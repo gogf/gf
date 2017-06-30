@@ -7,11 +7,6 @@ import (
     "io"
 )
 
-func init() {
-    // gf.Http.Server.BindHandle("/hello2", HelloServer2)
-    http.HandleFunc("/hello2", HelloServer2)
-}
-
 func HelloServer(w http.ResponseWriter, req *http.Request) {
     io.WriteString(w, "hello, world!\n")
 }
@@ -25,6 +20,7 @@ func main() {
     //    WriteTimeout  : 10 * time.Second,
     //}
     //gf.Http.Server.NewByConfig(s)
-
-    gf.Http.Server.New(":8199", nil)
+    //http.HandleFunc("/hello2", HelloServer2)
+    gf.Http.Server.BindHandle("/hello2", HelloServer2)
+    gf.Http.Server.Start(":8199")
 }
