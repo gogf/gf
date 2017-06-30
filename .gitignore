@@ -9,5 +9,3 @@
 vender/
 log/
 composer.lock
-pkg/
-bin/
