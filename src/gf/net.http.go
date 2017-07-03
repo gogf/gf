@@ -20,7 +20,7 @@ func (h gtHttpServer)Start(addr string) error {
     return http.ListenAndServe(addr, nil)
 }
 
-// 创建一个HTTPserver
+// 创建一个自定义配置的HTTPserver
 func (h gtHttpServer)StartByConfig(httpServerConfig *http.Server) error {
     return httpServerConfig.ListenAndServe()
 }
