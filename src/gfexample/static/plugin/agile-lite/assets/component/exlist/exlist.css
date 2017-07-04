@@ -1,0 +1,19 @@
+.swipe_block{
+	overflow: visible !important;
+}
+
+.swipe_option{
+	position: absolute;
+	height: 100%;
+	top: 0px;
+}
+
+.exlist_left_div{
+	position: absolute;
+	height: 100%;
+	top: 0px;
+}
+
+.exlist_checkbox{
+
+}

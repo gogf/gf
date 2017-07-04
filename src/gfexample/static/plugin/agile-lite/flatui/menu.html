@@ -1,0 +1,120 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/flat/flat.component.css">
+		<link rel="stylesheet" href="../assets/third/flat/flat.color.css">
+		<link rel="stylesheet" href="../assets/third/flat/iconline.css">
+		<link rel="stylesheet" href="../assets/app/css/app.css">
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="menu_section" data-role="section" class="active">
+				<header>
+				    <div class="titlebar">
+				    	<a data-toggle="back" href="#"><i class="iconfont iconline-arrow-left"></i></a>
+				    	<h1>菜单组件</h1>
+				    </div>
+				    <div class="tabbar">
+				    	<a class="tab active" data-role="tab" href="#">头条</a>
+				    	<a class="tab" data-role="tab" href="#">南京</a>
+				    	<a class="tab" data-role="tab" href="#">江苏</a>
+				    	<a class="tab" data-role="tab" href="#">国内</a>
+				    	<a class="tab" data-role="tab" href="#">国际</a>
+				    </div>
+				</header>
+				<article data-role="article" id="main_article" data-scroll="verticle" class="active" style="top:88px;bottom:56px;">
+					<div class="scroller"> 
+						<div class="padded carrot text-center">
+							如需给菜单支持控制器切换可给菜单项添加<br/>
+							data-toggle="{controller}"
+						</div>
+						<div class="grid" data-col="3">
+							<div class="grid-cell">
+								<div class="grid-img" style="background-color:#3498db;">
+									<span class="iconfont iconline-mail"></span>
+								</div>
+								<label class="grid-label">邮件</label>
+							</div>
+							<div class="grid-cell">
+								<div class="grid-img" style="background-color:#F39C12;">
+									<span class="iconfont iconline-notebook"></span>
+								</div>
+								<label class="grid-label">通讯录</label>
+							</div>
+							<div class="grid-cell">
+								<div class="grid-img" style="background-color:#1abc9c;">
+									<span class="iconfont iconline-file"></span>
+								</div>
+								<label class="grid-label">审批</label>
+							</div>
+							<div class="grid-cell">
+								<div class="grid-img" style="background-color:#e74c3c;">
+									<span class="iconfont iconline-map-location"></span>
+								</div>
+								<label class="grid-label">定位</label>
+							</div>
+							<div class="grid-cell">
+								<div class="grid-img" style="background-color:#78ba00;">
+									<span class="iconfont iconline-setting"></span>
+								</div>
+								<label class="grid-label">设置</label>
+							</div>
+							<div class="grid-cell">
+								<div class="grid-img" style="background-color:#8e44ad;">
+									<div class="iconfont iconline-folder"></div>
+								</div>
+								<label class="grid-label">文档</label>
+							</div>
+							<div class="grid-cell">
+								<div class="grid-img" style="background-color:#f1c40f;">
+									<span class="iconfont iconline-chart-pie"></span>
+								</div>
+								<label class="grid-label">数据分析</label>
+							</div>
+							<div class="clearfix"></div>
+						</div>
+					</div>  
+				</article>
+				
+				<footer>
+					<nav class="menubar">
+						<a class="menu active" data-role="tab" href="#">
+							<span class="menu-icon iconfont iconline-mail"></span>
+						    <span class="menu-text">邮件</span>
+						</a>
+						<a class="menu" data-role="tab" href="#">
+							<span class="menu-icon iconfont iconline-notebook"></span>
+						    <span class="menu-text">通讯录</span>
+						</a>
+						<a class="menu" data-role="tab" href="#">
+							<span class="menu-icon iconfont iconline-file"></span>
+						    <span class="menu-text">审批</span>
+						</a>
+						<a class="menu" data-role="tab" href="#">
+							<span class="menu-icon iconfont iconline-map-location"></span>
+						    <span class="menu-text">定位</span>
+						</a>
+					</nav>
+				</footer>
+			</section>
+		</div>
+		
+		<!--- third --->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<script src="../assets/third/iscroll/iscroll-probe.js"></script>
+		<script src="../assets/third/arttemplate/template-native.js"></script>
+		<!-- agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>		
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.js"></script>
+		
+	</body>
+</html>

@@ -1,0 +1,220 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<meta name="format-detection" content="telephone=no">
+	<title>local-map</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	<style type="text/css">
+		/*隐藏样式*/
+		.hide{
+			display: none!important;
+		}
+		/*地图标记*/
+		.pin-label{
+			position: absolute;
+			width:28px;
+			height:28px;
+			text-align:center;
+			line-height:28px;
+			left:2px;
+			top:2px;
+			border-radius: 100%;
+			-webkit-transform:rotate(45deg);
+			-webkit-transform-origin:center; 
+
+			color: white;
+		}
+		/*人员*/
+		#signPeople{
+			padding: 15px 0;
+		}
+		#signPeople li>a{
+			box-sizing:border-box;
+			border-style:solid;
+			border-width:2px;
+		}
+		#signPeople li>a.active{
+			background-color:white!important;
+			color:#333;
+		}
+		/*悬浮日期框*/
+		.signDate{
+			position: absolute;
+			top:10px;
+			left:10px;
+			width: 120px;
+			overflow: hidden;
+			box-shadow: 1px 2px 2px 0 rgba(0,0,0,.4);
+			z-index: 99999;
+		}
+		.signDate input,.signDate i{
+			color:white;
+		}
+	</style>
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_local_db" class="active">
+		<header>
+		    <div class="titlebar">
+		        <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+		        <h1>签到地图</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active" style="bottom:150px;">
+			<div class="input-box reverse radius20 height32 signDate">
+				<input type="date" id="expireDate" style="padding-top:0;padding-bottom:0;">
+				<i class="icon icon-calendar"></i>
+			</div>
+			<div id="allmap" class="height-full"></div>
+		</article>
+		<footer style="height: 150px;background-color:white;">
+			<ul class="list noclick">
+				<li>
+					<div class="justify-content">最新签到<b>1</b>人（已签<b>1</b>人，未签<b>2</b>人）</div>
+					<div class="justify">
+						<a>详细></a>
+					</div>
+				</li>
+			</ul>
+			<div id="signPeople">
+				<ul class="grid size50" data-col="4">
+					<li>
+						<a class="photo color-white" style="background-color: #53c6fd;border-color: #53c6fd;">
+							阳
+						</a>
+						<label class="grid-label">蔡宇阳</label>
+					</li>
+					<li>
+						<a class="photo color-white" style="background-color: #ffae02;border-color: #ffae02;">
+							波
+						</a>
+						<label class="grid-label">成少波</label>
+					</li>
+					<li>
+						<a class="photo color-white" style="background-color: #3ae3ea;border-color: #3ae3ea;">
+							进
+						</a>
+						<label class="grid-label">李进</label>
+					</li>
+					<li>
+						<a class="photo color-white" style="background-color: #ff6f36;border-color: #ff6f36;">
+							梅
+						</a>
+						<label class="grid-label">许啸梅</label>
+					</li>
+				</ul>
+			</div>
+		</footer>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+	<div class="popup-mask hide" style="opacity: 1;display: block;"></div>
+	<div class="loading-box box box-middlecenter hide">
+		<div class="loading"></div>
+	</div>
+
+	<script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+	<!--百度地图-->
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=8830f84901336e9afd2c6d7033d2ebe5"></script>
+	<script>
+		/*=============
+		地图
+		==============*/
+        //定义坐标和文字
+        var markerPeople=[[116.417854,39.921988,"<span class='color-1 bold'>蔡宇阳</span>&nbsp;早上8点<br>签到地址：北京市东城区王府井大街88号乐天银泰百货","<label class='pin-label'>阳</label>","#53c6fd"],
+        [116.406605,39.921585,"<span class='color-2 bold'>成少波</span>&nbsp;早上8点<br>签到地址：北京市东城区东华门大街","<label class='pin-label'>波</label>","#ffae02"],
+		[116.412222,39.912345,"<span class='color-3 bold'>李进</span>&nbsp;早上8点<br>签到地址：北京市东城区正义路甲5号","<label class='pin-label'>进</label>","#3ae3ea"]
+						];
+
+		var markerPerson=[[116.417854,39.921988,"<span class='color-1 bold'>蔡宇阳</span>&nbsp;早上8点<br>签到地址：北京市东城区王府井大街88号乐天银泰百货","<label class='pin-label'>1</label>","#53c6fd"],
+		[116.406605,39.921585,"<span class='color-1 bold'>蔡宇阳</span>&nbsp;早上8点<br>签到地址：北京市东城区东华门大街","<label class='pin-label'>2</label>","#53c6fd"]
+		];
+		//初始化地图
+		var b=new BaiduMap("allmap");
+		b.show(markerPeople);
+		//初始化日期
+	    function initSignDate(){
+	        var dateToast = new Toast("截止时间不能比今天日期晚哦！"),
+	        dateInput = document.getElementById('expireDate'),
+	        today = new Date();
+	        dateInput.valueAsDate = today;
+	        $(dateInput).change(function(){
+	            var inputDate = dateInput.valueAsDate;
+	            if (inputDate > today){
+	                dateToast.show();
+	                dateInput.valueAsDate = today;
+	            }
+	        });  
+	    }
+	    /*=============
+		遮罩
+		==============*/
+		var loadingMask=document.querySelector(".popup-mask"),loadingBox=document.querySelector(".loading-box");
+		function showLoading(){
+			loadingMask.classList.remove("hide");
+			loadingBox.classList.remove("hide");
+		}
+		function hideLoading(){
+			loadingMask.classList.add("hide");
+			loadingBox.classList.add("hide");
+		}
+	    /*=============
+		人员
+		==============*/
+		var signPeople=document.getElementById("signPeople");
+		//一个人与群组切换
+		function toogleMarker(target){
+			if(target.classList.contains("active")){
+				target.classList.remove("active");
+				b.show(markerPeople);
+				return;
+			}
+			[].slice.call(signPeople.getElementsByTagName("a")).forEach(function(n,i,a){
+				n.classList.remove("active");
+			})
+			target.classList.add("active");
+			b.show(markerPerson);
+		}
+
+		//点击
+		EventUtil.addHandler(signPeople,"tap",function(e){
+			toogleMarker(e.target);
+		})
+		//翻页
+		EventUtil.addHandler(signPeople,"swipeleft",function(){
+			//下一页
+			showLoading();//显示遮罩
+			//重新绘制人员：signPeople.innerHTML=xxx;
+			//重新绘制地图：生成markerPeople，并在重新绘点b.show(markerPeople)
+			hideLoading();//隐藏遮罩
+		})
+		EventUtil.addHandler(signPeople,"swiperight",function(){
+			//上一页
+			showLoading();//显示遮罩
+			//重新绘制人员：signPeople.innerHTML=xxx;
+			//重新绘制地图：生成markerPeople，并在重新绘点b.show(markerPeople)
+			hideLoading();//隐藏遮罩
+		})
+
+	    //Entry
+	    window.addEventListener("load",function(){
+	    	initSignDate();
+	    },false)
+		
+	</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>popup</title>
+    <link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_popup" class="active">
+	    <header>
+	        <div class="titlebar">
+	            <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+	            <h1>弹出框</h1>
+	        </div>
+	    </header>
+	    <article id="main_article" data-role="article" class="active">
+	    	<p class="title">系统弹出框</p>
+	    	<div class="card padding8">
+		        <button id="alert">alert</button>
+		        <button id="confirm" class="warn">confirm</button>
+		        <button id="actionsheet" class="info">actionsheet</button>
+		        <button id="toast" class="success">toast</button>
+	        </div>
+	        
+	        <p class="title">自定义弹出框</p>
+	        <div class="card padding8">
+		        <button id="middle">middle</button>
+		        <button id="top" class="warn">top</button>
+		        <button id="bottom">bottom</button>
+		        <button id="left" class="info">left</button>
+		        <button id="right" class="success">right</button>
+	    	</div>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+	<div class="popup confirm custom" id="pop_custom">
+        <label class="text-center">
+            <p class="title color-cancel">该投票将永远消失！</p>
+            <p>您确定这么做？！</p>
+            <i class="icon icon-bad size54 color-primary margin12"></i>
+        </label>
+        <div class="popup-handler">
+            <a>取消</a>
+            <a>确定</a>
+        </div>
+    </div>
+	
+    
+    
+    
+    
+    
+	<script type="text/javascript">
+		/*
+		 * 系统弹出框
+		 */
+		//alert
+		var popAlert=new Alert("我是Alert框我是Alert框我是Alert框我是Alert框");
+	    $("#alert").click(function(){
+			popAlert.show();
+	    });
+		//confirm
+		var c1=new Confirm("我是Confirm框",{
+			onClickOk:function(e){
+				console.log(e.target);
+			},onClickCancel:function(e){
+				console.log(e.target);
+				e.hide();
+			}
+		});
+		$("#confirm").click(function(){
+			c1.show();
+	    });
+		
+		// //toast
+		var popToast=new Toast("提示信息");
+		$("#toast").click(function(){
+			popToast.show();
+	    });
+	    var c;
+	    //actionsheet
+	    var t=new Toast("您点击了菜单一");
+	    var actionsheetParams=[
+			{
+				text : '菜单一',
+		        handler : function(s){
+		        	console.log(s.target);
+		        	t.setText("您点击了菜单一");
+		        	t.show();
+		        }
+			},{
+				text : '菜单二',
+		        handler : function(s){
+		        	console.log(s.target);
+		        	t.setText("您点击了菜单二");
+		        	t.show();
+				}
+		    },{
+				text : '取消',
+		        handler : function(s){
+		        	console.log(s.target);
+		        	s.hide();
+				}
+		    },{
+				text : '退出',
+		        handler : function(s){
+		        	if(!c){
+			        	c=new Confirm("您确定要退出吗？",{
+							onClickOk:function(confirm){
+								confirm.destory();
+								s.hide();
+								c=null;
+							}
+						});
+					}
+					c.show();
+				}
+		    }
+		];
+		var actionsheet=new Actionsheet();
+		$("#actionsheet").click(function(){
+			actionsheet.setParams(actionsheetParams);
+			actionsheet.show();
+	    });
+
+	    /**
+		 * 自定义弹出框
+		 * 
+		 */
+		var dialog=new Dialog("#pop_custom",{
+			onClick:function(s){
+            	console.log(s.target);
+                if(s.target.text=="取消"){
+                    s.hide();
+                }else if(s.target.text=="确定"){
+                    console.log("确定");
+                }
+            }
+		});
+		//middle
+		$("#middle").click(function(){
+			dialog.setPos("middle");
+			dialog.show();
+	    });
+		//top
+		$("#top").click(function(){
+			dialog.setPos("top");
+			dialog.show();
+	    });
+		//bottom
+		$("#bottom").click(function(){
+			dialog.setPos("bottom");
+			dialog.show();
+	    });
+		//left
+		$("#left").click(function(){
+			dialog.setPos("left");
+			dialog.show();
+	    });
+		//right
+		$("#right").click(function(){
+			dialog.setPos("right");
+			dialog.show();
+	    });
+	    
+	</script>
+</body>
+</html>

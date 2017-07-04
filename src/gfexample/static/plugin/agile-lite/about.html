@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<title>Agile Lite移动前端框架</title>
+	<link rel="stylesheet" href="assets/third/flat/welcome.css">
+	<link rel="stylesheet" href="assets/agile/css/agile.layout.css">
+	<link rel="stylesheet" href="assets/third/flat/flat.component.css">
+	<link rel="stylesheet" href="assets/third/flat/flat.color.css">
+	<link rel="stylesheet" href="assets/third/flat/iconline.css">
+	<link rel="stylesheet" href="assets/app/css/app.css">
+</head>
+<body>
+<img src="http://www.agilelite.net/resources/agile/img/icon.png" width="0" height="0"></img>
+<div id="section_container">
+    <section id="about_section" data-role="section" class="active" data-transition="slideUp">
+        <article id="about_article" data-role="article" class="active">
+            <div style="padding:0;margin:0;position:fixed;left:0;top:0;right:0;bottom:0;background-color:#3498db;height:100%;width:100%;z-index:100;" id="welcome">
+                <div class="topic" id="topic">
+                    <div class="welcome-title">Agile Lite</div>
+                    <div class="subtitle" id="subtitle">它是基于html | css | js轻量级webapp</div>
+                </div>
+                <!-- 三圆 -->
+                <div style="position:fixed;top:35%;left:50%;-webkit-transform:translateX(-50%);width:280px;height:250px;">
+                    <div class="rdohtml" id="rdohtml">
+                        HTML
+                    </div>
+                    <div class="rdocss" id="rdocss">
+                        CSS
+                    </div>
+                    <div class="rdojs" id="rdojs">
+                        JS
+                    </div>
+                </div>
+                <!-- 丰富的组件 -->
+                <div class="topic2" id="topic2">
+                    <div class="welcome-title">Agile Lite</div>
+                    <div class="subtitle" id="subtitle2" style="opacity:1;">组件齐全可扩展</div>
+                </div>
+                <div class="boxplug" id="boxplug">
+                    <img src="assets/app/img/about/chat.png" class="plugchat" id="plugchat"/>
+                    <img src="assets/app/img/about/file.png" class="plugfile" id="plugfile"/>
+                    <img src="assets/app/img/about/readmark.png" class="plugreadmark" id="plugreadmark"/>
+                    <img src="assets/app/img/about/tel.png" class="plugtel" id="plugtel"/>
+                    <img src="assets/app/img/about/home.png" class="plughome" id="plughome"/>
+                    <img src="assets/app/img/about/friends.png" class="plugfriends" id="plugfriends"/>
+                    <img src="assets/app/img/about/album.png" class="plugalbum" id="plugalbum"/>
+                    <img src="assets/app/img/about/position.png" class="plugposition" id="plugposition"/>
+                    <img src="assets/app/img/about/comments.png" class="plugcomments" id="plugcomments"/>
+                    <img src="assets/app/img/about/earth.png" class="plugearth" id="plugearth"/>
+                    <img src="assets/app/img/about/message.png" class="plugmessage" id="plugmessage"/>
+                    <img src="assets/app/img/about/img.png" class="plugimg" id="plugimg"/>
+                    <img src="assets/app/img/about/share.png" class="plugshare" id="plugshare"/>
+                    <img src="assets/app/img/about/search.png" class="plugsearch" id="plugsearch"/>
+                </div>
+                <div style="position:fixed;bottom:3%;left:50%;-webkit-transform:translate(-50%)" id="down"><img src="assets/app/img/about/down.png" style="width:24px;"/></div>
+                <!-- 我们致力于用户体验 -->
+                <div class="topic3" id="topic3">我们致力于用户体验</div>
+                
+                <img class="pull" src="assets/app/img/about/phone.png" id="phone"/>
+                <img src="assets/app/img/about/pull.png" class="pull" id="pull"/>
+
+                <div style="position:fixed;bottom:0;">
+                    <input type="hidden" id="txt-up" value="oneanimate"/>
+                    <input type="hidden" id="txt-down"/>
+                </div>
+            </div>
+        </article>
+    </section>
+    <section id="follow_section" data-role="section" data-transition="slideUp">
+    	<header>
+			<div class="titlebar">
+				<a data-toggle="html" href="index.html"><i class="iconfont iconline-home"></i></a>
+				<h1>技术交流</h1>
+			</div>
+		</header>
+    	<article id="follow_article" data-role="article" data-scroll="verticle" class="active" style="top:44px;bottom:0px;">
+    		<div class="scroller">
+    			<div style="text-align:center;padding:20px 0px;">
+    				<a data-href="http://www.agilelite.net">
+    					<img src="assets/app/img/allogo.png"></img>
+    				</a>
+    				<p>官网:<a data-href="http://www.agilelite.net">www.agilelite.net</a></p>
+    			</div>
+    			<div style="text-align:center;padding:20px 0px;">
+    				<a data-href="http://qm.qq.com/cgi-bin/qm/qr?k=eSLMOpIj7xpF6SGmd06KS5hy_V9wuO8C">
+    					<img src="assets/app/img/qrcode.png"></img>
+    				</a>
+    				<p>QQ群号：<a data-href="http://qm.qq.com/cgi-bin/qm/qr?k=eSLMOpIj7xpF6SGmd06KS5hy_V9wuO8C">498752673</a></p>
+    			</div>
+    		</div>
+    		
+    	</article>
+   	</section>
+</div>
+	<!--- third --->
+	<script src="assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<script src="assets/third/iscroll/iscroll-probe.js"></script>
+	<script src="assets/third/arttemplate/template-native.js"></script>
+	<!-- agile -->
+	<script type="text/javascript" src="assets/agile/js/agile.js"></script>	
+	<script type="text/javascript" src="assets/bridge/exmobi.js"></script>
+	<script type="text/javascript" src="assets/bridge/agile.exmobi.js"></script>	
+	<!-- app -->
+	<script type="text/javascript" src="assets/app/js/h5.base.js"></script>
+	<script type="text/javascript" src="assets/app/js/about.js"></script>
+    <script type="text/javascript" src="assets/app/js/app.js"></script>
+	<script>
+		$('a[data-href]').on(A.options.clickEvent, function(){
+			var href = $(this).data('href');
+			try{
+				NativeUtil.browser(href);
+			}catch(e){
+				location.href = href;
+			}
+		});
+		$('#about_section').on('touchmove', function(e){
+			e.preventDefault();
+		});
+	</script>
+</body>
+</html>

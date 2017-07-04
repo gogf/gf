@@ -1,0 +1,309 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/flat/flat.component.css">
+		<link rel="stylesheet" href="../assets/third/flat/flat.color.css">
+		<link rel="stylesheet" href="../assets/third/flat/iconline.css">
+		<link rel="stylesheet" href="../assets/third/flat/iconform.css">
+		<link rel="stylesheet" href="../assets/component/timepicker/timepicker.css">
+		<link rel="stylesheet" href="../assets/app/css/app.css">
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="form_section" data-role="section" class="active">
+				<header>
+				    <div class="titlebar">
+				    	<a data-toggle="back" href="#"><i class="iconfont iconline-arrow-left"></i></a>
+				    	<h1>表单组件</h1>
+				    </div>
+				    <div class="tabbar">
+				    	<a class="tab active" data-role="tab" href="#normal_article" data-toggle="article">普通</a>
+				    	<a class="tab" data-role="tab" href="#border_article" data-toggle="article">框形</a>
+				    	<a class="tab" data-role="tab" href="#group_article" data-toggle="article">分组</a>
+				    </div>
+				</header>
+				<article data-role="article" id="normal_article" data-scroll="verticle" class="active" style="top:88px;bottom:0px;">
+					<div class="scroller"> 
+						<form autocomplete="off" oninput="range_output.value=parseInt(range.value)" class="form-common">
+							<label class="label-left" for="user">用户名</label>
+							<label class="label-right">
+						    	<input id="user" type="text" placeholder="请输入英文数字下滑线" pattern="^[a-zA-z][a-zA-Z0-9_]{2,9}$" title="英文数字下滑线" required/>
+						    </label>
+						    <hr/>
+							<label class="label-left" for="email">邮箱</label>
+							<label class="label-right">
+						    	<input id="email" type="email" placeholder="请输入邮箱" autocomplete="on" required/>
+						    </label>
+						    <hr/>
+						    
+						   	<label class="label-left" style="height:40px;">接收推送</label>
+						   	<label class="label-right" style="height:40px;">
+						    	<div class="toggle" data-role="toggle" data-on="是" data-on-value="1" data-off="否" data-off-value="0" style="margin-top:4px;"></div>
+						    </label>
+						    <hr/>
+						    <label class="label-left" for="age">年龄</label>
+						    <div class="label-right">
+						    	<input id="age" type="number"/>
+						    </div>
+						    <hr/>
+						    <label class="label-left">爱好</label>
+						    <label class="label-right">
+						    	<a href="#" data-role="checkbox">
+						    		<input type="checkbox" id="baskball"/>
+						  			<label for="baskball" class="black">篮球</label>
+						  		</a>
+						  		<a href="#" data-role="checkbox">
+						  			<input type="checkbox" id="football"/>
+						  			<label for="football" class="black">足球</label>
+						  		</a>
+						  		<a href="#" data-role="checkbox">
+						    		<input type="checkbox" id="pingpang"/>
+						  			<label for="pingpang" class="black">乒乓球</label>
+						  		</a>
+						  		<a href="#" data-role="checkbox">
+						  			<input type="checkbox" id="badminton"/>
+						  			<label for="badminton" class="black">羽毛球</label>
+						  		</a>
+						    </label>
+						    <hr/>
+						   <label class="label-left">性别</label>
+						    <label class="label-right">
+						    	<a href="#" data-role="radio">
+						    		<input type="radio" name="sex" id="male" style="left:0;right:auto;"/>
+						  			<label for="male" class="black">男</label>
+						  		</a>
+						  		<a href="#" data-role="radio">
+						  			<input type="radio" name="sex" id="female" style="left:0;right:auto;"/>
+						  			<label for="female" class="black">女</label>
+						  		</a>
+						    </label>
+						    <hr/>
+						    <label class="label-left" for="phone" style="height:80px;">手机</label>
+						    <div style="height:80px;" class="label-right">
+							    <input id="phone" type="number" value="13066889988" onBlur="jQuery('#phone_output').val(jQuery('#phone').mobileISP())"/>
+							    <output for="phone" id="phone_output">此手机号码为移动号</output>
+						    </div>
+						    <hr/>
+						    
+						    <label class="label-left" for="date">时间</label>
+						    <div data-role="time" class="label-right">
+						  		<label>请选择时间</label>
+						  		<input type="hidden"/>
+						  	</div>
+						    <hr/>
+						    
+						    <label class="label-left">扫描</label>
+						    <div data-role="barcode" class="label-right">
+						  		<label>请扫描条形码</label>
+						  		<input type="hidden"/>
+						  	</div>
+						    <hr/>
+						    
+						    <label class="label-left">日期</label>
+						    <div data-role="date" class="label-right">
+						  		<label>请选择日期</label>
+						  		<input type="hidden"/>
+						  	</div>
+						    <hr/>
+						    
+						    <label class="label-left">时间</label>
+						    <div class="label-right">
+						  		<input type="time" name="time" value="11:20" style="height: 35px;width:100%;" readonly="readonly"/>
+						  	</div>
+						    <hr/>
+						    
+						    <label class="label-left">日期</label>
+						    <div class="label-right">
+						  		<input type="date" name="date" value="2015-01-02" style="height: 35px;width:100%;" readonly="readonly"/>
+						  	</div>
+					    </form>
+					</div>  
+				</article>
+				
+				<article data-role="article" id="border_article" data-scroll="verticle" style="top:88px;bottom:0px;">
+					<div class="scroller">
+						<form autocomplete="off" oninput="range_output.value=parseInt(range.value)" class="form-square">
+							<label class="label-left" for="user">正则</label>
+							<label class="label-right">
+						    	<input id="user" type="text" pattern="^[a-zA-z][a-zA-Z0-9_]{2,9}$" title="英文数字下滑线" required/>
+						    </label>
+						
+							<label class="label-left" for="email">邮箱</label>
+							<label class="label-right">
+						    	<input id="email" type="email" placeholder="邮箱" autocomplete="on" required/>
+						    </label>
+						    
+						    <label class="label-left" style="height:80px;">爱好</label>
+						    <label class="label-right" style="height:80px;">
+						    	<a href="#" data-role="checkbox">
+						    		<input type="checkbox" id="baskball"/>
+						  			<label for="baskball" class="black">篮球</label>
+						  		</a>
+						  		<a href="#" data-role="checkbox">
+						  			<input type="checkbox" id="football"/>
+						  			<label for="football" class="black">足球</label>
+						  		</a>
+						  		<a href="#" data-role="checkbox">
+						    		<input type="checkbox" id="pingpang"/>
+						  			<label for="pingpang" class="black">乒乓球</label>
+						  		</a>
+						  		<a href="#" data-role="checkbox">
+						  			<input type="checkbox" id="badminton"/>
+						  			<label for="badminton" class="black">羽毛球</label>
+						  		</a>
+						    </label>
+						    
+						    
+						    <label class="label-left" for="number">数字</label>
+						    <label class="label-right">
+						    	<input id="number" type="number" min="0" max="120" step="1" value="20"/>
+						    </label>
+						    
+						    <label class="label-left" for="phone">手机</label>
+						    <label class="label-right">
+						    	<input id="phone" type="number" value="13066889988" onBlur="jQuery('#phone_output').val(jQuery('#phone').mobileISP())"/>
+						    </label>
+						    
+						    <label class="label-left hint"></label>
+						    <label class="label-right">
+						    	<output for="phone" id="phone_output">此手机号为移动号</output>
+						    </label>
+						    
+						    <label class="label-left" for="date">时间</label>
+						    <div data-role="time" class="label-right">
+						  		<label>请选择时间</label>
+						  		<input type="hidden"/>
+						  	</div>
+						    
+						    <label class="label-left" for="date">扫描</label>
+						    <div data-role="barcode" class="label-right">
+						  		<label>请扫描条形码</label>
+						  		<input type="hidden"/>
+						  	</div>
+						    
+						    <label class="label-left" for="date">日期</label>
+						    <div data-role="date" class="label-right">
+						  		<label>请选择日期</label>
+						  		<input type="hidden"/>
+						  	</div>
+		  				</form>
+						
+					</div>
+				</article>
+				
+				<article data-role="article" id="group_article" data-scroll="verticle" style="top:88px;bottom:0px;">
+					<div class="scroller">
+						<form class="form-group">
+							<div class="card">
+						  		<input type="text" placeholder="姓名" class="noborder">
+						  	</div>
+						  	
+						  	<div class="card">
+						  		<textarea rows="5" class="noborder"></textarea>
+						  	</div>
+						  	
+						  	<div data-role="select" class="card">
+								<select placeholder="选择公司">
+									<option>请选择公司</option>
+								  	<option>烽火通信股份有限公司</option>
+								  	<option>烽火星空通信发展有限公司</option>
+								</select>
+						  	</div>
+						  	
+						  	<div class="card">
+								<ul class="listitem">
+								  	<li class="title">爱好</li>
+								  	<li class="nopadding">
+									  	<a href="#" data-role="checkbox">
+									  		<label for="basketball" class="black">篮球</label><input type="checkbox" id="basketball"/>
+									  	</a>
+								  	</li>
+								  	<li class="noborder nopadding">
+									  	<a href="#" data-role="checkbox">
+									  		<label for="football" class="black">足球</label><input type="checkbox" id="football"/>
+									  	</a>
+								  	</li>
+								</ul>
+						  	</div>
+						  	
+						  	<div class="card">
+								<ul class="listitem">
+								  	<li class="title">性别</li>
+								  	<li class="nopadding">
+								  		<a href="#" data-role="radio">
+								  			<label for="rdo1" class="black">男</label>
+								  			<input type="radio" name="sex" id="rdo1"/>
+								  		</a>
+								  	</li>
+								  	<li class="nopadding noborder">
+								  		<a href="#" data-role="radio">
+								  			<label for="rdo2" class="black">女</label><input type="radio" name="sex" id="rdo2"/>
+								  		</a>
+								  	</li>
+								</ul>
+						  	</div>
+						  	
+						  	<div data-role="file" class="card">
+						  		<label>请选择文件</label>
+						  		<input name="file" type="hidden">
+						  	</div>
+						  
+						  	<div data-role="file-native" class="card">
+						  		<input name="file" type="file">
+						  	</div>
+						  	
+						  	<div data-role="date" class="card">
+						  		<label>请选择日期</label>
+						  		<input type="hidden"/>
+						  	</div>
+						  
+						  
+						  	<div data-role="time" class="card">
+						  		<label>请选择时间</label>
+						  		<input type="hidden"/>
+						  	</div>
+						  	
+						  	
+						  	<div data-role="barcode" class="card">
+						  		<label>请扫描条形码</label>
+						  		<input type="hidden"/>
+						  	</div>
+						  	
+						  	
+						  	<div data-role="qrcode" class="card">
+						  		<label>请扫描二维码</label>
+						  		<input type="hidden"/>
+						  	</div>
+						  	
+						</form>
+						
+						<div class="card noborder">
+							<button class="submit width-full">提交</button>
+						</div>
+					</div>						
+				</article>
+				
+			</section>
+		</div>
+		
+		<!--- third --->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<script src="../assets/third/iscroll/iscroll-probe.js"></script>
+		<script src="../assets/third/arttemplate/template-native.js"></script>
+		<!-- agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>		
+		<!-- app -->
+		<script src="../assets/component/timepicker/agile.timepicker.js"></script>	
+		<script type="text/javascript" src="../assets/component/extend.js"></script>
+		<script type="text/javascript" src="../assets/app/js/app.js"></script>
+		
+	</body>
+</html>

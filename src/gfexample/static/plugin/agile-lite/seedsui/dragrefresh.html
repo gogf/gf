@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+    <title>dragrefresh</title>
+    <link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+    <section data-role="section" id="page_dragrefresh" class="active">
+        <header>
+            <div class="titlebar">
+            	<a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+                <h1>下拉刷新</h1>
+            </div>
+        </header>
+        <article id="main_article" data-role="article" class="active">
+            <ul class="list" id="list"></ul>
+	    </article>
+    </section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+    
+    
+    
+    
+    
+    
+    <script type="text/javascript">
+        var a1=new Alert("加载完成");
+        var a2=new Alert("请求超时啦");
+        var a3=new Alert("到底部啦");
+        function initData(){
+            for(var i=0;i<100;i++){
+                var elLI=document.createElement("li");
+                elLI.innerHTML='<div class="justify-content">第'+i+'行列表</div>';
+                document.getElementById("list").appendChild(elLI);
+            }
+        }
+        function initDrag(){
+            var drag=new Dragrefresh("article",{
+                "onRefreshStart":function(e){
+                    setTimeout(function(){
+                        e.refreshComplete();
+                    }, 2000);
+                },
+                "onRefreshEnd":function(e){
+                    a1.show();
+                },
+                "onRefreshTimeout":function(e){
+                    a2.show();
+                },
+                "onBottom":function(e){
+                    a3.show();
+                    //数据加载完成时，隐藏下面的元素
+                    setTimeout(function(){
+                        e.bottomRefreshEl.style.display="none";
+                    }, 5000);
+                }
+            });
+        }
+        window.addEventListener("load",function(){
+            initData();
+            initDrag();
+        },false);
+        
+        
+    </script>
+</body>
+</html>

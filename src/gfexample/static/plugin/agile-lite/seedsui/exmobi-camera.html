@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>exmobi-camera</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_exmobi_camera" class="active">
+		<header>
+			<div class="titlebar">
+		        <a href="javascript:Exmobi.close()"><i class="icon icon-arrowleft"></i></a>
+		        <h1>照片选择</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+			<a class="button block margin8" href="javascript:album(768)">调用系统相册</a>
+			<a class="button block margin8 info" href="javascript:Exmobi.imageChoice(500,5)">相册选择</a>
+			<a class="button block margin8 success" href="javascript:Exmobi.camera()">拍照上传</a>
+			<p class="sliver">图片列表</p>
+			<ul id="imagelist" class="grid album radius8" data-col="3">
+				<li>
+					<a class="default" href="javascript:Exmobi.camera()">
+						<i class="icon icon-camera"></i>
+					</a>
+				</li>
+			</ul>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+
+	
+    
+    
+    
+    
+    
+	<script>
+		//生成选择图片字符串
+		function getImgText(path){
+			return '<li><a style="background-image: url('+path+')"><span class="close"><i class="icon icon-close" onclick="removeCell(this)"></i></span></a></li>';
+		}
+		//相册选择
+		function imageChoiceCallback(selectPaths){
+			var selectImgs="";
+			var selectPaths = this.getFilePaths();//获取照片列表
+			for(var i=0;i<selectPaths.length;i++){
+				var url = selectPaths[i];
+				selectImgs+=getImgText(url);
+			}
+			$("#imagelist").prepend(selectImgs);
+		}
+		//拍照
+		function cameraCallback(){
+			var selectImg=getImgText(this.value);//获得拍照返回的路径
+			$("#imagelist").prepend(selectImg);
+		}
+		//调用系统相册
+		function album(pwidth){
+			NativeUtil.selectCameraPhoto(sysPhotoCallback,pwidth,true);
+		}
+		function sysPhotoCallback(path){
+			var selectImg=getImgText(path);
+			$("#imagelist").prepend(selectImg);
+		}
+		//移除grid-cell
+		function removeCell(thisobj){
+			$(thisobj).parent().parent().parent().remove();
+		}
+		
+		function back(){Exmobi.close();}
+	</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+		<style>
+			.outer { border:1px solid #ccc; border-radius: 6px;margin:10px;}
+			.accordionbar { display: block;padding:10px;border-bottom:1px solid #ccc;background-color: #efefef; color: #444;}
+			.accordionbar.active { color:#aaa;}
+			[data-role="accordion"]{
+				overflow: hidden;
+				height: 0px;
+				/*可以适当加一些动画*/
+				z-index: 10;
+				-webkit-transition: height 0.3s ease-in-out, box-shadow 0.6s linear;
+				-moz-transition: height 0.3s ease-in-out, box-shadow 0.6s linear;
+				-o-transition: height 0.3s ease-in-out, box-shadow 0.6s linear;
+				-ms-transition: height 0.3s ease-in-out, box-shadow 0.6s linear;
+				transition: height 0.3s ease-in-out, box-shadow 0.6s linear;
+			}/* 必须为被控制的组件添加默认样式不显示*/
+			[data-role="accordion"].active{
+				border-bottom:1px solid #ccc;
+				height:164px;
+				/*可以适当加一些动画*/
+				-webkit-transition: height 0.5s ease-in-out, box-shadow 0.1s linear;
+				-moz-transition: height 0.5s ease-in-out, box-shadow 0.1s linear;
+				-o-transition: height 0.5s ease-in-out, box-shadow 0.1s linear;
+				-ms-transition: height 0.5s ease-in-out, box-shadow 0.1s linear;
+				transition: height 0.5s ease-in-out, box-shadow 0.1s linear;
+				box-shadow: 0px 0px 0px 1px rgba(155,155,155,0.3);
+			}/* 必须为被控制的组件添加active样式，显示组件*/
+			
+			[data-role="accordion"] li, [data-role="accordionone"] li{
+				line-height:40px;
+				padding:0px 4px;
+				border-bottom:1px solid #ccc;
+			}
+			
+			[data-role="accordionone"]{	
+				display: none;
+			}/* 必须为被控制的组件添加默认样式不显示*/
+			[data-role="accordionone"].active{
+				display: block;
+			}/* 必须为被控制的组件添加active样式，显示组件*/
+		</style>
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="work_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">控制器原理</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="work_article" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<div class="text-center padded">下面是两个通过扩展的accordion的效果</div>
+						<div class="outer">
+							<a class="accordionbar active" data-role="accordionbar" data-toggle="accordion" href="#accordion1">组件</a>
+							<ul data-role="accordion" id="accordion1" class="listitem active">
+								<li><div class="text">设置了data-role的即为组件</div></li>
+								<li><div class="text">组件是可以被控制器控制的</div></li>
+								<li><div class="text">组件必须设置常态样式（非active样式）</div></li>
+								<li><div class="text">和活动时的样式（active样式）</div></li>
+							</ul>
+							<a class="accordionbar" data-role="accordionbar" data-toggle="accordion" href="#accordion2">控制器</a>
+							<ul data-role="accordion" id="accordion2" class="listitem">
+								<li><div class="text">设置了data-toggle的即为控制器</div></li>
+								<li><div class="text">当控制器和组件的值一致，则组件被控制</div></li>
+								<li><div class="text">组件和控制器都可以被重写</div></li>
+								<li><div class="text">href和id匹配的组件和控制器为active</div></li>
+							</ul>
+						</div>
+						<br>
+						<div class="outer">
+							<a class="accordionbar" data-role="accordionbarone" data-toggle="accordionone" href="#accordion3">组件扩展</a>
+							<ul data-role="accordionone" id="accordion3" class="listitem active">
+								<li><div class="text">通过A.Component.add(componentObj)扩展</div></li>
+								<li><div class="text">componentObj形式为{key:options}</div></li>
+								<li><div class="text">options支持selector[、handler、event]</div></li>
+								<li><div class="text">其中handler为处理函数，event默认是click</div></li>
+							</ul>
+							<a class="accordionbar" data-role="accordionbarone" data-toggle="accordionone" href="#accordion4">控制器扩展</a>
+							<ul data-role="accordionone" id="accordion4" class="listitem">
+								<li><div class="text">通过A.Controller.add(controllerObj)扩展</div></li>
+								<li><div class="text">controllerObj形式为{key:options}</div></li>
+								<li><div class="text">options支持selector[、container、isToggle、handler、complete]</div></li>
+								<li><div class="text">isToggle为true则此控制器仅控制目标组件</div></li>
+								<li><div class="text">控制器的效果如果会改变scroll容器的大小则需要refresh</div></li>
+							</ul>
+						</div>
+    				</div>  
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+		<!-- app -->
+		<script>
+		(function(){
+			//[必须]添加accordion控制器
+			A.Controller.add({
+				accordion : {
+					selector : '[data-toggle="accordion"]',
+					isToggle : true //仅控制目标显隐
+				},
+				accordionone : { 
+					selector : '[data-toggle="accordionone"]',
+				}
+			});
+			//[可选]添加accordionbar组件，只有在组件有样式切换的时候需要添加，本例不添加
+			
+			A.Component.add({
+				accordionbar : {
+					selector : '[data-role="accordionbar"]',
+					isToggle : true
+				}
+			});
+			
+		})();
+		
+		</script>
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	</body>
+</html>

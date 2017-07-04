@@ -1,0 +1,99 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="agiletemplate_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">Agile的Template</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="agiletemplate_article" data-scroll="pull" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<details open>
+			                <summary class="sliver">介绍</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>Agile Template是基于artTemplate的模板注入封装</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">基本用法</summary>
+			                <ul class="list">
+			                	<li>
+			                        <div class="justify-content">
+			                            <p>需要在页面用引入template.js或者template-native.js</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>A.template('#templateId').renderReplace|renderBefore|renderAfter(url|data,callback);</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">下拉刷新查看效果</summary>
+			                <ul class="list" id="content">
+			                	<script id="template" type="text/html">
+								    <% for (i = 0; i < list.length; i ++) { %>
+								        <li><div class="justify-content">条目内容 <%= i + 1 %> ：<%= list[i] %></div></li>
+								    <% } %>
+								</script>
+			                </ul>
+			            </details>
+    				</div>  
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<script src="../assets/third/iscroll/iscroll-probe.js"></script>
+		<script src="../assets/third/arttemplate/template-native.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		
+		<script>
+			$('#agiletemplate_article').on('refreshInit', function(){
+				
+				A.template('#template').renderReplace('../json/template.json');
+				
+				var refresh = A.Refresh(this);
+				refresh.on('pulldown', function(){
+					//下拉刷新加载到前面用before
+					A.template('#template').renderBefore({list:['Agile Lite移动前端框架', 'ExMobi三大引擎完美融合']},function(h){
+						//refresh.refresh();
+					});
+				});
+				refresh.on('pullup', function(){
+					//上拉刷新加载到后面用after
+					A.template('#template').renderAfter({list:['Agile Lite移动前端框架', 'ExMobi三大引擎完美融合']}, function(){
+						//refresh.refresh();
+					});
+				});
+			});
+			
+		</script>
+	</body>
+</html>

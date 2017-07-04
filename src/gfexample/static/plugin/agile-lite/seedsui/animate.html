@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+    <title>animate</title>
+    <link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+    
+    <link rel="stylesheet" href="../plugin/animate/animate.css">
+    <style>
+    button{
+    	width:40%;
+    	margin:8px 4%;
+    }
+    </style>
+</head>
+
+<body>
+<div id="section_container">
+    <section data-role="section" id="page_animate" class="active">
+        <header>
+            <div class="titlebar">
+                <a data-toggle="back" href="#">
+                    <i class="icon icon-arrowleft"></i>
+                </a>
+                <h1>动画效果</h1>
+            </div>
+        </header>
+        <article id="main_article" data-role="article" class="active">
+            <button onclick="Animate.one(this,'bounce animated');">bounce</button>
+            <button onclick="Animate.one(this,'flash animated');">flash</button>
+            <button onclick="Animate.one(this,'pulse animated');">pulse</button>
+            <button onclick="Animate.one(this,'rubberBand animated');">rubberBand</button>
+            <button onclick="Animate.one(this,'shake animated');">shake</button>
+            <button onclick="Animate.one(this,'swing animated');">swing</button>
+            <button onclick="Animate.one(this,'tada animated');">tada</button>
+            <button onclick="Animate.one(this,'wobble animated');">wobble</button>
+            <button onclick="Animate.one(this,'bounceIn animated');">bounceIn</button>
+            <button onclick="Animate.one(this,'bounceInDown animated');">bounceInDown</button>
+            <button onclick="Animate.one(this,'bounceInLeft animated');">bounceInLeft</button>
+            <button onclick="Animate.one(this,'bounceInRight animated');">bounceInRight</button>
+            <button onclick="Animate.one(this,'bounceInUp animated');">bounceInUp</button>
+            <button onclick="Animate.one(this,'bounceOut animated');">bounceOut</button>
+            <button onclick="Animate.one(this,'bounceOutDown animated');">bounceOutDown</button>
+            <button onclick="Animate.one(this,'bounceOutLeft animated');">bounceOutLeft</button>
+            <button onclick="Animate.one(this,'bounceOutRight animated');">bounceOutRight</button>
+            <button onclick="Animate.one(this,'bounceOutUp animated');">bounceOutUp</button>
+            <button onclick="Animate.one(this,'fadeIn animated');">fadeIn</button>
+            <button onclick="Animate.one(this,'fadeInDown animated');">fadeInDown</button>
+            <button onclick="Animate.one(this,'fadeInDownBig animated');">fadeInDownBig</button>
+            <button onclick="Animate.one(this,'fadeInLeft animated');">fadeInLeft</button>
+            <button onclick="Animate.one(this,'fadeInLeftBig animated');">fadeInLeftBig</button>
+            <button onclick="Animate.one(this,'fadeInRightBig animated');">fadeInRightBig</button>
+            <button onclick="Animate.one(this,'fadeInUp animated');">fadeInUp</button>
+            <button onclick="Animate.one(this,'fadeInUpBig animated');">fadeInUpBig</button>
+            <button onclick="Animate.one(this,'fadeOut animated');">fadeOut</button>
+            <button onclick="Animate.one(this,'fadeOutDownBig animated');">fadeOutDownBig</button>
+            <button onclick="Animate.one(this,'fadeOutLeft animated');">fadeOutLeft</button>
+            <button onclick="Animate.one(this,'fadeOutLeftBig animated');">fadeOutLeftBig</button>
+            <button onclick="Animate.one(this,'fadeOutRight animated');">fadeOutRight</button>
+            <button onclick="Animate.one(this,'fadeOutRightBig animated');">fadeOutRightBig</button>
+            <button onclick="Animate.one(this,'fadeOutUp animated');">fadeOutUp</button>
+            <button onclick="Animate.one(this,'fadeOutUpBig animated');">fadeOutUpBig</button>
+            <button onclick="Animate.one(this,'flip animated');">flip</button>
+            <button onclick="Animate.one(this,'flipInX animated');">flipInX</button>
+            <button onclick="Animate.one(this,'flipInY animated');">flipInY</button>
+            <button onclick="Animate.one(this,'flipOutX animated');">flipOutX</button>
+            <button onclick="Animate.one(this,'flipOutY animated');">flipOutY</button>
+            <button onclick="Animate.one(this,'lightSpeedIn animated');">lightSpeedIn</button>
+            <button onclick="Animate.one(this,'lightSpeedOut animated');">lightSpeedOut</button>
+            <button onclick="Animate.one(this,'rotateIn animated');">rotateIn</button>
+            <button onclick="Animate.one(this,'rotateInDownLeft animated');">rotateInDownLeft</button>
+            <button onclick="Animate.one(this,'rotateInDownRight animated');">rotateInDownRight</button>
+            <button onclick="Animate.one(this,'rotateInUpLeft animated');">rotateInUpLeft</button>
+            <button onclick="Animate.one(this,'rotateInUpRight animated');">rotateInUpRight</button>
+            <button onclick="Animate.one(this,'rotateOut animated');">rotateOut</button>
+            <button onclick="Animate.one(this,'rotateOutDownLeft animated');">rotateOutDownLeft</button>
+            <button onclick="Animate.one(this,'rotateOutDownRight animated');">rotateOutDownRight</button>
+            <button onclick="Animate.one(this,'rotateOutUpLeft animated');">rotateOutUpLeft</button>
+            <button onclick="Animate.one(this,'rotateOutUpRight animated');">rotateOutUpRight</button>
+            <button onclick="Animate.one(this,'hinge animated');">hinge</button>
+            <button onclick="Animate.one(this,'rollIn animated');">rollIn</button>
+            <button onclick="Animate.one(this,'rollOut animated');">rollOut</button>
+            <button onclick="Animate.one(this,'zoomIn animated');">zoomIn</button>
+            <button onclick="Animate.one(this,'zoomInDown animated');">zoomInDown</button>
+            <button onclick="Animate.one(this,'zoomInLeft animated');">zoomInLeft</button>
+            <button onclick="Animate.one(this,'zoomInRight animated');">zoomInRight</button>
+            <button onclick="Animate.one(this,'zoomInUp animated');">zoomInUp</button>
+            <button onclick="Animate.one(this,'zoomOut animated');">zoomOut</button>
+            <button onclick="Animate.one(this,'zoomOutDown animated');">zoomOutDown</button>
+            <button onclick="Animate.one(this,'zoomOutLeft animated');">zoomOutLeft</button>
+            <button onclick="Animate.one(this,'zoomOutRight animated');">zoomOutRight</button>
+            <button onclick="Animate.one(this,'zoomOutUp animated');">zoomOutUp</button>
+        </article>
+    </section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+    
+    
+    
+    
+    
+    
+    <script>
+    	
+    	
+    </script>
+</body>
+</html>

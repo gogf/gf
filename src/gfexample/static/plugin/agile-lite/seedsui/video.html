@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>video</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_video" class="active">
+		<header>
+		    <div class="titlebar">
+		        <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+		        <h1>媒体播放</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+		    <video id="player1" width="100%" controls>
+		        <source src="video.mp4" type="video/mp4">
+		        您的浏览器不支持 HTML5 video 标签。
+		    </video>
+		    <p class="text-center">
+		    <span id="currentTime">0</span>/<span id="durationTime">0</span><span>秒</span>
+			    <span>当前音量</span><span id="currentVol">0</span>
+			    <a class="button block submit margin8" onclick="resume()">播放与暂停</a>
+			    <a class="button block info margin8" onclick="goPlay(2)">设置播放时间</a>
+			    <a class="button block warn margin8" onclick="playBgSound()">播放背景音乐</a>
+			</p>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	<script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+    
+    
+	<script>
+		var durationTime=document.getElementById("durationTime");
+		var currentTime=document.getElementById("currentTime");
+		var vol=document.getElementById("currentVol");
+		
+		var m=new Media('#player1');
+		//初始化
+		function init(){
+			takevol();
+			takeduration();
+		}
+		//记录媒体音量
+		function takevol(){
+			vol.innerHTML=Math.round(m.volume()*100)+"%";
+		}
+		//总播放时间
+		function takeduration(){
+			durationTime.innerHTML=Math.round(m.durationTime());
+		}
+		//记录播放时间
+		function taketime(){
+			currentTime.innerHTML=Math.round(m.currentTime());
+		}
+		//设置播放时间
+		function goPlay(time){
+			m.currentTime(2);
+		}
+		//暂停与播放
+		function resume(){
+			m.resume();
+		}
+		//播放背景音乐
+		function playBgSound(){
+			var url="audio.mp3";
+			var au=new Media(url);
+			au.playAudio();
+		}
+		//绑定事件
+		m.onCanplaythrough(init);
+		m.onTimeupdate(taketime);
+		m.onVolumechange(takevol);
+
+		
+	</script>
+</body>
+</html>

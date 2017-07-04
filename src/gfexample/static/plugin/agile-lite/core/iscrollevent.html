@@ -1,0 +1,215 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="slider_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">IScroll联动</h1>
+		            </div>
+		             <div id="tabbarOuter" data-scroll="horizontal">
+				    	<div class="scroller">
+				            <ul class="slidebar">
+				                <li class="tab active" data-role="tab" href="#page1" data-toggle="page">
+				                    <label class="tab-label">用法</label>
+				                </li>
+				                <li class="tab" data-role="tab" href="#page2" data-toggle="page">
+				                    <label class="tab-label">说明</label>
+				                </li>
+				            </ul>
+						</div>
+					</div>
+		        </header>
+				<article  data-role="article" id="slider_article" class="active" style="top:88px;bottom:-88px;">
+					<div id="sliderPage" data-role="slider" class="full">
+						<div class="scroller">
+							<div id="page1" class="slide" data-role="page" data-scroll="pull">
+								<div class="scroller">
+									<div id="slide" data-role="slider" class="full" style="overflow: hidden; height:230px;">
+										<div class="scroller">
+											<div class="slide">
+												<img data-source="../assets/app/img/slide1.jpg" class="full-width"/>
+												<div class="slider_label">综合新闻</div>
+											</div>
+											<div class="slide">
+												<img data-source="../assets/app/img/slide2.jpg" class="full-width"/>
+												<div class="slider_label">综合新闻</div>
+											</div>
+											<div class="slide">
+												<img data-source="../assets/app/img/slide3.jpg" class="full-width"/>
+												<div class="slider_label">综合新闻</div>
+											</div>
+										</div>
+									</div>
+
+								
+									<details open>
+						                <summary class="sliver">说明</summary>
+						                <ul class="list">
+						                	<li>
+						                        <div class="justify-content">
+						                            <p>AL中的scroll组件、refresh组件和slider组件均使用了IScroll</p>
+						                        </div>
+						                    </li>
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>IScroll提供了beforeScrollStart、scrollStart、scroll、scrollEnd等事件</p>
+						                        </div>
+						                    </li>
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>AL在此基础上又扩展了scrollInit、scrollTop、scrollBottom、refreshInit、pullup、pulldown事件</p>
+						                        </div>
+						                    </li>
+						            </details>
+						            
+						            <details open>
+						                <summary class="sliver">用法</summary>
+						                <ul class="list">
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>IScroll的事件监听方式都是通过scroll对象.on(事件名, 回调函数)来使用。</p>
+						                        </div>
+						                    </li>
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>在AL中获取IScroll对象的方法很简单，就是获取组件对象本身即可。</p>
+						                        </div>
+						                    </li>
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>获取scroll组件对象：var $scroll = A.Scroll(#id)</p>
+						                        </div>
+						                    </li>
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>获取refresh组件对象：var $scroll = A.Refresh(#id)</p>
+						                        </div>
+						                    </li>
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>获取slider组件对象：var $slider = A.Slider(#id [, opts])</p>
+						                        </div>
+						                    </li>
+						            </details>
+						    	</div>
+							</div>
+							<div id="page2" class="slide" data-role="page" data-scroll="pull">
+								<div class="scroller">
+									<p class="padded">本示例的效果为：实际header并没有在滚动区域内，但是当滚动页面的时候，header头部可以跟着一起联动。</p>
+							    	<details open>
+						                <summary class="sliver">实现要点</summary>
+						                <ul class="list">
+						                	<li>
+						                        <div class="justify-content">
+						                            <p>（1）监听扩展的refresh组件的refreshInit事件，在此事件中获取refresh组件本身，此事件的触发代表refresh组件已经创建完毕，如果未等组件创建就获取组件对象会报错。</p>
+						                        </div>
+						                    </li>
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>（2）在refreshInit事件里监听scroll事件，此事件是在组件在滚动的时候实时触发的事件，监听此事件可以获得滚动条的位置，从而计算header和article需要位移的距离从而实现联通效果。</p>
+						                        </div>
+						                    </li>
+						                    <li>
+						                        <div class="justify-content">
+						                            <p>（3）在refreshInit事件里监听scrollEnd事件，此事件在组件滚动结束的时候触发，监听此事件的目的是矫正header和artcile的位置，因为IScroll有缓动效果可能造成scroll中的细节计算不准确而需要矫正。</p>
+						                        </div>
+						                    </li>
+						            </details>
+						            <details open>
+						                <summary class="sliver">特别注意</summary>
+						                <ul class="list">
+						                	<li>
+						                        <div class="justify-content">
+						                            <p>IScroll要求滚动区域大小不能变化，如果只是调整位置，artcile底部的可能不会着地，所以需要给article设置bottom为最大可能上移的top的高度，而且是负值。</p>
+						                        </div>
+						                    </li>
+						            </details>
+							    </div>
+							</div>
+						</div>
+					</div>
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<script src="../assets/third/iscroll/iscroll-probe.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>			
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		<script>
+		$('#slider_article').on('articleload', function(){
+			A.Slider('#slide', {
+				dots : 'right'
+			});			
+			A.Slider('#sliderPage', {
+				dots : 'hide'
+			});
+		});
+		$('#slide img').on(A.options.clickEvent, function(){
+			//var $el = $(this);
+			//A.showToast($el.siblings('.slider_label').html());
+			A.Component.pictureShow({
+				id : 'picture',
+				index : $("#slide .slide").index($("#slide .slide.active")),
+				title : '这是默认标题',
+				list : [
+					{
+						imgURL : '../assets/app/img/slide1.jpg',
+						content : '这是第一条新闻'
+					},
+					{
+						imgURL : '../assets/app/img/slide2.jpg',
+						content : '这是第二条新闻'
+					},
+					{
+						imgURL : '../assets/app/img/slide3.jpg',
+						content : '这是第三条新闻'
+					}
+				]
+			});
+		});
+		
+		$('[data-scroll]').on('refreshInit', function(){
+			var scroll = A.Refresh(this);
+			var $header = $('header');//获取header元素
+			var $article = $('#slider_article');//获取article元素
+			var defaultTop = 88;//article默认的top
+			
+			scroll.on('scroll', function(){
+				var myY = this.y;//当往上滑动的时候其值为负
+				if(this.y>=0) return;//当滚动条为正时就不需要计算了，以节约内存
+				//当往上滑动的时候，控制已经滑动超过默认的top的时候就停止了继续设置，以节约内润
+				var top = myY<-defaultTop?-defaultTop:myY;
+				$header.css({'top': top+'px'});				
+				var rTop = 88 + $header.offset().top;
+				$article.css({top:(rTop)+'px'});
+			});
+			scroll.on('scrollEnd', function(){
+				var myY = this.y;
+				if(myY==0){//当滚动结束，检测状态并矫正
+					$header.animate({'top': 0+'px'});
+					$article.animate({top: defaultTop+'px'});
+				}
+			});
+			
+		});
+		</script>
+	</body>
+</html>

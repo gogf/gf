@@ -1,0 +1,208 @@
+@font-face {
+	font-family: 'iconweather';
+	src:url('fonts/iconweather.eot?g1mipo');
+	src:url('fonts/iconweather.eot?#iefixg1mipo') format('embedded-opentype'),
+		url('fonts/iconweather.woff?g1mipo') format('woff'),
+		url('fonts/iconweather.ttf?g1mipo') format('truetype'),
+		url('fonts/iconweather.svg?g1mipo#iconweather') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="iconweather-"], [class*=" iconweather-"] {
+	font-family: 'iconweather';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.iconweather-breeze:before {
+	content: "\e300";
+}
+.iconweather-centigrade:before {
+	content: "\e301";
+}
+.iconweather-clearing-late:before {
+	content: "\e302";
+}
+.iconweather-cloudy1:before {
+	content: "\e303";
+}
+.iconweather-cloudy2:before {
+	content: "\e304";
+}
+.iconweather-cloudy3:before {
+	content: "\e305";
+}
+.iconweather-cloudy4:before {
+	content: "\e306";
+}
+.iconweather-cloudy5:before {
+	content: "\e307";
+}
+.iconweather-cloudy-early:before {
+	content: "\e308";
+}
+.iconweather-crescentmoon:before {
+	content: "\e309";
+}
+.iconweather-eclipse:before {
+	content: "\e30a";
+}
+.iconweather-fog:before {
+	content: "\e30b";
+}
+.iconweather-light-rain:before {
+	content: "\e30c";
+}
+.iconweather-light-snow:before {
+	content: "\e30d";
+}
+.iconweather-meteor:before {
+	content: "\e30e";
+}
+.iconweather-moderaterain:before {
+	content: "\e30f";
+}
+.iconweather-moon:before {
+	content: "\e310";
+}
+.iconweather-moon-half:before {
+	content: "\e311";
+}
+.iconweather-moon-more:before {
+	content: "\e312";
+}
+.iconweather-moon-star:before {
+	content: "\e313";
+}
+.iconweather-partly-cloudy1:before {
+	content: "\e314";
+}
+.iconweather-partly-cloudy2:before {
+	content: "\e315";
+}
+.iconweather-partly-cloudy3:before {
+	content: "\e316";
+}
+.iconweather-partly-rain1:before {
+	content: "\e317";
+}
+.iconweather-partly-rain2:before {
+	content: "\e318";
+}
+.iconweather-partly-rain3:before {
+	content: "\e319";
+}
+.iconweather-partly-rain4:before {
+	content: "\e31a";
+}
+.iconweather-partly-snow1:before {
+	content: "\e31b";
+}
+.iconweather-partly-snow2:before {
+	content: "\e31c";
+}
+.iconweather-partly-thunder1:before {
+	content: "\e31d";
+}
+.iconweather-partly-thunder2:before {
+	content: "\e31e";
+}
+.iconweather-partly-windy1:before {
+	content: "\e31f";
+}
+.iconweather-partly-windy2:before {
+	content: "\e320";
+}
+.iconweather-partly-windy3:before {
+	content: "\e321";
+}
+.iconweather-partly-windy4:before {
+	content: "\e322";
+}
+.iconweather-rainbow:before {
+	content: "\e323";
+}
+.iconweather-rainstorm:before {
+	content: "\e324";
+}
+.iconweather-shower1:before {
+	content: "\e325";
+}
+.iconweather-shower2:before {
+	content: "\e326";
+}
+.iconweather-shower3:before {
+	content: "\e327";
+}
+.iconweather-shower4:before {
+	content: "\e328";
+}
+.iconweather-shower5:before {
+	content: "\e329";
+}
+.iconweather-shower6:before {
+	content: "\e32a";
+}
+.iconweather-shower7:before {
+	content: "\e32b";
+}
+.iconweather-shower8:before {
+	content: "\e32c";
+}
+.iconweather-shower9:before {
+	content: "\e32d";
+}
+.iconweather-shower-few1:before {
+	content: "\e32e";
+}
+.iconweather-shower-few2:before {
+	content: "\e32f";
+}
+.iconweather-shower-thunder:before {
+	content: "\e330";
+}
+.iconweather-snowflakes1:before {
+	content: "\e331";
+}
+.iconweather-snowflakes2:before {
+	content: "\e332";
+}
+.iconweather-soundwave:before {
+	content: "\e333";
+}
+.iconweather-star:before {
+	content: "\e334";
+}
+.iconweather-sunny:before {
+	content: "\e335";
+}
+.iconweather-sunstar:before {
+	content: "\e336";
+}
+.iconweather-thermometer:before {
+	content: "\e337";
+}
+.iconweather-tornado:before {
+	content: "\e338";
+}
+.iconweather-wind-direction:before {
+	content: "\e339";
+}
+.iconweather-wind-force:before {
+	content: "\e33a";
+}
+.iconweather-wind-scale:before {
+	content: "\e33b";
+}
+.iconweather-windy:before {
+	content: "\e33c";
+}

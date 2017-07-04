@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+    <title>gauge</title>
+    <link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+    
+</head>
+
+<body>
+<div id="section_container">
+    <section data-role="section" id="page_gauge" class="active">
+        <header>
+            <div class="titlebar">
+                <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+                <h1>仪表盘</h1>
+            </div>
+        </header>
+        <article id="main_article" data-role="article" class="active">
+            <div class="gauge-box" id="gauge">
+                <div class="gauge">
+                    <div class="gauge-pointer"></div>
+                    <div class="gauge-text">0</div>
+                </div>
+            </div>
+        </article>
+    </section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+    
+    
+    
+    
+    
+    
+    
+    <script>
+        window.addEventListener("load",function(e){
+        	var g=new Gauge("#gauge",{
+                minValue:-100,
+                maxValue:400,
+                currentValue:100,
+                onInit:function(e){
+                    console.log("初始化完成");
+                },
+                onPointChangeStart:function(e){
+                    console.log("指针开始旋转，共需时间："+e.duration);
+                },
+                onPointChangeEnd:function(e){
+                    console.log("指针旋转完成");
+                }
+            });
+        	//若是爆表，可获得爆表值
+        	if(g.burst>0){
+        		alert("已爆表"+g.burst);
+        	}
+        },false);
+        
+        
+    </script>
+</body>
+</html>

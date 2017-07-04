@@ -1,0 +1,12 @@
+.datepickerscroll{  
+  width: 32%;
+  height: 124px;
+  float: left;
+  overflow: hidden;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.selectedli{
+	color: #3779D0;
+}

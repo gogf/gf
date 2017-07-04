@@ -1,0 +1,1180 @@
+﻿/*
+ * for Agile Lite 2.5.0 beta
+ * */
+/*******************全局样式global-start*******************/
+*{
+	margin:0;
+	padding:0;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+nav,
+summary {
+  display: block;
+}
+html {
+  /*禁用文字自适应，防止横屏时文字变大*/
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  /*禁止ios用_self打开时弹出对话框*/
+  -webkit-touch-callout:none;
+  -ms-touch-action: none;
+}
+body {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  font-size: 14px;
+  font-family: ubuntu, helvetica, arial;
+}
+a {
+  background: transparent;
+  text-decoration:none;
+}
+a:active,
+a:hover {
+  outline: 0;
+}
+button {
+	cursor: pointer;
+}
+a,button,input{
+	-webkit-tap-highlight-color:rgba(255,0,0,0);
+}
+ul,li,dl,dt,dd {
+	list-style: none;
+}
+img {
+  border: 0;
+}
+.relative {
+	position: relative;
+}
+.absolute{
+	position:absolute;
+}
+.opacity6 {
+	opacity:0.6;
+	filter:Alpha(opacity=60);
+}
+.opacity3{
+	opacity:0.3;
+	filter:Alpha(opacity=30);
+}
+.hide{
+	display:none;
+}
+.hidden{
+	visibility:hidden
+}
+abbr[title] {
+  border-bottom: 1px dotted;
+}
+dfn {
+  font-style: italic;
+}
+small {
+  font-size: 80%;
+}
+/*对齐*/
+.left{
+	float:left;
+}
+.right{
+	float:right;
+}
+.vmiddle{
+	vertical-align:middle;
+}
+.middle{
+	position:absolute;
+	top:50%;
+	-webkit-transform:translateY(-50%);
+}
+.center{
+	position:absolute;
+	left:50%;
+	-webkit-transform:translateX(-50%);
+}
+.text-center{
+	text-align:center;
+}
+.box{
+	display:-webkit-box;
+	display: box;
+}
+.box-center{
+	box-pack:center;
+	-webkit-box-pack:center;
+	text-align:center;
+}
+.box-middle{
+	box-align:center;
+	-webkit-box-align:center;
+}
+.box-vertical{
+    -webkit-box-orient:vertical;
+    box-orient:vertical;
+}
+.box-horizontal{
+	-webkit-box-orient:horizontal;
+    box-orient:horizontal;
+}
+/*清除浮动*/
+.clearfix:before, .clearfix:after {
+  display: table;
+  content: " ";
+}
+.clearfix:after {
+  clear: both;
+}
+.clearfix{
+	zoom:1;
+}
+.clr{
+	clear:both;
+}
+
+/*边框*/
+.border-inner{
+	-webkit-box-sizing:border-box;
+}
+.noborder{
+	border:none !important;
+}
+hr{
+	height:1px;
+	border:none;
+	clear:both;
+}
+/*效果*/
+.rect{
+	-webkit-border-radius:0;
+	-moz-border-radius:0;
+	border-radius:0;
+}
+.round{
+	-webkit-border-radius:40px;
+	-moz-border-radius:40px;
+	border-radius:40px;
+}
+.shadow{
+	-webkit-box-shadow:0 2px 3px 0 rgba(0, 0, 0, 0.2);
+	-moz-box-shadow:0 2px 3px 0 rgba(0, 0, 0, 0.2);
+	box-shadow:0 2px 3px 0 rgba(0, 0, 0, 0.2);
+}
+/*文字*/
+.nowrap{
+	white-space:nowrap;
+}
+.nowrap,.ellipsis{
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+.iconfont{
+	font-size:16px;
+}
+.black{
+	color:#000 !important;
+}
+.white{
+	color:#fff !important;
+}
+.section-title {
+	font-size:14px;
+	line-height:40px;
+	margin-bottom:8px;
+}
+
+
+/*间距与布局*/
+.rowspace{
+	height:4px;
+	border:none;
+	clear:all;
+}
+.rowspace-small{
+	height:1px;
+	border:none;
+	clear:all;
+}
+.rowspace-large{
+	height:20px;
+	border:none;
+	clear:all;
+}
+.width-full{
+	width:100%;
+}
+.height-full{
+	height:100%;
+}
+.nopadding{
+	padding:0 !important;
+}
+.nomargin{
+	margin:0 !important;
+}
+.margin-4{
+	margin:4px;
+}
+.margin-8{
+	margin:8px;
+}
+
+.noclick{
+	background-color:transparent !important;;
+}
+.noclick:active{
+	background-color:transparent !important;;
+}
+
+/*******************全局样式global-end*******************/
+
+/*******************布局样式layout-start*******************/
+/* 提供固定布局:header、footer、wrapper和控件:titlebar、tabbar、menubar */
+header{
+	position:absolute;
+	top:0;
+	width:100%;
+	z-index:999;
+}
+footer{
+	position:absolute;
+	bottom:0;
+	width:100%;
+	z-index:999;
+}
+#wrapper {
+	position: absolute;
+	z-index: 1;
+	top: 44px;
+	bottom: 44px;
+	left: 0;
+	width: 100%;
+	overflow: hidden;
+}
+/*头部栏*/
+.titlebar{
+	position:relative;
+	min-height:44px;
+}
+.titlebar h1{
+	position: absolute;
+	display: block;
+	padding: 0;
+	font-size: 17px;
+	font-weight: 500;
+	left:50%;
+	top:50%;
+	-webkit-transform: translateX(-50%) translateY(-50%);
+	white-space:nowrap;
+	/*width:80%;*/
+	text-align:center;
+	text-overflow:ellipsis;
+	overflow:hidden;
+}
+.titlebar a{
+	position: absolute;
+	display:block;
+	height:32px;
+	line-height:32px;
+	min-width:32px;
+	top:50%;
+	-webkit-transform: translateY(-50%);
+	font-size:14px;
+}
+.titlebar a:active{
+	color:rgba(0,0,0,.3);
+}
+.titlebar a:first-child{
+	left:8px;
+}
+.titlebar a:last-child{
+	right:8px;
+}
+.titlebar .iconfont{
+	height:24px;
+	line-height:24px;
+	display:inline-block;
+	overflow:hidden;
+	float:left;
+	position:relative;
+	top:50%;
+	-webkit-transform: translateY(-50%);
+}
+.titlebar .iconfont{
+	font-size:24px;
+	width:24px;
+}
+
+/*页签菜单栏*/
+.tabbar{
+	display: table;
+	overflow: hidden;
+	font-size: 12px;
+	font-weight: 400;
+	min-height:44px;
+}
+.tab{
+	display: table-cell;
+	width: 1%;
+	padding-top: 14px;
+  	padding-bottom: 16px;
+	/*height:42px;
+	line-height: 42px; */
+	overflow: hidden;
+	line-height: 1;
+	text-align: center;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.tab:active,.tab.active{
+	-webkit-box-sizing:border-box;
+}
+.tab .iconfont{
+	top: 3px;
+	width: 24px;
+	height: 24px;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+.tabbar-slider{
+	position:relative;
+	overflow:hidden;
+	width:100%;
+}
+.tab-more{
+	position:absolute;
+	right:0;
+	top:50%;
+	-webkit-transform: translateY(-50%);
+      	-ms-transform: translateY(-50%);
+         	transform: translateY(-50%);
+	font-size:20px;
+	width:44px;
+	text-align:center;
+	display:block;
+}
+
+/*底部菜单栏*/
+.menubar{
+	position: relative;
+	display: table;
+	overflow: hidden;
+	font-size: 12px;
+	font-weight: 400;
+	min-height:44px;
+}
+.menubar .menu{
+	display: table-cell;
+	width: 1%;
+	padding-top: 8px;
+  	padding-bottom: 8px;
+	overflow: hidden;
+	line-height: 1;
+	text-align: center;
+	text-overflow: ellipsis;
+}
+.menubar .menu:active,.menubar .menu.active{
+	color:white;
+}
+
+.menubar .menu .menu-icon{
+	width: 32px;
+	height: 32px;
+	font-size:24px;
+}
+.menubar .menu .menu-text{
+	display: block;
+	font-size: 12px;
+	margin-top:4px;
+}
+.menubar .menu .menu-icon+.menubar .menu-text{
+	margin-top:6px;
+}
+/*标题*/
+p.title{
+	margin:8px;
+}
+
+/*九宫控件*/
+.grid{
+    display:block;
+}
+
+/*九宫控件-单元格*/
+.grid-cell{
+	position:relative;
+	width:25%;
+	margin:8px 0;
+	text-align:center;
+	display:block;
+	float:left;
+	font-size:14px;
+}
+.grid[data-col="2"] .grid-cell{
+	width:50%;
+}
+.grid[data-col="3"] .grid-cell{
+	width:33.33%;
+}
+.grid[data-col="4"] .grid-cell{
+	width:25%;
+}
+.grid[data-col="5"] .grid-cell{
+	width:20%;
+}
+/*九宫控件-大图*/
+.grid-thumbnail{
+	position:relative;
+	display:block;
+	width:64px;
+	margin:0px auto;
+	text-align:center;
+}
+.grid-thumbnail img{
+	width:50px;
+}
+/*九宫控件-图片*/
+.grid-img{
+	position:relative;
+	display:block;
+	width:64px;
+	height:64px;
+	margin:0px auto;
+	border-radius:4px;
+	text-align:center;
+}
+.grid-img .iconfont,.grid-img img{
+	position:absolute;
+	vertical-align:middle;
+	left:50%;
+	top:50%;
+	-webkit-transform: translate(-50%,-50%);
+      	-ms-transform: translate(-50%,-50%);
+         	transform: translate(-50%,-50%);
+}
+.grid-img .iconfont{
+	font-size:32px;
+	width:32px;
+	height:32px;
+	color:white;
+}
+.grid-img img{
+	width:50px;
+	height:50px;
+}
+
+.grid-img .tip,.grid-thumbnail .tip{
+	position:absolute;
+	display:block;
+	top:0px;
+	right:0px;
+	width:20px;
+	height:20px;
+	line-height:20px;
+	text-align:center;
+	border-radius:20px;
+}
+/*九宫控件-文字*/
+.grid-label{
+	display:block;
+    width:80%;
+    height:30px;
+    margin:0px auto;
+    line-height:26px;
+    text-align:center;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+/*矩形框*/
+.card{
+	border-radius:4px;
+	margin:8px;
+	overflow:hidden;
+}
+/*******************布局样式layout-end*******************/
+
+/*******************表单元素form-start*******************/
+[data-role="date"],
+[data-role="time"],
+[data-role="checkbox"],
+[data-role="radio"],
+[data-role="select"],
+[data-role="file"],
+[data-role="date"],
+[data-role="time"],
+[data-role="barcode"],
+[data-role="qrcode"]{
+	position:relative;
+	display:block;
+	overflow:hidden;
+}
+
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input[type="tel"],
+input[type="week"],
+input[type="month"],
+input[type="time"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="search"],
+input[type="file"],
+input[type="color"],
+select{
+	display:inline-block;
+	height: 35px;
+	-webkit-appearance: none;
+	padding: 0 8px;
+	border-radius:4px;
+	outline: none;
+}
+input[type="number"],
+input[type="tel"],
+input[type="week"],
+input[type="month"],
+input[type="time"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"]{
+	height:auto;
+}
+textarea{
+	width:100%;
+	border-radius:4px;
+	outline:none;
+}
+input[type="checkbox"],input[type="radio"]{
+	border:none;
+	outline: none;
+	background:transparent;
+	vertical-align:middle;
+	/*不使用系统默认样式*/
+	-webkit-appearance: none;
+	height:20px;
+	width:20px;
+}
+input[type="checkbox"]:after,input[type="radio"]:after{
+	font-family:"iconform";
+	font-style:normal;
+	/*设置文字平滑度antialiased反锯齿 */
+	-webkit-font-smoothing: antialiased;
+	/*边缘模糊0.2px */
+	-webkit-text-stroke-width: 0.2px;
+	-moz-osx-font-smoothing: grayscale;
+	font-size:20px;
+}
+
+input[type="checkbox"]:after{
+	content: "\e203";
+}
+input[type="checkbox"]:checked::after{
+	content: "\e205";
+}
+input[type="radio"]:after{
+	content: "\e210";
+}
+input[type="radio"]:checked::after{
+	content: "\e211";
+}
+/*自定义表单元素*/
+
+/*开关控件toggle-默认风格*/
+/*关闭状态*/
+.toggle {
+	 position: relative;
+	 display: inline-block;
+	 height: 30px;
+	 width: 60px;
+	 background-color:transparent;
+	 border-radius: 30px;
+	 -webkit-transition-duration: .2s;
+	    -moz-transition-duration: .2s;
+	         transition-duration: .2s;
+	 -webkit-transition-property: background-color, border;
+	    -moz-transition-property: background-color, border;
+	         transition-property: background-color, border;
+}
+/*关闭状态圆点*/
+.toggle .toggle-handle{
+	 position: absolute;
+	 left:0;
+	 top:50%;
+	-webkit-transform:translate(4px,-50%);
+		-ms-transform:translate(4px,-50%);
+		    transform:translate(4px,-50%);
+	 width: 20px;
+	 height: 20px;
+	 border-radius: 100px;
+	 -webkit-transition-duration: .2s;
+	    -moz-transition-duration: .2s;
+	         transition-duration: .2s;
+	 -webkit-transition-property: -webkit-transform, border, width;
+	    -moz-transition-property:    -moz-transform, border, width;
+	         transition-property:         transform, border, width;
+	z-index: 2;
+}
+/*关闭状态文字off*/
+.toggle:after{
+	position: absolute;
+	right: 11px;
+	top:50%;
+	-webkit-transform:translateY(-50%);
+		-ms-transform:translateY(-50%);
+		    transform:translateY(-50%);
+	content: attr(data-off);
+}
+
+/*打开状态*/
+.toggle.active {
+	background-color:transparent;
+}
+/*打开状态小圆点*/
+.toggle.active .toggle-handle{
+	left:0;
+	top:50%;
+	 -webkit-transform: translate(34px,-50%);
+	     -ms-transform: translate(34px,-50%);
+	         transform: translate(34px,-50%);
+}
+/*打开状态文字on*/
+.toggle.active:after{
+	right: auto;
+	left: 11px;
+	content: attr(data-on);
+}
+
+/*开关控件toggle-无文字*/
+.notext.toggle{
+	width: 50px;
+}
+.notext.toggle:after{
+	content:none;
+}
+.notext.toggle.active .toggle-handle{
+	 -webkit-transform: translate(24px,-50%);
+	     -ms-transform: translate(24px,-50%);
+	         transform: translate(24px,-50%);
+}
+
+/*开关控件toggle-经典风格*/
+.classic.toggle{
+	border:none;
+}
+.classic.toggle .toggle-handle{
+	width: 26px;
+	height: 26px;
+	-webkit-transform: translate(2px,-50%);
+	     -ms-transform: translate(2px,-50%);
+	         transform: translate(2px,-50%);
+}
+.classic.toggle:after{
+}
+.classic.toggle.active{
+}
+.classic.toggle.active .toggle-handle{
+	-webkit-transform: translate(32px,-50%);
+	     -ms-transform: translate(32px,-50%);
+	         transform: translate(32px,-50%);
+}
+.classic.toggle.active:after{
+}
+/*无文字状态*/
+.notext.classic.toggle.active .toggle-handle{
+	 -webkit-transform: translate(22px,-50%);
+	     -ms-transform: translate(22px,-50%);
+	         transform: translate(22px,-50%);
+}
+
+/*开关控件toggle-ios风格*/
+.ios.toggle {
+	border-radius:30px;
+}
+.ios.toggle .toggle-handle {
+	background-color:white;
+	border-radius:30px;
+	width:28px;
+	height:28px;
+	top:0px;
+	left:0px;
+	-webkit-transform: translateX(0px);
+	     -ms-transform: translateX(0px);
+	         transform: translateX(0px);
+	-webkit-box-shadow: 0 3px 3px rgba(0, 0, 0, .08);
+	        box-shadow: 0 3px 3px rgba(0, 0, 0, .08);
+}
+
+.ios.toggle.active {
+}
+.ios.toggle.active:after{
+}
+.ios.toggle.active .toggle-handle {
+	-webkit-transform: translateX(30px);
+	     -ms-transform: translateX(30px);
+	         transform: translateX(30px);
+}
+/*无文字状态*/
+.notext.ios.toggle.active .toggle-handle{
+	 -webkit-transform: translateX(20px);
+	     -ms-transform: translateX(20px);
+	         transform: translateX(20px);
+}
+/*其它表单控件*/
+[data-role]{
+	/*
+	position:relative;
+	display:block;
+	overflow:hidden;*/
+}
+[data-role="select"],
+[data-role="file"],
+[data-role="date"],
+[data-role="time"],
+[data-role="barcode"],
+[data-role="qrcode"]
+{
+	overflow:hidden;
+}
+
+[data-role="select"] select{
+	border:none;
+	background-color:transparent;
+	height:40px;
+	padding-left:0;
+}
+[data-role="file"]:active,
+[data-role="date"]:active,
+[data-role="time"]:active,
+[data-role="barcode"]:active,
+[data-role="qrcode"]:active,
+[data-role="checkbox"]:active,
+[data-role="radio"]:active
+{
+}
+[data-role="file"] > label,
+[data-role="date"] > label,
+[data-role="time"] > label,
+[data-role="barcode"] > label,
+[data-role="qrcode"] > label
+{
+	display:block;
+	width:100%;
+	padding-right:20px;
+	white-space: nowrap;
+	text-overflow:ellipsis; 
+	overflow:hidden;
+}
+
+[data-role="select"]:after,
+[data-role="file"]:after,
+[data-role*="file-"]:after,
+[data-role="date"]:after,
+[data-role="time"]:after,
+[data-role="barcode"]:after,
+[data-role="qrcode"]:after,
+[data-role="checkbox"] input[type="checkbox"],
+[data-role="radio"] input[type="radio"]{
+	position: absolute;
+	clear:both;
+	top: 50%;
+	display: inline-block;
+	text-decoration: none;
+	-webkit-transform: translateY(-50%);
+		-ms-transform: translateY(-50%);
+		    transform: translateY(-50%);
+	-webkit-font-smoothing: antialiased;
+	right: 15px;
+	font-size:20px;
+	font-family:"iconform";
+}
+[data-role="file-native"]{
+	position:relative;
+}
+[data-role="file-native"] input[type="file"]{
+	-webkit-appearance: initial;
+    padding: initial;
+    background-color: initial;
+    border: initial;
+	width:100%;
+	height:100%;
+}
+[data-role="select"]:after{
+	content: "\e216";
+	z-index: 1;
+}
+[data-role="file"]:after, [data-role="file-native"]:after{
+	content: "\e209";
+	pointer-events:none;
+}
+[data-role="date"]:after{
+	content: "\e201";
+}
+[data-role="time"]:after{
+	content: "\e217";
+}
+[data-role="barcode"]:after{
+	content: "\e200";
+}
+[data-role="qrcode"]:after{
+	content: "\e20f";
+}
+/*******************表单元素form-end*******************/
+
+
+/*******************表单布局formlayout-start*******************/
+/*由于手机上checkbox与radio难选中，故对此进行的特殊处理方法*/
+.form-common [data-role="checkbox"],.form-common [data-role="radio"],.form-square [data-role="checkbox"],.form-square [data-role="radio"]{
+	display:inline-block;
+	float:left;
+}
+.form-common [data-role="checkbox"]>label,.form-common [data-role="radio"]>label,.form-square [data-role="checkbox"]>label,.form-square [data-role="radio"]>label{
+	padding-left:24px;
+	padding-right:8px;
+}
+.form-common [data-role="checkbox"] input[type="checkbox"],.form-common [data-role="radio"] input[type="radio"],.form-square [data-role="checkbox"] input[type="checkbox"],.form-square [data-role="radio"] input[type="radio"]{
+	left:0;
+	right:auto;
+}
+/*普通表单*/
+.form-common{
+	margin:8px;
+}
+.form-common .label-left,.form-common .label-right{
+	float:left;
+	line-height:40px;
+	margin:0;
+	vertical-align: middle;
+	display:block;
+}
+.form-common .label-left{
+	width: 30%;
+	font-size:12px;
+	text-indent:12px;
+}
+.form-common .label-right{
+	width:70%;
+	font-size:14px;
+	border:none;
+	padding-left:8px;
+}
+.form-common .label-right input{
+	font-size:14px;
+	padding:0;
+	border:none;
+}
+
+/*矩形表单*/
+.form-square{
+	margin:8px;
+}
+.form-square .label-left,.form-square .label-right{
+	float:left;
+	height:40px;
+	line-height:40px;
+	margin:0;
+	vertical-align: middle;
+	display:block;
+	
+	margin:8px 0;
+}
+.form-square .label-left{
+	width: 30%;
+	font-size:12px;
+	text-indent:12px;
+	
+	border-width:1px;
+	border-style:solid;
+	border-radius:4px 0 0 4px;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+.form-square .label-right{
+	width:70%;
+	font-size:14px;
+	border:none;
+	padding-left:8px;
+	
+	border-width:1px;
+	border-style:solid;
+	border-radius:0 4px 4px 0;
+	border-left:0;
+	-webkit-box-sizing:border-box;
+}
+.form-square .label-right input{
+	font-size:14px;
+	padding:0;
+	border:none;
+}
+
+.form-square .label-left.hint,.form-square .label-left.hint + .label-right{
+	height:30px;
+	line-height:30px;
+	margin:0;
+	margin-top:-8px;
+	border:none;
+}
+/*分组表单*/
+.form-group [data-role]{
+	height:40px;
+	line-height:40px;
+	padding-left:12px;
+}
+
+/*******************表单布局formlayout-end*******************/
+
+
+/*******************按钮button-start*******************/
+/*按钮-普通按钮*/
+button,input[type="button"],a.button{
+	border: 0;
+	font-size: 14px;
+	border-radius:4px;
+	padding: 0px 8px;
+	height:40px;
+	min-width:40px;
+	line-height:40px;
+	overflow:hidden;
+	display:inline-block;
+	
+	/*清除文本选择与外框*/
+	outline:none;
+	-moz-user-select: none; /*火狐*/
+	-webkit-user-select: none;  /*webkit浏览器*/
+	-ms-user-select: none;   /*IE10*/
+	-khtml-user-select: none; /*早期浏览器*/
+	user-select: none;
+	
+	/*动画*/
+	-webkit-transition: all;
+	   -moz-transition: all;
+	        transition: all;
+	-webkit-transition-timing-function: linear;
+	   -moz-transition-timing-function: linear;
+	        transition-timing-function: linear;
+	-webkit-transition-duration: .2s;
+	   -moz-transition-duration: .2s;
+	        transition-duration: .2s;
+}
+button.outline,input[type="button"].outline,a.button.outline{
+	background-color:transparent;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+button:active,input[type="button"]:active,a.button:active{
+}
+/*图标按钮*/
+button .iconfont,a.button .iconfont{
+	display:inline-block;
+	-webkit-transform:translateY(4px);
+		-ms-transform:translateY(4px);
+		    transform:translateY(4px);
+	font-size:20px;
+}
+
+/*按钮-禁用按钮*/
+button.disable,input[type="button"].disable,a.button.disable{
+}
+
+button.disable.outline,input[type="button"].disable.outline,a.button.disable.outline{
+	background-color:transparent;
+}
+
+/*按钮-取消按钮*/
+button.cancel,input[type="button"].cancel,a.button.cancel{
+}
+
+button.cancel.outline,input[type="button"].cancel.outline,a.button.cancel.outline{
+	background-color:transparent;
+}
+
+button.cancel:active,input[type="button"].cancel:active,a.button.cancel:active{
+}
+
+
+/*按钮-提交按钮*/
+button.submit,input[type="submit"],a.button.submit{
+}
+
+button.submit.outline,input[type="submit"].outline,a.button.submit.outline{
+	background-color:transparent;
+}
+
+button.submit:active,input[type="submit"]:active,a.button.submit:active{
+}
+/*按钮-链接*/
+button.link,input[type="button"].link,a.button.link{
+	background-color:transparent;
+}
+button.link.outline,input[type="button"].link.outline,a.button.link.outline{
+}
+button.link:active,input[type="button"].link:active,a.button.link:active{
+	background-color:transparent;
+}
+/*按钮-气泡*/
+button .tip,input[type="button"] .tip,a.button .tip{
+	display: inline-block;
+	padding: 2px 9px 3px;
+	font-size: 12px;
+	line-height: 1;
+	border-radius: 100px;
+}
+button.outline .tip,input[type="button"].outline .tip,a.button.outline .tip{
+}
+
+/*按钮-大按钮*/
+button.block,input[type="button"].block,a.button.block{
+	display: block;
+	width: 100%;
+	margin-bottom:10px;
+}
+/*按钮-仅图标按钮*/
+button.onlyicon{
+	width:48px;
+	height:48px;
+}
+button.onlyicon .iconfont{
+	font-size:24px;
+}
+/*按钮-投影图标*/
+.btn-3dshadow {
+	-webkit-box-shadow:0 2px 3px 0 rgba(0, 0, 0, 0.2);
+	-moz-box-shadow:0 2px 3px 0 rgba(0, 0, 0, 0.2);
+	box-shadow:0 2px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.btn-3dshadow:active {
+	-webkit-box-shadow:0 0 0 0 rgba(0, 0, 0, 0.2);
+	-moz-box-shadow:0 0 0 0 rgba(0, 0, 0, 0.2);
+	box-shadow:0 0 0 0 rgba(0, 0, 0, 0.2);
+	margin:2px 0 -2px 0;
+}
+/*******************按钮button-end*******************/
+
+/*******************列表样式list-start*******************/
+/*列表样式*/
+.listitem{
+}
+.listitem li{
+	position: relative;
+	padding:12px;
+	overflow:hidden;
+}
+.listitem li.row-large{
+	padding:20px 12px;
+}
+.listitem li:active,.listitem li.active{
+}
+.listitem li small{
+	display:block;
+}
+.listitem li .iconfont{
+}
+
+/*列表样式-文字区域*/
+.listitem li .text{
+	overflow: hidden;
+}
+.listitem li .text small{
+	margin-top:4px;
+}
+/*列表样式-左侧图*/
+.listitem li .img{
+	margin-right: 10px;
+	float:left;
+}
+/*列表样式-右侧图*/
+.listitem li .rimg{
+	margin-left: 10px;
+	float:right;
+}
+/*列表样式-左侧图标*/
+.listitem li .icon , .listitem li .ricon{
+	position: absolute;
+	top: 50%;
+	display: inline-block;
+	-webkit-transform: translateY(-50%);
+      -ms-transform: translateY(-50%);
+          transform: translateY(-50%);
+}
+.listitem li .icon{
+	left:8px;
+}
+.listitem li .icon~.text{
+	padding-left:20px;
+}
+/*列表样式-右侧图标*/
+.listitem li .ricon{
+	right:10px;
+}
+.listitem li button.ricon{
+}
+.listitem li .ricon~.text{
+	padding-right:20px;
+}
+.listitem li .ricon.iconfont{
+	font-size:12px;
+}
+/*列表样式-方块图标*/
+.square{
+	width:36px;
+	height:36px;
+	border-radius:4px;
+	position:relative;
+}
+.square .square-icon,.square i.iconfont,.square img{
+	color:white;
+	font-size:24px;
+	height:24px;
+	width:24px;
+	position:absolute;
+	top:50%;
+	left:50%;
+	-webkit-transform: translate(-50%,-50%);
+      	-ms-transform: translate(-50%,-50%);
+         	transform: translate(-50%,-50%);
+}
+.square .tip{
+	width:16px;
+	height:16px;
+	line-height:16px;
+	font-size:9px;
+	display:block;
+	border-radius:8px;
+	font-weight:normal;
+	text-align:center;
+	position:absolute;
+	top:-6px;
+	right:-6px;
+}
+/*列表样式-右侧文字*/
+.listitem li .rcaption{
+	position:absolute;
+	bottom:6px;
+	right:6px;
+}
+.listitem li.sliver{
+	font-size:12px;
+}
+.listitem li.title{
+}
+

@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>form-serialize</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+    
+</head>
+
+<body>
+<div id="section_container">
+    <section data-role="section" id="page_form_serialize" class="active">
+    	<header>
+    	    <div class="titlebar">
+    	        <a data-toggle="back" href="#"><span>返回</span></a>
+    	        <h1 class="text-center">表单序列化</h1>
+    	        <a id="submit"><span>完成</span></a>
+    	    </div>
+    	</header>
+    	<article id="main_article" data-role="article" class="active">
+    	<form id="form1">
+                <div class="group">
+                    <div class="row">
+                        <label class="row-left">用户名</label>
+                        <div class="row-right input-box" data-input="clear">
+                            <input type="text" placeholder="用户名" name="username" data-rule-field="用户名" data-rule="username"/>
+                            <i class="icon icon-clear-fill color-placeholder"></i>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">密码</label>
+                        <div class="row-right input-box" data-input="reveal">
+                            <input type="password" placeholder="密码" name="password" data-rule-field="密码" data-rule="password"/>
+                            <i class="icon icon-eye-fill color-placeholder"></i>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">确认</label>
+                        <div class="row-right input-box" data-input="reveal">
+                            <input type="password" placeholder="确认" name="reconfirm" data-rule="password compare:password"/>
+                            <i class="icon icon-eye-fill color-placeholder"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="row">
+                        <label class="row-left">昵称</label>
+                        <div class="row-right input-box">
+                            <input type="text" placeholder="填写昵称" name="nickname"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">性别</label>
+                        <div class="input-box input-text">
+                            <label><input type="radio" value="male" name="sex" checked/><span>男</span></label>
+                            <label style="margin-left:8px;"><input type="radio" value="female" name="sex"/><span>女</span></label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">出生日期</label>
+                        <div class="row-right input-box">
+                            <input type="date" name="birthday" placeholder="出生日期"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="row">
+                        <label class="row-left">职业</label>
+                        <div class="row-right input-box">
+                            <input type="text" class="job" readonly="" placeholder="选择职业，找到同行"/>
+                            <i class="icon icon-arrowright color-placeholder"></i>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">公司</label>
+                        <div class="row-right input-box">
+                            <input type="text" class="company" placeholder="公司"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">学校</label>
+                        <div class="row-right input-box">
+                            <input type="text" class="school" placeholder="填写学校，发现校友"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">所在地</label>
+                        <div class="row-right input-box">
+                            <input type="text" name="live" readonly="" placeholder="选择所在地"/>
+                            <i class="icon icon-arrowright color-placeholder"></i>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">故乡</label>
+                        <div class="row-right input-box">
+                            <input type="text" name="hometown" readonly="" placeholder="选择所在地"/>
+                            <i class="icon icon-arrowright color-placeholder"></i>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="row-left">邮箱</label>
+                        <div class="row-right input-box">
+                            <input type="text" name="email" placeholder="填写邮箱"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="row">
+                        <label class="row-left">个人说明</label>
+                        <div class="row-right input-box">
+                            <textarea class="label-right noborder" name="personal"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group">
+                    <div class="row">
+                        <label class="row-left">资料好友可见</label>
+                        <div class="row-right input-text lineheight0 noborder">
+                            <div class="switch" data-role="toggle" data-on="是" data-off="否" data-on-value="1" data-off-value="0" data-name="vis"><div class="switch-handle"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+    	</article>
+    </section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	<script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+	<script>
+	window.addEventListener("load",function(){
+		var f=new Form("#form1");
+        var a=new Alert();
+        $('#submit').on(A.options.clickEvent, function(){
+        	var isOk=f.validate();
+	        if(isOk){
+	        	var args=f.serialize();
+	        	a.setText("你所要提交的参数是："+args);
+                a.show();
+	        }
+	        return false;
+        });
+	},false);
+	</script>
+
+</body>
+</html>

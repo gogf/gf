@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>exmobi-gps</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_exmobi_gps" class="active">
+		<header>
+		    <div class="titlebar">
+		        <a href="javascript:Exmobi.close()"><i class="icon icon-arrowleft"></i></a>
+		        <h1>GPS定位</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+			<a class="button block margin8 info" href="javascript:Exmobi.gps()">开始定位</a>
+			<div class="sliver">gps定位</div>
+			<div id="gps" class="card padding8">gps信息</div>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+	
+    
+    
+    
+    
+    
+	<script>
+		//定位
+		function gpsCallback(){
+		    var lat = this.latitude;//获得纬度
+		    var lng = this.longitude;//获得经度
+		    var ltime = this.locationtime;//定位成功时间
+		    var gpsinfo="经纬度："+lat+";"+lng+"<br/>定位时间:"+ltime;
+			document.getElementById("gps").innerHTML=gpsinfo;
+			//获取位置
+			if(!this.isSuccess()){
+		       alert("定位失败");
+		       this.stopPosition();
+		    }
+		}
+		
+		function back(){Exmobi.close();}
+	</script>
+</body>
+</html>

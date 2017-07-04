@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>loading</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	<style type="text/css">
+	.hide{
+		display: none!important;
+	}
+	</style>
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_loading" class="active">
+		
+		<div class="popup-mask hide" style="display: block; opacity: 1;"></div>
+		<div class="loading-box box box-middlecenter hide">
+			<div class="loading"></div>
+		</div>
+		<header>
+			<div class="titlebar">
+		        <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+		        <h1>loading</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+	
+    
+    
+    
+    
+    
+	<script>
+		/*=============
+		遮罩
+		==============*/
+		var loadingMask=document.querySelector(".popup-mask"),loadingBox=document.querySelector(".loading-box");
+		function showLoading(){
+			loadingMask.classList.remove("hide");
+			loadingBox.classList.remove("hide");
+		}
+		function hideLoading(){
+			loadingMask.classList.add("hide");
+			loadingBox.classList.add("hide");
+		}
+		showLoading();
+		
+	</script>
+</body>
+</html>

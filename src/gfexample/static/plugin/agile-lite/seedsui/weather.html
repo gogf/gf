@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>weather</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+    
+</head>
+<div id="section_container">
+<body style="overflow:hidden;">
+	<section data-role="section" id="page_weather" class="active">
+		<header>
+		    <div class="titlebar">
+		    	<a data-toggle="back" href="#">
+		            <i class="icon icon-arrowleft"></i>
+		        </a>
+		        <h1>百度天气</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+			
+			<div class="weather-box bg-primary" id="weather">
+				<div class="weather-collapse">
+				<p><span class="weather-current-city">地区</span><span class="weather-name">天气名称</span></p>
+			    	<p><span>空气</span><span class="weather-air-quality">良</span><span class="weather-current-pm25">load</span></p>
+			    </div>
+				<div class="weather-topinfo">
+					<i class="icon icon-position-fill"></i>
+			    	<span class="weather-current-city">地区</span>
+			        <small id="weather-current-date" class="weather-current-date">日期</small>
+			    </div>
+				<div class="weather-today">
+			    	<div class="weather-today-left">
+			        	<div id="weather-current-temperature" class="weather-current-temperature">load</div>
+			            <div class="sndinfo">
+			                <p id="weather-today-temperature">load</p>
+			                <p><span>空气</span><span class="weather-air-quality">load</span><span class="weather-current-pm25">load</span></p>
+			            </div>
+			        </div>
+			        <div class="weather-today-right">
+			        	<div id="weather-current-icon" class="weather-icon-sunny"></div>
+			            <div class="sndinfo">
+			                <p class="weather-name">天气名称</p>
+			                <p id="weather-current-wind" class="weather-wind">风向级数</p>
+			            </div>
+			        </div>
+			    </div>
+			    <ul class="weather-otherday">
+			    	<li>
+			            <i class="weather-icon-sunny"></i>
+			            <p>load℃</p>
+			            <small>load</small>
+			        </li>
+			        <li>
+			        	<i class="weather-icon-sunny"></i>
+			            <p>load℃</p>
+			            <small>load</small>
+			        </li>
+			        <li>
+			        	<i class="weather-icon-sunny"></i>
+			            <p>load℃</p>
+			            <small>load</small>
+			        </li>
+			        <li>
+			        	<i class="weather-icon-sunny"></i>
+			            <p>load℃</p>
+			            <small>load</small>
+			        </li>
+			    </ul>
+			</div>
+			
+			<p class="title">调用方法</p>
+			<div class="card padding8">
+				<p class="indent paragraph">通过new Weather("#weather",{"city":"城市名称","expires":"时效"})即可。</p>
+			</div>
+
+			<p class="title">时效性</p>
+			<div class="card padding8">
+				<p class="indent paragraph">为了不要频繁访问服务器天气json数据（百度天气只允许每个ak每天访问5000次）。</p>
+				<p class="indent paragraph">默认缓存了1天的天气，当然您也可以设置指定的缓存时间，通过设置时效来控制缓存时间。</p>
+				<p class="indent paragraph">例如：Weather(elem).showWeather(城市,时效性（如0.1表示60秒，1表示1小时，today表示只有今天生效）);</p>
+			</div>
+
+			<p class="title">样式修改</p>
+			<div class="card padding8">
+			另外要注意weather-box内部的样式可以都改掉，但唯独含有id，以及class名称不能更改，class为weather-otherday的内部结构不能更改，样式可随意发挥，建议不要更改结构，只改样式。
+			</div>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	<script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+	<script>
+		var startScrollTop,article;
+		window.addEventListener("load",function(){
+			article=document.querySelector("article");
+			var w=new Weather("#weather",{
+				"city":"合肥",
+				"expires":1
+			});
+			w.container.addEventListener("click",function(){
+				$('.weather-box').toggleClass('expand');
+			},false);
+		},false);
+		/*EventUtil.addHandler(document,"touchstart",function(e){
+			startScrollTop=article.scrollTop;
+		});
+		EventUtil.addHandler(document,"swipeup",function(){
+			if($(".weather-box").hasClass("expand")){
+				$(".weather-box").removeClass("expand");
+			}
+			if($(".weather-box").css("overflow")=="hidden"){
+				$("article").css("overflow","auto")
+			}
+		});
+		EventUtil.addHandler(document,"swipedown",function(e){
+			if(startScrollTop>0){
+				return;
+			}
+			if(article.scrollTop<=0){
+				$(".weather-box").addClass("expand");
+				$("article").css("overflow","hidden")
+			}
+		});*/
+		
+	</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="multi_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">多页模式</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="multi_article" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<details open>
+			                <summary class="sliver">实现</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>多页模式是通过设置控制器data-toggle="html"来实现</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">示例</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p><code>
+					        		&lt;a href=&quot;#index&quot; data-toggle=&quot;html&quot;&gt;新页面中打开index.html页面&lt;/a&gt;
+					        	</code></p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">说明</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>当Agile用于一般浏览器或者不具有多窗口模式的宿主容器时，则此控制器的效果类似于location.href打开页面</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>当Agile用于ExMobi等具有多窗口模式的宿主容器时，可重写此控制器，以达到html页面在新的窗口中打开的效果
+					        	<br>
+					        	Agile的exmobi.js里已经重写，在代码中引用此js即可</p>
+			                        </div>
+			                    </li>
+			            </details>
+    				</div>  
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	</body>
+</html>

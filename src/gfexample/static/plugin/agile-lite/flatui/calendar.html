@@ -1,0 +1,501 @@
+﻿<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/flat/flat.component.css">
+		<link rel="stylesheet" href="../assets/third/flat/flat.color.css">
+		<link rel="stylesheet" href="../assets/third/flat/iconline.css">
+		<link rel="stylesheet" href="../assets/third/flat/iconform.css">
+		<link rel="stylesheet" href="../assets/component/calendar/calendar.css">
+		<link rel="stylesheet" href="../assets/component/exlist/exlist.css">
+		<link rel="stylesheet" href="../assets/component/timepicker/timepicker.css">
+		<link rel="stylesheet" href="../assets/app/css/app.css">
+		<style type="text/css">
+			.calendar_tr .curr_top:after{
+				font-family: 'iconline';
+				color: #FF0000;
+				content: "\e119";
+			}
+
+			.calendar_tr .curr:after{
+				font-family: 'iconline';
+				color: #FF0000;
+				content: "\e196";
+			}
+
+			.hoilday{
+				color: #CBD0D6;
+			}
+			.curr_td{
+				border: 1px solid #DA8484;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="calendar_section" data-role="section" class="active">
+				<header>
+				    <div class="titlebar">
+				    	<a data-toggle="back" href="#"><i class="iconfont iconline-arrow-left"></i></a>
+				    	<h1>日历组件</h1>
+				    	<a id="add_mark"><i class="iconfont iconline-mark-plus"></i></a>
+				    </div>
+				    
+				</header>
+				<article data-role="article" id="calendar_article" data-scroll="verticle" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<div id="control_panel" style="float: left;margin: 5px;/*border: 2px solid #BAB9EA*/;padding: 5px;border-radius: 19px;  min-height: 74px;  min-width: 160px;">
+							<div style="float: left;margin-left: 4px;margin-top: 12px;">
+								<span>日期：</span>						
+						  		<span id="datapicker_label">点此选择日期</span>
+						  		<input id="datapicker" type="hidden"/>
+							</div>
+						</div>
+						<div id="data_panel" style="float: left;margin: 5px;/*border: 2px solid #BAB9EA*/;padding: 5px;border-radius: 19px;">
+						</div>
+						<div style="clear:both;"></div>
+						<div data-role="calendar" id="calendar_calendar"></div>
+					</div>  
+				</article>
+				
+			</section>
+		</div>
+
+		<div id="detail_modal" data-role="modal" class="modal bg-carrot">
+			<header>
+				<div class="titlebar">
+					<a data-toggle="back"><i class="iconfont iconline-arrow-left"></i></a>
+					<h1 id="detail_modal_title"></h1>
+					<a id="detail_modal_edit">编辑</a>
+				</div>
+			</header>
+			<article data-role="article" id="detail_modal_article" data-scroll="verticle" class="active" style="top:44px;bottom:0px;">
+				<div class="scroller" id="detail_modal_article_scroller">
+		    	</div>  
+			</article>
+			<footer id="edit_footer" style="bottom: -56px;">
+				<nav class="menubar">
+					<a class="menu active" data-role="tab" href="#">
+						<span class="menu-icon iconfont iconline-trash"></span>
+					    <span class="menu-text">删除所选</span>
+					</a>
+				</nav>
+			</footer>
+
+		</div>
+
+		<div id="add_detail_modal" data-role="modal" class="modal bg-carrot">
+			<header>
+				<div class="titlebar">
+					<a data-toggle="back"><i class="iconfont iconline-arrow-left"></i></a>
+					<h1 id="add_detail_modal_title">新增事件</h1>
+				</div>
+			</header>
+			<article data-role="article" id="add_detail_modal_article" data-scroll="verticle" class="active" style="top:44px;bottom:0px;">
+				<div class="scroller" id="add_detail_modal_article_scroller">  
+						<form id="add_detail_modal_form" class="form-common">
+							<label class="label-left" for="name">活动名称</label>
+							<label class="label-right">
+						    	<input id="add_detail_modal_name" type="text" placeholder="请输入活动名称">
+						    </label>
+						    <hr>
+						    <label class="label-left" for="position">活动地点</label>
+							<label class="label-right">
+						    	<input id="add_detail_modal_position" type="text" placeholder="请输入活动地点">
+						    </label>
+						    <hr>
+							<label class="label-left">开始时间</label>
+							 <div data-role="time" class="label-right">
+						  		<label>请选择时间</label>
+						  		<input id="add_detail_modal_start_time" type="hidden"/>
+						  	</div>
+							<hr>
+							<label class="label-left">结束时间</label>
+							<div data-role="time" class="label-right">
+						  		<label>请选择时间</label>
+						  		<input id="add_detail_modal_end_time" type="hidden"/>
+						  	</div>
+							<hr>
+						</form>
+						<div style="padding:10px 20px;">
+							<button id="add_mark_button" class="width-full">添加</button>
+						</div>
+					<!--</div>-->
+		    	</div>  
+			</article>
+		</div>
+		
+		<!--- third --->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<script src="../assets/third/iscroll/iscroll-probe.js"></script>
+		<script src="../assets/third/arttemplate/template-native.js"></script>
+		<!-- agile -->
+		<script src="../assets/agile/js/agile.js"></script>
+		<script src="../assets/component/calendar/agile.calendar.js"></script>			
+		<script src="../assets/component/exlist/agile.exlist.js"></script>	
+		<script src="../assets/component/timepicker/agile.timepicker.js"></script>	
+		<!-- app -->
+		<script src="../assets/app/js/app.js"></script>
+
+		<script>
+			(function(){
+				var calendar_calendar = null;
+
+				var today = new Date();
+
+				var html = '';
+
+				function showCalendar(_val){
+					if(_val){
+						calendar_calendar = A.Calendar("#calendar_calendar",{
+							row:_val,
+							autoJump:_val>8?false:true,
+							marks:{
+								'2015-6-9':{
+									data:[
+										{
+											id:1,
+											name:'买灯泡',
+											position:'汉中门大街'
+										}
+									],
+									'top':{
+										class:'curr_top'
+									},
+									hideCount:true
+								},
+								'2015-6-10':{
+									data:[
+										{
+											id:2,
+											name:'买牙膏'
+										},{
+											id:3,
+											name:'包粽子',
+											position:'奶奶家'
+										}
+									],
+									'bottom':{
+										content:'端午',
+										class:'hoilday'
+									},
+									hideCount:true
+								},
+								'2015-7-20':{
+									data:[
+										{
+											id:11,
+											name:'熏蚊子'
+										},{
+											id:12,
+											name:'打印材料'
+										},{
+											id:13,
+											name:'回电话给客户'
+										},{
+											id:14,
+											name:'调热水器'
+										},{
+											id:15,
+											name:'油烟机送洗'
+										}
+									],
+									formClass:'curr_td'
+								},
+								'2015-6-21':{
+									data:[
+										{
+											id:16,
+											name:'换煤气'
+										}
+									],
+									formClass:'curr_td'
+								},
+								'2015-6-22':{
+									data:[
+										{
+											id:18,
+											name:'整理柜子',
+											position:'办公室'
+										},
+										{
+											id:19,
+											name:'扔垃圾'
+										}
+									]
+								}
+							}
+							
+						});
+						calendar_calendar.onChange(function(data){
+							console.log(data);
+							if(calendar_calendar.opts.selectedDateString){
+								$('#datapicker_label').html(calendar_calendar.opts.selectedDateString);
+								$('#datapicker').val(calendar_calendar.opts.selectedDateString);
+							}else{
+								$('#datapicker_label').html('点此跳转');
+								$('#datapicker').val('');
+							}
+						})
+						calendar_calendar.onTap(updataData);
+
+						A.Scroll("#calendar_article",{}).refresh();
+					}
+				}
+
+				function updataDataPanel(_mark){
+					var html = '';
+
+					if(_mark.data&&_mark.data.length!=0) {
+						html+='<p style="margin-left: 3px;margin-top: 4px;">活动总数:'
+							+_mark.data.length
+							+'</p>';
+
+						html+='<button id="detal_button" class="link">点此查看详情</button>';
+					}
+
+					A.anim.run($("#data_panel"),'scaleIn');
+
+					$("#data_panel").html(html);
+
+					$('#detal_button').off(A.options.clickEvent).on(A.options.clickEvent,function(){
+						A.Controller.modal('#detail_modal');
+					});
+				}
+
+				function updataEditData(_date_string,_mark){
+					var html_scroller='';
+
+					if(_mark.data&&_mark.data.length!=0) {
+						html_scroller+='<ul id="swipe_test" class="listitem">';
+
+						for(var key in _mark.data){
+							html_scroller+='<li data-key="'+key+'" data-date="'+_date_string+'">';
+
+							html_scroller+='<div class="text">';
+
+							html_scroller+='<font style="font-size: 18px;color: #3779D0;">'
+								+_mark.data[key].name
+								+'</font>';
+
+							if(_mark.data[key].position){
+								html_scroller +='<p>地点：'+_mark.data[key].position+'</p>';
+							}
+
+							if(_mark.data[key].startTime||_mark.data[key].endTime){
+								html_scroller +='<p>时间：'+(_mark.data[key].startTime?_mark.data[key].startTime:'<font style="color:red;">?</font>')+'~'+(_mark.data[key].endTime?_mark.data[key].endTime:'<font style="color:red;">?</font>')+'</p>';
+							}
+
+							html_scroller+='</div>';
+
+							html_scroller+='</li>';
+						}
+
+						html_scroller+='</ul>';
+					}
+
+					$('#detail_modal_title').html(_date_string+'的活动');
+
+					$('#detail_modal_article_scroller').html(html_scroller);
+
+					A.Scroll("#detail_modal_article").refresh();
+				}
+
+				function updataData(data){
+					console.log(data);
+					var _mark = data.mark,
+						_date = data.date,
+						_date_string = _date.getFullYear()+'-'+(_date.getMonth()+1)+'-'+_date.getDate();
+
+					$('#datapicker_label').html(_date_string);
+					$('#datapicker').val(_date_string);
+
+					updataDataPanel(_mark);
+
+					updataEditData(_date_string,_mark);
+
+					var ulController = A.ExList.ulController('#swipe_test',{
+						swipeOptionOnTap : function(liElement,targetElement){
+							A.confirm('提示','确定移除该活动吗？', function(){
+								var _$this = $(liElement);
+								var _data_key = _$this.data('key');
+								var _date_string = _$this.data('date');
+
+								delete_one_mark(_data_key,_date_string);
+
+								updataDataPanel(_mark);
+
+								calendar_calendar.refresh();
+							});
+						}
+					});
+
+					(function(){
+						$('#detail_modal_edit').text('编辑');
+
+						$('#edit_footer').css('bottom','-56px');
+
+						$('#detail_modal_edit').off(A.options.clickEvent).on(A.options.clickEvent,edit);
+
+						$('#edit_footer').off(A.options.clickEvent).on(A.options.clickEvent,function(){
+							var number = 0;
+							$('.exlist_checkbox').each(function(){
+								var $li = $(this).parents('li');
+								if($(this)[0].checked && $li.data('key')!='-1'){
+									number++;
+								}
+							});
+
+							if(number==0){
+								A.alert("请选择待删除的活动");
+								return;
+							}
+
+							A.confirm('提示','确定移除这'+number+'项活动吗？', function(){
+								$('.exlist_checkbox').each(function(){
+									var _data_key , _date_string;
+									var $li = $(this).parents('li');
+									if($(this)[0].checked && $li.data('key')!='-1'){
+										_data_key = $li.data('key');
+										_date_string = $li.data('date');
+										delete_one_mark(_data_key,_date_string);
+									}
+								});
+
+								updataDataPanel(_mark);
+
+								calendar_calendar.refresh();
+							});
+						});
+
+						function showEditMenu(){
+							$('#edit_footer').animate({
+								bottom:'0px'
+							},100);
+						}
+
+						function hideEditMenu(){
+							$('#edit_footer').animate({
+								bottom:'-56px'
+							},100);
+						}
+
+						function edit(){
+							ulController.showLeft();
+							$('#detail_modal_edit').text('取消');
+							showEditMenu();
+							$('#detail_modal_edit').off(A.options.clickEvent).on(A.options.clickEvent,function(){
+								ulController.hideLeft();
+								$('#detail_modal_edit').text('编辑');
+								$('#detail_modal_edit').off(A.options.clickEvent).on(A.options.clickEvent,edit);
+								hideEditMenu();
+							});
+						}
+					})();
+				}
+
+				function delete_one_mark(_data_key,_date_string){
+					var _data = calendar_calendar.getMarkAllData(_date_string);
+					var _data_temp = [];
+
+					for(var key in _data){
+						if(key!=_data_key){
+							_data_temp.push(_data[key]);
+						}
+					}
+
+					calendar_calendar.setMarkAllData(_date_string,_data_temp);
+
+					if(!calendar_calendar.getMarkAllData(_date_string)||calendar_calendar.getMarkAllData(_date_string).length==0){
+						calendar_calendar.removeMark(_date_string);
+					}
+
+					$('[data-key="'+_data_key+'"]').data('key','-1').css('display','none').attr('data-key',-1);
+
+					var index = 0;
+
+					$('#swipe_test').find('li').each(function(){
+						if($(this).data('key') != '-1'){
+							$(this).data('key',index);
+							$(this).attr('data-key',index);
+							index++;
+						}
+					});
+				}
+
+				$('#calendar_article').on('articleload',function(){
+					showCalendar(8);
+
+					var datapicker = A.Datepicker();
+
+					/*
+					var timepicker = A.Timepicker({
+						hasSecond:false
+					});
+					*/
+
+					$('#control_panel').on(A.options.clickEvent, function() {
+						var _date=null,
+							_date_string_array=$('#datapicker').val().split('-');
+
+						if(_date_string_array.length==3){
+							_date=new Date(_date_string_array[0],parseInt(_date_string_array[1])-1,_date_string_array[2]);
+						}else{
+							_date=new Date();
+						}
+
+						datapicker.select(_date,function(data){
+							var _date=data.date,
+								_date_string = data.dateString;
+							$('#datapicker').val(_date_string);
+							$('#datapicker_label').html(_date_string);
+							calendar_calendar.goto(data.date);
+						});
+					});
+				});
+
+				$('#add_mark').on(A.options.clickEvent,function(e){
+					if(calendar_calendar.opts.selectedDateString==null){
+						A.alert('提示','请先选定日期');
+						return;
+					}
+					$('#add_mark_button').off(A.options.clickEvent);
+					$('#add_mark_button').on(A.options.clickEvent, function(){
+						var name = $('#add_detail_modal_name').val();
+						if(name == '' || name == null){
+							A.alert('提示','请输入活动名称');
+							return;
+						}
+						var position = $('#add_detail_modal_position').val();
+						calendar_calendar.addMarkData(calendar_calendar.opts.selectedDateString,{
+							name:name,
+							position:position,
+							startTime:$('#add_detail_modal_start_time').val(),
+							endTime:$('#add_detail_modal_end_time').val()
+						});
+						calendar_calendar.refresh();
+						updataData({
+							date:calendar_calendar.opts.selectedDate,
+							mark:{
+								data:calendar_calendar.getMarkAllData(calendar_calendar.opts.selectedDateString)
+							}
+						});
+
+						A.Controller.modal('#add_detail_modal');
+					});
+
+					$('#add_detail_modal_form').find('input').val('');
+					A.Controller.modal('#add_detail_modal');
+				});
+				
+			})();
+			
+		</script>
+		
+	</body>
+</html>

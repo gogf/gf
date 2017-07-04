@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+    <title>form-validate</title>
+    <link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+    <section data-role="section" id="page_form_validate" class="active">
+        <header>
+            <div class="titlebar">
+                <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+                <h1>表单验证</h1>
+            </div>
+        </header>
+        <article id="main_article" data-role="article" class="active">
+        	<form id="form1" style="padding:10px;">
+                <div class="input-box nolrmargin required" data-input="clear">
+                    <input type="text" placeholder="用户名" name="username" maxlength="16" data-rule-field="用户名" data-rule="required username"/>
+                    <i class="icon icon-clear-fill color-placeholder"></i>
+                </div>
+                <div class="input-box nolrmargin required" data-input="reveal">
+                    <input type="password" placeholder="密码" name="password" id="password" maxlength="16" data-rule-field="密码" data-rule="required safelvl password minlength:6 maxlength:16"/>
+                    <i class="icon icon-eye-fill color-placeholder"></i>
+                    <div class="safelvl lvl0">
+                    	<ul>
+                    		<li>弱</li>
+                    		<li>中</li>
+                    		<li>强</li>
+                    	</ul>
+                    	<div class="progress"></div>
+                    </div>
+                </div>
+                
+                <div class="rowspace22"></div>
+
+                <div class="input-box nolrmargin required" data-input="reveal">
+                    <input type="password" placeholder="确认" name="repassword" data-rule-field="密码" data-rule="required password compare:password minlength:6 maxlength:16"/>
+                    <i class="icon icon-eye-fill color-placeholder"></i>
+                </div>
+
+                <div class="input-box nolrmargin">
+                    <input type="text" placeholder="手机号码" name="phone" data-rule-field="手机号码" data-rule="phone"/>
+                </div>
+
+                <div class="input-box nolrmargin">
+                    <input type="text" placeholder="中文姓名" name="mail" data-rule-field="姓名" data-rule="chinese"/>
+                </div>
+
+                <div class="input-box nolrmargin">
+                    <input type="text" placeholder="邮箱" name="mail" data-rule-field="邮箱" data-rule="mail"/>
+                </div>
+
+                <button class="submit block">注册</button>
+        	</form>
+        </article>
+    </section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	<script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+ 
+    <script>
+    window.addEventListener("load",function(){
+        var f=new Form("#form1");
+        f.container.addEventListener("submit",function(e){
+            e.preventDefault();
+            f.validate();
+        },false);
+    },false);
+    
+    
+    </script>
+</body>
+</html>

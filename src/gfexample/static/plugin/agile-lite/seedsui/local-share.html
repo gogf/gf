@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>local-share</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_local_share" class="active">
+		<header>
+		    <div class="titlebar">
+		        <a data-toggle="back" href="#">
+		            <i class="icon icon-arrowleft"></i>
+		        </a>
+		        <h1>分享</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+			<div class="card padding8">
+				分享功能目前只支持uc与微信浏览器
+			</div>
+			<a class="button submit block margin8" href="javascript:showShare()">点击分享</a>
+		</article>
+		
+		<div id="mshare" class="hide sharebox">
+			<ul class="grid size54" data-rowspace="8" data-col="3">
+				<li>
+					<a class="photo color-white" style="background-color:#e55f5f;" data-share="tsina">
+						<i class="icon icon-tsina"></i>
+					</a>
+					<label class="grid-label">新浪微博</label>
+				</li>
+				<li>
+					<a class="photo color-white" style="background-color:#eda200;" data-share="qzone">
+						<i class="icon icon-qqzone"></i>
+					</a>
+					<label class="grid-label">QQ空间</label>
+				</li>
+				<li>
+					<a class="photo color-white" style="background-color:#45aaf2;" data-share="tqq">
+						<i class="icon icon-tqq"></i>
+					</a>
+					<label class="grid-label">QQ微博</label>
+				</li>
+				<li>
+					<a class="photo color-white" style="background-color:#4485fb;" data-share="qq">
+						<i class="icon icon-qq"></i>
+					</a>
+					<label class="grid-label">QQ好友</label>
+				</li>
+				<li>
+					<a class="photo color-white" style="background-color:#38ba35;" data-share="weixin">
+						<i class="icon icon-weixin"></i>
+					</a>
+					<label class="grid-label">微信</label>
+				</li>
+				<li>
+					<a class="photo color-white" style="background-color:#41ce29;" data-share="fweixin">
+						<i class="icon icon-fweixin"></i>
+					</a>
+					<label class="grid-label">微信朋友圈</label>
+				</li>
+			</ul>
+			<a class="button cancel block" style="margin: 8px 20px;" id="msharecancel">取消</a>
+		</div>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+    <script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+	<script>
+		//分享参数
+		var shareData={
+			link:'http://exmobi.cn/',
+			title:'简易移动端开发技术！',
+			desc:'狠戳此链接了解，如何让移动开发变的简单',
+			imgUrl:'http://exmobi.cn/2015/images/comm/logo.png',
+			imgTitle:'Exmobi移动开发',
+			from:'烽火星空',
+			cusTxt: "请输入此时此刻想要分享的内容"
+		}
+		var s=new Share(shareData);
+		var t=new Toast("您所要分享的参数不正确");
+		//调用分享接口
+		document.addEventListener("click",function(e){
+			var target=e.target;
+			if(target.tagName.toLowerCase()=="i"){
+				target=target.parentNode;
+			}
+			if(target.getAttribute("data-share")){
+				var shareTo=target.getAttribute("data-share");
+				switch(shareTo){
+					case "tsina" : s.toTsina(); break;
+					case "weixin" : s.toWeixin(); break;
+					case "fweixin" : s.toFWeixin(); break;
+					case "qq" : s.toQQ(); break;
+					case "tqq" : s.toTqq(); break;
+					case "qzone" : s.toQzone(); break;
+					default : t.show(); break;
+				}
+			}
+		},false);
+
+		//弹出框
+		var sharepop;
+		var sharepop=new Dialog("#mshare",{
+			pos:"bottom"
+		});
+		function showShare(){
+			sharepop.show();
+		}
+		//调用分享接口
+		var cancelshare=document.getElementById("msharecancel");
+		cancelshare.addEventListener("click",function(e){
+			sharepop.hide();
+		},false);
+		
+	</script>
+</body>
+</html>

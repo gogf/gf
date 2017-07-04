@@ -7,31 +7,32 @@ import (
 )
 
 // 命令行参数列表
-type gtConsoleValue  struct {
+type gstConsoleValue  struct {
     values []string
 }
 
 // 命令行选项列表
-type gtConsoleOption struct {
+type gstConsoleOption struct {
     options map[string]string
 }
 
 // 终端操作结构体封装
-type gtConsole struct {
-    Value      gtConsoleValue         // console终端参数-命令参数列表
-    Option     gtConsoleOption        // console终端参数-选项参数列表
-    cmdFuncMap map[string]gtEmptyFunc // 终端命令及函数地址对应表
+type gstConsole struct {
+    Value      gstConsoleValue         // console终端参数-命令参数列表
+    Option     gstConsoleOption        // console终端参数-选项参数列表
+    cmdFuncMap map[string]GfuncEmpty   // 终端命令及函数地址对应表
 }
 
 // 终端管理对象(全局)
-var Console gtConsole
+var Console gstConsole
 
 // 检查并初始化console参数，在包加载的时候触发
+// 初始化时执行，不影响运行时性能
 func init() {
-    Console.cmdFuncMap     = make(map[string]gtEmptyFunc)
+    Console.cmdFuncMap     = make(map[string]GfuncEmpty)
     Console.Option.options = make(map[string]string)
     reg       := regexp.MustCompile(`\-\-{0,1}(\w+?)=(.+)`)
-    for i := 1; i < len(os.Args); i++ {
+    for i := 0; i < len(os.Args); i++ {
         result := reg.FindStringSubmatch(os.Args[i])
         if len(result) > 1 {
             Console.Option.options[result[1]] = result[2]
@@ -42,17 +43,17 @@ func init() {
 }
 
 // 返回所有的命令行参数values
-func (c gtConsoleValue) GetAll() []string {
+func (c gstConsoleValue) GetAll() []string {
     return c.values
 }
 
 // 返回所有的命令行参数options
-func (c gtConsoleOption) GetAll() map[string]string {
+func (c gstConsoleOption) GetAll() map[string]string {
     return c.options
 }
 
 // 获得一条指定索引位置的value参数
-func (c gtConsoleValue) GetIndex(index uint8) (string, bool) {
+func (c gstConsoleValue) GetIndex(index uint8) (string, bool) {
     if index < uint8(len(c.values)) {
         return c.values[index], true
     }
@@ -60,7 +61,7 @@ func (c gtConsoleValue) GetIndex(index uint8) (string, bool) {
 }
 
 // 获得一条指定索引位置的option参数
-func (c gtConsoleOption) GetIndex(key string) (string, bool) {
+func (c gstConsoleOption) GetIndex(key string) (string, bool) {
     option, ok := c.options[key]
     if ok {
         return option, true
@@ -70,7 +71,7 @@ func (c gtConsoleOption) GetIndex(key string) (string, bool) {
 
 // 绑定命令行参数及对应的命令函数，注意参数是函数的内存地址
 // 如果操作失败返回错误信息
-func (c gtConsole) BindHandle (cmd string, f gtEmptyFunc) error {
+func (c gstConsole) BindHandle (cmd string, f GfuncEmpty) error {
     _, ok := c.cmdFuncMap[cmd]
     if ok {
         return errors.New("duplicated handle for command:" + cmd)
@@ -81,7 +82,7 @@ func (c gtConsole) BindHandle (cmd string, f gtEmptyFunc) error {
 }
 
 // 执行命令对应的函数
-func (c gtConsole) RunHandle (cmd string) error {
+func (c gstConsole) RunHandle (cmd string) error {
     handle, ok := c.cmdFuncMap[cmd]
     if ok {
         handle()
@@ -89,4 +90,20 @@ func (c gtConsole) RunHandle (cmd string) error {
     } else {
         return errors.New("no handle found for command:" + cmd)
     }
+}
+
+// 自动识别命令参数并执行命令参数对应的函数
+func (c gstConsole) AutoRun () error {
+    cmd, ok := c.Value.GetIndex(1);
+    if ok {
+        if handle, ok := c.cmdFuncMap[cmd]; ok {
+            handle()
+            return nil
+        } else {
+            return errors.New("no handle found for command:" + cmd)
+        }
+    } else {
+        return errors.New("no command found")
+    }
+
 }

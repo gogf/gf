@@ -1,0 +1,92 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="arttemplate_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">artTemplate使用</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="arttemplate_article" data-scroll="pulldown" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<details open>
+			                <summary class="sliver">介绍</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>artTemplate是新一代 javascript 模板引擎</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">基本用法</summary>
+			                <ul class="list">
+			                	<li>
+			                        <div class="justify-content">
+			                            <p>需要在页面用引入template.js或者template-native.js</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>var html = template('templateId', jsonData);或者
+								var html = A.template('#templateId').render(jsonData);</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">下拉刷新查看效果</summary>
+			                <ul class="list" id="content">
+			                </ul>
+			            </details>
+    				</div>  
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<script src="../assets/third/iscroll/iscroll-probe.js"></script>
+		<script src="../assets/third/arttemplate/template-native.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		<script id="template" type="text/html">
+		    <% for (i = 0; i < list.length; i ++) { %>
+		        <li><div class="justify-content">条目内容 <%= i + 1 %> ：<%= list[i] %></div></li>
+		    <% } %>
+		</script>
+		<script>
+			$('#arttemplate_article').on('refreshInit', function(){
+				var refresh = A.Refresh(this);
+				refresh.on('pulldown', function(){
+					//artTemplate原生写法
+					//var html = template('template', {list:['Agile Lite移动前端框架', 'ExMobi三大引擎完美融合']});
+					//Agile封装的render方法
+					var html = A.template('#template').render({list:['Agile Lite移动前端框架', 'ExMobi三大引擎完美融合']});
+					$('#content').append(html);
+					refresh.refresh();
+				});
+			});
+			
+		</script>
+	</body>
+</html>

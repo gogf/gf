@@ -1,0 +1,44 @@
+<section id="ratchet_form_section" data-role="section">
+	<header class="bar bar-nav">
+	  	<a class="icon icon-left-nav pull-left" data-toggle="back" href="#"></a>
+	  	<h1 class="title">表单样式</h1>
+	</header>
+	<article data-role="article" id="ratchet_form_article" class="active" data-scroll="verticle" data-scroll-options="{preventDefaultException: { tagName: /^(INPUT|TEXTAREA|BUTTON|SELECT|IMG|LABEL)$/ }}" style="top:44px;bottom:0px;">
+		<div class="scroller padded">
+			<form>
+				<ul class="custom-ul">
+							<li class="custom-li-left">用户名</li>
+							<li class="custom-li-right"><input type="text"></input></li>
+							
+							<li class="custom-li-left">密码</li>
+							<li class="custom-li-right"><input type="password"></input></li>
+							
+							<li class="custom-li-left">性别</li>
+							<li class="custom-li-right">
+								<input type="radio" name="custom-rd" id="custom-rd1"></input>
+								<label for="custom-rd1">男</label>
+								&nbsp;&nbsp;
+								<input type="radio" name="custom-rd" id="custom-rd2"></input>
+								<label for="custom-rd2">女</label>
+							</li>
+							
+							<li class="custom-li-left">爱好</li>
+							<li class="custom-li-right">
+								<input type="checkbox" name="custom-cb" id="custom-cb1"></input>
+								<label for="custom-cb1">篮球</label>
+								&nbsp;&nbsp;
+								<input type="checkbox" name="custom-cb" id="custom-cb2"></input>
+								<label for="custom-cb2">足球</label>
+								&nbsp;&nbsp;
+								<input type="checkbox" name="custom-cb" id="custom-cb3"></input>
+								<label for="custom-cb3">羽毛球</label>
+							</li>
+						</ul>
+			  	<input type="text" placeholder="Full name">
+			  	<input type="search" placeholder="Search">
+			  	<textarea rows="5"></textarea>
+			  	<button class="btn btn-positive btn-block">Choose existing</button>
+			</form>
+		</div>
+	</article>
+</section>

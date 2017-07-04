@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>exmobi-tel</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_exmobi_tel" class="active">
+		<header>
+		    <div class="titlebar">
+		        <a href="javascript:Exmobi.close()"><i class="icon icon-arrowleft"></i></a>
+		        <h1>电话与通讯</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+			<div class="sliver">打电话</div>
+			<a class="button block margin8" href="javascript:Exmobi.tel('15651871075')">打电话</a>
+			<a class="button block margin8 warn" href="javascript:Exmobi.askTel('15651871075')">带询问打电话</a>
+
+			<div class="sliver">发短信</div>
+			<a class="button block margin8" href="javascript:Exmobi.sms()">调用系统短信</a>
+			<a class="button block margin8 warn" href="javascript:Exmobi.sms('15651871075')">调用系统短信，并设置号码</a>
+			<a class="button block margin8 success" href="javascript:Exmobi.sms('15651871075','exmobi:你好')">调用系统短信，并设置号码与内容</a>
+			<a class="button block margin8 cancel" href="javascript:Exmobi.sms('15651871075','exmobi:你好',true)">直接发送短信</a>
+
+			<div class="sliver">保存联系人</div>
+			<a class="button block margin8" href="javascript:Exmobi.addContact('张三','15651871075','南京')">保存张三到通讯录</a>
+
+			<div class="sliver">邮箱</div>
+			<a class="button block margin8" href="javascript:Exmobi.mail()">调用系统邮箱</a>
+			<a class="button block margin8 warn" href="javascript:Exmobi.mail('wangmingzhu@nj.fiberhome.cn')">调用系统邮箱，并设置收件人</a>
+			<a class="button block margin8 success" href="javascript:Exmobi.mail('wangmingzhu@nj.fiberhome.cn','您好')">调用系统邮箱，并设置收件人并设置主题</a>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+	
+    
+    
+    
+    
+    
+	<script>
+		
+		function back(){Exmobi.close();}
+	</script>
+</body>
+</html>

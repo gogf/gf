@@ -1,0 +1,808 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>weixin</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_weixin" class="active">
+		<header>
+	        <div class="titlebar">
+	            <a data-toggle="back" href="#">
+	                <i class="icon icon-arrowleft"></i>
+	            </a>
+	            <h1>微信本地能力</h1>
+	        </div>
+	    </header>
+		<article id="main_article" data-role="article" class="active" id="weixin_demo_article" class="active">
+			<ul class="list">
+					<li class="sliver" id="menu-basic">
+						<div class="justify-content">基础接口</div>
+					</li>
+					<li id="checkJsApi">
+						<div class="justify-content">
+							<span class="desc">checkJsApi<small>判断当前客户端是否支持指定JS接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-share">
+						<div class="justify-content">分享接口</div>
+					</li>
+					<li id="onMenuShareTimeline">
+						<div class="justify-content">
+							<span class="desc">onMenuShareTimeline<small>获取“分享到朋友圈”按钮点击状态及自定义分享内容接口</small></span>
+						</div>
+						
+					</li>
+					<li id="onMenuShareAppMessage">
+						<div class="justify-content">
+							<span class="desc">onMenuShareAppMessage<small>获取“分享给朋友”按钮点击状态及自定义分享内容接口</small></span>
+						</div>
+						
+					</li>
+					<li id="onMenuShareQQ">
+						<div class="justify-content">
+							<span class="desc">onMenuShareQQ<small>获取“分享到QQ”按钮点击状态及自定义分享内容接口</small></span>
+						</div>
+						
+					</li>
+					<li id="onMenuShareWeibo">
+						<div class="justify-content">
+							<span class="desc">onMenuShareWeibo<small>获取“分享到腾讯微博”按钮点击状态及自定义分享内容接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-image">
+						<div class="justify-content">图像接口</div>
+					</li>
+					<li id="chooseImage">
+						<div class="justify-content">
+							<span class="desc">chooseImage<small>拍照或从手机相册中选图接口</small></span>
+						</div>
+						
+					</li>
+					<li id="previewImage">
+						<div class="justify-content">
+							<span class="desc">previewImage<small>预览图片接口</small></span>
+						</div>
+						
+					</li>
+					<li id="uploadImage">
+						<div class="justify-content">
+							<span class="desc">uploadImage<small>上传图片接口</small></span>
+						</div>
+						
+					</li>
+					<li id="downloadImage">
+						<div class="justify-content">
+							<span class="desc">downloadImage<small>下载图片接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-voice">
+						<div class="justify-content">音频接口</div>
+					</li>
+					<li id="startRecord">
+						<div class="justify-content">
+							<span class="desc">startRecord<small>开始录音接口</small></span>
+						</div>
+						
+					</li>
+					<li id="stopRecord">
+						<div class="justify-content">
+							<span class="desc">stopRecord<small>停止录音接口</small></span>
+						</div>
+						
+					</li>
+					<li id="playVoice">
+						<div class="justify-content">
+							<span class="desc">playVoice<small>播放语音接口</small></span>
+						</div>
+						
+					</li>
+					<li id="pauseVoice">
+						<div class="justify-content">
+							<span class="desc">pauseVoice<small>暂停播放接口</small></span>
+						</div>
+						
+					</li>
+					<li id="stopVoice">
+						<div class="justify-content">
+							<span class="desc">stopVoice<small>停止播放接口</small></span>
+						</div>
+						
+					</li>
+					<li id="uploadVoice">
+						<div class="justify-content">
+							<span class="desc">uploadVoice<small>上传语音接口</small></span>
+						</div>
+						
+					</li>
+					<li id="downloadVoice">
+						<div class="justify-content">
+							<span class="desc">downloadVoice<small>下载语音接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-smart">
+						<div class="justify-content">智能接口</div>
+					</li>
+					<li id="translateVoice">
+						<div class="justify-content">
+							<span class="desc">translateVoice<small>识别音频并返回识别结果接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-device">
+						<div class="justify-content">设备信息接口</div>
+					</li>
+					<li id="getNetworkType">
+						<div class="justify-content">
+							<span class="desc">getNetworkType<small>获取网络状态接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-location">
+						<div class="justify-content">地理位置接口</div>
+					</li>
+					<li id="openLocation">
+						<div class="justify-content">
+							<span class="desc">openLocation<small>使用微信内置地图查看位置接口</small></span>
+						</div>
+						
+					</li>
+					<li id="getLocation">
+						<div class="justify-content">
+							<span class="desc">getLocation<small>获取地理位置接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-webview">
+						<div class="justify-content">界面操作接口</div>
+					</li>
+					<li id="hideOptionMenu">
+						<div class="justify-content">
+							<span class="desc">hideOptionMenu<small>隐藏右上角菜单接口</small></span>
+						</div>
+						
+					</li>
+					<li id="showOptionMenu">
+						<div class="justify-content">
+							<span class="desc">showOptionMenu<small>显示右上角菜单接口</small></span>
+						</div>
+						
+					</li>
+					<li id="closeWindow">
+						<div class="justify-content">
+							<span class="desc">closeWindow<small>关闭当前网页窗口接口</small></span>
+						</div>
+						
+					</li>
+					<li id="hideMenuItems">
+						<div class="justify-content">
+							<span class="desc">hideMenuItems<small>批量隐藏功能按钮接口</small></span>
+						</div>
+						
+					</li>
+					<li id="showMenuItems">
+						<div class="justify-content">
+							<span class="desc">showMenuItems<small>批量显示功能按钮接口</small></span>
+						</div>
+						
+					</li>
+					<li id="hideAllNonBaseMenuItem">
+						<div class="justify-content">
+							<span class="desc">hideAllNonBaseMenuItem<small>隐藏所有非基础按钮接口</small></span>
+						</div>
+						
+					</li>
+					<li id="showAllNonBaseMenuItem">
+						<div class="justify-content">
+							<span class="desc">showAllNonBaseMenuItem<small>显示所有功能按钮接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-scan">
+						<div class="justify-content">微信扫一扫</div>
+					</li>
+					<li id="scanQRCode0">
+						<div class="justify-content">
+							<span class="desc">scanQRCode(微信处理结果)<small>调起微信扫一扫接口</small></span>
+						</div>
+						
+					</li>
+					<li id="scanQRCode1">
+						<div class="justify-content">
+							<span class="desc">scanQRCode(直接返回结果)<small>调起微信扫一扫接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-shopping">
+						<div class="justify-content">微信小店接口</div>
+					</li>
+					<li id="openProductSpecificView">
+						<div class="justify-content">
+							<span class="desc">openProductSpecificView<small>跳转微信商品页接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-card">
+						<div class="justify-content">微信卡券接口</div>
+					</li>
+					<li id="addCard">
+						<div class="justify-content">
+							<span class="desc">addCard<small>批量添加卡券接口</small></span>
+						</div>
+						
+					</li>
+					<li id="chooseCard">
+						<div class="justify-content">
+							<span class="desc">chooseCard<small>调起适用于门店的卡券列表并获取用户选择列表</small></span>
+						</div>
+						
+					</li>
+					<li id="openCard">
+						<div class="justify-content">
+							<span class="desc">openCard<small>查看微信卡包中的卡券接口</small></span>
+						</div>
+						
+					</li>
+
+					<li class="sliver" id="menu-pay">
+						<div class="justify-content">微信支付接口</div>
+					</li>
+					<li id="chooseWXPay">
+						<div class="justify-content">
+							<span class="desc">chooseWXPay<small>发起一个微信支付请求</small></span>
+						</div>
+						
+				</li>
+			</ul>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+	
+	
+	
+	
+	<script>
+	
+	
+
+	//初始化微信接口
+	Weixin.init();
+	wx.ready(function(){
+		alert("初始化接口完成");
+	});
+	wx.error(function(res){
+		alert("调用接口失败："+res.errMsg);
+	});
+	//检测是否支持微信接口
+	$('#checkJsApi').on("click",function() {
+		wx.checkJsApi({
+			jsApiList: ['checkJsApi', 'onMenuShareTimeline', 'onMenuShareAppMessage', 'onMenuShareQQ', 'onMenuShareWeibo', 'hideMenuItems', 'showMenuItems', 'hideAllNonBaseMenuItem', 'showAllNonBaseMenuItem', 'translateVoice', 'startRecord', 'stopRecord', 'onVoiceRecordEnd', 'playVoice', 'pauseVoice', 'stopVoice', 'uploadVoice', 'downloadVoice', 'chooseImage', 'previewImage', 'uploadImage', 'downloadImage', 'getNetworkType', 'openLocation', 'getLocation', 'hideOptionMenu', 'showOptionMenu', 'closeWindow', 'scanQRCode', 'chooseWXPay', 'openProductSpecificView', 'addCard', 'chooseCard', 'openCard'],
+			success: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+	});
+
+	// 2. 分享接口
+	// 2.1 监听“分享给朋友”，按钮点击、自定义分享内容及分享结果接口
+	$('#onMenuShareAppMessage').on("click", function() {
+		wx.onMenuShareAppMessage({
+			title: 'ExMobi+Agile Lite微信开发',
+			desc: '原生UI组件UIXML引擎、HTML5引擎、原生插件引擎三大引擎并驾齐驱，跨平台多分辨率支持。',
+			link: 'http://www.exmobi.cn/product.html',
+			imgUrl: 'http://www.exmobi.cn/images/exmobi5.png',
+			trigger: function(res) {
+				// 不要尝试在trigger中使用ajax异步请求修改本次分享的内容，因为客户端分享操作是一个同步操作，这时候使用ajax的回包会还没有返回
+				alert('用户点击发送给朋友');
+			},
+			success: function(res) {
+				alert('已分享');
+			},
+			cancel: function(res) {
+				alert('已取消');
+			},
+			fail: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+		alert('已注册获取“发送给朋友”状态事件');
+	});
+
+	// 2.2 监听“分享到朋友圈”按钮点击、自定义分享内容及分享结果接口
+	$('#onMenuShareTimeline').on("click", function() {
+		wx.onMenuShareTimeline({
+			title: 'ExMobi+Agile Lite微信开发',
+			link: 'http://www.exmobi.cn/product.html',
+			imgUrl: 'http://www.exmobi.cn/images/exmobi5.png',
+			trigger: function(res) {
+				// 不要尝试在trigger中使用ajax异步请求修改本次分享的内容，因为客户端分享操作是一个同步操作，这时候使用ajax的回包会还没有返回
+				alert('用户点击分享到朋友圈');
+			},
+			success: function(res) {
+				alert('已分享');
+			},
+			cancel: function(res) {
+				alert('已取消');
+			},
+			fail: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+		alert('已注册获取“分享到朋友圈”状态事件');
+	});
+
+	// 2.3 监听“分享到QQ”按钮点击、自定义分享内容及分享结果接口
+	$('#onMenuShareQQ').on("click", function() {
+		wx.onMenuShareQQ({
+			title: 'ExMobi+Agile Lite微信开发',
+			desc: '原生UI组件UIXML引擎、HTML5引擎、原生插件引擎三大引擎并驾齐驱，跨平台多分辨率支持。',
+			link: 'http://www.exmobi.cn/product.html',
+			imgUrl: 'http://www.exmobi.cn/images/exmobi5.png',
+			trigger: function(res) {
+				alert('用户点击分享到QQ');
+			},
+			complete: function(res) {
+				alert(JSON.stringify(res));
+			},
+			success: function(res) {
+				alert('已分享');
+			},
+			cancel: function(res) {
+				alert('已取消');
+			},
+			fail: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+		alert('已注册获取“分享到 QQ”状态事件');
+	});
+
+	// 2.4 监听“分享到微博”按钮点击、自定义分享内容及分享结果接口
+	$('#onMenuShareWeibo').on("click", function() {
+		wx.onMenuShareWeibo({
+			title: 'ExMobi+Agile Lite微信开发',
+			desc: '原生UI组件UIXML引擎、HTML5引擎、原生插件引擎三大引擎并驾齐驱，跨平台多分辨率支持。',
+			link: 'http://www.exmobi.cn/product.html',
+			imgUrl: 'http://www.exmobi.cn/images/exmobi5.png',
+			trigger: function(res) {
+				alert('用户点击分享到微博');
+			},
+			complete: function(res) {
+				alert(JSON.stringify(res));
+			},
+			success: function(res) {
+				alert('已分享');
+			},
+			cancel: function(res) {
+				alert('已取消');
+			},
+			fail: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+		alert('已注册获取“分享到微博”状态事件');
+	});
+
+	// 3 智能接口
+	var voice = {
+		localId: '',
+		serverId: ''
+	};
+	// 3.1 识别音频并返回识别结果
+	$('#translateVoice').on("click", function() {
+		if (voice.localId == '') {
+			alert('请先使用 startRecord 接口录制一段声音');
+			return;
+		}
+		wx.translateVoice({
+			localId: voice.localId,
+			complete: function(res) {
+				if (res.hasOwnProperty('translateResult')) {
+					alert('识别结果：' + res.translateResult);
+				} else {
+					alert('无法识别');
+				}
+			}
+		});
+	});
+
+	// 4 音频接口
+	// 4.2 开始录音
+	$('#startRecord').on("click", function() {
+		wx.startRecord({
+			cancel: function() {
+				alert('用户拒绝授权录音');
+			}
+		});
+	});
+
+	// 4.3 停止录音
+	$('#stopRecord').on("click", function() {
+		wx.stopRecord({
+			success: function(res) {
+				voice.localId = res.localId;
+			},
+			fail: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+	});
+
+
+	// 4.5 播放音频
+	$('#playVoice').on("click", function() {
+		if (voice.localId == '') {
+			alert('请先使用 startRecord 接口录制一段声音');
+			return;
+		}
+		wx.playVoice({
+			localId: voice.localId
+		});
+	});
+
+	// 4.6 暂停播放音频
+	$('#pauseVoice').on("click", function() {
+		wx.pauseVoice({
+			localId: voice.localId
+		});
+	});
+
+	// 4.7 停止播放音频
+	$('#stopVoice').on("click", function() {
+		wx.stopVoice({
+			localId: voice.localId
+		});
+	});
+
+
+
+	// 4.8 上传语音
+	$('#uploadVoice').on("click", function() {
+		if (voice.localId == '') {
+			alert('请先使用 startRecord 接口录制一段声音');
+			return;
+		}
+		wx.uploadVoice({
+			localId: voice.localId,
+			success: function(res) {
+				alert('上传语音成功，serverId 为' + res.serverId);
+				voice.serverId = res.serverId;
+			}
+		});
+	});
+
+	// 4.9 下载语音
+	$('#downloadVoice').on("click", function() {
+		if (voice.serverId == '') {
+			alert('请先使用 uploadVoice 上传声音');
+			return;
+		}
+		wx.downloadVoice({
+			serverId: voice.serverId,
+			success: function(res) {
+				alert('下载语音成功，localId 为' + res.localId);
+				voice.localId = res.localId;
+			}
+		});
+	});
+
+	// 5 图片接口
+	// 5.1 拍照、本地选图
+	var images = {
+		localId: [],
+		serverId: []
+	};
+	$('#chooseImage').on("click", function() {
+		wx.chooseImage({
+			success: function(res) {
+				images.localId = res.localIds;
+				alert('已选择 ' + res.localIds.length + ' 张图片');
+			}
+		});
+	});
+
+	// 5.2 图片预览
+	$('#previewImage').on("click", function() {
+		if (images.serverId.length == 0) {
+			alert('请先使用 uploadImage 接口上传图片');
+			return;
+		}
+		var serveridImageUrl = [];
+		for (var key in images.serverId) {
+			serveridImageUrl.push($config.weixinImageURI + '?serverid=' + images.serverId[key]);
+		}
+		wx.previewImage({
+			current: $config.weixinImageURI + '?serverid=' + images.serverId[0],
+			urls: serveridImageUrl
+		});
+	});
+
+	// 5.3 上传图片
+	$('#uploadImage').on("click", function() {
+		if (images.localId.length == 0) {
+			alert('请先使用 chooseImage 接口选择图片');
+			return;
+		}
+		var i = 0,
+			length = images.localId.length;
+		images.serverId = [];
+
+		function upload() {
+			wx.uploadImage({
+				localId: images.localId[i],
+				success: function(res) {
+					i++;
+					alert('已上传：' + i + '/' + length);
+					images.serverId.push(res.serverId);
+					if (i < length) {
+						upload();
+					}
+				},
+				fail: function(res) {
+					alert(JSON.stringify(res));
+				}
+			});
+		}
+
+		upload();
+	});
+
+	// 5.4 下载图片
+	$('#downloadImage').on("click", function() {
+		if (images.serverId.length === 0) {
+			alert('请先使用 uploadImage 上传图片');
+			return;
+		}
+		var i = 0,
+			length = images.serverId.length;
+		images.localId = [];
+
+		function download() {
+			wx.downloadImage({
+				serverId: images.serverId[i],
+				isShowProgressTips: 1,
+				success: function(res) {
+					i++;
+					alert('已下载：' + i + '/' + length);
+					images.localId.push(res.localId);
+					if (i < length) {
+						download();
+					}
+				}
+			});
+		}
+
+		download();
+	});
+
+	// 6 设备信息接口
+	// 6.1 获取当前网络状态
+	$('#getNetworkType').on("click", function() {
+		wx.getNetworkType({
+			success: function(res) {
+				alert(res.networkType);
+			},
+			fail: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+	});
+
+	// 7 地理位置接口
+	// 7.1 查看地理位置
+	$('#openLocation').on("click", function() {
+		wx.openLocation({
+			latitude: 31.990775,
+			longitude: 118.737617,
+			name: '南京烽火',
+			address: '南京市云龙山路88号',
+			scale: 14,
+			infoUrl: 'http://www.exmobi.cn/'
+		});
+	});
+
+	// 7.2 获取当前地理位置
+	$('#getLocation').on("click", function() {
+		wx.getLocation({
+			success: function(res) {
+				alert(JSON.stringify(res));
+			},
+			cancel: function(res) {
+				alert('用户拒绝授权获取地理位置');
+			}
+		});
+	});
+
+	// 8 界面操作接口
+	// 8.1 隐藏右上角菜单
+	$('#hideOptionMenu').on("click", function() {
+		wx.hideOptionMenu();
+	});
+
+	// 8.2 显示右上角菜单
+	$('#showOptionMenu').on("click", function() {
+		wx.showOptionMenu();
+	});
+
+	// 8.3 批量隐藏菜单项
+	$('#hideMenuItems').on("click", function() {
+		wx.hideMenuItems({
+			menuList: ['menuItem:readMode', // 阅读模式
+				'menuItem:share:timeline', // 分享到朋友圈
+				'menuItem:copyUrl' // 复制链接
+			],
+			success: function(res) {
+				alert('已隐藏“阅读模式”，“分享到朋友圈”，“复制链接”等按钮');
+			},
+			fail: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+	});
+
+	// 8.4 批量显示菜单项
+	$('#showMenuItems').on("click", function() {
+		wx.showMenuItems({
+			menuList: ['menuItem:readMode', // 阅读模式
+				'menuItem:share:timeline', // 分享到朋友圈
+				'menuItem:copyUrl' // 复制链接
+			],
+			success: function(res) {
+				alert('已显示“阅读模式”，“分享到朋友圈”，“复制链接”等按钮');
+			},
+			fail: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+	});
+
+	// 8.5 隐藏所有非基本菜单项
+	$('#hideAllNonBaseMenuItem').on("click", function() {
+		wx.hideAllNonBaseMenuItem({
+			success: function() {
+				alert('已隐藏所有非基本菜单项');
+			}
+		});
+	});
+
+	// 8.6 显示所有被隐藏的非基本菜单项
+	$('#showAllNonBaseMenuItem').on("click", function() {
+		wx.showAllNonBaseMenuItem({
+			success: function() {
+				alert('已显示所有非基本菜单项');
+			}
+		});
+	});
+
+	// 8.7 关闭当前窗口
+	$('#closeWindow').on("click", function() {
+		wx.closeWindow();
+	});
+
+	// 9 微信原生接口
+	// 9.1.1 扫描二维码并返回结果
+	$('#scanQRCode0').on("click", function() {
+		wx.scanQRCode();
+	});
+	// 9.1.2 扫描二维码并返回结果
+	$('#scanQRCode1').on("click", function() {
+		wx.scanQRCode({
+			needResult: 1,
+			desc: 'scanQRCode desc',
+			success: function(res) {
+				alert(JSON.stringify(res));
+			}
+		});
+	});
+
+	// 10 微信支付接口
+	// 10.1 发起一个支付请求
+	$('#chooseWXPay').on("click", function() {
+		window.open('https://open.weixin.qq.com/connect/oauth2/authorize?appid=' + wx.appId + '&redirect_uri=' + encodeURIComponent($config.weixinPayURI) + '&response_type=code&scope=snsapi_base&state=123456#wechat_redirect');
+	});
+
+	// 11.3  跳转微信商品页
+	$('#openProductSpecificView').on("click", function() {
+		wx.openProductSpecificView({
+			productId: 'pDF3iY_m2M7EQ5EKKKWd95kAxfNw'
+		});
+	});
+
+	// 12 微信卡券接口
+	// 12.1 添加卡券
+	$('#addCard').on("click", function() {
+		wx.addCard({
+			cardList: [{
+				cardId: 'pDF3iY9tv9zCGCj4jTXFOo1DxHdo',
+				cardExt: '{"code": "", "openid": "", "timestamp": "1418301401", "signature":"f54dae85e7807cc9525ccc127b4796e021f05b33"}'
+			}, {
+				cardId: 'pDF3iY9tv9zCGCj4jTXFOo1DxHdo',
+				cardExt: '{"code": "", "openid": "", "timestamp": "1418301401", "signature":"f54dae85e7807cc9525ccc127b4796e021f05b33"}'
+			}],
+			success: function(res) {
+				alert('已添加卡券：' + JSON.stringify(res.cardList));
+			}
+		});
+	});
+
+	// 12.2 选择卡券
+	$('#chooseCard').on("click", function() {
+		wx.chooseCard({
+			cardSign: '97e9c5e58aab3bdf6fd6150e599d7e5806e5cb91',
+			timestamp: 1417504553,
+			nonceStr: 'k0hGdSXKZEj3Min5',
+			success: function(res) {
+				alert('已选择卡券：' + JSON.stringify(res.cardList));
+			}
+		});
+	});
+
+	// 12.3 查看卡券
+	$('#openCard').on("click", function() {
+		alert('您没有该公众号的卡券无法打开卡券。');
+		wx.openCard({
+			cardList: []
+		});
+	});
+
+
+
+	if (wx.isWeixinFunction) {
+		//分享配置
+		var shareData={
+			link:'http://raoh0822.imwork.net/workspace/measy/client/page/phone/default/www/local-share.html',
+			title:'分享标题',
+			desc:'分享内容分享内容分享内容',
+			imgUrl:'http://exmobi.cn/2015/images/comm/logo.png',
+		}
+		
+		wx.onMenuShareAppMessage(shareData);
+		wx.onMenuShareTimeline(shareData);
+
+		// 4.4 监听录音自动停止
+		wx.onVoiceRecordEnd({
+			complete: function(res) {
+				voice.localId = res.localId;
+				alert('录音时间已超过一分钟');
+			}
+		});
+
+		// 4.8 监听录音播放停止
+		wx.onVoicePlayEnd({
+			complete: function(res) {
+				alert('录音（' + res.localId + '）播放结束');
+			}
+		});
+	}
+	</script>
+</body>
+</html>

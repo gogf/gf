@@ -1,0 +1,403 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+		<style>
+		section ul, section li {padding:0px;margin:0px;list-style:none; }
+		.my_header { z-index:2;width:100%; margin:0px;}
+		.my_filter_controller { z-index:2;position:absolute;top:44px; height:44px;width:100%; clear:both; border-bottom:1px solid #e7e7e7; background:#fff;}
+		.my_filter_controller li { float:left; width:25%; line-height:44px; text-align:center; font-size:12px; }
+		.my_filter_controller li span:after { color:#95a5a6;font-family: iconfont;}
+		.my_filter_controller li span:after{ content: '\e90e'; }
+		.my_filter_controller li.active span:after{ content: '\e91a'; -webkit-animation: spinner 0.1s 2 linear;animation: spinner 0.1s 2 linear;}
+		.my_filter_controller li i { float:right; color:#ECF0F1;font-style:normal;}
+		
+		.my_filter_conatiner{ top:88px; bottom:0px; width:100%;}
+		.my_filter_component.active { z-index:1; position:absolute; display:block; width:100%; height:100%; background:rgba(0,0,0,0.2);}
+		@-webkit-keyframes myFilterslideDownIn{
+			0% {opacity: 0;-webkit-transform: translate3d(0,-44px,0)}
+			100% {opacity: 1;-webkit-transform: translate3d(0,0,0)}
+		}
+		.my_filter_component.active .my_filter_component_content { -webkit-animation: myFilterslideDownIn 1s; height:80%; background:#fff;}
+		
+		.my_filter_c1{width:50%;height:100%; float:left; overflow-y:scroll; -webkit-overflow-scrolling: touch;background:#efefef;}
+		.my_filter_c1 li { padding:12px 20px; font-size:12px;}
+		.my_filter_c1 li.active{ background:#fff;}
+		.my_filter_c2.active{ width:48%;height:100%; float:right; overflow-y:scroll; -webkit-overflow-scrolling: touch;}
+		.my_filter_c2.active li {padding:12px 20px; font-size:12px;border-bottom:1px solid #efefef;}
+		
+		
+		article ul img { width:100px;}
+		.money { font-size:14px;}
+		.money:before { content:'￥'; font-size:14px;}
+
+		
+		#list a{ font-size:18px; color:#95A5A6;}
+		</style>
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="controller_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">默认控制器的使用</h1>
+		                <a class="right" data-toggle="section" href="#readme_section">
+		                    <i class="icon icon-rdoinfo"></i>
+		                </a>
+		            </div>
+		        </header>
+		        <ul class="my_filter_controller">
+				  	<li data-role="tab" data-toggle="view" href="#fujin"><span>附近</span><i>|</i></li>
+					<li data-role="tab" data-toggle="view" href="#meishi"><span>美食</span><i>|</i></li>
+					<li data-role="tab" data-toggle="view" href="#paixu"><span>智能排序</span><i>|</i></li>
+					<li data-role="tab" data-toggle="view" href="#shaixuan"><span>筛选</span></li>
+				</ul>
+				<div class="my_filter_conatiner">
+					<div id="fujin" class="my_filter_component" data-role="view">
+    					<div class="my_filter_component_content">
+    						<ul class="my_filter_c1">
+    							<li class="active" data-toggle="view" href="#fujin1" data-role="tab">附近</li>
+    							<li data-toggle="view" href="#fujin2" data-role="tab">热门商区</li>
+    							<li data-toggle="view" href="#fujin3" data-role="tab">秦淮区</li>
+    							<li>鼓楼区</li>
+    							<li>江宁区</li>
+    							<li>建邺区</li>
+    							<li>玄武区</li>
+    							<li>栖霞区</li>
+    							<li>浦口区</li>
+    							<li>雨花台区</li>
+    							<li>下关区</li>
+    							<li>六合区</li>
+    							<li>溧水区</li>
+    							<li>高淳区</li>
+    						</ul>
+    						<ul id="fujin1" data-role="view" class="my_filter_c2 active">
+    							<li>附近（智能范围）</li>
+    							<li>500m</li>
+    							<li>1000m</li>
+    							<li>2000m</li>
+    							<li>3000m</li>
+    						</ul>
+    						<ul id="fujin2" data-role="view" class="my_filter_c2">
+    							<li>全部商区</li>
+    							<li>新街口地区</li>
+    							<li>湖南路</li>
+    							<li>东山镇</li>
+    							<li>江宁万达</li>
+    							<li>建邺万达</li>
+    							<li>珠江路沿线</li>
+    							<li>开发区</li>
+    							<li>胜太路</li>
+    							<li>莫愁湖/水西门</li>
+    							<li>同曦/瑞都商业圈</li>
+    						</ul>
+    						<ul id="fujin3" data-role="view" class="my_filter_c2">
+    							<li>全部秦淮区</li>
+    							<li>新街口地区</li>
+    							<li>夫子庙地区</li>
+    							<li>常府街/长白街</li>
+    							<li>升州路、集庆路</li>
+    							<li>瑞金路沿线</li>
+    							<li>苜蓿园</li>
+    							<li>秦虹村/中华门</li>
+    						</ul>
+    					</div>
+    				</div>
+    				<div id="meishi" class="my_filter_component" data-role="view">
+    					<div class="my_filter_component_content">
+    						<div style="text-align:center;padding:20px 0px;">在这里自定义你的内容吧</div>
+    					</div>
+    				</div>
+    				<div id="paixu" class="my_filter_component" data-role="view">
+    					<div class="my_filter_component_content">
+    						<div style="text-align:center;padding:20px 0px;">在这里自定义你的内容吧</div>
+    					</div>
+    				</div>
+    				<div id="shaixuan" class="my_filter_component" data-role="view">
+    					<div class="my_filter_component_content">
+    						<div style="text-align:center;padding:20px 0px;">在这里自定义你的内容吧</div>
+    					</div>
+    				</div>
+    			</div>
+				<article  data-role="article" id="controller_article" class="active" style="top:88px;bottom:0px;">
+					<div class="scroller">
+						<ul class="list" id="list">
+							<li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+		                    <li>
+		                        <div class="justify">
+		                            <img data-source="http://i2.s2.dpfile.com/pc/mc/c8f91ecbdead9fdb0629a11d37fb192f(160c100)/thumb.jpg">
+		                        </div>
+		                        <div class="justify-content" style="height:56px;">
+		                            <a>单人豪华自助午餐</a>
+		                            <small class="bottom left carrot money">219</small>
+		                            <small class="bottom right">
+		                                <label>已售2161</label>
+		                            </small>
+		                        </div>
+		                    </li>
+						</ul>
+    				</div>  
+				</article>
+			</section>
+			
+			<section id="readme_section" data-role="section">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">默认控制器介绍</h1>
+		            </div>
+		        </header>
+				<article id="readme_article" data-role="article" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller padded" style="width:auto;">
+						<h5>默认控制器的定义</h5>
+						<p>默认控制器即具有data-toggle="view"属性的元素。而默认控制器对应控制的组件为具有data-role="view"属性的元素。</p>
+						<h5>默认控制器的扩展</h5>
+						<p>默认控制器的扩展是指通过CSS样式对控制器进行UI渲染，使得默认控制器的使用场景更丰富。</p>
+						<h5>扩展默认控制器的方法</h5>
+						<p>Agile Lite的控制器和组件工作基本原理可以知道：当前被触发的控制器会具有active样式，而同组的其他控制器不具有active样式；处于激活状态的组件具有active样式，同组的其他组件不具有active样式。</p>
+						<p>所以，对默认控制的扩展，可以根据控制器和组件是否具有active样式实现。</p>
+						<p>比如本页的例子，顶部第二排的过滤器按钮其实就是控制器，他们的特点就是当点击某个控制器的时候箭头的方向会改变，所以我们可以给具有active样式的控制器设置箭头向上的样式，不具有active样式的控制器设置箭头向下的样式。</p>
+						<p>同样的，点击过滤按钮控制器会向下弹出对应的组件，而向下弹出的动画效果可以加到具有active的组件中，而不具有active样式的组件设置隐藏即可。</p>
+						<h5>扩展默认控制器的使用总结</h5>
+						<p>Agile Lite默认内置了很多常用组件，当不够用的时候就可以通过扩展默认控制器实现部分效果。当默认控制器的UI渲染仍然无法达到预定的效果时再考虑控制器的扩展，自己开发一个全新的控制器实现逻辑。</p>
+					</div>
+					
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		<script>
+		(function(){
+			$('.my_filter_conatiner .my_filter_component').on('touchmove', function(e){
+				if($(e.target).hasClass('my_filter_component')){
+					e.preventDefault();
+				}
+			});
+			
+			var resetView = function(){
+				setTimeout(function(){
+					$('.my_filter_controller li, .my_filter_conatiner .my_filter_component').removeClass('active');
+				}, 100);
+			};
+			$('.my_filter_c2 li').on(A.options.clickEvent, function(){
+				A.showToast('你点击了'+this.innerHTML);
+				resetView();
+			});
+			$('.my_filter_conatiner .my_filter_component').on(A.options.clickEvent, function(e){
+				if($(e.target).hasClass('my_filter_component')){
+					resetView();
+				}
+			});
+			
+			$('#controller_section').on('sectionhide', function(){
+				resetView();
+			});
+			
+			$('.my_filter_controller li').on(A.options.clickEvent, function(){
+				if($(this).hasClass('active')) resetView();
+			});
+			
+		})();
+		
+		</script>
+	</body>
+</html>

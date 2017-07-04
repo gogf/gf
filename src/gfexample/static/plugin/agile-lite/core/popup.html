@@ -1,0 +1,174 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+		<style>
+			#popup_article .padded { text-align: center;}
+			#popup_article .padded a{
+				width: 45%;margin:6px 0px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="popup_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">弹窗组件</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="popup_article" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller padded" style="width:auto;"> 						
+				    	<a class="button bg-turquoise" id="btn_alert">alert</a>
+						<a class="button bg-sun-flower" id="btn_confirm">confirm</a>
+						<a class="button bg-wet-asphalt" id="btn_loading">loading</a>
+						<a class="button bg-sliver" id="btn_center">center</a>
+						<a class="button bg-carrot" id="btn_actionsheet">actionsheet</a>
+						<a class="button bg-pumpkin" id="btn_popover">popover</a>
+						<a class="button bg-nephritis" id="btn_t_top">top</a>
+						<a class="button bg-belize-hole" id="btn_t_bottom">bottom</a>
+						<a class="button bg-concrete" id="btn_t_left">left</a>
+						<a class="button bg-turquoise" id="btn_t_right">right</a>
+					</div>  
+				</article>
+				<script type="text/html" id="login_template">
+		        <div style="padding:10px 20px;">
+		            <div style="text-align:center;font-size:20px;color:#3498DB;font-weight:600;margin:5px 0;">登录</div>
+		            <input type="text" name="name" class="full-width" placeholder="用户名" style="margin:0px -8px;"><div class="rowspace"></div>
+		            <input type="password" name="password" class="full-width" placeholder="密码" style="margin:0px -8px;"><div class="rowspace"></div>
+		            <button class="width-full">登录</button>
+		        </div>
+		    	</script>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>	
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		<script>
+		(function(){
+			$('#btn_alert').on(A.options.clickEvent, function(e){
+				A.alert('提示','这是一个Alert');
+				return false;
+			});
+			$('#btn_confirm').on(A.options.clickEvent, function(){
+			    A.confirm('提示','这是一个Confirm！',
+			    	function(){
+			    		A.showToast('你选择了“确定”');
+			    	},
+			    	function(){
+			    		A.alarmToast('你选择了“取消”');
+			    	});
+			    return false;
+			});
+			$('#btn_loading').on(A.options.clickEvent, function(){
+			    A.showMask(function(){
+			    	A.showToast('您已关闭请求');
+			    });
+			    setTimeout(function(){
+			    	A.hideMask();
+			    }, 2000);
+			    return false;
+			});
+			$('#btn_center').on(A.options.clickEvent, function(){
+				var $popup = A.popup({
+			   		html: $('#login_template').html(),
+			        css : {width:'auto'},
+			        pos : 'center'
+			    });
+			    $popup.popup.find('button').on(A.options.clickEvent, function(){
+			    	A.confirm('提示','确定登录吗？', function(){
+			    		$popup.close();
+			    	});
+			    });
+			    return false;
+			});
+			$('#btn_t_top').on(A.options.clickEvent, function(){
+			    var $popup = new A.Popup({
+			    	html: '这是一个来自顶部的弹出框',
+			        pos : 'top',
+			    }).on('popupopen', function(){
+			    	A.showToast('打开的时候提示1');
+			    }).on('popupclose', function(){
+			    	A.showToast('关闭的时候提示');
+			    }).open(function(){
+			    	//this对象就是A.popup对象，this.popup就是弹出窗的$DOM对象
+			    	//alert(this.popup.html());//得到就是弹出窗的代码片段
+					A.showToast('打开的时候提示2');
+				});
+				setTimeout(function(){
+					//手动关闭弹出窗
+					$popup.close();
+				}, 2000);
+				return false;
+			});
+			$('#btn_t_bottom').on(A.options.clickEvent, function(){
+			    A.popup({
+			    	html: '这是一个来自底部弹出框',
+			        pos : 'bottom',
+			    });
+			    return false;
+			});
+			$('#btn_t_left').on(A.options.clickEvent, function(){
+			    A.popup({
+			    	html: '这是一个来自左边的弹出框',
+			        pos : 'left',
+			    });
+			    return false;
+			});
+			$('#btn_t_right').on(A.options.clickEvent, function(){
+			    A.popup({
+			    	html: '这是一个来自右边的弹出框',
+			        pos : 'right',
+			    });
+			    return false;
+			});
+			$('#btn_actionsheet').on(A.options.clickEvent, function(){
+			    A.actionsheet([{
+					text : '这是第一个菜单',
+			        handler : function(){
+			        	A.showToast('这是第一个菜单！');
+			        }
+				},{
+					text : '这是第二个菜单',
+			        handler : function(){
+			        	A.showToast('这是第二个菜单！');
+			        }
+				}]);
+				return false;
+			});
+			
+			$('#btn_popover').on(A.options.clickEvent, function(){
+				A.popover([{
+					text : '这是第一个菜单',
+			        handler : function(){
+			        	A.showToast('这是第一个菜单！');
+			        }
+				},{
+					text : '这是第二个菜单',
+			        handler : function(){
+			        	A.showToast('这是第二个菜单！');
+			        }
+				}], this);
+				return false;
+			});
+		})();
+		
+		</script>
+	</body>
+</html>

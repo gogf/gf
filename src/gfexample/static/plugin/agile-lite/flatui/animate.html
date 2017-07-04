@@ -1,0 +1,114 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/flat/flat.component.css">
+		<link rel="stylesheet" href="../assets/third/flat/flat.color.css">
+		<link rel="stylesheet" href="../assets/third/flat/iconline.css">
+		<link rel="stylesheet" href="../assets/third/flat/animate.css">
+		<link rel="stylesheet" href="../assets/app/css/app.css">
+		<style>
+			button{ width: 45%;}
+		</style>
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="animate_section" data-role="section" class="active">
+				<header>
+				    <div class="titlebar">
+				    	<a data-toggle="back" href="#"><i class="iconfont iconline-arrow-left"></i></a>
+				    	<h1>CSS3动画</h1>
+				    </div>
+				</header>
+				<article data-role="article" id="main_article" data-scroll="verticle" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller padded text-center">  
+						<div class="section-title">Animation</div>
+						<button class="margin-4" onclick="$(this).animateObj('bounce');">bounce</button>
+						<button class="margin-4" onclick="$(this).animateObj('flash');">flash</button>
+						<button class="margin-4" onclick="$(this).animateObj('pulse');">pulse</button>
+						<button class="margin-4" onclick="$(this).animateObj('rubberBand');">rubberBand</button>
+						<button class="margin-4" onclick="$(this).animateObj('shake');">shake</button>
+						<button class="margin-4" onclick="$(this).animateObj('swing');">swing</button>
+						<button class="margin-4" onclick="$(this).animateObj('tada');">tada</button>
+						<button class="margin-4" onclick="$(this).animateObj('wobble');">wobble</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceIn');">bounceIn</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceInDown');">bounceInDown</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceInLeft');">bounceInLeft</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceInRight');">bounceInRight</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceInUp');">bounceInUp</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceOut');">bounceOut</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceOutDown');">bounceOutDown</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceOutLeft');">bounceOutLeft</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceOutRight');">bounceOutRight</button>
+						<button class="margin-4" onclick="$(this).animateObj('bounceOutUp');">bounceOutUp</button>
+						<button class="margin-4" onclick="$(this).animateObj('fadeIn');">fadeIn</button>
+						<button class="margin-4" onclick="$(this).animateObj('fadeInDown');">fadeInDown</button>
+						<button class="margin-4" onclick="$(this).animateObj('fadeInDownBig');">fadeInDownBig</button>
+						<button class="margin-4" onclick="$(this).animateObj('fadeInLeft');">fadeInLeft</button>
+						<button class="margin-4" onclick="$(this).animateObj('fadeInLeftBig');">fadeInLeftBig</button>
+						<button class="margin-4" onclick="$(this).animateObj('fadeInRightBig');">fadeInRightBig</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeInUp');">fadeInUp</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeInUpBig');">fadeInUpBig</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeOut');">fadeOut</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeOutDownBig');">fadeOutDownBig</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeOutLeft');">fadeOutLeft</button>
+			    		<!--<button class="margin-4" onclick="$(this).animateObj('fadeOutLeftBig');">fadeOutLeftBig</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeOutRight');">fadeOutRight</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeOutRightBig');">fadeOutRightBig</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeOutUp');">fadeOutUp</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('fadeOutUpBig');">fadeOutUpBig</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('flip');">flip</button>-->
+			    		<button class="margin-4" onclick="$(this).animateObj('flipInX');">flipInX</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('flipInY');">flipInY</button>
+			    		<!--<button class="margin-4" onclick="$(this).animateObj('flipOutX');">flipOutX</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('flipOutY');">flipOutY</button>-->
+			    		<button class="margin-4" onclick="$(this).animateObj('lightSpeedIn');">lightSpeedIn</button>
+			    		<!--<button class="margin-4" onclick="$(this).animateObj('lightSpeedOut');">lightSpeedOut</button>-->
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateIn');">rotateIn</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateInDownLeft');">rotateInDownLeft</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateInDownRight');">rotateInDownRight</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateInUpLeft');">rotateInUpLeft</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateInUpRight');">rotateInUpRight</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateOut');">rotateOut</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateOutDownLeft');">rotateOutDownLeft</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateOutDownRight');">rotateOutDownRight</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateOutUpLeft');">rotateOutUpLeft</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rotateOutUpRight');">rotateOutUpRight</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('hinge');">hinge</button>
+			    		<!--<button class="margin-4" onclick="$(this).animateObj('rollIn');">rollIn</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('rollOut');">rollOut</button>-->
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomIn');">zoomIn</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomInDown');">zoomInDown</button>
+			    		<!--<button class="margin-4" onclick="$(this).animateObj('zoomInLeft');">zoomInLeft</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomInRight');">zoomInRight</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomInUp');">zoomInUp</button>-->
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomOut');">zoomOut</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomOutDown');">zoomOutDown</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomOutLeft');">zoomOutLeft</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomOutRight');">zoomOutRight</button>
+			    		<button class="margin-4" onclick="$(this).animateObj('zoomOutUp');">zoomOutUp</button>
+    				</div>  
+
+				</article>
+			</section>
+		</div>
+		
+		<!--- third --->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<script src="../assets/third/iscroll/iscroll-probe.js"></script>
+		<script src="../assets/third/arttemplate/template-native.js"></script>
+		<!-- agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>		
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/h5.base.js"></script>
+		<script type="text/javascript" src="../assets/app/js/app.js"></script>
+		
+	</body>
+</html>

@@ -1,0 +1,177 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+		<style>
+		.x-title, li.x-item{ line-height:50px; border-bottom:1px solid #ccc; display:block !important; position:relative;}
+		.icon-x { width:30px;}
+		.icon-x:before { font-family: 'iconfont'; content: "\e916"; color:#18b2ed; font-size:20px;position:absolute;top:0px;left:4px;}
+		.active > .icon-x:before { content: "\e90e";}
+		.person:before{content: "\e9a0";}
+		.x-node{ padding-left:28px;}
+		.icon-x.right{ position:absolute;width:24px;height:24px;right:4px;top:14px;}
+		.icon-x.right:before{font-family: 'iconfont'; content:"\e9cd"; color:#18b2ed;font-size:24px;position:absolute;top:0px;left:0px;}
+		.icon-x.right.active:before {content:"\e9ce";}
+		</style>
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="work_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <a id="handler" class="right hide" data-toggle="article" href="#form_article">
+		                    <i class="icon icon-hook"></i>
+		                </a>
+		                <h1 class="text-center">选人树</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="form_article" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<div class="group">
+			                <div class="input-box">
+			                    <input type="text" placeholder="标题">
+			                </div>
+			                <hr>
+			                <div class="input-box">
+			                    <input type="text" id="receiver" placeholder="接收人" data-toggle="article" href="#tree_article">
+			                </div>
+			                <hr>
+			                <div class="input-box">
+			                    <textarea placeholder="填写描述，150字以内" id="description" name="description" data-rule="required maxlength:150"></textarea>
+			                </div>
+			                
+			            </div>
+    				</div>  
+				</article>
+				<article  data-role="article" id="tree_article" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<div class="x-tree">
+							<div class="x-title active" data-role="view" data-toggle="view" data-istoggle="true" href="#node_1"><i class="icon-x icon"></i>烽火星空<i class="icon-x icon right" data-toggle="treecheck"></i></div>
+							<ul id="node_1" data-role="view" class="x-node active">
+								<li class="x-item"><i class="icon-x icon person"></i>总经理<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+								<li class="x-item"><i class="icon-x icon person"></i>副总经理<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+								<li>
+									<div class="x-title" data-role="view" data-toggle="view" data-istoggle="true" href="#node_2_1"><i class="icon-x icon"></i>ExMobi产品<i class="icon-x icon right" data-toggle="treecheck"></i></div>
+									<ul id="node_2_1" data-role="view" class="x-node">
+										<li class="x-item"><i class="icon-x icon person"></i>总监<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+										<li class="x-item"><i class="icon-x icon person"></i>副总监<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+										<li>
+											<div class="x-title" data-role="view" data-toggle="view" data-istoggle="true" href="#node_3_1"><i class="icon-x icon"></i>开发一部<i class="icon-x icon right" data-toggle="treecheck"></i></div>
+											<ul id="node_3_1" data-role="view" class="x-node">
+												<li class="x-item"><i class="icon-x icon person"></i>张三<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+												<li class="x-item"><i class="icon-x icon person"></i>李四<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+												<li class="x-item"><i class="icon-x icon person"></i>王五<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+											</ul>
+											<div class="x-title" data-role="view" data-toggle="view" data-istoggle="true" href="#node_3_2"><i class="icon-x icon"></i>开发二部<i class="icon-x icon right" data-toggle="treecheck"></i></div>
+											<ul id="node_3_2" data-role="view" class="x-node">
+												<li class="x-item"><i class="icon-x icon person"></i>马六<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+												<li class="x-item"><i class="icon-x icon person"></i>七七<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+												<li class="x-item"><i class="icon-x icon person"></i>十八<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+											</ul>
+										</li>
+									</ul>
+									<div class="x-title" data-role="view" data-toggle="view" data-istoggle="true" href="#node_2_2"><i class="icon-x icon"></i>MPlus产品<i class="icon-x icon right" data-toggle="treecheck"></i></div>
+									<ul id="node_2_2" data-role="view" class="x-node">
+										<li class="x-item"><i class="icon-x icon person"></i>云凡<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+										<li class="x-item"><i class="icon-x icon person"></i>雨柔<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+										<li class="x-item"><i class="icon-x icon person"></i>龙幽<i class="icon-x icon right" data-toggle="treecheck"></i></li>
+									</ul>
+								</li>
+							</ul>
+						</div>
+    				</div>  
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>			
+		
+		<script>
+		(function(){
+			//添加数选人控制器
+			agilelite.Controller.add({
+				treecheck:{
+					selector : '[data-toggle="treecheck"]',
+					handler : function(el, $this){
+						var $root = $this.parents('.x-tree');
+						var _itrParent = function($node, checked){
+							if($node.length==0) return;
+							var hash = '#'+$node.attr('id');
+							var $parent = $root.find('[href="'+hash+'"] [data-toggle="treecheck"]');
+							if(checked){
+								if($(hash).find('[data-toggle="treecheck"]').not('.active').length==0){
+									$parent.addClass('active');
+								}else{
+									$parent.removeClass('active');
+								}
+							}else{
+								$parent.removeClass('active');
+							}
+							_itrParent($parent.parents('.x-node'), checked);
+						};
+
+						var $children = $($this.parent().attr('href'));
+						var checked = !$this.hasClass('active');
+						if(checked){
+							$this.addClass('active');
+							$children.find('[data-toggle="treecheck"]').not('.active').addClass('active');
+						}else{
+							$this.removeClass('active');
+							$children.find('[data-toggle="treecheck"].active').removeClass('active');
+						}
+						_itrParent($this.parents('.x-node'), checked);
+						return false;
+					}
+				}
+			});
+			
+			var Tree = function(selector){
+				this.root = $(selector);
+			};
+			
+			Tree.prototype.getItems = function(){
+				var arrV = [];
+				var arrN = [];
+				this.root.find('[data-toggle="treecheck"].active').each(function(){
+					var val = $(this).data('value');
+					var name = $(this).parent().text();
+					if(val) arrV.push(val); 
+					if(name) arrN.push(name); 
+				});
+				return {values:arrV, names:arrN};
+				
+			};
+			agilelite.register('Tree', function(selector){
+				return new Tree(selector);
+			})
+			
+		})();
+		</script>
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		<script>
+		(function(){
+			$('#tree_article').on('articleshow', function(){
+				$('#handler').show();
+			}).on('articlehide', function(){
+				$('#handler').hide();
+				$('#receiver').val(A.Tree('.x-tree').getItems().names);
+			});
+
+		})();
+			
+		</script>
+	</body>
+</html>

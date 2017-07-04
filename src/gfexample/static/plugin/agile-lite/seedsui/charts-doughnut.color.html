@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>charts-doughnut.color</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_doughnut_color" class="active">
+		<header>
+		  <div class="titlebar">
+		    <a data-toggle="back" href="#">
+	            <i class="icon icon-arrowleft"></i>
+	        </a>
+		    <h1>色环图</h1>
+		  </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+			<canvas id="chart-area" width="200px" style="margin:8px 0;" />
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+    
+    
+    
+    
+    
+    
+	
+	
+	<script>
+		var doughnutData = [
+			{
+				value: 1,
+				label: "华中区"
+			},
+			{
+				value: 2,
+				label: "华北区"
+			},
+			{
+				value: 3,
+				label: "华南区"
+			},
+			{
+				value: 4,
+				label: "西北区"
+			},
+			{
+				value: 5,
+				label: "西南区"
+			},
+			{
+				value: 5,
+				label: "华东区"
+			}
+
+		];
+
+		window.onload = function(){
+			var ctx = document.getElementById("chart-area").getContext("2d");
+			window.myDoughnut = new Chart(ctx).Doughnut(doughnutData, {responsive : true});
+		};
+		
+	</script>
+</body>
+</html>

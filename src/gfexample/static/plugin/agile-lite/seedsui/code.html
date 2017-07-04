@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+<title>code</title>
+<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+<style>
+.hack{
+	height:30px;
+	margin:14px;
+	background-color:green;
+	background-color:purple\9;/*ie6、ie7、ie8、ie9、ie10*/
+	background-color:yellow\0;/*ie8、ie9、ie10*/
+	background-color:blue\9\0;/*ie9、ie10*/
+	:root background-color:cyan\9;/*ie9*/
+	*background-color:gray;/*ie6、ie7*/
+	-background-color:red;/*ie6*/
+	+background-color:orange;/*ie7*/
+}
+</style>
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="code_section" class="active">
+	<header>
+    	<div class="titlebar">
+            <a data-toggle="back" href="#">
+                <i class="icon icon-arrowleft"></i>
+            </a>
+            <h1>代码展现</h1>
+        </div>
+    </header>
+	<article id="main_article" data-role="article" class="active">
+		<div class="sliver">Hack示例</div>
+		<div class="highlight">
+			<code data-lang="html">
+				<span class="property">background-color:</span>
+				<span class="val">green;</span>
+				<span class="comment">/*绿色*/</span>
+			</code>
+		</div>
+		<div class="sliver">ie6</div>
+		<div class="highlight">
+			<code data-lang="html">
+				<span class="property">-background-color:</span>
+				<span class="val">red;</span>
+				<span class="comment">/*红色*/</span>
+			</code>
+		</div>
+		<div class="sliver">ie7</div>
+		<div class="highlight">
+			<code data-lang="html">
+				<span class="property">+background-color:</span>
+				<span class="val">orange;</span>
+				<span class="comment">/*橙色*/</span>
+			</code>
+		</div>
+		<div class="sliver">ie6、ie7</div>
+		<div class="highlight">
+			<code data-lang="html">
+				<span class="property">*background-color:</span>
+				<span class="val">gray;</span>
+				<span class="comment">/*灰色*/</span>
+			</code>
+		</div>
+		<div class="sliver">ie9</div>
+		<div class="highlight">
+			<code data-lang="html">
+				<span class="property">:root background-color:</span>
+				<span class="val">blue\9;</span>
+				<span class="comment">/*蓝色*/</span>
+			</code>
+		</div>
+		<div class="sliver">ie9、ie10</div>
+		<div class="highlight">
+			<code data-lang="html">
+				<span class="property">background-color:</span>
+				<span class="val">cyan\9\0;</span>
+				<span class="comment">/*青色*/</span>
+			</code>
+		</div>
+		<div class="sliver">ie8、ie9、ie10</div>
+		<div class="highlight">
+			<code data-lang="html">
+				<span class="property">background-color:</span>
+				<span class="val">yellow\0;</span>
+				<span class="comment">/*黄色*/</span>
+			</code>
+		</div>
+		<div class="sliver">ie6、ie7、ie8、ie9、ie10</div>
+		<div class="highlight">
+			<code data-lang="html">
+				<span class="property">background-color:</span>
+				<span class="val">purple\9;</span>
+				<span class="comment">/*紫色*/</span>
+			</code>
+		</div>
+	</article>
+</section>
+</div>
+	<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>	
+</body>
+</html>

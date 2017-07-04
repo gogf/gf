@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<meta name="format-detection" content="telephone=no">
+	<title>bg</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	<style>
+		/*滤镜*/
+		.bgfilter{
+			height:100px;
+		}
+		.bgfilter:before{
+			background-image:url(http://robort007.github.io/SeedsUI/preview/img/components/banner.jpg);
+		}
+		/*渐变*/
+		.gradient{
+			height:100px;
+			background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#cce6f6), color-stop(100%,#f9fcf4));
+		}
+
+		.bgbox{
+			width:100%;
+			height:60px;
+			background-repeat:no-repeat;
+			background-color:white;
+			box-sizing:border-box;
+			border:1px solid #ddd;
+			width:90%;
+			margin:8px auto;
+		}
+		p{
+			margin-bottom:20px;
+			color:#aaa;
+		}
+
+		.bgorigin-padding-box{
+			background-image:url(http://robort007.github.io/SeedsUI/preview/img/components/marker.svg);
+			background-origin:padding-box;
+			padding:10px;
+		}
+		.bgorigin-border-box{
+			background-image:url(http://robort007.github.io/SeedsUI/preview/img/components/marker.svg);
+			background-origin:border-box;
+			border:10px solid #ddd;
+			padding:10px;
+		}
+		.bgorigin-content-box{
+			background-image:url(http://robort007.github.io/SeedsUI/preview/img/components/marker.svg);
+			background-origin:padding-box;
+			border:10px solid #ddd;
+			padding:10px;
+		}
+
+		.bgmultiple{
+			background-image:url(http://robort007.github.io/SeedsUI/preview/img/components/marker.svg),url(http://robort007.github.io/SeedsUI/preview/img/components/marker.svg);
+			background-position:0px 0px,38px 20px;
+			background-size:40px 40px,28px 28px;
+		}
+		.bgmultiple-cross{
+			background-image: -webkit-cross-fade(url(http://robort007.github.io/SeedsUI/preview/img/components/banner.jpg), url(http://robort007.github.io/SeedsUI/preview/img/components/1.jpg), 0.5);
+			background-position:center;
+			background-size:cover;
+		}
+
+		.bg-clip{
+			background-color:coral;
+			background-clip:content-box;
+			border:1px solid #ddd;
+			padding:10px;
+		}
+		.bg-clip-text{
+			/*文字部分*/
+			font-weight: bold;
+			font-size:35px;
+			background-color:black;
+			/*背景部分*/
+			background-image:url('http://robort007.github.io/SeedsUI/preview/img/components/photo.jpg');
+			-webkit-background-clip: text;
+			color: transparent;
+			background-size: 200px 100px;
+			
+			background-repeat: repeat-x;
+			background-position:left bottom;
+			opacity: 1;
+		}
+		.bg-mask{
+			-webkit-mask-image:url(http://robort007.github.io/SeedsUI/preview/img/components/marker.svg);
+			-webkit-mask-repeat:no-repeat;
+			-webkit-mask-position:center;
+			background-color:blue;
+		}
+	</style>
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_bg" class="active" style="background-color: white;">
+		<header>
+	        <div class="titlebar">
+	            <a data-toggle="back" href="#">
+	                <i class="icon icon-arrowleft"></i>
+	            </a>
+	            <h1>背景</h1>
+	        </div>
+	    </header>
+		<article id="main_article" data-role="article" class="active">
+			<!--background-filter-->
+			<div class="sliver">滤镜</div>
+			<div class="bgfilter" style="background-image:url(http://robort007.github.io/SeedsUI/preview/img/components/banner.jpg);background-position:center;background-size:cover;"></div>
+			<div class="bgfilter before-blur"></div>
+			<div class="bgfilter before-sepia"></div>
+			<div class="bgfilter before-grayscale"></div>
+			<div class="bgfilter before-invert"></div>
+			<div class="bgfilter before-saturate"></div>
+			<div class="bgfilter before-contrast"></div>
+			<div class="bgfilter before-brightness"></div>
+			<div class="bgfilter before-hue-rotate"></div>
+			<div class="bgfilter before-drop-shadow"></div>
+			<!--background-filter-->
+			<div class="sliver">渐变</div>
+			<div class="gradient"></div>
+		    <!--background-origin-->
+			<div class="sliver">background-origin（背景起始）</div>
+			<p>padding-box</p>
+		    <div class="bgbox bg-clip bgorigin-padding-box"></div>
+		    <p>border-box</p>
+		    <div class="bgbox bgorigin-border-box"></div>
+		    <p>content-box</p>
+		    <div class="bgbox bgorigin-content-box"></div>
+		    <!--background-clip-->
+		    <div class="sliver">background-clip</div>
+		    <div class="bgbox bg-clip">切掉padding区域</div>
+		    <div class="bgbox bg-clip-text">背景图切成文字形状</div>
+		    
+		    <div class="sliver">多重图片</div>
+		    <div class="bgbox bgmultiple"></div>
+		    <div class="bgbox bgmultiple-cross"></div>
+		    
+		    <div class="sliver">剪贴蒙版</div>
+		    <div class="bgbox bg-mask"></div>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+
+</body>
+</html>

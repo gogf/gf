@@ -1,0 +1,112 @@
+@font-face {
+	font-family: 'iconform';
+	src:url('fonts/iconform.eot?ioj7xh');
+	src:url('fonts/iconform.eot?#iefixioj7xh') format('embedded-opentype'),
+		url('fonts/iconform.woff?ioj7xh') format('woff'),
+		url('fonts/iconform.ttf?ioj7xh') format('truetype'),
+		url('fonts/iconform.svg?ioj7xh#iconform') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="iconform-"], [class*=" iconform-"] {
+	font-family: 'iconform';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.iconform-barcode:before {
+	content: "\e200";
+}
+.iconform-calendar:before {
+	content: "\e201";
+}
+.iconform-camera:before {
+	content: "\e202";
+}
+.iconform-checkbox:before {
+	content: "\e203";
+}
+.iconform-checkbox-checked1:before {
+	content: "\e204";
+}
+.iconform-checkbox-checked2:before {
+	content: "\e205";
+}
+.iconform-checkbox-checked3:before {
+	content: "\e206";
+}
+.iconform-checked:before {
+	content: "\e207";
+}
+.iconform-checked2:before {
+	content: "\e208";
+}
+.iconform-file:before {
+	content: "\e209";
+}
+.iconform-folder:before {
+	content: "\e20a";
+}
+.iconform-handsign:before {
+	content: "\e20b";
+}
+.iconform-image:before {
+	content: "\e20c";
+}
+.iconform-link:before {
+	content: "\e20d";
+}
+.iconform-mail:before {
+	content: "\e20e";
+}
+.iconform-qrcode:before {
+	content: "\e20f";
+}
+.iconform-radio:before {
+	content: "\e210";
+}
+.iconform-radio-checked1:before {
+	content: "\e211";
+}
+.iconform-radio-checked2:before {
+	content: "\e212";
+}
+.iconform-radio-fill:before {
+	content: "\e213";
+}
+.iconform-record:before {
+	content: "\e214";
+}
+.iconform-search:before {
+	content: "\e215";
+}
+.iconform-select:before {
+	content: "\e216";
+}
+.iconform-time:before {
+	content: "\e217";
+}
+.iconform-toggle-off:before {
+	content: "\e218";
+}
+.iconform-toggle-on:before {
+	content: "\e219";
+}
+.iconform-view:before {
+	content: "\e21a";
+}
+.iconform-week:before {
+	content: "\e21b";
+}
+.iconform-bumf-attach:before {
+	content: "\e21c";
+}

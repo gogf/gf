@@ -1,0 +1,467 @@
+<!doctype html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>shape</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+    
+	<style>
+	/*聊天框*/
+	.chatbox{
+		position: relative;
+	    padding: 10px;
+	    border-radius: 3px;
+	    background-color: #b8daff;
+	    display: inline-block;
+	}
+	.chatbox:after {
+	    position: absolute;
+	    right: 100%;
+	    top: 25%;
+	    height: 0;
+	    width: 0;
+	    content: " ";
+	    border-width: 5px;
+	    margin-top: -5px;
+	    border-style: solid;
+	    border-color: transparent;
+	    border-right-color: #b8daff;
+	}
+	/*向上三角形*/
+	.triangle-up {
+		position: relative;
+	    width:0; 
+	    height:0; 
+	    border-left:50px solid transparent;
+	    border-right:50px solid transparent;
+	    border-bottom:70px solid #b8daff;
+	}
+	/*等边三角形*/
+	.triangle-eq{
+		position: relative;
+		width: 0;  
+		height: 0;
+		border-left: 50px solid transparent;  
+		border-right: 50px solid transparent;  
+		border-bottom: 94px solid #b8daff;
+	}
+	.triangle-down {
+		position: relative;
+	    width:0; 
+	    height:0; 
+	    border-left:50px solid transparent;
+	    border-right:50px solid transparent;
+	    border-top:70px solid #b8daff;
+	}
+
+	.triangle-left {
+		position: relative;
+	    width:0; 
+	    height:0; 
+	    border-top:50px solid transparent;
+	    border-bottom:50px solid transparent; 
+	    border-right:70px solid #b8daff; 
+	}
+	.triangle-right {
+		position: relative;
+	    width:0; 
+	    height:0; 
+	    border-top:50px solid transparent;
+	    border-bottom: 50px solid transparent;
+	    border-left: 70px solid #b8daff;
+	}
+
+	/*五边形向下*/
+	.pentagon-down{
+		width:200px;
+		height:30px;
+		background-color:#b8daff;
+		position:relative;
+		margin-bottom:15px;
+	}
+	.pentagon-down:after{
+		position:absolute;
+		left:0;
+		top:30px;
+		content:'';
+		
+		width: 0;
+		height: 0;
+		border-style: solid;
+		border-width: 15px 100px 0 100px;
+		border-color: #b8daff transparent transparent transparent;
+
+	}
+	/*菱形*/
+	.rhombus{
+	   width: 0;   
+	   height: 0;   
+	   border-left: 40px solid transparent;   
+	   border-right: 40px solid transparent;   
+	   border-bottom: 60px solid #b8daff;
+	   margin:0 0 65px 0; 
+	}  
+	.rhombus:after {  
+	   content:"";  
+	   position: absolute;
+	   width: 0;
+	   height: 0;
+	   border-left: 40px solid transparent;
+	   border-right: 40px solid transparent; 
+	   border-top: 60px solid #b8daff;
+	   margin: 60px 0 0 -40px;
+	}
+	/*菱形六边形*/
+	.hexagon {
+	  position: relative;
+	  width: 200px; 
+	  height: 115.47px;
+	  line-height: 115.47px;
+	  background-color: #b8daff;
+	  margin: 57.74px 0;
+	}
+	.hexagon span{
+		width: 100%;
+		text-align: center;
+	}
+	.hexagon:before,
+	.hexagon:after {
+	  content: "";
+	  position: absolute;
+	  width: 0;
+	  border-left: 100px solid transparent;
+	  border-right: 100px solid transparent;
+	}
+
+	.hexagon:before {
+	  bottom: 100%;
+	  border-bottom: 57.74px solid #b8daff;
+	}
+
+	.hexagon:after {
+	  top: 100%;
+	  width: 0;
+	  border-top: 57.74px solid #b8daff;
+	}
+	/*-平行四边形-*/
+	.parallelogram {  
+	   width: 130px;   
+	   height: 75px;  
+	   background: #b8daff;  
+	     
+	   -webkit-transform: skew(20deg);
+	}
+	/*-梯形-*/
+	.trapezium {  
+	   height: 0;
+	   width: 80px;
+	   border-bottom: 80px solid #b8daff;
+	   border-left: 40px solid transparent;
+	   border-right: 40px solid transparent;
+	   text-align: center;
+
+	}
+	/*漏斗*/
+	.funnel{
+		height:0;
+		width:40px;
+		border-bottom:60px solid #b8daff;
+		border-top:60px solid #b8daff;
+		border-left:40px solid transparent;  
+		border-right:40px solid transparent;  
+	}
+	/*十二星形*/
+	.twelve-point-star,.twelve-point-star:before,.twelve-point-star:after{  
+	   height: 50px; 
+	   width: 50px;
+	   background: orange;
+	   border-radius:4px;
+	}  
+	.twelve-point-star:before {  
+	   content:"";
+	   position: absolute; 
+	   -webkit-transform: rotate(30deg);
+	}  
+	.twelve-point-star:after {
+	   content:"";  
+	   position: absolute;  
+	   -webkit-transform: rotate(-30deg);  
+	}
+	/*六星形*/
+	.six-point-star {
+	   width: 0;   
+	   height: 0;   
+	   border-left: 50px solid transparent;   
+	   border-right: 50px solid transparent;   
+	   border-bottom: 80px solid orange;
+	}  
+	.six-point-star:after {  
+	   content:"";  
+	   position: absolute;
+	   width: 0;
+	   height: 0;
+	   border-left: 50px solid transparent;
+	   border-right: 50px solid transparent; 
+	   border-top: 80px solid orange;
+	   margin: 30px 0 0 -50px;
+	}
+	/*六边形*/
+	.octagon {  
+	   width: 100px;   
+	   height: 100px;   
+	   background: #b8daff;  
+	}  
+	.octagon:before {  
+	   height: 0;  
+	   width: 40px;  
+	   content:"";  
+	   position: absolute;   
+	   border-bottom: 30px solid #b8daff;  
+	   border-left: 30px solid white;   
+	   border-right: 30px solid white;   
+	}  
+	.octagon:after {  
+	   height: 0;  
+	   width: 40px;  
+	   content:"";  
+	   position: absolute;   
+	   border-top: 30px solid #b8daff;   
+	   border-left: 30px solid white;    
+	   border-right: 30px solid white;   
+	   margin: 70px 0 0 0;  
+	}
+	/*鸡蛋*/
+	.egg {  
+	   display:block;  
+	   width:126px;
+	   height:180px;
+	   background-color:orange;
+	   border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+	}
+	/*不完整的圆*/
+	.pacman {  
+	  width: 0px;  
+	  height: 0px;  
+	  border-right: 60px solid transparent;  
+	  border-top: 60px solid #b8daff;  
+	  border-left: 60px solid #b8daff;  
+	  border-bottom: 60px solid #b8daff;  
+	  border-radius: 60px;
+	}
+	/*八卦圆*/
+	.biohazard {
+	  width: 0;  
+	  height: 0;  
+	  border-bottom: 60px solid black; 
+	  border-top: 60px solid black;
+	  border-left: 60px solid yellow; 
+	  border-right: 60px solid yellow;
+	  border-radius: 60px;
+	}
+	/*心形*/
+	.heart {   
+	    position: relative;
+		width:140px;
+		height:118px;
+	}  
+	.heart:before, .heart:after {  
+	    position: absolute;  
+	    content: "";  
+	    
+		top: 0;  
+	    width: 70px;  
+	    height: 115px;  
+	    background: red;
+	    border-radius: 50px 50px 0 0;  
+	    -webkit-transform: rotate(-45deg);
+	}
+	.heart:before{
+		left:16px;
+	}
+	.heart:after {   
+	    right:21px;   
+	    -webkit-transform: rotate(45deg);
+	}
+	/*clip*/
+	.arrowr{
+		background-image: url(http://robort007.github.io/SeedsUI/preview/img/components/banner.jpg);
+		background-size:cover;
+		width:150px;
+		height:150px;
+		-webkit-clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);
+	}
+	/*地图标记*/
+	.pin{
+		display:block;
+		position:relative;
+		width: 30px;
+		height: 30px;
+		border-radius: 50% 50% 50% 0;
+		-webkit-transform: rotate(-45deg);
+		-webkit-transform-origin:center;
+		
+		background: red;
+	}
+	.pin-label{
+		position: absolute;
+		width:26px;
+		height:26px;
+		text-align:center;
+		line-height:26px;
+		left:2px;
+		top:2px;
+		border-radius: 100%;
+		-webkit-transform:rotate(45deg);
+		-webkit-transform-origin:center; 
+
+		background-color: green;
+		color: white;
+	}
+	</style>
+	</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" class="active" id="page_shape">
+		<header>
+		    <div class="titlebar">
+	            <a data-toggle="back" href="#">
+	                <i class="icon icon-arrowleft"></i>
+	            </a>
+	            <h1>形状</h1>
+	        </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+			<div class="sliver">地图标记</div>
+			<div class="box box-center padding8">
+				<div class="pin"><label class="pin-label">1</label></div>
+			</div>
+			<div class="sliver">聊天框</div>
+			<div class="box box-center padding8">
+				<div class="chatbox">
+			         <p>聊天框</p>
+			    </div>
+			</div>
+
+			<div class="sliver">向上的三角</div>
+			<div class="box box-center padding8">
+				<div class="triangle-up"></div>
+			</div>
+
+			<div class="sliver">向左的三角</div>
+			<div class="box box-center padding8">
+				<div class="triangle-left"></div>
+			</div>
+
+			<div class="sliver">向下的三角</div>
+			<div class="box box-center padding8">
+				<div class="triangle-down"></div>
+			</div>
+			
+			<div class="sliver">向右的三角</div>
+			<div class="box box-center padding8">
+				<div class="triangle-right"></div>
+			</div>
+			
+			<div class="sliver">等边三角</div>
+			<div class="box box-center padding8">
+				<div class="triangle-eq"></div>
+			</div>
+			
+			<div class="sliver">五边形向下</div>
+			<div class="box box-center padding8">
+				<div class="pentagon-down"></div>
+			</div>
+			
+			<div class="sliver">菱形</div>
+			<div class="box box-center padding8">
+				<div class="rhombus"></div>
+			</div>
+			
+			<div class="sliver">菱形六边形</div>
+			<div class="box box-center padding8">
+				<div class="hexagon">
+				    
+				    <span style="position:absolute;z-index:2;">菱形六边形</span>
+				</div>
+			</div>
+			
+			<div class="sliver">梯形</div>
+			<div class="box box-center padding8">
+				<div class="trapezium">
+				    
+				    <span>梯形</span>
+				</div>
+			</div>
+
+			<div class="sliver">漏斗</div>
+			<div class="box box-center padding8">
+				<div class="funnel"></div>
+			</div>
+			
+			<div class="sliver">平等四边形</div>
+			<div class="box box-center padding8">
+				<div class="parallelogram"></div>
+			</div>
+
+			<div class="sliver">十二星形</div>
+			<div class="box box-center padding12">
+				<div class="twelve-point-star"></div>
+			</div>
+			
+			<div class="sliver">六星形</div>
+			<div class="box box-center" style="padding:12px 0 48px 0;">
+				<div class="six-point-star"></div>
+			</div>
+			
+			<div class="sliver">六边形</div>
+			<div class="box box-center padding8">
+				<div class="octagon"></div>
+			</div>
+			
+			
+			<div class="sliver">鸡蛋</div>
+			<div class="box box-center padding8">
+				<div class="egg" style="text-align:center;line-height:170px;color:white;">
+					
+				    <span>鸡蛋</span>
+				</div>
+			</div>
+
+			<div class="sliver">不完整的圆</div>
+			<div class="box box-center padding8">
+				<div class="pacman"></div>
+			</div>
+
+			<div class="sliver">八卦圆</div>
+			<div class="box box-center padding8">
+				<div class="biohazard"></div>
+			</div>
+
+			<div class="sliver">心形</div>
+			<div class="box box-center padding8">
+				<div class="heart"></div>
+			</div>
+
+			<div class="sliver">clip</div>
+			<div class="box box-center padding8">
+				<div class="arrowr"></div>
+			</div>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+
+	<script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+</body>
+</html>

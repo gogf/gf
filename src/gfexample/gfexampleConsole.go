@@ -10,9 +10,12 @@ func doEcho() {
 }
 
 func main() {
-    r,_ := gf.Console.Value.GetIndex(1)
-    fmt.Printf("%s", r)
+    fmt.Println(gf.Console.Value.GetAll())
+
+    fmt.Println(gf.Console.Value.GetIndex(1))
 
     gf.Console.BindHandle("echo", doEcho)
     gf.Console.RunHandle("echo")
+
+    gf.Console.AutoRun()
 }

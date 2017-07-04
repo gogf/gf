@@ -1,0 +1,68 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+		<style>
+			.button { margin:4px;display: inline-block;width: 80px;}
+		</style>
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="color_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">颜色样式</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="color_article" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller text-center" style="padding:4px;width:auto;">
+						<a class="button bg-turquoise">#1ABC9C</a>
+					    <a class="button bg-green-sea">#16A085</a>
+					    <a class="button bg-emerland">#78ba00</a>
+					    <a class="button bg-nephritis">#27AE60</a>
+					    <a class="button bg-peter-river">#3498DB</a>
+					    <a class="button bg-belize-hole">#2980B9</a>
+					    <a class="button bg-amethyst">#9B59B6</a>
+					    <a class="button bg-wisteria">#8E44AD</a>
+					    <a class="button bg-midnight-blue">#2C3E50</a>
+					    <a class="button bg-concrete">#95A5A6</a>
+					    <a class="button bg-asbestos ">#7F8C8D</a>
+					    <a class="button bg-clouds">#ECF0F1</a>
+					    <a class="button bg-sliver">#BDC3C7</a>
+					    <a class="button bg-alizarin">#E74C3C</a>
+					    <a class="button bg-pomegranate">#C0392B</a>
+					    <a class="button bg-carrot">#E67E22</a>
+					    <a class="button bg-pumpkin">#D35400</a>
+					    <a class="button bg-sun-flower">#F1C40F</a>
+					    <a class="button bg-orange">#F39C12</a>
+					    <a class="button bg-violet">#9f00a7</a>
+    				</div>  
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>	
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		<script>
+			$('#color_article a').on(A.options.clickEvent, function(){
+				A.alert($(this).attr('class').split('-')[1]);
+			});
+		</script>
+	</body>
+</html>

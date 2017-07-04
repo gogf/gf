@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+    <title>local-photoselect</title>
+    <link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+    <section data-role="section" id="page_local_photoselect" class="active">
+        <header>
+            <div class="titlebar">
+                <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+                <h1>照片选择</h1>
+            </div>
+        </header>
+        <article id="main_article" data-role="article" class="active">
+            <div class="card padding8">
+                目前只支持ios和部分android浏览器
+            </div>
+            <div class="row">
+                <label>图片上传</label>
+                <div class="input-box margin8">
+                    <input type="file" id="takePicture" accept="image/*" multiple />
+                </div>
+            </div>
+        	<br/>
+        	<div class="sliver">上传的图片</div>
+            <ul class="grid album" data-col="3" id="photoshow"></ul>
+        </article>
+    </section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+    <script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+    <script>
+    function fileSelect(fileId,handler){
+    	var takePicture=document.querySelector(fileId);
+        //监听上传控件事件
+        takePicture.onchange = function (e) {
+            var files = event.target.files;
+            var filepath=null;
+            for(var i=0,file;file=files[i++];){
+                try {
+                    var URL = window.URL || window.webkitURL;
+                    filePath = URL.createObjectURL(file);
+                    handler(filePath);
+                    URL.revokeObjectURL(filePath);
+                }
+                catch (e) {
+                    try {
+                        var fileReader = new FileReader();
+                        fileReader.onload = function (event) {
+                            filePath= event.target.result;
+                            handler(filePath);
+                        };
+                        fileReader.readAsDataURL(file);
+                    }
+                    catch (e) {
+                        alert("此设备即不支持createObjectURL也不支持FileReader");
+                    }
+                }
+            }
+        };
+    };
+    fileSelect("#takePicture",function(path){
+        if(path){
+    	   $("#photoshow").append('<li><a style="background-image: url('+path+')"></a></li>');
+        }
+    });
+    
+    
+    </script>
+</body>
+</html>

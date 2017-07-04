@@ -1,0 +1,202 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	</head>
+	<body>
+		<div id="aside_container">
+			<aside id="right_push_aside" data-role="aside" data-position="right" data-transition="reveal" style="width:80px;">
+			    <ul class="menu" style="text-align:center;font-size:2em;">
+		            <li style="padding: 10px 0;">
+		                <a><i class="icon icon-apple" style="font-size:30px;"></i></a>
+		            </li>
+		            <li style="padding: 10px 0;">
+		                <a><i class="icon icon-android" style="font-size:30px;"></i></a>
+		            </li>
+		            <li style="padding: 10px 0;">
+		                <a><i class="icon icon-qq" style="font-size:30px;"></i></a>
+		            </li>
+		            <li style="padding: 10px 0;">
+			            <a><i class="icon icon-tsina" style="font-size:30px;"></i></a>
+			        </li>
+		        </ul>
+			</aside>
+		</div>
+		<div id="section_container">
+			<section id="signle_section" data-role="section" class="active" data-aside-right="#right_push_aside">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">单页模式</h1>
+		                <a class="right" data-toggle="aside" href="#right_push_aside">
+		                    <i class="icon icon-menudot"></i>
+		                </a>
+		            </div>
+		        </header>
+				<article data-role="article" id="first_article" class="active" style="top:44px;bottom:54px;">
+					<div class="scroller">
+						<details open>
+			                <summary class="sliver">实现</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>单页模式通过控制器data-toggle="section|article|modal|aside"来实现</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">示例</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p><code>
+							        		&lt;a href=&quot;#index_section&quot; data-toggle=&quot;section&quot;&gt;当前页面中打开index_section&lt;/a&gt;
+							        	</code></p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">说明</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>所有单页模式控制器都会触发 load|show|hide事件，触发事件规则为控制器名+事件名。比如，当section第一次加载的时候会触发
+					        	sectionload事件，section每次处于激活状态的时候会触发sectionshow事件，当section处于非激活状态的时候会触发sectionhide事件</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>单页模式的所有内容均可以在当前页面已经加载好，也可以通过远程加载本地的一个同名的html页面来实现(aside除外)。
+					        	Agile会通过href的值优先找当前页面已经加载好的内容，如果不存在则远程加载本地的一个同名html页面。
+					      		当为远程加载的时候，控制器可以设置data-cache="true|false"定义此远程加载的内容是否要缓存，默认是true缓存</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>href的值有两种形式，第一种是#id；第二种是url相对地址，如：index_section.html?a=1。当为第二种的时候，
+					        	需要远程加载的本地页面的内容中有相应的id为相对地址的文件名的元素，且第二种方式可以通过当前控制器的data-params中获取参数</p>
+			                        </div>
+			                    </li>
+			            </details>
+    				</div>
+				</article>
+				
+				
+				
+				<article data-role="article" id="second_article" style="top:44px;bottom:54px;">
+					<div class="scroller">
+						<details open>
+			                <summary class="sliver">article的实现</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>article控制器data-toggle="article"来实现</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">说明</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>article控制器必须指向一个data-role="article"的组件，比如：<br>
+						       	<code>&lt;article data-role=&quot;article&quot; id=&quot;second_article&quot; data-scroll=&quot;verticle&quot; style=&quot;top:44px;bottom:56px;&quot;&gt;
+
+&lt;/article&gt;</code></p>
+			                        </div>
+			                    </li>
+			            </details>
+					</div>
+				</article>
+				
+				
+				
+				<footer>
+					<ul class="menubar">
+		                <li class="tab active" data-role="tab" href="#first_article" data-toggle="article">
+		                    <i class="icon icon-home-fill"></i>
+		                    <label class="tab-label">Article</label>
+		                </li>
+		                <li class="tab" data-role="tab" href="second_article.html?id=1" data-toggle="article">
+		                    <i class="icon icon-chattip"></i>
+		                    <label class="tab-label">Article</label>
+		                </li>
+		                <li class="tab" href="#third_section" data-toggle="section">
+		                    <i class="icon icon-contact"></i>
+		                    <label class="tab-label">Section</label>
+		                </li>
+		                <li class="tab" href="#fourth_modal" data-toggle="modal">
+		                    <i class="icon icon-app"></i>
+		                    <label class="tab-label">Modal</label>
+		                </li>
+		            </ul>
+				</footer>
+				
+				
+			</section>
+			
+			<section id="third_section" data-role="section">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">新Section</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="index_article" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<details open>
+			                <summary class="sliver">section的实现</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>section控制器data-toggle="section"来实现</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">说明</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>section控制器必须指向一个data-role="section"的组件，比如：<br>
+						       	<code>&lt;section id=&quot;index_section&quot; data-role=&quot;section&quot;&gt;
+
+&lt;/section &gt;</code></p>
+			                        </div>
+			                    </li>
+			            </details>
+    				</div>  
+				</article>
+			</section>
+		</div>
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>		
+		<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+		<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>	
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		<script>
+			$('#second_article').on('articleload', function(){
+				var params = A.Component.params(this);//获取所有参数
+				A.showToast('参数id的值为：'+params.id);
+			});
+		</script>
+	</body>
+</html>

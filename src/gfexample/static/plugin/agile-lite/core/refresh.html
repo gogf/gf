@@ -1,0 +1,155 @@
+<!-- HTML5文件 -->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<title>Agile Lite</title>
+		<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+		<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+	</head>
+	<body>
+		<div id="section_container">
+			<section id="refresh_section" data-role="section" class="active">
+				<header>
+		            <div class="titlebar">
+		            	<a class="left" data-toggle="back" href="#">
+		                    <i class="icon icon-arrowleft"></i>
+		                </a>
+		                <h1 class="text-center">刷新组件</h1>
+		            </div>
+		        </header>
+				<article  data-role="article" id="refresh_article" data-scroll="pull" class="active" style="top:44px;bottom:0px;">
+					<div class="scroller">
+						<details open>
+			                <summary class="sliver">用法</summary>
+			                <ul class="list">
+			                	<li>
+			                        <div class="justify-content">
+			                            <p>需要在页面中引入iscroll-probe.js</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>data-scroll="pull|pulldown|pullup"</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">说明</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>pull：上下拉均出现</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>pulldown：仅出现下拉</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>pullup：仅出现上拉</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">初始化</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>articleload的时候默认初始化</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>手动初始化调用var refresh = A.Refresh('#id')</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">事件</summary>
+			                <ul class="list">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>使用方法：refresh.on('event',function);</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>event支持ISroll的所有事件</p>
+			                        </div>
+			                    </li>
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>扩展支持：refreshInit、pulldown、pullup、scrollTop和scrollBottom</p>
+			                        </div>
+			                    </li>
+			            </details>
+			            
+			            <details open>
+			                <summary class="sliver">示例数据</summary>
+			                <ul class="list" id="content">
+			                    <li>
+			                        <div class="justify-content">
+			                            <p>这里显示拖动刷新的数据</p>
+			                        </div>
+			                    </li>
+			            </details>
+    				</div>  
+				</article>
+			</section>
+		</div>
+
+		
+		<!--- third -->
+		<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+		<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+		<script src="../assets/third/iscroll/iscroll-probe.js"></script>
+		<!---  agile -->
+		<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+		<!-- app -->
+		<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+		<script>
+			//当refresh初始化会进入此监听
+			$('#refresh_article').on('refreshInit', function(){
+				var refresh = A.Refresh(this);
+				refresh.setConfig({
+					pullDownOpts : {
+						normalLabel : '继续下拉',
+			    		releaseLabel : '可以啦可以啦',
+			    		refreshLabel : '终于松开啦'
+					},
+					pullUpOpts : {
+						normalLabel : '上拉试试',
+			    		releaseLabel : '有完没完',
+			    		refreshLabel : '哎呦我去'
+					}
+				});
+				//监听下拉刷新事件，可以做一些逻辑操作，当data-scroll="pullup"时无效
+				refresh.on('pulldown', function(){
+					//setTimeout是模拟异步效果，实际场景请勿使用
+					setTimeout(function(){
+						$('#content').prepend('<li><div class="justify-content"><p>下拉刷新的内容</p></div></li>');
+						refresh.refresh();//当scroll区域有dom结构变化需刷新
+					}, 1000);
+					
+				});
+				//监听上拉刷新事件，可以做一些逻辑操作，当data-scroll="pulldown"时无效
+				refresh.on('pullup', function(){
+					//setTimeout是模拟异步效果，实际场景请勿使用
+					setTimeout(function(){
+						$('#content').append('<li><div class="justify-content"><p>上拉刷新的内容</p></div></li>');
+						refresh.refresh();//当scroll区域有dom结构变化需刷新
+					}, 1000);
+				});
+			});
+		</script>
+	</body>
+</html>

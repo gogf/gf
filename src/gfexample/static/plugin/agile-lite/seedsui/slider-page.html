@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+<title>slider-page</title>
+<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+<style>
+</style>
+</head>
+
+<body>
+<div id="section_container">
+    <section data-role="section" id="page_sliderPage" class="active">
+        <header>
+            <div class="titlebar">
+                <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+                <h1>滑动页面</h1>
+            </div>
+            <ul class="tabbar animate-slide width-full" data-col="5" id="tabbar">
+                <li class="tab active">
+                    <label class="tab-label">头条</label>
+                </li>
+                <li class="tab">
+                    <label class="tab-label">推荐</label>
+                </li>
+                <li class="tab">
+                    <label class="tab-label">科技</label>
+                </li>
+                <li class="tab">
+                    <label class="tab-label">舆情</label>
+                </li>
+                <li class="tab">
+                    <label class="tab-label">动态</label>
+                </li>
+                <hr/>
+            </ul>
+        </header>
+        <article id="main_article" data-role="article" class="active" style="top:84px;">
+            <div class="slider-container" id="carouselPage" style="height: 100%;">
+                <div class="slider-wrapper">
+                    <div class="slider-slide">
+                        第一页
+                    </div>
+                    <div class="slider-slide">
+                        第二页
+                    </div>
+                    <div class="slider-slide">
+                        第三页
+                    </div>
+                    <div class="slider-slide">
+                        第四页
+                    </div>
+                    <div class="slider-slide">
+                        第五页
+                    </div>
+                </div>
+            </div>
+	    </article>
+    </section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+    
+    
+    
+    
+    
+    
+    
+    <script type="text/javascript">
+        var slides=document.querySelectorAll("#carouselPage .slider-slide");
+        //初始化滑动容器
+        var carouselPage;
+        function initSlider(){
+            carouselPage=new Slider("#carouselPage",{
+                "onInit":function(e){
+                    compatibleIosScroll(e);
+                },
+                "onSlideChangeEnd":function(e){
+                    tabActive(e.index);
+                    compatibleIosScroll(e);
+                }
+            });
+        }
+        //初始化数据
+        var pageDataCount=[100,10,30,40,50];
+        function initData(){
+            [].slice.call(slides).forEach(function(n,i,a){
+                var datastr="";
+                for(var j=0;j<pageDataCount[i];j++){
+                    datastr+="<li><div class='justify-content'>第"+i+"页</div></li>"
+                }
+                n.innerHTML='<ul class="list">'+datastr+'</ul>';
+            })
+        }
+        //初始化tabbar菜单
+        var tabbar=document.getElementById("tabbar");
+        var tab=tabbar.querySelectorAll(".tab");
+        function tabActive(index){
+            for(var i=0,t;t=tab[i++];){
+                t.classList.remove("active");
+            }
+            tab[index].classList.add("active");
+        }
+        function initTabbar(){
+            for(var i=0,t;t=tab[i++];){
+                (function(i){
+                    t.addEventListener("click",function(){
+                        carouselPage.slideTo(i-1);
+                        tabActive(i-1);
+                    },false);
+                })(i);
+            }
+        }
+        //给第一页和第二页添加拖动刷新
+        function initDrag(){
+            var drag1=new Dragrefresh(carouselPage.slides[0],{
+                "minScrollTop":1,
+                "onRefreshStart":function(e){
+                    setTimeout(function(){
+                        e.refreshComplete();
+                    }, 2000);
+                },
+                "onRefreshEnd":function(e){
+                    console.log("加载完成");
+                },
+                "onBottom":function(e){
+                    console.log("滚动到底部啦");
+                    //数据加载完成时，隐藏下面的元素
+                    setTimeout(function(){
+                        e.bottomRefreshEl.style.display="none";
+                    }, 5000);
+                }
+            });
+
+            var drag2=new Dragrefresh(carouselPage.slides[1],{
+                "onRefresh":function(e){
+                    setTimeout(function(){
+                        e.refreshComplete();
+                    }, 2000);
+                },
+                "onRefreshEnd":function(e){
+                    console.log("加载完成");
+                },
+                "onBottom":function(e){
+                    console.log("滚动到底部啦");
+                    //数据加载完成时，隐藏下面的元素
+                    setTimeout(function(){
+                        e.bottomRefreshEl.style.display="none";
+                    }, 5000);
+                }
+            });
+        }
+        window.addEventListener("load",function(){
+            initData();
+            initSlider();
+            initTabbar();
+            initDrag();
+        },false);
+
+        /*兼容Ios浏览器滚动到最底或者最顶，不能滚动的问题*/
+        [].slice.call(slides).forEach(function(n,i,a){
+            n.addEventListener("scroll",function(e){
+                compatibleIosScroll(e);
+            },false);
+        })
+        function compatibleIosScroll(e){
+            var container=e.target;
+            var clientHeight=container.clientHeight; 
+            var scrollTop=container.scrollTop; 
+            var scrollHeight=container.scrollHeight;
+            if(scrollTop==0){
+                container.scrollTop=1;
+                return;
+            }
+            if (clientHeight+scrollTop>=scrollHeight){
+                container.scrollTop=container.scrollTop-1;
+            }
+        }
+        
+        
+    </script>
+</body>
+</html>

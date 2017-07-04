@@ -1,0 +1,366 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<meta name="format-detection" content="telephone=no">
+	<title>grid</title>
+    <link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+	<section data-role="section" id="page_grid" class="active">
+		<header>
+		    <div class="titlebar">
+		        <a data-toggle="back" href="#"><i class="icon icon-arrowleft"></i></a>
+		        <h1>Grid栅格化</h1>
+		    </div>
+		</header>
+		<article id="main_article" data-role="article" class="active">
+			<p class="title">Metro风格</p>
+			<ul class="grid metro" data-col="2">
+				<li style="width:60%">
+					<a class="bg-1">
+						<div class="sticker top left"><span>NEW</span></div>
+						<i class="icon icon-contact-fill"></i>
+						<span class="metro-tip">3</span>
+						<label class="nowrap">通讯录</label>
+					</a>
+				</li>
+				<li style="width:40%">
+					<a class="bg-2">
+						<i class="icon icon-write-fill"></i>
+						<label>审批</label>
+					</a>
+				</li>
+				<li style="width:40%">
+					<a class="bg-3">
+						<i class="icon icon-position-fill"></i>
+						<label>定位</label>
+					</a>
+				</li>
+				<li style="width:60%">
+					<a class="bg-4">
+						<i class="icon icon-gear-fill"></i>
+						<label>设置</label>
+					</a>
+				</li>
+			</ul>
+			<p class="title">Metro复杂布局</p>
+			
+			<div class="box" style="padding:2px 2px 0 2px;">
+				<div class="box-flex-1 box box-middlecenter box-vertical relative bg-1" style="margin:2px;">
+					<p style="font-size: 50px;">300</p>
+					<p style="opacity: 0.7;">您的积分</p>
+					<p style="position: absolute;right:10px;bottom:10px;text-align: right;">小明，欢迎您</p>
+				</div>
+				<div class="box box-vertical box-flex-1" style="margin:2px;">
+					<div class="box-flex-1 bg-2" style="padding:0 4px;margin-bottom:4px;">
+						<ul class="list bg-transparent noclick">
+							<li><div class="justify-content">资料1</div></li>
+							<li><div class="justify-content">资料2</div></li>
+						</ul>
+						<div style="padding:8px 0;text-align: right;"><a style="color:white;">更多资料...</a></div>
+					</div>
+					<div class="box-flex-1 box box-horizontal">
+						<ul class="grid metro" data-col="2" style="padding:0;width:100%;">
+							<li style="padding:0 2px 0 0">
+								<a class="bg-3" style="height:100px;">
+									<i class="icon icon-contact-fill"></i>
+									<label class="nowrap">海关警员</label>
+								</a>
+							</li>
+							<li style="padding:0 0 0 2px">
+								<a class="bg-4" style="height:100px;">
+									<i class="icon icon-write-fill"></i>
+									<label>电子书</label>
+								</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			
+			<ul class="grid metro" data-col="3" style="padding:0 2px;">
+				<li style="width:50%">
+					<a class="bg-5">
+						<i class="icon icon-chartpie-fill"></i>
+						<label class="nowrap">岗位练兵</label>
+					</a>
+				</li>
+				<li style="width:25%">
+					<a class="bg-6">
+						<i class="icon icon-write-fill"></i>
+						<label>在线问卷</label>
+					</a>
+				</li>
+				<li style="width:25%">
+					<a class="bg-7">
+						<i class="icon icon-position-fill"></i>
+						<label>在线提问</label>
+					</a>
+				</li>
+				<li style="width:25%">
+					<a class="bg-8">
+						<i class="icon icon-folder-fill"></i>
+						<label>友情链接</label>
+					</a>
+				</li>
+				<li style="width:25%">
+					<a class="bg-9">
+						<i class="icon icon-gear-fill"></i>
+						<label>备忘录</label>
+					</a>
+				</li>
+				<li style="width:50%">
+					<a class="bg-10">
+						<i class="icon icon-contact-fill"></i>
+						<span class="metro-tip">3</span>
+						<label class="nowrap">消息推送</label>
+					</a>
+				</li>
+			</ul>
+
+			<p class="title">应用图标</p>
+			<ul class="grid size54" data-col="3" data-rowspace="8">
+				<li>
+					<a class="photo bg-1">
+						<i class="icon icon-contact-fill"></i>
+						<span class="tip">999</span>
+					</a>
+					<label>通讯录</label>
+				</li>
+				<li>
+					<a class="photo bg-2">
+						<i class="icon icon-write-fill"></i>
+						<span class="badge">999</span>
+					</a>
+					<label>审批</label>
+				</li>
+				<li>
+					<a class="photo bg-3">
+						<i class="icon icon-position-fill"></i>
+					</a>
+					<label>定位</label>
+				</li>
+				<li>
+					<a class="photo bg-4">
+						<i class="icon icon-gear-fill"></i>
+					</a>
+					<label>设置</label>
+				</li>
+				<li>
+					<a class="photo bg-5">
+						<i class="icon icon-folder-fill"></i>
+					</a>
+					<label>文档</label>
+				</li>
+				<li>
+					<a class="photo bg-6">
+						<i class="icon icon-chartpie-fill"></i>
+					</a>
+					<label>数据分析</label>
+				</li>
+			</ul>
+
+			<p class="title">应用图标-border</p>
+			<ul class="grid border size54" data-col="3" data-rowspace="8">
+				<li>
+					<a class="photo border">
+						<i class="icon icon-contact-fill"></i>
+						<span class="tip">999</span>
+					</a>
+					<label>通讯录</label>
+				</li>
+				<li>
+					<a class="photo border">
+						<i class="icon icon-write-fill"></i>
+					</a>
+					<label>审批</label>
+				</li>
+				<li>
+					<a class="photo border">
+						<i class="icon icon-position-fill"></i>
+					</a>
+					<label>定位</label>
+				</li>
+				<li>
+					<a class="photo border">
+						<i class="icon icon-gear-fill"></i>
+					</a>
+					<label>设置</label>
+				</li>
+				<li>
+					<a class="photo border">
+						<i class="icon icon-folder-fill"></i>
+					</a>
+					<label>文档</label>
+				</li>
+				<li>
+					<a class="photo border">
+						<i class="icon icon-chartpie-fill"></i>
+					</a>
+					<label>数据分析</label>
+				</li>
+			</ul>
+
+			<p class="title">裸图标</p>
+			<ul class="grid" data-col="3" data-rowspace="8">
+				<li>
+					<a class="color-1">
+						<i class="icon icon-contact-fill"></i>
+						<span class="tip">999</span>
+					</a>
+					<label>通讯录</label>
+				</li>
+				<li>
+					<a class="color-2">
+						<i class="icon icon-write-fill"></i>
+					</a>
+					<label>审批</label>
+				</li>
+				<li>
+					<a class="color-3">
+						<i class="icon icon-position-fill"></i>
+					</a>
+					<label>定位</label>
+				</li>
+				<li>
+					<a class="color-4">
+						<i class="icon icon-gear-fill"></i>
+					</a>
+					<label>设置</label>
+				</li>
+				<li>
+					<a class="color-5">
+						<i class="icon icon-folder-fill"></i>
+					</a>
+					<label>文档</label>
+				</li>
+				<li>
+					<a class="color-6">
+						<i class="icon icon-chartpie-fill"></i>
+					</a>
+					<label>数据分析</label>
+				</li>
+			</ul>
+
+			<p class="title">裸图标-border</p>
+			<ul class="grid border" data-col="3" data-rowspace="8">
+				<li>
+					<a class="color-1">
+						<i class="icon icon-contact-fill"></i>
+						<span class="tip">999</span>
+					</a>
+					<label>通讯录</label>
+				</li>
+				<li>
+					<a class="color-2">
+						<i class="icon icon-write-fill"></i>
+					</a>
+					<label>审批</label>
+				</li>
+				<li>
+					<a class="color-3">
+						<i class="icon icon-position-fill"></i>
+					</a>
+					<label>定位</label>
+				</li>
+				<li>
+					<a class="color-4">
+						<i class="icon icon-gear-fill"></i>
+					</a>
+					<label>设置</label>
+				</li>
+				<li>
+					<a class="color-5">
+						<i class="icon icon-folder-fill"></i>
+					</a>
+					<label>文档</label>
+				</li>
+				<li>
+					<a class="color-6">
+						<i class="icon icon-chartpie-fill"></i>
+					</a>
+					<label>数据分析</label>
+				</li>
+			</ul>
+
+			<p class="title">相册</p>
+			<ul class="grid radius8 album" data-col="3">
+				<li>
+					<a style="background-image: url(http://robort007.github.io/SeedsUI/preview/img/components/1.jpg)"></a>
+				</li>
+				<li>
+					<a style="background-image: url(http://robort007.github.io/SeedsUI/preview/img/components/2.jpg)"></a>
+				</li>
+				<li>
+					<a class="default">
+						<i class="icon icon-camera size54"></i>
+					</a>
+				</li>
+			</ul>
+			<ul class="grid album" data-col="3">
+				<li>
+					<a class="radius8" style="background-image: url(http://robort007.github.io/SeedsUI/preview/img/components/4.jpg)">
+						<span class="close"><i class="icon icon-close"></i></span>
+					</a>
+				</li>
+				<li>
+					<a class="radius8" style="background-image: url(http://robort007.github.io/SeedsUI/preview/img/components/5.jpg)">
+						<span class="close"><i class="icon icon-close"></i></span>
+					</a>
+				</li>
+				<li>
+					<a class="radius8 default">
+						<i class="icon icon-camera size54"></i>
+					</a>
+				</li>
+			</ul>
+			<p class="title">缩略图</p>
+			<ul class="grid album" data-rowspace="8" data-col="3">
+				<li>
+					<a>
+						<img src="http://robort007.github.io/SeedsUI/preview/img/components/contact.jpg"/>
+						<span class="tip">新</span>
+					</a>
+					<label>通讯录</label>
+				</li>
+				<li>
+					<a><img src="http://robort007.github.io/SeedsUI/preview/img/components/tree.jpg"/></a>
+					<label>树结构</label>
+				</li>
+				<li>
+					<a><img src="http://robort007.github.io/SeedsUI/preview/img/components/contact.jpg"/></a>
+					<label>通讯录</label>
+				</li>
+				<li>
+					<a><img src="http://robort007.github.io/SeedsUI/preview/img/components/contact.jpg"/></a>
+					<label>通讯录</label>
+				</li>
+			</ul>
+		</article>
+	</section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	
+    
+    
+    
+    
+    
+	<script>
+		
+	</script>
+</body>
+</html>

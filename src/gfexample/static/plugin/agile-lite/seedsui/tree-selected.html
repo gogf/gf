@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"><meta name="format-detection" content="telephone=no">
+	<title>tree-selected</title>
+	<link rel="stylesheet" href="../assets/agile/css/agile.layout.css">
+<link rel="stylesheet" href="../assets/third/seedsui/plugin/seedsui/seedsui.min.css">
+</head>
+
+<body>
+<div id="section_container">
+    <section data-role="section" id="page_treeSelected" class="active">
+        <header>
+           <div class="titlebar">
+                <a class="left" data-toggle="back" href="#">
+                    <i class="icon icon-arrowleft"></i>
+                    <span>返回</span>
+                </a>
+                <h1 class="text-center">选择人员</h1>
+                <a href="javascript:getSelected()" class="right">确定</a>
+            </div>
+        </header>
+        <article id="main_article" data-role="article" class="active">
+            <div class="statusbar horizontal hide" id="selected-box"></div>
+            
+            <div class="tree-box">
+                <ul class="tree" id="tree">
+                    <li id="group-1" data-name="业务产品部">
+                        <div class="treetitle"> <i class="treeicon icon-arrowright"></i>
+                            <span class="icon icon-persons radiusround events-none"></span>
+                            <a class="icontitle events-none">业务产品部</a>
+                            <a class="icon icon-rdoadd right middle"></a>
+                        </div>
+                        <ul>
+                            <li id="group-2" data-name="研发体系">
+                                <div class="treetitle">
+                                    <i class="treeicon icon-arrowright"></i>
+                                    <span class="icon icon-persons radiusround events-none"></span>
+                                    <a class="icontitle events-none">研发体系</a>
+                                    <a class="icon icon-rdoadd right middle"></a>
+                                </div>
+                                <ul>
+                                    <li id="group-3" data-name="开发一部">
+                                        <div class="treetitle">
+                                            <i class="treeicon icon-arrowright"></i>
+                                            <span class="icon icon-persons radiusround events-none"></span>
+                                            <a class="icontitle events-none">开发一部</a>
+                                            <a class="icon icon-rdoadd right middle"></a>
+                                        </div>
+                                        <ul>
+                                        	<li id="group-4" data-name="成少波">
+                                        		<div class="treetitle">
+                                        			<span class="radiusround" style="background-color: #53c6fd;">波</span>
+		                                            <a class="icontitle events-none">成少波</a>
+		                                            <a class="icon icon-rdoadd right middle"></a>
+		                                        </div>
+                                        	</li>
+                                        	<li id="group-5" data-name="颜学文">
+                                        		<div class="treetitle">
+                                        			<span class="radiusround" style="background-color: #3ae3ea;">文</span>
+		                                            <a class="icontitle events-none">颜学文</a>
+		                                            <a class="icon icon-rdoadd right middle"></a>
+		                                        </div>
+                                        	</li>
+                                        	<li id="group-6" data-name="张泉">
+                                        		<div class="treetitle">
+                                        			<span class="radiusround" style="background-color: #ff6f36;">泉</span>
+		                                            <a class="icontitle events-none">张泉</a>
+		                                            <a class="icon icon-rdoadd right middle"></a>
+		                                        </div>
+                                        	</li>
+                                        </ul>
+                                    </li>
+                                    <li id="group-7" data-name="开发二部">
+                                        <div class="treetitle">
+                                            <i class="treeicon icon-arrowright"></i>
+                                            <span class="icon icon-persons radiusround events-none"></span>
+                                            <a class="icontitle events-none">开发二部</a>
+                                            <a class="icon icon-rdoadd right middle"></a>
+                                        </div>
+                                    </li>
+                                    <li id="group-8" data-name="开发三部">
+                                        <div class="treetitle">
+                                            <i class="treeicon icon-arrowright"></i>
+                                            <span class="icon icon-persons radiusround events-none"></span>
+                                            <a class="icontitle events-none">开发三部</a>
+                                            <a class="icon icon-rdoadd right middle"></a>
+                                        </div>
+                                        <ul>
+                                            <li id="group-9" data-name="开发一部">
+                                                <div class="treetitle">
+                                                    <i class="treeicon icon-arrowright"></i>
+                                                    <span class="icon icon-persons radiusround events-none"></span>
+                                                    <a class="icontitle events-none">开发一组</a>
+                                                    <a class="icon icon-rdoadd right middle"></a>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li id="group-10" data-name="市场体系">
+                                <div class="treetitle">
+                                    <i class="treeicon icon-arrowright"></i>
+                                    <span class="icon icon-persons radiusround events-none"></span>
+                                    <a class="icontitle events-none">市场体系</a>
+                                    <a class="icon icon-rdoadd right middle"></a>
+                                </div>
+                                <ul>
+                                    <li id="group-11" data-name="上海办">
+                                        <div class="treetitle">
+                                            <i class="treeicon icon-arrowright"></i>
+                                            <span class="icon icon-persons radiusround events-none"></span>
+                                            <a class="icontitle events-none">上海办</a>
+                                            <a class="icon icon-rdoadd right middle"></a>
+                                        </div>
+                                    </li>
+                                    <li id="group-12" data-name="广州办名字超长超长超长超">
+                                        <div class="treetitle">
+                                            <i class="treeicon icon-arrowright"></i>
+                                            <span class="icon icon-persons radiusround events-none"></span>
+                                            <a class="icontitle events-none">广州办名字超长超长超长超</a>
+                                            <a class="icon icon-rdoadd right middle"></a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </article>
+    </section>
+</div>
+<!--- third -->
+	<script src="../assets/third/jquery/jquery-2.1.3.min.js"></script>
+	<script src="../assets/third/jquery/jquery.mobile.custom.min.js"></script>
+	<!---  agile -->
+	<script type="text/javascript" src="../assets/agile/js/agile.js"></script>
+<script type="text/javascript" src="../assets/bridge/exmobi.js"></script>
+<script type="text/javascript" src="../assets/bridge/agile.exmobi.js"></script>			
+	<!-- app -->
+	<script type="text/javascript" src="../assets/app/js/app.seedsui.js"></script>
+	<script type="text/javascript" src="../assets/third/seedsui/plugin/seedsui/seedsui.min.js"></script>
+	<script>
+    var tr;
+    var noChildToast = new Toast("没有子节点", {delay:2000});
+	window.addEventListener("load",function(e){
+        //注入数据时，注意根据姓氏获得颜色
+        //console.log("成少波".toPinyin().substr(0,1).toColor());
+
+        //树结构
+        tr=new Tree("#tree",{
+            "selectedContainer":"#selected-box",
+            "onTap":function(s){
+                console.log("您点击了：");
+                console.log(s.target);
+                console.log("当前节点的li为：");
+                console.log(s.elLI);
+            },
+            "onTapLastChild":function(s){//没有子节点
+                noChildToast.show();
+                if(s.elIcon)$(s.elIcon).remove();
+            }
+        });
+        
+	},false);
+    //获得选中元素
+    function getSelected(){
+        console.log("你所选择的树节点Id为：");
+        console.log(tr.selectedNodes);
+    }
+	
+	
+	</script>
+</body>
+</html>

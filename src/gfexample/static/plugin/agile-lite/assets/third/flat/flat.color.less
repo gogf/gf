@@ -1,0 +1,451 @@
+@color-primary:#3779d0;
+@color-primary-font:#fff;
+@color-status:#f2f2f2;
+@color-border:#ddd;
+@color-font:#454545;
+@color-title:#888;
+@color-icon:#aaa;
+@color-cancel:#dd524d;
+@color-submit:#88d038;
+@color-disable:#d9d9d9;
+@color-tip:#e63016;
+@color-banner:#000;
+@color-banner-label:#fff;
+@color-banner-dot:#3779d0;
+@color-banner-dot-active:#fff;
+
+/*******************alige框架样式-start*******************/
+/*listdrag列表拖动控件*/
+/*listdrag列表拖动控件：动画效果*/
+.agile-refresh-spinner{
+	display: inline-block;
+    -webkit-animation: spinner .8s infinite linear;
+    animation: spinner .8s infinite linear;
+}
+/*listdrag列表拖动控件：刷新图标*/
+.agile-refresh-spinner:before{
+	color:@color-primary;
+	font-family: 'iconline';
+	content: "\e1b2";
+}
+/*listdrag列表拖动控件：向上图标*/
+.agile-refresh-up-icon:before{
+	font-family: 'iconline';
+	content: "\e601";
+}
+/*listdrag列表拖动控件：向下图标*/
+.agile-refresh-down-icon:before{
+	color:@color-primary;
+	font-family: 'iconline';
+	content: "\e600";
+}
+
+/*loading弹出框控件*/
+/*loading弹出框控件：动画效果*/
+.agile-popup-spinner{
+	animation:gradient 1.5s infinite;
+    -webkit-animation: gradient 1.5s infinite;
+}
+/*loading弹出框控件：加载图标*/
+.agile-popup-spinner:before{
+	font-family: 'iconlogo';
+	content: "\e628";
+	color:#fff;
+	font-size:80px;
+	line-height:120px;
+}
+/*loading弹出框控件：关闭图标*/
+.agile-popup-close:before{
+	font-family: 'iconline';
+	content: "\e1a8";
+	color:#fff;
+	opacity:0.6;
+	font-size:20px;
+}
+.agile-popup-close:active{
+	opacity:1;
+}
+
+/*底部弹出按钮*/
+.agile-popup-actionsheet-normal{
+	background-color:@color-primary;
+	color:@color-primary-font;
+}
+.agile-popup-actionsheet-normal:active{
+	
+}
+.agile-popup-actionsheet-cancel{
+	background-color:@color-cancel;
+	color:@color-primary-font;
+}
+.agile-popup-actionsheet-cancel:active{
+	background-color:darken(@color-cancel,10%);
+}
+
+/*滑动banner*/
+[data-role="banner"] .dots{
+	opacity: .7;
+	background-color:@color-banner;
+}
+[data-role="banner"] .dots ul li a{
+	background:@color-banner-dot;
+}
+[data-role="banner"] .dots ul li.active a{
+	background-color:@color-banner-dot-active;
+}
+.slider_label{
+	color:@color-banner-label;
+}
+/*******************alige框架样式-end*******************/
+/*******************全局样式global-start*******************/
+﻿.section-title {
+	color:@color-title;
+	border-bottom:1px solid @color-border;
+}
+hr{
+	border-top:1px solid @color-border;
+}
+/*******************全局样式global-end*******************/
+/*******************布局样式layout-start*******************/
+/* 提供固定布局:header、footer、wrapper和控件:titlebar、tabbar、menubar */
+/*头部栏*/
+.titlebar{
+	background-color:@color-primary;
+}
+.titlebar h1{
+	color: @color-primary-font;
+}
+.titlebar a{
+	color:@color-primary-font;
+}
+.titlebar a:active{
+	color:rgba(0,0,0,.3);
+}
+
+/*页签菜单栏*/
+.tabbar{
+	background-color:@color-status;
+}
+.tab{
+	color:@color-font;
+}
+.tab:active,.tab.active{
+	color: @color-primary;
+	border-bottom:2px solid @color-primary;
+}
+.tabbar-slider{
+	background-color:@color-status;
+}
+.tab-more{
+	color:@color-icon;
+	background-color:@color-status;
+}
+
+/*底部菜单栏*/
+.menubar{
+	background-color:@color-primary;
+}
+.menubar .menu{
+	color:rgba(255,255,255,.6);
+}
+.menubar .menu:active,.menubar .menu.active{
+	color:@color-primary-font;
+}
+
+/*标题*/
+p.title{
+	color:#d1d2d7;
+}
+
+/*九宫控件*/
+
+/*九宫控件-单元格*/
+.grid-cell{
+	color:@color-icon;
+}
+/*九宫控件-图片*/
+.grid-img{
+	background-color:@color-primary;
+}
+.grid-img .iconfont{
+	color:@color-primary-font;
+}
+
+.grid-img .tip,.grid-thumbnail .tip{
+	color:@color-primary-font;
+	background-color:@color-tip;
+}
+
+/*矩形框*/
+.card{
+	border:1px solid @color-border;
+}
+/*******************布局样式layout-end*******************/
+
+/*******************表单元素form-start*******************/
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input[type="week"],
+input[type="month"],
+input[type="time"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="search"],
+input[type="file"],
+input[type="color"],
+select{
+	border: 1px solid @color-border;
+}
+textarea{
+	border:1px solid @color-border;
+}
+input[type="checkbox"]:after,input[type="radio"]:after{
+	color:@color-icon;
+}
+/*自定义表单元素*/
+
+/*开关控件toggle-默认风格*/
+/*关闭状态*/
+.toggle {
+	 border:1px solid @color-border;
+}
+/*关闭状态圆点*/
+.toggle .toggle-handle{
+	 background-color:@color-border;
+}
+/*关闭状态文字off*/
+.toggle:after{
+	color: @color-icon;
+}
+
+/*打开状态小圆点*/
+.toggle.active .toggle-handle{
+	background-color: @color-primary;
+}
+/*打开状态文字on*/
+.toggle.active:after{
+	color: @color-icon;
+}
+
+
+/*开关控件toggle-经典风格*/
+.classic.toggle{
+	background-color:@color-border;
+}
+.classic.toggle .toggle-handle{
+	background-color:@color-primary-font;
+}
+.classic.toggle:after{
+	color:@color-icon;
+}
+
+.classic.toggle.active{
+	background-color:@color-primary;
+}
+.classic.toggle.active .toggle-handle{
+	background-color:@color-primary-font;
+}
+.classic.toggle.active:after{
+	color:@color-primary-font;
+}
+
+/*开关控件toggle-ios风格*/
+.ios.toggle {
+	border:1px solid @color-border;
+	background-color:@color-primary-font;
+}
+.ios.toggle .toggle-handle {
+	background-color:@color-primary-font;
+	border:1px solid @color-border;
+}
+
+.ios.toggle.active {
+	border-color:@color-primary;
+	background-color:@color-primary;
+}
+.ios.toggle.active:after{
+	color:@color-primary-font;
+}
+.ios.toggle.active .toggle-handle {
+	border-color:@color-primary;
+}
+
+[data-role="select"] select{
+	color:@color-icon;
+	background-color:transparent;
+}
+[data-role="file"]:active,
+[data-role="date"]:active,
+[data-role="time"]:active,
+[data-role="barcode"]:active,
+[data-role="qrcode"]:active,
+[data-role="checkbox"]:active,
+[data-role="radio"]:active
+{
+	background-color:#eee;
+}
+
+[data-role="select"]:after,
+[data-role="file"]:after,
+[data-role*="file-"]:after,
+[data-role="date"]:after,
+[data-role="time"]:after,
+[data-role="barcode"]:after,
+[data-role="qrcode"]:after,
+[data-role="checkbox"] input[type="checkbox"],
+[data-role="radio"] input[type="radio"]{
+	color: @color-icon;
+}
+/*******************表单元素form-end*******************/
+
+
+/*******************表单布局formlayout-start*******************/
+.form-common .label-left,.form-common .label-right{
+	background-color:@color-primary-font;
+}
+.form-common .label-left{
+	color:@color-font;
+}
+
+/*矩形表单*/
+.form-square .label-left{
+	color:@color-font;
+	border-color:@color-border;
+}
+.form-square .label-right{
+	border-color:@color-border;
+}
+
+/*******************表单布局formlayout-end*******************/
+
+
+/*******************按钮button-start*******************/
+/*按钮-普通按钮*/
+button,input[type="button"],a.button{
+	color: @color-primary-font;
+	background-color:@color-primary;
+}
+button.outline,input[type="button"].outline,a.button.outline{
+	color:@color-primary;
+	border:1px solid @color-primary;
+}
+button:active,input[type="button"]:active,a.button:active{
+	color:@color-primary-font;
+	border-color:darken(@color-primary,10%);
+	background-color:darken(@color-primary,10%);
+}
+
+/*按钮-禁用按钮*/
+button.disable,input[type="button"].disable,a.button.disable{
+	background-color:@color-disable;
+}
+
+button.disable.outline,input[type="button"].disable.outline,a.button.disable.outline{
+	color:@color-disable;
+	border-color:@color-disable;
+}
+
+/*按钮-取消按钮*/
+button.cancel,input[type="button"].cancel,a.button.cancel{
+	background-color:@color-cancel;
+}
+
+button.cancel.outline,input[type="button"].cancel.outline,a.button.cancel.outline{
+	color:@color-cancel;
+	border-color:@color-cancel;
+}
+
+button.cancel:active,input[type="button"].cancel:active,a.button.cancel:active{
+	color:@color-primary-font;
+	border-color:darken(@color-cancel,10%);
+	background-color:darken(@color-cancel,10%);
+}
+
+
+/*按钮-提交按钮*/
+button.submit,input[type="submit"],a.button.submit{
+	background-color:@color-submit;
+}
+
+button.submit.outline,input[type="submit"].outline,a.button.submit.outline{
+	color:@color-submit;
+	border-color:@color-submit;
+}
+
+button.submit:active,input[type="submit"]:active,a.button.submit:active{
+	color:@color-primary-font;
+	border-color:darken(@color-submit,10%);
+	background-color:darken(@color-submit,10%);
+}
+/*按钮-链接*/
+button.link,input[type="button"].link,a.button.link{
+	color:@color-primary;
+}
+button.link.outline,input[type="button"].link.outline,a.button.link.outline{
+	border:1px solid @color-primary;
+	color:@color-primary;
+}
+button.link:active,input[type="button"].link:active,a.button.link:active{
+	color:darken(@color-primary,10%);
+	border-color:darken(@color-primary,10%);
+}
+/*按钮-气泡*/
+button .tip,input[type="button"] .tip,a.button .tip{
+	color:@color-primary-font;
+	background-color: rgba(0, 0, 0, .15);
+}
+button.outline .tip,input[type="button"].outline .tip,a.button.outline .tip{
+	background-color:@color-tip;
+}
+
+/*******************按钮button-end*******************/
+
+/*******************列表样式list-start*******************/
+/*列表样式*/
+.listitem{
+	background-color:@color-primary-font;
+}
+.listitem li{
+	border-bottom: 1px solid @color-border;
+}
+.listitem li:active,.listitem li.active{
+	background-color:darken(@color-status,10%);
+}
+.listitem li small{
+	color:@color-icon;
+}
+.listitem li .iconfont{
+	color:@color-icon;
+}
+
+/*列表样式-左侧图标*/
+.listitem li .icon , .listitem li .ricon{
+    color:@color-icon;
+}
+.listitem li button.ricon,.listitem li a.button.ricon{
+	color:@color-primary-font;
+}
+/*列表样式-方块图标*/
+.square{
+	background-color:@color-primary;
+}
+.square .square-icon,.square i.iconfont,.square img{
+	color:@color-primary-font;
+}
+.square .tip{
+	color:@color-primary-font;
+	background-color:@color-tip;
+}
+/*列表样式-右侧文字*/
+.listitem li.sliver{
+	color:@color-icon;
+	background-color:@color-status;
+}
+.listitem li.title{
+	color:@color-title;
+}
+/***********列表样式list-end**********/
