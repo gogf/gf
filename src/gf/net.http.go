@@ -9,7 +9,9 @@ import (
     "strings"
     "path/filepath"
 )
-
+/**
+    @todo 静态文件的处理性能比Nginx稍弱，不能使用标准库方法，需自行处理
+ */
 // 全局http封装对象
 var Http gstHttp
 
