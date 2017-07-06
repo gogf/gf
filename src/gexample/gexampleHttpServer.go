@@ -6,6 +6,7 @@ import (
     "net/http"
     "io"
     "time"
+    "g"
 )
 
 func HelloServer(w http.ResponseWriter, req *http.Request) {
@@ -20,11 +21,11 @@ func main() {
     //    ReadTimeout   : 10 * time.Second,
     //    WriteTimeout  : 10 * time.Second,
     //}
-    //gf.Http.Server.NewByConfig(s)
+    //g.Http.Server.NewByConfig(s)
     //http.HandleFunc("/hello2", HelloServer2)
-    //gf.Http.Server.BindHandle("/hello2", HelloServer2)
+    //g.Http.Server.BindHandle("/hello2", HelloServer2)
 	//
-    //gf.Http.Server.BindHandleByMap(map[string]http.HandlerFunc {
+    //g.Http.Server.BindHandleByMap(map[string]http.HandlerFunc {
     //    "/h":  HelloServer,
     //    "/h1": HelloServer,
     //    "/h2": HelloServer,
@@ -32,10 +33,10 @@ func main() {
     //})
     //dir := "/home/john/Workspace/Go/gf/src/gfexample/static"
     //http.Handle("/static", http.StripPrefix("/static/plugin/agile-lite", http.FileServer(http.Dir(dir))))
-    //gf.Http.Server.Start(":8199")
-    //s := gf.Http.Server.NewByAddr(":8199")
+    //g.Http.Server.Start(":8199")
+    //s := g.Http.Server.NewByAddr(":8199")
     //s.BindHandle("/hello", HelloServer)
-    gf.Http.Server.SetSetting(gf.GstHttpServerSetting {
+    g.Http.Server.SetSetting(g.GHttpServerSetting {
         Addr           : ":8199",
         ReadTimeout    : 10 * time.Second,
         WriteTimeout   : 10 * time.Second,
@@ -45,7 +46,7 @@ func main() {
         ServerRoot     : "/home/john/Workspace/Go/gf/src/gfexample/static/",
     })
 
-    gf.Http.Server.BindHandle("/hello", HelloServer2)
+    g.Http.Server.BindHandle("/hello", HelloServer2)
 
-    gf.Http.Server.Run()
+    g.Http.Server.Run()
 }

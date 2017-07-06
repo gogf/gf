@@ -1,11 +1,11 @@
-package gf
+package g
 
 
-type gstInfo struct {
+type gInfo struct {
     Version string
 }
 
 // 框架设置项
-var Info = gstInfo {
+var Info = gInfo {
     Version : "0.10",
 }

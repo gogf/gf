@@ -1,13 +1,13 @@
-package gf
+package g
 
 import (
     "os"
     "path/filepath"
 )
 
-var File gstFile
+var File gFile
 
-type gstFile struct {
+type gFile struct {
     Separator string
 }
 
@@ -16,13 +16,13 @@ func init() {
 }
 
 // 判断所给路径文件/文件夹是否存在
-func (f gstFile) Exists(path string) bool {
+func (f gFile) Exists(path string) bool {
     _, err := os.Stat(path)
     return err == nil || os.IsExist(err)
 }
 
 // 判断所给路径是否为文件夹
-func (f gstFile) IsDir(path string) bool {
+func (f gFile) IsDir(path string) bool {
     s, err := os.Stat(path)
     if (err == nil) {
         return s.IsDir()

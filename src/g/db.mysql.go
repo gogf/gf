@@ -1,4 +1,4 @@
-package gf
+package g
 
 import (
     "log"
@@ -10,22 +10,22 @@ import (
 )
 
 // 数据库全局空对象，用于封装方法
-var Db gstDbGlobalObj
+var Db gDb
 
-type gstDbGlobalObj   struct {}
+type gDb struct {}
 
-type gstDbTransaction struct {
+type gDbTransaction struct {
     db *sql.DB
     tx *sql.Tx
 }
 
-type GstDb struct {
-    Transaction gstDbTransaction
+type GDb struct {
+    Transaction gDbTransaction
     db *sql.DB
 }
 
 // 数据库配置
-type GstDbConfig struct {
+type GDbConfig struct {
     Host string
     Port string
     User string
@@ -34,7 +34,7 @@ type GstDbConfig struct {
 }
 
 // 获得一个数据库操作对象
-func (d gstDbGlobalObj) New(c GstDbConfig) (*GstDb) {
+func (d gDb) New(c GDbConfig) (*GDb) {
     db, err := sql.Open(
         "mysql",
         fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name),
@@ -42,21 +42,21 @@ func (d gstDbGlobalObj) New(c GstDbConfig) (*GstDb) {
     if err != nil {
         log.Fatal(err)
     }
-    return &GstDb {
+    return &GDb {
         db : db,
-        Transaction: gstDbTransaction {
+        Transaction: gDbTransaction {
             db : db,
         },
     }
 }
 
 // 关闭链接
-func (d *GstDb) Close() {
+func (d *GDb) Close() {
     d.db.Close()
 }
 
 // 数据库sql查询
-func (d *GstDb) Query(q string, args ...interface{}) (*sql.Rows, error) {
+func (d *GDb) Query(q string, args ...interface{}) (*sql.Rows, error) {
     rows, err := d.db.Query(q, args ...)
     if (err == nil) {
         return rows, nil
@@ -65,12 +65,12 @@ func (d *GstDb) Query(q string, args ...interface{}) (*sql.Rows, error) {
 }
 
 // 执行一条sql，并返回执行情况
-func (d *GstDb) Exec(q string, args ...interface{}) (sql.Result, error) {
+func (d *GDb) Exec(q string, args ...interface{}) (sql.Result, error) {
     return d.db.Exec(q, args ...)
 }
 
 // 数据库查询，获取查询结果集，以列表结构返回
-func (d *GstDb) GetAll(q string) ([]map[string]string, error) {
+func (d *GDb) GetAll(q string) ([]map[string]string, error) {
     // 执行sql
     rows, err := d.Query(q)
     if err != nil || rows == nil {
@@ -103,7 +103,7 @@ func (d *GstDb) GetAll(q string) ([]map[string]string, error) {
 }
 
 // 数据库查询，获取查询结果集，以关联数组结构返回
-func (d *GstDb) GetOne(q string) (map[string]string, error) {
+func (d *GDb) GetOne(q string) (map[string]string, error) {
     list, err := d.GetAll(q)
     if err != nil {
         return nil, err
@@ -112,7 +112,7 @@ func (d *GstDb) GetOne(q string) (map[string]string, error) {
 }
 
 // 数据库查询，获取查询字段值
-func (d *GstDb) GetValue(q string) (string, error) {
+func (d *GDb) GetValue(q string) (string, error) {
     one, err := d.GetOne(q)
     if err != nil {
         return "", err
@@ -124,12 +124,12 @@ func (d *GstDb) GetValue(q string) (string, error) {
 }
 
 // sql预处理
-func (d *GstDb) Prepare(q string) (*sql.Stmt, error) {
+func (d *GDb) Prepare(q string) (*sql.Stmt, error) {
     return d.db.Prepare(q)
 }
 
 // 获取上一次数据库写入产生的自增主键id，另外也可以使用Exec来实现
-func (d *GstDb) LastInsertId() (int, error) {
+func (d *GDb) LastInsertId() (int, error) {
     one, err := d.GetOne("SELECT last_insert_id()")
     if err != nil {
         return 0, err
@@ -141,30 +141,30 @@ func (d *GstDb) LastInsertId() (int, error) {
 }
 
 // ping一下，判断或保持数据库链接
-func (d *GstDb) Ping() error {
+func (d *GDb) Ping() error {
     err := d.db.Ping();
     return err
 }
 
 // 设置数据库连接池中空闲链接的大小
-func (d *GstDb) SetMaxIdleConns(n int) {
+func (d *GDb) SetMaxIdleConns(n int) {
     d.db.SetMaxIdleConns(n);
 }
 
 // 设置数据库连接池最大打开的链接数量
-func (d *GstDb) SetMaxOpenConns(n int) {
+func (d *GDb) SetMaxOpenConns(n int) {
     d.db.SetMaxOpenConns(n);
 }
 
 // 事务操作，开启
-func (t *gstDbTransaction) Begin() (*sql.Tx, error) {
+func (t *gDbTransaction) Begin() (*sql.Tx, error) {
     tx, err := t.db.Begin()
     t.tx = tx
     return tx, err
 }
 
 // 事务操作，提交
-func (t *gstDbTransaction) Commit() error {
+func (t *gDbTransaction) Commit() error {
     if t.tx == nil {
         errors.New("transaction not start")
     }
@@ -173,7 +173,7 @@ func (t *gstDbTransaction) Commit() error {
 }
 
 // 事务操作，回滚
-func (t *gstDbTransaction) Rollback() error {
+func (t *gDbTransaction) Rollback() error {
     if t.tx == nil {
         errors.New("transaction not start")
     }

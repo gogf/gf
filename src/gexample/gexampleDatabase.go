@@ -3,10 +3,11 @@ package main
 import (
     "fmt"
     "gf"
+    "g"
 )
 
 func main() {
-    db := gf.Db.New(gf.GstDbConfig{
+    db := g.Db.New(g.GstDbConfig{
         Host : "192.168.2.124",
         Port : "3306",
         User : "root",
