@@ -1,16 +1,33 @@
 package main
 
 import (
+    "g"
     "fmt"
 )
 
 
 func main() {
-    //json := `{"name":"中国","age":31,"list":[["a","b","c"],["d","e","f"]],"item":{"title":"make\"he moon","name":"make'he moon","content":"'[}]{[}he moon"}}`
+    //json := `{"name":"中国","age":31,"list":[["a","b","c"],["d","e","f"]],"items":{"title":"make\"he moon","name":"make'he moon","content":"'[}]{[}he moon"}}`
+    json := `[{"CityId":18,"CityName":"西安","ProvinceId":27,"CityOrder":1},{"CityId":53,"CityName":"广州","ProvinceId":27,"CityOrder":1}]`
     //json := `{"name"  :  "中国",  "age" : 31, "items":[1,2,3]}`
     //json := `[["a","b","c"],["d","e","f"]]`
     //json := `["a","b","c"]`
-    //jsonDecode(&json)
+    //json   := `
+    //[1,{"a":2},
+    //{"a":{}},
+    //{"a":[]},
+    //{"a":[{}]},
+    //{"{[a" : "\"2,:3," a ":33}]"}]` // 错误的json
+    //json := `["a","b","c"`        // 错误的json
+    //json := `,{ "name"  :  "中国",  "age" : 31, "items":[1,2]:}` //错误的json
+    p, err := g.Json.Decode(&json)
+    if err == nil {
+        //p.Print()
+        //fmt.Println(p.Get("0"))
+        fmt.Println(p.GetArray("01"))
+    } else {
+        fmt.Println(err)
+    }
     //fmt.Println()
     //fmt.Println()
     ////v := make(map[string]interface{})
@@ -44,18 +61,18 @@ func main() {
     //fmt.Println(s.v)
 
 
-    a := map[string]interface{} {
-        "name" : "john",
-        "list" : []interface{}{
-            1,2,3, "fuck",
-        },
-        "item" : map[string]string {
-            "n1" : "v1",
-            "n2" : "v2",
-            "n3" : "v3",
-        },
-    }
-    fmt.Println(a["list"][0])
+    //a := map[string]interface{} {
+    //    "name" : "john",
+    //    "list" : []interface{}{
+    //        1,2,3, "fuck",
+    //    },
+    //    "item" : map[string]string {
+    //        "n1" : "v1",
+    //        "n2" : "v2",
+    //        "n3" : "v3",
+    //    },
+    //}
+    //fmt.Println(json.M)
 
     //
     //var a = []int{1,2,3}

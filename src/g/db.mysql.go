@@ -10,10 +10,21 @@ import (
     _ "github.com/go-sql-driver/mysql"
 )
 
-// 数据库全局空对象，用于封装方法
-var Db gDb
+// 数据库全局对象，用于封装方法
+var Db = gDb {
+    // 数据库操作选项
+    OPTION_INSERT  : 0,
+    OPTION_REPLACE : 1,
+    OPTION_SAVE    : 2,
+    OPTION_IGNORE  : 3,
+}
 
-type gDb struct {}
+type gDb struct {
+    OPTION_INSERT  uint8
+    OPTION_REPLACE uint8
+    OPTION_SAVE    uint8
+    OPTION_IGNORE  uint8
+}
 
 type gDbTransaction struct {
     db *sql.DB
@@ -34,16 +45,9 @@ type GDbConfig struct {
     Name string
 }
 
-// 数据库操作选项
-const (
-    GDB_OPTION_INSERT  = 0
-    GDB_OPTION_REPLACE = 1
-    GDB_OPTION_SAVE    = 2
-    GDB_OPTION_IGNORE  = 3
-)
-
 // 获得一个数据库操作对象
 func (d gDb) New(c GDbConfig) (*GDb) {
+
     db, err := sql.Open(
         "mysql",
         fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name),
@@ -197,11 +201,11 @@ func (t *gDbTransaction) Rollback() error {
 func (d *GDb) getInsertOperationByOption(option uint8) string {
     oper := "INSERT"
     switch option {
-    case GDB_OPTION_INSERT:
-    case GDB_OPTION_REPLACE:
+    case Db.OPTION_INSERT:
+    case Db.OPTION_REPLACE:
         oper   = "REPLACE"
-    case GDB_OPTION_SAVE:
-    case GDB_OPTION_IGNORE:
+    case Db.OPTION_SAVE:
+    case Db.OPTION_IGNORE:
         oper   = "INSERT IGNORE"
     }
     return oper
@@ -223,7 +227,7 @@ func (d *GDb) insert(table string, data map[string]string, option uint8) (sql.Re
     }
     operation := d.getInsertOperationByOption(option)
     updatestr := ""
-    if option == GDB_OPTION_SAVE {
+    if option == Db.OPTION_SAVE {
         var updates []string
         for k, _ := range data {
             updates = append(updates, fmt.Sprintf("`%s`=VALUES(%s)", k, k))
@@ -238,17 +242,17 @@ func (d *GDb) insert(table string, data map[string]string, option uint8) (sql.Re
 
 // CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
 func (d *GDb) Insert(table string, data map[string]string) (sql.Result, error) {
-    return d.insert(table, data, GDB_OPTION_INSERT)
+    return d.insert(table, data, Db.OPTION_INSERT)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (d *GDb) Replace(table string, data map[string]string) (sql.Result, error) {
-    return d.insert(table, data, GDB_OPTION_REPLACE)
+    return d.insert(table, data, Db.OPTION_REPLACE)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (d *GDb) Save(table string, data map[string]string) (sql.Result, error) {
-    return d.insert(table, data, GDB_OPTION_SAVE)
+    return d.insert(table, data, Db.OPTION_SAVE)
 }
 
 // 批量写入数据
@@ -271,7 +275,7 @@ func (d *GDb) batchInsert(table string, list []map[string]string, batch int, opt
     // 操作判断
     operation := d.getInsertOperationByOption(option)
     updatestr := ""
-    if option == GDB_OPTION_SAVE {
+    if option == Db.OPTION_SAVE {
         var updates []string
         for _, k := range keys {
             updates = append(updates, fmt.Sprintf("`%s`=VALUES(%s)", k, k))
@@ -304,17 +308,17 @@ func (d *GDb) batchInsert(table string, list []map[string]string, batch int, opt
 
 // CURD操作:批量数据指定批次量写入
 func (d *GDb) BatchInsert(table string, list []map[string]string, batch int) error {
-    return d.batchInsert(table, list, batch, GDB_OPTION_INSERT)
+    return d.batchInsert(table, list, batch, Db.OPTION_INSERT)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (d *GDb) BatchReplace(table string, list []map[string]string, batch int) error {
-    return d.batchInsert(table, list, batch, GDB_OPTION_REPLACE)
+    return d.batchInsert(table, list, batch, Db.OPTION_REPLACE)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (d *GDb) BatchSave(table string, list []map[string]string, batch int) error {
-    return d.batchInsert(table, list, batch, GDB_OPTION_SAVE)
+    return d.batchInsert(table, list, batch, Db.OPTION_SAVE)
 }
 
 // CURD操作:数据更新，统一采用sql预处理

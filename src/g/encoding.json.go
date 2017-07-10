@@ -1,79 +1,174 @@
 package g
 
-import "fmt"
-
-const (
-    GJSON_CHAR_BRACE_LEFT        = rune('{')
-    GJSON_CHAR_BRACE_RIGHT       = rune('}')
-    GJSON_CHAR_BRACKET_LEFT      = rune('[')
-    GJSON_CHAR_BRACKET_RIGHT     = rune(']')
-    GJSON_CHAR_QUOTATION         = rune('\\')
-    GJSON_CHAR_COMMA             = rune(',')
-    GJSON_CHAR_COLON             = rune(':')
-    GJSON_CHAR_DOUBLE_QUOTE_MARK = rune('"')
+import (
+    "fmt"
+    "errors"
+    "strings"
+    "strconv"
 )
 
 const (
-    GJSON_TOKEN_BRACE_LEFT        = rune('{')
-    GJSON_TOKEN_BRACE_RIGHT       = rune('}')
-    GJSON_TOKEN_BRACKET_LEFT      = rune('[')
-    GJSON_TOKEN_BRACKET_RIGHT     = rune(']')
-    GJSON_TOKEN_COMMA             = rune(',')
-    GJSON_TOKEN_COLON             = rune(':')
-    GJSON_TOKEN_STRING            = rune('"')
-    GJSON_TOKEN_NUMBER            = rune('0')
+    gJSON_CHAR_BRACE_LEFT         = rune('{')
+    gJSON_CHAR_BRACE_RIGHT        = rune('}')
+    gJSON_CHAR_BRACKET_LEFT       = rune('[')
+    gJSON_CHAR_BRACKET_RIGHT      = rune(']')
+    gJSON_CHAR_QUOTATION          = rune('\\')
+    gJSON_CHAR_COMMA              = rune(',')
+    gJSON_CHAR_COLON              = rune(':')
+    gJSON_CHAR_DOUBLE_QUOTE_MARK  = rune('"')
+)
+
+const (
+    gJSON_TOKEN_BRACE_LEFT        = rune('{')
+    gJSON_TOKEN_BRACE_RIGHT       = rune('}')
+    gJSON_TOKEN_BRACKET_LEFT      = rune('[')
+    gJSON_TOKEN_BRACKET_RIGHT     = rune(']')
+    gJSON_TOKEN_COMMA             = rune(',')
+    gJSON_TOKEN_COLON             = rune(':')
+    gJSON_TOKEN_STRING            = rune('"')
+    gJSON_TOKEN_NUMBER            = rune('0')
 )
 
 // 全局操作对象
 var Json gJson
 
+// 空对象(操作封装)
 type gJson struct {}
 
+// json关联数组(哈希表)
+type JsonMap   map[string]interface{}
+// json索引数组(普通数组，从0开始索引)
+type JsonArray []interface{}
+
 // JSON数据对象
-type GJson struct {
-    m      map[string]interface{}
-    a      []interface{}
-    next  *GJson
+type JsonNode struct {
+    m JsonMap
+    a JsonArray
 }
 
 // JSON语义token
 type jsonToken struct {
-    token     []rune // token字符串
-    tokenType rune   // token类型
+    token      []rune // token字符串
+    tokenType  rune   // token类型
+    tokenindex int    // token在原始字符串中的索引位置
 }
 
 // JSON解析结构对象
 type jsonParser struct {
     content []rune      // 需要解析json字符串(通过string转换为[]rune)
-    tokens  []jsonToken // json token数组
-    root    GJson       // json根节点
-    pointer *GJson      // 指向当前正在解析的json节点
+    tokens  []jsonToken // 存放解析content后的json token数组
+    root    *JsonNode   // json根节点
+    pointer *JsonNode   // 指向当前正在解析的json节点
 }
 
 // 解析json字符串
-func (_ gJson) Decode(j *string)  {
-    p        := &jsonParser{content:[]rune(*j)}
-    p.root    = newJsonNode()
-    p.pointer = &p.root
-    p.parseTokens()
-    //p.printTokens()
-    p.parseTokenNodeToVar(0, len(p.tokens) - 1)
+func (_ gJson) Decode(j *string) (*jsonParser, error) {
+    p   := &jsonParser{content:[]rune(*j)}
+    err := p.parse()
+    if err == nil {
+        return p, err
+    } else {
+        return nil, err
+    }
+}
+
+// 判断所给字符串是否为数字
+func isNumeric(s string) bool  {
+    for i :=0; i < len(s); i++ {
+        if s[i] < byte('0') || s[i] > byte('9') {
+            return false
+        }
+    }
+    return true
+}
+
+// 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
+// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
+func (p *jsonParser) GetMap(pattern string) JsonMap {
+    result := p.Get(pattern)
+    if result != nil {
+        if r, ok := result.(JsonMap); ok {
+            return r
+        }
+    }
+    return nil
+}
+
+// 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
+// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
+func (p *jsonParser) GetArray(pattern string) JsonArray {
+    result := p.Get(pattern)
+    if result != nil {
+        if r, ok := result.(JsonArray); ok {
+            return r
+        }
+    }
+    return nil
+}
+
+
+// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
+// 返回的结果类型的interface{}，因此需要自己做类型转换
+func (p *jsonParser) Get(pattern string) interface{} {
+    var result interface{}
+    pointer  := p.root
+    array    := strings.Split(pattern, ".")
+    length   := len(array)
+    for i:= 0; i < length; i++ {
+        // 优先判断数组
+        if isNumeric(array[i]) {
+            n, err := strconv.Atoi(array[i])
+            if err == nil && len(pointer.a) > n {
+                if i == length - 1 {
+                    result = pointer.a[n]
+                    break;
+                } else {
+                    if p, ok := pointer.a[n].(*JsonNode); ok {
+                        pointer = p
+                        continue
+                    }
+                }
+            }
+        }
+        // 其次判断哈希表，如果一个键在数组及map中均不存在，直接返回nil
+        if v, ok := pointer.m[array[i]]; ok {
+            if i == length - 1 {
+                result = v
+            } else {
+                if p, ok := v.(*JsonNode); ok {
+                    pointer = p
+                    continue
+                }
+            }
+        } else {
+            return nil
+        }
+    }
+    // 处理结果，如果是JsonNode类型，那么需要做转换
+    if r, ok := result.(*JsonNode); ok {
+        if len(r.m) < 1 {
+            return r.a
+        } else {
+            return r.m
+        }
+    }
+    return result
 }
 
 // 遍历json字符串数组，并且判断转义
 func (p *jsonParser) getNextChar(c rune, f int) int {
     for i := f + 1; i < len(p.content); i++ {
         if p.content[i] == c {
-            if i > 0 && p.content[i - 1] != GJSON_CHAR_QUOTATION {
+            if i > 0 && p.content[i - 1] != gJSON_CHAR_QUOTATION {
                 return i
             }
         } else {
             switch p.content[i] {
-            case GJSON_CHAR_DOUBLE_QUOTE_MARK:
-                r := p.getNextChar(GJSON_CHAR_DOUBLE_QUOTE_MARK, i)
-                if r > 0 {
-                    i = r
-                }
+                case gJSON_CHAR_DOUBLE_QUOTE_MARK:
+                    r := p.getNextChar(gJSON_CHAR_DOUBLE_QUOTE_MARK, i)
+                    if r > 0 {
+                        i = r
+                    }
             }
         }
     }
@@ -88,8 +183,9 @@ func (p *jsonParser) isCharNumber(c rune) bool {
     return false
 }
 
-// 将json字符串解析为语义token
-func (p *jsonParser) parseTokens() {
+// 按照json语法对保存的字符串进行解析
+func (p *jsonParser) parse() error {
+    // 首先将字符串解析成token进行保存
     for i := 0; i < len(p.content); i++ {
         if p.isCharNumber(p.content[i]) {
             j := i + 1
@@ -98,69 +194,85 @@ func (p *jsonParser) parseTokens() {
                     break;
                 }
             }
-            p.tokens = append(p.tokens, jsonToken{token: p.content[i:j], tokenType: GJSON_TOKEN_NUMBER})
+            p.tokens = append(p.tokens, jsonToken {
+                token:      p.content[i:j],
+                tokenType:  gJSON_TOKEN_NUMBER,
+                tokenindex: i,
+            })
             i = j - 1
         } else {
             switch p.content[i] {
-            case GJSON_CHAR_DOUBLE_QUOTE_MARK:
-                r := p.getNextChar(GJSON_CHAR_DOUBLE_QUOTE_MARK, i)
-                if r > 0 {
-                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:r+1], tokenType: GJSON_TOKEN_STRING})
-                    i = r
-                }
-            case GJSON_CHAR_COLON:
-                p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: GJSON_TOKEN_COLON})
-            case GJSON_CHAR_COMMA:
-                p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: GJSON_TOKEN_COMMA})
-            case GJSON_CHAR_BRACE_LEFT:
-                p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: GJSON_TOKEN_BRACE_LEFT})
-            case GJSON_CHAR_BRACE_RIGHT:
-                p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: GJSON_TOKEN_BRACE_RIGHT})
-            case GJSON_CHAR_BRACKET_LEFT:
-                p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: GJSON_TOKEN_BRACKET_LEFT})
-            case GJSON_CHAR_BRACKET_RIGHT:
-                p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: GJSON_TOKEN_BRACKET_RIGHT})
+                case gJSON_CHAR_DOUBLE_QUOTE_MARK:
+                    r := p.getNextChar(gJSON_CHAR_DOUBLE_QUOTE_MARK, i)
+                    if r > 0 {
+                        // 注意这里需要去掉字符串两边的双引号
+                        p.tokens = append(p.tokens, jsonToken {
+                            token:      p.content[i+1:r],
+                            tokenType:  gJSON_TOKEN_STRING,
+                            tokenindex: i,
+                        })
+                        i = r
+                    }
+                case gJSON_CHAR_COLON:
+                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_COLON,         tokenindex: i})
+                case gJSON_CHAR_COMMA:
+                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_COMMA,         tokenindex: i})
+                case gJSON_CHAR_BRACE_LEFT:
+                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACE_LEFT,    tokenindex: i})
+                case gJSON_CHAR_BRACE_RIGHT:
+                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACE_RIGHT,   tokenindex: i})
+                case gJSON_CHAR_BRACKET_LEFT:
+                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACKET_LEFT,  tokenindex: i})
+                case gJSON_CHAR_BRACKET_RIGHT:
+                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACKET_RIGHT, tokenindex: i})
+
+                default:
+                    c := string(p.content[i])
+                    if c != " " && c != "\r" && c != "\n" && c != "\t" {
+                        return errors.New(fmt.Sprintf("json parse error: invalid char '%s' at index %d", c, i))
+                    }
             }
         }
-
     }
+    // 最后对解析后的token转换为go变量
+    return p.parseTokenNodeToVar(0, len(p.tokens) - 1)
 }
 
 // 获取json范围字符包含范围最右侧的索引位置
 func (p *jsonParser)getTokenBorderRightIndex(token rune, from int) int {
     switch token {
-    case GJSON_TOKEN_BRACE_LEFT:
-        leftCount := 0
-        for i := from + 1; i < len(p.tokens); i++ {
-            if p.tokens[i].tokenType == GJSON_TOKEN_BRACE_LEFT {
-                leftCount ++
-            } else if p.tokens[i].tokenType == GJSON_TOKEN_BRACE_RIGHT {
-                if leftCount < 1 {
-                    return i
-                } else {
-                    leftCount--
+        case gJSON_TOKEN_BRACE_LEFT:
+            leftCount := 0
+            for i := from + 1; i < len(p.tokens); i++ {
+                if p.tokens[i].tokenType == gJSON_TOKEN_BRACE_LEFT {
+                    leftCount ++
+                } else if p.tokens[i].tokenType == gJSON_TOKEN_BRACE_RIGHT {
+                    if leftCount < 1 {
+                        return i
+                    } else {
+                        leftCount--
+                    }
                 }
             }
-        }
-    case GJSON_CHAR_BRACKET_LEFT:
-        leftCount := 0
-        for i := from + 1; i < len(p.tokens); i++ {
-            if p.tokens[i].tokenType == GJSON_CHAR_BRACKET_LEFT {
-                leftCount ++
-            } else if p.tokens[i].tokenType == GJSON_CHAR_BRACKET_RIGHT {
-                if leftCount < 1 {
-                    return i
-                } else {
-                    leftCount--
+        case gJSON_CHAR_BRACKET_LEFT:
+            leftCount := 0
+            for i := from + 1; i < len(p.tokens); i++ {
+                if p.tokens[i].tokenType == gJSON_CHAR_BRACKET_LEFT {
+                    leftCount ++
+                } else if p.tokens[i].tokenType == gJSON_CHAR_BRACKET_RIGHT {
+                    if leftCount < 1 {
+                        return i
+                    } else {
+                        leftCount--
+                    }
                 }
             }
-        }
     }
     return 0
 }
 
 // 将解析过后的json token转换为go变量
-func (p *jsonParser)parseTokenNodeToVar(left int, right int) {
+func (p *jsonParser) parseTokenNodeToVar(left int, right int) error {
     //fmt.Println("================================")
     //for i := left; i <= right; i++ {
     //    fmt.Println(string(p.tokens[i].token))
@@ -168,42 +280,93 @@ func (p *jsonParser)parseTokenNodeToVar(left int, right int) {
     for i := left; i <= right; i++ {
         //fmt.Println(string(p.tokens[i].token))
         switch p.tokens[i].tokenType {
-        case GJSON_TOKEN_BRACE_LEFT:
-            fallthrough
-        case GJSON_CHAR_BRACKET_LEFT:
-            node := newJsonNode()
-            // 判断层级关系
-            if i > 0 && p.tokens[i-1].tokenType == GJSON_CHAR_COLON {
-                oldptr := p.pointer
-                k      := string(p.tokens[i-2].token)
-                node   := newJsonNode()
-                p.pointer.m[k] = &node
-                p.pointer      = &node
-                j := p.getTokenBorderRightIndex(p.tokens[i].tokenType, i)
-                p.parseTokenNodeToVar(i + 1, j - 1)
-                i         = j
-                p.pointer = oldptr
-            } else {
-                p.pointer.next = &node
-                p.pointer      = &node
-                j := p.getTokenBorderRightIndex(p.tokens[i].tokenType, i)
-                p.parseTokenNodeToVar(i + 1, j - 1)
-                i = j
-            }
+            case gJSON_TOKEN_BRACE_LEFT:
+                fallthrough
+            case gJSON_TOKEN_BRACKET_LEFT:
+                node := newJsonNode()
+                // 判断根节点
+                if p.root == nil {
+                    p.root    = node
+                    p.pointer = node
+                }
+                // 判断层级关系
+                borderRight := p.getTokenBorderRightIndex(p.tokens[i].tokenType, i)
+                if borderRight < 1 {
+                    return errors.New(fmt.Sprintf("json parse error: unclosed tag '%s' at index %d", string(p.tokens[i].token), p.tokens[i].tokenindex))
+                }
+                if i > 1 && (
+                    p.tokens[i-1].tokenType == gJSON_TOKEN_COLON &&
+                    p.tokens[i-2].tokenType == gJSON_TOKEN_STRING) {
+                    // json赋值操作
+                    oldptr        := p.pointer
+                    k             := string(p.tokens[i-2].token)
+                    p.pointer.m[k] = node
+                    p.pointer      = node
+                    err           := p.parseTokenNodeToVar(i + 1, borderRight - 1)
+                    if err != nil {
+                        return err
+                    } else {
+                        i         = borderRight
+                        p.pointer = oldptr
+                    }
 
+                } else if i > 0 && (
+                    p.tokens[i-1].tokenType == gJSON_TOKEN_COMMA ||
+                    p.tokens[i-1].tokenType == gJSON_TOKEN_BRACE_LEFT ||
+                    p.tokens[i-1].tokenType == gJSON_TOKEN_BRACKET_LEFT) {
+                    // json数组操作
+                    oldptr     := p.pointer
+                    p.pointer.a = append(p.pointer.a, node)
+                    p.pointer   = node
+                    err        := p.parseTokenNodeToVar(i + 1, borderRight - 1)
+                    if err != nil {
+                        return err
+                    } else {
+                        i         = borderRight
+                        p.pointer = oldptr
+                    }
+                } else {
+                    // json层级关系
+                    p.pointer = node
+                    err      := p.parseTokenNodeToVar(i + 1, borderRight - 1)
+                    if err != nil {
+                        return err
+                    } else {
+                        i = borderRight
+                    }
+                }
 
-        case GJSON_TOKEN_STRING:
-            fallthrough
-        case GJSON_TOKEN_NUMBER:
-            if i > 0 && p.tokens[i-1].tokenType == GJSON_CHAR_COLON {
-                k := string(p.tokens[i-2].token)
-                v := string(p.tokens[i].token)
-                p.pointer.m[k] = v
-            } else if p.tokens[i+1].tokenType != GJSON_CHAR_COLON {
-                p.pointer.a = append(p.pointer.a, p.tokens[i].token)
-            }
+            case gJSON_TOKEN_STRING:
+                fallthrough
+            case gJSON_TOKEN_NUMBER:
+                if i > 0 && p.tokens[i-1].tokenType == gJSON_TOKEN_COLON {
+                    k := string(p.tokens[i-2].token)
+                    v := string(p.tokens[i].token)
+                    p.pointer.m[k] = v
+                } else if p.tokens[i+1].tokenType != gJSON_TOKEN_COLON {
+                    p.pointer.a = append(p.pointer.a, string(p.tokens[i].token))
+                }
+
+            case gJSON_TOKEN_COLON:
+                if i < 1 || (p.tokens[i-1].tokenType != gJSON_TOKEN_STRING) {
+                    return errors.New(fmt.Sprintf("json parse error: invalid usage of '%s' at index %d", string(p.tokens[i].token), p.tokens[i].tokenindex))
+                }
+
+            case gJSON_TOKEN_COMMA:
+                if (p.tokens[i+1].tokenType != gJSON_TOKEN_STRING &&
+                    p.tokens[i+1].tokenType != gJSON_TOKEN_NUMBER &&
+                    p.tokens[i+1].tokenType != gJSON_TOKEN_BRACE_LEFT &&
+                    p.tokens[i+1].tokenType != gJSON_TOKEN_BRACKET_LEFT) ||
+                    (i < 1 || (
+                    p.tokens[i-1].tokenType != gJSON_TOKEN_STRING &&
+                    p.tokens[i-1].tokenType != gJSON_TOKEN_NUMBER &&
+                    p.tokens[i-1].tokenType != gJSON_TOKEN_BRACE_RIGHT &&
+                    p.tokens[i-1].tokenType != gJSON_TOKEN_BRACKET_RIGHT)) {
+                    return errors.New(fmt.Sprintf("json parse error: invalid usage of '%s' at index %d", string(p.tokens[i].token), p.tokens[i].tokenindex))
+                }
         }
     }
+    return nil
 }
 
 // 打印出所有的token(测试用)
@@ -213,31 +376,64 @@ func (p *jsonParser)printTokens() {
     }
 }
 
-// 格式化打印根节点(测试用)
+// 格式化打印根节点
 func (p *jsonParser)Print() {
-    node := &p.root
-    for {
-        fmt.Println("==============")
-        fmt.Println(node.m)
-        fmt.Println(node.a)
-        for k, v := range node.m {
-            fmt.Println(k)
-            fmt.Println(v)
+    if len(p.root.m) > 0 {
+        fmt.Println("{")
+    } else {
+        fmt.Println("[")
+    }
+    p.printNode(p.pointer, "\t")
+    if len(p.root.m) > 0 {
+        fmt.Println("}")
+    } else {
+        fmt.Println("]")
+    }
+}
+
+// 格式化打印根节点
+func (p *jsonParser)printNode(n *JsonNode, indent string) {
+    if len(n.m) > 0 {
+        for k, v := range n.m {
+            if t, ok := v.(*JsonNode); ok {
+                if len(t.m) > 0 {
+                    fmt.Printf("%v%v\t: {\n", indent, k)
+                    p.printNode(t, indent + "\t")
+                    fmt.Printf("%v}\n", indent)
+                } else {
+                    fmt.Printf("%v%v\t: [\n", indent, k)
+                    p.printNode(t, indent + "\t")
+                    fmt.Printf("%v}\n", indent)
+                }
+            } else {
+                fmt.Printf("%v%v\t: %v\n", indent, k, v)
+            }
         }
-        if node.next != nil {
-            node = node.next
-        } else {
-            break;
+    }
+    if len(n.a) > 0 {
+        for k, v := range n.a {
+            if t, ok := v.(*JsonNode); ok {
+                if len(t.m) > 0 {
+                    fmt.Printf("%v%v\t: {\n", indent, k)
+                    p.printNode(t, indent + "\t")
+                    fmt.Printf("%v}\n", indent)
+                } else {
+                    fmt.Printf("%v%v\t: [\n", indent, k)
+                    p.printNode(t, indent + "\t")
+                    fmt.Printf("%v}\n", indent)
+                }
+            } else {
+                fmt.Printf("%v%v : %v\n", indent, k, v)
+            }
         }
     }
 }
 
 // 创建一个json数据对象
-func newJsonNode() GJson {
-    return GJson {
+func newJsonNode() *JsonNode {
+    return &JsonNode {
         m: make(map[string]interface{}),
         a: make([]interface{}, 0),
-        next: nil,
     }
 }
 
