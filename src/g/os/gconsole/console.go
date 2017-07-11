@@ -16,28 +16,22 @@ type gConsoleOption struct {
     options map[string]string
 }
 
-// 终端操作结构体封装
-type gConsole struct {
-    Value      gConsoleValue         // console终端参数-命令参数列表
-    Option     gConsoleOption        // console终端参数-选项参数列表
-    cmdFuncMap map[string]func() // 终端命令及函数地址对应表
-}
-
 // 终端管理对象(全局)
-var Console gConsole
+var Value      gConsoleValue  // console终端参数-命令参数列表
+var Option     gConsoleOption // console终端参数-选项参数列表
+var cmdFuncMap = make(map[string]func()) // 终端命令及函数地址对应表
 
 // 检查并初始化console参数，在包加载的时候触发
 // 初始化时执行，不影响运行时性能
 func init() {
-    Console.cmdFuncMap     = make(map[string]func())
-    Console.Option.options = make(map[string]string)
+    Option.options = make(map[string]string)
     reg       := regexp.MustCompile(`\-\-{0,1}(\w+?)=(.+)`)
     for i := 0; i < len(os.Args); i++ {
         result := reg.FindStringSubmatch(os.Args[i])
         if len(result) > 1 {
-            Console.Option.options[result[1]] = result[2]
+            Option.options[result[1]] = result[2]
         } else {
-            Console.Value.values = append(Console.Value.values, os.Args[i])
+            Value.values = append(Value.values, os.Args[i])
         }
     }
 }
@@ -71,19 +65,19 @@ func (c gConsoleOption) GetIndex(key string) (string, bool) {
 
 // 绑定命令行参数及对应的命令函数，注意参数是函数的内存地址
 // 如果操作失败返回错误信息
-func (c gConsole) BindHandle (cmd string, f func()) error {
-    _, ok := c.cmdFuncMap[cmd]
+func BindHandle (cmd string, f func()) error {
+    _, ok := cmdFuncMap[cmd]
     if ok {
         return errors.New("duplicated handle for command:" + cmd)
     } else {
-        c.cmdFuncMap[cmd] = f
+        cmdFuncMap[cmd] = f
         return nil
     }
 }
 
 // 执行命令对应的函数
-func (c gConsole) RunHandle (cmd string) error {
-    handle, ok := c.cmdFuncMap[cmd]
+func RunHandle (cmd string) error {
+    handle, ok := cmdFuncMap[cmd]
     if ok {
         handle()
         return nil
@@ -93,10 +87,10 @@ func (c gConsole) RunHandle (cmd string) error {
 }
 
 // 自动识别命令参数并执行命令参数对应的函数
-func (c gConsole) AutoRun () error {
-    cmd, ok := c.Value.GetIndex(1);
+func AutoRun () error {
+    cmd, ok := Value.GetIndex(1);
     if ok {
-        if handle, ok := c.cmdFuncMap[cmd]; ok {
+        if handle, ok := cmdFuncMap[cmd]; ok {
             handle()
             return nil
         } else {

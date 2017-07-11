@@ -2,15 +2,28 @@ package main
 
 import (
     "fmt"
+    "time"
+    "math/rand"
 )
 
-func main() {
-    s := "中国"
-    p := &s
-    m := map[string]string {
-        "name" : string([]rune(*p)),
+func Rand (min, max int) int {
+    fmt.Printf("min: %d, max: %d\n", min, max)
+    rand.Seed(time.Now().UnixNano())
+    n := rand.Intn(max)
+    if n < min {
+        return Rand(min, max)
     }
-    fmt.Println(m)
+    return n
+}
+
+func main() {
+    //s := "中国"
+    //p := &s
+    //m := map[string]string {
+    //    "name" : string([]rune(*p)),
+    //}
+    //fmt.Println(rand.Int()%15)
+    fmt.Println(Rand(1500000, 2000000))
     //fmt.Println(len(make(map[string]string)))
     //json := `{"name":"中国","age":31,"list":[["a","b","c"],["d","e","f"]],"item":{"title":"make\"he moon","name":"make'he moon","content":"'[}]{[}he moon"}}`
     //json := `{"name"  :  "中国",  "age" : 31, "items":[1,2,3]}`

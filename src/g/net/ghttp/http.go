@@ -8,17 +8,10 @@ import (
     //"fmt"
     "strings"
     "path/filepath"
+    "g/os/gfile"
 )
-/**
-    @todo 静态文件的处理性能比Nginx稍弱，不能使用标准库方法，需自行处理
- */
-// 全局http封装对象
-var Http gHttp
 
-// http 结构体
-type gHttp struct {
-    Server HttpServer
-}
+// @todo 静态文件的处理性能比Nginx稍弱，不能使用标准库方法，需自行处理
 
 // http server结构体
 type HttpServer struct {
@@ -57,27 +50,27 @@ var defaultHttpServerSetting = HttpServerSetting {
 
 
 // 创建一个默认配置的HTTP Server(默认监听端口是80)
-func (h HttpServer)New() (*HttpServer) {
-    return h.NewBySetting(defaultHttpServerSetting)
+func New() (*HttpServer) {
+    return NewBySetting(defaultHttpServerSetting)
 }
 
 // 创建一个HTTP Server，返回指针
-func (h HttpServer)NewByAddr(addr string) (*HttpServer) {
+func NewByAddr(addr string) (*HttpServer) {
     setting     := defaultHttpServerSetting
     setting.Addr = addr
-    return h.NewBySetting(setting)
+    return NewBySetting(setting)
 }
 
 // 创建一个HTTP Server
-func (h HttpServer)NewByAddrRoot(addr string, root string) (*HttpServer) {
+func NewByAddrRoot(addr string, root string) (*HttpServer) {
     setting           := defaultHttpServerSetting
     setting.Addr       = addr
     setting.ServerRoot = root
-    return h.NewBySetting(setting)
+    return NewBySetting(setting)
 }
 
 // 根据输入配置创建一个http server对象
-func (h HttpServer)NewBySetting(s HttpServerSetting) (*HttpServer) {
+func NewBySetting(s HttpServerSetting) (*HttpServer) {
     var server HttpServer
     server.SetSetting(s)
     return &server
@@ -108,13 +101,13 @@ func (h *HttpServer)serveFile(w http.ResponseWriter, r *http.Request) {
         path := strings.TrimRight(h.setting.ServerRoot, string(filepath.Separator))
         path  = path + uri
         // fmt.Println(path)
-        if (File.Exists(path)) {
+        if (gfile.Exists(path)) {
             http.ServeFile(w, r, path)
         } else {
             http.NotFound(w, r)
         }
     } else {
-        panic("http server root is empty while handling static files request")
+        panic("http server root is empty while handling static file request")
     }
 }
 

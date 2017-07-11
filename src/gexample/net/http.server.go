@@ -5,7 +5,7 @@ import (
     "net/http"
     "io"
     "time"
-    "g/ghttp"
+    "g/net/ghttp"
     "g"
 )
 

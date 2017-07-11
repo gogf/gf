@@ -1,8 +1,8 @@
 package main
 
 import (
-    "g"
     "fmt"
+    "g/encoding/gjson"
 )
 
 
@@ -20,7 +20,7 @@ func main() {
     //{"{[a" : "\"2,:3," a ":33}]"}]` // 错误的json
     //json := `["a","b","c"`        // 错误的json
     //json := `,{ "name"  :  "中国",  "age" : 31, "items":[1,2]:}` //错误的json
-    p, err := g.Json.Decode(&json)
+    p, err := gjson.Decode(&json)
     if err == nil {
         //p.Print()
         //fmt.Println(p.Get("0"))

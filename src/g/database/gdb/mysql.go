@@ -1,7 +1,6 @@
 package gdb
 
 import (
-    "log"
     "fmt"
     "errors"
     "strconv"
@@ -10,65 +9,19 @@ import (
     _ "github.com/go-sql-driver/mysql"
 )
 
-const (
-    OPTION_INSERT  = 0
-    OPTION_REPLACE = 1
-    OPTION_SAVE    = 2
-    OPTION_IGNORE  = 3
-)
-
-// 数据库事务操作对象
-type gTrasaction struct {
-    db *sql.DB
-    tx *sql.Tx
-}
-
-// 数据库链接对象
-type gLink struct {
-    Transaction gTrasaction
-    db *sql.DB
-}
-
-// 数据库配置
-type Config struct {
-    Host string
-    Port string
-    User string
-    Pass string
-    Name string
-}
-
-// 记录关联数组
-type DataMap  map[string]string
-
-// 记录关联数组列表(索引从0开始的数组)
-type DataList []DataMap
-
-// 获得一个数据库操作对象
-func New(c Config) (*gLink) {
-    db, err := sql.Open(
-        "mysql",
-        fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name),
-    )
-    if err != nil {
-        log.Fatal(err)
-    }
-    return &gLink {
-        db : db,
-        Transaction: gTrasaction {
-            db : db,
-        },
-    }
-}
-
 // 关闭链接
 func (l *gLink) Close() {
-    l.db.Close()
+    if l.master != nil {
+        l.master.Close()
+    }
+    if l.slave != nil {
+        l.slave.Close()
+    }
 }
 
 // 数据库sql查询
 func (l *gLink) Query(q string, args ...interface{}) (*sql.Rows, error) {
-    rows, err := l.db.Query(q, args ...)
+    rows, err := l.slave.Query(q, args ...)
     if (err == nil) {
         return rows, nil
     }
@@ -79,7 +32,7 @@ func (l *gLink) Query(q string, args ...interface{}) (*sql.Rows, error) {
 func (l *gLink) Exec(q string, args ...interface{}) (sql.Result, error) {
     //fmt.Println(q)
     //fmt.Println(args)
-    return l.db.Exec(q, args ...)
+    return l.master.Exec(q, args ...)
 }
 
 // 数据库查询，获取查询结果集，以列表结构返回
@@ -139,7 +92,7 @@ func (l *gLink) GetValue(q string, args ...interface{}) (string, error) {
 // sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
 // 记得调用sql.Stmt.Close关闭操作对象
 func (l *gLink) Prepare(q string) (*sql.Stmt, error) {
-    return l.db.Prepare(q)
+    return l.master.Prepare(q)
 }
 
 // 获取上一次数据库写入产生的自增主键id，另外也可以使用Exec来实现
@@ -154,20 +107,26 @@ func (l *gLink) LastInsertId() (int, error) {
     return 0, nil
 }
 
-// ping一下，判断或保持数据库链接
-func (l *gLink) Ping() error {
-    err := l.db.Ping();
+// ping一下，判断或保持数据库链接(master)
+func (l *gLink) PingMaster() error {
+    err := l.master.Ping();
+    return err
+}
+
+// ping一下，判断或保持数据库链接(slave)
+func (l *gLink) PingSlave() error {
+    err := l.slave.Ping();
     return err
 }
 
 // 设置数据库连接池中空闲链接的大小
 func (l *gLink) SetMaxIdleConns(n int) {
-    l.db.SetMaxIdleConns(n);
+    l.master.SetMaxIdleConns(n);
 }
 
 // 设置数据库连接池最大打开的链接数量
 func (l *gLink) SetMaxOpenConns(n int) {
-    l.db.SetMaxOpenConns(n);
+    l.master.SetMaxOpenConns(n);
 }
 
 // 事务操作，开启

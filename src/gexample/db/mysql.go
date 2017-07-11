@@ -4,7 +4,7 @@ import (
     "fmt"
     "time"
     "strconv"
-    "g/gdb"
+    "g/db/gdb"
 )
 var db = gdb.New(gdb.Config{
     Host : "127.0.0.1",

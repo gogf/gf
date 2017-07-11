@@ -29,12 +29,6 @@ const (
     gJSON_TOKEN_NUMBER            = rune('0')
 )
 
-// 全局操作对象
-var Json gJson
-
-// 空对象(操作封装)
-type gJson struct {}
-
 // json关联数组(哈希表)
 type JsonMap   map[string]interface{}
 // json索引数组(普通数组，从0开始索引)
@@ -62,7 +56,7 @@ type gJsonParser struct {
 }
 
 // 解析json字符串
-func (_ gJson) Decode(j *string) (*gJsonParser, error) {
+func Decode(j *string) (*gJsonParser, error) {
     p   := &gJsonParser{content:[]rune(*j)}
     err := p.parse()
     if err == nil {
