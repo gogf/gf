@@ -1,4 +1,4 @@
-package g
+package ghttp
 
 import (
     "net/http"
@@ -17,18 +17,18 @@ var Http gHttp
 
 // http 结构体
 type gHttp struct {
-    Server GHttpServer
+    Server HttpServer
 }
 
 // http server结构体
-type GHttpServer struct {
+type HttpServer struct {
     server     http.Server
-    setting    GHttpServerSetting
+    setting    HttpServerSetting
     handlerMap map[string]http.HandlerFunc
 }
 
 // HTTP Server 设置结构体
-type GHttpServerSetting struct {
+type HttpServerSetting struct {
     // HTTP Server基础字段
     Addr            string
     Handler         http.Handler
@@ -44,7 +44,7 @@ type GHttpServerSetting struct {
 }
 
 // 默认HTTP Server
-var defaultHttpServerSetting = GHttpServerSetting {
+var defaultHttpServerSetting = HttpServerSetting {
     Addr           : ":80",
     Handler        : nil,
     ReadTimeout    : 10 * time.Second,
@@ -57,19 +57,19 @@ var defaultHttpServerSetting = GHttpServerSetting {
 
 
 // 创建一个默认配置的HTTP Server(默认监听端口是80)
-func (h GHttpServer)New() (*GHttpServer) {
+func (h HttpServer)New() (*HttpServer) {
     return h.NewBySetting(defaultHttpServerSetting)
 }
 
 // 创建一个HTTP Server，返回指针
-func (h GHttpServer)NewByAddr(addr string) (*GHttpServer) {
+func (h HttpServer)NewByAddr(addr string) (*HttpServer) {
     setting     := defaultHttpServerSetting
     setting.Addr = addr
     return h.NewBySetting(setting)
 }
 
 // 创建一个HTTP Server
-func (h GHttpServer)NewByAddrRoot(addr string, root string) (*GHttpServer) {
+func (h HttpServer)NewByAddrRoot(addr string, root string) (*HttpServer) {
     setting           := defaultHttpServerSetting
     setting.Addr       = addr
     setting.ServerRoot = root
@@ -77,14 +77,14 @@ func (h GHttpServer)NewByAddrRoot(addr string, root string) (*GHttpServer) {
 }
 
 // 根据输入配置创建一个http server对象
-func (h GHttpServer)NewBySetting(s GHttpServerSetting) (*GHttpServer) {
-    var server GHttpServer
+func (h HttpServer)NewBySetting(s HttpServerSetting) (*HttpServer) {
+    var server HttpServer
     server.SetSetting(s)
     return &server
 }
 
 // 执行
-func (h *GHttpServer)Run() error {
+func (h *HttpServer)Run() error {
     err := h.server.ListenAndServe()
     if err != nil {
         panic(err)
@@ -93,7 +93,7 @@ func (h *GHttpServer)Run() error {
 }
 
 // 默认HTTP Server处理入口
-func (h *GHttpServer)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
     if f, ok := h.handlerMap[r.URL.String()]; ok {
         f(w, r)
     } else {
@@ -102,7 +102,7 @@ func (h *GHttpServer)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 // 处理静态文件请求
-func (h *GHttpServer)serveFile(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer)serveFile(w http.ResponseWriter, r *http.Request) {
     uri := r.URL.String()
     if h.setting.ServerRoot != "" {
         path := strings.TrimRight(h.setting.ServerRoot, string(filepath.Separator))
@@ -119,12 +119,12 @@ func (h *GHttpServer)serveFile(w http.ResponseWriter, r *http.Request) {
 }
 
 // 获取默认的http server设置
-func (h GHttpServer)GetDefaultSetting() GHttpServerSetting {
+func (h HttpServer)GetDefaultSetting() HttpServerSetting {
     return defaultHttpServerSetting
 }
 
 // http server setting设置
-func (h *GHttpServer)SetSetting(s GHttpServerSetting) {
+func (h *HttpServer)SetSetting(s HttpServerSetting) {
     if s.Handler == nil {
         s.Handler = http.HandlerFunc(h.defaultHttpHandle)
     }
@@ -140,17 +140,17 @@ func (h *GHttpServer)SetSetting(s GHttpServerSetting) {
 }
 
 // 设置http server参数
-func (h *GHttpServer)SetServerAgent(agent string) {
+func (h *HttpServer)SetServerAgent(agent string) {
     h.setting.ServerAgent = agent
 }
 
 // 设置http server参数
-func (h *GHttpServer)SetServerRoot(root string) {
+func (h *HttpServer)SetServerRoot(root string) {
     h.setting.ServerRoot = root
 }
 
 // 绑定URI到操作函数/方法
-func (h *GHttpServer)BindHandle(pattern string, handler http.HandlerFunc )  {
+func (h *HttpServer)BindHandle(pattern string, handler http.HandlerFunc )  {
     if h.handlerMap == nil {
         h.handlerMap = make(map[string]http.HandlerFunc)
     }
@@ -162,7 +162,7 @@ func (h *GHttpServer)BindHandle(pattern string, handler http.HandlerFunc )  {
 }
 
 // 通过映射数组绑定URI到操作函数/方法
-func (h *GHttpServer)BindHandleByMap(m map[string]http.HandlerFunc ) {
+func (h *HttpServer)BindHandleByMap(m map[string]http.HandlerFunc ) {
     for p, f := range m {
         h.BindHandle(p, f)
     }

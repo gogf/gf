@@ -1,4 +1,4 @@
-package g
+package gjson
 
 import (
     "fmt"
@@ -41,29 +41,29 @@ type JsonMap   map[string]interface{}
 type JsonArray []interface{}
 
 // JSON数据对象
-type JsonNode struct {
+type gJsonNode struct {
     m JsonMap
     a JsonArray
 }
 
 // JSON语义token
-type jsonToken struct {
+type gJsonToken struct {
     token      []rune // token字符串
     tokenType  rune   // token类型
     tokenindex int    // token在原始字符串中的索引位置
 }
 
 // JSON解析结构对象
-type jsonParser struct {
-    content []rune      // 需要解析json字符串(通过string转换为[]rune)
-    tokens  []jsonToken // 存放解析content后的json token数组
-    root    *JsonNode   // json根节点
-    pointer *JsonNode   // 指向当前正在解析的json节点
+type gJsonParser struct {
+    content []rune       // 需要解析json字符串(通过string转换为[]rune)
+    tokens  []gJsonToken // 存放解析content后的json token数组
+    root    *gJsonNode   // json根节点
+    pointer *gJsonNode   // 指向当前正在解析的json节点
 }
 
 // 解析json字符串
-func (_ gJson) Decode(j *string) (*jsonParser, error) {
-    p   := &jsonParser{content:[]rune(*j)}
+func (_ gJson) Decode(j *string) (*gJsonParser, error) {
+    p   := &gJsonParser{content:[]rune(*j)}
     err := p.parse()
     if err == nil {
         return p, err
@@ -84,7 +84,7 @@ func isNumeric(s string) bool  {
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (p *jsonParser) GetMap(pattern string) JsonMap {
+func (p *gJsonParser) GetMap(pattern string) JsonMap {
     result := p.Get(pattern)
     if result != nil {
         if r, ok := result.(JsonMap); ok {
@@ -96,7 +96,7 @@ func (p *jsonParser) GetMap(pattern string) JsonMap {
 
 // 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (p *jsonParser) GetArray(pattern string) JsonArray {
+func (p *gJsonParser) GetArray(pattern string) JsonArray {
     result := p.Get(pattern)
     if result != nil {
         if r, ok := result.(JsonArray); ok {
@@ -109,7 +109,8 @@ func (p *jsonParser) GetArray(pattern string) JsonArray {
 
 // 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
 // 返回的结果类型的interface{}，因此需要自己做类型转换
-func (p *jsonParser) Get(pattern string) interface{} {
+// 如果找不到对应节点的数据，返回nil
+func (p *gJsonParser) Get(pattern string) interface{} {
     var result interface{}
     pointer  := p.root
     array    := strings.Split(pattern, ".")
@@ -123,7 +124,7 @@ func (p *jsonParser) Get(pattern string) interface{} {
                     result = pointer.a[n]
                     break;
                 } else {
-                    if p, ok := pointer.a[n].(*JsonNode); ok {
+                    if p, ok := pointer.a[n].(*gJsonNode); ok {
                         pointer = p
                         continue
                     }
@@ -135,7 +136,7 @@ func (p *jsonParser) Get(pattern string) interface{} {
             if i == length - 1 {
                 result = v
             } else {
-                if p, ok := v.(*JsonNode); ok {
+                if p, ok := v.(*gJsonNode); ok {
                     pointer = p
                     continue
                 }
@@ -144,8 +145,8 @@ func (p *jsonParser) Get(pattern string) interface{} {
             return nil
         }
     }
-    // 处理结果，如果是JsonNode类型，那么需要做转换
-    if r, ok := result.(*JsonNode); ok {
+    // 处理结果，如果是gJsonNode类型，那么需要做转换
+    if r, ok := result.(*gJsonNode); ok {
         if len(r.m) < 1 {
             return r.a
         } else {
@@ -156,7 +157,7 @@ func (p *jsonParser) Get(pattern string) interface{} {
 }
 
 // 遍历json字符串数组，并且判断转义
-func (p *jsonParser) getNextChar(c rune, f int) int {
+func (p *gJsonParser) getNextChar(c rune, f int) int {
     for i := f + 1; i < len(p.content); i++ {
         if p.content[i] == c {
             if i > 0 && p.content[i - 1] != gJSON_CHAR_QUOTATION {
@@ -176,7 +177,7 @@ func (p *jsonParser) getNextChar(c rune, f int) int {
 }
 
 // 判断字符是否为数字
-func (p *jsonParser) isCharNumber(c rune) bool {
+func (p *gJsonParser) isCharNumber(c rune) bool {
     if c >= rune('0') && c <= rune('9') {
         return true
     }
@@ -184,7 +185,7 @@ func (p *jsonParser) isCharNumber(c rune) bool {
 }
 
 // 按照json语法对保存的字符串进行解析
-func (p *jsonParser) parse() error {
+func (p *gJsonParser) parse() error {
     // 首先将字符串解析成token进行保存
     for i := 0; i < len(p.content); i++ {
         if p.isCharNumber(p.content[i]) {
@@ -194,7 +195,7 @@ func (p *jsonParser) parse() error {
                     break;
                 }
             }
-            p.tokens = append(p.tokens, jsonToken {
+            p.tokens = append(p.tokens, gJsonToken {
                 token:      p.content[i:j],
                 tokenType:  gJSON_TOKEN_NUMBER,
                 tokenindex: i,
@@ -206,7 +207,7 @@ func (p *jsonParser) parse() error {
                     r := p.getNextChar(gJSON_CHAR_DOUBLE_QUOTE_MARK, i)
                     if r > 0 {
                         // 注意这里需要去掉字符串两边的双引号
-                        p.tokens = append(p.tokens, jsonToken {
+                        p.tokens = append(p.tokens, gJsonToken {
                             token:      p.content[i+1:r],
                             tokenType:  gJSON_TOKEN_STRING,
                             tokenindex: i,
@@ -214,17 +215,17 @@ func (p *jsonParser) parse() error {
                         i = r
                     }
                 case gJSON_CHAR_COLON:
-                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_COLON,         tokenindex: i})
+                    p.tokens = append(p.tokens, gJsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_COLON,         tokenindex: i})
                 case gJSON_CHAR_COMMA:
-                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_COMMA,         tokenindex: i})
+                    p.tokens = append(p.tokens, gJsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_COMMA,         tokenindex: i})
                 case gJSON_CHAR_BRACE_LEFT:
-                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACE_LEFT,    tokenindex: i})
+                    p.tokens = append(p.tokens, gJsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACE_LEFT,    tokenindex: i})
                 case gJSON_CHAR_BRACE_RIGHT:
-                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACE_RIGHT,   tokenindex: i})
+                    p.tokens = append(p.tokens, gJsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACE_RIGHT,   tokenindex: i})
                 case gJSON_CHAR_BRACKET_LEFT:
-                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACKET_LEFT,  tokenindex: i})
+                    p.tokens = append(p.tokens, gJsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACKET_LEFT,  tokenindex: i})
                 case gJSON_CHAR_BRACKET_RIGHT:
-                    p.tokens = append(p.tokens, jsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACKET_RIGHT, tokenindex: i})
+                    p.tokens = append(p.tokens, gJsonToken{token: p.content[i:i+1], tokenType: gJSON_TOKEN_BRACKET_RIGHT, tokenindex: i})
 
                 default:
                     c := string(p.content[i])
@@ -239,7 +240,7 @@ func (p *jsonParser) parse() error {
 }
 
 // 获取json范围字符包含范围最右侧的索引位置
-func (p *jsonParser)getTokenBorderRightIndex(token rune, from int) int {
+func (p *gJsonParser)getTokenBorderRightIndex(token rune, from int) int {
     switch token {
         case gJSON_TOKEN_BRACE_LEFT:
             leftCount := 0
@@ -272,7 +273,7 @@ func (p *jsonParser)getTokenBorderRightIndex(token rune, from int) int {
 }
 
 // 将解析过后的json token转换为go变量
-func (p *jsonParser) parseTokenNodeToVar(left int, right int) error {
+func (p *gJsonParser) parseTokenNodeToVar(left int, right int) error {
     //fmt.Println("================================")
     //for i := left; i <= right; i++ {
     //    fmt.Println(string(p.tokens[i].token))
@@ -349,7 +350,7 @@ func (p *jsonParser) parseTokenNodeToVar(left int, right int) error {
 
             case gJSON_TOKEN_COLON:
                 if i < 1 || (p.tokens[i-1].tokenType != gJSON_TOKEN_STRING) {
-                    return errors.New(fmt.Sprintf("json parse error: invalid usage of '%s' at index %d", string(p.tokens[i].token), p.tokens[i].tokenindex))
+                    return errors.New(fmt.Sprintf("json parse error: invalid charactar '%s' at index %d", string(p.tokens[i].token), p.tokens[i].tokenindex))
                 }
 
             case gJSON_TOKEN_COMMA:
@@ -362,7 +363,7 @@ func (p *jsonParser) parseTokenNodeToVar(left int, right int) error {
                     p.tokens[i-1].tokenType != gJSON_TOKEN_NUMBER &&
                     p.tokens[i-1].tokenType != gJSON_TOKEN_BRACE_RIGHT &&
                     p.tokens[i-1].tokenType != gJSON_TOKEN_BRACKET_RIGHT)) {
-                    return errors.New(fmt.Sprintf("json parse error: invalid usage of '%s' at index %d", string(p.tokens[i].token), p.tokens[i].tokenindex))
+                    return errors.New(fmt.Sprintf("json parse error: invalid charactar '%s' at index %d", string(p.tokens[i].token), p.tokens[i].tokenindex))
                 }
         }
     }
@@ -370,14 +371,14 @@ func (p *jsonParser) parseTokenNodeToVar(left int, right int) error {
 }
 
 // 打印出所有的token(测试用)
-func (p *jsonParser)printTokens() {
+func (p *gJsonParser)printTokens() {
     for _, v := range p.tokens {
         fmt.Println(string(v.token))
     }
 }
 
 // 格式化打印根节点
-func (p *jsonParser)Print() {
+func (p *gJsonParser)Print() {
     if len(p.root.m) > 0 {
         fmt.Println("{")
     } else {
@@ -392,10 +393,10 @@ func (p *jsonParser)Print() {
 }
 
 // 格式化打印根节点
-func (p *jsonParser)printNode(n *JsonNode, indent string) {
+func (p *gJsonParser)printNode(n *gJsonNode, indent string) {
     if len(n.m) > 0 {
         for k, v := range n.m {
-            if t, ok := v.(*JsonNode); ok {
+            if t, ok := v.(*gJsonNode); ok {
                 if len(t.m) > 0 {
                     fmt.Printf("%v%v\t: {\n", indent, k)
                     p.printNode(t, indent + "\t")
@@ -412,7 +413,7 @@ func (p *jsonParser)printNode(n *JsonNode, indent string) {
     }
     if len(n.a) > 0 {
         for k, v := range n.a {
-            if t, ok := v.(*JsonNode); ok {
+            if t, ok := v.(*gJsonNode); ok {
                 if len(t.m) > 0 {
                     fmt.Printf("%v%v\t: {\n", indent, k)
                     p.printNode(t, indent + "\t")
@@ -430,8 +431,8 @@ func (p *jsonParser)printNode(n *JsonNode, indent string) {
 }
 
 // 创建一个json数据对象
-func newJsonNode() *JsonNode {
-    return &JsonNode {
+func newJsonNode() *gJsonNode {
+    return &gJsonNode {
         m: make(map[string]interface{}),
         a: make([]interface{}, 0),
     }

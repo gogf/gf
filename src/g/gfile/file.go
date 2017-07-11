@@ -1,18 +1,16 @@
-package g
+package gfile
 
 import (
     "os"
     "path/filepath"
 )
 
-var File gFile
+var File = gFile {
+    Separator : string(filepath.Separator),
+}
 
 type gFile struct {
     Separator string
-}
-
-func init() {
-    File.Separator = string(filepath.Separator)
 }
 
 // 判断所给路径文件/文件夹是否存在

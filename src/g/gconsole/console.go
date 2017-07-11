@@ -1,4 +1,4 @@
-package g
+package gconsole
 
 import (
 	"os"
@@ -20,7 +20,7 @@ type gConsoleOption struct {
 type gConsole struct {
     Value      gConsoleValue         // console终端参数-命令参数列表
     Option     gConsoleOption        // console终端参数-选项参数列表
-    cmdFuncMap map[string]GFuncEmpty // 终端命令及函数地址对应表
+    cmdFuncMap map[string]func() // 终端命令及函数地址对应表
 }
 
 // 终端管理对象(全局)
@@ -29,7 +29,7 @@ var Console gConsole
 // 检查并初始化console参数，在包加载的时候触发
 // 初始化时执行，不影响运行时性能
 func init() {
-    Console.cmdFuncMap     = make(map[string]GFuncEmpty)
+    Console.cmdFuncMap     = make(map[string]func())
     Console.Option.options = make(map[string]string)
     reg       := regexp.MustCompile(`\-\-{0,1}(\w+?)=(.+)`)
     for i := 0; i < len(os.Args); i++ {
@@ -71,7 +71,7 @@ func (c gConsoleOption) GetIndex(key string) (string, bool) {
 
 // 绑定命令行参数及对应的命令函数，注意参数是函数的内存地址
 // 如果操作失败返回错误信息
-func (c gConsole) BindHandle (cmd string, f GFuncEmpty) error {
+func (c gConsole) BindHandle (cmd string, f func()) error {
     _, ok := c.cmdFuncMap[cmd]
     if ok {
         return errors.New("duplicated handle for command:" + cmd)

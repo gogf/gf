@@ -24,7 +24,7 @@ func main() {
     if err == nil {
         //p.Print()
         //fmt.Println(p.Get("0"))
-        fmt.Println(p.GetArray("01"))
+        fmt.Println(p.GetMap("0"))
     } else {
         fmt.Println(err)
     }

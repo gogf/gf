@@ -1,4 +1,4 @@
-package g
+package ginstance
 
 // 全局单例操作对象
 var Instance gInstance

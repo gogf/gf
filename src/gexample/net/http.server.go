@@ -1,11 +1,11 @@
 package main
 
 import (
-    "gf"
     //"time"
     "net/http"
     "io"
     "time"
+    "g/ghttp"
     "g"
 )
 
@@ -36,7 +36,7 @@ func main() {
     //g.Http.Server.Start(":8199")
     //s := g.Http.Server.NewByAddr(":8199")
     //s.BindHandle("/hello", HelloServer)
-    g.Http.Server.SetSetting(g.GHttpServerSetting {
+    ghttp.Server.SetSetting(g.GHttpServerSetting {
         Addr           : ":8199",
         ReadTimeout    : 10 * time.Second,
         WriteTimeout   : 10 * time.Second,
