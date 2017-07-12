@@ -1,8 +1,8 @@
 package gfunc
 
 import (
-    "math/rand"
     "time"
+    "math/rand"
 )
 
 // 框架自定义函数库

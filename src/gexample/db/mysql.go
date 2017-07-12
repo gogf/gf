@@ -4,15 +4,24 @@ import (
     "fmt"
     "time"
     "strconv"
-    "g/db/gdb"
+    "g/database/gdb"
 )
-var db = gdb.New(gdb.Config{
-    Host : "127.0.0.1",
-    Port : "3306",
-    User : "root",
-    Pass : "123456",
-    Name : "test",
-})
+
+var db *gdb.Link
+
+func init () {
+    gdb.SetConfig(gdb.ConfigNode {
+        Host : "127.0.0.1",
+        Port : "3306",
+        User : "root",
+        Pass : "123456",
+        Name : "test",
+        Type : "mysql",
+    })
+    db, _ = gdb.Instance()
+}
+
+
 
 // 创建测试数据库
 func create() {
@@ -207,10 +216,37 @@ func linkopUpdate3() {
     }
 }
 
+// 主从io复用测试，在mysql中使用 show full processlist 查看链接信息
+func keepPing() {
+    for {
+        fmt.Println("ping...")
+        db.PingMaster()
+        db.PingSlave()
+        time.Sleep(1*time.Second)
+    }
+}
+
+// 数据库单例测试，在mysql中使用 show full processlist 查看链接信息
+func instance() {
+    db1, _ := gdb.Instance()
+    db2, _ := gdb.Instance()
+    db3, _ := gdb.Instance()
+    for {
+        fmt.Println("ping...")
+        db1.PingMaster()
+        db1.PingSlave()
+        db2.PingMaster()
+        db2.PingSlave()
+        db3.PingMaster()
+        db3.PingSlave()
+        time.Sleep(1*time.Second)
+    }
+}
+
 
 func main() {
-    create()
-    create()
+    //create()
+    //create()
     //insert()
     //query()
     //replace()
@@ -220,8 +256,9 @@ func main() {
     //update2()
     //update3()
     //linkopSelect()
-    linkopUpdate1()
+    //linkopUpdate1()
     //linkopUpdate2()
     //linkopUpdate3()
-
+    //keepPing()
+    instance()
 }

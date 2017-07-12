@@ -2,19 +2,10 @@ package main
 
 import (
     "fmt"
-    "time"
-    "math/rand"
+    "g/core/gfunc"
+    "g/database/gdb"
 )
 
-func Rand (min, max int) int {
-    fmt.Printf("min: %d, max: %d\n", min, max)
-    rand.Seed(time.Now().UnixNano())
-    n := rand.Intn(max)
-    if n < min {
-        return Rand(min, max)
-    }
-    return n
-}
 
 func main() {
     //s := "中国"
@@ -23,7 +14,8 @@ func main() {
     //    "name" : string([]rune(*p)),
     //}
     //fmt.Println(rand.Int()%15)
-    fmt.Println(Rand(1500000, 2000000))
+    fmt.Println(gfunc.Rand(10, 100))
+    gdb.Test()
     //fmt.Println(len(make(map[string]string)))
     //json := `{"name":"中国","age":31,"list":[["a","b","c"],["d","e","f"]],"item":{"title":"make\"he moon","name":"make'he moon","content":"'[}]{[}he moon"}}`
     //json := `{"name"  :  "中国",  "age" : 31, "items":[1,2,3]}`
