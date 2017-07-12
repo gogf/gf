@@ -70,7 +70,7 @@ func (p *gJson) GetString(pattern string) string {
     return ""
 }
 
-// 返回指定json中的int
+// 返回指定json中的float64
 func (p *gJson) GetNumber(pattern string) float64 {
     result := p.Get(pattern)
     if result != nil {

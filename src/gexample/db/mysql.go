@@ -19,6 +19,52 @@ func init () {
         Type : "mysql",
     })
     db, _ = gdb.Instance()
+
+    //gdb.SetConfig(gdb.Config {
+    //    "default" : gdb.ConfigGroup {
+    //        gdb.ConfigNode {
+    //            Host     : "127.0.0.1",
+    //            Port     : "3306",
+    //            User     : "root",
+    //            Pass     : "123456",
+    //            Name     : "test",
+    //            Type     : "mysql",
+    //            Role     : "master",
+    //            Priority : 100,
+    //        },
+    //        gdb.ConfigNode {
+    //            Host     : "127.0.0.2",
+    //            Port     : "3306",
+    //            User     : "root",
+    //            Pass     : "123456",
+    //            Name     : "test",
+    //            Type     : "mysql",
+    //            Role     : "master",
+    //            Priority : 100,
+    //        },
+    //        gdb.ConfigNode {
+    //            Host     : "127.0.0.3",
+    //            Port     : "3306",
+    //            User     : "root",
+    //            Pass     : "123456",
+    //            Name     : "test",
+    //            Type     : "mysql",
+    //            Role     : "master",
+    //            Priority : 100,
+    //        },
+    //        gdb.ConfigNode {
+    //            Host     : "127.0.0.4",
+    //            Port     : "3306",
+    //            User     : "root",
+    //            Pass     : "123456",
+    //            Name     : "test",
+    //            Type     : "mysql",
+    //            Role     : "master",
+    //            Priority : 100,
+    //        },
+    //    },
+    //})
+    //db, _ = gdb.Instance()
 }
 
 
@@ -248,7 +294,7 @@ func main() {
     //create()
     //create()
     //insert()
-    //query()
+    query()
     //replace()
     //save()
     //batchInsert()
@@ -260,5 +306,5 @@ func main() {
     //linkopUpdate2()
     //linkopUpdate3()
     //keepPing()
-    instance()
+    //instance()
 }
