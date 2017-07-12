@@ -6,7 +6,6 @@ import (
     "io"
     "time"
     "g/net/ghttp"
-    "g"
 )
 
 func HelloServer(w http.ResponseWriter, req *http.Request) {
@@ -36,7 +35,7 @@ func main() {
     //g.Http.Server.Start(":8199")
     //s := g.Http.Server.NewByAddr(":8199")
     //s.BindHandle("/hello", HelloServer)
-    ghttp.Server.SetSetting(g.GHttpServerSetting {
+    ghttp.SetDefaultServerConfig(ghttp.ServerConfig {
         Addr           : ":8199",
         ReadTimeout    : 10 * time.Second,
         WriteTimeout   : 10 * time.Second,
@@ -46,7 +45,4 @@ func main() {
         ServerRoot     : "/home/john/Workspace/Go/gf/src/gfexample/static/",
     })
 
-    g.Http.Server.BindHandle("/hello", HelloServer2)
-
-    g.Http.Server.Run()
 }
