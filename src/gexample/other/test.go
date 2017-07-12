@@ -16,6 +16,7 @@ func main() {
     //fmt.Println(rand.Int()%15)
     fmt.Println(gfunc.Rand(10, 100))
     gdb.Test()
+    redis
     //fmt.Println(len(make(map[string]string)))
     //json := `{"name":"中国","age":31,"list":[["a","b","c"],["d","e","f"]],"item":{"title":"make\"he moon","name":"make'he moon","content":"'[}]{[}he moon"}}`
     //json := `{"name"  :  "中国",  "age" : 31, "items":[1,2,3]}`
