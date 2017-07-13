@@ -3,10 +3,12 @@ package gdb
 import (
     "database/sql"
     "errors"
-    "g/core/gfunc"
+    "g/core/gutil"
     "fmt"
-    "log"
     "g/core/ginstance"
+    _ "github.com/go-sql-driver/mysql"
+    _ "github.com/lib/pq"
+    "log"
 )
 
 const (
@@ -22,17 +24,59 @@ var config struct {
     d  string
 }
 
-// 数据库事务操作对象
-type gTrasaction struct {
-    db *sql.DB
-    tx *sql.Tx
+// 数据库操作接口
+type Link interface {
+    Open (c *ConfigNode) (*sql.DB, error)
+    Close() error
+    Query(q string, args ...interface{}) (*sql.Rows, error)
+    Exec(q string, args ...interface{}) (sql.Result, error)
+    Prepare(q string) (*sql.Stmt, error)
+
+    GetAll(q string, args ...interface{}) (*DataList, error)
+    GetOne(q string, args ...interface{}) (*DataMap, error)
+    GetValue(q string, args ...interface{}) (string, error)
+
+    PingMaster() error
+    PingSlave() error
+
+    SetMaxIdleConns(n int)
+    SetMaxOpenConns(n int)
+
+    setMaster(master *sql.DB)
+    setSlave(slave *sql.DB)
+    setQuoteChar(left string, right string)
+    setLink(link Link)
+    getQuoteCharLeft () string
+    getQuoteCharRight () string
+
+    Begin() (*sql.Tx, error)
+    Commit() error
+    Rollback() error
+
+    insert(table string, data *DataMap, option uint8) (sql.Result, error)
+    Insert(table string, data *DataMap) (sql.Result, error)
+    Replace(table string, data *DataMap) (sql.Result, error)
+    Save(table string, data *DataMap) (sql.Result, error)
+
+    batchInsert(table string, list *DataList, batch int, option uint8) error
+    BatchInsert(table string, list *DataList, batch int) error
+    BatchReplace(table string, list *DataList, batch int) error
+    BatchSave(table string, list *DataList, batch int) error
+
+    Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
+    Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
+
+    Table(tables string) (*gLinkOp)
 }
 
 // 数据库链接对象
-type Link struct {
-    Transaction gTrasaction
-    master *sql.DB
-    slave  *sql.DB
+type dbLink struct {
+    link        Link
+    transaction *sql.Tx
+    master      *sql.DB
+    slave       *sql.DB
+    charl        string
+    charr        string
 }
 
 // 数据库配置
@@ -48,10 +92,11 @@ type ConfigNode  struct {
     User     string // 账号
     Pass     string // 密码
     Name     string // 数据库名称
-    Type     string // 数据库类型：mysql, sqlite, mssql, postgresql, oracle(目前仅支持mysql)
+    Type     string // 数据库类型：mysql, sqlite, mssql, pgsql, oracle(目前仅支持mysql)
     Role     string // (可选)数据库的角色，用于主从操作分离，至少需要有一个master，参数值：master, slave
     Charset  string // (可选)编码，默认为 utf-8
     Priority    int // (可选)用于负载均衡的权重计算，当集群中只有一个节点时，权重没有任何意义
+    Linkinfo string // (可选)自定义链接信息，当该字段被设置值时，以上链接字段(Host,Port,User,Pass,Name)将失效(该字段是一个扩展功能)
 }
 
 // 记录关联数组
@@ -120,7 +165,7 @@ func SetDefaultGroup (groupName string) {
 }
 
 // 根据配置项获取一个数据库操作对象单例
-func instance (groupName string) (*Link, error) {
+func instance (groupName string) (Link, error) {
     instanceName := "gdb_instance_" + groupName
     result       := ginstance.Get(instanceName)
     if result == nil {
@@ -132,27 +177,27 @@ func instance (groupName string) (*Link, error) {
             return nil, err
         }
     } else {
-        return result.(*Link), nil
+        return result.(Link), nil
     }
 }
 
 // 获得默认的数据库操作对象单例
-func Instance () (*Link, error) {
+func Instance () (Link, error) {
     return instance(config.d)
 }
 
 // 获得指定配置项的数据库草最对象单例
-func InstanceByGroup(groupName string) (*Link, error) {
+func InstanceByGroup(groupName string) (Link, error) {
     return instance(groupName)
 }
 
 // 使用默认选项进行连接，数据库集群配置项：default
-func New() (*Link, error) {
+func New() (Link, error) {
     return NewByGroup(config.d)
 }
 
 // 根据数据库配置项创建一个数据库操作对象
-func NewByGroup(groupName string) (*Link, error) {
+func NewByGroup(groupName string) (Link, error) {
     if len(config.c) < 1 {
         return nil, errors.New("empty database configuration")
     }
@@ -171,27 +216,12 @@ func NewByGroup(groupName string) (*Link, error) {
         if len(masterList) < 1 {
             return nil, errors.New("at least one master node configuration's need to make sense")
         }
-        link        := Link{}
-        // master链接对象
-        masterItem  := getConfigNodeByPriority(&masterList)
-        master, err := openSql(masterItem)
-        if err != nil {
-            log.Fatal(err)
-        }
-        // slave链接对象
-        // 如果整个配置中仅有一个master配置项，那么slave和master共用一个链接对象
-        slave := master
+        masterNode := getConfigNodeByPriority(&masterList)
+        var slaveNode *ConfigNode
         if len(slaveList) > 0 {
-            slaveItem  := getConfigNodeByPriority(&slaveList)
-            slave,  err = openSql(slaveItem)
-            if err != nil {
-                log.Fatal(err)
-            }
+            slaveNode = getConfigNodeByPriority(&slaveList)
         }
-        link.master         = master
-        link.slave          = slave
-        link.Transaction.db = master
-        return &link, nil
+        return newLink(masterNode, slaveNode)
     } else {
         return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", groupName))
     }
@@ -206,7 +236,7 @@ func getConfigNodeByPriority (cg *ConfigGroup) *ConfigNode {
     for i := 0; i < len(*cg); i++ {
         total += (*cg)[i].Priority * 100
     }
-    r   := gfunc.Rand(0, total)
+    r   := gutil.Rand(0, total)
     min := 0
     max := 0
     for i := 0; i < len(*cg); i++ {
@@ -221,12 +251,51 @@ func getConfigNodeByPriority (cg *ConfigGroup) *ConfigNode {
     return nil
 }
 
-// 创建SQL操作对象，内部采用了lazy link处理
-func openSql (c *ConfigNode) (*sql.DB, error) {
-    db,  err := sql.Open(c.Type,  fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name))
+// 创建数据库链接对象
+func newLink (masterNode *ConfigNode, slaveNode *ConfigNode) (Link, error) {
+    var link Link
+    switch masterNode.Type {
+        case "mysql":
+            link = Link(&mysqlLink{})
+
+        case "pgsql":
+            link = Link(&pgsqlLink{})
+
+        default:
+            return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", masterNode.Type))
+    }
+    master, err := link.Open(masterNode)
     if err != nil {
         log.Fatal(err)
     }
-    return db, err
+    slave := master
+    if slaveNode != nil {
+        slave,  err = link.Open(slaveNode)
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
+    link.setLink(link)
+    link.setMaster(master)
+    link.setSlave(slave)
+    link.setQuoteChar(link.getQuoteCharLeft(), link.getQuoteCharRight())
+    return link, nil
+}
+
+func (l *dbLink) setMaster(master *sql.DB) {
+    l.master = master
+}
+
+func (l *dbLink) setSlave(slave *sql.DB) {
+    l.slave = slave
+}
+
+func (l *dbLink) setQuoteChar(left string, right string) {
+    l.charl = left
+    l.charr = right
+}
+
+func (l *dbLink) setLink(link Link) {
+    l.link = link
 }
 

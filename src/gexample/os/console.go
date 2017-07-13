@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "g"
+    "g/os/gconsole"
 )
 
 func doEcho() {
@@ -10,12 +10,12 @@ func doEcho() {
 }
 
 func main() {
-    fmt.Println(g.Console.Value.GetAll())
+    fmt.Println(gconsole.Value.GetAll())
 
-    fmt.Println(g.Console.Value.GetIndex(1))
+    fmt.Println(gconsole.Value.GetIndex(1))
 
-    g.Console.BindHandle("echo", doEcho)
-    g.Console.RunHandle("echo")
+    gconsole.BindHandle("echo", doEcho)
+    gconsole.RunHandle("echo")
 
-    g.Console.AutoRun()
+    gconsole.AutoRun()
 }

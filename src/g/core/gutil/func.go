@@ -1,4 +1,4 @@
-package gfunc
+package gutil
 
 import (
     "time"

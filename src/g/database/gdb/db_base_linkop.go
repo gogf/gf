@@ -12,7 +12,7 @@ import (
 
 // 数据库链式操作对象
 type gLinkOp struct {
-    link          *Link
+    link          Link
     tables        string
     fields        string
     condition     string
@@ -27,9 +27,9 @@ type gLinkOp struct {
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (l *Link) Table(tables string) (*gLinkOp) {
+func (l *dbLink) Table(tables string) (*gLinkOp) {
     return &gLinkOp{
-        link  : l,
+        link  : l.link,
         tables: tables,
     }
 }

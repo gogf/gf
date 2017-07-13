@@ -7,7 +7,7 @@ import (
     "g/database/gdb"
 )
 
-var db *gdb.Link
+var db gdb.Link
 
 func init () {
     gdb.SetConfig(gdb.ConfigNode {
@@ -100,6 +100,7 @@ func create() {
         ENGINE = InnoDB
         DEFAULT CHARACTER SET = utf8
     `
+
     _, err = db.Exec(s)
     if (err != nil) {
         fmt.Println(err)
@@ -291,10 +292,11 @@ func instance() {
 
 
 func main() {
+
     //create()
     //create()
     //insert()
-    query()
+    //query()
     //replace()
     //save()
     //batchInsert()
@@ -304,7 +306,7 @@ func main() {
     //linkopSelect()
     //linkopUpdate1()
     //linkopUpdate2()
-    //linkopUpdate3()
+    linkopUpdate3()
     //keepPing()
     //instance()
 }
