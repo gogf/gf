@@ -17,7 +17,7 @@ func (l *mysqlLink) Open (c *ConfigNode) (*sql.DB, error) {
     if c.Linkinfo != "" {
         dbsource = c.Linkinfo
     } else {
-        dbsource = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name)
+        dbsource = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", c.User, c.Pass, c.Host, c.Port, c.Name)
     }
     db, err := sql.Open("mysql", dbsource)
     if err != nil {
@@ -34,4 +34,9 @@ func (l *mysqlLink) getQuoteCharLeft () string {
 // 获得关键字操作符 - 右
 func (l *mysqlLink) getQuoteCharRight () string {
     return "`"
+}
+
+// 在执行sql之前对sql进行进一步处理
+func (l *mysqlLink) handleSqlBeforeExec(q *string) *string {
+    return q
 }

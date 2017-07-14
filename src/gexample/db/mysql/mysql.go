@@ -7,18 +7,33 @@ import (
     "g/database/gdb"
 )
 
+// 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
+
 var db gdb.Link
 
+// 初始化配置及创建数据库
 func init () {
-    gdb.SetConfig(gdb.ConfigNode {
-        Host : "127.0.0.1",
-        Port : "3306",
-        User : "root",
-        Pass : "123456",
-        Name : "test",
-        Type : "mysql",
+    gdb.AddDefaultConfigNode(gdb.ConfigNode {
+        Host    : "127.0.0.1",
+        Port    : 3306,
+        User    : "root",
+        Pass    : "123456",
+        Name    : "test",
+        Type    : "mysql",
+        Role    : "master",
+        Charset : "utf8",
     })
     db, _ = gdb.Instance()
+
+    //gdb.SetConfig(gdb.ConfigNode {
+    //    Host : "127.0.0.1",
+    //    Port : 3306,
+    //    User : "root",
+    //    Pass : "123456",
+    //    Name : "test",
+    //    Type : "mysql",
+    //})
+    //db, _ = gdb.Instance()
 
     //gdb.SetConfig(gdb.Config {
     //    "default" : gdb.ConfigGroup {
@@ -105,19 +120,20 @@ func create() {
     if (err != nil) {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 // 数据写入
 func insert() {
-    fmt.Println("insert1:")
-    r, err := db.Insert("user", &gdb.DataMap {
+    fmt.Println("insert:")
+    r, err := db.Insert("user", &gdb.Map {
         "name": "john",
     })
     if (err == nil) {
         uid, err2 := r.LastInsertId()
         if err2 == nil {
-            r, err = db.Insert("user_detail", &gdb.DataMap {
-                "uid"  : string(uid),
+            r, err = db.Insert("user_detail", &gdb.Map {
+                "uid"  : uid,
                 "site" : "http://johng.cn",
             })
             if err == nil {
@@ -131,37 +147,27 @@ func insert() {
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 
 // 基本sql查询
 func query() {
+    fmt.Println("query:")
     list, err := db.GetAll("select * from user limit 2")
     if err == nil {
         fmt.Println(list)
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 // replace into
 func replace() {
-    r, err := db.Save("user", &gdb.DataMap {
-        "uid": "1",
-        "name": "john",
-    })
-    if (err == nil) {
-        fmt.Println(r.LastInsertId())
-        fmt.Println(r.RowsAffected())
-    } else {
-        fmt.Println(err)
-    }
-}
-
-// 数据保存
-func save() {
-    r, err := db.Save("user", &gdb.DataMap {
-        "uid"  : "1",
+    fmt.Println("replace:")
+    r, err := db.Save("user", &gdb.Map {
+        "uid"  :  1,
         "name" : "john",
     })
     if (err == nil) {
@@ -170,11 +176,29 @@ func save() {
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
+}
+
+// 数据保存
+func save() {
+    fmt.Println("save:")
+    r, err := db.Save("user", &gdb.Map {
+        "uid"  : 1,
+        "name" : "john",
+    })
+    if (err == nil) {
+        fmt.Println(r.LastInsertId())
+        fmt.Println(r.RowsAffected())
+    } else {
+        fmt.Println(err)
+    }
+    fmt.Println()
 }
 
 // 批量写入
 func batchInsert() {
-    err := db.BatchInsert("user", &gdb.DataList {
+    fmt.Println("batchInsert:")
+    err := db.BatchInsert("user", &gdb.List {
         {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
         {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
         {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
@@ -183,21 +207,25 @@ func batchInsert() {
     if err != nil {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 // 数据更新
 func update1() {
-    r, err := db.Update("user", &gdb.DataMap {"name": "john1"}, "uid=?", 1)
+    fmt.Println("update1:")
+    r, err := db.Update("user", &gdb.Map {"name": "john1"}, "uid=?", 1)
     if (err == nil) {
         fmt.Println(r.LastInsertId())
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 // 数据更新
 func update2() {
+    fmt.Println("update2:")
     r, err := db.Update("user", "name='john2'", "uid=1")
     if (err == nil) {
         fmt.Println(r.LastInsertId())
@@ -205,10 +233,12 @@ func update2() {
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 // 数据更新
 func update3() {
+    fmt.Println("update3:")
     r, err := db.Update("user", "name=?", "uid=?", "john2", 1)
     if (err == nil) {
         fmt.Println(r.LastInsertId())
@@ -216,55 +246,85 @@ func update3() {
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 
-// 链式查询操作
-func linkopSelect() {
-    r, err := db.Table("user u").
-        LeftJoin("user_detail ud", "u.uid=ud.uid").
-        Fields("u.*, ud.site").
-        Condition("u.uid > ?", 1).
-        Limit(0, 2).Select()
+// 链式查询操作1
+func linkopSelect1() {
+    fmt.Println("linkopSelect1:")
+    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*, ud.site").Condition("u.uid > ?", 1).Limit(0, 2).Select()
     if (err == nil) {
         fmt.Println(r)
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
+}
+
+// 链式查询操作2
+func linkopSelect2() {
+    fmt.Println("linkopSelect2:")
+    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Condition("u.uid=?", 1).One()
+    if (err == nil) {
+        fmt.Println(r)
+    } else {
+        fmt.Println(err)
+    }
+    fmt.Println()
+}
+
+// 链式查询操作3
+func linkopSelect3() {
+    fmt.Println("linkopSelect3:")
+    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Condition("u.uid=?", 1).Value()
+    if (err == nil) {
+        fmt.Println(r.(string))
+    } else {
+        fmt.Println(err)
+    }
+    fmt.Println()
 }
 
 // 错误操作
 func linkopUpdate1() {
+    fmt.Println("linkopUpdate1:")
     r, err := db.Table("henghe_setting").Update()
     if (err == nil) {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
-// 通过DataMap指针方式传参方式
+// 通过Map指针方式传参方式
 func linkopUpdate2() {
-    r, err := db.Table("user").Data(&gdb.DataMap{"name" : "john2"}).Condition("name=?", "john").Update()
+    fmt.Println("linkopUpdate2:")
+    r, err := db.Table("user").Data(&gdb.Map{"name" : "john2"}).Condition("name=?", "john").Update()
     if (err == nil) {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 // 通过字符串方式传参
 func linkopUpdate3() {
+    fmt.Println("linkopUpdate3:")
     r, err := db.Table("user").Data("name='john3'").Condition("name=?", "john2").Update()
     if (err == nil) {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
 }
 
 // 主从io复用测试，在mysql中使用 show full processlist 查看链接信息
 func keepPing() {
+    fmt.Println("keepPing:")
     for {
         fmt.Println("ping...")
         db.PingMaster()
@@ -275,6 +335,7 @@ func keepPing() {
 
 // 数据库单例测试，在mysql中使用 show full processlist 查看链接信息
 func instance() {
+    fmt.Println("instance:")
     db1, _ := gdb.Instance()
     db2, _ := gdb.Instance()
     db3, _ := gdb.Instance()
@@ -293,20 +354,20 @@ func instance() {
 
 func main() {
 
-    //create()
-    //create()
-    //insert()
-    //query()
-    //replace()
-    //save()
-    //batchInsert()
-    //update1()
-    //update2()
+    create()
+    create()
+    insert()
+    query()
+    replace()
+    save()
+    batchInsert()
+    update1()
+    update2()
     //update3()
-    //linkopSelect()
-    //linkopUpdate1()
-    //linkopUpdate2()
+    linkopSelect1()
+    linkopSelect2()
+    linkopSelect3()
+    linkopUpdate1()
+    linkopUpdate2()
     linkopUpdate3()
-    //keepPing()
-    //instance()
 }

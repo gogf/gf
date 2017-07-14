@@ -22,7 +22,7 @@ type gLinkOp struct {
     start         int
     limit         int
     data          interface{}
-    dataList      *DataList
+    dataList      *List
     batch         int
 }
 
@@ -91,7 +91,7 @@ func (op *gLinkOp) Data(data interface{}) (*gLinkOp) {
 }
 
 // 链式操作，操作数据记录项列表
-func (op *gLinkOp) DataList(list *DataList) (*gLinkOp) {
+func (op *gLinkOp) List(list *List) (*gLinkOp) {
     op.dataList = list
     return op
 }
@@ -101,7 +101,7 @@ func (op *gLinkOp) Insert() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("inserting into table with empty data")
     }
-    if d, ok :=  op.data.(*DataMap); ok {
+    if d, ok :=  op.data.(*Map); ok {
         return op.link.Insert(op.tables, d)
     }
     return nil, errors.New("inserting into table with invalid data type")
@@ -112,7 +112,7 @@ func (op *gLinkOp) Replace() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("replacing into table with empty data")
     }
-    if d, ok :=  op.data.(*DataMap); ok {
+    if d, ok :=  op.data.(*Map); ok {
         return op.link.Insert(op.tables, d)
     }
     return nil, errors.New("replacing into table with invalid data type")
@@ -123,7 +123,7 @@ func (op *gLinkOp) Save() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("saving into table with empty data")
     }
-    if d, ok :=  op.data.(*DataMap); ok {
+    if d, ok :=  op.data.(*Map); ok {
         return op.link.Insert(op.tables, d)
     }
     return nil, errors.New("saving into table with invalid data type")
@@ -188,7 +188,7 @@ func (op *gLinkOp) Delete() (sql.Result, error) {
 }
 
 // 链式操作，select
-func (op *gLinkOp) Select() (*DataList, error) {
+func (op *gLinkOp) Select() (*List, error) {
     if op.fields == "" {
         op.fields = "*"
     }
@@ -209,12 +209,12 @@ func (op *gLinkOp) Select() (*DataList, error) {
 }
 
 // 链式操作，查询所有记录
-func (op *gLinkOp) All() (*DataList, error) {
+func (op *gLinkOp) All() (*List, error) {
     return op.Select()
 }
 
 // 链式操作，查询单条记录
-func (op *gLinkOp) One() (*DataMap, error) {
+func (op *gLinkOp) One() (*Map, error) {
     list, err := op.All()
     if err != nil {
         return nil, err
@@ -223,7 +223,7 @@ func (op *gLinkOp) One() (*DataMap, error) {
 }
 
 // 链式操作，查询字段值
-func (op *gLinkOp) Value() (string, error) {
+func (op *gLinkOp) Value() (interface{}, error) {
     one, err := op.One()
     if err != nil {
         return "", err

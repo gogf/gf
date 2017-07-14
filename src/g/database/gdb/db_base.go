@@ -33,7 +33,9 @@ func (l *dbLink) Close() error {
 
 // 数据库sql查询操作，主要执行查询
 func (l *dbLink) Query(q string, args ...interface{}) (*sql.Rows, error) {
-    rows, err := l.slave.Query(q, args ...)
+    p         := l.link.handleSqlBeforeExec(&q)
+    rows, err := l.slave.Query(*p, args ...)
+    err        = l.formatError(err, p, args...)
     if (err == nil) {
         return rows, nil
     }
@@ -44,11 +46,28 @@ func (l *dbLink) Query(q string, args ...interface{}) (*sql.Rows, error) {
 func (l *dbLink) Exec(q string, args ...interface{}) (sql.Result, error) {
     //fmt.Println(q)
     //fmt.Println(args)
-    return l.master.Exec(q, args ...)
+    p      := l.link.handleSqlBeforeExec(&q)
+    r, err := l.master.Exec(*p, args ...)
+    err     = l.formatError(err, p, args...)
+    return r, err
 }
 
+// 格式化错误信息
+func (l *dbLink) formatError(err error, q *string, args ...interface{}) error {
+    if err != nil {
+        errstr := fmt.Sprintf("DB ERROR: %s\n", err.Error())
+        errstr += fmt.Sprintf("DB QUERY: %s\n", *q)
+        if len(args) > 0 {
+            errstr += fmt.Sprintf("DB PARAM: %v\n", args)
+        }
+        err     = errors.New(errstr)
+    }
+    return err
+}
+
+
 // 数据库查询，获取查询结果集，以列表结构返回
-func (l *dbLink) GetAll(q string, args ...interface{}) (*DataList, error) {
+func (l *dbLink) GetAll(q string, args ...interface{}) (*List, error) {
     // 执行sql
     rows, err := l.Query(q, args ...)
     if err != nil || rows == nil {
@@ -62,7 +81,7 @@ func (l *dbLink) GetAll(q string, args ...interface{}) (*DataList, error) {
     // 返回结构组装
     values   := make([]sql.RawBytes, len(columns))
     scanArgs := make([]interface{}, len(values))
-    var list DataList
+    var list List
     for i := range values {
         scanArgs[i] = &values[i]
     }
@@ -71,7 +90,7 @@ func (l *dbLink) GetAll(q string, args ...interface{}) (*DataList, error) {
         if err != nil {
             return &list, err
         }
-        row := make(map[string]string)
+        row := make(Map)
         for i, col := range values {
             row[columns[i]] = string(col)
         }
@@ -81,7 +100,7 @@ func (l *dbLink) GetAll(q string, args ...interface{}) (*DataList, error) {
 }
 
 // 数据库查询，获取查询结果集，以关联数组结构返回
-func (l *dbLink) GetOne(q string, args ...interface{}) (*DataMap, error) {
+func (l *dbLink) GetOne(q string, args ...interface{}) (*Map, error) {
     list, err := l.GetAll(q, args ...)
     if err != nil {
         return nil, err
@@ -90,7 +109,7 @@ func (l *dbLink) GetOne(q string, args ...interface{}) (*DataMap, error) {
 }
 
 // 数据库查询，获取查询字段值
-func (l *dbLink) GetValue(q string, args ...interface{}) (string, error) {
+func (l *dbLink) GetValue(q string, args ...interface{}) (interface{}, error) {
     one, err := l.GetOne(q, args ...)
     if err != nil {
         return "", err
@@ -175,7 +194,7 @@ func (l *dbLink) getInsertOperationByOption(option uint8) string {
 // 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 // 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 // 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做
-func (l *dbLink) insert(table string, data *DataMap, option uint8) (sql.Result, error) {
+func (l *dbLink) insert(table string, data *Map, option uint8) (sql.Result, error) {
     var keys   []string
     var values []string
     var params []interface{}
@@ -200,22 +219,22 @@ func (l *dbLink) insert(table string, data *DataMap, option uint8) (sql.Result, 
 }
 
 // CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
-func (l *dbLink) Insert(table string, data *DataMap) (sql.Result, error) {
+func (l *dbLink) Insert(table string, data *Map) (sql.Result, error) {
     return l.link.insert(table, data, OPTION_INSERT)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (l *dbLink) Replace(table string, data *DataMap) (sql.Result, error) {
+func (l *dbLink) Replace(table string, data *Map) (sql.Result, error) {
     return l.link.insert(table, data, OPTION_REPLACE)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (l *dbLink) Save(table string, data *DataMap) (sql.Result, error) {
+func (l *dbLink) Save(table string, data *Map) (sql.Result, error) {
     return l.link.insert(table, data, OPTION_SAVE)
 }
 
 // 批量写入数据
-func (l *dbLink) batchInsert(table string, list *DataList, batch int, option uint8) error {
+func (l *dbLink) batchInsert(table string, list *List, batch int, option uint8) error {
     var keys    []string
     var values  []string
     var bvalues []string
@@ -248,7 +267,7 @@ func (l *dbLink) batchInsert(table string, list *DataList, batch int, option uin
         }
         bvalues = append(bvalues, "(" + strings.Join(values, ",") + ")")
         if len(bvalues) == batch {
-            _, err := l.Exec(fmt.Sprintf("%s INTO %s(%s) VALUES%s %s", operation, l.charl, table, l.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
+            _, err := l.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, l.charl, table, l.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
             if err != nil {
                 return err
             }
@@ -257,7 +276,7 @@ func (l *dbLink) batchInsert(table string, list *DataList, batch int, option uin
     }
     // 处理最后不构成指定批量的数据
     if (len(bvalues) > 0) {
-        _, err := l.Exec(fmt.Sprintf("%s INTO %s(%s) VALUES%s %s", operation, l.charl, table, l.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
+        _, err := l.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, l.charl, table, l.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
         if err != nil {
             return err
         }
@@ -266,17 +285,17 @@ func (l *dbLink) batchInsert(table string, list *DataList, batch int, option uin
 }
 
 // CURD操作:批量数据指定批次量写入
-func (l *dbLink) BatchInsert(table string, list *DataList, batch int) error {
+func (l *dbLink) BatchInsert(table string, list *List, batch int) error {
     return l.link.batchInsert(table, list, batch, OPTION_INSERT)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (l *dbLink) BatchReplace(table string, list *DataList, batch int) error {
+func (l *dbLink) BatchReplace(table string, list *List, batch int) error {
     return l.link.batchInsert(table, list, batch, OPTION_REPLACE)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (l *dbLink) BatchSave(table string, list *DataList, batch int) error {
+func (l *dbLink) BatchSave(table string, list *List, batch int) error {
     return l.link.batchInsert(table, list, batch, OPTION_SAVE)
 }
 
@@ -288,16 +307,16 @@ func (l *dbLink) Update(table string, data interface{}, condition interface{}, a
     switch data.(type) {
         case string:
             updates = data.(string)
-        case *DataMap:
+        case *Map:
             var keys []string
-            for k, v := range *data.(*DataMap) {
-                keys   = append(keys,   fmt.Sprintf("%s=?", l.charl, k, l.charr))
+            for k, v := range *data.(*Map) {
+                keys   = append(keys,   fmt.Sprintf("%s%s%s=?", l.charl, k, l.charr))
                 params = append(params, v)
             }
             updates = strings.Join(keys,   ",")
 
         default:
-            return nil, errors.New("invalid data type for 'data' field, string or *DataMap expected")
+            return nil, errors.New("invalid data type for 'data' field, string or *Map expected")
     }
     for _, v := range args {
         if r, ok := v.(string); ok {

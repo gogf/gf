@@ -32,9 +32,9 @@ type Link interface {
     Exec(q string, args ...interface{}) (sql.Result, error)
     Prepare(q string) (*sql.Stmt, error)
 
-    GetAll(q string, args ...interface{}) (*DataList, error)
-    GetOne(q string, args ...interface{}) (*DataMap, error)
-    GetValue(q string, args ...interface{}) (string, error)
+    GetAll(q string, args ...interface{}) (*List, error)
+    GetOne(q string, args ...interface{}) (*Map, error)
+    GetValue(q string, args ...interface{}) (interface{}, error)
 
     PingMaster() error
     PingSlave() error
@@ -48,20 +48,21 @@ type Link interface {
     setLink(link Link)
     getQuoteCharLeft () string
     getQuoteCharRight () string
+    handleSqlBeforeExec(q *string) *string
 
     Begin() (*sql.Tx, error)
     Commit() error
     Rollback() error
 
-    insert(table string, data *DataMap, option uint8) (sql.Result, error)
-    Insert(table string, data *DataMap) (sql.Result, error)
-    Replace(table string, data *DataMap) (sql.Result, error)
-    Save(table string, data *DataMap) (sql.Result, error)
+    insert(table string, data *Map, option uint8) (sql.Result, error)
+    Insert(table string, data *Map) (sql.Result, error)
+    Replace(table string, data *Map) (sql.Result, error)
+    Save(table string, data *Map) (sql.Result, error)
 
-    batchInsert(table string, list *DataList, batch int, option uint8) error
-    BatchInsert(table string, list *DataList, batch int) error
-    BatchReplace(table string, list *DataList, batch int) error
-    BatchSave(table string, list *DataList, batch int) error
+    batchInsert(table string, list *List, batch int, option uint8) error
+    BatchInsert(table string, list *List, batch int) error
+    BatchReplace(table string, list *List, batch int) error
+    BatchSave(table string, list *List, batch int) error
 
     Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
     Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
@@ -88,7 +89,7 @@ type ConfigGroup []ConfigNode
 // 数据库单项配置
 type ConfigNode  struct {
     Host     string // 地址
-    Port     string // 端口
+    Port        int // 端口
     User     string // 账号
     Pass     string // 密码
     Name     string // 数据库名称
@@ -99,11 +100,11 @@ type ConfigNode  struct {
     Linkinfo string // (可选)自定义链接信息，当该字段被设置值时，以上链接字段(Host,Port,User,Pass,Name)将失效(该字段是一个扩展功能)
 }
 
-// 记录关联数组
-type DataMap  map[string]string
+// 关联数组，绑定一条数据表记录
+type Map  map[string]interface{}
 
-// 记录关联数组列表(索引从0开始的数组)
-type DataList []DataMap
+// 关联数组列表(索引从0开始的数组)，绑定多条记录
+type List []Map
 
 // 数据库集群配置示例，支持主从处理，多数据库集群支持
 /*
@@ -138,10 +139,11 @@ var DatabaseConfiguration = Config {
 
 // 包初始化
 func init() {
+    config.c = make(Config)
     config.d = "default"
 }
 
-// 设置当前应用的数据库配置信息
+// 设置当前应用的数据库配置信息，进行全局数据库配置覆盖操作
 // 支持三种数据类型的输入参数：Config, ConfigGroup, ConfigNode
 func SetConfig (c interface{}) {
     switch c.(type) {
@@ -157,6 +159,26 @@ func SetConfig (c interface{}) {
         default:
             panic("invalid config type, valid types are: Config, ConfigGroup, ConfigNode")
     }
+}
+
+// 添加一台数据库服务器配置
+func AddConfigNode (group string, node ConfigNode) {
+    config.c[group] = append(config.c[group], node)
+}
+
+// 添加数据库服务器集群配置
+func AddConfigGroup (group string, nodes ConfigGroup) {
+    config.c[group] = nodes
+}
+
+// 添加默认链接的一台数据库服务器配置
+func AddDefaultConfigNode (node ConfigNode) {
+    AddConfigNode("default", node)
+}
+
+// 添加默认链接的数据库服务器集群配置
+func AddDefaultConfigGroup (nodes ConfigGroup) {
+    AddConfigGroup("default", nodes)
 }
 
 // 设置默认链接的数据库链接配置项(默认是 default)
@@ -282,19 +304,23 @@ func newLink (masterNode *ConfigNode, slaveNode *ConfigNode) (Link, error) {
     return link, nil
 }
 
+// 设置master链接对象
 func (l *dbLink) setMaster(master *sql.DB) {
     l.master = master
 }
 
+// 设置slave链接对象
 func (l *dbLink) setSlave(slave *sql.DB) {
     l.slave = slave
 }
 
+// 设置当前数据库类型引用字符
 func (l *dbLink) setQuoteChar(left string, right string) {
     l.charl = left
     l.charr = right
 }
 
+// 设置挡脸操作的link接口
 func (l *dbLink) setLink(link Link) {
     l.link = link
 }

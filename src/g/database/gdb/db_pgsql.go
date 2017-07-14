@@ -4,7 +4,11 @@ import (
     "database/sql"
     "fmt"
     "log"
+    "regexp"
 )
+
+// postgresql的适配
+// @todo 需要完善replace和save的操作覆盖
 
 // 数据库链接对象
 type pgsqlLink struct {
@@ -17,7 +21,7 @@ func (l *pgsqlLink) Open (c *ConfigNode) (*sql.DB, error) {
     if c.Linkinfo != "" {
         dbsource = c.Linkinfo
     } else {
-        dbsource = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", c.User, c.Pass, c.Host, c.Port, c.Name)
+        dbsource = fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s", c.User, c.Pass, c.Host, c.Port, c.Name)
     }
     db, err := sql.Open("postgres", dbsource)
     if err != nil {
@@ -35,3 +39,15 @@ func (l *pgsqlLink) getQuoteCharLeft () string {
 func (l *pgsqlLink) getQuoteCharRight () string {
     return "\""
 }
+
+// 在执行sql之前对sql进行进一步处理
+func (l *pgsqlLink) handleSqlBeforeExec(q *string) *string {
+    reg   := regexp.MustCompile("\\?")
+    index := 0
+    str   := reg.ReplaceAllStringFunc(*q, func (s string) string {
+        index ++
+        return fmt.Sprintf("$%d", index)
+    })
+    return &str
+}
+
