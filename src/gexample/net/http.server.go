@@ -42,7 +42,7 @@ func main() {
         IdleTimeout    : 10 * time.Second,
         MaxHeaderBytes : 1024,
         ServerAgent    : "gf",
-        ServerRoot     : "/home/john/Workspace/Go/gf/src/gfexample/static/",
+        ServerRoot     : "/home/john/Workspace/",
     })
-
+    ghttp.New().Run()
 }
