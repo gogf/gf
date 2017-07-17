@@ -1,1 +1,1 @@
-Go Frame 轻量级Golang开发框架
+Go Frame - 轻量级Golang开发框架
