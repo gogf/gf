@@ -28,7 +28,7 @@ type ServerConfig struct {
     MaxHeaderBytes  int           // 最大的header长度
     ErrorLog       *log.Logger    // 错误日志的处理接口
     // gf 扩展信息字段
-    IndexFiles      string        // 默认访问的文件列表，多个以空格分隔
+    IndexFiles      []string      // 默认访问的文件列表
     IndexFolder     bool          // 如果访问目录是否显示目录列表
     ServerAgent     string        // server agent
     ServerRoot      string        // 服务器服务的本地目录根路径
@@ -42,7 +42,7 @@ var defaultServerConfig = ServerConfig {
     WriteTimeout   : 60 * time.Second,
     IdleTimeout    : 60 * time.Second,
     MaxHeaderBytes : 1024,
-    IndexFiles     : "index.html index.htm",
+    IndexFiles     : []string{"index.html", "index.htm"},
     IndexFolder    : false,
     ServerAgent    : "gf",
     ServerRoot     : "",

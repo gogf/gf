@@ -22,3 +22,13 @@ func IsDir(path string) bool {
     }
     return false
 }
+
+// 将所给定的路径转换为绝对路径
+// 并判断文件路径是否存在，如果文件不存在，那么返回空字符串
+func RealPath(path string) string {
+    p, err := filepath.Abs(path)
+    if err != nil || !Exists(p) {
+        return ""
+    }
+    return p
+}

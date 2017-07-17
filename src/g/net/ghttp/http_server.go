@@ -2,10 +2,22 @@ package ghttp
 
 import (
     "net/http"
+    "strings"
+    "path/filepath"
 )
 
 // 执行
 func (h *Server)Run() error {
+    // 底层http server配置
+    h.server  = http.Server {
+        Addr           : h.config.Addr,
+        Handler        : h.config.Handler,
+        ReadTimeout    : h.config.ReadTimeout,
+        WriteTimeout   : h.config.WriteTimeout,
+        IdleTimeout    : h.config.IdleTimeout,
+        MaxHeaderBytes : h.config.MaxHeaderBytes,
+    }
+    // 执行端口监听
     err := h.server.ListenAndServe()
     if err != nil {
         panic(err)
@@ -23,25 +35,30 @@ func (h *Server)SetConfig(c ServerConfig) {
     if c.Handler == nil {
         c.Handler = http.HandlerFunc(h.defaultHttpHandle)
     }
-    h.config  = c
-    h.server  = http.Server {
-        Addr           : c.Addr,
-        Handler        : c.Handler,
-        ReadTimeout    : c.ReadTimeout,
-        WriteTimeout   : c.WriteTimeout,
-        IdleTimeout    : c.IdleTimeout,
-        MaxHeaderBytes : c.MaxHeaderBytes,
+    h.config = c
+    if h.config.ServerRoot != "" {
+        h.SetServerRoot(h.config.ServerRoot)
     }
 }
 
-// 设置http server参数
+// 设置http server参数 - IndexFiles
+func (h *Server)SetIndexFiles(index []string) {
+    h.config.IndexFiles = index
+}
+
+// 设置http server参数 - IndexFolder
+func (h *Server)SetIndexFolder(index bool) {
+    h.config.IndexFolder = index
+}
+
+// 设置http server参数 - ServerAgent
 func (h *Server)SetServerAgent(agent string) {
     h.config.ServerAgent = agent
 }
 
-// 设置http server参数
+// 设置http server参数 - ServerRoot
 func (h *Server)SetServerRoot(root string) {
-    h.config.ServerRoot = root
+    h.config.ServerRoot  = strings.TrimRight(root, string(filepath.Separator))
 }
 
 // 绑定URI到操作函数/方法
