@@ -263,7 +263,7 @@ func getConfigNodeByPriority (cg *ConfigGroup) *ConfigNode {
     max := 0
     for i := 0; i < len(*cg); i++ {
         max = min + (*cg)[i].Priority * 100
-        fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
+        //fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
         if r >= min && r < max {
             return &(*cg)[i]
         } else {
