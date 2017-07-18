@@ -47,7 +47,21 @@ func (s *Server)doServeFile(w http.ResponseWriter, r *http.Request, path string)
     }
     info, _ := f.Stat()
     if info.IsDir() {
-        s.listDir(w, f)
+        if len(s.config.IndexFiles) > 0 {
+            for _, file := range s.config.IndexFiles {
+                fpath := path + "/" + file
+                if gfile.Exists(fpath) {
+                    f.Close()
+                    s.doServeFile(w, r, fpath)
+                    return
+                }
+            }
+        }
+        if s.config.IndexFolder {
+            s.listDir(w, f)
+        } else {
+            s.ResponseStatus(w, http.StatusForbidden)
+        }
     } else {
         http.ServeContent(w, r, info.Name(), info.ModTime(), f)
     }
@@ -74,6 +88,14 @@ func (s *Server)listDir(w http.ResponseWriter, f http.File) {
         fmt.Fprintf(w, "<a href=\"%s\">%s</a>\n", url.String(), gutil.HtmlSpecialChars(name))
     }
     fmt.Fprintf(w, "</pre>\n")
+}
+
+// 返回http状态码，并使用默认配置的字符串返回信息
+func (s *Server)ResponseStatus(w http.ResponseWriter, code int) {
+    w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+    w.Header().Set("X-Content-Type-Options", "nosniff")
+    w.WriteHeader(code)
+    fmt.Fprintln(w, http.StatusText(code))
 }
 
 // 404

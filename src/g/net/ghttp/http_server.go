@@ -4,21 +4,27 @@ import (
     "net/http"
     "strings"
     "path/filepath"
+    "crypto/tls"
+    "time"
+    "log"
 )
 
 // 执行
-func (h *Server)Run() error {
+func (s *Server)Run() error {
     // 底层http server配置
-    h.server  = http.Server {
-        Addr           : h.config.Addr,
-        Handler        : h.config.Handler,
-        ReadTimeout    : h.config.ReadTimeout,
-        WriteTimeout   : h.config.WriteTimeout,
-        IdleTimeout    : h.config.IdleTimeout,
-        MaxHeaderBytes : h.config.MaxHeaderBytes,
+    if s.config.Handler == nil {
+        s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
+    }
+    s.server  = http.Server {
+        Addr           : s.config.Addr,
+        Handler        : s.config.Handler,
+        ReadTimeout    : s.config.ReadTimeout,
+        WriteTimeout   : s.config.WriteTimeout,
+        IdleTimeout    : s.config.IdleTimeout,
+        MaxHeaderBytes : s.config.MaxHeaderBytes,
     }
     // 执行端口监听
-    err := h.server.ListenAndServe()
+    err := s.server.ListenAndServe()
     if err != nil {
         panic(err)
     }
@@ -31,52 +37,101 @@ func (h Server)GetDefaultSetting() ServerConfig {
 }
 
 // http server setting设置
-func (h *Server)SetConfig(c ServerConfig) {
+// 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
+func (s *Server)SetConfig(c ServerConfig) {
     if c.Handler == nil {
-        c.Handler = http.HandlerFunc(h.defaultHttpHandle)
+        c.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
-    h.config = c
-    if h.config.ServerRoot != "" {
-        h.SetServerRoot(h.config.ServerRoot)
+    s.config = c
+    // 需要处理server root最后的目录分隔符号
+    if s.config.ServerRoot != "" {
+        s.SetServerRoot(s.config.ServerRoot)
     }
+    // 必需设置默认值的属性
+    if len(s.config.IndexFiles) < 1 {
+        s.SetIndexFiles(defaultServerConfig.IndexFiles)
+    }
+    if s.config.ServerAgent == "" {
+        s.SetServerAgent(defaultServerConfig.ServerAgent)
+    }
+}
+
+// 设置http server参数 - Addr
+func (s *Server)SetAddr(addr string) {
+    s.config.Addr = addr
+}
+
+// 设置http server参数 - Handler
+func (s *Server)SetHandler(handler http.Handler) {
+    s.config.Handler = handler
+}
+
+// 设置http server参数 - TLSConfig
+func (s *Server)SetTLSConfig(tls *tls.Config) {
+    s.config.TLSConfig = tls
+}
+
+// 设置http server参数 - ReadTimeout
+func (s *Server)SetReadTimeout(t time.Duration) {
+    s.config.ReadTimeout = t
+}
+
+// 设置http server参数 - WriteTimeout
+func (s *Server)SetWriteTimeout(t time.Duration) {
+    s.config.WriteTimeout = t
+}
+
+// 设置http server参数 - IdleTimeout
+func (s *Server)SetIdleTimeout(t time.Duration) {
+    s.config.IdleTimeout = t
+}
+
+// 设置http server参数 - MaxHeaderBytes
+func (s *Server)SetMaxHeaderBytes(b int) {
+    s.config.MaxHeaderBytes = b
+}
+
+// 设置http server参数 - ErrorLog
+func (s *Server)SetErrorLog(logger *log.Logger) {
+    s.config.ErrorLog = logger
 }
 
 // 设置http server参数 - IndexFiles
-func (h *Server)SetIndexFiles(index []string) {
-    h.config.IndexFiles = index
+func (s *Server)SetIndexFiles(index []string) {
+    s.config.IndexFiles = index
 }
 
 // 设置http server参数 - IndexFolder
-func (h *Server)SetIndexFolder(index bool) {
-    h.config.IndexFolder = index
+func (s *Server)SetIndexFolder(index bool) {
+    s.config.IndexFolder = index
 }
 
 // 设置http server参数 - ServerAgent
-func (h *Server)SetServerAgent(agent string) {
-    h.config.ServerAgent = agent
+func (s *Server)SetServerAgent(agent string) {
+    s.config.ServerAgent = agent
 }
 
 // 设置http server参数 - ServerRoot
-func (h *Server)SetServerRoot(root string) {
-    h.config.ServerRoot  = strings.TrimRight(root, string(filepath.Separator))
+func (s *Server)SetServerRoot(root string) {
+    s.config.ServerRoot  = strings.TrimRight(root, string(filepath.Separator))
 }
 
 // 绑定URI到操作函数/方法
-func (h *Server)BindHandle(pattern string, handler http.HandlerFunc )  {
-    if h.handlerMap == nil {
-        h.handlerMap = make(map[string]http.HandlerFunc)
+func (s *Server)BindHandle(pattern string, handler http.HandlerFunc )  {
+    if s.handlerMap == nil {
+        s.handlerMap = make(HandlerMap)
     }
-    if _, ok := h.handlerMap[pattern]; ok {
+    if _, ok := s.handlerMap[pattern]; ok {
         panic("duplicated http server handler for: " + pattern)
     } else {
-        h.handlerMap[pattern] = handler
+        s.handlerMap[pattern] = handler
     }
 }
 
 // 通过映射数组绑定URI到操作函数/方法
-func (h *Server)BindHandleByMap(m map[string]http.HandlerFunc ) {
+func (s *Server)BindHandleByMap(m HandlerMap) {
     for p, f := range m {
-        h.BindHandle(p, f)
+        s.BindHandle(p, f)
     }
 }
 

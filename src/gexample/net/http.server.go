@@ -1,48 +1,29 @@
 package main
 
 import (
-    //"time"
     "net/http"
     "io"
-    "time"
     "g/net/ghttp"
 )
 
-func HelloServer(w http.ResponseWriter, req *http.Request) {
-    io.WriteString(w, "hello, world!\n")
+func HelloServer1(w http.ResponseWriter, r *http.Request) {
+    io.WriteString(w, "hello1!\n")
 }
-func HelloServer2(w http.ResponseWriter, req *http.Request) {
-    io.WriteString(w, "hello123\n")
+func HelloServer2(w http.ResponseWriter, r *http.Request) {
+    io.WriteString(w, "hello2\n")
 }
 func main() {
-    //s := http.Server{
-    //    Addr          : ":8889",
-    //    ReadTimeout   : 10 * time.Second,
-    //    WriteTimeout  : 10 * time.Second,
-    //}
-    //g.Http.Server.NewByConfig(s)
-    //http.HandleFunc("/hello2", HelloServer2)
-    //g.Http.Server.BindHandle("/hello2", HelloServer2)
-	//
-    //g.Http.Server.BindHandleByMap(map[string]http.HandlerFunc {
-    //    "/h":  HelloServer,
-    //    "/h1": HelloServer,
-    //    "/h2": HelloServer,
-    //    "/h3": HelloServer,
-    //})
-    //dir := "/home/john/Workspace/Go/gf/src/gfexample/static"
-    //http.Handle("/static", http.StripPrefix("/static/plugin/agile-lite", http.FileServer(http.Dir(dir))))
-    //g.Http.Server.Start(":8199")
-    //s := g.Http.Server.NewByAddr(":8199")
-    //s.BindHandle("/hello", HelloServer)
-    ghttp.SetDefaultServerConfig(ghttp.ServerConfig {
-        Addr           : ":8199",
-        ReadTimeout    : 10 * time.Second,
-        WriteTimeout   : 10 * time.Second,
-        IdleTimeout    : 10 * time.Second,
-        MaxHeaderBytes : 1024,
-        ServerAgent    : "gf",
-        ServerRoot     : "/home/john/Workspace/",
+    s := ghttp.New()
+    s.SetAddr(":8199")
+    s.SetIndexFolder(true)
+    s.SetServerRoot("/home/john/Workspace/")
+    s.BindHandleByMap(ghttp.HandlerMap {
+        "/h":  HelloServer1,
+        "/h1": HelloServer1,
+        "/h2": HelloServer1,
+        "/h3": HelloServer1,
     })
-    ghttp.New().Run()
+    s.BindHandle("/hello1", HelloServer1)
+    s.BindHandle("/hello2", HelloServer2)
+    s.Run()
 }

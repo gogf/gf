@@ -7,14 +7,15 @@ import (
     "log"
 )
 
-// @todo 标准库对静态文件的处理性能比Nginx稍弱，不能使用标准库方法，需自行处理
-
 // http server结构体
 type Server struct {
     server     http.Server
     config     ServerConfig
-    handlerMap map[string]http.HandlerFunc
+    handlerMap HandlerMap
 }
+
+// uri与回调函数的绑定记录表
+type HandlerMap map[string]http.HandlerFunc
 
 // HTTP Server 设置结构体
 type ServerConfig struct {
