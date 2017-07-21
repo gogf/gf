@@ -55,27 +55,27 @@ func SetDefaultServerConfig (c ServerConfig) {
 }
 
 // 创建一个默认配置的HTTP Server(默认监听端口是80)
-func New() (*Server) {
-    return NewByConfig(defaultServerConfig)
+func NewServer() (*Server) {
+    return NewServerByConfig(defaultServerConfig)
 }
 
 // 创建一个HTTP Server，返回指针
-func NewByAddr(addr string) (*Server) {
+func NewServerByAddr(addr string) (*Server) {
     config     := defaultServerConfig
     config.Addr = addr
-    return NewByConfig(config)
+    return NewServerByConfig(config)
 }
 
 // 创建一个HTTP Server
-func NewByAddrRoot(addr string, root string) (*Server) {
+func NewServerByAddrRoot(addr string, root string) (*Server) {
     config           := defaultServerConfig
     config.Addr       = addr
     config.ServerRoot = root
-    return NewByConfig(config)
+    return NewServerByConfig(config)
 }
 
 // 根据输入配置创建一个http server对象
-func NewByConfig(s ServerConfig) (*Server) {
+func NewServerByConfig(s ServerConfig) (*Server) {
     var server Server
     server.SetConfig(s)
     return &server
