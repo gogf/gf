@@ -7,6 +7,8 @@ import (
     "io"
     "io/ioutil"
     "sort"
+    "path"
+    "fmt"
 )
 
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
@@ -34,6 +36,11 @@ func IsDir(path string) bool {
     return s.IsDir()
 }
 
+// 判断所给路径是否为文件
+func IsFile(path string) bool {
+    return !IsDir(path)
+}
+
 // 获取文件或目录信息
 func Info(path string) os.FileInfo {
     info, err := os.Stat(path)
@@ -44,12 +51,89 @@ func Info(path string) os.FileInfo {
     return info
 }
 
+// 修改时间
+func MTime(path string) (int64, error) {
+    f, e := os.Stat(path)
+    if e != nil {
+        return 0, e
+    }
+    return f.ModTime().Unix(), nil
+}
+
+// 文件大小(bytes)
+func Size(path string) (int64, error) {
+    f, e := os.Stat(path)
+    if e != nil {
+        return 0, e
+    }
+    return f.Size(), nil
+}
+
+// 格式化文件大小
+func ReadableSize(path string) string {
+    return FormatSize(float64(Size(path)))
+}
+
+// 格式化文件大小
+func FormatSize(raw float64) string {
+    var t float64 = 1024
+    var d float64 = 1
+
+    if raw < t {
+        return fmt.Sprintf("%.2fB", raw/d)
+    }
+
+    d *= 1024
+    t *= 1024
+
+    if raw < t {
+        return fmt.Sprintf("%.2fK", raw/d)
+    }
+
+    d *= 1024
+    t *= 1024
+
+    if raw < t {
+        return fmt.Sprintf("%.2fM", raw/d)
+    }
+
+    d *= 1024
+    t *= 1024
+
+    if raw < t {
+        return fmt.Sprintf("%.2fG", raw/d)
+    }
+
+    d *= 1024
+    t *= 1024
+
+    if raw < t {
+        return fmt.Sprintf("%.2fT", raw/d)
+    }
+
+    d *= 1024
+    t *= 1024
+
+    if raw < t {
+        return fmt.Sprintf("%.2fP", raw/d)
+    }
+
+    return "TooLarge"
+}
+
 // 文件移动/重命名
-func Move(src string, dst string) {
+func Move(src string, dst string) error {
     err := os.Rename(src, dst)
     if err != nil {
         log.Println(err)
     }
+    return err
+}
+
+
+// 文件移动/重命名
+func Rename(src string, dst string) error {
+    return Move(src, dst)
 }
 
 // 文件复制
@@ -192,4 +276,30 @@ func PutContents(path string, content string) bool {
 // 追加内容到文件末尾
 func PutContentsAppend(path string, content string) bool {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+}
+
+// 获取当前执行文件的绝对路径
+func SelfPath() string {
+    p, _ := filepath.Abs(os.Args[0])
+    return p
+}
+
+// 获取当前执行文件的目录绝对路径
+func SelfDir() string {
+    return filepath.Dir(SelfPath())
+}
+
+// 获取指定文件路径的文件名称
+func Basename(path string) string {
+    return path.Base(path)
+}
+
+// 获取指定文件路径的目录地址
+func Dir(path string) string {
+    return path.Dir(path)
+}
+
+// 获取指定文件路径的文件扩展名
+func Ext(path string) string {
+    return path.Ext(path)
 }

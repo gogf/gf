@@ -3,12 +3,12 @@ package gdb
 import (
     "database/sql"
     "errors"
-    "g/core/gutil"
     "fmt"
     "g/core/ginstance"
     _ "github.com/go-sql-driver/mysql"
     _ "github.com/lib/pq"
     "log"
+    "g/util/grand"
 )
 
 const (
@@ -258,7 +258,7 @@ func getConfigNodeByPriority (cg *ConfigGroup) *ConfigNode {
     for i := 0; i < len(*cg); i++ {
         total += (*cg)[i].Priority * 100
     }
-    r   := gutil.Rand(0, total)
+    r   := grand.Rand(0, total)
     min := 0
     max := 0
     for i := 0; i < len(*cg); i++ {

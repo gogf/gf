@@ -5,7 +5,7 @@ import (
     "strings"
     "path/filepath"
     "g/os/gfile"
-    "g/core/gutil"
+    "g/gutil/gutil"
     "os"
     "fmt"
     "sort"

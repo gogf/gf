@@ -3,11 +3,8 @@ package main
 import (
     "net"
     "fmt"
-    "sync"
     "g/net/gtcp"
 )
-
-var tcpServerWaitGroup sync.WaitGroup
 
 func Handler(conn net.Conn){
     client := conn.RemoteAddr().String()

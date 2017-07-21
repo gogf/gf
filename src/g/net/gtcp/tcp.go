@@ -2,8 +2,8 @@ package gtcp
 
 import (
     "net"
-    "fmt"
     "sync"
+    "log"
 )
 
 // 用于tcp server的gorutine监听管理
@@ -20,10 +20,12 @@ type gTcpServer struct {
 func NewTCPServer (address string, handler func (net.Conn)) *gTcpServer {
     tcpaddr, err := net.ResolveTCPAddr("tcp4", address)
     if err != nil {
+        log.Println(err)
         return nil
     }
     listen, err := net.ListenTCP("tcp", tcpaddr)
     if err != nil {
+        log.Println(err)
         return nil
     }
     return &gTcpServer{ address, listen, handler}
@@ -31,9 +33,17 @@ func NewTCPServer (address string, handler func (net.Conn)) *gTcpServer {
 
 // 执行监听
 func (s *gTcpServer) Run() {
+    if s == nil || s.listener == nil {
+        log.Println("start running failed: socket address bind failed")
+        return
+    }
+    if s.handler == nil {
+        log.Println("start running failed: socket handler not defined")
+        return
+    }
     ServerWaitGroup.Add(1)
     go func() {
-        fmt.Println("listening on address", s.address)
+        //fmt.Println("listening on address", s.address)
         for  {
             conn, err := s.listener.Accept()
             if err != nil {
@@ -41,7 +51,7 @@ func (s *gTcpServer) Run() {
             }
             go s.handler(conn)
         }
-        fmt.Println("tcp server closed on address", s.address)
+        //fmt.Println("tcp server closed on address", s.address)
         ServerWaitGroup.Add(-1)
     }()
 }
