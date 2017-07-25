@@ -7,11 +7,12 @@ import (
     "fmt"
     "errors"
     "sync"
+    "time"
 )
 
-// 扫描网段及端口，如果扫描的端口是打开的，那么将链接给定给回调函数进行调用
+// TCP扫描网段及端口，如果扫描的端口是打开的，那么将链接给定给回调函数进行调用
 // 注意startIp和endIp需要是同一个网段，否则会报错,并且回调函数不会执行
-func scan(network string, startIp string, endIp string, port int, callback func(net.Conn)) error {
+func TcpScan(startIp string, endIp string, port int, callback func(net.Conn)) error {
     var waitGroup sync.WaitGroup
     startIplong := gip.Ip2long(startIp)
     endIplong   := gip.Ip2long(endIp)
@@ -31,7 +32,8 @@ func scan(network string, startIp string, endIp string, port int, callback func(
         ip := gip.Long2ip(i)
         go func() {
             //fmt.Println("scanning:", ip)
-            conn, err := net.Dial(network, fmt.Sprintf("%s:%d", ip, port))
+            // 这里必需设置超时时间，对于局域网异步端口扫描来讲，3秒已经足足够用
+            conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), 3 * time.Second)
             if err == nil {
                 callback(conn)
                 conn.Close()
@@ -42,17 +44,5 @@ func scan(network string, startIp string, endIp string, port int, callback func(
     }
     waitGroup.Wait()
     return nil
-}
-
-// TCP扫描网段及端口，如果扫描的端口是打开的，那么将链接给定给回调函数进行调用
-// 注意startIp和endIp需要是同一个网段，否则会报错,并且回调函数不会执行
-func TcpScan(startIp string, endIp string, port int, callback func(net.Conn)) error {
-    return scan("tcp", startIp, endIp, port, callback)
-}
-
-// TCP扫描网段及端口，如果扫描的端口是打开的，那么将链接给定给回调函数进行调用
-// 注意startIp和endIp需要是同一个网段，否则会报错,并且回调函数不会执行
-func UdpScan(startIp string, endIp string, port int, callback func(net.Conn)) error {
-    return scan("udp", startIp, endIp, port, callback)
 }
 
