@@ -41,6 +41,20 @@ func Long2ip(ip uint32) string {
     return fmt.Sprintf("%d.%d.%d.%d", ip>>24, ip<<8>>24, ip<<16>>24, ip<<24>>24)
 }
 
+// 获得ip的网段，例如：192.168.2.102 -> 192.168.2
+func GetSegment(ip string) string {
+    r        := `^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$`
+    reg, err := regexp.Compile(r)
+    if err != nil {
+        return ""
+    }
+    ips := reg.FindStringSubmatch(ip)
+    if ips == nil {
+        return ""
+    }
+    return fmt.Sprintf("%s.%s.%s", ips[1], ips[2], ips[3])
+}
+
 // 获取本地局域网ip列表
 func IntranetIP() (ips []string, err error) {
     ips        = make([]string, 0)
