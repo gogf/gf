@@ -55,6 +55,21 @@ func GetSegment(ip string) string {
     return fmt.Sprintf("%s.%s.%s", ips[1], ips[2], ips[3])
 }
 
+// 解析地址，形如：192.168.1.1:80 -> 192.168.1.1, 80
+func ParseAddress(addr string) (string, int) {
+    r        := `^(.+):(\d+)$`
+    reg, err := regexp.Compile(r)
+    if err != nil {
+        return "", 0
+    }
+    result := reg.FindStringSubmatch(addr)
+    if result != nil {
+        i, _ := strconv.Atoi(result[2])
+        return result[1], i
+    }
+    return "", 0
+}
+
 // 获取本地局域网ip列表
 func IntranetIP() (ips []string, err error) {
     ips        = make([]string, 0)
@@ -62,7 +77,6 @@ func IntranetIP() (ips []string, err error) {
     if e != nil {
         return ips, e
     }
-
     for _, iface := range ifaces {
         if iface.Flags&net.FlagUp == 0 {
             continue // interface down

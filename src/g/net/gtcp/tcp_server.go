@@ -8,10 +8,10 @@ func (s *gTcpServer) Run() {
         log.Println("start running failed: socket address bind failed")
         return
     }
-    if s.handler == nil {
-        log.Println("start running failed: socket handler not defined")
-        return
-    }
+    //if s.handler == nil {
+    //    log.Println("start running failed: socket handler not defined")
+    //    return
+    //}
     go func() {
         //fmt.Println("listening on address", s.address)
         for  {

@@ -1,15 +1,26 @@
 package main
 
 import (
-    "fmt"
-    "net"
+    "g/net/gip"
+    "log"
 )
 
-func main() {
-    conn, err := net.Dial("udp", "1.0.0.111:1234")
-    if err != nil {
-        fmt.Println(err)
+type ttt struct {
+    Name string
+    Age  int `json:"age"`
+    Info struct{
+        grade string
     }
-    fmt.Println(conn.RemoteAddr())
-    conn.Close()
+}
+func main() {
+
+    ips, err := gip.IntranetIP()
+    if err != nil {
+        log.Println("error", err)
+        return
+    }
+    for _, ip := range ips {
+        println(ip)
+    }
+
 }
