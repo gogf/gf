@@ -60,7 +60,7 @@ type RaftInfo struct {
 }
 
 
-// 创建一个节点对象
+// 创建一个服务节点
 func NewServer(ip string) *Node {
     hostname, err := os.Hostname()
     if err != nil {
@@ -71,6 +71,22 @@ func NewServer(ip string) *Node {
         Name  : hostname,
         Ip    : ip,
         Role  : gCLUSTER_ROLE_SERVER,
+        Peers : make(map[string]int),
+    }
+    return &node
+}
+
+// 创建一个客户端节点
+func NewClient(ip string) *Node {
+    hostname, err := os.Hostname()
+    if err != nil {
+        log.Fatalln("getting local hostname failed")
+        return nil
+    }
+    node := Node{
+        Name  : hostname,
+        Ip    : ip,
+        Role  : gCLUSTER_ROLE_CLIENT,
         Peers : make(map[string]int),
     }
     return &node

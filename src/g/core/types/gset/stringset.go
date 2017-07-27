@@ -1,4 +1,4 @@
-package set
+package gset
 
 type StringSet struct {
 	M map[string]struct{}

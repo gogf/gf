@@ -1,4 +1,4 @@
-package nmap
+package gnmap
 
 import (
 	"testing"

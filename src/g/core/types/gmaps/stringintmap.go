@@ -1,4 +1,4 @@
-package maps
+package gmaps
 
 import (
 	"sync"

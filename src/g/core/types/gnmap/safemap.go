@@ -1,4 +1,4 @@
-package nmap
+package gnmap
 
 import (
 	"sync"
@@ -15,7 +15,7 @@ func NewSafeMap() *SafeMap {
 	}
 }
 
-func (this *SafeMap) Put(key string, val interface{}) {
+func (this *SafeMap) Set(key string, val interface{}) {
 	this.Lock()
 	this.M[key] = val
 	this.Unlock()
@@ -63,12 +63,11 @@ func (this *SafeMap) Keys() []string {
 
 func (this *SafeMap) Slice() []interface{} {
 	this.RLock()
-	defer this.RUnlock()
-
 	vals := make([]interface{}, 0)
 	for _, val := range this.M {
 		vals = append(vals, val)
 	}
+	this.RUnlock()
 	return vals
 }
 

@@ -1,4 +1,4 @@
-package set
+package gset
 
 import (
 	"sync"

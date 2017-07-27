@@ -1,11 +1,13 @@
 package gconfig
 
+import "g/core/types/gnmap"
+
 // 配置对象
-var config = make(map[string]interface{})
+var config = gnmap.NewSafeMap()
 
 // 获取配置
 func Get(k string) interface{} {
-    if v, ok := config[k]; ok {
+    if v, ok := config.Get(k); ok {
         return v
     } else {
         return nil
@@ -14,5 +16,5 @@ func Get(k string) interface{} {
 
 // 设置配置
 func Set(k string, v interface{}) {
-    config[k] = v
+    config.Set(k, v)
 }

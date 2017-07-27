@@ -1,4 +1,4 @@
-package set
+package gset
 
 type IntSet struct {
 	M map[int]struct{}

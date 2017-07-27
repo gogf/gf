@@ -1,4 +1,4 @@
-package list
+package glist
 
 import (
 	"runtime"
