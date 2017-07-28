@@ -4,38 +4,38 @@ import (
 	"sync"
 )
 
-type StringInt64Map struct {
+type Int64BoolMap struct {
 	m sync.RWMutex
-	M map[string]int64
+	M map[int64]bool
 }
 
-func NewStringInt64Map() *StringInt64Map {
-	return &StringInt64Map{
-        M: make(map[string]int64),
+func NewInt64BoolMap() *Int64BoolMap {
+	return &Int64BoolMap{
+        M: make(map[int64]bool),
     }
 }
 
 // 哈希表克隆
-func (this *StringInt64Map) Clone() *map[string]int64 {
-    m := make(map[string]int64)
-    this.m.RLock()
-    for k, v := range this.M {
-        m[k] = v
-    }
+func (this *Int64BoolMap) Clone() *map[int64]bool {
+	m := make(map[int64]bool)
+	this.m.RLock()
+	for k, v := range this.M {
+		m[k] = v
+	}
     this.m.RUnlock()
-    return &m
+	return &m
 }
 
 // 设置键值对
-func (this *StringInt64Map) Set(key string, val int64) {
+func (this *Int64BoolMap) Set(key int64, val bool) {
 	this.m.Lock()
 	this.M[key] = val
 	this.m.Unlock()
 }
 
 // 批量设置键值对
-func (this *StringInt64Map) Sets(m map[string]int64) {
-	todo := make(map[string]int64)
+func (this *Int64BoolMap) BatchSet(m map[int64]bool) {
+	todo := make(map[int64]bool)
 	this.m.RLock()
 	for k, v := range m {
 		old, exists := this.M[k]
@@ -58,22 +58,22 @@ func (this *StringInt64Map) Sets(m map[string]int64) {
 }
 
 // 获取键值
-func (this *StringInt64Map) Get(key string) (int64, bool) {
+func (this *Int64BoolMap) Get(key int64) (bool, bool) {
 	this.m.RLock()
 	val, exists := this.M[key]
-    this.m.RUnlock()
+	this.m.RUnlock()
 	return val, exists
 }
 
 // 删除键值对
-func (this *StringInt64Map) Remove(key string) {
-	this.m.Lock()
-	delete(this.M, key)
+func (this *Int64BoolMap) Remove(key int64) {
+    this.m.Lock()
+    delete(this.M, key)
     this.m.Unlock()
 }
 
 // 批量删除键值对
-func (this *StringInt64Map) BatchRemove(keys []string) {
+func (this *Int64BoolMap) BatchRemove(keys []int64) {
     this.m.Lock()
     for _, key := range keys {
         delete(this.M, key)
@@ -82,7 +82,7 @@ func (this *StringInt64Map) BatchRemove(keys []string) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *StringInt64Map) GetAndRemove(key string) (int64, bool) {
+func (this *Int64BoolMap) GetAndRemove(key int64) (bool, bool) {
     this.m.Lock()
     val, exists := this.M[key]
     if exists {
@@ -93,9 +93,9 @@ func (this *StringInt64Map) GetAndRemove(key string) (int64, bool) {
 }
 
 // 返回键列表
-func (this *StringInt64Map) Keys() []string {
+func (this *Int64BoolMap) Keys() []int64 {
     this.m.RLock()
-    keys := make([]string, 0)
+    keys := make([]int64, 0)
     for key, _ := range this.M {
         keys = append(keys, key)
     }
@@ -104,24 +104,24 @@ func (this *StringInt64Map) Keys() []string {
 }
 
 // 返回值列表(注意是随机排序)
-func (this *StringInt64Map) Values() []int64 {
-    this.m.RLock()
-    vals := make([]int64, 0)
-    for _, val := range this.M {
-        vals = append(vals, val)
-    }
-    this.m.RUnlock()
-    return vals
-}
+//func (this *Int64BoolMap) Values() []bool {
+//    this.m.RLock()
+//    vals := make([]bool, 0)
+//    for _, val := range this.M {
+//        vals = append(vals, val)
+//    }
+//    this.m.RUnlock()
+//    return vals
+//}
 
 // 是否存在某个键
-func (this *StringInt64Map) Contains(key string) bool {
-    _, exists := this.Get(key)
-    return exists
+func (this *Int64BoolMap) Contains(key int64) bool {
+	_, exists := this.Get(key)
+	return exists
 }
 
 // 哈希表大小
-func (this *StringInt64Map) Size() int {
+func (this *Int64BoolMap) Size() int {
     this.m.RLock()
     len := len(this.M)
     this.m.RUnlock()
@@ -129,7 +129,7 @@ func (this *StringInt64Map) Size() int {
 }
 
 // 哈希表是否为空
-func (this *StringInt64Map) IsEmpty() bool {
+func (this *Int64BoolMap) IsEmpty() bool {
     this.m.RLock()
     empty := (len(this.M) == 0)
     this.m.RUnlock()
@@ -137,9 +137,9 @@ func (this *StringInt64Map) IsEmpty() bool {
 }
 
 // 清空哈希表
-func (this *StringInt64Map) Clear() {
+func (this *Int64BoolMap) Clear() {
     this.m.Lock()
-    this.M = make(map[string]int64)
+    this.M = make(map[int64]bool)
     this.m.Unlock()
 }
 

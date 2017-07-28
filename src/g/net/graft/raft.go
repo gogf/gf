@@ -4,6 +4,7 @@ import (
     "time"
     "log"
     "os"
+    "g/core/types/gmap"
 )
 
 const (
@@ -46,7 +47,7 @@ type Node struct {
     Name     string            // 节点名称
     Ip       string            // 主机节点的局域网ip
     Role     int               // 集群角色
-    Peers    map[string]int    // 集群所有的节点(ip->raft角色)，不包含自身
+    Peers    gmap.StringIntMap // 集群所有的节点(ip->raft角色)，不包含自身
     RaftInfo RaftInfo
 }
 

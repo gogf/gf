@@ -34,7 +34,7 @@ func (this *StringIntMap) Set(key string, val int) {
 }
 
 // 批量设置键值对
-func (this *StringIntMap) Sets(m map[string]int) {
+func (this *StringIntMap) BatchSet(m map[string]int) {
 	todo := make(map[string]int)
 	this.m.RLock()
 	for k, v := range m {

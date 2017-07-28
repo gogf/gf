@@ -1,8 +1,7 @@
 package main
 
 import (
-    "g/net/gip"
-    "log"
+    "fmt"
 )
 
 type ttt struct {
@@ -14,13 +13,9 @@ type ttt struct {
 }
 func main() {
 
-    ips, err := gip.IntranetIP()
-    if err != nil {
-        log.Println("error", err)
-        return
-    }
-    for _, ip := range ips {
-        println(ip)
-    }
+    var a interface{}
+    var b struct{}
+    fmt.Println(&a)
+    fmt.Println(&b)
 
 }
