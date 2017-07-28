@@ -6,7 +6,7 @@ import (
 )
 
 type SafeLinkedList struct {
-	sync.RWMutex
+	m sync.RWMutex
 	L *list.List
 }
 
@@ -15,8 +15,8 @@ func NewSafeLinkedList() *SafeLinkedList {
 }
 
 func (this *SafeLinkedList) PopBack(max int) []interface{} {
-	this.Lock()
-	defer this.Unlock()
+	this.m.Lock()
+	defer this.m.Unlock()
 
 	count := this.L.Len()
 	if count == 0 {
@@ -38,21 +38,21 @@ func (this *SafeLinkedList) PopBack(max int) []interface{} {
 }
 
 func (this *SafeLinkedList) PushFront(v interface{}) *list.Element {
-	this.Lock()
-	defer this.Unlock()
+	this.m.Lock()
+	defer this.m.Unlock()
 	return this.L.PushFront(v)
 }
 
 func (this *SafeLinkedList) Front() *list.Element {
-	this.RLock()
-	defer this.RUnlock()
+	this.m.RLock()
+	defer this.m.RUnlock()
 	return this.L.Front()
 }
 
 // TODO 异步rcu锁
 func (this *SafeLinkedList) Len() int {
-	this.RLock()
-	defer this.RUnlock()
+	this.m.RLock()
+	defer this.m.RUnlock()
 	return this.L.Len()
 }
 

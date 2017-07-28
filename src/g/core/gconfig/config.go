@@ -1,9 +1,11 @@
 package gconfig
 
-import "g/core/types/gnmap"
+import (
+    "g/core/types/gmap"
+)
 
 // 配置对象
-var config = gnmap.NewSafeMap()
+var config = gmap.NewStringInterfaceMap()
 
 // 获取配置
 func Get(k string) interface{} {

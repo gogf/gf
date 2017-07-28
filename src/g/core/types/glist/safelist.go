@@ -6,7 +6,7 @@ import (
 )
 
 type SafeList struct {
-	sync.RWMutex
+	m sync.RWMutex
 	L *list.List
 }
 
@@ -15,39 +15,39 @@ func NewSafeList() *SafeList {
 }
 
 func (this *SafeList) PushFront(v interface{}) *list.Element {
-	this.Lock()
+	this.m.Lock()
 	e := this.L.PushFront(v)
-	this.Unlock()
+	this.m.Unlock()
 	return e
 }
 
 func (this *SafeList) PushFrontBatch(vs []interface{}) {
-	this.Lock()
+	this.m.Lock()
 	for _, item := range vs {
 		this.L.PushFront(item)
 	}
-	this.Unlock()
+	this.m.Unlock()
 }
 
 func (this *SafeList) PopBack() interface{} {
-	this.Lock()
+	this.m.Lock()
 
 	if elem := this.L.Back(); elem != nil {
 		item := this.L.Remove(elem)
-		this.Unlock()
+		this.m.Unlock()
 		return item
 	}
 
-	this.Unlock()
+	this.m.Unlock()
 	return nil
 }
 
 func (this *SafeList) PopBackBy(max int) []interface{} {
-	this.Lock()
+	this.m.Lock()
 
 	count := this.len()
 	if count == 0 {
-		this.Unlock()
+		this.m.Unlock()
 		return []interface{}{}
 	}
 
@@ -61,16 +61,16 @@ func (this *SafeList) PopBackBy(max int) []interface{} {
 		items = append(items, item)
 	}
 
-	this.Unlock()
+	this.m.Unlock()
 	return items
 }
 
 func (this *SafeList) PopBackAll() []interface{} {
-	this.Lock()
+	this.m.Lock()
 
 	count := this.len()
 	if count == 0 {
-		this.Unlock()
+		this.m.Unlock()
 		return []interface{}{}
 	}
 
@@ -80,25 +80,25 @@ func (this *SafeList) PopBackAll() []interface{} {
 		items = append(items, item)
 	}
 
-	this.Unlock()
+	this.m.Unlock()
 	return items
 }
 
 func (this *SafeList) Remove(e *list.Element) interface{} {
-	this.Lock()
-	defer this.Unlock()
+	this.m.Lock()
+	defer this.m.Unlock()
 	return this.L.Remove(e)
 }
 
 func (this *SafeList) RemoveAll() {
-	this.Lock()
+	this.m.Lock()
 	this.L = list.New()
-	this.Unlock()
+	this.m.Unlock()
 }
 
 func (this *SafeList) FrontAll() []interface{} {
-	this.RLock()
-	defer this.RUnlock()
+	this.m.RLock()
+	defer this.m.RUnlock()
 
 	count := this.len()
 	if count == 0 {
@@ -113,8 +113,8 @@ func (this *SafeList) FrontAll() []interface{} {
 }
 
 func (this *SafeList) BackAll() []interface{} {
-	this.RLock()
-	defer this.RUnlock()
+	this.m.RLock()
+	defer this.m.RUnlock()
 
 	count := this.len()
 	if count == 0 {
@@ -129,20 +129,20 @@ func (this *SafeList) BackAll() []interface{} {
 }
 
 func (this *SafeList) Front() interface{} {
-	this.RLock()
+	this.m.RLock()
 
 	if f := this.L.Front(); f != nil {
-		this.RUnlock()
+		this.m.RUnlock()
 		return f.Value
 	}
 
-	this.RUnlock()
+	this.m.RUnlock()
 	return nil
 }
 
 func (this *SafeList) Len() int {
-	this.RLock()
-	defer this.RUnlock()
+	this.m.RLock()
+	defer this.m.RUnlock()
 	return this.len()
 }
 

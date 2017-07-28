@@ -1,37 +1,39 @@
-package gmaps
+package gmap
 
 import (
 	"sync"
 )
 
 type IntStringMap struct {
-	sync.RWMutex
+	m sync.RWMutex
 	M map[int]string
 }
 
 func NewIntStringMap() *IntStringMap {
-	return &IntStringMap{M: make(map[int]string)}
+	return &IntStringMap{
+        M: make(map[int]string),
+    }
 }
 
-func (this *IntStringMap) Clone() map[int]string {
+func (this *IntStringMap) Clone() *map[int]string {
 	m := make(map[int]string)
-	this.RLock()
-	defer this.RUnlock()
+	this.m.RLock()
 	for k, v := range this.M {
 		m[k] = v
 	}
-	return m
+    this.m.RUnlock()
+	return &m
 }
 
-func (this *IntStringMap) Put(key int, val string) {
-	this.Lock()
-	defer this.Unlock()
+func (this *IntStringMap) Set(key int, val string) {
+	this.m.Lock()
 	this.M[key] = val
+	this.m.Unlock()
 }
 
-func (this *IntStringMap) Puts(m map[int]string) {
+func (this *IntStringMap) Sets(m map[int]string) {
 	todo := make(map[int]string)
-	this.RLock()
+	this.m.RLock()
 	for k, v := range m {
 		old, exists := this.M[k]
 		if exists && v == old {
@@ -39,41 +41,41 @@ func (this *IntStringMap) Puts(m map[int]string) {
 		}
 		todo[k] = v
 	}
-	this.RUnlock()
+	this.m.RUnlock()
 
 	if len(todo) == 0 {
 		return
 	}
 
-	this.Lock()
+	this.m.Lock()
 	for k, v := range todo {
 		this.M[k] = v
 	}
-	this.Unlock()
+	this.m.Unlock()
 }
 
 func (this *IntStringMap) Get(key int) (string, bool) {
-	this.RLock()
-	defer this.RUnlock()
+	this.m.RLock()
 	val, exists := this.M[key]
+	this.m.RUnlock()
 	return val, exists
 }
 
-func (this *IntStringMap) Exists(key int) bool {
+func (this *IntStringMap) Contains(key int) bool {
 	_, exists := this.Get(key)
 	return exists
 }
 
 func (this *IntStringMap) Remove(key int) {
-	this.Lock()
-	defer this.Unlock()
+	this.m.Lock()
 	delete(this.M, key)
+	this.m.Unlock()
 }
 
 func (this *IntStringMap) RemoveBatch(keys []int) {
-	this.Lock()
-	defer this.Unlock()
+	this.m.Lock()
 	for _, key := range keys {
 		delete(this.M, key)
 	}
+	this.m.Unlock()
 }
