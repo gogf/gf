@@ -33,6 +33,11 @@ func (n *Node) repliTcpHandler(conn net.Conn) {
 
 }
 
+// 服务器对外API接口回调函数
+func (n *Node) apiTcpHandler(conn net.Conn) {
+
+}
+
 // 局域网扫描回调函数，类似广播消息
 func (n *Node) scannerRaftCallback(conn net.Conn) {
     fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
@@ -63,7 +68,7 @@ func (n *Node) recieve(conn net.Conn) *Msg {
     count, err := conn.Read(buffer)
     if err != nil {
         if err != io.EOF {
-            log.Println("conn.Read", err)
+            log.Println("node recieve:", err)
         }
         return nil
     }
@@ -109,8 +114,10 @@ func (n *Node) Run() {
     // 创建接口监听
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_RAFT),  n.raftTcpHandler).Run()
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_REPLI), n.repliTcpHandler).Run()
+    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_API),   n.apiTcpHandler).Run()
     // 通知上线
     n.sayHiToAll()
+
     // 测试
     n.showPeers()
 }
@@ -126,9 +133,11 @@ func (n *Node) showPeers() {
 // 向局域网内其他主机通知上线
 func (n *Node) sayHiToAll() {
     segment := gip.GetSegment(n.Ip)
-    if segment != "" {
-        startIp := fmt.Sprintf("%s.1",   segment)
-        endIp   := fmt.Sprintf("%s.255", segment)
-        gscanner.New().SetTimeout(6*time.Second).ScanIp(startIp, endIp, gCLUSTER_PORT_RAFT, n.scannerRaftCallback)
+    if segment == "" {
+        log.Fatalln("invalid listening ip given")
+        return
     }
+    startIp := fmt.Sprintf("%s.1",   segment)
+    endIp   := fmt.Sprintf("%s.255", segment)
+    gscanner.New().SetTimeout(6*time.Second).ScanIp(startIp, endIp, gCLUSTER_PORT_RAFT, n.scannerRaftCallback)
 }

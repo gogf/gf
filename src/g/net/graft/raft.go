@@ -10,6 +10,7 @@ const (
     // 集群端口定义
     gCLUSTER_PORT_RAFT    = 4166 // 集群协议通信接口
     gCLUSTER_PORT_REPLI   = 4167 // 集群数据同步接口
+    gCLUSTER_PORT_API     = 4168 // 服务器对外API接口
     // 集群角色
     gCLUSTER_ROLE_SERVER  = 0
     gCLUSTER_ROLE_CLIENT  = 1

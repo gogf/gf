@@ -72,10 +72,32 @@ func (this *IntStringMap) Remove(key int) {
 	this.m.Unlock()
 }
 
-func (this *IntStringMap) RemoveBatch(keys []int) {
+func (this *IntStringMap) BatchRemove(keys []int) {
 	this.m.Lock()
 	for _, key := range keys {
 		delete(this.M, key)
 	}
 	this.m.Unlock()
+}
+
+// 返回键列表
+func (this *IntStringMap) Keys() []int {
+    this.m.RLock()
+    keys := make([]int, 0)
+    for key, _ := range this.M {
+        keys = append(keys, key)
+    }
+    this.m.RUnlock()
+    return keys
+}
+
+// 返回值列表(注意是随机排序)
+func (this *IntStringMap) Values() []string {
+    this.m.RLock()
+    vals := make([]string, 0)
+    for _, val := range this.M {
+        vals = append(vals, val)
+    }
+    this.m.RUnlock()
+    return vals
 }

@@ -61,3 +61,25 @@ func (this *StringInt64Map) Remove(key string) {
 	delete(this.M, key)
     this.m.Unlock()
 }
+
+// 返回键列表
+func (this *StringInt64Map) Keys() []string {
+    this.m.RLock()
+    keys := make([]string, 0)
+    for key, _ := range this.M {
+        keys = append(keys, key)
+    }
+    this.m.RUnlock()
+    return keys
+}
+
+// 返回值列表(注意是随机排序)
+func (this *StringInt64Map) Values() []int64 {
+    this.m.RLock()
+    vals := make([]int64, 0)
+    for _, val := range this.M {
+        vals = append(vals, val)
+    }
+    this.m.RUnlock()
+    return vals
+}
