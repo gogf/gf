@@ -10,33 +10,8 @@ import (
     "g/net/gscanner"
     "encoding/json"
     "io"
+    "g/gtime"
 )
-
-// 集群协议通信接口回调函数
-func (n *Node) raftTcpHandler(conn net.Conn) {
-    msg := n.recieve(conn)
-    if msg == nil {
-        return
-    }
-    fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
-    switch msg.Act {
-        // 上线通知
-        case "hi":
-            n.Peers[fromip] = msg.From.RaftInfo.Role
-            n.send(conn, "hi2", nil)
-            //fmt.Println("add peer:", fromip, "to", n.Ip, ", remote", conn.RemoteAddr(), ", local", conn.LocalAddr())
-    }
-}
-
-// 集群数据同步接口回调函数
-func (n *Node) repliTcpHandler(conn net.Conn) {
-
-}
-
-// 服务器对外API接口回调函数
-func (n *Node) apiTcpHandler(conn net.Conn) {
-
-}
 
 // 局域网扫描回调函数，类似广播消息
 func (n *Node) scannerRaftCallback(conn net.Conn) {
@@ -45,24 +20,23 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
         //fmt.Println(fromip, "==", n.Ip)
         return
     }
-    err := n.send(conn, "hi", nil)
+    err := n.sendMsg(conn, "hi", nil)
     if err != nil {
         log.Println(err)
         return
     }
 
-    msg := n.recieve(conn)
-    switch msg.Act {
-        // 收到通知，找到组织
-        case "hi2":
-            n.Peers[fromip] = msg.From.RaftInfo.Role
-            //fmt.Println("add peer from scan:", fromip, "to", n.Ip)
+    msg := n.recieveMsg(conn)
+    if msg.Head == "hi2" {
+        n.Peers.Set(fromip, msg.From.RaftInfo.Role)
+        n.RaftInfo.TotalCount = n.Peers.Size()
+        //fmt.Println("add peer from scan:", fromip, "to", n.Ip)
     }
 }
 
 // 获取数据
 // @todo 数据量接收超过1024 byte时的处理
-func (n *Node) recieve(conn net.Conn) *Msg {
+func (n *Node) recieve(conn net.Conn) []byte {
     buffersize := 1024
     buffer     := make([]byte, buffersize)
     count, err := conn.Read(buffer)
@@ -72,9 +46,15 @@ func (n *Node) recieve(conn net.Conn) *Msg {
         }
         return nil
     }
-    if count > 0 {
+    return buffer[0:count]
+}
+
+// 获取Msg
+func (n *Node) recieveMsg(conn net.Conn) *Msg {
+    response := n.recieve(conn)
+    if len(response) > 0 {
         var msg Msg
-        err = json.Unmarshal(buffer[0:count], &msg)
+        err := json.Unmarshal(response, &msg)
         if err != nil {
             log.Println(err)
             return nil
@@ -85,25 +65,41 @@ func (n *Node) recieve(conn net.Conn) *Msg {
 }
 
 // 发送数据
-func (n *Node) send(conn net.Conn, act string, data interface{}) error {
-    var msg = Msg{act, data, *n.getMsgFromInfo()}
-    s, err := json.Marshal(msg)
-    if err != nil {
-        return err
-    }
-    _, err = conn.Write([]byte(s))
+func (n *Node) send(conn net.Conn, data []byte) error {
+    _, err := conn.Write(data)
     if err != nil {
         return err
     }
     return nil
 }
 
+// 发送Msg
+func (n *Node) sendMsg(conn net.Conn, head string, body interface{}) error {
+    var msg = Msg{head, body, *n.getMsgFromInfo()}
+    s, err := json.Marshal(msg)
+    if err != nil {
+        return err
+    }
+    return n.send(conn, s)
+}
+
+// 获得TCP链接
+func (n *Node) getConn(ip string, port int) net.Conn {
+    conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), 6*time.Second)
+    if err == nil {
+        return conn
+    }
+    return nil
+}
+
 // 获得当前节点进行数据通信时的来源信息结构
 func (n *Node) getMsgFromInfo() *MsgFrom {
+    n.mutex.RLock()
     var from = MsgFrom {
         Name : n.Name,
         Role : n.Role,
     }
+    n.mutex.RUnlock()
     from.RaftInfo.Term = n.RaftInfo.Term
     from.RaftInfo.Role = n.RaftInfo.Role
     return &from
@@ -116,17 +112,16 @@ func (n *Node) Run() {
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_REPLI), n.repliTcpHandler).Run()
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_API),   n.apiTcpHandler).Run()
     // 通知上线
-    n.sayHiToAll()
-
+    go n.sayHiToAll()
     // 测试
-    n.showPeers()
+    go n.show()
 }
 
 // 测试使用，展示当前节点通信的主机列表
-func (n *Node) showPeers() {
-    time.AfterFunc(2 * time.Second, func(){
-        fmt.Println(n.Ip, n.Peers)
-        n.showPeers()
+func (n *Node) show() {
+    gtime.SetInterval(5 * time.Second, func() bool{
+        fmt.Println(*n)
+        return true
     })
 }
 

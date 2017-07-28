@@ -13,9 +13,6 @@ type ttt struct {
 }
 func main() {
 
-    var a interface{}
-    var b struct{}
-    fmt.Println(&a)
-    fmt.Println(&b)
+    fmt.Println(5.000/2)
 
 }
