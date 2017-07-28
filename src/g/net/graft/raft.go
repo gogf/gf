@@ -22,8 +22,8 @@ const (
     gRAFT_ROLE_LEADER     = 2
     // 超时时间设置
     gELECTION_TIMEOUT_MIN = 1000   // 毫秒， 官方推荐 150ms - 300ms
-    gELECTION_TIMEOUT_MAX = 2000   // 毫秒， 官方推荐 150ms - 300ms
-    gHEARTBEAT_TIMEOUT    = 500    // 毫秒
+    gELECTION_TIMEOUT_MAX = 3000   // 毫秒， 官方推荐 150ms - 300ms
+    gHEARTBEAT_TIMEOUT    = 2000   // 毫秒
 )
 
 // 消息

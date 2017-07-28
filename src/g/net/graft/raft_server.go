@@ -10,7 +10,7 @@ import (
     "g/net/gscanner"
     "encoding/json"
     "io"
-    "g/gtime"
+    "g/util/gtime"
     "g/util/grand"
 )
 
@@ -107,9 +107,8 @@ func (n *Node) getMsgFromInfo() *MsgFrom {
 
 // 更新选举截止时间
 func (n *Node) updateElectionDeadline() {
-    timeout := grand.Rand(gELECTION_TIMEOUT_MIN, gELECTION_TIMEOUT_MAX)*1e6
     n.mutex.Lock()
-    n.RaftInfo.ElectionDeadline = time.Now().UnixNano()/1e6 + int64(timeout)
+    n.RaftInfo.ElectionDeadline = gtime.Millisecond() + int64(grand.Rand(gELECTION_TIMEOUT_MIN, gELECTION_TIMEOUT_MAX))
     n.mutex.Unlock()
 }
 

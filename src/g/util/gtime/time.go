@@ -25,3 +25,8 @@ func SetInterval(t time.Duration, callback func() bool) {
         }
     }()
 }
+
+// 获取当前的毫秒数
+func Millisecond() int64 {
+    return time.Now().UnixNano()/1e6
+}

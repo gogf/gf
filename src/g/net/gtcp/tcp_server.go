@@ -16,10 +16,11 @@ func (s *gTcpServer) Run() {
         //fmt.Println("listening on address", s.address)
         for  {
             conn, err := s.listener.Accept()
-            if err != nil {
+            if conn == nil || err != nil {
                 conn.Close()
+            } else {
+                go s.handler(conn)
             }
-            go s.handler(conn)
         }
         //fmt.Println("tcp server closed on address", s.address)
     }()
