@@ -15,11 +15,46 @@ func NewStringInterfaceMap() *StringInterfaceMap {
 	}
 }
 
+// 哈希表克隆
+func (this *StringInterfaceMap) Clone() *map[string]interface{} {
+    m := make(map[string]interface{})
+    this.m.RLock()
+    for k, v := range this.M {
+        m[k] = v
+    }
+    this.m.RUnlock()
+    return &m
+}
+
 // 设置键值对
 func (this *StringInterfaceMap) Set(key string, val interface{}) {
 	this.m.Lock()
 	this.M[key] = val
 	this.m.Unlock()
+}
+
+// 批量设置键值对
+func (this *StringInterfaceMap) Sets(m map[string]interface{}) {
+    todo := make(map[string]interface{})
+    this.m.RLock()
+    for k, v := range m {
+        old, exists := this.M[k]
+        if exists && v == old {
+            continue
+        }
+        todo[k] = v
+    }
+    this.m.RUnlock()
+
+    if len(todo) == 0 {
+        return
+    }
+
+    this.m.Lock()
+    for k, v := range todo {
+        this.M[k] = v
+    }
+    this.m.Unlock()
 }
 
 // 获取键值
@@ -37,6 +72,15 @@ func (this *StringInterfaceMap) Remove(key string) {
 	this.m.Unlock()
 }
 
+// 批量删除键值对
+func (this *StringInterfaceMap) BatchRemove(keys []string) {
+    this.m.Lock()
+    for _, key := range keys {
+        delete(this.M, key)
+    }
+    this.m.Unlock()
+}
+
 // 返回对应的键值，并删除该键值
 func (this *StringInterfaceMap) GetAndRemove(key string) (interface{}, bool) {
 	this.m.Lock()
@@ -46,13 +90,6 @@ func (this *StringInterfaceMap) GetAndRemove(key string) (interface{}, bool) {
 	}
 	this.m.Unlock()
 	return val, exists
-}
-
-// 清空哈希表
-func (this *StringInterfaceMap) Clear() {
-	this.m.Lock()
-	this.M = make(map[string]interface{})
-	this.m.Unlock()
 }
 
 // 返回键列表
@@ -99,4 +136,11 @@ func (this *StringInterfaceMap) IsEmpty() bool {
 	empty := (len(this.M) == 0)
 	this.m.RUnlock()
 	return empty
+}
+
+// 清空哈希表
+func (this *StringInterfaceMap) Clear() {
+    this.m.Lock()
+    this.M = make(map[string]interface{})
+    this.m.Unlock()
 }

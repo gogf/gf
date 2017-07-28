@@ -15,12 +15,25 @@ func NewStringIntMap() *StringIntMap {
     }
 }
 
+// 哈希表克隆
+func (this *StringIntMap) Clone() *map[string]int {
+    m := make(map[string]int)
+    this.m.RLock()
+    for k, v := range this.M {
+        m[k] = v
+    }
+    this.m.RUnlock()
+    return &m
+}
+
+// 设置键值对
 func (this *StringIntMap) Set(key string, val int) {
 	this.m.Lock()
 	this.M[key] = val
 	this.m.Unlock()
 }
 
+// 批量设置键值对
 func (this *StringIntMap) Sets(m map[string]int) {
 	todo := make(map[string]int)
 	this.m.RLock()
@@ -44,6 +57,7 @@ func (this *StringIntMap) Sets(m map[string]int) {
 	this.m.Unlock()
 }
 
+// 获取键值
 func (this *StringIntMap) Get(key string) (int, bool) {
 	this.m.RLock()
 	val, exists := this.M[key]
@@ -51,15 +65,31 @@ func (this *StringIntMap) Get(key string) (int, bool) {
 	return val, exists
 }
 
-func (this *StringIntMap) Contains(key string) bool {
-	_, exists := this.Get(key)
-	return exists
+// 删除键值对
+func (this *StringIntMap) Remove(key string) {
+    this.m.Lock()
+    delete(this.M, key)
+    this.m.Unlock()
 }
 
-func (this *StringIntMap) Remove(key string) {
-	this.m.Lock()
-	delete(this.M, key)
+// 批量删除键值对
+func (this *StringIntMap) BatchRemove(keys []string) {
+    this.m.Lock()
+    for _, key := range keys {
+        delete(this.M, key)
+    }
     this.m.Unlock()
+}
+
+// 返回对应的键值，并删除该键值
+func (this *StringIntMap) GetAndRemove(key string) (int, bool) {
+    this.m.Lock()
+    val, exists := this.M[key]
+    if exists {
+        delete(this.M, key)
+    }
+    this.m.Unlock()
+    return val, exists
 }
 
 // 返回键列表
@@ -83,3 +113,33 @@ func (this *StringIntMap) Values() []int {
     this.m.RUnlock()
     return vals
 }
+
+// 是否存在某个键
+func (this *StringIntMap) Contains(key string) bool {
+    _, exists := this.Get(key)
+    return exists
+}
+
+// 哈希表大小
+func (this *StringIntMap) Size() int {
+    this.m.RLock()
+    len := len(this.M)
+    this.m.RUnlock()
+    return len
+}
+
+// 哈希表是否为空
+func (this *StringIntMap) IsEmpty() bool {
+    this.m.RLock()
+    empty := (len(this.M) == 0)
+    this.m.RUnlock()
+    return empty
+}
+
+// 清空哈希表
+func (this *StringIntMap) Clear() {
+    this.m.Lock()
+    this.M = make(map[string]int)
+    this.m.Unlock()
+}
+
