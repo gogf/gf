@@ -11,6 +11,7 @@ import (
     "encoding/json"
     "io"
     "g/gtime"
+    "g/util/grand"
 )
 
 // 局域网扫描回调函数，类似广播消息
@@ -29,7 +30,6 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
     msg := n.recieveMsg(conn)
     if msg.Head == "hi2" {
         n.Peers.Set(fromip, msg.From.RaftInfo.Role)
-        n.RaftInfo.TotalCount = n.Peers.Size()
         //fmt.Println("add peer from scan:", fromip, "to", n.Ip)
     }
 }
@@ -105,6 +105,14 @@ func (n *Node) getMsgFromInfo() *MsgFrom {
     return &from
 }
 
+// 更新选举截止时间
+func (n *Node) updateElectionDeadline() {
+    timeout := grand.Rand(gELECTION_TIMEOUT_MIN, gELECTION_TIMEOUT_MAX)*1e6
+    n.mutex.Lock()
+    n.RaftInfo.ElectionDeadline = time.Now().UnixNano()/1e6 + int64(timeout)
+    n.mutex.Unlock()
+}
+
 // 运行节点
 func (n *Node) Run() {
     // 创建接口监听
@@ -112,15 +120,18 @@ func (n *Node) Run() {
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_REPLI), n.repliTcpHandler).Run()
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_API),   n.apiTcpHandler).Run()
     // 通知上线
-    go n.sayHiToAll()
+    n.sayHiToAll()
+    // 选举超时检查
+    go n.checkElectionTimeout()
+
     // 测试
     go n.show()
 }
 
 // 测试使用，展示当前节点通信的主机列表
 func (n *Node) show() {
-    gtime.SetInterval(5 * time.Second, func() bool{
-        fmt.Println(*n)
+    gtime.SetInterval(6 * time.Second, func() bool{
+        fmt.Println(n.Name, n.Ip, n.Peers.M, n.RaftInfo)
         return true
     })
 }
@@ -134,5 +145,5 @@ func (n *Node) sayHiToAll() {
     }
     startIp := fmt.Sprintf("%s.1",   segment)
     endIp   := fmt.Sprintf("%s.255", segment)
-    gscanner.New().SetTimeout(6*time.Second).ScanIp(startIp, endIp, gCLUSTER_PORT_RAFT, n.scannerRaftCallback)
+    gscanner.New().SetTimeout(3*time.Second).ScanIp(startIp, endIp, gCLUSTER_PORT_RAFT, n.scannerRaftCallback)
 }

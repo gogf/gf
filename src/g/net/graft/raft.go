@@ -1,11 +1,9 @@
 package graft
 
 import (
-    "time"
     "log"
     "os"
     "g/core/types/gmap"
-    "g/core/types/gset"
     "sync"
 )
 
@@ -23,8 +21,9 @@ const (
     gRAFT_ROLE_CANDIDATE  = 1
     gRAFT_ROLE_LEADER     = 2
     // 超时时间设置
-    gELECTION_TIMEOUT_MIN = 500  * time.Millisecond // 官方推荐 150ms - 300ms
-    gELECTION_TIMEOUT_MAX = 1000 * time.Millisecond // 官方推荐 150ms - 300ms
+    gELECTION_TIMEOUT_MIN = 1000   // 毫秒， 官方推荐 150ms - 300ms
+    gELECTION_TIMEOUT_MAX = 2000   // 毫秒， 官方推荐 150ms - 300ms
+    gHEARTBEAT_TIMEOUT    = 500    // 毫秒
 )
 
 // 消息
@@ -57,12 +56,12 @@ type Node struct {
 
 // raft信息结构体
 type RaftInfo struct {
-    Role       int             // raft角色
-    Term       int             // 时间阶段
-    Vote       string          // 当前node投票的节点
-    Leader     string          // Leader节点ip
-    VoteCount  int             // 获得的选票数量
-    TotalCount int             // 总共节点数
+    Role             int             // raft角色
+    Term             int             // 时间阶段
+    Vote             string          // 当前node投票的节点
+    Leader           string          // Leader节点ip
+    VoteCount        int             // 获得的选票数量
+    ElectionDeadline int64           // 毫秒
 }
 
 
@@ -80,5 +79,6 @@ func NewServer(ip string) *Node {
         Peers : gmap.NewStringIntMap(),
     }
     node.RaftInfo.Role = gRAFT_ROLE_FOLLOWER
+    node.updateElectionDeadline()
     return &node
 }
