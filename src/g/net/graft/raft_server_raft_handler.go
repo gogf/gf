@@ -46,6 +46,7 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
                     log.Println("two leader occured, set ", fromip, "as my leader")
                     n.setRaftRole(gRAFT_ROLE_FOLLOWER)
                     n.setRaftLeader(fromip)
+                    n.setRaftTerm(msg.From.RaftInfo.Term)
                 }
             }
             n.sendMsg(conn, "heartbeat", nil)
@@ -76,7 +77,7 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
         case "electiondone":
             log.Println("electiondone from", fromip)
             n.setRaftLeader(fromip)
-            //n.setRaftTerm(msg.From.RaftInfo.Term)
+            n.setRaftTerm(msg.From.RaftInfo.Term)
 
     }
 }
@@ -158,10 +159,11 @@ func (n *Node) heartbeatHandler() {
                             return
                         } else {
                             switch msg.Head {
-                            case "imleader":
-                                log.Println("two leader occured, set ", ip, "as my leader, done heartbeating")
-                                n.setRaftRole(gRAFT_ROLE_FOLLOWER)
-                                n.setRaftLeader(ip)
+                                case "imleader":
+                                    log.Println("two leader occured, set ", ip, "as my leader, done heartbeating")
+                                    n.setRaftRole(gRAFT_ROLE_FOLLOWER)
+                                    n.setRaftLeader(ip)
+                                    n.setRaftTerm(msg.From.RaftInfo.Term)
                             }
                         }
                         time.Sleep(gHEARTBEAT_TIMEOUT * time.Millisecond)
@@ -235,6 +237,7 @@ func (n *Node) beginVote() {
                                 if (!n.canBeLeader()) {
                                     log.Println("set him as my leader, done voting")
                                     n.setRaftLeader(ip)
+                                    n.setRaftTerm(msg.From.RaftInfo.Term)
                                 }
                             }
                     }
