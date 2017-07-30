@@ -11,7 +11,7 @@ import (
     "encoding/json"
     "io"
     "g/util/gtime"
-    "g/util/grand"
+    "g/util/gutil"
 )
 
 // 局域网扫描回调函数，类似广播消息
@@ -30,29 +30,45 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
     msg := n.recieveMsg(conn)
     if msg.Head == "hi2" {
         n.Peers.Set(fromip, msg.From.RaftInfo.Role)
-        //fmt.Println("add peer from scan:", fromip, "to", n.Ip)
+        if msg.From.RaftInfo.Role == gRAFT_ROLE_LEADER {
+            n.setRaftLeader(fromip)
+        }
     }
 }
 
 // 获取数据
-// @todo 数据量接收超过1024 byte时的处理
 func (n *Node) recieve(conn net.Conn) []byte {
+    try        := 0
     buffersize := 1024
-    buffer     := make([]byte, buffersize)
-    count, err := conn.Read(buffer)
-    if err != nil {
-        if err != io.EOF {
-            log.Println("node recieve:", err)
+    data       := make([]byte, 0)
+    for {
+        buffer      := make([]byte, buffersize)
+        length, err := conn.Read(buffer)
+        if err != nil {
+            if err != io.EOF {
+                log.Println("node recieve:", err, "try:", try)
+            }
+            if try > 2 {
+                break;
+            }
+            try ++
+            time.Sleep(100 * time.Millisecond)
+        } else {
+            if length == buffersize {
+                data = gutil.MergeSlice(data, buffer)
+            } else {
+                data = gutil.MergeSlice(data, buffer[0:length])
+                break;
+            }
         }
-        return nil
     }
-    return buffer[0:count]
+    return data
 }
 
 // 获取Msg
 func (n *Node) recieveMsg(conn net.Conn) *Msg {
     response := n.recieve(conn)
-    if len(response) > 0 {
+    if response != nil && len(response) > 0 {
         var msg Msg
         err := json.Unmarshal(response, &msg)
         if err != nil {
@@ -66,11 +82,20 @@ func (n *Node) recieveMsg(conn net.Conn) *Msg {
 
 // 发送数据
 func (n *Node) send(conn net.Conn, data []byte) error {
-    _, err := conn.Write(data)
-    if err != nil {
-        return err
+    try := 0
+    for {
+        _, err := conn.Write(data)
+        if err != nil {
+            log.Println("data send:", err, "try:", try)
+            if try > 2 {
+                return err
+            }
+            try ++
+            time.Sleep(100 * time.Millisecond)
+        } else {
+            return nil
+        }
     }
-    return nil
 }
 
 // 发送Msg
@@ -105,23 +130,16 @@ func (n *Node) getMsgFromInfo() *MsgFrom {
     return &from
 }
 
-// 更新选举截止时间
-func (n *Node) updateElectionDeadline() {
-    n.mutex.Lock()
-    n.RaftInfo.ElectionDeadline = gtime.Millisecond() + int64(grand.Rand(gELECTION_TIMEOUT_MIN, gELECTION_TIMEOUT_MAX))
-    n.mutex.Unlock()
-}
-
 // 运行节点
 func (n *Node) Run() {
     // 创建接口监听
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_RAFT),  n.raftTcpHandler).Run()
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_REPLI), n.repliTcpHandler).Run()
-    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_API),   n.apiTcpHandler).Run()
+    //gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_API),   n.apiTcpHandler).Run()
     // 通知上线
     n.sayHiToAll()
     // 选举超时检查
-    go n.checkElectionTimeout()
+    go n.electionHandler()
 
     // 测试
     go n.show()

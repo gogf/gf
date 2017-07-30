@@ -21,9 +21,9 @@ const (
     gRAFT_ROLE_CANDIDATE  = 1
     gRAFT_ROLE_LEADER     = 2
     // 超时时间设置
-    gELECTION_TIMEOUT_MIN = 1000   // 毫秒， 官方推荐 150ms - 300ms
+    gELECTION_TIMEOUT_MIN = 1500   // 毫秒， 官方推荐 150ms - 300ms
     gELECTION_TIMEOUT_MAX = 3000   // 毫秒， 官方推荐 150ms - 300ms
-    gHEARTBEAT_TIMEOUT    = 2000   // 毫秒
+    gHEARTBEAT_TIMEOUT    = 1000   // 毫秒
 )
 
 // 消息
@@ -46,7 +46,6 @@ type MsgFrom struct {
 // 服务器节点信息
 type Node struct {
     mutex    sync.RWMutex
-
     Name     string             // 节点名称
     Ip       string             // 主机节点的局域网ip
     Role     int                // 集群角色
@@ -78,7 +77,5 @@ func NewServer(ip string) *Node {
         Role  : gCLUSTER_ROLE_SERVER,
         Peers : gmap.NewStringIntMap(),
     }
-    node.RaftInfo.Role = gRAFT_ROLE_FOLLOWER
-    node.updateElectionDeadline()
     return &node
 }
