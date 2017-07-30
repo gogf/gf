@@ -15,7 +15,7 @@ func NewIntSet() *IntSet {
 }
 
 // 设置键
-func (this *IntSet) Set(item int) *IntSet {
+func (this *IntSet) Add(item int) *IntSet {
 	if this.Contains(item) {
 		return this
 	}
@@ -26,7 +26,7 @@ func (this *IntSet) Set(item int) *IntSet {
 }
 
 // 批量添加设置键
-func (this *IntSet) BatchSet(items []int) *IntSet {
+func (this *IntSet) BatchAdd(items []int) *IntSet {
     count := len(items)
     if count == 0 {
         return this
@@ -63,6 +63,13 @@ func (this *IntSet) Contains(item int) bool {
 	_, exists := this.M[item]
 	this.m.RUnlock()
 	return exists
+}
+
+// 删除键值对
+func (this *IntSet) Remove(key int) {
+	this.m.Lock()
+	delete(this.M, key)
+	this.m.Unlock()
 }
 
 // 大小

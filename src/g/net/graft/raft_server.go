@@ -140,6 +140,10 @@ func (n *Node) Run() {
     n.sayHiToAll()
     // 选举超时检查
     go n.electionHandler()
+    // 心跳保持(只有leader节点才会激活)
+    go n.heartbeatHandler()
+    // 存活性检查
+    go n.keepalivedHandler()
 
     // 测试
     go n.show()

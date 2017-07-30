@@ -15,7 +15,7 @@ func NewInt64Set() *Int64Set {
 }
 
 // 设置键
-func (this *Int64Set) Set(item int64) *Int64Set {
+func (this *Int64Set) Add(item int64) *Int64Set {
 	if this.Contains(item) {
 		return this
 	}
@@ -26,7 +26,7 @@ func (this *Int64Set) Set(item int64) *Int64Set {
 }
 
 // 批量添加设置键
-func (this *Int64Set) BatchSet(items []int64) *Int64Set {
+func (this *Int64Set) BatchAdd(items []int64) *Int64Set {
     count := len(items)
     if count == 0 {
         return this
@@ -63,6 +63,13 @@ func (this *Int64Set) Contains(item int64) bool {
 	_, exists := this.M[item]
 	this.m.RUnlock()
 	return exists
+}
+
+// 删除键值对
+func (this *Int64Set) Remove(key int64) {
+	this.m.Lock()
+	delete(this.M, key)
+	this.m.Unlock()
 }
 
 // 大小

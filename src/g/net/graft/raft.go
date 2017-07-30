@@ -1,3 +1,8 @@
+/*
+    使用raft算法处理集群的一致性
+    @todo 当集群节点 < 3时的leader选取问题
+ */
+
 package graft
 
 import (
@@ -21,9 +26,10 @@ const (
     gRAFT_ROLE_CANDIDATE  = 1
     gRAFT_ROLE_LEADER     = 2
     // 超时时间设置
-    gELECTION_TIMEOUT_MIN = 1500   // 毫秒， 官方推荐 150ms - 300ms
-    gELECTION_TIMEOUT_MAX = 3000   // 毫秒， 官方推荐 150ms - 300ms
+    gELECTION_TIMEOUT_MIN = 2000   // 毫秒， 官方推荐 150ms - 300ms
+    gELECTION_TIMEOUT_MAX = 4000   // 毫秒， 官方推荐 150ms - 300ms
     gHEARTBEAT_TIMEOUT    = 1000   // 毫秒
+    gKEEPALIVED_TIMEOUT   = 1000   // 毫秒
 )
 
 // 消息
@@ -56,7 +62,7 @@ type Node struct {
 // raft信息结构体
 type RaftInfo struct {
     Role             int             // raft角色
-    Term             int             // 时间阶段
+    Term             int          // 时间阶段
     Vote             string          // 当前node投票的节点
     Leader           string          // Leader节点ip
     VoteCount        int             // 获得的选票数量

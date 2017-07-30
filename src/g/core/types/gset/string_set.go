@@ -15,7 +15,7 @@ func NewStringSet() *StringSet {
 }
 
 // 设置键
-func (this *StringSet) Set(item string) *StringSet {
+func (this *StringSet) Add(item string) *StringSet {
 	if this.Contains(item) {
 		return this
 	}
@@ -26,7 +26,7 @@ func (this *StringSet) Set(item string) *StringSet {
 }
 
 // 批量添加设置键
-func (this *StringSet) BatchSet(items []string) *StringSet {
+func (this *StringSet) BatchAdd(items []string) *StringSet {
     count := len(items)
     if count == 0 {
         return this
@@ -63,6 +63,13 @@ func (this *StringSet) Contains(item string) bool {
 	_, exists := this.M[item]
 	this.m.RUnlock()
 	return exists
+}
+
+// 删除键值对
+func (this *StringSet) Remove(key string) {
+	this.m.Lock()
+	delete(this.M, key)
+	this.m.Unlock()
 }
 
 // 大小
