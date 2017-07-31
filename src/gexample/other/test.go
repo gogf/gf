@@ -4,17 +4,15 @@ import (
     "fmt"
 )
 
+type LogEntry struct {
+    id               int64        // 唯一ID
+    act              string       // 操作
+    key              string
+    value            string
+}
+
 func main() {
-    if (false) {
-        goto T1
-    } else {
-        goto T2
-    }
-    T1:
-    fmt.Println(1)
-    T2:
-    fmt.Println(2)
-
-
-
+    var a LogEntry
+    a.id = 1
+    fmt.Println(a)
 }

@@ -4,20 +4,32 @@ import (
     "net"
     "os"
     "fmt"
+    "log"
+    "g/net/graft"
+    "time"
 )
 
-
-
-func main() {
-    conn, err := net.Dial("tcp", "192.168.2.102:4166")
-    defer conn.Close()
+func rpcLogSet() {
+    conn, err := net.Dial("tcp", "192.168.2.102:4167")
     if err != nil {
-        os.Exit(1)
+        log.Println(err)
+        return
     }
+
+    log      := graft.LogEntry{}
+    log.Id    = time.Now().UnixNano()
+    log.Act   = "set"
+    log.Key   = "name"
+    log.Value = "john"
 
     conn.Write([]byte(""))
     var msg [20]byte
     n, err := conn.Read(msg[0:])
 
     fmt.Println(string(msg[0:n]))
+    conn.Close()
+}
+
+func main() {
+
 }

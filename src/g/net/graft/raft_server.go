@@ -18,7 +18,7 @@ import (
 func (n *Node) scannerRaftCallback(conn net.Conn) {
     fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
     if fromip == n.Ip {
-        //fmt.Println(fromip, "==", n.Ip)
+        //log.Println(fromip, "==", n.Ip)
         return
     }
     err := n.sendMsg(conn, "hi", nil)
@@ -38,6 +38,7 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
 
 // 获取数据
 func (n *Node) recieve(conn net.Conn) []byte {
+    //log.Println(conn.LocalAddr().String(), "recieve from", conn.RemoteAddr().String())
     try        := 0
     buffersize := 1024
     data       := make([]byte, 0)
@@ -82,6 +83,7 @@ func (n *Node) recieveMsg(conn net.Conn) *Msg {
 
 // 发送数据
 func (n *Node) send(conn net.Conn, data []byte) error {
+    //log.Println(conn.LocalAddr().String(), "send to", conn.RemoteAddr().String())
     try := 0
     for {
         _, err := conn.Write(data)
@@ -140,10 +142,8 @@ func (n *Node) Run() {
     n.sayHiToAll()
     // 选举超时检查
     go n.electionHandler()
-    // 心跳保持(只有leader节点才会激活)
+    // 心跳保持及存活性检查
     go n.heartbeatHandler()
-    // 存活性检查
-    go n.keepalivedHandler()
 
     // 测试
     go n.show()
@@ -151,8 +151,8 @@ func (n *Node) Run() {
 
 // 测试使用，展示当前节点通信的主机列表
 func (n *Node) show() {
-    gtime.SetInterval(6 * time.Second, func() bool{
-        fmt.Println(n.Name, n.Ip, n.Peers.M, n.RaftInfo)
+    gtime.SetInterval(4 * time.Second, func() bool{
+        log.Println(n.Name, n.Ip, n.Peers.M, n.RaftInfo)
         return true
     })
 }
