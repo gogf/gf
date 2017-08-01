@@ -13,7 +13,7 @@ import (
 
 // 集群协议通信接口回调函数
 func (n *Node) raftTcpHandler(conn net.Conn) {
-    msg       := n.recieveMsg(conn)
+    msg       := n.receiveMsg(conn)
     fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
     if msg == nil {
         conn.Close()
@@ -24,24 +24,24 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
     // 消息处理
     switch msg.Head {
         // 上线通知
-        case "hi":
+        case gRAFT_MSG_HEAD_HI:
             n.Peers.Set(fromip, msg.From.RaftInfo.Role)
-            n.sendMsg(conn, "hi2", nil)
+            n.sendMsg(conn, gRAFT_MSG_HEAD_HI2, nil)
             //log.Println("add peer:", fromip, "to", n.Ip, ", remote", conn.RemoteAddr(), ", local", conn.LocalAddr())
 
         // 节点存活性保持
-        case "keepalived":
+        case gRAFT_MSG_HEAD_KEEPALIVED:
             //log.Println("keepalived from", fromip)
-            n.sendMsg(conn, "keepalived", nil)
+            n.sendMsg(conn, gRAFT_MSG_HEAD_KEEPALIVED, nil)
 
         // 心跳保持
-        case "heartbeat":
+        case gRAFT_MSG_HEAD_HEARTBEAT:
             n.updateRaftElectionDeadline()
             //log.Println("heartbeat from", fromip)
             if n.getRaftRole() == gRAFT_ROLE_LEADER && msg.From.RaftInfo.Role == gRAFT_ROLE_LEADER {
                 // 脑裂问题判断，term最大的leader节点认定为集群的leader
                 if n.getRaftTerm() > msg.From.RaftInfo.Term {
-                    n.sendMsg(conn, "imleader", nil)
+                    n.sendMsg(conn, gRAFT_MSG_HEAD_I_AM_LEADER, nil)
                     goto continueHandleConn
                 } else {
                     log.Println("two leader occured, set ", fromip, "as my leader")
@@ -53,25 +53,24 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
             } else if n.getRaftTerm() != msg.From.RaftInfo.Term{
                 n.setRaftTerm(msg.From.RaftInfo.Term)
             }
-            n.sendMsg(conn, "heartbeat", nil)
+            n.sendMsg(conn, gRAFT_MSG_HEAD_HEARTBEAT, nil)
 
 
-        // raft选举
-        case "voteme":
-            result := ""
+        // raft选举，在多节点选举中，比较关键的一个操作
+        case gRAFT_MSG_HEAD_VOTE_REQUEST:
+            var result int
             if n.getRaftRole() == gRAFT_ROLE_LEADER && n.getRaftTerm() >= msg.From.RaftInfo.Term {
-                log.Println("i am leader vs", fromip)
-                result = "imleader"
+                result = gRAFT_MSG_HEAD_I_AM_LEADER
+                log.Println("vote i am leader for", fromip)
+            } else if n.getRaftVoteFor() == "" {
+                n.setRaftVoteFor(fromip)
+                result = gRAFT_MSG_HEAD_VOTE_YES
+                log.Println("vote yes for", fromip)
             } else {
-                if n.getRaftVoteFor() == "" {
-                    n.setRaftVoteFor(fromip)
-                    result = "yes"
-                } else {
-                    result = "no"
-                }
+                result = gRAFT_MSG_HEAD_VOTE_NO
+                log.Println("vote no for", fromip)
             }
 
-            log.Println("vote", result, "for", fromip)
             n.sendMsg(conn, result,  nil)
     }
 
@@ -102,56 +101,62 @@ func (n *Node) heartbeatHandler() {
             conns.Add(ip)
             go func(conn net.Conn) {
                 for {
-                    msgstr := "keepalived"
+                    msgstr := gRAFT_MSG_HEAD_KEEPALIVED
                     if n.getRaftRole() == gRAFT_ROLE_LEADER {
-                        msgstr = "heartbeat"
+                        msgstr = gRAFT_MSG_HEAD_HEARTBEAT
                     }
                     ip, _ := gip.ParseAddress(conn.RemoteAddr().String())
                     n.sendMsg(conn, msgstr, nil)
-                    conn.SetReadDeadline(time.Now().Add(3 * gHEARTBEAT_TIMEOUT * time.Millisecond))
-                    msg := n.recieveMsg(conn)
+                    conn.SetReadDeadline(time.Now().Add(3 * gRAFT_HEARTBEAT_TIMEOUT * time.Millisecond))
+                    msg := n.receiveMsg(conn)
                     if msg == nil {
-                        log.Println(msgstr, ":", ip, "no response, removing this peer")
+                        log.Println(ip, "no response, removing this peer")
                         n.Peers.Remove(ip)
                         conns.Remove(ip)
                         conn.Close()
                         return
                     } else {
                         switch msg.Head {
-                            case "imleader":
+                            case gRAFT_MSG_HEAD_I_AM_LEADER:
                                 //log.Println("two leader occured, set ", ip, "as my leader, done heartbeating")
                                 n.setRaftRole(gRAFT_ROLE_FOLLOWER)
                                 n.setRaftLeader(ip)
                         }
                     }
-                    time.Sleep(gHEARTBEAT_TIMEOUT * time.Millisecond)
+                    time.Sleep(gRAFT_HEARTBEAT_TIMEOUT * time.Millisecond)
                 }
             }(c)
         }
-        time.Sleep(gHEARTBEAT_TIMEOUT * time.Millisecond)
+        time.Sleep(gRAFT_HEARTBEAT_TIMEOUT * time.Millisecond)
     }
 }
 
 // 服务器节点选举
+// 改进：
+// 3个节点以内的集群也可以完成leader选举
 func (n *Node) electionHandler() {
     n.updateRaftElectionDeadline()
     for {
-        if gtime.Millisecond() >= n.getRaftElectionDeadline() {
+        if n.getRaftRole() != gRAFT_ROLE_LEADER && gtime.Millisecond() >= n.getRaftElectionDeadline() {
             // 重新进入选举流程时，需要清空已有的信息
             if n.getRaftLeader() != "" {
                 n.Peers.Remove(n.getRaftLeader())
             }
-            if n.getRaftRole() != gRAFT_ROLE_LEADER {
-                if n.Peers.Size() > 1 {
-                    n.resetAsCandidate()
-                    n.addRaftTerm()
-                    n.beginVote()
-                }
+            if n.Peers.Size() > 0 {
+                // 集群是2个节点及以上
+                n.resetAsCandidate()
+                n.addRaftTerm()
+                n.beginVote()
+            } else {
+                // 集群目前仅有1个节点
+                log.Println("only one node in this cluster, so i'll be the leader")
+                n.setRaftRole(gRAFT_ROLE_LEADER)
+                n.setRaftLeader(n.Ip)
             }
             n.updateRaftElectionDeadline()
             // 改进：
             // 如果本时间段候选人选举失败，在下一段选举时期内，角色重置为选民，并清空所有选票信息，
-            // 采用避让策略让集群更容易达成绝大多数的选举，以便快速选举
+            // 采用 随机超时+避让策略 让集群更容易达成绝大多数的选举，以便快速选举
             if n.getRaftRole() != gRAFT_ROLE_LEADER {
                 n.resetAsFollower()
             }
@@ -176,13 +181,13 @@ func (n *Node) beginVote() {
             conn := n.getConn(ip, gCLUSTER_PORT_RAFT)
             if conn != nil {
                 log.Println("request vote to", ip)
-                n.sendMsg(conn, "voteme", nil)
-                msg := n.recieveMsg(conn)
+                n.sendMsg(conn, gRAFT_MSG_HEAD_VOTE_REQUEST, nil)
+                msg := n.receiveMsg(conn)
                 if msg != nil {
-                    log.Println("recieve", msg.Head, "from", ip)
                     switch msg.Head {
                         // 同意投票
-                        case "yes":
+                        case gRAFT_MSG_HEAD_VOTE_YES:
+                            log.Println("receive yes from", ip)
                             n.addRaftVoteCount()
                             if  n.getRaftLeader() == "" &&
                                 n.getRaftRole() == gRAFT_ROLE_CANDIDATE &&
@@ -193,7 +198,8 @@ func (n *Node) beginVote() {
                             }
 
                         // 对方是leader，并且term不小于自身，那么转变自身角色
-                        case "imleader":
+                        case gRAFT_MSG_HEAD_I_AM_LEADER:
+                            log.Println("receive iamleader from", ip)
                             if  msg.From.RaftInfo.Role == gRAFT_ROLE_LEADER &&
                                 msg.From.RaftInfo.Term >= n.getRaftTerm() {
                                 log.Println("set him as my leader, done voting")
@@ -202,7 +208,7 @@ func (n *Node) beginVote() {
                             }
                     }
                 } else {
-                    log.Println("recieve nil from", ip)
+                    log.Println("receive nil from", ip)
                     n.Peers.Remove(ip)
                 }
                 conn.Close()
@@ -276,8 +282,8 @@ func (n *Node) addRaftVoteCount() {
 func (n *Node) resetAsCandidate() {
     n.mutex.Lock()
     n.RaftInfo.Role      = gRAFT_ROLE_CANDIDATE
-    n.RaftInfo.VoteFor      = n.Ip
     n.RaftInfo.Leader    = ""
+    n.RaftInfo.VoteFor   = n.Ip
     n.RaftInfo.VoteCount = 1
     n.mutex.Unlock()
 }
@@ -325,6 +331,6 @@ func (n *Node) setRaftVoteCount(count int) {
 // 更新选举截止时间
 func (n *Node) updateRaftElectionDeadline() {
     n.mutex.Lock()
-    n.RaftInfo.ElectionDeadline = gtime.Millisecond() + int64(grand.Rand(gELECTION_TIMEOUT_MIN, gELECTION_TIMEOUT_MAX))
+    n.RaftInfo.ElectionDeadline = gtime.Millisecond() + int64(grand.Rand(gRAFT_ELECTION_TIMEOUT_MIN, gRAFT_ELECTION_TIMEOUT_MAX))
     n.mutex.Unlock()
 }

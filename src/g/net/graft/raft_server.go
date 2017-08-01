@@ -9,9 +9,8 @@ import (
     "fmt"
     "g/net/gscanner"
     "encoding/json"
-    "io"
     "g/util/gtime"
-    "g/util/gutil"
+    "g/encoding/gjson"
 )
 
 // 局域网扫描回调函数，类似广播消息
@@ -21,14 +20,14 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
         //log.Println(fromip, "==", n.Ip)
         return
     }
-    err := n.sendMsg(conn, "hi", nil)
+    err := n.sendMsg(conn, gRAFT_MSG_HEAD_HI, nil)
     if err != nil {
         log.Println(err)
         return
     }
 
-    msg := n.recieveMsg(conn)
-    if msg.Head == "hi2" {
+    msg := n.receiveMsg(conn)
+    if msg.Head == gRAFT_MSG_HEAD_HI2 {
         n.Peers.Set(fromip, msg.From.RaftInfo.Role)
         if msg.From.RaftInfo.Role == gRAFT_ROLE_LEADER {
             n.setRaftLeader(fromip)
@@ -37,72 +36,23 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
 }
 
 // 获取数据
-func (n *Node) recieve(conn net.Conn) []byte {
-    //log.Println(conn.LocalAddr().String(), "recieve from", conn.RemoteAddr().String())
-    try        := 0
-    buffersize := 1024
-    data       := make([]byte, 0)
-    for {
-        buffer      := make([]byte, buffersize)
-        length, err := conn.Read(buffer)
-        if err != nil {
-            if err != io.EOF {
-                log.Println("node recieve:", err, "try:", try)
-            }
-            if try > 2 {
-                break;
-            }
-            try ++
-            time.Sleep(100 * time.Millisecond)
-        } else {
-            if length == buffersize {
-                data = gutil.MergeSlice(data, buffer)
-            } else {
-                data = gutil.MergeSlice(data, buffer[0:length])
-                break;
-            }
-        }
-    }
-    return data
+func (n *Node) receive(conn net.Conn) []byte {
+    return Receive(conn)
 }
 
 // 获取Msg
-func (n *Node) recieveMsg(conn net.Conn) *Msg {
-    response := n.recieve(conn)
-    if response != nil && len(response) > 0 {
-        var msg Msg
-        err := json.Unmarshal(response, &msg)
-        if err != nil {
-            log.Println(err)
-            return nil
-        }
-        return &msg
-    }
-    return nil
+func (n *Node) receiveMsg(conn net.Conn) *Msg {
+    return RecieveMsg(conn)
 }
 
 // 发送数据
 func (n *Node) send(conn net.Conn, data []byte) error {
-    //log.Println(conn.LocalAddr().String(), "send to", conn.RemoteAddr().String())
-    try := 0
-    for {
-        _, err := conn.Write(data)
-        if err != nil {
-            log.Println("data send:", err, "try:", try)
-            if try > 2 {
-                return err
-            }
-            try ++
-            time.Sleep(100 * time.Millisecond)
-        } else {
-            return nil
-        }
-    }
+    return Send(conn, data)
 }
 
 // 发送Msg
-func (n *Node) sendMsg(conn net.Conn, head string, body interface{}) error {
-    var msg = Msg{head, body, *n.getMsgFromInfo()}
+func (n *Node) sendMsg(conn net.Conn, head int, body interface{}) error {
+    var msg = Msg{ head, *gjson.Encode(body), *n.getMsgFromInfo() }
     s, err := json.Marshal(msg)
     if err != nil {
         return err
@@ -144,6 +94,10 @@ func (n *Node) Run() {
     go n.electionHandler()
     // 心跳保持及存活性检查
     go n.heartbeatHandler()
+    // 日志同步处理
+    go n.logAutoReplicationHandler()
+    // 本地日志存储处理
+    go n.logAutoSavingHandler()
 
     // 测试
     go n.show()
@@ -152,7 +106,8 @@ func (n *Node) Run() {
 // 测试使用，展示当前节点通信的主机列表
 func (n *Node) show() {
     gtime.SetInterval(4 * time.Second, func() bool{
-        log.Println(n.Name, n.Ip, n.Peers.M, n.RaftInfo)
+        // log.Println(n.Name, n.Ip, n.Peers.M, n.RaftInfo)
+        log.Println(n.Ip, ":", n.getRaftLeader(), n.Peers.M, n.LogList.Len(), n.KVMap.M)
         return true
     })
 }

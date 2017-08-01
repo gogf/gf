@@ -2,11 +2,10 @@ package main
 
 import (
     "net"
-    "os"
-    "fmt"
     "log"
     "g/net/graft"
-    "time"
+    "fmt"
+    "g/encoding/gjson"
 )
 
 func rpcLogSet() {
@@ -16,20 +15,14 @@ func rpcLogSet() {
         return
     }
 
-    log      := graft.LogEntry{}
-    log.Id    = time.Now().UnixNano()
-    log.Act   = "set"
-    log.Key   = "name"
-    log.Value = "john"
-
-    conn.Write([]byte(""))
-    var msg [20]byte
-    n, err := conn.Read(msg[0:])
-
-    fmt.Println(string(msg[0:n]))
-    conn.Close()
+    entry      := graft.LogRequest{}
+    entry.Key   = "name"
+    entry.Value = "john"
+    fmt.Println(*gjson.Encode(entry))
+    e := graft.SendMsg(conn, 100, nil)
+    fmt.Println(e)
 }
 
 func main() {
-
+    rpcLogSet()
 }

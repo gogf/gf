@@ -7,7 +7,6 @@ import (
     "io"
     "io/ioutil"
     "sort"
-    "path"
     "fmt"
 )
 
@@ -52,21 +51,23 @@ func Info(path string) os.FileInfo {
 }
 
 // 修改时间
-func MTime(path string) (int64, error) {
+func MTime(path string) int64 {
     f, e := os.Stat(path)
     if e != nil {
-        return 0, e
+        log.Println(e)
+        return 0
     }
-    return f.ModTime().Unix(), nil
+    return f.ModTime().Unix()
 }
 
 // 文件大小(bytes)
-func Size(path string) (int64, error) {
+func Size(path string) int64 {
     f, e := os.Stat(path)
     if e != nil {
-        return 0, e
+        log.Println(e)
+        return 0
     }
-    return f.Size(), nil
+    return f.Size()
 }
 
 // 格式化文件大小
@@ -291,15 +292,15 @@ func SelfDir() string {
 
 // 获取指定文件路径的文件名称
 func Basename(path string) string {
-    return path.Base(path)
+    return filepath.Base(path)
 }
 
 // 获取指定文件路径的目录地址
 func Dir(path string) string {
-    return path.Dir(path)
+    return filepath.Dir(path)
 }
 
 // 获取指定文件路径的文件扩展名
 func Ext(path string) string {
-    return path.Ext(path)
+    return filepath.Ext(path)
 }

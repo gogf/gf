@@ -5,6 +5,7 @@ import (
     "errors"
     "strings"
     "strconv"
+    "log"
 )
 
 // json解析结果存放数组
@@ -17,12 +18,13 @@ type gJson struct {
 type gJsonVar interface{}
 
 // 解析json字符串为go变量，并返回操作对象指针
-func Decode (s *string) (*gJson, error) {
+func Decode (s *string) *gJson {
     var result interface{}
     if err := json.Unmarshal([]byte(*s), &result); err != nil {
-        return nil, errors.New("json unmarshaling failed: " + err.Error())
+        log.Println("json unmarshaling failed: " + err.Error())
+        return nil
     }
-    return &gJson{ &result }, nil
+    return &gJson{ &result }
 }
 
 // 解析json字符串为go变量
@@ -34,13 +36,14 @@ func DecodeTo (s *string, v interface{}) error {
 }
 
 // 解析go变量为json字符串，并返回json字符串指针
-func Encode (v interface{}) (*string, error) {
+func Encode (v interface{}) *string {
     s, err := json.Marshal(v)
     if err != nil {
-        return nil, errors.New("json marshaling failed: " + err.Error())
+        log.Println("json marshaling failed: " + err.Error())
+        return nil
     }
     r := string(s)
-    return &r, nil
+    return &r
 }
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
