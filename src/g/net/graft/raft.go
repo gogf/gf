@@ -15,12 +15,12 @@ import (
 
 const (
     // 集群端口定义
-    gPORT_RAFT               = 4166 // 集群协议通信接口
-    gPORT_REPL               = 4167 // 集群数据同步接口
-    gPORT_API                = 4168 // 服务器对外API接口
+    gPORT_RAFT                  = 4166 // 集群协议通信接口
+    gPORT_REPL                  = 4167 // 集群数据同步接口
+    gPORT_API                   = 4168 // 服务器对外API接口
 
     // 节点状态
-    gSTATUS_ALIVE            = iota
+    gSTATUS_ALIVE               = iota
     gSTATUS_DEAD
 
     // raft 角色
@@ -49,10 +49,14 @@ const (
     gMSG_HEAD_SCORE_COMPARE_SUCCESS
 
     // 数据同步操作
-    gREPLI_MSG_HEAD_SET    = 100
-    gREPLI_MSG_HEAD_REMOVE = 101
-    gREPLI_MSG_HEAD_LOG_REPL_HEARTBEAT = 1000
-    gREPLI_MSG_HEAD_LOG_REPL_RESPONSE  = 2000
+    gMSG_HEAD_SET    = 100
+    gMSG_HEAD_REMOVE = 101
+    gMSG_HEAD_UPDATE = 102
+
+    gMSG_HEAD_LOG_REPL_HEARTBEAT   = 1001
+    gMSG_HEAD_LOG_REPL_RESPONSE    = 2000
+    gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER   = 3003
+    gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER = 4000
 
 )
 

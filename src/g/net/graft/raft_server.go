@@ -30,7 +30,7 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
 
     msg := n.receiveMsg(conn)
     if msg.Head == gMSG_HEAD_HI2 {
-        n.Peers.Set(fromip, msg.From.Role)
+        n.Peers.Set(fromip, gSTATUS_ALIVE)
         if msg.From.Role == gROLE_LEADER {
             log.Println(n.Ip, "scanner: found leader", fromip)
             n.setLeader(fromip)

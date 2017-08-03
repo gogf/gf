@@ -193,7 +193,7 @@ func (n *Node) beginScore() {
     log.Println("begin new score")
     conns := gmap.NewStringInterfaceMap()
     // 请求比分，获取比分数据
-    for ip, status := range n.Peers.M {
+    for ip, status := range *n.Peers.Clone() {
         if status != gSTATUS_ALIVE {
             continue
         }
@@ -236,7 +236,7 @@ func (n *Node) beginScore() {
     wg.Wait()
 
     // 执行比分，对比比分数据，选举出leader
-    for ip, status := range n.Peers.M {
+    for ip, status := range *n.Peers.Clone() {
         if status != gSTATUS_ALIVE {
             continue
         }

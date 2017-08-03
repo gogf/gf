@@ -2,18 +2,12 @@ package main
 
 import (
     "fmt"
-    "g/util/grand"
+    "g/os/gfile"
 )
 
-type LogEntry struct {
-    id               int64        // 唯一ID
-    act              string       // 操作
-    key              string
-    value            string
-}
 
 func main() {
-    for i := 0; i < 10; i++ {
-        fmt.Println(grand.Rand(0, 1))
-    }
+
+    path := "/tmp/192.168.2.102.graft.db2"
+    fmt.Println(gfile.Exists(path))
 }

@@ -19,9 +19,12 @@ var Separator = string(filepath.Separator)
 func Exists(path string) bool {
     _, err := os.Stat(path)
     if err != nil {
+        if os.IsExist(err) {
+            return true
+        }
         return false
     }
-    return os.IsExist(err)
+    return true
 }
 
 // 判断所给路径是否为文件夹
