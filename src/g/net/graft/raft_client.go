@@ -12,7 +12,8 @@ import (
 
 // 获取数据
 func Receive(conn net.Conn) []byte {
-    try        := 0
+    conn.SetReadDeadline(time.Now().Add(gTCP_READ_TIMEOUT * time.Millisecond))
+    retry      := 0
     buffersize := 1024
     data       := make([]byte, 0)
     for {
@@ -20,12 +21,12 @@ func Receive(conn net.Conn) []byte {
         length, err := conn.Read(buffer)
         if err != nil {
             if err != io.EOF {
-                log.Println("node receive:", err, "try:", try)
+                log.Println("node receive:", err, "retry:", retry)
             }
-            if try > 2 {
+            if retry > gTCP_RETRY_COUNT - 1 {
                 break;
             }
-            try ++
+            retry ++
             time.Sleep(100 * time.Millisecond)
         } else {
             if length == buffersize {
@@ -41,11 +42,10 @@ func Receive(conn net.Conn) []byte {
 
 // 获取Msg
 func RecieveMsg(conn net.Conn) *Msg {
-    response := Receive(conn)
-    //log.Println(response)
-    if response != nil && len(response) > 0 {
+    data := Receive(conn)
+    if data != nil && len(data) > 0 {
         var msg Msg
-        err := json.Unmarshal(response, &msg)
+        err := json.Unmarshal(data, &msg)
         if err != nil {
             log.Println(err)
             return nil
@@ -57,15 +57,16 @@ func RecieveMsg(conn net.Conn) *Msg {
 
 // 发送数据
 func Send(conn net.Conn, data []byte) error {
-    try := 0
+    conn.SetReadDeadline(time.Now().Add(gTCP_WRITE_TIMEOUT * time.Millisecond))
+    retry := 0
     for {
         _, err := conn.Write(data)
         if err != nil {
-            log.Println("data send:", err, "try:", try)
-            if try > 2 {
+            log.Println("data send:", err, "try:", retry)
+            if retry > gTCP_RETRY_COUNT - 1 {
                 return err
             }
-            try ++
+            retry ++
             time.Sleep(100 * time.Millisecond)
         } else {
             return nil

@@ -11,6 +11,8 @@ import (
     "encoding/json"
     "g/util/gtime"
     "g/encoding/gjson"
+    "g/core/types/gmap"
+    "g/os/gfile"
 )
 
 // 局域网扫描回调函数，类似广播消息
@@ -20,17 +22,18 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
         //log.Println(fromip, "==", n.Ip)
         return
     }
-    err := n.sendMsg(conn, gRAFT_MSG_HEAD_HI, nil)
+    err := n.sendMsg(conn, gMSG_HEAD_HI, nil)
     if err != nil {
         log.Println(err)
         return
     }
 
     msg := n.receiveMsg(conn)
-    if msg.Head == gRAFT_MSG_HEAD_HI2 {
-        n.Peers.Set(fromip, msg.From.RaftInfo.Role)
-        if msg.From.RaftInfo.Role == gRAFT_ROLE_LEADER {
-            n.setRaftLeader(fromip)
+    if msg.Head == gMSG_HEAD_HI2 {
+        n.Peers.Set(fromip, msg.From.Role)
+        if msg.From.Role == gROLE_LEADER {
+            log.Println(n.Ip, "scanner: found leader", fromip)
+            n.setLeader(fromip)
         }
     }
 }
@@ -62,11 +65,28 @@ func (n *Node) sendMsg(conn net.Conn, head int, body interface{}) error {
 
 // 获得TCP链接
 func (n *Node) getConn(ip string, port int) net.Conn {
-    conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), 6*time.Second)
+    conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), 3*time.Second)
     if err == nil {
         return conn
     }
     return nil
+}
+
+// 通过连接池获取tcp链接，连接池地址是传入的conns
+func (n *Node) getConnFromPool(ip string, port int, conns *gmap.StringInterfaceMap) net.Conn {
+    var conn net.Conn
+    if result, ok := conns.Get(ip); ok {
+        conn = result.(net.Conn)
+    } else {
+        conn = n.getConn(ip, port)
+        if conn != nil {
+            conns.Set(ip, conn)
+        } else {
+            conns.Remove(ip)
+            return nil
+        }
+    }
+    return conn
 }
 
 // 获得当前节点进行数据通信时的来源信息结构
@@ -77,17 +97,31 @@ func (n *Node) getMsgFromInfo() *MsgFrom {
         Role : n.Role,
     }
     n.mutex.RUnlock()
-    from.RaftInfo.Term = n.RaftInfo.Term
-    from.RaftInfo.Role = n.RaftInfo.Role
+    from.Role = n.Role
     return &from
+}
+
+// 获取数据文件的绝对路径
+func (n *Node) getDataFilePath() string {
+    n.mutex.RLock()
+    path := n.DataPath + gfile.Separator + n.Ip + ".graft.db"
+    n.mutex.RUnlock()
+    return path
+}
+
+// 设置数据保存目录路径
+func (n *Node) SetDataPath(path string) {
+    n.mutex.Lock()
+    n.DataPath = path
+    n.mutex.Unlock()
 }
 
 // 运行节点
 func (n *Node) Run() {
     // 创建接口监听
-    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_RAFT),  n.raftTcpHandler).Run()
-    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_REPLI), n.repliTcpHandler).Run()
-    //gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gCLUSTER_PORT_API),   n.apiTcpHandler).Run()
+    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
+    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL), n.replTcpHandler).Run()
+    //gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_API),   n.apiTcpHandler).Run()
     // 通知上线
     n.sayHiToAll()
     // 选举超时检查
@@ -107,7 +141,7 @@ func (n *Node) Run() {
 func (n *Node) show() {
     gtime.SetInterval(4 * time.Second, func() bool{
         // log.Println(n.Name, n.Ip, n.Peers.M, n.RaftInfo)
-        log.Println(n.Ip, ":", n.getRaftLeader(), n.Peers.M, n.LogList.Len(), n.KVMap.M)
+        log.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), n.Peers.M, n.LogList.Len(), n.KVMap.M)
         return true
     })
 }
@@ -121,5 +155,7 @@ func (n *Node) sayHiToAll() {
     }
     startIp := fmt.Sprintf("%s.1",   segment)
     endIp   := fmt.Sprintf("%s.255", segment)
-    gscanner.New().SetTimeout(3*time.Second).ScanIp(startIp, endIp, gCLUSTER_PORT_RAFT, n.scannerRaftCallback)
+    //log.Println(n.Ip, "say hi to all")
+    gscanner.New().SetTimeout(3 * time.Second).ScanIp(startIp, endIp, gPORT_RAFT, n.scannerRaftCallback)
+    //log.Println(n.Ip, "say hi to all done")
 }

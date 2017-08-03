@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "g/util/grand"
 )
 
 type LogEntry struct {
@@ -12,7 +13,7 @@ type LogEntry struct {
 }
 
 func main() {
-    var a LogEntry
-    a.id = 1
-    fmt.Println(a)
+    for i := 0; i < 10; i++ {
+        fmt.Println(grand.Rand(0, 1))
+    }
 }

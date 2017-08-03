@@ -19,7 +19,6 @@ var Separator = string(filepath.Separator)
 func Exists(path string) bool {
     _, err := os.Stat(path)
     if err != nil {
-        log.Println(err)
         return false
     }
     return os.IsExist(err)

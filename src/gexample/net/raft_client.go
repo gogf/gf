@@ -17,10 +17,11 @@ func rpcLogSet() {
 
     entry      := graft.LogRequest{}
     entry.Key   = "name"
-    entry.Value = "john"
+    entry.Value = "john2"
     fmt.Println(*gjson.Encode(entry))
-    e := graft.SendMsg(conn, 100, nil)
+    e := graft.SendMsg(conn, 100, entry)
     fmt.Println(e)
+    conn.Close()
 }
 
 func main() {

@@ -11,41 +11,48 @@ import (
     "g/core/types/gmap"
     "sync"
     "g/core/types/glist"
-    "g/os/gfile"
 )
 
 const (
     // 集群端口定义
-    gCLUSTER_PORT_RAFT    = 4166 // 集群协议通信接口
-    gCLUSTER_PORT_REPLI   = 4167 // 集群数据同步接口
-    gCLUSTER_PORT_API     = 4168 // 服务器对外API接口
+    gPORT_RAFT               = 4166 // 集群协议通信接口
+    gPORT_REPL               = 4167 // 集群数据同步接口
+    gPORT_API                = 4168 // 服务器对外API接口
 
-    // 集群角色
-    gCLUSTER_ROLE_SERVER  = 0
-    gCLUSTER_ROLE_CLIENT  = 1
-    gCLUSTER_ROLE_MONITOR = 2
+    // 节点状态
+    gSTATUS_ALIVE            = iota
+    gSTATUS_DEAD
 
     // raft 角色
-    gRAFT_ROLE_FOLLOWER   = 0
-    gRAFT_ROLE_CANDIDATE  = 1
-    gRAFT_ROLE_LEADER     = 2
+    gROLE_FOLLOWER              = iota
+    gROLE_CANDIDATE
+    gROLE_LEADER
 
     // 超时时间设置
-    gRAFT_ELECTION_TIMEOUT_MIN = 150    // 毫秒， 官方推荐 150ms - 300ms
-    gRAFT_ELECTION_TIMEOUT_MAX = 300   // 毫秒， 官方推荐 150ms - 300ms
-    gRAFT_HEARTBEAT_TIMEOUT    = 100    // 毫秒
+    gTCP_RETRY_COUNT            = 3
+    gTCP_READ_TIMEOUT           = 3000    // 毫秒
+    gTCP_WRITE_TIMEOUT          = 3000    // 毫秒
+    gELECTION_TIMEOUT_MIN       = 1000    // 毫秒
+    gELECTION_TIMEOUT_MAX       = 3000    // 毫秒
+    gELECTION_TIMEOUT_HEARTBEAT = 500     // 毫秒
+    gLOG_REPL_TIMEOUT_HEARTBEAT = 1000    // 毫秒
 
-    gRAFT_MSG_HEAD_HI          = iota
-    gRAFT_MSG_HEAD_HI2
-    gRAFT_MSG_HEAD_HEARTBEAT
-    gRAFT_MSG_HEAD_KEEPALIVED
-    gRAFT_MSG_HEAD_I_AM_LEADER
-    gRAFT_MSG_HEAD_VOTE_REQUEST
-    gRAFT_MSG_HEAD_VOTE_YES
-    gRAFT_MSG_HEAD_VOTE_NO
+    // 选举操作
+    gMSG_HEAD_HI                = iota
+    gMSG_HEAD_HI2
+    gMSG_HEAD_HEARTBEAT
+    gMSG_HEAD_I_AM_LEADER
+    gMSG_HEAD_SCORE_REQUEST
+    gMSG_HEAD_SCORE_RESPONSE
+    gMSG_HEAD_SCORE_COMPARE_REQUEST
+    gMSG_HEAD_SCORE_COMPARE_FAILURE
+    gMSG_HEAD_SCORE_COMPARE_SUCCESS
 
+    // 数据同步操作
     gREPLI_MSG_HEAD_SET    = 100
     gREPLI_MSG_HEAD_REMOVE = 101
+    gREPLI_MSG_HEAD_LOG_REPL_HEARTBEAT = 1000
+    gREPLI_MSG_HEAD_LOG_REPL_RESPONSE  = 2000
 
 )
 
@@ -58,39 +65,38 @@ type Msg struct {
 
 // 消息来源信息
 type MsgFrom struct {
-    Name string
-    Role int
-    RaftInfo struct{
-        Role int
-        Term int
-    }
+    Name       string
+    Role       int
+    Score      int64
+    ScoreCount int
+    LastLogId  int64
 }
 
 // 服务器节点信息
 type Node struct {
-    mutex     sync.RWMutex
+    mutex            sync.RWMutex
 
-    Name      string                // 节点名称
-    Ip        string                // 主机节点的局域网ip
-    Role      int                   // 集群角色
-    Peers     *gmap.StringIntMap    // 集群所有的节点(ip->raft角色)，不包含自身
-    RaftInfo  RaftInfo
-    LastLogId int64                 // 最后一次物理化log的id，用以数据同步识别
-    LogList   *glist.SafeList       // 未提交的日志列表
-    LogChan   chan struct{}         // 用于数据同步的事件通知
-    LogCount  uint64                // 日志的总数，用以核对一致性
-    DataPath  string                // 物理存储的本地数据文件绝对路径
-    KVMap     *gmap.StringStringMap // 存储的K-V哈希表
+    Name             string                // 节点名称
+    Ip               string                // 主机节点的局域网ip
+    Peers            *gmap.StringIntMap    // 集群所有的节点(ip->节点状态)，不包含自身
+    Role             int                  // raft角色
+    Leader           string               // Leader节点ip
+    Score            int64                // 选举比分
+    ScoreCount       int                  // 选举比分的节点数
+    ElectionDeadline int64                // 选举超时时间点
+
+    LastLogId        int64                 // 最后一次未保存log的id，用以数据同步识别
+    LastSavedLogId   int64                 // 最后一次物理化log的id，用以物理化保存识别
+    LogChan          chan struct{}         // 用于数据同步的通道
+    LogList          *glist.SafeList       // 未提交的日志列表
+    LogCount         uint64                // 日志的总数，用以核对一致性
+    DataPath         string                // 物理存储的本地数据目录绝对路径
+    KVMap            *gmap.StringStringMap // 存储的K-V哈希表
 }
 
 // raft信息结构体
 type RaftInfo struct {
-    Role             int          // raft角色
-    Term             int          // 时间阶段，改进：只在数据冲突时作为处理冲突的判断条件之一
-    Leader           string       // Leader节点ip
-    VoteFor          string       // 当前node投票的节点
-    VoteCount        int          // 获得的选票数量
-    ElectionDeadline int64        // 毫秒
+
 }
 
 // 日志记录项
@@ -115,14 +121,14 @@ func NewServer(ip string) *Node {
         return nil
     }
     node := Node {
-        Name     : hostname,
-        Ip       : ip,
-        Role     : gCLUSTER_ROLE_SERVER,
-        Peers    : gmap.NewStringIntMap(),
-        DataPath : os.TempDir() + gfile.Separator + "graft.db",
-        LogList  : glist.NewSafeList(),
-        LogChan  : make(chan struct{}, 1024),
-        KVMap    : gmap.NewStringStringMap(),
+        Name         : hostname,
+        Ip           : ip,
+        Role         : gROLE_FOLLOWER,
+        Peers        : gmap.NewStringIntMap(),
+        DataPath     : os.TempDir(),
+        LogChan      : make(chan struct{}, 1024),
+        LogList      : glist.NewSafeList(),
+        KVMap        : gmap.NewStringStringMap(),
     }
     return &node
 }
