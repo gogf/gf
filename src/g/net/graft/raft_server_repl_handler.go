@@ -12,6 +12,7 @@ import (
     "g/core/types/gmap"
     "g/os/gfile"
     "g/core/types/gset"
+    "g/net/gip"
 )
 
 // 用以识别节点当前是否正在数据同步中
@@ -19,7 +20,8 @@ var isInReplication bool
 
 // 集群数据同步接口回调函数
 func (n *Node) replTcpHandler(conn net.Conn) {
-    msg := n.receiveMsg(conn)
+    msg       := n.receiveMsg(conn)
+    fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
     if msg == nil {
         //log.Println("receive nil")
         conn.Close()
@@ -55,6 +57,7 @@ func (n *Node) replTcpHandler(conn net.Conn) {
 
         // 数据同步自动检测
         case gMSG_HEAD_LOG_REPL_HEARTBEAT:
+            log.Println("receiving replication heartbeat from", fromip)
             result := gMSG_HEAD_LOG_REPL_HEARTBEAT
             if n.getLastLogId() < msg.From.LastLogId {
                 if !n.getStatusInReplication() {
@@ -168,6 +171,7 @@ func (n *Node) logAutoReplicationCheckHandler() {
                             conns.Remove(ip)
                             return
                         }
+                        log.Println("sending replication heartbeat to", ip)
                         if err := n.sendMsg(conn, gMSG_HEAD_LOG_REPL_HEARTBEAT, nil); err != nil {
                             log.Println(err)
                             conn.Close()
@@ -234,28 +238,47 @@ func (n *Node) saveLogEntry(entry LogEntry) {
 
 // 日志自动保存处理
 func (n *Node) logAutoSavingHandler() {
-    // 初始化KVMap
-    path := n.getDataFilePath()
-    if gfile.Exists(path) {
-        data := gfile.GetContents(path)
-        if data != nil {
-            log.Println("initializing kvmap from data file")
-            content := string(data)
-            gjson.DecodeTo(&content, n.KVMap)
-        }
-    } else {
-        //log.Println("no data file found at", path)
-    }
+    // 初始化节点数据
+    n.restoreData()
     // 循环监听
     for {
         if n.getLastLogId() != n.getLastSavedLogId() {
             log.Println("saving data to file")
-            data := gjson.Encode(n.KVMap)
-            gfile.PutContents(n.getDataFilePath(), *data)
-            n.setLastSavedLogId(n.getLastLogId())
+            n.saveData()
         } else {
             time.Sleep(100 * time.Millisecond)
         }
+    }
+}
+
+func (n *Node) saveData() {
+    var data SaveInfo
+    data.LastLogId = n.getLastLogId()
+    data.DataMap   = *n.KVMap.Clone()
+    content       := gjson.Encode(&data)
+    gfile.PutContents(n.getDataFilePath(), *content)
+    n.setLastSavedLogId(n.getLastLogId())
+}
+
+func (n *Node) restoreData() {
+    path := n.getDataFilePath()
+    if gfile.Exists(path) {
+        content := gfile.GetContents(path)
+        if content != nil {
+            log.Println("initializing kvmap from data file")
+            var data = SaveInfo {
+                DataMap : make(map[string]string),
+            }
+            content := string(content)
+            if gjson.DecodeTo(&content, &data) == nil {
+                m := gmap.NewStringStringMap()
+                m.BatchSet(data.DataMap)
+                n.setLastLogId(data.LastLogId)
+                n.setKVMap(m)
+            }
+        }
+    } else {
+        //log.Println("no data file found at", path)
     }
 }
 
@@ -306,6 +329,9 @@ func (n *Node) setStatusInReplication(status bool ) {
 }
 
 func (n *Node) setKVMap(m *gmap.StringStringMap) {
+    if m == nil {
+        return
+    }
     n.mutex.Lock()
     n.KVMap = m
     n.mutex.Unlock()

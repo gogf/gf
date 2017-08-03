@@ -98,9 +98,10 @@ type Node struct {
     KVMap            *gmap.StringStringMap // 存储的K-V哈希表
 }
 
-// raft信息结构体
-type RaftInfo struct {
-
+// 数据保存结构体
+type SaveInfo struct {
+    LastLogId        int64
+    DataMap          map[string]string
 }
 
 // 日志记录项
