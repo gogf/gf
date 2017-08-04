@@ -1,12 +1,10 @@
 package main
 
 import (
-    "g/net/graft"
     "g/net/gip"
     "log"
+    "g/net/graft"
 )
-
-
 
 func main() {
     ips, err := gip.IntranetIP()
@@ -16,10 +14,8 @@ func main() {
     }
 
     for _, ip := range ips {
-        //fmt.Println(ip)
         graft.NewServerByIp(ip).Run()
     }
-    select {
 
-    }
+    select { }
 }

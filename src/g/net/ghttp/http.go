@@ -5,6 +5,7 @@ import (
     "time"
     "crypto/tls"
     "log"
+    "net/url"
 )
 
 // http server结构体
@@ -14,8 +15,22 @@ type Server struct {
     handlerMap HandlerMap
 }
 
+// 请求对象
+type Request struct {
+    http.Request
+    getValues *url.Values
+}
+
+// 返回对象
+type Response struct {
+    http.ResponseWriter
+}
+
+// http回调函数
+type HandlerFunc func(*Request, *Response)
+
 // uri与回调函数的绑定记录表
-type HandlerMap map[string]http.HandlerFunc
+type HandlerMap map[string]HandlerFunc
 
 // HTTP Server 设置结构体
 type ServerConfig struct {

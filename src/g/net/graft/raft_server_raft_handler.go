@@ -27,7 +27,7 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
     switch msg.Head {
         // 上线通知
         case gMSG_HEAD_HI:
-            n.sendMsg(conn, gMSG_HEAD_HI2, nil)
+            n.sendMsg(conn, gMSG_HEAD_HI2, "")
             //log.Println("add peer:", fromip, "to", n.Ip, ", remote", conn.RemoteAddr(), ", local", conn.LocalAddr())
 
         // 心跳保持
@@ -58,14 +58,14 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
                     n.setRole(gROLE_FOLLOWER)
                 }
             }
-            n.sendMsg(conn, result, nil)
+            n.sendMsg(conn, result, "")
 
         // 选举比分获取
         case gMSG_HEAD_SCORE_REQUEST:
             if n.getRole() == gROLE_LEADER {
-                n.sendMsg(conn, gMSG_HEAD_I_AM_LEADER,  nil)
+                n.sendMsg(conn, gMSG_HEAD_I_AM_LEADER, "")
             } else {
-                n.sendMsg(conn, gMSG_HEAD_SCORE_RESPONSE,  nil)
+                n.sendMsg(conn, gMSG_HEAD_SCORE_RESPONSE, "")
             }
 
         // 选举比分对比
@@ -93,7 +93,7 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
                 n.setLeader(fromip)
                 n.setRole(gROLE_FOLLOWER)
             }
-            n.sendMsg(conn, result,  nil)
+            n.sendMsg(conn, result, "")
 
     }
 
@@ -125,7 +125,7 @@ func (n *Node) heartbeatHandler() {
                             conns.Remove(ip)
                             return
                         }
-                        if err := n.sendMsg(conn, gMSG_HEAD_HEARTBEAT, nil); err != nil {
+                        if err := n.sendMsg(conn, gMSG_HEAD_HEARTBEAT, ""); err != nil {
                             log.Println(err)
                             conn.Close()
                             conns.Remove(ip)
@@ -133,7 +133,7 @@ func (n *Node) heartbeatHandler() {
                         }
                         msg := n.receiveMsg(conn)
                         if msg == nil {
-                            log.Println(ip, "no response, removing this peer")
+                            log.Println(ip, "was dead")
                             n.Peers.Set(ip, gSTATUS_DEAD)
                             conns.Remove(ip)
                             conn.Close()
@@ -209,7 +209,7 @@ func (n *Node) beginScore() {
                 n.Peers.Set(ip, gSTATUS_DEAD)
                 return
             }
-            if err := n.sendMsg(conn, gMSG_HEAD_SCORE_REQUEST, nil); err != nil {
+            if err := n.sendMsg(conn, gMSG_HEAD_SCORE_REQUEST, ""); err != nil {
                 log.Println(err)
                 conn.Close()
                 return
@@ -255,7 +255,7 @@ func (n *Node) beginScore() {
                 return
             }
 
-            if err := n.sendMsg(conn, gMSG_HEAD_SCORE_COMPARE_REQUEST, nil); err != nil {
+            if err := n.sendMsg(conn, gMSG_HEAD_SCORE_COMPARE_REQUEST, ""); err != nil {
                 log.Println(err)
                 return
             }

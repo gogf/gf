@@ -10,9 +10,9 @@ import (
     "g/net/gscanner"
     "encoding/json"
     "g/util/gtime"
-    "g/encoding/gjson"
     "g/core/types/gmap"
     "g/os/gfile"
+    "g/net/ghttp"
 )
 
 // 局域网扫描回调函数，类似广播消息
@@ -22,7 +22,7 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
         //log.Println(fromip, "==", n.Ip)
         return
     }
-    err := n.sendMsg(conn, gMSG_HEAD_HI, nil)
+    err := n.sendMsg(conn, gMSG_HEAD_HI, "")
     if err != nil {
         log.Println(err)
         return
@@ -54,8 +54,8 @@ func (n *Node) send(conn net.Conn, data []byte) error {
 }
 
 // 发送Msg
-func (n *Node) sendMsg(conn net.Conn, head int, body interface{}) error {
-    var msg = Msg{ head, *gjson.Encode(body), *n.getMsgFromInfo() }
+func (n *Node) sendMsg(conn net.Conn, head int, body string) error {
+    var msg = Msg{ head, body, *n.getMsgFromInfo() }
     s, err := json.Marshal(msg)
     if err != nil {
         return err
@@ -93,11 +93,12 @@ func (n *Node) getConnFromPool(ip string, port int, conns *gmap.StringInterfaceM
 func (n *Node) getMsgFromInfo() *MsgFrom {
     n.mutex.RLock()
     var from = MsgFrom {
-        Name : n.Name,
-        Role : n.Role,
+        Name      : n.Name,
+        Role      : n.Role,
+        LastLogId : n.LastLogId,
+        LogCount  : n.LogCount,
     }
     n.mutex.RUnlock()
-    from.Role = n.Role
     return &from
 }
 
@@ -120,10 +121,22 @@ func (n *Node) SetDataPath(path string) {
 func (n *Node) Run() {
     // 创建接口监听
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
-    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL), n.replTcpHandler).Run()
-    //gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_API),   n.apiTcpHandler).Run()
+    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL),  n.replTcpHandler).Run()
+    ips, _  := gip.IntranetIP()
+    address := fmt.Sprintf("%s:%d", n.Ip, gPORT_API)
+    if len(ips) == 1 {
+        address = fmt.Sprintf(":%d", gPORT_API)
+    }
+    api := ghttp.NewServerByAddr(address)
+    api.BindHandle("/kv",   n.kvApiHandler)
+    api.BindHandle("/node", n.nodeApiHandler)
+    api.Run()
+
+    // 初始化节点数据
+    n.restoreData()
     // 通知上线
-    n.sayHiToAll()
+    go n.sayHiToAll()
+    time.Sleep(2 * time.Second)
     // 选举超时检查
     go n.electionHandler()
     // 心跳保持及存活性检查
@@ -134,14 +147,14 @@ func (n *Node) Run() {
     go n.logAutoSavingHandler()
 
     // 测试
-    go n.show()
+    //go n.show()
 }
 
 // 测试使用，展示当前节点通信的主机列表
 func (n *Node) show() {
     gtime.SetInterval(4 * time.Second, func() bool{
-        // log.Println(n.Name, n.Ip, n.Peers.M, n.RaftInfo)
-        log.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), n.Peers.M, n.LogList.Len(), n.KVMap.M)
+        //log.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), *n.Peers.Clone(), n.LogList.Len(), n.KVMap.M)
+        log.Println(n.Ip + ":", n.getLeader(), n.getLastLogId(), *n.Peers.Clone(), n.LogList.Len(), n.KVMap.M)
         return true
     })
 }
@@ -156,6 +169,6 @@ func (n *Node) sayHiToAll() {
     startIp := fmt.Sprintf("%s.1",   segment)
     endIp   := fmt.Sprintf("%s.255", segment)
     //log.Println(n.Ip, "say hi to all")
-    gscanner.New().SetTimeout(3 * time.Second).ScanIp(startIp, endIp, gPORT_RAFT, n.scannerRaftCallback)
+    gscanner.New().SetTimeout(6 * time.Second).ScanIp(startIp, endIp, gPORT_RAFT, n.scannerRaftCallback)
     //log.Println(n.Ip, "say hi to all done")
 }

@@ -8,7 +8,6 @@ import (
     "time"
     "log"
     "regexp"
-    "os"
 )
 
 // 执行
@@ -121,7 +120,7 @@ func (s *Server)SetServerRoot(root string) {
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server)BindHandle(pattern string, handler http.HandlerFunc )  {
+func (s *Server)BindHandle(pattern string, handler HandlerFunc )  {
     if s.handlerMap == nil {
         s.handlerMap = make(HandlerMap)
     }
@@ -129,7 +128,7 @@ func (s *Server)BindHandle(pattern string, handler http.HandlerFunc )  {
     reg    := regexp.MustCompile(`(\w+?)\s*:\s*(.+)`)
     result := reg.FindStringSubmatch(pattern)
     if len(result) > 1 {
-        key = result[1] + ":" + result[2]
+        key = strings.ToUpper(result[1]) + ":" + result[2]
     } else {
         key = strings.TrimSpace(pattern)
     }

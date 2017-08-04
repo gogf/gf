@@ -49,21 +49,20 @@ const (
     gMSG_HEAD_SCORE_COMPARE_SUCCESS
 
     // 数据同步操作
-    gMSG_HEAD_SET    = 100
-    gMSG_HEAD_REMOVE = 101
-    gMSG_HEAD_UPDATE = 102
-
-    gMSG_HEAD_LOG_REPL_HEARTBEAT   = 1001
-    gMSG_HEAD_LOG_REPL_RESPONSE    = 2000
-    gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER   = 3003
-    gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER = 4000
+    gMSG_HEAD_SET
+    gMSG_HEAD_REMOVE
+    gMSG_HEAD_UPDATE
+    gMSG_HEAD_LOG_REPL_HEARTBEAT
+    gMSG_HEAD_LOG_REPL_RESPONSE
+    gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER
+    gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER
 
 )
 
 // 消息
 type Msg struct {
     Head int
-    Body interface{}
+    Body string
     From MsgFrom
 }
 
@@ -74,6 +73,7 @@ type MsgFrom struct {
     Score      int64
     ScoreCount int
     LastLogId  int64
+    LogCount   int64
 }
 
 // 服务器节点信息
@@ -93,7 +93,7 @@ type Node struct {
     LastSavedLogId   int64                 // 最后一次物理化log的id，用以物理化保存识别
     LogChan          chan struct{}         // 用于数据同步的通道
     LogList          *glist.SafeList       // 未提交的日志列表
-    LogCount         uint64                // 日志的总数，用以核对一致性
+    LogCount         int64                 // 日志的总数，用以核对一致性
     DataPath         string                // 物理存储的本地数据目录绝对路径
     KVMap            *gmap.StringStringMap // 存储的K-V哈希表
 }
@@ -101,6 +101,7 @@ type Node struct {
 // 数据保存结构体
 type SaveInfo struct {
     LastLogId        int64
+    LogCount         int64
     DataMap          map[string]string
 }
 
@@ -118,8 +119,8 @@ type LogRequest struct {
     Value            string
 }
 
-// 创建一个服务节点
-func NewServer(ip string) *Node {
+// 绑定本地IP并创建一个服务节点
+func NewServerByIp(ip string) *Node {
     hostname, err := os.Hostname()
     if err != nil {
         log.Fatalln("getting local hostname failed")

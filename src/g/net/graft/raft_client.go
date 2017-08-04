@@ -7,7 +7,6 @@ import (
     "time"
     "io"
     "g/util/gutil"
-    "g/encoding/gjson"
 )
 
 // 获取数据
@@ -75,10 +74,10 @@ func Send(conn net.Conn, data []byte) error {
 }
 
 // 发送Msg
-func SendMsg(conn net.Conn, head int, body interface{}) error {
+func SendMsg(conn net.Conn, head int, body string) error {
     var msg = Msg{
         Head : head,
-        Body : *gjson.Encode(body),
+        Body : body,
     }
     s, err := json.Marshal(msg)
     if err != nil {

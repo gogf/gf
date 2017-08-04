@@ -5,19 +5,26 @@ import (
     "strings"
     "path/filepath"
     "g/os/gfile"
-    "g/gutil/gutil"
     "os"
     "fmt"
     "sort"
     "net/url"
+    "g/encoding/ghtml"
 )
 
 // 默认HTTP Server处理入口，底层默认使用了gorutine调用该接口
 func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
-    if f, ok := s.handlerMap[r.URL.String()]; ok {
-        f(w, r)
+    request  := Request  { *r, nil}
+    response := Response { w }
+    if f, ok := s.handlerMap[r.URL.Path]; ok {
+        f(&request, &response)
     } else {
-        s.serveFile(w, r)
+        method := strings.ToUpper(r.Method)
+        if f, ok := s.handlerMap[method + ":" + r.URL.Path]; ok {
+            f(&request, &response)
+        } else {
+            s.serveFile(w, r)
+        }
     }
 }
 
@@ -85,7 +92,7 @@ func (s *Server)listDir(w http.ResponseWriter, f http.File) {
             name += "/"
         }
         url := url.URL{Path: name}
-        fmt.Fprintf(w, "<a href=\"%s\">%s</a>\n", url.String(), gutil.HtmlSpecialChars(name))
+        fmt.Fprintf(w, "<a href=\"%s\">%s</a>\n", url.String(), ghtml.SpecialChars(name))
     }
     fmt.Fprintf(w, "</pre>\n")
 }
