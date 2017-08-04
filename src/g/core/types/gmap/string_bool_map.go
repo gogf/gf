@@ -58,11 +58,11 @@ func (this *StringBoolMap) BatchSet(m map[string]bool) {
 }
 
 // 获取键值
-func (this *StringBoolMap) Get(key string) (bool, bool) {
+func (this *StringBoolMap) Get(key string) (bool) {
 	this.m.RLock()
-	val, exists := this.M[key]
+	val, _ := this.M[key]
 	this.m.RUnlock()
-	return val, exists
+	return val
 }
 
 // 删除键值对
@@ -82,14 +82,14 @@ func (this *StringBoolMap) BatchRemove(keys []string) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *StringBoolMap) GetAndRemove(key string) (bool, bool) {
+func (this *StringBoolMap) GetAndRemove(key string) (bool) {
 	this.m.Lock()
 	val, exists := this.M[key]
 	if exists {
 		delete(this.M, key)
 	}
 	this.m.Unlock()
-	return val, exists
+	return val
 }
 
 // 返回键列表

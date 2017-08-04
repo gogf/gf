@@ -15,10 +15,13 @@ func (n *Node) kvApiHandler(r *ghttp.Request, w *ghttp.Response) {
     method := strings.ToUpper(r.Method)
     switch method {
         case "GET":
-            q := r.URL.Query()
-            k := q["k"][0]
-            io.WriteString(w, k)
-            io.WriteString(w, "hello\n")
+            k := r.GetRequest("k")
+            if k == nil {
+                w.ResponseJson(1, "", *n.KVMap.Clone())
+            } else {
+                w.ResponseJson(1, "", n.KVMap.Get(k.(string)))
+            }
+
         case "PUT":
         case "POST":
         case "DELETE":

@@ -58,11 +58,11 @@ func (this *InterfaceInterfaceMap) BatchSet(m map[interface{}]interface{}) {
 }
 
 // 获取键值
-func (this *InterfaceInterfaceMap) Get(key interface{}) (interface{}, bool) {
+func (this *InterfaceInterfaceMap) Get(key interface{}) (interface{}) {
 	this.m.RLock()
-	val, exists := this.M[key]
+	val, _ := this.M[key]
 	this.m.RUnlock()
-	return val, exists
+	return val
 }
 
 // 删除键值对
@@ -82,14 +82,14 @@ func (this *InterfaceInterfaceMap) BatchRemove(keys []interface{}) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *InterfaceInterfaceMap) GetAndRemove(key interface{}) (interface{}, bool) {
+func (this *InterfaceInterfaceMap) GetAndRemove(key interface{}) (interface{}) {
 	this.m.Lock()
 	val, exists := this.M[key]
 	if exists {
 		delete(this.M, key)
 	}
 	this.m.Unlock()
-	return val, exists
+	return val
 }
 
 // 返回键列表

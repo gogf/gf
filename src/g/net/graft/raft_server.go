@@ -75,7 +75,7 @@ func (n *Node) getConn(ip string, port int) net.Conn {
 // 通过连接池获取tcp链接，连接池地址是传入的conns
 func (n *Node) getConnFromPool(ip string, port int, conns *gmap.StringInterfaceMap) net.Conn {
     var conn net.Conn
-    if result, ok := conns.Get(ip); ok {
+    if result := conns.Get(ip); result != nil {
         conn = result.(net.Conn)
     } else {
         conn = n.getConn(ip, port)

@@ -58,11 +58,11 @@ func (this *Int64StringMap) BatchSet(m map[int64]string) {
 }
 
 // 获取键值
-func (this *Int64StringMap) Get(key int64) (string, bool) {
+func (this *Int64StringMap) Get(key int64) (string) {
 	this.m.RLock()
-	val, exists := this.M[key]
+	val, _ := this.M[key]
 	this.m.RUnlock()
-	return val, exists
+	return val
 }
 
 // 删除键值对
@@ -82,14 +82,14 @@ func (this *Int64StringMap) BatchRemove(keys []int64) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *Int64StringMap) GetAndRemove(key int64) (string, bool) {
+func (this *Int64StringMap) GetAndRemove(key int64) (string) {
     this.m.Lock()
     val, exists := this.M[key]
     if exists {
         delete(this.M, key)
     }
     this.m.Unlock()
-    return val, exists
+    return val
 }
 
 // 返回键列表
@@ -116,8 +116,10 @@ func (this *Int64StringMap) Values() []string {
 
 // 是否存在某个键
 func (this *Int64StringMap) Contains(key int64) bool {
-	_, exists := this.Get(key)
-	return exists
+    this.m.RLock()
+    _, exists := this.M[key]
+    this.m.RUnlock()
+    return exists
 }
 
 // 哈希表大小

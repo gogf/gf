@@ -58,11 +58,11 @@ func (this *StringIntMap) BatchSet(m map[string]int) {
 }
 
 // 获取键值
-func (this *StringIntMap) Get(key string) (int, bool) {
+func (this *StringIntMap) Get(key string) (int) {
 	this.m.RLock()
-	val, exists := this.M[key]
+	val, _ := this.M[key]
     this.m.RUnlock()
-	return val, exists
+	return val
 }
 
 // 删除键值对
@@ -82,14 +82,14 @@ func (this *StringIntMap) BatchRemove(keys []string) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *StringIntMap) GetAndRemove(key string) (int, bool) {
+func (this *StringIntMap) GetAndRemove(key string) (int) {
     this.m.Lock()
     val, exists := this.M[key]
     if exists {
         delete(this.M, key)
     }
     this.m.Unlock()
-    return val, exists
+    return val
 }
 
 // 返回键列表
@@ -116,7 +116,9 @@ func (this *StringIntMap) Values() []int {
 
 // 是否存在某个键
 func (this *StringIntMap) Contains(key string) bool {
-    _, exists := this.Get(key)
+    this.m.RLock()
+    _, exists := this.M[key]
+    this.m.RUnlock()
     return exists
 }
 

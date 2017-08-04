@@ -58,11 +58,11 @@ func (this *Int64InterfaceMap) BatchSet(m map[int64]interface{}) {
 }
 
 // 获取键值
-func (this *Int64InterfaceMap) Get(key int64) (interface{}, bool) {
+func (this *Int64InterfaceMap) Get(key int64) (interface{}) {
 	this.m.RLock()
-	val, exists := this.M[key]
+	val, _ := this.M[key]
 	this.m.RUnlock()
-	return val, exists
+	return val
 }
 
 // 删除键值对
@@ -82,14 +82,14 @@ func (this *Int64InterfaceMap) BatchRemove(keys []int64) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *Int64InterfaceMap) GetAndRemove(key int64) (interface{}, bool) {
+func (this *Int64InterfaceMap) GetAndRemove(key int64) (interface{}) {
     this.m.Lock()
     val, exists := this.M[key]
     if exists {
         delete(this.M, key)
     }
     this.m.Unlock()
-    return val, exists
+    return val
 }
 
 // 返回键列表
@@ -116,8 +116,10 @@ func (this *Int64InterfaceMap) Values() []interface{} {
 
 // 是否存在某个键
 func (this *Int64InterfaceMap) Contains(key int64) bool {
-	_, exists := this.Get(key)
-	return exists
+    this.m.RLock()
+    _, exists := this.M[key]
+    this.m.RUnlock()
+    return exists
 }
 
 // 哈希表大小
