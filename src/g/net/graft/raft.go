@@ -107,16 +107,9 @@ type SaveInfo struct {
 
 // 日志记录项
 type LogEntry struct {
-    Id               int64        // 唯一ID
+    Id               int64                  // 唯一ID
     Act              int
-    Key              string
-    Value            string
-}
-
-// 日志请求，用以向leader发送日志请求，不带ID，ID由leader统一生成
-type LogRequest struct {
-    Key              string
-    Value            string
+    Items            interface{}            // map[string]string或[]string
 }
 
 // 绑定本地IP并创建一个服务节点

@@ -9,22 +9,22 @@ import (
 )
 
 // json解析结果存放数组
-type gJson struct {
+type Json struct {
     // 注意这是一个指针
     value *interface{}
 }
 
 // 一个json变量
-type gJsonVar interface{}
+type JsonVar interface{}
 
 // 解析json字符串为go变量，并返回操作对象指针
-func Decode (s *string) *gJson {
+func Decode (s *string) *Json {
     var result interface{}
     if err := json.Unmarshal([]byte(*s), &result); err != nil {
         log.Println("json unmarshaling failed: " + err.Error())
         return nil
     }
-    return &gJson{ &result }
+    return &Json{ &result }
 }
 
 // 解析json字符串为go变量
@@ -48,7 +48,7 @@ func Encode (v interface{}) *string {
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (p *gJson) GetMap(pattern string) map[string]interface{} {
+func (p *Json) GetMap(pattern string) map[string]interface{} {
     result := p.Get(pattern)
     if result != nil {
         if r, ok := result.(map[string]interface{}); ok {
@@ -60,7 +60,7 @@ func (p *gJson) GetMap(pattern string) map[string]interface{} {
 
 // 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (p *gJson) GetArray(pattern string) []interface{} {
+func (p *Json) GetArray(pattern string) []interface{} {
     result := p.Get(pattern)
     if result != nil {
         if r, ok := result.([]interface{}); ok {
@@ -71,7 +71,7 @@ func (p *gJson) GetArray(pattern string) []interface{} {
 }
 
 // 返回指定json中的string
-func (p *gJson) GetString(pattern string) string {
+func (p *Json) GetString(pattern string) string {
     result := p.Get(pattern)
     if result != nil {
         if r, ok := result.(string); ok {
@@ -82,7 +82,7 @@ func (p *gJson) GetString(pattern string) string {
 }
 
 // 返回指定json中的float64
-func (p *gJson) GetNumber(pattern string) float64 {
+func (p *Json) GetNumber(pattern string) float64 {
     result := p.Get(pattern)
     if result != nil {
         if r, ok := result.(float64); ok {
@@ -96,7 +96,7 @@ func (p *gJson) GetNumber(pattern string) float64 {
 // 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
 // 返回的结果类型的interface{}，因此需要自己做类型转换
 // 如果找不到对应节点的数据，返回nil
-func (p *gJson) Get(pattern string) interface{} {
+func (p *Json) Get(pattern string) interface{} {
     var result interface{}
     pointer  := p.value
     array    := strings.Split(pattern, ".")
@@ -133,6 +133,29 @@ func (p *gJson) Get(pattern string) interface{} {
     }
     return result
 }
+
+// 转换为map[string]interface{}类型,如果转换失败，返回nil
+func (p *Json) ToMap() map[string]interface{} {
+    pointer := p.value
+    switch (*pointer).(type) {
+        case map[string]interface{}:
+            return (*pointer).(map[string]interface{})
+        default:
+            return nil
+    }
+}
+
+// 转换为[]interface{}类型,如果转换失败，返回nil
+func (p *Json) ToArray() []interface{} {
+    pointer := p.value
+    switch (*pointer).(type) {
+        case []interface{}:
+            return (*pointer).([]interface{})
+        default:
+            return nil
+    }
+}
+
 
 // 判断所给字符串是否为数字
 func isNumeric(s string) bool  {

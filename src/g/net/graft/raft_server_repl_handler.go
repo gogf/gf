@@ -32,13 +32,12 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         case gMSG_HEAD_REMOVE:
             n.setStatusInReplication(true)
             if n.getRole() == gROLE_LEADER {
-                var item LogRequest
-                if gjson.DecodeTo(&msg.Body, &item) == nil {
+                var items interface{}
+                if gjson.DecodeTo(&msg.Body, &items) == nil {
                     var entry = LogEntry {
                         Id    : time.Now().UnixNano(),
                         Act   : msg.Head,
-                        Key   : item.Key,
-                        Value : item.Value,
+                        Items : items,
                     }
                     n.LogList.PushFront(entry)
                     n.LogChan <- struct{}{}
@@ -227,11 +226,17 @@ func (n *Node) saveLogEntry(entry LogEntry) {
     switch entry.Act {
         case gMSG_HEAD_SET:
             log.Println("setting log entry", entry)
-            n.KVMap.Set(entry.Key, entry.Value)
+            for k, v := range entry.Items.(map[string]interface{}) {
+                n.KVMap.Set(k, v.(string))
+            }
+
 
         case gMSG_HEAD_REMOVE:
             log.Println("removing log entry", entry)
-            n.KVMap.Remove(entry.Key)
+            for _, v := range entry.Items.([]interface{}) {
+                n.KVMap.Remove(v.(string))
+            }
+
     }
     n.setLastLogId(entry.Id)
     n.addLogCount()

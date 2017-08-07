@@ -8,6 +8,11 @@ import (
     "net/url"
 )
 
+// http客户端
+type Client struct {
+    http.Client
+}
+
 // http server结构体
 type Server struct {
     server     http.Server
@@ -18,12 +23,13 @@ type Server struct {
 // 请求对象
 type Request struct {
     http.Request
-    getValues *url.Values
+    getvals *url.Values
 }
 
 // 返回对象
 type Response struct {
-    http.ResponseWriter
+    http.Response
+    writer http.ResponseWriter
 }
 
 // http回调函数
@@ -67,6 +73,11 @@ var defaultServerConfig = ServerConfig {
 // 修改默认的http server配置
 func SetDefaultServerConfig (c ServerConfig) {
     defaultServerConfig = c
+}
+
+// http客户端对象指针
+func NewClient() (*Client) {
+    return &Client{}
 }
 
 // 创建一个默认配置的HTTP Server(默认监听端口是80)

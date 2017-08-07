@@ -122,15 +122,17 @@ func (n *Node) Run() {
     // 创建接口监听
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL),  n.replTcpHandler).Run()
-    ips, _  := gip.IntranetIP()
-    address := fmt.Sprintf("%s:%d", n.Ip, gPORT_API)
-    if len(ips) == 1 {
-        address = fmt.Sprintf(":%d", gPORT_API)
-    }
-    api := ghttp.NewServerByAddr(address)
-    api.BindHandle("/kv",   n.kvApiHandler)
-    api.BindHandle("/node", n.nodeApiHandler)
-    api.Run()
+    go func() {
+        ips, _  := gip.IntranetIP()
+        address := fmt.Sprintf("%s:%d", n.Ip, gPORT_API)
+        if len(ips) == 1 {
+            address = fmt.Sprintf(":%d", gPORT_API)
+        }
+        api := ghttp.NewServerByAddr(address)
+        api.BindHandle("/kv",   n.kvApiHandler)
+        api.BindHandle("/node", n.nodeApiHandler)
+        api.Run()
+    }()
 
     // 初始化节点数据
     n.restoreData()

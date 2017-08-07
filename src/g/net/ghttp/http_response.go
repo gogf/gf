@@ -3,6 +3,8 @@ package ghttp
 import (
     "g/encoding/gjson"
     "io"
+    "io/ioutil"
+    "log"
 )
 
 type ResponseJson struct {
@@ -11,6 +13,19 @@ type ResponseJson struct {
     Data    interface{} `json:"data"`
 }
 
+// 返回固定格式的json
 func (r *Response) ResponseJson(result int, message string, data interface{}) {
-    io.WriteString(r, *gjson.Encode(ResponseJson{ result, message, data }))
+    io.WriteString(r.writer, *gjson.Encode(ResponseJson{ result, message, data }))
+}
+
+// 获取返回的数据
+func (r *Response) ReadAll() string {
+    body, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        log.Println(err)
+        r.Body.Close()
+        return ""
+    }
+    r.Body.Close()
+    return string(body)
 }

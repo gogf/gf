@@ -14,8 +14,8 @@ import (
 
 // 默认HTTP Server处理入口，底层默认使用了gorutine调用该接口
 func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
-    request  := Request  { *r, nil}
-    response := Response { w }
+    request  := Request  { *r, nil }
+    response := Response { writer: w }
     if f, ok := s.handlerMap[r.URL.Path]; ok {
         f(&request, &response)
     } else {
