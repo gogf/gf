@@ -10,6 +10,7 @@ import (
     "g/util/grand"
     "g/core/types/gset"
     "g/core/types/gmap"
+    "g/encoding/gjson"
 )
 
 // 集群协议通信接口回调函数
@@ -95,6 +96,9 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
             }
             n.sendMsg(conn, result, "")
 
+        // 节点信息查询
+        case gMSG_HEAD_PEERS_INFO:
+            n.sendMsg(conn, gMSG_HEAD_PEERS_INFO, *gjson.Encode(*n.PeersInfo.Clone()))
     }
 
     n.raftTcpHandler(conn)
@@ -139,6 +143,14 @@ func (n *Node) heartbeatHandler() {
                             conn.Close()
                             return
                         } else {
+                            // 更新节点信息
+                            n.updateNodeInfo(ip, NodeInfo {
+                                Name          : msg.From.Name,
+                                Ip            : ip,
+                                LastLogId     : msg.From.LastLogId,
+                                LogCount      : msg.From.LogCount,
+                                LastHeartbeat : time.Now().String(),
+                            })
                             switch msg.Head {
                                 case gMSG_HEAD_I_AM_LEADER:
                                     log.Println("two leader occured, set", ip, "as my leader, done heartbeating")
@@ -153,7 +165,7 @@ func (n *Node) heartbeatHandler() {
                 }(ip, conn)
             }
         }
-        time.Sleep(100 * time.Millisecond)
+        time.Sleep(gELECTION_TIMEOUT_HEARTBEAT * time.Millisecond)
     }
 }
 
@@ -367,6 +379,11 @@ func (n *Node) setLeader(ip string) {
     n.mutex.Lock()
     n.Leader    = ip
     n.mutex.Unlock()
+}
+
+// 更新节点信息
+func (n *Node) updateNodeInfo(ip string, info NodeInfo) {
+    n.PeersInfo.Set(ip, info)
 }
 
 // 更新选举截止时间

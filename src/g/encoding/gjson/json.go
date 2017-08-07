@@ -27,7 +27,7 @@ func Decode (s *string) *Json {
     return &Json{ &result }
 }
 
-// 解析json字符串为go变量
+// 解析json字符串为go变量，注意第二个参数为指针
 func DecodeTo (s *string, v interface{}) error {
     if err := json.Unmarshal([]byte(*s), v); err != nil {
         return errors.New("json unmarshaling failed: " + err.Error())

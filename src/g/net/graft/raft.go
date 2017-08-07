@@ -57,6 +57,8 @@ const (
     gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER
     gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER
 
+    // API相关
+    gMSG_HEAD_PEERS_INFO
 )
 
 // 消息
@@ -80,22 +82,32 @@ type MsgFrom struct {
 type Node struct {
     mutex            sync.RWMutex
 
-    Name             string                // 节点名称
-    Ip               string                // 主机节点的局域网ip
-    Peers            *gmap.StringIntMap    // 集群所有的节点(ip->节点状态)，不包含自身
-    Role             int                  // raft角色
-    Leader           string               // Leader节点ip
-    Score            int64                // 选举比分
-    ScoreCount       int                  // 选举比分的节点数
-    ElectionDeadline int64                // 选举超时时间点
+    Name             string                   // 节点名称
+    Ip               string                   // 主机节点的局域网ip
+    Peers            *gmap.StringIntMap       // 集群所有的节点(ip->节点状态)，不包含自身
+    PeersInfo        *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
+    Role             int                      // raft角色
+    Leader           string                   // Leader节点ip
+    Score            int64                    // 选举比分
+    ScoreCount       int                      // 选举比分的节点数
+    ElectionDeadline int64                    // 选举超时时间点
 
-    LastLogId        int64                 // 最后一次未保存log的id，用以数据同步识别
-    LastSavedLogId   int64                 // 最后一次物理化log的id，用以物理化保存识别
-    LogChan          chan struct{}         // 用于数据同步的通道
-    LogList          *glist.SafeList       // 未提交的日志列表
-    LogCount         int64                 // 日志的总数，用以核对一致性
-    DataPath         string                // 物理存储的本地数据目录绝对路径
-    KVMap            *gmap.StringStringMap // 存储的K-V哈希表
+    LastLogId        int64                    // 最后一次未保存log的id，用以数据同步识别
+    LastSavedLogId   int64                    // 最后一次物理化log的id，用以物理化保存识别
+    LogChan          chan struct{}            // 用于数据同步的通道
+    LogList          *glist.SafeList          // 未提交的日志列表
+    LogCount         int64                    // 日志的总数，用以核对一致性
+    DataPath         string                   // 物理存储的本地数据目录绝对路径
+    KVMap            *gmap.StringStringMap    // 存储的K-V哈希表
+}
+
+// 节点信息
+type NodeInfo struct {
+    Name             string
+    Ip               string
+    LastLogId        int64
+    LogCount         int64
+    LastHeartbeat    string
 }
 
 // 数据保存结构体
@@ -124,6 +136,7 @@ func NewServerByIp(ip string) *Node {
         Ip           : ip,
         Role         : gROLE_FOLLOWER,
         Peers        : gmap.NewStringIntMap(),
+        PeersInfo    : gmap.NewStringInterfaceMap(),
         DataPath     : os.TempDir(),
         LogChan      : make(chan struct{}, 1024),
         LogList      : glist.NewSafeList(),

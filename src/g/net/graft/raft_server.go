@@ -119,6 +119,9 @@ func (n *Node) SetDataPath(path string) {
 
 // 运行节点
 func (n *Node) Run() {
+    // 初始化节点数据
+    n.restoreData()
+
     // 创建接口监听
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
     gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL),  n.replTcpHandler).Run()
@@ -134,8 +137,6 @@ func (n *Node) Run() {
         api.Run()
     }()
 
-    // 初始化节点数据
-    n.restoreData()
     // 通知上线
     go n.sayHiToAll()
     time.Sleep(2 * time.Second)
