@@ -1,6 +1,6 @@
 /*
     使用raft算法处理集群的一致性
-    @todo 当集群节点 < 3时的leader选取问题
+    @todo 解决split brains造成的数据一致性问题
  */
 
 package graft
@@ -49,6 +49,7 @@ const (
     gMSG_HEAD_SCORE_COMPARE_REQUEST
     gMSG_HEAD_SCORE_COMPARE_FAILURE
     gMSG_HEAD_SCORE_COMPARE_SUCCESS
+    gMSG_HEAD_SPLIT_BRAINS_OCCURRED
 
     // 数据同步操作
     gMSG_HEAD_SET
@@ -87,8 +88,7 @@ type Node struct {
 
     LastLogId        int64                    // 最后一次未保存log的id，用以数据同步识别
     LastSavedLogId   int64                    // 最后一次物理化log的id，用以物理化保存识别
-    LogChan          chan struct{}            // 用于数据同步的通道
-    LogList          *glist.SafeList          // 未提交的日志列表
+    LogList          *glist.SafeList          // leader日志列表，用以数据同步
     LogCount         int64                    // 日志的总数，用以核对一致性
     DataPath         string                   // 物理存储的本地数据目录绝对路径
     KVMap            *gmap.StringStringMap    // 存储的K-V哈希表
@@ -136,7 +136,6 @@ func NewServerByIp(ip string) *Node {
         Role         : gROLE_FOLLOWER,
         Peers        : gmap.NewStringInterfaceMap(),
         DataPath     : os.TempDir(),
-        LogChan      : make(chan struct{}, 1024),
         LogList      : glist.NewSafeList(),
         KVMap        : gmap.NewStringStringMap(),
     }

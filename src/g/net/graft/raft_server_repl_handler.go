@@ -8,7 +8,6 @@ import (
     "g/encoding/gjson"
     "time"
     "log"
-    "sync"
     "g/core/types/gmap"
     "g/os/gfile"
     "g/core/types/gset"
@@ -40,7 +39,7 @@ func (n *Node) replTcpHandler(conn net.Conn) {
                         Items : items,
                     }
                     n.LogList.PushFront(entry)
-                    n.LogChan <- struct{}{}
+                    n.saveLogEntry(entry)
                 }
             } else {
                 var entry LogEntry
@@ -80,7 +79,7 @@ func (n *Node) replTcpHandler(conn net.Conn) {
                 n.replTcpHandler(conn)
             }
 
-        // 数据完整同步更新
+        // 数据同步
         case gMSG_HEAD_UPDATE:
             log.Println("receive data replication update")
             if n.getLastLogId() < msg.Info.LastLogId || n.getLogCount() < msg.Info.LogCount {
@@ -97,59 +96,8 @@ func (n *Node) replTcpHandler(conn net.Conn) {
     conn.Close()
 }
 
-// leader到其他节点的数据同步监听
-func (n *Node) logAutoReplicationHandler() {
-    var wg sync.WaitGroup
-    // 初始化数据同步心跳检测
-    go n.logAutoReplicationCheckHandler()
-
-    for {
-        select {
-            case <- n.LogChan:
-                n.setStatusInReplication(true)
-                conns := gmap.NewStringInterfaceMap()
-                for {
-                    item := n.LogList.PopBack()
-                    if item == nil {
-                        break;
-                    }
-                    entry := item.(LogEntry)
-                    log.Println("sending log entry", entry)
-                    for _, v := range n.Peers.Values() {
-                        info := v.(NodeInfo)
-                        if info.Status != gSTATUS_ALIVE {
-                            continue
-                        }
-                        conn := n.getConnFromPool(info.Ip, gPORT_REPL, conns)
-                        if conn != nil {
-                            wg.Add(1)
-                            go func(conn net.Conn, entry LogEntry) {
-                                if err := n.sendMsg(conn, entry.Act, *gjson.Encode(entry)); err != nil {
-                                    log.Println(err)
-                                    conn.Close()
-                                    wg.Done()
-                                    return
-                                }
-                                n.receiveMsg(conn)
-                                wg.Done()
-                            }(conn, entry)
-                        }
-                    }
-                    wg.Wait()
-                    // 当所有节点的请求处理后，再保存数据到自身
-                    // 以便leader与follower之间的数据同步判断
-                    n.saveLogEntry(entry)
-                }
-                n.setStatusInReplication(false)
-                for _, c := range conns.M {
-                    c.(net.Conn).Close()
-                }
-        }
-    }
-}
-
 // 日志自动同步检查，类似心跳
-func (n *Node) logAutoReplicationCheckHandler() {
+func (n *Node) logAutoReplicationHandler() {
     conns := gset.NewStringSet()
     for {
         if n.getRole() == gROLE_LEADER {
@@ -259,6 +207,7 @@ func (n *Node) logAutoSavingHandler() {
     }
 }
 
+// 保存数据到磁盘
 func (n *Node) saveData() {
     var data SaveInfo
     data.LastLogId = n.getLastLogId()

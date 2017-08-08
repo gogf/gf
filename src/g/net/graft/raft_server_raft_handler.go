@@ -40,7 +40,6 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
             n.updateElectionDeadline()
             result := gMSG_HEAD_HEARTBEAT
             if n.getRole() == gROLE_LEADER {
-                // 脑裂问题处理
                 if n.getScoreCount() > msg.Info.ScoreCount {
                     result = gMSG_HEAD_I_AM_LEADER
                 } else if n.getScoreCount() == msg.Info.ScoreCount {
@@ -57,10 +56,17 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
                     n.setLeader(msg.Info.Ip)
                     n.setRole(gROLE_FOLLOWER)
                 }
+            } else if n.getLeader() == "" {
+                n.setLeader(msg.Info.Ip)
+                n.setRole(gROLE_FOLLOWER)
             } else {
+                // 脑裂问题，一个节点处于两个网路中，并且两个网络的leader无法相互通信，会引起数据一致性问题
                 if n.getLeader() != msg.Info.Ip {
-                    n.setLeader(msg.Info.Ip)
-                    n.setRole(gROLE_FOLLOWER)
+                    if  n.getScoreCount() < msg.Info.ScoreCount ||
+                        (n.getScoreCount() == msg.Info.ScoreCount && n.getLastLogId() < msg.Info.LastLogId) {
+                        n.setLeader(msg.Info.Ip)
+                        n.setRole(gROLE_FOLLOWER)
+                    }
                 }
             }
             n.sendMsg(conn, result, "")
@@ -143,7 +149,6 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
             n.sendMsg(conn, gMSG_HEAD_RAFT_RESPONSE, "")
 
         // 删除节点
-        // 注意，如果试图移除一个活跃的节点，将会失败
         case gMSG_HEAD_PEERS_REMOVE:
             list := make([]string, 0)
             gjson.DecodeTo(&msg.Body, &list)
@@ -184,7 +189,8 @@ func (n *Node) heartbeatHandler() {
                 conns.Add(info.Ip)
                 go func(ip string, conn net.Conn) {
                     for {
-                        if n.getRole() != gROLE_LEADER {
+                        // 如果当前节点不再是leader，或者节点表中已经删除该节点信息
+                        if n.getRole() != gROLE_LEADER || !n.Peers.Contains(ip){
                             conn.Close()
                             conns.Remove(ip)
                             return
