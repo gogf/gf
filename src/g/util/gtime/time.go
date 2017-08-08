@@ -30,3 +30,8 @@ func SetInterval(t time.Duration, callback func() bool) {
 func Millisecond() int64 {
     return time.Now().UnixNano()/1e6
 }
+
+// 获取当前的秒数(时间戳)
+func Second() int64 {
+    return time.Now().UnixNano()/1e9
+}

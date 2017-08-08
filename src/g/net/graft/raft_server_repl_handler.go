@@ -12,6 +12,7 @@ import (
     "g/core/types/gmap"
     "g/os/gfile"
     "g/core/types/gset"
+    "g/util/gtime"
 )
 
 // 用以识别节点当前是否正在数据同步中
@@ -47,32 +48,32 @@ func (n *Node) replTcpHandler(conn net.Conn) {
                 n.saveLogEntry(entry)
             }
             n.setStatusInReplication(false)
-            n.sendMsg(conn, gMSG_HEAD_LOG_REPL_RESPONSE, "")
+            n.sendMsg(conn, gMSG_HEAD_REPL_RESPONSE, "")
 
         // 数据同步自动检测
-        case gMSG_HEAD_LOG_REPL_HEARTBEAT:
-            result := gMSG_HEAD_LOG_REPL_HEARTBEAT
+        case gMSG_HEAD_REPL_HEARTBEAT:
+            result := gMSG_HEAD_REPL_HEARTBEAT
             //log.Println("heartbeat:", n.getLastLogId(), msg.Info.LastLogId, n.getStatusInReplication())
             if n.getLogCount() < msg.Info.LogCount {
                 if !n.getStatusInReplication() {
-                    result = gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER
+                    result = gMSG_HEAD_REPL_NEED_UPDATE_FOLLOWER
                 }
             } else if n.getLogCount() > msg.Info.LogCount {
                 if !n.getStatusInReplication() {
-                    result = gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER
+                    result = gMSG_HEAD_REPL_NEED_UPDATE_LEADER
                 }
             } else {
                 if n.getLastLogId() < msg.Info.LastLogId {
                     if !n.getStatusInReplication() {
-                        result = gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER
+                        result = gMSG_HEAD_REPL_NEED_UPDATE_FOLLOWER
                     }
                 } else if n.getLastLogId() > msg.Info.LastLogId {
                     if !n.getStatusInReplication() {
-                        result = gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER
+                        result = gMSG_HEAD_REPL_NEED_UPDATE_LEADER
                     }
                 }
             }
-            if result == gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER {
+            if result == gMSG_HEAD_REPL_NEED_UPDATE_LEADER {
                 n.sendMsg(conn, result, *gjson.Encode(*n.KVMap.Clone()))
             } else {
                 n.sendMsg(conn, result, "")
@@ -82,14 +83,15 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         // 数据完整同步更新
         case gMSG_HEAD_UPDATE:
             log.Println("receive data replication update")
-            if n.getLastLogId() < msg.Info.LastLogId {
+            if n.getLastLogId() < msg.Info.LastLogId || n.getLogCount() < msg.Info.LogCount {
                 if !n.getStatusInReplication() {
                     if n.updateFromDataMapJson(&msg.Body) == nil {
                         n.setLastLogId(msg.Info.LastLogId)
+                        n.setLogCount(msg.Info.LogCount)
                     }
                 }
             }
-            n.sendMsg(conn, gMSG_HEAD_LOG_REPL_RESPONSE, "")
+            n.sendMsg(conn, gMSG_HEAD_REPL_RESPONSE, "")
     }
 
     conn.Close()
@@ -174,7 +176,7 @@ func (n *Node) logAutoReplicationCheckHandler() {
                             return
                         }
                         //log.Println("sending replication heartbeat to", ip)
-                        if err := n.sendMsg(conn, gMSG_HEAD_LOG_REPL_HEARTBEAT, ""); err != nil {
+                        if err := n.sendMsg(conn, gMSG_HEAD_REPL_HEARTBEAT, ""); err != nil {
                             log.Println(err)
                             conn.Close()
                             conns.Remove(ip)
@@ -188,7 +190,7 @@ func (n *Node) logAutoReplicationCheckHandler() {
                             return
                         } else {
                             switch msg.Head {
-                                case gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER:
+                                case gMSG_HEAD_REPL_NEED_UPDATE_FOLLOWER:
                                     log.Println("request data replication update to", ip)
                                     if err := n.sendMsg(conn, gMSG_HEAD_UPDATE, *gjson.Encode(*n.KVMap.Clone())); err != nil {
                                         log.Println(err)
@@ -201,7 +203,7 @@ func (n *Node) logAutoReplicationCheckHandler() {
                                         log.Println("follower data replication update done")
                                     }
 
-                                case gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER:
+                                case gMSG_HEAD_REPL_NEED_UPDATE_LEADER:
                                     log.Println("request data replication update from", ip)
                                     if n.updateFromDataMapJson(&msg.Body) == nil {
                                         n.setLastLogId(msg.Info.LastLogId)
@@ -245,10 +247,12 @@ func (n *Node) saveLogEntry(entry LogEntry) {
 
 // 日志自动保存处理
 func (n *Node) logAutoSavingHandler() {
+    t := gtime.Millisecond()
     for {
-        if n.getLastLogId() != n.getLastSavedLogId() {
-            log.Println("saving data to file")
+        if n.getLastLogId() != n.getLastSavedLogId() || gtime.Millisecond() - t > gLOG_REPL_AUTOSAVE_INTERVAL {
+            //log.Println("saving data to file")
             n.saveData()
+            t = gtime.Millisecond()
         } else {
             time.Sleep(100 * time.Millisecond)
         }
@@ -259,6 +263,7 @@ func (n *Node) saveData() {
     var data SaveInfo
     data.LastLogId = n.getLastLogId()
     data.LogCount  = n.getLogCount()
+    data.Peers     = *n.Peers.Clone()
     data.DataMap   = *n.KVMap.Clone()
     content       := gjson.Encode(&data)
     gfile.PutContents(n.getDataFilePath(), *content)
@@ -273,16 +278,24 @@ func (n *Node) restoreData() {
         if content != nil {
             //log.Println("initializing kvmap from data file")
             var data = SaveInfo {
+                Peers   : make(map[string]interface{}),
                 DataMap : make(map[string]string),
             }
             content := string(content)
             if gjson.DecodeTo(&content, &data) == nil {
-                m := gmap.NewStringStringMap()
-                m.BatchSet(data.DataMap)
+                dataMap := gmap.NewStringStringMap()
+                peerMap := gmap.NewStringInterfaceMap()
+                infoMap := make(map[string]NodeInfo)
+                gjson.DecodeTo(gjson.Encode(data.Peers), &infoMap)
+                dataMap.BatchSet(data.DataMap)
+                for k, v := range infoMap {
+                    peerMap.Set(k, v)
+                }
                 n.setLastLogId(data.LastLogId)
                 n.setLastSavedLogId(data.LastLogId)
                 n.setLogCount(data.LogCount)
-                n.setKVMap(m)
+                n.setPeers(peerMap)
+                n.setKVMap(dataMap)
             }
         }
     } else {
@@ -352,6 +365,15 @@ func (n *Node) setLogCount(c int64) {
 func (n *Node) setStatusInReplication(status bool ) {
     n.mutex.Lock()
     isInReplication = status
+    n.mutex.Unlock()
+}
+
+func (n *Node) setPeers(m *gmap.StringInterfaceMap) {
+    if m == nil {
+        return
+    }
+    n.mutex.Lock()
+    n.Peers = m
     n.mutex.Unlock()
 }
 

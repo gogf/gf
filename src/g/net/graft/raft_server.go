@@ -34,6 +34,7 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
         if msg.Info.Role == gROLE_LEADER {
             log.Println(n.Ip, "scanner: found leader", fromip)
             n.setLeader(fromip)
+            n.setRole(gROLE_FOLLOWER)
         }
     }
 }
@@ -65,7 +66,7 @@ func (n *Node) sendMsg(conn net.Conn, head int, body string) error {
 
 // 获得TCP链接
 func (n *Node) getConn(ip string, port int) net.Conn {
-    conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), 3*time.Second)
+    conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), 3 * time.Second)
     if err == nil {
         return conn
     }
@@ -142,8 +143,8 @@ func (n *Node) Run() {
 
 // 测试使用，展示当前节点通信的主机列表
 func (n *Node) show() {
-    gtime.SetInterval(4 * time.Second, func() bool{
-        //log.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), *n.Peers.Clone(), n.LogList.Len(), n.KVMap.M)
+    gtime.SetInterval(1 * time.Second, func() bool{
+        //log.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), n.getRole())
         log.Println(n.Ip + ":", n.getLeader(), n.getLastLogId(), *n.Peers.Clone(), n.LogList.Len(), n.KVMap.M)
         return true
     })

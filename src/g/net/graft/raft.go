@@ -14,10 +14,11 @@ import (
 )
 
 const (
+    gVERSION                    = "0.6"   // 当前版本
     // 集群端口定义
-    gPORT_RAFT                  = 4166 // 集群协议通信接口
-    gPORT_REPL                  = 4167 // 集群数据同步接口
-    gPORT_API                   = 4168 // 服务器对外API接口
+    gPORT_RAFT                  = 4166    // 集群协议通信接口
+    gPORT_REPL                  = 4167    // 集群数据同步接口
+    gPORT_API                   = 4168    // 服务器对外API接口
 
     // 节点状态
     gSTATUS_ALIVE               = 1
@@ -36,14 +37,15 @@ const (
     gELECTION_TIMEOUT_MAX       = 3000    // 毫秒
     gELECTION_TIMEOUT_HEARTBEAT = 500     // 毫秒
     gLOG_REPL_TIMEOUT_HEARTBEAT = 1000    // 毫秒
+    gLOG_REPL_AUTOSAVE_INTERVAL = 5000    // 毫秒
 
     // 选举操作
     gMSG_HEAD_HI                = iota
     gMSG_HEAD_HI2
     gMSG_HEAD_HEARTBEAT
     gMSG_HEAD_I_AM_LEADER
+    gMSG_HEAD_RAFT_RESPONSE
     gMSG_HEAD_SCORE_REQUEST
-    gMSG_HEAD_SCORE_RESPONSE
     gMSG_HEAD_SCORE_COMPARE_REQUEST
     gMSG_HEAD_SCORE_COMPARE_FAILURE
     gMSG_HEAD_SCORE_COMPARE_SUCCESS
@@ -52,13 +54,15 @@ const (
     gMSG_HEAD_SET
     gMSG_HEAD_REMOVE
     gMSG_HEAD_UPDATE
-    gMSG_HEAD_LOG_REPL_HEARTBEAT
-    gMSG_HEAD_LOG_REPL_RESPONSE
-    gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER
-    gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER
+    gMSG_HEAD_REPL_HEARTBEAT
+    gMSG_HEAD_REPL_RESPONSE
+    gMSG_HEAD_REPL_NEED_UPDATE_LEADER
+    gMSG_HEAD_REPL_NEED_UPDATE_FOLLOWER
 
     // API相关
     gMSG_HEAD_PEERS_INFO
+    gMSG_HEAD_PEERS_ADD
+    gMSG_HEAD_PEERS_REMOVE
 )
 
 // 消息
@@ -100,13 +104,15 @@ type NodeInfo struct {
     ScoreCount       int
     LastLogId        int64
     LogCount         int64
-    LastHeartbeat    int64
+    LastHeartbeat    int64  // 上一次心跳检查的毫秒数
+    Version          string
 }
 
 // 数据保存结构体
 type SaveInfo struct {
     LastLogId        int64
     LogCount         int64
+    Peers            map[string]interface{}
     DataMap          map[string]string
 }
 

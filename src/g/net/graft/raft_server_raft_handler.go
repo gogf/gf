@@ -21,7 +21,11 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
     }
     // 保存peers
     if msg.Info.Ip != n.Ip {
-        n.updatePeerStatus(msg.Info.Ip, gSTATUS_ALIVE)
+        if n.Peers.Contains(msg.Info.Ip) {
+            n.updatePeerStatus(msg.Info.Ip, gSTATUS_ALIVE)
+        } else {
+            n.updatePeerInfo(msg.Info.Ip, msg.Info)
+        }
     }
 
     // 消息处理
@@ -69,7 +73,7 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
             if n.getRole() == gROLE_LEADER {
                 n.sendMsg(conn, gMSG_HEAD_I_AM_LEADER, "")
             } else {
-                n.sendMsg(conn, gMSG_HEAD_SCORE_RESPONSE, "")
+                n.sendMsg(conn, gMSG_HEAD_RAFT_RESPONSE, "")
             }
 
         // 选举比分对比
@@ -107,6 +111,49 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
                 list = append(list, v.(NodeInfo))
             }
             n.sendMsg(conn, gMSG_HEAD_PEERS_INFO, *gjson.Encode(list))
+
+        // 新增节点
+        case gMSG_HEAD_PEERS_ADD:
+            list := make([]string, 0)
+            gjson.DecodeTo(&msg.Body, &list)
+            if list != nil && len(list) > 0 {
+                for _, ip := range list {
+                    if n.Peers.Contains(ip) {
+                        continue
+                    }
+                    // log.Println("adding peer:", ip)
+                    go func(ip string) {
+                        conn := n.getConn(ip, gPORT_RAFT)
+                        if conn != nil {
+                            n.sendMsg(conn, gMSG_HEAD_HI, "")
+                            msg := n.receiveMsg(conn)
+                            if msg != nil && msg.Head == gMSG_HEAD_HI2{
+                                n.updatePeerInfo(ip, msg.Info)
+                            }
+                        }
+                        // 判断是否添加成功，如果没有，那么添加一个默认的信息
+                        if !n.Peers.Contains(ip) {
+                            info       := NodeInfo{}
+                            info.Status = gSTATUS_DEAD
+                            n.updatePeerInfo(ip, msg.Info)
+                        }
+                    }(ip)
+                }
+            }
+            n.sendMsg(conn, gMSG_HEAD_RAFT_RESPONSE, "")
+
+        // 删除节点
+        // 注意，如果试图移除一个活跃的节点，将会失败
+        case gMSG_HEAD_PEERS_REMOVE:
+            list := make([]string, 0)
+            gjson.DecodeTo(&msg.Body, &list)
+            if list != nil && len(list) > 0 {
+                for _, ip := range list {
+                    // log.Println("removing peer:", ip)
+                    n.Peers.Remove(ip)
+                }
+            }
+            n.sendMsg(conn, gMSG_HEAD_RAFT_RESPONSE, "")
     }
 
     conn.Close()
@@ -118,18 +165,23 @@ func (n *Node) heartbeatHandler() {
     conns := gset.NewStringSet()
     for {
         if n.getRole() == gROLE_LEADER {
-            ips := n.Peers.Keys()
-            for _, ip := range ips {
-                if conns.Contains(ip) {
+            for _, v := range n.Peers.Values() {
+                info := v.(NodeInfo)
+                if conns.Contains(info.Ip) {
                     continue
                 }
-                conn := n.getConn(ip, gPORT_RAFT)
+                conn := n.getConn(info.Ip, gPORT_RAFT)
                 if conn == nil {
-                    n.updatePeerStatus(ip, gSTATUS_DEAD)
-                    conns.Remove(ip)
+                    n.updatePeerStatus(info.Ip, gSTATUS_DEAD)
+                    conns.Remove(info.Ip)
+                    // 如果失联超过3天，那么将该节点移除
+                    if gtime.Millisecond() - info.LastHeartbeat > 3 * 86400 * 1000 {
+                        log.Println(info.Ip, "was dead over 3 days, removing from peers")
+                        n.Peers.Remove(info.Ip)
+                    }
                     continue
                 }
-                conns.Add(ip)
+                conns.Add(info.Ip)
                 go func(ip string, conn net.Conn) {
                     for {
                         if n.getRole() != gROLE_LEADER {
@@ -164,7 +216,7 @@ func (n *Node) heartbeatHandler() {
                             }
                         }
                     }
-                }(ip, conn)
+                }(info.Ip, conn)
             }
         }
         time.Sleep(gELECTION_TIMEOUT_HEARTBEAT * time.Millisecond)
@@ -175,6 +227,7 @@ func (n *Node) heartbeatHandler() {
 // 改进：
 // 3个节点以内的集群也可以完成leader选举
 func (n *Node) electionHandler() {
+    n.updateElectionDeadline()
     for {
         if n.getRole() != gROLE_LEADER && gtime.Millisecond() >= n.getElectionDeadline() {
             // 重新进入选举流程时，需要清空已有的信息
@@ -236,7 +289,7 @@ func (n *Node) beginScore() {
                         n.setLeader(ip)
                         n.setRole(gROLE_FOLLOWER)
 
-                    case gMSG_HEAD_SCORE_RESPONSE:
+                    case gMSG_HEAD_RAFT_RESPONSE:
                         etime := time.Now().UnixNano()
                         score := etime - stime
                         n.addScore(score)
@@ -315,7 +368,8 @@ func (n *Node) getNodeInfo() *NodeInfo {
         ScoreCount    : n.getScoreCount(),
         LastLogId     : n.getLastLogId(),
         LogCount      : n.getLogCount(),
-        LastHeartbeat : time.Now().UnixNano(),
+        LastHeartbeat : gtime.Millisecond(),
+        Version       : gVERSION,
     }
 }
 
@@ -405,6 +459,9 @@ func (n *Node) updatePeerStatus(ip string, status int) {
     if r != nil {
         info       := r.(NodeInfo)
         info.Status = status
+        if status == gSTATUS_ALIVE {
+            info.LastHeartbeat = gtime.Millisecond()
+        }
         n.Peers.Set(ip, info)
     }
 }
