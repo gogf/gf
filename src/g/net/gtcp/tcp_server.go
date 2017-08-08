@@ -12,16 +12,15 @@ func (s *gTcpServer) Run() {
     //    log.Println("start running failed: socket handler not defined")
     //    return
     //}
-    go func() {
-        //fmt.Println("listening on address", s.address)
-        for  {
-            conn, err := s.listener.Accept()
-            if conn == nil || err != nil {
-                conn.Close()
-            } else {
-                go s.handler(conn)
-            }
+
+    //fmt.Println("listening on address", s.address)
+    for  {
+        conn, err := s.listener.Accept()
+        if err != nil {
+            log.Println(err)
+        } else if conn != nil {
+            go s.handler(conn)
         }
-        //fmt.Println("tcp server closed on address", s.address)
-    }()
+    }
+    //fmt.Println("tcp server closed on address", s.address)
 }

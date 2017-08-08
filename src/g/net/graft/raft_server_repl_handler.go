@@ -19,8 +19,7 @@ var isInReplication bool
 
 // 集群数据同步接口回调函数
 func (n *Node) replTcpHandler(conn net.Conn) {
-    msg       := n.receiveMsg(conn)
-    //fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
+    msg := n.receiveMsg(conn)
     if msg == nil {
         //log.Println("receive nil")
         conn.Close()
@@ -53,21 +52,21 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         // 数据同步自动检测
         case gMSG_HEAD_LOG_REPL_HEARTBEAT:
             result := gMSG_HEAD_LOG_REPL_HEARTBEAT
-            //log.Println("heartbeat:", n.getLastLogId(), msg.From.LastLogId, n.getStatusInReplication())
-            if n.getLogCount() < msg.From.LogCount {
+            //log.Println("heartbeat:", n.getLastLogId(), msg.Info.LastLogId, n.getStatusInReplication())
+            if n.getLogCount() < msg.Info.LogCount {
                 if !n.getStatusInReplication() {
                     result = gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER
                 }
-            } else if n.getLogCount() > msg.From.LogCount {
+            } else if n.getLogCount() > msg.Info.LogCount {
                 if !n.getStatusInReplication() {
                     result = gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER
                 }
             } else {
-                if n.getLastLogId() < msg.From.LastLogId {
+                if n.getLastLogId() < msg.Info.LastLogId {
                     if !n.getStatusInReplication() {
                         result = gMSG_HEAD_LOG_REPL_NEED_UPDATE_FOLLOWER
                     }
-                } else if n.getLastLogId() > msg.From.LastLogId {
+                } else if n.getLastLogId() > msg.Info.LastLogId {
                     if !n.getStatusInReplication() {
                         result = gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER
                     }
@@ -77,22 +76,23 @@ func (n *Node) replTcpHandler(conn net.Conn) {
                 n.sendMsg(conn, result, *gjson.Encode(*n.KVMap.Clone()))
             } else {
                 n.sendMsg(conn, result, "")
+                n.replTcpHandler(conn)
             }
 
         // 数据完整同步更新
         case gMSG_HEAD_UPDATE:
             log.Println("receive data replication update")
-            if n.getLastLogId() < msg.From.LastLogId {
+            if n.getLastLogId() < msg.Info.LastLogId {
                 if !n.getStatusInReplication() {
                     if n.updateFromDataMapJson(&msg.Body) == nil {
-                        n.setLastLogId(msg.From.LastLogId)
+                        n.setLastLogId(msg.Info.LastLogId)
                     }
                 }
             }
             n.sendMsg(conn, gMSG_HEAD_LOG_REPL_RESPONSE, "")
     }
 
-    n.replTcpHandler(conn)
+    conn.Close()
 }
 
 // leader到其他节点的数据同步监听
@@ -113,11 +113,12 @@ func (n *Node) logAutoReplicationHandler() {
                     }
                     entry := item.(LogEntry)
                     log.Println("sending log entry", entry)
-                    for ip, status := range *n.Peers.Clone() {
-                        if status != gSTATUS_ALIVE {
+                    for _, v := range n.Peers.Values() {
+                        info := v.(NodeInfo)
+                        if info.Status != gSTATUS_ALIVE {
                             continue
                         }
-                        conn := n.getConnFromPool(ip, gPORT_REPL, conns)
+                        conn := n.getConnFromPool(info.Ip, gPORT_REPL, conns)
                         if conn != nil {
                             wg.Add(1)
                             go func(conn net.Conn, entry LogEntry) {
@@ -181,7 +182,7 @@ func (n *Node) logAutoReplicationCheckHandler() {
                         }
                         msg := n.receiveMsg(conn)
                         if msg == nil {
-                            n.Peers.Set(ip, gSTATUS_DEAD)
+                            n.updatePeerStatus(ip, gSTATUS_DEAD)
                             conns.Remove(ip)
                             conn.Close()
                             return
@@ -203,7 +204,7 @@ func (n *Node) logAutoReplicationCheckHandler() {
                                 case gMSG_HEAD_LOG_REPL_NEED_UPDATE_LEADER:
                                     log.Println("request data replication update from", ip)
                                     if n.updateFromDataMapJson(&msg.Body) == nil {
-                                        n.setLastLogId(msg.From.LastLogId)
+                                        n.setLastLogId(msg.Info.LastLogId)
                                         log.Println("leader data replication update done")
                                     } else {
                                         log.Println("leader data replication update failed")

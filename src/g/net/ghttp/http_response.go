@@ -2,7 +2,6 @@ package ghttp
 
 import (
     "g/encoding/gjson"
-    "io"
     "io/ioutil"
     "log"
 )
@@ -15,7 +14,8 @@ type ResponseJson struct {
 
 // 返回固定格式的json
 func (r *Response) ResponseJson(result int, message string, data interface{}) {
-    io.WriteString(r.writer, *gjson.Encode(ResponseJson{ result, message, data }))
+    r.writer.Header().Set("Content-type", "application/json")
+    r.writer.Write([]byte(*gjson.Encode(ResponseJson{ result, message, data })))
 }
 
 // 获取返回的数据

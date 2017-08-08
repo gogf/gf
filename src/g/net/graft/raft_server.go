@@ -30,8 +30,8 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
 
     msg := n.receiveMsg(conn)
     if msg.Head == gMSG_HEAD_HI2 {
-        n.Peers.Set(fromip, gSTATUS_ALIVE)
-        if msg.From.Role == gROLE_LEADER {
+        n.updatePeerInfo(fromip, msg.Info)
+        if msg.Info.Role == gROLE_LEADER {
             log.Println(n.Ip, "scanner: found leader", fromip)
             n.setLeader(fromip)
         }
@@ -55,7 +55,7 @@ func (n *Node) send(conn net.Conn, data []byte) error {
 
 // 发送Msg
 func (n *Node) sendMsg(conn net.Conn, head int, body string) error {
-    var msg = Msg{ head, body, *n.getMsgFromInfo() }
+    var msg = Msg { head, body, *n.getNodeInfo() }
     s, err := json.Marshal(msg)
     if err != nil {
         return err
@@ -89,19 +89,6 @@ func (n *Node) getConnFromPool(ip string, port int, conns *gmap.StringInterfaceM
     return conn
 }
 
-// 获得当前节点进行数据通信时的来源信息结构
-func (n *Node) getMsgFromInfo() *MsgFrom {
-    n.mutex.RLock()
-    var from = MsgFrom {
-        Name      : n.Name,
-        Role      : n.Role,
-        LastLogId : n.LastLogId,
-        LogCount  : n.LogCount,
-    }
-    n.mutex.RUnlock()
-    return &from
-}
-
 // 获取数据文件的绝对路径
 func (n *Node) getDataFilePath() string {
     n.mutex.RLock()
@@ -123,8 +110,8 @@ func (n *Node) Run() {
     n.restoreData()
 
     // 创建接口监听
-    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
-    gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL),  n.replTcpHandler).Run()
+    go gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
+    go gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL),  n.replTcpHandler).Run()
     go func() {
         ips, _  := gip.IntranetIP()
         address := fmt.Sprintf("%s:%d", n.Ip, gPORT_API)

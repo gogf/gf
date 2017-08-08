@@ -1,7 +1,6 @@
 package graft
 
 import (
-    "g/net/gip"
     "net"
     "sync"
     "time"
@@ -15,14 +14,15 @@ import (
 
 // 集群协议通信接口回调函数
 func (n *Node) raftTcpHandler(conn net.Conn) {
-    msg       := n.receiveMsg(conn)
-    fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
+    msg := n.receiveMsg(conn)
     if msg == nil {
         conn.Close()
         return
     }
     // 保存peers
-    n.Peers.Set(fromip, gSTATUS_ALIVE)
+    if msg.Info.Ip != n.Ip {
+        n.updatePeerStatus(msg.Info.Ip, gSTATUS_ALIVE)
+    }
 
     // 消息处理
     switch msg.Head {
@@ -37,12 +37,12 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
             result := gMSG_HEAD_HEARTBEAT
             if n.getRole() == gROLE_LEADER {
                 // 脑裂问题处理
-                if n.getScoreCount() > msg.From.ScoreCount {
+                if n.getScoreCount() > msg.Info.ScoreCount {
                     result = gMSG_HEAD_I_AM_LEADER
-                } else if n.getScoreCount() == msg.From.ScoreCount {
-                    if n.getScore() > msg.From.Score {
+                } else if n.getScoreCount() == msg.Info.ScoreCount {
+                    if n.getScore() > msg.Info.Score {
                         result = gMSG_HEAD_I_AM_LEADER
-                    } else if n.getScore() == msg.From.Score {
+                    } else if n.getScore() == msg.Info.Score {
                         // 极少数情况会出现两个节点ScoreCount和Score都相等的情况, 这个时候采用随机策略
                         if grand.Rand(0, 1) == 1 {
                             result = gMSG_HEAD_I_AM_LEADER
@@ -50,16 +50,19 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
                     }
                 }
                 if result == gMSG_HEAD_HEARTBEAT {
-                    n.setLeader(fromip)
+                    n.setLeader(msg.Info.Ip)
                     n.setRole(gROLE_FOLLOWER)
                 }
             } else {
-                if n.getLeader() != fromip {
-                    n.setLeader(fromip)
+                if n.getLeader() != msg.Info.Ip {
+                    n.setLeader(msg.Info.Ip)
                     n.setRole(gROLE_FOLLOWER)
                 }
             }
             n.sendMsg(conn, result, "")
+            if result == gMSG_HEAD_HEARTBEAT {
+                n.raftTcpHandler(conn)
+            }
 
         // 选举比分获取
         case gMSG_HEAD_SCORE_REQUEST:
@@ -75,12 +78,12 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
             if n.getRole() == gROLE_LEADER {
                 result = gMSG_HEAD_I_AM_LEADER
             } else {
-                if n.getScoreCount() > msg.From.ScoreCount {
+                if n.getScoreCount() > msg.Info.ScoreCount {
                     result = gMSG_HEAD_SCORE_COMPARE_FAILURE
-                } else if n.getScoreCount() == msg.From.ScoreCount {
-                    if n.getScore() > msg.From.Score {
+                } else if n.getScoreCount() == msg.Info.ScoreCount {
+                    if n.getScore() > msg.Info.Score {
                         result = gMSG_HEAD_SCORE_COMPARE_FAILURE
-                    } else if n.getScore() == msg.From.Score {
+                    } else if n.getScore() == msg.Info.Score {
                         // 极少数情况会出现两个节点ScoreCount和Score都相等的情况, 这个时候采用随机策略
                         if grand.Rand(0, 1) == 1 {
                             result = gMSG_HEAD_SCORE_COMPARE_FAILURE
@@ -91,17 +94,22 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
                 }
             }
             if result == gMSG_HEAD_SCORE_COMPARE_SUCCESS {
-                n.setLeader(fromip)
+                n.setLeader(msg.Info.Ip)
                 n.setRole(gROLE_FOLLOWER)
             }
             n.sendMsg(conn, result, "")
 
         // 节点信息查询
         case gMSG_HEAD_PEERS_INFO:
-            n.sendMsg(conn, gMSG_HEAD_PEERS_INFO, *gjson.Encode(*n.PeersInfo.Clone()))
+            list := make([]NodeInfo, 0)
+            list  = append(list, *n.getNodeInfo())
+            for _, v := range n.Peers.Values() {
+                list = append(list, v.(NodeInfo))
+            }
+            n.sendMsg(conn, gMSG_HEAD_PEERS_INFO, *gjson.Encode(list))
     }
 
-    n.raftTcpHandler(conn)
+    conn.Close()
 }
 
 
@@ -117,7 +125,7 @@ func (n *Node) heartbeatHandler() {
                 }
                 conn := n.getConn(ip, gPORT_RAFT)
                 if conn == nil {
-                    n.Peers.Set(ip, gSTATUS_DEAD)
+                    n.updatePeerStatus(ip, gSTATUS_DEAD)
                     conns.Remove(ip)
                     continue
                 }
@@ -138,19 +146,13 @@ func (n *Node) heartbeatHandler() {
                         msg := n.receiveMsg(conn)
                         if msg == nil {
                             log.Println(ip, "was dead")
-                            n.Peers.Set(ip, gSTATUS_DEAD)
+                            n.updatePeerStatus(ip, gSTATUS_DEAD)
                             conns.Remove(ip)
                             conn.Close()
                             return
                         } else {
                             // 更新节点信息
-                            n.updateNodeInfo(ip, NodeInfo {
-                                Name          : msg.From.Name,
-                                Ip            : ip,
-                                LastLogId     : msg.From.LastLogId,
-                                LogCount      : msg.From.LogCount,
-                                LastHeartbeat : time.Now().String(),
-                            })
+                            n.updatePeerInfo(ip, msg.Info)
                             switch msg.Head {
                                 case gMSG_HEAD_I_AM_LEADER:
                                     log.Println("two leader occured, set", ip, "as my leader, done heartbeating")
@@ -177,7 +179,7 @@ func (n *Node) electionHandler() {
         if n.getRole() != gROLE_LEADER && gtime.Millisecond() >= n.getElectionDeadline() {
             // 重新进入选举流程时，需要清空已有的信息
             if n.getLeader() != "" {
-                n.Peers.Set(n.getLeader(), gSTATUS_DEAD)
+                n.updatePeerStatus(n.getLeader(), gSTATUS_DEAD)
             }
             if n.Peers.Size() > 0 {
                 // 集群是2个节点及以上
@@ -205,8 +207,9 @@ func (n *Node) beginScore() {
     log.Println("begin new score")
     conns := gmap.NewStringInterfaceMap()
     // 请求比分，获取比分数据
-    for ip, status := range *n.Peers.Clone() {
-        if status != gSTATUS_ALIVE {
+    for _, v := range n.Peers.Values() {
+        info := v.(NodeInfo)
+        if info.Status != gSTATUS_ALIVE {
             continue
         }
         wg.Add(1)
@@ -218,7 +221,7 @@ func (n *Node) beginScore() {
             stime := time.Now().UnixNano()
             conn  := n.getConnFromPool(ip, gPORT_RAFT, conns)
             if conn == nil {
-                n.Peers.Set(ip, gSTATUS_DEAD)
+                n.updatePeerStatus(ip, gSTATUS_DEAD)
                 return
             }
             if err := n.sendMsg(conn, gMSG_HEAD_SCORE_REQUEST, ""); err != nil {
@@ -240,21 +243,22 @@ func (n *Node) beginScore() {
                         n.addScoreCount()
                 }
             } else {
-                n.Peers.Set(ip, gSTATUS_DEAD)
+                n.updatePeerStatus(ip, gSTATUS_DEAD)
             }
             wg.Done()
-        }(ip)
+        }(info.Ip)
     }
     wg.Wait()
 
     // 执行比分，对比比分数据，选举出leader
-    for ip, status := range *n.Peers.Clone() {
-        if status != gSTATUS_ALIVE {
+    for _, v := range n.Peers.Values() {
+        info := v.(NodeInfo)
+        if info.Status != gSTATUS_ALIVE {
             continue
         }
-        conn := n.getConnFromPool(ip, gPORT_RAFT, conns)
+        conn := n.getConnFromPool(info.Ip, gPORT_RAFT, conns)
         if conn == nil {
-            n.Peers.Set(ip, gSTATUS_DEAD)
+            n.updatePeerStatus(info.Ip, gSTATUS_DEAD)
             continue
         }
         wg.Add(1)
@@ -288,7 +292,7 @@ func (n *Node) beginScore() {
                         log.Println("score comparison: get success from", ip)
                 }
             }
-        }(ip, conn)
+        }(info.Ip, conn)
     }
     wg.Wait()
 
@@ -297,6 +301,21 @@ func (n *Node) beginScore() {
         log.Println("I've won this score comparison")
         n.setRole(gROLE_LEADER)
         n.setLeader(n.Ip)
+    }
+}
+
+// 获取当前节点的信息
+func (n *Node) getNodeInfo() *NodeInfo {
+    return &NodeInfo {
+        Name          : n.Name,
+        Ip            : n.Ip,
+        Status        : gSTATUS_ALIVE,
+        Role          : n.getRole(),
+        Score         : n.getScore(),
+        ScoreCount    : n.getScoreCount(),
+        LastLogId     : n.getLastLogId(),
+        LogCount      : n.getLogCount(),
+        LastHeartbeat : time.Now().UnixNano(),
     }
 }
 
@@ -381,9 +400,18 @@ func (n *Node) setLeader(ip string) {
     n.mutex.Unlock()
 }
 
+func (n *Node) updatePeerStatus(ip string, status int) {
+    r := n.Peers.Get(ip)
+    if r != nil {
+        info       := r.(NodeInfo)
+        info.Status = status
+        n.Peers.Set(ip, info)
+    }
+}
+
 // 更新节点信息
-func (n *Node) updateNodeInfo(ip string, info NodeInfo) {
-    n.PeersInfo.Set(ip, info)
+func (n *Node) updatePeerInfo(ip string, info NodeInfo) {
+    n.Peers.Set(ip, info)
 }
 
 // 更新选举截止时间

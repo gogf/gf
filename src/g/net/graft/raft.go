@@ -20,13 +20,13 @@ const (
     gPORT_API                   = 4168 // 服务器对外API接口
 
     // 节点状态
-    gSTATUS_ALIVE               = iota
-    gSTATUS_DEAD
+    gSTATUS_ALIVE               = 1
+    gSTATUS_DEAD                = 0
 
     // raft 角色
-    gROLE_FOLLOWER              = iota
-    gROLE_CANDIDATE
-    gROLE_LEADER
+    gROLE_FOLLOWER              = 0
+    gROLE_CANDIDATE             = 1
+    gROLE_LEADER                = 2
 
     // 超时时间设置
     gTCP_RETRY_COUNT            = 3
@@ -65,17 +65,7 @@ const (
 type Msg struct {
     Head int
     Body string
-    From MsgFrom
-}
-
-// 消息来源信息
-type MsgFrom struct {
-    Name       string
-    Role       int
-    Score      int64
-    ScoreCount int
-    LastLogId  int64
-    LogCount   int64
+    Info NodeInfo
 }
 
 // 服务器节点信息
@@ -84,8 +74,7 @@ type Node struct {
 
     Name             string                   // 节点名称
     Ip               string                   // 主机节点的局域网ip
-    Peers            *gmap.StringIntMap       // 集群所有的节点(ip->节点状态)，不包含自身
-    PeersInfo        *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
+    Peers            *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
     Role             int                      // raft角色
     Leader           string                   // Leader节点ip
     Score            int64                    // 选举比分
@@ -105,9 +94,13 @@ type Node struct {
 type NodeInfo struct {
     Name             string
     Ip               string
+    Status           int
+    Role             int
+    Score            int64
+    ScoreCount       int
     LastLogId        int64
     LogCount         int64
-    LastHeartbeat    string
+    LastHeartbeat    int64
 }
 
 // 数据保存结构体
@@ -135,8 +128,7 @@ func NewServerByIp(ip string) *Node {
         Name         : hostname,
         Ip           : ip,
         Role         : gROLE_FOLLOWER,
-        Peers        : gmap.NewStringIntMap(),
-        PeersInfo    : gmap.NewStringInterfaceMap(),
+        Peers        : gmap.NewStringInterfaceMap(),
         DataPath     : os.TempDir(),
         LogChan      : make(chan struct{}, 1024),
         LogList      : glist.NewSafeList(),

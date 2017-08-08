@@ -7,7 +7,6 @@ import (
     "strings"
     "g/net/ghttp"
     "g/encoding/gjson"
-    "time"
 )
 
 
@@ -91,18 +90,7 @@ func (n *Node) nodeApiHandler(r *ghttp.Request, w *ghttp.Response) {
                 if err != nil {
                     w.ResponseJson(0, "received error from leader: " + err.Error(), nil)
                 } else {
-                    list := make([]NodeInfo, 0)
-                    list  = append(list, NodeInfo {
-                        Name          : msg.From.Name,
-                        Ip            : n.getLeader(),
-                        LastLogId     : msg.From.LastLogId,
-                        LogCount      : msg.From.LogCount,
-                        LastHeartbeat : time.Now().String(),
-                    })
-                    for _, v := range data.(map[string]interface{}) {
-                        list = append(list, v.(NodeInfo))
-                    }
-                    w.ResponseJson(1, "ok", list)
+                    w.ResponseJson(1, "ok", data)
                 }
             }
             conn.Close()
