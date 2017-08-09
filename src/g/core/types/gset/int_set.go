@@ -6,7 +6,7 @@ import (
 )
 
 type IntSet struct {
-	m sync.RWMutex
+	sync.RWMutex
 	M map[int]struct{}
 }
 
@@ -19,9 +19,9 @@ func (this *IntSet) Add(item int) *IntSet {
 	if this.Contains(item) {
 		return this
 	}
-	this.m.Lock()
+	this.Lock()
 	this.M[item] = struct{}{}
-	this.m.Unlock()
+	this.Unlock()
 	return this
 }
 
@@ -33,7 +33,7 @@ func (this *IntSet) BatchAdd(items []int) *IntSet {
     }
 
     todo := make([]int, 0, count)
-    this.m.RLock()
+    this.RLock()
     for i := 0; i < count; i++ {
         _, exists := this.M[items[i]]
         if exists {
@@ -42,54 +42,54 @@ func (this *IntSet) BatchAdd(items []int) *IntSet {
 
         todo = append(todo, items[i])
     }
-    this.m.RUnlock()
+    this.RUnlock()
 
     count = len(todo)
     if count == 0 {
         return this
     }
 
-    this.m.Lock()
+    this.Lock()
     for i := 0; i < count; i++ {
         this.M[todo[i]] = struct{}{}
     }
-    this.m.Unlock()
+    this.Unlock()
     return this
 }
 
 // 键是否存在
 func (this *IntSet) Contains(item int) bool {
-	this.m.RLock()
+	this.RLock()
 	_, exists := this.M[item]
-	this.m.RUnlock()
+	this.RUnlock()
 	return exists
 }
 
 // 删除键值对
 func (this *IntSet) Remove(key int) {
-	this.m.Lock()
+	this.Lock()
 	delete(this.M, key)
-	this.m.Unlock()
+	this.Unlock()
 }
 
 // 大小
 func (this *IntSet) Size() int {
-	this.m.RLock()
+	this.RLock()
 	l := len(this.M)
-	this.m.RUnlock()
+	this.RUnlock()
 	return l
 }
 
 // 清空set
 func (this *IntSet) Clear() {
-	this.m.Lock()
+	this.Lock()
 	this.M = make(map[int]struct{})
-	this.m.Unlock()
+	this.Unlock()
 }
 
 // 转换为数组
 func (this *IntSet) Slice() []int {
-	this.m.RLock()
+	this.RLock()
 	ret := make([]int, len(this.M))
 	i := 0
 	for item := range this.M {
@@ -97,7 +97,7 @@ func (this *IntSet) Slice() []int {
 		i++
 	}
 
-	this.m.RUnlock()
+	this.RUnlock()
 	return ret
 }
 

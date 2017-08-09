@@ -6,7 +6,7 @@ import (
 )
 
 type Int64Set struct {
-	m sync.RWMutex
+	sync.RWMutex
 	M map[int64]struct{}
 }
 
@@ -19,9 +19,9 @@ func (this *Int64Set) Add(item int64) *Int64Set {
 	if this.Contains(item) {
 		return this
 	}
-	this.m.Lock()
+	this.Lock()
 	this.M[item] = struct{}{}
-	this.m.Unlock()
+	this.Unlock()
 	return this
 }
 
@@ -33,7 +33,7 @@ func (this *Int64Set) BatchAdd(items []int64) *Int64Set {
     }
 
     todo := make([]int64, 0, count)
-    this.m.RLock()
+    this.RLock()
     for i := 0; i < count; i++ {
         _, exists := this.M[items[i]]
         if exists {
@@ -42,54 +42,54 @@ func (this *Int64Set) BatchAdd(items []int64) *Int64Set {
 
         todo = append(todo, items[i])
     }
-    this.m.RUnlock()
+    this.RUnlock()
 
     count = len(todo)
     if count == 0 {
         return this
     }
 
-    this.m.Lock()
+    this.Lock()
     for i := 0; i < count; i++ {
         this.M[todo[i]] = struct{}{}
     }
-    this.m.Unlock()
+    this.Unlock()
     return this
 }
 
 // 键是否存在
 func (this *Int64Set) Contains(item int64) bool {
-	this.m.RLock()
+	this.RLock()
 	_, exists := this.M[item]
-	this.m.RUnlock()
+	this.RUnlock()
 	return exists
 }
 
 // 删除键值对
 func (this *Int64Set) Remove(key int64) {
-	this.m.Lock()
+	this.Lock()
 	delete(this.M, key)
-	this.m.Unlock()
+	this.Unlock()
 }
 
 // 大小
 func (this *Int64Set) Size() int {
-	this.m.RLock()
+	this.RLock()
 	l := len(this.M)
-	this.m.RUnlock()
+	this.RUnlock()
 	return l
 }
 
 // 清空set
 func (this *Int64Set) Clear() {
-	this.m.Lock()
+	this.Lock()
 	this.M = make(map[int64]struct{})
-	this.m.Unlock()
+	this.Unlock()
 }
 
 // 转换为数组
 func (this *Int64Set) Slice() []int64 {
-	this.m.RLock()
+	this.RLock()
 	ret := make([]int64, len(this.M))
 	i := 0
 	for item := range this.M {
@@ -97,7 +97,7 @@ func (this *Int64Set) Slice() []int64 {
 		i++
 	}
 
-	this.m.RUnlock()
+	this.RUnlock()
 	return ret
 }
 

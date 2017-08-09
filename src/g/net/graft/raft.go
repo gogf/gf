@@ -1,6 +1,9 @@
 /*
     使用raft算法处理集群的一致性
     @todo 解决split brains造成的数据一致性问题
+    经典分区多节点脑裂问题：出现两个及以上的分区网络，网络之间无法相互连接
+    复杂非分区三点脑裂问题：A-B-C，AC之间无法相互连接（B是双网卡），这样会造成A、C为leader，B为follower
+    以上需要解决的是数据一致性问题，解决方案：检测集群必需为环形网络，剔除掉非环形网络的节点
  */
 
 package graft
@@ -40,30 +43,31 @@ const (
     gLOG_REPL_AUTOSAVE_INTERVAL = 5000    // 毫秒
 
     // 选举操作
-    gMSG_HEAD_HI                = iota
-    gMSG_HEAD_HI2
-    gMSG_HEAD_HEARTBEAT
-    gMSG_HEAD_I_AM_LEADER
-    gMSG_HEAD_RAFT_RESPONSE
-    gMSG_HEAD_SCORE_REQUEST
-    gMSG_HEAD_SCORE_COMPARE_REQUEST
-    gMSG_HEAD_SCORE_COMPARE_FAILURE
-    gMSG_HEAD_SCORE_COMPARE_SUCCESS
-    gMSG_HEAD_SPLIT_BRAINS_OCCURRED
+    gMSG_RAFT_HI                = iota
+    gMSG_RAFT_HI2
+    gMSG_RAFT_HEARTBEAT
+    gMSG_RAFT_I_AM_LEADER
+    gMSG_RAFT_SPLIT_BRAINS_CHECK
+    gMSG_RAFT_SPLIT_BRAINS_UNSET
+    gMSG_RAFT_RESPONSE
+    gMSG_RAFT_SCORE_REQUEST
+    gMSG_RAFT_SCORE_COMPARE_REQUEST
+    gMSG_RAFT_SCORE_COMPARE_FAILURE
+    gMSG_RAFT_SCORE_COMPARE_SUCCESS
 
     // 数据同步操作
-    gMSG_HEAD_SET
-    gMSG_HEAD_REMOVE
-    gMSG_HEAD_UPDATE
-    gMSG_HEAD_REPL_HEARTBEAT
-    gMSG_HEAD_REPL_RESPONSE
-    gMSG_HEAD_REPL_NEED_UPDATE_LEADER
-    gMSG_HEAD_REPL_NEED_UPDATE_FOLLOWER
+    gMSG_REPL_SET
+    gMSG_REPL_REMOVE
+    gMSG_REPL_UPDATE
+    gMSG_REPL_HEARTBEAT
+    gMSG_REPL_RESPONSE
+    gMSG_REPL_NEED_UPDATE_LEADER
+    gMSG_REPL_NEED_UPDATE_FOLLOWER
 
     // API相关
-    gMSG_HEAD_PEERS_INFO
-    gMSG_HEAD_PEERS_ADD
-    gMSG_HEAD_PEERS_REMOVE
+    gMSG_API_PEERS_INFO
+    gMSG_API_PEERS_ADD
+    gMSG_API_PEERS_REMOVE
 )
 
 // 消息
@@ -88,8 +92,8 @@ type Node struct {
 
     LastLogId        int64                    // 最后一次未保存log的id，用以数据同步识别
     LastSavedLogId   int64                    // 最后一次物理化log的id，用以物理化保存识别
+    LogChan          chan LogEntry            // 用于数据同步的通道
     LogList          *glist.SafeList          // leader日志列表，用以数据同步
-    LogCount         int64                    // 日志的总数，用以核对一致性
     DataPath         string                   // 物理存储的本地数据目录绝对路径
     KVMap            *gmap.StringStringMap    // 存储的K-V哈希表
 }
@@ -103,7 +107,6 @@ type NodeInfo struct {
     Score            int64
     ScoreCount       int
     LastLogId        int64
-    LogCount         int64
     LastHeartbeat    int64  // 上一次心跳检查的毫秒数
     Version          string
 }
@@ -111,7 +114,6 @@ type NodeInfo struct {
 // 数据保存结构体
 type SaveInfo struct {
     LastLogId        int64
-    LogCount         int64
     Peers            map[string]interface{}
     DataMap          map[string]string
 }
@@ -136,6 +138,7 @@ func NewServerByIp(ip string) *Node {
         Role         : gROLE_FOLLOWER,
         Peers        : gmap.NewStringInterfaceMap(),
         DataPath     : os.TempDir(),
+        LogChan      : make(chan LogEntry, 1024),
         LogList      : glist.NewSafeList(),
         KVMap        : gmap.NewStringStringMap(),
     }

@@ -7,7 +7,7 @@ import (
 
 // 变长链表
 type SafeList struct {
-	m sync.RWMutex
+	sync.RWMutex
 	L *list.List
 }
 
@@ -18,39 +18,39 @@ func NewSafeList() *SafeList {
 
 // 往链表头入栈数据项
 func (this *SafeList) PushFront(v interface{}) *list.Element {
-	this.m.Lock()
+	this.Lock()
 	e := this.L.PushFront(v)
-	this.m.Unlock()
+	this.Unlock()
 	return e
 }
 
 // 批量往链表头入栈数据项
 func (this *SafeList) BatchPushFront(vs []interface{}) {
-	this.m.Lock()
+	this.Lock()
 	for _, item := range vs {
 		this.L.PushFront(item)
 	}
-	this.m.Unlock()
+	this.Unlock()
 }
 
 // 从链表尾端出栈数据项
 func (this *SafeList) PopBack() interface{} {
-	this.m.Lock()
+	this.Lock()
 	if elem := this.L.Back(); elem != nil {
 		item := this.L.Remove(elem)
-		this.m.Unlock()
+		this.Unlock()
 		return item
 	}
-	this.m.Unlock()
+	this.Unlock()
 	return nil
 }
 
 // 批量从链表尾端出栈数据项
 func (this *SafeList) BatchPopBack(max int) []interface{} {
-	this.m.Lock()
+	this.Lock()
 	count := this.L.Len()
 	if count == 0 {
-		this.m.Unlock()
+		this.Unlock()
 		return []interface{}{}
 	}
 
@@ -62,17 +62,17 @@ func (this *SafeList) BatchPopBack(max int) []interface{} {
 		item := this.L.Remove(this.L.Back())
 		items = append(items, item)
 	}
-	this.m.Unlock()
+	this.Unlock()
 	return items
 }
 
 // 批量从链表尾端依次获取所有数据
 func (this *SafeList) PopBackAll() []interface{} {
-	this.m.Lock()
+	this.Lock()
 
 	count := this.L.Len()
 	if count == 0 {
-		this.m.Unlock()
+		this.Unlock()
 		return []interface{}{}
 	}
 
@@ -82,31 +82,31 @@ func (this *SafeList) PopBackAll() []interface{} {
 		items = append(items, item)
 	}
 
-	this.m.Unlock()
+	this.Unlock()
 	return items
 }
 
 // (查找并)删除数据项
 func (this *SafeList) Remove(e *list.Element) interface{} {
-	this.m.Lock()
-	defer this.m.Unlock()
-	return this.L.Remove(e)
+	this.Lock()
+	r := this.L.Remove(e)
+	this.Unlock()
+	return r
 }
 
 // 删除所有数据项
 func (this *SafeList) RemoveAll() {
-	this.m.Lock()
+	this.Lock()
 	this.L = list.New()
-	this.m.Unlock()
+	this.Unlock()
 }
 
 // 从链表头获取所有数据(不删除)
 func (this *SafeList) FrontAll() []interface{} {
-	this.m.RLock()
-	defer this.m.RUnlock()
-
+	this.RLock()
 	count := this.L.Len()
 	if count == 0 {
+        this.RUnlock()
 		return []interface{}{}
 	}
 
@@ -114,15 +114,16 @@ func (this *SafeList) FrontAll() []interface{} {
 	for e := this.L.Front(); e != nil; e = e.Next() {
 		items = append(items, e.Value)
 	}
+    this.RUnlock()
 	return items
 }
 
 // 从链表尾获取所有数据(不删除)
 func (this *SafeList) BackAll() []interface{} {
-	this.m.RLock()
+	this.RLock()
 	count := this.L.Len()
 	if count == 0 {
-        this.m.RUnlock()
+        this.RUnlock()
 		return []interface{}{}
 	}
 
@@ -130,27 +131,27 @@ func (this *SafeList) BackAll() []interface{} {
 	for e := this.L.Back(); e != nil; e = e.Prev() {
 		items = append(items, e.Value)
 	}
-    this.m.RUnlock()
+    this.RUnlock()
 	return items
 }
 
 // 获取链表头值(不删除)
 func (this *SafeList) Front() interface{} {
-	this.m.RLock()
+	this.RLock()
 	if f := this.L.Front(); f != nil {
-		this.m.RUnlock()
+		this.RUnlock()
 		return f.Value
 	}
 
-	this.m.RUnlock()
+	this.RUnlock()
 	return nil
 }
 
 // 获取链表长度
 func (this *SafeList) Len() int {
-	this.m.RLock()
+	this.RLock()
     length := this.L.Len()
-	this.m.RUnlock()
+	this.RUnlock()
 	return length
 }
 

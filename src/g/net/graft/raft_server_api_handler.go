@@ -56,16 +56,16 @@ func (n *Node) kvApiHandler(r *ghttp.Request, w *ghttp.Response) {
                 w.ResponseJson(0, "could not connect to leader: " + n.getLeader(), nil)
                 return
             }
-            head := gMSG_HEAD_SET
+            head := gMSG_REPL_SET
             if method == "DELETE" {
-                head = gMSG_HEAD_REMOVE
+                head = gMSG_REPL_REMOVE
             }
             err   = n.sendMsg(conn, head, *gjson.Encode(items))
             if err != nil {
                 w.ResponseJson(0, "sending request error: " + err.Error(), nil)
             } else {
                 msg := n.receiveMsg(conn)
-                if msg.Head != gMSG_HEAD_REPL_RESPONSE {
+                if msg.Head != gMSG_REPL_RESPONSE {
                     w.ResponseJson(0, "handling request error", nil)
                 } else {
                     w.ResponseJson(1, "ok", nil)
@@ -88,7 +88,7 @@ func (n *Node) nodeApiHandler(r *ghttp.Request, w *ghttp.Response) {
                 w.ResponseJson(0, "could not connect to leader: " + n.getLeader(), nil)
                 return
             }
-            err := n.sendMsg(conn, gMSG_HEAD_PEERS_INFO, "")
+            err := n.sendMsg(conn, gMSG_API_PEERS_INFO, "")
             if err != nil {
                 w.ResponseJson(0, "sending request error: " + err.Error(), nil)
             } else {
@@ -130,16 +130,16 @@ func (n *Node) nodeApiHandler(r *ghttp.Request, w *ghttp.Response) {
                 w.ResponseJson(0, "could not connect to leader: " + n.getLeader(), nil)
                 return
             }
-            head := gMSG_HEAD_PEERS_ADD
+            head := gMSG_API_PEERS_ADD
             if method == "DELETE" {
-                head = gMSG_HEAD_PEERS_REMOVE
+                head = gMSG_API_PEERS_REMOVE
             }
             err   = n.sendMsg(conn, head, *gjson.Encode(items))
             if err != nil {
                 w.ResponseJson(0, "sending request error: " + err.Error(), nil)
             } else {
                 msg := n.receiveMsg(conn)
-                if msg.Head != gMSG_HEAD_RAFT_RESPONSE {
+                if msg.Head != gMSG_RAFT_RESPONSE {
                     w.ResponseJson(0, "handling request error", nil)
                 } else {
                     w.ResponseJson(1, "ok", nil)
