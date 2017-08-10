@@ -334,6 +334,9 @@ func (n *Node) updatePeerStatus(ip string, status int) {
         }
         n.Peers.Set(ip, info)
     }
+    if status == gSTATUS_DEAD {
+        log.Println(ip, "was dead")
+    }
 }
 
 // 更新选举截止时间

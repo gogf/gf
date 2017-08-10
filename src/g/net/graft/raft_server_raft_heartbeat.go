@@ -40,13 +40,12 @@ func (n *Node) heartbeatHandler() {
                         if n.getRole() != gROLE_LEADER || !n.Peers.Contains(ip){
                             return
                         }
-                        if err := n.sendMsg(conn, gMSG_RAFT_HEARTBEAT, ""); err != nil {
-                            log.Println(err)
+                        if n.sendMsg(conn, gMSG_RAFT_HEARTBEAT, "") != nil {
+                            n.updatePeerStatus(ip, gSTATUS_DEAD)
                             return
                         }
                         msg := n.receiveMsg(conn)
                         if msg == nil {
-                            log.Println(ip, "was dead")
                             n.updatePeerStatus(ip, gSTATUS_DEAD)
                             return
                         } else {

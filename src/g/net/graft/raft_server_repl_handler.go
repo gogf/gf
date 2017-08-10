@@ -6,9 +6,9 @@ package graft
 import (
     "net"
     "g/encoding/gjson"
-    "time"
     "log"
     "g/core/types/gmap"
+    "g/util/gtime"
 )
 
 // 集群数据同步接口回调函数
@@ -42,7 +42,7 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
         var items interface{}
         if gjson.DecodeTo(&msg.Body, &items) == nil {
             var entry = LogEntry {
-                Id    : time.Now().UnixNano(),
+                Id    : gtime.Microsecond(),
                 Act   : msg.Head,
                 Items : items,
             }

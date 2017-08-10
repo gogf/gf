@@ -19,7 +19,7 @@ var isInReplication bool
 func (n *Node) logAutoReplicationHandler() {
     var wg sync.WaitGroup
     // 初始化数据同步心跳检测
-    go n.logAutoReplicationLoop()
+    go n.replicationLoop()
     // 日志自动清理
     go n.autoCleanLogList()
     // 进入循环监听日志事件
@@ -58,7 +58,7 @@ func (n *Node) logAutoReplicationHandler() {
 }
 
 // 日志自动同步检查，类似心跳
-func (n *Node) logAutoReplicationLoop() {
+func (n *Node) replicationLoop() {
     conns := gset.NewStringSet()
     for {
         if n.getRole() == gROLE_LEADER {
@@ -87,8 +87,7 @@ func (n *Node) logAutoReplicationLoop() {
                             return
                         }
                         //log.Println("sending replication heartbeat to", ip)
-                        if err := n.sendMsg(conn, gMSG_REPL_HEARTBEAT, ""); err != nil {
-                            log.Println(err)
+                        if n.sendMsg(conn, gMSG_REPL_HEARTBEAT, "") != nil {
                             return
                         }
                         msg := n.receiveMsg(conn)
