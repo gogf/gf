@@ -47,20 +47,20 @@ func (c gConsoleOption) GetAll() map[string]string {
 }
 
 // 获得一条指定索引位置的value参数
-func (c gConsoleValue) GetIndex(index uint8) (string, bool) {
+func (c gConsoleValue) GetIndex(index uint8) string {
     if index < uint8(len(c.values)) {
-        return c.values[index], true
+        return c.values[index]
     }
-    return "", false
+    return ""
 }
 
 // 获得一条指定索引位置的option参数
-func (c gConsoleOption) GetIndex(key string) (string, bool) {
+func (c gConsoleOption) GetIndex(key string) string {
     option, ok := c.options[key]
     if ok {
-        return option, true
+        return option
     }
-    return "", false
+    return ""
 }
 
 // 绑定命令行参数及对应的命令函数，注意参数是函数的内存地址
@@ -88,8 +88,8 @@ func RunHandle (cmd string) error {
 
 // 自动识别命令参数并执行命令参数对应的函数
 func AutoRun () error {
-    cmd, ok := Value.GetIndex(1);
-    if ok {
+    cmd := Value.GetIndex(1);
+    if cmd != "" {
         if handle, ok := cmdFuncMap[cmd]; ok {
             handle()
             return nil

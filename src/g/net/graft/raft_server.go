@@ -225,15 +225,15 @@ func (n *Node) getElectionDeadline() int64 {
 // 获取数据文件的绝对路径
 func (n *Node) getDataFilePath() string {
     n.mutex.RLock()
-    path := n.DataPath + gfile.Separator + n.Ip + ".graft.db"
+    path := n.SavePath + gfile.Separator + n.Ip + "." + n.FileName
     n.mutex.RUnlock()
     return path
 }
 
 // 设置数据保存目录路径
-func (n *Node) SetDataPath(path string) {
+func (n *Node) SetSavePath(path string) {
     n.mutex.Lock()
-    n.DataPath = path
+    n.SavePath = path
     n.mutex.Unlock()
 }
 
@@ -279,7 +279,13 @@ func (n *Node) setRole(role int) {
 
 func (n *Node) setLeader(ip string) {
     n.mutex.Lock()
-    n.Leader    = ip
+    n.Leader = ip
+    n.mutex.Unlock()
+}
+
+func (n *Node) SetMonitor(ip string) {
+    n.mutex.Lock()
+    n.Monitor = ip
     n.mutex.Unlock()
 }
 

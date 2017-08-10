@@ -65,7 +65,7 @@ func (n *Node) restoreData() {
     if gfile.Exists(path) {
         content := gfile.GetContents(path)
         if content != nil {
-            //log.Println("initializing kvmap from data file")
+            log.Println("restore data from file:", path)
             var data = SaveInfo {
                 Peers   : make(map[string]interface{}),
                 DataMap : make(map[string]string),

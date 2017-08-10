@@ -18,31 +18,33 @@ import (
 )
 
 const (
-    gVERSION                    = "0.6"   // 当前版本
+    gVERSION                        = "0.6"   // 当前版本
     // 集群端口定义
-    gPORT_RAFT                  = 4166    // 集群协议通信接口
-    gPORT_REPL                  = 4167    // 集群数据同步接口
-    gPORT_API                   = 4168    // 服务器对外API接口
+    gPORT_RAFT                      = 4166    // 集群协议通信接口
+    gPORT_REPL                      = 4167    // 集群数据同步接口
+    gPORT_API                       = 4168    // 服务器对外API接口
+    gPORT_MONITOR                   = 4169    // 监控服务接口
+    gPORT_WEB                       = 4170    // WEB管理界面
 
     // 节点状态
-    gSTATUS_ALIVE               = 1
-    gSTATUS_DEAD                = 0
+    gSTATUS_ALIVE                   = 1
+    gSTATUS_DEAD                    = 0
 
     // raft 角色
-    gROLE_FOLLOWER              = 0
-    gROLE_CANDIDATE             = 1
-    gROLE_LEADER                = 2
+    gROLE_FOLLOWER                  = 0
+    gROLE_CANDIDATE                 = 1
+    gROLE_LEADER                    = 2
 
     // 超时时间设置
-    gTCP_RETRY_COUNT            = 3
-    gTCP_READ_TIMEOUT           = 3000    // 毫秒
-    gTCP_WRITE_TIMEOUT          = 3000    // 毫秒
-    gELECTION_TIMEOUT_MIN       = 1000    // 毫秒
-    gELECTION_TIMEOUT_MAX       = 3000    // 毫秒
-    gELECTION_TIMEOUT_HEARTBEAT = 500     // 毫秒
-    gLOG_REPL_TIMEOUT_HEARTBEAT = 1000    // 毫秒
-    gLOG_REPL_AUTOSAVE_INTERVAL = 5000    // 毫秒
-    gLOG_REPL_LOGCLEAN_INTERVAL = 5000    // 毫秒
+    gTCP_RETRY_COUNT                = 3
+    gTCP_READ_TIMEOUT               = 3000    // 毫秒
+    gTCP_WRITE_TIMEOUT              = 3000    // 毫秒
+    gELECTION_TIMEOUT_MIN           = 1000    // 毫秒
+    gELECTION_TIMEOUT_MAX           = 3000    // 毫秒
+    gELECTION_TIMEOUT_HEARTBEAT     = 500     // 毫秒
+    gLOG_REPL_TIMEOUT_HEARTBEAT     = 1000    // 毫秒
+    gLOG_REPL_AUTOSAVE_INTERVAL     = 5000    // 毫秒
+    gLOG_REPL_LOGCLEAN_INTERVAL     = 5000    // 毫秒
 
     // 选举操作
     gMSG_RAFT_HI                    = 101
@@ -89,6 +91,7 @@ type Node struct {
     Peers            *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
     Role             int                      // raft角色
     Leader           string                   // Leader节点ip
+    Monitor          string                   // Monitor节点ip
     Score            int64                    // 选举比分
     ScoreCount       int                      // 选举比分的节点数
     ElectionDeadline int64                    // 选举超时时间点
@@ -97,7 +100,8 @@ type Node struct {
     LastSavedLogId   int64                    // 最后一次物理化log的id，用以物理化保存识别
     LogChan          chan LogEntry            // 用于数据同步的通道
     LogList          *glist.SafeList          // leader日志列表，用以数据同步
-    DataPath         string                   // 物理存储的本地数据目录绝对路径
+    SavePath         string                   // 物理存储的本地数据目录绝对路径
+    FileName         string                   // 数据文件名称(包含后缀)
     KVMap            *gmap.StringStringMap    // 存储的K-V哈希表
 }
 
@@ -152,7 +156,8 @@ func NewServerByIp(ip string) *Node {
         Ip           : ip,
         Role         : gROLE_FOLLOWER,
         Peers        : gmap.NewStringInterfaceMap(),
-        DataPath     : os.TempDir(),
+        SavePath     : os.TempDir(),
+        FileName     : "graft.db",
         LogChan      : make(chan LogEntry, 1024),
         LogList      : glist.NewSafeList(),
         KVMap        : gmap.NewStringStringMap(),
