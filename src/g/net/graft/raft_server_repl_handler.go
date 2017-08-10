@@ -58,7 +58,7 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }
 
-// 心跳相应
+// 心跳响应
 func (n *Node) onMsgReplHeartbeat(conn net.Conn, msg *Msg) {
     result := gMSG_REPL_HEARTBEAT
     //log.Println("heartbeat:", n.getLastLogId(), msg.Info.LastLogId, n.getStatusInReplication())
@@ -81,6 +81,12 @@ func (n *Node) onMsgReplHeartbeat(conn net.Conn, msg *Msg) {
 // 数据同步，更新本地数据
 func (n *Node) onMsgReplUpdate(conn net.Conn, msg *Msg) {
     log.Println("receive data replication update")
+    n.updateDataFromRemoteNode(conn, msg)
+    n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
+}
+
+// 从目标节点同步数据，采用增量+全量模式
+func (n *Node) updateDataFromRemoteNode(conn net.Conn, msg *Msg) {
     if msg.Head == gMSG_REPL_INCREMENTAL_UPDATE {
         // 增量同步，LastLogId会根据保存的LogEntry自动更新
         if n.getLastLogId() < msg.Info.LastLogId {
@@ -101,7 +107,6 @@ func (n *Node) onMsgReplUpdate(conn net.Conn, msg *Msg) {
             log.Println(err)
         }
     }
-    n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }
 
 // 同步数据到目标节点，采用增量+全量模式

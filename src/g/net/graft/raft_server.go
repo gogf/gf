@@ -31,7 +31,7 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
 
     msg := n.receiveMsg(conn)
     if msg != nil && msg.Head == gMSG_RAFT_HI2 {
-        n.updatePeerInfo(fromip, msg.Info)
+        n.updatePeerInfo(msg.Info)
         if msg.Info.Role == gROLE_LEADER {
             log.Println(n.Ip, "scanner: found leader", fromip)
             n.setLeader(fromip)
@@ -320,8 +320,8 @@ func (n *Node) setKVMap(m *gmap.StringStringMap) {
 }
 
 // 更新节点信息
-func (n *Node) updatePeerInfo(ip string, info NodeInfo) {
-    n.Peers.Set(ip, info)
+func (n *Node) updatePeerInfo(info NodeInfo) {
+    n.Peers.Set(info.Ip, info)
 }
 
 func (n *Node) updatePeerStatus(ip string, status int) {
@@ -334,9 +334,9 @@ func (n *Node) updatePeerStatus(ip string, status int) {
         }
         n.Peers.Set(ip, info)
     }
-    if status == gSTATUS_DEAD {
-        log.Println(ip, "was dead")
-    }
+    //if status == gSTATUS_DEAD {
+    //    log.Println(ip, "was dead")
+    //}
 }
 
 // 更新选举截止时间

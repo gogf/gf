@@ -23,7 +23,7 @@ func Receive(conn net.Conn) []byte {
                 break;
             }
             if err != io.EOF {
-                log.Println("node receive:", err, "retry:", retry)
+                //log.Println("receive err:", err, "retry:", retry)
             }
             retry ++
             time.Sleep(100 * time.Millisecond)
@@ -42,6 +42,7 @@ func Receive(conn net.Conn) []byte {
 // 获取Msg
 func RecieveMsg(conn net.Conn) *Msg {
     data := Receive(conn)
+    //log.Println(string(data))
     if data != nil && len(data) > 0 {
         var msg Msg
         err := json.Unmarshal(data, &msg)
@@ -64,7 +65,7 @@ func Send(conn net.Conn, data []byte) error {
             if retry > gTCP_RETRY_COUNT - 1 {
                 return err
             }
-            log.Println("data send:", err, "try:", retry)
+            //log.Println("data send:", err, "try:", retry)
             retry ++
             time.Sleep(100 * time.Millisecond)
         } else {

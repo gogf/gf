@@ -37,12 +37,13 @@ func (this *NodeApiKv) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
 
 // K-V 删除
 func (this *NodeApiKv) DELETE(r *ghttp.Request, w *ghttp.ServerResponse) {
-    data := r.GetRaw()
+    method := strings.ToUpper(r.Method)
+    data   := r.GetRaw()
     if data == "" {
         w.ResponseJson(0, "invalid input", nil)
         return
     }
-    method := strings.ToUpper(r.Method)
+
     var items interface{}
     err := gjson.DecodeTo(&data, &items)
     if err != nil {

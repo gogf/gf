@@ -51,7 +51,7 @@ func (n *Node) heartbeatHandler() {
                         } else {
                             //log.Println("receive heartbeat back from", ip)
                             // 更新节点信息
-                            n.updatePeerInfo(ip, msg.Info)
+                            n.updatePeerInfo(msg.Info)
                             switch msg.Head {
                                 case gMSG_RAFT_I_AM_LEADER:
                                     log.Println("two leader occured, set", ip, "as my leader, done heartbeating")

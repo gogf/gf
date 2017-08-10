@@ -93,9 +93,9 @@ func (n *Node) replicationLoop() {
                         msg := n.receiveMsg(conn)
                         if msg != nil {
                             switch msg.Head {
-                                case gMSG_REPL_NEED_UPDATE_FOLLOWER:
-                                    n.updateDataToRemoteNode(conn, msg)
-
+                                case gMSG_REPL_NEED_UPDATE_FOLLOWER:    n.updateDataToRemoteNode(conn, msg)
+                                case gMSG_REPL_INCREMENTAL_UPDATE:      n.updateDataFromRemoteNode(conn, msg)
+                                case gMSG_REPL_COMPLETELY_UPDATE:       n.updateDataFromRemoteNode(conn, msg)
                                 default:
                                     time.Sleep(gLOG_REPL_TIMEOUT_HEARTBEAT * time.Millisecond)
                             }
@@ -121,6 +121,7 @@ func (n *Node) autoCleanLogList() {
                     t := p.Prev()
                     n.LogList.Remove(p)
                     p  = t
+                    log.Println("clean log id:", entry.Id, "now log list len:", n.LogList.Len())
                 } else {
                     break;
                 }
@@ -134,6 +135,9 @@ func (n *Node) getMinLogIdFromPeers() int64 {
     var minLogId int64
     for _, v := range n.Peers.Values() {
         info := v.(NodeInfo)
+        if info.Status != gSTATUS_ALIVE {
+            continue
+        }
         if minLogId == 0 || info.LastLogId < minLogId {
             minLogId = info.LastLogId
         }

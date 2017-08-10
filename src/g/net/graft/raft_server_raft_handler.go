@@ -19,7 +19,7 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
         if n.Peers.Contains(msg.Info.Ip) {
             n.updatePeerStatus(msg.Info.Ip, gSTATUS_ALIVE)
         } else {
-            n.updatePeerInfo(msg.Info.Ip, msg.Info)
+            n.updatePeerInfo(msg.Info)
         }
     }
     // 消息处理
@@ -50,7 +50,7 @@ func (n *Node) onMsgRaftSplitBrainsCheck(conn net.Conn, msg *Msg) {
             if n.sendMsg(tconn, gMSG_RAFT_HI, "") == nil {
                 rmsg := n.receiveMsg(tconn)
                 if rmsg != nil {
-                    n.updatePeerInfo(checkip, rmsg.Info)
+                    n.updatePeerInfo(rmsg.Info)
                     if n.getLastLogId() < msg.Info.LastLogId {
                         ip = checkip
                         n.setLeader(ip)
@@ -190,16 +190,17 @@ func (n *Node) onMsgApiPeersAdd(conn net.Conn, msg *Msg) {
                 conn := n.getConn(ip, gPORT_RAFT)
                 if conn != nil {
                     n.sendMsg(conn, gMSG_RAFT_HI, "")
-                    msg := n.receiveMsg(conn)
-                    if msg != nil && msg.Head == gMSG_RAFT_HI2{
-                        n.updatePeerInfo(ip, msg.Info)
+                    rmsg := n.receiveMsg(conn)
+                    if rmsg != nil && rmsg.Head == gMSG_RAFT_HI2 {
+                        n.updatePeerInfo(rmsg.Info)
                     }
                 }
                 // 判断是否添加成功，如果没有，那么添加一个默认的信息
                 if !n.Peers.Contains(ip) {
                     info       := NodeInfo{}
+                    info.Ip     = ip
                     info.Status = gSTATUS_DEAD
-                    n.updatePeerInfo(ip, msg.Info)
+                    n.updatePeerInfo(info)
                 }
             }(ip)
         }

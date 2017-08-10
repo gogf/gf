@@ -123,7 +123,7 @@ type NodeInfo struct {
     ScoreCount       int
     LastLogId        int64
     LastHeartbeat    int64  // 上一次心跳检查的毫秒数
-    Version          string
+    Version          string // 节点的版本
 }
 
 // 数据保存结构体
