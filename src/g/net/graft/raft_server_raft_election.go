@@ -43,7 +43,7 @@ func (n *Node) electionHandler() {
 // 一轮选举比分
 func (n *Node) beginScore() {
     var wg sync.WaitGroup
-    log.Println("begin new score")
+    log.Println(n.Ip + ":", "begin new score")
     conns := gmap.NewStringInterfaceMap()
     // 请求比分，获取比分数据
     for _, v := range n.Peers.Values() {
@@ -137,7 +137,7 @@ func (n *Node) beginScore() {
 
     // 如果其他节点均没有条件满足leader，那么选举自身为leader
     if n.getRole() != gROLE_FOLLOWER {
-        log.Println("I've won this score comparison")
+        log.Println(n.Ip + ":", "I've won this score comparison")
         n.setRole(gROLE_LEADER)
         n.setLeader(n.Ip)
     }

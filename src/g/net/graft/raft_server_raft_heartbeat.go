@@ -50,6 +50,7 @@ func (n *Node) heartbeatHandler() {
                             n.updatePeerStatus(ip, gSTATUS_DEAD)
                             return
                         } else {
+                            //log.Println("receive heartbeat back from", ip)
                             // 更新节点信息
                             n.updatePeerInfo(ip, msg.Info)
                             switch msg.Head {

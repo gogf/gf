@@ -146,3 +146,18 @@ func (s *Server)BindHandleByMap(m HandlerMap) {
     }
 }
 
+// 绑定控制器，控制器需要继承gmvc.ControllerBase对象并实现需要的REST方法
+func (s *Server)BindController(uri string, c Controller) {
+    s.BindHandleByMap(HandlerMap{
+        "GET:"     + uri : c.GET,
+        "PUT:"     + uri : c.PUT,
+        "POST:"    + uri : c.POST,
+        "DELETE:"  + uri : c.DELETE,
+        "PATCH:"   + uri : c.PATCH,
+        "HEAD:"    + uri : c.HEAD,
+        "CONNECT:" + uri : c.CONNECT,
+        "OPTIONS:" + uri : c.OPTIONS,
+        "TRACE:"   + uri : c.TRACE,
+    })
+}
+

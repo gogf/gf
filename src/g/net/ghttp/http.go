@@ -26,14 +26,18 @@ type Request struct {
     getvals *url.Values
 }
 
-// 返回对象
-type Response struct {
+// 客户端请求结果对象
+type ClientResponse struct {
     http.Response
-    writer http.ResponseWriter
+}
+
+// 服务端请求返回对象
+type ServerResponse struct {
+    http.ResponseWriter
 }
 
 // http回调函数
-type HandlerFunc func(*Request, *Response)
+type HandlerFunc func(*Request, *ServerResponse)
 
 // uri与回调函数的绑定记录表
 type HandlerMap map[string]HandlerFunc

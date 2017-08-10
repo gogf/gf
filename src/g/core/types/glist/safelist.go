@@ -86,7 +86,7 @@ func (this *SafeList) PopBackAll() []interface{} {
 	return items
 }
 
-// (查找并)删除数据项
+// 删除数据项
 func (this *SafeList) Remove(e *list.Element) interface{} {
 	this.Lock()
 	r := this.L.Remove(e)
@@ -136,7 +136,7 @@ func (this *SafeList) BackAll() []interface{} {
 }
 
 // 获取链表头值(不删除)
-func (this *SafeList) Front() interface{} {
+func (this *SafeList) FrontItem() interface{} {
 	this.RLock()
 	if f := this.L.Front(); f != nil {
 		this.RUnlock()
@@ -145,6 +145,34 @@ func (this *SafeList) Front() interface{} {
 
 	this.RUnlock()
 	return nil
+}
+
+// 获取链表尾值(不删除)
+func (this *SafeList) BackItem() interface{} {
+    this.RLock()
+    if f := this.L.Back(); f != nil {
+        this.RUnlock()
+        return f.Value
+    }
+
+    this.RUnlock()
+    return nil
+}
+
+// 获取表头指针
+func (this *SafeList) Front() *list.Element {
+    this.RLock()
+    r := this.L.Front()
+    this.RUnlock()
+    return r
+}
+
+// 获取表位指针
+func (this *SafeList) Back() *list.Element {
+    this.RLock()
+    r := this.L.Back()
+    this.RUnlock()
+    return r
 }
 
 // 获取链表长度
@@ -205,12 +233,28 @@ func (this *SafeListLimited) RemoveAll() {
 	this.SL.RemoveAll()
 }
 
-func (this *SafeListLimited) Front() interface{} {
-	return this.SL.Front()
-}
-
 func (this *SafeListLimited) FrontAll() []interface{} {
 	return this.SL.FrontAll()
+}
+
+// 获取链表头值(不删除)
+func (this *SafeListLimited) FrontItem() interface{} {
+    return this.SL.FrontItem()
+}
+
+// 获取链表尾值(不删除)
+func (this *SafeListLimited) BackItem() interface{} {
+    return this.SL.BackItem()
+}
+
+// 获取表头指针
+func (this *SafeListLimited) Front() *list.Element {
+    return this.SL.Front()
+}
+
+// 获取表位指针
+func (this *SafeListLimited) Back() *list.Element {
+    return this.SL.Back()
 }
 
 func (this *SafeListLimited) Len() int {

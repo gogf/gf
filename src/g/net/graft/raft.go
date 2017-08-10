@@ -14,6 +14,7 @@ import (
     "g/core/types/gmap"
     "sync"
     "g/core/types/glist"
+    "g/net/ghttp"
 )
 
 const (
@@ -41,33 +42,35 @@ const (
     gELECTION_TIMEOUT_HEARTBEAT = 500     // 毫秒
     gLOG_REPL_TIMEOUT_HEARTBEAT = 1000    // 毫秒
     gLOG_REPL_AUTOSAVE_INTERVAL = 5000    // 毫秒
+    gLOG_REPL_LOGCLEAN_INTERVAL = 5000    // 毫秒
 
     // 选举操作
-    gMSG_RAFT_HI                = iota
-    gMSG_RAFT_HI2
-    gMSG_RAFT_HEARTBEAT
-    gMSG_RAFT_I_AM_LEADER
-    gMSG_RAFT_SPLIT_BRAINS_CHECK
-    gMSG_RAFT_SPLIT_BRAINS_UNSET
-    gMSG_RAFT_RESPONSE
-    gMSG_RAFT_SCORE_REQUEST
-    gMSG_RAFT_SCORE_COMPARE_REQUEST
-    gMSG_RAFT_SCORE_COMPARE_FAILURE
-    gMSG_RAFT_SCORE_COMPARE_SUCCESS
+    gMSG_RAFT_HI                    = 101
+    gMSG_RAFT_HI2                   = 102
+    gMSG_RAFT_HEARTBEAT             = 103
+    gMSG_RAFT_I_AM_LEADER           = 104
+    gMSG_RAFT_SPLIT_BRAINS_CHECK    = 105
+    gMSG_RAFT_SPLIT_BRAINS_UNSET    = 106
+    gMSG_RAFT_RESPONSE              = 107
+    gMSG_RAFT_SCORE_REQUEST         = 108
+    gMSG_RAFT_SCORE_COMPARE_REQUEST = 109
+    gMSG_RAFT_SCORE_COMPARE_FAILURE = 110
+    gMSG_RAFT_SCORE_COMPARE_SUCCESS = 111
 
     // 数据同步操作
-    gMSG_REPL_SET
-    gMSG_REPL_REMOVE
-    gMSG_REPL_UPDATE
-    gMSG_REPL_HEARTBEAT
-    gMSG_REPL_RESPONSE
-    gMSG_REPL_NEED_UPDATE_LEADER
-    gMSG_REPL_NEED_UPDATE_FOLLOWER
+    gMSG_REPL_SET                   = 210
+    gMSG_REPL_REMOVE                = 220
+    gMSG_REPL_INCREMENTAL_UPDATE    = 230
+    gMSG_REPL_COMPLETELY_UPDATE     = 240
+    gMSG_REPL_HEARTBEAT             = 250
+    gMSG_REPL_RESPONSE              = 260
+    gMSG_REPL_NEED_UPDATE_LEADER    = 270
+    gMSG_REPL_NEED_UPDATE_FOLLOWER  = 280
 
     // API相关
-    gMSG_API_PEERS_INFO
-    gMSG_API_PEERS_ADD
-    gMSG_API_PEERS_REMOVE
+    gMSG_API_PEERS_INFO             = 301
+    gMSG_API_PEERS_ADD              = 302
+    gMSG_API_PEERS_REMOVE           = 303
 )
 
 // 消息
@@ -96,6 +99,18 @@ type Node struct {
     LogList          *glist.SafeList          // leader日志列表，用以数据同步
     DataPath         string                   // 物理存储的本地数据目录绝对路径
     KVMap            *gmap.StringStringMap    // 存储的K-V哈希表
+}
+
+// 用于KV API接口的对象
+type NodeApiKv struct {
+    ghttp.ControllerBase
+    node *Node
+}
+
+// 用于Node API接口的对象
+type NodeApiNode struct {
+    ghttp.ControllerBase
+    node *Node
 }
 
 // 节点信息

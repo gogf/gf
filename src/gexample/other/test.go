@@ -2,35 +2,24 @@ package main
 
 import (
     "fmt"
-    "sync"
-    "time"
 )
 
-type T struct {
-    I int
-    J string
+// 控制器基类
+type ControllerBase struct {
+
 }
 
-var m1 sync.RWMutex
-var m2 sync.RWMutex
-
-func lockPrint1(i int) {
-    m1.Lock()
-    m1.Lock()
-    fmt.Println(i)
-    m1.Unlock()
-    m1.Unlock()
+// 控制器接口
+type Controller interface {
+    GET()
 }
 
-func lockPrint2(i int) {
-    m2.Lock()
-    fmt.Println(i)
-    m2.Unlock()
-}
+func (c ControllerBase) GET()     {}
+
 
 func main() {
-    go lockPrint1(1)
-    //go lockPrint1(2)
-    go lockPrint2(3)
-    time.Sleep(2*time.Second)
+    var a Controller
+    var b ControllerBase
+    a = b
+    fmt.Println(a)
 }

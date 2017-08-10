@@ -48,7 +48,7 @@ func (c *Client) Get(url string) string {
 }
 
 // 请求并返回response对象
-func (c *Client) Request(method, url, data string) *Response {
+func (c *Client) Request(method, url, data string) *ClientResponse {
     client   := &http.Client{}
     req, err := http.NewRequest(method, url, strings.NewReader(data))
     if err != nil {
@@ -60,7 +60,7 @@ func (c *Client) Request(method, url, data string) *Response {
         log.Println(err)
         return nil
     }
-    r := &Response{}
+    r := &ClientResponse{}
     r.Response = *resp
     return r
 }

@@ -12,8 +12,8 @@ import (
     "g/util/gtime"
     "g/core/types/gmap"
     "g/os/gfile"
-    "g/net/ghttp"
     "g/util/grand"
+    "g/net/ghttp"
 )
 
 // 局域网扫描回调函数，类似广播消息
@@ -30,7 +30,7 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
     }
 
     msg := n.receiveMsg(conn)
-    if msg.Head == gMSG_RAFT_HI2 {
+    if msg != nil && msg.Head == gMSG_RAFT_HI2 {
         n.updatePeerInfo(fromip, msg.Info)
         if msg.Info.Role == gROLE_LEADER {
             log.Println(n.Ip, "scanner: found leader", fromip)
@@ -60,6 +60,7 @@ func (n *Node) sendMsg(conn net.Conn, head int, body string) error {
     var msg = Msg { head, body, *n.getNodeInfo() }
     s, err := json.Marshal(msg)
     if err != nil {
+        log.Println("send msg parse err:", err)
         return err
     }
     return n.send(conn, s)
@@ -106,8 +107,8 @@ func (n *Node) Run() {
             address = fmt.Sprintf(":%d", gPORT_API)
         }
         api := ghttp.NewServerByAddr(address)
-        api.BindHandle("/kv",   n.kvApiHandler)
-        api.BindHandle("/node", n.nodeApiHandler)
+        api.BindController("/kv",   &NodeApiKv{node: n})
+        api.BindController("/node", &NodeApiNode{node: n})
         api.Run()
     }()
 
@@ -282,18 +283,6 @@ func (n *Node) setLeader(ip string) {
     n.mutex.Unlock()
 }
 
-func (n *Node) updatePeerStatus(ip string, status int) {
-    r := n.Peers.Get(ip)
-    if r != nil {
-        info       := r.(NodeInfo)
-        info.Status = status
-        if status == gSTATUS_ALIVE {
-            info.LastHeartbeat = gtime.Millisecond()
-        }
-        n.Peers.Set(ip, info)
-    }
-}
-
 func (n *Node) setLastLogId(id int64) {
     n.mutex.Lock()
     n.LastLogId = id
@@ -333,6 +322,18 @@ func (n *Node) setKVMap(m *gmap.StringStringMap) {
 // 更新节点信息
 func (n *Node) updatePeerInfo(ip string, info NodeInfo) {
     n.Peers.Set(ip, info)
+}
+
+func (n *Node) updatePeerStatus(ip string, status int) {
+    r := n.Peers.Get(ip)
+    if r != nil {
+        info       := r.(NodeInfo)
+        info.Status = status
+        if status == gSTATUS_ALIVE {
+            info.LastHeartbeat = gtime.Millisecond()
+        }
+        n.Peers.Set(ip, info)
+    }
 }
 
 // 更新选举截止时间

@@ -4,6 +4,7 @@ import (
     "net"
     "g/util/grand"
     "g/encoding/gjson"
+    "log"
 )
 
 // 集群协议通信接口回调函数
@@ -33,26 +34,33 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
         case gMSG_API_PEERS_ADD:                n.onMsgApiPeersAdd(conn, msg)
         case gMSG_API_PEERS_REMOVE:             n.onMsgApiPeersRemove(conn, msg)
     }
-    conn.Close()
+    //这里不用自动关闭链接，由于链接有读取超时，当一段时间没有数据时会自动关闭
+    n.raftTcpHandler(conn)
 }
 
-// 检测split brains问题
+// 检测split brains问题，检查两个leader的连通性
+// 如果不连通，那么follower保持当前leader不变
+// 如果能够连通，那么需要在两个leader中确定一个
 func (n *Node) onMsgRaftSplitBrainsCheck(conn net.Conn, msg *Msg) {
-    ip := n.Ip
-    if !n.Peers.Contains(msg.Body) {
-        tconn := n.getConn(msg.Body, gPORT_RAFT)
+    ip      := n.Ip
+    checkip := msg.Body
+    if !n.Peers.Contains(checkip) {
+        tconn := n.getConn(checkip, gPORT_RAFT)
         if tconn != nil {
             if n.sendMsg(tconn, gMSG_RAFT_HI, "") == nil {
                 rmsg := n.receiveMsg(tconn)
                 if rmsg != nil {
+                    n.updatePeerInfo(checkip, rmsg.Info)
                     if n.getLastLogId() < msg.Info.LastLogId {
-                        ip = msg.Info.Ip
+                        ip = checkip
                         n.setLeader(ip)
                         n.setRole(gROLE_FOLLOWER)
                     }
                 }
             }
             tconn.Close()
+        } else {
+            ip = ""
         }
     }
     n.sendMsg(conn, gMSG_RAFT_RESPONSE, ip)
@@ -98,17 +106,18 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
     } else {
         // 脑裂问题，一个节点处于两个网路中，并且两个网络的leader无法相互通信，会引起数据一致性问题
         if n.getLeader() != msg.Info.Ip {
+            log.Println("split brains occurred:", n.getLeader(), "and", msg.Info.Ip)
             leaderConn := n.getConn(n.getLeader(), gPORT_RAFT)
             if leaderConn != nil {
                 if n.sendMsg(leaderConn, gMSG_RAFT_SPLIT_BRAINS_CHECK, msg.Info.Ip) == nil {
                     rmsg := n.receiveMsg(leaderConn)
                     if rmsg != nil {
-                        if n.getLeader() != msg.Body {
-                            n.setLeader(msg.Body)
-                        } else {
-                            // 该节点不与对方leader为一个集群，关闭联系方式
+                        if msg.Body == "" {
+                            // 请求返回空表示该节点不与对方leader为一个集群，或者网络分区，关闭联系方式
                             result = gMSG_RAFT_SPLIT_BRAINS_UNSET
-                            n.Peers.Remove(msg.Info.Ip)
+                            n.updatePeerStatus(msg.Info.Ip, gSTATUS_DEAD)
+                        } else if n.getLeader() != msg.Body {
+                            n.setLeader(msg.Body)
                         }
                     }
                 }
@@ -118,9 +127,6 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
         }
     }
     n.sendMsg(conn, result, "")
-    if result == gMSG_RAFT_HEARTBEAT {
-        n.raftTcpHandler(conn)
-    }
 }
 
 // 选举比分获取
