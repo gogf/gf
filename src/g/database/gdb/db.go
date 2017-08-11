@@ -5,10 +5,11 @@ import (
     "errors"
     "fmt"
     "g/core/ginstance"
-    _ "github.com/go-sql-driver/mysql"
-    _ "github.com/lib/pq"
     "log"
     "g/util/grand"
+    "sync"
+    _ "github.com/go-sql-driver/mysql"
+    _ "github.com/lib/pq"
 )
 
 const (
@@ -20,8 +21,9 @@ const (
 
 // 数据库配置包内对象
 var config struct {
-    c  Config
-    d  string
+    sync.RWMutex
+    c  Config // 数据库配置
+    d  string // 默认数据库分组名称
 }
 
 // 数据库操作接口
@@ -145,7 +147,10 @@ func init() {
 
 // 设置当前应用的数据库配置信息，进行全局数据库配置覆盖操作
 // 支持三种数据类型的输入参数：Config, ConfigGroup, ConfigNode
-func SetConfig (c interface{}) {
+func SetConfig (c interface{}) error {
+    config.Lock()
+    defer config.Unlock()
+
     switch c.(type) {
         case Config:
             config.c = c.(Config)
@@ -157,18 +162,23 @@ func SetConfig (c interface{}) {
             config.c = Config {"default" : ConfigGroup { c.(ConfigNode) }}
 
         default:
-            panic("invalid config type, valid types are: Config, ConfigGroup, ConfigNode")
+            return errors.New("invalid config type, types should be in: Config, ConfigGroup, ConfigNode")
     }
+    return nil
 }
 
 // 添加一台数据库服务器配置
 func AddConfigNode (group string, node ConfigNode) {
+    config.Lock()
     config.c[group] = append(config.c[group], node)
+    config.Unlock()
 }
 
 // 添加数据库服务器集群配置
 func AddConfigGroup (group string, nodes ConfigGroup) {
+    config.Lock()
     config.c[group] = nodes
+    config.Unlock()
 }
 
 // 添加默认链接的一台数据库服务器配置
@@ -183,7 +193,9 @@ func AddDefaultConfigGroup (nodes ConfigGroup) {
 
 // 设置默认链接的数据库链接配置项(默认是 default)
 func SetDefaultGroup (groupName string) {
+    config.Lock()
     config.d = groupName
+    config.Unlock()
 }
 
 // 根据配置项获取一个数据库操作对象单例
@@ -220,6 +232,9 @@ func New() (Link, error) {
 
 // 根据数据库配置项创建一个数据库操作对象
 func NewByGroup(groupName string) (Link, error) {
+    config.RLock()
+    defer config.RUnlock()
+
     if len(config.c) < 1 {
         return nil, errors.New("empty database configuration")
     }

@@ -21,7 +21,6 @@ func (n *Node) saveLogEntry(entry LogEntry) {
                 n.KVMap.Set(k, v.(string))
             }
 
-
         case gMSG_REPL_REMOVE:
             log.Println("removing log entry", entry)
             for _, v := range entry.Items.([]interface{}) {
@@ -39,7 +38,7 @@ func (n *Node) logAutoSavingHandler() {
         // 当日志列表的最新ID与保存的ID不相等，或者超过超时时间
         if n.getLastLogId() != n.getLastSavedLogId() || gtime.Millisecond() - t > gLOG_REPL_AUTOSAVE_INTERVAL {
             //log.Println("saving data to file")
-            n.saveData()
+            n.saveDataToFile()
             t = gtime.Millisecond()
         } else {
             time.Sleep(100 * time.Millisecond)
@@ -48,11 +47,13 @@ func (n *Node) logAutoSavingHandler() {
 }
 
 // 保存数据到磁盘
-func (n *Node) saveData() {
+func (n *Node) saveDataToFile() {
     data := SaveInfo {
-        LastLogId : n.getLastLogId(),
-        Peers     : *n.Peers.Clone(),
-        DataMap   : *n.KVMap.Clone(),
+        LastLogId           : n.getLastLogId(),
+        LastServiceLogId    : n.getLastServiceLogId(),
+        Service             : *n.Service.Clone(),
+        Peers               : *n.Peers.Clone(),
+        DataMap             : *n.KVMap.Clone(),
     }
     content := gjson.Encode(&data)
     gfile.PutContents(n.getDataFilePath(), *content)
@@ -60,35 +61,54 @@ func (n *Node) saveData() {
 }
 
 // 从物理化文件中恢复变量
-func (n *Node) restoreData() {
+func (n *Node) restoreDataFromFile() {
     path := n.getDataFilePath()
     if gfile.Exists(path) {
         content := gfile.GetContents(path)
         if content != nil {
             log.Println("restore data from file:", path)
             var data = SaveInfo {
+                Service : make(map[string]interface{}),
                 Peers   : make(map[string]interface{}),
                 DataMap : make(map[string]string),
             }
             content := string(content)
             if gjson.DecodeTo(&content, &data) == nil {
-                dataMap := gmap.NewStringStringMap()
-                peerMap := gmap.NewStringInterfaceMap()
-                infoMap := make(map[string]NodeInfo)
-                gjson.DecodeTo(gjson.Encode(data.Peers), &infoMap)
-                dataMap.BatchSet(data.DataMap)
-                for k, v := range infoMap {
-                    peerMap.Set(k, v)
-                }
                 n.setLastLogId(data.LastLogId)
                 n.setLastSavedLogId(data.LastLogId)
-                n.setPeers(peerMap)
-                n.setKVMap(dataMap)
+                n.setLastServiceLogId(data.LastServiceLogId)
+                n.restoreService(&data)
+                n.restoreKVMap(&data)
+                n.restorePeer(&data)
             }
         }
-    } else {
-        //log.Println("no data file found at", path)
     }
+}
+
+func (n *Node) restoreService(data *SaveInfo) {
+    serviceMap := gmap.NewStringInterfaceMap()
+    servMap    := make(map[string]Service)
+    gjson.DecodeTo(gjson.Encode(data.Service), &servMap)
+    for k, v := range servMap {
+        serviceMap.Set(k, v)
+    }
+    n.setService(serviceMap)
+}
+
+func (n *Node) restorePeer(data *SaveInfo) {
+    peerMap := gmap.NewStringInterfaceMap()
+    infoMap := make(map[string]NodeInfo)
+    gjson.DecodeTo(gjson.Encode(data.Peers), &infoMap)
+    for k, v := range infoMap {
+        peerMap.Set(k, v)
+    }
+    n.setPeers(peerMap)
+}
+
+func (n *Node) restoreKVMap(data *SaveInfo) {
+    dataMap := gmap.NewStringStringMap()
+    dataMap.BatchSet(data.DataMap)
+    n.setKVMap(dataMap)
 }
 
 // 使用logentry数组更新本地的日志列表

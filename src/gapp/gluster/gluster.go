@@ -8,11 +8,12 @@ import (
 )
 
 func main() {
-    role    := gconsole.Option.GetIndex("role")
+    //role    := gconsole.Option.GetIndex("role")
     bindip  := gconsole.Option.GetIndex("bindip")
     monitor := gconsole.Option.GetIndex("monitor")
     if bindip != "" {
         server := graft.NewServerByIp(bindip)
+        server.SetFileName("gluster.db")
         server.SetMonitor(monitor)
         server.Run()
     } else {
@@ -23,6 +24,7 @@ func main() {
         }
         for _, ip := range ips {
             server := graft.NewServerByIp(ip)
+            server.SetFileName("gluster.db")
             server.SetMonitor(monitor)
             server.Run()
         }

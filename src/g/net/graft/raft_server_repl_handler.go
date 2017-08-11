@@ -25,9 +25,33 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         case gMSG_REPL_HEARTBEAT:           n.onMsgReplHeartbeat(conn, msg)
         case gMSG_REPL_COMPLETELY_UPDATE:   n.onMsgReplUpdate(conn, msg)
         case gMSG_REPL_INCREMENTAL_UPDATE:  n.onMsgReplUpdate(conn, msg)
+        case gMSG_API_SERVICE_SET:          n.onMsgServiceSet(conn, msg)
+        case gMSG_API_SERVICE_REMOVE:       n.onMsgServiceRemove(conn, msg)
     }
     //这里不用自动关闭链接，由于链接有读取超时，当一段时间没有数据时会自动关闭
     n.replTcpHandler(conn)
+}
+
+// service删除
+func (n *Node) onMsgServiceRemove(conn net.Conn, msg *Msg) {
+    list := make([]interface{}, 0)
+    if gjson.DecodeTo(&msg.Body, &list) == nil {
+        for _, name := range list {
+            n.Service.Remove(name.(string))
+            n.setLastServiceLogId(gtime.Microsecond())
+        }
+    }
+    n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
+}
+
+// service设置
+func (n *Node) onMsgServiceSet(conn net.Conn, msg *Msg) {
+    var service Service
+    if gjson.DecodeTo(&msg.Body, &service) == nil {
+        n.Service.Set(service.Name, service)
+        n.setLastServiceLogId(gtime.Microsecond())
+    }
+    n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }
 
 // kv删除

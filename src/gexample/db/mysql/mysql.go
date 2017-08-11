@@ -18,7 +18,7 @@ func init () {
         Port    : 3306,
         User    : "root",
         Pass    : "123456",
-        Name    : "test",
+        Name    : "test2",
         Type    : "mysql",
         Role    : "master",
         Charset : "utf8",
@@ -327,8 +327,16 @@ func keepPing() {
     fmt.Println("keepPing:")
     for {
         fmt.Println("ping...")
-        db.PingMaster()
-        db.PingSlave()
+        err := db.PingMaster()
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        err  = db.PingSlave()
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
         time.Sleep(1*time.Second)
     }
 }
@@ -354,20 +362,21 @@ func instance() {
 
 func main() {
 
-    create()
-    create()
-    insert()
-    query()
-    replace()
-    save()
-    batchInsert()
-    update1()
-    update2()
+    //create()
+    //create()
+    //insert()
+    //query()
+    //replace()
+    //save()
+    //batchInsert()
+    //update1()
+    //update2()
     //update3()
-    linkopSelect1()
-    linkopSelect2()
-    linkopSelect3()
-    linkopUpdate1()
-    linkopUpdate2()
-    linkopUpdate3()
+    //linkopSelect1()
+    //linkopSelect2()
+    //linkopSelect3()
+    //linkopUpdate1()
+    //linkopUpdate2()
+    //linkopUpdate3()
+    keepPing()
 }

@@ -9,11 +9,7 @@ var instances = gmap.NewStringInterfaceMap()
 
 // 获取单例对象
 func Get(k string) interface{} {
-    if v, ok := instances.Get(k); ok {
-        return v
-    } else {
-        return nil
-    }
+    return instances.Get(k)
 }
 
 // 设置单例对象

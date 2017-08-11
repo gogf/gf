@@ -95,7 +95,7 @@ func (n *Node) getConnFromPool(ip string, port int, conns *gmap.StringInterfaceM
 // 运行节点
 func (n *Node) Run() {
     // 初始化节点数据
-    n.restoreData()
+    n.restoreDataFromFile()
 
     // 创建接口监听
     go gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
@@ -107,8 +107,9 @@ func (n *Node) Run() {
             address = fmt.Sprintf(":%d", gPORT_API)
         }
         api := ghttp.NewServerByAddr(address)
-        api.BindController("/kv",   &NodeApiKv{node: n})
-        api.BindController("/node", &NodeApiNode{node: n})
+        api.BindController("/kv",      &NodeApiKv{node: n})
+        api.BindController("/node",    &NodeApiNode{node: n})
+        api.BindController("/service", &NodeApiService{node: n})
         api.Run()
     }()
 
@@ -154,15 +155,16 @@ func (n *Node) sayHiToAll() {
 // 获取当前节点的信息
 func (n *Node) getNodeInfo() *NodeInfo {
     return &NodeInfo {
-        Name          : n.Name,
-        Ip            : n.Ip,
-        Status        : gSTATUS_ALIVE,
-        Role          : n.getRole(),
-        Score         : n.getScore(),
-        ScoreCount    : n.getScoreCount(),
-        LastLogId     : n.getLastLogId(),
-        LastHeartbeat : gtime.Millisecond(),
-        Version       : gVERSION,
+        Name             : n.Name,
+        Ip               : n.Ip,
+        Status           : gSTATUS_ALIVE,
+        Role             : n.getRole(),
+        Score            : n.getScore(),
+        ScoreCount       : n.getScoreCount(),
+        LastLogId        : n.getLastLogId(),
+        LastServiceLogId : n.getLastServiceLogId(),
+        LastHeartbeat    : gtime.Millisecond(),
+        Version          : gVERSION,
     }
 }
 
@@ -204,6 +206,13 @@ func (n *Node) getLastLogId() int64 {
 func (n *Node) getLastSavedLogId() int64 {
     n.mutex.Lock()
     r := n.LastSavedLogId
+    n.mutex.Unlock()
+    return r
+}
+
+func (n *Node) getLastServiceLogId() int64 {
+    n.mutex.Lock()
+    r := n.LastServiceLogId
     n.mutex.Unlock()
     return r
 }
@@ -289,6 +298,12 @@ func (n *Node) SetMonitor(ip string) {
     n.mutex.Unlock()
 }
 
+func (n *Node) SetFileName(name string) {
+    n.mutex.Lock()
+    n.FileName = name
+    n.mutex.Unlock()
+}
+
 func (n *Node) setLastLogId(id int64) {
     n.mutex.Lock()
     n.LastLogId = id
@@ -301,9 +316,24 @@ func (n *Node) setLastSavedLogId(id int64) {
     n.mutex.Unlock()
 }
 
+func (n *Node) setLastServiceLogId(id int64) {
+    n.mutex.Lock()
+    n.LastServiceLogId = id
+    n.mutex.Unlock()
+}
+
 func (n *Node) setStatusInReplication(status bool ) {
     n.mutex.Lock()
     isInReplication = status
+    n.mutex.Unlock()
+}
+
+func (n *Node) setService(m *gmap.StringInterfaceMap) {
+    if m == nil {
+        return
+    }
+    n.mutex.Lock()
+    n.Service = m
     n.mutex.Unlock()
 }
 

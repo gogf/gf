@@ -9,11 +9,7 @@ var config = gmap.NewStringInterfaceMap()
 
 // 获取配置
 func Get(k string) interface{} {
-    if v, ok := config.Get(k); ok {
-        return v
-    } else {
-        return nil
-    }
+    return config.Get(k)
 }
 
 // 设置配置

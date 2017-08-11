@@ -7,7 +7,7 @@ import (
     "strings"
     "g/net/ghttp"
     "g/encoding/gjson"
-    "fmt"
+    "reflect"
 )
 
 // 节点信息API管理
@@ -55,7 +55,7 @@ func (this *NodeApiNode) DELETE(r *ghttp.Request, w *ghttp.ServerResponse) {
         return
     }
     // 只允许[]interface{}数据类型
-    if "[]interface {}" != fmt.Sprintf("%T", items)  {
+    if "[]interface {}" != reflect.TypeOf(items).String()  {
         w.ResponseJson(0, "invalid data type", nil)
         return
     }
