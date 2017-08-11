@@ -45,7 +45,7 @@ const (
     gLOG_REPL_TIMEOUT_HEARTBEAT     = 1000    // (毫秒)数据同步检测心跳间隔(数据包括kv数据及service数据)
     gLOG_REPL_AUTOSAVE_INTERVAL     = 5000    // (毫秒)数据自动物理化保存的间隔
     gLOG_REPL_LOGCLEAN_INTERVAL     = 5000    // (毫秒)数据同步时的日志清理间隔
-    gSERVICE_HEALTH_CHECK_INTERVAL  = 10000   // (毫秒)健康检查默认间隔
+    gSERVICE_HEALTH_CHECK_INTERVAL  = 5000    // (毫秒)健康检查默认间隔
 
     // RAFT操作
     gMSG_RAFT_HI                    = 110
@@ -112,9 +112,9 @@ type Node struct {
 
 // 服务配置对象
 type Service struct {
-    Name string                 `json:"name"`
-    Type string                 `json:"type"`
-    List []map[string]string    `json:"list"`
+    Name string                   `json:"name"`
+    Type string                   `json:"type"`
+    List []map[string]interface{} `json:"list"`
 }
 
 // 用于KV API接口的对象

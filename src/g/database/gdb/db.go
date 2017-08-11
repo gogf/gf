@@ -264,6 +264,11 @@ func NewByGroup(groupName string) (Link, error) {
     }
 }
 
+// 根据单点数据库配置获得一个数据库草最对象
+func NewByConfigNode(node ConfigNode) (Link, error) {
+    return newLink (&node, nil)
+}
+
 // 按照负载均衡算法(优先级配置)从数据库集群中选择一个配置节点出来使用
 func getConfigNodeByPriority (cg *ConfigGroup) *ConfigNode {
     if len(*cg) < 2 {

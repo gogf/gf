@@ -124,6 +124,8 @@ func (n *Node) Run() {
     go n.logAutoReplicationHandler()
     // 本地日志存储处理
     go n.logAutoSavingHandler()
+    // 服务健康检查
+    go n.serviceHealthCheckHandler()
 
     // 测试
     //go n.show()
