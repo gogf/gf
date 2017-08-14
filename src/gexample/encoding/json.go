@@ -30,7 +30,7 @@ func main() {
     //data := `["a","b","c"`        // 错误的json
     //data := `,{ "name"  :  "中国",  "age" : 31, "items":[1,2]:}` //错误的json
 
-    v, _ := gjson.Decode(&data)
+    v := gjson.DecodeToJson(&data)
     fmt.Println(v.GetNumber("list"))
 
     //v := map[string]interface{} {

@@ -14,6 +14,8 @@ import (
     "g/os/gfile"
     "g/util/grand"
     "g/net/ghttp"
+    "g/os/gconsole"
+    "g/encoding/gjson"
 )
 
 // 局域网扫描回调函数，类似广播消息
@@ -94,6 +96,8 @@ func (n *Node) getConnFromPool(ip string, port int, conns *gmap.StringInterfaceM
 
 // 运行节点
 func (n *Node) Run() {
+    // 读取配置文件
+    n.initFromCfg()
     // 初始化节点数据
     n.restoreDataFromFile()
 
@@ -101,12 +105,7 @@ func (n *Node) Run() {
     go gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
     go gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL),  n.replTcpHandler).Run()
     go func() {
-        ips, _  := gip.IntranetIP()
-        address := fmt.Sprintf("%s:%d", n.Ip, gPORT_API)
-        if len(ips) == 1 {
-            address = fmt.Sprintf(":%d", gPORT_API)
-        }
-        api := ghttp.NewServerByAddr(address)
+        api := ghttp.NewServerByAddr(fmt.Sprintf(":%d", gPORT_API))
         api.BindController("/kv",      &NodeApiKv{node: n})
         api.BindController("/node",    &NodeApiNode{node: n})
         api.BindController("/service", &NodeApiService{node: n})
@@ -114,8 +113,9 @@ func (n *Node) Run() {
     }()
 
     // 通知上线（这里采用局域网扫描的方式进行广播通知）
-    go n.sayHiToAll()
-    time.Sleep(2 * time.Second)
+    //go n.sayHiToAll()
+    //time.Sleep(2 * time.Second)
+
     // 选举超时检查
     go n.electionHandler()
     // 心跳保持及存活性检查
@@ -131,6 +131,55 @@ func (n *Node) Run() {
     //go n.show()
 }
 
+// 读取配置文件内容
+func (n *Node) initFromCfg() {
+    // 获取命令行指定的配置文件路径，如果不存在，那么使用默认路径的配置文件
+    // 默认路径为gcluster执行文件的同一目录下的gluster.json文件
+    cfgpath := gconsole.Option.Get("cfg")
+    if cfgpath == "" {
+        cfgpath = gfile.SelfDir() + gfile.Separator + "gluster.json"
+    }
+    if gfile.Exists(cfgpath) {
+        c := string(gfile.GetContents(cfgpath))
+        j := gjson.DecodeToJson(&c)
+        // 数据保存路径(请保证运行gcluster的用户有权限写入)
+        savepath := j.GetString("SavePath")
+        if savepath != "" {
+            n.SetSavePath(savepath)
+        }
+        // (可选)监控节点IP或域名地址
+        monitor := j.GetString("Monitor")
+        if monitor != "" {
+            n.setMonitor(monitor)
+        }
+        // (可选)初始化节点列表，包含自定义的所需添加的服务器IP或者域名列表
+        peers := j.GetArray("Peers")
+        if peers != nil {
+            for _, v := range peers {
+                n.Peers.Set(v.(string), NodeInfo{ Ip : v.(string) })
+            }
+        }
+        // (可选)初始化自定义的k-v数据
+        datamap := j.GetMap("DataMap")
+        if datamap != nil {
+            for k, v := range datamap {
+                n.KVMap.Set(k, v.(string))
+            }
+        }
+        // (可选)初始化服务配置
+        service := j.GetArray("Service")
+        if service != nil {
+            for _, v := range service {
+                var s Service
+                if gjson.DecodeTo(gjson.Encode(v), &s) == nil {
+                    n.Service.Set(s.Name, s)
+                    n.setLastServiceLogId(gtime.Microsecond())
+                }
+            }
+        }
+    }
+}
+
 // 测试使用，展示当前节点通信的主机列表
 func (n *Node) show() {
     gtime.SetInterval(1 * time.Second, func() bool{
@@ -140,7 +189,7 @@ func (n *Node) show() {
     })
 }
 
-// 向局域网内其他主机通知上线
+// (测试用)向局域网内其他主机通知上线
 func (n *Node) sayHiToAll() {
     segment := gip.GetSegment(n.Ip)
     if segment == "" {

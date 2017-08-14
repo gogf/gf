@@ -17,8 +17,28 @@ type Json struct {
 // 一个json变量
 type JsonVar interface{}
 
-// 解析json字符串为go变量，并返回操作对象指针
-func Decode (s *string) *Json {
+// 解码字符串为interface{}变量
+func Decode (s *string) interface{} {
+    var v interface{}
+    if DecodeTo(s, &v) == nil {
+        return v
+    }
+    return nil
+}
+
+// 编码go变量为json字符串，并返回json字符串指针
+func Encode (v interface{}) *string {
+    s, err := json.Marshal(v)
+    if err != nil {
+        log.Println("json marshaling failed: " + err.Error())
+        return nil
+    }
+    r := string(s)
+    return &r
+}
+
+// 解析json字符串为gjson.Json对象，并返回操作对象指针
+func DecodeToJson (s *string) *Json {
     var result interface{}
     if err := json.Unmarshal([]byte(*s), &result); err != nil {
         log.Println("json unmarshaling failed: " + err.Error())
@@ -35,16 +55,7 @@ func DecodeTo (s *string, v interface{}) error {
     return nil
 }
 
-// 解析go变量为json字符串，并返回json字符串指针
-func Encode (v interface{}) *string {
-    s, err := json.Marshal(v)
-    if err != nil {
-        log.Println("json marshaling failed: " + err.Error())
-        return nil
-    }
-    r := string(s)
-    return &r
-}
+
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
