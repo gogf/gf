@@ -1,7 +1,7 @@
 // 返回格式统一：
 // {result:1, message:"", data:""}
 
-package graft
+package gluster
 
 import (
     "strings"

@@ -1,4 +1,4 @@
-package graft
+package gluster
 
 import (
     "time"
@@ -113,7 +113,7 @@ func (n *Node) Run() {
         api.Run()
     }()
 
-    // 通知上线
+    // 通知上线（这里采用局域网扫描的方式进行广播通知）
     go n.sayHiToAll()
     time.Sleep(2 * time.Second)
     // 选举超时检查

@@ -1,7 +1,7 @@
 // 数据同步需要注意的是：
 // leader只有在通知完所有follower更新完数据之后，自身才会进行数据更新
 // 因此leader
-package graft
+package gluster
 
 import (
     "net"

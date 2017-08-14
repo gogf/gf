@@ -3,8 +3,8 @@ package main
 import (
     "g/net/gip"
     "log"
-    "g/net/graft"
     "g/os/gconsole"
+    "gapp/gluster/gluster"
 )
 
 func main() {
@@ -12,7 +12,7 @@ func main() {
     bindip  := gconsole.Option.GetIndex("bindip")
     monitor := gconsole.Option.GetIndex("monitor")
     if bindip != "" {
-        server := graft.NewServerByIp(bindip)
+        server := gluster.NewServerByIp(bindip)
         server.SetFileName("gluster.db")
         server.SetMonitor(monitor)
         server.Run()
@@ -23,12 +23,11 @@ func main() {
             return
         }
         for _, ip := range ips {
-            server := graft.NewServerByIp(ip)
+            server := gluster.NewServerByIp(ip)
             server.SetFileName("gluster.db")
             server.SetMonitor(monitor)
             server.Run()
         }
     }
-
     select { }
 }

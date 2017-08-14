@@ -17,7 +17,7 @@ func (l *mysqlLink) Open (c *ConfigNode) (*sql.DB, error) {
     if c.Linkinfo != "" {
         dbsource = c.Linkinfo
     } else {
-        dbsource = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", c.User, c.Pass, c.Host, c.Port, c.Name)
+        dbsource = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name)
     }
     db, err := sql.Open("mysql", dbsource)
     if err != nil {

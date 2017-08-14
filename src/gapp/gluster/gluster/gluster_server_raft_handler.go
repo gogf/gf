@@ -1,4 +1,4 @@
-package graft
+package gluster
 
 import (
     "net"
