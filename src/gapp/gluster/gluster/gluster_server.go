@@ -294,15 +294,9 @@ func (n *Node) setLeader(ip string) {
     n.mutex.Unlock()
 }
 
-func (n *Node) SetMonitor(ip string) {
+func (n *Node) setMonitor(ip string) {
     n.mutex.Lock()
     n.Monitor = ip
-    n.mutex.Unlock()
-}
-
-func (n *Node) SetFileName(name string) {
-    n.mutex.Lock()
-    n.FileName = name
     n.mutex.Unlock()
 }
 

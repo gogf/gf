@@ -4,7 +4,6 @@ import (
     "net/http"
     "log"
     "strings"
-    "io/ioutil"
     "time"
 )
 
@@ -13,44 +12,37 @@ func (c *Client) SetTimeOut(t time.Duration)  {
     c.Timeout = t
 }
 
-// post请求提交数据
-func (c *Client) Post(url, data string) string {
+// GET请求
+func (c *Client) Get(url string) *ClientResponse {
+    return c.Request("GET", url, "")
+}
+
+// PUT请求
+func (c *Client) Put(url, data string) *ClientResponse {
+    return c.Request("PUT", url, data)
+}
+
+// POST请求提交数据
+func (c *Client) Post(url, data string) *ClientResponse {
     resp, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(data))
     if err != nil {
         log.Println(err)
-        return ""
+        return nil
     }
-    body, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        log.Println(err)
-        resp.Body.Close()
-        return ""
-    }
-    resp.Body.Close()
-    return string(body)
+    r := &ClientResponse{}
+    r.Response = *resp
+    return r
 }
 
-// get请求
-func (c *Client) Get(url string) string {
-    resp, err := http.Get(url)
-    if err != nil {
-        log.Println(err)
-        return ""
-    }
-    body, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        log.Println(err)
-        resp.Body.Close()
-        return ""
-    }
-    resp.Body.Close()
-    return string(body)
+// DELETE请求
+func (c *Client) Delete(url, data string) *ClientResponse {
+    return c.Request("DELETE", url, data)
 }
 
 // 请求并返回response对象
 func (c *Client) Request(method, url, data string) *ClientResponse {
     client   := &http.Client{}
-    req, err := http.NewRequest(method, url, strings.NewReader(data))
+    req, err := http.NewRequest(strings.ToUpper(method), url, strings.NewReader(data))
     if err != nil {
         log.Println(err)
         return nil

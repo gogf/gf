@@ -9,8 +9,8 @@
 //     "name" : "Site Database",
 //     "type" : "mysql",
 //     "list" : [
-//         {"host":"192.168.2.102", "port":"3306", "user":"root", "pass":"123456"},
-//         {"host":"192.168.2.124", "port":"3306", "user":"root", "pass":"123456"}
+//         {"host":"192.168.2.102", "port":"3306", "user":"root", "pass":"123456", "database":"test"},
+//         {"host":"192.168.2.124", "port":"3306", "user":"root", "pass":"123456", "database":"test"}
 //     ]
 // }
 // 2、WEB服务：

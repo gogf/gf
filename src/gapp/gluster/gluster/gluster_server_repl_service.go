@@ -6,6 +6,7 @@ import (
     "strings"
     "sync"
     "g/database/gdb"
+    "g/net/ghttp"
 )
 
 // 服务健康检查回调函数
@@ -24,7 +25,7 @@ func (n *Node) serviceHealthCheckHandler() {
                 }(&service)
             }
             wg.Wait()
-            start += gSERVICE_HEALTH_CHECK_INTERVAL
+            start = gtime.Millisecond() + gSERVICE_HEALTH_CHECK_INTERVAL
         }
         time.Sleep(100 * time.Millisecond)
     }
@@ -85,5 +86,16 @@ func (n *Node) dbHealthCheck(stype string, item map[string]interface{}) map[stri
 
 // WEB健康检测
 func (n *Node) webHealthCheck(item map[string]interface{}) map[string]interface{} {
+    url, ok := item["check"]
+    if !ok {
+        url = item["url"]
+    }
+    c := ghttp.NewClient()
+    r := c.Get(url.(string))
+    if r == nil || r.StatusCode != 200 {
+        item["status"] = 0
+    } else {
+        item["status"] = 1
+    }
     return item
 }

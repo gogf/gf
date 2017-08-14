@@ -91,6 +91,7 @@ type Node struct {
 
     Name             string                   // 节点名称
     Ip               string                   // 主机节点的局域网ip
+    Cfg              string                   // 配置文件绝对路径
     Peers            *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
     Role             int                      // raft角色
     Leader           string                   // Leader节点ip
@@ -178,7 +179,7 @@ func NewServerByIp(ip string) *Node {
         Role         : gROLE_FOLLOWER,
         Peers        : gmap.NewStringInterfaceMap(),
         SavePath     : os.TempDir(),
-        FileName     : "graft.db",
+        FileName     : "gluster.db",
         LogChan      : make(chan LogEntry, 1024),
         LogList      : glist.NewSafeList(),
         Service      : gmap.NewStringInterfaceMap(),
