@@ -1,15 +1,17 @@
 package gtcp
 
-import "log"
+import (
+    "g/os/glog"
+)
 
 // 执行监听
 func (s *gTcpServer) Run() {
     if s == nil || s.listener == nil {
-        log.Println("start running failed: socket address bind failed")
+        glog.Println("start running failed: socket address bind failed")
         return
     }
     //if s.handler == nil {
-    //    log.Println("start running failed: socket handler not defined")
+    //    glog.Println("start running failed: socket handler not defined")
     //    return
     //}
 
@@ -17,7 +19,7 @@ func (s *gTcpServer) Run() {
     for  {
         conn, err := s.listener.Accept()
         if err != nil {
-            log.Println(err)
+            glog.Println(err)
         } else if conn != nil {
             go s.handler(conn)
         }

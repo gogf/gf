@@ -4,7 +4,8 @@ import (
     "net"
     "g/util/grand"
     "g/encoding/gjson"
-    "log"
+    "g/os/glog"
+    "g/util/gtime"
 )
 
 // 集群协议通信接口回调函数
@@ -74,7 +75,7 @@ func (n *Node) onMsgRaftSplitBrainsUnset(conn net.Conn, msg *Msg) {
 // 上线通知
 func (n *Node) onMsgRaftHi(conn net.Conn, msg *Msg) {
     n.sendMsg(conn, gMSG_RAFT_HI2, "")
-    //log.Println("add peer:", fromip, "to", n.Ip, ", remote", conn.RemoteAddr(), ", local", conn.LocalAddr())
+    //glog.Println("add peer:", fromip, "to", n.Ip, ", remote", conn.RemoteAddr(), ", local", conn.LocalAddr())
 }
 
 // 心跳保持
@@ -106,7 +107,7 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
     } else {
         // 脑裂问题，一个节点处于两个网路中，并且两个网络的leader无法相互通信，会引起数据一致性问题
         if n.getLeader() != msg.Info.Ip {
-            log.Println("split brains occurred:", n.getLeader(), "and", msg.Info.Ip)
+            glog.Println("split brains occurred:", n.getLeader(), "and", msg.Info.Ip)
             leaderConn := n.getConn(n.getLeader(), gPORT_RAFT)
             if leaderConn != nil {
                 if n.sendMsg(leaderConn, gMSG_RAFT_SPLIT_BRAINS_CHECK, msg.Info.Ip) == nil {
@@ -185,7 +186,7 @@ func (n *Node) onMsgApiPeersAdd(conn net.Conn, msg *Msg) {
             if n.Peers.Contains(ip) {
                 continue
             }
-            // log.Println("adding peer:", ip)
+            // glog.Println("adding peer:", ip)
             go func(ip string) {
                 conn := n.getConn(ip, gPORT_RAFT)
                 if conn != nil {
@@ -200,6 +201,7 @@ func (n *Node) onMsgApiPeersAdd(conn net.Conn, msg *Msg) {
                     info       := NodeInfo{}
                     info.Ip     = ip
                     info.Status = gSTATUS_DEAD
+                    info.LastActiveTime = gtime.Millisecond()
                     n.updatePeerInfo(info)
                 }
             }(ip)
@@ -214,7 +216,7 @@ func (n *Node) onMsgApiPeersRemove(conn net.Conn, msg *Msg) {
     gjson.DecodeTo(&(msg.Body), &list)
     if list != nil && len(list) > 0 {
         for _, ip := range list {
-            // log.Println("removing peer:", ip)
+            // glog.Println("removing peer:", ip)
             n.Peers.Remove(ip)
         }
     }

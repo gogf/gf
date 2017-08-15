@@ -6,16 +6,16 @@ package gluster
 import (
     "net"
     "g/encoding/gjson"
-    "log"
     "g/core/types/gmap"
     "g/util/gtime"
+    "g/os/glog"
 )
 
 // 集群数据同步接口回调函数
 func (n *Node) replTcpHandler(conn net.Conn) {
     msg := n.receiveMsg(conn)
     if msg == nil {
-        //log.Println("receive nil")
+        //glog.Println("receive nil")
         conn.Close()
         return
     }
@@ -85,7 +85,7 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
 // 心跳响应
 func (n *Node) onMsgReplHeartbeat(conn net.Conn, msg *Msg) {
     result := gMSG_REPL_HEARTBEAT
-    //log.Println("heartbeat:", n.getLastLogId(), msg.Info.LastLogId, n.getStatusInReplication())
+    //glog.Println("heartbeat:", n.getLastLogId(), msg.Info.LastLogId, n.getStatusInReplication())
     if n.getLastLogId() < msg.Info.LastLogId {
         if !n.getStatusInReplication() {
             result = gMSG_REPL_NEED_UPDATE_FOLLOWER
@@ -104,7 +104,7 @@ func (n *Node) onMsgReplHeartbeat(conn net.Conn, msg *Msg) {
 
 // 数据同步，更新本地数据
 func (n *Node) onMsgReplUpdate(conn net.Conn, msg *Msg) {
-    log.Println("receive data replication update")
+    glog.Println("receive data replication update")
     n.updateDataFromRemoteNode(conn, msg)
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }
@@ -128,7 +128,7 @@ func (n *Node) updateDataFromRemoteNode(conn net.Conn, msg *Msg) {
             n.setKVMap(newm)
             n.setLastLogId(msg.Info.LastLogId)
         } else {
-            log.Println(err)
+            glog.Println(err)
         }
     }
 }
@@ -136,24 +136,24 @@ func (n *Node) updateDataFromRemoteNode(conn net.Conn, msg *Msg) {
 // 同步数据到目标节点，采用增量+全量模式
 func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     n.setStatusInReplication(true)
-    log.Println("send data replication update from", n.Ip, "to", msg.Info.Ip)
+    glog.Println("send data replication update from", n.Ip, "to", msg.Info.Ip)
     // 首先进行增量同步
     if err := n.sendMsg(conn, gMSG_REPL_INCREMENTAL_UPDATE, *gjson.Encode(n.getLogEntriesByLastLogId(msg.Info.LastLogId))); err != nil {
-        log.Println(err)
+        glog.Println(err)
         return
     }
     rmsg := n.receiveMsg(conn)
     if rmsg != nil {
         // 如果增量同步失败则采用全量同步
         if n.getLastLogId() > rmsg.Info.LastLogId {
-            log.Println(rmsg.Info.Ip + ":", "incremental update failed, now try completely update")
+            glog.Println(rmsg.Info.Ip + ":", "incremental update failed, now try completely update")
             if err := n.sendMsg(conn, gMSG_REPL_COMPLETELY_UPDATE, *gjson.Encode(*n.KVMap.Clone())); err != nil {
-                log.Println(err)
+                glog.Println(err)
                 return
             }
             n.receiveMsg(conn)
         }
-        log.Println(rmsg.Info.Ip + ":", "data replication update done")
+        glog.Println(rmsg.Info.Ip + ":", "data replication update done")
     }
     n.setStatusInReplication(false)
 }

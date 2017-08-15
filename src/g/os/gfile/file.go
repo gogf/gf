@@ -3,17 +3,46 @@ package gfile
 import (
     "os"
     "path/filepath"
-    "log"
     "io"
     "io/ioutil"
     "sort"
     "fmt"
+    "g/os/glog"
 )
 
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
 
 // 文件分隔符
 var Separator = string(filepath.Separator)
+
+// 给定文件的绝对路径创建文件
+func Mkdir(path string) error {
+    err  := os.MkdirAll(path, os.ModePerm)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+// 给定文件的绝对路径创建文件
+func Create(path string) error {
+    f, err  := os.Create(path)
+    if err != nil {
+        return err
+    }
+    f.Close()
+    return nil
+}
+
+// 打开文件
+func Open(path string) *os.File {
+    f, err  := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0755)
+    if err != nil {
+        glog.Println(err)
+        return nil
+    }
+    return f
+}
 
 // 判断所给路径文件/文件夹是否存在
 func Exists(path string) bool {
@@ -30,8 +59,8 @@ func Exists(path string) bool {
 // 判断所给路径是否为文件夹
 func IsDir(path string) bool {
     s, err := os.Stat(path)
-    if (err != nil) {
-        log.Println(err)
+    if err != nil {
+        glog.Println(err)
         return false
     }
     return s.IsDir()
@@ -46,7 +75,7 @@ func IsFile(path string) bool {
 func Info(path string) os.FileInfo {
     info, err := os.Stat(path)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return nil
     }
     return info
@@ -56,7 +85,7 @@ func Info(path string) os.FileInfo {
 func MTime(path string) int64 {
     f, e := os.Stat(path)
     if e != nil {
-        log.Println(e)
+        glog.Println(e)
         return 0
     }
     return f.ModTime().Unix()
@@ -66,7 +95,7 @@ func MTime(path string) int64 {
 func Size(path string) int64 {
     f, e := os.Stat(path)
     if e != nil {
-        log.Println(e)
+        glog.Println(e)
         return 0
     }
     return f.Size()
@@ -128,7 +157,7 @@ func FormatSize(raw float64) string {
 func Move(src string, dst string) error {
     err := os.Rename(src, dst)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
     }
     return err
 }
@@ -145,22 +174,22 @@ func Copy(src string, dst string) bool {
     srcFile, err := os.Open(src)
     if err != nil {
         result = false
-        log.Println(err)
+        glog.Println(err)
     }
     dstFile, err := os.Create(dst)
     if err != nil {
         result = false
-        log.Println(err)
+        glog.Println(err)
     }
     _, err = io.Copy(dstFile, srcFile)
     if err != nil {
         result = false
-        log.Println(err)
+        glog.Println(err)
     }
     err = dstFile.Sync()
     if err != nil {
         result = false
-        log.Println(err)
+        glog.Println(err)
     }
     srcFile.Close()
     dstFile.Close()
@@ -171,7 +200,7 @@ func Copy(src string, dst string) bool {
 func Remove(path string) {
     err := os.Remove(path)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
     }
 }
 
@@ -180,7 +209,7 @@ func Readable(path string) bool {
     result    := true
     file, err := os.OpenFile(path, os.O_RDONLY, 0666)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         result = false
     }
     file.Close()
@@ -192,7 +221,7 @@ func Writable(path string) bool {
     result    := true
     file, err := os.OpenFile(path, os.O_WRONLY, 0666)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         result = false
     }
     file.Close()
@@ -204,7 +233,7 @@ func Chmod(path string, mode os.FileMode) bool {
     result := true
     err    := os.Chmod(path, mode)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         result = false
     }
     return result
@@ -214,13 +243,13 @@ func Chmod(path string, mode os.FileMode) bool {
 func ScanDir(path string) []string {
     f, err := os.Open(path)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return nil
     }
     list, err := f.Readdirnames(-1)
     f.Close()
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return nil
     }
     sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
@@ -232,7 +261,7 @@ func ScanDir(path string) []string {
 func RealPath(path string) string {
     p, err := filepath.Abs(path)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return ""
     }
     if !Exists(p) {
@@ -245,7 +274,7 @@ func RealPath(path string) string {
 func GetContents(path string) []byte {
     data, err := ioutil.ReadFile(path)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return nil
     }
     return data
@@ -265,7 +294,7 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) bool {
         }
     }
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         result = false
     }
     return result

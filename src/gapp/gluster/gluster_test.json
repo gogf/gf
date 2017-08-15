@@ -1,10 +1,6 @@
 {
     "SavePath" : "/usr/local/gluster/",
-
-    "Log": {
-        "ShowPrint"  : 1,
-        "LogDirPath" : "/usr/local/gluster/log/"
-    },
+    "LogPath"  : "/usr/local/gluster/log/",
     "Monitor"  : "jonhx.cn",
     "Peers"    : ["192.168.2.124"],
     "DataMap"  : {
@@ -15,8 +11,8 @@
             "name" : "Site Database",
             "type" : "mysql",
             "list" : [
-                {"host":"192.168.2.102", "port": 3306, "user":"root", "pass":"123456", "database":"test"},
-                {"host":"192.168.2.124", "port": 3306, "user":"root", "pass":"123456", "database":"test2"}
+                {"host":"192.168.2.102", "port": "3306", "user":"root", "pass":"123456", "database":"test"},
+                {"host":"192.168.2.124", "port": "3306", "user":"root", "pass":"123456", "database":"test2"}
             ]
         }
     ]

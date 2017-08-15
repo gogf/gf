@@ -3,10 +3,10 @@ package gluster
 import (
     "net"
     "encoding/json"
-    "log"
     "time"
     "io"
     "g/util/gutil"
+    "g/os/glog"
 )
 
 // 获取数据
@@ -23,7 +23,7 @@ func Receive(conn net.Conn) []byte {
                 break;
             }
             if err != io.EOF {
-                //log.Println("receive err:", err, "retry:", retry)
+                //glog.Println("receive err:", err, "retry:", retry)
             }
             retry ++
             time.Sleep(100 * time.Millisecond)
@@ -42,12 +42,12 @@ func Receive(conn net.Conn) []byte {
 // 获取Msg
 func RecieveMsg(conn net.Conn) *Msg {
     data := Receive(conn)
-    //log.Println(string(data))
+    //glog.Println(string(data))
     if data != nil && len(data) > 0 {
         var msg Msg
         err := json.Unmarshal(data, &msg)
         if err != nil {
-            log.Println("receive msg parse err:", err)
+            glog.Println("receive msg parse err:", err)
             return nil
         }
         return &msg
@@ -65,7 +65,7 @@ func Send(conn net.Conn, data []byte) error {
             if retry > gTCP_RETRY_COUNT - 1 {
                 return err
             }
-            //log.Println("data send:", err, "try:", retry)
+            //glog.Println("data send:", err, "try:", retry)
             retry ++
             time.Sleep(100 * time.Millisecond)
         } else {
@@ -82,7 +82,7 @@ func SendMsg(conn net.Conn, head int, body string) error {
     }
     s, err := json.Marshal(msg)
     if err != nil {
-        log.Println("send msg parse err:", err)
+        glog.Println("send msg parse err:", err)
         return err
     }
     return Send(conn, s)

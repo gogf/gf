@@ -7,9 +7,9 @@ import (
     "net"
     "g/encoding/gjson"
     "time"
-    "log"
     "g/core/types/gset"
     "sync"
+    "g/os/glog"
 )
 
 // 用以识别节点当前是否正在数据同步中
@@ -27,7 +27,7 @@ func (n *Node) logAutoReplicationHandler() {
         select {
             case entry := <- n.LogChan:
                 n.setStatusInReplication(true)
-                log.Println("sending log entry", entry)
+                glog.Println("sending log entry", entry)
                 for _, v := range n.Peers.Values() {
                     info := v.(NodeInfo)
                     if info.Status != gSTATUS_ALIVE {
@@ -38,7 +38,7 @@ func (n *Node) logAutoReplicationHandler() {
                         wg.Add(1)
                         go func(conn net.Conn, entry LogEntry) {
                             if err := n.sendMsg(conn, entry.Act, *gjson.Encode(entry)); err != nil {
-                                log.Println(err)
+                                glog.Println(err)
                                 conn.Close()
                                 wg.Done()
                                 return
@@ -86,7 +86,7 @@ func (n *Node) replicationLoop() {
                         if n.getRole() != gROLE_LEADER || !n.Peers.Contains(ip){
                             return
                         }
-                        //log.Println("sending replication heartbeat to", ip)
+                        //glog.Println("sending replication heartbeat to", ip)
                         if n.sendMsg(conn, gMSG_REPL_HEARTBEAT, "") != nil {
                             return
                         }
@@ -121,7 +121,7 @@ func (n *Node) autoCleanLogList() {
                     t := p.Prev()
                     n.LogList.Remove(p)
                     p  = t
-                    log.Println("clean log id:", entry.Id, "now log list len:", n.LogList.Len())
+                    glog.Println("clean log id:", entry.Id, "now log list len:", n.LogList.Len())
                 } else {
                     break;
                 }

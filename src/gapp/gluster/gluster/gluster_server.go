@@ -3,7 +3,6 @@ package gluster
 import (
     "time"
     "g/net/gip"
-    "log"
     "g/net/gtcp"
     "net"
     "fmt"
@@ -16,18 +15,20 @@ import (
     "g/net/ghttp"
     "g/os/gconsole"
     "g/encoding/gjson"
+    "g/os/glog"
+    "strings"
 )
 
 // 局域网扫描回调函数，类似广播消息
 func (n *Node) scannerRaftCallback(conn net.Conn) {
     fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
     if fromip == n.Ip {
-        //log.Println(fromip, "==", n.Ip)
+        //glog.Println(fromip, "==", n.Ip)
         return
     }
     err := n.sendMsg(conn, gMSG_RAFT_HI, "")
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return
     }
 
@@ -35,7 +36,7 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
     if msg != nil && msg.Head == gMSG_RAFT_HI2 {
         n.updatePeerInfo(msg.Info)
         if msg.Info.Role == gROLE_LEADER {
-            log.Println(n.Ip, "scanner: found leader", fromip)
+            glog.Println(n.Ip, "scanner: found leader", fromip)
             n.setLeader(fromip)
             n.setRole(gROLE_FOLLOWER)
         }
@@ -62,7 +63,7 @@ func (n *Node) sendMsg(conn net.Conn, head int, body string) error {
     var msg = Msg { head, body, *n.getNodeInfo() }
     s, err := json.Marshal(msg)
     if err != nil {
-        log.Println("send msg parse err:", err)
+        glog.Println("send msg parse err:", err)
         return err
     }
     return n.send(conn, s)
@@ -139,13 +140,19 @@ func (n *Node) initFromCfg() {
     if cfgpath == "" {
         cfgpath = gfile.SelfDir() + gfile.Separator + "gluster.json"
     }
+    cfgpath = "/home/john/Workspace/Go/gf/src/gapp/gluster/gluster_test.json"
     if gfile.Exists(cfgpath) {
         c := string(gfile.GetContents(cfgpath))
         j := gjson.DecodeToJson(&c)
         // 数据保存路径(请保证运行gcluster的用户有权限写入)
         savepath := j.GetString("SavePath")
         if savepath != "" {
-            n.SetSavePath(savepath)
+            n.SetSavePath(strings.TrimRight(savepath, gfile.Separator))
+        }
+        // 日志保存路径
+        logpath := j.GetString("LogPath")
+        if logpath != "" {
+            glog.SetLogPath(logpath)
         }
         // (可选)监控节点IP或域名地址
         monitor := j.GetString("Monitor")
@@ -183,8 +190,8 @@ func (n *Node) initFromCfg() {
 // 测试使用，展示当前节点通信的主机列表
 func (n *Node) show() {
     gtime.SetInterval(1 * time.Second, func() bool{
-        //log.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), n.getRole())
-        log.Println(n.Ip + ":", n.getLeader(), n.getLastLogId(), *n.Peers.Clone(), n.LogList.Len(), n.KVMap.M)
+        //glog.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), n.getRole())
+        glog.Println(n.Ip + ":", n.getLeader(), n.getLastLogId(), *n.Peers.Clone(), n.LogList.Len(), n.KVMap.M)
         return true
     })
 }
@@ -193,14 +200,14 @@ func (n *Node) show() {
 func (n *Node) sayHiToAll() {
     segment := gip.GetSegment(n.Ip)
     if segment == "" {
-        log.Fatalln("invalid listening ip given")
+        glog.Fatalln("invalid listening ip given")
         return
     }
     startIp := fmt.Sprintf("%s.1",   segment)
     endIp   := fmt.Sprintf("%s.255", segment)
-    //log.Println(n.Ip, "say hi to all")
+    //glog.Println(n.Ip, "say hi to all")
     gscanner.New().SetTimeout(6 * time.Second).ScanIp(startIp, endIp, gPORT_RAFT, n.scannerRaftCallback)
-    //log.Println(n.Ip, "say hi to all done")
+    //glog.Println(n.Ip, "say hi to all done")
 }
 
 // 获取当前节点的信息
@@ -214,7 +221,6 @@ func (n *Node) getNodeInfo() *NodeInfo {
         ScoreCount       : n.getScoreCount(),
         LastLogId        : n.getLastLogId(),
         LastServiceLogId : n.getLastServiceLogId(),
-        LastHeartbeat    : gtime.Millisecond(),
         Version          : gVERSION,
     }
 }
@@ -410,13 +416,13 @@ func (n *Node) updatePeerStatus(ip string, status int) {
     if r != nil {
         info       := r.(NodeInfo)
         info.Status = status
-        if status == gSTATUS_ALIVE {
-            info.LastHeartbeat = gtime.Millisecond()
+        if info.LastActiveTime == 0 || status == gSTATUS_ALIVE {
+            info.LastActiveTime = gtime.Millisecond()
         }
         n.Peers.Set(ip, info)
     }
     //if status == gSTATUS_DEAD {
-    //    log.Println(ip, "was dead")
+    //    glog.Println(ip, "was dead")
     //}
 }
 

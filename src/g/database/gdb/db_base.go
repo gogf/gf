@@ -5,7 +5,7 @@ import (
     "errors"
     "strings"
     "database/sql"
-    "log"
+    "g/os/glog"
 )
 
 // 关闭链接
@@ -15,7 +15,7 @@ func (l *dbLink) Close() error {
         if (err == nil) {
             l.master = nil
         } else {
-            log.Fatal(err)
+            glog.Fatal(err)
             return err
         }
     }
@@ -24,7 +24,7 @@ func (l *dbLink) Close() error {
         if (err == nil) {
             l.slave = nil
         } else {
-            log.Fatal(err)
+            glog.Fatal(err)
             return err
         }
     }

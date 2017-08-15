@@ -3,7 +3,7 @@ package ghttp
 import (
     "g/encoding/gjson"
     "io/ioutil"
-    "log"
+    "g/os/glog"
 )
 
 type ResponseJson struct {
@@ -22,7 +22,7 @@ func (r *ServerResponse) ResponseJson(result int, message string, data interface
 func (r *ClientResponse) ReadAll() string {
     body, err := ioutil.ReadAll(r.Body)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         r.Body.Close()
         return ""
     }

@@ -2,7 +2,7 @@ package gtcp
 
 import (
     "net"
-    "log"
+    "g/os/glog"
 )
 
 // tcp server结构体
@@ -16,12 +16,12 @@ type gTcpServer struct {
 func NewServer (address string, handler func (net.Conn)) *gTcpServer {
     tcpaddr, err := net.ResolveTCPAddr("tcp4", address)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return nil
     }
     listen, err := net.ListenTCP("tcp", tcpaddr)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return nil
     }
     return &gTcpServer{ address, listen, handler}

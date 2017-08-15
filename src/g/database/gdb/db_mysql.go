@@ -3,7 +3,7 @@ package gdb
 import (
     "database/sql"
     "fmt"
-    "log"
+    "g/os/glog"
 )
 
 // 数据库链接对象
@@ -21,7 +21,7 @@ func (l *mysqlLink) Open (c *ConfigNode) (*sql.DB, error) {
     }
     db, err := sql.Open("mysql", dbsource)
     if err != nil {
-        log.Fatal(err)
+        glog.Fatal(err)
     }
     return db, err
 }

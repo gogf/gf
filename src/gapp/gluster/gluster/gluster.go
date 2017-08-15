@@ -9,12 +9,12 @@
 package gluster
 
 import (
-    "log"
     "os"
     "g/core/types/gmap"
     "sync"
     "g/core/types/glist"
     "g/net/ghttp"
+    "g/os/glog"
 )
 
 const (
@@ -146,7 +146,7 @@ type NodeInfo struct {
     ScoreCount       int
     LastLogId        int64
     LastServiceLogId int64
-    LastHeartbeat    int64  // 上一次心跳检查的毫秒数
+    LastActiveTime   int64  // 上一次活跃的时间毫秒(活跃包含：新增、心跳)，该数据用于Peer数据表中
     Version          string // 节点的版本
 }
 
@@ -170,7 +170,7 @@ type LogEntry struct {
 func NewServerByIp(ip string) *Node {
     hostname, err := os.Hostname()
     if err != nil {
-        log.Fatalln("getting local hostname failed")
+        glog.Fatalln("getting local hostname failed")
         return nil
     }
     node := Node {

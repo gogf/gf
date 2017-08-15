@@ -17,7 +17,7 @@ func (n *Node) serviceHealthCheckHandler() {
         if n.getRole() == gROLE_LEADER && gtime.Millisecond() > start {
             for _, v := range n.Service.Values() {
                 service := v.(Service)
-                //log.Println("health check:", service.Name)
+                //glog.Println("health check:", service.Name)
                 go func(s *Service) {
                     wg.Add(1)
                     n.checkServiceHealth(s)

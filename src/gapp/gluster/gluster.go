@@ -2,8 +2,8 @@ package main
 
 import (
     "g/net/gip"
-    "log"
     "gapp/gluster/gluster"
+    "g/os/glog"
 )
 
 func main() {
@@ -12,11 +12,11 @@ func main() {
     bindip   := "192.168.2.102"
     ips, err := gip.IntranetIP()
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return
     }
     if len(ips) > 1 && bindip == "" {
-        log.Println("You have serveral local ips, please specify one to bind")
+        glog.Println("You have serveral local ips, please specify one to bind")
         return
     }
     if bindip == "" {

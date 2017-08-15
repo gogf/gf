@@ -3,8 +3,8 @@ package gdb
 import (
     "database/sql"
     "fmt"
-    "log"
     "regexp"
+    "g/os/glog"
 )
 
 // postgresql的适配
@@ -25,7 +25,7 @@ func (l *pgsqlLink) Open (c *ConfigNode) (*sql.DB, error) {
     }
     db, err := sql.Open("postgres", dbsource)
     if err != nil {
-        log.Fatal(err)
+        glog.Fatal(err)
     }
     return db, err
 }

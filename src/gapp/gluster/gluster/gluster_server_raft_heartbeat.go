@@ -4,8 +4,8 @@ import (
     "net"
     "time"
     "g/util/gtime"
-    "log"
     "g/core/types/gset"
+    "g/os/glog"
 )
 
 // 通过心跳维持集群统治，如果心跳不及时，那么选民会重新进入选举流程
@@ -23,8 +23,9 @@ func (n *Node) heartbeatHandler() {
                     n.updatePeerStatus(info.Ip, gSTATUS_DEAD)
                     conns.Remove(info.Ip)
                     // 如果失联超过3天，那么将该节点移除
-                    if gtime.Millisecond() - info.LastHeartbeat > 3 * 86400 * 1000 {
-                        log.Println(info.Ip, "was dead over 3 days, removing from peers")
+                    // 注意一个节点添加的时候会给定一个初始化的活跃时间(添加时间)，因此该字段不会为0
+                    if info.LastActiveTime != 0 && gtime.Millisecond() - info.LastActiveTime > 3 * 86400 * 1000 {
+                        glog.Println(info.Ip, "was dead over 3 days, removing from peers")
                         n.Peers.Remove(info.Ip)
                     }
                     continue
@@ -49,12 +50,12 @@ func (n *Node) heartbeatHandler() {
                             n.updatePeerStatus(ip, gSTATUS_DEAD)
                             return
                         } else {
-                            //log.Println("receive heartbeat back from", ip)
+                            //glog.Println("receive heartbeat back from", ip)
                             // 更新节点信息
                             n.updatePeerInfo(msg.Info)
                             switch msg.Head {
                                 case gMSG_RAFT_I_AM_LEADER:
-                                    log.Println("two leader occured, set", ip, "as my leader, done heartbeating")
+                                    glog.Println("two leader occured, set", ip, "as my leader, done heartbeating")
                                     n.setRole(gROLE_FOLLOWER)
                                     n.setLeader(ip)
 

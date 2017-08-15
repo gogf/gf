@@ -5,8 +5,8 @@ import (
     "sync"
     "time"
     "g/util/gtime"
-    "log"
     "g/core/types/gmap"
+    "g/os/glog"
 )
 
 // 服务器节点选举
@@ -26,7 +26,7 @@ func (n *Node) electionHandler() {
                 n.beginScore()
             } else {
                 // 集群目前仅有1个节点
-                log.Println("only one node in this cluster, so i'll be the leader")
+                glog.Println("only one node in this cluster, so i'll be the leader")
                 n.setRole(gROLE_LEADER)
                 n.setLeader(n.Ip)
             }
@@ -43,7 +43,7 @@ func (n *Node) electionHandler() {
 // 一轮选举比分
 func (n *Node) beginScore() {
     var wg sync.WaitGroup
-    log.Println(n.Ip + ":", "begin new score")
+    glog.Println(n.Ip + ":", "begin new score")
     conns := gmap.NewStringInterfaceMap()
     // 请求比分，获取比分数据
     for _, v := range n.Peers.Values() {
@@ -64,7 +64,7 @@ func (n *Node) beginScore() {
                 return
             }
             if err := n.sendMsg(conn, gMSG_RAFT_SCORE_REQUEST, ""); err != nil {
-                log.Println(err)
+                glog.Println(err)
                 conn.Close()
                 return
             }
@@ -111,24 +111,24 @@ func (n *Node) beginScore() {
             }
 
             if err := n.sendMsg(conn, gMSG_RAFT_SCORE_COMPARE_REQUEST, ""); err != nil {
-                log.Println(err)
+                glog.Println(err)
                 return
             }
             msg := n.receiveMsg(conn)
             if msg != nil {
                 switch msg.Head {
                     case gMSG_RAFT_I_AM_LEADER:
-                        log.Println("score comparison: get leader from", ip)
+                        glog.Println("score comparison: get leader from", ip)
                         n.setLeader(ip)
                         n.setRole(gROLE_FOLLOWER)
 
                     case gMSG_RAFT_SCORE_COMPARE_FAILURE:
-                        log.Println("score comparison: get failure from", ip)
+                        glog.Println("score comparison: get failure from", ip)
                         n.setLeader(ip)
                         n.setRole(gROLE_FOLLOWER)
 
                     case gMSG_RAFT_SCORE_COMPARE_SUCCESS:
-                        log.Println("score comparison: get success from", ip)
+                        glog.Println("score comparison: get success from", ip)
                 }
             }
         }(info.Ip, conn)
@@ -137,7 +137,7 @@ func (n *Node) beginScore() {
 
     // 如果其他节点均没有条件满足leader，那么选举自身为leader
     if n.getRole() != gROLE_FOLLOWER {
-        log.Println(n.Ip + ":", "I've won this score comparison")
+        glog.Println(n.Ip + ":", "I've won this score comparison")
         n.setRole(gROLE_LEADER)
         n.setLeader(n.Ip)
     }

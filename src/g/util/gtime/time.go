@@ -40,3 +40,13 @@ func Millisecond() int64 {
 func Second() int64 {
     return time.Now().UnixNano()/1e9
 }
+
+// 获得当前的日期(例如：2006-01-02)
+func NowDate() string {
+    return time.Now().Format("2006-01-02")
+}
+
+// 获得当前的时间(例如：2006-01-02 15:04:05)
+func NowDatetime() string {
+    return time.Now().Format("2006-01-02 15:04:05")
+}

@@ -9,7 +9,7 @@ import (
 
 // 示例：
 // s := smtp.New("smtp.exmail.qq.com:25", "notify@a.com", "password")
-// log.Println(s.SendMail("notify@a.com", "ulric@b.com;rain@c.com", "这是subject", "这是body,<font color=red>red</font>"))
+// glog.Println(s.SendMail("notify@a.com", "ulric@b.com;rain@c.com", "这是subject", "这是body,<font color=red>red</font>"))
 
 type Smtp struct {
     Address  string

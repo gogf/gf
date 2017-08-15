@@ -1,14 +1,13 @@
 package main
 
 import (
+    "g/os/gfile"
     "fmt"
-    "g/encoding/gmd5"
-    "errors"
 )
 
 
 func main() {
-    fmt.Println(gmd5.Encode(1))
-    fmt.Println(gmd5.Encode(errors.New("123")))
-
+    //err := gfile.Mkdir("/tmp/a/b/c/d")
+    fmt.Println(gfile.Readable("/"))
+    fmt.Println(gfile.Writable("/root"))
 }

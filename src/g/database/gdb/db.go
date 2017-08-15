@@ -5,9 +5,9 @@ import (
     "errors"
     "fmt"
     "g/core/ginstance"
-    "log"
     "g/util/grand"
     "sync"
+    "g/os/glog"
     _ "github.com/go-sql-driver/mysql"
     _ "github.com/lib/pq"
 )
@@ -308,13 +308,13 @@ func newLink (masterNode *ConfigNode, slaveNode *ConfigNode) (Link, error) {
     }
     master, err := link.Open(masterNode)
     if err != nil {
-        log.Fatal(err)
+        glog.Fatal(err)
     }
     slave := master
     if slaveNode != nil {
         slave,  err = link.Open(slaveNode)
         if err != nil {
-            log.Fatal(err)
+            glog.Fatal(err)
         }
     }
     link.setLink(link)

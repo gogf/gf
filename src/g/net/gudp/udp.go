@@ -16,12 +16,12 @@ type gUdpServer struct {
 func NewServer (address string, handler func (*net.UDPConn)) *gUdpServer {
     tcpaddr, err := net.ResolveUDPAddr("udp4", address)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return nil
     }
     listen, err := net.ListenUDP("udp", tcpaddr)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return nil
     }
     return &gUdpServer{ address, listen, handler}

@@ -6,23 +6,23 @@ package gluster
 import (
     "g/encoding/gjson"
     "time"
-    "log"
     "g/core/types/gmap"
     "g/os/gfile"
     "g/util/gtime"
+    "g/os/glog"
 )
 
 // 保存日志数据
 func (n *Node) saveLogEntry(entry LogEntry) {
     switch entry.Act {
         case gMSG_REPL_SET:
-            log.Println("setting log entry", entry)
+            glog.Println("setting log entry", entry)
             for k, v := range entry.Items.(map[string]interface{}) {
                 n.KVMap.Set(k, v.(string))
             }
 
         case gMSG_REPL_REMOVE:
-            log.Println("removing log entry", entry)
+            glog.Println("removing log entry", entry)
             for _, v := range entry.Items.([]interface{}) {
                 n.KVMap.Remove(v.(string))
             }
@@ -37,7 +37,7 @@ func (n *Node) logAutoSavingHandler() {
     for {
         // 当日志列表的最新ID与保存的ID不相等，或者超过超时时间
         if n.getLastLogId() != n.getLastSavedLogId() || gtime.Millisecond() - t > gLOG_REPL_AUTOSAVE_INTERVAL {
-            //log.Println("saving data to file")
+            //glog.Println("saving data to file")
             n.saveDataToFile()
             t = gtime.Millisecond()
         } else {
@@ -66,7 +66,7 @@ func (n *Node) restoreDataFromFile() {
     if gfile.Exists(path) {
         content := gfile.GetContents(path)
         if content != nil {
-            log.Println("restore data from file:", path)
+            glog.Println("restore data from file:", path)
             var data = SaveInfo {
                 Service : make(map[string]interface{}),
                 Peers   : make(map[string]interface{}),
@@ -116,7 +116,7 @@ func (n *Node) updateFromLogEntriesJson(jsonContent *string) error {
     array := make([]LogEntry, 0)
     err   := gjson.DecodeTo(jsonContent, &array)
     if err != nil {
-        log.Println(err)
+        glog.Println(err)
         return err
     }
     if array != nil && len(array) > 0 {
