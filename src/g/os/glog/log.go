@@ -23,9 +23,7 @@ var logger = New()
 
 // 新建自定义的日志操作对象
 func New() *Logger {
-    return &Logger{
-        logio : os.Stdout,
-    }
+    return &Logger{ }
 }
 
 func SetLogPath(path string) {
@@ -137,6 +135,12 @@ func (l *Logger) GetLastLogDate() string {
     return r
 }
 
+func (l *Logger) SetLogIO(w io.Writer) {
+    l.mutex.RLock()
+    l.logio = w
+    l.mutex.RUnlock()
+}
+
 // 设置日志文件的存储目录路径
 func (l *Logger) SetLogPath(path string) {
     l.mutex.Lock()
@@ -161,118 +165,137 @@ func (l *Logger) checkLogIO() {
             fpath     := l.logpath + string(filepath.Separator) + fname
             fio, err  := os.OpenFile(fpath, os.O_WRONLY|os.O_APPEND, 0755)
             if err == nil && fio != nil {
-                if l.logio != nil {
-                    if reflect.TypeOf(l.logio).String() == "*os.File" {
-                        l.logio.(*os.File).Close()
-                    }
+                if l.logio != nil && reflect.TypeOf(l.logio).String() == "*os.File" {
+                    l.logio.(*os.File).Close()
                 }
                 l.logio = fio
             } else {
-                l.Error(err)
+                fmt.Fprintln(os.Stderr, err)
             }
             l.mutex.Unlock()
         }
     }
 }
 
-func (l *Logger) print(s string) {
+// 核心打印数据方法(标准输出)
+func (l *Logger) stdPrint(s string) {
     l.checkLogIO()
     l.mutex.Lock()
-    fmt.Fprint(l.logio, time.Now().Format("2006-01-02 15:04:05 ") + s)
+    if l.logio == nil {
+        fmt.Fprint(os.Stdout, l.format(s))
+    } else {
+        fmt.Fprint(l.logio, l.format(s))
+    }
     l.mutex.Unlock()
 }
 
+// 核心打印数据方法(标准错误)
+func (l *Logger) errPrint(s string) {
+    l.checkLogIO()
+    l.mutex.Lock()
+    if l.logio == nil {
+        fmt.Fprint(os.Stderr, l.format(s))
+    } else {
+        fmt.Fprint(l.logio, l.format(s))
+    }
+    l.mutex.Unlock()
+}
+
+func (l *Logger) format(s string) string {
+    return time.Now().Format("2006-01-02 15:04:05 ") + s
+}
+
 func (l *Logger) Print(v ...interface{}) {
-    l.print(fmt.Sprint(v...))
+    l.stdPrint(fmt.Sprint(v...))
 }
 
 func (l *Logger) Printf(format string, v ...interface{}) {
-    l.print(fmt.Sprintf(format, v...))
+    l.stdPrint(fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Println(v ...interface{}) {
-    l.print(fmt.Sprintln(v...))
+    l.stdPrint(fmt.Sprintln(v...))
 }
 
 func (l *Logger) Fatal(v ...interface{}) {
-    l.Println(v...)
+    l.errPrint(fmt.Sprint(v...))
     os.Exit(1)
 }
 
 func (l *Logger) Fatalf(format string, v ...interface{}) {
-    l.Printf(format, v...)
+    l.errPrint(fmt.Sprintf(format, v...))
     os.Exit(1)
 }
 
 func (l *Logger) Fatalln(v ...interface{}) {
-    l.Println(v...)
+    l.errPrint(fmt.Sprintln(v...))
     os.Exit(1)
 }
 
 func (l *Logger) Panic(v ...interface{}) {
     s := fmt.Sprint(v...)
-    l.Print(s)
+    l.errPrint(s)
     panic(s)
 }
 
 func (l *Logger) Panicf(format string, v ...interface{}) {
     s := fmt.Sprintf(format, v...)
-    l.Print(s)
+    l.errPrint(s)
     panic(s)
 }
 
 func (l *Logger) Panicln(v ...interface{}) {
     s := fmt.Sprintln(v...)
-    l.Print(s)
+    l.errPrint(s)
     panic(s)
 }
 
 func (l *Logger) Info(v ...interface{}) {
-    l.print("[INFO] " + fmt.Sprintln(v...))
+    l.stdPrint("[INFO] " + fmt.Sprintln(v...))
 }
 
 func (l *Logger) Debug(v ...interface{}) {
-    l.print("[DEBU] " + fmt.Sprintln(v...))
+    l.stdPrint("[DEBU] " + fmt.Sprintln(v...))
 }
 
 func (l *Logger) Notice(v ...interface{}) {
-    l.print("[NOTI] " + fmt.Sprintln(v...))
+    l.errPrint("[NOTI] " + fmt.Sprintln(v...))
 }
 
 func (l *Logger) Warning(v ...interface{}) {
-    l.print("[WARN] " + fmt.Sprintln(v...))
+    l.errPrint("[WARN] " + fmt.Sprintln(v...))
 }
 
 func (l *Logger) Error(v ...interface{}) {
-    l.print("[ERRO] " + fmt.Sprintln(v...))
+    l.errPrint("[ERRO] " + fmt.Sprintln(v...))
 }
 
 func (l *Logger) Critical(v ...interface{}) {
-    l.print("[CRIT] " + fmt.Sprintln(v...))
+    l.errPrint("[CRIT] " + fmt.Sprintln(v...))
 }
 
 func (l *Logger) Infof(format string, v ...interface{}) {
-    l.print("[INFO] " + fmt.Sprintf(format, v...))
+    l.stdPrint("[INFO] " + fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Debugf(format string, v ...interface{}) {
-    l.print("[DEBU] " + fmt.Sprintf(format, v...))
+    l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Noticef(format string, v ...interface{}) {
-    l.print("[NOTI] " + fmt.Sprintf(format, v...))
+    l.errPrint("[NOTI] " + fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Warningf(format string, v ...interface{}) {
-    l.print("[WARN] " + fmt.Sprintf(format, v...))
+    l.errPrint("[WARN] " + fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Errorf(format string, v ...interface{}) {
-    l.print("[ERRO] " + fmt.Sprintf(format, v...))
+    l.errPrint("[ERRO] " + fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Criticalf(format string, v ...interface{}) {
-    l.print("[CRIT] " + fmt.Sprintf(format, v...))
+    l.errPrint("[CRIT] " + fmt.Sprintf(format, v...))
 }
 
 // 给定文件的绝对路径创建文件

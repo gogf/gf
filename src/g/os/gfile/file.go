@@ -8,6 +8,8 @@ import (
     "sort"
     "fmt"
     "g/os/glog"
+    "time"
+    "strings"
 )
 
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
@@ -38,7 +40,7 @@ func Create(path string) error {
 func Open(path string) *os.File {
     f, err  := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0755)
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         return nil
     }
     return f
@@ -60,7 +62,7 @@ func Exists(path string) bool {
 func IsDir(path string) bool {
     s, err := os.Stat(path)
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         return false
     }
     return s.IsDir()
@@ -72,13 +74,13 @@ func IsFile(path string) bool {
 }
 
 // 获取文件或目录信息
-func Info(path string) os.FileInfo {
+func Info(path string) *os.FileInfo {
     info, err := os.Stat(path)
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         return nil
     }
-    return info
+    return &info
 }
 
 // 修改时间
@@ -155,11 +157,7 @@ func FormatSize(raw float64) string {
 
 // 文件移动/重命名
 func Move(src string, dst string) error {
-    err := os.Rename(src, dst)
-    if err != nil {
-        glog.Println(err)
-    }
-    return err
+    return os.Rename(src, dst)
 }
 
 
@@ -169,47 +167,39 @@ func Rename(src string, dst string) error {
 }
 
 // 文件复制
-func Copy(src string, dst string) bool {
-    result       := true
+func Copy(src string, dst string) error {
     srcFile, err := os.Open(src)
     if err != nil {
-        result = false
-        glog.Println(err)
+        return err
     }
     dstFile, err := os.Create(dst)
     if err != nil {
-        result = false
-        glog.Println(err)
+        return err
     }
     _, err = io.Copy(dstFile, srcFile)
     if err != nil {
-        result = false
-        glog.Println(err)
+        return err
     }
     err = dstFile.Sync()
     if err != nil {
-        result = false
-        glog.Println(err)
+        return err
     }
     srcFile.Close()
     dstFile.Close()
-    return result
+    return nil
 }
 
 // 文件删除
-func Remove(path string) {
-    err := os.Remove(path)
-    if err != nil {
-        glog.Println(err)
-    }
+func Remove(path string) error {
+    return os.RemoveAll(path)
 }
 
 // 文件是否可读
-func Readable(path string) bool {
+func IsReadable(path string) bool {
     result    := true
     file, err := os.OpenFile(path, os.O_RDONLY, 0666)
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         result = false
     }
     file.Close()
@@ -217,39 +207,46 @@ func Readable(path string) bool {
 }
 
 // 文件是否可写
-func Writable(path string) bool {
-    result    := true
-    file, err := os.OpenFile(path, os.O_WRONLY, 0666)
-    if err != nil {
-        glog.Println(err)
-        result = false
+func IsWritable(path string) bool {
+    result := true
+    if IsDir(path) {
+        // 如果是目录，那么创建一个临时文件进行写入测试
+        tfile := strings.TrimRight(path, Separator) + Separator + string(time.Now().UnixNano())
+        err   := Create(tfile)
+        if err != nil {
+            result = false
+        } else {
+            Remove(tfile)
+        }
+    } else {
+        // 如果是文件，那么判断文件是否可打开
+        file, err := os.OpenFile(path, os.O_WRONLY, 0666)
+        if err != nil {
+            // glog.Println(err)
+            result = false
+        }
+        file.Close()
     }
-    file.Close()
     return result
 }
 
 // 修改文件/目录权限
-func Chmod(path string, mode os.FileMode) bool {
-    result := true
-    err    := os.Chmod(path, mode)
-    if err != nil {
-        glog.Println(err)
-        result = false
-    }
-    return result
+func Chmod(path string, mode os.FileMode) error {
+    return os.Chmod(path, mode)
 }
 
 // 打开目录，并返回其下一级子目录名称列表，按照文件名称大小写进行排序
 func ScanDir(path string) []string {
     f, err := os.Open(path)
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         return nil
     }
+
     list, err := f.Readdirnames(-1)
     f.Close()
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         return nil
     }
     sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
@@ -261,7 +258,7 @@ func ScanDir(path string) []string {
 func RealPath(path string) string {
     p, err := filepath.Abs(path)
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         return ""
     }
     if !Exists(p) {
@@ -274,7 +271,7 @@ func RealPath(path string) string {
 func GetContents(path string) []byte {
     data, err := ioutil.ReadFile(path)
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         return nil
     }
     return data
@@ -294,7 +291,7 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) bool {
         }
     }
     if err != nil {
-        glog.Println(err)
+        // glog.Println(err)
         result = false
     }
     return result

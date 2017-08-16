@@ -30,7 +30,7 @@ func Decode (s *string) interface{} {
 func Encode (v interface{}) *string {
     s, err := json.Marshal(v)
     if err != nil {
-        glog.Println("json marshaling failed: " + err.Error())
+        glog.Error("json marshaling failed: " + err.Error())
         return nil
     }
     r := string(s)
@@ -41,7 +41,7 @@ func Encode (v interface{}) *string {
 func DecodeToJson (s *string) *Json {
     var result interface{}
     if err := json.Unmarshal([]byte(*s), &result); err != nil {
-        glog.Println("json unmarshaling failed: " + err.Error())
+        glog.Error("json unmarshaling failed: " + err.Error())
         return nil
     }
     return &Json{ &result }

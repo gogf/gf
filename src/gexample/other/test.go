@@ -1,13 +1,12 @@
 package main
 
 import (
-    "g/os/gfile"
-    "fmt"
+    "g/os/glog"
 )
 
 
 func main() {
-    //err := gfile.Mkdir("/tmp/a/b/c/d")
-    fmt.Println(gfile.Readable("/"))
-    fmt.Println(gfile.Writable("/root"))
+    glog.SetLogPath("/root")
+    glog.Info("test")
+    //glog.Error("test")
 }
