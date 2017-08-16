@@ -7,7 +7,6 @@ import (
     "io/ioutil"
     "sort"
     "fmt"
-    "g/os/glog"
     "time"
     "strings"
 )
@@ -40,7 +39,6 @@ func Create(path string) error {
 func Open(path string) *os.File {
     f, err  := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0755)
     if err != nil {
-        // glog.Println(err)
         return nil
     }
     return f
@@ -62,7 +60,6 @@ func Exists(path string) bool {
 func IsDir(path string) bool {
     s, err := os.Stat(path)
     if err != nil {
-        // glog.Println(err)
         return false
     }
     return s.IsDir()
@@ -77,7 +74,6 @@ func IsFile(path string) bool {
 func Info(path string) *os.FileInfo {
     info, err := os.Stat(path)
     if err != nil {
-        // glog.Println(err)
         return nil
     }
     return &info
@@ -87,7 +83,6 @@ func Info(path string) *os.FileInfo {
 func MTime(path string) int64 {
     f, e := os.Stat(path)
     if e != nil {
-        glog.Println(e)
         return 0
     }
     return f.ModTime().Unix()
@@ -97,7 +92,6 @@ func MTime(path string) int64 {
 func Size(path string) int64 {
     f, e := os.Stat(path)
     if e != nil {
-        glog.Println(e)
         return 0
     }
     return f.Size()
@@ -194,12 +188,11 @@ func Remove(path string) error {
     return os.RemoveAll(path)
 }
 
-// 文件是否可读
+// 文件是否可
 func IsReadable(path string) bool {
     result    := true
     file, err := os.OpenFile(path, os.O_RDONLY, 0666)
     if err != nil {
-        // glog.Println(err)
         result = false
     }
     file.Close()
@@ -222,7 +215,6 @@ func IsWritable(path string) bool {
         // 如果是文件，那么判断文件是否可打开
         file, err := os.OpenFile(path, os.O_WRONLY, 0666)
         if err != nil {
-            // glog.Println(err)
             result = false
         }
         file.Close()
@@ -239,14 +231,12 @@ func Chmod(path string, mode os.FileMode) error {
 func ScanDir(path string) []string {
     f, err := os.Open(path)
     if err != nil {
-        // glog.Println(err)
         return nil
     }
 
     list, err := f.Readdirnames(-1)
     f.Close()
     if err != nil {
-        // glog.Println(err)
         return nil
     }
     sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
@@ -258,7 +248,6 @@ func ScanDir(path string) []string {
 func RealPath(path string) string {
     p, err := filepath.Abs(path)
     if err != nil {
-        // glog.Println(err)
         return ""
     }
     if !Exists(p) {
@@ -271,15 +260,13 @@ func RealPath(path string) string {
 func GetContents(path string) []byte {
     data, err := ioutil.ReadFile(path)
     if err != nil {
-        // glog.Println(err)
         return nil
     }
     return data
 }
 
 // 写入文件内容
-func putContents(path string, data []byte, flag int, perm os.FileMode) bool {
-    result := true
+func putContents(path string, data []byte, flag int, perm os.FileMode) error {
     f, err := os.OpenFile(path, flag, perm)
     if err == nil {
         n, err := f.Write(data)
@@ -291,19 +278,18 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) bool {
         }
     }
     if err != nil {
-        // glog.Println(err)
-        result = false
+        return err
     }
-    return result
+    return nil
 }
 
 // 写入文件内容
-func PutContents(path string, content string) bool {
+func PutContents(path string, content string) error {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 }
 
 // 追加内容到文件末尾
-func PutContentsAppend(path string, content string) bool {
+func PutContentsAppend(path string, content string) error {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 }
 

@@ -144,14 +144,26 @@ func (n *Node) initFromCfg() {
     if gfile.Exists(cfgpath) {
         c := string(gfile.GetContents(cfgpath))
         j := gjson.DecodeToJson(&c)
+        if j == nil {
+            glog.Fatalln("config file decoding failed(surely a json format?), exit")
+            return
+        }
         // 数据保存路径(请保证运行gcluster的用户有权限写入)
         savepath := j.GetString("SavePath")
         if savepath != "" {
+            if !gfile.IsWritable(savepath) {
+                glog.Fatalln(savepath, "is not writable for saving data")
+                return
+            }
             n.SetSavePath(strings.TrimRight(savepath, gfile.Separator))
         }
         // 日志保存路径
         logpath := j.GetString("LogPath")
         if logpath != "" {
+            if !gfile.IsWritable(logpath) {
+                glog.Fatalln(logpath, "is not writable for saving log")
+                return
+            }
             glog.SetLogPath(logpath)
         }
         // (可选)监控节点IP或域名地址

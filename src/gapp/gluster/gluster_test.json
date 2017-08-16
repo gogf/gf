@@ -1,6 +1,6 @@
 {
-    "SavePath" : "/usr/local/gluster/",
-    "LogPath"  : "/usr/local/gluster/log/",
+    "SavePath" : "/tmp/gluster/",
+    "LogPath"  : "/tmp/gluster/log/",
     "Monitor"  : "jonhx.cn",
     "Peers"    : ["192.168.2.124"],
     "DataMap"  : {
@@ -17,4 +17,5 @@
         }
     ]
 }
+
 

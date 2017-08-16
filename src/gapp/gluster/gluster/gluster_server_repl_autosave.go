@@ -56,8 +56,12 @@ func (n *Node) saveDataToFile() {
         DataMap             : *n.KVMap.Clone(),
     }
     content := gjson.Encode(&data)
-    gfile.PutContents(n.getDataFilePath(), *content)
-    n.setLastSavedLogId(n.getLastLogId())
+    err     := gfile.PutContents(n.getDataFilePath(), *content)
+    if err != nil {
+        glog.Error(err)
+    } else {
+        n.setLastSavedLogId(n.getLastLogId())
+    }
 }
 
 // 从物理化文件中恢复变量

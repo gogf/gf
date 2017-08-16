@@ -9,6 +9,7 @@ import (
     "path/filepath"
     "time"
     "fmt"
+    "g/os/gfile"
 )
 
 type Logger struct {
@@ -156,14 +157,22 @@ func (l *Logger) checkLogIO() {
     if date != l.GetLastLogDate() {
         path := l.GetLogPath()
         if path != "" {
-            if !exists(path) {
-                mkdir(path)
+            if !gfile.Exists(path) {
+                err := gfile.Mkdir(path)
+                if err != nil {
+                    fmt.Fprintln(os.Stderr, err)
+                    return
+                }
+            }
+            if !gfile.IsWritable(path) {
+                fmt.Fprintln(os.Stderr, path + " is no writable for current user")
+                return
             }
 
             l.mutex.Lock()
             fname     := date + ".log"
             fpath     := l.logpath + string(filepath.Separator) + fname
-            fio, err  := os.OpenFile(fpath, os.O_WRONLY|os.O_APPEND, 0755)
+            fio, err  := os.OpenFile(fpath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
             if err == nil && fio != nil {
                 if l.logio != nil && reflect.TypeOf(l.logio).String() == "*os.File" {
                     l.logio.(*os.File).Close()
@@ -296,25 +305,4 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 
 func (l *Logger) Criticalf(format string, v ...interface{}) {
     l.errPrint("[CRIT] " + fmt.Sprintf(format, v...))
-}
-
-// 给定文件的绝对路径创建文件
-func mkdir(path string) error {
-    err  := os.MkdirAll(path, os.ModePerm)
-    if err != nil {
-        return err
-    }
-    return nil
-}
-
-// 判断所给路径文件/文件夹是否存在
-func exists(path string) bool {
-    _, err := os.Stat(path)
-    if err != nil {
-        if os.IsExist(err) {
-            return true
-        }
-        return false
-    }
-    return true
 }
