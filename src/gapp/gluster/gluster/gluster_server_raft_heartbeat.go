@@ -3,7 +3,6 @@ package gluster
 import (
     "net"
     "time"
-    "g/util/gtime"
     "g/core/types/gset"
     "g/os/glog"
 )

@@ -38,6 +38,7 @@ import (
 func (this *NodeApiService) GET(r *ghttp.Request, w *ghttp.ServerResponse) {
     name := r.GetRequestString("name")
     if name == "" {
+        // @todo 与健康检测的map并发读写有冲突：fatal error: concurrent map read and map write
         w.ResponseJson(1, "ok", *this.node.Service.Clone())
     } else {
         if this.node.Service.Contains(name) {

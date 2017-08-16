@@ -24,6 +24,7 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         case gMSG_REPL_REMOVE:              n.onMsgReplRemove(conn, msg)
         case gMSG_REPL_HEARTBEAT:           n.onMsgReplHeartbeat(conn, msg)
         case gMSG_REPL_COMPLETELY_UPDATE:   n.onMsgReplUpdate(conn, msg)
+        case gMSG_REPL_SERVICE_UPDATE:      n.onMsgReplServiceUpdate(conn, msg)
         case gMSG_REPL_INCREMENTAL_UPDATE:  n.onMsgReplUpdate(conn, msg)
         case gMSG_API_SERVICE_SET:          n.onMsgServiceSet(conn, msg)
         case gMSG_API_SERVICE_REMOVE:       n.onMsgServiceRemove(conn, msg)
@@ -86,19 +87,30 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
 func (n *Node) onMsgReplHeartbeat(conn net.Conn, msg *Msg) {
     result := gMSG_REPL_HEARTBEAT
     //glog.Println("heartbeat:", n.getLastLogId(), msg.Info.LastLogId, n.getStatusInReplication())
-    if n.getLastLogId() < msg.Info.LastLogId {
+    // 日志检测同步
+    lastLogId := n.getLastLogId()
+    if lastLogId < msg.Info.LastLogId {
         if !n.getStatusInReplication() {
             result = gMSG_REPL_NEED_UPDATE_FOLLOWER
         }
-    } else if n.getLastLogId() > msg.Info.LastLogId {
+    } else if lastLogId > msg.Info.LastLogId {
         if !n.getStatusInReplication() {
             result = gMSG_REPL_NEED_UPDATE_LEADER
         }
-    }
-    if result == gMSG_REPL_NEED_UPDATE_LEADER {
-        n.updateDataToRemoteNode(conn, msg)
     } else {
-        n.sendMsg(conn, result, "")
+        // service同步检测
+        lastServiceLogId := n.getLastServiceLogId()
+        if lastServiceLogId < msg.Info.LastServiceLogId {
+            result = gMSG_REPL_SERVICE_NEED_UPDATE_FOLLOWER
+        } else if lastServiceLogId > msg.Info.LastServiceLogId {
+            result = gMSG_REPL_SERVICE_NEED_UPDATE_LEADER
+        }
+    }
+    switch result {
+        case gMSG_REPL_NEED_UPDATE_LEADER:          n.updateDataToRemoteNode(conn, msg)
+        case gMSG_REPL_SERVICE_NEED_UPDATE_LEADER:  n.updateServiceToRemoteNode(conn, msg)
+        default:
+            n.sendMsg(conn, result, "")
     }
 }
 
@@ -106,6 +118,13 @@ func (n *Node) onMsgReplHeartbeat(conn net.Conn, msg *Msg) {
 func (n *Node) onMsgReplUpdate(conn net.Conn, msg *Msg) {
     glog.Println("receive data replication update")
     n.updateDataFromRemoteNode(conn, msg)
+    n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
+}
+
+// Service同步，更新本地数据
+func (n *Node) onMsgReplServiceUpdate(conn net.Conn, msg *Msg) {
+    glog.Println("receive service replication update")
+    n.updateServiceFromRemoteNode(conn, msg)
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }
 
@@ -154,6 +173,22 @@ func (n *Node) updateDataFromRemoteNode(conn net.Conn, msg *Msg) {
     }
 }
 
+// 从目标节点同步Service数据
+func (n *Node) updateServiceFromRemoteNode(conn net.Conn, msg *Msg) {
+    m   := make(map[string]Service)
+    err := gjson.DecodeTo(&(msg.Body), &m)
+    if err == nil {
+        newm := gmap.NewStringInterfaceMap()
+        for k, v := range m {
+            newm.Set(k, v)
+        }
+        n.setService(newm)
+        n.setLastServiceLogId(msg.Info.LastServiceLogId)
+    } else {
+        glog.Error(err)
+    }
+}
+
 // 同步数据到目标节点，采用增量+全量模式
 func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     n.setStatusInReplication(true)
@@ -187,5 +222,15 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
         }
         n.receiveMsg(conn)
     }
+}
+
+// 同步Service到目标节点
+func (n *Node) updateServiceToRemoteNode(conn net.Conn, msg *Msg) {
+    glog.Println("send service replication update from", n.Ip, "to", msg.Info.Ip)
+    if err := n.sendMsg(conn, gMSG_REPL_SERVICE_UPDATE, *gjson.Encode(*n.Service.Clone())); err != nil {
+        glog.Error(err)
+        return
+    }
+    n.receiveMsg(conn)
 }
 

@@ -61,21 +61,24 @@ const (
     gMSG_RAFT_SCORE_COMPARE_SUCCESS = 210
 
     // 数据同步操作
-    gMSG_REPL_SET                   = 310
-    gMSG_REPL_REMOVE                = 320
-    gMSG_REPL_INCREMENTAL_UPDATE    = 330
-    gMSG_REPL_COMPLETELY_UPDATE     = 340
-    gMSG_REPL_HEARTBEAT             = 350
-    gMSG_REPL_RESPONSE              = 360
-    gMSG_REPL_NEED_UPDATE_LEADER    = 370
-    gMSG_REPL_NEED_UPDATE_FOLLOWER  = 380
+    gMSG_REPL_SET                           = 310
+    gMSG_REPL_REMOVE                        = 320
+    gMSG_REPL_INCREMENTAL_UPDATE            = 330
+    gMSG_REPL_COMPLETELY_UPDATE             = 340
+    gMSG_REPL_SERVICE_UPDATE                = 345
+    gMSG_REPL_HEARTBEAT                     = 350
+    gMSG_REPL_RESPONSE                      = 360
+    gMSG_REPL_NEED_UPDATE_LEADER            = 370
+    gMSG_REPL_NEED_UPDATE_FOLLOWER          = 380
+    gMSG_REPL_SERVICE_NEED_UPDATE_LEADER    = 390
+    gMSG_REPL_SERVICE_NEED_UPDATE_FOLLOWER  = 400
 
     // API相关
-    gMSG_API_PEERS_INFO             = 510
-    gMSG_API_PEERS_ADD              = 520
-    gMSG_API_PEERS_REMOVE           = 530
-    gMSG_API_SERVICE_SET            = 540
-    gMSG_API_SERVICE_REMOVE         = 550
+    gMSG_API_PEERS_INFO                     = 510
+    gMSG_API_PEERS_ADD                      = 520
+    gMSG_API_PEERS_REMOVE                   = 530
+    gMSG_API_SERVICE_SET                    = 540
+    gMSG_API_SERVICE_REMOVE                 = 550
 )
 
 // 消息

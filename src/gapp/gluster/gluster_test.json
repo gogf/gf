@@ -1,7 +1,5 @@
 {
     "SavePath" : "/tmp/gluster/",
-
-    "Monitor"  : "jonhx.cn",
     "Peers"    : ["192.168.2.124"],
     "DataMap"  : {
         "name":"john"

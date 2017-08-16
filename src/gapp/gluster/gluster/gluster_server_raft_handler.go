@@ -5,7 +5,6 @@ import (
     "g/util/grand"
     "g/encoding/gjson"
     "g/os/glog"
-    "g/util/gtime"
 )
 
 // 集群协议通信接口回调函数

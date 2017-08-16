@@ -4,7 +4,6 @@ import (
     "net/http"
     "strings"
     "time"
-    "g/os/glog"
 )
 
 // 设置请求过期时间
@@ -49,7 +48,7 @@ func (c *Client) Request(method, url, data string) *ClientResponse {
     }
     resp, err := client.Do(req)
     if err != nil {
-        glog.Println(err)
+        //glog.Println(err)
         return nil
     }
     r := &ClientResponse{}

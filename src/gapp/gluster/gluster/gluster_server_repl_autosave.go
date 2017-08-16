@@ -55,7 +55,7 @@ func (n *Node) restoreDataFromFile() {
     if gfile.Exists(path) {
         content := gfile.GetContents(path)
         if content != nil {
-            glog.Println("restore data from file:", path)
+            glog.Println("restore data from", path)
             var data = SaveInfo {
                 LogList : make([]LogEntry, 0),
                 Service : make(map[string]interface{}),

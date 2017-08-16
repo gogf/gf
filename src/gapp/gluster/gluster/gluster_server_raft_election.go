@@ -43,7 +43,7 @@ func (n *Node) electionHandler() {
 // 一轮选举比分
 func (n *Node) beginScore() {
     var wg sync.WaitGroup
-    glog.Println(n.Ip + ":", "begin new score")
+    glog.Println(n.Ip + ":", "begin new election")
     conns := gmap.NewStringInterfaceMap()
     // 请求比分，获取比分数据
     for _, v := range n.Peers.Values() {

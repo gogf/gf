@@ -139,64 +139,75 @@ func (n *Node) initFromCfg() {
     cfgpath := gconsole.Option.Get("cfg")
     if cfgpath == "" {
         cfgpath = gfile.SelfDir() + gfile.Separator + "gluster.json"
-    }
-    //cfgpath = "/home/john/Workspace/Go/gf/src/gapp/gluster/gluster_test.json"
-    if gfile.Exists(cfgpath) {
-        c := string(gfile.GetContents(cfgpath))
-        j := gjson.DecodeToJson(&c)
-        if j == nil {
-            glog.Fatalln("config file decoding failed(surely a json format?), exit")
+    } else {
+        if !gfile.Exists(cfgpath) {
+            glog.Error(cfgpath, "does not exist")
             return
         }
-        // 数据保存路径(请保证运行gcluster的用户有权限写入)
-        savepath := j.GetString("SavePath")
-        if savepath != "" {
-            if !gfile.IsWritable(savepath) {
-                glog.Fatalln(savepath, "is not writable for saving data")
-                return
+    }
+    if !gfile.Exists(cfgpath) {
+        return
+    }
+    c := string(gfile.GetContents(cfgpath))
+    j := gjson.DecodeToJson(&c)
+    if j == nil {
+        glog.Fatalln("config file decoding failed(surely a json format?), exit")
+        return
+    }
+    glog.Println("initializing from", cfgpath)
+    // 数据保存路径(请保证运行gcluster的用户有权限写入)
+    savepath := j.GetString("SavePath")
+    if savepath != "" {
+        if !gfile.IsWritable(savepath) {
+            glog.Fatalln(savepath, "is not writable for saving data")
+            return
+        }
+        n.SetSavePath(strings.TrimRight(savepath, gfile.Separator))
+    }
+    // 日志保存路径
+    logpath := j.GetString("LogPath")
+    if logpath != "" {
+        if !gfile.IsWritable(logpath) {
+            glog.Fatalln(logpath, "is not writable for saving log")
+            return
+        }
+        glog.SetLogPath(logpath)
+    }
+    // (可选)监控节点IP或域名地址
+    monitor := j.GetString("Monitor")
+    if monitor != "" {
+        n.setMonitor(monitor)
+    }
+    // (可选)初始化节点列表，包含自定义的所需添加的服务器IP或者域名列表
+    peers := j.GetArray("Peers")
+    if peers != nil {
+        for _, v := range peers {
+            ip := v.(string)
+            if ip == n.Ip {
+                continue
             }
-            n.SetSavePath(strings.TrimRight(savepath, gfile.Separator))
+            n.Peers.Set(v.(string), NodeInfo{ Ip : ip })
         }
-        // 日志保存路径
-        logpath := j.GetString("LogPath")
-        if logpath != "" {
-            if !gfile.IsWritable(logpath) {
-                glog.Fatalln(logpath, "is not writable for saving log")
-                return
-            }
-            glog.SetLogPath(logpath)
+    }
+    // (可选)初始化自定义的k-v数据
+    datamap := j.GetMap("DataMap")
+    if datamap != nil {
+        for k, v := range datamap {
+            n.KVMap.Set(k, v.(string))
         }
-        // (可选)监控节点IP或域名地址
-        monitor := j.GetString("Monitor")
-        if monitor != "" {
-            n.setMonitor(monitor)
-        }
-        // (可选)初始化节点列表，包含自定义的所需添加的服务器IP或者域名列表
-        peers := j.GetArray("Peers")
-        if peers != nil {
-            for _, v := range peers {
-                n.Peers.Set(v.(string), NodeInfo{ Ip : v.(string) })
-            }
-        }
-        // (可选)初始化自定义的k-v数据
-        datamap := j.GetMap("DataMap")
-        if datamap != nil {
-            for k, v := range datamap {
-                n.KVMap.Set(k, v.(string))
-            }
-        }
-        // (可选)初始化服务配置
-        service := j.GetArray("Service")
-        if service != nil {
-            for _, v := range service {
-                var s Service
-                if gjson.DecodeTo(gjson.Encode(v), &s) == nil {
-                    n.Service.Set(s.Name, s)
-                    n.setLastServiceLogId(gtime.Microsecond())
-                }
+    }
+    // (可选)初始化服务配置
+    service := j.GetArray("Service")
+    if service != nil {
+        for _, v := range service {
+            var s Service
+            if gjson.DecodeTo(gjson.Encode(v), &s) == nil {
+                n.Service.Set(s.Name, s)
+                n.setLastServiceLogId(gtime.Microsecond())
             }
         }
     }
+
 }
 
 // 测试使用，展示当前节点通信的主机列表
@@ -233,6 +244,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
         ScoreCount       : n.getScoreCount(),
         LastLogId        : n.getLastLogId(),
         LogCount         : n.getLogCount(),
+        LastActiveTime   : gtime.Millisecond(),
         LastServiceLogId : n.getLastServiceLogId(),
         Version          : gVERSION,
     }
@@ -454,9 +466,6 @@ func (n *Node) updatePeerStatus(ip string, status int) {
         }
         n.Peers.Set(ip, info)
     }
-    //if status == gSTATUS_DEAD {
-    //    glog.Println(ip, "was dead")
-    //}
 }
 
 // 更新选举截止时间
