@@ -109,26 +109,47 @@ func (n *Node) onMsgReplUpdate(conn net.Conn, msg *Msg) {
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }
 
+// 保存日志数据
+func (n *Node) saveLogEntry(entry LogEntry) {
+    switch entry.Act {
+        case gMSG_REPL_SET:
+            glog.Println("setting log entry", entry)
+            for k, v := range entry.Items.(map[string]interface{}) {
+                n.KVMap.Set(k, v.(string))
+            }
+
+        case gMSG_REPL_REMOVE:
+            glog.Println("removing log entry", entry)
+            for _, v := range entry.Items.([]interface{}) {
+                n.KVMap.Remove(v.(string))
+            }
+
+    }
+    n.addLogCount()
+    n.setLastLogId(entry.Id)
+}
+
 // 从目标节点同步数据，采用增量+全量模式
 func (n *Node) updateDataFromRemoteNode(conn net.Conn, msg *Msg) {
     if msg.Head == gMSG_REPL_INCREMENTAL_UPDATE {
-        // 增量同步，LastLogId会根据保存的LogEntry自动更新
+        // 增量同步，LogCount和LastLogId会根据保存的LogEntry自动更新
         if n.getLastLogId() < msg.Info.LastLogId {
             if !n.getStatusInReplication() {
                 n.updateFromLogEntriesJson(&msg.Body)
             }
         }
     } else {
-        // 全量同步，完整的kv数据覆盖，因此需要设置LastLogId
+        // 全量同步，完整的kv数据覆盖
         m   := make(map[string]string)
         err := gjson.DecodeTo(&(msg.Body), &m)
         if err == nil {
             newm := gmap.NewStringStringMap()
             newm.BatchSet(m)
             n.setKVMap(newm)
+            n.setLogCount(msg.Info.LogCount)
             n.setLastLogId(msg.Info.LastLogId)
         } else {
-            glog.Println(err)
+            glog.Error(err)
         }
     }
 }
@@ -136,25 +157,35 @@ func (n *Node) updateDataFromRemoteNode(conn net.Conn, msg *Msg) {
 // 同步数据到目标节点，采用增量+全量模式
 func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     n.setStatusInReplication(true)
+    defer n.setStatusInReplication(false)
+
     glog.Println("send data replication update from", n.Ip, "to", msg.Info.Ip)
     // 首先进行增量同步
-    if err := n.sendMsg(conn, gMSG_REPL_INCREMENTAL_UPDATE, *gjson.Encode(n.getLogEntriesByLastLogId(msg.Info.LastLogId))); err != nil {
-        glog.Println(err)
-        return
-    }
-    rmsg := n.receiveMsg(conn)
-    if rmsg != nil {
-        // 如果增量同步失败则采用全量同步
-        if n.getLastLogId() > rmsg.Info.LastLogId {
-            glog.Println(rmsg.Info.Ip + ":", "incremental update failed, now try completely update")
-            if err := n.sendMsg(conn, gMSG_REPL_COMPLETELY_UPDATE, *gjson.Encode(*n.KVMap.Clone())); err != nil {
-                glog.Println(err)
-                return
-            }
-            n.receiveMsg(conn)
+    updated := true
+    list    := n.getLogEntriesByLastLogId(msg.Info.LastLogId)
+    length  := len(list)
+    if length > 0 && (msg.Info.LogCount + length) == n.getLogCount() {
+        if err := n.sendMsg(conn, gMSG_REPL_INCREMENTAL_UPDATE, *gjson.Encode(list)); err != nil {
+            glog.Error(err)
+            return
         }
-        glog.Println(rmsg.Info.Ip + ":", "data replication update done")
+        rmsg := n.receiveMsg(conn)
+        if rmsg != nil {
+            if n.getLastLogId() > rmsg.Info.LastLogId {
+                glog.Error(rmsg.Info.Ip + ":", "incremental update failed, now try completely update")
+                updated = false
+            }
+        }
+    } else {
+        updated = true
     }
-    n.setStatusInReplication(false)
+    if !updated {
+        // 如果增量同步失败则采用全量同步
+        if err := n.sendMsg(conn, gMSG_REPL_COMPLETELY_UPDATE, *gjson.Encode(*n.KVMap.Clone())); err != nil {
+            glog.Error(err)
+            return
+        }
+        n.receiveMsg(conn)
+    }
 }
 

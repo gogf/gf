@@ -6,30 +6,10 @@ package gluster
 import (
     "g/encoding/gjson"
     "time"
-    "g/core/types/gmap"
     "g/os/gfile"
     "g/util/gtime"
     "g/os/glog"
 )
-
-// 保存日志数据
-func (n *Node) saveLogEntry(entry LogEntry) {
-    switch entry.Act {
-        case gMSG_REPL_SET:
-            glog.Println("setting log entry", entry)
-            for k, v := range entry.Items.(map[string]interface{}) {
-                n.KVMap.Set(k, v.(string))
-            }
-
-        case gMSG_REPL_REMOVE:
-            glog.Println("removing log entry", entry)
-            for _, v := range entry.Items.([]interface{}) {
-                n.KVMap.Remove(v.(string))
-            }
-
-    }
-    n.setLastLogId(entry.Id)
-}
 
 // 日志自动保存处理
 func (n *Node) logAutoSavingHandler() {
@@ -50,10 +30,15 @@ func (n *Node) logAutoSavingHandler() {
 func (n *Node) saveDataToFile() {
     data := SaveInfo {
         LastLogId           : n.getLastLogId(),
+        LogCount            : n.getLogCount(),
+        LogList             : make([]LogEntry, 0),
         LastServiceLogId    : n.getLastServiceLogId(),
         Service             : *n.Service.Clone(),
         Peers               : *n.Peers.Clone(),
         DataMap             : *n.KVMap.Clone(),
+    }
+    for _, v := range n.LogList.BackAll() {
+        data.LogList = append(data.LogList, v.(LogEntry))
     }
     content := gjson.Encode(&data)
     err     := gfile.PutContents(n.getDataFilePath(), *content)
@@ -72,6 +57,7 @@ func (n *Node) restoreDataFromFile() {
         if content != nil {
             glog.Println("restore data from file:", path)
             var data = SaveInfo {
+                LogList : make([]LogEntry, 0),
                 Service : make(map[string]interface{}),
                 Peers   : make(map[string]interface{}),
                 DataMap : make(map[string]string),
@@ -79,8 +65,10 @@ func (n *Node) restoreDataFromFile() {
             content := string(content)
             if gjson.DecodeTo(&content, &data) == nil {
                 n.setLastLogId(data.LastLogId)
+                n.setLogCount(data.LogCount)
                 n.setLastSavedLogId(data.LastLogId)
                 n.setLastServiceLogId(data.LastServiceLogId)
+                n.restoreLogList(&data)
                 n.restoreService(&data)
                 n.restoreKVMap(&data)
                 n.restorePeer(&data)
@@ -89,30 +77,30 @@ func (n *Node) restoreDataFromFile() {
     }
 }
 
+func (n *Node) restoreLogList(data *SaveInfo) {
+    for _, v := range data.LogList {
+        n.LogList.PushFront(v)
+    }
+}
+
 func (n *Node) restoreService(data *SaveInfo) {
-    serviceMap := gmap.NewStringInterfaceMap()
     servMap    := make(map[string]Service)
     gjson.DecodeTo(gjson.Encode(data.Service), &servMap)
     for k, v := range servMap {
-        serviceMap.Set(k, v)
+        n.Service.Set(k, v)
     }
-    n.setService(serviceMap)
 }
 
 func (n *Node) restorePeer(data *SaveInfo) {
-    peerMap := gmap.NewStringInterfaceMap()
     infoMap := make(map[string]NodeInfo)
     gjson.DecodeTo(gjson.Encode(data.Peers), &infoMap)
     for k, v := range infoMap {
-        peerMap.Set(k, v)
+        n.Peers.Set(k, v)
     }
-    n.setPeers(peerMap)
 }
 
 func (n *Node) restoreKVMap(data *SaveInfo) {
-    dataMap := gmap.NewStringStringMap()
-    dataMap.BatchSet(data.DataMap)
-    n.setKVMap(dataMap)
+    n.KVMap.BatchSet(data.DataMap)
 }
 
 // 使用logentry数组更新本地的日志列表

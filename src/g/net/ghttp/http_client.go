@@ -26,7 +26,7 @@ func (c *Client) Put(url, data string) *ClientResponse {
 func (c *Client) Post(url, data string) *ClientResponse {
     resp, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(data))
     if err != nil {
-        glog.Println(err)
+        //glog.Println(err)
         return nil
     }
     r := &ClientResponse{}
@@ -44,7 +44,7 @@ func (c *Client) Request(method, url, data string) *ClientResponse {
     client   := &http.Client{}
     req, err := http.NewRequest(strings.ToUpper(method), url, strings.NewReader(data))
     if err != nil {
-        glog.Println(err)
+        //glog.Println(err)
         return nil
     }
     resp, err := client.Do(req)

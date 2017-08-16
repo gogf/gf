@@ -11,7 +11,6 @@ import (
     "g/util/gtime"
     "g/core/types/gmap"
     "g/os/gfile"
-    "g/util/grand"
     "g/net/ghttp"
     "g/os/gconsole"
     "g/encoding/gjson"
@@ -99,6 +98,7 @@ func (n *Node) getConnFromPool(ip string, port int, conns *gmap.StringInterfaceM
 func (n *Node) Run() {
     // 读取配置文件
     n.initFromCfg()
+
     // 初始化节点数据
     n.restoreDataFromFile()
 
@@ -140,7 +140,7 @@ func (n *Node) initFromCfg() {
     if cfgpath == "" {
         cfgpath = gfile.SelfDir() + gfile.Separator + "gluster.json"
     }
-    cfgpath = "/home/john/Workspace/Go/gf/src/gapp/gluster/gluster_test.json"
+    //cfgpath = "/home/john/Workspace/Go/gf/src/gapp/gluster/gluster_test.json"
     if gfile.Exists(cfgpath) {
         c := string(gfile.GetContents(cfgpath))
         j := gjson.DecodeToJson(&c)
@@ -232,6 +232,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
         Score            : n.getScore(),
         ScoreCount       : n.getScoreCount(),
         LastLogId        : n.getLastLogId(),
+        LogCount         : n.getLogCount(),
         LastServiceLogId : n.getLastServiceLogId(),
         Version          : gVERSION,
     }
@@ -272,6 +273,13 @@ func (n *Node) getLastLogId() int64 {
     return r
 }
 
+func (n *Node) getLogCount() int {
+    n.mutex.RLock()
+    r := n.LogCount
+    n.mutex.RUnlock()
+    return r
+}
+
 func (n *Node) getLastSavedLogId() int64 {
     n.mutex.Lock()
     r := n.LastSavedLogId
@@ -308,13 +316,6 @@ func (n *Node) getDataFilePath() string {
     return path
 }
 
-// 设置数据保存目录路径
-func (n *Node) SetSavePath(path string) {
-    n.mutex.Lock()
-    n.SavePath = path
-    n.mutex.Unlock()
-}
-
 // 添加比分节
 func (n *Node) addScore(s int64) {
     n.mutex.Lock()
@@ -324,6 +325,13 @@ func (n *Node) addScore(s int64) {
 
 // 添加比分节点数
 func (n *Node) addScoreCount() {
+    n.mutex.Lock()
+    n.ScoreCount++
+    n.mutex.Unlock()
+}
+
+// 添加日志总数
+func (n *Node) addLogCount() {
     n.mutex.Lock()
     n.ScoreCount++
     n.mutex.Unlock()
@@ -367,9 +375,22 @@ func (n *Node) setMonitor(ip string) {
     n.mutex.Unlock()
 }
 
+// 设置数据保存目录路径
+func (n *Node) SetSavePath(path string) {
+    n.mutex.Lock()
+    n.SavePath = path
+    n.mutex.Unlock()
+}
+
 func (n *Node) setLastLogId(id int64) {
     n.mutex.Lock()
     n.LastLogId = id
+    n.mutex.Unlock()
+}
+
+func (n *Node) setLogCount(count int) {
+    n.mutex.Lock()
+    n.LogCount = count
     n.mutex.Unlock()
 }
 
@@ -439,8 +460,9 @@ func (n *Node) updatePeerStatus(ip string, status int) {
 }
 
 // 更新选举截止时间
+// 改进：固定时间进行比分，看谁的比分更多
 func (n *Node) updateElectionDeadline() {
     n.mutex.Lock()
-    n.ElectionDeadline = gtime.Millisecond() + int64(grand.Rand(gELECTION_TIMEOUT_MIN, gELECTION_TIMEOUT_MAX))
+    n.ElectionDeadline = gtime.Millisecond() + gELECTION_TIMEOUT
     n.mutex.Unlock()
 }

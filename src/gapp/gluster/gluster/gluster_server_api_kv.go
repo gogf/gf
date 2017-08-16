@@ -31,6 +31,7 @@ func (this *NodeApiKv) PUT(r *ghttp.Request, w *ghttp.ServerResponse) {
 }
 
 // K-V 修改
+// @todo 需要使用同步请求机制保证成功处理，并返回真实的处理结果
 func (this *NodeApiKv) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
     data := r.GetRaw()
     if data == "" {
@@ -67,6 +68,7 @@ func (this *NodeApiKv) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
 }
 
 // K-V 删除
+// @todo 需要使用同步请求机制保证成功处理，并返回真实的处理结果
 func (this *NodeApiKv) DELETE(r *ghttp.Request, w *ghttp.ServerResponse) {
     method := strings.ToUpper(r.Method)
     data   := r.GetRaw()

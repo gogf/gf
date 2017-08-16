@@ -84,15 +84,24 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
     result := gMSG_RAFT_HEARTBEAT
     if n.getRole() == gROLE_LEADER {
         // 如果是两个leader相互心跳，表示两个leader是连通的，这时根据算法算出一个leader即可
-        if n.getScoreCount() > msg.Info.ScoreCount {
+        // 需要同时对比日志及选举比分
+        if n.getLogCount() > msg.Info.LogCount {
             result = gMSG_RAFT_I_AM_LEADER
-        } else if n.getScoreCount() == msg.Info.ScoreCount {
-            if n.getScore() > msg.Info.Score {
+        } else if n.getLogCount() == msg.Info.LogCount {
+            if n.LastLogId > msg.Info.LastLogId {
                 result = gMSG_RAFT_I_AM_LEADER
-            } else if n.getScore() == msg.Info.Score {
-                // 极少数情况会出现两个节点ScoreCount和Score都相等的情况, 这个时候采用随机策略
-                if grand.Rand(0, 1) == 1 {
+            } else if n.LastLogId == msg.Info.LastLogId {
+                if n.getScoreCount() > msg.Info.ScoreCount {
                     result = gMSG_RAFT_I_AM_LEADER
+                } else if n.getScoreCount() == msg.Info.ScoreCount {
+                    if n.getScore() > msg.Info.Score {
+                        result = gMSG_RAFT_I_AM_LEADER
+                    } else if n.getScore() == msg.Info.Score {
+                        // 极少数情况, 这时采用随机策略
+                        if grand.Rand(0, 1) == 1 {
+                            result = gMSG_RAFT_I_AM_LEADER
+                        }
+                    }
                 }
             }
         }
@@ -140,25 +149,34 @@ func (n *Node) onMsgRaftScoreRequest(conn net.Conn, msg *Msg) {
 }
 
 // 选举比分对比
+// 注意：这里除了比分选举，还需要判断数据一致性的对比
 func (n *Node) onMsgRaftScoreCompareRequest(conn net.Conn, msg *Msg) {
     result := gMSG_RAFT_SCORE_COMPARE_SUCCESS
     if n.getRole() == gROLE_LEADER {
         result = gMSG_RAFT_I_AM_LEADER
     } else {
-        if n.getScoreCount() > msg.Info.ScoreCount {
+        // 需要同时对比日志和比分
+        if n.getLogCount() > msg.Info.LogCount {
             result = gMSG_RAFT_SCORE_COMPARE_FAILURE
-        } else if n.getScoreCount() == msg.Info.ScoreCount {
-            if n.getScore() > msg.Info.Score {
+        } else if n.getLogCount() == msg.Info.LogCount {
+            if n.LastLogId > msg.Info.LastLogId {
                 result = gMSG_RAFT_SCORE_COMPARE_FAILURE
-            } else if n.getScore() == msg.Info.Score {
-                // 极少数情况会出现两个节点ScoreCount和Score都相等的情况, 这个时候采用随机策略
-                if grand.Rand(0, 1) == 1 {
+            } else if n.LastLogId == msg.Info.LastLogId {
+                if n.getScoreCount() > msg.Info.ScoreCount {
                     result = gMSG_RAFT_SCORE_COMPARE_FAILURE
+                } else if n.getScoreCount() == msg.Info.ScoreCount {
+                    if n.getScore() > msg.Info.Score {
+                        result = gMSG_RAFT_SCORE_COMPARE_FAILURE
+                    } else if n.getScore() == msg.Info.Score {
+                        // 极少数情况, 这时采用随机策略
+                        if grand.Rand(0, 1) == 1 {
+                            result = gMSG_RAFT_SCORE_COMPARE_FAILURE
+                        }
+                    }
                 }
             }
-        } else {
-            result = gMSG_RAFT_SCORE_COMPARE_SUCCESS
         }
+
     }
     if result == gMSG_RAFT_SCORE_COMPARE_SUCCESS {
         n.setLeader(msg.Info.Ip)
@@ -186,25 +204,7 @@ func (n *Node) onMsgApiPeersAdd(conn net.Conn, msg *Msg) {
             if n.Peers.Contains(ip) {
                 continue
             }
-            // glog.Println("adding peer:", ip)
-            go func(ip string) {
-                conn := n.getConn(ip, gPORT_RAFT)
-                if conn != nil {
-                    n.sendMsg(conn, gMSG_RAFT_HI, "")
-                    rmsg := n.receiveMsg(conn)
-                    if rmsg != nil && rmsg.Head == gMSG_RAFT_HI2 {
-                        n.updatePeerInfo(rmsg.Info)
-                    }
-                }
-                // 判断是否添加成功，如果没有，那么添加一个默认的信息
-                if !n.Peers.Contains(ip) {
-                    info       := NodeInfo{}
-                    info.Ip     = ip
-                    info.Status = gSTATUS_DEAD
-                    info.LastActiveTime = gtime.Millisecond()
-                    n.updatePeerInfo(info)
-                }
-            }(ip)
+            n.updatePeerInfo(NodeInfo{Ip: ip})
         }
     }
     n.sendMsg(conn, gMSG_RAFT_RESPONSE, "")

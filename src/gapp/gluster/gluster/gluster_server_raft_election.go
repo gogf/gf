@@ -53,8 +53,8 @@ func (n *Node) beginScore() {
         }
         wg.Add(1)
         go func(ip string) {
+            defer wg.Done()
             if n.getLeader() != "" || n.getRole() != gROLE_CANDIDATE {
-                wg.Done()
                 return
             }
             stime := time.Now().UnixNano()
@@ -63,13 +63,16 @@ func (n *Node) beginScore() {
                 n.updatePeerStatus(ip, gSTATUS_DEAD)
                 return
             }
+            defer conn.Close()
             if err := n.sendMsg(conn, gMSG_RAFT_SCORE_REQUEST, ""); err != nil {
                 glog.Println(err)
-                conn.Close()
                 return
             }
             msg := n.receiveMsg(conn)
             if msg != nil {
+                if n.getLeader() != "" || n.getRole() != gROLE_CANDIDATE {
+                    return
+                }
                 switch msg.Head {
                     case gMSG_RAFT_I_AM_LEADER:
                         n.setLeader(ip)
@@ -84,10 +87,14 @@ func (n *Node) beginScore() {
             } else {
                 n.updatePeerStatus(ip, gSTATUS_DEAD)
             }
-            wg.Done()
         }(info.Ip)
     }
     wg.Wait()
+
+    // 如果在计算比分的过程中发现了leader，那么不再继续比分，退出选举
+    if n.getLeader() != "" {
+        return;
+    }
 
     // 执行比分，对比比分数据，选举出leader
     for _, v := range n.Peers.Values() {
@@ -109,13 +116,15 @@ func (n *Node) beginScore() {
             if n.getLeader() != "" || n.getRole() != gROLE_CANDIDATE {
                 return
             }
-
             if err := n.sendMsg(conn, gMSG_RAFT_SCORE_COMPARE_REQUEST, ""); err != nil {
                 glog.Println(err)
                 return
             }
             msg := n.receiveMsg(conn)
             if msg != nil {
+                if n.getLeader() != "" || n.getRole() != gROLE_CANDIDATE {
+                    return
+                }
                 switch msg.Head {
                     case gMSG_RAFT_I_AM_LEADER:
                         glog.Println("score comparison: get leader from", ip)
@@ -135,7 +144,7 @@ func (n *Node) beginScore() {
     }
     wg.Wait()
 
-    // 如果其他节点均没有条件满足leader，那么选举自身为leader
+    // 如果peers中的节点均没有条件满足leader，那么选举自身为leader
     if n.getRole() != gROLE_FOLLOWER {
         glog.Println(n.Ip + ":", "I've won this score comparison")
         n.setRole(gROLE_LEADER)

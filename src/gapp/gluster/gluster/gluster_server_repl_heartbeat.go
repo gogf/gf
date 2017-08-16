@@ -113,11 +113,19 @@ func (n *Node) autoCleanLogList() {
     for {
         time.Sleep(gLOG_REPL_LOGCLEAN_INTERVAL * time.Millisecond)
         if n.getRole() == gROLE_LEADER {
+            match    := false
             minLogId := n.getMinLogIdFromPeers()
+            if minLogId == 0 {
+                continue
+            }
             p := n.LogList.Back()
             for p != nil {
                 entry := p.Value.(LogEntry)
-                if entry.Id <= minLogId {
+                // 该minLogId比需在日志中存在完整匹配的日志
+                if !match && entry.Id == minLogId {
+                    match = true
+                }
+                if match && entry.Id <= minLogId {
                     t := p.Prev()
                     n.LogList.Remove(p)
                     p  = t
@@ -146,14 +154,20 @@ func (n *Node) getMinLogIdFromPeers() int64 {
 }
 
 // 根据logid获取还未更新的日志列表
+// 注意：为保证日志一致性，在进行日志更新时，需要查找到目标节点logid在本地日志中存在有完整匹配的logid日志，并将其后的日志列表返回
+// 如果出现leader的logid比follower大，并且获取不到更新的日志列表时，表示两者数据已经不一致，需要做完整的同步复制处理
 func (n *Node) getLogEntriesByLastLogId(id int64) []LogEntry {
     if n.getLastLogId() > id {
+        match := (id == 0)
         array := make([]LogEntry, 0)
         n.LogList.RLock()
         l := n.LogList.L.Back()
         for l != nil {
             r := l.Value.(LogEntry)
-            if r.Id > id {
+            if !match && r.Id == id {
+                match = true
+            }
+            if match && r.Id > id {
                 array = append(array, r)
             }
             l = l.Prev()

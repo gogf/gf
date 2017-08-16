@@ -15,6 +15,7 @@ import (
     "g/core/types/glist"
     "g/net/ghttp"
     "g/os/glog"
+    "g/os/gfile"
 )
 
 const (
@@ -27,8 +28,8 @@ const (
     gPORT_WEB                       = 4170    // WEB管理界面
 
     // 节点状态
-    gSTATUS_ALIVE                   = 1
     gSTATUS_DEAD                    = 0
+    gSTATUS_ALIVE                   = 1
 
     // raft 角色
     gROLE_FOLLOWER                  = 0
@@ -39,11 +40,10 @@ const (
     gTCP_RETRY_COUNT                = 3       // TCP请求失败时的重试次数
     gTCP_READ_TIMEOUT               = 3000    // (毫秒)TCP链接读取超时
     gTCP_WRITE_TIMEOUT              = 3000    // (毫秒)TCP链接写入超时
-    gELECTION_TIMEOUT_MIN           = 1000    // (毫秒)RAFT选举超时最小值
-    gELECTION_TIMEOUT_MAX           = 3000    // (毫秒)RAFT选举超时最大值
+    gELECTION_TIMEOUT               = 2000    // (毫秒)RAFT选举超时时间
     gELECTION_TIMEOUT_HEARTBEAT     = 500     // (毫秒)RAFT Leader统治维持心跳间隔
     gLOG_REPL_TIMEOUT_HEARTBEAT     = 1000    // (毫秒)数据同步检测心跳间隔(数据包括kv数据及service数据)
-    gLOG_REPL_AUTOSAVE_INTERVAL     = 5000    // (毫秒)数据自动物理化保存的间隔
+    gLOG_REPL_AUTOSAVE_INTERVAL     = 1000    // (毫秒)数据自动物理化保存的间隔
     gLOG_REPL_LOGCLEAN_INTERVAL     = 5000    // (毫秒)数据同步时的日志清理间隔
     gSERVICE_HEALTH_CHECK_INTERVAL  = 3000    // (毫秒)健康检查默认间隔
 
@@ -100,7 +100,8 @@ type Node struct {
     ScoreCount       int                      // 选举比分的节点数
     ElectionDeadline int64                    // 选举超时时间点
 
-    LastLogId        int64                    // 最后一次保存log的id，用以数据同步识别
+    LastLogId        int64                    // 最后一次保存log的id，用以数据一致性判断
+    LogCount         int                      // 物理化保存的日志总数量，用于数据一致性判断
     LastSavedLogId   int64                    // 最后一次物理化log的id，用以物理化保存识别
     LastServiceLogId int64                    // 最后一次保存的service id号，用以识别service信息同步
     LogChan          chan LogEntry            // 用于数据同步的通道
@@ -145,6 +146,7 @@ type NodeInfo struct {
     Score            int64
     ScoreCount       int
     LastLogId        int64
+    LogCount         int
     LastServiceLogId int64
     LastActiveTime   int64  // 上一次活跃的时间毫秒(活跃包含：新增、心跳)，该数据用于Peer数据表中
     Version          string // 节点的版本
@@ -153,6 +155,8 @@ type NodeInfo struct {
 // 数据保存结构体
 type SaveInfo struct {
     LastLogId        int64
+    LogCount         int
+    LogList          []LogEntry
     LastServiceLogId int64
     Service          map[string]interface{}
     Peers            map[string]interface{}
@@ -178,7 +182,7 @@ func NewServerByIp(ip string) *Node {
         Ip           : ip,
         Role         : gROLE_FOLLOWER,
         Peers        : gmap.NewStringInterfaceMap(),
-        SavePath     : os.TempDir(),
+        SavePath     : gfile.SelfDir(),
         FileName     : "gluster.db",
         LogChan      : make(chan LogEntry, 1024),
         LogList      : glist.NewSafeList(),

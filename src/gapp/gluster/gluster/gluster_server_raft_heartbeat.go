@@ -24,10 +24,10 @@ func (n *Node) heartbeatHandler() {
                     conns.Remove(info.Ip)
                     // 如果失联超过3天，那么将该节点移除
                     // 注意一个节点添加的时候会给定一个初始化的活跃时间(添加时间)，因此该字段不会为0
-                    if info.LastActiveTime != 0 && gtime.Millisecond() - info.LastActiveTime > 3 * 86400 * 1000 {
-                        glog.Println(info.Ip, "was dead over 3 days, removing from peers")
-                        n.Peers.Remove(info.Ip)
-                    }
+                    //if info.LastActiveTime != 0 && gtime.Millisecond() - info.LastActiveTime > 3 * 86400 * 1000 {
+                    //    glog.Println(info.Ip, "was dead over 3 days, removing from peers")
+                    //    n.Peers.Remove(info.Ip)
+                    //}
                     continue
                 }
                 conns.Add(info.Ip)
