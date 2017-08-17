@@ -10,7 +10,7 @@ import (
 )
 
 // 节点信息API管理
-func (this *NodeApiNode) GET(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiNode) GET(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     conn := this.node.getConn(this.node.getLeader(), gPORT_RAFT)
     if conn == nil {
         w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader(), nil)
@@ -32,11 +32,11 @@ func (this *NodeApiNode) GET(r *ghttp.Request, w *ghttp.ServerResponse) {
     conn.Close()
 }
 
-func (this *NodeApiNode) PUT(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiNode) PUT(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     this.POST(r, w)
 }
 
-func (this *NodeApiNode) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiNode) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     data := r.GetRaw()
     if data == "" {
         w.ResponseJson(0, "invalid input", nil)
@@ -72,7 +72,7 @@ func (this *NodeApiNode) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
     conn.Close()
 }
 
-func (this *NodeApiNode) DELETE(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiNode) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     data := r.GetRaw()
     if data == "" {
         w.ResponseJson(0, "invalid input", nil)

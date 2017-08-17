@@ -158,6 +158,9 @@ func (n *Node) initFromCfg() {
     // 数据保存路径(请保证运行gcluster的用户有权限写入)
     savepath := j.GetString("SavePath")
     if savepath != "" {
+        if !gfile.Exists(savepath) {
+            gfile.Mkdir(savepath)
+        }
         if !gfile.IsWritable(savepath) {
             glog.Fatalln(savepath, "is not writable for saving data")
             return
@@ -200,14 +203,22 @@ func (n *Node) initFromCfg() {
     service := j.GetArray("Service")
     if service != nil {
         for _, v := range service {
-            var s Service
-            if gjson.DecodeTo(gjson.Encode(v), &s) == nil {
+            var s  Service
+            var st ServiceStruct
+            s.List = make([]*gmap.StringInterfaceMap, 0)
+            if gjson.DecodeTo(gjson.Encode(v), &st) == nil {
+                s.Name = st.Name
+                s.Type = st.Type
+                for _, v := range st.List {
+                    m := gmap.NewStringInterfaceMap()
+                    m.BatchSet(v)
+                    s.List = append(s.List, m)
+                }
                 n.Service.Set(s.Name, s)
                 n.setLastServiceLogId(gtime.Microsecond())
             }
         }
     }
-
 }
 
 // 测试使用，展示当前节点通信的主机列表

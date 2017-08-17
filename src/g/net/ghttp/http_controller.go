@@ -7,23 +7,23 @@ type ControllerBase struct {
 
 // 控制器接口
 type Controller interface {
-    GET(r *Request, w *ServerResponse)
-    PUT(r *Request, w *ServerResponse)
-    POST(r *Request, w *ServerResponse)
-    DELETE(r *Request, w *ServerResponse)
-    HEAD(r *Request, w *ServerResponse)
-    PATCH(r *Request, w *ServerResponse)
-    CONNECT(r *Request, w *ServerResponse)
-    OPTIONS(r *Request, w *ServerResponse)
-    TRACE(r *Request, w *ServerResponse)
+    GET(r *ClientRequest, w *ServerResponse)
+    PUT(r *ClientRequest, w *ServerResponse)
+    POST(r *ClientRequest, w *ServerResponse)
+    DELETE(r *ClientRequest, w *ServerResponse)
+    HEAD(r *ClientRequest, w *ServerResponse)
+    PATCH(r *ClientRequest, w *ServerResponse)
+    CONNECT(r *ClientRequest, w *ServerResponse)
+    OPTIONS(r *ClientRequest, w *ServerResponse)
+    TRACE(r *ClientRequest, w *ServerResponse)
 }
 
-func (c *ControllerBase) GET(r *Request, w *ServerResponse)     {}
-func (c *ControllerBase) PUT(r *Request, w *ServerResponse)     {}
-func (c *ControllerBase) POST(r *Request, w *ServerResponse)    {}
-func (c *ControllerBase) DELETE(r *Request, w *ServerResponse)  {}
-func (c *ControllerBase) HEAD(r *Request, w *ServerResponse)    {}
-func (c *ControllerBase) PATCH(r *Request, w *ServerResponse)   {}
-func (c *ControllerBase) CONNECT(r *Request, w *ServerResponse) {}
-func (c *ControllerBase) OPTIONS(r *Request, w *ServerResponse) {}
-func (c *ControllerBase) TRACE(r *Request, w *ServerResponse)   {}
+func (c *ControllerBase) GET(r *ClientRequest, w *ServerResponse)     {}
+func (c *ControllerBase) PUT(r *ClientRequest, w *ServerResponse)     {}
+func (c *ControllerBase) POST(r *ClientRequest, w *ServerResponse)    {}
+func (c *ControllerBase) DELETE(r *ClientRequest, w *ServerResponse)  {}
+func (c *ControllerBase) HEAD(r *ClientRequest, w *ServerResponse)    {}
+func (c *ControllerBase) PATCH(r *ClientRequest, w *ServerResponse)   {}
+func (c *ControllerBase) CONNECT(r *ClientRequest, w *ServerResponse) {}
+func (c *ControllerBase) OPTIONS(r *ClientRequest, w *ServerResponse) {}
+func (c *ControllerBase) TRACE(r *ClientRequest, w *ServerResponse)   {}

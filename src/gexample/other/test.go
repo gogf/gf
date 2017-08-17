@@ -1,12 +1,17 @@
 package main
 
 import (
-    "g/os/glog"
+    "g/net/ghttp"
+    "fmt"
 )
 
 
 func main() {
-    glog.SetLogPath("/root")
-    glog.Info("test")
-    //glog.Error("test")
+    c := ghttp.NewClient()
+    r := c.Get("http://baidu.com")
+    fmt.Println(r.Close)
+    r.ReadAll()
+    fmt.Println(r.Close)
+
+
 }

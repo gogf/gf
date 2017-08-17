@@ -35,14 +35,13 @@ import (
 
 
 // service 查询
-func (this *NodeApiService) GET(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiService) GET(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     name := r.GetRequestString("name")
     if name == "" {
-        // @todo 与健康检测的map并发读写有冲突：fatal error: concurrent map read and map write
-        w.ResponseJson(1, "ok", *this.node.Service.Clone())
+        w.ResponseJson(1, "ok", *this.node.ServiceForApi.Clone())
     } else {
         if this.node.Service.Contains(name) {
-            w.ResponseJson(1, "ok", this.node.Service.Get(name))
+            w.ResponseJson(1, "ok", this.node.ServiceForApi.Get(name))
         } else {
             w.ResponseJson(1, "ok", nil)
         }
@@ -50,12 +49,12 @@ func (this *NodeApiService) GET(r *ghttp.Request, w *ghttp.ServerResponse) {
 }
 
 // service 新增
-func (this *NodeApiService) PUT(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiService) PUT(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     this.POST(r, w)
 }
 
 // service 修改
-func (this *NodeApiService) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiService) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     data := r.GetRaw()
     if data == "" {
         w.ResponseJson(0, "invalid input", nil)
@@ -94,7 +93,7 @@ func (this *NodeApiService) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
 }
 
 // service 删除
-func (this *NodeApiService) DELETE(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiService) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     data   := r.GetRaw()
     if data == "" {
         w.ResponseJson(0, "invalid input", nil)

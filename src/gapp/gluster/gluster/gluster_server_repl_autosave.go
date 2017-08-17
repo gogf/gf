@@ -33,7 +33,7 @@ func (n *Node) saveDataToFile() {
         LogCount            : n.getLogCount(),
         LogList             : make([]LogEntry, 0),
         LastServiceLogId    : n.getLastServiceLogId(),
-        Service             : *n.Service.Clone(),
+        Service             : *n.serviceMapToServiceStructMap(),
         Peers               : *n.Peers.Clone(),
         DataMap             : *n.KVMap.Clone(),
     }
@@ -43,7 +43,7 @@ func (n *Node) saveDataToFile() {
     content := gjson.Encode(&data)
     err     := gfile.PutContents(n.getDataFilePath(), *content)
     if err != nil {
-        glog.Error(err)
+        glog.Error("saving data error:", err)
     } else {
         n.setLastSavedLogId(n.getLastLogId())
     }
@@ -58,7 +58,7 @@ func (n *Node) restoreDataFromFile() {
             glog.Println("restore data from", path)
             var data = SaveInfo {
                 LogList : make([]LogEntry, 0),
-                Service : make(map[string]interface{}),
+                Service : make(map[string]ServiceStruct),
                 Peers   : make(map[string]interface{}),
                 DataMap : make(map[string]string),
             }
@@ -84,10 +84,8 @@ func (n *Node) restoreLogList(data *SaveInfo) {
 }
 
 func (n *Node) restoreService(data *SaveInfo) {
-    servMap    := make(map[string]Service)
-    gjson.DecodeTo(gjson.Encode(data.Service), &servMap)
-    for k, v := range servMap {
-        n.Service.Set(k, v)
+    for k, v := range data.Service {
+        n.Service.Set(k, *n.serviceSructToService(&v))
     }
 }
 

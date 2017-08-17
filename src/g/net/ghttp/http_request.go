@@ -6,7 +6,7 @@ import (
 )
 
 // 获得get参数
-func (r *Request) GetQuery(k string) []string {
+func (r *ClientRequest) GetQuery(k string) []string {
     if r.getvals == nil {
         values     := r.URL.Query()
         r.getvals = &values
@@ -17,7 +17,7 @@ func (r *Request) GetQuery(k string) []string {
     return nil
 }
 
-func (r *Request) GetQueryString(k string) string {
+func (r *ClientRequest) GetQueryString(k string) string {
     v := r.GetQuery(k)
     if v == nil {
         return ""
@@ -26,7 +26,7 @@ func (r *Request) GetQueryString(k string) string {
     }
 }
 
-func (r *Request) GetQueryArray(k string) []string {
+func (r *ClientRequest) GetQueryArray(k string) []string {
     v := r.GetQuery(k)
     if v == nil {
         return nil
@@ -36,7 +36,7 @@ func (r *Request) GetQueryArray(k string) []string {
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-func (r *Request) GetQueryMap(defaultMap map[string][]string) map[string][]string {
+func (r *ClientRequest) GetQueryMap(defaultMap map[string][]string) map[string][]string {
     m := make(map[string][]string)
     for k, v := range defaultMap {
         v2 := r.GetQueryArray(k)
@@ -50,14 +50,14 @@ func (r *Request) GetQueryMap(defaultMap map[string][]string) map[string][]strin
 }
 
 // 获得post参数
-func (r *Request) GetPost(k string) []string {
+func (r *ClientRequest) GetPost(k string) []string {
     if v, ok := r.PostForm[k]; ok {
         return v
     }
     return nil
 }
 
-func (r *Request) GetPostString(k string) string {
+func (r *ClientRequest) GetPostString(k string) string {
     v := r.GetPost(k)
     if v == nil {
         return ""
@@ -66,7 +66,7 @@ func (r *Request) GetPostString(k string) string {
     }
 }
 
-func (r *Request) GetPostArray(k string) []string {
+func (r *ClientRequest) GetPostArray(k string) []string {
     v := r.GetPost(k)
     if v == nil {
         return nil
@@ -77,7 +77,7 @@ func (r *Request) GetPostArray(k string) []string {
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-func (r *Request) GetPostMap(defaultMap map[string][]string) map[string][]string {
+func (r *ClientRequest) GetPostMap(defaultMap map[string][]string) map[string][]string {
     m := make(map[string][]string)
     for k, v := range defaultMap {
         if v2, ok := r.PostForm[k]; ok {
@@ -90,7 +90,7 @@ func (r *Request) GetPostMap(defaultMap map[string][]string) map[string][]string
 }
 
 // 获得post或者get提交的参数，如果有同名参数，那么按照get->post优先级进行覆盖
-func (r *Request) GetRequest(k string) []string {
+func (r *ClientRequest) GetRequest(k string) []string {
     v := r.GetQuery(k)
     if v == nil {
         return r.GetPost(k)
@@ -98,7 +98,7 @@ func (r *Request) GetRequest(k string) []string {
     return v
 }
 
-func (r *Request) GetRequestString(k string) string {
+func (r *ClientRequest) GetRequestString(k string) string {
     v := r.GetRequest(k)
     if v == nil {
         return ""
@@ -107,7 +107,7 @@ func (r *Request) GetRequestString(k string) string {
     }
 }
 
-func (r *Request) GetRequestArray(k string) []string {
+func (r *ClientRequest) GetRequestArray(k string) []string {
     v := r.GetRequest(k)
     if v == nil {
         return nil
@@ -118,7 +118,7 @@ func (r *Request) GetRequestArray(k string) []string {
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-func (r *Request) GetRequestMap(defaultMap map[string][]string) map[string][]string {
+func (r *ClientRequest) GetRequestMap(defaultMap map[string][]string) map[string][]string {
     m := make(map[string][]string)
     for k, v := range defaultMap {
         v2 := r.GetRequest(k)
@@ -133,7 +133,7 @@ func (r *Request) GetRequestMap(defaultMap map[string][]string) map[string][]str
 
 
 // 获取原始请求输入字符串
-func (r *Request) GetRaw() string {
+func (r *ClientRequest) GetRaw() string {
     result, err := ioutil.ReadAll(r.Body)
     if err != nil {
         return ""
@@ -143,7 +143,7 @@ func (r *Request) GetRaw() string {
 }
 
 // 获取原始请求输入字符串
-func (r *Request) GetJson() *gjson.Json {
+func (r *ClientRequest) GetJson() *gjson.Json {
     data := r.GetRaw()
     if data != "" {
         return gjson.DecodeToJson(&data)

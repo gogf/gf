@@ -12,6 +12,12 @@ type ResponseJson struct {
     Data    interface{} `json:"data"`
 }
 
+// 关闭返回的HTTP链接
+func (r *ClientResponse) Close()  {
+    r.Response.Close = true
+    r.Body.Close()
+}
+
 // 返回固定格式的json
 func (r *ServerResponse) ResponseJson(result int, message string, data interface{}) {
     r.Header().Set("Content-type", "application/json")
@@ -23,9 +29,7 @@ func (r *ClientResponse) ReadAll() string {
     body, err := ioutil.ReadAll(r.Body)
     if err != nil {
         glog.Println(err)
-        r.Body.Close()
         return ""
     }
-    r.Body.Close()
     return string(body)
 }

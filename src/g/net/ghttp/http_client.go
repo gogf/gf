@@ -6,6 +6,11 @@ import (
     "time"
 )
 
+// http客户端对象指针
+func NewClient() (*Client) {
+    return &Client{}
+}
+
 // 设置请求过期时间
 func (c *Client) SetTimeOut(t time.Duration)  {
     c.Timeout = t
@@ -38,6 +43,26 @@ func (c *Client) Delete(url, data string) *ClientResponse {
     return c.Request("DELETE", url, data)
 }
 
+func (c *Client) Head(url, data string) *ClientResponse {
+    return c.Request("HEAD", url, data)
+}
+
+func (c *Client) Patch(url, data string) *ClientResponse  {
+    return c.Request("PATCH", url, data)
+}
+
+func (c *Client) Connect(url, data string) *ClientResponse{
+    return c.Request("CONNECT", url, data)
+}
+
+func (c *Client) Options(url, data string) *ClientResponse{
+    return c.Request("OPTIONS", url, data)
+}
+
+func (c *Client) Trace(url, data string) *ClientResponse  {
+    return c.Request("TRACE", url, data)
+}
+
 // 请求并返回response对象
 func (c *Client) Request(method, url, data string) *ClientResponse {
     client   := &http.Client{}
@@ -56,3 +81,43 @@ func (c *Client) Request(method, url, data string) *ClientResponse {
     return r
 }
 
+
+func Get(url string) *ClientResponse {
+    return Request("GET", url, "")
+}
+
+func Put(url, data string) *ClientResponse {
+    return Request("PUT", url, data)
+}
+
+func Post(url, data string) *ClientResponse {
+    return Request("PUT", url, data)
+}
+
+func Delete(url, data string) *ClientResponse {
+    return Request("DELETE", url, data)
+}
+
+func Head(url, data string) *ClientResponse {
+    return Request("HEAD", url, data)
+}
+
+func Patch(url, data string) *ClientResponse  {
+    return Request("PATCH", url, data)
+}
+
+func Connect(url, data string) *ClientResponse{
+    return Request("CONNECT", url, data)
+}
+
+func Options(url, data string) *ClientResponse{
+    return Request("OPTIONS", url, data)
+}
+
+func Trace(url, data string) *ClientResponse  {
+    return Request("TRACE", url, data)
+}
+
+func Request(method, url, data string) *ClientResponse {
+    return NewClient().Request(method, url, data)
+}

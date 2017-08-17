@@ -20,15 +20,20 @@ func (n *Node) electionHandler() {
             if n.getLeader() != "" {
                 n.updatePeerStatus(n.getLeader(), gSTATUS_DEAD)
             }
-            if n.Peers.Size() > 0 {
-                // 集群是2个节点及以上
-                n.resetAsCandidate()
-                n.beginScore()
+            // 使用MinNode变量控制最小节点数(这里判断的时候要去除自身的数量)
+            if n.Peers.Size() > n.MinNode - 1 {
+                if n.Peers.Size() > 0 {
+                    // 集群是2个节点及以上
+                    n.resetAsCandidate()
+                    n.beginScore()
+                } else {
+                    // 集群目前仅有1个节点
+                    glog.Println("only one node in this cluster, so i'll be the leader")
+                    n.setRole(gROLE_LEADER)
+                    n.setLeader(n.Ip)
+                }
             } else {
-                // 集群目前仅有1个节点
-                glog.Println("only one node in this cluster, so i'll be the leader")
-                n.setRole(gROLE_LEADER)
-                n.setLeader(n.Ip)
+                glog.Println("no meet the least nodes count:", n.MinNode, ", current:", n.Peers.Size() + 1)
             }
             n.updateElectionDeadline()
             // 改进：采用 随机超时+避让策略 让集群更容易达成绝大多数的选举，以便快速选举

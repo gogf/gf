@@ -21,7 +21,7 @@ type Server struct {
 }
 
 // 请求对象
-type Request struct {
+type ClientRequest struct {
     http.Request
     getvals *url.Values
 }
@@ -37,7 +37,7 @@ type ServerResponse struct {
 }
 
 // http回调函数
-type HandlerFunc func(*Request, *ServerResponse)
+type HandlerFunc func(*ClientRequest, *ServerResponse)
 
 // uri与回调函数的绑定记录表
 type HandlerMap map[string]HandlerFunc
@@ -77,11 +77,6 @@ var defaultServerConfig = ServerConfig {
 // 修改默认的http server配置
 func SetDefaultServerConfig (c ServerConfig) {
     defaultServerConfig = c
-}
-
-// http客户端对象指针
-func NewClient() (*Client) {
-    return &Client{}
 }
 
 // 创建一个默认配置的HTTP Server(默认监听端口是80)

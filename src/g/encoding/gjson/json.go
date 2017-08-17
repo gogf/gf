@@ -93,7 +93,7 @@ func (p *Json) GetString(pattern string) string {
 }
 
 // 返回指定json中的float64
-func (p *Json) GetNumber(pattern string) float64 {
+func (p *Json) GetFloat64(pattern string) float64 {
     result := p.Get(pattern)
     if result != nil {
         if r, ok := result.(float64); ok {
@@ -103,6 +103,15 @@ func (p *Json) GetNumber(pattern string) float64 {
     return 0
 }
 
+// 返回指定json中的float64->int
+func (p *Json) GetInt(pattern string) int {
+    return int(p.GetFloat64(pattern))
+}
+
+// 返回指定json中的float64->int64
+func (p *Json) GetInt64(pattern string) int64 {
+    return int64(p.GetFloat64(pattern))
+}
 
 // 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
 // 返回的结果类型的interface{}，因此需要自己做类型转换

@@ -268,17 +268,15 @@ func GetContents(path string) []byte {
 // 写入文件内容
 func putContents(path string, data []byte, flag int, perm os.FileMode) error {
     f, err := os.OpenFile(path, flag, perm)
-    if err == nil {
-        n, err := f.Write(data)
-        if err == nil && n < len(data) {
-            err = io.ErrShortWrite
-        }
-        if err1 := f.Close(); err == nil {
-            err = err1
-        }
-    }
     if err != nil {
         return err
+    }
+    defer f.Close()
+    n, err := f.Write(data)
+    if err != nil {
+        return err
+    } else if n < len(data) {
+        return io.ErrShortWrite
     }
     return nil
 }

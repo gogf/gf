@@ -97,6 +97,7 @@ type Node struct {
     Cfg              string                   // 配置文件绝对路径
     Peers            *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
     Role             int                      // raft角色
+    MinNode          int                      // 组成集群的最小节点数量
     Leader           string                   // Leader节点ip
     Monitor          string                   // Monitor节点ip
     Score            int64                    // 选举比分
@@ -107,19 +108,27 @@ type Node struct {
     LogCount         int                      // 物理化保存的日志总数量，用于数据一致性判断
     LastSavedLogId   int64                    // 最后一次物理化log的id，用以物理化保存识别
     LastServiceLogId int64                    // 最后一次保存的service id号，用以识别service信息同步
-    LogChan          chan LogEntry            // 用于数据同步的通道
+    LogChan          chan LogEntry            // 用于log数据同步的通道
     LogList          *glist.SafeList          // leader日志列表，用以数据同步
     SavePath         string                   // 物理存储的本地数据目录绝对路径
     FileName         string                   // 数据文件名称(包含后缀)
     Service          *gmap.StringInterfaceMap // 存储的服务配置表
+    ServiceForApi    *gmap.StringInterfaceMap // 用于提高Service API响应的冗余map变量，内容与Service成员变量相同，但结构不同
     KVMap            *gmap.StringStringMap    // 存储的K-V哈希表
 }
 
-// 服务配置对象
+// 服务对象
 type Service struct {
-    Name string                   `json:"name"`
-    Type string                   `json:"type"`
-    List []map[string]interface{} `json:"list"`
+    Name  string
+    Type  string
+    List  []*gmap.StringInterfaceMap
+}
+
+// 用以json化处理的Service数据结构
+type ServiceStruct struct {
+    Name  string                   `json:"name"`
+    Type  string                   `json:"type"`
+    List  []map[string]interface{} `json:"list"`
 }
 
 // 用于KV API接口的对象
@@ -161,7 +170,7 @@ type SaveInfo struct {
     LogCount         int
     LogList          []LogEntry
     LastServiceLogId int64
-    Service          map[string]interface{}
+    Service          map[string]ServiceStruct
     Peers            map[string]interface{}
     DataMap          map[string]string
 }
@@ -181,16 +190,18 @@ func NewServerByIp(ip string) *Node {
         return nil
     }
     node := Node {
-        Name         : hostname,
-        Ip           : ip,
-        Role         : gROLE_FOLLOWER,
-        Peers        : gmap.NewStringInterfaceMap(),
-        SavePath     : gfile.SelfDir(),
-        FileName     : "gluster.db",
-        LogChan      : make(chan LogEntry, 1024),
-        LogList      : glist.NewSafeList(),
-        Service      : gmap.NewStringInterfaceMap(),
-        KVMap        : gmap.NewStringStringMap(),
+        Name          : hostname,
+        Ip            : ip,
+        Role          : gROLE_FOLLOWER,
+        MinNode       : 1,
+        Peers         : gmap.NewStringInterfaceMap(),
+        SavePath      : gfile.SelfDir(),
+        FileName      : "gluster.db",
+        LogChan       : make(chan LogEntry, 1024),
+        LogList       : glist.NewSafeList(),
+        Service       : gmap.NewStringInterfaceMap(),
+        ServiceForApi : gmap.NewStringInterfaceMap(),
+        KVMap         : gmap.NewStringStringMap(),
     }
     return &node
 }

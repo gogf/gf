@@ -12,7 +12,7 @@ import (
 
 
 // K-V 查询
-func (this *NodeApiKv) GET(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiKv) GET(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     k := r.GetRequestString("k")
     if k == "" {
         w.ResponseJson(1, "ok", *this.node.KVMap.Clone())
@@ -26,13 +26,13 @@ func (this *NodeApiKv) GET(r *ghttp.Request, w *ghttp.ServerResponse) {
 }
 
 // K-V 新增
-func (this *NodeApiKv) PUT(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiKv) PUT(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     this.POST(r, w)
 }
 
 // K-V 修改
 // @todo 需要使用同步请求机制保证成功处理，并返回真实的处理结果
-func (this *NodeApiKv) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiKv) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     data := r.GetRaw()
     if data == "" {
         w.ResponseJson(0, "invalid input", nil)
@@ -69,7 +69,7 @@ func (this *NodeApiKv) POST(r *ghttp.Request, w *ghttp.ServerResponse) {
 
 // K-V 删除
 // @todo 需要使用同步请求机制保证成功处理，并返回真实的处理结果
-func (this *NodeApiKv) DELETE(r *ghttp.Request, w *ghttp.ServerResponse) {
+func (this *NodeApiKv) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     method := strings.ToUpper(r.Method)
     data   := r.GetRaw()
     if data == "" {
