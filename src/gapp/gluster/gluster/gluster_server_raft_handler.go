@@ -54,7 +54,7 @@ func (n *Node) onMsgRaftSplitBrainsCheck(conn net.Conn, msg *Msg) {
                     if n.getLastLogId() < msg.Info.LastLogId {
                         ip = checkip
                         n.setLeader(ip)
-                        n.setRole(gROLE_FOLLOWER)
+                        n.setRaftRole(gROLE_RAFT_FOLLOWER)
                     }
                 }
             }
@@ -81,7 +81,7 @@ func (n *Node) onMsgRaftHi(conn net.Conn, msg *Msg) {
 func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
     n.updateElectionDeadline()
     result := gMSG_RAFT_HEARTBEAT
-    if n.getRole() == gROLE_LEADER {
+    if n.getRaftRole() == gROLE_RAFT_LEADER {
         // 如果是两个leader相互心跳，表示两个leader是连通的，这时根据算法算出一个leader即可
         // 需要同时对比日志及选举比分
         if n.getLogCount() > msg.Info.LogCount {
@@ -106,12 +106,12 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
         }
         if result == gMSG_RAFT_HEARTBEAT {
             n.setLeader(msg.Info.Ip)
-            n.setRole(gROLE_FOLLOWER)
+            n.setRaftRole(gROLE_RAFT_FOLLOWER)
         }
     } else if n.getLeader() == "" {
         // 如果没有leader，那么设置leader
         n.setLeader(msg.Info.Ip)
-        n.setRole(gROLE_FOLLOWER)
+        n.setRaftRole(gROLE_RAFT_FOLLOWER)
     } else {
         // 脑裂问题，一个节点处于两个网路中，并且两个网络的leader无法相互通信，会引起数据一致性问题
         if n.getLeader() != msg.Info.Ip {
@@ -140,7 +140,7 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
 
 // 选举比分获取
 func (n *Node) onMsgRaftScoreRequest(conn net.Conn, msg *Msg) {
-    if n.getRole() == gROLE_LEADER {
+    if n.getRaftRole() == gROLE_RAFT_LEADER {
         n.sendMsg(conn, gMSG_RAFT_I_AM_LEADER, "")
     } else {
         n.sendMsg(conn, gMSG_RAFT_RESPONSE, "")
@@ -151,7 +151,7 @@ func (n *Node) onMsgRaftScoreRequest(conn net.Conn, msg *Msg) {
 // 注意：这里除了比分选举，还需要判断数据一致性的对比
 func (n *Node) onMsgRaftScoreCompareRequest(conn net.Conn, msg *Msg) {
     result := gMSG_RAFT_SCORE_COMPARE_SUCCESS
-    if n.getRole() == gROLE_LEADER {
+    if n.getRaftRole() == gROLE_RAFT_LEADER {
         result = gMSG_RAFT_I_AM_LEADER
     } else {
         // 需要同时对比日志和比分
@@ -179,7 +179,7 @@ func (n *Node) onMsgRaftScoreCompareRequest(conn net.Conn, msg *Msg) {
     }
     if result == gMSG_RAFT_SCORE_COMPARE_SUCCESS {
         n.setLeader(msg.Info.Ip)
-        n.setRole(gROLE_FOLLOWER)
+        n.setRaftRole(gROLE_RAFT_FOLLOWER)
     }
     n.sendMsg(conn, result, "")
 }

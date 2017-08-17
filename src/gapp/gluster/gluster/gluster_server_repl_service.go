@@ -51,7 +51,7 @@ func (n *Node) serviceHealthCheckHandler() {
     var wg sync.WaitGroup
     start := gtime.Millisecond()
     for {
-        if n.getRole() == gROLE_LEADER && gtime.Millisecond() > start {
+        if n.getRaftRole() == gROLE_RAFT_LEADER && gtime.Millisecond() > start {
             for _, v := range n.Service.Values() {
                 service := v.(Service)
                 go func(s *Service) {

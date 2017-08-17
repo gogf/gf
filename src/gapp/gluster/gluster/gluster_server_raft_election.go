@@ -15,7 +15,7 @@ import (
 func (n *Node) electionHandler() {
     n.updateElectionDeadline()
     for {
-        if n.getRole() != gROLE_LEADER && gtime.Millisecond() >= n.getElectionDeadline() {
+        if n.Role == gROLE_SERVER && n.getRaftRole() != gROLE_RAFT_LEADER && gtime.Millisecond() >= n.getElectionDeadline() {
             // 重新进入选举流程时，需要清空已有的信息
             if n.getLeader() != "" {
                 n.updatePeerStatus(n.getLeader(), gSTATUS_DEAD)
@@ -29,7 +29,7 @@ func (n *Node) electionHandler() {
                 } else {
                     // 集群目前仅有1个节点
                     glog.Println("only one node in this cluster, so i'll be the leader")
-                    n.setRole(gROLE_LEADER)
+                    n.setRaftRole(gROLE_RAFT_LEADER)
                     n.setLeader(n.Ip)
                 }
             } else {
@@ -37,7 +37,7 @@ func (n *Node) electionHandler() {
             }
             n.updateElectionDeadline()
             // 改进：采用 随机超时+避让策略 让集群更容易达成绝大多数的选举，以便快速选举
-            if n.getRole() != gROLE_LEADER {
+            if n.getRaftRole() != gROLE_RAFT_LEADER {
                 n.resetAsFollower()
             }
         }
@@ -59,7 +59,7 @@ func (n *Node) beginScore() {
         wg.Add(1)
         go func(ip string) {
             defer wg.Done()
-            if n.getLeader() != "" || n.getRole() != gROLE_CANDIDATE {
+            if n.getLeader() != "" || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
                 return
             }
             stime := time.Now().UnixNano()
@@ -75,13 +75,13 @@ func (n *Node) beginScore() {
             }
             msg := n.receiveMsg(conn)
             if msg != nil {
-                if n.getLeader() != "" || n.getRole() != gROLE_CANDIDATE {
+                if n.getLeader() != "" || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
                     return
                 }
                 switch msg.Head {
                     case gMSG_RAFT_I_AM_LEADER:
                         n.setLeader(ip)
-                        n.setRole(gROLE_FOLLOWER)
+                        n.setRaftRole(gROLE_RAFT_FOLLOWER)
 
                     case gMSG_RAFT_RESPONSE:
                         etime := time.Now().UnixNano()
@@ -118,7 +118,7 @@ func (n *Node) beginScore() {
                 conn.Close()
                 wg.Done()
             }()
-            if n.getLeader() != "" || n.getRole() != gROLE_CANDIDATE {
+            if n.getLeader() != "" || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
                 return
             }
             if err := n.sendMsg(conn, gMSG_RAFT_SCORE_COMPARE_REQUEST, ""); err != nil {
@@ -127,19 +127,19 @@ func (n *Node) beginScore() {
             }
             msg := n.receiveMsg(conn)
             if msg != nil {
-                if n.getLeader() != "" || n.getRole() != gROLE_CANDIDATE {
+                if n.getLeader() != "" || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
                     return
                 }
                 switch msg.Head {
                     case gMSG_RAFT_I_AM_LEADER:
                         glog.Println("score comparison: get leader from", ip)
                         n.setLeader(ip)
-                        n.setRole(gROLE_FOLLOWER)
+                        n.setRaftRole(gROLE_RAFT_FOLLOWER)
 
                     case gMSG_RAFT_SCORE_COMPARE_FAILURE:
                         glog.Println("score comparison: get failure from", ip)
                         n.setLeader(ip)
-                        n.setRole(gROLE_FOLLOWER)
+                        n.setRaftRole(gROLE_RAFT_FOLLOWER)
 
                     case gMSG_RAFT_SCORE_COMPARE_SUCCESS:
                         glog.Println("score comparison: get success from", ip)
@@ -150,9 +150,9 @@ func (n *Node) beginScore() {
     wg.Wait()
 
     // 如果peers中的节点均没有条件满足leader，那么选举自身为leader
-    if n.getRole() != gROLE_FOLLOWER {
+    if n.getRaftRole() != gROLE_RAFT_FOLLOWER {
         glog.Println(n.Ip + ":", "I've won this score comparison")
-        n.setRole(gROLE_LEADER)
+        n.setRaftRole(gROLE_RAFT_LEADER)
         n.setLeader(n.Ip)
     }
 }

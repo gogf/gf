@@ -11,7 +11,7 @@ import (
 func (n *Node) heartbeatHandler() {
     conns := gset.NewStringSet()
     for {
-        if n.getRole() == gROLE_LEADER {
+        if n.getRaftRole() == gROLE_RAFT_LEADER {
             for _, v := range n.Peers.Values() {
                 info := v.(NodeInfo)
                 if conns.Contains(info.Ip) {
@@ -37,7 +37,7 @@ func (n *Node) heartbeatHandler() {
                     }()
                     for {
                         // 如果当前节点不再是leader，或者节点表中已经删除该节点信息
-                        if n.getRole() != gROLE_LEADER || !n.Peers.Contains(ip){
+                        if n.getRaftRole() != gROLE_RAFT_LEADER || !n.Peers.Contains(ip){
                             return
                         }
                         if n.sendMsg(conn, gMSG_RAFT_HEARTBEAT, "") != nil {
@@ -55,7 +55,7 @@ func (n *Node) heartbeatHandler() {
                             switch msg.Head {
                                 case gMSG_RAFT_I_AM_LEADER:
                                     glog.Println("two leader occured, set", ip, "as my leader, done heartbeating")
-                                    n.setRole(gROLE_FOLLOWER)
+                                    n.setRaftRole(gROLE_RAFT_FOLLOWER)
                                     n.setLeader(ip)
 
                                 default:

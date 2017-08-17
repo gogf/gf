@@ -85,7 +85,10 @@ func (n *Node) restoreLogList(data *SaveInfo) {
 
 func (n *Node) restoreService(data *SaveInfo) {
     for k, v := range data.Service {
-        n.Service.Set(k, *n.serviceSructToService(&v))
+        // 如果配置文件与数据文件有同一键名的配置，那么使用配置文件的Service配置
+        if n.Service.Get(k) == nil {
+            n.Service.Set(k, *n.serviceSructToService(&v))
+        }
     }
 }
 

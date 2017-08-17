@@ -63,7 +63,7 @@ func (n *Node) onMsgReplRemove(conn net.Conn, msg *Msg) {
 // kv设置
 func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
     n.setStatusInReplication(true)
-    if n.getRole() == gROLE_LEADER {
+    if n.getRaftRole() == gROLE_RAFT_LEADER {
         var items interface{}
         if gjson.DecodeTo(&msg.Body, &items) == nil {
             var entry = LogEntry {

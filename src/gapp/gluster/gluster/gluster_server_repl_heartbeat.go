@@ -61,7 +61,7 @@ func (n *Node) logAutoReplicationHandler() {
 func (n *Node) replicationLoop() {
     conns := gset.NewStringSet()
     for {
-        if n.getRole() == gROLE_LEADER {
+        if n.getRaftRole() == gROLE_RAFT_LEADER {
             ips := n.Peers.Keys()
             for _, ip := range ips {
                 if conns.Contains(ip) {
@@ -83,7 +83,7 @@ func (n *Node) replicationLoop() {
                         for n.getStatusInReplication() {
                             time.Sleep(100 * time.Millisecond)
                         }
-                        if n.getRole() != gROLE_LEADER || !n.Peers.Contains(ip){
+                        if n.getRaftRole() != gROLE_RAFT_LEADER || !n.Peers.Contains(ip){
                             return
                         }
                         //glog.Println("sending replication heartbeat to", ip)
@@ -113,7 +113,7 @@ func (n *Node) replicationLoop() {
 func (n *Node) autoCleanLogList() {
     for {
         time.Sleep(gLOG_REPL_LOGCLEAN_INTERVAL * time.Millisecond)
-        if n.getRole() == gROLE_LEADER {
+        if n.getRaftRole() == gROLE_RAFT_LEADER {
             match    := false
             minLogId := n.getMinLogIdFromPeers()
             if minLogId == 0 {

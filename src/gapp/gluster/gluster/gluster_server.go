@@ -34,10 +34,10 @@ func (n *Node) scannerRaftCallback(conn net.Conn) {
     msg := n.receiveMsg(conn)
     if msg != nil && msg.Head == gMSG_RAFT_HI2 {
         n.updatePeerInfo(msg.Info)
-        if msg.Info.Role == gROLE_LEADER {
+        if msg.Info.RaftRole == gROLE_RAFT_LEADER {
             glog.Println(n.Ip, "scanner: found leader", fromip)
             n.setLeader(fromip)
-            n.setRole(gROLE_FOLLOWER)
+            n.setRaftRole(gROLE_RAFT_FOLLOWER)
         }
     }
 }
@@ -155,6 +155,8 @@ func (n *Node) initFromCfg() {
         return
     }
     glog.Println("initializing from", cfgpath)
+    // 集群角色
+    n.Role = j.GetInt("Role")
     // 数据保存路径(请保证运行gcluster的用户有权限写入)
     savepath := j.GetString("SavePath")
     if savepath != "" {
@@ -224,7 +226,7 @@ func (n *Node) initFromCfg() {
 // 测试使用，展示当前节点通信的主机列表
 func (n *Node) show() {
     gtime.SetInterval(1 * time.Second, func() bool{
-        //glog.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), n.getRole())
+        //glog.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), n.getRaftRole())
         glog.Println(n.Ip + ":", n.getLeader(), n.getLastLogId(), *n.Peers.Clone(), n.LogList.Len(), n.KVMap.M)
         return true
     })
@@ -250,7 +252,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
         Name             : n.Name,
         Ip               : n.Ip,
         Status           : gSTATUS_ALIVE,
-        Role             : n.getRole(),
+        RaftRole             : n.getRaftRole(),
         Score            : n.getScore(),
         ScoreCount       : n.getScoreCount(),
         LastLogId        : n.getLastLogId(),
@@ -268,9 +270,9 @@ func (n *Node) getLeader() string {
     return r
 }
 
-func (n *Node) getRole() int {
+func (n *Node) getRaftRole() int {
     n.mutex.RLock()
-    r := n.Role
+    r := n.RaftRole
     n.mutex.RUnlock()
     return r
 }
@@ -363,7 +365,7 @@ func (n *Node) addLogCount() {
 // 重置为候选者，并初始化投票给自己
 func (n *Node) resetAsCandidate() {
     n.mutex.Lock()
-    n.Role       = gROLE_CANDIDATE
+    n.RaftRole   = gROLE_RAFT_CANDIDATE
     n.Leader     = ""
     n.Score      = 0
     n.ScoreCount = 0
@@ -373,16 +375,16 @@ func (n *Node) resetAsCandidate() {
 // 重置为选民，并清空选票信息
 func (n *Node) resetAsFollower() {
     n.mutex.Lock()
-    n.Role      = gROLE_FOLLOWER
-    n.Leader    = ""
+    n.RaftRole   = gROLE_RAFT_FOLLOWER
+    n.Leader     = ""
     n.Score      = 0
     n.ScoreCount = 0
     n.mutex.Unlock()
 }
 
-func (n *Node) setRole(role int) {
+func (n *Node) setRaftRole(role int) {
     n.mutex.Lock()
-    n.Role = role
+    n.RaftRole = role
     n.mutex.Unlock()
 }
 
