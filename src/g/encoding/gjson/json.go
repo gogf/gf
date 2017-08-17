@@ -17,15 +17,6 @@ type Json struct {
 // 一个json变量
 type JsonVar interface{}
 
-// 解码字符串为interface{}变量
-func Decode (s *string) interface{} {
-    var v interface{}
-    if DecodeTo(s, &v) == nil {
-        return v
-    }
-    return nil
-}
-
 // 编码go变量为json字符串，并返回json字符串指针
 func Encode (v interface{}) *string {
     s, err := json.Marshal(v)
@@ -35,6 +26,23 @@ func Encode (v interface{}) *string {
     }
     r := string(s)
     return &r
+}
+
+// 解码字符串为interface{}变量
+func Decode (s *string) interface{} {
+    var v interface{}
+    if DecodeTo(s, &v) == nil {
+        return v
+    }
+    return nil
+}
+
+// 解析json字符串为go变量，注意第二个参数为指针
+func DecodeTo (s *string, v interface{}) error {
+    if err := json.Unmarshal([]byte(*s), v); err != nil {
+        return errors.New("json unmarshaling failed: " + err.Error())
+    }
+    return nil
 }
 
 // 解析json字符串为gjson.Json对象，并返回操作对象指针
@@ -47,14 +55,10 @@ func DecodeToJson (s *string) *Json {
     return &Json{ &result }
 }
 
-// 解析json字符串为go变量，注意第二个参数为指针
-func DecodeTo (s *string, v interface{}) error {
-    if err := json.Unmarshal([]byte(*s), v); err != nil {
-        return errors.New("json unmarshaling failed: " + err.Error())
-    }
-    return nil
+// 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
+func NewJson(v *interface{}) *Json {
+    return &Json{ v }
 }
-
 
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换

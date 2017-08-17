@@ -103,8 +103,8 @@ func (n *Node) Run() {
     n.restoreDataFromFile()
 
     // 创建接口监听
-    go gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_RAFT),  n.raftTcpHandler).Run()
-    go gtcp.NewServer(fmt.Sprintf("%s:%d", n.Ip, gPORT_REPL),  n.replTcpHandler).Run()
+    go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_RAFT),  n.raftTcpHandler).Run()
+    go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_REPL),  n.replTcpHandler).Run()
     go func() {
         api := ghttp.NewServerByAddr(fmt.Sprintf(":%d", gPORT_API))
         api.BindController("/kv",      &NodeApiKv{node: n})
@@ -252,7 +252,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
         Name             : n.Name,
         Ip               : n.Ip,
         Status           : gSTATUS_ALIVE,
-        RaftRole             : n.getRaftRole(),
+        RaftRole         : n.getRaftRole(),
         Score            : n.getScore(),
         ScoreCount       : n.getScoreCount(),
         LastLogId        : n.getLastLogId(),

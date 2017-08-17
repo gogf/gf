@@ -61,10 +61,9 @@ func (this *NodeApiService) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse
         return
     }
 
-    var items interface{}
-    err := gjson.DecodeTo(&data, &items)
-    if err != nil {
-        w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
+    items := gjson.Decode(&data)
+    if items == nil {
+        w.ResponseJson(0, "invalid data type: json decoding failed", nil)
         return
     }
 
@@ -78,7 +77,7 @@ func (this *NodeApiService) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse
         w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader(), nil)
         return
     }
-    err   = this.node.sendMsg(conn, gMSG_API_SERVICE_SET, *gjson.Encode(items))
+    err := this.node.sendMsg(conn, gMSG_API_SERVICE_SET, *gjson.Encode(items))
     if err != nil {
         w.ResponseJson(0, "sending request error: " + err.Error(), nil)
     } else {
