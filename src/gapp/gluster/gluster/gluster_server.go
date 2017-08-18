@@ -264,6 +264,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
         Name             : n.Name,
         Ip               : n.Ip,
         Status           : gSTATUS_ALIVE,
+        Role             : n.Role,
         RaftRole         : n.getRaftRole(),
         Score            : n.getScore(),
         ScoreCount       : n.getScoreCount(),

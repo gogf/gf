@@ -1,17 +1,11 @@
 package main
 
 import (
-    "g/net/ghttp"
     "fmt"
+    "strings"
 )
 
 
 func main() {
-    c := ghttp.NewClient()
-    r := c.Get("http://baidu.com")
-    fmt.Println(r.Close)
-    r.ReadAll()
-    fmt.Println(r.Close)
-
-
+    fmt.Println(strings.Join([]string{"1", "2"}, "&"))
 }

@@ -21,6 +21,9 @@ import (
     "time"
     "io"
     "g/util/gutil"
+    "sort"
+    "g/net/gip"
+    "strings"
 )
 
 const (
@@ -186,6 +189,7 @@ type NodeInfo struct {
     Name             string
     Ip               string
     Status           int
+    Role             int
     RaftRole         int
     Score            int64
     ScoreCount       int
@@ -216,9 +220,10 @@ type LogEntry struct {
 
 // 绑定本地IP并创建一个服务节点
 func NewServerByIp(ip string) *Node {
+    // 主机名称
     hostname, err := os.Hostname()
     if err != nil {
-        glog.Fatalln("getting local hostname failed")
+        glog.Fatalln("getting local hostname failed:", err)
         return nil
     }
     node := Node {
