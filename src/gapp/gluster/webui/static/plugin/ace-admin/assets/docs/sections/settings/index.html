@@ -1,0 +1,566 @@
+<section>
+	<h1 class="blue" data-id="#settings"><i class="ace-icon fa fa-cog grey"></i> Settings</h1>
+	
+	<div class="hr hr-double hr32"></div>
+	<!-- #section:settings -->
+	<div class="help-content">
+		<h3 class="info-title smaller">Settings</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Ace settings functions and cookie/localStorage feature is saved inside <code>assets/js/ace-extra.js</code>
+			</li>
+			<li>
+				If you want these features, it's best to include this file
+				inside document head
+			</li>
+			
+			<li>
+				The script to restore user saved settings is placed immediately after the relevant element's HTML code:
+<pre data-language="html">
+<div id="navbar" class="navbar navbar-default">
+ <script type="text/javascript">
+  try{ace.settings.check('navbar' , 'fixed')}catch(e){}
+ </script>
+</div>
+</pre>
+			This will cause the element's status be restored as soon as it is inserted into DOM.
+			<div class="space-4"></div>
+			If you call the functions after page load, for example in jQuery's document ready event,
+			there may be a delay between the initial state and the saved state.
+			<br />
+			It may not be noticeable for fixed navbar, etc, but for collapsed sidebar or other settings, it can get noticeable.
+
+			<div class="space-6"></div>
+			The <code>try/catch</code> block is used so that if you don't want to use  <code>ace-extra.js</code>,
+			the browser doesn't raise any errors.
+			<br />
+			In that case you can remove the code if it's not necessary.
+			</li>
+			
+		 </ul>
+		</div>
+
+	</div>
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#settings.page">
+		Page Options
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:settings.page -->
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#settings.navbar">Fixed Navbar</h3>
+		<!-- #section:settings.navbar -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For fixed navbar, you should add <code>.navbar-fixed-top</code> class
+				to <code>.navbar</code> element:
+<pre data-language="html">
+ <div class="navbar navbar-default navbar-fixed-top">
+  ...
+ </div>
+</pre>
+			</li>
+			<li>
+				You can also use the following javascript code to do this:
+<pre data-language="javascript">
+ ace.settings.navbar_fixed(true, true);
+</pre>
+				First parameter determines whether navbar should become fixed or not.
+				<br />
+				Second paramtere determines whether you want to save the changes to cookies/localStorage
+				for later retrieval
+			</li>
+		
+			<li>
+				In smaller devices, fixed navbar content may become too large
+				and ends up in more that two rows.
+				<br />
+				In that case you may need to add extra padding to content area
+				using CSS and media rules or enable <b>auto padding</b> option when building your custom Javascript
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:settings.navbar -->
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#settings.breadcrumbs">Fixed Breadcrumbs</h3>
+		<!-- #section:settings.breadcrumbs -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For fixed breadcrumbs, you should add <code>.breadcrumbs-fixed</code> class
+				to <code>.breadcrumbs</code> element:
+<pre data-language="html">
+ <div class="breadcrumbs breadcrumbs-fixed">
+  ...
+ </div>
+</pre>
+			</li>
+			<li>
+				If you want to do this using Javascript, you can use this code:
+<pre data-language="javascript">
+ ace.settings.breadcrumbs_fixed(true, true);
+</pre>
+				First parameter determines whether breadcrumbs should become fixed or not.
+				<br />
+				Second paramtere determines whether you want to save the changes to cookies/localStorage
+				for later retrieval
+			</li>
+			
+			<li>
+				Currently, fixed breadcrumbs are only available when device with is above
+				<code>991px</code>
+				which you can change that by modifying <code>@screen-fixed-breadcrumbs</code> variable
+				inside <code>assets/css/less/variables.less</code> files and recompiling <code>ace.less</code>.
+				<br />
+				The reason for this is that in smaller devices, fixed breadcrumbs and fixed navbar
+				may take up a lot of space!
+			</li>
+			
+			<li>
+				Anyway, if in smaller devices, your fixed breadcrumbs content is too large
+				and ends up in more that two rows, you may need to add extra padding to content area
+				using CSS and media rules or enable <b>auto padding</b> option when building your custom Javascript
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:settings.breadcrumbs -->
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#settings.container">Inside container</h3>
+		<!-- #section:settings.container -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For fixed container width, you should add <code>.container</code> class
+				to <code>.navbar-container</code> and <code>.main-container</code> elements:
+<pre data-language="html">
+ <div class="navbar navbar-default">
+   <div class="navbar-container container">
+     ...
+   </div>
+ </div>
+ 
+ <div class="main-container container">
+     ...
+ </div>
+</pre>
+			</li>
+			<li>
+				If you want to do this using Javascript, you can use this code:
+<pre data-language="javascript">
+ ace.settings.main_container_fixed(true, true);
+</pre>
+				First parameter determines whether navbar should become fixed or not.
+				<br />
+				Second paramtere determines whether you want to save the changes to cookies/localStorage
+				for later retrieval.
+			</li>
+		
+			<li>
+				Currently Bootstrap doesn't allow fixed width container on specific widths only.
+				<br />
+				You can enable <b>auto container</b> option when <a href="../build/js.html">building a custom Javascript</a> to
+				activate fixed container only when device width is more than 1140px.
+				<br />
+<pre data-language="javascript">
+$(window).on('resize.auto_container', function() {
+    var enable = $(this).width() > 1140;
+    try {
+       ace.settings.main_container_fixed(enable, false, false);
+    } catch(e) {}
+}).triggerHandler('resize.auto_container');
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:settings.container -->
+
+	</div>
+
+	
+	<div class="space-8"></div>
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#settings.sidebar">Sidebar Settings</h3>
+		<!-- #section:settings.sidebar -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For fixed sidebar, you should add <code>.sidebar-fixed</code> class
+				to <code>.sidebar</code> element:
+<pre data-language="html">
+ <div class="sidebar sidebar-fixed responsive">
+  ...
+ </div>
+</pre>
+			</li>
+			<li>
+				If you want to do this using Javascript, you can use this code:
+<pre data-language="javascript">
+ ace.settings.sidebar_fixed(true, true);
+</pre>
+				First parameter determines whether sidebar should become fixed or not.
+				<br />
+				Second paramtere determines whether you want to save the changes to cookies/localStorage
+				for later retrieval.
+			</li>
+			
+			
+			<li>
+				For minimized sidebar, you should add <code>.menu-min</code> class
+				to <code>.sidebar</code> element:
+<pre data-language="html">
+ <div class="sidebar menu-min responsive">
+  ...
+ </div>
+</pre>
+			</li>
+			<li>
+				If you want to do this using Javascript, you can use this code:
+<pre data-language="javascript">
+ ace.settings.sidebar_collapsed(true, true);
+</pre>
+				First parameter determines whether sidebar should become minimized or not.
+				<br />
+				Second paramtere determines whether you want to save the changes to cookies/localStorage
+				for later retrieval.
+			</li>
+			
+			<li>
+				For other sidebar options and settings please see <a href="#basics/sidebar.options" class="help-more">Sidebar options</a>
+			</li>
+			
+			
+		 </ul>
+		</div>
+		<!-- /section:settings.sidebar -->
+
+	</div>
+
+	
+	<div class="space-8"></div>
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#settings.events">Setting Events</h3>
+		<!-- #section:settings.events -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				When a settings box option or sidebar collapse/expand button is clicked an event is triggered which may be useful
+				in case you use settings box and want to respond to user changes				
+			</li>
+			
+			<li>
+				The event name is <code>settings.ace</code> and 
+				has two extra arguments.
+				<br />
+				The first is event name and the second is the new status:
+<pre data-language="javascript">
+$(document).on('settings.ace', function(event, name, status) {
+    //name is one of the following
+    //navbar_fixed
+    //sidebar_fixed
+    //breadcrumbs_fixed
+    //main_container_fixed
+    //sidebar_collapsed
+	
+    //status is either true or false
+	
+    if(name == 'sidebar_fixed' && status == false) {
+        //sidebar was unfixed by user, do something
+    }
+}
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:settings.events -->
+
+	</div>
+	
+	<!-- /section:settings.page -->
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#settings.skins">Skins</h3>
+		
+		<!-- #section:settings.skins -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				There are currently 4 skins available which changes sidebar and navbar colors,
+				which are:
+				<ol>
+					<li><code>.no-skin</code></li>
+					<li><code>.skin-1</code></li>
+					<li><code>.skin-2</code></li>
+					<li><code>.skin-3</code> To use .skin-3 you should add <code>.no-skin</code> class as well</li>
+				</ol>
+			</li>
+			
+			<li>
+				To use a skin simply update <code>body</code> element's class name:
+<pre data-language="html">
+&lt;body class="skin-2"&gt;
+...
+</pre>
+			</li>
+			
+			<li>
+				Inside settings box when you select a skin some other parts change as well.
+				<br />
+				For example shortcut buttons or navbar user dropdown buttons.
+				<br />
+				For that you should update some class names in your HTML code:
+				
+<pre data-language="html">
+ <!-- for example in skin-3, shortcut buttons have .btn-white class -->
+ <button class="btn btn-primary btn-white"><i class="ace-icon fa fa-signal red"></i></button>
+ 
+ <!-- or in skin-2, navbar dropdown buttons have 'no-border margin-1 light-pink' class -->
+ <li class='no-border margin-1 light-pink'>
+  ...
+ </li>
+</pre>
+			</li>
+			
+			<li>
+				Default skin in included and compiled with <code>ace.css</code>
+				but for other skins you should include <code>ace-skins.css</code>
+			</li>
+			<li>
+				You can also compile main css <code>ace.css</code> using another skin.
+				<br />
+				Please refer to <a class="help-more" href="#files/css.skins">Ace Skins</a> section for more info.
+			</li>
+
+			<li>
+				If you want to save a selected skin and retrieve it when user navigates to a different page or refreshes page,
+				there are several approaches for that depending on your application.
+				<br />
+				One way is to save selected skin inside a cookie and apply changes 
+				in your server side code when user requests a page:
+<pre data-language="javascript">
+ $('#ace-settings-skin').on('change', function() {
+   ace.settings.set('skin', this.value); 
+ })
+</pre>
+And in your server side code:
+<pre data-language="php">
+$skin = $_COOKIE['ace_skin'];
+echo '&lt;body class="'.$skin.'"&gt;';
+//...
+//...
+echo '&lt;li class="'.some_modification_based_on_selected_skin($skin).'"&gt;';
+</pre>
+
+			Of course it's the simplest way and things would be different depending on your application
+			</li>
+
+		 </ul>
+		</div>
+		<!-- /section:settings.skins -->
+
+	</div>
+
+
+
+
+	<div class="hr hr-double hr32"></div>
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#settings.rtl">RTL</h3>
+		<!-- #section:settings.rtl -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				RTL (right to left) direction is used for Arabic, Hebrew and Persian languages
+			</li>
+			
+			<li>
+				It's best to make RTL changes directly inside your HTML rather than using Javascript dynamically at runtime.
+			</li>
+			
+			<li>
+				You should make the following changes for RTL:
+				<ol>
+					<li>Include <code>assets/css/ace-rtl.css</code></li>
+					
+					<li>Add <code>.rtl</code> class to <code>body</code> element</li>
+	
+					<li> Switch classes that have <code>-right</code> or <code>-left</code>
+						<br />
+						For example:
+						<br />
+						<code>.pull-right</code> &amp; <code>.pull-left</code>
+						<br />
+						or
+						<br />
+						<code>.no-padding-left</code> &amp; <code>.no-padding-right</code>
+						<br />
+						or
+						<br />
+						<code>.arrowed</code> &amp; <code>.arrowed-right</code>						
+					</li>
+				</ol>
+				
+				<div class="space-4"></div>
+		
+				Also please note that RTL horizontal scrolling is inconsistent between browsers.
+				<br />
+				So it's better to change scrollbars to LTR and make the content RTL again.
+				<br />
+				You can use <code>.make-ltr</code> and <code>.make-rtl</code> classes:
+				<br />
+				
+<pre data-language="javascript">
+ $('#my-content').addClass('make-ltr')
+ .find('.scroll-content').wrapInner('&lt;div class="make-rtl" /&gt;');
+</pre>
+
+				<div class="space-4"></div>
+				
+				Some plugins support RTL and you should specify the options when initiating plugins:
+				<ol>
+					<li>For Chosen plugin add <code>.chosen-rtl</code> to the element</li>
+					<li>For jqGrid plugin specify <code>direction:'rtl'</code> option</li>
+					<li>For jQuery UI datepicker specify <code>isRTL:true</code> option</li>
+					<li>For FullCalendar plugin set <code>isRTL:true</code> option</li>
+				</ol>
+			</li>
+			
+			<li>
+				Sometimes when using RTL option of settings box for multiple times, 
+				you elements are misplaced in some browsers.
+				<br />
+				This is probably because browsers don't redraw elements.
+				<br />
+				It won't be a problem in your application, because you should enable RTL
+				inside your server side response and not dynamically inside browser.
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:settings.rtl -->
+
+	</div>
+
+
+
+
+	<div class="hr hr-double hr32"></div>
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#settings.storage">Cookies & Storage</h3>
+		<!-- #section:settings.storage -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Cookie and localStorage functionality has been added to save/load variables and settings
+				which is defined inside <code>ace-extra.js</code>
+			</li>
+			
+			<li>
+<pre data-language="javascript">
+//cookie functions
+ace.cookie.set(name, value, expires, path, domain, secure);
+ace.cookie.get(name);
+ace.cookie.remove(name, path);
+</pre>
+
+<pre data-language="javascript">
+//localStorage functions
+ace.storage.set(key, value);
+ace.storage.get(key);
+ace.storage.remove(key);
+</pre>
+			</li>
+			
+			<li>
+				<code>ace.data_storage</code> is a wrapper which by default chooses localStorage if available.
+				<br />
+				Otherwise it will use cookies for saving data which you can change that by specifying an optional argument:
+<pre data-language="javascript">
+ace.data = new ace.data_storage();//use localStorage if available otherwise use cookies
+ace.data = new ace.data_storage(1);//use localStorage
+ace.data = new ace.data_storage(2);//use cookies
+
+//save/load values with namespace (for example 'settings')
+//ace.data.set(namespace, key, value);
+ace.data.set('settings', 'sidebar-collapsed', 1);
+var collapsed = ace.data.get('settings', 'sidebar-collapsed');
+ace.data.remove('settings', 'sidebar-collapsed');
+
+//save/load values without namespace
+ace.data.set('username', 'alex');
+var username = ace.data.get('username');
+ace.data.remove('username');
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:settings.storage -->
+	</div>
+	
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#settings.box">Settings Box</h3>
+		<!-- #section:settings.box -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Settings container (<code>.ace-settings-container</code>) should be the first child of
+				<code>.page-content</code>
+				<br />
+				It contains
+				<code>.ace-settings-btn</code> and <code>.ace-settings-box</code>
+				which consists of several <code>.ace-settings-item</code> elements:
+				
+<pre data-language="html">
+<div class="page-content">
+  <div id="ace-settings-container" class="ace-settings-container">
+    <div id="ace-settings-btn" class="ace-settings-btn btn btn-app btn-xs btn-warning">
+       <i class="ace-icon fa fa-cog bigger-150"></i>
+    </div>
+
+    <div id="ace-settings-box" class="ace-settings-box clearfix open">
+      <div class="pull-left width-50">
+        <div class="ace-settings-item">
+            <input type="checkbox" id="ace-settings-navbar" class="ace" />
+            <label for="ace-settings-navbar" class="lbl"> Fixed Navbar</label>
+        </div>
+      </div><!-- /.pull-left -->
+
+      <div class="pull-left width-50">
+		...
+      </div><!-- /.pull-left -->
+    </div><!-- /.ace-settings-box -->
+  </div>
+  .
+  .
+  .
+</div><!-- /.page-content -->
+</pre>
+			</li>
+		 </ul>
+		</div>
+
+	</div>
+	<!-- /section:settings.box -->
+	
+	
+	<!-- /section:settings -->
+
+</section>

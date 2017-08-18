@@ -1,0 +1,383 @@
+<section>
+	<h1 class="blue"><i class="ace-icon fa fa-desktop grey"></i> Extra</h1>
+
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#custom/extra">
+		Some Extra Classes
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:custom/extra -->
+	<div class="help-content">
+		<h3 class="info-title smaller">Utility Classes</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				A few additional classes have been defined in 
+				<code data-open-file="css" class="open-file">assets/css/less/utility.less</code> that may be useful. 
+			</li>
+		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller">Font &amp; Color</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Headings:
+				<ul>
+					<li><code>.smaller</code> makes font size smaller</li>
+					<li><code>.bigger</code> makes font weight bigger</li>
+				</ul>
+<pre data-language="html">
+ <h4 class="bigger">Bigger H4</h4>
+</pre>
+			</li>
+		 
+			<li>
+				Font weights:
+				<ul>
+					<li><code>.lighter</code> makes font weight light</li>
+					<li><code>.bolder</code> makes font weight bold</li>
+				</ul>
+<pre data-language="html">
+ <h3 class="lighter">Lighter Text</h3>
+</pre>
+			</li>
+			
+			<li>
+				Text colors:
+				<ul>
+					<li><code>.dark</code></li>
+					<li><code>.white</code></li>
+					<li><code>.red</code></li>
+					<li><code>.red2</code></li>
+					<li><code>.light-red</code></li>
+					<li><code>.blue</code></li>
+					<li><code>.light-blue</code></li>
+					<li><code>.green</code></li>
+					<li><code>.light-green</code></li>
+					<li><code>.orange</code></li>
+					<li><code>.orange2</code></li>
+					<li><code>.light-orange</code></li>
+					<li><code>.purple</code></li>
+					<li><code>.pink</code></li>
+					<li><code>.pink2</code></li>
+					<li><code>.brown</code></li>
+					<li><code>.grey</code></li>
+					<li><code>.light-grey</code></li>
+				</ul>
+				
+<pre data-language="html">
+ <span class="blue">Blue Text</span>
+</pre>
+			</li>
+			
+			<li>
+				<ul>
+					<li><code>.bigger-110</code></li>
+					<li><code>.bigger-120</code></li>
+					<li>...</li>
+					<li><code>.bigger-290</code></li>
+					<li><code>.bigger-300</code></li>
+					<li>...</li>
+					<li><code>.bigger-125</code></li>
+					<li><code>.bigger-175</code></li>
+					<li><code>.bigger-225</code></li>
+					<li><code>.bigger-275</code></li>
+				</ul>
+				
+<pre data-language="html">
+ <i class="fa fa-twitter blue bigger-150"></i>
+</pre>
+			</li>
+			
+			<li>
+				<ul>
+					<li><code>.smaller-90</code></li>
+					<li><code>.smaller-80</code></li>
+					<li><code>...</code></li>
+					<li><code>.smaller-30</code></li>
+					<li><code>.smaller-20</code></li>
+					<li><code>...</code></li>
+					<li><code>.smaller-75</code></li>
+					<li><code>.smaller-25</code></li>
+				</ul>
+<pre data-language="html">
+ <span class="smaller-75">Smaller Text</span>
+</pre>
+			</li>
+ 		 </ul>
+		</div>
+		
+		
+		
+		<h3 class="info-title smaller">Layout &amp; Alignment</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<ul>
+					<li><code>.inline</code> applies <code>display: inline-block</code></li>
+					<li><code>.block</code> applies <code>display: block</code></li>
+				</ul>
+			</li>
+
+			<li>
+				<ul>
+					<li><code>.pos-rel</code></li>
+					<li><code>.position-relative</code></li>
+					<li><code>.pos-abs</code></li>
+					<li><code>.position-absolute</code></li>
+				</ul>
+				
+				As an example <code>.inline</code> and <code>.position-relative</code>
+				can be used to add a dropdown inside a <code>DIV</code> element without the need to define a new class:
+<pre data-language="html">
+<div class="inline pos-rel">
+   <a href="#" data-toggle="dropdown" class="dropdown-toggle">Show Menu</a>
+   <ul class="dropdown-menu">
+      ...
+   </ul>
+</div>
+</pre>
+			</li>
+			
+			<li>
+				<ul>
+					<li><code>.center</code></li>
+					<li><code>.align-center</code></li>
+					<li><code>.align-left</code></li>
+					<li><code>.align-right</code></li>
+				</ul>
+			</li>
+			
+			<li>
+				<ul>
+					<li><code>.middle</code></li>
+					<li><code>.align-middle</code></li>
+					<li><code>.align-top</code></li>
+					<li><code>.align-bottom</code></li>
+				</ul>
+				which applies vertical alignment
+			</li>
+			
+			<li><code>.no-float</code></li>
+		  </ul>
+		</div>
+
+
+
+		<h3 class="info-title smaller">Box Model</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<ul>
+					<li><code>.no-padding</code></li>
+					<li><code>.no-padding-right</code></li>
+					<li><code>.no-padding-left</code></li>
+					<li><code>.no-padding-top</code></li>
+					<li><code>.no-padding-bottom</code></li>
+				</ul>
+			</li>
+			
+			<li>
+				<ul>
+					<li><code>.no-margin</code></li>
+					<li><code>.no-margin-right</code></li>
+					<li><code>.no-margin-left</code></li>
+					<li><code>.no-margin-top</code></li>
+					<li><code>.no-margin-bottom</code></li>
+				</ul>
+			</li>
+			
+			<li>
+				<ul>
+					<li><code>.no-border</code></li>
+					<li><code>.no-border-right</code></li>
+					<li><code>.no-border-left</code></li>
+					<li><code>.no-border-top</code></li>
+					<li><code>.no-border-bottom</code></li>
+				</ul>
+			</li>
+			
+			<li>
+				<ul>
+					<li><code>.width-100</code></li>
+					<li><code>.width-90</code></li>
+					<li>...</li>
+					<li><code>.width-20</code></li>
+					<li>...</li>
+					<li><code>.width-75</code></li>
+					<li><code>.width-25</code></li>
+					<li>...</li>
+					<li><code>.width-auto</code></li>
+					<li><code>.height-auto</code></li>
+				</ul>
+				
+<pre data-language="html">
+<div class="clearfix">
+  <div class="pull-left width-50">
+    ...  
+  </div>
+  
+  <div class="pull-right width-50">
+    ...
+  </div>
+</div>
+</pre>
+			</li>
+		  </ul>
+		</div>
+
+
+
+		<h3 class="info-title smaller">Space &amp; Separator</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Add <code>.spaced</code> and <code>.spaced2</code> to
+				<code>ul</code> and <code>ol</code> lists for more spacing:
+<pre data-language="html">
+<ul class="spaced2">
+  <li>...</li>
+  <li>...</li>
+</ul>
+</pre>
+			</li>
+		 
+			<li>
+				Space classes to add vertical spacing:
+				<ul>
+					<li><code>.space</code></li>
+					<li><code>.space-0</code></li>
+					<li><code>.space-2</code></li>
+					<li><code>.space-4</code></li>
+					<li>...</li>
+					<li><code>.space-30</code></li>
+					<li><code>.space-32</code></li>
+				</ul>
+<pre data-language="html">
+<div class="space-12"></div>
+</pre>				
+			</li>
+			
+			<li>
+				Spacing that is only visible on specific widths:
+				<ul>
+					<li><code>.vspace-2-xs</code></li>
+					<li><code>.vspace-4-xs</code></li>
+					<li>...</li>
+					<li><code>.vspace-30-xs</code></li>
+					<li><code>.vspace-32-xs</code></li>
+				</ul>
+				
+				<ul>
+					<li><code>.vspace-2-sm</code></li>
+					<li><code>.vspace-4-sm</code></li>
+					<li>...</li>
+				</ul>
+				
+				<ul>
+					<li><code>.vspace-2-md</code></li>
+					<li><code>.vspace-4-md</code></li>
+					<li>...</li>
+				</ul>
+				
+				<ul>
+					<li><code>.vspace-2-lg</code></li>
+					<li><code>.vspace-4-lg</code></li>
+					<li>...</li>
+				</ul>
+				
+<pre data-language="html">
+<div class="vspace-12-xs"></div><!-- will be visibly only on small devices -->
+</pre>				
+			</li>
+			
+			<li>
+				<!-- #section:custom/extra.hr -->
+				Horizontal line:
+				<ul>
+					<li><code>.hr</code></li>
+					<li><code>.hr.hr-2</code></li>
+					<li><code>.hr.hr-4</code></li>
+					<li>...</li>
+					<li><code>.hr.hr-30</code></li>
+					<li><code>.hr.hr-32</code></li>
+					<li>...</li>
+					<li><code>.hr.hr-dotted</code></li>
+					<li><code>.hr.hr-double</code></li>
+				</ul>
+<pre data-language="html">
+<div class="hr hr-12 hr-dotted"></div>
+</pre>
+			</li>
+			<!-- /section:custom/extra.hr -->
+			
+		  </ul>
+		</div>
+		
+		
+		
+		<h3 class="info-title smaller">Header</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<code>.header</code> with same text colors as above:
+				<div class="well">
+					<h3 class="header blue">
+					  Header Text
+					</h3>
+				</div>
+<pre data-language="html">
+<h3 class="header blue lighter smaller">
+  Header Text
+</h3>
+</pre>
+			</li>
+		  </ul>
+		</div>
+		
+		
+		
+		<h3 class="info-title smaller">Other</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<!-- #section:custom/extra.action-buttons -->
+				<code>.action-buttons</code>:
+				<br />
+				<span class="action-buttons bigger-125">
+					<a href="#"><i class="ace-icon fa fa-twitter light-blue"></i></a>
+					<a href="#"><i class="ace-icon fa fa-facebook blue"></i></a>
+				</span>
+				<br />
+<pre data-language="html">
+<span class="action-buttons bigger-125">
+  <a href="#"><i class="ace-icon fa fa-twitter light-blue"></i></a>
+  <a href="#"><i class="ace-icon fa fa-facebook blue"></i></a>
+</span>
+</pre>
+				<!-- /section:custom/extra.action-buttons -->
+			</li>
+			
+			<li>
+				<!-- #section:custom/extra.grid -->
+				<code>.grid2</code> <code>.grid3</code> <code>.grid4</code> elements
+				are less responsive and good for small pieces of content and have a border line separating them:
+<pre data-language="html">
+<div class="clearfix">
+  <div class="grid3"></div>
+  <div class="grid3"></div>
+  <div class="grid3"></div>
+</div>
+</pre>
+				<!-- /section:custom/extra.grid -->
+			</li>
+		  </ul>
+		</div>
+		
+	</div>
+	<!-- /section:custom/extra -->
+	
+</section>

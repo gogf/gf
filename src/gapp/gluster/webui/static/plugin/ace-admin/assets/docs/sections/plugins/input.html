@@ -1,0 +1,273 @@
+<section>
+	<h1 class="blue" data-id="#plugins/input"><i class="ace-icon fa fa-pencil-square-o grey"></i> Form Inputs &amp; Controls</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+
+	<!-- #section:plugins/input -->
+	<div class="help-content">
+
+		<h3 class="info-title smaller" data-id="#plugins/input.chosen">Chosen</h3>
+		<!-- #section:plugins/input.chosen -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Chosen is a replacement for browser dropdown lists.
+				<br />
+				You can find more info about its options here:
+				<a href="http://harvesthq.github.io/chosen/">http://harvesthq.github.io/chosen/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/chosen.css</code>
+				<br />
+				<code>assets/js/chosen.jquery.min.js</code>
+			</li>
+			
+			<li>
+				A basic example could be like this:
+
+<pre data-language="html">
+ <select name="myselect" class="chosen-select">
+   <option value="1">Option#1</option>
+   <option value="2">Option#2</option>
+   <option value="2">Option#3</option>
+ </select>
+</pre>
+<pre data-language="javascript">
+ $('.chosen-select').chosen(); 
+</pre>
+			</li>
+			
+			<li>
+				Add <code>.tag-input-style</code> class to <code>select</code> element
+				for an alternative multiple chosen style:
+<pre data-language="html">
+ <select multiple name="myselect" class="chosen-select tag-input-style">
+   ...
+ </select>
+</pre>
+			</li>
+			
+			<li>
+				Please note that if chosen element is inside a container which is hidden at first,
+				it may not render properly.
+				<br />
+				To resolve it you should create the chosen or reset its width when the container is shown:
+<pre data-language="javascript">
+ //an example of a chosen inside a modal
+ $('#modal-form').on('shown.bs.modal', function () {
+   $('.chosen-select').chosen(); 
+ })
+ 
+ //or
+ $('#modal-form').on('shown.bs.modal', function () {
+    $(this).find('.chosen-container').each(function(){
+       $(this).find('a:first-child').css('width' , '210px');
+       $(this).find('.chosen-drop').css('width' , '210px');
+       $(this).find('.chosen-search input').css('width' , '200px');
+    });
+ })
+</pre>
+			</li>
+			
+			<li>
+				Chosen plugin is not responsive by default and to make it so, you should change its 
+				dimensions on window resize event:
+<pre data-language="javascript">
+$(window).on('resize.chosen', function() {
+    //get its parent width
+    var w = $('.chosen-select').parent().width();
+    $('.chosen-select').siblings('.chosen-container').css({'width':w});
+}).triggerHandler('resize.chosen');
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/input.chosen -->
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/input.select2">Select2</h3>
+		<!-- #section:plugins/input.select2 -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Select2 is similar to chosen with more advanced features such as remote data loading.
+				<br />
+				For more info please see <a href="https://github.com/ivaynberg/select2/">https://github.com/ivaynberg/select2/</a>
+			</li>
+			
+			<li>
+				To use it you should include:
+				<br />
+				<code>assets/css/select2.css</code>
+				<br />
+				<code>assets/js/select2.min.js</code>
+			</li>
+			
+			<li>
+				Please also note that Select2's dropdown sometimes jumps off.
+				<br />
+				I have tried to remove all Ace specific styles and scripts and
+				it still happens sometimes.
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/input.select2 -->
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/input.tag-input">Tag Input</h3>
+		<!-- #section:plugins/input.tag-input -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more info about tag input plugin, please see its page at:
+				<a href="https://github.com/fdeschenes/bootstrap-tag">https://github.com/fdeschenes/bootstrap-tag</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/bootstrap-tag.min.js</code>
+			</li>
+			
+			<li>
+				Its autocomplete feature is powered by <a href="#plugins/bootstrap.typeahead" class="help-more">Bootstrap's typeahead plugin</a>.
+			</li>
+			
+			<li>
+				A basic example which retrieve's autocomplete data dynamically from server is like this:
+<pre data-language="html">
+<input type="text" name="tags" id="form-field-tags" value="mytag1,mytag2" />
+</pre>
+
+<pre data-language="javascript">
+var tag_input = $('#form-field-tags');
+try{
+   tag_input.tag({
+      placeholder: tag_input.attr('placeholder'),
+      //source: ['tag 1', 'tag 2'],//static autocomplet array
+
+      //or fetch data from database, fetch those that match "query"
+      source: function(query, process) {
+         $.ajax({url: 'remote_source.php?q='+encodeURIComponent(query)})
+          .done(function(result_items){
+             process(result_items);
+         });
+      }
+   });
+}
+catch(e) {
+   //display a textarea for old IE, because it doesn't support this plugin or another one I tried!
+   tag_input.after('&lt;textarea id="'+tag_input.attr('id')+'" name="'+tag_input.attr('name')+'" rows="3">'+tag_input.val()+'&lt;/textarea>').remove();
+}
+</pre>
+			</li>
+			
+			<li>
+				You can also add new tags using the following code:
+<pre data-language="javascript">
+//programmatically add a new tag
+var $tag_obj = $('#form-field-tags').data('tag');
+$tag_obj.add('new tag');
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/input.tag-input -->
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/input.masked-input">Masked Input</h3>
+		<!-- #section:plugins/input.masked-input -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more info and examples about masked input plugin, please see:
+				<a href="http://digitalbush.com/projects/masked-input-plugin/">http://digitalbush.com/projects/masked-input-plugin/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery.maskedinput.min.js</code>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/input.masked-input -->
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/input.limiter">Input Limiter</h3>
+		<!-- #section:plugins/input.limiter -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Input Limiter plugin, limit's textarea input size by displaying a message to user which shows remaining characters.
+			</li>
+			
+			<li>
+				For more info please see:
+				<a href="http://rustyjeans.com/jquery-plugins/input-limiter">http://rustyjeans.com/jquery-plugins/input-limiter</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery.inputlimiter.1.3.1.min.js</code>
+			</li>
+
+			<li>
+				A basic example would be like this:
+<pre data-language="javascript">
+$('textarea.limited').inputlimiter({
+   remText: '%n character%s remaining...',
+   limitText: 'max allowed : %n.'
+});
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/input.limiter -->
+		
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/input.autosize">Auto Size</h3>
+		<!-- #section:plugins/input.autosize -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Textarea autosize, is used for automatically increasing textarea height as user input grows.
+			</li>
+			
+			<li>
+				For more info please see its page at:
+				<a href="http://www.jacklmoore.com/autosize/">http://www.jacklmoore.com/autosize/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery.autosize.min.js</code>
+			</li>
+			
+			<li>
+				A basic example would be something like this:
+<pre data-language="javascript">
+$('textarea.autosize').autosize({append: "\n"});
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/input.autosize -->
+		
+
+
+	</div>
+	<!-- /section:plugins/input -->
+</section>

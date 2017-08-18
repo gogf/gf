@@ -1,0 +1,236 @@
+<section>
+	<h1 class="blue" data-id="#basics/content"><i class="ace-icon fa fa-desktop grey"></i> Content</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+
+	<!-- #section:basics/content -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Layout</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Default HTML layout used for content area is:
+				<ol>
+					<li>
+						<b>breadcrumbs</b> and searchbox
+					</li>
+					<li>
+						<b>page title</b> optional
+					</li>
+					<li>
+						<b>page conent</b>
+					</li>
+					<li>
+						<b>settings box</b> optional
+					</li>
+				</ol>
+				
+				<div class="space-4"></div>
+<pre data-language="html">
+<div class="main-container" id="main-container">
+  <!-- sidebar here -->
+
+  <div class="main-content">
+    <div class="breadcrumbs" id="breadcrumbs">
+      <!-- breadcrumbs here -->
+    </div>
+
+    <div class="page-content">
+      <div class="ace-settings-container" id="ace-settings-container">
+        <!-- settings box goes here -->
+      </div>
+
+      <div class="page-header">
+        <!-- page header goes here -->
+      </div>
+	  
+      <div class="row">
+        <div class="col-xs-12">
+          <!-- page content goes here -->
+        </div>
+      </div>
+
+    </div><!-- /.page-content -->
+  </div><!-- /.main-content -->
+ 
+  <a class="btn-scroll-up" id="btn-scroll-up">
+   ...
+  </a>
+</div><!-- /.main-container -->
+</pre>
+			</li>
+
+			<li>
+				Starting with the following file you can find more details:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/</span>default.mustache</code>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+
+		<h3 class="info-title smaller" data-id="#basics/content.breadcrumbs">2. Breadcrumbs</h3>
+		<!-- #section:basics/content.breadcrumbs -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<code>.breadcrumbs</code> is inside <code>.main-content</code> and 
+				contains <code>ul.breadcrumb</code> and searchbox.
+				<br />
+<pre data-language="html">
+ <div id="breadcrumbs" class="breadcrumbs">
+   <ul class="breadcrumb">
+     <li><i class="fa fa-home home-icon"></i> <a href="#">Home</a></li>
+     <li><a href="#">...</a></li>
+     <li><a href="#">...</a></li>
+     <li class="active">...</li>
+   </ul><!-- /.breadcrumb -->
+
+   <!-- searchbox -->
+ </div>
+</pre>
+			</li>
+			
+			<li>
+				For an example on generating breadcrumbs list in your application,
+				see <a href="#basics/sidebar.mark_active" class="help-more">sidebar active item</a> section.
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/content.breadcrumbs -->
+
+
+		<h3 class="info-title smaller" data-id="#basics/content.searchbox">3. Search box</h3>
+		<!-- #section:basics/content.searchbox -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Search box is inside <code>.breadcrumbs</code>
+				<br />
+				You can also have a search box inside <a href="#basics/navbar.form" class="help-more">.navbar</a>
+			</li>
+			<li>
+<pre data-language="html">
+  <div id="nav-search" class="nav-search">
+    <form class="form-search">
+      <span class="input-icon">
+        <input type="text" class="nav-search-input" id="nav-search-input" autocomplete="off" placeholder="Search ..." />
+        <i class="ace-icon fa fa-search nav-search-icon"></i>
+      </span>
+    </form>
+  </div>
+</pre>			
+			</li>
+			
+			<li>
+				Optional auto complete is powered by
+				<a href="#plugins/bootstrap.typeahead" class="help-more">typeahead plugin</a> of Bootstrap 2,
+				which has been removed in Bootstrap 3, but is lightweight and functional.
+				<br />
+<pre data-language="javascript">
+ //auto complete's data source is a static array
+ $('#nav-search-input').typeahead({
+   source: some_static_array,
+   updater: function (item) {
+     //when an item is selected from dropdown menu, focus back to input element
+     $('#nav-search-input').focus();
+     return item;
+   }
+ });
+</pre>
+
+You can also retrieve auto complete data from a remote database:
+<pre data-language="javascript">
+ //auto complete's data is dynamically retrieved from server
+ source: function(query, process) {
+    $.ajax({url: 'source.php?q='+encodeURIComponent(query)}).done(function(result_items){
+       process(result_items);
+    })
+ }
+</pre>
+			</li>
+			
+			<li>
+				Adding <code>.minimized</code> class to <code>.nav-search</code> makes it minimized by default:
+<pre data-language="html">
+ <div id="nav-search" class="nav-search minimized">
+   ...
+ </div>
+</pre>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/content.searchbox -->
+		
+		
+		<h3 class="info-title smaller" data-id="#basics/content.content">4. Page Title &amp; Content</h3>
+		<!-- #section:basics/content.content -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<code>.page-content</code> should be after (optional) <code>.breadcrumbs</code>
+			</li>
+			<li>
+				It contains optional settings box, optional header and the content area:
+<pre data-language="html">
+<div class="page-content">
+  <div class="ace-settings-container" id="ace-settings-container">
+    <!-- settings box goes here -->
+  </div>
+
+  <div class="page-header">
+    <!-- page header goes here -->
+  </div>
+  
+  <div class="row">
+    <div class="col-xs-12">
+       <!-- page content goes here -->
+    </div>
+  </div>
+
+</div><!-- /.page-content -->
+</pre>
+			</li>
+			
+			<li>
+				Optional page header consists of a heading text and smaller description:
+<pre data-language="html">
+<div class="page-header">
+  <h1>
+     Dashboard
+     <small><i class="ace-icon fa fa-angle-double-right"></i> overview &amp; stats</small>
+   </h1>
+</div>
+</pre>
+			</li>
+			
+			<li>
+				Please note that page content must be wrapped inside <code>.row</code> and <code>.col-xs-12</code>
+<pre data-language="html">
+<div class="row">
+  <div class="col-xs-12">
+    <!-- page content goes here -->
+  </div>
+</div>
+</pre>
+			</li>			
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/content.content -->
+		
+		
+		<h3 class="info-title smaller">5. Settings Box</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Settings box is optional.
+				For more info please see <a href="#settings.box" class="help-more">settings box section</a>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+	</div><!-- /.help-content -->
+	<!-- /section:basics/content -->
+
+</section>

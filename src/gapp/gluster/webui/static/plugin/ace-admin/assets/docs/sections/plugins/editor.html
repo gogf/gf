@@ -1,0 +1,307 @@
+<section>
+	<h1 class="blue" data-id="#plugins/editor"><i class="ace-icon fa fa-text-height grey"></i> Editor</h1>
+
+	<div class="hr hr-double hr32"></div>
+	<!-- #section:plugins/editor -->
+	
+	
+	<!-- #section:plugins/editor.wysiwyg -->
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/editor.wysiwyg">Wysiwyg Editor</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more info about wysiwyg plugin, please see its page at:
+				<a href="http://mindmup.github.io/bootstrap-wysiwyg/">http://mindmup.github.io/bootstrap-wysiwyg/</a>
+			</li>
+
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery.hotkeys.min.js</code> 
+				<br />
+				<code>assets/js/bootstrap-wysiwyg.min.js</code>
+			</li>
+
+			<li>
+				For ease of use I have made a wrapper for it and some extra options
+			</li>
+			
+			<li>
+				A basic example is as follows:
+<pre data-language="html">
+<div id="my-editor"><!-- custom html data --></div>
+</pre>
+<pre data-language="javascript">
+$('#my-editor').ace_wysiwyg();
+</pre>
+
+			</li>
+		  </ul>
+		</div>
+		 
+		<h3 class="info-title smaller">Options</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Current ace_wysiwyg wrapper options are:
+				<ol>
+					<li><code>wysiwyg</code> options to send to the plugin</li>
+					<li><code>speech_button</code> whether to add speech input button in Chrome</li>
+					<li><code>toolbar</code> an array of toolbar buttons and options</li>
+					<li><code>toolbar_place</code> optional toolbar placement function</li>
+				</ol>
+				
+				For example the following creates a wyswiwyg with 3 toolbar buttons:
+<pre data-language="javascript">
+$('#my-editor').ace_wysiwyg({
+  toolbar: {
+    'bold',
+    'italic',
+    null,
+
+    {
+        name: 'font',
+        title: 'Custom tooltip',
+        values: ['Some Font!', 'Arial', 'Verdana', 'Comic Sans MS', 'Custom Font!']
+    }
+  }
+});
+</pre>
+			</li>
+			
+			<li>
+				As you can see each toolbar button, is a string or an array of options.
+				<br />
+				All buttons have the following properties:
+				<ol>
+					<li><code>title</code> which is button's tooltip text</li>
+					<li><code>icon</code> which is button's icon</li>
+					<li><code>className</code> which is button's class name</li>
+				</ol>
+			</li>
+			
+			<li>
+				A <code>null</code> value puts a separator(space) between buttons.
+			</li>
+
+			<li>
+				Toolbar buttons and options are as follows:
+				<ol>
+					<li><code>font</code> which takes an array as font names:
+<pre data-language="javascript">
+{
+   name: 'font',
+   title: 'optional custom tooltip',
+   icon: 'fa-leaf', //some custom icon
+   values: ['Some Font!', 'Arial', 'Verdana', 'Comic Sans MS', 'Custom Font!']
+}
+</pre>
+					</li>
+					<li><code>fontSize</code> which takes an array as font sizes:
+<pre data-language="javascript">
+{
+   name: 'fontSize',
+   title: 'optional custom tooltip',
+   values:{1 : 'Size#1' , 2 : 'Size#2' , 3 : 'Size#3' , 4 : 'Size#4' , 5 : 'Size#5'}
+}
+</pre>
+					</li>
+					
+					<li><code>bold</code>:
+<pre data-language="javascript">
+'bold',
+
+//or
+{
+   name: 'bold',
+   title: 'optional custom tooltip',
+   icon: 'fa-leaf' //some custom icon
+}
+</pre>
+					</li>
+					<li><code>italic</code></li>
+					<li><code>strikethrough</code></li>
+					<li><code>underline</code></li>
+					
+					<li><code>insertunorderedlist</code></li>
+					<li><code>insertorderedlist</code></li>
+					<li><code>outdent</code></li>
+					<li><code>indent</code></li>
+					
+					<li><code>justifyleft</code></li>
+					<li><code>justifycenter</code></li>
+					<li><code>justifyright</code></li>
+					<li><code>justifyfull</code></li>
+					
+					<li><code>createLink</code> which inserts a link:
+<pre data-language="javascript">
+{
+   name: 'createLink',
+   title: 'optional custom tooltip',
+   placeholder: 'link input placeholder',
+   button_class: 'btn-purple',//insert button's class
+   button_text: 'Add Link'//insert button's text
+}
+</pre>
+					</li>
+					
+					<li><code>unlink</code></li>
+					
+					<li><code>insertImage</code> which inserts an image:
+<pre data-language="javascript">
+{
+   name: 'createLink',
+   title: 'optional custom tooltip',
+   placeholder: 'image url input placeholder',
+   button_insert_class: 'btn-purple',//insert button's class
+   button_insert: 'Add Link',//insert button's text
+   
+   choose_file: true,//'Whether there should be a "Choose File" button
+   button_class: 'btn-success',//choose button's class
+   button_text: 'Choose an Image'//choose button's text
+}
+</pre>
+					</li>
+					
+					<li>
+						<code>foreColor</code> and <code>backColor</code>
+						which have a list of color values:
+<pre data-language="javascript">
+{
+   name: 'foreColor',
+   title: 'optional custom tooltip',
+   values: ['red', 'blue', '#FF7721']
+}
+</pre>
+					</li>
+					
+					<li><code>undo</code></li>
+					<li><code>redo</code></li>
+					<li><code>viewSource</code></li>
+				</ol>
+			</li>
+			
+			<li>
+				For an example please see <code>examples/wysiwyg.html</code>
+			</li>
+			
+			<li>
+				By default toolbar is placed before content area.
+				Using <code>toolbar_place</code> you can put the toolbar somewhere else:
+<pre data-language="javascript">
+$('#editor2').css({'height':'200px'}).ace_wysiwyg({
+ toolbar_place: function(toolbar) {
+    //for example put the toolbar inside '.widget-header'
+    return $(this).closest('.widget-box')
+           .find('.widget-header').prepend(toolbar)
+           .find('.wysiwyg-toolbar').addClass('inline');
+ }
+});
+</pre>
+				It should return the new toolbar
+			</li>
+			
+			<li>
+				Add <code>.wysiwyg-style1</code> and <code>.wysiwyg-style2</code>
+				to toolbar for alternative styles:
+<pre data-language="javascript">
+$('#editor2').ace_wysiwyg().prev().addClass('wysiwyg-style2');
+</pre>
+			</li>
+		   </ul>
+		 </div>
+
+
+		<h3 class="info-title smaller">Notes</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Normally you want to send the contents of wysiwyg editor to server.
+				<div class="space-4"></div>
+				Most plugins convert a textarea element into a wysiwyg editor,
+				by hiding the textarea and creating an editable DIV or iframe,
+				and updating textarea's content as needed.
+				
+				<div class="space-4"></div>
+				
+				You can use the following method to send html content to server along with form data:
+<pre data-language="javascript">
+$('#myform').on('submit', function() {
+  var hidden_input =
+  $('&lt;input type="hidden" name="my-html-content" /&gt;')
+  .appendTo('#myform');
+
+  var html_content = $('#myeditor').html();
+  hidden_input.val( html_content );
+  //put the editor's HTML into hidden_input and it will be sent to server
+});
+</pre>
+
+			</li>
+			
+			<li>
+				Firefox by default supports image resize inside wyswiwyg editor.
+				<br />
+				For other browsers you can use jQuery UI's resizable feature.
+				<br />
+				An example is included in wysiwyg demo page:
+				<br />
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>wysiwyg.js</code>
+				<br />
+				Search for <code>enableImageResize</code> function inside it
+			</li>
+		 </ul>
+		</div>
+	</div>
+	<!-- /section:plugins/editor.wysiwyg -->
+	
+	
+	<div class="space-12"></div>
+	
+	<!-- #section:plugins/editor.markdown -->
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/editor.markdown">Markdown Editor</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more info about markdown editor plugin, please see its page at:
+				<a href="http://toopay.github.io/bootstrap-markdown/">http://toopay.github.io/bootstrap-markdown/</a>
+			</li>
+		 
+			<li>
+				To use markdown editor you should include 
+				<code>assets/js/markdown/markdown.min.js</code>
+				and
+				<code>assets/js/markdown/bootstrap-markdown.min.js</code>
+				and optionally
+				<code>assets/js/bootbox.min.js</code>
+				if you prefer bootstrap modals to default browser dialogs
+			</li>
+			
+			<li>
+				For better styling you should put it inside a widget box
+<pre data-language="html">
+<div class="widget-box widget-color-blue">
+   <div class="widget-header widget-header-small"></div>
+   <div class="widget-body">
+      <div class="widget-main no-padding">
+         <textarea name="content" data-provide="markdown" rows="10"></textarea>
+      </div>
+   </div>
+</div>
+</pre>
+			</li>
+			
+			<li>
+				By specifying <code>data-provide="markdown"</code> attribute for the textarea element,
+				markdown editor will automatically be initiated.
+			</li>
+
+		 </ul>
+		</div>
+	</div>
+	<!-- /section:plugins/editor.markdown -->
+
+	<!-- /section:plugins/editor -->
+</section>

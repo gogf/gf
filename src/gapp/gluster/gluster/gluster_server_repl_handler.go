@@ -14,7 +14,7 @@ import (
 // 集群数据同步接口回调函数
 func (n *Node) replTcpHandler(conn net.Conn) {
     msg := n.receiveMsg(conn)
-    if msg == nil {
+    if msg == nil || msg.Info.Group != n.Group {
         //glog.Println("receive nil")
         conn.Close()
         return

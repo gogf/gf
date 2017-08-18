@@ -1,0 +1,38 @@
+{
+    "Role"     : 0,
+    "SavePath" : "/tmp/gluster/",
+    "Peers"    : ["192.168.2.124"],
+    "DataMap"  : {
+        "name":"john"
+    },
+    "Service"  : [
+        {
+            "name" : "Database Group1: user center",
+            "type" : "mysql",
+            "list" : [
+                {"host":"192.168.2.102", "port": "3306", "user":"root", "pass":"123456", "database":"test"},
+                {"host":"192.168.2.124", "port": "3306", "user":"root", "pass":"123456", "database":"test2"}
+            ]
+        },
+        {
+            "name" : "Database Group2: administration",
+            "type" : "mysql",
+            "list" : [
+                {"host":"192.168.2.102", "port": "3306", "user":"root", "pass":"123456", "database":"test3"},
+                {"host":"192.168.2.124", "port": "3306", "user":"root", "pass":"123456", "database":"test4"}
+            ]
+        },
+        {
+            "name" : "Official Web Site",
+            "type" : "web",
+            "list" : [
+                {"url": "http://192.168.2.104", "check":"http://baidu.com", "tag":"check with custom check url"},
+                {"url": "http://192.168.2.124"},
+                {"url": "http://192.168.2.102",  "tag":"check with the url"},
+                {"url": "http://dead.link", "tag":"dead link for example"}
+            ]
+        }
+    ]
+}
+
+

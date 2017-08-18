@@ -1,0 +1,1201 @@
+<section>
+	<h1 class="blue" data-id="#elements"><i class="ace-icon fa fa-desktop grey"></i> Elements</h1>
+
+	<div class="hr hr-double hr32"></div>
+	
+	<!-- #section:elements -->
+	<h2 class="blue lighter help-title" data-id="#elements.button">
+		Buttons
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:elements.button -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Buttons</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootstrap buttons with a few additional colors and sizes:
+				<ul>
+					<li><code>.btn-info2</code></li>
+					<li><code>.btn-purple</code></li>
+					<li><code>.btn-pink</code></li>
+					<li><code>.btn-light</code></li>
+					<li><code>.btn-yellow</code></li>
+					<li><code>.btn-grey</code></li>
+					<li class="space-6"></li>
+					<li><code>.btn-mini</code></li>
+					<li><code>.btn-minier</code></li>
+				</ul>
+			</li>
+			
+			<li>
+<pre data-language="html">
+ <button type="button" class="btn btn-sm btn-purple">
+   <i class="ace-icon fa fa-check"></i>
+   Click
+ </button>
+	
+ <a href="#" class="btn btn-sm btn-purple">
+   <i class="ace-icon fa fa-check"></i>
+   Click
+ </a>
+</pre>
+			</li>
+			
+			<li>
+				Add <code>.no-hover</code> and <code>.no-border</code> for more options:
+<pre data-language="html">
+ <button type="button" class="btn btn-sm btn-purple no-border">
+   No Border!
+ </button>
+ <button type="button" class="btn btn-sm btn-purple no-hover">
+   No Hover Effect!
+ </button>
+</pre>
+			</li>
+			
+			<li>
+				Add <code>.icon-on-right</code> when icon is on right:
+<pre data-language="html">
+ <button type="button" class="btn btn-sm btn-purple">
+   <i class="icon-on-right ace-icon fa fa-check"></i>
+ </button>
+</pre>
+			</li>
+
+			<li>
+				Add <code>.icon-only</code> when there is only icon:
+<pre data-language="html">
+ <button type="button" class="btn btn-sm btn-purple">
+   <i class="icon-only ace-icon fa fa-check"></i>
+ </button>
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		
+		<h3 class="info-title smaller" data-id="#elements.button.white">2. White Buttons</h3>
+		<!-- #section:elements.button.white -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Add <code>.btn-white</code> for white button backgrounds:
+				<br />
+				<button type="button" class="btn btn-sm btn-info btn-white">
+					<i class="ace-icon fa fa-check bigger-125"></i>
+					<span class="bigger-125">white button</span>
+				</button>
+				<div class="space-2"></div>
+<pre data-language="html">
+ <button type="button" class="btn btn-sm btn-info btn-white">
+   <i class="ace-icon fa fa-check"></i>
+   white button
+ </button>
+</pre>
+			</li>
+			
+			<li>
+			Add <code>.btn-bold</code> for bolder bottom border and 
+			<code>.btn-round</code> for slightly rounder corner:
+			<br />
+			<button type="button" class="btn btn-sm btn-danger btn-white btn-round">
+				<i class="ace-icon fa fa-trash-o bigger-125"></i>
+				<span class="bigger-125">rounder</span>
+			</button>
+			<div class="space-2"></div>
+<pre data-language="html">
+ <button type="button" class="btn btn-sm btn-danger btn-white btn-round">
+   <i class="ace-icon fa fa-trash-o"></i>
+   rounder
+ </button>
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.button.white -->
+		
+		
+		<h3 class="info-title smaller" data-id="#elements.button.app">3. Large Buttons </h3>
+		<!-- #section:elements.button.app -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Large application buttons have <code>.btn-app</code> class:
+				<br />
+			<button class="btn btn-app btn-grey btn-sm radius-4">
+				<i class="ace-icon fa fa-floppy-o bigger-175"></i>
+				Save
+				<span class="badge badge-transparent"><i class="light-red ace-icon fa fa-asterisk"></i></span>
+			</button>
+<pre data-language="html">
+ <button class="btn btn-app btn-grey btn-sm radius-4">
+   <i class="ace-icon fa fa-floppy-o bigger-160"></i>
+   Save
+ </button>
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.button.app -->
+		
+		<h3 class="info-title smaller" data-id="#elements.button.group">4. Button Groups</h3>
+		<!-- #section:elements.button.group -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				There are a few additional button group classes:
+				<ol>
+					<li><code>.btn-corner</code> so that first and last buttons have round corners</li>
+					<li><code>.btn-overlap</code> so that there's no space between buttons</li>
+				</ol>
+			</li>
+			<li>
+			<div class="btn-group btn-overlap btn-corner" data-toggle="buttons">
+				<label class="btn btn-sm btn-white btn-info">
+					<input type="checkbox" value="1" />
+					<i class="icon-only ace-icon fa fa-bold bigger-110"></i>
+				</label>
+				<label class="btn btn-sm btn-white btn-info">
+					<input type="checkbox" value="2" />
+					<i class="icon-only ace-icon fa fa-italic bigger-110"></i>
+				</label>
+				<label class="btn btn-sm btn-white btn-info">
+					<input type="checkbox" value="3" />
+					<i class="icon-only ace-icon fa fa-underline bigger-110"></i>
+				</label>
+			</div>
+			<div class="space-4"></div>
+<pre data-language="html">
+ <div class="btn-group btn-overlap btn-corner" data-toggle="buttons">
+  <label class="btn btn-sm btn-white btn-info">
+    <input type="checkbox" value="1" />
+    <i class="ace-icon fa fa-bold icon-only bigger-110"></i>
+  </label>
+  ...
+  ...
+ </div>
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.button.group -->
+
+	</div>
+	<!-- /section:elements.button -->
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#elements.label-badge">
+		Labels & Badges
+	</h2>
+	<div class="space-4"></div>
+
+	<div class="help-content">		
+		<h3 class="info-title smaller" data-id="#elements.label">1. Labels</h3>
+		<!-- #section:elements.label -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootstrap labels with a few additional colors, sizes and styles.
+<pre data-language="html">
+ <span class="label label-success">Success!</span>
+</pre>
+			</li>
+			
+			<li>
+				Additional colors are:
+				<ul>
+					<li><code>.label-pink</code></li>
+					<li><code>.label-purple</code></li>
+					<li><code>.label-grey</code></li>
+					<li><code>.label-light</code></li>
+					<li><code>.label-yellow</code></li>
+					<li><code>.label-transparent</code></li>
+				</ul>
+			</li>
+			
+			<li>
+				Additional sizes are:
+				<ul>
+					<li><code>.label-sm</code></li>
+					<li><code>.label-lg</code></li>
+					<li><code>.label-xlg</code></li>
+				</ul>
+				
+				<br />
+				<span class="label label-lg label-purple arrowed-right">label-lg</span>
+				<div class="space-4"></div>
+
+<pre data-language="html">
+ <span class="label label-lg label-purple arrowed-right">label-lg</span>
+</pre>
+			</li>
+			
+			<li>
+				Arrowed label styles:
+				<ul>
+					<li><code>.arrowed</code></li>
+					<li><code>.arrowed-right</code></li>
+					<li><code>.arrowed-in</code></li>
+					<li><code>.arrowed-in-right</code></li>
+				</ul>
+				
+				<br />
+				<span class="label label-info arrowed-in arrowed-in-right">Promotion!</span>
+				<div class="space-4"></div>
+
+<pre data-language="html">
+ <span class="label label-info arrowed-in arrowed-in-right">Promotion!</span>
+</pre>
+			</li>
+
+		 </ul>
+		</div>
+		<!-- /section:elements.label -->
+		
+		<h3 class="info-title smaller" data-id="#elements.badge">2. Badges</h3>
+		<!-- #section:elements.badge -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootstrap badge with a few additional colors:
+				<ul>
+					<li><code>.badge-info</code></li>
+					<li><code>.badge-primary</code></li>
+					<li><code>.badge-success</code></li>
+					<li><code>.badge-danger</code></li>
+					<li><code>.badge-warning</code></li>
+					<li><code>.badge-inverse</code></li>
+					<li><code>.badge-pink</code></li>
+					<li><code>.badge-purple</code></li>
+					<li><code>.badge-grey</code></li>
+					<li><code>.badge-light</code></li>
+					<li><code>.badge-yellow</code></li>
+					<li><code>.badge-transparent</code></li>
+				</ul>
+			</li>
+			<li>
+			<span class="badge badge-primary">4 new</span>
+			<div class="space-4"></div>
+			<pre data-language="html">
+ <span class="badge badge-primary">4 new</span>
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.badge -->
+	</div>
+	
+	
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#elements.icon">
+		Icons
+	</h2>
+	<div class="space-4"></div>
+
+	<div class="help-content">
+		<!-- #section:elements.icon -->
+		<h3 class="info-title smaller" data-id="#elements.icon.icon">1. Icons</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Curretly Fontawesome and Glyphicons are included but you can use any font library.
+			</li>
+
+			<li>
+				You should now add <code>.ace-icon</code> class to all icons
+				except those that don't need any special styles.
+				<br />
+				If you want, you can change <code>.ace-icon</code> to something else.
+				<br />
+				For more info about this, please see
+				<a href="#changes.fontawesome" class="help-more">Fontawesome section</a>.
+			</li>
+			
+			<li>
+				A <code>.menu-icon</code> class should be added to sidebar icons:
+<pre data-language="html">
+ <ul class="nav nav-list">
+   <li>
+     <a href="#">
+       <i class="menu-icon fa fa-leaf"></i>
+       <span class="menu-text">Dashboard</span>
+     </a>
+   </li>
+ </ul>
+</pre>
+			</li>
+		   </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller" data-id="#elements.icon.animated">2. Animated Icons</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				There are also some animations defined which you can use for icons or other elements:
+				<ol>
+					<li><code>ringing</code></li>
+					<li><code>vertical</code></li>
+					<li><code>hand-pointer</code></li>
+					<li><code>wrenching</code></li>
+					<li><code>blinking</code></li>
+					<li><code>pulsating</code></li>
+				</ol>
+				
+				In order to use them, you should define a new CSS class:
+<pre data-language="css">
+.my-pulsating-icon {
+                  /* pulsating duration repetition timing_function delay */
+     -moz-animation: pulsating 2s 2 linear 1s;
+  -webkit-animation: pulsating 2s 2 linear 1s;
+       -o-animation: pulsating 2s 2 linear 1s;
+      -ms-animation: pulsating 2s 2 linear 1s;
+          animation: pulsating 2s 2 linear 1s;
+}
+</pre>
+<pre data-language="html">
+ <i class="fa fa-star my-pulsating-icon"></i>
+</pre>
+
+			</li>
+			
+			<li>
+				There are also some pre-defined classes:
+				<ol>
+					<li><code>.icon-animated-bell</code></li>
+					<li><code>.icon-animated-vertical</code></li>
+					<li><code>.icon-animated-hand-pointer</code></li>
+					<li><code>.icon-animated-wrench</code></li>
+				</ol>
+			</li>
+			
+			<li>
+				However, some browsers have issues with animated icons.
+				<br />
+				Please see <a href="#issues" class="help-more">Issues section</a> for more info
+			</li>
+			
+		 </ul>
+		</div>
+
+		<h3 class="info-title smaller" data-id="#elements.icon.fontawesome">3. Fontawesome</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Fontawesome is included and to use it you should have its CSS file included in your document:
+<pre data-language="html">
+ &lt;link rel="stylesheet" href="path/to/assets/css/font-awesome.min.css" /&gt;
+</pre>
+			Font files should be in the right directory:
+			<code>path/to/assets/fonts</code>
+			</li>
+			
+			<li>
+				There is also a CDN option in which CSS and font files are hosted for you, which you can use in your production site:
+<pre data-language="html">
+ &lt;link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css" /&gt;
+</pre>
+			</li>
+		 </ul>
+		</div>
+		
+		<h3 class="info-title smaller" data-id="#elements.icon.glyphicon">4. Glyphicons</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Glyphicons is Bootstrap's default font icon library.
+				<br />
+				Font files should be in the right directory:
+				<code>path/to/assets/fonts</code>
+			</li>
+		 </ul>
+		</div>
+
+		<!-- /section:elements.icon -->
+	</div>
+	
+	
+	
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#elements.form">
+		Form
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:elements.form -->
+	<div class="help-content">		
+		<h3 class="info-title smaller" data-id="#elements.form">1. Forms</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more info please refer to
+				<a href="http://getbootstrap.com/css/#forms" target="_blank">Bootstrap form</a>
+				and
+				<a href="http://getbootstrap.com/components/#input-groups" target="_blank">Input group</a>
+			</li>
+		 
+			<li>
+				Horizontal form example:
+<pre data-language="html">
+ <form class="form-horizontal" role="form">
+   <div class="form-group">
+      <label class="col-sm-3 control-label no-padding-right" for="form-field-1">Label</label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" placeholder="Username" id="form-field-1" />
+      </div>
+   </div>
+ </form>
+</pre>
+			</li>
+			
+			<li>
+				Input elements can have grid column classes such as <code>.col-xs-10.col-sm-5</code>
+				or <code>.form-control</code>
+			</li>
+			
+			<li>
+				To reduce spacing (padding) between label and input element, you can add
+				<code>.no-padding-right</code> or <code>.no-padding-left</code> classes to label element.
+			</li>
+			
+		 </ul>
+		</div>
+
+		<h3 class="info-title smaller" data-id="#elements.form">2. Input</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<h1 class="hidden" data-id="#elements.form.input-icon">Input with Icon</h1>
+				<!-- #section:elements.form.input-icon -->
+				For inputs with icon,
+				wrap input element and the icon inside a <code>.input-icon</code> or <code>.input-icon.input-icon-right</code>
+				element:
+				<br />
+				<span class="input-icon">
+					<input type="text" id="form-field-icon-1" />
+					<i class="ace-icon fa fa-leaf blue"></i>
+				</span>
+				<span class="input-icon input-icon-right">
+					<input type="text" id="form-field-icon-1" />
+					<i class="ace-icon fa fa-leaf green"></i>
+				</span>
+				<div class="space-2"></div>
+<pre data-language="html">
+<span class="input-icon">
+  <input type="text" id="form-field-icon-1" />
+  <i class="ace-icon fa fa-leaf blue"></i>
+</span>
+<span class="input-icon input-icon-right">
+  <input type="text" id="form-field-icon-1" />
+  <i class="ace-icon fa fa-leaf green"></i>
+</span>
+</pre>
+			<!-- /section:elements.form.input-icon -->
+			</li>
+		 
+		 
+			<li>
+				A few additional sizes :
+				<br />
+				<ul>
+					<li><code>.input-mini</code></li>
+					<li><code>.input-small</code></li>
+					<li><code>.input-medium</code></li>
+					<li><code>.input-large</code></li>
+					<li><code>.input-xlarge</code></li>
+					<li><code>.input-xxlarge</code></li>
+				</ul>				
+			</li>
+			
+			
+			<li>
+				<h1 class="hidden" data-id="#elements.form.input-state">Validation State</h1>
+				<!-- #section:elements.form.input-state -->
+				Input validation state classes are:
+				<ol>
+					<li><code>.has-warning</code></li>
+					<li><code>.has-error</code></li>
+					<li><code>.has-success</code></li>
+					<li><code>.has-info</code></li>
+				</ol>
+				
+				For example:
+<pre data-language="html">
+<div class="form-group has-warning">
+   <label class="col-xs-12 col-sm-3 control-label no-padding-right" for="inputWarning">Input with warning</label>
+   <div class="col-xs-12 col-sm-5">
+      <span class="block input-icon input-icon-right">
+         <input type="text" class="width-100" id="inputWarning" />
+         <i class="ace-icon fa fa-leaf"></i>
+      </span>
+   </div>
+   <div class="help-block col-xs-12 col-sm-reset inline">
+      Warning tip help!
+   </div>
+</div>
+</pre>
+				<!-- /section:elements.form.input-state -->
+			</li>
+		 </ul>
+		</div>
+
+		<h3 class="info-title smaller">3. 3rd Party & Custom Inputs </h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				There are some third party and custom input elements included as well.
+				<br />
+				For more info about each one, please refer to the relevant section.
+			</li>
+		 </ul>
+		</div>
+
+	</div>
+	<!-- /section:elements.form -->
+	
+	
+	
+
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#elements.tab">
+		Tabs
+	</h2>
+	<div class="space-4"></div>
+
+	<div class="help-content">
+		<!-- #section:elements.tab -->
+		<h3 class="info-title smaller" data-id="#elements.tab.tabs">1. Tabs</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+			<a href="http://getbootstrap.com/javascript/#tabs" target="_blank">Bootstrap tabs</a>:
+			<div class="space-2"></div>
+<pre data-language="html">
+<div class="tabbable">
+
+ <ul id="myTab" class="nav nav-tabs">
+   <li class="active">
+      <a href="#home" data-toggle="tab">Home</a>
+   </li>
+   <li>
+      <a href="#profile" data-toggle="tab">Messages</a>
+   </li>
+ </ul>
+
+ <div class="tab-content">
+   <div class="tab-pane in active" id="home">
+     home tab content
+   </div>
+   <div class="tab-pane" id="profile">
+     profile tab content
+   </div>
+ </div>
+
+</div>
+</pre>
+			</li>
+		 </ul>
+		</div>
+
+		<h3 class="info-title smaller" data-id="#elements.tab.position">2. Position</h3>
+		<!-- #section:elements.tab.position -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For tab buttons to appear below tab content,
+				add <code>.tabs-below</code> to <code>.tabbable</code>:
+				<pre data-language="html">
+<div class="tabbable tabs-below">
+ <div class="tab-content"></div>
+ <ul class="nav nav-tabs" id="myTab"></ul>
+</div>
+</pre>
+				
+			</li>
+			
+			<li>
+				Add <code>.tabs-left</code> and <code>.tabs-right</code> to <code>.tabbable</code> element,
+				for tabs to appear on right or left
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.tab.position -->
+		
+		<h3 class="info-title smaller" data-id="#elements.tab.option">3. Color & Size</h3>
+		<!-- #section:elements.tab.option -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Add <code>.tab-color-blue</code> and <code>.background-blue</code> classes to
+				<code>.nav-tabs</code> element for blue tabs:
+				<pre data-language="html">
+ <ul class="nav nav-tabs tab-color-blue background-blue"></ul>
+</pre>
+			</li>
+			
+			<li>
+				Add <code>.tab-size-bigger</code> to <code>.nav-tabs</code> for larger tab buttons
+			</li>
+			
+			<li>
+				Add 
+				<code>.tab-space-1</code>
+				<code>.tab-space-2</code>
+				<code>.tab-space-3</code>
+				<code>.tab-space-4</code>
+				to <code>.nav-tabs</code> for more space between tab buttons
+			</li>
+			
+			<li>
+				Add 
+				<code>.padding-2</code>
+				<code>.padding-4</code>
+				...
+				<code>.padding-32</code>
+				to <code>.nav-tabs</code> for less/more padding for tab buttons
+			</li>
+			
+			<li>
+				Add 
+				<code>.padding-2</code>
+				<code>.padding-4</code>
+				...
+				<code>.padding-32</code>
+				to <code>.tab-content</code> for less/more padding for tab content
+			</li>
+			
+			<li>
+				For example, tab buttons on FAQ page have the following class names:
+				<pre data-language="html">
+ <ul class="nav nav-tabs padding-18 tab-size-bigger"></ul>
+</pre>
+				and tab content is:
+				<pre data-language="html">
+ <div class="tab-content no-border padding-24"></div>
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.tab.option -->
+		
+		<h3 class="info-title smaller" data-id="#elements.tab.other">4. Notes</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Some times you want to have a chart or some elements inside a currently hidden tab pane.
+				<br />
+				You may notice that element may not render correctly.				
+				<br />
+				For that you should draw/redraw the element when a tab pane is shown:
+				<div class="space-2"></div>
+				<pre data-language="javascript">
+$('#myTab a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+  //if( $(e.target).attr('href') == "#home" ) drawChartNow();
+  //if($(e.target).is('#my-chart-tab')) drawChartNow();
+})
+				</pre>
+			</li>
+		 </ul>
+		</div>
+
+		<!-- /section:elements.tab -->
+	</div>
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#elements.accordion">
+		Accordion
+	</h2>
+	<div class="space-4"></div>
+
+	<div class="help-content">
+		<!-- #section:elements.accordion -->
+		<h3 class="info-title smaller" data-id="#elements.accordion.accordion">1. Accordion</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+			For accordion,
+			<a href="http://getbootstrap.com/javascript/#tabs" target="_blank">Bootstrap panels</a>
+			are used.
+			<br />
+			You can add <code>.accordion-style1</code> & <code>.accordion-style2</code> classes:
+			<div class="space-2"></div>
+<pre data-language="html">
+<div class="accordion-style1 panel-group" id="accordion">
+ <div class="panel panel-default">
+  <div class="panel-heading">
+   <h4 class="panel-title">
+     <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+       <i data-icon-show="ace-icon fa fa-angle-right" data-icon-hide="ace-icon fa fa-angle-down" class="bigger-110 ace-icon fa fa-angle-right"></i>
+       &nbsp;Group Item #1
+     </a>
+   </h4>
+  </div>
+  <div id="collapseOne" class="panel-collapse collapse">
+    <div class="panel-body">
+      Panel Body
+    </div>
+  </div>
+ </div>
+
+ <!---
+ ... other panels ... 
+ -->
+
+</div>
+</pre>
+			</li>
+		 </ul>
+		</div>
+
+		<h3 class="info-title smaller" data-id="#elements.accordion.icon">2. Toggle Icon</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Inside <code>.accordion-toggle</code> or <code>data-toggle="panel"</code> element, you can add an icon
+				with <code>data-icon-show</code> and <code>data-icon-hide</code> attributes,
+				and the icons will be swapped on panel(accordion) toggle:
+				<div class="space-2"></div>
+<pre data-language="html">
+ <i data-icon-show="ace-icon fa fa-plus" data-icon-hide="ace-icon fa fa-minus"
+ class="ace-icon fa fa-plus"></i>
+</pre>
+			</li>
+		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller" data-id="#elements.accordion.icon">3. Notes</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Same note about tab panes also applies here.
+				<br />
+				That is sometimes when an element is inside a hidden
+				panel, you should redraw the element when the panel is shown:
+				<div class="space-2"></div>
+<pre data-language="javascript">
+$('#accordion').on('shown.bs.collapse', function (e) {
+  //if($(e.target).is('#collapseTwo')) drawChartNow();
+});
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.accordion -->
+	</div>
+
+
+
+
+
+
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#elements.tooltip">
+		Tooltip
+	</h2>
+	<div class="space-4"></div>
+
+	<div class="help-content">
+		<!-- #section:elements.tooltip -->
+		<h3 class="info-title smaller" data-id="#elements.tooltip">1. Tooltip</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<a href="http://getbootstrap.com/javascript/#tooltip">Bootstrap tooltips</a> with a few additional colors:
+				<ol>
+					<li><code>.tooltip-error</code></li>
+					<li><code>.tooltip-warning</code></li>
+					<li><code>.tooltip-success</code></li>
+					<li><code>.tooltip-info</code></li>
+				</ol>
+			</li>
+			
+			<li>
+				To use a color, you have two options:
+				<ol>
+					<li>
+					When you don't use <code>container</code> option of tooltip, you should add the color class to the element:
+<pre data-language="html">
+ <a href="#" title="message" class="my-tooltip-link tooltip-error">
+  Show Tooltip
+ </a>
+</pre>
+and then:
+<pre data-language="javascript">
+ $('.my-tooltip-link').tooltip();
+</pre>
+				</li>
+				
+				<li>
+					When you are using <code>container</code> option of tooltip, you should change the <code>template</code> option:
+<pre data-language="javascript">
+$('.my-tooltip-link').tooltip({
+ 'container': 'body',
+ 'template': '&lt;div class="tooltip tooltip-error"&gt;&lt;div class="tooltip-arrow"&gt;&lt;/div&gt;&lt;div class="tooltip-inner"&gt;&lt;/div&gt;&lt;/div&gt;'
+});
+</pre>
+				</li>
+			   </ol>
+			</li>
+		 </ul>
+		</div>
+
+		<h3 class="info-title smaller" data-id="#elements.tooltip.notes">2. Notes</h3>
+		<!-- #section:elements.tooltip.notes -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				When using tooltips inside tabs, panels and some other elements, its best to use
+				<code>container:'body'</code> options, so that the element's layout is not affected:
+<pre data-language="html">
+<div class="tab-pane">
+ <a href="#" title="message which may be very long" class="my-tooltip-link tooltip-error">
+  Show Tooltip
+ </a>
+</div>
+</pre>
+<pre data-language="javascript">
+$('.my-tooltip-link').tooltip({
+ 'container': 'body'
+});
+</pre>
+			</li>
+			
+			<li>
+			If you want to use a tooltip inside a modal dialog, again you shouldn't use 
+			<code>container:'body'</code> option of the tooltip.
+			<br />
+			Because the tooltip will appear below our modal box as the <code>z-index</code>
+			value of "tooltips" is defined less than that of "modals".
+			</li>
+			
+			<li>
+				If there's an element for which you may be using tooltips frequently,
+				it's better to pre-create a (static) tooltip and show or move it when needed.
+				<br />
+				For example, dashboard's piechart or form element's horizontal range slider has such tooltip:
+<pre data-language="javascript">
+//find "pie chart tooltip example" in mustache/app/views/assets/scripts/index.js
+var tooltip = $("&lt;div class='tooltip top in'&gt;&lt;div class='tooltip-inner'&gt;&lt;/div&gt;&lt;/div&gt;").hide().appendTo('body');
+//and when necessary
+tooltip.show().children(0).text(tip);//dynamically change its text
+tooltip.css({top: y, left: x});
+tooltip.hide();
+</pre>
+
+or slider:
+<pre data-language="javascript">
+//find "range slider tooltip example" in mustache/app/views/assets/scripts/form-elements.js
+if(! ui.handle.firstChild ) {
+ $(ui.handle).
+  append("tooltip right in' style='display:none; left:16px; top:-6px;'&gt;&lt;div class='tooltip-arrow'&gt;&lt;/div&gt;&lt;div class='tooltip-inner'&gt;&lt;/div&gt;&lt;/div&gt;")
+}
+$(ui.handle.firstChild).show().children().eq(1).text(val);//update (.tooltip-inner)'s text and show it
+</pre>
+
+			</li>
+			
+			<li>
+				Sometimes you need to show a tooltip on left or right depending on its position.
+				<br />
+				The following code can be used to do so:
+<pre data-language="javascript">
+//placement parameter can be a function
+$('[data-rel="tooltip"]').tooltip({placement: tooltip_placement});
+function tooltip_placement(context, source) {
+  var $source = $(source);
+  var $parent = $source.closest('div.container_selector')//or maybe 'body' > $parent = $('body')
+
+  //get containers offset and width
+  var off1 = $parent.offset();
+  var w1 = $parent.width();
+
+  //get elements offset
+  var off2 = $source.offset();
+
+  //this is approximate and optional, you can change it
+  if( parseInt(off2.left) < parseInt(off1.left) + parseInt(w1 / 2) ) return 'right';
+  return 'left';
+}
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:elements.tooltip.notes -->
+		
+		<!-- /section:elements.tooltip -->
+		
+		<h3 class="info-title smaller" data-id="#elements.popover">3. Popovers</h3>
+		<!-- #section:elements.popover -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<a href="http://getbootstrap.com/javascript/#popover">Bootstrap popovers</a> with a few additional colors:
+				<ol>
+					<li><code>.popover-error</code></li>
+					<li><code>.popover-warning</code></li>
+					<li><code>.popover-success</code></li>
+					<li><code>.popover-info</code></li>
+				</ol>
+				
+				Usage is similar to tooltips.
+			</li>
+			
+			<li>
+				Similar "tooltip" notes should also be considered when using popovers.
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:elements.popover -->
+	</div>
+
+
+
+
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#elements.dropdown">
+		Dropdown
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:elements.dropdown -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Colors</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For navbar user dropdowns please refer to <a href="#basics/navbar.dropdown" class="help-more">Navbar dropdowns</a>
+			</li>
+			<li>				
+				There are a few additional dropdown menu colors:
+				<ol>
+					<li><code>.dropdown-default</code></li>
+					<li><code>.dropdown-info</code></li>
+					<li><code>.dropdown-primary</code></li>
+					<li><code>.dropdown-success</code></li>
+					<li><code>.dropdown-warning</code></li>
+					<li><code>.dropdown-danger</code></li>
+					<li><code>.dropdown-inverse</code></li>
+					<li><code>.dropdown-purple</code></li>
+					<li><code>.dropdown-pink</code></li>
+					<li><code>.dropdown-grey</code></li>
+					<li><code>.dropdown-light</code></li>
+					<li><code>.dropdown-lighter</code></li>
+					<li><code>.dropdown-lightest</code></li>
+					<li><code>.dropdown-yellow</code></li>
+					<li><code>.dropdown-yellow2</code></li>
+					<li><code>.dropdown-light-blue</code></li>
+				</ol>
+
+				<div class="space-2"></div>
+				 <ul class="dropdown-menu dropdown-danger inline pos-rel no-float">
+				   <li><a tabindex="-1" href="#">Action</a></li>
+				   <li><a tabindex="-1" href="#">Another action</a></li>
+				   <li><a tabindex="-1" href="#">Something else here</a></li>
+				 </ul>
+				<div class="space-2"></div>
+<pre data-language="html">
+ <ul class="dropdown-menu dropdown-danger">
+   <li><a tabindex="-1" href="#">Action</a></li>
+   <li><a tabindex="-1" href="#">Another action</a></li>
+   <li><a tabindex="-1" href="#">Something else here</a></li>
+ </ul>
+</pre>
+			</li>
+		 </ul>
+		</div>
+
+		
+		
+		<h3 class="info-title smaller" data-id="#elements.dropdown.options">2. Options</h3>
+		<!-- #section:elements.dropdown.options -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				You can use <code>data-position="auto"</code> attribute for a "dropdown" to become a <code>dropup</code>
+				when appropriate:
+<pre data-language="html">
+ <button data-position="auto" data-toggle="dropdown" class="dropdown-toggle">
+   <i class="ace-icon fa fa-cog icon-only bigger-110"></i>
+ </button>
+ <ul class="dropdown-menu">
+  ...
+ </ul>
+</pre>
+				<br />
+				You may also need to do this on special cases, for example on "dropdown-hover" elements or 
+				when elements are inside a container with <code>overflow:hidden</code> or <code>overflow:scroll</code>
+<pre data-language="javascript">
+ //change a dropdown to "dropup" depending on its position
+ $('.dropdown-hover').on('mouseenter', function() {
+   var offset = $(this).offset();
+
+   var $w = $(window)
+   if (offset.top > $w.scrollTop() + $w.innerHeight() - 100)
+      $(this).addClass('dropup');
+   else $(this).removeClass('dropup');
+ });
+</pre>
+			</li>
+		 
+			<li>
+				Use <code>.dropdown-caret</code> to add a caret.
+				<br />
+				Use <code>.dropdown-close</code> & <code>.dropdown-closer</code> 
+				for dropdown elements appear closer to invoker element:
+				<div class="space-2"></div>
+				<div class="inline pos-rel">
+ <a href="#" class="dropdown-toggle" data-toggle="dropdown">Show menu</a>
+ <ul class="dropdown-menu dropdown-light dropdown-caret dropdown-closer">
+  <li> <a href="#">...</a> </li>
+ </ul>
+</div>
+				<div class="space-2"></div>
+				
+<pre data-language="html">
+<div class="inline pos-rel">
+ <a href="#" class="dropdown-toggle" data-toggle="dropdown">Show menu</a>
+ <ul class="dropdown-menu dropdown-light dropdown-caret dropdown-closer">
+  <li> <a href="#">...</a> </li>
+ </ul>
+</div>
+</pre>
+
+			<i class="ace-icon fa fa-hand-o-right"></i>
+			 Note the <code>.inline</code> & <code>.pos-rel</code> wrapper element may come in handy when using
+			 dropdowns inside content areas.
+			</li>
+
+			<li>
+				Add <code>.dropdown-only-icon</code> for an icon or image only dropdown:
+<pre data-language="html">
+ <ul class="dropdown-menu dropdown-only-icon">
+  ...
+ </ul>
+</pre>
+			</li>
+			
+			<li>
+				<!-- #section:elements.dropdown.hover -->
+				To show dropdown menu on mouse hover, add <code>.dropdown-hover</code> on parent container
+				and remove <code>data-toggle="dropdown"</code> attribute.
+				<div class="space-2"></div>
+				<div class="inline pos-rel dropdown-hover">
+				 <a href="javascript:void()" class="dropdown-toggle btn btn-info btn-white btn-sm"><i class="ace-icon icon-only fa fa-cog"></i></a>
+				 <ul class="dropdown-menu dropdown-light dropdown-only-icon dropdown-caret">
+				  <li> <a href="#"><i class="ace-icon fa fa-check green"></i></a> </li>
+				  <li> <a href="#"><i class="ace-icon fa fa-trash-o red"></i></a> </li>
+				 </ul>
+				</div>
+				<div class="space-2"></div>
+<pre data-language="html">
+<div class="inline pos-rel dropdown-hover">
+ <a href="#" class="dropdown-toggle">Show menu</a>
+ <ul class="dropdown-menu dropdown-light dropdown-only-icon">
+  <li> <a href="#">...</a> </li>
+ </ul>
+</div>
+</pre>
+				<!-- /section:elements.dropdown.hover -->
+			</li>
+			
+			<li>
+				<!-- #section:elements.dropdown.small -->
+				Add <code>.dropdown-50</code> <code>.dropdown-75</code> <code>.dropdown-100</code> <code>.dropdown-125</code> <code>.dropdown-150</code>
+				for smaller dropdown width:
+<pre data-language="html">
+<ul class="dropdown-menu dropdown-50 dropdown-light">
+ <li class="action-buttons"><a href="#" tabindex="-1" class="center"><i class="fa fa-flag blue bigger-130"></i></a></li>
+</ul>
+</pre>
+				<!-- /section:elements.dropdown.small -->
+			</li>
+			
+			<li>
+				<!-- #section:elements.dropdown.submenu -->
+				For submenu you can add <code>.dropdown-hover</code> class to parent <code>li</code>:
+				<br />
+<pre data-language="html">
+<ul class="dropdown-menu dropdown-light">
+ <li class="dropup dropdown-hover">
+   <a href="#">More options</a>
+   <ul class="dropdown-menu dropdown-menu-left">
+     <li><a href="#">Second level link</a></li>
+   </ul>
+ </li>
+</ul>
+</pre>
+				<!-- /section:elements.dropdown.submenu -->
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.dropdown.options -->
+	</div>
+	<!-- /section:elements.dropdown -->
+	
+	
+	
+	
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#elements.other">
+		Other elements
+	</h2>
+	<div class="space-4"></div>
+
+	<div class="help-content">
+		<!-- #section:elements.progress -->
+		<h3 class="info-title smaller" data-id="#elements.popover.accordion">1. Progressbar</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootstrap progress bars with a few additional colors and sizes:
+				<ol>
+					<li><code>.progress-bar-pink</code></li>
+					<li><code>.progress-bar-purple</code></li>
+					<li><code>.progress-bar-yellow</code></li>
+					<li><code>.progress-bar-inverse</code></li>
+					<li><code>.progress-bar-grey</code></li>
+					<li class="space-4"></li>
+					<li><code>.progress-small</code></li>
+					<li><code>.progress-mini</code></li>
+				</ol>
+				<div class="space-4"></div>
+<pre data-language="html">
+ <div class="progress progress-mini progress-striped active">
+   <div style="width: 40%;" class="progress-bar progress-bar-purple"></div>
+ </div>
+</pre>
+				
+			</li>
+			
+			<li>
+				For circular progress bars you can use <a href="#plugins/charts.easypiechart">Easy Pie Chart</a> plugin.
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:elements.progress -->
+	</div>
+		
+	
+	<!-- /section:elements -->	
+</section>
+		

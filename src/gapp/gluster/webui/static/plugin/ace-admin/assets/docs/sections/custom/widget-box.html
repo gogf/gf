@@ -1,0 +1,485 @@
+<section>
+	<h1 class="blue" data-id="#custom/widget-box"><i class="ace-icon fa fa-desktop grey"></i> Widget Box</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:custom/widget-box -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Widget Box</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<div class="well">
+					<i class="ace-icon fa fa-hand-o-right"></i>
+					Please note that widget box title should now have <code>.widget-title</code> class.
+					<br />
+					Also widget color options
+					are now applied to the box, not header.
+					<br />
+					For example <code>.widget-header.header-color-blue</code> becomes
+					<code>.widget-box.widget-color-blue</code>
+				</div>
+			</li>
+		 
+			<li>
+				Widget box consists of <b>header</b> and <b>body</b>.
+<pre data-language="html">
+ <div class="widget-box">
+   <div class="widget-header"></div>
+   <div class="widget-body"></div>
+ </div>
+</pre>
+			</li>
+ 		  </ul>
+		</div>
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#custom/widget-box.options">2. Widget Box Options</h3>
+		<!-- #section:custom/widget-box.options -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				You can use following classes for a different widget box color:
+				<ol>
+					<li><code>.widget-color-blue</code></li>
+					<li><code>.widget-color-blue2</code></li>
+					<li><code>.widget-color-blue3</code></li>
+					<li><code>.widget-color-green</code></li>
+					<li><code>.widget-color-green2</code></li>
+					<li><code>.widget-color-green3</code></li>
+					<li><code>.widget-color-red</code></li>
+					<li><code>.widget-color-red2</code></li>
+					<li><code>.widget-color-red3</code></li>
+					<li><code>.widget-color-yellow</code></li>
+					<li><code>.widget-color-purple</code></li>
+					<li><code>.widget-color-pink</code></li>
+					<li><code>.widget-color-dark</code></li>
+					<li><code>.widget-color-grey</code></li>
+				</ol>
+<pre data-language="html">
+ <div class="widget-box widget-color-blue">
+  ...
+ </div>
+</pre>
+
+			</li>
+			<li>
+				<!-- #section:custom/widget-box.options.transparent -->
+				Add <code>.transparent</code> for transparent widget box:
+<pre data-language="html">
+ <div class="widget-box transparent">
+  ...
+ </div>
+</pre>
+				<!-- /section:custom/widget-box.options.transparent -->
+			</li>
+			
+			<li>
+				Add <code>.light-border</code> for light widget body border:
+<pre data-language="html">
+ <div class="widget-box widget-color-dark light-border">
+  ...
+ </div>
+</pre>
+			</li>
+			
+			<li>
+				<!-- #section:custom/widget-box.options.collapsed -->
+				Add <code>.collapsed</code> for widget box to be collapsed by default:
+<pre data-language="html">
+ <div class="widget-box collapsed">
+  ...
+ </div>
+</pre>
+				<!-- /section:custom/widget-box.options.collapsed -->
+			</li>
+ 		  </ul>
+		</div>
+		<!-- /section:custom/widget-box.options -->
+
+	
+		<h3 class="info-title smaller" data-id="custom/widget-box.toolbar">3. Widget Header</h3>
+		<!-- #section:custom/widget-box.toolbar -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Header consists of title and toolbar(optional action buttons):
+<pre data-language="html">
+ <div class="widget-header">
+   <h4 class="widget-title smaller">title!</h4>
+   <div class="widget-toolbar"></div>
+ </div>
+</pre>
+			</li>
+			
+			<li>
+			  <h3 class="hidden" data-id="#custom/widget-box.header.options">Widget Header</h3>
+			  <!-- #section:custom/widget-box.header.options -->
+			  <ol>
+				<li><code>.widget-header-small</code> makes <code>.widget-header</code> smaller</li>
+				<li><code>.widget-header-large</code> makes <code>.widget-header</code> larger</li>
+				<li><code>.widget-header-flat</code> disables gradient background on <code>.widget-header</code></li>
+			  </ol>
+<pre data-language="html">
+<div class="widget-header widget-header-small widget-header-flat">
+</div>
+</pre>
+				<!-- /section:custom/widget-box.header.options -->
+			</li>
+			
+			<li>
+				Widget toolbar consists of buttons with custom icons and elements.
+<pre data-language="html">
+ <div class="widget-toolbar">
+   <a data-action="settings" href="#"><i class="ace-icon fa fa-bars"></i></a>
+   <a data-action="reload" href="#"><i class="ace-icon fa fa-refresh"></i></a>
+   <a data-action="fullscreen" class="orange2" href="#"><i class="ace-icon fa fa-expand"></i></a>
+   <a data-action="collapse" href="#"><i class="ace-icon fa fa-chevron-up"></i></a>
+   <a data-action="close" href="#"><i class="ace-icon fa fa-times"></i></a>
+ </div>
+</pre>
+			</li>
+			
+			<li>
+				Current action buttons that trigger an event and perform an action are:
+				<ol>
+					<li><code>settings</code></li>
+					<li><code>reload</code></li>
+					<li><code>fullscreen</code></li>
+					<li><code>collapse</code></li>
+					<li><code>close</code></li>
+				</ol>
+				Please refer to widget events section for more info.
+			</li>
+			
+			<li>
+				For <code>data-action="collapse"</code> button, you can change collapsed/expanded icons by
+				specifying icon's <code>data-icon-show</code> & <code>data-icon-hide</code> attributes:
+<pre data-language="html">
+  <a data-action="collapse" href="#">
+    <i class="ace-icon fa fa-minus" data-icon-show="fa-plus" data-icon-hide="fa-minus"></i>
+  </a>
+</pre>
+			Also, if you specify any icon with <code>-up</code> or <code>-down</code> in its name, it will be automatically flipped.
+			<div class="space-4"></div>
+			
+			You can also add <code>.collapsed</code> class to <code>.widget-box</code> to become collapsed by default.
+			</li>
+			
+			<li>
+				You can have multiple toolbars in widget header:
+<pre data-language="html">
+<div class="widget-header">
+ <h4 class="widget-title"></h4>
+
+ <div class="widget-toolbar no-border"></div>
+ <div class="widget-toolbar"></div>
+</div>
+</pre>
+
+				<code>.no-border</code> class on a <code>.widget-toolbar</code> hides its border.
+			</li>
+			
+
+			
+			<li>
+				To have a dropdown menu inside widget toolbar,
+				you should wrap the action button and menu inside a <code>.widget-menu</code> element:
+<pre data-language="html">
+ <div class="widget-toolbar">
+
+    <a data-action="reload" href="#"><i class="ace-icon fa fa-refresh"></i></a>
+
+    <div class="widget-menu">
+      <a data-toggle="dropdown" data-action="settings" href="#"><i class="ace-icon fa fa-bars"></i></a>
+      <ul class="dropdown-menu dropdown-menu-right dropdown-light-blue dropdown-caret dropdown-closer">
+         <li><a href="#dropdown1" data-toggle="tab">Option#1</a></li>
+         <li><a href="#dropdown2" data-toggle="tab">Option#2</a></li>
+      </ul>
+    </div>
+
+ </div>
+</pre>
+			</li>			
+			
+			<li>
+				<!-- #section:custom/widget-box.tabbed -->
+				To have tabs in widgets, you should put the <code>ul.nav-tabs</code> element inside <code>.widget-toolbar</code>
+				and <code>.tab-content</code> should be inside widget body's <code>.widget-main</code>:
+<pre data-language="html">
+ <div class="widget-header widget-header-small">
+   <h5 class="widget-title">Tabbed</h5>
+   <div class="widget-toolbar no-border">
+      <ul id="myTab" class="nav nav-tabs">
+         <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
+         <li><a href="#profile" data-toggle="tab">Profile</a></li>
+         <li><a href="#info" data-toggle="tab">Info</a></li>
+      </ul>
+   </div>
+ </div>
+ 
+ <div class="widget-body">
+   <div class="widget-main">
+	<!-- tab content here -->
+   </div>
+ </div>
+ 
+</pre>
+			<!-- /section:custom/widget-box.tabbed -->
+			</li>
+		</ul>
+	  </div>
+	  <!-- /section:custom/widget-box.toolbar -->
+
+	  
+	  <h3 class="info-title smaller">4. Widget Body</h3>
+	  <div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Widget box consists of <b>header</b> and <b>body</b>.
+<pre data-language="html">
+ <div class="widget-box">
+   <div class="widget-header"></div>
+   <div class="widget-body"></div>
+ </div>
+</pre>
+			</li>
+			
+			<li>
+				<code>.widget-body</code> consists of <code>.widget-main</code>
+				and optional toolboxes <code>.widget-toolbox</code>
+<pre data-language="html">
+<div class="widget-body">
+  <div class="widget-toolbox"> ... </div>
+
+  <div class="widget-main"> ... </div>
+
+  <div class="widget-toolbox padding-8"> ... </div>
+</div>
+</pre>
+			</li>
+			
+			<li>
+				<code>.widget-main</code> and <code>.widget-toolbox</code>
+				can have the following padding classes:
+				<ul>
+					<li><code>.no-padding</code></li>
+					<li><code>.padding-2</code></li>
+					<li><code>.padding-4</code></li>
+					<li>...</li>
+					<li><code>.padding-30</code></li>
+					<li><code>.padding-32</code></li>
+				</ul>
+				
+				For example when putting a table inside widget box
+				you may want to use <code>.no-padding</code>
+				
+<pre data-language="html">
+<div class="widget-body">
+  <div class="widget-main no-padding">
+  
+    <table class="table table-striped table-bordered table-hover">
+      <thead class="thin-border-bottom">
+      </thead>
+	  
+      <tbody>
+      </tbody>
+    </table>
+	
+  </div>
+</div>
+</pre>
+			</li>
+			
+			<li>
+				<!-- #section:custom/widget-box.toolbox -->
+				<code>.widget-toolbox</code> can be before or after <code>.widget-main</code>
+<pre data-language="html">
+<div class="widget-toolbox">
+ <div class="btn-toolbar">
+  ...
+ </div>
+</div>
+
+<div class="widget-main">
+ ...
+</div>
+
+<div class="widget-toolbox padding-8 clearfix">
+   <button class="btn btn-xs btn-danger pull-left">
+      <i class="ace-icon fa fa-times"></i>
+      I don't accept
+   </button>
+   <button class="btn btn-xs btn-success pull-right">
+      I accept
+      <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
+   </button>
+</div>
+</pre>
+				<!-- /section:custom/widget-box.toolbox -->
+			</li>
+			
+ 		  </ul>
+		</div>
+
+
+
+		<h3 class="info-title smaller">5. Functions & Events</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				The following functions are available for widgets:
+				<ol>
+					<li><code>close</code></li>
+					<li><code>toggle</code></li>
+					<li><code>hide</code></li>
+					<li><code>show</code></li>
+					<li><code>reload</code></li>
+					<li><code>fullscreen</code></li>
+				</ol>
+				
+<pre data-language="html">
+ <div class="widget-box" id="my-widget">
+  ....
+ </div>
+</pre>
+
+<pre data-language="javascript">
+ $('#my-widget').widget_box('toggle');
+ $('#my-widget').widget_box('show');
+ $('#my-widget').widget_box('close');
+ $('#my-widget').widget_box('reload');
+</pre>
+			</li>
+			
+			<li>
+				The following events are triggered when using widgets:
+				<br />
+				<b>Before Events:</b>
+				<ol>
+					<li><code>show.ace.widget</code> triggered before a widget box is shown</li>
+					<li><code>hide.ace.widget</code> triggered before a widget box is hidden</li>
+					<li><code>close.ace.widget</code> triggered before a widget box is closed</li>
+					<li><code>reload.ace.widget</code> triggered before a widget box is reloaded</li>
+					<li><code>fullscreen.ace.widget</code> triggered before a widget box is fullscreen</li>
+					<li><code>setting.ace.widget</code> triggered before a widget box is fullscreen</li>
+				</ol>
+				
+				<b>After Events:</b>
+				<ol>
+					<li><code>shown.ace.widget</code> triggered after a widget box is shown</li>
+					<li><code>hidden.ace.widget</code> triggered after a widget box is hidden</li>
+					<li><code>closed.ace.widget</code> triggered after a widget box is closed</li>
+					<li><code>reloaded.ace.widget</code> triggered after a widget box is reloaded</li>
+					<li><code>fullscreened.ace.widget</code> triggered after a widget box is fullscreened</li>
+				</ol>
+			</li>
+			
+			<li>
+				With "before events" you can cancel an action.
+				<br />
+			For example when you are waiting for remote content to arrive, you can cancel "close" events:
+<pre data-language="javascript">
+ $('#my-widget').on('close.ace.widget reload.ace.widget', function(event) {
+    if(waitingForContent) {
+       event.preventDefault();//action will be cancelled, widget box won't close
+    }
+ });
+</pre>
+			</li>
+			
+			<li>
+				With "after events" you can do some action after its finished:
+<pre data-language="javascript">
+ $('#my-widget').on('shown.ace.widget', function(event) {
+    //$(this).doSomething();
+ });
+</pre>
+			</li>
+			
+			<li>
+				<code><span class="blue">reload</span>.ace.widget</code> can be used to load remote content.
+				<br />
+				When data is ready, you can trigger <code><span class="green">reloaded</span>.ace.widget</code>:
+<pre data-language="javascript">
+ $('#my-widget').on('reload.ace.widget', function(ev) {
+   $.ajax({url: 'remote-data.php'}).done(function(content) {
+     //use content
+     //when ready ...
+     $('#my-widget').trigger('reloaded.ace.widget');
+   });
+ });
+</pre>
+			</li>
+			
+			<li>
+				<code>setting.ace.widget</code> event does not have an "after" event.
+				<br />
+				You can use it to be notified when "settings" button is clicked and show a dialog:
+<pre data-language="javascript">
+ $('#my-widget').on('setting.ace.widget', function(ev) {
+   //launch a modal (settings box) or other appropriate action
+ });
+</pre>
+			</li>
+			
+ 		  </ul>
+		</div>
+		
+
+		
+		
+		<h3 class="info-title smaller">7. Widget Drag & Drop</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Using jQuery UI, you can add drag & drop functionality to widget boxes or any other set of elements:
+<pre data-language="html">
+<div class="row">
+
+ <div class="col-sm-6 widget-container-col">
+   <div class="widget-box">
+   ...
+   </div>
+ </div>
+
+ <div class="col-sm-6 widget-container-col">
+   <div class="widget-box">
+   ...
+   </div>
+ </div>
+
+</div>
+</pre>
+
+<pre data-language="javascript">
+ $('.widget-container-col').sortable({
+    connectWith: '.widget-container-col',
+    items: '> .widget-box',
+    opacity: 0.8,
+    revert: true,
+    forceHelperSize: true,
+    placeholder: 'widget-placeholder',
+    forcePlaceholderSize: true,
+    tolerance: 'pointer',
+    start: function(event, ui){
+        //when an element is moved, its parent (.widget-container-col) becomes empty with almost zero height
+        //we set a "min-height" for it to be large enough so that later we can easily drop elements back onto it
+        ui.item.parent().css({'min-height': ui.item.height()})
+    },
+    update: function(event, ui) {
+        //the previously set "min-height" is not needed anymore
+        //now the parent (.widget-container-col) should take the height of its child (.wiget-box)
+        ui.item.parent({'min-height':''})
+    }
+ });
+</pre>
+			</li>
+ 		  </ul>
+		</div>
+	
+	</div>
+	<!-- /section:custom/widget-box -->
+	
+</section>

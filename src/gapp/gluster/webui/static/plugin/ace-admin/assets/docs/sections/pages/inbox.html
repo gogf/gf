@@ -1,0 +1,486 @@
+<section>
+	<h1 class="blue" data-id="#pages/inbox">Inbox</h1>
+
+	<!-- #section:pages/inbox -->
+	<div class="help-content">
+		<h3 class="info-title smaller">Inbox</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Inbox page consists of several parts and elements wrapped inside a tab:
+<pre data-language="html">
+<div class="tabbable">
+  <ul class="nav nav-tabs inbox-tabs padding-16 tab-size-bigger tab-space-1" id="inbox-tabs">
+     <!-- tab buttons -->
+  </ul>
+
+  <div class="tab-content">
+     <!-- tab/inbox content -->
+  </div>
+</div>
+</pre>
+			</li>
+			
+			<li>
+				You can see the following files for more info:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/</span>inbox.mustache</code>
+				<br />
+				And the files inside:
+				<br />
+				<code>mustache/app/views/pages/partials/inbox</code>
+			</li>
+			
+			<li>
+				<!-- #section:pages/inbox.compose-btn -->
+				<b>New Mail</b> button with <code>.btn-new-mail</code> class is (optionally) inside tab list:
+<pre data-language="html">
+<ul class=" ... ">
+  <li class="li-new-mail pull-right">
+    <a class="btn-new-mail" data-target="write" href="#write" data-toggle="tab">
+      <span class="btn btn-purple no-border">
+         <i class="ace-icon fa fa-envelope"></i>
+         Write Mail
+      </span>
+    </a>
+  </li>
+
+</ul>
+</pre>
+				<!-- /section:pages/inbox.compose-btn -->
+			</li>
+			
+			<li>
+				Tab pane consists of navbar, message list and message footer:
+<pre data-language="html">
+<div class="message-container">
+
+  <div id="id-message-list-navbar" class="message-navbar align-center clearfix">
+   ...
+  </div>
+
+  <div class="message-list-container">
+   ...
+  </div>
+
+  <div class="message-footer clearfix">
+   ...
+  </div>
+
+</div>
+</pre>
+			</li>
+			
+			<li>
+				<h3 class="hidden" data-id="#pages/inbox.navbar">Message Navbar</h3>
+				<!-- #section:pages/inbox.navbar -->
+				For more info about navbar you can see the following file:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/</span>inbox/navbar.mustache</code>
+				
+				<div class="hr hr-8 hr-dotted"></div>
+				
+				Message navbar <code>.message-navbar</code> consists of <code>.message-bar</code> which contains
+				title of the pane and toolbar buttons.
+				<br />
+<pre data-language="html">
+<div class="message-bar">
+  <div class="message-infobar" id="id-message-infobar">
+    <!-- title of the pane -->
+    <!-- for example "Inbox (32 unread)" -->
+  </div>
+  <div class="message-toolbar hide">
+    <!-- some action buttons, displayed when a message is selected from list --><
+  </div>
+</div>
+</pre>
+				<div class="hr hr-16 hr-double hr-dotted"></div>
+			
+				There are also other areas such as "Search box", "Sort Messages", etc, which
+				are inside <code>.messagebar-item-left</code> or <code>.messagebar-item-right</code> classes:
+<pre data-language="html">
+<div class="message-bar">...</div>
+
+<div>
+   <div class="messagebar-item-left">
+     <!-- contains Select Message dropdown -->
+   </div>
+   <div class="messagebar-item-right">
+      <!-- contains Sort Message dropdown -->
+   </div>
+   <div class="nav-search minimized">
+      <!-- contains search box -->
+   </div>
+</div>
+</pre>
+
+			<!-- /section:pages/inbox.navbar -->
+			</li>
+			
+			<li>
+				<!-- #section:pages/inbox.navbar-search -->
+				Search box is similar to breadcrumbs <a href="#basics/content.searchbox" class="help-more">searchbox</a>:
+				
+<pre data-language="html">
+<div class="nav-search minimized">
+  <form class="form-search">
+    <span class="input-icon">
+       <input type="text" placeholder="Search inbox ..." class="input-small nav-search-input" autocomplete="off" />
+       <i class="ace-icon fa fa-search nav-search-icon"></i>
+    </span>
+  </form>
+</div>
+</pre>
+			   <!-- /section:pages/inbox.navbar-search -->
+			</li>
+			
+		   </ul>
+		</div>
+
+
+
+		<h3 class="info-title smaller" data-id="#pages/inbox.message-list">Message List</h3>
+		<!-- #section:pages/inbox.message-list -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<code>.message-list-container</code> contains a list of messages wrapped inside <code>.message-list</code>:
+<pre data-language="html">
+<div class="message-container">
+  <!-- message navbar here -->
+
+
+  <div class="message-list-container">
+    <div class="message-list">
+       <div class="message-item message-unread">
+         ....
+       </div>
+	   
+	   .
+	   .
+	   .
+	   
+    </div><!-- /.message-list -->
+ </div><!-- /.message-list-container -->
+</div>
+</pre>
+			</li>
+			
+			<li>
+				<h3 class="hidden" data-id="#pages/inbox.message-list.item">Message Item</h3>
+				<!-- #section:pages/inbox.message-list.item -->
+				A message item in the list consists of different elements:
+				<ol>
+				    <li>A checkbox to select the message</li>
+					<li><code>.message-star</code> A star icon to mark messages as starred/unstarred</li>
+					<li><code>.sender</code> Which is the sender's name</li>
+					<li><code>.time</code> Which is the time the message was sent/received</li>
+					<li><code>.attachment</code> Which indicates there's an attachment</li>
+					<li>
+						<code>.summary</code>
+						Which contains message summary wrapped inside a <code>.text</code>
+						and an optional <code>.mail-tag</code> or <code>.message-flags</code>
+					</li>
+				</ol>
+<pre data-language="html">
+<div class="message-item message-unread">
+   <label class="inline">
+      <input type="checkbox" class="ace" />
+      <span class="lbl"></span>
+   </label>
+		  
+   <i class="message-star ace-icon fa fa-star orange2"></i>
+   <span title="Alex John Red Smith" class="sender">Alex Smith </span>
+   <span class="time">1:33 pm</span>
+   <span class="attachment"><i class="ace-icon fa fa-paperclip"></i></span>
+		  
+   <span class="summary">
+      <!-- <span class="badge badge-pink mail-tag"></span> -->
+      <!-- <span class="message-flags"> <i class="ace-icon fa fa-reply light-grey"></i> </span> -->
+      <span class="text">Click to open this message</span>
+   </span>
+</div>
+</pre>
+			<!-- /section:pages/inbox.message-list.item -->
+			</li>
+
+
+			<li>
+				<h3 class="hidden" data-id="#pages/inbox.message-footer">Message Footer</h3>
+				<!-- #section:pages/inbox.message-footer -->
+				<code>.message-footer</code> consists of
+				optional parts such as a pagination:
+<pre data-language="html">
+<div class="message-footer clearfix">
+  <div class="pull-left">151 messages total</div>
+  <div class="pull-right">
+    <ul class="pagination middle">
+     ....
+    </ul>
+  </div>
+</div>
+</pre>
+				
+
+				<div class="hr hr-8"></div>
+				2nd footer style has <code>.message-footer-style2</code> class:
+<pre data-language="html">
+<div class="message-footer message-footer-style2 clearfix">
+  <div class="pull-left">
+    simpler footer
+  </div>
+
+  <div class="pull-right">
+    ...
+  </div>
+</div>
+</pre>
+				<div class="hr hr-8"></div>
+				See the following file for more info:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/inbox</span>message_footer.mustache</code>
+
+				<!-- /section:pages/inbox.message-footer -->
+			</li>
+		   </ul>
+		 </div>
+		 <!-- /section:pages/inbox.message-list -->
+		 
+		 
+		 
+		<h3 class="info-title smaller" data-id="#pages/inbox.message-content">Message Content</h3>
+		<!-- #section:pages/inbox.message-content -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Message details is inside <code>.message-content</code> and
+				consists of <code>.message-header</code>, <code>.message-body</code>
+				and <code>.message-attachment</code>:
+<pre data-language="html">
+<div class="message-list-container">
+ <div class="message-content" id="id-message-content">
+   <div class="message-header clearfix">
+    ...
+   </div>
+  
+   <div class="message-body">
+    ...
+   </div>
+  
+   <div class="message-attachment clearfix">
+    ...
+   </div>
+ </div>
+</div>
+</pre>
+			</li>
+			
+			<li>
+				<!-- #section:pages/inbox.message-header -->
+				<code>.message-header</code> consists of optional elements, for example <code>.sender</code>, <code>.time</code>
+				and action buttons:
+<pre data-language="html">
+<div class="message-header clearfix">
+  <div class="pull-left">
+    <span class="blue bigger-125">
+       Message title
+    </span>
+    <div class="space-4"></div>
+
+    <i class="ace-icon fa fa-star orange2"></i><!-- star -->
+    &nbsp;
+    <img class="middle" alt="John's Avatar" src="{{path.assets}}/avatars/avatar.png" width="32" /><!-- sender photo -->
+    &nbsp;
+    <a href="#" class="sender">John Doe</a><!-- sender name -->
+    &nbsp;
+    <i class="ace-icon fa fa-clock-o bigger-110 orange middle"></i>
+    <span class="time">Today, 7:15 pm</span><!-- time sent -->
+  </div>
+
+  <div class="pull-right action-buttons">
+    <a href="#">
+       <i class="ace-icon fa fa-reply green icon-only bigger-130"></i>
+    </a>
+  </div>
+</div>
+</pre>
+			<!-- /section:pages/inbox.message-header -->
+			</li>
+			
+			<li>
+				<!-- #section:pages/inbox.message-body -->
+				Message body is inside <code>.message-body</code> element
+				<!-- /section:pages/inbox.message-body -->
+			</li>
+			
+			<li>
+				<!-- #section:pages/inbox.message-attachment -->
+				Message attachment consists of optional <code>.attachment-title</code>,
+				<code>.attachment-list</code> and <code>.attachment-images</code>
+<pre data-language="html">
+ <div class="attachment-title">
+ </div>
+ 
+ <ul class="attachment-list pull-left list-unstyled">
+ </ul>
+ 
+ <div class="attachment-images">
+    <div>
+        <img width="36" alt="image 4" src="path/to/thumb-1.jpg" />
+		...
+    </div>
+ </div>
+</pre>
+			
+				<div class="hr hr-8"></div>
+				
+				Attachment list consists of <code>.action-buttons</code> and
+				<code>.attached-file</code> which has <code>attached-name</code>:
+<pre data-language="html">
+<li>
+  <a href="#" class="attached-file">
+    <i class="ace-icon fa fa-file-o"></i>
+    <span class="attached-name">Document1.pdf</span>
+  </a>
+  <span class="action-buttons">
+    <a href="#"><i class="ace-icon fa fa-download blue"></i></a>
+    <a href="#"><i class="ace-icon fa fa-trash-o red"></i></a>
+  </span>
+</li>
+</pre>
+
+				<!-- /section:pages/inbox.message-attachment -->
+			</li>
+		   </ul>
+		 </div>
+		 <!-- /section:pages/inbox.message-content -->
+			
+	
+
+	
+	    <h3 class="info-title smaller" data-id="#pages/inbox.compose">Message Compose</h3>
+		<!-- #section:pages/inbox.compose -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			
+			<li>
+				Message compose area consists of a form with optional elements and a navbar with optional buttons.
+<pre data-language="html">
+<div id="id-message-new-navbar" class="hide message-navbar clearfix">
+  <div class="message-bar">
+    <div class="message-toolbar">
+        <!-- optional buttons -->
+    </div>
+  </div>
+
+  <div>
+    <div class="messagebar-item-left">
+        <a href="#" class="btn-back-message-list">
+           <i class="ace-icon fa fa-arrow-left middle blue"></i>
+           <b class="middle">Back</b>
+        </a>
+    </div>
+    <div class="messagebar-item-right">
+        <span class="btn-send-message blue">
+            <button type="button" class="btn btn-sm btn-primary btn-white btn-round">
+               Send
+               <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
+            </button>
+        </span>
+    </div>
+  </div>
+</div>
+</pre>
+			</li>
+			
+			<li>
+				See the following files for more info:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/inbox</span>message_form.mustache</code>
+				<br />
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>inbox.js</code>
+			</li>
+			
+		 </ul>
+		 <!-- /section:pages/inbox.compose -->
+		</div>
+		
+		
+
+		<h3 class="info-title smaller">Options</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				You can also make inbox message list more compact by adding
+				<code>.message-condensed</code> class to <code>.message-container</code>
+			</li>
+			
+			<li>
+				Remove <code>.tab-size-bigger</code> from <code>ul.inbox-tabs</code> for smaller tabs
+			</li>
+
+			<li>
+				If you don't want a tabbed inbox, like the image below, you should make the following changes:
+				<div>
+				  <span class="thumbnail inline">
+					<img src="images/tabless-inbox.png" />
+				  </span>
+				</div>
+				
+				<ol>
+					<li>Add <code>.inbox-menu</code> according to following file:
+						<br />
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/</span>inbox/folders.mustache</code>
+					</li>
+					<li>
+						Remove <code>.tabbable</code> and <code>.tab-pane</code> etc:
+						<br />
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/</span>inbox.mustache</code>
+					</li>
+				</ol>
+
+<pre data-language="html">
+<div class="col-xs-2 inbox-menu">
+  <div class="center">
+    <a href="#" class="btn btn-purple btn-new-mail">
+        <i class="ace-icon fa fa-envelope"></i>
+        Write Mail
+    </a>
+  </div>
+  <div class="space-6"></div>
+  <!-- buttons here (see folders.mustache below) -->
+</div>
+
+<div class="col-xs-10">
+ <div id="inbox">
+   <div class="message-container">
+      <div class="message-list-container">
+         ...
+      </div>
+   </div>
+ </div>
+</div>
+</pre>
+
+			</li>
+		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller">Notes</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Please note that inbox layout and scripts
+				are for demo only and may not be suitable for your application.
+				<br />
+				For example when clicking to open a message, 
+				the message content is already inside the page
+				but	there's some fake waiting to simulate remote content loading.
+			</li>
+		 </ul>
+		</div>
+
+	</div>
+	<!-- /section:pages/inbox -->
+</section>

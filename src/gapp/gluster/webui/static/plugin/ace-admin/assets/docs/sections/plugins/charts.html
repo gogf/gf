@@ -1,0 +1,334 @@
+<section>
+	<h1 class="blue" data-id="#plugins/charts"><i class="ace-icon fa fa-bar-chart-o grey"></i> Charts</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:plugins/charts -->
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/charts.flotchart">Flot Charts</h3>
+		<!-- #section:plugins/charts.flotchart -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Flotcharts is a library used for drawing different kinds of charts.
+			</li>
+			
+			<li>
+				For more info about it, please see <a href="http://www.flotcharts.org/">www.flotcharts.org</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/flot/jquery.flot.min.js</code>
+				<br />
+				<code>assets/js/flot/jquery.flot.resize.min.js</code> (to make it responsive)
+			</li>
+			
+			<li>
+				I have only included the basic files but
+				it has many extra modules for different types of charts which you can download from its page.
+			</li>
+			
+			<li>
+				IE8 support is provided via <b>excanvas</b>.
+				<br />
+				You can use the following code to include excanvas for IE8 and below:
+<pre data-language="html">
+<!--[if lte IE 8]>
+ <script src="path/to/assets/js/excanvas.min.js"></script>
+<![endif]-->
+ &lt;script src="path/to/assets/js/flotcharts.min.js"&gt;&lt;/script&gt;
+</pre>
+			</li>
+			
+	
+			<li>
+			A basic pie chart example would be like this:
+<pre data-language="javascript">
+var data = [
+    { label: "social networks",  data: 38.7, color: "#68BC31"},
+    { label: "search engines",  data: 24.5, color: "#2091CF"},
+    { label: "ad campaigns",  data: 8.2, color: "#AF4E96"},
+    { label: "direct traffic",  data: 18.6, color: "#DA5430"},
+    { label: "other",  data: 10, color: "#FEE074"}
+]
+
+$('#piechart-placeholder').css({'width':'90%' , 'min-height':'150px'});
+var my_chart = $.plot('#piechart-placeholder', data, {
+ series: {
+  pie: {
+    show: true,
+    tilt: 0.8,
+    highlight: {
+        opacity: 0.25
+    },
+    stroke: {
+        color: '#fff',
+        width: 2
+    },
+    startAngle: 2
+  }
+ },
+ legend: {
+   show: true,
+   position: position || "ne", 
+   labelBoxBorderColor: null,
+   margin:[-30,15] //some offsetting
+ },
+ grid: {
+   hoverable: true,
+   clickable: true
+ }
+})
+</pre>
+
+Chart tooltip example:
+<pre data-language="javascript">
+//pie chart tooltip example
+//create the tooltip once
+var $tooltip = $("&lt;div class='tooltip top in'>&lt;div class='tooltip-inner'>&lt;/div>&lt;/div>").hide().appendTo('body');
+
+var lastIndex = null;
+$('#piechart-placeholder').on('plothover', function (event, pos, item) {
+   if(item) {
+      if (lastIndex != item.seriesIndex) {
+           lastIndex = item.seriesIndex;
+           var tooltip_text = item.series['label'] + " : " + item.series['percent']+'%';
+           $tooltip.show().children(0).text(tooltip_text);
+           //or
+		   //$tooltip.find('.tooltip-inner').text(tooltip_text);
+       }
+       $tooltip.css({top:pos.pageY + 10, left:pos.pageX + 10});
+   } else {
+      $tooltip.hide();
+      lastIndex = null;
+   }
+ });
+
+</pre>
+			</li>
+			
+			
+			<li>
+			Another basic example:
+<pre data-language="javascript">
+ var d1 = [];//dataset 1 (random data)
+ for (var i = 0; i < Math.PI * 2; i += 0.5) {
+   d1.push([i, Math.sin(i)]);
+ }
+ var d2 = [];//dataset 2 (random data)
+ for (var i = 0; i < Math.PI * 2; i += 0.5) {
+    d2.push([i, Math.cos(i)]);
+ }
+
+ //we put the chart inside #sales-charts element
+ $('#sales-charts').css({'width':'100%' , 'height':'220px'});
+ var my_chart = $.plot("#sales-charts", [
+    { label: "Domains", data: d1 },
+    { label: "Hosting", data: d2 }
+ ], {
+    hoverable: true,
+    shadowSize: 0,
+    series: {
+        lines: { show: true },
+        points: { show: true }
+    },
+    xaxis: {
+        tickLength: 0
+    },
+    yaxis: {
+        ticks: 10,
+        min: -2,
+        max: 2,
+        tickDecimals: 3
+    },
+    grid: {
+        backgroundColor: { colors: [ "#fff", "#fff" ] },
+        borderWidth: 1,
+        borderColor:'#555'
+    }
+ });
+</pre>
+			</li>
+			
+			
+			<li>
+				Please note that when drawing charts inside a container which is initially hidden,
+				such as a hidden tab pane or a modal dialog, 
+				dimensions are unknown and charts may not be drawn properly.
+				<br />
+				You should try drawing/redrawing your chart when the container is displayed:
+<pre data-language="javascript">
+$('#my-modal).on('shown.bs.modal', function() {
+  my_chart.draw();
+});
+
+$('#myTab a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+   //if( $(e.target).is('#my-desired-tab') ) my_chart.draw();
+})
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/charts.flotchart -->
+
+
+		<h3 class="info-title smaller" data-id="#plugins/charts.sparkline">Sparklines</h3>
+		<!-- #section:plugins/charts.sparkline -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Sparkline plugin generates small inline charts.
+				<br />
+				For more info please see <a href="http://omnipotent.net/jquery.sparkline/">omnipotent.net/jquery.sparkline/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery.sparkline.min.js</code>
+				<br />
+				and <code>excanvas</code> for IE 8 and below:
+<pre data-language="html">
+<!--[if lte IE 8]>
+ <script src="path/to/assets/js/excanvas.min.js"></script>
+<![endif]-->
+ &lt;script src="path/to/assets/js/query.sparkline.min.js"&gt;&lt;/script&gt;
+</pre>
+			</li>
+			
+			<li>
+				A basic example could be like this:
+<pre data-language="html">
+ <span class="spark" data-values="196,128,202,177,154,94,100,170,224"></span>
+</pre>
+<pre data-language="javascript">
+$('.spark').sparkline('html', 
+  {
+    tagValuesAttribute: 'data-values',//the attribute which has data
+    type: 'bar',
+    barColor: '#FF0000',
+    chartRangeMin: 0
+  }
+ );
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/charts.sparkline -->
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/charts.easypiechart">Easy Pie Chart</h3>
+		<!-- #section:plugins/charts.easypiechart -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Easy pie chart plugin generates animated pie charts.
+				<br />
+				For more info please see <a href="https://github.com/rendro/easy-pie-chart/">github.com/rendro/easy-pie-chart/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery.easypiechart.min.js</code>
+				<br />
+				and <code>excanvas</code> for IE 8 and below:
+<pre data-language="html">
+<!--[if lte IE 8]>
+ <script src="path/to/assets/js/excanvas.min.js"></script>
+<![endif]-->
+ &lt;script src="path/to/assets/js/jquery.easypiechart.min.js"&gt;&lt;/script&gt;
+</pre>
+			</li>
+			
+			<li>
+				A basic example could be like this:
+<pre data-language="javascript">
+$('.easypiechart').each(function(){
+   $(this).easyPieChart({
+       barColor: $(this).css('color'),//maybe take bar color from text color
+       trackColor: '#EEEEEE',
+       scaleColor: false,
+       lineCap: 'butt',
+       lineWidth: 8,
+       animate: /msie\s*(8|7|6)/.test(navigator.userAgent.toLowerCase()) ? false : 1000,//don't animate for IE8 (too slow)
+       size:75
+   });
+});
+</pre>
+			</li>
+			
+			<li>
+				Android's default browser has a problem with latest version of easy pie chart, not rendering properly.
+				<br />
+				<span class="text-info">https://github.com/rendro/easy-pie-chart/issues/81</span>
+				<br />
+				You can use an older version of the plugin <code>jquery.easy-pie-chart-older.js</code>
+				and the problem does not exist.
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/charts.easypiechart -->
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/charts.knob">jQuery Knob</h3>
+		<!-- #section:plugins/charts.knob -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				jQuery Knob is a touch friendly dial.
+				<br />
+				For more info please see: <a href="http://anthonyterrien.com/knob/">anthonyterrien.com/knob/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery.knob.min.js</code>
+				<br />
+				and <code>excanvas</code> for IE 8 and below:
+<pre data-language="html">
+<!--[if lte IE 8]>
+ <script src="path/to/assets/js/excanvas.min.js"></script>
+<![endif]-->
+ &lt;script src="path/to/assets/js/jquery.knob.min.js"&gt;&lt;/script&gt;
+</pre>
+			</li>
+			
+			<li>
+				A basic example could be like this:
+<pre data-language="html">
+ <div class="knob-container inline">
+    <input type="text" class="knob" value="15" data-min="0" data-max="100" data-step="10" data-width="80" data-height="80" data-thickness=".2" />
+ </div>
+</pre>				
+
+<pre data-language="javascript">
+ $(".knob").knob();
+</pre>
+			</li>
+			
+			<li>
+				Please note that latest version of jQuery knob doesn't look good on IE8.
+				<br />
+				So I included the older version and you can include it for IE only using the following conditional comments:
+<pre data-language="html">
+<!--[if !IE]> -->
+<script src="path/to/jquery.knob.min.js"></script>
+<!-- <![endif]-->
+<!--[if IE]>
+<script src="path/to/jquery.knob-older.min.js"></script>
+<![endif]-->
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/charts.knob -->
+		
+	</div>
+	<!-- /section:plugins/charts -->
+</section>

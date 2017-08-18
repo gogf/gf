@@ -1,0 +1,537 @@
+<section>
+	<h1 class="blue" data-id="#plugins/misc"><i class="ace-icon fa fa-magic grey"></i> Miscellaneous</h1>
+
+	<div class="hr hr-double hr32"></div>
+	<div class="space-4"></div>
+
+	<div class="help-content">
+
+		<h3 class="info-title smaller" data-id="#plugins/misc.inline-editable">Inline Editable</h3>
+		<!-- #section:plugins/misc.inline-editable -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more information inline editable plugin and its option, please see its page at:
+				<a href="http://vitalets.github.io/x-editable/">vitalets.github.io/x-editable/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/bootstrap-editable.css</code>
+				<code>assets/js/x-editable/bootstrap-editable.min.js</code>
+			</li>
+
+			<li>
+				There are also five additional addons for the plugin that you can use
+				by including:
+				<br />
+				<code>assets/js/x-editable/ace-editable.min.js</code>
+				<br />
+				For more info see <a href="#custom/inline-editable" class="help-more">Inline Editable Addons</a>
+			</li>
+			
+			<li>
+				When using some editables you should include their relevant CSS and JS files first.
+				<Br />
+				For example when using Select2 or Datepicker editables
+			</li>
+			
+			<li>
+				For an example of some of the editables, you can see profile page:
+				<br />
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>profile.js</code>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.inline-editable -->
+	</div>
+	
+	
+	
+	<div class="space-12"></div>
+	
+
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/misc.jquery-validate">jQuery Validate</h3>
+		<!-- #section:plugins/misc.jquery-validate -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more information and examples please see:
+				<br />
+				<a href="http://jqueryvalidation.org/">jqueryvalidation.org</a>
+			</li>
+			
+			<li>
+				To use jQuery Validate you should include:
+				<br />
+				<code>assets/js/jquery.validate.min.js</code>
+				<br />
+				There are also additional validation methods for which you should include:
+				<br />
+				<code>assets/js/additional-methods.min.js</code>
+			</li>
+			
+			<li>
+				A basic example could be like this:
+<pre data-language="javascript">
+$('#my-form').validate({
+    errorElement: 'div',
+    errorClass: 'help-block',
+    focusInvalid: false,
+    rules: {
+       email: {
+          required: true,
+          email: true
+       },
+       name: {
+          required: true
+       },
+       url: {
+          required: true,
+          url: true
+       }
+    },
+
+    messages: {
+        email: {
+           required: "Please provide a valid email.",
+           email: "Please provide a valid email."
+        }
+    },
+
+    highlight: function (e) {
+        $(e).closest('.form-group').removeClass('has-info').addClass('has-error');
+    },
+
+    success: function (e) {
+        $(e).closest('.form-group').removeClass('has-error').addClass('has-info');
+        $(e).remove();
+    },
+
+    errorPlacement: function (error, element) {
+        error.insertAfter(element.parent());
+    }
+});
+</pre>
+			Error placement and highlighting is arbitrary and depends on your HTML structure.
+
+			</li>
+			
+			<li>
+				Please see form wizard page for a more detailed example
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.jquery-validate -->
+
+	</div>
+	
+	
+
+	
+	<div class="space-12"></div>
+	
+	
+	
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/misc.colorbox">jQuery Colorbox</h3>
+		<!-- #section:plugins/misc.colorbox -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more information about the plugin please see its page at:
+				<br />
+				<a href="http://www.jacklmoore.com/colorbox/">www.jacklmoore.com/colorbox/</a>
+			</li>
+			
+			<li>
+				Colorbox plugin is used for slideshow as shown in gallery page.
+				<br />				
+				To use it, you should include:
+				<br />
+				<code>assets/css/colorbox.css</code>
+				<br />
+				<code>assets/js/jquery.colorbox-min.js</code>
+			</li>
+		
+			<li>
+				A basic example would be like this:
+<pre data-language="html">
+<a href="path/to/image1" data-rel="colorbox">
+  <img alt="image1" src="path/to/thumb1" /> 
+</a>
+<a href="path/to/image2" data-rel="colorbox">
+  <img alt="image2" src="path/to/thumb2" /> 
+</a>
+</pre>
+<pre data-language="javascript">
+var colorbox_params = {
+          rel: 'colorbox',
+   reposition: true,
+  scalePhotos: true,
+    scrolling: false,
+     previous: '&lt;i class="ace-icon fa fa-arrow-left"&gt;&lt;/i&gt;',
+         next: '&lt;i class="ace-icon fa fa-arrow-right"&gt;&lt;/i&gt;',
+        close: '&amp;times;',
+      current: '{current} of {total}',
+     maxWidth: '100%',
+    maxHeight: '100%',
+   onComplete: function(){
+     $.colorbox.resize();
+   }
+}
+ 
+$('[data-rel="colorbox"]').colorbox(colorbox_params);
+$('#cboxLoadingGraphic').append("&lt;i class='ace-icon fa fa-spinner orange'&gt;&lt;/i&gt;");
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.colorbox -->
+	</div>
+
+
+	<div class="space-12"></div>
+
+
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/misc.dropzone">Dropzone.js</h3>
+		<!-- #section:plugins/misc.dropzone -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				If you want advanced file upload, you should consider using Dropzone.js plugin.
+				<br />
+				Fore more info and examples about it please see:
+				<a href="http://www.dropzonejs.com/">www.dropzonejs.com</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/dropzone.css</code>
+				<br />
+				<code>assets/js/dropzone.min.js</code>
+			</li>
+			
+			<li>
+				Any elment with <code>.dropzone</code> class will be automaically converted to a file upload area,
+				unless you set <code>Dropzone.autoDiscover = false</code>
+			</li>
+			
+			<li>
+				For a basic example please see:
+				<br />
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>dropzone.js</code>
+			</li>
+
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.dropzone -->
+	</div>
+	
+	
+
+	<div class="space-12"></div>
+
+
+	<div class="help-content">
+
+		<h3 class="info-title smaller" data-id="#plugins/misc.bootbox">Bootbox</h3>
+		<!-- #section:plugins/misc.bootbox -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootbox is a wrapper plugin for Bootstrap modals which allows easy
+				creation of dialogs.
+				<br />
+				For more info and examples about it please see:
+				<a href="http://bootboxjs.com/">bootboxjs.com</a>
+			</li>
+		
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/bootbox.min.js</code>
+			</li>
+			
+			<li>
+				A basic example would be like this:
+<pre data-language="javascript">
+$('#some-button').on('click', function() {
+  bootbox.confirm('Are you sure?', function(result) {
+    if(result) {
+       //do something
+    }
+  })
+})
+</pre>
+
+<pre data-language="javascript">
+$("#some-button").on('click', function() {
+  bootbox.confirm({
+    message: "Are you sure?",
+    buttons: {
+       confirm: {
+          label: "OK",
+          className: "btn-primary btn-sm",
+       },
+       cancel: {
+          label: "Cancel",
+          className: "btn-sm",
+       }
+    },
+    callback: function(result) {
+       //if(result) do something;
+    }
+ });
+});
+</pre>
+
+<pre data-language="javascript">
+$("#some-button").on('click', function() {
+   bootbox.dialog({
+      message: "I am a custom dialog with custom buttons,
+      buttons:
+      {
+         "success" :
+         {
+            "label" : "&lt;i class='ace-icon fa fa-check'&gt;&lt;/i&gt; Success!",
+            "className" : "btn-sm btn-success",
+            "callback": function() {
+                 //clicked, do something
+            }
+         },
+         "danger" :
+         {
+             "label" : "Danger!",
+             "className" : "btn-sm btn-danger",
+             "callback": function() {
+                 //clicked, do something
+             }
+         }
+      }
+   })
+})
+</pre>
+
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.bootbox -->
+	</div>
+	
+
+	
+	<div class="space-12"></div>
+		
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/misc.colorpicker">Colorpicker</h3>
+		<!-- #section:plugins/misc.colorpicker -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more info about colorpicker plugin, please see:
+				<a href="http://www.eyecon.ro/bootstrap-colorpicker">http://www.eyecon.ro/bootstrap-colorpicker</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/colorpicker.css</code>
+				<br />
+				<code>assets/js/bootstrap-colorpicker.min.js</code>
+			</li>
+			
+			<li>
+				A basic example would be like this:
+<pre data-language="html">
+ <input type="text" name="color" id="colorpicker1" />
+</pre>
+<pre data-language="javascript">
+$('#colorpicker1').colorpicker();
+</pre>
+			</li>
+			
+			<li>
+				You can also use browser's built-in color picker which could be a better option on small touch devices:
+<pre data-language="html">
+ <input type="color" name="color" id="colorpicker1" />
+</pre>
+<pre data-language="javascript">
+var picker = $('#colorpicker1')[0];
+if(picker.type !== 'color') {//if browser doesn't have built-in colorpicker
+  $(picker).colorpicker();
+}
+</pre>
+			</li>
+			
+			<li>
+				You can also use <a href="#custom/colorpicker" class="help-more">custom color picker</a>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.colorpicker -->
+	</div>
+	
+	
+	
+	<div class="space-12"></div>
+
+
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/misc.gritter">Gritter</h3>
+		<!-- #section:plugins/misc.gritter -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Gritter is a growl-like notifications plugin for jQuery.
+				<br />
+				Fore more info and examples please see:
+				<a href="https://github.com/jboesch/Gritter">https://github.com/jboesch/Gritter</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/jquery.gritter.css</code>
+				<br />
+				<code>assets/css/jquery.gritter.min.js</code>
+			</li>
+
+			
+			<li>
+				A few additional styles are also available which as follows:
+				<ol>
+					<li><code>.gritter-info</code></li>
+					<li><code>.gritter-error</code></li>
+					<li><code>.gritter-success</code></li>
+					<li><code>.gritter-warning</code></li>
+					<li class="space-6"></li>
+					<li><code>.gritter-light</code> light color style</li>
+					<li class="space-6"></li>
+					<li><code>.gritter-center</code> centers the notification box</li>
+				</ol>
+<pre data-language="html">
+jQuery.gritter.add({
+    title: 'This is a sticky notice!',
+    text: 'Sticky content',
+    image: 'path/to/image',
+    sticky: true,
+    time: '',
+    class_name: 'gritter-info gritter-light gritter-center'
+});
+
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.gritter -->
+	</div>
+
+	
+	<div class="space-12"></div>
+
+	
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/misc.nestable-list">Nestable Lists</h3>
+		<!-- #section:plugins/misc.nestable-list -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more information and examples please see 
+			</li>
+			
+			<li>
+				To use nestable lists you should include:
+				<br />
+				<code>assets/js/jquery.nestable.min.js</code>
+			</li>
+
+			<li>
+				You can use different color classes for list items.
+				<br />
+				See <a href="#pages/dashboard.tasks" class="help-more">Dashboard Tasks</a> for more info
+			</li>
+			
+			<li>
+				A basic example is like this:
+<pre data-language="html">
+<div class="dd">
+<ol class="dd-list">
+  <li class="dd-item item-red" data-id="7"><div class="dd-handle">Item 7</div></li>
+</ol>
+</div>
+</pre>
+
+<pre data-language="html">
+<div class="dd dd-draghandle">
+<ol class="dd-list">
+  <li class="dd-item dd2-item dd-colored" data-id="17">
+     <div class="dd-handle dd2-handle btn-info">
+        <i class="normal-icon ace-icon fa fa-pencil-square-o"></i>
+        <i class="drag-icon ace-icon fa fa-arrows"></i>
+     </div>
+     <div class="dd2-content btn-info no-hover">Published Articles</div>
+  </li>
+</ol>
+</div>
+</pre>
+
+In the above example, when dragging starts <code>.normal-icon</code> will be hidden and
+<code>.drag-icon</code> is shown
+
+<pre data-language="javascript">
+$('.dd').nestable();
+$('.dd-handle a').on('mousedown', function(e){
+   e.stopPropagation();
+});
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.nestable-list -->
+	</div>
+
+	
+	
+	<div class="space-12"></div>
+
+
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/misc.slimscroll">slimScroll</h3>
+		<!-- #section:plugins/misc.slimscroll -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				slimScroll is a lightweight scroll plugin using jQuery UI.
+				<br />
+				I've included in case you are already using it,
+				but you can use the <a href="#custom/scrollbar" class="help-more">custom scroll plugin</a>
+			</li>
+			
+			<li>
+				For more info about it, please see:
+				<a href="https://github.com/rochal/jQuery-slimScroll">https://github.com/rochal/jQuery-slimScroll</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery-ui.custom.min.js</code>
+				<br />
+				<code>assets/js/jquery.slimscroll.min.js</code>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/misc.slimscroll -->
+	</div>
+	
+
+</section>

@@ -1,0 +1,362 @@
+<section>
+	<h1 class="blue" data-id="#custom/scrollbar"><i class="ace-icon fa fa-desktop grey"></i> Scrollbars</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:custom/scrollbar -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Scrollbars</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Trying different scrollbar plugins,
+				I wasn't able to find a lightweight and easy to use one,
+				which is also touch friendly.
+				<br />
+				So I thought it's better to make one.
+				<br />
+				It's minimal but should be enough for most cases.
+				<br />
+				You can also use other more advanced plugins if necessary. There should be no conflicts.
+			</li>
+			<li>
+				Here is a simple snippet which add vertical scrollbars to an element and limits its size to 400:
+<pre data-language="javascript">
+ $('#my-content').ace_scroll({size: 400});
+</pre>
+			</li>
+ 		 </ul>
+		</div>
+		
+		<h3 class="info-title smaller">2. Options</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+					<li>
+						<code>size</code> which is 200px by default
+<pre data-language="javascript">
+ $('#my-content').ace_scroll({size: 400});
+</pre>
+
+					You can also specify size using <code>data-size</code> attribute:
+<pre data-language="html">
+<div id="my-content" data-size="300">
+   ...
+</div>
+</pre>
+					</li>
+					<li>
+						<code>horizontal</code> default=false. If true, horizontal scrollbars will be added
+<pre data-language="javascript">
+$('#my-content').ace_scroll({horizontal: true});
+</pre>
+					</li>
+					
+					<li><code>mouseWheel</code> default=true. Scrolls content on mouse wheel event. When end of content is reached, mouse wheel event will be propagated to window</li>
+					<li>
+						<code>mouseWheelLock</code> default=false. If true and we have reached end of scrolling on our element, mouse wheel event won't be propagated to window
+						<br />
+						<code>lockAnyway</code> default=false. If true, even if scrollbars are not needed and are not visible yet, mouse wheel event won't be propagated to window
+						<br />
+<pre data-language="javascript">
+ $('#my-content').ace_scroll({size: 300, mouseWheelLock: true});
+</pre>
+					</li>
+					
+					
+					<li><code>styleClass</code> additional style classes you can add to scrollbars. See next section for more info.</li>
+					
+					<li>
+						<code>hoverReset</code> default=true, because of window size changes and other document layout changes,
+						content sizes may change and we may need to reset scrollbar size.
+						<br />
+						It can be done on mouseenter event, which is set to true by default.
+					</li>
+					
+					<li>
+						<code>reset</code> default=false. If true, content will be scrolled to 0, on initialization.
+						<br />
+						Does not work when the element is hidden at first.
+					</li>
+						
+					<li>
+						<code>dragEvent</code> default=false. If true an event will be triggered when
+						user starts dragging scrollbars using mouse.
+					</li>
+					
+					<li>
+						<code>scrollEvent</code> default=false. If true an event will be triggered when
+						content is scrolled.
+					</li>
+
+					<li>
+						<code>touchDrag</code> default=true, which adds touch drag event for touch devices.
+					</li>
+					<!--
+					<li>
+						<code>touchSwipe</code> default=false, which adds touch swipe event instead of drag event.
+					</li>
+					-->
+ 		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller">3. Styles</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Some additional classes you can add using <code>styleClass</code> option:
+				<ol>
+					<li><code>scroll-margin</code> which add 1px space between content and scrollbars</li>
+					<li><code>scroll-left</code> shows scrollbars on left instead of right</li>
+					<li><code>scroll-top</code> shows horizontal scrollbars on top instead of bottom</li>
+					<li><code>scroll-dark</code> darker scrollbars</li>
+					<li><code>scroll-light</code> lighter scrollbars</li>
+					<li><code>no-track</code> hides scroll track</li>
+					<li><code>scroll-visible</code> scrollbars always visible</li>
+					<li><code>scroll-thin</code> thinner scrollbars</li>
+					<li><code>scroll-chrome</code> similar to latest version of Google Chrome scrollbars </li>
+				</ol>
+			</li>
+			
+			<li>
+<pre data-language="javascript">
+ $('#my-content').ace_scroll({
+    size: 300,
+    styleClass: 'scroll-dark scroll-left scroll-thin'
+ });
+</pre>
+			</li>
+ 		 </ul>
+		</div>
+		
+		
+		
+		<h3 class="info-title smaller">4. Events</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				If you set <code>scrollEvent</code> to true, a scroll event will be triggered when element is scrolled:
+<pre data-language="javascript">
+ $('#my-content')
+ .ace_scroll({
+    scrollEvent: true
+ })
+ .on('scroll', function() {
+    //element scrolled
+ });
+</pre>
+			
+			But it's better to listen to the inner content's native scroll event:
+<pre data-language="javascript">
+ $('#my-content').find('.scroll-content').on('scroll', function() {
+    //element scrolled
+ });
+</pre>
+			</li>
+			
+			<li>
+				If you set <code>dragEvent</code> to true, some drag events will be triggered when scrollbars are dragged:
+<pre data-language="javascript">
+ $('#my-content')
+ .ace_scroll({
+    dragEvents: true
+ })
+ .on('drag.start', function() {
+    //started dragging
+ })
+ .on('drag._end', function() {
+    //ended dragging
+ })
+</pre>
+			</li>
+ 		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller" data-id="#custom/scrollbar.touch-drag">5. Touch Drag Event</h3>
+		<!-- #section:custom/scrollbar.touch-drag -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				There is also a custom touch drag event specifically for use on scrollbars.
+				<br />
+				You can use it with other elements as well, though I recommend a more advanced library such as
+				<b>Hammer.js</b>
+			</li>
+			
+			<li>
+				You can use it like this:
+<pre data-language="javascript">
+$('#some-element').on('ace_drag', function(event) {
+  //var dir = event.direction;// up down left right
+  //var distanceX = event.dx 
+  //var distanceY = event.dy
+})
+</pre>
+			</li>
+ 		 </ul>
+		</div>
+		<!-- /custom/scrollbar.touch-drag -->
+
+	
+
+		<h3 class="info-title smaller">6. Functions</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				The following functions are available for scroller plugin:
+				<ol>
+					<li><code>reset</code> resets scrollbar size</li>
+					<li><code>disable</code> disables scrollbars</li>
+					<li><code>enable</code> enables scrollbars</li>
+					<li><code>destroy</code> destroys scrollbars</li>
+					<li><code>update</code> updates an option (currently only size)</li>
+					<li><code>modify</code> updates options and recreates scrollbars</li>
+				</ol>
+			</li>
+			
+			<li>
+<pre data-language="javascript">
+$('#my-content').ace_scroll('reset');
+$('#my-content').ace_scroll('disable');
+
+$('#my-content').ace_scroll('update', {size: 250});
+$('#my-content').ace_scroll('modify', completely_new_options);
+</pre>
+			</li>
+ 		 </ul>
+		</div>
+
+
+		<h3 class="info-title smaller" data-id="#custom/scrollbar.horizontal">7. Horizontal</h3>
+		<!-- #section:custom/scrollbar.horizontal -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Horizontal scrollbars can be created by specifying <code>horizontal</code> option:
+<pre data-language="javascript">
+$('#my-content').ace_scroll({
+    horizontal: true,
+    size: 600,
+    styleClass: 'scroll-top',
+    mouseWheelLock: true
+});
+</pre>
+			</li>
+			
+			<li>
+				Sometimes you may need to add some padding to the element if scrollbars appear above content:
+<pre data-language="javascript">
+$('#my-content').ace_scroll({
+    horizontal: true,
+    //options here
+}).css('padding-top', 15);
+</pre>
+			</li>
+			
+			<li>
+				If you are using RTL (right to left) direction,
+				please note that horizontal scrolling is inconsistent between browsers.
+				<br />
+				So it's better to change scrollbars to LTR and make the content RTL again.
+				<br />
+				You can use <code>.make-ltr</code> and <code>.make-rtl</code> classes:
+				<br />
+				
+<pre data-language="javascript">
+ $('#my-content').addClass('make-ltr')
+ .find('.scroll-content').wrapInner('&lt;div class="make-rtl" /&gt;');
+</pre>
+			</li>
+			
+			Or statically inside your HTML:
+<pre data-language="html">
+ <div id="my-content" class="make-ltr">
+   <div class="make-rtl">
+     ...
+   </div>
+ </div>
+</pre>
+<pre data-language="javascript">
+$('#my-content').ace_scroll({
+    horizontal: true,
+    //other options here
+})
+</pre>
+			</li>
+
+ 		 </ul>
+		</div>
+		<!-- /section:custom/scrollbar.horizontal -->
+
+		
+		
+		<h3 class="info-title smaller" data-id="#custom/scrollbar.sidebar">8. Sidebar Scrollbars</h3>
+		<!-- #section:custom/scrollbar.sidebar -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				You can also use scrollbar for sidebar whether it's fixed or not.
+			</li>
+			
+			<li>
+				I have used two approaches for sidebar
+			</li>
+			
+			<li>
+				The first one which is used by default, does not use <code>overflow:hidden</code> and
+				can be used only on fixed sidebar.
+				<br />
+				The advantage is that .hover submenus or mininized sidebar can also have scrollbars and
+				submenus will be shown outside of sidebar area without problem.
+			</li>
+			
+			</li>
+				Second one uses real scrollbars and has <code>overflow:hidden</code> applied to it.
+				<br />
+				It can be used on both normal and fixed sidebar.
+				<br />
+				To enable it you should <a href="../build/js.html">build a custom JS</a> using 2nd sidebar scrollbar style.
+			</li>
+			
+			<li>
+				Each one has several options which you can edit inside:
+				<ol>
+					<li><code>assets/js/ace/ace.js</code></li>
+					<li><code>assets/js/ace.min.js</code></li>
+					<li><code>assets/js/uncompressed/ace.js</code></li>
+				</ol>
+				<br />
+				Look for <code>sidebar_scrollable</code> and change options as needed.
+			</li>
+			
+			<li>
+				Options for first style (fixed sidebar only):
+				<ol>
+				  <li><code>scroll_to_active</code> If true, sidebar will be scrolled down to show active menu item on page load</li>
+				  <li><code>include_shortcuts</code> If true, shortcuts will also be inside scroll area. Otherwise it will be above scroll area</li>
+				  <li><code>include_toggle</code> If true, sidebar toggle(minimize button) will also be inside scroll area. Otherwise it will be below scroll area</li>
+				  <li><code>smooth_scroll</code> If true, sidebar scrolling will be smooth using CSS3 transition</li>
+				  <li><code>outside</code> If true, scrollbar will be outside of scroll area</li>
+				</ol>
+			</li>
+			
+			<li>
+				Options for secod style (normal/fixed sidebar):
+				<ol>
+				  <li><code>only_fixed</code> If true, scrollbars will be enabled for fixed sidebar only</li>
+				  <li><code>scroll_to_active</code> If true, sidebar will be scrolled down to show active menu item on page load</li>
+				  <li><code>include_shortcuts</code> If true, shortcuts will also be inside scroll area. Otherwise it will be above scroll area</li>
+				  <li><code>include_toggle</code> If true, sidebar toggle(minimize button) will also be inside scroll area. Otherwise it will be below scroll area</li>
+				</ol>
+			</li>
+			
+ 		 </ul>
+		</div>
+		<!-- /section:custom/scrollbar.sidebar -->
+		
+		
+	</div>
+	<!-- /section:custom/scrollbar -->
+	
+</section>

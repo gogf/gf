@@ -1,0 +1,323 @@
+<section>
+	<h1 class="blue" data-id="#custom/checkbox"><i class="ace-icon fa fa-desktop grey"></i> Checkbox & Switch</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:custom/checkbox -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Checkbox & Radio</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Ace admin template has support for pure CSS checkbox and on/off switches.
+				<br />
+				This makes it more lightweight and there's no need for an external library.
+			</li>
+			<li>
+				A basic checkbox element has <code>.ace</code>
+				class and a <code>.lbl</code> element follows it:
+<pre data-language="html">
+<label>
+  <input type="checkbox" name="myoption[]" class="ace" />
+  <span class="lbl">Optional Text</span>
+</label>
+</pre>
+			<li>
+			It's always a good idea to wrap checkbox element and the <code>.lbl</code> element
+			inside a <code>label</code> for better click response, except for some cases such as re-styling
+			jqGrid checkboxes (see Notes below)
+			</li>
+			
+			<li>
+				You can use an addtional <code>.ace-checkbox-2</code> class for another checkbox style:
+<br />
+<pre data-language="html">
+<label>
+  <input type="checkbox" name="myoption[]" class="ace ace-checkbox-2" />
+  <span class="lbl">Optional Text</span>
+</label>
+</pre>
+			</li>
+			
+			<li>
+				Radio buttons are also styled like checkboxes:
+<pre data-language="html">
+<label>
+  <input type="radio" name="myoption" class="ace" value="1" />
+  <span class="lbl">Optional Text</span>
+</label>
+</pre>
+			</li>
+			
+ 		 </ul>
+		</div>
+		
+		<h3 class="info-title smaller" data-id="#custom/checkbox.switch">2. Switch elements</h3>
+		<!-- #section:custom/checkbox.switch -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Switch elements are like checkboxes with a few additional classes:
+				<ol>
+					<li><code>.ace-switch</code></li>
+					<li><code>.ace-switch-2</code></li>
+					<li><code>.ace-switch-3</code></li>
+					<li><code>.ace-switch-4</code></li>
+					<li><code>.ace-switch-5</code></li>
+					<li><code>.ace-switch-6</code></li>
+					<li><code>.ace-switch-7</code></li>
+				</ol>
+<pre data-language="html">
+ <label>
+  <input type="checkbox" name="myoption" class="ace ace-switch" />
+  <span class="lbl"></span>
+ </label>
+
+ <label>
+  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4" />
+  <span class="lbl"></span>
+ </label>
+</pre>
+			</li>
+			
+			<li>
+				<code>.btn-rotate</code> makes the bars horizontal:
+				<br />
+				<label>
+				  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-rotate" />
+				  <span class="lbl"></span>
+				</label>
+				<br />
+<pre data-language="html">
+ <label>
+  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-rotate" />
+  <span class="lbl"></span>
+ </label>
+</pre>
+			</li>
+			
+			<li>
+				<code>.btn-empty</code> hides the bars:
+				<br />
+				<label>
+				  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-empty" />
+				  <span class="lbl"></span>
+				</label>
+				<br />
+<pre data-language="html">
+ <label>
+  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-empty" />
+  <span class="lbl"></span>
+ </label>
+</pre>
+			</li>
+			
+			<li>
+				<code>.btn-flat</code> makes the checkbox rectangular:
+				<br />
+				<label>
+				  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-flat" />
+				  <span class="lbl"></span>
+				</label>
+				<br />
+<pre data-language="html">
+ <label>
+  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-flat" />
+  <span class="lbl"></span>
+ </label>
+</pre>
+			</li>
+			
+			<li>
+				You can have a custom text for switch elements using <code>data-lbl</code> attribute of the
+				<code>.lbl</code> element.
+				<br />
+				You should add enough spaces (&amp;nbsp;) to adjust your custom text:
+				<label>
+				  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-flat" />
+				  <span class="lbl" data-lbl="Hi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bye"></span>
+				</label>
+				<br />
+<pre data-language="html">
+ <label>
+  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-flat" />
+  <span class="lbl" data-lbl="Hi&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Bye"></span>
+ </label>
+</pre>
+			</li>
+			
+			<li>
+				You can also edit <code>assets/css/less/form/checkbox.less</code>
+				and modify <code>@switch-1-text</code> variables and re-compile LESS files into CSS.
+			</li>
+			
+			<li>
+				Sometimes your text is not adjusted well.
+				In that case you can override the following CSS rules and find the best values:
+<pre data-language="css">
+/* for default switch element */
+input[type=checkbox].ace.ace-switch + .lbl::before {
+   text-indent: -21px;
+}
+input[type=checkbox].ace.ace-switch:checked + .lbl::before {
+   text-indent: 8px;
+}
+
+/* or other ones */
+input[type=checkbox].ace.ace-switch.ace-switch-4 + .lbl::before {
+   text-indent: -25px;
+}
+input[type=checkbox].ace.ace-switch.ace-switch-4:checked + .lbl::before {
+   text-indent: 9px;
+}
+</pre>
+			</li>
+			
+ 		 </ul>
+		</div>
+		<!-- /section:custom/checkbox.switch -->
+		
+		
+		<h3 class="info-title smaller" data-id="#custom/checkbox.notes">3. Notes</h3>
+		<!-- #section:custom/checkbox.notes -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				You may face an issue with checkboxes in ASP.NET as there's often a hidden input inserted
+				after the checkbox and therefore our CSS rule which requires <code>.lbl</code> to be inserted
+				immediately after checkbox element, fails:
+<pre data-language="html">
+ <label>
+  <input type="checkbox" name="myoption" class="ace" />
+  <input type="hidden" name="asp-inserted-hidden-input" />
+  <span class="lbl"></span>
+ </label>
+</pre>
+			Checkboxes won't be displayed here.
+			<br />
+			You can remove <code>.ace</code> class to have default browser checkbox or
+			
+			you can use <a href="../build/css.html">CSS builder tool</a> and enable <b>ASP.NET friendly checkboxes </b>
+			option.
+			<div class="space-6"></div>
+			<i class="ace-icon fa fa-hand-o-right"></i>
+			Please note that your checkbox element should only have one <code>.lbl</code> sibling:
+<pre data-language="html">
+ <label>
+   <input type="checkbox" name="myoption" class="ace" />
+   <input type="hidden" name="asp-inserted-hidden-input" />
+   <span class="lbl">Will be styled </span>
+   <span class="lbl">This will also be styled with new ASP.net rules!</span>
+ </label>
+</pre>
+			</li>
+			
+			<li>
+				It also seems that Rails framework automatically puts a hidden input before the checkbox.
+				<br />
+				In some browsers, this may prevent the checkbox from receiving click events if it's inside a label:
+<pre data-language="html">
+ <label>
+   <input type="hidden" name="rails-inserted-hidden-input" />
+   <input type="checkbox" name="myoption" class="ace" />
+   <span class="lbl"></span>
+ </label>
+</pre>
+
+				That's because <code>label</code> element should only have one input element which
+				in this is the "hidden" input.
+				
+				<br />
+				To fix that you can put "hidden" input after checkbox or associate the label to checkbox with
+				"for" attribute and checkbox "id":
+<pre data-language="html">
+ <label for="myoption">
+   <input type="hidden" name="rails-inserted-hidden-input" />
+   <input id="myoption" type="checkbox" name="myoption" class="ace" />
+   <span class="lbl"></span>
+ </label>
+</pre>
+			</li>
+
+			<li>
+				Sometimes you have a list of checkboxes inside a parent with scrollbars.
+				<br />
+				In that case, it's better to put checkboxes inside a parent with <code>position:relative</code>.
+				<br />
+				For example inside a <code>.pos-rel</code> element:
+				
+				<div class="well">
+					<div style="overflow-y: scroll; overflow-x: hidden; height: 60px;">
+					  <div>
+					   <label class="pos-rel">
+						<input type="checkbox" name="myoption1" class="ace ace-switch ace-switch-4 btn-flat" />
+						<span class="lbl"></span>
+					   </label>
+					  </div>
+					  <div>
+					   <label class="pos-rel">
+						<input type="checkbox" name="myoption2" class="ace ace-switch ace-switch-4 btn-flat" />
+						<span class="lbl"></span>
+					   </label>
+					  </div>
+					  <div>
+					   <label class="pos-rel">
+						<input type="checkbox" name="myoption3" class="ace ace-switch ace-switch-4 btn-flat" />
+						<span class="lbl"></span>
+					   </label>
+					  </div>
+					</div>
+				</div>
+<pre data-language="html">
+<div style="overflow-y: scroll; overflow-x: hidden; height: 60px;">
+  <div>
+   <label class="pos-rel">
+    <input type="checkbox" name="myoption1" class="ace ace-switch ace-switch-4 btn-flat" />
+    <span class="lbl"></span>
+   </label>
+  </div>
+  <div>
+   <label class="pos-rel">
+    <input type="checkbox" name="myoption2" class="ace ace-switch ace-switch-4 btn-flat" />
+    <span class="lbl"></span>
+   </label>
+  </div>
+  .
+  .
+  .
+</div>
+</pre>
+			</li>
+			
+			<li>
+				Sometimes you shouldn't wrap the checkbox and <code>.lbl</code> inside a label.
+				<br />
+				For example in jqGrid plugin, when you launch an "edit record" or "new record" dialog,
+				and want to style the checkbox dynamically:
+<pre data-language="javascript">
+  form.find('input[type=checkbox]')
+      .addClass('ace ace-switch ace-switch-5').after('&lt;span class="lbl"&gt;&lt;/span&gt;');
+</pre>
+			Checkbox should not be wrapped inside <code>label</code> because it conflicts with
+			plugin's data upload mechanism.
+			</li>
+			
+			<li>
+				For better vertical alignmnet sometimes you should add <code>.middle</code> class to <code>.lbl</code>
+				element:
+<pre data-language="html">
+ <label>
+  <input type="checkbox" name="myoption" class="ace ace-switch ace-switch-4 btn-flat" />
+  <span class="lbl middle"></span>
+ </label>
+</pre>
+			</li>
+ 		 </ul>
+		</div>
+		<!-- /section:custom/checkbox.notes -->
+
+		
+	</div>
+	<!-- /section:custom/checkbox -->
+	
+</section>

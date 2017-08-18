@@ -10,7 +10,7 @@ import (
 // 集群协议通信接口回调函数
 func (n *Node) raftTcpHandler(conn net.Conn) {
     msg := n.receiveMsg(conn)
-    if msg == nil {
+    if msg == nil || msg.Info.Group != n.Group {
         conn.Close()
         return
     }

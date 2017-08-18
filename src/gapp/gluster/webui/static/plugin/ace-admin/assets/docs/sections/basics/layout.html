@@ -1,0 +1,337 @@
+<section>
+	<h1 class="blue" data-id="#basics/layout"><i class="ace-icon fa fa-desktop grey"></i> Layout</h1>
+
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter" data-id="#basics/layout.default">
+		Default layout
+	</h2>
+	<div class="space-4"></div>
+
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Layout</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Default layout used for all pages (except for login) is:
+				<img src="images/default.png" />
+				
+				<ul>
+					<li>
+						1) Navbar
+					</li>
+					
+					<li>
+						Inside <b>main-container</b> area:
+						<ul>
+							<li> 2) Sidebar </li>
+							<li> 3) Breadcrumbs (inside "main-content") </li>
+							<li> 4) Page content (inside "main-content") </li>
+							<li> 5) Settings box (inside "page-content") </li>
+							<li> 6) Footer </li>
+						</ul>
+					</li>
+				</ul>
+				
+				
+				<div class="space-4"></div>
+<pre data-language="html">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+ &lt;head&gt;
+    &lt;!-- title, meta tags, list of stylesheets, etc ... --&gt;
+ &lt;/head&gt;
+  
+ &lt;body class="no-skin"&gt;
+    &lt;div class="navbar" id="navbar"&gt;
+     &lt;!-- navbar goes here --&gt;
+    &lt;/div&gt;
+ 
+    &lt;div class="main-container" id="main-container"&gt;
+     &lt;div class="sidebar responsive" id="sidebar"&gt;
+      &lt;!-- sidebar goes here --&gt;
+     &lt;/div&gt;
+  
+     &lt;div class="main-content"&gt;
+      &lt;div class="breadcrumbs"&gt;
+       &lt;!-- breadcrumbs goes here --&gt;
+      &lt;/div&gt;
+   
+      &lt;div class="page-content"&gt;
+        &lt;!-- setting box goes here if needed --&gt;
+
+        &lt;div class="row"&gt;
+          &lt;div class="col-xs-12"&gt;
+           &lt;!-- page content goes here --&gt;
+          &lt;/div&gt;&lt;!-- /.col --&gt;
+        &lt;/div&gt;&lt;!-- /.row --&gt;
+
+      &lt;/div&gt;&lt;!-- /.page-content --&gt;
+     &lt;/div&gt;&lt;!-- /.main-content --&gt;
+	 
+     &lt;!-- footer area --&gt;
+
+   &lt;/div&gt;&lt;!-- /.main-container --&gt;
+
+   &lt;!-- list of script files --&gt;
+   
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+			</li>
+
+			<li>
+				Starting with the following file you can find more details:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/</span>default.mustache</code>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+	
+	
+		<h3 class="info-title smaller">2. Head element</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<code>head</code> element contains title, meta tags, stylesheets and some scripts:
+<pre data-language="html">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+ &lt;head&gt;
+  &lt;meta charset="utf-8" /&gt;
+  &lt;!-- use the following meta to force IE use its most up to date rendering engine --&gt;
+  &lt;meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;
+  
+  &lt;title&gt; page tite &lt;/title&gt;
+  &lt;meta name="description" content="page description" /&gt;
+  
+  &lt;!-- stylesheets are put here, refer to files/css documentation --&gt;
+  &lt;!-- some scripts should be  here, refer to files/javascript documentation --&gt;
+ &lt;/head&gt;
+</pre>
+
+		For more info about stylesheets and order of use, please see <a href="#files/css.order">CSS order</a>.
+		<br />
+		For more info about scripts and order of use, please see <a href="#files/javascript.order">Javascript order</a>.
+		
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+		
+		<h3 class="info-title smaller">3. Viewport meta tag</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Please note that with mobile devices, pages may not look good when user zooms in/out,
+				especially when navbar or sidebar is fixed.
+				<br />
+				One option is preventing user from zooming in/out using <code>user-scalable=no</code> property:
+<pre data-language="html">
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" /&gt;
+</pre>
+
+			The following links have more info:
+			<br />
+			<a href="http://www.javascriptkit.com/dhtmltutors/cssmediaqueries3.shtml">
+				http://www.javascriptkit.com/dhtmltutors/cssmediaqueries3.shtml
+			</a>
+			<br />
+			<a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html">
+				developer.apple.com
+			</a>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+		
+		<h3 class="info-title smaller">4. Body element</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+<pre data-language="html">
+ &lt;body class="no-skin"&gt;
+   ...
+ &lt;/body&gt;
+</pre>
+
+				You can use one of the following classes to apply different skins:
+				<ol>
+					<li><code>.no-skin</code></li>
+					<li><code>.skin-1</code></li>
+					<li><code>.skin-2</code></li>
+					<li><code>.no-skin.skin-3</code></li>
+				</ol>
+				
+				There is more information about this in
+				<a href="#settings.skins" class="help-more">Skins section</a>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+		
+		<h3 class="info-title smaller">5. End of document</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Here you put your script list and inline scripts.
+				<br />
+				For more info about scripts and order of use, please see <a href="#files/javascript.order">Javascript order</a>.
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+	</div><!-- /.help-content -->
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter" data-id="#basics/layout.empty">
+		Empty layout
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:basics/layout.empty -->
+	<div class="help-content">
+		<h3 class="info-title smaller">Layout</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Empty layout is similar to default layout and is only used for 
+				<code data-open-file="html" class="open-file">html/empty.html</code>
+				file which has minimal code for easier investigation:
+				<div class="space-4"></div>
+<pre data-language="html">
+ &lt;html&gt;
+  &lt;head&gt;
+     &lt;!-- title, meta tags, list of stylesheets, etc ... --&gt;
+  &lt;/head&gt;
+  
+  &lt;body class="no-skin"&gt;
+    &lt;div class="navbar" id="navbar"&gt;
+     &lt;!-- navbar goes here --&gt;
+    &lt;/div&gt;
+ 
+    &lt;div class="main-container" id="main-container"&gt;
+     &lt;div class="sidebar responsive" id="sidebar"&gt;
+      &lt;!-- sidebar goes here --&gt;
+     &lt;/div&gt;
+  
+     &lt;div class="main-content"&gt;
+   
+      &lt;div class="page-content"&gt;
+        &lt;div class="row"&gt;
+          &lt;div class="col-xs-12"&gt;
+           &lt;!-- page content goes here --&gt;
+          &lt;/div&gt;&lt;!-- /.col --&gt;
+        &lt;/div&gt;&lt;!-- /.row --&gt;
+      &lt;/div&gt;&lt;!-- /.page-content --&gt;
+     &lt;/div&gt;&lt;!-- /.main-content --&gt;
+	 
+   &lt;/div&gt;&lt;!-- /.main-container --&gt;
+
+   &lt;!-- list of script files --&gt;
+   
+  &lt;/body&gt;
+ &lt;/html&gt;
+</pre>
+			</li>
+
+			<li>
+				Starting with the following file you can find more details:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/</span>empty.mustache</code>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+	</div><!-- /.help-content -->
+	<!-- /section:basics/layout.empty -->
+	
+	
+	
+	
+	
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter" data-id="#basics/layout.login">
+		Login layout
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:basics/layout.login -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Layout</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Login layout used only for the login page is as follows:
+				<div class="space-4"></div>
+<pre data-language="html">
+&lt;html&gt;
+ &lt;head&gt;
+  
+ &lt;/head&gt;
+
+ &lt;body class="login-layout"&gt;
+ 
+  &lt;div class="main-container"&gt;
+   &lt;div class="main-content"&gt;
+    &lt;div class="row"&gt;
+     &lt;div class="col-sm-10 col-sm-offset-1"&gt;
+     &lt;!-- page content goes here --&gt;
+     &lt;/div&gt;&lt;!-- /.col --&gt;
+    &lt;/div&gt;&lt;!-- /.row --&gt;
+   &lt;/div&gt;&lt;!-- /.main-content --&gt;
+  &lt;/div&gt;&lt;!-- /.main-container --&gt;
+
+
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+			</li>
+			
+			<li>
+				For more info about login page, please see <a href="#pages/login" class="help-more">login page</a>
+			</li>
+
+			<li>
+				Starting with the following file you can find more details:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/</span>login.mustache</code>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+		
+		<h3 class="info-title smaller">2. Scripts</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Fewer scripts are needed for login page.
+				<br />
+				Basically, you just need <b>jquery</b> and the following snippet to switch to a different box:
+<pre data-language="javascript">
+jQuery(function($) {
+ $(document).on('click', '.toolbar a[data-target]', function(e) {
+    e.preventDefault();
+    var target = $(this).data('target');
+    $('.widget-box.visible').removeClass('visible');//hide others
+    $(target).addClass('visible');//show target
+ })
+})
+</pre>
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>login.js</code>
+				<br />
+				
+				Of course if you want to use extra functionality such as form validation
+				or elements such as datepicker or a slider,
+				you should include the relevant scripts.
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+	</div><!-- /.help-content -->
+	<!-- /section:basics/layout.login -->
+
+</section>

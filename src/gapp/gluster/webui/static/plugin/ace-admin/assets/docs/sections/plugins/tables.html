@@ -1,0 +1,156 @@
+<section>
+	<h1 class="blue" data-id="#plugins/tables"><i class="ace-icon fa fa-table grey"></i> Tables & Grids</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:plugins/tables -->
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/tables.datatables">dataTables</h3>
+		<!-- #section:plugins/tables.datatables -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				dataTables is a table plugin with many options and free or premium addons.
+				<br />
+				For more details see plugin's page: <a href="http://datatables.net/">datatables.net</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/js/jquery.dataTables.min.js</code>
+				<br />
+				<code>assets/js/jquery.dataTables.bootstrap.js</code>
+			</li>
+			
+			<li>
+				To enable or disable pagination buttons such as 'next', 'prev', 'last' and 'first',
+				you should edit <code>assets/js/jquery.dataTables.bootstrap.js</code>
+				and modify the part that says <span class="green">//Pagination Buttons</span>
+			</li>
+			
+			<li>
+				A basic example is as follows:
+<pre data-language="javascript">
+var myTable = 
+ $('#my-table')
+ .dataTable({
+    /**
+    sScrollY: "200px",//enable vertical scrolling
+    sScrollX: "100%",
+    sScrollXInner: "120%",//enable horizintal scrolling with its content 120% of its container
+    bScrollCollapse: true,
+    */
+
+    bAutoWidth: false,//for better responsiveness
+    aoColumns": [
+      { "bSortable": false },
+      null, null,null, null, null,
+      { "bSortable": false }
+    ]
+ })
+</pre>
+				<code>aoColumns</code> is an array containing info and options for each table column
+				and its element count should match the number of columns.
+				<br />
+				For more information about <code>aoColumns</code> and other options, please see the plugin's page.
+			</li>
+
+			
+			<li>
+				If you want to apply horizontal scrolling (sScrollX) on a bordered table (<code>.table-bordered</code>)
+				you can wrap the table inside a <code>.dataTables_borderWrap</code> element first:
+<pre data-language="javascript">
+var myTable = 
+ $('#my-table')
+ .wrap("&lt;div class='dataTables_borderWrap' /&gt;")
+ .dataTable({
+    //options
+ });
+</pre>
+			</li>
+
+		 </ul>
+		</div>
+		<!-- /section:plugins/tables.datatables -->
+
+
+		<h3 class="info-title smaller" data-id="#plugins/tables.jqgrid">jqGrid</h3>
+		<!-- #section:plugins/tables.jqgrid -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				jqGrid is a table and grid plugin with advanced functionality and many different options
+				<br />
+				Please make sure you see its page, examples and documentation at:
+				<a href="http://www.trirand.com">www.trirand.com</a>
+			</li>
+			
+			<li>
+				You can also a build a custom version depending on your needs:
+				<a href="http://www.trirand.com/blog/?page_id=6">http://www.trirand.com/blog/?page_id=6</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/ui.jqgrid.css</code>
+				<br />
+				<code>assets/js/jqGrid/jquery.jqGrid.min.js</code>
+			</li>
+			
+			<li>			
+				Please note that in our demo example,
+				data source is a local static table but you can retrieve data dynamically from server:
+				<br />
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>jqgrid.js</code>
+			</li>
+			
+			<li>
+				jqGrid has many options and you can choose a different icon for different buttons, etc.
+				<br />
+				But sometimes you need to dynamically style buttons, icons, checkboxes using Javascript
+				for example when search dialog is displayed.
+			</li>
+			
+			<li>
+				If you want to style checkboxes dynamically using Javascript, please note that you shouldn't 
+				wrap them inside <code>label</code> or jqGrid plugin will not send your data to server properly:
+<pre data-language="javascript">
+ //inside colModel we have a checkbox
+ /**{name: 'stock', index: 'stock', width:70, editable: true, edittype: 'checkbox',
+   editoptions: {value:"Yes:No"}, unformat: aceSwitch},*/
+ //aceSwitch is the function which styles the checkbox  
+ 
+ function aceSwitch( cellvalue, options, cell ) {
+    setTimeout(function(){
+        $(cell) .find('input[type=checkbox]')
+          .addClass('ace ace-switch ace-switch-5')
+          .after('&lt;span class="lbl">&lt;/span>');
+    }, 0);
+ }
+</pre>
+			</li>
+			
+			<li>
+				To make the grid responsive, you can use the following code:
+<pre data-language="javascript">
+ var parent_column = $(grid_selector).closest('[class*="col-"]');
+ $(window).on('resize.jqGrid', function () {
+     $(grid_selector).jqGrid( 'setGridWidth', $(".page-content").width() );
+ })
+ //optional: resize on sidebar collapse/expand and container fixed/unfixed
+ $(document).on('settings.ace.jqGrid' , function(ev, event_name, collapsed) {
+    if( event_name === 'sidebar_collapsed' || event_name === 'main_container_fixed' ) {
+       $(grid_selector).jqGrid( 'setGridWidth', parent_column.width() );
+    }
+ })
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/tables.jqgrid -->
+
+	</div>
+	<!-- /section:plugins/tables -->
+</section>

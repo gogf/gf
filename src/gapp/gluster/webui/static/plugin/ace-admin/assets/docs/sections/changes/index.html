@@ -1,0 +1,1052 @@
+<section>
+  <h1 class="blue" data-id="#changes"><i class="ace-icon fa fa-magic grey"></i> Changes and Updates</h1>
+  <hr />
+
+  <div class="alert alert-danger">
+	<button class="close" data-dismiss="alert"><i class="ace-icon fa fa-times"></i></button>
+	<i class="ace-icon fa fa-exclamation-triangle"></i>
+	Make sure you have a copy of your application files before making changes.
+  </div>
+  
+  
+  
+  
+  <div class="hr hr-double hr32"></div>
+  <h2 class="blue lighter help-title" data-id="#changes.v6">
+	Ace v1.3.0 to v1.3.1 (current version)
+  </h2>
+  <div class="space-4"></div>
+
+  <div class="help-content">
+	  <h3 class="info-title smaller">1. New Features / Improvements / Fixes / Updates</h3>
+	  <div class="info-section">
+		<ul class="list-unstyled  info-list">
+			<li>
+				Added <a href="#basics/ajax">Ajax version</a>
+			</li>
+			<li>
+				Added <a href="#pages/email">Email templates</a>
+				and an <a href="../build/email.html">email tool</a> which converts normal Bootstrap syntax to email friendly table layout
+			</li>
+			<li>
+				<a href="#custom/onpage-help">Onpage Help</a> feature is now available for use in your application to provide help and instructions to users.
+			</li>
+			<li>
+				Option to remove sidebar (previously sidebar was almost mandatory)
+			</li>
+			<li>
+				Improved and fixed <a href="../build/css.html">CSS builder</a>
+			</li>
+			<li>
+				<code>.hover</code> submenus and <code>.compact</code> sidebar is now available only on larger devices.
+			</li>
+			<li>
+				Added <a href="#plugins/bootstrap">typeahead.js</a> plugin
+			</li>
+			<li>
+				Updated all scripts to their latest version
+			</li>
+			<li>
+				Fixed several bugs and issues
+			</li>
+		</ul>
+	</div>
+	
+	
+	<h3 class="info-title smaller">2. Ace Changes</h3>
+	<div class="info-section">
+		<ul class="list-unstyled info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				In this version, <a href="#plugins/bootstrap.typeahead-js">typeahead.js</a>
+				plugin has been included.
+				<br />
+				The older Bootstrap (v2.x) typeahead plugin is still included with the template
+				as it's a lightweight alternative used by demo search box and tag input plugin.
+				<br />
+				However the latter (old plugin) has been renamed to <code>bs_typeahead</code>
+				<br />
+				For more info please see <a href="#plugins/bootstrap.typeahead">its section</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				In case you modified some of Ace's functions arguments, 
+				please note that options used to be passed as separate paramaterers but now are passed
+				as a JSON object:
+<pre data-language="javascript">
+ ace.sidebar_scroll(jQuery, {
+   {
+     'scroll_to_active': true,
+     'include_shortcuts': true,
+     'include_toggle': false,
+     'smooth_scroll': 200,
+     'outside': false
+   }
+ });
+</pre>
+			</li>
+		</ul>
+   </div>
+	
+
+	
+	<h3 class="info-title smaller">3. Third Party Changes</h3>
+	<div class="info-section">
+		<ul class="list-unstyled info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				dataTables plugin has been updated to latest version 1.10.0 and there
+				may be a few changes you need to make because of some API changes.
+				<br />
+				If your current tables are somehow messed up after script update, you may need
+				to consult plugin's documentation for more info.
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				Markdown editor now accepts more options and to use FontAwesome fonts
+				you need to specify <code>data-iconlibrary="fa"</code> attribute.
+			</li>
+		</ul>
+   </div>
+	
+
+  </div><!-- /.help-content -->
+  
+  
+  
+  
+  
+  <div class="hr hr-double hr32"></div>
+  <h2 class="blue lighter help-title" data-id="#changes.v5">
+	Ace v1.2.0 to v1.3.0 (current version)
+  </h2>
+  <div class="space-4"></div>
+
+  <div class="help-content">
+	  <h3 class="info-title smaller">1. New Features / Improvements / Fixes</h3>
+	  <div class="info-section">
+		<ul class="list-unstyled  info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				<a href="#custom/scrollbar" class="help-more">Custom scrollbar plugin</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Automatic scrollbars for fixed sidebar
+			</li>
+
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				<a href="#basics/sidebar.horizontal" class="help-more">Horizontal Menu</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				3 Different mobile menu styles.
+				<a href="#basics/sidebar.mobile" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				New mobile navbar user buttons style.
+				<a href="#basics/navbar.mobile" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				New submenu style displayed on mouse hover.
+				<a href="#basics/sidebar.hover" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				<a href="#basics/sidebar.compact" class="help-more">Compact sidebar style</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Alternative active menu item style.
+				<a href="#basics/sidebar.highlight" class="help-more">More info</a>
+			</li>
+
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				<a href="#files/css.skins" class="help-more">LESS skin files</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				In-browser CSS & JS file builder to make your own minimal files
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Enhanced widget box functions and events.
+				<a href="#custom/widget-box" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				On-page help which lets you pick any element and see how it works
+			</li>
+	
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				<code>nativeUI</code> option for custom editable addons.
+				<a href="#custom/inline-editable" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Date addon for inline editable plugin.
+				<a href="#custom/inline-editable.date" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Added Bootstrap datetime picker plugin.
+				<a href="#plugins/date-time.datetimepicker" class="help-more">More info</a>
+			</li>
+
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Tabbed user dropdowns inside navbar.
+				<a href="#basics/navbar.tabbed" class="help-more">More info</a>
+			</li>
+
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				New classes for navbar user dropdowns:
+				<code>.dropdown-content</code> &
+				<code>.dropdown-footer</code>
+				which allows addings scrollbars to <code>.dropdown-content</code>.
+				<br />
+				<a href="#basics/navbar.dropdown-content" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				New white button styles.
+				<a href="#elements.button.white" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				ASP.net friendly checkboxes and radio buttons.
+				<br />
+				You need to build your own custom CSS via the builder and choose 
+				<a href="#custom/checkbox.notes" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Add data attribute <code>data-position='auto'</code> to dropdown elements
+				so they become a <b>dropup</b> when appropriate.
+				<a href="#elements.dropdown.options" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				New <code>.ace-icon</code>(changeable) & <code>.menu-icon</code>
+				classes which help with switching between different font icon libraries.
+				<a href="#changes.fontawesome" class="help-more">More info</a>
+			</li>
+
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				File input <b>whitelist</b> & <b>blacklist</b> options and other fixes & enchancements.
+				<a href="#custom/file-input" class="help-more">More info</a>
+			</li>
+
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Custom color picker enhancements.
+				<a href="#custom/colorpicker" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				Light and blurred background for login page.
+				<br />
+				<a href="#pages/login" class="help-more">More info</a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i> 
+				Some browser fixes. Now compatible with almost all desktop and mobile browsers.
+			</li>
+
+		</ul>
+	</div>
+	
+	<h3 class="info-title  smaller">2. Changes to Ace</h3>
+	  <div class="info-section">
+	  <ul class="list-unstyled info-list">
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			You should now add <code>.ace-icon</code> class name to (almost) all icons 
+			but you can rename or remove it.
+			<br />
+			For more info and the reason for this,
+			see <a href="#changes.fontawesome" class="help-more">Updating Fontawesome</a> section.
+		</li>
+
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			Sidebar icons now have a <code>.menu-icon</code> class name.
+			<a class="help-more" href="#basics/sidebar.layout.item">More info</a>
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			Default mobile view sidebar should have <code>.responsive</code> class name now.
+			<br />
+			<a href="#basics/sidebar.mobile" class="help-more">More info</a>
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			Default mobile menu toggle button has been moved to <code>.navbar</code>
+			but you can still use old style toggle button:
+			<div class="space-4"></div>
+			<div>
+				<span class="thumbnail inline">
+					<img src="images/old-toggle.png" />
+				</span>
+				<span class="middle inline">
+					<i class="fa fa-long-arrow-left blue"></i>
+					<i class="fa fa-long-arrow-right blue"></i>
+				</span>
+				<span class="thumbnail inline  no-margin-bottom">
+					<img src="images/new-toggle.png" />
+				</span>
+			</div>
+			<br />
+			If you want to use old style toggle button, note that the <code>.menu-text</code> element inside it has been renamed to <code>.toggler-text</code>
+			<br />
+			For more info plese see <a href="#basics/sidebar.mobile.toggle" class="help-more">Toggle Buttons</a> section or use the on-page help of demo files.
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			Navbar has a few markup changes. Please see <a href="#basics/navbar" class="help-more">Navbar section</a>.
+		</li>
+
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			For default skin, you should add <code>.no-skin</code> class name to body element now.
+			<br />
+			For more info see <a href="#settings.skins" class="help-more">Skins</a> section.
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i>
+			<code>label</code> and <code>.lbl</code> elements had <code>vertical-align:middle</code>
+			CSS rule which is removed now.
+			<br />
+			You should add <code>.middle</code> class to those elements that are out of place now.
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			<code>.sidebar-collapse</code> element is now <code>.sidebar-toggle .sidebar-collapse</code>.
+			<br />
+			This is because, there is now <code>.sidebar-toggle .sidebar-expand</code> for 2nd mobile menu style.
+			<br />
+			<a href="#basics/sidebar.layout.minimize" class="help-more">More info</a>
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			If you are using settings box it should now be put right after
+			<code>.page-content</code> element's opening tag.
+			<br />
+			It also has a slightly different HTML markup.
+			<a href="#settings.box" class="help-more">More info</a>
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			No need for <code>.main-container-inner</code> element any more.
+			<br />
+			<a href="#basics/layout" class="help-more">More info</a>
+		</li>
+		
+		<li>
+			Treeview element had two special icons <code>.icon-plus</code> and <code>.icon-minus</code>
+			which have been renamed to <code>.tree-plus</code> and <code>.tree-minus</code>
+			<br />
+			<a href="#plugins/fuleux.treeview" class="help-more">More info</a>
+		</li>
+		
+		<li>
+			Widget box title should now have <code>.widget-title</code> class and also widget color options
+			are now applied to the box, not header.
+			<br />
+			For example <code>.widget-header.header-color-blue</code> becomes
+			<code>.widget-box.widget-color-blue</code>
+			<br />
+			<a href="#custom/widget-box" class="help-more">More info</a>
+		</li>
+		
+		<li>
+			Login page links such as "forgot password", etc should now have a
+			<code>data-target</code> attribute.
+			<br />
+			<a href="#pages/login" class="help-more">More info</a>
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			<b>ace-ie.css</b> or <b>ace-ie.min.css</b>
+			was included only for <i>IE 8</i> and below. Now it should be included for <i>IE 9</i> as well, thus:
+			<div class="space-4"></div>
+<pre class="light-green">
+&lt;!--[if lte IE <span class="light-red bolder">9</span>&gt;
+&lt;link rel="stylesheet" href="<span class="purple bolder">path/to/assets/<span class="light-blue">ace-ie.min.css</span></span>" /&gt;
+&lt;![endif]--&gt;
+</pre>
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			When building CSS files using the in-browser builder tool, you may be notified that output CSS file is large for IE9 and below.
+			<br />
+			In that case, make sure to include the extra CSS file <code>ace-part2.css</code> using the provided instructions.
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i>
+			Version number has been removed from jQuery file name for easier updates.
+			Therefore:
+			<br />
+			<code>jquery.2.1.9.min.js</code> becomes <code>jquery.min.js</code>
+			 <br />
+			<code>jquery-1.x.min.js</code> becomes <code>jquery1x.min.js</code> (which is used for IE9 and below)
+			 <br />
+			 Same applies to jQuery UI:
+			 <br />
+			<code>jquery-ui.min.js</code>
+			 <br />
+			<code>jquery-ui.custom.min.js</code>
+			 <br />
+			<code>jquery-ui.min.css</code>
+			 <br />
+			<code>jquery-ui.custom.min.css</code>
+		</li>
+
+		<li>
+			<i class="ace-icon fa fa-check"></i> 
+			If you have used custom mobile view spacing element that add some space only in specific device widths,
+			the naming has changed a bit.
+			<br />
+			For example <code>.vspace-xs-16</code> has been changed to <code>.vspace-16-xs</code>.
+			<br />
+			This helps reduce number of CSS selectors.	
+		</li>
+		
+		<li>
+			<i class="ace-icon fa fa-check"></i>
+			If you've used Mustache templates, some files and data have been renamed:
+			<ol>
+				<li><code>sidenav_navList</code> <i class="fa fa-double-angle-right"></i> <code>sidebar_items</code></li>
+				<li><code>topbar*</code> <i class="fa fa-double-angle-right"></i> <code>navbar*</code></li>
+				<li><code>sidenav*</code> <i class="fa fa-double-angle-right"></i> <code>sidebar*</code></li>
+			</ol>
+		</li>
+	   </ul>
+	   </div><!-- /.info-section -->
+		   
+		
+		<h3 class="info-title smaller">3. Changes to Bootstrap</h3>
+		 <div class="info-section">
+			<ul class="list-unstyled info-list">
+				<li>
+					<i class="ace-icon fa fa-warning red"></i> 
+					The included Bootstrap CSS file has been modified and is slightly different from original Bootstrap files.
+					<br />
+					You can still use original Bootstrap files but you should re-compile Ace LESS files with new variables.
+					<br />
+					See <a  class="help-more" href="#files/css">CSS/LESS files</a> for more info on this.
+				</li>
+				
+				<li>
+					<i class="ace-icon fa fa-check"></i> 
+					There is not much to about Bootstrap when updating from <b>v3.0</b> to <b>v3.1</b>
+					<br />
+					You can read more about it here:<br />
+					<span class="text-info">http://blog.getbootstrap.com/2014/01/30/bootstrap-3-1-0-released/</span>
+					or
+					<span class="text-info">https://github.com/twbs/bootstrap/issues/11734</span>
+				</li>
+				
+				<li>
+					<i class="ace-icon fa fa-check"></i> 
+					With dropdown menus, use <code>.dropdown-menu-right</code> instead of <code>.pull-right</code>.
+					This includes <u class="dotted">navbar's user info dropdowns</u>.
+				</li>
+			</ul>
+	   </div>
+
+
+		<h3 class="info-title smaller">4. Third Party Changes</h3>
+		<div class="info-section">
+			<ul class="list-unstyled info-list">
+				<li>
+					<i class="ace-icon fa fa-check"></i>
+					If you are using Colorbox(slideshow) plugin, the latest version requires
+					<code>rel</code> parameter to work properly, for example <code>rel: 'colorbox'</code>.
+					<a class="help-more" href="#plugins/misc.colorbox">More info</a>
+				</li>
+
+				<li>
+					<i class="ace-icon fa fa-check"></i>
+					Latest inline editable plugin doesn't come with datepicker option.
+					<br />
+					I added a custom addon for it.
+					<a class="help-more" href="#custom/inline-editable.date"><b>More info</b></a>
+				</li>
+				
+				<li>
+					<i class="ace-icon fa fa-check"></i>
+					Easy pie chart plugin's file has been renamed to <code>easypiechart.js</code>.
+					It was <code>easy-pie-chart.js</code>.
+					<br />
+					Also Android's default browser has a problem with latest version of easy pie chart, not rendering properly.
+					<br />
+					<span class="text-info">https://github.com/rendro/easy-pie-chart/issues/81</span>
+					<br />
+					You can use an older version of the plugin <code>jquery.easy-pie-chart-older.js</code>
+					and the problem does not exist.
+				</li>
+				
+				<li>
+					I have also changed/customized a few things with some plugins including:
+					<ol>
+						<li><code>nextIcon</code> and <code>prevIcon</code> options for daterangepicker plugin</li>
+						<li>Added <code>function.bind</code> for IE in html5shiv (used by easypiechart)</li>
+						<li>Added bootboxes to markdown editor</li>
+						
+						<li>And modified/customized a few things with FuelUX plugins</li>
+					</ol>
+				</li>
+			</ul>
+	   </div>
+	   
+
+  </div><!-- /.help-content -->
+
+
+  <div class="hr hr-double hr32"></div>
+  <h2 class="blue lighter" data-id="#changes.v4">
+	Ace v1.1.3 to v1.2.0
+  </h2>
+  <div class="space-4"></div>
+ 
+  <div class="help-content">
+	<h3 class="info-title smaller">1. Updating to Bootstrap 3</h3>
+	  <div class="info-section">
+		<ul class="list-unstyled  info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				 The major change is upgrading your application to Bootstrap 3.
+				 <br />
+				 So you may want to take a look at the following guide for migrating to BS3:
+				 <br />
+				 <a href="http://bootply.com/bootstrap-3-migration-guide">http://bootply.com/bootstrap-3-migration-guide</a>
+				 <br />
+				 or Bootstrap's documentation:
+				 <br />
+				 <a href="http://getbootstrap.com/getting-started">http://getbootstrap.com/getting-started</a>
+			</li>
+			<li>
+				Here are a few quick tips:
+				<div class="space-4"></div>
+				<ul class="list-unstyled info-list">
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Use <code>.row</code> instead of <code>.row-fluid</code>
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Use
+						<code>.col-xs-*</code>
+						<code>.col-sm-*</code>
+						<code>.col-md-*</code>
+						<code>.col-lg-*</code>
+						instead of
+						<code>.span*</code>
+						
+						<div class="space-2"></div>
+						<div class="alert alert-danger">
+							<i class="ace-icon fa fa-warning"></i>
+							With Bootstrap 2.x it was alright to randomly have <code>.row-fluid</code> elements
+							without <code>.span*</code> children.
+							<br />
+							But with Bootstrap 3, you should remove those unused <code>.row</code> (<small>previously</small> <code>.row-fluid</code>)
+							elements that don't need/contain <code>.col-*-*</code> (<small>previously</small> <code>.span*</code>)
+							inside them and use <code>.clearfix</code> class if it has floating children or use no class at all.
+						</div>
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Use <code>.btn-xs</code> <code>.btn-sm</code> <code>.btn-lg</code> instead of 
+							<code>.btn-mini</code> <code>.btn-small</code> <code>.btn-large</code>
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Use <code>.well-sm</code> <code>.well-lg</code> instead of 
+							<code>.well-small</code> <code>.well-large</code>
+						
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Use <code>.input-group</code> instead of 
+							<code>.input-append</code> and <code>.input-prepend</code>
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Update Bootstrap's modal dialog HTML code:
+						<br />
+						Now it needs <code>.modal-dialog</code> <code>.modal-content</code> classes
+						and the <code>.modal</code> doesn't need <code>.hide</code> class.
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Bootstrap event names have been namespaced, so for example instead of
+						<code>$('#myModal').on('shown' , ...)</code> we now have <code>$('#myModal').on('shown.bs.modal' , ...)</code>
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						No need for <b>bootstrap-responsive.css</b> or <b>ace-responsive.css</b> now.
+						<br />
+						They have been integrated with main CSS files.
+					</li>
+
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						No need for
+						<code>&lt;span class="divider"&gt;&lt;i class="arrow-icon"&gt;&lt;/i&gt;&lt;/span&gt;</code>
+						as breadcrumbs divider.
+					</li>
+
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Images were responsive by default, i.e. they were limited to their container's size.
+						Now you should use <code>.img-responsive</code> class.
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-check"></i>
+						Use <code>.dropdown-header</code> instead of <code>.nav-header</code>.
+						This applies to user dropdown menus inside navbar.
+					</li>
+					
+					<li>
+						<i class="ace-icon fa fa-hand-o-right blue"></i>
+						Default typeahead plugin in Bootstrap 2 has been remove in BS3. <br />
+						I've included that in Ace's Javascript file.<br />
+						It is used in search box and also <b>Tag Input</b> plugin.
+						<br />
+						If you don't need it, you can build a custom Javascript without it.
+					</li>
+					
+					<li>
+						<div class="alert alert-danger">
+							<i class="ace-icon fa fa-warning"></i>
+						  Bootstrap 3 is now setting the CSS rule <code>box-sizing:border-box</code> on all HTML elements.
+						  <br />
+						  It means that if you had custom elements with specific dimensions, paddings and borders that relied on default browser value of
+						  <code>box-sizing:contet-box</code>
+						  you may now want to recalculate those values.
+						  <br />
+						  Also many third party plugins rely on the default browser value <b>content-box</b>.
+						  <br />
+						  Some of them are reset in <code>assets/css/less/bs3-reset.less</code>
+						  <br />
+						  See this for more info:
+						  <span class="text-primary">http://getbootstrap.com/getting-started/#third-box-sizing</span>
+						</div>
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</div><!-- /.info-section -->
+	
+	
+     <h3 class="info-title smaller">2. Changes to Ace</h3>
+	  <div class="info-section">
+		<ul class="list-unstyled  info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				Navbar structure and classes are now slightly different. Please see:
+				<code data-open-file="html" class="open-file">mustache/app/views/layouts/partials/_shared/navbar.mustache</code>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				Document structure and classes are now slightly different.
+				Please see <code data-open-file="html" class="open-file">mustache/app/views/layouts/default.mustache</code>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				Use <code>data-icon-show</code> <code>data-icon-hide</code> attributes inside <code>.accordion-toggle</code> elements
+				to specify icons used when toggling panels.
+				<br />
+				<a class="help-more" href="#elements.accordion.icon"><b>More info</b></a>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-hand-o-right blue"></i>
+				Some changes should be made to form elements inside <code>.form-horizontal</code>.
+				<br />
+				An example could be like this:
+<pre data-language="html">
+&lt;div class="form-group"&gt;
+  &lt;label for="id-username" class="col-sm-3 control-label no-padding-right"&gt;
+    Text Field
+  &lt;/label&gt;
+  &lt;div class="col-sm-9"&gt;
+    &lt;input type="text" class="col-xs-10 col-sm-5" placeholder="Username" id="id-username"&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-hand-o-right blue"></i>
+				The wizard steps container doesn't need <code>.hide</code> class
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-hand-o-right blue"></i>
+				Gallery tags should be wrapped inside <code>.label-holder</code>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-hand-o-right blue"></i>
+				Use <code>.dropdown-only-icon</code>
+				instead of
+				<code>.dropdown-icon-only</code>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-hand-o-right blue"></i>
+				Use <code>.vspace-*-xs</code>
+				<code>.vspace-*-sm</code>
+				<code>.vspace-*-md</code>
+				<code>.vspace-*-lg</code>
+					instead of <code>.vspace-*</code>
+				for spacing that is visible only on specific sizes.
+			</li>
+
+			<li>
+				<i class="ace-icon fa fa-hand-o-right blue"></i>
+				RTL styles has now been separated into <b>ace-rtl.css</b> file.
+				<br />
+				You can add or remove it as needed.
+			</li>
+
+		</ul>
+	</div><!-- /.info-section -->
+  </div><!-- /.help-content -->
+
+
+   <div class="hr hr-double hr32"></div>
+   <h2 class="blue lighter" data-id="#changes.v3">
+	Ace v1.1.2 to v1.1.3
+   </h2>
+    <div class="space-4"></div>
+
+    <div class="help-content">
+	  <h3 class="info-title smaller">Changes to Ace</h3>
+	  <div class="info-section">
+		<ul class="list-unstyled  info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				You should now add <code>.ace</code> class name to checkbox and radio buttons to style them.
+				<br />
+				Previously, browser checkboxes and radio buttons were hidden by default
+				and you needed to insert an <code>.lbl</code> element after them to be displayed correctly.
+			   <br />
+			   This caused some issues with environments or libraries that created checkboxes
+			   automatically or differently
+			   and wasn't easy to put <code>.lbl</code> after them.
+			   <br />
+			   So now, default checkboxes are shown without change
+			   and you can style them by adding <code>.ace</code> class
+			   to checkboxes and inserting an <code>.lbl</code> element after them.
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				To have sidebar fixed by default you now should add
+				<code>.sidebar-fixed</code> class to <code>.sidebar</code> element
+				and to fix breadcrumbs you should add <code>.breadcrumbs-fixed</code>
+				class to <code>.breadcrumbs</code> element.
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				You should now use <code>assets/js/ace-extra.js</code> inside <code>head</code> element
+				to dynamically enable/save/retrieve some user settings using Javascript, such as
+				fixing navbar/sidebar/breadcrumbs and sidebar collapse/expand.
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				The <code>#sidebar-collapse</code> element's icon has two attributes <code>data-icon1</code> and 
+				<code>data-icon2</code> which determine the button's icon in expanded/collapsed state.
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				<code>#ace-settings-header</code> has been changed to <code>#ace-settings-navbar</code>
+				(i.e. the checkbox element inside settings box that fixes/unfixes navbar)
+			</li>
+		</ul>
+	</div><!-- /.info-section -->
+	
+
+
+	  <h3 class="info-title  smaller">Third Party Changes</h3>
+	  <div class="info-section">
+		<ul class="list-unstyled  info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				Chosen plugin now uses <b>chosen-</b> prefix rather than <b>chzn-</b> for its classes.
+				<br />
+				If you have defined custom CSS rules or used <b>chzn-*</b> selectors inside your scripts, you may need to modify them accordingly.
+			</li>
+		</ul>
+	  </div><!-- /.info-section -->
+
+  </div><!-- /.help-content -->
+
+    
+  
+  <div class="hr hr-double hr32"></div>
+   <h2 class="blue lighter" data-id="#changes.v2">
+	Ace v1.1.2
+   </h2>
+    <div class="space-4"></div>
+    <div class="help-content">
+		<h3 class="info-title smaller">Changes to Ace</h3>
+		<div class="info-section">
+		 <ul class="list-unstyled info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				CSS "ID"s have been replaced with classes.
+				  <p>
+				  So for example in CSS files where we had:
+				  <br />
+				  <code>
+				  #main-content {
+				   ...
+				  }
+				  </code>
+				  </p>
+				  <p>
+				  It has been changed to:
+				   <br />
+				  <code>
+				  .main-content {
+				   ...
+				  }
+				  </code>
+				  <p>
+				  The element in HTML code still keeps the ID attribute, so previous Javascript code should work as expected.
+				  </p>
+<pre data-language="html">
+&lt;div class="main-container" id="main-container"&gt;
+   ...
+&lt;/div&gt;
+
+...
+
+&lt;a class="menu-toggler" id="menu-toggler"&gt;
+   &lt;span class="toggler-text"&gt;&lt;/span&gt;
+&lt;/a&gt;
+				</pre>
+					Basically you just need to add a class with the same ID value to HTML elements.
+				The specific changes are:
+				  <ul>
+					<li><code>#user_info</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.user-info</code> (Topright user menu)</li>
+					<li><code>#user_menu</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.user-menu</code></li>
+					
+					<li class="hr hr-8 dotted"></li>
+
+					<li><code>#menu-toggler</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.menu-toggler</code></li>
+					<li><code>#sidebar</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.sidebar</code></li>
+					<li><code>#sidebar-shortcuts</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.sidebar-shortcuts</code></li>
+					<li><code>#sidebar-shortcuts-large</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.sidebar-shortcuts-large</code></li>
+					<li><code>#sidebar-shortcuts-mini</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.sidebar-shortcuts-mini</code></li>
+					<li><code>#sidebar-collapse</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.sidebar-collapse</code></li>
+					
+					<li class="hr hr-8 dotted"></li>
+					
+					<li><code>#main-container</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.main-container</code></li>
+					<li><code>#main-content</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.main-content</code></li>
+					<li><code>#page-content</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.page-content</code></li>
+					
+					<li class="hr hr-8 dotted"></li>
+					
+					<li><code>#breadcrumbs</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.breadcrumbs</code></li>
+					<li><code>#nav-search</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.nav-search</code></li>
+					<li><code>#nav-search-input</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.nav-search-input</code></li>
+					<li><code>#nav-search-icon</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.nav-search-icon</code></li>
+
+					<li class="hr hr-8 dotted"></li>
+
+					<li><code>#ace-settings-container</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.ace-settings-container</code></li>
+					<li><code>#ace-settings-btn</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.ace-settings-btn</code></li>
+					<li><code>#ace-settings-box</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.ace-settings-box</code></li>
+					<li><code>#btn-scroll-up</code> <i class="ace-icon fa fa-hand-o-right"></i> <code>.btn-scroll-up</code></li>
+				   </ul>  
+			</li>
+			
+			<li>
+			   <i class="ace-icon fa fa-check"></i>
+			   The text on first level links of side navigation which was <code>SPAN</code> element, should now have <code>.menu-text</code> class:
+<pre data-language="html">
+&lt;li&gt;
+  &lt;a href="index.html"&gt;
+    &lt;i class="ace-icon fa fa-tachometer"&gt;&lt;/i&gt;
+    &lt;span class="menu-text"&gt;Dashboard&lt;/span&gt;
+  &lt;/a&gt;
+&lt;/li&gt;</pre>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+			   Similar things applies to <code>#menu-toggler</code> element.
+			   <br />
+			   You should add <code>.toggler-text</code> class name to its <code>SPAN</code> child:
+<pre data-language="html">
+&lt;a href="#" class="menu-toggler" id="menu-toggler"&gt;
+   &lt;span class="toggler-text"&gt;&lt;/span&gt;
+&lt;/li&gt;</pre>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+			  The default size of icons inside buttons have been removed.
+			  <br />
+			  You may specify icon sizes using <code>.bigger-110</code> ... <code>.bigger-300</code> as described later.
+<pre data-language="html">
+&lt;a href="#" class="btn btn-app btn-primary"&gt;
+   &lt;i class="ace-icon fa fa-envelope bigger-200"&gt;&lt;/i&gt;
+   Email
+&lt;/li&gt;</pre>
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+			  Add <code>.home-icon</code> to the first breadcrumbs icon (the one indicating homepage).
+			</li>
+			
+		</ul>
+	  </div><!-- /.info-section -->
+  </div><!-- /.help-content -->
+
+
+
+  <div class="hr hr-double hr32"></div>
+  <h2 class="blue lighter">FontAwesome & Icons</h2>
+ <div class="space-4"></div>
+ 
+  <div class="help-content">
+	<h3 class="info-title smaller" data-id="#changes.fontawesome">Updating Fontawesome 3.x to 4.x</h3>
+	<div class="info-section">
+		<ul class="list-unstyled info-list">
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				Because there are multiple Font icon libraries which you can use and each one has a different naming convention,
+				I added a custom icon class name to be used with all fonts without the need to change CSS or JS code.
+				<div class="space-6"></div>
+				I have added <code>.ace-icon</code> class to be used on all icons except for those that don't any special styling.
+				<br />
+				Also <code>.menu-icon</code> should be used for sidebar icons.
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				You can choose a different name other than <code>.ace-icon</code> by modifying 
+				<code>@icon</code> variable inside <code>assets/css/less/variables.less</code>
+				and re-compiling LESS files.
+				<br />
+				Also inside:
+				<br />
+				<code>assets/js/ace.min.js</code>
+				<br />
+				or <code>assets/js/uncompressed/ace.js</code>
+				<br />
+				or
+				<code>assets/js/ace/ace.js</code>,
+				<div class="space-4"></div>
+				and
+				<div class="space-4"></div>
+				<code>assets/js/ace-extra.min.js</code>,
+				<br />
+				or
+				<code>assets/js/uncompressed/ace-extra.js</code>
+				<br />
+				
+				you should change <code>ace.vars['icon']</code> and <code>ace.vars['.icon']</code>
+				to new values.
+			</li>
+			
+			<li>
+				<i class="ace-icon fa fa-check"></i>
+				I have included a Javascript file which helps you to update all your files to use new icon names.
+				<br />
+				You can find it here
+				<code>build/icon.js</code>
+				and use it with Node.js like this:
+				<code>node icon.js --path=".../html/myfile.html"</code>
+				or
+				<code>node icon.js --path=".../mydir/"</code>
+				<br />
+				Options include:
+				<ol>
+					<li>
+						<b>path</b>: Path to the folder or file you want to update.
+					</li>
+					<li>
+						<b>ext</b>: if specified only this extensions will be updated.
+					</li>
+				</ol>
+				Example:
+				<br />
+				<code>node icon.js --path="path/to/file-or-folder"</code>
+				<br />
+				<code>node icon.js --path="path/to/file-or-folder" --ext="html|php|js"</code>
+			</li>
+			
+			<li>
+				<div class="alert alert-danger">
+					If you want to use the <b>icon.js</b> script to update icon names,
+					make sure you have a copy of your files first.
+					<br />
+					Also if you want to use another name other than <code>.ace-icon</code> you should modify
+					<code>var ace_icon</code> variable inside the script.
+				</div>
+			</li>
+		</ul>
+	</div><!-- /.info-section -->
+  </div><!-- /.help-content -->
+
+
+  
+</section>

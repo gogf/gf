@@ -1,0 +1,891 @@
+<section>
+	<h1 class="blue" data-id="#basics/sidebar"><i class="ace-icon fa fa-desktop grey"></i> Sidebar</h1>
+
+	<div class="hr hr-double hr32"></div>
+	
+	<!-- #section:basics/sidebar -->
+	<h2 class="blue lighter help-title" data-id="#basics/sidebar.layout">
+		Sidebar Basics
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:basics/sidebar.layout -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Layout</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Default HTML layout used for sidebar is:
+				<div>
+				 <span class="thumbnail inline">
+					<img src="images/sidebar.png" />
+				 </span>
+				</div>
+				<ol>
+					<li>
+						<b>shortcut buttons</b>: optional
+					</li>
+					<li>
+						<b>.nav-list</b>: contains sidebar items
+					</li>
+					<li>
+						<b>expand/collapse button</b>: optional
+					</li>
+				</ol>
+				
+				<div class="space-4"></div>
+<pre data-language="html">
+<div class="sidebar responsive" id="sidebar">
+ <div class="sidebar-shortcuts" id="sidebar-shortcuts">
+   ...
+ </div>
+ 
+ <ul class="nav nav-list">
+   ...
+ </ul>
+ 
+ <div class="sidebar-toggle sidebar-collapse">
+   ...
+ </div>
+</div><!-- /.sidebar -->
+</pre>
+				Please note that for most Javascript functions to perform without problem,
+				you should specify <b>id</b> attribute of elements, for example, sidebar element should have
+				<code>#sidebar</code> id attribute.
+			</li>
+
+			<li>
+				Starting with the following file you can find more details:
+				<br />
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>sidebar.mustache</code>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+
+		<h3 class="info-title smaller" data-id="#basics/sidebar.layout.item">2. Menu item</h3>
+		<!-- #section:basics/sidebar.layout.item -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				First level menu item has the following markup:
+				<pre data-language="html">
+<li>
+  <a href="#">
+    <i class="menu-icon fa fa-leaf"></i>
+    <span class="menu-text">
+      Item text
+    </span>
+    <b class="arrow fa fa-angle-down"></b>
+    <!-- arrow down icon if there's a submenu -->
+  </a>
+ 
+  <b class="arrow"></b>
+  <!-- optional arrow for minimized menu & hover submenu -->
+
+  <ul class="submenu">
+   ....
+  </ul>
+</li>
+				</pre>
+
+				<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/sidebar/</span>item.mustache</code>
+			</li>
+			
+			<li>
+				Icons should have <code>.menu-icon</code> class.
+				<br />
+				First level menu item's text should be inside <code>.menu-text</code> element,
+				but this isn't needed for deeper levels:
+				<pre data-language="html">
+<!-- first level item -->
+<li>
+  <a href="#">
+    <i class="menu-icon fa fa-caret-right"></i>
+    <span class="menu-text">level 2 item text</span>
+    <b class="arrow fa fa-angle-down"></b>
+  </a>
+</li>
+
+<!-- second level item -->
+<li>
+  <a href="#">
+    <i class="menu-icon fa fa-caret-right"></i>
+    level 2 item text
+    <b class="arrow fa fa-angle-down"></b>
+  </a>
+</li>
+				</pre>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/sidebar.layout.item -->
+		
+		
+		<h3 class="info-title smaller" data-id="#basics/sidebar.layout.shortcuts">3. Shortcut Buttons</h3>
+		<!-- #section:basics/sidebar.layout.shortcuts -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				It consists of <code>.sidebar-shortcuts-large</code> and
+				<code>.sidebar-shortcuts-mini</code> which is displayed when sidebar is minimized (collapsed)
+			</li>
+			<li>
+<pre data-language="html">
+<div class="sidebar-shortcuts" id="sidebar-shortcuts">
+
+  <div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
+    <button class="btn btn-success"><i class="ace-icon fa fa-signal"></i></button>
+    <button class="btn btn-info"><i class="ace-icon fa fa-pencil"></i></button>
+    <button class="btn btn-warning"><i class="ace-icon fa fa-users"></i></button>
+    <button class="btn btn-danger"><i class="ace-icon fa fa-cogs"></i></button>
+  </div>
+
+  <div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini">
+    <span class="btn btn-success"></span>
+    <span class="btn btn-info"></span>
+    <span class="btn btn-warning"></span>
+    <span class="btn btn-danger"></span>
+  </div>
+
+</div>
+</pre>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/sidebar.layout.shortcuts -->
+		
+		
+		<h3 class="info-title smaller" data-id="#basics/sidebar.layout.minimize">4. Minimize Button</h3>
+		<!-- #section:basics/sidebar.layout.minimize -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Sidebar collapse/expand button is used to minimize/restore sidebar.
+				<br />
+<pre data-language="html">
+  <div class="sidebar responsive" id="sidebar">
+  .
+  .
+  .
+  <div id="sidebar-collapse" class="sidebar-toggle sidebar-collapse">
+     <i class="ace-icon fa fa-angle-double-left" data-icon1="ace-icon fa fa-angle-double-left" data-icon2="ace-icon fa fa-angle-double-right"></i>
+  </div>
+ </div><!-- /.sidebar -->
+</pre>
+			</li>
+			
+			<li>
+				There is also another <code>.sidebar-expand</code> button for sidebar in <a href="#basics/sidebar.mobile.style2" class="help-more">2nd mobile view style</a>.
+				<br />
+				In that case, sidebar is automatically minimized and the button is used to expand it:
+<pre data-language="html">
+ <div class="sidebar responsive-min" id="sidebar">
+   .
+   .
+   .
+   <div id="sidebar-expand" class="sidebar-toggle sidebar-expand">
+     <i class="ace-icon fa fa-angle-double-right" data-icon1="ace-icon fa fa-angle-double-right" data-icon2="ace-icon fa fa-angle-double-left"></i>
+   </div>
+ </div><!-- /.sidebar -->
+</pre>
+			</li>
+		
+			<li>
+				You can use <code>data-icon1</code>
+				and <code>data-icon2</code> attributes to specify icons to use in collapsed/expanded state
+			</li>
+			
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/sidebar.layout.minimize -->
+
+		
+		<h3 class="info-title smaller" data-id="#basics/sidebar.layout.badge">5. Other notes</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<!-- #section:basics/sidebar.layout.badge -->
+				To add a badge or label inside menu items, you should put it inside <code>.menu-text</code> element:
+<pre data-language="html">
+ <span class="menu-text">
+   Menu Text
+   <span class="badge badge-info">4</span>
+ </span>
+</pre>
+
+You can also include a tooltip:
+<pre data-language="html">
+ <span class="menu-text">
+   Menu Text
+   <span class="label label-transparent tooltip-error" title="some title for tooltip!">
+     <i class="red ace-icon fa fa-exclamation-triangle"></i>
+   </span>
+ </span>
+</pre>
+				<!-- /section:basics/sidebar.layout.badge -->
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+		
+		<h3 class="info-title smaller">6. Sidebar options</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				See <a href="#basics/sidebar.options" class="help-more">sidebar options section</a> for more info.
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+	</div><!-- /.help-content -->
+	<!-- /section:basics/sidebar.layout -->
+
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="blue lighter help-title" data-id="#basics/sidebar.mobile">
+		Responsive Sidebar
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:basics/sidebar.mobile -->
+	<div class="help-content">
+		<h3 class="info-title smaller">Mobiles Views</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				There are 3 styles of responsive (mobile view) sidebar when screen size is below <b>992px</b>.
+				<br />
+				<i class="fa fa-hand-o-right"></i> You can change this value by changing
+				Bootstrap <code>@grid-float-breakpoint-max</code> variable
+				and	recompiling LESS files.
+				<br />
+				See <a href="#files/css" class="help-more">CSS section</a>
+			</li>
+			</ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller" data-id="#basics/sidebar.mobile.style1">1. Default mobile menu style</h3>
+		<!-- #section:basics/sidebar.mobile.style1 -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<h4 class="grey lighter" >Default mobile menu style</h4>
+				<div>
+				  <span class="thumbnail inline">
+					<img src="images/sidebar-mobile1.png" />
+				  </span>
+				</div>
+				You should add <code>.responsive</code> class to <code>.sidebar</code> element.
+			</li>
+			
+			<li>
+				You can also add <code>.push_away</code> class to <code>.sidebar</code> to push content when sidebar is shown:
+<pre data-language="html">
+ <div id="sidebar" class="sidebar responsive push_away">
+ </div>
+</pre>
+			</li>
+		  </ul>
+		</div>
+		<!-- /section:basics/sidebar.mobile.style1 -->
+		 
+		 
+		 
+		<h3 class="info-title smaller" data-id="#basics/sidebar.mobile.style2">2. Automatically minimized menu style</h3>
+		<!-- #section:basics/sidebar.mobile.style2 -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<div>
+						  <span class="thumbnail inline">
+							<img src="images/sidebar-mobile2.png" />
+						  </span>
+						</div>
+
+						You should add <code>.responsive-min</code> class to <code>.sidebar</code> element
+						and there should also be an <b>invisible toggle button</b> present, right before sidebar.
+						
+						<br />
+						An additional <code>.sidebar-toggle.sidebar-expand</code> button, expands sidebar in mobile view:
+						(<a href="#basics/sidebar.layout.minimize" class="help-more">More info</a>)
+						<div class="space-4"></div>
+<pre data-language="html">
+<a href="#" class="menu-toggler invisible" id="menu-toggler"></a>
+<div id="sidebar" class="sidebar responsive-min">
+  .
+  .
+  .
+  .
+ <div class="sidebar-toggle sidebar-collapse">
+    ...
+ </div>
+ 
+ <div class="sidebar-toggle sidebar-expand">
+    ...
+ </div>
+</div>
+</pre>
+			</li>
+		  </ul>
+		 </div>
+		 <!-- /section:basics/sidebar.mobile.style2 -->
+
+		 
+		 <h3 class="info-title smaller" data-id="#basics/sidebar.mobile.style3">3. Bootstrap collapse style</h3>
+		<!-- #section:basics/sidebar.mobile.style3 -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<h4 class="grey lighter" data-id="#basics/sidebar.mobile.style3"></h4>
+				<div>
+				  <span class="thumbnail inline">
+					<img src="images/toggle-sidebar-3.png" />
+				  </span>
+				</div>
+
+				For this you should add <code>.collapse.navbar-collapse</code> class
+				to <code>.sidebar</code> element and have the correct <a href="#basics/sidebar.mobile.toggle" class="help-more">toggle buttons</a> inside navbar:
+				<br />
+				<pre data-language="html">
+<div id="sidebar" class="sidebar collapse navbar-collapse">
+</div>
+</pre>
+			</li>
+
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/sidebar.mobile.style3 -->
+	
+	
+	
+	
+		<h3 class="info-title smaller" data-id="#basics/sidebar.mobile.toggle">Toggle Button</h3>
+		<!-- #section:basics/sidebar.mobile.toggle -->
+		<div class="info-section">
+		  <ul class="info-list list-unstyled">
+		  	<li>
+				In default responsive (mobile) style and collapsible responsive style,
+				toggle buttons are used to show and hide sidebar.
+			</li>
+			<li>
+				Buttons can are either before brand text container (<code>.navbar-header</code>) or inside it:
+				<div>
+				 <span class="thumbnail inline">
+					<img src="images/toggle-sidebar-1.png" />
+				 </span>
+				</div>
+<pre data-language="html">
+ <button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler">
+   <span class="sr-only">Toggle sidebar</span>
+   <span class="icon-bar"></span>
+   <span class="icon-bar"></span>
+   <span class="icon-bar"></span>
+ </button>
+
+ <div class="navbar-header pull-left">
+   <!-- toggle button can also be here -->
+   
+   <!-- brand text -->
+   
+   <!-- toggle button can also be here -->
+ </div>
+</pre>
+			</li>
+			
+			<li>
+				If you want to use old style toggle button,
+				you should insert it before <code>.sidebar</code> element:
+				<div>
+				 <span class="thumbnail inline">
+					<img src="images/toggle-sidebar-11.png" />
+				 </span>
+				</div>
+<pre data-language="html">
+ <a href="#" class="menu-toggler" id="menu-toggler">
+   <span class="sr-only">Toggle sidebar</span>
+   <span class="toggler-text"></span>
+ </a>
+ <div class="sidebar responsive" id="sidebar">
+   ...
+ </div>
+</pre>
+				It should have a <code>span.toggler-text</code> inside it and you can change
+				<b>MENU</b> text to something else by modifying
+				<code>@toggler-text</code> variable inside <code>assets/css/less/sidebar/old-toggle-button.less</code>
+				and recompiling <code>ace.less</code>
+			</li>
+			
+			<li>
+				In 2nd mobile menu style, you should add an invisible <code>.menu-toggler</code> element right before <code>.sidebar</code>
+<pre data-language="html">
+ <a class="invisible menu-toggler" id="menu-toggler"></a>
+ <div class="sidebar responsive-min">
+ ...
+ </div>
+</pre>
+			</li>
+			
+			
+			<li>
+				For collapse style sidebar in mobile view (3rd style),
+				you should use <code>data-toggle</code> and <code>data-target</code> attributes:
+				<div>
+				 <span class="thumbnail inline">
+					<img src="images/toggle-sidebar-3.png" />
+				 </span>
+				</div>
+<pre data-language="html">
+&lt;button class="pull-right navbar-toggle collapsed" type="button"
+           data-toggle="collapse" data-target=".sidebar">
+  &lt;span class="sr-only">Toggle sidebar&lt;/span>
+  &lt;span class="icon-bar">&lt;/span>
+  &lt;span class="icon-bar">&lt;/span>
+  &lt;span class="icon-bar">&lt;/span>
+&lt;/button>
+</pre>
+
+<pre data-language="html">
+ <!-- collapse style toggle buttons can be here -->
+ <div class="navbar-header pull-left">
+   <a class="navbar-brand" href="#">
+      <!-- brand text is here -->
+   </a>
+   <!-- collapse style toggle buttons can be here -->
+ </div>
+</pre>
+
+			</li>
+			
+		  </ul>
+		</div>
+		<!-- /section:basics/sidebar.mobile.toggle -->
+	</div>
+	<!-- /section:basics/sidebar.mobile -->
+
+		
+		
+	<div class="hr hr-double hr32"></div>
+	<h2 class="help-title blue lighter" data-id="#basics/sidebar.options">
+		Sidebar Options
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:basics/sidebar.options -->
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#basics/sidebar.horizontal">1. Horizontal Sidebar</h3>
+		<!-- #section:basics/sidebar.horizontal -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+			For horizontal menu you should add <code>.h-sidebar</code> class to <code>.sidebar</code> and <code>.h-navbar</code> to <code>.navbar</code> element:
+<pre data-language="html">
+ <div id="navbar" class="navbar navbar-default h-navbar navbar-collapse">
+ </div>
+ <div id="main-container">
+    <div id="sidebar" class="sidebar h-sidebar collapse navbar-collapse">
+     .
+     .
+     .
+    </div>
+ </div>
+</pre>
+			</li>
+
+			<li>
+				You should also add <code>.hover</code> class to all <b>LI</b> elements, so that submenus are shown on mouse hover:
+<pre data-language="html">
+ <ul class="nav nav-list">
+   <li class="hover">
+     <a href="#">
+       ...
+     </a>
+     <b class="arrow"></b>
+     <ul class="submenu">
+       ...
+     </ul>
+   </li>
+ </ul>
+</pre>
+			</li>
+
+			<li>
+				Horizontal menu is only visible when screen width is above <b>991px</b>.
+				<br />
+				You can choose any of the three possible mobile menu styles for smaller widths.
+			</li>
+			
+			<li>
+				Also, in demo page, when horizontal menu is fixed and you scroll down,
+				it moves up gradually.
+				<br />
+				To enable this, you should include the following code in your page:
+				<br />
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>top-menu.js</code>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/sidebar.horizontal -->
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#basics/sidebar.hover">2. Submenu on Hover</h3>
+		<!-- #section:basics/sidebar.hover -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+			You can have submenus to be displayed on mouse hover instead of click.
+			</li>
+			<li>
+			For that you should add <code>.hover</code> class to each <b>LI</b> element
+			and also add <code>.arrow</code> element before submenus.
+<pre data-language="html">
+ <ul class="nav nav-list">
+   <li class="hover">
+    <a href="#">
+      ...
+    </a>
+    <b class="arrow"></b>
+    <ul class="submenu">
+      ...
+    </ul>
+   </li>
+ </ul>
+</pre>
+			</li>
+			<li>
+				Hover submenus are only available when screen width is above <b>991px</b>.
+				<br />
+				You can change that by modifying <code>@screen-hover-menu</code> variable inside
+				<code>assets/css/less/variables.less</code> and recompile <code>ace.less</code>
+				or use CSS builder tool.
+			</li>			
+			
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/sidebar.hover -->
+		
+
+
+		<h3 class="info-title smaller" data-id="#basics/sidebar.compact">3. Compact Sidebar</h3>
+		<!-- #section:basics/sidebar.compact -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Simply add <code>.compact</code> class to <code>.sidebar</code> element:
+<pre data-language="html">
+ <div class="sidebar responsive compact" id="sidebar">
+ </div>
+</pre>
+			</li>
+			
+			<li>
+				Compact sidebar is only available when screen width is above <b>991px</b>.
+				<br />
+				You can change that by modifying <code>@@screen-compact-menu</code> variable inside
+				<code>assets/css/less/variables.less</code> and recompile <code>ace.less</code>
+				or use CSS builder tool.
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/sidebar.compact -->
+
+
+		<h3 class="info-title smaller" data-id="#basics/sidebar.highlight">4. Highlight Item</h3>
+		<!-- #section:basics/sidebar.highlight -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				An alternative active item highlight.
+				<br />
+				Add <code>.highlight</code> to <b>LI</b> elements:
+<pre data-language="html">
+ <ul class="nav nav-list">
+   <li class="highlight">
+    ...
+   </li>
+ </ul>
+</pre>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		<!-- /section:basics/sidebar.highlight -->
+		
+		
+		<h3 class="info-title smaller">5. Fixed Sidebar</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Adding <code>.sidebar-fixed</code> class to <code>.sidebar</code> element makes it fixed by default:
+<pre data-language="html">
+ <div class="sidebar responsive sidebar-fixed" id="sidebar">
+ </div>
+</pre>
+			</li>
+			<li>
+				For more info please see <a href="#settings.sidebar" class="help-more">sidebar settings</a>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+		
+		<h3 class="info-title smaller">6. Minimized Sidebar</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Adding <code>.menu-min</code> class to <code>.sidebar</code> element
+				makes it minimized by default:
+<pre data-language="html">
+ <div class="sidebar responsive menu-min" id="sidebar">
+ </div>
+</pre>
+			</li>
+			
+			<li>
+				For more info please see <a href="#settings.sidebar" class="help-more">sidebar settings</a>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+	</div><!-- /.help-content -->
+	<!-- /section:basics/sidebar.options -->
+
+
+	
+	<div class="hr hr-double hr32"></div>
+	<h2 class="help-title blue lighter" data-id="#basics/sidebar.mark_active">
+		Sidebar Active Item
+	</h2>
+	<div class="space-4"></div>
+
+	<!-- #section:basics/sidebar.mark_active -->
+	<div class="help-content">
+		<h3 class="info-title smaller">Ajax</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+			<div>
+				<span class="thumbnail inline">
+					<img src="images/active.png" />
+				</span>
+			</div>
+
+			
+				If your page content is updated via ajax and you want to mark a different menu item as active,
+				you can do like this as an example:
+
+<pre data-language="javascript">
+//inside the function when ajax content is loaded
+
+//somehow get a reference to our newly clicked(selected) element's parent "LI"
+var new_active = $(this).parent();
+
+//remove ".active" class from all (previously) ".active" elements
+$('.nav-list li.active').removeClass('active');
+
+//add ".active" class to our newly selected item and all its parent "LI" elements
+new_active.addClass('active').parents('.nav-list li').addClass('active');
+
+//you can also update breadcrumbs:
+var breadcrumb_items = [];
+//$(this) is a reference to our clicked/selected element
+$(this).parents('.nav-list li').each(function() {
+  var link = $(this).find('> a');
+  var text = link.text();
+  var href = link.attr('href');
+  breadcrumb_items.push({'text': text, 'href': href});
+})
+//now we have a breadcrumbs list and can replace breadcrumbs area
+</pre>
+
+			</li>
+			
+			<li>
+				If you are using a client side application framework such as ember.js or angular.js,
+				you may have other approaches that work better in the specific context.
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+		
+		<h3 class="info-title smaller">non-Ajax</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				If you navigate to other pages without ajax, you can have several approaches depending on your application.
+			</li>
+			
+			<li>
+				For example if you have a list of pages retrieved from a data source,
+				you can lookup the item that matches current page and mark it as <b>active</b>.
+				<br />
+				You should also mark its parents as <b>active</b> and <b>open</b>
+			</li>
+			
+			<li>
+				In the following example we have a list of items.
+				<br />
+				We find our current item using its identifier.
+				<br />
+				Then we mark it as active, find its parent, mark the parent as active & open and repeat this action.
+			</li>
+
+			<li>
+Sample PHP code:
+<pre data-language="php">
+//suppose we have a list of pages (associative array or other data structure)
+//$menu_list = ... //retrieved from database
+//or
+ $menu_list = array(
+    'id or name of page 1' => array (
+         'href' => '#link1',
+         'text' => 'item name or text',
+       'parent' => 'parent id or name'
+    )
+    ,
+   'id or name of page 2' => array (
+         'href' => '#link2',
+         'text' => 'item name or text',
+       'parent' => 'parent id or name'
+    )
+    ,
+   'new-user' => array (
+         'href' => 'user/create',
+         'text' => 'Add User',
+       'parent' => 'operations'
+    )
+    ...
+ );
+
+//we somehow know the ID or tag or hash of the current page
+//perhapse from a database lookup or by simply checking its URL
+//for some pointers such as ID, file name, category name, etc ...
+$current_page = 'new-user';
+$breadcrumbs = array();//let's create our breadcrumbs array as well
+
+//make_me should be a reference to current_item not a copy of it
+$mark_me = &$menu_list[$current_page];
+$open = false;
+while(true) {//you can also use a recursive function instead of a loop
+  $mark_me['active'] = true;//mark this as "active"
+  if( $open ) $mark_me['open'] = true;//mark this as "open"
+  
+  $breadcrumbs[] = $mark_me;
+
+  $parent_id = $mark_me['parent'];//see if it has a parent
+  if( $parent_id == null || !isset($menu_list[$parent_id]) ) break;//if not, break
+  
+  $mark_me = &$menu_list[$parent_id];//set item's parent as the new "mark_me" and repeat
+  $open = true;//parent elements should be marked as "open" too
+}
+
+foreach($menu_list as $id => $menu_item) {
+  print('&lt;li class="');
+   if( $menu_item['active'] ) print('active');
+   if( $menu_item['open'] ) print(' open');
+  print('"&gt;');
+  //something like &lt;li class="active open"&gt; will be printed
+  //...
+  //print other parts of menu item
+}
+
+//now we also have a list of breadcrumb items to print later
+</pre>
+
+<hr />
+
+Sample Javascript code (for example in Nodejs):
+<pre data-language="javascript">
+//suppose we have a list of pages (associative array or other data structure)
+//var menu_list = ... //retrieved from database
+//or
+ var menu_list = {
+    'id or name of page 1' : {
+         'href' : '#link1',
+         'text' : 'item name or text',
+       'parent' : 'parent id or name'
+    }
+    ,
+   'id or name of page 2' : {
+         'href' : '#link2',
+         'text' : 'item name or text',
+       'parent' : 'parent id or name'
+    }
+    ,
+   'new-user' : {
+         'href' : 'user/create',
+         'text' : 'Add User',
+       'parent' : 'operations'
+    }
+    ...
+ };
+
+//we somehow know the ID or tag or hash of the current page
+//perhapse from a database lookup or by simply checking its URL
+//for some pointers such as ID, file name, category name, etc ...
+var current_page = 'new-user';
+var breadcrumbs = [];//let's create our breadcrumbs array as well
+
+//make_me should be a reference to current_item not a copy of it
+var mark_me = menu_list[current_page];
+var open = false;
+while(true) {//you can also use a recursive function instead of a loop
+  mark_me['active'] = true;//mark this as "active"
+  if( open ) mark_me['open'] = true;//mark this as "open"
+  
+  breadcrumbs.push(mark_me);
+
+  var parent_id = mark_me['parent'];//see if it has a parent
+  if( parent_id == null || !(parent_id in menu_list) ) break;//if not, break
+  
+  mark_me = menu_list[parent_id];//set item's parent as the new "mark_me" and repeat
+  open = true;//parent elements should be marked as "open" too
+}
+
+var output = '';
+for(var id in menu_list) if(menu_list.hasOwnProperty(id)) {
+  var menu_item = menu_list[id];
+  output += '&lt;li class="';
+   if( menu_item['active'] ) output += 'active';
+   if( menu_item['open'] ) output += ' open';
+  output += '"&gt;';
+  //something like &lt;li class="active open"&gt; will be printed
+  //...
+  //print other parts of menu item
+}
+console.log(output);
+
+//now we also have a list of breadcrumb items to print later
+</pre>
+
+			</li>
+			
+			<li class="hidden">
+			
+			<div class="alert alert-info">
+				In some languages such as PHP, you should make sure you are making changes to the item itself and not a copy of it.
+				<br />
+				For example in this assignment: <code>$mark_me = $menu_list[$current_page]</code>
+				, when you modify <code>$mark_me</code> and for example mark it as active,
+				changes are not reflected in
+				<code>$menu_list[$current_page]</code> and therefore, when printing the <code>$menu_list</code> list,
+				you won't have modified items.
+				<br />
+				For that you should make sure, you are using a reference not a copy:
+				<code>$mark_me = <span class="bolder bigger-150 blue">&amp;</span>$menu_list[$current_page]</code>
+				<br />
+				Now <code>$mark_me</code> is a reference to <code>$menu_list[$current_page]</code>
+				and therefore 
+			</div>
+			
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+	</div><!-- /.help-content -->
+	<!-- /section:basics/sidebar.mark_active -->
+	
+	
+	<!-- /section:basics/sidebar -->	
+</section>

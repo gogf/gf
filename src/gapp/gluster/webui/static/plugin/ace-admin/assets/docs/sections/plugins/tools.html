@@ -1,0 +1,130 @@
+<section>
+	<h1 class="blue" data-id="#plugins/tools"><i class="ace-icon fa fa-desktop grey"></i> Tools</h1>
+
+	<div class="hr hr-double hr32"></div>
+	
+	<!-- #section:plugins/tools -->
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/tools.node-js">Node.js</h3>
+		<!-- #section:plugins/tools.node-js -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more information and installing Node.js please see its page at
+				<a href="http://nodejs.org">nodejs.org</a>
+			</li>
+			
+			<li>
+				It's optional and you don't need to use it.
+				<br />
+				I've used it for compiling LESS files into CSS and
+				Mustache templates into static HTML
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/tools.node-js -->
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/tools.less-js">Less.js</h3>
+		<!-- #section:plugins/tools.less-js -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Less is a CSS pre-processor which is useful for creating and maintating large amounts of CSS code
+			</li>
+			
+			<li>
+				You can find more info about it here <a href="http://lesscss.org/">lesscss.org</a>
+			</li>			
+			
+			<li>
+				Almost all Ace CSS files are generated from compiling LESS files
+			</li>
+			
+			<li>
+				First you need to install less compiler via npm:
+				<code>npm install -g less</code>
+				
+		    </li>
+			
+			<li>
+				To compile LESS files, you can run the following commands:
+				<br />
+				<code>lessc ace.less path/to/ace.css</code>
+				<br />
+				<code>lessc skins/skins.less path/to/ace-skins.css</code>
+				
+				<br />
+				For options such as compressing output, etc, you can use its help by using the following command:
+				<br />
+				<code>lessc --help</code>
+			</li>
+			
+			<li>
+				You can also use the <a href="../build/css.html">in-browser CSS builder tool</a> to build a custom CSS.
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/tools.less-js -->
+		
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/tools.mustache">Mustache Compilers</h3>
+		<!-- #section:plugins/tools.mustache -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Ace's demo pages are mustache templates compiled into HTML
+			</li>
+			
+			<li>
+				For more info about Mustache files please see <a href="#files/mustache" class="help-more">Mustache files</a>
+			</li>
+			
+			<li>
+				PHP Mustache is used during development.
+				<br />
+				And Javascript Mustache compiler is used for final demo output				
+			</li>
+			
+			<li>
+				For more info please see the following links:
+				<br />
+				<a href="http://mustache.github.io/">Mustache</a>
+				<br />
+				<a href="https://github.com/janl/mustache.js/">Mustache.js</a>
+				<br />
+				<a href="http://twitter.github.io/hogan.js/">Hogan.js</a>
+				<br />
+				<a href="https://github.com/bobthecow/mustache.php">PHP Mustache</a>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/tools.mustache -->
+		
+		
+				
+		<h3 class="info-title smaller" data-id="#plugins/tools.uglifyjs">UglifyJS</h3>
+		<!-- #section:plugins/tools.uglifyjs -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				UglifyJS is a popular tool for minifying Javascript files
+			</li>
+			
+			<li>
+				It can also be used inside browser like in the <a href="../build/js.html">Javascript builder tool</a>
+			</li>
+			
+			<li>
+				For more info please see <a href="http://lisperator.net/uglifyjs/">lisperator.net/uglifyjs/</a>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/tools.uglifyjs -->
+
+	
+	<!-- /section:plugins/tools -->
+</section>

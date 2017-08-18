@@ -1,0 +1,184 @@
+<section>
+	<h1 class="blue" data-id="#plugins/jquery">jQuery </h1>
+	
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:plugins/jquery -->
+	<div class="help-content">
+		<h3 class="info-title smaller">jQuery</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				jQuery is required by Bootstrap and most third party plugins
+			</li>
+			
+			<li>
+				Currently latest 2.x version is used. For older IE browsers you should use latest 1.x version,
+				as described in <a href="#files/javascript.order" class="help-more">Javascript files</a> section:
+<pre data-language="html">
+ &lt;!--[if !IE]&gt; --&gt;
+   &lt;script src="path/to/jquery.min.js"&gt;&lt;/script&gt;
+ &lt;!-- &lt;![endif]--&gt;
+ &lt;!--[if lte IE 9]&gt;
+   &lt;script src="path/to/jquery1x.min.js"&gt;&lt;/script&gt;
+ &lt;![endif]--&gt;
+</pre>
+			</li>
+		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller">jQuery UI</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				jQuery UI is also used for slider and drag drop functionality
+			</li>
+			
+			<li>
+				It is also required by some plugins such as FullCalendar and slimScroll
+			</li>
+			
+			<li>
+				A custom built version is included which has only above mentioned basic features.
+				<br />
+				You can use it by including the following files:
+				<br />
+				<code>assets/css/jquery-ui.custom.min.css</code>
+				<br />
+				<code>assets/js/jquery-ui.custom.min.js</code>
+			</li>
+			
+			<li>
+				A full version is also included in case you want to use more features of the library.
+				<br />
+				You can use it by including the following files:
+				<br />
+				<code>assets/css/jquery-ui.min.css</code>
+				<br />
+				<code>assets/js/jquery-ui.min.js</code>
+			</li>
+			
+			<li>
+				You can also build a custom version depending on your needs.
+				<br />
+				Please see
+				<a href="http://jqueryui.com/download/">jQuery UI custom download</a>
+			</li>
+			
+			<li>
+				Please note that jQuery UI tooltip module overrides Bootstrap tooltip.
+				<br />
+				You can avoid this by building a custom jQuery UI without tooltip
+				or including Bootstrap Javascript files after jQuery UI.
+				
+				<div class="space-6"></div>
+				Same thing can happen with jQuery UI spinner and FuelUX spinner.
+			</li>
+			
+			<li>
+				<a href="http://touchpunch.furf.com">jQuery UI Touch Punch</a> is used for enabling touch events.
+				<br />
+				You should include <code>assets/js/jquery.ui.touch-punch.min.js</code>
+			</li>
+		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/jquery.slider">jQuery UI Slider</h3>
+		<!-- #section:plugins/jquery.slider -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For more info about jQuery UI slider, see:
+				<a href="https://api.jqueryui.com/slider/">api.jqueryui.com/slider/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/jquery-ui.custom.min.css</code>
+				<br />
+				<code>assets/js/jquery-ui.custom.min.js</code>
+				<br />
+				You can also include full jQuery UI versions or your own custom download.
+			</li>
+			
+			<li>
+				There are some additional colors and options:
+				<ol>
+					<li><code>.ui-slider-green</code></li>
+					<li><code>.ui-slider-red</code></li>
+					<li><code>.ui-slider-purple</code></li>
+					<li><code>.ui-slider-orange</code></li>
+					<li><code>.ui-slider-dark</code></li>
+					<li><code>.ui-slider-pink</code></li>
+					<li class="space-6"></li>
+					<li><code>.ui-slider-simple</code> for simple slider handle without bars</li>
+					<li><code>.ui-slider-small</code> for smaller handle</li>
+				</ol>
+			</li>
+			
+			<li>
+				A basic example would be like this:
+<pre data-language="html">
+ <span id="myslider" class="ui-slider-simple ui-slider-orange"></span>
+</pre>
+<pre data-language="javascipr">
+$('#myslider').slider({
+   value: 11,
+   range: "min",
+   animate: true
+});
+</pre>
+			</li>
+			
+			<li>
+				For more examples you can also see <b>Form Elements</b> script at:
+				<br />
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>form-elements.js</code>
+				<br />
+				Search for "jQuery UI Slider" inside it
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/jquery.slider -->
+		
+		
+		<h3 class="info-title smaller">jQuery Mobile</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				To add support for <code>tap</code> event on touch devices,
+				a custom built jQuery mobile version is included which has minimal features.
+				<br />
+				To use it you should include 
+				<code>assets/js/jquery.mobile.custom.min.js</code>
+<pre data-language="html">
+<!-- after jquery -->
+&lt;script type="text/javascript"&gt;
+   if('ontouchstart' in document.documentElement) 
+      document.write("&lt;script src='path/to/assets/js/jquery.mobile.custom.min.js'&gt;"+"&lt;"+"/script&gt;");
+&lt;/script&gt;
+</pre>
+
+				This will include it only if touch events are available.
+			</li>
+			
+			<li>
+				You may want to build a custom one depending on your requirements.
+				<br />
+				Please see
+				<a href="http://jquerymobile.com/download-builder/">jQuery Mobile builder</a>
+			</li>
+			
+			<li>
+				If you are using KendoUI or perhaps other libraries,
+				there may be conflicts with touch events which you can avoid by removing jQuery Mobile
+			</li>
+		 </ul>
+		</div>
+	</div>
+	<!-- /section:plugins/jquery -->
+</section>

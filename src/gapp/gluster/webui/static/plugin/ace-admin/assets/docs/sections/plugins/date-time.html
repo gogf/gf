@@ -1,0 +1,218 @@
+<section>
+	<h1 class="blue" data-id="#plugins/date-time"><i class="ace-icon fa fa-clock-o grey"></i> Date & Time</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:plugins/date-time -->
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#plugins/date-time.datepicker">Date picker</h3>
+		<!-- #section:plugins/date-time.datepicker -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootstrap date picker plugin.
+				<br />
+				You can find more info at its page:
+				<a href="http://eternicode.github.io/bootstrap-datepicker/">eternicode.github.io/bootstrap-datepicker/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/datepicker.css</code>
+				<br />
+				<code>assets/js/date-time/bootstrap-datepicker.min.js</code>
+			</li>
+			
+			<li>
+				It is also recommended to use browser's built-in datepicker if available, 
+				which should be better especially on small touch devices:
+<pre data-language="html">
+ <input type="date" name="mydate" id="mydate" />
+</pre>
+<pre data-language="javascript">
+ var mydate = $('#mydate')[0];
+ if(mydate.type !== 'date') {//if browser doesn't support "date" input
+    $(mydate).datepicker({
+      //options
+    })
+ }
+</pre>
+			</li>
+			
+			<li>
+				A basic example would be like this:
+<pre data-language="javascript">
+$('#my-date-picker-input').datepicker({
+   autoclose: true,
+   todayHighlight: true
+})
+</pre>
+			</li>
+			
+			<li>
+				You can also use the plugin as a daterange picker:
+<pre data-language="html">
+<div class="input-daterange input-group">
+  <input type="text" name="start" />
+  -
+  <input type="text" name="end" />
+</div>
+</pre>
+<pre data-language="javascript">
+ $('.input-daterange').datepicker({autoclose:true});
+</pre>
+			</li>
+			
+		 </ul>
+		</div>
+		<!-- /section:plugins/date-time.datepicker -->
+
+
+		<h3 class="info-title smaller" data-id="#plugins/date-time.daterangepicker">Daterange picker</h3>
+		<!-- #section:plugins/date-time.daterangepicker -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootstrap daterange picker plugin which uses <a href="http://momentjs.com/">moment.js</a>.
+				<br />
+				You can find more info at its page:
+				<a href="https://github.com/dangrossman/bootstrap-daterangepicker">https://github.com/dangrossman/bootstrap-daterangepicker</a>
+			</li>
+			
+			<li>
+				To use it you should include:
+				<br />
+				<code>assets/css/daterangepicker.css</code>
+				<br />				
+				<code>assets/js/date-time/moment.min.js</code>
+				<br />
+				<code>assets/js/date-time/daterangepicker.min.js</code>
+			</li>
+			
+			<li>
+				For an example of daterangepicker i118n, see the example at
+				<code>examples/daterange.html</code>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/date-time.daterangepicker -->
+		
+		
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/date-time.timepicker">Time picker</h3>
+		<!-- #section:plugins/date-time.timepicker -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootstrap time picker plugin.
+				<br />
+				You can find more info at its page:
+				<a href="http://jdewit.github.io/bootstrap-timepicker/">jdewit.github.io/bootstrap-timepicker/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/bootstrap-timepicker.css</code>
+				<br />
+				<code>assets/js/date-time/bootstrap-timepicker.min.js</code>
+			</li>
+			
+			<li>
+				It is also recommended to use browser's built-in time picker if available, 
+				which should be better especially on small touch devices:
+<pre data-language="html">
+ <input type="date" name="mytime" id="mytime" />
+</pre>
+<pre data-language="javascript">
+ var mytime = $('#mytime')[0];
+ if(mytime.type !== 'time') {//if browser doesn't support "time" input
+    $(mytime).timepicker({
+      //options
+    })
+ }
+</pre>
+			</li>
+			
+			<li>
+				A basic example would be like this:
+<pre data-language="javascript">
+$('#timepicker1').timepicker({
+    minuteStep: 1,
+    showSeconds: true,
+    showMeridian: false
+})
+</pre>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/date-time.timepicker -->
+		
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/date-time.datetimepicker">Datetime picker</h3>
+		<!-- #section:plugins/date-time.datetimepicker -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Bootstrap datetime picker plugin which uses <a href="http://momentjs.com/">moment.js</a>.
+				<br />
+				You can find more info at its page:
+				<a href="https://github.com/Eonasdan/bootstrap-datetimepicker">https://github.com/Eonasdan/bootstrap-datetimepicker</a>
+			</li>
+			
+			<li>
+				To use it you should include:
+				<br />
+				<code>assets/css/bootstrap-datetimepicker.css</code>
+				<br />				
+				<code>assets/js/date-time/moment.min.js</code>
+				<br />
+				<code>assets/js/date-time/bootstrap-datetimepicker.min.js</code>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/date-time.datetimepicker -->
+		
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#plugins/date-time.fullcalendar">Fullcalendar</h3>
+		<!-- #section:plugins/date-time.fullcalendar -->
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Full calendar plugin with drag & drop functionality.
+				<br />
+				You can find more info here:
+				<a href="http://arshaw.com/fullcalendar/">arshaw.com/fullcalendar/</a>
+			</li>
+			
+			<li>
+				To use it, you should include:
+				<br />
+				<code>assets/css/fullcalendar.css</code>
+				<br />
+				<code>assets/js/jquery-ui.custom.min.js</code> If you want drag & drop and resize functionality.
+				<br />
+				<code>assets/js/fullcalendar.min.js</code>
+			</li>
+			
+			<li>
+				For an example, please see calendar's example page inside the template.
+				<br />
+				The Javascript code is located at:
+				<br />
+				<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/scripts/</span>calendar.js</code>
+			</li>
+		 </ul>
+		</div>
+		<!-- /section:plugins/date-time.fullcalendar -->
+		
+	</div>
+	<!-- /section:plugins/date-time -->
+</section>

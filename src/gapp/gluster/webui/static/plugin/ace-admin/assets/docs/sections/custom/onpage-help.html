@@ -1,0 +1,272 @@
+<section>
+	<h1 class="blue" data-id="#custom/onpage-help"><i class="ace-icon fa fa-desktop grey"></i> Onpage Help</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:custom/onpage-help -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Overview</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Onpage Help is a feature of Ace admin template that allows users
+				to select an element or a section of a page and see more info about it without leaving the page.
+				<br />
+				For an example of this you can refer to
+				<a href="../html/index.html#help">Ace demo</a>
+				and click the black button on right of page.
+			</li>
+			
+			<li>
+				You can also use this feature in your app to provide help and instructions for users.
+			</li>
+ 		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller">2. Usage</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Help content can be retrieved from your own help files and it will be displayed inside a modal box in your
+				application.
+			</li>
+		 
+			<li>
+				To use onpage help you should build a custom Javascript file using JS builder tool and include
+				onpage help feature or you can directly include
+				<code>assets/js/ace/elements.onpage-help.js</code> file.
+			</li>
+
+			<li>
+				To initiate help you can call:
+<pre data-language="javascript">
+jQuery(function($) {
+  var help = new Onpage_Help({/* for available options, see below */});
+  $('#some-button').on('click', function() {
+	help.toggle();
+	//or help.enable()
+	//or help.disable()
+  })
+})
+</pre>
+			</li>
+			
+			<li>
+				Your application page should have special comments for special sections that have help material:
+<pre data-language="html">
+ <!-- #section:manage/user -->
+  Some elements are here which will show a help dialog when clicked!
+ <!-- /section:manage/user -->
+</pre>
+			</li>
+			
+			<li>
+				The help content is retrieved dynamically from a remote file that you specify.
+				<br />
+				That file should have similar comments like above:
+<pre data-language="html">
+ <!-- #section:manage/user -->
+  Documentation and help content for "manage/user" are here inside some file.
+ <!-- /section:manage/user -->
+</pre>
+				<br />
+				There should also be an element with <code>data-id="#manage/user"</code> attribute
+				which is used to specify modal box's title.
+				<br />
+				If no such element exists, its possible parent is looked up and if available its title is used for the modal box!
+			</li>
+			
+			<li>
+				If inside one documentation(help) page, there are several sections to be displayed in your application,
+				you should use "."(dot) character to separate them:
+<pre data-language="html">
+ <!-- #section:manage/user.edit -->
+  Manage user documentation is here
+ <!-- /section:manage/user.edit -->
+..
+..
+..
+ <!-- #section:manage/user.delete -->
+  Delete user documentation is here
+ <!-- /section:manage/user.delete -->
+</pre>
+			</li>
+			
+			<li>
+				Same is true for your application page:
+<pre data-language="html">
+ <!-- #section:manage/user.edit -->
+  <a href="#">Edit</a><!-- will display help dialog -->
+ <!-- /section:manage/user.edit -->
+..
+..
+..
+ <!-- #section:manage/user.delete -->
+   <a href="#">Delete</a><!-- will display help dialog -->
+ <!-- /section:manage/user.delete -->
+</pre>
+			</li>
+			
+			<li>
+				When user clicks on a help section to see its content, the name of section is passed
+				to "section_url" function in which you should return the url which contains relevant help material.
+				<br />
+				Please see next section for more info.
+			</li>
+			
+			<li>
+				If you have files with HTML, CSS, etc code that you want to show inside the modal help dialog,
+				you can wrap the path inside a <code>code</code> tag with <code>.open-file</code> class
+				and <code>data-open-file="css"</code> attribute:
+<pre data-language="html">
+ <code class="open-file" data-open-file="js">path/to/some/file.js</code>
+</pre>
+			</li>
+
+ 		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller">3. Options</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+			There are several options when initiating help.
+			</li>
+			<li><code>icon_1</code> Optional icon displayed inside a help section.
+				Default is 'fa fa-question'
+				<br />
+				<span class="thumbnail inline">
+					<img src="images/help-icon1.png" />
+				</span>
+			</li>
+			<li><code>icon_2</code> Optional icon displayed on top left of a help section.
+				Default is 'fa fa-lightbulb-o'
+				<br />
+				<span class="thumbnail inline">
+					<img src="images/help-icon2.png" />
+				</span>
+			</li>
+			<li><code>include_all</code>
+				Include all elements between two comments
+				or just the first and last one(might be slightly faster in some cases).
+				Default is true (include all):
+				<br />
+				<span class="thumbnail inline">
+					<img src="images/help-include-all.png" />
+				</span>
+			</li>
+			
+			<li><code>base</code> Optional path to documentation folder which you can use later in following callbacks to return content url.</li>
+			<li><code>section_url</code> Callback function which return a url to load the help content of a section.
+				<br />
+				For example when a help section which refers to "basics/sidebar.compact" is requested, you can use this
+				function to return the url to load which contains help content:
+<pre data-language="javascript">
+'section_url': function(section_name) {
+	//From Ace Demo's example
+   
+    //according to a section_name such as `basics/navbar.toggle` return the file url which contains help content
+    section_name = section_name || '';
+
+    //for example convert section_name=`basic/navbar.layout.brand` to `basic/navbar`
+    //because in Ace's documentation files 'basic/navbar.layout.brand' section is inside `basic/navbar.html` file
+    var url = section_name.replace(/\..*$/g, '');
+
+    var parts = url.split('/');
+    if(parts.length == 1) {
+        //for example convert `changes` to `changes/index.html`
+        if(url.length == 0) url = 'intro';//or convert `empty string` to `intro/index.html`
+        url = url + '/index.html';
+    }
+    else if(parts.length > 1) {
+        //for example convert `basics/navbar.layout` to `basics/navbar.html`
+        url = url + '.html';
+    }
+    return this.settings.base + '/docs/sections/' + url;
+}
+</pre>
+			</li>
+			<li><code>file_url</code> Similar to above callback. This function is used when a file (which contains code snippets) is to be loaded.</li>
+			<li><code>img_url</code> Similar to above callbacks. When inserting images into DOM, the url may need to be updated.</li>
+		
+			<li><code>code_highlight</code> Used for syntax highlighting code snippets.
+				<br />
+				Currently if Rainbow.js or Prism.js libraries are available, they will be used for highlighting.
+			</li>
+
+			
+			<li><code>before_enable</code> Optional callback to make some changes before help is enabled.
+				<br />
+				For example in Ace's demo, when help is enabled, we unfix navbar, sidebar, etc,
+				because when an element is fixed or is inside a fixed parent,
+				it will need a fixed help box above it and it becomes unnecessarily complex.
+			</li>
+			<li><code>after_enable</code> Optional callback to make some changes after help is enabled</li>
+			<li><code>before_disable</code> Optional callback to make some changes before help is disabled</li>
+			<li><code>after_disable</code> Optional callback to make some changes after help is disabled.
+				<br />
+				For example in Ace's demo, we restore fixed state of previously unfixed navbar, etc.
+			</li>
+			
+			<li><code>add_panels</code> Separate &amp; wrap help content inside panels like image below.
+			Default is true.
+			<br />
+				<span class="thumbnail">
+					<img src="images/help-panels.png" />
+				</span>
+			</li>
+			<li><code>panel_content_selector</code> Use this selector to find and separate contents and wrap them inside panels</li>
+			<li><code>panel_content_title</code> Use this selector to find the title for each panel. Should come before relevant 'panel_content_selector'</li>
+		</ul>
+	  </div>
+	  
+	  
+	  <h3 class="info-title smaller">4. Example</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				For an example of using Onpage Help in your application, you can see 
+				<a href="../html/index.html#help">Ace's demo pages</a>
+			</li>
+			
+			<li>
+				The code that initiates help is inside
+				<code>assets/js/ace/ace.onpage-help.js</code>
+				and has comments and explanations.
+			</li>
+			
+			<li>
+				For Ace's demo there is also an extra style file which is
+				<code>assets/css/ace.onpage-help.css</code>.
+				<br />
+				It is used for styling the black help button and you don't need it.
+			</li>
+			
+			<li>
+				Also, "Rainbow.js" files are include for syntax highlighting.
+				<br />
+				You don't need them if your help content doesn't make use of it.
+			</li>
+			
+			<li>
+				The help content is retrieved from <code>docs/sections</code> folder.
+			</li>
+			
+			<li>
+				Inside Ace's demo, help is initiated when "#help" is appended to url and
+				a black button on right side of page is shown which enables/disables help.
+				<br />
+				You should use your own approach.
+				<br />
+				Perhaps a button inside navbar or sidebar which enables or disables help.
+			</li>
+ 		 </ul>
+		</div>
+		
+		
+	</div>
+	<!-- /section:custom/onpage-help -->
+	
+</section>

@@ -1,0 +1,183 @@
+ <section>
+	  <h1 class="blue" data-id="intro">
+		<i class="ace-icon fa fa-leaf green"></i>
+		Issues
+	  </h1>
+	  <hr />
+	  
+	  <div class="alert alert-danger">
+		<button class="close" data-dismiss="alert"><i class="ace-icon fa fa-times"></i></button>
+	    Please note that most of the following issues have been resolved.
+		<br />
+		Also some have more info as how to avoid them.
+	  </div>
+	  
+  
+	  <div class="help-content">
+		 <h3 class="info-title smaller">1. Webkit browsers</h3>
+		 <div class="info-section">
+		    <ul class="info-list list-unstyled">
+				<li>
+					Webkit browers have a problem especially when resizing window due to over-optimization.
+					<br />
+					They sometimes don't properly redraw layout or apply CSS property changes
+					and the workaround is to force redrawing or recalculating properties
+					for example by hiding and re-showing an element.
+					<br />
+					This also may not work every time.
+				</li>
+				
+				<li>
+					Webkit browsers have a fixed CSS z-index issue.
+					<br />
+					According to:
+					<br />
+					<span class="text-info">http://updates.html5rocks.com/2012/09/Stacking-Changes-Coming-to-position-fixed-elements</span>
+					<br />
+					Chrome has decided to choose a different approach than what's mentioned in standard specs.
+					<br />
+					So now with Firefox and IE,
+					a tooltip, popover or dropdown menu inside content area goes above fixed sidebar,
+					but below <b>.hover</b> submenus or when sidebar is minimized.
+					<br />
+					But in Chrome, popovers, tooltips etc go below fixed sidebar.
+				
+					<div class="hr hr-6"></div>
+				
+					On the other hand when sidebar is fixed in Firefox,
+					text becomes fuzzy,
+					and if we apply <code>-moz-backface-visiblity:hidden</code> it gets better
+					which again manipulates stacking context (z-index).
+					
+					<div class="hr hr-6"></div>
+					As a result, now fixed sidebar will be above all elements of content area, so 
+					you should take care to show dropdowns, popovers or tooltips in a direction which
+					don't go below fixed sidebar.
+					<br />
+					There is an example of changing tooltip direction in <a href="#elements.tooltip.notes" class="help-more">Tooltip section</a>
+					
+					<div class="hr hr-6"></div>
+					
+					The only cross-browser workaround to this is to detach a submenu from sidebar on mouse hover,
+					append it to body and then put it back in its place on mouseleave.
+				</li>
+				
+				<li>
+					Old Safari versions have a flickering issue when sidebar has scrollbars and there is an animated icon in content area.
+					<br />
+					This may not be an issue with updated versions, but Safari for Windows has not been updated for a long time which again is a rarely used browser in Windows.
+				</li>
+			</ul>
+		 </div>
+		 
+		 
+		 <h3 class="info-title smaller">2. Chrome</h3>
+		 <div class="info-section">
+		    <ul class="info-list list-unstyled">
+				<li>
+					 Chrome has a problem with responding to click events on Ace buttons becauseo of "move down" effect.
+					 <br />
+					 I have tried to fix this and its seems to be working now.
+					 <br />
+					 But if the problem persists you can remove <code>button.btn:active</code> CSS rule
+					 inside <code>assets/css/less/buttons.less</code>
+					 or <code>assets/css/ace.min.css</code>
+				</li>
+				
+				<li>
+					Most of the above webkit issues apply to Chrome as well.
+				</li>
+			</ul>
+		 </div>
+		 
+		 
+		 <h3 class="info-title smaller">3. Android Default Browser &amp; Chrome</h3>
+		 <div class="info-section">
+		    <ul class="info-list list-unstyled">
+				<li>
+					Android's default browser has an issues with <code>top:auto</code> when
+					sidebar or breadcrumbs is fixed
+				<li>
+				
+				<li>
+					When sidebar is fixed, document is in RTL mode and there are animated icons inside navbar,
+					Android default browser will misplace sidebar.
+					<br />
+					So you can avoid this by removing animated icons in RTL mode.
+				</li>
+				
+				<li>
+					Android's default browser doesn't trigger window resize properly when address bar is hidden.
+					It's not a big deal
+				</li>
+				
+				<li>
+					Chrome Browser on Android, doesn't respond to "mouse hover" events the way
+					Android's Default Browser or Android Firefox do.
+				</li>
+			</ul>
+		 </div>
+		 
+		 
+		 <h3 class="info-title smaller">4. iOS Safari</h3>
+		 <div class="info-section">
+		    <ul class="info-list list-unstyled">
+				<li>
+					iOS default browser has a problem when you click on sidebar items
+					that are hidden at first and are shown when user scrolls down to view them
+				</li>
+				<li>
+					The link receives click event and all handlers are triggered.
+					<br />
+					It just doesn't navigate to the url.
+				</li>
+				
+				<li>
+					So I used <code>document.location = link_element.attr('href')</code>
+					to navigate to new url and it works.
+					<br />
+					But if you are using custom handlers for a link and want to avoid navigation,
+					just add <code>data-link="false"</code> attribute to the link to disable navigation:
+<pre data-language="html">
+<a href="some/path/" data-link="false">
+  don't navigate (iOS)
+</a>
+</pre>
+				</li>
+				
+				
+				<li>
+					Also when navbar is fixed and an input element receives focus, 
+					fixed navbar won't be redrawn.
+					<br />
+					Currently I have added a workaround which forces redraw of navbar.
+				</li>
+			</ul>
+		 </div>
+		 
+
+		 
+		 <h3 class="info-title smaller">5. RTL</h3>
+		 <div class="info-section">
+		    <ul class="info-list list-unstyled">
+				<li>
+					When using settings box to switch RTL &amp; LTR mode several times,
+					some browsers may not redraw elements properly.
+				</li>
+				
+				<li>
+					It's not an issue and when you make RTL-specific changes in your server side response,
+					browser will render pages correctly.
+				</li>
+				
+				<li>
+					Also when sidebar is fixed and there are animated icons inside navbar,
+					Android default browser will misplace sidebar.
+					<br />
+					So you can avoid this by removing animated icons in RTL mode.
+				</li>
+			</ul>
+		 </div>
+		 
+	  </div>
+</section>

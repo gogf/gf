@@ -103,30 +103,39 @@ func (n *Node) Run() {
     n.restoreDataFromFile()
 
     // 创建接口监听
-    go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_RAFT),  n.raftTcpHandler).Run()
-    go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_REPL),  n.replTcpHandler).Run()
-    go func() {
-        api := ghttp.NewServerByAddr(fmt.Sprintf(":%d", gPORT_API))
-        api.BindController("/kv",      &NodeApiKv{node: n})
-        api.BindController("/node",    &NodeApiNode{node: n})
-        api.BindController("/service", &NodeApiService{node: n})
-        api.Run()
-    }()
+    if n.Role == gROLE_MONITOR {
+        go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_MONITOR),  n.monitorTcpHandler).Run()
+        go func() {
+            webui := ghttp.NewServerByAddr(fmt.Sprintf(":%d", gPORT_WEBUI))
+            webui.BindController("/",      &MonitorWebUI{node: n})
+            webui.Run()
+        }()
+    } else {
+        go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_RAFT),  n.raftTcpHandler).Run()
+        go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_REPL),  n.replTcpHandler).Run()
+        go func() {
+            api := ghttp.NewServerByAddr(fmt.Sprintf(":%d", gPORT_API))
+            api.BindController("/kv",      &NodeApiKv{node: n})
+            api.BindController("/node",    &NodeApiNode{node: n})
+            api.BindController("/service", &NodeApiService{node: n})
+            api.Run()
+        }()
 
-    // 通知上线（这里采用局域网扫描的方式进行广播通知）
-    //go n.sayHiToAll()
-    //time.Sleep(2 * time.Second)
+        // 通知上线（这里采用局域网扫描的方式进行广播通知）
+        //go n.sayHiToAll()
+        //time.Sleep(2 * time.Second)
 
-    // 选举超时检查
-    go n.electionHandler()
-    // 心跳保持及存活性检查
-    go n.heartbeatHandler()
-    // 日志同步处理
-    go n.logAutoReplicationHandler()
-    // 本地日志存储处理
-    go n.logAutoSavingHandler()
-    // 服务健康检查
-    go n.serviceHealthCheckHandler()
+        // 选举超时检查
+        go n.electionHandler()
+        // 心跳保持及存活性检查
+        go n.heartbeatHandler()
+        // 日志同步处理
+        go n.logAutoReplicationHandler()
+        // 本地日志存储处理
+        go n.logAutoSavingHandler()
+        // 服务健康检查
+        go n.serviceHealthCheckHandler()
+    }
 
     // 测试
     //go n.show()
@@ -152,11 +161,15 @@ func (n *Node) initFromCfg() {
     j := gjson.DecodeToJson(&c)
     if j == nil {
         glog.Fatalln("config file decoding failed(surely a json format?), exit")
-        return
     }
     glog.Println("initializing from", cfgpath)
+    // 集群名称
+    n.Group = j.GetString("Group")
     // 集群角色
-    n.Role = j.GetInt("Role")
+    n.Role  = j.GetInt("Role")
+    if n.Role < 0 || n.Role > 2 {
+        glog.Fatalln("invalid role setting, exit")
+    }
     // 数据保存路径(请保证运行gcluster的用户有权限写入)
     savepath := j.GetString("SavePath")
     if savepath != "" {
@@ -165,7 +178,6 @@ func (n *Node) initFromCfg() {
         }
         if !gfile.IsWritable(savepath) {
             glog.Fatalln(savepath, "is not writable for saving data")
-            return
         }
         n.SetSavePath(strings.TrimRight(savepath, gfile.Separator))
     }
@@ -174,7 +186,6 @@ func (n *Node) initFromCfg() {
     if logpath != "" {
         if !gfile.IsWritable(logpath) {
             glog.Fatalln(logpath, "is not writable for saving log")
-            return
         }
         glog.SetLogPath(logpath)
     }
@@ -249,6 +260,7 @@ func (n *Node) sayHiToAll() {
 // 获取当前节点的信息
 func (n *Node) getNodeInfo() *NodeInfo {
     return &NodeInfo {
+        Group            : n.Group,
         Name             : n.Name,
         Ip               : n.Ip,
         Status           : gSTATUS_ALIVE,

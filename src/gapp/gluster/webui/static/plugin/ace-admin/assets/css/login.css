@@ -1,0 +1,900 @@
+@keyframes animatedBackground {
+    from { background-position: 0 0; }
+    to { background-position: 100% 0; }
+}
+@-webkit-keyframes animatedBackground {
+    from { background-position: 0 0; }
+    to { background-position: 100% 0; }
+}
+html, body {
+    overflow:hidden;
+}
+body {
+    font-family: "Segoe UI", "Lucida Grande", Helvetica, Arial, "Microsoft YaHei", FreeSans, Arimo, "Droid Sans","wenquanyi micro hei","Hiragino Sans GB", "Hiragino Sans GB W3", Arial, sans-serif;
+}
+a{
+    cursor:pointer;
+}
+#animate-area	{
+    background-color:#c0deed;
+    background-image: url(../images/cloud.jpg);
+    background-position: 0px 0px;
+    background-repeat: repeat-x;
+    animation: animatedBackground 40s linear infinite;
+    -ms-animation: animatedBackground 40s linear infinite;
+    -moz-animation: animatedBackground 40s linear infinite;
+    -webkit-animation: animatedBackground 40s linear infinite;
+}
+
+
+
+.page-signin .signin-form
+{
+    background:#fff;
+    display:block;
+    position:relative;
+    padding:30px 30px 0 30px;
+}
+
+.page-signin .password-reset-form
+{
+    background:#fff;
+    bottom:0;
+    display:none;
+    left:0;
+    position:absolute;
+    right:0;
+    top:0;
+    z-index:1020;
+    padding:30px;
+}
+
+.page-signin .password-reset-form .header
+{
+    background:#f4f4f4;
+    border-bottom:1px solid #ddd;
+    margin:-30px -30px 30px;
+    padding:20px;
+}
+
+.page-signin .password-reset-form .header .signin-text span
+{
+    background:#f4f4f4;
+}
+
+.page-signin .password-reset-form .header .close
+{
+    margin-top:2px;
+}
+
+.page-signin .password-reset-form .form-group.w-icon .signin-form-icon
+{
+    z-index:1025;
+}
+
+.page-signin .signin-with
+{
+    background:#f4f4f4;
+    border-top:1px solid #ddd;
+    margin:30px -30px -30px;
+    padding:20px 30px;
+    text-align:center;
+}
+
+.page-signup .signup-form
+{
+    background:#fff;
+    display:block;
+    position:relative;
+    padding:30px 20px;
+}
+
+.page-signup .signup-with
+{
+    background:#f4f4f4;
+    border-top:1px solid #ddd;
+    margin:30px -20px -30px;
+    padding:20px;
+}
+
+.page-signin-alt .signin-password input
+{
+    padding-right:70px;
+}
+
+.page-signin-alt .signin-password .forgot
+{
+    position:absolute;
+    right:10px;
+    top:10px;
+    color:#555;
+    background:#f1f1f1;
+    border-radius:2px;
+    line-height:25px;
+    font-size:12px;
+    padding:0 7px;
+}
+
+.page-signin-alt .signin-password .forgot:hover
+{
+    text-decoration:underline;
+}
+
+
+
+.page-invoice table,#page-signin-bg img,#page-signup-bg img
+{
+    width:100%;
+}
+
+.page-invoice.page-invoice-print .invoice-header .invoice-logo,.ie8 .page-pricing .page-pricing-header .bg-overlay
+{
+    display:none!important;
+}
+
+.page-pricing .page-pricing-header .page-pricing-header-content,.page-signin-alt .signin-password
+{
+    position:relative;
+}
+
+.page-pricing .trial a,.page-mail .m-details-star,.page-mail .m-details-star>*
+{
+    font-size:15px;
+}
+
+
+#page-signin-bg,#page-signup-bg
+{
+    height:100%;
+    left:0;
+    overflow:hidden;
+    position:fixed;
+    top:0;
+    width:100%;
+    z-index:20;
+}
+
+#page-signin-bg .overlay,#page-signup-bg .overlay
+{
+    background:rgba(0,0,0,.5);
+    bottom:0;
+    left:0;
+    position:absolute;
+    right:0;
+    top:0;
+}
+
+.page-signin .signin-container,.page-signup .signup-container
+{
+    border-radius:2px;
+    display:block;
+    position:relative;
+    z-index:999;
+    margin:20px 14px;
+}
+
+.page-signin .signin-info,.page-signup .signup-header
+{
+    background:#444;
+    display:block;
+    overflow:hidden;
+    text-align:center;
+    padding:20px 30px;
+}
+
+.page-signin .signin-info .logo,.page-signup .signup-header .logo
+{
+    color:#fff;
+    font-size:22px;
+    font-weight:700;
+    opacity:1;
+}
+
+.page-signin .signin-info .logo[href]:hover,.page-signup .signup-header .logo[href]:hover
+{
+    opacity:.7;
+}
+
+.page-signin .signin-info .slogan,.page-signup .signup-header .slogan
+{
+    color:#fff;
+    font-size:16px;
+    font-weight:300;
+    margin-top:5px;
+}
+
+.page-signin .signin-info ul,.page-signin .password-reset-form .header .signin-text:before,.page-mail .mail-select-folder
+{
+    display:none;
+}
+
+.page-signin .password-reset-form .header .signin-text,.page-search .search-users table
+{
+    margin:0;
+}
+
+.page-signin .form-actions,.page-signup .form-actions
+{
+    margin-top:15px;
+}
+
+.page-signin .form-actions .signin-btn,.page-signup .form-actions .signup-btn
+{
+    border:none;
+    border-radius:999999px;
+    font-size:13px;
+    font-weight:600;
+    line-height:19px;
+    outline:0!important;
+    text-align:center;
+    width:100%;
+    -webkit-transition:all .3s;
+    transition:all .3s;
+    padding:10px 0;
+}
+
+.page-signin .form-actions .signin-btn:hover,.page-signin .signin-with-btn:hover,.page-signup .form-actions .signup-btn:hover,.page-signup .signup-with-btn:hover
+{
+    
+}
+
+.page-signin .form-actions a.forgot-password,.page-signup .form-actions a.forgot-password
+{
+    border-bottom:1px dashed #bbb;
+    color:#999;
+    display:inline-block;
+    font-size:11px;
+    margin-left:10px;
+    padding-bottom:1px;
+}
+
+.page-signin .form-actions a.forgot-password:hover,.page-signup .form-actions a.forgot-password:hover
+{
+    color:#555;
+    text-decoration:none;
+}
+
+.page-signin .form-group,.page-signup .form-group
+{
+    position:relative;
+    margin:0;
+}
+
+.page-signin .form-group+.form-group,.page-signup .form-group+.form-group
+{
+    margin:10px 0 0;
+}
+
+.page-signin .form-group.w-icon .signin-form-icon,.page-signup .form-group.w-icon .signup-form-icon
+{
+    border-right:1px solid #d6d6d6;
+    bottom:9px;
+    color:#d6d6d6;
+    display:block;
+    font-size:14px;
+    left:0;
+    line-height:27px;
+    position:absolute;
+    text-align:center;
+    top:9px;
+    width:40px;
+    z-index:1002;
+    -webkit-transition:all .3s;
+    transition:all .3s;
+}
+
+.page-signin .form-group.w-icon input[type=password],.page-signin .form-group.w-icon input[type=text],.page-signup .form-group.w-icon input[type=password],.page-signup .form-group.w-icon input[type=text]
+{
+    font-size:15px;
+    padding-left:56px;
+}
+
+.page-signin .form-group.w-icon input[type=password]:focus+.signin-form-icon,.page-signin .form-group.w-icon input[type=text]:focus+.signin-form-icon,.page-signup .form-group.w-icon input[type=password]:focus+.signup-form-icon,.page-signup .form-group.w-icon input[type=text]:focus+.signup-form-icon
+{
+    color:#888;
+}
+
+.page-signin .signin-text,.page-signup .signup-text
+{
+    color:#777;
+    display:block;
+    font-size:15px;
+    
+    margin-bottom:25px;
+    position:relative;
+    text-align:center;
+}
+
+.page-signin .signin-text span,.page-signup .signup-text span
+{
+    background:#fff;
+    display:inline-block;
+    position:relative;
+    padding:0 20px;
+}
+
+.page-signin .signin-text:before,.page-signup .signup-text:before
+{
+    background:#e4e4e4;
+    content:"";
+    display:block;
+    height:1px;
+    left:0;
+    position:absolute;
+    right:0;
+    top:50%;
+}
+
+.page-signin .signin-with-btn,.page-signup .signup-with-btn
+{
+    border-radius:2px;
+    color:#fff;
+    display:block;
+    font-weight:300;
+    text-align:center;
+    -webkit-transition:all .3s;
+    transition:all .3s;
+    padding:10px 0;
+}
+
+.page-signin .signin-with-btn span,.page-signup .signup-with-btn span
+{
+    font-weight:600;
+}
+
+.page-signin .signin-with-btn+.signin-with-btn,.page-signup .signup-with-btn+.signup-with-btn,.page-search .search-classic li>*+*
+{
+    margin-top:10px;
+}
+
+.page-signin .not-a-member,.page-signup .have-account
+{
+    color:#fff;
+    display:block;
+    font-size:14px;
+    position:relative;
+    text-align:center;
+    z-index:999;
+    margin:-20px 0 0;
+    padding:20px 0;
+}
+
+.page-signin .not-a-member a,.page-signup .have-account a
+{
+    color:#fff;
+    text-decoration:underline;
+    transition:all .3s;
+}
+
+.page-signin .not-a-member a:hover,.page-signup .have-account a:hover,.page-signin-alt .signin-header .logo[href]:hover,.page-signup-alt .signup-header .logo[href]:hover
+{
+    opacity:.6;
+}
+
+.page-signin-alt,.page-signup-alt
+{
+    padding-bottom:40px;
+}
+
+.page-signin-alt .signin-header,.page-signup-alt .signup-header
+{
+    background:#fff;
+    position:relative;
+    -webkit-box-shadow:0 2px 2px rgba(0,0,0,.05),0 1px 0 rgba(0,0,0,.05);
+    box-shadow:0 2px 2px rgba(0,0,0,.05),0 1px 0 rgba(0,0,0,.05);
+    padding:16px 0 16px 16px;
+}
+
+.page-signin-alt .signin-header .logo,.page-signup-alt .signup-header .logo
+{
+    color:#555;
+    font-size:16px;
+    height:24px;
+    line-height:24px;
+    width:24px;
+    opacity:1;
+    -webkit-transition:all .3s;
+    transition:all .3s;
+}
+
+.page-signin-alt .signin-header .btn,.page-signup-alt .signup-header .btn
+{
+    position:absolute;
+    right:16px;
+    top:12px;
+}
+
+.page-signin-alt .signin-header .demo-logo,.page-signup-alt .signup-header .demo-logo
+{
+    display:inline-block;
+    height:24px;
+    line-height:24px;
+}
+
+.page-signin-alt .form-header,.page-signup-alt .form-header
+{
+    font-size:22px;
+    font-weight:300;
+    text-align:center;
+    margin:40px 0;
+}
+
+.page-signin-alt .panel,.page-signup-alt .panel
+{
+    margin:0 16px;
+    padding:20px;
+}
+
+.page-signin-alt .signin-with,.page-signup-alt .signup-with
+{
+    text-align:center;
+    margin:0 14px;
+    padding:20px;
+}
+
+.page-signin-alt .signin-with .header,.page-signup-alt .signup-with .header
+{
+    font-size:16px;
+    font-weight:300;
+    text-align:center;
+    margin:0 0 20px;
+}
+
+.page-signin-alt .signin-with .btn,.page-signup-alt .signup-with .btn
+{
+    padding-left:0;
+    padding-right:0;
+    width:40px;
+    text-align:center;
+}
+
+.page-search .search-classic .search-content,.page-search .search-classic .search-tags,.page-search .search-classic .search-title,.page-search .search-classic .search-url,.page-mail .mail-select-folder.active,.page-mail .mail-container-header.show
+{
+    display:block;
+}
+
+.page-search .search-users,.page-profile .widget-followers
+{
+    margin:-20px;
+}
+
+.page-mail .mail-item:nth-child(2n-1),.page-mail .mail-attachments li:nth-child(2n-1)
+{
+    background:#f6f6f6;
+}
+
+@media (min-width:768px) {
+    .page-invoice .invoice
+    {
+        padding:0 40px;
+    }
+
+    .page-invoice .invoice hr
+    {
+        border:none;
+        border-bottom:3px solid #f1f1f1;
+        margin:0 -40px;
+    }
+
+    .page-invoice .invoice-header
+    {
+        margin:0 -40px;
+        padding:40px;
+    }
+
+    .page-invoice .invoice-header address
+    {
+        float:left;
+        margin:6px 0 0 30px;
+    }
+
+    .page-invoice .invoice-date
+    {
+        float:right;
+        margin-top:6px;
+    }
+
+    .page-invoice .invoice-recipient,.page-invoice .invoice-total
+    {
+        width:50%;
+    }
+
+    .page-invoice .invoice-total
+    {
+        float:right;
+        margin-top:0;
+    }
+
+    .page-pricing .plans-panel
+    {
+        background:#fafafa;
+        border:1px solid #e4e4e4;
+        margin-bottom:22px;
+    }
+
+    .page-pricing .plan-col
+    {
+        margin-bottom:0;
+    }
+
+    .page-pricing .plan-col+.plan-col .plan-features>li
+    {
+        border-left-width:0;
+        -webkit-box-shadow:-1px 0 0 #e4e4e4;
+        box-shadow:-1px 0 0 #e4e4e4;
+    }
+
+    .page-pricing .plan-col+.plan-col .plan-features>a
+    {
+        margin-left:-1px;
+    }
+
+    .page-signin .signin-container
+    {
+        display:table;
+        width:550px;
+        table-layout:fixed;
+        position: absolute;
+        left: 50%;
+        margin-left: -225px;
+        opacity:0;
+        margin-top:100px;
+    }
+
+    .page-signin .signin-info
+    {
+        background:#438eb9;
+        opacity:0.8;
+        display:table-cell;
+        text-align:left;
+        vertical-align:top;
+        width:40%;
+        padding:30px;
+    }
+
+    .page-signin .signin-info ul
+    {
+        color:#fff;
+        display:block;
+        font-size:13px;
+        font-weight:300;
+        margin:30px 0 0;
+        padding:0;
+    }
+
+    .page-signin .signin-info ul li
+    {
+        list-style:none;
+        margin:0;
+        padding:7px 0;
+    }
+
+    .page-signin .signin-info ul li a, .page-signin .signin-info ul li a:hover, .page-signin .signin-info ul li a:visited {
+        color:#fff;
+        text-decoration: none;
+    }
+
+    .page-signin .signin-info ul .signin-icon
+    {
+        display:block;
+        float:left;
+        font-size:14px;
+        line-height:18px;
+        margin-right:6px;
+        text-align:center;
+        width:24px;
+    }
+
+    .page-signin .signin-form
+    {
+        display:table-cell;
+        vertical-align:top;
+        width:60%;
+    }
+
+    .page-signin .not-a-member
+    {
+        margin:-80px 0 80px;
+    }
+
+    .timeline:after,.timeline:before
+    {
+        left:100px;
+    }
+
+    .tl-header
+    {
+        left:100px;
+        margin-left:-70px;
+    }
+
+    .tl-entry
+    {
+        margin-left:100px;
+        margin-bottom:20px;
+    }
+
+    .tl-time
+    {
+        left:auto;
+        right:100%;
+        margin-left:0;
+        margin-right:32px;
+        top:14px;
+    }
+
+    .timeline.centered .tl-header,.timeline.centered:after,.timeline.centered:before
+    {
+        left:50%;
+        right:auto;
+    }
+
+    .timeline.centered .tl-entry
+    {
+        margin-left:50%;
+        margin-right:0;
+    }
+
+    .timeline.centered .tl-entry.left
+    {
+        margin-left:0;
+        margin-right:50%;
+        padding-left:0;
+        padding-right:36px;
+    }
+
+    .timeline.centered .tl-entry.left:before
+    {
+        left:auto;
+        right:-3px;
+    }
+
+    .timeline.centered .tl-entry.left .tl-body:before
+    {
+        left:auto;
+        right:-9px;
+        border-width:8px 0 8px 9px;
+    }
+
+    .timeline.centered .tl-entry.left .tl-body:after
+    {
+        left:auto;
+        right:-8px;
+        border-color:transparent transparent transparent #fff;
+        border-width:7px 0 7px 8px;
+    }
+
+    .timeline.centered .tl-entry.left .tl-time
+    {
+        left:100%;
+        right:auto;
+        margin-left:32px;
+        margin-right:0;
+    }
+
+    .timeline.centered .tl-entry.left .tl-icon
+    {
+        left:auto;
+        right:-20px;
+    }
+
+    .page-profile .left-col
+    {
+        float:left;
+        width:220px;
+    }
+
+    .page-profile .right-col
+    {
+        overflow:hidden;
+        padding-left:20px;
+    }
+
+    .page-profile .profile-content
+    {
+        margin-top:0;
+    }
+
+    .page-profile .profile-full-name
+    {
+        padding-left:240px;
+        padding-bottom:50px;
+        text-align:left;
+    }
+
+    .page-profile .profile-row
+    {
+        margin-top:-36px;
+    }
+
+    .page-profile .profile-block
+    {
+        margin-top:-70px;
+    }
+
+    .profile-content-hr
+    {
+        display:none;
+    }
+
+    .page-invoice .invoice-header h3,.page-invoice .invoice-recipient
+    {
+        float:left;
+    }
+}
+
+@media (min-width:480px) {
+    .page-signin .form-actions
+    {
+        margin-top:15px;
+        text-align:center;
+    }
+
+    .page-signin .form-actions .signin-btn
+    {
+        padding-left:40px;
+        padding-right:40px;
+        width:auto;
+        margin-right:20px;
+    }
+
+    .page-signup .signup-container
+    {
+        width:380px;
+        margin:80px auto;
+    }
+
+    .page-signup .signup-form
+    {
+        padding:30px;
+    }
+
+    .page-signup .signup-with
+    {
+        margin-left:-30px;
+        margin-right:-30px;
+        padding-left:30px;
+        padding-right:30px;
+    }
+
+    .page-signup .have-account
+    {
+        margin:-80px 0 20px;
+    }
+
+    .page-signin-alt .signin-header,.page-signup-alt .signup-header
+    {
+        padding-left:0;
+        text-align:center;
+    }
+
+    .page-signin-alt .panel,.page-signup-alt .panel
+    {
+        width:360px;
+        margin:0 auto;
+        padding:27px;
+    }
+
+    .page-signin-alt .signin-with,.page-signup-alt .signup-with
+    {
+        width:360px;
+        margin:0 auto;
+    }
+}
+
+@media min-width992px {
+    .page-mail .mail-controls .wide-btns .btn
+    {
+        width:60px;
+        text-align:center;
+        display:inline-block;
+    }
+
+    .page-mail #content-wrapper
+    {
+        position:static;
+    }
+
+    .page-mail .mail-nav
+    {
+        width:200px;
+        border-bottom:0;
+        position:absolute;
+        height:auto;
+        min-height:100%;
+        border-right-width:1px;
+    }
+
+    .page-mail .mail-nav.fixed
+    {
+        position:fixed;
+    }
+
+    .page-mail .mail-nav:before
+    {
+        content:"";
+        display:block;
+        top:0;
+        bottom:0;
+        position:fixed;
+        width:200px;
+        border-right:1px solid;
+        z-index:-1;
+    }
+
+    .page-mail .mail-nav .navigation
+    {
+        height:auto!important;
+        padding-top:0;
+    }
+
+    .page-mail .mail-nav .navigation .label
+    {
+        font-size:10px;
+        line-height:16px;
+        margin-top:11px!important;
+        margin-right:16px!important;
+        padding:0 4px;
+    }
+
+    .page-mail .mail-nav .sections li.active
+    {
+        position:static;
+        top:auto;
+        border:none;
+    }
+
+    .page-mail .mail-nav .sections a,.page-mail .mail-nav .sections li.active a
+    {
+        font-size:13px;
+        line-height:36px;
+    }
+
+    .page-mail .mail-container
+    {
+        margin-left:200px;
+        min-height:400px;
+    }
+
+    .page-mail .mail-container-header
+    {
+        display:block;
+        margin-top:46px;
+    }
+
+    .page-mail .mail-item
+    {
+        padding-left:220px;
+        padding-right:100px;
+    }
+
+    .page-mail .m-star
+    {
+        left:40px;
+        top:11px;
+    }
+
+    .page-mail .m-from
+    {
+        position:absolute;
+        overflow:hidden;
+        width:140px;
+        left:70px;
+    }
+
+    .page-mail .m-subject
+    {
+        margin-top:0;
+        overflow:hidden;
+    }
+
+    .page-mail .m-date
+    {
+        width:150px;
+    }
+
+    .page-mail .mail-nav.fixed:before,.page-mail .mail-nav .navigation li:after,.page-mail .mail-select-folder
+    {
+        display:none!important;
+    }
+}

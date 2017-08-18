@@ -1,0 +1,238 @@
+<section>
+	<h1 class="blue" data-id="#basics/ajax"><i class="ace-icon fa fa-desktop grey"></i> Ajax Content</h1>
+
+	<div class="hr hr-double hr32"></div>
+
+	<!-- #section:basics/ajax -->
+	<div class="help-content">
+		<h3 class="info-title smaller">1. Overview</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Ajax loading is only useful for updating content area without reloading the whole page.
+			</li>
+
+			<li>
+				If your application data and sections depend a lot on dynamic loading via ajax,
+				you may need more advanced solutions such as AngularJS which requires
+				some work to integrate with the template.
+			</li>
+			<li>
+				In demo ajax pages some pages are not included such as horizontal menu page and jQuery UI page.
+				<br />
+				This is because for horizontal menu, layout changes as well.
+				<br />
+				And for jQuery UI when loading jQuery UI library, tooltip and datepicker override Bootstrap's.
+				<br />
+				This wouldn't be a problem, since in your app you either use jQuery UI datepicker or Bootstrap
+				datepicker, but not both. Same is true for tooltips.
+			</li>
+			
+			<li>
+				To enable ajax loading the link element should have <code>data-url</code> attribute which
+				will be used to retrieve content:
+				<pre data-language="html">
+  <ul class="nav nav-list">
+    <li>
+       <a href="#somepage" data-url="somepage">Some Page</a>
+    </li>
+  </ul>
+</pre>
+			</li>
+			
+			<li>
+				Inside <code>.page-content</code>, you should have a <code>.page-content-area</code>
+				element which will be updated with new content.
+			</li>
+			
+			<li>
+				And the new content should be something like this:
+<pre data-language="html">
+ <title>New Title</title>
+ 
+ <link rel="stylesheet" href="maybe_new_style.css" />
+ <style>
+  .new_ruels_maybe {
+     color: red;
+  }
+ </style>
+ 
+ <div cass="page-header">
+    <!-- optional page header -->
+ </div>
+ 
+ <div class="row">
+   <div class="col-xs-12">
+      <!-- new page content here -->
+   </div>
+ </div>
+ 
+ 
+ <script type="text/javascript">
+  /* Load new scripts here. See next section for more info */
+ </script>
+</pre>
+			</li>
+			
+			<li>
+				Before loading content, you should have a basic empty layout.
+				<br />
+				For an example you can see <code>html/ajax/ajax.html</code> file.
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+
+		<h3 class="info-title smaller">2. Options</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				You should call <code>ace.enable_ajax_content</code> function and provide the following options:
+				<ul>
+					<li><code>content_url</code>: a function that returns a url to retrieve</li>
+					<li><code>default_url</code>: default url to load</li>
+					<li><code>loading_icon</code>: the icon to show when loading new content. Default is "fa-spinner fa-2x orange"</li>
+					<li><code>loading_text</code>: the text to show when loading new content. Default is ""</li>
+					<li><code>update_active</code>: whether to update "active" state of newly selected link and its parents. Default is true</li>
+					<li><code>update_breadcrumbs</code>: whether to update breadcrumbs. Default is true</li>
+					<li><code>update_title</code>: whether to update window title. Default is true</li>
+					<li><code>close_active</code>: whether to close submenu of previously active items or not. Default is true</li>
+				</ul>
+			</li>
+			<li>
+				If your new page content has <code>title</code> tag and <code>update_title</code> option is true (which is the default),
+				window title will be updated.
+			</li>
+			
+			<li>
+				An example would be something like this:
+<pre data-language="javascript">
+ace.enable_ajax_content(jQuery, {
+  content_url: function(url) {
+	//this is for Ace demo only, you should change it
+	//url is the value from document url hash
+
+	//take "url" param and return the relevant url to load
+	return "content/"+url+".html";
+  },
+  default_url: 'homepage.html'//default url
+  ,
+  loading_icon: "fa-cog fa-2x blue"
+});
+</pre>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+
+
+		<h3 class="info-title smaller">3. Loading JS &amp; CSS Files</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				To add new styles to a page, you can simply insert "link" and "style" tags:
+<pre data-language="html">
+ <title>New Title</title>
+ 
+ <link rel="stylesheet" href="maybe_new_style.css" />
+ <style>
+  .new_ruels_maybe {
+     color: red;
+  }
+ </style>
+</pre>
+			</li>
+			
+			<li>
+				To add new scripts to a page, you can insert "script" tags or use "ace.load_ajax_scripts" 
+				function which loads and runs scripts and caches them which prevents scripts from running more than once:
+<pre data-language="html">
+ <script type="text/javascript">
+ var scripts = ['path/to/plugin1.js', 'path/to/other-plugin.js']
+ ace.load_ajax_scripts(scripts, function() {
+   //put inline scripts related to this page here
+   alert('hello!');
+ })
+ </script>
+</pre>
+				
+			</li>
+
+			<li>
+				Please note that, scripts loaded via "ace.load_ajax_scripts" function, will be loaded and executed only once.
+				<br />
+				But sometimes, some scripts are related to a page and should be run everytime the page is loaded.
+				<br />
+				In that case you can load the script using jQuery's getScript function:
+<pre data-language="html">
+ <script type="text/javascript">
+ var scripts = ['path/to/plugin1.js', 'path/to/other-plugin.js']
+ ace.load_ajax_scripts(scripts, function() {
+   //put inline scripts related to this page here
+   jQuery.getScript('path/to/mypage-script.js', function() {
+      //this page's script is loaded
+      //now do domething
+   });
+ })
+ </script>
+</pre>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+		
+		<h3 class="info-title smaller">4. Events</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				There are some events triggered when loading page content:
+				<ol>
+					<li><code>ajaxloadstart</code> triggered when new content is requested.
+					<br />
+					If you call "preventDefault()" on event object, loading will be cancelled</li>
+					<li><code>ajaxloaddone</code> is triggered when ajax content is loaded</li>
+					<li><code>ajaxloadcomplete</code> is triggered when ajax content is loaded and inserted into dom</li>
+					<li><code>ajaxloaderror</code> is triggered when loading ajax content has failed</li>
+					<li><code>ajaxscriptsloaded</code> is triggered when loading scripts is finished</li>
+				</ol>
+			</li>
+			
+			<li>
+<pre data-language="javascript">
+ jQuery(document)
+ .on('ajaxloadstart', function(e, params) {
+    //params.url and params.hash are available
+    if(params.url == 'something') e.preventDefault();
+    if(params.hash == 'something') e.preventDefault();
+    //you can also return "false" from "content_url" function to prevent loading
+ })
+</pre>
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+		
+		
+		<h3 class="info-title smaller">5. Notes</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Please note that, inserting large pieces of content and running javascript code in ajax mode
+				may be somewhat slow on mobile devices.
+			</li>
+			
+			<li>
+				For better results, you should make sure you don't insert many scripts that contain long pieces of code when new ajax content is loaded.
+			</li>
+			
+			<li>
+				It would also be faster to keep most of your application login inside one file which is inserted into document once and
+				used by different ajax pages.
+			</li>
+		 </ul><!-- /.info-list -->
+		</div><!-- /.info-section -->
+		
+
+	</div><!-- /.help-content -->
+	<!-- /section:basics/ajax -->
+
+</section>

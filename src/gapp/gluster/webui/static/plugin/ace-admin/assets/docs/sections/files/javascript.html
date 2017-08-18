@@ -1,0 +1,349 @@
+<section>
+	<h1 class="blue"><i class="ace-icon fa fa-file-o grey"></i> Javascript Files</h1>
+	<hr />
+
+	<div class="help-content">
+		<h3 class="info-title smaller" data-id="#files/javascript.ace">1. Ace Files</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				<ul class="info-list list-unstyled">
+					<li>
+						Compressed files are inside	<code>assets/js</code> folder.
+						<br />
+						Uncompressed(non-minified) files are inside <code>assets/js/uncompressed</code> folder.
+					</li>
+				
+					<li>
+						<b>ace.js</b> contains site's main functionality such as handling sidebar, widget boxes, etc.
+					</li>
+					
+					<li>
+						<p>
+						<b>ace-elements.js</b> contains custom plugins such as
+						<i>file input</i>, <i>scrollbars</i>, <i>colorpicker</i>
+						and	wrappers for <i>spinner</i>, <i>wizard</i>, <i>treeview</i> and <i>wysiwyg</i> plugins.
+						</p>
+						<p>
+						Please note that if you want to use one of these wrappers,  you still need to include the plugin's script.
+						<br />
+						For example:
+<pre data-language="html">
+ &lt;script src="fuleux/spinner.js"&gt;&lt;/script&gt;
+ &lt;script src="ace.elements.js"&gt;&lt;/script&gt;
+</pre>
+						You can find more info about this in each plugin's section.
+					</li>
+					
+					<li>
+						<p>
+						<b>ace-extra.js</b>
+						which has cookie/localStorage functionality to save & retrieve user's settings.
+						</p>
+						<p>
+						Also, sidebar collapse/expand, fixing navbar/sidebar/breadcrumbs are defined inside this file.
+						</p>
+						<p>						
+						For more info about page options and settings, please see <a class="help-more" href="#settings">Settings</a> section.
+						</p>
+						<p>
+						And for info about cookies and storage you can refer to <a class="help-more" href="#settings.storage">Cookies & Storage</a> section.
+						</p>
+					</li>
+					
+					<li>
+						<p>
+						<b>x-editable/ace-editable.js</b> which contains 5 additional inline editable addons:
+						<i>date</i>, <i>slider</i>, <i>spinner</i>, <i>wysiwyg</i> and <i>image</i>.
+						</p>
+						<p>
+						You can find more about about these addons <a class="help-more" href="#custom/inline-editable">here</a>
+						and about <b>x-editable</b> plugin <a class="help-more" href="#plugins/misc.inline-editable">here</a>.
+						</p>
+					</li>
+					
+				</ul>
+				
+				<div class="hr hr-10"></div>
+				<p>
+					<b>ace.js</b> and <b>ace-elements.js</b>
+					are generated using in-browser Javascript builder by merging separate script files that are inside
+					<code>assets/js/ace</code> folder, which contains:
+					<ol>
+						<li><code data-open-file="javascript" class="open-file"><span class="brief-show">assets/js/ace/</span>ace.js</code></li>
+						<li><code data-open-file="javascript" class="open-file"><span class="brief-show">assets/js/ace/</span>ace.sidebar.js</code></li>
+						<li><code data-open-file="javascript" class="open-file"><span class="brief-show">assets/js/ace/</span>ace.widget-box.js</code></li>
+						<li><code data-open-file="javascript" class="open-file"><span class="brief-show">assets/js/ace/</span>elements.scroller.js</code></li>
+						<li><code data-open-file="javascript" class="open-file"><span class="brief-show">assets/js/ace/</span>elements.fileinput.js</code></li>
+						<li>And some other files which you can see inside <code>assets/js/ace</code></li>
+					</ol>
+				</p>
+				<p>				
+					For more information about any of the above files you can refer to <a href="../build/js.html">Javascript builder</a> as it has some description about each file.
+				</p>
+			</li>
+
+		 </ul>
+		</div>
+		
+		
+		
+		<h3 class="info-title smaller" data-id="#files/javascript.third">2. Other Files</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				All scripts are inside <code>assets/js</code> folder.
+				<br />
+				Uncompressed (non-minified) versions are inside	<code>assets/js/uncompressed</code> folder.				
+			</li>
+			<li>
+				<p>
+				I have put some scripts that are similar in separate folders.
+				<br />
+				But that's optional and you can have your own structure.
+				</p>
+				<p>
+				For example:
+				<br />
+				<code>assets/js/date-time</code>
+				<br />
+				<code>assets/js/fuelux</code>
+				<br />
+				<code>assets/js/markdown</code>
+				<br />
+				<code>assets/js/x-editable</code>
+				<br />
+				<code>assets/js/flot</code>
+				<br />
+				<code>assets/js/jqGrid</code>
+				</p>
+			</li>
+
+			<li>
+				If  you want to see what scripts are used in a demo page, you can view its json data file inside
+				<code>mustache/app/data/pages</code> folder.
+				<br />
+				For example, according to its data file
+				<br />
+				<code data-open-file="json" class="open-file">mustache/app/data/pages/index.json</code>
+				<br />
+				dashboard(index) page is using the following scripts:
+				<div class="space-4"></div>
+				<ol>
+					<li><b>jQuery UI</b> used for sortable tasks list</li>
+					<li><b>Easy Pie Chart</b> used for circular progress meters</li>
+					<li><b>Sparkline</b> used for inline charts inside infoboxes</li>
+					<li><b>Flot charts</b> used for the pie chart and sale stats chart</li>
+				</ol>
+			</li>
+
+			<li>
+				I have included 2 versions of jQuery UI:
+				<ol>
+					<li>
+						<code>assets/js/jquery-ui.custom.min.js</code>
+						which is a custom build which contains stripped down functionality needed by some plugins and sections.
+						<br />
+						Included features are: dragging, resizing, jQuery UI Slider, etc.
+					</li>
+					<li>
+						<code>assets/js/jquery-ui.full.min.js</code>
+						is a full version containing all of jQuery UI's functionality used in jQuery UI sample page.
+					</li>					
+				</ol>
+				You can build your own version depending on your needs.
+			</li>
+			
+			<li>
+				A minimal custom download of <b>jQuery Mobile</b> is also used,
+				so that we can have <i>tap</i> event
+				on touch devices which is preferred to <i>click</i>.
+				<br />
+				You can build your own version depending on your needs.
+			</li>
+		 </ul>
+		</div>
+
+
+
+		
+		
+		<h3 class="info-title smaller" data-id="#files/javascript.changes">3. Third party changes</h3>
+		<div class="info-title info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				I haved modified some third party scripts slightly to add some extra options.
+			</li>
+			<li>
+				The changes include :
+				<ol>
+					<li>
+						FuelUX wizard, spinner, treeview
+					</li>
+					<li>
+						Inline editable plugin
+					</li>
+					<li>
+						Markdown editor
+					</li>
+					<li>
+						Datepicker, Daterange picker, Timepicker
+					</li>
+					<li>
+						Added <code>function.bind</code> polyfill to html5shiv
+					</li>
+					<li>
+						Some changes in Easy Pie Chart
+					</li>
+				</ol>
+			</li>
+		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller" data-id="#files/javascript.order">4. Script order</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				The right order of including script files is:
+				<ul>
+					<li>
+					Scripts that are inside <code>HEAD</code> element:
+					<br />
+					(also visible in <br />
+					<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/_template/</span>styles.mustache</code>)
+					
+					<ol>
+						<li>
+							<b>ace-extra.js</b> if  you need cookie support and sidebar collapse/expand, fixing navbar, etc.
+						</li>
+						<li>
+							<b>html5shiv.min.js</b> & <b>respond.min.js</b>
+							wrapped inside IE conditional comments which enable some HTML5 features on IE8 and below.
+						</li>
+					</ol>
+					
+<pre data-language="html">
+ &lt;head&gt;
+  .
+  .
+  .
+
+  &lt;script src="ace-extra.min.js"&gt;&lt;/script&gt;
+  &lt;!--[if lte IE 8]&gt;
+   &lt;script src="html5shiv.min.js"&gt;&lt;/script&gt;
+   &lt;script src="respond.min.js"&gt;&lt;/script&gt;
+  &lt;![endif]--&gt;
+ &lt;/head&gt;
+</pre>
+
+				</li>
+				<li>
+					Other scripts that are preferrably at the end of document:
+					<br />
+					(also visible in <br />
+					<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/_template/</span>scripts.mustache</code>)
+					
+					<ol class="spaced2">
+						<li>
+							<b>jquery.js</b> as well as <b>jquery v1.x</b> which is included for IE9 and below.
+							<br />
+							<b>jquery.js</b> should be inside special IE conditional comments and it will be ignored by IE9 and below.
+							<br />
+							<b>jquery v1.x</b> should be inside conditional comments so that it's included by IE9 and below only.
+						</li>
+						
+						<li>
+							<b>bootstrap.js</b>
+						</li>
+						
+						<li>
+							<b>excanvas.js</b> for IE8 if you are going to need HTML5 Canvas support.
+							Currently plugins that need canvas support are:
+							<ol>
+								<li>Flotchart</li>
+								<li>Sparklines</li>
+								<li>jQuery Knob</li>
+								<li>Easy Pie Chart</li>
+							</ol>							
+							<br />
+							You should include excanvas before including above plugins.
+						</li>
+						
+						<li>
+							Any Plugin that you want to use for example:
+							<br />
+							<b>Chosen</b>
+							<br />
+							<b>Fuelux Wizard</b>
+						</li>
+
+						<li>
+							Finally you should include <b>ace-elements.js</b> and <b>ace.js</b>
+						</li>
+						
+						<li>
+							And then inline scripts that you may want to use for the page.
+						</li>
+					</ol>
+					<div class="hr hr-8"></div>
+<pre data-language="html">
+  .
+  .
+  .
+
+  &lt;!--[if !IE]&gt; --&gt;
+  &lt;script src="jquery.min.js"&gt;&lt;/script&gt;
+  &lt;!-- &lt;![endif]--&gt;
+  &lt;!--[if lte IE 9]&gt;
+   &lt;script src="jquery1x.min.js"&gt;&lt;/script&gt;
+  &lt;![endif]--&gt;
+
+  &lt;script src="bootstrap.min.js"&gt;&lt;/script&gt;
+
+  &lt;!-- ie8 canvas if required for plugins such as charts, etc --&gt;
+  &lt;!--[if lte IE 8]&gt;
+   &lt;script src="excanvas.min.js"&gt;&lt;/script&gt;
+  &lt;![endif]--&gt;
+
+  &lt;script src="plugin1.min.js"&gt;&lt;/script&gt;
+  &lt;script src="plugin2.min.js"&gt;&lt;/script&gt;
+  &lt;script src="plugin3.min.js"&gt;&lt;/script&gt;
+  
+  &lt;script src="ace-elements.min.js"&gt;&lt;/script&gt;
+  &lt;script src="ace.min.js"&gt;&lt;/script&gt;
+  
+  &lt;script type="text/javascript"&gt;
+     //If page has any inline scripts, it goes here
+     jQuery(function($) {
+       alert('hello!');
+     });
+  &lt;/script&gt;
+
+ &lt;/body&gt;
+</pre>
+
+				 </li>
+					
+				</ul>
+			</li>
+		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller" data-id="#files/javascript.build">5. Javascript Builder</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				There is also the in-browser Javascript builder that you can use to build a custom Javascript file,
+				using only the parts you need.
+				<br />
+				You can find it here: <a href="../build/js.html">path/to/ace/build/js.html</a>
+				<div class="space-6"></div>
+				You can choose a minified(compressed) output which is powered by the popular tool
+				<a href="#plugins/tools.uglifyjs" class="help-more">UglifyJs</a>.
+			</li>
+		 </ul>
+		</div>
+	</div>
+</section>

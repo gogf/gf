@@ -16,6 +16,11 @@ import (
     "g/net/ghttp"
     "g/os/glog"
     "g/os/gfile"
+    "net"
+    "encoding/json"
+    "time"
+    "io"
+    "g/util/gutil"
 )
 
 const (
@@ -25,7 +30,7 @@ const (
     gPORT_REPL                      = 4167    // 集群数据同步接口
     gPORT_API                       = 4168    // 服务器对外API接口
     gPORT_MONITOR                   = 4169    // 监控服务接口
-    gPORT_WEB                       = 4170    // WEB管理界面
+    gPORT_WEBUI                     = 4170    // WEB管理界面
 
     // 节点状态
     gSTATUS_DEAD                    = 0
@@ -97,6 +102,7 @@ type Msg struct {
 type Node struct {
     mutex            sync.RWMutex
 
+    Group            string                   // 集群名称
     Name             string                   // 节点名称
     Ip               string                   // 主机节点的局域网ip
     Cfg              string                   // 配置文件绝对路径
@@ -121,6 +127,19 @@ type Node struct {
     Service          *gmap.StringInterfaceMap // 存储的服务配置表
     ServiceForApi    *gmap.StringInterfaceMap // 用于提高Service API响应的冗余map变量，内容与Service成员变量相同，但结构不同
     KVMap            *gmap.StringStringMap    // 存储的K-V哈希表
+
+    MonitorData      *Monitor         // 当节点为Monitor时，该变量存储Monitor的数据
+}
+
+// Monitor对象
+type Monitor struct {
+    SavePath  string
+    WebUIPath string
+    Admin     string
+    Pass      string
+    Peers     *gmap.StringInterfaceMap
+    Services  *gmap.StringInterfaceMap
+    KVMaps    *gmap.StringInterfaceMap
 }
 
 // 服务对象
@@ -155,8 +174,15 @@ type NodeApiService struct {
     node *Node
 }
 
+// 用于Monitor WebUI对象
+type MonitorWebUI struct {
+    ghttp.ControllerBase
+    node *Node
+}
+
 // 节点信息
 type NodeInfo struct {
+    Group            string
     Name             string
     Ip               string
     Status           int
@@ -211,4 +237,92 @@ func NewServerByIp(ip string) *Node {
         KVMap         : gmap.NewStringStringMap(),
     }
     return &node
+}
+
+// 创建一个Monitor对象
+func NewMonitor() *Monitor {
+    return &Monitor {
+        Peers    : gmap.NewStringInterfaceMap(),
+        Services : gmap.NewStringInterfaceMap(),
+        KVMaps   : gmap.NewStringInterfaceMap(),
+    }
+}
+
+// 获取数据
+func Receive(conn net.Conn) []byte {
+    conn.SetReadDeadline(time.Now().Add(gTCP_READ_TIMEOUT * time.Millisecond))
+    retry      := 0
+    buffersize := 1024
+    data       := make([]byte, 0)
+    for {
+        buffer      := make([]byte, buffersize)
+        length, err := conn.Read(buffer)
+        if err != nil {
+            if retry > gTCP_RETRY_COUNT - 1 {
+                break;
+            }
+            if err != io.EOF {
+                //glog.Println("receive err:", err, "retry:", retry)
+            }
+            retry ++
+            time.Sleep(100 * time.Millisecond)
+        } else {
+            if length == buffersize {
+                data = gutil.MergeSlice(data, buffer)
+            } else {
+                data = gutil.MergeSlice(data, buffer[0:length])
+                break;
+            }
+        }
+    }
+    return data
+}
+
+// 获取Msg
+func RecieveMsg(conn net.Conn) *Msg {
+    data := Receive(conn)
+    //glog.Println(string(data))
+    if data != nil && len(data) > 0 {
+        var msg Msg
+        err := json.Unmarshal(data, &msg)
+        if err != nil {
+            glog.Println("receive msg parse err:", err)
+            return nil
+        }
+        return &msg
+    }
+    return nil
+}
+
+// 发送数据
+func Send(conn net.Conn, data []byte) error {
+    conn.SetReadDeadline(time.Now().Add(gTCP_WRITE_TIMEOUT * time.Millisecond))
+    retry := 0
+    for {
+        _, err := conn.Write(data)
+        if err != nil {
+            if retry > gTCP_RETRY_COUNT - 1 {
+                return err
+            }
+            //glog.Println("data send:", err, "try:", retry)
+            retry ++
+            time.Sleep(100 * time.Millisecond)
+        } else {
+            return nil
+        }
+    }
+}
+
+// 发送Msg
+func SendMsg(conn net.Conn, head int, body string) error {
+    var msg = Msg{
+        Head : head,
+        Body : body,
+    }
+    s, err := json.Marshal(msg)
+    if err != nil {
+        glog.Println("send msg parse err:", err)
+        return err
+    }
+    return Send(conn, s)
 }

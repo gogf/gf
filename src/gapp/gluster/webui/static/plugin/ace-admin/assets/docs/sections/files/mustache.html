@@ -1,0 +1,535 @@
+<section>
+	<h1 class="blue"><i class="ace-icon fa fa-file-o grey"></i> Mustache Files</h1>
+	<hr />
+	
+	<div class="alert alert-info">
+		<button class="close" data-dismiss="alert"><i class="ace-icon fa fa-times"></i></button>
+		<b>Please note that:</b>
+		<div class="space-4"></div>
+		<i class="fa fa-hand-o-right"></i>
+		You don't need to use Mustache templates in your application.
+		
+		<div class="space-8"></div>
+		<i class="fa fa-hand-o-right"></i>
+		If you need any info about any part of the template,
+		you can refer to its documentation or use on-page help.
+		
+		<div class="space-8"></div>
+		<i class="fa fa-hand-o-right"></i>
+		But you can read the following for more info such as the purpose of using a template engine
+		and how it may help you find your way around Ace admin template better.
+		
+		<div class="hr hr-12"></div>
+		If you think there's something I'm missing here or more info is needed, just let me know.
+	</div>
+	
+	<div class="hr hr-double hr32"></div>
+
+	<div class="help-content">
+		<h3 class="info-title smaller">1. What is it?</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Probably you are already using a template system in your application.
+				<p>
+				It may be natively supported by your framework of choice or may be an external library.
+				<p>
+				For example PHP Smarty or Ruby's ERB are such template engines.
+				<p>
+				The main purpose of using a template system is to separate presentation from application logic				
+			</li>
+			
+			<li>
+				<i class="fa fa-lightbulb-o orange bigger-125"></i>
+				But Ace admin's demo pages are static HTML and not an application.
+				<br />
+				Therefore the main reason for using Mustache templates is to create
+				demo pages which have similar layout and looks but different content.
+				<div class="space-6"></div>
+				In other words, we use templates to break down large HTML pages into smaller parts that can be easily modified and maintained.
+			</li>
+			
+			<li>
+				Mustache is a templating system with implementations
+				available in many languages including Javascript, PHP, Ruby, etc.
+				
+				<div class="space-6"></div>
+				For an overview you can see this page: <a href="http://mustache.github.io/">http://mustache.github.io/mustache.5.html</a> 
+				<div class="space-6"></div>
+				
+				I'm using it to create the HTML output.
+				<br />
+				I've also overridden the partial template loader mechanism
+				to automatically load partial templates as needed.
+			</li>
+
+			<li>
+				You can view or edit <b>Mustache</b>(.mustache) files using your favorite text or HTML editor
+				and enable HTML syntax highlighting for it.
+				<p>
+				You can also click on each file name provided in the following sections and view its content inside your browser.
+			</li>
+		 </ul>
+		</div>
+		
+		<h3 class="info-title smaller">2. What does it contain?</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Let's start with the following file which is the default layout file:
+				<br />
+				<i>(you can click on in to view its content)</i>
+				<br />
+				<code data-open-file="html" class="open-file">mustache/app/views/layouts/default.mustache</code>
+				<div class="space-6"></div>
+				As you can see it contains some HTML code and some special tags (Mustache tags).
+				<div class="space-4"></div>
+				There are 6 kinds of Mustache tags used here:
+				<ol class="spaced2">
+					<li>
+						Variables that are used for printing a piece of data
+						such as <code>{{page.title}}</code> or <code>{{site.title}}</code>
+					</li>
+					
+					<li>
+						Partial template tags that start with a <code>&gt;</code> such as <code>{{&gt; layout.sidebar}}</code>.
+						<div class="space-6"></div>
+						The engine tries to load current layout's <code>sidebar</code> template file.
+						<br />
+						It starts by looking inside
+						<br />
+						<code>mustache/app/views/layouts/partials/<b class="bigger-110 blue">default</b></code>
+						<br />
+						folder and if not found, it will look for it inside
+						<code>mustache/app/views/layouts/partials/<b class="bigger-110 blue">_shared</b></code>
+						
+						<div class="space-6"></div>
+						In our case, sidebar's HTML code is shared between <b>default</b> & <b>empty</b> layouts.
+						So it's located at:
+						<br />
+						<code data-open-file="html" class="open-file">mustache/app/views/layouts/partials/<b class="bigger-110 blue">_shared</b>/sidebar.mustache</code>
+					</li>
+
+					<li>
+						Section tags that print a piece of code or data if a variable is defined
+						and is not false/null.
+						<br />
+						For example inside our sidebar <code data-open-file="html" class="open-file">mustache/app/views/layouts/partials/_shared/sidebar.mustache</code>
+						there is:
+<pre>
+&lt;div id="sidebar" class="sidebar
+<span class="light-blue">{{#page.horizontal-menu}}</span><span class="light-green"> h-sidebar</span><span class="light-blue">{{/page.horizontal-menu}}</span>
+</pre>
+					The <code><span class="green">h-sidebar</span></code>
+					class will be printed only if a <code>page.horizontal-menu</code> variable is defined and is not false or null.
+					</li>
+
+					<li>
+					Inverted Section tags that print a piece of code or data if a variable is not defined
+						or is false/null.
+						Again in our <code>sidebar</code> mustache file we have: <br />
+<pre>
+<span class="light-red">{{^page.side_menu_collapsible}}</span>
+ <span class="light-red">{{^page.responsive_style_2}}</span>
+  <span class="light-green">responsive</span>
+ <span class="light-red">{{/page.responsive_style_2}}</span>
+<span class="light-red">{{/page.side_menu_collapsible}}</span>
+</pre>
+
+					The	<code><span class="green">responsive</span></code> class will be printed
+					only if <code>page.side_menu_collapsible</code> and <code>page.responsive_style_2</code> variables are NOT defined or are false/null.
+					</li>
+					
+					<li>
+						Non-Empty List tags are used to print a list of items when the variable is a non-empty array:
+<pre>
+<span class="light-blue">{{#conversation_list}}</span>
+  &lt;h3&gt;<span class="light-green">{{title}}</span>&lt;/h3&gt;
+  &lt;div class="content"&gt;<span class="light-green">{{content}}</span>&lt;/div&gt;
+  &lt;div class="time"&gt;<span class="light-green">{{time}}</span>&lt;/div&gt;
+<span class="light-blue">{{/conversation_list}}</span>
+</pre>
+					</li>
+					
+
+					<li>
+						Comment tags such as <code><span class="green">{{! This is a comment}}</span></code>. These are ignored and won't be converted to HTML comments.
+					</li>
+				</ol>
+					
+			</li>
+				
+			<li>
+				In our case variables and options come under some different names:
+				<ol class="spaced2">
+					<li>
+						<code>site.*</code> for example <code>site.title</code>
+					</li>
+					<li>
+						<code>layout.*</code> for example <code>layout.sidebar_items</code>
+					</li>
+					<li>
+						<code>page.*</code> for example <code>page.title</code> or <code>page.content</code>
+					</li>
+					<li>
+						And other variables such as <code>path.assets</code>, etc.
+					</li>
+				</ol>
+
+				
+				For example <code>site.remote_jquery</code> inside
+				<code data-open-file="html" class="open-file">mustache/app/views/layouts/partials/_shared/_template/jquery.mustache</code>
+				is an option that specifies whether we should
+				use remote (CDN) jquery files or not when generating our HTML output.
+				<div class="space-6"></div>
+				Following <code>Data Files</code> section describes where data is loaded from.
+			</li>
+		 </ul>
+		</div>
+
+		<h3 class="info-title smaller">3. Templates Files</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Our layout files are inside <code>mustache/app/views/layouts</code> folder which includes:
+				<br />
+				<i>(Move mouse over each item to see full path)</i>
+				<ul>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/</span>default.mustache</code>
+						<br />
+						Default layout file for all pages except for login and empty.html file.
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/</span>login.mustache</code>
+						<br />
+						Login page layout file.
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/</span>empty.mustache</code>
+						<br />
+						Empty page's layout file.
+						It is similar to default layout but the partials are slightly different
+						so a separate file is used.
+					</li>
+				</ul>
+				<br />
+				Layout partials are inside <code>mustache/app/views/layouts/partials</code> folder.
+				<br />
+				Some of partials are:
+				<ul>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>sidebar.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>sidebar/item.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>sidebar/shortcuts.mustache</code>
+					</li>
+				</ul>
+				
+				<ul>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>navbar.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>navbar/topmenu.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>navbar/toggle_buttons.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>navbar/messages.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>navbar/notifications.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>navbar/tasks.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>navbar/tabbed_user_notifications.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/</span>default/navbar/user_menu.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/</span>empty/navbar/user_menu.mustache</code>
+					</li>
+					<li class="space-8"></li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>settings.mustache</code>
+					</li>
+					
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/</span>default/breadcrumbs.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/</span>default/footer.mustache</code>
+					</li>
+
+					<li class="hr hr-8"></li>
+					
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>_template/jquery.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>_template/bootstrap.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>_template/fonts.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>_template/fontawesome.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>_template/scripts.mustache</code>
+					</li>
+					<li>
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/layouts/partials/_shared/</span>_template/styles.mustache</code>
+					</li>
+				</ul>
+			</li>
+			
+			<li>
+				Page files are inside <code>mustache/app/views/pages</code>.
+				<br />
+				A few samples pages include:
+				<br />
+				<ul class="spaced2">
+					<li>
+						Home (dashboard) page:
+						<br />
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/</span>index.mustache</code>
+						<br />
+						And its partials are:
+						<ul>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/index/</span>conversations.mustache</code>
+							</li>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/index/</span>comments.mustache</code>
+							</li>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/index/</span>tasks.mustache</code>
+							</li>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/index/</span>members.mustache</code>
+							</li>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/index/</span>domains.mustache</code>
+							</li>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/index/</span>infobox.mustache</code>
+							</li>
+						</ul>
+					</li>
+					<li>
+						Login page:
+						<br />
+						<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/</span>login.mustache</code>
+						<br />
+						which is split into 3 partials:
+						<br />
+						<ul>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/login/</span>login_box.mustache</code>
+							</li>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/login/</span>forgot_box.mustache</code>
+							</li>
+							<li>
+								<code data-open-file="html" class="open-file"><span class="brief-show">mustache/app/views/pages/partials/login/</span>signup_box.mustache</code>
+							</li>
+						</ul>
+					</li>
+					<li>
+						And other pages at <code>mustache/app/views/pages</code>.
+					</li>
+				</ul>
+			</li>
+			
+	
+			<li>
+				Page assets (inline scripts and styles) are inside <code>mustache/app/views/assets</code>.
+				<br />
+				Putting them in separate files makes it easier to read and edit.
+				<br />
+				In some (server side programming language) frameworks,
+				this is usually done by registering files and snippets during application run
+				and inserting them in the output at the right spot. 
+
+				<br />
+				<ul class="spaced2">
+					<li>
+						Script of each page is inside <code>mustache/app/views/assets/scripts</code>.
+						<br />
+						A few samples are:
+						<br />						
+						<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/</span>scripts/index.js</code>
+						<br />
+						<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/</span>scripts/tables.js</code>
+						<br />
+						<code data-open-file="javascript" class="open-file"><span class="brief-show">mustache/app/views/assets/</span>scripts/profile.js</code>
+						<br />
+						These scripts are used in relevant pages and can server as a basic example for most plugins and functionality.
+					</li>
+					<li>
+						Some pages may have additional extra CSS rules that are used for demo pages only.
+						<br />
+						Currently there is:
+						<br />
+						<code data-open-file="css" class="open-file"><span class="brief-show">mustache/app/views/assets/</span>styles/elements.css</code>
+						<br />
+						and
+						<br />
+						<code data-open-file="css" class="open-file"><span class="brief-show">mustache/app/views/assets/</span>styles/grid.css</code>
+					</li>
+				</ul>
+			</li>
+		 </ul>
+		</div>
+		
+		
+		<h3 class="info-title smaller">4. Data Files</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				In your application you are probably using a database engine to save/restore your data.
+				<br />
+				For Ace admin, as there is not any dynamic functionality in demo pages, I have used
+				simple text files with json and csv data format.
+				<br />
+				They are located here:
+				<code>mustache/app/data</code>
+			</li>
+		 
+			<li>
+				In our case there are 3 types of data:
+				<ol class="spaced2">
+					<li>
+						<b>Layout data</b> inside <code>mustache/app/data/layouts</code> folder.
+						<br />
+						For example:
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/layouts/partials/default/</span>navbar_messages.json</code>
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/layouts/partials/default/</span>navbar_notifications.json</code>
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/layouts/partials/default/</span>navbar_tasks.json</code>
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/layouts/partials/</span>default/sidebar_items.json</code>
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/layouts/partials/</span>empty/sidebar_items.json</code>
+					</li>
+					
+					<li>
+						<b>Page data and options</b> inside <code>mustache/app/data/pages</code> folder.
+						<br />
+						For example:
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/pages/</span>index.json</code>
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/pages/</span>top-menu.json</code>
+						<br />
+						You can see that <code>top-menu.json</code> has <code>horizontal-menu</code> and <code>top-menu</code> options enabled.
+
+						<div class="space-8"></div>
+						
+						Also each page's partial data is inside <code>mustache/app/data/pages/partials</code> folder.
+						<br />
+						For example dashboard's conversations or profile activities:
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/pages/partials/</span>index/conversations.json</code>
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/pages/partials/</span>profile/activities.json</code>
+					</li>
+					
+					<li>
+						<b>Site data and options</b> inside <code>mustache/app/data/common</code> folder.
+						<br />
+						For example
+						<br />
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/common/</span>site.json</code>
+						<br />
+						contains some general site variables and options.
+						
+						<div class="space-6"></div>
+						
+						When using <a href="#plugins/tools.node-js" class="help-more">Node.js</a> to produce the output, it's possible to override these values using command line arguments.
+						<i>(There is more info on this in the following section)</i>
+						
+						<div class="hr hr-12"></div>
+						
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/common/</span>script-mapping.json</code>
+						<br /> 
+						<code data-open-file="json" class="open-file"><span class="brief-show">mustache/app/data/common/</span>style-mapping.json</code>
+						<br />
+						files contain a list of 3rd party names and their relevant Javascript or CSS file.
+						<br />
+						This way a file name can be modified and the changes will be reflected
+						on all pages using that script or style in future updates.
+					</li>
+				</ol>
+			</li>
+		 </ul>
+		</div>
+
+		
+		<h3 class="info-title smaller">5. Compiling & Browsing</h3>
+		<div class="info-section">
+		 <ul class="info-list list-unstyled">
+			<li>
+				Demo page's are generated using a Javascript Mustache compiler(both Hogan.js or Mustache.js are possible).
+				<br />
+				You can go to <code>mustache/js</code> directory and rebuild HTML files using the following command:
+				<code>node index.js</code>				
+				<br />
+				The output will be put inside <code>output</code> folder by default.
+				
+				<div class="space-10"></div>
+				There are also a few options you can use:
+				<ul class="spaced2">
+					<li>
+						<b>--engine</b>=mustache|hogan
+						<br />
+						Default is hogan
+					</li>
+					<li>
+						<b>--output_folder</b>="../some-folder"
+						<br />
+						Default is <i>output</i>
+					</li>
+					<li>
+						And site variables & options of the following file can be overriden via command line arguments:
+						<br />
+						<code data-open-file="json" class="open-file">mustache/app/data/common/site.json</code>
+						<br />
+						For example: <b>--remote_jquery</b>=true
+					</li>
+				</ul>
+			</li>
+			<li>
+				There is also a PHP version using PHP Mustache compiler which I use during development.
+				<br />
+				If you have PHP installed, you can access it here:
+				<a href="../mustache/php/">http://path_to_ace/mustache/php/</a>				
+			</li>
+			
+			<li>
+				Also please note that
+				I have overridden a function of <b>Hogan.js</b>
+				and </b>Mustache.js</b> compiler to automatically load a partial template
+				as needed without preloading them.
+				<br />
+				They are located at 
+				<code data-open-file="javascript" class="open-file">mustache/js/classes/autoload-hogan.js</code>
+				and
+				<code data-open-file="javascript" class="open-file">mustache/js/classes/autoload-mustache.js</code>
+			</li>
+		 </ul>
+		</div>
+
+	</div>
+</section>
