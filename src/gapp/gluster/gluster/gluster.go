@@ -118,7 +118,6 @@ type Node struct {
     RaftRole         int                      // RAFT角色
     MinNode          int                      // 组成集群的最小节点数量
     Leader           *NodeInfo                // Leader节点信息
-                                              // @todo 修改为对象存储
     Monitor          string                   // Monitor节点ip
     Score            int64                    // 选举比分
     ScoreCount       int                      // 选举比分的节点数

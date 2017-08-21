@@ -74,7 +74,6 @@ func (n *Node) onMsgRaftSplitBrainsUnset(conn net.Conn, msg *Msg) {
 // 上线通知
 func (n *Node) onMsgRaftHi(conn net.Conn, msg *Msg) {
     n.sendMsg(conn, gMSG_RAFT_HI2, "")
-    //glog.Println("add peer:", fromip, "to", n.Ip, ", remote", conn.RemoteAddr(), ", local", conn.LocalAddr())
 }
 
 // 心跳保持

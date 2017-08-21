@@ -4,7 +4,6 @@
 package gluster
 
 import (
-    "net"
     "g/encoding/gjson"
     "time"
     "g/core/types/gset"

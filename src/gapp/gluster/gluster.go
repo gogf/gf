@@ -5,10 +5,7 @@
 package main
 
 import (
-    "g/net/gip"
     "gapp/gluster/gluster"
-    "g/os/glog"
-    "g/os/gconsole"
 )
 
 func main() {

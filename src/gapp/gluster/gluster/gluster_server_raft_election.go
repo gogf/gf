@@ -15,7 +15,7 @@ func (n *Node) electionHandler() {
     for {
         if n.Role == gROLE_SERVER && n.getRaftRole() != gROLE_RAFT_LEADER && gtime.Millisecond() >= n.getElectionDeadline() {
             // 使用MinNode变量控制最小节点数(这里判断的时候要去除自身的数量)
-            if n.Peers.Size() > n.MinNode - 1 {
+            if n.Peers.Size() >= n.MinNode - 1 {
                 if n.Peers.Size() > 0 {
                     // 集群是2个节点及以上
                     n.resetAsCandidate()

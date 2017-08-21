@@ -20,11 +20,10 @@ func (this *NodeApiNode) GET(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     if err != nil {
         w.ResponseJson(0, "sending request error: " + err.Error(), nil)
     } else {
-        var data interface{}
-        msg := this.node.receiveMsg(conn)
-        err  = gjson.DecodeTo(&msg.Body, &data)
-        if err != nil {
-            w.ResponseJson(0, "received error from leader: " + err.Error(), nil)
+        msg  := this.node.receiveMsg(conn)
+        data := gjson.Decode(&msg.Body)
+        if data == nil {
+            w.ResponseJson(0, "error data type from leader", nil)
         } else {
             w.ResponseJson(1, "ok", data)
         }

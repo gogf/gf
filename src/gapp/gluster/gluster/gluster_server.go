@@ -212,6 +212,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
     return &NodeInfo {
         Group            : n.Group,
         Id               : n.Id,
+        Ip               : "127.0.0.1",
         Name             : n.Name,
         Status           : gSTATUS_ALIVE,
         Role             : n.Role,
