@@ -11,9 +11,14 @@ import (
 
 // 节点信息API管理
 func (this *NodeApiNode) GET(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_RAFT)
+    leader := this.node.getLeader()
+    if leader == nil {
+        w.ResponseJson(0, "service would be available after leader election", nil)
+        return
+    }
+    conn := this.node.getConn(leader.Ip, gPORT_RAFT)
     if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
+        w.ResponseJson(0, "could not connect to leader: " + leader.Ip, nil)
         return
     }
     err := this.node.sendMsg(conn, gMSG_API_PEERS_INFO, "")

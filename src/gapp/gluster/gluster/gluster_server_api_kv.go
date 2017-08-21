@@ -47,10 +47,14 @@ func (this *NodeApiKv) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
         w.ResponseJson(0, "invalid data type", nil)
         return
     }
-    // 请求到leader
-    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_REPL)
+    leader := this.node.getLeader()
+    if leader == nil {
+        w.ResponseJson(0, "service would be available after leader election", nil)
+        return
+    }
+    conn := this.node.getConn(leader.Ip, gPORT_REPL)
     if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
+        w.ResponseJson(0, "could not connect to leader: " + leader.Ip, nil)
         return
     }
     err := this.node.sendMsg(conn, gMSG_REPL_SET, *gjson.Encode(items))
@@ -87,10 +91,14 @@ func (this *NodeApiKv) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
         w.ResponseJson(0, "invalid data type for " + method, nil)
         return
     }
-    // 请求到leader
-    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_REPL)
+    leader := this.node.getLeader()
+    if leader == nil {
+        w.ResponseJson(0, "service would be available after leader election", nil)
+        return
+    }
+    conn := this.node.getConn(leader.Ip, gPORT_REPL)
     if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
+        w.ResponseJson(0, "could not connect to leader: " + leader.Ip, nil)
         return
     }
     err := this.node.sendMsg(conn, gMSG_REPL_REMOVE, *gjson.Encode(items))

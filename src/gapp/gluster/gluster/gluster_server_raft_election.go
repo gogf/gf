@@ -62,6 +62,10 @@ func (n *Node) beginScore() {
                 return
             }
             defer conn.Close()
+            if n.checkConnInLocalNode(conn) {
+                n.Peers.Remove(info.Id)
+                return
+            }
             if err := n.sendMsg(conn, gMSG_RAFT_SCORE_REQUEST, ""); err != nil {
                 glog.Println(err)
                 return
@@ -108,10 +112,14 @@ func (n *Node) beginScore() {
             }
             conn := n.getConn(info.Ip, gPORT_RAFT)
             if conn == nil {
-                n.updatePeerStatus(info.Ip, gSTATUS_DEAD)
+                n.updatePeerStatus(info.Id, gSTATUS_DEAD)
                 return
             }
             defer conn.Close()
+            if n.checkConnInLocalNode(conn) {
+                n.Peers.Remove(info.Id)
+                return
+            }
             if err := n.sendMsg(conn, gMSG_RAFT_SCORE_COMPARE_REQUEST, ""); err != nil {
                 glog.Println(err)
                 return

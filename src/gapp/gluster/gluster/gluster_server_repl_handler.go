@@ -23,9 +23,8 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         case gMSG_REPL_SET:                 n.onMsgReplSet(conn, msg)
         case gMSG_REPL_REMOVE:              n.onMsgReplRemove(conn, msg)
         case gMSG_REPL_HEARTBEAT:           n.onMsgReplHeartbeat(conn, msg)
-        case gMSG_REPL_COMPLETELY_UPDATE:   n.onMsgReplUpdate(conn, msg)
-        case gMSG_REPL_SERVICE_UPDATE:      n.onMsgReplServiceUpdate(conn, msg)
         case gMSG_REPL_INCREMENTAL_UPDATE:  n.onMsgReplUpdate(conn, msg)
+        case gMSG_REPL_COMPLETELY_UPDATE:   n.onMsgReplUpdate(conn, msg)
         case gMSG_API_SERVICE_SET:          n.onMsgServiceSet(conn, msg)
         case gMSG_API_SERVICE_REMOVE:       n.onMsgServiceRemove(conn, msg)
     }
@@ -212,10 +211,10 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
             }
         }
     } else {
-        updated = true
+        updated = false
     }
     if !updated {
-        // 如果增量同步失败则采用全量同步
+        // 如果增量同步失败，或者判断需要完整同步，则采用全量同步
         if err := n.sendMsg(conn, gMSG_REPL_COMPLETELY_UPDATE, *gjson.Encode(*n.KVMap.Clone())); err != nil {
             glog.Error(err)
             return

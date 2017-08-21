@@ -79,6 +79,11 @@ func (n *Node) onMsgRaftHi(conn net.Conn, msg *Msg) {
 // 心跳保持
 func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
     n.updateElectionDeadline()
+    if n.checkConnInLocalNode(conn) {
+        n.Peers.Remove(msg.Info.Id)
+        conn.Close()
+        return
+    }
     result := gMSG_RAFT_HEARTBEAT
     if n.getRaftRole() == gROLE_RAFT_LEADER {
         // 如果是两个leader相互心跳，表示两个leader是连通的，这时根据算法算出一个leader即可

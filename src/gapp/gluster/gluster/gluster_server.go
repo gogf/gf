@@ -37,7 +37,7 @@ func (n *Node) sendMsg(conn net.Conn, head int, body string) error {
     ip, _  := gip.ParseAddress(conn.LocalAddr().String())
     info   := n.getNodeInfo()
     info.Ip = ip
-    s, err := json.Marshal(Msg { head, body, *n.getNodeInfo() })
+    s, err := json.Marshal(Msg { head, body, *info })
     if err != nil {
         glog.Println("send msg parse err:", err)
         return err
@@ -212,7 +212,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
     return &NodeInfo {
         Group            : n.Group,
         Id               : n.Id,
-        Ip               : "127.0.0.1",
+        Ip               : n.Ip,
         Name             : n.Name,
         Status           : gSTATUS_ALIVE,
         Role             : n.Role,
@@ -234,6 +234,10 @@ func (n *Node) sayHi(ip string) bool {
     }
     conn := n.getConn(ip, gPORT_RAFT)
     if conn == nil {
+        return false
+    }
+    defer conn.Close()
+    if n.checkConnInLocalNode(conn) {
         return false
     }
     err := n.sendMsg(conn, gMSG_RAFT_HI, "")
@@ -265,6 +269,13 @@ func (n *Node) sayHiToLocalLan() {
     for i := 1; i < 256; i++ {
         go n.sayHi(fmt.Sprintf("%s.%d", segment, i))
     }
+}
+
+// 检查链接是否属于本地的一个链接(即：自己链接自己)
+func (n *Node) checkConnInLocalNode(conn net.Conn) bool {
+    localip,  _ := gip.ParseAddress(conn.LocalAddr().String())
+    remoteip, _ := gip.ParseAddress(conn.RemoteAddr().String())
+    return localip == remoteip
 }
 
 func (n *Node) getLeader() *NodeInfo {

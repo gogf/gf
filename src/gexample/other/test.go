@@ -8,6 +8,8 @@ import (
     "g/os/glog"
     "g/net/gip"
     "sort"
+    "net"
+    "time"
 )
 
 func makeNodeId() string {
@@ -24,6 +26,14 @@ func makeNodeId() string {
     return strings.ToUpper(gmd5.EncodeString(fmt.Sprintf("%s/%v", hostname, strings.Join(ips, ","))))
 }
 
+func getConn(ip string, port int) net.Conn {
+    conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), 3 * time.Second)
+    if err == nil {
+        return conn
+    }
+    return nil
+}
+
 func main() {
-    fmt.Println(makeNodeId())
+    fmt.Println(getConn("192.168.2.102", 80).LocalAddr())
 }

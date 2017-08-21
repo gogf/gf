@@ -233,6 +233,7 @@ func NewServer() *Node {
     }
     node := Node {
         Id            : nodeId(),
+        Ip            : "127.0.0.1",
         Name          : hostname,
         Role          : gROLE_SERVER,
         RaftRole      : gROLE_RAFT_FOLLOWER,
@@ -246,6 +247,10 @@ func NewServer() *Node {
         Service       : gmap.NewStringInterfaceMap(),
         ServiceForApi : gmap.NewStringInterfaceMap(),
         KVMap         : gmap.NewStringStringMap(),
+    }
+    ips, err := gip.IntranetIP()
+    if err == nil && len(ips) == 1 {
+        node.Ip = ips[0]
     }
     return &node
 }
@@ -315,7 +320,7 @@ func RecieveMsg(conn net.Conn) *Msg {
             glog.Println("receive msg parse err:", err)
             return nil
         }
-        ip, _      := gip.ParseAddress(conn.LocalAddr().String())
+        ip, _      := gip.ParseAddress(conn.RemoteAddr().String())
         msg.Info.Ip = ip
         return &msg
     }
