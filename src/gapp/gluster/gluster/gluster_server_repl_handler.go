@@ -194,7 +194,7 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     n.setStatusInReplication(true)
     defer n.setStatusInReplication(false)
 
-    glog.Println("send data replication update from", n.Ip, "to", msg.Info.Ip)
+    glog.Println("send data replication update from", n.Name, "to", msg.Info.Name)
     // 首先进行增量同步
     updated := true
     list    := n.getLogEntriesByLastLogId(msg.Info.LastLogId)
@@ -207,7 +207,7 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
         rmsg := n.receiveMsg(conn)
         if rmsg != nil {
             if n.getLastLogId() > rmsg.Info.LastLogId {
-                glog.Error(rmsg.Info.Ip + ":", "incremental update failed, now try completely update")
+                glog.Error(rmsg.Info.Name + ":", "incremental update failed, now try completely update")
                 updated = false
             }
         }
@@ -226,7 +226,7 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
 
 // 同步Service到目标节点
 func (n *Node) updateServiceToRemoteNode(conn net.Conn, msg *Msg) {
-    glog.Println("send service replication update from", n.Ip, "to", msg.Info.Ip)
+    glog.Println("send service replication update from", n.Name, "to", msg.Info.Name)
     if err := n.sendMsg(conn, gMSG_REPL_SERVICE_UPDATE, *gjson.Encode(*n.Service.Clone())); err != nil {
         glog.Error(err)
         return

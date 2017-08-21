@@ -27,31 +27,27 @@ func (n *Node) logAutoReplicationHandler() {
         select {
             case entry := <- n.LogChan:
                 n.setStatusInReplication(true)
+                n.saveLogEntry(entry)
                 glog.Println("sending log entry", entry)
                 for _, v := range n.Peers.Values() {
                     info := v.(NodeInfo)
                     if info.Status != gSTATUS_ALIVE {
                         continue
                     }
-                    conn := n.getConn(info.Ip, gPORT_REPL)
-                    if conn != nil {
-                        wg.Add(1)
-                        go func(conn net.Conn, entry LogEntry) {
-                            if err := n.sendMsg(conn, entry.Act, *gjson.Encode(entry)); err != nil {
-                                glog.Println(err)
-                                conn.Close()
-                                wg.Done()
-                                return
-                            }
+                    wg.Add(1)
+                    go func(info *NodeInfo, entry LogEntry) {
+                        defer wg.Done()
+                        conn := n.getConn(info.Ip, gPORT_REPL)
+                        if conn == nil {
+                            return
+                        }
+                        defer conn.Close()
+                        if n.sendMsg(conn, entry.Act, *gjson.Encode(entry)) == nil {
                             n.receiveMsg(conn)
-                            wg.Done()
-                        }(conn, entry)
-                    }
+                        }
+                    }(&info, entry)
                 }
                 wg.Wait()
-                // 当所有节点的请求处理后，再保存数据到自身
-                // 以便leader与follower之间的数据同步判断
-                n.saveLogEntry(entry)
                 n.setStatusInReplication(false)
         }
     }
@@ -62,28 +58,25 @@ func (n *Node) replicationLoop() {
     conns := gset.NewStringSet()
     for {
         if n.getRaftRole() == gROLE_RAFT_LEADER {
-            ips := n.Peers.Keys()
-            for _, ip := range ips {
-                if conns.Contains(ip) {
+            for _, v := range n.Peers.Values() {
+                info := v.(NodeInfo)
+                if conns.Contains(info.Id) {
                     continue
                 }
-                conn := n.getConn(ip, gPORT_REPL)
-                if conn == nil {
-                    conns.Remove(ip)
-                    continue
-                }
-                conns.Add(ip)
-                go func(ip string, conn net.Conn) {
-                    defer func() {
-                        conn.Close()
-                        conns.Remove(ip)
-                    }()
+                go func(info *NodeInfo) {
+                    conns.Add(info.Id)
+                    defer conns.Remove(info.Id)
+                    conn := n.getConn(info.Ip, gPORT_REPL)
+                    if conn == nil {
+                        return
+                    }
+                    defer conn.Close()
                     for {
                         // 如果当前正在数据同步操作中，那么等待
                         for n.getStatusInReplication() {
                             time.Sleep(100 * time.Millisecond)
                         }
-                        if n.getRaftRole() != gROLE_RAFT_LEADER || !n.Peers.Contains(ip){
+                        if n.getRaftRole() != gROLE_RAFT_LEADER || !n.Peers.Contains(info.Id){
                             return
                         }
                         //glog.Println("sending replication heartbeat to", ip)
@@ -102,7 +95,7 @@ func (n *Node) replicationLoop() {
                             }
                         }
                     }
-                }(ip, conn)
+                }(&info)
             }
         }
         time.Sleep(100 * time.Millisecond)

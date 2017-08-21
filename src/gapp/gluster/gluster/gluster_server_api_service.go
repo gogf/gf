@@ -72,9 +72,9 @@ func (this *NodeApiService) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse
         return
     }
     // 请求到leader
-    conn := this.node.getConn(this.node.getLeader(), gPORT_REPL)
+    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_REPL)
     if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader(), nil)
+        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
         return
     }
     err := this.node.sendMsg(conn, gMSG_API_SERVICE_SET, *gjson.Encode(items))
@@ -109,9 +109,9 @@ func (this *NodeApiService) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerRespon
         return
     }
     // 请求到leader
-    conn := this.node.getConn(this.node.getLeader(), gPORT_REPL)
+    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_REPL)
     if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader(), nil)
+        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
         return
     }
     err := this.node.sendMsg(conn, gMSG_API_SERVICE_REMOVE, *gjson.Encode(items))

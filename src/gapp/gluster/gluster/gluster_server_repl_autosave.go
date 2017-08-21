@@ -96,7 +96,9 @@ func (n *Node) restorePeer(data *SaveInfo) {
     infoMap := make(map[string]NodeInfo)
     gjson.DecodeTo(gjson.Encode(data.Peers), &infoMap)
     for k, v := range infoMap {
-        n.Peers.Set(k, v)
+        if !n.Peers.Contains(k) {
+            n.Peers.Set(k, v)
+        }
     }
 }
 

@@ -24,6 +24,8 @@ import (
     "sort"
     "g/net/gip"
     "strings"
+    "g/encoding/gmd5"
+    "fmt"
 )
 
 const (
@@ -106,14 +108,17 @@ type Node struct {
     mutex            sync.RWMutex
 
     Group            string                   // 集群名称
-    Name             string                   // 节点名称
-    Ip               string                   // 主机节点的局域网ip
+    Id               string                   // 节点ID(根据算法自动生成的集群唯一名称)
+    Name             string                   // 节点主机名称
+    Ip               string                   // 主机节点的ip，由通信的时候进行填充，
+                                              // 一个节点可能会有多个IP，这里保存最近通信的那个，节点唯一性识别使用的是Name字段
     Cfg              string                   // 配置文件绝对路径
     Peers            *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
     Role             int                      // 集群角色
     RaftRole         int                      // RAFT角色
     MinNode          int                      // 组成集群的最小节点数量
-    Leader           string                   // Leader节点ip
+    Leader           *NodeInfo                // Leader节点信息
+                                              // @todo 修改为对象存储
     Monitor          string                   // Monitor节点ip
     Score            int64                    // 选举比分
     ScoreCount       int                      // 选举比分的节点数
@@ -186,6 +191,7 @@ type MonitorWebUI struct {
 // 节点信息
 type NodeInfo struct {
     Group            string
+    Id               string
     Name             string
     Ip               string
     Status           int
@@ -219,7 +225,7 @@ type LogEntry struct {
 }
 
 // 绑定本地IP并创建一个服务节点
-func NewServerByIp(ip string) *Node {
+func NewServer() *Node {
     // 主机名称
     hostname, err := os.Hostname()
     if err != nil {
@@ -227,11 +233,12 @@ func NewServerByIp(ip string) *Node {
         return nil
     }
     node := Node {
+        Id            : nodeId(),
         Name          : hostname,
-        Ip            : ip,
         Role          : gROLE_SERVER,
         RaftRole      : gROLE_RAFT_FOLLOWER,
         MinNode       : 1,
+        Leader        : nil,
         Peers         : gmap.NewStringInterfaceMap(),
         SavePath      : gfile.SelfDir(),
         FileName      : "gluster.db",
@@ -251,6 +258,21 @@ func NewMonitor() *Monitor {
         Services : gmap.NewStringInterfaceMap(),
         KVMaps   : gmap.NewStringInterfaceMap(),
     }
+}
+
+// 生成节点的唯一ID
+func nodeId() string {
+    hostname, err := os.Hostname()
+    if err != nil {
+        glog.Fatalln("getting local hostname failed:", err)
+    }
+    ips, err      := gip.IntranetIP()
+    if err != nil {
+        glog.Fatalln("getting local ips:", err)
+    }
+    // 如果有多个IP，那么将IP升序排序
+    sort.Slice(ips, func(i, j int) bool { return ips[i] < ips[j] })
+    return strings.ToUpper(gmd5.EncodeString(fmt.Sprintf("%s/%s", hostname, strings.Join(ips, ","))))
 }
 
 // 获取数据
@@ -294,6 +316,8 @@ func RecieveMsg(conn net.Conn) *Msg {
             glog.Println("receive msg parse err:", err)
             return nil
         }
+        ip, _      := gip.ParseAddress(conn.LocalAddr().String())
+        msg.Info.Ip = ip
         return &msg
     }
     return nil

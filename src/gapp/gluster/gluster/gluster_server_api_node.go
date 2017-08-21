@@ -11,9 +11,9 @@ import (
 
 // 节点信息API管理
 func (this *NodeApiNode) GET(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    conn := this.node.getConn(this.node.getLeader(), gPORT_RAFT)
+    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_RAFT)
     if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader(), nil)
+        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
         return
     }
     err := this.node.sendMsg(conn, gMSG_API_PEERS_INFO, "")
@@ -53,9 +53,9 @@ func (this *NodeApiNode) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
         return
     }
     // 请求到leader
-    conn := this.node.getConn(this.node.getLeader(), gPORT_RAFT)
+    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_RAFT)
     if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader(), nil)
+        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
         return
     }
     err := this.node.sendMsg(conn, gMSG_API_PEERS_ADD, *gjson.Encode(items))
@@ -89,9 +89,9 @@ func (this *NodeApiNode) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse)
         return
     }
     // 请求到leader
-    conn := this.node.getConn(this.node.getLeader(), gPORT_RAFT)
+    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_RAFT)
     if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader(), nil)
+        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
         return
     }
     err := this.node.sendMsg(conn, gMSG_API_PEERS_REMOVE, *gjson.Encode(items))

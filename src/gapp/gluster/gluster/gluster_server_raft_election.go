@@ -1,11 +1,9 @@
 package gluster
 
 import (
-    "net"
     "sync"
     "time"
     "g/util/gtime"
-    "g/core/types/gmap"
     "g/os/glog"
 )
 
@@ -16,10 +14,6 @@ func (n *Node) electionHandler() {
     n.updateElectionDeadline()
     for {
         if n.Role == gROLE_SERVER && n.getRaftRole() != gROLE_RAFT_LEADER && gtime.Millisecond() >= n.getElectionDeadline() {
-            // 重新进入选举流程时，需要清空已有的信息
-            if n.getLeader() != "" {
-                n.updatePeerStatus(n.getLeader(), gSTATUS_DEAD)
-            }
             // 使用MinNode变量控制最小节点数(这里判断的时候要去除自身的数量)
             if n.Peers.Size() > n.MinNode - 1 {
                 if n.Peers.Size() > 0 {
@@ -29,8 +23,8 @@ func (n *Node) electionHandler() {
                 } else {
                     // 集群目前仅有1个节点
                     glog.Println("only one node in this cluster, so i'll be the leader")
+                    n.setLeader(n.getNodeInfo())
                     n.setRaftRole(gROLE_RAFT_LEADER)
-                    n.setLeader(n.Ip)
                 }
             } else {
                 glog.Println("no meet the least nodes count:", n.MinNode, ", current:", n.Peers.Size() + 1)
@@ -45,11 +39,10 @@ func (n *Node) electionHandler() {
     }
 }
 
-// 一轮选举比分
+// 改进的RAFT选举
 func (n *Node) beginScore() {
     var wg sync.WaitGroup
-    glog.Println(n.Ip + ":", "begin new election")
-    conns := gmap.NewStringInterfaceMap()
+    glog.Println("begin new election")
     // 请求比分，获取比分数据
     for _, v := range n.Peers.Values() {
         info := v.(NodeInfo)
@@ -57,15 +50,15 @@ func (n *Node) beginScore() {
             continue
         }
         wg.Add(1)
-        go func(ip string) {
+        go func(info *NodeInfo) {
             defer wg.Done()
-            if n.getLeader() != "" || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
+            if n.getLeader() != nil || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
                 return
             }
             stime := time.Now().UnixNano()
-            conn  := n.getConnFromPool(ip, gPORT_RAFT, conns)
+            conn  := n.getConn(info.Ip, gPORT_RAFT)
             if conn == nil {
-                n.updatePeerStatus(ip, gSTATUS_DEAD)
+                n.updatePeerStatus(info.Id, gSTATUS_DEAD)
                 return
             }
             defer conn.Close()
@@ -75,12 +68,12 @@ func (n *Node) beginScore() {
             }
             msg := n.receiveMsg(conn)
             if msg != nil {
-                if n.getLeader() != "" || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
+                if n.getLeader() != nil || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
                     return
                 }
                 switch msg.Head {
                     case gMSG_RAFT_I_AM_LEADER:
-                        n.setLeader(ip)
+                        n.setLeader(info)
                         n.setRaftRole(gROLE_RAFT_FOLLOWER)
 
                     case gMSG_RAFT_RESPONSE:
@@ -90,14 +83,14 @@ func (n *Node) beginScore() {
                         n.addScoreCount()
                 }
             } else {
-                n.updatePeerStatus(ip, gSTATUS_DEAD)
+                n.updatePeerStatus(info.Id, gSTATUS_DEAD)
             }
-        }(info.Ip)
+        }(&info)
     }
     wg.Wait()
 
     // 如果在计算比分的过程中发现了leader，那么不再继续比分，退出选举
-    if n.getLeader() != "" {
+    if n.getLeader() != nil {
         return;
     }
 
@@ -107,53 +100,51 @@ func (n *Node) beginScore() {
         if info.Status != gSTATUS_ALIVE {
             continue
         }
-        conn := n.getConnFromPool(info.Ip, gPORT_RAFT, conns)
-        if conn == nil {
-            n.updatePeerStatus(info.Ip, gSTATUS_DEAD)
-            continue
-        }
         wg.Add(1)
-        go func(ip string, conn net.Conn) {
-            defer func() {
-                conn.Close()
-                wg.Done()
-            }()
-            if n.getLeader() != "" || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
+        go func(info *NodeInfo) {
+            defer wg.Done()
+            if n.getLeader() != nil || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
                 return
             }
+            conn := n.getConn(info.Ip, gPORT_RAFT)
+            if conn == nil {
+                n.updatePeerStatus(info.Ip, gSTATUS_DEAD)
+                return
+            }
+            defer conn.Close()
             if err := n.sendMsg(conn, gMSG_RAFT_SCORE_COMPARE_REQUEST, ""); err != nil {
                 glog.Println(err)
                 return
             }
             msg := n.receiveMsg(conn)
             if msg != nil {
-                if n.getLeader() != "" || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
+                if n.getLeader() != nil || n.getRaftRole() != gROLE_RAFT_CANDIDATE {
                     return
                 }
                 switch msg.Head {
                     case gMSG_RAFT_I_AM_LEADER:
-                        glog.Println("score comparison: get leader from", ip)
-                        n.setLeader(ip)
+                        glog.Println("score comparison: get leader from", info.Name)
+                        n.setLeader(info)
                         n.setRaftRole(gROLE_RAFT_FOLLOWER)
 
                     case gMSG_RAFT_SCORE_COMPARE_FAILURE:
-                        glog.Println("score comparison: get failure from", ip)
-                        n.setLeader(ip)
+                        glog.Println("score comparison: get failure from", info.Name)
+                        n.setLeader(info)
                         n.setRaftRole(gROLE_RAFT_FOLLOWER)
 
                     case gMSG_RAFT_SCORE_COMPARE_SUCCESS:
-                        glog.Println("score comparison: get success from", ip)
+                        glog.Println("score comparison: get success from", info.Name)
                 }
             }
-        }(info.Ip, conn)
+        }(&info)
     }
     wg.Wait()
 
     // 如果peers中的节点均没有条件满足leader，那么选举自身为leader
     if n.getRaftRole() != gROLE_RAFT_FOLLOWER {
-        glog.Println(n.Ip + ":", "I've won this score comparison")
+        glog.Println("I've won this score comparison")
+        n.setLeader(n.getNodeInfo())
         n.setRaftRole(gROLE_RAFT_LEADER)
-        n.setLeader(n.Ip)
     }
 }
 

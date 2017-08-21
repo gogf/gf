@@ -6,7 +6,6 @@ import (
     "g/net/gtcp"
     "net"
     "fmt"
-    "g/net/gscanner"
     "encoding/json"
     "g/util/gtime"
     "g/core/types/gmap"
@@ -17,30 +16,6 @@ import (
     "g/os/glog"
     "strings"
 )
-
-// 局域网扫描回调函数，类似广播消息
-func (n *Node) scannerRaftCallback(conn net.Conn) {
-    fromip, _ := gip.ParseAddress(conn.RemoteAddr().String())
-    if fromip == n.Ip {
-        //glog.Println(fromip, "==", n.Ip)
-        return
-    }
-    err := n.sendMsg(conn, gMSG_RAFT_HI, "")
-    if err != nil {
-        glog.Println(err)
-        return
-    }
-
-    msg := n.receiveMsg(conn)
-    if msg != nil && msg.Head == gMSG_RAFT_HI2 {
-        n.updatePeerInfo(msg.Info)
-        if msg.Info.RaftRole == gROLE_RAFT_LEADER {
-            glog.Println(n.Ip, "scanner: found leader", fromip)
-            n.setLeader(fromip)
-            n.setRaftRole(gROLE_RAFT_FOLLOWER)
-        }
-    }
-}
 
 // 获取数据
 func (n *Node) receive(conn net.Conn) []byte {
@@ -59,8 +34,10 @@ func (n *Node) send(conn net.Conn, data []byte) error {
 
 // 发送Msg
 func (n *Node) sendMsg(conn net.Conn, head int, body string) error {
-    var msg = Msg { head, body, *n.getNodeInfo() }
-    s, err := json.Marshal(msg)
+    ip, _  := gip.ParseAddress(conn.LocalAddr().String())
+    info   := n.getNodeInfo()
+    info.Ip = ip
+    s, err := json.Marshal(Msg { head, body, *n.getNodeInfo() })
     if err != nil {
         glog.Println("send msg parse err:", err)
         return err
@@ -75,23 +52,6 @@ func (n *Node) getConn(ip string, port int) net.Conn {
         return conn
     }
     return nil
-}
-
-// 通过连接池获取tcp链接，连接池地址是传入的conns
-func (n *Node) getConnFromPool(ip string, port int, conns *gmap.StringInterfaceMap) net.Conn {
-    var conn net.Conn
-    if result := conns.Get(ip); result != nil {
-        conn = result.(net.Conn)
-    } else {
-        conn = n.getConn(ip, port)
-        if conn != nil {
-            conns.Set(ip, conn)
-        } else {
-            conns.Remove(ip)
-            return nil
-        }
-    }
-    return conn
 }
 
 // 运行节点
@@ -202,7 +162,11 @@ func (n *Node) initFromCfg() {
             if ip == n.Ip {
                 continue
             }
-            n.Peers.Set(v.(string), NodeInfo{ Ip : ip })
+            go func(ip string) {
+                if !n.sayHi(ip) {
+                    n.Peers.Set(ip, NodeInfo{Id: ip, Ip: ip})
+                }
+            }(ip)
         }
     }
     // (可选)初始化自定义的k-v数据
@@ -243,26 +207,12 @@ func (n *Node) show() {
     })
 }
 
-// (测试用)向局域网内其他主机通知上线
-func (n *Node) sayHiToAll() {
-    segment := gip.GetSegment(n.Ip)
-    if segment == "" {
-        glog.Fatalln("invalid listening ip given")
-        return
-    }
-    startIp := fmt.Sprintf("%s.1",   segment)
-    endIp   := fmt.Sprintf("%s.255", segment)
-    //glog.Println(n.Ip, "say hi to all")
-    gscanner.New().SetTimeout(6 * time.Second).ScanIp(startIp, endIp, gPORT_RAFT, n.scannerRaftCallback)
-    //glog.Println(n.Ip, "say hi to all done")
-}
-
 // 获取当前节点的信息
 func (n *Node) getNodeInfo() *NodeInfo {
     return &NodeInfo {
         Group            : n.Group,
+        Id               : n.Id,
         Name             : n.Name,
-        Ip               : n.Ip,
         Status           : gSTATUS_ALIVE,
         Role             : n.Role,
         RaftRole         : n.getRaftRole(),
@@ -276,7 +226,47 @@ func (n *Node) getNodeInfo() *NodeInfo {
     }
 }
 
-func (n *Node) getLeader() string {
+// 通过IP向一个节点发送消息并建立双方联系
+func (n *Node) sayHi(ip string) bool {
+    if ip == n.Ip {
+        return false
+    }
+    conn := n.getConn(ip, gPORT_RAFT)
+    if conn == nil {
+        return false
+    }
+    err := n.sendMsg(conn, gMSG_RAFT_HI, "")
+    if err != nil {
+        return false
+    }
+    msg := n.receiveMsg(conn)
+    if msg != nil && msg.Head == gMSG_RAFT_HI2 {
+        n.updatePeerInfo(msg.Info)
+        if msg.Info.RaftRole == gROLE_RAFT_LEADER && n.Leader == nil && n.getRaftRole() != gROLE_RAFT_LEADER {
+            n.setLeader(&msg.Info)
+            n.setRaftRole(gROLE_RAFT_FOLLOWER)
+        }
+        // 去掉初始化时写入的IP键名记录
+        if n.Peers.Contains(msg.Info.Ip) {
+            n.Peers.Remove(msg.Info.Ip)
+        }
+    }
+    return true
+}
+
+// 向局域网内其他主机通知上线
+func (n *Node) sayHiToLocalLan() {
+    segment := gip.GetSegment(n.Ip)
+    if segment == "" {
+        glog.Fatalln("invalid listening ip given")
+        return
+    }
+    for i := 1; i < 256; i++ {
+        go n.sayHi(fmt.Sprintf("%s.%d", segment, i))
+    }
+}
+
+func (n *Node) getLeader() *NodeInfo {
     n.mutex.RLock()
     r := n.Leader
     n.mutex.RUnlock()
@@ -349,7 +339,7 @@ func (n *Node) getElectionDeadline() int64 {
 // 获取数据文件的绝对路径
 func (n *Node) getDataFilePath() string {
     n.mutex.RLock()
-    path := n.SavePath + gfile.Separator + n.Ip + "." + n.FileName
+    path := n.SavePath + gfile.Separator + n.Id + "." + n.FileName
     n.mutex.RUnlock()
     return path
 }
@@ -379,7 +369,7 @@ func (n *Node) addLogCount() {
 func (n *Node) resetAsCandidate() {
     n.mutex.Lock()
     n.RaftRole   = gROLE_RAFT_CANDIDATE
-    n.Leader     = ""
+    n.Leader     = nil
     n.Score      = 0
     n.ScoreCount = 0
     n.mutex.Unlock()
@@ -389,7 +379,7 @@ func (n *Node) resetAsCandidate() {
 func (n *Node) resetAsFollower() {
     n.mutex.Lock()
     n.RaftRole   = gROLE_RAFT_FOLLOWER
-    n.Leader     = ""
+    n.Leader     = nil
     n.Score      = 0
     n.ScoreCount = 0
     n.mutex.Unlock()
@@ -401,9 +391,9 @@ func (n *Node) setRaftRole(role int) {
     n.mutex.Unlock()
 }
 
-func (n *Node) setLeader(ip string) {
+func (n *Node) setLeader(info *NodeInfo) {
     n.mutex.Lock()
-    n.Leader = ip
+    n.Leader = info
     n.mutex.Unlock()
 }
 
@@ -479,18 +469,18 @@ func (n *Node) setKVMap(m *gmap.StringStringMap) {
 
 // 更新节点信息
 func (n *Node) updatePeerInfo(info NodeInfo) {
-    n.Peers.Set(info.Ip, info)
+    n.Peers.Set(info.Id, info)
 }
 
-func (n *Node) updatePeerStatus(ip string, status int) {
-    r := n.Peers.Get(ip)
+func (n *Node) updatePeerStatus(Id string, status int) {
+    r := n.Peers.Get(Id)
     if r != nil {
         info       := r.(NodeInfo)
         info.Status = status
         if info.LastActiveTime == 0 || status == gSTATUS_ALIVE {
             info.LastActiveTime = gtime.Millisecond()
         }
-        n.Peers.Set(ip, info)
+        n.Peers.Set(Id, info)
     }
 }
 

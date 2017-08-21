@@ -15,11 +15,15 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
         return
     }
     // 保存peers
-    if msg.Info.Ip != n.Ip {
-        if n.Peers.Contains(msg.Info.Ip) {
-            n.updatePeerStatus(msg.Info.Ip, gSTATUS_ALIVE)
+    if msg.Info.Id != n.Id {
+        if n.Peers.Contains(msg.Info.Id) {
+            n.updatePeerStatus(msg.Info.Id, gSTATUS_ALIVE)
         } else {
             n.updatePeerInfo(msg.Info)
+        }
+        // 去掉初始化时写入的IP键名记录
+        if n.Peers.Contains(msg.Info.Ip) {
+            n.Peers.Remove(msg.Info.Ip)
         }
     }
     // 消息处理
@@ -42,33 +46,29 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
 // 如果不连通，那么follower保持当前leader不变
 // 如果能够连通，那么需要在两个leader中确定一个
 func (n *Node) onMsgRaftSplitBrainsCheck(conn net.Conn, msg *Msg) {
-    ip      := n.Ip
     checkip := msg.Body
-    if !n.Peers.Contains(checkip) {
-        tconn := n.getConn(checkip, gPORT_RAFT)
-        if tconn != nil {
-            if n.sendMsg(tconn, gMSG_RAFT_HI, "") == nil {
-                rmsg := n.receiveMsg(tconn)
-                if rmsg != nil {
-                    n.updatePeerInfo(rmsg.Info)
-                    if n.getLastLogId() < msg.Info.LastLogId {
-                        ip = checkip
-                        n.setLeader(ip)
-                        n.setRaftRole(gROLE_RAFT_FOLLOWER)
-                    }
+    result  := gMSG_RAFT_SPLIT_BRAINS_UNSET
+    tconn   := n.getConn(checkip, gPORT_RAFT)
+    if tconn != nil {
+        if n.sendMsg(tconn, gMSG_RAFT_HI, "") == nil {
+            rmsg := n.receiveMsg(tconn)
+            if rmsg != nil {
+                n.updatePeerInfo(rmsg.Info)
+                if n.getLogCount() < msg.Info.LogCount && n.getLastLogId() < msg.Info.LastLogId {
+                    n.setLeader(&rmsg.Info)
+                    n.setRaftRole(gROLE_RAFT_FOLLOWER)
+                    result = gMSG_RAFT_RESPONSE
                 }
             }
-            tconn.Close()
-        } else {
-            ip = ""
         }
+        tconn.Close()
     }
-    n.sendMsg(conn, gMSG_RAFT_RESPONSE, ip)
+    n.sendMsg(conn, result, "")
 }
 
 // 处理split brains问题
 func (n *Node) onMsgRaftSplitBrainsUnset(conn net.Conn, msg *Msg) {
-    n.Peers.Remove(msg.Info.Ip)
+    n.Peers.Remove(msg.Info.Id)
 }
 
 // 上线通知
@@ -83,56 +83,50 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
     result := gMSG_RAFT_HEARTBEAT
     if n.getRaftRole() == gROLE_RAFT_LEADER {
         // 如果是两个leader相互心跳，表示两个leader是连通的，这时根据算法算出一个leader即可
-        // 需要同时对比日志及选举比分
-        if n.getLogCount() > msg.Info.LogCount {
+        // 需要同时对比日志信息及选举比分
+        if n.getLogCount() > msg.Info.LogCount && n.getLastLogId() > msg.Info.LastLogId {
             result = gMSG_RAFT_I_AM_LEADER
-        } else if n.getLogCount() == msg.Info.LogCount {
-            if n.LastLogId > msg.Info.LastLogId {
+        } else if n.getLogCount() == msg.Info.LogCount && n.getLastLogId() == msg.Info.LastLogId {
+            if n.getScoreCount() > msg.Info.ScoreCount {
                 result = gMSG_RAFT_I_AM_LEADER
-            } else if n.LastLogId == msg.Info.LastLogId {
-                if n.getScoreCount() > msg.Info.ScoreCount {
+            } else if n.getScoreCount() == msg.Info.ScoreCount {
+                if n.getScore() > msg.Info.Score {
                     result = gMSG_RAFT_I_AM_LEADER
-                } else if n.getScoreCount() == msg.Info.ScoreCount {
-                    if n.getScore() > msg.Info.Score {
+                } else if n.getScore() == msg.Info.Score {
+                    // 极少数情况, 这时采用随机策略
+                    if grand.Rand(0, 1) == 1 {
                         result = gMSG_RAFT_I_AM_LEADER
-                    } else if n.getScore() == msg.Info.Score {
-                        // 极少数情况, 这时采用随机策略
-                        if grand.Rand(0, 1) == 1 {
-                            result = gMSG_RAFT_I_AM_LEADER
-                        }
                     }
                 }
             }
         }
         if result == gMSG_RAFT_HEARTBEAT {
-            n.setLeader(msg.Info.Ip)
+            n.setLeader(&msg.Info)
             n.setRaftRole(gROLE_RAFT_FOLLOWER)
         }
-    } else if n.getLeader() == "" {
+    } else if n.getLeader() == nil {
         // 如果没有leader，那么设置leader
-        n.setLeader(msg.Info.Ip)
+        n.setLeader(&msg.Info)
         n.setRaftRole(gROLE_RAFT_FOLLOWER)
     } else {
         // 脑裂问题，一个节点处于两个网路中，并且两个网络的leader无法相互通信，会引起数据一致性问题
-        if n.getLeader() != msg.Info.Ip {
-            glog.Println("split brains occurred:", n.getLeader(), "and", msg.Info.Ip)
-            leaderConn := n.getConn(n.getLeader(), gPORT_RAFT)
+        if n.getLeader().Id != msg.Info.Id {
+            glog.Println("split brains occurred:", n.getLeader().Name, "and", msg.Info.Name)
+            leaderConn := n.getConn(n.getLeader().Ip, gPORT_RAFT)
             if leaderConn != nil {
                 if n.sendMsg(leaderConn, gMSG_RAFT_SPLIT_BRAINS_CHECK, msg.Info.Ip) == nil {
                     rmsg := n.receiveMsg(leaderConn)
                     if rmsg != nil {
-                        if msg.Body == "" {
-                            // 请求返回空表示该节点不与对方leader为一个集群，或者网络分区，关闭联系方式
+                        if msg.Head == gMSG_RAFT_SPLIT_BRAINS_UNSET {
                             result = gMSG_RAFT_SPLIT_BRAINS_UNSET
-                            n.updatePeerStatus(msg.Info.Ip, gSTATUS_DEAD)
-                        } else if n.getLeader() != msg.Body {
-                            n.setLeader(msg.Body)
+                            n.updatePeerStatus(msg.Info.Id, gSTATUS_DEAD)
+                        } else {
+                            n.setLeader(&msg.Info)
                         }
                     }
                 }
                 leaderConn.Close()
             }
-
         }
     }
     n.sendMsg(conn, result, "")
@@ -154,31 +148,26 @@ func (n *Node) onMsgRaftScoreCompareRequest(conn net.Conn, msg *Msg) {
     if n.getRaftRole() == gROLE_RAFT_LEADER {
         result = gMSG_RAFT_I_AM_LEADER
     } else {
-        // 需要同时对比日志和比分
-        if n.getLogCount() > msg.Info.LogCount {
+        // 需要同时对比日志信息和比分
+        if n.getLogCount() > msg.Info.LogCount && n.getLastLogId() > msg.Info.LastLogId {
             result = gMSG_RAFT_SCORE_COMPARE_FAILURE
-        } else if n.getLogCount() == msg.Info.LogCount {
-            if n.LastLogId > msg.Info.LastLogId {
+        } else if n.getLogCount() == msg.Info.LogCount && n.getLastLogId() == msg.Info.LastLogId {
+            if n.getScoreCount() > msg.Info.ScoreCount {
                 result = gMSG_RAFT_SCORE_COMPARE_FAILURE
-            } else if n.LastLogId == msg.Info.LastLogId {
-                if n.getScoreCount() > msg.Info.ScoreCount {
+            } else if n.getScoreCount() == msg.Info.ScoreCount {
+                if n.getScore() > msg.Info.Score {
                     result = gMSG_RAFT_SCORE_COMPARE_FAILURE
-                } else if n.getScoreCount() == msg.Info.ScoreCount {
-                    if n.getScore() > msg.Info.Score {
+                } else if n.getScore() == msg.Info.Score {
+                    // 极少数情况, 这时采用随机策略
+                    if grand.Rand(0, 1) == 1 {
                         result = gMSG_RAFT_SCORE_COMPARE_FAILURE
-                    } else if n.getScore() == msg.Info.Score {
-                        // 极少数情况, 这时采用随机策略
-                        if grand.Rand(0, 1) == 1 {
-                            result = gMSG_RAFT_SCORE_COMPARE_FAILURE
-                        }
                     }
                 }
             }
         }
-
     }
     if result == gMSG_RAFT_SCORE_COMPARE_SUCCESS {
-        n.setLeader(msg.Info.Ip)
+        n.setLeader(&msg.Info)
         n.setRaftRole(gROLE_RAFT_FOLLOWER)
     }
     n.sendMsg(conn, result, "")
