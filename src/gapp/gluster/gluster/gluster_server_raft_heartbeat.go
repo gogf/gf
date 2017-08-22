@@ -26,6 +26,11 @@ func (n *Node) heartbeatHandler() {
                         return
                     }
                     defer conn.Close()
+                    // 如果是本地同一节点通信，那么移除掉
+                    if n.checkConnInLocalNode(conn) {
+                        n.Peers.Remove(info.Id)
+                        return
+                    }
                     for {
                         // 如果当前节点不再是leader，或者节点表中已经删除该节点信息
                         if n.getRaftRole() != gROLE_RAFT_LEADER || !n.Peers.Contains(info.Id){

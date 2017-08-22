@@ -192,7 +192,6 @@ func (n *Node) initFromCfg() {
                     s.List = append(s.List, m)
                 }
                 n.Service.Set(s.Name, s)
-                n.setLastServiceLogId(gtime.Microsecond())
             }
         }
     }
@@ -237,7 +236,9 @@ func (n *Node) sayHi(ip string) bool {
         return false
     }
     defer conn.Close()
+    // 如果是本地同一节点通信，那么移除掉
     if n.checkConnInLocalNode(conn) {
+        n.Peers.Remove(ip)
         return false
     }
     err := n.sendMsg(conn, gMSG_RAFT_HI, "")

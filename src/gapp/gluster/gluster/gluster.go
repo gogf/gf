@@ -80,11 +80,11 @@ const (
     gMSG_REPL_REMOVE                        = 320
     gMSG_REPL_INCREMENTAL_UPDATE            = 330
     gMSG_REPL_COMPLETELY_UPDATE             = 340
-    gMSG_REPL_SERVICE_UPDATE                = 345
     gMSG_REPL_HEARTBEAT                     = 350
     gMSG_REPL_RESPONSE                      = 360
     gMSG_REPL_NEED_UPDATE_LEADER            = 370
     gMSG_REPL_NEED_UPDATE_FOLLOWER          = 380
+    gMSG_REPL_SERVICE_COMPLETELY_UPDATE     = 385
     gMSG_REPL_SERVICE_NEED_UPDATE_LEADER    = 390
     gMSG_REPL_SERVICE_NEED_UPDATE_FOLLOWER  = 400
 

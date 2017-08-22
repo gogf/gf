@@ -86,10 +86,10 @@ func (n *Node) replicationLoop() {
                         if msg != nil {
                             switch msg.Head {
                                 case gMSG_REPL_NEED_UPDATE_FOLLOWER:            n.updateDataToRemoteNode(conn, msg)
-                                case gMSG_REPL_SERVICE_UPDATE:                  n.onMsgReplServiceUpdate(conn, msg)
-                                case gMSG_REPL_SERVICE_NEED_UPDATE_FOLLOWER:    n.updateServiceToRemoteNode(conn, msg)
                                 case gMSG_REPL_INCREMENTAL_UPDATE:              n.updateDataFromRemoteNode(conn, msg)
                                 case gMSG_REPL_COMPLETELY_UPDATE:               n.updateDataFromRemoteNode(conn, msg)
+                                case gMSG_REPL_SERVICE_COMPLETELY_UPDATE:       n.updateServiceFromRemoteNode(conn, msg)
+                                case gMSG_REPL_SERVICE_NEED_UPDATE_FOLLOWER:    n.updateServiceToRemoteNode(conn, msg)
                                 default:
                                     time.Sleep(gLOG_REPL_TIMEOUT_HEARTBEAT * time.Millisecond)
                             }

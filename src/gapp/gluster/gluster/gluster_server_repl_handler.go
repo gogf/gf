@@ -20,16 +20,22 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         return
     }
     switch msg.Head {
-        case gMSG_REPL_SET:                 n.onMsgReplSet(conn, msg)
-        case gMSG_REPL_REMOVE:              n.onMsgReplRemove(conn, msg)
-        case gMSG_REPL_HEARTBEAT:           n.onMsgReplHeartbeat(conn, msg)
-        case gMSG_REPL_INCREMENTAL_UPDATE:  n.onMsgReplUpdate(conn, msg)
-        case gMSG_REPL_COMPLETELY_UPDATE:   n.onMsgReplUpdate(conn, msg)
-        case gMSG_API_SERVICE_SET:          n.onMsgServiceSet(conn, msg)
-        case gMSG_API_SERVICE_REMOVE:       n.onMsgServiceRemove(conn, msg)
+        case gMSG_REPL_SET:                         n.onMsgReplSet(conn, msg)
+        case gMSG_REPL_REMOVE:                      n.onMsgReplRemove(conn, msg)
+        case gMSG_REPL_HEARTBEAT:                   n.onMsgReplHeartbeat(conn, msg)
+        case gMSG_REPL_INCREMENTAL_UPDATE:          n.onMsgReplUpdate(conn, msg)
+        case gMSG_REPL_COMPLETELY_UPDATE:           n.onMsgReplUpdate(conn, msg)
+        case gMSG_REPL_SERVICE_COMPLETELY_UPDATE:   n.onMsgServiceCompletelyUpdate(conn, msg)
+        case gMSG_API_SERVICE_SET:                  n.onMsgServiceSet(conn, msg)
+        case gMSG_API_SERVICE_REMOVE:               n.onMsgServiceRemove(conn, msg)
     }
     //这里不用自动关闭链接，由于链接有读取超时，当一段时间没有数据时会自动关闭
     n.replTcpHandler(conn)
+}
+
+// 心跳消息提交的完整更新消息
+func (n *Node) onMsgServiceCompletelyUpdate(conn net.Conn, msg *Msg) {
+    n.updateServiceFromRemoteNode(conn, msg)
 }
 
 // service删除
@@ -120,13 +126,6 @@ func (n *Node) onMsgReplUpdate(conn net.Conn, msg *Msg) {
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }
 
-// Service同步，更新本地数据
-func (n *Node) onMsgReplServiceUpdate(conn net.Conn, msg *Msg) {
-    glog.Println("receive service replication update")
-    n.updateServiceFromRemoteNode(conn, msg)
-    n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
-}
-
 // 保存日志数据
 func (n *Node) saveLogEntry(entry LogEntry) {
     switch entry.Act {
@@ -172,28 +171,12 @@ func (n *Node) updateDataFromRemoteNode(conn net.Conn, msg *Msg) {
     }
 }
 
-// 从目标节点同步Service数据
-func (n *Node) updateServiceFromRemoteNode(conn net.Conn, msg *Msg) {
-    m   := make(map[string]Service)
-    err := gjson.DecodeTo(&(msg.Body), &m)
-    if err == nil {
-        newm := gmap.NewStringInterfaceMap()
-        for k, v := range m {
-            newm.Set(k, v)
-        }
-        n.setService(newm)
-        n.setLastServiceLogId(msg.Info.LastServiceLogId)
-    } else {
-        glog.Error(err)
-    }
-}
-
 // 同步数据到目标节点，采用增量+全量模式
 func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     n.setStatusInReplication(true)
     defer n.setStatusInReplication(false)
 
-    glog.Println("send data replication update from", n.Name, "to", msg.Info.Name)
+    glog.Println("send data replication update to", msg.Info.Name)
     // 首先进行增量同步
     updated := true
     list    := n.getLogEntriesByLastLogId(msg.Info.LastLogId)
@@ -223,10 +206,27 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     }
 }
 
+// 从目标节点同步Service数据
+func (n *Node) updateServiceFromRemoteNode(conn net.Conn, msg *Msg) {
+    glog.Println("receive data replication update from", msg.Info.Name)
+    m   := make(map[string]Service)
+    err := gjson.DecodeTo(&(msg.Body), &m)
+    if err == nil {
+        newm := gmap.NewStringInterfaceMap()
+        for k, v := range m {
+            newm.Set(k, v)
+        }
+        n.setService(newm)
+        n.setLastServiceLogId(msg.Info.LastServiceLogId)
+    } else {
+        glog.Error(err)
+    }
+}
+
 // 同步Service到目标节点
 func (n *Node) updateServiceToRemoteNode(conn net.Conn, msg *Msg) {
-    glog.Println("send service replication update from", n.Name, "to", msg.Info.Name)
-    if err := n.sendMsg(conn, gMSG_REPL_SERVICE_UPDATE, *gjson.Encode(*n.Service.Clone())); err != nil {
+    glog.Println("send service replication update to", msg.Info.Name)
+    if err := n.sendMsg(conn, gMSG_REPL_SERVICE_COMPLETELY_UPDATE, *gjson.Encode(*n.Service.Clone())); err != nil {
         glog.Error(err)
         return
     }
