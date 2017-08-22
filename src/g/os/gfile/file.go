@@ -256,8 +256,13 @@ func RealPath(path string) string {
     return p
 }
 
-// 读取文件内容
-func GetContents(path string) []byte {
+// (文本)读取文件内容
+func GetContents(path string) string {
+    return string(GetBinContents(path))
+}
+
+// (二进制)读取文件内容
+func GetBinContents(path string) []byte {
     data, err := ioutil.ReadFile(path)
     if err != nil {
         return nil
@@ -281,15 +286,26 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
     return nil
 }
 
-// 写入文件内容
+// (文本)写入文件内容
 func PutContents(path string, content string) error {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 }
 
-// 追加内容到文件末尾
+// (文本)追加内容到文件末尾
 func PutContentsAppend(path string, content string) error {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 }
+
+// (二进制)写入文件内容
+func PutBinContents(path string, content []byte) error {
+    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+}
+
+// (二进制)追加内容到文件末尾
+func PutBinContentsAppend(path string, content []byte) error {
+    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+}
+
 
 // 获取当前执行文件的绝对路径
 func SelfPath() string {

@@ -1,1 +1,2 @@
-Go Frame - 轻量级Golang开发框架
+@todo
+1、初始化配置文件folower与leader的初始化数据同步问题

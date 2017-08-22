@@ -9,6 +9,7 @@ import (
     "g/os/gfile"
     "g/util/gtime"
     "g/os/glog"
+    "g/encoding/gcompress"
 )
 
 // 日志自动保存处理
@@ -40,8 +41,11 @@ func (n *Node) saveDataToFile() {
     for _, v := range n.LogList.BackAll() {
         data.LogList = append(data.LogList, v.(LogEntry))
     }
-    content := gjson.Encode(&data)
-    err     := gfile.PutContents(n.getDataFilePath(), *content)
+    content := []byte(*gjson.Encode(&data))
+    if gCOMPRESS {
+        content = gcompress.Zlib(content)
+    }
+    err := gfile.PutBinContents(n.getDataFilePath(), content)
     if err != nil {
         glog.Error("saving data error:", err)
     } else {
@@ -53,16 +57,19 @@ func (n *Node) saveDataToFile() {
 func (n *Node) restoreDataFromFile() {
     path := n.getDataFilePath()
     if gfile.Exists(path) {
-        content := gfile.GetContents(path)
-        if content != nil {
+        bin := gfile.GetBinContents(path)
+        if gCOMPRESS {
+            bin = gcompress.UnZlib(bin)
+        }
+        if bin != nil && len(bin) > 0 {
             glog.Println("restore data from", path)
+            content := string(bin)
             var data = SaveInfo {
                 LogList : make([]LogEntry, 0),
                 Service : make(map[string]ServiceStruct),
                 Peers   : make(map[string]interface{}),
                 DataMap : make(map[string]string),
             }
-            content := string(content)
             if gjson.DecodeTo(&content, &data) == nil {
                 n.setLastLogId(data.LastLogId)
                 n.setLogCount(data.LogCount)

@@ -1,5 +1,5 @@
 {
-    "Group"    : "gluster-test-group",
+    "Group"    : "",
     "Role"     : 0,
     "SavePath" : "/tmp/gluster/",
     "Peers"    : [

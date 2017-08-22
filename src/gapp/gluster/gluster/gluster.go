@@ -26,10 +26,12 @@ import (
     "strings"
     "g/encoding/gmd5"
     "fmt"
+    "g/encoding/gcompress"
 )
 
 const (
     gVERSION                        = "0.6"   // 当前版本
+    gCOMPRESS                       = false   // 是否压缩存储文件以及通信内容(生产环境需要打开)
     // 集群端口定义
     gPORT_RAFT                      = 4166    // 集群协议通信接口
     gPORT_REPL                      = 4167    // 集群数据同步接口
@@ -55,7 +57,7 @@ const (
     gTCP_RETRY_COUNT                = 3       // TCP请求失败时的重试次数
     gTCP_READ_TIMEOUT               = 3000    // (毫秒)TCP链接读取超时
     gTCP_WRITE_TIMEOUT              = 3000    // (毫秒)TCP链接写入超时
-    gELECTION_TIMEOUT               = 2000    // (毫秒)RAFT选举超时时间
+    gELECTION_TIMEOUT               = 1000    // (毫秒)RAFT选举超时时间
     gELECTION_TIMEOUT_HEARTBEAT     = 500     // (毫秒)RAFT Leader统治维持心跳间隔
     gLOG_REPL_TIMEOUT_HEARTBEAT     = 1000    // (毫秒)数据同步检测心跳间隔(数据包括kv数据及service数据)
     gLOG_REPL_AUTOSAVE_INTERVAL     = 1000    // (毫秒)数据自动物理化保存的间隔
@@ -308,7 +310,32 @@ func Receive(conn net.Conn) []byte {
             }
         }
     }
+    if gCOMPRESS {
+        return gcompress.UnZlib(data)
+    }
     return data
+}
+
+// 发送数据
+func Send(conn net.Conn, data []byte) error {
+    conn.SetReadDeadline(time.Now().Add(gTCP_WRITE_TIMEOUT * time.Millisecond))
+    retry := 0
+    for {
+        if gCOMPRESS {
+            data = gcompress.Zlib(data)
+        }
+        _, err := conn.Write(data)
+        if err != nil {
+            if retry > gTCP_RETRY_COUNT - 1 {
+                return err
+            }
+            //glog.Println("data send:", err, "try:", retry)
+            retry ++
+            time.Sleep(100 * time.Millisecond)
+        } else {
+            return nil
+        }
+    }
 }
 
 // 获取Msg
@@ -327,25 +354,6 @@ func RecieveMsg(conn net.Conn) *Msg {
         return &msg
     }
     return nil
-}
-
-// 发送数据
-func Send(conn net.Conn, data []byte) error {
-    conn.SetReadDeadline(time.Now().Add(gTCP_WRITE_TIMEOUT * time.Millisecond))
-    retry := 0
-    for {
-        _, err := conn.Write(data)
-        if err != nil {
-            if retry > gTCP_RETRY_COUNT - 1 {
-                return err
-            }
-            //glog.Println("data send:", err, "try:", retry)
-            retry ++
-            time.Sleep(100 * time.Millisecond)
-        } else {
-            return nil
-        }
-    }
 }
 
 // 发送Msg
