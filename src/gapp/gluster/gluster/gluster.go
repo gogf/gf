@@ -60,6 +60,7 @@ const (
     gLOG_REPL_TIMEOUT_HEARTBEAT     = 1000    // (毫秒)数据同步检测心跳间隔(数据包括kv数据及service数据)
     gLOG_REPL_AUTOSAVE_INTERVAL     = 1000    // (毫秒)数据自动物理化保存的间隔
     gLOG_REPL_LOGCLEAN_INTERVAL     = 5000    // (毫秒)数据同步时的日志清理间隔
+    gLOG_REPL_PEERS_INTERVAL        = 3000    // (毫秒)Peers节点信息同步(非完整同步)
     gSERVICE_HEALTH_CHECK_INTERVAL  = 3000    // (毫秒)健康检查默认间隔
 
     // RAFT操作
@@ -82,6 +83,7 @@ const (
     gMSG_REPL_COMPLETELY_UPDATE             = 340
     gMSG_REPL_HEARTBEAT                     = 350
     gMSG_REPL_RESPONSE                      = 360
+    gMSG_REPL_PEERS_UPDATE                  = 375
     gMSG_REPL_NEED_UPDATE_LEADER            = 370
     gMSG_REPL_NEED_UPDATE_FOLLOWER          = 380
     gMSG_REPL_SERVICE_COMPLETELY_UPDATE     = 385

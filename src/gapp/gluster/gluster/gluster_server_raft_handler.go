@@ -21,10 +21,6 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
         } else {
             n.updatePeerInfo(msg.Info)
         }
-        // 去掉初始化时写入的IP键名记录
-        if n.Peers.Contains(msg.Info.Ip) {
-            n.Peers.Remove(msg.Info.Ip)
-        }
     }
     // 消息处理
     switch msg.Head {
@@ -34,7 +30,6 @@ func (n *Node) raftTcpHandler(conn net.Conn) {
         case gMSG_RAFT_SCORE_COMPARE_REQUEST:   n.onMsgRaftScoreCompareRequest(conn, msg)
         case gMSG_RAFT_SPLIT_BRAINS_CHECK:      n.onMsgRaftSplitBrainsCheck(conn, msg)
         case gMSG_RAFT_SPLIT_BRAINS_UNSET:      n.onMsgRaftSplitBrainsUnset(conn, msg)
-        case gMSG_API_PEERS_INFO:               n.onMsgApiPeersInfo(conn, msg)
         case gMSG_API_PEERS_ADD:                n.onMsgApiPeersAdd(conn, msg)
         case gMSG_API_PEERS_REMOVE:             n.onMsgApiPeersRemove(conn, msg)
     }
@@ -177,17 +172,7 @@ func (n *Node) onMsgRaftScoreCompareRequest(conn net.Conn, msg *Msg) {
     n.sendMsg(conn, result, "")
 }
 
-// 节点信息查询
-func (n *Node) onMsgApiPeersInfo(conn net.Conn, msg *Msg) {
-    list := make([]NodeInfo, 0)
-    list  = append(list, *n.getNodeInfo())
-    for _, v := range n.Peers.Values() {
-        list = append(list, v.(NodeInfo))
-    }
-    n.sendMsg(conn, gMSG_API_PEERS_INFO, *gjson.Encode(list))
-}
-
-// 新增节点
+// 新增节点,通过IP添加
 func (n *Node) onMsgApiPeersAdd(conn net.Conn, msg *Msg) {
     list := make([]string, 0)
     gjson.DecodeTo(&(msg.Body), &list)
@@ -202,14 +187,21 @@ func (n *Node) onMsgApiPeersAdd(conn net.Conn, msg *Msg) {
     n.sendMsg(conn, gMSG_RAFT_RESPONSE, "")
 }
 
-// 删除节点
+// 删除节点，目前通过IP删除，效率较低
 func (n *Node) onMsgApiPeersRemove(conn net.Conn, msg *Msg) {
     list := make([]string, 0)
     gjson.DecodeTo(&(msg.Body), &list)
     if list != nil && len(list) > 0 {
+        peers := n.Peers.Values()
         for _, ip := range list {
             // glog.Println("removing peer:", ip)
-            n.Peers.Remove(ip)
+            for _, v := range peers {
+                info := v.(NodeInfo)
+                if ip == info.Ip {
+                    n.Peers.Remove(ip)
+                    break;
+                }
+            }
         }
     }
     n.sendMsg(conn, gMSG_RAFT_RESPONSE, "")

@@ -9,37 +9,17 @@ import (
     "reflect"
 )
 
-// 节点信息API管理
+// 查询Peers
 func (this *NodeApiNode) GET(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    leader := this.node.getLeader()
-    if leader == nil {
-        w.ResponseJson(0, "service would be available after leader election", nil)
-        return
-    }
-    conn := this.node.getConn(leader.Ip, gPORT_RAFT)
-    if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + leader.Ip, nil)
-        return
-    }
-    err := this.node.sendMsg(conn, gMSG_API_PEERS_INFO, "")
-    if err != nil {
-        w.ResponseJson(0, "sending request error: " + err.Error(), nil)
-    } else {
-        msg  := this.node.receiveMsg(conn)
-        data := gjson.Decode(&msg.Body)
-        if data == nil {
-            w.ResponseJson(0, "error data type from leader", nil)
-        } else {
-            w.ResponseJson(1, "ok", data)
-        }
-    }
-    conn.Close()
+    w.ResponseJson(1, "ok", *this.node.getAllPeers())
 }
 
+// 新增Peer
 func (this *NodeApiNode) PUT(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     this.POST(r, w)
 }
 
+// 修改Peer
 func (this *NodeApiNode) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     data := r.GetRaw()
     if data == "" {
@@ -76,6 +56,7 @@ func (this *NodeApiNode) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     conn.Close()
 }
 
+// 删除Peer
 func (this *NodeApiNode) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     data := r.GetRaw()
     if data == "" {

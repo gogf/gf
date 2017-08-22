@@ -15,12 +15,14 @@ import (
 var isInReplication bool
 
 // leader到其他节点的数据同步监听
-func (n *Node) logAutoReplicationHandler() {
+func (n *Node) replicationHandler() {
     var wg sync.WaitGroup
     // 初始化数据同步心跳检测
-    go n.replicationLoop()
+    go n.dataReplicationLoop()
     // 日志自动清理
     go n.autoCleanLogList()
+    // Peers自动同步
+    go n.peersReplicationLoop()
     // 进入循环监听日志事件
     for {
         select {
@@ -53,7 +55,7 @@ func (n *Node) logAutoReplicationHandler() {
 }
 
 // 日志自动同步检查，类似心跳
-func (n *Node) replicationLoop() {
+func (n *Node) dataReplicationLoop() {
     conns := gset.NewStringSet()
     for {
         if n.getRaftRole() == gROLE_RAFT_LEADER {
@@ -99,6 +101,25 @@ func (n *Node) replicationLoop() {
             }
         }
         time.Sleep(100 * time.Millisecond)
+    }
+}
+
+// 节点信息自动同步
+func (n *Node) peersReplicationLoop() {
+    for {
+        if n.getRaftRole() == gROLE_RAFT_LEADER {
+            for _, v := range n.Peers.Values() {
+                info := v.(NodeInfo)
+                go func(info *NodeInfo) {
+                    conn := n.getConn(info.Ip, gPORT_REPL)
+                    if conn != nil {
+                        defer conn.Close()
+                        n.sendMsg(conn, gMSG_REPL_PEERS_UPDATE, *gjson.Encode(n.Peers.Values()))
+                    }
+                }(&info)
+            }
+        }
+        time.Sleep(gLOG_REPL_PEERS_INTERVAL * time.Millisecond)
     }
 }
 

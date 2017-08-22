@@ -90,7 +90,7 @@ func (n *Node) Run() {
         // 心跳保持及存活性检查
         go n.heartbeatHandler()
         // 日志同步处理
-        go n.logAutoReplicationHandler()
+        go n.replicationHandler()
         // 本地日志存储处理
         go n.logAutoSavingHandler()
         // 服务健康检查
@@ -164,7 +164,7 @@ func (n *Node) initFromCfg() {
             }
             go func(ip string) {
                 if !n.sayHi(ip) {
-                    n.Peers.Set(ip, NodeInfo{Id: ip, Ip: ip})
+                    n.updatePeerInfo(NodeInfo{Id: ip, Ip: ip})
                 }
             }(ip)
         }
@@ -252,10 +252,6 @@ func (n *Node) sayHi(ip string) bool {
             n.setLeader(&msg.Info)
             n.setRaftRole(gROLE_RAFT_FOLLOWER)
         }
-        // 去掉初始化时写入的IP键名记录
-        if n.Peers.Contains(msg.Info.Ip) {
-            n.Peers.Remove(msg.Info.Ip)
-        }
     }
     return true
 }
@@ -277,6 +273,16 @@ func (n *Node) checkConnInLocalNode(conn net.Conn) bool {
     localip,  _ := gip.ParseAddress(conn.LocalAddr().String())
     remoteip, _ := gip.ParseAddress(conn.RemoteAddr().String())
     return localip == remoteip
+}
+
+// 获得Peers节点信息(包含自身)
+func (n *Node) getAllPeers() *[]NodeInfo{
+    list := make([]NodeInfo, 0)
+    list  = append(list, *n.getNodeInfo())
+    for _, v := range n.Peers.Values() {
+        list = append(list, v.(NodeInfo))
+    }
+    return &list
 }
 
 func (n *Node) getLeader() *NodeInfo {
@@ -483,6 +489,12 @@ func (n *Node) setKVMap(m *gmap.StringStringMap) {
 // 更新节点信息
 func (n *Node) updatePeerInfo(info NodeInfo) {
     n.Peers.Set(info.Id, info)
+    // 去掉初始化时写入的IP键名记录
+    if n.Peers.Contains(info.Ip) {
+        if info.Id != info.Ip {
+            n.Peers.Remove(info.Ip)
+        }
+    }
 }
 
 func (n *Node) updatePeerStatus(Id string, status int) {
@@ -493,7 +505,7 @@ func (n *Node) updatePeerStatus(Id string, status int) {
         if info.LastActiveTime == 0 || status == gSTATUS_ALIVE {
             info.LastActiveTime = gtime.Millisecond()
         }
-        n.Peers.Set(Id, info)
+        n.updatePeerInfo(info)
     }
 }
 

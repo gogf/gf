@@ -23,6 +23,7 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         case gMSG_REPL_SET:                         n.onMsgReplSet(conn, msg)
         case gMSG_REPL_REMOVE:                      n.onMsgReplRemove(conn, msg)
         case gMSG_REPL_HEARTBEAT:                   n.onMsgReplHeartbeat(conn, msg)
+        case gMSG_REPL_PEERS_UPDATE:                n.onMsgPeersUpdate(conn, msg)
         case gMSG_REPL_INCREMENTAL_UPDATE:          n.onMsgReplUpdate(conn, msg)
         case gMSG_REPL_COMPLETELY_UPDATE:           n.onMsgReplUpdate(conn, msg)
         case gMSG_REPL_SERVICE_COMPLETELY_UPDATE:   n.onMsgServiceCompletelyUpdate(conn, msg)
@@ -31,6 +32,20 @@ func (n *Node) replTcpHandler(conn net.Conn) {
     }
     //这里不用自动关闭链接，由于链接有读取超时，当一段时间没有数据时会自动关闭
     n.replTcpHandler(conn)
+}
+
+// Peers信息更新
+func (n *Node) onMsgPeersUpdate(conn net.Conn, msg *Msg) {
+    //glog.Println("receive peers update", msg.Body)
+    m := make([]NodeInfo, 0)
+    if gjson.DecodeTo(&msg.Body, &m) == nil {
+        for _, v := range m {
+            if v.Id != n.Id {
+                n.updatePeerInfo(v)
+            }
+        }
+    }
+    conn.Close()
 }
 
 // 心跳消息提交的完整更新消息
@@ -230,6 +245,5 @@ func (n *Node) updateServiceToRemoteNode(conn net.Conn, msg *Msg) {
         glog.Error(err)
         return
     }
-    n.receiveMsg(conn)
 }
 
