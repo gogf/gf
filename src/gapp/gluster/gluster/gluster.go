@@ -27,11 +27,14 @@ import (
     "g/encoding/gmd5"
     "fmt"
     "g/encoding/gcompress"
+    "g/os/gconsole"
+    "g/encoding/gjson"
 )
 
 const (
     gVERSION                        = "0.6"   // 当前版本
-    gCOMPRESS                       = false   // 是否压缩存储文件以及通信内容(生产环境需要打开)
+    gCOMPRESS_COMMUNICATION         = true    // 是否在通信时进行内容压缩
+    gCOMPRESS_SAVING                = false   // 是否在存储时压缩内容
     // 集群端口定义
     gPORT_RAFT                      = 4166    // 集群协议通信接口
     gPORT_REPL                      = 4167    // 集群数据同步接口
@@ -117,6 +120,8 @@ type Node struct {
     Ip               string                   // 主机节点的ip，由通信的时候进行填充，
                                               // 一个节点可能会有多个IP，这里保存最近通信的那个，节点唯一性识别使用的是Name字段
     Cfg              string                   // 配置文件绝对路径
+    CfgJson          *gjson.Json              // 配置对象
+    CfgInited        bool                     // 本地配置对象是否已同步到leader(配置同步需要注意覆盖问题)
     Peers            *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
     Role             int                      // 集群角色
     RaftRole         int                      // RAFT角色
@@ -256,6 +261,10 @@ func NewServer() *Node {
     if err == nil && len(ips) == 1 {
         node.Ip = ips[0]
     }
+    // 命令行操作绑定
+    gconsole.BindHandle("addnode", cmd_addnode)
+    gconsole.BindHandle("delnode", cmd_delnode)
+
     return &node
 }
 
@@ -310,7 +319,7 @@ func Receive(conn net.Conn) []byte {
             }
         }
     }
-    if gCOMPRESS {
+    if gCOMPRESS_COMMUNICATION {
         return gcompress.UnZlib(data)
     }
     return data
@@ -321,7 +330,7 @@ func Send(conn net.Conn, data []byte) error {
     conn.SetReadDeadline(time.Now().Add(gTCP_WRITE_TIMEOUT * time.Millisecond))
     retry := 0
     for {
-        if gCOMPRESS {
+        if gCOMPRESS_COMMUNICATION {
             data = gcompress.Zlib(data)
         }
         _, err := conn.Write(data)

@@ -146,7 +146,7 @@ func (r *ClientRequest) GetRaw() string {
 func (r *ClientRequest) GetJson() *gjson.Json {
     data := r.GetRaw()
     if data != "" {
-        return gjson.DecodeToJson(&data)
+        return gjson.DecodeToJson(data)
     }
     return nil
 }

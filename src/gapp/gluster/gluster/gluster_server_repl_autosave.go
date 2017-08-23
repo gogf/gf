@@ -41,8 +41,8 @@ func (n *Node) saveDataToFile() {
     for _, v := range n.LogList.BackAll() {
         data.LogList = append(data.LogList, v.(LogEntry))
     }
-    content := []byte(*gjson.Encode(&data))
-    if gCOMPRESS {
+    content := []byte(gjson.Encode(&data))
+    if gCOMPRESS_SAVING {
         content = gcompress.Zlib(content)
     }
     err := gfile.PutBinContents(n.getDataFilePath(), content)
@@ -58,7 +58,7 @@ func (n *Node) restoreDataFromFile() {
     path := n.getDataFilePath()
     if gfile.Exists(path) {
         bin := gfile.GetBinContents(path)
-        if gCOMPRESS {
+        if gCOMPRESS_SAVING {
             bin = gcompress.UnZlib(bin)
         }
         if bin != nil && len(bin) > 0 {
@@ -70,7 +70,7 @@ func (n *Node) restoreDataFromFile() {
                 Peers   : make(map[string]interface{}),
                 DataMap : make(map[string]string),
             }
-            if gjson.DecodeTo(&content, &data) == nil {
+            if gjson.DecodeTo(content, &data) == nil {
                 n.setLastLogId(data.LastLogId)
                 n.setLogCount(data.LogCount)
                 n.setLastSavedLogId(data.LastLogId)
@@ -114,7 +114,7 @@ func (n *Node) restoreKVMap(data *SaveInfo) {
 }
 
 // 使用logentry数组更新本地的日志列表
-func (n *Node) updateFromLogEntriesJson(jsonContent *string) error {
+func (n *Node) updateFromLogEntriesJson(jsonContent string) error {
     array := make([]LogEntry, 0)
     err   := gjson.DecodeTo(jsonContent, &array)
     if err != nil {

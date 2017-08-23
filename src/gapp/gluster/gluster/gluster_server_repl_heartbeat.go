@@ -43,7 +43,7 @@ func (n *Node) replicationHandler() {
                             return
                         }
                         defer conn.Close()
-                        if n.sendMsg(conn, entry.Act, *gjson.Encode(entry)) == nil {
+                        if n.sendMsg(conn, entry.Act, gjson.Encode(entry)) == nil {
                             n.receiveMsg(conn)
                         }
                     }(&info, entry)
@@ -87,9 +87,9 @@ func (n *Node) dataReplicationLoop() {
                         msg := n.receiveMsg(conn)
                         if msg != nil {
                             switch msg.Head {
-                                case gMSG_REPL_NEED_UPDATE_FOLLOWER:            n.updateDataToRemoteNode(conn, msg)
                                 case gMSG_REPL_INCREMENTAL_UPDATE:              n.updateDataFromRemoteNode(conn, msg)
                                 case gMSG_REPL_COMPLETELY_UPDATE:               n.updateDataFromRemoteNode(conn, msg)
+                                case gMSG_REPL_NEED_UPDATE_FOLLOWER:            n.updateDataToRemoteNode(conn, msg)
                                 case gMSG_REPL_SERVICE_COMPLETELY_UPDATE:       n.updateServiceFromRemoteNode(conn, msg)
                                 case gMSG_REPL_SERVICE_NEED_UPDATE_FOLLOWER:    n.updateServiceToRemoteNode(conn, msg)
                                 default:
@@ -114,7 +114,7 @@ func (n *Node) peersReplicationLoop() {
                     conn := n.getConn(info.Ip, gPORT_REPL)
                     if conn != nil {
                         defer conn.Close()
-                        n.sendMsg(conn, gMSG_REPL_PEERS_UPDATE, *gjson.Encode(n.Peers.Values()))
+                        n.sendMsg(conn, gMSG_REPL_PEERS_UPDATE, gjson.Encode(n.Peers.Values()))
                     }
                 }(&info)
             }

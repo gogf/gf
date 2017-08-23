@@ -21,7 +21,7 @@ func (r *ClientResponse) Close()  {
 // 返回固定格式的json
 func (r *ServerResponse) ResponseJson(result int, message string, data interface{}) {
     r.Header().Set("Content-type", "application/json")
-    r.Write([]byte(*gjson.Encode(ResponseJson{ result, message, data })))
+    r.Write([]byte(gjson.Encode(ResponseJson{ result, message, data })))
 }
 
 // 获取返回的数据

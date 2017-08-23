@@ -175,13 +175,13 @@ func (n *Node) onMsgRaftScoreCompareRequest(conn net.Conn, msg *Msg) {
 // 新增节点,通过IP添加
 func (n *Node) onMsgApiPeersAdd(conn net.Conn, msg *Msg) {
     list := make([]string, 0)
-    gjson.DecodeTo(&(msg.Body), &list)
+    gjson.DecodeTo(msg.Body, &list)
     if list != nil && len(list) > 0 {
         for _, ip := range list {
             if n.Peers.Contains(ip) {
                 continue
             }
-            n.updatePeerInfo(NodeInfo{Ip: ip})
+            n.updatePeerInfo(NodeInfo{Id: ip, Ip: ip})
         }
     }
     n.sendMsg(conn, gMSG_RAFT_RESPONSE, "")
@@ -190,7 +190,7 @@ func (n *Node) onMsgApiPeersAdd(conn net.Conn, msg *Msg) {
 // 删除节点，目前通过IP删除，效率较低
 func (n *Node) onMsgApiPeersRemove(conn net.Conn, msg *Msg) {
     list := make([]string, 0)
-    gjson.DecodeTo(&(msg.Body), &list)
+    gjson.DecodeTo(msg.Body, &list)
     if list != nil && len(list) > 0 {
         peers := n.Peers.Values()
         for _, ip := range list {

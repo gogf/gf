@@ -38,7 +38,7 @@ func (n *Node) replTcpHandler(conn net.Conn) {
 func (n *Node) onMsgPeersUpdate(conn net.Conn, msg *Msg) {
     //glog.Println("receive peers update", msg.Body)
     m := make([]NodeInfo, 0)
-    if gjson.DecodeTo(&msg.Body, &m) == nil {
+    if gjson.DecodeTo(msg.Body, &m) == nil {
         for _, v := range m {
             if v.Id != n.Id {
                 n.updatePeerInfo(v)
@@ -56,7 +56,7 @@ func (n *Node) onMsgServiceCompletelyUpdate(conn net.Conn, msg *Msg) {
 // service删除
 func (n *Node) onMsgServiceRemove(conn net.Conn, msg *Msg) {
     list := make([]interface{}, 0)
-    if gjson.DecodeTo(&msg.Body, &list) == nil {
+    if gjson.DecodeTo(msg.Body, &list) == nil {
         for _, name := range list {
             n.Service.Remove(name.(string))
             n.setLastServiceLogId(gtime.Microsecond())
@@ -67,9 +67,9 @@ func (n *Node) onMsgServiceRemove(conn net.Conn, msg *Msg) {
 
 // service设置
 func (n *Node) onMsgServiceSet(conn net.Conn, msg *Msg) {
-    var service Service
-    if gjson.DecodeTo(&msg.Body, &service) == nil {
-        n.Service.Set(service.Name, service)
+    var st ServiceStruct
+    if gjson.DecodeTo(msg.Body, &st) == nil {
+        n.Service.Set(st.Name, n.serviceSructToService(&st))
         n.setLastServiceLogId(gtime.Microsecond())
     }
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
@@ -85,7 +85,7 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
     n.setStatusInReplication(true)
     if n.getRaftRole() == gROLE_RAFT_LEADER {
         var items interface{}
-        if gjson.DecodeTo(&msg.Body, &items) == nil {
+        if gjson.DecodeTo(msg.Body, &items) == nil {
             var entry = LogEntry {
                 Id    : gtime.Microsecond(),
                 Act   : msg.Head,
@@ -96,7 +96,7 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
         }
     } else {
         var entry LogEntry
-        gjson.DecodeTo(&msg.Body, &entry)
+        gjson.DecodeTo(msg.Body, &entry)
         n.saveLogEntry(entry)
     }
     n.setStatusInReplication(false)
@@ -167,13 +167,13 @@ func (n *Node) updateDataFromRemoteNode(conn net.Conn, msg *Msg) {
         // 增量同步，LogCount和LastLogId会根据保存的LogEntry自动更新
         if n.getLastLogId() < msg.Info.LastLogId {
             if !n.getStatusInReplication() {
-                n.updateFromLogEntriesJson(&msg.Body)
+                n.updateFromLogEntriesJson(msg.Body)
             }
         }
     } else {
         // 全量同步，完整的kv数据覆盖
         m   := make(map[string]string)
-        err := gjson.DecodeTo(&(msg.Body), &m)
+        err := gjson.DecodeTo(msg.Body, &m)
         if err == nil {
             newm := gmap.NewStringStringMap()
             newm.BatchSet(m)
@@ -197,7 +197,7 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     list    := n.getLogEntriesByLastLogId(msg.Info.LastLogId)
     length  := len(list)
     if length > 0 && (msg.Info.LogCount + length) == n.getLogCount() {
-        if err := n.sendMsg(conn, gMSG_REPL_INCREMENTAL_UPDATE, *gjson.Encode(list)); err != nil {
+        if err := n.sendMsg(conn, gMSG_REPL_INCREMENTAL_UPDATE, gjson.Encode(list)); err != nil {
             glog.Error(err)
             return
         }
@@ -213,7 +213,7 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     }
     if !updated {
         // 如果增量同步失败，或者判断需要完整同步，则采用全量同步
-        if err := n.sendMsg(conn, gMSG_REPL_COMPLETELY_UPDATE, *gjson.Encode(*n.KVMap.Clone())); err != nil {
+        if err := n.sendMsg(conn, gMSG_REPL_COMPLETELY_UPDATE, gjson.Encode(*n.KVMap.Clone())); err != nil {
             glog.Error(err)
             return
         }
@@ -225,7 +225,7 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
 func (n *Node) updateServiceFromRemoteNode(conn net.Conn, msg *Msg) {
     glog.Println("receive data replication update from", msg.Info.Name)
     m   := make(map[string]Service)
-    err := gjson.DecodeTo(&(msg.Body), &m)
+    err := gjson.DecodeTo(msg.Body, &m)
     if err == nil {
         newm := gmap.NewStringInterfaceMap()
         for k, v := range m {
@@ -241,7 +241,7 @@ func (n *Node) updateServiceFromRemoteNode(conn net.Conn, msg *Msg) {
 // 同步Service到目标节点
 func (n *Node) updateServiceToRemoteNode(conn net.Conn, msg *Msg) {
     glog.Println("send service replication update to", msg.Info.Name)
-    if err := n.sendMsg(conn, gMSG_REPL_SERVICE_COMPLETELY_UPDATE, *gjson.Encode(*n.Service.Clone())); err != nil {
+    if err := n.sendMsg(conn, gMSG_REPL_SERVICE_COMPLETELY_UPDATE, gjson.Encode(*n.Service.Clone())); err != nil {
         glog.Error(err)
         return
     }

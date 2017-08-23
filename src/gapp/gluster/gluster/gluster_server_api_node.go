@@ -7,6 +7,7 @@ import (
     "g/net/ghttp"
     "g/encoding/gjson"
     "reflect"
+    "errors"
 )
 
 // 查询Peers
@@ -21,75 +22,32 @@ func (this *NodeApiNode) PUT(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
 
 // 修改Peer
 func (this *NodeApiNode) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    data := r.GetRaw()
-    if data == "" {
-        w.ResponseJson(0, "invalid input", nil)
-        return
-    }
-    items := gjson.Decode(&data)
-    if items == nil {
-        w.ResponseJson(0, "invalid data type: json decoding failed", nil)
-        return
-    }
-    // 只允许[]interface{}数据类型
-    if "[]interface {}" != reflect.TypeOf(items).String()  {
-        w.ResponseJson(0, "invalid data type", nil)
-        return
-    }
-    // 请求到leader
-    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_RAFT)
-    if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
-        return
-    }
-    err := this.node.sendMsg(conn, gMSG_API_PEERS_ADD, *gjson.Encode(items))
+    list := make([]string, 0)
+    err  := gjson.DecodeTo(r.GetRaw(), &list)
     if err != nil {
-        w.ResponseJson(0, "sending request error: " + err.Error(), nil)
-    } else {
-        msg := this.node.receiveMsg(conn)
-        if msg.Head != gMSG_RAFT_RESPONSE {
-            w.ResponseJson(0, "handling request error", nil)
-        } else {
-            w.ResponseJson(1, "ok", nil)
-        }
+        w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
+        return
     }
-    conn.Close()
+    err  = this.node.SendToLeader(gMSG_API_PEERS_ADD, gPORT_RAFT, list)
+    if err != nil {
+        w.ResponseJson(0, err.Error(), nil)
+    } else {
+        w.ResponseJson(1, "ok", nil)
+    }
 }
 
 // 删除Peer
 func (this *NodeApiNode) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    data := r.GetRaw()
-    if data == "" {
-        w.ResponseJson(0, "invalid input", nil)
-        return
-    }
-    items := gjson.Decode(&data)
-    if items == nil {
-        w.ResponseJson(0, "invalid data type: json decoding failed", nil)
-        return
-    }
-    // 只允许[]interface{}数据类型
-    if "[]interface {}" != reflect.TypeOf(items).String()  {
-        w.ResponseJson(0, "invalid data type", nil)
-        return
-    }
-    // 请求到leader
-    conn := this.node.getConn(this.node.getLeader().Ip, gPORT_RAFT)
-    if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + this.node.getLeader().Ip, nil)
-        return
-    }
-    err := this.node.sendMsg(conn, gMSG_API_PEERS_REMOVE, *gjson.Encode(items))
+    list := make([]string, 0)
+    err  := gjson.DecodeTo(r.GetRaw(), &list)
     if err != nil {
-        w.ResponseJson(0, "sending request error: " + err.Error(), nil)
-    } else {
-        msg := this.node.receiveMsg(conn)
-        if msg.Head != gMSG_RAFT_RESPONSE {
-            w.ResponseJson(0, "handling request error", nil)
-        } else {
-            w.ResponseJson(1, "ok", nil)
-        }
+        w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
+        return
     }
-    conn.Close()
+    err  = this.node.SendToLeader(gMSG_API_PEERS_REMOVE, gPORT_RAFT, list)
+    if err != nil {
+        w.ResponseJson(0, err.Error(), nil)
+    } else {
+        w.ResponseJson(1, "ok", nil)
+    }
 }
-

@@ -15,6 +15,8 @@ import (
     "g/encoding/gjson"
     "g/os/glog"
     "strings"
+    "os"
+    "errors"
 )
 
 // 获取数据
@@ -56,6 +58,12 @@ func (n *Node) getConn(ip string, port int) net.Conn {
 
 // 运行节点
 func (n *Node) Run() {
+    // 命令行操作
+    if gconsole.Value.Get(1) != "" {
+        gconsole.AutoRun()
+        os.Exit(0)
+        return
+    }
     // 读取配置文件
     n.initFromCfg()
 
@@ -117,21 +125,20 @@ func (n *Node) initFromCfg() {
     if !gfile.Exists(cfgpath) {
         return
     }
-    c := string(gfile.GetContents(cfgpath))
-    j := gjson.DecodeToJson(&c)
-    if j == nil {
+    n.CfgJson = gjson.DecodeToJson(string(gfile.GetContents(cfgpath)))
+    if n.CfgJson == nil {
         glog.Fatalln("config file decoding failed(surely a json format?), exit")
     }
     glog.Println("initializing from", cfgpath)
     // 集群名称
-    n.Group = j.GetString("Group")
+    n.Group = n.CfgJson.GetString("Group")
     // 集群角色
-    n.Role  = j.GetInt("Role")
+    n.Role  = n.CfgJson.GetInt("Role")
     if n.Role < 0 || n.Role > 2 {
         glog.Fatalln("invalid role setting, exit")
     }
     // 数据保存路径(请保证运行gcluster的用户有权限写入)
-    savepath := j.GetString("SavePath")
+    savepath := n.CfgJson.GetString("SavePath")
     if savepath != "" {
         if !gfile.Exists(savepath) {
             gfile.Mkdir(savepath)
@@ -142,7 +149,7 @@ func (n *Node) initFromCfg() {
         n.SetSavePath(strings.TrimRight(savepath, gfile.Separator))
     }
     // 日志保存路径
-    logpath := j.GetString("LogPath")
+    logpath := n.CfgJson.GetString("LogPath")
     if logpath != "" {
         if !gfile.IsWritable(logpath) {
             glog.Fatalln(logpath, "is not writable for saving log")
@@ -150,12 +157,12 @@ func (n *Node) initFromCfg() {
         glog.SetLogPath(logpath)
     }
     // (可选)监控节点IP或域名地址
-    monitor := j.GetString("Monitor")
+    monitor := n.CfgJson.GetString("Monitor")
     if monitor != "" {
         n.setMonitor(monitor)
     }
     // (可选)初始化节点列表，包含自定义的所需添加的服务器IP或者域名列表
-    peers := j.GetArray("Peers")
+    peers := n.CfgJson.GetArray("Peers")
     if peers != nil {
         for _, v := range peers {
             ip := v.(string)
@@ -170,14 +177,14 @@ func (n *Node) initFromCfg() {
         }
     }
     // (可选)初始化自定义的k-v数据
-    datamap := j.GetMap("DataMap")
+    datamap := n.CfgJson.GetMap("DataMap")
     if datamap != nil {
         for k, v := range datamap {
             n.KVMap.Set(k, v.(string))
         }
     }
     // (可选)初始化服务配置
-    service := j.GetArray("Service")
+    service := n.CfgJson.GetArray("Service")
     if service != nil {
         for _, v := range service {
             var s  Service
@@ -224,6 +231,29 @@ func (n *Node) getNodeInfo() *NodeInfo {
         LastServiceLogId : n.getLastServiceLogId(),
         Version          : gVERSION,
     }
+}
+
+// 向leader发送操作请求
+func (n *Node) SendToLeader(head int, port int, param interface{}) error {
+    leader := n.getLeader()
+    if leader == nil {
+        return errors.New("leader not found, please try again after leader election done")
+    }
+    conn := n.getConn(leader.Ip, gPORT_REPL)
+    if conn == nil {
+        return errors.New("could not connect to leader: " + leader.Ip)
+    }
+    defer conn.Close()
+    err := n.sendMsg(conn, gMSG_API_SERVICE_REMOVE, gjson.Encode(param))
+    if err != nil {
+        return errors.New("sending request error: " + err.Error())
+    } else {
+        msg := n.receiveMsg(conn)
+        if msg.Head != gMSG_RAFT_RESPONSE {
+            return errors.New("handling request error")
+        }
+    }
+    return nil
 }
 
 // 通过IP向一个节点发送消息并建立双方联系
@@ -516,3 +546,4 @@ func (n *Node) updateElectionDeadline() {
     n.ElectionDeadline = gtime.Millisecond() + gELECTION_TIMEOUT
     n.mutex.Unlock()
 }
+

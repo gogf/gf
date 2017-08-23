@@ -8,6 +8,7 @@ import (
     "g/net/ghttp"
     "g/encoding/gjson"
     "reflect"
+    "errors"
 )
 
 
@@ -31,86 +32,33 @@ func (this *NodeApiKv) PUT(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
 }
 
 // K-V 修改
-// @todo 需要使用同步请求机制保证成功处理，并返回真实的处理结果
 func (this *NodeApiKv) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    data := r.GetRaw()
-    if data == "" {
-        w.ResponseJson(0, "invalid input", nil)
-        return
-    }
-    items := gjson.Decode(&data)
-    if items == nil {
-        w.ResponseJson(0, "invalid data type: json decoding failed", nil)
-        return
-    }
-    if "map[string]interface {}" != reflect.TypeOf(items).String() {
-        w.ResponseJson(0, "invalid data type", nil)
-        return
-    }
-    leader := this.node.getLeader()
-    if leader == nil {
-        w.ResponseJson(0, "service would be available after leader election", nil)
-        return
-    }
-    conn := this.node.getConn(leader.Ip, gPORT_REPL)
-    if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + leader.Ip, nil)
-        return
-    }
-    err := this.node.sendMsg(conn, gMSG_REPL_SET, *gjson.Encode(items))
+    items := make(map[string]string)
+    err   := gjson.DecodeTo(r.GetRaw(), &items)
     if err != nil {
-        w.ResponseJson(0, "sending request error: " + err.Error(), nil)
-    } else {
-        msg := this.node.receiveMsg(conn)
-        if msg.Head != gMSG_REPL_RESPONSE {
-            w.ResponseJson(0, "handling request error", nil)
-        } else {
-            w.ResponseJson(1, "ok", nil)
-        }
+        w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
+        return
     }
-    conn.Close()
+    err  = this.node.SendToLeader(gMSG_REPL_SET, gPORT_REPL, items)
+    if err != nil {
+        w.ResponseJson(0, err.Error(), nil)
+    } else {
+        w.ResponseJson(1, "ok", nil)
+    }
 }
 
 // K-V 删除
-// @todo 需要使用同步请求机制保证成功处理，并返回真实的处理结果
 func (this *NodeApiKv) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    method := strings.ToUpper(r.Method)
-    data   := r.GetRaw()
-    if data == "" {
-        w.ResponseJson(0, "invalid input", nil)
-        return
-    }
-
-    items := gjson.Decode(&data)
-    if items == nil {
-        w.ResponseJson(0, "invalid data type: json decoding failed", nil)
-        return
-    }
-
-    if "[]interface {}" != reflect.TypeOf(items).String()  {
-        w.ResponseJson(0, "invalid data type for " + method, nil)
-        return
-    }
-    leader := this.node.getLeader()
-    if leader == nil {
-        w.ResponseJson(0, "service would be available after leader election", nil)
-        return
-    }
-    conn := this.node.getConn(leader.Ip, gPORT_REPL)
-    if conn == nil {
-        w.ResponseJson(0, "could not connect to leader: " + leader.Ip, nil)
-        return
-    }
-    err := this.node.sendMsg(conn, gMSG_REPL_REMOVE, *gjson.Encode(items))
+    list := make([]string, 0)
+    err  := gjson.DecodeTo(r.GetRaw(), &list)
     if err != nil {
-        w.ResponseJson(0, "sending request error: " + err.Error(), nil)
-    } else {
-        msg := this.node.receiveMsg(conn)
-        if msg.Head != gMSG_REPL_RESPONSE {
-            w.ResponseJson(0, "handling request error", nil)
-        } else {
-            w.ResponseJson(1, "ok", nil)
-        }
+        w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
+        return
     }
-    conn.Close()
+    err  = this.node.SendToLeader(gMSG_REPL_REMOVE, gPORT_REPL, list)
+    if err != nil {
+        w.ResponseJson(0, err.Error(), nil)
+    } else {
+        w.ResponseJson(1, "ok", nil)
+    }
 }

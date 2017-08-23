@@ -1,7 +1,14 @@
 {
+    "Group"    : "",
     "Role"     : 1,
-    "SavePath" : "/tmp/gluster/",
-    "Peers"    : ["192.168.2.124"],
+    "SavePath" : "~/gluster/db/",
+    "LogPath"  : "~/gluster/log/",
+    "Peers"    : [
+        "192.168.2.102",
+        "192.168.2.147",
+        "192.168.2.186",
+        "192.168.2.196"
+    ],
     "DataMap"  : {
         "name":"john"
     },
