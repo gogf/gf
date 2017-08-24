@@ -161,3 +161,22 @@ func (s *Server)BindController(uri string, c Controller) {
     })
 }
 
+func (s *Server)AotoRedirect()  {
+    if s.handlerMap == nil {
+        s.handlerMap = make(HandlerMap)
+    }
+    key    := ""
+    reg    := regexp.MustCompile(`(\w+?)\s*:\s*(.+)`)
+    result := reg.FindStringSubmatch(pattern)
+    if len(result) > 1 {
+        key = strings.ToUpper(result[1]) + ":" + result[2]
+    } else {
+        key = strings.TrimSpace(pattern)
+    }
+    if _, ok := s.handlerMap[key]; ok {
+        panic("duplicated http server handler for: " + pattern)
+    } else {
+        s.handlerMap[key] = handler
+    }
+}
+

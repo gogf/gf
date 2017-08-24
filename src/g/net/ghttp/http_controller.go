@@ -2,7 +2,7 @@ package ghttp
 
 // 控制器基类
 type ControllerBase struct {
-
+    Server *Server
 }
 
 // 控制器接口

@@ -96,7 +96,6 @@ const (
     gMSG_REPL_SERVICE_NEED_UPDATE_FOLLOWER  = 400
 
     // API相关
-    gMSG_API_PEERS_INFO                     = 510
     gMSG_API_PEERS_ADD                      = 520
     gMSG_API_PEERS_REMOVE                   = 530
     gMSG_API_SERVICE_SET                    = 540
@@ -243,7 +242,7 @@ func NewServer() *Node {
         Id            : nodeId(),
         Ip            : "127.0.0.1",
         Name          : hostname,
-        Role          : gROLE_SERVER,
+        Role          : gROLE_MONITOR,
         RaftRole      : gROLE_RAFT_FOLLOWER,
         MinNode       : 1,
         Leader        : nil,

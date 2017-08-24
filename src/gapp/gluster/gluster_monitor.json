@@ -1,6 +1,6 @@
 {
     "Role"     : 2,
-    "SavePath" : "~/gluster/db/",
+    "SavePath" : "/tmp/gluster/db/",
     "Monitor"  : {
         "WebUIPath" : "/home/john/Workspace/Go/gf/src/gapp/gluster/webui",
         "AdminUser" : "admin",
