@@ -72,28 +72,39 @@ func (n *Node) serviceHealthCheckHandler() {
 // 如果新增检测类型，需要更新该方法
 func (n *Node) checkServiceHealth(service *Service) {
     var wg sync.WaitGroup
+    // 用以标识Service是否有更新
+    updated := false
     for k, v := range service.List {
         wg.Add(1)
-        go func(i int, m *gmap.StringInterfaceMap) {
+        go func(i int, m *gmap.StringInterfaceMap, u *bool) {
+            ostatus := m.Get("status")
+            if ostatus == nil {
+                ostatus = 0
+            }
             switch strings.ToLower(service.Type) {
                 case "mysql": fallthrough
                 case "pgsql": n.dbHealthCheck(service.Type, m)
                 case "web":   n.webHealthCheck(m)
             }
+            if ostatus != m.Get("status") {
+                (*u) = true
+            }
             wg.Done()
-        }(k, v)
+        }(k, v, &updated)
     }
     wg.Wait()
-
     // 从Service对象为基础，新创建一个ServiceStruct，更新到API接口变量中，以便提高接口查询效率
     // 以空间换时间的方式，在ServiceForApi中已有的变量会被新变量替换，但旧变量不会马上消失，而是转交给GC处理
-    n.ServiceForApi.Set(service.Name, *n.serviceToServiceStruct(service))
+    if updated {
+        n.ServiceForApi.Set(service.Name, *n.serviceToServiceStruct(service))
+        n.setLastServiceLogId(gtime.Microsecond())
+    }
 }
 
 // MySQL/PostgreSQL数据库健康检查
 // 使用并发方式并行测试同一个配置中的数据库链接
 func (n *Node) dbHealthCheck(stype string, item *gmap.StringInterfaceMap) {
-    dbcfg := gdb.ConfigNode{
+    dbcfg   := gdb.ConfigNode{
         Host    : item.Get("host").(string),
         Port    : item.Get("port").(string),
         User    : item.Get("user").(string),

@@ -164,7 +164,7 @@ type Service struct {
     List  []*gmap.StringInterfaceMap
 }
 
-// 用以json化处理的Service数据结构
+// 用以可直接json化处理的Service数据结构
 type ServiceStruct struct {
     Name  string                   `json:"name"`
     Type  string                   `json:"type"`

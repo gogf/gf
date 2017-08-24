@@ -8,5 +8,5 @@ import (
 
 
 func main() {
-    fmt.Println(gfile.Home())
+    fmt.Println(false == 0)
 }

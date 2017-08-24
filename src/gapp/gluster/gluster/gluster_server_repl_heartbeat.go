@@ -9,6 +9,7 @@ import (
     "g/core/types/gset"
     "sync"
     "g/os/glog"
+    "g/util/gtime"
 )
 
 // 用以识别节点当前是否正在数据同步中
@@ -59,6 +60,13 @@ func (n *Node) dataReplicationLoop() {
     conns := gset.NewStringSet()
     for {
         if n.getRaftRole() == gROLE_RAFT_LEADER {
+            // 检查数据与Service是否是初始化内容，如果是的画则更新对应ID，以便同步数据和Service到Follower
+            if n.getLastLogId() == 0 {
+                n.setLastLogId(gtime.Microsecond())
+            }
+            if n.getLastServiceLogId() == 0 {
+                n.setLastServiceLogId(gtime.Microsecond())
+            }
             for _, v := range n.Peers.Values() {
                 info := v.(NodeInfo)
                 if conns.Contains(info.Id) {

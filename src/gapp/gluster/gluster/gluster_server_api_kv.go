@@ -36,7 +36,7 @@ func (this *NodeApiKv) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
         w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
         return
     }
-    err  = this.node.SendToLeader(gMSG_REPL_SET, gPORT_REPL, items)
+    err  = this.node.SendToLeader(gMSG_REPL_SET, gPORT_REPL, gjson.Encode(items))
     if err != nil {
         w.ResponseJson(0, err.Error(), nil)
     } else {
@@ -52,7 +52,7 @@ func (this *NodeApiKv) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
         w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
         return
     }
-    err  = this.node.SendToLeader(gMSG_REPL_REMOVE, gPORT_REPL, list)
+    err  = this.node.SendToLeader(gMSG_REPL_REMOVE, gPORT_REPL, gjson.Encode(list))
     if err != nil {
         w.ResponseJson(0, err.Error(), nil)
     } else {

@@ -60,7 +60,7 @@ func (this *NodeApiService) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse
         w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
         return
     }
-    err  = this.node.SendToLeader(gMSG_API_SERVICE_SET, gPORT_REPL, st)
+    err  = this.node.SendToLeader(gMSG_API_SERVICE_SET, gPORT_REPL, gjson.Encode(st))
     if err != nil {
         w.ResponseJson(0, err.Error(), nil)
     } else {
@@ -76,7 +76,7 @@ func (this *NodeApiService) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerRespon
         w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
         return
     }
-    err  = this.node.SendToLeader(gMSG_API_SERVICE_REMOVE, gPORT_REPL, list)
+    err  = this.node.SendToLeader(gMSG_API_SERVICE_REMOVE, gPORT_REPL, gjson.Encode(list))
     if err != nil {
         w.ResponseJson(0, err.Error(), nil)
     } else {

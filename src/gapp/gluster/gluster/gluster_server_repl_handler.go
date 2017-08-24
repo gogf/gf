@@ -9,7 +9,6 @@ import (
     "g/core/types/gmap"
     "g/util/gtime"
     "g/os/glog"
-    "reflect"
 )
 
 // 集群数据同步接口回调函数
@@ -39,6 +38,7 @@ func (n *Node) replTcpHandler(conn net.Conn) {
 // Follower->Leader的配置同步
 func (n *Node) onMsgConfigFromFollower(conn net.Conn, msg *Msg) {
     glog.Println("config replication from", msg.Info.Name)
+    glog.Println(msg.Body)
     j := gjson.DecodeToJson(msg.Body)
     if j != nil {
         // 初始化节点列表，包含自定义的所需添加的服务器IP或者域名列表
@@ -58,9 +58,10 @@ func (n *Node) onMsgConfigFromFollower(conn net.Conn, msg *Msg) {
         }
         // 初始化自定义的k-v数据
         datamap := j.GetMap("DataMap")
+        glog.Println(datamap)
         if datamap != nil {
             for k, v := range datamap {
-                if "string" == reflect.TypeOf(v).String() && !n.KVMap.Contains(k) {
+                if !n.KVMap.Contains(k) {
                     n.KVMap.Set(k, v.(string))
                     n.setLastLogId(gtime.Microsecond())
                 }
@@ -285,15 +286,18 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
 
 // 从目标节点同步Service数据
 func (n *Node) updateServiceFromRemoteNode(conn net.Conn, msg *Msg) {
-    glog.Println("receive data replication update from", msg.Info.Name)
-    m   := make(map[string]Service)
+    glog.Println("receive service replication update from", msg.Info.Name)
+    m   := make(map[string]ServiceStruct)
     err := gjson.DecodeTo(msg.Body, &m)
     if err == nil {
-        newm := gmap.NewStringInterfaceMap()
+        newmForService    := gmap.NewStringInterfaceMap()
+        newmForServiceApi := gmap.NewStringInterfaceMap()
         for k, v := range m {
-            newm.Set(k, v)
+            newmForService.Set(k, *n.serviceSructToService(&v))
+            newmForServiceApi.Set(k, v)
         }
-        n.setService(newm)
+        n.setService(newmForService)
+        n.setServiceForApi(newmForServiceApi)
         n.setLastServiceLogId(msg.Info.LastServiceLogId)
     } else {
         glog.Error(err)
@@ -303,7 +307,7 @@ func (n *Node) updateServiceFromRemoteNode(conn net.Conn, msg *Msg) {
 // 同步Service到目标节点
 func (n *Node) updateServiceToRemoteNode(conn net.Conn, msg *Msg) {
     glog.Println("send service replication update to", msg.Info.Name)
-    if err := n.sendMsg(conn, gMSG_REPL_SERVICE_COMPLETELY_UPDATE, gjson.Encode(*n.Service.Clone())); err != nil {
+    if err := n.sendMsg(conn, gMSG_REPL_SERVICE_COMPLETELY_UPDATE, gjson.Encode(*n.ServiceForApi.Clone())); err != nil {
         glog.Error(err)
         return
     }

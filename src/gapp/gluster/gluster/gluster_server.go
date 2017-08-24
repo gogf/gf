@@ -17,7 +17,6 @@ import (
     "strings"
     "os"
     "errors"
-    "reflect"
 )
 
 // 获取数据
@@ -187,9 +186,7 @@ func (n *Node) initFromCfg() {
     datamap := j.GetMap("DataMap")
     if datamap != nil {
         for k, v := range datamap {
-            if "string" == reflect.TypeOf(v).String() {
-                n.KVMap.Set(k, v.(string))
-            }
+            n.KVMap.Set(k, v.(string))
         }
     }
     // (可选)初始化服务配置
@@ -242,7 +239,7 @@ func (n *Node) replicateConfigToLeader() {
 func (n *Node) show() {
     gtime.SetInterval(1 * time.Second, func() bool{
         //glog.Println(n.Ip + ":", n.getScoreCount(), n.getScore(), n.getLeader(), n.getRaftRole())
-        glog.Println(n.Ip + ":", n.getLeader(), n.getLastLogId(), *n.Peers.Clone(), n.LogList.Len(), n.KVMap.M)
+        glog.Println(n.getLastLogId(), n.getLastServiceLogId())
         return true
     })
 }
@@ -268,7 +265,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
 }
 
 // 向leader发送操作请求
-func (n *Node) SendToLeader(head int, port int, param interface{}) error {
+func (n *Node) SendToLeader(head int, port int, body string) error {
     leader := n.getLeader()
     if leader == nil {
         return errors.New("leader not found, please try again after leader election done")
@@ -278,7 +275,7 @@ func (n *Node) SendToLeader(head int, port int, param interface{}) error {
         return errors.New("could not connect to leader: " + leader.Ip)
     }
     defer conn.Close()
-    err := n.sendMsg(conn, head, gjson.Encode(param))
+    err := n.sendMsg(conn, head, body)
     if err != nil {
         return errors.New("sending request error: " + err.Error())
     } else {
@@ -542,6 +539,15 @@ func (n *Node) setService(m *gmap.StringInterfaceMap) {
     }
     n.mutex.Lock()
     n.Service = m
+    n.mutex.Unlock()
+}
+
+func (n *Node) setServiceForApi(m *gmap.StringInterfaceMap) {
+    if m == nil {
+        return
+    }
+    n.mutex.Lock()
+    n.ServiceForApi = m
     n.mutex.Unlock()
 }
 
