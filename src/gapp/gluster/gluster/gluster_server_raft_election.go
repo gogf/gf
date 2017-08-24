@@ -156,7 +156,7 @@ func (n *Node) beginScore() {
 func (n *Node) checkFailedTheElection() bool {
     // 如果在计算比分的过程中发现了leader，那么不再继续比分，退出选举
     if n.getLeader() != nil {
-        glog.Println("failed the election, set", n.getLeader().Name, "as my leader")
+        glog.Println("failed the election, set", n.getLeader().Name, "as leader")
         return true
     }
     // 如果选举过程中状态变化，那么自身选举失败

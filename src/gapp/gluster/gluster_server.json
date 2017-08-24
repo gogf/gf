@@ -1,8 +1,7 @@
 {
     "Group"    : "",
     "Role"     : 0,
-    "SavePath" : "~/gluster/db/",
-    "LogPath"  : "~/gluster/log/",
+    "SavePath" : "/tmp/gluster/db/",
     "Peers"    : [
         "192.168.2.102",
         "192.168.2.147",

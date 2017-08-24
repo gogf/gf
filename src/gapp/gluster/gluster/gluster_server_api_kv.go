@@ -4,11 +4,8 @@
 package gluster
 
 import (
-    "strings"
     "g/net/ghttp"
     "g/encoding/gjson"
-    "reflect"
-    "errors"
 )
 
 

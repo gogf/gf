@@ -28,7 +28,6 @@ import (
     "fmt"
     "g/encoding/gcompress"
     "g/os/gconsole"
-    "g/encoding/gjson"
 )
 
 const (
@@ -88,9 +87,10 @@ const (
     gMSG_REPL_COMPLETELY_UPDATE             = 340
     gMSG_REPL_HEARTBEAT                     = 350
     gMSG_REPL_RESPONSE                      = 360
-    gMSG_REPL_PEERS_UPDATE                  = 375
-    gMSG_REPL_NEED_UPDATE_LEADER            = 370
+    gMSG_REPL_PEERS_UPDATE                  = 370
+    gMSG_REPL_NEED_UPDATE_LEADER            = 375
     gMSG_REPL_NEED_UPDATE_FOLLOWER          = 380
+    gMSG_REPL_CONFIG_FROM_FOLLOWER          = 383
     gMSG_REPL_SERVICE_COMPLETELY_UPDATE     = 385
     gMSG_REPL_SERVICE_NEED_UPDATE_LEADER    = 390
     gMSG_REPL_SERVICE_NEED_UPDATE_FOLLOWER  = 400
@@ -119,9 +119,8 @@ type Node struct {
     Name             string                   // 节点主机名称
     Ip               string                   // 主机节点的ip，由通信的时候进行填充，
                                               // 一个节点可能会有多个IP，这里保存最近通信的那个，节点唯一性识别使用的是Name字段
-    Cfg              string                   // 配置文件绝对路径
-    CfgJson          *gjson.Json              // 配置对象
-    CfgInited        bool                     // 本地配置对象是否已同步到leader(配置同步需要注意覆盖问题)
+    CfgFilePath      string                   // 配置文件绝对路径
+    CfgReplicated    bool                     // 本地配置对象是否已同步到leader(配置同步需要注意覆盖问题)
     Peers            *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
     Role             int                      // 集群角色
     RaftRole         int                      // RAFT角色

@@ -9,6 +9,7 @@ import (
     "g/core/types/gmap"
     "g/util/gtime"
     "g/os/glog"
+    "reflect"
 )
 
 // 集群数据同步接口回调函数
@@ -26,12 +27,71 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         case gMSG_REPL_PEERS_UPDATE:                n.onMsgPeersUpdate(conn, msg)
         case gMSG_REPL_INCREMENTAL_UPDATE:          n.onMsgReplUpdate(conn, msg)
         case gMSG_REPL_COMPLETELY_UPDATE:           n.onMsgReplUpdate(conn, msg)
+        case gMSG_REPL_CONFIG_FROM_FOLLOWER     :   n.onMsgConfigFromFollower(conn, msg)
         case gMSG_REPL_SERVICE_COMPLETELY_UPDATE:   n.onMsgServiceCompletelyUpdate(conn, msg)
         case gMSG_API_SERVICE_SET:                  n.onMsgServiceSet(conn, msg)
         case gMSG_API_SERVICE_REMOVE:               n.onMsgServiceRemove(conn, msg)
     }
     //这里不用自动关闭链接，由于链接有读取超时，当一段时间没有数据时会自动关闭
     n.replTcpHandler(conn)
+}
+
+// Follower->Leader的配置同步
+func (n *Node) onMsgConfigFromFollower(conn net.Conn, msg *Msg) {
+    glog.Println("config replication from", msg.Info.Name)
+    j := gjson.DecodeToJson(msg.Body)
+    if j != nil {
+        // 初始化节点列表，包含自定义的所需添加的服务器IP或者域名列表
+        peers := j.GetArray("Peers")
+        if peers != nil {
+            for _, v := range peers {
+                ip := v.(string)
+                if ip == n.Ip || n.Peers.Contains(ip){
+                    continue
+                }
+                go func(ip string) {
+                    if !n.sayHi(ip) {
+                        n.updatePeerInfo(NodeInfo{Id: ip, Ip: ip})
+                    }
+                }(ip)
+            }
+        }
+        // 初始化自定义的k-v数据
+        datamap := j.GetMap("DataMap")
+        if datamap != nil {
+            for k, v := range datamap {
+                if "string" == reflect.TypeOf(v).String() && !n.KVMap.Contains(k) {
+                    n.KVMap.Set(k, v.(string))
+                    n.setLastLogId(gtime.Microsecond())
+                }
+            }
+        }
+        // 初始化服务配置
+        service := j.GetArray("Service")
+        if service != nil {
+            for _, v := range service {
+                var s  Service
+                var st ServiceStruct
+                s.List = make([]*gmap.StringInterfaceMap, 0)
+                if gjson.DecodeTo(gjson.Encode(v), &st) == nil {
+                    if n.Service.Contains(st.Name) {
+                        continue
+                    }
+                    s.Name = st.Name
+                    s.Type = st.Type
+                    for _, v := range st.List {
+                        m := gmap.NewStringInterfaceMap()
+                        m.BatchSet(v)
+                        s.List = append(s.List, m)
+                    }
+                    n.Service.Set(s.Name, s)
+                    n.setLastServiceLogId(gtime.Microsecond())
+                }
+            }
+        }
+    }
+    conn.Close()
+    glog.Println("config replication from", msg.Info.Name, "done")
 }
 
 // Peers信息更新
@@ -42,6 +102,8 @@ func (n *Node) onMsgPeersUpdate(conn net.Conn, msg *Msg) {
         for _, v := range m {
             if v.Id != n.Id {
                 n.updatePeerInfo(v)
+            } else {
+                n.setIp(v.Ip)
             }
         }
     }
@@ -196,7 +258,7 @@ func (n *Node) updateDataToRemoteNode(conn net.Conn, msg *Msg) {
     updated := true
     list    := n.getLogEntriesByLastLogId(msg.Info.LastLogId)
     length  := len(list)
-    if length > 0 && (msg.Info.LogCount + length) == n.getLogCount() {
+    if length > 0 && list[length - 1].Id == n.getLastLogId() && (msg.Info.LogCount + length) == n.getLogCount() {
         if err := n.sendMsg(conn, gMSG_REPL_INCREMENTAL_UPDATE, gjson.Encode(list)); err != nil {
             glog.Error(err)
             return

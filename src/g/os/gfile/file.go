@@ -9,6 +9,11 @@ import (
     "fmt"
     "time"
     "strings"
+    "bytes"
+    "os/exec"
+    "errors"
+    "os/user"
+    "runtime"
 )
 
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
@@ -206,7 +211,7 @@ func IsWritable(path string) bool {
         // 如果是目录，那么创建一个临时文件进行写入测试
         tfile := strings.TrimRight(path, Separator) + Separator + string(time.Now().UnixNano())
         err   := Create(tfile)
-        if err != nil {
+        if err != nil || !Exists(tfile){
             result = false
         } else {
             Remove(tfile)
@@ -331,4 +336,49 @@ func Dir(path string) string {
 // 获取指定文件路径的文件扩展名
 func Ext(path string) string {
     return filepath.Ext(path)
+}
+
+// 获取用户主目录
+func Home() (string, error) {
+    u, err := user.Current()
+    if nil == err {
+        return u.HomeDir, nil
+    }
+    if "windows" == runtime.GOOS {
+        return homeWindows()
+    }
+    return homeUnix()
+}
+
+func homeUnix() (string, error) {
+    if home := os.Getenv("HOME"); home != "" {
+        return home, nil
+    }
+    var stdout bytes.Buffer
+    cmd := exec.Command("sh", "-c", "eval echo ~$USER")
+    cmd.Stdout = &stdout
+    if err := cmd.Run(); err != nil {
+        return "", err
+    }
+
+    result := strings.TrimSpace(stdout.String())
+    if result == "" {
+        return "", errors.New("blank output when reading home directory")
+    }
+
+    return result, nil
+}
+
+func homeWindows() (string, error) {
+    drive := os.Getenv("HOMEDRIVE")
+    path  := os.Getenv("HOMEPATH")
+    home  := drive + path
+    if drive == "" || path == "" {
+        home = os.Getenv("USERPROFILE")
+    }
+    if home == "" {
+        return "", errors.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
+    }
+
+    return home, nil
 }

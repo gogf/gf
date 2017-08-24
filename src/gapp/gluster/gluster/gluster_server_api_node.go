@@ -6,8 +6,6 @@ package gluster
 import (
     "g/net/ghttp"
     "g/encoding/gjson"
-    "reflect"
-    "errors"
 )
 
 // 查询Peers

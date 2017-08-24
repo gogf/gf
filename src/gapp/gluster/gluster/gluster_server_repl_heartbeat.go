@@ -104,7 +104,7 @@ func (n *Node) dataReplicationLoop() {
     }
 }
 
-// 节点信息自动同步
+// 节点Peers信息自动同步
 func (n *Node) peersReplicationLoop() {
     for {
         if n.getRaftRole() == gROLE_RAFT_LEADER {
