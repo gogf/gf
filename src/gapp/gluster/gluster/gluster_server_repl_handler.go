@@ -38,7 +38,6 @@ func (n *Node) replTcpHandler(conn net.Conn) {
 // Follower->Leader的配置同步
 func (n *Node) onMsgConfigFromFollower(conn net.Conn, msg *Msg) {
     glog.Println("config replication from", msg.Info.Name)
-    glog.Println(msg.Body)
     j := gjson.DecodeToJson(msg.Body)
     if j != nil {
         // 初始化节点列表，包含自定义的所需添加的服务器IP或者域名列表
@@ -58,7 +57,6 @@ func (n *Node) onMsgConfigFromFollower(conn net.Conn, msg *Msg) {
         }
         // 初始化自定义的k-v数据
         datamap := j.GetMap("DataMap")
-        glog.Println(datamap)
         if datamap != nil {
             for k, v := range datamap {
                 if !n.KVMap.Contains(k) {
