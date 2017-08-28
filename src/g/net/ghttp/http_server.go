@@ -147,7 +147,7 @@ func (s *Server)BindHandleByMap(m HandlerMap) {
 }
 
 // 绑定控制器，控制器需要继承gmvc.ControllerBase对象并实现需要的REST方法
-func (s *Server)BindController(uri string, c Controller) {
+func (s *Server)BindController(uri string, c ControllerApi) {
     s.BindHandleByMap(HandlerMap{
         "GET:"     + uri : c.GET,
         "PUT:"     + uri : c.PUT,
@@ -161,22 +161,4 @@ func (s *Server)BindController(uri string, c Controller) {
     })
 }
 
-func (s *Server)AotoRedirect()  {
-    if s.handlerMap == nil {
-        s.handlerMap = make(HandlerMap)
-    }
-    key    := ""
-    reg    := regexp.MustCompile(`(\w+?)\s*:\s*(.+)`)
-    result := reg.FindStringSubmatch(pattern)
-    if len(result) > 1 {
-        key = strings.ToUpper(result[1]) + ":" + result[2]
-    } else {
-        key = strings.TrimSpace(pattern)
-    }
-    if _, ok := s.handlerMap[key]; ok {
-        panic("duplicated http server handler for: " + pattern)
-    } else {
-        s.handlerMap[key] = handler
-    }
-}
 

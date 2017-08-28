@@ -172,25 +172,25 @@ type ServiceStruct struct {
 
 // 用于KV API接口的对象
 type NodeApiKv struct {
-    ghttp.ControllerBase
+    ghttp.Controller
     node *Node
 }
 
 // 用于Node API接口的对象
 type NodeApiNode struct {
-    ghttp.ControllerBase
+    ghttp.Controller
     node *Node
 }
 
 // 用于Service API接口的对象
 type NodeApiService struct {
-    ghttp.ControllerBase
+    ghttp.Controller
     node *Node
 }
 
 // 用于Monitor WebUI对象
 type MonitorWebUI struct {
-    ghttp.ControllerBase
+    ghttp.Controller
     node *Node
 }
 

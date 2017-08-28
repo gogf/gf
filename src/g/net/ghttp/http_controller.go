@@ -1,12 +1,12 @@
 package ghttp
 
 // 控制器基类
-type ControllerBase struct {
+type Controller struct {
     Server *Server
 }
 
 // 控制器接口
-type Controller interface {
+type ControllerApi interface {
     GET(r *ClientRequest, w *ServerResponse)
     PUT(r *ClientRequest, w *ServerResponse)
     POST(r *ClientRequest, w *ServerResponse)
@@ -18,12 +18,12 @@ type Controller interface {
     TRACE(r *ClientRequest, w *ServerResponse)
 }
 
-func (c *ControllerBase) GET(r *ClientRequest, w *ServerResponse)     {}
-func (c *ControllerBase) PUT(r *ClientRequest, w *ServerResponse)     {}
-func (c *ControllerBase) POST(r *ClientRequest, w *ServerResponse)    {}
-func (c *ControllerBase) DELETE(r *ClientRequest, w *ServerResponse)  {}
-func (c *ControllerBase) HEAD(r *ClientRequest, w *ServerResponse)    {}
-func (c *ControllerBase) PATCH(r *ClientRequest, w *ServerResponse)   {}
-func (c *ControllerBase) CONNECT(r *ClientRequest, w *ServerResponse) {}
-func (c *ControllerBase) OPTIONS(r *ClientRequest, w *ServerResponse) {}
-func (c *ControllerBase) TRACE(r *ClientRequest, w *ServerResponse)   {}
+func (c *Controller) GET(r *ClientRequest, w *ServerResponse)     {}
+func (c *Controller) PUT(r *ClientRequest, w *ServerResponse)     {}
+func (c *Controller) POST(r *ClientRequest, w *ServerResponse)    {}
+func (c *Controller) DELETE(r *ClientRequest, w *ServerResponse)  {}
+func (c *Controller) HEAD(r *ClientRequest, w *ServerResponse)    {}
+func (c *Controller) PATCH(r *ClientRequest, w *ServerResponse)   {}
+func (c *Controller) CONNECT(r *ClientRequest, w *ServerResponse) {}
+func (c *Controller) OPTIONS(r *ClientRequest, w *ServerResponse) {}
+func (c *Controller) TRACE(r *ClientRequest, w *ServerResponse)   {}
