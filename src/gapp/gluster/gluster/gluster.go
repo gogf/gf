@@ -65,7 +65,7 @@ const (
     gLOG_REPL_AUTOSAVE_INTERVAL     = 1000    // (毫秒)数据自动物理化保存的间隔
     gLOG_REPL_LOGCLEAN_INTERVAL     = 5000    // (毫秒)数据同步时的日志清理间隔
     gLOG_REPL_PEERS_INTERVAL        = 3000    // (毫秒)Peers节点信息同步(非完整同步)
-    gSERVICE_HEALTH_CHECK_INTERVAL  = 3000    // (毫秒)健康检查默认间隔
+    gSERVICE_HEALTH_CHECK_INTERVAL  = 2000    // (毫秒)健康检查默认间隔
 
     // RAFT操作
     gMSG_RAFT_HI                    = 110
@@ -242,7 +242,7 @@ func NewServer() *Node {
         Id            : nodeId(),
         Ip            : "127.0.0.1",
         Name          : hostname,
-        Role          : gROLE_MONITOR,
+        Role          : gROLE_SERVER,
         RaftRole      : gROLE_RAFT_FOLLOWER,
         MinNode       : 1,
         Leader        : nil,
@@ -260,8 +260,15 @@ func NewServer() *Node {
         node.Ip = ips[0]
     }
     // 命令行操作绑定
-    gconsole.BindHandle("addnode", cmd_addnode)
-    gconsole.BindHandle("delnode", cmd_delnode)
+    gconsole.BindHandle("getnode",    cmd_getnode)
+    gconsole.BindHandle("addnode",    cmd_addnode)
+    gconsole.BindHandle("delnode",    cmd_delnode)
+    gconsole.BindHandle("getkv",      cmd_getkv)
+    gconsole.BindHandle("addkv",      cmd_addkv)
+    gconsole.BindHandle("delkv",      cmd_delkv)
+    gconsole.BindHandle("getservice", cmd_getservice)
+    gconsole.BindHandle("addservice", cmd_addservice)
+    gconsole.BindHandle("delservice", cmd_delservice)
 
     return &node
 }
@@ -275,7 +282,7 @@ func NewMonitor() *Monitor {
     }
 }
 
-// 生成节点的唯一ID
+// 生成节点的唯一ID(hostname+ips)
 func nodeId() string {
     hostname, err := os.Hostname()
     if err != nil {

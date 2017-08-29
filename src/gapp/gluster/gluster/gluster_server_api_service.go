@@ -54,18 +54,20 @@ func (this *NodeApiService) PUT(r *ghttp.ClientRequest, w *ghttp.ServerResponse)
 
 // service 修改
 func (this *NodeApiService) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    var st ServiceStruct
-    err := gjson.DecodeTo(r.GetRaw(), &st)
+    list := make([]ServiceStruct, 0)
+    err  := gjson.DecodeTo(r.GetRaw(), &list)
     if err != nil {
         w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
         return
     }
-    err  = this.node.SendToLeader(gMSG_API_SERVICE_SET, gPORT_REPL, gjson.Encode(st))
-    if err != nil {
-        w.ResponseJson(0, err.Error(), nil)
-    } else {
-        w.ResponseJson(1, "ok", nil)
+    for _, v := range list {
+        err  = this.node.SendToLeader(gMSG_API_SERVICE_SET, gPORT_REPL, gjson.Encode(v))
+        if err != nil {
+            w.ResponseJson(0, err.Error(), nil)
+            return
+        }
     }
+    w.ResponseJson(1, "ok", nil)
 }
 
 // service 删除

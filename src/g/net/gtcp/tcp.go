@@ -16,12 +16,12 @@ type gTcpServer struct {
 func NewServer (address string, handler func (net.Conn)) *gTcpServer {
     tcpaddr, err := net.ResolveTCPAddr("tcp4", address)
     if err != nil {
-        glog.Println(err)
+        glog.Fatalln(err)
         return nil
     }
     listen, err := net.ListenTCP("tcp", tcpaddr)
     if err != nil {
-        glog.Println(err)
+        glog.Fatalln(err)
         return nil
     }
     return &gTcpServer{ address, listen, handler}

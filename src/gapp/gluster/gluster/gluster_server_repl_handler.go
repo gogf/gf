@@ -114,7 +114,7 @@ func (n *Node) onMsgServiceCompletelyUpdate(conn net.Conn, msg *Msg) {
     n.updateServiceFromRemoteNode(conn, msg)
 }
 
-// service删除
+// Service删除
 func (n *Node) onMsgServiceRemove(conn net.Conn, msg *Msg) {
     list := make([]interface{}, 0)
     if gjson.DecodeTo(msg.Body, &list) == nil {
@@ -126,11 +126,12 @@ func (n *Node) onMsgServiceRemove(conn net.Conn, msg *Msg) {
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }
 
-// service设置
+// Service设置
 func (n *Node) onMsgServiceSet(conn net.Conn, msg *Msg) {
     var st ServiceStruct
     if gjson.DecodeTo(msg.Body, &st) == nil {
-        n.Service.Set(st.Name, n.serviceSructToService(&st))
+        n.Service.Set(st.Name, *n.serviceSructToService(&st))
+        n.ServiceForApi.Set(st.Name, st)
         n.setLastServiceLogId(gtime.Microsecond())
     }
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")

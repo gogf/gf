@@ -8,6 +8,7 @@ import (
     "time"
     "log"
     "regexp"
+    "g/os/glog"
 )
 
 // 执行
@@ -27,7 +28,7 @@ func (s *Server)Run() error {
     // 执行端口监听
     err := s.server.ListenAndServe()
     if err != nil {
-        panic(err)
+        glog.Fatalln(err)
     }
     return err
 }

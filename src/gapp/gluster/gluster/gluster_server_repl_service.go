@@ -78,9 +78,6 @@ func (n *Node) checkServiceHealth(service *Service) {
         wg.Add(1)
         go func(i int, m *gmap.StringInterfaceMap, u *bool) {
             ostatus := m.Get("status")
-            if ostatus == nil {
-                ostatus = 0
-            }
             switch strings.ToLower(service.Type) {
                 case "mysql": fallthrough
                 case "pgsql": n.dbHealthCheck(service.Type, m)
