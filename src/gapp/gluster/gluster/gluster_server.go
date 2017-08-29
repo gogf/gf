@@ -426,7 +426,8 @@ func (n *Node) getElectionDeadline() int64 {
 // 获取数据文件的绝对路径
 func (n *Node) getDataFilePath() string {
     n.mutex.RLock()
-    path := n.SavePath + gfile.Separator + n.Id + "." + n.FileName
+    //path := n.SavePath + gfile.Separator + n.Id + "." + n.FileName
+    path := n.SavePath + gfile.Separator + n.FileName
     n.mutex.RUnlock()
     return path
 }
