@@ -61,7 +61,7 @@ const (
     gTCP_WRITE_TIMEOUT              = 3000    // (毫秒)TCP链接写入超时
     gELECTION_TIMEOUT               = 1000    // (毫秒)RAFT选举超时时间
     gELECTION_TIMEOUT_HEARTBEAT     = 500     // (毫秒)RAFT Leader统治维持心跳间隔
-    gLOG_REPL_TIMEOUT_HEARTBEAT     = 1000    // (毫秒)数据同步检测心跳间隔(数据包括kv数据及service数据)
+    gLOG_REPL_TIMEOUT_HEARTBEAT     = 2000    // (毫秒)数据同步检测心跳间隔(数据包括kv数据及service数据)
     gLOG_REPL_AUTOSAVE_INTERVAL     = 1000    // (毫秒)数据自动物理化保存的间隔
     gLOG_REPL_LOGCLEAN_INTERVAL     = 5000    // (毫秒)数据同步时的日志清理间隔
     gLOG_REPL_PEERS_INTERVAL        = 3000    // (毫秒)Peers节点信息同步(非完整同步)
@@ -111,38 +111,38 @@ type Msg struct {
 
 // 服务器节点信息
 type Node struct {
-    mutex            sync.RWMutex
+    mutex               sync.RWMutex             // 通用锁，可以考虑不同的变量使用不同的锁以提高读写效率
 
-    Group            string                   // 集群名称
-    Id               string                   // 节点ID(根据算法自动生成的集群唯一名称)
-    Name             string                   // 节点主机名称
-    Ip               string                   // 主机节点的ip，由通信的时候进行填充，
-                                              // 一个节点可能会有多个IP，这里保存最近通信的那个，节点唯一性识别使用的是Name字段
-    CfgFilePath      string                   // 配置文件绝对路径
-    CfgReplicated    bool                     // 本地配置对象是否已同步到leader(配置同步需要注意覆盖问题)
-    Peers            *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
-    Role             int                      // 集群角色
-    RaftRole         int                      // RAFT角色
-    MinNode          int                      // 组成集群的最小节点数量
-    Leader           *NodeInfo                // Leader节点信息
-    Monitor          string                   // Monitor节点ip
-    Score            int64                    // 选举比分
-    ScoreCount       int                      // 选举比分的节点数
-    ElectionDeadline int64                    // 选举超时时间点
+    Group               string                   // 集群名称
+    Id                  string                   // 节点ID(根据算法自动生成的集群唯一名称)
+    Name                string                   // 节点主机名称
+    Ip                  string                   // 主机节点的ip，由通信的时候进行填充，
+                                                 // 一个节点可能会有多个IP，这里保存最近通信的那个，节点唯一性识别使用的是Name字段
+    CfgFilePath         string                   // 配置文件绝对路径
+    CfgReplicated       bool                     // 本地配置对象是否已同步到leader(配置同步需要注意覆盖问题)
+    Peers               *gmap.StringInterfaceMap // 集群所有的节点信息(ip->节点信息)，不包含自身
+    Role                int                      // 集群角色
+    RaftRole            int                      // RAFT角色
+    MinNode             int                      // 组成集群的最小节点数量
+    Leader              *NodeInfo                // Leader节点信息
+    Monitor             string                   // Monitor节点ip
+    Score               int64                    // 选举比分
+    ScoreCount          int                      // 选举比分的节点数
+    ElectionDeadline    int64                    // 选举超时时间点
+    isInDataReplication bool                     // 是否正在数据同步过程中
 
-    LastLogId        int64                    // 最后一次保存log的id，用以数据一致性判断
-    LogCount         int                      // 物理化保存的日志总数量，用于数据一致性判断
-    LastSavedLogId   int64                    // 最后一次物理化log的id，用以物理化保存识别
-    LastServiceLogId int64                    // 最后一次保存的service id号，用以识别service信息同步
-    LogChan          chan LogEntry            // 用于log数据同步的通道
-    LogList          *glist.SafeList          // leader日志列表，用以数据同步
-    SavePath         string                   // 物理存储的本地数据目录绝对路径
-    FileName         string                   // 数据文件名称(包含后缀)
-    Service          *gmap.StringInterfaceMap // 存储的服务配置表
-    ServiceForApi    *gmap.StringInterfaceMap // 用于提高Service API响应的冗余map变量，内容与Service成员变量相同，但结构不同
-    KVMap            *gmap.StringStringMap    // 存储的K-V哈希表
+    LastLogId           int64                    // 最后一次保存log的id，用以数据一致性判断
+    LogCount            int                      // 物理化保存的日志总数量，用于数据一致性判断
+    LastSavedLogId      int64                    // 最后一次物理化log的id，用以物理化保存识别
+    LastServiceLogId    int64                    // 最后一次保存的service id号，用以识别service信息同步
+    LogList             *glist.SafeList          // leader日志列表，用以数据同步
+    SavePath            string                   // 物理存储的本地数据目录绝对路径
+    FileName            string                   // 数据文件名称(包含后缀)
+    Service             *gmap.StringInterfaceMap // 存储的服务配置表
+    ServiceForApi       *gmap.StringInterfaceMap // 用于提高Service API响应的冗余map变量，内容与Service成员变量相同，但结构不同
+    KVMap               *gmap.StringStringMap    // 存储的K-V哈希表
 
-    MonitorData      *Monitor         // 当节点为Monitor时，该变量存储Monitor的数据
+    MonitorData         *Monitor                 // 当节点为Monitor时，该变量存储Monitor的数据
 }
 
 // Monitor对象
@@ -239,21 +239,21 @@ func NewServer() *Node {
         return nil
     }
     node := Node {
-        Id            : nodeId(),
-        Ip            : "127.0.0.1",
-        Name          : hostname,
-        Role          : gROLE_SERVER,
-        RaftRole      : gROLE_RAFT_FOLLOWER,
-        MinNode       : 1,
-        Leader        : nil,
-        Peers         : gmap.NewStringInterfaceMap(),
-        SavePath      : gfile.SelfDir(),
-        FileName      : "gluster.db",
-        LogChan       : make(chan LogEntry, 1024),
-        LogList       : glist.NewSafeList(),
-        Service       : gmap.NewStringInterfaceMap(),
-        ServiceForApi : gmap.NewStringInterfaceMap(),
-        KVMap         : gmap.NewStringStringMap(),
+        Id                  : nodeId(),
+        Ip                  : "127.0.0.1",
+        Name                : hostname,
+        Role                : gROLE_SERVER,
+        RaftRole            : gROLE_RAFT_FOLLOWER,
+        MinNode             : 1,
+        Leader              : nil,
+        Peers               : gmap.NewStringInterfaceMap(),
+        SavePath            : gfile.SelfDir(),
+        FileName            : "gluster.db",
+        LogList             : glist.NewSafeList(),
+        Service             : gmap.NewStringInterfaceMap(),
+        ServiceForApi       : gmap.NewStringInterfaceMap(),
+        KVMap               : gmap.NewStringStringMap(),
+        isInDataReplication : false,
     }
     ips, err := gip.IntranetIP()
     if err == nil && len(ips) == 1 {

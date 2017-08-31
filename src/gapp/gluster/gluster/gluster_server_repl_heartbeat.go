@@ -7,52 +7,18 @@ import (
     "g/encoding/gjson"
     "time"
     "g/core/types/gset"
-    "sync"
     "g/os/glog"
     "g/util/gtime"
 )
 
-// 用以识别节点当前是否正在数据同步中
-var isInReplication bool
-
 // leader到其他节点的数据同步监听
 func (n *Node) replicationHandler() {
-    var wg sync.WaitGroup
     // 初始化数据同步心跳检测
     go n.dataReplicationLoop()
     // 日志自动清理
     go n.autoCleanLogList()
     // Peers自动同步
     go n.peersReplicationLoop()
-    // 进入循环监听日志事件
-    for {
-        select {
-            case entry := <- n.LogChan:
-                n.setStatusInReplication(true)
-                n.saveLogEntry(entry)
-                glog.Println("sending log entry", entry)
-                for _, v := range n.Peers.Values() {
-                    info := v.(NodeInfo)
-                    if info.Status != gSTATUS_ALIVE {
-                        continue
-                    }
-                    wg.Add(1)
-                    go func(info *NodeInfo, entry LogEntry) {
-                        defer wg.Done()
-                        conn := n.getConn(info.Ip, gPORT_REPL)
-                        if conn == nil {
-                            return
-                        }
-                        defer conn.Close()
-                        if n.sendMsg(conn, entry.Act, gjson.Encode(entry)) == nil {
-                            n.receiveMsg(conn)
-                        }
-                    }(&info, entry)
-                }
-                wg.Wait()
-                n.setStatusInReplication(false)
-        }
-    }
 }
 
 // 日志自动同步检查，类似心跳

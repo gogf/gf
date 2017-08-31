@@ -9,6 +9,7 @@ import (
     "g/core/types/gmap"
     "g/util/gtime"
     "g/os/glog"
+    "sync"
 )
 
 // 集群数据同步接口回调函数
@@ -56,38 +57,38 @@ func (n *Node) onMsgConfigFromFollower(conn net.Conn, msg *Msg) {
             }
         }
         // 初始化自定义的k-v数据
-        datamap := j.GetMap("DataMap")
-        if datamap != nil {
-            for k, v := range datamap {
-                if !n.KVMap.Contains(k) {
-                    n.KVMap.Set(k, v.(string))
-                    n.setLastLogId(gtime.Microsecond())
-                }
-            }
-        }
+        //datamap := j.GetMap("DataMap")
+        //if datamap != nil {
+        //    for k, v := range datamap {
+        //        if !n.KVMap.Contains(k) {
+        //            n.KVMap.Set(k, v.(string))
+        //            n.setLastLogId(gtime.Microsecond())
+        //        }
+        //    }
+        //}
         // 初始化服务配置
-        service := j.GetArray("Service")
-        if service != nil {
-            for _, v := range service {
-                var s  Service
-                var st ServiceStruct
-                s.List = make([]*gmap.StringInterfaceMap, 0)
-                if gjson.DecodeTo(gjson.Encode(v), &st) == nil {
-                    if n.Service.Contains(st.Name) {
-                        continue
-                    }
-                    s.Name = st.Name
-                    s.Type = st.Type
-                    for _, v := range st.List {
-                        m := gmap.NewStringInterfaceMap()
-                        m.BatchSet(v)
-                        s.List = append(s.List, m)
-                    }
-                    n.Service.Set(s.Name, s)
-                    n.setLastServiceLogId(gtime.Microsecond())
-                }
-            }
-        }
+        //service := j.GetArray("Service")
+        //if service != nil {
+        //    for _, v := range service {
+        //        var s  Service
+        //        var st ServiceStruct
+        //        s.List = make([]*gmap.StringInterfaceMap, 0)
+        //        if gjson.DecodeTo(gjson.Encode(v), &st) == nil {
+        //            if n.Service.Contains(st.Name) {
+        //                continue
+        //            }
+        //            s.Name = st.Name
+        //            s.Type = st.Type
+        //            for _, v := range st.List {
+        //                m := gmap.NewStringInterfaceMap()
+        //                m.BatchSet(v)
+        //                s.List = append(s.List, m)
+        //            }
+        //            n.Service.Set(s.Name, s)
+        //            n.setLastServiceLogId(gtime.Microsecond())
+        //        }
+        //    }
+        //}
     }
     conn.Close()
     glog.Println("config replication from", msg.Info.Name, "done")
@@ -150,6 +151,7 @@ func (n *Node) onMsgReplRemove(conn net.Conn, msg *Msg) {
 
 // kv设置
 func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
+    // 同时只能有一个线程执行数据同步
     n.setStatusInReplication(true)
     if n.getRaftRole() == gROLE_RAFT_LEADER {
         var items interface{}
@@ -160,7 +162,8 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
                 Items : items,
             }
             n.LogList.PushFront(entry)
-            n.LogChan <- entry
+            n.saveLogEntry(entry)
+            n.sendLogEntryToPeers(entry)
         }
     } else {
         var entry LogEntry
@@ -169,6 +172,35 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
     }
     n.setStatusInReplication(false)
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
+}
+
+// 发送数据操作到其他节点,为保证数据的强一致性，所有节点返回结果后，才算成功
+// 只要数据请求完整流程执行完毕，即使其中几个节点失败也不影响，因为有另外的数据同步方式进行进一步的数据一致性保证
+func (n *Node) sendLogEntryToPeers(entry LogEntry) {
+    var wg sync.WaitGroup
+    n.setStatusInReplication(true)
+    // 异步并发发送数据操作请求到其他节点
+    glog.Println("sending log entry", entry)
+    for _, v := range n.Peers.Values() {
+        info := v.(NodeInfo)
+        if info.Status != gSTATUS_ALIVE {
+            continue
+        }
+        wg.Add(1)
+        go func(info *NodeInfo, entry LogEntry) {
+            defer wg.Done()
+            conn := n.getConn(info.Ip, gPORT_REPL)
+            if conn == nil {
+                return
+            }
+            defer conn.Close()
+            if n.sendMsg(conn, entry.Act, gjson.Encode(entry)) == nil {
+                n.receiveMsg(conn)
+            }
+        }(&info, entry)
+    }
+    wg.Wait()
+    n.setStatusInReplication(false)
 }
 
 // 心跳响应

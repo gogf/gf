@@ -183,31 +183,31 @@ func (n *Node) initFromCfg() {
         }
     }
     // (可选)初始化自定义的k-v数据
-    datamap := j.GetMap("DataMap")
-    if datamap != nil {
-        for k, v := range datamap {
-            n.KVMap.Set(k, v.(string))
-        }
-    }
+    //datamap := j.GetMap("DataMap")
+    //if datamap != nil {
+    //    for k, v := range datamap {
+    //        n.KVMap.Set(k, v.(string))
+    //    }
+    //}
     // (可选)初始化服务配置
-    service := j.GetArray("Service")
-    if service != nil {
-        for _, v := range service {
-            var s  Service
-            var st ServiceStruct
-            s.List = make([]*gmap.StringInterfaceMap, 0)
-            if gjson.DecodeTo(gjson.Encode(v), &st) == nil {
-                s.Name = st.Name
-                s.Type = st.Type
-                for _, v := range st.List {
-                    m := gmap.NewStringInterfaceMap()
-                    m.BatchSet(v)
-                    s.List = append(s.List, m)
-                }
-                n.Service.Set(s.Name, s)
-            }
-        }
-    }
+    //service := j.GetArray("Service")
+    //if service != nil {
+    //    for _, v := range service {
+    //        var s  Service
+    //        var st ServiceStruct
+    //        s.List = make([]*gmap.StringInterfaceMap, 0)
+    //        if gjson.DecodeTo(gjson.Encode(v), &st) == nil {
+    //            s.Name = st.Name
+    //            s.Type = st.Type
+    //            for _, v := range st.List {
+    //                m := gmap.NewStringInterfaceMap()
+    //                m.BatchSet(v)
+    //                s.List = append(s.List, m)
+    //            }
+    //            n.Service.Set(s.Name, s)
+    //        }
+    //    }
+    //}
 }
 
 // 将本地配置信息同步到leader
@@ -411,7 +411,7 @@ func (n *Node) getLastServiceLogId() int64 {
 
 func (n *Node) getStatusInReplication() bool {
     n.mutex.RLock()
-    r := isInReplication
+    r := n.isInDataReplication
     n.mutex.RUnlock()
     return r
 }
@@ -530,7 +530,7 @@ func (n *Node) setLastServiceLogId(id int64) {
 
 func (n *Node) setStatusInReplication(status bool ) {
     n.mutex.Lock()
-    isInReplication = status
+    n.isInDataReplication = status
     n.mutex.Unlock()
 }
 
