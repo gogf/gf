@@ -8,7 +8,6 @@ import (
     "time"
     "g/core/types/gset"
     "g/os/glog"
-    "g/util/gtime"
 )
 
 // leader到其他节点的数据同步监听
@@ -26,13 +25,6 @@ func (n *Node) dataReplicationLoop() {
     conns := gset.NewStringSet()
     for {
         if n.getRaftRole() == gROLE_RAFT_LEADER {
-            // 检查数据与Service是否是初始化内容，如果是的画则更新对应ID，以便同步数据和Service到Follower
-            if n.getLastLogId() == 0 {
-                n.setLastLogId(gtime.Microsecond())
-            }
-            if n.getLastServiceLogId() == 0 {
-                n.setLastServiceLogId(gtime.Microsecond())
-            }
             for _, v := range n.Peers.Values() {
                 info := v.(NodeInfo)
                 if conns.Contains(info.Id) {
