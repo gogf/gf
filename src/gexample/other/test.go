@@ -1,14 +1,16 @@
 package main
 
 import (
-    "os/exec"
     "fmt"
+    "sort"
 )
 
 
 
 func main() {
-    b , err :=exec.Command("sh", "-c", "ls /home").Output()
-    fmt.Println(b)
-    fmt.Println(err)
+    a := []string{"linux","windows", "windows10"}
+    //fmt.Println(a)
+    //sort.Strings(a)
+    //fmt.Println(a)
+    fmt.Println(sort.SearchStrings(a, "windows10"))
 }

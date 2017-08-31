@@ -132,6 +132,7 @@ func (n *Node) peersReplicationLoop() {
 }
 
 // 定期清理已经同步完毕的日志列表
+// 获取所有已存活的节点的最小日志ID，清理本地日志列表中比该ID小的记录
 func (n *Node) autoCleanLogList() {
     for {
         time.Sleep(gLOG_REPL_LOGCLEAN_INTERVAL * time.Millisecond)
@@ -144,7 +145,7 @@ func (n *Node) autoCleanLogList() {
             p := n.LogList.Back()
             for p != nil {
                 entry := p.Value.(LogEntry)
-                // 该minLogId比需在日志中存在完整匹配的日志
+                // 该minLogId必需在日志中存在完整匹配的日志
                 if !match && entry.Id == minLogId {
                     match = true
                 }
@@ -163,7 +164,7 @@ func (n *Node) autoCleanLogList() {
 
 // 获取节点中已同步的最小的log id
 func (n *Node) getMinLogIdFromPeers() int64 {
-    var minLogId int64
+    var minLogId int64 = 0
     for _, v := range n.Peers.Values() {
         info := v.(NodeInfo)
         if info.Status != gSTATUS_ALIVE {
@@ -177,7 +178,7 @@ func (n *Node) getMinLogIdFromPeers() int64 {
 }
 
 // 根据logid获取还未更新的日志列表
-// 注意：为保证日志一致性，在进行日志更新时，需要查找到目标节点logid在本地日志中存在有完整匹配的logid日志，并将其后的日志列表返回
+// 注意：为保证日志一致性，在进行日志更新时，需要查找到目标节点logid在本地日志中存在有**完整匹配**的logid日志，并将其后的日志列表返回
 // 如果出现leader的logid比follower大，并且获取不到更新的日志列表时，表示两者数据已经不一致，需要做完整的同步复制处理
 func (n *Node) getLogEntriesByLastLogId(id int64) []LogEntry {
     if n.getLastLogId() > id {

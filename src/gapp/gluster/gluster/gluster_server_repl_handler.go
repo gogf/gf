@@ -118,8 +118,14 @@ func (n *Node) onMsgServiceCompletelyUpdate(conn net.Conn, msg *Msg) {
 func (n *Node) onMsgServiceRemove(conn net.Conn, msg *Msg) {
     list := make([]interface{}, 0)
     if gjson.DecodeTo(msg.Body, &list) == nil {
+        updated := false
         for _, name := range list {
-            n.Service.Remove(name.(string))
+            if n.Service.Contains(name.(string)) {
+                n.Service.Remove(name.(string))
+                updated = true
+            }
+        }
+        if updated {
             n.setLastServiceLogId(gtime.Microsecond())
         }
     }
@@ -198,7 +204,7 @@ func (n *Node) onMsgReplHeartbeat(conn net.Conn, msg *Msg) {
 
 // 数据同步，更新本地数据
 func (n *Node) onMsgReplUpdate(conn net.Conn, msg *Msg) {
-    glog.Println("receive data replication update")
+    glog.Println("receive data replication update from", msg.Info.Name)
     n.updateDataFromRemoteNode(conn, msg)
     n.sendMsg(conn, gMSG_REPL_RESPONSE, "")
 }

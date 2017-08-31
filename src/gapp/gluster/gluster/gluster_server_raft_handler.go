@@ -80,6 +80,7 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
         return
     }
     result := gMSG_RAFT_HEARTBEAT
+
     if n.getRaftRole() == gROLE_RAFT_LEADER {
         // 如果是两个leader相互心跳，表示两个leader是连通的，这时根据算法算出一个leader即可
         // 需要同时对比日志信息及选举比分

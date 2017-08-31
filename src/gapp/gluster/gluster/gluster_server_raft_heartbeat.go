@@ -50,8 +50,8 @@ func (n *Node) heartbeatHandler() {
                             n.updatePeerInfo(msg.Info)
                             switch msg.Head {
                                 case gMSG_RAFT_I_AM_LEADER:
-                                    glog.Println("two leader occured, set", info.Name, "as my leader, done heartbeating")
-                                    n.setLeader(info)
+                                    glog.Println("two leader occured, set", msg.Info.Name, "as my leader, done heartbeating")
+                                    n.setLeader(&(msg.Info))
                                     n.setRaftRole(gROLE_RAFT_FOLLOWER)
 
                                 default:

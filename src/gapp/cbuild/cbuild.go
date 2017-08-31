@@ -7,6 +7,7 @@ import (
     "g/os/gconsole"
     "os/exec"
     "sync"
+    "g/util/gutil"
 )
 
 const platforms = `
@@ -43,10 +44,13 @@ const platforms = `
 `
 func main() {
     var wg sync.WaitGroup
-    app   := gconsole.Value.Get(1)
-    param := gconsole.Value.Get(2)
-    reg   := regexp.MustCompile(`\s+`)
-    lines := strings.Split(strings.TrimSpace(platforms), "\n")
+    src     := gconsole.Value.Get(1)
+    name    := gconsole.Option.Get("name")
+    version := gconsole.Option.Get("version")
+    oses    := strings.Split(gconsole.Option.Get("os"), ",")
+    arches  := strings.Split(gconsole.Option.Get("arch"), ",")
+    reg     := regexp.MustCompile(`\s+`)
+    lines   := strings.Split(strings.TrimSpace(platforms), "\n")
     fmt.Println("building...")
     for _, line := range lines {
         line   = strings.TrimSpace(line)
@@ -54,19 +58,26 @@ func main() {
         array := strings.Split(line, " ")
         os    := array[0]
         arch  := array[1]
-        name  := os + "_" + arch
-        if os == "windows" {
-            name += ".exe"
+        if len(oses) > 0 && !gutil.StringInArray(oses, os) {
+            continue
         }
-        cmd   := fmt.Sprintf("CGO_ENABLED=0 GOOS=%s GOARCH=%s go build -o ./bin/%s/%s %s", os, arch, app, name, param)
+        if len(arches) > 0 && !gutil.StringInArray(arches, arch) {
+            continue
+        }
+        appname := name + "." + os + "_" + arch
+        if os == "windows" {
+            appname += ".exe"
+        }
+        cmd := fmt.Sprintf("CGO_ENABLED=0 GOOS=%s GOARCH=%s go build -o ./bin/%s_%s/%s %s", os, arch, name, version, appname, src)
         wg.Add(1)
         go func(cmd string) {
             defer wg.Done()
             _, err := exec.Command("sh", "-c", cmd).Output()
             if err != nil {
                 fmt.Println("build failed:", cmd)
-                fmt.Println("build failed:", err)
                 return
+            } else {
+                fmt.Println(cmd)
             }
         }(cmd)
     }

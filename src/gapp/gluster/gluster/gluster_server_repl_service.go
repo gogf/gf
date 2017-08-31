@@ -8,6 +8,7 @@ import (
     "g/database/gdb"
     "g/net/ghttp"
     "g/core/types/gmap"
+    "g/os/glog"
 )
 
 // 将Service转为可json化的数据结构
@@ -83,8 +84,10 @@ func (n *Node) checkServiceHealth(service *Service) {
                 case "pgsql": n.dbHealthCheck(service.Type, m)
                 case "web":   n.webHealthCheck(m)
             }
-            if ostatus != m.Get("status") {
+            nstatus := m.Get("status")
+            if ostatus != nstatus {
                 (*u) = true
+                glog.Printf("service updated, index: %d, from %v to %v, name: %s, \n", i, ostatus, nstatus, service.Name)
             }
             wg.Done()
         }(k, v, &updated)

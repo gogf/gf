@@ -21,6 +21,7 @@ func cmd_getnode () {
 }
 
 // 添加集群节点
+// 使用方式：gluster addnode IP1,IP2,IP3,...
 func cmd_addnode () {
     nodes := gconsole.Value.Get(2)
     if nodes != "" {
@@ -50,6 +51,7 @@ func cmd_addnode () {
 }
 
 // 删除集群节点
+// 使用方式：gluster delnode IP1,IP2,IP3,...
 func cmd_delnode () {
     nodes := gconsole.Value.Get(2)
     if nodes != "" {
