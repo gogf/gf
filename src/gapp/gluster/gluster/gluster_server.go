@@ -86,6 +86,7 @@ func (n *Node) Run() {
             api.BindController("/kv",      &NodeApiKv{node: n})
             api.BindController("/node",    &NodeApiNode{node: n})
             api.BindController("/service", &NodeApiService{node: n})
+            api.BindController("/balance", &NodeApiBalance{node: n})
             api.Run()
         }()
 
@@ -182,32 +183,6 @@ func (n *Node) initFromCfg() {
             }(ip)
         }
     }
-    // (可选)初始化自定义的k-v数据
-    //datamap := j.GetMap("DataMap")
-    //if datamap != nil {
-    //    for k, v := range datamap {
-    //        n.KVMap.Set(k, v.(string))
-    //    }
-    //}
-    // (可选)初始化服务配置
-    //service := j.GetArray("Service")
-    //if service != nil {
-    //    for _, v := range service {
-    //        var s  Service
-    //        var st ServiceStruct
-    //        s.List = make([]*gmap.StringInterfaceMap, 0)
-    //        if gjson.DecodeTo(gjson.Encode(v), &st) == nil {
-    //            s.Name = st.Name
-    //            s.Type = st.Type
-    //            for _, v := range st.List {
-    //                m := gmap.NewStringInterfaceMap()
-    //                m.BatchSet(v)
-    //                s.List = append(s.List, m)
-    //            }
-    //            n.Service.Set(s.Name, s)
-    //        }
-    //    }
-    //}
 }
 
 // 将本地配置信息同步到leader

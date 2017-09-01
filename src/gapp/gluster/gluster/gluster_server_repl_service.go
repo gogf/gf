@@ -76,6 +76,7 @@ func (n *Node) checkServiceHealth(service *Service) {
     updated := false
     for k, v := range *service.Node.Clone() {
         wg.Add(1)
+        // @todo service转换为servicestruct的时候需要去掉lastcheck，使用memcache来实现
         go func(name string, m *gmap.StringInterfaceMap, u *bool) {
             interval  := m.Get("interval")
             lastcheck := m.Get("lastcheck")

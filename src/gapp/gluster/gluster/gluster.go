@@ -194,6 +194,12 @@ type NodeApiService struct {
     node *Node
 }
 
+// 用于Service 负载均衡API接口的对象
+type NodeApiBalance struct {
+    ghttp.Controller
+    node *Node
+}
+
 // 用于Monitor WebUI对象
 type MonitorWebUI struct {
     ghttp.Controller
