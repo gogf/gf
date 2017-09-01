@@ -1,28 +1,28 @@
 [
     {
-        "name" : "Database Group1: user center",
+        "name" : "usercenter",
         "type" : "mysql",
-        "list" : [
-            {"host":"192.168.2.15",  "port": "3306", "user":"root", "pass":"123456", "database":"test"},
-            {"host":"192.168.2.124", "port": "3306", "user":"root", "pass":"123456", "database":"test2"}
-        ]
+        "node" : {
+            "node1": {"host":"192.168.2.15",  "port": "3306", "user":"root", "pass":"123456", "database":"test", "interval" : "2000"},
+            "node2": {"host":"192.168.2.124", "port": "3306", "user":"root", "pass":"123456", "database":"test", "interval" : "2000"}
+        }
     },
     {
-        "name" : "Database Group2: administration",
+        "name" : "admindb",
         "type" : "mysql",
-        "list" : [
-            {"host":"192.168.2.102", "port": "3306", "user":"root", "pass":"123456", "database":"test3"},
-            {"host":"192.168.2.124", "port": "3306", "user":"root", "pass":"123456", "database":"test4"}
-        ]
+        "node" : {
+            "node1": {"host":"192.168.2.15", "port": "3306", "user":"root", "pass":"123456", "database":"test2", "interval" : "2000"},
+            "node2": {"host":"192.168.2.15", "port": "3306", "user":"root", "pass":"123456", "database":"test3", "interval" : "2000"}
+        }
     },
     {
-        "name" : "Official Web Site",
+        "name" : "homesite",
         "type" : "web",
-        "list" : [
-            {"url": "http://192.168.2.104", "check":"http://baidu.com", "tag":"check with custom check url"},
-            {"url": "http://192.168.2.124"},
-            {"url": "http://192.168.2.102",  "tag":"check with the url"},
-            {"url": "http://dead.link", "tag":"dead link for example"}
-        ]
+        "node" : {
+            "node1": {"host":"192.168.2.15", "port": "80",   "interval" : "5000", "check":"http://baidu.com"},
+            "node2": {"host":"192.168.2.15", "port": "8080", "interval" : "5000"},
+            "node3": {"host":"192.168.2.15", "port": "8088", "interval" : "5000"},
+            "node4": {"host":"192.168.2.15", "port": "8888", "interval" : "5000"}
+        }
     }
 ]

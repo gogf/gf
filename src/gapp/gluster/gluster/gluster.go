@@ -160,14 +160,20 @@ type Monitor struct {
 type Service struct {
     Name  string
     Type  string
-    List  []*gmap.StringInterfaceMap
+    Node  *gmap.StringInterfaceMap
 }
 
 // 用以可直接json化处理的Service数据结构
 type ServiceStruct struct {
-    Name  string                   `json:"name"`
-    Type  string                   `json:"type"`
-    List  []map[string]interface{} `json:"list"`
+    Name  string                 `json:"name"`
+    Type  string                 `json:"type"`
+    Node  map[string]interface{} `json:"node"`
+}
+
+type ServiceStructNode struct {
+    Name  string                 `json:"name"`
+    Type  string                 `json:"type"`
+    Node  map[string]interface{} `json:"node"`
 }
 
 // 用于KV API接口的对象
