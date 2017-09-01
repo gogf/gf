@@ -11,6 +11,7 @@ import (
     "g/os/glog"
     "fmt"
     "strconv"
+    "g/os/gcache"
 )
 
 // 将Service转为可json化的数据结构
@@ -76,18 +77,11 @@ func (n *Node) checkServiceHealth(service *Service) {
     updated := false
     for k, v := range *service.Node.Clone() {
         wg.Add(1)
-        // @todo service转换为servicestruct的时候需要去掉lastcheck，使用memcache来实现
         go func(name string, m *gmap.StringInterfaceMap, u *bool) {
-            interval  := m.Get("interval")
-            lastcheck := m.Get("lastcheck")
-            if lastcheck != nil {
-                timeout := int64(gSERVICE_HEALTH_CHECK_INTERVAL)
-                if interval != nil {
-                    timeout, _ = strconv.ParseInt(interval.(string), 10, 64)
-                }
-                if lastcheck.(int64) + timeout > gtime.Millisecond() {
-                    return
-                }
+            cachekey  := "gluster_service_" + service.Name + "_" + name + "_check"
+            needcheck := gcache.Get(cachekey)
+            if needcheck != nil {
+                return
             }
             //glog.Printf("start checking node: %s, name: %s, \n", name, service.Name)
             ostatus := m.Get("status")
@@ -101,7 +95,12 @@ func (n *Node) checkServiceHealth(service *Service) {
                 (*u) = true
                 glog.Printf("service updated, node: %s, from %v to %v, name: %s, \n", name, ostatus, nstatus, service.Name)
             }
-            m.Set("lastcheck", gtime.Millisecond())
+            interval := m.Get("interval")
+            timeout  := int64(gSERVICE_HEALTH_CHECK_INTERVAL)
+            if interval != nil {
+                timeout, _ = strconv.ParseInt(interval.(string), 10, 64)
+            }
+            gcache.Set(cachekey, 1, timeout)
             wg.Done()
         }(k, v.(*gmap.StringInterfaceMap), &updated)
     }
