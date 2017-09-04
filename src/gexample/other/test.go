@@ -2,15 +2,17 @@ package main
 
 import (
     "fmt"
-    "sort"
+    "g/os/gcache"
+    "time"
 )
 
 
 
 func main() {
-    a := []string{"linux","windows", "windows10"}
-    //fmt.Println(a)
-    //sort.Strings(a)
-    //fmt.Println(a)
-    fmt.Println(sort.SearchStrings(a, "windows10"))
+    c := gcache.New()
+    c.Set("k", "v", 3)
+    for {
+        fmt.Println(c.Get("k"))
+        time.Sleep(time.Second)
+    }
 }

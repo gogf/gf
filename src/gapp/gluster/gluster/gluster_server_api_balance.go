@@ -6,6 +6,7 @@ import (
     "errors"
     "g/util/grand"
     "strconv"
+    "g/os/gcache"
 )
 
 // 用于负载均衡计算的结构体
@@ -14,17 +15,25 @@ type PriorityNode struct {
     priority int
 }
 
-// service 查询
+// 负载均衡查询
 func (this *NodeApiBalance) GET(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     name := r.GetRequestString("name")
     if name == "" {
         w.ResponseJson(0, "incomplete input: name is required", nil)
     } else {
-        result, err := this.getAliveServiceByPriority(name)
-        if err != nil {
-            w.ResponseJson(0, err.Error(), nil)
+        // 高并发下的缓存处理，缓存时间为1秒
+        k := "gluster_service_balance_name_" + name
+        r := gcache.Get(k)
+        if r == nil {
+            r, err := this.getAliveServiceByPriority(name)
+            if err != nil {
+                w.ResponseJson(0, err.Error(), nil)
+            } else {
+                gcache.Set(k, r, 1)
+                w.ResponseJson(0, "ok", r)
+            }
         } else {
-            w.ResponseJson(0, "ok", result)
+            w.ResponseJson(0, "ok", r)
         }
     }
 }
