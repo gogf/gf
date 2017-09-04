@@ -58,10 +58,10 @@ func main() {
         array := strings.Split(line, " ")
         os    := array[0]
         arch  := array[1]
-        if len(oses) > 0 && !gutil.StringInArray(oses, os) {
+        if len(oses) > 1 && !gutil.StringInArray(oses, os) {
             continue
         }
-        if len(arches) > 0 && !gutil.StringInArray(arches, arch) {
+        if len(arches) > 1 && !gutil.StringInArray(arches, arch) {
             continue
         }
         appname := name + "." + os + "_" + arch
