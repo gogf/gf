@@ -61,7 +61,7 @@ const (
     gTCP_WRITE_TIMEOUT              = 3000    // (毫秒)TCP链接写入超时
     gELECTION_TIMEOUT               = 1000    // (毫秒)RAFT选举超时时间
     gELECTION_TIMEOUT_HEARTBEAT     = 500     // (毫秒)RAFT Leader统治维持心跳间隔
-    gLOG_REPL_TIMEOUT_HEARTBEAT     = 2000    // (毫秒)数据同步检测心跳间隔(数据包括kv数据及service数据)
+    gLOG_REPL_TIMEOUT_HEARTBEAT     = 1000    // (毫秒)数据同步检测心跳间隔(数据包括kv数据及service数据)
     gLOG_REPL_AUTOSAVE_INTERVAL     = 1000    // (毫秒)数据自动物理化保存的间隔
     gLOG_REPL_LOGCLEAN_INTERVAL     = 5000    // (毫秒)数据同步时的日志清理间隔
     gLOG_REPL_PEERS_INTERVAL        = 3000    // (毫秒)Peers节点信息同步(非完整同步)
@@ -165,12 +165,6 @@ type Service struct {
 
 // 用以可直接json化处理的Service数据结构
 type ServiceStruct struct {
-    Name  string                 `json:"name"`
-    Type  string                 `json:"type"`
-    Node  map[string]interface{} `json:"node"`
-}
-
-type ServiceStructNode struct {
     Name  string                 `json:"name"`
     Type  string                 `json:"type"`
     Node  map[string]interface{} `json:"node"`

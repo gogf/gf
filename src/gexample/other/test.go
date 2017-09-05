@@ -1,18 +1,16 @@
 package main
 
 import (
-    "fmt"
     "g/os/gcache"
-    "time"
+    "fmt"
 )
 
 
 
 func main() {
-    c := gcache.New()
-    c.Set("k", "v", 3)
-    for {
-        fmt.Println(c.Get("k"))
-        time.Sleep(time.Second)
-    }
+    c1 := gcache.New()
+    c2 := gcache.New()
+    c1.Set("a", 1, 0)
+    //c2.Import(c1.Export())
+    fmt.Println(c2.Get("a"))
 }
