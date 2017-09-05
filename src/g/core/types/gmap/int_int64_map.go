@@ -6,12 +6,12 @@ import (
 
 type IntInt64Map struct {
 	sync.RWMutex
-	M map[int]int64
+	m map[int]int64
 }
 
 func NewIntInt64Map() *IntInt64Map {
 	return &IntInt64Map{
-        M: make(map[int]int64),
+        m: make(map[int]int64),
     }
 }
 
@@ -19,7 +19,7 @@ func NewIntInt64Map() *IntInt64Map {
 func (this *IntInt64Map) Clone() *map[int]int64 {
 	m := make(map[int]int64)
 	this.RLock()
-	for k, v := range this.M {
+	for k, v := range this.m {
 		m[k] = v
 	}
     this.RUnlock()
@@ -29,30 +29,15 @@ func (this *IntInt64Map) Clone() *map[int]int64 {
 // 设置键值对
 func (this *IntInt64Map) Set(key int, val int64) {
 	this.Lock()
-	this.M[key] = val
+	this.m[key] = val
 	this.Unlock()
 }
 
 // 批量设置键值对
 func (this *IntInt64Map) BatchSet(m map[int]int64) {
-	todo := make(map[int]int64)
-	this.RLock()
-	for k, v := range m {
-		old, exists := this.M[k]
-		if exists && v == old {
-			continue
-		}
-		todo[k] = v
-	}
-	this.RUnlock()
-
-	if len(todo) == 0 {
-		return
-	}
-
 	this.Lock()
-	for k, v := range todo {
-		this.M[k] = v
+	for k, v := range m {
+		this.m[k] = v
 	}
 	this.Unlock()
 }
@@ -60,7 +45,7 @@ func (this *IntInt64Map) BatchSet(m map[int]int64) {
 // 获取键值
 func (this *IntInt64Map) Get(key int) (int64) {
 	this.RLock()
-	val, _ := this.M[key]
+	val, _ := this.m[key]
 	this.RUnlock()
 	return val
 }
@@ -68,7 +53,7 @@ func (this *IntInt64Map) Get(key int) (int64) {
 // 删除键值对
 func (this *IntInt64Map) Remove(key int) {
     this.Lock()
-    delete(this.M, key)
+    delete(this.m, key)
     this.Unlock()
 }
 
@@ -76,7 +61,7 @@ func (this *IntInt64Map) Remove(key int) {
 func (this *IntInt64Map) BatchRemove(keys []int) {
     this.Lock()
     for _, key := range keys {
-        delete(this.M, key)
+        delete(this.m, key)
     }
     this.Unlock()
 }
@@ -84,9 +69,9 @@ func (this *IntInt64Map) BatchRemove(keys []int) {
 // 返回对应的键值，并删除该键值
 func (this *IntInt64Map) GetAndRemove(key int) (int64) {
     this.Lock()
-    val, exists := this.M[key]
+    val, exists := this.m[key]
     if exists {
-        delete(this.M, key)
+        delete(this.m, key)
     }
     this.Unlock()
     return val
@@ -96,7 +81,7 @@ func (this *IntInt64Map) GetAndRemove(key int) (int64) {
 func (this *IntInt64Map) Keys() []int {
     this.RLock()
     keys := make([]int, 0)
-    for key, _ := range this.M {
+    for key, _ := range this.m {
         keys = append(keys, key)
     }
     this.RUnlock()
@@ -107,7 +92,7 @@ func (this *IntInt64Map) Keys() []int {
 func (this *IntInt64Map) Values() []int64 {
     this.RLock()
     vals := make([]int64, 0)
-    for _, val := range this.M {
+    for _, val := range this.m {
         vals = append(vals, val)
     }
     this.RUnlock()
@@ -117,7 +102,7 @@ func (this *IntInt64Map) Values() []int64 {
 // 是否存在某个键
 func (this *IntInt64Map) Contains(key int) bool {
     this.RLock()
-    _, exists := this.M[key]
+    _, exists := this.m[key]
     this.RUnlock()
     return exists
 }
@@ -125,7 +110,7 @@ func (this *IntInt64Map) Contains(key int) bool {
 // 哈希表大小
 func (this *IntInt64Map) Size() int {
     this.RLock()
-    len := len(this.M)
+    len := len(this.m)
     this.RUnlock()
     return len
 }
@@ -133,7 +118,7 @@ func (this *IntInt64Map) Size() int {
 // 哈希表是否为空
 func (this *IntInt64Map) IsEmpty() bool {
     this.RLock()
-    empty := (len(this.M) == 0)
+    empty := (len(this.m) == 0)
     this.RUnlock()
     return empty
 }
@@ -141,7 +126,7 @@ func (this *IntInt64Map) IsEmpty() bool {
 // 清空哈希表
 func (this *IntInt64Map) Clear() {
     this.Lock()
-    this.M = make(map[int]int64)
+    this.m = make(map[int]int64)
     this.Unlock()
 }
 

@@ -21,8 +21,8 @@ func (n *Node) replTcpHandler(conn net.Conn) {
         return
     }
     switch msg.Head {
-        case gMSG_REPL_SET:                         n.onMsgReplSet(conn, msg)
-        case gMSG_REPL_REMOVE:                      n.onMsgReplRemove(conn, msg)
+        case gMSG_REPL_DATA_SET:                    n.onMsgReplDataSet(conn, msg)
+        case gMSG_REPL_DATA_REMOVE:                 n.onMsgReplDataRemove(conn, msg)
         case gMSG_REPL_HEARTBEAT:                   n.onMsgReplHeartbeat(conn, msg)
         case gMSG_REPL_PEERS_UPDATE:                n.onMsgPeersUpdate(conn, msg)
         case gMSG_REPL_INCREMENTAL_UPDATE:          n.onMsgReplUpdate(conn, msg)
@@ -56,39 +56,6 @@ func (n *Node) onMsgConfigFromFollower(conn net.Conn, msg *Msg) {
                 }(ip)
             }
         }
-        // 初始化自定义的k-v数据
-        //datamap := j.GetMap("DataMap")
-        //if datamap != nil {
-        //    for k, v := range datamap {
-        //        if !n.KVMap.Contains(k) {
-        //            n.KVMap.Set(k, v.(string))
-        //            n.setLastLogId(gtime.Microsecond())
-        //        }
-        //    }
-        //}
-        // 初始化服务配置
-        //service := j.GetArray("Service")
-        //if service != nil {
-        //    for _, v := range service {
-        //        var s  Service
-        //        var st ServiceStruct
-        //        s.List = make([]*gmap.StringInterfaceMap, 0)
-        //        if gjson.DecodeTo(gjson.Encode(v), &st) == nil {
-        //            if n.Service.Contains(st.Name) {
-        //                continue
-        //            }
-        //            s.Name = st.Name
-        //            s.Type = st.Type
-        //            for _, v := range st.List {
-        //                m := gmap.NewStringInterfaceMap()
-        //                m.BatchSet(v)
-        //                s.List = append(s.List, m)
-        //            }
-        //            n.Service.Set(s.Name, s)
-        //            n.setLastServiceLogId(gtime.Microsecond())
-        //        }
-        //    }
-        //}
     }
     conn.Close()
     glog.Println("config replication from", msg.Info.Name, "done")
@@ -145,13 +112,12 @@ func (n *Node) onMsgServiceSet(conn net.Conn, msg *Msg) {
 }
 
 // kv删除
-func (n *Node) onMsgReplRemove(conn net.Conn, msg *Msg) {
-    n.onMsgReplSet(conn, msg)
+func (n *Node) onMsgReplDataRemove(conn net.Conn, msg *Msg) {
+    n.onMsgReplDataSet(conn, msg)
 }
 
-// kv设置
-func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
-    // 同时只能有一个线程执行数据同步
+// kv设置，最终一致性
+func (n *Node) onMsgReplDataSet(conn net.Conn, msg *Msg) {
     n.setStatusInReplication(true)
     if n.getRaftRole() == gROLE_RAFT_LEADER {
         var items interface{}
@@ -163,7 +129,10 @@ func (n *Node) onMsgReplSet(conn net.Conn, msg *Msg) {
             }
             n.LogList.PushFront(entry)
             n.saveLogEntry(entry)
-            n.sendLogEntryToPeers(entry)
+            // 这里不做主动通知数据同步，而是依靠心跳检测时的单线程数据同步
+            // 并且为保证客户端能够及时相应（例如在写入请求的下一次获取请求将一定能够获取到最新的数据），
+            // 因此，请求端应当在leader返回成功后，同时将该数据写入到本地
+            // n.sendLogEntryToPeers(entry)
         }
     } else {
         var entry LogEntry
@@ -243,14 +212,19 @@ func (n *Node) onMsgReplUpdate(conn net.Conn, msg *Msg) {
 
 // 保存日志数据
 func (n *Node) saveLogEntry(entry LogEntry) {
+    lastLogId := n.getLastLogId()
+    if entry.Id < lastLogId {
+        glog.Printf("expired log entry, received:%v, current:%v\n", entry.Id, lastLogId)
+        return
+    }
     switch entry.Act {
-        case gMSG_REPL_SET:
+        case gMSG_REPL_DATA_SET:
             glog.Println("setting log entry", entry)
             for k, v := range entry.Items.(map[string]interface{}) {
                 n.KVMap.Set(k, v.(string))
             }
 
-        case gMSG_REPL_REMOVE:
+        case gMSG_REPL_DATA_REMOVE:
             glog.Println("removing log entry", entry)
             for _, v := range entry.Items.([]interface{}) {
                 n.KVMap.Remove(v.(string))

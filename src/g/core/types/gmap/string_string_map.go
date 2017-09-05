@@ -6,12 +6,12 @@ import (
 
 type StringStringMap struct {
 	sync.RWMutex
-	M map[string]string
+	m map[string]string
 }
 
 func NewStringStringMap() *StringStringMap {
 	return &StringStringMap{
-		M: make(map[string]string),
+		m: make(map[string]string),
 	}
 }
 
@@ -19,7 +19,7 @@ func NewStringStringMap() *StringStringMap {
 func (this *StringStringMap) Clone() *map[string]string {
     m := make(map[string]string)
     this.RLock()
-    for k, v := range this.M {
+    for k, v := range this.m {
         m[k] = v
     }
     this.RUnlock()
@@ -29,30 +29,15 @@ func (this *StringStringMap) Clone() *map[string]string {
 // 设置键值对
 func (this *StringStringMap) Set(key string, val string) {
 	this.Lock()
-	this.M[key] = val
+	this.m[key] = val
 	this.Unlock()
 }
 
 // 批量设置键值对
 func (this *StringStringMap) BatchSet(m map[string]string) {
-    todo := make(map[string]string)
-    this.RLock()
-    for k, v := range m {
-        old, exists := this.M[k]
-        if exists && v == old {
-            continue
-        }
-        todo[k] = v
-    }
-    this.RUnlock()
-
-    if len(todo) == 0 {
-        return
-    }
-
     this.Lock()
-    for k, v := range todo {
-        this.M[k] = v
+    for k, v := range m {
+        this.m[k] = v
     }
     this.Unlock()
 }
@@ -60,7 +45,7 @@ func (this *StringStringMap) BatchSet(m map[string]string) {
 // 获取键值
 func (this *StringStringMap) Get(key string) string {
 	this.RLock()
-	val, _ := this.M[key]
+	val, _ := this.m[key]
 	this.RUnlock()
 	return val
 }
@@ -68,7 +53,7 @@ func (this *StringStringMap) Get(key string) string {
 // 删除键值对
 func (this *StringStringMap) Remove(key string) {
 	this.Lock()
-	delete(this.M, key)
+	delete(this.m, key)
 	this.Unlock()
 }
 
@@ -76,7 +61,7 @@ func (this *StringStringMap) Remove(key string) {
 func (this *StringStringMap) BatchRemove(keys []string) {
     this.Lock()
     for _, key := range keys {
-        delete(this.M, key)
+        delete(this.m, key)
     }
     this.Unlock()
 }
@@ -84,9 +69,9 @@ func (this *StringStringMap) BatchRemove(keys []string) {
 // 返回对应的键值，并删除该键值
 func (this *StringStringMap) GetAndRemove(key string) string {
 	this.Lock()
-	val, exists := this.M[key]
+	val, exists := this.m[key]
 	if exists {
-		delete(this.M, key)
+		delete(this.m, key)
 	}
 	this.Unlock()
 	return val
@@ -96,7 +81,7 @@ func (this *StringStringMap) GetAndRemove(key string) string {
 func (this *StringStringMap) Keys() []string {
 	this.RLock()
 	keys := make([]string, 0)
-	for key, _ := range this.M {
+	for key, _ := range this.m {
 		keys = append(keys, key)
 	}
     this.RUnlock()
@@ -107,7 +92,7 @@ func (this *StringStringMap) Keys() []string {
 func (this *StringStringMap) Values() []string {
 	this.RLock()
 	vals := make([]string, 0)
-	for _, val := range this.M {
+	for _, val := range this.m {
 		vals = append(vals, val)
 	}
 	this.RUnlock()
@@ -117,7 +102,7 @@ func (this *StringStringMap) Values() []string {
 // 是否存在某个键
 func (this *StringStringMap) Contains(key string) bool {
 	this.RLock()
-	_, exists := this.M[key]
+	_, exists := this.m[key]
 	this.RUnlock()
 	return exists
 }
@@ -125,7 +110,7 @@ func (this *StringStringMap) Contains(key string) bool {
 // 哈希表大小
 func (this *StringStringMap) Size() int {
 	this.RLock()
-	len := len(this.M)
+	len := len(this.m)
 	this.RUnlock()
 	return len
 }
@@ -133,7 +118,7 @@ func (this *StringStringMap) Size() int {
 // 哈希表是否为空
 func (this *StringStringMap) IsEmpty() bool {
 	this.RLock()
-	empty := (len(this.M) == 0)
+	empty := (len(this.m) == 0)
 	this.RUnlock()
 	return empty
 }
@@ -141,6 +126,6 @@ func (this *StringStringMap) IsEmpty() bool {
 // 清空哈希表
 func (this *StringStringMap) Clear() {
     this.Lock()
-    this.M = make(map[string]string)
+    this.m = make(map[string]string)
     this.Unlock()
 }

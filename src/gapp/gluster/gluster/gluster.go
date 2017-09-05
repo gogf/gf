@@ -81,8 +81,8 @@ const (
     gMSG_RAFT_SCORE_COMPARE_SUCCESS = 210
 
     // 数据同步操作
-    gMSG_REPL_SET                           = 310
-    gMSG_REPL_REMOVE                        = 320
+    gMSG_REPL_DATA_SET                      = 310
+    gMSG_REPL_DATA_REMOVE                   = 320
     gMSG_REPL_INCREMENTAL_UPDATE            = 330
     gMSG_REPL_COMPLETELY_UPDATE             = 340
     gMSG_REPL_HEARTBEAT                     = 350

@@ -36,10 +36,15 @@ func (this *NodeApiKv) POST(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
         w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
         return
     }
-    err  = this.node.SendToLeader(gMSG_REPL_SET, gPORT_REPL, gjson.Encode(items))
+    err  = this.node.SendToLeader(gMSG_REPL_DATA_SET, gPORT_REPL, gjson.Encode(items))
     if err != nil {
         w.ResponseJson(0, err.Error(), nil)
     } else {
+        // 为保证客户端能够及时相应（例如在写入请求的下一次获取请求将一定能够获取到最新的数据），
+        // 因此，请求端应当在leader返回成功后，同时将该数据写入到本地
+        if this.node.Id != this.node.getLeader().Id {
+            this.node.KVMap.BatchSet(items)
+        }
         w.ResponseJson(1, "ok", nil)
     }
 }
@@ -52,10 +57,13 @@ func (this *NodeApiKv) DELETE(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
         w.ResponseJson(0, "invalid data type: " + err.Error(), nil)
         return
     }
-    err  = this.node.SendToLeader(gMSG_REPL_REMOVE, gPORT_REPL, gjson.Encode(list))
+    err  = this.node.SendToLeader(gMSG_REPL_DATA_REMOVE, gPORT_REPL, gjson.Encode(list))
     if err != nil {
         w.ResponseJson(0, err.Error(), nil)
     } else {
+        if this.node.Id != this.node.getLeader().Id {
+            this.node.KVMap.BatchRemove(list)
+        }
         w.ResponseJson(1, "ok", nil)
     }
 }

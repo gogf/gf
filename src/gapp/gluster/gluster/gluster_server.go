@@ -456,8 +456,12 @@ func (n *Node) setIp(ip string) {
 
 func (n *Node) setRaftRole(role int) {
     n.mutex.Lock()
+    if n.RaftRole != role {
+        glog.Printf("role changed from %s to %s\n", n.raftRoleName(n.RaftRole), n.raftRoleName(role))
+    }
     n.RaftRole = role
     n.mutex.Unlock()
+
 }
 
 func (n *Node) setLeader(info *NodeInfo) {
@@ -574,5 +578,15 @@ func (n *Node) updateElectionDeadline() {
     n.mutex.Lock()
     n.ElectionDeadline = gtime.Millisecond() + gELECTION_TIMEOUT
     n.mutex.Unlock()
+}
+
+// 将RAFT角色字段转换为可读的字符串
+func (n *Node) raftRoleName(role int) string {
+    switch role {
+        case gROLE_RAFT_FOLLOWER:  return "follower"
+        case gROLE_RAFT_CANDIDATE: return "candidate"
+        case gROLE_RAFT_LEADER:    return "leader"
+    }
+    return "unknown"
 }
 

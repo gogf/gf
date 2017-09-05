@@ -63,6 +63,7 @@ func (n *Node) onMsgRaftSplitBrainsCheck(conn net.Conn, msg *Msg) {
 
 // 处理split brains问题
 func (n *Node) onMsgRaftSplitBrainsUnset(conn net.Conn, msg *Msg) {
+    glog.Println("split brains occurred, remove node:", msg.Info.Name)
     n.Peers.Remove(msg.Info.Id)
 }
 
@@ -109,7 +110,9 @@ func (n *Node) onMsgRaftHeartbeat(conn net.Conn, msg *Msg) {
         n.setLeader(&msg.Info)
         n.setRaftRole(gROLE_RAFT_FOLLOWER)
     } else {
-        // 脑裂问题，一个节点处于两个网路中，并且两个网络的leader无法相互通信，会引起数据一致性问题
+        // 脑裂问题，集群节点规划或者网络异常造成
+        // 1、两个leader无法相互通信，那么两个leader处于不同的两个网络，因此需要将其中一个网络中的该follower剔除掉，只保留其在一个网络中
+        // 2、两个leader可以相互通信，那么两个leader处于相同的网络，于是将两个leader相互比较，最终留下一个作为leader，另外一个作为follower
         if n.getLeader().Id != msg.Info.Id {
             glog.Println("split brains occurred:", n.getLeader().Name, "and", msg.Info.Name)
             leaderConn := n.getConn(n.getLeader().Ip, gPORT_RAFT)

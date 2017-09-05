@@ -22,7 +22,7 @@ func (n *Node) electionHandler() {
                     n.beginScore()
                 } else {
                     // 集群目前仅有1个节点
-                    glog.Println("only one node in this cluster, so i'll be the leader")
+                    glog.Println("only one node in this cluster, i'll be the leader")
                     n.setLeader(n.getNodeInfo())
                     n.setRaftRole(gROLE_RAFT_LEADER)
                 }
@@ -30,10 +30,6 @@ func (n *Node) electionHandler() {
                 glog.Println("no meet the least nodes count:", n.MinNode, ", current:", n.Peers.Size() + 1)
             }
             n.updateElectionDeadline()
-            // 改进：采用 随机超时+避让策略 让集群更容易达成绝大多数的选举，以便快速选举
-            if n.getRaftRole() != gROLE_RAFT_LEADER {
-                n.resetAsFollower()
-            }
         }
         time.Sleep(100 * time.Millisecond)
     }
@@ -42,7 +38,7 @@ func (n *Node) electionHandler() {
 // 改进的RAFT选举
 func (n *Node) beginScore() {
     var wg sync.WaitGroup
-    glog.Println("begin new election")
+    glog.Println("new election")
     // 请求比分，获取比分数据
     for _, v := range n.Peers.Values() {
         info := v.(NodeInfo)
@@ -93,6 +89,12 @@ func (n *Node) beginScore() {
         }(&info)
     }
     wg.Wait()
+
+    // 必需要获得多数派比分（以保证能够连通绝大部分的节点）才能满足leader的基础条件
+    if n.getScoreCount() < n.Peers.Size() {
+        n.updateElectionDeadline()
+        return
+    }
 
     if n.checkFailedTheElection() {
         return
