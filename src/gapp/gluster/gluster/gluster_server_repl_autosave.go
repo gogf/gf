@@ -36,7 +36,7 @@ func (n *Node) saveDataToFile() {
         LastServiceLogId    : n.getLastServiceLogId(),
         Service             : *n.serviceMapToServiceStructMap(),
         Peers               : *n.Peers.Clone(),
-        DataMap             : *n.KVMap.Clone(),
+        DataMap             : *n.DataMap.Clone(),
     }
     for _, v := range n.LogList.BackAll() {
         data.LogList = append(data.LogList, v.(LogEntry))
@@ -77,7 +77,7 @@ func (n *Node) restoreDataFromFile() {
                 n.setLastServiceLogId(data.LastServiceLogId)
                 n.restoreLogList(&data)
                 n.restoreService(&data)
-                n.restoreKVMap(&data)
+                n.restoreDataMap(&data)
                 n.restorePeer(&data)
             }
         }
@@ -109,8 +109,8 @@ func (n *Node) restorePeer(data *SaveInfo) {
     }
 }
 
-func (n *Node) restoreKVMap(data *SaveInfo) {
-    n.KVMap.BatchSet(data.DataMap)
+func (n *Node) restoreDataMap(data *SaveInfo) {
+    n.DataMap.BatchSet(data.DataMap)
 }
 
 // 使用logentry数组更新本地的日志列表

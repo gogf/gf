@@ -1,6 +1,6 @@
 [
     {
-        "name" : "usercenter",
+        "name" : "ucenter",
         "type" : "mysql",
         "node" : {
             "node1": {"host":"192.168.2.15",  "port": "3306", "user":"root", "pass":"123456", "database":"test", "priority": "100", "interval" : "2000"},
@@ -19,7 +19,7 @@
         "name" : "homesite",
         "type" : "web",
         "node" : {
-            "node1": {"host":"192.168.2.15", "port": "80",   "interval" : "5000", "priority": "100", "check":"http://baidu.com"},
+            "node1": {"host":"192.168.2.15", "port": "80",   "interval" : "5000", "priority": "100", "check":"http://163.com"},
             "node2": {"host":"192.168.2.15", "port": "8080", "interval" : "5000", "priority": "100"},
             "node3": {"host":"192.168.2.15", "port": "8088", "interval" : "5000", "priority": "100"},
             "node4": {"host":"192.168.2.15", "port": "8888", "interval" : "5000", "priority": "100"}

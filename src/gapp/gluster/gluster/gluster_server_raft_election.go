@@ -38,7 +38,7 @@ func (n *Node) electionHandler() {
 // 改进的RAFT选举
 func (n *Node) beginScore() {
     var wg sync.WaitGroup
-    glog.Println("new election")
+    //glog.Println("new election...")
     // 请求比分，获取比分数据
     for _, v := range n.Peers.Values() {
         info := v.(NodeInfo)
@@ -93,6 +93,7 @@ func (n *Node) beginScore() {
     // 必需要获得多数派比分（以保证能够连通绝大部分的节点）才能满足leader的基础条件
     if n.getScoreCount() < n.Peers.Size() {
         n.updateElectionDeadline()
+        //glog.Println("election failed: could not reach major of the nodes")
         return
     }
 
@@ -148,7 +149,7 @@ func (n *Node) beginScore() {
 
     // 如果peers中的节点均没有条件满足leader，那么选举自身为leader
     if n.getRaftRole() != gROLE_RAFT_FOLLOWER {
-        glog.Println("won the score comparison, become the leader")
+        //glog.Println("won the score comparison, become the leader")
         n.setLeader(n.getNodeInfo())
         n.setRaftRole(gROLE_RAFT_LEADER)
     }
@@ -158,7 +159,7 @@ func (n *Node) beginScore() {
 func (n *Node) checkFailedTheElection() bool {
     // 如果在计算比分的过程中发现了leader，那么不再继续比分，退出选举
     if n.getLeader() != nil {
-        glog.Println("failed the election, set", n.getLeader().Name, "as leader")
+        //glog.Println("failed the election, set", n.getLeader().Name, "as leader")
         return true
     }
     // 如果选举过程中状态变化，那么自身选举失败

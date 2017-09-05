@@ -64,6 +64,10 @@ func (n *Node) Run() {
         os.Exit(0)
         return
     }
+    // 显示当前节点信息
+    glog.Println("Host Id  :", n.Id)
+    glog.Println("Host Name:", n.Name)
+
     // 读取配置文件
     n.initFromCfg()
 
@@ -71,41 +75,32 @@ func (n *Node) Run() {
     n.restoreDataFromFile()
 
     // 创建接口监听
-    if n.Role == gROLE_MONITOR {
-        go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_MONITOR),  n.monitorTcpHandler).Run()
-        go func() {
-            webui := ghttp.NewServerByAddr(fmt.Sprintf(":%d", gPORT_WEBUI))
-            webui.BindController("/",      &MonitorWebUI{node: n})
-            webui.Run()
-        }()
-    } else {
-        go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_RAFT),  n.raftTcpHandler).Run()
-        go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_REPL),  n.replTcpHandler).Run()
-        go func() {
-            api := ghttp.NewServerByAddr(fmt.Sprintf(":%d", gPORT_API))
-            api.BindController("/kv",      &NodeApiKv{node: n})
-            api.BindController("/node",    &NodeApiNode{node: n})
-            api.BindController("/service", &NodeApiService{node: n})
-            api.BindController("/balance", &NodeApiBalance{node: n})
-            api.Run()
-        }()
+    go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_RAFT),  n.raftTcpHandler).Run()
+    go gtcp.NewServer(fmt.Sprintf(":%d", gPORT_REPL),  n.replTcpHandler).Run()
+    go func() {
+        api := ghttp.NewServerByAddr(fmt.Sprintf(":%d", gPORT_API))
+        api.BindController("/kv",      &NodeApiKv{node: n})
+        api.BindController("/node",    &NodeApiNode{node: n})
+        api.BindController("/service", &NodeApiService{node: n})
+        api.BindController("/balance", &NodeApiBalance{node: n})
+        api.Run()
+    }()
 
-        // 通知上线（这里采用局域网扫描的方式进行广播通知）
-        //go n.sayHiToAll()
-        //time.Sleep(2 * time.Second)
-        // 配置同步
-        go n.replicateConfigToLeader()
-        // 选举超时检查
-        go n.electionHandler()
-        // 心跳保持及存活性检查
-        go n.heartbeatHandler()
-        // 日志同步处理
-        go n.replicationHandler()
-        // 本地日志存储处理
-        go n.logAutoSavingHandler()
-        // 服务健康检查
-        go n.serviceHealthCheckHandler()
-    }
+    // 通知上线（这里采用局域网扫描的方式进行广播通知）
+    //go n.sayHiToAll()
+    //time.Sleep(2 * time.Second)
+    // 配置同步
+    go n.replicateConfigToLeader()
+    // 选举超时检查
+    go n.electionHandler()
+    // 心跳保持及存活性检查
+    go n.heartbeatHandler()
+    // 日志同步处理
+    go n.replicationHandler()
+    // 本地日志存储处理
+    go n.logAutoSavingHandler()
+    // 服务健康检查
+    go n.serviceHealthCheckHandler()
 
     // 测试
     //go n.show()
@@ -243,7 +238,7 @@ func (n *Node) getNodeInfo() *NodeInfo {
 func (n *Node) SendToLeader(head int, port int, body string) error {
     leader := n.getLeader()
     if leader == nil {
-        return errors.New("leader not found, please try again after leader election done")
+        return errors.New(fmt.Sprintf("leader not found, please try again after leader election done, request head: %d", head))
     }
     conn := n.getConn(leader.Ip, port)
     if conn == nil {
@@ -466,8 +461,14 @@ func (n *Node) setRaftRole(role int) {
 
 func (n *Node) setLeader(info *NodeInfo) {
     n.mutex.Lock()
+    if n.Leader != nil {
+        glog.Printf("leader changed from %s to %s\n", n.Leader.Name, info.Name)
+    } else {
+        glog.Println("set leader:", info.Name)
+    }
     n.Leader = info
     n.mutex.Unlock()
+
 }
 
 func (n *Node) setMonitor(ip string) {
@@ -540,12 +541,12 @@ func (n *Node) setPeers(m *gmap.StringInterfaceMap) {
     n.mutex.Unlock()
 }
 
-func (n *Node) setKVMap(m *gmap.StringStringMap) {
+func (n *Node) setDataMap(m *gmap.StringStringMap) {
     if m == nil {
         return
     }
     n.mutex.Lock()
-    n.KVMap = m
+    n.DataMap = m
     n.mutex.Unlock()
 }
 

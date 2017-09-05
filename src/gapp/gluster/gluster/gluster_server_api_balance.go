@@ -48,7 +48,7 @@ func (this *NodeApiBalance) getAliveServiceByPriority(name string ) (interface{}
     for k, v := range st.Node {
         m := v.(map[string]interface{})
         status, ok := m["status"]
-        if !ok || status == 0 {
+        if !ok || status.(int) == 0 {
             continue
         }
         priority, ok := m["priority"]

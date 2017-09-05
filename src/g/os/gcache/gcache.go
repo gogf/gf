@@ -11,11 +11,12 @@ import (
 
 type Cache struct {
     sync.RWMutex
-    m map[string]*CacheMap    // 以键名首字母为索引
+    m map[string]*CacheMap // 以键名首字母为索引
 }
 
 type CacheMap  struct {
     sync.RWMutex
+    deleted bool              // 对象是否已删除，以便判断停止goroutine
     m1 map[string]interface{} // 不过期的键值对
     m2 map[string]CacheItem   // 有过期时间的键值对
 }
@@ -29,7 +30,7 @@ var cache *Cache = New()
 
 // Cache对象按照缓存键名首字母做了分组
 func New() *Cache {
-    c := &Cache{
+    c := &Cache {
         m : make(map[string]*CacheMap),
     }
     // 0 - 9
@@ -168,6 +169,28 @@ func (c *Cache) Size() int {
     return size
 }
 
+// 删除缓存对象
+func (c *Cache) Destroy()  {
+    c.RLock()
+    for _, cm := range c.m {
+        cm.Lock()
+        cm.deleted = true
+        cm.Unlock()
+    }
+    c.RUnlock()
+    c.Lock()
+    c.m = nil
+    c.Unlock()
+}
+
+// 清空缓存对象（相当于新建一个新的缓存对象，旧的丢给GC处理）
+func (c *Cache) Clear() {
+    c.Destroy()
+    c.Lock()
+    c.m = New().m
+    c.Unlock()
+}
+
 // 将数据导出为JSON字符串
 func (c *Cache) Export() string {
     data := make(map[string]interface{})
@@ -252,7 +275,7 @@ func (cm *CacheMap) Remove(k string) {
 
 // 自动清理过期键值对(每间隔60秒执行)
 func (cm *CacheMap) autoClearLoop() {
-    for {
+    for !cm.deleted {
         expired := make([]string, 0)
         cm.RLock()
         for k, v := range cm.m2 {

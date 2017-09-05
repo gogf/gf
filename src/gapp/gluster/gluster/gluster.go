@@ -125,7 +125,6 @@ type Node struct {
     RaftRole            int                      // RAFT角色
     MinNode             int                      // 组成集群的最小节点数量
     Leader              *NodeInfo                // Leader节点信息
-    Monitor             string                   // Monitor节点ip
     Score               int64                    // 选举比分
     ScoreCount          int                      // 选举比分的节点数
     ElectionDeadline    int64                    // 选举超时时间点
@@ -140,20 +139,7 @@ type Node struct {
     FileName            string                   // 数据文件名称(包含后缀)
     Service             *gmap.StringInterfaceMap // 存储的服务配置表
     ServiceForApi       *gmap.StringInterfaceMap // 用于提高Service API响应的冗余map变量，内容与Service成员变量相同，但结构不同
-    KVMap               *gmap.StringStringMap    // 存储的K-V哈希表
-
-    MonitorData         *Monitor                 // 当节点为Monitor时，该变量存储Monitor的数据
-}
-
-// Monitor对象
-type Monitor struct {
-    SavePath  string
-    WebUIPath string
-    Admin     string
-    Pass      string
-    Peers     *gmap.StringInterfaceMap
-    Services  *gmap.StringInterfaceMap
-    KVMaps    *gmap.StringInterfaceMap
+    DataMap             *gmap.StringStringMap    // 存储的K-V哈希表
 }
 
 // 服务对象
@@ -258,7 +244,7 @@ func NewServer() *Node {
         LogList             : glist.NewSafeList(),
         Service             : gmap.NewStringInterfaceMap(),
         ServiceForApi       : gmap.NewStringInterfaceMap(),
-        KVMap               : gmap.NewStringStringMap(),
+        DataMap               : gmap.NewStringStringMap(),
         isInDataReplication : false,
     }
     ips, err := gip.IntranetIP()
@@ -277,15 +263,6 @@ func NewServer() *Node {
     gconsole.BindHandle("delservice", cmd_delservice)
 
     return &node
-}
-
-// 创建一个Monitor对象
-func NewMonitor() *Monitor {
-    return &Monitor {
-        Peers    : gmap.NewStringInterfaceMap(),
-        Services : gmap.NewStringInterfaceMap(),
-        KVMaps   : gmap.NewStringInterfaceMap(),
-    }
 }
 
 // 生成节点的唯一ID(hostname+ips)
