@@ -158,11 +158,6 @@ func (n *Node) initFromCfg() {
         }
         glog.SetLogPath(logpath)
     }
-    // (可选)监控节点IP或域名地址
-    monitor := j.GetString("Monitor")
-    if monitor != "" {
-        n.setMonitor(monitor)
-    }
     // (可选)初始化节点列表，包含自定义的所需添加的服务器IP或者域名列表
     peers := j.GetArray("Peers")
     if peers != nil {
@@ -469,12 +464,6 @@ func (n *Node) setLeader(info *NodeInfo) {
     n.Leader = info
     n.mutex.Unlock()
 
-}
-
-func (n *Node) setMonitor(ip string) {
-    n.mutex.Lock()
-    n.Monitor = ip
-    n.mutex.Unlock()
 }
 
 // 设置数据保存目录路径
