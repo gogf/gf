@@ -60,6 +60,17 @@ func NewJson(v *interface{}) *Json {
     return &Json{ v }
 }
 
+// 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
+// 注意第二个参数需要给的是变量地址
+func (p *Json) GetToVar(pattern string, v interface{}) error {
+    r := p.Get(pattern)
+    if r != nil {
+        return DecodeTo(Encode(r), v)
+    } else {
+        v = nil
+    }
+    return nil
+}
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil

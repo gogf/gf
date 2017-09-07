@@ -26,6 +26,11 @@ func SetInterval(t time.Duration, callback func() bool) {
     }()
 }
 
+// 获取当前的纳秒数
+func Nanosecond() int64 {
+    return time.Now().UnixNano()
+}
+
 // 获取当前的微秒数
 func Microsecond() int64 {
     return time.Now().UnixNano()/1e3
