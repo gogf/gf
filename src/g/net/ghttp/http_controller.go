@@ -7,23 +7,23 @@ type Controller struct {
 
 // 控制器接口
 type ControllerApi interface {
-    GET(r *ClientRequest, w *ServerResponse)
-    PUT(r *ClientRequest, w *ServerResponse)
-    POST(r *ClientRequest, w *ServerResponse)
-    DELETE(r *ClientRequest, w *ServerResponse)
-    HEAD(r *ClientRequest, w *ServerResponse)
-    PATCH(r *ClientRequest, w *ServerResponse)
-    CONNECT(r *ClientRequest, w *ServerResponse)
-    OPTIONS(r *ClientRequest, w *ServerResponse)
-    TRACE(r *ClientRequest, w *ServerResponse)
+    Get(r *ClientRequest, w *ServerResponse)
+    Put(r *ClientRequest, w *ServerResponse)
+    Post(r *ClientRequest, w *ServerResponse)
+    Delete(r *ClientRequest, w *ServerResponse)
+    Head(r *ClientRequest, w *ServerResponse)
+    Patch(r *ClientRequest, w *ServerResponse)
+    Connect(r *ClientRequest, w *ServerResponse)
+    Options(r *ClientRequest, w *ServerResponse)
+    Trace(r *ClientRequest, w *ServerResponse)
 }
 
-func (c *Controller) GET(r *ClientRequest, w *ServerResponse)     {}
-func (c *Controller) PUT(r *ClientRequest, w *ServerResponse)     {}
-func (c *Controller) POST(r *ClientRequest, w *ServerResponse)    {}
-func (c *Controller) DELETE(r *ClientRequest, w *ServerResponse)  {}
-func (c *Controller) HEAD(r *ClientRequest, w *ServerResponse)    {}
-func (c *Controller) PATCH(r *ClientRequest, w *ServerResponse)   {}
-func (c *Controller) CONNECT(r *ClientRequest, w *ServerResponse) {}
-func (c *Controller) OPTIONS(r *ClientRequest, w *ServerResponse) {}
-func (c *Controller) TRACE(r *ClientRequest, w *ServerResponse)   {}
+func (c *Controller) Get(r *ClientRequest, w *ServerResponse)     {}
+func (c *Controller) Put(r *ClientRequest, w *ServerResponse)     {}
+func (c *Controller) Post(r *ClientRequest, w *ServerResponse)    {}
+func (c *Controller) Delete(r *ClientRequest, w *ServerResponse)  {}
+func (c *Controller) Head(r *ClientRequest, w *ServerResponse)    {}
+func (c *Controller) Patch(r *ClientRequest, w *ServerResponse)   {}
+func (c *Controller) Connect(r *ClientRequest, w *ServerResponse) {}
+func (c *Controller) Options(r *ClientRequest, w *ServerResponse) {}
+func (c *Controller) Trace(r *ClientRequest, w *ServerResponse)   {}
