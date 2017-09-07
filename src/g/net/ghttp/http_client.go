@@ -4,6 +4,7 @@ import (
     "net/http"
     "strings"
     "time"
+    "g/os/glog"
 )
 
 // http客户端对象指针
@@ -65,15 +66,14 @@ func (c *Client) Trace(url, data string) *ClientResponse  {
 
 // 请求并返回response对象
 func (c *Client) Request(method, url, data string) *ClientResponse {
-    client   := &http.Client{}
     req, err := http.NewRequest(strings.ToUpper(method), url, strings.NewReader(data))
     if err != nil {
-        //glog.Println(err)
+        glog.Println("creating request failed: " + err.Error())
         return nil
     }
-    resp, err := client.Do(req)
+    resp, err := c.Do(req)
     if err != nil {
-        //glog.Println(err)
+        glog.Println("sending request failed: " + err.Error())
         return nil
     }
     r := &ClientResponse{}
