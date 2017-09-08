@@ -2,7 +2,8 @@ package main
 
 import (
     "fmt"
-    "net"
+    "os/exec"
+    "strings"
 )
 
 type ST struct {
@@ -10,13 +11,11 @@ type ST struct {
 }
 
 func main() {
+    cmd := "echo -c 1"
+    parts := strings.Fields(cmd)
 
-    interfaces, err :=  net.Interfaces()
-    if err != nil {
-        panic("Poor soul, here is what you got: " + err.Error())
-    }
-    for _, inter := range interfaces {
-        fmt.Println(inter.Name, inter.HardwareAddr)
-    }
+    r, e := exec.Command(parts[0], parts[1:]...).Output()
+    fmt.Println(string(r))
+    fmt.Println(e)
 
 }

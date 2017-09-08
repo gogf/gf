@@ -55,12 +55,12 @@ func New() *Cache {
 }
 
 // (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为秒
-func Set(k string, v interface{}, expired int64)  {
+func Set(k string, v interface{}, expired int)  {
     cache.Set(k, v, expired)
 }
 
 // (使用全局KV缓存对象)批量设置kv缓存键值对，过期时间单位为秒
-func BatchSet(m map[string]interface{}, expired int64)  {
+func BatchSet(m map[string]interface{}, expired int)  {
     cache.BatchSet(m, expired)
 }
 
@@ -80,14 +80,14 @@ func BatchRemove(l []string) {
 }
 
 // 设置kv缓存键值对，过期时间单位为秒
-func (c *Cache) Set(k string, v interface{}, expired int64)  {
+func (c *Cache) Set(k string, v interface{}, expired int)  {
     c.RLock()
     c.m[c.getIndex(k)].Set(k, v, expired)
     c.RUnlock()
 }
 
 // 批量设置
-func (c *Cache) BatchSet(m map[string]interface{}, expired int64)  {
+func (c *Cache) BatchSet(m map[string]interface{}, expired int)  {
     c.RLock()
     for k, v := range m {
         c.m[c.getIndex(k)].Set(k, v, expired)
@@ -222,7 +222,11 @@ func (c *Cache) Import(s string) {
     data := make(map[string]map[string]interface{})
     gjson.DecodeTo(s, &data)
     for k, m := range data {
-        c.Set(k, m["v"], int64(m["e"].(float64)))
+        // Set的第三个参数是过期时间数，因此这里需要计算导入的时候还剩多少时间过期
+        expire := gtime.Second() - int64(m["e"].(float64))
+        if expire > 0 {
+            c.Set(k, m["v"], int(expire))
+        }
     }
 }
 
@@ -232,7 +236,7 @@ func (c *Cache) getIndex(k string) string {
 }
 
 // 设置kv缓存键值对，过期时间单位为秒
-func (cm *CacheMap) Set(k string, v interface{}, expired int64)  {
+func (cm *CacheMap) Set(k string, v interface{}, expired int)  {
     cm.Lock()
     if expired == 0 {
         cm.m1[k] = v
@@ -240,7 +244,7 @@ func (cm *CacheMap) Set(k string, v interface{}, expired int64)  {
             delete(cm.m2, k)
         }
     } else {
-        cm.m2[k] = CacheItem{v: v, e: gtime.Second() + expired}
+        cm.m2[k] = CacheItem{v: v, e: gtime.Second() + int64(expired)}
         if _, ok := cm.m1[k]; ok {
             delete(cm.m1, k)
         }
