@@ -2,20 +2,21 @@ package main
 
 import (
     "fmt"
-    "os/exec"
-    "strings"
+    "g/net/ghttp"
 )
 
 type ST struct {
     I int64
 }
 
-func main() {
-    cmd := "echo -c 1"
-    parts := strings.Fields(cmd)
 
-    r, e := exec.Command(parts[0], parts[1:]...).Output()
-    fmt.Println(string(r))
-    fmt.Println(e)
+func main() {
+
+        for i := 0; i < 10000; i ++ {
+            r := ghttp.Post("http://127.0.0.1:4168/kv", fmt.Sprintf("{\"key_%d\":\"value_%d\"}", i, i))
+            r.Close()
+        }
+
+
 
 }
