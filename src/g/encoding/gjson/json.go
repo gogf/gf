@@ -107,6 +107,16 @@ func (p *Json) GetString(pattern string) string {
     return ""
 }
 
+// 返回指定json中的bool
+func (p *Json) GetBool(pattern string) bool {
+    result := p.GetString(pattern)
+    result  = strings.ToLower(pattern)
+    if result != "" && result != "0" && result != "false" {
+        return true
+    }
+    return false
+}
+
 // 返回指定json中的float64
 func (p *Json) GetFloat64(pattern string) float64 {
     result := p.Get(pattern)
