@@ -10,8 +10,8 @@ type ST struct {
 
 func main() {
 
-    fmt.Println(3/2)
-    fmt.Println(int(18/10))
+    fmt.Println(int("10"))
+
 
 
 

@@ -4,6 +4,7 @@ import (
 	"os"
     "regexp"
     "errors"
+    "strconv"
 )
 
 // 命令行参数列表
@@ -54,6 +55,16 @@ func (c gConsoleValue) Get(index uint8) string {
     return ""
 }
 
+// 类型转换
+func (c gConsoleValue) GetInt(key uint8) int {
+    v := c.Get(key)
+    if v != "" {
+        i, _ := strconv.Atoi(v)
+        return i
+    }
+    return 0
+}
+
 // 获得一条指定索引位置的option参数
 func (c gConsoleOption) Get(key string) string {
     option, ok := c.options[key]
@@ -61,6 +72,16 @@ func (c gConsoleOption) Get(key string) string {
         return option
     }
     return ""
+}
+
+// 类型转换
+func (c gConsoleOption) GetInt(key string) int {
+    v := c.Get(key)
+    if v != "" {
+        i, _ := strconv.Atoi(v)
+        return i
+    }
+    return 0
 }
 
 // 绑定命令行参数及对应的命令函数，注意参数是函数的内存地址
