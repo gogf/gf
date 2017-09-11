@@ -41,12 +41,21 @@ func Create(path string) error {
 }
 
 // 打开文件
-func Open(path string) *os.File {
-    f, err  := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0755)
+func Open(path string) (*os.File, error) {
+    f, err  := os.OpenFile(path, os.O_RDWR, 0755)
     if err != nil {
-        return nil
+        return nil, err
     }
-    return f
+    return f, nil
+}
+
+// 打开文件
+func OpenWithFlag(path string, flag int) (*os.File, error) {
+    f, err  := os.OpenFile(path, flag, 0755)
+    if err != nil {
+        return nil, err
+    }
+    return f, nil
 }
 
 // 判断所给路径文件/文件夹是否存在
@@ -381,4 +390,44 @@ func homeWindows() (string, error) {
     }
 
     return home, nil
+}
+
+// 获得文件内容下一个指定字节的位置
+func GetNextCharOffset(file *os.File, char string, start int64) int64 {
+    c := []byte(char)[0]
+    b := make([]byte, 1)
+    o := start
+    for {
+        _, err := file.ReadAt(b, o)
+        if err != nil {
+            return 0
+        }
+        fmt.Println(b[0])
+        if b[0] == c {
+            return o
+        }
+        o++
+    }
+    return 0
+}
+
+// 获得文件内容中两个offset之间的内容
+func GetBinContentByTwoOffsets(file *os.File, start int64, end int64) []byte {
+    if end < start {
+        return nil
+    }
+    char   := make([]byte, 1)
+    result := make([]byte, end - start + 1)
+    offset := start
+    index  := 0
+    for offset <= end {
+        _, err := file.ReadAt(char, offset)
+        if err != nil {
+            return result
+        }
+        result[index] = char[0]
+        index++
+        offset++
+    }
+    return result
 }
