@@ -402,7 +402,6 @@ func GetNextCharOffset(file *os.File, char string, start int64) int64 {
         if err != nil {
             return 0
         }
-        fmt.Println(b[0])
         if b[0] == c {
             return o
         }
