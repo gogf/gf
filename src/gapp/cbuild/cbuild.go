@@ -64,11 +64,12 @@ func main() {
         if len(arches) > 0 && arches[0] != "" && !gutil.StringInArray(arches, arch) {
             continue
         }
-        appname := name + "." + os + "_" + arch
+        folder  := os + "_" + arch
+        appname := name
         if os == "windows" {
             appname += ".exe"
         }
-        cmd := fmt.Sprintf("CGO_ENABLED=0 GOOS=%s GOARCH=%s go build -o ./bin/%s_%s/%s %s", os, arch, name, version, appname, src)
+        cmd := fmt.Sprintf("CGO_ENABLED=0 GOOS=%s GOARCH=%s go build -o ./bin/%s_%s/%s/%s %s", os, arch, name, version, folder, appname, src)
         wg.Add(1)
         go func(cmd string) {
             defer wg.Done()
