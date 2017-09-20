@@ -6,6 +6,8 @@ import (
     "sync"
     "g/util/gtime"
     "g/core/types/gmap"
+    "g/encoding/gjson"
+    "g/os/gfile"
 )
 
 type ST struct {
@@ -100,12 +102,12 @@ type ST struct {
 type T1 struct {
     m *gmap.StringInterfaceMap
 }
+
+
+
 func main() {
-    var a interface{}
-    var b interface{}
-    a = 0
-    b = 0
-    fmt.Println(a != b)
+    j := gjson.DecodeToJson(gfile.GetContents("/home/john/Workspace/Go/gluster/src/gluster/gluster_server.json"))
+    fmt.Println(j.GetBool("Scan2"))
     return
     //a := []int{1,2,3}
 

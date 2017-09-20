@@ -6,6 +6,8 @@ import (
     "strings"
     "strconv"
     "g/os/glog"
+    "fmt"
+    "reflect"
 )
 
 // json解析结果存放数组
@@ -99,6 +101,7 @@ func (p *Json) GetArray(pattern string) []interface{} {
 // 返回指定json中的string
 func (p *Json) GetString(pattern string) string {
     result := p.Get(pattern)
+    fmt.Println(reflect.TypeOf(result))
     if result != nil {
         if r, ok := result.(string); ok {
             return r
@@ -109,10 +112,12 @@ func (p *Json) GetString(pattern string) string {
 
 // 返回指定json中的bool
 func (p *Json) GetBool(pattern string) bool {
-    result := p.GetString(pattern)
-    result  = strings.ToLower(pattern)
-    if result != "" && result != "0" && result != "false" {
-        return true
+    result := p.Get(pattern)
+    if result != nil {
+        str := fmt.Sprintf("%v", result)
+        if str != "" && str != "0" && str != "false" {
+            return true
+        }
     }
     return false
 }
