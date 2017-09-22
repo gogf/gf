@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// 变长链表
+// 变长双向链表
 type SafeList struct {
 	sync.RWMutex
 	L *list.List
@@ -23,6 +23,31 @@ func (this *SafeList) PushFront(v interface{}) *list.Element {
 	this.Unlock()
 	return e
 }
+
+// 往链表尾入栈数据项
+func (this *SafeList) PushBack(v interface{}) *list.Element {
+	this.Lock()
+	r := this.L.PushBack(v)
+	this.Unlock()
+	return r
+}
+
+// 在list 中元素mark之后插入一个值为v的元素，并返回该元素，如果mark不是list中元素，则list不改变。
+func (this *SafeList) InsertAfter(v interface{}, mark *list.Element) *list.Element {
+    this.Lock()
+    r := this.L.InsertAfter(v, mark)
+    this.Unlock()
+    return r
+}
+
+// 在list 中元素mark之前插入一个值为v的元素，并返回该元素，如果mark不是list中元素，则list不改变。
+func (this *SafeList) InsertBefore(v interface{}, mark *list.Element) *list.Element {
+    this.Lock()
+    r := this.L.InsertBefore(v, mark)
+    this.Unlock()
+    return r
+}
+
 
 // 批量往链表头入栈数据项
 func (this *SafeList) BatchPushFront(vs []interface{}) {
@@ -181,82 +206,4 @@ func (this *SafeList) Len() int {
     length := this.L.Len()
 	this.RUnlock()
 	return length
-}
-
-
-// 固定长度的链表
-type SafeListLimited struct {
-	maxSize int
-	SL      *SafeList
-}
-
-func NewSafeListLimited(maxSize int) *SafeListLimited {
-	return &SafeListLimited{SL: NewSafeList(), maxSize: maxSize}
-}
-
-func (this *SafeListLimited) PopBack() interface{} {
-	return this.SL.PopBack()
-}
-
-func (this *SafeListLimited) PopBackBy(max int) []interface{} {
-	return this.SL.BatchPopBack(max)
-}
-
-func (this *SafeListLimited) PushFront(v interface{}) bool {
-	if this.SL.Len() >= this.maxSize {
-		return false
-	}
-
-	this.SL.PushFront(v)
-	return true
-}
-
-func (this *SafeListLimited) PushFrontBatch(vs []interface{}) bool {
-	if this.SL.Len() >= this.maxSize {
-		return false
-	}
-
-	this.SL.BatchPushFront(vs)
-	return true
-}
-
-func (this *SafeListLimited) PushFrontViolently(v interface{}) bool {
-	this.SL.PushFront(v)
-	if this.SL.Len() > this.maxSize {
-		this.SL.PopBack()
-	}
-
-	return true
-}
-
-func (this *SafeListLimited) RemoveAll() {
-	this.SL.RemoveAll()
-}
-
-func (this *SafeListLimited) FrontAll() []interface{} {
-	return this.SL.FrontAll()
-}
-
-// 获取链表头值(不删除)
-func (this *SafeListLimited) FrontItem() interface{} {
-    return this.SL.FrontItem()
-}
-
-// 获取链表尾值(不删除)
-func (this *SafeListLimited) BackItem() interface{} {
-    return this.SL.BackItem()
-}
-
-// 获取表头指针
-func (this *SafeListLimited) Front() *list.Element {
-    return this.SL.Front()
-}
-
-// 获取表位指针
-func (this *SafeListLimited) Back() *list.Element {
-    return this.SL.Back()
-}
-
-func (this *SafeListLimited) Len() int {
-	return this.SL.Len()
 }
