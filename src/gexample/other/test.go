@@ -8,7 +8,7 @@ import (
     "g/util/grand"
     "g/encoding/gjson"
     "g/encoding/gcompress"
-    "g/core/types/glist"
+    "g/os/gcache"
 )
 
 type ST struct {
@@ -107,12 +107,12 @@ type T1 struct {
 
 
 func main() {
-    l := glist.NewSafeList()
-    l.PushFront(1)
-    l.PushFront(2)
-    l.PushFront(3)
-    l.InsertAfter(2, l.Front())
-    fmt.Println(l.FrontAll())
+    gcache.Set("t", struct {}{}, 100000)
+    if gcache.Get("t") != nil {
+        fmt.Println(gcache.Get("t"))
+    } else {
+        fmt.Println("nil")
+    }
     return
     //j := gjson.DecodeToJson(gfile.GetContents("/home/john/Workspace/Go/gluster/src/gluster/gluster_server.json"))
     //fmt.Println(j.GetBool("Scan2"))
