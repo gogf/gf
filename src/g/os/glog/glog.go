@@ -34,6 +34,10 @@ func SetLogPath(path string) {
     logger.SetLogPath(path)
 }
 
+func SetDebug(debug bool) {
+    logger.SetDebug(debug)
+}
+
 func GetLogPath() string {
     return logger.GetLogPath()
 }
