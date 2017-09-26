@@ -131,6 +131,30 @@ func Criticalf(format string, v ...interface{}) {
     logger.Criticalf(format, v...)
 }
 
+func Infofln(format string, v ...interface{}) {
+    logger.Infofln(format, v...)
+}
+
+func Debugfln(format string, v ...interface{}) {
+    logger.Debugfln(format, v...)
+}
+
+func Noticefln(format string, v ...interface{}) {
+    logger.Noticefln(format, v...)
+}
+
+func Warningfln(format string, v ...interface{}) {
+    logger.Warningfln(format, v...)
+}
+
+func Errorfln(format string, v ...interface{}) {
+    logger.Errorfln(format, v...)
+}
+
+func Criticalfln(format string, v ...interface{}) {
+    logger.Criticalfln(format, v...)
+}
+
 func (l *Logger) GetLogIO() io.Writer {
     l.mutex.RLock()
     r := l.logio
@@ -336,4 +360,28 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 
 func (l *Logger) Criticalf(format string, v ...interface{}) {
     l.errPrint("[CRIT] " + fmt.Sprintf(format, v...))
+}
+
+func (l *Logger) Infofln(format string, v ...interface{}) {
+    l.stdPrint("[INFO] " + fmt.Sprintf(format, v...) + "\n")
+}
+
+func (l *Logger) Debugfln(format string, v ...interface{}) {
+    l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...) + "\n")
+}
+
+func (l *Logger) Noticefln(format string, v ...interface{}) {
+    l.errPrint("[NOTI] " + fmt.Sprintf(format, v...) + "\n")
+}
+
+func (l *Logger) Warningfln(format string, v ...interface{}) {
+    l.errPrint("[WARN] " + fmt.Sprintf(format, v...) + "\n")
+}
+
+func (l *Logger) Errorfln(format string, v ...interface{}) {
+    l.errPrint("[ERRO] " + fmt.Sprintf(format, v...) + "\n")
+}
+
+func (l *Logger) Criticalfln(format string, v ...interface{}) {
+    l.errPrint("[CRIT] " + fmt.Sprintf(format, v...) + "\n")
 }

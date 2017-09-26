@@ -6,9 +6,7 @@ import (
     "g/core/types/gmap"
     "g/os/gfile"
     "g/util/grand"
-    "g/encoding/gjson"
-    "g/encoding/gcompress"
-    "g/os/gcache"
+    "sync/atomic"
 )
 
 type ST struct {
@@ -107,12 +105,9 @@ type T1 struct {
 
 
 func main() {
-    gcache.Set("t", struct {}{}, 100000)
-    if gcache.Get("t") != nil {
-        fmt.Println(gcache.Get("t"))
-    } else {
-        fmt.Println("nil")
-    }
+    var i int64 = 1
+    atomic.SwapInt64(&i, 2)
+    fmt.Println(atomic.LoadInt64(&i))
     return
     //j := gjson.DecodeToJson(gfile.GetContents("/home/john/Workspace/Go/gluster/src/gluster/gluster_server.json"))
     //fmt.Println(j.GetBool("Scan2"))
@@ -141,18 +136,18 @@ func main() {
 //    var wg sync.WaitGroup
 
     // {"DataMap":{"name2":"john2"},"LastLogId":45766}
-    m := make(map[string]string)
-    for i := 0; i<1000000; i++ {
-        key   := fmt.Sprintf("key_%d", i)
-        value := fmt.Sprintf("value_%d", i)
-        m[key] = value
-    }
-    path    := "/home/john/temp/gluster.data.db"
-    content := map[string]interface{}{
-        "DataMap"   : m,
-        "LastLogId" : 9999991721,
-    }
-    gfile.PutBinContents(path, gcompress.Zlib([]byte(gjson.Encode(content))))
+    //m := make(map[string]string)
+    //for i := 0; i<1000000; i++ {
+    //    key   := fmt.Sprintf("key_%d", i)
+    //    value := fmt.Sprintf("value_%d", i)
+    //    m[key] = value
+    //}
+    //path    := "/home/john/temp/gluster.data.db"
+    //content := map[string]interface{}{
+    //    "DataMap"   : m,
+    //    "LastLogId" : 9999991721,
+    //}
+    //gfile.PutBinContents(path, gcompress.Zlib([]byte(gjson.Encode(content))))
 
 return
     start   := gtime.Second()
