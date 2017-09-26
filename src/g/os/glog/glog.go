@@ -15,6 +15,7 @@ import (
 type Logger struct {
     mutex        sync.RWMutex
     logio        io.Writer
+    debug        bool         // 是否允许输出DEBUG信息
     logpath      string       // 日志写入的目录路径
     lastlogdate  string       // 上一次写入日志的日期，例如: 2006-01-02
 }
@@ -24,7 +25,9 @@ var logger = New()
 
 // 新建自定义的日志操作对象
 func New() *Logger {
-    return &Logger{ }
+    return &Logger{
+        debug : true,
+    }
 }
 
 func SetLogPath(path string) {
@@ -162,6 +165,13 @@ func (l *Logger) GetLogIO() io.Writer {
     return r
 }
 
+func (l *Logger) GetDebug() bool {
+    l.mutex.RLock()
+    r := l.debug
+    l.mutex.RUnlock()
+    return r
+}
+
 func (l *Logger) GetLogPath() string {
     l.mutex.RLock()
     r := l.logpath
@@ -180,6 +190,12 @@ func (l *Logger) SetLogIO(w io.Writer) {
     l.mutex.RLock()
     l.logio = w
     l.mutex.RUnlock()
+}
+
+func (l *Logger) SetDebug(debug bool) {
+    l.mutex.Lock()
+    l.debug = debug
+    l.mutex.Unlock()
 }
 
 // 设置日志文件的存储目录路径
@@ -319,7 +335,9 @@ func (l *Logger) Info(v ...interface{}) {
 }
 
 func (l *Logger) Debug(v ...interface{}) {
-    l.stdPrint("[DEBU] " + fmt.Sprintln(v...))
+    if l.GetDebug() {
+        l.stdPrint("[DEBU] " + fmt.Sprintln(v...))
+    }
 }
 
 func (l *Logger) Notice(v ...interface{}) {
@@ -343,7 +361,9 @@ func (l *Logger) Infof(format string, v ...interface{}) {
 }
 
 func (l *Logger) Debugf(format string, v ...interface{}) {
-    l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...))
+    if l.GetDebug() {
+        l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...))
+    }
 }
 
 func (l *Logger) Noticef(format string, v ...interface{}) {
@@ -367,7 +387,9 @@ func (l *Logger) Infofln(format string, v ...interface{}) {
 }
 
 func (l *Logger) Debugfln(format string, v ...interface{}) {
-    l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...) + "\n")
+    if l.GetDebug() {
+        l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...) + "\n")
+    }
 }
 
 func (l *Logger) Noticefln(format string, v ...interface{}) {
