@@ -2,113 +2,42 @@ package main
 
 import (
     "fmt"
-    "g/util/gtime"
-    "g/core/types/gmap"
-    "g/os/gfile"
-    "g/util/grand"
-    "sync/atomic"
+    "bytes"
+    "encoding/binary"
 )
 
-type ST struct {
-    I int64
+// 二进制打包
+func encode(vs ...interface{}) []byte {
+    buf := new(bytes.Buffer)
+    for i := 0; i < len(vs); i++ {
+        binary.Write(buf, binary.LittleEndian, vs[i])
+    }
+    return buf.Bytes()
 }
 
-//func check(id int64) bool {
-//    path      := "/home/john/Workspace/Go/gluster/bin/gluster_0.8/gluster.db/gluster.entry.1.db"
-//    file, err := gfile.OpenWithFlag(path, os.O_RDONLY)
-//    if err == nil {
-//        defer file.Close()
-//        buffer := bufio.NewReader(file)
-//        for {
-//            line, _, err := buffer.ReadLine()
-//            if err == nil {
-//                var entry gluster.LogEntry
-//                if json.Unmarshal(line, &entry) == nil {
-//                    if entry.Id == id {
-//                        return true
-//                    } else if entry.Id > id {
-//                        return false
-//                    }
-//                }
-//            } else {
-//                break;
-//            }
-//        }
-//    }
-//    return false
-//}
-//
-//func check2(id int64) bool {
-//    path      := "/home/john/Workspace/Go/gluster/bin/gluster_0.8/gluster.db/gluster.entry.1.db"
-//    content   := gfile.GetBinContents(path)
-//    slices    := bytes.SplitN(content, []byte("\n"), -1)
-//    for _, line := range slices {
-//        var entry gluster.LogEntry
-//        if json.Unmarshal(line, &entry) == nil {
-//            if entry.Id == id {
-//                return true
-//            } else if entry.Id > id {
-//                return false
-//            }
-//        }
-//    }
-//    return false
-//}
-//
-//func getLogEntryListFromFileById(start int64, checkid int64, max int) []gluster.LogEntry {
-//    id    := start
-//    match := false
-//    array := make([]gluster.LogEntry, 0)
-//    for {
-//        path      := "/home/john/Workspace/Go/gluster/bin/gluster_0.8/gluster.db/gluster.entry.1.db"
-//        file, err := gfile.OpenWithFlag(path, os.O_RDONLY)
-//        if err == nil {
-//            defer file.Close()
-//            buffer := bufio.NewReader(file)
-//            for {
-//                if len(array) == max {
-//                    return array
-//                }
-//                line, _, err := buffer.ReadLine()
-//                if err == nil {
-//                    var entry gluster.LogEntry
-//                    if err := json.Unmarshal(line, &entry); err == nil {
-//                        if entry.Id == checkid {
-//                            match = true
-//                        } else if entry.Id > checkid {
-//                            if match {
-//                                array = append(array, entry)
-//                            } else {
-//                                break;
-//                            }
-//                        }
-//                    } else {
-//                        return array
-//                    }
-//                } else {
-//                    return array
-//                }
-//            }
-//        } else {
-//            break;
-//        }
-//        // 下一批次
-//        id += 100000
-//    }
-//    return array
-//}
-
-type T1 struct {
-    m *gmap.StringInterfaceMap
+// 二进制解包
+func decode(b []byte, vs ...interface{}) {
+    buf := bytes.NewBuffer(b)
+    for i := 0; i < len(vs); i++ {
+        binary.Read(buf, binary.LittleEndian, vs[i])
+    }
 }
-
-
 
 func main() {
-    var i int64 = 1
-    atomic.SwapInt64(&i, 2)
-    fmt.Println(atomic.LoadInt64(&i))
+    var i1 int32 = 1
+    var i2 int32 = 2
+    var i3 int32 = 3
+    var i4, i5, i6 int
+    b := encode(i1, i2, i3)
+    fmt.Println(b)
+
+    decode(b, &i4, &i5, &i6)
+    fmt.Println(i4, i5, i6)
     return
+    //fmt.Println("\a")
+    ////gfile.PutContents("/tmp/test", "123\0456\0789")
+    ////fmt.Println(gfile.GetContents("/tmp/test"))
+    //return
     //j := gjson.DecodeToJson(gfile.GetContents("/home/john/Workspace/Go/gluster/src/gluster/gluster_server.json"))
     //fmt.Println(j.GetBool("Scan2"))
     //return
@@ -128,10 +57,19 @@ func main() {
 //    fmt.Println(check2(999893892))
 //    fmt.Println(gtime.Millisecond() - start2)
 //    return
-//    path := "/home/john/temp/index.html"
-//    //gfile.PutBinContents(path, gcompress.Zlib(gfile.GetBinContents(path)))
-//    file, _ := gfile.Open(path)
-//    fmt.Println(gfile.GetNextCharOffset(file, "\n", 0))
+
+//    s := `74142374,300,{"key_99999":"value_99999"}`
+//    reg, _ := regexp.Compile(`^(\d+),.+$`)
+//    results := reg.FindStringSubmatch(s)
+//    fmt.Println(results)
+//    return
+//    //path1 := "/home/john/temp/temp"
+//    path2 := "/home/john/temp/temp2"
+//    //path3 := "/home/john/temp/gluster"
+//    gfile.PutBinContents(path2, []byte("123456\n"))
+//    //gfile.PutBinContents(path1, gcompress.Zlib(gfile.GetBinContents(path3)))
+//    //file, _ := gfile.Open(path1)
+//    //fmt.Println(gfile.GetNextCharOffset(file, "\0000", 0))
 //return
 //    var wg sync.WaitGroup
 
@@ -149,19 +87,19 @@ func main() {
     //}
     //gfile.PutBinContents(path, gcompress.Zlib([]byte(gjson.Encode(content))))
 
-return
-    start   := gtime.Second()
-
-    for n := 0; n < 10; n++ {
-        content := ""
-        path    := fmt.Sprintf("/home/john/temp/gluster.db/gluster.entry.%d.db", n)
-        for i := n*100000; i < (n+1)*100000; i++ {
-            id      := i*10000+grand.Rand(0, 9999)
-            content += fmt.Sprintf("{\"Id\":%d,\"Act\":300,\"Items\":{\"key_%d\":\"value_%d\"}}\n", id, i, i)
-        }
-        gfile.PutContents(path, content)
-        fmt.Println("done:", n)
-    }
+//return
+//    start   := gtime.Second()
+//
+//    for n := 0; n < 10; n++ {
+//        content := ""
+//        path    := fmt.Sprintf("/home/john/temp/gluster.db/gluster.entry.%d.db", n)
+//        for i := n*100000; i < (n+1)*100000; i++ {
+//            id      := i*10000+grand.Rand(0, 9999)
+//            content += fmt.Sprintf("{\"Id\":%d,\"Act\":300,\"Items\":{\"key_%d\":\"value_%d\"}}\n", id, i, i)
+//        }
+//        gfile.PutContents(path, content)
+//        fmt.Println("done:", n)
+//    }
 
     //for i := 0; i< 500; i++ {
     //    wg.Add(1)
@@ -175,6 +113,6 @@ return
     //}
     //wg.Wait()
 
-    fmt.Println(gtime.Second() - start)
+    //fmt.Println(gtime.Second() - start)
 
 }
