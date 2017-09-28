@@ -4,7 +4,8 @@ import (
     "fmt"
     "bytes"
     "encoding/binary"
-    "g/encoding/gbinary"
+    "g/encoding/gcrc32"
+    "strconv"
 )
 
 // 二进制打包
@@ -25,10 +26,13 @@ func decode(b []byte, vs ...interface{}) {
 }
 
 func main() {
-    b := encode(int32(10), int32(20), int32(30))
-    fmt.Println(b)
+    //hash := crc32.NewIEEE()
 
-    fmt.Println(gbinary.DecodeToInt32(b[4:]))
+    check_str := "Discard medicine more than two years old."
+    fmt.Println(gcrc32.EncodeString(check_str))
+    fmt.Printf("%x\n", gcrc32.EncodeString(check_str))
+    fmt.Println(strconv.ParseInt("6b9cdfe7", 16, 32))
+
     return
     //fmt.Println("\a")
     ////gfile.PutContents("/tmp/test", "123\0456\0789")

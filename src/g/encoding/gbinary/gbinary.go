@@ -38,6 +38,15 @@ func DecodeToInt32(b []byte) (int32, error) {
     return i, nil
 }
 
+func DecodeToUint32(b []byte) (uint32, error) {
+    var i uint32
+    err := Decode(b, &i)
+    if err != nil {
+        return 0, err
+    }
+    return i, nil
+}
+
 func DecodeToInt64(b []byte) (int64, error) {
     var i int64
     err := Decode(b, &i)
@@ -47,7 +56,16 @@ func DecodeToInt64(b []byte) (int64, error) {
     return i, nil
 }
 
-func DecodeToBytes(b []byte, size int) ([]byte, error) {
+func DecodeToUint64(b []byte) (uint64, error) {
+    var i uint64
+    err := Decode(b, &i)
+    if err != nil {
+        return 0, err
+    }
+    return i, nil
+}
+
+func DecodeToBytes(b []byte, size int32) ([]byte, error) {
     r := make([]byte, size)
     err := Decode(b, &r)
     if err != nil {
@@ -56,7 +74,7 @@ func DecodeToBytes(b []byte, size int) ([]byte, error) {
     return r, nil
 }
 
-func DecodeToString(b []byte, size int) (string, error) {
+func DecodeToString(b []byte, size int32) (string, error) {
     r, err := DecodeToBytes(b, size)
     if err != nil {
         return "", err
