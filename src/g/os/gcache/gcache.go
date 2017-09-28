@@ -4,14 +4,17 @@ import (
     "sync"
     "g/util/gtime"
     "time"
-    "g/encoding/gmd5"
-    "strings"
     "g/encoding/gjson"
+    "hash/crc32"
+)
+
+const (
+    gCACHE_GROUP_SIZE = 10 // 缓存分区大小，不能超过uint8的最大值
 )
 
 type Cache struct {
     sync.RWMutex
-    m map[string]*CacheMap // 以键名首字母为索引
+    m map[uint8]*CacheMap     // 以分区大小数字作为索引
 }
 
 type CacheMap  struct {
@@ -31,24 +34,16 @@ var cache *Cache = New()
 // Cache对象按照缓存键名首字母做了分组
 func New() *Cache {
     c := &Cache {
-        m : make(map[string]*CacheMap),
-    }
-    // 0 - 9
-    for i := 48; i <= 57; i++ {
-        m := &CacheMap {
-            m1 : make(map[string]interface{}),
-            m2 : make(map[string]CacheItem),
-        }
-        c.m[string(i)] = m
-        go m.autoClearLoop()
+        m : make(map[uint8]*CacheMap),
     }
     // a - z
-    for i := 97; i <= 122; i++ {
+    var i uint8 = 0
+    for ; i < gCACHE_GROUP_SIZE; i++ {
         m := &CacheMap {
             m1 : make(map[string]interface{}),
             m2 : make(map[string]CacheItem),
         }
-        c.m[string(i)] = m
+        c.m[i] = m
         go m.autoClearLoop()
     }
     return c
@@ -230,9 +225,8 @@ func (c *Cache) Import(s string) {
     }
 }
 
-func (c *Cache) getIndex(k string) string {
-    s := gmd5.EncodeString(k)
-    return strings.ToLower(string(s[0]))
+func (c *Cache) getIndex(k string) uint8 {
+    return uint8(crc32.ChecksumIEEE([]byte(k)) % gCACHE_GROUP_SIZE)
 }
 
 // 设置kv缓存键值对，过期时间单位为毫秒
