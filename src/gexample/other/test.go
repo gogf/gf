@@ -4,6 +4,7 @@ import (
     "fmt"
     "bytes"
     "encoding/binary"
+    "g/encoding/gbinary"
 )
 
 // 二进制打包
@@ -24,15 +25,10 @@ func decode(b []byte, vs ...interface{}) {
 }
 
 func main() {
-    var i1 int32 = 1
-    var i2 int32 = 2
-    var i3 int32 = 3
-    var i4, i5, i6 int
-    b := encode(i1, i2, i3)
+    b := encode(int32(10), int32(20), int32(30))
     fmt.Println(b)
 
-    decode(b, &i4, &i5, &i6)
-    fmt.Println(i4, i5, i6)
+    fmt.Println(gbinary.DecodeToInt32(b[4:]))
     return
     //fmt.Println("\a")
     ////gfile.PutContents("/tmp/test", "123\0456\0789")
