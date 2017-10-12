@@ -1,17 +1,12 @@
 package main
 
 import (
+    "g/os/gfile"
     "fmt"
-    "g/os/gcache"
-    "time"
 )
 
 
 
 func main() {
-    gcache.Set("key", 10, 1000)
-    time.Sleep(time.Second)
-    fmt.Println(gcache.Get("key"))
-    time.Sleep(time.Second)
-    fmt.Println(gcache.Get("key"))
+    fmt.Println(gfile.PutContents("/tmp/123/1/1/1/1/1/test", "12345678"))
 }

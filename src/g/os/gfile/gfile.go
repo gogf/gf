@@ -286,6 +286,12 @@ func GetBinContents(path string) []byte {
 
 // 写入文件内容
 func putContents(path string, data []byte, flag int, perm os.FileMode) error {
+    // 支持目录递归创建
+    dir := Dir(path)
+    if !Exists(dir) {
+        Mkdir(dir)
+    }
+    // 创建/打开文件
     f, err := os.OpenFile(path, flag, perm)
     if err != nil {
         return err
@@ -337,7 +343,7 @@ func Basename(path string) string {
     return filepath.Base(path)
 }
 
-// 获取指定文件路径的目录地址
+// 获取指定文件路径的目录地址绝对路径
 func Dir(path string) string {
     return filepath.Dir(path)
 }
