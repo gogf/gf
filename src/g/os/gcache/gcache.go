@@ -19,9 +19,8 @@ type Cache struct {
 
 type CacheMap  struct {
     sync.RWMutex
-    deleted bool              // 对象是否已删除，以便判断停止goroutine
-    m1 map[string]interface{} // 不过期的键值对
-    m2 map[string]CacheItem   // 有过期时间的键值对
+    deleted bool             // 对象是否已删除，以便判断停止goroutine
+    m map[string]CacheItem   // 键值对
 }
 
 type CacheItem struct {
@@ -36,12 +35,10 @@ func New() *Cache {
     c := &Cache {
         m : make(map[uint8]*CacheMap),
     }
-    // a - z
     var i uint8 = 0
     for ; i < gCACHE_GROUP_SIZE; i++ {
         m := &CacheMap {
-            m1 : make(map[string]interface{}),
-            m2 : make(map[string]CacheItem),
+            m : make(map[string]CacheItem),
         }
         c.m[i] = m
         go m.autoClearLoop()
@@ -120,10 +117,7 @@ func (c *Cache) Keys() []string {
     c.RLock()
     for _, cm := range c.m {
         cm.RLock()
-        for k1, _ := range cm.m1 {
-            l = append(l, k1)
-        }
-        for k2, _ := range cm.m2 {
+        for k2, _ := range cm.m {
             l = append(l, k2)
         }
         cm.RUnlock()
@@ -138,10 +132,7 @@ func (c *Cache) Values() []interface{} {
     c.RLock()
     for _, cm := range c.m {
         cm.RLock()
-        for _, v1 := range cm.m1 {
-            l = append(l, v1)
-        }
-        for _, v2 := range cm.m2 {
+        for _, v2 := range cm.m {
             l = append(l, v2.v)
         }
         cm.RUnlock()
@@ -156,8 +147,7 @@ func (c *Cache) Size() int {
     c.RLock()
     for _, cm := range c.m {
         cm.RLock()
-        size += len(cm.m1)
-        size += len(cm.m2)
+        size += len(cm.m)
         cm.RUnlock()
     }
     c.RUnlock()
@@ -192,14 +182,7 @@ func (c *Cache) Export() string {
     c.RLock()
     for _, cm := range c.m {
         cm.RLock()
-        for k1, v1 := range cm.m1 {
-            data[k1] = make(map[string]interface{})
-            data[k1] = map[string]interface{}{
-                "v": v1,
-                "e": 0,
-            }
-        }
-        for k2, v2 := range cm.m2 {
+        for k2, v2 := range cm.m {
             data[k2] = make(map[string]interface{})
             data[k2] = map[string]interface{}{
                 "v": v2.v,
@@ -231,18 +214,12 @@ func (c *Cache) getIndex(k string) uint8 {
 
 // 设置kv缓存键值对，过期时间单位为毫秒
 func (cm *CacheMap) Set(k string, v interface{}, expired int64)  {
-    cm.Lock()
-    if expired == 0 {
-        cm.m1[k] = v
-        if _, ok := cm.m2[k]; ok {
-            delete(cm.m2, k)
-        }
-    } else {
-        cm.m2[k] = CacheItem{v: v, e: gtime.Millisecond() + int64(expired)}
-        if _, ok := cm.m1[k]; ok {
-            delete(cm.m1, k)
-        }
+    var e int64
+    if expired > 0 {
+        e = gtime.Millisecond() + int64(expired)
     }
+    cm.Lock()
+    cm.m[k] = CacheItem{v: v, e: e}
     cm.Unlock()
 }
 
@@ -250,13 +227,11 @@ func (cm *CacheMap) Set(k string, v interface{}, expired int64)  {
 func (cm *CacheMap) Get(k string) interface{} {
     var v interface{}
     cm.RLock()
-    if r1, ok := cm.m1[k]; ok {
-        v = r1
-    } else if r2, ok := cm.m2[k]; ok {
-        if r2.e < gtime.Millisecond() {
+    if r, ok := cm.m[k]; ok {
+        if r.e > 0 && r.e < gtime.Millisecond() {
             v = nil
         } else {
-            v = r2.v
+            v = r.v
         }
     }
     cm.RUnlock()
@@ -266,8 +241,7 @@ func (cm *CacheMap) Get(k string) interface{} {
 // 删除指定键值对
 func (cm *CacheMap) Remove(k string) {
     cm.Lock()
-    delete(cm.m1, k)
-    delete(cm.m2, k)
+    delete(cm.m, k)
     cm.Unlock()
 }
 
@@ -276,16 +250,17 @@ func (cm *CacheMap) autoClearLoop() {
     for !cm.deleted {
         expired := make([]string, 0)
         cm.RLock()
-        for k, v := range cm.m2 {
-            if v.e < gtime.Millisecond() {
+        for k, v := range cm.m {
+            if v.e > 0 && v.e < gtime.Millisecond() {
                 expired = append(expired, k)
             }
         }
         cm.RUnlock()
+
         if len(expired) > 0 {
             cm.Lock()
             for _, k := range expired {
-                delete(cm.m2, k)
+                delete(cm.m, k)
             }
             cm.Unlock()
         }
