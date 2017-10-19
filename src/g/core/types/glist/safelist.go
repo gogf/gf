@@ -58,7 +58,7 @@ func (this *SafeList) BatchPushFront(vs []interface{}) {
 	this.Unlock()
 }
 
-// 从链表尾端出栈数据项
+// 从链表尾端出栈数据项(删除)
 func (this *SafeList) PopBack() interface{} {
 	this.Lock()
 	if elem := this.L.Back(); elem != nil {
@@ -70,7 +70,7 @@ func (this *SafeList) PopBack() interface{} {
 	return nil
 }
 
-// 批量从链表尾端出栈数据项
+// 批量从链表尾端出栈数据项(删除)
 func (this *SafeList) BatchPopBack(max int) []interface{} {
 	this.Lock()
 	count := this.L.Len()

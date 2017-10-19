@@ -42,7 +42,7 @@ func Create(path string) error {
 
 // 打开文件
 func Open(path string) (*os.File, error) {
-    f, err  := os.OpenFile(path, os.O_RDWR, 0755)
+    f, err  := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0755)
     if err != nil {
         return nil, err
     }
@@ -418,21 +418,9 @@ func GetNextCharOffset(file *os.File, char string, start int64) int64 {
 
 // 获得文件内容中两个offset之间的内容
 func GetBinContentByTwoOffsets(file *os.File, start int64, end int64) []byte {
-    if end < start {
+    buffer := make([]byte, end - start)
+    if _, err := file.ReadAt(buffer, start); err != nil {
         return nil
     }
-    char   := make([]byte, 1)
-    result := make([]byte, end - start + 1)
-    offset := start
-    index  := 0
-    for offset <= end {
-        _, err := file.ReadAt(char, offset)
-        if err != nil {
-            return result
-        }
-        result[index] = char[0]
-        index++
-        offset++
-    }
-    return result
+    return buffer
 }

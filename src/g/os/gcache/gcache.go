@@ -155,7 +155,7 @@ func (c *Cache) Size() int {
 }
 
 // 删除缓存对象
-func (c *Cache) Destroy()  {
+func (c *Cache) Close()  {
     c.RLock()
     for _, cm := range c.m {
         cm.Lock()
@@ -165,14 +165,6 @@ func (c *Cache) Destroy()  {
     c.RUnlock()
     c.Lock()
     c.m = nil
-    c.Unlock()
-}
-
-// 清空缓存对象（相当于新建一个新的缓存对象，旧的丢给GC处理）
-func (c *Cache) Clear() {
-    c.Destroy()
-    c.Lock()
-    c.m = New().m
     c.Unlock()
 }
 
