@@ -5,26 +5,29 @@ import (
     "os"
     "fmt"
     "g/util/gtime"
-    "github.com/syndtr/goleveldb/leveldb"
+    "g/encoding/gcrc32"
 )
 
 
 
 func main() {
-    fmt.Println(fmt.Sprintf("%d", "sgertertetretertertteterte"))
-    return
-    db, err := leveldb.OpenFile("/tmp/lv.db", nil)
-    defer db.Close()
+    //m := gmap.NewStringInterfaceMap()
     t1 := gtime.Microsecond()
-    err = db.Put([]byte("key"), []byte("value"), nil)
+    gcrc32.EncodeString("123")
     fmt.Println(gtime.Microsecond() - t1)
-
-    t2 := gtime.Microsecond()
-
-    fmt.Println(db.Get([]byte("key"), nil))
-    fmt.Println(gtime.Microsecond() - t2)
-
     return
+    //db, err := leveldb.OpenFile("/tmp/lv.db", nil)
+    //defer db.Close()
+    //t1 := gtime.Microsecond()
+    //err = db.Put([]byte("key"), []byte("value"), nil)
+    //fmt.Println(gtime.Microsecond() - t1)
+    //
+    //t2 := gtime.Microsecond()
+    //
+    //fmt.Println(db.Get([]byte("key"), nil))
+    //fmt.Println(gtime.Microsecond() - t2)
+    //
+    //return
     //db, err := bolt.Open("/tmp/my.db", 0600, nil)
     //if err != nil {
     //    log.Fatal(err)

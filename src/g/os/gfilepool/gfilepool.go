@@ -5,6 +5,8 @@ import (
     "g/core/types/glist"
     "g/util/gtime"
     "time"
+    "g/core/types/gmap"
+    "strconv"
 )
 
 // 文件指针池
@@ -12,7 +14,7 @@ type Pool struct {
     path    string          // 文件绝对路径
     flag    int             // 文件打开标识
     list    *glist.SafeList // 可用/闲置的文件指针链表
-    idlemax int32           // 闲置最大时间，超过该时间则被系统回收(秒)
+    idlemax int             // 闲置最大时间，超过该时间则被系统回收(秒)
     closed  bool            // 连接池是否已关闭
 }
 
@@ -23,8 +25,23 @@ type File struct {
     expire int64     // 过期时间
 }
 
+// 全局指针池，expire < 0表示不过期，expire = 0表示使用完立即回收，expire > 0表示超时回收
+var pools *gmap.StringInterfaceMap = gmap.NewStringInterfaceMap()
+
+// 获得文件对象，并自动创建指针池
+func OpenWithPool(path string, flag int, expire int) (*File, error) {
+    key    := path + strconv.Itoa(flag) + strconv.Itoa(expire)
+    result := pools.Get(key)
+    if result != nil {
+        return result.(*Pool).File()
+    }
+    pool := New(path, flag, expire)
+    pools.Set(key, pool)
+    return pool.File()
+}
+
 // 创建一个文件指针池，expire < 0表示不过期，expire = 0表示使用完立即回收，expire > 0表示超时回收
-func New(path string, flag int, expire int32) *Pool {
+func New(path string, flag int, expire int) *Pool {
     r := &Pool {
         path    : path,
         flag    : flag,
@@ -39,6 +56,9 @@ func New(path string, flag int, expire int32) *Pool {
                 if r != nil && r.Value != nil {
                     f := r.Value.(*File)
                     if f.expire <= gtime.Second() {
+                        if f.file != nil {
+                            f.file.Close()
+                        }
                         p.list.Remove(r)
                         continue
                     }

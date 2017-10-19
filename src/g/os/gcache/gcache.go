@@ -4,12 +4,10 @@ import (
     "sync"
     "g/util/gtime"
     "time"
-    "g/encoding/gjson"
-    "hash/crc32"
 )
 
 const (
-    gCACHE_GROUP_SIZE = 10 // 缓存分区大小，不能超过uint8的最大值
+    gCACHE_GROUP_SIZE = 4 // 缓存分区大小，不能超过uint8的最大值
 )
 
 type Cache struct {
@@ -24,10 +22,11 @@ type CacheMap  struct {
 }
 
 type CacheItem struct {
-    v interface{}
-    e int64
+    v interface{} // 缓存键值
+    e int64       // 过期时间
 }
 
+// 全局缓存管理对象
 var cache *Cache = New()
 
 // Cache对象按照缓存键名首字母做了分组
@@ -163,45 +162,15 @@ func (c *Cache) Close()  {
         cm.Unlock()
     }
     c.RUnlock()
+
     c.Lock()
     c.m = nil
     c.Unlock()
 }
 
-// 将数据导出为JSON字符串
-func (c *Cache) Export() string {
-    data := make(map[string]interface{})
-    c.RLock()
-    for _, cm := range c.m {
-        cm.RLock()
-        for k2, v2 := range cm.m {
-            data[k2] = make(map[string]interface{})
-            data[k2] = map[string]interface{}{
-                "v": v2.v,
-                "e": v2.e,
-            }
-        }
-        cm.RUnlock()
-    }
-    c.RUnlock()
-    return gjson.Encode(data)
-}
-
-// 将导出的JSON字符串导入到缓存对象中
-func (c *Cache) Import(s string) {
-    data := make(map[string]map[string]interface{})
-    gjson.DecodeTo(s, &data)
-    for k, m := range data {
-        // Set的第三个参数是过期时间数，因此这里需要计算导入的时候还剩多少时间过期
-        expire := gtime.Millisecond() - int64(m["e"].(float64))
-        if expire > 0 {
-            c.Set(k, m["v"], expire)
-        }
-    }
-}
-
+// 计算缓存的索引
 func (c *Cache) getIndex(k string) uint8 {
-    return uint8(crc32.ChecksumIEEE([]byte(k)) % gCACHE_GROUP_SIZE)
+    return uint8(k[0] % gCACHE_GROUP_SIZE)
 }
 
 // 设置kv缓存键值对，过期时间单位为毫秒
