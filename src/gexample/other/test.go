@@ -4,18 +4,33 @@ import (
     "g/os/gfile"
     "os"
     "fmt"
-    "g/util/gtime"
-    "g/encoding/gcrc32"
+    "g/core/types/gbtree"
 )
 
 
 
 func main() {
-    //m := gmap.NewStringInterfaceMap()
-    t1 := gtime.Microsecond()
-    gcrc32.EncodeString("123")
-    fmt.Println(gtime.Microsecond() - t1)
+    btree := gbtree.New(3)
+    //t1 := gtime.Microsecond()
+    btree.Set([]byte("key1"), []byte("value1"))
+    btree.Set([]byte("key2"), []byte("value2"))
+    btree.Set([]byte("key3"), []byte("value3"))
+    btree.Set([]byte("key4"), []byte("value4"))
+    btree.Set([]byte("key5"), []byte("value5"))
+    //btree.Set([]byte("key6"), []byte("value6"))
+    //btree.Set([]byte("key7"), []byte("value7"))
+    //btree.Set([]byte("key8"), []byte("value8"))
+    //btree.Set([]byte("key9"), []byte("value9"))
+    //fmt.Println(gtime.Microsecond() - t1)
+    //t2 := gtime.Microsecond()
+    btree.Print()
+    //fmt.Println(gtime.Microsecond() - t2)
     return
+    ////m := gmap.NewStringInterfaceMap()
+    //t1 := gtime.Microsecond()
+    //gcrc32.EncodeString("123")
+    //fmt.Println(gtime.Microsecond() - t1)
+    //return
     //db, err := leveldb.OpenFile("/tmp/lv.db", nil)
     //defer db.Close()
     //t1 := gtime.Microsecond()
