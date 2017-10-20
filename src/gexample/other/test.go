@@ -5,26 +5,29 @@ import (
     "os"
     "fmt"
     "g/core/types/gbtree"
+    "g/util/gtime"
 )
 
 
 
 func main() {
     btree := gbtree.New(3)
-    //t1 := gtime.Microsecond()
-    btree.Set([]byte("key1"), []byte("value1"))
-    btree.Set([]byte("key2"), []byte("value2"))
-    //btree.Set([]byte("key3"), []byte("value3"))
-    //btree.Set([]byte("key4"), []byte("value4"))
-    //btree.Set([]byte("key5"), []byte("value5"))
-    //btree.Set([]byte("key6"), []byte("value6"))
-    //btree.Set([]byte("key7"), []byte("value7"))
-    //btree.Set([]byte("key8"), []byte("value8"))
-    //btree.Set([]byte("key9"), []byte("value9"))
-    //fmt.Println(gtime.Microsecond() - t1)
+    t1 := gtime.Microsecond()
+    for i := 1; i <= 11; i++ {
+        btree.Set([]byte{byte(i)}, []byte{byte(i)})
+    }
+    fmt.Println(gtime.Microsecond() - t1)
+    btree.Print()
+    fmt.Println()
+    fmt.Println()
+    btree.Remove([]byte{11})
+    btree.Print()
+
     //t2 := gtime.Microsecond()
-    //btree.Print()
+    //btree.Get([]byte("key2"))
+    //fmt.Println(btree.Get([]byte{200}))
     //fmt.Println(gtime.Microsecond() - t2)
+
     return
     ////m := gmap.NewStringInterfaceMap()
     //t1 := gtime.Microsecond()
