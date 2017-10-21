@@ -5,27 +5,25 @@ import (
     "os"
     "fmt"
     "g/encoding/ghash"
-    "g/util/gtime"
-    "strconv"
 )
 
 
 
 func main() {
-    t1 := gtime.Second()
-    m := make(map[uint64]bool)
-    c := 0
-    for i := 0; i < 10000000; i++ {
-        key := ghash.SDBMHash64([]byte("this is test key" + strconv.Itoa(i)))
-        if _, ok := m[key]; ok {
-            c++
-        } else {
-            m[key] = true
-        }
-    }
-    fmt.Println(gtime.Second() - t1)
-    fmt.Println("conflicts:", c)
-    //fmt.Println(ghash.BKDRHash([]byte("johnWRWEREWREWRWEREWRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")))
+    //t1 := gtime.Second()
+    //m := make(map[uint64]bool)
+    //c := 0
+    //for i := 0; i < 100000000; i++ {
+    //    key := ghash.SDBMHash64([]byte("this is test key" + strconv.Itoa(i)))
+    //    if _, ok := m[key]; ok {
+    //        c++
+    //    } else {
+    //        m[key] = true
+    //    }
+    //}
+    //fmt.Println(gtime.Second() - t1)
+    //fmt.Println("conflicts:", c)
+    fmt.Println(ghash.BKDRHash([]byte("johnWRWEREWREWRWEREWRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")))
     //t1 := gtime.Microsecond()
     //fmt.Println(ghash.BKDRHash([]byte("john")))
     //fmt.Println(ghash.ELFHash([]byte("john")))

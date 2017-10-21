@@ -4,6 +4,7 @@ import (
     "sync"
     "g/util/gtime"
     "time"
+    "g/encoding/ghash"
 )
 
 const (
@@ -170,7 +171,7 @@ func (c *Cache) Close()  {
 
 // 计算缓存的索引
 func (c *Cache) getIndex(k string) uint8 {
-    return uint8(k[0] % gCACHE_GROUP_SIZE)
+    return uint8(ghash.BKDRHash([]byte(k)) % gCACHE_GROUP_SIZE)
 }
 
 // 设置kv缓存键值对，过期时间单位为毫秒
