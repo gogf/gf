@@ -1,15 +1,14 @@
 // 这是一颗改进的B树
+// @todo 未完成，暂不能使用
 package gbtree
 
 import (
-    "g/core/types/gset"
-    "fmt"
-    "unsafe"
     "math"
 )
 
 // B树对象
 type Tree struct {
+    min   int   // 最小数据项数
     max   int   // 最大数据项数
     root *Node  // 根节点数据块
 }
@@ -41,6 +40,7 @@ type Data struct {
 func New(m int) *Tree {
     // 构建一棵m阶树
     tree := &Tree{
+        min : int(math.Ceil(float64(m)/2)) - 1,
         max : m,
     }
     // 初始化根节点
@@ -76,148 +76,6 @@ func compareBytes (v1, v2 []byte) int8 {
         }
     }
     return 0
-}
-
-// 节点分裂检查
-func (node *Node) checkSplit() {
-    if len(node.items) == node.tree.max {
-        mid  := int(math.Ceil(float64(len(node.items))/2)) - 1
-        item := node.items[mid]
-        if node.parent != nil {
-            // 新增分裂节点
-            noden := &Node {
-                tree   : node.tree,
-                parent : node.parent,
-                items  : node.items[mid + 1:],
-            }
-            // 当前节点分裂
-            node.items  = node.items[0 : mid]
-            item.node   = node.parent
-            item.childl = node
-            item.childr = noden
-            // 替换分列节点中的item的node为新node
-            for _, v := range noden.items {
-                v.node = noden
-                if v.childl != nil {
-                    v.childl.parent = noden
-                }
-                if v.childr != nil {
-                    v.childr.parent = noden
-                }
-            }
-            //fmt.Printf("split insert %v, childl %v, childr %v\n", item.key, item.childl.node.items[0].key, item.childr.node.items[0].key)
-            node.parent.insertWithItem(item)
-
-        } else {
-            // root节点满了，从node中的中间节点进行拆分，创建两个新分支，中间节点向上提为root节点
-            root  := &Node {
-                tree   : node.tree,
-                parent : nil,
-                items  : []*Item{ item },
-            }
-            // 新增分裂节点
-            noden := &Node {
-                tree   : node.tree,
-                parent : root,
-                items  : node.items[mid + 1:],
-            }
-            // 设置根节点
-            node.tree.root = root
-            // 当前节点分裂
-            node.items     = node.items[0 : mid]
-            // 原root节点降级为普通节点
-            node.parent    = root
-            // 重构item的上下节点链接关系
-            item.childl    = node
-            item.childr    = noden
-            // 提升的item与节点的关联关系
-            item.node      = root
-            // 替换分列节点中的item的node为新node
-            //fmt.Printf("new node: %v\n", noden.items[0].key)
-            for _, v := range noden.items {
-                v.node = noden
-                if v.childl != nil {
-                    //fmt.Printf("%v, update childl node: %v\n", v.key, v.childl.node.items[0].key)
-                    v.childl.parent = noden
-                }
-                if v.childr != nil {
-                    //fmt.Printf("%v, update childr node: %v\n", v.key, v.childr.node.items[0].key)
-                    v.childr.parent = noden
-                }
-            }
-        }
-    }
-}
-
-// 节点合并检查
-func (node *Node) checkMerge() {
-    min := int(math.Ceil(float64(len(node.items))/2)) - 1
-    if len(node.items) < min {
-        // 不满足节点的最小数据要求
-    }
-}
-
-// 从根节点开始遍历树，返回顺序的节点列表
-func (tree *Tree) walk() []*Node {
-    m    := gset.NewStringSet()
-    list := make([]*Node, 0)
-    list  = append(list, tree.root)
-    temp := list
-    for {
-        temp2 := make([]*Node, 0)
-        for _, v := range temp {
-            node := v
-            //fmt.Printf("scan node %d, %x: \n", node.items[0].key, unsafe.Pointer(node))
-            for _, item := range node.items {
-                if item.childl != nil {
-                    key := fmt.Sprintf("%x", unsafe.Pointer(item.childl))
-                    //fmt.Printf("%d childl is %d, node %s, items[0] is %d\n", item.key, item.childl.key, key, item.childl.node.items[0].key)
-                    if !m.Contains(key) {
-                        temp2 = append(temp2, item.childl)
-                        m.Add(key)
-                    }
-                } else {
-                    //fmt.Printf("%d childl is nil\n", item.key)
-                }
-                if item.childr != nil {
-                    key := fmt.Sprintf("%x", unsafe.Pointer(item.childr))
-                    //fmt.Printf("%d childr is %d, node %s, items[0] is %d\n", item.key, item.childr.key, key, item.childr.node.items[0].key)
-                    if !m.Contains(key) {
-                        temp2 = append(temp2, item.childr)
-                        m.Add(key)
-                    }
-                } else {
-                    //fmt.Printf("%d childr is nil\n", item.key)
-                }
-            }
-            //fmt.Println()
-        }
-        if len(temp2) > 0 {
-            // 插入一个nil表示分层
-            list = append(list, nil)
-            list = append(list, temp2...)
-            temp = temp2
-        } else {
-            break
-        }
-    }
-    return list
-}
-
-// 打印节点信息（测试）
-func (tree *Tree) Print() {
-    list := tree.walk()
-    for _, v := range list {
-        if v == nil {
-            fmt.Println()
-            continue
-        }
-        fmt.Printf("[ ")
-        for _, item := range v.items {
-            fmt.Printf("%v ", item.key[0])
-        }
-        fmt.Printf("] ")
-    }
 }
 
 // 往节点中写入数据
@@ -313,37 +171,4 @@ func (node *Node) search(key []byte, deep bool) (*Item, int, int8) {
     return nil, -1, 0
 }
 
-// 往树中写入数据
-func (tree *Tree) Set(key, value []byte) {
-    item, index, cmp := tree.root.search(key, true)
-    if index != -1 && cmp == 0 {
-        item.data.value = value
-    } else {
-        if item == nil {
-            tree.root.insertRoundItem(key, value, item, index, cmp)
-        } else {
-            item.node.insertRoundItem(key, value, item, index, cmp)
-        }
-    }
-}
-
-// 从树中查找数据
-func (tree *Tree) Get(key []byte) []byte {
-    if tree.root != nil {
-        if item, index, cmp := tree.root.search(key, true); index != -1 && cmp == 0 {
-            return item.data.value
-        }
-    }
-    return nil
-}
-
-// 从树中删除数据
-func (tree *Tree) Remove(key []byte) {
-    if tree.root != nil {
-        // 先进行查找，找到之后再进行删除
-        if item, index, cmp := tree.root.search(key, true); index != -1 && cmp == 0 {
-            item.node.removeItem(index)
-        }
-    }
-}
 

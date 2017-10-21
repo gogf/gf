@@ -4,24 +4,45 @@ import (
     "g/os/gfile"
     "os"
     "fmt"
-    "g/core/types/gbtree"
+    "g/encoding/ghash"
     "g/util/gtime"
+    "strconv"
 )
 
 
 
 func main() {
-    btree := gbtree.New(3)
-    t1 := gtime.Microsecond()
-    for i := 1; i <= 11; i++ {
-        btree.Set([]byte{byte(i)}, []byte{byte(i)})
+    t1 := gtime.Second()
+    m := make(map[uint64]bool)
+    c := 0
+    for i := 0; i < 10000000; i++ {
+        key := ghash.SDBMHash64([]byte("this is test key" + strconv.Itoa(i)))
+        if _, ok := m[key]; ok {
+            c++
+        } else {
+            m[key] = true
+        }
     }
-    fmt.Println(gtime.Microsecond() - t1)
-    btree.Print()
-    fmt.Println()
-    fmt.Println()
-    btree.Remove([]byte{11})
-    btree.Print()
+    fmt.Println(gtime.Second() - t1)
+    fmt.Println("conflicts:", c)
+    //fmt.Println(ghash.BKDRHash([]byte("johnWRWEREWREWRWEREWRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")))
+    //t1 := gtime.Microsecond()
+    //fmt.Println(ghash.BKDRHash([]byte("john")))
+    //fmt.Println(ghash.ELFHash([]byte("john")))
+    //fmt.Println(ghash.JSHash([]byte("john")))
+    //fmt.Println(gtime.Microsecond() - t1)
+    return
+    //btree := gbtree.New(3)
+    //t1 := gtime.Microsecond()
+    //for i := 1; i <= 11; i++ {
+    //    btree.Set([]byte{byte(i)}, []byte{byte(i)})
+    //}
+    //fmt.Println(gtime.Microsecond() - t1)
+    //btree.Print()
+    //fmt.Println()
+    //fmt.Println()
+    //btree.Remove([]byte{11})
+    //btree.Print()
 
     //t2 := gtime.Microsecond()
     //btree.Get([]byte("key2"))
