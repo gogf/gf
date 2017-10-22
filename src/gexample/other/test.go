@@ -4,12 +4,42 @@ import (
     "g/os/gfile"
     "os"
     "fmt"
-    "g/encoding/ghash"
+    "g/util/gtime"
+    "g/encoding/gbinary"
 )
 
 
 
 func main() {
+
+    //binary.LittleEndian.Uint64(bytes)
+    //b, _ := gbinary.Encode(i)
+    t1 := gtime.Microsecond()
+    fmt.Println(gbinary.DecodeToString(gbinary.EncodeString("123")))
+    //r := int32(binary.LittleEndian.Uint32(b))
+    //fmt.Println(int32(r))
+    //binary.BigEndian.Uint16(b)
+    //gbinary.DecodeToInt32([]byte{1,2,3,4})
+    fmt.Println(gtime.Microsecond() - t1)
+    //fmt.Println([]byte{byte(i)})
+    return
+    //b := make([]byte, 0)
+    //a := ghash.BKDRHash([]byte("john"))
+    //for i := 0; i < 1000; i++ {
+    //    r, e := gbinary.Encode([]byte("key_" + strconv.Itoa(i)), a, a)
+    //    if e != nil {
+    //        fmt.Println(e)
+    //        return
+    //    }
+    //    b = append(b, r...)
+    //}
+    //fmt.Printf("length:     %d\n", len(b)/1024)
+    //fmt.Printf("compressed: %d\n", len(gcompress.Zlib(b))/1024)
+    //t1 := gtime.Microsecond()
+    ////gcompress.Zlib(b)
+    //gbinary.Encode([]byte("key_" + strconv.Itoa(100)), a, a)
+    //fmt.Println(gtime.Microsecond() - t1)
+    //return
     //t1 := gtime.Second()
     //m := make(map[uint64]bool)
     //c := 0
@@ -23,13 +53,14 @@ func main() {
     //}
     //fmt.Println(gtime.Second() - t1)
     //fmt.Println("conflicts:", c)
-    fmt.Println(ghash.BKDRHash([]byte("johnWRWEREWREWRWEREWRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")))
+    //fmt.Println(ghash.BKDRHash([]byte("johnWRWEREWREWRWEREWRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")))
     //t1 := gtime.Microsecond()
-    //fmt.Println(ghash.BKDRHash([]byte("john")))
-    //fmt.Println(ghash.ELFHash([]byte("john")))
-    //fmt.Println(ghash.JSHash([]byte("john")))
+    //ghash.BKDRHash64([]byte("john"))
+    ////fmt.Println(ghash.ELFHash([]byte("john")))
+    ////fmt.Println(ghash.JSHash([]byte("john")))
     //fmt.Println(gtime.Microsecond() - t1)
-    return
+    //fmt.Println(ghash.BKDRHash64([]byte("john29384723894723894789sdkjfhsjkdh")))
+    //return
     //btree := gbtree.New(3)
     //t1 := gtime.Microsecond()
     //for i := 1; i <= 11; i++ {
@@ -47,7 +78,7 @@ func main() {
     //fmt.Println(btree.Get([]byte{200}))
     //fmt.Println(gtime.Microsecond() - t2)
 
-    return
+    //return
     ////m := gmap.NewStringInterfaceMap()
     //t1 := gtime.Microsecond()
     //gcrc32.EncodeString("123")
@@ -105,7 +136,7 @@ func main() {
     //fmt.Println(gtime.Microsecond() - t2)
 
 
-    return
+    //return
     ////db, err := gkvdb.New("/tmp/test2", "t")
     //fmt.Println(err)
     ////fmt.Println(db.Set("1", []byte("1")))
@@ -120,9 +151,9 @@ func main() {
     //}
 
     file, _ := gfile.OpenWithFlag("/tmp/test", os.O_WRONLY|os.O_CREATE)
-    fmt.Println(string(gfile.GetBinContentByTwoOffsets(file, 10000000, 10000010)))
+    //fmt.Println(string(gfile.GetBinContentByTwoOffsets(file, 10000000, 10000010)))
     //n, err := file.WriteAt([]byte("123"), 2286 445 522*8)
-    n, err := file.WriteAt([]byte("123"), 42864454*(4 + 8 + 8))
+    n, err := file.WriteAt([]byte("123"), 1000000*(16))
     fmt.Println(n)
     fmt.Println(err)
     defer file.Close()
