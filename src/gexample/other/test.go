@@ -5,17 +5,32 @@ import (
     "os"
     "fmt"
     "g/util/gtime"
-    "g/encoding/gbinary"
+    "g/database/gkvdb"
+    "g/util/grand"
 )
 
 
 
 func main() {
+    db, err := gkvdb.New("/tmp/test.db", "my")
+    if err != nil {
+        fmt.Println(err)
+    }
 
     //binary.LittleEndian.Uint64(bytes)
     //b, _ := gbinary.Encode(i)
     t1 := gtime.Microsecond()
-    fmt.Println(gbinary.DecodeToString(gbinary.EncodeString("123")))
+    for i := 0; i < 100000; i++ {
+        db.Set([]byte(grand.RandStr(10)), []byte(grand.RandStr(10)))
+    }
+    return
+    //db.Set([]byte("1"), []byte(grand.RandStr(10)))
+    //grand.RandStr(10)
+    //db.Set([]byte("r88U89b6Vv"), []byte("john211111111111111111111111"))
+    //db.Get([]byte("name2"))
+    //fmt.Println(e)
+
+    //fmt.Println(string(v))
     //r := int32(binary.LittleEndian.Uint32(b))
     //fmt.Println(int32(r))
     //binary.BigEndian.Uint16(b)

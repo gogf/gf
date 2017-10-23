@@ -1,24 +1,25 @@
+// 基于哈希分区的KV嵌入式数据库
+// 一级索引结构：二级索引文件开始位置(8) 二级索引文件结束位置(8)
+// 二级索引结构：键名64位哈希值(8) 数据键名长度(2) 数据分配的存储长度(4) 数据文件索引开始位置(8) 数据文件索引结束位置(8)
+// 数据索引结构：键名键值
+
 package gkvdb
 
 import (
     "os"
     "g/os/gfile"
     "strings"
-    "fmt"
     "g/encoding/gbinary"
     "g/os/gfilepool"
     "errors"
-    "encoding/json"
-    "g/encoding/gcompress"
-    "g/encoding/gjson"
     "g/encoding/ghash"
 )
 
 const (
-    gINDEX1_CACHE_TIMEOUT    = 60       // 二级索引缓存时间(秒)
-    gFILE_POOL_CACHE_TIMEOUT = 60       // 文件指针池缓存时间(秒)
-    gPARTITION_SIZE          = 4194304  // 哈希表分区大小(文件大小最大约为64MB)
-    gINDEX1_SIZE             = 520000   // 二级索引允许的最大长度，超过此长度则重新
+    gINDEX1_BUCKET_SIZE      = 30*10     // 二级索引分块大小
+    gINDEX1_CACHE_TIMEOUT    = 60        // 二级索引缓存时间(秒)
+    gFILE_POOL_CACHE_TIMEOUT = 60        // 文件指针池缓存时间(秒)
+    gPARTITION_SIZE          = 100000    // 哈希表分区大小
 )
 
 // KV数据库
@@ -32,13 +33,22 @@ type DB struct {
 
 // KV数据记录
 type DBRecord struct {
-    hash    uint64 // 64位的hash code
-    offset0 int64  // 一级索引地址
-    offset1 int64  // 二级索引地址
-    keysize uint16 // 关键字长度，用以切分数据
-    dbstart int64  // 数据文件中的开始地址
-    dbend   int64  // 数据文件中的结束地址
-    dbcap   int32  // 数据允许存放的的最大长度（用以修改对比）
+    hash    uint64     // 64位的hash code
+    part    int64      // 分区位置
+    offset0 struct {
+        start int64    // 一级索引开始位置(关键字列表起始位置)
+        end   int64    // 一级索引结束位置
+    }
+    offset1 struct {
+        start int64    // 二级索引开始位置(关键字列表中匹配关键字的准确的起始位置)
+        end   int64    // 二级索引结束位置
+    }
+    dbinfo  struct {
+        start   int64  // 数据文件中的开始地址
+        end     int64  // 数据文件中的结束地址
+        cap     uint32 // 数据允许存放的的最大长度（用以修改对比）
+        keysize uint16 // 关键字长度，用以切分数据
+    }
 }
 
 // 创建一个KV数据库
@@ -72,7 +82,7 @@ func New(path, prefix string) (*DB, error) {
     // 创建文件指针池
     ix0fp := gfilepool.New(ix0path, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
     ix1fp := gfilepool.New(ix1path, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
-    dbfp := gfilepool.New(dbpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
+    dbfp  := gfilepool.New(dbpath,  os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
     return &DB {
         path   : path,
         prefix : prefix,
@@ -88,128 +98,196 @@ func (db *DB) getHash(key []byte) uint64 {
 }
 
 // 计算关键字再一级索引文件中的偏移量
-func (db *DB) getOffset0ByHash(hash uint64) int64 {
+func (db *DB) getPartitionByHash(hash uint64) int64 {
     return int64(hash%gPARTITION_SIZE)
 }
 
-// 计算关键字在二级索引文件中的位置
-func (db *DB) getOffset1ByHash(hash uint64) (int64, int64) {
-    offset0 := db.getOffset0ByHash(hash)
+// 获得一级索引信息
+func (db *DB) getOffset0ByPart(part int64) (int64, int64, error) {
     pf, err := db.ix0fp.File()
     if err != nil {
-        return -1, -1
+        return -1, -1, err
     }
     defer pf.Close()
-    buffer := gfile.GetBinContentByTwoOffsets(pf.File(), offset0, offset0 + 16)
-    if buffer != nil && len(buffer) == 16 {
-
+    start  := part*16
+    buffer := gfile.GetBinContentByTwoOffsets(pf.File(), start, start + 16)
+    if buffer != nil {
+        return gbinary.DecodeToInt64(buffer[0:8]), gbinary.DecodeToInt64(buffer[8:16]), nil
     }
-    record.dbstart,_ = gbinary.DecodeToInt64(buffer[0:8])
-    record.dbend,_   = gbinary.DecodeToInt64(buffer[8:16])
-    return -1, -1
+    return -1, -1, nil
 }
 
-// 查询数据信息
-func (db *DB) getDBRecordByKey(key []byte) (*DBRecord, error) {
+// 查询索引信息
+func (db *DB) getRecordByKey(key []byte) (*DBRecord, error) {
     hash    := db.getHash(key)
-    offset0 := db.getOffset0ByHash(code)
-    pf, err := db.ixfp.File()
+    part    := db.getPartitionByHash(hash)
+    record  := &DBRecord {
+        hash    : hash,
+        part    : part,
+    }
+    // 查询一级索引信息
+    offset0start, offset0end, err := db.getOffset0ByPart(part)
+    record.offset0.start = offset0start
+    record.offset0.end   = offset0end
     if err != nil {
-        return nil, err
+        return record, err
     }
-    defer pf.Close()
-    record  := DBRecord {
-        code    : code,
-        offset  : offset,
-        dbmap   : make(map[string][]byte),
-    }
-    buffer := gfile.GetBinContentByTwoOffsets(pf.File(), offset, offset + 20)
-    if buffer != nil && len(buffer) == 20 {
-        record.dbstart,_ = gbinary.DecodeToInt64(buffer[0:8])
-        record.dbend,_   = gbinary.DecodeToInt64(buffer[8:16])
-        record.dbcap,_   = gbinary.DecodeToInt32(buffer[16:])
-        if record.dbcap > 0 {
-            if pf, err := db.dbfp.File(); err == nil {
-                defer pf.Close()
-                buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.dbstart, record.dbend)
-                if buffer != nil {
-                    json.Unmarshal(gcompress.UnZlib(buffer), &record.dbmap)
+    // 查询二级索引信息
+    if offset0end > 0 {
+        pf, err := db.ix1fp.File()
+        if err != nil {
+            return record, err
+        }
+        defer pf.Close()
+        buffer := gfile.GetBinContentByTwoOffsets(pf.File(), offset0start, offset0end)
+        if buffer != nil {
+            for i := 0; i < len(buffer); i += 30 {
+                hash64 := gbinary.DecodeToUint64(buffer[i: i + 8])
+                if hash == hash64 {
+                    if uint16(len(key)) == gbinary.DecodeToUint16(buffer[i + 8: i + 8 + 2]) {
+                        record.offset1.start  = offset0start + int64(i)
+                        record.offset1.end    = record.offset1.start + 30
+                        record.dbinfo.cap     = gbinary.DecodeToUint32(buffer[i + 10: i + 14])
+                        record.dbinfo.start   = gbinary.DecodeToInt64(buffer[i + 14: i + 22])
+                        record.dbinfo.end     = gbinary.DecodeToInt64(buffer[i + 22: i + 30])
+                        record.dbinfo.keysize = uint16(len(key))
+                        return record, nil
+                    }
                 }
             }
         }
+
     }
-    return &record, nil
+    return record, nil
+}
+
+// 查询数据信息键值
+func (db *DB) getValueByKey(key []byte) ([]byte, error) {
+    record, err := db.getRecordByKey(key)
+    if err != nil {
+        return nil, err
+    }
+    if record.dbinfo.end > 0 {
+        pf, err := db.dbfp.File()
+        if err != nil {
+            return nil, err
+        }
+        defer pf.Close()
+        buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.dbinfo.start + int64(record.dbinfo.keysize), record.dbinfo.end)
+        if buffer != nil {
+            return buffer, nil
+        }
+    }
+    return nil, nil
+}
+
+// 查询KV数据
+func (db *DB) Get(key []byte) ([]byte, error) {
+    value, err := db.getValueByKey(key)
+    if err != nil {
+        return nil, err
+    }
+    return value, nil
 }
 
 // 设置KV数据
-func (db *DB) Set(key string, value []byte) error {
-    record, err := db.getDBRecordByKey(key)
-    if err != nil {
-        return errors.New(fmt.Sprintf("data index failed for key: %s, error:%s", key, err.Error()))
-    }
-    // 数据整合
-    record.dbmap[key] = value
-    // 数据结构化处理及压缩
-    data := gcompress.Zlib([]byte(gjson.Encode(record.dbmap)))
-    // 创建文件操作指针
-    pfix, err := db.ixfp.File()
+func (db *DB) Set(key []byte, value []byte) error {
+    record, err := db.getRecordByKey(key)
     if err != nil {
         return err
     }
-    defer pfix.Close()
-    pfdb, err := db.dbfp.File()
-    if err != nil {
+    // 写入数据文件，并更新record信息
+    if err := db.insertDataByRecord(key, value, record); err != nil {
         return err
     }
-    defer pfdb.Close()
-    // 写入数据文件
-    var dbstart int64 = record.dbstart
-    var dbend   int64 = record.dbend
-    var dbcap   int32 = record.dbcap
-    length := int32(len(data))
-    if record.dbcap >= length {
-        // 如果原本的空间大小满足本次数据，那么直接覆写
-        if _, err = pfdb.File().WriteAt(data, record.dbstart); err != nil {
-            return err
-        }
-        // 更新数据索引信息
-        dbend = record.dbstart + int64(length)
-    } else {
-        // 否则从文件末尾重新写入数据，原本的空间依靠另外的清理线程回收处理
-        pos, err := pfdb.File().Seek(0, 2)
-        if err != nil {
-            return err
-        }
-        if _, err = pfdb.File().WriteAt(data, pos); err != nil {
-            return err
-        }
-        dbstart = pos
-        dbend   = dbstart + int64(length)
-        dbcap   = length
-    }
-    // 写入索引文件
-    buffer, _ := gbinary.Encode(dbstart, dbend, dbcap)
-    if _, err := pfix.File().WriteAt(buffer, record.offset); err != nil {
+    // 根据record信息更新索引文件
+    if err := db.createIndexByRecord(record); err != nil {
         return err
     }
     return nil
 }
 
-// 查询KV数据
-//func (db *DB) Get(key string) ([]byte, error) {
-//    record, err := db.getDBRecordByKey(key)
-//    if err != nil {
-//        return nil, errors.New(fmt.Sprintf("data index failed for key: %s, error:%s", key, err.Error()))
-//    }
-//    if v, ok := record.dbmap[key]; ok {
-//        return v, nil
-//    }
-//    return nil, nil
-//}
+// 插入一条KV数据
+func (db *DB) insertDataByRecord(key []byte, value []byte, record *DBRecord) error {
+    dbpf, err := db.dbfp.File()
+    if err != nil {
+        return err
+    }
+    defer dbpf.Close()
+    dbcap   := record.dbinfo.cap
+    dbstart := record.dbinfo.start
+    length  := uint32(len(key) + len(value))
+    if record.dbinfo.end <= 0 || record.dbinfo.cap < length {
+        pos, err := dbpf.File().Seek(0, 2)
+        if err != nil {
+            return err
+        }
+        dbcap   = length
+        dbstart = pos
+    }
+    data := make([]byte, 0)
+    data  = append(data, key...)
+    data  = append(data, value...)
+    if _, err = dbpf.File().WriteAt(data, dbstart); err != nil {
+        return err
+    }
+    record.dbinfo.start   = dbstart
+    record.dbinfo.end     = dbstart + int64(length)
+    record.dbinfo.cap     = dbcap
+    record.dbinfo.keysize = uint16(len(key))
+    return nil
+}
 
-
-
-
-
+// 根据record重新创建索引信息
+func (db *DB) createIndexByRecord(record *DBRecord) error {
+    // 创建二级索引信息
+    ix1pf, err := db.ix1fp.File()
+    if err != nil {
+        return err
+    }
+    defer ix1pf.Close()
+    // 如果一级索引都不存在，那么需要同时更新一级和二级索引信息，这里先获取索引信息
+    if record.offset0.end <= 0 {
+        pos, err := ix1pf.File().Seek(0, 2)
+        if err != nil {
+            return err
+        }
+        // 每次分配必须为gINDEX1_BUCKET_SIZE
+        r := pos%gINDEX1_BUCKET_SIZE
+        if r != 0 {
+            pos += gINDEX1_BUCKET_SIZE - r
+        }
+        record.offset0.start = pos
+        record.offset0.end   = pos + 30
+        record.offset1.start = pos
+        record.offset1.end   = pos + 30
+    }
+    // 如果一级索引存在，那么写入到二级索引数据信息列表末尾
+    if record.offset1.end <= 0 {
+        record.offset1.start = record.offset0.end
+    }
+    data := make([]byte, 0)
+    data  = append(data, gbinary.EncodeUint64(record.hash)...)
+    data  = append(data, gbinary.EncodeUint16(record.dbinfo.keysize)...)
+    data  = append(data, gbinary.EncodeUint32(record.dbinfo.cap)...)
+    data  = append(data, gbinary.EncodeInt64(record.dbinfo.start)...)
+    data  = append(data, gbinary.EncodeInt64(record.dbinfo.end)...)
+    if _, err = ix1pf.File().WriteAt(data, record.offset1.start); err != nil {
+        return err
+    }
+    // 创建一级索引信息
+    ix0pf, err := db.ix0fp.File()
+    if err != nil {
+        return err
+    }
+    defer ix0pf.Close()
+    data = make([]byte, 0)
+    data = append(data, gbinary.EncodeInt64(record.offset0.start)...)
+    data = append(data, gbinary.EncodeInt64(record.offset0.end)...)
+    if _, err = ix0pf.File().WriteAt(data, record.part*16); err != nil {
+        return err
+    }
+    return nil
+}
 
 
