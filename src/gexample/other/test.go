@@ -6,12 +6,28 @@ import (
     "fmt"
     "g/util/gtime"
     "g/database/gkvdb"
-    "g/util/grand"
+    "strconv"
+    "g/os/gfilespace"
 )
 
 
 
 func main() {
+    //b := []int{1,2,3}
+    //c := b
+    //b  = c[0:0]
+    //b  = append(b, 4)
+    //fmt.Println(b)
+    //return
+    space, err := gfilespace.New("/tmp/test")
+    if err != nil {
+        fmt.Println(err)
+    }
+    for i := 0; i < 10; i++ {
+        space.AddBlock(int64(i), uint32((i + 1)*10))
+    }
+    fmt.Println(space.GetBlock(50))
+    return
     db, err := gkvdb.New("/tmp/test.db", "my")
     if err != nil {
         fmt.Println(err)
@@ -20,9 +36,14 @@ func main() {
     //binary.LittleEndian.Uint64(bytes)
     //b, _ := gbinary.Encode(i)
     t1 := gtime.Microsecond()
-    for i := 0; i < 100000; i++ {
-        db.Set([]byte(grand.RandStr(10)), []byte(grand.RandStr(10)))
+    for i := 0; i < 1000000; i++ {
+        db.Set([]byte("key_" + strconv.Itoa(i)), []byte("value_" + strconv.Itoa(i)))
     }
+    //for i := 0; i < 10; i++ {
+    //    fmt.Println(string(db.Get([]byte("key_" + strconv.Itoa(i)))))
+    //}
+    //fmt.Println(string(db.Get([]byte("key_" + strconv.Itoa(9)))))
+    fmt.Println(gtime.Microsecond() - t1)
     return
     //db.Set([]byte("1"), []byte(grand.RandStr(10)))
     //grand.RandStr(10)
