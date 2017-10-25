@@ -1,5 +1,5 @@
 // 这是一颗改进的B树
-// @todo 未完成，暂不能使用
+// @todo 未开发完成，暂时不能使用
 package gbtree
 
 import (

@@ -6,43 +6,50 @@ import (
     "fmt"
     "g/util/gtime"
     "g/database/gkvdb"
-    "strconv"
-    "g/os/gfilespace"
 )
 
 
 
 func main() {
     //b := []int{1,2,3}
-    //c := b
-    //b  = c[0:0]
-    //b  = append(b, 4)
+    //c := []int{4}
+    //copy(b[1:], c)
     //fmt.Println(b)
     //return
-    space, err := gfilespace.New("/tmp/test")
-    if err != nil {
-        fmt.Println(err)
-    }
-    for i := 0; i < 10; i++ {
-        space.AddBlock(int64(i), uint32((i + 1)*10))
-    }
-    fmt.Println(space.GetBlock(50))
-    return
+    //space, err := gfilespace.New("/tmp/test")
+    //if err != nil {
+    //    fmt.Println(err)
+    //}
+    //for i := 0; i < 10; i++ {
+    //    space.AddBlock(int64(i), uint32((i + 1)*10))
+    //}
+    //fmt.Println(space.GetBlock(50))
+    //return
     db, err := gkvdb.New("/tmp/test.db", "my")
     if err != nil {
         fmt.Println(err)
     }
-
     //binary.LittleEndian.Uint64(bytes)
     //b, _ := gbinary.Encode(i)
-    t1 := gtime.Microsecond()
-    for i := 0; i < 1000000; i++ {
-        db.Set([]byte("key_" + strconv.Itoa(i)), []byte("value_" + strconv.Itoa(i)))
-    }
-    //for i := 0; i < 10; i++ {
-    //    fmt.Println(string(db.Get([]byte("key_" + strconv.Itoa(i)))))
+    t1   := gtime.Microsecond()
+    size := 2
+    //db.Set([]byte{byte(2)}, []byte{byte(2)})
+    db.Set([]byte{byte(1)}, []byte{byte(1)})
+    db.Set([]byte{byte(0)}, []byte{byte(0)})
+
+    //for i := 0; i < size; i++ {
+    //    //db.Set([]byte("key_" + strconv.Itoa(i)), []byte("value_" + strconv.Itoa(i)))
+    //    db.Set([]byte{byte(i)}, []byte{byte(i)})
     //}
-    //fmt.Println(string(db.Get([]byte("key_" + strconv.Itoa(9)))))
+    for i := 0; i < size; i++ {
+        //r := db.Get([]byte("key_" + strconv.Itoa(i)))
+        r := db.Get([]byte{byte(i)})
+        if r == nil {
+            fmt.Println("none for ", i)
+        }
+    }
+    db.Remove(true)
+    //fmt.Println(string(db.Get([]byte("key_" + strconv.Itoa(123498)))))
     fmt.Println(gtime.Microsecond() - t1)
     return
     //db.Set([]byte("1"), []byte(grand.RandStr(10)))
