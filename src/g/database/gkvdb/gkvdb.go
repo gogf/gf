@@ -259,16 +259,16 @@ func (db *DB) Set(key []byte, value []byte) error {
     if err := db.insertDataByRecord(key, value, record); err != nil {
         return err
     }
-    oldcap := record.ix1.cap
+    //oldcap := record.ix1.cap
     // 根据record信息更新索引文件
     if err := db.createIndexByRecord(record); err != nil {
         return err
     }
-    if record.ix1.cap != oldcap {
-        if record.ix1.cap > gINDEX1_BUCKET_SIZE {
-            fmt.Printf("new cap %d for key: %v\n", record.ix1.cap, string(key))
-        }
-    }
+    //if record.ix1.cap != oldcap {
+    //    if record.ix1.cap > gINDEX1_BUCKET_SIZE {
+    //        fmt.Printf("new cap %d for key: %v\n", record.ix1.cap, string(key))
+    //    }
+    //}
     return nil
 }
 
