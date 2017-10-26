@@ -1,14 +1,12 @@
 package main
 
 import (
-    "g/os/gfile"
-    "os"
     "fmt"
     "g/util/gtime"
     "g/database/gkvdb"
+    "strconv"
+    "g/os/gmmap"
 )
-
-
 
 func main() {
     //b := []int{1,2,3}
@@ -32,24 +30,24 @@ func main() {
     //binary.LittleEndian.Uint64(bytes)
     //b, _ := gbinary.Encode(i)
     t1   := gtime.Microsecond()
-    size := 2
+    size := 100000
     //db.Set([]byte{byte(2)}, []byte{byte(2)})
-    db.Set([]byte{byte(1)}, []byte{byte(1)})
-    db.Set([]byte{byte(0)}, []byte{byte(0)})
+    //db.Set([]byte{byte(1)}, []byte{byte(1)})
+    //db.Set([]byte{byte(0)}, []byte{byte(0)})
 
-    //for i := 0; i < size; i++ {
-    //    //db.Set([]byte("key_" + strconv.Itoa(i)), []byte("value_" + strconv.Itoa(i)))
-    //    db.Set([]byte{byte(i)}, []byte{byte(i)})
-    //}
     for i := 0; i < size; i++ {
-        //r := db.Get([]byte("key_" + strconv.Itoa(i)))
-        r := db.Get([]byte{byte(i)})
+        db.Set([]byte("key_" + strconv.Itoa(i)), []byte("value_" + strconv.Itoa(i)))
+        //db.Set([]byte{byte(i)}, []byte{byte(i)})
+    }
+    for i := 0; i < size; i++ {
+        r := db.Get([]byte("key_" + strconv.Itoa(i)))
+        //r := db.Get([]byte{byte(i)})
         if r == nil {
             fmt.Println("none for ", i)
         }
     }
-    db.Remove(true)
-    //fmt.Println(string(db.Get([]byte("key_" + strconv.Itoa(123498)))))
+    //db.Remove(true)
+    //fmt.Println(string(db.Get([]byte(strconv.Itoa(123498)))))
     fmt.Println(gtime.Microsecond() - t1)
     return
     //db.Set([]byte("1"), []byte(grand.RandStr(10)))
@@ -192,13 +190,13 @@ func main() {
     //for i := 0; i < 10000000; i++ {
     //    gfile.PutContentsAppend("/tmp/test", "1234567890")
     //}
-
-    file, _ := gfile.OpenWithFlag("/tmp/test", os.O_WRONLY|os.O_CREATE)
-    //fmt.Println(string(gfile.GetBinContentByTwoOffsets(file, 10000000, 10000010)))
-    //n, err := file.WriteAt([]byte("123"), 2286 445 522*8)
-    n, err := file.WriteAt([]byte("123"), 1000000*(16))
-    fmt.Println(n)
-    fmt.Println(err)
-    defer file.Close()
+    //
+    //file, _ := gfile.OpenWithFlag("/tmp/test", os.O_WRONLY|os.O_CREATE)
+    ////fmt.Println(string(gfile.GetBinContentByTwoOffsets(file, 10000000, 10000010)))
+    ////n, err := file.WriteAt([]byte("123"), 2286 445 522*8)
+    //n, err := file.WriteAt([]byte("123"), 1000000*(16))
+    //fmt.Println(n)
+    //fmt.Println(err)
+    //defer file.Close()
     //fmt.Println(gcrc32.EncodeString("123"))
 }

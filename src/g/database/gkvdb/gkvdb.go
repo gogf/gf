@@ -18,8 +18,8 @@ import (
 
 const (
     //gPARTITION_SIZE          = 419430   // 哈希表分区大小
-    gPARTITION_SIZE          = 1   // 哈希表分区大小
-    gINDEX1_BUCKET_SIZE      = 1       // 二级索引索引文件列表分块大小(值越大，初始化时占用的空间越大)
+    gPARTITION_SIZE          = 655360   // 哈希表分区大小
+    gINDEX1_BUCKET_SIZE      = 10       // 二级索引索引文件列表分块大小(值越大，初始化时占用的空间越大)
     gFILE_POOL_CACHE_TIMEOUT = 60       // 文件指针池缓存时间(秒)
 )
 
@@ -37,11 +37,11 @@ type Record struct {
     hash32    uint32 // 32位的hash code
     hash64    uint64 // 64位的hash code
     part      int64  // 分区位置
-    index0 struct {
+    ix0 struct {
         start int64  // 一级索引开始位置
         end   int64  // 一级索引结束位置
     }
-    index1 struct {
+    ix1 struct {
         start  int64  // 二级索引开始位置
         end    int64  // 二级索引结束位置
         cap    int32  // 二级索引分配大小(条数)
@@ -51,7 +51,7 @@ type Record struct {
         near   int32  // list中未匹配到的相邻索引位置
         cmp    int8   // 当near存在时有效，判断给定的key比near大还是小
     }
-    index2 struct {
+    data struct {
         start int64   // 数据文件中的开始地址
         end   int64   // 数据文件中的结束地址
         cap   int32   // 数据允许存放的的最大长度（用以修改对比）
@@ -76,8 +76,8 @@ func New(path, prefix string) (*DB, error) {
         return nil, errors.New(path + " is not writable")
     }
     // 索引/数据文件权限检测
-    ix0path := path + gfile.Separator + prefix + ".ix0"
-    ix1path := path + gfile.Separator + prefix + ".ix1"
+    ix0path := path + gfile.Separator + prefix + ".0.ix"
+    ix1path := path + gfile.Separator + prefix + ".1.ix"
     dbpath  := path + gfile.Separator + prefix + ".db"
     if gfile.Exists(ix0path) && (!gfile.IsWritable(ix0path) || !gfile.IsReadable(ix0path)){
         return nil, errors.New("permission denied to 0 index file: " + ix0path)
@@ -118,13 +118,13 @@ func (db *DB) getIndexInfoByRecord(record *Record) error {
         return err
     }
     defer pf.Close()
-    record.index0.start = record.part*16
-    record.index0.end   = record.index0.start + 16
-    if buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.index0.start, record.index0.end); buffer != nil {
-        record.index1.start = gbinary.DecodeToInt64(buffer[0:8])
-        record.index1.cap   = gbinary.DecodeToInt32(buffer[8:12])
-        record.index1.size  = gbinary.DecodeToInt32(buffer[12:16])
-        record.index1.end   = record.index1.start + int64(record.index1.size*20)
+    record.ix0.start = record.part*16
+    record.ix0.end   = record.ix0.start + 16
+    if buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.ix0.start, record.ix0.end); buffer != nil {
+        record.ix1.start = gbinary.DecodeToInt64(buffer[0:8])
+        record.ix1.cap   = gbinary.DecodeToInt32(buffer[8:12])
+        record.ix1.size  = gbinary.DecodeToInt32(buffer[12:16])
+        record.ix1.end   = record.ix1.start + int64(record.ix1.size*20)
         return nil
     }
     return nil
@@ -137,20 +137,20 @@ func (db *DB) getDataInfoByRecord(record *Record) error {
         return err
     }
     defer pf.Close()
-    record.index1.buffer = gfile.GetBinContentByTwoOffsets(pf.File(), record.index1.start, record.index1.end)
-    if record.index1.buffer != nil {
+    record.ix1.buffer = gfile.GetBinContentByTwoOffsets(pf.File(), record.ix1.start, record.ix1.end)
+    if record.ix1.buffer != nil {
         //fmt.Println("get record", record)
         // 获取到二级索引数据后，进行二分查找
-        record.index1.match = -1
+        record.ix1.match = -1
         min := int32(0)
-        max := record.index1.size - 1
+        max := record.ix1.size - 1
         for {
-            if record.index1.match != -1 || min > max {
+            if record.ix1.match != -1 || min > max {
                 break
             }
             for {
                 mid    := int32((min + max) / 2)
-                hash32 := gbinary.DecodeToUint32(record.index1.buffer[mid*20 : mid*20 + 4])
+                hash32 := gbinary.DecodeToUint32(record.ix1.buffer[mid*20 : mid*20 + 4])
                 cmp    := 0
                 //fmt.Println("mid:", mid, record.hash32, "VS", hash32)
                 if record.hash32 < hash32 {
@@ -160,22 +160,22 @@ func (db *DB) getDataInfoByRecord(record *Record) error {
                     min = mid + 1
                     cmp = 1
                 } else {
-                    record.index1.match = mid
+                    record.ix1.match = mid
                     break
                 }
                 if min > max {
-                    record.index1.near  = mid
-                    record.index1.cmp   = int8(cmp)
+                    record.ix1.near  = mid
+                    record.ix1.cmp   = int8(cmp)
                     break
                 }
             }
         }
-        if record.index1.match != -1 {
-            match                := record.index1.match*20
-            record.index2.cap     = gbinary.DecodeToInt32(record.index1.buffer[match +  4 : match + 8])
-            record.index2.size    = gbinary.DecodeToInt32(record.index1.buffer[match +  8 : match + 12])
-            record.index2.start   = gbinary.DecodeToInt64(record.index1.buffer[match + 12 : match + 20])
-            record.index2.end     = record.index2.start + int64(record.index2.size)
+        if record.ix1.match != -1 {
+            match                := record.ix1.match*20
+            record.data.cap     = gbinary.DecodeToInt32(record.ix1.buffer[match +  4 : match + 8])
+            record.data.size    = gbinary.DecodeToInt32(record.ix1.buffer[match +  8 : match + 12])
+            record.data.start   = gbinary.DecodeToInt64(record.ix1.buffer[match + 12 : match + 20])
+            record.data.end     = record.data.start + int64(record.data.size)
         }
     }
     return nil
@@ -195,8 +195,8 @@ func (db *DB) getRecordByKey(key []byte) (*Record, error) {
         return record, err
     }
     // 查询数据信息
-    if record.index1.end > 0 {
-        record.index2.klen = uint16(len(key))
+    if record.ix1.end > 0 {
+        record.data.klen = uint16(len(key))
         if err := db.getDataInfoByRecord(record); err != nil {
             return record, err
         }
@@ -211,13 +211,13 @@ func (db *DB) getValueByKey(key []byte) ([]byte, error) {
         return nil, err
     }
     //fmt.Println(record)
-    if record.index2.end > 0 {
+    if record.data.end > 0 {
         pf, err := db.dbfp.File()
         if err != nil {
             return nil, err
         }
         defer pf.Close()
-        buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.index2.start + 2 + int64(record.index2.klen), record.index2.end)
+        buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.data.start + 2 + int64(record.data.klen), record.data.end)
         if buffer != nil {
             return buffer, nil
         }
@@ -259,14 +259,14 @@ func (db *DB) Set(key []byte, value []byte) error {
     if err := db.insertDataByRecord(key, value, record); err != nil {
         return err
     }
-    oldcap := record.index1.cap
+    oldcap := record.ix1.cap
     // 根据record信息更新索引文件
     if err := db.createIndexByRecord(record); err != nil {
         return err
     }
-    if record.index1.cap != oldcap {
-        if record.index1.cap > gINDEX1_BUCKET_SIZE {
-            fmt.Printf("new cap %d for string: %s\n", record.index1.cap, string(key))
+    if record.ix1.cap != oldcap {
+        if record.ix1.cap > gINDEX1_BUCKET_SIZE {
+            fmt.Printf("new cap %d for key: %v\n", record.ix1.cap, string(key))
         }
     }
     return nil
@@ -279,10 +279,10 @@ func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error
         return err
     }
     defer dbpf.Close()
-    dbcap   := record.index2.cap
-    dbstart := record.index2.start
+    dbcap   := record.data.cap
+    dbstart := record.data.start
     length  := int32(len(key) + len(value)) + 2
-    if record.index2.end <= 0 || record.index2.cap < length {
+    if record.data.end <= 0 || record.data.cap < length {
         pos, err := dbpf.File().Seek(0, 2)
         if err != nil {
             return err
@@ -298,12 +298,12 @@ func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error
     if _, err = dbpf.File().WriteAt(data, dbstart); err != nil {
         return err
     }
-    record.index2.start   = dbstart
-    record.index2.end     = dbstart + int64(length)
-    record.index2.cap     = dbcap
-    record.index2.size    = length
-    if record.index2.klen <= 0 {
-        record.index2.klen    = uint16(len(key))
+    record.data.start   = dbstart
+    record.data.end     = dbstart + int64(length)
+    record.data.cap     = dbcap
+    record.data.size    = length
+    if record.data.klen <= 0 {
+        record.data.klen    = uint16(len(key))
     }
     return nil
 }
@@ -319,12 +319,11 @@ func (db *DB) createIndexByRecord(record *Record) error {
 
     data := make([]byte, 0)
     data  = append(data, gbinary.EncodeUint32(record.hash32)...)
-    data  = append(data, gbinary.EncodeInt32(record.index2.cap)...)
-    data  = append(data, gbinary.EncodeInt32(record.index2.size)...)
-    data  = append(data, gbinary.EncodeInt64(record.index2.start)...)
-    fmt.Println(record)
+    data  = append(data, gbinary.EncodeInt32(record.data.cap)...)
+    data  = append(data, gbinary.EncodeInt32(record.data.size)...)
+    data  = append(data, gbinary.EncodeInt64(record.data.start)...)
     // 判断是否需要重新分配空间
-    if record.index1.end <= 0 || (record.index1.match == -1 && (record.index1.cap < record.index1.size + 1)) {
+    if record.ix1.end <= 0 || (record.ix1.match == -1 && (record.ix1.cap < record.ix1.size + 1)) {
         // 如果二级索引不存在，或者分配的空间大小不够，那么直接写入到二级索引列表末尾
         pos, err := ix1pf.File().Seek(0, 2)
         if err != nil {
@@ -336,46 +335,44 @@ func (db *DB) createIndexByRecord(record *Record) error {
         if r != 0 {
             pos += t - r
         }
-        record.index1.start = pos
-        record.index1.end   = pos + 20 + int64(record.index1.size*20)
-        record.index1.cap   = (int32(record.index1.size/gINDEX1_BUCKET_SIZE) + 1)*gINDEX1_BUCKET_SIZE
+        record.ix1.start = pos
+        record.ix1.end   = pos + 20 + int64(record.ix1.size*20)
+        record.ix1.cap   = (int32(record.ix1.size/gINDEX1_BUCKET_SIZE) + 1)*gINDEX1_BUCKET_SIZE
     }
     // 写入数据处理
     buffer := make([]byte, 0)
-    if record.index1.match != -1 {
+    if record.ix1.match != -1 {
         // 更新
-        if record.index1.size > 0 {
-            buffer = record.index1.buffer
-            copy(buffer[record.index1.match*20 : ], data)
+        if record.ix1.size > 0 {
+            buffer = record.ix1.buffer
+            copy(buffer[record.ix1.match*20 : ], data)
         } else {
             buffer = data
-            record.index1.size++
+            record.ix1.size++
         }
     } else {
         var length int32 = 0
-        if record.index1.cmp > 0 {
+        if record.ix1.cmp > 0 {
             // 插入到near后面
-            size := record.index1.near + 1
-            if size > record.index1.size {
-                size = record.index1.size
+            size := record.ix1.near + 1
+            if size > record.ix1.size {
+                size = record.ix1.size
             }
             length = size*20
         } else {
             // 插入到near前面
-            length = record.index1.near*20
+            length = record.ix1.near*20
         }
-        buffer = record.index1.buffer[0 : length]
+        buffer = append(buffer, record.ix1.buffer[0 : length]...)
         buffer = append(buffer, data...)
-        buffer = append(buffer, record.index1.buffer[length : ]...)
-        record.index1.size++
-        record.index1.end = record.index1.end + 20
-        fmt.Println(length)
-        fmt.Println(buffer)
+        buffer = append(buffer, record.ix1.buffer[length : ]...)
+        record.ix1.size++
+        record.ix1.end = record.ix1.end + 20
     }
 
     //fmt.Println(record)
 
-    if _, err = ix1pf.File().WriteAt(buffer, record.index1.start); err != nil {
+    if _, err = ix1pf.File().WriteAt(buffer, record.ix1.start); err != nil {
         return err
     }
     // 创建一级索引信息
@@ -385,9 +382,9 @@ func (db *DB) createIndexByRecord(record *Record) error {
     }
     defer ix0pf.Close()
     buffer = make([]byte, 0)
-    buffer = append(buffer, gbinary.EncodeInt64(record.index1.start)...)
-    buffer = append(buffer, gbinary.EncodeInt32(record.index1.cap)...)
-    buffer = append(buffer, gbinary.EncodeInt32(record.index1.size)...)
+    buffer = append(buffer, gbinary.EncodeInt64(record.ix1.start)...)
+    buffer = append(buffer, gbinary.EncodeInt32(record.ix1.cap)...)
+    buffer = append(buffer, gbinary.EncodeInt32(record.ix1.size)...)
     if _, err = ix0pf.File().WriteAt(buffer, record.part*16); err != nil {
         return err
     }
