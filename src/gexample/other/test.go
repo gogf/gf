@@ -2,13 +2,18 @@ package main
 
 import (
     "fmt"
-    "g/util/gtime"
     "g/database/gkvdb"
+    "g/util/gtime"
     "strconv"
-    "g/os/gmmap"
 )
 
 func main() {
+    //b := []int{1,2,3,4}
+    //fmt.Println(b[3:4])
+    //return
+    //fmt.Println(gbinary.DecodeToInt64([]byte{1}))
+    //return
+    //fmt.Println(gbinary.EncodeInt32(1)[0:3])
     //b := []int{1,2,3}
     //c := []int{4}
     //copy(b[1:], c)
@@ -23,6 +28,7 @@ func main() {
     //}
     //fmt.Println(space.GetBlock(50))
     //return
+
     db, err := gkvdb.New("/tmp/test.db", "my")
     if err != nil {
         fmt.Println(err)
@@ -30,7 +36,13 @@ func main() {
     //binary.LittleEndian.Uint64(bytes)
     //b, _ := gbinary.Encode(i)
     t1   := gtime.Microsecond()
-    size := 100000
+    //fmt.Println(db.Set([]byte{byte(1)}, []byte{byte(1)}))
+    //fmt.Println(db.Get([]byte{byte(1)}))
+    //fmt.Println(db.Set([]byte("name"), []byte("john")))
+    //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
+    //fmt.Println(db.Get([]byte("name")))
+    //fmt.Println(db.Get([]byte("name2")))
+    size := 1
     //db.Set([]byte{byte(2)}, []byte{byte(2)})
     //db.Set([]byte{byte(1)}, []byte{byte(1)})
     //db.Set([]byte{byte(0)}, []byte{byte(0)})
@@ -39,17 +51,18 @@ func main() {
         db.Set([]byte("key_" + strconv.Itoa(i)), []byte("value_" + strconv.Itoa(i)))
         //db.Set([]byte{byte(i)}, []byte{byte(i)})
     }
-    for i := 0; i < size; i++ {
-        r := db.Get([]byte("key_" + strconv.Itoa(i)))
-        //r := db.Get([]byte{byte(i)})
-        if r == nil {
-            fmt.Println("none for ", i)
-        }
-    }
+    //for i := 0; i < size; i++ {
+    //    r := db.Get([]byte("key_" + strconv.Itoa(i)))
+    //    //r := db.Get([]byte{byte(i)})
+    //    if r == nil {
+    //        fmt.Println("none for ", i)
+    //    }
+    //}
     //db.Remove(true)
-    //fmt.Println(string(db.Get([]byte(strconv.Itoa(123498)))))
+    ////fmt.Println(string(db.Get([]byte(strconv.Itoa(123498)))))
     fmt.Println(gtime.Microsecond() - t1)
     return
+
     //db.Set([]byte("1"), []byte(grand.RandStr(10)))
     //grand.RandStr(10)
     //db.Set([]byte("r88U89b6Vv"), []byte("john211111111111111111111111"))
@@ -61,7 +74,7 @@ func main() {
     //fmt.Println(int32(r))
     //binary.BigEndian.Uint16(b)
     //gbinary.DecodeToInt32([]byte{1,2,3,4})
-    fmt.Println(gtime.Microsecond() - t1)
+    //fmt.Println(gtime.Microsecond() - t1)
     //fmt.Println([]byte{byte(i)})
     return
     //b := make([]byte, 0)
