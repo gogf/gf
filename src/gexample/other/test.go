@@ -4,10 +4,43 @@ import (
     "fmt"
     "g/database/gkvdb"
     "g/util/gtime"
-    "strconv"
+    "g/encoding/gbinary"
 )
 
+// 将给定的[]byte按照二进制位进行编码，只保留二进制中的高位返回(高位只保留1，低位可保留0)
+func EncodeBits(blist ...[]byte) []byte {
+    bits := make([]byte, 0)
+    for _, bs := range blist {
+        for _, b := range bs {
+            switch b {
+                case 0x00:
+                    continue
+                case 0xFF:
+                    count += 8
+                default:
+                    t := b
+                    for i := 0; i < 8; i++ {
+                        if t & 0x01 > 0 {
+                            count++
+                        }
+                        t >>= 1
+                    }
+            }
+        }
+    }
+    for i := 0; i < count/8; i++ {
+        bits = append(bits, 0xFF)
+    }
+    if count%8 != 0 {
+
+    }
+    return bits
+}
+
 func main() {
+    b := []byte{0xff, 0xC0}
+    fmt.Println(gbinary.DecodeToUint16(b))
+    return
     //b := []int{1,2,3,4}
     //fmt.Println(b[3:4])
     //return
@@ -36,24 +69,24 @@ func main() {
     //binary.LittleEndian.Uint64(bytes)
     //b, _ := gbinary.Encode(i)
     t1   := gtime.Microsecond()
-    //fmt.Println(db.Set([]byte{byte(1)}, []byte{byte(1)}))
+    fmt.Println(db.Set([]byte{byte(1)}, []byte{byte(1)}))
     //fmt.Println(db.Get([]byte{byte(1)}))
     //fmt.Println(db.Set([]byte("name"), []byte("john")))
     //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
-    size := 1
-    //db.Set([]byte{byte(2)}, []byte{byte(2)})
-    //db.Set([]byte{byte(1)}, []byte{byte(1)})
-    //db.Set([]byte{byte(0)}, []byte{byte(0)})
-
-    for i := 0; i < size; i++ {
-        db.Set([]byte("key_" + strconv.Itoa(i)), []byte("value_" + strconv.Itoa(i)))
-        //db.Set([]byte{byte(i)}, []byte{byte(i)})
-    }
+    //size := 1
+    ////db.Set([]byte{byte(2)}, []byte{byte(2)})
+    ////db.Set([]byte{byte(1)}, []byte{byte(1)})
+    ////db.Set([]byte{byte(0)}, []byte{byte(0)})
+    //
     //for i := 0; i < size; i++ {
-    //    r := db.Get([]byte("key_" + strconv.Itoa(i)))
-    //    //r := db.Get([]byte{byte(i)})
+    //    //db.Set([]byte("key_" + strconv.Itoa(i)), []byte("value_" + strconv.Itoa(i)))
+    //    db.Set([]byte{byte(i)}, []byte{byte(i)})
+    //}
+    //for i := 0; i < size; i++ {
+    //    //r := db.Get([]byte("key_" + strconv.Itoa(i)))
+    //    r := db.Get([]byte{byte(i)})
     //    if r == nil {
     //        fmt.Println("none for ", i)
     //    }
