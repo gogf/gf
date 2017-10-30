@@ -5,9 +5,7 @@
 // 数据文件1结构 ：键值(变长)
 // 数据项类型 :
 // 0: 数据文件0中的数据项键值放在第5项中，最大长度为5byte
-// 1: 数据文件0中的数据项键值放在数据文件1中，第5项为数据文件1中的索引位置，键值cap数据单位为Byte
-// 2: 数据文件0中的数据项键值放在数据文件1中，第5项为数据文件1中的索引位置，键值cap数据单位为KB
-// 3: 数据文件0中的数据项键值放在数据文件1中，第5项为数据文件1中的索引位置，键值cap数据单位为MB
+// 1-3: 数据文件0中的数据项键值放在数据文件1中，第5项为数据文件1中的索引位置，键值cap存放gBUCKET_SIZE的倍数
 
 package gkvdb
 
@@ -21,14 +19,13 @@ import (
     "g/encoding/ghash"
     "bytes"
     "strconv"
-    "fmt"
 )
 
 const (
-    gPARTITION_SIZE          = 1165084                    // 哈希表分区大小(大小约为10MB)
-    gMAX_KEY_SIZE            = (0xFF >> 4) - 8            // 键名最大长度(4087)
+    gPARTITION_SIZE          = 1048576                    // 哈希表分区大小(大小约为10MB)
+    gMAX_KEY_SIZE            = (0xFFFF >> 4) - 10         // 键名最大长度(4087)
     gMAX_VALUE_SIZE          = 0xFFFF                     // 键值最大长度(65535)
-    gBUCKET_SIZE             = 1024                       // 数据文件0文件列表分块大小(byte, 值越大，初始化时占用的空间越大)
+    gBUCKET_SIZE             = 64                         // 数据文件0文件列表分块大小(byte, 值越大，初始化时占用的空间越大)
     gFILE_POOL_CACHE_TIMEOUT = 60                         // 文件指针池缓存时间(秒)
 )
 
@@ -43,29 +40,30 @@ type DB struct {
 
 // KV数据检索记录
 type Record struct {
-    hash64    uint64 // 64位的hash code
-    part      int64  // 分区位置
-    key       []byte // 键名
-    value     []byte // 键值(当键值<=5时直接存放到db0文件中，检索时便能直接获取到值)
+    hash64    uint64  // 64位的hash code
+    part      int64   // 分区位置
+    key       []byte  // 键名
+    value     []byte  // 键值(当键值<=5时直接存放到db0文件中，检索时便能直接获取到值)
     ix struct {
-        start int64  // 一级索引开始位置
-        end   int64  // 一级索引结束位置
+        start int64   // 一级索引开始位置
+        end   int64   // 一级索引结束位置
     }
     db0 struct {
         start  int64  // 开始位置
         end    int64  // 结束位置
-        cap    int32  // 分配长度(byte)
-        size   int32  // 真实长度(byte)
+        cap    int    // 分配长度(byte)
+        size   int    // 真实长度(byte)
         buffer []byte // 数据项列表([]byte)
-        index  int32  // 列表匹配的索引位置
+        index  int    // 列表匹配的索引位置
+        match  bool   // 是否在查找中准确匹配key
     }
     db1 struct {
         start  int64  // 数据文件中的开始地址
         end    int64  // 数据文件中的结束地址
-        vcap   uint32 // 键值允许存放的的最大长度（用以修改对比）
-        klen   uint32 // 键名大小
-        vlen   uint32 // 键值大小(byte)
-        vtype  uint8  // 键值类型
+        vcap   uint   // 键值允许存放的的最大长度（用以修改对比）
+        klen   uint   // 键名大小
+        vlen   uint   // 键值大小(byte)
+        vtype  uint   // 键值类型
     }
 }
 
@@ -132,8 +130,8 @@ func (db *DB) getIndexInfoByRecord(record *Record) error {
     if buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.ix.start, record.ix.end); buffer != nil {
         //fmt.Println("get index:",buffer)
         record.db0.start = gbinary.DecodeToInt64(buffer[0:5])
-        record.db0.cap   = int32(gbinary.DecodeToUint16(buffer[5:7])*gBUCKET_SIZE)
-        record.db0.size  = int32(gbinary.DecodeToUint32(buffer[7:10]))
+        record.db0.cap   = int(gbinary.DecodeToUint16(buffer[5:7])*gBUCKET_SIZE)
+        record.db0.size  = int(gbinary.DecodeToUint32(buffer[7:10]))
         record.db0.end   = record.db0.start + int64(record.db0.size)
         return nil
     }
@@ -149,33 +147,25 @@ func (db *DB) getDataInfoByRecord(record *Record) error {
     defer pf.Close()
     record.db0.buffer = gfile.GetBinContentByTwoOffsets(pf.File(), record.db0.start, record.db0.end)
     if record.db0.buffer != nil {
-        fmt.Println("get record", record)
+        //fmt.Println("get record", record)
         // 线性查找
         for i := 0; i < len(record.db0.buffer); {
             buffer := record.db0.buffer[i:]
-            bits   := gbinary.DecodeToUint64(buffer[0:5])
-            length := uint32(bits >> 52)
-            key    := buffer[9 : length]
+            bits   := gbinary.DecodeBytesToBits(buffer[0:5])
+            length := gbinary.DecodeBits(bits[0 : 12])
+            key    := buffer[10 : length]
             if bytes.Compare(key, record.key) == 0 {
-                record.db0.index  = int32(i)
+                record.db0.index  = i
+                record.db0.match  = true
                 record.db1.klen   = length - 10
-                record.db1.vcap   = uint32((bits & 0x0003FF0000000000) >> 42)
-                record.db1.vlen   = uint32((bits & 0x00000FFFF0000000) >> 26)
-                record.db1.vtype  = uint8((bits  & 0x0000000003000000) >> 24)
+                record.db1.vcap   = gbinary.DecodeBits(bits[12 : 22])*gBUCKET_SIZE
+                record.db1.vlen   = gbinary.DecodeBits(bits[22 : 38])
+                record.db1.vtype  = gbinary.DecodeBits(bits[38 : 40])
                 if record.db1.vtype == 0 {
-                    record.value = buffer[4 : 4 + record.db1.vlen]
+                    record.value = buffer[5 : 5 + record.db1.vlen]
                 } else {
-                    record.db1.start = gbinary.DecodeToInt64(buffer[4 : 10])
-                    switch record.db1.vtype {
-                        case 1:
-                            record.db1.end   = record.db1.start + int64(record.db1.vlen)
-                        case 2:
-                            record.db1.vcap  = record.db1.vcap*1024
-                            record.db1.end   = record.db1.start + int64(record.db1.vlen)*1024
-                        case 3:
-                            record.db1.vcap  = record.db1.vcap*1024*1024
-                            record.db1.end   = record.db1.start + int64(record.db1.vlen)*1024*1024
-                    }
+                    record.db1.start = gbinary.DecodeToInt64(buffer[5 : 10])
+                    record.db1.end   = record.db1.start + int64(record.db1.vlen)
                 }
                 break
             } else {
@@ -195,11 +185,12 @@ func (db *DB) getRecordByKey(key []byte) (*Record, error) {
         part    : part,
         key     : key,
     }
-    record.db1.klen = uint32(len(key))
+
     // 查询索引信息
     if err := db.getIndexInfoByRecord(record); err != nil {
         return record, err
     }
+
     // 查询数据信息
     if record.db0.end > 0 {
         if err := db.getDataInfoByRecord(record); err != nil {
@@ -215,9 +206,15 @@ func (db *DB) getValueByKey(key []byte) ([]byte, error) {
     if err != nil {
         return nil, err
     }
+
+    if record == nil {
+        return nil, nil
+    }
+
     if len(record.value) > 0 {
         return record.value, nil
     }
+
     if record.db1.end > 0 {
         pf, err := db.db1fp.File()
         if err != nil {
@@ -293,91 +290,78 @@ func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error
         return err
     }
     defer db0pf.Close()
-    bits   := uint64(0)
+    bits   := make([]uint8, 0)
     data   := make([]byte, 0)
     buffer := make([]byte, 0)
+    record.db1.klen = uint(len(key))
+    record.db1.vlen = uint(len(value))
     // 如果键值大于5byte, 写入到db1中
     if len(value) > 5 {
-        //db1pf, err := db.db1fp.File()
-        //if err != nil {
-        //    return err
-        //}
-        //defer db1pf.Close()
-        //record.db1.vlen = uint32(len(value))
-        //if record.db1.end <= 0 || record.db1.vcap < record.db1.vlen {
-        //    // @todo 碎片管理
-        //    start, err := db1pf.File().Seek(0, 2)
-        //    if err != nil {
-        //        return err
-        //    }
-        //    record.db1.vcap  = record.db1.vlen
-        //    record.db1.start = start
-        //    record.db1.end   = start + int64(record.db1.vlen)
-        //}
-        //// 键值大小必须为gBUCKET_SIZE的整数倍，且位数必须为 0-127
-        //vbuffer := make([]byte, 0)
-        //vbuffer  = append(vbuffer, value...)
-        //if record.db1.vlen > gMAX_VALUE_SIZE && record.db1.vlen%gBUCKET_SIZE != 0 {
-        //    vlen  := record.db1.vlen
-        //    count := 0
-        //    for vlen > gMAX_VALUE_SIZE {
-        //        vlen = uint32(math.Ceil(float64(vlen/1024)))
-        //        count++
-        //    }
-        //    diff := gBUCKET_SIZE - record.db1.vlen%gBUCKET_SIZE
-        //    for i := 0; i < int(diff); i++ {
-        //        vbuffer  = append(vbuffer, byte(" "))
-        //    }
-        //    record.db1.vlen  = record.db1.vlen + diff
-        //    record.db1.vcap  = record.db1.vlen
-        //    record.db1.end   = record.db1.start + int64(record.db1.vlen)
-        //}
-        //if _, err = db1pf.File().WriteAt(vbuffer, record.db1.start); err != nil {
-        //    return err
-        //}
-        //
-        //var vcap, vlen uint8
-        //if record.db1.vlen < gMAX_VALUE_SIZE {
-        //    vcap             = uint8(record.db1.vcap)
-        //    vlen             = uint8(record.db1.vlen)
-        //    record.db1.vtype = 1
-        //} else if record.db1.vlen < gMAX_VALUE_SIZE*1024 {
-        //    vcap             = uint8(record.db1.vcap/1024)
-        //    vlen             = uint8(record.db1.vlen/1024)
-        //    record.db1.vtype = 2
-        //} else if record.db1.vlen < gMAX_VALUE_SIZE*1024*1024 {
-        //    vcap             = uint8(record.db1.vcap/1024/1024)
-        //    vlen             = uint8(record.db1.vlen/1024/1024)
-        //    record.db1.vtype = 3
-        //}
-        //bits  = bits | uint16(vcap << 9)
-        //bits  = bits | uint16(vlen << 2)
-        //bits  = bits | uint16(record.db1.vtype & 0x0003)
-    } else {
-        bits  = bits | uint64(10 + record.db1.klen) & 0x0FFF << 28
-        bits  = bits | uint64(record.db1.vcap/gBUCKET_SIZE) & 0x03FF << 18
-        bits  = bits | uint64(record.db1.vlen) & 0xFFFF << 2
-        bits  = bits | uint64(record.db1.vtype) & 0x3
-        data  = append(data, gbinary.EncodeUint64(bits)[0:5]...)
-        data  = append(data, value...)
-        for i := 0; i < 5 - len(value); i++ {
-            data  = append(data, byte(0))
+        db1pf, err := db.db1fp.File()
+        if err != nil {
+            return err
         }
-        data   = append(data, key...)
+        defer db1pf.Close()
+        // 判断是否额外分配键值存储空间
+        if record.db1.end <= 0 || record.db1.vcap < record.db1.vlen {
+            // @todo 碎片管理
+            start, err := db1pf.File().Seek(0, 2)
+            if err != nil {
+                return err
+            }
+            record.db1.start = start
+            record.db1.end   = start + int64(record.db1.vlen)
+        }
+        // 键值大小必须为gBUCKET_SIZE的整数倍
+        vbuffer := make([]byte, 0)
+        vbuffer  = append(vbuffer, value...)
+        if record.db1.vcap < record.db1.vlen {
+            for {
+                record.db1.vcap += gBUCKET_SIZE
+                if record.db1.vcap >= record.db1.vlen {
+                    break
+                }
+            }
+            for i := 0; i < int(record.db1.vcap - record.db1.vlen); i++ {
+                vbuffer = append(vbuffer, byte(0))
+            }
+        }
+        if _, err = db1pf.File().WriteAt(vbuffer, record.db1.start); err != nil {
+            return err
+        }
+        // 改变value的值为db1文件偏移地址
+        value            = gbinary.EncodeUint64(uint64(record.db1.start))[0:5]
+        record.db1.vtype = 1
     }
-    fmt.Println(data)
-    fmt.Println(gbinary.DecodeToUint64(data[0:5]) >> 28)
-    os.Exit(0)
+    // 二进制打包
+    bits = gbinary.EncodeBits(bits, record.db1.klen + 10, 12)
+    bits = gbinary.EncodeBits(bits, record.db1.vcap/gBUCKET_SIZE, 10)
+    bits = gbinary.EncodeBits(bits, record.db1.vlen, 16)
+    bits = gbinary.EncodeBits(bits, record.db1.vtype, 2)
+    data = append(data, gbinary.EncodeBitsToBytes(bits)...)
+    data = append(data, value...)
+    for i := 0; i < 5 - len(value); i++ {
+        data  = append(data, byte(0))
+    }
+    data = append(data, key...)
+    //fmt.Println("data:", data)
     // 数据列表打包
     buffer = append(buffer, data...)
     if len(record.db0.buffer) > 0 {
-        buffer = append(buffer, record.db0.buffer[0 : record.db0.index]...)
-        buffer = append(buffer, record.db0.buffer[record.db0.index + 8 + int32(record.db1.klen) :]...)
+        if record.db0.match {
+            buffer = append(buffer, record.db0.buffer[0 : record.db0.index]...)
+            buffer = append(buffer, record.db0.buffer[record.db0.index + 10 + int(record.db1.klen) :]...)
+        } else {
+            buffer = append(buffer, record.db0.buffer...)
+        }
     }
-    //fmt.Println(buffer)
+
+    //fmt.Println("record:", record)
+    //fmt.Println("db0   buffer:", record.db0.buffer)
+    //fmt.Println("write buffer:", buffer)
 
     // 判断数据列表空间是否足够
-    record.db0.size = int32(len(buffer))
+    record.db0.size = len(buffer)
     if record.db0.cap < record.db0.size {
         // @todo 碎片管理
         start, err := db0pf.File().Seek(0, 2)
@@ -397,6 +381,7 @@ func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error
             buffer = append(buffer, byte(0))
         }
     }
+
     if _, err = db0pf.File().WriteAt(buffer, record.db0.start); err != nil {
         return err
     }
