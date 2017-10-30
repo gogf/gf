@@ -1,7 +1,7 @@
 // 基于哈希分区的KV嵌入式数据库
 // 索引文件结构：数据0文件偏移量(5) 数据0列表分配大小(2 buckets) 数据0列表真实长度(3)
-// 数据文件0结构1：[数据项长度(12bit) 键值分配长度(10bit buckets) 键值真实长度(2) 数据项类型(2bit - 0) 键值(变长,最大5) 键名(变长)](变长,链表)
-// 数据文件0结构2：[数据项长度(12bit) 键值分配长度(10bit buckets) 键值真实长度(2) 数据项类型(2bit - 1|2|3) 数据文件偏移量(5) 键名(变长)](变长,链表)
+// 数据文件0结构1：[数据项长度(10bit) 键值分配长度(12bit buckets) 键值真实长度(2) 数据项类型(2bit - 0) 键值(变长,最大5) 键名(变长)](变长,链表)
+// 数据文件0结构2：[数据项长度(10bit) 键值分配长度(12bit buckets) 键值真实长度(2) 数据项类型(2bit - 1|2|3) 数据文件偏移量(5) 键名(变长)](变长,链表)
 // 数据文件1结构 ：键值(变长)
 // 数据项类型 :
 // 0: 数据文件0中的数据项键值放在第5项中，最大长度为5byte
@@ -23,7 +23,7 @@ import (
 
 const (
     gPARTITION_SIZE          = 1048576                    // 哈希表分区大小(大小约为10MB)
-    gMAX_KEY_SIZE            = (0xFFFF >> 4) - 10         // 键名最大长度(4087)
+    gMAX_KEY_SIZE            = (0xFFFF >> 6) - 10         // 键名最大长度(1013)
     gMAX_VALUE_SIZE          = 0xFFFF                     // 键值最大长度(65535)
     gBUCKET_SIZE             = 64                         // 数据文件0文件列表分块大小(byte, 值越大，初始化时占用的空间越大)
     gFILE_POOL_CACHE_TIMEOUT = 60                         // 文件指针池缓存时间(秒)
@@ -152,13 +152,13 @@ func (db *DB) getDataInfoByRecord(record *Record) error {
         for i := 0; i < len(record.db0.buffer); {
             buffer := record.db0.buffer[i:]
             bits   := gbinary.DecodeBytesToBits(buffer[0:5])
-            length := gbinary.DecodeBits(bits[0 : 12])
+            length := gbinary.DecodeBits(bits[0 : 10])
             key    := buffer[10 : length]
             if bytes.Compare(key, record.key) == 0 {
                 record.db0.index  = i
                 record.db0.match  = true
                 record.db1.klen   = length - 10
-                record.db1.vcap   = gbinary.DecodeBits(bits[12 : 22])*gBUCKET_SIZE
+                record.db1.vcap   = gbinary.DecodeBits(bits[10 : 22])*gBUCKET_SIZE
                 record.db1.vlen   = gbinary.DecodeBits(bits[22 : 38])
                 record.db1.vtype  = gbinary.DecodeBits(bits[38 : 40])
                 if record.db1.vtype == 0 {
@@ -334,8 +334,8 @@ func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error
         record.db1.vtype = 1
     }
     // 二进制打包
-    bits = gbinary.EncodeBits(bits, record.db1.klen + 10, 12)
-    bits = gbinary.EncodeBits(bits, record.db1.vcap/gBUCKET_SIZE, 10)
+    bits = gbinary.EncodeBits(bits, record.db1.klen + 10, 10)
+    bits = gbinary.EncodeBits(bits, record.db1.vcap/gBUCKET_SIZE, 12)
     bits = gbinary.EncodeBits(bits, record.db1.vlen, 16)
     bits = gbinary.EncodeBits(bits, record.db1.vtype, 2)
     data = append(data, gbinary.EncodeBitsToBytes(bits)...)
