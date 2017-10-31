@@ -7,9 +7,14 @@ import (
     "g/util/grand"
 )
 
-
+func remove(slice []interface{}, i int) []interface{} {
+    //    copy(slice[i:], slice[i+1:])
+    //    return slice[:len(slice)-1]
+    return append(slice[:i], slice[i+1:]...)
+}
 
 func main() {
+
     //a := gbinary.EncodeBits(nil, 100, 10)
     //fmt.Println(a)
     //b := gbinary.EncodeBitsToBytes(a)
@@ -17,9 +22,9 @@ func main() {
     //fmt.Println(gbinary.EncodeInt32(1))
     //return
     //return
-    //b := []int{1,2,3,4}
-    //fmt.Println(b[3:4])
-    //return
+    b := []int{1,2,3,4}
+    fmt.Println(remove([]interface{}(b), 1))
+    return
     //fmt.Println(gbinary.DecodeToInt64([]byte{1}))
     //return
     //fmt.Println(gbinary.EncodeInt32(1)[0:3])
