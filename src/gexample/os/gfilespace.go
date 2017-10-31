@@ -18,7 +18,7 @@ func main() {
 
 
     fmt.Println(gtime.Microsecond() - t1)
-    fmt.Println(space.GetBlock(15))
-    fmt.Println(space.GetBlock(15))
+    fmt.Println(space.GetAllBlocksByIndex()[0])
+    //fmt.Println(space.GetBlock(15))
     //fmt.Println(space.GetBlock(15))
 }

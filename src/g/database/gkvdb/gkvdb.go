@@ -22,10 +22,13 @@ import (
     "g/encoding/ghash"
     "bytes"
     "strconv"
+    "g/os/gfilespace"
+    "fmt"
 )
 
 const (
-    gPARTITION_SIZE          = 1048576                    // 哈希表分区大小(大小约为10MB)
+    //gPARTITION_SIZE          = 1048576                    // 哈希表分区大小(大小约为10MB)
+    gPARTITION_SIZE          = 2                    // 哈希表分区大小(大小约为10MB)
     gMAX_KEY_SIZE            = (0xFFFF >> 6) - 10         // 键名最大长度(1013)
     gMAX_VALUE_SIZE          = 0xFFFF                     // 键值最大长度(65535)
     gBUCKET_SIZE             = 64                         // 元数据文件文件列表分块大小(byte, 值越大，初始化时占用的空间越大)
@@ -34,11 +37,13 @@ const (
 
 // KV数据库
 type DB struct {
-    path  string          // 数据文件存放目录路径
-    name  string          // 数据文件名
-    ixfp  *gfilepool.Pool // 索引文件打开指针池(用以高并发下的IO复用)
-    mtfp  *gfilepool.Pool // 元数据文件打开指针池(元数据，包含索引信息和部分数据信息)
-    dbfp  *gfilepool.Pool // 数据文件打开指针池(纯键值存储)
+    path  string            // 数据文件存放目录路径
+    name  string            // 数据文件名
+    ixfp  *gfilepool.Pool   // 索引文件打开指针池(用以高并发下的IO复用)
+    mtfp  *gfilepool.Pool   // 元数据文件打开指针池(元数据，包含索引信息和部分数据信息)
+    dbfp  *gfilepool.Pool   // 数据文件打开指针池(纯键值存储)
+    mtsp  *gfilespace.Space // 元数据文件碎片管理
+    dbsp  *gfilespace.Space // 数据文件碎片管理器
 }
 
 // KV数据检索记录
@@ -85,10 +90,11 @@ func New(path, name string) (*DB, error) {
     if !gfile.IsWritable(path) {
         return nil, errors.New(path + " is not writable")
     }
+    db := &DB {path : path, name : name}
     // 索引/数据文件权限检测
-    ixpath := path + gfile.Separator + name + ".ix"
-    mtpath := path + gfile.Separator + name + ".mt"
-    dbpath := path + gfile.Separator + name + ".db"
+    ixpath := db.getIndexFilePath()
+    mtpath := db.getMetaFilePath()
+    dbpath := db.getDataFilePath()
     if gfile.Exists(ixpath) && (!gfile.IsWritable(ixpath) || !gfile.IsReadable(ixpath)){
         return nil, errors.New("permission denied to index file: " + ixpath)
     }
@@ -99,16 +105,43 @@ func New(path, name string) (*DB, error) {
         return nil, errors.New("permission denied to data file: " + dbpath)
     }
     // 创建文件指针池
-    ixfp := gfilepool.New(ixpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
-    mtfp := gfilepool.New(mtpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
-    dbfp := gfilepool.New(dbpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
-    return &DB {
-        path   : path,
-        name   : name,
-        ixfp   : ixfp,
-        mtfp  : mtfp,
-        dbfp  : dbfp,
-    }, nil
+    db.ixfp = gfilepool.New(ixpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
+    db.mtfp = gfilepool.New(mtpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
+    db.dbfp = gfilepool.New(dbpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
+    db.initFileSpace()
+    return db, nil
+}
+
+func (db *DB) getIndexFilePath() string {
+    return db.path + gfile.Separator + db.name + ".ix"
+}
+
+func (db *DB) getMetaFilePath() string {
+    return db.path + gfile.Separator + db.name + ".mt"
+}
+
+func (db *DB) getDataFilePath() string {
+    return db.path + gfile.Separator + db.name + ".db"
+}
+
+// 初始化碎片管理器
+func (db *DB) initFileSpace() {
+    if db.mtsp == nil {
+        db.mtsp  = gfilespace.New()
+        usagesp := gfilespace.New()
+        buffer := gfile.GetBinContents(db.getIndexFilePath())
+        for i := 0; i < len(buffer); i += 9 {
+            index := gbinary.DecodeToInt64(buffer[i : i + 5])
+            cap   := int(gbinary.DecodeToUint16(buffer[i + 5 : i + 7])*gBUCKET_SIZE)
+            if cap > 0 {
+                usagesp.AddBlock(int(index), uint(cap))
+            }
+        }
+        fmt.Println(usagesp.GetAllBlocksByIndex())
+    }
+    if db.dbsp == nil {
+        db.dbsp = gfilespace.New()
+    }
 }
 
 // 计算关键字的hash code

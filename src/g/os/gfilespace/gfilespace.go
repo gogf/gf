@@ -1,4 +1,5 @@
-// 文件空间管理，包括内容空间分配、文件碎片维护及再利用
+// 文件空间管理(不仅仅是碎片管理)，
+// 可用于文件碎片维护及再利用，支持自动合并连续碎片空间
 package gfilespace
 
 import (
@@ -24,6 +25,11 @@ func New() *Space {
         blocks  : make([]Block, 0),
         indexes : make([]Block, 0),
     }
+}
+
+// 获得所有的碎片空间，按照index升序排序
+func (space *Space) GetAllBlocksByIndex() []Block {
+    return space.indexes
 }
 
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块
@@ -249,6 +255,16 @@ func (space *Space) searchBlockByIndex(index int) (int, int) {
     //fmt.Println(mid, cmp)
     //fmt.Println()
     return mid, cmp
+}
+
+// 获得碎片偏移量
+func (block *Block) Index() int {
+    return block.index
+}
+
+// 获得碎片大小
+func (block *Block) Size() uint {
+    return block.size
 }
 
 

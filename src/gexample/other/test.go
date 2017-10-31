@@ -7,12 +7,6 @@ import (
     "g/util/grand"
 )
 
-func remove(slice []interface{}, i int) []interface{} {
-    //    copy(slice[i:], slice[i+1:])
-    //    return slice[:len(slice)-1]
-    return append(slice[:i], slice[i+1:]...)
-}
-
 func main() {
 
     //a := gbinary.EncodeBits(nil, 100, 10)
@@ -22,9 +16,7 @@ func main() {
     //fmt.Println(gbinary.EncodeInt32(1))
     //return
     //return
-    b := []int{1,2,3,4}
-    fmt.Println(remove([]interface{}(b), 1))
-    return
+
     //fmt.Println(gbinary.DecodeToInt64([]byte{1}))
     //return
     //fmt.Println(gbinary.EncodeInt32(1)[0:3])
@@ -56,7 +48,7 @@ func main() {
     //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
-    size := 100
+    size := 1
     ////db.Set([]byte{byte(2)}, []byte{byte(2)})
     ////db.Set([]byte{byte(1)}, []byte{byte(1)})
     ////db.Set([]byte{byte(0)}, []byte{byte(0)})
