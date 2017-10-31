@@ -1,3 +1,4 @@
+// 文件空间管理，包括内容空间分配、文件碎片维护及再利用
 // @todo 未开发完成，暂时不能使用
 package gfilespace
 
@@ -12,15 +13,16 @@ import (
 
 // 文件空间管理结构体
 type Space struct {
-    fp     *gfilepool.Pool
-    lock   sync.RWMutex
-    blocks []Block
+    fp     *gfilepool.Pool // 文件指针池
+    mu     sync.RWMutex    // 文件并发操作锁
+    path   string          // 文件绝对路径
+    blocks []Block         // 空间区块列表
 }
 
 // 文件空闲块
 type Block struct {
-    index int64
-    size  uint32
+    index int64  // 文件偏移量
+    size  uint32 // 区块大小(byte)
 }
 
 // 创建一个空间管理器，基于给定的文件
@@ -31,14 +33,15 @@ func New(path string) (*Space, error) {
     space := &Space{
         fp     : gfilepool.New(path, os.O_RDONLY|os.O_CREATE, 60),
         blocks : make([]Block, 0),
+        path   : path,
     }
     return space, nil
 }
 
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块
 func (space *Space) GetBlock(size uint32) (int64, uint32) {
-    space.lock.RLock()
-    defer space.lock.RUnlock()
+    space.mu.RLock()
+    defer space.mu.RUnlock()
 
     mid, cmp := space.searchBlock(size)
     if cmp == -1 {

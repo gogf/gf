@@ -1,3 +1,4 @@
+// 二进制及byte操作管理包
 package gbinary
 
 import (
@@ -6,7 +7,7 @@ import (
     "math"
 )
 
-// (通用)二进制打包
+// (通用,效率较低)二进制打包
 func Encode(vs ...interface{}) ([]byte, error) {
     buf := new(bytes.Buffer)
     for i := 0; i < len(vs); i++ {
@@ -18,7 +19,7 @@ func Encode(vs ...interface{}) ([]byte, error) {
     return buf.Bytes(), nil
 }
 
-// (通用)二进制解包，注意第二个参数之后的变量是变量的指针地址
+// (通用,效率较低)二进制解包，注意第二个参数之后的变量是变量的指针地址
 func Decode(b []byte, vs ...interface{}) error {
     buf := bytes.NewBuffer(b)
     for i := 0; i < len(vs); i++ {

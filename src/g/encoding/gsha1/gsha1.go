@@ -1,4 +1,4 @@
-package gsha
+package gsha1
 
 import (
     "crypto/sha1"

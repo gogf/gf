@@ -1,3 +1,4 @@
+// 对常用关系数据库的封装管理包
 package gdb
 
 import (
