@@ -27,6 +27,12 @@ func New() *Space {
     }
 }
 
+// 清空数据列表
+func (space *Space) Empty() {
+    space.blocks  = make([]Block, 0)
+    space.indexes = make([]Block, 0)
+}
+
 // 获得所有的碎片空间，按照index升序排序
 func (space *Space) GetAllBlocksByIndex() []Block {
     return space.indexes
@@ -135,10 +141,6 @@ func (space *Space) AddBlock(index int, size uint) {
     indexpos := mid
     if cmp == -1 {
         // 添加到前面
-        indexpos = mid - 1
-        if indexpos < 0 {
-            indexpos = 0
-        }
     } else {
         // 添加到后面
         indexpos = mid + 1
@@ -157,10 +159,6 @@ func (space *Space) AddBlock(index int, size uint) {
     blockpos := mid
     if cmp == -1 {
         // 添加到前面
-        blockpos = mid - 1
-        if blockpos < 0 {
-            blockpos = 0
-        }
     } else {
         // 添加到后面
         blockpos = mid + 1

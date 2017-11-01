@@ -23,12 +23,11 @@ import (
     "bytes"
     "strconv"
     "g/os/gfilespace"
-    "fmt"
+    "sync"
 )
 
 const (
-    //gPARTITION_SIZE          = 1048576                    // 哈希表分区大小(大小约为10MB)
-    gPARTITION_SIZE          = 2                    // 哈希表分区大小(大小约为10MB)
+    gPARTITION_SIZE          = 1048576                    // 哈希表分区大小(大小约为10MB)
     gMAX_KEY_SIZE            = (0xFFFF >> 6) - 10         // 键名最大长度(1013)
     gMAX_VALUE_SIZE          = 0xFFFF                     // 键值最大长度(65535)
     gBUCKET_SIZE             = 64                         // 元数据文件文件列表分块大小(byte, 值越大，初始化时占用的空间越大)
@@ -37,6 +36,7 @@ const (
 
 // KV数据库
 type DB struct {
+    mu    sync.RWMutex
     path  string            // 数据文件存放目录路径
     name  string            // 数据文件名
     ixfp  *gfilepool.Pool   // 索引文件打开指针池(用以高并发下的IO复用)
@@ -59,8 +59,8 @@ type Record struct {
     mt struct {
         start  int64  // 开始位置
         end    int64  // 结束位置
-        cap    int    // 分配长度(byte)
-        size   int    // 真实长度(byte)
+        cap    uint   // 列表分配长度(byte)
+        size   uint   // 列表真实长度(byte)
         buffer []byte // 数据项列表([]byte)
         index  int    // 列表匹配的索引位置
         match  bool   // 是否在查找中准确匹配key
@@ -124,24 +124,54 @@ func (db *DB) getDataFilePath() string {
     return db.path + gfile.Separator + db.name + ".db"
 }
 
-// 初始化碎片管理器
+// 初始化碎片管理器，计算当前数据库存在的碎片，保存到内存中用于运行时计算和分配
 func (db *DB) initFileSpace() {
     if db.mtsp == nil {
         db.mtsp  = gfilespace.New()
-        usagesp := gfilespace.New()
-        buffer := gfile.GetBinContents(db.getIndexFilePath())
-        for i := 0; i < len(buffer); i += 9 {
-            index := gbinary.DecodeToInt64(buffer[i : i + 5])
-            cap   := int(gbinary.DecodeToUint16(buffer[i + 5 : i + 7])*gBUCKET_SIZE)
-            if cap > 0 {
-                usagesp.AddBlock(int(index), uint(cap))
-            }
-        }
-        fmt.Println(usagesp.GetAllBlocksByIndex())
     }
     if db.dbsp == nil {
         db.dbsp = gfilespace.New()
     }
+    pf, _ := db.mtfp.File()
+    defer pf.Close()
+
+    usedmtsp := gfilespace.New()
+    useddbsp := gfilespace.New()
+    ixbuffer := gfile.GetBinContents(db.getIndexFilePath())
+    for i := 0; i < len(ixbuffer); i += 10 {
+        mtindex := gbinary.DecodeToInt64(ixbuffer[i : i + 5])
+        mtcap   := int(gbinary.DecodeToUint16(ixbuffer[i + 5 : i + 7])*gBUCKET_SIZE)
+        mtsize  := int(gbinary.DecodeToUint32(ixbuffer[i + 7 : i + 10]))
+        if mtcap > 0 {
+            usedmtsp.AddBlock(int(mtindex), uint(mtcap))
+            // 获取数据列表
+            if buffer := gfile.GetBinContentByTwoOffsets(pf.File(), mtindex, mtindex + int64(mtsize)); buffer != nil {
+                bits   := gbinary.DecodeBytesToBits(buffer[0:5])
+                dbcap  := gbinary.DecodeBits(bits[10 : 22])
+                dbtype := gbinary.DecodeBits(bits[38 : 40])
+                if dbtype > 0 {
+                    dbindex := gbinary.DecodeToInt64(buffer[5 : 10])
+                    useddbsp.AddBlock(int(dbindex), uint(dbcap)*gBUCKET_SIZE)
+                }
+            }
+        }
+    }
+    start := 0
+    for _, v := range usedmtsp.GetAllBlocksByIndex() {
+        if v.Index() > start {
+            db.dbsp.AddBlock(start, uint(v.Index() - start))
+            start = v.Index() + int(v.Size())
+        }
+    }
+    start  = 0
+    for _, v := range useddbsp.GetAllBlocksByIndex() {
+        if v.Index() > start {
+            db.mtsp.AddBlock(start, uint(v.Index() - start))
+            start = v.Index() + int(v.Size())
+        }
+    }
+    //fmt.Println(db.mtsp.GetAllBlocksByIndex())
+    //fmt.Println(db.dbsp.GetAllBlocksByIndex())
 }
 
 // 计算关键字的hash code
@@ -166,8 +196,8 @@ func (db *DB) getIndexInfoByRecord(record *Record) error {
     if buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.ix.start, record.ix.end); buffer != nil {
         //fmt.Println("get index:",buffer)
         record.mt.start = gbinary.DecodeToInt64(buffer[0:5])
-        record.mt.cap   = int(gbinary.DecodeToUint16(buffer[5:7])*gBUCKET_SIZE)
-        record.mt.size  = int(gbinary.DecodeToUint32(buffer[7:10]))
+        record.mt.cap   = uint(gbinary.DecodeToUint16(buffer[5:7])*gBUCKET_SIZE)
+        record.mt.size  = uint(gbinary.DecodeToUint32(buffer[7:10]))
         record.mt.end   = record.mt.start + int64(record.mt.size)
         return nil
     }
@@ -194,12 +224,13 @@ func (db *DB) getDataInfoByRecord(record *Record) error {
                 record.mt.index  = i
                 record.mt.match  = true
                 record.db.klen   = length - 10
-                record.db.vcap   = gbinary.DecodeBits(bits[10 : 22])*gBUCKET_SIZE
+                record.db.vcap   = gbinary.DecodeBits(bits[10 : 22])
                 record.db.vlen   = gbinary.DecodeBits(bits[22 : 38])
                 record.db.vtype  = gbinary.DecodeBits(bits[38 : 40])
                 if record.db.vtype == 0 {
                     record.value = buffer[5 : 5 + record.db.vlen]
                 } else {
+                    record.db.vcap  = record.db.vcap*gBUCKET_SIZE
                     record.db.start = gbinary.DecodeToInt64(buffer[5 : 10])
                     record.db.end   = record.db.start + int64(record.db.vlen)
                 }
@@ -220,6 +251,7 @@ func (db *DB) getRecordByKey(key []byte) (*Record, error) {
         hash64  : hash64,
         part    : part,
         key     : key,
+        value   : nil,
     }
 
     // 查询索引信息
@@ -242,12 +274,12 @@ func (db *DB) getValueByKey(key []byte) ([]byte, error) {
     if err != nil {
         return nil, err
     }
-
+//fmt.Println(record)
     if record == nil {
         return nil, nil
     }
 
-    if len(record.value) > 0 {
+    if record.value != nil {
         return record.value, nil
     }
 
@@ -272,14 +304,6 @@ func (db *DB) Close() {
     db.dbfp.Close()
 }
 
-// 删除数据库
-func (db *DB) Remove(sure bool) {
-    if sure {
-        db.Close()
-        gfile.Remove(db.path)
-    }
-}
-
 // 查询KV数据
 func (db *DB) Get(key []byte) []byte {
     value, _ := db.getValueByKey(key)
@@ -296,61 +320,142 @@ func (db *DB) Set(key []byte, value []byte) error {
         return errors.New("too large value size, max allowed: " + strconv.Itoa(gMAX_VALUE_SIZE) + " bytes")
     }
 
+    // 查询索引信息
     record, err := db.getRecordByKey(key)
     if err != nil {
         return err
     }
-     //fmt.Println(record)
-    //return nil
+
     // 写入数据文件，并更新record信息
     if err := db.insertDataByRecord(key, value, record); err != nil {
         return errors.New("inserting data error: " + err.Error())
     }
-    //oldcap := record.mt.cap
+
     // 根据record信息更新索引文件
-    if err := db.createIndexByRecord(record); err != nil {
+    if err := db.updateIndexByRecord(record); err != nil {
         return errors.New("creating index error: " + err.Error())
     }
-    //if record.mt.cap != oldcap {
-    //    if record.mt.cap > gINDEX1_BUCKET_SIZE {
-    //        fmt.Printf("new cap %d for key: %v\n", record.mt.cap, string(key))
-    //    }
-    //}
     return nil
+}
+
+// 删除KV数据
+func (db *DB) Remove(key []byte) error {
+    // 查询索引信息
+    record, err := db.getRecordByKey(key)
+    if err != nil {
+        return err
+    }
+    // 如果找到匹配才执行删除操作
+    if record.mt.match {
+        return db.removeDataByRecord(record)
+    }
+    return nil
+}
+
+// 根据索引信息删除指定数据
+func (db *DB) removeDataByRecord(record *Record) error {
+    if err := db.removeDataFromDb(record); err != nil {
+        return err
+    }
+    if err := db.removeDataFromMt(record); err != nil {
+        return err
+    }
+    if err := db.removeDataFromIx(record); err != nil {
+        return err
+    }
+    return nil
+}
+
+// 从数据文件中删除指定数据
+func (db *DB) removeDataFromDb(record *Record) error {
+    if record.db.vtype == 0 {
+        return nil
+    }
+
+    pf, err := db.dbfp.File()
+    if err != nil {
+        return err
+    }
+    defer pf.Close()
+    // 内容空间必须执行清0
+    if _, err = pf.File().WriteAt(make([]byte, record.db.vlen), record.db.start); err != nil {
+        return err
+    }
+    // 添加碎片
+    db.dbsp.AddBlock(int(record.db.start), record.db.vcap)
+    return nil
+}
+
+// 从元数据中删除指定数据
+func (db *DB) removeDataFromMt(record *Record) error {
+    pf, err := db.mtfp.File()
+    if err != nil {
+        return err
+    }
+    defer pf.Close()
+
+    buffer   := make([]byte, 0)
+    buffer    = append(buffer, record.mt.buffer[ : record.mt.index]...)
+    endindex := record.mt.index + int(record.db.klen + 10)
+    if endindex <= len(record.mt.buffer) - 1 {
+        buffer  = append(buffer, record.mt.buffer[endindex : ]...)
+    }
+    record.mt.buffer = buffer
+    record.mt.size   = uint(len(buffer))
+    for i := 0; i < int(record.mt.cap - record.mt.size); i++ {
+        buffer = append(buffer, byte(0))
+    }
+    if _, err = pf.File().WriteAt(buffer, record.mt.start); err != nil {
+        return err
+    }
+    // 如果列表被清空，那么添加到碎片管理器
+    if record.mt.size == 0 {
+        db.mtsp.AddBlock(int(record.mt.start), record.mt.cap)
+    }
+    return nil
+}
+
+// 从索引中删除指定数据
+func (db *DB) removeDataFromIx(record *Record) error {
+    return db.updateIndexByRecord(record)
 }
 
 // 插入一条KV数据
 func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error {
-    mtpf, err := db.mtfp.File()
+    // type0可以变为type1,但是一旦成为type1将无法逆转，否则会造成碎片管理问题
+    if record.db.vtype == 0 && len(value) > 5 {
+        record.db.vtype = 1
+    }
+    record.db.klen = uint(len(key))
+    record.db.vlen = uint(len(value))
+    if record.db.vtype > 0 {
+        if err := db.insertDataIntoDb(key, value, record); err != nil {
+            return err
+        }
+        // 改变value的值为db文件偏移地址
+        value = gbinary.EncodeUint64(uint64(record.db.start))[0:5]
+    }
+    // 写入元数据
+    if err := db.insertDataIntoMt(key, value, record); err != nil {
+        return err
+    }
+    return nil
+}
+
+// 将数据写入到数据文件中，并更新信息到record
+func (db *DB) insertDataIntoDb(key []byte, value []byte, record *Record) error {
+    pf, err := db.dbfp.File()
     if err != nil {
         return err
     }
-    defer mtpf.Close()
-    bits   := make([]uint8, 0)
-    data   := make([]byte, 0)
-    buffer := make([]byte, 0)
-    record.db.klen = uint(len(key))
-    record.db.vlen = uint(len(value))
-    // 如果键值大于5byte, 写入到db中
-    if len(value) > 5 {
-        dbpf, err := db.dbfp.File()
-        if err != nil {
-            return err
+    defer pf.Close()
+    // 判断是否额外分配键值存储空间
+    if record.db.end <= 0 || record.db.vcap < record.db.vlen {
+        // 不用的空间添加到碎片管理器
+        if record.db.end > 0 && record.db.vcap > 0 {
+            db.dbsp.AddBlock(int(record.db.start), record.db.vcap)
         }
-        defer dbpf.Close()
-        // 判断是否额外分配键值存储空间
-        if record.db.end <= 0 || record.db.vcap < record.db.vlen {
-            // @todo 碎片管理
-            start, err := dbpf.File().Seek(0, 2)
-            if err != nil {
-                return err
-            }
-            record.db.start = start
-            record.db.end   = start + int64(record.db.vlen)
-        }
-        // 键值大小必须为gBUCKET_SIZE的整数倍
-        vbuffer := make([]byte, 0)
-        vbuffer  = append(vbuffer, value...)
+        // 重新计算所需空间
         if record.db.vcap < record.db.vlen {
             for {
                 record.db.vcap += gBUCKET_SIZE
@@ -358,17 +463,48 @@ func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error
                     break
                 }
             }
-            for i := 0; i < int(record.db.vcap - record.db.vlen); i++ {
-                vbuffer = append(vbuffer, byte(0))
+        }
+        // 首先从碎片管理器中获取，如果不够，那么再从文件末尾分配
+        index, size := db.dbsp.GetBlock(record.db.vcap)
+        if index >= 0 {
+            // 如果还可以对分配的空间进行切分
+            extra := size - record.db.vcap
+            if extra > gBUCKET_SIZE {
+                db.dbsp.AddBlock(index + int(record.db.vcap), extra)
             }
+            record.db.start = int64(index)
+            record.db.end   = int64(index) + int64(record.db.vlen)
+        } else {
+            start, err := pf.File().Seek(0, 2)
+            if err != nil {
+                return err
+            }
+            record.db.start = start
+            record.db.end   = start + int64(record.db.vlen)
         }
-        if _, err = dbpf.File().WriteAt(vbuffer, record.db.start); err != nil {
-            return err
-        }
-        // 改变value的值为db文件偏移地址
-        value            = gbinary.EncodeUint64(uint64(record.db.start))[0:5]
-        record.db.vtype = 1
     }
+    // vlen不够vcap的对末尾进行补0占位
+    vbuffer := make([]byte, 0)
+    vbuffer  = append(vbuffer, value...)
+    for i := 0; i < int(record.db.vcap - record.db.vlen); i++ {
+        vbuffer = append(vbuffer, byte(0))
+    }
+    if _, err = pf.File().WriteAt(vbuffer, record.db.start); err != nil {
+        return err
+    }
+    return nil
+}
+
+// 将数据写入到元数据文件中，并更新信息到record
+func (db *DB) insertDataIntoMt(key []byte, value []byte, record *Record) error {
+    pf, err := db.mtfp.File()
+    if err != nil {
+        return err
+    }
+    defer pf.Close()
+    bits   := make([]uint8, 0)
+    data   := make([]byte, 0)
+    buffer := make([]byte, 0)
     // 二进制打包
     bits = gbinary.EncodeBits(bits, record.db.klen + 10, 10)
     bits = gbinary.EncodeBits(bits, record.db.vcap/gBUCKET_SIZE, 12)
@@ -376,11 +512,11 @@ func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error
     bits = gbinary.EncodeBits(bits, record.db.vtype, 2)
     data = append(data, gbinary.EncodeBitsToBytes(bits)...)
     data = append(data, value...)
+    // vlen不够vcap的对末尾进行补0占位
     for i := 0; i < 5 - len(value); i++ {
         data  = append(data, byte(0))
     }
     data = append(data, key...)
-    //fmt.Println("data:", data)
     // 数据列表打包
     buffer = append(buffer, data...)
     if len(record.mt.buffer) > 0 {
@@ -391,53 +527,69 @@ func (db *DB) insertDataByRecord(key []byte, value []byte, record *Record) error
             buffer = append(buffer, record.mt.buffer...)
         }
     }
-
-    //fmt.Println("record:", record)
-    //fmt.Println("mt   buffer:", record.mt.buffer)
-    //fmt.Println("write buffer:", buffer)
-
     // 判断数据列表空间是否足够
-    record.mt.size = len(buffer)
-    if record.mt.cap < record.mt.size {
-        // @todo 碎片管理
-        start, err := mtpf.File().Seek(0, 2)
-        if err != nil {
-            return err
+    record.mt.size = uint(len(buffer))
+    if record.mt.end <= 0 || record.mt.cap < record.mt.size {
+        // 不用的空间添加到碎片管理器
+        if record.mt.end > 0 && record.mt.cap > 0 {
+            db.mtsp.AddBlock(int(record.mt.start), uint(record.mt.cap))
         }
-        // 每次分配必须为gBUCKET_SIZE
-        for {
-            record.mt.cap += gBUCKET_SIZE
-            if record.mt.cap >= record.mt.size {
-                break
+        // 重新计算所需空间
+        if record.mt.cap < record.mt.size {
+            for {
+                record.mt.cap += gBUCKET_SIZE
+                if record.mt.cap >= record.mt.size {
+                    break
+                }
             }
         }
-        record.mt.start = start
-        record.mt.end   = start + int64(record.mt.cap)
-        for i := 0; i < int(record.mt.cap - record.mt.size); i++ {
-            buffer = append(buffer, byte(0))
+        // 首先从碎片管理器中获取，如果不够，那么再从文件末尾分配
+        index, size := db.mtsp.GetBlock(record.mt.cap)
+        if index >= 0 {
+            // 如果还可以对分配的空间进行切分
+            extra := size - record.mt.cap
+            if extra > gBUCKET_SIZE {
+                db.mtsp.AddBlock(index + int(record.mt.cap), extra)
+            }
+            record.mt.start = int64(index)
+            record.mt.end   = int64(index) + int64(record.mt.size)
+        } else {
+            start, err := pf.File().Seek(0, 2)
+            if err != nil {
+                return err
+            }
+            record.mt.start = start
+            record.mt.end   = start + int64(record.mt.cap)
         }
     }
-
-    if _, err = mtpf.File().WriteAt(buffer, record.mt.start); err != nil {
+    // vlen不够vcap的对末尾进行补0占位
+    for i := 0; i < int(record.mt.cap - record.mt.size); i++ {
+        buffer = append(buffer, byte(0))
+    }
+    if _, err = pf.File().WriteAt(buffer, record.mt.start); err != nil {
         return err
     }
     return nil
 }
 
-// 根据record重新创建索引信息
-func (db *DB) createIndexByRecord(record *Record) error {
+// 根据record更新索引信息
+func (db *DB) updateIndexByRecord(record *Record) error {
     ixpf, err := db.ixfp.File()
     if err != nil {
         return err
     }
     defer ixpf.Close()
+
     buffer := make([]byte, 0)
-    mtcap  := uint16(record.mt.cap/gBUCKET_SIZE)
-    mtsize := uint32(record.mt.size)
-    buffer  = append(buffer, gbinary.EncodeInt64(record.mt.start)[0:5]...)
-    buffer  = append(buffer, gbinary.EncodeUint16(mtcap)...)
-    buffer  = append(buffer, gbinary.EncodeUint32(mtsize)[0:3]...)
-    //fmt.Println("create:", buffer)
+    if record.mt.size > 0 {
+        mtcap  := uint16(record.mt.cap/gBUCKET_SIZE)
+        mtsize := uint32(record.mt.size)
+        buffer  = append(buffer, gbinary.EncodeInt64(record.mt.start)[0:5]...)
+        buffer  = append(buffer, gbinary.EncodeUint16(mtcap)...)
+        buffer  = append(buffer, gbinary.EncodeUint32(mtsize)[0:3]...)
+    } else {
+        buffer = make([]byte, 10)
+    }
     if _, err = ixpf.File().WriteAt(buffer, record.part*10); err != nil {
         return err
     }
