@@ -28,8 +28,8 @@ import (
 )
 
 const (
-    //gPARTITION_SIZE          = 1048576                    // 哈希表分区大小(大小约为10MB)
-    gPARTITION_SIZE          = 10                    // 哈希表分区大小(大小约为10MB)
+    gPARTITION_SIZE          = 1048576                    // 哈希表分区大小(大小约为10MB)
+    //gPARTITION_SIZE          = 10                    // 哈希表分区大小(大小约为10MB)
     gMAX_KEY_SIZE            = (0xFFFF >> 6) - 10         // 键名最大长度(1013)
     gMAX_VALUE_SIZE          = 0xFFFF                     // 键值最大长度(65535)
     gBUCKET_SIZE             = 64                         // 元数据文件文件列表分块大小(byte, 值越大，初始化时占用的空间越大)
@@ -153,7 +153,9 @@ func (db *DB) initFileSpace() {
         mtcap   := int(gbinary.DecodeToUint16(ixbuffer[i + 5 : i + 7])*gBUCKET_SIZE)
         mtsize  := int(gbinary.DecodeToUint32(ixbuffer[i + 7 : i + 10]))
         if mtcap > 0 {
+            //fmt.Println("add block:", int(mtindex), uint(mtcap))
             usedmtsp.AddBlock(int(mtindex), uint(mtcap))
+            //fmt.Println(usedmtsp.GetAllBlocksByIndex())
             // 获取数据列表
             if mtbuffer := gfile.GetBinContentByTwoOffsets(pf.File(), mtindex, mtindex + int64(mtsize)); mtbuffer != nil {
                 for i := 0; i < len(mtbuffer); {
@@ -186,6 +188,7 @@ func (db *DB) initFileSpace() {
         }
         start = v.Index() + int(v.Size())
     }
+    //fmt.Println(usedmtsp.GetAllBlocksByIndex())
     //fmt.Println(db.mtsp.GetAllBlocksByIndex())
     //fmt.Println(db.dbsp.GetAllBlocksByIndex())
 }
@@ -486,10 +489,12 @@ func (db *DB) insertDataIntoDb(key []byte, value []byte, record *Record) error {
         // 首先从碎片管理器中获取，如果不够，那么再从文件末尾分配
         index, size := db.dbsp.GetBlock(record.db.vcap)
         if index >= 0 {
-            // 如果还可以对分配的空间进行切分
+            // 判断是否还可以对分配的空间进行切分
             extra := size - record.db.vcap
             if extra > gBUCKET_SIZE {
                 db.dbsp.AddBlock(index + int(record.db.vcap), extra)
+            } else {
+                record.db.vcap = size
             }
             record.db.start = int64(index)
             record.db.end   = int64(index) + int64(record.db.vlen)
@@ -566,10 +571,13 @@ func (db *DB) insertDataIntoMt(key []byte, value []byte, record *Record) error {
         // 首先从碎片管理器中获取，如果不够，那么再从文件末尾分配
         index, size := db.mtsp.GetBlock(record.mt.cap)
         if index >= 0 {
-            // 如果还可以对分配的空间进行切分
+            //fmt.Println("get block:", index, size)
+            // 判断是否还可以对分配的空间进行切分
             extra := size - record.mt.cap
             if extra > gBUCKET_SIZE {
                 db.mtsp.AddBlock(index + int(record.mt.cap), extra)
+            } else {
+                record.mt.cap = size
             }
             record.mt.start = int64(index)
             record.mt.end   = int64(index) + int64(record.mt.size)

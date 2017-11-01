@@ -4,7 +4,6 @@ import (
     "g/database/gkvdb"
     "fmt"
     "g/util/gtime"
-    "strconv"
 )
 
 func main() {
@@ -23,20 +22,20 @@ func main() {
     //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
-    size := 100
-
-    ////////db.Set([]byte{byte(2)}, []byte{byte(2)})
-    ////////db.Set([]byte{byte(1)}, []byte{byte(1)})
-    ////////db.Set([]byte{byte(0)}, []byte{byte(0)})
-    //////
-    for i := 0; i < size; i++ {
-        //r := []byte(grand.RandStr(10))
-        //if err := db.Set(r, r); err != nil {
-        if err := db.Set([]byte("key1_" + strconv.Itoa(i)), []byte("value1_" + strconv.Itoa(i))); err != nil {
-            //if err := db.Set(gbinary.EncodeInt32(int32(i)), gbinary.EncodeInt32(int32(i))); err != nil {
-            fmt.Println(err)
-        }
-    }
+    //size := 100
+    //
+    //////////db.Set([]byte{byte(2)}, []byte{byte(2)})
+    //////////db.Set([]byte{byte(1)}, []byte{byte(1)})
+    //////////db.Set([]byte{byte(0)}, []byte{byte(0)})
+    ////////
+    //for i := 0; i < size; i++ {
+    //    //r := []byte(grand.RandStr(10))
+    //    //if err := db.Set(r, r); err != nil {
+    //    if err := db.Set([]byte("key1_" + strconv.Itoa(i)), []byte("value1_" + strconv.Itoa(i))); err != nil {
+    //        //if err := db.Set(gbinary.EncodeInt32(int32(i)), gbinary.EncodeInt32(int32(i))); err != nil {
+    //        fmt.Println(err)
+    //    }
+    //}
     //for i := 0; i < size; i++ {
     //    r := db.Get([]byte("key1_" + strconv.Itoa(i)))
     //    //r := db.Get(gbinary.EncodeInt32(int32(i)))

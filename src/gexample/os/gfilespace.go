@@ -14,10 +14,17 @@ func main() {
     //for i := 1; i <= 10; i++ {
     //    space.AddBlock(i, uint(i*10))
     //}
+    //add block: 1792 192
+    //[{0 192} {512 192} {768 384} {1408 960}]
+    //add block: 320 192
+    //[{0 192} {320 192} {512 192} {768 384} {1408 960}]
 
-    space.AddBlock(319808, 64)
-    space.AddBlock(319872, 64)
-    space.AddBlock(319936, 64)
+
+    space.AddBlock(0,    192)
+    space.AddBlock(512,  192)
+    //space.AddBlock(768,  384)
+    //space.AddBlock(1408, 960)
+    space.AddBlock(320,  192)
 
     //space.Empty()
 

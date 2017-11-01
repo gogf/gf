@@ -172,12 +172,15 @@ func (space *Space) AddBlock(index int, size uint) {
     blocks  = append(blocks, space.blocks[blockpos : ]...)
     space.blocks = blocks
 
-    // 区块检查合并
-    checkpos := indexpos - 1
-    if checkpos < 0 {
-        checkpos = 0
+    // 区块检查合并，对插入位置的前后项检查
+    checkpos1 := indexpos - 1
+    checkpos2 := indexpos
+    if checkpos1 < 0 {
+        checkpos1 = 0
     }
-    space.checkIndexMergeFromIndex(checkpos)
+
+    space.checkIndexMergeFromIndex(checkpos1)
+    space.checkIndexMergeFromIndex(checkpos2)
 
     //fmt.Println(space.indexes)
     //fmt.Println(space.blocks)
