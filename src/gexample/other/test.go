@@ -7,7 +7,18 @@ import (
 )
 
 func main() {
+    slice := []int{1,2,3,4,5,6,7,8,9}
+    index := 1
+    //fmt.Println(append(slice[:index], slice[index+1:]...))
 
+    //rear:=append([]int{}, slice[index:]...)
+    //slice=append(slice[0:index], 88)
+    //slice=append(slice, rear...)
+    //
+    //fmt.Println(slice)
+
+    fmt.Println(append(append(slice[0 : index], 88), append([]int{}, slice[index : ]...)...))
+    return
     //a := gbinary.EncodeBits(nil, 100, 10)
     //fmt.Println(a)
     //b := gbinary.EncodeBitsToBytes(a)

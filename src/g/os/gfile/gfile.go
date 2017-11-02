@@ -416,7 +416,7 @@ func GetNextCharOffset(file *os.File, char string, start int64) int64 {
     return 0
 }
 
-// 获得文件内容中两个offset之间的内容
+// 获得文件内容中两个offset之间的内容 [start, end)
 func GetBinContentByTwoOffsets(file *os.File, start int64, end int64) []byte {
     buffer := make([]byte, end - start)
     if _, err := file.ReadAt(buffer, start); err != nil {

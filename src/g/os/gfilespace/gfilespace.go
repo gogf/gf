@@ -38,8 +38,14 @@ func (space *Space) GetAllBlocksByIndex() []Block {
     return space.indexes
 }
 
+// 获得所有的碎片空间，按照size升序排序
+func (space *Space) GetAllBlocksBySize() []Block {
+    return space.blocks
+}
+
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块
 func (space *Space) GetBlock(size uint) (int, uint) {
+    return -1, 0
     space.mu.RLock()
     defer space.mu.RUnlock()
 
@@ -57,33 +63,36 @@ func (space *Space) GetBlock(size uint) (int, uint) {
     }
     // 找到符合要求的区块，返回前进行删除
     if cmp >= 0 {
-        index := space.blocks[mid].index
-        size  := space.blocks[mid].size
+        ix := space.blocks[mid].index
+        sz := space.blocks[mid].size
         space.blocks = space.removeBlock(space.blocks, mid)
-        if indexpos := space.getIndexPositionByIndex(index); indexpos != -1 {
+        if indexpos := space.getIndexPositionByIndex(ix); indexpos != -1 {
             space.indexes = space.removeBlock(space.indexes, indexpos)
         }
-        return index, size
+        return ix, sz
     }
     return -1, 0
 }
 
-// 删除一项
-func (space *Space) removeBlock(slice []Block, index int) []Block {
-    blocks  := make([]Block, 0)
-    blocks   = append(blocks, space.indexes[ : index]...)
-    if index + 1 <= len(slice) - 1 {
-        blocks  = append(blocks, space.indexes[index + 1 : ]...)
-    }
-    return blocks
-}
-
 // 根据index和size准确查找blocks中对应的区块
 func (space *Space) getBlockPositionByIndexAndSize(index int, size uint) int {
-    mid, _ := space.searchBlockBySize(size - 1)
+    mid, _ := space.searchBlockBySize(size)
+    // 往后继续匹配index
     for i := mid; i < len(space.blocks); i++ {
         if space.blocks[i].index == index {
             return i
+        }
+        if space.blocks[i].size != size {
+            break
+        }
+    }
+    // 往前继续匹配index
+    for i := mid; i >= 0; i-- {
+        if space.blocks[i].index == index {
+            return i
+        }
+        if space.blocks[i].size != size {
+            break
         }
     }
     return -1
@@ -106,17 +115,24 @@ func (space *Space) checkIndexMergeFromIndex(from int) {
             break
         }
         if space.indexes[i].index + int(space.indexes[i].size) >= space.indexes[next].index {
-            // 更新区块大小
-            space.indexes[i].size = uint(space.indexes[next].index + int(space.indexes[next].size) - space.indexes[i].index)
+            // 更新区块大小，必须同时更新indexes和blocks
             if blockpos := space.getBlockPositionByIndexAndSize(space.indexes[i].index, space.indexes[i].size); blockpos != -1 {
-                space.blocks[blockpos].size = space.indexes[i].size
+                space.indexes[i].size = uint(space.indexes[next].index + int(space.indexes[next].size) - space.indexes[i].index)
+                // 由于涉及到列表排序，因此需要删除后重新插入
+                block         := Block{space.blocks[blockpos].index, space.indexes[i].size}
+                space.blocks   = space.removeBlock(space.blocks, blockpos)
+                blockpos, cmp := space.searchBlockBySize(block.size)
+                space.blocks   = space.insertBlock(space.blocks, block, blockpos, cmp)
             }
-            // 合并后删除next项，首先删除blocks中对应的区块
+
+            // 合并后删除next项(正常情况下是肯定存在的)
             if blockpos := space.getBlockPositionByIndexAndSize(space.indexes[next].index, space.indexes[next].size); blockpos != -1 {
-                space.blocks = space.removeBlock(space.blocks, blockpos)
+                // 首先删除blocks中对应的区块
+                space.blocks  = space.removeBlock(space.blocks, blockpos)
+                // 其次删除index对应区块
+                space.indexes = space.removeBlock(space.indexes, next)
             }
-            // 其次删除index对应区块
-            space.indexes = space.removeBlock(space.indexes, next)
+
             // 递归处理
             space.checkIndexMergeFromIndex(i)
             break
@@ -128,6 +144,7 @@ func (space *Space) checkIndexMergeFromIndex(from int) {
 
 // 添加空闲空间到管理器
 func (space *Space) AddBlock(index int, size uint) {
+    return
     if size <= 0 {
         return
     }
@@ -135,42 +152,15 @@ func (space *Space) AddBlock(index int, size uint) {
     space.mu.Lock()
     defer space.mu.Unlock()
 
-    block    := Block{index, size}
-    // 首先按照索引搜索，插入到合适的位置
-    mid, cmp := space.searchBlockByIndex(index)
-    indexpos := mid
-    if cmp == -1 {
-        // 添加到前面
-    } else {
-        // 添加到后面
-        indexpos = mid + 1
-        if indexpos >= len(space.indexes) {
-            indexpos = len(space.indexes)
-        }
+    indexpos, cmp := space.searchBlockByIndex(index)
+    if cmp == 0 && indexpos >= 0 {
+        // 已经添加过就不能再添加
+        return
     }
-    indexes := make([]Block, 0)
-    indexes  = append(indexes, space.indexes[0 : indexpos]...)
-    indexes  = append(indexes, block)
-    indexes  = append(indexes, space.indexes[indexpos : ]...)
-    space.indexes = indexes
-
-    // 其次按照区块进行索引，插入到合适的位置
-    mid, cmp  = space.searchBlockBySize(size)
-    blockpos := mid
-    if cmp == -1 {
-        // 添加到前面
-    } else {
-        // 添加到后面
-        blockpos = mid + 1
-        if blockpos >= len(space.blocks) {
-            blockpos = len(space.blocks)
-        }
-    }
-    blocks := make([]Block, 0)
-    blocks  = append(blocks, space.blocks[0 : blockpos]...)
-    blocks  = append(blocks, block)
-    blocks  = append(blocks, space.blocks[blockpos : ]...)
-    space.blocks = blocks
+    block         := Block{index, size}
+    space.indexes  = space.insertBlock(space.indexes, block, indexpos, cmp)
+    blockpos, cmp := space.searchBlockBySize(size)
+    space.blocks   = space.insertBlock(space.blocks, block, blockpos, cmp)
 
     // 区块检查合并，对插入位置的前后项检查
     checkpos1 := indexpos - 1
@@ -185,6 +175,30 @@ func (space *Space) AddBlock(index int, size uint) {
     //fmt.Println(space.indexes)
     //fmt.Println(space.blocks)
     //fmt.Println()
+}
+
+// 添加一项, cmp < 0往前插入，cmp >= 0往后插入
+func (space *Space) insertBlock(slice []Block, block Block, index int, cmp int) []Block {
+    pos := index
+    if cmp == -1 {
+        // 添加到前面
+    } else {
+        // 添加到后面
+        pos = index + 1
+        if pos >= len(slice) {
+            pos = len(slice)
+        }
+    }
+    rear  := append([]Block{}, slice[pos : ]...)
+    slice  = append(slice[0 : pos], block)
+    slice  = append(slice, rear...)
+    return slice
+}
+
+
+// 删除一项
+func (space *Space) removeBlock(slice []Block, index int) []Block {
+    return append(slice[:index], slice[index + 1:]...)
 }
 
 
