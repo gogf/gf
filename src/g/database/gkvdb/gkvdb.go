@@ -6,6 +6,7 @@ package gkvdb
 import (
     "sync"
     "github.com/syndtr/goleveldb/leveldb"
+    "g/os/gfile"
 )
 
 type DB struct {
@@ -29,6 +30,21 @@ func New(path string) (*DB, error) {
 // 关闭数据库链接
 func (db *DB) Close() error {
     return db.lvdb.Close()
+}
+
+// 清空数据库数据
+func (db *DB) Clear() error {
+    if err := gfile.Remove(db.path); err != nil {
+        return err
+    }
+    db.lvdb.Close()
+
+    lvdb, err := leveldb.OpenFile(db.path, nil)
+    if err != nil {
+        return err
+    }
+    db.lvdb = lvdb
+    return nil
 }
 
 // 查询KV数据
@@ -57,6 +73,17 @@ func (db *DB) Remove(key []byte) error {
     return db.lvdb.Delete(key, nil)
 }
 
+// 获得数据库大小
+func (db *DB) Size() uint {
+    size := uint(0)
+    iter := db.lvdb.NewIterator(nil, nil)
+    for iter.Next() {
+        size++
+    }
+    iter.Release()
+    return size
+}
+
 // 获得所有的键名
 func (db *DB) Keys() [][]byte {
     keys := make([][]byte, 0)
@@ -68,11 +95,13 @@ func (db *DB) Keys() [][]byte {
     return keys
 }
 
-// 遍历数据库
-func (db *DB) Iterate(f func(key, value []byte)) {
+// 遍历数据库，给定参数位遍历回调函数
+func (db *DB) Iterate(f func(key, value []byte) bool) {
     iter := db.lvdb.NewIterator(nil, nil)
     for iter.Next() {
-        f(iter.Key(), iter.Value())
+        if !f(iter.Key(), iter.Value()) {
+            break
+        }
     }
     iter.Release()
 }

@@ -14,11 +14,8 @@ func main() {
     }
     fmt.Println(gtime.Microsecond() - t1)
 
-
-    //binary.LittleEndian.Uint64(bytes)
-    //b, _ := gbinary.Encode(i)
     t2 := gtime.Microsecond()
-    fmt.Println(len(db.Keys()))
+    fmt.Println(db.Size())
     //db.Set([]byte{byte(1)}, []byte("1"))
     //db.Set([]byte{byte(1)}, []byte("123456"))
     //db.Set([]byte{byte(1)}, []byte("1"))
@@ -29,7 +26,7 @@ func main() {
     //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
-    //size := 1000000
+    //size := 10000000
     //////////db.Set([]byte{byte(2)}, []byte{byte(2)})
     //////////db.Set([]byte{byte(1)}, []byte{byte(1)})
     //////////db.Set([]byte{byte(0)}, []byte{byte(0)})
@@ -56,7 +53,4 @@ func main() {
     //fmt.Println(gbinary.DecodeToInt32(db.Get(gbinary.EncodeInt32(4253318))))
     fmt.Println(gtime.Microsecond() - t2)
 
-    select {
-    
-    }
 }

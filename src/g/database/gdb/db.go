@@ -5,12 +5,12 @@ import (
     "database/sql"
     "errors"
     "fmt"
-    "g/core/ginstance"
     "g/util/grand"
     "sync"
     "g/os/glog"
     _ "github.com/go-sql-driver/mysql"
     _ "github.com/lib/pq"
+    "g/os/gcache"
 )
 
 const (
@@ -202,11 +202,11 @@ func SetDefaultGroup (groupName string) {
 // 根据配置项获取一个数据库操作对象单例
 func instance (groupName string) (Link, error) {
     instanceName := "gdb_instance_" + groupName
-    result       := ginstance.Get(instanceName)
+    result       := gcache.Get(instanceName)
     if result == nil {
         link, err := NewByGroup(groupName)
         if err == nil {
-            ginstance.Set(instanceName, link)
+            gcache.Set(instanceName, link, 0)
             return link, nil
         } else {
             return nil, err
