@@ -4,21 +4,24 @@ import (
     "fmt"
     "g/os/gfile"
     "os"
+    "github.com/syndtr/goleveldb/leveldb"
+    "g/util/gtime"
+    "strconv"
 )
 
 func main() {
-    slice := []int{1,2,3,4,5,6,7,8,9}
-    index := 1
-    //fmt.Println(append(slice[:index], slice[index+1:]...))
-
-    //rear:=append([]int{}, slice[index:]...)
-    //slice=append(slice[0:index], 88)
-    //slice=append(slice, rear...)
+    //slice := []int{1,2,3,4,5,6,7,8,9}
+    //index := 1
+    ////fmt.Println(append(slice[:index], slice[index+1:]...))
     //
-    //fmt.Println(slice)
-
-    fmt.Println(append(append(slice[0 : index], 88), append([]int{}, slice[index : ]...)...))
-    return
+    ////rear:=append([]int{}, slice[index:]...)
+    ////slice=append(slice[0:index], 88)
+    ////slice=append(slice, rear...)
+    ////
+    ////fmt.Println(slice)
+    //
+    //fmt.Println(append(append(slice[0 : index], 88), append([]int{}, slice[index : ]...)...))
+    //return
     //a := gbinary.EncodeBits(nil, 100, 10)
     //fmt.Println(a)
     //b := gbinary.EncodeBitsToBytes(a)
@@ -121,18 +124,46 @@ func main() {
     //gcrc32.EncodeString("123")
     //fmt.Println(gtime.Microsecond() - t1)
     //return
-    //db, err := leveldb.OpenFile("/tmp/lv.db", nil)
-    //defer db.Close()
-    //t1 := gtime.Microsecond()
-    //err = db.Put([]byte("key"), []byte("value"), nil)
-    //fmt.Println(gtime.Microsecond() - t1)
-    //
-    //t2 := gtime.Microsecond()
-    //
-    //fmt.Println(db.Get([]byte("key"), nil))
-    //fmt.Println(gtime.Microsecond() - t2)
-    //
-    //return
+    db, err := leveldb.OpenFile("/tmp/lv.db", nil)
+    fmt.Println(err)
+    defer db.Close()
+    t1 := gtime.Microsecond()
+    size := 10000000
+
+    for i := 0; i < size; i++ {
+        //r := []byte(grand.RandStr(10))
+        //if err := db.Set(r, r); err != nil {
+        t3 := gtime.Microsecond()
+        if err := db.Put([]byte("key1_" + strconv.Itoa(i)), []byte("value1_" + strconv.Itoa(i)), nil); err != nil {
+            //if err := db.Set(gbinary.EncodeInt32(int32(i)), gbinary.EncodeInt32(int32(i))); err != nil {
+            fmt.Println(err)
+        }
+        t4 := gtime.Microsecond()
+        if t4 - t3 > 1000 {
+            fmt.Println(t4-t3)
+        }
+    }
+
+    for i := 0; i < size; i++ {
+        //r := []byte(grand.RandStr(10))
+        //if err := db.Set(r, r); err != nil {
+        t3 := gtime.Microsecond()
+        v, err := db.Get([]byte("key1_" + strconv.Itoa(i)), nil)
+        if err != nil {
+            //if err := db.Set(gbinary.EncodeInt32(int32(i)), gbinary.EncodeInt32(int32(i))); err != nil {
+            fmt.Println(err)
+        }
+        if len(v) == 0 {
+            fmt.Println("none")
+        }
+        t4 := gtime.Microsecond()
+        if t4 - t3 > 1000 {
+            fmt.Println(t4-t3)
+        }
+    }
+    fmt.Println(gtime.Microsecond() - t1)
+
+    return
     //db, err := bolt.Open("/tmp/my.db", 0600, nil)
     //if err != nil {
     //    log.Fatal(err)
