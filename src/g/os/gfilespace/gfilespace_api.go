@@ -1,6 +1,5 @@
 package gfilespace
 
-
 // 清空数据列表
 func (space *Space) Empty() {
     space.blocks  = make([]Block, 0)
@@ -9,7 +8,6 @@ func (space *Space) Empty() {
 
 // 添加空闲空间到管理器
 func (space *Space) AddBlock(index int, size uint) {
-    return
     if size <= 0 {
         return
     }

@@ -1,7 +1,7 @@
 // 基于哈希分区的KV嵌入式数据库
 // KV数据库其实只需要保存键值即可，但本数据库同时保存了键名，以便于后期遍历需要
 
-// 数据库支持的范围：2546540(极端) <= n <= 229064922452(理想)
+// 数据库支持的范围：2546540(极端) <= n <= 229064922452(理论)
 
 // 数据结构要点   ：数据的分配长度cap >= 数据真实长度len，且 cap - len <= bucket，
 //               当数据存储内容发生改变时，依靠碎片管理器对碎片进行回收再利用，且碎片大小 >= bucket
@@ -33,7 +33,8 @@ const (
     //gPARTITION_SIZE          = 2
     gMAX_KEY_SIZE            = 0xFFFF                   // 键名最大长度(255byte)
     gMAX_VALUE_SIZE          = 0xFFFFFF >> 2            // 键值最大长度(4194303byte = 4MB)
-    gMETA_BUCKET_SIZE        = 120                      // 元数据数据分块大小(byte, 值越大，数据增长时占用的空间越大)
+    gINDEX_BUCKET_SIZE       = 7                        // 索引文件数据块大小
+    gMETA_BUCKET_SIZE        = 12*5                     // 元数据数据分块大小(byte, 值越大，数据增长时占用的空间越大)
     gDATA_BUCKET_SIZE        = 32                       // 数据分块大小(byte, 值越大，数据增长时占用的空间越大)
     gFILE_POOL_CACHE_TIMEOUT = 60                       // 文件指针池缓存时间(秒)
 )
@@ -237,8 +238,8 @@ func (db *DB) getIndexInfoByRecord(record *Record) error {
         return err
     }
     defer pf.Close()
-    record.ix.start = record.part*7
-    record.ix.end   = record.ix.start + 7
+    record.ix.start = record.part*gINDEX_BUCKET_SIZE
+    record.ix.end   = record.ix.start + gINDEX_BUCKET_SIZE
     if buffer := gfile.GetBinContentByTwoOffsets(pf.File(), record.ix.start, record.ix.end); buffer != nil {
         bits           := gbinary.DecodeBytesToBits(buffer)
         record.mt.start = int64(gbinary.DecodeBits(bits[0 : 36]))*gMETA_BUCKET_SIZE
@@ -257,6 +258,7 @@ func (db *DB) getDataInfoByRecord(record *Record) error {
         return err
     }
     defer pf.Close()
+
     record.mt.buffer = gfile.GetBinContentByTwoOffsets(pf.File(), record.mt.start, record.mt.end)
     if record.mt.buffer != nil {
         //fmt.Println("get record", record)
@@ -596,7 +598,7 @@ func (db *DB) updateIndexByRecord(record *Record) error {
         bits = gbinary.EncodeBits(bits, record.mt.size/12,                         20)
     } else {
         // 数据全部删除完
-        bits = make([]gbinary.Bit, 7)
+        bits = make([]gbinary.Bit, gINDEX_BUCKET_SIZE)
     }
 
     if _, err = ixpf.File().WriteAt(gbinary.EncodeBitsToBytes(bits), record.ix.start); err != nil {

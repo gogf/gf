@@ -29,7 +29,7 @@ func main() {
     //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
-    size := 100000
+    size := 1000000
     //gtime.SetInterval(5*time.Second, func() bool {
     //    db.PrintState()
     //    return true
@@ -46,13 +46,13 @@ func main() {
             fmt.Println(err)
         }
     }
-    for i := 0; i < size; i++ {
-        r := db.Get([]byte("key1_" + strconv.Itoa(i)))
-        //r := db.Get(gbinary.EncodeInt32(int32(i)))
-        if r == nil {
-            fmt.Println("none for ", i)
-        }
-    }
+    //for i := 0; i < size; i++ {
+    //    r := db.Get([]byte("key1_" + strconv.Itoa(i)))
+    //    //r := db.Get(gbinary.EncodeInt32(int32(i)))
+    //    if r == nil {
+    //        fmt.Println("none for ", i)
+    //    }
+    //}
     //db.Remove(true)
     //db.PrintState()
     //db.Get([]byte("key1_" + strconv.Itoa(99999)))

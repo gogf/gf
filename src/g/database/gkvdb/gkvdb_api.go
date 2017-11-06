@@ -34,6 +34,7 @@ func (db *DB) Set(key []byte, value []byte) error {
     if err != nil {
         return err
     }
+
     //oldcap := record.mt.cap
     // 写入数据文件，并更新record信息
     if err := db.insertDataByRecord(key, value, record); err != nil {
