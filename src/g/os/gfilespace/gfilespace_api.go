@@ -9,6 +9,7 @@ func (space *Space) Empty() {
 
 // 添加空闲空间到管理器
 func (space *Space) AddBlock(index int, size uint) {
+    return
     if size <= 0 {
         return
     }
@@ -44,6 +45,7 @@ func (space *Space) AddBlock(index int, size uint) {
 
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块
 func (space *Space) GetBlock(size uint) (int, uint) {
+    return -1, 0
     space.mu.RLock()
     defer space.mu.RUnlock()
 

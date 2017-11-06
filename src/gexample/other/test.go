@@ -3,28 +3,30 @@ package main
 import (
     "fmt"
     "g/util/gtime"
+    "g/encoding/ghash"
 )
 
-func removeBlock(slice []byte, index int) []byte {
-    return append(slice[:index], slice[index + 1:]...)
-}
 
 func main() {
-
-    m := make(map[int]int, 0)
-    for i := 0; i < 10000000; i ++ {
-        m[i] = i
-    }
-    t1 := gtime.Microsecond()
-    for i := 0; i < 10; i ++ {
-        if _, ok := m[i]; ok {
-
-        }
-    }
+    t1 := gtime.Nanosecond()
+    //ghash.BKDRHash([]byte("1234567890"))
+    ghash.APHash([]byte{2})
+    fmt.Println(gtime.Nanosecond() - t1)
+    return
+    //m := make(map[int]int, 0)
+    //for i := 0; i < 10000000; i ++ {
+    //    m[i] = i
+    //}
+    //t1 := gtime.Microsecond()
+    //for i := 0; i < 10; i ++ {
+    //    if _, ok := m[i]; ok {
+    //
+    //    }
+    //}
 
     //b := make([]byte, 100000)
     //removeBlock(b, 80000)
-    fmt.Println(gtime.Microsecond() - t1)
+    //fmt.Println(gtime.Microsecond() - t1)
 
     return
     //slice := []int{1,2,3,4,5,6,7,8,9}

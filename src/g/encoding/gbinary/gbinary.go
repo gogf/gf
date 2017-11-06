@@ -7,6 +7,9 @@ import (
     "math"
 )
 
+// 二进制位(0|1)
+type Bit uint8
+
 // (通用,效率较低)二进制打包
 func Encode(vs ...interface{}) ([]byte, error) {
     buf := new(bytes.Buffer)
@@ -147,48 +150,48 @@ func DecodeToFloat64(b []byte) float64 {
     return math.Float64frombits(binary.LittleEndian.Uint64(fillUpSize(b, 8)))
 }
 
-// 将ui按位合并到uis数组中，并占length长度位
-func EncodeBits(uis []uint8, ui uint, l int) []uint8 {
-    a := make([]uint8, l)
+// 将ui按位合并到bits数组中，并占length长度位(注意：uis数组中存放的是二进制的0|1数字)
+func EncodeBits(bits []Bit, ui uint, l int) []Bit {
+    a := make([]Bit, l)
     for i := l - 1; i >= 0; i-- {
-        a[i] = uint8(ui & 1)
+        a[i] = Bit(ui & 1)
         ui >>= 1
     }
-    if uis != nil {
-        return append(uis, a...)
+    if bits != nil {
+        return append(bits, a...)
     } else {
         return a
     }
 }
 
-// 将uis转换为[]byte，从左至右进行编码，不足1 byte按0往末尾补充
-func EncodeBitsToBytes(uis []uint8) []byte {
-    if len(uis)%8 != 0 {
-        for i := 0; i < len(uis)%8; i++ {
-            uis = append(uis, 0)
+// 将bits转换为[]byte，从左至右进行编码，不足1 byte按0往末尾补充
+func EncodeBitsToBytes(bits []Bit) []byte {
+    if len(bits)%8 != 0 {
+        for i := 0; i < len(bits)%8; i++ {
+            bits = append(bits, 0)
         }
     }
     b := make([]byte, 0)
-    for i := 0; i < len(uis); i += 8 {
-        b = append(b, byte(DecodeBits(uis[i : i + 8])))
+    for i := 0; i < len(bits); i += 8 {
+        b = append(b, byte(DecodeBits(bits[i : i + 8])))
     }
     return b
 }
 
 // 从ui字位数组中解析为uint
-func DecodeBits(uis []uint8) uint {
+func DecodeBits(bits []Bit) uint {
     ui := uint(0)
-    for _, i := range uis {
+    for _, i := range bits {
         ui = ui << 1 | uint(i)
     }
     return ui
 }
 
 // 解析[]byte为字位数组[]uint8
-func DecodeBytesToBits(bs []byte) []uint8 {
-    uis := make([]uint8, 0)
+func DecodeBytesToBits(bs []byte) []Bit {
+    bits := make([]Bit, 0)
     for _, b := range bs {
-        uis = EncodeBits(uis, uint(b), 8)
+        bits = EncodeBits(bits, uint(b), 8)
     }
-    return uis
+    return bits
 }

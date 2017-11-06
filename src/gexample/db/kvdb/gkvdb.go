@@ -5,7 +5,6 @@ import (
     "fmt"
     "g/util/gtime"
     "strconv"
-    "time"
 )
 
 func main() {
@@ -30,14 +29,14 @@ func main() {
     //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
-    size := 10000000
-    gtime.SetInterval(5*time.Second, func() bool {
-        db.PrintState()
-        return true
-    })
-    ////////db.Set([]byte{byte(2)}, []byte{byte(2)})
-    ////////db.Set([]byte{byte(1)}, []byte{byte(1)})
-    ////////db.Set([]byte{byte(0)}, []byte{byte(0)})
+    size := 100000
+    //gtime.SetInterval(5*time.Second, func() bool {
+    //    db.PrintState()
+    //    return true
+    //})
+    //db.Set([]byte{byte(2)}, []byte{byte(2)})
+    //db.Set([]byte{byte(1)}, []byte{byte(1)})
+    ////db.Set([]byte{byte(0)}, []byte{byte(0)})
     //////
     for i := 0; i < size; i++ {
         //r := []byte(grand.RandStr(10))
@@ -47,15 +46,15 @@ func main() {
             fmt.Println(err)
         }
     }
-    //for i := 0; i < size; i++ {
-    //    r := db.Get([]byte("key1_" + strconv.Itoa(i)))
-    //    //r := db.Get(gbinary.EncodeInt32(int32(i)))
-    //    if r == nil {
-    //        fmt.Println("none for ", i)
-    //    }
-    //}
+    for i := 0; i < size; i++ {
+        r := db.Get([]byte("key1_" + strconv.Itoa(i)))
+        //r := db.Get(gbinary.EncodeInt32(int32(i)))
+        if r == nil {
+            fmt.Println("none for ", i)
+        }
+    }
     //db.Remove(true)
-    db.PrintState()
+    //db.PrintState()
     //db.Get([]byte("key1_" + strconv.Itoa(99999)))
     //fmt.Println(string(db.Get([]byte("key1_" + strconv.Itoa(99999)))))
     //fmt.Println(gbinary.DecodeToInt32(db.Get(gbinary.EncodeInt32(4253318))))
