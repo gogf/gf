@@ -2,14 +2,31 @@ package main
 
 import (
     "fmt"
-    "g/os/gfile"
-    "os"
-    "github.com/syndtr/goleveldb/leveldb"
     "g/util/gtime"
-    "strconv"
 )
 
+func removeBlock(slice []byte, index int) []byte {
+    return append(slice[:index], slice[index + 1:]...)
+}
+
 func main() {
+
+    m := make(map[int]int, 0)
+    for i := 0; i < 10000000; i ++ {
+        m[i] = i
+    }
+    t1 := gtime.Microsecond()
+    for i := 0; i < 10; i ++ {
+        if _, ok := m[i]; ok {
+
+        }
+    }
+
+    //b := make([]byte, 100000)
+    //removeBlock(b, 80000)
+    fmt.Println(gtime.Microsecond() - t1)
+
+    return
     //slice := []int{1,2,3,4,5,6,7,8,9}
     //index := 1
     ////fmt.Println(append(slice[:index], slice[index+1:]...))
@@ -124,46 +141,46 @@ func main() {
     //gcrc32.EncodeString("123")
     //fmt.Println(gtime.Microsecond() - t1)
     //return
-    db, err := leveldb.OpenFile("/tmp/lv.db", nil)
-    fmt.Println(err)
-    defer db.Close()
-    t1 := gtime.Microsecond()
-    size := 10000000
+    //db, err := leveldb.OpenFile("/tmp/lv.db", nil)
+    //fmt.Println(err)
+    //defer db.Close()
+    //t1 := gtime.Microsecond()
+    //size := 10000000
 
-    for i := 0; i < size; i++ {
-        //r := []byte(grand.RandStr(10))
-        //if err := db.Set(r, r); err != nil {
-        t3 := gtime.Microsecond()
-        if err := db.Put([]byte("key1_" + strconv.Itoa(i)), []byte("value1_" + strconv.Itoa(i)), nil); err != nil {
-            //if err := db.Set(gbinary.EncodeInt32(int32(i)), gbinary.EncodeInt32(int32(i))); err != nil {
-            fmt.Println(err)
-        }
-        t4 := gtime.Microsecond()
-        if t4 - t3 > 1000 {
-            fmt.Println(t4-t3)
-        }
-    }
+    //for i := 0; i < size; i++ {
+    //    //r := []byte(grand.RandStr(10))
+    //    //if err := db.Set(r, r); err != nil {
+    //    t3 := gtime.Microsecond()
+    //    if err := db.Put([]byte("key1_" + strconv.Itoa(i)), []byte("value1_" + strconv.Itoa(i)), nil); err != nil {
+    //        //if err := db.Set(gbinary.EncodeInt32(int32(i)), gbinary.EncodeInt32(int32(i))); err != nil {
+    //        fmt.Println(err)
+    //    }
+    //    t4 := gtime.Microsecond()
+    //    if t4 - t3 > 1000 {
+    //        fmt.Println(t4-t3)
+    //    }
+    //}
 
-    for i := 0; i < size; i++ {
-        //r := []byte(grand.RandStr(10))
-        //if err := db.Set(r, r); err != nil {
-        t3 := gtime.Microsecond()
-        v, err := db.Get([]byte("key1_" + strconv.Itoa(i)), nil)
-        if err != nil {
-            //if err := db.Set(gbinary.EncodeInt32(int32(i)), gbinary.EncodeInt32(int32(i))); err != nil {
-            fmt.Println(err)
-        }
-        if len(v) == 0 {
-            fmt.Println("none")
-        }
-        t4 := gtime.Microsecond()
-        if t4 - t3 > 1000 {
-            fmt.Println(t4-t3)
-        }
-    }
-    fmt.Println(gtime.Microsecond() - t1)
-
-    return
+    //for i := 0; i < size; i++ {
+    //    //r := []byte(grand.RandStr(10))
+    //    //if err := db.Set(r, r); err != nil {
+    //    t3 := gtime.Microsecond()
+    //    v, err := db.Get([]byte("key1_" + strconv.Itoa(i)), nil)
+    //    if err != nil {
+    //        //if err := db.Set(gbinary.EncodeInt32(int32(i)), gbinary.EncodeInt32(int32(i))); err != nil {
+    //        fmt.Println(err)
+    //    }
+    //    if len(v) == 0 {
+    //        fmt.Println("none")
+    //    }
+    //    t4 := gtime.Microsecond()
+    //    if t4 - t3 > 1000 {
+    //        fmt.Println(t4-t3)
+    //    }
+    //}
+    //fmt.Println(gtime.Microsecond() - t1)
+    //
+    //return
     //db, err := bolt.Open("/tmp/my.db", 0600, nil)
     //if err != nil {
     //    log.Fatal(err)
@@ -218,12 +235,12 @@ func main() {
     //    gfile.PutContentsAppend("/tmp/test", "1234567890")
     //}
     //
-    file, _ := gfile.OpenWithFlag("/tmp/test", os.O_RDWR|os.O_CREATE)
-    fmt.Println(gfile.GetBinContentByTwoOffsets(file, 100, 110))
-    //n, err := file.WriteAt([]byte("123"), 2286 445 522*8)
-    //n, err := file.WriteAt([]byte("123"), 1000000*(16))
-    //fmt.Println(n)
-    //fmt.Println(err)
-    defer file.Close()
+    //file, _ := gfile.OpenWithFlag("/tmp/test", os.O_RDWR|os.O_CREATE)
+    //fmt.Println(gfile.GetBinContentByTwoOffsets(file, 100, 110))
+    ////n, err := file.WriteAt([]byte("123"), 2286 445 522*8)
+    ////n, err := file.WriteAt([]byte("123"), 1000000*(16))
+    ////fmt.Println(n)
+    ////fmt.Println(err)
+    //defer file.Close()
     //fmt.Println(gcrc32.EncodeString("123"))
 }
