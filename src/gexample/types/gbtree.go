@@ -4,7 +4,6 @@ import (
     "g/core/types/gbtree"
     "fmt"
     "g/util/gtime"
-    "g/util/grand"
 )
 
 type Block struct {
@@ -20,24 +19,24 @@ func (block Block) Less(item gbtree.Item) bool {
 }
 
 func main () {
-    tr := gbtree.New(100)
+    tr := gbtree.New(10)
+
     t1 := gtime.Microsecond()
-    for i := 0; i < 1000000; i++ {
-        tr.ReplaceOrInsert(gbtree.Item(Block{i*grand.Rand(0, 10000000), uint(i*10)}))
+    for i := 0; i < 10000000; i++ {
+        tr.ReplaceOrInsert(gbtree.Item(Block{i, uint(i*10)}))
     }
     fmt.Println("create", gtime.Microsecond() - t1)
 
     t2 := gtime.Microsecond()
-    tr.Get(gbtree.Item(Block{99999, 0}))
+    tr.Get(gbtree.Item(Block{9999990, 0}))
     fmt.Println("get", gtime.Microsecond() - t2)
 
     t3 := gtime.Microsecond()
     var b Block
-    tr.AscendGreaterOrEqual(gbtree.Item(Block{99999, 0}), func(item gbtree.Item) bool {
+    tr.AscendGreaterOrEqual(gbtree.Item(Block{9999999, 0}), func(item gbtree.Item) bool {
         b = item.(Block)
         return false
     })
     fmt.Println("asc fetch", gtime.Microsecond() - t3, b)
 
-    fmt.Println(tr.Get(gbtree.Item(Block{1, 0})))
 }

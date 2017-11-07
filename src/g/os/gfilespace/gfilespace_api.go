@@ -1,5 +1,7 @@
 package gfilespace
 
+import "g/core/types/gbtree"
+
 // 清空数据列表
 func (space *Space) Empty() {
     space.blocks  = make([]Block, 0)
@@ -11,34 +13,16 @@ func (space *Space) AddBlock(index int, size uint) {
     if size <= 0 {
         return
     }
+    block := &Block{index, size}
 
     space.mu.Lock()
     defer space.mu.Unlock()
 
-    indexpos, cmp := space.searchBlockByIndex(index)
-    if cmp == 0 && indexpos >= 0 {
-        // 已经添加过就不能再添加
-        return
-    }
+    // 插入进入树
+    space.blocks.ReplaceOrInsert(gbtree.Item(block))
 
-    // 插入到indexes和blocks
-    block         := Block{index, size}
-    space.indexes  = space.insertBlock(space.indexes, block, indexpos, cmp)
-    blockpos, cmp := space.searchBlockBySize(size)
-    space.blocks   = space.insertBlock(space.blocks, block, blockpos, cmp)
-
-    // 对indexes进行区块检查合并，对插入位置的前后项检查
-    checkpos := indexpos - 1
-    if checkpos < 0 {
-        checkpos = 0
-    }
-
-    space.checkIndexMergeFromIndex(checkpos)
-    space.checkIndexMergeFromIndex(checkpos + 1)
-
-    //fmt.Println(space.indexes)
-    //fmt.Println(space.blocks)
-    //fmt.Println()
+    // 对插入的数据进行合并检测
+    space.checkMerge(block)
 }
 
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块

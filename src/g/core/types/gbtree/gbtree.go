@@ -1,4 +1,4 @@
-// from https://github.com/google/btree
+// B+树，来源于：from https://github.com/google/btree
 package gbtree
 
 import (
@@ -452,58 +452,59 @@ const (
 func (n *node) iterate(dir direction, start, stop Item, includeStart bool, hit bool, iter ItemIterator) (bool, bool) {
     var ok bool
     switch dir {
-    case ascend:
-        for i := 0; i < len(n.items); i++ {
-            if start != nil && n.items[i].Less(start) {
-                continue
-            }
-            if len(n.children) > 0 {
-                if hit, ok = n.children[i].iterate(dir, start, stop, includeStart, hit, iter); !ok {
-                    return hit, false
-                }
-            }
-            if !includeStart && !hit && start != nil && !start.Less(n.items[i]) {
-                hit = true
-                continue
-            }
-            hit = true
-            if stop != nil && !n.items[i].Less(stop) {
-                return hit, false
-            }
-            if !iter(n.items[i]) {
-                return hit, false
-            }
-        }
-        if len(n.children) > 0 {
-            if hit, ok = n.children[len(n.children)-1].iterate(dir, start, stop, includeStart, hit, iter); !ok {
-                return hit, false
-            }
-        }
-    case descend:
-        for i := len(n.items) - 1; i >= 0; i-- {
-            if start != nil && !n.items[i].Less(start) {
-                if !includeStart || hit || start.Less(n.items[i]) {
+        case ascend:
+            for i := 0; i < len(n.items); i++ {
+                if start != nil && n.items[i].Less(start) {
                     continue
                 }
-            }
-            if len(n.children) > 0 {
-                if hit, ok = n.children[i+1].iterate(dir, start, stop, includeStart, hit, iter); !ok {
+                if len(n.children) > 0 {
+                    if hit, ok = n.children[i].iterate(dir, start, stop, includeStart, hit, iter); !ok {
+                        return hit, false
+                    }
+                }
+                if !includeStart && !hit && start != nil && !start.Less(n.items[i]) {
+                    hit = true
+                    continue
+                }
+                hit = true
+                if stop != nil && !n.items[i].Less(stop) {
+                    return hit, false
+                }
+                if !iter(n.items[i]) {
                     return hit, false
                 }
             }
-            if stop != nil && !stop.Less(n.items[i]) {
-                return hit, false //	continue
+            if len(n.children) > 0 {
+                if hit, ok = n.children[len(n.children)-1].iterate(dir, start, stop, includeStart, hit, iter); !ok {
+                    return hit, false
+                }
             }
-            hit = true
-            if !iter(n.items[i]) {
-                return hit, false
+
+        case descend:
+            for i := len(n.items) - 1; i >= 0; i-- {
+                if start != nil && !n.items[i].Less(start) {
+                    if !includeStart || hit || start.Less(n.items[i]) {
+                        continue
+                    }
+                }
+                if len(n.children) > 0 {
+                    if hit, ok = n.children[i+1].iterate(dir, start, stop, includeStart, hit, iter); !ok {
+                        return hit, false
+                    }
+                }
+                if stop != nil && !stop.Less(n.items[i]) {
+                    return hit, false //	continue
+                }
+                hit = true
+                if !iter(n.items[i]) {
+                    return hit, false
+                }
             }
-        }
-        if len(n.children) > 0 {
-            if hit, ok = n.children[0].iterate(dir, start, stop, includeStart, hit, iter); !ok {
-                return hit, false
+            if len(n.children) > 0 {
+                if hit, ok = n.children[0].iterate(dir, start, stop, includeStart, hit, iter); !ok {
+                    return hit, false
+                }
             }
-        }
     }
     return hit, true
 }

@@ -1,20 +1,20 @@
 // 文件空间管理(不仅仅是碎片管理)，
 // 可用于文件碎片维护及再利用，支持自动合并连续碎片空间
 
-// @TODO 大数据量下数据合并存在问题
 package gfilespace
 
 import (
     "sync"
     "fmt"
     "os"
+    "g/core/types/gbtree"
 )
 
 // 文件空间管理结构体
 type Space struct {
-    mu      sync.RWMutex    // 并发操作锁
-    blocks  []Block         // 空间区块列表(按照区块大小排序)
-    indexes []Block         // 空间区块列表(按照索引大小排序)
+    mu      sync.RWMutex           // 并发操作锁
+    blocks  *gbtree.BTree          // 所有的空间块构建的B+树
+    sizemap map[uint]*gbtree.BTree // 按照空间块大小构建的索引哈希表，便于检索，每个表项是一个B+树
 }
 
 // 文件空闲块
@@ -23,11 +23,19 @@ type Block struct {
     size  uint // 区块大小(byte)
 }
 
+// 用于B+树的接口具体实现定义
+func (block *Block) Less(item gbtree.Item) bool {
+    if block.index < item.(*Block).index {
+        return true
+    }
+    return false
+}
+
 // 创建一个空间管理器
 func New() *Space {
     return &Space {
-        blocks  : make([]Block, 0),
-        indexes : make([]Block, 0),
+        blocks  : gbtree.New(100),
+        sizemap : make(map[uint]*gbtree.BTree),
     }
 }
 
@@ -65,44 +73,15 @@ func (space *Space) getIndexPositionByIndex(index int) int {
 }
 
 // 内部按照索引检查合并
-func (space *Space) checkIndexMergeFromIndex(from int) {
-    for i := from; i < len(space.indexes); i++ {
-        next := from + 1
-        if next >= len(space.indexes) {
-            break
-        }
-        if space.indexes[i].index + int(space.indexes[i].size) >= space.indexes[next].index {
-            // 更新区块大小，必须同时更新indexes和blocks
-            if blockpos := space.getBlockPositionByIndexAndSize(space.indexes[i].index, space.indexes[i].size); blockpos != -1 {
-                space.indexes[i].size = uint(space.indexes[next].index + int(space.indexes[next].size) - space.indexes[i].index)
-                // 由于涉及到列表排序，因此需要删除后重新插入
-                block         := Block{space.blocks[blockpos].index, space.indexes[i].size}
-                space.blocks   = space.removeBlock(space.blocks, blockpos)
-                blockpos, cmp := space.searchBlockBySize(block.size)
-                space.blocks   = space.insertBlock(space.blocks, block, blockpos, cmp)
-            } else {
-                fmt.Printf("update block missing for (%d, %d)\n", space.indexes[i].index, space.indexes[i].size)
-                os.Exit(1)
-            }
+func (space *Space) checkMerge(block *Block) {
+    var pblock, nblock Block
+    // 查询满足合并条件的上一项
+    pblock := &Block{block.index}
+    space.blocks.AscendGreaterOrEqual(gbtree.Item(block), func(item gbtree.Item) bool {
+        pblock = item.(Block)
+        return false
+    })
 
-            // 合并后删除next项(正常情况下是肯定存在的)
-            if blockpos := space.getBlockPositionByIndexAndSize(space.indexes[next].index, space.indexes[next].size); blockpos != -1 {
-                // 首先删除blocks中对应的区块
-                space.blocks  = space.removeBlock(space.blocks, blockpos)
-                // 其次删除index对应区块
-                space.indexes = space.removeBlock(space.indexes, next)
-            } else {
-                fmt.Printf("remove block missing for (%d, %d)\n", space.indexes[next].index, space.indexes[next].size)
-                os.Exit(1)
-            }
-
-            // 递归处理
-            space.checkIndexMergeFromIndex(i)
-            break
-        } else {
-            break
-        }
-    }
 }
 
 // 添加一项, cmp < 0往前插入，cmp >= 0往后插入
