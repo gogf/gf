@@ -103,10 +103,13 @@ func (space *Space) checkMergeOfTwoBlock(pblock, block *Block) *Block {
     }
     for {
         if pblock.index + int(pblock.size) >= block.index {
-            space.removeFromSizeMap(pblock)
-            pblock.size = uint(block.index + int(block.size) - pblock.index)
             space.removeBlock(block)
-            space.insertIntoSizeMap(pblock)
+            // 判断是否需要更新大小
+            if pblock.index + int(pblock.size) < block.index + int(block.size) {
+                space.removeFromSizeMap(pblock)
+                pblock.size = uint(block.index + int(block.size) - pblock.index)
+                space.insertIntoSizeMap(pblock)
+            }
             block = space.getNextBlock(pblock)
             if block == nil {
                 return pblock
@@ -145,6 +148,7 @@ func (space *Space) removeFromSizeMap(block *Block) {
         // 数据数据为空，那么删除该项哈希记录
         if tree.Len() == 0 {
             delete(space.sizemap, block.size)
+            space.sizetr.Delete(gbtree.Int(block.size))
         }
     }
 }

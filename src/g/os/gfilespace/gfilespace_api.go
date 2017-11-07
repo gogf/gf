@@ -70,4 +70,16 @@ func (space *Space) GetAllSizes() []uint {
     return sizes
 }
 
+// 获取当前空间管理器中最大的空闲块大小
+func (space *Space) GetMaxSize() uint {
+    space.mu.RLock()
+    defer space.mu.RUnlock()
+
+    if item := space.sizetr.Max(); item != nil {
+        return uint(item.(gbtree.Int))
+    }
+    return 0
+}
+
+
 

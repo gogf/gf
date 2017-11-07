@@ -5,7 +5,8 @@ import (
     "fmt"
     "g/util/gtime"
     "strconv"
-    "time"
+    "g/encoding/gbinary"
+    "g/os/gfile"
 )
 
 func main() {
@@ -31,10 +32,10 @@ func main() {
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
     size := 10000000
-    gtime.SetInterval(3*time.Second, func() bool {
-        db.PrintState()
-        return true
-    })
+    //gtime.SetInterval(3*time.Second, func() bool {
+    //    db.PrintState()
+    //    return true
+    //})
     //db.Set([]byte{byte(2)}, []byte{byte(2)})
     //db.Set([]byte{byte(1)}, []byte{byte(1)})
     ////db.Set([]byte{byte(0)}, []byte{byte(0)})
@@ -59,5 +60,13 @@ func main() {
     //db.Get([]byte("key1_" + strconv.Itoa(99999)))
     //fmt.Println(string(db.Get([]byte("key1_" + strconv.Itoa(99999)))))
     //fmt.Println(gbinary.DecodeToInt32(db.Get(gbinary.EncodeInt32(4253318))))
+
+    blocks  := db.GetBlocks()
+    content := make([]byte, 0)
+    for _, b := range blocks {
+        content = append(content, gbinary.EncodeInt64(int64(b.Index()))...)
+        content = append(content, gbinary.EncodeUint32(uint32(b.Size()))...)
+    }
+    gfile.PutBinContents("/tmp/blocks", content)
     fmt.Println(gtime.Microsecond() - t2)
 }

@@ -26,7 +26,6 @@ import (
     "g/encoding/ghash"
     "g/os/gfilespace"
     "sync"
-    "fmt"
 )
 
 const (
@@ -538,7 +537,7 @@ func (db *DB) insertDataIntoMt(key []byte, value []byte, record *Record) error {
     if record.mt.end <= 0 || record.mt.cap < record.mt.size {
         // 不用的空间添加到碎片管理器
         if record.mt.end > 0 && record.mt.cap > 0 {
-            fmt.Println("add mt block", int(record.mt.start), uint(record.mt.cap))
+            //fmt.Println("add mt block", int(record.mt.start), uint(record.mt.cap))
             db.mtsp.AddBlock(int(record.mt.start), uint(record.mt.cap))
         }
         // 重新计算所需空间
@@ -553,17 +552,21 @@ func (db *DB) insertDataIntoMt(key []byte, value []byte, record *Record) error {
         // 首先从碎片管理器中获取，如果不够，那么再从文件末尾分配
         index, size := db.mtsp.GetBlock(record.mt.cap)
         if index >= 0 {
-            fmt.Println("get mt block:", index, size, record.mt.cap)
+            //fmt.Println("get mt block:", index, size, record.mt.cap)
             // 只能分配cap大小，多余的空间放回管理器继续分配
             extra := size - record.mt.cap
             if extra > 0 {
-                fmt.Println("readd mt block", index + int(record.mt.cap), extra)
+                //fmt.Println("readd mt block", index + int(record.mt.cap), extra)
                 db.mtsp.AddBlock(index + int(record.mt.cap), extra)
             }
             //fmt.Println(db.mtsp.GetAllBlocksByIndex())
             record.mt.start = int64(index)
             record.mt.end   = int64(index) + int64(record.mt.size)
         } else {
+            //if db.mtsp.GetMaxSize() >= record.mt.cap {
+            //    //fmt.Printf("get mt block failed, request: %d, max: %d\n", record.mt.cap, db.mtsp.GetMaxSize())
+            //    os.Exit(1)
+            //}
             start, err := pf.File().Seek(0, 2)
             if err != nil {
                 return err

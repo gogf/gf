@@ -4,6 +4,7 @@ import (
     "errors"
     "strconv"
     "fmt"
+    "g/os/gfilespace"
 )
 
 // 关闭数据库链接
@@ -78,3 +79,10 @@ func (db *DB) PrintState() {
 
     fmt.Println("=======================================")
 }
+
+// 获取所有的碎片(调试使用)
+func (db *DB) GetBlocks() []gfilespace.Block {
+    return db.mtsp.GetAllBlocks()
+}
+
+
