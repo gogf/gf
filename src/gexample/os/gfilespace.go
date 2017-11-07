@@ -12,9 +12,10 @@ func main() {
     space := gfilespace.New()
 
     //t1 := gtime.Microsecond()
-    for i := 1; i <= 10; i++ {
+    for i := 1; i <= 1000000; i++ {
         //space.AddBlock(i*grand.Rand(0, 10000000), uint(i*10))
         space.AddBlock(i, uint(i*10))
+        //fmt.Println(space.GetAllBlocks())
     }
     //fmt.Println("create", gtime.Microsecond() - t1)
 

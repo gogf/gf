@@ -18,7 +18,7 @@ func (space *Space) AddBlock(index int, size uint) {
     space.blocks.ReplaceOrInsert(block)
 
     // 插入进入索引表
-    space.insertSizeMap(block)
+    space.insertIntoSizeMap(block)
 
     // 对插入的数据进行合并检测
     space.checkMerge(block)

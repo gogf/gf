@@ -103,9 +103,10 @@ func (space *Space) checkMergeOfTwoBlock(pblock, block *Block) *Block {
     }
     for {
         if pblock.index + int(pblock.size) >= block.index {
+            space.removeFromSizeMap(pblock)
             pblock.size = uint(block.index + int(block.size) - pblock.index)
             space.removeBlock(block)
-            space.insertSizeMap(pblock)
+            space.insertIntoSizeMap(pblock)
             block = space.getNextBlock(pblock)
             if block == nil {
                 return pblock
@@ -118,7 +119,7 @@ func (space *Space) checkMergeOfTwoBlock(pblock, block *Block) *Block {
 }
 
 // 插入空间块到索引表
-func (space *Space) insertSizeMap(block *Block) {
+func (space *Space) insertIntoSizeMap(block *Block) {
     tree, ok := space.sizemap[block.size]
     if !ok {
         tree                      = gbtree.New(10)
@@ -134,8 +135,17 @@ func (space *Space) insertSizeMap(block *Block) {
 // 删除一项
 func (space *Space) removeBlock(block *Block) {
     space.blocks.Delete(block)
+    space.removeFromSizeMap(block)
+}
+
+// 从索引表中删除对应的空间块
+func (space *Space) removeFromSizeMap(block *Block) {
     if tree, ok := space.sizemap[block.size]; ok {
         tree.Delete(block)
+        // 数据数据为空，那么删除该项哈希记录
+        if tree.Len() == 0 {
+            delete(space.sizemap, block.size)
+        }
     }
 }
 
