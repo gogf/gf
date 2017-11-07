@@ -22,20 +22,21 @@ func main () {
     tr := gbtree.New(10)
 
     t1 := gtime.Microsecond()
-    for i := 0; i < 10000000; i++ {
+    for i := 0; i < 10; i++ {
         tr.ReplaceOrInsert(gbtree.Item(Block{i, uint(i*10)}))
     }
     fmt.Println("create", gtime.Microsecond() - t1)
 
     t2 := gtime.Microsecond()
-    tr.Get(gbtree.Item(Block{9999990, 0}))
-    fmt.Println("get", gtime.Microsecond() - t2)
+    tr.Get(gbtree.Item(Block{9, 0}))
+    fmt.Println(tr.ReplaceOrInsert(gbtree.Item(Block{9, 10})))
+    fmt.Println("get", gtime.Microsecond() - t2, tr.Get(gbtree.Item(Block{9, 0})))
 
     t3 := gtime.Microsecond()
     var b Block
-    tr.AscendGreaterOrEqual(gbtree.Item(Block{9999999, 0}), func(item gbtree.Item) bool {
+    tr.DescendLessOrEqual(gbtree.Item(Block{2, 0}), func(item gbtree.Item) bool {
         b = item.(Block)
-        return false
+        return true
     })
     fmt.Println("asc fetch", gtime.Microsecond() - t3, b)
 

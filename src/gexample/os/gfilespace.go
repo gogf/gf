@@ -3,8 +3,8 @@ package main
 import (
     "g/os/gfilespace"
     "fmt"
-    "g/util/grand"
     "g/util/gtime"
+    "g/util/grand"
 )
 
 
@@ -14,15 +14,18 @@ func main() {
     space := gfilespace.New()
 
     t1 := gtime.Microsecond()
-    for i := 1; i <= 100000; i++ {
+    for i := 1; i <= 10; i++ {
         space.AddBlock(i*grand.Rand(0, 10000000), uint(i*10))
+        //space.AddBlock(i, uint(i*10))
     }
     fmt.Println("create", gtime.Microsecond() - t1)
 
     t2 := gtime.Microsecond()
-    space.GetBlock(50)
+    fmt.Println(space.GetBlock(10))
     fmt.Println("get", gtime.Microsecond() - t2)
 
+    fmt.Println(space.GetAllBlocks())
+    fmt.Println(space.GetAllSizes())
 
 
 
