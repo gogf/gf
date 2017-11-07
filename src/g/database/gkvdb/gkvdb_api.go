@@ -66,19 +66,15 @@ func (db *DB) Remove(key []byte) error {
 
 // 打印数据库状态(调试使用)
 func (db *DB) PrintState() {
-    mtbysize  := db.mtsp.GetAllBlocksBySize()
-    mtbyindex := db.mtsp.GetAllBlocksByIndex()
-    dbbysize  := db.dbsp.GetAllBlocksBySize()
-    dbbyindex := db.dbsp.GetAllBlocksByIndex()
+    mtblocks := db.mtsp.GetAllBlocks()
+    dbblocks := db.dbsp.GetAllBlocks()
     fmt.Println("meta pieces:")
-    fmt.Println("   by index:", len(mtbyindex))
-    //fmt.Println("      list:", mtbyindex)
-    fmt.Println("    by size:", len(mtbysize))
-    //fmt.Println("      list:", mtbysize)
+    fmt.Println("       size:", len(mtblocks))
+    //fmt.Println("       list:", mtblocks)
 
     fmt.Println("data pieces:")
-    fmt.Println("   by index:", len(dbbyindex))
-    //fmt.Println("      list:", dbbyindex)
-    fmt.Println("    by size:", len(dbbysize))
-    //fmt.Println("      list:", dbbysize)
+    fmt.Println("       size:", len(dbblocks))
+    //fmt.Println("       list:", dbblocks)
+
+    fmt.Println("=======================================")
 }

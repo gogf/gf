@@ -5,6 +5,7 @@ import (
     "fmt"
     "g/util/gtime"
     "strconv"
+    "time"
 )
 
 func main() {
@@ -29,11 +30,11 @@ func main() {
     //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
-    size := 1000000
-    //gtime.SetInterval(5*time.Second, func() bool {
-    //    db.PrintState()
-    //    return true
-    //})
+    size := 10000000
+    gtime.SetInterval(3*time.Second, func() bool {
+        db.PrintState()
+        return true
+    })
     //db.Set([]byte{byte(2)}, []byte{byte(2)})
     //db.Set([]byte{byte(1)}, []byte{byte(1)})
     ////db.Set([]byte{byte(0)}, []byte{byte(0)})

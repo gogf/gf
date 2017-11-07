@@ -105,6 +105,7 @@ func (space *Space) checkMergeOfTwoBlock(pblock, block *Block) *Block {
         if pblock.index + int(pblock.size) >= block.index {
             pblock.size = uint(block.index + int(block.size) - pblock.index)
             space.removeBlock(block)
+            space.insertSizeMap(pblock)
             block = space.getNextBlock(pblock)
             if block == nil {
                 return pblock
@@ -114,6 +115,19 @@ func (space *Space) checkMergeOfTwoBlock(pblock, block *Block) *Block {
         }
     }
     return block
+}
+
+// 插入空间块到索引表
+func (space *Space) insertSizeMap(block *Block) {
+    tree, ok := space.sizemap[block.size]
+    if !ok {
+        tree                      = gbtree.New(10)
+        space.sizemap[block.size] = tree
+    }
+    tree.ReplaceOrInsert(block)
+
+    // 插入空间块大小记录表
+    space.sizetr.ReplaceOrInsert(gbtree.Int(block.size))
 }
 
 

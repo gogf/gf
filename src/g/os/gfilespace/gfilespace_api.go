@@ -1,6 +1,8 @@
 package gfilespace
 
-import "g/core/types/gbtree"
+import (
+    "g/core/types/gbtree"
+)
 
 // 添加空闲空间到管理器
 func (space *Space) AddBlock(index int, size uint) {
@@ -16,15 +18,7 @@ func (space *Space) AddBlock(index int, size uint) {
     space.blocks.ReplaceOrInsert(block)
 
     // 插入进入索引表
-    tree, ok := space.sizemap[block.size]
-    if !ok {
-        tree                      = gbtree.New(10)
-        space.sizemap[block.size] = tree
-    }
-    tree.ReplaceOrInsert(block)
-
-    // 插入空间块大小记录表
-    space.sizetr.ReplaceOrInsert(gbtree.Int(block.size))
+    space.insertSizeMap(block)
 
     // 对插入的数据进行合并检测
     space.checkMerge(block)
@@ -32,8 +26,8 @@ func (space *Space) AddBlock(index int, size uint) {
 
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块
 func (space *Space) GetBlock(size uint) (int, uint) {
-    space.mu.RLock()
-    defer space.mu.RUnlock()
+    space.mu.Lock()
+    defer space.mu.Unlock()
 
     for {
         if tree, ok := space.sizemap[size]; ok {
@@ -54,11 +48,11 @@ func (space *Space) GetBlock(size uint) (int, uint) {
 
 // 获得所有的碎片空间，按照index升序排序
 func (space *Space) GetAllBlocks() []Block {
-    index  := 0
-    blocks := make([]Block, space.blocks.Len())
+    space.mu.RLock()
+    defer space.mu.RUnlock()
+    blocks := make([]Block, 0)
     space.blocks.Ascend(func(item gbtree.Item) bool {
-        blocks[index] = *(item.(*Block))
-        index++
+        blocks = append(blocks, *(item.(*Block)))
         return true
     })
     return blocks
@@ -66,11 +60,11 @@ func (space *Space) GetAllBlocks() []Block {
 
 // 获得所有的碎片空间大小列表，按照size升序排序
 func (space *Space) GetAllSizes() []uint {
-    index := 0
-    sizes := make([]uint, space.sizetr.Len())
+    space.mu.RLock()
+    defer space.mu.RUnlock()
+    sizes := make([]uint, 0)
     space.sizetr.Ascend(func(item gbtree.Item) bool {
-        sizes[index] = uint(item.(gbtree.Int))
-        index++
+        sizes = append(sizes, uint(item.(gbtree.Int)))
         return true
     })
     return sizes
