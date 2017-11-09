@@ -38,6 +38,20 @@ func New() *Space {
     }
 }
 
+// 添加空闲空间到管理器
+func (space *Space) addBlock(index int, size uint) {
+    block := &Block{index, size}
+
+    // 插入进全局树
+    space.blocks.ReplaceOrInsert(block)
+
+    // 插入进入索引表
+    space.insertIntoSizeMap(block)
+
+    // 对插入的数据进行合并检测
+    space.checkMerge(block)
+}
+
 // 获取指定block的前一项block
 func (space *Space) getPrevBlock(block *Block) *Block {
     var pblock *Block = nil

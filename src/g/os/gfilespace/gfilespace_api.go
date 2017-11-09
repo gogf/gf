@@ -2,6 +2,7 @@ package gfilespace
 
 import (
     "g/core/types/gbtree"
+    "g/encoding/gbinary"
 )
 
 // 添加空闲空间到管理器
@@ -9,19 +10,10 @@ func (space *Space) AddBlock(index int, size uint) {
     if size <= 0 {
         return
     }
-    block := &Block{index, size}
-
     space.mu.Lock()
     defer space.mu.Unlock()
 
-    // 插入进全局树
-    space.blocks.ReplaceOrInsert(block)
-
-    // 插入进入索引表
-    space.insertIntoSizeMap(block)
-
-    // 对插入的数据进行合并检测
-    space.checkMerge(block)
+    space.addBlock(index, size)
 }
 
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块
@@ -83,6 +75,44 @@ func (space *Space) GetMaxSize() uint {
     }
     return 0
 }
+
+// 获取空间块的数量
+func (space *Space) Len() int {
+    space.mu.RLock()
+    defer space.mu.RUnlock()
+
+    return space.blocks.Len()
+}
+
+// 导出空间块数据
+func (space *Space) Export() []byte {
+    space.mu.RLock()
+    defer space.mu.RUnlock()
+
+    content := make([]byte, 0)
+    space.blocks.Ascend(func(item gbtree.Item) bool {
+        block   := item.(*Block)
+        content  = append(content, gbinary.EncodeInt64(int64(block.Index()))...)
+        content  = append(content, gbinary.EncodeUint32(uint32(block.Size()))...)
+        return true
+    })
+
+    return content
+}
+
+// 导入空间块数据
+func (space *Space) Import(content []byte) {
+    space.mu.Lock()
+    defer space.mu.Unlock()
+
+    for i := 0; i < len(content); i += 12 {
+        space.addBlock(
+            int(gbinary.DecodeToInt64(content[i : i + 8])),
+            uint(gbinary.DecodeToUint32(content[i + 8 : i + 12])),
+        )
+    }
+}
+
 
 
 

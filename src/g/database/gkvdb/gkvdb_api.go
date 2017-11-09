@@ -3,8 +3,6 @@ package gkvdb
 import (
     "errors"
     "strconv"
-    "fmt"
-    "g/os/gfilespace"
 )
 
 // 关闭数据库链接
@@ -16,6 +14,9 @@ func (db *DB) Close() {
 
 // 查询KV数据
 func (db *DB) Get(key []byte) []byte {
+    db.mu.RLock()
+    defer db.mu.RUnlock()
+
     value, _ := db.getValueByKey(key)
     return value
 }
@@ -29,6 +30,8 @@ func (db *DB) Set(key []byte, value []byte) error {
     if len(value) > gMAX_VALUE_SIZE {
         return errors.New("too large value size, max allowed: " + strconv.Itoa(gMAX_VALUE_SIZE) + " bytes")
     }
+    db.mu.Lock()
+    defer db.mu.Unlock()
 
     // 查询索引信息
     record, err := db.getRecordByKey(key)
@@ -53,6 +56,9 @@ func (db *DB) Set(key []byte, value []byte) error {
 
 // 删除KV数据
 func (db *DB) Remove(key []byte) error {
+    db.mu.Lock()
+    defer db.mu.Unlock()
+
     // 查询索引信息
     record, err := db.getRecordByKey(key)
     if err != nil {
@@ -66,23 +72,23 @@ func (db *DB) Remove(key []byte) error {
 }
 
 // 打印数据库状态(调试使用)
-func (db *DB) PrintState() {
-    mtblocks := db.mtsp.GetAllBlocks()
-    dbblocks := db.dbsp.GetAllBlocks()
-    fmt.Println("meta pieces:")
-    fmt.Println("       size:", len(mtblocks))
-    //fmt.Println("       list:", mtblocks)
-
-    fmt.Println("data pieces:")
-    fmt.Println("       size:", len(dbblocks))
-    //fmt.Println("       list:", dbblocks)
-
-    fmt.Println("=======================================")
-}
-
-// 获取所有的碎片(调试使用)
-func (db *DB) GetBlocks() []gfilespace.Block {
-    return db.mtsp.GetAllBlocks()
-}
+//func (db *DB) PrintState() {
+//    mtblocks := db.mtsp.GetAllBlocks()
+//    dbblocks := db.dbsp.GetAllBlocks()
+//    fmt.Println("meta pieces:")
+//    fmt.Println("       size:", len(mtblocks))
+//    //fmt.Println("       list:", mtblocks)
+//
+//    fmt.Println("data pieces:")
+//    fmt.Println("       size:", len(dbblocks))
+//    //fmt.Println("       list:", dbblocks)
+//
+//    fmt.Println("=======================================")
+//}
+//
+//// 获取所有的碎片(调试使用)
+//func (db *DB) GetBlocks() []gfilespace.Block {
+//    return db.mtsp.GetAllBlocks()
+//}
 
 

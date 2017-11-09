@@ -41,14 +41,14 @@ const (
 
 // KV数据库
 type DB struct {
-    mu    sync.RWMutex
-    path  string            // 数据文件存放目录路径
-    name  string            // 数据文件名
-    ixfp  *gfilepool.Pool   // 索引文件打开指针池(用以高并发下的IO复用)
-    mtfp  *gfilepool.Pool   // 元数据文件打开指针池(元数据，包含索引信息和部分数据信息)
-    dbfp  *gfilepool.Pool   // 数据文件打开指针池(纯键值存储)
-    mtsp  *gfilespace.Space // 元数据文件碎片管理
-    dbsp  *gfilespace.Space // 数据文件碎片管理器
+    mu      sync.RWMutex
+    path    string            // 数据文件存放目录路径
+    name    string            // 数据文件名
+    ixfp    *gfilepool.Pool   // 索引文件打开指针池(用以高并发下的IO复用)
+    mtfp    *gfilepool.Pool   // 元数据文件打开指针池(元数据，包含索引信息和部分数据信息)
+    dbfp    *gfilepool.Pool   // 数据文件打开指针池
+    mtsp    *gfilespace.Space // 元数据文件碎片管理
+    dbsp    *gfilespace.Space // 数据文件碎片管理器
 }
 
 // KV数据检索记录
@@ -102,6 +102,7 @@ func New(path, name string) (*DB, error) {
     ixpath := db.getIndexFilePath()
     mtpath := db.getMetaFilePath()
     dbpath := db.getDataFilePath()
+    fspath := db.getSpaceFilePath()
     if gfile.Exists(ixpath) && (!gfile.IsWritable(ixpath) || !gfile.IsReadable(ixpath)){
         return nil, errors.New("permission denied to index file: " + ixpath)
     }
@@ -111,11 +112,14 @@ func New(path, name string) (*DB, error) {
     if gfile.Exists(dbpath) && (!gfile.IsWritable(dbpath) || !gfile.IsReadable(dbpath)){
         return nil, errors.New("permission denied to data file: " + dbpath)
     }
+    if gfile.Exists(fspath) && (!gfile.IsWritable(fspath) || !gfile.IsReadable(fspath)){
+        return nil, errors.New("permission denied to space file: " + fspath)
+    }
     // 创建文件指针池
     db.ixfp = gfilepool.New(ixpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
     db.mtfp = gfilepool.New(mtpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
     db.dbfp = gfilepool.New(dbpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
-    db.initAndCheckSelf()
+    db.init()
     return db, nil
 }
 
@@ -131,13 +135,14 @@ func (db *DB) getDataFilePath() string {
     return db.path + gfile.Separator + db.name + ".db"
 }
 
+func (db *DB) getSpaceFilePath() string {
+    return db.path + gfile.Separator + db.name + ".fs"
+}
+
 // 数据库启动自检，整体快速扫描数据库，修复可能的异常
-func (db *DB) initAndCheckSelf() {
+func (db *DB) init() {
     db.initFileSpace()
-    //go func() {
-    //    db.PrintState()
-    //    time.Sleep(3*time.Second)
-    //}()
+    db.restoreFileSpace()
 }
 
 // 根据元数据的size计算cap
@@ -161,60 +166,6 @@ func (db *DB) initFileSpace() {
     db.mtsp = gfilespace.New()
     db.dbsp = gfilespace.New()
 }
-
-// 计算空间碎片状态
-//func (db *DB) countFileSpace() {
-//    pf, _ := db.mtfp.File()
-//    defer pf.Close()
-//
-//    usedmtsp := gfilespace.New()
-//    useddbsp := gfilespace.New()
-//    ixbuffer := gfile.GetBinContents(db.getIndexFilePath())
-//    for i := 0; i < len(ixbuffer); i += 9 {
-//        mtindex := gbinary.DecodeToInt64(ixbuffer[i : i + 5])
-//        mtsize  := int(gbinary.DecodeToUint32(ixbuffer[i + 5 : i + 9]))
-//        if mtsize > 0 {
-//            //fmt.Println("add block:", int(mtindex), uint(mtcap))
-//            usedmtsp.AddBlock(int(mtindex), db.getCapBySize(uint(mtsize)))
-//            //fmt.Println(usedmtsp.GetAllBlocksByIndex())
-//            // 获取数据列表
-//            if mtbuffer := gfile.GetBinContentByTwoOffsets(pf.File(), mtindex, mtindex + int64(mtsize)); mtbuffer != nil {
-//                for i := 0; i < len(mtbuffer); {
-//                    buffer := mtbuffer[i:]
-//                    bits   := gbinary.DecodeBytesToBits(buffer[0:4])
-//                    length := gbinary.DecodeBits(bits[0 : 9])
-//                    dbtype := gbinary.DecodeBits(bits[31 : 32])
-//                    if dbtype > 0 {
-//                        dbsize  := gbinary.DecodeBits(bits[9 : 31])
-//                        dbcap   := db.getCapBySize(dbsize)
-//                        dbindex := gbinary.DecodeToInt64(buffer[4 : 9])
-//                        useddbsp.AddBlock(int(dbindex), dbcap)
-//                    }
-//                    i += int(length)
-//                }
-//            }
-//        }
-//    }
-//    // 计算元数据碎片
-//    start := 0
-//    for _, v := range usedmtsp.GetAllBlocksByIndex() {
-//        if v.Index() > start {
-//            db.mtsp.AddBlock(start, uint(v.Index() - start))
-//        }
-//        start = v.Index() + int(v.Size())
-//    }
-//    // 计算数据碎片
-//    start  = 0
-//    for _, v := range useddbsp.GetAllBlocksByIndex() {
-//        if v.Index() > start {
-//            db.dbsp.AddBlock(start, uint(v.Index() - start))
-//        }
-//        start = v.Index() + int(v.Size())
-//    }
-//    //fmt.Println(usedmtsp.GetAllBlocksByIndex())
-//    //fmt.Println(db.mtsp.GetAllBlocksByIndex())
-//    //fmt.Println(db.dbsp.GetAllBlocksByIndex())
-//}
 
 // 计算关键字的hash code，使用64位哈希函数
 func (db *DB) getHash64(key []byte) uint64 {
@@ -264,7 +215,6 @@ func (db *DB) getDataInfoByRecord(record *Record) error {
         //fmt.Println("get record", record)
         //fmt.Println("get:", record.mt.start, record.mt.size, record.mt.buffer)
         // 线性查找
-        // @todo 替换位二分查找
         for i := 0; i < len(record.mt.buffer); i += 12 {
             buffer := record.mt.buffer[i : i + 12]
             bits   := gbinary.DecodeBytesToBits(buffer)
@@ -278,7 +228,6 @@ func (db *DB) getDataInfoByRecord(record *Record) error {
                 record.db.cap    = db.getDataCapBySize(record.db.size)
                 record.db.start  = int64(gbinary.DecodeBits(bits[58 : 96]))*gDATA_BUCKET_SIZE
                 record.db.end    = record.db.start + int64(record.db.size)
-
                 break
             }
         }
@@ -368,7 +317,7 @@ func (db *DB) removeDataFromDb(record *Record) error {
         return err
     }
     // 添加碎片
-    db.dbsp.AddBlock(int(record.db.start), record.db.cap)
+    db.addDbFileSpace(int(record.db.start), record.db.cap)
     return nil
 }
 
@@ -396,7 +345,7 @@ func (db *DB) removeDataFromMt(record *Record) error {
     }
     if record.mt.size == 0 {
         // 如果列表被清空，那么添加整块空间到碎片管理器
-        db.mtsp.AddBlock(int(record.mt.start), record.mt.cap)
+        db.addMtFileSpace(int(record.mt.start), record.mt.cap)
     } else {
         // 如果列表分配大小比较实际大小超过bucket，那么进行空间切分，添加多余的空间到碎片管理器
         db.checkAndResizeMtCap(record)
@@ -416,7 +365,7 @@ func (db *DB) checkAndResizeMtCap(record *Record) {
         diffcap := int(record.mt.cap - realcap)
         if diffcap >= gMETA_BUCKET_SIZE {
             record.mt.cap = realcap
-            db.mtsp.AddBlock(int(record.mt.start)+int(realcap), uint(diffcap))
+            db.addMtFileSpace(int(record.mt.start)+int(realcap), uint(diffcap))
         }
     }
 }
@@ -428,7 +377,7 @@ func (db *DB) checkAndResizeDbCap(record *Record) {
         diffcap := int(record.db.cap - realcap)
         if diffcap >= gDATA_BUCKET_SIZE {
             record.db.cap = realcap
-            db.dbsp.AddBlock(int(record.db.start)+int(realcap), uint(diffcap))
+            db.addDbFileSpace(int(record.db.start)+int(realcap), uint(diffcap))
         }
     }
 }
@@ -463,7 +412,7 @@ func (db *DB) insertDataIntoDb(key []byte, value []byte, record *Record) error {
         // 不用的空间添加到碎片管理器
         if record.db.end > 0 && record.db.cap > 0 {
             //fmt.Println("add db block", int(record.db.start), uint(record.db.cap))
-            db.dbsp.AddBlock(int(record.db.start), record.db.cap)
+            db.addDbFileSpace(int(record.db.start), record.db.cap)
         }
         // 重新计算所需空间
         if record.db.cap < record.db.size {
@@ -475,13 +424,13 @@ func (db *DB) insertDataIntoDb(key []byte, value []byte, record *Record) error {
             }
         }
         // 首先从碎片管理器中获取，如果不够，那么再从文件末尾分配
-        index, size := db.dbsp.GetBlock(record.db.cap)
+        index, size := db.getDbFileSpace(record.db.cap)
         if index >= 0 {
             // 只能分配cap大小，多余的空间放回管理器继续分配
             extra := int(size - record.db.cap)
             if extra > 0 {
                 //fmt.Println("readd db block", index + int(record.db.cap), extra)
-                db.dbsp.AddBlock(index + int(record.db.cap), uint(extra))
+                db.addDbFileSpace(index + int(record.db.cap), uint(extra))
             }
             record.db.start = int64(index)
             record.db.end   = int64(index) + int64(record.db.size)
@@ -540,7 +489,7 @@ func (db *DB) insertDataIntoMt(key []byte, value []byte, record *Record) error {
         // 不用的空间添加到碎片管理器
         if record.mt.end > 0 && record.mt.cap > 0 {
             //fmt.Println("add mt block", int(record.mt.start), uint(record.mt.cap))
-            db.mtsp.AddBlock(int(record.mt.start), uint(record.mt.cap))
+            db.addMtFileSpace(int(record.mt.start), uint(record.mt.cap))
         }
         // 重新计算所需空间
         if record.mt.cap < record.mt.size {
@@ -552,14 +501,14 @@ func (db *DB) insertDataIntoMt(key []byte, value []byte, record *Record) error {
             }
         }
         // 首先从碎片管理器中获取，如果不够，那么再从文件末尾分配
-        index, size := db.mtsp.GetBlock(record.mt.cap)
+        index, size := db.getMtFileSpace(record.mt.cap)
         if index >= 0 {
             //fmt.Println("get mt block:", index, size, record.mt.cap)
             // 只能分配cap大小，多余的空间放回管理器继续分配
             extra := int(size - record.mt.cap)
             if extra > 0 {
                 //fmt.Println("readd mt block", index + int(record.mt.cap), extra)
-                db.mtsp.AddBlock(index + int(record.mt.cap), uint(extra))
+                db.addMtFileSpace(index + int(record.mt.cap), uint(extra))
             }
             //fmt.Println(db.mtsp.GetAllBlocksByIndex())
             record.mt.start = int64(index)

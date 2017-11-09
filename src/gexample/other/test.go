@@ -4,14 +4,20 @@ import (
     "fmt"
     "g/util/gtime"
     "g/encoding/ghash"
+    "g/encoding/gbinary"
 )
 
 
 func main() {
-    a := uint(100) - uint(360)
-    fmt.Println(a)
+    b := make([]byte, 1200)
+    t1 := gtime.Microsecond()
+
+    for i := 0; i < len(b); i += 12 {
+        gbinary.DecodeToInt64(b[i : i + 8])
+    }
+    fmt.Println(gtime.Microsecond() - t1)
     return
-    t1 := gtime.Nanosecond()
+    //t1 := gtime.Nanosecond()
     //ghash.BKDRHash([]byte("1234567890"))
     ghash.APHash([]byte{2})
     fmt.Println(gtime.Nanosecond() - t1)
