@@ -27,18 +27,18 @@ func main () {
     //fmt.Println("create", gtime.Microsecond() - t1)
 
     //t2 := gtime.Microsecond()
-    b := &Block{9, 10}
-    fmt.Println(tr.Get(b))
-    fmt.Println(tr.Delete(b))
-    fmt.Println(tr.Get(b))
+    //b := &Block{9, 10}
+    //fmt.Println(tr.Get(b))
+    //fmt.Println(tr.Delete(b))
+    //fmt.Println(tr.Get(b))
     //fmt.Println("get", gtime.Microsecond() - t2)
 
     //t3 := gtime.Microsecond()
     //var b Block
-    //tr.DescendLessOrEqual(gbtree.Item(Block{2, 0}), func(item gbtree.Item) bool {
-    //    b = item.(Block)
-    //    return true
-    //})
+    tr.AscendGreaterOrEqual(&Block{2, 0}, func(item gbtree.Item) bool {
+        fmt.Println(item)
+        return true
+    })
     //fmt.Println("asc fetch", gtime.Microsecond() - t3, b)
 
 }

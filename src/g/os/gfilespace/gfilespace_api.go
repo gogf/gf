@@ -2,16 +2,12 @@ package gfilespace
 
 import (
     "g/core/types/gbtree"
-    "fmt"
 )
 
 // 添加空闲空间到管理器
 func (space *Space) AddBlock(index int, size uint) {
     if size <= 0 {
         return
-    }
-    if index == 55378920 {
-        fmt.Println(index, size)
     }
     block := &Block{index, size}
 
@@ -30,6 +26,9 @@ func (space *Space) AddBlock(index int, size uint) {
 
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块
 func (space *Space) GetBlock(size uint) (int, uint) {
+    if size <= 0 {
+        return -1, 0
+    }
     space.mu.Lock()
     defer space.mu.Unlock()
 

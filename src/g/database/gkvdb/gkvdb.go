@@ -411,24 +411,24 @@ func (db *DB) removeDataFromIx(record *Record) error {
 
 // 检查并更新元数据分配大小与实际大小，如果有多余的空间，交给碎片管理器
 func (db *DB) checkAndResizeMtCap(record *Record) {
-    if record.mt.cap - record.mt.size >= gMETA_BUCKET_SIZE {
+    if int(record.mt.cap - record.mt.size) >= gMETA_BUCKET_SIZE {
         realcap := db.getMetaCapBySize(record.mt.size)
-        diffcap := record.mt.cap - realcap
+        diffcap := int(record.mt.cap - realcap)
         if diffcap >= gMETA_BUCKET_SIZE {
             record.mt.cap = realcap
-            db.mtsp.AddBlock(int(record.mt.start)+int(realcap), diffcap)
+            db.mtsp.AddBlock(int(record.mt.start)+int(realcap), uint(diffcap))
         }
     }
 }
 
 // 检查并更新数据分配大小与实际大小，如果有多余的空间，交给碎片管理器
 func (db *DB) checkAndResizeDbCap(record *Record) {
-    if record.db.cap - record.db.size >= gDATA_BUCKET_SIZE {
+    if int(record.db.cap - record.db.size) >= gDATA_BUCKET_SIZE {
         realcap := db.getDataCapBySize(record.db.size)
-        diffcap := record.db.cap - realcap
+        diffcap := int(record.db.cap - realcap)
         if diffcap >= gDATA_BUCKET_SIZE {
             record.db.cap = realcap
-            db.dbsp.AddBlock(int(record.db.start)+int(realcap), diffcap)
+            db.dbsp.AddBlock(int(record.db.start)+int(realcap), uint(diffcap))
         }
     }
 }
@@ -462,13 +462,14 @@ func (db *DB) insertDataIntoDb(key []byte, value []byte, record *Record) error {
     if record.db.end <= 0 || record.db.cap < record.db.size {
         // 不用的空间添加到碎片管理器
         if record.db.end > 0 && record.db.cap > 0 {
+            //fmt.Println("add db block", int(record.db.start), uint(record.db.cap))
             db.dbsp.AddBlock(int(record.db.start), record.db.cap)
         }
         // 重新计算所需空间
-        if record.db.cap < record.db.vlen {
+        if record.db.cap < record.db.size {
             for {
                 record.db.cap += gDATA_BUCKET_SIZE
-                if record.db.cap >= record.db.vlen {
+                if record.db.cap >= record.db.size {
                     break
                 }
             }
@@ -477,9 +478,10 @@ func (db *DB) insertDataIntoDb(key []byte, value []byte, record *Record) error {
         index, size := db.dbsp.GetBlock(record.db.cap)
         if index >= 0 {
             // 只能分配cap大小，多余的空间放回管理器继续分配
-            extra := size - record.db.cap
+            extra := int(size - record.db.cap)
             if extra > 0 {
-                db.dbsp.AddBlock(index + int(record.db.cap), extra)
+                //fmt.Println("readd db block", index + int(record.db.cap), extra)
+                db.dbsp.AddBlock(index + int(record.db.cap), uint(extra))
             }
             record.db.start = int64(index)
             record.db.end   = int64(index) + int64(record.db.size)
@@ -554,10 +556,10 @@ func (db *DB) insertDataIntoMt(key []byte, value []byte, record *Record) error {
         if index >= 0 {
             //fmt.Println("get mt block:", index, size, record.mt.cap)
             // 只能分配cap大小，多余的空间放回管理器继续分配
-            extra := size - record.mt.cap
+            extra := int(size - record.mt.cap)
             if extra > 0 {
                 //fmt.Println("readd mt block", index + int(record.mt.cap), extra)
-                db.mtsp.AddBlock(index + int(record.mt.cap), extra)
+                db.mtsp.AddBlock(index + int(record.mt.cap), uint(extra))
             }
             //fmt.Println(db.mtsp.GetAllBlocksByIndex())
             record.mt.start = int64(index)

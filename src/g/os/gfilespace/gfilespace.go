@@ -54,9 +54,12 @@ func (space *Space) getPrevBlock(block *Block) *Block {
 // 获取指定block的后一项block
 func (space *Space) getNextBlock(block *Block) *Block {
     var nblock *Block = nil
-    space.blocks.DescendGreaterThan(block, func(item gbtree.Item) bool {
-        nblock = item.(*Block)
-        return false
+    space.blocks.AscendGreaterOrEqual(block, func(item gbtree.Item) bool {
+        if item.(*Block).index != block.index {
+            nblock = item.(*Block)
+            return false
+        }
+        return true
     })
     return nblock
 }
@@ -77,9 +80,12 @@ func (space *Space) getPrevBlockSize(size uint) uint {
 // 获取指定block的后一项block size
 func (space *Space) getNextBlockSize(size uint) uint {
     nsize := uint(0)
-    space.sizetr.DescendGreaterThan(gbtree.Int(size), func(item gbtree.Item) bool {
-        nsize = uint(item.(gbtree.Int))
-        return false
+    space.sizetr.AscendGreaterOrEqual(gbtree.Int(size), func(item gbtree.Item) bool {
+        if uint(item.(gbtree.Int)) != size {
+            nsize = uint(item.(gbtree.Int))
+            return false
+        }
+        return true
     })
     return nsize
 }

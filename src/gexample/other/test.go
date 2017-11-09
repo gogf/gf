@@ -8,7 +8,8 @@ import (
 
 
 func main() {
-    fmt.Println(uint(480) - uint(360))
+    a := uint(100) - uint(360)
+    fmt.Println(a)
     return
     t1 := gtime.Nanosecond()
     //ghash.BKDRHash([]byte("1234567890"))

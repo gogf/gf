@@ -27,7 +27,7 @@ func main() {
         if i + 1 == len(blocks) {
             break
         }
-        fmt.Println(blocks[i].index, blocks[i].size)
+        //fmt.Println(blocks[i].index, blocks[i].size)
         if blocks[i].index + int(blocks[i].size) >= blocks[i+1].index {
             fmt.Println(blocks[i].index, "+", blocks[i].size, ">=", blocks[i+1].index)
             break
