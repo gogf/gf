@@ -137,7 +137,7 @@ func New(path, name string) (*DB, error) {
     // 初始化相关服务及数据
     db.initFileSpace()
     db.restoreFileSpace()
-    go db.autoSavingLoop()
+    db.startAutoSavingLoop()
     return db, nil
 }
 
