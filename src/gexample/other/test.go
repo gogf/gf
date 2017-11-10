@@ -8,11 +8,21 @@ import (
     "g/core/types/gmap"
     "time"
     "strconv"
+    "runtime"
 )
 
 
-func main() {
+func test() string {
+    pc,_,_,_ := runtime.Caller(0)
+    return runtime.FuncForPC(pc).Name()
+}
 
+func main() {
+    t1 := gtime.Microsecond()
+    name := test()
+    fmt.Println(gtime.Microsecond() - t1)
+    fmt.Println(name)
+    return
     m := gmap.NewIntStringMap()
     for i := 0; i < 10000000; i++ {
         m.Set(i, "value111111111_" + strconv.Itoa(i))
@@ -27,7 +37,7 @@ func main() {
     time.Sleep(10000*time.Second)
     return
     b := make([]byte, 1200)
-    t1 := gtime.Microsecond()
+    //t1 := gtime.Microsecond()
 
     for i := 0; i < len(b); i += 12 {
         gbinary.DecodeToInt64(b[i : i + 8])

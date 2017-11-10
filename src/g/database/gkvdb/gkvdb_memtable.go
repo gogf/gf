@@ -65,6 +65,7 @@ func (table *MemTable) remove(key []byte) error {
 }
 
 // 同步数据到磁盘
+// 注意这里的map不会在delete之后马上释放，而是随着GC的逻辑缓慢进行
 func (table *MemTable) sync() {
     if table.m.IsEmpty() {
         return
