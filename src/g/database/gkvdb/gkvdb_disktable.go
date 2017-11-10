@@ -1,8 +1,8 @@
 package gkvdb
 
 import (
-    "errors"
     "g/os/gcache"
+    "errors"
 )
 
 
@@ -41,7 +41,7 @@ func (db *DB) set(key []byte, value []byte) error {
     }
 
     // 根据record信息更新索引文件
-    if oldr.ix.start != record.ix.start || oldr.ix.end != record.ix.end {
+    if oldr.mt.start != record.mt.start || oldr.mt.size != record.mt.size {
         if err := db.updateIndexByRecord(record); err != nil {
             return errors.New("creating index error: " + err.Error())
         }
@@ -63,7 +63,7 @@ func (db *DB) remove(key []byte) error {
         return err
     }
     // 如果找到匹配才执行删除操作
-    if record.mt.match {
+    if record.mt.match == 0 {
         return db.removeDataByRecord(record)
     }
     return nil

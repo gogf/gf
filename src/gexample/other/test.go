@@ -2,53 +2,15 @@ package main
 
 import (
     "fmt"
-    "g/util/gtime"
-    "g/encoding/ghash"
-    "g/encoding/gbinary"
-    "g/core/types/gmap"
-    "time"
-    "strconv"
-    "runtime"
 )
 
 
-func test() string {
-    pc,_,_,_ := runtime.Caller(0)
-    return runtime.FuncForPC(pc).Name()
-}
+
 
 func main() {
-    t1 := gtime.Microsecond()
-    name := test()
-    fmt.Println(gtime.Microsecond() - t1)
-    fmt.Println(name)
-    return
-    m := gmap.NewIntStringMap()
-    for i := 0; i < 10000000; i++ {
-        m.Set(i, "value111111111_" + strconv.Itoa(i))
-    }
-    fmt.Println("done")
+    var a interface{} = nil
+    fmt.Println(a == nil)
 
-    time.Sleep(5*time.Second)
-    for i := 0; i < 10000000; i++ {
-        m.GetAndRemove(i)
-    }
-    fmt.Println("done2")
-    time.Sleep(10000*time.Second)
-    return
-    b := make([]byte, 1200)
-    //t1 := gtime.Microsecond()
-
-    for i := 0; i < len(b); i += 12 {
-        gbinary.DecodeToInt64(b[i : i + 8])
-    }
-    fmt.Println(gtime.Microsecond() - t1)
-    return
-    //t1 := gtime.Nanosecond()
-    //ghash.BKDRHash([]byte("1234567890"))
-    ghash.APHash([]byte{2})
-    fmt.Println(gtime.Nanosecond() - t1)
-    return
     //m := make(map[int]int, 0)
     //for i := 0; i < 10000000; i ++ {
     //    m[i] = i
