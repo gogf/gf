@@ -14,10 +14,8 @@ func main() {
         fmt.Println(err)
     }
     fmt.Println(gtime.Microsecond() - t1)
+    //db.SetCache(false)
 
-
-    //binary.LittleEndian.Uint64(bytes)
-    //b, _ := gbinary.Encode(i)
     t2 := gtime.Microsecond()
     //db.Set([]byte{byte(1)}, []byte("1"))
     //db.Set([]byte{byte(1)}, []byte("123456"))
@@ -29,7 +27,7 @@ func main() {
     //fmt.Println(db.Set([]byte("name2"), []byte("john2")))
     //fmt.Println(db.Get([]byte("name")))
     //fmt.Println(db.Get([]byte("name2")))
-    size := 10000000
+    size := 5000000
     //gtime.SetInterval(2*time.Second, func() bool {
     //    db.PrintState()
     //    //fmt.Println(db.GetBlocks())
@@ -47,15 +45,14 @@ func main() {
             fmt.Println(err)
         }
     }
-    for i := 0; i < size; i++ {
-        r := db.Get([]byte("key1_" + strconv.Itoa(i)))
-        //r := db.Get(gbinary.EncodeInt32(int32(i)))
-        if r == nil {
-            fmt.Println("none for ", i)
-        }
-    }
+    //for i := 0; i < size; i++ {
+    //    r := db.Get([]byte("key1_" + strconv.Itoa(i)))
+    //    //r := db.Get(gbinary.EncodeInt32(int32(i)))
+    //    if r == nil {
+    //        fmt.Println("none for ", i)
+    //    }
+    //}
     //db.Remove(true)
-    //db.PrintState()
     //db.Get([]byte("key1_" + strconv.Itoa(99999)))
     //fmt.Println(string(db.Get([]byte("key1_" + strconv.Itoa(99999)))))
     //fmt.Println(gbinary.DecodeToInt32(db.Get(gbinary.EncodeInt32(4253318))))
@@ -69,4 +66,7 @@ func main() {
     //}
     //gfile.PutBinContents("/tmp/blocks", content)
     fmt.Println(gtime.Microsecond() - t2)
+    select {
+
+    }
 }

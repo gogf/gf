@@ -6,8 +6,8 @@
 // 数据结构要点   ：数据的分配长度cap >= 数据真实长度len，且 cap - len <= bucket，
 //               当数据存储内容发生改变时，依靠碎片管理器对碎片进行回收再利用，且碎片大小 >= bucket
 
-// 索引文件结构  ：元数据文件偏移量(36bit) 元数据文件列表项大小(20bit)
-// 元数据文件结构 :[键名哈希28(28bit) 键名长度(8bit) 键值长度(22bit,最大4MB) 数据文件偏移量(38bit)](变长,链表)
+// 索引文件结构  ：元数据文件偏移量(36bit,64GB) 元数据文件列表项大小(20bit,1048575)
+// 元数据文件结构 :[键名哈希28(28bit) 键名长度(8bit) 键值长度(22bit,4MB) 数据文件偏移量(38bit,256GB)](变长,链表)
 // 数据文件结构  ：键名(变长) 键值(变长)
 
 // 数据项类型 :
@@ -26,6 +26,7 @@ import (
     "g/encoding/ghash"
     "g/os/gfilespace"
     "sync"
+    "sync/atomic"
 )
 
 const (
@@ -37,6 +38,7 @@ const (
     gMETA_BUCKET_SIZE        = 12*5                     // 元数据数据分块大小(byte, 值越大，数据增长时占用的空间越大)
     gDATA_BUCKET_SIZE        = 32                       // 数据分块大小(byte, 值越大，数据增长时占用的空间越大)
     gFILE_POOL_CACHE_TIMEOUT = 60                       // 文件指针池缓存时间(秒)
+    gAUTO_SAVING_TIMEOUT     = 1000                     // 自动同步到磁盘的时间(毫秒)
 )
 
 // KV数据库
@@ -49,6 +51,8 @@ type DB struct {
     dbfp    *gfilepool.Pool   // 数据文件打开指针池
     mtsp    *gfilespace.Space // 元数据文件碎片管理
     dbsp    *gfilespace.Space // 数据文件碎片管理器
+    memt    *MemTable         // MemTable
+    cache   int32             // 是否开启缓存功能
 }
 
 // KV数据检索记录
@@ -97,7 +101,12 @@ func New(path, name string) (*DB, error) {
     if !gfile.IsWritable(path) {
         return nil, errors.New(path + " is not writable")
     }
-    db := &DB {path : path, name : name}
+    db := &DB {
+        path  : path,
+        name  : name,
+        cache : 1,
+    }
+    db.memt = newMemTable(db)
     // 索引/数据文件权限检测
     ixpath := db.getIndexFilePath()
     mtpath := db.getMetaFilePath()
@@ -119,7 +128,10 @@ func New(path, name string) (*DB, error) {
     db.ixfp = gfilepool.New(ixpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
     db.mtfp = gfilepool.New(mtpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
     db.dbfp = gfilepool.New(dbpath, os.O_RDWR|os.O_CREATE, gFILE_POOL_CACHE_TIMEOUT)
-    db.init()
+    // 初始化相关服务及数据
+    db.initFileSpace()
+    db.restoreFileSpace()
+    go db.autoSavingLoop()
     return db, nil
 }
 
@@ -139,10 +151,12 @@ func (db *DB) getSpaceFilePath() string {
     return db.path + gfile.Separator + db.name + ".fs"
 }
 
-// 数据库启动自检，整体快速扫描数据库，修复可能的异常
-func (db *DB) init() {
-    db.initFileSpace()
-    db.restoreFileSpace()
+func (db *DB) getCache() bool {
+    return atomic.LoadInt32(&db.cache) > 0
+}
+
+func (db *DB) setCache(v int32) {
+    atomic.StoreInt32(&db.cache, v)
 }
 
 // 根据元数据的size计算cap
@@ -159,12 +173,6 @@ func (db *DB) getDataCapBySize(size uint) uint {
         return size + gDATA_BUCKET_SIZE - size%gDATA_BUCKET_SIZE
     }
     return size
-}
-
-// 初始化碎片管理器
-func (db *DB) initFileSpace() {
-    db.mtsp = gfilespace.New()
-    db.dbsp = gfilespace.New()
 }
 
 // 计算关键字的hash code，使用64位哈希函数

@@ -4,20 +4,20 @@ import (
 	"sync"
 )
 
-type Int32Int32Map struct {
+type IntInterfaceMap struct {
 	sync.RWMutex
-	m map[int32]int32
+	m map[int]interface{}
 }
 
-func NewInt32Int32Map() *Int32Int32Map {
-	return &Int32Int32Map{
-        m: make(map[int32]int32),
+func NewIntInterfaceMap() *IntInterfaceMap {
+	return &IntInterfaceMap{
+        m: make(map[int]interface{}),
     }
 }
 
 // 哈希表克隆
-func (this *Int32Int32Map) Clone() *map[int32]int32 {
-	m := make(map[int32]int32)
+func (this *IntInterfaceMap) Clone() *map[int]interface{} {
+	m := make(map[int]interface{})
 	this.RLock()
 	for k, v := range this.m {
 		m[k] = v
@@ -27,14 +27,14 @@ func (this *Int32Int32Map) Clone() *map[int32]int32 {
 }
 
 // 设置键值对
-func (this *Int32Int32Map) Set(key int32, val int32) {
+func (this *IntInterfaceMap) Set(key int, val interface{}) {
 	this.Lock()
 	this.m[key] = val
 	this.Unlock()
 }
 
 // 批量设置键值对
-func (this *Int32Int32Map) BatchSet(m map[int32]int32) {
+func (this *IntInterfaceMap) BatchSet(m map[int]interface{}) {
 	this.Lock()
 	for k, v := range m {
 		this.m[k] = v
@@ -43,7 +43,7 @@ func (this *Int32Int32Map) BatchSet(m map[int32]int32) {
 }
 
 // 获取键值
-func (this *Int32Int32Map) Get(key int32) (int32) {
+func (this *IntInterfaceMap) Get(key int) (interface{}) {
 	this.RLock()
 	val, _ := this.m[key]
 	this.RUnlock()
@@ -51,14 +51,14 @@ func (this *Int32Int32Map) Get(key int32) (int32) {
 }
 
 // 删除键值对
-func (this *Int32Int32Map) Remove(key int32) {
+func (this *IntInterfaceMap) Remove(key int) {
     this.Lock()
     delete(this.m, key)
     this.Unlock()
 }
 
 // 批量删除键值对
-func (this *Int32Int32Map) BatchRemove(keys []int32) {
+func (this *IntInterfaceMap) BatchRemove(keys []int) {
     this.Lock()
     for _, key := range keys {
         delete(this.m, key)
@@ -67,7 +67,7 @@ func (this *Int32Int32Map) BatchRemove(keys []int32) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *Int32Int32Map) GetAndRemove(key int32) (int32) {
+func (this *IntInterfaceMap) GetAndRemove(key int) (interface{}) {
     this.Lock()
     val, exists := this.m[key]
     if exists {
@@ -78,9 +78,9 @@ func (this *Int32Int32Map) GetAndRemove(key int32) (int32) {
 }
 
 // 返回键列表
-func (this *Int32Int32Map) Keys() []int32 {
+func (this *IntInterfaceMap) Keys() []int {
     this.RLock()
-    keys := make([]int32, 0)
+    keys := make([]int, 0)
     for key, _ := range this.m {
         keys = append(keys, key)
     }
@@ -89,9 +89,9 @@ func (this *Int32Int32Map) Keys() []int32 {
 }
 
 // 返回值列表(注意是随机排序)
-func (this *Int32Int32Map) Values() []int32 {
+func (this *IntInterfaceMap) Values() []interface{} {
     this.RLock()
-    vals := make([]int32, 0)
+    vals := make([]interface{}, 0)
     for _, val := range this.m {
         vals = append(vals, val)
     }
@@ -100,7 +100,7 @@ func (this *Int32Int32Map) Values() []int32 {
 }
 
 // 是否存在某个键
-func (this *Int32Int32Map) Contains(key int32) bool {
+func (this *IntInterfaceMap) Contains(key int) bool {
     this.RLock()
     _, exists := this.m[key]
     this.RUnlock()
@@ -108,7 +108,7 @@ func (this *Int32Int32Map) Contains(key int32) bool {
 }
 
 // 哈希表大小
-func (this *Int32Int32Map) Size() int {
+func (this *IntInterfaceMap) Size() int {
     this.RLock()
     len := len(this.m)
     this.RUnlock()
@@ -116,7 +116,7 @@ func (this *Int32Int32Map) Size() int {
 }
 
 // 哈希表是否为空
-func (this *Int32Int32Map) IsEmpty() bool {
+func (this *IntInterfaceMap) IsEmpty() bool {
     this.RLock()
     empty := (len(this.m) == 0)
     this.RUnlock()
@@ -124,9 +124,9 @@ func (this *Int32Int32Map) IsEmpty() bool {
 }
 
 // 清空哈希表
-func (this *Int32Int32Map) Clear() {
+func (this *IntInterfaceMap) Clear() {
     this.Lock()
-    this.m = make(map[int32]int32)
+    this.m = make(map[int]interface{})
     this.Unlock()
 }
 

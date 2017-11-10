@@ -5,10 +5,27 @@ import (
     "g/util/gtime"
     "g/encoding/ghash"
     "g/encoding/gbinary"
+    "g/core/types/gmap"
+    "time"
+    "strconv"
 )
 
 
 func main() {
+
+    m := gmap.NewIntStringMap()
+    for i := 0; i < 10000000; i++ {
+        m.Set(i, "value111111111_" + strconv.Itoa(i))
+    }
+    fmt.Println("done")
+
+    time.Sleep(5*time.Second)
+    for i := 0; i < 10000000; i++ {
+        m.GetAndRemove(i)
+    }
+    fmt.Println("done2")
+    time.Sleep(10000*time.Second)
+    return
     b := make([]byte, 1200)
     t1 := gtime.Microsecond()
 
