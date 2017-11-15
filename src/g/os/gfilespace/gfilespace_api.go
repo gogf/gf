@@ -6,7 +6,7 @@ import (
 )
 
 // 添加空闲空间到管理器
-func (space *Space) AddBlock(index int, size uint) {
+func (space *Space) AddBlock(index int, size int) {
     if size <= 0 {
         return
     }
@@ -17,7 +17,7 @@ func (space *Space) AddBlock(index int, size uint) {
 }
 
 // 申请空间，返回文件地址及大小，返回成功后则在管理器中删除该空闲块
-func (space *Space) GetBlock(size uint) (int, uint) {
+func (space *Space) GetBlock(size int) (int, int) {
     if size <= 0 {
         return -1, 0
     }
@@ -66,12 +66,12 @@ func (space *Space) GetAllSizes() []uint {
 }
 
 // 获取当前空间管理器中最大的空闲块大小
-func (space *Space) GetMaxSize() uint {
+func (space *Space) GetMaxSize() int {
     space.mu.RLock()
     defer space.mu.RUnlock()
 
     if item := space.sizetr.Max(); item != nil {
-        return uint(item.(gbtree.Int))
+        return int(item.(gbtree.Int))
     }
     return 0
 }
@@ -93,7 +93,7 @@ func (space *Space) Export() []byte {
     space.blocks.Ascend(func(item gbtree.Item) bool {
         block   := item.(*Block)
         content  = append(content, gbinary.EncodeInt64(int64(block.Index()))...)
-        content  = append(content, gbinary.EncodeUint32(uint32(block.Size()))...)
+        content  = append(content, gbinary.EncodeInt32(int32(block.Size()))...)
         return true
     })
 
@@ -108,7 +108,7 @@ func (space *Space) Import(content []byte) {
     for i := 0; i < len(content); i += 12 {
         space.addBlock(
             int(gbinary.DecodeToInt64(content[i : i + 8])),
-            uint(gbinary.DecodeToUint32(content[i + 8 : i + 12])),
+            int(gbinary.DecodeToInt32(content[i + 8 : i + 12])),
         )
     }
 }

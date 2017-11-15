@@ -12,13 +12,13 @@ type Space struct {
     mu      sync.RWMutex           // 并发操作锁
     blocks  *gbtree.BTree          // 所有的空间块构建的B+树
     sizetr  *gbtree.BTree          // 空间块大小构建的B+树
-    sizemap map[uint]*gbtree.BTree // 按照空间块大小构建的索引哈希表，便于检索，每个表项是一个B+树
+    sizemap map[int]*gbtree.BTree  // 按照空间块大小构建的索引哈希表，便于检索，每个表项是一个B+树
 }
 
 // 文件空闲块
 type Block struct {
     index int  // 文件偏移量
-    size  uint // 区块大小(byte)
+    size  int  // 区块大小(byte)
 }
 
 // 用于B+树的接口具体实现定义
@@ -34,12 +34,12 @@ func New() *Space {
     return &Space {
         blocks  : gbtree.New(10),
         sizetr  : gbtree.New(5),
-        sizemap : make(map[uint]*gbtree.BTree),
+        sizemap : make(map[int]*gbtree.BTree),
     }
 }
 
 // 添加空闲空间到管理器
-func (space *Space) addBlock(index int, size uint) {
+func (space *Space) addBlock(index int, size int) {
     block := &Block{index, size}
 
     // 插入进全局树
@@ -79,11 +79,11 @@ func (space *Space) getNextBlock(block *Block) *Block {
 }
 
 // 获取指定block的前一项block size
-func (space *Space) getPrevBlockSize(size uint) uint {
-    psize := uint(0)
+func (space *Space) getPrevBlockSize(size int) int {
+    psize := 0
     space.sizetr.DescendLessOrEqual(gbtree.Int(size), func(item gbtree.Item) bool {
-        if uint(item.(gbtree.Int)) != size {
-            psize = uint(item.(gbtree.Int))
+        if int(item.(gbtree.Int)) != size {
+            psize = int(item.(gbtree.Int))
             return false
         }
         return true
@@ -92,11 +92,11 @@ func (space *Space) getPrevBlockSize(size uint) uint {
 }
 
 // 获取指定block的后一项block size
-func (space *Space) getNextBlockSize(size uint) uint {
-    nsize := uint(0)
+func (space *Space) getNextBlockSize(size int) int {
+    nsize := 0
     space.sizetr.AscendGreaterOrEqual(gbtree.Int(size), func(item gbtree.Item) bool {
-        if uint(item.(gbtree.Int)) != size {
-            nsize = uint(item.(gbtree.Int))
+        if int(item.(gbtree.Int)) != size {
+            nsize = int(item.(gbtree.Int))
             return false
         }
         return true
@@ -127,7 +127,7 @@ func (space *Space) checkMergeOfTwoBlock(pblock, block *Block) *Block {
             // 判断是否需要更新大小
             if pblock.index + int(pblock.size) < block.index + int(block.size) {
                 space.removeFromSizeMap(pblock)
-                pblock.size = uint(block.index + int(block.size) - pblock.index)
+                pblock.size = block.index + block.size - pblock.index
                 space.insertIntoSizeMap(pblock)
             }
             block = space.getNextBlock(pblock)
@@ -179,7 +179,7 @@ func (block *Block) Index() int {
 }
 
 // 获得碎片大小
-func (block *Block) Size() uint {
+func (block *Block) Size() int {
     return block.size
 }
 

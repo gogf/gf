@@ -2,15 +2,19 @@ package main
 
 import (
     "fmt"
+    "math"
 )
 
 
 
 
 func main() {
-    var a interface{} = nil
-    fmt.Println(a == nil)
+    a := 1497965
+    for i := 0; i < 10000; i++ {
+        fmt.Println(a*i)
+    }
 
+    fmt.Println(math.MaxUint64)
     //m := make(map[int]int, 0)
     //for i := 0; i < 10000000; i ++ {
     //    m[i] = i
