@@ -2,19 +2,23 @@ package main
 
 import (
     "fmt"
-    "math"
 )
 
 
 
 
 func main() {
-    a := 1497965
-    for i := 0; i < 10000; i++ {
-        fmt.Println(a*i)
-    }
-
-    fmt.Println(math.MaxUint64)
+    a := 3
+    b := 2
+    c := a/b
+    fmt.Println(c)
+    return
+    //a := 1497965
+    //for i := 0; i < 10000; i++ {
+    //    fmt.Println(a*i)
+    //}
+    //
+    //fmt.Println(math.MaxUint64)
     //m := make(map[int]int, 0)
     //for i := 0; i < 10000000; i ++ {
     //    m[i] = i

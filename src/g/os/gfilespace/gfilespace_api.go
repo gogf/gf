@@ -40,6 +40,22 @@ func (space *Space) GetBlock(size int) (int, int) {
     return -1, 0
 }
 
+// 给定的空间块*整块*是否包含在管理器中
+func (space *Space) Contains(index int, size int) bool {
+    block := &Block{index, size}
+    if r := space.blocks.Get(block); r != nil {
+        if r.(*Block).size >= size {
+            return true
+        }
+    } else {
+        pblock := space.getPrevBlock(block)
+        if pblock != nil && (pblock.index <= index && (pblock.index + pblock.size) >= (index + size)) {
+            return true
+        }
+    }
+    return false
+}
+
 
 // 获得所有的碎片空间，按照index升序排序
 func (space *Space) GetAllBlocks() []Block {

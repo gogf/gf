@@ -3,7 +3,6 @@ package main
 import (
     "g/os/gfilespace"
     "fmt"
-    "g/util/grand"
 )
 
 
@@ -12,18 +11,24 @@ func main() {
 
     //t1 := gtime.Microsecond()
     space := gfilespace.New()
+
+    space.AddBlock(0,  10)
+    space.AddBlock(11, 10)
+    space.AddBlock(23, 10)
+    fmt.Println(space.GetAllBlocks())
+    fmt.Println(space.Contains(24, 10))
     //t1 := gtime.Microsecond()
-    for i := 1; i <= 10; i++ {
-        space.AddBlock(i*grand.Rand(0, 10000000), uint(i*10))
-        //space.AddBlock(i, uint(i*100))
-        //fmt.Println(space.GetAllBlocks())
-    }
+    //for i := 1; i <= 10; i++ {
+    //    space.AddBlock(i*grand.Rand(0, 10000000), uint(i*10))
+    //    //space.AddBlock(i, uint(i*100))
+    //    //fmt.Println(space.GetAllBlocks())
+    //}
     //fmt.Println("create", gtime.Microsecond() - t1)
-    e := space.Export()
-    space2 := gfilespace.New()
-    fmt.Println(e)
-    space2.Import(e)
-    fmt.Println(space2.Export())
+    //e := space.Export()
+    //space2 := gfilespace.New()
+    //fmt.Println(e)
+    //space2.Import(e)
+    //fmt.Println(space2.Export())
     //t2 := gtime.Microsecond()
     //fmt.Println(space.GetBlock(10))
     //fmt.Println(space.GetBlock(10))
