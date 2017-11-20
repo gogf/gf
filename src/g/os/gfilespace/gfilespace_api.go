@@ -92,6 +92,18 @@ func (space *Space) GetMaxSize() int {
     return 0
 }
 
+// 计算总的空闲空间大小
+func (space *Space) SumSize() int {
+    space.mu.RLock()
+    defer space.mu.RUnlock()
+    size := 0
+    space.blocks.Ascend(func(item gbtree.Item) bool {
+        size += item.(*Block).size
+        return true
+    })
+    return size
+}
+
 // 获取空间块的数量
 func (space *Space) Len() int {
     space.mu.RLock()
