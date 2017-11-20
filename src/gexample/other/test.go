@@ -8,10 +8,16 @@ import (
 
 
 func main() {
-    a := 3
-    b := 2
-    c := a/b
-    fmt.Println(c)
+    length := 100
+    for i := 0; i <= length; i++ {
+        var seed uint64 = 131; // 31 131 1313 13131 131313 etc..
+        var hash uint64 = 0;
+        for j := 0; j < i; j++ {
+            hash = hash * seed + 255
+        }
+        fmt.Println(hash)
+    }
+
     return
     //a := 1497965
     //for i := 0; i < 10000; i++ {

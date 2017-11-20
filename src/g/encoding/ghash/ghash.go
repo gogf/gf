@@ -9,7 +9,7 @@ func BKDRHash(str []byte) uint32 {
     for i := 0; i < len(str); i++ {
         hash = hash * seed + uint32(str[i])
     }
-    return (hash & 0x7FFFFFFF)
+    return hash
 }
 
 // BKDR Hash Function 64
@@ -19,7 +19,7 @@ func BKDRHash64(str []byte) uint64 {
     for i := 0; i < len(str); i++ {
         hash = hash * seed + uint64(str[i])
     }
-    return (hash & 0x7FFFFFFFFFFFFFFF)
+    return hash
 }
 
 // SDBM Hash
@@ -29,7 +29,7 @@ func SDBMHash(str []byte) uint32 {
         // equivalent to: hash = 65599*hash + uint32(str[i]);
         hash = uint32(str[i]) + (hash << 6) + (hash << 16) - hash;
     }
-    return (hash & 0x7FFFFFFF);
+    return hash
 }
 
 // SDBM Hash 64
@@ -39,7 +39,7 @@ func SDBMHash64(str []byte) uint64 {
         // equivalent to: hash = 65599*hash + uint32(str[i]);
         hash = uint64(str[i]) + (hash << 6) + (hash << 16) - hash;
     }
-    return (hash & 0x7FFFFFFFFFFFFFFF);
+    return hash
 }
 
 // RS Hash Function
@@ -51,7 +51,7 @@ func RSHash(str []byte) uint32 {
         hash = hash * a + uint32(str[i]);
         a *= b;
     }
-    return (hash & 0x7FFFFFFF);
+    return hash
 }
 
 // RS Hash Function 64
@@ -63,7 +63,7 @@ func RSHash64(str []byte) uint64 {
         hash = hash * a + uint64(str[i]);
         a *= b;
     }
-    return (hash & 0x7FFFFFFFFFFFFFFF);
+    return hash
 }
 
 // JS Hash Function
@@ -72,7 +72,7 @@ func JSHash(str []byte) uint32 {
     for i := 0; i < len(str); i++ {
         hash ^= ((hash << 5) + uint32(str[i]) + (hash >> 2));
     }
-    return (hash & 0x7FFFFFFF);
+    return hash
 }
 
 // JS Hash Function 64
@@ -81,7 +81,7 @@ func JSHash64(str []byte) uint64 {
     for i := 0; i < len(str); i++ {
         hash ^= ((hash << 5) + uint64(str[i]) + (hash >> 2));
     }
-    return (hash & 0x7FFFFFFFFFFFFFFF);
+    return hash
 }
 
 // P. J. Weinberger Hash Function
@@ -98,7 +98,7 @@ func PJWHash(str []byte) uint32 {
             hash = ((hash ^ (test >> ThreeQuarters)) & (^HighBits + 1));
         }
     }
-    return (hash & 0x7FFFFFFF);
+    return hash
 }
 
 // P. J. Weinberger Hash Function 64
@@ -106,7 +106,7 @@ func PJWHash64(str []byte) uint64 {
     var BitsInUnignedInt uint64 = (4 * 8);
     var ThreeQuarters    uint64 = ((BitsInUnignedInt  * 3) / 4);
     var OneEighth        uint64 = (BitsInUnignedInt / 8);
-    var HighBits         uint64 = (0xFFFFFFFF) << (BitsInUnignedInt - OneEighth);
+    var HighBits         uint64 = (0xFFFFFFFFFFFFFFFF) << (BitsInUnignedInt - OneEighth);
     var hash             uint64 = 0;
     var test             uint64 = 0;
     for i := 0; i < len(str); i++ {
@@ -115,7 +115,7 @@ func PJWHash64(str []byte) uint64 {
             hash = ((hash ^ (test >> ThreeQuarters)) & (^HighBits + 1));
         }
     }
-    return (hash & 0x7FFFFFFFFFFFFFFF);
+    return hash
 }
 
 // ELF Hash Function
@@ -129,7 +129,7 @@ func ELFHash(str []byte) uint32 {
             hash &= ^x + 1;
         }
     }
-    return (hash & 0x7FFFFFFF);
+    return hash
 }
 
 // ELF Hash Function 64
@@ -138,12 +138,12 @@ func ELFHash64(str []byte) uint64 {
     var x    uint64 = 0;
     for i := 0; i < len(str); i++ {
         hash = (hash << 4) + uint64(str[i]);
-        if x = hash & 0xF0000000; x != 0 {
+        if x = hash & 0xF000000000000000; x != 0 {
             hash ^= (x >> 24);
             hash &= ^x + 1;
         }
     }
-    return (hash & 0x7FFFFFFFFFFFFFFF);
+    return hash
 }
 
 // DJB Hash Function
@@ -152,7 +152,7 @@ func DJBHash(str []byte) uint32 {
     for i := 0; i < len(str); i++ {
         hash += (hash << 5) + uint32(str[i]);
     }
-    return (hash & 0x7FFFFFFF);
+    return hash
 }
 
 // DJB Hash Function 64
@@ -161,7 +161,7 @@ func DJBHash64(str []byte) uint64 {
     for i := 0; i < len(str); i++ {
         hash += (hash << 5) + uint64(str[i]);
     }
-    return (hash & 0x7FFFFFFFFFFFFFFF);
+    return hash
 }
 
 // AP Hash Function
@@ -174,7 +174,7 @@ func APHash(str []byte) uint32 {
             hash ^= (^((hash << 11) ^ uint32(str[i]) ^ (hash >> 5)) + 1);
         }
     }
-    return (hash & 0x7FFFFFFF);
+    return hash
 }
 
 // AP Hash Function 64
@@ -187,5 +187,5 @@ func APHash64(str []byte) uint64 {
             hash ^= (^((hash << 11) ^ uint64(str[i]) ^ (hash >> 5)) + 1);
         }
     }
-    return (hash & 0x7FFFFFFFFFFFFFFF);
+    return hash
 }
