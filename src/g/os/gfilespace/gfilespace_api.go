@@ -40,6 +40,14 @@ func (space *Space) GetBlock(size int) (int, int) {
     return -1, 0
 }
 
+// 删除指定索引位置的空间块
+func (space *Space) RemoveBlock(index int) {
+    space.mu.Lock()
+    defer space.mu.Unlock()
+
+    space.removeBlock(&Block{index, 0})
+}
+
 // 给定的空间块*整块*是否包含在管理器中
 func (space *Space) Contains(index int, size int) bool {
     block := &Block{index, size}
@@ -56,6 +64,29 @@ func (space *Space) Contains(index int, size int) bool {
     return false
 }
 
+// 获取索引最小的空间块
+func (space *Space) GetMinBlock() *Block {
+    space.mu.RLock()
+    defer space.mu.RUnlock()
+    var block *Block
+    space.blocks.Ascend(func(item gbtree.Item) bool {
+        block = item.(*Block)
+        return true
+    })
+    return block
+}
+
+// 获取索引最大的空间块
+func (space *Space) GetMaxBlock() *Block {
+    space.mu.RLock()
+    defer space.mu.RUnlock()
+    var block *Block
+    space.blocks.Descend(func(item gbtree.Item) bool {
+        block = item.(*Block)
+        return true
+    })
+    return block
+}
 
 // 获得所有的碎片空间，按照index升序排序
 func (space *Space) GetAllBlocks() []Block {
