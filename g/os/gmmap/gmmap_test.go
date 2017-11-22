@@ -1,4 +1,4 @@
-package gmmap_test
+package gmmap
 
 import (
     "bytes"

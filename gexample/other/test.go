@@ -2,21 +2,22 @@ package main
 
 import (
     "fmt"
+    "sync"
 )
 
 
 
 
 func main() {
-    length := 100
-    for i := 0; i <= length; i++ {
-        var seed uint64 = 131; // 31 131 1313 13131 131313 etc..
-        var hash uint64 = 0;
-        for j := 0; j < i; j++ {
-            hash = hash * seed + 255
-        }
-        fmt.Println(hash)
-    }
+    var mu sync.RWMutex
+
+    mu.Lock()
+    mu.RLock()
+
+    fmt.Println(1)
+
+    mu.RUnlock()
+    mu.Unlock()
 
     return
     //a := 1497965
