@@ -2,7 +2,7 @@ Go Frame - 轻量级的Go语言开发框架。
 
 # 安装
 ```
-go get gitee.com/johng/gf
+go get -u gitee.com/johng/gf
 ````
 
 # 使用
