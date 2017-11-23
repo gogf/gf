@@ -7,5 +7,5 @@ go get gitee.com/johng/gf
 
 # 使用
 ```go
-import "giteecom/johng/gf/g/xxx"
+import "gitee.com/johng/gf/g/xxx"
 ```
