@@ -6,9 +6,9 @@ import (
     "sync"
     "errors"
     "database/sql"
-    "../../os/glog"
-    "../../os/gcache"
-    "../../util/grand"
+    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/g/util/grand"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
 )

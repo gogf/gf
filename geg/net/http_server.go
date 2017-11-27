@@ -3,7 +3,7 @@ package main
 import (
     "net/http"
     "io"
-    "gf/g/net/ghttp"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 func HelloServer1(w http.ResponseWriter, r *http.Request) {

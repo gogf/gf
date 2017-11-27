@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gf/g/net/ghttp"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 

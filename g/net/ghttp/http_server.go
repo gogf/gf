@@ -8,7 +8,7 @@ import (
     "time"
     "log"
     "regexp"
-    "../../os/glog"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 // 执行
