@@ -4,7 +4,7 @@ package gfilespace
 
 import (
     "sync"
-    "../../container/gbtree"
+    "gitee.com/johng/gf/g/container/gbtree"
 )
 
 // 文件空间管理结构体

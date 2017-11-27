@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gf/g/core/types/gbtree"
+    "gitee.com/johng/gf/g/container/gbtree"
     "fmt"
 )
 

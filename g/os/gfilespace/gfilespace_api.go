@@ -2,8 +2,8 @@ package gfilespace
 
 import (
 
-    "../../encoding/gbinary"
-    "../../container/gbtree"
+    "gitee.com/johng/gf/g/encoding/gbinary"
+    "gitee.com/johng/gf/g/container/gbtree"
 )
 
 // 添加空闲空间到管理器

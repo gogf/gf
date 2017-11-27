@@ -7,7 +7,7 @@ import (
     "reflect"
     "os"
     "io"
-    "../../os/glog"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 // 将任意类型的变量进行md5摘要(注意map等非排序变量造成的不同结果)

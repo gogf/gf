@@ -3,7 +3,7 @@ package main
 import (
     "fmt"
     //"encoding/json"
-    "gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/encoding/gjson"
 )
 
 type City struct {

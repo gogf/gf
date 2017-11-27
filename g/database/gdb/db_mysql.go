@@ -3,7 +3,7 @@ package gdb
 import (
     "database/sql"
     "fmt"
-    "../../os/glog"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 // 数据库链接对象

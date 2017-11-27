@@ -3,7 +3,7 @@ package main
 import (
     "net"
     "fmt"
-    "gf/g/net/gudp"
+    "gitee.com/johng/gf/g/net/gudp"
 )
 
 func main() {

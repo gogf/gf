@@ -8,8 +8,8 @@ import (
     "net/url"
     "net/http"
     "path/filepath"
-    "../../os/gfile"
-    "../../encoding/ghtml"
+    "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
 // 默认HTTP Server处理入口，底层默认使用了gorutine调用该接口

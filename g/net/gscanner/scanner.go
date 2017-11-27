@@ -7,7 +7,7 @@ import (
     "errors"
     "sync"
     "time"
-    "../../net/gip"
+    "gitee.com/johng/gf/g/net/gip"
 )
 
 type scanner struct {
