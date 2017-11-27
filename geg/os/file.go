@@ -1,7 +1,8 @@
 package main
 
+
 import (
-    "gf/g/os/gfile"
+    "../../../gf/g/os/gfile"
     "fmt"
 )
 

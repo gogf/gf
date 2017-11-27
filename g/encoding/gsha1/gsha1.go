@@ -5,8 +5,8 @@ import (
     "encoding/hex"
     "os"
     "io"
-    "gf/g/os/glog"
-    "gf/g/encoding/gmd5"
+    "../../os/glog"
+    "../../encoding/gmd5"
 )
 
 // 将任意类型的变量进行SHA摘要(注意map等非排序变量造成的不同结果)

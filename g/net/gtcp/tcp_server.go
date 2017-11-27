@@ -1,7 +1,7 @@
 package gtcp
 
 import (
-    "gf/g/os/glog"
+    "../../os/glog"
 )
 
 // 执行监听
