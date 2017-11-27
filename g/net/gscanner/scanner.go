@@ -3,11 +3,11 @@ package gscanner
 
 import (
     "net"
-    "gf/g/net/gip"
     "fmt"
     "errors"
     "sync"
     "time"
+    "../../net/gip"
 )
 
 type scanner struct {

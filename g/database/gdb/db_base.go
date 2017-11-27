@@ -5,7 +5,7 @@ import (
     "errors"
     "strings"
     "database/sql"
-    "gf/g/os/glog"
+    "../../os/glog"
 )
 
 // 关闭链接

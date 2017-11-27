@@ -1,9 +1,9 @@
 package ghttp
 
 import (
-    "gf/g/encoding/gjson"
+    "../../encoding/gjson"
     "io/ioutil"
-    "gf/g/os/glog"
+    "../../os/glog"
 )
 
 type ResponseJson struct {

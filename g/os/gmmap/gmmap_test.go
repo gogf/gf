@@ -4,11 +4,10 @@ import (
     "bytes"
     "io/ioutil"
     "testing"
-    "gf/g/os/gmmap"
 )
 
 func TestMap(t *testing.T) {
-    data, err := gmmap.Map("mmap_test.go")
+    data, err := Map("mmap_test.go")
     if err != nil {
         t.Fatalf("Open: %v", err)
     }

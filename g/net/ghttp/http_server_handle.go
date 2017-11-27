@@ -1,15 +1,15 @@
 package ghttp
 
 import (
-    "net/http"
-    "strings"
-    "path/filepath"
-    "gf/g/os/gfile"
     "os"
     "fmt"
     "sort"
+    "strings"
     "net/url"
-    "gf/g/encoding/ghtml"
+    "net/http"
+    "path/filepath"
+    "../../os/gfile"
+    "../../encoding/ghtml"
 )
 
 // 默认HTTP Server处理入口，底层默认使用了gorutine调用该接口

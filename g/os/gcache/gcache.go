@@ -2,9 +2,9 @@ package gcache
 
 import (
     "sync"
-    "gf/g/util/gtime"
     "time"
-    "gf/g/encoding/ghash"
+    "../../util/gtime"
+    "../../encoding/ghash"
 )
 
 const (

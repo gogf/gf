@@ -2,7 +2,7 @@ package gtcp
 
 import (
     "net"
-    "gf/g/os/glog"
+    "../../os/glog"
 )
 
 // tcp server结构体
