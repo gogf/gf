@@ -3,6 +3,8 @@ package main
 import (
     "fmt"
     "sync"
+    "github.com/boltdb/bolt"
+    "log"
 )
 
 
@@ -196,44 +198,44 @@ func main() {
     //fmt.Println(gtime.Microsecond() - t1)
     //
     //return
-    //db, err := bolt.Open("/tmp/my.db", 0600, nil)
-    //if err != nil {
-    //    log.Fatal(err)
-    //}
-    //defer db.Close()
-    //
-    //tx, err := db.Begin(true)
-    //if err != nil {
-    //    log.Fatal(err)
-    //}
-    //defer tx.Rollback()
+    db, err := bolt.Open("/tmp/my.db", 0600, nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
 
-    // Use the transaction...
-    //_, err = tx.CreateBucket([]byte("MyBucket"))
-    //if err != nil {
-    //    log.Fatal(err)
-    //}
+    tx, err := db.Begin(true)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer tx.Rollback()
 
-    // Commit the transaction and check for error.
-    //if err := tx.Commit(); err != nil {
-    //    log.Fatal(err)
-    //}
-    //t1 := gtime.Microsecond()
-    //db.Update(func(tx *bolt.Tx) error {
-    //    b := tx.Bucket([]byte("MyBucket"))
-    //    err := b.Put([]byte("answer"), []byte("11"))
-    //    return err
-    //})
-    //fmt.Println(gtime.Microsecond() - t1)
-    //
-    //t2 := gtime.Microsecond()
-    //db.View(func(tx *bolt.Tx) error {
-    //    b := tx.Bucket([]byte("MyBucket"))
-    //    v := b.Get([]byte("answer"))
-    //    fmt.Printf("The answer is: %s\n", v)
-    //    return nil
-    //})
-    //fmt.Println(gtime.Microsecond() - t2)
+     //Use the transaction...
+    _, err = tx.CreateBucket([]byte("MyBucket"))
+    if err != nil {
+        log.Fatal(err)
+    }
+
+     //Commit the transaction and check for error.
+    if err := tx.Commit(); err != nil {
+        log.Fatal(err)
+    }
+    t1 := gtime.Microsecond()
+    db.Update(func(tx *bolt.Tx) error {
+        b := tx.Bucket([]byte("MyBucket"))
+        err := b.Put([]byte("answer"), []byte("11"))
+        return err
+    })
+    fmt.Println(gtime.Microsecond() - t1)
+
+    t2 := gtime.Microsecond()
+    db.View(func(tx *bolt.Tx) error {
+        b := tx.Bucket([]byte("MyBucket"))
+        v := b.Get([]byte("answer"))
+        fmt.Printf("The answer is: %s\n", v)
+        return nil
+    })
+    fmt.Println(gtime.Microsecond() - t2)
 
 
     //return

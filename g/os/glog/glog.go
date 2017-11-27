@@ -9,7 +9,7 @@ import (
     "path/filepath"
     "time"
     "fmt"
-    "gf/g/os/gfile"
+    "../../os/gfile"
 )
 
 type Logger struct {

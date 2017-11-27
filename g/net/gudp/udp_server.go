@@ -1,6 +1,6 @@
 package gudp
 
-import "log"
+import "../../os/glog"
 
 // 执行监听
 func (s *gUdpServer) Run() {

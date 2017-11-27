@@ -2,15 +2,15 @@
 package gdb
 
 import (
-    "database/sql"
-    "errors"
     "fmt"
-    "gf/g/util/grand"
     "sync"
-    "gf/g/os/glog"
-    _ "github.com/go-sql-driver/mysql"
+    "errors"
+    "database/sql"
+    "../../os/glog"
+    "../../os/gcache"
+    "../../util/grand"
     _ "github.com/lib/pq"
-    "gf/g/os/gcache"
+    _ "github.com/go-sql-driver/mysql"
 )
 
 const (
