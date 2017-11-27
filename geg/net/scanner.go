@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gf/g/net/gscanner"
+    "gitee.com/johng/gf/g/net/gscanner"
     "net"
     "fmt"
     "time"

@@ -3,11 +3,11 @@ package main
 import (
     "net"
     "fmt"
-    "gf/g/net/gtcp"
+    "gitee.com/johng/gf/g/net/gtcp"
     "io"
     "log"
     "time"
-    "gf/g/util/gutil"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 func main() {

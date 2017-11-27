@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gf/g/os/gconsole"
+    "gitee.com/johng/gf/g/os/gconsole"
 )
 
 func doEcho() {

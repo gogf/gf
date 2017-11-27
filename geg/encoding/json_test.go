@@ -2,7 +2,7 @@ package main
 
 import (
     "testing"
-    "gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/encoding/gjson"
     "encoding/json"
     "log"
 )

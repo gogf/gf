@@ -4,7 +4,7 @@ import (
     "fmt"
     "time"
     "strconv"
-    "gf/g/database/gdb"
+    "gitee.com/johng/gf/g/database/gdb"
 )
 
 // 本文件用于gf框架的postgresql数据库操作示例，不作为单元测试使用

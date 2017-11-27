@@ -2,7 +2,7 @@ package main
 
 import (
     "testing"
-    "gf/g/core/types/gmap"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 

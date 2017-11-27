@@ -2,7 +2,7 @@ package main
 
 
 import (
-    "../../../gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gfile"
     "fmt"
 )
 

@@ -3,8 +3,8 @@ package gcache
 import (
     "sync"
     "time"
-    "../../util/gtime"
-    "../../encoding/ghash"
+    "gitee.com/johng/gf/g/util/gtime"
+    "gitee.com/johng/gf/g/encoding/ghash"
 )
 
 const (

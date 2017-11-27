@@ -4,9 +4,9 @@ import (
     "os"
     "time"
     "strconv"
-    "../../util/gtime"
-    "../../container/gmap"
-    "../../container/glist"
+    "gitee.com/johng/gf/g/util/gtime"
+    "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/container/glist"
 )
 
 // 文件指针池
