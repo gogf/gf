@@ -2,7 +2,7 @@ package main
 
 import (
     "testing"
-    "gf/g/os/gcache"
+    "gitee.com/johng/gf/g/os/gcache"
 )
 
 var cache *gcache.Cache = gcache.New()

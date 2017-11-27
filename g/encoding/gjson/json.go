@@ -5,7 +5,7 @@ import (
     "errors"
     "strings"
     "strconv"
-    "../../os/glog"
+    "gitee.com/johng/gf/g/os/glog"
     "fmt"
 )
 

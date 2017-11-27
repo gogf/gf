@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gf/g/net/graft"
-    "gf/g/net/gip"
+    "gitee.com/johng/gf/g/net/graft"
+    "gitee.com/johng/gf/g/net/gip"
     "log"
 )
 

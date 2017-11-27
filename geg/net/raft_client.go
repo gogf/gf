@@ -3,9 +3,9 @@ package main
 import (
     "net"
     "log"
-    "gf/g/net/graft"
+    "gitee.com/johng/gf/g/net/graft"
     "fmt"
-    "gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/encoding/gjson"
 )
 
 func rpcLogSet() {

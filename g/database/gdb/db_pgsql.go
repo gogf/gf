@@ -4,7 +4,7 @@ import (
     "database/sql"
     "fmt"
     "regexp"
-    "../../os/glog"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 // postgresql的适配
