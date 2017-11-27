@@ -2,7 +2,7 @@ package ghttp
 
 import (
     "io/ioutil"
-    "gf/g/encoding/gjson"
+    "../../encoding/gjson"
 )
 
 // 获得get参数

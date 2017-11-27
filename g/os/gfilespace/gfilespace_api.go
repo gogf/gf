@@ -1,8 +1,9 @@
 package gfilespace
 
 import (
-    "gf/g/core/types/gbtree"
-    "gf/g/encoding/gbinary"
+
+    "../../encoding/gbinary"
+    "../../container/gbtree"
 )
 
 // 添加空闲空间到管理器

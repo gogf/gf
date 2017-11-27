@@ -2,7 +2,7 @@ package gudp
 
 import (
     "net"
-    "log"
+    "../../os/glog"
 )
 
 // tcp server结构体

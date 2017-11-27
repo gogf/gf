@@ -2,11 +2,11 @@ package gfilepool
 
 import (
     "os"
-    "gf/g/core/types/glist"
-    "gf/g/util/gtime"
     "time"
-    "gf/g/core/types/gmap"
     "strconv"
+    "../../util/gtime"
+    "../../container/gmap"
+    "../../container/glist"
 )
 
 // 文件指针池
