@@ -49,13 +49,13 @@ import "gitee.com/johng/gf/g/xxx"
     │   │   ├── gfilepool        文件指针池
     │   │   ├── gfilespace       文件碎片管理
     │   │   ├── glog             日志管理
-    │   │   └── gmmap            MMAP文件内存映射
+    │   │   ├── gmmap            MMAP文件内存映射
+    │   │   └── gtime            时间管理
     │   │   
     │   └── util             【常用工具】
     │       ├── gpage            分页
     │       ├── grand            随机数
     │       ├── gregx            正则表达式
-    │       ├── gtime            时间管理
     │       └── gutil            其他工具
     │   
     ├── geg              【框架示例】
