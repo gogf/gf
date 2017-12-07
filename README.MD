@@ -28,7 +28,7 @@ import "gitee.com/johng/gf/g/xxx"
     │   │   ├── gcompress        数据压缩
     │   │   ├── gcrc32           CRC32
     │   │   ├── ghash            常用哈希函数
-    │   │   ├── ghtml            html编码
+    │   │   ├── ghtml            HTML相关编码
     │   │   ├── gjson            JSON
     │   │   ├── gmd5             MD5
     │   │   ├── gsha1            SHA1
@@ -38,7 +38,7 @@ import "gitee.com/johng/gf/g/xxx"
     │   │   ├── ghttp            HTTP客户端及服务端
     │   │   ├── gip              IP操作
     │   │   ├── gscanner         端口扫描
-    │   │   ├── gsmtp            SMTP
+    │   │   ├── gsmtp            SMTP邮件管理
     │   │   ├── gtcp             TCP客户端及服务端
     │   │   └── gudp             UDP客户端及服务端
     │   │   
@@ -49,7 +49,7 @@ import "gitee.com/johng/gf/g/xxx"
     │   │   ├── gfilepool        文件指针池
     │   │   ├── gfilespace       文件碎片管理
     │   │   ├── glog             日志管理
-    │   │   └── gmmap            MMAP
+    │   │   └── gmmap            MMAP文件内存映射
     │   │   
     │   └── util             【常用工具】
     │       ├── gpage            分页
