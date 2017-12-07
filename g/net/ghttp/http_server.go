@@ -7,9 +7,30 @@ import (
     "crypto/tls"
     "time"
     "log"
-    "regexp"
-    "gitee.com/johng/gf/g/os/glog"
+    "sync"
+    "errors"
 )
+
+// http server结构体
+type Server struct {
+    hmu        sync.RWMutex // handlerMap互斥锁
+    server     http.Server  // 底层http server对象
+    config     ServerConfig // 配置对象
+    handlerMap HandlerMap   // 回调函数
+}
+
+// http回调函数
+type HandlerFunc func(*ClientRequest, *ServerResponse)
+
+// uri与回调函数的绑定记录表
+type HandlerMap map[string]HandlerFunc
+
+// 创建一个默认配置的HTTP Server(默认监听端口是80)
+func NewServer() (*Server) {
+    server := Server{}
+    server.SetConfig(defaultServerConfig)
+    return &server
+}
 
 // 执行
 func (s *Server)Run() error {
@@ -17,6 +38,7 @@ func (s *Server)Run() error {
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
+    // 底层http server初始化
     s.server  = http.Server {
         Addr           : s.config.Addr,
         Handler        : s.config.Handler,
@@ -26,16 +48,10 @@ func (s *Server)Run() error {
         MaxHeaderBytes : s.config.MaxHeaderBytes,
     }
     // 执行端口监听
-    err := s.server.ListenAndServe()
-    if err != nil {
-        glog.Fatalln(err)
+    if err := s.server.ListenAndServe(); err != nil {
+        return err
     }
-    return err
-}
-
-// 获取默认的http server设置
-func (h Server)GetDefaultSetting() ServerConfig {
-    return defaultServerConfig
+    return nil
 }
 
 // http server setting设置
@@ -121,23 +137,25 @@ func (s *Server)SetServerRoot(root string) {
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server)BindHandle(pattern string, handler HandlerFunc )  {
+func (s *Server)BindHandle(pattern string, handler HandlerFunc) error {
+    s.hmu.Lock()
+    defer s.hmu.Unlock()
     if s.handlerMap == nil {
         s.handlerMap = make(HandlerMap)
     }
     key    := ""
-    reg    := regexp.MustCompile(`(\w+?)\s*:\s*(.+)`)
-    result := reg.FindStringSubmatch(pattern)
+    result := strings.Split(pattern, ":")
     if len(result) > 1 {
-        key = strings.ToUpper(result[1]) + ":" + result[2]
+        key = strings.ToUpper(result[0]) + ":" + result[1]
     } else {
         key = strings.TrimSpace(pattern)
     }
     if _, ok := s.handlerMap[key]; ok {
-        panic("duplicated http server handler for: " + pattern)
+        return errors.New("duplicated http server handler for: " + pattern)
     } else {
         s.handlerMap[key] = handler
     }
+    return nil
 }
 
 // 通过映射数组绑定URI到操作函数/方法
@@ -148,7 +166,7 @@ func (s *Server)BindHandleByMap(m HandlerMap) {
 }
 
 // 绑定控制器，控制器需要继承gmvc.ControllerBase对象并实现需要的REST方法
-func (s *Server)BindController(uri string, c ControllerApi) {
+func (s *Server)BindController(uri string, c ControllerRest) {
     s.BindHandleByMap(HandlerMap{
         "GET:"     + uri : c.Get,
         "PUT:"     + uri : c.Put,
