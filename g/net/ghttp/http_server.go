@@ -17,6 +17,7 @@ type Server struct {
     server     http.Server  // 底层http server对象
     config     ServerConfig // 配置对象
     handlerMap HandlerMap   // 回调函数
+    status     int8         // 当前服务器状态(0：未启动，1：运行中)
 }
 
 // http回调函数
@@ -25,15 +26,25 @@ type HandlerFunc func(*ClientRequest, *ServerResponse)
 // uri与回调函数的绑定记录表
 type HandlerMap map[string]HandlerFunc
 
+// ServerMap互斥锁
+var smu  sync.RWMutex
+// Server表，用以存储和检索多个Server对象
+var smap map[string]*Server = make(map[string]*Server)
+
 // 创建一个默认配置的HTTP Server(默认监听端口是80)
-func NewServer() (*Server) {
-    server := Server{}
-    server.SetConfig(defaultServerConfig)
-    return &server
+func GetServer(name string) (*Server) {
+    smu.Lock()
+    defer smu.Unlock()
+    if s, ok := smap[name]; ok {
+        return s
+    }
+    smap[name] = &Server{}
+    smap[name].SetConfig(defaultServerConfig)
+    return smap[name]
 }
 
 // 执行
-func (s *Server)Run() error {
+func (s *Server) Run() error {
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
@@ -51,12 +62,16 @@ func (s *Server)Run() error {
     if err := s.server.ListenAndServe(); err != nil {
         return err
     }
+    s.status = 1
     return nil
 }
 
 // http server setting设置
 // 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
-func (s *Server)SetConfig(c ServerConfig) {
+func (s *Server)SetConfig(c ServerConfig) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     if c.Handler == nil {
         c.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
@@ -72,74 +87,128 @@ func (s *Server)SetConfig(c ServerConfig) {
     if s.config.ServerAgent == "" {
         s.SetServerAgent(defaultServerConfig.ServerAgent)
     }
+    return nil
 }
 
 // 设置http server参数 - Addr
-func (s *Server)SetAddr(addr string) {
+func (s *Server)SetAddr(addr string) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.Addr = addr
+    return nil
 }
 
 // 设置http server参数 - Handler
-func (s *Server)SetHandler(handler http.Handler) {
+func (s *Server)SetHandler(handler http.Handler) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.Handler = handler
+    return nil
 }
 
 // 设置http server参数 - TLSConfig
-func (s *Server)SetTLSConfig(tls *tls.Config) {
+func (s *Server)SetTLSConfig(tls *tls.Config) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.TLSConfig = tls
+    return nil
 }
 
 // 设置http server参数 - ReadTimeout
-func (s *Server)SetReadTimeout(t time.Duration) {
+func (s *Server)SetReadTimeout(t time.Duration) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.ReadTimeout = t
+    return nil
 }
 
 // 设置http server参数 - WriteTimeout
-func (s *Server)SetWriteTimeout(t time.Duration) {
+func (s *Server)SetWriteTimeout(t time.Duration) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.WriteTimeout = t
+    return nil
 }
 
 // 设置http server参数 - IdleTimeout
-func (s *Server)SetIdleTimeout(t time.Duration) {
+func (s *Server)SetIdleTimeout(t time.Duration) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.IdleTimeout = t
+    return nil
 }
 
 // 设置http server参数 - MaxHeaderBytes
-func (s *Server)SetMaxHeaderBytes(b int) {
+func (s *Server)SetMaxHeaderBytes(b int) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.MaxHeaderBytes = b
+    return nil
 }
 
 // 设置http server参数 - ErrorLog
-func (s *Server)SetErrorLog(logger *log.Logger) {
+func (s *Server)SetErrorLog(logger *log.Logger) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.ErrorLog = logger
+    return nil
 }
 
 // 设置http server参数 - IndexFiles
-func (s *Server)SetIndexFiles(index []string) {
+func (s *Server)SetIndexFiles(index []string) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.IndexFiles = index
+    return nil
 }
 
 // 设置http server参数 - IndexFolder
-func (s *Server)SetIndexFolder(index bool) {
+func (s *Server)SetIndexFolder(index bool) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.IndexFolder = index
+    return nil
 }
 
 // 设置http server参数 - ServerAgent
-func (s *Server)SetServerAgent(agent string) {
+func (s *Server)SetServerAgent(agent string) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.ServerAgent = agent
+    return nil
 }
 
 // 设置http server参数 - ServerRoot
-func (s *Server)SetServerRoot(root string) {
+func (s *Server)SetServerRoot(root string) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
     s.config.ServerRoot  = strings.TrimRight(root, string(filepath.Separator))
+    return nil
 }
 
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
 func (s *Server)BindHandle(pattern string, handler HandlerFunc) error {
+    if s.status == 1 {
+        return errors.New("server handlers cannot be changed while running")
+    }
+
     s.hmu.Lock()
     defer s.hmu.Unlock()
+
     if s.handlerMap == nil {
         s.handlerMap = make(HandlerMap)
     }
@@ -166,7 +235,7 @@ func (s *Server)BindHandleByMap(m HandlerMap) {
 }
 
 // 绑定控制器，控制器需要继承gmvc.ControllerBase对象并实现需要的REST方法
-func (s *Server)BindController(uri string, c ControllerRest) {
+func (s *Server)BindControllerRest(uri string, c ControllerRest) {
     s.BindHandleByMap(HandlerMap{
         "GET:"     + uri : c.Get,
         "PUT:"     + uri : c.Put,
