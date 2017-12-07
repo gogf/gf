@@ -8,35 +8,41 @@ import (
 )
 
 const (
-    gCACHE_GROUP_SIZE = 4 // 缓存分区大小，不能超过uint8的最大值
+    gDEFAULT_CACHE_GROUP_SIZE = 4 // 默认缓存分区大小，不能超过uint8的最大值
 )
 
+// 缓存对象
 type Cache struct {
     sync.RWMutex
-    m map[uint8]*CacheMap     // 以分区大小数字作为索引
+    g uint8               // 分区大小
+    m map[uint8]*CacheMap // 以分区大小数字作为索引
 }
 
+// 缓存分区对象
 type CacheMap  struct {
     sync.RWMutex
-    deleted bool             // 对象是否已删除，以便判断停止goroutine
+    closed bool              // 对象是否已删除，以便判断停止goroutine
     m map[string]CacheItem   // 键值对
 }
 
+// 缓存数据项
 type CacheItem struct {
     v interface{} // 缓存键值
     e int64       // 过期时间
 }
 
 // 全局缓存管理对象
-var cache *Cache = New()
+var cache *Cache = New(gDEFAULT_CACHE_GROUP_SIZE)
 
 // Cache对象按照缓存键名首字母做了分组
-func New() *Cache {
+func New(group uint8) *Cache {
     c := &Cache {
+        g : group,
         m : make(map[uint8]*CacheMap),
     }
+    // 初始化分区对象
     var i uint8 = 0
-    for ; i < gCACHE_GROUP_SIZE; i++ {
+    for ; i < group; i++ {
         m := &CacheMap {
             m : make(map[string]CacheItem),
         }
@@ -158,20 +164,14 @@ func (c *Cache) Size() int {
 func (c *Cache) Close()  {
     c.RLock()
     for _, cm := range c.m {
-        cm.Lock()
-        cm.deleted = true
-        cm.Unlock()
+        cm.Close()
     }
     c.RUnlock()
-
-    c.Lock()
-    c.m = nil
-    c.Unlock()
 }
 
 // 计算缓存的索引
 func (c *Cache) getIndex(k string) uint8 {
-    return uint8(ghash.BKDRHash([]byte(k)) % gCACHE_GROUP_SIZE)
+    return uint8(ghash.BKDRHash([]byte(k)) % uint32(c.g))
 }
 
 // 设置kv缓存键值对，过期时间单位为毫秒
@@ -207,26 +207,32 @@ func (cm *CacheMap) Remove(k string) {
     cm.Unlock()
 }
 
-// 自动清理过期键值对(每间隔60秒执行)
+// 关闭缓存分区
+func (cm *CacheMap) Close() {
+    cm.Lock()
+    cm.closed = true
+    cm.Unlock()
+}
+
+// 是否删除
+func (cm *CacheMap) isClosed() bool {
+    cm.RLock()
+    r := cm.closed
+    cm.RUnlock()
+    return r
+}
+
+// 自动清理过期键值对(每间隔3秒执行)
 func (cm *CacheMap) autoClearLoop() {
-    for !cm.deleted {
-        expired := make([]string, 0)
-        cm.RLock()
+    for !cm.isClosed() {
+        cm.Lock()
         for k, v := range cm.m {
             if v.e > 0 && v.e < gtime.Millisecond() {
-                expired = append(expired, k)
-            }
-        }
-        cm.RUnlock()
-
-        if len(expired) > 0 {
-            cm.Lock()
-            for _, k := range expired {
                 delete(cm.m, k)
             }
-            cm.Unlock()
         }
-        time.Sleep(60 * time.Second)
+        cm.Unlock()
+        time.Sleep(3 * time.Second)
     }
 }
 
