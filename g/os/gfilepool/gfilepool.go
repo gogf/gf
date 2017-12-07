@@ -4,7 +4,7 @@ import (
     "os"
     "time"
     "strconv"
-    "gitee.com/johng/gf/g/util/gtime"
+    "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
     "sync/atomic"

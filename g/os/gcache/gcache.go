@@ -3,7 +3,7 @@ package gcache
 import (
     "sync"
     "time"
-    "gitee.com/johng/gf/g/util/gtime"
+    "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/encoding/ghash"
 )
 
