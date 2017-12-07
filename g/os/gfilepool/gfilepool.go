@@ -7,6 +7,8 @@ import (
     "gitee.com/johng/gf/g/util/gtime"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
+    "sync/atomic"
+    "sync"
 )
 
 // 文件指针池
@@ -20,9 +22,10 @@ type Pool struct {
 
 // 文件指针池指针
 type File struct {
+    sync.RWMutex
     pool   *Pool     // 所属池
     file   *os.File  // 指针对象
-    expire int64     // 过期时间
+    expire int64     // 过期时间(秒)
 }
 
 // 全局指针池，expire < 0表示不过期，expire = 0表示使用完立即回收，expire > 0表示超时回收
@@ -51,14 +54,14 @@ func New(path string, flag int, expire int) *Pool {
     // 独立的线程执行过期清理工作
     if expire != -1 {
         go func(p *Pool) {
+            // 遍历可用指针列表，判断是否过期
             for !p.closed {
                 r := p.list.Front()
                 if r != nil && r.Value != nil {
                     f := r.Value.(*File)
-                    if f.expire <= gtime.Second() {
-                        if f.file != nil {
-                            f.file.Close()
-                        }
+                    // 必须小于，中间有1秒的缓存时间，防止同时获取和判断过期时冲突
+                    if f.getExpire() < gtime.Second() {
+                        f.destroy()
                         p.list.Remove(r)
                         continue
                     }
@@ -73,15 +76,16 @@ func New(path string, flag int, expire int) *Pool {
 // 获得一个文件打开指针
 func (p *Pool) File() (*File, error) {
     if p.list.Len() > 0 {
+        // 遍历可用指针列表，返回一个未过期的指针
         for {
             r := p.list.PopBack()
             if r != nil {
                 f := r.(*File)
-                if f.expire > gtime.Second() {
+                // 必须大于
+                if f.getExpire() > gtime.Second() {
                     return f, nil
                 } else if f.file != nil {
-                    f.file.Close()
-                    f.file = nil
+                    f.destroy()
                 }
             } else {
                 break;
@@ -108,8 +112,28 @@ func (f *File) File() *os.File {
     return f.file
 }
 
-// 关闭指针链接(软关闭)
+// 关闭指针链接(软关闭)，放回池中重复使用
 func (f *File) Close() {
-    f.expire = gtime.Second() + int64(f.pool.idlemax)
+    f.setExpire(gtime.Second() + int64(f.pool.idlemax))
     f.pool.list.PushFront(f)
+}
+
+// 销毁指针
+func (f *File) destroy() {
+    f.Lock()
+    defer f.Unlock()
+    if f.file != nil {
+        f.file.Close()
+        f.file =  nil
+    }
+}
+
+// 获取指针过期时间
+func (f *File) setExpire(expire int64) {
+    atomic.StoreInt64(&f.expire, expire)
+}
+
+// 获取指针过期时间
+func (f *File) getExpire() int64 {
+    return atomic.LoadInt64(&f.expire)
 }
