@@ -19,11 +19,11 @@ type ResponseJson struct {
 }
 
 // 返回信息
-func (r *ServerResponse) Response(content []byte) {
+func (r *ServerResponse) Write(content []byte) {
     if r.Header().Get("Content-Type") == "" {
         r.Header().Set("Content-Type", "text/plain; charset=utf-8")
     }
-    r.Write(content)
+    r.ResponseWriter.Write(content)
 }
 
 // 返回固定格式的json

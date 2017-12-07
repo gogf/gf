@@ -13,7 +13,7 @@ func HelloServer2(w http.ResponseWriter, r *http.Request) {
     io.WriteString(w, "hello2\n")
 }
 func main() {
-    s := ghttp.New()
+    s := ghttp.NewServer()
     s.SetAddr(":8199")
     s.SetIndexFolder(true)
     s.SetServerRoot("/home/john/Workspace/")
