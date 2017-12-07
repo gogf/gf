@@ -15,8 +15,8 @@ import (
 // 默认HTTP Server处理入口，底层默认使用了gorutine调用该接口
 func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
     request  := ClientRequest{}
-    response := ServerResponse {}
-    request.Request = *r
+    response := ServerResponse {server : s}
+    request.Request         = *r
     response.ResponseWriter = w
     if f, ok := s.handlerMap[r.URL.Path]; ok {
         f(&request, &response)
@@ -93,8 +93,7 @@ func (s *Server)listDir(w http.ResponseWriter, f http.File) {
         if d.IsDir() {
             name += "/"
         }
-        url := url.URL{Path: name}
-        fmt.Fprintf(w, "<a href=\"%s\">%s</a>\n", url.String(), ghtml.SpecialChars(name))
+        fmt.Fprintf(w, "<a href=\"%s\">%s</a>\n", url.URL{Path: name}.String(), ghtml.SpecialChars(name))
     }
     fmt.Fprintf(w, "</pre>\n")
 }
