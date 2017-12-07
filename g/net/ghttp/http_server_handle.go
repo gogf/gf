@@ -93,7 +93,8 @@ func (s *Server)listDir(w http.ResponseWriter, f http.File) {
         if d.IsDir() {
             name += "/"
         }
-        fmt.Fprintf(w, "<a href=\"%s\">%s</a>\n", url.URL{Path: name}.String(), ghtml.SpecialChars(name))
+        u := url.URL{Path: name}
+        fmt.Fprintf(w, "<a href=\"%s\">%s</a>\n", u.String(), ghtml.SpecialChars(name))
     }
     fmt.Fprintf(w, "</pre>\n")
 }
@@ -103,7 +104,7 @@ func (s *Server)ResponseStatus(w http.ResponseWriter, code int) {
     w.Header().Set("Content-Type", "text/plain; charset=utf-8")
     w.Header().Set("X-Content-Type-Options", "nosniff")
     w.WriteHeader(code)
-    fmt.Fprintln(w, http.StatusText(code))
+    w.Write([]byte(http.StatusText(code)))
 }
 
 // 404
