@@ -3,9 +3,10 @@ package ghttp
 import (
     "io/ioutil"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "strconv"
 )
 
-// 获得get参数
+// 获得指定名称的get参数列表
 func (r *ClientRequest) GetQuery(k string) []string {
     if r.getvals == nil {
         values     := r.URL.Query()
@@ -15,6 +16,20 @@ func (r *ClientRequest) GetQuery(k string) []string {
         return v
     }
     return nil
+}
+
+// 获取指定名称的参数int类型
+func (r *ClientRequest) GetQueryInt(k string) int {
+    v := r.GetQuery(k)
+    if v == nil {
+        return -1
+    } else {
+        if i, err := strconv.Atoi(v[0]); err != nil {
+            return -1
+        } else {
+            return i
+        }
+    }
 }
 
 func (r *ClientRequest) GetQueryString(k string) string {
@@ -55,6 +70,19 @@ func (r *ClientRequest) GetPost(k string) []string {
         return v
     }
     return nil
+}
+
+func (r *ClientRequest) GetPostInt(k string) int {
+    v := r.GetPost(k)
+    if v == nil {
+        return -1
+    } else {
+        if i, err := strconv.Atoi(v[0]); err != nil {
+            return -1
+        } else {
+            return i
+        }
+    }
 }
 
 func (r *ClientRequest) GetPostString(k string) string {
