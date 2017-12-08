@@ -18,7 +18,7 @@ func init() {
 
 // 定义操作逻辑
 func (cu *Controller_User_Register) Show(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    w.Write([]byte("register page"))
+    w.Write([]byte("user register page"))
 }
 
 

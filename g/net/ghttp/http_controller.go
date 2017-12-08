@@ -2,7 +2,7 @@ package ghttp
 
 // 控制器基类
 type Controller struct {
-    Server *Server
+
 }
 
 func (c *Controller) Get(*ClientRequest, *ServerResponse)     {}

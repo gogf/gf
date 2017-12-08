@@ -18,12 +18,7 @@ func init() {
 
 // 定义操作逻辑
 func (cu *Controller_User) Info(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    uid := r.GetQueryString("uid")
-    if uid != "" {
-        w.Write([]byte("uid: " + uid + "\n"))
-    }
-    w.Write([]byte("name: John\n"))
-    w.Write([]byte("..."))
+    w.Write([]byte("user information page"))
 }
 
 
