@@ -39,8 +39,8 @@ import "gitee.com/johng/gf/g/xxx"
     │   │   ├── gip              IP操作
     │   │   ├── gscanner         端口扫描
     │   │   ├── gsmtp            SMTP邮件管理
-    │   │   ├── gtcp             TCP客户端及服务端
-    │   │   └── gudp             UDP客户端及服务端
+    │   │   ├── gtcp             TCP服务端
+    │   │   └── gudp             UDP服务端
     │   │   
     │   ├── os               【系统管理】
     │   │   ├── gcache           本地缓存管理
