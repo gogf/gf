@@ -18,19 +18,26 @@ type ResponseJson struct {
     Data    interface{} `json:"data"`
 }
 
-// 返回信息
+// 返回信息(byte)
 func (r *ServerResponse) Write(content []byte) {
-    if r.Header().Get("Content-Type") == "" {
-        r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-    }
     r.ResponseWriter.Write(content)
 }
 
+// 返回信息(string)
+func (r *ServerResponse) WriteString(content string) {
+    r.Write([]byte(content))
+}
+
 // 返回固定格式的json
-func (r *ServerResponse) ResponseJson(result int, message string, data interface{}) {
+func (r *ServerResponse) WriteJson(result int, message string, data interface{}) {
     if r.Header().Get("Content-Type") == "" {
         r.Header().Set("Content-Type", "application/json")
     }
     r.Write([]byte(gjson.Encode(ResponseJson{ result, message, data })))
+}
+
+// 返回内容编码
+func (r *ServerResponse) WriteHeaderEncoding(encoding string) {
+    r.Header().Set("Content-Type", "text/plain; charset=" + encoding)
 }
 

@@ -1,8 +1,9 @@
 package main
 
 import (
-    _ "gitee.com/johng/gf/geg/net/controller/controller"
     "gitee.com/johng/gf/g/net/ghttp"
+    _ "gitee.com/johng/gf/geg/frame/mvc/controller/user"
+
 )
 
 func main() {
