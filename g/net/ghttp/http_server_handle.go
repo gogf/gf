@@ -12,8 +12,13 @@ import (
     "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
-// 默认HTTP Server处理入口，底层默认使用了gorutine调用该接口
+// 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
 func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
+    s.handleRequest(w, r)
+}
+
+// 执行处理HTTP请求
+func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request  := ClientRequest{}
     response := ServerResponse {server : s}
     request.Request         = *r
