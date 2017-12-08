@@ -9,11 +9,13 @@ import (
     "log"
     "sync"
     "errors"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 // http server结构体
 type Server struct {
     hmu        sync.RWMutex // handlerMap互斥锁
+    name       string       // 服务名称，方便识别
     server     http.Server  // 底层http server对象
     config     ServerConfig // 配置对象
     handlerMap HandlerMap   // 回调函数
@@ -26,25 +28,27 @@ type HandlerFunc func(*ClientRequest, *ServerResponse)
 // uri与回调函数的绑定记录表
 type HandlerMap map[string]HandlerFunc
 
-// ServerMap互斥锁
-var smu  sync.RWMutex
-// Server表，用以存储和检索多个Server对象
-var smap map[string]*Server = make(map[string]*Server)
+// Server表，用以存储和检索名称与Server对象之间的关联关系
+var serverMapping *gmap.StringInterfaceMap = gmap.NewStringInterfaceMap()
 
 // 创建一个默认配置的HTTP Server(默认监听端口是80)
 func GetServer(name string) (*Server) {
-    smu.Lock()
-    defer smu.Unlock()
-    if s, ok := smap[name]; ok {
-        return s
+    if s := serverMapping.Get(name); s != nil {
+        return s.(*Server)
     }
-    smap[name] = &Server{}
-    smap[name].SetConfig(defaultServerConfig)
-    return smap[name]
+    s     := &Server{}
+    s.name = name
+    s.SetConfig(defaultServerConfig)
+    serverMapping.Set(name, s)
+    return s
 }
 
 // 执行
 func (s *Server) Run() error {
+    if s.status == 1 {
+        return errors.New("server is already running")
+    }
+
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
@@ -96,15 +100,6 @@ func (s *Server)SetAddr(addr string) error {
         return errors.New("server config cannot be changed while running")
     }
     s.config.Addr = addr
-    return nil
-}
-
-// 设置http server参数 - Handler
-func (s *Server)SetHandler(handler http.Handler) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.Handler = handler
     return nil
 }
 
