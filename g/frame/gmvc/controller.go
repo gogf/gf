@@ -1,4 +1,4 @@
-package mvc
+package gmvc
 
 import "gitee.com/johng/gf/g/net/ghttp"
 
