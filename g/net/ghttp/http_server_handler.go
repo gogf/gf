@@ -23,11 +23,10 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     response := ServerResponse {server : s}
     request.Request         = *r
     response.ResponseWriter = w
-    if f, ok := s.handlerMap[r.URL.Path]; ok {
+    if f := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); f != nil {
         f(&request, &response)
     } else {
-        method := strings.ToUpper(r.Method)
-        if f, ok := s.handlerMap[method + ":" + r.URL.Path]; ok {
+        if f := s.getHandler(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path); f != nil {
             f(&request, &response)
         } else {
             s.serveFile(w, r)

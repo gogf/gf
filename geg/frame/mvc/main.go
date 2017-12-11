@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-    ghttp.GetServer("johng.cn").SetAddr(":8199")
-    ghttp.GetServer("johng.cn").Run()
+    ghttp.GetServer("johng").SetAddr(":8199")
+    ghttp.GetServer("johng").Run()
 }
