@@ -208,7 +208,7 @@ func (s *Server) handlerKey(domain, method, pattern string) string {
 func (s *Server) setHandler(domain, method, pattern string, handler HandlerFunc) {
     s.hmu.Lock()
     defer s.hmu.Unlock()
-    if method == gDEFAULT_METHOD {
+    if method == "all" {
         s.handlerMap[s.handlerKey(domain, "GET",     pattern)] = handler
         s.handlerMap[s.handlerKey(domain, "PUT",     pattern)] = handler
         s.handlerMap[s.handlerKey(domain, "POST",    pattern)] = handler
@@ -241,9 +241,13 @@ func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
     if s.status == 1 {
         return errors.New("server handlers cannot be changed while running")
     }
+
+    s.hmu.Lock()
+    defer s.hmu.Unlock()
+
     uri    := ""
     domain := gDEFAULT_DOMAIN
-    method := gDEFAULT_METHOD
+    method := "all"
     result := strings.Split(pattern, "@")
     if len(result) > 1 {
         domain = result[1]

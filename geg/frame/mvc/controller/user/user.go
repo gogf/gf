@@ -2,10 +2,10 @@ package user
 
 import (
     "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/frame/mvc"
     "html/template"
     "fmt"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/frame/gmvc"
 )
 
 // 定义业务相关的控制器对象
@@ -25,6 +25,7 @@ func init() {
 
 // 定义操作逻辑
 func (cu *Controller_User) Info(r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
+    r.c
     //w.Write([]byte("user information page"))
     t, err := template.New("test").Funcs(template.FuncMap{"add": Add}).Parse(gfile.GetContents("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/mvc/view/user/info.tpl"))
     if err != nil {
