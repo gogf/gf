@@ -47,45 +47,40 @@ func cacheKey(sessionid string) string {
 
 // 获取sessionid
 func (s *Session) Id () string {
-    s.mu.RLock()
-    defer s.mu.RUnlock()
-    id := s.id
-    s.updateExpire()
-    return id
+    go s.updateExpire()
+    return s.id
 }
 
 // 获取当前session所有数据
 func (s *Session) Data () map[string]interface{} {
-    m := *s.data.Clone()
-    s.updateExpire()
-    return m
+    go s.updateExpire()
+    return *s.data.Clone()
 }
 
-// 设置session过期间隔
+// 设置session过期间隔(秒)
 func (s *Session) SetExpire (expire int) {
     s.mu.Lock()
     defer s.mu.Unlock()
+    go s.updateExpire()
     s.expire = expire
-    s.updateExpire()
 }
 
 // 设置session
 func (s *Session) Set (k string, v interface{}) {
+    go s.updateExpire()
     s.data.Set(k, v)
-    s.updateExpire()
 }
 
 // 获取session
 func (s *Session) Get (k string) interface{} {
-    r := s.data.Get(k)
-    s.updateExpire()
-    return r
+    go s.updateExpire()
+    return s.data.Get(k)
 }
 
 // 删除session
 func (s *Session) Remove (k string) {
+    go s.updateExpire()
     s.data.Remove(k)
-    s.updateExpire()
 }
 
 // 更新过期时间
