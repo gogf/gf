@@ -31,30 +31,15 @@ func (s *Server) Domain(domain string) *Domain {
     return d
 }
 
-// 在当前域名中绑定回调函数
-func (d *Domain) BindHandler(pattern string, handler HandlerFunc) error {
-    for domain, _ := range d.m {
-        if err := d.s.BindHandler(pattern + "@" + domain, handler); err != nil {
-            return err
-        }
-    }
-    return nil
+// 绑定方法
+func (d *Domain) BindMethod(pattern string, c Controller, method string) error {
+    return d.s.BindMethod(pattern, c, method)
 }
 
-// 批量绑定
-func (d *Domain) BindHandlerByMap(m HandlerMap) error {
-    for p, f := range m {
-        if err := d.s.BindHandler(p, f); err != nil {
-            return err
-        }
-    }
-    return nil
-}
-
-// 绑定REST控制器
-func (d *Domain) BindControllerRest(uri string, c ControllerRest) error {
+// 绑定控制器
+func (d *Domain) BindController(uri string, c Controller) error {
     for domain, _ := range d.m {
-        if err := d.s.BindControllerRest(uri + "@" + domain, c); err != nil {
+        if err := d.s.BindController(uri + "@" + domain, c); err != nil {
             return err
         }
     }

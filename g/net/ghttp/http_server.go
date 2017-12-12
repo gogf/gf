@@ -9,6 +9,8 @@ import (
     "log"
     "sync"
     "errors"
+    "reflect"
+    "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/container/gmap"
 )
 
@@ -30,8 +32,11 @@ type Server struct {
 // 域名、URI与回调函数的绑定记录表
 type HandlerMap  map[string]HandlerFunc
 
-// http回调函数
-type HandlerFunc func(*ClientRequest, *ServerResponse)
+// http回调函数信息
+type HandlerFunc struct {
+    ctype reflect.Type // 控制器类型
+    fname string       // 回调方法名称
+}
 
 // Server表，用以存储和检索名称与Server对象之间的关联关系
 var serverMapping *gmap.StringInterfaceMap = gmap.NewStringInterfaceMap()
@@ -224,12 +229,12 @@ func (s *Server) setHandler(domain, method, pattern string, handler HandlerFunc)
 }
 
 // 查询请求处理方法
-func (s *Server) getHandler(domain, method, pattern string) HandlerFunc {
+func (s *Server) getHandler(domain, method, pattern string) *HandlerFunc {
     s.hmu.RLock()
     defer s.hmu.RUnlock()
     key := s.handlerKey(domain, method, pattern)
     if f, ok := s.handlerMap[key]; ok {
-        return f
+        return &f
     }
     return nil
 }
@@ -237,14 +242,10 @@ func (s *Server) getHandler(domain, method, pattern string) HandlerFunc {
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user, post:/user@johng.cn
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
+func (s *Server)bindHandler(pattern string, handler HandlerFunc) error {
     if s.status == 1 {
         return errors.New("server handlers cannot be changed while running")
     }
-
-    s.hmu.Lock()
-    defer s.hmu.Unlock()
-
     uri    := ""
     domain := gDEFAULT_DOMAIN
     method := "all"
@@ -267,28 +268,41 @@ func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
 }
 
 // 通过映射数组绑定URI到操作函数/方法
-func (s *Server)BindHandlerByMap(m HandlerMap) error {
-    for p, f := range m {
-        if err := s.BindHandler(p, f); err != nil {
+func (s *Server)bindHandlerByMap(m HandlerMap) error {
+    for p, h := range m {
+        if err := s.bindHandler(p, h); err != nil {
             return err
         }
     }
     return nil
 }
 
-// 绑定控制器，控制器需要继承gmvc.Controller对象并实现需要的REST方法
-func (s *Server)BindControllerRest(uri string, c ControllerRest) error {
-    return s.BindHandlerByMap(HandlerMap{
-        "GET:"     + uri : c.Get,
-        "PUT:"     + uri : c.Put,
-        "POST:"    + uri : c.Post,
-        "DELETE:"  + uri : c.Delete,
-        "PATCH:"   + uri : c.Patch,
-        "HEAD:"    + uri : c.Head,
-        "CONNECT:" + uri : c.Connect,
-        "OPTIONS:" + uri : c.Options,
-        "TRACE:"   + uri : c.Trace,
-    })
+// 绑定方法，pattern支持http method
+// pattern的格式形如：/user/list, put:/user, delete:/user
+func (s *Server)BindMethod(pattern string, c Controller, method string) error {
+    return s.bindHandler(pattern, HandlerFunc{reflect.ValueOf(c).Type(), method})
 }
 
-
+// 绑定控制器，控制器需要实现gmvc.Controller接口
+func (s *Server)BindController(uri string, c Controller) error {
+    // 遍历控制器，获取方法列表，并构造成uri
+    m := make(HandlerMap)
+    v := reflect.ValueOf(c)
+    t := v.Type()
+    for i := 0; i < v.NumMethod(); i++ {
+        key  := strings.TrimRight(uri, "/") + "/"
+        name := t.Method(i).Name
+        if name == "Init" || name == "Shut" {
+            continue
+        }
+        for i := 0; i < len(name); i++ {
+            if i > 0 && gutil.IsLetterUpper(name[i]) {
+                key += "-"
+            }
+            key += strings.ToLower(string(name[i]))
+        }
+        m[key] = HandlerFunc{t, name}
+    }
+    //fmt.Println(m)
+    return s.bindHandlerByMap(m)
+}
