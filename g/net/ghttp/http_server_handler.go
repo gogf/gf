@@ -10,6 +10,7 @@ import (
     "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/encoding/ghtml"
+    "reflect"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -19,19 +20,30 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 
 // 执行处理HTTP请求
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
-    request  := ClientRequest{}
-    response := ServerResponse {server : s}
+    request  := &ClientRequest{}
+    response := &ServerResponse {server : s}
     request.Request         = *r
     response.ResponseWriter = w
-    if f := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); f != nil {
-        f(&request, &response)
+    if h := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); h != nil {
+        s.initController(h, request, response)
     } else {
-        if f := s.getHandler(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path); f != nil {
-            f(&request, &response)
+        if h := s.getHandler(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path); h != nil {
+            s.initController(h, request, response)
         } else {
             s.serveFile(w, r)
         }
     }
+}
+
+// 初始化控制器
+func (s *Server)initController(h *HandlerFunc, r *ClientRequest, w *ServerResponse) {
+    c := reflect.Indirect(reflect.New(h.ctype)).Elem()
+    fmt.Println(c.String())
+    c.FieldByName("Request").Set(reflect.ValueOf(r))
+    c.FieldByName("Response").Set(reflect.ValueOf(w))
+    c.MethodByName("Init").Call(nil)
+    c.MethodByName(h.fname).Call(nil)
+    c.MethodByName("Shut").Call(nil)
 }
 
 // 处理静态文件请求
