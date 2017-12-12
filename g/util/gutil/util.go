@@ -15,5 +15,19 @@ func StringInArray (a []string, s string) bool {
     return StringSearch(a, s) != -1
 }
 
+// 判断给定字符是否小写
+func IsLetterLower(b byte) bool {
+    if b >= byte('a') && b <= byte('z') {
+        return true
+    }
+    return false
+}
 
+// 判断给定字符是否大写
+func IsLetterUpper(b byte) bool {
+    if b >= byte('A') && b <= byte('Z') {
+        return true
+    }
+    return false
+}
 
