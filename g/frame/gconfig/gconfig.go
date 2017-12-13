@@ -4,6 +4,8 @@ package gconfig
 import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/os/gfile"
+    "errors"
 )
 
 // 配置对象
@@ -45,4 +47,18 @@ func GetJson(k string) *gjson.Json {
 // 设置配置
 func Set(k string, v interface{}) {
     config.Set(k, v)
+}
+
+// 加载json文件配置
+func Load(key string, path string) error {
+    content := gfile.GetContents(path)
+    if len(content) == 0 {
+        return errors.New("load json file failed, path: " + path)
+    }
+    if json, err := gjson.DecodeToJson(content); err == nil {
+        config.Set(key, json)
+    } else {
+        return err
+    }
+    return nil
 }
