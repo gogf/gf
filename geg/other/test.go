@@ -1,20 +1,13 @@
 package main
+
 import (
-    "reflect"
+    "time"
+    "gitee.com/johng/gf/g/os/gtime"
     "fmt"
 )
 
-type B struct {
-    Name string
-}
-
-func(b *B) Test() {
-
-}
-
 func main() {
-    b := &B{}
-    t := reflect.ValueOf(b).Elem().Type()
-    //n := reflect.New(t)
-    fmt.Println(t.NumMethod())
+    s := gtime.Second()
+    t := time.Unix(s, 0)
+    fmt.Println(t.Format("2006-01-02 15:04:05"))
 }

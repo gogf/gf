@@ -33,6 +33,7 @@ func Get(sessionid string) *Session {
         return r.(*Session)
     }
     s := &Session{
+        id     : Id(),
         data   : gmap.NewStringInterfaceMap(),
         expire : DEFAULT_EXPIRE_TIME,
     }
@@ -75,6 +76,15 @@ func (s *Session) Set (k string, v interface{}) {
 func (s *Session) Get (k string) interface{} {
     go s.updateExpire()
     return s.data.Get(k)
+}
+
+// 获取session(字符串)
+func (s *Session) GetString (k string) string {
+    go s.updateExpire()
+    if r := s.data.Get(k); r != nil {
+        return r.(string)
+    }
+    return ""
 }
 
 // 删除session
