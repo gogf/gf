@@ -5,7 +5,6 @@ import (
     "errors"
     "strings"
     "strconv"
-    "gitee.com/johng/gf/g/os/glog"
     "fmt"
 )
 
@@ -19,23 +18,24 @@ type Json struct {
 type JsonVar interface{}
 
 // 编码go变量为json字符串，并返回json字符串指针
-func Encode (v interface{}) string {
+func Encode (v interface{}) (string, error) {
     s, err := json.Marshal(v)
     if err != nil {
-        glog.Error("json marshaling failed: " + err.Error())
-        return ""
+        //glog.Error("json marshaling failed: " + err.Error())
+        return "", err
     }
     r := string(s)
-    return r
+    return r, nil
 }
 
 // 解码字符串为interface{}变量
-func Decode (s string) interface{} {
+func Decode (s string) (interface{}, error) {
     var v interface{}
-    if DecodeTo(s, &v) == nil {
-        return v
+    if err := DecodeTo(s, &v); err == nil {
+        return nil, err
+    } else {
+        return v, nil
     }
-    return nil
 }
 
 // 解析json字符串为go变量，注意第二个参数为指针
@@ -47,13 +47,13 @@ func DecodeTo (s string, v interface{}) error {
 }
 
 // 解析json字符串为gjson.Json对象，并返回操作对象指针
-func DecodeToJson (s string) *Json {
+func DecodeToJson (s string) (*Json, error) {
     var result interface{}
     if err := json.Unmarshal([]byte(s), &result); err != nil {
-        glog.Error("json unmarshaling failed: " + err.Error())
-        return nil
+        //glog.Error("json unmarshaling failed: " + err.Error())
+        return nil, err
     }
-    return &Json{ &result }
+    return &Json{ &result }, nil
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
@@ -66,7 +66,11 @@ func NewJson(v *interface{}) *Json {
 func (p *Json) GetToVar(pattern string, v interface{}) error {
     r := p.Get(pattern)
     if r != nil {
-        return DecodeTo(Encode(r), v)
+        if t, err := Encode(r); err == nil {
+            return DecodeTo(t, v)
+        } else {
+            return err
+        }
     } else {
         v = nil
     }
