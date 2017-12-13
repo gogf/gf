@@ -37,11 +37,8 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
 // 初始化控制器
 func (s *Server)initController(h *HandlerFunc, r *ClientRequest, w *ServerResponse) {
-    c := reflect.Indirect(reflect.New(h.ctype)).Elem()
-    fmt.Println(c.String())
-    c.FieldByName("Request").Set(reflect.ValueOf(r))
-    c.FieldByName("Response").Set(reflect.ValueOf(w))
-    c.MethodByName("Init").Call(nil)
+    c := reflect.New(h.ctype)
+    c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r), reflect.ValueOf(w)})
     c.MethodByName(h.fname).Call(nil)
     c.MethodByName("Shut").Call(nil)
 }

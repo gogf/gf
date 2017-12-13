@@ -3,6 +3,11 @@ package ghttp
 import (
     "sync"
     "net/http"
+    "strings"
+)
+
+const (
+    gDEFAULT_MAX_AGE = 86400
 )
 
 // cookie对象
@@ -41,8 +46,13 @@ func (c *Cookie) init() {
     }
 }
 
-// 设置cookie
-func (c *Cookie) Set(key, value, domain, path string, maxage int) {
+// 设置cookie，使用默认参数
+func (c *Cookie) Set(key, value string) {
+    c.SetCookie(key, value, strings.Split(c.request.Host, ":")[0], "/", gDEFAULT_MAX_AGE)
+}
+
+// 设置cookie，带详细cookie参数
+func (c *Cookie) SetCookie(key, value, domain, path string, maxage int) {
     c.mu.Lock()
     defer c.mu.Unlock()
     c.data[key] = CookieItem {
