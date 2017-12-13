@@ -1,16 +1,16 @@
 Go Frame - 轻量级的Go语言开发框架。
 
-# 安装
+## 安装
 ```
 go get -u gitee.com/johng/gf
 ````
 
-# 使用
+## 使用
 ```go
 import "gitee.com/johng/gf/g/xxx"
 ```
 
-# 说明
+## 说明
     .
     ├── g                【框架目录】
     │   ├── container        【常用数据结构容器】
@@ -61,3 +61,7 @@ import "gitee.com/johng/gf/g/xxx"
     ├── geg              【框架示例】
     ├── vendor           【第三方包】
     └── version.go       【版本信息】
+    
+## 配置
+    键名                          键值类型      配置说明
+    Server名称.gf.mvc.view.path   string    模板目录绝对路径

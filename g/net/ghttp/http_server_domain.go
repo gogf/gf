@@ -12,7 +12,7 @@ type Domain struct {
 }
 
 // 域名对象表，用以存储和检索域名(支持多域名)与域名对象之间的关联关系
-var domains *gmap.StringInterfaceMap = gmap.NewStringInterfaceMap()
+var domains = gmap.NewStringInterfaceMap()
 
 // 生成一个域名对象
 func (s *Server) Domain(domain string) *Domain {

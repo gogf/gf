@@ -4,7 +4,8 @@
     </head>
 
     <body>
-    <p>age:{{.}}</p>
-    <p>add:{{add 1 2}}</p>
+    <h3>This is index</h3>
+    <p>tpl vals: {{.}}</p>
+    {{include "user/footer"}}
     </body>
 </html>
