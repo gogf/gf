@@ -13,8 +13,10 @@ type ControllerBase struct {
 }
 
 // 控制器初始化
-func (c *ControllerBase) Init() {
-    c.Cookie = NewCookie(c.Request, c.Response)
+func (c *ControllerBase) Init(r *ClientRequest, w *ServerResponse) {
+    c.Request  = r
+    c.Response = w
+    c.Cookie   = NewCookie(c.Request, c.Response)
     if r := c.Cookie.Get("gfsessionid"); r != "" {
         c.Session = gsession.Get(r)
     } else {
@@ -25,6 +27,7 @@ func (c *ControllerBase) Init() {
 // 控制器结束请求
 func (c *ControllerBase) Shut() {
     c.Cookie.Output()
+    c.Response.Output()
 }
 
 
