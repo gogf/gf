@@ -3,6 +3,7 @@ package user
 import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/frame/gmvc"
+    "fmt"
 )
 
 // 定义业务相关的控制器对象
@@ -22,17 +23,11 @@ func init() {
 
 // 定义操作逻辑
 func (c *ControllerUser) Info() {
-    //c.Session.Set("name", "john")
-    c.Response.WriteString("session:" + c.Session.GetString("name"))
-    c.Response.Write([]byte("user information page"))
-    //t, err := template.New("test").Funcs(template.FuncMap{"add": Add}).Parse(gfile.GetContents("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/mvc/view/user/info.tpl"))
-    //if err != nil {
-    //    fmt.Println(err)
-    //}
-    //
-    //t.Execute(w.ResponseWriter, map[string]string{
-    //    "name" : "john",
-    //})
+    //c.Response.WriteString("user information page")
+    c.View.Assign("name", "john")
+    if err := c.View.Display("user/index"); err != nil {
+        fmt.Println(err)
+    }
 }
 
 

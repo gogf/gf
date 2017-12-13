@@ -10,7 +10,6 @@ import (
 type ServerResponse struct {
     http.ResponseWriter
     bufmu  sync.RWMutex // 缓冲区互斥锁
-    server *Server      // 所属Server对象
     buffer []byte       // 每个请求的返回数据缓冲区
 }
 

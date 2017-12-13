@@ -21,7 +21,7 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 执行处理HTTP请求
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request  := &ClientRequest{}
-    response := &ServerResponse {server : s}
+    response := &ServerResponse{}
     request.Request         = *r
     response.ResponseWriter = w
     if h := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); h != nil {
@@ -38,7 +38,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 // 初始化控制器
 func (s *Server)initController(h *HandlerFunc, r *ClientRequest, w *ServerResponse) {
     c := reflect.New(h.ctype)
-    c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r), reflect.ValueOf(w)})
+    c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(s), reflect.ValueOf(r), reflect.ValueOf(w)})
     c.MethodByName(h.fname).Call(nil)
     c.MethodByName("Shut").Call(nil)
 }
