@@ -21,8 +21,9 @@ func init() {
 }
 
 // 定义操作逻辑
-func (cu *ControllerUser) Info() {
-    cu.Response.Write([]byte("user information page"))
+func (c *ControllerUser) Info() {
+    c.Cookie.Set("name", "john2")
+    c.Response.Write([]byte("user information page"))
     //t, err := template.New("test").Funcs(template.FuncMap{"add": Add}).Parse(gfile.GetContents("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/mvc/view/user/info.tpl"))
     //if err != nil {
     //    fmt.Println(err)

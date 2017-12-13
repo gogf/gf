@@ -213,7 +213,7 @@ func (s *Server) handlerKey(domain, method, pattern string) string {
 func (s *Server) setHandler(domain, method, pattern string, handler HandlerFunc) {
     s.hmu.Lock()
     defer s.hmu.Unlock()
-    if method == "all" {
+    if method == gDEFAULT_METHOD {
         s.handlerMap[s.handlerKey(domain, "GET",     pattern)] = handler
         s.handlerMap[s.handlerKey(domain, "PUT",     pattern)] = handler
         s.handlerMap[s.handlerKey(domain, "POST",    pattern)] = handler
@@ -280,7 +280,7 @@ func (s *Server)bindHandlerByMap(m HandlerMap) error {
 // 绑定方法，pattern支持http method
 // pattern的格式形如：/user/list, put:/user, delete:/user
 func (s *Server)BindMethod(pattern string, c Controller, method string) error {
-    return s.bindHandler(pattern, HandlerFunc{reflect.ValueOf(c).Type(), method})
+    return s.bindHandler(pattern, HandlerFunc{reflect.ValueOf(c).Elem().Type(), method})
 }
 
 // 绑定控制器，控制器需要实现gmvc.Controller接口
@@ -301,8 +301,7 @@ func (s *Server)BindController(uri string, c Controller) error {
             }
             key += strings.ToLower(string(name[i]))
         }
-        m[key] = HandlerFunc{t, name}
+        m[key] = HandlerFunc{v.Elem().Type(), name}
     }
-    //fmt.Println(m)
     return s.bindHandlerByMap(m)
 }
