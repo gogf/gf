@@ -9,7 +9,7 @@ import (
 
 
 func main() {
-    ips, err := gip.IntranetIP()
+    ips, err := gipv4.IntranetIP()
     if err != nil {
         log.Println(err)
         return

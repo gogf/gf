@@ -4,11 +4,13 @@ import (
     "sync"
     "html/template"
     "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/frame/gconfig"
+    "gitee.com/johng/gf/g/frame/gbase"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 // 视图对象(一个请求一个视图对象，用完即销毁)
 type View struct {
+    gbase.Base
     mu   sync.RWMutex           // 并发互斥锁
     ctl  *Controller            // 所属控制器
     view *gview.View            // 底层视图对象
@@ -17,10 +19,13 @@ type View struct {
 
 // 创建一个MVC请求中使用的视图对象
 func NewView(c *Controller) *View {
-    path := c.Server.GetName() + ".gf.mvc.view.path"
+    viewpath := gfile.SelfDir()
+    if r := c.Config.Get("viewpath"); r != nil {
+        viewpath = r.(string)
+    }
     return &View{
         ctl  : c,
-        view : gview.GetView(gconfig.GetString(path)),
+        view : gview.GetView(viewpath),
         data : make(map[string]interface{}),
     }
 }
