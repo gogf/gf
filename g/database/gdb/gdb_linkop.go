@@ -2,13 +2,10 @@ package gdb
 
 import (
     "fmt"
-    "database/sql"
     "errors"
+    "database/sql"
     _ "github.com/go-sql-driver/mysql"
 )
-
-// gf的数据库操作支持普通方法操作及链式操作两种方式，本文件是链式操作的封装，提供非常简便的CURD方法
-
 
 // 数据库链式操作对象
 type gLinkOp struct {
