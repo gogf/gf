@@ -63,5 +63,5 @@ import "gitee.com/johng/gf/g/xxx"
     └── version.go       【版本信息】
     
 ## 配置
-    键名                          键值类型      配置说明
-    Server名称.gf.mvc.view.path   string    模板目录绝对路径
+1. 默认读取文件运行目录的config.json文件；
+1. 支持多配置文件管理，默认配置文件目录为当前运行目录；

@@ -1,4 +1,4 @@
-package gip
+package gipv4
 
 import (
     "net"
@@ -10,12 +10,8 @@ import (
 
 // ip字符串转为整形
 func Ip2long(ipstr string) (ip uint32) {
-    r        := `^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$`
-    reg, err := regexp.Compile(r)
-    if err != nil {
-        return
-    }
-    ips := reg.FindStringSubmatch(ipstr)
+    reg, _ := regexp.Compile(`^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$`)
+    ips    := reg.FindStringSubmatch(ipstr)
     if ips == nil {
         return
     }

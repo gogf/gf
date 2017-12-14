@@ -32,7 +32,7 @@ type Server struct {
 // 域名、URI与回调函数的绑定记录表
 type HandlerMap  map[string]HandlerFunc
 
-// http回调函数信息
+// http回调函数注册信息
 type HandlerFunc struct {
     ctype reflect.Type // 控制器类型
     fname string       // 回调方法名称

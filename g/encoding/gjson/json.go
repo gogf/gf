@@ -6,6 +6,7 @@ import (
     "strings"
     "strconv"
     "fmt"
+    "io/ioutil"
 )
 
 // json解析结果存放数组
@@ -51,6 +52,19 @@ func DecodeToJson (s string) (*Json, error) {
     var result interface{}
     if err := json.Unmarshal([]byte(s), &result); err != nil {
         //glog.Error("json unmarshaling failed: " + err.Error())
+        return nil, err
+    }
+    return &Json{ &result }, nil
+}
+
+// 加载json文件内容，并转换为json对象
+func Load (path string) (*Json, error) {
+    data, err := ioutil.ReadFile(path)
+    if err != nil {
+        return nil, err
+    }
+    var result interface{}
+    if err := json.Unmarshal(data, &result); err != nil {
         return nil, err
     }
     return &Json{ &result }, nil
