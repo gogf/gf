@@ -34,8 +34,8 @@ func (s *scanner) ScanIp(startIp string, endIp string, port int, callback func(n
         return errors.New("callback function should not be nil")
     }
     var waitGroup sync.WaitGroup
-    startIplong := gip.Ip2long(startIp)
-    endIplong   := gip.Ip2long(endIp)
+    startIplong := gipv4.Ip2long(startIp)
+    endIplong   := gipv4.Ip2long(endIp)
     result      := endIplong - startIplong
     if startIplong == 0 || endIplong == 0 {
         return errors.New("invalid startip or endip: ipv4 string should be given")
@@ -56,7 +56,7 @@ func (s *scanner) ScanIp(startIp string, endIp string, port int, callback func(n
             }
             //fmt.Println("scanning:", ip, "done")
             waitGroup.Done()
-        }(gip.Long2ip(i))
+        }(gipv4.Long2ip(i))
     }
     waitGroup.Wait()
     return nil

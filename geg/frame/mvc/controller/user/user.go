@@ -23,11 +23,9 @@ func init() {
 
 // 定义操作逻辑
 func (c *ControllerUser) Info() {
-    //c.Response.WriteString("user information page")
+    fmt.Println(c.Db)
     c.View.Assign("name", "john")
-    if err := c.View.Display("user/index"); err != nil {
-        fmt.Println(err)
-    }
+    c.View.Display("user/index")
 }
 
 

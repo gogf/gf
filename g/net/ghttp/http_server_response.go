@@ -35,11 +35,16 @@ func (r *ServerResponse) WriteString(content string) {
 }
 
 // 返回固定格式的json
-func (r *ServerResponse) WriteJson(result int, message string, data interface{}) {
+func (r *ServerResponse) WriteJson(result int, message string, data interface{}) error {
     r.Header().Set("Content-Type", "application/json")
     r.bufmu.Lock()
     defer r.bufmu.Unlock()
-    r.buffer = append(r.buffer, gjson.Encode(ResponseJson{ result, message, data })...)
+    if jsonstr, err := gjson.Encode(ResponseJson{ result, message, data }); err != nil {
+        return err
+    } else {
+        r.buffer = append(r.buffer, jsonstr...)
+    }
+    return nil
 }
 
 // 返回内容编码
