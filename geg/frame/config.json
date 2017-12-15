@@ -1,6 +1,7 @@
 {
-    "viewpath" : "/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/mvc/view",
-    "database" : {
+    "configpath" : "",
+    "viewpath"   : "/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/mvc/view",
+    "database"   : {
         "default" : [
             "root@127.0.0.1:3306,123456,test,mysql",
             "root@127.0.0.1:3306,123456,test,mysql",
