@@ -3,14 +3,10 @@ package gbase
 
 import (
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gconsole"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/frame/gconfig"
     "gitee.com/johng/gf/g/frame/ginstance"
-    "gitee.com/johng/gf/g/os/gconsole"
-)
-
-const (
-    gDEFAULT_CONFIG_FILE = "config.json" // 默认读取的配置文件名称
 )
 
 // 框架基类，所有的基于gf框架的类对象都继承于此，以便使用框架的一些封装的核心组件

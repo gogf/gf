@@ -103,6 +103,15 @@ func (p *Json) GetMap(pattern string) map[string]interface{} {
     return nil
 }
 
+// 将检索值转换为Json对象指针返回
+func (p *Json) GetJson(pattern string) *Json {
+    result := p.Get(pattern)
+    if result != nil {
+        return &Json{&result}
+    }
+    return nil
+}
+
 // 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
 func (p *Json) GetArray(pattern string) []interface{} {

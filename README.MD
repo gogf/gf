@@ -7,7 +7,7 @@ go get -u gitee.com/johng/gf
 
 ## 使用
 ```go
-import "gitee.com/johng/gf/g/xxx"
+import "gitee.com/johng/gf/g/xxx/xxx"
 ```
 
 ## 说明
