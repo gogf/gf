@@ -31,7 +31,7 @@ func (c *Config) file(files []string) string {
     if len(files) > 0 {
         file = files[0]
     }
-    return file
+    return file + ".json"
 }
 
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中

@@ -41,7 +41,8 @@ type HandlerFunc struct {
 // Server表，用以存储和检索名称与Server对象之间的关联关系
 var serverMapping = gmap.NewStringInterfaceMap()
 
-// 创建一个默认配置的HTTP Server(默认监听端口是80)
+// 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
+// 单例模式，请保证name的唯一性
 func GetServer(name string) (*Server) {
     if s := serverMapping.Get(name); s != nil {
         return s.(*Server)

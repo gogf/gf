@@ -1,5 +1,4 @@
 {
-    "configpath" : "",
     "viewpath"   : "/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/mvc/view",
     "database"   : {
         "default" : [

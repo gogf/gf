@@ -1,3 +1,4 @@
+// 单例对象管理工具
 package ginstance
 
 import "gitee.com/johng/gf/g/container/gmap"

@@ -19,6 +19,9 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 // 执行处理HTTP请求
+// 首先，查找是否有对应域名的处理接口配置；
+// 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
+// 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request  := &ClientRequest{}
     response := &ServerResponse{}
