@@ -22,7 +22,7 @@ type Controller struct {
     View     *View                 // 视图对象
 }
 
-// 控制器初始化
+// 控制器初始化接口方法
 func (c *Controller) Init(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     c.Base.Init()
     c.Server   = s
@@ -37,7 +37,7 @@ func (c *Controller) Init(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.Serv
     }
 }
 
-// 控制器结束请求
+// 控制器结束请求接口方法
 func (c *Controller) Shut() {
     if c.Cookie.Get(gDEFAULT_SESSION_ID_NAME) == "" {
         c.Cookie.Set(gDEFAULT_SESSION_ID_NAME, c.Session.Id())

@@ -6,6 +6,7 @@ import (
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/frame/gbase"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gconsole"
 )
 
 // 视图对象(一个请求一个视图对象，用完即销毁)
@@ -19,13 +20,17 @@ type View struct {
 
 // 创建一个MVC请求中使用的视图对象
 func NewView(c *Controller) *View {
-    viewpath := gfile.SelfDir()
+    // 视图目录路径查找优先级：配置文件参数viewpath、启动参数viewpath、当前程序运行目录
+    path := gconsole.Option.Get("viewpath")
+    if path == "" {
+        path = gfile.SelfDir()
+    }
     if r := c.Config.Get("viewpath"); r != nil {
-        viewpath = r.(string)
+        path = r.(string)
     }
     return &View{
         ctl  : c,
-        view : gview.GetView(viewpath),
+        view : gview.GetView(path),
         data : make(map[string]interface{}),
     }
 }
