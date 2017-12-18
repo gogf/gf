@@ -6,13 +6,14 @@ import (
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/frame/gconfig"
     "gitee.com/johng/gf/g/frame/ginstance"
+    "gitee.com/johng/gf/g/os/gconsole"
 )
 
 const (
     gDEFAULT_CONFIG_FILE = "config.json" // 默认读取的配置文件名称
 )
 
-// 框架基类
+// 框架基类，所有的基于gf框架的类对象都继承于此，以便使用框架的一些封装的核心组件
 type Base struct {
     Db     gdb.Link
     Config *gconfig.Config
@@ -20,16 +21,18 @@ type Base struct {
 
 // 基类初始化，如若需要自定义初始化内置核心对象组件，可在继承子类中覆盖此方法
 func (b *Base) Init() {
-    // 默认配置目录为当前程序运行目录
+    // 配置文件目录查找依次为：启动参数cfgpath、当前程序运行目录
     if b.Config == nil {
-        path   := gfile.SelfDir()
+        path := gconsole.Option.Get("cfgpath")
+        if path == "" {
+            path = gfile.SelfDir()
+        }
         ckey   := "gf_config_with_path_" + path
         result := ginstance.Get(ckey)
         if result != nil {
             b.Config = result.(*gconfig.Config)
         } else {
             b.Config = gconfig.New(path)
-            b.Config.Add(gDEFAULT_CONFIG_FILE)
             ginstance.Set(ckey, b.Config)
         }
     }
@@ -49,10 +52,10 @@ func (b *Base) Init() {
                         }
                     }
                 }
-            }
-            if link, err := gdb.Instance(); err != nil {
-                b.Db = link
-                ginstance.Set(ckey, b.Db)
+                if link, err := gdb.Instance(); err != nil {
+                    b.Db = link
+                    ginstance.Set(ckey, b.Db)
+                }
             }
         }
     }
