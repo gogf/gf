@@ -11,8 +11,8 @@ import (
 
 // 框架基类，所有的基于gf框架的类对象都继承于此，以便使用框架的一些封装的核心组件
 type Base struct {
-    Db     gdb.Link
-    Config *gconfig.Config
+    Db       gdb.Link        // 数据库操作对象
+    Config   *gconfig.Config // 配置管理对象
 }
 
 // 基类初始化，如若需要自定义初始化内置核心对象组件，可在继承子类中覆盖此方法
