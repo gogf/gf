@@ -12,6 +12,7 @@ import (
     "reflect"
     "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/container/gmap"
+    "strconv"
 )
 
 const (
@@ -112,11 +113,11 @@ func (s *Server)SetConfig(c ServerConfig) error {
 }
 
 // 设置http server参数 - Addr
-func (s *Server)SetAddr(addr string) error {
+func (s *Server)SetPort(port int) error {
     if s.status == 1 {
         return errors.New("server config cannot be changed while running")
     }
-    s.config.Addr = addr
+    s.config.Addr = ":" + strconv.Itoa(port)
     return nil
 }
 

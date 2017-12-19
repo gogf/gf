@@ -2,14 +2,28 @@
     "viewpath"   : "/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/mvc/view",
     "database"   : {
         "default" : [
-            "root@127.0.0.1:3306,123456,test,mysql",
-            "root@127.0.0.1:3306,123456,test,mysql",
-            "root@127.0.0.1:3306,123456,test,mysql"
-        ],
-        "user-center" : [
-            "root@127.0.0.1:3306,123456,ucenter,mysql",
-            "root@127.0.0.1:3306,123456,ucenter,mysql",
-            "root@127.0.0.1:3306,123456,ucenter,mysql"
+            {
+                "host"     : "127.0.0.1",
+                "port"     : "3306",
+                "user"     : "root",
+                "pass"     : "127456",
+                "name"     : "test",
+                "type"     : "mysql",
+                "role"     : "master",
+                "charset"  : "utf8",
+                "priority" : "1"
+            },
+            {
+                "host"     : "127.0.0.1",
+                "port"     : "3306",
+                "user"     : "root",
+                "pass"     : "127456",
+                "name"     : "test",
+                "type"     : "mysql",
+                "role"     : "master",
+                "charset"  : "utf8",
+                "priority" : "1"
+            }
         ]
     }
 }
