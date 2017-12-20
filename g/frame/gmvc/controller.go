@@ -3,7 +3,6 @@ package gmvc
 
 import (
     "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/frame/gbase"
     "gitee.com/johng/gf/g/net/gsession"
 )
 
@@ -13,7 +12,6 @@ const (
 
 // 控制器基类
 type Controller struct {
-    gbase.Base
     Server   *ghttp.Server         // Web Server对象
     Request  *ghttp.ClientRequest  // 请求数据对象
     Response *ghttp.ServerResponse // 返回数据对象
@@ -24,7 +22,6 @@ type Controller struct {
 
 // 控制器初始化接口方法
 func (c *Controller) Init(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    c.Base.Init()
     c.Server   = s
     c.Request  = r
     c.Response = w

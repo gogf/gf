@@ -67,7 +67,7 @@ func (l *dbLink) formatError(err error, q *string, args ...interface{}) error {
 
 
 // 数据库查询，获取查询结果集，以列表结构返回
-func (l *dbLink) GetAll(q string, args ...interface{}) (*List, error) {
+func (l *dbLink) GetAll(q string, args ...interface{}) (List, error) {
     // 执行sql
     rows, err := l.Query(q, args ...)
     if err != nil || rows == nil {
@@ -88,7 +88,7 @@ func (l *dbLink) GetAll(q string, args ...interface{}) (*List, error) {
     for rows.Next() {
         err = rows.Scan(scanArgs...)
         if err != nil {
-            return &list, err
+            return list, err
         }
         row := make(Map)
         for i, col := range values {
@@ -96,16 +96,16 @@ func (l *dbLink) GetAll(q string, args ...interface{}) (*List, error) {
         }
         list = append(list, row)
     }
-    return &list, nil
+    return list, nil
 }
 
 // 数据库查询，获取查询结果集，以关联数组结构返回
-func (l *dbLink) GetOne(q string, args ...interface{}) (*Map, error) {
+func (l *dbLink) GetOne(q string, args ...interface{}) (Map, error) {
     list, err := l.GetAll(q, args ...)
     if err != nil {
         return nil, err
     }
-    return &(*list)[0], nil
+    return list[0], nil
 }
 
 // 数据库查询，获取查询字段值
@@ -114,7 +114,7 @@ func (l *dbLink) GetValue(q string, args ...interface{}) (interface{}, error) {
     if err != nil {
         return "", err
     }
-    for _, v := range *one {
+    for _, v := range one {
         return v, nil
     }
     return "", nil
@@ -194,11 +194,11 @@ func (l *dbLink) getInsertOperationByOption(option uint8) string {
 // 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 // 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 // 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做
-func (l *dbLink) insert(table string, data *Map, option uint8) (sql.Result, error) {
+func (l *dbLink) insert(table string, data Map, option uint8) (sql.Result, error) {
     var keys   []string
     var values []string
     var params []interface{}
-    for k, v := range *data {
+    for k, v := range data {
         keys   = append(keys,   l.charl + k + l.charr)
         values = append(values, "?")
         params = append(params, v)
@@ -207,7 +207,7 @@ func (l *dbLink) insert(table string, data *Map, option uint8) (sql.Result, erro
     updatestr := ""
     if option == OPTION_SAVE {
         var updates []string
-        for k, _ := range *data {
+        for k, _ := range data {
             updates = append(updates, fmt.Sprintf("%s%s%s=VALUES(%s)", l.charl, k, l.charr, k))
         }
         updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
@@ -219,33 +219,33 @@ func (l *dbLink) insert(table string, data *Map, option uint8) (sql.Result, erro
 }
 
 // CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
-func (l *dbLink) Insert(table string, data *Map) (sql.Result, error) {
+func (l *dbLink) Insert(table string, data Map) (sql.Result, error) {
     return l.link.insert(table, data, OPTION_INSERT)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (l *dbLink) Replace(table string, data *Map) (sql.Result, error) {
+func (l *dbLink) Replace(table string, data Map) (sql.Result, error) {
     return l.link.insert(table, data, OPTION_REPLACE)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (l *dbLink) Save(table string, data *Map) (sql.Result, error) {
+func (l *dbLink) Save(table string, data Map) (sql.Result, error) {
     return l.link.insert(table, data, OPTION_SAVE)
 }
 
 // 批量写入数据
-func (l *dbLink) batchInsert(table string, list *List, batch int, option uint8) error {
+func (l *dbLink) batchInsert(table string, list List, batch int, option uint8) error {
     var keys    []string
     var values  []string
     var bvalues []string
     var params  []interface{}
-    var size int = len(*list)
+    var size int = len(list)
     // 判断长度
     if size < 1 {
         return errors.New("empty data list")
     }
     // 首先获取字段名称及记录长度
-    for k, _ := range (*list)[0] {
+    for k, _ := range list[0] {
         keys   = append(keys,   k)
         values = append(values, "?")
     }
@@ -263,7 +263,7 @@ func (l *dbLink) batchInsert(table string, list *List, batch int, option uint8) 
     // 构造批量写入数据格式(注意map的遍历是无序的)
     for i := 0; i < size; i++ {
         for _, k := range keys {
-            params = append(params, (*list)[i][k])
+            params = append(params, list[i][k])
         }
         bvalues = append(bvalues, "(" + strings.Join(values, ",") + ")")
         if len(bvalues) == batch {
@@ -285,17 +285,17 @@ func (l *dbLink) batchInsert(table string, list *List, batch int, option uint8) 
 }
 
 // CURD操作:批量数据指定批次量写入
-func (l *dbLink) BatchInsert(table string, list *List, batch int) error {
+func (l *dbLink) BatchInsert(table string, list List, batch int) error {
     return l.link.batchInsert(table, list, batch, OPTION_INSERT)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (l *dbLink) BatchReplace(table string, list *List, batch int) error {
+func (l *dbLink) BatchReplace(table string, list List, batch int) error {
     return l.link.batchInsert(table, list, batch, OPTION_REPLACE)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (l *dbLink) BatchSave(table string, list *List, batch int) error {
+func (l *dbLink) BatchSave(table string, list List, batch int) error {
     return l.link.batchInsert(table, list, batch, OPTION_SAVE)
 }
 
@@ -307,16 +307,16 @@ func (l *dbLink) Update(table string, data interface{}, condition interface{}, a
     switch data.(type) {
         case string:
             updates = data.(string)
-        case *Map:
+        case Map:
             var keys []string
-            for k, v := range *data.(*Map) {
+            for k, v := range data.(Map) {
                 keys   = append(keys,   fmt.Sprintf("%s%s%s=?", l.charl, k, l.charr))
                 params = append(params, v)
             }
             updates = strings.Join(keys,   ",")
 
         default:
-            return nil, errors.New("invalid data type for 'data' field, string or *Map expected")
+            return nil, errors.New("invalid data type for 'data' field, string or Map expected")
     }
     for _, v := range args {
         if r, ok := v.(string); ok {

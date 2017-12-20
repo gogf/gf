@@ -27,8 +27,8 @@ type Link interface {
     Exec(q string, args ...interface{}) (sql.Result, error)
     Prepare(q string) (*sql.Stmt, error)
 
-    GetAll(q string, args ...interface{}) (*List, error)
-    GetOne(q string, args ...interface{}) (*Map, error)
+    GetAll(q string, args ...interface{}) (List, error)
+    GetOne(q string, args ...interface{}) (Map, error)
     GetValue(q string, args ...interface{}) (interface{}, error)
 
     PingMaster() error
@@ -49,15 +49,15 @@ type Link interface {
     Commit() error
     Rollback() error
 
-    insert(table string, data *Map, option uint8) (sql.Result, error)
-    Insert(table string, data *Map) (sql.Result, error)
-    Replace(table string, data *Map) (sql.Result, error)
-    Save(table string, data *Map) (sql.Result, error)
+    insert(table string, data Map, option uint8) (sql.Result, error)
+    Insert(table string, data Map) (sql.Result, error)
+    Replace(table string, data Map) (sql.Result, error)
+    Save(table string, data Map) (sql.Result, error)
 
-    batchInsert(table string, list *List, batch int, option uint8) error
-    BatchInsert(table string, list *List, batch int) error
-    BatchReplace(table string, list *List, batch int) error
-    BatchSave(table string, list *List, batch int) error
+    batchInsert(table string, list List, batch int, option uint8) error
+    BatchInsert(table string, list List, batch int) error
+    BatchReplace(table string, list List, batch int) error
+    BatchSave(table string, list List, batch int) error
 
     Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
     Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
@@ -136,7 +136,6 @@ func NewByGroup(groupName string) (Link, error) {
         if len(masterList) < 1 {
             return nil, errors.New("at least one master node configuration's need to make sense")
         }
-        fmt.Println(masterList)
         masterNode := getConfigNodeByPriority(&masterList)
         var slaveNode *ConfigNode
         if len(slaveList) > 0 {

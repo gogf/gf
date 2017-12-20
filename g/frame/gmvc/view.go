@@ -4,14 +4,13 @@ import (
     "sync"
     "html/template"
     "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/frame/gbase"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gconsole"
+    "gitee.com/johng/gf/g/frame/ginstance"
 )
 
 // 视图对象(一个请求一个视图对象，用完即销毁)
 type View struct {
-    gbase.Base
     mu   sync.RWMutex           // 并发互斥锁
     ctl  *Controller            // 所属控制器
     view *gview.View            // 底层视图对象
@@ -25,8 +24,10 @@ func NewView(c *Controller) *View {
     if path == "" {
         path = gfile.SelfDir()
     }
-    if r := c.Config.Get("viewpath"); r != nil {
-        path = r.(string)
+    if config := ginstance.Config(); config != nil {
+        if r := config.Get("viewpath"); r != nil {
+            path = r.(string)
+        }
     }
     return &View{
         ctl  : c,
@@ -52,7 +53,11 @@ func (view *View) Assign(key string, value interface{}) {
 }
 
 // 解析指定模板
-func (view *View) Display(file string) error {
+func (view *View) Display(files...string) error {
+    file := "default"
+    if len(files) > 0 {
+        file = files[0]
+    }
     // 查询模板
     tpl, err := view.view.Template(file)
     if err != nil {
