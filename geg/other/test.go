@@ -1,18 +1,11 @@
 package main
 import (
     "fmt"
-    "os"
+    "gitee.com/johng/gf/g/frame/ginstance"
 )
 
-func Add(path string, name ... string) {
-    fmt.Println(name)
-}
-
 func main() {
-    for _, e := range os.Environ() {
-
-        fmt.Println(e)
-
-    }
-
+    db := ginstance.Database()
+    list, _ := db.Table("test").Select()
+    fmt.Println(list[0])
 }
