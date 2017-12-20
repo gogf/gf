@@ -3,9 +3,6 @@ package gdb
 
 import (
     "sync"
-    "regexp"
-    "strings"
-    "strconv"
 )
 
 const (
@@ -99,42 +96,42 @@ func AddConfigNode (group string, node ConfigNode) {
 
 // 添加一台数据库服务器配置，通过解析规范的字符串配置实现
 // 配置格式：账号@地址:端口,密码,数据库名称,数据库类型[,集群角色(master|slave),字符编码,负载均衡优先级,自定义链接]
-func AddConfigNodeByString (group string, nodestr string) {
-    reg, _ := regexp.Compile(`(.+)@(.+):([^,]+),([^,]+),([^,]+),([^,]+)`)
-    match  := reg.FindStringSubmatch(nodestr)
-    if match != nil {
-        node := ConfigNode{
-            User : strings.TrimSpace(match[1]),
-            Host : strings.TrimSpace(match[2]),
-            Port : strings.TrimSpace(match[3]),
-            Pass : strings.TrimSpace(match[4]),
-            Name : strings.TrimSpace(match[5]),
-            Type : strings.TrimSpace(match[6]),
-        }
-        if len(match[0]) + 1 < len(nodestr) {
-            extra := strings.Split(nodestr[len(match[0]) + 1:], ",")
-            if len(extra) > 0 {
-                node.Role = strings.TrimSpace(extra[0])
-            }
-            if len(extra) > 1 {
-                node.Charset = strings.TrimSpace(extra[1])
-            }
-            if len(extra) > 2 {
-                node.Priority, _ = strconv.Atoi(strings.TrimSpace(extra[2]))
-            }
-            if len(extra) > 3 {
-                index        := len(extra[0]) + len(extra[1]) + len(extra[2]) + 3
-                node.Linkinfo = strings.TrimSpace(nodestr[len(match[0]) + 1 + index:])
-            }
-        }
-        AddConfigNode(group, node)
-    }
-}
+//func AddConfigNodeByString (group string, nodestr string) {
+//    reg, _ := regexp.Compile(`(.+)@(.+):([^,]+),([^,]+),([^,]+),([^,]+)`)
+//    match  := reg.FindStringSubmatch(nodestr)
+//    if match != nil {
+//        node := ConfigNode{
+//            User : strings.TrimSpace(match[1]),
+//            Host : strings.TrimSpace(match[2]),
+//            Port : strings.TrimSpace(match[3]),
+//            Pass : strings.TrimSpace(match[4]),
+//            Name : strings.TrimSpace(match[5]),
+//            Type : strings.TrimSpace(match[6]),
+//        }
+//        if len(match[0]) + 1 < len(nodestr) {
+//            extra := strings.Split(nodestr[len(match[0]) + 1:], ",")
+//            if len(extra) > 0 {
+//                node.Role = strings.TrimSpace(extra[0])
+//            }
+//            if len(extra) > 1 {
+//                node.Charset = strings.TrimSpace(extra[1])
+//            }
+//            if len(extra) > 2 {
+//                node.Priority, _ = strconv.Atoi(strings.TrimSpace(extra[2]))
+//            }
+//            if len(extra) > 3 {
+//                index        := len(extra[0]) + len(extra[1]) + len(extra[2]) + 3
+//                node.Linkinfo = strings.TrimSpace(nodestr[len(match[0]) + 1 + index:])
+//            }
+//        }
+//        AddConfigNode(group, node)
+//    }
+//}
 
 // 添加默认链接的一台数据库服务器配置,通过解析规范的字符串配置实现
-func AddDefaultConfigNodeByString (nodestr string) {
-    AddConfigNodeByString(gDEFAULT_CONFIG_GROUP_NAME, nodestr)
-}
+//func AddDefaultConfigNodeByString (nodestr string) {
+//    AddConfigNodeByString(gDEFAULT_CONFIG_GROUP_NAME, nodestr)
+//}
 
 // 添加默认链接的一台数据库服务器配置
 func AddDefaultConfigNode (node ConfigNode) {

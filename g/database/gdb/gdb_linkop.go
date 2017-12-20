@@ -19,7 +19,7 @@ type gLinkOp struct {
     start         int
     limit         int
     data          interface{}
-    dataList      *List
+    dataList      List
     batch         int
 }
 
@@ -88,7 +88,7 @@ func (op *gLinkOp) Data(data interface{}) (*gLinkOp) {
 }
 
 // 链式操作，操作数据记录项列表
-func (op *gLinkOp) List(list *List) (*gLinkOp) {
+func (op *gLinkOp) List(list List) (*gLinkOp) {
     op.dataList = list
     return op
 }
@@ -98,7 +98,7 @@ func (op *gLinkOp) Insert() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("inserting into table with empty data")
     }
-    if d, ok :=  op.data.(*Map); ok {
+    if d, ok :=  op.data.(Map); ok {
         return op.link.Insert(op.tables, d)
     }
     return nil, errors.New("inserting into table with invalid data type")
@@ -109,7 +109,7 @@ func (op *gLinkOp) Replace() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("replacing into table with empty data")
     }
-    if d, ok :=  op.data.(*Map); ok {
+    if d, ok :=  op.data.(Map); ok {
         return op.link.Insert(op.tables, d)
     }
     return nil, errors.New("replacing into table with invalid data type")
@@ -120,7 +120,7 @@ func (op *gLinkOp) Save() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("saving into table with empty data")
     }
-    if d, ok :=  op.data.(*Map); ok {
+    if d, ok :=  op.data.(Map); ok {
         return op.link.Insert(op.tables, d)
     }
     return nil, errors.New("saving into table with invalid data type")
@@ -134,7 +134,7 @@ func (op *gLinkOp) Batch(batch int) *gLinkOp {
 
 // 链式操作， CURD - BatchInsert
 func (op *gLinkOp) BatchInsert() error {
-    if op.dataList == nil || len(*op.dataList) < 1 {
+    if op.dataList == nil || len(op.dataList) < 1 {
         return errors.New("batch inserting into table with empty data list")
     }
     batch := 10
@@ -146,7 +146,7 @@ func (op *gLinkOp) BatchInsert() error {
 
 // 链式操作， CURD - BatchReplace
 func (op *gLinkOp) BatchReplace() error {
-    if op.dataList == nil || len(*op.dataList) < 1 {
+    if op.dataList == nil || len(op.dataList) < 1 {
         return errors.New("batch replacing into table with empty data list")
     }
     batch := 10
@@ -158,7 +158,7 @@ func (op *gLinkOp) BatchReplace() error {
 
 // 链式操作， CURD - BatchSave
 func (op *gLinkOp) BatchSave() error {
-    if op.dataList == nil || len(*op.dataList) < 1 {
+    if op.dataList == nil || len(op.dataList) < 1 {
         return errors.New("batch saving into table with empty data list")
     }
     batch := 10
@@ -185,7 +185,7 @@ func (op *gLinkOp) Delete() (sql.Result, error) {
 }
 
 // 链式操作，select
-func (op *gLinkOp) Select() (*List, error) {
+func (op *gLinkOp) Select() (List, error) {
     if op.fields == "" {
         op.fields = "*"
     }
@@ -206,17 +206,17 @@ func (op *gLinkOp) Select() (*List, error) {
 }
 
 // 链式操作，查询所有记录
-func (op *gLinkOp) All() (*List, error) {
+func (op *gLinkOp) All() (List, error) {
     return op.Select()
 }
 
 // 链式操作，查询单条记录
-func (op *gLinkOp) One() (*Map, error) {
+func (op *gLinkOp) One() (Map, error) {
     list, err := op.All()
     if err != nil {
         return nil, err
     }
-    return &(*list)[0], nil
+    return list[0], nil
 }
 
 // 链式操作，查询字段值
@@ -225,7 +225,7 @@ func (op *gLinkOp) Value() (interface{}, error) {
     if err != nil {
         return "", err
     }
-    for _, v := range *one {
+    for _, v := range one {
         return v, nil
     }
     return "", nil
