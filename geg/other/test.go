@@ -1,11 +1,11 @@
 package main
 import (
+    "sort"
     "fmt"
-    "gitee.com/johng/gf/g/frame/ginstance"
 )
 
 func main() {
-    db := ginstance.Database()
-    list, _ := db.Table("test").Select()
-    fmt.Println(list[0])
+    fnums := []uint64{0,12,2,4,5,5,2,uint64(10)}
+    sort.Slice(fnums, func(i, j int) bool { return fnums[i] < fnums[j] })
+    fmt.Println(fnums)
 }
