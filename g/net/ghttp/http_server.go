@@ -113,6 +113,15 @@ func (s *Server)SetConfig(c ServerConfig) error {
 }
 
 // 设置http server参数 - Addr
+func (s *Server)SetAddr(addr string) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
+    s.config.Addr = addr
+    return nil
+}
+
+// 设置http server参数 - Port
 func (s *Server)SetPort(port int) error {
     if s.status == 1 {
         return errors.New("server config cannot be changed while running")
