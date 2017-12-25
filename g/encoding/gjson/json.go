@@ -1,12 +1,11 @@
 package gjson
 
 import (
-    "encoding/json"
-    "errors"
+    "fmt"
     "strings"
     "strconv"
-    "fmt"
     "io/ioutil"
+    "encoding/json"
 )
 
 // json解析结果存放数组
@@ -19,20 +18,14 @@ type Json struct {
 type JsonVar interface{}
 
 // 编码go变量为json字符串，并返回json字符串指针
-func Encode (v interface{}) (string, error) {
-    s, err := json.Marshal(v)
-    if err != nil {
-        //glog.Error("json marshaling failed: " + err.Error())
-        return "", err
-    }
-    r := string(s)
-    return r, nil
+func Encode (v interface{}) ([]byte, error) {
+    return json.Marshal(v)
 }
 
 // 解码字符串为interface{}变量
-func Decode (s string) (interface{}, error) {
+func Decode (b []byte) (interface{}, error) {
     var v interface{}
-    if err := DecodeTo(s, &v); err == nil {
+    if err := DecodeTo(b, &v); err == nil {
         return nil, err
     } else {
         return v, nil
@@ -40,21 +33,17 @@ func Decode (s string) (interface{}, error) {
 }
 
 // 解析json字符串为go变量，注意第二个参数为指针
-func DecodeTo (s string, v interface{}) error {
-    if err := json.Unmarshal([]byte(s), v); err != nil {
-        return errors.New("json unmarshaling failed: " + err.Error())
-    }
-    return nil
+func DecodeTo (b []byte, v interface{}) error {
+    return json.Unmarshal(b, v)
 }
 
 // 解析json字符串为gjson.Json对象，并返回操作对象指针
-func DecodeToJson (s string) (*Json, error) {
-    var result interface{}
-    if err := json.Unmarshal([]byte(s), &result); err != nil {
-        //glog.Error("json unmarshaling failed: " + err.Error())
+func DecodeToJson (b []byte) (*Json, error) {
+    if v, err := Decode(b); err != nil {
+        return &Json{&v}, nil
+    } else {
         return nil, err
     }
-    return &Json{ &result }, nil
 }
 
 // 加载json文件内容，并转换为json对象
