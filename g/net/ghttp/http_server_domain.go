@@ -32,8 +32,8 @@ func (s *Server) Domain(domain string) *Domain {
 }
 
 // 绑定方法
-func (d *Domain) BindMethod(pattern string, c Controller, method string) error {
-    return d.s.BindMethod(pattern, c, method)
+func (d *Domain) BindControllerMethod(pattern string, c Controller, method string) error {
+    return d.s.BindControllerMethod(pattern, c, method)
 }
 
 // 绑定控制器
