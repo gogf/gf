@@ -52,6 +52,13 @@ func (r *ServerResponse) WriteHeaderEncoding(encoding string) {
     r.Header().Set("Content-Type", "text/plain; charset=" + encoding)
 }
 
+// 获取缓冲区数据
+func (r *ServerResponse) Buffer() []byte {
+    r.bufmu.RLock()
+    defer r.bufmu.RUnlock()
+    return r.buffer
+}
+
 // 输出缓冲区数据到客户端
 func (r *ServerResponse) Output() {
     r.bufmu.RLock()

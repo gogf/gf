@@ -28,10 +28,10 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request.Request         = *r
     response.ResponseWriter = w
     if h := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); h != nil {
-        s.initController(h, request, response)
+        s.callHandler(h, request, response)
     } else {
         if h := s.getHandler(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path); h != nil {
-            s.initController(h, request, response)
+            s.callHandler(h, request, response)
         } else {
             s.serveFile(w, r)
         }
@@ -39,11 +39,15 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // 初始化控制器
-func (s *Server)initController(h *HandlerFunc, r *ClientRequest, w *ServerResponse) {
-    c := reflect.New(h.ctype)
-    c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(s), reflect.ValueOf(r), reflect.ValueOf(w)})
-    c.MethodByName(h.fname).Call(nil)
-    c.MethodByName("Shut").Call(nil)
+func (s *Server)callHandler(h *HandlerItem, r *ClientRequest, w *ServerResponse) {
+    if h.faddr == nil {
+        c := reflect.New(h.ctype)
+        c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(s), reflect.ValueOf(r), reflect.ValueOf(w)})
+        c.MethodByName(h.fname).Call(nil)
+        c.MethodByName("Shut").Call(nil)
+    } else {
+        h.faddr(s, r, w)
+    }
 }
 
 // 处理静态文件请求
