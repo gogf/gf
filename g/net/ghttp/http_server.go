@@ -1,33 +1,35 @@
 package ghttp
 
 import (
-    "net/http"
     "strings"
-    "path/filepath"
-    "crypto/tls"
     "time"
     "log"
     "sync"
     "errors"
     "reflect"
+    "strconv"
+    "net/http"
+    "crypto/tls"
+    "path/filepath"
     "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/container/gmap"
-    "strconv"
 )
 
 const (
     gDEFAULT_DOMAIN = "default"
     gDEFAULT_METHOD = "all"
+    gHTTP_METHODS   = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
 )
 
 // http server结构体
 type Server struct {
-    hmu        sync.RWMutex // handlerMap互斥锁
-    name       string       // 服务名称，方便识别
-    server     http.Server  // 底层http server对象
-    config     ServerConfig // 配置对象
-    handlerMap HandlerMap   // 回调函数
-    status     int8         // 当前服务器状态(0：未启动，1：运行中)
+    hmu        sync.RWMutex    // handlerMap互斥锁
+    name       string          // 服务名称，方便识别
+    server     http.Server     // 底层http server对象
+    config     ServerConfig    // 配置对象
+    status     int8            // 当前服务器状态(0：未启动，1：运行中)
+    handlerMap HandlerMap      // 所有注册的回调函数
+    methodsMap map[string]bool // 所有支持的HTTP Method
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -55,6 +57,10 @@ func GetServer(name string) (*Server) {
     s           := &Server{}
     s.name       = name
     s.handlerMap = make(HandlerMap)
+    s.methodsMap = make(map[string]bool)
+    for _, v := range strings.Split(gHTTP_METHODS, ",") {
+        s.methodsMap[v] = true
+    }
     s.SetConfig(defaultServerConfig)
     serverMapping.Set(name, s)
     return s
@@ -234,15 +240,9 @@ func (s *Server) setHandler(domain, method, pattern string, hitem HandlerItem) {
     s.hmu.Lock()
     defer s.hmu.Unlock()
     if method == gDEFAULT_METHOD {
-        s.handlerMap[s.handlerKey(domain, "GET",     pattern)] = hitem
-        s.handlerMap[s.handlerKey(domain, "PUT",     pattern)] = hitem
-        s.handlerMap[s.handlerKey(domain, "POST",    pattern)] = hitem
-        s.handlerMap[s.handlerKey(domain, "DELETE",  pattern)] = hitem
-        s.handlerMap[s.handlerKey(domain, "PATCH",   pattern)] = hitem
-        s.handlerMap[s.handlerKey(domain, "HEAD",    pattern)] = hitem
-        s.handlerMap[s.handlerKey(domain, "CONNECT", pattern)] = hitem
-        s.handlerMap[s.handlerKey(domain, "OPTIONS", pattern)] = hitem
-        s.handlerMap[s.handlerKey(domain, "TRACE",   pattern)] = hitem
+        for v, _ := range s.methodsMap {
+            s.handlerMap[s.handlerKey(domain, v, pattern)] = hitem
+        }
     } else {
         s.handlerMap[s.handlerKey(domain, method, pattern)] = hitem
     }
@@ -276,7 +276,7 @@ func (s *Server)bindHandlerItem(pattern string, hitem HandlerItem) error {
     result  = strings.Split(result[0], ":")
     if len(result) > 1 {
         method = result[0]
-        uri    = result[0]
+        uri    = result[1]
     } else {
         uri    = result[0]
     }
@@ -297,9 +297,53 @@ func (s *Server)bindHandlerByMap(m HandlerMap) error {
     return nil
 }
 
+// 将方法名称按照设定的规则转换为URI并附加到指定的URI后面
+func (s *Server)appendMethodNameToUri(uri string, name string) string {
+    uri = strings.TrimRight(uri, "/") + "/"
+    // 方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词
+    for i := 0; i < len(name); i++ {
+        if i > 0 && gutil.IsLetterUpper(name[i]) {
+            uri += "-"
+        }
+        uri += strings.ToLower(string(name[i]))
+    }
+    return uri
+}
+
 // 注意该方法是直接绑定方法的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
     return s.bindHandlerItem(pattern, HandlerItem{nil, "", handler})
+}
+
+// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
+// 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
+func (s *Server)BindObject(uri string, obj interface{}) error {
+    m := make(HandlerMap)
+    v := reflect.ValueOf(obj)
+    t := v.Type()
+    for i := 0; i < v.NumMethod(); i++ {
+        name  := t.Method(i).Name
+        key   := s.appendMethodNameToUri(uri, name)
+        m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Server, *ClientRequest, *ServerResponse))}
+    }
+    return s.bindHandlerByMap(m)
+}
+
+// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
+// 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
+func (s *Server)BindObjectRest(uri string, obj interface{}) error {
+    m := make(HandlerMap)
+    v := reflect.ValueOf(obj)
+    t := v.Type()
+    for i := 0; i < v.NumMethod(); i++ {
+        name := t.Method(i).Name
+        if _, ok := s.methodsMap[strings.ToUpper(name)]; !ok {
+            continue
+        }
+        key   := name + ":" + uri
+        m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Server, *ClientRequest, *ServerResponse))}
+    }
+    return s.bindHandlerByMap(m)
 }
 
 // 绑定控制器，控制器需要实现gmvc.Controller接口
@@ -310,17 +354,38 @@ func (s *Server)BindController(uri string, c Controller) error {
     v := reflect.ValueOf(c)
     t := v.Type()
     for i := 0; i < v.NumMethod(); i++ {
-        key  := strings.TrimRight(uri, "/") + "/"
         name := t.Method(i).Name
         if name == "Init" || name == "Shut" {
             continue
         }
-        for i := 0; i < len(name); i++ {
-            if i > 0 && gutil.IsLetterUpper(name[i]) {
-                key += "-"
-            }
-            key += strings.ToLower(string(name[i]))
+        key   := s.appendMethodNameToUri(uri, name)
+        m[key] = HandlerItem{v.Elem().Type(), name, nil}
+    }
+    return s.bindHandlerByMap(m)
+}
+
+// 绑定控制器，控制器需要实现gmvc.Controller接口
+// 方法会识别HTTP方法，并做REST绑定处理，例如：Post方法会绑定到HTTP POST的方法请求处理，Delete方法会绑定到HTTP DELETE的方法请求处理
+// 因此只会绑定HTTP Method对应的方法，其他方法不会自动注册绑定
+// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
+func (s *Server)BindControllerRest(uri string, c Controller) error {
+    // 遍历控制器，获取方法列表，并构造成uri
+    m := make(HandlerMap)
+    v := reflect.ValueOf(c)
+    t := v.Type()
+    methods := make(map[string]bool)
+    for _, v := range strings.Split(gHTTP_METHODS, ",") {
+        methods[v] = true
+    }
+    for i := 0; i < v.NumMethod(); i++ {
+        name := t.Method(i).Name
+        if name == "Init" || name == "Shut" {
+            continue
         }
+        if _, ok := s.methodsMap[strings.ToUpper(name)]; !ok {
+            continue
+        }
+        key   := name + ":" + uri
         m[key] = HandlerItem{v.Elem().Type(), name, nil}
     }
     return s.bindHandlerByMap(m)
