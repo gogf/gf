@@ -47,6 +47,7 @@ func (s *Server)callHandler(h *HandlerItem, r *ClientRequest, w *ServerResponse)
         c.MethodByName("Shut").Call(nil)
     } else {
         h.faddr(s, r, w)
+        w.Output()
     }
 }
 
