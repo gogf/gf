@@ -5,7 +5,6 @@ import (
     "crypto/tls"
     "time"
     "log"
-    "gitee.com/johng/gf/g/os/gfile"
 )
 
 // HTTP Server 设置结构体
@@ -37,7 +36,7 @@ var defaultServerConfig = ServerConfig {
     IndexFiles     : []string{"index.html", "index.htm"},
     IndexFolder    : false,
     ServerAgent    : "gf",
-    ServerRoot     : gfile.SelfDir(),
+    ServerRoot     : "",
 }
 
 // 获取默认的http server设置

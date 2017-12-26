@@ -31,13 +31,17 @@ type Server struct {
 }
 
 // 域名、URI与回调函数的绑定记录表
-type HandlerMap  map[string]HandlerFunc
+type HandlerMap  map[string]HandlerItem
 
 // http回调函数注册信息
-type HandlerFunc struct {
+type HandlerItem struct {
     ctype reflect.Type // 控制器类型
     fname string       // 回调方法名称
+    faddr HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
 }
+
+// http注册函数
+type HandlerFunc func(*Server, *ClientRequest, *ServerResponse)
 
 // Server表，用以存储和检索名称与Server对象之间的关联关系
 var serverMapping = gmap.NewStringInterfaceMap()
@@ -226,26 +230,26 @@ func (s *Server) handlerKey(domain, method, pattern string) string {
 }
 
 // 设置请求处理方法
-func (s *Server) setHandler(domain, method, pattern string, handler HandlerFunc) {
+func (s *Server) setHandler(domain, method, pattern string, hitem HandlerItem) {
     s.hmu.Lock()
     defer s.hmu.Unlock()
     if method == gDEFAULT_METHOD {
-        s.handlerMap[s.handlerKey(domain, "GET",     pattern)] = handler
-        s.handlerMap[s.handlerKey(domain, "PUT",     pattern)] = handler
-        s.handlerMap[s.handlerKey(domain, "POST",    pattern)] = handler
-        s.handlerMap[s.handlerKey(domain, "DELETE",  pattern)] = handler
-        s.handlerMap[s.handlerKey(domain, "PATCH",   pattern)] = handler
-        s.handlerMap[s.handlerKey(domain, "HEAD",    pattern)] = handler
-        s.handlerMap[s.handlerKey(domain, "CONNECT", pattern)] = handler
-        s.handlerMap[s.handlerKey(domain, "OPTIONS", pattern)] = handler
-        s.handlerMap[s.handlerKey(domain, "TRACE",   pattern)] = handler
+        s.handlerMap[s.handlerKey(domain, "GET",     pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, "PUT",     pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, "POST",    pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, "DELETE",  pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, "PATCH",   pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, "HEAD",    pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, "CONNECT", pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, "OPTIONS", pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, "TRACE",   pattern)] = hitem
     } else {
-        s.handlerMap[s.handlerKey(domain, method, pattern)] = handler
+        s.handlerMap[s.handlerKey(domain, method, pattern)] = hitem
     }
 }
 
 // 查询请求处理方法
-func (s *Server) getHandler(domain, method, pattern string) *HandlerFunc {
+func (s *Server) getHandler(domain, method, pattern string) *HandlerItem {
     s.hmu.RLock()
     defer s.hmu.RUnlock()
     key := s.handlerKey(domain, method, pattern)
@@ -258,7 +262,7 @@ func (s *Server) getHandler(domain, method, pattern string) *HandlerFunc {
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user, post:/user@johng.cn
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server)bindHandler(pattern string, handler HandlerFunc) error {
+func (s *Server)bindHandlerItem(pattern string, hitem HandlerItem) error {
     if s.status == 1 {
         return errors.New("server handlers cannot be changed while running")
     }
@@ -279,27 +283,27 @@ func (s *Server)bindHandler(pattern string, handler HandlerFunc) error {
     if uri == "" {
         return errors.New("invalid pattern")
     }
-    s.setHandler(domain, method, uri, handler)
+    s.setHandler(domain, method, uri, hitem)
     return nil
 }
 
 // 通过映射数组绑定URI到操作函数/方法
 func (s *Server)bindHandlerByMap(m HandlerMap) error {
     for p, h := range m {
-        if err := s.bindHandler(p, h); err != nil {
+        if err := s.bindHandlerItem(p, h); err != nil {
             return err
         }
     }
     return nil
 }
 
-// 绑定方法，pattern支持http method
-// pattern的格式形如：/user/list, put:/user, delete:/user
-func (s *Server)BindMethod(pattern string, c Controller, method string) error {
-    return s.bindHandler(pattern, HandlerFunc{reflect.ValueOf(c).Elem().Type(), method})
+// 注意该方法是直接绑定方法的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
+func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
+    return s.bindHandlerItem(pattern, HandlerItem{nil, "", handler})
 }
 
 // 绑定控制器，控制器需要实现gmvc.Controller接口
+// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
 func (s *Server)BindController(uri string, c Controller) error {
     // 遍历控制器，获取方法列表，并构造成uri
     m := make(HandlerMap)
@@ -317,7 +321,14 @@ func (s *Server)BindController(uri string, c Controller) error {
             }
             key += strings.ToLower(string(name[i]))
         }
-        m[key] = HandlerFunc{v.Elem().Type(), name}
+        m[key] = HandlerItem{v.Elem().Type(), name, nil}
     }
     return s.bindHandlerByMap(m)
+}
+
+// 绑定方法，pattern支持http method
+// pattern的格式形如：/user/list, put:/user, delete:/user
+// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
+func (s *Server)BindControllerMethod(pattern string, c Controller, method string) error {
+    return s.bindHandlerItem(pattern, HandlerItem{reflect.ValueOf(c).Elem().Type(), method, nil})
 }
