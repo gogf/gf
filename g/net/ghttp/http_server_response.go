@@ -52,7 +52,7 @@ func (r *ServerResponse) WriteHeaderEncoding(encoding string) {
     r.Header().Set("Content-Type", "text/plain; charset=" + encoding)
 }
 
-// 获取缓冲区数据
+// 获取当前缓冲区中的数据
 func (r *ServerResponse) Buffer() []byte {
     r.bufmu.RLock()
     defer r.bufmu.RUnlock()
@@ -61,7 +61,10 @@ func (r *ServerResponse) Buffer() []byte {
 
 // 输出缓冲区数据到客户端
 func (r *ServerResponse) Output() {
-    r.bufmu.RLock()
-    defer r.bufmu.RUnlock()
-    r.ResponseWriter.Write(r.buffer)
+    r.bufmu.Lock()
+    defer r.bufmu.Unlock()
+    if len(r.buffer) > 0 {
+        r.ResponseWriter.Write(r.buffer)
+        r.buffer = make([]byte, 0)
+    }
 }
