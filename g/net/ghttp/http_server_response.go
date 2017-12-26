@@ -15,9 +15,9 @@ type ServerResponse struct {
 
 // 返回的固定JSON数据结构
 type ResponseJson struct {
-    Result  int         `json:"result"`
-    Message string      `json:"message"`
-    Data    interface{} `json:"data"`
+    Result  int    `json:"result"`  // 标识消息状态
+    Message string `json:"message"` // 消息使用string存储
+    Data    []byte `json:"data"`    // 二进制数据(不管什么数据结构)
 }
 
 // 返回信息(byte)
@@ -35,7 +35,7 @@ func (r *ServerResponse) WriteString(content string) {
 }
 
 // 返回固定格式的json
-func (r *ServerResponse) WriteJson(result int, message string, data interface{}) error {
+func (r *ServerResponse) WriteJson(result int, message string, data []byte) error {
     r.Header().Set("Content-Type", "application/json")
     r.bufmu.Lock()
     defer r.bufmu.Unlock()

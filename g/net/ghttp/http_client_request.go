@@ -161,20 +161,16 @@ func (r *ClientRequest) GetRequestMap(defaultMap map[string][]string) map[string
 
 
 // 获取原始请求输入字符串
-func (r *ClientRequest) GetRaw() string {
-    result, err := ioutil.ReadAll(r.Body)
-    if err != nil {
-        return ""
-    } else {
-        return string(result)
-    }
+func (r *ClientRequest) GetRaw() []byte {
+    result, _ := ioutil.ReadAll(r.Body)
+    return result
 }
 
 // 获取原始请求输入字符串
 func (r *ClientRequest) GetJson() *gjson.Json {
     data := r.GetRaw()
-    if data != "" {
-        if j, err := gjson.DecodeToJson([]byte(data)); err == nil {
+    if data != nil {
+        if j, err := gjson.DecodeToJson(data); err == nil {
             return j
         }
     }
