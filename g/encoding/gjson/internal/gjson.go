@@ -7,7 +7,7 @@ import (
     "strconv"
 )
 
-// 这是一个使用go进行json语法解析的解析器，效率没有官方的json解析高，仅作学习参考
+// 这是一个自己开发的，使用go进行json语法解析的解析器，效率没有官方的json解析高，仅作学习参考
 
 const (
     gJSON_CHAR_BRACE_LEFT         = rune('{')
