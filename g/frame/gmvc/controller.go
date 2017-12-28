@@ -40,7 +40,6 @@ func (c *Controller) Shut() {
         c.Cookie.Set(gDEFAULT_SESSION_ID_NAME, c.Session.Id())
     }
     c.Cookie.Output()
-    c.Response.Output()
 }
 
 

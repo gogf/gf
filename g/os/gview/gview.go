@@ -110,21 +110,21 @@ func (t *Template) Assign(k string, v interface{}) {
 
 // 返回解析后的模板内容，可以额外指定模板变量，如果没有可以传入nil
 // 函数内部的底层template必须每次调用都新生成一个，防止错误：html/template: cannot Parse after Execute
-func (t *Template) Parse(data map[string]interface{}) (string, error) {
+func (t *Template) Parse(data map[string]interface{}) ([]byte, error) {
     t.mu.RLock()
     defer t.mu.RUnlock()
     buffer := bytes.NewBuffer(nil)
     if tpl, err := template.New(t.path).Funcs(t.funcmap).Parse(t.content); err != nil {
-        return "", err
+        return nil, err
     } else {
         m := t.data
         for k, v := range data {
             m[k] = v
         }
         if err := tpl.Execute(buffer, m); err != nil {
-            return "", err
+            return nil, err
         }
     }
-    return buffer.String(), nil
+    return buffer.Bytes(), nil
 }
 

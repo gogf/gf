@@ -59,8 +59,15 @@ func (r *ServerResponse) Buffer() []byte {
     return r.buffer
 }
 
+// 清空缓冲区内容
+func (r *ServerResponse) ClearBuffer() {
+    r.bufmu.Lock()
+    defer r.bufmu.Unlock()
+    r.buffer = make([]byte, 0)
+}
+
 // 输出缓冲区数据到客户端
-func (r *ServerResponse) Output() {
+func (r *ServerResponse) OutputBuffer() {
     r.bufmu.Lock()
     defer r.bufmu.Unlock()
     if len(r.buffer) > 0 {
