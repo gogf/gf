@@ -13,7 +13,7 @@ import "gitee.com/johng/gf/g/xxx/xxx"
 ## 说明
     .
     ├── g                【框架目录】
-    │   ├── container        【常用数据结构容器】
+    │   ├── container        【常用数据结构】
     │   │   ├── gbtree           B+树
     │   │   ├── glist            并发安全的双向链表
     │   │   ├── gmap             并发安全的哈希表
@@ -42,6 +42,7 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     │   ├── net              【网络通信】
     │   │   ├── ghttp            HTTP客户端及服务端
     │   │   ├── gipv4            IP操作
+    │   │   ├── grouter          路由管理器
     │   │   ├── gscanner         端口扫描
     │   │   ├── gsession         SESSION会话管理
     │   │   ├── gsmtp            SMTP邮件管理

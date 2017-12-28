@@ -4,8 +4,6 @@ import (
     "sync"
     "html/template"
     "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/gconsole"
     "gitee.com/johng/gf/g/frame/ginstance"
 )
 
@@ -19,19 +17,9 @@ type View struct {
 
 // 创建一个MVC请求中使用的视图对象
 func NewView(c *Controller) *View {
-    // 视图目录路径查找优先级：配置文件参数viewpath、启动参数viewpath、当前程序运行目录
-    path := gconsole.Option.Get("viewpath")
-    if path == "" {
-        path = gfile.SelfDir()
-    }
-    if config := ginstance.Config(); config != nil {
-        if r := config.Get("viewpath"); r != nil {
-            path = r.(string)
-        }
-    }
     return &View{
         ctl  : c,
-        view : gview.GetView(path),
+        view : ginstance.View(),
         data : make(map[string]interface{}),
     }
 }
@@ -52,29 +40,33 @@ func (view *View) Assign(key string, value interface{}) {
     view.data[key] = value
 }
 
+// 解析模板，并返回解析后的内容
+func (view *View) Parse(file string) ([]byte, error) {
+    // 查询模板
+    tpl, err := view.view.Template(file)
+    if err != nil {
+        return nil, err
+    }
+    // 绑定函数
+    tpl.BindFunc("include", view.funcInclude)
+    // 执行解析
+    view.mu.RLock()
+    content, err := tpl.Parse(view.data)
+    view.mu.RUnlock()
+    return content, err
+}
+
 // 解析指定模板
 func (view *View) Display(files...string) error {
     file := "default"
     if len(files) > 0 {
         file = files[0]
     }
-    // 查询模板
-    tpl, err := view.view.Template(file)
-    if err != nil {
-        view.ctl.Response.WriteString("Tpl Parsing Error: " + err.Error())
-        return err
-    }
-    // 绑定函数
-    tpl.BindFunc("include", view.funcInclude)
-    // 执行解析
-    view.mu.RLock()
-    defer view.mu.RUnlock()
-    content, err := tpl.Parse(view.data)
-    if err != nil {
+    if content, err := view.Parse(file); err != nil {
         view.ctl.Response.WriteString("Tpl Parsing Error: " + err.Error())
         return err
     } else {
-        view.ctl.Response.WriteString(content)
+        view.ctl.Response.Write(content)
     }
     return nil
 }
