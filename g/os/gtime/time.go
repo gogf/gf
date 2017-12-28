@@ -2,6 +2,7 @@ package gtime
 
 import (
     "time"
+    "fmt"
 )
 
 // 类似与js中的SetTimeout，一段时间后执行回调函数
@@ -54,4 +55,18 @@ func Date() string {
 // 获得当前的时间(例如：2006-01-02 15:04:05)
 func Datetime() string {
     return time.Now().Format("2006-01-02 15:04:05")
+}
+
+// 时间戳转换为指定格式的字符串，format格式形如：2006-01-02 03:04:05 PM
+func Format(timestamp int64, format string) string {
+    return time.Unix(timestamp, 0).Format(format)
+}
+
+// 字符串转换为时间戳，需要给定字符串时间格式，format格式形如：2006-01-02 03:04:05 PM
+func StrToTime(timestr string, format string) (int64, error) {
+    t, err := time.Parse(format, timestr)
+    if err != nil {
+        return 0, err
+    }
+    return t.Unix(), nil
 }

@@ -1,12 +1,11 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gregx"
     "fmt"
+    "gitee.com/johng/gf/g/util/gregx"
 )
 
 
 func main() {
-    s, _ := gregx.Replace(`\w`, []byte("/user/list/page/2"), []byte("-"))
-    fmt.Println(string(s))
+    fmt.Println(gregx.IsMatchString(`^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`, "joh-n_cn@johng.cn"))
 }

@@ -51,14 +51,14 @@ func (r *ClientRequest) GetQueryArray(k string) []string {
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-func (r *ClientRequest) GetQueryMap(defaultMap map[string][]string) map[string][]string {
-    m := make(map[string][]string)
+func (r *ClientRequest) GetQueryMap(defaultMap map[string]string) map[string]string {
+    m := make(map[string]string)
     for k, v := range defaultMap {
         v2 := r.GetQueryArray(k)
         if v2 == nil {
             m[k] = v
         } else {
-            m[k] = v2
+            m[k] = v2[0]
         }
     }
     return m
@@ -105,11 +105,12 @@ func (r *ClientRequest) GetPostArray(k string) []string {
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-func (r *ClientRequest) GetPostMap(defaultMap map[string][]string) map[string][]string {
-    m := make(map[string][]string)
+// 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetPostArray获取特定字段内容
+func (r *ClientRequest) GetPostMap(defaultMap map[string]string) map[string]string {
+    m := make(map[string]string)
     for k, v := range defaultMap {
         if v2, ok := r.PostForm[k]; ok {
-            m[k] = v2
+            m[k] = v2[0]
         } else {
             m[k] = v
         }
@@ -146,12 +147,13 @@ func (r *ClientRequest) GetRequestArray(k string) []string {
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-func (r *ClientRequest) GetRequestMap(defaultMap map[string][]string) map[string][]string {
-    m := make(map[string][]string)
+// 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetRequestArray获取特定字段内容
+func (r *ClientRequest) GetRequestMap(defaultMap map[string]string) map[string]string {
+    m := make(map[string]string)
     for k, v := range defaultMap {
         v2 := r.GetRequest(k)
         if v2 != nil {
-            m[k] = v2
+            m[k] = v2[0]
         } else {
             m[k] = v
         }
