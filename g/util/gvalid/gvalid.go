@@ -1,5 +1,44 @@
 // 通用数据验证工具
 // 本来打算取名gvalidator的，名字太长了，缩写一下
+/*
+参考：https://laravel.com/docs/5.5/validation#available-validation-rules
+规则如下：
+required           格式：required                      说明：必需参数
+required_if        格式：required_if:field,value,...   说明：必需参数(当给定字段值与所给任意值相等时)
+required_with      格式：required_with:foo,bar,...     说明：必需参数(当所给定任意字段值不为空时)
+required_with_all  格式：required_with_all:foo,bar,... 说明：必须参数(当所给定所有字段值都不为空时)
+date               格式：date                          说明：参数为常用日期类型，格式：2006-01-02, 20060102, 2006.01.02
+date_format        格式：date_format:format            说明：判断日期是否为指定的日期格式，format为Go日期格式(可以包含时间)
+email              格式：email                         说明：EMAIL邮箱地址
+phone              格式：phone                         说明：手机号
+telephone          格式：telephone                     说明：国内座机电话号码，"XXXX-XXXXXXX"、"XXXX-XXXXXXXX"、"XXX-XXXXXXX"、"XXX-XXXXXXXX"、"XXXXXXX"、"XXXXXXXX"
+passport           格式：passport                      说明：通用帐号规则(字母开头，只能包含字母、数字和下划线，长度在6~18之间)
+password           格式：password                      说明：通用密码(任意可见字符，长度在6~18之间)
+password2          格式：password2                     说明：中等强度密码(在弱密码的基础上，必须包含大小写字母和数字)
+password3          格式：password3                     说明：强等强度密码(在弱密码的基础上，必须包含大小写字母、数字和特殊字符)
+postcode           格式：id_number                     说明：中国邮政编码
+id_number          格式：id_number                     说明：公民身份证号码
+qq                 格式：qq                            说明：腾讯QQ号码
+ip                 格式：ip                            说明：IP地址(IPv4)
+mac                格式：mac                           说明：MAC地址
+url                格式：url                           说明：URL
+length             格式：length:min,max                说明：参数长度为min到max
+min_length         格式：min_length:min                说明：参数长度最小为min
+max_length         格式：max_length:max                说明：参数长度最大为max
+between            格式：between:min,max               说明：参数大小为min到max
+min                格式：min:min                       说明：参数最小为min
+max                格式：max:max                       说明：参数最大为max
+json               格式：json                          说明：判断数据格式为JSON
+xml                格式：xml                           说明：判断数据格式为XML
+integer            格式：integer                       说明：整数
+float              格式：float                         说明：浮点数
+boolean            格式：boolean                       说明：布尔值(1,true,on,yes:true | 0,false,off,no,"":false)
+same               格式：same:field                    说明：参数值必需与field参数的值相同
+different          格式：different:field               说明：参数值不能与field参数的值相同
+in                 格式：in:foo,bar,...                说明：参数值应该在foo,bar,...中
+not_in             格式：not_in:foo,bar,...            说明：参数值不应该在foo,bar,...中
+regex              格式：regex:pattern                 说明：参数值应当满足正则匹配规则pattern(使用preg_match判断)
+*/
 package gvalid
 
 import (
@@ -70,56 +109,104 @@ func CheckRule(value, rule string, values...map[string]string) map[string]string
                 match = !(value == "")
                 break
 
-            //// 必须字段(当给定字段值与所给任意值相等时)
-            //case "required_if":
-            //    array := strings.Split(strings.TrimSpace(ruleval), ",")
-            //    for _, v := range array {
-            //        if strings.Compare(value, strings.TrimSpace(v)) == 0 {
-            //            match = true
-            //            break
-            //        }
-            //    }
-            //    break
-            //
-            //// 必须字段(当所给定任意字段值不为空时)
-            //case "required_with":
-            //    $ruleMatch = false;
-            //    $tmpArray  = explode(',', $ruleAttr);
-            //    foreach ($tmpArray as $v) {
-            //if (!empty(self::$_currentData[$v])) {
-            //$ruleMatch = true;
-            //break
-            //}
-            //}
-            //    break
-            //
-            //    // 必须字段(当所给定所有字段值都不为空时)
-            //case "required_with_all":
-            //    $tmpArray  = explode(',', $ruleAttr);
-            //    foreach ($tmpArray as $v) {
-            //if (empty(self::$_currentData[$v])) {
-            //$ruleMatch = false;
-            //break
-            //}
-            //}
-            //    break
+            // 必须字段(当给定字段值与所给任意值相等时)
+            case "required_if":
+                required := false
+                array    := strings.Split(strings.TrimSpace(ruleval), ",")
+                // 必须为偶数，才能是键值对匹配
+                if len(array)%2 == 0 {
+                    for i := 0; i < len(array); {
+                        tk := array[i]
+                        tv := array[i + 1]
+                        if v, ok := params[tk]; ok {
+                            if strings.Compare(tv, v) == 0 {
+                                required = true
+                                break
+                            }
+                        }
+                        i += 2
+                    }
+                }
+                if required {
+                    match = !(value == "")
+                } else {
+                    match = true
+                }
+                break
+
+            // 必须字段(当所给定任意字段值不为空时)
+            case "required_with":
+                required := false
+                array    := strings.Split(strings.TrimSpace(ruleval), ",")
+                for i := 0; i < len(array); i++ {
+                    if v, ok := params[array[i]]; ok {
+                        if v != "" {
+                            required = true
+                            break
+                        }
+                    }
+                }
+                if required {
+                    match = !(value == "")
+                } else {
+                    match = true
+                }
+                break
+
+            // 必须字段(当所给定所有字段值都不为空时)
+            case "required_with_all":
+                required := true
+                array    := strings.Split(strings.TrimSpace(ruleval), ",")
+                for i := 0; i < len(array); i++ {
+                    if v, ok := params[array[i]]; ok {
+                        if v == "" {
+                            required = false
+                            break
+                        }
+                    }
+                }
+                if required {
+                    match = !(value == "")
+                } else {
+                    match = true
+                }
+                break
+
+            // 日期格式，
+            case "date":
+                for _, v := range []string{"2006-01-02", "20060102", "2006.01.02"} {
+                    if _, err := gtime.StrToTime(value, v); err == nil {
+                        match = true
+                        break
+                    }
+                }
+                break
 
             // 日期格式，需要给定日期格式
-            case "date":
+            case "date_format":
                 if _, err := gtime.StrToTime(value, ruleval); err == nil {
                     match = true
                 }
                 break
 
-            //    // 两字段值应相同(非敏感字符判断，非类型判断)
-            //case "same":
-            //    $ruleMatch = (isset(self::$_currentData[$ruleAttr]) && $value == self::$_currentData[$ruleAttr]);
-            //    break
-            //
-            //    // 两字段值不应相同(非敏感字符判断，非类型判断)
-            //case "different":
-            //    $ruleMatch = (!isset(self::$_currentData[$ruleAttr]) || $value != self::$_currentData[$ruleAttr]);
-            //    break
+            // 两字段值应相同(非敏感字符判断，非类型判断)
+            case "same":
+                if v, ok := params[ruleval]; ok {
+                    if strings.Compare(value, v) == 0 {
+                        match = true
+                    }
+                }
+                break
+
+            // 两字段值不应相同(非敏感字符判断，非类型判断)
+            case "different":
+                match = true
+                if v, ok := params[ruleval]; ok {
+                    if strings.Compare(value, v) == 0 {
+                        match = false
+                    }
+                }
+                break
 
             // 字段值应当在指定范围中
             case "in":
@@ -161,9 +248,7 @@ func CheckRule(value, rule string, values...map[string]string) map[string]string
                 match = gregx.IsMatchString(`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^17[0,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$`, value)
                 break
 
-            /*
-             * 国内座机电话号码："XXXX-XXXXXXX"、"XXXX-XXXXXXXX"、"XXX-XXXXXXX"、"XXX-XXXXXXXX"、"XXXXXXX"、"XXXXXXXX"
-             */
+            // 国内座机电话号码："XXXX-XXXXXXX"、"XXXX-XXXXXXXX"、"XXX-XXXXXXX"、"XXX-XXXXXXXX"、"XXXXXXX"、"XXXXXXXX"
             case "telephone":
                 match = gregx.IsMatchString(`^((\d{3,4})|\d{3,4}-)?\d{7,8}$`, value)
                 break
