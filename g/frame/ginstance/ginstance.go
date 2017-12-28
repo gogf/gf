@@ -8,17 +8,17 @@ import (
     "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/os/gconsole"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/frame/gconfig"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 const (
-    FRAME_CORE_COMPONENT_NAME_VIEW     = "gf.component.view"
-    FRAME_CORE_COMPONENT_NAME_CONFIG   = "gf.component.config"
-    FRAME_CORE_COMPONENT_NAME_DATABASE = "gf.component.database"
+    FRAME_CORE_COMPONENT_NAME_VIEW     = "gf.core.component.view"
+    FRAME_CORE_COMPONENT_NAME_CONFIG   = "gf.core.component.config"
+    FRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
 )
 
 // 单例对象存储器
