@@ -4,15 +4,19 @@ package ginstance
 
 import (
     "strconv"
+    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/genv"
+    "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gconsole"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/frame/gconfig"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 const (
+    FRAME_CORE_COMPONENT_NAME_VIEW     = "gf.component.view"
     FRAME_CORE_COMPONENT_NAME_CONFIG   = "gf.component.config"
     FRAME_CORE_COMPONENT_NAME_DATABASE = "gf.component.database"
 )
@@ -30,6 +34,36 @@ func Set(k string, v interface{}) {
     instances.Set(k, v)
 }
 
+// 核心对象：Server
+// 框架支持多服务器对象，通过传入不同的name进行区分
+func Server(names...string) *ghttp.Server {
+    name := "default"
+    if len(names) > 0 {
+        name = names[0]
+    }
+    return ghttp.GetServer(name)
+}
+
+// 核心对象：View
+func View() *gview.View {
+    result := Get(FRAME_CORE_COMPONENT_NAME_VIEW)
+    if result != nil {
+        return result.(*gview.View)
+    } else {
+        path := gconsole.Option.Get("viewpath")
+        if path == "" {
+            path = genv.Get("viewpath")
+            if path == "" {
+                path = gfile.SelfDir()
+            }
+        }
+        view := gview.GetView(path)
+        Set(FRAME_CORE_COMPONENT_NAME_VIEW, view)
+        return view
+    }
+    return nil
+}
+
 // 核心对象：Config
 // 配置文件目录查找依次为：启动参数cfgpath、当前程序运行目录
 func Config() *gconfig.Config {
@@ -39,7 +73,10 @@ func Config() *gconfig.Config {
     } else {
         path := gconsole.Option.Get("cfgpath")
         if path == "" {
-            path = gfile.SelfDir()
+            path = genv.Get("cfgpath")
+            if path == "" {
+                path = gfile.SelfDir()
+            }
         }
         config := gconfig.New(path)
         Set(FRAME_CORE_COMPONENT_NAME_CONFIG, config)
@@ -58,7 +95,6 @@ func Database(names...string) gdb.Link {
         if config == nil {
             return nil
         }
-
         if m := config.GetMap("database"); m != nil {
             for group, v := range m {
                 if list, ok := v.([]interface{}); ok {

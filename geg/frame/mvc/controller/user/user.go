@@ -3,6 +3,7 @@ package user
 import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/frame/gmvc"
+    "gitee.com/johng/gf/g/frame/ginstance"
 )
 
 // 定义业务相关的控制器对象
@@ -10,6 +11,7 @@ type ControllerUser struct {
     gmvc.Controller
 }
 
+// 测试绑定对象
 type T struct {
 
 }
@@ -28,8 +30,8 @@ func (t *T) Get(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse
 func init() {
     //ghttp.GetServer("johng").Domain("localhost").BindHandler("/user", u.Info)
     //ghttp.GetServer("johng").BindHandler("/test", Test)
-    ghttp.GetServer("johng").BindObjectRest("/test", &T{})
-    ghttp.GetServer("johng").BindController("/user", &ControllerUser{})
+    ginstance.Server().BindObjectRest("/test", &T{})
+    ginstance.Server().BindController("/user", &ControllerUser{})
 }
 
 // 定义操作逻辑
