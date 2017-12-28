@@ -23,6 +23,13 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
+    // 路由解析
+    uri         := r.URL.String()
+    result, err := s.Router.Dispatch(uri)
+    if err == nil && strings.Compare(uri, result) != 0 {
+        r.URL, _ = r.URL.Parse(result)
+    }
+    // 构造请求/返回参数对象
     request  := &ClientRequest{}
     response := &ServerResponse{}
     request.Request         = *r
@@ -47,8 +54,14 @@ func (s *Server)callHandler(h *HandlerItem, r *ClientRequest, w *ServerResponse)
         c.MethodByName("Shut").Call(nil)
     } else {
         h.faddr(s, r, w)
-        w.Output()
     }
+    // 路由规则打包
+    if buffer, err := s.Router.Patch(w.Buffer()); err == nil {
+        w.ClearBuffer()
+        w.Write(buffer)
+    }
+    // 输出缓冲区
+    w.OutputBuffer()
 }
 
 // 处理静态文件请求
@@ -59,7 +72,7 @@ func (s *Server)serveFile(w http.ResponseWriter, r *http.Request) {
         path := strings.TrimRight(s.config.ServerRoot, string(filepath.Separator))
         path  = path + uri
         path  = gfile.RealPath(path)
-        if (path != "") {
+        if path != "" {
             s.doServeFile(w, r, path)
         } else {
             s.NotFound(w, r)

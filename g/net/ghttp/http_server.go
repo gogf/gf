@@ -13,6 +13,7 @@ import (
     "path/filepath"
     "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/net/grouter"
 )
 
 const (
@@ -30,6 +31,7 @@ type Server struct {
     status     int8            // 当前服务器状态(0：未启动，1：运行中)
     handlerMap HandlerMap      // 所有注册的回调函数
     methodsMap map[string]bool // 所有支持的HTTP Method
+    Router     *grouter.Router // 路由管理对象
 }
 
 // 域名、URI与回调函数的绑定记录表

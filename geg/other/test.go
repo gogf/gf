@@ -1,11 +1,12 @@
 package main
 
 import (
+    "gitee.com/johng/gf/g/util/gregx"
     "fmt"
-    "math"
 )
 
 
 func main() {
-    fmt.Printf("given id not match current maxid [%d]", int(math.MaxInt64))
+    s, _ := gregx.Replace(`\w`, []byte("/user/list/page/2"), []byte("-"))
+    fmt.Println(string(s))
 }
