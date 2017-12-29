@@ -21,6 +21,46 @@ func Test_Regex(t *testing.T) {
     }
 }
 
+func Test_CheckMap(t *testing.T) {
+    kvmap := map[string]string {
+        "id"   : "0",
+        "name" : "john",
+    }
+    rules := map[string]string {
+        "id"   : "required|between:1,100",
+        "name" : "required|length:6,16",
+    }
+    msgs  := map[string]interface{} {
+        "id"   : "ID不能为空|ID范围应当为:min到:max",
+        "name" : map[string]string {
+            "required" : "名称不能为空",
+            "length"   : "名称长度为:min到:max个字符",
+        },
+    }
+    if m := gvalid.CheckMap(kvmap, rules, msgs); m == nil {
+        t.Error("CheckMap校验失败")
+    }
+
+    kvmap = map[string]string {
+        "id"   : "1",
+        "name" : "john",
+    }
+    rules = map[string]string {
+        "id"   : "required|between:1,100",
+        "name" : "required|length:4,16",
+    }
+    msgs  = map[string]interface{} {
+        "id"   : "ID不能为空|ID范围应当为:min到:max",
+        "name" : map[string]string {
+            "required" : "名称不能为空",
+            "length"   : "名称长度为:min到:max个字符",
+        },
+    }
+    if m := gvalid.CheckMap(kvmap, rules, msgs); m != nil {
+        t.Error(m)
+    }
+}
+
 func Test_Required(t *testing.T) {
     if m := gvalid.Check("1", "required", nil);  m != nil {
         t.Error(m)
@@ -29,10 +69,10 @@ func Test_Required(t *testing.T) {
         t.Error(m)
     }
     if m := gvalid.Check("", "required-if:id,1,age,18", nil, map[string]string{"id" : "1", "age" : "19"});  m == nil {
-        t.Error("required校验失败")
+        t.Error("Required校验失败")
     }
     if m := gvalid.Check("", "required-if:id,1,age,18", nil, map[string]string{"id" : "2", "age" : "19"});  m != nil {
-        t.Error("required校验失败")
+        t.Error("Required校验失败")
     }
 }
 
