@@ -125,7 +125,6 @@ func init() {
     errorMsgMap.BatchSet(defaultMessages)
 }
 
-
 // 替换默认的错误提示为指定的自定义提示
 // 主要作用：
 // 1、便于多语言错误提示设置；
@@ -239,6 +238,163 @@ func checkRequired(value, rulekey, ruleval string, params map[string]string) boo
     }
 }
 
+// 对字段值长度进行检测
+func checkLength(value, rulekey, ruleval string, cmsgs map[string]string) string {
+    msg := ""
+    switch rulekey {
+        // 长度范围
+        case "length":
+            array := strings.Split(ruleval, ",")
+            min   := 0
+            max   := 0
+            if len(array) > 0 {
+                if v, err := strconv.Atoi(strings.TrimSpace(array[0])); err == nil {
+                    min = v
+                }
+            }
+            if len(array) > 1 {
+                if v, err := strconv.Atoi(strings.TrimSpace(array[1])); err == nil {
+                    max = v
+                }
+            }
+            if len(value) < min || len(value) > max {
+                if v, ok := cmsgs[rulekey]; !ok {
+                    msg = errorMsgMap.Get(rulekey)
+                } else {
+                    msg = v
+                }
+                msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
+                msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
+                return msg
+            }
+
+        // 最小长度
+        case "min-length":
+            if min, err := strconv.Atoi(ruleval); err == nil {
+                if len(value) < min {
+                    if v, ok := cmsgs[rulekey]; !ok {
+                        msg = errorMsgMap.Get(rulekey)
+                    } else {
+                        msg = v
+                    }
+                    msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
+                }
+            } else {
+                msg = "校验参数[" + ruleval + "]应当为整数类型"
+            }
+
+        // 最大长度
+        case "max-length":
+            if max, err := strconv.Atoi(ruleval); err == nil {
+                if len(value) > max {
+                    if v, ok := cmsgs[rulekey]; !ok {
+                        msg = errorMsgMap.Get(rulekey)
+                    } else {
+                        msg = v
+                    }
+                    msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
+                }
+            } else {
+                msg = "校验参数[" + ruleval + "]应当为整数类型"
+            }
+    }
+    return msg
+}
+
+// 对字段值大小进行检测
+func checkSize(value, rulekey, ruleval string, cmsgs map[string]string) string {
+    msg := ""
+    switch rulekey {
+        // 大小范围
+        case "between":
+            array := strings.Split(ruleval, ",")
+            min   := float64(0)
+            max   := float64(0)
+            if len(array) > 0 {
+                if v, err := strconv.ParseFloat(strings.TrimSpace(array[0]), 10); err == nil {
+                    min = v
+                }
+            }
+            if len(array) > 1 {
+                if v, err := strconv.ParseFloat(strings.TrimSpace(array[1]), 10); err == nil {
+                    max = v
+                }
+            }
+            if v, err := strconv.ParseFloat(value, 10); err == nil {
+                if v < min || v > max {
+                    if v, ok := cmsgs[rulekey]; !ok {
+                        msg = errorMsgMap.Get(rulekey)
+                    } else {
+                        msg = v
+                    }
+                    msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
+                    msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
+                }
+            } else {
+                msg = "输入参数[" + value + "]应当为数字类型"
+            }
+
+        // 最小值
+        case "min":
+            if min, err := strconv.ParseFloat(ruleval, 10); err == nil {
+                if v, err := strconv.ParseFloat(value, 10); err == nil {
+                    if v < min {
+                        msg, ok := cmsgs[rulekey]
+                        if !ok {
+                            msg = errorMsgMap.Get(rulekey)
+                        }
+                        msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
+                    }
+                } else {
+                    msg = "输入参数[" + value + "]应当为数字类型"
+                }
+            } else {
+                msg = "校验参数[" + ruleval + "]应当为数字类型"
+            }
+
+        // 最大值
+        case "max":
+            if max, err := strconv.ParseFloat(ruleval, 10); err == nil {
+                if v, err := strconv.ParseFloat(value, 10); err == nil {
+                    if v > max {
+                        msg, ok := cmsgs[rulekey]
+                        if !ok {
+                            msg = errorMsgMap.Get(rulekey)
+                        }
+                        msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
+                    }
+                } else {
+                    msg = "输入参数[" + value + "]应当为数字类型"
+                }
+            } else {
+                msg = "校验参数[" + ruleval + "]应当为数字类型"
+            }
+    }
+    return msg
+}
+
+// 检测键值对Map，注意返回参数是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息
+func CheckMap(kvmap map[string]string, rules map[string]string, msgs map[string]interface{}) map[string]map[string]string {
+    emsgs := make(map[string]map[string]string)
+    for key, value := range kvmap {
+        if rule, ok := rules[key]; ok {
+            msg, _ := msgs[key]
+            if m := Check(value, rule, msg, kvmap); m != nil {
+                if _, ok := emsgs[key]; !ok {
+                    emsgs[key] = make(map[string]string)
+                }
+                for k, v := range m {
+                    emsgs[key][k] = v
+                }
+            }
+        }
+    }
+    if len(emsgs) > 0 {
+        return emsgs
+    }
+    return nil
+}
+
 // 检测单条数据的规则，其中values参数为非必须参数，可以传递所有的校验参数进来，进行多参数对比(部分校验规则需要)
 // msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持string/map[string]string，允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误
 // values参数为表单联合校验参数，对于需要联合校验的规则有效，如：required-*、same、different
@@ -278,6 +434,26 @@ func Check(value, rules string, msgs interface{}, values...map[string]string) ma
             case "required-without":  fallthrough
             case "required-without-all":
                 match = checkRequired(value, rulekey, ruleval, params)
+
+            // 长度范围
+            case "length":            fallthrough
+            case "min-length":        fallthrough
+            case "max-length":
+                if msg := checkLength(value, rulekey, ruleval, cmsgs); msg != "" {
+                    errmsgs[rulekey] = msg
+                } else {
+                    match = true
+                }
+
+            // 大小范围
+            case "min":               fallthrough
+            case "max":               fallthrough
+            case "between":
+                if msg := checkSize(value, rulekey, ruleval, cmsgs); msg != "" {
+                    errmsgs[rulekey] = msg
+                } else {
+                    match = true
+                }
 
             // 自定义正则判断
             case "regex":
@@ -405,126 +581,10 @@ func Check(value, rules string, msgs interface{}, values...map[string]string) ma
                     match = true
                 }
 
-                // 强等强度密码(在弱密码的基础上，必须包含大小写字母、数字和特殊字符)
+            // 强等强度密码(在弱密码的基础上，必须包含大小写字母、数字和特殊字符)
             case "password3":
                 if gregx.IsMatchString(`^[\w\S]{6,18}$`, value) && gregx.IsMatchString(`[a-z]+`, value) && gregx.IsMatchString(`[A-Z]+`, value) && gregx.IsMatchString(`\d+`, value) && gregx.IsMatchString(`\S+`, value) {
                     match = true
-                }
-
-                // 长度范围
-            case "length":
-                array := strings.Split(ruleval, ",")
-                min   := 0
-                max   := 0
-                if len(array) > 0 {
-                    if v, err := strconv.Atoi(strings.TrimSpace(array[0])); err == nil {
-                        min = v
-                    }
-                }
-                if len(array) > 1 {
-                    if v, err := strconv.Atoi(strings.TrimSpace(array[1])); err == nil {
-                        max = v
-                    }
-                }
-                if len(value) >= min && len(value) <= max {
-                    match = true
-                } else {
-                    msg := errorMsgMap.Get(rulekey)
-                    msg  = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
-                    msg  = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
-                    errmsgs[rulekey] = msg
-                }
-
-            // 最小长度
-            case "min-length":
-                if min, err := strconv.Atoi(ruleval); err == nil {
-                    if len(value) >= min {
-                        match = true
-                    } else {
-                        msg := errorMsgMap.Get(rulekey)
-                        msg  = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
-                        errmsgs[rulekey] = msg
-                    }
-                } else {
-                    errmsgs[rulekey] = "校验参数[" + ruleval + "]应当为整数类型"
-                }
-
-            // 最大长度
-            case "max-length":
-                if max, err := strconv.Atoi(ruleval); err == nil {
-                    if len(value) <= max {
-                        match = true
-                    } else {
-                        msg := errorMsgMap.Get(rulekey)
-                        msg  = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
-                        errmsgs[rulekey] = msg
-                    }
-                } else {
-                    errmsgs[rulekey] = "校验参数[" + ruleval + "]应当为整数类型"
-                }
-
-            // 大小范围
-            case "between":
-                array := strings.Split(ruleval, ",")
-                min   := float64(0)
-                max   := float64(0)
-                if len(array) > 0 {
-                    if v, err := strconv.ParseFloat(strings.TrimSpace(array[0]), 10); err == nil {
-                        min = v
-                    }
-                }
-                if len(array) > 1 {
-                    if v, err := strconv.ParseFloat(strings.TrimSpace(array[1]), 10); err == nil {
-                        max = v
-                    }
-                }
-                if v, err := strconv.ParseFloat(value, 10); err == nil {
-                    if v >= min && v <= max {
-                        match = true
-                    } else {
-                        msg := errorMsgMap.Get(rulekey)
-                        msg  = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
-                        msg  = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
-                        errmsgs[rulekey] = msg
-                    }
-                } else {
-                    errmsgs[rulekey] = "输入参数[" + value + "]应当为数字类型"
-                }
-
-            // 最小值
-            case "min":
-                if min, err := strconv.ParseFloat(ruleval, 10); err == nil {
-                    if v, err := strconv.ParseFloat(value, 10); err == nil {
-                        if v >= min {
-                            match = true
-                        } else {
-                            msg := errorMsgMap.Get(rulekey)
-                            msg  = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
-                            errmsgs[rulekey] = msg
-                        }
-                    } else {
-                        errmsgs[rulekey] = "输入参数[" + value + "]应当为数字类型"
-                    }
-                } else {
-                    errmsgs[rulekey] = "校验参数[" + ruleval + "]应当为数字类型"
-                }
-
-            // 最大值
-            case "max":
-                if max, err := strconv.ParseFloat(ruleval, 10); err == nil {
-                    if v, err := strconv.ParseFloat(value, 10); err == nil {
-                        if v <= max {
-                            match = true
-                        } else {
-                            msg := errorMsgMap.Get(rulekey)
-                            msg  = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
-                            errmsgs[rulekey] = msg
-                        }
-                    } else {
-                        errmsgs[rulekey] = "输入参数[" + value + "]应当为数字类型"
-                    }
-                } else {
-                    errmsgs[rulekey] = "校验参数[" + ruleval + "]应当为数字类型"
                 }
 
             // json
@@ -585,13 +645,12 @@ func Check(value, rules string, msgs interface{}, values...map[string]string) ma
 
         // 错误消息整合
         if !match {
-            // 判断是否存在自定义的错误信息
-            if msg, ok := cmsgs[rulekey]; ok {
-                errmsgs[rulekey] = msg
-            } else {
-                // 不存在则使用默认的错误信息，
-                // 如果在校验过程中已经设置了错误信息，那么这里便不作处理
-                if _, ok := errmsgs[rulekey]; !ok {
+            // 不存在则使用默认的错误信息，
+            // 如果在校验过程中已经设置了错误信息，那么这里便不作处理
+            if _, ok := errmsgs[rulekey]; !ok {
+                if msg, ok := cmsgs[rulekey]; ok {
+                    errmsgs[rulekey] = msg
+                } else {
                     errmsgs[rulekey] = errorMsgMap.Get(rulekey)
                 }
             }
