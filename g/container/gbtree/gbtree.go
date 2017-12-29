@@ -1,4 +1,4 @@
-// B+树，来源于：from https://github.com/google/btree
+// from https://github.com/google/btree
 package gbtree
 
 import (
