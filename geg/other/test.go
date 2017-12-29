@@ -2,10 +2,10 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gvalid"
 )
 
 
 func main() {
-    fmt.Println(gregx.IsMatchString(`^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`, "joh-n_cn@johng.cn"))
+    fmt.Println(gvalid.Check("10.0.0.0", "ip", nil))
 }
