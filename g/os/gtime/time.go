@@ -2,7 +2,6 @@ package gtime
 
 import (
     "time"
-    "fmt"
 )
 
 // 类似与js中的SetTimeout，一段时间后执行回调函数
