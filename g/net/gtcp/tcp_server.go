@@ -11,7 +11,7 @@ import (
 )
 
 // 执行监听
-func (s *gTcpServer) Run() {
+func (s *Server) Run() {
     if s == nil || s.listener == nil {
         glog.Println("start running failed: socket address bind failed")
         return
