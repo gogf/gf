@@ -28,7 +28,7 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     │   │   ├── gcompress        数据压缩
     │   │   ├── gcrc32           CRC32
     │   │   ├── ghash            常用哈希函数
-    │   │   ├── ghtml            HTML相关编码
+    │   │   ├── ghtml            HTML编码
     │   │   ├── gjson            JSON
     │   │   ├── gmd5             MD5
     │   │   ├── gsha1            SHA1
@@ -41,18 +41,19 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     │   │   
     │   ├── net              【网络通信】
     │   │   ├── ghttp            HTTP客户端及服务端
-    │   │   ├── gipv4            IP操作
-    │   │   ├── grouter          路由管理器
+    │   │   ├── gipv4            IPv4操作
+    │   │   ├── gipv6            IPv6操作
+    │   │   ├── grouter          路由管理
     │   │   ├── gscanner         端口扫描
-    │   │   ├── gsession         SESSION会话管理
+    │   │   ├── gsession         SESSION管理
     │   │   ├── gsmtp            SMTP邮件管理
     │   │   ├── gtcp             TCP服务端
     │   │   └── gudp             UDP服务端
     │   │   
     │   ├── os               【系统管理】
-    │   │   ├── gcache           本地缓存管理
+    │   │   ├── gcache           缓存管理
     │   │   ├── gconsole         命令行控制
-    │   │   ├── genv             环境变量管理
+    │   │   ├── genv             环境变量
     │   │   ├── gfile            文件管理
     │   │   ├── gfilepool        文件指针池
     │   │   ├── gfilespace       文件碎片管理
