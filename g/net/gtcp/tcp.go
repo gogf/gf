@@ -12,14 +12,14 @@ import (
 )
 
 // tcp server结构体
-type gTcpServer struct {
+type Server struct {
     address   string
     listener *net.TCPListener
     handler   func (net.Conn)
 }
 
 // 创建一个tcp server对象
-func NewServer (address string, handler func (net.Conn)) *gTcpServer {
+func NewServer(address string, handler func (net.Conn)) *Server {
     tcpaddr, err := net.ResolveTCPAddr("tcp4", address)
     if err != nil {
         glog.Fatalln(err)
@@ -30,6 +30,6 @@ func NewServer (address string, handler func (net.Conn)) *gTcpServer {
         glog.Fatalln(err)
         return nil
     }
-    return &gTcpServer{ address, listen, handler}
+    return &Server{ address, listen, handler}
 }
 
