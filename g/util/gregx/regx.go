@@ -17,6 +17,25 @@ func IsMatchString(pattern string, src string) bool {
     return IsMatch(pattern, []byte(src))
 }
 
+// 正则匹配，并返回匹配的列表
+func MatchString(pattern string, src string) ([]string, error) {
+    reg, err := regexp.Compile(pattern)
+    if err != nil {
+        return nil, err
+    }
+    s := reg.FindStringSubmatch(src)
+    return s, nil
+}
+
+func MatchAllString(pattern string, src string) ([][]string, error) {
+    reg, err := regexp.Compile(pattern)
+    if err != nil {
+        return nil, err
+    }
+    s := reg.FindAllStringSubmatch(src, -1)
+    return s, nil
+}
+
 // 正则替换(全部替换)
 func Replace(pattern string, src, replace []byte) ([]byte, error) {
     reg, err := regexp.Compile(pattern)
