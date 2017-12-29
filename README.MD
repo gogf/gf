@@ -62,9 +62,9 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     │   │   └── gview            视图管理(通用的模板管理对象，独立于MVC模块)
     │   │   
     │   └── util             【常用工具】
-    │       ├── gpage            分页
     │       ├── grand            随机数
     │       ├── gregx            正则表达式
+    │       ├── gvalid           表单校验
     │       └── gutil            其他工具
     │   
     ├── geg              【框架示例】
