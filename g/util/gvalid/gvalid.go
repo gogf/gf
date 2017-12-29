@@ -1,3 +1,9 @@
+// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://gitee.com/johng/gf.
+//
 // 通用数据验证工具
 // 本来打算取名gvalidator的，名字太长了，缩写一下
 /*
