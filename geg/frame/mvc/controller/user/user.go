@@ -18,12 +18,10 @@ type T struct {
 
 func (t *T) Test(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     w.WriteString("Test")
-    w.Output()
 }
 
 func (t *T) Get(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
     w.WriteString("Http Method GET")
-    w.Output()
 }
 
 // 初始化控制器对象，并绑定操作到Web Server
