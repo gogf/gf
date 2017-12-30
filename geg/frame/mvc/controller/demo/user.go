@@ -1,8 +1,9 @@
 package demo
 
 import (
-    "gitee.com/johng/gf/g"
+
     "gitee.com/johng/gf/g/frame/gmvc"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 // 定义业务相关的控制器对象，
@@ -15,7 +16,7 @@ type ControllerUser struct {
 func init() {
     // 绑定控制器到指定URI，所有控制器的公开方法将会映射到指定URI末尾
     // 例如该方法执行后，查看效果可访问：http://127.0.0.1:8199/user/info
-    g.HTTPServer().BindController("/user", &ControllerUser{})
+    ghttp.GetServer().BindController("/user", &ControllerUser{})
 }
 
 // 定义操作逻辑 - 展示模板

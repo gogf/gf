@@ -12,10 +12,6 @@ import (
     "gitee.com/johng/gf/g/net/gsession"
 )
 
-const (
-    gDEFAULT_SESSION_ID_NAME = "gfsessionid"
-)
-
 // 控制器基类
 type Controller struct {
     Server   *ghttp.Server         // Web Server对象
@@ -33,19 +29,12 @@ func (c *Controller) Init(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.Serv
     c.Response = w
     c.Cookie   = ghttp.NewCookie(c.Request, c.Response)
     c.View     = NewView(c)
-    if r := c.Cookie.Get(gDEFAULT_SESSION_ID_NAME); r != "" {
-        c.Session = gsession.Get(r)
-    } else {
-        c.Session = gsession.Get(gsession.Id())
-    }
+    c.Session  = gsession.Get(c.Cookie.SessionId())
 }
 
 // 控制器结束请求接口方法
 func (c *Controller) Shut() {
-    if c.Cookie.Get(gDEFAULT_SESSION_ID_NAME) == "" {
-        c.Cookie.Set(gDEFAULT_SESSION_ID_NAME, c.Session.Id())
-    }
-    c.Cookie.Output()
+
 }
 
 

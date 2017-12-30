@@ -21,7 +21,8 @@ type Client struct {
 // 请求对象
 type ClientRequest struct {
     http.Request
-    getvals *url.Values // GET参数
+    id       uint64      // 请求id(唯一)
+    getvals  *url.Values // GET参数
 }
 
 // 客户端请求结果对象
