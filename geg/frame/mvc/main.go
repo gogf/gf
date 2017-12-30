@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-    g.HttpServer().SetPort(8199)
-    g.HttpServer().Run()
+    g.HTTPServer().SetPort(8199)
+    g.HTTPServer().Run()
 }

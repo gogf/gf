@@ -6,20 +6,36 @@
 
 package gudp
 
-import "gitee.com/johng/gf/g/os/glog"
+import (
+    "net"
+    "errors"
+)
+
+// 设置参数 - address
+func (s *Server) SetAddress (address string) {
+    s.address = address
+}
+
+// 设置参数 - handler
+func (s *Server) SetHandler (handler func (*net.UDPConn)) {
+    s.handler = handler
+}
 
 // 执行监听
-func (s *Server) Run() {
-    if s == nil || s.listener == nil {
-        glog.Println("start running failed: socket address bind failed")
-        return
-    }
+func (s *Server) Run() error {
     if s.handler == nil {
-        glog.Println("start running failed: socket handler not defined")
-        return
+        return errors.New("start running failed: socket handler not defined")
+    }
+    tcpaddr, err := net.ResolveUDPAddr("udp4", s.address)
+    if err != nil {
+        return err
+    }
+    listen, err := net.ListenUDP("udp", tcpaddr)
+    if err != nil {
+        return err
     }
     for {
-        s.handler(s.listener)
+        s.handler(listen)
     }
-
+    return nil
 }
