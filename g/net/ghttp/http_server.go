@@ -62,10 +62,12 @@ func GetServer(name string) (*Server) {
     if s := serverMapping.Get(name); s != nil {
         return s.(*Server)
     }
-    s           := &Server{}
-    s.name       = name
-    s.handlerMap = make(HandlerMap)
-    s.methodsMap = make(map[string]bool)
+    s := &Server{
+        name       : name,
+        handlerMap : make(HandlerMap),
+        methodsMap : make(map[string]bool),
+        Router     : grouter.New(),
+    }
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = true
     }

@@ -6,15 +6,39 @@
 //
 package g
 
-import "gitee.com/johng/gf/g/net/ghttp"
+import (
+    "gitee.com/johng/gf/g/net/gtcp"
+    "gitee.com/johng/gf/g/net/gudp"
+    "gitee.com/johng/gf/g/net/ghttp"
+)
 
-const HTTP = 1
-// 核心对象：Server
+// 单例HTTP Server
 // 框架支持多服务器对象，通过传入不同的name进行区分
-func HttpServer(names...string) *ghttp.Server {
+func HTTPServer(names...string) *ghttp.Server {
     name := "default"
     if len(names) > 0 {
         name = names[0]
     }
     return ghttp.GetServer(name)
+}
+
+// 单例TCP Server
+// 框架支持多服务器对象，通过传入不同的name进行区分
+func TCPServer(names...string) *gtcp.Server {
+    name := "default"
+    if len(names) > 0 {
+        name = names[0]
+    }
+    return gtcp.GetServer(name)
+}
+
+
+// 单例HTTP Server
+// 框架支持多服务器对象，通过传入不同的name进行区分
+func UDPServer(names...string) *gudp.Server {
+    name := "default"
+    if len(names) > 0 {
+        name = names[0]
+    }
+    return gudp.GetServer(name)
 }

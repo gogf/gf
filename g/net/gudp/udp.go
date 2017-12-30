@@ -8,28 +8,35 @@ package gudp
 
 import (
     "net"
-    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 // tcp server结构体
 type Server struct {
     address   string
-    listener *net.UDPConn
     handler   func (*net.UDPConn)
 }
 
-// 创建一个tcp server对象
-func NewServer (address string, handler func (*net.UDPConn)) *Server {
-    tcpaddr, err := net.ResolveUDPAddr("udp4", address)
-    if err != nil {
-        glog.Println(err)
-        return nil
+// Server表，用以存储和检索名称与Server对象之间的关联关系
+var serverMapping = gmap.NewStringInterfaceMap()
+
+// 获取/创建一个空配置的UDP Server
+// 单例模式，请保证name的唯一性
+func GetServer(name string) (*Server) {
+    if s := serverMapping.Get(name); s != nil {
+        return s.(*Server)
     }
-    listen, err := net.ListenUDP("udp", tcpaddr)
-    if err != nil {
-        glog.Println(err)
-        return nil
+    s := NewServer("", nil)
+    serverMapping.Set(name, s)
+    return s
+}
+
+// 创建一个tcp server对象，并且可以选择指定一个单例名字
+func NewServer (address string, handler func (*net.UDPConn), names...string) *Server {
+    s := &Server{address, handler}
+    if len(names) > 0 {
+        serverMapping.Set(names[0], s)
     }
-    return &Server{ address, listen, handler}
+    return s
 }
 
