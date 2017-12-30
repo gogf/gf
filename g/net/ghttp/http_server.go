@@ -23,6 +23,7 @@ import (
 )
 
 const (
+    gDEFAULT_SERVER = "default"
     gDEFAULT_DOMAIN = "default"
     gDEFAULT_METHOD = "all"
     gHTTP_METHODS   = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
@@ -58,7 +59,11 @@ var serverMapping = gmap.NewStringInterfaceMap()
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
 // 单例模式，请保证name的唯一性
-func GetServer(name string) (*Server) {
+func GetServer(names...string) (*Server) {
+    name := gDEFAULT_SERVER
+    if len(names) > 0 {
+        name = names[0]
+    }
     if s := serverMapping.Get(name); s != nil {
         return s.(*Server)
     }
@@ -308,7 +313,11 @@ func (s *Server)bindHandlerByMap(m HandlerMap) error {
 }
 
 // 将方法名称按照设定的规则转换为URI并附加到指定的URI后面
-func (s *Server)appendMethodNameToUri(uri string, name string) string {
+func (s *Server)appendMethodNameToUriWithPattern(pattern string, name string) string {
+    // 检测域名后缀
+    array := strings.Split(pattern, "@")
+    // 分离URI(其实可能包含HTTP Method)
+    uri := array[0]
     uri = strings.TrimRight(uri, "/") + "/"
     // 方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词
     for i := 0; i < len(name); i++ {
@@ -317,23 +326,27 @@ func (s *Server)appendMethodNameToUri(uri string, name string) string {
         }
         uri += strings.ToLower(string(name[i]))
     }
+    // 加上指定域名后缀
+    if len(array) > 1 {
+        uri += "@" + array[1]
+    }
     return uri
 }
 
-// 注意该方法是直接绑定方法的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
+// 注意该方法是直接绑定函数的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
     return s.bindHandlerItem(pattern, HandlerItem{nil, "", handler})
 }
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
 // 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
-func (s *Server)BindObject(uri string, obj interface{}) error {
+func (s *Server)BindObject(pattern string, obj interface{}) error {
     m := make(HandlerMap)
     v := reflect.ValueOf(obj)
     t := v.Type()
     for i := 0; i < v.NumMethod(); i++ {
         name  := t.Method(i).Name
-        key   := s.appendMethodNameToUri(uri, name)
+        key   := s.appendMethodNameToUriWithPattern(pattern, name)
         m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Server, *ClientRequest, *ServerResponse))}
     }
     return s.bindHandlerByMap(m)
@@ -341,7 +354,7 @@ func (s *Server)BindObject(uri string, obj interface{}) error {
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
 // 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
-func (s *Server)BindObjectRest(uri string, obj interface{}) error {
+func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
     m := make(HandlerMap)
     v := reflect.ValueOf(obj)
     t := v.Type()
@@ -350,7 +363,7 @@ func (s *Server)BindObjectRest(uri string, obj interface{}) error {
         if _, ok := s.methodsMap[strings.ToUpper(name)]; !ok {
             continue
         }
-        key   := name + ":" + uri
+        key   := name + ":" + pattern
         m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Server, *ClientRequest, *ServerResponse))}
     }
     return s.bindHandlerByMap(m)
@@ -358,7 +371,7 @@ func (s *Server)BindObjectRest(uri string, obj interface{}) error {
 
 // 绑定控制器，控制器需要实现gmvc.Controller接口
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
-func (s *Server)BindController(uri string, c Controller) error {
+func (s *Server)BindController(pattern string, c Controller) error {
     // 遍历控制器，获取方法列表，并构造成uri
     m := make(HandlerMap)
     v := reflect.ValueOf(c)
@@ -368,17 +381,17 @@ func (s *Server)BindController(uri string, c Controller) error {
         if name == "Init" || name == "Shut" {
             continue
         }
-        key   := s.appendMethodNameToUri(uri, name)
+        key   := s.appendMethodNameToUriWithPattern(pattern, name)
         m[key] = HandlerItem{v.Elem().Type(), name, nil}
     }
     return s.bindHandlerByMap(m)
 }
 
-// 绑定控制器，控制器需要实现gmvc.Controller接口
+// 绑定控制器(RESTFul)，控制器需要实现gmvc.Controller接口
 // 方法会识别HTTP方法，并做REST绑定处理，例如：Post方法会绑定到HTTP POST的方法请求处理，Delete方法会绑定到HTTP DELETE的方法请求处理
 // 因此只会绑定HTTP Method对应的方法，其他方法不会自动注册绑定
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
-func (s *Server)BindControllerRest(uri string, c Controller) error {
+func (s *Server)BindControllerRest(pattern string, c Controller) error {
     // 遍历控制器，获取方法列表，并构造成uri
     m := make(HandlerMap)
     v := reflect.ValueOf(c)
@@ -395,13 +408,13 @@ func (s *Server)BindControllerRest(uri string, c Controller) error {
         if _, ok := s.methodsMap[strings.ToUpper(name)]; !ok {
             continue
         }
-        key   := name + ":" + uri
+        key   := name + ":" + pattern
         m[key] = HandlerItem{v.Elem().Type(), name, nil}
     }
     return s.bindHandlerByMap(m)
 }
 
-// 绑定方法，pattern支持http method
+// 绑定控制器方法，pattern支持http method
 // pattern的格式形如：/user/list, put:/user, delete:/user
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
 func (s *Server)BindControllerMethod(pattern string, c Controller, method string) error {

@@ -14,7 +14,7 @@ var db gdb.Link
 func init () {
     gdb.AddDefaultConfigNode(gdb.ConfigNode {
         Host : "127.0.0.1",
-        Port : 5432,
+        Port : "5432",
         User : "postgres",
         Pass : "123456",
         Name : "test",
@@ -59,14 +59,14 @@ func create() {
 // 数据写入
 func insert() {
     fmt.Println("insert:")
-    r, err := db.Insert("user", &gdb.Map {
+    r, err := db.Insert("user", gdb.Map {
         "uid" : 1,
         "name": "john",
     })
     if (err == nil) {
         uid, err2 := r.LastInsertId()
         if err2 == nil {
-            r, err = db.Insert("user_detail", &gdb.Map {
+            r, err = db.Insert("user_detail", gdb.Map {
                 "uid"  : string(uid),
                 "site" : "http://johng.cn",
             })
@@ -100,7 +100,7 @@ func query() {
 // replace into
 func replace() {
     fmt.Println("replace:")
-    r, err := db.Save("user", &gdb.Map {
+    r, err := db.Save("user", gdb.Map {
         "uid": "1",
         "name": "john",
     })
@@ -116,7 +116,7 @@ func replace() {
 // 数据保存
 func save() {
     fmt.Println("save:")
-    r, err := db.Save("user", &gdb.Map {
+    r, err := db.Save("user", gdb.Map {
         "uid"  : "1",
         "name" : "john",
     })
@@ -132,7 +132,7 @@ func save() {
 // 批量写入
 func batchInsert() {
     fmt.Println("batchInsert:")
-    err := db.BatchInsert("user", &gdb.List {
+    err := db.BatchInsert("user", gdb.List {
         {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
         {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
         {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
@@ -147,7 +147,7 @@ func batchInsert() {
 // 数据更新
 func update1() {
     fmt.Println("update1:")
-    r, err := db.Update("user", &gdb.Map {"name": "john1"}, "uid=?", 1)
+    r, err := db.Update("user", gdb.Map {"name": "john1"}, "uid=?", 1)
     if (err == nil) {
         fmt.Println(r.LastInsertId())
         fmt.Println(r.RowsAffected())
@@ -215,7 +215,7 @@ func linkopUpdate1() {
 // 通过Map指针方式传参方式
 func linkopUpdate2() {
     fmt.Println("linkopUpdate2:")
-    r, err := db.Table("user").Data(&gdb.Map{"name" : "john2"}).Condition("name=?", "john").Update()
+    r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Condition("name=?", "john").Update()
     if (err == nil) {
         fmt.Println(r.RowsAffected())
     } else {
