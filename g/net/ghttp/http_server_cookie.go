@@ -3,20 +3,24 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-
+//
+// HTTP Cookie管理对象，
+// 由于Cookie是和HTTP请求挂钩的，因此被包含到 ghttp 包中进行管理
 package ghttp
 
 import (
     "sync"
+    "time"
     "strings"
     "net/http"
-    "time"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 const (
-    gDEFAULT_PATH    = "/"   // 默认path
-    gDEFAULT_MAX_AGE = 86400 // 默认cookie有效期
+    gDEFAULT_PATH    = "/"           // 默认path
+    gDEFAULT_MAX_AGE = 86400         // 默认cookie有效期
+    SESSION_ID_NAME  = "gfsessionid" // 默认存放Cookie中的SessionId名称
 )
 
 // cookie对象
@@ -31,21 +35,41 @@ type Cookie struct {
 // cookie项
 type CookieItem struct {
     value  string
-    domain string
-    path   string
-    expire int    //过期时间
+    domain string // 有效域名
+    path   string // 有效路径
+    expire int    // 过期时间
 }
 
-// 初始化cookie对象
+// 包含所有当前服务器正在服务的Cookie
+var cookies = gmap.NewUintInterfaceMap()
+
+// 创建一个cookie对象，与传入的请求对应
 func NewCookie(r *ClientRequest, w *ServerResponse) *Cookie {
-    c := &Cookie{
+    if r := GetCookie(r.Id()); r != nil {
+        return r
+    }
+    c := &Cookie {
         data     : make(map[string]CookieItem),
         domain   : defaultDomain(r),
         request  : r,
         response : w,
     }
     c.init()
+    cookies.Set(uint(r.Id()), c)
     return c
+}
+
+// 获取一个已经存在的Cookie对象
+func GetCookie(requestid uint64) *Cookie {
+    if r := cookies.Get(uint(requestid)); r != nil {
+        return r.(*Cookie)
+    }
+    return nil
+}
+
+// 请求完毕后删除已经存在的Cookie对象
+func RemoveCookie(requestid uint64) {
+    cookies.Remove(uint(requestid))
 }
 
 // 获取默认的domain参数
@@ -62,6 +86,16 @@ func (c *Cookie) init() {
             v.Value, v.Domain, v.Path, v.Expires.Second(),
         }
     }
+}
+
+// 获取SessionId
+func (c *Cookie) SessionId() string {
+    return c.Get(SESSION_ID_NAME)
+}
+
+// 设置SessionId
+func (c *Cookie) SetSessionId(sessionid string)  {
+    c.Set(SESSION_ID_NAME, sessionid)
 }
 
 // 设置cookie，使用默认参数
@@ -92,19 +126,36 @@ func (c *Cookie) Get(key string) string {
     return ""
 }
 
+// 标记该cookie在对应的域名和路径失效
 // 删除cookie的重点是需要通知浏览器客户端cookie已过期
-func (c *Cookie) Remove(key string) {
-    c.SetCookie(key, "", c.domain, gDEFAULT_PATH, -86400)
+func (c *Cookie) Remove(key, domain, path string) {
+    c.SetCookie(key, "", domain, path, -86400)
 }
 
 // 输出到客户端
 func (c *Cookie) Output() {
     c.mu.RLock()
     defer c.mu.RUnlock()
+    // 自动更新SessionId的过期时间
+    sitem := c.data[SESSION_ID_NAME]
+    minex := int(gtime.Second()) + gDEFAULT_MAX_AGE
+    if sitem.expire < minex {
+        sitem.expire            = minex
+        c.data[SESSION_ID_NAME] = sitem
+    }
     for k, v := range c.data {
         if v.expire == 0 {
             continue
         }
-        http.SetCookie(c.response.ResponseWriter, &http.Cookie{Name: k, Value: v.value, Domain: v.domain, Path: v.path, Expires: time.Unix(int64(v.expire), 0)})
+        http.SetCookie(
+            c.response.ResponseWriter,
+            &http.Cookie {
+                Name    : k,
+                Value   : v.value,
+                Domain  : v.domain,
+                Path    : v.path,
+                Expires : time.Unix(int64(v.expire), 0),
+            },
+        )
     }
 }
