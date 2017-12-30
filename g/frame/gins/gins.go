@@ -6,17 +6,17 @@
 
 // 单例对象管理工具
 // 框架内置了一些核心对象，并且可以通过Set和Get方法实现IoC以及对内置核心对象的自定义替换
-package ginstance
+package gins
 
 import (
     "strconv"
+    "gitee.com/johng/gf/g/os/gcmd"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/gconsole"
+    "gitee.com/johng/gf/g/frame/gcfg"
     "gitee.com/johng/gf/g/database/gdb"
-    "gitee.com/johng/gf/g/frame/gconfig"
     "gitee.com/johng/gf/g/container/gmap"
 )
 
@@ -45,7 +45,7 @@ func View() *gview.View {
     if result != nil {
         return result.(*gview.View)
     } else {
-        path := gconsole.Option.Get("viewpath")
+        path := gcmd.Option.Get("viewpath")
         if path == "" {
             path = genv.Get("viewpath")
             if path == "" {
@@ -61,19 +61,19 @@ func View() *gview.View {
 
 // 核心对象：Config
 // 配置文件目录查找依次为：启动参数cfgpath、当前程序运行目录
-func Config() *gconfig.Config {
+func Config() *gcfg.Config {
     result := Get(FRAME_CORE_COMPONENT_NAME_CONFIG)
     if result != nil {
-        return result.(*gconfig.Config)
+        return result.(*gcfg.Config)
     } else {
-        path := gconsole.Option.Get("cfgpath")
+        path := gcmd.Option.Get("cfgpath")
         if path == "" {
             path = genv.Get("cfgpath")
             if path == "" {
                 path = gfile.SelfDir()
             }
         }
-        config := gconfig.New(path)
+        config := gcfg.New(path)
         Set(FRAME_CORE_COMPONENT_NAME_CONFIG, config)
         return config
     }

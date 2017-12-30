@@ -3,8 +3,8 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-
-package gconsole
+//
+package gcmd
 
 import (
 	"os"
@@ -15,18 +15,18 @@ import (
 )
 
 // 命令行参数列表
-type gConsoleValue  struct {
+type gCmdValue  struct {
     values []string
 }
 
 // 命令行选项列表
-type gConsoleOption struct {
+type gCmdOption struct {
     options map[string]string
 }
 
 // 终端管理对象(全局)
-var Value      gConsoleValue  // console终端参数-命令参数列表
-var Option     gConsoleOption // console终端参数-选项参数列表
+var Value      = &gCmdValue{}            // 终端参数-命令参数列表
+var Option     = &gCmdOption{}           // 终端参数-选项参数列表
 var cmdFuncMap = make(map[string]func()) // 终端命令及函数地址对应表
 
 // 检查并初始化console参数，在包加载的时候触发
@@ -45,17 +45,17 @@ func init() {
 }
 
 // 返回所有的命令行参数values
-func (c gConsoleValue) GetAll() []string {
+func (c *gCmdValue) GetAll() []string {
     return c.values
 }
 
 // 返回所有的命令行参数options
-func (c gConsoleOption) GetAll() map[string]string {
+func (c *gCmdOption) GetAll() map[string]string {
     return c.options
 }
 
 // 获得一条指定索引位置的value参数
-func (c gConsoleValue) Get(index uint8) string {
+func (c *gCmdValue) Get(index uint8) string {
     if index < uint8(len(c.values)) {
         return c.values[index]
     }
@@ -63,9 +63,8 @@ func (c gConsoleValue) Get(index uint8) string {
 }
 
 // 类型转换
-func (c gConsoleValue) GetInt(key uint8) int {
-    v := c.Get(key)
-    if v != "" {
+func (c *gCmdValue) GetInt(key uint8) int {
+    if v := c.Get(key); v != "" {
         i, _ := strconv.Atoi(v)
         return i
     }
@@ -73,7 +72,7 @@ func (c gConsoleValue) GetInt(key uint8) int {
 }
 
 // 类型转换bool
-func (c gConsoleValue) GetBool(key uint8) bool {
+func (c *gCmdValue) GetBool(key uint8) bool {
     v := c.Get(key)
     v  = strings.ToLower(v)
     if v != "" && v != "0" && v != "false" {
@@ -82,19 +81,17 @@ func (c gConsoleValue) GetBool(key uint8) bool {
     return false
 }
 
-// 获得一条指定索引位置的option参数
-func (c gConsoleOption) Get(key string) string {
-    option, ok := c.options[key]
-    if ok {
+// 获得一条指定索引位置的option参数;
+func (c *gCmdOption) Get(key string) string {
+    if option, ok := c.options[key]; ok {
         return option
     }
     return ""
 }
 
 // 类型转换int
-func (c gConsoleOption) GetInt(key string) int {
-    v := c.Get(key)
-    if v != "" {
+func (c *gCmdOption) GetInt(key string) int {
+    if v := c.Get(key); v != "" {
         i, _ := strconv.Atoi(v)
         return i
     }
@@ -102,7 +99,7 @@ func (c gConsoleOption) GetInt(key string) int {
 }
 
 // 类型转换bool
-func (c gConsoleOption) GetBool(key string) bool {
+func (c *gCmdOption) GetBool(key string) bool {
     v := c.Get(key)
     v  = strings.ToLower(v)
     if v != "" && v != "0" && v != "false" {
@@ -114,8 +111,7 @@ func (c gConsoleOption) GetBool(key string) bool {
 // 绑定命令行参数及对应的命令函数，注意参数是函数的内存地址
 // 如果操作失败返回错误信息
 func BindHandle (cmd string, f func()) error {
-    _, ok := cmdFuncMap[cmd]
-    if ok {
+    if _, ok := cmdFuncMap[cmd]; ok {
         return errors.New("duplicated handle for command:" + cmd)
     } else {
         cmdFuncMap[cmd] = f
@@ -125,8 +121,7 @@ func BindHandle (cmd string, f func()) error {
 
 // 执行命令对应的函数
 func RunHandle (cmd string) error {
-    handle, ok := cmdFuncMap[cmd]
-    if ok {
+    if handle, ok := cmdFuncMap[cmd]; ok {
         handle()
         return nil
     } else {
@@ -136,8 +131,7 @@ func RunHandle (cmd string) error {
 
 // 自动识别命令参数并执行命令参数对应的函数
 func AutoRun () error {
-    cmd := Value.Get(1);
-    if cmd != "" {
+    if cmd := Value.Get(1); cmd != "" {
         if handle, ok := cmdFuncMap[cmd]; ok {
             handle()
             return nil
@@ -147,5 +141,4 @@ func AutoRun () error {
     } else {
         return errors.New("no command found")
     }
-
 }

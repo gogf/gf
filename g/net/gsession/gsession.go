@@ -7,13 +7,13 @@
 package gsession
 
 import (
+    "sync"
     "strconv"
     "strings"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/util/grand"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/os/gcache"
-    "sync"
 )
 
 const (
@@ -38,8 +38,8 @@ func Get(sessionid string) *Session {
     if r := gcache.Get(cacheKey(sessionid)); r != nil {
         return r.(*Session)
     }
-    s := &Session{
-        id     : Id(),
+    s := &Session {
+        id     : sessionid,
         data   : gmap.NewStringInterfaceMap(),
         expire : DEFAULT_EXPIRE_TIME,
     }
@@ -84,6 +84,38 @@ func (s *Session) Get (k string) interface{} {
     return s.data.Get(k)
 }
 
+func (s *Session) GetInt (k string) int {
+    go s.updateExpire()
+    if r := s.data.Get(k); r != nil {
+        return r.(int)
+    }
+    return 0
+}
+
+func (s *Session) GetUint (k string) uint {
+    go s.updateExpire()
+    if r := s.data.Get(k); r != nil {
+        return r.(uint)
+    }
+    return 0
+}
+
+func (s *Session) GetFloat32 (k string) float32 {
+    go s.updateExpire()
+    if r := s.data.Get(k); r != nil {
+        return r.(float32)
+    }
+    return 0
+}
+
+func (s *Session) GetFloat64 (k string) float64 {
+    go s.updateExpire()
+    if r := s.data.Get(k); r != nil {
+        return r.(float64)
+    }
+    return 0
+}
+
 // 获取session(字符串)
 func (s *Session) GetString (k string) string {
     go s.updateExpire()
@@ -101,5 +133,6 @@ func (s *Session) Remove (k string) {
 
 // 更新过期时间
 func (s *Session) updateExpire() {
-    gcache.Set(cacheKey(s.id), s, int64(s.expire*1000))
+    //gcache.Set(cacheKey(s.id), s, int64(s.expire*1000))
+    gcache.Set(cacheKey(s.id), s, 0)
 }
