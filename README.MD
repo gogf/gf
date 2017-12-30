@@ -35,8 +35,8 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     │   │   └── gurl             URL
     │   │   
     │   ├── frame            【开发框架】
-    │   │   ├── gconfig          通用配置管理
-    │   │   ├── ginstance        单例对象管理
+    │   │   ├── gcfg             通用配置管理
+    │   │   ├── gins             单例对象管理
     │   │   └── gmvc             MVC模式封装基类
     │   │   
     │   ├── net              【网络通信】
@@ -52,7 +52,7 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     │   │   
     │   ├── os               【系统管理】
     │   │   ├── gcache           缓存管理
-    │   │   ├── gconsole         命令行控制
+    │   │   ├── gcmd             命令行控制
     │   │   ├── genv             环境变量
     │   │   ├── gfile            文件管理
     │   │   ├── gfilepool        文件指针池

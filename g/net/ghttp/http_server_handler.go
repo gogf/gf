@@ -10,13 +10,14 @@ import (
     "os"
     "fmt"
     "sort"
+    "reflect"
     "strings"
     "net/url"
     "net/http"
     "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/net/gsession"
     "gitee.com/johng/gf/g/encoding/ghtml"
-    "reflect"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -38,6 +39,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 构造请求/返回参数对象
     request  := &ClientRequest{}
     response := &ServerResponse{}
+    request.id              = s.increServed()
     request.Request         = *r
     response.ResponseWriter = w
     if h := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); h != nil {
@@ -53,12 +55,22 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
 // 初始化控制器
 func (s *Server)callHandler(h *HandlerItem, r *ClientRequest, w *ServerResponse) {
+    // 会话处理，每个请求必定有一个sessionid
+    cookie    := NewCookie(r, w)
+    sessionid := cookie.SessionId()
+    if sessionid == "" {
+        sessionid = gsession.Id()
+        cookie.SetSessionId(sessionid)
+    }
+    // 请求处理
     if h.faddr == nil {
+        // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
         c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(s), reflect.ValueOf(r), reflect.ValueOf(w)})
         c.MethodByName(h.fname).Call(nil)
         c.MethodByName("Shut").Call(nil)
     } else {
+        // 直接调用注册的方法处理请求
         h.faddr(s, r, w)
     }
     // 路由规则打包
@@ -66,8 +78,15 @@ func (s *Server)callHandler(h *HandlerItem, r *ClientRequest, w *ServerResponse)
         w.ClearBuffer()
         w.Write(buffer)
     }
+
+    // 输出Cookie
+    cookie.Output()
+
     // 输出缓冲区
     w.OutputBuffer()
+
+    // 删除当前会话的Cookie
+    RemoveCookie(r.Id())
 }
 
 // 处理静态文件请求

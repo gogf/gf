@@ -20,13 +20,14 @@ import (
     "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/net/grouter"
+    "sync/atomic"
 )
 
 const (
-    gDEFAULT_SERVER = "default"
-    gDEFAULT_DOMAIN = "default"
-    gDEFAULT_METHOD = "all"
-    gHTTP_METHODS   = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+    gDEFAULT_SERVER  = "default"
+    gDEFAULT_DOMAIN  = "default"
+    gDEFAULT_METHOD  = "all"
+    gHTTP_METHODS    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
 )
 
 // http server结构体
@@ -36,6 +37,7 @@ type Server struct {
     server     http.Server     // 底层http server对象
     config     ServerConfig    // 配置对象
     status     int8            // 当前服务器状态(0：未启动，1：运行中)
+    served     uint64          // 已服务的请求数(递增)
     handlerMap HandlerMap      // 所有注册的回调函数
     methodsMap map[string]bool // 所有支持的HTTP Method
     Router     *grouter.Router // 路由管理对象
@@ -243,6 +245,11 @@ func (s *Server)SetServerRoot(root string) error {
     }
     s.config.ServerRoot  = strings.TrimRight(root, string(filepath.Separator))
     return nil
+}
+
+// 服务请求数原子递增
+func (s *Server) increServed() uint64 {
+    return atomic.AddUint64(&s.served, 1)
 }
 
 // 生成回调方法查询的Key

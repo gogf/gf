@@ -2,7 +2,8 @@ package demo
 
 import (
     "gitee.com/johng/gf/g/frame/gmvc"
-    "gitee.com/johng/gf/g"
+
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 // 测试控制器
@@ -12,8 +13,8 @@ type ControllerRest struct {
 
 // 初始化控制器对象，并绑定操作到Web Server
 func init() {
-    // 控制器公开方法中与HTTP Method方法同名的方法将会绑定映射
-    g.HTTPServer().BindControllerRest("/user", &ControllerRest{})
+    // 控制器公开方法中与HTTP Method方法同名的方法将会自动绑定映射
+    ghttp.GetServer().BindControllerRest("/user", &ControllerRest{})
 }
 
 // RESTFul - GET

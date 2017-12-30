@@ -10,7 +10,7 @@ import (
     "sync"
     "html/template"
     "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/frame/ginstance"
+    "gitee.com/johng/gf/g/frame/gins"
 )
 
 // 视图对象(一个请求一个视图对象，用完即销毁)
@@ -25,7 +25,7 @@ type View struct {
 func NewView(c *Controller) *View {
     return &View{
         ctl  : c,
-        view : ginstance.View(),
+        view : gins.View(),
         data : make(map[string]interface{}),
     }
 }

@@ -11,6 +11,11 @@ import (
     "strconv"
 )
 
+// 获取当前请求的id
+func (r *ClientRequest) Id() uint64 {
+    return r.id
+}
+
 // 获得指定名称的get参数列表
 func (r *ClientRequest) GetQuery(k string) []string {
     if r.getvals == nil {

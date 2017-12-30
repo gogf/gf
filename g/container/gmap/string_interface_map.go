@@ -56,6 +56,41 @@ func (this *StringInterfaceMap) Get(key string) interface{} {
 	return val
 }
 
+func (this *StringInterfaceMap) GetInt(key string) int {
+	if r := this.Get(key); r != nil {
+		return r.(int)
+	}
+	return 0
+}
+
+func (this *StringInterfaceMap) GetUint (key string) uint {
+	if r := this.Get(key); r != nil {
+		return r.(uint)
+	}
+	return 0
+}
+
+func (this *StringInterfaceMap) GetFloat32 (key string) float32 {
+	if r := this.Get(key); r != nil {
+		return r.(float32)
+	}
+	return 0
+}
+
+func (this *StringInterfaceMap) GetFloat64 (key string) float64 {
+	if r := this.Get(key); r != nil {
+		return r.(float64)
+	}
+	return 0
+}
+
+func (this *StringInterfaceMap) GetString (key string) string {
+	if r := this.Get(key); r != nil {
+		return r.(string)
+	}
+	return ""
+}
+
 // 删除键值对
 func (this *StringInterfaceMap) Remove(key string) {
 	this.Lock()
