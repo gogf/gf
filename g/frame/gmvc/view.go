@@ -53,7 +53,7 @@ func (view *View) Parse(file string) ([]byte, error) {
     if err != nil {
         return nil, err
     }
-    // 绑定函数
+    // 绑定函数，对基类的include进行覆盖(由于涉及到模板变量的传递)
     tpl.BindFunc("include", view.funcInclude)
     // 执行解析
     view.mu.RLock()

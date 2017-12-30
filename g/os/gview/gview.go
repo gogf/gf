@@ -87,6 +87,9 @@ func (view *View) Template(file string) (*Template, error) {
         content  : gfile.GetContents(path),
         funcmap  : make(map[string]interface{}),
     }
+    // 绑定内置inluce方法
+    t.BindFunc("include", t.funcInclude)
+    // 将模板对象注册到内部map中
     view.tpls.Set(path, t)
     return t, nil
 }
@@ -132,5 +135,14 @@ func (t *Template) Parse(data map[string]interface{}) ([]byte, error) {
         }
     }
     return buffer.Bytes(), nil
+}
+
+// 模板内置方法：include
+func (t *Template) funcInclude(file string) template.HTML {
+    content, err := t.Parse(nil)
+    if err != nil {
+        return template.HTML(err.Error())
+    }
+    return template.HTML(content)
 }
 
