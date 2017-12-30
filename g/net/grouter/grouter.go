@@ -3,7 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-
+//
 package grouter
 
 import (
@@ -71,6 +71,7 @@ func (r *Router) RemovePatchRule(rule string) {
     r.updatePatchKeys()
 }
 
+// 内部更新解析索引规则排序，便于运行时使用
 func (r *Router) updateDispatchKeys() {
     r.dmu.Lock()
     defer r.dmu.Unlock()
@@ -78,6 +79,7 @@ func (r *Router) updateDispatchKeys() {
     sort.Slice(r.dkeys, func(i, j int) bool { return len(r.dkeys[i]) > len(r.dkeys[j]) })
 }
 
+// 内部更新所打包引规则排序，便于运行时使用
 func (r *Router) updatePatchKeys() {
     r.pmu.Lock()
     defer r.pmu.Unlock()
