@@ -14,7 +14,6 @@ import (
     "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/os/gconsole"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/frame/gconfig"
@@ -38,16 +37,6 @@ func Get(k string) interface{} {
 // 设置单例对象
 func Set(k string, v interface{}) {
     instances.Set(k, v)
-}
-
-// 核心对象：Server
-// 框架支持多服务器对象，通过传入不同的name进行区分
-func Server(names...string) *ghttp.Server {
-    name := "default"
-    if len(names) > 0 {
-        name = names[0]
-    }
-    return ghttp.GetServer(name)
 }
 
 // 核心对象：View
