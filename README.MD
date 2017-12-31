@@ -9,46 +9,49 @@ import "gitee.com/johng/gf/g/xxx/xxx"
 ```
 ## 说明
 
-1. [框架入门](#框架介绍)
+1. [框架说明](#框架介绍)
     - [框架介绍](#框架介绍)
     - [源码结构](#源码结构)
-1. [Web服务开发](;)
-    - [HTTPServer]()
-        - [Web Server]()
-        - [多域名支持]()
-    - [MVC开发模式]()
-        - [Controller]()
-        - [Model]()
-        - [View]()
-    - [服务注册]()
-        - [控制器注册]()
-        - [REST控制器]()
-        - [执行对象注册]()
-        - [回调函数注册]()
-    - [Cookie]()
-    - [Session]()
-    - [路由控制]()
-    - [配置管理]()
-    - [单例管理]()
-    - [数据校验]()
-    - [模板引擎]()
-    - [数据库操作]()
-1. [网络服务开发]()
-    - [TCPServer]()
-    - [UDPServer]()
-1. [功能模块设计]()
-    - [缓存模块]()
-    - [日志模块]()
-    - [时间模块]()
-    - [命令行模块]()
-    - [环境变量模块]()
-    - [文件管理模块]()
-    - [并发安全容器]()
-    - [通用编码模块]()
-    - [其他模块简介]()
+1. [Web服务开发](javascript:;)
+    - [HTTPServer](javascript:;)
+        - [Web Server](javascript:;)
+        - [多域名支持](javascript:;)
+    - [MVC开发模式](javascript:;)
+        - [Controller](javascript:;)
+        - [Model](javascript:;)
+        - [View](javascript:;)
+    - [服务注册](javascript:;)
+        - [控制器注册](javascript:;)
+        - [REST控制器](javascript:;)
+        - [执行对象注册](javascript:;)
+        - [回调函数注册](javascript:;)
+    - [Cookie](javascript:;)
+    - [Session](javascript:;)
+    - [路由控制](javascript:;)
+    - [配置管理](javascript:;)
+    - [单例管理](javascript:;)
+    - [数据校验](javascript:;)
+    - [模板引擎](javascript:;)
+    - [数据库操作](javascript:;)
+1. [网络服务开发](javascript:;)
+    - [TCPServer](javascript:;)
+    - [UDPServer](javascript:;)
+1. [功能模块设计](javascript:;)
+    - [缓存模块](javascript:;)
+    - [日志模块](javascript:;)
+    - [时间模块](javascript:;)
+    - [命令行模块](javascript:;)
+    - [环境变量模块](javascript:;)
+    - [文件管理模块](javascript:;)
+    - [并发安全容器](javascript:;)
+    - [通用编码模块](javascript:;)
+    - [其他模块简介](javascript:;)
 
 ### 框架介绍
-
+gf(Go Frame)是一款为Web服务及网络服务开发设计的，轻量级的Go语言开发框架。
+gf框架基于模块化设计，实现了通用的HTTP/TCP/UDP Server，并实现了Web服务开发的相关核心组件，
+包括：MVC模式、Cookie、Session、模板引擎、路由控制、配置管理、数据校验、数据库操作等等，
+并且提供了数十个自行研发的实用模块，包括：缓存模块、日志模块、时间模块、命令行模块、环境变量模块、并发安全容器等等。
 
 ### 源码结构
     .
@@ -111,7 +114,21 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     ├── geg              【框架示例】
     ├── vendor           【第三方包】
     └── version.go       【版本信息】
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
 ## 配置
 1. 默认读取文件运行目录的config.json文件；
 1. 支持多配置文件管理，默认配置文件目录为当前运行目录；
@@ -181,4 +198,4 @@ import "gitee.com/johng/gf/g/xxx/xxx"
         }
     }
     ```
-
+-->
