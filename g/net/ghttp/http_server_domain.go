@@ -91,10 +91,12 @@ func (d *Domain) BindControllerRest(pattern string, c Controller) error {
 }
 
 // 绑定控制器方法
-func (d *Domain) BindControllerMethod(pattern string, c Controller, method string) error {
+func (d *Domain) BindControllerMethod(pattern string, c Controller, methods string) error {
     for domain, _ := range d.m {
-        if err := d.s.BindControllerMethod(pattern + "@" + domain, c, method); err != nil {
-            return err
+        for _, method := range strings.Split(methods, ",") {
+            if err := d.s.BindControllerMethod(pattern + "@" + domain, c, strings.TrimSpace(method)); err != nil {
+                return err
+            }
         }
     }
     return nil
