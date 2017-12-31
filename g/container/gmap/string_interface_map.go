@@ -8,6 +8,7 @@ package gmap
 
 import (
 	"sync"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 type StringInterfaceMap struct {
@@ -56,39 +57,28 @@ func (this *StringInterfaceMap) Get(key string) interface{} {
 	return val
 }
 
+func (this *StringInterfaceMap) GetBool(key string) bool {
+    return gconv.Bool(this.Get(key))
+}
+
 func (this *StringInterfaceMap) GetInt(key string) int {
-	if r := this.Get(key); r != nil {
-		return r.(int)
-	}
-	return 0
+    return gconv.Int(this.Get(key))
 }
 
 func (this *StringInterfaceMap) GetUint (key string) uint {
-	if r := this.Get(key); r != nil {
-		return r.(uint)
-	}
-	return 0
+    return gconv.Uint(this.Get(key))
 }
 
 func (this *StringInterfaceMap) GetFloat32 (key string) float32 {
-	if r := this.Get(key); r != nil {
-		return r.(float32)
-	}
-	return 0
+    return gconv.Float32(this.Get(key))
 }
 
 func (this *StringInterfaceMap) GetFloat64 (key string) float64 {
-	if r := this.Get(key); r != nil {
-		return r.(float64)
-	}
-	return 0
+    return gconv.Float64(this.Get(key))
 }
 
 func (this *StringInterfaceMap) GetString (key string) string {
-	if r := this.Get(key); r != nil {
-		return r.(string)
-	}
-	return ""
+    return gconv.String(this.Get(key))
 }
 
 // 删除键值对
