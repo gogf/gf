@@ -40,12 +40,11 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     │   │   └── gmvc             MVC模式封装基类
     │   │   
     │   ├── net              【网络通信】
-    │   │   ├── ghttp            HTTP客户端及服务端
+    │   │   ├── ghttp            强大的HTTP客户端及服务端
     │   │   ├── gipv4            IPv4操作
     │   │   ├── gipv6            IPv6操作
     │   │   ├── grouter          路由管理
     │   │   ├── gscanner         端口扫描
-    │   │   ├── gsession         SESSION管理
     │   │   ├── gsmtp            SMTP邮件管理
     │   │   ├── gtcp             TCP服务端
     │   │   └── gudp             UDP服务端
@@ -63,6 +62,7 @@ import "gitee.com/johng/gf/g/xxx/xxx"
     │   │   └── gview            视图管理(通用的模板管理对象，独立于MVC模块)
     │   │   
     │   └── util             【常用工具】
+    │       ├── gconv            类型转换
     │       ├── grand            随机数
     │       ├── gregx            正则表达式
     │       ├── gvalid           表单校验
