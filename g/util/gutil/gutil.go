@@ -36,4 +36,3 @@ func IsLetterUpper(b byte) bool {
     }
     return false
 }
-

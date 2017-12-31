@@ -8,7 +8,7 @@ package ghttp
 import (
     "io/ioutil"
     "gitee.com/johng/gf/g/encoding/gjson"
-    "strconv"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 // 获取当前请求的id
@@ -28,18 +28,24 @@ func (r *ClientRequest) GetQuery(k string) []string {
     return nil
 }
 
-// 获取指定名称的参数int类型
+func (r *ClientRequest) GetQueryBool(k string) bool {
+    return gconv.Bool(r.GetQueryString(k))
+}
+
 func (r *ClientRequest) GetQueryInt(k string) int {
-    v := r.GetQuery(k)
-    if v == nil {
-        return -1
-    } else {
-        if i, err := strconv.Atoi(v[0]); err != nil {
-            return -1
-        } else {
-            return i
-        }
-    }
+    return gconv.Int(r.GetQueryString(k))
+}
+
+func (r *ClientRequest) GetQueryUint(k string) uint {
+    return gconv.Uint(r.GetQueryString(k))
+}
+
+func (r *ClientRequest) GetQueryFloat32(k string) float32 {
+    return gconv.Float32(r.GetQueryString(k))
+}
+
+func (r *ClientRequest) GetQueryFloat64(k string) float64 {
+    return gconv.Float64(r.GetQueryString(k))
 }
 
 func (r *ClientRequest) GetQueryString(k string) string {
@@ -52,12 +58,7 @@ func (r *ClientRequest) GetQueryString(k string) string {
 }
 
 func (r *ClientRequest) GetQueryArray(k string) []string {
-    v := r.GetQuery(k)
-    if v == nil {
-        return nil
-    } else {
-        return v
-    }
+    return r.GetQuery(k)
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
@@ -82,17 +83,24 @@ func (r *ClientRequest) GetPost(k string) []string {
     return nil
 }
 
+func (r *ClientRequest) GetPostBool(k string) bool {
+    return gconv.Bool(r.GetPostString(k))
+}
+
 func (r *ClientRequest) GetPostInt(k string) int {
-    v := r.GetPost(k)
-    if v == nil {
-        return -1
-    } else {
-        if i, err := strconv.Atoi(v[0]); err != nil {
-            return -1
-        } else {
-            return i
-        }
-    }
+    return gconv.Int(r.GetPostString(k))
+}
+
+func (r *ClientRequest) GetPostUint(k string) uint {
+    return gconv.Uint(r.GetPostString(k))
+}
+
+func (r *ClientRequest) GetPostFloat32(k string) float32 {
+    return gconv.Float32(r.GetPostString(k))
+}
+
+func (r *ClientRequest) GetPostFloat64(k string) float64 {
+    return gconv.Float64(r.GetPostString(k))
 }
 
 func (r *ClientRequest) GetPostString(k string) string {
@@ -105,13 +113,7 @@ func (r *ClientRequest) GetPostString(k string) string {
 }
 
 func (r *ClientRequest) GetPostArray(k string) []string {
-    v := r.GetPost(k)
-    if v == nil {
-        return nil
-    } else {
-        return v
-    }
-    return nil
+    return r.GetPost(k)
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
@@ -146,14 +148,28 @@ func (r *ClientRequest) GetRequestString(k string) string {
     }
 }
 
+func (r *ClientRequest) GetRequestBool(k string) bool {
+    return gconv.Bool(r.GetRequestString(k))
+}
+
+func (r *ClientRequest) GetRequestInt(k string) int {
+    return gconv.Int(r.GetRequestString(k))
+}
+
+func (r *ClientRequest) GetRequestUint(k string) uint {
+    return gconv.Uint(r.GetRequestString(k))
+}
+
+func (r *ClientRequest) GetRequestFloat32(k string) float32 {
+    return gconv.Float32(r.GetRequestString(k))
+}
+
+func (r *ClientRequest) GetRequestFloat64(k string) float64 {
+    return gconv.Float64(r.GetRequestString(k))
+}
+
 func (r *ClientRequest) GetRequestArray(k string) []string {
-    v := r.GetRequest(k)
-    if v == nil {
-        return nil
-    } else {
-        return v
-    }
-    return nil
+    return r.GetRequest(k)
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
@@ -171,14 +187,13 @@ func (r *ClientRequest) GetRequestMap(defaultMap map[string]string) map[string]s
     return m
 }
 
-
 // 获取原始请求输入字符串
 func (r *ClientRequest) GetRaw() []byte {
     result, _ := ioutil.ReadAll(r.Body)
     return result
 }
 
-// 获取原始请求输入字符串
+// 获取原始json请求输入字符串，并解析为json对象
 func (r *ClientRequest) GetJson() *gjson.Json {
     data := r.GetRaw()
     if data != nil {
