@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 二进制及byte操作管理包
+
 package gbinary
 
 import (

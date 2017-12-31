@@ -1,4 +1,5 @@
 // from https://github.com/influxdata/influxdb/tree/master/pkg/mmap
+
 package gmmap
 
 import (
