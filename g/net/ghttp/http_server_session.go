@@ -3,8 +3,8 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-
-package gsession
+// 并发安全的Session管理器
+package ghttp
 
 import (
     "sync"
@@ -14,10 +14,8 @@ import (
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/util/grand"
     "gitee.com/johng/gf/g/container/gmap"
-)
-
-const (
-    DEFAULT_EXPIRE_TIME = 600 // 默认过期间隔(10分钟)
+    "gitee.com/johng/gf/g/util/gconv"
+    "sync/atomic"
 )
 
 // 单个session对象
@@ -25,114 +23,93 @@ type Session struct {
     mu     sync.RWMutex             // 并发安全互斥锁
     id     string                   // sessionid
     data   *gmap.StringInterfaceMap // session数据
-    expire int                      // 过期间隔(秒)
 }
 
+// 默认session过期时间(秒)
+var defaultSessionMaxAge int32 = 600
+
 // 生成一个唯一的sessionid字符串
-func Id() string {
+func makeSessionId() string {
     return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 32) + grand.RandStr(3))
 }
 
+// 设置默认的session过期时间
+func SetSessionMaxAge(maxage int) {
+    atomic.StoreInt32(&defaultSessionMaxAge, int32(maxage))
+}
+
 // 获取或者生成一个session对象
-func Get(sessionid string) *Session {
-    if r := gcache.Get(cacheKey(sessionid)); r != nil {
+func GetSession(sessionid string) *Session {
+    if r := gcache.Get(sessionCacheKey(sessionid)); r != nil {
         return r.(*Session)
     }
     s := &Session {
         id     : sessionid,
         data   : gmap.NewStringInterfaceMap(),
-        expire : DEFAULT_EXPIRE_TIME,
     }
-    s.updateExpire()
     return s
 }
 
 // session在gache中的缓存键名
-func cacheKey(sessionid string) string {
+func sessionCacheKey(sessionid string) string {
     return "session_" + sessionid
 }
 
 // 获取sessionid
-func (s *Session) Id () string {
-    go s.updateExpire()
+func (s *Session) Id() string {
     return s.id
 }
 
 // 获取当前session所有数据
 func (s *Session) Data () map[string]interface{} {
-    go s.updateExpire()
     return *s.data.Clone()
-}
-
-// 设置session过期间隔(秒)
-func (s *Session) SetExpire (expire int) {
-    s.mu.Lock()
-    defer s.mu.Unlock()
-    go s.updateExpire()
-    s.expire = expire
 }
 
 // 设置session
 func (s *Session) Set (k string, v interface{}) {
-    go s.updateExpire()
     s.data.Set(k, v)
+}
+
+// 批量设置
+func (s *Session) BatchSet (m map[string]interface{}) {
+    s.data.BatchSet(m)
 }
 
 // 获取session
 func (s *Session) Get (k string) interface{} {
-    go s.updateExpire()
     return s.data.Get(k)
 }
 
+func (s *Session) GetString (k string) string {
+    return gconv.String(s.Get(k))
+}
+
+func (s *Session) GetBool (k string) bool {
+    return gconv.Bool(s.Get(k))
+}
+
 func (s *Session) GetInt (k string) int {
-    go s.updateExpire()
-    if r := s.data.Get(k); r != nil {
-        return r.(int)
-    }
-    return 0
+    return gconv.Int(s.Get(k))
 }
 
 func (s *Session) GetUint (k string) uint {
-    go s.updateExpire()
-    if r := s.data.Get(k); r != nil {
-        return r.(uint)
-    }
-    return 0
+    return gconv.Uint(s.Get(k))
 }
 
 func (s *Session) GetFloat32 (k string) float32 {
-    go s.updateExpire()
-    if r := s.data.Get(k); r != nil {
-        return r.(float32)
-    }
-    return 0
+    return gconv.Float32(s.Get(k))
 }
 
 func (s *Session) GetFloat64 (k string) float64 {
-    go s.updateExpire()
-    if r := s.data.Get(k); r != nil {
-        return r.(float64)
-    }
-    return 0
-}
-
-// 获取session(字符串)
-func (s *Session) GetString (k string) string {
-    go s.updateExpire()
-    if r := s.data.Get(k); r != nil {
-        return r.(string)
-    }
-    return ""
+    return gconv.Float64(s.Get(k))
 }
 
 // 删除session
 func (s *Session) Remove (k string) {
-    go s.updateExpire()
     s.data.Remove(k)
 }
 
-// 更新过期时间
-func (s *Session) updateExpire() {
-    //gcache.Set(cacheKey(s.id), s, int64(s.expire*1000))
-    gcache.Set(cacheKey(s.id), s, 0)
+// 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
+func (s *Session) UpdateExpire() {
+    gcache.Set(sessionCacheKey(s.id), s, int64(defaultSessionMaxAge*1000))
 }
