@@ -50,6 +50,7 @@ in                   格式：in:value1,value2,...                  说明：参
 not-in               格式：not-in:value1,value2,...              说明：参数值不应该在value1,value2,...中(字符串匹配)
 regex                格式：regex:pattern                         说明：参数值应当满足正则匹配规则pattern
 */
+
 package gvalid
 
 import (

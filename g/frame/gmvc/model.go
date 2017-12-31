@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 模型基类
+
 package gmvc
 
 type Model struct {

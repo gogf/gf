@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 封装常用的hash函数
+
 package ghash
 
 

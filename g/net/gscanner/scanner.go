@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 局域网端口扫描
+
 package gscanner
 
 import (

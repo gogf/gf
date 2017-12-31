@@ -6,6 +6,7 @@
 
 // 文件空间管理， 可用于文件碎片空间维护及再利用，支持自动合并连续碎片空间
 
+
 package gfilespace
 
 import (
