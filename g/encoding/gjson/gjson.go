@@ -7,11 +7,11 @@
 package gjson
 
 import (
-    "fmt"
     "strings"
     "strconv"
     "io/ioutil"
     "encoding/json"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 // json解析结果存放数组
@@ -121,46 +121,28 @@ func (p *Json) GetArray(pattern string) []interface{} {
 
 // 返回指定json中的string
 func (p *Json) GetString(pattern string) string {
-    result := p.Get(pattern)
-    if result != nil {
-        if r, ok := result.(string); ok {
-            return r
-        }
-    }
-    return ""
+    return gconv.String(p.Get(pattern))
 }
 
-// 返回指定json中的bool
+// 返回指定json中的bool(false:"", 0, false, off)
 func (p *Json) GetBool(pattern string) bool {
-    result := p.Get(pattern)
-    if result != nil {
-        str := fmt.Sprintf("%v", result)
-        if str != "" && str != "0" && str != "false" {
-            return true
-        }
-    }
-    return false
+    return gconv.Bool(p.Get(pattern))
 }
 
-// 返回指定json中的float64
-func (p *Json) GetFloat64(pattern string) float64 {
-    result := p.Get(pattern)
-    if result != nil {
-        if r, ok := result.(float64); ok {
-            return r
-        }
-    }
-    return 0
-}
-
-// 返回指定json中的float64->int
 func (p *Json) GetInt(pattern string) int {
-    return int(p.GetFloat64(pattern))
+    return gconv.Int(p.Get(pattern))
 }
 
-// 返回指定json中的float64->int64
-func (p *Json) GetInt64(pattern string) int64 {
-    return int64(p.GetFloat64(pattern))
+func (p *Json) GetUint(pattern string) uint {
+    return gconv.Uint(p.Get(pattern))
+}
+
+func (p *Json) GetFloat32(pattern string) float32 {
+    return gconv.Float32(p.Get(pattern))
+}
+
+func (p *Json) GetFloat64(pattern string) float64 {
+    return gconv.Float64(p.Get(pattern))
 }
 
 // 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
