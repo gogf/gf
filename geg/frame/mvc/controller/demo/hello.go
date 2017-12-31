@@ -1,9 +1,6 @@
 package demo
 
-import (
-    "gitee.com/johng/gf/g/net/ghttp"
-)
-
+import "gitee.com/johng/gf/g/net/ghttp"
 
 // 初始化控制器对象，并绑定操作到Web Server
 func init() {
