@@ -425,6 +425,13 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
 // 绑定控制器方法，pattern支持http method
 // pattern的格式形如：/user/list, put:/user, delete:/user
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
-func (s *Server)BindControllerMethod(pattern string, c Controller, method string) error {
-    return s.bindHandlerItem(pattern, HandlerItem{reflect.ValueOf(c).Elem().Type(), method, nil})
+// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔
+func (s *Server)BindControllerMethod(pattern string, c Controller, methods string) error {
+    for _, method := range strings.Split(methods, ",") {
+        item := HandlerItem{reflect.ValueOf(c).Elem().Type(), strings.TrimSpace(method), nil}
+        if err := s.bindHandlerItem(pattern, item); err != nil {
+            return err
+        }
+    }
+    return nil
 }
