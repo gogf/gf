@@ -4,19 +4,23 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-
+// 日志模块
+// 直接文件/输出操作，没有异步逻辑，没有使用缓存或者通道
 package glog
 
 import (
     "sync"
     "os"
     "io"
-    "strings"
-    "reflect"
-    "path/filepath"
     "time"
     "fmt"
+    "errors"
+    "strings"
+    "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gfilepool"
+    "runtime"
+    "strconv"
 )
 
 type Logger struct {
@@ -37,14 +41,17 @@ func New() *Logger {
     }
 }
 
+// 日志日志目录绝对路径
 func SetLogPath(path string) {
     logger.SetLogPath(path)
 }
 
+// 设置是否允许输出DEBUG信息
 func SetDebug(debug bool) {
     logger.SetDebug(debug)
 }
 
+// 获取日志目录绝对路径
 func GetLogPath() string {
     return logger.GetLogPath()
 }
@@ -210,71 +217,88 @@ func (l *Logger) SetDebug(debug bool) {
 }
 
 // 设置日志文件的存储目录路径
-func (l *Logger) SetLogPath(path string) {
+func (l *Logger) SetLogPath(path string) error {
+    // 检测目录权限
+    if !gfile.Exists(path) {
+        if err := gfile.Mkdir(path); err != nil {
+            fmt.Fprintln(os.Stderr, err)
+            return err
+        }
+    }
+    if !gfile.IsWritable(path) {
+        errstr := path + " is no writable for current user"
+        fmt.Fprintln(os.Stderr, errstr)
+        return errors.New(errstr)
+    }
     l.mutex.Lock()
-    l.logpath  = strings.TrimRight(path, string(filepath.Separator))
+    l.logpath = strings.TrimRight(path, string(filepath.Separator))
     l.mutex.Unlock()
     // 重新检查日志io对象
     l.checkLogIO()
+    return nil
 }
 
-// 检查文件名称是否已经过期
+// 检查文件名称是否已经过期，如果过期那么需要新建一个日志文件(默认按照日期分隔)
 func (l *Logger) checkLogIO() {
     date := time.Now().Format("2006-01-02")
     if date != l.GetLastLogDate() {
-        path := l.GetLogPath()
-        if path != "" {
-            if !gfile.Exists(path) {
-                err := gfile.Mkdir(path)
-                if err != nil {
-                    fmt.Fprintln(os.Stderr, err)
-                    return
-                }
-            }
-            if !gfile.IsWritable(path) {
-                fmt.Fprintln(os.Stderr, path + " is no writable for current user")
-                return
-            }
-
-            l.mutex.Lock()
-            fname     := date + ".log"
-            fpath     := l.logpath + string(filepath.Separator) + fname
-            fio, err  := os.OpenFile(fpath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
-            if err == nil && fio != nil {
-                if l.logio != nil && reflect.TypeOf(l.logio).String() == "*os.File" {
-                    l.logio.(*os.File).Close()
-                }
-                l.logio = fio
+        if path := l.GetLogPath(); path != "" {
+            fname := date + ".log"
+            fpath := path + string(filepath.Separator) + fname
+            if fp, err := gfilepool.OpenWithPool(fpath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 600); err == nil {
+                l.SetLogIO(fp.File())
             } else {
                 fmt.Fprintln(os.Stderr, err)
             }
-            l.mutex.Unlock()
         }
     }
+}
+
+// 这里的互斥锁保证统一时刻只会写入一行日志，防止串日志的情况
+func (l *Logger) print(logio io.Writer, s string) {
+    l.mutex.Lock()
+    fmt.Fprint(logio, l.format(s))
+    l.mutex.Unlock()
 }
 
 // 核心打印数据方法(标准输出)
 func (l *Logger) stdPrint(s string) {
     l.checkLogIO()
-    l.mutex.Lock()
-    if l.logio == nil {
-        fmt.Fprint(os.Stdout, l.format(s))
-    } else {
-        fmt.Fprint(l.logio, l.format(s))
+    logio := l.GetLogIO()
+    if logio == nil {
+        logio = os.Stdout
     }
-    l.mutex.Unlock()
+    l.print(logio, s)
 }
 
 // 核心打印数据方法(标准错误)
 func (l *Logger) errPrint(s string) {
     l.checkLogIO()
-    l.mutex.Lock()
-    if l.logio == nil {
-        fmt.Fprint(os.Stderr, l.format(s))
-    } else {
-        fmt.Fprint(l.logio, l.format(s))
+    logio := l.GetLogIO()
+    if logio == nil {
+        logio = os.Stderr
     }
-    l.mutex.Unlock()
+    // 记录调用回溯信息
+    backtrace := l.backtrace()
+    if s[len(s) - 1] == byte('\n') {
+        s = s + backtrace + "\n"
+    } else {
+        s = s + "\n" + backtrace + "\n"
+    }
+    l.print(logio, s)
+}
+
+// 调用回溯字符串
+func (l *Logger) backtrace() string {
+    backtrace := "Trace:\n"
+    for i := 1; i < 100; i++ {
+        if _, cfile, cline, ok := runtime.Caller(i + 3); ok {
+            backtrace += strconv.Itoa(i) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n"
+        } else {
+            break
+        }
+    }
+    return backtrace
 }
 
 func (l *Logger) format(s string) string {
