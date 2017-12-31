@@ -2,8 +2,6 @@ package demo
 
 import (
     "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/net/gsession"
-    "strconv"
 )
 
 
@@ -15,17 +13,5 @@ func init() {
 
 // 用于函数映射
 func Hello(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    cookie  := ghttp.GetCookie(r.Id())
-    session := gsession.Get(cookie.SessionId())
-
-    id := 0
-    for i := 0; i < 1; i++ {
-        if r := session.Get("id"); r != nil {
-            id = r.(int)
-        }
-        id++
-        session.Set("id", id)
-    }
-
-    w.WriteString("Hello World!" + strconv.Itoa(id))
+    w.WriteString("Hello World!")
 }

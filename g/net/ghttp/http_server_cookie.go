@@ -45,7 +45,7 @@ var cookies = gmap.NewUintInterfaceMap()
 
 // 创建一个cookie对象，与传入的请求对应
 func NewCookie(r *ClientRequest, w *ServerResponse) *Cookie {
-    if r := GetCookie(r.Id()); r != nil {
+    if r := GetCookie(r.Id); r != nil {
         return r
     }
     c := &Cookie {
@@ -55,7 +55,7 @@ func NewCookie(r *ClientRequest, w *ServerResponse) *Cookie {
         response : w,
     }
     c.init()
-    cookies.Set(uint(r.Id()), c)
+    cookies.Set(uint(r.Id), c)
     return c
 }
 
@@ -65,11 +65,6 @@ func GetCookie(requestid uint64) *Cookie {
         return r.(*Cookie)
     }
     return nil
-}
-
-// 请求完毕后删除已经存在的Cookie对象
-func RemoveCookie(requestid uint64) {
-    cookies.Remove(uint(requestid))
 }
 
 // 获取默认的domain参数
@@ -90,7 +85,12 @@ func (c *Cookie) init() {
 
 // 获取SessionId
 func (c *Cookie) SessionId() string {
-    return c.Get(SESSION_ID_NAME)
+    v := c.Get(SESSION_ID_NAME)
+    if v == "" {
+        v = makeSessionId()
+        c.SetSessionId(v)
+    }
+    return v
 }
 
 // 设置SessionId
@@ -130,6 +130,11 @@ func (c *Cookie) Get(key string) string {
 // 删除cookie的重点是需要通知浏览器客户端cookie已过期
 func (c *Cookie) Remove(key, domain, path string) {
     c.SetCookie(key, "", domain, path, -86400)
+}
+
+// 请求完毕后删除已经存在的Cookie对象
+func (c *Cookie) Close() {
+    cookies.Remove(uint(c.request.Id))
 }
 
 // 输出到客户端

@@ -9,7 +9,6 @@ package gmvc
 
 import (
     "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/net/gsession"
 )
 
 // 控制器基类
@@ -18,7 +17,7 @@ type Controller struct {
     Request  *ghttp.ClientRequest  // 请求数据对象
     Response *ghttp.ServerResponse // 返回数据对象
     Cookie   *ghttp.Cookie         // COOKIE操作对象
-    Session  *gsession.Session     // SESSION操作对象
+    Session  *ghttp.Session        // SESSION操作对象
     View     *View                 // 视图对象
 }
 
@@ -27,9 +26,9 @@ func (c *Controller) Init(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.Serv
     c.Server   = s
     c.Request  = r
     c.Response = w
-    c.Cookie   = ghttp.NewCookie(c.Request, c.Response)
-    c.View     = NewView(c)
-    c.Session  = gsession.Get(c.Cookie.SessionId())
+    c.View     = NewView(w)
+    c.Cookie   = r.Cookie
+    c.Session  = r.Session
 }
 
 // 控制器结束请求接口方法

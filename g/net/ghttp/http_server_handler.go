@@ -16,7 +16,6 @@ import (
     "net/http"
     "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/net/gsession"
     "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
@@ -39,7 +38,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 构造请求/返回参数对象
     request  := &ClientRequest{}
     response := &ServerResponse{}
-    request.id              = s.increServed()
+    request.Id              = s.increServed()
     request.Request         = *r
     response.ResponseWriter = w
     if h := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); h != nil {
@@ -55,13 +54,10 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
 // 初始化控制器
 func (s *Server)callHandler(h *HandlerItem, r *ClientRequest, w *ServerResponse) {
-    // 会话处理，每个请求必定有一个sessionid
-    cookie    := NewCookie(r, w)
-    sessionid := cookie.SessionId()
-    if sessionid == "" {
-        sessionid = gsession.Id()
-        cookie.SetSessionId(sessionid)
-    }
+    // 会话处理
+    r.Cookie  = NewCookie(r, w)
+    r.Session = GetSession(r.Cookie.SessionId())
+
     // 请求处理
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
@@ -80,13 +76,15 @@ func (s *Server)callHandler(h *HandlerItem, r *ClientRequest, w *ServerResponse)
     }
 
     // 输出Cookie
-    cookie.Output()
+    r.Cookie.Output()
 
     // 输出缓冲区
     w.OutputBuffer()
 
-    // 删除当前会话的Cookie
-    RemoveCookie(r.Id())
+    // 关闭当前会话的Cookie
+    go r.Cookie.Close()
+    // 更新Sssion会话超时时间
+    go r.Session.UpdateExpire()
 }
 
 // 处理静态文件请求

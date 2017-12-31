@@ -9,20 +9,12 @@ import (
     "net/http"
     "strings"
     "time"
-    "net/url"
     "bytes"
 )
 
 // http客户端
 type Client struct {
     http.Client
-}
-
-// 请求对象
-type ClientRequest struct {
-    http.Request
-    id       uint64      // 请求id(唯一)
-    getvals  *url.Values // GET参数
 }
 
 // 客户端请求结果对象
