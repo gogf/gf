@@ -11,22 +11,23 @@ import (
     "html/template"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/frame/gins"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 // 视图对象(一个请求一个视图对象，用完即销毁)
 type View struct {
-    mu   sync.RWMutex           // 并发互斥锁
-    ctl  *Controller            // 所属控制器
-    view *gview.View            // 底层视图对象
-    data map[string]interface{} // 视图数据
+    mu       sync.RWMutex              // 并发互斥锁
+    view     *gview.View               // 底层视图对象
+    data     map[string]interface{}    // 视图数据
+    response *ghttp.ServerResponse     // 数据返回对象
 }
 
 // 创建一个MVC请求中使用的视图对象
-func NewView(c *Controller) *View {
+func NewView(w *ghttp.ServerResponse) *View {
     return &View{
-        ctl  : c,
-        view : gins.View(),
-        data : make(map[string]interface{}),
+        view     : gins.View(),
+        data     : make(map[string]interface{}),
+        response : w,
     }
 }
 
@@ -69,10 +70,10 @@ func (view *View) Display(files...string) error {
         file = files[0]
     }
     if content, err := view.Parse(file); err != nil {
-        view.ctl.Response.WriteString("Tpl Parsing Error: " + err.Error())
+        view.response.WriteString("Tpl Parsing Error: " + err.Error())
         return err
     } else {
-        view.ctl.Response.Write(content)
+        view.response.Write(content)
     }
     return nil
 }
