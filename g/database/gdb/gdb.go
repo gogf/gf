@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 //
 // 对常用关系数据库的封装管理包
+
 package gdb
 
 import (

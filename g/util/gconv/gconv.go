@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 // 数据基本类型强制转换
+
 package gconv
 
 import (

@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+
 package gutil
 
 // 便利数组查找字符串索引位置，如果不存在则返回-1
