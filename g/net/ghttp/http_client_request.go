@@ -7,13 +7,19 @@ package ghttp
 
 import (
     "io/ioutil"
-    "gitee.com/johng/gf/g/encoding/gjson"
+    "net/http"
+    "net/url"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/encoding/gjson"
 )
 
-// 获取当前请求的id
-func (r *ClientRequest) Id() uint64 {
-    return r.id
+// 请求对象
+type ClientRequest struct {
+    http.Request
+    getvals  *url.Values    // GET参数
+    Id       uint64         // 请求id(唯一)
+    Cookie   *Cookie        // 与当前请求绑定的Cookie对象(并发安全)
+    Session  *Session       // 与当前请求绑定的Session对象(并发安全)
 }
 
 // 获得指定名称的get参数列表
