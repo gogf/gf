@@ -20,11 +20,11 @@ type View struct {
     mu       sync.RWMutex              // 并发互斥锁
     view     *gview.View               // 底层视图对象
     data     map[string]interface{}    // 视图数据
-    response *ghttp.ServerResponse     // 数据返回对象
+    response *ghttp.Response           // 数据返回对象
 }
 
 // 创建一个MVC请求中使用的视图对象
-func NewView(w *ghttp.ServerResponse) *View {
+func NewView(w *ghttp.Response) *View {
     return &View{
         view     : gins.View(),
         data     : make(map[string]interface{}),

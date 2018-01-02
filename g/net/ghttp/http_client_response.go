@@ -8,7 +8,13 @@ package ghttp
 
 import (
     "io/ioutil"
+    "net/http"
 )
+
+// 客户端请求结果对象
+type ClientResponse struct {
+    http.Response
+}
 
 // 获取返回的数据
 func (r *ClientResponse) ReadAll() []byte {

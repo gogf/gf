@@ -19,11 +19,6 @@ type Client struct {
     http.Client
 }
 
-// 客户端请求结果对象
-type ClientResponse struct {
-    http.Response
-}
-
 // http客户端对象指针
 func NewClient() (*Client) {
     return &Client{}
