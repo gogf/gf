@@ -8,7 +8,7 @@ func init() {
     ghttp.GetServer().BindObject("/object", &Object{})
 }
 
-func (o *Object) Show(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    w.WriteString("It's show time bibi!")
+func (o *Object) Show(r *ghttp.Request) {
+    r.Response.WriteString("It's show time bibi!")
 }
 

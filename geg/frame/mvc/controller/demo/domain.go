@@ -15,7 +15,7 @@ func init() {
 }
 
 // 用于对象映射
-func (d *ControllerDomain) Show(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    w.WriteString("It's show time bibi!")
+func (d *ControllerDomain) Show(r *ghttp.Request) {
+    r.Response.WriteString("It's show time bibi!")
 }
 

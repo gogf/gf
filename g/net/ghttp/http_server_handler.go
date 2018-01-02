@@ -36,17 +36,19 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     if err == nil && strings.Compare(uri, result) != 0 {
         r.URL, _ = r.URL.Parse(result)
     }
-    // 构造请求/返回参数对象
-    request  := &ClientRequest{}
-    response := &ServerResponse{}
-    request.Id              = s.increServed()
-    request.Request         = *r
-    response.ResponseWriter = w
+    // 构造请求参数对象
+    request  := &Request{
+        Id       : s.idgen.Int(),
+        Request  : *r,
+        Response : &ServerResponse {
+            ResponseWriter : w,
+        },
+    }
     if h := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); h != nil {
-        s.callHandler(h, request, response)
+        s.callHandler(h, request)
     } else {
         if h := s.getHandler(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path); h != nil {
-            s.callHandler(h, request, response)
+            s.callHandler(h, request)
         } else {
             s.serveFile(w, r)
         }
@@ -54,33 +56,33 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // 初始化控制器
-func (s *Server)callHandler(h *HandlerItem, r *ClientRequest, w *ServerResponse) {
+func (s *Server)callHandler(h *HandlerItem, r *Request) {
     // 会话处理
-    r.Cookie  = NewCookie(r, w)
+    r.Cookie  = NewCookie(r)
     r.Session = GetSession(r.Cookie.SessionId())
 
     // 请求处理
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
-        c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(s), reflect.ValueOf(r), reflect.ValueOf(w)})
+        c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
         c.MethodByName(h.fname).Call(nil)
         c.MethodByName("Shut").Call(nil)
     } else {
         // 直接调用注册的方法处理请求
-        h.faddr(s, r, w)
+        h.faddr(r)
     }
     // 路由规则打包
-    if buffer, err := s.Router.Patch(w.Buffer()); err == nil {
-        w.ClearBuffer()
-        w.Write(buffer)
+    if buffer, err := s.Router.Patch(r.Response.Buffer()); err == nil {
+        r.Response.ClearBuffer()
+        r.Response.Write(buffer)
     }
 
     // 输出Cookie
     r.Cookie.Output()
 
     // 输出缓冲区
-    w.OutputBuffer()
+    r.Response.OutputBuffer()
 
     // 关闭当前会话的Cookie
     go r.Cookie.Close()

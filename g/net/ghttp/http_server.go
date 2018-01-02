@@ -19,9 +19,9 @@ import (
     "crypto/tls"
     "path/filepath"
     "gitee.com/johng/gf/g/util/gutil"
-    "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/net/grouter"
-    "sync/atomic"
+    "gitee.com/johng/gf/g/util/gidgen"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 const (
@@ -38,9 +38,9 @@ type Server struct {
     server     http.Server     // 底层http server对象
     config     ServerConfig    // 配置对象
     status     int8            // 当前服务器状态(0：未启动，1：运行中)
-    served     uint64          // 已服务的请求数(递增)
     handlerMap HandlerMap      // 所有注册的回调函数
     methodsMap map[string]bool // 所有支持的HTTP Method
+    idgen      *gidgen.Gen     // 请求ID生成器
     Router     *grouter.Router // 路由管理对象
 }
 
@@ -55,7 +55,7 @@ type HandlerItem struct {
 }
 
 // http注册函数
-type HandlerFunc func(*Server, *ClientRequest, *ServerResponse)
+type HandlerFunc func(*Request)
 
 // Server表，用以存储和检索名称与Server对象之间的关联关系
 var serverMapping = gmap.NewStringInterfaceMap()
@@ -74,6 +74,7 @@ func GetServer(names...string) (*Server) {
         name       : name,
         handlerMap : make(HandlerMap),
         methodsMap : make(map[string]bool),
+        idgen      : gidgen.New(20000),
         Router     : grouter.New(),
     }
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
@@ -248,11 +249,6 @@ func (s *Server)SetServerRoot(root string) error {
     return nil
 }
 
-// 服务请求数原子递增
-func (s *Server) increServed() uint64 {
-    return atomic.AddUint64(&s.served, 1)
-}
-
 // 生成回调方法查询的Key
 func (s *Server) handlerKey(domain, method, pattern string) string {
     return strings.ToUpper(method) + ":" + pattern + "@" + strings.ToLower(domain)
@@ -355,7 +351,7 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
     for i := 0; i < v.NumMethod(); i++ {
         name  := t.Method(i).Name
         key   := s.appendMethodNameToUriWithPattern(pattern, name)
-        m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Server, *ClientRequest, *ServerResponse))}
+        m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Request))}
     }
     return s.bindHandlerByMap(m)
 }
@@ -372,7 +368,7 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
             continue
         }
         key   := name + ":" + pattern
-        m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Server, *ClientRequest, *ServerResponse))}
+        m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Request))}
     }
     return s.bindHandlerByMap(m)
 }

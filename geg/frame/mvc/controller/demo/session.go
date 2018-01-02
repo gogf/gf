@@ -11,9 +11,9 @@ func init() {
 }
 
 // 用于函数映射
-func Session(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
+func Session(r *ghttp.Request) {
     id := r.Session.GetInt("id")
     r.Session.Set("id", id + 1)
     
-    w.WriteString("id:" + strconv.Itoa(id))
+    r.Response.WriteString("id:" + strconv.Itoa(id))
 }
