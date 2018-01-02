@@ -14,12 +14,12 @@ import (
 
 // 控制器基类
 type Controller struct {
-    Server   *ghttp.Server         // Web Server对象
-    Request  *ghttp.Request        // 请求数据对象
-    Response *ghttp.ServerResponse // 返回数据对象
-    Cookie   *ghttp.Cookie         // COOKIE操作对象
-    Session  *ghttp.Session        // SESSION操作对象
-    View     *View                 // 视图对象
+    Request  *ghttp.Request  // 请求数据对象
+    Response *ghttp.Response // 返回数据对象(r.Response)
+    Server   *ghttp.Server   // Web Server对象(r.Server)
+    Cookie   *ghttp.Cookie   // COOKIE操作对象
+    Session  *ghttp.Session  // SESSION操作对象
+    View     *View           // 视图对象
 }
 
 // 控制器初始化接口方法
