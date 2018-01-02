@@ -20,7 +20,7 @@ import (
 
 const (
     gDEFAULT_PATH    = "/"           // 默认path
-    gDEFAULT_MAX_AGE = 86400         // 默认cookie有效期
+    gDEFAULT_MAX_AGE = 86400*365     // 默认cookie有效期(一年)
     SESSION_ID_NAME  = "gfsessionid" // 默认存放Cookie中的SessionId名称
 )
 
@@ -142,13 +142,6 @@ func (c *Cookie) Close() {
 func (c *Cookie) Output() {
     c.mu.RLock()
     defer c.mu.RUnlock()
-    // 自动更新SessionId的过期时间
-    sitem := c.data[SESSION_ID_NAME]
-    minex := int(gtime.Second()) + gDEFAULT_MAX_AGE
-    if sitem.expire < minex {
-        sitem.expire            = minex
-        c.data[SESSION_ID_NAME] = sitem
-    }
     for k, v := range c.data {
         if v.expire == 0 {
             continue
