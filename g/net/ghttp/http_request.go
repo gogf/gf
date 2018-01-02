@@ -22,7 +22,7 @@ type Request struct {
     Server   *Server         // 请求关联的服务器对象
     Cookie   *Cookie         // 与当前请求绑定的Cookie对象(并发安全)
     Session  *Session        // 与当前请求绑定的Session对象(并发安全)
-    Response *ServerResponse // 对应请求的返回数据操作对象
+    Response *Response // 对应请求的返回数据操作对象
 }
 
 // 获得指定名称的get参数列表

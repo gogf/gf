@@ -14,7 +14,7 @@ import (
 )
 
 // 服务端请求返回对象
-type ServerResponse struct {
+type Response struct {
     http.ResponseWriter
     bufmu  sync.RWMutex // 缓冲区互斥锁
     buffer []byte       // 每个请求的返回数据缓冲区
@@ -28,21 +28,21 @@ type ResponseJson struct {
 }
 
 // 返回信息(byte)
-func (r *ServerResponse) Write(content []byte) {
+func (r *Response) Write(content []byte) {
     r.bufmu.Lock()
     defer r.bufmu.Unlock()
     r.buffer = append(r.buffer, content...)
 }
 
 // 返回信息(string)
-func (r *ServerResponse) WriteString(content string) {
+func (r *Response) WriteString(content string) {
     r.bufmu.Lock()
     defer r.bufmu.Unlock()
     r.buffer = append(r.buffer, content...)
 }
 
 // 返回固定格式的json
-func (r *ServerResponse) WriteJson(result int, message string, data []byte) error {
+func (r *Response) WriteJson(result int, message string, data []byte) error {
     r.Header().Set("Content-Type", "application/json")
     r.bufmu.Lock()
     defer r.bufmu.Unlock()
@@ -55,26 +55,26 @@ func (r *ServerResponse) WriteJson(result int, message string, data []byte) erro
 }
 
 // 返回内容编码
-func (r *ServerResponse) WriteHeaderEncoding(encoding string) {
+func (r *Response) WriteHeaderEncoding(encoding string) {
     r.Header().Set("Content-Type", "text/plain; charset=" + encoding)
 }
 
 // 获取当前缓冲区中的数据
-func (r *ServerResponse) Buffer() []byte {
+func (r *Response) Buffer() []byte {
     r.bufmu.RLock()
     defer r.bufmu.RUnlock()
     return r.buffer
 }
 
 // 清空缓冲区内容
-func (r *ServerResponse) ClearBuffer() {
+func (r *Response) ClearBuffer() {
     r.bufmu.Lock()
     defer r.bufmu.Unlock()
     r.buffer = make([]byte, 0)
 }
 
 // 输出缓冲区数据到客户端
-func (r *ServerResponse) OutputBuffer() {
+func (r *Response) OutputBuffer() {
     r.bufmu.Lock()
     defer r.bufmu.Unlock()
     if len(r.buffer) > 0 {
