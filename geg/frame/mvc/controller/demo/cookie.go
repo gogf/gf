@@ -11,9 +11,9 @@ func init() {
 }
 
 // 用于函数映射
-func Cookie(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
+func Cookie(r *ghttp.Request) {
     datetime := r.Cookie.Get("datetime")
     r.Cookie.Set("datetime", gtime.Datetime())
     
-    w.WriteString("datetime:" + datetime)
+    r.Response.WriteString("datetime:" + datetime)
 }

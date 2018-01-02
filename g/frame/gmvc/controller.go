@@ -15,7 +15,7 @@ import (
 // 控制器基类
 type Controller struct {
     Server   *ghttp.Server         // Web Server对象
-    Request  *ghttp.ClientRequest  // 请求数据对象
+    Request  *ghttp.Request        // 请求数据对象
     Response *ghttp.ServerResponse // 返回数据对象
     Cookie   *ghttp.Cookie         // COOKIE操作对象
     Session  *ghttp.Session        // SESSION操作对象
@@ -23,11 +23,11 @@ type Controller struct {
 }
 
 // 控制器初始化接口方法
-func (c *Controller) Init(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    c.Server   = s
+func (c *Controller) Init(r *ghttp.Request) {
+    c.Server   = r.Server
     c.Request  = r
-    c.Response = w
-    c.View     = NewView(w)
+    c.Response = r.Response
+    c.View     = NewView(r.Response)
     c.Cookie   = r.Cookie
     c.Session  = r.Session
 }

@@ -9,6 +9,6 @@ func init() {
 }
 
 // 用于函数映射
-func Hello(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    w.WriteString("Hello World!")
+func Hello(r *ghttp.Request) {
+    r.Response.WriteString("Hello World!")
 }
