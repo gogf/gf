@@ -9,7 +9,7 @@ func init() {
     ghttp.GetServer().BindObjectRest("/object-rest", &ObjectRest{})
 }
 
-func (o *ObjectRest) Get(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    w.WriteString("It's show time bibi!")
+func (o *ObjectRest) Get(r *ghttp.Request) {
+    r.Response.WriteString("It's show time bibi!")
 }
 
