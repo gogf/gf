@@ -36,12 +36,12 @@ func (c *Client) SetTimeOut(t time.Duration)  {
 
 // GET请求
 func (c *Client) Get(url string) (*ClientResponse, error) {
-    return c.Request("GET", url, []byte(""))
+    return c.DoRequest("GET", url, []byte(""))
 }
 
 // PUT请求
 func (c *Client) Put(url, data string) (*ClientResponse, error) {
-    return c.Request("PUT", url, []byte(data))
+    return c.DoRequest("PUT", url, []byte(data))
 }
 
 // POST请求提交数据
@@ -57,31 +57,31 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
 
 // DELETE请求
 func (c *Client) Delete(url, data string) (*ClientResponse, error) {
-    return c.Request("DELETE", url, []byte(data))
+    return c.DoRequest("DELETE", url, []byte(data))
 }
 
 func (c *Client) Head(url, data string) (*ClientResponse, error) {
-    return c.Request("HEAD", url, []byte(data))
+    return c.DoRequest("HEAD", url, []byte(data))
 }
 
 func (c *Client) Patch(url, data string) (*ClientResponse, error) {
-    return c.Request("PATCH", url, []byte(data))
+    return c.DoRequest("PATCH", url, []byte(data))
 }
 
 func (c *Client) Connect(url, data string) (*ClientResponse, error) {
-    return c.Request("CONNECT", url, []byte(data))
+    return c.DoRequest("CONNECT", url, []byte(data))
 }
 
 func (c *Client) Options(url, data string) (*ClientResponse, error) {
-    return c.Request("OPTIONS", url, []byte(data))
+    return c.DoRequest("OPTIONS", url, []byte(data))
 }
 
 func (c *Client) Trace(url, data string) (*ClientResponse, error) {
-    return c.Request("TRACE", url, []byte(data))
+    return c.DoRequest("TRACE", url, []byte(data))
 }
 
 // 请求并返回response对象，该方法支持二进制提交数据
-func (c *Client) Request(method, url string, data []byte) (*ClientResponse, error) {
+func (c *Client) DoRequest(method, url string, data []byte) (*ClientResponse, error) {
     req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader(data))
     if err != nil {
         return nil, err
@@ -97,42 +97,42 @@ func (c *Client) Request(method, url string, data []byte) (*ClientResponse, erro
 
 
 func Get(url string) (*ClientResponse, error) {
-    return Request("GET", url, []byte(""))
+    return DoRequest("GET", url, []byte(""))
 }
 
 func Put(url, data string) (*ClientResponse, error) {
-    return Request("PUT", url, []byte(data))
+    return DoRequest("PUT", url, []byte(data))
 }
 
 func Post(url, data string) (*ClientResponse, error) {
-    return Request("PUT", url, []byte(data))
+    return DoRequest("PUT", url, []byte(data))
 }
 
 func Delete(url, data string) (*ClientResponse, error) {
-    return Request("DELETE", url, []byte(data))
+    return DoRequest("DELETE", url, []byte(data))
 }
 
 func Head(url, data string) (*ClientResponse, error) {
-    return Request("HEAD", url, []byte(data))
+    return DoRequest("HEAD", url, []byte(data))
 }
 
 func Patch(url, data string) (*ClientResponse, error) {
-    return Request("PATCH", url, []byte(data))
+    return DoRequest("PATCH", url, []byte(data))
 }
 
 func Connect(url, data string) (*ClientResponse, error) {
-    return Request("CONNECT", url, []byte(data))
+    return DoRequest("CONNECT", url, []byte(data))
 }
 
 func Options(url, data string) (*ClientResponse, error) {
-    return Request("OPTIONS", url, []byte(data))
+    return DoRequest("OPTIONS", url, []byte(data))
 }
 
 func Trace(url, data string) (*ClientResponse, error) {
-    return Request("TRACE", url, []byte(data))
+    return DoRequest("TRACE", url, []byte(data))
 }
 
 // 该方法支持二进制提交数据
-func Request(method, url string, data []byte) (*ClientResponse, error) {
-    return NewClient().Request(method, url, data)
+func DoRequest(method, url string, data []byte) (*ClientResponse, error) {
+    return NewClient().DoRequest(method, url, data)
 }

@@ -2,12 +2,12 @@ package main
 
 import "gitee.com/johng/gf/g/net/ghttp"
 
-func Hello1(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    w.WriteString("Hello World1!")
+func Hello1(r *ghttp.Request) {
+    r.Response.WriteString("Hello World1!")
 }
 
-func Hello2(s *ghttp.Server, r *ghttp.ClientRequest, w *ghttp.ServerResponse) {
-    w.WriteString("Hello World2!")
+func Hello2(r *ghttp.Request) {
+    r.Response.WriteString("Hello World2!")
 }
 
 func main() {

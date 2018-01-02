@@ -29,7 +29,7 @@ type Cookie struct {
     mu       sync.RWMutex          // 并发安全互斥锁
     data     map[string]CookieItem // 数据项
     domain   string                // 默认的cookie域名
-    request  *ClientRequest        // 所属HTTP请求对象
+    request  *Request        // 所属HTTP请求对象
     response *ServerResponse       // 所属HTTP返回对象
 }
 
@@ -45,7 +45,7 @@ type CookieItem struct {
 var cookies = gmap.NewUintInterfaceMap()
 
 // 创建一个cookie对象，与传入的请求对应
-func NewCookie(r *ClientRequest, w *ServerResponse) *Cookie {
+func NewCookie(r *Request) *Cookie {
     if r := GetCookie(r.Id); r != nil {
         return r
     }
@@ -53,7 +53,7 @@ func NewCookie(r *ClientRequest, w *ServerResponse) *Cookie {
         data     : make(map[string]CookieItem),
         domain   : defaultDomain(r),
         request  : r,
-        response : w,
+        response : r.Response,
     }
     c.init()
     cookies.Set(uint(r.Id), c)
@@ -61,7 +61,7 @@ func NewCookie(r *ClientRequest, w *ServerResponse) *Cookie {
 }
 
 // 获取一个已经存在的Cookie对象
-func GetCookie(requestid uint64) *Cookie {
+func GetCookie(requestid int) *Cookie {
     if r := cookies.Get(uint(requestid)); r != nil {
         return r.(*Cookie)
     }
@@ -69,7 +69,7 @@ func GetCookie(requestid uint64) *Cookie {
 }
 
 // 获取默认的domain参数
-func defaultDomain(r *ClientRequest) string {
+func defaultDomain(r *Request) string {
     return strings.Split(r.Host, ":")[0]
 }
 
