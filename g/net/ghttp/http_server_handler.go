@@ -39,8 +39,9 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 构造请求参数对象
     request  := &Request{
         Id       : s.idgen.Int(),
+        Server   : s,
         Request  : *r,
-        Response : &ServerResponse {
+        Response : &Response {
             ResponseWriter : w,
         },
     }

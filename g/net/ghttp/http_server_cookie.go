@@ -29,8 +29,8 @@ type Cookie struct {
     mu       sync.RWMutex          // 并发安全互斥锁
     data     map[string]CookieItem // 数据项
     domain   string                // 默认的cookie域名
-    request  *Request        // 所属HTTP请求对象
-    response *ServerResponse       // 所属HTTP返回对象
+    request  *Request              // 所属HTTP请求对象
+    response *Response             // 所属HTTP返回对象
 }
 
 // cookie项
