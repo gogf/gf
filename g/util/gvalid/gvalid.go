@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 通用数据验证工具
+// 数据校验.
 // 本来打算取名gvalidator的，名字太长了，缩写一下
 package gvalid
 
