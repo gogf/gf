@@ -54,11 +54,6 @@ func (r *Response) WriteJson(result int, message string, data []byte) error {
     return nil
 }
 
-// 返回内容编码
-func (r *Response) WriteHeaderEncoding(encoding string) {
-    r.Header().Set("Content-Type", "text/plain; charset=" + encoding)
-}
-
 // 获取当前缓冲区中的数据
 func (r *Response) Buffer() []byte {
     r.bufmu.RLock()
