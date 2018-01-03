@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 唯一ID生成器，
+// ID生成器.
 // 内部采用了通道+缓冲池来实现高效的ID递增生成，
 // 非常适合高并发下使用
 package gidgen

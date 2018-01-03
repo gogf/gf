@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// IPv6管理
+// IPv6
 package gipv6
 
 import "gitee.com/johng/gf/g/util/gregx"
