@@ -6,6 +6,20 @@
 
 // 通用数据验证工具
 // 本来打算取名gvalidator的，名字太长了，缩写一下
+package gvalid
+
+import (
+    "strings"
+    "regexp"
+    "strconv"
+    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/net/gipv4"
+    "gitee.com/johng/gf/g/net/gipv6"
+    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/container/gmap"
+)
+
 /*
 参考：https://laravel.com/docs/5.5/validation#available-validation-rules
 规则如下：
@@ -50,19 +64,6 @@ in                   格式：in:value1,value2,...                  说明：参
 not-in               格式：not-in:value1,value2,...              说明：参数值不应该在value1,value2,...中(字符串匹配)
 regex                格式：regex:pattern                         说明：参数值应当满足正则匹配规则pattern
 */
-package gvalid
-
-import (
-    "strings"
-    "regexp"
-    "strconv"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/gregx"
-    "gitee.com/johng/gf/g/encoding/gjson"
-    "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/net/gipv6"
-    "gitee.com/johng/gf/g/net/gipv4"
-)
 
 // 默认规则校验错误消息(可以通过接口自定义错误消息)
 var defaultMessages = map[string]string {
