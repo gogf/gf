@@ -24,9 +24,9 @@ type Controller struct {
 
 // 控制器初始化接口方法
 func (c *Controller) Init(r *ghttp.Request) {
-    c.Server   = r.Server
     c.Request  = r
     c.Response = r.Response
+    c.Server   = r.Server
     c.View     = NewView(r.Response)
     c.Cookie   = r.Cookie
     c.Session  = r.Session
