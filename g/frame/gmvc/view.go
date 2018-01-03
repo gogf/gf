@@ -4,7 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// MVC视图基类
 package gmvc
 
 import (
@@ -15,7 +14,7 @@ import (
     "gitee.com/johng/gf/g/net/ghttp"
 )
 
-// 视图对象(一个请求一个视图对象，用完即销毁)
+// MVC视图基类(一个请求一个视图对象，用完即销毁)
 type View struct {
     mu       sync.RWMutex              // 并发互斥锁
     view     *gview.View               // 底层视图对象
