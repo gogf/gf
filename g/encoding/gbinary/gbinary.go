@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 二进制及byte操作管理包
+// 二进制及byte操作
 package gbinary
 
 import (
