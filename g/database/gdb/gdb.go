@@ -3,9 +3,8 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-//
-// 对常用关系数据库的封装管理包
 
+// 关系数据库操作
 package gdb
 
 import (

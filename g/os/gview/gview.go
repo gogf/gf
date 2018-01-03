@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-
+// 视图管理
 package gview
 
 import (
@@ -38,7 +38,7 @@ type Template struct {
 var viewMap = gmap.NewStringInterfaceMap()
 
 // 获取或者创建一个视图对象
-func GetView(path string) *View {
+func Get(path string) *View {
     if r := viewMap.Get(path); r != nil {
         return r.(*View)
     }
@@ -49,7 +49,7 @@ func GetView(path string) *View {
 
 // 生成一个视图对象
 func New(path string) *View {
-    return &View{
+    return &View {
         path   : path,
         tpls   : gmap.NewStringInterfaceMap(),
         suffix : "tpl",

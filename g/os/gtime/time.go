@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-
+// 时间管理
 package gtime
 
 import (
@@ -25,9 +25,8 @@ func SetInterval(t time.Duration, callback func() bool) {
     go func() {
         for {
             time.Sleep(t)
-            r := callback()
-            if !r {
-                break;
+            if !callback() {
+                break
             }
         }
     }()
