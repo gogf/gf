@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 日志模块
+// 日志模块.
 // 直接文件/输出操作，没有异步逻辑，没有使用缓存或者通道
 package glog
 

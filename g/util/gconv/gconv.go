@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 数据基本类型转换，
+// 类型转换.
 // 如果给定的interface{}参数不是指定转换的输出类型，那么会进行强制转换，效率会比较低，
 // 建议已知类型的转换自行调用相关方法来单独处理。
 package gconv
