@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 全局配置管理对象，配置文件为json文件
+// 配置管理
 package gcfg
 
 import (

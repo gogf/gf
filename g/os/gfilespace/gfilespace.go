@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 文件空间管理， 可用于文件碎片空间维护及再利用，支持自动合并连续碎片空间
+// 文件空间管理
 package gfilespace
 
 import (
