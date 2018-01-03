@@ -7,7 +7,7 @@
 // 其他工具包
 package gutil
 
-// 便利数组查找字符串索引位置，如果不存在则返回-1
+// 便利数组查找字符串索引位置，如果不存在则返回-1，使用完整遍历查找
 func StringSearch (a []string, s string) int {
     for i, v := range a {
         if s == v {

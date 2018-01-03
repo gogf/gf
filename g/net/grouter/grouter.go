@@ -5,25 +5,26 @@
 // You can obtain one at https://gitee.com/johng/gf.
 //
 
-// 路由管理
+// 路由管理.
+// 路由规则按照传入的优先级进行解析
 package grouter
 
 import (
     "sync"
-    "sort"
     "bytes"
     "errors"
     "strings"
     "gitee.com/johng/gf/g/util/gregx"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 // 路由管理对象
 type Router struct {
-    dmu    sync.RWMutex // 解析规则互斥锁
-    pmu    sync.RWMutex // 打包规则互斥锁
-    dkeys  []string     // 解析规则排序键名
-    pkeys  []string     // 打包规则排序键名
+    dmu    sync.RWMutex          // 解析规则互斥锁
+    pmu    sync.RWMutex          // 打包规则互斥锁
+    dkeys  []string              // 解析规则排序键名
+    pkeys  []string              // 打包规则排序键名
     drules *gmap.StringStringMap // 解析规则
     prules *gmap.StringStringMap // 打包规则
 }
@@ -39,53 +40,41 @@ func New() *Router {
 // `\/([\w\.\-]+)\/([\w\.\-]+)\/page\/([\d\.\-]+)[\/\?]*`, "/user/list/page/2"
 func (r *Router) SetRule(rule, replace string) {
     r.drules.Set(rule, replace)
-    r.updateDispatchKeys()
-}
-
-// 批量设置解析规则
-func (r *Router) SetRules(rules map[string]string) {
-    r.drules.BatchSet(rules)
-    r.updateDispatchKeys()
+    if !gutil.StringInArray(r.dkeys, rule) {
+        r.dmu.Lock()
+        r.dkeys = append(r.dkeys, rule)
+        r.dmu.Unlock()
+    }
 }
 
 // 删除解析规则
 func (r *Router) RemoveRule(rule string) {
-    r.drules.Remove(rule)
-    r.updateDispatchKeys()
+    if i := gutil.StringSearch(r.dkeys, rule); i != -1 {
+        r.drules.Remove(rule)
+        r.dmu.Lock()
+        r.dkeys = append(r.dkeys[ : i], r.dkeys[i + 1 : ]...)
+        r.dmu.Unlock()
+    }
 }
 
 // 设置打包规则
 func (r *Router) SetPatchRule(rule, replace string) {
     r.prules.Set(rule, replace)
-    r.updatePatchKeys()
-}
-
-// 批量设置打包规则
-func (r *Router) SetPatchRules(rules map[string]string) {
-    r.prules.BatchSet(rules)
-    r.updatePatchKeys()
+    if !gutil.StringInArray(r.pkeys, rule) {
+        r.pmu.Lock()
+        r.pkeys = append(r.pkeys, rule)
+        r.pmu.Unlock()
+    }
 }
 
 // 删除打包规则
 func (r *Router) RemovePatchRule(rule string) {
-    r.prules.Remove(rule)
-    r.updatePatchKeys()
-}
-
-// 内部更新解析索引规则排序，便于运行时使用
-func (r *Router) updateDispatchKeys() {
-    r.dmu.Lock()
-    defer r.dmu.Unlock()
-    r.dkeys = r.drules.Keys()
-    sort.Slice(r.dkeys, func(i, j int) bool { return len(r.dkeys[i]) > len(r.dkeys[j]) })
-}
-
-// 内部更新所打包引规则排序，便于运行时使用
-func (r *Router) updatePatchKeys() {
-    r.pmu.Lock()
-    defer r.pmu.Unlock()
-    r.pkeys = r.prules.Keys()
-    sort.Slice(r.pkeys, func(i, j int) bool { return len(r.pkeys[i]) > len(r.pkeys[j]) })
+    if i := gutil.StringSearch(r.pkeys, rule); i != -1 {
+        r.prules.Remove(rule)
+        r.pmu.Lock()
+        r.pkeys = append(r.pkeys[ : i], r.pkeys[i + 1 : ]...)
+        r.pmu.Unlock()
+    }
 }
 
 // 解析URI
