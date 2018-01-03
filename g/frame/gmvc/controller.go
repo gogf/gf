@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // MVC控制器基类
-
 package gmvc
 
 import (

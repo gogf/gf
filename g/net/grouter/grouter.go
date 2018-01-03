@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 //
 
+// 路由管理
 package grouter
 
 import (
@@ -26,7 +27,6 @@ type Router struct {
     drules *gmap.StringStringMap // 解析规则
     prules *gmap.StringStringMap // 打包规则
 }
-
 
 func New() *Router {
     return &Router{

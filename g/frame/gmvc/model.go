@@ -4,8 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 模型基类
-
+// MVC模型基类
 package gmvc
 
 type Model struct {
