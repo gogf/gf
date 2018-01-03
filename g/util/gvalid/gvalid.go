@@ -3,7 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-//
+
 // 通用数据验证工具
 // 本来打算取名gvalidator的，名字太长了，缩写一下
 /*
@@ -50,7 +50,6 @@ in                   格式：in:value1,value2,...                  说明：参
 not-in               格式：not-in:value1,value2,...              说明：参数值不应该在value1,value2,...中(字符串匹配)
 regex                格式：regex:pattern                         说明：参数值应当满足正则匹配规则pattern
 */
-
 package gvalid
 
 import (

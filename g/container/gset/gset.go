@@ -4,17 +4,5 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// URL编码
-package gurl
-
-import "net/url"
-
-// url encode string, is + not %20
-func Encode(str string) string {
-    return url.QueryEscape(str)
-}
-
-// url decode string
-func Decode(str string) (string, error) {
-    return url.QueryUnescape(str)
-}
+// 并发安全的SET
+package gset

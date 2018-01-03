@@ -6,7 +6,6 @@
 
 // 单例对象管理工具
 // 框架内置了一些核心对象，并且可以通过Set和Get方法实现IoC以及对内置核心对象的自定义替换
-
 package gins
 
 import (
@@ -53,7 +52,7 @@ func View() *gview.View {
                 path = gfile.SelfDir()
             }
         }
-        view := gview.GetView(path)
+        view := gview.Get(path)
         Set(FRAME_CORE_COMPONENT_NAME_VIEW, view)
         return view
     }
