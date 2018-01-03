@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 //
 
+// IPv4管理
 package gipv4
 
 import (

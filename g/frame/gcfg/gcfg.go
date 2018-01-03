@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 全局配置管理对象，配置文件为json文件
-
 package gcfg
 
 import (
