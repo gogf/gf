@@ -155,7 +155,7 @@ gf框架基于模块化设计，实现了通用的HTTP/TCP/UDP Server，并实�
 ```json
 {
     "viewpath"   : "/home/www/templates/",
-    "routines"   : {
+    "routings"   : {
         "dispatch" : {
             "\/list\/page\/(\d+)[\/\?]*" : "/list?page=$1&"
         }
