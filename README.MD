@@ -117,85 +117,88 @@ gf框架基于模块化设计，实现了通用的HTTP/TCP/UDP Server，并实�
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-<!--
 ## 配置
 1. 默认读取文件运行目录的config.json文件；
 1. 支持多配置文件管理，默认配置文件目录为当前运行目录；
 1. config.json配置文件说明：
-    ```json
-    {
-        "viewpath"   : "视图文件存放路径",
-        "database"   : {
-            "数据库分组名称" : [
-                {
-                    "host"     : "地址",
-                    "port"     : "端口",
-                    "user"     : "账号",
-                    "pass"     : "密码",
-                    "name"     : "数据库名称",
-                    "type"     : "数据库类型(mysql|pgsql)",
-                    "role"     : "数据库角色(master|slave)",
-                    "charset"  : "字符编码",
-                    "priority" : "数据库优先级(负载均衡处理)"
-                }
-            ]
+```json
+{
+    "viewpath"   : "视图文件存放路径",
+    "routings"   : {
+        "dispatch" : {
+            "解析匹配规则1" : "解析替换规则1",
+            "解析匹配规则2" : "解析替换规则2"
+        },
+        "patch"    : {
+            "打包匹配规则1" : "打包替换规则1",
+            "打包匹配规则2" : "打包替换规则2"
         }
+    },
+    "database"   : {
+        "数据库分组名称" : [
+            {
+                "host"     : "地址",
+                "port"     : "端口",
+                "user"     : "账号",
+                "pass"     : "密码",
+                "name"     : "数据库名称",
+                "type"     : "数据库类型(mysql|pgsql)",
+                "role"     : "数据库角色(master|slave)",
+                "charset"  : "字符编码",
+                "priority" : "数据库优先级(负载均衡处理)"
+            }
+        ]
     }
-    ```
+}
+```
 1. config.json示例文件：
-    ```json
-    {
-        "viewpath"   : "/home/john/Workspace/Go/gitee.com/johng/gf/geg/frame/mvc/view",
-        "database"   : {
-            "default" : [
-                {
-                    "host"     : "127.0.0.1",
-                    "port"     : "3306",
-                    "user"     : "root",
-                    "pass"     : "123456",
-                    "name"     : "test",
-                    "type"     : "mysql",
-                    "role"     : "master",
-                    "charset"  : "utf8",
-                    "priority" : "100"
-                },
-                {
-                    "host"     : "127.0.0.1",
-                    "port"     : "3306",
-                    "user"     : "root",
-                    "pass"     : "123456",
-                    "name"     : "test",
-                    "type"     : "mysql",
-                    "role"     : "slave",
-                    "charset"  : "utf8",
-                    "priority" : "100"
-                }
-            ],
-            "ucenter" : [
-                {
-                    "host"     : "127.0.0.1",
-                    "port"     : "3306",
-                    "user"     : "root",
-                    "pass"     : "123456",
-                    "name"     : "ucenter",
-                    "type"     : "mysql",
-                    "role"     : "master",
-                    "charset"  : "utf8",
-                    "priority" : "100"
-                }
-            ]
+```json
+{
+    "viewpath"   : "/home/www/templates/",
+    "routines"   : {
+        "dispatch" : {
+            "\/list\/page\/(\d+)[\/\?]*" : "/list?page=$1&"
         }
+    },
+    "database"   : {
+        "default" : [
+            {
+                "host"     : "127.0.0.1",
+                "port"     : "3306",
+                "user"     : "root",
+                "pass"     : "123456",
+                "name"     : "test",
+                "type"     : "mysql",
+                "role"     : "master",
+                "charset"  : "utf8",
+                "priority" : "100"
+            },
+            {
+                "host"     : "127.0.0.1",
+                "port"     : "3306",
+                "user"     : "root",
+                "pass"     : "123456",
+                "name"     : "test",
+                "type"     : "mysql",
+                "role"     : "slave",
+                "charset"  : "utf8",
+                "priority" : "100"
+            }
+        ],
+        "ucenter" : [
+            {
+                "host"     : "127.0.0.1",
+                "port"     : "3306",
+                "user"     : "root",
+                "pass"     : "123456",
+                "name"     : "ucenter",
+                "type"     : "mysql",
+                "role"     : "master",
+                "charset"  : "utf8",
+                "priority" : "100"
+            }
+        ]
     }
-    ```
--->
+}
+```
+
