@@ -21,9 +21,9 @@ import (
 )
 
 const (
-    FRAME_CORE_COMPONENT_NAME_VIEW     = "gf.core.component.view"
-    FRAME_CORE_COMPONENT_NAME_CONFIG   = "gf.core.component.config"
-    FRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
+    gFRAME_CORE_COMPONENT_NAME_VIEW       = "gf.core.component.view"
+    gFRAME_CORE_COMPONENT_NAME_CONFIG     = "gf.core.component.config"
+    gFRAME_CORE_COMPONENT_NAME_DATABASE   = "gf.core.component.database"
 )
 
 // 单例对象存储器
@@ -39,9 +39,28 @@ func Set(k string, v interface{}) {
     instances.Set(k, v)
 }
 
+// 自定义框架核心组件：View
+func SetView(v *gview.View) {
+    instances.Set(gFRAME_CORE_COMPONENT_NAME_VIEW, v)
+}
+
+// 自定义框架核心组件：Config
+func SetConfig(v *gcfg.Config) {
+    instances.Set(gFRAME_CORE_COMPONENT_NAME_CONFIG, v)
+}
+
+// 自定义框架核心组件：Database
+func SetDatabase(v gdb.Link, names...string) {
+    dbCacheKey := gFRAME_CORE_COMPONENT_NAME_DATABASE
+    if len(names) > 0 {
+        dbCacheKey += names[0]
+    }
+    instances.Set(dbCacheKey, v)
+}
+
 // 核心对象：View
 func View() *gview.View {
-    result := Get(FRAME_CORE_COMPONENT_NAME_VIEW)
+    result := Get(gFRAME_CORE_COMPONENT_NAME_VIEW)
     if result != nil {
         return result.(*gview.View)
     } else {
@@ -53,7 +72,7 @@ func View() *gview.View {
             }
         }
         view := gview.Get(path)
-        Set(FRAME_CORE_COMPONENT_NAME_VIEW, view)
+        Set(gFRAME_CORE_COMPONENT_NAME_VIEW, view)
         return view
     }
     return nil
@@ -62,7 +81,7 @@ func View() *gview.View {
 // 核心对象：Config
 // 配置文件目录查找依次为：启动参数cfgpath、当前程序运行目录
 func Config() *gcfg.Config {
-    result := Get(FRAME_CORE_COMPONENT_NAME_CONFIG)
+    result := Get(gFRAME_CORE_COMPONENT_NAME_CONFIG)
     if result != nil {
         return result.(*gcfg.Config)
     } else {
@@ -74,7 +93,7 @@ func Config() *gcfg.Config {
             }
         }
         config := gcfg.New(path)
-        Set(FRAME_CORE_COMPONENT_NAME_CONFIG, config)
+        Set(gFRAME_CORE_COMPONENT_NAME_CONFIG, config)
         return config
     }
     return nil
@@ -82,7 +101,11 @@ func Config() *gcfg.Config {
 
 // 核心对象：Database
 func Database(names...string) gdb.Link {
-    result := Get(FRAME_CORE_COMPONENT_NAME_DATABASE)
+    dbCacheKey := gFRAME_CORE_COMPONENT_NAME_DATABASE
+    if len(names) > 0 {
+        dbCacheKey += names[0]
+    }
+    result := Get(dbCacheKey)
     if result != nil {
         return result.(gdb.Link)
     } else {
@@ -142,7 +165,7 @@ func Database(names...string) gdb.Link {
                 }
             }
             if db != nil {
-                Set(FRAME_CORE_COMPONENT_NAME_DATABASE, db)
+                Set(dbCacheKey, db)
                 return db
             }
         }
