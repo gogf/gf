@@ -374,13 +374,18 @@ func checkSize(value, rulekey, ruleval string, cmsgs map[string]string) string {
     return msg
 }
 
-// 检测键值对Map，注意返回参数是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息
-func CheckMap(kvmap map[string]string, rules map[string]string, msgs map[string]interface{}) map[string]map[string]string {
+// 检测键值对参数Map，注意返回参数是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息
+func CheckMap(params map[string]string, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
+    // 自定义消息，非必须参数，因此这里需要做判断
+    cmsgs := make(map[string]interface{})
+    if len(msgs) > 0 {
+        cmsgs = msgs[0]
+    }
     emsgs := make(map[string]map[string]string)
-    for key, value := range kvmap {
+    for key, value := range params {
         if rule, ok := rules[key]; ok {
-            msg, _ := msgs[key]
-            if m := Check(value, rule, msg, kvmap); m != nil {
+            msg, _ := cmsgs[key]
+            if m := Check(value, rule, msg, params); m != nil {
                 if _, ok := emsgs[key]; !ok {
                     emsgs[key] = make(map[string]string)
                 }
@@ -396,15 +401,15 @@ func CheckMap(kvmap map[string]string, rules map[string]string, msgs map[string]
     return nil
 }
 
-// 检测单条数据的规则，其中values参数为非必须参数，可以传递所有的校验参数进来，进行多参数对比(部分校验规则需要)
+// 检测单条数据的规则，其中params参数为非必须参数，可以传递所有的校验参数进来，进行多参数对比(部分校验规则需要)
 // msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持string/map[string]string，允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误
 // values参数为表单联合校验参数，对于需要联合校验的规则有效，如：required-*、same、different
-func Check(value, rules string, msgs interface{}, values...map[string]string) map[string]string {
+func Check(value, rules string, msgs interface{}, params...map[string]string) map[string]string {
     value    = strings.TrimSpace(value)
-    params  := make(map[string]string)
+    kvmap   := make(map[string]string)
     errmsgs := make(map[string]string)
-    if len(values) > 0 {
-        params = values[0]
+    if len(params) > 0 {
+        kvmap = params[0]
     }
     // 自定义错误消息处理
     list  := make([]string, 0)
@@ -434,7 +439,7 @@ func Check(value, rules string, msgs interface{}, values...map[string]string) ma
             case "required-with-all": fallthrough
             case "required-without":  fallthrough
             case "required-without-all":
-                match = checkRequired(value, rulekey, ruleval, params)
+                match = checkRequired(value, rulekey, ruleval, kvmap)
 
             // 长度范围
             case "length":            fallthrough
@@ -485,7 +490,7 @@ func Check(value, rules string, msgs interface{}, values...map[string]string) ma
 
             // 两字段值应相同(非敏感字符判断，非类型判断)
             case "same":
-                if v, ok := params[ruleval]; ok {
+                if v, ok := kvmap[ruleval]; ok {
                     if strings.Compare(value, v) == 0 {
                         match = true
                     }
@@ -494,7 +499,7 @@ func Check(value, rules string, msgs interface{}, values...map[string]string) ma
             // 两字段值不应相同(非敏感字符判断，非类型判断)
             case "different":
                 match = true
-                if v, ok := params[ruleval]; ok {
+                if v, ok := kvmap[ruleval]; ok {
                     if strings.Compare(value, v) == 0 {
                         match = false
                     }
