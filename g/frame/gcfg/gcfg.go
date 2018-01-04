@@ -8,11 +8,11 @@
 package gcfg
 
 import (
+    "sync"
+    "strings"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
-    "sync"
-    "strings"
 )
 
 const (
