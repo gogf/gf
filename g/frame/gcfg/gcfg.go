@@ -11,6 +11,7 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "sync"
 )
 
 const (
@@ -19,36 +20,46 @@ const (
 
 // 配置管理对象
 type Config struct {
+    mu    sync.RWMutex             // 并发互斥锁
     path  string                   // 配置文件存放目录，绝对路径
     jsons *gmap.StringInterfaceMap // 配置文件对象
 }
 
 // 生成一个配置管理对象
 func New(path string) *Config {
-    return &Config{
+    return &Config {
         path  : path,
         jsons : gmap.NewStringInterfaceMap(),
     }
 }
 
 // 判断从哪个配置文件中获取内容
-func (c *Config) file(files []string) string {
+func (c *Config) filePath(files []string) string {
     file := gDEFAULT_CONFIG_FILE
     if len(files) > 0 {
         file = files[0]
     }
-    return file + ".json"
+    c.mu.RLock()
+    fpath := c.path + gfile.Separator + file
+    c.mu.RUnlock()
+    return fpath + ".json"
+}
+
+// 设置配置管理器的配置文件存放目录绝对路径
+func (c *Config) SetPath(path string) {
+    c.mu.Lock()
+    c.path = path
+    c.mu.Unlock()
 }
 
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中
 func (c *Config) getJson(files []string) *gjson.Json {
-    file := c.file(files)
-    if r := c.jsons.Get(file); r != nil {
+    fpath := c.filePath(files)
+    if r := c.jsons.Get(fpath); r != nil {
         return r.(*gjson.Json)
     }
-    path := c.path + gfile.Separator + file
-    if j, err := gjson.Load(path); err == nil {
-        c.jsons.Set(file, j)
+    if j, err := gjson.Load(fpath); err == nil {
+        c.jsons.Set(fpath, j)
         return j
     }
     return nil
