@@ -12,6 +12,7 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
     "sync"
+    "strings"
 )
 
 const (
@@ -48,7 +49,10 @@ func (c *Config) filePath(files []string) string {
 // 设置配置管理器的配置文件存放目录绝对路径
 func (c *Config) SetPath(path string) {
     c.mu.Lock()
-    c.path = path
+    if strings.Compare(c.path, path) != 0 {
+        c.path  = path
+        c.jsons = gmap.NewStringInterfaceMap()
+    }
     c.mu.Unlock()
 }
 
