@@ -56,23 +56,32 @@ func New(path string) *View {
     }
 }
 
-// 设置模板文件后缀名
-//func (view *View) SetSuffix(suffix string) {
-//    view.mu.Lock()
-//    defer view.mu.Unlock()
-//    view.suffix = suffix
-//}
+// 设置模板目录绝对路径
+func (view *View) SetPath(path string) {
+    view.mu.Lock()
+    defer view.mu.Unlock()
+    view.path = path
+}
 
-// 获取模板文件后缀名
-func (view *View) GetSuffix() string {
+// 获取模板目录绝对路径
+func (view *View) GetPath() string {
     view.mu.RLock()
     defer view.mu.RUnlock()
-    return view.suffix
+    return view.path
+}
+
+// 直接解析模板，返回解析后的内容
+func (view *View) Parse(file string, params map[string]interface{}) ([]byte, error) {
+    if t, err := view.Template(file); err == nil {
+        return t.Parse(params)
+    } else {
+        return nil, err
+    }
 }
 
 // 根据文件名称生成一个模板对象，或者获取一个现有的模板对象
 func (view *View) Template(file string) (*Template, error) {
-    path := strings.TrimRight(view.path, gfile.Separator) + gfile.Separator + file + "." + view.GetSuffix()
+    path := strings.TrimRight(view.GetPath(), gfile.Separator) + gfile.Separator + file + "." + view.suffix
     if t := view.tpls.Get(path); t != nil {
         return t.(*Template), nil
     }
