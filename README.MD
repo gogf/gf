@@ -13,11 +13,12 @@ func main() {
     ghttp.GetServer().BindHandler("/", func(r *ghttp.Request){
         r.Response.WriteString("Hello World!")
     })
+    ghttp.GetServer().Run()
 }
 ```
 ## 文档
 * [一、框架介绍](https://www.kancloud.cn/johng/gf/494364)
-* [二、Web服务开发](https://www.kancloud.cn/johng/gf/494364)
+* [二、Web服务开发](https://www.kancloud.cn/johng/gf/494366)
     * [1、Web Server](https://www.kancloud.cn/johng/gf/494366)
     * [2、MVC模式](https://www.kancloud.cn/johng/gf/494367)
     * [3、服务注册](https://www.kancloud.cn/johng/gf/494368)
