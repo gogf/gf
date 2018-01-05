@@ -1,19 +1,16 @@
 package main
 
 import (
-    "net"
     "fmt"
+    "net"
     "gitee.com/johng/gf/g/net/gudp"
 )
 
 func main() {
     gudp.NewServer(":8999", func(conn *net.UDPConn) {
-        var buf [1024]byte
-        count, raddr, err := conn.ReadFromUDP(buf[0:])
-        if err != nil {
-            return
+        buffer := make([]byte, 1024)
+        if length, addr, err := conn.ReadFromUDP(buffer); err == nil {
+            fmt.Println(string(buffer[0 : length]), "from", addr.String())
         }
-        fmt.Println(raddr.String() + ":", string(buf[0:count]))
-        _, err = conn.WriteToUDP([]byte("hi"), raddr)
     }).Run()
 }
