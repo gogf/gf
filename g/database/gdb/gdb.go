@@ -60,10 +60,10 @@ type Link interface {
     Replace(table string, data Map) (sql.Result, error)
     Save(table string, data Map) (sql.Result, error)
 
-    batchInsert(table string, list List, batch int, option uint8) error
-    BatchInsert(table string, list List, batch int) error
-    BatchReplace(table string, list List, batch int) error
-    BatchSave(table string, list List, batch int) error
+    batchInsert(table string, list List, batch int, option uint8) (sql.Result, error)
+    BatchInsert(table string, list List, batch int) (sql.Result, error)
+    BatchReplace(table string, list List, batch int) (sql.Result, error)
+    BatchSave(table string, list List, batch int) (sql.Result, error)
 
     Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
     Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
