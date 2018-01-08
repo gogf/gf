@@ -3,6 +3,7 @@ package demo
 import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/frame/gmvc"
+    "gitee.com/johng/gf/g/frame/gins"
 )
 
 type ControllerTemplate struct {
@@ -10,7 +11,7 @@ type ControllerTemplate struct {
 }
 
 func init() {
-    ghttp.GetServer().BindControllerMethod("/template/info", &ControllerTemplate{}, "Info")
+    ghttp.GetServer().BindControllerMethod("/template", &ControllerTemplate{}, "Info")
 }
 
 func (c *ControllerTemplate) Info() {
@@ -19,7 +20,7 @@ func (c *ControllerTemplate) Info() {
         "age"   : 18,
         "score" : 100,
     })
-    c.View.Display("user/index")
+    c.View.Display("user/index.tpl")
 }
 
 
