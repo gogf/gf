@@ -7,8 +7,9 @@ import (
 type ObjectMethod struct {}
 
 func init() {
-    ghttp.GetServer().BindObjectMethod("/object-method", &ObjectMethod{}, "Show1, Show2, Show3")
-    ghttp.GetServer().Domain("localhost").BindObjectMethod("/object-method", &ObjectMethod{}, "Show4")
+    obj := &ObjectMethod{}
+    ghttp.GetServer().BindObjectMethod("/object-method", obj, "Show1, Show2, Show3")
+    ghttp.GetServer().Domain("localhost").BindObjectMethod("/object-method", obj, "Show4")
 }
 
 func (o *ObjectMethod) Show1(r *ghttp.Request) {

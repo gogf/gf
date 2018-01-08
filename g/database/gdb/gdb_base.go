@@ -241,15 +241,16 @@ func (l *dbLink) Save(table string, data Map) (sql.Result, error) {
 }
 
 // 批量写入数据
-func (l *dbLink) batchInsert(table string, list List, batch int, option uint8) error {
+func (l *dbLink) batchInsert(table string, list List, batch int, option uint8) (sql.Result, error) {
     var keys    []string
     var values  []string
     var bvalues []string
     var params  []interface{}
-    var size int = len(list)
+    var result  sql.Result
+    var size = len(list)
     // 判断长度
     if size < 1 {
-        return errors.New("empty data list")
+        return result, errors.New("empty data list")
     }
     // 首先获取字段名称及记录长度
     for k, _ := range list[0] {
@@ -274,35 +275,37 @@ func (l *dbLink) batchInsert(table string, list List, batch int, option uint8) e
         }
         bvalues = append(bvalues, "(" + strings.Join(values, ",") + ")")
         if len(bvalues) == batch {
-            _, err := l.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, l.charl, table, l.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
+            r, err := l.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, l.charl, table, l.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
             if err != nil {
-                return err
+                return result, err
             }
+            result  = r
             bvalues = bvalues[:0]
         }
     }
     // 处理最后不构成指定批量的数据
-    if (len(bvalues) > 0) {
-        _, err := l.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, l.charl, table, l.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
+    if len(bvalues) > 0 {
+        r, err := l.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, l.charl, table, l.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
         if err != nil {
-            return err
+            return result, err
         }
+        result = r
     }
-    return nil
+    return result, nil
 }
 
 // CURD操作:批量数据指定批次量写入
-func (l *dbLink) BatchInsert(table string, list List, batch int) error {
+func (l *dbLink) BatchInsert(table string, list List, batch int) (sql.Result, error) {
     return l.link.batchInsert(table, list, batch, OPTION_INSERT)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (l *dbLink) BatchReplace(table string, list List, batch int) error {
+func (l *dbLink) BatchReplace(table string, list List, batch int) (sql.Result, error) {
     return l.link.batchInsert(table, list, batch, OPTION_REPLACE)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (l *dbLink) BatchSave(table string, list List, batch int) error {
+func (l *dbLink) BatchSave(table string, list List, batch int) (sql.Result, error) {
     return l.link.batchInsert(table, list, batch, OPTION_SAVE)
 }
 

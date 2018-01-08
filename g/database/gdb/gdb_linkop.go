@@ -15,18 +15,17 @@ import (
 
 // 数据库链式操作对象
 type gLinkOp struct {
-    link          Link
-    tables        string
-    fields        string
-    condition     string
-    conditionArgs []interface{}
-    groupby       string
-    orderby       string
-    start         int
-    limit         int
-    data          interface{}
-    dataList      List
-    batch         int
+    link          Link          // 数据库链接对象
+    tables        string        // 数据库操作表
+    fields        string        // 操作字段
+    condition     string        // 操作条件
+    conditionArgs []interface{} // 操作条件参数
+    groupby       string        // 分组语句
+    orderby       string        // 排序语句
+    start         int           // 分页开始
+    limit         int           // 分页条数
+    data          interface{}   // 操作记录(支持Map/List/string类型)
+    batch         int           // 批量操作条数
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
@@ -93,14 +92,17 @@ func (op *gLinkOp) Data(data interface{}) (*gLinkOp) {
     return op
 }
 
-// 链式操作，操作数据记录项列表
-func (op *gLinkOp) List(list List) (*gLinkOp) {
-    op.dataList = list
-    return op
-}
-
-// 链式操作， CURD - Insert
+// 链式操作， CURD - Insert/BatchInsert
 func (op *gLinkOp) Insert() (sql.Result, error) {
+    // 批量操作
+    if list, ok :=  op.data.(List); ok {
+        batch := 10
+        if op.batch > 0 {
+            batch = op.batch
+        }
+        return op.link.BatchInsert(op.tables, list, batch)
+    }
+    // 记录操作
     if op.data == nil {
         return nil, errors.New("inserting into table with empty data")
     }
@@ -110,8 +112,17 @@ func (op *gLinkOp) Insert() (sql.Result, error) {
     return nil, errors.New("inserting into table with invalid data type")
 }
 
-// 链式操作， CURD - Replace
+// 链式操作， CURD - Replace/BatchReplace
 func (op *gLinkOp) Replace() (sql.Result, error) {
+    // 批量操作
+    if list, ok :=  op.data.(List); ok {
+        batch := 10
+        if op.batch > 0 {
+            batch = op.batch
+        }
+        return op.link.BatchReplace(op.tables, list, batch)
+    }
+    // 记录操作
     if op.data == nil {
         return nil, errors.New("replacing into table with empty data")
     }
@@ -121,8 +132,17 @@ func (op *gLinkOp) Replace() (sql.Result, error) {
     return nil, errors.New("replacing into table with invalid data type")
 }
 
-// 链式操作， CURD - Save
+// 链式操作， CURD - Save/BatchSave
 func (op *gLinkOp) Save() (sql.Result, error) {
+    // 批量操作
+    if list, ok :=  op.data.(List); ok {
+        batch := 10
+        if op.batch > 0 {
+            batch = op.batch
+        }
+        return op.link.BatchSave(op.tables, list, batch)
+    }
+    // 记录操作
     if op.data == nil {
         return nil, errors.New("saving into table with empty data")
     }
@@ -130,48 +150,6 @@ func (op *gLinkOp) Save() (sql.Result, error) {
         return op.link.Insert(op.tables, d)
     }
     return nil, errors.New("saving into table with invalid data type")
-}
-
-// 设置批处理的大小
-func (op *gLinkOp) Batch(batch int) *gLinkOp {
-    op.batch = batch
-    return op
-}
-
-// 链式操作， CURD - BatchInsert
-func (op *gLinkOp) BatchInsert() error {
-    if op.dataList == nil || len(op.dataList) < 1 {
-        return errors.New("batch inserting into table with empty data list")
-    }
-    batch := 10
-    if op.batch > 0 {
-        batch = op.batch
-    }
-    return op.link.BatchInsert(op.tables, op.dataList, batch)
-}
-
-// 链式操作， CURD - BatchReplace
-func (op *gLinkOp) BatchReplace() error {
-    if op.dataList == nil || len(op.dataList) < 1 {
-        return errors.New("batch replacing into table with empty data list")
-    }
-    batch := 10
-    if op.batch > 0 {
-        batch = op.batch
-    }
-    return op.link.BatchReplace(op.tables, op.dataList, batch)
-}
-
-// 链式操作， CURD - BatchSave
-func (op *gLinkOp) BatchSave() error {
-    if op.dataList == nil || len(op.dataList) < 1 {
-        return errors.New("batch saving into table with empty data list")
-    }
-    batch := 10
-    if op.batch > 0 {
-        batch = op.batch
-    }
-    return op.link.BatchSave(op.tables, op.dataList, batch)
 }
 
 // 链式操作， CURD - Update
@@ -188,6 +166,12 @@ func (op *gLinkOp) Delete() (sql.Result, error) {
         return nil, errors.New("condition is required while deleting")
     }
     return op.link.Delete(op.tables, op.condition, op.conditionArgs...)
+}
+
+// 设置批处理的大小
+func (op *gLinkOp) Batch(batch int) *gLinkOp {
+    op.batch = batch
+    return op
 }
 
 // 链式操作，select
