@@ -8,10 +8,9 @@ package gmvc
 
 import (
     "sync"
-    "html/template"
     "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/frame/gins"
     "gitee.com/johng/gf/g/net/ghttp"
+    "gitee.com/johng/gf/g/frame/gins"
 )
 
 // MVC视图基类(一个请求一个视图对象，用完即销毁)
@@ -49,23 +48,15 @@ func (view *View) Assign(key string, value interface{}) {
 
 // 解析模板，并返回解析后的内容
 func (view *View) Parse(file string) ([]byte, error) {
-    // 查询模板
-    tpl, err := view.view.Template(file)
-    if err != nil {
-        return nil, err
-    }
-    // 绑定函数，对基类的include进行覆盖(由于涉及到模板变量的传递)
-    tpl.BindFunc("include", view.funcInclude)
-    // 执行解析
     view.mu.RLock()
-    content, err := tpl.Parse(view.data)
+    content, err := view.view.Parse(file, view.data)
     view.mu.RUnlock()
     return content, err
 }
 
 // 解析指定模板
 func (view *View) Display(files...string) error {
-    file := "default"
+    file := "index.tpl"
     if len(files) > 0 {
         file = files[0]
     }
@@ -76,17 +67,4 @@ func (view *View) Display(files...string) error {
         view.response.Write(content)
     }
     return nil
-}
-
-// 模板内置方法：include
-func (view *View) funcInclude(file string) template.HTML {
-    tpl, err := view.view.Template(file)
-    if err != nil {
-        return template.HTML(err.Error())
-    }
-    content, err := tpl.Parse(view.data)
-    if err != nil {
-        return template.HTML(err.Error())
-    }
-    return template.HTML(content)
 }
