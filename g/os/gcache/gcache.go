@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 单进程缓存
+// 单进程缓存.
+// @todo 需要新增一个MAP，用于时间与过期键值对的快速处理。
 package gcache
 
 import (

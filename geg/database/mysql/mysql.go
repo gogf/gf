@@ -3,7 +3,6 @@ package main
 import (
     "fmt"
     "time"
-    "strconv"
     "gitee.com/johng/gf/g/database/gdb"
 )
 
@@ -198,11 +197,11 @@ func save() {
 // 批量写入
 func batchInsert() {
     fmt.Println("batchInsert:")
-    err := db.BatchInsert("user", gdb.List {
-        {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
-        {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
-        {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
-        {"name": "john_" + strconv.FormatInt(time.Now().UnixNano(), 10)},
+    _, err := db.BatchInsert("user", gdb.List {
+        {"name": "john_1"},
+        {"name": "john_2"},
+        {"name": "john_3"},
+        {"name": "john_4"},
     }, 10)
     if err != nil {
         fmt.Println(err)
@@ -314,6 +313,58 @@ func linkopUpdate2() {
 func linkopUpdate3() {
     fmt.Println("linkopUpdate3:")
     r, err := db.Table("user").Data("name='john3'").Condition("name=?", "john2").Update()
+    if (err == nil) {
+        fmt.Println(r.RowsAffected())
+    } else {
+        fmt.Println(err)
+    }
+    fmt.Println()
+}
+
+
+// 链式批量写入
+func linkopBatchInsert1() {
+    fmt.Println("linkopBatchInsert1:")
+    r, err := db.Table("user").Data(gdb.List{
+        {"name": "john_1"},
+        {"name": "john_2"},
+        {"name": "john_3"},
+        {"name": "john_4"},
+    }).Insert()
+    if (err == nil) {
+        fmt.Println(r.RowsAffected())
+    } else {
+        fmt.Println(err)
+    }
+    fmt.Println()
+}
+
+// 链式批量写入，指定每批次写入的条数
+func linkopBatchInsert2() {
+    fmt.Println("linkopBatchInsert2:")
+    r, err := db.Table("user").Data(gdb.List{
+        {"name": "john_1"},
+        {"name": "john_2"},
+        {"name": "john_3"},
+        {"name": "john_4"},
+    }).Batch(2).Insert()
+    if (err == nil) {
+        fmt.Println(r.RowsAffected())
+    } else {
+        fmt.Println(err)
+    }
+    fmt.Println()
+}
+
+// 链式批量保存
+func linkopBatchSave() {
+    fmt.Println("linkopBatchSave:")
+    r, err := db.Table("user").Data(gdb.List{
+        {"id":1, "name": "john_1"},
+        {"id":2, "name": "john_2"},
+        {"id":3, "name": "john_3"},
+        {"id":4, "name": "john_4"},
+    }).Save()
     if (err == nil) {
         fmt.Println(r.RowsAffected())
     } else {
