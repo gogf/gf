@@ -264,6 +264,7 @@ func (s *Server) setHandler(domain, method, pattern string, hitem HandlerItem) {
     } else {
         s.handlerMap[s.handlerKey(domain, method, pattern)] = hitem
     }
+
 }
 
 // 查询请求处理方法
@@ -356,6 +357,22 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
 }
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
+// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔
+func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string) error {
+    m := make(HandlerMap)
+    for _, v := range strings.Split(methods, ",") {
+        method := strings.TrimSpace(v)
+        fval   := reflect.ValueOf(obj).MethodByName(method)
+        if !fval.IsValid() {
+            return errors.New("invalid method name:" + method)
+        }
+        key   := s.appendMethodNameToUriWithPattern(pattern, method)
+        m[key] = HandlerItem{nil, "", fval.Interface().(func(*Request))}
+    }
+    return s.bindHandlerByMap(m)
+}
+
+// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
 // 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
 func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
     m := make(HandlerMap)
@@ -417,16 +434,19 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
     return s.bindHandlerByMap(m)
 }
 
-// 绑定控制器方法，pattern支持http method
-// pattern的格式形如：/user/list, put:/user, delete:/user
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
 // 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔
 func (s *Server)BindControllerMethod(pattern string, c Controller, methods string) error {
-    for _, method := range strings.Split(methods, ",") {
-        item := HandlerItem{reflect.ValueOf(c).Elem().Type(), strings.TrimSpace(method), nil}
-        if err := s.bindHandlerItem(pattern, item); err != nil {
-            return err
+    m    := make(HandlerMap)
+    cval := reflect.ValueOf(c)
+    for _, v := range strings.Split(methods, ",") {
+        ctype  := reflect.ValueOf(c).Elem().Type()
+        method := strings.TrimSpace(v)
+        if !cval.MethodByName(method).IsValid() {
+            return errors.New("invalid method name:" + method)
         }
+        key    := s.appendMethodNameToUriWithPattern(pattern, method)
+        m[key]  = HandlerItem{ctype, method, nil}
     }
-    return nil
+    return s.bindHandlerByMap(m)
 }

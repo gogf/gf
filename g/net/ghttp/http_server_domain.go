@@ -48,8 +48,7 @@ func (d *Domain) BindHandler(pattern string, handler HandlerFunc) error {
     return nil
 }
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
-// 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
+// 执行对象方法
 func (d *Domain) BindObject(pattern string, obj interface{}) error {
     for domain, _ := range d.m {
         if err := d.s.BindObject(pattern + "@" + domain, obj); err != nil {
@@ -59,8 +58,17 @@ func (d *Domain) BindObject(pattern string, obj interface{}) error {
     return nil
 }
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
-// 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
+// 执行对象方法注册
+func (d *Domain) BindObjectMethod(pattern string, obj interface{}, methods string) error {
+    for domain, _ := range d.m {
+        if err := d.s.BindObjectMethod(pattern + "@" + domain, obj, methods); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+// RESTful执行对象注册
 func (d *Domain) BindObjectRest(pattern string, obj interface{}) error {
     for domain, _ := range d.m {
         if err := d.s.BindObjectRest(pattern + "@" + domain, obj); err != nil {
@@ -70,7 +78,7 @@ func (d *Domain) BindObjectRest(pattern string, obj interface{}) error {
     return nil
 }
 
-// 绑定控制器
+// 控制器注册
 func (d *Domain) BindController(pattern string, c Controller) error {
     for domain, _ := range d.m {
         if err := d.s.BindController(pattern + "@" + domain, c); err != nil {
@@ -80,7 +88,7 @@ func (d *Domain) BindController(pattern string, c Controller) error {
     return nil
 }
 
-// 绑定控制器(RESTFul)
+// RESTful控制器注册
 func (d *Domain) BindControllerRest(pattern string, c Controller) error {
     for domain, _ := range d.m {
         if err := d.s.BindControllerRest(pattern + "@" + domain, c); err != nil {
@@ -90,13 +98,11 @@ func (d *Domain) BindControllerRest(pattern string, c Controller) error {
     return nil
 }
 
-// 绑定控制器方法
+// 控制器方法注册
 func (d *Domain) BindControllerMethod(pattern string, c Controller, methods string) error {
     for domain, _ := range d.m {
-        for _, method := range strings.Split(methods, ",") {
-            if err := d.s.BindControllerMethod(pattern + "@" + domain, c, strings.TrimSpace(method)); err != nil {
-                return err
-            }
+        if err := d.s.BindControllerMethod(pattern + "@" + domain, c, methods); err != nil {
+            return err
         }
     }
     return nil
