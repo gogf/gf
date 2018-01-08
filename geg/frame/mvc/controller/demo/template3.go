@@ -6,7 +6,8 @@ import (
 )
 
 func init() {
-    ghttp.GetServer().BindHandler("/template2", func(r *ghttp.Request){
+    gins.View().SetPath("/home/www/template/")
+    ghttp.GetServer().BindHandler("/template3", func(r *ghttp.Request){
         content, _ := gins.View().Parse("index.tpl", map[string]interface{}{
             "id"   : 123,
             "name" : "john",
