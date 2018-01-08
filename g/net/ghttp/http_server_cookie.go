@@ -41,7 +41,7 @@ type CookieItem struct {
     expire int    // 过期时间
 }
 
-// 包含所有当前服务器正在服务的Cookie
+// 包含所有当前服务器正在服务的Cookie(每个请求一个Cookie对象)
 var cookies = gmap.NewUintInterfaceMap()
 
 // 创建一个cookie对象，与传入的请求对应
