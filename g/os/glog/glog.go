@@ -290,15 +290,15 @@ func (l *Logger) errPrint(s string) {
 
 // 调用回溯字符串
 func (l *Logger) backtrace() string {
-    backtrace := "Trace:\n"
+    backtraces := []string{"Trace:"}
     for i := 1; i < 100; i++ {
         if _, cfile, cline, ok := runtime.Caller(i + 3); ok {
-            backtrace += strconv.Itoa(i) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n"
+            backtraces = append(backtraces, strconv.Itoa(i) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n")
         } else {
             break
         }
     }
-    return backtrace
+    return strings.Join(backtraces[0 : len(backtraces) -2 ], "\n")
 }
 
 func (l *Logger) format(s string) string {
