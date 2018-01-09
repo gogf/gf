@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "reflect"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 
@@ -15,8 +15,5 @@ func (t *T)Test() {
 }
 
 func main() {
-    t := &T{"john"}
-    //fmt.Printf("%p\n", t.Test)
-    //fmt.Printf("%p\n", reflect.ValueOf(t).MethodByName("Test").Interface().(func()))
-    reflect.ValueOf(t).MethodByName("Test").Interface().(func())()
+    glog.Error("test")
 }
