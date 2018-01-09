@@ -10,7 +10,7 @@ func main() {
         for {
             buffer := make([]byte, 1024)
             if length, err := conn.Read(buffer); err == nil {
-                conn.Write(append([]byte("What you send, what you receive: "), buffer[0 : length]...))
+                conn.Write(append([]byte("> "), buffer[0 : length]...))
             }
         }
     }).Run()
