@@ -252,7 +252,7 @@ func update3() {
 // 链式查询操作1
 func linkopSelect1() {
     fmt.Println("linkopSelect1:")
-    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*, ud.site").Condition("u.uid > ?", 1).Limit(0, 2).Select()
+    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*, ud.site").Where("u.uid > ?", 1).Limit(0, 2).Select()
     if (err == nil) {
         fmt.Println(r)
     } else {
@@ -264,7 +264,7 @@ func linkopSelect1() {
 // 链式查询操作2
 func linkopSelect2() {
     fmt.Println("linkopSelect2:")
-    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Condition("u.uid=?", 1).One()
+    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Where("u.uid=?", 1).One()
     if (err == nil) {
         fmt.Println(r)
     } else {
@@ -276,7 +276,7 @@ func linkopSelect2() {
 // 链式查询操作3
 func linkopSelect3() {
     fmt.Println("linkopSelect3:")
-    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Condition("u.uid=?", 1).Value()
+    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
     if (err == nil) {
         fmt.Println(r.(string))
     } else {
@@ -300,7 +300,7 @@ func linkopUpdate1() {
 // 通过Map指针方式传参方式
 func linkopUpdate2() {
     fmt.Println("linkopUpdate2:")
-    r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Condition("name=?", "john").Update()
+    r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Where("name=?", "john").Update()
     if (err == nil) {
         fmt.Println(r.RowsAffected())
     } else {
@@ -312,7 +312,7 @@ func linkopUpdate2() {
 // 通过字符串方式传参
 func linkopUpdate3() {
     fmt.Println("linkopUpdate3:")
-    r, err := db.Table("user").Data("name='john3'").Condition("name=?", "john2").Update()
+    r, err := db.Table("user").Data("name='john3'").Where("name=?", "john2").Update()
     if (err == nil) {
         fmt.Println(r.RowsAffected())
     } else {
