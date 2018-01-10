@@ -3,6 +3,7 @@ package demo
 import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/frame/gmvc"
+    "fmt"
 )
 
 // 定义业务相关的控制器对象，

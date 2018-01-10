@@ -3,7 +3,6 @@ package demo
 import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/frame/gmvc"
-    "gitee.com/johng/gf/g/frame/gins"
 )
 
 type ControllerTemplate struct {
