@@ -12,6 +12,7 @@ import (
     "net/url"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "fmt"
 )
 
 // 请求对象
@@ -86,6 +87,10 @@ func (r *Request) GetQueryMap(defaultMap map[string]string) map[string]string {
 
 // 获得post参数
 func (r *Request) GetPost(k string) []string {
+    if len(r.PostForm) == 0 {
+        r.ParseForm()
+        fmt.Println(r)
+    }
     if v, ok := r.PostForm[k]; ok {
         return v
     }
