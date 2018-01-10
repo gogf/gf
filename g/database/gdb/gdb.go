@@ -69,6 +69,7 @@ type Link interface {
     Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
     Table(tables string) (*gLinkOp)
+    From(tables string) (*gLinkOp)
 }
 
 // 数据库链接对象
