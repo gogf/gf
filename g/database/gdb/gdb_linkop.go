@@ -18,8 +18,8 @@ type gLinkOp struct {
     link          Link          // 数据库链接对象
     tables        string        // 数据库操作表
     fields        string        // 操作字段
-    condition     string        // 操作条件
-    conditionArgs []interface{} // 操作条件参数
+    where         string        // 操作条件
+    whereArgs     []interface{} // 操作条件参数
     groupby       string        // 分组语句
     orderby       string        // 排序语句
     start         int           // 分页开始
@@ -30,10 +30,15 @@ type gLinkOp struct {
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
 func (l *dbLink) Table(tables string) (*gLinkOp) {
-    return &gLinkOp{
+    return &gLinkOp {
         link  : l.link,
         tables: tables,
     }
+}
+
+// 链式操作，数据表字段，可支持多个表，以半角逗号连接
+func (l *dbLink) From(tables string) (*gLinkOp) {
+    return l.Table(tables)
 }
 
 // 链式操作，左联表
@@ -61,9 +66,9 @@ func (op *gLinkOp) Fields(fields string) (*gLinkOp) {
 }
 
 // 链式操作，consition
-func (op *gLinkOp) Condition(condition string, args...interface{}) (*gLinkOp) {
-    op.condition     = condition
-    op.conditionArgs = args
+func (op *gLinkOp) Where(where string, args...interface{}) (*gLinkOp) {
+    op.where     = where
+    op.whereArgs = args
     return op
 }
 
@@ -157,15 +162,15 @@ func (op *gLinkOp) Update() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("updating table with empty data")
     }
-    return op.link.Update(op.tables, op.data, op.condition, op.conditionArgs ...)
+    return op.link.Update(op.tables, op.data, op.where, op.whereArgs ...)
 }
 
 // 链式操作， CURD - Delete
 func (op *gLinkOp) Delete() (sql.Result, error) {
-    if op.condition == "" {
-        return nil, errors.New("condition is required while deleting")
+    if op.where == "" {
+        return nil, errors.New("where is required while deleting")
     }
-    return op.link.Delete(op.tables, op.condition, op.conditionArgs...)
+    return op.link.Delete(op.tables, op.where, op.whereArgs...)
 }
 
 // 设置批处理的大小
@@ -180,8 +185,8 @@ func (op *gLinkOp) Select() (List, error) {
         op.fields = "*"
     }
     s := fmt.Sprintf("SELECT %s FROM %s", op.fields, op.tables)
-    if op.condition != "" {
-        s += " WHERE " + op.condition
+    if op.where != "" {
+        s += " WHERE " + op.where
     }
     if op.groupby != "" {
         s += " GROUP BY " + op.groupby
@@ -192,7 +197,7 @@ func (op *gLinkOp) Select() (List, error) {
     if op.limit != 0 {
         s += fmt.Sprintf(" LIMIT %d, %d", op.start, op.limit)
     }
-    return op.link.GetAll(s, op.conditionArgs...)
+    return op.link.GetAll(s, op.whereArgs...)
 }
 
 // 链式操作，查询所有记录
