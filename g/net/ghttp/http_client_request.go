@@ -8,10 +8,14 @@
 package ghttp
 
 import (
-    "net/http"
-    "strings"
+    "os"
+    "io"
     "time"
     "bytes"
+    "strings"
+    "net/http"
+    "mime/multipart"
+    "fmt"
 )
 
 // http客户端
@@ -40,8 +44,45 @@ func (c *Client) Put(url, data string) (*ClientResponse, error) {
 }
 
 // POST请求提交数据
+// 支持文件上传，需要字段格式为：FieldName=@file:
 func (c *Client) Post(url, data string) (*ClientResponse, error) {
-    resp, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(data))
+    isfile := false
+    buffer := new(bytes.Buffer)
+    writer := multipart.NewWriter(buffer)
+    for _, item := range strings.Split(data, "&") {
+        array := strings.Split(item, "=")
+        // 判断是否文件上传
+        if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
+            isfile = true
+            if file, err := writer.CreateFormFile(array[0], array[1][6:]); err == nil {
+                if f, err := os.Open(array[1][6:]); err == nil {
+                    defer f.Close()
+                    if _, err = io.Copy(file, f); err != nil {
+                        return nil, err
+                    }
+                } else {
+                    return nil, err
+                }
+            } else {
+                return nil, err
+            }
+        } else {
+            writer.WriteField(array[0], array[1])
+        }
+    }
+    writer.Close()
+    req, err := http.NewRequest("POST", url, buffer)
+    if err != nil {
+        return nil, err
+    }
+    // 表单类型处理
+    if isfile {
+        req.Header.Set("Content-Type", writer.FormDataContentType())
+    } else {
+        req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+    }
+    // 执行请求
+    resp, err := c.Do(req)
     if err != nil {
         return nil, err
     }
@@ -77,10 +118,15 @@ func (c *Client) Trace(url, data string) (*ClientResponse, error) {
 
 // 请求并返回response对象，该方法支持二进制提交数据
 func (c *Client) DoRequest(method, url string, data []byte) (*ClientResponse, error) {
+    //if strings.Compare("POST", strings.ToUpper(method)) == 0 {
+    //    return c.Post(url, string(data))
+    //}
+    fmt.Println(method)
     req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader(data))
     if err != nil {
         return nil, err
     }
+
     resp, err := c.Do(req)
     if err != nil {
         return nil, err
@@ -100,7 +146,7 @@ func Put(url, data string) (*ClientResponse, error) {
 }
 
 func Post(url, data string) (*ClientResponse, error) {
-    return DoRequest("PUT", url, []byte(data))
+    return DoRequest("POST", url, []byte(data))
 }
 
 func Delete(url, data string) (*ClientResponse, error) {
