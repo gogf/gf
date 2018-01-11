@@ -49,7 +49,7 @@ func Create(path string) error {
 
 // 打开文件
 func Open(path string) (*os.File, error) {
-    f, err  := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0755)
+    f, err  := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
     if err != nil {
         return nil, err
     }
@@ -58,7 +58,7 @@ func Open(path string) (*os.File, error) {
 
 // 打开文件
 func OpenWithFlag(path string, flag int) (*os.File, error) {
-    f, err  := os.OpenFile(path, flag, 0755)
+    f, err  := os.OpenFile(path, flag, 0666)
     if err != nil {
         return nil, err
     }
@@ -315,22 +315,22 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
 
 // (文本)写入文件内容
 func PutContents(path string, content string) error {
-    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 }
 
 // (文本)追加内容到文件末尾
 func PutContentsAppend(path string, content string) error {
-    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 }
 
 // (二进制)写入文件内容
 func PutBinContents(path string, content []byte) error {
-    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 }
 
 // (二进制)追加内容到文件末尾
 func PutBinContentsAppend(path string, content []byte) error {
-    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 }
 
 
