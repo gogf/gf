@@ -32,7 +32,7 @@ func Encode (v interface{}) ([]byte, error) {
 // 解码字符串为interface{}变量
 func Decode (b []byte) (interface{}, error) {
     var v interface{}
-    if err := DecodeTo(b, &v); err == nil {
+    if err := DecodeTo(b, &v); err != nil {
         return nil, err
     } else {
         return v, nil
@@ -47,9 +47,9 @@ func DecodeTo (b []byte, v interface{}) error {
 // 解析json字符串为gjson.Json对象，并返回操作对象指针
 func DecodeToJson (b []byte) (*Json, error) {
     if v, err := Decode(b); err != nil {
-        return &Json{&v}, nil
-    } else {
         return nil, err
+    } else {
+        return &Json{&v}, nil
     }
 }
 
