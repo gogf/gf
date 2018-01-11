@@ -12,26 +12,41 @@ import (
     "net/url"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
-    "fmt"
 )
 
 // 请求对象
 type Request struct {
     http.Request
-    getvals  *url.Values     // GET参数
-    Id       int             // 请求id(唯一)
-    Server   *Server         // 请求关联的服务器对象
-    Cookie   *Cookie         // 与当前请求绑定的Cookie对象(并发安全)
-    Session  *Session        // 与当前请求绑定的Session对象(并发安全)
-    Response *Response       // 对应请求的返回数据操作对象
+    parsedPost bool            // POST参数是否已经解析
+    getvals    *url.Values     // GET参数
+    Id         int             // 请求id(唯一)
+    Server     *Server         // 请求关联的服务器对象
+    Cookie     *Cookie         // 与当前请求绑定的Cookie对象(并发安全)
+    Session    *Session        // 与当前请求绑定的Session对象(并发安全)
+    Response   *Response       // 对应请求的返回数据操作对象
 }
 
-// 获得指定名称的get参数列表
-func (r *Request) GetQuery(k string) []string {
+// 初始化GET请求参数
+func (r *Request) initGet() {
     if r.getvals == nil {
         values   := r.URL.Query()
         r.getvals = &values
     }
+}
+
+// 初始化POST请求参数
+func (r *Request) initPost() {
+    if !r.parsedPost {
+        // 快速保存，尽量避免并发问题
+        r.parsedPost = true
+        // MultiMedia表单请求解析允许最大使用内存：1GB
+        r.ParseMultipartForm(1024*1024*1024)
+    }
+}
+
+// 获得指定名称的get参数列表
+func (r *Request) GetQuery(k string) []string {
+    r.initGet()
     if v, ok := (*r.getvals)[k]; ok {
         return v
     }
@@ -72,14 +87,21 @@ func (r *Request) GetQueryArray(k string) []string {
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-func (r *Request) GetQueryMap(defaultMap map[string]string) map[string]string {
+func (r *Request) GetQueryMap(defaultMap...map[string]string) map[string]string {
+    r.initGet()
     m := make(map[string]string)
-    for k, v := range defaultMap {
-        v2 := r.GetQueryArray(k)
-        if v2 == nil {
-            m[k] = v
-        } else {
-            m[k] = v2[0]
+    if len(defaultMap) == 0 {
+        for k, v := range *r.getvals {
+            m[k] = v[0]
+        }
+    } else {
+        for k, v := range defaultMap[0] {
+            v2 := r.GetQueryArray(k)
+            if v2 == nil {
+                m[k] = v
+            } else {
+                m[k] = v2[0]
+            }
         }
     }
     return m
@@ -87,10 +109,7 @@ func (r *Request) GetQueryMap(defaultMap map[string]string) map[string]string {
 
 // 获得post参数
 func (r *Request) GetPost(k string) []string {
-    if len(r.PostForm) == 0 {
-        r.ParseForm()
-        fmt.Println(r)
-    }
+    r.initPost()
     if v, ok := r.PostForm[k]; ok {
         return v
     }
@@ -132,13 +151,20 @@ func (r *Request) GetPostArray(k string) []string {
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
 // 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetPostArray获取特定字段内容
-func (r *Request) GetPostMap(defaultMap map[string]string) map[string]string {
+func (r *Request) GetPostMap(defaultMap...map[string]string) map[string]string {
+    r.initPost()
     m := make(map[string]string)
-    for k, v := range defaultMap {
-        if v2, ok := r.PostForm[k]; ok {
-            m[k] = v2[0]
-        } else {
-            m[k] = v
+    if len(defaultMap) == 0 {
+        for k, v := range r.PostForm {
+            m[k] = v[0]
+        }
+    } else {
+        for k, v := range defaultMap[0] {
+            if v2, ok := r.PostForm[k]; ok {
+                m[k] = v2[0]
+            } else {
+                m[k] = v
+            }
         }
     }
     return m
@@ -188,20 +214,28 @@ func (r *Request) GetRequestArray(k string) []string {
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
 // 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetRequestArray获取特定字段内容
-func (r *Request) GetRequestMap(defaultMap map[string]string) map[string]string {
-    m := make(map[string]string)
-    for k, v := range defaultMap {
-        v2 := r.GetRequest(k)
-        if v2 != nil {
-            m[k] = v2[0]
-        } else {
-            m[k] = v
+func (r *Request) GetRequestMap(defaultMap...map[string]string) map[string]string {
+    m := r.GetQueryMap()
+    if len(defaultMap) == 0 {
+        for k, v := range r.GetPostMap() {
+            if _, ok := m[k]; !ok {
+                m[k] = v
+            }
+        }
+    } else {
+        for k, v := range defaultMap[0] {
+            v2 := r.GetRequest(k)
+            if v2 != nil {
+                m[k] = v2[0]
+            } else {
+                m[k] = v
+            }
         }
     }
     return m
 }
 
-// 获取原始请求输入字符串
+// 获取原始请求输入字符串，注意：只能获取一次，读完就没了
 func (r *Request) GetRaw() []byte {
     result, _ := ioutil.ReadAll(r.Body)
     return result
