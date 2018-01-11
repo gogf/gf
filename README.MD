@@ -40,6 +40,7 @@ func main() {
     * [时间模块](https://www.kancloud.cn/johng/gf/494384)
     * [JSON模块](https://www.kancloud.cn/johng/gf/494384)
     * [命令行模块](https://www.kancloud.cn/johng/gf/494384)
+    * [HTTP客户端](https://www.kancloud.cn/johng/gf/499674)
     * [环境变量模块](https://www.kancloud.cn/johng/gf/494384)
     * [文件管理模块](https://www.kancloud.cn/johng/gf/494384)
     * [并发安全容器](https://www.kancloud.cn/johng/gf/494384)
