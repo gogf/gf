@@ -99,7 +99,7 @@ func (p *Pool) File() (*File, error) {
             }
         }
     }
-    file, err := os.OpenFile(p.path, p.flag, 0755)
+    file, err := os.OpenFile(p.path, p.flag, 0666)
     if err != nil {
         return nil, err
     }

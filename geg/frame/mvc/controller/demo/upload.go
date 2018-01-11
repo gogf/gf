@@ -8,16 +8,13 @@ import (
 )
 
 func Upload(r *ghttp.Request) {
-    fmt.Println(r.GetPostMap(nil))
-    fmt.Println(r.GetPostString("name"))
-    //fmt.Println(string(r.GetRaw()))
-    return
     if f, h, e := r.FormFile("upload-file"); e == nil {
         defer f.Close()
+        fname  := gfile.Basename(h.Filename)
         buffer := make([]byte, h.Size)
         f.Read(buffer)
-        gfile.PutBinContents("/tmp/" + h.Filename, buffer)
-        r.Response.WriteString(fmt.Sprintf("%s upload success, input value:%s", h.Filename, r.GetPostString("name")))
+        gfile.PutBinContents("/tmp/" + fname, buffer)
+        r.Response.WriteString(fmt.Sprintf("%s upload success, input value:%s", fname, r.GetPostString("name")))
     } else {
         glog.Error(e)
     }
