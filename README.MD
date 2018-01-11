@@ -1,5 +1,5 @@
-<div style="align: center">
-<img src="http://cover.kancloud.cn/johng/gf"/>
+<div style="text-align: right">
+<img src="http://cover.kancloud.cn/johng/gf" style="text-align:center;width:100px;"/>
 </div>
 
 ## 介绍
