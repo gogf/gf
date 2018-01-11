@@ -1,7 +1,6 @@
 package demo
 
 import (
-    "fmt"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/net/ghttp"
 )
@@ -13,7 +12,7 @@ func Upload(r *ghttp.Request) {
         buffer := make([]byte, h.Size)
         f.Read(buffer)
         gfile.PutBinContents("/tmp/" + fname, buffer)
-        r.Response.WriteString(fmt.Sprintf("%s upload success, input value:%s", fname, r.GetPostString("name")))
+        r.Response.WriteString(fname + " uploaded successly"))
     } else {
         r.Response.WriteString(e.Error())
     }
@@ -27,7 +26,6 @@ func UploadShow(r *ghttp.Request) {
 </head>
     <body>
         <form enctype="multipart/form-data" action="/upload" method="post">
-            <input type="input" name="name" />
             <input type="file" name="upload-file" />
             <input type="submit" value="upload" />
         </form>
