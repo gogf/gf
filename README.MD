@@ -1,5 +1,5 @@
 <div style="align: center">
-![GoFrame](./gf-logo.png)
+<img src="http://cover.kancloud.cn/johng/gf"/>
 </div>
 
 ## 介绍
