@@ -1,19 +1,9 @@
 package main
 
 import (
-    "fmt"
-    "gitee.com/johng/gf/g/encoding/gurl"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
-
-type T struct {
-    name string
-}
-
-func (t *T)Test() {
-    fmt.Println(t.name)
-}
-
 func main() {
-    fmt.Println(gurl.Encode("@123"))
+    glog.Error("发生错误！")
 }
