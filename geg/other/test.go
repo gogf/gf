@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/encoding/gurl"
 )
 
 
@@ -15,5 +15,5 @@ func (t *T)Test() {
 }
 
 func main() {
-    glog.Error("test")
+    fmt.Println(gurl.Encode("@123"))
 }
