@@ -1,10 +1,9 @@
 package demo
 
 import (
-    "gitee.com/johng/gf/g/os/glog"
+    "fmt"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/net/ghttp"
-    "fmt"
 )
 
 func Upload(r *ghttp.Request) {
@@ -16,7 +15,7 @@ func Upload(r *ghttp.Request) {
         gfile.PutBinContents("/tmp/" + fname, buffer)
         r.Response.WriteString(fmt.Sprintf("%s upload success, input value:%s", fname, r.GetPostString("name")))
     } else {
-        glog.Error(e)
+        r.Response.WriteString(e.Error())
     }
 }
 
