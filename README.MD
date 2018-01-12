@@ -10,6 +10,8 @@ gf(Go Frame)是一款为Web服务及网络服务开发设计的，模块化、�
 
 gf是开源的，免费的，基于MIT协议进行分发，开源项目地址：https://gitee.com/johng/gf
 
+欢迎加入技术交流QQ群：116707870
+
 ## 安装
 ```
 go get -u gitee.com/johng/gf
