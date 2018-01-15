@@ -13,20 +13,24 @@ import (
 
 // 创建goroutine池管理对象
 func New() *Pool {
-    return &Pool {
+    p := &Pool {
+        jobs  : gset.NewInterfaceSet(),
         queue : glist.NewSafeList(),
-        pjobs : gset.NewInterfaceSet(),
+        funcs : make(chan func(), 1000000),
     }
+    p.loop()
+    return p
 }
 
 // 添加异步任务
 func (p *Pool) Add(f func()) {
-    p.getJob().setJob(f)
+    p.funcs <- f
 }
 
 // 关闭池，所有的任务将会停止，此后继续添加的任务将不会被执行
 func (p *Pool) Close() {
-    p.pjobs.Iterator(func(v interface{}){
+    p.funcs <- nil
+    p.jobs.Iterator(func(v interface{}){
         v.(*PoolJob).stop()
     })
 }
