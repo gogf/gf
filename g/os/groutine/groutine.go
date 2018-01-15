@@ -15,8 +15,9 @@ import (
 
 // goroutine池对象
 type Pool struct {
-    queue *glist.SafeList    // 空闲任务队列*PoolJob)
-    pjobs *gset.InterfaceSet // 当前任务对象(*PoolJob)
+    jobs  *gset.InterfaceSet // 当前任务对象(*PoolJob)
+    queue *glist.SafeList    // 空闲任务队列(*PoolJob)
+    funcs []chan func()      // 待处理任务操作
 }
 
 // goroutine任务
@@ -26,6 +27,19 @@ type PoolJob struct {
     pool   *Pool       // 所属池
 }
 
+// 任务分配循环
+func (p *Pool) loop() {
+    go func() {
+        for {
+            if f := <- p.funcs; f != nil {
+                p.getJob().setJob(f)
+            } else {
+                return
+            }
+        }
+    }()
+}
+
 // 创建一个空的任务对象
 func (p *Pool) newJob() *PoolJob {
     j := &PoolJob {
@@ -33,7 +47,7 @@ func (p *Pool) newJob() *PoolJob {
         pool : p,
     }
     j.start()
-    p.pjobs.Add(j)
+    p.jobs.Add(j)
     return j
 }
 
