@@ -26,7 +26,7 @@ func (j *PoolJob) start() {
 
 // 关闭当前任务
 func (j *PoolJob) stop() {
-    j.job <- nil
+    j.setJob(nil)
 }
 
 // 设置当前任务的执行函数
