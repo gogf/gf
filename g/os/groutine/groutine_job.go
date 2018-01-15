@@ -13,6 +13,8 @@ func (j *PoolJob) start() {
             if f := <- j.job; f != nil {
                 // 执行任务
                 f()
+                // 清空任务(GC可回收f对应资源)
+                j.job = nil
                 // 执行完毕后添加到空闲队列
                 j.pool.addJob(j)
             } else {
