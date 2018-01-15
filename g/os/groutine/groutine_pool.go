@@ -4,37 +4,20 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Goroutine池.
 package groutine
-
-import (
-    "gitee.com/johng/gf/g/container/glist"
-    "gitee.com/johng/gf/g/container/gset"
-    "sync"
-)
-
-// goroutine池对象
-type Pool struct {
-    jobs  *gset.InterfaceSet // 当前任务对象(*PoolJob)
-    queue *glist.SafeList    // 空闲任务队列(*PoolJob)
-    funcs []chan func()      // 待处理任务操作
-}
-
-// goroutine任务
-type PoolJob struct {
-    mu     sync.RWMutex
-    job    chan func() // 当前任务(当为nil时表示关闭)
-    pool   *Pool       // 所属池
-}
 
 // 任务分配循环
 func (p *Pool) loop() {
     go func() {
         for {
-            if f := <- p.funcs; f != nil {
-                p.getJob().setJob(f)
-            } else {
-                return
+            // 阻塞监听任务事件
+            if _, ok := <- p.events; ok {
+                // 如果任务为nil，表示池关闭
+                if r := p.funcs.PopFront(); r != nil {
+                    p.getJob().setJob(r.(func()))
+                } else {
+                    return
+                }
             }
         }
     }()
