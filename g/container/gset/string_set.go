@@ -21,6 +21,15 @@ func NewStringSet() *StringSet {
 	return &StringSet{M: make(map[string]struct{})}
 }
 
+// 给定回调函数对原始内容进行遍历
+func (this *StringSet) Iterator(f func (v string)) {
+	this.RLock()
+	for k, _ := range this.M {
+		f(k)
+	}
+	this.RUnlock()
+}
+
 // 设置键
 func (this *StringSet) Add(item string) *StringSet {
 	if this.Contains(item) {
