@@ -1,9 +1,9 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/glog"
+    "fmt"
 )
 
 func main() {
-    glog.Error("发生错误！")
+    fmt.Println(len(make(chan int, 10)))
 }
