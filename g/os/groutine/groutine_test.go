@@ -1,3 +1,11 @@
+// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://gitee.com/johng/gf.
+
+// go test *.go -bench=".*"
+
 package groutine_test
 
 import (
@@ -21,11 +29,8 @@ func BenchmarkGroutine(b *testing.B) {
     //pool.Close()
 }
 
-//func BenchmarkGoRoutine(b *testing.B) {
-//    t := gtime.Microsecond()
-//    b.N = 100000
-//    for i := 0; i < b.N; i++ {
-//        go test()
-//    }
-//    fmt.Println("BenchmarkGoRoutine costs:", gtime.Microsecond() - t)
-//}
+func BenchmarkGoRoutine(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        go test()
+    }
+}
