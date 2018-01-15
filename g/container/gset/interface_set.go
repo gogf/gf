@@ -21,7 +21,16 @@ func NewInterfaceSet() *InterfaceSet {
 	return &InterfaceSet{M: make(map[interface{}]struct{})}
 }
 
-// 设置键
+// 给定回调函数对原始内容进行遍历
+func (this *InterfaceSet) Iterator(f func (v interface{})) {
+    this.RLock()
+    for k, _ := range this.M {
+        f(k)
+    }
+    this.RUnlock()
+}
+
+// 添加
 func (this *InterfaceSet) Add(item interface{}) *InterfaceSet {
 	if this.Contains(item) {
 		return this
@@ -32,7 +41,7 @@ func (this *InterfaceSet) Add(item interface{}) *InterfaceSet {
 	return this
 }
 
-// 批量添加设置键
+// 批量添加
 func (this *InterfaceSet) BatchAdd(items []interface{}) *InterfaceSet {
     count := len(items)
     if count == 0 {
@@ -97,13 +106,12 @@ func (this *InterfaceSet) Clear() {
 // 转换为数组
 func (this *InterfaceSet) Slice() []interface{} {
 	this.RLock()
+	i   := 0
 	ret := make([]interface{}, len(this.M))
-	i := 0
 	for item := range this.M {
 		ret[i] = item
 		i++
 	}
-
 	this.RUnlock()
 	return ret
 }
