@@ -22,6 +22,15 @@ func NewIntSet() *IntSet {
 	return &IntSet{M: make(map[int]struct{})}
 }
 
+// 给定回调函数对原始内容进行遍历
+func (this *IntSet) Iterator(f func (v int)) {
+	this.RLock()
+	for k, _ := range this.M {
+		f(k)
+	}
+	this.RUnlock()
+}
+
 // 设置键
 func (this *IntSet) Add(item int) *IntSet {
 	if this.Contains(item) {
