@@ -78,6 +78,18 @@ func (this *SafeList) PopBack() interface{} {
 	return nil
 }
 
+// 从链表头端出栈数据项(删除)
+func (this *SafeList) PopFront() interface{} {
+	this.Lock()
+	if elem := this.L.Front(); elem != nil {
+		item := this.L.Remove(elem)
+		this.Unlock()
+		return item
+	}
+	this.Unlock()
+	return nil
+}
+
 // 批量从链表尾端出栈数据项(删除)
 func (this *SafeList) BatchPopBack(max int) []interface{} {
 	this.Lock()
@@ -90,33 +102,64 @@ func (this *SafeList) BatchPopBack(max int) []interface{} {
 	if count > max {
 		count = max
 	}
-	items := make([]interface{}, 0, count)
+	items := make([]interface{}, count)
 	for i := 0; i < count; i++ {
-		item := this.L.Remove(this.L.Back())
-		items = append(items, item)
+		items[i] = this.L.Remove(this.L.Back())
 	}
 	this.Unlock()
 	return items
 }
 
-// 批量从链表尾端依次获取所有数据
-func (this *SafeList) PopBackAll() []interface{} {
+// 批量从链表头端出栈数据项(删除)
+func (this *SafeList) BatchPopFront(max int) []interface{} {
 	this.Lock()
-
 	count := this.L.Len()
 	if count == 0 {
 		this.Unlock()
 		return []interface{}{}
 	}
 
-	items := make([]interface{}, 0, count)
-	for i := 0; i < count; i++ {
-		item := this.L.Remove(this.L.Back())
-		items = append(items, item)
+	if count > max {
+		count = max
 	}
-
+	items := make([]interface{}, count)
+	for i := 0; i < count; i++ {
+		items[i] = this.L.Remove(this.L.Front())
+	}
 	this.Unlock()
 	return items
+}
+
+// 批量从链表尾端依次获取所有数据(删除)
+func (this *SafeList) PopBackAll() []interface{} {
+	this.Lock()
+	count := this.L.Len()
+	if count == 0 {
+		this.Unlock()
+		return []interface{}{}
+	}
+	items := make([]interface{}, count)
+	for i := 0; i < count; i++ {
+		items[i] = this.L.Remove(this.L.Back())
+	}
+	this.Unlock()
+	return items
+}
+
+// 批量从链表头端依次获取所有数据(删除)
+func (this *SafeList) PopFrontAll() []interface{} {
+    this.Lock()
+    count := this.L.Len()
+    if count == 0 {
+        this.Unlock()
+        return []interface{}{}
+    }
+    items := make([]interface{}, count)
+    for i := 0; i < count; i++ {
+        items[i] = this.L.Remove(this.L.Front())
+    }
+    this.Unlock()
+    return items
 }
 
 // 删除数据项
