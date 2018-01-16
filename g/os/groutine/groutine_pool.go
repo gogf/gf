@@ -6,21 +6,59 @@
 
 package groutine
 
+import (
+    "time"
+    "sync/atomic"
+    "gitee.com/johng/gf/g/os/gtime"
+)
+
 // 任务分配循环
-func (p *Pool) loop() {
+func (p *Pool) workloop() {
     go func() {
         for {
-            // 阻塞监听任务事件
-            if _, ok := <- p.events; ok {
-                // 如果任务为nil，表示池关闭
-                if r := p.funcs.PopFront(); r != nil {
-                    p.getJob().setJob(r.(func()))
-                } else {
+            select {
+                case <-p.funcEvents:
+                    p.getJob().setJob(p.funcs.PopFront().(func()))
+                case <-p.stopEvents:
                     return
-                }
             }
         }
     }()
+}
+
+// 定时清理过期任务
+func (p *Pool) clearloop() {
+    go func() {
+        for {
+            time.Sleep(gDEFAULT_CLEAR_INTERVAL*time.Second)
+            if len(p.stopEvents) > 0 || len(p.funcEvents) == 0 {
+                var j *PoolJob
+                for {
+                    if r := p.queue.PopFront(); r != nil {
+                        j = r.(*PoolJob)
+                        if gtime.Second() - int64(p.expire) > j.update {
+                            j.stop()
+                            atomic.AddInt32(&p.number, -1)
+                        } else {
+                            p.queue.PushFront(r)
+                            break
+                        }
+                    } else {
+                        break
+                    }
+                }
+            }
+            // 判断是池已经关闭，是则退出
+            if len(p.stopEvents) > 0 {
+                break
+            }
+        }
+    }()
+}
+
+// 获取过期时间
+func (p *Pool) getExpire() int32 {
+    return atomic.LoadInt32(&p.expire)
 }
 
 // 创建一个空的任务对象
@@ -30,13 +68,16 @@ func (p *Pool) newJob() *PoolJob {
         pool : p,
     }
     j.start()
-    p.jobs.Add(j)
+    atomic.AddInt32(&p.number, 1)
     return j
 }
 
 // 添加任务对象到队列
-func (p *Pool) addJob(j *PoolJob) {
-    p.queue.PushBack(j)
+func (p *Pool) addJob(j *PoolJob) bool {
+    if j.pool.getExpire() == -1 {
+        return false
+    }
+    return p.queue.PushBack(j) != nil
 }
 
 // 获取/创建任务
