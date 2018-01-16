@@ -20,13 +20,10 @@ func test() {
     }
 }
 
-var pool = groutine.New()
-
 func BenchmarkGroutine(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        pool.Add(test)
+        groutine.Add(test)
     }
-    //pool.Close()
 }
 
 func BenchmarkGoRoutine(b *testing.B) {
