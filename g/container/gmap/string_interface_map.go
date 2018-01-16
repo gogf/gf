@@ -13,8 +13,8 @@ import (
 )
 
 type StringInterfaceMap struct {
-	sync.RWMutex
-	m map[string]interface{}
+	mu sync.RWMutex
+	m  map[string]interface{}
 }
 
 func NewStringInterfaceMap() *StringInterfaceMap {
@@ -26,138 +26,138 @@ func NewStringInterfaceMap() *StringInterfaceMap {
 // 哈希表克隆
 func (this *StringInterfaceMap) Clone() *map[string]interface{} {
     m := make(map[string]interface{})
-    this.RLock()
+    this.mu.RLock()
     for k, v := range this.m {
         m[k] = v
     }
-    this.RUnlock()
+    this.mu.RUnlock()
     return &m
 }
 
 // 设置键值对
 func (this *StringInterfaceMap) Set(key string, val interface{}) {
-	this.Lock()
+	this.mu.Lock()
 	this.m[key] = val
-	this.Unlock()
+	this.mu.Unlock()
 }
 
 // 批量设置键值对
 func (this *StringInterfaceMap) BatchSet(m map[string]interface{}) {
-    this.Lock()
+    this.mu.Lock()
     for k, v := range m {
         this.m[k] = v
     }
-    this.Unlock()
+    this.mu.Unlock()
 }
 
 // 获取键值
 func (this *StringInterfaceMap) Get(key string) interface{} {
-	this.RLock()
+	this.mu.RLock()
 	val, _ := this.m[key]
-	this.RUnlock()
+	this.mu.RUnlock()
 	return val
 }
 
 func (this *StringInterfaceMap) GetBool(key string) bool {
-    return gconv.Bool(this.Get(key))
+    return gconv.Bool(this.mu.Get(key))
 }
 
 func (this *StringInterfaceMap) GetInt(key string) int {
-    return gconv.Int(this.Get(key))
+    return gconv.Int(this.mu.Get(key))
 }
 
 func (this *StringInterfaceMap) GetUint (key string) uint {
-    return gconv.Uint(this.Get(key))
+    return gconv.Uint(this.mu.Get(key))
 }
 
 func (this *StringInterfaceMap) GetFloat32 (key string) float32 {
-    return gconv.Float32(this.Get(key))
+    return gconv.Float32(this.mu.Get(key))
 }
 
 func (this *StringInterfaceMap) GetFloat64 (key string) float64 {
-    return gconv.Float64(this.Get(key))
+    return gconv.Float64(this.mu.Get(key))
 }
 
 func (this *StringInterfaceMap) GetString (key string) string {
-    return gconv.String(this.Get(key))
+    return gconv.String(this.mu.Get(key))
 }
 
 // 删除键值对
 func (this *StringInterfaceMap) Remove(key string) {
-	this.Lock()
+	this.mu.Lock()
 	delete(this.m, key)
-	this.Unlock()
+	this.mu.Unlock()
 }
 
 // 批量删除键值对
 func (this *StringInterfaceMap) BatchRemove(keys []string) {
-    this.Lock()
+    this.mu.Lock()
     for _, key := range keys {
         delete(this.m, key)
     }
-    this.Unlock()
+    this.mu.Unlock()
 }
 
 // 返回对应的键值，并删除该键值
 func (this *StringInterfaceMap) GetAndRemove(key string) interface{} {
-	this.Lock()
+	this.mu.Lock()
 	val, exists := this.m[key]
 	if exists {
 		delete(this.m, key)
 	}
-	this.Unlock()
+	this.mu.Unlock()
 	return val
 }
 
 // 返回键列表
 func (this *StringInterfaceMap) Keys() []string {
-	this.RLock()
+	this.mu.RLock()
 	keys := make([]string, 0)
 	for key, _ := range this.m {
 		keys = append(keys, key)
 	}
-    this.RUnlock()
+    this.mu.RUnlock()
 	return keys
 }
 
 // 返回值列表(注意是随机排序)
 func (this *StringInterfaceMap) Values() []interface{} {
-	this.RLock()
+	this.mu.RLock()
 	vals := make([]interface{}, 0)
 	for _, val := range this.m {
 		vals = append(vals, val)
 	}
-	this.RUnlock()
+	this.mu.RUnlock()
 	return vals
 }
 
 // 是否存在某个键
 func (this *StringInterfaceMap) Contains(key string) bool {
-	this.RLock()
+	this.mu.RLock()
 	_, exists := this.m[key]
-	this.RUnlock()
+	this.mu.RUnlock()
 	return exists
 }
 
 // 哈希表大小
 func (this *StringInterfaceMap) Size() int {
-	this.RLock()
+	this.mu.RLock()
 	len := len(this.m)
-	this.RUnlock()
+	this.mu.RUnlock()
 	return len
 }
 
 // 哈希表是否为空
 func (this *StringInterfaceMap) IsEmpty() bool {
-	this.RLock()
+	this.mu.RLock()
 	empty := (len(this.m) == 0)
-	this.RUnlock()
+	this.mu.RUnlock()
 	return empty
 }
 
 // 清空哈希表
 func (this *StringInterfaceMap) Clear() {
-    this.Lock()
+    this.mu.Lock()
     this.m = make(map[string]interface{})
-    this.Unlock()
+    this.mu.Unlock()
 }

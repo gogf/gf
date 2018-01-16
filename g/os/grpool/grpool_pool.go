@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-package groutine
+package grpool
 
 import (
     "time"
@@ -13,7 +13,7 @@ import (
 )
 
 // 任务分配循环
-func (p *Pool) workloop() {
+func (p *Pool) startWorkLoop() {
     go func() {
         for {
             select {
@@ -27,7 +27,7 @@ func (p *Pool) workloop() {
 }
 
 // 定时清理过期任务
-func (p *Pool) clearloop() {
+func (p *Pool) startClearLoop() {
     go func() {
         for {
             time.Sleep(gDEFAULT_CLEAR_INTERVAL*time.Second)
