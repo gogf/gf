@@ -6,7 +6,7 @@
 
 // Goroutine池.
 // 用于goroutine复用，提升异步操作执行效率.
-package groutine
+package grpool
 
 import (
     "math"
@@ -41,16 +41,21 @@ type PoolJob struct {
 var defaultPool = New(gDEFAULT_EXPIRE_TIME)
 
 // 创建goroutine池管理对象，给定过期时间(秒)
-func New(expire int) *Pool {
+// 第二个参数设置允许同时执行的最大任务数，用户可以限制最大并行任务数(非必需参数，默认为不限制)
+func New(expire int, sizes...int) *Pool {
+    size := math.MaxUint32
+    if len(sizes) > 0 {
+        size = sizes[0]
+    }
     p := &Pool {
         expire     : int32(expire),
         queue      : glist.NewSafeList(),
         funcs      : glist.NewSafeList(),
-        funcEvents : make(chan struct{}, math.MaxUint32),
+        funcEvents : make(chan struct{}, size),
         stopEvents : make(chan struct{}, 1),
     }
-    p.workloop()
-    p.clearloop()
+    p.startWorkLoop()
+    p.startClearLoop()
     return p
 }
 

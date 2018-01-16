@@ -14,21 +14,21 @@ import (
 )
 
 type IntSet struct {
-	sync.RWMutex
-	M map[int]struct{}
+	mu sync.RWMutex
+	m  map[int]struct{}
 }
 
 func NewIntSet() *IntSet {
-	return &IntSet{M: make(map[int]struct{})}
+	return &IntSet{m: make(map[int]struct{})}
 }
 
 // 给定回调函数对原始内容进行遍历
 func (this *IntSet) Iterator(f func (v int)) {
-	this.RLock()
-	for k, _ := range this.M {
+	this.mu.RLock()
+	for k, _ := range this.m {
 		f(k)
 	}
-	this.RUnlock()
+	this.mu.RUnlock()
 }
 
 // 设置键
@@ -36,9 +36,9 @@ func (this *IntSet) Add(item int) *IntSet {
 	if this.Contains(item) {
 		return this
 	}
-	this.Lock()
-	this.M[item] = struct{}{}
-	this.Unlock()
+	this.mu.Lock()
+	this.m[item] = struct{}{}
+	this.mu.Unlock()
 	return this
 }
 
@@ -50,76 +50,75 @@ func (this *IntSet) BatchAdd(items []int) *IntSet {
     }
 
     todo := make([]int, 0, count)
-    this.RLock()
+    this.mu.RLock()
     for i := 0; i < count; i++ {
-        _, exists := this.M[items[i]]
+        _, exists := this.m[items[i]]
         if exists {
             continue
         }
 
         todo = append(todo, items[i])
     }
-    this.RUnlock()
+    this.mu.RUnlock()
 
     count = len(todo)
     if count == 0 {
         return this
     }
 
-    this.Lock()
+    this.mu.Lock()
     for i := 0; i < count; i++ {
-        this.M[todo[i]] = struct{}{}
+        this.m[todo[i]] = struct{}{}
     }
-    this.Unlock()
+    this.mu.Unlock()
     return this
 }
 
 // 键是否存在
 func (this *IntSet) Contains(item int) bool {
-	this.RLock()
-	_, exists := this.M[item]
-	this.RUnlock()
+	this.mu.RLock()
+	_, exists := this.m[item]
+	this.mu.RUnlock()
 	return exists
 }
 
 // 删除键值对
 func (this *IntSet) Remove(key int) {
-	this.Lock()
-	delete(this.M, key)
-	this.Unlock()
+	this.mu.Lock()
+	delete(this.m, key)
+	this.mu.Unlock()
 }
 
 // 大小
 func (this *IntSet) Size() int {
-	this.RLock()
-	l := len(this.M)
-	this.RUnlock()
+	this.mu.RLock()
+	l := len(this.m)
+	this.mu.RUnlock()
 	return l
 }
 
 // 清空set
 func (this *IntSet) Clear() {
-	this.Lock()
-	this.M = make(map[int]struct{})
-	this.Unlock()
+	this.mu.Lock()
+	this.m = make(map[int]struct{})
+	this.mu.Unlock()
 }
 
 // 转换为数组
 func (this *IntSet) Slice() []int {
-	this.RLock()
-	ret := make([]int, len(this.M))
+	this.mu.RLock()
+	ret := make([]int, len(this.m))
 	i := 0
-	for item := range this.M {
+	for item := range this.m {
 		ret[i] = item
 		i++
 	}
 
-	this.RUnlock()
+	this.mu.RUnlock()
 	return ret
 }
 
 // 转换为字符串
 func (this *IntSet) String() string {
-	s := this.Slice()
-	return fmt.Sprint(s)
+	return fmt.Sprint(this.Slice())
 }
