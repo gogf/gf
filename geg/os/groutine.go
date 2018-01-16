@@ -2,9 +2,9 @@ package main
 
 import (
     "time"
-    "gitee.com/johng/gf/g/os/groutine"
     "fmt"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/os/grpool"
 )
 
 func job(i int) {
@@ -14,12 +14,12 @@ func job(i int) {
 
 func main() {
     for i := 0; i < 10; i++ {
-        groutine.Add(func() {
+        grpool.Add(func() {
             job(i)
         })
     }
     gtime.SetInterval(2*time.Second, func() bool {
-        fmt.Println(groutine.Size())
+        fmt.Println(grpool.Size())
         return true
     })
     time.Sleep(5000*time.Second)

@@ -6,11 +6,11 @@
 
 // go test *.go -bench=".*"
 
-package groutine_test
+package grpool_test
 
 import (
     "testing"
-    "gitee.com/johng/gf/g/os/groutine"
+    "gitee.com/johng/gf/g/os/grpool"
 )
 
 func increment() {
@@ -19,7 +19,7 @@ func increment() {
 
 func BenchmarkGroutine(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        groutine.Add(increment)
+        grpool.Add(increment)
     }
 }
 
