@@ -12,8 +12,8 @@ import (
 )
 
 type IntIntMap struct {
-	sync.RWMutex
-	m map[int]int
+	mu sync.RWMutex
+	m  map[int]int
 }
 
 func NewIntIntMap() *IntIntMap {
@@ -25,115 +25,115 @@ func NewIntIntMap() *IntIntMap {
 // 哈希表克隆
 func (this *IntIntMap) Clone() *map[int]int {
 	m := make(map[int]int)
-	this.RLock()
+	this.mu.RLock()
 	for k, v := range this.m {
 		m[k] = v
 	}
-    this.RUnlock()
+    this.mu.RUnlock()
 	return &m
 }
 
 // 设置键值对
 func (this *IntIntMap) Set(key int, val int) {
-	this.Lock()
+	this.mu.Lock()
 	this.m[key] = val
-	this.Unlock()
+	this.mu.Unlock()
 }
 
 // 批量设置键值对
 func (this *IntIntMap) BatchSet(m map[int]int) {
-	this.Lock()
+	this.mu.Lock()
 	for k, v := range m {
 		this.m[k] = v
 	}
-	this.Unlock()
+	this.mu.Unlock()
 }
 
 // 获取键值
 func (this *IntIntMap) Get(key int) (int) {
-	this.RLock()
+	this.mu.RLock()
 	val, _ := this.m[key]
-	this.RUnlock()
+	this.mu.RUnlock()
 	return val
 }
 
 // 删除键值对
 func (this *IntIntMap) Remove(key int) {
-    this.Lock()
+    this.mu.Lock()
     delete(this.m, key)
-    this.Unlock()
+    this.mu.Unlock()
 }
 
 // 批量删除键值对
 func (this *IntIntMap) BatchRemove(keys []int) {
-    this.Lock()
+    this.mu.Lock()
     for _, key := range keys {
         delete(this.m, key)
     }
-    this.Unlock()
+    this.mu.Unlock()
 }
 
 // 返回对应的键值，并删除该键值
 func (this *IntIntMap) GetAndRemove(key int) (int) {
-    this.Lock()
+    this.mu.Lock()
     val, exists := this.m[key]
     if exists {
         delete(this.m, key)
     }
-    this.Unlock()
+    this.mu.Unlock()
     return val
 }
 
 // 返回键列表
 func (this *IntIntMap) Keys() []int {
-    this.RLock()
+    this.mu.RLock()
     keys := make([]int, 0)
     for key, _ := range this.m {
         keys = append(keys, key)
     }
-    this.RUnlock()
+    this.mu.RUnlock()
     return keys
 }
 
 // 返回值列表(注意是随机排序)
 func (this *IntIntMap) Values() []int {
-    this.RLock()
+    this.mu.RLock()
     vals := make([]int, 0)
     for _, val := range this.m {
         vals = append(vals, val)
     }
-    this.RUnlock()
+    this.mu.RUnlock()
     return vals
 }
 
 // 是否存在某个键
 func (this *IntIntMap) Contains(key int) bool {
-    this.RLock()
+    this.mu.RLock()
     _, exists := this.m[key]
-    this.RUnlock()
+    this.mu.RUnlock()
     return exists
 }
 
 // 哈希表大小
 func (this *IntIntMap) Size() int {
-    this.RLock()
+    this.mu.RLock()
     len := len(this.m)
-    this.RUnlock()
+    this.mu.RUnlock()
     return len
 }
 
 // 哈希表是否为空
 func (this *IntIntMap) IsEmpty() bool {
-    this.RLock()
+    this.mu.RLock()
     empty := (len(this.m) == 0)
-    this.RUnlock()
+    this.mu.RUnlock()
     return empty
 }
 
 // 清空哈希表
 func (this *IntIntMap) Clear() {
-    this.Lock()
+    this.mu.Lock()
     this.m = make(map[int]int)
-    this.Unlock()
+    this.mu.Unlock()
 }
 
