@@ -13,21 +13,18 @@ import (
     "gitee.com/johng/gf/g/os/groutine"
 )
 
-func test() {
-    num := 0
-    for i := 0; i < 1000000; i++ {
-        num += i
-    }
+func increment() {
+    for i := 0; i < 1000000; i++ {}
 }
 
 func BenchmarkGroutine(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        groutine.Add(test)
+        groutine.Add(increment)
     }
 }
 
 func BenchmarkGoRoutine(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        go test()
+        go increment()
     }
 }
