@@ -10,21 +10,44 @@ package grpool_test
 
 import (
     "testing"
-    "gitee.com/johng/gf/g/os/grpool"
+    "runtime"
+    "fmt"
 )
+
+var n = 5000000
 
 func increment() {
     for i := 0; i < 1000000; i++ {}
 }
 
-func BenchmarkGroutine(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        grpool.Add(increment)
-    }
-}
+//func Test_GrpoolMemUsage(t *testing.T) {
+//    for i := 0; i < n; i++ {
+//        grpool.Add(increment)
+//    }
+//    mem := runtime.MemStats{}
+//    runtime.ReadMemStats(&mem)
+//    fmt.Println("mem usage:", mem.TotalAlloc/1024)
+//}
 
-func BenchmarkGoRoutine(b *testing.B) {
-    for i := 0; i < b.N; i++ {
+func Test_GroroutineMemUsage(t *testing.T) {
+    for i := 0; i < n; i++ {
         go increment()
     }
+    mem := runtime.MemStats{}
+    runtime.ReadMemStats(&mem)
+    fmt.Println("mem usage:", mem.TotalAlloc/1024)
 }
+
+//func BenchmarkGrpool(b *testing.B) {
+//    b.N = n
+//    for i := 0; i < b.N; i++ {
+//        grpool.Add(increment)
+//    }
+//}
+
+//func BenchmarkGoroutine(b *testing.B) {
+//    b.N = n
+//    for i := 0; i < b.N; i++ {
+//        go increment()
+//    }
+//}
