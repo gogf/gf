@@ -23,8 +23,8 @@ func BenchmarkGrpool_1(b *testing.B) {
     }
 }
 
-func BenchmarkGoroutine_1(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        go increment1()
-    }
-}
+//func BenchmarkGoroutine_1(b *testing.B) {
+//    for i := 0; i < b.N; i++ {
+//        go increment1()
+//    }
+//}
