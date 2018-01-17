@@ -21,10 +21,12 @@ const (
 
 // goroutine池对象
 type Pool struct {
+    size       int32              // 限制最大的goroutine数量/线程数/worker数量
     expire     int32              // goroutine过期时间(秒)
     number     int32              // 当前goroutine数量(非任务数)
     queue      *glist.SafeList    // 空闲任务队列(*PoolJob)
     funcs      *glist.SafeList    // 待处理任务操作队列
+    freeEvents chan struct{}      // 空闲线程通知事件
     funcEvents chan struct{}      // 任务操作处理事件(用于任务事件通知)
     stopEvents chan struct{}      // 池关闭事件(用于池相关异步线程通知)
 }
@@ -41,11 +43,18 @@ type PoolJob struct {
 var defaultPool = New(gDEFAULT_EXPIRE_TIME)
 
 // 创建goroutine池管理对象，给定过期时间(秒)
-func New(expire int) *Pool {
+// 第二个参数用于限制限制最大的goroutine数量/线程数/worker数量，非必需参数，默认不做限制
+func New(expire int, sizes...int) *Pool {
+    size := math.MaxInt32
+    if len(sizes) > 0 {
+        size = sizes[0]
+    }
     p := &Pool {
+        size       : int32(size),
         expire     : int32(expire),
         queue      : glist.NewSafeList(),
         funcs      : glist.NewSafeList(),
+        freeEvents : make(chan struct{}, math.MaxUint32),
         funcEvents : make(chan struct{}, math.MaxUint32),
         stopEvents : make(chan struct{}, 1),
     }
@@ -65,7 +74,17 @@ func Size() int {
     return int(atomic.LoadInt32(&defaultPool.number))
 }
 
-// 设置默认池中goroutine的过期时间
+// 查询当前等待处理的任务总数
+func Jobs() int {
+    return len(defaultPool.funcEvents)
+}
+
+// 动态改变默认池中goroutine的上线数量
+func SetSize(size int) {
+    atomic.StoreInt32(&defaultPool.size, int32(size))
+}
+
+// 动态改变默认池中goroutine的过期时间
 func SetExpire(expire int) {
     atomic.StoreInt32(&defaultPool.expire, int32(expire))
 }
@@ -81,7 +100,17 @@ func (p *Pool) Size() int {
     return int(atomic.LoadInt32(&p.number))
 }
 
-// 设置当前池中goroutine的过期时间
+// 查询当前等待处理的任务总数
+func (p *Pool) Jobs() int {
+    return len(p.funcEvents)
+}
+
+// 动态改变当前池中goroutine的上线数量
+func (p *Pool) SetSize(size int) {
+    atomic.StoreInt32(&p.size, int32(size))
+}
+
+// 动态改变当前池中goroutine的过期时间
 func (p *Pool) SetExpire(expire int) {
     atomic.StoreInt32(&p.expire, int32(expire))
 }

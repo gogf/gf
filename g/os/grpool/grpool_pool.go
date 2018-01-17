@@ -12,7 +12,7 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
 )
 
-// 任务分配循环
+// 任务分配循环，这是一个独立的goroutine，单线程处理
 func (p *Pool) startWorkLoop() {
     go func() {
         for {
@@ -26,7 +26,7 @@ func (p *Pool) startWorkLoop() {
     }()
 }
 
-// 定时清理过期任务
+// 定时清理过期任务，单线程处理
 func (p *Pool) startClearLoop() {
     go func() {
         for {
@@ -48,12 +48,18 @@ func (p *Pool) startClearLoop() {
                     }
                 }
             }
-            // 判断是池已经关闭，是则退出
-            if len(p.stopEvents) > 0 {
+            // 判断是池已经关闭，并且所有goroutine已退出，那么该goroutine终止执行
+            if len(p.stopEvents) > 0 && atomic.LoadInt32(&p.number) == 0 {
                 break
             }
         }
     }()
+}
+
+// 判断是否达到goroutine上上限
+func (p *Pool) reachSizeLimit() bool {
+    return false
+    return atomic.LoadInt32(&p.number) >= atomic.LoadInt32(&p.size)
 }
 
 // 获取过期时间
@@ -63,6 +69,14 @@ func (p *Pool) getExpire() int32 {
 
 // 创建一个空的任务对象
 func (p *Pool) newJob() *PoolJob {
+    // 如果达到goroutine数限制，那么阻塞等待有空闲goroutine后继续
+    //if p.reachSizeLimit() {
+    //    // 阻塞等待空闲goroutine
+    //    select {
+    //        case <- p.freeEvents:
+    //            return p.getJob()
+    //    }
+    //}
     j := &PoolJob {
         job  : make(chan func(), 1),
         pool : p,
@@ -77,7 +91,12 @@ func (p *Pool) addJob(j *PoolJob) bool {
     if j.pool.getExpire() == -1 {
         return false
     }
-    return p.queue.PushBack(j) != nil
+    p.queue.PushBack(j)
+    // 如果当前的goroutine数量达到上线，那么需要使用空闲goroutine通知事件
+    //if p.reachSizeLimit() {
+    //    p.freeEvents <- struct{}{}
+    //}
+    return true
 }
 
 // 获取/创建任务
