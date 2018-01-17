@@ -59,27 +59,27 @@ func (this *InterfaceInterfaceMap) Get(key interface{}) (interface{}) {
 }
 
 func (this *InterfaceInterfaceMap) GetBool(key interface{}) bool {
-    return gconv.Bool(this.mu.Get(key))
+    return gconv.Bool(this.Get(key))
 }
 
 func (this *InterfaceInterfaceMap) GetInt(key interface{}) int {
-    return gconv.Int(this.mu.Get(key))
+    return gconv.Int(this.Get(key))
 }
 
 func (this *InterfaceInterfaceMap) GetUint (key interface{}) uint {
-    return gconv.Uint(this.mu.Get(key))
+    return gconv.Uint(this.Get(key))
 }
 
 func (this *InterfaceInterfaceMap) GetFloat32 (key interface{}) float32 {
-    return gconv.Float32(this.mu.Get(key))
+    return gconv.Float32(this.Get(key))
 }
 
 func (this *InterfaceInterfaceMap) GetFloat64 (key interface{}) float64 {
-    return gconv.Float64(this.mu.Get(key))
+    return gconv.Float64(this.Get(key))
 }
 
 func (this *InterfaceInterfaceMap) GetString (key interface{}) string {
-    return gconv.String(this.mu.Get(key))
+    return gconv.String(this.Get(key))
 }
 
 // 删除键值对

@@ -59,27 +59,27 @@ func (this *UintInterfaceMap) Get(key uint) (interface{}) {
 }
 
 func (this *UintInterfaceMap) GetBool(key uint) bool {
-    return gconv.Bool(this.mu.Get(key))
+    return gconv.Bool(this.Get(key))
 }
 
 func (this *UintInterfaceMap) GetInt(key uint) int {
-    return gconv.Int(this.mu.Get(key))
+    return gconv.Int(this.Get(key))
 }
 
 func (this *UintInterfaceMap) GetUint (key uint) uint {
-    return gconv.Uint(this.mu.Get(key))
+    return gconv.Uint(this.Get(key))
 }
 
 func (this *UintInterfaceMap) GetFloat32 (key uint) float32 {
-    return gconv.Float32(this.mu.Get(key))
+    return gconv.Float32(this.Get(key))
 }
 
 func (this *UintInterfaceMap) GetFloat64 (key uint) float64 {
-    return gconv.Float64(this.mu.Get(key))
+    return gconv.Float64(this.Get(key))
 }
 
 func (this *UintInterfaceMap) GetString (key uint) string {
-    return gconv.String(this.mu.Get(key))
+    return gconv.String(this.Get(key))
 }
 
 // 删除键值对
@@ -142,9 +142,9 @@ func (this *UintInterfaceMap) Contains(key uint) bool {
 // 哈希表大小
 func (this *UintInterfaceMap) Size() int {
     this.mu.RLock()
-    len := len(this.m)
+    length := len(this.m)
     this.mu.RUnlock()
-    return len
+    return length
 }
 
 // 哈希表是否为空
