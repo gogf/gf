@@ -7,19 +7,20 @@ import (
     "gitee.com/johng/gf/g/os/grpool"
 )
 
-func job(i int) {
-    time.Sleep(2*time.Second)
-    //fmt.Println("job done:", i)
+func job() {
+    time.Sleep(1*time.Second)
 }
 
 func main() {
-    for i := 0; i < 10; i++ {
+    grpool.SetSize(10)
+    for i := 0; i < 1000; i++ {
         grpool.Add(func() {
-            job(i)
+            job()
         })
     }
     gtime.SetInterval(2*time.Second, func() bool {
-        fmt.Println(grpool.Size())
+        fmt.Println("size:", grpool.Size())
+        fmt.Println("jobs:", grpool.Jobs())
         return true
     })
     time.Sleep(5000*time.Second)
