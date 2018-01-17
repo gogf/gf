@@ -14,14 +14,12 @@ func job() {
 func main() {
     grpool.SetSize(10)
     for i := 0; i < 1000; i++ {
-        grpool.Add(func() {
-            job()
-        })
+        grpool.Add(job)
     }
     gtime.SetInterval(2*time.Second, func() bool {
         fmt.Println("size:", grpool.Size())
         fmt.Println("jobs:", grpool.Jobs())
         return true
     })
-    time.Sleep(5000*time.Second)
+    select {}
 }
