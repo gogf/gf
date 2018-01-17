@@ -58,7 +58,6 @@ func (p *Pool) startClearLoop() {
 
 // 判断是否达到goroutine上上限
 func (p *Pool) reachSizeLimit() bool {
-    return false
     return atomic.LoadInt32(&p.number) >= atomic.LoadInt32(&p.size)
 }
 
@@ -70,13 +69,13 @@ func (p *Pool) getExpire() int32 {
 // 创建一个空的任务对象
 func (p *Pool) newJob() *PoolJob {
     // 如果达到goroutine数限制，那么阻塞等待有空闲goroutine后继续
-    //if p.reachSizeLimit() {
-    //    // 阻塞等待空闲goroutine
-    //    select {
-    //        case <- p.freeEvents:
-    //            return p.getJob()
-    //    }
-    //}
+    if p.reachSizeLimit() {
+        // 阻塞等待空闲goroutine
+        select {
+            case <- p.freeEvents:
+                return p.getJob()
+        }
+    }
     j := &PoolJob {
         job  : make(chan func(), 1),
         pool : p,
@@ -93,9 +92,9 @@ func (p *Pool) addJob(j *PoolJob) bool {
     }
     p.queue.PushBack(j)
     // 如果当前的goroutine数量达到上线，那么需要使用空闲goroutine通知事件
-    //if p.reachSizeLimit() {
-    //    p.freeEvents <- struct{}{}
-    //}
+    if p.reachSizeLimit() {
+        p.freeEvents <- struct{}{}
+    }
     return true
 }
 
