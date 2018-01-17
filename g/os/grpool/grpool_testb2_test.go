@@ -4,33 +4,31 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// go test *.go -bench=".*" -count=1
+
 package grpool_test
 
 import (
-    "fmt"
-    "runtime"
     "testing"
     "gitee.com/johng/gf/g/os/grpool"
 )
 
-func increment() {
+var n = 500000
+
+func increment2() {
     for i := 0; i < 1000000; i++ {}
 }
 
-func Test_GrpoolMemUsage(t *testing.T) {
-    for i := 0; i < n; i++ {
+func BenchmarkGrpool2(b *testing.B) {
+    b.N = n
+    for i := 0; i < b.N; i++ {
         grpool.Add(increment)
     }
-    mem := runtime.MemStats{}
-    runtime.ReadMemStats(&mem)
-    fmt.Println("mem usage:", mem.TotalAlloc/1024)
 }
 
-func Test_GroroutineMemUsage(t *testing.T) {
-    for i := 0; i < n; i++ {
+func BenchmarkGoroutine2(b *testing.B) {
+    b.N = n
+    for i := 0; i < b.N; i++ {
         go increment()
     }
-    mem := runtime.MemStats{}
-    runtime.ReadMemStats(&mem)
-    fmt.Println("mem usage:", mem.TotalAlloc/1024)
 }
