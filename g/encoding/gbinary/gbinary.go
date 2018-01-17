@@ -16,7 +16,7 @@ import (
 // 二进制位(0|1)
 type Bit uint8
 
-// (通用,效率较低)二进制打包
+// 整形二进制打包，注意参数必须为字长确定的类型：int8/16/32/64、uint8/16/32/64
 func Encode(vs ...interface{}) ([]byte, error) {
     buf := new(bytes.Buffer)
     for i := 0; i < len(vs); i++ {
@@ -28,7 +28,7 @@ func Encode(vs ...interface{}) ([]byte, error) {
     return buf.Bytes(), nil
 }
 
-// (通用,效率较低)二进制解包，注意第二个参数之后的变量是变量的指针地址
+// 整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，字长确定的类型：int8/16/32/64、uint8/16/32/64
 func Decode(b []byte, vs ...interface{}) error {
     buf := bytes.NewBuffer(b)
     for i := 0; i < len(vs); i++ {
