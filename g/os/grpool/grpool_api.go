@@ -121,5 +121,4 @@ func (p *Pool) Close() {
     p.SetExpire(-1)
     p.stopEvents <- struct{}{} // 通知workloop
     p.stopEvents <- struct{}{} // 通知clearloop
-
 }
