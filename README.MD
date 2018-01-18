@@ -5,8 +5,8 @@
 ## 介绍
 gf(Go Frame)是一款为Web服务及网络服务开发设计的，模块化、低耦合、轻量级的Go语言开发框架。
 实现了通用的HTTP/TCP/UDP Server，并提供了Web服务开发的系列核心组件，
-包括：MVC、Cookie、Session、模板引擎、路由控制、配置管理、数据校验、数据库操作等等，
-并且提供了数十个实用开发模块，包括：缓存模块、日志模块、JSON模块、命令行模块、环境变量模块、并发安全容器、Goroutine池等等。
+包括：MVC、Cookie、Session、模板引擎、路由控制、配置管理、数据校验、数据库操作(ORM)等等，
+并且提供了数十个实用开发模块，包括：缓存模块、日志模块、JSON模块、命令行模块、二进制模块、环境变量模块、并发安全容器、Goroutine池等等。
 
 gf是开源的，免费的，基于MIT协议进行分发，开源项目地址：https://gitee.com/johng/gf
 
@@ -24,10 +24,11 @@ package main
 import "gitee.com/johng/gf/g/net/ghttp"
 
 func main() {
-    ghttp.GetServer().BindHandler("/", func(r *ghttp.Request){
+    s := ghttp.GetServer()
+    s.BindHandler("/", func(r *ghttp.Request){
         r.Response.WriteString("Hello World!")
     })
-    ghttp.GetServer().Run()
+    s.Run()
 }
 ```
 ## 文档
@@ -54,7 +55,9 @@ func main() {
     * [时间模块](https://www.kancloud.cn/johng/gf/494387)
     * [JSON模块](https://www.kancloud.cn/johng/gf/494388)
     * [命令行模块](https://www.kancloud.cn/johng/gf/494389)
+    * [二进制模块](https://www.kancloud.cn/johng/gf/500342)
     * [HTTP客户端](https://www.kancloud.cn/johng/gf/499674)
+    * [Goroutine池](https://www.kancloud.cn/johng/gf/504458)
     * [环境变量模块](https://www.kancloud.cn/johng/gf/494390)
     * [文件管理模块](https://www.kancloud.cn/johng/gf/494391)
     * [并发安全容器](https://www.kancloud.cn/johng/gf/494392)

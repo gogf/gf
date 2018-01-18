@@ -13,7 +13,7 @@ func main() {
     // 网关编码
     bits := make([]gbinary.Bit, 0)
     for i := 0; i < count; i++ {
-        bits = gbinary.EncodeBits(bits, uint(status), 2)
+        bits = gbinary.EncodeBits(bits, status, 2)
     }
     buffer := gbinary.EncodeBitsToBytes(bits)
     fmt.Println("buffer length:", len(buffer))
