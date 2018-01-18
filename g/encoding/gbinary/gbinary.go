@@ -14,7 +14,7 @@ import (
 )
 
 // 二进制位(0|1)
-type Bit uint8
+type Bit int8
 
 // 针对基本类型进行二进制打包，支持的基本数据类型包括:int/8/16/32/64、uint/8/16/32/64、float32/64、bool、string、[]byte
 func Encode(vs ...interface{}) ([]byte, error) {
@@ -237,8 +237,13 @@ func DecodeToFloat64(b []byte) float64 {
     return math.Float64frombits(binary.LittleEndian.Uint64(fillUpSize(b, 8)))
 }
 
+// 默认编码
+func EncodeBits(bits []Bit, i int, l int) []Bit {
+    return EncodeBitsWithUint(bits, uint(i), l)
+}
+
 // 将ui按位合并到bits数组中，并占length长度位(注意：uis数组中存放的是二进制的0|1数字)
-func EncodeBits(bits []Bit, ui uint, l int) []Bit {
+func EncodeBitsWithUint(bits []Bit, ui uint, l int) []Bit {
     a := make([]Bit, l)
     for i := l - 1; i >= 0; i-- {
         a[i] = Bit(ui & 1)
@@ -250,7 +255,6 @@ func EncodeBits(bits []Bit, ui uint, l int) []Bit {
         return a
     }
 }
-
 // 将bits转换为[]byte，从左至右进行编码，不足1 byte按0往末尾补充
 func EncodeBitsToBytes(bits []Bit) []byte {
     if len(bits)%8 != 0 {
@@ -260,25 +264,34 @@ func EncodeBitsToBytes(bits []Bit) []byte {
     }
     b := make([]byte, 0)
     for i := 0; i < len(bits); i += 8 {
-        b = append(b, byte(DecodeBits(bits[i : i + 8])))
+        b = append(b, byte(DecodeBitsToUint(bits[i : i + 8])))
     }
     return b
 }
 
-// 从ui字位数组中解析为uint
-func DecodeBits(bits []Bit) uint {
-    ui := uint(0)
+// 解析为int
+func DecodeBitsToInt(bits []Bit) int {
+    v := int(0)
     for _, i := range bits {
-        ui = ui << 1 | uint(i)
+        v = v << 1 | int(i)
     }
-    return ui
+    return v
+}
+
+// 解析为uint
+func DecodeBitsToUint(bits []Bit) uint {
+    v := uint(0)
+    for _, i := range bits {
+        v = v << 1 | uint(i)
+    }
+    return v
 }
 
 // 解析[]byte为字位数组[]uint8
 func DecodeBytesToBits(bs []byte) []Bit {
     bits := make([]Bit, 0)
     for _, b := range bs {
-        bits = EncodeBits(bits, uint(b), 8)
+        bits = EncodeBitsWithUint(bits, uint(b), 8)
     }
     return bits
 }
