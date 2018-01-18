@@ -16,11 +16,20 @@ import (
 // 二进制位(0|1)
 type Bit uint8
 
-// 整形二进制打包，注意参数必须为字长确定的类型：int8/16/32/64、uint8/16/32/64
+// 针对基本类型进行二进制打包，支持的基本数据类型包括:int/8/16/32/64、uint/8/16/32/64、float32/64、bool、string、[]byte
 func Encode(vs ...interface{}) ([]byte, error) {
     buf := new(bytes.Buffer)
     for i := 0; i < len(vs); i++ {
-        err := binary.Write(buf, binary.LittleEndian, vs[i])
+        var err error = nil
+        switch vs[i].(type) {
+            case int:    buf.Write(EncodeInt(vs[i].(int)))
+            case uint:   buf.Write(EncodeUint(vs[i].(uint)))
+            case bool:   buf.Write(EncodeBool(vs[i].(bool)))
+            case string: buf.Write(EncodeString(vs[i].(string)))
+            case []byte: buf.Write(vs[i].([]byte))
+            default:
+                err = binary.Write(buf, binary.LittleEndian, vs[i])
+        }
         if err != nil {
             return nil, err
         }
@@ -28,7 +37,8 @@ func Encode(vs ...interface{}) ([]byte, error) {
     return buf.Bytes(), nil
 }
 
-// 整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，字长确定的类型：int8/16/32/64、uint8/16/32/64
+// 整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，以便确定解析的[]byte长度，
+// 例如：int8/16/32/64、uint8/16/32/64、float32/64等等
 func Decode(b []byte, vs ...interface{}) error {
     buf := bytes.NewBuffer(b)
     for i := 0; i < len(vs); i++ {
@@ -46,6 +56,40 @@ func EncodeString(s string) []byte {
 
 func DecodeToString(b []byte) string {
     return string(b)
+}
+
+func EncodeBool(b bool) []byte {
+    if b == true {
+        return []byte{1}
+    } else {
+        return []byte{0}
+    }
+}
+
+// 自动识别int类型长度，转换为[]byte
+func EncodeInt(i int) []byte {
+    if i <= math.MaxInt8 {
+        return EncodeInt8(int8(i))
+    } else if i <= math.MaxInt16 {
+        return EncodeInt16(int16(i))
+    } else if i <= math.MaxInt32 {
+        return EncodeInt32(int32(i))
+    } else {
+        return EncodeInt64(int64(i))
+    }
+}
+
+// 自动识别uint类型长度，转换为[]byte
+func EncodeUint(i uint) []byte {
+    if i <= math.MaxUint8 {
+        return EncodeUint8(uint8(i))
+    } else if i <= math.MaxUint16 {
+        return EncodeUint16(uint16(i))
+    } else if i <= math.MaxUint32 {
+        return EncodeUint32(uint32(i))
+    } else {
+        return EncodeUint64(uint64(i))
+    }
 }
 
 func EncodeInt8(i int8) []byte {
@@ -114,6 +158,43 @@ func fillUpSize(b []byte, l int) []byte {
         c = append(c, 0x00)
     }
     return c
+}
+
+// 将二进制解析为int类型，根据[]byte的长度进行自动转换
+func DecodeToInt(b []byte) int {
+    if len(b) < 2 {
+        return int(DecodeToInt8(b))
+    } else if len(b) < 3 {
+        return int(DecodeToInt16(b))
+    } else if len(b) < 5 {
+        return int(DecodeToInt32(b))
+    } else {
+        return int(DecodeToInt64(b))
+    }
+}
+
+// 将二进制解析为uint类型，根据[]byte的长度进行自动转换
+func DecodeToUint(b []byte) uint {
+    if len(b) < 2 {
+        return uint(DecodeToUint8(b))
+    } else if len(b) < 3 {
+        return uint(DecodeToUint16(b))
+    } else if len(b) < 5 {
+        return uint(DecodeToUint32(b))
+    } else {
+        return uint(DecodeToUint64(b))
+    }
+}
+
+// 将二进制解析为bool类型，识别标准是判断二进制中数值是否都为0，或者为空
+func DecodeToBool(b []byte) bool {
+    if len(b) == 0 {
+        return false
+    }
+    if bytes.Compare(b, make([]byte, len(b))) == 0 {
+        return false
+    }
+    return true
 }
 
 func DecodeToInt8(b []byte) int8 {
