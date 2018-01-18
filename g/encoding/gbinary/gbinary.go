@@ -270,7 +270,7 @@ func EncodeBitsToBytes(bits []Bit) []byte {
 }
 
 // 解析为int
-func DecodeBitsToInt(bits []Bit) int {
+func DecodeBits(bits []Bit) int {
     v := int(0)
     for _, i := range bits {
         v = v << 1 | int(i)
