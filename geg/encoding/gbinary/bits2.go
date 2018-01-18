@@ -21,7 +21,7 @@ func main() {
     buffer := gbinary.EncodeBitsToBytes(bits)
     fmt.Println("meta length:", len(buffer))
 
-    /* 然后将二进制数据存储到元数据文件中，查询数据时涉及到的元数据解码操作如下 */
+    /* 文件存储及数据查询过程忽略，这里只展示元数据编码/解码示例 */
 
     // 解码
     metabits := gbinary.DecodeBytesToBits(buffer)
