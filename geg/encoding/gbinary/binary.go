@@ -1,32 +1,48 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/encoding/gbinary"
-    "gitee.com/johng/gf/g/os/glog"
     "fmt"
+    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
 func main() {
-    // 使用gbinary.Encoded对整形二进制打包，注意参数必须为字长确定的类型：int8/16/32/64、uint8/16/32/64
-    if buffer, err := gbinary.Encode(int32(18), int64(24)); err != nil {
+    // 使用gbinary.Encoded对基本数据类型进行二进制打包
+    if buffer, err := gbinary.Encode(18, 300, 1.01); err != nil {
         glog.Error(err)
     } else {
         fmt.Println(buffer)
     }
 
-
-    // 使用gbinary.Decode对整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，字长确定的类型：int8/16/32/64、uint8/16/32/64
-    if buffer, err := gbinary.Encode(int32(18), int64(24)); err != nil {
+    // 使用gbinary.Decode对整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，字长确定的类型，
+    // 例如：int8/16/32/64、uint8/16/32/64、float32/64
+    // 这里的1.01默认为float64类型(64位系统下)
+    if buffer, err := gbinary.Encode(18, 300, 1.01); err != nil {
         glog.Error(err)
     } else {
-        var i1 int32
-        var i2 int64
-        if err := gbinary.Decode(buffer, &i1, &i2); err != nil {
+        var i1 int8
+        var i2 int16
+        var f3 float64
+        if err := gbinary.Decode(buffer, &i1, &i2, &f3); err != nil {
             glog.Error(err)
         } else {
-            fmt.Println(i1, i2)
+            fmt.Println(i1, i2, f3)
         }
     }
+
+    // 编码/解析 int，自动识别变量长度
+    fmt.Println(gbinary.DecodeToInt(gbinary.EncodeInt(1)))
+    fmt.Println(gbinary.DecodeToInt(gbinary.EncodeInt(300)))
+    fmt.Println(gbinary.DecodeToInt(gbinary.EncodeInt(70000)))
+    fmt.Println(gbinary.DecodeToInt(gbinary.EncodeInt(2000000000)))
+    fmt.Println(gbinary.DecodeToInt(gbinary.EncodeInt(500000000000)))
+
+    // 编码/解析 uint，自动识别变量长度
+    fmt.Println(gbinary.DecodeToUint(gbinary.EncodeUint(1)))
+    fmt.Println(gbinary.DecodeToUint(gbinary.EncodeUint(300)))
+    fmt.Println(gbinary.DecodeToUint(gbinary.EncodeUint(70000)))
+    fmt.Println(gbinary.DecodeToUint(gbinary.EncodeUint(2000000000)))
+    fmt.Println(gbinary.DecodeToUint(gbinary.EncodeUint(500000000000)))
 
     // 编码/解析 int8/16/32/64
     fmt.Println(gbinary.DecodeToInt8(gbinary.EncodeInt8(int8(100))))
