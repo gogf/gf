@@ -14,12 +14,14 @@ func main() {
 
     // 编码
     bits   := make([]gbinary.Bit, 0)
-    bits    = gbinary.EncodeBits(bits, uint(hash),   64)
-    bits    = gbinary.EncodeBits(bits, uint(klen),   8)
-    bits    = gbinary.EncodeBits(bits, uint(vlen),   24)
-    bits    = gbinary.EncodeBits(bits, uint(offset), 40)
+    bits    = gbinary.EncodeBits(bits, hash,   64)
+    bits    = gbinary.EncodeBits(bits, klen,    8)
+    bits    = gbinary.EncodeBits(bits, vlen,   24)
+    bits    = gbinary.EncodeBits(bits, offset, 40)
     buffer := gbinary.EncodeBitsToBytes(bits)
     fmt.Println("meta length:", len(buffer))
+
+    /* 然后将二进制数据存储到元数据文件中，查询数据时涉及到的元数据解码操作如下 */
 
     // 解码
     metabits := gbinary.DecodeBytesToBits(buffer)
