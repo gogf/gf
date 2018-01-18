@@ -10,7 +10,7 @@ func main() {
     count  := 100
     status := 1
 
-    // 编码
+    // 网关编码
     bits := make([]gbinary.Bit, 0)
     for i := 0; i < count; i++ {
         bits = gbinary.EncodeBits(bits, uint(status), 2)
@@ -18,7 +18,9 @@ func main() {
     buffer := gbinary.EncodeBitsToBytes(bits)
     fmt.Println("buffer length:", len(buffer))
 
-    // 解码
+    /* 上报过程忽略，这里只展示编码/解码示例 */
+
+    // 平台解码
     alivecount := 0
     sensorbits := gbinary.DecodeBytesToBits(buffer)
     for i := 0; i < len(sensorbits); i += 2 {
