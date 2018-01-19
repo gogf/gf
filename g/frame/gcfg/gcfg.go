@@ -16,7 +16,7 @@ import (
 )
 
 const (
-    gDEFAULT_CONFIG_FILE = "config" // 默认的配置管理文件名称
+    gDEFAULT_CONFIG_FILE = "config.json" // 默认的配置管理文件名称
 )
 
 // 配置管理对象
@@ -43,7 +43,7 @@ func (c *Config) filePath(files []string) string {
     c.mu.RLock()
     fpath := c.path + gfile.Separator + file
     c.mu.RUnlock()
-    return fpath + ".json"
+    return fpath
 }
 
 // 设置配置管理器的配置文件存放目录绝对路径
@@ -111,6 +111,14 @@ func (c *Config) GetBool(pattern string, files...string) bool {
     return false
 }
 
+// 返回指定json中的float32
+func (c *Config) GetFloat32(pattern string, files...string) float32 {
+    if j := c.getJson(files); j != nil {
+        return j.GetFloat32(pattern)
+    }
+    return 0
+}
+
 // 返回指定json中的float64
 func (c *Config) GetFloat64(pattern string, files...string) float64 {
     if j := c.getJson(files); j != nil {
@@ -121,10 +129,16 @@ func (c *Config) GetFloat64(pattern string, files...string) float64 {
 
 // 返回指定json中的float64->int
 func (c *Config) GetInt(pattern string, files...string)  int {
-    return int(c.GetFloat64(pattern))
+    if j := c.getJson(files); j != nil {
+        return j.GetInt(pattern)
+    }
+    return 0
 }
 
-// 返回指定json中的float64->int64
-func (c *Config) GetInt64(pattern string, files...string)  int64 {
-    return int64(c.GetFloat64(pattern))
+// 返回指定json中的float64->uint
+func (c *Config) GetUint(pattern string, files...string)  uint {
+    if j := c.getJson(files); j != nil {
+        return j.GetUint(pattern)
+    }
+    return 0
 }

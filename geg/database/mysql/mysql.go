@@ -17,7 +17,7 @@ func init () {
         Port    : "3306",
         User    : "root",
         Pass    : "123456",
-        Name    : "test2",
+        Name    : "test",
         Type    : "mysql",
         Role    : "master",
         Charset : "utf8",
@@ -416,7 +416,7 @@ func main() {
     //create()
     //create()
     //insert()
-    //query()
+    query()
     //replace()
     //save()
     //batchInsert()
