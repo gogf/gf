@@ -17,8 +17,12 @@ func Decode(xmlbyte []byte) (map[string]interface{}, error) {
 }
 
 // 将map变量解析为XML格式内容
-func Encode(v map[string]interface{}) ([]byte, error) {
-    return mxj.Map(v).Xml()
+func Encode(v map[string]interface{}, rootTag...string) ([]byte, error) {
+    return mxj.Map(v).Xml(rootTag...)
+}
+
+func EncodeWithIndent(v map[string]interface{}, rootTag...string) ([]byte, error) {
+    return mxj.Map(v).XmlIndent("", "\t", rootTag...)
 }
 
 // XML格式内容直接转换为JSON格式内容

@@ -12,10 +12,10 @@ import (
     "strconv"
     "io/ioutil"
     "encoding/json"
-    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/os/gfile"
-    "errors"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gxml"
+    "gitee.com/johng/gf/g/encoding/gyaml"
 )
 
 // json解析结果存放数组
@@ -57,20 +57,33 @@ func DecodeToJson (b []byte) (*Json, error) {
 }
 
 // 支持多种配置文件类型转换为json格式内容并解析为gjson.Json对象
-// 支持的配置文件格式：xml, json, yml
 func Load (path string) (*Json, error) {
-    var result interface{}
     data, err := ioutil.ReadFile(path)
     if err != nil {
         return nil, err
     }
-    switch gfile.Ext(path) {
+    return LoadContent(data, gfile.Ext(path))
+}
+
+// 支持的配置文件格式：xml, json, yml
+func LoadContent (data []byte, t string) (*Json, error) {
+    var err    error
+    var result interface{}
+    switch t {
+        case "xml":  fallthrough
         case ".xml":
             data, err = gxml.ToJson(data)
             if err != nil {
                 return nil, err
             }
-        case ".yml":
+        case "yml":  fallthrough
+        case "yaml": fallthrough
+        case ".yml": fallthrough
+        case ".yaml":
+            data, err = gyaml.ToJson(data)
+            if err != nil {
+                return nil, err
+            }
     }
     if err := json.Unmarshal(data, &result); err != nil {
         return nil, err
@@ -201,10 +214,9 @@ func (p *Json) Get(pattern string) interface{} {
 
 // 转换为map[string]interface{}类型,如果转换失败，返回nil
 func (p *Json) ToMap() map[string]interface{} {
-    pointer := p.value
-    switch (*pointer).(type) {
+    switch (*(p.value)).(type) {
         case map[string]interface{}:
-            return (*pointer).(map[string]interface{})
+            return (*(p.value)).(map[string]interface{})
         default:
             return nil
     }
@@ -212,15 +224,33 @@ func (p *Json) ToMap() map[string]interface{} {
 
 // 转换为[]interface{}类型,如果转换失败，返回nil
 func (p *Json) ToArray() []interface{} {
-    pointer := p.value
-    switch (*pointer).(type) {
+    switch (*(p.value)).(type) {
         case []interface{}:
-            return (*pointer).([]interface{})
+            return (*(p.value)).([]interface{})
         default:
             return nil
     }
 }
 
+func (p *Json) ToXml(rootTag...string) ([]byte, error) {
+    return gxml.Encode(p.ToMap(), rootTag...)
+}
+
+func (p *Json) ToXmlIndent(rootTag...string) ([]byte, error) {
+    return gxml.EncodeWithIndent(p.ToMap(), rootTag...)
+}
+
+func (p *Json) ToJson() ([]byte, error) {
+    return Encode(*(p.value))
+}
+
+func (p *Json) ToJsonIndent() ([]byte, error) {
+    return json.MarshalIndent(*(p.value), "", "\t")
+}
+
+func (p *Json) ToYaml() ([]byte, error) {
+    return gyaml.Encode(*(p.value))
+}
 
 // 判断所给字符串是否为数字
 func isNumeric(s string) bool  {
