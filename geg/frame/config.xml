@@ -1,1 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<config>
+    <viewpath>/home/www/templates/</viewpath>
+    <database>
+        <default>
+            <host>127.0.0.1</host>
+            <port>3306</port>
+            <user>root</user>
+            <pass>123456</pass>
+            <name>test</name>
+            <role>master</role>
+            <type>mysql</type>
+            <charset>utf8</charset>
+            <priority>1</priority>
+        </default>
+        <default>
+            <host>127.0.0.1</host>
+            <port>3306</port>
+            <user>root</user>
+            <pass>123456</pass>
+            <name>test</name>
+            <role>master</role>
+            <type>mysql</type>
+            <charset>utf8</charset>
+            <priority>1</priority>
+        </default>
+    </database>
+</config>
