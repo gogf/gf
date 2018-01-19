@@ -13,6 +13,9 @@ import (
     "io/ioutil"
     "encoding/json"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/os/gfile"
+    "errors"
+    "gitee.com/johng/gf/g/encoding/gxml"
 )
 
 // json解析结果存放数组
@@ -39,7 +42,7 @@ func Decode (b []byte) (interface{}, error) {
     }
 }
 
-// 解析json字符串为go变量，注意第二个参数为指针
+// 解析json字符串为go变量，注意第二个参数为指针(任意结构的变量)
 func DecodeTo (b []byte, v interface{}) error {
     return json.Unmarshal(b, v)
 }
@@ -53,13 +56,22 @@ func DecodeToJson (b []byte) (*Json, error) {
     }
 }
 
-// 加载json文件内容，并转换为json对象
+// 支持多种配置文件类型转换为json格式内容并解析为gjson.Json对象
+// 支持的配置文件格式：xml, json, yml
 func Load (path string) (*Json, error) {
+    var result interface{}
     data, err := ioutil.ReadFile(path)
     if err != nil {
         return nil, err
     }
-    var result interface{}
+    switch gfile.Ext(path) {
+        case ".xml":
+            data, err = gxml.ToJson(data)
+            if err != nil {
+                return nil, err
+            }
+        case ".yml":
+    }
     if err := json.Unmarshal(data, &result); err != nil {
         return nil, err
     }
