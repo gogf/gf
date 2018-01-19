@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 配置管理
+// 配置管理.
+// 配置文件格式支持：json, xml, yml
 package gcfg
 
 import (
