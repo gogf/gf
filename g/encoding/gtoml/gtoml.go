@@ -4,27 +4,39 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// YAML
-package gyaml
+// TOML
+package gtoml
 
-import "github.com/ghodss/yaml"
+import (
+    "bytes"
+    "encoding/json"
+    "github.com/BurntSushi/toml"
+)
 
 func Encode(v interface{}) ([]byte, error) {
-    return yaml.Marshal(v)
+    buffer := bytes.NewBuffer(nil)
+    if err := toml.NewEncoder(buffer).Encode(v); err != nil {
+        return nil, err
+    }
+    return buffer.Bytes(), nil
 }
 
 func Decode(v []byte) (interface{}, error) {
     var result interface{}
-    if err := yaml.Unmarshal(v, &result); err != nil {
+    if err := toml.Unmarshal(v, &result); err != nil {
         return nil, err
     }
     return result, nil
 }
 
 func DecodeTo(v []byte, result interface{}) error {
-    return yaml.Unmarshal(v, &result)
+    return toml.Unmarshal(v, result)
 }
 
 func ToJson(v []byte) ([]byte, error) {
-    return yaml.YAMLToJSON(v)
+    if r, err := Decode(v); err != nil {
+        return nil, err
+    } else {
+        return json.Marshal(r)
+    }
 }
