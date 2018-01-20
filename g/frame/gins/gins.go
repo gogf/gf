@@ -4,18 +4,18 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 单例对象管理.
-// 框架内置了一些核心对象，并且可以通过Set和Get方法实现IoC以及对内置核心对象的自定义替换
+// 单例对象管理(耦合了一些框架核心对象获取方法).
+// 框架内置了一些核心对象获取方法，并且可以通过Set和Get方法实现IoC以及对内置核心对象的自定义替换
 package gins
 
 import (
     "strconv"
+    "gitee.com/johng/gf/g/os/gcfg"
     "gitee.com/johng/gf/g/os/gcmd"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/frame/gcfg"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/container/gmap"
 )
