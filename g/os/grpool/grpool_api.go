@@ -56,7 +56,7 @@ func New(expire int, sizes...int) *Pool {
         funcs      : glist.NewSafeList(),
         freeEvents : make(chan struct{}, math.MaxUint32),
         funcEvents : make(chan struct{}, math.MaxUint32),
-        stopEvents : make(chan struct{}, 1),
+        stopEvents : make(chan struct{}, 2),
     }
     p.startWorkLoop()
     p.startClearLoop()

@@ -16,6 +16,7 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gxml"
     "gitee.com/johng/gf/g/encoding/gyaml"
+    "gitee.com/johng/gf/g/encoding/gtoml"
 )
 
 // json解析结果存放数组
@@ -65,22 +66,29 @@ func Load (path string) (*Json, error) {
     return LoadContent(data, gfile.Ext(path))
 }
 
-// 支持的配置文件格式：xml, json, yml
+// 支持的配置文件格式：xml, json, yaml/yml, toml
 func LoadContent (data []byte, t string) (*Json, error) {
     var err    error
     var result interface{}
     switch t {
-        case "xml":  fallthrough
+        case  "xml":  fallthrough
         case ".xml":
             data, err = gxml.ToJson(data)
             if err != nil {
                 return nil, err
             }
-        case "yml":  fallthrough
-        case "yaml": fallthrough
-        case ".yml": fallthrough
+        case   "yml": fallthrough
+        case  "yaml": fallthrough
+        case  ".yml": fallthrough
         case ".yaml":
             data, err = gyaml.ToJson(data)
+            if err != nil {
+                return nil, err
+            }
+
+        case  "toml": fallthrough
+        case ".toml":
+            data, err = gtoml.ToJson(data)
             if err != nil {
                 return nil, err
             }
@@ -250,6 +258,10 @@ func (p *Json) ToJsonIndent() ([]byte, error) {
 
 func (p *Json) ToYaml() ([]byte, error) {
     return gyaml.Encode(*(p.value))
+}
+
+func (p *Json) ToToml() ([]byte, error) {
+    return gtoml.Encode(*(p.value))
 }
 
 // 判断所给字符串是否为数字
