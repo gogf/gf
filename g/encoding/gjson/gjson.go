@@ -21,12 +21,8 @@ import (
 
 // json解析结果存放数组
 type Json struct {
-    // 注意这是一个指针
-    value *interface{}
+    p *interface{} // 注意这是一个指针
 }
-
-// 一个json变量
-type JsonVar interface{}
 
 // 编码go变量为json字符串，并返回json字符串指针
 func Encode (v interface{}) ([]byte, error) {
@@ -106,8 +102,8 @@ func NewJson(v *interface{}) *Json {
 
 // 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
 // 注意第二个参数需要给的是变量地址
-func (p *Json) GetToVar(pattern string, v interface{}) error {
-    r := p.Get(pattern)
+func (j *Json) GetToVar(pattern string, v interface{}) error {
+    r := j.Get(pattern)
     if r != nil {
         if t, err := Encode(r); err == nil {
             return DecodeTo(t, v)
@@ -122,8 +118,8 @@ func (p *Json) GetToVar(pattern string, v interface{}) error {
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (p *Json) GetMap(pattern string) map[string]interface{} {
-    result := p.Get(pattern)
+func (j *Json) GetMap(pattern string) map[string]interface{} {
+    result := j.Get(pattern)
     if result != nil {
         if r, ok := result.(map[string]interface{}); ok {
             return r
@@ -133,8 +129,8 @@ func (p *Json) GetMap(pattern string) map[string]interface{} {
 }
 
 // 将检索值转换为Json对象指针返回
-func (p *Json) GetJson(pattern string) *Json {
-    result := p.Get(pattern)
+func (j *Json) GetJson(pattern string) *Json {
+    result := j.Get(pattern)
     if result != nil {
         return &Json{&result}
     }
@@ -143,8 +139,8 @@ func (p *Json) GetJson(pattern string) *Json {
 
 // 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (p *Json) GetArray(pattern string) []interface{} {
-    result := p.Get(pattern)
+func (j *Json) GetArray(pattern string) []interface{} {
+    result := j.Get(pattern)
     if result != nil {
         if r, ok := result.([]interface{}); ok {
             return r
@@ -154,114 +150,208 @@ func (p *Json) GetArray(pattern string) []interface{} {
 }
 
 // 返回指定json中的string
-func (p *Json) GetString(pattern string) string {
-    return gconv.String(p.Get(pattern))
+func (j *Json) GetString(pattern string) string {
+    return gconv.String(j.Get(pattern))
 }
 
 // 返回指定json中的bool(false:"", 0, false, off)
-func (p *Json) GetBool(pattern string) bool {
-    return gconv.Bool(p.Get(pattern))
+func (j *Json) GetBool(pattern string) bool {
+    return gconv.Bool(j.Get(pattern))
 }
 
-func (p *Json) GetInt(pattern string) int {
-    return gconv.Int(p.Get(pattern))
+func (j *Json) GetInt(pattern string) int {
+    return gconv.Int(j.Get(pattern))
 }
 
-func (p *Json) GetUint(pattern string) uint {
-    return gconv.Uint(p.Get(pattern))
+func (j *Json) GetUint(pattern string) uint {
+    return gconv.Uint(j.Get(pattern))
 }
 
-func (p *Json) GetFloat32(pattern string) float32 {
-    return gconv.Float32(p.Get(pattern))
+func (j *Json) GetFloat32(pattern string) float32 {
+    return gconv.Float32(j.Get(pattern))
 }
 
-func (p *Json) GetFloat64(pattern string) float64 {
-    return gconv.Float64(p.Get(pattern))
+func (j *Json) GetFloat64(pattern string) float64 {
+    return gconv.Float64(j.Get(pattern))
+}
+
+// 根据pattern查找并设置数据
+// 注意：写入的时候"."符号只能表示层级，不能使用带"."符号的键名
+func (j *Json) Set(pattern string, value interface{}) error {
+    array := strings.Split(pattern, ".")
+    // root节点
+    if len(array) == 1 {
+        return j.setRoot(pattern, value)
+    }
+    pointer  := j.p
+    length   := len(array)
+    for i:= 0; i < length; i++ {
+        switch (*pointer).(type) {
+            case map[string]interface{}:
+                if i == length - 1 {
+                    (*pointer).(map[string]interface{})[array[i]] = value
+                } else {
+                    v, ok := (*pointer).(map[string]interface{})[array[i]]
+                    if !ok {
+                        if strings.Compare(array[i], "0") == 0 {
+                            v = make([]interface{}, 0)
+                        } else {
+                            v = make(map[string]interface{})
+                        }
+                        (*pointer).(map[string]interface{})[array[i]] = v
+                    }
+                    pointer = &v
+                }
+            case []interface{}:
+                if isNumeric(array[i]) {
+                    if n, err := strconv.Atoi(array[i]); err == nil {
+                        if i == length - 1 {
+                            (*pointer).([]interface{})[n] = value
+                            if len((*pointer).([]interface{})) > n {
+                                (*pointer).([]interface{})[n] = value
+                            } else {
+                                // 注意这里产生了临时变量和赋值拷贝
+                                array   := (*pointer).([]interface{})
+                                array    = append(array, value)
+                                *pointer = array
+                            }
+                            break
+                        } else {
+                            pointer = &(*pointer).([]interface{})[n]
+                        }
+                    } else {
+                        return err
+                    }
+                }
+        }
+    }
+    return nil
+}
+
+// 修改根节点数据
+func (j *Json) setRoot(pattern string, value interface{}) error {
+    switch (*j.p).(type) {
+        case map[string]interface{}:
+            (*j.p).(map[string]interface{})[pattern] = value
+        case []interface{}:
+            if isNumeric(pattern) {
+                if n, err := strconv.Atoi(pattern); err != nil {
+                    return err
+                } else {
+                    if len((*j.p).([]interface{})) > n {
+                        (*j.p).([]interface{})[n] = value
+                    } else {
+                        // 注意这里产生了临时变量和赋值拷贝
+                        array := (*j.p).([]interface{})
+                        array  = append(array, value)
+                        *j.p   = array
+                    }
+                }
+            }
+    }
+    return nil
 }
 
 // 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
 // 返回的结果类型的interface{}，因此需要自己做类型转换
 // 如果找不到对应节点的数据，返回nil
-func (p *Json) Get(pattern string) interface{} {
-    var result interface{}
-    pointer  := p.value
-    array    := strings.Split(pattern, ".")
-    length   := len(array)
-    for i:= 0; i < length; i++ {
-        switch (*pointer).(type) {
-            case map[string]interface{}:
-                if v, ok := (*pointer).(map[string]interface{})[array[i]]; ok {
-                    if i == length - 1 {
-                        result = v
-                    } else {
-                        pointer = &v
-                    }
-                } else {
-                    return nil
-                }
-            case []interface{}:
-                if isNumeric(array[i]) {
-                    n, err := strconv.Atoi(array[i])
-                    if err == nil && len((*pointer).([]interface{})) > n {
-                        if i == length - 1 {
-                            result = (*pointer).([]interface{})[n]
-                            break;
-                        } else {
-                            pointer = &(*pointer).([]interface{})[n]
-                        }
-                    }
-                } else {
-                    return nil
-                }
-            default:
-                return nil
+func (j *Json) Get(pattern string) interface{} {
+    if r := j.getPointerByPattern(pattern); r != nil {
+        return *r
+    }
+    return nil
+}
+
+// 根据pattern层级查找变量指针
+func (j *Json) getPointerByPattern(pattern string) *interface{} {
+    start   := 0
+    index   := len(pattern)
+    length  := 0
+    pointer := j.p
+    for {
+        if r := j.checkPatternByPointer(pattern[start:index], pointer); r != nil {
+            length += index - start
+            if start > 0 {
+                length += 1
+            }
+            start = index + 1
+            index = len(pattern)
+            if length == len(pattern) {
+                return r
+            } else {
+                pointer = r
+            }
+        } else {
+            index = strings.LastIndex(pattern[start:index], ".")
+        }
+        if start >= index {
+            break
         }
     }
-    return result
+    return nil
+}
+
+// 判断给定的pattern在当前的pointer下是否有值，并返回对应的pointer
+// 注意这里返回的指针都是临时变量的内存地址
+func (j *Json) checkPatternByPointer(pattern string, pointer *interface{}) *interface{} {
+    switch (*pointer).(type) {
+        case map[string]interface{}:
+            if v, ok := (*pointer).(map[string]interface{})[pattern]; ok {
+                return &v
+            }
+        case []interface{}:
+            if isNumeric(pattern) {
+                n, err := strconv.Atoi(pattern)
+                if err == nil && len((*pointer).([]interface{})) > n {
+                    return &(*pointer).([]interface{})[n]
+                }
+            }
+    }
+    return nil
 }
 
 // 转换为map[string]interface{}类型,如果转换失败，返回nil
-func (p *Json) ToMap() map[string]interface{} {
-    switch (*(p.value)).(type) {
+func (j *Json) ToMap() map[string]interface{} {
+    switch (*(j.p)).(type) {
         case map[string]interface{}:
-            return (*(p.value)).(map[string]interface{})
+            return (*(j.p)).(map[string]interface{})
         default:
             return nil
     }
 }
 
 // 转换为[]interface{}类型,如果转换失败，返回nil
-func (p *Json) ToArray() []interface{} {
-    switch (*(p.value)).(type) {
+func (j *Json) ToArray() []interface{} {
+    switch (*(j.p)).(type) {
         case []interface{}:
-            return (*(p.value)).([]interface{})
+            return (*(j.p)).([]interface{})
         default:
             return nil
     }
 }
 
-func (p *Json) ToXml(rootTag...string) ([]byte, error) {
-    return gxml.Encode(p.ToMap(), rootTag...)
+func (j *Json) ToXml(rootTag...string) ([]byte, error) {
+    return gxml.Encode(j.ToMap(), rootTag...)
 }
 
-func (p *Json) ToXmlIndent(rootTag...string) ([]byte, error) {
-    return gxml.EncodeWithIndent(p.ToMap(), rootTag...)
+func (j *Json) ToXmlIndent(rootTag...string) ([]byte, error) {
+    return gxml.EncodeWithIndent(j.ToMap(), rootTag...)
 }
 
-func (p *Json) ToJson() ([]byte, error) {
-    return Encode(*(p.value))
+func (j *Json) ToJson() ([]byte, error) {
+    return Encode(*(j.p))
 }
 
-func (p *Json) ToJsonIndent() ([]byte, error) {
-    return json.MarshalIndent(*(p.value), "", "\t")
+func (j *Json) ToJsonIndent() ([]byte, error) {
+    return json.MarshalIndent(*(j.p), "", "\t")
 }
 
-func (p *Json) ToYaml() ([]byte, error) {
-    return gyaml.Encode(*(p.value))
+func (j *Json) ToYaml() ([]byte, error) {
+    return gyaml.Encode(*(j.p))
 }
 
-func (p *Json) ToToml() ([]byte, error) {
-    return gtoml.Encode(*(p.value))
+func (j *Json) ToToml() ([]byte, error) {
+    return gtoml.Encode(*(j.p))
 }
 
 // 判断所给字符串是否为数字
