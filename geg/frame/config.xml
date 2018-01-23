@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
+    <!-- 模板引擎目录 -->
     <viewpath>/home/www/templates/</viewpath>
+    <!-- MySQL数据库配置 -->
     <database>
         <default>
             <host>127.0.0.1</host>
