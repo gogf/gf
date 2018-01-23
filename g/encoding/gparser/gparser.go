@@ -15,6 +15,10 @@ type File struct {
     json *gjson.Json
 }
 
+func New () *File {
+    return &File{gjson.NewJson(nil)}
+}
+
 func Load (path string) (*File, error) {
     if j, e := gjson.Load(path); e == nil {
         return &File{j}, nil
@@ -126,25 +130,25 @@ func (f *File) ToToml() ([]byte, error) {
 }
 
 func VarToXml(value interface{}, rootTag...string) ([]byte, error) {
-    return gjson.NewJson(&value).ToXml(rootTag...)
+    return gjson.NewJson(value).ToXml(rootTag...)
 }
 
 func VarToXmlIndent(value interface{}, rootTag...string) ([]byte, error) {
-    return gjson.NewJson(&value).ToXmlIndent(rootTag...)
+    return gjson.NewJson(value).ToXmlIndent(rootTag...)
 }
 
 func VarToJson(value interface{}) ([]byte, error) {
-    return gjson.NewJson(&value).ToJson()
+    return gjson.NewJson(value).ToJson()
 }
 
 func VarToJsonIndent(value interface{}) ([]byte, error) {
-    return gjson.NewJson(&value).ToJsonIndent()
+    return gjson.NewJson(value).ToJsonIndent()
 }
 
 func VarToYaml(value interface{}) ([]byte, error) {
-    return gjson.NewJson(&value).ToYaml()
+    return gjson.NewJson(value).ToYaml()
 }
 
 func VarToToml(value interface{}) ([]byte, error) {
-    return gjson.NewJson(&value).ToToml()
+    return gjson.NewJson(value).ToToml()
 }
