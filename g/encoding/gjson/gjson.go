@@ -183,6 +183,14 @@ func (j *Json) GetFloat64(pattern string) float64 {
 // 1、写入的时候"."符号只能表示层级，不能使用带"."符号的键名
 // 2、写入的value为nil时，表示删除
 func (j *Json) Set(pattern string, value interface{}) error {
+    // 初始化判断
+    if *j.p == nil {
+        if isNumeric(pattern) {
+            *j.p = make([]interface{}, 0)
+        } else {
+            *j.p = make(map[string]interface{})
+        }
+    }
     value  = j.convertValue(value)
     array := strings.Split(pattern, ".")
     // root节点
@@ -204,6 +212,10 @@ func (j *Json) Set(pattern string, value interface{}) error {
                 } else {
                     v, ok := (*pointer).(map[string]interface{})[array[i]]
                     if !ok {
+                        // 如果父级键也不存在，并且是删除操作，那么直接返回
+                        if value == nil {
+                            goto done
+                        }
                         if strings.Compare(array[i], "0") == 0 {
                             v = make([]interface{}, 0)
                         } else {
@@ -247,6 +259,7 @@ func (j *Json) Set(pattern string, value interface{}) error {
                 }
         }
     }
+done:
     j.mu.Unlock()
     return nil
 }
@@ -269,13 +282,6 @@ func (j *Json) convertValue(value interface{}) interface{} {
 
 // 修改根节点数据
 func (j *Json) setRoot(pattern string, value interface{}) error {
-    if *j.p == nil {
-        if isNumeric(pattern) {
-            *j.p = make([]interface{}, 0)
-        } else {
-            *j.p = make(map[string]interface{})
-        }
-    }
     switch (*j.p).(type) {
         case map[string]interface{}:
             if value == nil {

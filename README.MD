@@ -58,6 +58,7 @@ func main() {
     * [二进制模块](https://www.kancloud.cn/johng/gf/500342)
     * [HTTP客户端](https://www.kancloud.cn/johng/gf/499674)
     * [Goroutine池](https://www.kancloud.cn/johng/gf/504458)
+    * [数据编码解析](https://www.kancloud.cn/johng/gf/511393)
     * [环境变量模块](https://www.kancloud.cn/johng/gf/494390)
     * [文件管理模块](https://www.kancloud.cn/johng/gf/494391)
     * [并发安全容器](https://www.kancloud.cn/johng/gf/494392)
