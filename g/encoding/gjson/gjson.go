@@ -8,6 +8,8 @@
 package gjson
 
 import (
+    "sync"
+    "errors"
     "strings"
     "strconv"
     "io/ioutil"
@@ -21,7 +23,8 @@ import (
 
 // json解析结果存放数组
 type Json struct {
-    p *interface{} // 注意这是一个指针
+    mu sync.RWMutex
+    p  *interface{} // 注意这是一个指针
 }
 
 // 编码go变量为json字符串，并返回json字符串指针
@@ -49,7 +52,7 @@ func DecodeToJson (b []byte) (*Json, error) {
     if v, err := Decode(b); err != nil {
         return nil, err
     } else {
-        return &Json{&v}, nil
+        return NewJson(&v), nil
     }
 }
 
@@ -92,12 +95,12 @@ func LoadContent (data []byte, t string) (*Json, error) {
     if err := json.Unmarshal(data, &result); err != nil {
         return nil, err
     }
-    return &Json{ &result }, nil
+    return NewJson(&result), nil
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
 func NewJson(v *interface{}) *Json {
-    return &Json{ v }
+    return &Json{ p: v }
 }
 
 // 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
@@ -132,7 +135,7 @@ func (j *Json) GetMap(pattern string) map[string]interface{} {
 func (j *Json) GetJson(pattern string) *Json {
     result := j.Get(pattern)
     if result != nil {
-        return &Json{&result}
+        return NewJson(&result)
     }
     return nil
 }
@@ -178,11 +181,13 @@ func (j *Json) GetFloat64(pattern string) float64 {
 // 根据pattern查找并设置数据
 // 注意：写入的时候"."符号只能表示层级，不能使用带"."符号的键名
 func (j *Json) Set(pattern string, value interface{}) error {
+    value  = j.convertValue(value)
     array := strings.Split(pattern, ".")
     // root节点
     if len(array) == 1 {
         return j.setRoot(pattern, value)
     }
+    j.mu.Lock()
     pointer  := j.p
     length   := len(array)
     for i:= 0; i < length; i++ {
@@ -206,26 +211,47 @@ func (j *Json) Set(pattern string, value interface{}) error {
                 if isNumeric(array[i]) {
                     if n, err := strconv.Atoi(array[i]); err == nil {
                         if i == length - 1 {
-                            (*pointer).([]interface{})[n] = value
-                            if len((*pointer).([]interface{})) > n {
+                            if cap((*pointer).([]interface{})) >= n {
                                 (*pointer).([]interface{})[n] = value
                             } else {
                                 // 注意这里产生了临时变量和赋值拷贝
-                                array   := (*pointer).([]interface{})
-                                array    = append(array, value)
-                                *pointer = array
+                                s := make([]interface{}, n + 1)
+                                copy(s, (*pointer).([]interface{}))
+                                s[n] = value
+                                j.mu.Unlock()
+                                return j.Set(strings.Join(array[0 : i], "."), s)
                             }
-                            break
                         } else {
                             pointer = &(*pointer).([]interface{})[n]
                         }
                     } else {
+                        j.mu.Unlock()
                         return err
                     }
+                } else {
+                    j.mu.Unlock()
+                    return errors.New("\"" + strings.Join(array[0:i], ".") + "\" is array, invalid index - \"" + array[i] + "\"")
                 }
         }
     }
+    j.mu.Unlock()
     return nil
+}
+
+// 数据结构转换，map参数必须转换为map[string]interface{}，数组参数必须转换为[]interface{}
+func (j *Json) convertValue(value interface{}) interface{} {
+    switch value.(type) {
+        case map[string]interface{}:
+            return value
+        case []interface{}:
+            return value
+        default:
+            // 这里效率会比较低
+            b, _ := Encode(value)
+            v, _ := Decode(b)
+            return v
+    }
+    return value
 }
 
 // 修改根节点数据
@@ -238,7 +264,7 @@ func (j *Json) setRoot(pattern string, value interface{}) error {
                 if n, err := strconv.Atoi(pattern); err != nil {
                     return err
                 } else {
-                    if len((*j.p).([]interface{})) > n {
+                    if cap((*j.p).([]interface{})) >= n {
                         (*j.p).([]interface{})[n] = value
                     } else {
                         // 注意这里产生了临时变量和赋值拷贝
@@ -256,6 +282,8 @@ func (j *Json) setRoot(pattern string, value interface{}) error {
 // 返回的结果类型的interface{}，因此需要自己做类型转换
 // 如果找不到对应节点的数据，返回nil
 func (j *Json) Get(pattern string) interface{} {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
     if r := j.getPointerByPattern(pattern); r != nil {
         return *r
     }
@@ -312,6 +340,8 @@ func (j *Json) checkPatternByPointer(pattern string, pointer *interface{}) *inte
 
 // 转换为map[string]interface{}类型,如果转换失败，返回nil
 func (j *Json) ToMap() map[string]interface{} {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
     switch (*(j.p)).(type) {
         case map[string]interface{}:
             return (*(j.p)).(map[string]interface{})
@@ -322,6 +352,8 @@ func (j *Json) ToMap() map[string]interface{} {
 
 // 转换为[]interface{}类型,如果转换失败，返回nil
 func (j *Json) ToArray() []interface{} {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
     switch (*(j.p)).(type) {
         case []interface{}:
             return (*(j.p)).([]interface{})
@@ -339,18 +371,26 @@ func (j *Json) ToXmlIndent(rootTag...string) ([]byte, error) {
 }
 
 func (j *Json) ToJson() ([]byte, error) {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
     return Encode(*(j.p))
 }
 
 func (j *Json) ToJsonIndent() ([]byte, error) {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
     return json.MarshalIndent(*(j.p), "", "\t")
 }
 
 func (j *Json) ToYaml() ([]byte, error) {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
     return gyaml.Encode(*(j.p))
 }
 
 func (j *Json) ToToml() ([]byte, error) {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
     return gtoml.Encode(*(j.p))
 }
 
