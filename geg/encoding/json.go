@@ -54,7 +54,7 @@ func testSet() {
     if err != nil {
         glog.Error(err)
     } else {
-        j.Set("users.count",  2)
+        j.Set("users.count",  1)
         j.Set("users.list",  []string{"John", "小明"})
         c, _ := j.ToJson()
         fmt.Println(string(c))
@@ -96,5 +96,5 @@ func testConvert() {
 }
 
 func main() {
-    testConvert()
+    testSet()
 }

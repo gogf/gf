@@ -52,7 +52,7 @@ func DecodeToJson (b []byte) (*Json, error) {
     if v, err := Decode(b); err != nil {
         return nil, err
     } else {
-        return NewJson(&v), nil
+        return NewJson(v), nil
     }
 }
 
@@ -95,12 +95,12 @@ func LoadContent (data []byte, t string) (*Json, error) {
     if err := json.Unmarshal(data, &result); err != nil {
         return nil, err
     }
-    return NewJson(&result), nil
+    return NewJson(result), nil
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
-func NewJson(v *interface{}) *Json {
-    return &Json{ p: v }
+func NewJson(v interface{}) *Json {
+    return &Json{ p: &v }
 }
 
 // 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
@@ -135,7 +135,7 @@ func (j *Json) GetMap(pattern string) map[string]interface{} {
 func (j *Json) GetJson(pattern string) *Json {
     result := j.Get(pattern)
     if result != nil {
-        return NewJson(&result)
+        return NewJson(result)
     }
     return nil
 }
@@ -179,7 +179,9 @@ func (j *Json) GetFloat64(pattern string) float64 {
 }
 
 // 根据pattern查找并设置数据
-// 注意：写入的时候"."符号只能表示层级，不能使用带"."符号的键名
+// 注意：
+// 1、写入的时候"."符号只能表示层级，不能使用带"."符号的键名
+// 2、写入的value为nil时，表示删除
 func (j *Json) Set(pattern string, value interface{}) error {
     value  = j.convertValue(value)
     array := strings.Split(pattern, ".")
@@ -194,7 +196,11 @@ func (j *Json) Set(pattern string, value interface{}) error {
         switch (*pointer).(type) {
             case map[string]interface{}:
                 if i == length - 1 {
-                    (*pointer).(map[string]interface{})[array[i]] = value
+                    if value == nil {
+                        delete((*pointer).(map[string]interface{}), array[i])
+                    } else {
+                        (*pointer).(map[string]interface{})[array[i]] = value
+                    }
                 } else {
                     v, ok := (*pointer).(map[string]interface{})[array[i]]
                     if !ok {
@@ -212,14 +218,21 @@ func (j *Json) Set(pattern string, value interface{}) error {
                     if n, err := strconv.Atoi(array[i]); err == nil {
                         if i == length - 1 {
                             if cap((*pointer).([]interface{})) >= n {
-                                (*pointer).([]interface{})[n] = value
+                                if value == nil {
+                                    j.mu.Unlock()
+                                    return j.Set(strings.Join(array[0 : i], "."), append((*pointer).([]interface{})[ : n], (*pointer).([]interface{})[n + 1 : ]...))
+                                } else {
+                                    (*pointer).([]interface{})[n] = value
+                                }
                             } else {
-                                // 注意这里产生了临时变量和赋值拷贝
-                                s := make([]interface{}, n + 1)
-                                copy(s, (*pointer).([]interface{}))
-                                s[n] = value
-                                j.mu.Unlock()
-                                return j.Set(strings.Join(array[0 : i], "."), s)
+                                if value != nil {
+                                    // 注意这里产生了临时变量和赋值拷贝
+                                    s := make([]interface{}, n + 1)
+                                    copy(s, (*pointer).([]interface{}))
+                                    s[n] = value
+                                    j.mu.Unlock()
+                                    return j.Set(strings.Join(array[0 : i], "."), s)
+                                }
                             }
                         } else {
                             pointer = &(*pointer).([]interface{})[n]
@@ -256,21 +269,38 @@ func (j *Json) convertValue(value interface{}) interface{} {
 
 // 修改根节点数据
 func (j *Json) setRoot(pattern string, value interface{}) error {
+    if *j.p == nil {
+        if isNumeric(pattern) {
+            *j.p = make([]interface{}, 0)
+        } else {
+            *j.p = make(map[string]interface{})
+        }
+    }
     switch (*j.p).(type) {
         case map[string]interface{}:
-            (*j.p).(map[string]interface{})[pattern] = value
+            if value == nil {
+                delete((*j.p).(map[string]interface{}), pattern)
+            } else {
+                (*j.p).(map[string]interface{})[pattern] = value
+            }
         case []interface{}:
             if isNumeric(pattern) {
                 if n, err := strconv.Atoi(pattern); err != nil {
                     return err
                 } else {
                     if cap((*j.p).([]interface{})) >= n {
-                        (*j.p).([]interface{})[n] = value
+                        if value == nil {
+                            (*j.p) = append((*j.p).([]interface{})[ : n], (*j.p).([]interface{})[n + 1 : ]...)
+                        } else {
+                            (*j.p).([]interface{})[n] = value
+                        }
                     } else {
-                        // 注意这里产生了临时变量和赋值拷贝
-                        array := (*j.p).([]interface{})
-                        array  = append(array, value)
-                        *j.p   = array
+                        if value != nil {
+                            // 注意这里产生了临时变量和赋值拷贝
+                            array := (*j.p).([]interface{})
+                            array  = append(array, value)
+                            *j.p   = array
+                        }
                     }
                 }
             }
