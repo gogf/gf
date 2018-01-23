@@ -7,9 +7,10 @@ import (
 )
 
 func main() {
-    j, _ := gjson.Load("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/config.json")
-    c, _ := j.ToToml()
-    fmt.Println(string(c))
+    j, _ := gjson.Load("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/config.yml")
+    //c, _ := j.ToToml()
+    //fmt.Println(j.Get("database.default").([]interface{})[0])
+    fmt.Println(j.Get("database.default.0"))
     return
     data :=
         `{

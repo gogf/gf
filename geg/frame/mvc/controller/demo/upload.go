@@ -12,7 +12,7 @@ func Upload(r *ghttp.Request) {
         buffer := make([]byte, h.Size)
         f.Read(buffer)
         gfile.PutBinContents("/tmp/" + fname, buffer)
-        r.Response.WriteString(fname + " uploaded successly"))
+        r.Response.WriteString(fname + " uploaded successly")
     } else {
         r.Response.WriteString(e.Error())
     }
