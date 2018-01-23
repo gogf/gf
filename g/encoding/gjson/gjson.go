@@ -311,6 +311,9 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
             }
         } else {
             index = strings.LastIndex(pattern[start:index], ".")
+            if index != -1 && length > 0 {
+                index += length + 1
+            }
         }
         if start >= index {
             break
