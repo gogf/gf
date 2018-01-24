@@ -43,7 +43,7 @@ func getWithPattern2() {
 }
 
 // 当键名存在"."号时，检索优先级：键名->层级，因此不会引起歧义
-func multiDots() {
+func multiDots1() {
     data :=
         `{
             "users" : {
@@ -55,6 +55,25 @@ func multiDots() {
         glog.Error(e)
     } else {
         fmt.Println("Users Count:", p.Get("users.count"))
+    }
+}
+
+func multiDots2() {
+    data :=
+        `{
+            "users" : {
+                "count" : {
+                    "type1" : 1,
+                    "type2" : 2
+                },
+                "count.type1" : 100
+            }
+        }`
+    if p, e := gparser.LoadContent([]byte(data), "json"); e != nil {
+        glog.Error(e)
+    } else {
+        fmt.Println("Users Count:", p.Get("users.count.type1"))
+        fmt.Println("Users Count:", p.Get("users.count.type2"))
     }
 }
 
@@ -152,5 +171,5 @@ func convert() {
 }
 
 func main() {
-    convert()
+    multiDots2()
 }
