@@ -33,6 +33,7 @@ func main() {
 ```
 ## 文档
 * [框架介绍](https://www.kancloud.cn/johng/gf/494364)
+* [加入团队](https://www.kancloud.cn/johng/gf/512841)
 * [Web服务开发](https://www.kancloud.cn/johng/gf/494647)
     * [WebServer](https://www.kancloud.cn/johng/gf/494366)
     * [MVC模式](https://www.kancloud.cn/johng/gf/494367)
