@@ -99,8 +99,18 @@ func LoadContent (data []byte, t string) (*Json, error) {
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
-func NewJson(v interface{}) *Json {
-    return &Json{ p: &v }
+func NewJson(value interface{}) *Json {
+    switch value.(type) {
+        case map[string]interface{}:
+            return &Json{ p: &value }
+        case []interface{}:
+            return &Json{ p: &value }
+        default:
+            // 这里效率会比较低
+            b, _ := Encode(value)
+            v, _ := Decode(b)
+            return &Json{ p: &v }
+    }
 }
 
 // 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
@@ -272,7 +282,8 @@ func (j *Json) convertValue(value interface{}) interface{} {
         case []interface{}:
             return value
         default:
-            // 这里效率会比较低
+            // 这里效率会比较低，当然比直接用反射也不会差到哪儿去
+            // 为了操作的灵活性，牺牲了一定的效率
             b, _ := Encode(value)
             v, _ := Decode(b)
             return v

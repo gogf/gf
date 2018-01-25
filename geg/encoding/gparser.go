@@ -171,5 +171,5 @@ func convert() {
 }
 
 func main() {
-    multiDots2()
+    convert()
 }
