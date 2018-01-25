@@ -128,21 +128,36 @@ func makeXml1() {
     fmt.Println(string(c))
 }
 
-func makeXml2() {
+func makeJson1() {
     type Order struct {
         Id    int      `json:"id"`
         Price float32  `json:"price"`
     }
     p := gparser.New()
     p.Set("orders.list.0", Order{1, 100})
-    p.Set("orders.list.1", Order{2, 666.66})
+    p.Set("orders.list.1", Order{2, 666})
     p.Set("orders.list.2", Order{3, 999.99})
     fmt.Println("Order 1 Price:", p.Get("orders.list.1.price"))
     c, _ := p.ToJson()
     fmt.Println(string(c))
-    // {"orders":{"list":{"0":{"id":1,"price":100},"1":{"id":2,"price":666.66},"2":{"id":3,"price":999.99}}}}
 }
 
+func makeJson2() {
+    p := gparser.New(map[string]string{
+        "k1" : "v1",
+        "k2" : "v2",
+    })
+    p.Set("k1.k11", []int{1,2,3})
+    c, _ := p.ToJson()
+    fmt.Println(string(c))
+}
+
+func makeJson3() {
+    p := gparser.New([]string{"a"})
+    p.Set("1.2.3", []int{1,2,3})
+    c, _ := p.ToJsonIndent()
+    fmt.Println(string(c))
+}
 
 func convert() {
     p := gparser.New(map[string]string{
@@ -171,5 +186,6 @@ func convert() {
 }
 
 func main() {
-    convert()
+    makeJson2()
+    makeJson3()
 }
