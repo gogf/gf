@@ -154,7 +154,7 @@ func makeJson2() {
 
 func makeJson3() {
     p := gparser.New([]string{"a"})
-    p.Set("1.2.3", []int{1,2,3})
+    p.Set("1.1", 10)
     c, _ := p.ToJsonIndent()
     fmt.Println(string(c))
 }
@@ -186,6 +186,6 @@ func convert() {
 }
 
 func main() {
-    makeJson2()
+    //makeJson2()
     makeJson3()
 }
