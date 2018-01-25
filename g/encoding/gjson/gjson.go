@@ -275,15 +275,13 @@ func (j *Json) Set(pattern string, value interface{}) error {
                                 if value == nil {
                                     goto done
                                 }
-                                s := make([]interface{}, n + 1)
+                                var v interface{}
+                                s := make([]interface{}, len((*pointer).([]interface{})))
                                 copy(s, (*pointer).([]interface{}))
-                                if i == 0 {
-                                    *j.p = s
-                                } else {
-                                    j.setPointerWithValue(pparent, array[i], s)
-                                }
+                                j.setPointerWithValue(pparent, i, array[i], s)
+                                v       = s
                                 pparent = pointer
-                                pointer = &s[n]
+                                pointer = &v
                             }
                         }
                     } else {
@@ -300,11 +298,16 @@ func (j *Json) Set(pattern string, value interface{}) error {
                     goto done
                 }
                 var v interface{}
+                // 判断当前节点应当为map或者数组
                 if strings.Compare(array[i], "0") == 0 {
                     if i == length - 1 {
                         v = []interface{}{value}
                     } else {
-                        v = make([]interface{}, 0)
+                        if strings.Compare(array[i + 1], "0") == 0 {
+                            v = make([]interface{}, 0)
+                        } else {
+                            v = make(map[string]interface{})
+                        }
                     }
                 } else {
                     if i == length - 1 {
@@ -315,7 +318,7 @@ func (j *Json) Set(pattern string, value interface{}) error {
                         v = make(map[string]interface{})
                     }
                 }
-                j.setPointerWithValue(pparent, array[i - 1], v)
+                j.setPointerWithValue(pparent, i, array[i - 1], v)
                 pparent = pointer
                 pointer = &v
         }
@@ -326,7 +329,11 @@ done:
 }
 
 // 用于Set方法中，对指针指向的内存地址进行赋值
-func (j *Json) setPointerWithValue(pointer *interface{}, key string, value interface{}) {
+func (j *Json) setPointerWithValue(pointer *interface{}, index int, key string, value interface{}) {
+    if index == 0 {
+        *j.p = value
+        return
+    }
     switch (*pointer).(type) {
         case map[string]interface{}:
             (*pointer).(map[string]interface{})[key] = value
@@ -341,6 +348,7 @@ func (j *Json) setPointerWithValue(pointer *interface{}, key string, value inter
                 *pointer = s
             }
     }
+    //fmt.Println("end:", *j.p)
 }
 
 // 数据结构转换，map参数必须转换为map[string]interface{}，数组参数必须转换为[]interface{}
