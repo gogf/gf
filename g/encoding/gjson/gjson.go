@@ -9,7 +9,6 @@ package gjson
 
 import (
     "sync"
-    "errors"
     "strings"
     "strconv"
     "io/ioutil"
@@ -188,10 +187,11 @@ func (j *Json) GetFloat64(pattern string) float64 {
     return gconv.Float64(j.Get(pattern))
 }
 
-// 根据pattern查找并设置数据，该方法内部逻辑比较复杂，主要的作用是层级检索及节点创建，叶子赋值
+// 根据pattern查找并设置数据
 // 注意：
 // 1、写入的时候"."符号只能表示层级，不能使用带"."符号的键名;
 // 2、写入的value为nil时，表示删除;
+// 3、里面的层级处理比较复杂，逻辑较复杂的地方在于层级检索及节点创建，叶子赋值;
 func (j *Json) Set(pattern string, value interface{}) error {
     // 初始化判断
     if *j.p == nil {
@@ -201,21 +201,22 @@ func (j *Json) Set(pattern string, value interface{}) error {
             *j.p = make(map[string]interface{})
         }
     }
-    value  = j.convertValue(value)
-    array := strings.Split(pattern, ".")
-    // root节点
-    if len(array) == 1 {
-        return j.setRoot(pattern, value)
-    }
+    var pparent *interface{}
+    var pointer *interface{}
+
+    pointer  = j.p
+    pparent  = nil
+    removed := false
+    value    = j.convertValue(value)
+    array   := strings.Split(pattern, ".")
+    length  := len(array)
+
     j.mu.Lock()
-    pointer  := j.p
-    pparent  := pointer
-    length   := len(array)
     for i:= 0; i < length; i++ {
         switch (*pointer).(type) {
             case map[string]interface{}:
                 if i == length - 1 {
-                    if value == nil {
+                    if removed && value == nil {
                         // 删除map元素
                         delete((*pointer).(map[string]interface{}), array[i])
                     } else {
@@ -225,15 +226,9 @@ func (j *Json) Set(pattern string, value interface{}) error {
                     // 当键名不存在的情况这里会进行处理
                     v, ok := (*pointer).(map[string]interface{})[array[i]]
                     if !ok {
-                        if value == nil {
+                        if removed && value == nil {
                             goto done
                         }
-                        if strings.Compare(array[i + 1], "0") == 0 {
-                            v = make([]interface{}, 0)
-                        } else {
-                            v = make(map[string]interface{})
-                        }
-                        (*pointer).(map[string]interface{})[array[i]] = v
                     }
                     pparent = pointer
                     pointer = &v
@@ -244,26 +239,25 @@ func (j *Json) Set(pattern string, value interface{}) error {
                     if n, err := strconv.Atoi(array[i]); err == nil {
                         if i == length - 1 {
                             if len((*pointer).([]interface{})) > n {
-                                if value == nil {
+                                if removed && value == nil {
                                     // 删除数据元素
-                                    j.mu.Unlock()
-                                    return j.Set(strings.Join(array[0 : i], "."), append((*pointer).([]interface{})[ : n], (*pointer).([]interface{})[n + 1 : ]...))
+                                    j.setPointerWithValue(pparent, array[i - 1], append((*pointer).([]interface{})[ : n], (*pointer).([]interface{})[n + 1 : ]...))
                                 } else {
                                     (*pointer).([]interface{})[n] = value
                                 }
                             } else {
-                                if value == nil {
+                                if removed && value == nil {
                                     goto done
                                 }
-                                // 注意这里产生了临时变量和赋值拷贝
+                                // 叶子节点:需要对父级重新赋值
                                 s := make([]interface{}, n + 1)
                                 copy(s, (*pointer).([]interface{}))
                                 s[n] = value
-                                if i == 0 {
-                                    *j.p = s
+                                if pparent != nil {
+                                    pparent = j.setPointerWithValue(pparent, array[i - 1], s)
                                 } else {
-                                    j.mu.Unlock()
-                                    return j.Set(strings.Join(array[0 : i], "."), s)
+                                    *pointer = s
+                                    pparent  = pointer
                                 }
                             }
                         } else {
@@ -272,16 +266,19 @@ func (j *Json) Set(pattern string, value interface{}) error {
                                 pparent = pointer
                                 pointer = &(*pointer).([]interface{})[n]
                             } else {
-                                if value == nil {
+                                if removed && value == nil {
                                     goto done
                                 }
-                                var v interface{}
-                                s := make([]interface{}, len((*pointer).([]interface{})))
+                                // 1.0
+                                s := make([]interface{}, n + 1)
                                 copy(s, (*pointer).([]interface{}))
-                                j.setPointerWithValue(pparent, i, array[i], s)
-                                v       = s
-                                pparent = pointer
-                                pointer = &v
+                                if pparent != nil {
+                                    pparent  = j.setPointerWithValue(pparent, array[i - 1], s)
+                                } else {
+                                    *pointer = s
+                                    pparent  = pointer
+                                }
+                                pointer  = &s[n]
                             }
                         }
                     } else {
@@ -289,66 +286,66 @@ func (j *Json) Set(pattern string, value interface{}) error {
                         return err
                     }
                 } else {
-                    j.mu.Unlock()
-                    return errors.New("\"" + strings.Join(array[0:i], ".") + "\" is array, invalid index - \"" + array[i] + "\"")
-                }
-
-            default:
-                if value == nil {
-                    goto done
-                }
-                var v interface{}
-                // 判断当前节点应当为map或者数组
-                if strings.Compare(array[i], "0") == 0 {
-                    if i == length - 1 {
-                        v = []interface{}{value}
-                    } else {
-                        if strings.Compare(array[i + 1], "0") == 0 {
-                            v = make([]interface{}, 0)
-                        } else {
-                            v = make(map[string]interface{})
-                        }
-                    }
-                } else {
+                    var v interface{}
                     if i == length - 1 {
                         v = map[string]interface{}{
                             array[i] : value,
                         }
                     } else {
-                        v = make(map[string]interface{})
+                        v = map[string]interface{}{}
                     }
+                    if pparent != nil {
+                        pparent = j.setPointerWithValue(pparent, array[i], v)
+                    } else {
+                        *pointer = v
+                        pparent  = pointer
+                    }
+                    pointer = &v
                 }
-                j.setPointerWithValue(pparent, i, array[i - 1], v)
-                pparent = pointer
-                pointer = &v
+
+            default:
+                if removed && value == nil {
+                    goto done
+                }
+                // 判断当前节点应当为map或者数组
+                if isNumeric(array[i]) {
+                    if n, err := strconv.Atoi(array[i]); err == nil {
+                        s := make([]interface{}, n + 1)
+                        if i == length - 1 {
+                            s[n] = value
+                        }
+                        if pparent != nil {
+                            pparent = j.setPointerWithValue(pparent, array[i - 1], s)
+                        } else {
+                            *pointer = s
+                            pparent  = pointer
+                        }
+                        pointer  = &s[n]
+                    } else {
+                        return err
+                    }
+                } else {
+                    var v interface{}
+                    if i == length - 1 {
+                        v = map[string]interface{}{
+                            array[i] : value,
+                        }
+                    } else {
+                        v = map[string]interface{}{}
+                    }
+                    if pparent != nil {
+                        pparent = j.setPointerWithValue(pparent, array[i - 1], v)
+                    } else {
+                        *pointer = v
+                        pparent  = pointer
+                    }
+                    pointer = &v
+                }
         }
     }
 done:
     j.mu.Unlock()
     return nil
-}
-
-// 用于Set方法中，对指针指向的内存地址进行赋值
-func (j *Json) setPointerWithValue(pointer *interface{}, index int, key string, value interface{}) {
-    if index == 0 {
-        *j.p = value
-        return
-    }
-    switch (*pointer).(type) {
-        case map[string]interface{}:
-            (*pointer).(map[string]interface{})[key] = value
-        case []interface{}:
-            n, _ := strconv.Atoi(key)
-            if len((*pointer).([]interface{})) > n {
-                (*pointer).([]interface{})[n] = value
-            } else {
-                s := make([]interface{}, n + 1)
-                copy(s, (*pointer).([]interface{}))
-                s[n] = value
-                *pointer = s
-            }
-    }
-    //fmt.Println("end:", *j.p)
 }
 
 // 数据结构转换，map参数必须转换为map[string]interface{}，数组参数必须转换为[]interface{}
@@ -368,38 +365,27 @@ func (j *Json) convertValue(value interface{}) interface{} {
     return value
 }
 
-// 修改根节点数据
-func (j *Json) setRoot(pattern string, value interface{}) error {
-    switch (*j.p).(type) {
+// 用于Set方法中，对指针指向的内存地址进行赋值
+// 返回修改后的父级指针
+func (j *Json) setPointerWithValue(pointer *interface{}, key string, value interface{}) *interface{} {
+    switch (*pointer).(type) {
         case map[string]interface{}:
-            if value == nil {
-                delete((*j.p).(map[string]interface{}), pattern)
-            } else {
-                (*j.p).(map[string]interface{})[pattern] = value
-            }
+            (*pointer).(map[string]interface{})[key] = value
+            return &value
         case []interface{}:
-            if isNumeric(pattern) {
-                if n, err := strconv.Atoi(pattern); err != nil {
-                    return err
-                } else {
-                    if len((*j.p).([]interface{})) >= n {
-                        if value == nil {
-                            (*j.p) = append((*j.p).([]interface{})[ : n], (*j.p).([]interface{})[n + 1 : ]...)
-                        } else {
-                            (*j.p).([]interface{})[n] = value
-                        }
-                    } else {
-                        if value != nil {
-                            // 注意这里产生了临时变量和赋值拷贝
-                            array := (*j.p).([]interface{})
-                            array  = append(array, value)
-                            *j.p   = array
-                        }
-                    }
-                }
+            n, _ := strconv.Atoi(key)
+            if len((*pointer).([]interface{})) > n {
+                (*pointer).([]interface{})[n] = value
+                return &(*pointer).([]interface{})[n]
+            } else {
+                s := make([]interface{}, n + 1)
+                copy(s, (*pointer).([]interface{}))
+                s[n] = value
+                *pointer = s
+                return &s[n]
             }
     }
-    return nil
+    return pointer
 }
 
 // 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
