@@ -187,12 +187,22 @@ func (j *Json) GetFloat64(pattern string) float64 {
     return gconv.Float64(j.Get(pattern))
 }
 
+// 动态设置层级变量
+func (j *Json) Set(pattern string, value interface{}) error {
+    return j.setValue(pattern, value, false)
+}
+
+// 动态删除层级变量
+func (j *Json) Remove(pattern string) error {
+    return j.setValue(pattern, nil, true)
+}
+
 // 根据pattern查找并设置数据
 // 注意：
 // 1、写入的时候"."符号只能表示层级，不能使用带"."符号的键名;
-// 2、写入的value为nil时，表示删除;
+// 2、写入的value为nil且removed为true时，表示删除;
 // 3、里面的层级处理比较复杂，逻辑较复杂的地方在于层级检索及节点创建，叶子赋值;
-func (j *Json) Set(pattern string, value interface{}) error {
+func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
     // 初始化判断
     if *j.p == nil {
         if isNumeric(pattern) {
@@ -206,7 +216,6 @@ func (j *Json) Set(pattern string, value interface{}) error {
 
     pointer  = j.p
     pparent  = nil
-    removed := false
     value    = j.convertValue(value)
     array   := strings.Split(pattern, ".")
     length  := len(array)
