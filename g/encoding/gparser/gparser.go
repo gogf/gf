@@ -89,6 +89,11 @@ func (p *Parser) Set(pattern string, value interface{}) error {
     return p.json.Set(pattern, value)
 }
 
+// 动态删除变量节点
+func (p *Parser) Remove(pattern string) error {
+    return p.json.Remove(pattern)
+}
+
 // 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
 // 返回的结果类型的interface{}，因此需要自己做类型转换
 // 如果找不到对应节点的数据，返回nil
