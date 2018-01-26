@@ -186,7 +186,18 @@ func convert() {
 
 }
 
+func remove1() {
+    p := gparser.New(map[string]string{
+        "k1" : "v1",
+        "k2" : "v2",
+    })
+    p.Set("0.0.0.0.0.0.0.0", []int{1,2,3})
+    p.Remove("0.0")
+    c, _ := p.ToJson()
+    fmt.Println(string(c))
+}
+
+
 func main() {
-    makeJson2()
-    //makeJson3()
+    remove1()
 }
