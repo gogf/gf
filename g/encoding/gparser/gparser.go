@@ -9,12 +9,15 @@ package gparser
 
 import (
     "gitee.com/johng/gf/g/encoding/gjson"
+    "encoding/json"
 )
 
 type Parser struct {
     json *gjson.Json
 }
 
+// 将变量转换为Parser对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
+// 该参数为非必需参数，默认为创建一个空的Parser对象
 func New (values...interface{}) *Parser {
     if len(values) > 0 {
         return &Parser{gjson.NewJson(values[0])}
@@ -137,26 +140,40 @@ func (p *Parser) ToToml() ([]byte, error) {
     return p.json.ToToml()
 }
 
+// 将变量解析为对应的struct对象，注意传递的参数为struct对象指针
+func (p *Parser) ToStruct(v interface{}) error {
+    if c, e := p.ToJson(); e == nil {
+        return json.Unmarshal(c, v)
+    } else {
+        return e
+    }
+}
+
 func VarToXml(value interface{}, rootTag...string) ([]byte, error) {
-    return gjson.NewJson(value).ToXml(rootTag...)
+    return New(value).ToXml(rootTag...)
 }
 
 func VarToXmlIndent(value interface{}, rootTag...string) ([]byte, error) {
-    return gjson.NewJson(value).ToXmlIndent(rootTag...)
+    return New(value).ToXmlIndent(rootTag...)
 }
 
 func VarToJson(value interface{}) ([]byte, error) {
-    return gjson.NewJson(value).ToJson()
+    return New(value).ToJson()
 }
 
 func VarToJsonIndent(value interface{}) ([]byte, error) {
-    return gjson.NewJson(value).ToJsonIndent()
+    return New(value).ToJsonIndent()
 }
 
 func VarToYaml(value interface{}) ([]byte, error) {
-    return gjson.NewJson(value).ToYaml()
+    return New(value).ToYaml()
 }
 
 func VarToToml(value interface{}) ([]byte, error) {
-    return gjson.NewJson(value).ToToml()
+    return New(value).ToToml()
+}
+
+// 将变量解析为对应的struct对象，注意传递的参数为struct对象指针
+func VarToStruct(value interface{}, obj interface{}) error {
+    return New(value).ToStruct(obj)
 }
