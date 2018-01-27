@@ -160,6 +160,21 @@ func makeJson3() {
     fmt.Println(string(c))
 }
 
+func toStruct1() {
+    type Info struct {
+        Name string
+        Url  string
+    }
+    o := Info{}
+    p := gparser.New(map[string]string{
+        "Name" : "gf",
+        "Url"  : "https://gitee.com/johng",
+    })
+    p.ToStruct(&o)
+    fmt.Println("Name:", o.Name)
+    fmt.Println("Url :", o.Url)
+}
+
 func convert() {
     p := gparser.New(map[string]string{
         "name" : "gf",
@@ -199,5 +214,5 @@ func remove1() {
 
 
 func main() {
-    remove1()
+    toStruct1()
 }
