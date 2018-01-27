@@ -8,8 +8,12 @@ gf(Go Frame)是一款为Web服务及网络服务开发设计的，模块化、�
 包括：MVC、Cookie、Session、模板引擎、路由控制、配置管理、数据校验、数据库操作(ORM)等等，
 并且提供了数十个实用开发模块，包括：缓存模块、日志模块、JSON模块、命令行模块、二进制模块、环境变量模块、并发安全容器、Goroutine池等等。
 
-gf是开源的，免费的，基于MIT协议进行分发，开源项目地址：https://gitee.com/johng/gf
-
+gf是开源的，免费的，基于MIT协议进行分发，开源项目地址(gitee与github仓库保持实时同步)：
+1. Gitee
+	https://gitee.com/johng/gf
+2. Github
+	https://github.com/johng-cn/gf
+	
 使用中有任何问题/建议，欢迎加入技术QQ群交流：116707870
 
 ## 安装
