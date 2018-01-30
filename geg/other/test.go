@@ -1,7 +1,7 @@
 package main
 
+import "gitee.com/johng/gf/g/encoding/gparser"
 
 func main() {
-    a := make([]int, 0, 10)
-    a[0] = 1
+    gparser.Load("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame/config.yml")
 }
