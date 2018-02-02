@@ -48,6 +48,11 @@ func (q *UintQueue) Pop() uint {
     return 0
 }
 
+// 关闭队列(通知所有通过Pop阻塞的协程退出)
+func (q *UintQueue) Close() {
+    q.events <- struct{}{}
+}
+
 // 获取当前队列大小
 func (q *UintQueue) Size() int {
     return len(q.events)
