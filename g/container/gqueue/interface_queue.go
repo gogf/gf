@@ -49,6 +49,11 @@ func (q *InterfaceQueue) Pop() interface{} {
     return nil
 }
 
+// 关闭队列(通知所有通过Pop阻塞的协程退出)
+func (q *InterfaceQueue) Close() {
+    q.events <- struct{}{}
+}
+
 // 获取当前队列大小
 func (q *InterfaceQueue) Size() int {
     return len(q.events)
