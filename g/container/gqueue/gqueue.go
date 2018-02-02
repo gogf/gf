@@ -19,7 +19,7 @@ type Queue struct {
     events chan struct{}
 }
 
-func NewQueue() *Queue {
+func New() *Queue {
     return &Queue {
         list   : list.New(),
         events : make(chan struct{}, math.MaxInt64),
