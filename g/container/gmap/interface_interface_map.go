@@ -23,6 +23,15 @@ func NewInterfaceInterfaceMap() *InterfaceInterfaceMap {
 	}
 }
 
+// 给定回调函数对原始内容进行遍历
+func (this *InterfaceInterfaceMap) Iterator(f func (k interface{}, v interface{})) {
+	this.mu.RLock()
+	for k, v := range this.m {
+		f(k, v)
+	}
+	this.mu.RUnlock()
+}
+
 // 哈希表克隆
 func (this *InterfaceInterfaceMap) Clone() *map[interface{}]interface{} {
     m := make(map[interface{}]interface{})

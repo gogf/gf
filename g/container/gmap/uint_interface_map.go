@@ -23,6 +23,14 @@ func NewUintInterfaceMap() *UintInterfaceMap {
     }
 }
 
+func (this *UintInterfaceMap) Iterator(f func (k uint, v interface{})) {
+    this.mu.RLock()
+    for k, v := range this.m {
+        f(k, v)
+    }
+    this.mu.RUnlock()
+}
+
 // 哈希表克隆
 func (this *UintInterfaceMap) Clone() *map[uint]interface{} {
 	m := make(map[uint]interface{})

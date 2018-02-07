@@ -22,6 +22,15 @@ func NewStringIntMap() *StringIntMap {
     }
 }
 
+// 给定回调函数对原始内容进行遍历
+func (this *StringIntMap) Iterator(f func (k string, v int)) {
+    this.mu.RLock()
+    for k, v := range this.m {
+        f(k, v)
+    }
+    this.mu.RUnlock()
+}
+
 // 哈希表克隆
 func (this *StringIntMap) Clone() *map[string]int {
     m := make(map[string]int)
