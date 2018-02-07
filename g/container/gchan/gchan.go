@@ -4,13 +4,13 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 优雅的channel操作封装
+// 优雅的channel操作.
 package gchan
 
 import (
     "sync"
-    "sync/atomic"
     "errors"
+    "sync/atomic"
 )
 
 type Chan struct {
@@ -28,7 +28,7 @@ func New(limit int) *Chan {
 // 将数据压入队列
 func (q *Chan) Push(v interface{}) error {
     if atomic.LoadInt32(&q.closed) > 0 {
-        return errors.New("channel closed")
+        return errors.New("closed")
     }
     q.list <- v
     return nil

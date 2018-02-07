@@ -5,14 +5,17 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 动态大小的安全队列(dynamic channel).
+// 优点：
+// 1、队列初始化速度快；
+// 2、可以向队头/队尾进行Push/Pop操作；
 package gqueue
 
 import (
     "math"
     "sync"
-    "container/list"
-    "sync/atomic"
     "errors"
+    "sync/atomic"
+    "container/list"
 )
 
 type Queue struct {
@@ -40,7 +43,7 @@ func New(limit...int) *Queue {
 // 将数据压入队列, 队尾
 func (q *Queue) PushBack(v interface{}) error {
     if atomic.LoadInt32(&q.closed) > 0 {
-        return errors.New("queue closed")
+        return errors.New("closed")
     }
     if q.limit > 0 {
         q.limits <- struct{}{}
@@ -55,7 +58,7 @@ func (q *Queue) PushBack(v interface{}) error {
 // 将数据压入队列, 队头
 func (q *Queue) PushFront(v interface{}) error {
     if atomic.LoadInt32(&q.closed) > 0 {
-        return errors.New("queue closed")
+        return errors.New("closed")
     }
     if q.limit > 0 {
         q.limits <- struct{}{}
@@ -104,7 +107,7 @@ func (q *Queue) PopBack() interface{} {
     return nil
 }
 
-// 关闭队列(通知所有通过Pop阻塞的协程退出)
+// 关闭队列(通知所有通过Pop*阻塞的协程退出)
 func (q *Queue) Close() {
     if atomic.LoadInt32(&q.closed) == 0 {
         atomic.StoreInt32(&q.closed, 1)
