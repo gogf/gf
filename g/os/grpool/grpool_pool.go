@@ -8,30 +8,37 @@ package grpool
 
 import (
     "time"
+    "runtime"
     "sync/atomic"
     "gitee.com/johng/gf/g/os/gtime"
 )
 
-// 任务分配循环，这是一个独立的goroutine，单线程处理
+// 任务分配循环协程，使用基于 runtime.GOMAXPROCS 数量的协程来实现抢占调度
 func (p *Pool) startWorkLoop() {
-    go func() {
-        for {
-            select {
-                case <-p.funcEvents:
-                    p.getJob().setJob(p.funcs.PopFront().(func()))
-                case <-p.stopEvents:
-                    return
+    for i := 0; i < runtime.GOMAXPROCS(-1); i++ {
+        go func() {
+            for {
+                select {
+                    case <-p.funcEvents:
+                        p.getJob().setJob(p.funcs.PopFront().(func()))
+                    case <-p.stopEvents:
+                        return
+                }
             }
-        }
-    }()
+        }()
+    }
 }
 
 // 定时清理过期任务，单线程处理
 func (p *Pool) startClearLoop() {
     go func() {
         for {
+            // 如果接收到关闭通知(池已经关闭)，那么不再执行清理操作，直接退出
+            if len(p.stopEvents) > 0 {
+                break
+            }
             time.Sleep(gDEFAULT_CLEAR_INTERVAL*time.Second)
-            if len(p.stopEvents) > 0 || len(p.funcEvents) == 0 {
+            if len(p.funcEvents) == 0 {
                 var j *PoolJob
                 for {
                     if r := p.queue.PopFront(); r != nil {
@@ -47,10 +54,6 @@ func (p *Pool) startClearLoop() {
                         break
                     }
                 }
-            }
-            // 判断是池已经关闭，并且所有goroutine已退出，那么该goroutine终止执行
-            if len(p.stopEvents) > 0 && atomic.LoadInt32(&p.number) == 0 {
-                break
             }
         }
     }()
@@ -70,11 +73,11 @@ func (p *Pool) getExpire() int32 {
 func (p *Pool) newJob() *PoolJob {
     // 如果达到goroutine数限制，那么阻塞等待有空闲goroutine后继续
     if p.reachSizeLimit() {
-        // 阻塞等待空闲goroutine
-        select {
-            case <- p.freeEvents:
-                return p.getJob()
-        }
+        // 阻塞等待空闲的协程资源，
+        // 这是一个递归循环，因为该流程中存在协程抢占机制，
+        // 如果进入getJob方法没有抢占到协程资源，那么该任务执行会继续等待下一个freeEvents
+        <- p.freeEvents
+        return p.getJob()
     }
     j := &PoolJob {
         job  : make(chan func(), 1),

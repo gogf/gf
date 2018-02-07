@@ -72,38 +72,38 @@ func (q *Queue) PushFront(v interface{}) error {
 
 // 从队头先进先出地从队列取出一项数据，当没有数据可获取时，阻塞等待
 func (q *Queue) PopFront() interface{} {
-    select {
-        case <- q.events:
-            if q.limit > 0 {
-                <- q.limits
-            }
-            q.mu.Lock()
-            if elem := q.list.Front(); elem != nil {
-                item := q.list.Remove(elem)
-                q.mu.Unlock()
-                return item
-            }
-            q.mu.Unlock()
+    <- q.events
+
+    if q.limit > 0 {
+        <- q.limits
     }
+    q.mu.Lock()
+    if elem := q.list.Front(); elem != nil {
+        item := q.list.Remove(elem)
+        q.mu.Unlock()
+        return item
+    }
+    q.mu.Unlock()
+
     return nil
 }
 
 // 从队尾先进先出地从队列取出一项数据，当没有数据可获取时，阻塞等待
 // 第二个返回值表示队列是否关闭
 func (q *Queue) PopBack() interface{} {
-    select {
-        case <- q.events:
-            if q.limit > 0 {
-                <- q.limits
-            }
-            q.mu.Lock()
-            if elem := q.list.Front(); elem != nil {
-                item := q.list.Remove(elem)
-                q.mu.Unlock()
-                return item
-            }
-            q.mu.Unlock()
+    <- q.events
+
+    if q.limit > 0 {
+        <- q.limits
     }
+    q.mu.Lock()
+    if elem := q.list.Front(); elem != nil {
+        item := q.list.Remove(elem)
+        q.mu.Unlock()
+        return item
+    }
+    q.mu.Unlock()
+
     return nil
 }
 
