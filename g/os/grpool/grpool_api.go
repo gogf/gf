@@ -10,31 +10,32 @@ package grpool
 
 import (
     "math"
+    "runtime"
     "sync/atomic"
     "gitee.com/johng/gf/g/container/glist"
 )
 
 const (
-    gDEFAULT_EXPIRE_TIME    = 60 // 默认goroutine过期时间
-    gDEFAULT_CLEAR_INTERVAL = 60 // 定期检查任务过期时间间隔
+    gDEFAULT_EXPIRE_TIME    = 60 // 默认goroutine过期时间(秒)
+    gDEFAULT_CLEAR_INTERVAL = 60 // 定期检查任务过期时间间隔(秒)
 )
 
 // goroutine池对象
 type Pool struct {
-    size       int32              // 限制最大的goroutine数量/线程数/worker数量
+    size       int32              // 限制最大的goroutine数量/协程数/worker数量
     expire     int32              // goroutine过期时间(秒)
     number     int32              // 当前goroutine数量(非任务数)
     queue      *glist.SafeList    // 空闲任务队列(*PoolJob)
     funcs      *glist.SafeList    // 待处理任务操作队列
-    freeEvents chan struct{}      // 空闲线程通知事件
+    freeEvents chan struct{}      // 空闲协程通知事件
     funcEvents chan struct{}      // 任务操作处理事件(用于任务事件通知)
-    stopEvents chan struct{}      // 池关闭事件(用于池相关异步线程通知)
+    stopEvents chan struct{}      // 池关闭事件(用于池相关异步协程通知)
 }
 
 // goroutine任务
 type PoolJob struct {
     job    chan func() // 当前任务(当为nil时表示关闭)
-    pool   *Pool       // 所属池
+    pool   *Pool       // 所属协程池
     update int64       // 更新时间
 }
 
@@ -65,8 +66,7 @@ func New(expire int, sizes...int) *Pool {
 
 // 添加异步任务(使用默认的池对象)
 func Add(f func()) {
-    defaultPool.funcs.PushBack(f)
-    defaultPool.funcEvents <- struct{}{}
+    defaultPool.Add(f)
 }
 
 // 查询当前goroutine总数
@@ -119,6 +119,8 @@ func (p *Pool) SetExpire(expire int) {
 func (p *Pool) Close() {
     // 必须首先标识让任务过期自动关闭
     p.SetExpire(-1)
-    p.stopEvents <- struct{}{} // 通知workloop
-    p.stopEvents <- struct{}{} // 通知clearloop
+    // 使用stopEvents事件通知所有的异步协程自动退出
+    for i := 0; i < runtime.GOMAXPROCS(-1) + 1; i++ {
+        p.stopEvents <- struct{}{}
+    }
 }
