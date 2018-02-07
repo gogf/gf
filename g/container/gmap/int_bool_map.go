@@ -33,6 +33,15 @@ func (this *IntBoolMap) Clone() *map[int]bool {
 	return &m
 }
 
+// 给定回调函数对原始内容进行遍历
+func (this *IntBoolMap) Iterator(f func (k int, v bool)) {
+    this.mu.RLock()
+    for k, v := range this.m {
+        f(k, v)
+    }
+    this.mu.RUnlock()
+}
+
 // 设置键值对
 func (this *IntBoolMap) Set(key int, val bool) {
 	this.mu.Lock()
