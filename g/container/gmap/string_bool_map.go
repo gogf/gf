@@ -22,6 +22,15 @@ func NewStringBoolMap() *StringBoolMap {
 	}
 }
 
+// 给定回调函数对原始内容进行遍历
+func (this *StringBoolMap) Iterator(f func (k string, v bool)) {
+    this.mu.RLock()
+    for k, v := range this.m {
+        f(k, v)
+    }
+    this.mu.RUnlock()
+}
+
 // 哈希表克隆
 func (this *StringBoolMap) Clone() *map[string]bool {
     m := make(map[string]bool)
