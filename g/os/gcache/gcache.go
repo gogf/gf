@@ -4,25 +4,33 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 单进程高速缓存.
+// 单进程缓存.
+// @todo 需要新增一个MAP，用于时间与过期键值对的快速处理。
 package gcache
 
 import (
     "sync"
     "time"
-    "math"
-    "sync/atomic"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/container/gset"
+    "gitee.com/johng/gf/g/encoding/ghash"
+)
+
+const (
+    gDEFAULT_CACHE_GROUP_SIZE = 4 // 默认缓存分区大小，不能超过uint8的最大值
 )
 
 // 缓存对象
 type Cache struct {
-    mu         sync.RWMutex
-    data       *gmap.StringInterfaceMap // 存放真实的键值对数据
-    eksets     *gmap.IntInterfaceMap    // 存放过期的键名数据
-    closed     int32                    // 缓存对象是否关闭
+    sync.RWMutex
+    g uint8               // 分区大小
+    m map[uint8]*CacheMap // 以分区大小数字作为索引
+}
+
+// 缓存分区对象
+type CacheMap  struct {
+    sync.RWMutex
+    closed bool              // 对象是否已删除，以便判断停止goroutine
+    m map[string]CacheItem   // 键值对
 }
 
 // 缓存数据项
@@ -32,156 +40,208 @@ type CacheItem struct {
 }
 
 // 全局缓存管理对象
-var cache *Cache = New()
+var cache *Cache = New(gDEFAULT_CACHE_GROUP_SIZE)
 
 // Cache对象按照缓存键名首字母做了分组
-func New() *Cache {
+func New(group uint8) *Cache {
     c := &Cache {
-        data    : gmap.NewStringInterfaceMap(),
-        eksets  : gmap.NewIntInterfaceMap(),
+        g : group,
+        m : make(map[uint8]*CacheMap),
     }
-    c.autoClearLoop()
+    // 初始化分区对象
+    var i uint8 = 0
+    for ; i < group; i++ {
+        m := &CacheMap {
+            m : make(map[string]CacheItem),
+        }
+        c.m[i] = m
+        go m.autoClearLoop()
+    }
     return c
 }
 
 // (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为毫秒
-func Set(key string, value interface{}, expired int64)  {
-    cache.Set(key, value, expired)
+func Set(k string, v interface{}, expired int64)  {
+    cache.Set(k, v, expired)
 }
 
 // (使用全局KV缓存对象)批量设置kv缓存键值对，过期时间单位为毫秒
-func BatchSet(data map[string]interface{}, expire int64)  {
-    cache.BatchSet(data, expire)
+func BatchSet(m map[string]interface{}, expired int64)  {
+    cache.BatchSet(m, expired)
 }
 
 // (使用全局KV缓存对象)获取指定键名的值
-func Get(key string) interface{} {
-    return cache.Get(key)
+func Get(k string) interface{} {
+    return cache.Get(k)
 }
 
 // (使用全局KV缓存对象)删除指定键值对
-func Remove(key string) {
-    cache.Remove(key)
+func Remove(k string) {
+    cache.Remove(k)
 }
 
 // (使用全局KV缓存对象)批量删除指定键值对
-func BatchRemove(keys []string) {
-    cache.BatchRemove(keys)
+func BatchRemove(l []string) {
+    cache.BatchRemove(l)
 }
 
-// 计算过期缓存的键名
-func (c *Cache) getExpireKey(expire int64) int {
-    return int(math.Ceil(float64(expire/1000)) + 1)*1000
-}
-
-// 获取或者创建一个过期键名存放Set
-func (c *Cache) getOrNewExpireSet(ek int) *gset.StringSet {
-    c.mu.RLock()
-    defer c.mu.RUnlock()
-    ekset := c.eksets.Get(ek)
-    if ekset == nil {
-        s := gset.NewStringSet()
-        c.eksets.Set(ek, s)
-        return s
-    } else {
-        return ekset.(*gset.StringSet)
-    }
-}
-
-
-// 设置kv缓存键值对，过期时间单位为毫秒，expire<=0表示不过期
-func (c *Cache) Set(key string, value interface{}, expire int64) {
-    // 查找老的键值过期时间
-    olde := int64(0)
-    item := c.data.Get(key)
-    if item != nil {
-        olde = item.(CacheItem).e
-    }
-    // 保存新的键值对
-    newe := int64(math.MaxInt64)
-    if expire > 0 {
-        newe = gtime.Millisecond() + int64(expire)
-    }
-    // 删除旧的过期键名
-    if olde > 0 && newe != olde {
-        c.eksets.Get(c.getExpireKey(olde)).(*gset.StringSet).Remove(key)
-    }
-    // 保存新的过期键名
-    c.getOrNewExpireSet(c.getExpireKey(newe)).Add(key)
-    // 最后才真实保存数据
-    c.data.Set(key, CacheItem{v: value, e: newe})
+// 设置kv缓存键值对，过期时间单位为毫秒
+func (c *Cache) Set(k string, v interface{}, expired int64)  {
+    c.RLock()
+    c.m[c.getIndex(k)].Set(k, v, expired)
+    c.RUnlock()
 }
 
 // 批量设置
-func (c *Cache) BatchSet(data map[string]interface{}, expire int64)  {
-    l    := make([]string, len(data))
-    m    := make(map[string]interface{})
-    newe := int64(math.MaxInt64)
-    if expire > 0 {
-        newe = gtime.Millisecond() + int64(expire)
-    }
+func (c *Cache) BatchSet(m map[string]interface{}, expired int64)  {
+    c.RLock()
     for k, v := range m {
-        m[k]          = CacheItem{v: v, e: newe}
-        l[len(l) - 1] = k
+        c.m[c.getIndex(k)].Set(k, v, expired)
     }
-    c.getOrNewExpireSet(c.getExpireKey(newe)).BatchAdd(l)
-    c.data.BatchSet(m)
+    c.RUnlock()
 }
 
 // 获取指定键名的值
-func (c *Cache) Get(key string) interface{} {
-    r := c.data.Get(key)
-    if r != nil {
-        item := r.(CacheItem)
-        if item.e > gtime.Millisecond() {
-            return item.v
-        }
-    }
-    return nil
+func (c *Cache) Get(k string) interface{} {
+    c.RLock()
+    r := c.m[c.getIndex(k)].Get(k)
+    c.RUnlock()
+    return r
 }
 
 // 删除指定键值对
-func (c *Cache) Remove(key string) {
-    c.data.Remove(key)
+func (c *Cache) Remove(k string) {
+    c.RLock()
+    c.m[c.getIndex(k)].Remove(k)
+    c.RUnlock()
 }
 
 // 批量删除键值对
-func (c *Cache) BatchRemove(keys []string) {
-    c.data.BatchRemove(keys)
+func (c *Cache) BatchRemove(l []string) {
+    c.RLock()
+    for _, k := range l {
+        c.m[c.getIndex(k)].Remove(k)
+    }
+    c.RUnlock()
 }
 
 // 获得所有的键名，组成字符串数组返回
 func (c *Cache) Keys() []string {
-    return c.data.Keys()
+    l := make([]string, 0)
+    c.RLock()
+    for _, cm := range c.m {
+        cm.RLock()
+        for k2, _ := range cm.m {
+            l = append(l, k2)
+        }
+        cm.RUnlock()
+    }
+    c.RUnlock()
+    return l
 }
 
 // 获得所有的值，组成数组返回
 func (c *Cache) Values() []interface{} {
-    return c.data.Values()
+    l := make([]interface{}, 0)
+    c.RLock()
+    for _, cm := range c.m {
+        cm.RLock()
+        for _, v2 := range cm.m {
+            l = append(l, v2.v)
+        }
+        cm.RUnlock()
+    }
+    c.RUnlock()
+    return l
 }
 
 // 获得缓存对象的键值对数量
 func (c *Cache) Size() int {
-    return c.data.Size()
+    var size int
+    c.RLock()
+    for _, cm := range c.m {
+        cm.RLock()
+        size += len(cm.m)
+        cm.RUnlock()
+    }
+    c.RUnlock()
+    return size
 }
 
 // 删除缓存对象
 func (c *Cache) Close()  {
-    atomic.AddInt32(&c.closed, 1)
+    c.RLock()
+    for _, cm := range c.m {
+        cm.Close()
+    }
+    c.RUnlock()
 }
 
-// 自动清理过期键值对
-// 每隔1秒清除过去3秒的键值对数据
-func (c *Cache) autoClearLoop() {
-    for atomic.LoadInt32(&c.closed) == 0 {
-        ek  := c.getExpireKey(gtime.Millisecond())
-        eks := []int{ek - 2000, ek - 3000, ek - 4000}
-        for _, v := range eks {
-            if r := c.eksets.Get(v); r != nil {
-                c.data.BatchRemove(r.(*gset.StringSet).Slice())
+// 计算缓存的索引
+func (c *Cache) getIndex(k string) uint8 {
+    return uint8(ghash.BKDRHash([]byte(k)) % uint32(c.g))
+}
+
+// 设置kv缓存键值对，过期时间单位为毫秒
+func (cm *CacheMap) Set(k string, v interface{}, expired int64)  {
+    var e int64
+    if expired > 0 {
+        e = gtime.Millisecond() + int64(expired)
+    }
+    cm.Lock()
+    cm.m[k] = CacheItem{v: v, e: e}
+    cm.Unlock()
+}
+
+// 获取指定键名的值
+func (cm *CacheMap) Get(k string) interface{} {
+    var v interface{}
+    cm.RLock()
+    if r, ok := cm.m[k]; ok {
+        if r.e > 0 && r.e < gtime.Millisecond() {
+            v = nil
+        } else {
+            v = r.v
+        }
+    }
+    cm.RUnlock()
+    return v
+}
+
+// 删除指定键值对
+func (cm *CacheMap) Remove(k string) {
+    cm.Lock()
+    delete(cm.m, k)
+    cm.Unlock()
+}
+
+// 关闭缓存分区
+func (cm *CacheMap) Close() {
+    cm.Lock()
+    cm.closed = true
+    cm.Unlock()
+}
+
+// 是否删除
+func (cm *CacheMap) isClosed() bool {
+    cm.RLock()
+    r := cm.closed
+    cm.RUnlock()
+    return r
+}
+
+// 自动清理过期键值对(每间隔3秒执行)
+func (cm *CacheMap) autoClearLoop() {
+    for !cm.isClosed() {
+        cm.Lock()
+        for k, v := range cm.m {
+            if v.e > 0 && v.e < gtime.Millisecond() {
+                delete(cm.m, k)
             }
         }
-        c.eksets.BatchRemove(eks)
-        time.Sleep(time.Second)
+        cm.Unlock()
+        time.Sleep(3 * time.Second)
     }
 }
+
+
