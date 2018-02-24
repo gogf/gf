@@ -32,9 +32,6 @@ func (this *InterfaceSet) Iterator(f func (v interface{})) {
 
 // 添加
 func (this *InterfaceSet) Add(item interface{}) *InterfaceSet {
-	if this.Contains(item) {
-		return this
-	}
 	this.mu.Lock()
 	this.m[item] = struct{}{}
 	this.mu.Unlock()
@@ -43,33 +40,11 @@ func (this *InterfaceSet) Add(item interface{}) *InterfaceSet {
 
 // 批量添加
 func (this *InterfaceSet) BatchAdd(items []interface{}) *InterfaceSet {
-    count := len(items)
-    if count == 0 {
-        return this
-    }
-
-    todo := make([]interface{}, 0, count)
-    this.mu.RLock()
-    for i := 0; i < count; i++ {
-        _, exists := this.m[items[i]]
-        if exists {
-            continue
-        }
-
-        todo = append(todo, items[i])
-    }
-    this.mu.RUnlock()
-
-    count = len(todo)
-    if count == 0 {
-        return this
-    }
-
-    this.mu.Lock()
-    for i := 0; i < count; i++ {
-        this.m[todo[i]] = struct{}{}
-    }
-    this.mu.Unlock()
+	this.mu.Lock()
+	for _, item := range items {
+		this.m[item] = struct{}{}
+	}
+	this.mu.Unlock()
     return this
 }
 
