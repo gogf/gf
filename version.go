@@ -1,4 +1,5 @@
-package g
+package gf
 
-// Yes, it's g.go
+const VERSION  = "0.95 beta"
+const AUTHORS  = "john<john@johng.cn>"
 
