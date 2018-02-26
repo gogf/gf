@@ -2,7 +2,12 @@
 <img src="http://cover.kancloud.cn/johng/gf" width="200"/>
 </div>
 
+<div align=center>
+<a href="https://godoc.org/github.com/johng-cn/gf">
+<img src="https://godoc.org/github.com/johng-cn/gf?status.svg"/>
+</a>
 [![GoDoc](https://godoc.org/github.com/johng-cn/gf?status.svg)](https://godoc.org/github.com/johng-cn/gf)
+</div>
 
 ## 介绍
 gf(Go Frame)是一款为Web服务及网络服务开发设计的，模块化、低耦合、轻量级的Go语言开发框架。
