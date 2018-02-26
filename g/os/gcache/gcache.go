@@ -12,20 +12,19 @@ import (
     "time"
     "math"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/encoding/ghash"
     "gitee.com/johng/gf/g/container/gset"
     "gitee.com/johng/gf/g/container/gqueue"
 )
 
 // 缓存对象
 type Cache struct {
-    dmu        sync.RWMutex             // data锁
-    emu        sync.RWMutex             // ekmap锁
-    data       map[uint64]CacheItem     // 缓存数据(使用键名哈希作为键)
-    ekmap      map[uint64]int64         // 键名哈希对应的分组过期时间
-    eksets     map[int64]*gset.UintSet  // 分组过期时间对应的键名哈希列表
-    eventQueue *gqueue.Queue            // 异步处理队列
-    stopEvents chan struct{}            // 关闭时间通知
+    dmu        sync.RWMutex              // data锁
+    emu        sync.RWMutex              // ekmap锁
+    data       map[string]CacheItem      // 缓存数据
+    ekmap      map[string]int64          // 键名对应的分组过期时间
+    eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表
+    eventQueue *gqueue.Queue             // 异步处理队列
+    stopEvents chan struct{}             // 关闭时间通知
 }
 
 // 缓存数据项
@@ -36,7 +35,7 @@ type CacheItem struct {
 
 // 异步队列数据项
 type EventItem struct {
-    k uint64      // 键名uint64哈希值
+    k string      // 键名
     e int64       // 过期时间
 }
 
@@ -46,9 +45,9 @@ var cache *Cache = New()
 // Cache对象按照缓存键名首字母做了分组
 func New() *Cache {
     c := &Cache {
-        data       : make(map[uint64]CacheItem),
-        ekmap      : make(map[uint64]int64),
-        eksets     : make(map[int64]*gset.UintSet),
+        data       : make(map[string]CacheItem),
+        ekmap      : make(map[string]int64),
+        eksets     : make(map[int64]*gset.StringSet),
         eventQueue : gqueue.New(),
         stopEvents : make(chan struct{}, 2),
     }
@@ -88,7 +87,7 @@ func (c *Cache) makeExpireKey(expire int64) int64 {
 }
 
 // 获取一个过期键名存放Set,如果没有则返回nil
-func (c *Cache) getExpireSet(expire int64) *gset.UintSet {
+func (c *Cache) getExpireSet(expire int64) *gset.StringSet {
     c.emu.RLock()
     if ekset, ok := c.eksets[expire]; ok {
         c.emu.RUnlock()
@@ -99,9 +98,9 @@ func (c *Cache) getExpireSet(expire int64) *gset.UintSet {
 }
 
 // 获取或者创建一个过期键名存放Set(由于是异步单线程执行，因此不会出现创建set时的覆盖问题)
-func (c *Cache) getOrNewExpireSet(expire int64) *gset.UintSet {
+func (c *Cache) getOrNewExpireSet(expire int64) *gset.StringSet {
     if ekset := c.getExpireSet(expire); ekset == nil {
-        set := gset.NewUintSet()
+        set := gset.NewStringSet()
         c.emu.Lock()
         c.eksets[expire] = set
         c.emu.Unlock()
@@ -117,11 +116,10 @@ func (c *Cache) Set(key string, value interface{}, expire int64) {
     if expire > 0 {
         e = gtime.Millisecond() + int64(expire)
     }
-    h := ghash.BKDRHash64([]byte(key))
     c.dmu.Lock()
-    c.data[h] = CacheItem{v: value, e: e}
+    c.data[key] = CacheItem{v: value, e: e}
     c.dmu.Unlock()
-    c.eventQueue.PushBack(EventItem{k:h, e:e})
+    c.eventQueue.PushBack(EventItem{k: key, e:e})
 }
 
 // 批量设置
@@ -131,18 +129,17 @@ func (c *Cache) BatchSet(data map[string]interface{}, expire int64)  {
         e = gtime.Millisecond() + int64(expire)
     }
     for k, v := range data {
-        h := ghash.BKDRHash64([]byte(k))
         c.dmu.Lock()
-        c.data[h] = CacheItem{v: v, e: e}
+        c.data[k] = CacheItem{v: v, e: e}
         c.dmu.Unlock()
-        c.eventQueue.PushBack(EventItem{k:h, e:e})
+        c.eventQueue.PushBack(EventItem{k: k, e:e})
     }
 }
 
 // 获取指定键名的值
 func (c *Cache) Get(key string) interface{} {
     c.dmu.RLock()
-    item, ok := c.data[ghash.BKDRHash64([]byte(key))]
+    item, ok := c.data[key]
     c.dmu.RUnlock()
     if ok {
         if item.e > gtime.Millisecond() {
@@ -160,23 +157,34 @@ func (c *Cache) Remove(key string) {
 // 批量删除键值对
 func (c *Cache) BatchRemove(keys []string) {
     for _, key := range keys {
-        h := ghash.BKDRHash64([]byte(key))
         c.dmu.Lock()
-        c.data[h] = CacheItem{v: nil, e: -1}
+        c.data[key] = CacheItem{v: nil, e: -1}
         c.dmu.Unlock()
-        c.eventQueue.PushBack(EventItem{k:h, e: -1})
+        c.eventQueue.PushBack(EventItem{k: key, e: -1})
     }
 }
 
 // 获得所有的键名，组成字符串数组返回
-//func (c *Cache) Keys() []string {
-//    return append(c.temp.Keys(), c.data.Keys()...)
-//}
-//
-//// 获得所有的值，组成数组返回
-//func (c *Cache) Values() []interface{} {
-//    return append(c.temp.Values(), c.data.Values()...)
-//}
+func (c *Cache) Keys() []string {
+    keys := make([]string, 0)
+    c.dmu.RLock()
+    for k, _ := range c.data {
+        keys = append(keys, k)
+    }
+    c.dmu.RUnlock()
+    return keys
+}
+
+// 获得所有的值，组成数组返回
+func (c *Cache) Values() []interface{} {
+    values := make([]interface{}, 0)
+    c.dmu.RLock()
+    for _, v := range c.data {
+        values = append(values, v)
+    }
+    c.dmu.RUnlock()
+    return values
+}
 
 // 获得缓存对象的键值对数量
 func (c *Cache) Size() int {
@@ -201,11 +209,11 @@ func (c *Cache) autoSyncLoop() {
             if olde, ok := c.ekmap[item.k]; ok {
                 if newe != olde {
                     if ekset := c.getExpireSet(olde); ekset != nil {
-                        ekset.Remove(uint(item.k))
+                        ekset.Remove(item.k)
                     }
                 }
             }
-            c.getOrNewExpireSet(newe).Add(uint(item.k))
+            c.getOrNewExpireSet(newe).Add(item.k)
             c.ekmap[item.k] = newe
         } else {
             break
@@ -226,8 +234,9 @@ func (c *Cache) autoClearLoop() {
                 for _, v := range eks {
                     if ekset := c.getExpireSet(v); ekset != nil {
                         c.dmu.Lock()
-                        ekset.Iterator(func(v uint) {
-                            delete(c.data, uint64(v))
+                        ekset.Iterator(func(key string) {
+                            delete(c.data,  key)
+                            delete(c.ekmap, key)
                         })
                         c.dmu.Unlock()
                     }
