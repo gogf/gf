@@ -3,9 +3,14 @@
 </div>
 
 <div align=center>
-<a href="https://godoc.org/github.com/johng-cn/gf" target="_blank">
-<img src="https://godoc.org/github.com/johng-cn/gf?status.svg"/>
-</a>
+    <a href="https://godoc.org/github.com/johng-cn/gf" target="_blank">
+        <img src="https://godoc.org/github.com/johng-cn/gf?status.svg"/>
+    </a>
+    <!--
+    <a href="https://www.codetriage.com/johng-cn/gf" target="_blank">
+        <img src="https://www.codetriage.com/johng-cn/gf/badges/users.svg"/>
+    </a>
+    -->
 </div>
 
 ## 介绍
