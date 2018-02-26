@@ -3,10 +3,9 @@
 </div>
 
 <div align=center>
-<a href="https://godoc.org/github.com/johng-cn/gf">
+<a href="https://godoc.org/github.com/johng-cn/gf" target="_blank">
 <img src="https://godoc.org/github.com/johng-cn/gf?status.svg"/>
 </a>
-[![GoDoc](https://godoc.org/github.com/johng-cn/gf?status.svg)](https://godoc.org/github.com/johng-cn/gf)
 </div>
 
 ## 介绍
