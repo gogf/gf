@@ -14,9 +14,10 @@ import (
     "gitee.com/johng/gf/g/container/gset"
 )
 
-var ints = gset.NewIntSet()
-var itfs = gset.NewInterfaceSet()
-var strs = gset.NewStringSet()
+var ints  = gset.NewIntSet()
+var uints = gset.NewUintSet()
+var itfs  = gset.NewInterfaceSet()
+var strs  = gset.NewStringSet()
 
 func BenchmarkIntSet_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
@@ -33,6 +34,24 @@ func BenchmarkIntSet_Contains(b *testing.B) {
 func BenchmarkIntSet_Remove(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ints.Remove(i)
+    }
+}
+
+func BenchmarkUintSet_Add(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        uints.Add(uint(i))
+    }
+}
+
+func BenchmarkUintSet_Contains(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        uints.Contains(uint(i))
+    }
+}
+
+func BenchmarkUintSet_Remove(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        uints.Remove(uint(i))
     }
 }
 
