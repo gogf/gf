@@ -1,5 +1,4 @@
 package g
 
-const VERSION  = "0.95 beta"
-const AUTHORS  = "john<john@johng.cn>"
+// Yes, it's g.go
 
