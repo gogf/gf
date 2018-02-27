@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 单例对象管理(耦合了一些框架核心对象获取方法).
+// 单例对象管理.
 // 框架内置了一些核心对象获取方法，并且可以通过Set和Get方法实现IoC以及对内置核心对象的自定义替换
 package gins
 
