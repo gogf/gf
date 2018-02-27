@@ -20,6 +20,7 @@ import (
 type Cache struct {
     dmu        sync.RWMutex              // data锁
     emu        sync.RWMutex              // ekmap锁
+    smu        sync.RWMutex              // eksets锁
     data       map[string]CacheItem      // 缓存数据
     ekmap      map[string]int64          // 键名对应的分组过期时间
     eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表
@@ -88,12 +89,12 @@ func (c *Cache) makeExpireKey(expire int64) int64 {
 
 // 获取一个过期键名存放Set,如果没有则返回nil
 func (c *Cache) getExpireSet(expire int64) *gset.StringSet {
-    c.emu.RLock()
+    c.smu.RLock()
     if ekset, ok := c.eksets[expire]; ok {
-        c.emu.RUnlock()
+        c.smu.RUnlock()
         return ekset
     }
-    c.emu.RUnlock()
+    c.smu.RUnlock()
     return nil
 }
 
@@ -101,9 +102,9 @@ func (c *Cache) getExpireSet(expire int64) *gset.StringSet {
 func (c *Cache) getOrNewExpireSet(expire int64) *gset.StringSet {
     if ekset := c.getExpireSet(expire); ekset == nil {
         set := gset.NewStringSet()
-        c.emu.Lock()
+        c.smu.Lock()
         c.eksets[expire] = set
-        c.emu.Unlock()
+        c.smu.Unlock()
         return set
     } else {
         return ekset
@@ -206,15 +207,18 @@ func (c *Cache) autoSyncLoop() {
         if r := c.eventQueue.PopFront(); r != nil {
             item := r.(EventItem)
             newe := c.makeExpireKey(item.e)
-            if olde, ok := c.ekmap[item.k]; ok {
-                if newe != olde {
-                    if ekset := c.getExpireSet(olde); ekset != nil {
-                        ekset.Remove(item.k)
-                    }
+            c.emu.RLock()
+            olde, ok := c.ekmap[item.k];
+            c.emu.RUnlock()
+            if ok && newe != olde {
+                if ekset := c.getExpireSet(olde); ekset != nil {
+                    ekset.Remove(item.k)
                 }
             }
             c.getOrNewExpireSet(newe).Add(item.k)
+            c.emu.Lock()
             c.ekmap[item.k] = newe
+            c.emu.Unlock()
         } else {
             break
         }
@@ -233,16 +237,21 @@ func (c *Cache) autoClearLoop() {
                 eks := []int64{ek - 2000, ek - 3000, ek - 4000}
                 for _, v := range eks {
                     if ekset := c.getExpireSet(v); ekset != nil {
-                        c.dmu.Lock()
+
                         ekset.Iterator(func(key string) {
+                            c.dmu.Lock()
                             delete(c.data,  key)
+                            c.dmu.Unlock()
+
+                            c.emu.Lock()
                             delete(c.ekmap, key)
+                            c.emu.Unlock()
                         })
-                        c.dmu.Unlock()
+
                     }
-                    c.emu.Lock()
+                    c.smu.Lock()
                     delete(c.eksets, v)
-                    c.emu.Unlock()
+                    c.smu.Unlock()
                 }
                 time.Sleep(time.Second)
         }
