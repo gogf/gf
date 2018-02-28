@@ -5,7 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 //
 
-// 并发安全的双向链表
+// 并发安全的双向链表.
 package glist
 
 import (
