@@ -10,13 +10,12 @@ package gchan
 import (
     "sync"
     "errors"
-    "sync/atomic"
 )
 
 type Chan struct {
     mu     sync.RWMutex
     list   chan interface{}
-    closed int32
+    closed bool
 }
 
 func New(limit int) *Chan {
@@ -27,25 +26,29 @@ func New(limit int) *Chan {
 
 // 将数据压入队列
 func (q *Chan) Push(v interface{}) error {
-    if atomic.LoadInt32(&q.closed) > 0 {
+    q.mu.RLock()
+    if q.closed {
+        q.mu.RUnlock()
         return errors.New("closed")
     }
     q.list <- v
+    q.mu.RUnlock()
     return nil
 }
 
 // 先进先出地从队列取出一项数据，当没有数据可获取时，阻塞等待
-// 第二个返回值表示队列是否关闭
 func (q *Chan) Pop() interface{} {
     return <- q.list
 }
 
 // 关闭队列(通知所有通过Pop阻塞的协程退出)
 func (q *Chan) Close() {
-    if atomic.LoadInt32(&q.closed) == 0 {
-        atomic.StoreInt32(&q.closed, 1)
+    q.mu.Lock()
+    if !q.closed {
+        q.closed = true
         close(q.list)
     }
+    q.mu.Unlock()
 }
 
 // 获取当前队列大小
