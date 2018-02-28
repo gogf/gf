@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 优雅的channel操作.
+// 优雅的Channel操作.
 package gchan
 
 import (

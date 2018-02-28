@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 动态大小的安全队列(dynamic channel).
+// 并发安全的动态队列.
 // 优点：
 // 1、队列初始化速度快；
 // 2、可以向队头/队尾进行Push/Pop操作；
