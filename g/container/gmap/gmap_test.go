@@ -11,46 +11,78 @@ package gmap_test
 import (
     "testing"
     "gitee.com/johng/gf/g/container/gmap"
-    "sync"
+    "strconv"
 )
 
 
-var m1 = gmap.NewIntIntMap()
-var m2 = sync.Map{}
+var ibm   = gmap.NewIntBoolMap()
+var iim   = gmap.NewIntIntMap()
+var iifm  = gmap.NewIntInterfaceMap()
+var ism   = gmap.NewIntStringMap()
+var ififm = gmap.NewInterfaceInterfaceMap()
+var sbm   = gmap.NewStringBoolMap()
+var sim   = gmap.NewStringIntMap()
+var sifm  = gmap.NewStringInterfaceMap()
+var ssm   = gmap.NewStringStringMap()
+var uifm  = gmap.NewUintInterfaceMap()
 
-func BenchmarkGmapSet(b *testing.B) {
+func BenchmarkIntBoolMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        m1.Set(i, i)
+        ibm.Set(i, true)
     }
 }
 
-func BenchmarkSyncmapSet(b *testing.B) {
+func BenchmarkIntIntMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        m2.Store(i, i)
+        iim.Set(i, i)
     }
 }
 
-func BenchmarkGmapGet(b *testing.B) {
+func BenchmarkIntInterfaceMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        m1.Get(i)
+        iifm.Set(i, i)
     }
 }
 
-func BenchmarkSyncmapGet(b *testing.B) {
+func BenchmarkIntStringMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        m2.Load(i)
+        ism.Set(i, strconv.Itoa(i))
     }
 }
 
-func BenchmarkGmapRemove(b *testing.B) {
+func BenchmarkInterfaceInterfaceMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        m1.Remove(i)
+        ififm.Set(i, i)
     }
 }
 
-func BenchmarkSyncmapRmove(b *testing.B) {
+func BenchmarkStringBoolMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        m2.Delete(i)
+        sbm.Set(strconv.Itoa(i), true)
+    }
+}
+
+func BenchmarkStringIntMap_Set(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        sim.Set(strconv.Itoa(i), i)
+    }
+}
+
+func BenchmarkStringInterfaceMap_Set(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        sifm.Set(strconv.Itoa(i), i)
+    }
+}
+
+func BenchmarkStringStringMap_Set(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        ssm.Set(strconv.Itoa(i), strconv.Itoa(i))
+    }
+}
+
+func BenchmarkUintInterfaceMap_Set(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        uifm.Set(uint(i), i)
     }
 }
 
