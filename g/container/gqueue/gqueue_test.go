@@ -14,11 +14,18 @@ import (
 )
 
 var length = 10000000
-var q = gqueue.New(length)
+var q      = gqueue.New(length)
+var c      = make(chan int, length)
 
 func BenchmarkGqueueNew1000W(b *testing.B) {
     for i := 0; i < b.N; i++ {
         gqueue.New(length)
+    }
+}
+
+func BenchmarkChannelNew1000W(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        c = make(chan int, length)
     }
 }
 
@@ -32,6 +39,13 @@ func BenchmarkGqueuePushAndPop(b *testing.B) {
     for i := 0; i < b.N; i++ {
         q.PushBack(i)
         q.PopFront()
+    }
+}
+
+func BenchmarkChannelPushAndPop(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        c <- i
+        <- c
     }
 }
 
