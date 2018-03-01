@@ -25,8 +25,8 @@ type Pool struct {
     size       int32              // 限制最大的goroutine数量/协程数/worker数量
     expire     int32              // goroutine过期时间(秒)
     number     int32              // 当前goroutine数量(非任务数)
-    queue      *glist.SafeList    // 空闲任务队列(*PoolJob)
-    funcs      *glist.SafeList    // 待处理任务操作队列
+    queue      *glist.List        // 空闲任务队列(*PoolJob)
+    funcs      *glist.List        // 待处理任务操作队列
     freeEvents chan struct{}      // 空闲协程通知事件
     funcEvents chan struct{}      // 任务操作处理事件(用于任务事件通知)
     stopEvents chan struct{}      // 池关闭事件(用于池相关异步协程通知)
@@ -53,8 +53,8 @@ func New(expire int, sizes...int) *Pool {
     p := &Pool {
         size       : int32(size),
         expire     : int32(expire),
-        queue      : glist.NewSafeList(),
-        funcs      : glist.NewSafeList(),
+        queue      : glist.New(),
+        funcs      : glist.New(),
         freeEvents : make(chan struct{}, math.MaxUint32),
         funcEvents : make(chan struct{}, math.MaxUint32),
         stopEvents : make(chan struct{}, 2),
