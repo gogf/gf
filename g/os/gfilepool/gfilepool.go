@@ -22,7 +22,7 @@ import (
 type Pool struct {
     path    string          // 文件绝对路径
     flag    int             // 文件打开标识
-    list    *glist.SafeList // 可用/闲置的文件指针链表
+    list    *glist.List     // 可用/闲置的文件指针链表
     idlemax int             // 闲置最大时间，超过该时间则被系统回收(秒)
     closed  bool            // 连接池是否已关闭
 }
@@ -55,7 +55,7 @@ func New(path string, flag int, expire int) *Pool {
     r := &Pool {
         path    : path,
         flag    : flag,
-        list    : glist.NewSafeList(),
+        list    : glist.New(),
         idlemax : expire,
     }
     // 独立的线程执行过期清理工作
