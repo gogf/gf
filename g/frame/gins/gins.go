@@ -150,23 +150,12 @@ func Database(names...string) gdb.Link {
                     }
                 }
             }
-            var db gdb.Link = nil
-            if len(names) == 0 {
-                if link, err := gdb.Instance(); err == nil {
-                    db = link
-                } else {
-                    glog.Error(err)
-                }
-            } else {
-                if link, err := gdb.InstanceByGroup(names[0]); err == nil {
-                    db = link
-                } else {
-                    glog.Error(err)
-                }
-            }
-            if db != nil {
+
+            if db, err := gdb.Instance(names...); err == nil {
                 Set(dbCacheKey, db)
                 return db
+            } else {
+                glog.Error(err)
             }
         }
     }

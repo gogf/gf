@@ -88,14 +88,13 @@ type Map  map[string]interface{}
 // 关联数组列表(索引从0开始的数组)，绑定多条记录
 type List []Map
 
-// 获得默认的数据库操作对象单例
-func Instance () (Link, error) {
-    return instance(config.d)
-}
-
-// 获得指定配置项的数据库草最对象单例
-func InstanceByGroup(groupName string) (Link, error) {
-    return instance(groupName)
+// 获得默认/指定分组名称的数据库操作对象单例
+func Instance (groupName...string) (Link, error) {
+    name := config.d
+    if len(groupName) > 0 {
+        name = groupName[0]
+    }
+    return instance(name)
 }
 
 // 根据配置项获取一个数据库操作对象单例
@@ -103,7 +102,7 @@ func instance (groupName string) (Link, error) {
     instanceName := "gdb_instance_" + groupName
     result       := gcache.Get(instanceName)
     if result == nil {
-        link, err := NewByGroup(groupName)
+        link, err := New(groupName)
         if err == nil {
             gcache.Set(instanceName, link, 0)
             return link, nil
@@ -115,20 +114,19 @@ func instance (groupName string) (Link, error) {
     }
 }
 
-// 使用默认选项进行连接，数据库集群配置项：default
-func New() (Link, error) {
-    return NewByGroup(config.d)
-}
-
-// 根据数据库配置项创建一个数据库操作对象
-func NewByGroup(groupName string) (Link, error) {
+// 使用默认/指定分组配置进行连接，数据库集群配置项：default
+func New(groupName...string) (Link, error) {
+    name := config.d
+    if len(groupName) > 0 {
+        name = groupName[0]
+    }
     config.RLock()
     defer config.RUnlock()
 
     if len(config.c) < 1 {
         return nil, errors.New("empty database configuration")
     }
-    if list, ok := config.c[groupName]; ok {
+    if list, ok := config.c[name]; ok {
         // 将master, slave集群列表拆分出来
         masterList  := make(ConfigGroup, 0)
         slaveList   := make(ConfigGroup, 0)
@@ -150,12 +148,12 @@ func NewByGroup(groupName string) (Link, error) {
         }
         return newLink(masterNode, slaveNode)
     } else {
-        return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", groupName))
+        return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", name))
     }
 }
 
 // 根据单点数据库配置获得一个数据库草最对象
-func NewByConfigNode(node ConfigNode) (Link, error) {
+func NewByNode(node ConfigNode) (Link, error) {
     return newLink (&node, nil)
 }
 
