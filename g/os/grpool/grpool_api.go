@@ -28,12 +28,12 @@ type Pool struct {
     queue      *glist.List        // 空闲任务队列(*PoolJob)
     funcs      *glist.List        // 待处理任务操作队列
     freeEvents chan struct{}      // 空闲协程通知事件
-    funcEvents chan struct{}      // 任务操作处理事件(用于任务事件通知)
+    funcEvents chan struct{}      // 任务添加事件(兄弟们该干活了！)
     stopEvents chan struct{}      // 池关闭事件(用于池相关异步协程通知)
 }
 
-// goroutine任务
-type PoolJob struct {
+// goroutine worker
+type PoolWorker struct {
     job    chan func() // 当前任务(当为nil时表示关闭)
     pool   *Pool       // 所属协程池
     update int64       // 更新时间
@@ -95,7 +95,7 @@ func (p *Pool) Add(f func()) {
     p.funcEvents <- struct{}{}
 }
 
-// 查询当前goroutine总数
+// 查询当前goroutine worker总数
 func (p *Pool) Size() int {
     return int(atomic.LoadInt32(&p.number))
 }
@@ -119,7 +119,7 @@ func (p *Pool) SetExpire(expire int) {
 func (p *Pool) Close() {
     // 必须首先标识让任务过期自动关闭
     p.SetExpire(-1)
-    // 使用stopEvents事件通知所有的异步协程自动退出
+    // 使用stopEvents事件通知所有的异步协程及清理协程自动退出
     for i := 0; i < runtime.GOMAXPROCS(-1) + 1; i++ {
         p.stopEvents <- struct{}{}
     }

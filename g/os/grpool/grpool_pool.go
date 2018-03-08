@@ -33,27 +33,37 @@ func (p *Pool) startWorkLoop() {
 func (p *Pool) startClearLoop() {
     go func() {
         for {
-            // 如果接收到关闭通知(池已经关闭)，那么不再执行清理操作，直接退出
-            if len(p.stopEvents) > 0 {
-                break
-            }
             time.Sleep(gDEFAULT_CLEAR_INTERVAL*time.Second)
+            // 保证没有工作任务的情况下，执行worker清理操作
             if len(p.funcEvents) == 0 {
-                var j *PoolJob
+                var w *PoolWorker
                 for {
                     if r := p.queue.PopFront(); r != nil {
-                        j = r.(*PoolJob)
-                        if gtime.Second() - int64(p.expire) > j.update {
-                            j.stop()
+                        w = r.(*PoolWorker)
+                        if gtime.Second() - int64(p.expire) > w.update {
+                            w.stop()
                             atomic.AddInt32(&p.number, -1)
                         } else {
-                            p.queue.PushFront(r)
+                            p.queue.PushFront(w)
                             break
                         }
                     } else {
                         break
                     }
                 }
+            }
+            // 如果接收到关闭通知(池已经关闭)，那么不再执行清理操作，关闭所有worker后退出
+            if len(p.stopEvents) > 0 {
+                for {
+                    if r := p.queue.PopFront(); r != nil {
+                        // 主动关闭所有work，防止goroutine泄露
+                        r.(*PoolWorker).stop()
+                        atomic.AddInt32(&p.number, -1)
+                    } else {
+                        break
+                    }
+                }
+                break
             }
         }
     }()
@@ -70,7 +80,7 @@ func (p *Pool) getExpire() int32 {
 }
 
 // 创建一个空的任务对象
-func (p *Pool) newJob() *PoolJob {
+func (p *Pool) newJob() *PoolWorker {
     // 如果达到goroutine数限制，那么阻塞等待有空闲goroutine后继续
     if p.reachSizeLimit() {
         // 阻塞等待空闲的协程资源，
@@ -79,21 +89,21 @@ func (p *Pool) newJob() *PoolJob {
         <- p.freeEvents
         return p.getJob()
     }
-    j := &PoolJob {
+    w := &PoolWorker {
         job  : make(chan func(), 1),
         pool : p,
     }
-    j.start()
+    w.start()
     atomic.AddInt32(&p.number, 1)
-    return j
+    return w
 }
 
 // 添加任务对象到队列
-func (p *Pool) addJob(j *PoolJob) bool {
-    if j.pool.getExpire() == -1 {
+func (p *Pool) addJob(w *PoolWorker) bool {
+    if w.pool.getExpire() == -1 {
         return false
     }
-    p.queue.PushBack(j)
+    p.queue.PushBack(w)
     // 如果当前的goroutine数量达到上线，那么需要使用空闲goroutine通知事件
     if p.reachSizeLimit() {
         p.freeEvents <- struct{}{}
@@ -102,9 +112,9 @@ func (p *Pool) addJob(j *PoolJob) bool {
 }
 
 // 获取/创建任务
-func (p *Pool) getJob() *PoolJob {
+func (p *Pool) getJob() *PoolWorker {
     if r := p.queue.PopFront(); r != nil {
-        return r.(*PoolJob)
+        return r.(*PoolWorker)
     }
     return p.newJob()
 }
