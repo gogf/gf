@@ -9,16 +9,16 @@ package grpool
 import "gitee.com/johng/gf/g/os/gtime"
 
 // 开始任务
-func (j *PoolJob) start() {
+func (w *PoolWorker) start() {
     go func() {
         for {
-            if f := <- j.job; f != nil {
+            if f := <- w.job; f != nil {
                 // 执行任务
                 f()
                 // 更新活动时间
-                j.update = gtime.Second()
+                w.update = gtime.Second()
                 // 执行完毕后添加到空闲队列
-                if !j.pool.addJob(j) {
+                if !w.pool.addJob(w) {
                     break
                 }
             } else {
@@ -29,12 +29,12 @@ func (j *PoolJob) start() {
 }
 
 // 关闭当前任务
-func (j *PoolJob) stop() {
-    j.setJob(nil)
+func (w *PoolWorker) stop() {
+    w.setJob(nil)
 }
 
 // 设置当前任务的执行函数
-func (j *PoolJob) setJob(f func()) {
-    j.job <- f
+func (w *PoolWorker) setJob(f func()) {
+    w.job <- f
 }
 
