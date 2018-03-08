@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 正则表达式
+// 正则表达式.
 package gregx
 
 import (
@@ -44,7 +44,7 @@ func MatchAllString(pattern string, src string) ([][]string, error) {
 }
 
 // 正则替换(全部替换)
-func Replace(pattern string, src, replace []byte) ([]byte, error) {
+func Replace(pattern string, replace, src []byte) ([]byte, error) {
     reg, err := regexp.Compile(pattern)
     if err != nil {
         return src, err
@@ -53,7 +53,7 @@ func Replace(pattern string, src, replace []byte) ([]byte, error) {
 }
 
 // 正则替换(全部替换)，字符串
-func ReplaceString(pattern, src, replace string) (string, error) {
+func ReplaceString(pattern, replace, src string) (string, error) {
     r, e := Replace(pattern, []byte(src), []byte(replace))
     return string(r), e
 }
