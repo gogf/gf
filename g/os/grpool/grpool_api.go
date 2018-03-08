@@ -6,6 +6,7 @@
 
 // Goroutine池.
 // 用于goroutine复用，提升异步操作执行效率.
+// 需要注意的是，grpool提供给的公共池不提供关闭方法(但可以修改公共属性)，自创建的池可以手动关闭掉。
 package grpool
 
 import (
@@ -13,6 +14,7 @@ import (
     "runtime"
     "sync/atomic"
     "gitee.com/johng/gf/g/container/glist"
+    "errors"
 )
 
 const (
@@ -45,19 +47,19 @@ var defaultPool = New(gDEFAULT_EXPIRE_TIME)
 
 // 创建goroutine池管理对象，给定过期时间(秒)
 // 第二个参数用于限制限制最大的goroutine数量/线程数/worker数量，非必需参数，默认不做限制
-func New(expire int, sizes...int) *Pool {
-    size := math.MaxInt32
-    if len(sizes) > 0 {
-        size = sizes[0]
+func New(expire int, size...int) *Pool {
+    s := math.MaxInt32
+    if len(size) > 0 {
+        s = size[0]
     }
     p := &Pool {
-        size       : int32(size),
+        size       : int32(s),
         expire     : int32(expire),
         queue      : glist.New(),
         funcs      : glist.New(),
         freeEvents : make(chan struct{}, math.MaxUint32),
         funcEvents : make(chan struct{}, math.MaxUint32),
-        stopEvents : make(chan struct{}, 2),
+        stopEvents : make(chan struct{}, runtime.GOMAXPROCS(-1) + 1),
     }
     p.startWorkLoop()
     p.startClearLoop()
@@ -65,8 +67,8 @@ func New(expire int, sizes...int) *Pool {
 }
 
 // 添加异步任务(使用默认的池对象)
-func Add(f func()) {
-    defaultPool.Add(f)
+func Add(f func()) error {
+    return defaultPool.Add(f)
 }
 
 // 查询当前goroutine总数
@@ -90,9 +92,13 @@ func SetExpire(expire int) {
 }
 
 // 添加异步任务
-func (p *Pool) Add(f func()) {
+func (p *Pool) Add(f func()) error {
+    if len(p.stopEvents) > 0 {
+        return errors.New("pool closed")
+    }
     p.funcs.PushBack(f)
     p.funcEvents <- struct{}{}
+    return nil
 }
 
 // 查询当前goroutine worker总数
