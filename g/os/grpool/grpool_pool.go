@@ -52,11 +52,11 @@ func (p *Pool) startClearLoop() {
                     }
                 }
             }
-            // 如果接收到关闭通知(池已经关闭)，那么不再执行清理操作，关闭所有worker后退出
+            // 如果接收到关闭通知(池已经关闭)，闭所有worker后退出
             if len(p.stopEvents) > 0 {
                 for {
                     if r := p.queue.PopFront(); r != nil {
-                        // 主动关闭所有work，防止goroutine泄露
+                        // 主动关闭所有worker，防止goroutine泄露
                         r.(*PoolWorker).stop()
                         atomic.AddInt32(&p.number, -1)
                     } else {
