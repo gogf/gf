@@ -152,7 +152,7 @@ func (op *gLinkOp) Save() (sql.Result, error) {
         return nil, errors.New("saving into table with empty data")
     }
     if d, ok :=  op.data.(Map); ok {
-        return op.link.Insert(op.tables, d)
+        return op.link.Save(op.tables, d)
     }
     return nil, errors.New("saving into table with invalid data type")
 }
