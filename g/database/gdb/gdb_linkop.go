@@ -14,7 +14,7 @@ import (
 )
 
 // 数据库链式操作对象
-type gLinkOp struct {
+type DbOp struct {
     link          Link          // 数据库链接对象
     tables        string        // 数据库操作表
     fields        string        // 操作字段
@@ -29,76 +29,76 @@ type gLinkOp struct {
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (l *dbLink) Table(tables string) (*gLinkOp) {
-    return &gLinkOp {
-        link  : l.link,
+func (db *Db) Table(tables string) (*DbOp) {
+    return &DbOp {
+        link  : db.link,
         tables: tables,
     }
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (l *dbLink) From(tables string) (*gLinkOp) {
-    return l.Table(tables)
+func (db *Db) From(tables string) (*DbOp) {
+    return db.Table(tables)
 }
 
 // 链式操作，左联表
-func (op *gLinkOp) LeftJoin(joinTable string, on string) (*gLinkOp) {
+func (op *DbOp) LeftJoin(joinTable string, on string) (*DbOp) {
     op.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", joinTable, on)
     return op
 }
 
 // 链式操作，右联表
-func (op *gLinkOp) RightJoin(joinTable string, on string) (*gLinkOp) {
+func (op *DbOp) RightJoin(joinTable string, on string) (*DbOp) {
     op.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", joinTable, on)
     return op
 }
 
 // 链式操作，内联表
-func (op *gLinkOp) InnerJoin(joinTable string, on string) (*gLinkOp) {
+func (op *DbOp) InnerJoin(joinTable string, on string) (*DbOp) {
     op.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", joinTable, on)
     return op
 }
 
 // 链式操作，查询字段
-func (op *gLinkOp) Fields(fields string) (*gLinkOp) {
+func (op *DbOp) Fields(fields string) (*DbOp) {
     op.fields = fields
     return op
 }
 
 // 链式操作，consition
-func (op *gLinkOp) Where(where string, args...interface{}) (*gLinkOp) {
+func (op *DbOp) Where(where string, args...interface{}) (*DbOp) {
     op.where     = where
     op.whereArgs = args
     return op
 }
 
 // 链式操作，group by
-func (op *gLinkOp) GroupBy(groupby string) (*gLinkOp) {
+func (op *DbOp) GroupBy(groupby string) (*DbOp) {
     op.groupby = groupby
     return op
 }
 
 // 链式操作，order by
-func (op *gLinkOp) OrderBy(orderby string) (*gLinkOp) {
+func (op *DbOp) OrderBy(orderby string) (*DbOp) {
     op.orderby = orderby
     return op
 }
 
 // 链式操作，limit
-func (op *gLinkOp) Limit(start int, limit int) (*gLinkOp) {
+func (op *DbOp) Limit(start int, limit int) (*DbOp) {
     op.start = start
     op.limit = limit
     return op
 }
 
 // 链式操作，操作数据记录项
-func (op *gLinkOp) Data(data interface{}) (*gLinkOp) {
+func (op *DbOp) Data(data interface{}) (*DbOp) {
     op.data = data
     return op
 }
 
 // 链式操作， CURD - Insert/BatchInsert
-func (op *gLinkOp) Insert() (sql.Result, error) {
+func (op *DbOp) Insert() (sql.Result, error) {
     // 批量操作
     if list, ok :=  op.data.(List); ok {
         batch := 10
@@ -118,7 +118,7 @@ func (op *gLinkOp) Insert() (sql.Result, error) {
 }
 
 // 链式操作， CURD - Replace/BatchReplace
-func (op *gLinkOp) Replace() (sql.Result, error) {
+func (op *DbOp) Replace() (sql.Result, error) {
     // 批量操作
     if list, ok :=  op.data.(List); ok {
         batch := 10
@@ -138,7 +138,7 @@ func (op *gLinkOp) Replace() (sql.Result, error) {
 }
 
 // 链式操作， CURD - Save/BatchSave
-func (op *gLinkOp) Save() (sql.Result, error) {
+func (op *DbOp) Save() (sql.Result, error) {
     // 批量操作
     if list, ok :=  op.data.(List); ok {
         batch := 10
@@ -158,7 +158,7 @@ func (op *gLinkOp) Save() (sql.Result, error) {
 }
 
 // 链式操作， CURD - Update
-func (op *gLinkOp) Update() (sql.Result, error) {
+func (op *DbOp) Update() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("updating table with empty data")
     }
@@ -166,7 +166,7 @@ func (op *gLinkOp) Update() (sql.Result, error) {
 }
 
 // 链式操作， CURD - Delete
-func (op *gLinkOp) Delete() (sql.Result, error) {
+func (op *DbOp) Delete() (sql.Result, error) {
     if op.where == "" {
         return nil, errors.New("where is required while deleting")
     }
@@ -174,13 +174,13 @@ func (op *gLinkOp) Delete() (sql.Result, error) {
 }
 
 // 设置批处理的大小
-func (op *gLinkOp) Batch(batch int) *gLinkOp {
+func (op *DbOp) Batch(batch int) *DbOp {
     op.batch = batch
     return op
 }
 
 // 链式操作，select
-func (op *gLinkOp) Select() (List, error) {
+func (op *DbOp) Select() (List, error) {
     if op.fields == "" {
         op.fields = "*"
     }
@@ -201,12 +201,12 @@ func (op *gLinkOp) Select() (List, error) {
 }
 
 // 链式操作，查询所有记录
-func (op *gLinkOp) All() (List, error) {
+func (op *DbOp) All() (List, error) {
     return op.Select()
 }
 
 // 链式操作，查询单条记录
-func (op *gLinkOp) One() (Map, error) {
+func (op *DbOp) One() (Map, error) {
     list, err := op.All()
     if err != nil {
         return nil, err
@@ -215,7 +215,7 @@ func (op *gLinkOp) One() (Map, error) {
 }
 
 // 链式操作，查询字段值
-func (op *gLinkOp) Value() (interface{}, error) {
+func (op *DbOp) Value() (interface{}, error) {
     one, err := op.One()
     if err != nil {
         return "", err
