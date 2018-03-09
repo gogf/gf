@@ -27,22 +27,54 @@ const (
 
 // 数据库操作接口
 type Link interface {
+    // 打开数据库连接，建立数据库操作对象
     Open (c *ConfigNode) (*sql.DB, error)
-    Close() error
+
+    // SQL操作方法
     Query(q string, args ...interface{}) (*sql.Rows, error)
     Exec(q string, args ...interface{}) (sql.Result, error)
     Prepare(q string) (*sql.Stmt, error)
 
+    // 数据库查询
     GetAll(q string, args ...interface{}) (List, error)
     GetOne(q string, args ...interface{}) (Map, error)
     GetValue(q string, args ...interface{}) (interface{}, error)
 
+    // Ping
     PingMaster() error
     PingSlave() error
 
+    // 连接属性设置
     SetMaxIdleConns(n int)
     SetMaxOpenConns(n int)
 
+    // 开启事务操作
+    Begin() (*sql.Tx, error)
+
+    // 数据表插入/更新/保存操作
+    Insert(table string, data Map) (sql.Result, error)
+    Replace(table string, data Map) (sql.Result, error)
+    Save(table string, data Map) (sql.Result, error)
+
+    // 数据表插入/更新/保存操作(批量)
+    BatchInsert(table string, list List, batch int) (sql.Result, error)
+    BatchReplace(table string, list List, batch int) (sql.Result, error)
+    BatchSave(table string, list List, batch int) (sql.Result, error)
+
+    // 数据修改/删除
+    Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
+    Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
+
+    // 创建链式操作对象(Table为From的别名)
+    Table(tables string) (*DbOp)
+    From(tables string)  (*DbOp)
+
+    // 关闭数据库操作对象
+    Close() error
+
+    // 内部方法
+    insert(table string, data Map, option uint8) (sql.Result, error)
+    batchInsert(table string, list List, batch int, option uint8) (sql.Result, error)
     setMaster(master *sql.DB)
     setSlave(slave *sql.DB)
     setQuoteChar(left string, right string)
@@ -50,36 +82,15 @@ type Link interface {
     getQuoteCharLeft () string
     getQuoteCharRight () string
     handleSqlBeforeExec(q *string) *string
-
-    Begin() (*sql.Tx, error)
-    Commit() error
-    Rollback() error
-
-    insert(table string, data Map, option uint8) (sql.Result, error)
-    Insert(table string, data Map) (sql.Result, error)
-    Replace(table string, data Map) (sql.Result, error)
-    Save(table string, data Map) (sql.Result, error)
-
-    batchInsert(table string, list List, batch int, option uint8) (sql.Result, error)
-    BatchInsert(table string, list List, batch int) (sql.Result, error)
-    BatchReplace(table string, list List, batch int) (sql.Result, error)
-    BatchSave(table string, list List, batch int) (sql.Result, error)
-
-    Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
-    Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
-
-    Table(tables string) (*gLinkOp)
-    From(tables string) (*gLinkOp)
 }
 
 // 数据库链接对象
-type dbLink struct {
-    link        Link
-    transaction *sql.Tx
-    master      *sql.DB
-    slave       *sql.DB
-    charl        string
-    charr        string
+type Db struct {
+    link   Link
+    master *sql.DB
+    slave  *sql.DB
+    charl  string
+    charr  string
 }
 
 // 关联数组，绑定一条数据表记录
@@ -186,10 +197,10 @@ func newLink (masterNode *ConfigNode, slaveNode *ConfigNode) (Link, error) {
     var link Link
     switch masterNode.Type {
         case "mysql":
-            link = Link(&mysqlLink{})
+            link = Link(&dbmysql{})
 
         case "pgsql":
-            link = Link(&pgsqlLink{})
+            link = Link(&dbpgsql{})
 
         default:
             return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", masterNode.Type))
@@ -213,23 +224,23 @@ func newLink (masterNode *ConfigNode, slaveNode *ConfigNode) (Link, error) {
 }
 
 // 设置master链接对象
-func (l *dbLink) setMaster(master *sql.DB) {
-    l.master = master
+func (db *Db) setMaster(master *sql.DB) {
+    db.master = master
 }
 
 // 设置slave链接对象
-func (l *dbLink) setSlave(slave *sql.DB) {
-    l.slave = slave
+func (db *Db) setSlave(slave *sql.DB) {
+    db.slave = slave
 }
 
 // 设置当前数据库类型引用字符
-func (l *dbLink) setQuoteChar(left string, right string) {
-    l.charl = left
-    l.charr = right
+func (db *Db) setQuoteChar(left string, right string) {
+    db.charl = left
+    db.charr = right
 }
 
 // 设置挡脸操作的link接口
-func (l *dbLink) setLink(link Link) {
-    l.link = link
+func (db *Db) setLink(link Link) {
+    db.link = link
 }
 

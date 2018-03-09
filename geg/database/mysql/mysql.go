@@ -376,23 +376,25 @@ func linkopBatchSave() {
 // 事务操作示例1
 func transaction1() {
     fmt.Println("transaction1:")
-    db.Begin()
-    r, err := db.Save("user", gdb.Map{
-        "uid"  :  1,
-        "name" : "john",
-    })
-    db.Rollback()
-    fmt.Println(r, err)
+    if tx, err := db.Begin(); err == nil {
+        r, err := db.Save("user", gdb.Map{
+            "uid"  :  1,
+            "name" : "john",
+        })
+        tx.Rollback()
+        fmt.Println(r, err)
+    }
     fmt.Println()
 }
 
 // 事务操作示例2
 func transaction2() {
     fmt.Println("transaction2:")
-    db.Begin()
-    r, err := db.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
-    db.Commit()
-    fmt.Println(r, err)
+    if tx, err := db.Begin(); err == nil {
+        r, err := db.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
+        tx.Commit()
+        fmt.Println(r, err)
+    }
     fmt.Println()
 }
 
@@ -454,5 +456,5 @@ func main() {
     //linkopUpdate3()
     //keepPing()
     transaction1()
-    transaction2()
+    //transaction2()
 }

@@ -8,47 +8,46 @@
 package gdb
 
 import (
-    "database/sql"
     "fmt"
     "regexp"
-    "gitee.com/johng/gf/g/os/glog"
+    "database/sql"
 )
 
 // postgresql的适配
 // @todo 需要完善replace和save的操作覆盖
 
 // 数据库链接对象
-type pgsqlLink struct {
-    dbLink
+type dbpgsql struct {
+    Db
 }
 
 // 创建SQL操作对象，内部采用了lazy link处理
-func (l *pgsqlLink) Open (c *ConfigNode) (*sql.DB, error) {
+func (db *dbpgsql) Open (c *ConfigNode) (*sql.DB, error) {
     var dbsource string
     if c.Linkinfo != "" {
         dbsource = c.Linkinfo
     } else {
         dbsource = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", c.User, c.Pass, c.Host, c.Port, c.Name)
     }
-    db, err := sql.Open("postgres", dbsource)
-    if err != nil {
-        glog.Fatal(err)
+    if db, err := sql.Open("postgres", dbsource); err == nil {
+        return db, nil
+    } else {
+        return nil, err
     }
-    return db, err
 }
 
 // 获得关键字操作符 - 左
-func (l *pgsqlLink) getQuoteCharLeft () string {
+func (db *dbpgsql) getQuoteCharLeft () string {
     return "\""
 }
 
 // 获得关键字操作符 - 右
-func (l *pgsqlLink) getQuoteCharRight () string {
+func (db *dbpgsql) getQuoteCharRight () string {
     return "\""
 }
 
 // 在执行sql之前对sql进行进一步处理
-func (l *pgsqlLink) handleSqlBeforeExec(q *string) *string {
+func (db *dbpgsql) handleSqlBeforeExec(q *string) *string {
     reg   := regexp.MustCompile("\\?")
     index := 0
     str   := reg.ReplaceAllStringFunc(*q, func (s string) string {
