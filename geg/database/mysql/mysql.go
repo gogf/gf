@@ -128,7 +128,7 @@ func insert() {
     r, err := db.Insert("user", gdb.Map {
         "name": "john",
     })
-    if (err == nil) {
+    if err == nil {
         uid, err2 := r.LastInsertId()
         if err2 == nil {
             r, err = db.Insert("user_detail", gdb.Map {
@@ -169,7 +169,7 @@ func replace() {
         "uid"  :  1,
         "name" : "john",
     })
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.LastInsertId())
         fmt.Println(r.RowsAffected())
     } else {
@@ -185,7 +185,7 @@ func save() {
         "uid"  : 1,
         "name" : "john",
     })
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.LastInsertId())
         fmt.Println(r.RowsAffected())
     } else {
@@ -213,7 +213,7 @@ func batchInsert() {
 func update1() {
     fmt.Println("update1:")
     r, err := db.Update("user", gdb.Map {"name": "john1"}, "uid=?", 1)
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.LastInsertId())
         fmt.Println(r.RowsAffected())
     } else {
@@ -226,7 +226,7 @@ func update1() {
 func update2() {
     fmt.Println("update2:")
     r, err := db.Update("user", "name='john2'", "uid=1")
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.LastInsertId())
         fmt.Println(r.RowsAffected())
     } else {
@@ -239,7 +239,7 @@ func update2() {
 func update3() {
     fmt.Println("update3:")
     r, err := db.Update("user", "name=?", "uid=?", "john2", 1)
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.LastInsertId())
         fmt.Println(r.RowsAffected())
     } else {
@@ -253,7 +253,7 @@ func update3() {
 func linkopSelect1() {
     fmt.Println("linkopSelect1:")
     r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*, ud.site").Where("u.uid > ?", 1).Limit(0, 2).Select()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r)
     } else {
         fmt.Println(err)
@@ -265,7 +265,7 @@ func linkopSelect1() {
 func linkopSelect2() {
     fmt.Println("linkopSelect2:")
     r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Where("u.uid=?", 1).One()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r)
     } else {
         fmt.Println(err)
@@ -277,7 +277,7 @@ func linkopSelect2() {
 func linkopSelect3() {
     fmt.Println("linkopSelect3:")
     r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.(string))
     } else {
         fmt.Println(err)
@@ -289,7 +289,7 @@ func linkopSelect3() {
 func linkopUpdate1() {
     fmt.Println("linkopUpdate1:")
     r, err := db.Table("henghe_setting").Update()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
@@ -301,7 +301,7 @@ func linkopUpdate1() {
 func linkopUpdate2() {
     fmt.Println("linkopUpdate2:")
     r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Where("name=?", "john").Update()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
@@ -313,7 +313,7 @@ func linkopUpdate2() {
 func linkopUpdate3() {
     fmt.Println("linkopUpdate3:")
     r, err := db.Table("user").Data("name='john3'").Where("name=?", "john2").Update()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
@@ -331,7 +331,7 @@ func linkopBatchInsert1() {
         {"name": "john_3"},
         {"name": "john_4"},
     }).Insert()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
@@ -348,7 +348,7 @@ func linkopBatchInsert2() {
         {"name": "john_3"},
         {"name": "john_4"},
     }).Batch(2).Insert()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
@@ -360,16 +360,39 @@ func linkopBatchInsert2() {
 func linkopBatchSave() {
     fmt.Println("linkopBatchSave:")
     r, err := db.Table("user").Data(gdb.List{
-        {"id":1, "name": "john_1"},
-        {"id":2, "name": "john_2"},
-        {"id":3, "name": "john_3"},
-        {"id":4, "name": "john_4"},
+        {"uid":1, "name": "john_1"},
+        {"uid":2, "name": "john_2"},
+        {"uid":3, "name": "john_3"},
+        {"uid":4, "name": "john_4"},
     }).Save()
-    if (err == nil) {
+    if err == nil {
         fmt.Println(r.RowsAffected())
     } else {
         fmt.Println(err)
     }
+    fmt.Println()
+}
+
+// 事务操作示例1
+func transaction1() {
+    fmt.Println("transaction1:")
+    db.Begin()
+    r, err := db.Save("user", gdb.Map{
+        "uid"  :  1,
+        "name" : "john",
+    })
+    db.Rollback()
+    fmt.Println(r, err)
+    fmt.Println()
+}
+
+// 事务操作示例2
+func transaction2() {
+    fmt.Println("transaction2:")
+    db.Begin()
+    r, err := db.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
+    db.Commit()
+    fmt.Println(r, err)
     fmt.Println()
 }
 
@@ -416,7 +439,7 @@ func main() {
     //create()
     //create()
     //insert()
-    query()
+    //query()
     //replace()
     //save()
     //batchInsert()
@@ -429,5 +452,7 @@ func main() {
     //linkopUpdate1()
     //linkopUpdate2()
     //linkopUpdate3()
-    keepPing()
+    //keepPing()
+    transaction1()
+    transaction2()
 }
