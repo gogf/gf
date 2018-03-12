@@ -31,7 +31,7 @@ func (tx *Tx) Rollback() error {
     return tx.tx.Rollback()
 }
 
-// 数据库sql查询操作，主要执行查询
+// (事务)数据库sql查询操作，主要执行查询
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
     p         := tx.db.link.handleSqlBeforeExec(&query)
     rows, err := tx.tx.Query(*p, args ...)
@@ -42,7 +42,7 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
     return nil, err
 }
 
-// 执行一条sql，并返回执行情况，主要用于非查询操作
+// (事务)执行一条sql，并返回执行情况，主要用于非查询操作
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
     p      := tx.db.link.handleSqlBeforeExec(&query)
     r, err := tx.tx.Exec(*p, args ...)
@@ -50,7 +50,7 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
     return r, err
 }
 
-// 数据库查询，获取查询结果集，以列表结构返回
+// (事务)数据库查询，获取查询结果集，以列表结构返回
 func (tx *Tx) GetAll(query string, args ...interface{}) (List, error) {
     // 执行sql
     rows, err := tx.Query(query, args ...)
@@ -83,7 +83,7 @@ func (tx *Tx) GetAll(query string, args ...interface{}) (List, error) {
     return list, nil
 }
 
-// 数据库查询，获取查询结果集，以关联数组结构返回
+// (事务)数据库查询，获取查询结果集，以关联数组结构返回
 func (tx *Tx) GetOne(query string, args ...interface{}) (Map, error) {
     list, err := tx.GetAll(query, args ...)
     if err != nil {
@@ -92,7 +92,7 @@ func (tx *Tx) GetOne(query string, args ...interface{}) (Map, error) {
     return list[0], nil
 }
 
-// 数据库查询，获取查询字段值
+// (事务)数据库查询，获取查询字段值
 func (tx *Tx) GetValue(query string, args ...interface{}) (interface{}, error) {
     one, err := tx.GetOne(query, args ...)
     if err != nil {
@@ -104,13 +104,13 @@ func (tx *Tx) GetValue(query string, args ...interface{}) (interface{}, error) {
     return nil, nil
 }
 
-// sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
+// (事务)sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
 // 记得调用sql.Stmt.Close关闭操作对象
 func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
     return tx.Prepare(query)
 }
 
-// insert、replace, save， ignore操作
+// (事务)insert、replace, save， ignore操作
 // 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
 // 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 // 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
@@ -139,22 +139,22 @@ func (tx *Tx) insert(table string, data Map, option uint8) (sql.Result, error) {
     )
 }
 
-// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
+// (事务)CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
 func (tx *Tx) Insert(table string, data Map) (sql.Result, error) {
     return tx.insert(table, data, OPTION_INSERT)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
+// (事务)CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (tx *Tx) Replace(table string, data Map) (sql.Result, error) {
     return tx.insert(table, data, OPTION_REPLACE)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
+// (事务)CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (tx *Tx) Save(table string, data Map) (sql.Result, error) {
     return tx.insert(table, data, OPTION_SAVE)
 }
 
-// 批量写入数据
+// (事务)批量写入数据
 func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql.Result, error) {
     var keys    []string
     var values  []string
@@ -212,22 +212,22 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
     return result, nil
 }
 
-// CURD操作:批量数据指定批次量写入
+// (事务)CURD操作:批量数据指定批次量写入
 func (tx *Tx) BatchInsert(table string, list List, batch int) (sql.Result, error) {
     return tx.batchInsert(table, list, batch, OPTION_INSERT)
 }
 
-// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
+// (事务)CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (tx *Tx) BatchReplace(table string, list List, batch int) (sql.Result, error) {
     return tx.batchInsert(table, list, batch, OPTION_REPLACE)
 }
 
-// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
+// (事务)CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (tx *Tx) BatchSave(table string, list List, batch int) (sql.Result, error) {
     return tx.batchInsert(table, list, batch, OPTION_SAVE)
 }
 
-// CURD操作:数据更新，统一采用sql预处理
+// (事务)CURD操作:数据更新，统一采用sql预处理
 // data参数支持字符串或者关联数组类型，内部会自行做判断处理
 func (tx *Tx) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
     var params  []interface{}
@@ -258,7 +258,7 @@ func (tx *Tx) Update(table string, data interface{}, condition interface{}, args
     return tx.Exec(fmt.Sprintf("UPDATE %s%s%s SET %s WHERE %s", tx.db.charl, table, tx.db.charr, updates, condition), params...)
 }
 
-// CURD操作:删除数据
+// (事务)CURD操作:删除数据
 func (tx *Tx) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
     return tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", tx.db.charl, table, tx.db.charr, condition), args...)
 }
