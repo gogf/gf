@@ -8,7 +8,7 @@ import (
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
 
-var db gdb.Link
+var db *gdb.Db
 
 // 初始化配置及创建数据库
 func init () {
@@ -455,6 +455,6 @@ func main() {
     //linkopUpdate2()
     //linkopUpdate3()
     //keepPing()
-    //transaction1()
+    transaction1()
     transaction2()
 }

@@ -12,7 +12,6 @@ import (
     "strconv"
     "gitee.com/johng/gf/g/os/gcfg"
     "gitee.com/johng/gf/g/os/gcmd"
-    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
@@ -100,14 +99,14 @@ func Config() *gcfg.Config {
 }
 
 // 核心对象：Database
-func Database(names...string) gdb.Link {
+func Database(names...string) *gdb.Db {
     dbCacheKey := gFRAME_CORE_COMPONENT_NAME_DATABASE
     if len(names) > 0 {
         dbCacheKey += names[0]
     }
     result := Get(dbCacheKey)
     if result != nil {
-        return result.(gdb.Link)
+        return result.(*gdb.Db)
     } else {
         config := Config()
         if config == nil {
@@ -155,7 +154,7 @@ func Database(names...string) gdb.Link {
                 Set(dbCacheKey, db)
                 return db
             } else {
-                glog.Error(err)
+                return nil
             }
         }
     }

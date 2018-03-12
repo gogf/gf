@@ -11,7 +11,6 @@ import (
     "fmt"
     "errors"
     "database/sql"
-    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/util/grand"
     _ "github.com/lib/pq"
@@ -75,10 +74,7 @@ type Link interface {
     // 内部方法
     insert(table string, data Map, option uint8) (sql.Result, error)
     batchInsert(table string, list List, batch int, option uint8) (sql.Result, error)
-    setMaster(master *sql.DB)
-    setSlave(slave *sql.DB)
-    setQuoteChar(left string, right string)
-    setLink(link Link)
+
     getQuoteCharLeft () string
     getQuoteCharRight () string
     handleSqlBeforeExec(q *string) *string
@@ -100,7 +96,7 @@ type Map  map[string]interface{}
 type List []Map
 
 // 获得默认/指定分组名称的数据库操作对象单例
-func Instance (groupName...string) (Link, error) {
+func Instance (groupName...string) (*Db, error) {
     name := config.d
     if len(groupName) > 0 {
         name = groupName[0]
@@ -109,24 +105,24 @@ func Instance (groupName...string) (Link, error) {
 }
 
 // 根据配置项获取一个数据库操作对象单例
-func instance (groupName string) (Link, error) {
+func instance (groupName string) (*Db, error) {
     instanceName := "gdb_instance_" + groupName
     result       := gcache.Get(instanceName)
     if result == nil {
-        link, err := New(groupName)
+        db, err := New(groupName)
         if err == nil {
-            gcache.Set(instanceName, link, 0)
-            return link, nil
+            gcache.Set(instanceName, db, 0)
+            return db, nil
         } else {
             return nil, err
         }
     } else {
-        return result.(Link), nil
+        return result.(*Db), nil
     }
 }
 
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
-func New(groupName...string) (Link, error) {
+func New(groupName...string) (*Db, error) {
     name := config.d
     if len(groupName) > 0 {
         name = groupName[0]
@@ -157,15 +153,15 @@ func New(groupName...string) (Link, error) {
         if len(slaveList) > 0 {
             slaveNode = getConfigNodeByPriority(&slaveList)
         }
-        return newLink(masterNode, slaveNode)
+        return newDb(masterNode, slaveNode)
     } else {
         return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", name))
     }
 }
 
 // 根据单点数据库配置获得一个数据库草最对象
-func NewByNode(node ConfigNode) (Link, error) {
-    return newLink (&node, nil)
+func NewByNode(node ConfigNode) (*Db, error) {
+    return newDb (&node, nil)
 }
 
 // 按照负载均衡算法(优先级配置)从数据库集群中选择一个配置节点出来使用
@@ -193,7 +189,7 @@ func getConfigNodeByPriority (cg *ConfigGroup) *ConfigNode {
 }
 
 // 创建数据库链接对象
-func newLink (masterNode *ConfigNode, slaveNode *ConfigNode) (Link, error) {
+func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
     var link Link
     switch masterNode.Type {
         case "mysql":
@@ -207,40 +203,25 @@ func newLink (masterNode *ConfigNode, slaveNode *ConfigNode) (Link, error) {
     }
     master, err := link.Open(masterNode)
     if err != nil {
-        glog.Fatal(err)
+        return nil, err
     }
     slave := master
     if slaveNode != nil {
         slave,  err = link.Open(slaveNode)
         if err != nil {
-            glog.Fatal(err)
+            return nil, err
         }
     }
-    link.setLink(link)
-    link.setMaster(master)
-    link.setSlave(slave)
-    link.setQuoteChar(link.getQuoteCharLeft(), link.getQuoteCharRight())
-    return link, nil
-}
-
-// 设置master链接对象
-func (db *Db) setMaster(master *sql.DB) {
-    db.master = master
-}
-
-// 设置slave链接对象
-func (db *Db) setSlave(slave *sql.DB) {
-    db.slave = slave
-}
-
-// 设置当前数据库类型引用字符
-func (db *Db) setQuoteChar(left string, right string) {
-    db.charl = left
-    db.charr = right
-}
-
-// 设置挡脸操作的link接口
-func (db *Db) setLink(link Link) {
-    db.link = link
+    //link.setLink(link)
+    //link.setMaster(master)
+    //link.setSlave(slave)
+    //link.setQuoteChar(link.getQuoteCharLeft(), link.getQuoteCharRight())
+    return &Db {
+        link   : link,
+        master : master,
+        slave  : slave,
+        charl  : link.getQuoteCharLeft(),
+        charr  : link.getQuoteCharRight(),
+    }, nil
 }
 
