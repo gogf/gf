@@ -32,8 +32,8 @@ func (tx *Tx) Rollback() error {
 }
 
 // 数据库sql查询操作，主要执行查询
-func (tx *Tx) Query(q string, args ...interface{}) (*sql.Rows, error) {
-    p         := tx.db.link.handleSqlBeforeExec(&q)
+func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
+    p         := tx.db.link.handleSqlBeforeExec(&query)
     rows, err := tx.tx.Query(*p, args ...)
     err        = tx.db.formatError(err, p, args...)
     if err == nil {
@@ -43,17 +43,17 @@ func (tx *Tx) Query(q string, args ...interface{}) (*sql.Rows, error) {
 }
 
 // 执行一条sql，并返回执行情况，主要用于非查询操作
-func (tx *Tx) Exec(q string, args ...interface{}) (sql.Result, error) {
-    p      := tx.db.link.handleSqlBeforeExec(&q)
+func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
+    p      := tx.db.link.handleSqlBeforeExec(&query)
     r, err := tx.tx.Exec(*p, args ...)
     err     = tx.db.formatError(err, p, args...)
     return r, err
 }
 
 // 数据库查询，获取查询结果集，以列表结构返回
-func (tx *Tx) GetAll(q string, args ...interface{}) (List, error) {
+func (tx *Tx) GetAll(query string, args ...interface{}) (List, error) {
     // 执行sql
-    rows, err := tx.Query(q, args ...)
+    rows, err := tx.Query(query, args ...)
     if err != nil || rows == nil {
         return nil, err
     }
@@ -84,8 +84,8 @@ func (tx *Tx) GetAll(q string, args ...interface{}) (List, error) {
 }
 
 // 数据库查询，获取查询结果集，以关联数组结构返回
-func (tx *Tx) GetOne(q string, args ...interface{}) (Map, error) {
-    list, err := tx.GetAll(q, args ...)
+func (tx *Tx) GetOne(query string, args ...interface{}) (Map, error) {
+    list, err := tx.GetAll(query, args ...)
     if err != nil {
         return nil, err
     }
@@ -93,21 +93,21 @@ func (tx *Tx) GetOne(q string, args ...interface{}) (Map, error) {
 }
 
 // 数据库查询，获取查询字段值
-func (tx *Tx) GetValue(q string, args ...interface{}) (interface{}, error) {
-    one, err := tx.GetOne(q, args ...)
+func (tx *Tx) GetValue(query string, args ...interface{}) (interface{}, error) {
+    one, err := tx.GetOne(query, args ...)
     if err != nil {
-        return "", err
+        return nil, err
     }
     for _, v := range one {
         return v, nil
     }
-    return "", nil
+    return nil, nil
 }
 
 // sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
 // 记得调用sql.Stmt.Close关闭操作对象
-func (tx *Tx) Prepare(q string) (*sql.Stmt, error) {
-    return tx.Prepare(q)
+func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
+    return tx.Prepare(query)
 }
 
 // insert、replace, save， ignore操作
