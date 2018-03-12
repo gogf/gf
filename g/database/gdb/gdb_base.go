@@ -36,8 +36,8 @@ func (db *Db) Close() error {
 }
 
 // 数据库sql查询操作，主要执行查询
-func (db *Db) Query(q string, args ...interface{}) (*sql.Rows, error) {
-    p         := db.link.handleSqlBeforeExec(&q)
+func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
+    p         := db.link.handleSqlBeforeExec(&query)
     rows, err := db.slave.Query(*p, args ...)
     err        = db.formatError(err, p, args...)
     if err == nil {
@@ -47,20 +47,18 @@ func (db *Db) Query(q string, args ...interface{}) (*sql.Rows, error) {
 }
 
 // 执行一条sql，并返回执行情况，主要用于非查询操作
-func (db *Db) Exec(q string, args ...interface{}) (sql.Result, error) {
-    //fmt.Println(q)
-    //fmt.Println(args)
-    p      := db.link.handleSqlBeforeExec(&q)
+func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
+    p      := db.link.handleSqlBeforeExec(&query)
     r, err := db.master.Exec(*p, args ...)
     err     = db.formatError(err, p, args...)
     return r, err
 }
 
 // 格式化错误信息
-func (db *Db) formatError(err error, q *string, args ...interface{}) error {
+func (db *Db) formatError(err error, query *string, args ...interface{}) error {
     if err != nil {
         errstr := fmt.Sprintf("DB ERROR: %s\n", err.Error())
-        errstr += fmt.Sprintf("DB QUERY: %s\n", *q)
+        errstr += fmt.Sprintf("DB QUERY: %s\n", *query)
         if len(args) > 0 {
             errstr += fmt.Sprintf("DB PARAM: %v\n", args)
         }
@@ -71,9 +69,9 @@ func (db *Db) formatError(err error, q *string, args ...interface{}) error {
 
 
 // 数据库查询，获取查询结果集，以列表结构返回
-func (db *Db) GetAll(q string, args ...interface{}) (List, error) {
+func (db *Db) GetAll(query string, args ...interface{}) (List, error) {
     // 执行sql
-    rows, err := db.Query(q, args ...)
+    rows, err := db.Query(query, args ...)
     if err != nil || rows == nil {
         return nil, err
     }
@@ -104,8 +102,8 @@ func (db *Db) GetAll(q string, args ...interface{}) (List, error) {
 }
 
 // 数据库查询，获取查询结果集，以关联数组结构返回
-func (db *Db) GetOne(q string, args ...interface{}) (Map, error) {
-    list, err := db.GetAll(q, args ...)
+func (db *Db) GetOne(query string, args ...interface{}) (Map, error) {
+    list, err := db.GetAll(query, args ...)
     if err != nil {
         return nil, err
     }
@@ -113,21 +111,21 @@ func (db *Db) GetOne(q string, args ...interface{}) (Map, error) {
 }
 
 // 数据库查询，获取查询字段值
-func (db *Db) GetValue(q string, args ...interface{}) (interface{}, error) {
-    one, err := db.GetOne(q, args ...)
+func (db *Db) GetValue(query string, args ...interface{}) (interface{}, error) {
+    one, err := db.GetOne(query, args ...)
     if err != nil {
-        return "", err
+        return nil, err
     }
     for _, v := range one {
         return v, nil
     }
-    return "", nil
+    return nil, nil
 }
 
 // sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
 // 记得调用sql.Stmt.Close关闭操作对象
-func (db *Db) Prepare(q string) (*sql.Stmt, error) {
-    return db.master.Prepare(q)
+func (db *Db) Prepare(query string) (*sql.Stmt, error) {
+    return db.master.Prepare(query)
 }
 
 // ping一下，判断或保持数据库链接(master)
@@ -155,7 +153,7 @@ func (db *Db) SetMaxOpenConns(n int) {
 // 事务操作，开启，会返回一个底层的事务操作对象链接如需要嵌套事务，那么可以使用该对象，否则请忽略
 func (db *Db) Begin() (*Tx, error) {
     if tx, err := db.master.Begin(); err == nil {
-        return &Tx{
+        return &Tx {
             db : db,
             tx : tx,
         }, nil
