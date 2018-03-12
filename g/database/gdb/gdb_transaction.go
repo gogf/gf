@@ -9,42 +9,26 @@ package gdb
 import (
     "fmt"
     "errors"
+    "strings"
     "database/sql"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/gcache"
-    "gitee.com/johng/gf/g/util/grand"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
-    "strings"
 )
 
 // 数据库事务对象
 type Tx struct {
-    db Db
+    db *Db
     tx *sql.Tx
+}
 
-    //Query(q string, args ...interface{}) (*sql.Rows, error)
-    //Exec(q string, args ...interface{}) (sql.Result, error)
-    //Prepare(q string) (*sql.Stmt, error)
-    //
-    //GetAll(q string, args ...interface{}) (List, error)
-    //GetOne(q string, args ...interface{}) (Map, error)
-    //GetValue(q string, args ...interface{}) (interface{}, error)
-    //
-    //
-    //Insert(table string, data Map) (sql.Result, error)
-    //Replace(table string, data Map) (sql.Result, error)
-    //Save(table string, data Map) (sql.Result, error)
-    //
-    //BatchInsert(table string, list List, batch int) (sql.Result, error)
-    //BatchReplace(table string, list List, batch int) (sql.Result, error)
-    //BatchSave(table string, list List, batch int) (sql.Result, error)
-    //
-    //Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
-    //Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
-    //
-    //Table(tables string) (*gLinkOp)
-    //From(tables string) (*gLinkOp)
+// 事务操作，提交
+func (tx *Tx) Commit() error {
+    return tx.tx.Commit()
+}
+
+// 事务操作，回滚
+func (tx *Tx) Rollback() error {
+    return tx.tx.Rollback()
 }
 
 // 数据库sql查询操作，主要执行查询
@@ -145,29 +129,29 @@ func (tx *Tx) insert(table string, data Map, option uint8) (sql.Result, error) {
     if option == OPTION_SAVE {
         var updates []string
         for k, _ := range data {
-            updates = append(updates, fmt.Sprintf("%s%s%s=VALUES(%s)", db.charl, k, db.charr, k))
+            updates = append(updates, fmt.Sprintf("%s%s%s=VALUES(%s)", tx.db.charl, k, tx.db.charr, k))
         }
         updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
     return tx.Exec(
         fmt.Sprintf("%s INTO %s%s%s(%s) VALUES(%s) %s",
-            operation, tx.db.charl, table, db.charr, strings.Join(keys, ","), strings.Join(values, ","), updatestr), params...
+            operation, tx.db.charl, table, tx.db.charr, strings.Join(keys, ","), strings.Join(values, ","), updatestr), params...
     )
 }
 
 // CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
 func (tx *Tx) Insert(table string, data Map) (sql.Result, error) {
-    return db.link.insert(table, data, OPTION_INSERT)
+    return tx.insert(table, data, OPTION_INSERT)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (tx *Tx) Replace(table string, data Map) (sql.Result, error) {
-    return db.link.insert(table, data, OPTION_REPLACE)
+    return tx.insert(table, data, OPTION_REPLACE)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (tx *Tx) Save(table string, data Map) (sql.Result, error) {
-    return db.link.insert(table, data, OPTION_SAVE)
+    return tx.insert(table, data, OPTION_SAVE)
 }
 
 // 批量写入数据
@@ -187,14 +171,14 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
         keys   = append(keys,   k)
         values = append(values, "?")
     }
-    var kstr = db.charl + strings.Join(keys, db.charl + "," + db.charr) + db.charr
+    var kstr = tx.db.charl + strings.Join(keys, tx.db.charl + "," + tx.db.charr) + tx.db.charr
     // 操作判断
-    operation := db.getInsertOperationByOption(option)
+    operation := tx.db.getInsertOperationByOption(option)
     updatestr := ""
     if option == OPTION_SAVE {
         var updates []string
         for _, k := range keys {
-            updates = append(updates, fmt.Sprintf("%s=VALUES(%s)", db.charl, k, db.charr, k))
+            updates = append(updates, fmt.Sprintf("%s=VALUES(%s)", tx.db.charl, k, tx.db.charr, k))
         }
         updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
@@ -205,7 +189,9 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
         }
         bvalues = append(bvalues, "(" + strings.Join(values, ",") + ")")
         if len(bvalues) == batch {
-            r, err := db.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, db.charl, table, db.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
+            r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
+                operation, tx.db.charl, table, tx.db.charr, kstr, strings.Join(bvalues, ","), updatestr),
+                    params...)
             if err != nil {
                 return result, err
             }
@@ -215,7 +201,9 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
     }
     // 处理最后不构成指定批量的数据
     if len(bvalues) > 0 {
-        r, err := db.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, db.charl, table, db.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
+        r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
+            operation, tx.db.charl, table, tx.db.charr, kstr, strings.Join(bvalues, ","), updatestr),
+                params...)
         if err != nil {
             return result, err
         }
@@ -226,17 +214,17 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
 
 // CURD操作:批量数据指定批次量写入
 func (tx *Tx) BatchInsert(table string, list List, batch int) (sql.Result, error) {
-    return db.link.batchInsert(table, list, batch, OPTION_INSERT)
+    return tx.batchInsert(table, list, batch, OPTION_INSERT)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (tx *Tx) BatchReplace(table string, list List, batch int) (sql.Result, error) {
-    return db.link.batchInsert(table, list, batch, OPTION_REPLACE)
+    return tx.batchInsert(table, list, batch, OPTION_REPLACE)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (tx *Tx) BatchSave(table string, list List, batch int) (sql.Result, error) {
-    return db.link.batchInsert(table, list, batch, OPTION_SAVE)
+    return tx.batchInsert(table, list, batch, OPTION_SAVE)
 }
 
 // CURD操作:数据更新，统一采用sql预处理
@@ -245,18 +233,18 @@ func (tx *Tx) Update(table string, data interface{}, condition interface{}, args
     var params  []interface{}
     var updates string
     switch data.(type) {
-    case string:
-        updates = data.(string)
-    case Map:
-        var keys []string
-        for k, v := range data.(Map) {
-            keys   = append(keys,   fmt.Sprintf("%s%s%s=?", db.charl, k, db.charr))
-            params = append(params, v)
-        }
-        updates = strings.Join(keys,   ",")
+        case string:
+            updates = data.(string)
+        case Map:
+            var keys []string
+            for k, v := range data.(Map) {
+                keys   = append(keys,   fmt.Sprintf("%s%s%s=?", tx.db.charl, k, tx.db.charr))
+                params = append(params, v)
+            }
+            updates = strings.Join(keys,   ",")
 
-    default:
-        return nil, errors.New("invalid data type for 'data' field, string or Map expected")
+        default:
+            return nil, errors.New("invalid data type for 'data' field, string or Map expected")
     }
     for _, v := range args {
         if r, ok := v.(string); ok {
@@ -267,10 +255,10 @@ func (tx *Tx) Update(table string, data interface{}, condition interface{}, args
 
         }
     }
-    return db.Exec(fmt.Sprintf("UPDATE %s%s%s SET %s WHERE %s", db.charl, table, db.charr, updates, condition), params...)
+    return tx.Exec(fmt.Sprintf("UPDATE %s%s%s SET %s WHERE %s", tx.db.charl, table, tx.db.charr, updates, condition), params...)
 }
 
 // CURD操作:删除数据
 func (tx *Tx) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-    return db.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", db.charl, table, db.charr, condition), args...)
+    return tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", tx.db.charl, table, tx.db.charr, condition), args...)
 }
