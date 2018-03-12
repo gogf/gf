@@ -377,7 +377,7 @@ func linkopBatchSave() {
 func transaction1() {
     fmt.Println("transaction1:")
     if tx, err := db.Begin(); err == nil {
-        r, err := db.Save("user", gdb.Map{
+        r, err := tx.Save("user", gdb.Map{
             "uid"  :  1,
             "name" : "john",
         })
@@ -391,7 +391,7 @@ func transaction1() {
 func transaction2() {
     fmt.Println("transaction2:")
     if tx, err := db.Begin(); err == nil {
-        r, err := db.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
+        r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
         tx.Commit()
         fmt.Println(r, err)
     }
@@ -455,6 +455,6 @@ func main() {
     //linkopUpdate2()
     //linkopUpdate3()
     //keepPing()
-    transaction1()
-    //transaction2()
+    //transaction1()
+    transaction2()
 }

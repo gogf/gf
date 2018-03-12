@@ -15,7 +15,8 @@ import (
 
 // 数据库链式操作对象
 type DbOp struct {
-    link          Link          // 数据库链接对象
+    tx            *Tx           // 数据库事务对象
+    db            *Db           // 数据库操作对象
     tables        string        // 数据库操作表
     fields        string        // 操作字段
     where         string        // 操作条件
@@ -31,14 +32,27 @@ type DbOp struct {
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
 func (db *Db) Table(tables string) (*DbOp) {
     return &DbOp {
-        link  : db.link,
-        tables: tables,
+        db     : db,
+        tables : tables,
     }
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
 func (db *Db) From(tables string) (*DbOp) {
     return db.Table(tables)
+}
+
+// (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
+func (tx *Tx) Table(tables string) (*DbOp) {
+    return &DbOp {
+        tx     : tx,
+        tables : tables,
+    }
+}
+
+// (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
+func (tx *Tx) From(tables string) (*DbOp) {
+    return tx.Table(tables)
 }
 
 // 链式操作，左联表
@@ -105,14 +119,22 @@ func (op *DbOp) Insert() (sql.Result, error) {
         if op.batch > 0 {
             batch = op.batch
         }
-        return op.link.BatchInsert(op.tables, list, batch)
+        if op.tx == nil {
+            return op.db.BatchInsert(op.tables, list, batch)
+        } else {
+            return op.tx.BatchInsert(op.tables, list, batch)
+        }
     }
     // 记录操作
     if op.data == nil {
         return nil, errors.New("inserting into table with empty data")
     }
-    if d, ok :=  op.data.(Map); ok {
-        return op.link.Insert(op.tables, d)
+    if dataMap, ok :=  op.data.(Map); ok {
+        if op.tx == nil {
+            return op.db.Insert(op.tables, dataMap)
+        } else {
+            return op.tx.Insert(op.tables, dataMap)
+        }
     }
     return nil, errors.New("inserting into table with invalid data type")
 }
@@ -125,14 +147,22 @@ func (op *DbOp) Replace() (sql.Result, error) {
         if op.batch > 0 {
             batch = op.batch
         }
-        return op.link.BatchReplace(op.tables, list, batch)
+        if op.tx == nil {
+            return op.db.BatchReplace(op.tables, list, batch)
+        } else {
+            return op.tx.BatchReplace(op.tables, list, batch)
+        }
     }
     // 记录操作
     if op.data == nil {
         return nil, errors.New("replacing into table with empty data")
     }
-    if d, ok :=  op.data.(Map); ok {
-        return op.link.Insert(op.tables, d)
+    if dataMap, ok :=  op.data.(Map); ok {
+        if op.tx == nil {
+            return op.db.Insert(op.tables, dataMap)
+        } else {
+            return op.tx.Insert(op.tables, dataMap)
+        }
     }
     return nil, errors.New("replacing into table with invalid data type")
 }
@@ -145,14 +175,22 @@ func (op *DbOp) Save() (sql.Result, error) {
         if op.batch > 0 {
             batch = op.batch
         }
-        return op.link.BatchSave(op.tables, list, batch)
+        if op.tx == nil {
+            return op.db.BatchSave(op.tables, list, batch)
+        } else {
+            return op.tx.BatchSave(op.tables, list, batch)
+        }
     }
     // 记录操作
     if op.data == nil {
         return nil, errors.New("saving into table with empty data")
     }
-    if d, ok :=  op.data.(Map); ok {
-        return op.link.Save(op.tables, d)
+    if dataMap, ok :=  op.data.(Map); ok {
+        if op.tx == nil {
+            return op.db.Save(op.tables, dataMap)
+        } else {
+            return op.tx.Save(op.tables, dataMap)
+        }
     }
     return nil, errors.New("saving into table with invalid data type")
 }
@@ -162,7 +200,11 @@ func (op *DbOp) Update() (sql.Result, error) {
     if op.data == nil {
         return nil, errors.New("updating table with empty data")
     }
-    return op.link.Update(op.tables, op.data, op.where, op.whereArgs ...)
+    if op.tx == nil {
+        return op.db.Update(op.tables, op.data, op.where, op.whereArgs ...)
+    } else {
+        return op.tx.Update(op.tables, op.data, op.where, op.whereArgs ...)
+    }
 }
 
 // 链式操作， CURD - Delete
@@ -170,7 +212,11 @@ func (op *DbOp) Delete() (sql.Result, error) {
     if op.where == "" {
         return nil, errors.New("where is required while deleting")
     }
-    return op.link.Delete(op.tables, op.where, op.whereArgs...)
+    if op.tx == nil {
+        return op.db.Delete(op.tables, op.where, op.whereArgs...)
+    } else {
+        return op.tx.Delete(op.tables, op.where, op.whereArgs...)
+    }
 }
 
 // 设置批处理的大小
@@ -197,7 +243,11 @@ func (op *DbOp) Select() (List, error) {
     if op.limit != 0 {
         s += fmt.Sprintf(" LIMIT %d, %d", op.start, op.limit)
     }
-    return op.link.GetAll(s, op.whereArgs...)
+    if op.tx == nil {
+        return op.db.GetAll(s, op.whereArgs...)
+    } else {
+        return op.tx.GetAll(s, op.whereArgs...)
+    }
 }
 
 // 链式操作，查询所有记录

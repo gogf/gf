@@ -49,7 +49,7 @@ type Link interface {
     SetMaxOpenConns(n int)
 
     // 开启事务操作
-    Begin() (*sql.Tx, error)
+    Begin() (*Tx, error)
 
     // 数据表插入/更新/保存操作
     Insert(table string, data Map) (sql.Result, error)
