@@ -12,7 +12,6 @@ import (
     "errors"
     "strings"
     "database/sql"
-    "gitee.com/johng/gf/g/os/glog"
 )
 
 // 关闭链接
@@ -22,7 +21,6 @@ func (db *Db) Close() error {
         if err == nil {
             db.master = nil
         } else {
-            glog.Fatal(err)
             return err
         }
     }
@@ -31,7 +29,6 @@ func (db *Db) Close() error {
         if err == nil {
             db.slave = nil
         } else {
-            glog.Fatal(err)
             return err
         }
     }
@@ -156,8 +153,15 @@ func (db *Db) SetMaxOpenConns(n int) {
 }
 
 // 事务操作，开启，会返回一个底层的事务操作对象链接如需要嵌套事务，那么可以使用该对象，否则请忽略
-func (db *Db) Begin() (*sql.Tx, error) {
-    return db.master.Begin()
+func (db *Db) Begin() (*Tx, error) {
+    if tx, err := db.master.Begin(); err == nil {
+        return &Tx{
+            db : db,
+            tx : tx,
+        }, nil
+    } else {
+        return nil, err
+    }
 }
 
 // 根据insert选项获得操作名称
