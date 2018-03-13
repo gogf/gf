@@ -54,6 +54,6 @@ func Replace(pattern string, replace, src []byte) ([]byte, error) {
 
 // 正则替换(全部替换)，字符串
 func ReplaceString(pattern, replace, src string) (string, error) {
-    r, e := Replace(pattern, []byte(src), []byte(replace))
+    r, e := Replace(pattern, []byte(replace), []byte(src))
     return string(r), e
 }

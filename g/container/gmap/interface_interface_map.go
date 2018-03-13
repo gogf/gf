@@ -60,10 +60,22 @@ func (this *InterfaceInterfaceMap) BatchSet(m map[interface{}]interface{}) {
 }
 
 // 获取键值
-func (this *InterfaceInterfaceMap) Get(key interface{}) (interface{}) {
+func (this *InterfaceInterfaceMap) Get(key interface{}) interface{} {
 	this.mu.RLock()
 	val, _ := this.m[key]
 	this.mu.RUnlock()
+	return val
+}
+
+// 获取键值，如果键值不存在则写入默认值
+func (this *InterfaceInterfaceMap) GetWithDefault(key interface{}, value interface{}) interface{} {
+	this.mu.Lock()
+	val, ok := this.m[key]
+	if !ok {
+		this.m[key] = value
+		val         = value
+	}
+	this.mu.Unlock()
 	return val
 }
 

@@ -22,6 +22,7 @@ import (
     "gitee.com/johng/gf/g/util/gidgen"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gqueue"
+    "gitee.com/johng/gf/g/container/glist"
 )
 
 const (
@@ -33,16 +34,18 @@ const (
 
 // http server结构体
 type Server struct {
-    hmu        sync.RWMutex    // handlerMap互斥锁
-    name       string          // 服务名称，方便识别
-    server     http.Server     // 底层http server对象
-    config     ServerConfig    // 配置对象
-    status     int8            // 当前服务器状态(0：未启动，1：运行中)
-    handlerMap HandlerMap      // 所有注册的回调函数
-    methodsMap map[string]bool // 所有支持的HTTP Method
-    idgen      *gidgen.Gen     // 请求ID生成器
-    closeQueue *gqueue.Queue   // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
-    Router     *grouter.Router // 路由管理对象
+    hmu         sync.RWMutex             // handlerMap互斥锁
+    name        string                   // 服务名称，方便识别
+    server      http.Server              // 底层http server对象
+    config      ServerConfig             // 配置对象
+    status      int8                     // 当前服务器状态(0：未启动，1：运行中)
+    handlerMap  HandlerMap               // 所有注册的回调函数
+    methodsMap  map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
+    idgen       *gidgen.Gen              // 请求ID生成器
+    closeQueue  *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
+    initHookMap *gmap.StringInterfaceMap // Init钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
+    shutHookMap *gmap.StringInterfaceMap // Shut钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
+    Router      *grouter.Router          // 路由管理对象
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -72,12 +75,14 @@ func GetServer(names...string) (*Server) {
         return s.(*Server)
     }
     s := &Server{
-        name       : name,
-        handlerMap : make(HandlerMap),
-        methodsMap : make(map[string]bool),
-        idgen      : gidgen.New(50000),
-        closeQueue : gqueue.New(),
-        Router     : grouter.New(),
+        name        : name,
+        handlerMap  : make(HandlerMap),
+        methodsMap  : make(map[string]bool),
+        idgen       : gidgen.New(50000),
+        closeQueue  : gqueue.New(),
+        initHookMap : gmap.NewStringInterfaceMap(),
+        shutHookMap : gmap.NewStringInterfaceMap(),
+        Router      : grouter.New(),
     }
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = true
@@ -259,15 +264,15 @@ func (s *Server) handlerKey(domain, method, pattern string) string {
 }
 
 // 设置请求处理方法
-func (s *Server) setHandler(domain, method, pattern string, hitem HandlerItem) {
+func (s *Server) setHandler(domain, method, pattern string, item HandlerItem) {
     s.hmu.Lock()
     defer s.hmu.Unlock()
     if method == gDEFAULT_METHOD {
         for v, _ := range s.methodsMap {
-            s.handlerMap[s.handlerKey(domain, v, pattern)] = hitem
+            s.handlerMap[s.handlerKey(domain, v, pattern)] = item
         }
     } else {
-        s.handlerMap[s.handlerKey(domain, method, pattern)] = hitem
+        s.handlerMap[s.handlerKey(domain, method, pattern)] = item
     }
 
 }
@@ -283,16 +288,11 @@ func (s *Server) getHandler(domain, method, pattern string) *HandlerItem {
     return nil
 }
 
-// 绑定URI到操作函数/方法
-// pattern的格式形如：/user/list, put:/user, delete:/user, post:/user@johng.cn
-// 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server)bindHandlerItem(pattern string, hitem HandlerItem) error {
-    if s.status == 1 {
-        return errors.New("server handlers cannot be changed while running")
-    }
-    uri    := ""
-    domain := gDEFAULT_DOMAIN
-    method := "all"
+// 解析pattern
+func (s *Server)parsePattern(pattern string) (domain, method, uri string, err error) {
+    uri    = ""
+    domain = gDEFAULT_DOMAIN
+    method = "all"
     result := strings.Split(pattern, "@")
     if len(result) > 1 {
         domain = result[1]
@@ -305,9 +305,23 @@ func (s *Server)bindHandlerItem(pattern string, hitem HandlerItem) error {
         uri    = result[0]
     }
     if uri == "" {
+        err = errors.New("invalid pattern")
+    }
+    return
+}
+
+// 绑定URI到操作函数/方法
+// pattern的格式形如：/user/list, put:/user, delete:/user, post:/user@johng.cn
+// 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
+func (s *Server)bindHandlerItem(pattern string, item HandlerItem) error {
+    if s.status == 1 {
+        return errors.New("server handlers cannot be changed while running")
+    }
+    domain, method, uri, err := s.parsePattern(pattern)
+    if err != nil {
         return errors.New("invalid pattern")
     }
-    s.setHandler(domain, method, uri, hitem)
+    s.setHandler(domain, method, uri, item)
     return nil
 }
 
@@ -362,7 +376,7 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
 }
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
-// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔
+// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，不区分大小写
 func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string) error {
     m := make(HandlerMap)
     for _, v := range strings.Split(methods, ",") {
@@ -440,7 +454,7 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
 }
 
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
-// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔
+// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，不区分大小写
 func (s *Server)BindControllerMethod(pattern string, c Controller, methods string) error {
     m    := make(HandlerMap)
     cval := reflect.ValueOf(c)
@@ -455,3 +469,85 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, methods strin
     }
     return s.bindHandlerByMap(m)
 }
+
+// 绑定URI服务注册的Init回调函数，回调时按照注册顺序执行
+// Init回调调用时机为请求进入控制器之前，初始化Request对象之后
+func (s *Server)BindHookHandlerInit(pattern string, handler HandlerFunc) error {
+    domain, method, uri, err := s.parsePattern(pattern)
+    if err != nil {
+        return errors.New("invalid pattern")
+    }
+    var l *glist.List
+    if method == gDEFAULT_METHOD {
+        for v, _ := range s.methodsMap {
+            key := s.handlerKey(domain, v, uri)
+            if v := s.initHookMap.GetWithDefault(key, glist.New()); v != nil {
+                l = v.(*glist.List)
+            }
+            l.PushBack(handler)
+        }
+    } else {
+        key := s.handlerKey(domain, method, uri)
+        if v := s.initHookMap.GetWithDefault(key, glist.New()); v == nil {
+            l = v.(*glist.List)
+        }
+        l.PushBack(handler)
+    }
+    return nil
+}
+
+// 绑定URI服务注册的Shut回调函数，回调时按照注册顺序执行
+// Shut回调调用时机为请求执行完成之后，所有的请求资源释放之前
+func (s *Server)BindHookHandlerShut(pattern string, handler HandlerFunc) error {
+    domain, method, uri, err := s.parsePattern(pattern)
+    if err != nil {
+        return errors.New("invalid pattern")
+    }
+    var l *glist.List
+    if method == gDEFAULT_METHOD {
+        for v, _ := range s.methodsMap {
+            key := s.handlerKey(domain, v, uri)
+            if v := s.shutHookMap.GetWithDefault(key, glist.New()); v != nil {
+                l = v.(*glist.List)
+            }
+            l.PushBack(handler)
+        }
+    } else {
+        key := s.handlerKey(domain, method, uri)
+        if v := s.shutHookMap.GetWithDefault(key, glist.New()); v != nil {
+            l = v.(*glist.List)
+        }
+        l.PushBack(handler)
+    }
+    return nil
+}
+
+// 获取Init回调函数列表，按照注册顺序排序
+func (s *Server)getInitHookList(domain, method, uri string) []HandlerFunc {
+    key := s.handlerKey(domain, method, uri)
+    if v := s.initHookMap.Get(key); v != nil {
+        items := v.(*glist.List).FrontAll()
+        funcs := make([]HandlerFunc, len(items))
+        for k, v := range items {
+            funcs[k] = v.(HandlerFunc)
+        }
+        return funcs
+    }
+    return nil
+}
+
+// 获取Shut回调函数列表，按照注册顺序排序
+func (s *Server)getShutHookList(domain, method, uri string) []HandlerFunc {
+    key := s.handlerKey(domain, method, uri)
+    if v := s.shutHookMap.Get(key); v != nil {
+        items := v.(*glist.List).FrontAll()
+        funcs := make([]HandlerFunc, len(items))
+        for k, v := range items {
+            funcs[k] = v.(HandlerFunc)
+        }
+        return funcs
+    }
+    return nil
+}
+
+
