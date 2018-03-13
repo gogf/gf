@@ -59,11 +59,23 @@ func (this *IntBoolMap) BatchSet(m map[int]bool) {
 }
 
 // 获取键值
-func (this *IntBoolMap) Get(key int) (bool) {
+func (this *IntBoolMap) Get(key int) bool {
 	this.mu.RLock()
 	val, _ := this.m[key]
 	this.mu.RUnlock()
 	return val
+}
+
+// 获取键值，如果键值不存在则写入默认值
+func (this *IntBoolMap) GetWithDefault(key int, value bool) bool {
+    this.mu.Lock()
+    val, ok := this.m[key]
+    if !ok {
+        this.m[key] = value
+        val         = value
+    }
+    this.mu.Unlock()
+    return val
 }
 
 // 删除键值对

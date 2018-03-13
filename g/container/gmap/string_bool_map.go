@@ -59,10 +59,22 @@ func (this *StringBoolMap) BatchSet(m map[string]bool) {
 }
 
 // 获取键值
-func (this *StringBoolMap) Get(key string) (bool) {
+func (this *StringBoolMap) Get(key string) bool {
 	this.mu.RLock()
 	val, _ := this.m[key]
 	this.mu.RUnlock()
+	return val
+}
+
+// 获取键值，如果键值不存在则写入默认值
+func (this *StringBoolMap) GetWithDefault(key string, value bool) bool {
+	this.mu.Lock()
+	val, ok := this.m[key]
+	if !ok {
+		this.m[key] = value
+		val         = value
+	}
+	this.mu.Unlock()
 	return val
 }
 
