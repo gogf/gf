@@ -67,6 +67,18 @@ func (this *StringInterfaceMap) Get(key string) interface{} {
 	return val
 }
 
+// 获取键值，如果键值不存在则写入默认值
+func (this *StringInterfaceMap) GetWithDefault(key string, value interface{}) interface{} {
+	this.mu.Lock()
+	val, ok := this.m[key]
+	if !ok {
+        this.m[key] = value
+        val         = value
+    }
+	this.mu.Unlock()
+	return val
+}
+
 func (this *StringInterfaceMap) GetBool(key string) bool {
     return gconv.Bool(this.Get(key))
 }
