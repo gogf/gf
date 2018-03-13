@@ -59,11 +59,23 @@ func (this *StringIntMap) BatchSet(m map[string]int) {
 }
 
 // 获取键值
-func (this *StringIntMap) Get(key string) (int) {
+func (this *StringIntMap) Get(key string) int {
 	this.mu.RLock()
 	val, _ := this.m[key]
     this.mu.RUnlock()
 	return val
+}
+
+// 获取键值，如果键值不存在则写入默认值
+func (this *StringIntMap) GetWithDefault(key string, value int) int {
+    this.mu.Lock()
+    val, ok := this.m[key]
+    if !ok {
+        this.m[key] = value
+        val         = value
+    }
+    this.mu.Unlock()
+    return val
 }
 
 // 删除键值对

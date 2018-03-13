@@ -86,7 +86,7 @@ func (r *Router) Dispatch(uri string) (string, error) {
     }
     for _, rule := range r.dkeys {
         if replace := r.drules.Get(rule); replace != "" {
-            result, err := gregx.ReplaceString(rule, uri, replace)
+            result, err := gregx.ReplaceString(rule, replace, uri)
             if err != nil {
                 return result, err
             }
@@ -107,7 +107,7 @@ func (r *Router) Patch(content []byte) ([]byte, error) {
     }
     for _, rule := range r.pkeys {
         if replace := r.prules.Get(rule); replace != "" {
-            result, err := gregx.Replace(rule, content, []byte(replace))
+            result, err := gregx.Replace(rule, []byte(replace), content)
             if err != nil {
                 return result, err
             }

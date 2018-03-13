@@ -66,6 +66,18 @@ func (this *StringStringMap) Get(key string) string {
 	return val
 }
 
+// 获取键值，如果键值不存在则写入默认值
+func (this *StringStringMap) GetWithDefault(key string, value string) string {
+	this.mu.Lock()
+	val, ok := this.m[key]
+	if !ok {
+		this.m[key] = value
+		val         = value
+	}
+	this.mu.Unlock()
+	return val
+}
+
 // 删除键值对
 func (this *StringStringMap) Remove(key string) {
 	this.mu.Lock()

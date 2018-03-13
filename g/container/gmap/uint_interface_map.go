@@ -59,11 +59,23 @@ func (this *UintInterfaceMap) BatchSet(m map[uint]interface{}) {
 }
 
 // 获取键值
-func (this *UintInterfaceMap) Get(key uint) (interface{}) {
+func (this *UintInterfaceMap) Get(key uint) interface{} {
 	this.mu.RLock()
 	val, _ := this.m[key]
 	this.mu.RUnlock()
 	return val
+}
+
+// 获取键值，如果键值不存在则写入默认值
+func (this *UintInterfaceMap) GetWithDefault(key uint, value interface{}) interface{} {
+    this.mu.Lock()
+    val, ok := this.m[key]
+    if !ok {
+        this.m[key] = value
+        val         = value
+    }
+    this.mu.Unlock()
+    return val
 }
 
 func (this *UintInterfaceMap) GetBool(key uint) bool {
