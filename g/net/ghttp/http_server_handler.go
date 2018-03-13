@@ -85,10 +85,8 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
     // 输出缓冲区
     r.Response.OutputBuffer()
 
-    // 关闭当前会话的Cookie
-    go r.Cookie.Close()
-    // 更新Sssion会话超时时间
-    go r.Session.UpdateExpire()
+    // 将Request对象指针丢到队列中异步处理
+    s.closeQueue.PushBack(r)
 }
 
 // 处理静态文件请求

@@ -21,6 +21,7 @@ import (
     "gitee.com/johng/gf/g/net/grouter"
     "gitee.com/johng/gf/g/util/gidgen"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/container/gqueue"
 )
 
 const (
@@ -40,6 +41,7 @@ type Server struct {
     handlerMap HandlerMap      // 所有注册的回调函数
     methodsMap map[string]bool // 所有支持的HTTP Method
     idgen      *gidgen.Gen     // 请求ID生成器
+    closeQueue *gqueue.Queue   // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
     Router     *grouter.Router // 路由管理对象
 }
 
@@ -73,7 +75,8 @@ func GetServer(names...string) (*Server) {
         name       : name,
         handlerMap : make(HandlerMap),
         methodsMap : make(map[string]bool),
-        idgen      : gidgen.New(20000),
+        idgen      : gidgen.New(50000),
+        closeQueue : gqueue.New(),
         Router     : grouter.New(),
     }
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
@@ -103,6 +106,8 @@ func (s *Server) Run() error {
         IdleTimeout    : s.config.IdleTimeout,
         MaxHeaderBytes : s.config.MaxHeaderBytes,
     }
+    // 开启异步处理队列处理循环
+    s.startCloseQueueLoop()
     // 执行端口监听
     if err := s.server.ListenAndServe(); err != nil {
         return err
