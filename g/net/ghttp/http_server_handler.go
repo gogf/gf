@@ -70,9 +70,9 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
         c.MethodByName(h.fname).Call(nil)
         c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
     } else {
-        s.callHookHandlerInit(r)
+        s.callHookHandler(r, "Init")
         h.faddr(r)
-        s.callHookHandlerShut(r)
+        s.callHookHandler(r, "Shut")
     }
     // 路由规则打包
     if buffer, err := s.Router.Patch(r.Response.Buffer()); err == nil {
@@ -90,27 +90,12 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
     s.closeQueue.PushBack(r)
 }
 
-// 按照Init回调函数的注册顺序进行调用
-func (s *Server)callHookHandlerInit(r *Request) {
+// 按照指定hook回调函数的注册顺序进行调用
+func (s *Server)callHookHandler(r *Request, hook string) {
     var l []HandlerFunc
-    l = s.getInitHookList(gDEFAULT_DOMAIN, r.Method, r.URL.Path)
+    l = s.getHookList(gDEFAULT_DOMAIN, r.Method, r.URL.Path, hook)
     if l == nil {
-        l = s.getInitHookList(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path)
-    }
-    if l == nil {
-        return
-    }
-    for _, f := range l {
-        f(r)
-    }
-}
-
-// 按照Shut回调函数的注册顺序进行调用
-func (s *Server)callHookHandlerShut(r *Request) {
-    var l []HandlerFunc
-    l = s.getShutHookList(gDEFAULT_DOMAIN, r.Method, r.URL.Path)
-    if l == nil {
-        l = s.getShutHookList(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path)
+        l = s.getHookList(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path, hook)
     }
     if l == nil {
         return

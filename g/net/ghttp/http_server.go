@@ -43,8 +43,7 @@ type Server struct {
     methodsMap  map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
     idgen       *gidgen.Gen              // 请求ID生成器
     closeQueue  *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
-    initHookMap *gmap.StringInterfaceMap // Init钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
-    shutHookMap *gmap.StringInterfaceMap // Shut钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
+    hooksMap    *gmap.StringInterfaceMap // 钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
     Router      *grouter.Router          // 路由管理对象
 }
 
@@ -80,8 +79,7 @@ func GetServer(names...string) (*Server) {
         methodsMap  : make(map[string]bool),
         idgen       : gidgen.New(50000),
         closeQueue  : gqueue.New(),
-        initHookMap : gmap.NewStringInterfaceMap(),
-        shutHookMap : gmap.NewStringInterfaceMap(),
+        hooksMap    : gmap.NewStringInterfaceMap(),
         Router      : grouter.New(),
     }
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
@@ -470,9 +468,9 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, methods strin
     return s.bindHandlerByMap(m)
 }
 
-// 绑定URI服务注册的Init回调函数，回调时按照注册顺序执行
-// Init回调调用时机为请求进入控制器之前，初始化Request对象之后
-func (s *Server)BindHookHandlerInit(pattern string, handler HandlerFunc) error {
+// 绑定指定的hook回调函数, hook参数的值由ghttp server设定，参数不区分大小写
+// 目前hook支持：Init/Shut
+func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc) error {
     domain, method, uri, err := s.parsePattern(pattern)
     if err != nil {
         return errors.New("invalid pattern")
@@ -480,52 +478,40 @@ func (s *Server)BindHookHandlerInit(pattern string, handler HandlerFunc) error {
     var l *glist.List
     if method == gDEFAULT_METHOD {
         for v, _ := range s.methodsMap {
-            key := s.handlerKey(domain, v, uri)
-            if v := s.initHookMap.GetWithDefault(key, glist.New()); v != nil {
+            if v := s.hooksMap.GetWithDefault(s.handlerHookKey(domain, v, uri, hook), glist.New()); v != nil {
                 l = v.(*glist.List)
             }
             l.PushBack(handler)
         }
     } else {
-        key := s.handlerKey(domain, method, uri)
-        if v := s.initHookMap.GetWithDefault(key, glist.New()); v == nil {
+        if v := s.hooksMap.GetWithDefault(s.handlerHookKey(domain, method, uri, hook), glist.New()); v == nil {
             l = v.(*glist.List)
         }
         l.PushBack(handler)
     }
     return nil
+}
+
+// 绑定URI服务注册的Init回调函数，回调时按照注册顺序执行
+// Init回调调用时机为请求进入控制器之前，初始化Request对象之后
+func (s *Server)BindHookHandlerInit(pattern string, handler HandlerFunc) error {
+    return s.BindHookHandler(pattern, "Init", handler)
 }
 
 // 绑定URI服务注册的Shut回调函数，回调时按照注册顺序执行
 // Shut回调调用时机为请求执行完成之后，所有的请求资源释放之前
 func (s *Server)BindHookHandlerShut(pattern string, handler HandlerFunc) error {
-    domain, method, uri, err := s.parsePattern(pattern)
-    if err != nil {
-        return errors.New("invalid pattern")
-    }
-    var l *glist.List
-    if method == gDEFAULT_METHOD {
-        for v, _ := range s.methodsMap {
-            key := s.handlerKey(domain, v, uri)
-            if v := s.shutHookMap.GetWithDefault(key, glist.New()); v != nil {
-                l = v.(*glist.List)
-            }
-            l.PushBack(handler)
-        }
-    } else {
-        key := s.handlerKey(domain, method, uri)
-        if v := s.shutHookMap.GetWithDefault(key, glist.New()); v != nil {
-            l = v.(*glist.List)
-        }
-        l.PushBack(handler)
-    }
-    return nil
+    return s.BindHookHandler(pattern, "Shut", handler)
 }
 
-// 获取Init回调函数列表，按照注册顺序排序
-func (s *Server)getInitHookList(domain, method, uri string) []HandlerFunc {
-    key := s.handlerKey(domain, method, uri)
-    if v := s.initHookMap.Get(key); v != nil {
+// 构造用于hooksMap检索的键名
+func (s *Server)handlerHookKey(domain, method, uri, hook string) string {
+    return strings.ToUpper(hook) + "^" + s.handlerKey(domain, method, uri)
+}
+
+// 获取指定hook的回调函数列表，按照注册顺序排序
+func (s *Server)getHookList(domain, method, uri, hook string) []HandlerFunc {
+    if v := s.hooksMap.Get(s.handlerHookKey(domain, method, uri, hook)); v != nil {
         items := v.(*glist.List).FrontAll()
         funcs := make([]HandlerFunc, len(items))
         for k, v := range items {
@@ -535,19 +521,3 @@ func (s *Server)getInitHookList(domain, method, uri string) []HandlerFunc {
     }
     return nil
 }
-
-// 获取Shut回调函数列表，按照注册顺序排序
-func (s *Server)getShutHookList(domain, method, uri string) []HandlerFunc {
-    key := s.handlerKey(domain, method, uri)
-    if v := s.shutHookMap.Get(key); v != nil {
-        items := v.(*glist.List).FrontAll()
-        funcs := make([]HandlerFunc, len(items))
-        for k, v := range items {
-            funcs[k] = v.(HandlerFunc)
-        }
-        return funcs
-    }
-    return nil
-}
-
-
