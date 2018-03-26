@@ -21,9 +21,9 @@ type Cache struct {
     dmu        sync.RWMutex              // data锁
     emu        sync.RWMutex              // ekmap锁
     smu        sync.RWMutex              // eksets锁
-    data       map[string]CacheItem      // 缓存数据
-    ekmap      map[string]int64          // 键名对应的分组过期时间
-    eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表
+    data       map[string]CacheItem      // 缓存数据(所有的缓存数据存放哈希表)
+    ekmap      map[string]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)
+    eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表(用于自动过期快速删除)
     eventQueue *gqueue.Queue             // 异步处理队列
     stopEvents chan struct{}             // 关闭时间通知
 }
@@ -82,7 +82,7 @@ func BatchRemove(keys []string) {
     cache.BatchRemove(keys)
 }
 
-// 计算过期缓存的键名
+// 计算过期缓存的键名(将毫秒换算成秒的整数毫秒)
 func (c *Cache) makeExpireKey(expire int64) int64 {
     return int64(math.Ceil(float64(expire/1000) + 1)*1000)
 }
@@ -207,15 +207,18 @@ func (c *Cache) autoSyncLoop() {
         if r := c.eventQueue.PopFront(); r != nil {
             item := r.(EventItem)
             newe := c.makeExpireKey(item.e)
+            // 查询键名是否已经存在过期时间
             c.emu.RLock()
             olde, ok := c.ekmap[item.k];
             c.emu.RUnlock()
+            // 是否需要删除旧的过期时间map中对应的键名
             if ok && newe != olde {
                 if ekset := c.getExpireSet(olde); ekset != nil {
                     ekset.Remove(item.k)
                 }
             }
             c.getOrNewExpireSet(newe).Add(item.k)
+            // 重新设置对应键名的过期时间
             c.emu.Lock()
             c.ekmap[item.k] = newe
             c.emu.Unlock()
@@ -237,7 +240,6 @@ func (c *Cache) autoClearLoop() {
                 eks := []int64{ek - 2000, ek - 3000, ek - 4000}
                 for _, v := range eks {
                     if ekset := c.getExpireSet(v); ekset != nil {
-
                         ekset.Iterator(func(key string) {
                             c.dmu.Lock()
                             delete(c.data,  key)
@@ -247,7 +249,6 @@ func (c *Cache) autoClearLoop() {
                             delete(c.ekmap, key)
                             c.emu.Unlock()
                         })
-
                     }
                     c.smu.Lock()
                     delete(c.eksets, v)
