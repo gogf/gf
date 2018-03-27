@@ -34,6 +34,6 @@ func (t *Bool)Set(value bool) {
     }
 }
 
-func (t *Bool)Get() bool {
+func (t *Bool)Val() bool {
     return atomic.LoadInt32(&t.val) > 0
 }

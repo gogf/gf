@@ -25,7 +25,7 @@ func (t *Uint64)Set(value uint64) {
     atomic.StoreUint64(&t.val, value)
 }
 
-func (t *Uint64)Get() uint64 {
+func (t *Uint64)Val() uint64 {
     return atomic.LoadUint64(&t.val)
 }
 

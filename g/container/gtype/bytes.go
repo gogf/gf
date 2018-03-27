@@ -28,7 +28,7 @@ func (t *Bytes)Set(value []byte) {
     t.mu.Unlock()
 }
 
-func (t *Bytes)Get() []byte {
+func (t *Bytes)Val() []byte {
     t.mu.RLock()
     b := t.val
     t.mu.RUnlock()

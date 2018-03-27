@@ -292,8 +292,8 @@ func (c *Cache) autoClearLoop() {
                     c.smu.Unlock()
                 }
                 // LRU缓存淘汰处理
-                if c.cap.Get() > 0 {
-                    for i := c.Size() - c.cap.Get(); i > 0; i-- {
+                if c.cap.Val() > 0 {
+                    for i := c.Size() - c.cap.Val(); i > 0; i-- {
                         if s := c.lru.Pop(); s != "" {
                             c.clearByKey(s)
                         }
