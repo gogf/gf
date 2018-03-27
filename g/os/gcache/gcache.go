@@ -28,7 +28,7 @@ type Cache struct {
     smu        sync.RWMutex              // eksets锁
     lru        *_Lru                     // LRU缓存限制
     cap        *gtype.Int                // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
-    data       map[string]CacheItem      // 缓存数据(所有的缓存数据存放哈希表)
+    data       map[string]_CacheItem     // 缓存数据(所有的缓存数据存放哈希表)
     ekmap      map[string]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)
     eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表(用于自动过期快速删除)
     eventQueue *gqueue.Queue             // 异步处理队列
@@ -36,13 +36,13 @@ type Cache struct {
 }
 
 // 缓存数据项
-type CacheItem struct {
+type _CacheItem struct {
     v interface{} // 缓存键值
     e int64       // 过期时间
 }
 
 // 异步队列数据项
-type EventItem struct {
+type _EventItem struct {
     k string      // 键名
     e int64       // 过期时间
 }
@@ -55,7 +55,7 @@ func New() *Cache {
     c := &Cache {
         lru        : newLru(),
         cap        : gtype.NewInt(),
-        data       : make(map[string]CacheItem),
+        data       : make(map[string]_CacheItem),
         ekmap      : make(map[string]int64),
         eksets     : make(map[int64]*gset.StringSet),
         eventQueue : gqueue.New(),
@@ -154,9 +154,9 @@ func (c *Cache) Set(key string, value interface{}, expire int64) {
         e = gDEFAULT_MAX_EXPIRE
     }
     c.dmu.Lock()
-    c.data[key] = CacheItem{v : value, e : e}
+    c.data[key] = _CacheItem{v : value, e : e}
     c.dmu.Unlock()
-    c.eventQueue.PushBack(EventItem{k : key, e : e})
+    c.eventQueue.PushBack(_EventItem{k : key, e : e})
 }
 
 // 批量设置
@@ -169,9 +169,9 @@ func (c *Cache) BatchSet(data map[string]interface{}, expire int64)  {
     }
     for k, v := range data {
         c.dmu.Lock()
-        c.data[k] = CacheItem{v: v, e: e}
+        c.data[k] = _CacheItem{v: v, e: e}
         c.dmu.Unlock()
-        c.eventQueue.PushBack(EventItem{k: k, e:e})
+        c.eventQueue.PushBack(_EventItem{k: k, e:e})
     }
 }
 
@@ -197,9 +197,9 @@ func (c *Cache) Remove(key string) {
 func (c *Cache) BatchRemove(keys []string) {
     for _, key := range keys {
         c.dmu.Lock()
-        c.data[key] = CacheItem{v: nil, e: -1000}
+        c.data[key] = _CacheItem{v: nil, e: -1000}
         c.dmu.Unlock()
-        c.eventQueue.PushBack(EventItem{k: key, e: -1000})
+        c.eventQueue.PushBack(_EventItem{k: key, e: -1000})
     }
 }
 
@@ -244,7 +244,7 @@ func (c *Cache) Close()  {
 func (c *Cache) autoSyncLoop() {
     for {
         if r := c.eventQueue.PopFront(); r != nil {
-            item := r.(EventItem)
+            item := r.(_EventItem)
             newe := c.makeExpireKey(item.e)
             // 查询键名是否已经存在过期时间
             c.emu.RLock()
