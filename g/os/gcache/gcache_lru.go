@@ -8,10 +8,11 @@ package gcache
 
 import (
     "fmt"
+    "container/list"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/container/gmap"
-    "container/list"
+
 )
 
 // LRU算法实现对象，底层双向链表使用了标准库的list.List
@@ -19,12 +20,6 @@ type _Lru struct {
     list  *glist.List
     data  *gmap.StringInterfaceMap
     queue *gqueue.Queue
-}
-
-// 数据项结构
-type _LruItem struct {
-    key  string
-    size int
 }
 
 func newLru() *_Lru {
@@ -42,25 +37,32 @@ func (lru *_Lru) Close() {
     lru.queue.Close()
 }
 
+// 删除指定数据项
+func (lru *_Lru) Remove(key string) {
+    if v := lru.data.Get(key); v != nil {
+        lru.list.Remove(v.(*list.Element))
+    }
+}
+
 // 添加LRU数据项
-func (lru *_Lru) Push(key string, size int) {
-    lru.queue.PushBack(&_LruItem{key, size})
+func (lru *_Lru) Push(key string) {
+    lru.queue.PushBack(key)
 }
 
 // 从链表尾删除LRU数据项，并返回对应数据
-func (lru *_Lru) Pop() *_LruItem {
+func (lru *_Lru) Pop() string {
     if v := lru.list.PopBack(); v != nil {
-        item := v.(*_LruItem)
-        lru.data.Remove(item.key)
-        return item
+        s := v.(string)
+        lru.data.Remove(s)
+        return s
     }
-    return nil
+    return ""
 }
 
 // 从链表头打印LRU链表值
 func (lru *_Lru) Print() {
     for _, v := range lru.list.FrontAll() {
-        fmt.Printf("%s ", v.(*_LruItem).key)
+        fmt.Printf("%s ", v.(string))
     }
 }
 
@@ -68,13 +70,13 @@ func (lru *_Lru) Print() {
 func (lru *_Lru) StartAutoLoop() {
     for {
         if v := lru.queue.PopFront(); v != nil {
-            item := v.(*_LruItem)
+            s := v.(string)
             // 删除对应链表项
-            if v := lru.data.Get(item.key); v != nil {
+            if v := lru.data.Get(s); v != nil {
                 lru.list.Remove(v.(*list.Element))
             }
             // 将数据插入到链表头，并生成新的链表项
-            lru.data.Set(item.key, lru.list.PushFront(item))
+            lru.data.Set(s, lru.list.PushFront(s))
         } else {
             break
         }
