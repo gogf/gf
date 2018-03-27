@@ -7,7 +7,12 @@ import (
 )
 
 func main() {
-    gcache.Set("k1", "v1", 1000)
+    gcache.Set("k1", "v111111111111111111111111111111111111111111", 1000)
+    //gcache.Set("k2", "v2", 2000)
+    time.Sleep(time.Second)
+    fmt.Println(gcache.Bytes())
+
+    return
     gcache.Set("k2", "v2", 2000)
     time.Sleep(500*time.Millisecond)
     fmt.Println(gcache.Get("k1"))
