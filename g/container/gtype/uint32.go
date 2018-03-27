@@ -25,7 +25,7 @@ func (t *Uint32)Set(value uint32) {
     atomic.StoreUint32(&t.val, value)
 }
 
-func (t *Uint32)Get() uint32 {
+func (t *Uint32)Val() uint32 {
     return atomic.LoadUint32(&t.val)
 }
 
