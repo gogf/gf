@@ -1,14 +1,13 @@
 package main
 
+import (
+    "fmt"
+    "unsafe"
+)
 
 func main() {
-    defer func() {
-        recover()
-    }()
-    events1 := make(chan int, 100)
-    events1 <- 1
-    close(events1)
-    events1 <- 2
+    fmt.Println(unsafe.Sizeof("11111111111111111111111111111111"))
+    fmt.Println(unsafe.Sizeof("1"))
     //events2 := make(chan int, 100)
     //go func() {
     //    for{
