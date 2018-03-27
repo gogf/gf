@@ -1,6 +1,6 @@
 // from https://github.com/google/btree
 
-// B+ Tree
+// B-Tree
 package gbtree
 
 import (
