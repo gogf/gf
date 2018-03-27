@@ -28,7 +28,7 @@ func (t *Interface)Set(value interface{}) {
     t.mu.Unlock()
 }
 
-func (t *Interface)Get() interface{} {
+func (t *Interface)Val() interface{} {
     t.mu.RLock()
     b := t.val
     t.mu.RUnlock()

@@ -34,7 +34,7 @@ func BenchmarkInt_Set(b *testing.B) {
 
 func BenchmarkInt_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        it.Get()
+        it.Val()
     }
 }
 
@@ -52,7 +52,7 @@ func BenchmarkInt32_Set(b *testing.B) {
 
 func BenchmarkInt32_Get(b *testing.B) {
     for i := int32(0); i < int32(b.N); i++ {
-        it32.Get()
+        it32.Val()
     }
 }
 
@@ -70,7 +70,7 @@ func BenchmarkInt64_Set(b *testing.B) {
 
 func BenchmarkInt64_Get(b *testing.B) {
     for i := int64(0); i < int64(b.N); i++ {
-        it64.Get()
+        it64.Val()
     }
 }
 
@@ -90,7 +90,7 @@ func BenchmarkUint_Set(b *testing.B) {
 
 func BenchmarkUint_Get(b *testing.B) {
     for i := uint(0); i < uint(b.N); i++ {
-        uit.Get()
+        uit.Val()
     }
 }
 
@@ -110,7 +110,7 @@ func BenchmarkUint32_Set(b *testing.B) {
 
 func BenchmarkUint32_Get(b *testing.B) {
     for i := uint32(0); i < uint32(b.N); i++ {
-        uit32.Get()
+        uit32.Val()
     }
 }
 
@@ -129,7 +129,7 @@ func BenchmarkUint64_Set(b *testing.B) {
 
 func BenchmarkUint64_Get(b *testing.B) {
     for i := uint64(0); i < uint64(b.N); i++ {
-        uit64.Get()
+        uit64.Val()
     }
 }
 
@@ -149,7 +149,7 @@ func BenchmarkBool_Set(b *testing.B) {
 
 func BenchmarkBool_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        bl.Get()
+        bl.Val()
     }
 }
 
@@ -163,7 +163,7 @@ func BenchmarkString_Set(b *testing.B) {
 
 func BenchmarkString_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        str.Get()
+        str.Val()
     }
 }
 
@@ -177,7 +177,7 @@ func BenchmarkBytes_Set(b *testing.B) {
 
 func BenchmarkBytes_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        bytes.Get()
+        bytes.Val()
     }
 }
 
@@ -190,7 +190,7 @@ func BenchmarkInterface_Set(b *testing.B) {
 
 func BenchmarkInterface_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        inf.Get()
+        inf.Val()
     }
 }
 

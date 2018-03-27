@@ -25,7 +25,7 @@ func (t *Int)Set(value int) {
     atomic.StoreInt64(&t.val, int64(value))
 }
 
-func (t *Int)Get() int {
+func (t *Int)Val() int {
     return int(atomic.LoadInt64(&t.val))
 }
 
