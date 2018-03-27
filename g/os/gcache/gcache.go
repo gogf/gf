@@ -15,7 +15,10 @@ import (
     "gitee.com/johng/gf/g/container/gset"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/container/gtype"
-    "unsafe"
+)
+
+const (
+    gDEFAULT_MAX_EXPIRE = 9223372036854  // 当数据不过期时，默认设置的过期属性值，相当于：math.MaxInt64/1000000
 )
 
 // 缓存对象
@@ -24,10 +27,9 @@ type Cache struct {
     emu        sync.RWMutex              // ekmap锁
     smu        sync.RWMutex              // eksets锁
     lru        *_Lru                     // LRU缓存限制
-    cap        *gtype.Int                // 缓存大小上限(byte，默认为0表示不做控制)
-    bytes      *gtype.Int                // 当前缓存所占内存大小(byte，注意如果缓存存放的是指针，那么所占大小=键名长度+8)
+    cap        *gtype.Int                // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
     data       map[string]CacheItem      // 缓存数据(所有的缓存数据存放哈希表)
-    ekmap      map[string]EkmapItem      // 键名对应的分组过期时间及大小(用于相同键名过期时间快速更新)
+    ekmap      map[string]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)
     eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表(用于自动过期快速删除)
     eventQueue *gqueue.Queue             // 异步处理队列
     stopEvents chan struct{}             // 关闭时间通知
@@ -39,17 +41,10 @@ type CacheItem struct {
     e int64       // 过期时间
 }
 
-// 过期处理数据项
-type EkmapItem struct {
-    e int64       // 过期时间
-    s int         // 数据项大小
-}
-
 // 异步队列数据项
 type EventItem struct {
     k string      // 键名
     e int64       // 过期时间
-    s int         // 数据项大小
 }
 
 // 全局缓存管理对象
@@ -60,9 +55,8 @@ func New() *Cache {
     c := &Cache {
         lru        : newLru(),
         cap        : gtype.NewInt(),
-        bytes      : gtype.NewInt(),
         data       : make(map[string]CacheItem),
-        ekmap      : make(map[string]EkmapItem),
+        ekmap      : make(map[string]int64),
         eksets     : make(map[int64]*gset.StringSet),
         eventQueue : gqueue.New(),
         stopEvents : make(chan struct{}, 2),
@@ -70,6 +64,11 @@ func New() *Cache {
     go c.autoSyncLoop()
     go c.autoClearLoop()
     return c
+}
+
+// 设置缓存池大小，内部依靠LRU算法进行缓存淘汰处理
+func SetCap(cap int) {
+    cache.cap.Set(cap)
 }
 
 // (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为毫秒
@@ -112,11 +111,10 @@ func Size() int {
     return cache.Size()
 }
 
-// 获得缓存对象的内存占用大小(byte)
-func Bytes() int {
-    return cache.Bytes()
+// 设置缓存池大小，内部依靠LRU算法进行缓存淘汰处理
+func (c *Cache) SetCap(cap int) {
+    c.cap.Set(cap)
 }
-
 
 // 计算过期缓存的键名(将毫秒换算成秒的整数毫秒)
 func (c *Cache) makeExpireKey(expire int64) int64 {
@@ -149,22 +147,25 @@ func (c *Cache) getOrNewExpireSet(expire int64) *gset.StringSet {
 
 // 设置kv缓存键值对，过期时间单位为毫秒，expire<=0表示不过期
 func (c *Cache) Set(key string, value interface{}, expire int64) {
-    e := int64(math.MaxInt64)
-    if expire > 0 {
+    var e int64
+    if expire != 0 {
         e = gtime.Millisecond() + int64(expire)
+    } else {
+        e = gDEFAULT_MAX_EXPIRE
     }
-    item := CacheItem{v : value, e : e}
     c.dmu.Lock()
-    c.data[key] = item
+    c.data[key] = CacheItem{v : value, e : e}
     c.dmu.Unlock()
-    c.eventQueue.PushBack(EventItem{k : key, e : e, s : int(unsafe.Sizeof(item))})
+    c.eventQueue.PushBack(EventItem{k : key, e : e})
 }
 
 // 批量设置
 func (c *Cache) BatchSet(data map[string]interface{}, expire int64)  {
-    e := int64(math.MaxInt64)
-    if expire > 0 {
+    var e int64
+    if expire != 0 {
         e = gtime.Millisecond() + int64(expire)
+    } else {
+        e = gDEFAULT_MAX_EXPIRE
     }
     for k, v := range data {
         c.dmu.Lock()
@@ -189,16 +190,16 @@ func (c *Cache) Get(key string) interface{} {
 
 // 删除指定键值对
 func (c *Cache) Remove(key string) {
-    c.Set(key, nil, -1)
+    c.Set(key, nil, -1000)
 }
 
 // 批量删除键值对
 func (c *Cache) BatchRemove(keys []string) {
     for _, key := range keys {
         c.dmu.Lock()
-        c.data[key] = CacheItem{v: nil, e: -1}
+        c.data[key] = CacheItem{v: nil, e: -1000}
         c.dmu.Unlock()
-        c.eventQueue.PushBack(EventItem{k: key, e: -1})
+        c.eventQueue.PushBack(EventItem{k: key, e: -1000})
     }
 }
 
@@ -232,11 +233,6 @@ func (c *Cache) Size() int {
     return length
 }
 
-// 获得缓存对象的内存占用大小(byte)
-func (c *Cache) Bytes() int {
-    return c.bytes.Get()
-}
-
 // 删除缓存对象
 func (c *Cache) Close()  {
     c.stopEvents <- struct{}{}
@@ -249,36 +245,33 @@ func (c *Cache) autoSyncLoop() {
     for {
         if r := c.eventQueue.PopFront(); r != nil {
             item := r.(EventItem)
-            size := item.s
             newe := c.makeExpireKey(item.e)
             // 查询键名是否已经存在过期时间
             c.emu.RLock()
-            ekitem, ok := c.ekmap[item.k];
+            olde, ok := c.ekmap[item.k];
             c.emu.RUnlock()
             // 是否需要删除旧的过期时间map中对应的键名
-            if ok {
-                if newe != ekitem.e {
-                    if ekset := c.getExpireSet(ekitem.e); ekset != nil {
-                        ekset.Remove(item.k)
-                    }
+            if ok && newe != olde {
+                if ekset := c.getExpireSet(olde); ekset != nil {
+                    ekset.Remove(item.k)
                 }
-                size -= ekitem.s
             }
             c.getOrNewExpireSet(newe).Add(item.k)
             // 重新设置对应键名的过期时间
             c.emu.Lock()
-            c.ekmap[item.k] = EkmapItem{newe, item.s}
+            c.ekmap[item.k] = newe
             c.emu.Unlock()
-            // LRU操作
-            c.lru.Push(item.k, item.s)
-            c.bytes.Add(size)
+            // LRU操作记录(只有新增和修改操作才会记录到LRU管理对象中，删除不会)
+            if newe >= olde {
+                c.lru.Push(item.k)
+            }
         } else {
             break
         }
     }
 }
 
-// 自动清理过期键值对
+// LRU缓存淘汰处理+自动清理过期键值对
 // 每隔1秒清除过去3秒的键值对数据
 func (c *Cache) autoClearLoop() {
     for {
@@ -286,31 +279,43 @@ func (c *Cache) autoClearLoop() {
             case <- c.stopEvents:
                 return
             default:
+                // 缓存过期处理
                 ek  := c.makeExpireKey(gtime.Millisecond())
                 eks := []int64{ek - 2000, ek - 3000, ek - 4000}
                 for _, v := range eks {
                     if ekset := c.getExpireSet(v); ekset != nil {
-                        ekset.Iterator(func(key string) {
-                            // 删除缓存数据
-                            c.dmu.Lock()
-                            delete(c.data,  key)
-                            c.dmu.Unlock()
-
-                            // 删除异步处理数据项，并更新缓存的内存使用大小记录值
-                            c.emu.Lock()
-                            if ekitem, ok := c.ekmap[key]; ok {
-                                c.bytes.Add(-ekitem.s)
-                                delete(c.ekmap, key)
-                            }
-                            c.emu.Unlock()
-                        })
+                        ekset.Iterator(c.clearByKey)
                     }
                     // 删除异步处理键名set
                     c.smu.Lock()
                     delete(c.eksets, v)
                     c.smu.Unlock()
                 }
+                // LRU缓存淘汰处理
+                if c.cap.Get() > 0 {
+                    for i := c.Size() - c.cap.Get(); i > 0; i-- {
+                        if s := c.lru.Pop(); s != "" {
+                            c.clearByKey(s)
+                        }
+                    }
+                }
                 time.Sleep(time.Second)
         }
     }
+}
+
+// 删除对应键名的缓存数据
+func (c *Cache) clearByKey(key string) {
+    // 删除缓存数据
+    c.dmu.Lock()
+    delete(c.data,  key)
+    c.dmu.Unlock()
+
+    // 删除异步处理数据项，并更新缓存的内存使用大小记录值
+    c.emu.Lock()
+    delete(c.ekmap, key)
+    c.emu.Unlock()
+
+    // 删除LRU管理对象中指定键名
+    c.lru.Remove(key)
 }

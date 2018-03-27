@@ -2,12 +2,13 @@ package main
 
 import (
     "fmt"
-    "unsafe"
+    "gitee.com/johng/gf/g/os/gtime"
+    "math"
 )
 
 func main() {
-    fmt.Println(unsafe.Sizeof("11111111111111111111111111111111"))
-    fmt.Println(unsafe.Sizeof("1"))
+        fmt.Println(gtime.Millisecond())
+        fmt.Println(math.MaxInt64)
     //events2 := make(chan int, 100)
     //go func() {
     //    for{
