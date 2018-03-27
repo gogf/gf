@@ -21,7 +21,7 @@ type Cache struct {
     dmu        sync.RWMutex              // data锁
     emu        sync.RWMutex              // ekmap锁
     smu        sync.RWMutex              // eksets锁
-    data       map[string]CacheItem      // 缓存数据
+    data       map[string]_CacheItem     // 缓存数据
     ekmap      map[string]int64          // 键名对应的分组过期时间
     eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表
     eventQueue *gqueue.Queue             // 异步处理队列
@@ -29,13 +29,13 @@ type Cache struct {
 }
 
 // 缓存数据项
-type CacheItem struct {
+type _CacheItem struct {
     v interface{} // 缓存键值
     e int64       // 过期时间
 }
 
 // 异步队列数据项
-type EventItem struct {
+type _EventItem struct {
     k string      // 键名
     e int64       // 过期时间
 }
@@ -46,7 +46,7 @@ var cache *Cache = New()
 // Cache对象按照缓存键名首字母做了分组
 func New() *Cache {
     c := &Cache {
-        data       : make(map[string]CacheItem),
+        data       : make(map[string]_CacheItem),
         ekmap      : make(map[string]int64),
         eksets     : make(map[int64]*gset.StringSet),
         eventQueue : gqueue.New(),
@@ -80,6 +80,21 @@ func Remove(key string) {
 // (使用全局KV缓存对象)批量删除指定键值对
 func BatchRemove(keys []string) {
     cache.BatchRemove(keys)
+}
+
+// 获得所有的键名，组成字符串数组返回
+func Keys() []string {
+    return cache.Keys()
+}
+
+// 获得所有的值，组成数组返回
+func Values() []interface{} {
+    return cache.Values()
+}
+
+// 获得缓存对象的键值对数量
+func Size() int {
+    return cache.Size()
 }
 
 // 计算过期缓存的键名
@@ -118,9 +133,9 @@ func (c *Cache) Set(key string, value interface{}, expire int64) {
         e = gtime.Millisecond() + int64(expire)
     }
     c.dmu.Lock()
-    c.data[key] = CacheItem{v: value, e: e}
+    c.data[key] = _CacheItem{v: value, e: e}
     c.dmu.Unlock()
-    c.eventQueue.PushBack(EventItem{k: key, e:e})
+    c.eventQueue.PushBack(_EventItem{k: key, e:e})
 }
 
 // 批量设置
@@ -131,9 +146,9 @@ func (c *Cache) BatchSet(data map[string]interface{}, expire int64)  {
     }
     for k, v := range data {
         c.dmu.Lock()
-        c.data[k] = CacheItem{v: v, e: e}
+        c.data[k] = _CacheItem{v: v, e: e}
         c.dmu.Unlock()
-        c.eventQueue.PushBack(EventItem{k: k, e:e})
+        c.eventQueue.PushBack(_EventItem{k: k, e:e})
     }
 }
 
@@ -159,9 +174,9 @@ func (c *Cache) Remove(key string) {
 func (c *Cache) BatchRemove(keys []string) {
     for _, key := range keys {
         c.dmu.Lock()
-        c.data[key] = CacheItem{v: nil, e: -1}
+        c.data[key] = _CacheItem{v: nil, e: -1}
         c.dmu.Unlock()
-        c.eventQueue.PushBack(EventItem{k: key, e: -1})
+        c.eventQueue.PushBack(_EventItem{k: key, e: -1})
     }
 }
 
@@ -181,7 +196,7 @@ func (c *Cache) Values() []interface{} {
     values := make([]interface{}, 0)
     c.dmu.RLock()
     for _, v := range c.data {
-        values = append(values, v)
+        values = append(values, v.v)
     }
     c.dmu.RUnlock()
     return values
@@ -205,17 +220,20 @@ func (c *Cache) Close()  {
 func (c *Cache) autoSyncLoop() {
     for {
         if r := c.eventQueue.PopFront(); r != nil {
-            item := r.(EventItem)
+            item := r.(_EventItem)
             newe := c.makeExpireKey(item.e)
+            // 查询键名是否已经存在过期时间
             c.emu.RLock()
             olde, ok := c.ekmap[item.k];
             c.emu.RUnlock()
+            // 是否需要删除旧的过期时间map中对应的键名
             if ok && newe != olde {
                 if ekset := c.getExpireSet(olde); ekset != nil {
                     ekset.Remove(item.k)
                 }
             }
             c.getOrNewExpireSet(newe).Add(item.k)
+            // 重新设置对应键名的过期时间
             c.emu.Lock()
             c.ekmap[item.k] = newe
             c.emu.Unlock()
@@ -237,18 +255,19 @@ func (c *Cache) autoClearLoop() {
                 eks := []int64{ek - 2000, ek - 3000, ek - 4000}
                 for _, v := range eks {
                     if ekset := c.getExpireSet(v); ekset != nil {
-
                         ekset.Iterator(func(key string) {
+                            // 删除缓存数据
                             c.dmu.Lock()
                             delete(c.data,  key)
                             c.dmu.Unlock()
 
+                            // 删除异步处理数据项
                             c.emu.Lock()
                             delete(c.ekmap, key)
                             c.emu.Unlock()
                         })
-
                     }
+                    // 删除异步处理键名set
                     c.smu.Lock()
                     delete(c.eksets, v)
                     c.smu.Unlock()
