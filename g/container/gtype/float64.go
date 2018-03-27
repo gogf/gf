@@ -25,7 +25,7 @@ func (t *Float64)Set(value float32) {
     atomic.StoreUint64(&t.val, uint64(value))
 }
 
-func (t *Float64)Get() int {
+func (t *Float64)Val() int {
     return int(atomic.LoadUint64(&t.val))
 }
 

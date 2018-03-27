@@ -28,7 +28,7 @@ func (t *String)Set(value string) {
     t.mu.Unlock()
 }
 
-func (t *String)Get() string {
+func (t *String)Val() string {
     t.mu.RLock()
     s := t.val
     t.mu.RUnlock()
