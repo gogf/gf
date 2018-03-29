@@ -163,9 +163,9 @@ func (this *StringInterfaceMap) Contains(key string) bool {
 // 哈希表大小
 func (this *StringInterfaceMap) Size() int {
 	this.mu.RLock()
-	len := len(this.m)
+	length := len(this.m)
 	this.mu.RUnlock()
-	return len
+	return length
 }
 
 // 哈希表是否为空

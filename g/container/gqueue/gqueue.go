@@ -15,7 +15,7 @@ import (
     "sync"
     "errors"
     "container/list"
-    "sync/atomic"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 type Queue struct {
@@ -24,7 +24,7 @@ type Queue struct {
     limit  int            // 队列限制大小
     limits chan struct{}  // 用于队列写入限制
     events chan struct{}  // 用于队列出列限制
-    closed int32          // 队列是否关闭(0:未关闭，1:关闭)
+    closed *gtype.Bool    // 队列是否关闭
 }
 
 // 队列大小为非必须参数，默认不限制
@@ -37,13 +37,14 @@ func New(limit...int) *Queue {
         list   : list.New(),
         limit  : 0,
         limits : make(chan struct{}, size),
-        events : make(chan struct{}, math.MaxInt64),
+        events : make(chan struct{}, math.MaxInt32),
+        closed : gtype.NewBool(),
     }
 }
 
 // 将数据压入队列, 队尾
 func (q *Queue) PushBack(v interface{}) error {
-    if q.isClosed() {
+    if q.closed.Val() {
         return errors.New("closed")
     }
     if q.limit > 0 {
@@ -60,7 +61,7 @@ func (q *Queue) PushBack(v interface{}) error {
 
 // 将数据压入队列, 队头
 func (q *Queue) PushFront(v interface{}) error {
-    if q.isClosed() {
+    if q.closed.Val() {
         return errors.New("closed")
     }
     // 限制队列大小，使用channel进行阻塞限制
@@ -78,6 +79,9 @@ func (q *Queue) PushFront(v interface{}) error {
 
 // 从队头先进先出地从队列取出一项数据，当没有数据可获取时，阻塞等待
 func (q *Queue) PopFront() interface{} {
+    if q.closed.Val() {
+        return nil
+    }
     if q.limit > 0 {
         <- q.limits
     } else {
@@ -95,6 +99,9 @@ func (q *Queue) PopFront() interface{} {
 
 // 从队尾先进先出地从队列取出一项数据，当没有数据可获取时，阻塞等待
 func (q *Queue) PopBack() interface{} {
+    if q.closed.Val() {
+        return nil
+    }
     if q.limit > 0 {
         <- q.limits
     } else {
@@ -112,8 +119,8 @@ func (q *Queue) PopBack() interface{} {
 
 // 关闭队列(通知所有通过Pop*阻塞的协程退出)
 func (q *Queue) Close() {
-    if !q.isClosed() {
-        atomic.StoreInt32(&q.closed, 1)
+    if !q.closed.Val() {
+        q.closed.Set(true)
         close(q.limits)
         close(q.events)
     }
@@ -124,7 +131,4 @@ func (q *Queue) Size() int {
     return len(q.events)
 }
 
-// 队列是否关闭
-func (q *Queue) isClosed() bool {
-    return atomic.LoadInt32(&q.closed) > 0
-}
+
