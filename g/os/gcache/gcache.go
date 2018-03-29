@@ -96,6 +96,20 @@ func BatchRemove(keys []string) {
     cache.BatchRemove(keys)
 }
 
+// 基于内存缓存的锁，锁成功返回true，失败返回false，当失败时表示有其他的锁存在
+func Lock(key string, expire int64) bool {
+    if v := cache.Get(key); v != nil {
+        return false
+    }
+    cache.Set(key, struct {}{}, expire)
+    return true
+}
+
+// 解除基于内存缓存的锁
+func Unlock(key string) {
+    cache.Remove(key)
+}
+
 // 获得所有的键名，组成字符串数组返回
 func Keys() []string {
     return cache.Keys()
@@ -173,6 +187,20 @@ func (c *Cache) BatchSet(data map[string]interface{}, expire int64)  {
         c.dmu.Unlock()
         c.eventQueue.PushBack(_EventItem{k: k, e:e})
     }
+}
+
+// 基于内存缓存的锁，锁成功返回true，失败返回false，当失败时表示有其他的锁存在
+func (c *Cache) Lock(key string, expire int64) bool {
+    if v := c.Get(key); v != nil {
+        return false
+    }
+    c.Set(key, struct {}{}, expire)
+    return true
+}
+
+// 解除基于内存缓存的锁
+func (c *Cache) Unlock(key string) {
+    c.Remove(key)
 }
 
 // 获取指定键名的值
