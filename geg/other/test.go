@@ -2,13 +2,16 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gtime"
-    "math"
+    "gitee.com/johng/gf/g/util/gidgen"
 )
 
 func main() {
-        fmt.Println(gtime.Millisecond())
-        fmt.Println(math.MaxInt64)
+    g := gidgen.New(2)
+    for i := 0; i < 11; i++ {
+        fmt.Println(g.Int())
+    }
+    g.Close()
+    fmt.Println(g.Uint())
     //events2 := make(chan int, 100)
     //go func() {
     //    for{

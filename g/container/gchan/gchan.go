@@ -8,31 +8,28 @@
 package gchan
 
 import (
-    "sync"
     "errors"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 type Chan struct {
-    mu     sync.RWMutex
     list   chan interface{}
-    closed bool
+    closed *gtype.Bool
 }
 
 func New(limit int) *Chan {
     return &Chan {
-        list : make(chan interface{}, limit),
+        list   : make(chan interface{}, limit),
+        closed : gtype.NewBool(),
     }
 }
 
 // 将数据压入队列
 func (q *Chan) Push(v interface{}) error {
-    q.mu.RLock()
-    if q.closed {
-        q.mu.RUnlock()
+    if q.closed.Val() {
         return errors.New("closed")
     }
     q.list <- v
-    q.mu.RUnlock()
     return nil
 }
 
@@ -43,12 +40,10 @@ func (q *Chan) Pop() interface{} {
 
 // 关闭队列(通知所有通过Pop阻塞的协程退出)
 func (q *Chan) Close() {
-    q.mu.Lock()
-    if !q.closed {
-        q.closed = true
+    if !q.closed.Val() {
+        q.closed.Set(true)
         close(q.list)
     }
-    q.mu.Unlock()
 }
 
 // 获取当前队列大小

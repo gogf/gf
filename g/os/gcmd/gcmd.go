@@ -5,7 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 //
 
-// 命令行管理
+// 命令行管理.
 package gcmd
 
 import (
