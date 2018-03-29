@@ -138,9 +138,9 @@ func (this *StringIntMap) Contains(key string) bool {
 // 哈希表大小
 func (this *StringIntMap) Size() int {
     this.mu.RLock()
-    len := len(this.m)
+    length := len(this.m)
     this.mu.RUnlock()
-    return len
+    return length
 }
 
 // 哈希表是否为空

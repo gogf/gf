@@ -13,24 +13,37 @@ import "math"
 
 // ID生成器管理对象
 type Gen struct {
-    ch chan uint
+    ch         chan uint
+    closeQueue chan struct{}
 }
 
 // 创建一个ID生成器，并给定ID池大小
 func New (bufsize int) *Gen {
     g := &Gen {
-        ch : make(chan uint, bufsize),
+        ch         : make(chan uint, bufsize),
+        closeQueue : make(chan struct{}),
     }
     go g.startLoop()
     return g
 }
 
+// 关闭生成器
+func (g *Gen) Close() {
+    close(g.closeQueue)
+    close(g.ch)
+}
+
 // 内部循环，当最大值使用完之后重新从1开始获取
 func (g *Gen) startLoop() {
     for {
-        // 当ch达到缓冲池大小，会阻塞，只要有线程取出值，再立即填充
-        for i := uint(1); i < uint(math.MaxUint64); i++ {
-            g.ch <- i
+        select {
+            case <- g.closeQueue:
+                return
+            default:
+                // 当ch达到缓冲池大小，会阻塞，只要有线程取出值，再立即填充
+                for i := uint(1); i < uint(math.MaxUint64); i++ {
+                    g.ch <- i
+                }
         }
     }
 }
@@ -42,11 +55,14 @@ func (g *Gen) Uint() uint {
 
 // 从池中获取一个ID返回(int)
 func (g *Gen) Int() int {
-    i := int(<- g.ch & 0x7FFFFFFFFFFFFFFF)
-    // 可能是int与uint之间的临界点
-    if i == 0 {
-        i = int(<- g.ch & 0x7FFFFFFFFFFFFFFF)
+    i := <- g.ch
+    if i != 0 {
+        i = i & 0x7FFFFFFFFFFFFFFF
+        // 可能是int与uint之间的临界点
+        if i == 0 {
+            return g.Int()
+        }
     }
-    return i
+    return int(i)
 }
 
