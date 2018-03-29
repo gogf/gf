@@ -266,9 +266,10 @@ func (c *Cache) autoSyncLoop() {
                 c.lru.Push(item.k)
             }
         } else {
-            break
+            return
         }
     }
+
 }
 
 // LRU缓存淘汰处理+自动清理过期键值对
