@@ -148,6 +148,7 @@ func New(groupName...string) (*Db, error) {
         if len(masterList) < 1 {
             return nil, errors.New("at least one master node configuration's need to make sense")
         }
+
         masterNode := getConfigNodeByPriority(&masterList)
         var slaveNode *ConfigNode
         if len(slaveList) > 0 {
