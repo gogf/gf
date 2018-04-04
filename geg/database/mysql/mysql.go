@@ -16,7 +16,7 @@ func init () {
         Host    : "127.0.0.1",
         Port    : "3306",
         User    : "root",
-        Pass    : "123456",
+        Pass    : "8692651",
         Name    : "test",
         Type    : "mysql",
         Role    : "master",
@@ -438,23 +438,23 @@ func instance() {
 
 func main() {
 
-    //create()
-    //create()
-    //insert()
-    //query()
-    //replace()
-    //save()
-    //batchInsert()
-    //update1()
-    //update2()
-    //update3()
-    //linkopSelect1()
-    //linkopSelect2()
-    //linkopSelect3()
-    //linkopUpdate1()
-    //linkopUpdate2()
-    //linkopUpdate3()
+    create()
+    create()
+    insert()
+    query()
+    replace()
+    save()
+    batchInsert()
+    update1()
+    update2()
+    update3()
+    linkopSelect1()
+    linkopSelect2()
+    linkopSelect3()
+    linkopUpdate1()
+    linkopUpdate2()
+    linkopUpdate3()
     //keepPing()
-    transaction1()
-    transaction2()
+    //transaction1()
+    //transaction2()
 }
