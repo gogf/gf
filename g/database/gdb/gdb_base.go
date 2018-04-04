@@ -207,17 +207,17 @@ func (db *Db) insert(table string, data Map, option uint8) (sql.Result, error) {
 
 // CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
 func (db *Db) Insert(table string, data Map) (sql.Result, error) {
-    return db.link.insert(table, data, OPTION_INSERT)
+    return db.insert(table, data, OPTION_INSERT)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (db *Db) Replace(table string, data Map) (sql.Result, error) {
-    return db.link.insert(table, data, OPTION_REPLACE)
+    return db.insert(table, data, OPTION_REPLACE)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (db *Db) Save(table string, data Map) (sql.Result, error) {
-    return db.link.insert(table, data, OPTION_SAVE)
+    return db.insert(table, data, OPTION_SAVE)
 }
 
 // 批量写入数据
@@ -276,17 +276,17 @@ func (db *Db) batchInsert(table string, list List, batch int, option uint8) (sql
 
 // CURD操作:批量数据指定批次量写入
 func (db *Db) BatchInsert(table string, list List, batch int) (sql.Result, error) {
-    return db.link.batchInsert(table, list, batch, OPTION_INSERT)
+    return db.batchInsert(table, list, batch, OPTION_INSERT)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (db *Db) BatchReplace(table string, list List, batch int) (sql.Result, error) {
-    return db.link.batchInsert(table, list, batch, OPTION_REPLACE)
+    return db.batchInsert(table, list, batch, OPTION_REPLACE)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (db *Db) BatchSave(table string, list List, batch int) (sql.Result, error) {
-    return db.link.batchInsert(table, list, batch, OPTION_SAVE)
+    return db.batchInsert(table, list, batch, OPTION_SAVE)
 }
 
 // CURD操作:数据更新，统一采用sql预处理

@@ -1,38 +1,56 @@
 package main
 
 import (
+    "gitee.com/johng/gf/g/database/gdb"
     "fmt"
-    "gitee.com/johng/gf/g/util/gidgen"
 )
 
-func main() {
-    g := gidgen.New(2)
-    for i := 0; i < 11; i++ {
-        fmt.Println(g.Int())
-    }
-    g.Close()
-    fmt.Println(g.Uint())
-    //events2 := make(chan int, 100)
-    //go func() {
-    //    for{
-    //        v := <- events1
-    //        fmt.Println(v)
-    //    }
-    //
-    //}()
+type Model struct {
+    TableName string
+}
 
-    //go func() {
-    //    time.Sleep(2*time.Second)
-    //    events1 <- 1
-    //    events2 <- 2
-    //    time.Sleep(2*time.Second)
-    //    close(events1)
-    //    close(events2)
-    //    events1 <- 1
-    //    events2 <- 2
-    //}()
-    //
-    //select {
-    //
-    //}
+var Db *gdb.Db
+
+func init() {
+    gdb.AddDefaultConfigNode(gdb.ConfigNode {
+        Host    : "127.0.0.1",
+        Port    : "3306",
+        User    : "root",
+        Pass    : "123456",
+        Name    : "test",
+        Type    : "mysql",
+        Role    : "master",
+        Charset : "utf8",
+    })
+    var err error
+    Db, err = gdb.Instance()
+    checkErr(err)
+}
+
+func checkErr(err error) {
+    if err != nil {
+        panic(err)
+    }
+}
+
+type UserModel struct {
+    Model
+}
+
+func (u *UserModel) Get() (user gdb.Map){
+    user, _ = Db.Table("user").Fields("uid, nickname, email").Where("uid = ?", 15).One()
+    return
+}
+
+func (u *UserModel) Insert(data gdb.Map) (id int64) {
+    ret, _ := Db.Table("user").Data(data).Insert()
+    id, _   = ret.LastInsertId()
+    return
+}
+
+func main() {
+    u    := &UserModel{}
+    user := u.Get()
+    fmt.Println(user)
+    u.Insert(gdb.Map{"uid": 100, "name": "jack"})
 }
