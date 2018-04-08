@@ -63,6 +63,7 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
     r.Session = GetSession(r.Cookie.SessionId())
 
     // 请求处理
+    s.callHookHandler(r, "BeforeServe")
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
@@ -70,18 +71,22 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
         c.MethodByName(h.fname).Call(nil)
         c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
     } else {
-        s.callHookHandler(r, "Init")
         h.faddr(r)
-        s.callHookHandler(r, "Shut")
     }
+    s.callHookHandler(r, "AfterServe")
+
     // 路由规则打包
+    s.callHookHandler(r, "BeforeRouterPatch")
     if buffer, err := s.Router.Patch(r.Response.Buffer()); err == nil {
         r.Response.ClearBuffer()
         r.Response.Write(buffer)
     }
+    s.callHookHandler(r, "AfterRouterPatch")
 
     // 输出Cookie
+    s.callHookHandler(r, "BeforeCookieOutput")
     r.Cookie.Output()
+    s.callHookHandler(r, "AfterCookieOutput")
 
     // 输出缓冲区
     r.Response.OutputBuffer()
