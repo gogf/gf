@@ -108,6 +108,17 @@ func (d *Domain) BindControllerMethod(pattern string, c Controller, methods stri
     return nil
 }
 
+// 绑定指定的hook回调函数, hook参数的值由ghttp server设定，参数不区分大小写
+// 目前hook支持：Init/Shut
+func (d *Domain)BindHookHandler(pattern string, hook string, handler HandlerFunc) error {
+    for domain, _ := range d.m {
+        if err := d.s.BindHookHandler(pattern + "@" + domain, hook, handler); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
 // 绑定URI服务注册的Init回调函数，回调时按照注册顺序执行
 // Init回调调用时机为请求进入控制器之前，初始化Request对象之后
 func (d *Domain)BindHookHandlerInit(pattern string, handler HandlerFunc) error {

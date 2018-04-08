@@ -92,8 +92,7 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
 
 // 按照指定hook回调函数的注册顺序进行调用
 func (s *Server)callHookHandler(r *Request, hook string) {
-    var l []HandlerFunc
-    l = s.getHookList(gDEFAULT_DOMAIN, r.Method, r.URL.Path, hook)
+    l := s.getHookList(gDEFAULT_DOMAIN, r.Method, r.URL.Path, hook)
     if l == nil {
         l = s.getHookList(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path, hook)
     }
