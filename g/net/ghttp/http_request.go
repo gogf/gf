@@ -12,12 +12,13 @@ import (
     "net/url"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 // 请求对象
 type Request struct {
     http.Request
-    parsedPost bool            // POST参数是否已经解析
+    parsedPost *gtype.Bool     // POST参数是否已经解析
     getvals    *url.Values     // GET参数
     Id         int             // 请求id(唯一)
     Server     *Server         // 请求关联的服务器对象
@@ -36,9 +37,9 @@ func (r *Request) initGet() {
 
 // 初始化POST请求参数
 func (r *Request) initPost() {
-    if !r.parsedPost {
+    if !r.parsedPost.Val() {
         // 快速保存，尽量避免并发问题
-        r.parsedPost = true
+        r.parsedPost.Set(true)
         // MultiMedia表单请求解析允许最大使用内存：1GB
         r.ParseMultipartForm(1024*1024*1024)
     }
