@@ -12,14 +12,14 @@ func (s *Server) startCloseQueueLoop() {
         for {
             if v := s.closeQueue.PopFront(); v != nil {
                 r := v.(*Request)
-                s.callHookHandler(r, "BeforeRequestClose")
+                s.callHookHandler(r, "BeforeClose")
 
                 // 关闭当前会话的Cookie
                 r.Cookie.Close()
                 // 更新Session会话超时时间
                 r.Session.UpdateExpire()
 
-                s.callHookHandler(r, "AfterRequestClose")
+                s.callHookHandler(r, "AfterClose")
             }
         }
     }()
