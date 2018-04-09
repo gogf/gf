@@ -18,6 +18,7 @@ import (
     "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/encoding/ghtml"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -38,10 +39,11 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     }
     // 构造请求参数对象
     request  := &Request{
-        Id       : s.servedCount.Add(1),
-        Server   : s,
-        Request  : *r,
-        Response : &Response {
+        parsedPost : gtype.NewBool(),
+        Id         : s.servedCount.Add(1),
+        Server     : s,
+        Request    : *r,
+        Response   : &Response {
             ResponseWriter : w,
         },
     }
