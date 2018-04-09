@@ -38,7 +38,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     }
     // 构造请求参数对象
     request  := &Request{
-        Id       : s.idgen.Int(),
+        Id       : s.servedCount.Add(1),
         Server   : s,
         Request  : *r,
         Response : &Response {
@@ -89,7 +89,9 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
     s.callHookHandler(r, "AfterCookieOutput")
 
     // 输出缓冲区
+    s.callHookHandler(r, "BeforeBufferOutput")
     r.Response.OutputBuffer()
+    s.callHookHandler(r, "AfterBufferOutput")
 
     // 将Request对象指针丢到队列中异步处理
     s.closeQueue.PushBack(r)
