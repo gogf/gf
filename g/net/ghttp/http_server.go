@@ -19,10 +19,10 @@ import (
     "path/filepath"
     "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/net/grouter"
-    "gitee.com/johng/gf/g/util/gidgen"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/container/glist"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 const (
@@ -41,7 +41,7 @@ type Server struct {
     status      int8                     // 当前服务器状态(0：未启动，1：运行中)
     handlerMap  HandlerMap               // 所有注册的回调函数
     methodsMap  map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
-    idgen       *gidgen.Gen              // 请求ID生成器
+    servedCount *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)
     closeQueue  *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
     hooksMap    *gmap.StringInterfaceMap // 钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
     Router      *grouter.Router          // 路由管理对象
@@ -77,7 +77,7 @@ func GetServer(names...string) (*Server) {
         name        : name,
         handlerMap  : make(HandlerMap),
         methodsMap  : make(map[string]bool),
-        idgen       : gidgen.New(50000),
+        servedCount : gtype.NewInt(),
         closeQueue  : gqueue.New(),
         hooksMap    : gmap.NewStringInterfaceMap(),
         Router      : grouter.New(),
@@ -488,6 +488,16 @@ func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc
             l = v.(*glist.List)
         }
         l.PushBack(handler)
+    }
+    return nil
+}
+
+// 通过map批量绑定回调函数
+func (s *Server)BindHookHandlerByMap(pattern string, hookmap map[string]HandlerFunc) error {
+    for k, v := range hookmap {
+        if err := s.BindHookHandler(pattern, k, v); err != nil {
+            return err
+        }
     }
     return nil
 }
