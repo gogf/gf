@@ -119,6 +119,16 @@ func (d *Domain)BindHookHandler(pattern string, hook string, handler HandlerFunc
     return nil
 }
 
+// 通过map批量绑定回调函数
+func (d *Domain)BindHookHandlerByMap(pattern string, hookmap map[string]HandlerFunc) error {
+    for domain, _ := range d.m {
+        if err := d.s.BindHookHandlerByMap(pattern + "@" + domain, hookmap); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
 //// 绑定URI服务注册的Init回调函数，回调时按照注册顺序执行
 //// Init回调调用时机为请求进入控制器之前，初始化Request对象之后
 //func (d *Domain)BindHookHandlerInit(pattern string, handler HandlerFunc) error {
