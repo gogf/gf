@@ -78,22 +78,21 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
     s.callHookHandler(r, "AfterServe")
 
     // 路由规则打包
-    s.callHookHandler(r, "BeforeRouterPatch")
+    s.callHookHandler(r, "BeforePatch")
     if buffer, err := s.Router.Patch(r.Response.Buffer()); err == nil {
         r.Response.ClearBuffer()
         r.Response.Write(buffer)
     }
-    s.callHookHandler(r, "AfterRouterPatch")
+    s.callHookHandler(r, "AfterPatch")
+
+    s.callHookHandler(r, "BeforeOutput")
 
     // 输出Cookie
-    s.callHookHandler(r, "BeforeCookieOutput")
     r.Cookie.Output()
-    s.callHookHandler(r, "AfterCookieOutput")
-
     // 输出缓冲区
-    s.callHookHandler(r, "BeforeBufferOutput")
     r.Response.OutputBuffer()
-    s.callHookHandler(r, "AfterBufferOutput")
+
+    s.callHookHandler(r, "AfterOutput")
 
     // 将Request对象指针丢到队列中异步处理
     s.closeQueue.PushBack(r)
