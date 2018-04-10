@@ -12,48 +12,37 @@ import (
     "strconv"
     "strings"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/util/grand"
-    "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/util/gconv"
-    "sync/atomic"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 // 单个session对象
 type Session struct {
     mu     sync.RWMutex             // 并发安全互斥锁
-    id     string                   // sessionid
-    data   *gmap.StringInterfaceMap // session数据
+    id     string                   // SessionId
+    data   *gmap.StringInterfaceMap // Session数据
+    server *Server                  // 所属Server
 }
-
-// 默认session过期时间(秒)
-var defaultSessionMaxAge int32 = 600
 
 // 生成一个唯一的sessionid字符串
 func makeSessionId() string {
     return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 32) + grand.RandStr(3))
 }
 
-// 设置默认的session过期时间
-func SetSessionMaxAge(maxage int) {
-    atomic.StoreInt32(&defaultSessionMaxAge, int32(maxage))
-}
-
 // 获取或者生成一个session对象
-func GetSession(sessionid string) *Session {
-    if r := gcache.Get(sessionCacheKey(sessionid)); r != nil {
+func GetSession(r *Request) *Session {
+    s   := r.Server
+    sid := r.Cookie.SessionId()
+    if r := s.sessions.Get(sid); r != nil {
         return r.(*Session)
     }
-    s := &Session {
-        id     : sessionid,
+    ses := &Session {
+        id     : sid,
         data   : gmap.NewStringInterfaceMap(),
+        server : s,
     }
-    return s
-}
-
-// session在gache中的缓存键名
-func sessionCacheKey(sessionid string) string {
-    return "session_" + sessionid
+    return ses
 }
 
 // 获取sessionid
@@ -112,5 +101,5 @@ func (s *Session) Remove (k string) {
 
 // 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
 func (s *Session) UpdateExpire() {
-    gcache.Set(sessionCacheKey(s.id), s, int64(defaultSessionMaxAge*1000))
+    s.server.sessions.Set(s.id, s, int64(s.server.sessionMaxAge.Val()*1000))
 }

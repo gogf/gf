@@ -8,10 +8,10 @@
 package ghttp
 
 import (
-    "net/http"
-    "crypto/tls"
     "time"
     "log"
+    "net/http"
+    "crypto/tls"
 )
 
 // HTTP Server 设置结构体
