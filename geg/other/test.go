@@ -2,17 +2,25 @@ package main
 
 import (
     "fmt"
-    "reflect"
+    "github.com/fatih/structs"
 )
 
 type T struct {
-
+    Name string
+    Age  int
+    S    struct {
+        N string
+    }
 }
 
 func (t *T) Test2Test() {}
 
 func main() {
-    obj := &T{}
-    v := reflect.ValueOf(obj).MethodByName("Test2Test")
-    fmt.Println(v.IsValid())
+    v := &T{
+        Name : "john",
+        Age  : 18,
+    }
+    v.S.N = "ttt"
+    fmt.Println(structs.Map(v))
+
 }

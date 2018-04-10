@@ -64,6 +64,28 @@ func Test_CheckMap(t *testing.T) {
     }
 }
 
+func Test_CheckObject(t *testing.T) {
+    type Object struct {
+        Name string
+        Age  int
+    }
+    rules := map[string]string {
+        "Name" : "required|length:6,16",
+        "Age"  : "between:18,30",
+    }
+    msgs  := map[string]interface{} {
+        "Name" : map[string]string {
+            "required" : "名称不能为空",
+            "length"   : "名称长度为:min到:max个字符",
+        },
+        "Age"  : "年龄为18到30周岁",
+    }
+    obj := &Object{"john", 16}
+    if m := gvalid.CheckObject(obj, rules, msgs); m == nil {
+        t.Error("CheckObject校验失败")
+    }
+}
+
 func Test_Required(t *testing.T) {
     if m := gvalid.Check("1", "required", nil);  m != nil {
         t.Error(m)

@@ -18,6 +18,8 @@ import (
     "gitee.com/johng/gf/g/util/gregx"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gmap"
+    "github.com/fatih/structs"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 /*
@@ -399,6 +401,15 @@ func CheckMap(params map[string]string, rules map[string]string, msgs...map[stri
         return emsgs
     }
     return nil
+}
+
+// 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法
+func CheckObject(object interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
+    params := make(map[string]string)
+    for k, v := range structs.Map(object) {
+        params[k] = gconv.String(v)
+    }
+    return CheckMap(params, rules, msgs...)
 }
 
 // 检测单条数据的规则，其中params参数为非必须参数，可以传递所有的校验参数进来，进行多参数对比(部分校验规则需要)
