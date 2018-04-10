@@ -15,13 +15,6 @@ import (
     "strings"
     "net/http"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/container/gmap"
-)
-
-const (
-    gDEFAULT_PATH    = "/"           // 默认path
-    gDEFAULT_MAX_AGE = 86400*365     // 默认cookie有效期(一年)
-    SESSION_ID_NAME  = "gfsessionid" // 默认存放Cookie中的SessionId名称
 )
 
 // cookie对象
@@ -29,6 +22,7 @@ type Cookie struct {
     mu       sync.RWMutex          // 并发安全互斥锁
     data     map[string]CookieItem // 数据项
     domain   string                // 默认的cookie域名
+    server   *Server               // 所属Server
     request  *Request              // 所属HTTP请求对象
     response *Response             // 所属HTTP返回对象
 }
@@ -41,52 +35,37 @@ type CookieItem struct {
     expire int    // 过期时间
 }
 
-// 包含所有当前服务器正在服务的Cookie(每个请求一个Cookie对象)
-var cookies = gmap.NewUintInterfaceMap()
-
-// 创建一个cookie对象，与传入的请求对应
-func NewCookie(r *Request) *Cookie {
-    if r := GetCookie(r.Id); r != nil {
-        return r
+// 获取或者创建一个cookie对象，与传入的请求对应
+func GetCookie(r *Request) *Cookie {
+    if v := r.Server.cookies.Get(r.Id); v != nil {
+        return v.(*Cookie)
     }
     c := &Cookie {
         data     : make(map[string]CookieItem),
-        domain   : defaultDomain(r),
+        domain   : strings.Split(r.Host, ":")[0],
+        server   : r.Server,
         request  : r,
         response : r.Response,
     }
     c.init()
-    cookies.Set(uint(r.Id), c)
+    c.server.cookies.Set(r.Id, c)
     return c
-}
-
-// 获取一个已经存在的Cookie对象
-func GetCookie(requestid int) *Cookie {
-    if r := cookies.Get(uint(requestid)); r != nil {
-        return r.(*Cookie)
-    }
-    return nil
-}
-
-// 获取默认的domain参数
-func defaultDomain(r *Request) string {
-    return strings.Split(r.Host, ":")[0]
 }
 
 // 从请求流中初始化
 func (c *Cookie) init() {
     c.mu.Lock()
-    defer c.mu.Unlock()
     for _, v := range c.request.Cookies() {
         c.data[v.Name] = CookieItem {
             v.Value, v.Domain, v.Path, v.Expires.Second(),
         }
     }
+    c.mu.Unlock()
 }
 
 // 获取SessionId
 func (c *Cookie) SessionId() string {
-    v := c.Get(SESSION_ID_NAME)
+    v := c.Get(c.server.GetSessionIdName())
     if v == "" {
         v = makeSessionId()
         c.SetSessionId(v)
@@ -96,12 +75,12 @@ func (c *Cookie) SessionId() string {
 
 // 设置SessionId
 func (c *Cookie) SetSessionId(sessionid string)  {
-    c.Set(SESSION_ID_NAME, sessionid)
+    c.Set(c.server.GetSessionIdName(), sessionid)
 }
 
 // 设置cookie，使用默认参数
 func (c *Cookie) Set(key, value string) {
-    c.SetCookie(key, value, c.domain, gDEFAULT_PATH, gDEFAULT_MAX_AGE)
+    c.SetCookie(key, value, c.domain, gDEFAULT_COOKIE_PATH, c.server.GetCookieMaxAge())
 }
 
 // 设置cookie，带详细cookie参数
@@ -135,13 +114,12 @@ func (c *Cookie) Remove(key, domain, path string) {
 
 // 请求完毕后删除已经存在的Cookie对象
 func (c *Cookie) Close() {
-    cookies.Remove(uint(c.request.Id))
+    c.server.cookies.Remove(c.request.Id)
 }
 
 // 输出到客户端
 func (c *Cookie) Output() {
     c.mu.RLock()
-    defer c.mu.RUnlock()
     for k, v := range c.data {
         if v.expire == 0 {
             continue
@@ -157,4 +135,5 @@ func (c *Cookie) Output() {
             },
         )
     }
+    c.mu.RUnlock()
 }

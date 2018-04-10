@@ -23,5 +23,4 @@ func main() {
     ghttp.GetServer().SetPort(10000)
     ghttp.GetServer().Run()
 
-    select { }
 }
