@@ -7,44 +7,51 @@
 package ghttp
 
 import (
-    "strings"
-    "time"
-    "log"
     "sync"
     "errors"
+    "strings"
     "reflect"
-    "strconv"
     "net/http"
-    "crypto/tls"
-    "path/filepath"
     "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/net/grouter"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/os/gcache"
 )
 
 const (
-    gDEFAULT_SERVER  = "default"
-    gDEFAULT_DOMAIN  = "default"
-    gDEFAULT_METHOD  = "all"
-    gHTTP_METHODS    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+    gHTTP_METHODS             = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+    gDEFAULT_SERVER           = "default"
+    gDEFAULT_DOMAIN           = "default"
+    gDEFAULT_METHOD           = "all"
+
+    gDEFAULT_COOKIE_PATH      = "/"           // 默认path
+    gDEFAULT_COOKIE_MAX_AGE   = 86400*365     // 默认cookie有效期(一年)
+    gDEFAULT_SESSION_MAX_AGE  = 600           // 默认session有效期(600秒)
+    gDEFAULT_SESSION_ID_NAME  = "gfsessionid" // 默认存放Cookie中的SessionId名称
 )
 
 // http server结构体
 type Server struct {
-    hmu         sync.RWMutex             // handlerMap互斥锁
-    name        string                   // 服务名称，方便识别
-    server      http.Server              // 底层http server对象
-    config      ServerConfig             // 配置对象
-    status      int8                     // 当前服务器状态(0：未启动，1：运行中)
-    handlerMap  HandlerMap               // 所有注册的回调函数
-    methodsMap  map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
-    servedCount *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)
-    closeQueue  *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
-    hooksMap    *gmap.StringInterfaceMap // 钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
-    Router      *grouter.Router          // 路由管理对象
+    hmu           sync.RWMutex             // handlerMap互斥锁
+    name          string                   // 服务名称，方便识别
+    server        http.Server              // 底层http server对象
+    config        ServerConfig             // 配置对象
+    status        int8                     // 当前服务器状态(0：未启动，1：运行中)
+    handlerMap    HandlerMap               // 所有注册的回调函数
+    methodsMap    map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
+    closeQueue    *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
+    hooksMap      *gmap.StringInterfaceMap // 钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
+    servedCount   *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)
+    cookieMaxAge  *gtype.Int               // Cookie有效期
+    sessionMaxAge *gtype.Int               // Session有效期
+    sessionIdName *gtype.String            // SessionId名称
+    cookies       *gmap.IntInterfaceMap    // 当前服务器正在服务(请求正在执行)的Cookie(每个请求一个Cookie对象)
+    sessions      *gcache.Cache            // Session内存缓存
+
+    Router        *grouter.Router          // 路由管理对象
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -74,13 +81,18 @@ func GetServer(names...string) (*Server) {
         return s.(*Server)
     }
     s := &Server{
-        name        : name,
-        handlerMap  : make(HandlerMap),
-        methodsMap  : make(map[string]bool),
-        servedCount : gtype.NewInt(),
-        closeQueue  : gqueue.New(),
-        hooksMap    : gmap.NewStringInterfaceMap(),
-        Router      : grouter.New(),
+        name          : name,
+        handlerMap    : make(HandlerMap),
+        methodsMap    : make(map[string]bool),
+        servedCount   : gtype.NewInt(),
+        closeQueue    : gqueue.New(),
+        hooksMap      : gmap.NewStringInterfaceMap(),
+        Router        : grouter.New(),
+        cookies       : gmap.NewIntInterfaceMap(),
+        sessions      : gcache.New(),
+        cookieMaxAge  : gtype.NewInt(gDEFAULT_COOKIE_MAX_AGE),
+        sessionMaxAge : gtype.NewInt(gDEFAULT_SESSION_MAX_AGE),
+        sessionIdName : gtype.NewString(gDEFAULT_SESSION_ID_NAME),
     }
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = true
@@ -116,143 +128,6 @@ func (s *Server) Run() error {
         return err
     }
     s.status = 1
-    return nil
-}
-
-// 获取
-func (s *Server) GetName() string {
-    return s.name
-}
-
-// http server setting设置
-// 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
-func (s *Server)SetConfig(c ServerConfig) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    if c.Handler == nil {
-        c.Handler = http.HandlerFunc(s.defaultHttpHandle)
-    }
-    s.config = c
-    // 需要处理server root最后的目录分隔符号
-    if s.config.ServerRoot != "" {
-        s.SetServerRoot(s.config.ServerRoot)
-    }
-    // 必需设置默认值的属性
-    if len(s.config.IndexFiles) < 1 {
-        s.SetIndexFiles(defaultServerConfig.IndexFiles)
-    }
-    if s.config.ServerAgent == "" {
-        s.SetServerAgent(defaultServerConfig.ServerAgent)
-    }
-    return nil
-}
-
-// 设置http server参数 - Addr
-func (s *Server)SetAddr(addr string) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.Addr = addr
-    return nil
-}
-
-// 设置http server参数 - Port
-func (s *Server)SetPort(port int) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.Addr = ":" + strconv.Itoa(port)
-    return nil
-}
-
-// 设置http server参数 - TLSConfig
-func (s *Server)SetTLSConfig(tls *tls.Config) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.TLSConfig = tls
-    return nil
-}
-
-// 设置http server参数 - ReadTimeout
-func (s *Server)SetReadTimeout(t time.Duration) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.ReadTimeout = t
-    return nil
-}
-
-// 设置http server参数 - WriteTimeout
-func (s *Server)SetWriteTimeout(t time.Duration) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.WriteTimeout = t
-    return nil
-}
-
-// 设置http server参数 - IdleTimeout
-func (s *Server)SetIdleTimeout(t time.Duration) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.IdleTimeout = t
-    return nil
-}
-
-// 设置http server参数 - MaxHeaderBytes
-func (s *Server)SetMaxHeaderBytes(b int) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.MaxHeaderBytes = b
-    return nil
-}
-
-// 设置http server参数 - ErrorLog
-func (s *Server)SetErrorLog(logger *log.Logger) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.ErrorLog = logger
-    return nil
-}
-
-// 设置http server参数 - IndexFiles
-func (s *Server)SetIndexFiles(index []string) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.IndexFiles = index
-    return nil
-}
-
-// 设置http server参数 - IndexFolder
-func (s *Server)SetIndexFolder(index bool) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.IndexFolder = index
-    return nil
-}
-
-// 设置http server参数 - ServerAgent
-func (s *Server)SetServerAgent(agent string) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.ServerAgent = agent
-    return nil
-}
-
-// 设置http server参数 - ServerRoot
-func (s *Server)SetServerRoot(root string) error {
-    if s.status == 1 {
-        return errors.New("server config cannot be changed while running")
-    }
-    s.config.ServerRoot  = strings.TrimRight(root, string(filepath.Separator))
     return nil
 }
 
@@ -374,7 +249,7 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
 }
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
-// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，不区分大小写
+// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，区分大小写
 func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string) error {
     m := make(HandlerMap)
     for _, v := range strings.Split(methods, ",") {

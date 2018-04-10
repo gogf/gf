@@ -98,7 +98,7 @@ func (d *Domain) BindControllerRest(pattern string, c Controller) error {
     return nil
 }
 
-// 控制器方法注册，methods参数不区分大小写
+// 控制器方法注册，methods参数区分大小写
 func (d *Domain) BindControllerMethod(pattern string, c Controller, methods string) error {
     for domain, _ := range d.m {
         if err := d.s.BindControllerMethod(pattern + "@" + domain, c, methods); err != nil {

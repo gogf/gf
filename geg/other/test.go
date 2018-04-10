@@ -2,9 +2,17 @@ package main
 
 import (
     "fmt"
-    "math"
+    "reflect"
 )
 
+type T struct {
+
+}
+
+func (t *T) Test2Test() {}
+
 func main() {
-    fmt.Println(math.MaxInt64)
+    obj := &T{}
+    v := reflect.ValueOf(obj).MethodByName("Test2Test")
+    fmt.Println(v.IsValid())
 }
