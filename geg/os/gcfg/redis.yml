@@ -1,0 +1,14 @@
+redis-cache:
+    - host:   192.168.0.100
+      port:   6379
+      db:     0
+    - host:   192.168.0.100
+      port:   6379
+      db:     1
+redis-disk:
+    - host:   192.168.0.100
+      port:   6380
+      db:     0
+    - host:   192.168.0.100
+      port:   6380
+      db:     1
