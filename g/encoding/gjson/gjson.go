@@ -411,10 +411,13 @@ func (j *Json) Get(pattern string) interface{} {
 
 // 根据pattern层级查找变量指针
 func (j *Json) getPointerByPattern(pattern string) *interface{} {
-    start   := 0
     index   := len(pattern)
+    start   := 0
     length  := 0
     pointer := j.p
+    if index == 0 {
+        return pointer
+    }
     for {
         if r := j.checkPatternByPointer(pattern[start:index], pointer); r != nil {
             length += index - start
