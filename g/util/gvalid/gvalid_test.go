@@ -25,7 +25,7 @@ func Test_Regex(t *testing.T) {
 }
 
 func Test_CheckMap(t *testing.T) {
-    kvmap := map[string]string {
+    kvmap := map[string]interface{} {
         "id"   : "0",
         "name" : "john",
     }
@@ -44,7 +44,7 @@ func Test_CheckMap(t *testing.T) {
         t.Error("CheckMap校验失败")
     }
 
-    kvmap = map[string]string {
+    kvmap = map[string]interface{} {
         "id"   : "1",
         "name" : "john",
     }
@@ -93,10 +93,10 @@ func Test_Required(t *testing.T) {
     if m := gvalid.Check("", "required", nil);  m == nil {
         t.Error(m)
     }
-    if m := gvalid.Check("", "required-if:id,1,age,18", nil, map[string]string{"id" : "1", "age" : "19"});  m == nil {
+    if m := gvalid.Check("", "required-if:id,1,age,18", nil, map[string]interface{}{"id" : 1, "age" : 19});  m == nil {
         t.Error("Required校验失败")
     }
-    if m := gvalid.Check("", "required-if:id,1,age,18", nil, map[string]string{"id" : "2", "age" : "19"});  m != nil {
+    if m := gvalid.Check("", "required-if:id,1,age,18", nil, map[string]interface{}{"id" : 2, "age" : 19});  m != nil {
         t.Error("Required校验失败")
     }
 }
@@ -151,10 +151,10 @@ func Test_MaxLength(t *testing.T) {
 
 func Test_Between(t *testing.T) {
     rule := "between:6.01, 10.01"
-    if m := gvalid.Check("10", rule, nil);  m != nil {
+    if m := gvalid.Check(10, rule, nil);  m != nil {
         t.Error(m)
     }
-    if m := gvalid.Check("10.02", rule, nil);  m == nil {
+    if m := gvalid.Check(10.02, rule, nil);  m == nil {
         t.Error("大小范围校验失败")
     }
 }

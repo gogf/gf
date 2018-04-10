@@ -12,14 +12,14 @@ import (
     "strings"
     "regexp"
     "strconv"
+    "github.com/fatih/structs"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/net/gipv4"
     "gitee.com/johng/gf/g/net/gipv6"
     "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gmap"
-    "github.com/fatih/structs"
-    "gitee.com/johng/gf/g/util/gconv"
 )
 
 /*
@@ -377,7 +377,7 @@ func checkSize(value, rulekey, ruleval string, cmsgs map[string]string) string {
 }
 
 // 检测键值对参数Map，注意返回参数是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息
-func CheckMap(params map[string]string, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
+func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
     // 自定义消息，非必须参数，因此这里需要做判断
     cmsgs := make(map[string]interface{})
     if len(msgs) > 0 {
@@ -405,22 +405,21 @@ func CheckMap(params map[string]string, rules map[string]string, msgs...map[stri
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法
 func CheckObject(object interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
-    params := make(map[string]string)
-    for k, v := range structs.Map(object) {
-        params[k] = gconv.String(v)
-    }
-    return CheckMap(params, rules, msgs...)
+    return CheckMap(structs.Map(object), rules, msgs...)
 }
 
 // 检测单条数据的规则，其中params参数为非必须参数，可以传递所有的校验参数进来，进行多参数对比(部分校验规则需要)
 // msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持string/map[string]string，允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误
 // values参数为表单联合校验参数，对于需要联合校验的规则有效，如：required-*、same、different
-func Check(value, rules string, msgs interface{}, params...map[string]string) map[string]string {
-    value    = strings.TrimSpace(value)
+func Check(val interface{}, rules string, msgs interface{}, params...map[string]interface{}) map[string]string {
+    // 内部会将参数全部转换为字符串类型进行校验
+    value   := strings.TrimSpace(gconv.String(val))
     kvmap   := make(map[string]string)
     errmsgs := make(map[string]string)
     if len(params) > 0 {
-        kvmap = params[0]
+        for k, v := range params[0] {
+            kvmap[k] = gconv.String(v)
+        }
     }
     // 自定义错误消息处理
     list  := make([]string, 0)
