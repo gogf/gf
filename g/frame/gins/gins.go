@@ -49,7 +49,7 @@ func SetConfig(v *gcfg.Config) {
 }
 
 // 自定义框架核心组件：Database
-func SetDatabase(v gdb.Link, names...string) {
+func SetDatabase(v *gdb.Db, names...string) {
     dbCacheKey := gFRAME_CORE_COMPONENT_NAME_DATABASE
     if len(names) > 0 {
         dbCacheKey += names[0]
