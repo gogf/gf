@@ -61,8 +61,8 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 // 初始化控制器
 func (s *Server)callHandler(h *HandlerItem, r *Request) {
     // 会话处理
-    r.Cookie  = NewCookie(r)
-    r.Session = GetSession(r.Cookie.SessionId())
+    r.Cookie  = GetCookie(r)
+    r.Session = GetSession(r)
 
     // 请求处理
     s.callHookHandler(r, "BeforeServe")
