@@ -19,6 +19,7 @@ import (
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/g/util/gregx"
 )
 
 const (
@@ -150,32 +151,18 @@ func (s *Server) setHandler(domain, method, pattern string, item HandlerItem) {
 
 }
 
-// 查询请求处理方法
-func (s *Server) getHandler(domain, method, pattern string) *HandlerItem {
-    s.hmu.RLock()
-    defer s.hmu.RUnlock()
-    key := s.handlerKey(domain, method, pattern)
-    if f, ok := s.handlerMap[key]; ok {
-        return &f
-    }
-    return nil
-}
-
 // 解析pattern
-func (s *Server)parsePattern(pattern string) (domain, method, uri string, err error) {
-    uri    = ""
+func (s *Server)parsePatternForBindHandler(pattern string) (domain, method, uri string, err error) {
+    uri    = pattern
     domain = gDEFAULT_DOMAIN
     method = "all"
-    result := strings.Split(pattern, "@")
-    if len(result) > 1 {
-        domain = result[1]
+    if array, err := gregx.MatchString(`([a-zA-Z]+):(.+)`, pattern); len(array) > 1 && err == nil {
+        method  = array[1]
+        pattern = array[2]
     }
-    result  = strings.Split(result[0], ":")
-    if len(result) > 1 {
-        method = result[0]
-        uri    = result[1]
-    } else {
-        uri    = result[0]
+    if array, err := gregx.MatchString(`(.+)@([\w\.\-]+)`, pattern); len(array) > 1 && err == nil {
+        uri     = array[1]
+        domain  = array[2]
     }
     if uri == "" {
         err = errors.New("invalid pattern")
@@ -190,7 +177,7 @@ func (s *Server)bindHandlerItem(pattern string, item HandlerItem) error {
     if s.status == 1 {
         return errors.New("server handlers cannot be changed while running")
     }
-    domain, method, uri, err := s.parsePattern(pattern)
+    domain, method, uri, err := s.parsePatternForBindHandler(pattern)
     if err != nil {
         return errors.New("invalid pattern")
     }
@@ -346,7 +333,7 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, methods strin
 // 绑定指定的hook回调函数, hook参数的值由ghttp server设定，参数不区分大小写
 // 目前hook支持：Init/Shut
 func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc) error {
-    domain, method, uri, err := s.parsePattern(pattern)
+    domain, method, uri, err := s.parsePatternForBindHandler(pattern)
     if err != nil {
         return errors.New("invalid pattern")
     }
