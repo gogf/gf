@@ -11,6 +11,12 @@ import (
     "regexp"
 )
 
+// 校验所给定的正则表达式是否符合规范
+func Validate(pattern string) error {
+    _, err := regexp.Compile(pattern)
+    return err
+}
+
 // 正则表达式是否匹配
 func IsMatch(pattern string, src []byte) bool {
     match, err := regexp.Match(pattern, src)

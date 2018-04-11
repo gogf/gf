@@ -25,8 +25,8 @@ type Router struct {
     pmu    sync.RWMutex          // 打包规则互斥锁
     dkeys  []string              // 解析规则排序键名
     pkeys  []string              // 打包规则排序键名
-    drules *gmap.StringStringMap // 解析规则
-    prules *gmap.StringStringMap // 打包规则
+    drules *gmap.StringStringMap // dispatch解析规则
+    prules *gmap.StringStringMap // patch打包规则
 }
 
 func New() *Router {
