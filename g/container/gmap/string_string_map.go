@@ -23,10 +23,12 @@ func NewStringStringMap() *StringStringMap {
 }
 
 // 给定回调函数对原始内容进行遍历
-func (this *StringStringMap) Iterator(f func (k string, v string)) {
+func (this *StringStringMap) Iterator(f func (k string, v string) bool) {
 	this.mu.RLock()
 	for k, v := range this.m {
-		f(k, v)
+		if !f(k, v) {
+			break
+		}
 	}
 	this.mu.RUnlock()
 }

@@ -22,10 +22,12 @@ func NewStringSet() *StringSet {
 }
 
 // 给定回调函数对原始内容进行遍历
-func (this *StringSet) Iterator(f func (v string)) {
+func (this *StringSet) Iterator(f func (v string) bool) {
 	this.mu.RLock()
 	for k, _ := range this.m {
-		f(k)
+		if !f(k) {
+			break
+		}
 	}
 	this.mu.RUnlock()
 }
