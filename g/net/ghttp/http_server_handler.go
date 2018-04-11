@@ -19,6 +19,8 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/encoding/ghtml"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/util/gregx"
+    "strconv"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -31,7 +33,7 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
-    // 路由解析
+    // 全局路由解析
     uri         := r.URL.String()
     result, err := s.Router.Dispatch(uri)
     if err == nil && strings.Compare(uri, result) != 0 {
@@ -47,15 +49,78 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
             ResponseWriter : w,
         },
     }
-    if h := s.getHandler(gDEFAULT_DOMAIN, r.Method, r.URL.Path); h != nil {
+    if h := s.getHandler(request); h != nil {
         s.callHandler(h, request)
     } else {
-        if h := s.getHandler(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path); h != nil {
-            s.callHandler(h, request)
-        } else {
-            s.serveFile(w, r)
+        s.serveFile(w, r)
+    }
+}
+
+// 查询请求处理方法
+func (s *Server) getHandler(r *Request) *HandlerItem {
+    s.hmu.RLock()
+    defer s.hmu.RUnlock()
+    domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
+    // 首先进行静态匹配
+    for _, domain := range domains {
+        if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
+            return &f
         }
     }
+    // 其次进行正则匹配(会比较耗效率)
+    for k, v := range s.handlerMap {
+        if array, err := gregx.MatchString(`([a-zA-Z]+):(.+)@([\w\.\-]+)`, k); len(array) > 2 && err == nil {
+            // method匹配
+            if strings.EqualFold(r.Method, array[1]) {
+                for _, domain := range domains {
+                    // domain匹配
+                    if !strings.EqualFold(domain, array[3]) {
+                        continue
+                    }
+                    // method & domain匹配时，那么执行pattern的正则匹配
+                    regrule, querystr := s.patternToRegRule(array[2])
+                    if gregx.IsMatchString(regrule, r.URL.Path) {
+                        // 如果需要query匹配，那么需要重新解析URL
+                        if len(querystr) > 0 {
+                            if result, err := gregx.ReplaceString(regrule, querystr, r.URL.Path); err == nil {
+                                r.URL, _ = r.URL.Parse(r.URL.Path + "?" + r.URL.RawQuery + "&" + result)
+                            }
+                        }
+                        return &v
+                    }
+                }
+            }
+        }
+    }
+    return nil
+}
+
+// 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
+func (s *Server) patternToRegRule(rule string) (regrule string, querystr string) {
+    regrule = "/"
+    array  := strings.Split(rule[1:], "/")
+    index  := 1
+    for _, v := range array {
+        switch v[0] {
+        case ':':
+            regrule += `/([\w\.\-]+)`
+            if len(querystr) > 0 {
+                querystr += "&"
+            }
+            querystr += v[1:] + "=$" + strconv.Itoa(index)
+            index++
+        case '*':
+            regrule += `/(.*)`
+            if len(querystr) > 0 {
+                querystr += "&"
+            }
+            querystr += v[1:] + "=$" + strconv.Itoa(index)
+            return
+        default:
+            regrule += v
+        }
+    }
+    return
 }
 
 // 初始化控制器
