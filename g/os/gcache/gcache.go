@@ -334,7 +334,7 @@ func (c *Cache) autoClearLoop() {
 }
 
 // 删除对应键名的缓存数据
-func (c *Cache) clearByKey(key string) {
+func (c *Cache) clearByKey(key string) bool {
     // 删除缓存数据
     c.dmu.Lock()
     delete(c.data,  key)
@@ -347,4 +347,6 @@ func (c *Cache) clearByKey(key string) {
 
     // 删除LRU管理对象中指定键名
     c.lru.Remove(key)
+
+    return true
 }

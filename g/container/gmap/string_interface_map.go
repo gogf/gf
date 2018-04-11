@@ -24,10 +24,12 @@ func NewStringInterfaceMap() *StringInterfaceMap {
 }
 
 // 给定回调函数对原始内容进行遍历
-func (this *StringInterfaceMap) Iterator(f func (k string, v interface{})) {
+func (this *StringInterfaceMap) Iterator(f func (k string, v interface{}) bool) {
 	this.mu.RLock()
 	for k, v := range this.m {
-		f(k, v)
+		if !f(k, v) {
+			break
+		}
 	}
 	this.mu.RUnlock()
 }

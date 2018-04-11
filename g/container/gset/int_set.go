@@ -23,10 +23,12 @@ func NewIntSet() *IntSet {
 }
 
 // 给定回调函数对原始内容进行遍历
-func (this *IntSet) Iterator(f func (v int)) {
+func (this *IntSet) Iterator(f func (v int) bool) {
 	this.mu.RLock()
 	for k, _ := range this.m {
-		f(k)
+		if !f(k) {
+			break
+		}
 	}
 	this.mu.RUnlock()
 }
