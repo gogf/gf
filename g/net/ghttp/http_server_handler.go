@@ -13,14 +13,14 @@ import (
     "sort"
     "reflect"
     "strings"
+    "strconv"
     "net/url"
     "net/http"
     "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/encoding/ghtml"
-    "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/util/gregx"
-    "strconv"
+    "gitee.com/johng/gf/g/encoding/ghtml"
+    "gitee.com/johng/gf/g/container/glist"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -33,22 +33,7 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
-    // 全局路由解析
-    uri         := r.URL.String()
-    result, err := s.Router.Dispatch(uri)
-    if err == nil && strings.Compare(uri, result) != 0 {
-        r.URL, _ = r.URL.Parse(result)
-    }
-    // 构造请求参数对象
-    request  := &Request{
-        parsedPost : gtype.NewBool(),
-        Id         : s.servedCount.Add(1),
-        Server     : s,
-        Request    : *r,
-        Response   : &Response {
-            ResponseWriter : w,
-        },
-    }
+    request := newRequest(s, r, w)
     if h := s.getHandler(request); h != nil {
         s.callHandler(h, request)
     } else {
@@ -57,7 +42,14 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // 查询请求处理方法
+// 这里有个锁机制，可以并发读，但是不能并发写
 func (s *Server) getHandler(r *Request) *HandlerItem {
+    handler := s.searchHandler(r)
+    return handler
+}
+
+// 服务方法检索
+func (s *Server) searchHandler(r *Request) *HandlerItem {
     s.hmu.RLock()
     defer s.hmu.RUnlock()
     domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
@@ -71,23 +63,28 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
     for k, v := range s.handlerMap {
         if array, err := gregx.MatchString(`([a-zA-Z]+):(.+)@([\w\.\-]+)`, k); len(array) > 2 && err == nil {
             // method匹配
-            if strings.EqualFold(r.Method, array[1]) {
-                for _, domain := range domains {
-                    // domain匹配
-                    if !strings.EqualFold(domain, array[3]) {
-                        continue
-                    }
-                    // method & domain匹配时，那么执行pattern的正则匹配
-                    regrule, querystr := s.patternToRegRule(array[2])
-                    if gregx.IsMatchString(regrule, r.URL.Path) {
-                        // 如果需要query匹配，那么需要重新解析URL
-                        if len(querystr) > 0 {
-                            if result, err := gregx.ReplaceString(regrule, querystr, r.URL.Path); err == nil {
-                                r.URL, _ = r.URL.Parse(r.URL.Path + "?" + r.URL.RawQuery + "&" + result)
+            if !strings.EqualFold(r.Method, array[1]) {
+                continue
+            }
+            // domain匹配
+            for _, domain := range domains {
+                if !strings.EqualFold(domain, array[3]) {
+                    continue
+                }
+                // method & domain匹配时，那么执行pattern的正则匹配
+                regrule, querystr := s.patternToRegRule(array[2])
+                if gregx.IsMatchString(regrule, r.URL.Path) {
+                    // 如果需要query匹配，那么需要重新解析URL
+                    if len(querystr) > 0 {
+                        if query, err := gregx.ReplaceString(regrule, querystr, r.URL.Path); err == nil && len(query) > 0 {
+                            if vals, err := url.ParseQuery(query); err == nil {
+                                for k, v := range vals {
+                                    r.values[k] = v
+                                }
                             }
                         }
-                        return &v
                     }
+                    return &v
                 }
             }
         }
@@ -95,29 +92,103 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
     return nil
 }
 
+
+// 按照指定hook回调函数的注册顺序进行调用
+func (s *Server)callHookHandler(r *Request, hook string) {
+    l := s.searchHookHandler(r, hook)
+    if l != nil {
+        for _, f := range l {
+            f(r)
+        }
+    }
+}
+
+// 获取指定hook的回调函数列表，按照注册顺序排序
+func (s *Server)searchHookHandler(r *Request, hook string) []HandlerFunc {
+    domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
+    // 首先进行静态匹配
+    for _, domain := range domains {
+        key := s.handlerHookKey(domain, r.Method, r.URL.Path, hook)
+        if v := s.hooksMap.Get(key); v != nil {
+            items := v.(*glist.List).FrontAll()
+            funcs := make([]HandlerFunc, len(items))
+            for k, v := range items {
+                funcs[k] = v.(HandlerFunc)
+            }
+            return funcs
+        }
+    }
+    // 其次进行正则匹配(会比较耗效率)
+    var funcs []HandlerFunc
+    s.hooksMap.Iterator(func(rule string, list interface{}) bool {
+        if array, err := gregx.MatchString(`([a-zA-Z]+)\^([a-zA-Z]+):(.+)@([\w\.\-]+)`, rule); len(array) > 3 && err == nil {
+            // hook匹配
+            if !strings.EqualFold(hook, array[1]) {
+                return true
+            }
+            // method匹配
+            if !strings.EqualFold(r.Method, array[2]) {
+                return true
+            }
+            // domain匹配
+            for _, domain := range domains {
+                if !strings.EqualFold(domain, array[4]) {
+                    continue
+                }
+                // method & domain匹配时，那么执行pattern的正则匹配
+                regrule, querystr := s.patternToRegRule(array[3])
+                if gregx.IsMatchString(regrule, r.URL.Path) {
+                    // 如果需要query匹配，那么需要重新解析URL
+                    if len(querystr) > 0 {
+                        if query, err := gregx.ReplaceString(regrule, querystr, r.URL.Path); err == nil && len(query) > 0 {
+                            if vals, err := url.ParseQuery(query); err == nil {
+                                for k, v := range vals {
+                                    r.values[k] = v
+                                }
+                            }
+                        }
+                    }
+                    // 列表数据解析
+                    items := list.(*glist.List).FrontAll()
+                    funcs  = make([]HandlerFunc, len(items))
+                    for k, v := range items {
+                        funcs[k] = v.(HandlerFunc)
+                    }
+                    return false
+                }
+            }
+        }
+        return true
+    })
+    return funcs
+}
+
 // 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
 func (s *Server) patternToRegRule(rule string) (regrule string, querystr string) {
-    regrule = "/"
+    if len(rule) < 2 {
+        return rule, ""
+    }
+    regrule = "^/"
     array  := strings.Split(rule[1:], "/")
     index  := 1
     for _, v := range array {
         switch v[0] {
-        case ':':
-            regrule += `/([\w\.\-]+)`
-            if len(querystr) > 0 {
-                querystr += "&"
-            }
-            querystr += v[1:] + "=$" + strconv.Itoa(index)
-            index++
-        case '*':
-            regrule += `/(.*)`
-            if len(querystr) > 0 {
-                querystr += "&"
-            }
-            querystr += v[1:] + "=$" + strconv.Itoa(index)
-            return
-        default:
-            regrule += v
+            case ':':
+                regrule += `/([\w\.\-]+)`
+                if len(querystr) > 0 {
+                    querystr += "&"
+                }
+                querystr += v[1:] + "=$" + strconv.Itoa(index)
+                index++
+            case '*':
+                regrule += `/(.*)`
+                if len(querystr) > 0 {
+                    querystr += "&"
+                }
+                querystr += v[1:] + "=$" + strconv.Itoa(index)
+                return
+            default:
+                regrule += v
         }
     }
     return
@@ -142,14 +213,6 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
     }
     s.callHookHandler(r, "AfterServe")
 
-    // 路由规则打包
-    s.callHookHandler(r, "BeforePatch")
-    if buffer, err := s.Router.Patch(r.Response.Buffer()); err == nil {
-        r.Response.ClearBuffer()
-        r.Response.Write(buffer)
-    }
-    s.callHookHandler(r, "AfterPatch")
-
     s.callHookHandler(r, "BeforeOutput")
 
     // 输出Cookie
@@ -161,20 +224,6 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
 
     // 将Request对象指针丢到队列中异步处理
     s.closeQueue.PushBack(r)
-}
-
-// 按照指定hook回调函数的注册顺序进行调用
-func (s *Server)callHookHandler(r *Request, hook string) {
-    l := s.getHookList(gDEFAULT_DOMAIN, r.Method, r.URL.Path, hook)
-    if l == nil {
-        l = s.getHookList(strings.Split(r.Host, ":")[0], r.Method, r.URL.Path, hook)
-    }
-    if l == nil {
-        return
-    }
-    for _, f := range l {
-        f(r)
-    }
 }
 
 // 处理静态文件请求
