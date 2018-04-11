@@ -12,18 +12,17 @@ import (
     "strings"
     "reflect"
     "net/http"
-    "gitee.com/johng/gf/g/util/gutil"
-    "gitee.com/johng/gf/g/net/grouter"
-    "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/container/gqueue"
-    "gitee.com/johng/gf/g/container/glist"
-    "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gutil"
+    "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/container/glist"
+    "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/gqueue"
 )
 
 const (
-    gHTTP_METHODS             = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+    gHTTP_METHODS             = "GET,POST,DELETE,PUT,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
     gDEFAULT_SERVER           = "default"
     gDEFAULT_DOMAIN           = "default"
     gDEFAULT_METHOD           = "all"
@@ -49,10 +48,9 @@ type Server struct {
     cookieMaxAge  *gtype.Int               // Cookie有效期
     sessionMaxAge *gtype.Int               // Session有效期
     sessionIdName *gtype.String            // SessionId名称
+    routers       *gcache.Cache            // 服务注册路由内存缓存
     cookies       *gmap.IntInterfaceMap    // 当前服务器正在服务(请求正在执行)的Cookie(每个请求一个Cookie对象)
     sessions      *gcache.Cache            // Session内存缓存
-
-    Router        *grouter.Router          // 路由管理对象
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -81,14 +79,14 @@ func GetServer(names...string) (*Server) {
     if s := serverMapping.Get(name); s != nil {
         return s.(*Server)
     }
-    s := &Server{
+    s := &Server {
         name          : name,
         handlerMap    : make(HandlerMap),
         methodsMap    : make(map[string]bool),
         servedCount   : gtype.NewInt(),
         closeQueue    : gqueue.New(),
         hooksMap      : gmap.NewStringInterfaceMap(),
-        Router        : grouter.New(),
+        routers       : gcache.New(),
         cookies       : gmap.NewIntInterfaceMap(),
         sessions      : gcache.New(),
         cookieMaxAge  : gtype.NewInt(gDEFAULT_COOKIE_MAX_AGE),
@@ -103,7 +101,7 @@ func GetServer(names...string) (*Server) {
     return s
 }
 
-// 执行
+// 阻塞执行监听
 func (s *Server) Run() error {
     if s.status == 1 {
         return errors.New("server is already running")
@@ -137,7 +135,7 @@ func (s *Server) handlerKey(domain, method, pattern string) string {
     return strings.ToUpper(method) + ":" + pattern + "@" + strings.ToLower(domain)
 }
 
-// 设置请求处理方法
+// 注册服务处理方法
 func (s *Server) setHandler(domain, method, pattern string, item HandlerItem) {
     s.hmu.Lock()
     defer s.hmu.Unlock()
@@ -330,8 +328,7 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, methods strin
     return s.bindHandlerByMap(m)
 }
 
-// 绑定指定的hook回调函数, hook参数的值由ghttp server设定，参数不区分大小写
-// 目前hook支持：Init/Shut
+// 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
 func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc) error {
     domain, method, uri, err := s.parsePatternForBindHandler(pattern)
     if err != nil {
@@ -364,32 +361,7 @@ func (s *Server)BindHookHandlerByMap(pattern string, hookmap map[string]HandlerF
     return nil
 }
 
-//// 绑定URI服务注册的Init回调函数，回调时按照注册顺序执行
-//// Init回调调用时机为请求进入控制器之前，初始化Request对象之后
-//func (s *Server)BindHookHandlerInit(pattern string, handler HandlerFunc) error {
-//    return s.BindHookHandler(pattern, "Init", handler)
-//}
-//
-//// 绑定URI服务注册的Shut回调函数，回调时按照注册顺序执行
-//// Shut回调调用时机为请求执行完成之后，所有的请求资源释放之前
-//func (s *Server)BindHookHandlerShut(pattern string, handler HandlerFunc) error {
-//    return s.BindHookHandler(pattern, "Shut", handler)
-//}
-
 // 构造用于hooksMap检索的键名
 func (s *Server)handlerHookKey(domain, method, uri, hook string) string {
     return strings.ToUpper(hook) + "^" + s.handlerKey(domain, method, uri)
-}
-
-// 获取指定hook的回调函数列表，按照注册顺序排序
-func (s *Server)getHookList(domain, method, uri, hook string) []HandlerFunc {
-    if v := s.hooksMap.Get(s.handlerHookKey(domain, method, uri, hook)); v != nil {
-        items := v.(*glist.List).FrontAll()
-        funcs := make([]HandlerFunc, len(items))
-        for k, v := range items {
-            funcs[k] = v.(HandlerFunc)
-        }
-        return funcs
-    }
-    return nil
 }

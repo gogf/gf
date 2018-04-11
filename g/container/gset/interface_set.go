@@ -22,10 +22,12 @@ func NewInterfaceSet() *InterfaceSet {
 }
 
 // 给定回调函数对原始内容进行遍历
-func (this *InterfaceSet) Iterator(f func (v interface{})) {
+func (this *InterfaceSet) Iterator(f func (v interface{}) bool) {
     this.mu.RLock()
     for k, _ := range this.m {
-        f(k)
+		if !f(k) {
+			break
+		}
     }
     this.mu.RUnlock()
 }

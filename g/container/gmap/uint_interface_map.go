@@ -23,10 +23,12 @@ func NewUintInterfaceMap() *UintInterfaceMap {
     }
 }
 
-func (this *UintInterfaceMap) Iterator(f func (k uint, v interface{})) {
+func (this *UintInterfaceMap) Iterator(f func (k uint, v interface{}) bool) {
     this.mu.RLock()
     for k, v := range this.m {
-        f(k, v)
+        if !f(k, v) {
+            break
+        }
     }
     this.mu.RUnlock()
 }

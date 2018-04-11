@@ -24,10 +24,12 @@ func NewIntInterfaceMap() *IntInterfaceMap {
 }
 
 // 给定回调函数对原始内容进行遍历
-func (this *IntInterfaceMap) Iterator(f func (k int, v interface{})) {
+func (this *IntInterfaceMap) Iterator(f func (k int, v interface{}) bool) {
     this.mu.RLock()
     for k, v := range this.m {
-        f(k, v)
+        if !f(k, v) {
+            break
+        }
     }
     this.mu.RUnlock()
 }

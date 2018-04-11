@@ -9,7 +9,6 @@ package ghttp
 import (
     "io/ioutil"
     "net/http"
-    "net/url"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
@@ -18,20 +17,42 @@ import (
 // 请求对象
 type Request struct {
     http.Request
-    parsedPost *gtype.Bool     // POST参数是否已经解析
-    getvals    *url.Values     // GET参数
-    Id         int             // 请求id(唯一)
-    Server     *Server         // 请求关联的服务器对象
-    Cookie     *Cookie         // 与当前请求绑定的Cookie对象(并发安全)
-    Session    *Session        // 与当前请求绑定的Session对象(并发安全)
-    Response   *Response       // 对应请求的返回数据操作对象
+    parsedGet  *gtype.Bool         // GET参数是否已经解析
+    parsedPost *gtype.Bool         // POST参数是否已经解析
+    values     map[string][]string // GET参数
+    Id         int                 // 请求id(唯一)
+    Server     *Server             // 请求关联的服务器对象
+    Cookie     *Cookie             // 与当前请求绑定的Cookie对象(并发安全)
+    Session    *Session            // 与当前请求绑定的Session对象(并发安全)
+    Response   *Response           // 对应请求的返回数据操作对象
 }
+
+// 创建一个Request对象
+func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
+    return &Request{
+        parsedGet  : gtype.NewBool(),
+        parsedPost : gtype.NewBool(),
+        values     : make(map[string][]string),
+        Id         : s.servedCount.Add(1),
+        Server     : s,
+        Request    : *r,
+        Response   : &Response {
+            ResponseWriter : w,
+        },
+    }
+}
+
 
 // 初始化GET请求参数
 func (r *Request) initGet() {
-    if r.getvals == nil {
-        values   := r.URL.Query()
-        r.getvals = &values
+    if !r.parsedGet.Val() {
+        if len(r.values) == 0 {
+            r.values = r.URL.Query()
+        } else {
+            for k, v := range r.URL.Query() {
+                r.values[k] = v
+            }
+        }
     }
 }
 
@@ -48,7 +69,7 @@ func (r *Request) initPost() {
 // 获得指定名称的get参数列表
 func (r *Request) GetQuery(k string) []string {
     r.initGet()
-    if v, ok := (*r.getvals)[k]; ok {
+    if v, ok := r.values[k]; ok {
         return v
     }
     return nil
@@ -92,7 +113,7 @@ func (r *Request) GetQueryMap(defaultMap...map[string]string) map[string]string 
     r.initGet()
     m := make(map[string]string)
     if len(defaultMap) == 0 {
-        for k, v := range *r.getvals {
+        for k, v := range r.values {
             m[k] = v[0]
         }
     } else {

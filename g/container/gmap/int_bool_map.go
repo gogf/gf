@@ -34,10 +34,12 @@ func (this *IntBoolMap) Clone() *map[int]bool {
 }
 
 // 给定回调函数对原始内容进行遍历
-func (this *IntBoolMap) Iterator(f func (k int, v bool)) {
+func (this *IntBoolMap) Iterator(f func (k int, v bool) bool) {
     this.mu.RLock()
     for k, v := range this.m {
-        f(k, v)
+        if !f(k, v) {
+            break
+        }
     }
     this.mu.RUnlock()
 }
