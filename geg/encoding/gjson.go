@@ -4,6 +4,7 @@ import (
     "fmt"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 func getByPattern() {
@@ -95,6 +96,67 @@ func testConvert() {
     }
 }
 
+
+func testSplitChar() {
+    var v interface{}
+    j := gjson.New(nil)
+    t1 := gtime.Nanosecond()
+    j.Set("a.b.c", 1)
+    t2 := gtime.Nanosecond()
+    fmt.Println(t2 - t1)
+
+    t5 := gtime.Nanosecond()
+    v = j.Get("a.b.c.d.e.f.g.h.i.j.k")
+    t6 := gtime.Nanosecond()
+    b, _ := j.ToJsonIndent()
+    fmt.Println(string(b))
+    fmt.Println(v)
+    fmt.Println(t6 - t5)
+
+    j.SetSplitChar('#')
+
+
+
+    t7 := gtime.Nanosecond()
+    v = j.Get("a#a#a#a#a#a#a#a#a#a#a#a#a#a#a#a")
+    t8 := gtime.Nanosecond()
+    fmt.Println(v)
+    fmt.Println(t8 - t7)
+}
+
+
+func testViolenceCheck() {
+    j := gjson.New(nil)
+    t1 := gtime.Nanosecond()
+    j.Set("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a", 1)
+    t2 := gtime.Nanosecond()
+    fmt.Println(t2 - t1)
+
+    t3 := gtime.Nanosecond()
+    j.Set("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a", 1)
+    t4 := gtime.Nanosecond()
+    fmt.Println(t4 - t3)
+
+    t5 := gtime.Nanosecond()
+    j.Get("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a")
+    t6 := gtime.Nanosecond()
+    fmt.Println(t6 - t5)
+
+
+    j.SetViolenceCheck(false)
+
+
+    t7 := gtime.Nanosecond()
+    j.Set("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a", 1)
+    t8 := gtime.Nanosecond()
+    fmt.Println(t8 - t7)
+
+    t9 := gtime.Nanosecond()
+    j.Get("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a")
+    t10 := gtime.Nanosecond()
+    fmt.Println(t10 - t9)
+}
+
 func main() {
-    testSet()
+    testSplitChar()
 }

@@ -20,9 +20,9 @@ type Parser struct {
 // 该参数为非必需参数，默认为创建一个空的Parser对象
 func New (values...interface{}) *Parser {
     if len(values) > 0 {
-        return &Parser{gjson.NewJson(values[0])}
+        return &Parser{gjson.New(values[0])}
     }
-    return &Parser{gjson.NewJson(nil)}
+    return &Parser{gjson.New(nil)}
 }
 
 func Load (path string) (*Parser, error) {
