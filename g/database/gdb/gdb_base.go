@@ -12,6 +12,7 @@ import (
     "errors"
     "strings"
     "database/sql"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 // 关闭链接
@@ -309,13 +310,7 @@ func (db *Db) Update(table string, data interface{}, condition interface{}, args
             return nil, errors.New("invalid data type for 'data' field, string or Map expected")
     }
     for _, v := range args {
-        if r, ok := v.(string); ok {
-            params = append(params, r)
-        } else if r, ok := v.(int); ok {
-            params = append(params, string(r))
-        } else {
-
-        }
+        params = append(params, gconv.String(v))
     }
     return db.Exec(fmt.Sprintf("UPDATE %s%s%s SET %s WHERE %s", db.charl, table, db.charr, updates, condition), params...)
 }
