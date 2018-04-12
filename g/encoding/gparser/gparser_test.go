@@ -157,7 +157,7 @@ func Test_Set9(t *testing.T) {
 
 
 func Test_Set10(t *testing.T) {
-    e := []byte(`{"a":{"b":{"c":1}}`)
+    e := []byte(`{"a":{"b":{"c":1}}}`)
     p := gparser.New(nil)
     p.Set("a.b.c", 1)
     if c, err := p.ToJson(); err == nil {
