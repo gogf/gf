@@ -33,6 +33,7 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
+    fmt.Println(s.handlerTree)
     request := newRequest(s, r, w)
     if h := s.getHandler(request); h != nil {
         s.callHandler(h, request)
@@ -50,13 +51,13 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
 
 // 服务方法检索
 func (s *Server) searchHandler(r *Request) *HandlerItem {
-    s.hmu.RLock()
-    defer s.hmu.RUnlock()
+    s.hmmu.RLock()
+    defer s.hmmu.RUnlock()
     domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
     // 首先进行静态匹配
     for _, domain := range domains {
         if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
-            return &f
+            return f
         }
     }
     // 其次进行正则匹配(会比较耗效率)
@@ -84,7 +85,7 @@ func (s *Server) searchHandler(r *Request) *HandlerItem {
                             }
                         }
                     }
-                    return &v
+                    return v
                 }
             }
         }
@@ -172,6 +173,9 @@ func (s *Server) patternToRegRule(rule string) (regrule string, querystr string)
     array  := strings.Split(rule[1:], "/")
     index  := 1
     for _, v := range array {
+        if len(v) == 0 {
+            continue
+        }
         switch v[0] {
             case ':':
                 regrule += `/([\w\.\-]+)`
