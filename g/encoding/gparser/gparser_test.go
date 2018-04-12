@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// 单元测试
+
 package gparser_test
 
 import (
@@ -169,6 +171,22 @@ func Test_Set10(t *testing.T) {
         t.Error(err)
     }
 }
+
+
+func Test_Set11(t *testing.T) {
+    e    := []byte(`{"a":{"b":{}}}`)
+    p, _ := gparser.LoadContent([]byte(`{"a":{"b":{"c":1}}}`), "json")
+    p.Remove("a.b.c")
+    if c, err := p.ToJson(); err == nil {
+        fmt.Println(string(c))
+        if bytes.Compare(c, e) != 0 {
+            t.Error("expect:", string(e))
+        }
+    } else {
+        t.Error(err)
+    }
+}
+
 
 
 
