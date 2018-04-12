@@ -41,7 +41,11 @@ func (s *Server) Domain(domain string) *Domain {
 // 注意该方法是直接绑定方法的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (d *Domain) BindHandler(pattern string, handler HandlerFunc) error {
     for domain, _ := range d.m {
-        if err := d.s.bindHandlerItem(pattern + "@" + domain, HandlerItem{nil, "", handler}); err != nil {
+        if err := d.s.bindHandlerItem(pattern + "@" + domain, &HandlerItem{
+                ctype : nil,
+                fname : "",
+                faddr : handler,
+            }); err != nil {
             return err
         }
     }
