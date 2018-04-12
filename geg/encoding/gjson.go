@@ -101,15 +101,13 @@ func testSplitChar() {
     var v interface{}
     j := gjson.New(nil)
     t1 := gtime.Nanosecond()
-    j.Set("a.b.c", 1)
+    j.Set("a.b.c.d.e.f.g.h.i.j.k", 1)
     t2 := gtime.Nanosecond()
     fmt.Println(t2 - t1)
 
     t5 := gtime.Nanosecond()
     v = j.Get("a.b.c.d.e.f.g.h.i.j.k")
     t6 := gtime.Nanosecond()
-    b, _ := j.ToJsonIndent()
-    fmt.Println(string(b))
     fmt.Println(v)
     fmt.Println(t6 - t5)
 
@@ -118,7 +116,7 @@ func testSplitChar() {
 
 
     t7 := gtime.Nanosecond()
-    v = j.Get("a#a#a#a#a#a#a#a#a#a#a#a#a#a#a#a")
+    v = j.Get("a#b#c#d#e#f#g#h#i#j#k")
     t8 := gtime.Nanosecond()
     fmt.Println(v)
     fmt.Println(t8 - t7)
@@ -158,5 +156,5 @@ func testViolenceCheck() {
 }
 
 func main() {
-    testSplitChar()
+    testViolenceCheck()
 }
