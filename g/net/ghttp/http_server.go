@@ -25,8 +25,7 @@ const (
     gHTTP_METHODS             = "GET,POST,DELETE,PUT,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
     gDEFAULT_SERVER           = "default"
     gDEFAULT_DOMAIN           = "default"
-    gDEFAULT_METHOD           = "all"
-
+    gDEFAULT_METHOD           = "ALL"
     gDEFAULT_COOKIE_PATH      = "/"           // 默认path
     gDEFAULT_COOKIE_MAX_AGE   = 86400*365     // 默认cookie有效期(一年)
     gDEFAULT_SESSION_MAX_AGE  = 600           // 默认session有效期(600秒)
@@ -35,15 +34,17 @@ const (
 
 // http server结构体
 type Server struct {
-    hmu           sync.RWMutex             // handlerMap互斥锁
+    hmmu          sync.RWMutex             // handlerMap互斥锁
+    htmu          sync.RWMutex             // handlerTree互斥锁
     name          string                   // 服务名称，方便识别
     server        http.Server              // 底层http server对象
     config        ServerConfig             // 配置对象
     status        int8                     // 当前服务器状态(0：未启动，1：运行中)
-    handlerMap    HandlerMap               // 所有注册的回调函数
     methodsMap    map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
-    closeQueue    *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
+    handlerMap    HandlerMap               // 所有注册的回调函数(静态匹配)
+    handlerTree   map[string]interface{}   // 所有注册的回调函数(动态匹配，树型+链表优先级匹配)
     hooksMap      *gmap.StringInterfaceMap // 钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
+    closeQueue    *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
     servedCount   *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)
     cookieMaxAge  *gtype.Int               // Cookie有效期
     sessionMaxAge *gtype.Int               // Session有效期
@@ -54,13 +55,17 @@ type Server struct {
 }
 
 // 域名、URI与回调函数的绑定记录表
-type HandlerMap  map[string]HandlerItem
+type HandlerMap  map[string]*HandlerItem
 
 // http回调函数注册信息
 type HandlerItem struct {
-    ctype reflect.Type // 控制器类型
-    fname string       // 回调方法名称
-    faddr HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
+    ctype    reflect.Type // 控制器类型
+    fname    string       // 回调方法名称
+    faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
+    uri      string       // 注册时的pattern - uri
+    method   string       // 注册时的pattern - method
+    domain   string       // 注册时的pattern - domain
+    priority int          // 优先级，用于链表排序，值越大优先级越高
 }
 
 // http注册函数
@@ -81,11 +86,12 @@ func GetServer(names...string) (*Server) {
     }
     s := &Server {
         name          : name,
-        handlerMap    : make(HandlerMap),
         methodsMap    : make(map[string]bool),
+        handlerMap    : make(HandlerMap),
+        handlerTree   : make(map[string]interface{}),
+        hooksMap      : gmap.NewStringInterfaceMap(),
         servedCount   : gtype.NewInt(),
         closeQueue    : gqueue.New(),
-        hooksMap      : gmap.NewStringInterfaceMap(),
         routers       : gcache.New(),
         cookies       : gmap.NewIntInterfaceMap(),
         sessions      : gcache.New(),
@@ -136,9 +142,16 @@ func (s *Server) handlerKey(domain, method, pattern string) string {
 }
 
 // 注册服务处理方法
-func (s *Server) setHandler(domain, method, pattern string, item HandlerItem) {
-    s.hmu.Lock()
-    defer s.hmu.Unlock()
+func (s *Server) setHandler(pattern string, item *HandlerItem) error {
+    domain, method, uri, err := s.parsePatternForBindHandler(pattern)
+    if err != nil {
+        return errors.New("invalid pattern")
+    }
+    item.uri    = uri
+    item.domain = domain
+    item.method = method
+    // 静态注册
+    s.hmmu.Lock()
     if method == gDEFAULT_METHOD {
         for v, _ := range s.methodsMap {
             s.handlerMap[s.handlerKey(domain, v, pattern)] = item
@@ -146,7 +159,36 @@ func (s *Server) setHandler(domain, method, pattern string, item HandlerItem) {
     } else {
         s.handlerMap[s.handlerKey(domain, method, pattern)] = item
     }
+    s.hmmu.Unlock()
+    // 动态注册，首先需要判断是否是动态注册，如果不是那么就没必要添加到动态注册记录变量中
+    if s.isUriHasRule(uri) {
+        array := strings.Split(uri, "/")
+        item.priority = len(array)
+        pattern := ""
+        for _, v := range array {
+            switch v[0] {
+                case ':':
+                case '*':
+                default:
+                    if p == nil {
+                        p = make(map[string]interface{})
+                        p = p.(map[string]interface{})
+                    }
+                    if _, ok := p[v]; !ok {
+                        p[v] = make(map[string]interface{})
+                    }
+            }
+        }
+    }
+    return nil
+}
 
+// 判断URI中是否包含动态注册规则
+func (s *Server) isUriHasRule(uri string) bool {
+    if len(uri) > 1 && (strings.Index(uri, "/:") != -1 || strings.Index(uri, "/*") != -1) {
+        return true
+    }
+    return false
 }
 
 // 解析pattern
@@ -171,16 +213,11 @@ func (s *Server)parsePatternForBindHandler(pattern string) (domain, method, uri 
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user, post:/user@johng.cn
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server)bindHandlerItem(pattern string, item HandlerItem) error {
+func (s *Server)bindHandlerItem(pattern string, item *HandlerItem) error {
     if s.status == 1 {
         return errors.New("server handlers cannot be changed while running")
     }
-    domain, method, uri, err := s.parsePatternForBindHandler(pattern)
-    if err != nil {
-        return errors.New("invalid pattern")
-    }
-    s.setHandler(domain, method, uri, item)
-    return nil
+    return s.setHandler(pattern, item)
 }
 
 // 通过映射数组绑定URI到操作函数/方法
@@ -216,7 +253,11 @@ func (s *Server)appendMethodNameToUriWithPattern(pattern string, name string) st
 
 // 注意该方法是直接绑定函数的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
-    return s.bindHandlerItem(pattern, HandlerItem{nil, "", handler})
+    return s.bindHandlerItem(pattern, &HandlerItem{
+        ctype : nil,
+        fname : "",
+        faddr : handler,
+    })
 }
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
@@ -228,7 +269,11 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
     for i := 0; i < v.NumMethod(); i++ {
         name  := t.Method(i).Name
         key   := s.appendMethodNameToUriWithPattern(pattern, name)
-        m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Request))}
+        m[key] = &HandlerItem{
+            ctype : nil,
+            fname : "",
+            faddr : v.Method(i).Interface().(func(*Request)),
+        }
     }
     return s.bindHandlerByMap(m)
 }
@@ -244,7 +289,11 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string
             return errors.New("invalid method name:" + method)
         }
         key   := s.appendMethodNameToUriWithPattern(pattern, method)
-        m[key] = HandlerItem{nil, "", fval.Interface().(func(*Request))}
+        m[key] = &HandlerItem{
+            ctype : nil,
+            fname : "",
+            faddr : fval.Interface().(func(*Request)),
+        }
     }
     return s.bindHandlerByMap(m)
 }
@@ -261,7 +310,11 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
             continue
         }
         key   := name + ":" + pattern
-        m[key] = HandlerItem{nil, "", v.Method(i).Interface().(func(*Request))}
+        m[key] = &HandlerItem{
+            ctype : nil,
+            fname : "",
+            faddr : v.Method(i).Interface().(func(*Request)),
+        }
     }
     return s.bindHandlerByMap(m)
 }
@@ -279,7 +332,11 @@ func (s *Server)BindController(pattern string, c Controller) error {
             continue
         }
         key   := s.appendMethodNameToUriWithPattern(pattern, name)
-        m[key] = HandlerItem{v.Elem().Type(), name, nil}
+        m[key] = &HandlerItem{
+            ctype : v.Elem().Type(),
+            fname : name,
+            faddr : nil,
+        }
     }
     return s.bindHandlerByMap(m)
 }
@@ -297,16 +354,21 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         methods[v] = true
     }
+    // 如果存在与HttpMethod对应名字的方法，那么绑定这些方法
     for i := 0; i < v.NumMethod(); i++ {
-        name := t.Method(i).Name
+        name := strings.ToUpper(t.Method(i).Name)
         if name == "Init" || name == "Shut" {
             continue
         }
-        if _, ok := s.methodsMap[strings.ToUpper(name)]; !ok {
+        if _, ok := s.methodsMap[name]; !ok {
             continue
         }
         key   := name + ":" + pattern
-        m[key] = HandlerItem{v.Elem().Type(), name, nil}
+        m[key] = &HandlerItem{
+            ctype : v.Elem().Type(),
+            fname : name,
+            faddr : nil,
+        }
     }
     return s.bindHandlerByMap(m)
 }
@@ -323,31 +385,35 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, methods strin
             return errors.New("invalid method name:" + method)
         }
         key    := s.appendMethodNameToUriWithPattern(pattern, method)
-        m[key]  = HandlerItem{ctype, method, nil}
+        m[key]  = &HandlerItem{
+            ctype : ctype,
+            fname : method,
+            faddr : nil,
+        }
     }
     return s.bindHandlerByMap(m)
 }
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
 func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc) error {
-    domain, method, uri, err := s.parsePatternForBindHandler(pattern)
-    if err != nil {
-        return errors.New("invalid pattern")
-    }
-    var l *glist.List
-    if method == gDEFAULT_METHOD {
-        for v, _ := range s.methodsMap {
-            if v := s.hooksMap.GetWithDefault(s.handlerHookKey(domain, v, uri, hook), glist.New()); v != nil {
-                l = v.(*glist.List)
-            }
-            l.PushBack(handler)
-        }
-    } else {
-        if v := s.hooksMap.GetWithDefault(s.handlerHookKey(domain, method, uri, hook), glist.New()); v == nil {
-            l = v.(*glist.List)
-        }
-        l.PushBack(handler)
-    }
+    //domain, method, uri, err := s.parsePatternForBindHookHandler(pattern)
+    //if err != nil {
+    //    return errors.New("invalid pattern")
+    //}
+    //var l *glist.List
+    //if method == gDEFAULT_METHOD {
+    //    for v, _ := range s.methodsMap {
+    //        if v := s.hooksMap.GetWithDefault(s.handlerHookKey(domain, v, uri, hook), glist.New()); v != nil {
+    //            l = v.(*glist.List)
+    //        }
+    //        l.PushBack(handler)
+    //    }
+    //} else {
+    //    if v := s.hooksMap.GetWithDefault(s.handlerHookKey(domain, method, uri, hook), glist.New()); v == nil {
+    //        l = v.(*glist.List)
+    //    }
+    //    l.PushBack(handler)
+    //}
     return nil
 }
 
