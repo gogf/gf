@@ -16,7 +16,7 @@ func init () {
         Host    : "127.0.0.1",
         Port    : "3306",
         User    : "root",
-        Pass    : "8692651",
+        Pass    : "123456",
         Name    : "test",
         Type    : "mysql",
         Role    : "master",
@@ -225,7 +225,7 @@ func update1() {
 // 数据更新
 func update2() {
     fmt.Println("update2:")
-    r, err := db.Update("user", "name='john2'", "uid=1")
+    r, err := db.Update("user", gdb.Map{"name" : "john6"}, "uid=?", 1)
     if err == nil {
         fmt.Println(r.LastInsertId())
         fmt.Println(r.RowsAffected())
@@ -300,7 +300,7 @@ func linkopUpdate1() {
 // 通过Map指针方式传参方式
 func linkopUpdate2() {
     fmt.Println("linkopUpdate2:")
-    r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Where("name=?", "john").Update()
+    r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Where("name=?", "john_1").Update()
     if err == nil {
         fmt.Println(r.RowsAffected())
     } else {
@@ -438,22 +438,22 @@ func instance() {
 
 func main() {
 
-    create()
-    create()
-    insert()
-    query()
-    replace()
-    save()
-    batchInsert()
-    update1()
+    //create()
+    //create()
+    //insert()
+    //query()
+    //replace()
+    //save()
+    //batchInsert()
+    //update1()
     update2()
-    update3()
-    linkopSelect1()
-    linkopSelect2()
-    linkopSelect3()
-    linkopUpdate1()
-    linkopUpdate2()
-    linkopUpdate3()
+    //update3()
+    //linkopSelect1()
+    //linkopSelect2()
+    //linkopSelect3()
+    //linkopUpdate1()
+    //linkopUpdate2()
+    //linkopUpdate3()
     //keepPing()
     //transaction1()
     //transaction2()
