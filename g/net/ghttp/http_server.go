@@ -16,9 +16,9 @@ import (
     "gitee.com/johng/gf/g/util/gregx"
     "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
+    "container/list"
 )
 
 const (
@@ -162,23 +162,39 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
     s.hmmu.Unlock()
     // 动态注册，首先需要判断是否是动态注册，如果不是那么就没必要添加到动态注册记录变量中
     if s.isUriHasRule(uri) {
-        array := strings.Split(uri, "/")
+        if _, ok := s.handlerTree[domain]; !ok {
+            s.handlerTree[domain] = make(map[string]interface{})
+        }
+        p     := s.handlerTree[domain]
+        array := strings.Split(uri[1:], "/")
         item.priority = len(array)
-        pattern := ""
         for _, v := range array {
+            if len(v) == 0 {
+                continue
+            }
             switch v[0] {
                 case ':':
+                    fallthrough
                 case '*':
+                    v = "/"
+                    fallthrough
                 default:
-                    if p == nil {
-                        p = make(map[string]interface{})
-                        p = p.(map[string]interface{})
-                    }
-                    if _, ok := p[v]; !ok {
-                        p[v] = make(map[string]interface{})
+                    if _, ok := p.(map[string]interface{})[v]; !ok {
+                        p.(map[string]interface{})[v] = make(map[string]interface{})
+                    } else {
+                        p = p.(map[string]interface{})[v]
                     }
             }
         }
+        // 到达叶子节点
+        var l *list.List
+        if v, ok := p.(map[string]interface{})["*list"]; !ok {
+            l = list.New()
+            p.(map[string]interface{})["*list"] = l
+        } else {
+            l = v.(*list.List)
+        }
+        l.PushBack(item)
     }
     return nil
 }
@@ -195,7 +211,7 @@ func (s *Server) isUriHasRule(uri string) bool {
 func (s *Server)parsePatternForBindHandler(pattern string) (domain, method, uri string, err error) {
     uri    = pattern
     domain = gDEFAULT_DOMAIN
-    method = "all"
+    method = gDEFAULT_METHOD
     if array, err := gregx.MatchString(`([a-zA-Z]+):(.+)`, pattern); len(array) > 1 && err == nil {
         method  = array[1]
         pattern = array[2]
