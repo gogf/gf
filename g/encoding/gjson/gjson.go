@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// JSON解析/封装
+// JSON解析/封装.
+// 单元测试请参考gpaser包.
 package gjson
 
 import (
@@ -20,12 +21,58 @@ import (
     "gitee.com/johng/gf/g/encoding/gtoml"
 )
 
+const (
+    gDEFAULT_SPLIT_CHAR = '.' // 默认层级分隔符号
+)
+
 // json解析结果存放数组
 type Json struct {
     mu sync.RWMutex
     p  *interface{} // 注意这是一个指针
+    c  byte         // 层级分隔符，默认为"."
+    vc bool         // 是否执行分隔符冲突检测(默认为true，检测会比较影响检索效率)
 }
 
+// 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
+func New(value interface{}) *Json {
+    switch value.(type) {
+        case map[string]interface{}:
+            return &Json{
+                p  : &value,
+                c  : byte(gDEFAULT_SPLIT_CHAR),
+                vc : true ,
+            }
+        case []interface{}:
+            return &Json{
+                p  : &value,
+                c  : byte(gDEFAULT_SPLIT_CHAR),
+                vc : true ,
+            }
+        default:
+            // 这里效率会比较低
+            b, _ := Encode(value)
+            v, _ := Decode(b)
+            return &Json{
+                p  : &v,
+                c  : byte(gDEFAULT_SPLIT_CHAR),
+                vc : true,
+            }
+    }
+}
+
+// 设置自定义的层级分隔符号
+func (j *Json) SetSplitChar(char byte) {
+    j.mu.Lock()
+    j.c = char
+    j.mu.Unlock()
+}
+
+// 设置自定义的层级分隔符号
+func (j *Json) SetViolenceCheck(check bool) {
+    j.mu.Lock()
+    j.vc = check
+    j.mu.Unlock()
+}
 // 编码go变量为json字符串，并返回json字符串指针
 func Encode (v interface{}) ([]byte, error) {
     return json.Marshal(v)
@@ -51,7 +98,7 @@ func DecodeToJson (b []byte) (*Json, error) {
     if v, err := Decode(b); err != nil {
         return nil, err
     } else {
-        return NewJson(v), nil
+        return New(v), nil
     }
 }
 
@@ -94,26 +141,11 @@ func LoadContent (data []byte, t string) (*Json, error) {
     if err := json.Unmarshal(data, &result); err != nil {
         return nil, err
     }
-    return NewJson(result), nil
-}
-
-// 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
-func NewJson(value interface{}) *Json {
-    switch value.(type) {
-        case map[string]interface{}:
-            return &Json{ p: &value }
-        case []interface{}:
-            return &Json{ p: &value }
-        default:
-            // 这里效率会比较低
-            b, _ := Encode(value)
-            v, _ := Decode(b)
-            return &Json{ p: &v }
-    }
+    return New(result), nil
 }
 
 // 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
-// 注意第二个参数需要给的是变量地址
+// 注意第二个参数需要给的是**变量地址**
 func (j *Json) GetToVar(pattern string, v interface{}) error {
     r := j.Get(pattern)
     if r != nil {
@@ -144,7 +176,7 @@ func (j *Json) GetMap(pattern string) map[string]interface{} {
 func (j *Json) GetJson(pattern string) *Json {
     result := j.Get(pattern)
     if result != nil {
-        return NewJson(result)
+        return New(result)
     }
     return nil
 }
@@ -199,27 +231,22 @@ func (j *Json) Remove(pattern string) error {
 
 // 根据pattern查找并设置数据
 // 注意：
-// 1、写入的时候"."符号只能表示层级，不能使用带"."符号的键名;
-// 2、写入的value为nil且removed为true时，表示删除;
-// 3、里面的层级处理比较复杂，逻辑较复杂的地方在于层级检索及节点创建，叶子赋值;
+// 1、写入的value为nil且removed为true时，表示删除;
+// 2、里面的层级处理比较复杂，逻辑较复杂的地方在于层级检索及节点创建，叶子赋值;
 func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
+    array   := strings.Split(pattern, string(j.c))
+    length  := len(array)
+    value    = j.convertValue(value)
     // 初始化判断
     if *j.p == nil {
-        if isNumeric(pattern) {
+        if isNumeric(array[0]) {
             *j.p = make([]interface{}, 0)
         } else {
             *j.p = make(map[string]interface{})
         }
     }
-    var pparent *interface{}
-    var pointer *interface{}
-
-    pointer  = j.p
-    pparent  = nil
-    value    = j.convertValue(value)
-    array   := strings.Split(pattern, ".")
-    length  := len(array)
-
+    var pparent *interface{} = nil // 父级元素项(设置时需要根据子级的内容确定数据类型，所以必须记录父级)
+    var pointer *interface{} = j.p // 当前操作层级项
     j.mu.Lock()
     for i:= 0; i < length; i++ {
         switch (*pointer).(type) {
@@ -403,13 +430,31 @@ func (j *Json) setPointerWithValue(pointer *interface{}, key string, value inter
 func (j *Json) Get(pattern string) interface{} {
     j.mu.RLock()
     defer j.mu.RUnlock()
-    if r := j.getPointerByPattern(pattern); r != nil {
-        return *r
+
+    var result *interface{}
+    if j.vc {
+        result = j.getPointerByPattern(pattern)
+    } else {
+        result = j.getPointerByPatternWithoutSplitCharViolenceCheck(pattern)
+    }
+    if result != nil {
+        return *result
     }
     return nil
 }
 
-// 根据pattern层级查找变量指针
+// 根据pattern层级查找**变量指针**
+// 检索方式：例如检索 a.a.a ，值为1
+// 1. 检索 a.a.a.a 是否存在对应map的键名；
+// 2. 检索 a.a.a   是否存在对应map的键名；
+// 3. 检索 a.a     是否存在对应map的键名；
+// 4. 检索 a       是否存在对应map的键名，如果检索出这是一个map，假如为变量m1；
+// 5. 在m1中检索 a.a.a 否存在对应map的键名；
+// 6. 在m1中检索 a.a   否存在对应map的键名；
+// 7. 在m1中检索 a     否存在对应map的键名，如果检索出这是一个map，假如为变量m2；
+// 8. 在m2中检索 a.a   否存在对应map的键名；
+// 9. 在m2中检索 a     否存在对应map的键名，检索到有值，值为1；
+// 这样检索的复杂度很高，主要是为了避免键名中存在分隔符号(默认为".")的情况，避免歧义。
 func (j *Json) getPointerByPattern(pattern string) *interface{} {
     index   := len(pattern)
     start   := 0
@@ -432,7 +477,8 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
                 pointer = r
             }
         } else {
-            index = strings.LastIndex(pattern[start:index], ".")
+            // 查找下一个分割符号的索引位置
+            index = strings.LastIndexByte(pattern[start:index], j.c)
             if index != -1 && length > 0 {
                 index += length + 1
             }
@@ -444,17 +490,38 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
     return nil
 }
 
-// 判断给定的pattern在当前的pointer下是否有值，并返回对应的pointer
+// 层级检索，内部不执行分隔符冲突检查，检索效率会有所提高，但是冲突需要开发者自己根据自定义的分隔符来进行解决
+func (j *Json) getPointerByPatternWithoutSplitCharViolenceCheck(pattern string) *interface{} {
+    pointer := j.p
+    if len(pattern) == 0 {
+        return pointer
+    }
+    array := strings.Split(pattern, string(j.c))
+    for k, v := range array {
+        if r := j.checkPatternByPointer(v, pointer); r != nil {
+            if k == len(array) - 1 {
+                return r
+            } else {
+                pointer = r
+            }
+        } else {
+            break
+        }
+    }
+    return nil
+}
+
+// 判断给定的key在当前的pointer下是否有值，并返回对应的pointer
 // 注意这里返回的指针都是临时变量的内存地址
-func (j *Json) checkPatternByPointer(pattern string, pointer *interface{}) *interface{} {
+func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interface{} {
     switch (*pointer).(type) {
         case map[string]interface{}:
-            if v, ok := (*pointer).(map[string]interface{})[pattern]; ok {
+            if v, ok := (*pointer).(map[string]interface{})[key]; ok {
                 return &v
             }
         case []interface{}:
-            if isNumeric(pattern) {
-                n, err := strconv.Atoi(pattern)
+            if isNumeric(key) {
+                n, err := strconv.Atoi(key)
                 if err == nil && len((*pointer).([]interface{})) > n {
                     return &(*pointer).([]interface{})[n]
                 }
