@@ -42,6 +42,16 @@ func LoadContent (data []byte, fileType string) (*Parser, error) {
     }
 }
 
+// 设置自定义的层级分隔符号
+func (p *Parser) SetSplitChar(char byte) {
+    p.json.SetSplitChar(char)
+}
+
+// 设置自定义的层级分隔符号
+func (p *Parser) SetViolenceCheck(check bool) {
+    p.SetViolenceCheck(check)
+}
+
 // 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
 // 注意第二个参数需要给的是变量地址
 func (p *Parser) GetToVar(pattern string, v interface{}) error {
