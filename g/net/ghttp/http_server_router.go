@@ -20,10 +20,10 @@ func (s *Server)parsePatternForBindHandler(pattern string) (domain, method, uri 
     domain = gDEFAULT_DOMAIN
     method = gDEFAULT_METHOD
     if array, err := gregx.MatchString(`([a-zA-Z]+):(.+)`, pattern); len(array) > 1 && err == nil {
-        method  = array[1]
-        pattern = array[2]
+        method = array[1]
+        uri    = array[2]
     }
-    if array, err := gregx.MatchString(`(.+)@([\w\.\-]+)`, pattern); len(array) > 1 && err == nil {
+    if array, err := gregx.MatchString(`(.+)@([\w\.\-]+)`, uri); len(array) > 1 && err == nil {
         uri     = array[1]
         domain  = array[2]
     }
@@ -47,10 +47,10 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
     defer s.hmmu.Unlock()
     if method == gDEFAULT_METHOD {
         for v, _ := range s.methodsMap {
-            s.handlerMap[s.handlerKey(domain, v, pattern)] = item
+            s.handlerMap[s.handlerKey(domain, v, uri)] = item
         }
     } else {
-        s.handlerMap[s.handlerKey(domain, method, pattern)] = item
+        s.handlerMap[s.handlerKey(domain, method, uri)] = item
     }
 
     // 动态注册，首先需要判断是否是动态注册，如果不是那么就没必要添加到动态注册记录变量中
@@ -121,19 +121,41 @@ func (s *Server) compareHandlerItemPriority(newItem, oldItem *HandlerItem) bool 
 
 // 服务方法检索
 func (s *Server) searchHandler(r *Request) *HandlerItem {
+    f := s.searchHandlerStatic(r)
+    if f == nil {
+        f = s.searchHandlerDynamic(r)
+    }
+    // 如果检索不到服务，那么使用默认的"/"服务注册来执行服务
+    // "/"静态路由是特殊的路由，当所有服务都找不到时，会交给"/"路由规则的控制器来处理
+    if f == nil && r.URL.Path != "/" {
+        path      := r.URL.Path
+        r.URL.Path = "/"
+        f          = s.searchHandlerStatic(r)
+        r.URL.Path = path
+    }
+    return f
+}
+
+// 检索静态路由规则
+func (s *Server) searchHandlerStatic(r *Request) *HandlerItem {
     s.hmmu.RLock()
+    defer s.hmmu.RUnlock()
     domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
     // 首先进行静态匹配
     for _, domain := range domains {
         if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
-            s.hmmu.RUnlock()
             return f
         }
     }
-    s.hmmu.RUnlock()
-    // 其次进行动态匹配
-    array := strings.Split(r.URL.Path[1:], "/")
+    return nil
+}
+
+// 检索动态路由规则
+func (s *Server) searchHandlerDynamic(r *Request) *HandlerItem {
+    domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
+    array   := strings.Split(r.URL.Path[1:], "/")
     s.htmu.RLock()
+    defer s.htmu.RLock()
     for _, domain := range domains {
         p, ok := s.handlerTree[domain]
         if !ok {
@@ -182,14 +204,12 @@ func (s *Server) searchHandler(r *Request) *HandlerItem {
                                 }
                             }
                         }
-                        s.htmu.RUnlock()
                         return item
                     }
                 }
             }
         }
     }
-    s.htmu.RUnlock()
     return nil
 }
 
@@ -235,7 +255,7 @@ func (s *Server) isUriHasRule(uri string) bool {
 }
 
 // 生成回调方法查询的Key
-func (s *Server) handlerKey(domain, method, pattern string) string {
-    return strings.ToUpper(method) + ":" + pattern + "@" + strings.ToLower(domain)
+func (s *Server) handlerKey(domain, method, uri string) string {
+    return strings.ToUpper(method) + ":" + uri + "@" + strings.ToLower(domain)
 }
 
