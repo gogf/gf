@@ -17,9 +17,7 @@ import (
     "net/http"
     "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/util/gregx"
     "gitee.com/johng/gf/g/encoding/ghtml"
-    "gitee.com/johng/gf/g/container/glist"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -38,83 +36,6 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     } else {
         s.serveFile(w, r)
     }
-}
-
-// 查询请求处理方法
-// 这里有个锁机制，可以并发读，但是不能并发写
-func (s *Server) getHandler(r *Request) *HandlerItem {
-    handler := s.searchHandler(r)
-    return handler
-}
-
-// 按照指定hook回调函数的注册顺序进行调用
-func (s *Server)callHookHandler(r *Request, hook string) {
-    l := s.searchHookHandler(r, hook)
-    if l != nil {
-        for _, f := range l {
-            f(r)
-        }
-    }
-}
-
-// 获取指定hook的回调函数列表，按照注册顺序排序
-func (s *Server)searchHookHandler(r *Request, hook string) []HandlerFunc {
-    domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
-    // 首先进行静态匹配
-    for _, domain := range domains {
-        key := s.handlerHookKey(domain, r.Method, r.URL.Path, hook)
-        if v := s.hooksMap.Get(key); v != nil {
-            items := v.(*glist.List).FrontAll()
-            funcs := make([]HandlerFunc, len(items))
-            for k, v := range items {
-                funcs[k] = v.(HandlerFunc)
-            }
-            return funcs
-        }
-    }
-    // 其次进行正则匹配(会比较耗效率)
-    var funcs []HandlerFunc
-    s.hooksMap.Iterator(func(rule string, list interface{}) bool {
-        if array, err := gregx.MatchString(`([a-zA-Z]+)\^([a-zA-Z]+):(.+)@([\w\.\-]+)`, rule); len(array) > 3 && err == nil {
-            // hook匹配
-            if !strings.EqualFold(hook, array[1]) {
-                return true
-            }
-            // method匹配
-            if !strings.EqualFold(r.Method, array[2]) {
-                return true
-            }
-            // domain匹配
-            for _, domain := range domains {
-                if !strings.EqualFold(domain, array[4]) {
-                    continue
-                }
-                // method & domain匹配时，那么执行pattern的正则匹配
-                regrule, querystr := s.patternToRegRule(array[3])
-                if gregx.IsMatchString(regrule, r.URL.Path) {
-                    // 如果需要query匹配，那么需要重新解析URL
-                    if len(querystr) > 0 {
-                        if query, err := gregx.ReplaceString(regrule, querystr, r.URL.Path); err == nil && len(query) > 0 {
-                            if vals, err := url.ParseQuery(query); err == nil {
-                                for k, v := range vals {
-                                    r.values[k] = v
-                                }
-                            }
-                        }
-                    }
-                    // 列表数据解析
-                    items := list.(*glist.List).FrontAll()
-                    funcs  = make([]HandlerFunc, len(items))
-                    for k, v := range items {
-                        funcs[k] = v.(HandlerFunc)
-                    }
-                    return false
-                }
-            }
-        }
-        return true
-    })
-    return funcs
 }
 
 // 初始化控制器

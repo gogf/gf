@@ -31,8 +31,8 @@ const (
 
 // http server结构体
 type Server struct {
-    hmmu          sync.RWMutex             // handlerMap互斥锁
-    htmu          sync.RWMutex             // handlerTree互斥锁
+    hmmu          sync.RWMutex             // handler互斥锁
+    hhmu          sync.RWMutex             // hooks互斥锁
     name          string                   // 服务名称，方便识别
     server        http.Server              // 底层http server对象
     config        ServerConfig             // 配置对象
@@ -40,15 +40,16 @@ type Server struct {
     methodsMap    map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
     handlerMap    HandlerMap               // 所有注册的回调函数(静态匹配)
     handlerTree   map[string]interface{}   // 所有注册的回调函数(动态匹配，树型+链表优先级匹配)
-    hooksMap      *gmap.StringInterfaceMap // 钩子注册方法map，键值为按照注册顺序生成的glist，用于hook顺序调用
-    closeQueue    *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
+    hooksTree     map[string]interface{}   // 所有注册的事件回调函数(动态匹配，树型+链表优先级匹配)
+    handlerCache  *gcache.Cache            // 服务注册路由内存缓存
+    hooksCache    *gcache.Cache            // 回调事件注册路由内存缓存
     servedCount   *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)
     cookieMaxAge  *gtype.Int               // Cookie有效期
     sessionMaxAge *gtype.Int               // Session有效期
     sessionIdName *gtype.String            // SessionId名称
-    routers       *gcache.Cache            // 服务注册路由内存缓存
     cookies       *gmap.IntInterfaceMap    // 当前服务器正在服务(请求正在执行)的Cookie(每个请求一个Cookie对象)
     sessions      *gcache.Cache            // Session内存缓存
+    closeQueue    *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -86,16 +87,19 @@ func GetServer(names...string) (*Server) {
         methodsMap    : make(map[string]bool),
         handlerMap    : make(HandlerMap),
         handlerTree   : make(map[string]interface{}),
-        hooksMap      : gmap.NewStringInterfaceMap(),
-        servedCount   : gtype.NewInt(),
-        closeQueue    : gqueue.New(),
-        routers       : gcache.New(),
+        hooksTree     : make(map[string]interface{}),
+        handlerCache  : gcache.New(),
+        hooksCache    : gcache.New(),
         cookies       : gmap.NewIntInterfaceMap(),
         sessions      : gcache.New(),
         cookieMaxAge  : gtype.NewInt(gDEFAULT_COOKIE_MAX_AGE),
         sessionMaxAge : gtype.NewInt(gDEFAULT_SESSION_MAX_AGE),
         sessionIdName : gtype.NewString(gDEFAULT_SESSION_ID_NAME),
+        servedCount   : gtype.NewInt(),
+        closeQueue    : gqueue.New(),
     }
+    s.hooksCache.SetCap(10000)
+    s.handlerCache.SetCap(10000)
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = true
     }
