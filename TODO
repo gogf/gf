@@ -2,3 +2,4 @@
 2. gdb Where方法参数的改进，研究是否可以将string参数类型修改为interfaceP{；
 3. 增加对于数据表Model的封装；
 4. ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
+5. ghttp.Response对象完善并改进数据返回方法(Write/WriteString)；
