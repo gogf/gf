@@ -10,6 +10,8 @@ package ghttp
 import (
     "sync"
     "net/http"
+    "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/encoding/gparser"
 )
 
 // 服务端请求返回对象
@@ -19,39 +21,52 @@ type Response struct {
     buffer []byte       // 每个请求的返回数据缓冲区
 }
 
-// 返回的固定JSON数据结构
-//type ResponseJson struct {
-//    Result  int    `json:"result"`  // 标识消息状态
-//    Message string `json:"message"` // 消息使用string存储
-//    Data    []byte `json:"data"`    // 二进制数据(不管什么数据结构)
-//}
-
-// 返回信息(byte)
-func (r *Response) Write(content []byte) {
+// 返回信息，任何变量自动转换为bytes
+func (r *Response) Write(content interface{}) {
     r.bufmu.Lock()
-    defer r.bufmu.Unlock()
-    r.buffer = append(r.buffer, content...)
+    r.buffer = append(r.buffer, gconv.Bytes(content)...)
+    r.bufmu.Unlock()
 }
 
-// 返回信息(string)
-func (r *Response) WriteString(content string) {
-    r.bufmu.Lock()
-    defer r.bufmu.Unlock()
-    r.buffer = append(r.buffer, content...)
+// 返回JSON
+func (r *Response) WriteJson(content interface{}) error {
+    if b, err := gparser.VarToJson(content); err != nil {
+        return err
+    } else {
+        r.Header().Set("Content-Type", "application/json")
+        r.Write(b)
+    }
+    return nil
 }
 
-// 返回固定格式的json
-//func (r *Response) WriteJson(result int, message string, data []byte) error {
-//    r.Header().Set("Content-Type", "application/json")
-//    r.bufmu.Lock()
-//    defer r.bufmu.Unlock()
-//    if jsonstr, err := gjson.Encode(ResponseJson{ result, message, data }); err != nil {
-//        return err
-//    } else {
-//        r.buffer = append(r.buffer, jsonstr...)
-//    }
-//    return nil
-//}
+// 返回XML
+func (r *Response) WriteXml(content interface{}, rootTag...string) error {
+    if b, err := gparser.VarToXml(content, rootTag...); err != nil {
+        return err
+    } else {
+        r.Header().Set("Content-Type", "application/xml")
+        r.Write(b)
+    }
+    return nil
+}
+
+// 返回HTTP Code状态码
+func (r *Response) WriteStatus(code int, content...string) {
+    r.Header().Set("Content-Type", "text/plain; charset=utf-8")
+    r.Header().Set("X-Content-Type-Options", "nosniff")
+    if len(content) > 0 {
+        r.Write(content[0])
+    } else {
+        r.Write(http.StatusText(code))
+    }
+    r.WriteHeader(code)
+}
+
+// 返回location标识，引导客户端跳转
+func (r *Response) RedirectTo(location string) {
+    r.Header().Set("Location", location)
+    r.WriteHeader(http.StatusFound)
+}
 
 // 获取当前缓冲区中的数据
 func (r *Response) Buffer() []byte {
@@ -60,19 +75,26 @@ func (r *Response) Buffer() []byte {
     return r.buffer
 }
 
+// 手动设置缓冲区内容
+func (r *Response) SetBuffer(buffer []byte) {
+    r.bufmu.Lock()
+    r.buffer = buffer
+    r.bufmu.Unlock()
+}
+
 // 清空缓冲区内容
 func (r *Response) ClearBuffer() {
     r.bufmu.Lock()
-    defer r.bufmu.Unlock()
     r.buffer = make([]byte, 0)
+    r.bufmu.Unlock()
 }
 
 // 输出缓冲区数据到客户端
 func (r *Response) OutputBuffer() {
     r.bufmu.Lock()
-    defer r.bufmu.Unlock()
     if len(r.buffer) > 0 {
         r.ResponseWriter.Write(r.buffer)
         r.buffer = make([]byte, 0)
     }
+    r.bufmu.Unlock()
 }

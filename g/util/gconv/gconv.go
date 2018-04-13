@@ -5,13 +5,12 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 类型转换.
-// 如果给定的interface{}参数不是指定转换的输出类型，那么会进行强制转换，效率会比较低，
-// 建议已知类型的转换自行调用相关方法来单独处理。
+// 内部使用了bytes作为底层转换类型，效率很高。
 package gconv
 
 import (
     "fmt"
-    "strconv"
+    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
 func Bytes(i interface{}) []byte {
@@ -21,10 +20,11 @@ func Bytes(i interface{}) []byte {
     if r, ok := i.([]byte); ok {
         return r
     } else {
-        return []byte(String(i))
+        return gbinary.Encode(i)
     }
 }
 
+// 基础的字符串类型转换
 func String(i interface{}) string {
     if i == nil {
         return ""
@@ -32,7 +32,7 @@ func String(i interface{}) string {
     if r, ok := i.(string); ok {
         return r
     } else {
-        return fmt.Sprintf("%v", i)
+        return string(Bytes(i))
     }
 }
 
@@ -73,19 +73,97 @@ func Int(i interface{}) int {
     if v, ok := i.(int); ok {
         return v
     }
-    v, _ := strconv.Atoi(String(i))
-    return v
+    return gbinary.DecodeToInt(Bytes(i))
 }
 
-func Uint (i interface{}) uint {
+func Int8(i interface{}) int8 {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(int8); ok {
+        return v
+    }
+    return gbinary.DecodeToInt8(Bytes(i))
+}
+
+func Int16(i interface{}) int16 {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(int16); ok {
+        return v
+    }
+    return gbinary.DecodeToInt16(Bytes(i))
+}
+
+func Int32(i interface{}) int32 {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(int32); ok {
+        return v
+    }
+    return gbinary.DecodeToInt32(Bytes(i))
+}
+
+func Int64(i interface{}) int64 {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(int64); ok {
+        return v
+    }
+    return gbinary.DecodeToInt64(Bytes(i))
+}
+
+func Uint(i interface{}) uint {
     if i == nil {
         return 0
     }
     if v, ok := i.(uint); ok {
         return v
     }
-    v, _ := strconv.ParseUint(String(i), 10, 8)
-    return uint(v)
+    return gbinary.DecodeToUint(Bytes(i))
+}
+
+func Uint8(i interface{}) uint8 {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(uint8); ok {
+        return v
+    }
+    return gbinary.DecodeToUint8(Bytes(i))
+}
+
+func Uint16(i interface{}) uint16 {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(uint16); ok {
+        return v
+    }
+    return gbinary.DecodeToUint16(Bytes(i))
+}
+
+func Uint32(i interface{}) uint32 {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(uint32); ok {
+        return v
+    }
+    return gbinary.DecodeToUint32(Bytes(i))
+}
+
+func Uint64(i interface{}) uint64 {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(uint64); ok {
+        return v
+    }
+    return gbinary.DecodeToUint64(Bytes(i))
 }
 
 func Float32 (i interface{}) float32 {
@@ -95,8 +173,7 @@ func Float32 (i interface{}) float32 {
     if v, ok := i.(float32); ok {
         return v
     }
-    v, _ := strconv.ParseFloat(String(i), 8)
-    return float32(v)
+    return gbinary.DecodeToFloat32(Bytes(i))
 }
 
 func Float64 (i interface{}) float64 {
@@ -106,6 +183,5 @@ func Float64 (i interface{}) float64 {
     if v, ok := i.(float64); ok {
         return v
     }
-    v, _ := strconv.ParseFloat(String(i), 8)
-    return v
+    return gbinary.DecodeToFloat64(Bytes(i))
 }
