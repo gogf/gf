@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-    pattern := "/"
+    pattern := "/:name/action"
     ghttp.GetServer().BindHookHandlerByMap(pattern, map[string]ghttp.HandlerFunc{
         "BeforeServe"  : func(r *ghttp.Request){ fmt.Println("BeforeServe") },
         "AfterServe"   : func(r *ghttp.Request){ fmt.Println("AfterServe") },

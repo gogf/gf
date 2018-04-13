@@ -14,8 +14,35 @@ import (
     "gitee.com/johng/gf/g/util/gregx"
 )
 
+// handler缓存项，根据URL.Path进行缓存，因此对象中带有缓存参数
+type handlerCacheItem struct {
+    item    *HandlerItem        // 准确的执行方法内存地址
+    values   map[string][]string // GET解析参数
+}
+
+// 查询请求处理方法
+// 这里有个锁机制，可以并发读，但是不能并发写
+func (s *Server) getHandler(r *Request) *HandlerItem {
+    var handlerItem *handlerCacheItem
+    if v := s.handlerCache.Get(r.URL.Path); v == nil {
+        handlerItem = s.searchHandler(r)
+        if handlerItem != nil {
+            s.handlerCache.Set(r.URL.Path, handlerItem, 0)
+        }
+    } else {
+        handlerItem = v.(*handlerCacheItem)
+    }
+    if handlerItem != nil {
+        for k, v := range handlerItem.values {
+            r.values[k] = v
+        }
+        return handlerItem.item
+    }
+    return nil
+}
+
 // 解析pattern
-func (s *Server)parsePatternForBindHandler(pattern string) (domain, method, uri string, err error) {
+func (s *Server)parsePattern(pattern string) (domain, method, uri string, err error) {
     uri    = pattern
     domain = gDEFAULT_DOMAIN
     method = gDEFAULT_METHOD
@@ -35,7 +62,7 @@ func (s *Server)parsePatternForBindHandler(pattern string) (domain, method, uri 
 
 // 注册服务处理方法
 func (s *Server) setHandler(pattern string, item *HandlerItem) error {
-    domain, method, uri, err := s.parsePatternForBindHandler(pattern)
+    domain, method, uri, err := s.parsePattern(pattern)
     if err != nil {
         return errors.New("invalid pattern")
     }
@@ -57,8 +84,6 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
     // 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
     // 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表一般数据量不大，所以效率比较高；
     if s.isUriHasRule(uri) {
-        s.htmu.Lock()
-        defer s.htmu.Unlock()
         if _, ok := s.handlerTree[domain]; !ok {
             s.handlerTree[domain] = make(map[string]interface{})
         }
@@ -120,42 +145,42 @@ func (s *Server) compareHandlerItemPriority(newItem, oldItem *HandlerItem) bool 
 }
 
 // 服务方法检索
-func (s *Server) searchHandler(r *Request) *HandlerItem {
-    f := s.searchHandlerStatic(r)
-    if f == nil {
-        f = s.searchHandlerDynamic(r)
+func (s *Server) searchHandler(r *Request) *handlerCacheItem {
+    item := s.searchHandlerStatic(r)
+    if item == nil {
+        item = s.searchHandlerDynamic(r)
     }
     // 如果检索不到服务，那么使用默认的"/"服务注册来执行服务
     // "/"静态路由是特殊的路由，当所有服务都找不到时，会交给"/"路由规则的控制器来处理
-    if f == nil && r.URL.Path != "/" {
+    if item == nil && r.URL.Path != "/" {
         path      := r.URL.Path
         r.URL.Path = "/"
-        f          = s.searchHandlerStatic(r)
+        item       = s.searchHandlerStatic(r)
         r.URL.Path = path
     }
-    return f
+    return item
 }
 
 // 检索静态路由规则
-func (s *Server) searchHandlerStatic(r *Request) *HandlerItem {
+func (s *Server) searchHandlerStatic(r *Request) *handlerCacheItem {
     s.hmmu.RLock()
     defer s.hmmu.RUnlock()
     domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
     // 首先进行静态匹配
     for _, domain := range domains {
         if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
-            return f
+            return &handlerCacheItem{f, nil}
         }
     }
     return nil
 }
 
 // 检索动态路由规则
-func (s *Server) searchHandlerDynamic(r *Request) *HandlerItem {
+func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
+    s.hmmu.RLock()
+    defer s.hmmu.RUnlock()
     domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
     array   := strings.Split(r.URL.Path[1:], "/")
-    s.htmu.RLock()
-    defer s.htmu.RLock()
     for _, domain := range domains {
         p, ok := s.handlerTree[domain]
         if !ok {
@@ -175,6 +200,8 @@ func (s *Server) searchHandlerDynamic(r *Request) *HandlerItem {
                             lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
                         }
                     }
+                } else {
+                    break
                 }
             } else {
                 p = p.(map[string]interface{})[v]
@@ -193,18 +220,20 @@ func (s *Server) searchHandlerDynamic(r *Request) *HandlerItem {
                 if strings.EqualFold(item.method, gDEFAULT_METHOD) || strings.EqualFold(item.method, r.Method) {
                     regrule, names := s.patternToRegRule(item.uri)
                     if gregx.IsMatchString(regrule, r.URL.Path) {
+                        handlerItem := &handlerCacheItem{item, nil}
                         // 如果需要query匹配，那么需要重新解析URL
                         if len(names) > 0 {
                             if match, err := gregx.MatchString(regrule, r.URL.Path); err == nil {
                                 array := strings.Split(names, ",")
                                 if len(match) > len(array) {
+                                    handlerItem.values = make(map[string][]string)
                                     for index, name := range array {
-                                        r.values[name] = []string{match[index + 1]}
+                                        handlerItem.values[name] = []string{match[index + 1]}
                                     }
                                 }
                             }
                         }
-                        return item
+                        return handlerItem
                     }
                 }
             }
