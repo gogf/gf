@@ -3,7 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-//
+// 请求处理.
 
 package ghttp
 
@@ -13,7 +13,6 @@ import (
     "sort"
     "reflect"
     "strings"
-    "strconv"
     "net/url"
     "net/http"
     "path/filepath"
@@ -33,7 +32,6 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
-    fmt.Println(s.handlerTree)
     request := newRequest(s, r, w)
     if h := s.getHandler(request); h != nil {
         s.callHandler(h, request)
@@ -48,51 +46,6 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
     handler := s.searchHandler(r)
     return handler
 }
-
-// 服务方法检索
-func (s *Server) searchHandler(r *Request) *HandlerItem {
-    s.hmmu.RLock()
-    defer s.hmmu.RUnlock()
-    domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
-    // 首先进行静态匹配
-    for _, domain := range domains {
-        if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
-            return f
-        }
-    }
-    // 其次进行正则匹配(会比较耗效率)
-    for k, v := range s.handlerMap {
-        if array, err := gregx.MatchString(`([a-zA-Z]+):(.+)@([\w\.\-]+)`, k); len(array) > 2 && err == nil {
-            // method匹配
-            if !strings.EqualFold(r.Method, array[1]) {
-                continue
-            }
-            // domain匹配
-            for _, domain := range domains {
-                if !strings.EqualFold(domain, array[3]) {
-                    continue
-                }
-                // method & domain匹配时，那么执行pattern的正则匹配
-                regrule, querystr := s.patternToRegRule(array[2])
-                if gregx.IsMatchString(regrule, r.URL.Path) {
-                    // 如果需要query匹配，那么需要重新解析URL
-                    if len(querystr) > 0 {
-                        if query, err := gregx.ReplaceString(regrule, querystr, r.URL.Path); err == nil && len(query) > 0 {
-                            if vals, err := url.ParseQuery(query); err == nil {
-                                for k, v := range vals {
-                                    r.values[k] = v
-                                }
-                            }
-                        }
-                    }
-                    return v
-                }
-            }
-        }
-    }
-    return nil
-}
-
 
 // 按照指定hook回调函数的注册顺序进行调用
 func (s *Server)callHookHandler(r *Request, hook string) {
@@ -162,40 +115,6 @@ func (s *Server)searchHookHandler(r *Request, hook string) []HandlerFunc {
         return true
     })
     return funcs
-}
-
-// 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
-func (s *Server) patternToRegRule(rule string) (regrule string, querystr string) {
-    if len(rule) < 2 {
-        return rule, ""
-    }
-    regrule = "^/"
-    array  := strings.Split(rule[1:], "/")
-    index  := 1
-    for _, v := range array {
-        if len(v) == 0 {
-            continue
-        }
-        switch v[0] {
-            case ':':
-                regrule += `/([\w\.\-]+)`
-                if len(querystr) > 0 {
-                    querystr += "&"
-                }
-                querystr += v[1:] + "=$" + strconv.Itoa(index)
-                index++
-            case '*':
-                regrule += `/(.*)`
-                if len(querystr) > 0 {
-                    querystr += "&"
-                }
-                querystr += v[1:] + "=$" + strconv.Itoa(index)
-                return
-            default:
-                regrule += v
-        }
-    }
-    return
 }
 
 // 初始化控制器
