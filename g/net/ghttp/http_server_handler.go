@@ -30,22 +30,33 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
+    // 创建请求处理对象
     request := newRequest(s, r, w)
+    // 事件 - BeforeServe
+    s.callHookHandler(request, "BeforeServe")
     if h := s.getHandler(request); h != nil {
         s.callHandler(h, request)
     } else {
-        s.serveFile(w, r)
+        s.serveFile(request)
     }
+    // 事件 - AfterServe
+    s.callHookHandler(request, "AfterServe")
+    // 事件 - BeforeOutput
+    s.callHookHandler(request, "BeforeOutput")
+    // 输出Cookie
+    request.Cookie.Output()
+    // 输出缓冲区
+    request.Response.OutputBuffer()
+    // 事件 - AfterOutput
+    s.callHookHandler(request, "AfterOutput")
+    // 将Request对象指针丢到队列中异步处理
+    s.closeQueue.PushBack(request)
 }
 
 // 初始化控制器
 func (s *Server)callHandler(h *HandlerItem, r *Request) {
-    // 会话处理
-    r.Cookie  = GetCookie(r)
-    r.Session = GetSession(r)
-
     // 请求处理
-    s.callHookHandler(r, "BeforeServe")
+
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
@@ -55,23 +66,11 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
     } else {
         h.faddr(r)
     }
-    s.callHookHandler(r, "AfterServe")
 
-    s.callHookHandler(r, "BeforeOutput")
-
-    // 输出Cookie
-    r.Cookie.Output()
-    // 输出缓冲区
-    r.Response.OutputBuffer()
-
-    s.callHookHandler(r, "AfterOutput")
-
-    // 将Request对象指针丢到队列中异步处理
-    s.closeQueue.PushBack(r)
 }
 
 // 处理静态文件请求
-func (s *Server)serveFile(w http.ResponseWriter, r *http.Request) {
+func (s *Server)serveFile(r *Request) {
     uri := r.URL.String()
     if s.config.ServerRoot != "" {
         // 获取文件的绝对路径
@@ -79,17 +78,17 @@ func (s *Server)serveFile(w http.ResponseWriter, r *http.Request) {
         path  = path + uri
         path  = gfile.RealPath(path)
         if path != "" {
-            s.doServeFile(w, r, path)
+            s.doServeFile(r, path)
         } else {
-            s.NotFound(w, r)
+            r.Response.WriteStatus(http.StatusNotFound)
         }
     } else {
-        s.NotFound(w, r)
+        r.Response.WriteStatus(http.StatusNotFound)
     }
 }
 
 // http server静态文件处理
-func (s *Server)doServeFile(w http.ResponseWriter, r *http.Request, path string) {
+func (s *Server)doServeFile(r *Request, path string) {
     f, err := os.Open(path)
     if err != nil {
         return
@@ -101,53 +100,41 @@ func (s *Server)doServeFile(w http.ResponseWriter, r *http.Request, path string)
                 fpath := path + "/" + file
                 if gfile.Exists(fpath) {
                     f.Close()
-                    s.doServeFile(w, r, fpath)
+                    s.doServeFile(r, fpath)
                     return
                 }
             }
         }
         if s.config.IndexFolder {
-            s.listDir(w, f)
+            s.listDir(r, f)
         } else {
-            s.ResponseStatus(w, http.StatusForbidden)
+            r.Response.WriteStatus(http.StatusForbidden)
         }
     } else {
-        http.ServeContent(w, r, info.Name(), info.ModTime(), f)
+        // 读取文件内容返回
+        http.ServeContent(r.Response.ResponseWriter, &r.Request, info.Name(), info.ModTime(), f)
     }
     f.Close()
 }
 
 // 目录列表
-func (s *Server)listDir(w http.ResponseWriter, f http.File) {
+func (s *Server)listDir(r *Request, f http.File) {
     dirs, err := f.Readdir(-1)
     if err != nil {
-        http.Error(w, "Error reading directory", http.StatusInternalServerError)
+        r.Response.WriteStatus(http.StatusInternalServerError, "Error reading directory")
         return
     }
     sort.Slice(dirs, func(i, j int) bool { return dirs[i].Name() < dirs[j].Name() })
 
-    w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    fmt.Fprintf(w, "<pre>\n")
+    r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
+    r.Response.Write("<pre>\n")
     for _, d := range dirs {
         name := d.Name()
         if d.IsDir() {
             name += "/"
         }
         u := url.URL{Path: name}
-        fmt.Fprintf(w, "<a href=\"%s\">%s</a>\n", u.String(), ghtml.SpecialChars(name))
+        r.Response.Write(fmt.Sprintf("<a href=\"%s\">%s</a>\n", u.String(), ghtml.SpecialChars(name)))
     }
-    fmt.Fprintf(w, "</pre>\n")
-}
-
-// 返回http状态码，并使用默认配置的字符串返回信息
-func (s *Server)ResponseStatus(w http.ResponseWriter, code int) {
-    w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-    w.Header().Set("X-Content-Type-Options", "nosniff")
-    w.WriteHeader(code)
-    w.Write([]byte(http.StatusText(code)))
-}
-
-// 404
-func (s *Server)NotFound(w http.ResponseWriter, r *http.Request) {
-    http.NotFound(w, r)
+    r.Response.Write("</pre>\n")
 }

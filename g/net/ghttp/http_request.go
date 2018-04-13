@@ -29,7 +29,7 @@ type Request struct {
 
 // 创建一个Request对象
 func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
-    return &Request{
+    request := &Request{
         parsedGet  : gtype.NewBool(),
         parsedPost : gtype.NewBool(),
         values     : make(map[string][]string),
@@ -40,6 +40,10 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
             ResponseWriter : w,
         },
     }
+    // 会话处理
+    request.Cookie  = GetCookie(request)
+    request.Session = GetSession(request)
+    return request
 }
 
 

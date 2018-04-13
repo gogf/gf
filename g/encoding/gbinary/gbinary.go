@@ -8,33 +8,43 @@
 package gbinary
 
 import (
+    "fmt"
+    "math"
     "bytes"
     "encoding/binary"
-    "math"
 )
 
 // 二进制位(0|1)
 type Bit int8
 
 // 针对基本类型进行二进制打包，支持的基本数据类型包括:int/8/16/32/64、uint/8/16/32/64、float32/64、bool、string、[]byte
-func Encode(vs ...interface{}) ([]byte, error) {
+// 其他未知类型使用 fmt.Sprintf("%v", value) 转换为字符串之后处理
+func Encode(vs ...interface{}) []byte {
     buf := new(bytes.Buffer)
     for i := 0; i < len(vs); i++ {
-        var err error = nil
-        switch vs[i].(type) {
-            case int:    buf.Write(EncodeInt(vs[i].(int)))
-            case uint:   buf.Write(EncodeUint(vs[i].(uint)))
-            case bool:   buf.Write(EncodeBool(vs[i].(bool)))
-            case string: buf.Write(EncodeString(vs[i].(string)))
-            case []byte: buf.Write(vs[i].([]byte))
+        switch value := vs[i].(type) {
+            case int:     buf.Write(EncodeInt(value))
+            case int8:    buf.Write(EncodeInt8(value))
+            case int16:   buf.Write(EncodeInt16(value))
+            case int32:   buf.Write(EncodeInt32(value))
+            case int64:   buf.Write(EncodeInt64(value))
+            case uint:    buf.Write(EncodeUint(value))
+            case uint8:   buf.Write(EncodeUint8(value))
+            case uint16:  buf.Write(EncodeUint16(value))
+            case uint32:  buf.Write(EncodeUint32(value))
+            case uint64:  buf.Write(EncodeUint64(value))
+            case bool:    buf.Write(EncodeBool(value))
+            case string:  buf.Write(EncodeString(value))
+            case []byte:  buf.Write(value)
+            case float32: buf.Write(EncodeFloat32(value))
+            case float64: buf.Write(EncodeFloat64(value))
             default:
-                err = binary.Write(buf, binary.LittleEndian, vs[i])
-        }
-        if err != nil {
-            return nil, err
+                if err := binary.Write(buf, binary.LittleEndian, value); err != nil {
+                    buf.Write(EncodeString(fmt.Sprintf("%v", value)))
+                }
         }
     }
-    return buf.Bytes(), nil
+    return buf.Bytes()
 }
 
 // 整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，以便确定解析的[]byte长度，
