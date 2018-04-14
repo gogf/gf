@@ -87,16 +87,6 @@ go get -u gitee.com/johng/gf
 
 1. **服务注册**
     
-    gf框架提供了非常强大的服务注册方式，这也是相对于其他框架如：gin/beego/httprouter最突出的特点之一。
-    
-    gf框架提供了三种服务注册方式：控制器注册、执行对象注册、回调函数注册，具体介绍请查看官方文档([http://gf.johng.cn/494368](http://gf.johng.cn/494368))。服务注册方式比较：
-    
-    |  注册方式        |  使用难度  |  安全系数  |  执行性能  | 内存消耗  |
-    | ---                   |     ---       | --- | --- | ---|
-    |  控制器注册     |  低  |   高 |  低  |  高 |
-    |  执行对象注册  |  中  |  中  |  中  | 中 |
-    |  回调函数注册  |  高  |  低  |  高  | 低 |
-    
     1. **控制器注册**
         ```go
         package main
@@ -133,7 +123,6 @@ go get -u gitee.com/johng/gf
         ```
     1. **RESTful控制器注册**
         
-        支持的HTTP Method: ```GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE```
         ```go
         package main
         
@@ -170,13 +159,9 @@ go get -u gitee.com/johng/gf
             s.Run()
         }
         ```
-    1. **其他注册方式**
-    
-        由于服务注册方式功能相当丰富，其他注册方式请查看官方开发文档 - 服务注册章节（[http://gf.johng.cn/494368](http://gf.johng.cn/494368)）。
-    
+
 1. **路由控制**
 
-    gf框架提供了自建的非常强大的路由控制功能，支持流行的命名匹配规则及模糊匹配规则，并提供了优秀的优先级管理机制。
     ```go
     package main
     
@@ -199,86 +184,6 @@ go get -u gitee.com/johng/gf
         s.Run()
     }
     ```
-    1. **命名匹配规则**
-    
-        使用```:name```方式进行匹配(```name```为自定义的匹配名称)，匹配成功后对应匹配参数会被解析为GET参数并传递给注册的服务使用。
-        
-        匹配示例1：
-        ```
-        rule: /user/:user
-        
-        /user/john/profile        no match
-        /user/                    no match
-        /user/john                match
-        /user/you                 match
-        ```
-        匹配示例2：
-        ```
-        rule: /:name/action
-        
-        /john/name                no match
-        /john/action              match
-        /smith/info               no match
-        /smith/info/age           no match
-        /smith/action             match
-        ```
-        匹配示例3：
-        ```
-        rule: /:name/:action
-        
-        /john/name                match
-        /john/info                match
-        /smith/info               match
-        /smith/info/age           no match
-        /smith/action/del         no match
-        ```
-    
-    1. **模糊匹配规则**
-
-        使用```*any```方式进行匹配(```any```为自定义的匹配名称)，一般常用语末尾匹配，将会匹配URI随后所有的参数，并将匹配参数解析为GET参数并传递给注册的服务使用。
-        
-        匹配示例1：
-        ```
-        rule: /src/*path
-        
-        /src/                     match
-        /src/somefile.go          match
-        /src/subdir/somefile.go   match
-        /user/                    no match
-        /user/john                no match
-        ```
-        匹配示例2：
-        ```
-        rule: /src/*path/:action
-        
-        /src/                     no match
-        /src/somefile.go          no match
-        /src/somefile.go/del      match
-        /src/subdir/file.go/del   match
-        ```
-        匹配示例3：
-        ```
-        rule: /src/*path/show
-        
-        /src/                     no match
-        /src/somefile.go          no match
-        /src/somefile.go/del      no match
-        /src/somefile.go/show     match
-        /src/subdir/file.go/show  match
-        ```
-    
-    1. **路由优先级控制**
-    
-        优先级控制最主要的是两点因素，1、层级越深的规则优先级越高；2、命名匹配比模糊匹配优先级高。
-        我们来看示例（左边的规则优先级比右边高）：
-        ```
-        /user/name               >            /user/:action
-        /:name/info              >            /:name/:action
-        /:name/:action           >            /:name/*action
-        /src/path/del            >            /src/path
-        /src/path/del            >            /src/path/:action
-        /src/path/*any           >            /src/path
-        ```
 
 1. **数据库ORM**
 
@@ -318,17 +223,6 @@ go get -u gitee.com/johng/gf
             })
             ```
         
-        6. **批量操作**
-            ```go
-            // BatchInsert/BatchReplace/BatchSave 同理
-            _, err := db.BatchInsert("user", gdb.List {
-                {"name": "john_1"},
-                {"name": "john_2"},
-                {"name": "john_3"},
-                {"name": "john_4"},
-            }, 10)
-            ```
-        
         7. **数据更新/删除**
             ```go
             // db.Update/db.Delete 同理
@@ -336,7 +230,6 @@ go get -u gitee.com/johng/gf
             r, err := db.Update("user", "name='john'", "uid=10000")
             r, err := db.Update("user", "name=?", "uid=?", "john", 10000)
             ```
-            注意，参数域支持并建议使用预处理模式进行输入，避免SQL注入风险。
     
     1. **链式操作**
     
@@ -368,46 +261,14 @@ go get -u gitee.com/johng/gf
             r, err := db.Table("user").Data(gdb.Map{"uid": 10001, "name": "john"}).Save()
             ```
         
-        4. **链式批量写入**
-            ```go
-            r, err := db.Table("user").Data(gdb.List{
-                {"name": "john_1"},
-                {"name": "john_2"},
-                {"name": "john_3"},
-                {"name": "john_4"},
-            }).Insert()
-            ```
-            可以指定批量操作中分批写入数据库的每批次写入条数数量：
-            ```go
-            r, err := db.Table("user").Data(gdb.List{
-                {"name": "john_1"},
-                {"name": "john_2"},
-                {"name": "john_3"},
-                {"name": "john_4"},
-            }).Batch(2).Insert()
-            ```
-        
-        5. **链式批量保存**
-            ```go
-            r, err := db.Table("user").Data(gdb.List{
-                {"uid":10000, "name": "john_1"},
-                {"uid":10001, "name": "john_2"},
-                {"uid":10002, "name": "john_3"},
-                {"uid":10003, "name": "john_4"},
-            }).Save()
-            ```
-        
     1. **事务操作**
     
-        开启事务操作可以通过执行```db.Begin```方法，该方法返回事务的操作对象，类型为```*gdb.Tx```，通过该对象执行后续的数据库操作，并可通过```tx.Commit```提交修改，或者通过```tx.Rollback```回滚修改。
-        
         1. **开启事务操作**
             ```go
             if tx, err := db.Begin(); err == nil {
                 fmt.Println("开启事务操作")
             }
             ```
-            事务操作对象可以执行所有db对象的方法，具体请参考[API文档](https://godoc.org/github.com/johng-cn/gf/g/database/gdb)。
         2. **事务回滚操作**
             ```go
             if tx, err := db.Begin(); err == nil {
@@ -431,7 +292,6 @@ go get -u gitee.com/johng/gf
             }
             ```
         4. **事务链式操作**
-            事务操作对象仍然可以通过```tx.Table```或者```tx.From```方法返回一个链式操作的对象，该对象与```db.Table```或者```db.From```方法返回值相同，只不过数据库操作在事务上执行，可提交或回滚。
             ```go
             if tx, err := db.Begin(); err == nil {
                 r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
@@ -439,7 +299,6 @@ go get -u gitee.com/johng/gf
                 fmt.Println(r, err)
             }
             ```
-            其他链式操作请参考上述链式操作章节。
 
 
 ## 文档
