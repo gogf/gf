@@ -204,7 +204,7 @@ go get -u gitee.com/johng/gf
         使用```:name```方式进行匹配(```name```为自定义的匹配名称)，匹配成功后对应匹配参数会被解析为GET参数并传递给注册的服务使用。
         
         匹配示例1：
-        ```shell
+        ```
         rule: /user/:user
         
         /user/john/profile        no match
@@ -213,7 +213,7 @@ go get -u gitee.com/johng/gf
         /user/you                 match
         ```
         匹配示例2：
-        ```shell
+        ```
         rule: /:name/action
         
         /john/name                no match
