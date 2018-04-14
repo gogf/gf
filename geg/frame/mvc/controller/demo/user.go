@@ -22,12 +22,12 @@ func init() {
 
 // 定义操作逻辑 - 展示姓名
 func (c *ControllerUser) Name() {
-    c.Response.WriteString("John")
+    c.Response.Write("John")
 }
 
 // 定义操作逻辑 - 展示年龄
 func (c *ControllerUser) Age() {
-    c.Response.WriteString("18")
+    c.Response.Write("18")
 }
 
 

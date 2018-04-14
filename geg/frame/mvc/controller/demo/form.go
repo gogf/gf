@@ -13,7 +13,7 @@ func Form(r *ghttp.Request) {
 }
 
 func FormShow(r *ghttp.Request) {
-    r.Response.WriteString(`
+    r.Response.Write(`
 <html>
 <head>
     <title>表单提交</title>

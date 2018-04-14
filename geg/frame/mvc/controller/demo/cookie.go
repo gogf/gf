@@ -12,5 +12,5 @@ func init() {
 func Cookie(r *ghttp.Request) {
     datetime := r.Cookie.Get("datetime")
     r.Cookie.Set("datetime", gtime.Datetime())
-    r.Response.WriteString("datetime:" + datetime)
+    r.Response.Write("datetime:" + datetime)
 }

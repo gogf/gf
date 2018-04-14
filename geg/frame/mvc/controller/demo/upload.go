@@ -12,14 +12,14 @@ func Upload(r *ghttp.Request) {
         buffer := make([]byte, h.Size)
         f.Read(buffer)
         gfile.PutBinContents("/tmp/" + fname, buffer)
-        r.Response.WriteString(fname + " uploaded successly")
+        r.Response.Write(fname + " uploaded successly")
     } else {
-        r.Response.WriteString(e.Error())
+        r.Response.Write(e.Error())
     }
 }
 
 func UploadShow(r *ghttp.Request) {
-    r.Response.WriteString(`
+    r.Response.Write(`
 <html>
 <head>
     <title>上传文件</title>

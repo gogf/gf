@@ -17,7 +17,7 @@ func main() {
         r.Response.Write(r.GetQueryString("any"))
     })
     //ghttp.GetServer().BindHandler("/:name/action", func(r *ghttp.Request) {
-    //    r.Response.WriteString(r.GetQueryString("name"))
+    //    r.Response.Write(r.GetQueryString("name"))
     //})
     ghttp.GetServer().BindHandler("/:name/:action/:aaa", func(r *ghttp.Request) {
         r.Response.Write("name")
