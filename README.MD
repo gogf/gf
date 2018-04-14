@@ -204,7 +204,7 @@ go get -u gitee.com/johng/gf
         使用```:name```方式进行匹配(```name```为自定义的匹配名称)，匹配成功后对应匹配参数会被解析为GET参数并传递给注册的服务使用。
         
         匹配示例1：
-        ```go
+        ```
         rule: /user/:user
         
         /user/john/profile        no match
@@ -213,7 +213,7 @@ go get -u gitee.com/johng/gf
         /user/you                 match
         ```
         匹配示例2：
-        ```go
+        ```
         rule: /:name/action
         
         /john/name                no match
@@ -223,7 +223,7 @@ go get -u gitee.com/johng/gf
         /smith/action             match
         ```
         匹配示例3：
-        ```go
+        ```
         rule: /:name/:action
         
         /john/name                match
@@ -238,7 +238,7 @@ go get -u gitee.com/johng/gf
         使用```*any```方式进行匹配(```any```为自定义的匹配名称)，一般常用语末尾匹配，将会匹配URI随后所有的参数，并将匹配参数解析为GET参数并传递给注册的服务使用。
         
         匹配示例1：
-        ```go
+        ```
         rule: /src/*path
         
         /src/                     match
@@ -248,7 +248,7 @@ go get -u gitee.com/johng/gf
         /user/john                no match
         ```
         匹配示例2：
-        ```go
+        ```
         rule: /src/*path/:action
         
         /src/                     no match
@@ -257,7 +257,7 @@ go get -u gitee.com/johng/gf
         /src/subdir/file.go/del   match
         ```
         匹配示例3：
-        ```go
+        ```
         rule: /src/*path/show
         
         /src/                     no match
@@ -271,14 +271,14 @@ go get -u gitee.com/johng/gf
     
         优先级控制最主要的是两点因素，1、层级越深的规则优先级越高；2、命名匹配比模糊匹配优先级高。
         我们来看示例（左边的规则优先级比右边高）：
-        <pre>
+        ```
         /user/name               >            /user/:action
         /:name/info              >            /:name/:action
         /:name/:action           >            /:name/*action
         /src/path/del            >            /src/path
         /src/path/del            >            /src/path/:action
         /src/path/*any           >            /src/path
-        </pre>
+        ```
 
 1. **数据库ORM**
 
