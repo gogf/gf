@@ -11,20 +11,20 @@ func init() {
 
 // RESTFul - GET
 func (o *ObjectRest) Get(r *ghttp.Request) {
-    r.Response.WriteString("RESTFul HTTP Method GET")
+    r.Response.Write("RESTFul HTTP Method GET")
 }
 
 // RESTFul - POST
 func (c *ObjectRest) Post(r *ghttp.Request) {
-    r.Response.WriteString("RESTFul HTTP Method POST")
+    r.Response.Write("RESTFul HTTP Method POST")
 }
 
 // RESTFul - DELETE
 func (c *ObjectRest) Delete(r *ghttp.Request) {
-    r.Response.WriteString("RESTFul HTTP Method DELETE")
+    r.Response.Write("RESTFul HTTP Method DELETE")
 }
 
 // 该方法无法映射，将会无法访问到
 func (c *ObjectRest) Hello(r *ghttp.Request) {
-    r.Response.WriteString("Hello")
+    r.Response.Write("Hello")
 }

@@ -18,22 +18,22 @@ func init() {
 
 // RESTFul - GET
 func (c *ControllerUser) Get() {
-    c.Response.WriteString("RESTFul HTTP Method GET")
+    c.Response.Write("RESTFul HTTP Method GET")
 }
 
 // RESTFul - POST
 func (c *ControllerUser) Post() {
-    c.Response.WriteString("RESTFul HTTP Method POST")
+    c.Response.Write("RESTFul HTTP Method POST")
 }
 
 // RESTFul - DELETE
 func (c *ControllerUser) Delete() {
-    c.Response.WriteString("RESTFul HTTP Method DELETE")
+    c.Response.Write("RESTFul HTTP Method DELETE")
 }
 
 // 该方法无法映射，将会无法访问到
 func (c *ControllerUser) Hello() {
-    c.Response.WriteString("Hello")
+    c.Response.Write("Hello")
 }
 
 

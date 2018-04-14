@@ -7,6 +7,6 @@ import (
 
 func init() {
     ghttp.GetServer().BindHandler("/config", func (r *ghttp.Request) {
-        r.Response.WriteString(gins.Config().GetString("database.default.0.host"))
+        r.Response.Write(gins.Config().GetString("database.default.0.host"))
     })
 }
