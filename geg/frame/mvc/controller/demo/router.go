@@ -8,5 +8,5 @@ func init() {
 }
 
 func List(r *ghttp.Request) {
-    r.Response.Write("list page:" + r.GetQueryString("page"))
+    r.Response.Write("list page:" + r.Get("page"))
 }

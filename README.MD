@@ -151,12 +151,7 @@ go get -u gitee.com/johng/gf
         func (c *ControllerRest) Get() {
             c.Response.Write("RESTful HTTP Method GET")
         }
-        
-        // RESTFul - POST
-        func (c *ControllerRest) Post() {
-            c.Response.Write("RESTful HTTP Method POST")
-        }
-        
+
         // RESTFul - DELETE
         func (c *ControllerRest) Delete() {
             c.Response.Write("RESTful HTTP Method DELETE")
@@ -190,15 +185,15 @@ go get -u gitee.com/johng/gf
     func main() {
         s := ghttp.GetServer()
         s.BindHandler("/:name", func(r *ghttp.Request){
-            r.Response.Write(r.GetQueryString("name"))
+            r.Response.Write(r.Get("name"))
         })
         s.BindHandler("/:name/:action", func(r *ghttp.Request){
-            r.Response.Write(r.GetQueryString("name"))
-            r.Response.Write(r.GetQueryString("action"))
+            r.Response.Write(r.Get("name"))
+            r.Response.Write(r.Get("action"))
         })
         s.BindHandler("/:name/:any", func(r *ghttp.Request){
-            r.Response.Write(r.GetQueryString("name"))
-            r.Response.Write(r.GetQueryString("any"))
+            r.Response.Write(r.Get("name"))
+            r.Response.Write(r.Get("any"))
         })
         s.SetPort(8199)
         s.Run()
@@ -212,10 +207,10 @@ go get -u gitee.com/johng/gf
         ```shell
         rule: /user/:user
         
-        /user/john                match
-        /user/you                 match
         /user/john/profile        no match
         /user/                    no match
+        /user/john                match
+        /user/you                 match
         ```
         匹配示例2：
         ```shell
