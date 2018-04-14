@@ -9,6 +9,6 @@ func init() {
 }
 
 func (o *Object) Show(r *ghttp.Request) {
-    r.Response.WriteString("It's show time bibi!")
+    r.Response.Write("It's show time bibi!")
 }
 

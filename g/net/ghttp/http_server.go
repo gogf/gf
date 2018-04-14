@@ -19,7 +19,7 @@ import (
 )
 
 const (
-    gHTTP_METHODS             = "GET,POST,DELETE,PUT,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+    gHTTP_METHODS             = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
     gDEFAULT_SERVER           = "default"
     gDEFAULT_DOMAIN           = "default"
     gDEFAULT_METHOD           = "ALL"

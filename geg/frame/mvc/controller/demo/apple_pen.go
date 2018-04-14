@@ -9,13 +9,13 @@ func init() {
 }
 
 func Apple(r *ghttp.Request) {
-    r.Response.WriteString("Apple")
+    r.Response.Write("Apple")
 }
 
 func Pen(r *ghttp.Request) {
-    r.Response.WriteString("Pen")
+    r.Response.Write("Pen")
 }
 
 func ApplePen(r *ghttp.Request) {
-    r.Response.WriteString("Apple-Pen")
+    r.Response.Write("Apple-Pen")
 }

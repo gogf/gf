@@ -266,7 +266,6 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names string) {
                     names += ","
                 }
                 names += v[1:]
-                return
             default:
                 regrule += "/" + v
         }

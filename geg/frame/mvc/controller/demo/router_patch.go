@@ -8,5 +8,5 @@ func init() {
 }
 
 func RouterPatch(r *ghttp.Request) {
-    r.Response.WriteString(`<a href="/list?page=2&ajax=1">page2</a>`)
+    r.Response.Write(`<a href="/list?page=2&ajax=1">page2</a>`)
 }

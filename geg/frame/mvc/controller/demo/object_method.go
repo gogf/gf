@@ -13,19 +13,19 @@ func init() {
 }
 
 func (o *ObjectMethod) Show1(r *ghttp.Request) {
-    r.Response.WriteString("show 1")
+    r.Response.Write("show 1")
 }
 
 func (o *ObjectMethod) Show2(r *ghttp.Request) {
-    r.Response.WriteString("show 2")
+    r.Response.Write("show 2")
 }
 
 func (o *ObjectMethod) Show3(r *ghttp.Request) {
-    r.Response.WriteString("show 3")
+    r.Response.Write("show 3")
 }
 
 func (o *ObjectMethod) Show4(r *ghttp.Request) {
-    r.Response.WriteString("show 4")
+    r.Response.Write("show 4")
 }
 
 
