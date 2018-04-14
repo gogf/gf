@@ -9,9 +9,9 @@ func init() {
 }
 
 func List1(r *ghttp.Request) {
-    r.Response.WriteString("list page:" + r.GetQueryString("page"))
+    r.Response.Write("list page:" + r.GetQueryString("page"))
 }
 
 func List2(r *ghttp.Request) {
-    r.Response.WriteString("customed list page")
+    r.Response.Write("customed list page")
 }

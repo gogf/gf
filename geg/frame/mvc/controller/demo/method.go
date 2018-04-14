@@ -14,15 +14,15 @@ func init() {
 }
 
 func (c *ControllerMethod) Name() {
-    c.Response.WriteString("John")
+    c.Response.Write("John")
 }
 
 func (c *ControllerMethod) Age() {
-    c.Response.WriteString("18")
+    c.Response.Write("18")
 }
 
 func (c *ControllerMethod) Info() {
-    c.Response.WriteString("Info")
+    c.Response.Write("Info")
 }
 
 

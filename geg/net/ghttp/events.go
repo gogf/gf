@@ -18,7 +18,7 @@ func main() {
         "AfterClose"   : func(r *ghttp.Request){ fmt.Println("AfterClose") },
     })
     ghttp.GetServer().BindHandler(pattern, func(r *ghttp.Request) {
-        r.Response.WriteString("Hello World!")
+        r.Response.Write("Hello World!")
     })
     ghttp.GetServer().SetPort(10000)
     ghttp.GetServer().Run()

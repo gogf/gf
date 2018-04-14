@@ -1,3 +1,3 @@
-1. gdb Where方法参数的改进，研究是否可以将string参数类型修改为interfaceP{；
+1. gdb Where方法参数的改进，研究是否可以将string参数类型修改为interface{}；
 2. 增加对于数据表Model的封装；
 3. ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
