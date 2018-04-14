@@ -70,6 +70,12 @@ func (r *Request) initPost() {
     }
 }
 
+// 获得指定名称的参数字符串(GET/POST)，同 GetRequestString
+// 这是常用方法的简化别名
+func (r *Request) Get(k string) string {
+    return r.GetRequestString(k)
+}
+
 // 获得指定名称的get参数列表
 func (r *Request) GetQuery(k string) []string {
     r.initGet()
@@ -80,23 +86,23 @@ func (r *Request) GetQuery(k string) []string {
 }
 
 func (r *Request) GetQueryBool(k string) bool {
-    return gconv.Bool(r.GetQueryString(k))
+    return gconv.Bool(r.Get(k))
 }
 
 func (r *Request) GetQueryInt(k string) int {
-    return gconv.Int(r.GetQueryString(k))
+    return gconv.Int(r.Get(k))
 }
 
 func (r *Request) GetQueryUint(k string) uint {
-    return gconv.Uint(r.GetQueryString(k))
+    return gconv.Uint(r.Get(k))
 }
 
 func (r *Request) GetQueryFloat32(k string) float32 {
-    return gconv.Float32(r.GetQueryString(k))
+    return gconv.Float32(r.Get(k))
 }
 
 func (r *Request) GetQueryFloat64(k string) float64 {
-    return gconv.Float64(r.GetQueryString(k))
+    return gconv.Float64(r.Get(k))
 }
 
 func (r *Request) GetQueryString(k string) string {

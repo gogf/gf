@@ -9,7 +9,7 @@ func init() {
 }
 
 func List1(r *ghttp.Request) {
-    r.Response.Write("list page:" + r.GetQueryString("page"))
+    r.Response.Write("list page:" + r.Get("page"))
 }
 
 func List2(r *ghttp.Request) {
