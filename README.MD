@@ -34,7 +34,7 @@ go get -u gitee.com/johng/gf
 ```
 
 ## 使用
-1. **Hello World!**
+1. **哈喽世界！**
     ```go
     package main
     
@@ -43,46 +43,9 @@ go get -u gitee.com/johng/gf
     func main() {
         s := ghttp.GetServer()
         s.BindHandler("/", func(r *ghttp.Request){
-            r.Response.Write("Hello World!")
+            r.Response.Write("哈喽世界！")
         })
         s.Run()
-    }
-    ```
-1. **Web Server**
-    ```go
-    package main
-    
-    import "gitee.com/johng/gf/g/net/ghttp"
-    
-    func main() {
-        s := ghttp.GetServer()
-        s.SetIndexFolder(true)
-        s.SetServerRoot("/home/www/")
-        s.Run()
-    }
-    ```
-1. **多Web Server支持**
-    ```go
-    package main
-    
-    import (
-        "gitee.com/johng/gf/g/net/ghttp"
-    )
-    
-    func main() {
-        s1 := ghttp.GetServer("s1")
-        s1.SetAddr(":8080")
-        s1.SetIndexFolder(true)
-        s1.SetServerRoot("/home/www/static1")
-        go s1.Run()
-    
-        s2 := ghttp.GetServer("s2")
-        s2.SetAddr(":8081")
-        s2.SetIndexFolder(true)
-        s2.SetServerRoot("/home/www/static2")
-        go s2.Run()
-    
-        select{}
     }
     ```
 1. **域名 & 多域名支持**
@@ -482,7 +445,6 @@ go get -u gitee.com/johng/gf
             }
             ```
             其他链式操作请参考上述链式操作章节。
-
 
 
 ## 文档
