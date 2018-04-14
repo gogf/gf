@@ -271,14 +271,14 @@ go get -u gitee.com/johng/gf
     
         优先级控制最主要的是两点因素，1、层级越深的规则优先级越高；2、命名匹配比模糊匹配优先级高。
         我们来看示例（左边的规则优先级比右边高）：
-        ```
-        /user/name               >            /user/:action
-        /:name/info              >            /:name/:action
-        /:name/:action           >            /:name/*action
-        /src/path/del            >            /src/path
-        /src/path/del            >            /src/path/:action
-        /src/path/*any           >            /src/path
-        ```
+```
+/user/name               >            /user/:action
+/:name/info              >            /:name/:action
+/:name/:action           >            /:name/*action
+/src/path/del            >            /src/path
+/src/path/del            >            /src/path/:action
+/src/path/*any           >            /src/path
+```
 
 1. **数据库ORM**
 
