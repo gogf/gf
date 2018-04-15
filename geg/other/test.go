@@ -1,18 +1,17 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/container/gmap"
     "fmt"
-    "strings"
+    "gitee.com/johng/gf/g/container/garray"
 )
 
 func main() {
-    m := gmap.NewIntBoolMap()
-    m.Set(1, true)
-    fmt.Println(m.Keys())
-    m.LockFunc(func(m map[int]bool) {
-        m[2] = false
-    })
-    fmt.Println(m.Keys())
+    a := garray.NewIntArray(0)
+    a.Append(1)
+    a.Append(2)
+    a.Append(3)
+    fmt.Println(a.Slice())
+    a.Insert(0, 0)
+    fmt.Println(a.Slice())
 }
 
