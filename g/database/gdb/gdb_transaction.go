@@ -232,12 +232,12 @@ func (tx *Tx) BatchSave(table string, list List, batch int) (sql.Result, error) 
 func (tx *Tx) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
     var params  []interface{}
     var updates string
-    switch data.(type) {
+    switch value := data.(type) {
         case string:
-            updates = data.(string)
+            updates = value
         case Map:
             var keys []string
-            for k, v := range data.(Map) {
+            for k, v := range value {
                 keys   = append(keys,   fmt.Sprintf("%s%s%s=?", tx.db.charl, k, tx.db.charr))
                 params = append(params, v)
             }
