@@ -9,8 +9,8 @@
 package glist
 
 import (
-	"container/list"
 	"sync"
+	"container/list"
 )
 
 // 变长双向链表
