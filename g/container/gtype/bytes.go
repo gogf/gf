@@ -34,3 +34,17 @@ func (t *Bytes)Val() []byte {
     t.mu.RUnlock()
     return b
 }
+
+// 使用自定义方法执行加锁修改操作
+func (t *Bytes) LockFunc(f func(value []byte) []byte) {
+    t.mu.Lock()
+    t.val = f(t.val)
+    t.mu.Unlock()
+}
+
+// 使用自定义方法执行加锁读取操作
+func (t *Bytes) RLockFunc(f func(value []byte)) {
+    t.mu.RLock()
+    f(t.val)
+    t.mu.RUnlock()
+}

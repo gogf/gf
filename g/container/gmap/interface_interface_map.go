@@ -23,7 +23,7 @@ func NewInterfaceInterfaceMap() *InterfaceInterfaceMap {
 	}
 }
 
-// 给定回调函数对原始内容进行遍历
+// 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *InterfaceInterfaceMap) Iterator(f func (k interface{}, v interface{}) bool) {
 	this.mu.RLock()
 	for k, v := range this.m {
@@ -183,4 +183,18 @@ func (this *InterfaceInterfaceMap) Clear() {
     this.mu.Lock()
     this.m = make(map[interface{}]interface{})
     this.mu.Unlock()
+}
+
+// 使用自定义方法执行加锁修改操作
+func (this *InterfaceInterfaceMap) LockFunc(f func(m map[interface{}]interface{})) {
+	this.mu.Lock()
+	f(this.m)
+	this.mu.Unlock()
+}
+
+// 使用自定义方法执行加锁读取操作
+func (this *InterfaceInterfaceMap) RLockFunc(f func(m map[interface{}]interface{})) {
+	this.mu.RLock()
+	f(this.m)
+	this.mu.RUnlock()
 }

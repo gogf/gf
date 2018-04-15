@@ -21,7 +21,7 @@ func NewStringSet() *StringSet {
 	return &StringSet{m: make(map[string]struct{})}
 }
 
-// 给定回调函数对原始内容进行遍历
+// 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *StringSet) Iterator(f func (v string) bool) {
 	this.mu.RLock()
 	for k, _ := range this.m {
