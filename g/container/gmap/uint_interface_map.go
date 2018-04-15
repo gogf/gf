@@ -184,3 +184,16 @@ func (this *UintInterfaceMap) Clear() {
     this.mu.Unlock()
 }
 
+// 使用自定义方法执行加锁修改操作
+func (this *UintInterfaceMap) LockFunc(f func(m map[uint]interface{})) {
+    this.mu.Lock()
+    f(this.m)
+    this.mu.Unlock()
+}
+
+// 使用自定义方法执行加锁读取操作
+func (this *UintInterfaceMap) RLockFunc(f func(m map[uint]interface{})) {
+    this.mu.RLock()
+    f(this.m)
+    this.mu.RUnlock()
+}

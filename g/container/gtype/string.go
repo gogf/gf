@@ -34,3 +34,19 @@ func (t *String)Val() string {
     t.mu.RUnlock()
     return s
 }
+
+// 使用自定义方法执行加锁修改操作
+func (t *String) LockFunc(f func(value string) string) {
+    t.mu.Lock()
+    t.val = f(t.val)
+    t.mu.Unlock()
+}
+
+// 使用自定义方法执行加锁读取操作
+func (t *String) RLockFunc(f func(value string)) {
+    t.mu.RLock()
+    f(t.val)
+    t.mu.RUnlock()
+}
+
+
