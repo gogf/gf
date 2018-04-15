@@ -32,6 +32,7 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
 
     s.hhmu.Lock()
     defer s.hhmu.Unlock()
+    defer s.clearHooksCache()
     if _, ok := s.hooksTree[domain]; !ok {
         s.hooksTree[domain] = make(map[string]interface{})
     }
@@ -86,6 +87,9 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
 // 事件回调 - 检索动态路由规则
 // 并按照指定hook回调函数的优先级及注册顺序进行调用
 func (s *Server) callHookHandler(r *Request, hook string) {
+    s.hhcmu.RLock()
+    defer s.hhcmu.RUnlock()
+
     var hookItems []*hookCacheItem
     cacheKey := hook + "^" + r.URL.Path
     if v := s.hooksCache.Get(cacheKey); v == nil {

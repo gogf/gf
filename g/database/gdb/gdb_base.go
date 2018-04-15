@@ -295,12 +295,12 @@ func (db *Db) BatchSave(table string, list List, batch int) (sql.Result, error) 
 func (db *Db) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
     var params  []interface{}
     var updates string
-    switch data.(type) {
+    switch value := data.(type) {
         case string:
-            updates = data.(string)
+            updates = value
         case Map:
             var keys []string
-            for k, v := range data.(Map) {
+            for k, v := range value {
                 keys   = append(keys,   fmt.Sprintf("%s%s%s=?", db.charl, k, db.charr))
                 params = append(params, v)
             }
