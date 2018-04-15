@@ -2,16 +2,10 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
-type T struct{
-    name string
-}
+
 func main() {
-    var i interface{} = T{"john"}
-    switch v := i.(type) {
-    case T:
-    default:
-        fmt.Println(v)
-    }
+    fmt.Println(gconv.Uint("123"))
 }

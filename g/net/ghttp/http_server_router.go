@@ -23,6 +23,9 @@ type handlerCacheItem struct {
 // 查询请求处理方法
 // 这里有个锁机制，可以并发读，但是不能并发写
 func (s *Server) getHandler(r *Request) *HandlerItem {
+    s.hmcmu.RLock()
+    defer s.hmcmu.RUnlock()
+
     var handlerItem *handlerCacheItem
     if v := s.handlerCache.Get(r.URL.Path); v == nil {
         handlerItem = s.searchHandler(r)
@@ -72,6 +75,7 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
     // 静态注册
     s.hmmu.Lock()
     defer s.hmmu.Unlock()
+    defer s.clearHandlerCache()
     if method == gDEFAULT_METHOD {
         for v, _ := range s.methodsMap {
             s.handlerMap[s.handlerKey(domain, v, uri)] = item

@@ -33,6 +33,8 @@ const (
 type Server struct {
     hmmu          sync.RWMutex             // handler互斥锁
     hhmu          sync.RWMutex             // hooks互斥锁
+    hmcmu         sync.RWMutex             // handlerCache互斥锁
+    hhcmu         sync.RWMutex             // hooksCache互斥锁
     name          string                   // 服务名称，方便识别
     server        http.Server              // 底层http server对象
     config        ServerConfig             // 配置对象
@@ -135,4 +137,28 @@ func (s *Server) Run() error {
     }
     s.status = 1
     return nil
+}
+
+// 清空当前的handlerCache
+func (s *Server) clearHandlerCache() {
+    // 只有在运行时才会生效
+    if s.status != 1 {
+        return
+    }
+    s.hmcmu.Lock()
+    defer s.hmcmu.Unlock()
+    s.handlerCache.Close()
+    s.handlerCache = gcache.New()
+}
+
+// 清空当前的hooksCache
+func (s *Server) clearHooksCache() {
+    // 只有在运行时才会生效
+    if s.status != 1 {
+        return
+    }
+    s.hhcmu.Lock()
+    defer s.hhcmu.Unlock()
+    s.hooksCache.Close()
+    s.hooksCache = gcache.New()
 }

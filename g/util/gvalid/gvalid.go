@@ -424,11 +424,11 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
     // 自定义错误消息处理
     list  := make([]string, 0)
     cmsgs := make(map[string]string)
-    switch msgs.(type) {
+    switch value := msgs.(type) {
         case map[string]string:
-            cmsgs = msgs.(map[string]string)
+            cmsgs = value
         case string:
-            list = strings.Split(msgs.(string), "|")
+            list = strings.Split(value, "|")
     }
     items := strings.Split(strings.TrimSpace(rules), "|")
     for index := 0; index < len(items); {

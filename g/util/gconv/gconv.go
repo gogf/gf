@@ -10,6 +10,7 @@ package gconv
 
 import (
     "fmt"
+    "strconv"
     "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
@@ -29,10 +30,22 @@ func String(i interface{}) string {
     if i == nil {
         return ""
     }
-    if r, ok := i.(string); ok {
-        return r
-    } else {
-        return string(Bytes(i))
+    switch value := i.(type) {
+        case int:     return strconv.Itoa(value)
+        case int8:    return strconv.Itoa(int(value))
+        case int16:   return strconv.Itoa(int(value))
+        case int32:   return strconv.Itoa(int(value))
+        case int64:   return strconv.Itoa(int(value))
+        case uint:    return strconv.FormatUint(uint64(value), 10)
+        case uint8:   return strconv.FormatUint(uint64(value), 10)
+        case uint16:  return strconv.FormatUint(uint64(value), 10)
+        case uint32:  return strconv.FormatUint(uint64(value), 10)
+        case uint64:  return strconv.FormatUint(uint64(value), 10)
+        case bool:    return strconv.FormatBool(value)
+        case string:  return value
+        case []byte:  return string(value)
+        default:
+            return fmt.Sprintf("%v", value)
     }
 }
 
@@ -70,10 +83,26 @@ func Int(i interface{}) int {
     if i == nil {
         return 0
     }
-    if v, ok := i.(int); ok {
-        return v
+    switch value := i.(type) {
+        case int:     return value
+        case int8:    return int(value)
+        case int16:   return int(value)
+        case int32:   return int(value)
+        case int64:   return int(value)
+        case uint:    return int(value)
+        case uint8:   return int(value)
+        case uint16:  return int(value)
+        case uint32:  return int(value)
+        case uint64:  return int(value)
+        case bool:
+            if value {
+                return 1
+            }
+            return 0
+        default:
+            v, _ := strconv.Atoi(String(value))
+            return v
     }
-    return gbinary.DecodeToInt(Bytes(i))
 }
 
 func Int8(i interface{}) int8 {
@@ -83,7 +112,7 @@ func Int8(i interface{}) int8 {
     if v, ok := i.(int8); ok {
         return v
     }
-    return gbinary.DecodeToInt8(Bytes(i))
+    return int8(Int(i))
 }
 
 func Int16(i interface{}) int16 {
@@ -93,7 +122,7 @@ func Int16(i interface{}) int16 {
     if v, ok := i.(int16); ok {
         return v
     }
-    return gbinary.DecodeToInt16(Bytes(i))
+    return int16(Int(i))
 }
 
 func Int32(i interface{}) int32 {
@@ -103,7 +132,7 @@ func Int32(i interface{}) int32 {
     if v, ok := i.(int32); ok {
         return v
     }
-    return gbinary.DecodeToInt32(Bytes(i))
+    return int32(Int(i))
 }
 
 func Int64(i interface{}) int64 {
@@ -113,17 +142,33 @@ func Int64(i interface{}) int64 {
     if v, ok := i.(int64); ok {
         return v
     }
-    return gbinary.DecodeToInt64(Bytes(i))
+    return int64(Int(i))
 }
 
 func Uint(i interface{}) uint {
     if i == nil {
         return 0
     }
-    if v, ok := i.(uint); ok {
-        return v
+    switch value := i.(type) {
+        case int:     return uint(value)
+        case int8:    return uint(value)
+        case int16:   return uint(value)
+        case int32:   return uint(value)
+        case int64:   return uint(value)
+        case uint:    return value
+        case uint8:   return uint(value)
+        case uint16:  return uint(value)
+        case uint32:  return uint(value)
+        case uint64:  return uint(value)
+        case bool:
+            if value {
+                return 1
+            }
+            return 0
+        default:
+            v, _ := strconv.ParseUint(String(value), 10, 64)
+            return uint(v)
     }
-    return gbinary.DecodeToUint(Bytes(i))
 }
 
 func Uint8(i interface{}) uint8 {
@@ -133,7 +178,7 @@ func Uint8(i interface{}) uint8 {
     if v, ok := i.(uint8); ok {
         return v
     }
-    return gbinary.DecodeToUint8(Bytes(i))
+    return uint8(Uint(i))
 }
 
 func Uint16(i interface{}) uint16 {
@@ -143,7 +188,7 @@ func Uint16(i interface{}) uint16 {
     if v, ok := i.(uint16); ok {
         return v
     }
-    return gbinary.DecodeToUint16(Bytes(i))
+    return uint16(Uint(i))
 }
 
 func Uint32(i interface{}) uint32 {
@@ -153,7 +198,7 @@ func Uint32(i interface{}) uint32 {
     if v, ok := i.(uint32); ok {
         return v
     }
-    return gbinary.DecodeToUint32(Bytes(i))
+    return uint32(Uint(i))
 }
 
 func Uint64(i interface{}) uint64 {
@@ -163,7 +208,7 @@ func Uint64(i interface{}) uint64 {
     if v, ok := i.(uint64); ok {
         return v
     }
-    return gbinary.DecodeToUint64(Bytes(i))
+    return uint64(Uint(i))
 }
 
 func Float32 (i interface{}) float32 {
@@ -173,7 +218,8 @@ func Float32 (i interface{}) float32 {
     if v, ok := i.(float32); ok {
         return v
     }
-    return gbinary.DecodeToFloat32(Bytes(i))
+    v, _ := strconv.ParseFloat(String(i), 32)
+    return float32(v)
 }
 
 func Float64 (i interface{}) float64 {
@@ -183,5 +229,7 @@ func Float64 (i interface{}) float64 {
     if v, ok := i.(float64); ok {
         return v
     }
-    return gbinary.DecodeToFloat64(Bytes(i))
+    v, _ := strconv.ParseFloat(String(i), 32)
+    return v
 }
+
