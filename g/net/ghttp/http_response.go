@@ -22,10 +22,24 @@ type Response struct {
 }
 
 // 返回信息，任何变量自动转换为bytes
-func (r *Response) Write(content interface{}) {
+func (r *Response) Write(content ... interface{}) {
+    if len(content) == 0 {
+        return
+    }
     r.bufmu.Lock()
-    r.buffer = append(r.buffer, gconv.Bytes(content)...)
+    for _, v := range content {
+        r.buffer = append(r.buffer, gconv.Bytes(v)...)
+    }
     r.bufmu.Unlock()
+}
+
+// 返回信息，末尾增加换行标识符"\n"
+func (r *Response) Writeln(content ... interface{}) {
+    if len(content) == 0 {
+        return
+    }
+    content = append(content, "\n")
+    r.Write(content...)
 }
 
 // 返回JSON
