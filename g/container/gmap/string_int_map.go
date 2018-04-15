@@ -22,7 +22,7 @@ func NewStringIntMap() *StringIntMap {
     }
 }
 
-// 给定回调函数对原始内容进行遍历
+// 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *StringIntMap) Iterator(f func (k string, v int) bool) {
     this.mu.RLock()
     for k, v := range this.m {
@@ -160,3 +160,16 @@ func (this *StringIntMap) Clear() {
     this.mu.Unlock()
 }
 
+// 使用自定义方法执行加锁修改操作
+func (this *StringIntMap) LockFunc(f func(m map[string]int)) {
+    this.mu.Lock()
+    f(this.m)
+    this.mu.Unlock()
+}
+
+// 使用自定义方法执行加锁读取操作
+func (this *StringIntMap) RLockFunc(f func(m map[string]int)) {
+    this.mu.RLock()
+    f(this.m)
+    this.mu.RUnlock()
+}

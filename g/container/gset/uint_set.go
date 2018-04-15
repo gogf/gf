@@ -21,7 +21,7 @@ func NewUintSet() *UintSet {
 	return &UintSet{m: make(map[uint]struct{})}
 }
 
-// 给定回调函数对原始内容进行遍历
+// 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *UintSet) Iterator(f func (v uint) bool) {
     this.mu.RLock()
     for k, _ := range this.m {

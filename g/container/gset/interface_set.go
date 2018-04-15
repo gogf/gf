@@ -21,7 +21,7 @@ func NewInterfaceSet() *InterfaceSet {
 	return &InterfaceSet{m: make(map[interface{}]struct{})}
 }
 
-// 给定回调函数对原始内容进行遍历
+// 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *InterfaceSet) Iterator(f func (v interface{}) bool) {
     this.mu.RLock()
     for k, _ := range this.m {

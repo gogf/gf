@@ -10,6 +10,7 @@ import (
     "sync"
 )
 
+// 比较通用的并发安全数据类型
 type Interface struct {
     mu  sync.RWMutex
     val interface{}
@@ -33,4 +34,18 @@ func (t *Interface)Val() interface{} {
     b := t.val
     t.mu.RUnlock()
     return b
+}
+
+// 使用自定义方法执行加锁修改操作
+func (t *Interface) LockFunc(f func(value interface{}) interface{}) {
+    t.mu.Lock()
+    t.val = f(t.val)
+    t.mu.Unlock()
+}
+
+// 使用自定义方法执行加锁读取操作
+func (t *Interface) RLockFunc(f func(value interface{})) {
+    t.mu.RLock()
+    f(t.val)
+    t.mu.RUnlock()
 }
