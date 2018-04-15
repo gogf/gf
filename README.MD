@@ -129,79 +129,38 @@ go get -u gitee.com/johng/gf
         ```
 
 1. **服务注册**
+    ```go
+    package main
     
-    1. **控制器注册**
-        ```go
-        package main
-        
-        import (
-            "gitee.com/johng/gf/g/net/ghttp"
-            "gitee.com/johng/gf/g/frame/gmvc"
-        )
-        
-        // 定义业务相关的控制器对象
-        type ControllerUser struct {
-            gmvc.Controller
-        }
-        // 定义操作逻辑 - 展示姓名
-        func (c *ControllerUser) Name() {
-            c.Response.Write("John")
-        }
-        
-        // 定义操作逻辑 - 展示年龄
-        func (c *ControllerUser) Age() {
-            c.Response.Write("18")
-        }
-         
-        func main() {
-            // 绑定控制器到指定URI，所有控制器的公开方法将会映射到指定URI末尾
-            // 例如该方法执行后，查看效果可访问：
-            // http://127.0.0.1:8199/user/name
-            // http://127.0.0.1:8199/user/age
-            s := ghttp.GetServer()
-            s.BindController("/user", &ControllerUser{})
-            s.SetPort(8199)
-            s.Run()
-        }
-        ```
-    1. **RESTful控制器注册**
-        
-        ```go
-        package main
-        
-        import (
-            "gitee.com/johng/gf/g/net/ghttp"
-            "gitee.com/johng/gf/g/frame/gmvc"
-        )
-        
-        // 测试控制器
-        type ControllerRest struct {
-            gmvc.Controller
-        }   
-        
-        // RESTFul - GET
-        func (c *ControllerRest) Get() {
-            c.Response.Write("RESTful HTTP Method GET")
-        }
-
-        // RESTFul - DELETE
-        func (c *ControllerRest) Delete() {
-            c.Response.Write("RESTful HTTP Method DELETE")
-        }
-        
-        // 该方法无法映射，将会无法访问到
-        func (c *ControllerRest) Hello() {
-            c.Response.Write("Hello")
-        }
+    import (
+        "gitee.com/johng/gf/g/net/ghttp"
+        "gitee.com/johng/gf/g/frame/gmvc"
+    )
+    
+    // 定义业务相关的控制器对象
+    type ControllerUser struct {
+        gmvc.Controller
+    }
+    // 定义操作逻辑 - 展示姓名
+    func (c *ControllerUser) Name() {
+        c.Response.Write("John")
+    }
+    
+    // 定义操作逻辑 - 展示年龄
+    func (c *ControllerUser) Age() {
+        c.Response.Write("18")
+    }
      
-        func main() {
-            // 控制器公开方法中与HTTP Method方法同名的方法将会自动绑定映射
-            s := ghttp.GetServer()
-            s.BindControllerRest("/user.rest", &ControllerRest{})
-            s.SetPort(8199)
-            s.Run()
-        }
-        ```
+    func main() {
+        // 绑定控制器到指定URI，所有控制器的公开方法将会映射到指定URI末尾
+        // 例如该方法执行后，查看效果可访问：
+        // http://127.0.0.1:8199/user/name
+        // http://127.0.0.1:8199/user/age
+        s := ghttp.GetServer()
+        s.BindController("/user", &ControllerUser{})
+        s.Run()
+    }
+    ```
 
 1. **路由控制**
 
@@ -228,6 +187,46 @@ go get -u gitee.com/johng/gf
     }
     ```
 
+1. **模板引擎**
+   
+    ```go
+    package main
+    
+    import (
+        "gitee.com/johng/gf/g/net/ghttp"
+        "gitee.com/johng/gf/g/frame/gmvc"
+    )
+    
+    type ControllerTemplate struct {
+        gmvc.Controller
+    }
+    
+    func (c *ControllerTemplate) Info() {
+        c.View.Assign("name", "john")
+        c.View.Assigns(map[string]interface{}{
+            "age"   : 18,
+            "score" : 100,
+        })
+        c.View.Display("user/index.tpl")
+    }
+    
+    func main() {
+        s := ghttp.GetServer()
+        s.BindControllerMethod("/template", &ControllerTemplate{}, "Info")
+        s.Run()
+    }
+    ```
+
+1. **数据校验**
+    ```go
+    rule := "url|min-length:11"
+    msgs := map[string]string{
+        "url"       : "请输入正确的URL地址",
+        "minlength" : "地址长度至少为:min位"
+    }
+    fmt.Println(gvalid.Check("http://gfjohngcn", rule, msgs))
+    ```
+    
 1. **数据库ORM**
 
     1. **方法操作**
@@ -342,6 +341,45 @@ go get -u gitee.com/johng/gf
                 fmt.Println(r, err)
             }
             ```
+
+1. **数据编码解析**
+    ```go
+    // JSON
+    data :=
+        `{
+            "users" : {
+                    "count" : 100,
+                    "list"  : [
+                        {"name" : "Ming", "score" : 60},
+                        {"name" : "John", "score" : 99.5}
+                    ]
+            }
+        }`
+
+    if p, e := gparser.LoadContent([]byte(data), "json"); e != nil {
+        glog.Error(e)
+    } else {
+        fmt.Println("John Score:", p.GetFloat32("users.list.1.score"))
+    }
+    ```
+
+    ```go
+    // XML
+    data :=
+        `<?xml version="1.0" encoding="UTF-8"?>
+         <note>
+             <to>Tove</to>
+             <from>Jani</from>
+             <heading>Reminder</heading>
+             <body>Don't forget me this weekend!</body>
+         </note>`
+
+    if p, e := gparser.LoadContent([]byte(data), "xml"); e != nil {
+        glog.Error(e)
+    } else {
+        fmt.Println("Heading:", p.GetString("note.heading"))
+    }
+    ```
 
 
 ...
