@@ -60,18 +60,19 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
 // 初始化控制器
 func (s *Server)callHandler(h *HandlerItem, r *Request) {
-    // 请求处理
-
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
         c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
-        c.MethodByName(h.fname).Call(nil)
+        if !r.IsExit() {
+            c.MethodByName(h.fname).Call(nil)
+        }
         c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
     } else {
-        h.faddr(r)
+        if !r.IsExit() {
+            h.faddr(r)
+        }
     }
-
 }
 
 // 处理静态文件请求
