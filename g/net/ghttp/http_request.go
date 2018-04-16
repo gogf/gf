@@ -293,7 +293,7 @@ func (r *Request) Exit() {
 }
 
 // 判断当前请求是否停止执行
-func (r *Request) IsExit() bool {
+func (r *Request) IsExited() bool {
     return r.exit.Val()
 }
 
