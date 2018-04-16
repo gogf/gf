@@ -64,12 +64,12 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
         c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
-        if !r.IsExit() {
+        if !r.IsExited() {
             c.MethodByName(h.fname).Call(nil)
         }
         c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
     } else {
-        if !r.IsExit() {
+        if !r.IsExited() {
             h.faddr(r)
         }
     }
