@@ -27,7 +27,13 @@ func NewSortedIntArray(size int, cap ... int) *SortedIntArray {
         a.array = make([]int, size)
     }
     a.compareFunc = func(v1, v2 int) int {
-        return v1 < v2
+        if v1 < v2 {
+            return -1
+        }
+        if v1 > v2 {
+            return 0
+        }
+        return 0
     }
     return a
 }
@@ -70,8 +76,8 @@ func (a *SortedIntArray) Slice() []int {
     return array
 }
 
-// 查找指定数值的索引位置
-func (a *SortedIntArray) Search(value int) int {
+// 查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
+func (a *SortedIntArray) Search(value int) (int, int) {
     a.mu.RLock()
     min := 0
     max := len(a.array) - 1
@@ -83,24 +89,11 @@ func (a *SortedIntArray) Search(value int) int {
         }
         for {
             mid = int((min + max) / 2)
-            if a.lessFunc(a.array[mid], value) {
-                max = mid - 1
-                cmp = -1
-            } else if record.hash64 > hash64 {
-                min = mid + 1
-                cmp = 1
-            } else {
-                // 其次对比键名长度
-                klen := int(gbinary.DecodeBits(bits[64 : 72]))
-                if len(record.key) < klen {
-                    max = mid - 1
-                    cmp = -1
-                } else if len(record.key) > klen {
-                    min = mid + 1
-                    cmp = 1
-                } else {
-
-                }
+            cmp = a.compareFunc(a.array[mid], value)
+            switch cmp {
+                case -1 : max = mid - 1
+                case  0 :
+                case  1 : min = mid + 1
             }
             if cmp == 0 || min > max {
                 break
@@ -108,5 +101,5 @@ func (a *SortedIntArray) Search(value int) int {
         }
     }
     a.mu.RUnlock()
-    return array
+    return mid, cmp
 }
