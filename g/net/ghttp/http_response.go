@@ -60,7 +60,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
     if b, err := gparser.VarToJson(content); err != nil {
         return err
     } else {
-        r.Header().Set("Content-Type", "application/json")
+        //r.Header().Set("Content-Type", "application/json")
         if callback := r.request.Get("callback"); callback != "" {
             buffer := []byte(callback)
             buffer  = append(buffer, byte('('))
