@@ -4,16 +4,15 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// IP扫描器
+// IP扫描器.
 package gscanner
 
 import (
     "net"
     "fmt"
-    "errors"
     "sync"
     "time"
-    "gitee.com/johng/gf/g/net/gip"
+    "errors"
     "gitee.com/johng/gf/g/net/gipv4"
 )
 
