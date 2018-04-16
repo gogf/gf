@@ -36,4 +36,9 @@ func (c *Controller) Shut(r *ghttp.Request) {
 
 }
 
+// 推出请求执行
+func (c *Controller) Exit() {
+    c.Request.Exit()
+}
+
 
