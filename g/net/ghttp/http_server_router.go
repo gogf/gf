@@ -192,20 +192,18 @@ func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
             if _, ok := p.(map[string]interface{})["*list"]; ok {
                 lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
             }
-            if _, ok := p.(map[string]interface{})[v]; !ok {
-                if _, ok := p.(map[string]interface{})["/"]; ok {
-                    p = p.(map[string]interface{})["/"]
-                    if k == len(array) - 1 {
-                        if _, ok := p.(map[string]interface{})["*list"]; ok {
-                            lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
-                        }
-                    }
-                } else {
-                    break
-                }
-            } else {
+            if _, ok := p.(map[string]interface{})[v]; ok {
                 p = p.(map[string]interface{})[v]
                 if k == len(array) - 1 {
+                    if _, ok := p.(map[string]interface{})["*list"]; ok {
+                        lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+                    }
+                }
+            }
+            // 如果是叶子节点，同时判断当前层级的"/"键名，解决例如：/user/*action 匹配 /user 的规则
+            if k == len(array) - 1 {
+                if _, ok := p.(map[string]interface{})["/"]; ok {
+                    p = p.(map[string]interface{})["/"]
                     if _, ok := p.(map[string]interface{})["*list"]; ok {
                         lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
                     }
@@ -261,7 +259,7 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names string) {
                 }
                 names += v[1:]
             case '*':
-                regrule += `/(.*)`
+                regrule += `/{0,1}(.*)`
                 if len(names) > 0 {
                     names += ","
                 }
