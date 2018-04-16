@@ -96,9 +96,10 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
             s.handlerTree[domain] = make(map[string]interface{})
         }
         p            := s.handlerTree[domain]
+        lists        := make([]*list.List, 0)
         array        := strings.Split(uri[1:], "/")
         item.priority = len(array)
-        for _, v := range array {
+        for k, v := range array {
             if len(v) == 0 {
                 continue
             }
@@ -107,34 +108,43 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
                     fallthrough
                 case '*':
                     v = "/"
+                    if v, ok := p.(map[string]interface{})["*list"]; !ok {
+                        p.(map[string]interface{})["*list"] = list.New()
+                        lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+                    } else {
+                        lists = append(lists, v.(*list.List))
+                    }
                     fallthrough
                 default:
                     if _, ok := p.(map[string]interface{})[v]; !ok {
                         p.(map[string]interface{})[v] = make(map[string]interface{})
                     }
                     p = p.(map[string]interface{})[v]
+                    // 到达叶子节点，往list中增加匹配规则
+                    if v != "/" && k == len(array) - 1 {
+                        if v, ok := p.(map[string]interface{})["*list"]; !ok {
+                            p.(map[string]interface{})["*list"] = list.New()
+                            lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+                        } else {
+                            lists = append(lists, v.(*list.List))
+                        }
+                    }
 
             }
         }
-        // 到达叶子节点
-        var l *list.List
-        if v, ok := p.(map[string]interface{})["*list"]; !ok {
-            l = list.New()
-            p.(map[string]interface{})["*list"] = l
-        } else {
-            l = v.(*list.List)
-        }
-        //b,_ := gjson.New(s.handlerTree).ToJsonIndent()
-        //fmt.Println(string(b))
         // 从头开始遍历链表，优先级高的放在前面
-        for e := l.Front(); e != nil; e = e.Next() {
-            if s.compareHandlerItemPriority(item, e.Value.(*HandlerItem)) {
-                l.InsertBefore(item, e)
-                return nil
+        for _, l := range lists {
+            for e := l.Front(); e != nil; e = e.Next() {
+                if s.compareHandlerItemPriority(item, e.Value.(*HandlerItem)) {
+                    l.InsertBefore(item, e)
+                    return nil
+                }
             }
+            l.PushBack(item)
         }
-        l.PushBack(item)
     }
+    //b, _ := gparser.VarToJsonIndent(s.handlerTree)
+    //fmt.Println(string(b))
     return nil
 }
 
