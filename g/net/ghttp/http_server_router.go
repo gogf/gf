@@ -60,6 +60,10 @@ func (s *Server)parsePattern(pattern string) (domain, method, uri string, err er
     if uri == "" {
         err = errors.New("invalid pattern")
     }
+    // 去掉末尾的"/"符号，与路由匹配时处理一直
+    if uri != "/" {
+        uri = strings.TrimRight(uri, "/")
+    }
     return
 }
 
@@ -153,14 +157,6 @@ func (s *Server) searchHandler(r *Request) *handlerCacheItem {
     item := s.searchHandlerStatic(r)
     if item == nil {
         item = s.searchHandlerDynamic(r)
-    }
-    // 如果检索不到服务，那么使用默认的"/"服务注册来执行服务
-    // "/"静态路由是特殊的路由，当所有服务都找不到时，会交给"/"路由规则的控制器来处理
-    if item == nil && r.URL.Path != "/" {
-        path      := r.URL.Path
-        r.URL.Path = "/"
-        item       = s.searchHandlerStatic(r)
-        r.URL.Path = path
     }
     return item
 }

@@ -20,6 +20,7 @@ type Request struct {
     parsedGet  *gtype.Bool         // GET参数是否已经解析
     parsedPost *gtype.Bool         // POST参数是否已经解析
     values     map[string][]string // GET参数
+    exit       *gtype.Bool         // 是否退出当前请求流程执行
     Id         int                 // 请求id(唯一)
     Server     *Server             // 请求关联的服务器对象
     Cookie     *Cookie             // 与当前请求绑定的Cookie对象(并发安全)
@@ -33,6 +34,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
         parsedGet  : gtype.NewBool(),
         parsedPost : gtype.NewBool(),
         values     : make(map[string][]string),
+        exit       : gtype.NewBool(),
         Id         : s.servedCount.Add(1),
         Server     : s,
         Request    : *r,
@@ -283,6 +285,16 @@ func (r *Request) GetJson() *gjson.Json {
         }
     }
     return nil
+}
+
+// 退出当前请求执行，原理是在Request.exit做标记，由服务逻辑流程做判断，自行停止
+func (r *Request) Exit() {
+    r.exit.Set(true)
+}
+
+// 判断当前请求是否停止执行
+func (r *Request) IsExited() bool {
+    return r.exit.Val()
 }
 
 
