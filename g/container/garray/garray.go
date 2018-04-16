@@ -5,4 +5,5 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 并发安全的数组.
+// 底层使用通用的interface{}类型，从性能上考虑，类似于gmap那样可以为每种类型都定义一个array.
 package garray
