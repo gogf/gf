@@ -12,13 +12,15 @@ import (
     "net/http"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gparser"
+    "strconv"
 )
 
 // 服务端请求返回对象
 type Response struct {
     http.ResponseWriter
-    bufmu  sync.RWMutex // 缓冲区互斥锁
-    buffer []byte       // 每个请求的返回数据缓冲区
+    bufmu   sync.RWMutex // 缓冲区互斥锁
+    buffer  []byte       // 每个请求的返回数据缓冲区
+    request *Request     // 关联的Request请求对象
 }
 
 // 返回信息，任何变量自动转换为bytes
@@ -53,6 +55,25 @@ func (r *Response) WriteJson(content interface{}) error {
     return nil
 }
 
+// 返回JSONP
+func (r *Response) WriteJsonP(content interface{}) error {
+    if b, err := gparser.VarToJson(content); err != nil {
+        return err
+    } else {
+        r.Header().Set("Content-Type", "application/json")
+        if callback := r.request.Get("callback"); callback != "" {
+            buffer := []byte(callback)
+            buffer  = append(buffer, byte('('))
+            buffer  = append(buffer, b...)
+            buffer  = append(buffer, byte(')'))
+            r.Write(buffer)
+        } else {
+            r.Write(b)
+        }
+    }
+    return nil
+}
+
 // 返回XML
 func (r *Response) WriteXml(content interface{}, rootTag...string) error {
     if b, err := gparser.VarToXml(content, rootTag...); err != nil {
@@ -62,6 +83,17 @@ func (r *Response) WriteXml(content interface{}, rootTag...string) error {
         r.Write(b)
     }
     return nil
+}
+
+// 允许AJAX跨域访问
+func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods string, maxAge...int) {
+    age := 3628800
+    if len(maxAge) > 0 {
+        age = maxAge[0]
+    }
+    r.Header().Set("Access-Control-Allow-Origin",  allowOrigin);
+    r.Header().Set("Access-Control-Allow-Methods", allowMethods);
+    r.Header().Set("Access-Control-Max-Age",       strconv.Itoa(age));
 }
 
 // 返回HTTP Code状态码

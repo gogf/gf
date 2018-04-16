@@ -41,8 +41,9 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
         },
     }
     // 会话处理
-    request.Cookie  = GetCookie(request)
-    request.Session = GetSession(request)
+    request.Cookie           = GetCookie(request)
+    request.Session          = GetSession(request)
+    request.Response.request = request
     return request
 }
 
