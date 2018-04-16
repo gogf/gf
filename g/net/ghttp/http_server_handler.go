@@ -30,6 +30,11 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
+    // 去掉末尾的"/"号
+    if r.URL.Path != "/" {
+        r.URL.Path = strings.TrimRight(r.URL.Path, "/")
+    }
+
     // 创建请求处理对象
     request := newRequest(s, r, w)
     // 事件 - BeforeServe
@@ -55,18 +60,19 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
 // 初始化控制器
 func (s *Server)callHandler(h *HandlerItem, r *Request) {
-    // 请求处理
-
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
         c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
-        c.MethodByName(h.fname).Call(nil)
+        if !r.IsExited() {
+            c.MethodByName(h.fname).Call(nil)
+        }
         c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
     } else {
-        h.faddr(r)
+        if !r.IsExited() {
+            h.faddr(r)
+        }
     }
-
 }
 
 // 处理静态文件请求

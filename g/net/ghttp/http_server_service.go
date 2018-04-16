@@ -40,7 +40,7 @@ func (s *Server)appendMethodNameToUriWithPattern(pattern string, name string) st
     array := strings.Split(pattern, "@")
     // 分离URI(其实可能包含HTTP Method)
     uri := array[0]
-    uri = strings.TrimRight(uri, "/") + "/"
+    uri  = strings.TrimRight(uri, "/") + "/"
     // 方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词
     for i := 0; i < len(name); i++ {
         if i > 0 && gutil.IsLetterUpper(name[i]) {
@@ -73,10 +73,18 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
     for i := 0; i < v.NumMethod(); i++ {
         name  := t.Method(i).Name
         key   := s.appendMethodNameToUriWithPattern(pattern, name)
-        m[key] = &HandlerItem{
+        m[key] = &HandlerItem {
             ctype : nil,
             fname : "",
             faddr : v.Method(i).Interface().(func(*Request)),
+        }
+        // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
+        if strings.EqualFold(name, "Index") {
+            m[pattern] = &HandlerItem {
+                ctype : nil,
+                fname : "",
+                faddr : v.Method(i).Interface().(func(*Request)),
+            }
         }
     }
     return s.bindHandlerByMap(m)
@@ -87,16 +95,24 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
 func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string) error {
     m := make(HandlerMap)
     for _, v := range strings.Split(methods, ",") {
-        method := strings.TrimSpace(v)
-        fval   := reflect.ValueOf(obj).MethodByName(method)
+        name   := strings.TrimSpace(v)
+        fval   := reflect.ValueOf(obj).MethodByName(name)
         if !fval.IsValid() {
-            return errors.New("invalid method name:" + method)
+            return errors.New("invalid method name:" + name)
         }
-        key   := s.appendMethodNameToUriWithPattern(pattern, method)
+        key   := s.appendMethodNameToUriWithPattern(pattern, name)
         m[key] = &HandlerItem{
             ctype : nil,
             fname : "",
             faddr : fval.Interface().(func(*Request)),
+        }
+        // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
+        if strings.EqualFold(name, "Index") {
+            m[pattern] = &HandlerItem {
+                ctype : nil,
+                fname : "",
+                faddr : fval.Interface().(func(*Request)),
+            }
         }
     }
     return s.bindHandlerByMap(m)
@@ -136,10 +152,47 @@ func (s *Server)BindController(pattern string, c Controller) error {
             continue
         }
         key   := s.appendMethodNameToUriWithPattern(pattern, name)
-        m[key] = &HandlerItem{
+        m[key] = &HandlerItem {
             ctype : v.Elem().Type(),
             fname : name,
             faddr : nil,
+        }
+        // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
+        if strings.EqualFold(name, "Index") {
+            m[pattern] = &HandlerItem {
+                ctype : v.Elem().Type(),
+                fname : name,
+                faddr : nil,
+            }
+        }
+    }
+    return s.bindHandlerByMap(m)
+}
+
+// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
+// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，不区分大小写
+func (s *Server)BindControllerMethod(pattern string, c Controller, methods string) error {
+    m    := make(HandlerMap)
+    cval := reflect.ValueOf(c)
+    for _, v := range strings.Split(methods, ",") {
+        name  := strings.TrimSpace(v)
+        ctype := reflect.ValueOf(c).Elem().Type()
+        if !cval.MethodByName(name).IsValid() {
+            return errors.New("invalid method name:" + name)
+        }
+        key    := s.appendMethodNameToUriWithPattern(pattern, name)
+        m[key]  = &HandlerItem {
+            ctype : ctype,
+            fname : name,
+            faddr : nil,
+        }
+        // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
+        if strings.EqualFold(name, "Index") {
+            m[pattern] = &HandlerItem {
+                ctype : ctype,
+                fname : name,
+                faddr : nil,
+            }
         }
     }
     return s.bindHandlerByMap(m)
@@ -171,27 +224,6 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
         m[key] = &HandlerItem{
             ctype : v.Elem().Type(),
             fname : name,
-            faddr : nil,
-        }
-    }
-    return s.bindHandlerByMap(m)
-}
-
-// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
-// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，不区分大小写
-func (s *Server)BindControllerMethod(pattern string, c Controller, methods string) error {
-    m    := make(HandlerMap)
-    cval := reflect.ValueOf(c)
-    for _, v := range strings.Split(methods, ",") {
-        ctype  := reflect.ValueOf(c).Elem().Type()
-        method := strings.TrimSpace(v)
-        if !cval.MethodByName(method).IsValid() {
-            return errors.New("invalid method name:" + method)
-        }
-        key    := s.appendMethodNameToUriWithPattern(pattern, method)
-        m[key]  = &HandlerItem{
-            ctype : ctype,
-            fname : method,
             faddr : nil,
         }
     }
