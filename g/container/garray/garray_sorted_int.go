@@ -12,25 +12,40 @@ import (
 )
 
 // 默认按照从低到高进行排序
-type SortedArray struct {
-    mu          sync.RWMutex                 // 互斥锁
-    cap         int                          // 初始化设置的数组容量
-    size        int                          // 初始化设置的数组大小
-    array       []interface{}                // 底层数组
-    unique      *gtype.Bool                  // 是否要求不能重复
-    compareFunc func(v1, v2 interface{}) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
+type SortedIntArray struct {
+    mu          sync.RWMutex         // 互斥锁
+    cap         int                  // 初始化设置的数组容量
+    size        int                  // 初始化设置的数组大小
+    array       []int                // 底层数组
+    unique      *gtype.Bool          // 是否要求不能重复
+    compareFunc func(v1, v2 int) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
-func NewSortedArray(size int, cap int, compareFunc func(v1, v2 interface{}) int) *SortedArray {
-    return &SortedArray{
+func NewSortedIntArray(size int, cap ... int) *SortedIntArray {
+    a := &SortedIntArray {
         unique      : gtype.NewBool(),
-        array       : make([]interface{}, size, cap),
-        compareFunc : compareFunc,
+        compareFunc : func(v1, v2 int) int {
+            if v1 < v2 {
+                return -1
+            }
+            if v1 > v2 {
+                return 1
+            }
+            return 0
+        },
     }
+    a.size = size
+    if len(cap) > 0 {
+        a.cap   = cap[0]
+        a.array = make([]int, size, cap[0])
+    } else {
+        a.array = make([]int, size)
+    }
+    return a
 }
 
 // 添加加数据项
-func (a *SortedArray) Add(value interface{}) {
+func (a *SortedIntArray) Add(value int) {
     index, cmp := a.Search(value)
     if a.unique.Val() && cmp == 0 {
         return
@@ -46,14 +61,14 @@ func (a *SortedArray) Add(value interface{}) {
         index++
     }
     a.mu.Lock()
-    rear   := append([]interface{}{}, a.array[index : ]...)
+    rear   := append([]int{}, a.array[index : ]...)
     a.array = append(a.array[0 : index], value)
     a.array = append(a.array, rear...)
     a.mu.Unlock()
 }
 
 // 获取指定索引的数据项, 调用方注意判断数组边界
-func (a *SortedArray) Get(index int) interface{} {
+func (a *SortedIntArray) Get(index int) int {
     a.mu.RLock()
     value := a.array[index]
     a.mu.RUnlock()
@@ -61,14 +76,14 @@ func (a *SortedArray) Get(index int) interface{} {
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
-func (a *SortedArray) Remove(index int) {
+func (a *SortedIntArray) Remove(index int) {
     a.mu.Lock()
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
     a.mu.RUnlock()
 }
 
 // 数组长度
-func (a *SortedArray) Len() int {
+func (a *SortedIntArray) Len() int {
     a.mu.RLock()
     length := len(a.array)
     a.mu.RUnlock()
@@ -76,7 +91,7 @@ func (a *SortedArray) Len() int {
 }
 
 // 返回原始数据数组
-func (a *SortedArray) Slice() []interface{} {
+func (a *SortedIntArray) Slice() []int {
     a.mu.RLock()
     array := a.array
     a.mu.RUnlock()
@@ -84,7 +99,7 @@ func (a *SortedArray) Slice() []interface{} {
 }
 
 // 查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
-func (a *SortedArray) Search(value interface{}) (int, int) {
+func (a *SortedIntArray) Search(value int) (int, int) {
     if len(a.array) == 0 {
         return -1, -2
     }
@@ -115,7 +130,7 @@ func (a *SortedArray) Search(value interface{}) (int, int) {
 }
 
 // 设置是否允许数组唯一
-func (a *SortedArray) SetUnique(unique bool) {
+func (a *SortedIntArray) SetUnique(unique bool) {
     oldUnique := a.unique.Val()
     a.unique.Set(unique)
     if unique && oldUnique != unique {
@@ -124,7 +139,7 @@ func (a *SortedArray) SetUnique(unique bool) {
 }
 
 // 清理数组中重复的元素项
-func (a *SortedArray) doUnique() {
+func (a *SortedIntArray) doUnique() {
     a.mu.Lock()
     i := 0
     for {
@@ -141,25 +156,25 @@ func (a *SortedArray) doUnique() {
 }
 
 // 清空数据数组
-func (a *SortedArray) Clear() {
+func (a *SortedIntArray) Clear() {
     a.mu.Lock()
     if a.cap > 0 {
-        a.array = make([]interface{}, a.size, a.cap)
+        a.array = make([]int, a.size, a.cap)
     } else {
-        a.array = make([]interface{}, a.size)
+        a.array = make([]int, a.size)
     }
     a.mu.Unlock()
 }
 
 // 使用自定义方法执行加锁修改操作
-func (a *SortedArray) LockFunc(f func(array []interface{})) {
+func (a *SortedIntArray) LockFunc(f func(array []int)) {
     a.mu.Lock()
     f(a.array)
     a.mu.Unlock()
 }
 
 // 使用自定义方法执行加锁读取操作
-func (a *SortedArray) RLockFunc(f func(array []interface{})) {
+func (a *SortedIntArray) RLockFunc(f func(array []int)) {
     a.mu.RLock()
     f(a.array)
     a.mu.RUnlock()
