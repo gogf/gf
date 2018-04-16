@@ -61,7 +61,7 @@ func (view *View) Display(files...string) error {
         file = files[0]
     }
     if content, err := view.Parse(file); err != nil {
-        view.response.WriteString("Tpl Parsing Error: " + err.Error())
+        view.response.Write("Tpl Parsing Error: " + err.Error())
         return err
     } else {
         view.response.Write(content)
