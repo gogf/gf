@@ -49,9 +49,17 @@ func (view *View) Assign(key string, value interface{}) {
 // 解析模板，并返回解析后的内容
 func (view *View) Parse(file string) ([]byte, error) {
     view.mu.RLock()
-    content, err := view.view.Parse(file, view.data)
+    buffer, err := view.view.Parse(file, view.data)
     view.mu.RUnlock()
-    return content, err
+    return buffer, err
+}
+
+// 直接解析模板内容，并返回解析后的内容
+func (view *View) ParseContent(name string, content string) ([]byte, error) {
+    view.mu.RLock()
+    buffer, err := view.view.ParseContent(name, content, view.data)
+    view.mu.RUnlock()
+    return buffer, err
 }
 
 // 解析指定模板
