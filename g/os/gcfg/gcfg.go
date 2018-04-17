@@ -14,6 +14,7 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 const (
@@ -23,14 +24,14 @@ const (
 // 配置管理对象
 type Config struct {
     mu    sync.RWMutex             // 并发互斥锁
-    path  string                   // 配置文件存放目录，绝对路径
+    path  *gtype.String            // 配置文件存放目录，绝对路径
     jsons *gmap.StringInterfaceMap // 配置文件对象
 }
 
 // 生成一个配置管理对象
 func New(path string) *Config {
     return &Config {
-        path  : path,
+        path  : gtype.NewString(),
         jsons : gmap.NewStringInterfaceMap(),
     }
 }
@@ -41,20 +42,23 @@ func (c *Config) filePath(files []string) string {
     if len(files) > 0 {
         file = files[0]
     }
-    c.mu.RLock()
-    fpath := c.path + gfile.Separator + file
-    c.mu.RUnlock()
+    fpath := c.path.Val() + gfile.Separator + file
     return fpath
 }
 
 // 设置配置管理器的配置文件存放目录绝对路径
 func (c *Config) SetPath(path string) {
-    c.mu.Lock()
-    if strings.Compare(c.path, path) != 0 {
-        c.path  = path
+    if strings.Compare(c.path.Val(), path) != 0 {
+        c.path.Set(path)
+        c.mu.Lock()
         c.jsons = gmap.NewStringInterfaceMap()
+        c.mu.Unlock()
     }
-    c.mu.Unlock()
+}
+
+// 设置配置管理器的配置文件存放目录绝对路径
+func (c *Config) GetPath() string {
+    return c.path.Val()
 }
 
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中
