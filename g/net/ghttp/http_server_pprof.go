@@ -69,9 +69,13 @@ func (p *utilpprof) Trace(r *Request) {
 }
 
 // 开启pprof支持
-func (s *Server) EnablePprof(pattern string) {
+func (s *Server) EnablePprof(pattern...string) {
+    p := "/debug/pprof"
+    if len(pattern) > 0 {
+        p = pattern[0]
+    }
     up := &utilpprof{}
-    _, _, uri, _ := s.parsePattern(pattern)
+    _, _, uri, _ := s.parsePattern(p)
     uri = strings.TrimRight(uri, "/")
     s.BindHandler(uri + "/*action", up.Index)
     s.BindHandler(uri + "/cmdline", up.Cmdline)
