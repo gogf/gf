@@ -55,9 +55,9 @@ func (view *View) Parse(file string) ([]byte, error) {
 }
 
 // 直接解析模板内容，并返回解析后的内容
-func (view *View) ParseContent(name string, content string) ([]byte, error) {
+func (view *View) ParseContent(content string) ([]byte, error) {
     view.mu.RLock()
-    buffer, err := view.view.ParseContent(name, content, view.data)
+    buffer, err := view.view.ParseContent(content, view.data)
     view.mu.RUnlock()
     return buffer, err
 }

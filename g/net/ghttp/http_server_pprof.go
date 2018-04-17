@@ -26,7 +26,7 @@ func (p *utilpprof) Index(r *Request) {
     }
     if len(action) == 0 {
         view      := gins.View()
-        buffer, _ := view.ParseContent("ghttp_pprof", `
+        buffer, _ := view.ParseContent(`
             <html>
             <head>
                 <title>gf ghttp pprof</title>
