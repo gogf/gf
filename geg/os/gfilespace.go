@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gfilespace"
+    "gitee.com/johng/gkvdb/gkvdb/gfilespace"
     "fmt"
 )
 

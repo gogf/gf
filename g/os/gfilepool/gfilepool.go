@@ -10,12 +10,12 @@ package gfilepool
 import (
     "os"
     "time"
+    "sync"
     "strconv"
+    "sync/atomic"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
-    "sync/atomic"
-    "sync"
 )
 
 // 文件指针池
