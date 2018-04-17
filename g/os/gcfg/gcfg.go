@@ -15,7 +15,6 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
-    "fmt"
 )
 
 const (
@@ -65,7 +64,6 @@ func (c *Config) GetPath() string {
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中
 func (c *Config) getJson(file []string) *gjson.Json {
     fpath := c.filePath(file)
-    fmt.Println(fpath)
     if r := c.jsons.Get(fpath); r != nil {
         return r.(*gjson.Json)
     }
