@@ -15,12 +15,13 @@ import (
     "html/template"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 // 视图对象
 type View struct {
     mu       sync.RWMutex
-    path     string                  // 模板目录(绝对路径)
+    path     *gtype.String           // 模板目录(绝对路径)
     funcmap  map[string]interface{}  // FuncMap
     contents *gmap.StringStringMap   // 已解析的模板文件内容
 }
@@ -41,7 +42,7 @@ func Get(path string) *View {
 // 生成一个视图对象
 func New(path string) *View {
     view := &View {
-        path     : path,
+        path     : gtype.NewString(path),
         funcmap  : make(map[string]interface{}),
         contents : gmap.NewStringStringMap(),
     }
@@ -51,23 +52,12 @@ func New(path string) *View {
 
 // 设置模板目录绝对路径
 func (view *View) SetPath(path string) {
-    view.mu.Lock()
-    defer view.mu.Unlock()
-    view.path = path
+    view.path.Set(path)
 }
 
 // 获取模板目录绝对路径
 func (view *View) GetPath() string {
-    view.mu.RLock()
-    defer view.mu.RUnlock()
-    return view.path
-}
-
-// 获取模板文件内容
-func (view *View) GetTplContent() string {
-    view.mu.RLock()
-    defer view.mu.RUnlock()
-    return view.path
+    return view.path.Val()
 }
 
 // 解析模板，返回解析后的内容
