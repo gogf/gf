@@ -16,6 +16,8 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/encoding/ghash"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 // 视图对象
@@ -88,7 +90,8 @@ func (view *View) Parse(file string, params map[string]interface{}) ([]byte, err
 }
 
 // 直接解析模板内容，返回解析后的内容
-func (view *View) ParseContent(name string, content string, params map[string]interface{}) ([]byte, error) {
+func (view *View) ParseContent(content string, params map[string]interface{}) ([]byte, error) {
+    name   := gconv.String(ghash.BKDRHash64([]byte(content)))
     buffer := bytes.NewBuffer(nil)
     if tpl, err := template.New(name).Funcs(view.getFuncs()).Parse(content); err != nil {
         return nil, err
