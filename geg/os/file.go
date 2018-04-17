@@ -31,12 +31,11 @@ func getContents() {
 }
 
 func putContents() {
-    fmt.Println(gfile.PutContentsAppend(filepath2, []byte("123")))
+    fmt.Println(gfile.PutContentsAppend(filepath2, "123"))
 }
 
 func putBinContents() {
-    data := []byte(BinData{"john", 31})
-    fmt.Println(gfile.PutContents(filepath2, data))
+    fmt.Println(gfile.PutBinContents(filepath2, []byte("abc")))
 }
 
 func main() {

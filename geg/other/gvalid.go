@@ -43,7 +43,7 @@ func main() {
     //fmt.Println(gvalid.CheckMap(params, rules))
     //// map[passport:map[length:字段长度为6到16个字符] password:map[same:字段值不合法]]
 
-    params := map[string]string {
+    params := map[string]interface{} {
         "passport"  : "john",
         "password"  : "123456",
         "password2" : "1234567",
