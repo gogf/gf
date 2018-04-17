@@ -17,6 +17,7 @@ func init() {
     // 例如该方法执行后，查看效果可访问：
     // http://127.0.0.1:8199/user/name
     // http://127.0.0.1:8199/user/age
+    // http://127.0.0.1:8199/user/true-name
     ghttp.GetServer().BindController("/user", &ControllerUser{})
 }
 
@@ -28,6 +29,11 @@ func (c *ControllerUser) Name() {
 // 定义操作逻辑 - 展示年龄
 func (c *ControllerUser) Age() {
     c.Response.Write("18")
+}
+
+// 定义操作逻辑 - 展示方法名称如果带多个单词，路由控制器使用英文连接符号"-"进行拼接
+func (c *ControllerUser) TrueName() {
+    c.Response.Write("John Smith")
 }
 
 
