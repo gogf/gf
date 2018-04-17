@@ -70,7 +70,7 @@ func (view *View) GetTplContent() string {
     return view.path
 }
 
-// 直接解析模板，返回解析后的内容
+// 解析模板，返回解析后的内容
 func (view *View) Parse(file string, params map[string]interface{}) ([]byte, error) {
     // 获取模板文件路径及内容
     path    := strings.TrimRight(view.GetPath(), gfile.Separator) + gfile.Separator + file
@@ -88,6 +88,19 @@ func (view *View) Parse(file string, params map[string]interface{}) ([]byte, err
     // 执行模板解析
     buffer := bytes.NewBuffer(nil)
     if tpl, err := template.New(path).Funcs(view.getFuncs()).Parse(content); err != nil {
+        return nil, err
+    } else {
+        if err := tpl.Execute(buffer, params); err != nil {
+            return nil, err
+        }
+    }
+    return buffer.Bytes(), nil
+}
+
+// 直接解析模板内容，返回解析后的内容
+func (view *View) ParseContent(name string, content string, params map[string]interface{}) ([]byte, error) {
+    buffer := bytes.NewBuffer(nil)
+    if tpl, err := template.New(name).Funcs(view.getFuncs()).Parse(content); err != nil {
         return nil, err
     } else {
         if err := tpl.Execute(buffer, params); err != nil {
