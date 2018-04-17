@@ -15,6 +15,7 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
+    "fmt"
 )
 
 const (
@@ -31,18 +32,18 @@ type Config struct {
 // 生成一个配置管理对象
 func New(path string) *Config {
     return &Config {
-        path  : gtype.NewString(),
+        path  : gtype.NewString(path),
         jsons : gmap.NewStringInterfaceMap(),
     }
 }
 
 // 判断从哪个配置文件中获取内容
-func (c *Config) filePath(files []string) string {
-    file := gDEFAULT_CONFIG_FILE
-    if len(files) > 0 {
-        file = files[0]
+func (c *Config) filePath(file []string) string {
+    path := gDEFAULT_CONFIG_FILE
+    if len(file) > 0 {
+        path = file[0]
     }
-    fpath := c.path.Val() + gfile.Separator + file
+    fpath := c.path.Val() + gfile.Separator + path
     return fpath
 }
 
@@ -62,8 +63,9 @@ func (c *Config) GetPath() string {
 }
 
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中
-func (c *Config) getJson(files []string) *gjson.Json {
-    fpath := c.filePath(files)
+func (c *Config) getJson(file []string) *gjson.Json {
+    fpath := c.filePath(file)
+    fmt.Println(fpath)
     if r := c.jsons.Get(fpath); r != nil {
         return r.(*gjson.Json)
     }
@@ -75,8 +77,8 @@ func (c *Config) getJson(files []string) *gjson.Json {
 }
 
 // 获取配置项，当不存在时返回nil
-func (c *Config) Get(pattern string, files...string) interface{} {
-    if j := c.getJson(files); j != nil {
+func (c *Config) Get(pattern string, file...string) interface{} {
+    if j := c.getJson(file); j != nil {
         return j.Get(pattern)
     }
     return nil
@@ -84,8 +86,8 @@ func (c *Config) Get(pattern string, files...string) interface{} {
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (c *Config) GetMap(pattern string, files...string)  map[string]interface{} {
-    if j := c.getJson(files); j != nil {
+func (c *Config) GetMap(pattern string, file...string)  map[string]interface{} {
+    if j := c.getJson(file); j != nil {
         return j.GetMap(pattern)
     }
     return nil
@@ -93,56 +95,56 @@ func (c *Config) GetMap(pattern string, files...string)  map[string]interface{} 
 
 // 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (c *Config) GetArray(pattern string, files...string)  []interface{} {
-    if j := c.getJson(files); j != nil {
+func (c *Config) GetArray(pattern string, file...string)  []interface{} {
+    if j := c.getJson(file); j != nil {
         return j.GetArray(pattern)
     }
     return nil
 }
 
 // 返回指定json中的string
-func (c *Config) GetString(pattern string, files...string) string {
-    if j := c.getJson(files); j != nil {
+func (c *Config) GetString(pattern string, file...string) string {
+    if j := c.getJson(file); j != nil {
         return j.GetString(pattern)
     }
     return ""
 }
 
 // 返回指定json中的bool
-func (c *Config) GetBool(pattern string, files...string) bool {
-    if j := c.getJson(files); j != nil {
+func (c *Config) GetBool(pattern string, file...string) bool {
+    if j := c.getJson(file); j != nil {
         return j.GetBool(pattern)
     }
     return false
 }
 
 // 返回指定json中的float32
-func (c *Config) GetFloat32(pattern string, files...string) float32 {
-    if j := c.getJson(files); j != nil {
+func (c *Config) GetFloat32(pattern string, file...string) float32 {
+    if j := c.getJson(file); j != nil {
         return j.GetFloat32(pattern)
     }
     return 0
 }
 
 // 返回指定json中的float64
-func (c *Config) GetFloat64(pattern string, files...string) float64 {
-    if j := c.getJson(files); j != nil {
+func (c *Config) GetFloat64(pattern string, file...string) float64 {
+    if j := c.getJson(file); j != nil {
         return j.GetFloat64(pattern)
     }
     return 0
 }
 
 // 返回指定json中的float64->int
-func (c *Config) GetInt(pattern string, files...string)  int {
-    if j := c.getJson(files); j != nil {
+func (c *Config) GetInt(pattern string, file...string)  int {
+    if j := c.getJson(file); j != nil {
         return j.GetInt(pattern)
     }
     return 0
 }
 
 // 返回指定json中的float64->uint
-func (c *Config) GetUint(pattern string, files...string)  uint {
-    if j := c.getJson(files); j != nil {
+func (c *Config) GetUint(pattern string, file...string)  uint {
+    if j := c.getJson(file); j != nil {
         return j.GetUint(pattern)
     }
     return 0
