@@ -65,7 +65,7 @@ func View() *gview.View {
     } else {
         path := gcmd.Option.Get("viewpath")
         if path == "" {
-            path = genv.Get("viewpath")
+            path = genv.Get("gf.viewpath")
             if path == "" {
                 path = gfile.SelfDir()
             }
@@ -86,7 +86,7 @@ func Config() *gcfg.Config {
     } else {
         path := gcmd.Option.Get("cfgpath")
         if path == "" {
-            path = genv.Get("cfgpath")
+            path = genv.Get("gf.cfgpath")
             if path == "" {
                 path = gfile.SelfDir()
             }
