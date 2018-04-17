@@ -11,8 +11,6 @@ func main() {
     s.BindHookHandlerByMap(p, map[string]ghttp.HandlerFunc{
         "BeforeServe"  : func(r *ghttp.Request){ fmt.Println("BeforeServe") },
         "AfterServe"   : func(r *ghttp.Request){ fmt.Println("AfterServe") },
-        "BeforePatch"  : func(r *ghttp.Request){ fmt.Println("BeforePatch") },
-        "AfterPatch"   : func(r *ghttp.Request){ fmt.Println("AfterPatch") },
         "BeforeOutput" : func(r *ghttp.Request){ fmt.Println("BeforeOutput") },
         "AfterOutput"  : func(r *ghttp.Request){ fmt.Println("AfterOutput") },
         "BeforeClose"  : func(r *ghttp.Request){ fmt.Println("BeforeClose") },

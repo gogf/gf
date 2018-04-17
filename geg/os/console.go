@@ -12,7 +12,7 @@ func doEcho() {
 func main() {
     fmt.Println(gcmd.Value.GetAll())
 
-    fmt.Println(gcmd.Value.GetIndex(1))
+    fmt.Println(gcmd.Value.Get(1))
 
     gcmd.BindHandle("echo", doEcho)
     gcmd.RunHandle("echo")

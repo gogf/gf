@@ -23,6 +23,5 @@ func main () {
     a.Add(1)
     a.Add(1)
     a.Add(1)
-    a.DoUnique()
     fmt.Println(a.Slice())
 }
