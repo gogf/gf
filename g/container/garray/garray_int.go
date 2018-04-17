@@ -9,10 +9,11 @@ package garray
 import "sync"
 
 type IntArray struct {
-    mu           sync.RWMutex  // 互斥锁
-    cap          int           // 初始化设置的数组容量
-    size         int           // 初始化设置的数组大小
-    array        []int         // 底层数组
+    mu           sync.RWMutex        // 互斥锁
+    cap          int                 // 初始化设置的数组容量
+    size         int                 // 初始化设置的数组大小
+    array        []int               // 底层数组
+    compareFunc func(v1, v2 int) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
 func NewIntArray(size int, cap ... int) *IntArray {
@@ -23,6 +24,15 @@ func NewIntArray(size int, cap ... int) *IntArray {
         a.array = make([]int, size, cap[0])
     } else {
         a.array = make([]int, size)
+    }
+    a.compareFunc = func(v1, v2 int) int {
+        if v1 < v2 {
+            return -1
+        }
+        if v1 > v2 {
+            return 1
+        }
+        return 0
     }
     return a
 }
@@ -90,6 +100,41 @@ func (a *IntArray) Clear() {
         a.array = make([]int, a.size)
     }
     a.mu.Unlock()
+}
+
+// 查找指定数值的索引位置，返回索引位置，如果查找不到则返回-1
+func (a *IntArray) Search(value int) int {
+    if len(a.array) == 0 {
+        return -1
+    }
+    a.mu.RLock()
+    min := 0
+    max := len(a.array) - 1
+    mid := 0
+    cmp := -2
+    for {
+        if cmp == 0 || min > max {
+            break
+        }
+        for {
+            mid = int((min + max) / 2)
+            cmp = a.compareFunc(value, a.array[mid])
+            switch cmp {
+                case -1 : max = mid - 1
+                case  0 :
+                case  1 : min = mid + 1
+            }
+            if cmp == 0 || min > max {
+                break
+            }
+        }
+    }
+    a.mu.RUnlock()
+
+    if cmp == 0 {
+        return mid
+    }
+    return -1
 }
 
 // 使用自定义方法执行加锁修改操作
