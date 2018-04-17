@@ -9,11 +9,10 @@ import (
 )
 
 func main() {
-    //s := ghttp.GetServer()
+    s := ghttp.GetServer()
     s.BindHandler("/", func(r *ghttp.Request){
         r.Response.Writeln("哈喽世界！")
     })
-    //s.SetPort(8199)
-    //s.Run()
-    log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
+    s.SetPort(8199)
+    s.Run()
 }
