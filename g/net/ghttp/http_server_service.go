@@ -125,12 +125,13 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
     v := reflect.ValueOf(obj)
     t := v.Type()
     for i := 0; i < v.NumMethod(); i++ {
-        name := t.Method(i).Name
-        if _, ok := s.methodsMap[strings.ToUpper(name)]; !ok {
+        name   := t.Method(i).Name
+        method := strings.ToUpper(name)
+        if _, ok := s.methodsMap[method]; !ok {
             continue
         }
         key   := name + ":" + pattern
-        m[key] = &HandlerItem{
+        m[key] = &HandlerItem {
             ctype : nil,
             fname : "",
             faddr : v.Method(i).Interface().(func(*Request)),
