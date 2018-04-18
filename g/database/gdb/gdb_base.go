@@ -108,7 +108,10 @@ func (db *Db) GetOne(query string, args ...interface{}) (Map, error) {
     if err != nil {
         return nil, err
     }
-    return list[0], nil
+    if len(list) > 0 {
+        return list[0], nil
+    }
+    return nil, nil
 }
 
 // 数据库查询，获取查询字段值
