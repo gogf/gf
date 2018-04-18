@@ -29,10 +29,11 @@ type Cookie struct {
 
 // cookie项
 type CookieItem struct {
-    value  string
-    domain string // 有效域名
-    path   string // 有效路径
-    expire int    // 过期时间
+    value    string
+    domain   string // 有效域名
+    path     string // 有效路径
+    expire   int    // 过期时间
+    httpOnly bool
 }
 
 // 获取或者创建一个cookie对象，与传入的请求对应
@@ -57,7 +58,7 @@ func (c *Cookie) init() {
     c.mu.Lock()
     for _, v := range c.request.Cookies() {
         c.data[v.Name] = CookieItem {
-            v.Value, v.Domain, v.Path, v.Expires.Second(),
+            v.Value, v.Domain, v.Path, v.Expires.Second(), v.HttpOnly,
         }
     }
     c.mu.Unlock()
@@ -84,12 +85,16 @@ func (c *Cookie) Set(key, value string) {
 }
 
 // 设置cookie，带详细cookie参数
-func (c *Cookie) SetCookie(key, value, domain, path string, maxage int) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int, httpOnly ... bool) {
     c.mu.Lock()
-    defer c.mu.Unlock()
-    c.data[key] = CookieItem {
-        value, domain, path, int(gtime.Second()) + maxage,
+    isHttpOnly := false
+    if len(httpOnly) > 0 {
+        isHttpOnly = httpOnly[0]
     }
+    c.data[key] = CookieItem {
+        value, domain, path, int(gtime.Second()) + maxAge, isHttpOnly,
+    }
+    c.mu.Unlock()
 }
 
 // 查询cookie
@@ -127,11 +132,12 @@ func (c *Cookie) Output() {
         http.SetCookie(
             c.response.ResponseWriter,
             &http.Cookie {
-                Name    : k,
-                Value   : v.value,
-                Domain  : v.domain,
-                Path    : v.path,
-                Expires : time.Unix(int64(v.expire), 0),
+                Name     : k,
+                Value    : v.value,
+                Domain   : v.domain,
+                Path     : v.path,
+                Expires  : time.Unix(int64(v.expire), 0),
+                HttpOnly : v.httpOnly,
             },
         )
     }
