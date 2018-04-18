@@ -261,7 +261,10 @@ func (op *DbOp) One() (Map, error) {
     if err != nil {
         return nil, err
     }
-    return list[0], nil
+    if len(list) > 0 {
+        return list[0], nil
+    }
+    return nil, nil
 }
 
 // 链式操作，查询字段值

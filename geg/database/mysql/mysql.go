@@ -446,7 +446,7 @@ func main() {
     //save()
     //batchInsert()
     //update1()
-    update2()
+    //update2()
     //update3()
     //linkopSelect1()
     //linkopSelect2()
@@ -457,4 +457,8 @@ func main() {
     //keepPing()
     //transaction1()
     //transaction2()
+
+    m, e := db.Table("user").Fields("uid,name").Where("uid = ?", 4).One()
+    fmt.Println(e)
+    fmt.Println(m)
 }
