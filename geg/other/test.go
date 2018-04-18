@@ -1,18 +1,20 @@
 package main
 
 import (
-    "fmt"
-    "github.com/clbanning/mxj"
+    "gitee.com/johng/gf/g/net/ghttp"
+    "gitee.com/johng/gf/g/frame/gins"
 )
 
 func main() {
-    m := make(map[string]interface{})
-    m["m"] = map[string]string {
-        "k" : "v",
-    }
-    b, _ := mxj.Map(m).Xml()
-    fmt.Println(string(b))
-
-    // expect {"m":{"k":"v"}} , but I got >UNKNOWN/>
+    s := ghttp.GetServer()
+    s.BindHandler("/template2", func(r *ghttp.Request){
+        tplcontent := `id:{{.id}}, name:{{.name}}`
+        content, _ := gins.View().ParseContent(tplcontent, map[string]interface{}{
+            "id"   : 123,
+            "name" : "john",
+        })
+        r.Response.Write(content)
+    })
+    s.SetPort(8199)
+    s.Run()
 }
-
