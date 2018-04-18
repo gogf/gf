@@ -18,6 +18,7 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/ghash"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/os/gfsnotify"
 )
 
 // 视图对象
@@ -64,21 +65,23 @@ func (view *View) GetPath() string {
 
 // 解析模板，返回解析后的内容
 func (view *View) Parse(file string, params map[string]interface{}) ([]byte, error) {
-    view.mu.RLock()
-    defer view.mu.RUnlock()
     path    := strings.TrimRight(view.GetPath(), gfile.Separator) + gfile.Separator + file
     content := view.contents.Get(path)
     if content == "" {
         content = gfile.GetContents(path)
-        if content == "" {
-            content = gfile.GetContents(file)
+        if content != "" {
+            view.mu.Lock()
+            view.addMonitor(path)
+            view.contents.Set(path, content)
+            view.mu.Unlock()
         }
-        view.contents.Set(path, content)
     }
     if content == "" {
         return nil, errors.New("invalid tpl \"" + file + "\"")
     }
     // 执行模板解析
+    view.mu.RLock()
+    defer view.mu.RUnlock()
     buffer := bytes.NewBuffer(nil)
     if tpl, err := template.New(path).Funcs(view.funcmap).Parse(content); err != nil {
         return nil, err
@@ -124,4 +127,17 @@ func (view *View) funcInclude(file string, data...map[string]interface{}) templa
         return template.HTML(err.Error())
     }
     return template.HTML(content)
+}
+
+// 添加模板文件监控
+func (view *View) addMonitor(path string) {
+    if view.contents.Get(path) == "" {
+        gfsnotify.Add(path, func(event *gfsnotify.Event) {
+            if event.IsRemove() {
+                gfsnotify.Remove(event.Path)
+                return
+            }
+            view.contents.Remove(event.Path)
+        })
+    }
 }
