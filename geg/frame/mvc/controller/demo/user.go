@@ -33,6 +33,9 @@ func (c *ControllerUser) Age() {
 
 // 定义操作逻辑 - 展示方法名称如果带多个单词，路由控制器使用英文连接符号"-"进行拼接
 func (c *ControllerUser) TrueName() {
+    c.View.Assigns(map[string]interface{}{
+
+    })
     c.Response.Write("John Smith")
 }
 
