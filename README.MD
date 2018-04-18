@@ -40,6 +40,7 @@ gf是开源的，免费的，基于MIT协议进行分发，开源项目地址(gi
         * [执行对象注册](http://gf.johng.cn/590882)
         * [回调方法注册](http://gf.johng.cn/590883)
         * [事件回调注册](http://gf.johng.cn/590884)
+        * [服务性能分析](http://gf.johng.cn/592298)
     * [路由控制](http://gf.johng.cn/49437)
     * [Cookie](http://gf.johng.cn/494372)
     * [Session](http://gf.johng.cn/494373)
