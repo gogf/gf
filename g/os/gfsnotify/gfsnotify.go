@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 文件监控.
+// 使用时需要注意的是，一旦一个文件被删除，那么对其的监控将会失效。
 package gfsnotify
 
 import (
@@ -151,6 +152,11 @@ func (w *Watcher) startEventLoop() {
         for {
             if v := w.events.PopFront(); v != nil {
                 event := v.(*Event)
+                // 如果是文件删除时间，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，并重新添加监控
+                if event.IsRemove() && gfile.Exists(event.Path){
+                    w.watcher.Add(event.Path)
+                    continue
+                }
                 if l := w.callbacks.Get(event.Path); l != nil {
                     grpool.Add(func() {
                         for _, v := range l.(*glist.List).FrontAll() {
