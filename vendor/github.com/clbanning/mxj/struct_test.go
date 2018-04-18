@@ -6,7 +6,7 @@ import (
 )
 
 func TestStructHeader(t *testing.T) {
-	fmt.Println("\n----------------  struct_test.go ...\n")
+	fmt.Println("\n----------------  struct_test.go ...")
 }
 
 /*

@@ -10,7 +10,7 @@ import (
 )
 
 func TestXml2Header(t *testing.T) {
-	fmt.Println("\n----------------  xml2_test.go ...\n")
+	fmt.Println("\n----------------  xml2_test.go ...")
 }
 
 func TestNewMapXml4(t *testing.T) {

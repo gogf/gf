@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewMapHeader(t *testing.T) {
-	fmt.Println("\n----------------  newmap_test.go ...\n")
+	fmt.Println("\n----------------  newmap_test.go ...")
 }
 
 func TestNewMap(t *testing.T) {

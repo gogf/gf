@@ -6,7 +6,7 @@ import (
 )
 
 func TestMxjHeader(t *testing.T) {
-	fmt.Println("\n----------------  mxj_test.go ...\n")
+	fmt.Println("\n----------------  mxj_test.go ...")
 }
 
 func TestMap(t *testing.T) {

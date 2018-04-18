@@ -21,7 +21,7 @@ var baddata = []byte(`
 `)
 
 func TestBadXml(t *testing.T) {
-	fmt.Println("\n---------------- badxml_test.go\n")
+	fmt.Println("\n---------------- badxml_test.go")
 	fmt.Println("TestBadXml ...")
 	m, err := NewMapXml(baddata)
 	if err != nil {

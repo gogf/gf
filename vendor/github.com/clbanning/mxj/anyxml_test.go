@@ -7,7 +7,7 @@ import (
 )
 
 func TestAnyXmlHeader(t *testing.T) {
-	fmt.Println("\n----------------  anyxml_test.go ...\n")
+	fmt.Println("\n----------------  anyxml_test.go ...")
 }
 
 var anydata = []byte(`[

@@ -26,7 +26,7 @@ var seqdata2 = []byte(`
 	</Obj>`)
 
 func TestSeqNumHeader(t *testing.T) {
-	fmt.Println("\n----------------  seqnum_test.go ...\n")
+	fmt.Println("\n----------------  seqnum_test.go ...")
 }
 
 func TestSeqNum(t *testing.T) {

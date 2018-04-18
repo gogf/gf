@@ -9,7 +9,7 @@ import (
 )
 
 func TestBulkHeader(t *testing.T) {
-	fmt.Println("\n----------------  bulk_test.go ...\n")
+	fmt.Println("\n----------------  bulk_test.go ...")
 }
 
 var jsonWriter = new(bytes.Buffer)

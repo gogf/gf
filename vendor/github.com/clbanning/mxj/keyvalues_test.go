@@ -10,7 +10,7 @@ import (
 )
 
 func TestKVHeader(t *testing.T) {
-	fmt.Println("\n----------------  keyvalues_test.go ...\n")
+	fmt.Println("\n----------------  keyvalues_test.go ...")
 }
 
 var doc1 = []byte(`
@@ -224,7 +224,7 @@ func TestValuesForNotKey(t *testing.T) {
 }
 
 func TestIAHeader(t *testing.T) {
-	fmt.Println("\n----------------  indexedarray_test.go ...\n")
+	fmt.Println("\n----------------  indexedarray_test.go ...")
 }
 
 var ak_data = []byte(`{ "section1":{"data" : [{"F1" : "F1 data","F2" : "F2 data"},{"F1" : "demo 123","F2" : "abc xyz"}]}}`)
