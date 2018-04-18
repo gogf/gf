@@ -125,12 +125,13 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
     v := reflect.ValueOf(obj)
     t := v.Type()
     for i := 0; i < v.NumMethod(); i++ {
-        name := t.Method(i).Name
-        if _, ok := s.methodsMap[strings.ToUpper(name)]; !ok {
+        name   := t.Method(i).Name
+        method := strings.ToUpper(name)
+        if _, ok := s.methodsMap[method]; !ok {
             continue
         }
         key   := name + ":" + pattern
-        m[key] = &HandlerItem{
+        m[key] = &HandlerItem {
             ctype : nil,
             fname : "",
             faddr : v.Method(i).Interface().(func(*Request)),
@@ -148,7 +149,7 @@ func (s *Server)BindController(pattern string, c Controller) error {
     t := v.Type()
     for i := 0; i < v.NumMethod(); i++ {
         name := t.Method(i).Name
-        if name == "Init" || name == "Shut" {
+        if name == "Init" || name == "Shut" || name == "Exit"  {
             continue
         }
         key   := s.appendMethodNameToUriWithPattern(pattern, name)
@@ -207,21 +208,15 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
     m := make(HandlerMap)
     v := reflect.ValueOf(c)
     t := v.Type()
-    methods := make(map[string]bool)
-    for _, v := range strings.Split(gHTTP_METHODS, ",") {
-        methods[v] = true
-    }
     // 如果存在与HttpMethod对应名字的方法，那么绑定这些方法
     for i := 0; i < v.NumMethod(); i++ {
-        name := strings.ToUpper(t.Method(i).Name)
-        if name == "Init" || name == "Shut" {
-            continue
-        }
-        if _, ok := s.methodsMap[name]; !ok {
+        name   := t.Method(i).Name
+        method := strings.ToUpper(name)
+        if _, ok := s.methodsMap[method]; !ok {
             continue
         }
         key   := name + ":" + pattern
-        m[key] = &HandlerItem{
+        m[key] = &HandlerItem {
             ctype : v.Elem().Type(),
             fname : name,
             faddr : nil,
