@@ -13,26 +13,26 @@ type ControllerRest struct {
 // 初始化控制器对象，并绑定操作到Web Server
 func init() {
     // 控制器公开方法中与HTTP Method方法同名的方法将会自动绑定映射
-    ghttp.GetServer().BindControllerRest("/user", &ControllerRest{})
+    ghttp.GetServer().BindControllerRest("/john", &ControllerRest{})
 }
 
 // RESTFul - GET
-func (c *ControllerUser) Get() {
+func (c *ControllerRest) Get() {
     c.Response.Write("RESTFul HTTP Method GET")
 }
 
 // RESTFul - POST
-func (c *ControllerUser) Post() {
+func (c *ControllerRest) Post() {
     c.Response.Write("RESTFul HTTP Method POST")
 }
 
 // RESTFul - DELETE
-func (c *ControllerUser) Delete() {
+func (c *ControllerRest) Delete() {
     c.Response.Write("RESTFul HTTP Method DELETE")
 }
 
 // 该方法无法映射，将会无法访问到
-func (c *ControllerUser) Hello() {
+func (c *ControllerRest) Hello() {
     c.Response.Write("Hello")
 }
 
