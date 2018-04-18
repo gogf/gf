@@ -21,5 +21,7 @@ database:
           role:     master
           charset:  utf-8
           priority: 1
-
-
+# Redis数据库配置
+redis:
+    disk:  127.0.0.1:6379,0
+    cache: 127.0.0.1:6379,1
