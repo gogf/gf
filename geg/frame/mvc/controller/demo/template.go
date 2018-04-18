@@ -9,10 +9,6 @@ type ControllerTemplate struct {
     gmvc.Controller
 }
 
-func init() {
-    ghttp.GetServer().BindControllerMethod("/template", &ControllerTemplate{}, "Info")
-}
-
 func (c *ControllerTemplate) Info() {
     c.View.Assign("name", "john")
     c.View.Assigns(map[string]interface{}{
@@ -21,6 +17,12 @@ func (c *ControllerTemplate) Info() {
     })
     c.View.Display("user/index.tpl")
 }
+
+func init() {
+    ghttp.GetServer().BindController("/template", &ControllerTemplate{})
+}
+
+
 
 
 
