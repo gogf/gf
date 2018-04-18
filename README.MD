@@ -72,6 +72,7 @@ gf是开源的，免费的，基于MIT协议进行分发，开源项目地址(gi
     * [数据编码解析](http://gf.johng.cn/511393)
     * [环境变量模块](http://gf.johng.cn/494390)
     * [文件管理模块](http://gf.johng.cn/494391)
+    * [文件监控模块](http://gf.johng.cn/593848)
     * [并发安全容器](http://gf.johng.cn/494392)
         * [gmap](http://gf.johng.cn/590858)
         * [gtype](http://gf.johng.cn/590859)
