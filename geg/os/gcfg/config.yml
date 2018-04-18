@@ -21,5 +21,6 @@ memcache:
   - host:   192.168.0.102
     port:   11211
     expire: 60
+
 viewpath   : /home/www/templates/
 serverpath : /home/www/server/
