@@ -1,8 +1,8 @@
 ON THE WAY:
 1. gdb Where方法参数的改进，研究是否可以将string参数类型修改为interface{}；
 2. 增加对于数据表Model的封装；
-3. 跟踪第三方mxj包的issue问题：https://github.com/clbanning/mxj/issues/48
-
+3. 跟踪第三方mxj包的issue问题：https://github.com/clbanning/mxj/issues/48；
+4. ghttp.Server平滑重启方案；
 
 
 DONE:
