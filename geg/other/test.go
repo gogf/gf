@@ -1,15 +1,18 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/net/ghttp"
+    "fmt"
+    "github.com/clbanning/mxj"
 )
 
 func main() {
-    s := ghttp.GetServer()
-    s.BindHandler("/", func(r *ghttp.Request){
-        r.Response.Writeln("哈喽世界！")
-    })
-    s.SetPort(8199)
-    s.Run()
+    m := make(map[string]interface{})
+    m["m"] = map[string]string {
+        "k" : "v",
+    }
+    b, _ := mxj.Map(m).Xml()
+    fmt.Println(string(b))
+
+    // expect {"m":{"k":"v"}} , but I got >UNKNOWN/>
 }
 
