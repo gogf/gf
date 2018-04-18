@@ -7,7 +7,7 @@ import (
 )
 
 func TestXmlSeqHeader(t *testing.T) {
-	fmt.Println("\n----------------  xmlseq_test.go ...\n")
+	fmt.Println("\n----------------  xmlseq_test.go ...")
 }
 
 func TestNewMapXmlSeq(t *testing.T) {

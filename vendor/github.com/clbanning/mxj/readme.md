@@ -21,6 +21,8 @@ For over a year I've wanted to refactor the XML-to-map[string]interface{} decode
 
 <h4>Notices</h4>
 
+	2018.03.29: mv.Gob/NewMapGob support gob encoding/decoding of Maps.
+	2018.03.26: Added mxj/x2j-wrapper sub-package for migrating from legacy x2j package.
 	2017.02.22: LeafNode paths can use ".N" syntax rather than "[N]" for list member indexing.
 	2017.02.10: SetFieldSeparator changes field separator for args in UpdateValuesForPath, ValuesFor... methods.
 	2017.02.06: Support XMPP stream processing - HandleXMPPStreamTag().

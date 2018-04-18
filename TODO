@@ -4,6 +4,8 @@ ON THE WAY:
 3. 增加fsnotify包支持；
 4. 改进gcfg和gview的文件自动更新机制；
 5. 将模板变量进行暴露，以便应用端可以进行灵活控制；
+6. 跟踪第三方mxj包的issue问题：https://github.com/clbanning/mxj/issues/48
+
 
 
 DONE:

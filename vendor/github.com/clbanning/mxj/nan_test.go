@@ -8,7 +8,7 @@ import (
 )
 
 func TestNan(t *testing.T) {
-	fmt.Println("\n------------ TestNan\n")
+	fmt.Println("\n------------ TestNan ...")
 	data := []byte("<foo><bar>NAN</bar></foo>")
 
 	m, err := NewMapXml(data, true)

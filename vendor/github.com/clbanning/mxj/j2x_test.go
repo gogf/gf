@@ -8,7 +8,7 @@ import (
 var jjdata = []byte(`{ "key1":"string", "key2":34, "key3":true, "key4":"unsafe: <>&", "key5":null }`)
 
 func TestJ2XHeader(t *testing.T) {
-	fmt.Println("\n---------------- j2x_test .go ...\n")
+	fmt.Println("\n---------------- j2x_test .go ...")
 }
 
 func TestJ2X(t *testing.T) {

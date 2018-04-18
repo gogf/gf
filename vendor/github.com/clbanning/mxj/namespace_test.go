@@ -6,7 +6,7 @@ import (
 )
 
 func TestNamespaceHeader(t *testing.T) {
-	fmt.Println("\n---------------- namespace_test.go ...\n")
+	fmt.Println("\n---------------- namespace_test.go ...")
 }
 
 func TestBeautifyXml(t *testing.T) {

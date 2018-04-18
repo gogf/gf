@@ -6,7 +6,7 @@
 /*
 Marshal/Unmarshal XML to/from JSON and map[string]interface{} values, and extract/modify values from maps by key or key-path, including wildcards.
 
-mxj supplants the legacy x2j and j2x packages. If you want the old syntax, use mxj/x2j or mxj/j2x packages.
+mxj supplants the legacy x2j and j2x packages. The subpackage x2j-wrapper is provided to facilitate migrating from the x2j package.  The x2j and j2x subpackages provide similar functionality of the old packages but are not function-name compatible with them.
 
 Note: this library was designed for processing ad hoc anonymous messages.  Bulk processing large data sets may be much more efficiently performed using the encoding/xml or encoding/json packages from Go's standard library directly.
 
@@ -14,6 +14,8 @@ Related Packages:
 	checkxml: github.com/clbanning/checkxml provides functions for validating XML data.
 
 Notes:
+	2018.03.29: mv.Gob/NewMapGob support gob encoding/decoding of Maps.
+	2018.03.26: Added mxj/x2j-wrapper sub-package for migrating from legacy x2j package.
 	2017.02.22: LeafNode paths can use ".N" syntax rather than "[N]" for list member indexing.
 	2017.02.21: github.com/clbanning/checkxml provides functions for validating XML data.
 	2017.02.10: SetFieldSeparator changes field separator for args in UpdateValuesForPath, ValuesFor... methods.

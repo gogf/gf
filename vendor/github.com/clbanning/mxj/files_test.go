@@ -6,7 +6,7 @@ import (
 )
 
 func TestFilesHeader(t *testing.T) {
-	fmt.Println("\n----------------  files_test.go ...\n")
+	fmt.Println("\n----------------  files_test.go ...")
 }
 
 func TestNewJsonFile(t *testing.T) {

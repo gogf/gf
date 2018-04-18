@@ -8,7 +8,7 @@ import (
 )
 
 func TestUVHeader(t *testing.T) {
-	fmt.Println("\n----------------  updatevalues_test.go ...\n")
+	fmt.Println("\n----------------  updatevalues_test.go ...")
 }
 
 func TestUpdateValuesForPath_Author(t *testing.T) {

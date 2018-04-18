@@ -9,7 +9,7 @@ import (
 )
 
 func TestBulkRawHeader(t *testing.T) {
-	fmt.Println("\n----------------  bulkraw_test.go ...\n")
+	fmt.Println("\n----------------  bulkraw_test.go ...")
 }
 
 // use data from bulk_test.go

@@ -19,7 +19,7 @@ var boms = [][]byte{
 }
 
 func TestBom(t *testing.T) {
-	fmt.Println("\n--------------- bom_test.go \n")
+	fmt.Println("\n--------------- bom_test.go")
 	fmt.Println("TestBom ...")
 
 	// use just UTF-8 BOM ... no alternative CharSetReader

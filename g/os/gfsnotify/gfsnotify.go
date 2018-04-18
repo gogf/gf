@@ -11,16 +11,21 @@ import (
     "errors"
     "github.com/fsnotify/fsnotify"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/os/grpool"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
+    "gitee.com/johng/gf/g/container/gqueue"
 )
 
 // 监听管理对象
 type Watcher struct {
-    watcher   *fsnotify.Watcher        // 底层fsnotify对象
-    closeChan chan struct{}            // 关闭事件
-    callbacks *gmap.StringInterfaceMap // 监听的回调函数
+    watcher    *fsnotify.Watcher        // 底层fsnotify对象
+    events     *gqueue.Queue            // 过滤后的事件通知，不会出现重复事件
+    eventCache *gcache.Cache            // 用于进行事件过滤，当同一监听文件在100ms内出现相同事件，则过滤
+    closeChan  chan struct{}            // 关闭事件
+    callbacks  *gmap.StringInterfaceMap // 监听的回调函数
 }
 
 // 监听事件对象
@@ -51,16 +56,28 @@ func Add(path string, callback func(event *Event)) error {
     return watcher.Add(path, callback)
 }
 
+// 移除监听
+func Remove(path string) error {
+    if watcher == nil {
+        return errors.New("global watcher creating failed")
+    }
+    return watcher.Remove(path)
+}
+
+
 
 // 创建监听管理对象
 func New() (*Watcher, error) {
     if watch, err := fsnotify.NewWatcher(); err == nil {
         w := &Watcher {
-            watcher   : watch,
-            closeChan : make(chan struct{}, 1),
-            callbacks : gmap.NewStringInterfaceMap(),
+            watcher    : watch,
+            events     : gqueue.New(),
+            eventCache : gcache.New(),
+            closeChan  : make(chan struct{}, 1),
+            callbacks  : gmap.NewStringInterfaceMap(),
         }
         w.startWatchLoop()
+        w.startEventLoop()
         return w, nil
     } else {
         return nil, err
@@ -70,6 +87,7 @@ func New() (*Watcher, error) {
 // 关闭监听管理对象
 func (w *Watcher) Close() {
     w.watcher.Close()
+    w.events.Close()
     w.closeChan <- struct{}{}
 }
 
@@ -111,22 +129,38 @@ func (w *Watcher) startWatchLoop() {
 
                 // 监听事件
                 case ev := <- w.watcher.Events:
-                    event := &Event{
+                    if !w.eventCache.Lock(ev.Name + ":" + gconv.String(ev.Op), 100) {
+                        continue
+                    }
+                    w.events.PushBack(&Event{
                         Path : ev.Name,
                         Op   : Op(ev.Op),
-                    }
-                    if l := w.callbacks.Get(event.Path); l != nil {
-                        grpool.Add(func() {
-                            for _, v := range l.(*glist.List).FrontAll() {
-                                v.(func(event *Event))(event)
-                            }
-                        })
-                    }
+                    })
 
                 //case err := <- w.watcher.Errors:
                 //    log.Println("error : ", err);
                 //    return
             }
         }
-    }();
+    }()
+}
+
+// 事件循环
+func (w *Watcher) startEventLoop() {
+    go func() {
+        for {
+            if v := w.events.PopFront(); v != nil {
+                event := v.(*Event)
+                if l := w.callbacks.Get(event.Path); l != nil {
+                    grpool.Add(func() {
+                        for _, v := range l.(*glist.List).FrontAll() {
+                            v.(func(event *Event))(event)
+                        }
+                    })
+                }
+            } else {
+                break
+            }
+        }
+    }()
 }

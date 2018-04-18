@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"reflect"
 	"testing"
 )
 
 func TestXmlHeader(t *testing.T) {
-	fmt.Println("\n----------------  xml_test.go ...\n")
+	fmt.Println("\n----------------  xml_test.go ...")
 }
 
 func TestNewMapXml(t *testing.T) {
@@ -19,12 +20,24 @@ func TestNewMapXml(t *testing.T) {
 		t.Fatal("merr:", merr.Error())
 	}
 
-	fmt.Println("NewMapXml, x :", string(x))
-	fmt.Println("NewMapXml, mv:", mv)
+	want := Map{"root2":
+		map[string]interface{}{
+			"newtag":
+				map[string]interface{}{"-newattr": "some_attr_value", "#text":"something more"},
+			"list":
+				map[string]interface{}{"-listattr":"val", "item":[]interface{}{"1", "2"}},
+		}}
+	if !reflect.DeepEqual(mv, want) {
+		fmt.Println("NewMapXml, x :", string(x))
+		fmt.Printf("NewMapXml, mv  : %#v\n", mv)
+		fmt.Printf("NewMapXml, want: %#v\n", want)
+		t.Fatal("not DeepEqual")
+	}
 }
 
 func TestAttrHyphenFalse(t *testing.T) {
 	PrependAttrWithHyphen(false)
+	defer PrependAttrWithHyphen(true)
 	x := []byte(`<root2><newtag newattr="some_attr_value">something more</newtag><list listattr="val"><item>1</item><item>2</item></list></root2>`)
 
 	mv, merr := NewMapXml(x)
@@ -32,9 +45,19 @@ func TestAttrHyphenFalse(t *testing.T) {
 		t.Fatal("merr:", merr.Error())
 	}
 
-	fmt.Println("AttrHyphenFalse, x :", string(x))
-	fmt.Println("AttrHyphenFalse, mv:", mv)
-	PrependAttrWithHyphen(true)
+	want := Map{"root2":
+		map[string]interface{}{
+			"newtag":
+				map[string]interface{}{"newattr": "some_attr_value", "#text":"something more"},
+			"list":
+				map[string]interface{}{"listattr":"val", "item":[]interface{}{"1", "2"}},
+		}}
+	if !reflect.DeepEqual(mv, want) {
+		fmt.Println("AttrHyphenFalse, x :", string(x))
+		fmt.Printf("AttrHyphenFalse, mv  : %#v\n", mv)
+		fmt.Printf("AttrHyphenFalse, want: %#v\n", want)
+		t.Fatal("not DeepEqual")
+	}
 }
 
 func TestNewMapXmlError(t *testing.T) {
@@ -45,17 +68,12 @@ func TestNewMapXmlError(t *testing.T) {
 		t.Fatal("NewMapXmlError, m:", m)
 	}
 
-	fmt.Println("NewMapXmlError, x   :", string(x))
-	fmt.Println("NewMapXmlError, merr:", merr.Error())
-
-	x = []byte(`<root2><newtag>something more</newtag><list><item>1<item>2</item></list></root2>`)
-	m, merr = NewMapJson(x)
-	if merr == nil {
-		t.Fatal("NewMapXmlError, m:", m)
+	want := `invalid character '<' looking for beginning of value`
+	if merr != nil && merr.Error() != want {
+		fmt.Println("NewMapXmlError, x   :", string(x))
+		fmt.Println("NewMapXmlError, merr:", merr.Error())
+		fmt.Println("NewMapXmlError, want:", want)
 	}
-
-	fmt.Println("NewMapXmlError, x   :", string(x))
-	fmt.Println("NewMapXmlError, merr:", merr.Error())
 }
 
 func TestNewMapXmlReader(t *testing.T) {
