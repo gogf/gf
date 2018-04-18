@@ -27,4 +27,9 @@
             <priority>1</priority>
         </default>
     </database>
+    <!-- Redis数据库配置 -->
+    <redis>
+        <disk>127.0.0.1:6379,0</disk>
+        <cache>127.0.0.1:6379,1</cache>
+    </redis>
 </config>
