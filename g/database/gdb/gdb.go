@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 数据库ORM操作.
+// 数据库ORM.
 package gdb
 
 import (

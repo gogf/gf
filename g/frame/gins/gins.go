@@ -17,12 +17,16 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/database/gredis"
+    "strings"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 const (
     gFRAME_CORE_COMPONENT_NAME_VIEW       = "gf.core.component.view"
     gFRAME_CORE_COMPONENT_NAME_CONFIG     = "gf.core.component.config"
     gFRAME_CORE_COMPONENT_NAME_DATABASE   = "gf.core.component.database"
+    gFRAME_CORE_COMPONENT_NAME_REDIS      = "gf.core.component.redis"
 )
 
 // 单例对象存储器
@@ -49,10 +53,10 @@ func SetConfig(v *gcfg.Config) {
 }
 
 // 自定义框架核心组件：Database
-func SetDatabase(v *gdb.Db, names...string) {
+func SetDatabase(v *gdb.Db, name...string) {
     dbCacheKey := gFRAME_CORE_COMPONENT_NAME_DATABASE
-    if len(names) > 0 {
-        dbCacheKey += names[0]
+    if len(name) > 0 {
+        dbCacheKey += name[0]
     }
     instances.Set(dbCacheKey, v)
 }
@@ -99,10 +103,10 @@ func Config() *gcfg.Config {
 }
 
 // 核心对象：Database
-func Database(names...string) *gdb.Db {
+func Database(name...string) *gdb.Db {
     dbCacheKey := gFRAME_CORE_COMPONENT_NAME_DATABASE
-    if len(names) > 0 {
-        dbCacheKey += names[0]
+    if len(name) > 0 {
+        dbCacheKey += name[0]
     }
     result := Get(dbCacheKey)
     if result != nil {
@@ -150,11 +154,41 @@ func Database(names...string) *gdb.Db {
                 }
             }
 
-            if db, err := gdb.Instance(names...); err == nil {
+            if db, err := gdb.Instance(name...); err == nil {
                 Set(dbCacheKey, db)
                 return db
             } else {
                 return nil
+            }
+        }
+    }
+    return nil
+}
+
+// 核心对象：Redis
+func Redis(name...string) *gredis.Redis {
+    group         := "default"
+    redisCacheKey := gFRAME_CORE_COMPONENT_NAME_REDIS
+    if len(name) > 0 {
+        group          = name[0]
+        redisCacheKey += name[0]
+    }
+    result := Get(redisCacheKey)
+    if result != nil {
+        return result.(*gredis.Redis)
+    } else {
+        config := Config()
+        if config == nil {
+            return nil
+        }
+        if m := config.GetMap("redis"); m != nil {
+            if v, ok := m[group]; ok {
+                array := strings.Split(gconv.String(v), ",")
+                if len(array) > 1 {
+                    redis := gredis.New(array[0], array[1])
+                    Set(redisCacheKey, redis)
+                    return redis
+                }
             }
         }
     }
