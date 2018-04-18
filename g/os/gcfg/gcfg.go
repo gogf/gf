@@ -12,11 +12,10 @@ import (
     "sync"
     "strings"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/container/gset"
-    "gitee.com/johng/gf/g/os/gfsnotify"
 )
 
 const (
@@ -28,7 +27,6 @@ type Config struct {
     mu     sync.RWMutex             // 并发互斥锁
     path   *gtype.String            // 配置文件存放目录，绝对路径
     jsons  *gmap.StringInterfaceMap // 配置文件对象
-    fpaths *gset.StringSet          // 已经监控的文件路径Set
     closed *gtype.Bool              // 是否已经被close
 }
 
@@ -37,7 +35,6 @@ func New(path string) *Config {
     return &Config {
         path   : gtype.NewString(path),
         jsons  : gmap.NewStringInterfaceMap(),
-        fpaths : gset.NewStringSet(),
         closed : gtype.NewBool(),
     }
 }
@@ -74,8 +71,10 @@ func (c *Config) getJson(file []string) *gjson.Json {
         return r.(*gjson.Json)
     }
     if j, err := gjson.Load(fpath); err == nil {
+        c.mu.Lock()
+        c.addMonitor(fpath)
         c.jsons.Set(fpath, j)
-        c.AddMonitor(fpath)
+        c.mu.Unlock()
         return j
     }
     return nil
@@ -166,9 +165,8 @@ func (c *Config) Close() {
 }
 
 // 添加文件监控
-func (c *Config) AddMonitor(path string) {
-    if !c.fpaths.Contains(path) {
-        c.fpaths.Add(path)
+func (c *Config) addMonitor(path string) {
+    if c.jsons.Get(path) == nil {
         gfsnotify.Add(path, func(event *gfsnotify.Event) {
             if event.IsRemove() {
                 gfsnotify.Remove(event.Path)
