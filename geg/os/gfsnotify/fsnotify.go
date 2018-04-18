@@ -43,7 +43,6 @@ func main() {
                     if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
                         log.Println("修改权限 : ", ev.Name)
                     }
-                    watch.Add("/home/john/Documents/temp")
 
                 case err := <-watch.Errors:
                     log.Println("error : ", err)
