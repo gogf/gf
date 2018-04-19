@@ -26,7 +26,9 @@ import (
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
 
 // 文件分隔符
-var Separator = string(filepath.Separator)
+const (
+    Separator = string(filepath.Separator)
+)
 
 // 给定文件的绝对路径创建文件
 func Mkdir(path string) error {
