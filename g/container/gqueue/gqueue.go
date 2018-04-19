@@ -35,7 +35,7 @@ func New(limit...int) *Queue {
     }
     return &Queue {
         list   : list.New(),
-        limit  : 0,
+        limit  : size,
         limits : make(chan struct{}, size),
         events : make(chan struct{}, math.MaxInt32),
         closed : gtype.NewBool(),
