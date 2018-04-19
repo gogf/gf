@@ -1,21 +1,23 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/frame/gins"
-    "gitee.com/johng/gf/g"
+    "fmt"
 )
 
+
+type T struct {
+    name string
+}
+
+
+func (t *T) swap(t2 *T) {
+    *t = &t2
+}
+
 func main() {
-    s := ghttp.GetServer()
-    s.BindHandler("/template2", func(r *ghttp.Request){
-        tplcontent := `id:{{.id}}, name:{{.name}}`
-        content, _ := gins.View().ParseContent(tplcontent, g.Map{
-            "id"   : 123,
-            "name" : "john",
-        })
-        r.Response.Write(content)
-    })
-    //s.SetPort(80)
-    s.Run()
+    t1 := &T{"john"}
+    t2 := &T{"smith"}
+    t2.swap(t2)
+
+    fmt.Println(t1)
 }
