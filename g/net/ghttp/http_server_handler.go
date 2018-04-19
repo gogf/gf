@@ -15,8 +15,8 @@ import (
     "strings"
     "net/url"
     "net/http"
-    "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/util/gregx"
     "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
@@ -77,14 +77,22 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
 
 // 处理静态文件请求
 func (s *Server)serveFile(r *Request) {
-    uri := r.URL.String()
+    uri := r.URL.Path
     if s.config.ServerRoot != "" {
         // 获取文件的绝对路径
-        path := strings.TrimRight(s.config.ServerRoot, string(filepath.Separator))
+        path := strings.TrimRight(s.config.ServerRoot, gfile.Separator)
+        if gfile.Separator != "/" {
+            uri = strings.Replace(uri, "/", gfile.Separator, -1)
+        }
         path  = path + uri
         path  = gfile.RealPath(path)
         if path != "" {
-            s.doServeFile(r, path)
+            // 文件/目录访问安全限制：服务的路径必须在ServerRoot下，否则会报错
+            if gregx.IsMatchString("^" + s.config.ServerRoot, path) {
+                s.doServeFile(r, path)
+            } else {
+                r.Response.WriteStatus(http.StatusForbidden)
+            }
         } else {
             r.Response.WriteStatus(http.StatusNotFound)
         }
@@ -103,7 +111,7 @@ func (s *Server)doServeFile(r *Request, path string) {
     if info.IsDir() {
         if len(s.config.IndexFiles) > 0 {
             for _, file := range s.config.IndexFiles {
-                fpath := path + "/" + file
+                fpath := path + gfile.Separator + file
                 if gfile.Exists(fpath) {
                     f.Close()
                     s.doServeFile(r, fpath)
