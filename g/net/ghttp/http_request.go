@@ -39,6 +39,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
         Server     : s,
         Request    : *r,
         Response   : &Response {
+            status         : http.StatusOK,
             ResponseWriter : w,
         },
     }
