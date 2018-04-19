@@ -21,6 +21,7 @@ type Response struct {
     bufmu   sync.RWMutex // 缓冲区互斥锁
     buffer  []byte       // 每个请求的返回数据缓冲区
     request *Request     // 关联的Request请求对象
+    status  int          // 返回状态码
 }
 
 // 返回信息，任何变量自动转换为bytes
@@ -98,6 +99,7 @@ func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods s
 
 // 返回HTTP Code状态码
 func (r *Response) WriteStatus(code int, content...string) {
+    r.status = code
     r.Header().Set("Content-Type", "text/plain; charset=utf-8")
     r.Header().Set("X-Content-Type-Options", "nosniff")
     if len(content) > 0 {
