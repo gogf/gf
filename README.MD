@@ -272,102 +272,105 @@ r, err := db.Insert("user", gdb.Map {
 })
 ```
 
-    3. **数据查询(列表)**
-        ```go
-        list, err := db.GetAll("select * from user limit 2")
-        ```
+#### 数据查询(列表)
+```go
+list, err := db.GetAll("select * from user limit 2")
+```
 
-    4. **数据查询(单条)**
-        ```go
-        one, err := db.GetOne("select * from user limit 2")
-        // 或者
-        one, err := db.GetOne("select * from user where uid=1000")
-        ```
+#### 数据查询(单条)
+```go
+one, err := db.GetOne("select * from user limit 2")
+// 或者
+one, err := db.GetOne("select * from user where uid=1000")
+```
 
-    5. **数据保存**
-        ```go
-        r, err := db.Save("user", gdb.Map {
-            "uid"  :  1,
-            "name" : "john",
-        })
-        ```
+#### 数据保存
+```go
+r, err := db.Save("user", gdb.Map {
+    "uid"  :  1,
+    "name" : "john",
+})
+```
 
-    7. **数据更新/删除**
-        ```go
-        // db.Update/db.Delete 同理
-        r, err := db.Update("user", gdb.Map {"name": "john"}, "uid=?", 10000)
-        r, err := db.Update("user", "name='john'", "uid=10000")
-        r, err := db.Update("user", "name=?", "uid=?", "john", 10000)
-        ```
+#### 数据更新/删除
+```go
+// db.Update/db.Delete 同理
+r, err := db.Update("user", gdb.Map {"name": "john"}, "uid=?", 10000)
+r, err := db.Update("user", "name='john'", "uid=10000")
+r, err := db.Update("user", "name=?", "uid=?", "john", 10000)
+```
 
-1. **链式操作**
+### 链式操作
 
-    1. **链式查询**
-        ```go
-        // 查询多条记录并使用Limit分页
-        r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*, ud.site").Where("u.uid > ?", 1).Limit(0, 10).Select()
-        // 查询符合条件的单条记录(第一条)
-        r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Where("u.uid=?", 1).One()
-        // 查询字段值
-        r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
-        // 分组及排序
-        r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.city").GroupBy("city").OrderBy("register_time asc").Select()
-        ```
+#### 链式查询
+```go
+// 查询多条记录并使用Limit分页
+r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*, ud.site").Where("u.uid > ?", 1).Limit(0, 10).Select()
+// 查询符合条件的单条记录(第一条)
+r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Where("u.uid=?", 1).One()
+// 查询字段值
+r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
+// 分组及排序
+r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.city").GroupBy("city").OrderBy("register_time asc").Select()
+```
 
-    2. **链式更新/删除**
-        ```go
-        // 更新
-        r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Where("name=?", "john").Update()
-        r, err := db.Table("user").Data("name='john3'").Where("name=?", "john2").Update()
-        // 删除
-        r, err := db.Table("user").Where("uid=?", 10).Delete()
-        ```
+#### 链式更新/删除
+```go
+// 更新
+r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Where("name=?", "john").Update()
+r, err := db.Table("user").Data("name='john3'").Where("name=?", "john2").Update()
+// 删除
+r, err := db.Table("user").Where("uid=?", 10).Delete()
+```
 
-    3. **链式写入/保存**
-        ```go
-        r, err := db.Table("user").Data(gdb.Map{"name": "john"}).Insert()
-        r, err := db.Table("user").Data(gdb.Map{"uid": 10000, "name": "john"}).Replace()
-        r, err := db.Table("user").Data(gdb.Map{"uid": 10001, "name": "john"}).Save()
-        ```
+#### 链式写入/保存
+```go
+r, err := db.Table("user").Data(gdb.Map{"name": "john"}).Insert()
+r, err := db.Table("user").Data(gdb.Map{"uid": 10000, "name": "john"}).Replace()
+r, err := db.Table("user").Data(gdb.Map{"uid": 10001, "name": "john"}).Save()
+```
 
-1. **事务操作**
+### 事务操作
 
-    1. **开启事务操作**
-        ```go
-        if tx, err := db.Begin(); err == nil {
-            fmt.Println("开启事务操作")
-        }
-        ```
-    2. **事务回滚操作**
-        ```go
-        if tx, err := db.Begin(); err == nil {
-            r, err := tx.Save("user", gdb.Map{
-                "uid"  :  1,
-                "name" : "john",
-            })
-            tx.Rollback()
-            fmt.Println(r, err)
-        }
-        ```
-    3. **事务提交操作**
-        ```go
-        if tx, err := db.Begin(); err == nil {
-            r, err := tx.Save("user", gdb.Map{
-                "uid"  :  1,
-                "name" : "john",
-            })
-            tx.Commit()
-            fmt.Println(r, err)
-        }
-        ```
-    4. **事务链式操作**
-        ```go
-        if tx, err := db.Begin(); err == nil {
-            r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
-            tx.Commit()
-            fmt.Println(r, err)
-        }
-        ```
+#### 开启事务操作
+```go
+if tx, err := db.Begin(); err == nil {
+    fmt.Println("开启事务操作")
+}
+```
+
+#### 事务回滚操作
+```go
+if tx, err := db.Begin(); err == nil {
+    r, err := tx.Save("user", gdb.Map{
+        "uid"  :  1,
+        "name" : "john",
+    })
+    tx.Rollback()
+    fmt.Println(r, err)
+}
+```
+        
+#### 事务提交操作
+```go
+if tx, err := db.Begin(); err == nil {
+    r, err := tx.Save("user", gdb.Map{
+        "uid"  :  1,
+        "name" : "john",
+    })
+    tx.Commit()
+    fmt.Println(r, err)
+}
+```
+        
+#### 事务链式操作
+```go
+if tx, err := db.Begin(); err == nil {
+    r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
+    tx.Commit()
+    fmt.Println(r, err)
+}
+```
 
 ## 数据编码解析
 ```go
