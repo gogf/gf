@@ -5,9 +5,12 @@
     </a>
 </div>
 -->
-# 介绍
-<img align="right" src="http://cover.kancloud.cn/johng/gf" width="200"/>
 
+<div align=center>
+    <img src="http://cover.kancloud.cn/johng/gf" width="200"/>
+</div>
+
+# 介绍
 gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开源项目地址(仓库保持实时同步)：
 [Gitee](https://gitee.com/johng/gf)，[Github](https://github.com/johng-cn/gf)
 
