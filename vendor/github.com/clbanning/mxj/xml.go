@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -810,6 +811,20 @@ func mapToXmlIndent(doIndent bool, s *string, key string, value interface{}, pp 
 	var isSimple bool
 	var elen int
 	p := &pretty{pp.indent, pp.cnt, pp.padding, pp.mapDepth, pp.start}
+
+	// per issue #48, 18apr18 - try and coerce maps to map[string]interface{}
+	// Don't need for mapToXmlSeqIndent, since maps there are decoded by NewMapXmlSeq().
+	if reflect.ValueOf(value).Kind() == reflect.Map {
+		if _, ok := value.(map[string]interface{}); !ok {
+			val := make(map[string]interface{})
+			vv := reflect.ValueOf(value)
+			keys := vv.MapKeys()
+			for _, k := range keys {
+				val[fmt.Sprint(k)] = vv.MapIndex(k).Interface()
+			}
+			value = val
+		}
+	}
 
 	switch value.(type) {
 	// special handling of []interface{} values when len(value) == 0
