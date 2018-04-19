@@ -21,6 +21,7 @@ import (
     "gitee.com/johng/gf/g/os/gfilepool"
     "runtime"
     "strconv"
+    "gitee.com/johng/gf/g/util/gregx"
 )
 
 type Logger struct {
@@ -247,6 +248,7 @@ func (l *Logger) checkLogIO() {
             fpath := path + string(filepath.Separator) + fname
             if fp, err := gfilepool.OpenWithPool(fpath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 600); err == nil {
                 l.SetLogIO(fp.File())
+                fp.Close()
             } else {
                 fmt.Fprintln(os.Stderr, err)
             }
@@ -293,7 +295,10 @@ func (l *Logger) backtrace() string {
     backtrace := "Trace:\n"
     for i := 1; i < 10000; i++ {
         if _, cfile, cline, ok := runtime.Caller(i + 3); ok {
-            backtrace += strconv.Itoa(i) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n"
+            // 不打印出go源码路径
+            if !gregx.IsMatchString("^" + runtime.GOROOT(), cfile) {
+                backtrace += strconv.Itoa(i) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n"
+            }
         } else {
             break
         }
