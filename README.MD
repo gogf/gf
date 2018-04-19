@@ -1,4 +1,3 @@
-<img align="right" src="http://cover.kancloud.cn/johng/gf" width="200"/>
 <!--
 <div align=center>
     <a href="https://godoc.org/github.com/johng-cn/gf" target="_blank">
@@ -6,8 +5,8 @@
     </a>
 </div>
 -->
-
 # 介绍
+<img align="right" src="http://cover.kancloud.cn/johng/gf" width="200"/>
 gf(Go Frame)是一款为Web服务及网络服务开发设计的，模块化、低耦合、轻量级、高性能的Go语言开发框架。
 实现了通用的HTTP/TCP/UDP Server，并提供了Web服务开发的系列核心组件，
 包括：MVC、Cookie、Session、服务注册、路由控制、配置管理、模板引擎、数据校验、数据库操作(ORM)等等，
@@ -91,7 +90,7 @@ gf的项目源代码目前同时托管在 Gitee 和 Github 平台上，您可以
 您为gf所做出的任何贡献都将会被记录到gf的史册中。
 
 # 安装
-```
+```shell
 go get -u gitee.com/johng/gf
 ```
 
@@ -136,9 +135,6 @@ import "gitee.com/johng/gf/g/net/ghttp"
 
 func main() {
     s := ghttp.GetServer()
-    s.Domain("localhost").BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("localhost")
-    })
     s.Domain("localhost1，localhost2，localhost3").BindHandler("/", func(r *ghttp.Request) {
         r.Response.Write("localhostx")
     })
@@ -159,21 +155,16 @@ import (
 type ControllerUser struct {
     gmvc.Controller
 }
+
 // 定义操作逻辑 - 展示姓名
 func (c *ControllerUser) Name() {
     c.Response.Write("John")
-}
-
-// 定义操作逻辑 - 展示年龄
-func (c *ControllerUser) Age() {
-    c.Response.Write("18")
 }
 
 func main() {
     // 绑定控制器到指定URI，所有控制器的公开方法将会映射到指定URI末尾
     // 例如该方法执行后，查看效果可访问：
     // http://127.0.0.1:8199/user/name
-    // http://127.0.0.1:8199/user/age
     s := ghttp.GetServer()
     s.BindController("/user", &ControllerUser{})
     s.Run()
@@ -194,10 +185,6 @@ func main() {
     s.BindHandler("/:name/:action", func(r *ghttp.Request){
         r.Response.Write(r.Get("name"))
         r.Response.Write(r.Get("action"))
-    })
-    s.BindHandler("/:name/*any", func(r *ghttp.Request){
-        r.Response.Write(r.Get("name"))
-        r.Response.Write(r.Get("any"))
     })
     s.SetPort(8199)
     s.Run()
@@ -378,11 +365,11 @@ if tx, err := db.Begin(); err == nil {
 data :=
     `{
         "users" : {
-                "count" : 100,
-                "list"  : [
-                    {"name" : "Ming", "score" : 60},
-                    {"name" : "John", "score" : 99.5}
-                ]
+            "count" : 100,
+            "list"  : [
+                {"name" : "Ming", "score" : 60},
+                {"name" : "John", "score" : 99.5}
+            ]
         }
     }`
 
