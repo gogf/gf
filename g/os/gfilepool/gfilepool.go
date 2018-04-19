@@ -12,10 +12,10 @@ import (
     "time"
     "sync"
     "strconv"
-    "sync/atomic"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 // 文件指针池
@@ -23,23 +23,23 @@ type Pool struct {
     path    string          // 文件绝对路径
     flag    int             // 文件打开标识
     list    *glist.List     // 可用/闲置的文件指针链表
-    idlemax int             // 闲置最大时间，超过该时间则被系统回收(秒)
-    closed  bool            // 连接池是否已关闭
+    idle    int             // 闲置最大时间，超过该时间则被系统回收(秒)
+    closed  *gtype.Bool     // 连接池是否已关闭
 }
 
 // 文件指针池指针
-type File struct {
-    sync.RWMutex
-    pool   *Pool     // 所属池
-    file   *os.File  // 指针对象
-    expire int64     // 过期时间(秒)
+type PoolItem struct {
+    mu     sync.RWMutex
+    pool   *Pool            // 所属池
+    file   *os.File         // 指针对象
+    expire *gtype.Int64     // 过期时间(秒)
 }
 
 // 全局指针池，expire < 0表示不过期，expire = 0表示使用完立即回收，expire > 0表示超时回收
-var pools *gmap.StringInterfaceMap = gmap.NewStringInterfaceMap()
+var pools = gmap.NewStringInterfaceMap()
 
 // 获得文件对象，并自动创建指针池
-func OpenWithPool(path string, flag int, expire int) (*File, error) {
+func OpenWithPool(path string, flag int, expire int) (*PoolItem, error) {
     key    := path + strconv.Itoa(flag) + strconv.Itoa(expire)
     result := pools.Get(key)
     if result != nil {
@@ -56,21 +56,22 @@ func New(path string, flag int, expire int) *Pool {
         path    : path,
         flag    : flag,
         list    : glist.New(),
-        idlemax : expire,
+        idle    : expire,
     }
     // 独立的线程执行过期清理工作
     if expire != -1 {
         go func(p *Pool) {
             // 遍历可用指针列表，判断是否过期
-            for !p.closed {
-                r := p.list.Front()
-                if r != nil && r.Value != nil {
-                    f := r.Value.(*File)
+            for !p.closed.Val() {
+                if r := p.list.PopFront(); r != nil {
+                    f := r.(*PoolItem)
                     // 必须小于，中间有1秒的缓存时间，防止同时获取和判断过期时冲突
-                    if f.getExpire() < gtime.Second() {
+                    if f.expire.Val() < gtime.Second() {
                         f.destroy()
-                        p.list.Remove(r)
-                        continue
+                    } else {
+                        // 重新推回去
+                        p.list.PushFront(f)
+                        break
                     }
                 }
                 time.Sleep(3 * time.Second)
@@ -81,21 +82,19 @@ func New(path string, flag int, expire int) *Pool {
 }
 
 // 获得一个文件打开指针
-func (p *Pool) File() (*File, error) {
+func (p *Pool) File() (*PoolItem, error) {
     if p.list.Len() > 0 {
-        // 遍历可用指针列表，返回一个未过期的指针
         for {
-            r := p.list.PopBack()
-            if r != nil {
-                f := r.(*File)
-                // 必须大于
-                if f.getExpire() > gtime.Second() {
+            // 从队列头依次查找，返回一个未过期的指针
+            if r := p.list.PopFront(); r != nil {
+                f := r.(*PoolItem)
+                if f.expire.Val() > gtime.Second() {
                     return f, nil
                 } else if f.file != nil {
                     f.destroy()
                 }
             } else {
-                break;
+                break
             }
         }
     }
@@ -103,44 +102,30 @@ func (p *Pool) File() (*File, error) {
     if err != nil {
         return nil, err
     }
-    return &File {
-        pool : p,
-        file : file,
+    return &PoolItem {
+        pool   : p,
+        file   : file,
+        expire : gtype.NewInt64(),
     }, nil
 }
 
 // 关闭指针池
 func (p *Pool) Close() {
-    p.closed = true
+    p.closed.Set(true)
 }
 
 // 获得底层文件指针
-func (f *File) File() *os.File {
+func (f *PoolItem) File() *os.File {
     return f.file
 }
 
 // 关闭指针链接(软关闭)，放回池中重复使用
-func (f *File) Close() {
-    f.setExpire(gtime.Second() + int64(f.pool.idlemax))
-    f.pool.list.PushFront(f)
+func (f *PoolItem) Close() {
+    f.expire.Set(gtime.Second() + int64(f.pool.idle))
+    f.pool.list.PushBack(f)
 }
 
 // 销毁指针
-func (f *File) destroy() {
-    f.Lock()
-    defer f.Unlock()
-    if f.file != nil {
-        f.file.Close()
-        f.file =  nil
-    }
-}
-
-// 获取指针过期时间
-func (f *File) setExpire(expire int64) {
-    atomic.StoreInt64(&f.expire, expire)
-}
-
-// 获取指针过期时间
-func (f *File) getExpire() int64 {
-    return atomic.LoadInt64(&f.expire)
+func (f *PoolItem) destroy() {
+    f.file.Close()
 }
