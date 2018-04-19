@@ -111,40 +111,40 @@ func main() {
 }
 ```
 ## 域名 & 多域名支持
-1. 自定义域名支持：
-    ```go
-    package main
+### 自定义域名支持：
+```go
+package main
 
-    import "gitee.com/johng/gf/g/net/ghttp"
+import "gitee.com/johng/gf/g/net/ghttp"
 
-    func main() {
-        s := ghttp.GetServer()
-        s.Domain("127.0.0.1").BindHandler("/", func(r *ghttp.Request) {
-            r.Response.Write("127.0.0.1")   
-        })
-        s.Domain("localhost").BindHandler("/", func(r *ghttp.Request) {
-            r.Response.Write("localhost")
-        })
-        s.Run()
-    }
-    ```
-1. 多域名绑定支持：
-    ```go
-    package main
+func main() {
+    s := ghttp.GetServer()
+    s.Domain("127.0.0.1").BindHandler("/", func(r *ghttp.Request) {
+        r.Response.Write("127.0.0.1")   
+    })
+    s.Domain("localhost").BindHandler("/", func(r *ghttp.Request) {
+        r.Response.Write("localhost")
+    })
+    s.Run()
+}
+```
+### 多域名绑定支持：
+```go
+package main
 
-    import "gitee.com/johng/gf/g/net/ghttp"
+import "gitee.com/johng/gf/g/net/ghttp"
 
-    func main() {
-        s := ghttp.GetServer()
-        s.Domain("localhost").BindHandler("/", func(r *ghttp.Request) {
-            r.Response.Write("localhost")
-        })
-        s.Domain("localhost1，localhost2，localhost3").BindHandler("/", func(r *ghttp.Request) {
-            r.Response.Write("localhostx")
-        })
-        s.Run()
-    }
-    ```
+func main() {
+    s := ghttp.GetServer()
+    s.Domain("localhost").BindHandler("/", func(r *ghttp.Request) {
+        r.Response.Write("localhost")
+    })
+    s.Domain("localhost1，localhost2，localhost3").BindHandler("/", func(r *ghttp.Request) {
+        r.Response.Write("localhostx")
+    })
+    s.Run()
+}
+```
 
 ## 服务注册
 ```go
@@ -256,21 +256,21 @@ fmt.Println(gvalid.Check("http://gfjohngcn", rule, msgs))
 ```
 
 ## 数据库ORM
-1. **方法操作**
-    1. **获取ORM单例对象**
-        ```go
-        // 获取默认配置的数据库对象(配置名称为"default")
-        db, err := gdb.Instance()
-        // 获取配置分组名称为"user-center"的数据库对象
-        db, err := gdb.Instance("user-center")
-        ```
+### 方法操作
+#### 获取ORM单例对象
+```go
+// 获取默认配置的数据库对象(配置名称为"default")
+db, err := gdb.Instance()
+// 获取配置分组名称为"user-center"的数据库对象
+db, err := gdb.Instance("user-center")
+```
 
-    2. **数据写入**
-        ```go
-        r, err := db.Insert("user", gdb.Map {
-            "name": "john",
-        })
-        ```
+#### 数据写入
+```go
+r, err := db.Insert("user", gdb.Map {
+    "name": "john",
+})
+```
 
     3. **数据查询(列表)**
         ```go
