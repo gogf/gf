@@ -37,6 +37,14 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
     // 创建请求处理对象
     request := newRequest(s, r, w)
+
+    // 错误日志使用recover进行判断
+    defer func() {
+        if e := recover(); e != nil {
+            s.handleErrorLog(e, request)
+        }
+    }()
+
     // 事件 - BeforeServe
     s.callHookHandler(request, "BeforeServe")
     if h := s.getHandler(request); h != nil {
@@ -54,6 +62,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request.Response.OutputBuffer()
     // 事件 - AfterOutput
     s.callHookHandler(request, "AfterOutput")
+
     // 将Request对象指针丢到队列中异步处理
     s.closeQueue.PushBack(request)
 }

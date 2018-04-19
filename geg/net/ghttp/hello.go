@@ -1,10 +1,6 @@
 package main
 
 import (
-    //"gitee.com/johng/gf/g/net/ghttp"
-    _"net/http/pprof"
-    "log"
-    "net/http"
     "gitee.com/johng/gf/g/net/ghttp"
 )
 
