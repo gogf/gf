@@ -12,6 +12,7 @@ import (
     "strings"
     "reflect"
     "net/http"
+    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
@@ -133,6 +134,7 @@ func (s *Server) Run() error {
     s.startCloseQueueLoop()
     // 执行端口监听
     if err := s.server.ListenAndServe(); err != nil {
+        glog.Error(err)
         return err
     }
     s.status = 1
