@@ -1,13 +1,10 @@
-<!--
+<div align=center>
+    <img src="http://cover.kancloud.cn/johng/gf" width="200"/>
+</div>
 <div align=center>
     <a href="https://godoc.org/github.com/johng-cn/gf" target="_blank">
         <img src="https://godoc.org/github.com/johng-cn/gf?status.svg"/>
     </a>
-</div>
--->
-
-<div align=center>
-    <img src="http://cover.kancloud.cn/johng/gf" width="200"/>
 </div>
 
 # 介绍
