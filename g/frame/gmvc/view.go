@@ -76,13 +76,24 @@ func (view *View) RLockFunc(f func(vars map[string]interface{})) {
     view.mu.RUnlock()
 }
 
-// 解析指定模板
+// 解析并显示指定模板
 func (view *View) Display(file...string) error {
     name := "index.tpl"
     if len(file) > 0 {
         name = file[0]
     }
     if content, err := view.Parse(name); err != nil {
+        view.response.Write("Tpl Parsing Error: " + err.Error())
+        return err
+    } else {
+        view.response.Write(content)
+    }
+    return nil
+}
+
+// 解析并显示模板内容
+func (view *View) DisplayContent(content string) error {
+    if content, err := view.ParseContent(content); err != nil {
         view.response.Write("Tpl Parsing Error: " + err.Error())
         return err
     } else {
