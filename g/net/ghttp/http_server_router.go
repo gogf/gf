@@ -23,6 +23,7 @@ type handlerCacheItem struct {
 // 查询请求处理方法
 // 这里有个锁机制，可以并发读，但是不能并发写
 func (s *Server) getHandler(r *Request) *HandlerItem {
+    // 缓存清空时是直接修改属性，因此必须使用互斥锁
     s.hmcmu.RLock()
     defer s.hmcmu.RUnlock()
 
@@ -76,22 +77,14 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
     item.uri    = uri
     item.domain = domain
     item.method = method
-    // 静态注册
+
     s.hmmu.Lock()
     defer s.hmmu.Unlock()
     defer s.clearHandlerCache()
-    if method == gDEFAULT_METHOD {
-        for v, _ := range s.methodsMap {
-            s.handlerMap[s.handlerKey(domain, v, uri)] = item
-        }
-    } else {
-        s.handlerMap[s.handlerKey(domain, method, uri)] = item
-    }
-
-    // 动态注册，首先需要判断是否是动态注册，如果不是那么就没必要添加到动态注册记录变量中
-    // 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
-    // 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表一般数据量不大，所以效率比较高；
     if s.isUriHasRule(uri) {
+        // 动态注册，首先需要判断是否是动态注册，如果不是那么就没必要添加到动态注册记录变量中
+        // 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
+        // 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表一般数据量不大，所以效率比较高；
         if _, ok := s.handlerTree[domain]; !ok {
             s.handlerTree[domain] = make(map[string]interface{})
         }
@@ -129,7 +122,6 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
                             lists = append(lists, v.(*list.List))
                         }
                     }
-
             }
         }
         // 从头开始遍历链表，优先级高的放在前面
@@ -142,9 +134,16 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
             }
             l.PushBack(item)
         }
+    } else {
+        // 静态注册
+        if method == gDEFAULT_METHOD {
+            for v, _ := range s.methodsMap {
+                s.handlerMap[s.handlerKey(domain, v, uri)] = item
+            }
+        } else {
+            s.handlerMap[s.handlerKey(domain, method, uri)] = item
+        }
     }
-    //b, _ := gparser.VarToJsonIndent(s.handlerTree)
-    //fmt.Println(string(b))
     return nil
 }
 

@@ -101,6 +101,7 @@ func GetServer(names...string) (*Server) {
         servedCount   : gtype.NewInt(),
         closeQueue    : gqueue.New(),
     }
+    // 设置路由解析缓存上限，使用LRU进行缓存淘汰
     s.hooksCache.SetCap(10000)
     s.handlerCache.SetCap(10000)
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
@@ -143,10 +144,6 @@ func (s *Server) Run() error {
 
 // 清空当前的handlerCache
 func (s *Server) clearHandlerCache() {
-    // 只有在运行时才会生效
-    if s.status != 1 {
-        return
-    }
     s.hmcmu.Lock()
     defer s.hmcmu.Unlock()
     s.handlerCache.Close()
@@ -155,10 +152,6 @@ func (s *Server) clearHandlerCache() {
 
 // 清空当前的hooksCache
 func (s *Server) clearHooksCache() {
-    // 只有在运行时才会生效
-    if s.status != 1 {
-        return
-    }
     s.hhcmu.Lock()
     defer s.hhcmu.Unlock()
     s.hooksCache.Close()

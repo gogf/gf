@@ -21,6 +21,7 @@ type hookCacheItem struct {
 }
 
 // 事件回调注册方法
+// 因为有事件回调优先级的关系，叶子节点必须为一个链表，因此这里只有动态注册
 func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) error {
     domain, method, uri, err := s.parsePattern(pattern)
     if err != nil {
@@ -33,6 +34,7 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
     s.hhmu.Lock()
     defer s.hhmu.Unlock()
     defer s.clearHooksCache()
+
     if _, ok := s.hooksTree[domain]; !ok {
         s.hooksTree[domain] = make(map[string]interface{})
     }
@@ -87,6 +89,7 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
 // 事件回调 - 检索动态路由规则
 // 并按照指定hook回调函数的优先级及注册顺序进行调用
 func (s *Server) callHookHandler(r *Request, hook string) {
+    // 缓存清空时是直接修改属性，因此必须使用互斥锁
     s.hhcmu.RLock()
     defer s.hhcmu.RUnlock()
 
