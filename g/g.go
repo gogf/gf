@@ -7,4 +7,5 @@
 
 package g
 
-
+// 常用map数据结构
+type Map map[string]interface{}
