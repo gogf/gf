@@ -50,6 +50,24 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
     return r, err
 }
 
+// (事务)数据表查询，其中tables可以是多个联表查询语句，这种查询方式较复杂，建议使用链式操作
+func (tx *Tx) Select(tables, fields string, condition interface{}, groupBy, orderBy string, first, limit int, args ... interface{}) (List, error) {
+    s := fmt.Sprintf("SELECT %s FROM %s ", fields, tables)
+    if condition != nil {
+        s += fmt.Sprintf("WHERE %s ", tx.db.formatCondition(condition))
+    }
+    if len(groupBy) > 0 {
+        s += fmt.Sprintf("GROUP BY %s ", groupBy)
+    }
+    if len(orderBy) > 0 {
+        s += fmt.Sprintf("ORDER BY %s ", orderBy)
+    }
+    if limit > 0 {
+        s += fmt.Sprintf("LIMIT %d,%d ", first, limit)
+    }
+    return tx.GetAll(s, args ... )
+}
+
 // (事务)数据库查询，获取查询结果集，以列表结构返回
 func (tx *Tx) GetAll(query string, args ...interface{}) (List, error) {
     // 执行sql
