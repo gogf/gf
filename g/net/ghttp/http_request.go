@@ -12,6 +12,7 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/util/gregx"
 )
 
 // 请求对象
@@ -39,8 +40,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
         Server     : s,
         Request    : *r,
         Response   : &Response {
-            status         : http.StatusOK,
-            ResponseWriter : w,
+            ResponseWriter : ResponseWriter{w, http.StatusOK, 0},
         },
     }
     // 会话处理
@@ -298,5 +298,12 @@ func (r *Request) IsExited() bool {
     return r.exit.Val()
 }
 
-
+// 获取请求的客户端Ip地址
+func (r *Request) GetClientIp() string {
+    array, _ := gregx.MatchString(`(.+):(\d+)`, r.RemoteAddr)
+    if len(array) > 1 {
+        return array[1]
+    }
+    return r.RemoteAddr
+}
 
