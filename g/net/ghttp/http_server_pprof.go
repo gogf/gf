@@ -46,26 +46,26 @@ func (p *utilpprof) Index(r *Request) {
     }
     for _, p := range profiles {
         if p.Name() == action {
-            p.WriteTo(r.Response.ResponseWriter, r.GetRequestInt("debug"))
+            p.WriteTo(r.Response.ResponseWriter.ResponseWriter, r.GetRequestInt("debug"))
             break
         }
     }
 }
 
 func (p *utilpprof) Cmdline(r *Request) {
-    netpprof.Cmdline(r.Response.ResponseWriter, &r.Request)
+    netpprof.Cmdline(r.Response.ResponseWriter.ResponseWriter, &r.Request)
 }
 
 func (p *utilpprof) Profile(r *Request) {
-    netpprof.Profile(r.Response.ResponseWriter, &r.Request)
+    netpprof.Profile(r.Response.ResponseWriter.ResponseWriter, &r.Request)
 }
 
 func (p *utilpprof) Symbol(r *Request) {
-    netpprof.Symbol(r.Response.ResponseWriter, &r.Request)
+    netpprof.Symbol(r.Response.ResponseWriter.ResponseWriter, &r.Request)
 }
 
 func (p *utilpprof) Trace(r *Request) {
-    netpprof.Trace(r.Response.ResponseWriter, &r.Request)
+    netpprof.Trace(r.Response.ResponseWriter.ResponseWriter, &r.Request)
 }
 
 // 开启pprof支持
