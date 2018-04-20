@@ -15,10 +15,11 @@ import (
 )
 
 type Logger struct {
-    mu    sync.RWMutex
-    io    io.Writer           // 日志内容写入的IO接口
-    path  *gtype.String       // 日志写入的目录路径
-    debug *gtype.Bool         // 是否允许输出DEBUG信息
+    mu     sync.RWMutex
+    io     io.Writer           // 日志内容写入的IO接口
+    path   *gtype.String       // 日志写入的目录路径
+    debug  *gtype.Bool         // 是否允许输出DEBUG信息
+    btSkip *gtype.Int          // 错误产生时的backtrace回调信息skip条数
 }
 
 // 默认的日志对象
@@ -27,9 +28,10 @@ var logger = New()
 // 新建自定义的日志操作对象
 func New() *Logger {
     return &Logger {
-        io    : nil,
-        path  : gtype.NewString(),
-        debug : gtype.NewBool(true),
+        io     : nil,
+        path   : gtype.NewString(),
+        debug  : gtype.NewBool(true),
+        btSkip : gtype.NewInt(3),
     }
 }
 

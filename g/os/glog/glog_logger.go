@@ -24,6 +24,11 @@ const (
     gDEFAULT_FILE_POOL_FLAGS = os.O_CREATE|os.O_WRONLY|os.O_APPEND
 )
 
+// 设置BacktraceSkip
+func (l *Logger) SetBacktraceSkip(skip int) {
+    l.btSkip.Set(skip)
+}
+
 // 可自定义IO接口
 func (l *Logger) SetIO(w io.Writer) {
     l.mu.RLock()
@@ -114,11 +119,13 @@ func (l *Logger) errPrint(s string) {
 // 调用回溯字符串
 func (l *Logger) backtrace() string {
     backtrace := "Trace:\n"
+    index     := 1
     for i := 1; i < 10000; i++ {
-        if _, cfile, cline, ok := runtime.Caller(i + 3); ok {
+        if _, cfile, cline, ok := runtime.Caller(i + l.btSkip.Val()); ok {
             // 不打印出go源码路径
             if !gregx.IsMatchString("^" + runtime.GOROOT(), cfile) {
-                backtrace += strconv.Itoa(i) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n"
+                backtrace += strconv.Itoa(index) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n"
+                index++
             }
         } else {
             break
