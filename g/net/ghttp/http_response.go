@@ -26,20 +26,20 @@ type Response struct {
 // 自定义的ResponseWriter，用于写入流的控制
 type ResponseWriter struct {
     http.ResponseWriter
-    status int // http status
-    length int // response length
+    Status int // http status
+    Length int // response length
 }
 
 // 覆盖父级的WriteHeader方法
 func (w *ResponseWriter) Write(buffer []byte) (int, error) {
     n, e := w.ResponseWriter.Write(buffer)
-    w.length += n
+    w.Length += n
     return n, e
 }
 
 // 覆盖父级的WriteHeader方法
 func (w *ResponseWriter) WriteHeader(code int) {
-    w.status = code
+    w.Status = code
     w.ResponseWriter.WriteHeader(code)
 }
 
