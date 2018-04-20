@@ -15,6 +15,7 @@ import (
     "gitee.com/johng/gf/g/util/grand"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 const (
@@ -65,8 +66,8 @@ type Link interface {
     Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
     // 创建链式操作对象(Table为From的别名)
-    Table(tables string) (*DbOp)
-    From(tables string)  (*DbOp)
+    Table(tables string) (*Model)
+    From(tables string)  (*Model)
 
     // 关闭数据库操作对象
     Close() error
@@ -193,12 +194,8 @@ func getConfigNodeByPriority (cg *ConfigGroup) *ConfigNode {
 func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
     var link Link
     switch masterNode.Type {
-        case "mysql":
-            link = Link(&dbmysql{})
-
-        case "pgsql":
-            link = Link(&dbpgsql{})
-
+        case "mysql": link = Link(&dbmysql{})
+        case "pgsql": link = Link(&dbpgsql{})
         default:
             return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", masterNode.Type))
     }
@@ -226,3 +223,35 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
     }, nil
 }
 
+// 将结果列表按照指定的字段值做map[string]Map
+func (list List) ToStringMap(key string) map[string]Map {
+    m := make(map[string]Map)
+    for _, item := range list {
+        if v, ok := item[key]; ok {
+            m[gconv.String(v)] = item
+        }
+    }
+    return m
+}
+
+// 将结果列表按照指定的字段值做map[int]Map
+func (list List) ToIntMap(key string) map[int]Map {
+    m := make(map[int]Map)
+    for _, item := range list {
+        if v, ok := item[key]; ok {
+            m[gconv.Int(v)] = item
+        }
+    }
+    return m
+}
+
+// 将结果列表按照指定的字段值做map[uint]Map
+func (list List) ToUintMap(key string) map[uint]Map {
+    m := make(map[uint]Map)
+    for _, item := range list {
+        if v, ok := item[key]; ok {
+            m[gconv.Uint(v)] = item
+        }
+    }
+    return m
+}
