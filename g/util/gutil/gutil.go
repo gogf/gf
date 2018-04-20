@@ -37,3 +37,13 @@ func IsLetterUpper(b byte) bool {
     }
     return false
 }
+
+// 判断锁给字符串是否为数字
+func IsNumeric(s string) bool {
+    for i := 0; i < len(s); i++ {
+        if s[i] < byte('0') && s[i] > byte('9') {
+            return false
+        }
+    }
+    return true
+}
