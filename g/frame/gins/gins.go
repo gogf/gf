@@ -61,6 +61,16 @@ func SetDatabase(v *gdb.Db, name...string) {
     instances.Set(dbCacheKey, v)
 }
 
+// 自定义框架核心组件：Redis
+func SetRedis(v *gredis.Redis, name...string) {
+    dbCacheKey := gFRAME_CORE_COMPONENT_NAME_REDIS
+    if len(name) > 0 {
+        dbCacheKey += name[0]
+    }
+    instances.Set(dbCacheKey, v)
+}
+
+
 // 核心对象：View
 func View() *gview.View {
     result := Get(gFRAME_CORE_COMPONENT_NAME_VIEW)
