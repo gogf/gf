@@ -11,8 +11,10 @@ import (
     "fmt"
     "errors"
     "strings"
+    "reflect"
     "database/sql"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 // 关闭链接
@@ -315,11 +317,35 @@ func (db *Db) Update(table string, data interface{}, condition interface{}, args
     for _, v := range args {
         params = append(params, gconv.String(v))
     }
-    return db.Exec(fmt.Sprintf("UPDATE %s%s%s SET %s WHERE %s", db.charl, table, db.charr, updates, condition), params...)
+    return db.Exec(fmt.Sprintf("UPDATE %s%s%s SET %s WHERE %s", db.charl, table, db.charr, updates, db.formatCondition(condition)), params...)
 }
 
 // CURD操作:删除数据
 func (db *Db) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-    return db.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", db.charl, table, db.charr, condition), args...)
+    return db.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", db.charl, table, db.charr, db.formatCondition(condition)), args...)
+}
+
+// 格式化SQL查询条件
+func (db *Db) formatCondition(condition interface{}) (where string) {
+    if reflect.ValueOf(condition).Kind() == reflect.Map {
+        ks := reflect.ValueOf(condition).MapKeys()
+        vs := reflect.ValueOf(condition)
+        for _, k := range ks {
+            key   := gconv.String(k.Interface())
+            value := gconv.String(vs.MapIndex(k).Interface())
+            isNum := gutil.IsNumeric(value)
+            if len(where) > 0 {
+                where += " and "
+            }
+            if isNum || value == "?" {
+                where += key + "=" + value
+            } else {
+                where += key + "='" + value + "'"
+            }
+        }
+    } else {
+        where += gconv.String(condition)
+    }
+    return
 }
 
