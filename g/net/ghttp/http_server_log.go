@@ -25,7 +25,7 @@ func (s *Server) handleAccessLog(r *Request) {
     }
     content := fmt.Sprintf(`"%s %s %s %s" %s %s`, r.Method, r.Host, r.URL.String(), r.Proto, gconv.String(r.Response.status), gconv.String(r.Response.length))
     content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
-    s.logger.Println(content)
+    s.accessLogger.Println(content)
 }
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
@@ -44,5 +44,5 @@ func (s *Server) handleErrorLog(error interface{}, r *Request) {
     content := fmt.Sprintf(`"%s %s %s %s"`,    r.Method, r.Host, r.URL.String(), r.Proto)
     content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
     content += fmt.Sprintf(`, %v`, error)
-    s.logger.Error(content)
+    s.errorLogger.Error(content)
 }

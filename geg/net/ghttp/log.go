@@ -6,10 +6,10 @@ import (
 
 func main() {
     s := ghttp.GetServer()
-    s.BindHandler("/", func(r *ghttp.Request){
+    s.BindHandler("/log/test", func(r *ghttp.Request){
         r.Response.Writeln("哈喽世界！")
-        panic("test")
     })
+    s.SetLogPath("/tmp/gf.log")
     s.SetAccessLogEnabled(true)
     s.SetErrorLogEnabled(true)
     s.SetPort(8199)

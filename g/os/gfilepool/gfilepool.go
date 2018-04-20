@@ -57,6 +57,7 @@ func New(path string, flag int, expire int) *Pool {
         flag    : flag,
         list    : glist.New(),
         idle    : expire,
+        closed  : gtype.NewBool(),
     }
     // 独立的线程执行过期清理工作
     if expire != -1 {
