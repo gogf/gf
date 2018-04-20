@@ -14,6 +14,7 @@ import (
     "net/http"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
@@ -83,16 +84,16 @@ var serverMapping = gmap.NewStringInterfaceMap()
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
 // 单例模式，请保证name的唯一性
-func GetServer(names...string) (*Server) {
-    name := gDEFAULT_SERVER
-    if len(names) > 0 {
-        name = names[0]
+func GetServer(name...interface{}) (*Server) {
+    sname := gDEFAULT_SERVER
+    if len(name) > 0 {
+        sname = gconv.String(name[0])
     }
-    if s := serverMapping.Get(name); s != nil {
+    if s := serverMapping.Get(sname); s != nil {
         return s.(*Server)
     }
     s := &Server {
-        name             : name,
+        name             : sname,
         methodsMap       : make(map[string]bool),
         handlerMap       : make(HandlerMap),
         handlerTree      : make(map[string]interface{}),
@@ -122,7 +123,7 @@ func GetServer(names...string) (*Server) {
         s.methodsMap[v] = true
     }
     s.SetConfig(defaultServerConfig)
-    serverMapping.Set(name, s)
+    serverMapping.Set(sname, s)
     return s
 }
 

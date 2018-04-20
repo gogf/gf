@@ -128,6 +128,24 @@ func (db *Db) GetValue(query string, args ...interface{}) (interface{}, error) {
     return nil, nil
 }
 
+// 数据表查询，其中tables可以是多个联表查询语句，这种查询方式较复杂，建议使用链式操作
+func (db *Db) Select(tables, fields string, condition interface{}, groupBy, orderBy string, first, limit int, args ... interface{}) (List, error) {
+    s := fmt.Sprintf("SELECT %s FROM %s ", fields, tables)
+    if condition != nil {
+        s += fmt.Sprintf("WHERE %s ", db.formatCondition(condition))
+    }
+    if len(groupBy) > 0 {
+        s += fmt.Sprintf("GROUP BY %s ", groupBy)
+    }
+    if len(orderBy) > 0 {
+        s += fmt.Sprintf("ORDER BY %s ", orderBy)
+    }
+    if limit > 0 {
+        s += fmt.Sprintf("LIMIT %d,%d ", first, limit)
+    }
+    return db.GetAll(s, args ... )
+}
+
 // sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
 // 记得调用sql.Stmt.Close关闭操作对象
 func (db *Db) Prepare(query string) (*sql.Stmt, error) {
