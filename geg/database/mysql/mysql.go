@@ -4,6 +4,7 @@ import (
     "fmt"
     "time"
     "gitee.com/johng/gf/g/database/gdb"
+    "gitee.com/johng/gf/g"
 )
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
@@ -248,7 +249,6 @@ func update3() {
     fmt.Println()
 }
 
-
 // 链式查询操作1
 func linkopSelect1() {
     fmt.Println("linkopSelect1:")
@@ -321,6 +321,17 @@ func linkopUpdate3() {
     fmt.Println()
 }
 
+// Where条件使用Map
+func linkopUpdate4() {
+    fmt.Println("linkopUpdate4:")
+    r, err := db.Table("user").Data(gdb.Map{"name" : "john11111"}).Where(g.Map{"uid" : 1}).Update()
+    if err == nil {
+        fmt.Println(r.RowsAffected())
+    } else {
+        fmt.Println(err)
+    }
+    fmt.Println()
+}
 
 // 链式批量写入
 func linkopBatchInsert1() {
@@ -454,11 +465,8 @@ func main() {
     //linkopUpdate1()
     //linkopUpdate2()
     //linkopUpdate3()
+    linkopUpdate4()
     //keepPing()
     //transaction1()
     //transaction2()
-
-    m, e := db.Table("user").Fields("uid,name").Where("uid = ?", 4).One()
-    fmt.Println(e)
-    fmt.Println(m)
 }

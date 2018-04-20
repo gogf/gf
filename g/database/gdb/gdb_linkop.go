@@ -21,8 +21,8 @@ type DbOp struct {
     fields        string        // 操作字段
     where         string        // 操作条件
     whereArgs     []interface{} // 操作条件参数
-    groupby       string        // 分组语句
-    orderby       string        // 排序语句
+    groupBy       string        // 分组语句
+    orderBy       string        // 排序语句
     start         int           // 分页开始
     limit         int           // 分页条数
     data          interface{}   // 操作记录(支持Map/List/string类型)
@@ -79,22 +79,22 @@ func (op *DbOp) Fields(fields string) (*DbOp) {
     return op
 }
 
-// 链式操作，consition
-func (op *DbOp) Where(where string, args...interface{}) (*DbOp) {
-    op.where     = where
+// 链式操作，condition，支持string & gdb.Map
+func (op *DbOp) Where(where interface{}, args...interface{}) (*DbOp) {
+    op.where     = op.db.formatCondition(where)
     op.whereArgs = args
     return op
 }
 
 // 链式操作，group by
-func (op *DbOp) GroupBy(groupby string) (*DbOp) {
-    op.groupby = groupby
+func (op *DbOp) GroupBy(groupBy string) (*DbOp) {
+    op.groupBy = groupBy
     return op
 }
 
 // 链式操作，order by
-func (op *DbOp) OrderBy(orderby string) (*DbOp) {
-    op.orderby = orderby
+func (op *DbOp) OrderBy(orderBy string) (*DbOp) {
+    op.orderBy = orderBy
     return op
 }
 
@@ -234,11 +234,11 @@ func (op *DbOp) Select() (List, error) {
     if op.where != "" {
         s += " WHERE " + op.where
     }
-    if op.groupby != "" {
-        s += " GROUP BY " + op.groupby
+    if op.groupBy != "" {
+        s += " GROUP BY " + op.groupBy
     }
-    if op.orderby != "" {
-        s += " ORDER BY " + op.orderby
+    if op.orderBy != "" {
+        s += " ORDER BY " + op.orderBy
     }
     if op.limit != 0 {
         s += fmt.Sprintf(" LIMIT %d, %d", op.start, op.limit)
