@@ -10,6 +10,7 @@ package ghttp
 import (
     "fmt"
     "gitee.com/johng/gf/g/util/gconv"
+    "net/http"
 )
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
@@ -29,6 +30,8 @@ func (s *Server) handleAccessLog(r *Request) {
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
 func (s *Server) handleErrorLog(error interface{}, r *Request) {
+    r.Response.WriteStatus(http.StatusInternalServerError)
+
     if !s.IsErrorLogEnabled() {
         return
     }
