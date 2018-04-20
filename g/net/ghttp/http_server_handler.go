@@ -43,6 +43,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         if e := recover(); e != nil {
             s.handleErrorLog(e, request)
         }
+        s.handleAccessLog(request)
     }()
 
     // 事件 - BeforeServe
@@ -134,7 +135,7 @@ func (s *Server)doServeFile(r *Request, path string) {
             r.Response.WriteStatus(http.StatusForbidden)
         }
     } else {
-        // 读取文件内容返回
+        // 读取文件内容返回, no buffer
         http.ServeContent(r.Response.ResponseWriter, &r.Request, info.Name(), info.ModTime(), f)
     }
     f.Close()

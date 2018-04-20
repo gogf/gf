@@ -27,12 +27,9 @@ func (s *Server) handleAccessLog(r *Request) {
     if v := r.Response.Header().Get("Status Code"); v != "" {
         status = v
     }
-    content := fmt.Sprintf(`%s %s %s`,     r.Method, r.URL.String(), r.Proto)
-    content += fmt.Sprintf(", host: %s",   r.Host)
-    content += fmt.Sprintf(", from: %s",   strings.Split(r.RemoteAddr, ":")[0])
-    content += fmt.Sprintf(", refer: %s",  r.Referer())
-    content += fmt.Sprintf(", status: %v", status)
-    s.logger.Info(content)
+    content := fmt.Sprintf(`"%s %s %s %s" %s`, r.Method, r.Host, r.URL.String(), r.Proto, status)
+    content += fmt.Sprintf(`, %s, "%s", "%s"`, strings.Split(r.RemoteAddr, ":")[0], r.Referer(), r.UserAgent())
+    s.logger.Println(content)
 }
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
@@ -45,10 +42,9 @@ func (s *Server) handleErrorLog(error interface{}, r *Request) {
         v(r, error)
         return
     }
-    content := fmt.Sprintf(`%s %s %s`,    r.Method, r.URL.String(), r.Proto)
-    content += fmt.Sprintf(", host: %s",  r.Host)
-    content += fmt.Sprintf(", from: %s",  strings.Split(r.RemoteAddr, ":")[0])
-    content += fmt.Sprintf(", refer: %s", r.Referer())
-    content += fmt.Sprintf(", error: %v", error)
+
+    content := fmt.Sprintf(`"%s %s %s %s"`,    r.Method, r.Host, r.URL.String(), r.Proto)
+    content += fmt.Sprintf(`, %s, "%s", "%s"`, strings.Split(r.RemoteAddr, ":")[0], r.Referer(), r.UserAgent())
+    content += fmt.Sprintf(`, %v`, error)
     s.logger.Error(content)
 }

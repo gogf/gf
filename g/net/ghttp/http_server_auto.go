@@ -13,9 +13,6 @@ func (s *Server) startCloseQueueLoop() {
         for {
             if v := s.closeQueue.PopFront(); v != nil {
                 r := v.(*Request)
-
-                s.handleAccessLog(r)
-
                 s.callHookHandler(r, "BeforeClose")
                 // 关闭当前会话的Cookie
                 r.Cookie.Close()
