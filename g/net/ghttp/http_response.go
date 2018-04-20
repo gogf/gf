@@ -17,11 +17,30 @@ import (
 
 // 服务端请求返回对象
 type Response struct {
-    http.ResponseWriter
-    bufmu   sync.RWMutex // 缓冲区互斥锁
+    ResponseWriter
+    mu      sync.RWMutex // 缓冲区互斥锁
     buffer  []byte       // 每个请求的返回数据缓冲区
     request *Request     // 关联的Request请求对象
-    status  int          // 返回状态码
+}
+
+// 自定义的ResponseWriter，用于写入流的控制
+type ResponseWriter struct {
+    http.ResponseWriter
+    status int // http status
+    length int // response length
+}
+
+// 覆盖父级的WriteHeader方法
+func (w *ResponseWriter) Write(buffer []byte) (int, error) {
+    n, e := w.ResponseWriter.Write(buffer)
+    w.length += n
+    return n, e
+}
+
+// 覆盖父级的WriteHeader方法
+func (w *ResponseWriter) WriteHeader(code int) {
+    w.status = code
+    w.ResponseWriter.WriteHeader(code)
 }
 
 // 返回信息，任何变量自动转换为bytes
@@ -29,11 +48,11 @@ func (r *Response) Write(content ... interface{}) {
     if len(content) == 0 {
         return
     }
-    r.bufmu.Lock()
+    r.mu.Lock()
     for _, v := range content {
         r.buffer = append(r.buffer, gconv.Bytes(v)...)
     }
-    r.bufmu.Unlock()
+    r.mu.Unlock()
 }
 
 // 返回信息，末尾增加换行标识符"\n"
@@ -99,7 +118,6 @@ func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods s
 
 // 返回HTTP Code状态码
 func (r *Response) WriteStatus(code int, content...string) {
-    r.status = code
     r.Header().Set("Content-Type", "text/plain; charset=utf-8")
     r.Header().Set("X-Content-Type-Options", "nosniff")
     if len(content) > 0 {
@@ -118,31 +136,31 @@ func (r *Response) RedirectTo(location string) {
 
 // 获取当前缓冲区中的数据
 func (r *Response) Buffer() []byte {
-    r.bufmu.RLock()
-    defer r.bufmu.RUnlock()
+    r.mu.RLock()
+    defer r.mu.RUnlock()
     return r.buffer
 }
 
 // 手动设置缓冲区内容
 func (r *Response) SetBuffer(buffer []byte) {
-    r.bufmu.Lock()
+    r.mu.Lock()
     r.buffer = buffer
-    r.bufmu.Unlock()
+    r.mu.Unlock()
 }
 
 // 清空缓冲区内容
 func (r *Response) ClearBuffer() {
-    r.bufmu.Lock()
+    r.mu.Lock()
     r.buffer = make([]byte, 0)
-    r.bufmu.Unlock()
+    r.mu.Unlock()
 }
 
 // 输出缓冲区数据到客户端
 func (r *Response) OutputBuffer() {
-    r.bufmu.Lock()
+    r.mu.Lock()
     if len(r.buffer) > 0 {
         r.ResponseWriter.Write(r.buffer)
         r.buffer = make([]byte, 0)
     }
-    r.bufmu.Unlock()
+    r.mu.Unlock()
 }

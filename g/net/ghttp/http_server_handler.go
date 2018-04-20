@@ -136,7 +136,7 @@ func (s *Server)doServeFile(r *Request, path string) {
         }
     } else {
         // 读取文件内容返回, no buffer
-        http.ServeContent(r.Response.ResponseWriter, &r.Request, info.Name(), info.ModTime(), f)
+        http.ServeContent(r.Response.ResponseWriter.ResponseWriter, &r.Request, info.Name(), info.ModTime(), f)
     }
     f.Close()
 }
