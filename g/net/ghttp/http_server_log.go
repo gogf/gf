@@ -9,7 +9,6 @@ package ghttp
 
 import (
     "fmt"
-    "strings"
     "gitee.com/johng/gf/g/util/gconv"
 )
 
@@ -23,12 +22,8 @@ func (s *Server) handleAccessLog(r *Request) {
         v(r)
         return
     }
-    status := gconv.String(r.Response.status)
-    if v := r.Response.Header().Get("Status Code"); v != "" {
-        status = v
-    }
-    content := fmt.Sprintf(`"%s %s %s %s" %s`, r.Method, r.Host, r.URL.String(), r.Proto, status)
-    content += fmt.Sprintf(`, %s, "%s", "%s"`, strings.Split(r.RemoteAddr, ":")[0], r.Referer(), r.UserAgent())
+    content := fmt.Sprintf(`"%s %s %s %s" %s %s`, r.Method, r.Host, r.URL.String(), r.Proto, gconv.String(r.Response.status), gconv.String(r.Response.length))
+    content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
     s.logger.Println(content)
 }
 
@@ -44,7 +39,7 @@ func (s *Server) handleErrorLog(error interface{}, r *Request) {
     }
 
     content := fmt.Sprintf(`"%s %s %s %s"`,    r.Method, r.Host, r.URL.String(), r.Proto)
-    content += fmt.Sprintf(`, %s, "%s", "%s"`, strings.Split(r.RemoteAddr, ":")[0], r.Referer(), r.UserAgent())
+    content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
     content += fmt.Sprintf(`, %v`, error)
     s.logger.Error(content)
 }
