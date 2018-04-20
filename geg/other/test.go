@@ -1,15 +1,10 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/net/ghttp"
+    "fmt"
+    "strconv"
 )
 
 func main() {
-    s := ghttp.GetServer()
-    s.BindHandler("/template2", func(r *ghttp.Request){
-        //panic("123")
-    })
-    s.SetAccessLogEnabled(true)
-    s.SetPort(8199)
-    s.Run()
+    fmt.Println(strconv.Atoi("11"))
 }
