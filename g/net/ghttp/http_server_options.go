@@ -15,6 +15,7 @@ import (
     "net/http"
     "crypto/tls"
     "path/filepath"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 // http server setting设置
@@ -157,7 +158,12 @@ func (s *Server)SetSessionIdName(name string) {
 
 // 设置日志目录
 func (s *Server)SetLogPath(path string) error {
-    if err := s.logger.SetPath(path); err != nil {
+    errorLogPath  := strings.TrimRight(path, gfile.Separator) + gfile.Separator + "error"
+    accessLogPath := strings.TrimRight(path, gfile.Separator) + gfile.Separator + "access"
+    if err := s.accessLogger.SetPath(accessLogPath); err != nil {
+        return err
+    }
+    if err := s.errorLogger.SetPath(errorLogPath); err != nil {
         return err
     }
     s.logPath.Set(path)

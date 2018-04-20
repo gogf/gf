@@ -56,7 +56,8 @@ type Server struct {
     logPath          *gtype.String            // 存放日志的目录路径
     errorLogEnabled  *gtype.Bool              // 是否开启error log
     accessLogEnabled *gtype.Bool              // 是否开启access log
-    logger           *glog.Logger             // 日志对象
+    accessLogger     *glog.Logger             // access log日志对象
+    errorLogger      *glog.Logger             // error log日志对象
     logHandler       *gtype.Interface         // 自定义的日志处理回调方法
 }
 
@@ -108,10 +109,12 @@ func GetServer(names...string) (*Server) {
         logPath          : gtype.NewString(),
         accessLogEnabled : gtype.NewBool(),
         errorLogEnabled  : gtype.NewBool(),
-        logger           : glog.New(),
+        accessLogger     : glog.New(),
+        errorLogger      : glog.New(),
         logHandler       : gtype.NewInterface(),
     }
-    s.logger.SetBacktraceSkip(4)
+    s.errorLogger.SetBacktraceSkip(4)
+    s.accessLogger.SetBacktraceSkip(4)
     // 设置路由解析缓存上限，使用LRU进行缓存淘汰
     s.hooksCache.SetCap(10000)
     s.handlerCache.SetCap(10000)
