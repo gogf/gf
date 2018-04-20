@@ -8,6 +8,7 @@ func main() {
     s := ghttp.GetServer()
     s.BindHandler("/", func(r *ghttp.Request){
         r.Response.Writeln("哈喽世界！")
+        panic("test")
     })
     s.SetAccessLogEnabled(true)
     s.SetErrorLogEnabled(true)

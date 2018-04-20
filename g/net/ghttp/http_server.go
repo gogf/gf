@@ -111,6 +111,7 @@ func GetServer(names...string) (*Server) {
         logger           : glog.New(),
         logHandler       : gtype.NewInterface(),
     }
+    s.logger.SetBacktraceSkip(4)
     // 设置路由解析缓存上限，使用LRU进行缓存淘汰
     s.hooksCache.SetCap(10000)
     s.handlerCache.SetCap(10000)
