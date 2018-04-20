@@ -23,7 +23,7 @@ func (s *Server) handleAccessLog(r *Request) {
         v(r)
         return
     }
-    content := fmt.Sprintf(`"%s %s %s %s" %s %s`, r.Method, r.Host, r.URL.String(), r.Proto, gconv.String(r.Response.status), gconv.String(r.Response.length))
+    content := fmt.Sprintf(`"%s %s %s %s" %s %s`, r.Method, r.Host, r.URL.String(), r.Proto, gconv.String(r.Response.Status), gconv.String(r.Response.Length))
     content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
     s.accessLogger.Println(content)
 }
