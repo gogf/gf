@@ -35,6 +35,7 @@ func (db *Db) Table(tables string) (*Model) {
     return &Model {
         db     : db,
         tables : tables,
+        fields : "*",
     }
 }
 
