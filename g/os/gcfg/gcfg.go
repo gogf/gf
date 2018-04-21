@@ -59,9 +59,18 @@ func (c *Config) SetPath(path string) {
     }
 }
 
-// 设置配置管理器的配置文件存放目录绝对路径
+// 获取配置管理器的配置文件存放目录绝对路径
 func (c *Config) GetPath() string {
     return c.path.Val()
+}
+
+// 获取指定文件的绝对路径，默认获取默认的配置文件路径
+func (c *Config) GetFilePath(name...string) string {
+    path := strings.TrimRight(c.path.Val(), gfile.Separator) + gfile.Separator
+    if len(name) > 0 {
+        return path + name[0]
+    }
+    return path + gDEFAULT_CONFIG_FILE
 }
 
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中
