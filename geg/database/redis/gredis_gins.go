@@ -8,6 +8,7 @@ import (
 
 func main() {
     gins.Config().SetPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame")
+    
     redis := gins.Redis("cache")
     redis.Do("SET", "k", "v")
     v, _ := redis.Do("GET", "k")
