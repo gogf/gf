@@ -10,16 +10,17 @@ package gins
 
 import (
     "strconv"
+    "strings"
     "gitee.com/johng/gf/g/os/gcfg"
     "gitee.com/johng/gf/g/os/gcmd"
     "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/database/gredis"
-    "strings"
-    "gitee.com/johng/gf/g/util/gconv"
 )
 
 const (
@@ -163,9 +164,14 @@ func Database(name...string) *gdb.Db {
                     }
                 }
             }
-
-            if db, err := gdb.Instance(name...); err == nil {
+            // 这里不能用Instance方法，否则无法自动检测更新
+            if db, err := gdb.New(name...); err == nil {
                 Set(dbCacheKey, db)
+                // 监控配置变化，一单有变化马上清空单例对象，下一次重新获取
+                // 无法对特定操作进行判断，不同编辑器的行为引起的操作回调提醒不一样
+                gfsnotify.Add(config.GetFilePath(), func(event *gfsnotify.Event) {
+                    Set(dbCacheKey, nil)
+                })
                 return db
             } else {
                 return nil
@@ -197,6 +203,11 @@ func Redis(name...string) *gredis.Redis {
                 if len(array) > 1 {
                     redis := gredis.New(array[0], array[1])
                     Set(redisCacheKey, redis)
+                    // 监控配置变化，一单有变化马上清空单例对象，下一次重新获取
+                    // 无法对特定操作进行判断，不同编辑器的行为引起的操作回调提醒不一样
+                    gfsnotify.Add(config.GetFilePath(), func(event *gfsnotify.Event) {
+                        Set(redisCacheKey, nil)
+                    })
                     return redis
                 }
             }
