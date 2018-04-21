@@ -2,9 +2,9 @@ package main
 
 import (
     "fmt"
-    "strconv"
+    "gitee.com/johng/gf/g/frame/gins"
 )
 
 func main() {
-    fmt.Println(strconv.Atoi("11"))
+    fmt.Println(gins.Config().GetString("database.default.0.host"))
 }
