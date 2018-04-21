@@ -57,8 +57,8 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
         * [基本函数](http://gf.johng.cn/591644)
     * [数据库ORM](http://gf.johng.cn/494380)
         * [数据库配置](http://gf.johng.cn/596222)
-        * [ORM方法操作](http://gf.johng.cn/596223)
         * [ORM链式操作](http://gf.johng.cn/596224)
+        * [ORM方法操作](http://gf.johng.cn/596223)
         * [ORM事务操作](http://gf.johng.cn/596225)
     * [Redis客户端](http://gf.johng.cn/596344)
 * [网络服务开发](http://gf.johng.cn/494648)
@@ -249,64 +249,30 @@ fmt.Println(gvalid.Check("http://gfjohngcn", rule, msgs))
 ```
 
 ## 数据库ORM
-### 方法操作
-#### 获取ORM单例对象
+
+### 链式操作
+
+#### ORM单例对象
 ```go
 // 获取默认配置的数据库对象(配置名称为"default")
 db, err := gdb.Instance()
 // 获取配置分组名称为"user-center"的数据库对象
 db, err := gdb.Instance("user-center")
 ```
-
-#### 数据写入
-```go
-r, err := db.Insert("user", gdb.Map {
-    "name": "john",
-})
-```
-
-#### 数据查询(列表)
-```go
-list, err := db.GetAll("select * from user limit 2")
-```
-
-#### 数据查询(单条)
-```go
-one, err := db.GetOne("select * from user limit 2")
-// 或者
-one, err := db.GetOne("select * from user where uid=1000")
-```
-
-#### 数据保存
-```go
-r, err := db.Save("user", gdb.Map {
-    "uid"  :  1,
-    "name" : "john",
-})
-```
-
-#### 数据更新/删除
-```go
-// db.Update/db.Delete 同理
-r, err := db.Update("user", gdb.Map {"name": "john"}, "uid=?", 10000)
-r, err := db.Update("user", "name='john'", "uid=10000")
-r, err := db.Update("user", "name=?", "uid=?", "john", 10000)
-```
-
-### 链式操作
-
-#### 链式查询
+#### 单表/联表查询
 ```go
 // 查询多条记录并使用Limit分页
-r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*, ud.site").Where("u.uid > ?", 1).Limit(0, 10).Select()
+r, err := db.Table("user").Where("u.uid > ?", 1).Limit(0, 10).Select()
+
 // 查询符合条件的单条记录(第一条)
 r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Where("u.uid=?", 1).One()
-// 查询字段值
-r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
-// 分组及排序
-r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.city").GroupBy("city").OrderBy("register_time asc").Select()
-```
 
+// 查询指定字段值
+r, err := db.Table("user u").RightJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
+
+// 分组及排序
+r, err := db.Table("user u").InnerJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.city").GroupBy("city").OrderBy("register_time asc").Select()
+```
 #### 链式更新/删除
 ```go
 // 更新
@@ -315,12 +281,31 @@ r, err := db.Table("user").Data("name='john3'").Where("name=?", "john2").Update(
 // 删除
 r, err := db.Table("user").Where("uid=?", 10).Delete()
 ```
-
 #### 链式写入/保存
 ```go
 r, err := db.Table("user").Data(gdb.Map{"name": "john"}).Insert()
 r, err := db.Table("user").Data(gdb.Map{"uid": 10000, "name": "john"}).Replace()
 r, err := db.Table("user").Data(gdb.Map{"uid": 10001, "name": "john"}).Save()
+```
+
+#### 链式批量写入
+```go
+r, err := db.Table("user").Data(gdb.List{
+    {"name": "john_1"},
+    {"name": "john_2"},
+    {"name": "john_3"},
+    {"name": "john_4"},
+}).Insert()
+```
+
+#### 链式批量保存
+```go
+r, err := db.Table("user").Data(gdb.List{
+    {"uid":10000, "name": "john_1"},
+    {"uid":10001, "name": "john_2"},
+    {"uid":10002, "name": "john_3"},
+    {"uid":10003, "name": "john_4"},
+}).Save()
 ```
 
 ### 事务操作
@@ -359,7 +344,7 @@ if tx, err := db.Begin(); err == nil {
 #### 事务链式操作
 ```go
 if tx, err := db.Begin(); err == nil {
-    r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john_1"}).Save()
+    r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john"}).Save()
     tx.Commit()
     fmt.Println(r, err)
 }
