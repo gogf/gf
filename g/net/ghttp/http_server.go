@@ -65,15 +65,20 @@ type Server struct {
 // 域名、URI与回调函数的绑定记录表
 type HandlerMap  map[string]*HandlerItem
 
+// 路由对象
+type Router struct {
+    Uri      string       // 注册时的pattern - uri
+    Method   string       // 注册时的pattern - method
+    Domain   string       // 注册时的pattern - domain
+    Priority int          // 优先级，用于链表排序，值越大优先级越高
+}
+
 // http回调函数注册信息
 type HandlerItem struct {
     ctype    reflect.Type // 控制器类型
     fname    string       // 回调方法名称
     faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
-    uri      string       // 注册时的pattern - uri
-    method   string       // 注册时的pattern - method
-    domain   string       // 注册时的pattern - domain
-    priority int          // 优先级，用于链表排序，值越大优先级越高
+    router   *Router      // 注册时绑定的路由对象
 }
 
 // http注册函数

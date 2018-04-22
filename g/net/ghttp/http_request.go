@@ -27,6 +27,7 @@ type Request struct {
     Cookie     *Cookie             // 与当前请求绑定的Cookie对象(并发安全)
     Session    *Session            // 与当前请求绑定的Session对象(并发安全)
     Response   *Response           // 对应请求的返回数据操作对象
+    Router     *Router             // 匹配到的路由对象
 }
 
 // 创建一个Request对象

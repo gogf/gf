@@ -32,6 +32,19 @@ type View struct {
 // 视图表
 var viewMap = gmap.NewStringInterfaceMap()
 
+// 默认的视图对象
+var viewObj = Get(".")
+
+// 输出到模板页面时保留HTML标签原意，不做自动escape处理
+func HTML(content string) template.HTML {
+    return template.HTML(content)
+}
+
+// 直接解析模板内容，返回解析后的内容
+func ParseContent(content string, params map[string]interface{}) ([]byte, error) {
+    return viewObj.ParseContent(content, params)
+}
+
 // 获取或者创建一个视图对象
 func Get(path string) *View {
     if r := viewMap.Get(path); r != nil {
