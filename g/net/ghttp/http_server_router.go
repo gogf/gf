@@ -40,6 +40,7 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
         for k, v := range handlerItem.values {
             r.values[k] = v
         }
+        r.Router = handlerItem.item.router
         return handlerItem.item
     }
     return nil
@@ -74,10 +75,11 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
     if err != nil {
         return errors.New("invalid pattern")
     }
-    item.uri    = uri
-    item.domain = domain
-    item.method = method
-
+    item.router = &Router {
+        Uri    : uri,
+        Domain : domain,
+        Method : method,
+    }
     s.hmmu.Lock()
     defer s.hmmu.Unlock()
     defer s.clearHandlerCache()
@@ -88,10 +90,10 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
         if _, ok := s.handlerTree[domain]; !ok {
             s.handlerTree[domain] = make(map[string]interface{})
         }
-        p            := s.handlerTree[domain]
-        lists        := make([]*list.List, 0)
-        array        := strings.Split(uri[1:], "/")
-        item.priority = len(array)
+        p     := s.handlerTree[domain]
+        lists := make([]*list.List, 0)
+        array := strings.Split(uri[1:], "/")
+        item.router.Priority = len(array)
         for k, v := range array {
             if len(v) == 0 {
                 continue
@@ -149,13 +151,13 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
 
 // 对比两个HandlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序
 func (s *Server) compareHandlerItemPriority(newItem, oldItem *HandlerItem) bool {
-    if newItem.priority > oldItem.priority {
+    if newItem.router.Priority > oldItem.router.Priority {
         return true
     }
-    if newItem.priority < oldItem.priority {
+    if newItem.router.Priority < oldItem.router.Priority {
         return false
     }
-    if strings.Count(newItem.uri, "/:") > strings.Count(oldItem.uri, "/:") {
+    if strings.Count(newItem.router.Uri, "/:") > strings.Count(oldItem.router.Uri, "/:") {
         return true
     }
     return false
@@ -224,8 +226,8 @@ func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
         for i := len(lists) - 1; i >= 0; i-- {
             for e := lists[i].Front(); e != nil; e = e.Next() {
                 item := e.Value.(*HandlerItem)
-                if strings.EqualFold(item.method, gDEFAULT_METHOD) || strings.EqualFold(item.method, r.Method) {
-                    regrule, names := s.patternToRegRule(item.uri)
+                if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, r.Method) {
+                    regrule, names := s.patternToRegRule(item.router.Uri)
                     if gregx.IsMatchString(regrule, r.URL.Path) {
                         handlerItem := &handlerCacheItem{item, nil}
                         // 如果需要query匹配，那么需要重新解析URL

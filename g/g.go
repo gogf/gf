@@ -6,8 +6,18 @@
 
 package g
 
+import (
+    "html/template"
+)
+
 // 常用map数据结构
 type Map map[string]interface{}
 
 // 常用list数据结构
 type List []Map
+
+
+// 输出到模板页面时保留HTML标签原意，不做自动escape处理
+func HTML(content string) template.HTML {
+    return template.HTML(content)
+}
