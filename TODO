@@ -2,6 +2,7 @@ ON THE WAY:
 1. 增加对于数据表Model的封装；
 2. ghttp.Server平滑重启方案；
 3. 更多数据库的ORM支持；
+4. 验证码包支持；
 
 
 DONE:
@@ -14,3 +15,4 @@ DONE:
 7. 将模板变量进行暴露，以便应用端可以进行灵活控制；
 8. 跟踪第三方mxj包的issue问题：https://github.com/clbanning/mxj/issues/48；
 9. gdb Where方法参数的改进，研究是否可以将string参数类型修改为interface{}；
+10. gpage分页控制功能；
