@@ -9,8 +9,9 @@ import (
 
 func main() {
     s := ghttp.GetServer()
-    s.BindHandler("/page/static/*page", func(r *ghttp.Request){
+    s.BindHandler("/page/ajax", func(r *ghttp.Request){
         page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router.Uri)
+        page.EnableAjax("DoAjax")
         buffer, _ := gview.ParseContent(`
         <html>
             <head>
@@ -20,17 +21,11 @@ func main() {
                 </style>
             </head>
             <body>
-                <div>{{.page1}}</div>
-                <div>{{.page2}}</div>
-                <div>{{.page3}}</div>
-                <div>{{.page4}}</div>
+                <div>{{.page}}</div>
             </body>
         </html>
         `, g.Map{
-            "page1" : g.HTML(page.GetContent(1)),
-            "page2" : g.HTML(page.GetContent(2)),
-            "page3" : g.HTML(page.GetContent(3)),
-            "page4" : g.HTML(page.GetContent(4)),
+            "page" : g.HTML(page.GetContent(1)),
         })
         r.Response.Write(buffer)
     })
