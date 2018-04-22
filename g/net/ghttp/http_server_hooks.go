@@ -27,9 +27,11 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
     if err != nil {
         return errors.New("invalid pattern")
     }
-    item.uri    = uri
-    item.domain = domain
-    item.method = method
+    item.router = &Router {
+        Uri    : uri,
+        Domain : domain,
+        Method : method,
+    }
 
     s.hhmu.Lock()
     defer s.hhmu.Unlock()
@@ -44,8 +46,8 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
     }
     p = p.(map[string]interface{})[hook]
 
-    array        := strings.Split(uri[1:], "/")
-    item.priority = len(array)
+    array := strings.Split(uri[1:], "/")
+    item.router.Priority = len(array)
     for _, v := range array {
         if len(v) == 0 {
             continue
@@ -164,8 +166,8 @@ func (s *Server) searchHookHandler(r *Request, hook string) []*hookCacheItem {
         for i := len(lists) - 1; i >= 0; i-- {
             for e := lists[i].Front(); e != nil; e = e.Next() {
                 item := e.Value.(*HandlerItem)
-                if strings.EqualFold(item.method, gDEFAULT_METHOD) || strings.EqualFold(item.method, r.Method) {
-                    regrule, names := s.patternToRegRule(item.uri)
+                if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, r.Method) {
+                    regrule, names := s.patternToRegRule(item.router.Uri)
                     if gregx.IsMatchString(regrule, r.URL.Path) {
                         hookItem := &hookCacheItem {item.faddr, nil}
                         // 如果需要query匹配，那么需要重新解析URL
