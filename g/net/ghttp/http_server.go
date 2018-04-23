@@ -154,10 +154,20 @@ func (s *Server) Run() error {
     // 开启异步处理队列处理循环
     s.startCloseQueueLoop()
     // 执行端口监听
-    if err := s.server.ListenAndServe(); err != nil {
-        glog.Error(err)
-        return err
+    if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
+        // HTTPS
+        if err := s.server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
+            glog.Error(err)
+            return err
+        }
+    } else {
+        // HTTP
+        if err := s.server.ListenAndServe(); err != nil {
+            glog.Error(err)
+            return err
+        }
     }
+
     s.status = 1
     return nil
 }

@@ -9,9 +9,7 @@ package ghttp
 
 import (
     "time"
-    "log"
     "net/http"
-    "crypto/tls"
 )
 
 // HTTP Server 设置结构体
@@ -19,12 +17,12 @@ type ServerConfig struct {
     // HTTP Server基础字段
     Addr            string        // 监听IP和端口，监听本地所有IP使用":端口"
     Handler         http.Handler  // 默认的处理函数
-    TLSConfig      *tls.Config    // TLS配置
+    HTTPSCertPath   string        // HTTPS证书文件路径
+    HTTPSKeyPath    string        // HTTPS签名文件路径
     ReadTimeout     time.Duration
     WriteTimeout    time.Duration
     IdleTimeout     time.Duration
     MaxHeaderBytes  int           // 最大的header长度
-    ErrorLog       *log.Logger    // 错误日志的处理接口
     // gf 扩展信息字段
     IndexFiles      []string      // 默认访问的文件列表
     IndexFolder     bool          // 如果访问目录是否显示目录列表
