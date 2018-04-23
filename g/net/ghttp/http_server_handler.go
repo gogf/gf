@@ -93,8 +93,8 @@ func (s *Server)serveFile(r *Request) {
         if gfile.Separator != "/" {
             uri = strings.Replace(uri, "/", gfile.Separator, -1)
         }
-        path  = path + uri
-        path  = gfile.RealPath(path)
+        path = path + uri
+        path = gfile.RealPath(path)
         if path != "" {
             // 文件/目录访问安全限制：服务的路径必须在ServerRoot下，否则会报错
             if len(path) >= len(s.config.ServerRoot) && strings.EqualFold(path[0 : len(s.config.ServerRoot)], s.config.ServerRoot) {
