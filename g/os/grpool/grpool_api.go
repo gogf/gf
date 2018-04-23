@@ -57,8 +57,8 @@ func New(expire int, size...int) *Pool {
         expire     : int32(expire),
         queue      : glist.New(),
         funcs      : glist.New(),
-        freeEvents : make(chan struct{}, math.MaxUint32),
-        funcEvents : make(chan struct{}, math.MaxUint32),
+        freeEvents : make(chan struct{}, math.MaxInt32),
+        funcEvents : make(chan struct{}, math.MaxInt32),
         stopEvents : make(chan struct{}, runtime.GOMAXPROCS(-1) + 1),
     }
     p.startWorkLoop()

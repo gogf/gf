@@ -2,9 +2,15 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/frame/gins"
+    "strings"
 )
 
 func main() {
-    fmt.Println(gins.Config().GetString("database.default.0.host"))
+    s1 := `C:\Documents and Settings\Claymore\桌面\gf.test`
+    s2 := `C:\Documents and Settings\Claymore\桌面\gf.tes`
+
+
+
+
+    fmt.Println(len(s2) >= len(s1) && strings.EqualFold(s2[0 : len(s1)], s1) )
 }
