@@ -8,7 +8,7 @@
     7、 ghttp.Response去掉WriteString方法，统一使用Write方法返回数据流，是使用灵活的参数形式；
     8、 模板引擎增加模板变量暴露接口LockFunc/RLockFunc，以便支持开发者灵活处理模板变量；
     9、 ghttp.Server增加access & error log功能，并支持开发者自定义日志处理回调函数注册；
-    10、 增加gredis包，支持对redis的客户端操作封装，并将gredis.Redis对象加入到gins单例管理器中进行统一配置管理维护；
+    10、增加gredis包，支持对redis的客户端操作封装，并将gredis.Redis对象加入到gins单例管理器中进行统一配置管理维护；
     11、gins单例管理器增加对单例对象配置文件的自动检测更新机制，当配置文件在外部发生变更时，自动刷新单例管理器中的单例对象；
     12、gdb数据库ORM包增加And/Or条件链式方法，并改进Where/Data方法参数灵活性；
     13、对于新增加的模块，同时也增加了对应的开发文档，并梳理完善了现有的其他模块开发文档；

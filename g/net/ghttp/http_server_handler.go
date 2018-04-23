@@ -16,7 +16,6 @@ import (
     "net/url"
     "net/http"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/util/gregx"
     "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
@@ -98,7 +97,7 @@ func (s *Server)serveFile(r *Request) {
         path  = gfile.RealPath(path)
         if path != "" {
             // 文件/目录访问安全限制：服务的路径必须在ServerRoot下，否则会报错
-            if gregx.IsMatchString("^" + s.config.ServerRoot, path) {
+            if len(path) >= len(s.config.ServerRoot) && strings.EqualFold(path[0 : len(s.config.ServerRoot)], s.config.ServerRoot) {
                 s.doServeFile(r, path)
             } else {
                 r.Response.WriteStatus(http.StatusForbidden)
