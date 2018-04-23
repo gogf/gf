@@ -3,7 +3,8 @@ ON THE WAY:
 2. ghttp.Server平滑重启方案；
 3. 更多数据库的ORM支持；
 4. 验证码包支持；
-
+5. https支持；
+6. FAQ
 
 DONE:
 1. gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；

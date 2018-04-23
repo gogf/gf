@@ -90,7 +90,7 @@ func (view *View) Parse(file string, params map[string]interface{}) ([]byte, err
         }
     }
     if content == "" {
-        return nil, errors.New("invalid tpl \"" + file + "\"")
+        return nil, errors.New("tpl \"" + file + "\" not found")
     }
     // 执行模板解析
     view.mu.RLock()
