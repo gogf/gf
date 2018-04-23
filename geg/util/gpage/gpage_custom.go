@@ -24,7 +24,7 @@ func pageContent(page *gpage.Page) string {
 func main() {
     s := ghttp.GetServer()
     s.BindHandler("/page/custom/*page", func(r *ghttp.Request){
-        page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router.Uri)
+        page      := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router.Uri)
         buffer, _ := gview.ParseContent(`
         <html>
             <head>
@@ -42,6 +42,6 @@ func main() {
         })
         r.Response.Write(buffer)
     })
-    s.SetPort(8199)
+    s.SetPort(10000)
     s.Run()
 }
