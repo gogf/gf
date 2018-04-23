@@ -28,6 +28,7 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
 # 文档
 * [框架介绍](http://gf.johng.cn/494364)
 * [加入团队](http://gf.johng.cn/512841)
+* [源码目录](http://gf.johng.cn/597940)
 * [Web服务开发](http://gf.johng.cn/494647)
     * [开始使用](http://gf.johng.cn/494366)
     * [开发模式](http://gf.johng.cn/494367)
