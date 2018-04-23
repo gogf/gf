@@ -13,7 +13,6 @@ import (
     "strconv"
     "strings"
     "net/http"
-    "crypto/tls"
     "gitee.com/johng/gf/g/os/gfile"
 )
 
@@ -59,12 +58,13 @@ func (s *Server)SetPort(port int) error {
     return nil
 }
 
-// 设置http server参数 - TLSConfig
-func (s *Server)SetTLSConfig(tls *tls.Config) error {
+// 开启HTTPS支持，但是必须提供Cert和Key文件
+func (s *Server)EnableHTTPS(certFile, keyFile string) error {
     if s.status == 1 {
         return errors.New("server config cannot be changed while running")
     }
-    s.config.TLSConfig = tls
+    s.config.HTTPSCertPath = certFile
+    s.config.HTTPSKeyPath  = keyFile
     return nil
 }
 
