@@ -7,7 +7,7 @@ import (
 func main() {
     s := ghttp.GetServer()
     s.SetIndexFolder(true)
-    s.SetServerRoot("C:\\Documents and Settings\\Claymore\\桌面\\gf.test")
+    s.SetServerRoot("/home/john/Workspace/view")
     s.SetPort(8199)
     s.Run()
 }
