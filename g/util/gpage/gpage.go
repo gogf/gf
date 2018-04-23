@@ -47,9 +47,13 @@ func New(TotalSize, perPage int,  CurrentPage interface{}, url string, route...s
         NextBar      : ">>",
         TotalSize    : TotalSize,
         TotalPage    : int(math.Ceil(float64(TotalSize/perPage))),
-        CurrentPage  : gconv.Int(CurrentPage),
+        CurrentPage  : 1,
         PageBarNum   : 10,
         Url          : u,
+    }
+    curPage := gconv.Int(CurrentPage)
+    if curPage > 0 {
+        page.CurrentPage = curPage
     }
     if len(route) > 0 {
         page.Route = route[0]
@@ -247,9 +251,12 @@ func (page *Page) GetUrl(pageNo int) string {
         }
         // 替换url.Path中的分页码
         if index != -1 {
-            array       := strings.Split(page.Url.Path, "/")
-            array[index] = gconv.String(pageNo)
-            url.Path     = strings.Join(array, "/")
+            pathArray := strings.Split(page.Url.Path, "/")
+            for i := 0; i <= index - len(pathArray); i++ {
+                pathArray = append(pathArray, "")
+            }
+            pathArray[index] = gconv.String(pageNo)
+            url.Path         = strings.TrimRight(strings.Join(pathArray, "/"), "/")
             return url.String()
         }
     }
