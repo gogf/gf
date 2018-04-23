@@ -14,7 +14,6 @@ import (
     "strings"
     "net/http"
     "crypto/tls"
-    "path/filepath"
     "gitee.com/johng/gf/g/os/gfile"
 )
 
@@ -105,7 +104,7 @@ func (s *Server)SetMaxHeaderBytes(b int) error {
     return nil
 }
 
-// 设置http server参数 - IndexFiles
+// 设置http server参数 - IndexFiles，默认展示文件，如：index.html, index.htm
 func (s *Server)SetIndexFiles(index []string) error {
     if s.status == 1 {
         return errors.New("server config cannot be changed while running")
@@ -114,7 +113,7 @@ func (s *Server)SetIndexFiles(index []string) error {
     return nil
 }
 
-// 设置http server参数 - IndexFolder
+// 允许展示访问目录的文件列表
 func (s *Server)SetIndexFolder(index bool) error {
     if s.status == 1 {
         return errors.New("server config cannot be changed while running")
@@ -137,7 +136,12 @@ func (s *Server)SetServerRoot(root string) error {
     if s.status == 1 {
         return errors.New("server config cannot be changed while running")
     }
-    s.config.ServerRoot  = strings.TrimRight(root, string(filepath.Separator))
+    // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
+    path := gfile.RealPath(root)
+    if path == "" {
+        return errors.New("invalid root path \"" + root + "\"")
+    }
+    s.config.ServerRoot  = strings.TrimRight(path, string(gfile.Separator))
     return nil
 }
 
