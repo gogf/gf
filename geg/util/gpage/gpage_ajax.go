@@ -19,6 +19,14 @@ func main() {
                     a,span {padding:8px; font-size:16px;}
                     div{margin:5px 5px 20px 5px}
                 </style>
+                <script src="https://cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+                <script>
+                function DoAjax(url) {
+                     $.get(url, function(data,status) {
+                         $("body").html(data);
+                     });
+                }
+                </script>
             </head>
             <body>
                 <div>{{.page}}</div>

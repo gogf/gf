@@ -114,7 +114,7 @@ func GetServer(name...interface{}) (*Server) {
         closeQueue       : gqueue.New(),
         logPath          : gtype.NewString(),
         accessLogEnabled : gtype.NewBool(),
-        errorLogEnabled  : gtype.NewBool(),
+        errorLogEnabled  : gtype.NewBool(true),
         accessLogger     : glog.New(),
         errorLogger      : glog.New(),
         logHandler       : gtype.NewInterface(),

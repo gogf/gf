@@ -41,8 +41,7 @@ func (s *Server) handleErrorLog(error interface{}, r *Request) {
         return
     }
 
-    content := fmt.Sprintf(`"%s %s %s %s"`,    r.Method, r.Host, r.URL.String(), r.Proto)
-    content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
-    content += fmt.Sprintf(`, %v`, error)
+    content := fmt.Sprintf(`%v, "%s %s %s %s"`, error, r.Method, r.Host, r.URL.String(), r.Proto)
+    content += fmt.Sprintf(`, %s, "%s", "%s"`,  r.GetClientIp(), r.Referer(), r.UserAgent())
     s.errorLogger.Error(content)
 }
