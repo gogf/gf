@@ -11,11 +11,10 @@ import (
     "fmt"
     "errors"
     "database/sql"
-    "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/grand"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
-    "gitee.com/johng/gf/g/util/gconv"
 )
 
 const (
@@ -96,32 +95,6 @@ type Map  map[string]interface{}
 // 关联数组列表(索引从0开始的数组)，绑定多条记录
 type List []Map
 
-// 获得默认/指定分组名称的数据库操作对象单例
-func Instance (groupName...string) (*Db, error) {
-    name := config.d
-    if len(groupName) > 0 {
-        name = groupName[0]
-    }
-    return instance(name)
-}
-
-// 根据配置项获取一个数据库操作对象单例
-func instance (groupName string) (*Db, error) {
-    instanceName := "gdb_instance_" + groupName
-    result       := gcache.Get(instanceName)
-    if result == nil {
-        db, err := New(groupName)
-        if err == nil {
-            gcache.Set(instanceName, db, 0)
-            return db, nil
-        } else {
-            return nil, err
-        }
-    } else {
-        return result.(*Db), nil
-    }
-}
-
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
 func New(groupName...string) (*Db, error) {
     name := config.d
@@ -159,11 +132,6 @@ func New(groupName...string) (*Db, error) {
     } else {
         return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", name))
     }
-}
-
-// 根据单点数据库配置获得一个数据库草最对象
-func NewByNode(node ConfigNode) (*Db, error) {
-    return newDb (&node, nil)
 }
 
 // 按照负载均衡算法(优先级配置)从数据库集群中选择一个配置节点出来使用
@@ -210,10 +178,7 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
             return nil, err
         }
     }
-    //link.setLink(link)
-    //link.setMaster(master)
-    //link.setSlave(slave)
-    //link.setQuoteChar(link.getQuoteCharLeft(), link.getQuoteCharRight())
+
     return &Db {
         link   : link,
         master : master,

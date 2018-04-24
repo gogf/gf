@@ -6,20 +6,20 @@ database:
         - host:     127.0.0.1
           port:     3306
           user:     root
-          pass:     123456
+          pass:     "8692651"
           name:     test
           type:     mysql
           role:     master
-          charset:  utf-8
+          charset:  utf8
           priority: 1
         - host:     127.0.0.1
           port:     3306
           user:     root
-          pass:     123456
+          pass:     "8692651"
           name:     test
           type:     mysql
           role:     master
-          charset:  utf-8
+          charset:  utf8
           priority: 1
 # Redis数据库配置
 redis:

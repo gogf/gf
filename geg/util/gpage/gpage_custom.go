@@ -38,7 +38,7 @@ func main() {
             </body>
         </html>
         `, g.Map{
-            "page" : g.HTML(pageContent(page)),
+            "page" : gview.HTML(pageContent(page)),
         })
         r.Response.Write(buffer)
     })

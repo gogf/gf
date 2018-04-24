@@ -33,7 +33,7 @@ func main() {
             </body>
         </html>
         `, g.Map{
-            "page" : g.HTML(page.GetContent(1)),
+            "page" : gview.HTML(page.GetContent(1)),
         })
         r.Response.Write(buffer)
     })
