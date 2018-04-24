@@ -13,6 +13,7 @@ import (
     "database/sql"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 // 数据库事务对象
@@ -120,6 +121,15 @@ func (tx *Tx) GetValue(query string, args ...interface{}) (interface{}, error) {
         return v, nil
     }
     return nil, nil
+}
+
+// 数据库查询，获取查询数量
+func (tx *Tx) GetCount(query string, args ...interface{}) (int, error) {
+    val, err := tx.GetValue(query, args ...)
+    if err != nil {
+        return 0, err
+    }
+    return gconv.Int(val), nil
 }
 
 // (事务)sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作

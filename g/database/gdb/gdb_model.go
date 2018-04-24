@@ -251,26 +251,10 @@ func (md *Model) Batch(batch int) *Model {
 
 // 链式操作，select
 func (md *Model) Select() (List, error) {
-    if md.fields == "" {
-        md.fields = "*"
-    }
-    s := fmt.Sprintf("SELECT %s FROM %s", md.fields, md.tables)
-    if md.where != "" {
-        s += " WHERE " + md.where
-    }
-    if md.groupBy != "" {
-        s += " GROUP BY " + md.groupBy
-    }
-    if md.orderBy != "" {
-        s += " ORDER BY " + md.orderBy
-    }
-    if md.limit != 0 {
-        s += fmt.Sprintf(" LIMIT %d, %d", md.start, md.limit)
-    }
     if md.tx == nil {
-        return md.db.GetAll(s, md.whereArgs...)
+        return md.db.GetAll(md.getFormattedSql(), md.whereArgs...)
     } else {
-        return md.tx.GetAll(s, md.whereArgs...)
+        return md.tx.GetAll(md.getFormattedSql(), md.whereArgs...)
     }
 }
 
@@ -303,3 +287,40 @@ func (md *Model) Value() (interface{}, error) {
     return "", nil
 }
 
+// 链式操作，查询数量，fields可以为空，也可以自定义查询字段，
+// 当给定自定义查询字段时，该字段必须为数量结果，否则会引起歧义，如：Fields("COUNT(id)")
+func (md *Model) Count() (int, error) {
+    if md.fields == "" || md.fields == "*" {
+        md.fields = "COUNT(1)"
+    }
+    s := md.getFormattedSql()
+    if len(md.groupBy) > 0 {
+        s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
+    }
+    if md.tx == nil {
+        return md.db.GetCount(s, md.whereArgs...)
+    } else {
+        return md.tx.GetCount(s, md.whereArgs...)
+    }
+}
+
+// 格式化当前输入参数，返回可执行的SQL语句（不带参数）
+func (md *Model) getFormattedSql() string {
+    if md.fields == "" {
+        md.fields = "*"
+    }
+    s := fmt.Sprintf("SELECT %s FROM %s", md.fields, md.tables)
+    if md.where != "" {
+        s += " WHERE " + md.where
+    }
+    if md.groupBy != "" {
+        s += " GROUP BY " + md.groupBy
+    }
+    if md.orderBy != "" {
+        s += " ORDER BY " + md.orderBy
+    }
+    if md.limit != 0 {
+        s += fmt.Sprintf(" LIMIT %d, %d", md.start, md.limit)
+    }
+    return s
+}

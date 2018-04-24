@@ -17,7 +17,7 @@ func init () {
         Host    : "127.0.0.1",
         Port    : "3306",
         User    : "root",
-        Pass    : "123456",
+        Pass    : "8692651",
         Name    : "test",
         Type    : "mysql",
         Role    : "master",
@@ -285,6 +285,19 @@ func linkopSelect3() {
     fmt.Println()
 }
 
+// 链式查询数量1
+func linkopCount1() {
+    fmt.Println("linkopCount1:")
+    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Where("u.uid=?", 1).Count()
+    if err == nil {
+        fmt.Println(r)
+    } else {
+        fmt.Println(err)
+    }
+    fmt.Println()
+}
+
+
 // 错误操作
 func linkopUpdate1() {
     fmt.Println("linkopUpdate1:")
@@ -462,10 +475,11 @@ func main() {
     //linkopSelect1()
     //linkopSelect2()
     //linkopSelect3()
+    linkopCount1()
     //linkopUpdate1()
     //linkopUpdate2()
     //linkopUpdate3()
-    linkopUpdate4()
+    //linkopUpdate4()
     //keepPing()
     //transaction1()
     //transaction2()
