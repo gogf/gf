@@ -128,6 +128,15 @@ func (db *Db) GetValue(query string, args ...interface{}) (interface{}, error) {
     return nil, nil
 }
 
+// 数据库查询，获取查询数量
+func (db *Db) GetCount(query string, args ...interface{}) (int, error) {
+    val, err := db.GetValue(query, args ...)
+    if err != nil {
+        return 0, err
+    }
+    return gconv.Int(val), nil
+}
+
 // 数据表查询，其中tables可以是多个联表查询语句，这种查询方式较复杂，建议使用链式操作
 func (db *Db) Select(tables, fields string, condition interface{}, groupBy, orderBy string, first, limit int, args ... interface{}) (List, error) {
     s := fmt.Sprintf("SELECT %s FROM %s ", fields, tables)
