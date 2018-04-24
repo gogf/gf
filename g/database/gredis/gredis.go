@@ -11,6 +11,8 @@ package gredis
 import (
     "time"
     "github.com/gomodule/redigo/redis"
+    "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 const (
@@ -22,9 +24,8 @@ const (
 
 // Redis客户端
 type Redis struct {
-    address string
-    db      interface{}
-    pool    *redis.Pool
+    conn redis.Conn
+    pool *redis.Pool
 }
 
 // Redis链接池统计信息
@@ -32,27 +33,45 @@ type PoolStats struct {
     redis.PoolStats
 }
 
+// 连接池map
+var pools = gmap.NewStringInterfaceMap()
+
 // 创建redis操作对象
 // address参数格式 host:port
 func New(address string, db ... interface{}) *Redis {
     r := &Redis{}
-    r.address = address
+    dialDb := 0
     if len(db) > 0 {
-        r.db = db[0]
+        dialDb = gconv.Int(db[0])
     }
-    r.pool = &redis.Pool {
-        MaxIdle         : gDEFAULT_POOL_MAX_IDLE,
-        MaxActive       : gDEFAULT_POOL_MAX_ACTIVE,
-        IdleTimeout     : gDEFAULT_POOL_IDLE_TIMEOUT,
-        MaxConnLifetime : gDEFAULT_POOL_MAX_LIFE_TIME,
-        Dial            : r.dialFunc(),
+    poolKey := address + "," + gconv.String(dialDb)
+    if v := pools.Get(poolKey); v == nil {
+        pool := &redis.Pool {
+            MaxIdle         : gDEFAULT_POOL_MAX_IDLE,
+            MaxActive       : gDEFAULT_POOL_MAX_ACTIVE,
+            IdleTimeout     : gDEFAULT_POOL_IDLE_TIMEOUT,
+            MaxConnLifetime : gDEFAULT_POOL_MAX_LIFE_TIME,
+            Dial            : func() (redis.Conn, error) {
+                c, err := redis.Dial("tcp", address)
+                if err != nil {
+                    return nil, err
+                }
+                c.Do("SELECT", dialDb)
+                return c, nil
+            },
+        }
+        pools.Set(poolKey, pool)
+        r.pool = pool
+    } else {
+        r.pool = v.(*redis.Pool)
     }
+    r.conn = r.pool.Get()
     return r
 }
 
 // 关闭链接
 func (r *Redis) Close() error {
-    return r.pool.Close()
+    return r.conn.Close()
 }
 
 // 设置属性 - MaxIdle
@@ -82,26 +101,11 @@ func (r *Redis) Stats() *PoolStats {
 
 // 执行命令 - Do
 func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
-    c := r.pool.Get()
-    defer c.Close()
-    return c.Do(command, args...)
+    return r.conn.Do(command, args...)
 }
 
 // 执行命令 - Send
 func (r *Redis) Send(command string, args ...interface{}) error {
-    c := r.pool.Get()
-    defer c.Close()
-    return c.Send(command, args...)
+    return r.conn.Send(command, args...)
 }
 
-// 构造链接redis方法
-func (r *Redis) dialFunc() func()(redis.Conn, error) {
-    return func() (redis.Conn, error) {
-        c, err := redis.Dial("tcp", r.address)
-        if err != nil {
-            return nil, err
-        }
-        c.Do("SELECT", r.db)
-        return c, nil
-    }
-}

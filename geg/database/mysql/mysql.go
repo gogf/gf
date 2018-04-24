@@ -5,6 +5,7 @@ import (
     "time"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/frame/gins"
 )
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
@@ -13,17 +14,20 @@ var db *gdb.Db
 
 // 初始化配置及创建数据库
 func init () {
-    gdb.AddDefaultConfigNode(gdb.ConfigNode {
-        Host    : "127.0.0.1",
-        Port    : "3306",
-        User    : "root",
-        Pass    : "8692651",
-        Name    : "test",
-        Type    : "mysql",
-        Role    : "master",
-        Charset : "utf8",
-    })
-    db, _ = gdb.Instance()
+    //gdb.AddDefaultConfigNode(gdb.ConfigNode {
+    //    Host    : "127.0.0.1",
+    //    Port    : "3306",
+    //    User    : "root",
+    //    Pass    : "8692651",
+    //    Name    : "test",
+    //    Type    : "mysql",
+    //    Role    : "master",
+    //    Charset : "utf8",
+    //})
+    //db, _ = gdb.New()
+
+    gins.Config().SetPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame")
+    db = g.Database()
 
     //gdb.SetConfig(gdb.ConfigNode {
     //    Host : "127.0.0.1",
@@ -444,9 +448,9 @@ func keepPing() {
 // 数据库单例测试，在mysql中使用 show full processlist 查看链接信息
 func instance() {
     fmt.Println("instance:")
-    db1, _ := gdb.Instance()
-    db2, _ := gdb.Instance()
-    db3, _ := gdb.Instance()
+    db1, _ := gdb.New()
+    db2, _ := gdb.New()
+    db3, _ := gdb.New()
     for {
         fmt.Println("ping...")
         db1.PingMaster()
