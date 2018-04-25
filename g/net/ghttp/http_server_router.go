@@ -28,10 +28,11 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
     defer s.hmcmu.RUnlock()
 
     var handlerItem *handlerCacheItem
-    if v := s.handlerCache.Get(r.URL.Path); v == nil {
+    cacheKey := s.handlerKey(r.GetHost(), r.Method, r.URL.Path)
+    if v := s.handlerCache.Get(cacheKey); v == nil {
         handlerItem = s.searchHandler(r)
         if handlerItem != nil {
-            s.handlerCache.Set(r.URL.Path, handlerItem, 0)
+            s.handlerCache.Set(cacheKey, handlerItem, 0)
         }
     } else {
         handlerItem = v.(*handlerCacheItem)
@@ -176,7 +177,7 @@ func (s *Server) searchHandler(r *Request) *handlerCacheItem {
 func (s *Server) searchHandlerStatic(r *Request) *handlerCacheItem {
     s.hmmu.RLock()
     defer s.hmmu.RUnlock()
-    domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
+    domains := []string{gDEFAULT_DOMAIN, r.GetHost()}
     // 首先进行静态匹配
     for _, domain := range domains {
         if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
@@ -190,7 +191,7 @@ func (s *Server) searchHandlerStatic(r *Request) *handlerCacheItem {
 func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
     s.hmmu.RLock()
     defer s.hmmu.RUnlock()
-    domains := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
+    domains := []string{gDEFAULT_DOMAIN, r.GetHost()}
     array   := strings.Split(r.URL.Path[1:], "/")
     for _, domain := range domains {
         p, ok := s.handlerTree[domain]
