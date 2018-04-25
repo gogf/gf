@@ -96,7 +96,7 @@ func (s *Server) callHookHandler(r *Request, hook string) {
     defer s.hhcmu.RUnlock()
 
     var hookItems []*hookCacheItem
-    cacheKey := hook + "^" + r.URL.Path
+    cacheKey := s.handlerHookKey(r.GetHost(), r.Method, r.URL.Path, hook)
     if v := s.hooksCache.Get(cacheKey); v == nil {
         hookItems = s.searchHookHandler(r, hook)
         if hookItems != nil {
@@ -124,7 +124,7 @@ func (s *Server) searchHookHandler(r *Request, hook string) []*hookCacheItem {
     s.hhmu.RLock()
     defer s.hhmu.RUnlock()
     hookItems := make([]*hookCacheItem, 0)
-    domains   := []string{gDEFAULT_DOMAIN, strings.Split(r.Host, ":")[0]}
+    domains   := []string{gDEFAULT_DOMAIN, r.GetHost()}
     array     := strings.Split(r.URL.Path[1:], "/")
     for _, domain := range domains {
         p, ok := s.hooksTree[domain]

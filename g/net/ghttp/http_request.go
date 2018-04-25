@@ -299,7 +299,16 @@ func (r *Request) IsExited() bool {
     return r.exit.Val()
 }
 
-// 获取请求的客户端Ip地址
+// 获取请求的服务端IP/域名
+func (r *Request) GetHost() string {
+    array, _ := gregx.MatchString(`(.+):(\d+)`, r.Host)
+    if len(array) > 1 {
+        return array[1]
+    }
+    return r.Host
+}
+
+// 获取请求的客户端IP地址
 func (r *Request) GetClientIp() string {
     array, _ := gregx.MatchString(`(.+):(\d+)`, r.RemoteAddr)
     if len(array) > 1 {
