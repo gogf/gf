@@ -55,7 +55,7 @@ func (a *Array) Insert(index int, value interface{}) {
 func (a *Array) Remove(index int) {
     a.mu.Lock()
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
-    a.mu.RUnlock()
+    a.mu.Unlock()
 }
 
 // 追加数据项

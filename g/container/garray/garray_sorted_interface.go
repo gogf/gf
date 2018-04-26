@@ -64,7 +64,7 @@ func (a *SortedArray) Get(index int) interface{} {
 func (a *SortedArray) Remove(index int) {
     a.mu.Lock()
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
-    a.mu.RUnlock()
+    a.mu.Unlock()
 }
 
 // 数组长度
