@@ -12,18 +12,23 @@ import (
     "net/http"
 )
 
+const (
+    gDEFAULT_HTTP_ADDR  = ":80"  // 默认HTTP监听地址
+    gDEFAULT_HTTPS_ADDR = ":443" // 默认HTTPS监听地址
+)
+
 // HTTP Server 设置结构体
 type ServerConfig struct {
-    // HTTP Server基础字段
-    Addr            string        // 监听IP和端口，监听本地所有IP使用":端口"
-    Handler         http.Handler  // 默认的处理函数
+    Addr            string        // 监听IP和端口，监听本地所有IP使用":端口"(支持多个地址，使用","号分隔)
+    HTTPSAddr       string        // HTTPS服务监听地址(支持多个地址，使用","号分隔)
     HTTPSCertPath   string        // HTTPS证书文件路径
     HTTPSKeyPath    string        // HTTPS签名文件路径
+    Handler         http.Handler  // 默认的处理函数
     ReadTimeout     time.Duration
     WriteTimeout    time.Duration
     IdleTimeout     time.Duration
     MaxHeaderBytes  int           // 最大的header长度
-    // gf 扩展信息字段
+
     IndexFiles      []string      // 默认访问的文件列表
     IndexFolder     bool          // 如果访问目录是否显示目录列表
     ServerAgent     string        // server agent
@@ -32,7 +37,8 @@ type ServerConfig struct {
 
 // 默认HTTP Server
 var defaultServerConfig = ServerConfig {
-    Addr           : ":80",
+    Addr           : "",
+    HTTPSAddr      : "",
     Handler        : nil,
     ReadTimeout    : 60 * time.Second,
     WriteTimeout   : 60 * time.Second,

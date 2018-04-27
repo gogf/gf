@@ -50,11 +50,39 @@ func (s *Server)SetAddr(addr string) error {
 }
 
 // 设置http server参数 - Port
-func (s *Server)SetPort(port int) error {
+func (s *Server)SetPort(port...int) error {
     if s.status == 1 {
         return errors.New("server config cannot be changed while running")
     }
-    s.config.Addr = ":" + strconv.Itoa(port)
+    if len(port) > 0 {
+        s.config.Addr = ""
+        for _, v := range port {
+            s.config.Addr += ":" + strconv.Itoa(v)
+        }
+    }
+    return nil
+}
+
+// 设置http server参数 - HTTPS Addr
+func (s *Server)SetHTTPSAddr(addr string) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
+    s.config.HTTPSAddr = addr
+    return nil
+}
+
+// 设置http server参数 - HTTPS Port
+func (s *Server)SetHTTPSPort(port...int) error {
+    if s.status == 1 {
+        return errors.New("server config cannot be changed while running")
+    }
+    if len(port) > 0 {
+        s.config.HTTPSAddr = ""
+        for _, v := range port {
+            s.config.HTTPSAddr += ":" + strconv.Itoa(v)
+        }
+    }
     return nil
 }
 
