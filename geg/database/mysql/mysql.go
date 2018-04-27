@@ -465,7 +465,9 @@ func instance() {
 
 
 func main() {
-
+    r, e := db.Table("user").Where("name like ?", "%john%").Select()
+    fmt.Println(e)
+    fmt.Println(r)
     //create()
     //create()
     //insert()
@@ -479,7 +481,7 @@ func main() {
     //linkopSelect1()
     //linkopSelect2()
     //linkopSelect3()
-    linkopCount1()
+    //linkopCount1()
     //linkopUpdate1()
     //linkopUpdate2()
     //linkopUpdate3()
