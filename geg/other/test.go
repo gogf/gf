@@ -1,11 +1,12 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gconv"
-    "math"
     "fmt"
+    "math/rand"
 )
 
 func main() {
-    fmt.Println(gconv.String(uint(math.MaxUint64)))
+    for i := 0; i < 100; i++ {
+        fmt.Println(rand.Intn(200))
+    }
 }
