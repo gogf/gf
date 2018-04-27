@@ -15,6 +15,8 @@ import (
     "gitee.com/johng/gf/g/util/grand"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
+    "sync"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 const (
@@ -95,6 +97,15 @@ type Map  map[string]interface{}
 // 关联数组列表(索引从0开始的数组)，绑定多条记录
 type List []Map
 
+// MySQL接口对象
+var linkMysql = &dbmysql{}
+
+// PostgreSQL接口对象
+var linkPgsql = &dbpgsql{}
+
+// 二级数据库连接池，这是一个临时的对象池，键名为对应的单节点数据库配置，键值为*sync.Pool
+var dbPools   = gmap.NewStringInterfaceMap()
+
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
 func New(groupName...string) (*Db, error) {
     name := config.d
@@ -170,21 +181,15 @@ func getConfigNodeByPriority (cg ConfigGroup) *ConfigNode {
 func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
     var link Link
     switch masterNode.Type {
-        case "mysql": link = Link(&dbmysql{})
-        case "pgsql": link = Link(&dbpgsql{})
+        case "mysql": link = linkMysql
+        case "pgsql": link = linkPgsql
         default:
             return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", masterNode.Type))
     }
-    master, err := link.Open(masterNode)
-    if err != nil {
-        return nil, err
-    }
-    slave := master
+    master := openDb(link, masterNode)
+    slave  := master
     if slaveNode != nil {
-        slave,  err = link.Open(slaveNode)
-        if err != nil {
-            return nil, err
-        }
+        slave = openDb(link, slaveNode)
     }
     return &Db {
         link   : link,
@@ -193,6 +198,30 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
         charl  : link.getQuoteCharLeft(),
         charr  : link.getQuoteCharRight(),
     }, nil
+}
+
+func openDb (link Link, node *ConfigNode) *sql.DB {
+    var pool *sync.Pool
+    poolKey := fmt.Sprintf("%v", *node)
+    if v := dbPools.Get(poolKey); v == nil {
+        pool := sync.Pool{
+            New : func() interface{} {
+                if db, err := link.Open(node); err != nil {
+                    //glog.Error(err)
+                    return nil
+                } else {
+                    return db
+                }
+            },
+        }
+        dbPools.Set(poolKey, pool)
+    } else {
+        pool = v.(*sync.Pool)
+    }
+    if v := pool.Get(); v != nil {
+        return v.(*sql.DB)
+    }
+    return nil
 }
 
 // 将结果列表按照指定的字段值做map[string]Map
