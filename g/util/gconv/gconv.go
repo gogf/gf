@@ -229,7 +229,7 @@ func Float64 (i interface{}) float64 {
     if v, ok := i.(float64); ok {
         return v
     }
-    v, _ := strconv.ParseFloat(String(i), 32)
+    v, _ := strconv.ParseFloat(String(i), 64)
     return v
 }
 
