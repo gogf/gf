@@ -122,11 +122,10 @@ func New(groupName...string) (*Db, error) {
         if len(masterList) < 1 {
             return nil, errors.New("at least one master node configuration's need to make sense")
         }
-
-        masterNode := getConfigNodeByPriority(&masterList)
+        masterNode := getConfigNodeByPriority(masterList)
         var slaveNode *ConfigNode
         if len(slaveList) > 0 {
-            slaveNode = getConfigNodeByPriority(&slaveList)
+            slaveNode = getConfigNodeByPriority(slaveList)
         }
         return newDb(masterNode, slaveNode)
     } else {
@@ -135,22 +134,31 @@ func New(groupName...string) (*Db, error) {
 }
 
 // 按照负载均衡算法(优先级配置)从数据库集群中选择一个配置节点出来使用
-func getConfigNodeByPriority (cg *ConfigGroup) *ConfigNode {
-    if len(*cg) < 2 {
-        return &(*cg)[0]
+// 算法说明举例，
+// 1、假如2个节点的priority都是1，那么随机大小范围为[0, 199]；
+// 2、那么节点1的权重范围为[0, 99]，节点2的权重范围为[100, 199]，比例为1:1；
+// 3、假如计算出的随机数为99;
+// 4、那么选择的配置为节点1;
+func getConfigNodeByPriority (cg ConfigGroup) *ConfigNode {
+    if len(cg) < 2 {
+        return &cg[0]
     }
     var total int
-    for i := 0; i < len(*cg); i++ {
-        total += (*cg)[i].Priority * 100
+    for i := 0; i < len(cg); i++ {
+        total += cg[i].Priority * 100
     }
+    // 不能取到末尾的边界点
     r   := grand.Rand(0, total)
+    if r > 0 {
+        r -= 1
+    }
     min := 0
     max := 0
-    for i := 0; i < len(*cg); i++ {
-        max = min + (*cg)[i].Priority * 100
+    for i := 0; i < len(cg); i++ {
+        max = min + cg[i].Priority * 100
         //fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
         if r >= min && r < max {
-            return &(*cg)[i]
+            return &cg[i]
         } else {
             min = max
         }
@@ -178,7 +186,6 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
             return nil, err
         }
     }
-
     return &Db {
         link   : link,
         master : master,
