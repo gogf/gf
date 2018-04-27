@@ -19,13 +19,13 @@ type dbmysql struct {
 
 // 创建SQL操作对象，内部采用了lazy link处理
 func (db *dbmysql) Open (c *ConfigNode) (*sql.DB, error) {
-    var dbsource string
+    var source string
     if c.Linkinfo != "" {
-        dbsource = c.Linkinfo
+        source = c.Linkinfo
     } else {
-        dbsource = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name)
+        source = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name)
     }
-    if db, err := sql.Open("mysql", dbsource); err == nil {
+    if db, err := sql.Open("mysql", source); err == nil {
         return db, nil
     } else {
         return nil, err
