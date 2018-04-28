@@ -20,16 +20,14 @@ import (
 // 关闭链接
 func (db *Db) Close() error {
     if db.master != nil {
-        err := db.master.Close()
-        if err == nil {
+        if err := db.master.Close(); err == nil {
             db.master = nil
         } else {
             return err
         }
     }
     if db.slave != nil {
-        err := db.slave.Close()
-        if err == nil {
+        if err := db.slave.Close(); err == nil {
             db.slave = nil
         } else {
             return err
