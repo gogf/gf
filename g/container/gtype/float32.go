@@ -8,6 +8,7 @@ package gtype
 
 import (
     "sync/atomic"
+    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
 type Float32 struct {
@@ -16,19 +17,33 @@ type Float32 struct {
 
 func NewFloat32(value...float32) *Float32 {
     if len(value) > 0 {
-        return &Float32{val:uint32(value[0])}
+        return &Float32{ val : float32ToUint32InBits(value[0]) }
     }
     return &Float32{}
 }
 
 func (t *Float32)Set(value float32) {
-    atomic.StoreUint32(&t.val, uint32(value))
+    atomic.StoreUint32(&t.val, float32ToUint32InBits(value) )
 }
 
-func (t *Float32)Val() int {
-    return int(atomic.LoadUint32(&t.val))
+func (t *Float32)Val() float32 {
+    return uint32ToFloat32InBits(atomic.LoadUint32(&t.val))
 }
 
-func (t *Float32)Add(delta float32) int {
-    return int(atomic.AddUint32(&t.val, uint32(delta)))
+func (t *Float32)Add(delta float32) float32 {
+    return uint32ToFloat32InBits(atomic.AddUint32(&t.val, float32ToUint32InBits(delta)))
+}
+
+// 通过二进制的方式将float32转换为uint32(都是32bits)
+func float32ToUint32InBits(value float32) uint32 {
+    b := gbinary.Encode(value)
+    i := gbinary.DecodeToUint32(b)
+    return i
+}
+
+// 通过二进制的方式将uint32转换为float32(都是32bits)
+func uint32ToFloat32InBits(value uint32) float32 {
+    b := gbinary.Encode(value)
+    f := gbinary.DecodeToFloat32(b)
+    return f
 }
