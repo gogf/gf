@@ -15,8 +15,6 @@ import (
     "gitee.com/johng/gf/g/util/grand"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
-    "sync"
-    "gitee.com/johng/gf/g/container/gmap"
 )
 
 const (
@@ -103,9 +101,6 @@ var linkMysql = &dbmysql{}
 // PostgreSQL接口对象
 var linkPgsql = &dbpgsql{}
 
-// 二级数据库连接池，这是一个临时的对象池，键名为对应的单节点数据库配置，键值为*sync.Pool
-var dbPools   = gmap.NewStringInterfaceMap()
-
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
 func New(groupName...string) (*Db, error) {
     name := config.d
@@ -186,10 +181,16 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
         default:
             return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", masterNode.Type))
     }
-    master := openDb(link, masterNode)
+    master, err := link.Open(masterNode)
+    if err != nil {
+        return nil, err
+    }
     slave  := master
     if slaveNode != nil {
-        slave = openDb(link, slaveNode)
+        slave, err = link.Open(slaveNode)
+        if err != nil {
+            return nil, err
+        }
     }
     return &Db {
         link   : link,
@@ -198,30 +199,6 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
         charl  : link.getQuoteCharLeft(),
         charr  : link.getQuoteCharRight(),
     }, nil
-}
-
-func openDb (link Link, node *ConfigNode) *sql.DB {
-    var pool *sync.Pool
-    poolKey := fmt.Sprintf("%v", *node)
-    if v := dbPools.Get(poolKey); v == nil {
-        pool := sync.Pool{
-            New : func() interface{} {
-                if db, err := link.Open(node); err != nil {
-                    //glog.Error(err)
-                    return nil
-                } else {
-                    return db
-                }
-            },
-        }
-        dbPools.Set(poolKey, pool)
-    } else {
-        pool = v.(*sync.Pool)
-    }
-    if v := pool.Get(); v != nil {
-        return v.(*sql.DB)
-    }
-    return nil
 }
 
 // 将结果列表按照指定的字段值做map[string]Map
