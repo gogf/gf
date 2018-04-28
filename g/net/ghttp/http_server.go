@@ -18,6 +18,7 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
+    "time"
 )
 
 const (
@@ -38,7 +39,6 @@ type Server struct {
     hmcmu            sync.RWMutex             // handlerCache互斥锁
     hhcmu            sync.RWMutex             // hooksCache互斥锁
     name             string                   // 服务名称，方便识别
-    server           http.Server              // 底层http server对象
     config           ServerConfig             // 配置对象
     status           int8                     // 当前服务器状态(0：未启动，1：运行中)
     methodsMap       map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
@@ -60,6 +60,7 @@ type Server struct {
     accessLogger     *glog.Logger             // access log日志对象
     errorLogger      *glog.Logger             // error log日志对象
     logHandler       *gtype.Interface         // 自定义的日志处理回调方法
+    serverCount      *gtype.Int               // 底层的Web Server数量
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -118,6 +119,7 @@ func GetServer(name...interface{}) (*Server) {
         accessLogger     : glog.New(),
         errorLogger      : glog.New(),
         logHandler       : gtype.NewInterface(),
+        serverCount      : gtype.NewInt(),
     }
     s.errorLogger.SetBacktraceSkip(4)
     s.accessLogger.SetBacktraceSkip(4)
@@ -138,38 +140,71 @@ func (s *Server) Run() error {
         return errors.New("server is already running")
     }
 
+
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
-    // 底层http server初始化
-    s.server  = http.Server {
-        Addr           : s.config.Addr,
+
+    // 开启异步处理队列处理循环
+    s.startCloseQueueLoop()
+
+    // 开始执行底层Web Server创建，端口监听
+    if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
+        // HTTPS
+        if len(s.config.HTTPSAddr) == 0 {
+            if len(s.config.Addr) > 0 {
+                s.config.HTTPSAddr = s.config.Addr
+            } else {
+                s.config.HTTPSAddr = gDEFAULT_HTTPS_ADDR
+            }
+        }
+        array := strings.Split(s.config.HTTPSAddr, ",")
+        for _, addr := range array {
+            s.servedCount.Add(1)
+            go func() {
+                if err := s.newServer(addr).ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
+                    glog.Error(err)
+                    s.servedCount.Add(-1)
+                }
+            }()
+        }
+
+    }
+    // HTTP
+    if s.servedCount.Val() == 0 && len(s.config.Addr) == 0 {
+        s.config.Addr = gDEFAULT_HTTP_ADDR
+    }
+    array := strings.Split(s.config.Addr, ",")
+    for _, addr := range array {
+        s.servedCount.Add(1)
+        go func() {
+            if err := s.newServer(addr).ListenAndServe(); err != nil {
+                glog.Error(err)
+                s.servedCount.Add(-1)
+            }
+        }()
+    }
+
+    s.status = 1
+
+    // 阻塞执行，直到所有Web Server退出
+    for s.servedCount.Val() > 0 {
+        time.Sleep(time.Second)
+    }
+    return nil
+}
+
+// 生成一个底层的Web Server对象
+func (s *Server) newServer(addr string) *http.Server {
+    return &http.Server {
+        Addr           : addr,
         Handler        : s.config.Handler,
         ReadTimeout    : s.config.ReadTimeout,
         WriteTimeout   : s.config.WriteTimeout,
         IdleTimeout    : s.config.IdleTimeout,
         MaxHeaderBytes : s.config.MaxHeaderBytes,
     }
-    // 开启异步处理队列处理循环
-    s.startCloseQueueLoop()
-    // 执行端口监听
-    if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
-        // HTTPS
-        if err := s.server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
-            glog.Error(err)
-            return err
-        }
-    } else {
-        // HTTP
-        if err := s.server.ListenAndServe(); err != nil {
-            glog.Error(err)
-            return err
-        }
-    }
-
-    s.status = 1
-    return nil
 }
 
 // 清空当前的handlerCache
