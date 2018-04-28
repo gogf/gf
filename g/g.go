@@ -17,6 +17,9 @@ import (
     "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/database/gredis"
+    "gitee.com/johng/gf/g/net/ghttp"
+    "gitee.com/johng/gf/g/net/gtcp"
+    "gitee.com/johng/gf/g/net/gudp"
 )
 
 const (
@@ -28,6 +31,21 @@ type Map map[string]interface{}
 
 // 常用list数据结构
 type List []Map
+
+// HTTPServer单例对象
+func Server(name...interface{}) *ghttp.Server {
+    return ghttp.GetServer(name...)
+}
+
+// TCPServer单例对象
+func TcpServer(name...interface{}) *gtcp.Server {
+    return gtcp.GetServer(name...)
+}
+
+// UDPServer单例对象
+func UdpServer(name...interface{}) *gudp.Server {
+    return gudp.GetServer(name...)
+}
 
 // 核心对象：View
 func View() *gview.View {
@@ -124,3 +142,5 @@ func Redis(name...string) *gredis.Redis {
     }
     return nil
 }
+
+

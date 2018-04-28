@@ -10,6 +10,7 @@ package gudp
 import (
     "net"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 const (
@@ -27,16 +28,16 @@ var serverMapping = gmap.NewStringInterfaceMap()
 
 // 获取/创建一个空配置的UDP Server
 // 单例模式，请保证name的唯一性
-func GetServer(names...string) (*Server) {
-    name := gDEFAULT_SERVER
-    if len(names) > 0 {
-        name = names[0]
+func GetServer(name...interface{}) (*Server) {
+    sname := gDEFAULT_SERVER
+    if len(name) > 0 {
+        sname = gconv.String(name[0])
     }
-    if s := serverMapping.Get(name); s != nil {
+    if s := serverMapping.Get(sname); s != nil {
         return s.(*Server)
     }
     s := NewServer("", nil)
-    serverMapping.Set(name, s)
+    serverMapping.Set(sname, s)
     return s
 }
 
