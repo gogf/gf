@@ -2,10 +2,25 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/util/gutil"
 )
 
+// 自定义的struct
+type User struct {
+    Uid  int
+    Name string
+}
+
+// map[uid:1 name:john3 email: type:1]
+// {1 john3}
 func main() {
-    fmt.Println(gutil.LcFirst("ABC"))
-    fmt.Println(gutil.UcFirst("abc"))
+    if r, err := db.Table("user").Where("uid=?", 1).One(); err == nil {
+        u := User{}
+        if err := r.ToStruct(&u); err == nil {
+            fmt.Println(u)
+        } else {
+            fmt.Println(err)
+        }
+    } else {
+        fmt.Println(err)
+    }
 }
