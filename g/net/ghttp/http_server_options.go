@@ -57,6 +57,9 @@ func (s *Server)SetPort(port...int) error {
     if len(port) > 0 {
         s.config.Addr = ""
         for _, v := range port {
+            if len(s.config.Addr) > 0 {
+                s.config.Addr += ","
+            }
             s.config.Addr += ":" + strconv.Itoa(v)
         }
     }
@@ -80,6 +83,9 @@ func (s *Server)SetHTTPSPort(port...int) error {
     if len(port) > 0 {
         s.config.HTTPSAddr = ""
         for _, v := range port {
+            if len(s.config.HTTPSAddr) > 0 {
+                s.config.HTTPSAddr += ","
+            }
             s.config.HTTPSAddr += ":" + strconv.Itoa(v)
         }
     }
