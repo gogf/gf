@@ -17,6 +17,7 @@ import (
     "net/http"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/encoding/ghtml"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -39,6 +40,9 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
     // 错误日志使用recover进行判断
     defer func() {
+        if request.LeaveTime == 0 {
+            request.LeaveTime = gtime.Microsecond()
+        }
         if e := recover(); e != nil {
             s.handleErrorLog(e, request)
         }
@@ -54,6 +58,8 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     }
     // 事件 - AfterServe
     s.callHookHandler(request, "AfterServe")
+    // 设置请求完成时间
+    request.LeaveTime = gtime.Microsecond()
     // 事件 - BeforeOutput
     s.callHookHandler(request, "BeforeOutput")
     // 输出Cookie

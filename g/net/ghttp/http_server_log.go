@@ -23,7 +23,12 @@ func (s *Server) handleAccessLog(r *Request) {
         v(r)
         return
     }
-    content := fmt.Sprintf(`"%s %s %s %s" %s %s`, r.Method, r.Host, r.URL.String(), r.Proto, gconv.String(r.Response.Status), gconv.String(r.Response.Length))
+    content := fmt.Sprintf(`"%s %s %s %s" %s %s`,
+        r.Method, r.Host, r.URL.String(), r.Proto,
+        gconv.String(r.Response.Status),
+        gconv.String(r.Response.Length),
+    )
+    content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime - r.EnterTime)/1000)
     content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
     s.accessLogger.Println(content)
 }
@@ -42,6 +47,7 @@ func (s *Server) handleErrorLog(error interface{}, r *Request) {
     }
 
     content := fmt.Sprintf(`%v, "%s %s %s %s"`, error, r.Method, r.Host, r.URL.String(), r.Proto)
+    content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime - r.EnterTime)/1000)
     content += fmt.Sprintf(`, %s, "%s", "%s"`,  r.GetClientIp(), r.Referer(), r.UserAgent())
     s.errorLogger.Error(content)
 }
