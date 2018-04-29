@@ -14,6 +14,29 @@ import (
     "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
+// 将变量i转换为字符串指定的类型t
+func Convert(i interface{}, t string) interface{} {
+    switch t {
+    case "int":     return Int(i)
+    case "int8":    return Int8(i)
+    case "int16":   return Int16(i)
+    case "int32":   return Int32(i)
+    case "int64":   return Int64(i)
+    case "uint":    return Uint(i)
+    case "uint8":   return Uint8(i)
+    case "uint16":  return Uint16(i)
+    case "uint32":  return Uint32(i)
+    case "uint64":  return Uint64(i)
+    case "float32": return Float32(i)
+    case "float64": return Float64(i)
+    case "bool":    return Bool(i)
+    case "string":  return String(i)
+    case "[]byte":  return Bytes(i)
+    default:
+        return i
+    }
+}
+
 func Bytes(i interface{}) []byte {
     if i == nil {
         return nil
@@ -232,4 +255,5 @@ func Float64 (i interface{}) float64 {
     v, _ := strconv.ParseFloat(String(i), 64)
     return v
 }
+
 

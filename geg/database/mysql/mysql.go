@@ -445,29 +445,39 @@ func keepPing() {
     }
 }
 
-// 数据库单例测试，在mysql中使用 show full processlist 查看链接信息
-func instance() {
-    fmt.Println("instance:")
-    db1, _ := gdb.New()
-    db2, _ := gdb.New()
-    db3, _ := gdb.New()
-    for {
-        fmt.Println("ping...")
-        db1.PingMaster()
-        db1.PingSlave()
-        db2.PingMaster()
-        db2.PingSlave()
-        db3.PingMaster()
-        db3.PingSlave()
-        time.Sleep(1*time.Second)
+// like语句查询
+func likeQuery() {
+    fmt.Println("likeQuery:")
+    if r, err := db.Table("user").Where("name like ?", "%john%").Select(); err == nil {
+        fmt.Println(r)
+    } else {
+        fmt.Println(err)
     }
 }
 
 
+// mapToStruct
+func mapToStruct() {
+    type User struct {
+        Uid  int
+        Name string
+    }
+    fmt.Println("mapToStruct:")
+    if r, err := db.Table("user").Where("uid=?", 1).One(); err == nil {
+        u := User{}
+        if err := r.ToStruct(&u); err == nil {
+            fmt.Println(r)
+            fmt.Println(u)
+        } else {
+            fmt.Println(err)
+        }
+    } else {
+        fmt.Println(err)
+    }
+}
+
 func main() {
-    r, e := db.Table("user").Where("name like ?", "%john%").Select()
-    fmt.Println(e)
-    fmt.Println(r)
+    mapToStruct()
     //create()
     //create()
     //insert()

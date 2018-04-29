@@ -13,7 +13,7 @@ type gtInterface interface {
 
 type st struct {
     age  int
-    name string
+    Name string
 }
 
 type mySt struct {
@@ -53,7 +53,7 @@ func main() {
     //// 我们需要调用的是实体结构体指针的方法，注意v2与v2的区别，以及方法定义的区别
     //v2.MethodByName("Echo2").Call([]reflect.Value{p})
     //v.MethodByName()
-    fmt.Println(v.Type())
+    fmt.Println(v.FieldByName("name"))
 
 
 
