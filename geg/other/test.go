@@ -2,11 +2,10 @@ package main
 
 import (
     "fmt"
-    "math/rand"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 func main() {
-    for i := 0; i < 100; i++ {
-        fmt.Println(rand.Intn(200))
-    }
+    fmt.Println(gutil.LcFirst("ABC"))
+    fmt.Println(gutil.UcFirst("abc"))
 }
