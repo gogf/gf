@@ -18,7 +18,6 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
-    "time"
 )
 
 const (
@@ -60,7 +59,6 @@ type Server struct {
     accessLogger     *glog.Logger             // access log日志对象
     errorLogger      *glog.Logger             // error log日志对象
     logHandler       *gtype.Interface         // 自定义的日志处理回调方法
-    serverCount      *gtype.Int               // 底层的Web Server数量
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -119,7 +117,6 @@ func GetServer(name...interface{}) (*Server) {
         accessLogger     : glog.New(),
         errorLogger      : glog.New(),
         logHandler       : gtype.NewInterface(),
-        serverCount      : gtype.NewInt(),
     }
     s.errorLogger.SetBacktraceSkip(4)
     s.accessLogger.SetBacktraceSkip(4)
@@ -140,7 +137,6 @@ func (s *Server) Run() error {
         return errors.New("server is already running")
     }
 
-
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
@@ -150,6 +146,7 @@ func (s *Server) Run() error {
     s.startCloseQueueLoop()
 
     // 开始执行底层Web Server创建，端口监听
+    var wg sync.WaitGroup
     if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
         // HTTPS
         if len(s.config.HTTPSAddr) == 0 {
@@ -160,38 +157,35 @@ func (s *Server) Run() error {
             }
         }
         array := strings.Split(s.config.HTTPSAddr, ",")
-        for _, addr := range array {
-            s.servedCount.Add(1)
-            go func() {
+        for _, v := range array {
+            wg.Add(1)
+            go func(addr string) {
                 if err := s.newServer(addr).ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
                     glog.Error(err)
-                    s.servedCount.Add(-1)
+                    wg.Done()
                 }
-            }()
+            }(v)
         }
-
     }
     // HTTP
     if s.servedCount.Val() == 0 && len(s.config.Addr) == 0 {
         s.config.Addr = gDEFAULT_HTTP_ADDR
     }
     array := strings.Split(s.config.Addr, ",")
-    for _, addr := range array {
-        s.servedCount.Add(1)
-        go func() {
+    for _, v := range array {
+        wg.Add(1)
+        go func(addr string) {
             if err := s.newServer(addr).ListenAndServe(); err != nil {
                 glog.Error(err)
-                s.servedCount.Add(-1)
+                wg.Done()
             }
-        }()
+        }(v)
     }
 
     s.status = 1
 
     // 阻塞执行，直到所有Web Server退出
-    for s.servedCount.Val() > 0 {
-        time.Sleep(time.Second)
-    }
+    wg.Wait()
     return nil
 }
 
