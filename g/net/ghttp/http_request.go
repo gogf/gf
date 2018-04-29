@@ -13,6 +13,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 // 请求对象
@@ -28,6 +29,8 @@ type Request struct {
     Session    *Session            // 与当前请求绑定的Session对象(并发安全)
     Response   *Response           // 对应请求的返回数据操作对象
     Router     *Router             // 匹配到的路由对象
+    EnterTime  int64               // 请求进入时间(微秒)
+    LeaveTime  int64               // 请求完成时间(微秒)
 }
 
 // 创建一个Request对象
@@ -43,6 +46,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
         Response   : &Response {
             ResponseWriter : ResponseWriter{w, http.StatusOK, 0},
         },
+        EnterTime  : gtime.Microsecond(),
     }
     // 会话处理
     request.Cookie           = GetCookie(request)
