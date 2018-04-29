@@ -9,7 +9,6 @@ package gparser
 
 import (
     "gitee.com/johng/gf/g/encoding/gjson"
-    "encoding/json"
 )
 
 type Parser struct {
@@ -151,12 +150,8 @@ func (p *Parser) ToToml() ([]byte, error) {
 }
 
 // 将变量解析为对应的struct对象，注意传递的参数为struct对象指针
-func (p *Parser) ToStruct(v interface{}) error {
-    if c, e := p.ToJson(); e == nil {
-        return json.Unmarshal(c, v)
-    } else {
-        return e
-    }
+func (p *Parser) ToStruct(o interface{}) error {
+    return p.json.ToStruct(o)
 }
 
 func VarToXml(value interface{}, rootTag...string) ([]byte, error) {
