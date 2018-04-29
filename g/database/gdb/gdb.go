@@ -13,6 +13,7 @@ import (
     "database/sql"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/grand"
+    "gitee.com/johng/gf/g/util/gutil"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
 )
@@ -201,10 +202,15 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
     }, nil
 }
 
+// 将Map变量映射到指定的struct对象中，注意参数应当是一个对象的指针
+func (m Map) ToStruct(obj interface{}) error {
+    return gutil.MapToStruct(m, obj)
+}
+
 // 将结果列表按照指定的字段值做map[string]Map
-func (list List) ToStringMap(key string) map[string]Map {
+func (l List) ToStringMap(key string) map[string]Map {
     m := make(map[string]Map)
-    for _, item := range list {
+    for _, item := range l {
         if v, ok := item[key]; ok {
             m[gconv.String(v)] = item
         }
@@ -213,9 +219,9 @@ func (list List) ToStringMap(key string) map[string]Map {
 }
 
 // 将结果列表按照指定的字段值做map[int]Map
-func (list List) ToIntMap(key string) map[int]Map {
+func (l List) ToIntMap(key string) map[int]Map {
     m := make(map[int]Map)
-    for _, item := range list {
+    for _, item := range l {
         if v, ok := item[key]; ok {
             m[gconv.Int(v)] = item
         }
@@ -224,9 +230,9 @@ func (list List) ToIntMap(key string) map[int]Map {
 }
 
 // 将结果列表按照指定的字段值做map[uint]Map
-func (list List) ToUintMap(key string) map[uint]Map {
+func (l List) ToUintMap(key string) map[uint]Map {
     m := make(map[uint]Map)
-    for _, item := range list {
+    for _, item := range l {
         if v, ok := item[key]; ok {
             m[gconv.Uint(v)] = item
         }
