@@ -18,9 +18,10 @@ import (
 // 服务端请求返回对象
 type Response struct {
     ResponseWriter
-    mu      sync.RWMutex // 缓冲区互斥锁
-    buffer  []byte       // 每个请求的返回数据缓冲区
-    request *Request     // 关联的Request请求对象
+    Writer  *ResponseWriter // io.Writer
+    mu      sync.RWMutex    // 缓冲区互斥锁
+    buffer  []byte          // 每个请求的返回数据缓冲区
+    request *Request        // 关联的Request请求对象
 }
 
 // 自定义的ResponseWriter，用于写入流的控制
@@ -28,6 +29,15 @@ type ResponseWriter struct {
     http.ResponseWriter
     Status int // http status
     Length int // response length
+}
+
+// 创建一个ghttp.Response对象指针
+func newResponse(w http.ResponseWriter) *Response {
+    r := &Response {
+        ResponseWriter : ResponseWriter{w, http.StatusOK, 0},
+    }
+    r.Writer = &r.ResponseWriter
+    return r
 }
 
 // 覆盖父级的WriteHeader方法
