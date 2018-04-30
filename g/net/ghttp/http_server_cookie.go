@@ -130,7 +130,7 @@ func (c *Cookie) Output() {
             continue
         }
         http.SetCookie(
-            c.response.ResponseWriter.ResponseWriter,
+            c.response.Writer,
             &http.Cookie {
                 Name     : k,
                 Value    : v.value,
