@@ -60,7 +60,14 @@ func (r *Response) Write(content ... interface{}) {
     }
     r.mu.Lock()
     for _, v := range content {
-        r.buffer = append(r.buffer, gconv.String(v)...)
+        switch v.(type) {
+            case []byte:
+                // 如果是二进制数据，那么返回二进制数据
+                r.buffer = append(r.buffer, gconv.Bytes(v)...)
+            default:
+                // 否则一律按照可显示的字符串进行转换
+                r.buffer = append(r.buffer, gconv.String(v)...)
+        }
     }
     r.mu.Unlock()
 }
