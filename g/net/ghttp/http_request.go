@@ -44,9 +44,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
         Id         : s.servedCount.Add(1),
         Server     : s,
         Request    : *r,
-        Response   : &Response {
-            ResponseWriter : ResponseWriter{w, http.StatusOK, 0},
-        },
+        Response   : newResponse(w),
         EnterTime  : gtime.Microsecond(),
     }
     // 会话处理
