@@ -4,11 +4,7 @@ ON THE WAY:
 3. 更多数据库的ORM功能支持；
 4. 验证码包支持；
 5. FAQ
-6. ghttp.Server多个时间之间如何传参？Request？Context？
-7. ghttp.Server日志中增加请求时间和返回时间，以便计算执行时间差；
-8. 由于去掉了gdb的单例模式，并且将gins的部分对象封装迁移到了g包中，需要同时梳理文档，完善修改；
-9. 在代码中增加https与http同时开启使用的示例代码，这块大家问得比较多；
-10. gdb对象管理增加二级连接池特性；
+6. gdb对象管理增加二级连接池特性；
 
 DONE:
 1. gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
@@ -22,3 +18,7 @@ DONE:
 9. gdb Where方法参数的改进，研究是否可以将string参数类型修改为interface{}；
 10. gpage分页控制功能；
 11. https支持；
+12. ghttp.Server日志中增加请求时间和返回时间，以便计算执行时间差；
+13. 由于去掉了gdb的单例模式，并且将gins的部分对象封装迁移到了g包中，需要同时梳理文档，完善修改；
+14. 在代码中增加https与http同时开启使用的示例代码，这块大家问得比较多；
+15. ghttp.Server多个事件之间通过ghttp.Request.Param自定义参数传参；
