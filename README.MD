@@ -65,7 +65,7 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
         * [ORM链式操作](http://gf.johng.cn/596224)
         * [ORM方法操作](http://gf.johng.cn/596223)
         * [ORM事务操作](http://gf.johng.cn/596225)
-        * [ORM高级用法](http://gf.johng.cn/606435)
+        * [ORM高级特性](http://gf.johng.cn/606435)
     * [框架开发进阶](http://gf.johng.cn/598801)
         * [HTTPS服务](http://gf.johng.cn/598802)
         * [服务性能分析](http://gf.johng.cn/592298)

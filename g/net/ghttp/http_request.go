@@ -31,6 +31,7 @@ type Request struct {
     Router     *Router             // 匹配到的路由对象
     EnterTime  int64               // 请求进入时间(微秒)
     LeaveTime  int64               // 请求完成时间(微秒)
+    Param      interface{}         // 开发者自定义参数
 }
 
 // 创建一个Request对象
