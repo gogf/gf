@@ -60,7 +60,7 @@ func (r *Response) Write(content ... interface{}) {
     }
     r.mu.Lock()
     for _, v := range content {
-        r.buffer = append(r.buffer, gconv.Bytes(v)...)
+        r.buffer = append(r.buffer, gconv.String(v)...)
     }
     r.mu.Unlock()
 }
