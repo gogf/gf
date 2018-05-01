@@ -250,7 +250,7 @@ func (md *Model) Batch(batch int) *Model {
 }
 
 // 链式操作，select
-func (md *Model) Select() (List, error) {
+func (md *Model) Select() (Result, error) {
     if md.tx == nil {
         return md.db.GetAll(md.getFormattedSql(), md.whereArgs...)
     } else {
@@ -259,12 +259,12 @@ func (md *Model) Select() (List, error) {
 }
 
 // 链式操作，查询所有记录
-func (md *Model) All() (List, error) {
+func (md *Model) All() (Result, error) {
     return md.Select()
 }
 
 // 链式操作，查询单条记录
-func (md *Model) One() (Map, error) {
+func (md *Model) One() (Record, error) {
     list, err := md.All()
     if err != nil {
         return nil, err
