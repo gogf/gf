@@ -52,7 +52,7 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 }
 
 // (事务)数据表查询，其中tables可以是多个联表查询语句，这种查询方式较复杂，建议使用链式操作
-func (tx *Tx) Select(tables, fields string, condition interface{}, groupBy, orderBy string, first, limit int, args ... interface{}) (List, error) {
+func (tx *Tx) Select(tables, fields string, condition interface{}, groupBy, orderBy string, first, limit int, args ... interface{}) (Result, error) {
     s := fmt.Sprintf("SELECT %s FROM %s ", fields, tables)
     if condition != nil {
         s += fmt.Sprintf("WHERE %s ", tx.db.formatCondition(condition))
@@ -70,7 +70,7 @@ func (tx *Tx) Select(tables, fields string, condition interface{}, groupBy, orde
 }
 
 // (事务)数据库查询，获取查询结果集，以列表结构返回
-func (tx *Tx) GetAll(query string, args ...interface{}) (List, error) {
+func (tx *Tx) GetAll(query string, args ...interface{}) (Result, error) {
     // 执行sql
     rows, err := tx.Query(query, args ...)
     if err != nil || rows == nil {
@@ -84,26 +84,26 @@ func (tx *Tx) GetAll(query string, args ...interface{}) (List, error) {
     // 返回结构组装
     values   := make([]sql.RawBytes, len(columns))
     scanArgs := make([]interface{}, len(values))
-    var list List
+    records  := make(Result, 0)
     for i := range values {
         scanArgs[i] = &values[i]
     }
     for rows.Next() {
         err = rows.Scan(scanArgs...)
         if err != nil {
-            return list, err
+            return records, err
         }
-        row := make(Map)
+        row := make(Record)
         for i, col := range values {
-            row[columns[i]] = string(col)
+            row[columns[i]] = Value(col)
         }
-        list = append(list, row)
+        records = append(records, row)
     }
-    return list, nil
+    return records, nil
 }
 
 // (事务)数据库查询，获取查询结果集，以关联数组结构返回
-func (tx *Tx) GetOne(query string, args ...interface{}) (Map, error) {
+func (tx *Tx) GetOne(query string, args ...interface{}) (Record, error) {
     list, err := tx.GetAll(query, args ...)
     if err != nil {
         return nil, err

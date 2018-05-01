@@ -11,9 +11,7 @@ import (
     "fmt"
     "errors"
     "database/sql"
-    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/grand"
-    "gitee.com/johng/gf/g/util/gutil"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
 )
@@ -36,8 +34,8 @@ type Link interface {
     Prepare(q string) (*sql.Stmt, error)
 
     // 数据库查询
-    GetAll(q string, args ...interface{}) (List, error)
-    GetOne(q string, args ...interface{}) (Map, error)
+    GetAll(q string, args ...interface{}) (Result, error)
+    GetOne(q string, args ...interface{}) (Record, error)
     GetValue(q string, args ...interface{}) (interface{}, error)
 
     // Ping
@@ -90,11 +88,20 @@ type Db struct {
     charr  string
 }
 
+// 返回数据表记录值
+type Value   string
+
+// 返回数据表记录Map
+type Record  map[string]Value
+
+// 返回数据表记录List
+type Result  []Record
+
 // 关联数组，绑定一条数据表记录
-type Map  map[string]interface{}
+type Map     map[string]interface{}
 
 // 关联数组列表(索引从0开始的数组)，绑定多条记录
-type List []Map
+type List    []Map
 
 // MySQL接口对象
 var linkMysql = &dbmysql{}
@@ -202,40 +209,3 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
     }, nil
 }
 
-// 将Map变量映射到指定的struct对象中，注意参数应当是一个对象的指针
-func (m Map) ToStruct(obj interface{}) error {
-    return gutil.MapToStruct(m, obj)
-}
-
-// 将结果列表按照指定的字段值做map[string]Map
-func (l List) ToStringMap(key string) map[string]Map {
-    m := make(map[string]Map)
-    for _, item := range l {
-        if v, ok := item[key]; ok {
-            m[gconv.String(v)] = item
-        }
-    }
-    return m
-}
-
-// 将结果列表按照指定的字段值做map[int]Map
-func (l List) ToIntMap(key string) map[int]Map {
-    m := make(map[int]Map)
-    for _, item := range l {
-        if v, ok := item[key]; ok {
-            m[gconv.Int(v)] = item
-        }
-    }
-    return m
-}
-
-// 将结果列表按照指定的字段值做map[uint]Map
-func (l List) ToUintMap(key string) map[uint]Map {
-    m := make(map[uint]Map)
-    for _, item := range l {
-        if v, ok := item[key]; ok {
-            m[gconv.Uint(v)] = item
-        }
-    }
-    return m
-}
