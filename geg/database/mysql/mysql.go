@@ -282,7 +282,7 @@ func linkopSelect3() {
     fmt.Println("linkopSelect3:")
     r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
     if err == nil {
-        fmt.Println(r.(string))
+        fmt.Println(r.String())
     } else {
         fmt.Println(err)
     }

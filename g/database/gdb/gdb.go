@@ -36,7 +36,7 @@ type Link interface {
     // 数据库查询
     GetAll(q string, args ...interface{}) (Result, error)
     GetOne(q string, args ...interface{}) (Record, error)
-    GetValue(q string, args ...interface{}) (interface{}, error)
+    GetValue(q string, args ...interface{}) (Value, error)
 
     // Ping
     PingMaster() error
@@ -89,7 +89,7 @@ type Db struct {
 }
 
 // 返回数据表记录值
-type Value   string
+type Value   []byte
 
 // 返回数据表记录Map
 type Record  map[string]Value
