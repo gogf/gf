@@ -276,15 +276,15 @@ func (md *Model) One() (Record, error) {
 }
 
 // 链式操作，查询字段值
-func (md *Model) Value() (interface{}, error) {
+func (md *Model) Value() (Value, error) {
     one, err := md.One()
     if err != nil {
-        return "", err
+        return nil, err
     }
     for _, v := range one {
         return v, nil
     }
-    return "", nil
+    return nil, nil
 }
 
 // 链式操作，查询数量，fields可以为空，也可以自定义查询字段，
