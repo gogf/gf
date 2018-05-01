@@ -115,7 +115,7 @@ func (db *Db) GetOne(query string, args ...interface{}) (Record, error) {
 }
 
 // 数据库查询，获取查询字段值
-func (db *Db) GetValue(query string, args ...interface{}) (interface{}, error) {
+func (db *Db) GetValue(query string, args ...interface{}) (Value, error) {
     one, err := db.GetOne(query, args ...)
     if err != nil {
         return nil, err
