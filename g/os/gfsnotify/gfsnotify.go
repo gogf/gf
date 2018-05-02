@@ -10,6 +10,7 @@ package gfsnotify
 
 import (
     "errors"
+    "gitee.com/johng/gf/g/os/glog"
     "github.com/fsnotify/fsnotify"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gcache"
@@ -94,7 +95,9 @@ func (w *Watcher) Close() {
 
 // 添加对指定文件/目录的监听，并给定回调函数
 func (w *Watcher) Add(path string, callback func(event *Event)) error {
-    if !gfile.Exists(path) {
+    // 这里统一转换为当前系统的绝对路径，便于统一监控文件名称
+    path = gfile.RealPath(path)
+    if path == "" {
         return errors.New(path + " does not exist")
     }
     // 注册回调函数
@@ -138,9 +141,8 @@ func (w *Watcher) startWatchLoop() {
                         Op   : Op(ev.Op),
                     })
 
-                //case err := <- w.watcher.Errors:
-                //    log.Println("error : ", err);
-                //    return
+                case err := <- w.watcher.Errors:
+                    glog.Error("error : ", err);
             }
         }
     }()
