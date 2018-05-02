@@ -96,10 +96,11 @@ func (w *Watcher) Close() {
 // 添加对指定文件/目录的监听，并给定回调函数
 func (w *Watcher) Add(path string, callback func(event *Event)) error {
     // 这里统一转换为当前系统的绝对路径，便于统一监控文件名称
-    path = gfile.RealPath(path)
-    if path == "" {
+    t := gfile.RealPath(path)
+    if t == "" {
         return errors.New(path + " does not exist")
     }
+    path = t
     // 注册回调函数
     w.callbacks.LockFunc(func(m map[string]interface{}) {
         var result interface{}
