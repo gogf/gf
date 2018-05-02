@@ -112,7 +112,7 @@ func (tx *Tx) GetOne(query string, args ...interface{}) (Record, error) {
 }
 
 // (事务)数据库查询，获取查询字段值
-func (tx *Tx) GetValue(query string, args ...interface{}) (interface{}, error) {
+func (tx *Tx) GetValue(query string, args ...interface{}) (Value, error) {
     one, err := tx.GetOne(query, args ...)
     if err != nil {
         return nil, err
