@@ -6,6 +6,7 @@ import (
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/frame/gins"
+    "gitee.com/johng/gf/g/encoding/gparser"
 )
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
@@ -477,7 +478,10 @@ func mapToStruct() {
 }
 
 func main() {
-    mapToStruct()
+    r, _ := db.Table("user").Select()
+    j, _ := gparser.VarToJson(r.ToList())
+    fmt.Println(string(j))
+    fmt.Println(r)
     //create()
     //create()
     //insert()
