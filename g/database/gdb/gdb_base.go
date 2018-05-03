@@ -102,7 +102,7 @@ func (db *Db) GetAll(query string, args ...interface{}) (Result, error) {
     return records, nil
 }
 
-// 数据库查询，获取查询结果集，以关联数组结构返回
+// 数据库查询，获取查询结果记录，以关联数组结构返回
 func (db *Db) GetOne(query string, args ...interface{}) (Record, error) {
     list, err := db.GetAll(query, args ...)
     if err != nil {
@@ -113,6 +113,16 @@ func (db *Db) GetOne(query string, args ...interface{}) (Record, error) {
     }
     return nil, nil
 }
+
+// 数据库查询，获取查询结果记录，自动映射数据到给定的struct对象中
+func (db *Db) GetStruct(obj interface{}, query string, args ...interface{}) error {
+    one, err := db.GetOne(query, args...)
+    if err != nil {
+        return err
+    }
+    return one.ToStruct(obj)
+}
+
 
 // 数据库查询，获取查询字段值
 func (db *Db) GetValue(query string, args ...interface{}) (Value, error) {
