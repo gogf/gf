@@ -11,20 +11,19 @@ import (
     "sync"
     "bytes"
     "errors"
-    "strings"
     "html/template"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/ghash"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/os/gfsnotify"
+    "gitee.com/johng/gf/g/os/gspath"
 )
 
 // 视图对象
 type View struct {
     mu       sync.RWMutex
-    path     *gtype.String           // 模板目录(绝对路径)
+    paths    *gspath.SPath           // 模板查找目录(绝对路径)
     funcmap  map[string]interface{}  // FuncMap
     contents *gmap.StringStringMap   // 已解析的模板文件内容
 }
@@ -57,8 +56,10 @@ func Get(path string) *View {
 
 // 生成一个视图对象
 func New(path string) *View {
+    s := gspath.New()
+    s.Set(path)
     view := &View {
-        path     : gtype.NewString(path),
+        paths    : s,
         funcmap  : make(map[string]interface{}),
         contents : gmap.NewStringStringMap(),
     }
@@ -67,32 +68,30 @@ func New(path string) *View {
 }
 
 // 设置模板目录绝对路径
-func (view *View) SetPath(path string) {
-    view.path.Set(path)
+func (view *View) SetPath(path string) error {
+    return view.paths.Set(path)
 }
 
-// 获取模板目录绝对路径
-func (view *View) GetPath() string {
-    return view.path.Val()
+// 添加模板目录搜索路径
+func (view *View) AddPath(path string) error {
+    return view.paths.Add(path)
 }
 
 // 解析模板，返回解析后的内容
 func (view *View) Parse(file string, params map[string]interface{}) ([]byte, error) {
-    path    := strings.TrimRight(view.GetPath(), gfile.Separator) + gfile.Separator + file
+    path    := view.paths.Search(file)
     content := view.contents.Get(path)
     if content == "" {
         content = gfile.GetContents(path)
         if content != "" {
-            view.mu.Lock()
             view.addMonitor(path)
             view.contents.Set(path, content)
-            view.mu.Unlock()
         }
     }
     if content == "" {
         return nil, errors.New("tpl \"" + file + "\" not found")
     }
-    // 执行模板解析
+    // 执行模板解析，互斥锁主要是用于funcmap
     view.mu.RLock()
     defer view.mu.RUnlock()
     buffer := bytes.NewBuffer(nil)
