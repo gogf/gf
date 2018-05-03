@@ -9,7 +9,6 @@ package gfile
 
 import (
     "os"
-    "path/filepath"
     "io"
     "io/ioutil"
     "sort"
@@ -21,6 +20,9 @@ import (
     "errors"
     "os/user"
     "runtime"
+    "path/filepath"
+    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
@@ -29,6 +31,9 @@ import (
 const (
     Separator = string(filepath.Separator)
 )
+
+// 源码的main包所在目录，仅仅会设置一次
+var mainPkgPath = gtype.NewInterface()
 
 // 给定文件的绝对路径创建文件
 func Mkdir(path string) error {
@@ -432,4 +437,29 @@ func GetBinContentByTwoOffsets(file *os.File, start int64, end int64) []byte {
         return nil
     }
     return buffer
+}
+
+// 获取入口函数文件所在目录(main包文件目录)，仅对源码开发环境有效（即仅对生成该可执行文件的系统下有效）
+func MainPkgPath() string {
+    path := mainPkgPath.Val()
+    if path != nil {
+        return path.(string)
+    }
+    f := ""
+    for i := 1; i < 10000; i++ {
+        if _, file, _, ok := runtime.Caller(i); ok {
+            // 不包含go源码路径
+            if !gregx.IsMatchString("^" + runtime.GOROOT(), file) {
+                f = file
+            }
+        } else {
+            break
+        }
+    }
+    if f != "" {
+        p := Dir(f)
+        mainPkgPath.Set(p)
+        return p
+    }
+    return ""
 }
