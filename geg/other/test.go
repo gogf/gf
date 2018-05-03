@@ -1,19 +1,35 @@
 package main
 
 import (
+    "runtime"
+    "strconv"
     "fmt"
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
-func main() {
-    g.Config().SetPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame")
-    db := g.Database()
-    if r, err := db.Table("goods").Where("id=?", 1).One(); err == nil {
-        fmt.Printf("goods    id: %d\n",   r["id"].Int())
-        fmt.Printf("goods title: %s\n",   r["title"].String())
-        fmt.Printf("goods proce: %.2f\n", r["price"].Float32())
-    } else {
-        glog.Error(err)
+func Test() {
+    backtrace := "Trace:\n"
+    index     := 0
+    for i := 1; i < 10000; i++ {
+        if _, cfile, cline, ok := runtime.Caller(i); ok {
+            // 不打印出go源码路径
+            if !gregx.IsMatchString("^" + runtime.GOROOT(), cfile) {
+                fmt.Println(gfile.Dir(cfile))
+                backtrace += strconv.Itoa(index) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n"
+                index++
+            }
+        } else {
+            break
+        }
     }
+    fmt.Println(backtrace)
+}
+
+func Test2() {
+    Test()
+}
+
+func main() {
+    Test2()
 }
