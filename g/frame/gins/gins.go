@@ -41,7 +41,7 @@ func View() *gview.View {
     if result != nil {
         return result.(*gview.View)
     } else {
-        path := gcmd.Option.Get("viewpath")
+        path := gcmd.Option.Get("gf.viewpath")
         if path == "" {
             path = genv.Get("gf.viewpath")
             if path == "" {
@@ -67,7 +67,7 @@ func Config() *gcfg.Config {
     if result != nil {
         return result.(*gcfg.Config)
     } else {
-        path := gcmd.Option.Get("cfgpath")
+        path := gcmd.Option.Get("gf.cfgpath")
         if path == "" {
             path = genv.Get("gf.cfgpath")
             if path == "" {
