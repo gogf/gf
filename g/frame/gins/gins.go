@@ -9,13 +9,11 @@
 package gins
 
 import (
-    "runtime"
     "gitee.com/johng/gf/g/os/gcfg"
     "gitee.com/johng/gf/g/os/gcmd"
     "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/util/gregx"
     "gitee.com/johng/gf/g/container/gmap"
 )
 
@@ -51,6 +49,11 @@ func View() *gview.View {
             }
         }
         view := gview.Get(path)
+        // 添加代码级的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
+        mainDirPath := gfile.MainPkgPath()
+        if mainDirPath != "" {
+            view.AddPath(mainDirPath)
+        }
         Set(gFRAME_CORE_COMPONENT_NAME_VIEW, view)
         return view
     }
@@ -73,19 +76,9 @@ func Config() *gcfg.Config {
         }
         config := gcfg.New(path)
         // 添加代码级的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
-        path = ""
-        for i := 1; i < 10000; i++ {
-            if _, file, _, ok := runtime.Caller(i); ok {
-                // 不包含go源码路径
-                if !gregx.IsMatchString("^" + runtime.GOROOT(), file) {
-                    path = file
-                }
-            } else {
-                break
-            }
-        }
-        if path != "" {
-            config.AddPath(gfile.Dir(path))
+        mainDirPath := gfile.MainPkgPath()
+        if mainDirPath != "" {
+            config.AddPath(mainDirPath)
         }
         // 单例对象缓存控制
         Set(gFRAME_CORE_COMPONENT_NAME_CONFIG, config)
