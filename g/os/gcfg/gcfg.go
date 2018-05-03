@@ -9,9 +9,7 @@
 package gcfg
 
 import (
-    "sync"
-    "strings"
-    "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
@@ -24,66 +22,66 @@ const (
 
 // 配置管理对象
 type Config struct {
-    mu     sync.RWMutex             // 并发互斥锁
-    path   *gtype.String            // 配置文件存放目录，绝对路径
+    paths  *gspath.SPath            // 搜索目录路径
     jsons  *gmap.StringInterfaceMap // 配置文件对象
     closed *gtype.Bool              // 是否已经被close
 }
 
 // 生成一个配置管理对象
 func New(path string) *Config {
+    s := gspath.New()
+    s.Set(path)
     return &Config {
-        path   : gtype.NewString(path),
+        paths  : s,
         jsons  : gmap.NewStringInterfaceMap(),
         closed : gtype.NewBool(),
     }
 }
 
 // 判断从哪个配置文件中获取内容，返回配置文件的绝对路径
-func (c *Config) filePath(file []string) string {
-    path := gDEFAULT_CONFIG_FILE
+func (c *Config) filePath(file...string) string {
+    name := gDEFAULT_CONFIG_FILE
     if len(file) > 0 {
-        path = file[0]
+        name = file[0]
     }
-    fpath := c.path.Val() + gfile.Separator + path
-    return fpath
+    return c.paths.Search(name)
 }
 
 // 设置配置管理器的配置文件存放目录绝对路径
-func (c *Config) SetPath(path string) {
-    if strings.Compare(c.path.Val(), path) != 0 {
-        c.path.Set(path)
-        c.mu.Lock()
-        c.jsons = gmap.NewStringInterfaceMap()
-        c.mu.Unlock()
+func (c *Config) SetPath(path string) error {
+    if err := c.paths.Set(path); err != nil {
+        return err
     }
+    c.jsons.Clear()
+    return nil
 }
 
-// 获取配置管理器的配置文件存放目录绝对路径
-func (c *Config) GetPath() string {
-    return c.path.Val()
+// 添加配置管理器的配置文件搜索路径
+func (c *Config) AddPath(path string) error {
+    if err := c.paths.Add(path); err != nil {
+        return err
+    }
+    return nil
 }
 
 // 获取指定文件的绝对路径，默认获取默认的配置文件路径
-func (c *Config) GetFilePath(name...string) string {
-    path := strings.TrimRight(c.path.Val(), gfile.Separator) + gfile.Separator
-    if len(name) > 0 {
-        return path + name[0]
+func (c *Config) GetFilePath(file...string) string {
+    name := gDEFAULT_CONFIG_FILE
+    if len(file) > 0 {
+        name = file[0]
     }
-    return path + gDEFAULT_CONFIG_FILE
+    return c.paths.Search(name)
 }
 
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中
-func (c *Config) getJson(file []string) *gjson.Json {
-    fpath := c.filePath(file)
+func (c *Config) getJson(file...string) *gjson.Json {
+    fpath := c.filePath(file...)
     if r := c.jsons.Get(fpath); r != nil {
         return r.(*gjson.Json)
     }
     if j, err := gjson.Load(fpath); err == nil {
-        c.mu.Lock()
         c.addMonitor(fpath)
         c.jsons.Set(fpath, j)
-        c.mu.Unlock()
         return j
     }
     return nil
@@ -91,7 +89,7 @@ func (c *Config) getJson(file []string) *gjson.Json {
 
 // 获取配置项，当不存在时返回nil
 func (c *Config) Get(pattern string, file...string) interface{} {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.Get(pattern)
     }
     return nil
@@ -100,7 +98,7 @@ func (c *Config) Get(pattern string, file...string) interface{} {
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
 func (c *Config) GetMap(pattern string, file...string)  map[string]interface{} {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.GetMap(pattern)
     }
     return nil
@@ -109,7 +107,7 @@ func (c *Config) GetMap(pattern string, file...string)  map[string]interface{} {
 // 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
 // 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
 func (c *Config) GetArray(pattern string, file...string)  []interface{} {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.GetArray(pattern)
     }
     return nil
@@ -117,7 +115,7 @@ func (c *Config) GetArray(pattern string, file...string)  []interface{} {
 
 // 返回指定json中的string
 func (c *Config) GetString(pattern string, file...string) string {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.GetString(pattern)
     }
     return ""
@@ -125,7 +123,7 @@ func (c *Config) GetString(pattern string, file...string) string {
 
 // 返回指定json中的bool
 func (c *Config) GetBool(pattern string, file...string) bool {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.GetBool(pattern)
     }
     return false
@@ -133,7 +131,7 @@ func (c *Config) GetBool(pattern string, file...string) bool {
 
 // 返回指定json中的float32
 func (c *Config) GetFloat32(pattern string, file...string) float32 {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.GetFloat32(pattern)
     }
     return 0
@@ -141,7 +139,7 @@ func (c *Config) GetFloat32(pattern string, file...string) float32 {
 
 // 返回指定json中的float64
 func (c *Config) GetFloat64(pattern string, file...string) float64 {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.GetFloat64(pattern)
     }
     return 0
@@ -149,7 +147,7 @@ func (c *Config) GetFloat64(pattern string, file...string) float64 {
 
 // 返回指定json中的float64->int
 func (c *Config) GetInt(pattern string, file...string)  int {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.GetInt(pattern)
     }
     return 0
@@ -157,7 +155,7 @@ func (c *Config) GetInt(pattern string, file...string)  int {
 
 // 返回指定json中的float64->uint
 func (c *Config) GetUint(pattern string, file...string)  uint {
-    if j := c.getJson(file); j != nil {
+    if j := c.getJson(file...); j != nil {
         return j.GetUint(pattern)
     }
     return 0
