@@ -86,6 +86,8 @@ func String(i interface{}) string {
         case uint16:  return strconv.FormatUint(uint64(value), 10)
         case uint32:  return strconv.FormatUint(uint64(value), 10)
         case uint64:  return strconv.FormatUint(uint64(value), 10)
+        case float32: return strconv.FormatFloat(float64(value), 'f', -1, 64)
+        case float64: return strconv.FormatFloat(value, 'f', -1, 64)
         case bool:    return strconv.FormatBool(value)
         case string:  return value
         case []byte:  return string(value)
@@ -139,6 +141,8 @@ func Int(i interface{}) int {
         case uint16:  return int(value)
         case uint32:  return int(value)
         case uint64:  return int(value)
+        case float32: return int(value)
+        case float64: return int(value)
         case bool:
             if value {
                 return 1
@@ -205,6 +209,8 @@ func Uint(i interface{}) uint {
         case uint16:  return uint(value)
         case uint32:  return uint(value)
         case uint64:  return uint(value)
+        case float32: return uint(value)
+        case float64: return uint(value)
         case bool:
             if value {
                 return 1
