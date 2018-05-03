@@ -275,6 +275,15 @@ func (md *Model) One() (Record, error) {
     return nil, nil
 }
 
+// 链式操作，查询单条记录，并自动转换为struct对象
+func (md *Model) Struct(obj interface{}) error {
+    one, err := md.One()
+    if err != nil {
+        return err
+    }
+    return one.ToStruct(obj)
+}
+
 // 链式操作，查询字段值
 func (md *Model) Value() (Value, error) {
     one, err := md.One()
