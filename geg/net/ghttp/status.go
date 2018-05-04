@@ -12,7 +12,6 @@ func main() {
         r.Response.WriteStatus(404)
     })
     s.BindStatusHandler(404, func(r *ghttp.Request){
-        r.Response.ClearBuffer()
         r.Response.Writeln("This is customized 404 page")
     })
     s.SetPort(8199)
