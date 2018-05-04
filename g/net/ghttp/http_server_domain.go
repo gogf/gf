@@ -132,3 +132,17 @@ func (d *Domain)BindHookHandlerByMap(pattern string, hookmap map[string]HandlerF
     }
     return nil
 }
+
+// 绑定指定的状态码回调函数
+func (d *Domain)BindStatusHandler(status int, handler HandlerFunc) {
+    for domain, _ := range d.m {
+        d.s.setStatusHandler(d.s.statusHandlerKey(status, domain), handler)
+    }
+}
+
+// 通过map批量绑定状态码回调函数
+func (d *Domain)BindStatusHandlerByMap(handlerMap map[int]HandlerFunc) {
+    for k, v := range handlerMap {
+        d.BindStatusHandler(k, v)
+    }
+}

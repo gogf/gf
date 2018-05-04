@@ -134,15 +134,17 @@ func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods s
 }
 
 // 返回HTTP Code状态码
-func (r *Response) WriteStatus(code int, content...string) {
-    r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-    r.Header().Set("X-Content-Type-Options", "nosniff")
-    if len(content) > 0 {
-        r.Write(content[0])
-    } else {
-        r.Write(http.StatusText(code))
+func (r *Response) WriteStatus(status int, content...string) {
+    if len(r.buffer) == 0 {
+        r.Header().Set("Content-Type", "text/plain; charset=utf-8")
+        r.Header().Set("X-Content-Type-Options", "nosniff")
+        if len(content) > 0 {
+            r.Write(content[0])
+        } else {
+            r.Write(http.StatusText(status))
+        }
     }
-    r.WriteHeader(code)
+    r.WriteHeader(status)
 }
 
 // 返回location标识，引导客户端跳转
@@ -156,6 +158,13 @@ func (r *Response) Buffer() []byte {
     r.mu.RLock()
     defer r.mu.RUnlock()
     return r.buffer
+}
+
+// 获取当前缓冲区中的数据大小
+func (r *Response) BufferLength() int {
+    r.mu.RLock()
+    defer r.mu.RUnlock()
+    return len(r.buffer)
 }
 
 // 手动设置缓冲区内容
