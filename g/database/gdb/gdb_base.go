@@ -95,8 +95,12 @@ func (db *Db) GetAll(query string, args ...interface{}) (Result, error) {
         }
         row := make(Record)
         for i, col := range values {
-            row[columns[i]] = Value(col)
+            k := columns[i]
+            v := make([]byte, len(col))
+            copy(v, col)
+            row[k] = v
         }
+        //fmt.Printf("%p\n", row["typeid"])
         records = append(records, row)
     }
     return records, nil
