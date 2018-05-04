@@ -136,6 +136,14 @@ func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods s
 // 返回HTTP Code状态码
 func (r *Response) WriteStatus(status int, content...string) {
     if len(r.buffer) == 0 {
+        // 状态码注册回调函数处理
+        if status != http.StatusOK {
+            if f := r.request.Server.getStatusHandler(status, r.request); f != nil {
+                f(r.request)
+                r.WriteHeader(status)
+                return
+            }
+        }
         r.Header().Set("Content-Type", "text/plain; charset=utf-8")
         r.Header().Set("X-Content-Type-Options", "nosniff")
         if len(content) > 0 {
@@ -183,10 +191,11 @@ func (r *Response) ClearBuffer() {
 
 // 输出缓冲区数据到客户端
 func (r *Response) OutputBuffer() {
-    r.mu.Lock()
     if len(r.buffer) > 0 {
+        r.mu.Lock()
         r.ResponseWriter.Write(r.buffer)
         r.buffer = make([]byte, 0)
+        r.mu.Unlock()
     }
-    r.mu.Unlock()
+
 }
