@@ -2,9 +2,8 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gfile"
 )
 
 func main() {
-    fmt.Println(gfile.RealPath("./"))
+    fmt.Println("我要加入gf框架开发团队！")
 }
