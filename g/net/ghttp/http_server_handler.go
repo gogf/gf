@@ -59,11 +59,6 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 事件 - AfterServe
     s.callHookHandler(request, "AfterServe")
 
-    // 状态码注册回调函数处理
-    if f := request.Server.getStatusHandler(request.Response.Status, request); f != nil {
-        f(request)
-    }
-
     // 设置请求完成时间
     request.LeaveTime = gtime.Microsecond()
 
