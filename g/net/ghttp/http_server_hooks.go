@@ -124,7 +124,7 @@ func (s *Server) searchHookHandler(r *Request, hook string) []*hookCacheItem {
     s.hhmu.RLock()
     defer s.hhmu.RUnlock()
     hookItems := make([]*hookCacheItem, 0)
-    domains   := []string{gDEFAULT_DOMAIN, r.GetHost()}
+    domains   := []string{r.GetHost(), gDEFAULT_DOMAIN}
     array     := strings.Split(r.URL.Path[1:], "/")
     for _, domain := range domains {
         p, ok := s.hooksTree[domain]
