@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-    fmt.Println("我要加入gf框架开发团队！")
+    fmt.Println("我要加入gf框架开发团队！！")
 }
