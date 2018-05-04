@@ -35,6 +35,7 @@ const (
 type Server struct {
     hmmu             sync.RWMutex             // handler互斥锁
     hhmu             sync.RWMutex             // hooks互斥锁
+    hsmu             sync.RWMutex             // status handler互斥锁
     hmcmu            sync.RWMutex             // handlerCache互斥锁
     hhcmu            sync.RWMutex             // hooksCache互斥锁
     name             string                   // 服务名称，方便识别
@@ -42,6 +43,7 @@ type Server struct {
     status           int8                     // 当前服务器状态(0：未启动，1：运行中)
     methodsMap       map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
     handlerMap       HandlerMap               // 所有注册的回调函数(静态匹配)
+    statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
     handlerTree      map[string]interface{}   // 所有注册的回调函数(动态匹配，树型+链表优先级匹配)
     hooksTree        map[string]interface{}   // 所有注册的事件回调函数(动态匹配，树型+链表优先级匹配)
     handlerCache     *gcache.Cache            // 服务注册路由内存缓存
@@ -100,6 +102,7 @@ func GetServer(name...interface{}) (*Server) {
         name             : sname,
         methodsMap       : make(map[string]bool),
         handlerMap       : make(HandlerMap),
+        statusHandlerMap : make(map[string]HandlerFunc),
         handlerTree      : make(map[string]interface{}),
         hooksTree        : make(map[string]interface{}),
         handlerCache     : gcache.New(),
