@@ -478,7 +478,7 @@ func mapToStruct() {
 }
 
 func main() {
-    r, _ := db.Table("user").Select()
+    r, _ := db.Table("user").Fields("*").Where("typeid = ?", 1).Limit(0, 10).Select()
     j, _ := gparser.VarToJson(r.ToList())
     fmt.Println(string(j))
     fmt.Println(r)
