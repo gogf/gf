@@ -94,6 +94,7 @@ func (db *Db) GetAll(query string, args ...interface{}) (Result, error) {
             return records, err
         }
         row := make(Record)
+        // 注意col字段是一个[]byte类型(slice类型本身是一个指针)，多个记录循环时该变量指向的是同一个内存地址
         for i, col := range values {
             k := columns[i]
             v := make([]byte, len(col))
