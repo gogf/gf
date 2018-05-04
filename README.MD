@@ -128,25 +128,7 @@ func main() {
     s.Run()
 }
 ```
-## 域名 & 多域名支持
-### 自定义域名支持：
-```go
-package main
-
-import "gitee.com/johng/gf/g/net/ghttp"
-
-func main() {
-    s := ghttp.GetServer()
-    s.Domain("127.0.0.1").BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("127.0.0.1")   
-    })
-    s.Domain("localhost").BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("localhost")
-    })
-    s.Run()
-}
-```
-### 多域名绑定支持：
+## 多域名支持
 ```go
 package main
 
@@ -157,6 +139,23 @@ func main() {
     s.Domain("localhost1，localhost2，localhost3").BindHandler("/", func(r *ghttp.Request) {
         r.Response.Write("localhostx")
     })
+    s.Run()
+}
+```
+## 多端口支持
+```go
+package main
+
+import (
+    "gitee.com/johng/gf/g/net/ghttp"
+)
+
+func main() {
+    s := ghttp.GetServer()
+    s.BindHandler("/", func(r *ghttp.Request){
+        r.Response.Writeln("go frame!")
+    })
+    s.SetPort(8080, 8081, 8082)
     s.Run()
 }
 ```
@@ -198,9 +197,6 @@ import "gitee.com/johng/gf/g/net/ghttp"
 
 func main() {
     s := ghttp.GetServer()
-    s.BindHandler("/:name", func(r *ghttp.Request){
-        r.Response.Write(r.Get("name"))
-    })
     s.BindHandler("/:name/:action", func(r *ghttp.Request){
         r.Response.Write(r.Get("name"))
         r.Response.Write(r.Get("action"))
@@ -268,24 +264,31 @@ fmt.Println(gvalid.Check("http://gfjohngcn", rule, msgs))
 #### ORM单例对象
 ```go
 // 获取默认配置的数据库对象(配置名称为"default")
-db, err := gdb.Instance()
+db, err := gdb.New()
 // 获取配置分组名称为"user-center"的数据库对象
-db, err := gdb.Instance("user-center")
+db, err := gdb.New("user-center")
 ```
 #### 单表/联表查询
 ```go
 // 查询多条记录并使用Limit分页
 r, err := db.Table("user").Where("u.uid > ?", 1).Limit(0, 10).Select()
-
 // 查询符合条件的单条记录(第一条)
 r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Where("u.uid=?", 1).One()
-
 // 查询指定字段值
 r, err := db.Table("user u").RightJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
-
 // 分组及排序
 r, err := db.Table("user u").InnerJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.city").GroupBy("city").OrderBy("register_time asc").Select()
+// 不使用john的联表查询
+r, err := db.Table("user u,user_detail ud").Where("u.uid=ud.uid").Fields("u.*,ud.city").All()
+// 不使用Fields方法指定查询字段时，默认查询为"*"
+r, err := db.Table("user").Where("u.uid=1",).One()
 ```
+
+#### like查询
+```go
+r, err := db.Table("user").Where("name like ?", "%john%").Select()
+```
+    
 #### 链式更新/删除
 ```go
 // 更新
@@ -293,6 +296,10 @@ r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Where("name=?", "john
 r, err := db.Table("user").Data("name='john3'").Where("name=?", "john2").Update()
 // 删除
 r, err := db.Table("user").Where("uid=?", 10).Delete()
+// Data数值方法的参数形式比较灵活
+r, err := db.Table("user").Data(`name="john"`).Update()
+r, err := db.Table("user").Data("name", "john").Update()
+r, err := db.Table("user").Data(g.Map{"name" : "john"}).Update()
 ```
 #### 链式写入/保存
 ```go
