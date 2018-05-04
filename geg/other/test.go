@@ -2,8 +2,9 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 func main() {
-    fmt.Println(int(float64(149860800000)))
+    fmt.Println(gfile.RealPath("./"))
 }

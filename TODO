@@ -6,6 +6,12 @@ ON THE WAY:
 5. FAQ
 6. gdb对象管理增加二级连接池特性；
 7. 完善gconv类型转换功能，增加time.Time/time.Duration类型转换，并增加benchmark测试脚本
+8. 增加ghttp.Server不同状态码的自定义处理方法；
+
+
+
+
+
 
 DONE:
 1. gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；

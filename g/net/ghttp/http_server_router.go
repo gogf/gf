@@ -177,7 +177,7 @@ func (s *Server) searchHandler(r *Request) *handlerCacheItem {
 func (s *Server) searchHandlerStatic(r *Request) *handlerCacheItem {
     s.hmmu.RLock()
     defer s.hmmu.RUnlock()
-    domains := []string{gDEFAULT_DOMAIN, r.GetHost()}
+    domains := []string{r.GetHost(), gDEFAULT_DOMAIN}
     // 首先进行静态匹配
     for _, domain := range domains {
         if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
