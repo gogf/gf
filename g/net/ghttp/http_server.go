@@ -83,7 +83,7 @@ type HandlerItem struct {
 }
 
 // http注册函数
-type HandlerFunc func(*Request)
+type HandlerFunc func(r *Request)
 
 // Server表，用以存储和检索名称与Server对象之间的关联关系
 var serverMapping = gmap.NewStringInterfaceMap()
