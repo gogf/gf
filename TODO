@@ -7,6 +7,7 @@ ON THE WAY:
 6. 完善gconv类型转换功能，增加time.Time/time.Duration类型转换，并增加benchmark测试脚本
 7. 增加热编译工具，提高开发环境的开发/测试效率（媲美PHP开发效率）；
 8. 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
+9. orm增加更多数据库支持；
 
 
 
