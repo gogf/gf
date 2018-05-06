@@ -463,3 +463,8 @@ func MainPkgPath() string {
     }
     return ""
 }
+
+// 系统临时目录
+func TempDir() string {
+    return os.TempDir()
+}

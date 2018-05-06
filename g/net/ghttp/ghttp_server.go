@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+    "os"
     "sync"
     "errors"
     "strings"
@@ -31,36 +32,45 @@ const (
     gDEFAULT_SESSION_ID_NAME  = "gfsessionid" // 默认存放Cookie中的SessionId名称
 )
 
-// http server结构体
+// ghttp.Server结构体
 type Server struct {
-    hmmu             sync.RWMutex             // handler互斥锁
-    hhmu             sync.RWMutex             // hooks互斥锁
-    hsmu             sync.RWMutex             // status handler互斥锁
-    hmcmu            sync.RWMutex             // handlerCache互斥锁
-    hhcmu            sync.RWMutex             // hooksCache互斥锁
+    // 基本属性变量
     name             string                   // 服务名称，方便识别
     config           ServerConfig             // 配置对象
     status           int8                     // 当前服务器状态(0：未启动，1：运行中)
+    servers          []*http.Server           // 底层http.Server列表
     methodsMap       map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
+    servedCount      *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
+    closeQueue       *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
+    signalQueue      chan os.Signal           // 终端命令行监听队列
+    // 服务注册相关
+    hmmu             sync.RWMutex             // handler互斥锁
+    hmcmu            sync.RWMutex             // handlerCache互斥锁
     handlerMap       HandlerMap               // 所有注册的回调函数(静态匹配)
-    statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
     handlerTree      map[string]interface{}   // 所有注册的回调函数(动态匹配，树型+链表优先级匹配)
-    hooksTree        map[string]interface{}   // 所有注册的事件回调函数(动态匹配，树型+链表优先级匹配)
     handlerCache     *gcache.Cache            // 服务注册路由内存缓存
+    // 事件回调注册
+    hhmu             sync.RWMutex             // hooks互斥锁
+    hhcmu            sync.RWMutex             // hooksCache互斥锁
+    hooksTree        map[string]interface{}   // 所有注册的事件回调函数(动态匹配，树型+链表优先级匹配)
     hooksCache       *gcache.Cache            // 回调事件注册路由内存缓存
-    servedCount      *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)
+    // 自定义状态码回调
+    hsmu             sync.RWMutex             // status handler互斥锁
+    statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
+    // COOKIE
     cookieMaxAge     *gtype.Int               // Cookie有效期
+    cookies          *gmap.IntInterfaceMap    // 当前服务器正在服务(请求正在执行)的Cookie(每个请求一个Cookie对象)
+    // SESSION
     sessionMaxAge    *gtype.Int               // Session有效期
     sessionIdName    *gtype.String            // SessionId名称
-    cookies          *gmap.IntInterfaceMap    // 当前服务器正在服务(请求正在执行)的Cookie(每个请求一个Cookie对象)
     sessions         *gcache.Cache            // Session内存缓存
-    closeQueue       *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
+    // 日志相关属性
     logPath          *gtype.String            // 存放日志的目录路径
+    logHandler       *gtype.Interface         // 自定义日志处理回调方法
     errorLogEnabled  *gtype.Bool              // 是否开启error log
     accessLogEnabled *gtype.Bool              // 是否开启access log
     accessLogger     *glog.Logger             // access log日志对象
     errorLogger      *glog.Logger             // error log日志对象
-    logHandler       *gtype.Interface         // 自定义的日志处理回调方法
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -100,6 +110,7 @@ func GetServer(name...interface{}) (*Server) {
     }
     s := &Server {
         name             : sname,
+        servers          : make([]*http.Server, 0),
         methodsMap       : make(map[string]bool),
         handlerMap       : make(HandlerMap),
         statusHandlerMap : make(map[string]HandlerFunc),
@@ -114,6 +125,7 @@ func GetServer(name...interface{}) (*Server) {
         sessionIdName    : gtype.NewString(gDEFAULT_SESSION_ID_NAME),
         servedCount      : gtype.NewInt(),
         closeQueue       : gqueue.New(),
+        signalQueue      : make(chan os.Signal),
         logPath          : gtype.NewString(),
         accessLogEnabled : gtype.NewBool(),
         errorLogEnabled  : gtype.NewBool(true),
@@ -145,7 +157,7 @@ func (s *Server) Run() error {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
 
-    // 开启异步处理队列处理循环
+    // 开启异步关闭队列处理循环
     s.startCloseQueueLoop()
 
     // 开始执行底层Web Server创建，端口监听
@@ -163,9 +175,12 @@ func (s *Server) Run() error {
         for _, v := range array {
             wg.Add(1)
             go func(addr string) {
-                if err := s.newServer(addr).ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
+                server := s.newGracefulServer(addr)
+                if err := server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
                     glog.Error(err)
                     wg.Done()
+                } else {
+                    //s.servers = append(s.servers, server)
                 }
             }(v)
         }
@@ -178,9 +193,12 @@ func (s *Server) Run() error {
     for _, v := range array {
         wg.Add(1)
         go func(addr string) {
-            if err := s.newServer(addr).ListenAndServe(); err != nil {
+            server := s.newGracefulServer(addr)
+            if err := server.ListenAndServe(); err != nil {
                 glog.Error(err)
                 wg.Done()
+            } else {
+                //s.servers = append(s.servers, server)
             }
         }(v)
     }
