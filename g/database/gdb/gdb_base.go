@@ -362,7 +362,7 @@ func (db *Db) Update(table string, data interface{}, condition interface{}, args
 
 // CURD操作:删除数据
 func (db *Db) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-    return db.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", db.charl, table, db.charr, db.formatCondition(condition)), args...)
+    return db.Exec(fmt.Sprintf("DELETE FROM %s%s%s WHERE %s", db.charl, table, db.charr, db.formatCondition(condition)), args...)
 }
 
 // 格式化SQL查询条件
