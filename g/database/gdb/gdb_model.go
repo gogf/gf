@@ -91,14 +91,14 @@ func (md *Model) Where(where interface{}, args...interface{}) (*Model) {
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args...interface{}) (*Model) {
     md.where     += " AND " + md.db.formatCondition(where)
-    md.whereArgs  = append(md.whereArgs, args)
+    md.whereArgs  = append(md.whereArgs, args...)
     return md
 }
 
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args...interface{}) (*Model) {
     md.where     += " OR " + md.db.formatCondition(where)
-    md.whereArgs  = append(md.whereArgs, args)
+    md.whereArgs  = append(md.whereArgs, args...)
     return md
 }
 
