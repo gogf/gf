@@ -21,6 +21,7 @@ import (
 const (
     gGF_WEB_SERVER_GRACEFUL_ENVIRON_KEY    = "GF_WEB_SERVER_GRACEFUL"
     gGF_WEB_SERVER_GRACEFUL_ENVIRON_STRING = gGF_WEB_SERVER_GRACEFUL_ENVIRON_KEY + "=1"
+    gGF_WEB_SERVER_GRACEFUL_LISTENER_FD    = 3
 )
 
 // 优雅的Web Server对象封装
@@ -99,7 +100,7 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
         //if err != nil {
         //    return nil, err
         //}
-        f := os.NewFile(3, "")
+        f := os.NewFile(gGF_WEB_SERVER_GRACEFUL_LISTENER_FD, "")
         ln, err = net.FileListener(f)
         if err != nil {
             err = fmt.Errorf("net.FileListener error: %v", err)
@@ -162,15 +163,15 @@ func (s *gracefulServer) startNewProcess() (uintptr, error) {
         return 0, fmt.Errorf("failed to get socket file descriptor: %v", err)
     }
     // 构造子进程的环境变量，并增加环境变量参数以标识该进程是graceful子进程
-    envs := []string{}
+    env := make([]string, 0)
     for _, value := range os.Environ() {
         if value != gGF_WEB_SERVER_GRACEFUL_ENVIRON_STRING {
-            envs = append(envs, value)
+            env = append(env, value)
         }
     }
-    envs = append(envs, gGF_WEB_SERVER_GRACEFUL_ENVIRON_STRING)
+    env = append(env, gGF_WEB_SERVER_GRACEFUL_ENVIRON_STRING)
     fork, err := syscall.ForkExec(os.Args[0], os.Args, &syscall.ProcAttr {
-        Env   : os.Environ(),
+        Env   : env,
         Files : []uintptr{os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd(), listenerFd},
     })
     if err != nil {
