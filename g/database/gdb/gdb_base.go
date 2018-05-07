@@ -38,6 +38,8 @@ func (db *Db) Close() error {
 
 // 数据库sql查询操作，主要执行查询
 func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
+    fmt.Println(query)
+    fmt.Println(args)
     p         := db.link.handleSqlBeforeExec(&query)
     rows, err := db.slave.Query(*p, args ...)
     err        = db.formatError(err, p, args...)
