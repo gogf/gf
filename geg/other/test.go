@@ -5,6 +5,7 @@ import (
     "net/http"
 
     "github.com/tabalt/gracehttp"
+    "os"
 )
 
 
@@ -20,5 +21,7 @@ func test() {
 }
 
 func main() {
-    test()
+    fmt.Println(os.NewFile(11111, ""))
+    fmt.Println(os.NewFile(111111111, ""))
+    fmt.Println(os.NewFile(33333333333333, ""))
 }
