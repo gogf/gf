@@ -6,6 +6,8 @@ import (
 
     "github.com/tabalt/gracehttp"
     "os"
+    "gitee.com/johng/gf/g/os/gpm"
+    "time"
 )
 
 
@@ -21,7 +23,10 @@ func test() {
 }
 
 func main() {
-    fmt.Println(os.NewFile(11111, ""))
-    fmt.Println(os.NewFile(111111111, ""))
-    fmt.Println(os.NewFile(33333333333333, ""))
+    m    := gpm.New()
+    args := os.Args
+    args  = append(args, "--child=1")
+    p    := m.NewProcess(args[0], args, nil)
+    p.Run()
+    time.Sleep(100*time.Second)
 }
