@@ -29,13 +29,25 @@ type gracefulServer struct {
 func (s *Server) newGracefulServer(addr string, fd...int) *gracefulServer {
     gs := &gracefulServer {
         addr         : addr,
-        httpServer   : s.newServer(addr),
+        httpServer   : s.newHttpServer(addr),
         shutdownChan : make(chan bool),
     }
     if len(fd) > 0 && fd[0] > 0 {
         gs.fd = uintptr(fd[0])
     }
     return gs
+}
+
+// 生成一个底层的Web Server对象
+func (s *Server) newHttpServer(addr string) *http.Server {
+    return &http.Server {
+        Addr           : addr,
+        Handler        : s.config.Handler,
+        ReadTimeout    : s.config.ReadTimeout,
+        WriteTimeout   : s.config.WriteTimeout,
+        IdleTimeout    : s.config.IdleTimeout,
+        MaxHeaderBytes : s.config.MaxHeaderBytes,
+    }
 }
 
 // 执行HTTP监听
