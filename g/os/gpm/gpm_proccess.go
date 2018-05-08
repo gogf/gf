@@ -12,6 +12,9 @@ import (
 
 // 运行进程
 func (p *Process) Run() (int, error) {
+    if p.process != nil {
+        return p.Pid(), nil
+    }
     if process, err := os.StartProcess(p.path, p.args, p.attr); err == nil {
         p.process = process
         p.pm.processes.Set(process.Pid, p)
