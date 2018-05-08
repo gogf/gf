@@ -19,6 +19,9 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
+    "fmt"
+    "gitee.com/johng/gf/g/os/gpm"
+    "net"
 )
 
 const (
@@ -26,10 +29,12 @@ const (
     gDEFAULT_SERVER           = "default"
     gDEFAULT_DOMAIN           = "default"
     gDEFAULT_METHOD           = "ALL"
-    gDEFAULT_COOKIE_PATH      = "/"           // 默认path
-    gDEFAULT_COOKIE_MAX_AGE   = 86400*365     // 默认cookie有效期(一年)
-    gDEFAULT_SESSION_MAX_AGE  = 600           // 默认session有效期(600秒)
-    gDEFAULT_SESSION_ID_NAME  = "gfsessionid" // 默认存放Cookie中的SessionId名称
+    gDEFAULT_COOKIE_PATH      = "/"                         // 默认path
+    gDEFAULT_COOKIE_MAX_AGE   = 86400*365                   // 默认cookie有效期(一年)
+    gDEFAULT_SESSION_MAX_AGE  = 600                         // 默认session有效期(600秒)
+    gDEFAULT_SESSION_ID_NAME  = "gfsessionid"               // 默认存放Cookie中的SessionId名称
+    gCHILD_ENVIRON_KEY        = "GF_WEB_SERVER_CHILD"       // 用以子父进程识别，环境变量名称
+    gCHILD_ENVIRON_STRING     = gCHILD_ENVIRON_KEY + "=1"   // 用以子父进程识别，环境变量键值设置
 )
 
 // ghttp.Server结构体
@@ -38,7 +43,8 @@ type Server struct {
     name             string                   // 服务名称，方便识别
     config           ServerConfig             // 配置对象
     status           int8                     // 当前服务器状态(0：未启动，1：运行中)
-    servers          []*http.Server           // 底层http.Server列表
+    servers          []*gracefulServer        // 底层http.Server列表
+    pmanager         *gpm.Manager             // 进程管理器，用于管理子进程服务
     methodsMap       map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
     servedCount      *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
     closeQueue       *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
@@ -110,7 +116,8 @@ func GetServer(name...interface{}) (*Server) {
     }
     s := &Server {
         name             : sname,
-        servers          : make([]*http.Server, 0),
+        servers          : make([]*gracefulServer, 0),
+        pmanager         : gpm.New(),
         methodsMap       : make(map[string]bool),
         handlerMap       : make(HandlerMap),
         statusHandlerMap : make(map[string]HandlerFunc),
@@ -161,7 +168,9 @@ func (s *Server) Run() error {
     s.startCloseQueueLoop()
 
     // 开始执行底层Web Server创建，端口监听
-    var wg sync.WaitGroup
+    var fd     = 3
+    var wg     sync.WaitGroup
+    var server *gracefulServer
     if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
         // HTTPS
         if len(s.config.HTTPSAddr) == 0 {
@@ -175,12 +184,20 @@ func (s *Server) Run() error {
         for _, v := range array {
             wg.Add(1)
             go func(addr string) {
-                server := s.newGracefulServer(addr)
+                if s.isChildProcess() {
+                    server = s.newGracefulServer(addr, fd)
+                    fd++
+                } else {
+                    server = s.newGracefulServer(addr)
+                }
                 if err := server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
-                    glog.Error(err)
+                    // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
+                    if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
+                        glog.Error(err)
+                    }
                     wg.Done()
                 } else {
-                    //s.servers = append(s.servers, server)
+                    s.servers = append(s.servers, server)
                 }
             }(v)
         }
@@ -193,12 +210,20 @@ func (s *Server) Run() error {
     for _, v := range array {
         wg.Add(1)
         go func(addr string) {
-            server := s.newGracefulServer(addr)
+            if s.isChildProcess() {
+                server = s.newGracefulServer(addr, fd)
+                fd++
+            } else {
+                server = s.newGracefulServer(addr)
+            }
             if err := server.ListenAndServe(); err != nil {
-                glog.Error(err)
+                // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
+                if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
+                    glog.Error(err)
+                }
                 wg.Done()
             } else {
-                //s.servers = append(s.servers, server)
+                s.servers = append(s.servers, server)
             }
         }(v)
     }
@@ -208,6 +233,65 @@ func (s *Server) Run() error {
     // 阻塞执行，直到所有Web Server退出
     wg.Wait()
     return nil
+}
+
+// 重启Web Server
+func (s *Server) Restart() {
+    if pid, err := s.startChildProcess(); err != nil {
+        glog.Printf("server restart failed: %v, continue serving\n", err)
+    } else {
+        glog.Printf("server restart successfully, new pid: %d\n", pid)
+
+    }
+}
+
+// 关闭Web Server
+func (s *Server) Shutdown() {
+    for _, v := range s.servers {
+        v.
+        if f, e := v.listener.(*net.TCPListener).File(); e == nil {
+            files = append(files, f)
+        } else {
+            return 0, fmt.Errorf("failed to get listener file: %v", e)
+        }
+    }
+}
+
+// 判断是否为子进程执行
+func (s *Server) isChildProcess() bool {
+    return os.Getenv(gCHILD_ENVIRON_KEY) != ""
+}
+
+// 创建子进程来监听并处理新的HTTP请求，与父进程使用的是同一个socket文件描述符
+func (s *Server) startChildProcess() (int, error) {
+    if s.isChildProcess() {
+        return 0, errors.New("only main process can fork child process")
+    }
+    // 构造子进程的环境变量，并增加环境变量参数以标识该进程是graceful子进程
+    env := make([]string, 0)
+    for _, value := range os.Environ() {
+        if value != gCHILD_ENVIRON_STRING {
+            env = append(env, value)
+        }
+    }
+    env = append(env, gCHILD_ENVIRON_STRING)
+    // 获取所有http server的file
+    files := []*os.File{ os.Stdin,os.Stdout,os.Stderr}
+    for _, v := range s.servers {
+        if f, e := v.listener.(*net.TCPListener).File(); e == nil {
+            files = append(files, f)
+        } else {
+            return 0, fmt.Errorf("failed to get listener file: %v", e)
+        }
+    }
+    p, err := os.StartProcess(os.Args[0], os.Args, &os.ProcAttr {
+        Env   : env,
+        Files : files,
+    })
+    if err != nil {
+        return 0, fmt.Errorf("failed to forkexec: %v", err)
+    }
+    return p.Pid, nil
 }
 
 // 生成一个底层的Web Server对象
