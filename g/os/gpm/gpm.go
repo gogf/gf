@@ -35,22 +35,37 @@ func New () *Manager {
 
 // 创建一个进程(不执行)
 func (m *Manager) NewProcess(path string, args []string, env []string) *Process {
-    attr := &os.ProcAttr {
-        Env   : env,
-        Files : []*os.File{ os.Stdin,os.Stdout,os.Stderr },
-    }
-    return &Process{
+    return &Process {
         pm   : m,
         path : path,
         args : args,
-        attr : attr,
+        attr : &os.ProcAttr {
+            Env   : env,
+            Files : []*os.File{ os.Stdin,os.Stdout,os.Stderr },
+        },
     }
 }
 
-// 获取一个进程
+// 获取当前进程管理器中的一个进程
 func (m *Manager) GetProcess(pid int) *Process {
     if v := m.processes.Get(pid); v != nil {
         return v.(*Process)
+    }
+    return nil
+}
+
+// 添加一个已存在的进程到管理器中
+func (m *Manager) AddProcess(pid int) *Process {
+    if v := m.GetProcess(pid); v != nil {
+        return v
+    }
+    if process, err := os.FindProcess(pid); err == nil {
+        p := &Process {
+            pm      : m,
+            process : process,
+        }
+        m.processes.Set(pid, p)
+        return p
     }
     return nil
 }
