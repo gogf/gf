@@ -5,11 +5,17 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 进程管理.
-package gpm
+package gproc
 
 import (
     "os"
+    "net"
+    "fmt"
+    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/net/gtcp"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/encoding/gbinary"
+    "gitee.com/johng/gf/g/container/gqueue"
 )
 
 // 进程管理器
@@ -17,14 +23,8 @@ type Manager struct {
     processes *gmap.IntInterfaceMap // 所管理的子进程map
 }
 
-// 子进程
-type Process struct {
-    pm       *Manager        // 所属进程管理器
-    path     string          // 可执行文件绝对路径
-    args     []string        // 执行参数
-    attr     *os.ProcAttr    // 进程属性
-    process  *os.Process     // 底层进程对象
-}
+// 进程通信消息队列
+var msgQueue = gqueue.New()
 
 // 创建一个进程管理器
 func New () *Manager {
@@ -33,8 +33,37 @@ func New () *Manager {
     }
 }
 
+// 创建主进程与子进程的TCP通信监听服务
+func (m *Manager) startTcpService() {
+    go func() {
+        var listen *net.TCPListener
+        for i := gCOMMUNICATION_MAIN_PORT; i < gCOMMUNICATION_MAIN_PORT + 10000; i++ {
+            addr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf("127.0.0.1:%d", i))
+            if err != nil {
+                continue
+            }
+            listen, err = net.ListenTCP("tcp", addr)
+            if err != nil {
+                continue
+            }
+        }
+        for  {
+            if conn, err := listen.Accept(); err != nil {
+                glog.Error(err)
+            } else if conn != nil {
+                go tcpServiceHandler(conn)
+            }
+        }
+    }()
+}
+
 // 创建一个进程(不执行)
-func (m *Manager) NewProcess(path string, args []string, env []string) *Process {
+func (m *Manager) NewProcess(path string, args []string, environment []string) *Process {
+    env := make([]string, len(environment) + 1)
+    for k, v := range environment {
+        env[k] = v
+    }
+    env[len(env)] = gCHILD_PROCESS_ENV_STRING
     return &Process {
         pm   : m,
         path : path,
@@ -50,22 +79,6 @@ func (m *Manager) NewProcess(path string, args []string, env []string) *Process 
 func (m *Manager) GetProcess(pid int) *Process {
     if v := m.processes.Get(pid); v != nil {
         return v.(*Process)
-    }
-    return nil
-}
-
-// 添加一个已存在的进程到管理器中
-func (m *Manager) AddProcess(pid int) *Process {
-    if v := m.GetProcess(pid); v != nil {
-        return v
-    }
-    if process, err := os.FindProcess(pid); err == nil {
-        p := &Process {
-            pm      : m,
-            process : process,
-        }
-        m.processes.Set(pid, p)
-        return p
     }
     return nil
 }
