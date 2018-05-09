@@ -23,7 +23,7 @@ func test() {
 }
 
 func main() {
-    m    := gpm.New()
+    m    := gproc.New()
     args := os.Args
     args  = append(args, "--child=1")
     p    := m.NewProcess(args[0], args, nil)

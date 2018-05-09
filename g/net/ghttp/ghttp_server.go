@@ -81,7 +81,7 @@ type Server struct {
     accessLogger     *glog.Logger             // access log日志对象
     errorLogger      *glog.Logger             // error log日志对象
     // 多进程管理控制
-    manager          *gpm.Manager             // 多进程管理
+    manager          *gproc.Manager // 多进程管理
     heartbeats
 }
 
@@ -145,7 +145,7 @@ func GetServer(name...interface{}) (*Server) {
         accessLogger     : glog.New(),
         errorLogger      : glog.New(),
         logHandler       : gtype.NewInterface(),
-        manager          : gpm.New(),
+        manager          : gproc.New(),
         signalChan       : make(chan os.Signal),
     }
     s.errorLogger.SetBacktraceSkip(4)
