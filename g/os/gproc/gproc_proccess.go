@@ -4,11 +4,24 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-package gpm
+package gproc
 
 import (
     "os"
+    "fmt"
+    "gitee.com/johng/gf/g/os/glog"
+    "net"
+    "gitee.com/johng/gf/g/net/gtcp"
 )
+
+// 子进程
+type Process struct {
+    pm       *Manager        // 所属进程管理器
+    path     string          // 可执行文件绝对路径
+    args     []string        // 执行参数
+    attr     *os.ProcAttr    // 进程属性
+    process  *os.Process     // 底层进程对象
+}
 
 // 运行进程
 func (p *Process) Run() (int, error) {
@@ -22,6 +35,30 @@ func (p *Process) Run() (int, error) {
     } else {
         return 0, err
     }
+}
+
+// 创建主进程与子进程的TCP通信监听服务
+func (p *Process) startTcpService() {
+    go func() {
+        var listen *net.TCPListener
+        for i := gCOMMUNICATION_CHILD_PORT; i < gCOMMUNICATION_CHILD_PORT + 10000; i++ {
+            addr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf("127.0.0.1:%d", i))
+            if err != nil {
+                continue
+            }
+            listen, err = net.ListenTCP("tcp", addr)
+            if err != nil {
+                continue
+            }
+        }
+        for  {
+            if conn, err := listen.Accept(); err != nil {
+                glog.Error(err)
+            } else if conn != nil {
+                go tcpServiceHandler(conn)
+            }
+        }
+    }()
 }
 
 func (p *Process) SetArgs(args []string) {

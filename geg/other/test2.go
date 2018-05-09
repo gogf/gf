@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-    m   := gpm.New()
+    m   := gproc.New()
     env := os.Environ()
     env  = append(env, "child=1")
     p   := m.NewProcess(os.Args[0], os.Args, env)
