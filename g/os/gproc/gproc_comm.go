@@ -16,6 +16,7 @@ import (
     "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/encoding/gbinary"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 const (
@@ -38,22 +39,36 @@ type Msg struct {
 func init() {
     path := getCommFilePath(os.Getpid())
     if !gfile.Exists(path) {
-        gfile.Create(path)
+        if err := gfile.Create(path); err != nil {
+            glog.Error(err)
+        }
+    } else {
+        // 初始化时读取已有数据(文件修改时间在10秒以内)
+        if gtime.Second() - gfile.MTime(path) < 10 {
+            checkCommBuffer(path)
+        }
     }
-    fmt.Println(path)
     // 文件事件监听，如果通信数据文件有任何变化，读取文件并添加到消息队列
     err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
-        fmt.Println(event)
-        commLocker.Lock()
-        buffer := gfile.GetBinContents(path)
-        os.Truncate(path, 0)
-        commLocker.UnLock()
-        for _, v := range bufferToMsgs(buffer) {
-            commQueue.PushBack(v)
-        }
+        checkCommBuffer(path)
     })
     if err != nil {
         glog.Error(err)
+    }
+}
+
+// 手动检查进程通信消息，如果存在消息曾推送到进程消息队列
+func checkCommBuffer(path string) {
+    commLocker.Lock()
+    buffer := gfile.GetBinContents(path)
+    if len(buffer) > 0 {
+        os.Truncate(path, 0)
+    }
+    commLocker.UnLock()
+    if len(buffer) > 0 {
+        for _, v := range bufferToMsgs(buffer) {
+            commQueue.PushBack(v)
+        }
     }
 }
 
