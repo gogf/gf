@@ -46,6 +46,10 @@ func Mkdir(path string) error {
 
 // 给定文件的绝对路径创建文件
 func Create(path string) error {
+    dir := Dir(path)
+    if !Exists(dir) {
+        Mkdir(dir)
+    }
     f, err  := os.Create(path)
     if err != nil {
         return err
