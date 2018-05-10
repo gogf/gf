@@ -320,6 +320,11 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
     return nil
 }
 
+// Truncate
+func Truncate(path string, size int) error {
+    return os.Truncate(path, int64(size))
+}
+
 // (文本)写入文件内容
 func PutContents(path string, content string) error {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
