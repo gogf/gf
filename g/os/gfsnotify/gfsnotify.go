@@ -25,7 +25,7 @@ import (
 type Watcher struct {
     watcher    *fsnotify.Watcher        // 底层fsnotify对象
     events     *gqueue.Queue            // 过滤后的事件通知，不会出现重复事件
-    eventCache *gcache.Cache            // 用于进行事件过滤，当同一监听文件在100ms内出现相同事件，则过滤
+    eventCache *gcache.Cache            // 用于进行事件过滤，当同一监听文件在10ms内出现相同事件，则过滤
     closeChan  chan struct{}            // 关闭事件
     callbacks  *gmap.StringInterfaceMap // 监听的回调函数
 }
@@ -132,7 +132,7 @@ func (w *Watcher) startWatchLoop() {
 
                 // 监听事件
                 case ev := <- w.watcher.Events:
-                    if !w.eventCache.Lock(ev.Name + ":" + gconv.String(ev.Op), 100) {
+                    if !w.eventCache.Lock(ev.Name + ":" + gconv.String(ev.Op), 10) {
                         continue
                     }
                     w.events.PushBack(&Event{
