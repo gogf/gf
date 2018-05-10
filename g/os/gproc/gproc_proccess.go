@@ -9,6 +9,7 @@ package gproc
 import (
     "os"
     "errors"
+    "fmt"
 )
 
 // 子进程
@@ -17,6 +18,7 @@ type Process struct {
     path     string          // 可执行文件绝对路径
     args     []string        // 执行参数
     attr     *os.ProcAttr    // 进程属性
+    ppid     int             // 自定义关联的父进程ID
     process  *os.Process     // 底层进程对象
 }
 
@@ -25,13 +27,25 @@ func (p *Process) Run() (int, error) {
     if p.process != nil {
         return p.Pid(), nil
     }
+    p.attr.Env = append(p.attr.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.ppid))
     if process, err := os.StartProcess(p.path, p.args, p.attr); err == nil {
         p.process = process
-        p.pm.processes.Set(process.Pid, p)
+        if p.pm != nil {
+            p.pm.processes.Set(process.Pid, p)
+        }
         return process.Pid, nil
     } else {
         return 0, err
     }
+}
+
+func (p *Process) SetManager(m *Manager) {
+    p.pm = m
+}
+
+// 设置自定义的父进程ID
+func (p *Process) SetPpid(ppid int) {
+    p.ppid = ppid
 }
 
 func (p *Process) SetArgs(args []string) {
@@ -89,7 +103,9 @@ func (p *Process) Release() error {
 // Kill causes the Process to exit immediately.
 func (p *Process) Kill() error {
     if err := p.process.Kill(); err == nil {
-        p.pm.processes.Remove(p.Pid())
+        if p.pm != nil {
+            p.pm.processes.Remove(p.Pid())
+        }
         return nil
     } else {
         return err
