@@ -8,10 +8,7 @@ package gproc
 
 import (
     "os"
-    "fmt"
-    "gitee.com/johng/gf/g/os/glog"
-    "net"
-    "gitee.com/johng/gf/g/net/gtcp"
+    "errors"
 )
 
 // 子进程
@@ -35,30 +32,6 @@ func (p *Process) Run() (int, error) {
     } else {
         return 0, err
     }
-}
-
-// 创建主进程与子进程的TCP通信监听服务
-func (p *Process) startTcpService() {
-    go func() {
-        var listen *net.TCPListener
-        for i := gCOMMUNICATION_CHILD_PORT; i < gCOMMUNICATION_CHILD_PORT + 10000; i++ {
-            addr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf("127.0.0.1:%d", i))
-            if err != nil {
-                continue
-            }
-            listen, err = net.ListenTCP("tcp", addr)
-            if err != nil {
-                continue
-            }
-        }
-        for  {
-            if conn, err := listen.Accept(); err != nil {
-                glog.Error(err)
-            } else if conn != nil {
-                go tcpServiceHandler(conn)
-            }
-        }
-    }()
 }
 
 func (p *Process) SetArgs(args []string) {
@@ -96,6 +69,15 @@ func (p *Process) Pid() int {
     }
     return 0
 }
+
+// 向进程发送消息
+func (p *Process) Send(data interface{}) error {
+    if p.process != nil {
+        return Send(p.process.Pid, data)
+    }
+    return errors.New("process not running")
+}
+
 
 // Release releases any resources associated with the Process p,
 // rendering it unusable in the future.
