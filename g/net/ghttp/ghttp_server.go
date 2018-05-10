@@ -20,13 +20,13 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
     "fmt"
-    "gitee.com/johng/gf/g/os/gpm"
     "net"
-    "os/signal"
     "syscall"
-    "time"
     "gitee.com/johng/gf/g/os/gcmd"
     "gitee.com/johng/gf/g/os/gproc"
+    "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/os/gtime"
+    "time"
 )
 
 const (
@@ -83,7 +83,6 @@ type Server struct {
     errorLogger      *glog.Logger             // error log日志对象
     // 多进程管理控制
     manager          *gproc.Manager // 多进程管理
-    heartbeats
 }
 
 // 域名、URI与回调函数的绑定记录表
@@ -146,8 +145,7 @@ func GetServer(name...interface{}) (*Server) {
         accessLogger     : glog.New(),
         errorLogger      : glog.New(),
         logHandler       : gtype.NewInterface(),
-        manager          : gproc.New(),
-        signalChan       : make(chan os.Signal),
+        manager          : gproc.NewManager(),
     }
     s.errorLogger.SetBacktraceSkip(4)
     s.accessLogger.SetBacktraceSkip(4)
@@ -176,25 +174,26 @@ func (s *Server) Run() error {
     // 开启异步关闭队列处理循环
     s.startCloseQueueLoop()
 
-    // 开启Web Server执行
-    s.startServer()
+
+    // 主进程只负责创建子进程
+    if !gproc.IsChild() {
+        p := s.manager.NewProcess(os.Args[0], os.Args, os.Environ())
+        p.Run()
+        gtime.SetTimeout(3*time.Second, func() {
+            b, _ := gjson.Encode(s.getAllListenerFdMap())
+            s.sendMsg(p.Pid(), gMSG_START, b)
+        })
+    }
+    // 开启进程消息监听处理
+    s.handleProcessMsg()
     return nil
 }
 
 // 开启底层Web Server执行
-func (s *Server) startServer() {
-    // 主进程只负责创建子进程
-    if !s.isChildProcess() {
-        s.forkChildProcess()
-        time.Sleep(10*time.Second)
-        time.Sleep(1000*time.Second)
-        return
-    }
-
+func (s *Server) startServer(fdMap map[string]string) {
+    fmt.Println("startServer")
     // 开始执行底层Web Server创建，端口监听
-    var fd     = 3
     var wg     sync.WaitGroup
-    var fcount = s.processFileCount()
     var server *gracefulServer
     if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
         // HTTPS
@@ -205,15 +204,23 @@ func (s *Server) startServer() {
                 s.config.HTTPSAddr = gDEFAULT_HTTPS_ADDR
             }
         }
-        array := strings.Split(s.config.HTTPSAddr, ",")
+        var array []string
+        var isFd  bool
+        if v, ok := fdMap["https"]; ok && len(v) > 0 {
+            isFd  = true
+            array = strings.Split(v, ",")
+        } else {
+            array = strings.Split(s.config.HTTPSAddr, ",")
+        }
+
         for _, v := range array {
             wg.Add(1)
-            go func(addr string) {
-                if s.isChildProcess() && fcount > 0 {
-                    server = s.newGracefulServer(addr, fd)
-                    fd++
+            go func(item string) {
+                if isFd {
+                    tArray := strings.Split(item, ":")
+                    server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
                 } else {
-                    server = s.newGracefulServer(addr)
+                    server  = s.newGracefulServer(item)
                 }
                 s.servers = append(s.servers, server)
                 if err := server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
@@ -230,22 +237,27 @@ func (s *Server) startServer() {
     if s.servedCount.Val() == 0 && len(s.config.Addr) == 0 {
         s.config.Addr = gDEFAULT_HTTP_ADDR
     }
-    array := strings.Split(s.config.Addr, ",")
+    var array []string
+    var isFd  bool
+    if v, ok := fdMap["http"]; ok && len(v) > 0 {
+        isFd  = true
+        array = strings.Split(v, ",")
+    } else {
+        array = strings.Split(s.config.Addr, ",")
+    }
     for _, v := range array {
         wg.Add(1)
-        go func(addr string) {
-            if s.isChildProcess() && fcount > 0 {
-                server = s.newGracefulServer(addr, fd)
-                fd++
+        go func(item string) {
+            if isFd {
+                tArray := strings.Split(item, ":")
+                server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
             } else {
-                server = s.newGracefulServer(addr)
+                server  = s.newGracefulServer(item)
             }
             s.servers = append(s.servers, server)
             if err := server.ListenAndServe(); err != nil {
                 // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
                 if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-                    glog.Println(fd)
-                    glog.Println(os.Args)
                     glog.Error(err)
                 }
                 wg.Done()
@@ -257,26 +269,6 @@ func (s *Server) startServer() {
 
     // 阻塞执行，直到所有Web Server退出
     wg.Wait()
-}
-
-// 异步处理信号量监控
-func (s *Server) handleSignals() {
-    var sig os.Signal
-
-    signal.Notify(
-        s.signalChan,
-        syscall.SIGTERM,
-        syscall.SIGUSR2,
-    )
-
-    for {
-        sig = <- s.signalChan
-        switch sig {
-            case syscall.SIGTERM: s.Shutdown()
-            case syscall.SIGUSR2: s.Restart()
-            default:
-        }
-    }
 }
 
 // 重启Web Server
@@ -323,6 +315,43 @@ func (s *Server) getTopId() int {
         return gconv.Int(id)
     }
     return 0
+}
+
+// 获取当前监听的文件描述符信息，构造成map返回
+func (s *Server) getAllListenerFdMap() map[string]string {
+    m := map[string]string{
+        "http"  : "",
+        "https" : "",
+    }
+    for _, v := range s.servers {
+        if f, e := v.listener.(*net.TCPListener).File(); e == nil {
+            str := v.addr + ":" + gconv.String(f.Fd()) + ","
+            if v.isHttps {
+                m["https"] += str
+            } else {
+                m["http"]  += str
+            }
+        } else {
+            glog.Errorfln("failed to get listener file: %v", e)
+        }
+    }
+    if len(m["http"]) > 0 {
+        m["http"] = m["http"][0 : len(m["http"]) - 1]
+    }
+    if len(m["https"]) > 0 {
+        m["https"] = m["https"][0 : len(m["https"]) - 1]
+    }
+    return m
+}
+
+// 二进制转换为FdMap
+func (s *Server) bufferToFdMap(buffer []byte) map[string]string {
+    m    := make(map[string]string)
+    j, _ := gjson.LoadContent(buffer, "json")
+    for k, v := range j.ToMap() {
+        m[k] = gconv.String(v)
+    }
+    return m
 }
 
 // 创建子进程来监听并处理新的HTTP请求，与父进程使用的是同一个socket文件描述符
