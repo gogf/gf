@@ -8,22 +8,42 @@
 package gflock
 
 import (
+    "sync"
     "github.com/theckman/go-flock"
     "gitee.com/johng/gf/g/os/gfile"
 )
 
 // 文件锁
 type Locker struct {
+    mu    sync.RWMutex
     flock *flock.Flock
 }
 
 // 创建文件锁
 func New(file string) *Locker {
-    path := gfile.TempDir() + gfile.Separator + file
+    path := gfile.TempDir() + gfile.Separator + "gflock" + gfile.Separator + file
     lock := flock.NewFlock(path)
     return &Locker{
-        lock,
+        flock : lock,
     }
 }
 
+func (l *Locker) Lock() {
+    l.mu.Lock()
+    l.flock.Lock()
+}
 
+func (l *Locker) UnLock() {
+    l.flock.Unlock()
+    l.mu.Unlock()
+}
+
+func (l *Locker) RLock() {
+    l.mu.RLock()
+    l.flock.RLock()
+}
+
+func (l *Locker) RUnlock() {
+    l.flock.Unlock()
+    l.mu.RUnlock()
+}
