@@ -27,11 +27,12 @@ func New () *Manager {
 
 // 创建一个进程(不执行)
 func (m *Manager) NewProcess(path string, args []string, environment []string) *Process {
-    env := make([]string, len(environment) + 1)
+    env := make([]string, len(environment) + 2)
     for k, v := range environment {
         env[k] = v
     }
-    env[len(env) - 1] = fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, os.Getpid())
+    env[len(env) - 2] = fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, os.Getpid())
+    env[len(env) - 1] = fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir())
     p := &Process {
         pm   : m,
         path : path,

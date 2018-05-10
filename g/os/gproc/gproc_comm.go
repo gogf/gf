@@ -9,6 +9,7 @@ package gproc
 import (
     "os"
     "fmt"
+    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gflock"
     "gitee.com/johng/gf/g/util/gconv"
@@ -17,8 +18,11 @@ import (
     "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
-// gproc进程通信共享文件目录地址
-var commDirPath = gfile.TempDir() + gfile.Separator + "gproc"
+const (
+    // 由于子进程的temp dir有可能会和父进程不一致，影响进程间通信，这里统一使用环境变量设置
+    gPROC_TEMP_DIR_ENV_KEY = "gproc.tempdir"
+)
+
 // 当前进程的文件锁
 var commLocker  = gflock.New(fmt.Sprintf("%d.lock", os.Getpid()))
 // 进程通信消息队列
@@ -37,7 +41,7 @@ func init() {
         gfile.Create(path)
     }
     // 文件事件监听，如果通信数据文件有任何变化，读取文件并添加到消息队列
-    gfsnotify.Add(path, func(event *gfsnotify.Event) {
+    err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
         commLocker.Lock()
         buffer := gfile.GetBinContents(path)
         os.Truncate(path, 0)
@@ -46,6 +50,9 @@ func init() {
             commQueue.PushBack(v)
         }
     })
+    if err != nil {
+        glog.Error(err)
+    }
 }
 
 // 获取其他进程传递到当前进程的消息包，阻塞执行
@@ -74,7 +81,11 @@ func Send(pid int, data interface{}) error {
 
 // 获取指定进程的通信文件地址
 func getCommFilePath(pid int) string {
-    return commDirPath + gfile.Separator + gconv.String(pid)
+    tempDir := os.Getenv("gproc.tempdir")
+    if tempDir == "" {
+        tempDir = gfile.TempDir()
+    }
+    return tempDir + gfile.Separator + "gproc" + gfile.Separator + gconv.String(pid)
 }
 
 // 数据解包，防止黏包
@@ -82,7 +93,7 @@ func bufferToMsgs(buffer []byte) []*Msg {
     s    := 0
     msgs := make([]*Msg, 0)
     for s < len(buffer) {
-        length := gbinary.DecodeToInt(buffer[s : 4])
+        length := gbinary.DecodeToInt(buffer[s : s + 4])
         if length < 0 || length > len(buffer) {
             s++
             continue
