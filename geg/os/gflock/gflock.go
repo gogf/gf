@@ -1,25 +1,17 @@
 package main
 
 import (
-    "github.com/theckman/go-flock"
+    "gitee.com/johng/gf/g/os/gflock"
     "fmt"
+    "time"
 )
 
 func main() {
-    fileLock := flock.NewFlock("/var/lock/go-lock.lock")
-
-    fmt.Println(fileLock.TryLock())
-    fmt.Println(fileLock.TryRLock())
-    //time.Sleep(1000*time.Second)
-//fmt.Println(locked)
-//    fmt.Println(fileLock.Locked())
-//fmt.Println(err)
-//    if err != nil {
-//        // handle locking error
-//    }
-//
-//    if locked {
-//        // do work
-//        fileLock.Unlock()
-//    }
+    l := gflock.New("1.lock")
+    fmt.Println(l.Path())
+    fmt.Println(l.Lock())
+    fmt.Println("lock 1")
+    fmt.Println(l.Lock())
+    fmt.Println("lock 1")
+    time.Sleep(time.Hour)
 }
