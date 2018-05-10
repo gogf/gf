@@ -1,0 +1,10 @@
+language: go
+go:
+  - 1.9.3
+  - 1.8.6
+script: go test -v ./... -check.vv
+sudo: false
+notifications:
+  email:
+    on_success: never
+    on_failure: always
