@@ -378,22 +378,25 @@ func checkSize(value, rulekey, ruleval string, cmsgs map[string]string) string {
 
 // 检测键值对参数Map，注意返回参数是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息
 func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
+    var value interface{}
     // 自定义消息，非必须参数，因此这里需要做判断
     cmsgs := make(map[string]interface{})
     if len(msgs) > 0 {
         cmsgs = msgs[0]
     }
     emsgs := make(map[string]map[string]string)
-    for key, value := range params {
-        if rule, ok := rules[key]; ok {
-            msg, _ := cmsgs[key]
-            if m := Check(value, rule, msg, params); m != nil {
-                if _, ok := emsgs[key]; !ok {
-                    emsgs[key] = make(map[string]string)
-                }
-                for k, v := range m {
-                    emsgs[key][k] = v
-                }
+    for key, rule := range rules {
+        value = nil
+        if v, ok := params[key]; ok {
+            value = v
+        }
+        msg, _ := cmsgs[key]
+        if m := Check(value, rule, msg, params); m != nil {
+            if _, ok := emsgs[key]; !ok {
+                emsgs[key] = make(map[string]string)
+            }
+            for k, v := range m {
+                emsgs[key][k] = v
             }
         }
     }
