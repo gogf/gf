@@ -21,11 +21,19 @@ type Locker struct {
 
 // 创建文件锁
 func New(file string) *Locker {
-    path := gfile.TempDir() + gfile.Separator + "gflock" + gfile.Separator + file
+    dir := gfile.TempDir() + gfile.Separator + "gflock"
+    if !gfile.Exists(dir) {
+        gfile.Mkdir(dir)
+    }
+    path := dir + gfile.Separator + file
     lock := flock.NewFlock(path)
     return &Locker{
         flock : lock,
     }
+}
+
+func (l *Locker) Path() string {
+    return l.flock.Path()
 }
 
 func (l *Locker) Lock() {

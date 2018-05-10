@@ -1,11 +1,11 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gproc"
     "fmt"
+    "gitee.com/johng/gf/g/os/gproc"
 )
 
 func main () {
-    err := gproc.Send(11177, "hello process!")
+    err := gproc.Send(29260, "hello process!")
     fmt.Println(err)
 }

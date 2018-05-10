@@ -26,6 +26,7 @@ import (
     "syscall"
     "time"
     "gitee.com/johng/gf/g/os/gcmd"
+    "gitee.com/johng/gf/g/os/gproc"
 )
 
 const (
@@ -189,8 +190,7 @@ func (s *Server) startServer() {
         time.Sleep(1000*time.Second)
         return
     }
-    // 信号量控制监听
-    go s.handleSignals()
+
     // 开始执行底层Web Server创建，端口监听
     var fd     = 3
     var wg     sync.WaitGroup
