@@ -19,24 +19,23 @@ type Manager struct {
 }
 
 // 创建一个进程管理器
-func New () *Manager {
+func NewManager() *Manager {
     return &Manager{
         processes : gmap.NewIntInterfaceMap(),
     }
 }
 
 // 创建一个进程(不执行)
-func (m *Manager) NewProcess(path string, args []string, environment []string) *Process {
+func NewProcess(path string, args []string, environment []string) *Process {
     env := make([]string, len(environment) + 2)
     for k, v := range environment {
         env[k] = v
     }
-    env[len(env) - 2] = fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, os.Getpid())
     env[len(env) - 1] = fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir())
     p := &Process {
-        pm   : m,
         path : path,
         args : make([]string, 0),
+        ppid : os.Getppid(),
         attr : &os.ProcAttr {
             Env   : env,
             Files : []*os.File{ os.Stdin,os.Stdout,os.Stderr },
@@ -47,6 +46,13 @@ func (m *Manager) NewProcess(path string, args []string, environment []string) *
     if len(args) > 1 {
         p.args = append(p.args, args[1:]...)
     }
+    return p
+}
+
+// 创建一个进程(不执行)
+func (m *Manager) NewProcess(path string, args []string, environment []string) *Process {
+    p := NewProcess(path, args, environment)
+    p.SetManager(m)
     return p
 }
 
@@ -99,8 +105,18 @@ func (m *Manager) SignalAll(sig os.Signal) error {
     return nil
 }
 
-// 获取当前进程管理器中的一个进程
-func (m *Manager) Send(pid int, data interface{}) error {
+// 向所有进程发送消息
+func (m *Manager) Send(data interface{}) error {
+    for _, p := range m.Processes() {
+        if err := p.Send(data); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+// 向指定进程发送消息
+func (m *Manager) SendTo(pid int, data interface{}) error {
     return Send(pid, data)
 }
 
