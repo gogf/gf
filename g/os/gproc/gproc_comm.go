@@ -40,8 +40,10 @@ func init() {
     if !gfile.Exists(path) {
         gfile.Create(path)
     }
+    fmt.Println(path)
     // 文件事件监听，如果通信数据文件有任何变化，读取文件并添加到消息队列
     err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
+        fmt.Println(event)
         commLocker.Lock()
         buffer := gfile.GetBinContents(path)
         os.Truncate(path, 0)

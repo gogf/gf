@@ -22,6 +22,7 @@ type gracefulServer struct {
     addr         string
     httpServer   *http.Server
     listener     net.Listener
+    isHttps      bool
     shutdownChan chan bool
 }
 
@@ -61,6 +62,11 @@ func (s *gracefulServer) ListenAndServe() error {
     return s.doServe()
 }
 
+// 设置自定义fd
+func (s *gracefulServer) setFd(fd int) {
+    s.fd = uintptr(fd)
+}
+
 // 执行HTTPS监听
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string) error {
     addr   := s.httpServer.Addr
@@ -82,6 +88,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string) error {
         return err
     }
     s.listener = tls.NewListener(ln, config)
+    s.isHttps  = true
     return s.doServe()
 }
 
