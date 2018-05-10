@@ -66,8 +66,6 @@ func Remove(path string) error {
     return watcher.Remove(path)
 }
 
-
-
 // 创建监听管理对象
 func New() (*Watcher, error) {
     if watch, err := fsnotify.NewWatcher(); err == nil {
@@ -155,7 +153,7 @@ func (w *Watcher) startEventLoop() {
         for {
             if v := w.events.PopFront(); v != nil {
                 event := v.(*Event)
-                // 如果是文件删除时间，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，并重新添加监控
+                // 如果是文件删除事件，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，并重新添加监控
                 if event.IsRemove() && gfile.Exists(event.Path){
                     w.watcher.Add(event.Path)
                     continue
