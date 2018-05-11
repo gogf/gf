@@ -14,6 +14,7 @@ import (
     "net/http"
     "crypto/tls"
     "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gproc"
 )
 
 // 优雅的Web Server对象封装
@@ -92,8 +93,18 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string) error {
     return s.doServe()
 }
 
+// 获取服务协议字符串
+func (s *gracefulServer) getProto() string {
+    proto := "http"
+    if s.isHttps {
+        proto = "https"
+    }
+    return proto
+}
+
 // 开始执行Web Server服务处理
 func (s *gracefulServer) doServe() error {
+    glog.Printfln("%d: %s server started listening on [%s]", gproc.Pid(), s.getProto(), s.addr)
     err := s.httpServer.Serve(s.listener)
     <-s.shutdownChan
     return err
@@ -123,9 +134,9 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
 // 执行请求优雅关闭
 func (s *gracefulServer) shutdown() {
     if err := s.httpServer.Shutdown(context.Background()); err != nil {
-        glog.Errorf("server %s shutdown error: %v\n", s.addr, err)
+        glog.Errorfln("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
     } else {
-        glog.Printf("server %s shutdown successfully\n", s.addr)
+        glog.Printfln("%d: %s server [%s] shutdown smoothly", gproc.Pid(), s.getProto(), s.addr)
         s.shutdownChan <- true
     }
 }

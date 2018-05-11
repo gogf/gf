@@ -20,7 +20,7 @@ import (
 )
 
 const (
-    // 由于子进程的temp dir有可能会和父进程不一致，影响进程间通信，这里统一使用环境变量设置
+    // 由于子进程的temp dir有可能会和父进程不一致(特别是windows下)，影响进程间通信，这里统一使用环境变量设置
     gPROC_TEMP_DIR_ENV_KEY = "gproc.tempdir"
 )
 

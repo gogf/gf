@@ -9,9 +9,13 @@ package gproc
 
 import (
     "os"
-    "gitee.com/johng/gf/g/container/gmap"
     "fmt"
-    "syscall"
+    "gitee.com/johng/gf/g/container/gmap"
+    "strings"
+)
+
+const (
+    gCHILD_ARGS_MARK_NAME = "--gproc-child"
 )
 
 // 进程管理器
@@ -37,14 +41,20 @@ func NewProcess(path string, args []string, environment []string) *Process {
         path : path,
         args : make([]string, 0),
         ppid : os.Getpid(),
-        attr : &syscall.ProcAttr {
-            Files: []uintptr{os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd()},
+        attr : &os.ProcAttr {
+            Env   : env,
+            Files : []*os.File{ os.Stdin,os.Stdout,os.Stderr },
         },
     }
-    p.args = append(p.args, args[0])
-    p.args = append(p.args, "--gproc-child")
+    if len(args) > 0 {
+        p.args = append(p.args, args[0])
+    }
+    // 判断是否加上子进程标识
+    if len(args) == 1 || (len(args) > 1 && !strings.EqualFold(args[1], gCHILD_ARGS_MARK_NAME)) {
+        p.args = append(p.args, gCHILD_ARGS_MARK_NAME)
+    }
     if len(args) > 1 {
-        p.args = append(p.args, args[1:]...)
+        p.args = append(p.args, args[1 : ]...)
     }
     return p
 }
@@ -69,6 +79,7 @@ func (m *Manager) AddProcess(pid int) {
     if process, err := os.FindProcess(pid); err == nil {
         p := m.NewProcess("", nil, nil)
         p.process = process
+        m.processes.Set(pid, p)
     }
 }
 
@@ -131,6 +142,11 @@ func (m *Manager) Send(data interface{}) error {
 // 向指定进程发送消息
 func (m *Manager) SendTo(pid int, data interface{}) error {
     return Send(pid, data)
+}
+
+// 清空管理器
+func (m *Manager) Clear() {
+    m.processes.Clear()
 }
 
 // 当前进程总数
