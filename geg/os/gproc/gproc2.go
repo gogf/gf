@@ -6,6 +6,6 @@ import (
 )
 
 func main () {
-    err := gproc.Send(29260, "hello process!")
+    err := gproc.Send(26248, []byte{40})
     fmt.Println(err)
 }

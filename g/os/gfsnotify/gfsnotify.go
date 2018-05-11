@@ -13,9 +13,7 @@ import (
     "gitee.com/johng/gf/g/os/glog"
     "github.com/fsnotify/fsnotify"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/os/grpool"
-    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gqueue"
@@ -25,7 +23,6 @@ import (
 type Watcher struct {
     watcher    *fsnotify.Watcher        // 底层fsnotify对象
     events     *gqueue.Queue            // 过滤后的事件通知，不会出现重复事件
-    eventCache *gcache.Cache            // 用于进行事件过滤，当同一监听文件在10ms内出现相同事件，则过滤
     closeChan  chan struct{}            // 关闭事件
     callbacks  *gmap.StringInterfaceMap // 监听的回调函数
 }
@@ -72,7 +69,6 @@ func New() (*Watcher, error) {
         w := &Watcher {
             watcher    : watch,
             events     : gqueue.New(),
-            eventCache : gcache.New(),
             closeChan  : make(chan struct{}, 1),
             callbacks  : gmap.NewStringInterfaceMap(),
         }
@@ -132,9 +128,6 @@ func (w *Watcher) startWatchLoop() {
 
                 // 监听事件
                 case ev := <- w.watcher.Events:
-                    if !w.eventCache.Lock(ev.Name + ":" + gconv.String(ev.Op), 10) {
-                        continue
-                    }
                     w.events.PushBack(&Event{
                         Path : ev.Name,
                         Op   : Op(ev.Op),
