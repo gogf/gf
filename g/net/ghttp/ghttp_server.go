@@ -8,20 +8,20 @@ package ghttp
 
 import (
     "os"
+    "net"
     "sync"
     "errors"
     "strings"
     "reflect"
     "net/http"
     "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gproc"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
-    "net"
-    "gitee.com/johng/gf/g/os/gproc"
-    "gitee.com/johng/gf/g/encoding/gjson"
 )
 
 const (
@@ -115,6 +115,7 @@ var doneChan      = make(chan struct{}, 100000)
 // Web Server进程初始化
 func init() {
     go func() {
+        // 等待run消息(Run方法调用)
         <- runChan
         // 主进程只负责创建子进程
         if !gproc.IsChild() {
@@ -122,6 +123,7 @@ func init() {
         }
         // 开启进程消息监听处理
         handleProcessMsg()
+        // 服务执行完成，需要退出
         doneChan <- struct{}{}
     }()
 }
@@ -222,14 +224,16 @@ func (s *Server) Run() error {
     // 开启异步关闭队列处理循环
     s.startCloseQueueLoop()
 
+    // 阻塞等待服务执行完成
     <- doneChan
+
+    glog.Printfln("web server pid %d exit successfully", gproc.Pid())
     return nil
 }
 
 // 开启底层Web Server执行
 func (s *Server) startServer(fdMap listenerFdMap) {
     // 开始执行底层Web Server创建，端口监听
-    var wg     sync.WaitGroup
     var server *gracefulServer
     if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
         // HTTPS
@@ -250,10 +254,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         }
 
         for _, v := range array {
-            wg.Add(1)
             go func(item string) {
                 if isFd {
-                    tArray := strings.Split(item, ":")
+                    tArray := strings.Split(item, "#")
                     server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
                 } else {
                     server  = s.newGracefulServer(item)
@@ -265,7 +268,6 @@ func (s *Server) startServer(fdMap listenerFdMap) {
                     if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
                         glog.Error(err)
                     }
-                    wg.Done()
                 }
             }(v)
         }
@@ -283,10 +285,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         array = strings.Split(s.config.Addr, ",")
     }
     for _, v := range array {
-        wg.Add(1)
         go func(item string) {
             if isFd {
-                tArray := strings.Split(item, ":")
+                tArray := strings.Split(item, "#")
                 server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
             } else {
                 server  = s.newGracefulServer(item)
@@ -298,37 +299,28 @@ func (s *Server) startServer(fdMap listenerFdMap) {
                 if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
                     glog.Error(err)
                 }
-                wg.Done()
             }
         }(v)
     }
 
     s.status = 1
-
-    // 阻塞执行，直到所有Web Server退出
-    wg.Wait()
 }
 
 // 重启Web Server
 func (s *Server) Restart() {
     // 如果是主进程，那么向所有子进程发送重启信号
     if !gproc.IsChild() {
-
+        procManager.Send(formatMsgBuffer(gMSG_RESTART, nil))
         return
     }
-    //if pid, err := s.forkChildProcess(); err != nil {
-    //    glog.Errorf("server restart failed: %v, continue serving\n", err)
-    //} else {
-    //    glog.Printf("server restart successfully, new pid: %d\n", pid)
-    //    s.Shutdown()
-    //}
+    sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
 }
 
 // 关闭Web Server
 func (s *Server) Shutdown() {
     // 如果是主进程，那么向所有子进程发送关闭信号
     if !gproc.IsChild() {
-
+        procManager.Send(formatMsgBuffer(gMSG_SHUTDOWN, nil))
         return
     }
     for _, v := range s.servers {
@@ -336,17 +328,15 @@ func (s *Server) Shutdown() {
     }
 }
 
-
-
 // 获取当前监听的文件描述符信息，构造成map返回
 func (s *Server) getListenerFdMap() map[string]string {
-    m := map[string]string{
+    m := map[string]string {
         "http"  : "",
         "https" : "",
     }
     for _, v := range s.servers {
         if f, e := v.listener.(*net.TCPListener).File(); e == nil {
-            str := v.addr + ":" + gconv.String(f.Fd()) + ","
+            str := v.addr + "#" + gconv.String(f.Fd()) + ","
             if v.isHttps {
                 m["https"] += str
             } else {

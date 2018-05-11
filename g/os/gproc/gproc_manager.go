@@ -11,6 +11,7 @@ import (
     "os"
     "gitee.com/johng/gf/g/container/gmap"
     "fmt"
+    "syscall"
 )
 
 // 进程管理器
@@ -35,10 +36,9 @@ func NewProcess(path string, args []string, environment []string) *Process {
     p := &Process {
         path : path,
         args : make([]string, 0),
-        ppid : os.Getppid(),
-        attr : &os.ProcAttr {
-            Env   : env,
-            Files : []*os.File{ os.Stdin,os.Stdout,os.Stderr },
+        ppid : os.Getpid(),
+        attr : &syscall.ProcAttr {
+            Files: []uintptr{os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd()},
         },
     }
     p.args = append(p.args, args[0])
@@ -62,6 +62,19 @@ func (m *Manager) GetProcess(pid int) *Process {
         return v.(*Process)
     }
     return nil
+}
+
+// 添加一个已存在进程到进程管理器中
+func (m *Manager) AddProcess(pid int) {
+    if process, err := os.FindProcess(pid); err == nil {
+        p := m.NewProcess("", nil, nil)
+        p.process = process
+    }
+}
+
+// 移除进程管理器中的指定进程
+func (m *Manager) RemoveProcess(pid int) {
+    m.processes.Remove(pid)
 }
 
 // 获取所有的进程对象，构成列表返回
