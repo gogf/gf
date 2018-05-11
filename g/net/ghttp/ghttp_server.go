@@ -125,6 +125,10 @@ func init() {
         handleProcessMsg()
         // 服务执行完成，需要退出
         doneChan <- struct{}{}
+
+        if !gproc.IsChild() {
+            glog.Printfln("all web server shutdown smoothly")
+        }
     }()
 }
 
@@ -226,8 +230,6 @@ func (s *Server) Run() error {
 
     // 阻塞等待服务执行完成
     <- doneChan
-
-    glog.Printfln("web server pid %d exit successfully", gproc.Pid())
     return nil
 }
 
@@ -262,7 +264,6 @@ func (s *Server) startServer(fdMap listenerFdMap) {
                     server  = s.newGracefulServer(item)
                 }
                 s.servers = append(s.servers, server)
-                glog.Printfln("https server started listening on %s", server.addr)
                 if err := server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
                     // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
                     if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
@@ -293,7 +294,6 @@ func (s *Server) startServer(fdMap listenerFdMap) {
                 server  = s.newGracefulServer(item)
             }
             s.servers = append(s.servers, server)
-            glog.Printfln("http server started listening on %s", server.addr)
             if err := server.ListenAndServe(); err != nil {
                 // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
                 if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
@@ -308,24 +308,12 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 
 // 重启Web Server
 func (s *Server) Restart() {
-    // 如果是主进程，那么向所有子进程发送重启信号
-    if !gproc.IsChild() {
-        procManager.Send(formatMsgBuffer(gMSG_RESTART, nil))
-        return
-    }
     sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
 }
 
 // 关闭Web Server
 func (s *Server) Shutdown() {
-    // 如果是主进程，那么向所有子进程发送关闭信号
-    if !gproc.IsChild() {
-        procManager.Send(formatMsgBuffer(gMSG_SHUTDOWN, nil))
-        return
-    }
-    for _, v := range s.servers {
-        v.shutdown()
-    }
+    sendProcessMsg(gproc.Pid(), gMSG_SHUTDOWN, nil)
 }
 
 // 获取当前监听的文件描述符信息，构造成map返回
