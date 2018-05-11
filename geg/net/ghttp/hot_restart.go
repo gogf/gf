@@ -3,8 +3,6 @@ package main
 import (
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/os/gtime"
-    "time"
 )
 
 func main() {
@@ -13,10 +11,12 @@ func main() {
         r.Response.Writeln("hello")
     })
     s.BindHandler("/restart", func(r *ghttp.Request){
-        r.Response.Writeln("restart server in 2 seconds")
-        gtime.SetTimeout(2*time.Second, func() {
-            r.Server.Restart()
-        })
+        r.Response.Writeln("restart server")
+        r.Server.Restart()
+    })
+    s.BindHandler("/shutdown", func(r *ghttp.Request){
+        r.Response.Writeln("shutdown server")
+        r.Server.Shutdown()
     })
     s.SetPort(8199)
     s.Run()

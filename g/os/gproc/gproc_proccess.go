@@ -8,9 +8,8 @@ package gproc
 
 import (
     "os"
-    "errors"
     "fmt"
-    "syscall"
+    "errors"
 )
 
 // 子进程
@@ -18,8 +17,7 @@ type Process struct {
     pm       *Manager        // 所属进程管理器
     path     string          // 可执行文件绝对路径
     args     []string        // 执行参数
-    //attr     *os.ProcAttr    // 进程属性
-    attr     *syscall.ProcAttr    // 进程属性
+    attr     *os.ProcAttr    // 进程属性
     ppid     int             // 自定义关联的父进程ID
     process  *os.Process     // 底层进程对象
 }
@@ -30,16 +28,43 @@ func (p *Process) Run() (int, error) {
         return p.Pid(), nil
     }
     p.attr.Env = append(p.attr.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.ppid))
-    if pid, err := syscall.ForkExec(p.path, p.args, p.attr); err == nil {
-        p.process, _ = os.FindProcess(pid)
+    if process, err := os.StartProcess(p.path, p.args, p.attr); err == nil {
+        p.process = process
         if p.pm != nil {
-            p.pm.processes.Set(pid, p)
+            p.pm.processes.Set(process.Pid, p)
         }
-        return pid, nil
+        return process.Pid, nil
     } else {
         return 0, err
     }
 }
+
+// 运行进程，守护进程，主进程退出后不退出
+//func (p *Process) RunDaemon() (int, error) {
+//    if p.process != nil {
+//        return p.Pid(), nil
+//    }
+//    p.attr.Env = append(p.attr.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.ppid))
+//    procAttr  := &syscall.ProcAttr {
+//        Dir   : p.attr.Dir,
+//        Env   : p.attr.Env,
+//        Sys   : p.attr.Sys,
+//        Files : make([]uintptr, 0),
+//    }
+//    // 将os.ProcAttr.Files转换为底层的syscall.ProcAttr.Files
+//    for _, f := range p.attr.Files {
+//        procAttr.Files = append(procAttr.Files, f.Fd())
+//    }
+//    if pid, err := syscall.ForkExec(p.path, p.args, procAttr); err == nil {
+//        p.process, _ = os.FindProcess(pid)
+//        if p.pm != nil {
+//            p.pm.processes.Set(pid, p)
+//        }
+//        return pid, nil
+//    } else {
+//        return 0, err
+//    }
+//}
 
 func (p *Process) SetManager(m *Manager) {
     p.pm = m
@@ -70,11 +95,11 @@ func (p *Process) AddEnv(env []string) {
     }
 }
 
-func (p *Process) SetAttr(attr *syscall.ProcAttr) {
+func (p *Process) SetAttr(attr *os.ProcAttr) {
     p.attr = attr
 }
 
-func (p *Process) GetAttr() *syscall.ProcAttr {
+func (p *Process) GetAttr() *os.ProcAttr {
     return p.attr
 }
 

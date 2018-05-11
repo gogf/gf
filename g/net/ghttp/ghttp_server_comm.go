@@ -9,28 +9,34 @@ package ghttp
 
 import (
     "os"
-    "gitee.com/johng/gf/g/os/gproc"
-    "gitee.com/johng/gf/g/encoding/gbinary"
-    "strings"
-    "gitee.com/johng/gf/g/util/gconv"
     "fmt"
+    "strings"
+    "syscall"
+    "os/signal"
+    "gitee.com/johng/gf/g/os/gproc"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
 const (
-    gMSG_START     = 10
-    gMSG_RESTART   = 20
-    gMSG_CORESTART = 30
-    gMSG_SHUTDOWN  = 40
-    gMSG_NEW_FORK  = 50
+    gMSG_START       = 10
+    gMSG_RESTART     = 20
+    gMSG_SHUTDOWN    = 30
+    gMSG_NEW_FORK    = 40
+    gMSG_REMOVE_PROC = 50
 )
+
+// 进程信号量监听消息队列
+var procSignalChan = make(chan os.Signal)
 
 // 处理进程间消息
 // 数据格式： 操作(8bit) | 参数(变长)
 func handleProcessMsg() {
+    go handleProcessSignals()
     for {
         if msg := gproc.Receive(); msg != nil {
-            fmt.Println(gproc.Pid(), gproc.IsChild(), msg)
+            //fmt.Println(gproc.Pid(), gproc.IsChild(), msg)
             act  := gbinary.DecodeToUint(msg.Data[0 : 1])
             data := msg.Data[1 : ]
             if gproc.IsChild() {
@@ -64,7 +70,7 @@ func handleProcessMsg() {
                                         array := strings.Split(item, "#")
                                         fd    := uintptr(gconv.Uint(array[1]))
                                         s     += fmt.Sprintf("%s#%d", array[0], len(p.GetAttr().Files))
-                                        p.GetAttr().Files = append(p.GetAttr().Files, fd)
+                                        p.GetAttr().Files = append(p.GetAttr().Files, os.NewFile(fd, ""))
                                     }
                                     sfm[name][fdk] = strings.TrimRight(s, ",")
                                 }
@@ -72,19 +78,21 @@ func handleProcessMsg() {
                         }
                         p.SetPpid(gproc.Ppid())
                         p.Run()
-                        fmt.Println(procManager)
                         b, _ := gjson.Encode(sfm)
                         sendProcessMsg(p.Pid(),      gMSG_START,    b)
+                        sendProcessMsg(gproc.Ppid(), gMSG_NEW_FORK, gbinary.EncodeInt(p.Pid()))
                         sendProcessMsg(gproc.Pid(),  gMSG_SHUTDOWN, nil)
-                        sendProcessMsg(gproc.Ppid(), gMSG_NEW_FORK, gconv.Bytes(p.Pid()))
 
                     // 友好关闭服务链接并退出
                     case gMSG_SHUTDOWN:
                         serverMapping.RLockFunc(func(m map[string]interface{}) {
                             for _, v := range m {
-                                v.(*Server).Shutdown()
+                                for _, s := range v.(*Server).servers {
+                                    s.shutdown()
+                                }
                             }
                         })
+                        sendProcessMsg(gproc.Ppid(), gMSG_REMOVE_PROC, gbinary.EncodeInt(gproc.Pid()))
                         return
 
                 }
@@ -102,20 +110,65 @@ func handleProcessMsg() {
                         // 向所有子进程发送重启命令，子进程将会搜集Web Server信息发送给父进程进行协调重启工作
                         procManager.Send(formatMsgBuffer(gMSG_RESTART, nil))
 
-                    // 协调重启服务
+                    // 新建子进程通知
                     case gMSG_NEW_FORK:
-                        //sendProcessMsg(p.Pid(), gMSG_START, data)
-                        // 关闭旧的服务进程
-                        //sendProcessMsg(msg.Pid, gMSG_SHUTDOWN, nil)
+                        pid := gbinary.DecodeToInt(data)
+                        procManager.AddProcess(pid)
+
+                    // 销毁子进程通知
+                    case gMSG_REMOVE_PROC:
+                        pid := gbinary.DecodeToInt(data)
+                        procManager.RemoveProcess(pid)
+                        // 如果所有子进程都退出，那么主进程也主动退出
+                        if procManager.Size() == 0 {
+                            return
+                        }
 
                     // 关闭服务
                     case gMSG_SHUTDOWN:
                         procManager.Send(formatMsgBuffer(gMSG_SHUTDOWN, nil))
-
+                        return
                 }
             }
         }
     }
+}
+
+// 信号量处理
+func handleProcessSignals() {
+    var sig os.Signal
+    signal.Notify(
+        procSignalChan,
+        syscall.SIGINT,
+        syscall.SIGQUIT,
+        syscall.SIGKILL,
+        syscall.SIGHUP,
+        syscall.SIGTERM,
+        syscall.SIGUSR1,
+    )
+    for {
+        sig = <- procSignalChan
+        switch sig {
+            // 进程终止，停止所有子进程运行
+            case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGTERM:
+                sendProcessMsg(gproc.Pid(), gMSG_SHUTDOWN, nil)
+                return
+
+            // 用户信号，重启服务
+            case syscall.SIGUSR1:
+                sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
+
+            default:
+        }
+    }
+}
+
+func onMainShutDown() {
+    procManager.Send(formatMsgBuffer(gMSG_SHUTDOWN, nil))
+}
+
+func onMainRemoveProc() {
+    procManager.Send(formatMsgBuffer(gMSG_SHUTDOWN, nil))
 }
 
 // 向进程发送操作消息
