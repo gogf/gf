@@ -18,7 +18,6 @@ import (
     "gitee.com/johng/gf/g/os/gproc"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
@@ -111,6 +110,8 @@ var procManager   = gproc.NewManager()
 var runChan       = make(chan struct{}, 100000)
 // 已完成的run消息队列
 var doneChan      = make(chan struct{}, 100000)
+// 阻塞消息队列，用于ghttp.Wait
+var waitChan      = make(chan struct{}, 0)
 
 // Web Server进程初始化
 func init() {
@@ -122,41 +123,22 @@ func init() {
             sendProcessMsg(os.Getpid(), gMSG_START, nil)
         }
         // 开启进程消息监听处理
-        handleProcessMsg()
+        handleProcessMsgAndSignal()
         // 服务执行完成，需要退出
         doneChan <- struct{}{}
 
         if !gproc.IsChild() {
-            glog.Printfln("all web server shutdown smoothly")
+            glog.Printfln("%d: all web server shutdown smoothly", gproc.Pid())
         }
+
+        // 停止进程等待
+        close(waitChan)
     }()
 }
 
-// 获取所有Web Server的文件描述符map
-func getServerFdMap() map[string]listenerFdMap {
-    sfm := make(map[string]listenerFdMap)
-    serverMapping.RLockFunc(func(m map[string]interface{}) {
-        for k, v := range m {
-            sfm[k] = v.(*Server).getListenerFdMap()
-        }
-    })
-    return sfm
-}
-
-// 二进制转换为FdMap
-func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
-    sfm := make(map[string]listenerFdMap)
-    if len(buffer) > 0 {
-        j, _ := gjson.LoadContent(buffer, "json")
-        for k, _ := range j.ToMap() {
-            m := make(map[string]string)
-            for k, v := range j.GetMap(k) {
-                m[k] = gconv.String(v)
-            }
-            sfm[k] = m
-        }
-    }
-    return sfm
+// 阻塞等待所有Web Server停止，常用于多Web Server场景，以及需要将Web Server异步运行的场景
+func Wait() {
+    <- waitChan
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
@@ -267,6 +249,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
                 if err := server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
                     // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
                     if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
+                        s.servers = s.servers[0 : len(s.servers) - 1]
                         glog.Error(err)
                     }
                 }
@@ -297,6 +280,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             if err := server.ListenAndServe(); err != nil {
                 // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
                 if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
+                    s.servers = s.servers[0 : len(s.servers) - 1]
                     glog.Error(err)
                 }
             }

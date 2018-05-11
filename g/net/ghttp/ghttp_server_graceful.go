@@ -118,13 +118,13 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
         f      := os.NewFile(s.fd, "")
         ln, err = net.FileListener(f)
         if err != nil {
-            err = fmt.Errorf("net.FileListener error: %v", err)
+            err = fmt.Errorf("%d: net.FileListener error: %v", gproc.Pid(), err)
             return nil, err
         }
     } else {
         ln, err = net.Listen("tcp", addr)
         if err != nil {
-            err = fmt.Errorf("net.Listen error: %v", err)
+            err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
             return nil, err
         }
     }
