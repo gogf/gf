@@ -99,6 +99,11 @@ func (m *Manager) Processes() []*Process {
     return processes
 }
 
+// 获取所有的进程pid，构成列表返回
+func (m *Manager) Pids() []int {
+    return m.processes.Keys()
+}
+
 // 等待所有子进程结束
 func (m *Manager) WaitAll() {
     processes := m.Processes()
