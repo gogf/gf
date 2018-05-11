@@ -31,7 +31,6 @@ func onCommChildStart(pid int, data []byte) {
             GetServer(k).startServer(v)
         }
     } else {
-        fmt.Println(serverMapping)
         serverMapping.RLockFunc(func(m map[string]interface{}) {
             for _, v := range m {
                 v.(*Server).startServer(nil)
