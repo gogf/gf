@@ -27,7 +27,9 @@ func (p *Process) Run() (int, error) {
     if p.process != nil {
         return p.Pid(), nil
     }
-    p.attr.Env = append(p.attr.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.ppid))
+    if p.ppid > 0 {
+        p.attr.Env = append(p.attr.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.ppid))
+    }
     if process, err := os.StartProcess(p.path, p.args, p.attr); err == nil {
         p.process = process
         if p.pm != nil {
