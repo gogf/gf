@@ -21,6 +21,7 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
+    "runtime"
 )
 
 const (
@@ -239,7 +240,8 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 
         for _, v := range array {
             go func(item string) {
-                if isFd {
+                // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
+                if isFd && runtime.GOOS != "windows" {
                     tArray := strings.Split(item, "#")
                     server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
                 } else {
@@ -257,7 +259,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         }
     }
     // HTTP
-    if s.servedCount.Val() == 0 && len(s.config.Addr) == 0 {
+    if len(s.config.Addr) == 0 {
         s.config.Addr = gDEFAULT_HTTP_ADDR
     }
     var array []string
@@ -270,7 +272,8 @@ func (s *Server) startServer(fdMap listenerFdMap) {
     }
     for _, v := range array {
         go func(item string) {
-            if isFd {
+            // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
+            if isFd && runtime.GOOS != "windows" {
                 tArray := strings.Split(item, "#")
                 server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
             } else {

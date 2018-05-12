@@ -9,14 +9,13 @@ package ghttp
 
 import (
     "os"
-    "syscall"
-    "os/signal"
     "gitee.com/johng/gf/g/os/gproc"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/gbinary"
+    "fmt"
 )
 
 const (
@@ -54,9 +53,9 @@ func handleProcessMsg() {
     for {
         if msg := gproc.Receive(); msg != nil {
             // 记录消息日志，用于调试
-            //gfile.PutContentsAppend("/tmp/gproc-log",
-            //    gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data),
-            //)
+            content := gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data)
+            fmt.Print(content)
+            //gfile.PutContentsAppend("/tmp/gproc-log", content)
             act  := gbinary.DecodeToUint(msg.Data[0 : 1])
             data := msg.Data[1 : ]
             if gproc.IsChild() {
@@ -64,7 +63,7 @@ func handleProcessMsg() {
                 // 子进程
                 // ===============
                 // 任何与父进程的通信都会更新最后通信时间
-                if msg.Pid == gproc.Ppid() {
+                if msg.Pid == gproc.PPid() {
                     lastHeartbeatTime.Set(int(gtime.Millisecond()))
                 }
                 switch act {
@@ -99,35 +98,6 @@ func handleProcessMsg() {
                         return
                 }
             }
-        }
-    }
-}
-
-// 信号量处理
-func handleProcessSignal() {
-    var sig os.Signal
-    signal.Notify(
-        procSignalChan,
-        syscall.SIGINT,
-        syscall.SIGQUIT,
-        syscall.SIGKILL,
-        syscall.SIGHUP,
-        syscall.SIGTERM,
-        syscall.SIGUSR1,
-    )
-    for {
-        sig = <- procSignalChan
-        switch sig {
-            // 进程终止，停止所有子进程运行
-            case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGTERM:
-                sendProcessMsg(gproc.Pid(), gMSG_SHUTDOWN, nil)
-                return
-
-            // 用户信号，重启服务
-            case syscall.SIGUSR1:
-                sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
-
-            default:
         }
     }
 }
@@ -167,4 +137,28 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
         }
     }
     return sfm
+}
+
+// 关优雅闭进程所有端口的Web Server服务
+// 注意，只是关闭Web Server服务，并不是退出进程
+func shutdownWebServers() {
+    serverMapping.RLockFunc(func(m map[string]interface{}) {
+        for _, v := range m {
+            for _, s := range v.(*Server).servers {
+                s.shutdown()
+            }
+        }
+    })
+}
+
+// 强制关闭进程所有端口的Web Server服务
+// 注意，只是关闭Web Server服务，并不是退出进程
+func closeWebServers() {
+    serverMapping.RLockFunc(func(m map[string]interface{}) {
+        for _, v := range m {
+            for _, s := range v.(*Server).servers {
+                s.close()
+            }
+        }
+    })
 }
