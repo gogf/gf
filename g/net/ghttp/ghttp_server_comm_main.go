@@ -27,8 +27,7 @@ func onCommMainStart(pid int, data []byte) {
 
 // 心跳处理
 func onCommMainHeartbeat(pid int, data []byte) {
-    //glog.Printfln("%d: main heartbeat", gproc.Pid())
-    procUpdateMap.Set(pid, int(gtime.Millisecond()))
+    updateProcessCommTime(pid)
 }
 
 // 重启服务
@@ -39,7 +38,7 @@ func onCommMainRestart(pid int, data []byte) {
 
 // 新建子进程通知
 func onCommMainNewFork(pid int, data []byte) {
-    procManager.AddProcess(gbinary.DecodeToInt(data))
+    procManager.AddProcess(pid)
     heartbeatStarted.Set(true)
 }
 
@@ -51,6 +50,11 @@ func onCommMainRemoveProc(pid int, data []byte) {
 // 关闭服务，通知所有子进程退出
 func onCommMainShutdown(pid int, data []byte) {
     procManager.Send(formatMsgBuffer(gMSG_SHUTDOWN, nil))
+}
+
+// 更新指定进程的通信时间记录
+func updateProcessCommTime(pid int) {
+    procUpdateMap.Set(pid, int(gtime.Millisecond()))
 }
 
 // 主进程与子进程相互异步方式发送心跳信息，保持活跃状态

@@ -18,6 +18,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/gbinary"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 // (子进程)上一次从主进程接收心跳的时间戳
@@ -37,12 +38,17 @@ func onCommChildStart(pid int, data []byte) {
             }
         })
     }
+    // 进程创建成功之后(开始执行服务时间点为准)，通知主进程自身的存在，并开始执行心跳机制
+    sendProcessMsg(gproc.Ppid(), gMSG_NEW_FORK, nil)
+    // 如果创建自己的父进程非gproc父进程，那么表示该进程为重启创建的进程，创建成功之后需要通知父进程销毁
+    if os.Getppid() != gproc.Ppid() {
+        sendProcessMsg(os.Getppid(), gMSG_SHUTDOWN, nil)
+    }
     heartbeatStarted.Set(true)
 }
 
 // 心跳消息
 func onCommChildHeartbeat(pid int, data []byte) {
-    //glog.Printfln("%d: child heartbeat", gproc.Pid())
     lastHeartbeatTime.Set(int(gtime.Millisecond()))
 }
 
@@ -70,9 +76,7 @@ func onCommChildRestart(pid int, data []byte) {
     p.Run()
     // 编码，通信
     b, _ := gjson.Encode(sfm)
-    sendProcessMsg(p.Pid(),      gMSG_START,    b)
-    sendProcessMsg(gproc.Ppid(), gMSG_NEW_FORK, gbinary.EncodeInt(p.Pid()))
-    sendProcessMsg(gproc.Pid(),  gMSG_SHUTDOWN, nil)
+    sendProcessMsg(p.Pid(), gMSG_START, b)
 }
 
 // 友好关闭服务链接并退出
@@ -95,7 +99,8 @@ func handleChildProcessHeartbeat() {
         // 超过时间没有接收到主进程心跳，自动关闭退出
         if heartbeatStarted.Val() && (int(gtime.Millisecond()) - lastHeartbeatTime.Val() > gPROC_HEARTBEAT_TIMEOUT) {
             sendProcessMsg(gproc.Pid(), gMSG_SHUTDOWN, nil)
-            // 子进程有时会无法退出，这里直接使用exit，而不是return
+            // 子进程有时会无法退出(僵尸?)，这里直接使用exit，而不是return
+            glog.Errorfln("%d heartbeat timeout, exit", gproc.Pid())
             os.Exit(0)
         }
     }
