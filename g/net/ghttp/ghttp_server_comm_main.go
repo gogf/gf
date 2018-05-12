@@ -12,7 +12,6 @@ import (
     "time"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
 // (主进程)主进程与子进程上一次活跃时间映射map
@@ -21,7 +20,7 @@ var procUpdateMap = gmap.NewIntIntMap()
 // 开启服务
 func onCommMainStart(pid int, data []byte) {
     p := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
-    p.Run()
+    p.Start()
     sendProcessMsg(p.Pid(), gMSG_START, nil)
 }
 
@@ -44,7 +43,7 @@ func onCommMainNewFork(pid int, data []byte) {
 
 // 销毁子进程通知
 func onCommMainRemoveProc(pid int, data []byte) {
-    procManager.RemoveProcess(gbinary.DecodeToInt(data))
+    procManager.RemoveProcess(pid)
 }
 
 // 关闭服务，通知所有子进程退出
@@ -69,7 +68,6 @@ func handleMainProcessHeartbeat() {
                     // 这里需要手动从进程管理器中去掉该进程
                     procManager.RemoveProcess(pid)
                     sendProcessMsg(pid, gMSG_SHUTDOWN, nil)
-                    return
                 }
             }
         }

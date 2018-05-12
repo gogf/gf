@@ -10,8 +10,9 @@ package gproc
 import (
     "os"
     "fmt"
-    "gitee.com/johng/gf/g/container/gmap"
     "strings"
+    "os/exec"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 const (
@@ -32,29 +33,45 @@ func NewManager() *Manager {
 
 // 创建一个进程(不执行)
 func NewProcess(path string, args []string, environment []string) *Process {
-    env := make([]string, len(environment) + 2)
+    env := make([]string, len(environment) + 1)
     for k, v := range environment {
         env[k] = v
     }
     env[len(env) - 1] = fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir())
     p := &Process {
-        path : path,
-        args : make([]string, 0),
-        ppid : os.Getpid(),
-        attr : &os.ProcAttr {
-            Env   : env,
-            Files : []*os.File{ os.Stdin,os.Stdout,os.Stderr },
+        Manager   : nil,
+        PPid      : os.Getpid(),
+        Cmd       : exec.Cmd {
+            Args       : []string{path},
+            Path       : path,
+            Stdin      : os.Stdin,
+            Stdout     : os.Stdout,
+            Stderr     : os.Stderr,
+            Env        : env,
+            ExtraFiles : make([]*os.File, 0),
         },
     }
-    if len(args) > 0 {
-        p.args = append(p.args, args[0])
+    // 当前工作目录
+    if d, err := os.Getwd(); err == nil {
+        p.Dir = d
     }
     // 判断是否加上子进程标识
-    if len(args) == 1 || (len(args) > 1 && !strings.EqualFold(args[1], gCHILD_ARGS_MARK_NAME)) {
-        p.args = append(p.args, gCHILD_ARGS_MARK_NAME)
+    hasChildMark := false
+    childMarkLen := len(gCHILD_ARGS_MARK_NAME)
+    for _, v := range args {
+        if len(v) >= childMarkLen && strings.EqualFold(v[0 : childMarkLen], gCHILD_ARGS_MARK_NAME) {
+            hasChildMark = true
+        }
     }
-    if len(args) > 1 {
-        p.args = append(p.args, args[1 : ]...)
+    if !hasChildMark {
+        p.Args = append(p.Args, gCHILD_ARGS_MARK_NAME)
+    }
+    if len(args) > 0 {
+        start := 0
+        if strings.EqualFold(path, args[0]) {
+            start = 1
+        }
+        p.Args = append(p.Args, args[start : ]...)
     }
     return p
 }
@@ -62,7 +79,7 @@ func NewProcess(path string, args []string, environment []string) *Process {
 // 创建一个进程(不执行)
 func (m *Manager) NewProcess(path string, args []string, environment []string) *Process {
     p := NewProcess(path, args, environment)
-    p.SetManager(m)
+    p.Manager = m
     return p
 }
 
@@ -78,7 +95,7 @@ func (m *Manager) GetProcess(pid int) *Process {
 func (m *Manager) AddProcess(pid int) {
     if process, err := os.FindProcess(pid); err == nil {
         p := m.NewProcess("", nil, nil)
-        p.process = process
+        p.Process = process
         m.processes.Set(pid, p)
     }
 }

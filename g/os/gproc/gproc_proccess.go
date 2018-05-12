@@ -10,113 +10,55 @@ import (
     "os"
     "fmt"
     "errors"
+    "os/exec"
 )
 
 // 子进程
 type Process struct {
-    pm       *Manager        // 所属进程管理器
-    path     string          // 可执行文件绝对路径
-    args     []string        // 执行参数
-    attr     *os.ProcAttr    // 进程属性
-    ppid     int             // 自定义关联的父进程ID
-    process  *os.Process     // 底层进程对象
+    exec.Cmd
+    Manager  *Manager // 所属进程管理器
+    PPid     int      // 自定义关联的父进程ID
 }
 
-// 运行进程
-func (p *Process) Run() (int, error) {
-    if p.process != nil {
+// 开始执行(非阻塞)
+func (p *Process) Start() (int, error) {
+    if p.Process != nil {
         return p.Pid(), nil
     }
-    if p.ppid > 0 {
-        p.attr.Env = append(p.attr.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.ppid))
+    if p.PPid > 0 {
+        p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
     }
-    if process, err := os.StartProcess(p.path, p.args, p.attr); err == nil {
-        p.process = process
-        if p.pm != nil {
-            p.pm.processes.Set(process.Pid, p)
+    if err := p.Cmd.Start(); err == nil {
+        if p.Manager != nil {
+            p.Manager.processes.Set(p.Process.Pid, p)
         }
-        return process.Pid, nil
+        return p.Process.Pid, nil
     } else {
         return 0, err
     }
 }
 
-// 运行进程，守护进程，主进程退出后不退出
-//func (p *Process) RunDaemon() (int, error) {
-//    if p.process != nil {
-//        return p.Pid(), nil
-//    }
-//    p.attr.Env = append(p.attr.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.ppid))
-//    procAttr  := &syscall.ProcAttr {
-//        Dir   : p.attr.Dir,
-//        Env   : p.attr.Env,
-//        Sys   : p.attr.Sys,
-//        Files : make([]uintptr, 0),
-//    }
-//    // 将os.ProcAttr.Files转换为底层的syscall.ProcAttr.Files
-//    for _, f := range p.attr.Files {
-//        procAttr.Files = append(procAttr.Files, f.Fd())
-//    }
-//    if pid, err := syscall.ForkExec(p.path, p.args, procAttr); err == nil {
-//        p.process, _ = os.FindProcess(pid)
-//        if p.pm != nil {
-//            p.pm.processes.Set(pid, p)
-//        }
-//        return pid, nil
-//    } else {
-//        return 0, err
-//    }
-//}
-
-func (p *Process) SetManager(m *Manager) {
-    p.pm = m
-}
-
-// 设置自定义的父进程ID
-func (p *Process) SetPpid(ppid int) {
-    p.ppid = ppid
-}
-
-func (p *Process) SetArgs(args []string) {
-    p.args = args
-}
-
-func (p *Process) AddArgs(args []string) {
-    for _, v := range args {
-        p.args = append(p.args, v)
+// 运行进程(阻塞等待执行完毕)
+func (p *Process) Run() error {
+    if _, err := p.Start(); err == nil {
+        return p.Wait()
+    } else {
+        return err
     }
-}
-
-func (p *Process) SetEnv(env []string) {
-    p.attr.Env = env
-}
-
-func (p *Process) AddEnv(env []string) {
-    for _, v := range env {
-        p.attr.Env = append(p.attr.Env, v)
-    }
-}
-
-func (p *Process) SetAttr(attr *os.ProcAttr) {
-    p.attr = attr
-}
-
-func (p *Process) GetAttr() *os.ProcAttr {
-    return p.attr
 }
 
 // PID
 func (p *Process) Pid() int {
-    if p.process != nil {
-        return p.process.Pid
+    if p.Process != nil {
+        return p.Process.Pid
     }
     return 0
 }
 
 // 向进程发送消息
 func (p *Process) Send(data interface{}) error {
-    if p.process != nil {
-        return Send(p.process.Pid, data)
+    if p.Process != nil {
+        return Send(p.Process.Pid, data)
     }
     return errors.New("process not running")
 }
@@ -126,14 +68,14 @@ func (p *Process) Send(data interface{}) error {
 // rendering it unusable in the future.
 // Release only needs to be called if Wait is not.
 func (p *Process) Release() error {
-    return p.process.Release()
+    return p.Process.Release()
 }
 
 // Kill causes the Process to exit immediately.
 func (p *Process) Kill() error {
-    if err := p.process.Kill(); err == nil {
-        if p.pm != nil {
-            p.pm.processes.Remove(p.Pid())
+    if err := p.Process.Kill(); err == nil {
+        if p.Manager != nil {
+            p.Manager.processes.Remove(p.Pid())
         }
         return nil
     } else {
@@ -141,17 +83,8 @@ func (p *Process) Kill() error {
     }
 }
 
-// Wait waits for the Process to exit, and then returns a
-// ProcessState describing its status and an error, if any.
-// Wait releases any resources associated with the Process.
-// On most operating systems, the Process must be a child
-// of the current process or an error will be returned.
-func (p *Process) Wait() (*os.ProcessState, error) {
-    return p.process.Wait()
-}
-
 // Signal sends a signal to the Process.
 // Sending Interrupt on Windows is not implemented.
 func (p *Process) Signal(sig os.Signal) error {
-    return p.process.Signal(sig)
+    return p.Process.Signal(sig)
 }
