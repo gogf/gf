@@ -9,18 +9,17 @@ import (
 )
 
 func main () {
+    fmt.Printf("%d: I am child? %v\n", gproc.Pid(), gproc.IsChild())
     if gproc.IsChild() {
-        fmt.Printf(" child pid is %d\n", os.Getpid())
         gtime.SetInterval(time.Second, func() bool {
-            gproc.Send(gproc.Ppid(), gtime.Datetime())
+            gproc.Send(gproc.PPid(), gtime.Datetime())
             return true
         })
         select { }
     } else {
-        fmt.Printf("parent pid is %d\n", os.Getpid())
-        m := gproc.New()
-        p := m.NewProcess(os.Args[0], os.Args, nil)
-        p.Run()
+        m := gproc.NewManager()
+        p := m.NewProcess(os.Args[0], os.Args, os.Environ())
+        p.Start()
         for {
             msg := gproc.Receive()
             fmt.Printf("receive from %d, data: %s\n", msg.Pid, string(msg.Data))

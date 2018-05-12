@@ -4,7 +4,9 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 进程管理.
+// 进程管理/通信.
+// 本进程管理从syscall, os.StartProcess, exec.Cmd都使用过，
+// 最后采用了exec.Cmd来实现多进程管理，这是一个顶层的跨平台封装，兼容性更好，另外两个是偏底层的接口。
 package gproc
 
 import (
@@ -22,7 +24,7 @@ func Pid() int {
 }
 
 // 获取父进程ID(gproc父进程，不存在时则使用系统父进程)
-func Ppid() int {
+func PPid() int {
     // gPROC_ENV_KEY_PPID_KEY为gproc包自定义的父进程
     ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
     if ppidValue != "" {
