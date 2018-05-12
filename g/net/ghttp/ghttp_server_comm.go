@@ -12,6 +12,7 @@ import (
     "syscall"
     "os/signal"
     "gitee.com/johng/gf/g/os/gproc"
+    "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
@@ -59,7 +60,13 @@ func handleProcessMsg() {
             act  := gbinary.DecodeToUint(msg.Data[0 : 1])
             data := msg.Data[1 : ]
             if gproc.IsChild() {
+                // ===============
                 // 子进程
+                // ===============
+                // 任何与父进程的通信都会更新最后通信时间
+                if msg.Pid == gproc.Ppid() {
+                    lastHeartbeatTime.Set(int(gtime.Millisecond()))
+                }
                 switch act {
                     case gMSG_START:     onCommChildStart(msg.Pid, data)
                     case gMSG_RESTART:   onCommChildRestart(msg.Pid, data)
@@ -69,7 +76,13 @@ func handleProcessMsg() {
                         return
                 }
             } else {
+                // ===============
                 // 父进程
+                // ===============
+                // 任何进程消息都会自动更新最后通信时间记录
+                if msg.Pid != gproc.Pid() {
+                    updateProcessCommTime(msg.Pid)
+                }
                 switch act {
                     case gMSG_START:     onCommMainStart(msg.Pid, data)
                     case gMSG_RESTART:   onCommMainRestart(msg.Pid, data)

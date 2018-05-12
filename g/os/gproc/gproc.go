@@ -21,9 +21,19 @@ func Pid() int {
     return os.Getpid()
 }
 
-// 获取父进程ID
+// 获取父进程ID(gproc父进程，不存在时则使用系统父进程)
 func Ppid() int {
-    return gconv.Int(os.Getenv(gPROC_ENV_KEY_PPID_KEY))
+    // gPROC_ENV_KEY_PPID_KEY为gproc包自定义的父进程
+    ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
+    if ppidValue != "" {
+        return gconv.Int(ppidValue)
+    }
+    return os.Getppid()
+}
+
+// 获取父进程ID(系统父进程)
+func PpidOfOs() int {
+    return os.Getppid()
 }
 
 // 判断当前进程是否为gproc创建的子进程
