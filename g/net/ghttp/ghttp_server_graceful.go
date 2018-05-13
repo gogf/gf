@@ -144,9 +144,9 @@ func (s *gracefulServer) shutdown() {
 // 执行请求强制关闭
 func (s *gracefulServer) close() {
     if err := s.httpServer.Close(); err != nil {
-        glog.Errorfln("%d: %s server [%s] close error: %v", gproc.Pid(), s.getProto(), s.addr, err)
+        glog.Errorfln("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.addr, err)
     } else {
-        glog.Printfln("%d: %s server [%s] close smoothly", gproc.Pid(), s.getProto(), s.addr)
+        glog.Printfln("%d: %s server [%s] closed smoothly", gproc.Pid(), s.getProto(), s.addr)
         s.shutdownChan <- true
     }
 }

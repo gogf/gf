@@ -3,19 +3,26 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-// Web Server进程间通信 - 主进程
+// Web Server进程间通信 - 主进程.
+// 管理子进程按照规则听话玩，不听话有一百种方法让子进程在本地混不下去.
 
 package ghttp
 
 import (
     "os"
     "time"
+    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gproc"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gmap"
 )
 
+// (主进程)子进程与主进程第一次通信的时间映射map
+// 用以识别子进程创建时间先后顺序，当存在多个子进程时，主动销毁旧的子进程
+var procFirstTimeMap  = gmap.NewIntIntMap()
+
 // (主进程)主进程与子进程上一次活跃时间映射map
-var procUpdateMap = gmap.NewIntIntMap()
+var procUpdateTimeMap = gmap.NewIntIntMap()
 
 // 开启服务
 func onCommMainStart(pid int, data []byte) {
@@ -38,7 +45,7 @@ func onCommMainRestart(pid int, data []byte) {
 // 新建子进程通知
 func onCommMainNewFork(pid int, data []byte) {
     procManager.AddProcess(pid)
-    heartbeatStarted.Set(true)
+    checkHeartbeat.Set(true)
 }
 
 // 销毁子进程通知
@@ -53,7 +60,7 @@ func onCommMainShutdown(pid int, data []byte) {
 
 // 更新指定进程的通信时间记录
 func updateProcessCommTime(pid int) {
-    procUpdateMap.Set(pid, int(gtime.Millisecond()))
+    procUpdateTimeMap.Set(pid, int(gtime.Millisecond()))
 }
 
 // 主进程与子进程相互异步方式发送心跳信息，保持活跃状态
@@ -62,13 +69,34 @@ func handleMainProcessHeartbeat() {
         time.Sleep(gPROC_HEARTBEAT_INTERVAL*time.Millisecond)
         procManager.Send(formatMsgBuffer(gMSG_HEARTBEAT, nil))
         // 清理过期进程
-        if heartbeatStarted.Val() {
+        if checkHeartbeat.Val() {
             for _, pid := range procManager.Pids() {
-                if int(gtime.Millisecond()) - procUpdateMap.Get(pid) > gPROC_HEARTBEAT_TIMEOUT {
+                if int(gtime.Millisecond()) - procUpdateTimeMap.Get(pid) > gPROC_HEARTBEAT_TIMEOUT {
                     // 这里需要手动从进程管理器中去掉该进程
                     procManager.RemoveProcess(pid)
                     sendProcessMsg(pid, gMSG_SHUTDOWN, nil)
                 }
+            }
+        }
+    }
+}
+
+// 清理多余的子进程
+func handleMainProcessChildClear() {
+    for {
+        time.Sleep(gPROC_MULTI_CHILD_CLEAR_INTERVAL*time.Millisecond)
+        if procManager.Size() > 1 {
+            minPid  := 0
+            minTime := int(gtime.Millisecond())
+            for _, pid := range procManager.Pids() {
+                if t := procFirstTimeMap.Get(pid); t < minTime {
+                    minPid  = pid
+                    minTime = t
+                }
+            }
+            if minPid > 0 && procUpdateTimeMap.Get(minPid) - procFirstTimeMap.Get(minPid) > gPROC_MULTI_CHILD_CLEAR_MIN_EXPIRE {
+                sendProcessMsg(minPid, gMSG_SHUTDOWN, nil)
+                glog.Printfln("%d: multi child occurred, shutdown %d", gproc.Pid(), minPid)
             }
         }
     }
