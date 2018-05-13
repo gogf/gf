@@ -39,7 +39,7 @@ func onCommChildRestart(pid int, data []byte) {
     p := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
     // windows系统无法进行文件描述符操作，只能重启进程
     if runtime.GOOS == "windows" {
-        // windows下使用shutdownWebServers会造成协程阻塞，这里直接使用close强制关闭
+        // windows下使用shutdown会造成协程阻塞，这里直接使用close强制关闭
         closeWebServers()
     } else {
         // 创建新的服务进程，子进程自动从父进程复制文件描述来监听同样的端口
@@ -65,7 +65,7 @@ func onCommChildRestart(pid int, data []byte) {
     if newPid, err := p.Start(); err == nil {
         sendProcessMsg(newPid, gMSG_START, buffer)
     } else {
-        glog.Errorfln("%d: fork process failed, error:%s", err.Error())
+        glog.Errorfln("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
     }
 }
 
@@ -75,6 +75,7 @@ func onCommChildShutdown(pid int, data []byte) {
     if runtime.GOOS != "windows" {
         shutdownWebServers()
     }
+    glog.Printfln("%d: shutdown done", gproc.Pid())
 }
 
 // 更新上一次主进程主动与子进程通信的时间
@@ -93,11 +94,13 @@ func handleChildProcessHeartbeat() {
             // 子进程有时会无法退出(僵尸?)，这里直接使用exit，而不是return
             //glog.Printfln("%d: %d - %d > %d", gproc.Pid(), int(gtime.Millisecond()), lastHeartbeatTime.Val(), gPROC_HEARTBEAT_TIMEOUT)
             //glog.Printfln("%d: heartbeat timeout, exit", gproc.Pid())
+            glog.Printfln("%d: exit", gproc.Pid())
             os.Exit(0)
         }
         // 未开启心跳检测的闲置超过一定时间则主动关闭
         if !checkHeartbeat.Val() && gproc.Uptime() > gPROC_CHILD_MAX_IDLE_TIME {
             //glog.Printfln("%d: max idle time exceeded, exit", gproc.Pid())
+            glog.Printfln("%d: exit", gproc.Pid())
             os.Exit(0)
         }
     }

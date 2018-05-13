@@ -26,9 +26,9 @@ const (
     gMSG_HEARTBEAT   = 60
 
     gPROC_HEARTBEAT_INTERVAL    = 1000        // (毫秒)进程间心跳间隔
-    gPROC_HEARTBEAT_TIMEOUT     = 5000        // (毫秒)进程间心跳超时时间，如果子进程在这段内没有接收到任何心跳，那么自动退出，防止可能出现的僵尸子进程
+    gPROC_HEARTBEAT_TIMEOUT     = 3000        // (毫秒)进程间心跳超时时间，如果子进程在这段内没有接收到任何心跳，那么自动退出，防止可能出现的僵尸子进程
     gPROC_MULTI_CHILD_CLEAR_INTERVAL   = 1000 // (毫秒)检测间隔，当存在多个子进程时(往往是重启间隔非常短且频繁造成)，需要进行清理，最终留下一个最新的子进程
-    gPROC_MULTI_CHILD_CLEAR_MIN_EXPIRE = 5000 // (毫秒)当多个子进程存在时，允许子进程进程至少运行的最小时间，超过该时间则清理
+    gPROC_MULTI_CHILD_CLEAR_MIN_EXPIRE = 3000 // (毫秒)当多个子进程存在时，允许子进程进程至少运行的最小时间，超过该时间则清理
 )
 
 // 进程信号量监听消息队列
