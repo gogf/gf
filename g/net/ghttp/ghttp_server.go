@@ -225,16 +225,21 @@ func Wait() {
 // 开启底层Web Server执行
 func (s *Server) startServer(fdMap listenerFdMap) {
     // 开始执行底层Web Server创建，端口监听
-    var server *gracefulServer
+    var server       *gracefulServer
+    var httpsEnabled bool
     if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
+        // ================
         // HTTPS
+        // ================
         if len(s.config.HTTPSAddr) == 0 {
             if len(s.config.Addr) > 0 {
                 s.config.HTTPSAddr = s.config.Addr
+                s.config.Addr      = ""
             } else {
                 s.config.HTTPSAddr = gDEFAULT_HTTPS_ADDR
             }
         }
+        httpsEnabled = len(s.config.HTTPSAddr) > 0
         var array []string
         var isFd  bool
         if v, ok := fdMap["https"]; ok && len(v) > 0 {
@@ -243,8 +248,10 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         } else {
             array = strings.Split(s.config.HTTPSAddr, ",")
         }
-
         for _, v := range array {
+            if len(v) == 0 {
+                continue
+            }
             go func(addrItem string) {
                 // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
                 if isFd && runtime.GOOS != "windows" {
@@ -264,8 +271,11 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             }(v)
         }
     }
+    // ================
     // HTTP
-    if len(s.config.Addr) == 0 {
+    // ================
+    // 当HTTPS服务未启用时，默认HTTP地址才会生效
+    if !httpsEnabled && len(s.config.Addr) == 0 {
         s.config.Addr = gDEFAULT_HTTP_ADDR
     }
     var array []string
@@ -277,6 +287,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         array = strings.Split(s.config.Addr, ",")
     }
     for _, v := range array {
+        if len(v) == 0 {
+            continue
+        }
         go func(addrItem string) {
             // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
             if isFd && runtime.GOOS != "windows" {
@@ -316,6 +329,13 @@ func (s *Server) getListenerFdMap() map[string]string {
         "https" : "",
     }
     for _, v := range s.servers {
+        //switch l := v.listener.(type) {
+        //case *net.TCPListener:
+        //default:
+        //
+        //    tls.NewListener(ln, config)
+        //
+        //}
         if f, e := v.listener.(*net.TCPListener).File(); e == nil {
             str := v.addr + "#" + gconv.String(f.Fd()) + ","
             if v.isHttps {
