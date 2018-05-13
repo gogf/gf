@@ -32,6 +32,12 @@ type Map map[string]interface{}
 // 常用list数据结构
 type List []Map
 
+
+// 阻塞等待HTTPServer执行完成(同一进程多HTTPServer情况下)
+func Wait() {
+    ghttp.Wait()
+}
+
 // HTTPServer单例对象
 func Server(name...interface{}) *ghttp.Server {
     return ghttp.GetServer(name...)
@@ -57,7 +63,6 @@ func View() *gview.View {
 func Config() *gcfg.Config {
     return gins.Config()
 }
-
 
 // 数据库操作对象，使用了连接池
 func Database(name...string) *gdb.Db {

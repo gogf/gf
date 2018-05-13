@@ -15,7 +15,6 @@ import (
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/gbinary"
-    "fmt"
 )
 
 const (
@@ -26,15 +25,17 @@ const (
     gMSG_REMOVE_PROC = 50
     gMSG_HEARTBEAT   = 60
 
-    gPROC_HEARTBEAT_INTERVAL = 1000 // (毫秒)进程间心跳间隔
-    gPROC_HEARTBEAT_TIMEOUT  = 3000 // (毫秒)进程间心跳超时时间，如果子进程在这段内没有接收到任何心跳，那么自动退出，防止可能出现的僵尸子进程
+    gPROC_HEARTBEAT_INTERVAL    = 1000        // (毫秒)进程间心跳间隔
+    gPROC_HEARTBEAT_TIMEOUT     = 5000        // (毫秒)进程间心跳超时时间，如果子进程在这段内没有接收到任何心跳，那么自动退出，防止可能出现的僵尸子进程
+    gPROC_MULTI_CHILD_CLEAR_INTERVAL   = 1000 // (毫秒)检测间隔，当存在多个子进程时(往往是重启间隔非常短且频繁造成)，需要进行清理，最终留下一个最新的子进程
+    gPROC_MULTI_CHILD_CLEAR_MIN_EXPIRE = 5000 // (毫秒)当多个子进程存在时，允许子进程进程至少运行的最小时间，超过该时间则清理
 )
 
 // 进程信号量监听消息队列
-var procSignalChan    = make(chan os.Signal)
+var procSignalChan  = make(chan os.Signal)
 
 // (主子进程)在第一次创建子进程成功之后才会开始心跳检测，同理对应超时时间才会生效
-var heartbeatStarted  = gtype.NewBool()
+var checkHeartbeat  = gtype.NewBool()
 
 // 处理进程信号量监控以及进程间消息通信
 func handleProcessMsgAndSignal() {
@@ -43,6 +44,7 @@ func handleProcessMsgAndSignal() {
         go handleChildProcessHeartbeat()
     } else {
         go handleMainProcessHeartbeat()
+        go handleMainProcessChildClear()
     }
     handleProcessMsg()
 }
@@ -53,8 +55,8 @@ func handleProcessMsg() {
     for {
         if msg := gproc.Receive(); msg != nil {
             // 记录消息日志，用于调试
-            content := gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data)
-            fmt.Print(content)
+            //content := gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data)
+            //fmt.Print(content)
             //gfile.PutContentsAppend("/tmp/gproc-log", content)
             act  := gbinary.DecodeToUint(msg.Data[0 : 1])
             data := msg.Data[1 : ]
@@ -64,7 +66,7 @@ func handleProcessMsg() {
                 // ===============
                 // 任何与父进程的通信都会更新最后通信时间
                 if msg.Pid == gproc.PPid() {
-                    lastHeartbeatTime.Set(int(gtime.Millisecond()))
+                    updateProcessChildUpdateTime()
                 }
                 switch act {
                     case gMSG_START:     onCommChildStart(msg.Pid, data)
@@ -81,6 +83,9 @@ func handleProcessMsg() {
                 // 任何进程消息都会自动更新最后通信时间记录
                 if msg.Pid != gproc.Pid() {
                     updateProcessCommTime(msg.Pid)
+                }
+                if !procFirstTimeMap.Contains(msg.Pid) {
+                    procFirstTimeMap.Set(msg.Pid, int(gtime.Millisecond()))
                 }
                 switch act {
                     case gMSG_START:     onCommMainStart(msg.Pid, data)

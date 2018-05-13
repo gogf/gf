@@ -21,37 +21,16 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
 )
 
+const (
+    gPROC_CHILD_MAX_IDLE_TIME = 3000 // 子进程闲置时间(未开启心跳机制的时间)
+)
+
 // (子进程)上一次从主进程接收心跳的时间戳
 var lastHeartbeatTime = gtype.NewInt()
 
-// 开启所有Web Server(根据消息启动)
-func onCommChildStart(pid int, data []byte) {
-    if len(data) > 0 {
-        sfm := bufferToServerFdMap(data)
-        for k, v := range sfm {
-            GetServer(k).startServer(v)
-        }
-    } else {
-        serverMapping.RLockFunc(func(m map[string]interface{}) {
-            for _, v := range m {
-                v.(*Server).startServer(nil)
-            }
-        })
-    }
-    // 进程创建成功之后(开始执行服务时间点为准)，通知主进程自身的存在，并开始执行心跳机制
-    sendProcessMsg(gproc.PPid(), gMSG_NEW_FORK, nil)
-    // 如果创建自己的父进程非gproc父进程，那么表示该进程为重启创建的进程，创建成功之后需要通知父进程销毁
-    if os.Getppid() != gproc.PPid() {
-        //glog.Printfln("%d: ask os.ppid %d to exit, proc.ppid:%d", gproc.Pid(), os.Getppid(), gproc.PPid())
-        sendProcessMsg(os.Getppid(), gMSG_SHUTDOWN, nil)
-    }
-    heartbeatStarted.Set(true)
-}
-
 // 心跳消息
 func onCommChildHeartbeat(pid int, data []byte) {
-    //glog.Printfln("%d: update heartbeat", gproc.Pid())
-    lastHeartbeatTime.Set(int(gtime.Millisecond()))
+    updateProcessChildUpdateTime()
 }
 
 // 子进程收到重启消息，那么将自身的ServerFdMap信息收集后发送给主进程，由主进程进行统一调度
@@ -60,6 +39,7 @@ func onCommChildRestart(pid int, data []byte) {
     p := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
     // windows系统无法进行文件描述符操作，只能重启进程
     if runtime.GOOS == "windows" {
+        // windows下使用shutdownWebServers会造成协程阻塞，这里直接使用close强制关闭
         closeWebServers()
     } else {
         // 创建新的服务进程，子进程自动从父进程复制文件描述来监听同样的端口
@@ -89,12 +69,17 @@ func onCommChildRestart(pid int, data []byte) {
     }
 }
 
-// 友好关闭服务链接并退出
+// 关闭服务链接并退出
 func onCommChildShutdown(pid int, data []byte) {
+    sendProcessMsg(gproc.PPid(), gMSG_REMOVE_PROC, nil)
     if runtime.GOOS != "windows" {
         shutdownWebServers()
     }
-    sendProcessMsg(gproc.PPid(), gMSG_REMOVE_PROC, nil)
+}
+
+// 更新上一次主进程主动与子进程通信的时间
+func updateProcessChildUpdateTime() {
+    lastHeartbeatTime.Set(int(gtime.Millisecond()))
 }
 
 // 主进程与子进程相互异步方式发送心跳信息，保持活跃状态
@@ -103,10 +88,16 @@ func handleChildProcessHeartbeat() {
         time.Sleep(gPROC_HEARTBEAT_INTERVAL*time.Millisecond)
         sendProcessMsg(gproc.PPid(), gMSG_HEARTBEAT, nil)
         // 超过时间没有接收到主进程心跳，自动关闭退出
-        if heartbeatStarted.Val() && (int(gtime.Millisecond()) - lastHeartbeatTime.Val() > gPROC_HEARTBEAT_TIMEOUT) {
+        if checkHeartbeat.Val() && (int(gtime.Millisecond()) - lastHeartbeatTime.Val() > gPROC_HEARTBEAT_TIMEOUT) {
             sendProcessMsg(gproc.Pid(), gMSG_SHUTDOWN, nil)
             // 子进程有时会无法退出(僵尸?)，这里直接使用exit，而不是return
-            glog.Printfln("%d: heartbeat timeout, exit", gproc.Pid())
+            //glog.Printfln("%d: %d - %d > %d", gproc.Pid(), int(gtime.Millisecond()), lastHeartbeatTime.Val(), gPROC_HEARTBEAT_TIMEOUT)
+            //glog.Printfln("%d: heartbeat timeout, exit", gproc.Pid())
+            os.Exit(0)
+        }
+        // 未开启心跳检测的闲置超过一定时间则主动关闭
+        if !checkHeartbeat.Val() && gproc.Uptime() > gPROC_CHILD_MAX_IDLE_TIME {
+            //glog.Printfln("%d: max idle time exceeded, exit", gproc.Pid())
             os.Exit(0)
         }
     }
