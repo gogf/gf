@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 // Web Server进程间通信 - 主进程.
-// 管理子进程按照规则听话玩，不听话有一百种方法让子进程在本地混不下去.
+// 管理子进程按照规则听话玩，不然有一百种方法让子进程在本地混不下去.
 
 package ghttp
 

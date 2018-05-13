@@ -22,7 +22,8 @@ type gracefulServer struct {
     fd           uintptr
     addr         string
     httpServer   *http.Server
-    listener     net.Listener
+    rawln        *net.TCPListener // 原始listener
+    listener     net.Listener     // 接口化封装的listener
     isHttps      bool
     shutdownChan chan bool
 }
@@ -59,8 +60,23 @@ func (s *gracefulServer) ListenAndServe() error {
     if err != nil {
         return err
     }
+    //file, err := ln.(*net.TCPListener).File()
+    //if err != nil {
+    //    return err
+    //}
+    //s.fd       = file.Fd()
     s.listener = ln
     return s.doServe()
+}
+
+// 获得文件描述符
+func (s *gracefulServer) Fd() uintptr {
+    file, err := s.listener.(*net.TCPListener).File()
+    //file, err := s.rawln.File()
+    if err == nil {
+        return file.Fd()
+    }
+    return 0
 }
 
 // 设置自定义fd
@@ -88,6 +104,11 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string) error {
     if err != nil {
         return err
     }
+    //file, err := ln.(*net.TCPListener).File()
+    //if err != nil {
+    //    return err
+    //}
+    //s.fd       = file.Fd()
     s.listener = tls.NewListener(ln, config)
     s.isHttps  = true
     return s.doServe()
