@@ -11,12 +11,20 @@ package gproc
 
 import (
     "os"
+    "time"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 const (
     gPROC_ENV_KEY_PPID_KEY = "gproc.ppid"
 )
+
+// 进程开始执行时间
+var processStartTime = time.Now()
+
+// 优雅退出标识符号
+var isExited = gtype.NewBool()
 
 // 获取当前进程ID
 func Pid() int {
@@ -34,12 +42,32 @@ func PPid() int {
 }
 
 // 获取父进程ID(系统父进程)
-func PpidOfOs() int {
+func PPidOS() int {
     return os.Getppid()
 }
 
 // 判断当前进程是否为gproc创建的子进程
 func IsChild() bool {
     return os.Getenv(gPROC_ENV_KEY_PPID_KEY) != ""
+}
+
+// 进程开始执行时间
+func StartTime() time.Time {
+    return processStartTime
+}
+
+// 进程已经运行的时间(毫秒)
+func Uptime() int {
+    return int(time.Now().UnixNano()/1e6 - processStartTime.UnixNano()/1e6)
+}
+
+// 标识当前进程为退出状态，其他业务可以根据此标识来执行优雅退出
+func SetExited() {
+    isExited.Set(true)
+}
+
+// 当前进程是否被标识为退出状态
+func Exited() bool {
+    return isExited.Val()
 }
 

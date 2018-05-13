@@ -13,6 +13,7 @@ import (
     "errors"
     "strings"
     "reflect"
+    "runtime"
     "net/http"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
@@ -21,7 +22,6 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
-    "runtime"
 )
 
 const (
@@ -108,38 +108,29 @@ var serverMapping = gmap.NewStringInterfaceMap()
 var procManager   = gproc.NewManager()
 
 // Web Server开始执行事件通道，由于同一个进程支持多Server，因此该通道为非阻塞
-var runChan       = make(chan struct{}, 100000)
-// 已完成的run消息队列
+var readyChan     = make(chan struct{}, 100000)
+// Web Server已完成服务事件通道，当有事件时表示服务完成，当前进程退出
 var doneChan      = make(chan struct{}, 100000)
-// 阻塞消息队列，用于ghttp.Wait
-var waitChan      = make(chan struct{}, 0)
 
 // Web Server进程初始化
 func init() {
     go func() {
-        // 等待run消息(Run方法调用)
-        <- runChan
+        // 等待ready消息(Run方法调用)
+        <- readyChan
         // 主进程只负责创建子进程
         if !gproc.IsChild() {
             sendProcessMsg(os.Getpid(), gMSG_START, nil)
         }
         // 开启进程消息监听处理
         handleProcessMsgAndSignal()
+
         // 服务执行完成，需要退出
         doneChan <- struct{}{}
 
         if !gproc.IsChild() {
             glog.Printfln("%d: all web server shutdown smoothly", gproc.Pid())
         }
-
-        // 停止进程等待
-        close(waitChan)
     }()
-}
-
-// 阻塞等待所有Web Server停止，常用于多Web Server场景，以及需要将Web Server异步运行的场景
-func Wait() {
-    <- waitChan
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
@@ -190,31 +181,46 @@ func GetServer(name...interface{}) (*Server) {
     return s
 }
 
-// 阻塞执行监听
-func (s *Server) Run() error {
-    runChan <- struct{}{}
-
+// 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行)
+// 需要结合Wait方式一起使用
+func (s *Server) Start() error {
+    // 主进程，不执行任何业务，只负责进程管理
     if !gproc.IsChild() {
-        <- doneChan
         return nil
     }
 
     if s.status == 1 {
         return errors.New("server is already running")
     }
-
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
-
     // 开启异步关闭队列处理循环
     s.startCloseQueueLoop()
+    return nil
+}
 
+// 阻塞执行监听
+func (s *Server) Run() error {
+    if err := s.Start(); err != nil {
+        return err
+    }
+    // Web Server准备就绪，待执行
+    readyChan <- struct{}{}
     // 阻塞等待服务执行完成
     <- doneChan
     return nil
 }
+
+
+// 阻塞等待所有Web Server停止，常用于多Web Server场景，以及需要将Web Server异步运行的场景
+// 这是一个与进程相关的方法
+func Wait() {
+    readyChan <- struct{}{}
+    <- doneChan
+}
+
 
 // 开启底层Web Server执行
 func (s *Server) startServer(fdMap listenerFdMap) {
@@ -239,13 +245,13 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         }
 
         for _, v := range array {
-            go func(item string) {
+            go func(addrItem string) {
                 // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
                 if isFd && runtime.GOOS != "windows" {
-                    tArray := strings.Split(item, "#")
+                    tArray := strings.Split(addrItem, "#")
                     server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
                 } else {
-                    server  = s.newGracefulServer(item)
+                    server  = s.newGracefulServer(addrItem)
                 }
                 s.servers = append(s.servers, server)
                 if err := server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
@@ -271,13 +277,13 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         array = strings.Split(s.config.Addr, ",")
     }
     for _, v := range array {
-        go func(item string) {
+        go func(addrItem string) {
             // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
             if isFd && runtime.GOOS != "windows" {
-                tArray := strings.Split(item, "#")
+                tArray := strings.Split(addrItem, "#")
                 server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
             } else {
-                server  = s.newGracefulServer(item)
+                server  = s.newGracefulServer(addrItem)
             }
             s.servers = append(s.servers, server)
             if err := server.ListenAndServe(); err != nil {

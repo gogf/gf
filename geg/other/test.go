@@ -43,7 +43,7 @@ func checksum(buffer []byte) uint32 {
 }
 
 func main(){
-    b := gfile.GetBinContents("/tmp/gproc/27501")
+    b := gfile.GetBinContents("/tmp/gproc/30588")
     for _, msg := range bufferToMsgs(b) {
         fmt.Println(msg.Pid)
         fmt.Println(msg.Data)
