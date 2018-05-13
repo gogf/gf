@@ -19,14 +19,14 @@ func main() {
         r.Server.Shutdown()
     })
     s1.SetPort(8199, 8200)
-    go s1.Run()
+    s1.Start()
 
     s2 := g.Server("s2")
     s2.BindHandler("/", func(r *ghttp.Request){
         r.Response.Writeln("hello s2")
     })
     s2.SetPort(8300, 8080)
-    go s2.Run()
+    s2.Start()
 
-    ghttp.Wait()
+    g.Wait()
 }
