@@ -39,8 +39,11 @@ type Msg struct {
 func init() {
     path := getCommFilePath(os.Getpid())
     if !gfile.Exists(path) {
-        // 检测存在性
-        if err := gfile.Create(path); err != nil {
+        // 判断是否需要创建通信文件
+        commLocker.Lock()
+        err := gfile.Create(path)
+        commLocker.UnLock()
+        if err != nil {
             glog.Error(err)
             os.Exit(1)
         }
@@ -50,9 +53,14 @@ func init() {
         glog.Errorfln("%s is not writable for gproc", path)
         os.Exit(1)
     }
-    // 初始化时读取已有数据(文件修改时间在10秒以内)
     if gtime.Second() - gfile.MTime(path) < 10 {
+        // 初始化时读取已有数据(文件修改时间在10秒以内)
         checkCommBuffer(path)
+    } else {
+        // 否则清空旧的数据内容
+        commLocker.Lock()
+        os.Truncate(path, 0)
+        commLocker.UnLock()
     }
     // 文件事件监听，如果通信数据文件有任何变化，读取文件并添加到消息队列
     err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
