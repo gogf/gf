@@ -71,10 +71,11 @@ func (s *gracefulServer) ListenAndServe() error {
 
 // 获得文件描述符
 func (s *gracefulServer) Fd() uintptr {
-    file, err := s.listener.(*net.TCPListener).File()
-    //file, err := s.rawln.File()
-    if err == nil {
-        return file.Fd()
+    if s.listener != nil {
+        file, err := s.listener.(*net.TCPListener).File()
+        if err == nil {
+            return file.Fd()
+        }
     }
     return 0
 }
@@ -155,9 +156,9 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
 // 执行请求优雅关闭
 func (s *gracefulServer) shutdown() {
     if err := s.httpServer.Shutdown(context.Background()); err != nil {
-        glog.Errorfln("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
+        //glog.Errorfln("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
     } else {
-        glog.Printfln("%d: %s server [%s] shutdown smoothly", gproc.Pid(), s.getProto(), s.addr)
+        //glog.Printfln("%d: %s server [%s] shutdown smoothly", gproc.Pid(), s.getProto(), s.addr)
         s.shutdownChan <- true
     }
 }

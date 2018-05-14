@@ -8,7 +8,6 @@ package ghttp
 
 import (
     "os"
-    "net"
     "sync"
     "errors"
     "strings"
@@ -241,9 +240,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         }
         httpsEnabled = len(s.config.HTTPSAddr) > 0
         var array []string
-        var isFd  bool
         if v, ok := fdMap["https"]; ok && len(v) > 0 {
-            isFd  = true
             array = strings.Split(v, ",")
         } else {
             array = strings.Split(s.config.HTTPSAddr, ",")
@@ -253,18 +250,25 @@ func (s *Server) startServer(fdMap listenerFdMap) {
                 continue
             }
             go func(addrItem string) {
-                // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
-                if isFd && runtime.GOOS != "windows" {
-                    tArray := strings.Split(addrItem, "#")
-                    server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
+                fd    := 0
+                addr  := addrItem
+                array := strings.Split(addrItem, "#")
+                if len(array) > 1 {
+                    addr = array[0]
+                    // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
+                    if runtime.GOOS != "windows" {
+                        fd = gconv.Int(array[1])
+                    }
+                }
+                if fd > 0 {
+                    server = s.newGracefulServer(addr, fd)
                 } else {
-                    server  = s.newGracefulServer(addrItem)
+                    server = s.newGracefulServer(addr)
                 }
                 s.servers = append(s.servers, server)
                 if err := server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
                     // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
                     if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-                        s.servers = s.servers[0 : len(s.servers) - 1]
                         glog.Error(err)
                     }
                 }
@@ -279,9 +283,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         s.config.Addr = gDEFAULT_HTTP_ADDR
     }
     var array []string
-    var isFd  bool
     if v, ok := fdMap["http"]; ok && len(v) > 0 {
-        isFd  = true
         array = strings.Split(v, ",")
     } else {
         array = strings.Split(s.config.Addr, ",")
@@ -291,18 +293,25 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             continue
         }
         go func(addrItem string) {
-            // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
-            if isFd && runtime.GOOS != "windows" {
-                tArray := strings.Split(addrItem, "#")
-                server  = s.newGracefulServer(tArray[0], gconv.Int(tArray[1]))
+            fd    := 0
+            addr  := addrItem
+            array := strings.Split(addrItem, "#")
+            if len(array) > 1 {
+                addr = array[0]
+                // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
+                if runtime.GOOS != "windows" {
+                    fd = gconv.Int(array[1])
+                }
+            }
+            if fd > 0 {
+                server = s.newGracefulServer(addr, fd)
             } else {
-                server  = s.newGracefulServer(addrItem)
+                server = s.newGracefulServer(addr)
             }
             s.servers = append(s.servers, server)
             if err := server.ListenAndServe(); err != nil {
                 // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
                 if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-                    s.servers = s.servers[0 : len(s.servers) - 1]
                     glog.Error(err)
                 }
             }
@@ -325,34 +334,26 @@ func (s *Server) Shutdown() {
 // 获取当前监听的文件描述符信息，构造成map返回
 func (s *Server) getListenerFdMap() map[string]string {
     m := map[string]string {
-        "http"  : "",
         "https" : "",
+        "http"  : "",
     }
+    // s.servers是从HTTPS到HTTP优先级遍历，解析的时候也应当按照这个顺序读取fd
     for _, v := range s.servers {
-        //switch l := v.listener.(type) {
-        //case *net.TCPListener:
-        //default:
-        //
-        //    tls.NewListener(ln, config)
-        //
-        //}
-        if f, e := v.listener.(*net.TCPListener).File(); e == nil {
-            str := v.addr + "#" + gconv.String(f.Fd()) + ","
-            if v.isHttps {
-                m["https"] += str
-            } else {
-                m["http"]  += str
-            }
+        str := v.addr + "#" + gconv.String(v.Fd()) + ","
+        if v.isHttps {
+            m["https"] += str
         } else {
-            glog.Errorfln("failed to get listener file: %v", e)
+            m["http"]  += str
         }
+    }
+    // 去掉末尾的","号
+    if len(m["https"]) > 0 {
+        m["https"] = m["https"][0 : len(m["https"]) - 1]
     }
     if len(m["http"]) > 0 {
         m["http"] = m["http"][0 : len(m["http"]) - 1]
     }
-    if len(m["https"]) > 0 {
-        m["https"] = m["https"][0 : len(m["https"]) - 1]
-    }
+
     return m
 }
 

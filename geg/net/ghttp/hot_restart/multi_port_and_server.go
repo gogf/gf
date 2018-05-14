@@ -11,9 +11,10 @@ func main() {
     s1 := g.Server("s1")
     s1.EnableAdmin()
     s1.BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("before time, pid:", gproc.Pid())
+        pid := gproc.Pid()
+        r.Response.Writeln("before restart, pid:", pid)
         time.Sleep(10*time.Second)
-        r.Response.Write("after time, pid:", gproc.Pid())
+        r.Response.Writeln("after restart, pid:", gproc.Pid())
     })
     s1.BindHandler("/pid", func(r *ghttp.Request) {
         r.Response.Write(gproc.Pid())
