@@ -2,8 +2,17 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g/util/gvalid"
 )
 
 func main() {
-    fmt.Println("我要加入gf框架开发团队！！")
+    data  := map[string]interface{} {
+        "id"   : "1",
+    }
+    rules := map[string]string {
+        "id"   : "required",
+        "name" : "length:4,16",
+    }
+    m := gvalid.CheckMap(data, rules)
+    fmt.Println(m)
 }
