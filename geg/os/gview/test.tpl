@@ -1,1 +1,1 @@
-test.tpl content
+test.tpl content2
