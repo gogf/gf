@@ -316,19 +316,19 @@ func (s *Server) startServer(fdMap listenerFdMap) {
     s.status = 1
 }
 
-// 热重启Web Server
+// 平滑重启Web Server
 func (s *Server) Reload() {
     sendProcessMsg(gproc.Pid(), gMSG_RELOAD, nil)
 }
 
-// 重启Web Server
+// 完整重启Web Server
 func (s *Server) Restart() {
     sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
 }
 
 // 关闭Web Server
 func (s *Server) Shutdown() {
-    sendProcessMsg(gproc.Pid(), gMSG_SHUTDOWN, nil)
+    sendProcessMsg(gproc.PPid(), gMSG_SHUTDOWN, nil)
 }
 
 // 获取当前监听的文件描述符信息，构造成map返回
