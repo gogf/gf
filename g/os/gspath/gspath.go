@@ -61,8 +61,8 @@ func (sp *SPath) Search(name string) string {
     if path == "" {
         sp.mu.RLock()
         for _, v := range sp.paths {
-            path = v + gfile.Separator + name
-            if gfile.Exists(path) {
+            path = gfile.RealPath(v + gfile.Separator + name)
+            if path != "" && gfile.Exists(path) {
                 break
             }
         }
