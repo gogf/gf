@@ -9,6 +9,7 @@ package gproc
 import (
     "os"
     "fmt"
+    "time"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gflock"
@@ -21,7 +22,9 @@ import (
 
 const (
     // 由于子进程的temp dir有可能会和父进程不一致(特别是windows下)，影响进程间通信，这里统一使用环境变量设置
-    gPROC_TEMP_DIR_ENV_KEY = "gproc.tempdir"
+    gPROC_TEMP_DIR_ENV_KEY         = "gproc.tempdir"
+    // 自动通信文件清理时间间隔
+    gPROC_COMM_AUTO_CLEAR_INTERVAL = time.Second
 )
 
 // 当前进程的文件锁
@@ -69,6 +72,23 @@ func init() {
     if err != nil {
         glog.Error(err)
     }
+
+    go autoClearCommDir()
+}
+
+// 自动清理通信目录文件
+// @todo 目前是以时间过期规则进行清理，后期可以考虑加入进程存在性判断
+func autoClearCommDir() {
+    dirPath := getCommDirPath()
+    for {
+        time.Sleep(gPROC_COMM_AUTO_CLEAR_INTERVAL)
+        for _, name := range gfile.ScanDir(dirPath) {
+            path := dirPath + gfile.Separator + name
+            if gtime.Second() - gfile.MTime(path) >= 10 {
+                gfile.Remove(path)
+            }
+        }
+    }
 }
 
 // 手动检查进程通信消息，如果存在消息曾推送到进程消息队列
@@ -97,6 +117,10 @@ func Receive() *Msg {
 // 向指定gproc进程发送数据
 // 数据格式：总长度(32bit) | PID(32bit) | 校验(32bit) | 参数(变长)
 func Send(pid int, data interface{}) error {
+    // 首先检测进程存在不存在，存在才能发送消息
+    if _, err := os.FindProcess(pid); err != nil {
+        return err
+    }
     buffer := gconv.Bytes(data)
     b := make([]byte, 0)
     b  = append(b, gbinary.EncodeInt32(int32(len(buffer) + 12))...)
@@ -112,11 +136,16 @@ func Send(pid int, data interface{}) error {
 
 // 获取指定进程的通信文件地址
 func getCommFilePath(pid int) string {
+    return getCommDirPath() + gfile.Separator + gconv.String(pid)
+}
+
+// 获取进程间通信目录地址
+func getCommDirPath() string {
     tempDir := os.Getenv("gproc.tempdir")
     if tempDir == "" {
         tempDir = gfile.TempDir()
     }
-    return tempDir + gfile.Separator + "gproc" + gfile.Separator + gconv.String(pid)
+    return tempDir + gfile.Separator + "gproc"
 }
 
 // 数据解包，防止黏包
