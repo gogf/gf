@@ -31,19 +31,20 @@ func onCommMainHeartbeat(pid int, data []byte) {
     updateProcessCommTime(pid)
 }
 
-// 热重启服务
+// 平滑重启服务
 func onCommMainReload(pid int, data []byte) {
-    // 向所有子进程发送重启命令，子进程将会搜集Web Server信息发送给父进程进行协调重启工作
     procManager.Send(formatMsgBuffer(gMSG_RELOAD, nil))
 }
 
 // 完整重启服务
 func onCommMainRestart(pid int, data []byte) {
+    // 如果是父进程接收到重启指令，那么通知所有子进程重启
     if pid == gproc.Pid() {
         procManager.Send(formatMsgBuffer(gMSG_RESTART, nil))
         return
     }
-    if p, _ := os.FindProcess(pid); p != nil {
+    // 否则杀掉子进程，然后新建一个完整的子进程
+    if p, err := os.FindProcess(pid); err == nil && p != nil {
         p.Kill()
         p.Wait()
     }
@@ -56,9 +57,8 @@ func onCommMainNewFork(pid int, data []byte) {
     checkHeartbeat.Set(true)
 }
 
-// 关闭服务，通知所有子进程退出
+// 关闭服务，通知所有子进程退出(Kill强制性退出)
 func onCommMainShutdown(pid int, data []byte) {
-    //procManager.Send(formatMsgBuffer(gMSG_SHUTDOWN, nil))
     procManager.KillAll()
     procManager.WaitAll()
 }
@@ -83,7 +83,7 @@ func handleMainProcessHeartbeat() {
                 }
             }
         }
-        // 如果所有子进程都退出，并且达到超时时间，那么主进程也没存在的必要
+        // 如果所有子进程都退出，并且主进程未活动达到超时时间，那么主进程也没存在的必要
         if procManager.Size() == 0 && int(gtime.Millisecond()) - lastUpdateTime.Val() > gPROC_HEARTBEAT_TIMEOUT{
             os.Exit(0)
         }

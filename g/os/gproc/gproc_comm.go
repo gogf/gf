@@ -27,6 +27,8 @@ const (
     gPROC_COMM_AUTO_CLEAR_INTERVAL = time.Second
 )
 
+// 全局通信文件清理文件锁(同一时刻只能存在一个进程进行通信文件清理)
+var commClearLocker = gflock.New("comm.clear.lock")
 // 当前进程的文件锁
 var commLocker  = gflock.New(fmt.Sprintf("%d.lock", os.Getpid()))
 // 进程通信消息队列
@@ -82,11 +84,14 @@ func autoClearCommDir() {
     dirPath := getCommDirPath()
     for {
         time.Sleep(gPROC_COMM_AUTO_CLEAR_INTERVAL)
-        for _, name := range gfile.ScanDir(dirPath) {
-            path := dirPath + gfile.Separator + name
-            if gtime.Second() - gfile.MTime(path) >= 10 {
-                gfile.Remove(path)
+        if commClearLocker.TryLock() {
+            for _, name := range gfile.ScanDir(dirPath) {
+                path := dirPath + gfile.Separator + name
+                if gtime.Second() - gfile.MTime(path) >= 10 {
+                    gfile.Remove(path)
+                }
             }
+            commClearLocker.UnLock()
         }
     }
 }
