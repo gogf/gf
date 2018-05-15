@@ -26,6 +26,7 @@ func handleProcessSignal() {
         syscall.SIGHUP,
         syscall.SIGTERM,
         syscall.SIGUSR1,
+        syscall.SIGUSR2,
     )
     for {
         sig = <- procSignalChan
@@ -33,12 +34,14 @@ func handleProcessSignal() {
             // 进程终止，停止所有子进程运行
             case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGTERM:
                 sendProcessMsg(gproc.Pid(), gMSG_SHUTDOWN, nil)
-                // 强制性kill掉所有子进程
-                procManager.KillAll()
                 return
 
-            // 用户信号，重启服务
+            // 用户信号，热重启服务
             case syscall.SIGUSR1:
+                sendProcessMsg(gproc.Pid(), gMSG_RELOAD, nil)
+
+            // 用户信号，完整重启服务
+            case syscall.SIGUSR2:
                 sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
 
             default:

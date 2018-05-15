@@ -18,6 +18,10 @@ import (
     "time"
 )
 
+const (
+    gGRACEFUL_SHUTDOWN_TIMEOUT = 10*time.Second // 优雅关闭链接时的超时时间
+)
+
 // 优雅的Web Server对象封装
 type gracefulServer struct {
     fd           uintptr
@@ -156,12 +160,10 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
 
 // 执行请求优雅关闭
 func (s *gracefulServer) shutdown() {
-    ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(2*time.Second))
-    defer cancel()
-    if err := s.httpServer.Shutdown(ctx); err != nil {
+    if err := s.httpServer.Shutdown(context.Background()); err != nil {
         glog.Errorfln("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
     } else {
-        glog.Printfln("%d: %s server [%s] shutdown smoothly", gproc.Pid(), s.getProto(), s.addr)
+        //glog.Printfln("%d: %s server [%s] shutdown smoothly", gproc.Pid(), s.getProto(), s.addr)
         s.shutdownChan <- true
     }
 }
@@ -171,7 +173,7 @@ func (s *gracefulServer) close() {
     if err := s.httpServer.Close(); err != nil {
         glog.Errorfln("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.addr, err)
     } else {
-        glog.Printfln("%d: %s server [%s] closed smoothly", gproc.Pid(), s.getProto(), s.addr)
+        //glog.Printfln("%d: %s server [%s] closed smoothly", gproc.Pid(), s.getProto(), s.addr)
         s.shutdownChan <- true
     }
 }
