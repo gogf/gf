@@ -29,7 +29,7 @@ func onCommChildHeartbeat(pid int, data []byte) {
 
 }
 
-// 热重启，子进程收到重启消息，那么将自身的ServerFdMap信息收集后发送给主进程，由主进程进行统一调度
+// 平滑重启，子进程收到重启消息，那么将自身的ServerFdMap信息收集后发送给主进程，由主进程进行统一调度
 func onCommChildReload(pid int, data []byte) {
     var buffer []byte = nil
     p := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
