@@ -11,8 +11,6 @@ package ghttp
 import (
     "os"
     "time"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/gproc"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gmap"
 )
@@ -82,22 +80,22 @@ func handleMainProcessHeartbeat() {
 }
 
 // 清理多余的子进程
-func handleMainProcessChildClear() {
-    for {
-        time.Sleep(gPROC_MULTI_CHILD_CLEAR_INTERVAL*time.Millisecond)
-        if procManager.Size() > 1 {
-            minPid  := 0
-            minTime := int(gtime.Millisecond())
-            for _, pid := range procManager.Pids() {
-                if t := procFirstTimeMap.Get(pid); t < minTime {
-                    minPid  = pid
-                    minTime = t
-                }
-            }
-            if minPid > 0 && procUpdateTimeMap.Get(minPid) - procFirstTimeMap.Get(minPid) > gPROC_MULTI_CHILD_CLEAR_MIN_EXPIRE {
-                sendProcessMsg(minPid, gMSG_SHUTDOWN, nil)
-                glog.Printfln("%d: multi child occurred, shutdown %d", gproc.Pid(), minPid)
-            }
-        }
-    }
-}
+//func handleMainProcessChildClear() {
+//    for {
+//        time.Sleep(gPROC_MULTI_CHILD_CLEAR_INTERVAL*time.Millisecond)
+//        if procManager.Size() > 1 {
+//            minPid  := 0
+//            minTime := int(gtime.Millisecond())
+//            for _, pid := range procManager.Pids() {
+//                if t := procFirstTimeMap.Get(pid); t < minTime {
+//                    minPid  = pid
+//                    minTime = t
+//                }
+//            }
+//            if minPid > 0 && procUpdateTimeMap.Get(minPid) - procFirstTimeMap.Get(minPid) > gPROC_MULTI_CHILD_CLEAR_MIN_EXPIRE {
+//                sendProcessMsg(minPid, gMSG_SHUTDOWN, nil)
+//                glog.Printfln("%d: multi child occurred, shutdown %d", gproc.Pid(), minPid)
+//            }
+//        }
+//    }
+//}
