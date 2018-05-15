@@ -6,7 +6,8 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/os/gproc"
-    "strings"
+    "os"
+    "syscall"
 )
 
 // 数据解包，防止黏包
@@ -44,7 +45,8 @@ func checksum(buffer []byte) uint32 {
 }
 
 func main(){
-    fmt.Println(len(strings.Split("", ",")))
+    p, _ := os.FindProcess(10354)
+    fmt.Println(p.Signal(syscall.Signal(1)))
     return
     b := gfile.GetBinContents("/tmp/gproc/30588")
     for _, msg := range bufferToMsgs(b) {
