@@ -223,8 +223,6 @@ func Wait() {
 
 // 开启底层Web Server执行
 func (s *Server) startServer(fdMap listenerFdMap) {
-    // 开始执行底层Web Server创建，端口监听
-    var server       *gracefulServer
     var httpsEnabled bool
     if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
         // ================
@@ -249,30 +247,21 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             if len(v) == 0 {
                 continue
             }
-            go func(addrItem string) {
-                fd    := 0
-                addr  := addrItem
-                array := strings.Split(addrItem, "#")
-                if len(array) > 1 {
-                    addr = array[0]
-                    // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
-                    if runtime.GOOS != "windows" {
-                        fd = gconv.Int(array[1])
-                    }
+            fd    := 0
+            addr  := v
+            array := strings.Split(v, "#")
+            if len(array) > 1 {
+                addr = array[0]
+                // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
+                if runtime.GOOS != "windows" {
+                    fd = gconv.Int(array[1])
                 }
-                if fd > 0 {
-                    server = s.newGracefulServer(addr, fd)
-                } else {
-                    server = s.newGracefulServer(addr)
-                }
-                s.servers = append(s.servers, server)
-                if err := server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath); err != nil {
-                    // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
-                    if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-                        glog.Error(err)
-                    }
-                }
-            }(v)
+            }
+            if fd > 0 {
+                s.servers = append(s.servers, s.newGracefulServer(addr, fd))
+            } else {
+                s.servers = append(s.servers, s.newGracefulServer(addr))
+            }
         }
     }
     // ================
@@ -292,33 +281,44 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         if len(v) == 0 {
             continue
         }
-        go func(addrItem string) {
-            fd    := 0
-            addr  := addrItem
-            array := strings.Split(addrItem, "#")
-            if len(array) > 1 {
-                addr = array[0]
-                // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
-                if runtime.GOOS != "windows" {
-                    fd = gconv.Int(array[1])
-                }
+        fd    := 0
+        addr  := v
+        array := strings.Split(v, "#")
+        if len(array) > 1 {
+            addr = array[0]
+            // windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
+            if runtime.GOOS != "windows" {
+                fd = gconv.Int(array[1])
             }
-            if fd > 0 {
-                server = s.newGracefulServer(addr, fd)
+        }
+        if fd > 0 {
+            s.servers = append(s.servers, s.newGracefulServer(addr, fd))
+        } else {
+            s.servers = append(s.servers, s.newGracefulServer(addr))
+        }
+    }
+    // 开始执行异步监听
+    for _, v := range s.servers {
+        go func(server *gracefulServer) {
+            var err error
+            if server.isHttps {
+                err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath)
             } else {
-                server = s.newGracefulServer(addr)
+                err = server.ListenAndServe()
             }
-            s.servers = append(s.servers, server)
-            if err := server.ListenAndServe(); err != nil {
-                // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
-                if !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-                    glog.Error(err)
-                }
+            // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
+            if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
+                glog.Error(err)
             }
         }(v)
     }
 
     s.status = 1
+}
+
+// 热重启Web Server
+func (s *Server) Reload() {
+    sendProcessMsg(gproc.Pid(), gMSG_RELOAD, nil)
 }
 
 // 重启Web Server

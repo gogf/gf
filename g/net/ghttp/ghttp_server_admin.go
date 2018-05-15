@@ -10,6 +10,7 @@ package ghttp
 import (
     "strings"
     "gitee.com/johng/gf/g/os/gview"
+    "runtime"
 )
 
 // 用于服务管理的对象
@@ -26,15 +27,26 @@ func (p *utilAdmin) Index(r *Request) {
                 <title>gf ghttp admin</title>
             </head>
             <body>
+                <p><a href="{{$.uri}}/reload">reload</a></p>
                 <p><a href="{{$.uri}}/restart">restart</a></p>
                 <p><a href="{{$.uri}}/shutdown">shutdown</a></p>
             </body>
             </html>
-            `, data)
+    `, data)
     r.Response.Write(buffer)
 }
 
-// 服务重启
+// 服务热重启
+func (p *utilAdmin) Reload(r *Request) {
+    if runtime.GOOS == "windows" {
+        p.Restart(r)
+    } else {
+        r.Response.Write("reload server")
+        r.Server.Reload()
+    }
+}
+
+// 服务完整重启
 func (p *utilAdmin) Restart(r *Request) {
     r.Response.Write("restart server")
     r.Server.Restart()
