@@ -18,13 +18,13 @@ import (
 )
 
 const (
-    gMSG_START       = 10
-    gMSG_RELOAD      = 20
-    gMSG_RESTART     = 30
-    gMSG_SHUTDOWN    = 40
-    gMSG_CLOSE       = 45
-    gMSG_NEW_FORK    = 50
-    gMSG_HEARTBEAT   = 70
+    gMSG_START       = 1
+    gMSG_RELOAD      = 2
+    gMSG_RESTART     = 3
+    gMSG_SHUTDOWN    = 4
+    gMSG_CLOSE       = 5
+    gMSG_NEW_FORK    = 6
+    gMSG_HEARTBEAT   = 7
 
     gPROC_HEARTBEAT_INTERVAL    = 1000       // (毫秒)进程间心跳间隔
     gPROC_HEARTBEAT_TIMEOUT     = 3000       // (毫秒)进程间心跳超时时间，如果子进程在这段内没有接收到任何心跳，那么自动退出，防止可能出现的僵尸子进程

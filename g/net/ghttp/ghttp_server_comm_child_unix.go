@@ -32,7 +32,7 @@ func onCommChildStart(pid int, data []byte) {
     sendProcessMsg(gproc.PPid(), gMSG_NEW_FORK, nil)
     // 如果创建自己的父进程非gproc父进程，那么表示该进程为重启创建的进程，创建成功之后需要通知父进程自行销毁
     if gproc.PPidOS() != gproc.PPid() {
-        //sendProcessMsg(gproc.PPidOS(), gMSG_SHUTDOWN, nil)
+        //如果子进程已经继承了父进程的socket文件描述符，那么父进程没有存在的必要，直接kill掉
         if p, err := os.FindProcess(gproc.PPidOS()); err == nil {
             p.Kill()
         }
