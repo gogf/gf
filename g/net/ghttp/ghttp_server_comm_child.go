@@ -79,6 +79,7 @@ func onCommChildShutdown(pid int, data []byte) {
     if runtime.GOOS != "windows" {
         shutdownWebServers()
     }
+    os.Exit(0)
 }
 
 // 更新上一次主进程主动与子进程通信的时间

@@ -15,6 +15,7 @@ import (
     "crypto/tls"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
+    "time"
 )
 
 // 优雅的Web Server对象封装
@@ -155,10 +156,12 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
 
 // 执行请求优雅关闭
 func (s *gracefulServer) shutdown() {
-    if err := s.httpServer.Shutdown(context.Background()); err != nil {
-        //glog.Errorfln("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
+    ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(2*time.Second))
+    defer cancel()
+    if err := s.httpServer.Shutdown(ctx); err != nil {
+        glog.Errorfln("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
     } else {
-        //glog.Printfln("%d: %s server [%s] shutdown smoothly", gproc.Pid(), s.getProto(), s.addr)
+        glog.Printfln("%d: %s server [%s] shutdown smoothly", gproc.Pid(), s.getProto(), s.addr)
         s.shutdownChan <- true
     }
 }
