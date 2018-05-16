@@ -127,11 +127,7 @@ func init() {
         doneChan <- struct{}{}
 
         if !gproc.IsChild() {
-            if serverMapping.Size() > 1 {
-                glog.Printfln("%d: all web servers shutdown", gproc.Pid())
-            } else {
-                glog.Printfln("%d: web server shutdown", gproc.Pid())
-            }
+            glog.Printfln("%d: all web servers shutdown", gproc.Pid())
         }
     }()
 }
