@@ -15,6 +15,7 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/os/gtime"
+    "fmt"
 )
 
 const (
@@ -34,7 +35,7 @@ const (
 var procSignalChan = make(chan os.Signal)
 
 // 上一次进程间心跳的时间戳
-var lastUpdateTime = gtype.NewInt()
+var lastUpdateTime = gtype.NewInt(int(gtime.Millisecond()))
 
 // (主子进程)在第一次创建子进程成功之后才会开始心跳检测，同理对应超时时间才会生效
 var checkHeartbeat = gtype.NewBool()
@@ -56,8 +57,8 @@ func handleProcessMsg() {
     for {
         if msg := gproc.Receive(); msg != nil {
             // 记录消息日志，用于调试
-            //content := gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data)
-            //fmt.Print(content)
+            content := gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data)
+            fmt.Print(content)
             //gfile.PutContentsAppend("/tmp/gproc-log", content)
             act  := gbinary.DecodeToUint(msg.Data[0 : 1])
             data := msg.Data[1 : ]

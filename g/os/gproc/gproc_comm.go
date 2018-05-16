@@ -122,10 +122,6 @@ func Receive() *Msg {
 // 向指定gproc进程发送数据
 // 数据格式：总长度(32bit) | PID(32bit) | 校验(32bit) | 参数(变长)
 func Send(pid int, data interface{}) error {
-    // 首先检测进程存在不存在，存在才能发送消息
-    if _, err := os.FindProcess(pid); err != nil {
-        return err
-    }
     buffer := gconv.Bytes(data)
     b := make([]byte, 0)
     b  = append(b, gbinary.EncodeInt32(int32(len(buffer) + 12))...)
