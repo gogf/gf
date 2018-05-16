@@ -34,6 +34,9 @@ func handleProcessSignal() {
             // 进程终止，停止所有子进程运行
             case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGTERM:
                 sendProcessMsg(gproc.Pid(), gMSG_SHUTDOWN, nil)
+                if gproc.IsChild() {
+                    sendProcessMsg(gproc.PPid(), gMSG_SHUTDOWN, nil)
+                }
                 return
 
             // 用户信号，热重启服务
