@@ -26,9 +26,9 @@ func onCommMainStart(pid int, data []byte) {
     sendProcessMsg(p.Pid(), gMSG_START, nil)
 }
 
-// 心跳处理
+// 心跳处理(方法为空，逻辑放到公共通信switch中进行处理)
 func onCommMainHeartbeat(pid int, data []byte) {
-    updateProcessCommTime(pid)
+
 }
 
 // 平滑重启服务
