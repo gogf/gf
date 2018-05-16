@@ -7,8 +7,8 @@
 package ghttp
 
 import (
-    "os"
     "gitee.com/johng/gf/g/os/gproc"
+    "os"
 )
 
 // 开启所有Web Server(根据消息启动)
@@ -17,11 +17,9 @@ func onCommChildStart(pid int, data []byte) {
     sendProcessMsg(gproc.PPid(), gMSG_NEW_FORK, nil)
     // 如果创建自己的父进程非gproc父进程，那么表示该进程为重启创建的进程，创建成功之后需要通知父进程自行销毁
     if gproc.PPidOS() != gproc.PPid() {
-        sendProcessMsg(gproc.PPidOS(), gMSG_SHUTDOWN, nil)
-        // 在windows下必须等待父进程销毁后才能表明Server资源已被释放，才能开始端口监听，否则会端口资源冲突
-        if p, err := os.FindProcess(gproc.PPidOS()); err == nil {
-            p.Wait()
-        }
+       if p, err := os.FindProcess(gproc.PPidOS()); err == nil {
+           p.Kill()
+       }
     }
     // 开启Web Server服务
     serverMapping.RLockFunc(func(m map[string]interface{}) {
@@ -30,6 +28,6 @@ func onCommChildStart(pid int, data []byte) {
         }
     })
     // 开始心跳时必须保证主进程时间有值，但是又不能等待主进程消息后再开始检测，因此这里自己更新一下通信时间
-    updateProcessChildUpdateTime()
+    updateProcessUpdateTime()
     checkHeartbeat.Set(true)
 }
