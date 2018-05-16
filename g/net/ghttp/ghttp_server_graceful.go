@@ -7,19 +7,14 @@
 package ghttp
 
 import (
+    "os"
     "fmt"
     "net"
-    "os"
     "context"
     "net/http"
     "crypto/tls"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
-    "time"
-)
-
-const (
-    gGRACEFUL_SHUTDOWN_TIMEOUT = 10*time.Second // 优雅关闭链接时的超时时间
 )
 
 // 优雅的Web Server对象封装
@@ -27,8 +22,8 @@ type gracefulServer struct {
     fd           uintptr
     addr         string
     httpServer   *http.Server
-    rawln        *net.TCPListener // 原始listener
-    listener     net.Listener     // 接口化封装的listener
+    rawListener  net.Listener // 原始listener
+    listener     net.Listener // 接口化封装的listener
     isHttps      bool
     shutdownChan chan bool
 }
@@ -40,6 +35,7 @@ func (s *Server) newGracefulServer(addr string, fd...int) *gracefulServer {
         httpServer   : s.newHttpServer(addr),
         shutdownChan : make(chan bool),
     }
+    // 是否有继承的文件描述符
     if len(fd) > 0 && fd[0] > 0 {
         gs.fd = uintptr(fd[0])
     }
@@ -65,19 +61,15 @@ func (s *gracefulServer) ListenAndServe() error {
     if err != nil {
         return err
     }
-    //file, err := ln.(*net.TCPListener).File()
-    //if err != nil {
-    //    return err
-    //}
-    //s.fd       = file.Fd()
-    s.listener = ln
+    s.listener    = ln
+    s.rawListener = ln
     return s.doServe()
 }
 
 // 获得文件描述符
 func (s *gracefulServer) Fd() uintptr {
-    if s.listener != nil {
-        file, err := s.listener.(*net.TCPListener).File()
+    if s.rawListener != nil {
+        file, err := s.rawListener.(*net.TCPListener).File()
         if err == nil {
             return file.Fd()
         }
@@ -110,13 +102,9 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string) error {
     if err != nil {
         return err
     }
-    //file, err := ln.(*net.TCPListener).File()
-    //if err != nil {
-    //    return err
-    //}
-    //s.fd       = file.Fd()
-    s.listener = tls.NewListener(ln, config)
-    s.isHttps  = true
+
+    s.listener    = tls.NewListener(ln, config)
+    s.rawListener = ln
     return s.doServe()
 }
 
@@ -131,7 +119,11 @@ func (s *gracefulServer) getProto() string {
 
 // 开始执行Web Server服务处理
 func (s *gracefulServer) doServe() error {
-    glog.Printfln("%d: %s server started listening on [%s]", gproc.Pid(), s.getProto(), s.addr)
+    action := "started"
+    if s.fd != 0 {
+        action = "reloaded"
+    }
+    glog.Printfln("%d: %s server %s listening on [%s]", gproc.Pid(), s.getProto(), action, s.addr)
     err := s.httpServer.Serve(s.listener)
     <-s.shutdownChan
     return err
