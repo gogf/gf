@@ -59,6 +59,7 @@ func onCommMainNewFork(pid int, data []byte) {
 
 // 关闭服务，通知所有子进程退出(Kill强制性退出)
 func onCommMainShutdown(pid int, data []byte) {
+    procManager.Send(formatMsgBuffer(gMSG_CLOSE, nil))
     procManager.KillAll()
     procManager.WaitAll()
 }
@@ -83,7 +84,7 @@ func handleMainProcessHeartbeat() {
                 }
             }
         }
-        // 如果所有子进程都退出，并且主进程未活动达到超时时间，那么主进程也没存在的必要
+        // (双保险)如果所有子进程都退出，并且主进程未活动达到超时时间，那么主进程也没存在的必要
         if procManager.Size() == 0 && int(gtime.Millisecond()) - lastUpdateTime.Val() > gPROC_HEARTBEAT_TIMEOUT{
             os.Exit(0)
         }

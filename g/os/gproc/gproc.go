@@ -31,14 +31,17 @@ func Pid() int {
     return os.Getpid()
 }
 
-// 获取父进程ID(gproc父进程，不存在时则使用系统父进程)
+// 获取父进程ID(gproc父进程，如果当前进程本身就是父进程，那么返回自身的pid，不存在时则使用系统父进程)
 func PPid() int {
+    if !IsChild() {
+        return Pid()
+    }
     // gPROC_ENV_KEY_PPID_KEY为gproc包自定义的父进程
     ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
     if ppidValue != "" {
         return gconv.Int(ppidValue)
     }
-    return os.Getppid()
+    return PPidOS()
 }
 
 // 获取父进程ID(系统父进程)
