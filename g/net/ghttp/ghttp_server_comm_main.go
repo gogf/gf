@@ -14,6 +14,8 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/os/gproc"
+    "fmt"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 // (主进程)主进程与子进程上一次活跃时间映射map
@@ -22,7 +24,11 @@ var procUpdateTimeMap = gmap.NewIntIntMap()
 // 开启服务
 func onCommMainStart(pid int, data []byte) {
     p := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
-    p.Start()
+    if _, err := p.Start(); err != nil {
+        glog.Errorfln("%d: fork new process error:%s", gproc.Pid(), err.Error())
+        return
+    }
+    updateProcessCommTime(p.Pid())
     sendProcessMsg(p.Pid(), gMSG_START, nil)
 }
 
@@ -38,7 +44,7 @@ func onCommMainReload(pid int, data []byte) {
 
 // 完整重启服务
 func onCommMainRestart(pid int, data []byte) {
-    // 如果是父进程接收到重启指令，那么通知所有子进程重启
+    // 如果是父进程自身发送的重启指令，那么通知所有子进程重启
     if pid == gproc.Pid() {
         procManager.Send(formatMsgBuffer(gMSG_RESTART, nil))
         return
@@ -77,7 +83,9 @@ func handleMainProcessHeartbeat() {
         // 清理过期进程
         if checkHeartbeat.Val() {
             for _, pid := range procManager.Pids() {
-                if int(gtime.Millisecond()) - procUpdateTimeMap.Get(pid) > gPROC_HEARTBEAT_TIMEOUT {
+                updatetime := procUpdateTimeMap.Get(pid)
+                if updatetime > 0 && int(gtime.Millisecond()) - updatetime > gPROC_HEARTBEAT_TIMEOUT {
+                    fmt.Println("remove pid", pid, int(gtime.Millisecond()), updatetime)
                     // 这里需要手动从进程管理器中去掉该进程
                     procManager.RemoveProcess(pid)
                     sendProcessMsg(pid, gMSG_CLOSE, nil)
@@ -86,6 +94,7 @@ func handleMainProcessHeartbeat() {
         }
         // (双保险)如果所有子进程都退出，并且主进程未活动达到超时时间，那么主进程也没存在的必要
         if procManager.Size() == 0 && int(gtime.Millisecond()) - lastUpdateTime.Val() > gPROC_HEARTBEAT_TIMEOUT{
+            //glog.Printfln("%d: all children died, exit", gproc.Pid())
             os.Exit(0)
         }
     }

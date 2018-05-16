@@ -17,6 +17,7 @@ import (
     "errors"
     "fmt"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 const (
@@ -101,6 +102,7 @@ func (s *Server) Reload() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
+    glog.Printfln("%d: server reloading", gproc.Pid())
     sendProcessMsg(gproc.Pid(), gMSG_RELOAD, nil)
     return nil
 }
@@ -112,6 +114,7 @@ func (s *Server) Restart() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
+    glog.Printfln("%d: server restarting", gproc.Pid())
     sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
     return nil
 }
@@ -123,6 +126,7 @@ func (s *Server) Shutdown() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
+    glog.Printfln("%d: server shutting down", gproc.Pid())
     sendProcessMsg(gproc.PPid(), gMSG_SHUTDOWN, nil)
     return nil
 }
