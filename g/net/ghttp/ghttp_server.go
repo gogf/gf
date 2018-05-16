@@ -127,7 +127,11 @@ func init() {
         doneChan <- struct{}{}
 
         if !gproc.IsChild() {
-            glog.Printfln("%d: all web server shutdown smoothly", gproc.Pid())
+            if serverMapping.Size() > 1 {
+                glog.Printfln("%d: all web servers shutdown", gproc.Pid())
+            } else {
+                glog.Printfln("%d: web server shutdown", gproc.Pid())
+            }
         }
     }()
 }
@@ -262,6 +266,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             } else {
                 s.servers = append(s.servers, s.newGracefulServer(addr))
             }
+            s.servers[len(s.servers) - 1].isHttps = true
         }
     }
     // ================
