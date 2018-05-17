@@ -2,17 +2,21 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/util/gvalid"
+    "reflect"
+    "gitee.com/johng/gf/g/database/gdb"
 )
 
 func main() {
-    data  := map[string]interface{} {
-        "id"   : "1",
+    var value interface{}
+    value = gdb.Map{"a":1}
+
+    refValue := reflect.ValueOf(value)
+
+    if refValue.Kind() == reflect.Map {
+            keys := refValue.MapKeys()
+            for _, k := range keys {
+                fmt.Println(k, refValue.MapIndex(k).Interface())
+            }
     }
-    rules := map[string]string {
-        "id"   : "required",
-        "name" : "length:4,16",
-    }
-    m := gvalid.CheckMap(data, rules)
-    fmt.Println(m)
+
 }
