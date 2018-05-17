@@ -16,6 +16,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/os/gtime"
     "fmt"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 const (
@@ -58,7 +59,7 @@ func handleProcessMsg() {
         if msg := gproc.Receive(); msg != nil {
             // 记录消息日志，用于调试
             content := gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data)
-            fmt.Print(content)
+            glog.Print(content)
             //gfile.PutContentsAppend("/tmp/gproc-log", content)
             act  := gbinary.DecodeToUint(msg.Data[0 : 1])
             data := msg.Data[1 : ]
@@ -101,8 +102,8 @@ func handleProcessMsg() {
 }
 
 // 向进程发送操作消息
-func sendProcessMsg(pid int, act int, data []byte) {
-    gproc.Send(pid, formatMsgBuffer(act, data))
+func sendProcessMsg(pid int, act int, data []byte) error {
+    return gproc.Send(pid, formatMsgBuffer(act, data))
 }
 
 // 生成一条满足Web Server进程通信协议的消息
