@@ -6,6 +6,7 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/os/gproc"
+    "os"
 )
 
 // 数据解包，防止黏包
@@ -43,6 +44,12 @@ func checksum(buffer []byte) uint32 {
 }
 
 func main(){
+    f, _ := os.Stat("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/other/test.go")
+    fmt.Println(f.ModTime().Unix())
+    fmt.Println(f.ModTime().Nanosecond())
+    fmt.Println(gfile.MTimeMillisecond("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/other/test.go"))
+
+    return
     b := gfile.GetBinContents("/home/john/Documents/11248")
     for _, msg := range bufferToMsgs(b) {
         fmt.Println(msg.Pid)

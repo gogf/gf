@@ -96,7 +96,7 @@ func handleChildProcessHeartbeat() {
         // 超过时间没有接收到主进程心跳，自动关闭退出
         if checkHeartbeat.Val() && (int(gtime.Millisecond()) - lastUpdateTime.Val() > gPROC_HEARTBEAT_TIMEOUT) {
             // 子进程有时会无法退出(僵尸?)，这里直接使用exit，而不是return
-            //glog.Printfln("%d: %d - %d > %d", gproc.Pid(), int(gtime.Millisecond()), lastHeartbeatTime.Val(), gPROC_HEARTBEAT_TIMEOUT)
+            glog.Printfln("%d: %d - %d > %d", gproc.Pid(), int(gtime.Millisecond()), lastUpdateTime.Val(), gPROC_HEARTBEAT_TIMEOUT)
             glog.Printfln("%d: heartbeat timeout[%dms], exit", gproc.Pid(), gPROC_HEARTBEAT_TIMEOUT)
             os.Exit(0)
         }

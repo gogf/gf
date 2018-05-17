@@ -18,6 +18,8 @@ import (
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/os/gtime"
+    "io"
+    "errors"
 )
 
 const (
@@ -25,6 +27,8 @@ const (
     gPROC_TEMP_DIR_ENV_KEY         = "gproc.tempdir"
     // 自动通信文件清理时间间隔
     gPROC_COMM_AUTO_CLEAR_INTERVAL = time.Second
+    // 写入通信数据失败时候的重试次数
+    gPROC_COMM_FAILURE_RETRY_COUNT = 3
 )
 
 // 全局通信文件清理文件锁(同一时刻只能存在一个进程进行通信文件清理)
@@ -33,6 +37,8 @@ var commClearLocker = gflock.New("comm.clear.lock")
 var commLocker  = gflock.New(fmt.Sprintf("%d.lock", os.Getpid()))
 // 进程通信消息队列
 var commQueue   = gqueue.New()
+// 文件监控器
+var watcher, _  = gfsnotify.New()
 
 // TCP通信数据结构定义
 type Msg struct {
@@ -67,8 +73,10 @@ func init() {
         os.Truncate(path, 0)
         commLocker.UnLock()
     }
+    watcher.EnableActiveCheck(1000)
     // 文件事件监听，如果通信数据文件有任何变化，读取文件并添加到消息队列
-    err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
+    err := watcher.Add(path, func(event *gfsnotify.Event) {
+        glog.Printfln("%d: gfsnotify", Pid())
         checkCommBuffer(path)
     })
     if err != nil {
@@ -122,6 +130,7 @@ func Receive() *Msg {
 // 向指定gproc进程发送数据
 // 数据格式：总长度(32bit) | PID(32bit) | 校验(32bit) | 参数(变长)
 func Send(pid int, data interface{}) error {
+    var err error = nil
     buffer := gconv.Bytes(data)
     b := make([]byte, 0)
     b  = append(b, gbinary.EncodeInt32(int32(len(buffer) + 12))...)
@@ -130,9 +139,48 @@ func Send(pid int, data interface{}) error {
     b  = append(b, buffer...)
     l := gflock.New(fmt.Sprintf("%d.lock", pid))
     l.Lock()
-    err := gfile.PutBinContentsAppend(getCommFilePath(pid), b)
+    for i := gPROC_COMM_FAILURE_RETRY_COUNT; i > 0; i-- {
+        err = doSend(pid, b)
+        if err == nil {
+            break
+        }
+    }
     l.UnLock()
+    glog.Printfln("%d to %d, %v, %d, %v", Pid(), pid, data, gfile.Size(getCommFilePath(pid)), err)
     return err
+}
+
+// 执行进程间通信数据写入
+func doSend(pid int, buffer []byte) error {
+    file, err := gfile.OpenWithFlag(getCommFilePath(pid), os.O_RDWR|os.O_CREATE|os.O_APPEND)
+    if err != nil{
+        return err
+    }
+    // 获取原有文件内容大小
+    stat, err := file.Stat()
+    if err != nil {
+        return err
+    }
+    oldSize := stat.Size()
+    // 执行数据写入
+    writeSize, err := file.Write(buffer)
+    if err != nil {
+        return err
+    }
+    if writeSize < len(buffer) {
+        return io.ErrShortWrite
+    }
+    // 写入成功之后获取最新文件内容大小，执行对比
+    if stat, err := file.Stat(); err != nil {
+        return err
+    } else {
+        // 由于文件锁机制的保证，同一时刻只会有一个进程(&协程)在执行写入，不会出现数据粘包情况
+        // 这里从严谨性考虑增加大小判断，更进一步避免粘包，或者丢包情况
+        if stat.Size() - int64(writeSize) != oldSize {
+            return errors.New("error writing data")
+        }
+    }
+    return nil
 }
 
 // 获取指定进程的通信文件地址
