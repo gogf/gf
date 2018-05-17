@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 单元测试
+// go test *.go -bench=".*"
 
 package gvalid_test
 
@@ -223,5 +224,19 @@ func Test_CustomError2(t *testing.T) {
                 t.Error("错误信息不匹配")
             }
         }
+    }
+}
+
+// 如果值为nil，并且不需要require*验证时，其他验证失效
+func Test_CheckMapWithNilAndNotRequiredField(t *testing.T) {
+    data  := map[string]interface{} {
+        "id"   : "1",
+    }
+    rules := map[string]string {
+        "id"   : "required",
+        "name" : "length:4,16",
+    }
+    if m := gvalid.CheckMap(data, rules); m != nil {
+        t.Error(m)
     }
 }
