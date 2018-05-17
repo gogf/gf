@@ -10,12 +10,12 @@ package ghttp
 
 import (
     "os"
-    "time"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/os/gproc"
     "fmt"
+    "time"
     "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/os/gproc"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 // (主进程)主进程与子进程上一次活跃时间映射map
@@ -29,6 +29,7 @@ func onCommMainStart(pid int, data []byte) {
         return
     }
     updateProcessCommTime(p.Pid())
+    // 子进程创建成功之后再发送执行命令
     sendProcessMsg(p.Pid(), gMSG_START, nil)
 }
 

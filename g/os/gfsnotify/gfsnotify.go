@@ -6,6 +6,9 @@
 
 // 文件监控.
 // 使用时需要注意的是，一旦一个文件被删除，那么对其的监控将会失效。
+// 特点：
+// 1、底层使用了fsnotify机制作为异步监听插件；
+// 2、(可选)文件主动自动检查作为fsnotify文件监听的辅助手段来保障监听文件如果发生改变，监控端将会及时收到提醒(解决某些业务场景下的fsnotify延迟问题)；
 package gfsnotify
 
 import (
@@ -17,14 +20,18 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gqueue"
+    "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 // 监听管理对象
 type Watcher struct {
-    watcher    *fsnotify.Watcher        // 底层fsnotify对象
-    events     *gqueue.Queue            // 过滤后的事件通知，不会出现重复事件
-    closeChan  chan struct{}            // 关闭事件
-    callbacks  *gmap.StringInterfaceMap // 监听的回调函数
+    watcher             *fsnotify.Watcher        // 底层fsnotify对象
+    events              *gqueue.Queue            // 过滤后的事件通知，不会出现重复事件
+    closeChan           chan struct{}            // 关闭事件
+    callbacks           *gmap.StringInterfaceMap // 监听的回调函数
+    watchUpdateTimeMap  *gmap.StringIntMap       // (毫秒)监控文件最新的通知时间
+    activeCheckInterval *gtype.Int               // (毫秒)主动文件检查时间间隔
 }
 
 // 监听事件对象
@@ -67,17 +74,30 @@ func Remove(path string) error {
 func New() (*Watcher, error) {
     if watch, err := fsnotify.NewWatcher(); err == nil {
         w := &Watcher {
-            watcher    : watch,
-            events     : gqueue.New(),
-            closeChan  : make(chan struct{}, 1),
-            callbacks  : gmap.NewStringInterfaceMap(),
+            watcher             : watch,
+            events              : gqueue.New(),
+            closeChan           : make(chan struct{}, 1),
+            callbacks           : gmap.NewStringInterfaceMap(),
+            watchUpdateTimeMap  : gmap.NewStringIntMap(),
+            activeCheckInterval : gtype.NewInt(),
         }
         w.startWatchLoop()
         w.startEventLoop()
+        w.startActiveCheckLoop()
         return w, nil
     } else {
         return nil, err
     }
+}
+
+// 启动主动文件更新检测机制
+func (w *Watcher) EnableActiveCheck(interval int) {
+    w.activeCheckInterval.Set(interval)
+}
+
+// 关闭主动文件更新检测机制
+func (w *Watcher) DisableActiveCheck() {
+    w.activeCheckInterval.Set(0)
 }
 
 // 关闭监听管理对象
@@ -108,6 +128,8 @@ func (w *Watcher) Add(path string, callback func(event *Event)) error {
     })
     // 添加底层监听
     w.watcher.Add(path)
+    // 添加默认更新时间
+    w.watchUpdateTimeMap.Set(path, int(gfile.MTimeMillisecond(path)))
     return nil
 }
 
@@ -117,7 +139,7 @@ func (w *Watcher) Remove(path string) error {
     return w.watcher.Remove(path)
 }
 
-// 监听循环
+// fsnotify监听循环
 func (w *Watcher) startWatchLoop() {
     go func() {
         for {
@@ -151,6 +173,7 @@ func (w *Watcher) startEventLoop() {
                     w.watcher.Add(event.Path)
                     continue
                 }
+                w.watchUpdateTimeMap.Set(event.Path, int(gtime.Millisecond()))
                 if l := w.callbacks.Get(event.Path); l != nil {
                     grpool.Add(func() {
                         for _, v := range l.(*glist.List).FrontAll() {
