@@ -7,28 +7,31 @@
 package gproc
 
 import (
+    "io"
     "os"
     "fmt"
     "time"
+    "errors"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/os/gflock"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/os/gfsnotify"
+    "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/encoding/gbinary"
-    "gitee.com/johng/gf/g/os/gtime"
-    "io"
-    "errors"
 )
 
 const (
     // 由于子进程的temp dir有可能会和父进程不一致(特别是windows下)，影响进程间通信，这里统一使用环境变量设置
-    gPROC_TEMP_DIR_ENV_KEY         = "gproc.tempdir"
+    gPROC_TEMP_DIR_ENV_KEY           = "gproc.tempdir"
     // 自动通信文件清理时间间隔
-    gPROC_COMM_AUTO_CLEAR_INTERVAL = time.Second
+    gPROC_COMM_AUTO_CLEAR_INTERVAL   = time.Second
     // 写入通信数据失败时候的重试次数
-    gPROC_COMM_FAILURE_RETRY_COUNT = 3
+    gPROC_COMM_FAILURE_RETRY_COUNT   = 3
+    // (毫秒)主动通信内容检查时间间隔
+    gPROC_COMM_ACTIVE_CHECK_INTERVAL = 500
 )
 
 // 全局通信文件清理文件锁(同一时刻只能存在一个进程进行通信文件清理)
@@ -37,8 +40,8 @@ var commClearLocker = gflock.New("comm.clear.lock")
 var commLocker  = gflock.New(fmt.Sprintf("%d.lock", os.Getpid()))
 // 进程通信消息队列
 var commQueue   = gqueue.New()
-// 文件监控器
-var watcher, _  = gfsnotify.New()
+// 上一次进程通信内容检查的时间
+var commLastCheckTime = gtype.NewInt64()
 
 // TCP通信数据结构定义
 type Msg struct {
@@ -64,6 +67,7 @@ func init() {
         glog.Errorfln("%s is not writable for gproc", path)
         os.Exit(1)
     }
+    updateLastCheckTime()
     if gtime.Second() - gfile.MTime(path) < 10 {
         // 初始化时读取已有数据(文件修改时间在10秒以内)
         checkCommBuffer(path)
@@ -73,10 +77,9 @@ func init() {
         os.Truncate(path, 0)
         commLocker.UnLock()
     }
-    watcher.EnableActiveCheck(1000)
     // 文件事件监听，如果通信数据文件有任何变化，读取文件并添加到消息队列
-    err := watcher.Add(path, func(event *gfsnotify.Event) {
-        glog.Printfln("%d: gfsnotify", Pid())
+    err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
+        updateLastCheckTime()
         checkCommBuffer(path)
     })
     if err != nil {
@@ -84,6 +87,12 @@ func init() {
     }
 
     go autoClearCommDir()
+    go autoActiveCheckComm()
+}
+
+// 更新最后通信检查时间
+func updateLastCheckTime() {
+    commLastCheckTime.Set(gtime.Millisecond())
 }
 
 // 自动清理通信目录文件
@@ -100,6 +109,17 @@ func autoClearCommDir() {
                 }
             }
             commClearLocker.UnLock()
+        }
+    }
+}
+
+// 主动通信内容检测
+func autoActiveCheckComm() {
+    for {
+        time.Sleep(gPROC_COMM_ACTIVE_CHECK_INTERVAL*time.Millisecond)
+        if gtime.Millisecond() - commLastCheckTime.Val() > gPROC_COMM_ACTIVE_CHECK_INTERVAL {
+            updateLastCheckTime()
+            checkCommBuffer(getCommFilePath(Pid()))
         }
     }
 }
@@ -146,7 +166,7 @@ func Send(pid int, data interface{}) error {
         }
     }
     l.UnLock()
-    glog.Printfln("%d to %d, %v, %d, %v", Pid(), pid, data, gfile.Size(getCommFilePath(pid)), err)
+    //glog.Printfln("%d to %d, %v, %d, %v", Pid(), pid, data, gfile.Size(getCommFilePath(pid)), err)
     return err
 }
 
