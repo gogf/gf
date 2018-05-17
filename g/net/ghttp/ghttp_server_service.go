@@ -34,23 +34,29 @@ func (s *Server)bindHandlerByMap(m HandlerMap) error {
     return nil
 }
 
-// 将方法名称按照设定的规则转换为URI并附加到指定的URI后面
-func (s *Server)appendMethodNameToUriWithPattern(pattern string, name string) string {
+// 将方法名称按照设定的规则合并到pattern中.
+// 规则1：pattern中的URI包含{method}关键字，则替换该关键字为方法名称
+// 规则2：如果不满足规则1，那么直接将防发明附加到pattern中的URI后面
+func (s *Server)mergeMethodNameToPattern(pattern string, name string) string {
+    // 方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词
+    method := ""
+    for i := 0; i < len(name); i++ {
+        if i > 0 && gutil.IsLetterUpper(name[i]) {
+            method += "-"
+        }
+        method += strings.ToLower(string(name[i]))
+    }
+    if strings.Index(pattern, "{method}") != -1 {
+        return strings.Replace(pattern, "{method}", method, -1)
+    }
     // 检测域名后缀
     array := strings.Split(pattern, "@")
     // 分离URI(其实可能包含HTTP Method)
     uri := array[0]
     uri  = strings.TrimRight(uri, "/") + "/"
-    // 方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词
-    for i := 0; i < len(name); i++ {
-        if i > 0 && gutil.IsLetterUpper(name[i]) {
-            uri += "-"
-        }
-        uri += strings.ToLower(string(name[i]))
-    }
     // 加上指定域名后缀
     if len(array) > 1 {
-        uri += "@" + array[1]
+        return uri + "@" + array[1]
     }
     return uri
 }
@@ -72,7 +78,7 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
     t := v.Type()
     for i := 0; i < v.NumMethod(); i++ {
         name  := t.Method(i).Name
-        key   := s.appendMethodNameToUriWithPattern(pattern, name)
+        key   := s.mergeMethodNameToPattern(pattern, name)
         m[key] = &HandlerItem {
             ctype : nil,
             fname : "",
@@ -100,7 +106,7 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string
         if !fval.IsValid() {
             return errors.New("invalid method name:" + name)
         }
-        key   := s.appendMethodNameToUriWithPattern(pattern, name)
+        key   := s.mergeMethodNameToPattern(pattern, name)
         m[key] = &HandlerItem{
             ctype : nil,
             fname : "",
@@ -152,7 +158,7 @@ func (s *Server)BindController(pattern string, c Controller) error {
         if name == "Init" || name == "Shut" || name == "Exit"  {
             continue
         }
-        key   := s.appendMethodNameToUriWithPattern(pattern, name)
+        key   := s.mergeMethodNameToPattern(pattern, name)
         m[key] = &HandlerItem {
             ctype : v.Elem().Type(),
             fname : name,
@@ -181,7 +187,7 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, methods strin
         if !cval.MethodByName(name).IsValid() {
             return errors.New("invalid method name:" + name)
         }
-        key    := s.appendMethodNameToUriWithPattern(pattern, name)
+        key    := s.mergeMethodNameToPattern(pattern, name)
         m[key]  = &HandlerItem {
             ctype : ctype,
             fname : name,
