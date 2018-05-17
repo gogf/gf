@@ -10,7 +10,6 @@ package ghttp
 
 import (
     "os"
-    "fmt"
     "time"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
@@ -23,14 +22,13 @@ var procUpdateTimeMap = gmap.NewIntIntMap()
 
 // 开启服务
 func onCommMainStart(pid int, data []byte) {
-    p := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
-    if _, err := p.Start(); err != nil {
-        glog.Errorfln("%d: fork new process error:%s", gproc.Pid(), err.Error())
-        return
+    fork := forkNewProcess()
+    if fork == nil {
+        os.Exit(1)
     }
-    updateProcessCommTime(p.Pid())
+    updateProcessCommTime(fork.Pid())
     // 子进程创建成功之后再发送执行命令
-    sendProcessMsg(p.Pid(), gMSG_START, nil)
+    sendProcessMsg(fork.Pid(), gMSG_START, nil)
 }
 
 // 心跳处理(方法为空，逻辑放到公共通信switch中进行处理)
@@ -50,12 +48,19 @@ func onCommMainRestart(pid int, data []byte) {
         procManager.Send(formatMsgBuffer(gMSG_RESTART, nil))
         return
     }
-    // 否则杀掉子进程，然后新建一个完整的子进程
+    // 首先创建子进程，暂时不开始服务，否则会有端口冲突
+    fork := forkNewProcess()
+    if fork == nil {
+        os.Exit(1)
+    }
+    // 然后通知旧的子进程自动关闭并退出(不需要新建的子进程来处理)
+    sendProcessMsg(pid, gMSG_CLOSE, nil)
     if p, err := os.FindProcess(pid); err == nil && p != nil {
         p.Kill()
         p.Wait()
     }
-    sendProcessMsg(gproc.Pid(), gMSG_START, nil)
+    // 通知新的子进程执行服务监听
+    sendProcessMsg(fork.Pid(), gMSG_START, nil)
 }
 
 // 新建子进程通知
@@ -76,6 +81,16 @@ func updateProcessCommTime(pid int) {
     procUpdateTimeMap.Set(pid, int(gtime.Millisecond()))
 }
 
+// 创建一个子进程，但是暂时不执行服务监听
+func forkNewProcess() *gproc.Process {
+    p := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
+    if _, err := p.Start(); err != nil {
+        glog.Errorfln("%d: fork new process error:%s", gproc.Pid(), err.Error())
+        return nil
+    }
+    return p
+}
+
 // 主进程与子进程相互异步方式发送心跳信息，保持活跃状态
 func handleMainProcessHeartbeat() {
     for {
@@ -86,17 +101,19 @@ func handleMainProcessHeartbeat() {
             for _, pid := range procManager.Pids() {
                 updatetime := procUpdateTimeMap.Get(pid)
                 if updatetime > 0 && int(gtime.Millisecond()) - updatetime > gPROC_HEARTBEAT_TIMEOUT {
-                    fmt.Println("remove pid", pid, int(gtime.Millisecond()), updatetime)
+                    //fmt.Println("remove pid", pid, int(gtime.Millisecond()), updatetime)
                     // 这里需要手动从进程管理器中去掉该进程
                     procManager.RemoveProcess(pid)
                     sendProcessMsg(pid, gMSG_CLOSE, nil)
                 }
             }
+
+            // (双保险)如果所有子进程都退出，并且主进程未活动达到超时时间，那么主进程也没存在的必要
+            if procManager.Size() == 0 && int(gtime.Millisecond()) - lastUpdateTime.Val() > gPROC_HEARTBEAT_TIMEOUT{
+                glog.Printfln("%d: all children died, exit", gproc.Pid())
+                os.Exit(0)
+            }
         }
-        // (双保险)如果所有子进程都退出，并且主进程未活动达到超时时间，那么主进程也没存在的必要
-        if procManager.Size() == 0 && int(gtime.Millisecond()) - lastUpdateTime.Val() > gPROC_HEARTBEAT_TIMEOUT{
-            //glog.Printfln("%d: all children died, exit", gproc.Pid())
-            os.Exit(0)
-        }
+
     }
 }

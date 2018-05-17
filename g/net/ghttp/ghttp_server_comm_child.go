@@ -21,7 +21,7 @@ import (
 )
 
 const (
-    gPROC_CHILD_MAX_IDLE_TIME = 3000 // 子进程闲置时间(未开启心跳机制的时间)
+    gPROC_CHILD_MAX_IDLE_TIME = 10000 // 子进程闲置时间(未开启心跳机制的时间)
 )
 
 // 心跳处理(方法为空，逻辑放到公共通信switch中进行处理)

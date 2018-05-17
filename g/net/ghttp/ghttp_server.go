@@ -127,7 +127,7 @@ func init() {
         doneChan <- struct{}{}
 
         if !gproc.IsChild() {
-            glog.Printfln("%d: all web servers shutdown", gproc.Pid())
+            glog.Printfln("%d: all servers shutdown", gproc.Pid())
         }
     }()
 }
