@@ -340,19 +340,17 @@ func (db *Db) BatchSave(table string, list List, batch int) (sql.Result, error) 
 func (db *Db) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
     var params  []interface{}
     var updates string
-    switch value := data.(type) {
-        case string:
-            updates = value
-        case Map:
-            var keys []string
-            for k, v := range value {
-                keys   = append(keys,   fmt.Sprintf("%s%s%s=?", db.charl, k, db.charr))
-                params = append(params, v)
-            }
-            updates = strings.Join(keys,   ",")
-
-        default:
-            return nil, errors.New("invalid data type for 'data' field, string or Map expected")
+    refValue := reflect.ValueOf(data)
+    if refValue.Kind() == reflect.Map {
+        var fields []string
+        keys := refValue.MapKeys()
+        for _, k := range keys {
+            fields  = append(fields, fmt.Sprintf("%s%s%s=?", db.charl, k, db.charr))
+            params  = append(params, gconv.String(refValue.MapIndex(k).Interface()))
+            updates = strings.Join(fields,   ",")
+        }
+    } else {
+        updates = gconv.String(data)
     }
     for _, v := range args {
         params = append(params, gconv.String(v))

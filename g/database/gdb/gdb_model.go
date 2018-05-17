@@ -84,7 +84,7 @@ func (md *Model) Fields(fields string) (*Model) {
 // 链式操作，condition，支持string & gdb.Map
 func (md *Model) Where(where interface{}, args...interface{}) (*Model) {
     md.where     = md.db.formatCondition(where)
-    md.whereArgs = args
+    md.whereArgs = append(md.whereArgs, args...)
     return md
 }
 
