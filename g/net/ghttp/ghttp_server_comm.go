@@ -15,8 +15,6 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/os/gtime"
-    "fmt"
-    "gitee.com/johng/gf/g/os/glog"
 )
 
 const (
@@ -58,8 +56,8 @@ func handleProcessMsg() {
     for {
         if msg := gproc.Receive(); msg != nil {
             // 记录消息日志，用于调试
-            content := gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data)
-            glog.Print(content)
+            //content := gconv.String(msg.Pid) + "=>" + gconv.String(gproc.Pid()) + ":" + fmt.Sprintf("%v\n", msg.Data)
+            //glog.Print(content)
             //gfile.PutContentsAppend("/tmp/gproc-log", content)
             act  := gbinary.DecodeToUint(msg.Data[0 : 1])
             data := msg.Data[1 : ]

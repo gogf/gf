@@ -21,7 +21,7 @@ import (
 )
 
 const (
-    gADMIN_ACTION_INTERVAL_LIMIT = 0 // (毫秒)每一次执行管理操作的间隔限制
+    gADMIN_ACTION_INTERVAL_LIMIT = 3000 // (毫秒)服务开启后允许执行管理操作的间隔限制
 )
 
 // 用于服务管理的对象
@@ -32,6 +32,12 @@ var serverActionLocker sync.Mutex
 
 // (进程级别)用于记录上一次操作的时间(毫秒)
 var serverActionLastTime = gtype.NewInt64(gtime.Millisecond())
+
+// 当前服务进程所处的互斥管理操作状态
+// 1 : reload
+// 2 : restart
+// 4 : shutdown
+var serverProcessStatus  = gtype.NewInt()
 
 // 服务管理首页
 func (p *utilAdmin) Index(r *Request) {
@@ -99,6 +105,9 @@ func (s *Server) EnableAdmin(pattern...string) {
 func (s *Server) Reload() error {
     serverActionLocker.Lock()
     defer serverActionLocker.Unlock()
+    if err := s.checkActionStatus(); err != nil {
+        return err
+    }
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
@@ -111,6 +120,9 @@ func (s *Server) Reload() error {
 func (s *Server) Restart() error {
     serverActionLocker.Lock()
     defer serverActionLocker.Unlock()
+    if err := s.checkActionStatus(); err != nil {
+        return err
+    }
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
@@ -123,6 +135,9 @@ func (s *Server) Restart() error {
 func (s *Server) Shutdown() error {
     serverActionLocker.Lock()
     defer serverActionLocker.Unlock()
+    if err := s.checkActionStatus(); err != nil {
+        return err
+    }
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
@@ -138,5 +153,21 @@ func (s *Server) checkActionFrequence() error {
         return errors.New(fmt.Sprintf("too frequent action, please retry in %d ms", gADMIN_ACTION_INTERVAL_LIMIT - interval))
     }
     serverActionLastTime.Set(gtime.Millisecond())
+    return nil
+}
+
+// 检查当前服务进程的状态
+func (s *Server) checkActionStatus() error {
+    status := serverProcessStatus.Val()
+    if status > 0 {
+        switch status {
+            case 1:
+                return errors.New("server is reloading")
+            case 2:
+                return errors.New("server is restarting")
+            case 4:
+                return errors.New("server is shutting down")
+        }
+    }
     return nil
 }
