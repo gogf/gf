@@ -6,7 +6,6 @@ import (
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/frame/gins"
-    "gitee.com/johng/gf/g/encoding/gparser"
 )
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
@@ -478,10 +477,9 @@ func mapToStruct() {
 }
 
 func main() {
-    r, _ := db.Table("user").Fields("*").Where("typeid = ?", 1).And("uid=?", 1).Limit(0, 10).Select()
-    j, _ := gparser.VarToJson(r.ToList())
-    fmt.Println(string(j))
-    fmt.Println(r)
+    r, err := db.Table("user").Data(g.Map{"name": "john14"}).Where("uid = ?", 1).Update()
+    fmt.Println(r.RowsAffected())
+    fmt.Println(err)
     //create()
     //create()
     //insert()
