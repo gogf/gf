@@ -111,13 +111,24 @@ func Info(path string) *os.FileInfo {
     return &info
 }
 
-// 修改时间
+// 修改时间(秒)
 func MTime(path string) int64 {
     f, e := os.Stat(path)
     if e != nil {
         return 0
     }
     return f.ModTime().Unix()
+}
+
+// 修改时间(毫秒)
+func MTimeMillisecond(path string) int64 {
+    f, e := os.Stat(path)
+    if e != nil {
+        return 0
+    }
+    seconds     := f.ModTime().Unix()
+    nanoSeconds := f.ModTime().Nanosecond()
+    return seconds*1000 + int64(nanoSeconds/1000000)
 }
 
 // 文件大小(bytes)

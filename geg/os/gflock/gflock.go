@@ -6,12 +6,24 @@ import (
     "time"
 )
 
-func main() {
+func test() {
     l := gflock.New("1.lock")
     fmt.Println(l.Path())
-    fmt.Println(l.TryLock())
-    fmt.Println("lock 1")
     l.Lock()
     fmt.Println("lock 1")
-    time.Sleep(time.Hour)
+    l.Lock()
+    fmt.Println("lock 2")
+}
+
+func active() {
+    i := 0
+    for {
+        time.Sleep(time.Second)
+        i++
+    }
+}
+
+func main() {
+    go active()
+    test()
 }
