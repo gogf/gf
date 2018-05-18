@@ -23,7 +23,7 @@
         1、平滑重启特性；
         2、gflock文件锁模块；
         3、gproc进程管理及通信模块；
-        4、gpage分页管理模块，gpage提供了强大的动态分页及静态分页功能，并且为开发者自定义分页样式提供了极高的灵活度；
+        4、gpage分页管理模块，强大的动态分页及静态分页功能，并为开发者自定义分页样式提供了极高的灵活度；
         5、ghttp.Server增加多端口监听特性，并支持HTTP/HTTPS；
         6、增加gspath目录检索包管理工具，支持对多目录下的文件检索特性；
         7、ghttp包控制器及执行对象注册增加更灵活的动态路由特性，路由规则增加{method}变量支持；
@@ -37,9 +37,10 @@
         3、ghttp
             1)、增加Web Server目录安全访问控制机制；
             2)、ghttp.Server增加自定义状态码回调函数注册处理；
-            3)、gdb包增加gdb.GetStruct/gdb.Model.Struct方法，获取查询结果记录自动转换为指定对象；
-            4)、gdb增加Value/Record/Result类型，增加对Value类型的系列类型转换方法；
-            5)、gdb包增加db.GetCount,tx.GetCount,model.Count数量查询方法；
+        4、gdb
+            1)、gdb包增加gdb.GetStruct/gdb.Model.Struct方法，获取查询结果记录自动转换为指定对象；
+            2)、gdb增加Value/Record/Result类型，增加对Value类型的系列类型转换方法；
+            3)、gdb包增加db.GetCount,tx.GetCount,model.Count数量查询方法；
 
 
     功能改进：
@@ -54,9 +55,10 @@
         9、ghttp
             1)、ghttp.Request增加请求进入和完成时间记录，并增加到默认日志内容中；
             2)、ghttp.Server事件回调之间支持通过ghttp.Request.Param自定义参数进行流程传参；
-            3)、改进gdb.Result与gdb.List, gdb.Record与gdb.Map之间的类型转换，便于业务层数据编码处理(如json/xml)；
-            4)、改进gdb.Tx.GetValue返回值类型；
-            5)、gdb.Model.Data参数支持更加灵活的map参数；
+        10、gdb
+            1)、改进gdb.Result与gdb.List, gdb.Record与gdb.Map之间的类型转换，便于业务层数据编码处理(如json/xml)；
+            2)、改进gdb.Tx.GetValue返回值类型；
+            3)、gdb.Model.Data参数支持更加灵活的map参数；
 
 
     问题修复：
