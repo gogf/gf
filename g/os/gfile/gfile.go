@@ -126,9 +126,7 @@ func MTimeMillisecond(path string) int64 {
     if e != nil {
         return 0
     }
-    seconds     := f.ModTime().Unix()
-    nanoSeconds := f.ModTime().Nanosecond()
-    return seconds*1000 + int64(nanoSeconds/1000000)
+    return int64(f.ModTime().Nanosecond()/1000000)
 }
 
 // 文件大小(bytes)
