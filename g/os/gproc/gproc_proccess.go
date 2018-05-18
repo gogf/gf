@@ -56,7 +56,7 @@ func (p *Process) Pid() int {
 }
 
 // 向进程发送消息
-func (p *Process) Send(data interface{}) error {
+func (p *Process) Send(data []byte) error {
     if p.Process != nil {
         return Send(p.Process.Pid, data)
     }

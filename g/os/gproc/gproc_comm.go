@@ -31,17 +31,17 @@ const (
     // 写入通信数据失败时候的重试次数
     gPROC_COMM_FAILURE_RETRY_COUNT   = 3
     // (毫秒)主动通信内容检查时间间隔
-    gPROC_COMM_ACTIVE_CHECK_INTERVAL = 500
+    gPROC_COMM_ACTIVE_CHECK_INTERVAL = 500*time.Millisecond
 )
 
 // 全局通信文件清理文件锁(同一时刻只能存在一个进程进行通信文件清理)
 var commClearLocker = gflock.New("comm.clear.lock")
 // 当前进程的文件锁
-var commLocker  = gflock.New(fmt.Sprintf("%d.lock", os.Getpid()))
+var commLocker      = gflock.New(fmt.Sprintf("%d.lock", os.Getpid()))
 // 进程通信消息队列
-var commQueue   = gqueue.New()
-// 上一次进程通信内容检查的时间
-var commLastCheckTime = gtype.NewInt64()
+var commQueue       = gqueue.New()
+// 通信文件修改时间
+var commUpdateTime  = gtype.NewInt64()
 
 // TCP通信数据结构定义
 type Msg struct {
@@ -67,8 +67,9 @@ func init() {
         glog.Errorfln("%s is not writable for gproc", path)
         os.Exit(1)
     }
-    updateLastCheckTime()
-    if gtime.Second() - gfile.MTime(path) < 10 {
+    fileMtime := gfile.MTime(path)
+    commUpdateTime.Set(fileMtime)
+    if gtime.Second() - fileMtime < 10 {
         // 初始化时读取已有数据(文件修改时间在10秒以内)
         checkCommBuffer(path)
     } else {
@@ -79,7 +80,6 @@ func init() {
     }
     // 文件事件监听，如果通信数据文件有任何变化，读取文件并添加到消息队列
     err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
-        updateLastCheckTime()
         checkCommBuffer(path)
     })
     if err != nil {
@@ -88,11 +88,6 @@ func init() {
 
     go autoClearCommDir()
     go autoActiveCheckComm()
-}
-
-// 更新最后通信检查时间
-func updateLastCheckTime() {
-    commLastCheckTime.Set(gtime.Millisecond())
 }
 
 // 自动清理通信目录文件
@@ -115,28 +110,34 @@ func autoClearCommDir() {
 
 // 主动通信内容检测
 func autoActiveCheckComm() {
+    path := getCommFilePath(Pid())
     for {
-        time.Sleep(gPROC_COMM_ACTIVE_CHECK_INTERVAL*time.Millisecond)
-        if gtime.Millisecond() - commLastCheckTime.Val() > gPROC_COMM_ACTIVE_CHECK_INTERVAL {
-            updateLastCheckTime()
-            checkCommBuffer(getCommFilePath(Pid()))
-        }
+        time.Sleep(gPROC_COMM_ACTIVE_CHECK_INTERVAL)
+        checkCommBuffer(path)
     }
 }
 
 // 手动检查进程通信消息，如果存在消息曾推送到进程消息队列
 func checkCommBuffer(path string) {
     commLocker.Lock()
+    defer commLocker.UnLock()
+    // 检测文件修改时间
+    mtime := gfile.MTimeMillisecond(path)
+    if mtime == commUpdateTime.Val() {
+        return
+    }
+    // 读取进程间通信数据
     buffer := gfile.GetBinContents(path)
     if len(buffer) > 0 {
         os.Truncate(path, 0)
     }
-    commLocker.UnLock()
     if len(buffer) > 0 {
         for _, v := range bufferToMsgs(buffer) {
             commQueue.PushBack(v)
         }
     }
+    // 保存上一次检测的文件修改时间
+    commUpdateTime.Set(mtime)
 }
 
 // 获取其他进程传递到当前进程的消息包，阻塞执行
@@ -149,14 +150,13 @@ func Receive() *Msg {
 
 // 向指定gproc进程发送数据
 // 数据格式：总长度(32bit) | PID(32bit) | 校验(32bit) | 参数(变长)
-func Send(pid int, data interface{}) error {
+func Send(pid int, data []byte) error {
     var err error = nil
-    buffer := gconv.Bytes(data)
     b := make([]byte, 0)
-    b  = append(b, gbinary.EncodeInt32(int32(len(buffer) + 12))...)
+    b  = append(b, gbinary.EncodeInt32(int32(len(data) + 12))...)
     b  = append(b, gbinary.EncodeInt32(int32(os.Getpid()))...)
-    b  = append(b, gbinary.EncodeUint32(checksum(buffer))...)
-    b  = append(b, buffer...)
+    b  = append(b, gbinary.EncodeUint32(checksum(data))...)
+    b  = append(b, data...)
     l := gflock.New(fmt.Sprintf("%d.lock", pid))
     l.Lock()
     for i := gPROC_COMM_FAILURE_RETRY_COUNT; i > 0; i-- {
@@ -176,6 +176,8 @@ func doSend(pid int, buffer []byte) error {
     if err != nil{
         return err
     }
+    // 必须要Close才会更新文件的修改时间
+    defer file.Close()
     // 获取原有文件内容大小
     stat, err := file.Stat()
     if err != nil {

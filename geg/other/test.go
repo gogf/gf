@@ -2,21 +2,20 @@ package main
 
 import (
     "fmt"
-    "reflect"
-    "gitee.com/johng/gf/g/database/gdb"
+    "gitee.com/johng/gf/g/os/gtime"
+    "time"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 func main() {
-    var value interface{}
-    value = gdb.Map{"a":1}
 
-    refValue := reflect.ValueOf(value)
+    gtime.SetInterval(10*time.Millisecond, func() bool {
+        path := "./temp.txt"
+        gfile.PutBinContentsAppend(path, []byte("1"))
+        fmt.Println(gfile.MTimeMillisecond(path))
+        return true
+    })
 
-    if refValue.Kind() == reflect.Map {
-            keys := refValue.MapKeys()
-            for _, k := range keys {
-                fmt.Println(k, refValue.MapIndex(k).Interface())
-            }
-    }
+    time.Sleep(time.Hour)
 
 }
