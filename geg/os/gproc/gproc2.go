@@ -6,6 +6,10 @@ import (
 )
 
 func main () {
-    err := gproc.Send(23504, []byte{30})
-    fmt.Println(err)
+    pid := 28536
+    m   := gproc.NewManager()
+    m.AddProcess(pid)
+    m.KillAll()
+    m.WaitAll()
+    fmt.Printf("%d was killed\n", pid)
 }
