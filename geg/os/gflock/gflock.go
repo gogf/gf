@@ -1,29 +1,17 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gflock"
-    "fmt"
     "time"
+    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gproc"
+    "gitee.com/johng/gf/g/os/gflock"
 )
 
-func test() {
-    l := gflock.New("1.lock")
-    fmt.Println(l.Path())
-    l.Lock()
-    fmt.Println("lock 1")
-    l.Lock()
-    fmt.Println("lock 2")
-}
-
-func active() {
-    i := 0
-    for {
-        time.Sleep(time.Second)
-        i++
-    }
-}
-
 func main() {
-    go active()
-    test()
+    l := gflock.New("demo.lock")
+    l.Lock()
+    glog.Printfln("locked by pid: %d", gproc.Pid())
+    time.Sleep(3*time.Second)
+    l.UnLock()
+    glog.Printfln("unlocked by pid: %d", gproc.Pid())
 }

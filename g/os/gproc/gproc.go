@@ -13,7 +13,6 @@ import (
     "os"
     "time"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/container/gtype"
 )
 
 const (
@@ -22,9 +21,6 @@ const (
 
 // 进程开始执行时间
 var processStartTime = time.Now()
-
-// 优雅退出标识符号
-var isExited = gtype.NewBool()
 
 // 获取当前进程ID
 func Pid() int {
@@ -62,15 +58,5 @@ func StartTime() time.Time {
 // 进程已经运行的时间(毫秒)
 func Uptime() int {
     return int(time.Now().UnixNano()/1e6 - processStartTime.UnixNano()/1e6)
-}
-
-// 标识当前进程为退出状态，其他业务可以根据此标识来执行优雅退出
-func SetExited() {
-    isExited.Set(true)
-}
-
-// 当前进程是否被标识为退出状态
-func Exited() bool {
-    return isExited.Val()
 }
 
