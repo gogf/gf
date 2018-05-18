@@ -70,6 +70,7 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
         * [ORM高级特性](http://gf.johng.cn/606435)
     * [框架开发进阶](http://gf.johng.cn/598801)
         * [HTTPS服务](http://gf.johng.cn/598802)
+        * [平滑重启特性](http://gf.johng.cn/625833)
         * [服务性能分析](http://gf.johng.cn/592298)
         * [服务日志管理](http://gf.johng.cn/596202)
         * [自定义状态码处理](http://gf.johng.cn/609401)
@@ -84,12 +85,14 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
     * [JSON模块](http://gf.johng.cn/494388)
     * [命令行模块](http://gf.johng.cn/494389)
     * [二进制模块](http://gf.johng.cn/500342)
+    * [文件锁模块](http://gf.johng.cn/626062)
     * [Goroutine池](http://gf.johng.cn/504458)
     * [Redis客户端](http://gf.johng.cn/596344)
     * [数据编码解析](http://gf.johng.cn/511393)
     * [环境变量模块](http://gf.johng.cn/494390)
     * [文件管理模块](http://gf.johng.cn/494391)
     * [文件监控模块](http://gf.johng.cn/593848)
+    * [进程管理通信](http://gf.johng.cn/626063)
     * [并发安全容器](http://gf.johng.cn/494392)
         * [gmap](http://gf.johng.cn/590858)
         * [gtype](http://gf.johng.cn/590859)
@@ -118,11 +121,14 @@ go get -u gitee.com/johng/gf
 ```go
 package main
 
-import "gitee.com/johng/gf/g/net/ghttp"
+import (
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/net/ghttp"
+)
 
 func main() {
-    s := ghttp.GetServer()
-    s.BindHandler("/", func(r *ghttp.Request){
+    s := g.Server()
+    s.BindHandler("/", func(r *ghttp.Request) {
         r.Response.Write("哈喽世界！")
     })
     s.Run()
@@ -132,10 +138,13 @@ func main() {
 ```go
 package main
 
-import "gitee.com/johng/gf/g/net/ghttp"
+import (
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/net/ghttp"
+)
 
 func main() {
-    s := ghttp.GetServer()
+    s := g.Server()
     s.Domain("localhost1，localhost2，localhost3").BindHandler("/", func(r *ghttp.Request) {
         r.Response.Write("localhostx")
     })
@@ -147,11 +156,12 @@ func main() {
 package main
 
 import (
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/net/ghttp"
 )
 
 func main() {
-    s := ghttp.GetServer()
+    s := g.Server()
     s.BindHandler("/", func(r *ghttp.Request){
         r.Response.Writeln("go frame!")
     })
