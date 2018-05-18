@@ -53,7 +53,7 @@ func (s *Server)mergeMethodNameToPattern(pattern string, name string) string {
     array := strings.Split(pattern, "@")
     // 分离URI(其实可能包含HTTP Method)
     uri := array[0]
-    uri  = strings.TrimRight(uri, "/") + "/"
+    uri  = strings.TrimRight(uri, "/") + "/" + method
     // 加上指定域名后缀
     if len(array) > 1 {
         return uri + "@" + array[1]
