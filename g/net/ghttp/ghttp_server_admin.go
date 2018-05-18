@@ -22,6 +22,9 @@ import (
 
 const (
     gADMIN_ACTION_INTERVAL_LIMIT = 3000 // (毫秒)服务开启后允许执行管理操作的间隔限制
+    gADMIN_ACTION_RELOADING      = 1
+    gADMIN_ACTION_RESTARTING     = 2
+    gADMIN_ACTION_SHUTINGDOWN    = 4
 )
 
 // 用于服务管理的对象
@@ -34,9 +37,6 @@ var serverActionLocker sync.Mutex
 var serverActionLastTime = gtype.NewInt64(gtime.Millisecond())
 
 // 当前服务进程所处的互斥管理操作状态
-// 1 : reload
-// 2 : restart
-// 4 : shutdown
 var serverProcessStatus  = gtype.NewInt()
 
 // 服务管理首页
@@ -111,6 +111,7 @@ func (s *Server) Reload() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
+    serverProcessStatus.Set(gADMIN_ACTION_RELOADING)
     glog.Printfln("%d: server reloading", gproc.Pid())
     sendProcessMsg(gproc.Pid(), gMSG_RELOAD, nil)
     return nil
@@ -126,6 +127,7 @@ func (s *Server) Restart() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
+    serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
     glog.Printfln("%d: server restarting", gproc.Pid())
     sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
     return nil
@@ -141,6 +143,7 @@ func (s *Server) Shutdown() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
+    serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
     glog.Printfln("%d: server shutting down", gproc.Pid())
     sendProcessMsg(gproc.PPid(), gMSG_SHUTDOWN, nil)
     return nil
@@ -161,11 +164,11 @@ func (s *Server) checkActionStatus() error {
     status := serverProcessStatus.Val()
     if status > 0 {
         switch status {
-            case 1:
+            case gADMIN_ACTION_RELOADING:
                 return errors.New("server is reloading")
-            case 2:
+            case gADMIN_ACTION_RESTARTING:
                 return errors.New("server is restarting")
-            case 4:
+            case gADMIN_ACTION_SHUTINGDOWN:
                 return errors.New("server is shutting down")
         }
     }
