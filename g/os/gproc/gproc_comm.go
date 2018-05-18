@@ -18,7 +18,6 @@ import (
     "gitee.com/johng/gf/g/os/gflock"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/os/gfsnotify"
-    "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/encoding/gbinary"
 )
@@ -27,7 +26,7 @@ const (
     // 由于子进程的temp dir有可能会和父进程不一致(特别是windows下)，影响进程间通信，这里统一使用环境变量设置
     gPROC_TEMP_DIR_ENV_KEY           = "gproc.tempdir"
     // 自动通信文件清理时间间隔
-    gPROC_COMM_AUTO_CLEAR_INTERVAL   = time.Second
+    gPROC_COMM_AUTO_CLEAR_INTERVAL   = 10*time.Second
     // 写入通信数据失败时候的重试次数
     gPROC_COMM_FAILURE_RETRY_COUNT   = 3
     // (毫秒)主动通信内容检查时间间隔
@@ -40,8 +39,6 @@ var commClearLocker = gflock.New("comm.clear.lock")
 var commLocker      = gflock.New(fmt.Sprintf("%d.lock", os.Getpid()))
 // 进程通信消息队列
 var commQueue       = gqueue.New()
-// 通信文件修改时间
-var commUpdateTime  = gtype.NewInt64()
 
 // TCP通信数据结构定义
 type Msg struct {
@@ -68,7 +65,7 @@ func init() {
         os.Exit(1)
     }
     fileMtime := gfile.MTime(path)
-    commUpdateTime.Set(fileMtime)
+    //commUpdateTime.Set(fileMtime)
     if gtime.Second() - fileMtime < 10 {
         // 初始化时读取已有数据(文件修改时间在10秒以内)
         checkCommBuffer(path)
@@ -120,24 +117,17 @@ func autoActiveCheckComm() {
 // 手动检查进程通信消息，如果存在消息曾推送到进程消息队列
 func checkCommBuffer(path string) {
     commLocker.Lock()
-    defer commLocker.UnLock()
-    // 检测文件修改时间
-    mtime := gfile.MTimeMillisecond(path)
-    if mtime == commUpdateTime.Val() {
-        return
-    }
     // 读取进程间通信数据
     buffer := gfile.GetBinContents(path)
     if len(buffer) > 0 {
         os.Truncate(path, 0)
     }
+    commLocker.UnLock()
     if len(buffer) > 0 {
         for _, v := range bufferToMsgs(buffer) {
             commQueue.PushBack(v)
         }
     }
-    // 保存上一次检测的文件修改时间
-    commUpdateTime.Set(mtime)
 }
 
 // 获取其他进程传递到当前进程的消息包，阻塞执行
