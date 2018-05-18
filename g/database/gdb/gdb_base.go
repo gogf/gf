@@ -13,8 +13,8 @@ import (
     "strings"
     "reflect"
     "database/sql"
+    "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/util/gutil"
 )
 
 // 关闭链接
@@ -371,7 +371,7 @@ func (db *Db) formatCondition(condition interface{}) (where string) {
         for _, k := range ks {
             key   := gconv.String(k.Interface())
             value := gconv.String(vs.MapIndex(k).Interface())
-            isNum := gutil.IsNumeric(value)
+            isNum := gstr.IsNumeric(value)
             if len(where) > 0 {
                 where += " and "
             }
