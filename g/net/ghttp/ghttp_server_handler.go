@@ -16,8 +16,8 @@ import (
     "net/url"
     "net/http"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/encoding/ghtml"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -168,4 +168,21 @@ func (s *Server)listDir(r *Request, f http.File) {
         r.Response.Write(fmt.Sprintf("<a href=\"%s\">%s</a>\n", u.String(), ghtml.SpecialChars(name)))
     }
     r.Response.Write("</pre>\n")
+}
+
+// 开启异步队列处理循环，该异步线程与Server同生命周期
+func (s *Server) startCloseQueueLoop() {
+    go func() {
+        for {
+            if v := s.closeQueue.PopFront(); v != nil {
+                r := v.(*Request)
+                s.callHookHandler(r, "BeforeClose")
+                // 关闭当前会话的Cookie
+                r.Cookie.Close()
+                // 更新Session会话超时时间
+                r.Session.UpdateExpire()
+                s.callHookHandler(r, "AfterClose")
+            }
+        }
+    }()
 }

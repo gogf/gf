@@ -1,11 +1,11 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/net/ghttp"
+    "gitee.com/johng/gf/g"
     _ "gitee.com/johng/gf/geg/frame/mvc/controller/demo"
 )
 
 func main() {
-    ghttp.GetServer().SetPort(8199)
-    ghttp.GetServer().Run()
+    g.Server().SetPort(8199)
+    g.Server().Run()
 }
