@@ -11,13 +11,13 @@ import (
     "strings"
     runpprof "runtime/pprof"
     netpprof "net/http/pprof"
-    "gitee.com/johng/gf/g/frame/gins"
+    "gitee.com/johng/gf/g/os/gview"
 )
 
 // 用于pprof的对象
-type utilpprof struct {}
+type utilPprof struct {}
 
-func (p *utilpprof) Index(r *Request) {
+func (p *utilPprof) Index(r *Request) {
     profiles := runpprof.Profiles()
     action   := r.Get("action")
     data     := map[string]interface{}{
@@ -25,8 +25,7 @@ func (p *utilpprof) Index(r *Request) {
         "profiles" : profiles,
     }
     if len(action) == 0 {
-        view      := gins.View()
-        buffer, _ := view.ParseContent(`
+        buffer, _ := gview.ParseContent(`
             <html>
             <head>
                 <title>gf ghttp pprof</title>
@@ -52,19 +51,19 @@ func (p *utilpprof) Index(r *Request) {
     }
 }
 
-func (p *utilpprof) Cmdline(r *Request) {
+func (p *utilPprof) Cmdline(r *Request) {
     netpprof.Cmdline(r.Response.Writer, &r.Request)
 }
 
-func (p *utilpprof) Profile(r *Request) {
+func (p *utilPprof) Profile(r *Request) {
     netpprof.Profile(r.Response.Writer, &r.Request)
 }
 
-func (p *utilpprof) Symbol(r *Request) {
+func (p *utilPprof) Symbol(r *Request) {
     netpprof.Symbol(r.Response.Writer, &r.Request)
 }
 
-func (p *utilpprof) Trace(r *Request) {
+func (p *utilPprof) Trace(r *Request) {
     netpprof.Trace(r.Response.Writer, &r.Request)
 }
 
@@ -74,7 +73,7 @@ func (s *Server) EnablePprof(pattern...string) {
     if len(pattern) > 0 {
         p = pattern[0]
     }
-    up := &utilpprof{}
+    up := &utilPprof{}
     _, _, uri, _ := s.parsePattern(p)
     uri = strings.TrimRight(uri, "/")
     s.BindHandler(uri + "/*action", up.Index)
