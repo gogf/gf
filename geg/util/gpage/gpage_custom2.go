@@ -3,28 +3,28 @@ package main
 import (
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/util/gpage"
 )
 
-// 分页标签使用li标签包裹
-func wrapContent(page *gpage.Page) string {
-    content := page.GetContent(4)
-    content  = gstr.ReplaceByMap(content, map[string]string {
-        "<span"  : "<li><span",
-        "/span>" : "/span></li>",
-        "<a"     : "<li><a",
-        "/a>"    : "/a></li>",
-    })
-    return "<ul>" + content + "</ul>"
+// 自定义分页名称
+func pageContent(page *gpage.Page) string {
+    page.NextPageTag  = "NextPage"
+    page.PrevPageTag  = "PrevPage"
+    page.FirstPageTag = "HomePage"
+    page.LastPageTag  = "LastPage"
+    pageStr := page.FirstPage()
+    pageStr += page.PrevPage()
+    pageStr += page.PageBar("current-page")
+    pageStr += page.NextPage()
+    pageStr += page.LastPage()
+    return pageStr
 }
 
 func main() {
     s := ghttp.GetServer()
     s.BindHandler("/page/custom2/*page", func(r *ghttp.Request){
         page      := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router.Uri)
-        content   := wrapContent(page)
         buffer, _ := gview.ParseContent(`
         <html>
             <head>
@@ -38,7 +38,7 @@ func main() {
             </body>
         </html>
         `, g.Map{
-            "page" : gview.HTML(content),
+            "page" : gview.HTML(pageContent(page)),
         })
         r.Response.Write(buffer)
     })
