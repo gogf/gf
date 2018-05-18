@@ -3,6 +3,8 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
+// @todo 后期改为tcp进程通信形式
+
 
 package gproc
 
@@ -25,8 +27,6 @@ import (
 const (
     // 由于子进程的temp dir有可能会和父进程不一致(特别是windows下)，影响进程间通信，这里统一使用环境变量设置
     gPROC_TEMP_DIR_ENV_KEY           = "gproc.tempdir"
-    // 自动通信文件清理时间间隔
-    gPROC_COMM_AUTO_CLEAR_INTERVAL   = 10*time.Second
     // 写入通信数据失败时候的重试次数
     gPROC_COMM_FAILURE_RETRY_COUNT   = 3
     // (毫秒)主动通信内容检查时间间隔
@@ -49,23 +49,10 @@ type Msg struct {
 // 进程管理/通信初始化操作
 func init() {
     path := getCommFilePath(os.Getpid())
-    if !gfile.Exists(path) {
-        // 判断是否需要创建通信文件
-        commLocker.Lock()
-        err := gfile.Create(path)
-        commLocker.UnLock()
-        if err != nil {
-            glog.Error(err)
-            os.Exit(1)
-        }
-    }
-    // 检测写入权限
-    if !gfile.IsWritable(path) {
-        glog.Errorfln("%s is not writable for gproc", path)
-        os.Exit(1)
-    }
+    checkAndInitCommFile(path)
+    commLocker.Lock()
     fileMtime := gfile.MTime(path)
-    //commUpdateTime.Set(fileMtime)
+    commLocker.UnLock()
     if gtime.Second() - fileMtime < 10 {
         // 初始化时读取已有数据(文件修改时间在10秒以内)
         checkCommBuffer(path)
@@ -83,25 +70,24 @@ func init() {
         glog.Error(err)
     }
 
-    go autoClearCommDir()
     go autoActiveCheckComm()
 }
 
-// 自动清理通信目录文件
-// @todo 目前是以时间过期规则进行清理，后期可以考虑加入进程存在性判断
-func autoClearCommDir() {
-    dirPath := getCommDirPath()
-    for {
-        time.Sleep(gPROC_COMM_AUTO_CLEAR_INTERVAL)
-        if commClearLocker.TryLock() {
-            for _, name := range gfile.ScanDir(dirPath) {
-                path := dirPath + gfile.Separator + name
-                if gtime.Second() - gfile.MTime(path) >= 10 {
-                    gfile.Remove(path)
-                }
-            }
-            commClearLocker.UnLock()
+// 检测并初始化通信文件
+func checkAndInitCommFile(path string) {
+    commLocker.Lock()
+    defer commLocker.UnLock()
+    if !gfile.Exists(path) {
+        err := gfile.Create(path)
+        if err != nil {
+            glog.Error(err)
+            os.Exit(1)
         }
+    }
+    // 检测写入权限
+    if !gfile.IsWritable(path) {
+        glog.Errorfln("%s is not writable for gproc", path)
+        os.Exit(1)
     }
 }
 
