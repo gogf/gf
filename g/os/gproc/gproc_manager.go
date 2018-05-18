@@ -152,7 +152,7 @@ func (m *Manager) SignalAll(sig os.Signal) error {
 }
 
 // 向所有进程发送消息
-func (m *Manager) Send(data interface{}) error {
+func (m *Manager) Send(data []byte) error {
     for _, p := range m.Processes() {
         if err := p.Send(data); err != nil {
             return err
@@ -162,7 +162,7 @@ func (m *Manager) Send(data interface{}) error {
 }
 
 // 向指定进程发送消息
-func (m *Manager) SendTo(pid int, data interface{}) error {
+func (m *Manager) SendTo(pid int, data []byte) error {
     return Send(pid, data)
 }
 

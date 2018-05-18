@@ -2,27 +2,25 @@ package main
 
 import (
     "os"
-    "fmt"
     "time"
+    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
-    "gitee.com/johng/gf/g/os/gtime"
 )
 
 func main () {
-    fmt.Printf("%d: I am child? %v\n", gproc.Pid(), gproc.IsChild())
     if gproc.IsChild() {
-        gtime.SetInterval(time.Second, func() bool {
-            gproc.Send(gproc.PPid(), gtime.Datetime())
-            return true
-        })
-        select { }
+        glog.Printfln("%d: Hi, I am child, waiting 3 seconds to die", gproc.Pid())
+        time.Sleep(time.Second)
+        glog.Printfln("%d: 1", gproc.Pid())
+        time.Sleep(time.Second)
+        glog.Printfln("%d: 2", gproc.Pid())
+        time.Sleep(time.Second)
+        glog.Printfln("%d: 3", gproc.Pid())
     } else {
         m := gproc.NewManager()
         p := m.NewProcess(os.Args[0], os.Args, os.Environ())
         p.Start()
-        for {
-            msg := gproc.Receive()
-            fmt.Printf("receive from %d, data: %s\n", msg.Pid, string(msg.Data))
-        }
+        p.Wait()
+        glog.Printfln("%d: child died", gproc.Pid())
     }
 }
