@@ -20,6 +20,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gxml"
     "gitee.com/johng/gf/g/encoding/gyaml"
     "gitee.com/johng/gf/g/encoding/gtoml"
+    "gitee.com/johng/gf/g/util/gstr"
 )
 
 const (
@@ -241,7 +242,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
     value    = j.convertValue(value)
     // 初始化判断
     if *j.p == nil {
-        if gutil.IsNumeric(array[0]) {
+        if gstr.IsNumeric(array[0]) {
             *j.p = make([]interface{}, 0)
         } else {
             *j.p = make(map[string]interface{})
@@ -268,7 +269,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
                             goto done
                         }
                         // 创建新节点
-                        if gutil.IsNumeric(array[i + 1]) {
+                        if gstr.IsNumeric(array[i + 1]) {
                             // 创建array节点
                             n, _ := strconv.Atoi(array[i + 1])
                             var v interface{} = make([]interface{}, n + 1)
@@ -288,7 +289,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 
             case []interface{}:
                 // 键名与当前指针类型不符合，需要执行**覆盖操作**
-                if !gutil.IsNumeric(array[i]) {
+                if !gstr.IsNumeric(array[i]) {
                     if i == length - 1 {
                         *pointer = map[string]interface{}{ array[i] : value }
                     } else {
@@ -320,7 +321,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
                         j.setPointerWithValue(pointer, array[i], value)
                     }
                 } else {
-                    if gutil.IsNumeric(array[i + 1]) {
+                    if gstr.IsNumeric(array[i + 1]) {
                         n, _ := strconv.Atoi(array[i + 1])
                         if len((*pointer).([]interface{})) > valn {
                             (*pointer).([]interface{})[valn] = make([]interface{}, n + 1)
@@ -347,7 +348,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
                 if removed && value == nil {
                     goto done
                 }
-                if gutil.IsNumeric(array[i]) {
+                if gstr.IsNumeric(array[i]) {
                     n, _    := strconv.Atoi(array[i])
                     s       := make([]interface{}, n + 1)
                     if i == length - 1 {
@@ -519,7 +520,7 @@ func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interfac
                 return &v
             }
         case []interface{}:
-            if gutil.IsNumeric(key) {
+            if gstr.IsNumeric(key) {
                 n, err := strconv.Atoi(key)
                 if err == nil && len((*pointer).([]interface{})) > n {
                     return &(*pointer).([]interface{})[n]

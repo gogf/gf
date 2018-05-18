@@ -11,7 +11,7 @@ import (
     "errors"
     "strings"
     "reflect"
-    "gitee.com/johng/gf/g/util/gutil"
+    "gitee.com/johng/gf/g/util/gstr"
 )
 
 // 绑定URI到操作函数/方法
@@ -41,7 +41,7 @@ func (s *Server)mergeMethodNameToPattern(pattern string, name string) string {
     // 方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词
     method := ""
     for i := 0; i < len(name); i++ {
-        if i > 0 && gutil.IsLetterUpper(name[i]) {
+        if i > 0 && gstr.IsLetterUpper(name[i]) {
             method += "-"
         }
         method += strings.ToLower(string(name[i]))
