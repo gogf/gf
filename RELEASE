@@ -16,3 +16,64 @@
         #IISWI gitee.com/johng/gf/issues/IISWI,
         #IISMY gitee.com/johng/gf/issues/IISMY,
         反馈并跟踪完成第三方依赖mxj包的ISSUE修复(github.com/clbanning/mxj/issues/48)；
+
+
+0.98 beta
+    新特性：
+        1、平滑重启特性；
+        2、gflock文件锁模块；
+        3、gproc进程管理及通信模块；
+        4、gpage分页管理模块，gpage提供了强大的动态分页及静态分页功能，并且为开发者自定义分页样式提供了极高的灵活度；
+        5、ghttp.Server增加多端口监听特性，并支持HTTP/HTTPS；
+        6、增加gspath目录检索包管理工具，支持对多目录下的文件检索特性；
+        7、ghttp包控制器及执行对象注册增加更灵活的动态路由特性，路由规则增加{method}变量支持；
+
+
+    新功能：
+        1、gutil包增加MapToStruct方法，支持将map数据类型映射为struct对象；
+        2、gconv
+            1)、gconv包增加按照类型名称字符串进行类型转换；
+            2)、gconv包新增Time/TimeDuration类型转换方法；
+        3、ghttp
+            1)、增加Web Server目录安全访问控制机制；
+            2)、ghttp.Server增加自定义状态码回调函数注册处理；
+            3)、gdb包增加gdb.GetStruct/gdb.Model.Struct方法，获取查询结果记录自动转换为指定对象；
+            4)、gdb增加Value/Record/Result类型，增加对Value类型的系列类型转换方法；
+            5)、gdb包增加db.GetCount,tx.GetCount,model.Count数量查询方法；
+
+
+    功能改进：
+        1、改进gredis客户端功能封装；
+        2、改进grand包随机数生成性能；
+        3、grand/gdb/gredis包增加benchmark性能测试脚本；
+        4、改进gjson/gparser包的ToStruct方法实现；
+        5、gdb  ：改进gdb.New获取ORM操作对象性能；
+        6、gcfg ：改进配置文件检索功能；
+        7、gview：模板引擎增加多目录检索功能；
+        8、gfile：增加源码main包目录获取方法MainPkgPath；
+        9、ghttp
+            1)、ghttp.Request增加请求进入和完成时间记录，并增加到默认日志内容中；
+            2)、ghttp.Server事件回调之间支持通过ghttp.Request.Param自定义参数进行流程传参；
+            3)、改进gdb.Result与gdb.List, gdb.Record与gdb.Map之间的类型转换，便于业务层数据编码处理(如json/xml)；
+            4)、改进gdb.Tx.GetValue返回值类型；
+            5)、gdb.Model.Data参数支持更加灵活的map参数；
+
+
+    问题修复：
+        1、ghttp
+            1)、修复ghttp包路由缓存问题；
+            2)、修复服务注册时的控制器及执行对象方法丢失问题；
+        2、gconv
+            1)、修正gconv.Float64方法位大小设置问题；
+            2)、修复gconv.Int64(float64(xxx))问题；
+        2、gdb
+            1)、修复gdb.GetAll针对返回数据列表的for..range...的返回结果slice相同指针问题；
+            2)、修复gdb.Delete方法错误；
+            3)、修复gdb.Model.And/Or方法；
+            4)、修复gdb.Model.Where方法参数处理问题；
+        3、garray：修复garray包Remove方法锁机制问题；
+        4、gtype ：修复gtype.Float32/gtype.Float64对象类型的方法逻辑错误；
+        5、gfsnotify：修复在windows下文件参数中不同文件分隔符引起的热更新机制失效问题；
+        6、修复gvalid包验证问题：如果值为nil，并且不需要require*验证时，其他验证失效。并增加单元测试项，测试通过。
+
+
