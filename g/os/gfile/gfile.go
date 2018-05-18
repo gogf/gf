@@ -46,6 +46,10 @@ func Mkdir(path string) error {
 
 // 给定文件的绝对路径创建文件
 func Create(path string) error {
+    dir := Dir(path)
+    if !Exists(dir) {
+        Mkdir(dir)
+    }
     f, err  := os.Create(path)
     if err != nil {
         return err
@@ -107,13 +111,24 @@ func Info(path string) *os.FileInfo {
     return &info
 }
 
-// 修改时间
+// 修改时间(秒)
 func MTime(path string) int64 {
     f, e := os.Stat(path)
     if e != nil {
         return 0
     }
     return f.ModTime().Unix()
+}
+
+// 修改时间(毫秒)
+func MTimeMillisecond(path string) int64 {
+    f, e := os.Stat(path)
+    if e != nil {
+        return 0
+    }
+    seconds     := f.ModTime().Unix()
+    nanoSeconds := f.ModTime().Nanosecond()
+    return seconds*1000 + int64(nanoSeconds/1000000)
 }
 
 // 文件大小(bytes)
@@ -320,6 +335,11 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
     return nil
 }
 
+// Truncate
+func Truncate(path string, size int) error {
+    return os.Truncate(path, int64(size))
+}
+
 // (文本)写入文件内容
 func PutContents(path string, content string) error {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
@@ -462,4 +482,9 @@ func MainPkgPath() string {
         return p
     }
     return ""
+}
+
+// 系统临时目录
+func TempDir() string {
+    return os.TempDir()
 }
