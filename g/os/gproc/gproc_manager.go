@@ -93,10 +93,12 @@ func (m *Manager) GetProcess(pid int) *Process {
 
 // 添加一个已存在进程到进程管理器中
 func (m *Manager) AddProcess(pid int) {
-    if process, err := os.FindProcess(pid); err == nil {
-        p := m.NewProcess("", nil, nil)
-        p.Process = process
-        m.processes.Set(pid, p)
+    if m.processes.Get(pid) == nil {
+        if process, err := os.FindProcess(pid); err == nil {
+            p := m.NewProcess("", nil, nil)
+            p.Process = process
+            m.processes.Set(pid, p)
+        }
     }
 }
 

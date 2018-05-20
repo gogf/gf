@@ -15,6 +15,8 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/os/glog"
+    "time"
 )
 
 const (
@@ -26,8 +28,10 @@ const (
     gMSG_NEW_FORK    = 6
     gMSG_HEARTBEAT   = 7
 
-    gPROC_HEARTBEAT_INTERVAL    = 1000       // (毫秒)进程间心跳间隔
-    gPROC_HEARTBEAT_TIMEOUT     = 3000       // (毫秒)进程间心跳超时时间，如果子进程在这段内没有接收到任何心跳，那么自动退出，防止可能出现的僵尸子进程
+    gPROC_FAILURE_RETRY_COUNT    = 3          // 发送消息失败重试次数
+    gPROC_FAILURE_RETRY_INTERVAL = 500        // (毫秒)发送消息失败时重试间隔
+    gPROC_HEARTBEAT_INTERVAL     = 1000       // (毫秒)进程间心跳间隔
+    gPROC_HEARTBEAT_TIMEOUT      = 3000       // (毫秒)进程间心跳超时时间，如果子进程在这段内没有接收到任何心跳，那么自动退出，防止可能出现的僵尸子进程
 )
 
 // 进程信号量监听消息队列
@@ -101,7 +105,16 @@ func handleProcessMsg() {
 
 // 向进程发送操作消息
 func sendProcessMsg(pid int, act int, data []byte) error {
-    return gproc.Send(pid, formatMsgBuffer(act, data))
+    var err error
+    for i := gPROC_FAILURE_RETRY_COUNT; i > 0; i-- {
+        if err = gproc.Send(pid, formatMsgBuffer(act, data)); err != nil {
+            time.Sleep(gPROC_FAILURE_RETRY_INTERVAL*time.Millisecond)
+        } else {
+            break
+        }
+    }
+    glog.Printfln("%d=>%d, %d, %v", gproc.Pid(), pid, act, err)
+    return err
 }
 
 // 生成一条满足Web Server进程通信协议的消息

@@ -17,6 +17,7 @@ import (
 
 const (
     gPROC_ENV_KEY_PPID_KEY = "gproc.ppid"
+    gPROC_TEMP_DIR_ENV_KEY = "gproc.tempdir"
 )
 
 // 进程开始执行时间
