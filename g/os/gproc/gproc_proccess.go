@@ -9,8 +9,8 @@ package gproc
 import (
     "os"
     "fmt"
-    "errors"
     "os/exec"
+    "errors"
 )
 
 // 子进程
@@ -60,7 +60,7 @@ func (p *Process) Send(data []byte) error {
     if p.Process != nil {
         return Send(p.Process.Pid, data)
     }
-    return errors.New("process not running")
+    return errors.New("invalid process")
 }
 
 
