@@ -113,8 +113,7 @@ func (s *Server) Reload() error {
     }
     serverProcessStatus.Set(gADMIN_ACTION_RELOADING)
     glog.Printfln("%d: server reloading", gproc.Pid())
-    sendProcessMsg(gproc.Pid(), gMSG_RELOAD, nil)
-    return nil
+    return sendProcessMsg(gproc.Pid(), gMSG_RELOAD, nil)
 }
 
 // 完整重启Web Server
@@ -129,8 +128,7 @@ func (s *Server) Restart() error {
     }
     serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
     glog.Printfln("%d: server restarting", gproc.Pid())
-    sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
-    return nil
+    return sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
 }
 
 // 关闭Web Server
@@ -145,8 +143,7 @@ func (s *Server) Shutdown() error {
     }
     serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
     glog.Printfln("%d: server shutting down", gproc.Pid())
-    sendProcessMsg(gproc.PPid(), gMSG_SHUTDOWN, nil)
-    return nil
+    return sendProcessMsg(gproc.PPid(), gMSG_SHUTDOWN, nil)
 }
 
 // 检测当前操作的频繁度
