@@ -36,6 +36,7 @@ func startTcpListening() {
         }
         // 将监听的端口保存到通信文件中(字符串类型存放)
         gfile.PutContents(getCommFilePath(Pid()), gconv.String(i))
+        //glog.Printfln("%d: gproc listening on [%s]", Pid(), addr)
         break
     }
     for  {
@@ -51,14 +52,12 @@ func startTcpListening() {
 // 数据格式：总长度(32bit) | PID(32bit) | 校验(32bit) | 参数(变长)
 func tcpServiceHandler(conn net.Conn) {
     for {
-        if buffer, err := gtcp.Receive(conn, gtcp.Retry{3, 10}); err == nil {
-            if len(buffer) > 0 {
-                for _, v := range bufferToMsgs(buffer) {
-                    commReceiveQueue.PushBack(v)
-                }
+        if buffer, err := gtcp.Receive(conn, gtcp.Retry{3, 10}); len(buffer) > 0 && err == nil {
+            //glog.Printfln("%d: receive, %v", Pid(), buffer)
+            for _, v := range bufferToMsgs(buffer) {
+                commReceiveQueue.PushBack(v)
             }
         } else {
-            fmt.Println(err)
             conn.Close()
             return
         }
@@ -66,25 +65,31 @@ func tcpServiceHandler(conn net.Conn) {
 }
 
 // 数据解包，防止黏包
+// 数据格式：总长度(32bit) | 发送进程PID(32bit) | 接收进程PID(32bit) | 校验(32bit) | 参数(变长)
 func bufferToMsgs(buffer []byte) []*Msg {
     s    := 0
     msgs := make([]*Msg, 0)
     for s < len(buffer) {
+        // 长度解析及校验
         length := gbinary.DecodeToInt(buffer[s : s + 4])
-        if length < 0 || length > len(buffer) {
+        if length < 16 || length > len(buffer) {
             s++
             continue
         }
-        checksum1 := gbinary.DecodeToUint32(buffer[s + 8 : s + 12])
-        checksum2 := gtcp.Checksum(buffer[s + 12 : s + length])
+        // checksum校验(仅对参数做校验，提高校验效率)
+        checksum1 := gbinary.DecodeToUint32(buffer[s + 12 : s + 16])
+        checksum2 := gtcp.Checksum(buffer[s + 16 : s + length])
         if checksum1 != checksum2 {
             s++
             continue
         }
-        msgs = append(msgs, &Msg {
-            Pid  : gbinary.DecodeToInt(buffer[s + 4 : s + 8]),
-            Data : buffer[s + 12 : s + length],
-        })
+        // 接收进程PID校验
+        if Pid() ==  gbinary.DecodeToInt(buffer[s + 8 : s + 12]) {
+            msgs = append(msgs, &Msg {
+                Pid  : gbinary.DecodeToInt(buffer[s + 4 : s + 8]),
+                Data : buffer[s + 16 : s + length],
+            })
+        }
         s += length
     }
     return msgs

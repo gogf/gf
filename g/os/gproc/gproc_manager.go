@@ -154,13 +154,10 @@ func (m *Manager) SignalAll(sig os.Signal) error {
 }
 
 // 向所有进程发送消息
-func (m *Manager) Send(data []byte) error {
+func (m *Manager) Send(data []byte) {
     for _, p := range m.Processes() {
-        if err := p.Send(data); err != nil {
-            return err
-        }
+        p.Send(data)
     }
-    return nil
 }
 
 // 向指定进程发送消息

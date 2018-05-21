@@ -15,7 +15,6 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/glog"
     "time"
 )
 
@@ -113,7 +112,7 @@ func sendProcessMsg(pid int, act int, data []byte) error {
             break
         }
     }
-    glog.Printfln("%d=>%d, %d, %v", gproc.Pid(), pid, act, err)
+    //glog.Printfln("%d=>%d, %d, %v", gproc.Pid(), pid, act, err)
     return err
 }
 
