@@ -12,31 +12,32 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gbinary"
-    "os"
     "fmt"
     "errors"
 )
 
 const (
-    gPROC_COMM_FAILURE_RETRY_COUNT = 3
+    gPROC_COMM_FAILURE_RETRY_COUNT   = 3  // 失败重试次数
 )
 
 // 向指定gproc进程发送数据
-// 数据格式：总长度(32bit) | PID(32bit) | 校验(32bit) | 参数(变长)
+// 数据格式：总长度(32bit) | 发送进程PID(32bit) | 接收进程PID(32bit) | 校验(32bit) | 参数(变长)
 func Send(pid int, data []byte) error {
-    b := make([]byte, 0)
-    b  = append(b, gbinary.EncodeInt32(int32(len(data) + 12))...)
-    b  = append(b, gbinary.EncodeInt32(int32(os.Getpid()))...)
-    b  = append(b, gbinary.EncodeUint32(gtcp.Checksum(data))...)
-    b  = append(b, data...)
+    buffer := make([]byte, 0)
+    buffer  = append(buffer, gbinary.EncodeInt32(int32(len(data) + 16))...)
+    buffer  = append(buffer, gbinary.EncodeInt32(int32(Pid()))...)
+    buffer  = append(buffer, gbinary.EncodeInt32(int32(pid))...)
+    buffer  = append(buffer, gbinary.EncodeUint32(gtcp.Checksum(data))...)
+    buffer  = append(buffer, data...)
     if conn, err := getConnByPid(pid); err == nil {
         for i := gPROC_COMM_FAILURE_RETRY_COUNT; i > 0; i-- {
-            if err = gtcp.Send(conn, b); err != nil {
+            if err = gtcp.Send(conn, buffer); err != nil {
                 conn.Close()
                 if conn, err = newConnByPid(pid); err != nil {
                     return err
                 }
             } else {
+                //glog.Printfln("%d: sent to %d, %v", Pid(), pid, buffer)
                 break
             }
         }
