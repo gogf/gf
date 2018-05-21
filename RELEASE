@@ -20,11 +20,11 @@
 
 0.98 beta
     新特性：
-        1、平滑重启特性；
-        2、gflock文件锁模块；
-        3、gproc进程管理及通信模块；
-        4、gpage分页管理模块，强大的动态分页及静态分页功能，并为开发者自定义分页样式提供了极高的灵活度；
-        5、ghttp.Server增加多端口监听特性，并支持HTTP/HTTPS；
+        1、平滑重启特性( http://gf.johng.cn/625833 )；
+        2、gflock文件锁模块( http://gf.johng.cn/626062 )；
+        3、gproc进程管理及通信模块( http://gf.johng.cn/626063 )；
+        4、gpage分页管理模块，强大的动态分页及静态分页功能，并为开发者自定义分页样式提供了极高的灵活度( http://gf.johng.cn/597431 )；
+        5、ghttp.Server增加多端口监听特性，并支持HTTP/HTTPS( http://gf.johng.cn/494366 , http://gf.johng.cn/598802 )；
         6、增加gspath目录检索包管理工具，支持对多目录下的文件检索特性；
         7、ghttp包控制器及执行对象注册增加更灵活的动态路由特性，路由规则增加{method}变量支持；
 
