@@ -1,23 +1,24 @@
-package gdes
+package gdes_test
 
 import (
 	"testing"
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"gitee.com/johng/gf/g/encoding/gdes"
 )
 
 func TestDesECB(t *testing.T){
 	{
 		key := []byte("11111111")
 		text := []byte("12345678")
-		padding := NOPADDING
-		cipherText, err := DesECBEncrypt(key, text, padding)
+		padding := gdes.NOPADDING
+		cipherText, err := gdes.DesECBEncrypt(key, text, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
   
-		clearText, err := DesECBDecrypt(key, cipherText, padding)
+		clearText, err := gdes.DesECBDecrypt(key, cipherText, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -32,13 +33,13 @@ func TestDesECB(t *testing.T){
 	{
 		key := []byte("11111111")
 		text := []byte("12345678")
-		padding := PKCS5PADDING
-		cipherText, err := DesECBEncrypt(key, text, padding)
+		padding := gdes.PKCS5PADDING
+		cipherText, err := gdes.DesECBEncrypt(key, text, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 
-		clearText, err := DesECBDecrypt(key, cipherText, padding)
+		clearText, err := gdes.DesECBDecrypt(key, cipherText, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -54,13 +55,13 @@ func Test3DesECB(t *testing.T){
 	{
 		key := []byte("1111111111111234")
 		text := []byte("1234567812345678")
-		padding := NOPADDING
-		cipherText, err := TripleDesECBEncrypt(key, text, padding)
+		padding := gdes.NOPADDING
+		cipherText, err := gdes.TripleDesECBEncrypt(key, text, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 
-		clearText, err := TripleDesECBDecrypt(key, cipherText, padding)
+		clearText, err := gdes.TripleDesECBDecrypt(key, cipherText, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -75,13 +76,13 @@ func Test3DesECB(t *testing.T){
 	{
 		key := []byte("111111111111123412345678")
 		text := []byte("123456789")
-		padding := PKCS5PADDING
-		cipherText, err := TripleDesECBEncrypt(key, text, padding)
+		padding := gdes.PKCS5PADDING
+		cipherText, err := gdes.TripleDesECBEncrypt(key, text, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 
-		clearText, err := TripleDesECBDecrypt(key, cipherText, padding)
+		clearText, err := gdes.TripleDesECBDecrypt(key, cipherText, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -97,14 +98,14 @@ func TestDesCBC(t *testing.T){
 	{
 		key := []byte("11111111")
 		text := []byte("1234567812345678")
-		padding := NOPADDING
+		padding := gdes.NOPADDING
 		iv := []byte("12345678")
-		cipherText, err := DesCBCEncrypt(key, text, iv,padding)
+		cipherText, err := gdes.DesCBCEncrypt(key, text, iv,padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 
-		clearText, err := DesCBCDecrypt(key, cipherText, iv, padding)
+		clearText, err := gdes.DesCBCDecrypt(key, cipherText, iv, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -119,14 +120,14 @@ func TestDesCBC(t *testing.T){
 	{
 		key := []byte("11111111")
 		text := []byte("12345678")
-		padding := PKCS5PADDING
+		padding := gdes.PKCS5PADDING
 		iv := []byte("12345678")
-		cipherText, err := DesCBCEncrypt(key, text, iv, padding)
+		cipherText, err := gdes.DesCBCEncrypt(key, text, iv, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 
-		clearText, err := DesCBCDecrypt(key, cipherText, iv, padding)
+		clearText, err := gdes.DesCBCDecrypt(key, cipherText, iv, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -142,14 +143,14 @@ func Test3DesCBC(t *testing.T){
 	{
 		key := []byte("1111111112345678")
 		text := []byte("1234567812345678")
-		padding := NOPADDING
+		padding := gdes.NOPADDING
 		iv := []byte("12345678")
-		cipherText, err := TripleDesCBCEncrypt(key, text, iv,padding)
+		cipherText, err := gdes.TripleDesCBCEncrypt(key, text, iv,padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 
-		clearText, err := TripleDesCBCDecrypt(key, cipherText, iv, padding)
+		clearText, err := gdes.TripleDesCBCDecrypt(key, cipherText, iv, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -164,14 +165,14 @@ func Test3DesCBC(t *testing.T){
 	{
 		key := []byte("111111111234567812345678")
 		text := []byte("12345678")
-		padding := PKCS5PADDING
+		padding := gdes.PKCS5PADDING
 		iv := []byte("12345678")
-		cipherText, err := TripleDesCBCEncrypt(key, text, iv, padding)
+		cipherText, err := gdes.TripleDesCBCEncrypt(key, text, iv, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 
-		clearText, err := TripleDesCBCDecrypt(key, cipherText, iv, padding)
+		clearText, err := gdes.TripleDesCBCDecrypt(key, cipherText, iv, padding)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
