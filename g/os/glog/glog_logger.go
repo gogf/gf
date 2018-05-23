@@ -25,7 +25,7 @@ const (
 )
 
 // 默认的日志换行符
-var ln  string
+var ln = "\n"
 
 // 初始化日志换行符
 // @author zseeker
@@ -33,9 +33,7 @@ var ln  string
 func init() {
     if runtime.GOOS == "windows" {
         ln = "\r\n"
-    } else {
-        ln = "\n"
-    }
+	}
 }
 
 // 设置BacktraceSkip
