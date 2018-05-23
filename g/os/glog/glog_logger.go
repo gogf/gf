@@ -80,6 +80,16 @@ func (l *Logger) SetPath(path string) error {
         return errors.New(errstr)
     }
     l.path.Set(strings.TrimRight(path, gfile.Separator))
+
+    // 添加日志换行符适配，window是\r\n，linux是\n
+    // @author zseeker
+    // @date   2018-05-23
+    if runtime.GOOS == "windows" {
+        l.ln = "\r\n"
+    } else {
+        l.ln = "\n"
+    }
+
     return nil
 }
 
@@ -88,7 +98,14 @@ func (l *Logger) print(defaultIO io.Writer, s string) {
     w := l.GetIO()
     if w == nil {
         if v := l.getFileByPool(); v != nil {
-            w = v.File()
+            // 同时输出到文件和终端
+            // @author zseeker
+            // @date   2018-05-23
+            ws := []io.Writer {
+                v.File(),
+                os.Stdout,
+            }
+            w = io.MultiWriter(ws...)
             defer v.Close()
         } else {
             w = defaultIO
@@ -109,22 +126,22 @@ func (l *Logger) errPrint(s string) {
     // 记录调用回溯信息
     backtrace := l.backtrace()
     if s[len(s) - 1] == byte('\n') {
-        s = s + backtrace + "\n"
+        s = s + backtrace + l.ln
     } else {
-        s = s + "\n" + backtrace + "\n"
+        s = s + l.ln + backtrace + l.ln
     }
     l.print(os.Stderr, s)
 }
 
 // 调用回溯字符串
 func (l *Logger) backtrace() string {
-    backtrace := "Trace:\n"
+    backtrace := "Trace:" + l.ln
     index     := 1
     for i := 1; i < 10000; i++ {
         if _, cfile, cline, ok := runtime.Caller(i + l.btSkip.Val()); ok {
             // 不打印出go源码路径
             if !gregx.IsMatchString("^" + runtime.GOROOT(), cfile) {
-                backtrace += strconv.Itoa(index) + ". " + cfile + ":" + strconv.Itoa(cline) + "\n"
+                backtrace += strconv.Itoa(index) + ". " + cfile + ":" + strconv.Itoa(cline) + l.ln
                 index++
             }
         } else {
@@ -147,11 +164,11 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 }
 
 func (l *Logger) Println(v ...interface{}) {
-    l.stdPrint(fmt.Sprintln(v...))
+    l.stdPrint(fmt.Sprint(v...) + l.ln)
 }
 
 func (l *Logger) Printfln(format string, v ...interface{}) {
-    l.stdPrint(fmt.Sprintf(format + "\n", v...))
+    l.stdPrint(fmt.Sprintf(format + l.ln, v...))
 }
 
 func (l *Logger) Fatal(v ...interface{}) {
@@ -165,12 +182,12 @@ func (l *Logger) Fatalf(format string, v ...interface{}) {
 }
 
 func (l *Logger) Fatalln(v ...interface{}) {
-    l.errPrint(fmt.Sprintln(v...))
+    l.errPrint(fmt.Sprint(v...) + l.ln)
     os.Exit(1)
 }
 
 func (l *Logger) Fatalfln(format string, v ...interface{}) {
-    l.errPrint(fmt.Sprintf(format + "\n", v...))
+    l.errPrint(fmt.Sprintf(format + l.ln, v...))
     os.Exit(1)
 }
 
@@ -187,41 +204,41 @@ func (l *Logger) Panicf(format string, v ...interface{}) {
 }
 
 func (l *Logger) Panicln(v ...interface{}) {
-    s := fmt.Sprintln(v...)
+    s := fmt.Sprint(v...) + l.ln
     l.errPrint(s)
     panic(s)
 }
 
 func (l *Logger) Panicfln(format string, v ...interface{}) {
-    s := fmt.Sprintf(format + "\n", v...)
+    s := fmt.Sprintf(format + l.ln, v...)
     l.errPrint(s)
     panic(s)
 }
 
 func (l *Logger) Info(v ...interface{}) {
-    l.stdPrint("[INFO] " + fmt.Sprintln(v...))
+    l.stdPrint("[INFO] " + fmt.Sprint(v...) + l.ln)
 }
 
 func (l *Logger) Debug(v ...interface{}) {
     if l.GetDebug() {
-        l.stdPrint("[DEBU] " + fmt.Sprintln(v...))
+        l.stdPrint("[DEBU] " + fmt.Sprint(v...) + l.ln)
     }
 }
 
 func (l *Logger) Notice(v ...interface{}) {
-    l.errPrint("[NOTI] " + fmt.Sprintln(v...))
+    l.errPrint("[NOTI] " + fmt.Sprint(v...) + l.ln)
 }
 
 func (l *Logger) Warning(v ...interface{}) {
-    l.errPrint("[WARN] " + fmt.Sprintln(v...))
+    l.errPrint("[WARN] " + fmt.Sprint(v...) + l.ln)
 }
 
 func (l *Logger) Error(v ...interface{}) {
-    l.errPrint("[ERRO] " + fmt.Sprintln(v...))
+    l.errPrint("[ERRO] " + fmt.Sprint(v...) + l.ln)
 }
 
 func (l *Logger) Critical(v ...interface{}) {
-    l.errPrint("[CRIT] " + fmt.Sprintln(v...))
+    l.errPrint("[CRIT] " + fmt.Sprint(v...) + l.ln)
 }
 
 func (l *Logger) Infof(format string, v ...interface{}) {
@@ -251,27 +268,27 @@ func (l *Logger) Criticalf(format string, v ...interface{}) {
 }
 
 func (l *Logger) Infofln(format string, v ...interface{}) {
-    l.stdPrint("[INFO] " + fmt.Sprintf(format, v...) + "\n")
+    l.stdPrint("[INFO] " + fmt.Sprintf(format, v...) + l.ln)
 }
 
 func (l *Logger) Debugfln(format string, v ...interface{}) {
     if l.GetDebug() {
-        l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...) + "\n")
+        l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...) + l.ln)
     }
 }
 
 func (l *Logger) Noticefln(format string, v ...interface{}) {
-    l.errPrint("[NOTI] " + fmt.Sprintf(format, v...) + "\n")
+    l.errPrint("[NOTI] " + fmt.Sprintf(format, v...) + l.ln)
 }
 
 func (l *Logger) Warningfln(format string, v ...interface{}) {
-    l.errPrint("[WARN] " + fmt.Sprintf(format, v...) + "\n")
+    l.errPrint("[WARN] " + fmt.Sprintf(format, v...) + l.ln)
 }
 
 func (l *Logger) Errorfln(format string, v ...interface{}) {
-    l.errPrint("[ERRO] " + fmt.Sprintf(format, v...) + "\n")
+    l.errPrint("[ERRO] " + fmt.Sprintf(format, v...) + l.ln)
 }
 
 func (l *Logger) Criticalfln(format string, v ...interface{}) {
-    l.errPrint("[CRIT] " + fmt.Sprintf(format, v...) + "\n")
+    l.errPrint("[CRIT] " + fmt.Sprintf(format, v...) + l.ln)
 }
