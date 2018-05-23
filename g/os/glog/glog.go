@@ -20,7 +20,6 @@ type Logger struct {
     path   *gtype.String       // 日志写入的目录路径
     debug  *gtype.Bool         // 是否允许输出DEBUG信息
     btSkip *gtype.Int          // 错误产生时的backtrace回调信息skip条数
-    ln     string              // 日志换行符，window是\r\n，linux是\n
 }
 
 // 默认的日志对象
@@ -33,15 +32,7 @@ func New() *Logger {
         path   : gtype.NewString(),
         debug  : gtype.NewBool(true),
         btSkip : gtype.NewInt(3),
-        ln     : "\n",
     }
-}
-
-// 获取默认的日志对象
-// @author zseeker
-// @date   2018-05-23
-func GetLogger() *Logger {
-    return logger
 }
 
 // 日志日志目录绝对路径
