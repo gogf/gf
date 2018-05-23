@@ -210,8 +210,40 @@ func (j *Json) GetInt(pattern string) int {
     return gconv.Int(j.Get(pattern))
 }
 
+func (j *Json) GetInt8(pattern string) int8 {
+    return gconv.Int8(j.Get(pattern))
+}
+
+func (j *Json) GetInt16(pattern string) int16 {
+    return gconv.Int16(j.Get(pattern))
+}
+
+func (j *Json) GetInt32(pattern string) int32 {
+    return gconv.Int32(j.Get(pattern))
+}
+
+func (j *Json) GetInt64(pattern string) int64 {
+    return gconv.Int64(j.Get(pattern))
+}
+
 func (j *Json) GetUint(pattern string) uint {
     return gconv.Uint(j.Get(pattern))
+}
+
+func (j *Json) GetUint8(pattern string) uint8 {
+    return gconv.Uint8(j.Get(pattern))
+}
+
+func (j *Json) GetUint16(pattern string) uint16 {
+    return gconv.Uint16(j.Get(pattern))
+}
+
+func (j *Json) GetUint32(pattern string) uint32 {
+    return gconv.Uint32(j.Get(pattern))
+}
+
+func (j *Json) GetUint64(pattern string) uint64 {
+    return gconv.Uint64(j.Get(pattern))
 }
 
 func (j *Json) GetFloat32(pattern string) float32 {
