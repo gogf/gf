@@ -83,8 +83,40 @@ func (p *Parser) GetInt(pattern string) int {
     return p.json.GetInt(pattern)
 }
 
+func (p *Parser) GetInt8(pattern string) int8 {
+    return p.json.GetInt8(pattern)
+}
+
+func (p *Parser) GetInt16(pattern string) int16 {
+    return p.json.GetInt16(pattern)
+}
+
+func (p *Parser) GetInt32(pattern string) int32 {
+    return p.json.GetInt32(pattern)
+}
+
+func (p *Parser) GetInt64(pattern string) int64 {
+    return p.json.GetInt64(pattern)
+}
+
 func (p *Parser) GetUint(pattern string) uint {
     return p.json.GetUint(pattern)
+}
+
+func (p *Parser) GetUint8(pattern string) uint8 {
+    return p.json.GetUint8(pattern)
+}
+
+func (p *Parser) GetUint16(pattern string) uint16 {
+    return p.json.GetUint16(pattern)
+}
+
+func (p *Parser) GetUint32(pattern string) uint32 {
+    return p.json.GetUint32(pattern)
+}
+
+func (p *Parser) GetUint64(pattern string) uint64 {
+    return p.json.GetUint64(pattern)
 }
 
 func (p *Parser) GetFloat32(pattern string) float32 {

@@ -164,10 +164,67 @@ func (c *Config) GetInt(pattern string, file...string)  int {
     return 0
 }
 
+
+func (c *Config) GetInt8(pattern string, file...string)  int8 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetInt8(pattern)
+    }
+    return 0
+}
+
+func (c *Config) GetInt16(pattern string, file...string)  int16 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetInt16(pattern)
+    }
+    return 0
+}
+
+func (c *Config) GetInt32(pattern string, file...string)  int32 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetInt32(pattern)
+    }
+    return 0
+}
+
+func (c *Config) GetInt64(pattern string, file...string)  int64 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetInt64(pattern)
+    }
+    return 0
+}
+
 // 返回指定json中的float64->uint
 func (c *Config) GetUint(pattern string, file...string)  uint {
     if j := c.getJson(file...); j != nil {
         return j.GetUint(pattern)
+    }
+    return 0
+}
+
+func (c *Config) GetUint8(pattern string, file...string)  uint8 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetUint8(pattern)
+    }
+    return 0
+}
+
+func (c *Config) GetUint16(pattern string, file...string)  uint16 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetUint16(pattern)
+    }
+    return 0
+}
+
+func (c *Config) GetUint32(pattern string, file...string)  uint32 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetUint32(pattern)
+    }
+    return 0
+}
+
+func (c *Config) GetUint64(pattern string, file...string)  uint64 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetUint64(pattern)
     }
     return 0
 }
