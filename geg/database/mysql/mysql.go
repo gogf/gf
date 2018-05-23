@@ -477,8 +477,8 @@ func mapToStruct() {
 }
 
 func main() {
-    r, err := db.Table("user").Data(g.Map{"name": "john14"}).Where("uid = ?", 1).Update()
-    fmt.Println(r.RowsAffected())
+    r, err := db.Table("user").Where("name = ?", "'jack'; delete from `user`").All()
+    fmt.Println(r)
     fmt.Println(err)
     //create()
     //create()
