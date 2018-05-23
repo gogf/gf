@@ -22,16 +22,22 @@ const (
 
 // 配置管理对象
 type Config struct {
+    name   *gtype.String            // 默认配置文件名称
     paths  *gspath.SPath            // 搜索目录路径
     jsons  *gmap.StringInterfaceMap // 配置文件对象
     closed *gtype.Bool              // 是否已经被close
 }
 
 // 生成一个配置管理对象
-func New(path string) *Config {
+func New(path string, file...string) *Config {
+    name := gDEFAULT_CONFIG_FILE
+    if len(file) > 0 {
+        name = file[0]
+    }
     s := gspath.New()
     s.Set(path)
     return &Config {
+        name   : gtype.NewString(name),
         paths  : s,
         jsons  : gmap.NewStringInterfaceMap(),
         closed : gtype.NewBool(),
@@ -40,7 +46,7 @@ func New(path string) *Config {
 
 // 判断从哪个配置文件中获取内容，返回配置文件的绝对路径
 func (c *Config) filePath(file...string) string {
-    name := gDEFAULT_CONFIG_FILE
+    name := c.name.Val()
     if len(file) > 0 {
         name = file[0]
     }
@@ -66,11 +72,16 @@ func (c *Config) AddPath(path string) error {
 
 // 获取指定文件的绝对路径，默认获取默认的配置文件路径
 func (c *Config) GetFilePath(file...string) string {
-    name := gDEFAULT_CONFIG_FILE
+    name := c.name.Val()
     if len(file) > 0 {
         name = file[0]
     }
     return c.paths.Search(name)
+}
+
+// 设置配置管理对象的默认文件名称
+func (c *Config) SetFileName(name string) {
+    c.name.Set(name)
 }
 
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中

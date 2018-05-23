@@ -1,17 +1,16 @@
 package main
 
-import "fmt"
-
-
-func test(a []byte) {
-    fmt.Println(a)
-}
+import (
+    "gitee.com/johng/gf/g"
+    "fmt"
+)
 
 func main() {
-    b := []byte{0,1,2,3,4,5,6,7,8,9}
-    a := []byte{}
-    a = append(a, b[0:2]...)
-    a = append(a, b[7:10]...)
-    test(a)
-    fmt.Println(b)
+
+    c := g.Config()
+    c.SetPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/os/gcfg")
+    c.SetFileName("redis.yml")
+    fmt.Println(c.Get("redis-cache"))
+
+
 }
