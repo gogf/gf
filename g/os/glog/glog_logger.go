@@ -109,9 +109,10 @@ func (l *Logger) print(defaultIO io.Writer, s string) {
     w := l.GetIO()
     if w == nil {
         if v := l.getFileByPool(); v != nil {
+            w = v.File()
             // 同时输出到文件和终端 @author zseeker
             if stdprint {
-                w = io.MultiWriter(v.File(), os.Stdout)
+                w = io.MultiWriter(w, os.Stdout)
             }
             defer v.Close()
         } else {
