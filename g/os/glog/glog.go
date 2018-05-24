@@ -50,6 +50,13 @@ func GetPath() string {
     return logger.path.Val()
 }
 
+// 设置写日志的同时开启or关闭控制台打印，默认是关闭的
+// @author zseeker
+// @date   2018-05-24
+func SetStdPrint(open bool) {
+    logger.SetStdPrint(open)
+}
+
 func Print(v ...interface{}) {
     logger.Print(v ...)
 }
