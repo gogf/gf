@@ -46,7 +46,7 @@ func New(TotalSize, perPage int,  CurrentPage interface{}, url string, route...s
         PrevBar      : "<<",
         NextBar      : ">>",
         TotalSize    : TotalSize,
-        TotalPage    : int(math.Ceil(float64(TotalSize/perPage))),
+        TotalPage    : int(math.Ceil(float64(TotalSize)/float64(perPage))),
         CurrentPage  : 1,
         PageBarNum   : 10,
         Url          : u,
