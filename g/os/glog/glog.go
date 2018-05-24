@@ -20,6 +20,7 @@ type Logger struct {
     path   *gtype.String       // 日志写入的目录路径
     debug  *gtype.Bool         // 是否允许输出DEBUG信息
     btSkip *gtype.Int          // 错误产生时的backtrace回调信息skip条数
+    stdprint *gtype.Bool       // 控制台打印开关 @author zseeker
 }
 
 // 默认的日志对象
@@ -32,6 +33,7 @@ func New() *Logger {
         path   : gtype.NewString(),
         debug  : gtype.NewBool(true),
         btSkip : gtype.NewInt(3),
+        stdprint : gtype.NewBool(false),
     }
 }
 
@@ -48,6 +50,13 @@ func SetDebug(debug bool) {
 // 获取日志目录绝对路径
 func GetPath() string {
     return logger.path.Val()
+}
+
+// 设置写日志的同时开启or关闭控制台打印，默认是关闭的
+// @author zseeker
+// @date   2018-05-24
+func SetStdPrint(open bool) {
+    logger.SetStdPrint(open)
 }
 
 func Print(v ...interface{}) {
