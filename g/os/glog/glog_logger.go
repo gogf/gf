@@ -27,16 +27,13 @@ const (
 // 默认的日志换行符
 var ln = "\n"
 
-// 控制台打印开关
-var stdprint = false
-
 // 初始化日志换行符
 // @author zseeker
 // @date   2018-05-23
 func init() {
     if runtime.GOOS == "windows" {
         ln = "\r\n"
-	}
+    }
 }
 
 // 设置BacktraceSkip
@@ -100,8 +97,9 @@ func (l *Logger) SetPath(path string) error {
 
 // 设置写日志时开启or关闭控制台打印，默认是关闭的
 // @author zseeker
+// @date   2018-05-24
 func (l *Logger) SetStdPrint(open bool) {
-    stdprint = open
+    l.stdprint.Set(open)
 }
 
 // 这里的写锁保证统一时刻只会写入一行日志，防止串日志的情况
@@ -111,8 +109,8 @@ func (l *Logger) print(defaultIO io.Writer, s string) {
         if v := l.getFileByPool(); v != nil {
             w = v.File()
             // 同时输出到文件和终端 @author zseeker
-            if stdprint {
-                w = io.MultiWriter(w, os.Stdout)
+            if l.stdprint.Val() {
+                w = io.MultiWriter(w, defaultIO)
             }
             defer v.Close()
         } else {
