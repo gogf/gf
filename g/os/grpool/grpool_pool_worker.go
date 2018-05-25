@@ -15,16 +15,17 @@ func (w *PoolWorker) start() {
             if f := <- w.job; f != nil {
                 // 执行任务
                 f()
-                // 更新活动时间
+                // 更新活动时间(不存在并发安全问题)
                 w.update = gtime.Second()
                 // 执行完毕后添加到空闲队列
-                if !w.pool.addJob(w) {
+                if !w.pool.addWorker(w) {
                     break
                 }
             } else {
                 break
             }
         }
+        w.pool.workerNum.Add(-1)
     }()
 }
 
