@@ -16,9 +16,16 @@ func main() {
     for i := 0; i < 1000; i++ {
         grpool.Add(job)
     }
+    fmt.Println("size:", grpool.Size())
+    fmt.Println("jobs:", grpool.Jobs())
     gtime.SetInterval(2*time.Second, func() bool {
         fmt.Println("size:", grpool.Size())
         fmt.Println("jobs:", grpool.Jobs())
+        return true
+    })
+
+    gtime.SetInterval(5*time.Second, func() bool {
+        grpool.SetSize(2)
         return true
     })
     select {}
