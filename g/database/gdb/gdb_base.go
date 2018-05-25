@@ -228,11 +228,11 @@ func (db *Db) getInsertOperationByOption(option uint8) string {
 // 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 // 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做
 func (db *Db) insert(table string, data Map, option uint8) (sql.Result, error) {
-    var keys   []string
+    var fields []string
     var values []string
     var params []interface{}
     for k, v := range data {
-        keys   = append(keys,   db.charl + k + db.charr)
+        fields = append(fields,   db.charl + k + db.charr)
         values = append(values, "?")
         params = append(params, v)
     }
@@ -247,7 +247,7 @@ func (db *Db) insert(table string, data Map, option uint8) (sql.Result, error) {
     }
     return db.Exec(
         fmt.Sprintf("%s INTO %s%s%s(%s) VALUES(%s) %s",
-            operation, db.charl, table, db.charr, strings.Join(keys, ","), strings.Join(values, ","), updatestr), params...
+            operation, db.charl, table, db.charr, strings.Join(fields, ","), strings.Join(values, ","), updatestr), params...
     )
 }
 
@@ -345,10 +345,10 @@ func (db *Db) Update(table string, data interface{}, condition interface{}, args
         var fields []string
         keys := refValue.MapKeys()
         for _, k := range keys {
-            fields  = append(fields, fmt.Sprintf("%s%s%s=?", db.charl, k, db.charr))
-            params  = append(params, gconv.String(refValue.MapIndex(k).Interface()))
-            updates = strings.Join(fields,   ",")
+            fields = append(fields, fmt.Sprintf("%s%s%s=?", db.charl, k, db.charr))
+            params = append(params, gconv.String(refValue.MapIndex(k).Interface()))
         }
+        updates = strings.Join(fields, ",")
     } else {
         updates = gconv.String(data)
     }
