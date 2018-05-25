@@ -26,11 +26,11 @@ func Test_GrpoolMemUsage(t *testing.T) {
     fmt.Println("mem usage:", mem.TotalAlloc/1024)
 }
 
-func Test_GroroutineMemUsage(t *testing.T) {
-    for i := 0; i < n; i++ {
-        go increment()
-    }
-    mem := runtime.MemStats{}
-    runtime.ReadMemStats(&mem)
-    fmt.Println("mem usage:", mem.TotalAlloc/1024)
-}
+//func Test_GroroutineMemUsage(t *testing.T) {
+//    for i := 0; i < n; i++ {
+//        go increment()
+//    }
+//    mem := runtime.MemStats{}
+//    runtime.ReadMemStats(&mem)
+//    fmt.Println("mem usage:", mem.TotalAlloc/1024)
+//}
