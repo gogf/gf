@@ -137,6 +137,9 @@ func (md *Model) Data(data...interface{}) (*Model) {
 
 // 链式操作， CURD - Insert/BatchInsert
 func (md *Model) Insert() (sql.Result, error) {
+    if md.data == nil {
+        return nil, errors.New("inserting into table with empty data")
+    }
     // 批量操作
     if list, ok :=  md.data.(List); ok {
         batch := 10
@@ -148,12 +151,7 @@ func (md *Model) Insert() (sql.Result, error) {
         } else {
             return md.tx.BatchInsert(md.tables, list, batch)
         }
-    }
-    // 记录操作
-    if md.data == nil {
-        return nil, errors.New("inserting into table with empty data")
-    }
-    if dataMap, ok :=  md.data.(Map); ok {
+    } else if dataMap, ok := md.data.(Map); ok {
         if md.tx == nil {
             return md.db.Insert(md.tables, dataMap)
         } else {
@@ -165,6 +163,9 @@ func (md *Model) Insert() (sql.Result, error) {
 
 // 链式操作， CURD - Replace/BatchReplace
 func (md *Model) Replace() (sql.Result, error) {
+    if md.data == nil {
+        return nil, errors.New("replacing into table with empty data")
+    }
     // 批量操作
     if list, ok :=  md.data.(List); ok {
         batch := 10
@@ -176,12 +177,7 @@ func (md *Model) Replace() (sql.Result, error) {
         } else {
             return md.tx.BatchReplace(md.tables, list, batch)
         }
-    }
-    // 记录操作
-    if md.data == nil {
-        return nil, errors.New("replacing into table with empty data")
-    }
-    if dataMap, ok :=  md.data.(Map); ok {
+    } else if dataMap, ok :=  md.data.(Map); ok {
         if md.tx == nil {
             return md.db.Insert(md.tables, dataMap)
         } else {
@@ -193,6 +189,9 @@ func (md *Model) Replace() (sql.Result, error) {
 
 // 链式操作， CURD - Save/BatchSave
 func (md *Model) Save() (sql.Result, error) {
+    if md.data == nil {
+        return nil, errors.New("replacing into table with empty data")
+    }
     // 批量操作
     if list, ok :=  md.data.(List); ok {
         batch := 10
@@ -204,12 +203,7 @@ func (md *Model) Save() (sql.Result, error) {
         } else {
             return md.tx.BatchSave(md.tables, list, batch)
         }
-    }
-    // 记录操作
-    if md.data == nil {
-        return nil, errors.New("saving into table with empty data")
-    }
-    if dataMap, ok :=  md.data.(Map); ok {
+    } else if dataMap, ok :=  md.data.(Map); ok {
         if md.tx == nil {
             return md.db.Save(md.tables, dataMap)
         } else {

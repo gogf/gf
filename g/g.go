@@ -26,11 +26,11 @@ const (
     gIS_DATABASE_CONFIG_CACHED = "gf.core.component.database.cached"
 )
 
-// 常用map数据结构
-type Map map[string]interface{}
+// 常用map数据结构(使用别名)
+type Map  = map[string]interface{}
 
-// 常用list数据结构
-type List []Map
+// 常用list数据结构(使用别名)
+type List = []Map
 
 
 // 阻塞等待HTTPServer执行完成(同一进程多HTTPServer情况下)
