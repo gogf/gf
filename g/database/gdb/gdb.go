@@ -97,11 +97,13 @@ type Record  map[string]Value
 // 返回数据表记录List
 type Result  []Record
 
-// 关联数组，绑定一条数据表记录
-type Map     map[string]interface{}
 
-// 关联数组列表(索引从0开始的数组)，绑定多条记录
-type List    []Map
+// 关联数组，绑定一条数据表记录(使用别名)
+type Map     = map[string]interface{}
+
+// 关联数组列表(索引从0开始的数组)，绑定多条记录(使用别名)
+type List    = []Map
+
 
 // MySQL接口对象
 var linkMysql = &dbmysql{}

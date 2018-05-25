@@ -477,7 +477,9 @@ func mapToStruct() {
 }
 
 func main() {
-    r, err := db.Table("user").Where("name = ?", "'jack'; delete from `user`").All()
+    r, err := db.Table("user").Data([]map[string]interface{}{
+        map[string]interface{}{"name" : "john11111"},
+    }).Insert()
     fmt.Println(r)
     fmt.Println(err)
     //create()
@@ -498,7 +500,9 @@ func main() {
     //linkopUpdate2()
     //linkopUpdate3()
     //linkopUpdate4()
-    //keepPing()
+    //
     //transaction1()
     //transaction2()
+    //
+    //keepPing()
 }
