@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017-2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,7 +11,6 @@ package grpool
 
 import (
     "math"
-    "errors"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gtype"
 )
@@ -28,7 +27,7 @@ type Pool struct {
     workerNum   *gtype.Int         // 当前正在运行的goroutine数量(非任务数)
     blockedNum  *gtype.Int         // 当前被阻塞运行的goroutine数量
     queue       *glist.List        // 空闲任务队列(*PoolJob)
-    funcs       *glist.List        // 待处理任务操作队列
+    jobs        *glist.List        // 待处理任务操作队列
     jobEvents   chan struct{}      // 任务添加事件(兄弟们该干活了！)
     freeEvents  chan struct{}      // 空闲协程通知事件
     stopEvents  chan struct{}      // 池关闭事件(用于池相关异步协程通知)
@@ -58,7 +57,7 @@ func New(expire int, size...int) *Pool {
         workerNum   : gtype.NewInt(),
         blockedNum  : gtype.NewInt(),
         queue       : glist.New(),
-        funcs       : glist.New(),
+        jobs        : glist.New(),
         jobEvents   : make(chan struct{}, math.MaxInt32),
         freeEvents  : make(chan struct{}, math.MaxInt32),
         stopEvents  : make(chan struct{}, 0),
@@ -95,10 +94,7 @@ func SetExpire(expire int) {
 
 // 添加异步任务
 func (p *Pool) Add(f func()) error {
-    if len(p.stopEvents) > 0 {
-        return errors.New("pool closed")
-    }
-    p.funcs.PushBack(f)
+    p.jobs.PushBack(f)
     p.jobEvents <- struct{}{}
     return nil
 }
