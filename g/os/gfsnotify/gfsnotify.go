@@ -13,7 +13,6 @@ import (
     "gitee.com/johng/gf/g/os/glog"
     "github.com/fsnotify/fsnotify"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/grpool"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gqueue"
@@ -152,11 +151,11 @@ func (w *Watcher) startEventLoop() {
                     continue
                 }
                 if l := w.callbacks.Get(event.Path); l != nil {
-                    grpool.Add(func() {
-                        for _, v := range l.(*glist.List).FrontAll() {
+                    go func(list interface{}) {
+                        for _, v := range list.(*glist.List).FrontAll() {
                             v.(func(event *Event))(event)
                         }
-                    })
+                    }(l)
                 }
             } else {
                 break

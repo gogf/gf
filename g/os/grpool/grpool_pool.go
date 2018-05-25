@@ -20,7 +20,7 @@ func (p *Pool) startSchedLoop() {
             for {
                 select {
                     case <-p.jobEvents:
-                        p.getWorker().setJob(p.funcs.PopFront().(func()))
+                        p.getWorker().setJob(p.jobs.PopFront().(func()))
                     case <-p.stopEvents:
                         return
                 }
