@@ -1,16 +1,22 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g"
     "fmt"
+    "time"
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/os/gproc"
 )
 
 func main() {
-
-    c := g.Config()
-    c.SetPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/os/gcfg")
-    c.SetFileName("redis.yml")
-    fmt.Println(c.Get("redis-cache"))
-
-
+    if !gproc.IsChild() {
+        go func() {
+            for {
+                fmt.Println("test")
+                time.Sleep(2 * time.Second)
+            }
+        }()
+    }
+    s := g.Server()
+    s.SetPort(9000)
+    s.Run()
 }
