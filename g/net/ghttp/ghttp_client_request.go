@@ -12,7 +12,6 @@ import (
     "bytes"
     "strings"
     "net/http"
-    "fmt"
     "mime/multipart"
     "os"
     "io"
@@ -125,7 +124,6 @@ func (c *Client) DoRequest(method, url string, data []byte) (*ClientResponse, er
     if strings.Compare("POST", strings.ToUpper(method)) == 0 {
         return c.Post(url, string(data))
     }
-    fmt.Println(method)
     req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader(data))
     if err != nil {
         return nil, err
