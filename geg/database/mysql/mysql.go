@@ -477,9 +477,7 @@ func mapToStruct() {
 }
 
 func main() {
-    r, err := db.Table("user").Data([]map[string]interface{}{
-        map[string]interface{}{"name" : "john11111"},
-    }).Insert()
+    r, err := db.Table("user").Data(g.Map{"name" : "john11111"}).Insert()
     fmt.Println(r)
     fmt.Println(err)
     //create()
