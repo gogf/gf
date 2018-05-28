@@ -21,12 +21,12 @@ func main() {
         go func(clientId int) {
             url := "http://127.0.0.1:8199/"
             for i := 0; i < requestMax; i++ {
-                //url = fmt.Sprintf("http://127.0.0.1:8199/%d_%d", clientId, i)
+                url = fmt.Sprintf("http://127.0.0.1:8199/%d_%d", clientId, i)
                 if c, e := ghttp.Get(url); e == nil {
-                    //fmt.Println(string(c.ReadAll()))
                     c.Close()
                     successNum.Add(1)
                 } else {
+                    fmt.Println(e)
                     failureNum.Add(1)
                 }
             }

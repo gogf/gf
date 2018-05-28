@@ -16,7 +16,7 @@ import (
 
 // handler缓存项，根据URL.Path进行缓存，因此对象中带有缓存参数
 type handlerCacheItem struct {
-    item    *HandlerItem        // 准确的执行方法内存地址
+    item    *HandlerItem         // 准确的执行方法内存地址
     values   map[string][]string // GET解析参数
 }
 
@@ -39,7 +39,7 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
     }
     if handlerItem != nil {
         for k, v := range handlerItem.values {
-            r.values[k] = v
+            r.queries[k] = v
         }
         r.Router = handlerItem.item.router
         return handlerItem.item
@@ -228,12 +228,12 @@ func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
             for e := lists[i].Front(); e != nil; e = e.Next() {
                 item := e.Value.(*HandlerItem)
                 if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, r.Method) {
-                    regrule, names := s.patternToRegRule(item.router.Uri)
-                    if gregx.IsMatchString(regrule, r.URL.Path) {
+                    rule, names := s.patternToRegRule(item.router.Uri)
+                    if gregx.IsMatchString(rule, r.URL.Path) {
                         handlerItem := &handlerCacheItem{item, nil}
                         // 如果需要query匹配，那么需要重新解析URL
                         if len(names) > 0 {
-                            if match, err := gregx.MatchString(regrule, r.URL.Path); err == nil {
+                            if match, err := gregx.MatchString(rule, r.URL.Path); err == nil {
                                 array := strings.Split(names, ",")
                                 if len(match) > len(array) {
                                     handlerItem.values = make(map[string][]string)
