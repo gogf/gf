@@ -19,8 +19,11 @@ func main() {
     for i := 0; i < clientMax; i++ {
         wg.Add(1)
         go func(clientId int) {
-            for j := 0; j < requestMax; j++ {
-                if c, e := ghttp.Get("http://127.0.0.1/"); e == nil {
+            url := "http://127.0.0.1:8199/"
+            for i := 0; i < requestMax; i++ {
+                //url = fmt.Sprintf("http://127.0.0.1:8199/%d_%d", clientId, i)
+                if c, e := ghttp.Get(url); e == nil {
+                    //fmt.Println(string(c.ReadAll()))
                     c.Close()
                     successNum.Add(1)
                 } else {

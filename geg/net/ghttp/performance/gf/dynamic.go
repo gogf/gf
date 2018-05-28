@@ -7,8 +7,8 @@ import (
 
 func main() {
     s := g.Server()
-    s.BindHandler("/dynamic/:name", func(r *ghttp.Request){
-        r.Response.Writeln(r.Get("name"))
+    s.BindHandler("/:name", func(r *ghttp.Request){
+        r.Response.Write(r.Get("name"))
     })
     s.SetPort(8199)
     s.Run()
