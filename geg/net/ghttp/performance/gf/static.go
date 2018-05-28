@@ -8,8 +8,9 @@ import (
 func main() {
     s := g.Server()
     s.BindHandler("/", func(r *ghttp.Request){
-        r.Response.Writeln("哈喽世界！")
+        r.Response.Write("哈喽世界！")
     })
+    s.EnablePprof()
     s.SetPort(8199)
     s.Run()
 }
