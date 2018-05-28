@@ -21,7 +21,7 @@ type Request struct {
     http.Request
     parsedGet  *gtype.Bool         // GET参数是否已经解析
     parsedPost *gtype.Bool         // POST参数是否已经解析
-    values     map[string][]string // GET参数
+    queries    map[string][]string // GET参数
     exit       *gtype.Bool         // 是否退出当前请求流程执行
     Id         int                 // 请求id(唯一)
     Server     *Server             // 请求关联的服务器对象
@@ -32,6 +32,8 @@ type Request struct {
     EnterTime  int64               // 请求进入时间(微秒)
     LeaveTime  int64               // 请求完成时间(微秒)
     Param      interface{}         // 开发者自定义参数
+    parsedHost *gtype.String       // 解析过后不带端口号的服务器域名名称
+    clientIp   *gtype.String       // 解析过后的客户端IP地址
 }
 
 // 创建一个Request对象
@@ -39,13 +41,15 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
     request := &Request{
         parsedGet  : gtype.NewBool(),
         parsedPost : gtype.NewBool(),
-        values     : make(map[string][]string),
+        queries     : make(map[string][]string),
         exit       : gtype.NewBool(),
         Id         : s.servedCount.Add(1),
         Server     : s,
         Request    : *r,
         Response   : newResponse(w),
         EnterTime  : gtime.Microsecond(),
+        parsedHost : gtype.NewString(),
+        clientIp   : gtype.NewString(),
     }
     // 会话处理
     request.Cookie           = GetCookie(request)
@@ -58,11 +62,11 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 // 初始化GET请求参数
 func (r *Request) initGet() {
     if !r.parsedGet.Val() {
-        if len(r.values) == 0 {
-            r.values = r.URL.Query()
+        if len(r.queries) == 0 {
+            r.queries = r.URL.Query()
         } else {
             for k, v := range r.URL.Query() {
-                r.values[k] = v
+                r.queries[k] = v
             }
         }
     }
@@ -87,7 +91,7 @@ func (r *Request) Get(k string) string {
 // 获得指定名称的get参数列表
 func (r *Request) GetQuery(k string) []string {
     r.initGet()
-    if v, ok := r.values[k]; ok {
+    if v, ok := r.queries[k]; ok {
         return v
     }
     return nil
@@ -131,7 +135,7 @@ func (r *Request) GetQueryMap(defaultMap...map[string]string) map[string]string 
     r.initGet()
     m := make(map[string]string)
     if len(defaultMap) == 0 {
-        for k, v := range r.values {
+        for k, v := range r.queries {
             m[k] = v[0]
         }
     } else {
@@ -304,19 +308,31 @@ func (r *Request) IsExited() bool {
 
 // 获取请求的服务端IP/域名
 func (r *Request) GetHost() string {
-    array, _ := gregx.MatchString(`(.+):(\d+)`, r.Host)
-    if len(array) > 1 {
-        return array[1]
+    host := r.parsedHost.Val()
+    if len(host) == 0 {
+        array, _ := gregx.MatchString(`(.+):(\d+)`, r.Host)
+        if len(array) > 1 {
+            host = array[1]
+        } else {
+            host = r.Host
+        }
+        r.parsedHost.Set(host)
     }
-    return r.Host
+    return host
 }
 
 // 获取请求的客户端IP地址
 func (r *Request) GetClientIp() string {
-    array, _ := gregx.MatchString(`(.+):(\d+)`, r.RemoteAddr)
-    if len(array) > 1 {
-        return array[1]
+    ip := r.clientIp.Val()
+    if len(ip) == 0 {
+        array, _ := gregx.MatchString(`(.+):(\d+)`, r.RemoteAddr)
+        if len(array) > 1 {
+            ip = array[1]
+        } else {
+            ip = r.RemoteAddr
+        }
+        r.clientIp.Set(ip)
     }
-    return r.RemoteAddr
+    return ip
 }
 

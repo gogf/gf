@@ -24,7 +24,13 @@ type Client struct {
 
 // http客户端对象指针
 func NewClient() (*Client) {
-    return &Client{}
+    return &Client{
+        http.Client {
+            Transport: &http.Transport {
+                DisableKeepAlives: true,
+            },
+        },
+    }
 }
 
 // 设置请求过期时间
