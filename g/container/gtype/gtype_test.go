@@ -6,25 +6,24 @@
 
 // go test *.go -bench=".*"
 
-package gtype_test
+package gtype
 
 import (
     "testing"
-    "gitee.com/johng/gf/g/container/gtype"
     "strconv"
     "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
-var it    = gtype.NewInt()
-var it32  = gtype.NewInt32()
-var it64  = gtype.NewInt64()
-var uit   = gtype.NewUint()
-var uit32 = gtype.NewUint32()
-var uit64 = gtype.NewUint64()
-var bl    = gtype.NewBool()
-var bytes = gtype.NewBytes()
-var str   = gtype.NewString()
-var inf   = gtype.NewInterface()
+var it    = NewInt()
+var it32  = NewInt32()
+var it64  = NewInt64()
+var uit   = NewUint()
+var uit32 = NewUint32()
+var uit64 = NewUint64()
+var bl    = NewBool()
+var bytes = NewBytes()
+var str   = NewString()
+var inf   = NewInterface()
 
 func BenchmarkInt_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {

@@ -26,7 +26,7 @@ type Cache struct {
     dmu        sync.RWMutex              // data锁
     emu        sync.RWMutex              // ekmap锁
     smu        sync.RWMutex              // eksets锁
-    lru        *_Lru                     // LRU缓存限制
+    lru        *_Lru                     // LRU缓存限制(只有限定池大小时才启用)
     cap        *gtype.Int                // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
     data       map[string]_CacheItem     // 缓存数据(所有的缓存数据存放哈希表)
     ekmap      map[string]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)
@@ -290,14 +290,13 @@ func (c *Cache) autoSyncLoop() {
             c.ekmap[item.k] = newe
             c.emu.Unlock()
             // LRU操作记录(只有新增和修改操作才会记录到LRU管理对象中，删除不会)
-            if newe >= olde {
+            if newe >= olde && c.cap.Val() > 0 {
                 c.lru.Push(item.k)
             }
         } else {
             return
         }
     }
-
 }
 
 // LRU缓存淘汰处理+自动清理过期键值对

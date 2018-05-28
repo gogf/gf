@@ -6,29 +6,28 @@
 
 // go test *.go -bench=".*"
 
-package gcache_test
+package gcache
 
 import (
     "testing"
     "strconv"
-    "gitee.com/johng/gf/g/os/gcache"
 )
 
 
 func BenchmarkSet(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        gcache.Set(strconv.Itoa(i), strconv.Itoa(i), 0)
+        Set(strconv.Itoa(i), strconv.Itoa(i), 0)
     }
 }
 
 func BenchmarkGet(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        gcache.Get(strconv.Itoa(i))
+        Get(strconv.Itoa(i))
     }
 }
 
 func BenchmarkRemove(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        gcache.Remove(strconv.Itoa(i))
+        Remove(strconv.Itoa(i))
     }
 }
