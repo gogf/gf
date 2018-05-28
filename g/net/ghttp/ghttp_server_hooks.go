@@ -91,17 +91,12 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
 // 事件回调 - 检索动态路由规则
 // 并按照指定hook回调函数的优先级及注册顺序进行调用
 func (s *Server) callHookHandler(r *Request, hook string) {
-
     // 缓存清空时是直接修改属性，因此必须使用互斥锁
     s.hhcmu.RLock()
     defer s.hhcmu.RUnlock()
 
     var hookItems []*hookCacheItem
     cacheKey := s.handlerHookKey(r.GetHost(), r.Method, r.URL.Path, hook)
-
-    return
-
-
     if v := s.hooksCache.Get(cacheKey); v == nil {
         hookItems = s.searchHookHandler(r, hook)
         if hookItems != nil {
@@ -113,7 +108,7 @@ func (s *Server) callHookHandler(r *Request, hook string) {
     if hookItems != nil {
         for _, item := range hookItems {
             for k, v := range item.values {
-                r.values[k] = v
+                r.queries[k] = v
             }
             item.faddr(r)
         }
