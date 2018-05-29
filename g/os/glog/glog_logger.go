@@ -146,7 +146,7 @@ func (l *Logger) backtrace() string {
     for i := 1; i < 10000; i++ {
         if _, cfile, cline, ok := runtime.Caller(i + l.btSkip.Val()); ok {
             // 不打印出go源码路径
-            if !gregx.IsMatchString("^" + runtime.GOROOT(), cfile) {
+            if !gregx.IsMatchString("^" + gfile.GoRootOfBuild(), cfile) {
                 backtrace += strconv.Itoa(index) + ". " + cfile + ":" + strconv.Itoa(cline) + ln
                 index++
             }
