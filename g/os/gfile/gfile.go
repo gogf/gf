@@ -33,7 +33,10 @@ const (
 )
 
 // 源码的main包所在目录，仅仅会设置一次
-var mainPkgPath = gtype.NewInterface()
+var mainPkgPath   = gtype.NewString()
+
+// 编译时的 GOROOT 数值
+var goRootOfBuild = gtype.NewString()
 
 // 给定文件的绝对路径创建文件
 func Mkdir(path string) error {
@@ -457,17 +460,18 @@ func GetBinContentByTwoOffsets(file *os.File, start int64, end int64) []byte {
     return buffer
 }
 
-// 获取入口函数文件所在目录(main包文件目录)，仅对源码开发环境有效（即仅对生成该可执行文件的系统下有效）
+// 获取入口函数文件所在目录(main包文件目录)，
+// **仅对源码开发环境有效（即仅对生成该可执行文件的系统下有效）**
 func MainPkgPath() string {
     path := mainPkgPath.Val()
-    if path != nil {
-        return path.(string)
+    if path != "" {
+        return path
     }
     f := ""
     for i := 1; i < 10000; i++ {
         if _, file, _, ok := runtime.Caller(i); ok {
             // 不包含go源码路径
-            if !gregx.IsMatchString("^" + runtime.GOROOT(), file) {
+            if !gregx.IsMatchString("^" + GoRootOfBuild(), file) {
                 f = file
             }
         } else {
@@ -478,6 +482,33 @@ func MainPkgPath() string {
         p := Dir(f)
         mainPkgPath.Set(p)
         return p
+    }
+    return ""
+}
+
+// 编译时环境的GOROOT数值
+func GoRootOfBuild() string {
+    if v := goRootOfBuild.Val(); v != "" {
+        return v
+    }
+    firstEntry := ""
+    for i := 0; i < 10000; i++ {
+        if _, file, _, ok := runtime.Caller(i); ok {
+            firstEntry = file
+        } else {
+            break
+        }
+    }
+    if len(firstEntry) > 0 {
+        sep   := "/"
+        array := strings.Split(firstEntry, sep)
+        if len(array) == 1 {
+            sep   = "\\"
+            array = strings.Split(firstEntry, sep)
+        }
+        root := strings.Join(array[0 : len(array) - 3], sep)
+        goRootOfBuild.Set(root)
+        return root
     }
     return ""
 }
