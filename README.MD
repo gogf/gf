@@ -7,6 +7,11 @@
     </a>
 </div>
 
+# 安装
+```shell
+go get -u gitee.com/johng/gf
+```
+
 # 介绍
 gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开源项目地址(仓库保持实时同步)：
 [Gitee](https://gitee.com/johng/gf)，[Github](https://github.com/johng-cn/gf)
@@ -30,6 +35,7 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
 * [框架介绍](http://gf.johng.cn/494364)
 * [加入团队](http://gf.johng.cn/512841)
 * [源码目录](http://gf.johng.cn/597940)
+* [性能测试](http://gf.johng.cn/637443)
 * [Web服务开发](http://gf.johng.cn/494647)
     * [开始使用](http://gf.johng.cn/494366)
     * [开发模式](http://gf.johng.cn/494367)
@@ -111,11 +117,6 @@ gf是开源的、免费的软件，这意味着任何人都可以为其开发和
 gf的项目源代码目前同时托管在 Gitee 和 Github 平台上，您可以选择您喜欢的平台来 fork 项目和合并你的贡献，
 两个平台的仓库将会保持即时的同步。我们非常欢迎有更多的朋友加入到gf框架的开发中来，
 您为gf所做出的任何贡献都将会被记录到gf的史册中。
-
-# 安装
-```shell
-go get -u gitee.com/johng/gf
-```
 
 # 使用
 ## 哈喽世界！
