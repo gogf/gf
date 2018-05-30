@@ -8,7 +8,7 @@ orm增加更多数据库支持；
 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
 ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
 对grpool进行优化改进，包括属性原子操作封装采用gtype实现，修正设计BUG：https://github.com/johng-cn/gf/issues/6；
-平滑重启机制改进，去掉多进程模式，改为单进程模式，以便于开发阶段调试；
+平滑重启机制改进，以便于开发阶段调试；
 
 
 DONE:
