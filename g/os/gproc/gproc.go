@@ -13,6 +13,7 @@ import (
     "os"
     "time"
     "gitee.com/johng/gf/g/util/gconv"
+    "strings"
 )
 
 const (
@@ -51,6 +52,15 @@ func IsChild() bool {
     return os.Getenv(gPROC_ENV_KEY_PPID_KEY) != ""
 }
 
+// 设置gproc父进程ID，当ppid为0时表示该进程为gproc主进程，否则为gproc子进程
+func SetPPid(ppid int) {
+    if ppid > 0 {
+        os.Setenv(gPROC_ENV_KEY_PPID_KEY, gconv.String(ppid))
+    } else {
+        os.Unsetenv(gPROC_ENV_KEY_PPID_KEY)
+    }
+}
+
 // 进程开始执行时间
 func StartTime() time.Time {
     return processStartTime
@@ -59,5 +69,15 @@ func StartTime() time.Time {
 // 进程已经运行的时间(毫秒)
 func Uptime() int {
     return int(time.Now().UnixNano()/1e6 - processStartTime.UnixNano()/1e6)
+}
+
+// 检测环境变量中是否已经存在指定键名
+func checkEnvKey(env []string, key string) bool {
+    for _, v := range env {
+        if len(v) >= len(key) && strings.EqualFold(v[0 : len(key)], key) {
+            return true
+        }
+    }
+    return false
 }
 

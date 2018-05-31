@@ -18,6 +18,9 @@ import (
     "fmt"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/glog"
+    "os"
+    "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 const (
@@ -25,6 +28,8 @@ const (
     gADMIN_ACTION_RELOADING      = 1
     gADMIN_ACTION_RESTARTING     = 2
     gADMIN_ACTION_SHUTINGDOWN    = 4
+    gADMIN_ACTION_RELOAD_ENVKEY  = "gf.server.reload"
+    gADMIN_ACTION_RESTART_ENVKEY = "gf.server.restart"
 )
 
 // 用于服务管理的对象
@@ -113,7 +118,10 @@ func (s *Server) Reload() error {
     }
     serverProcessStatus.Set(gADMIN_ACTION_RELOADING)
     glog.Printfln("%d: server reloading", gproc.Pid())
-    return sendProcessMsg(gproc.Pid(), gMSG_RELOAD, nil)
+    forkReloadProcess()
+    go shutdownWebServers()
+    doneChan <- struct{}{}
+    return nil
 }
 
 // 完整重启Web Server
@@ -128,7 +136,8 @@ func (s *Server) Restart() error {
     }
     serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
     glog.Printfln("%d: server restarting", gproc.Pid())
-    return sendProcessMsg(gproc.Pid(), gMSG_RESTART, nil)
+    doneChan <- struct{}{}
+    return nil
 }
 
 // 关闭Web Server
@@ -143,7 +152,9 @@ func (s *Server) Shutdown() error {
     }
     serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
     glog.Printfln("%d: server shutting down", gproc.Pid())
-    return sendProcessMsg(gproc.PPid(), gMSG_SHUTDOWN, nil)
+    go closeWebServers()
+    doneChan <- struct{}{}
+    return nil
 }
 
 // 检测当前操作的频繁度
@@ -170,4 +181,86 @@ func (s *Server) checkActionStatus() error {
         }
     }
     return nil
+}
+
+// 创建一个子进程，通过环境变量传参
+func forkReloadProcess() {
+    p   := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
+    // 创建新的服务进程，子进程自动从父进程复制文件描述来监听同样的端口
+    sfm := getServerFdMap()
+    // 将sfm中的fd按照子进程创建时的文件描述符顺序进行整理，以便子进程获取到正确的fd
+    for name, m := range sfm {
+        for fdk, fdv := range m {
+            if len(fdv) > 0 {
+                s := ""
+                for _, item := range strings.Split(fdv, ",") {
+                    array := strings.Split(item, "#")
+                    fd    := uintptr(gconv.Uint(array[1]))
+                    if fd > 0 {
+                        s += fmt.Sprintf("%s#%d,", array[0], 3 + len(p.ExtraFiles))
+                        p.ExtraFiles = append(p.ExtraFiles, os.NewFile(fd, ""))
+                    } else {
+                        s += fmt.Sprintf("%s#%d,", array[0], 0)
+                    }
+                }
+                sfm[name][fdk] = strings.TrimRight(s, ",")
+            }
+        }
+    }
+    buffer, _ := gjson.Encode(sfm)
+    p.Env = append(p.Env, fmt.Sprintf("%s=%s", gADMIN_ACTION_RELOAD_ENVKEY, string(buffer)))
+    if _, err := p.Start(); err != nil {
+        glog.Errorfln("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
+    }
+}
+
+// 获取所有Web Server的文件描述符map
+func getServerFdMap() map[string]listenerFdMap {
+    sfm := make(map[string]listenerFdMap)
+    serverMapping.RLockFunc(func(m map[string]interface{}) {
+        for k, v := range m {
+            sfm[k] = v.(*Server).getListenerFdMap()
+        }
+    })
+    return sfm
+}
+
+// 二进制转换为FdMap
+func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
+    sfm := make(map[string]listenerFdMap)
+    if len(buffer) > 0 {
+        j, _ := gjson.LoadContent(buffer, "json")
+        for k, _ := range j.ToMap() {
+            m := make(map[string]string)
+            for k, v := range j.GetMap(k) {
+                m[k] = gconv.String(v)
+            }
+            sfm[k] = m
+        }
+    }
+    return sfm
+}
+
+// 关优雅闭进程所有端口的Web Server服务
+// 注意，只是关闭Web Server服务，并不是退出进程
+func shutdownWebServers() {
+    serverMapping.RLockFunc(func(m map[string]interface{}) {
+        for _, v := range m {
+            for _, s := range v.(*Server).servers {
+                s.shutdown()
+            }
+        }
+    })
+}
+
+// 强制关闭进程所有端口的Web Server服务
+// 注意，只是关闭Web Server服务，并不是退出进程
+func closeWebServers() {
+    serverMapping.RLockFunc(func(m map[string]interface{}) {
+        for _, v := range m {
+            for _, s := range v.(*Server).servers {
+                s.close()
+            }
+        }
+    })
 }
