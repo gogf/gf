@@ -14,6 +14,7 @@ import (
     "strings"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/os/gfsnotify"
 )
 
 // 文件目录搜索管理对象
@@ -69,7 +70,25 @@ func (sp *SPath) Search(name string) string {
         sp.mu.RUnlock()
         if path != "" {
             sp.cache.Set(name, path)
+            sp.addMonitor(name, path)
         }
     }
     return path
+}
+
+// 当前的搜索路径数量
+func (sp *SPath) Size() int {
+    sp.mu.RLock()
+    length := len(sp.paths)
+    sp.mu.RUnlock()
+    return length
+}
+
+// 添加文件监控，当文件删除时，同时也删除搜索结果缓存
+func (sp *SPath) addMonitor(name, path string) {
+    gfsnotify.Add(path, func(event *gfsnotify.Event) {
+        if event.IsRemove() {
+            sp.cache.Remove(name)
+        }
+    })
 }
