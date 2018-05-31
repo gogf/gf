@@ -23,6 +23,7 @@ import (
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/genv"
 )
 
 const (
@@ -116,23 +117,8 @@ var doneChan      = make(chan struct{}, 100000)
 
 // Web Server进程初始化
 func init() {
-    go func() {
-        // 等待ready消息(Run方法调用)
-        <- readyChan
-        // 主进程只负责创建子进程
-        if !gproc.IsChild() {
-            sendProcessMsg(os.Getpid(), gMSG_START, nil)
-        }
-        // 开启进程消息监听处理
-        handleProcessMsgAndSignal()
-
-        // 服务执行完成，需要退出
-        doneChan <- struct{}{}
-
-        if !gproc.IsChild() {
-            glog.Printfln("%d: all servers shutdown", gproc.Pid())
-        }
-    }()
+    // 信号量管理操作监听
+    go handleProcessSignal()
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
@@ -198,11 +184,6 @@ func (s *Server) Start() error {
         }
     }
 
-    // 主进程，不执行任何业务，只负责进程管理
-    if !gproc.IsChild() {
-        return nil
-    }
-
     if s.status == 1 {
         return errors.New("server is already running")
     }
@@ -210,6 +191,22 @@ func (s *Server) Start() error {
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
+
+    // 启动http server
+    fdMapStr := genv.Get(gADMIN_ACTION_RELOAD_ENVKEY)
+    if len(fdMapStr) > 0 {
+        sfm := bufferToServerFdMap([]byte(fdMapStr))
+        for k, v := range sfm {
+            GetServer(k).startServer(v)
+        }
+    } else {
+        serverMapping.RLockFunc(func(m map[string]interface{}) {
+            for _, v := range m {
+                v.(*Server).startServer(nil)
+            }
+        })
+    }
+
     // 开启异步关闭队列处理循环
     s.startCloseQueueLoop()
     return nil
@@ -220,10 +217,10 @@ func (s *Server) Run() error {
     if err := s.Start(); err != nil {
         return err
     }
-    // Web Server准备就绪，待执行
-    readyChan <- struct{}{}
     // 阻塞等待服务执行完成
     <- doneChan
+
+    glog.Printfln("%d: all servers shutdown", gproc.Pid())
     return nil
 }
 
@@ -231,8 +228,10 @@ func (s *Server) Run() error {
 // 阻塞等待所有Web Server停止，常用于多Web Server场景，以及需要将Web Server异步运行的场景
 // 这是一个与进程相关的方法
 func Wait() {
-    readyChan <- struct{}{}
+    // 阻塞等待服务执行完成
     <- doneChan
+
+    glog.Printfln("%d: all servers shutdown", gproc.Pid())
 }
 
 

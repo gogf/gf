@@ -9,14 +9,10 @@ package gproc
 
 import (
     "os"
-    "fmt"
     "strings"
     "os/exec"
     "gitee.com/johng/gf/g/container/gmap"
-)
-
-const (
-    gCHILD_ARGS_MARK_NAME = "--gproc-child"
+    "fmt"
 )
 
 // 进程管理器
@@ -54,17 +50,6 @@ func NewProcess(path string, args []string, environment []string) *Process {
     // 当前工作目录
     if d, err := os.Getwd(); err == nil {
         p.Dir = d
-    }
-    // 判断是否加上子进程标识
-    hasChildMark := false
-    childMarkLen := len(gCHILD_ARGS_MARK_NAME)
-    for _, v := range args {
-        if len(v) >= childMarkLen && strings.EqualFold(v[0 : childMarkLen], gCHILD_ARGS_MARK_NAME) {
-            hasChildMark = true
-        }
-    }
-    if !hasChildMark {
-        p.Args = append(p.Args, gCHILD_ARGS_MARK_NAME)
     }
     if len(args) > 0 {
         start := 0
