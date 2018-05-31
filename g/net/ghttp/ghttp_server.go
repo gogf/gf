@@ -21,6 +21,8 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
+    "gitee.com/johng/gf/g/os/gspath"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 const (
@@ -38,6 +40,7 @@ const (
 type Server struct {
     // 基本属性变量
     name             string                   // 服务名称，方便识别
+    paths            *gspath.SPath            // 静态文件检索对象
     config           ServerConfig             // 配置对象
     status           int8                     // 当前服务器状态(0：未启动，1：运行中)
     servers          []*gracefulServer        // 底层http.Server列表
@@ -144,6 +147,7 @@ func GetServer(name...interface{}) (*Server) {
     }
     s := &Server {
         name             : sname,
+        paths            : gspath.New(),
         servers          : make([]*gracefulServer, 0),
         methodsMap       : make(map[string]bool),
         handlerMap       : make(HandlerMap),
@@ -183,6 +187,17 @@ func GetServer(name...interface{}) (*Server) {
 // 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行)
 // 需要结合Wait方式一起使用
 func (s *Server) Start() error {
+    // 如果设置了静态文件目录，那么严格按照静态文件目录进行检索
+    // 否则，默认使用当前可执行文件目录，并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索
+    if s.config.ServerRoot != "" {
+        s.paths.Set(s.config.ServerRoot)
+    } else {
+        s.paths.Set(gfile.SelfDir())
+        if p := gfile.MainPkgPath(); gfile.Exists(p) {
+            s.paths.Add(p)
+        }
+    }
+
     // 主进程，不执行任何业务，只负责进程管理
     if !gproc.IsChild() {
         return nil
