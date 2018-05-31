@@ -82,16 +82,17 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
     }
     l.PushBack(item)
 
-    //b,_ := gjson.New(s.hooksTree).ToJsonIndent()
-    //fmt.Println(string(b))
-
     return nil
 }
 
 // 事件回调 - 检索动态路由规则
 // 并按照指定hook回调函数的优先级及注册顺序进行调用
 func (s *Server) callHookHandler(r *Request, hook string) {
-    // 缓存清空时是直接修改属性，因此必须使用互斥锁
+    // 如果没有注册事件回调，那么不做后续处理
+    if len(s.hooksTree) == 0 {
+        return
+    }
+
     s.hhcmu.RLock()
     defer s.hhcmu.RUnlock()
 
@@ -116,11 +117,6 @@ func (s *Server) callHookHandler(r *Request, hook string) {
 }
 
 func (s *Server) searchHookHandler(r *Request, hook string) []*hookCacheItem {
-    // 一般不会注册事件回调，因此优先判断大小
-    if len(s.hooksTree) == 0 {
-        return nil
-    }
-
     s.hhmu.RLock()
     defer s.hhmu.RUnlock()
     hookItems := make([]*hookCacheItem, 0)

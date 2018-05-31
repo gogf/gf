@@ -49,10 +49,9 @@ func View() *gview.View {
             }
         }
         view := gview.Get(path)
-        // 添加代码级的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
-        mainDirPath := gfile.MainPkgPath()
-        if mainDirPath != "" {
-            view.AddPath(mainDirPath)
+        // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
+        if p := gfile.MainPkgPath(); gfile.Exists(p) {
+            view.AddPath(p)
         }
         Set(gFRAME_CORE_COMPONENT_NAME_VIEW, view)
         return view
@@ -75,10 +74,9 @@ func Config() *gcfg.Config {
             }
         }
         config := gcfg.New(path)
-        // 添加代码级的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
-        mainDirPath := gfile.MainPkgPath()
-        if mainDirPath != "" {
-            config.AddPath(mainDirPath)
+        // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
+        if p := gfile.MainPkgPath(); gfile.Exists(p) {
+            config.AddPath(p)
         }
         // 单例对象缓存控制
         Set(gFRAME_CORE_COMPONENT_NAME_CONFIG, config)

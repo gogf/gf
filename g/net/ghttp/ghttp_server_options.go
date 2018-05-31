@@ -175,7 +175,7 @@ func (s *Server)SetServerRoot(root string) error {
     if path == "" {
         return errors.New("invalid root path \"" + root + "\"")
     }
-    s.config.ServerRoot  = strings.TrimRight(path, string(gfile.Separator))
+    s.config.ServerRoot = strings.TrimRight(path, string(gfile.Separator))
     return nil
 }
 

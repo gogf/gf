@@ -38,24 +38,44 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 创建请求处理对象
     request := newRequest(s, r, w)
 
-    // 错误日志使用recover进行判断
     defer func() {
         if request.LeaveTime == 0 {
             request.LeaveTime = gtime.Microsecond()
         }
+        // access log
+        s.handleAccessLog(request)
+        // error log使用recover进行判断
         if e := recover(); e != nil {
             s.handleErrorLog(e, request)
         }
-        s.handleAccessLog(request)
+        // 将Request对象指针丢到队列中异步关闭
+        s.closeQueue.PushBack(request)
     }()
+
+    // 路由注册检索
+    handler := s.getHandler(request)
+    if handler == nil {
+        // 如果路由不匹配，那么执行静态文件检索
+        path := s.paths.Search(r.URL.Path)
+        if path != "" {
+            s.serveFile(request, path)
+        } else {
+            request.Response.WriteStatus(http.StatusNotFound)
+            request.Response.OutputBuffer()
+        }
+        return
+    }
+
+    // **********************************************
+    // 以下操作仅对路由控制有效，包括事件处理，不对静态文件有效
+    // **********************************************
 
     // 事件 - BeforeServe
     s.callHookHandler(request, "BeforeServe")
-    if h := s.getHandler(request); h != nil {
-        s.callHandler(h, request)
-    } else {
-        s.serveFile(request)
-    }
+
+    // 执行回调控制器/执行对象/方法
+    s.callHandler(handler, request)
+
     // 事件 - AfterServe
     s.callHookHandler(request, "AfterServe")
 
@@ -70,9 +90,6 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request.Response.OutputBuffer()
     // 事件 - AfterOutput
     s.callHookHandler(request, "AfterOutput")
-
-    // 将Request对象指针丢到队列中异步处理
-    s.closeQueue.PushBack(request)
 }
 
 // 初始化控制器
@@ -92,46 +109,21 @@ func (s *Server)callHandler(h *HandlerItem, r *Request) {
     }
 }
 
-// 处理静态文件请求
-func (s *Server)serveFile(r *Request) {
-    uri := r.URL.Path
-    if s.config.ServerRoot != "" {
-        // 获取文件的绝对路径
-        path := strings.TrimRight(s.config.ServerRoot, gfile.Separator)
-        if gfile.Separator != "/" {
-            uri = strings.Replace(uri, "/", gfile.Separator, -1)
-        }
-        path = path + uri
-        path = gfile.RealPath(path)
-        if path != "" {
-            // 文件/目录访问安全限制：服务的路径必须在ServerRoot下，否则会报错
-            if len(path) >= len(s.config.ServerRoot) && strings.EqualFold(path[0 : len(s.config.ServerRoot)], s.config.ServerRoot) {
-                s.doServeFile(r, path)
-            } else {
-                r.Response.WriteStatus(http.StatusForbidden)
-            }
-        } else {
-            r.Response.WriteStatus(http.StatusNotFound)
-        }
-    } else {
-        r.Response.WriteStatus(http.StatusNotFound)
-    }
-}
-
 // http server静态文件处理
-func (s *Server)doServeFile(r *Request, path string) {
+func (s *Server)serveFile(r *Request, path string) {
     f, err := os.Open(path)
     if err != nil {
         return
     }
     info, _ := f.Stat()
     if info.IsDir() {
+        // 处理访问目录
         if len(s.config.IndexFiles) > 0 {
             for _, file := range s.config.IndexFiles {
                 fpath := path + gfile.Separator + file
                 if gfile.Exists(fpath) {
                     f.Close()
-                    s.doServeFile(r, fpath)
+                    s.serveFile(r, fpath)
                     return
                 }
             }
