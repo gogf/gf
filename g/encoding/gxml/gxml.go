@@ -18,6 +18,10 @@ import (
 
 // 将XML内容解析为map变量
 func Decode(xmlbyte []byte) (map[string]interface{}, error) {
+    //@author wenzi1 
+    //@date 20180529
+	//XML中的encoding如果非UTF-8时mxj包中会自动转换，但是自动转换时需要调用方提供转换的方法,这里提供一个空方法
+	//所以如果涉及到字符集转换那么需要用户自行转为utf8时再调用该方法
 	if strings.Index(string(xmlbyte), "encoding=\"UTF-8\"") == -1 {
 		charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
 			reader := input
@@ -47,10 +51,8 @@ func EncodeWithIndent(v map[string]interface{}, rootTag...string) ([]byte, error
 
 // XML格式内容直接转换为JSON格式内容
 func ToJson(xmlbyte []byte) ([]byte, error) {
-	//input, _ := ioutil.ReadAll(bytes.NewReader(xmlbyte))
-	//input:= bytes.NewReader(xmlbyte)
-	//charset := "UTF-8"
-	//@wenzi1 20180529
+    //@author wenzi1 
+    //@date 20180529
 	//XML中的encoding如果非UTF-8时mxj包中会自动转换，但是自动转换时需要调用方提供转换的方法,这里提供一个空方法
 	//所以如果涉及到字符集转换那么需要用户自行转为utf8时再调用该方法
 	if strings.Index(string(xmlbyte), "encoding=\"UTF-8\"") == -1 { 
