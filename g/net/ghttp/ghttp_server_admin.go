@@ -82,7 +82,6 @@ func (p *utilAdmin) Shutdown(r *Request) {
     }
 }
 
-
 // 开启服务管理支持
 func (s *Server) EnableAdmin(pattern...string) {
     p := "/debug/admin"
@@ -92,10 +91,10 @@ func (s *Server) EnableAdmin(pattern...string) {
     s.BindObject(p, &utilAdmin{})
 }
 
-// 重启Web Server
+// 重启Web Server，参数支持自定义重启的可执行文件路径，不传递时默认和原有可执行文件路径一致。
 // 针对*niux系统: 平滑重启
 // 针对windows : 完整重启
-func (s *Server) Restart() error {
+func (s *Server) Restart(newExeFilePath...string) error {
     serverActionLocker.Lock()
     defer serverActionLocker.Unlock()
     if err := s.checkActionStatus(); err != nil {
@@ -104,7 +103,7 @@ func (s *Server) Restart() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
-    restartWebServers()
+    restartWebServers(newExeFilePath...)
     return nil
 }
 
@@ -145,8 +144,12 @@ func (s *Server) checkActionStatus() error {
 }
 
 // 平滑重启：创建一个子进程，通过环境变量传参
-func forkReloadProcess() {
-    p   := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
+func forkReloadProcess(newExeFilePath...string) {
+    path := os.Args[0]
+    if len(newExeFilePath) > 0 {
+        path = newExeFilePath[0]
+    }
+    p   := procManager.NewProcess(path, os.Args, os.Environ())
     // 创建新的服务进程，子进程自动从父进程复制文件描述来监听同样的端口
     sfm := getServerFdMap()
     // 将sfm中的fd按照子进程创建时的文件描述符顺序进行整理，以便子进程获取到正确的fd
@@ -176,12 +179,16 @@ func forkReloadProcess() {
 }
 
 // 完整重启：创建一个新的子进程
-func forkRestartProcess() {
+func forkRestartProcess(newExeFilePath...string) {
+    path := os.Args[0]
+    if len(newExeFilePath) > 0 {
+        path = newExeFilePath[0]
+    }
     // 去掉平滑重启的环境变量参数
     os.Unsetenv(gADMIN_ACTION_RELOAD_ENVKEY)
     env := os.Environ()
     env  = append(env, gADMIN_ACTION_RESTART_ENVKEY + "=1")
-    p := procManager.NewProcess(os.Args[0], os.Args, env)
+    p := procManager.NewProcess(path, os.Args, env)
     if _, err := p.Start(); err != nil {
         glog.Errorfln("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
     }
@@ -215,17 +222,17 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 }
 
 // Web Server重启
-func restartWebServers() {
+func restartWebServers(newExeFilePath...string) {
     serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
     glog.Printfln("%d: server restarting", gproc.Pid())
     if runtime.GOOS == "windows" {
         // 异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
         gtime.SetTimeout(time.Second, func() {
             forcedlyCloseWebServers()
-            forkRestartProcess()
+            forkRestartProcess(newExeFilePath...)
         })
     } else {
-        forkReloadProcess()
+        forkReloadProcess(newExeFilePath...)
         go gracefulShutdownWebServers()
         doneChan <- struct{}{}
     }
