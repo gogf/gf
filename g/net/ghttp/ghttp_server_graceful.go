@@ -15,6 +15,7 @@ import (
     "crypto/tls"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
+    "time"
 )
 
 // 优雅的Web Server对象封装
@@ -141,9 +142,18 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
             return nil, err
         }
     } else {
-        ln, err = net.Listen("tcp", addr)
+        // 如果监听失败，1秒后重试，最多重试3次
+        for i := 0; i < 3; i++ {
+            ln, err = net.Listen("tcp", addr)
+            if err != nil {
+                err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
+                time.Sleep(time.Second)
+            } else {
+                err = nil
+                break
+            }
+        }
         if err != nil {
-            err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
             return nil, err
         }
     }
