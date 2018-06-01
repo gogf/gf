@@ -1,7 +1,9 @@
 package main
 
-import "gitee.com/johng/gf/g/os/glog"
+import (
+    "gitee.com/johng/gf/geg/other/sleep"
+)
 
 func main() {
-    glog.Error(1)
+    sleep.Test()
 }

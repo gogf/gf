@@ -10,7 +10,6 @@ package ghttp
 import (
     "strings"
     "gitee.com/johng/gf/g/os/gview"
-    "runtime"
     "gitee.com/johng/gf/g/os/gproc"
     "sync"
     "gitee.com/johng/gf/g/os/gtime"
@@ -21,13 +20,14 @@ import (
     "os"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/util/gconv"
+    "time"
+    "runtime"
 )
 
 const (
-    gADMIN_ACTION_INTERVAL_LIMIT = 3000 // (毫秒)服务开启后允许执行管理操作的间隔限制
-    gADMIN_ACTION_RELOADING      = 1
-    gADMIN_ACTION_RESTARTING     = 2
-    gADMIN_ACTION_SHUTINGDOWN    = 4
+    gADMIN_ACTION_INTERVAL_LIMIT = 2000 // (毫秒)服务开启后允许执行管理操作的间隔限制
+    gADMIN_ACTION_RESTARTING     = 1
+    gADMIN_ACTION_SHUTINGDOWN    = 2
     gADMIN_ACTION_RELOAD_ENVKEY  = "gf.server.reload"
     gADMIN_ACTION_RESTART_ENVKEY = "gf.server.restart"
 )
@@ -55,7 +55,6 @@ func (p *utilAdmin) Index(r *Request) {
                 <title>gf ghttp admin</title>
             </head>
             <body>
-                <p><a href="{{$.uri}}/reload">reload</a></p>
                 <p><a href="{{$.uri}}/restart">restart</a></p>
                 <p><a href="{{$.uri}}/shutdown">shutdown</a></p>
             </body>
@@ -64,20 +63,7 @@ func (p *utilAdmin) Index(r *Request) {
     r.Response.Write(buffer)
 }
 
-// 服务热重启
-func (p *utilAdmin) Reload(r *Request) {
-    if runtime.GOOS == "windows" {
-        p.Restart(r)
-    } else {
-        if err := r.Server.Reload(); err == nil {
-            r.Response.Write("server reloaded")
-        } else {
-            r.Response.Write(err.Error())
-        }
-    }
-}
-
-// 服务完整重启
+// 服务重启
 func (p *utilAdmin) Restart(r *Request) {
     if err := r.Server.Restart(); err == nil {
         r.Response.Write("server restarted")
@@ -106,25 +92,9 @@ func (s *Server) EnableAdmin(pattern...string) {
     s.BindObject(p, &utilAdmin{})
 }
 
-// 平滑重启Web Server
-func (s *Server) Reload() error {
-    serverActionLocker.Lock()
-    defer serverActionLocker.Unlock()
-    if err := s.checkActionStatus(); err != nil {
-        return err
-    }
-    if err := s.checkActionFrequence(); err != nil {
-        return err
-    }
-    serverProcessStatus.Set(gADMIN_ACTION_RELOADING)
-    glog.Printfln("%d: server reloading", gproc.Pid())
-    forkReloadProcess()
-    go shutdownWebServers()
-    doneChan <- struct{}{}
-    return nil
-}
-
-// 完整重启Web Server
+// 重启Web Server
+// 针对*niux系统: 平滑重启
+// 针对windows : 完整重启
 func (s *Server) Restart() error {
     serverActionLocker.Lock()
     defer serverActionLocker.Unlock()
@@ -134,9 +104,7 @@ func (s *Server) Restart() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
-    serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
-    glog.Printfln("%d: server restarting", gproc.Pid())
-    doneChan <- struct{}{}
+    restartWebServers()
     return nil
 }
 
@@ -150,10 +118,7 @@ func (s *Server) Shutdown() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
-    serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
-    glog.Printfln("%d: server shutting down", gproc.Pid())
-    go closeWebServers()
-    doneChan <- struct{}{}
+    shutdownWebServers()
     return nil
 }
 
@@ -172,18 +137,14 @@ func (s *Server) checkActionStatus() error {
     status := serverProcessStatus.Val()
     if status > 0 {
         switch status {
-            case gADMIN_ACTION_RELOADING:
-                return errors.New("server is reloading")
-            case gADMIN_ACTION_RESTARTING:
-                return errors.New("server is restarting")
-            case gADMIN_ACTION_SHUTINGDOWN:
-                return errors.New("server is shutting down")
+            case gADMIN_ACTION_RESTARTING:  return errors.New("server is restarting")
+            case gADMIN_ACTION_SHUTINGDOWN: return errors.New("server is shutting down")
         }
     }
     return nil
 }
 
-// 创建一个子进程，通过环境变量传参
+// 平滑重启：创建一个子进程，通过环境变量传参
 func forkReloadProcess() {
     p   := procManager.NewProcess(os.Args[0], os.Args, os.Environ())
     // 创建新的服务进程，子进程自动从父进程复制文件描述来监听同样的端口
@@ -208,9 +169,21 @@ func forkReloadProcess() {
         }
     }
     buffer, _ := gjson.Encode(sfm)
-    p.Env = append(p.Env, fmt.Sprintf("%s=%s", gADMIN_ACTION_RELOAD_ENVKEY, string(buffer)))
+    p.Env = append(p.Env, gADMIN_ACTION_RELOAD_ENVKEY + "=" + string(buffer))
     if _, err := p.Start(); err != nil {
         glog.Errorfln("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
+    }
+}
+
+// 完整重启：创建一个新的子进程
+func forkRestartProcess() {
+    // 去掉平滑重启的环境变量参数
+    os.Unsetenv(gADMIN_ACTION_RELOAD_ENVKEY)
+    env := os.Environ()
+    env  = append(env, gADMIN_ACTION_RESTART_ENVKEY + "=1")
+    p := procManager.NewProcess(os.Args[0], os.Args, env)
+    if _, err := p.Start(); err != nil {
+        glog.Errorfln("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
     }
 }
 
@@ -241,9 +214,37 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
     return sfm
 }
 
+// Web Server重启
+func restartWebServers() {
+    serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
+    glog.Printfln("%d: server restarting", gproc.Pid())
+    if runtime.GOOS == "windows" {
+        // 异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+        gtime.SetTimeout(time.Second, func() {
+            forcedlyCloseWebServers()
+            forkRestartProcess()
+        })
+    } else {
+        forkReloadProcess()
+        go gracefulShutdownWebServers()
+        doneChan <- struct{}{}
+    }
+}
+
+// Web Server关闭服务
+func shutdownWebServers() {
+    serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
+    glog.Printfln("%d: server shutting down", gproc.Pid())
+    // 异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+    gtime.SetTimeout(time.Second, func() {
+        forcedlyCloseWebServers()
+        doneChan <- struct{}{}
+    })
+}
+
 // 关优雅闭进程所有端口的Web Server服务
 // 注意，只是关闭Web Server服务，并不是退出进程
-func shutdownWebServers() {
+func gracefulShutdownWebServers() {
     serverMapping.RLockFunc(func(m map[string]interface{}) {
         for _, v := range m {
             for _, s := range v.(*Server).servers {
@@ -255,7 +256,7 @@ func shutdownWebServers() {
 
 // 强制关闭进程所有端口的Web Server服务
 // 注意，只是关闭Web Server服务，并不是退出进程
-func closeWebServers() {
+func forcedlyCloseWebServers() {
     serverMapping.RLockFunc(func(m map[string]interface{}) {
         for _, v := range m {
             for _, s := range v.(*Server).servers {
