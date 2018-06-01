@@ -7,8 +7,6 @@ orm增加更多数据库支持；
 增加热编译工具，提高开发环境的开发/测试效率（媲美PHP开发效率）；
 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
 ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
-对grpool进行优化改进，包括属性原子操作封装采用gtype实现，修正设计BUG：https://github.com/johng-cn/gf/issues/6；
-平滑重启机制改进，以便于开发阶段调试；
 gredis增加redis密码支持；
 
 DONE:
@@ -34,7 +32,8 @@ DONE:
 20. 当二进制参数为nil时，gjson.LoadContent并将gjson.Json对象ToMap时会报错；
 21. 改进控制器及执行对象注册，更友好地支持动态路由注册，例如：注册规则为 /channel/:name，现有的控制器及执行对象注册很难友好支持这种动态形式；
 22. 当前gpage分页包的输出标签不支持li，大多数CSS框架都是li+a标签模式，需要提供可更加灵活的定制化功能实现；
-
+23. 平滑重启机制改进，以便于开发阶段调试；
+24. 对grpool进行优化改进，包括属性原子操作封装采用gtype实现，修正设计BUG：https://github.com/johng-cn/gf/issues/6；
 
 
 
