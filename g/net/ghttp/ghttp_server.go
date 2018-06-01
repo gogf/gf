@@ -117,6 +117,16 @@ var doneChan      = make(chan struct{}, 100000)
 
 // Web Server进程初始化
 func init() {
+    // 如果是完整重启，那么需要等待主进程销毁后，才开始执行监听，防止端口冲突
+    if genv.Get(gADMIN_ACTION_RESTART_ENVKEY) != "" {
+        if p, e := os.FindProcess(gproc.PPid()); e == nil {
+            p.Kill()
+            p.Wait()
+        } else {
+            glog.Error(e)
+        }
+    }
+
     // 信号量管理操作监听
     go handleProcessSignal()
 }
@@ -193,18 +203,17 @@ func (s *Server) Start() error {
     }
 
     // 启动http server
+    reloaded := false
     fdMapStr := genv.Get(gADMIN_ACTION_RELOAD_ENVKEY)
     if len(fdMapStr) > 0 {
         sfm := bufferToServerFdMap([]byte(fdMapStr))
-        for k, v := range sfm {
-            GetServer(k).startServer(v)
+        if v, ok := sfm[s.name]; ok {
+            s.startServer(v)
+            reloaded = true
         }
-    } else {
-        serverMapping.RLockFunc(func(m map[string]interface{}) {
-            for _, v := range m {
-                v.(*Server).startServer(nil)
-            }
-        })
+    }
+    if !reloaded {
+        s.startServer(nil)
     }
 
     // 开启异步关闭队列处理循环
