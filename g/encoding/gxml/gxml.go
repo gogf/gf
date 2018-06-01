@@ -11,18 +11,28 @@ import (
     "github.com/clbanning/mxj"
     "encoding/xml"
     "io"
+    "strings"
+    "golang.org/x/text/transform"
+	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
-// 将XML内容解析为map变量,入口参数使用的字符集必须为UTF-8的
+// 将XML内容解析为map变量
 func Decode(xmlbyte []byte) (map[string]interface{}, error) {
-    //@author wenzi1  
-    //@date   2018-05-29
-	//XML中的encoding如果非UTF-8时mxj包中会自动转换，但是自动转换时需要调用方提供转换的方法,这里提供一个空方法
-	//所以如果涉及到字符集转换那么需要用户自行转为utf8时再调用该方法
-    charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
-		return input, nil
-	}	
-	mxj.CustomDecoder = &xml.Decoder{CharsetReader:charsetReader}
+	if strings.Index(string(xmlbyte), "encoding=\"UTF-8\"") == -1 {
+		charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
+			reader := input
+			switch charset {
+			case "GBK":
+				reader = transform.NewReader(input,simplifiedchinese.GBK.NewDecoder())
+			case "GB18030":
+				reader = transform.NewReader(input, simplifiedchinese.GB18030.NewDecoder())
+			default:
+				reader = input
+			}
+			return reader, nil
+		}	
+		mxj.CustomDecoder = &xml.Decoder{Strict:false,CharsetReader:charsetReader}
+	}
     return mxj.NewMapXml(xmlbyte)
 }
 
@@ -35,17 +45,32 @@ func EncodeWithIndent(v map[string]interface{}, rootTag...string) ([]byte, error
     return mxj.Map(v).XmlIndent("", "\t", rootTag...)
 }
 
-// XML格式内容直接转换为JSON格式内容,入口参数使用的字符集必须为UTF-8的
+// XML格式内容直接转换为JSON格式内容
 func ToJson(xmlbyte []byte) ([]byte, error) {
-    //@author wenzi1  
-    //@date   2018-05-29
+	//input, _ := ioutil.ReadAll(bytes.NewReader(xmlbyte))
+	//input:= bytes.NewReader(xmlbyte)
+	//charset := "UTF-8"
+	//@wenzi1 20180529
 	//XML中的encoding如果非UTF-8时mxj包中会自动转换，但是自动转换时需要调用方提供转换的方法,这里提供一个空方法
 	//所以如果涉及到字符集转换那么需要用户自行转为utf8时再调用该方法
-	charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
-		return input, nil
-	}	
-	mxj.CustomDecoder = &xml.Decoder{CharsetReader:charsetReader}
-    if mv, err := mxj.NewMapXml(xmlbyte); err == nil {
+	if strings.Index(string(xmlbyte), "encoding=\"UTF-8\"") == -1 { 
+		charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
+			reader := input
+			switch charset {
+			case "GBK":
+				reader = transform.NewReader(input,simplifiedchinese.GBK.NewDecoder())
+			case "GB18030":
+				reader = transform.NewReader(input, simplifiedchinese.GB18030.NewDecoder())
+			default:
+				reader = input
+			}
+			return reader, nil
+		}	
+		mxj.CustomDecoder = &xml.Decoder{Strict:false,CharsetReader:charsetReader}
+	}
+	mv, err := mxj.NewMapXml(xmlbyte)
+	
+	if err == nil {
         return mv.Json()
     } else {
         return nil, err
