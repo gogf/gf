@@ -65,7 +65,14 @@ func (p *utilAdmin) Index(r *Request) {
 
 // 服务重启
 func (p *utilAdmin) Restart(r *Request) {
-    if err := r.Server.Restart(); err == nil {
+    var err error = nil
+    path := r.GetQueryString("newExeFilePath")
+    if len(path) > 0 {
+        err = r.Server.Restart(path)
+    } else {
+        err = r.Server.Restart()
+    }
+    if err == nil {
         r.Response.Write("server restarted")
     } else {
         r.Response.Write(err.Error())
