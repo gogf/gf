@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>gf websocket echo server</title>
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="list-group" id="divShow"></div>
+    <div>
+        <div><input class="form-control" id="txtContent" autofocus rows="6" placeholder="请输入发送内容"></div>
+        <div><button class="btn btn-default" id="btnSend" style="margin-top:15px">发 送</button></div>
+    </div>
+</div>
+</body>
+</html>
+
+<script type="application/javascript">
+    // 显示提示信息
+    function showInfo(content) {
+        $("<div class=\"list-group-item list-group-item-info\">" + content + "</div>").appendTo("#divShow")
+    }
+    // 显示警告信息
+    function showWaring(content) {
+        $("<div class=\"list-group-item list-group-item-warning\">" + content + "</div>").appendTo("#divShow")
+    }
+    // 显示成功信息
+    function showSuccess(content) {
+        $("<div class=\"list-group-item list-group-item-success\">" + content + "</div>").appendTo("#divShow")
+    }
+    // 显示错误信息
+    function showError(content) {
+        $("<div class=\"list-group-item list-group-item-danger\">" + content + "</div>").appendTo("#divShow")
+    }
+
+    $(function () {
+        var url = "ws://127.0.0.1:8199/ws";
+        var ws  = new WebSocket(url);
+        try {
+            // ws连接成功
+            ws.onopen = function () {
+                showInfo("WebSocket Server [" + url +"] 连接成功！");
+            };
+            // ws连接关闭
+            ws.onclose = function () {
+                if (ws) {
+                    ws.close();
+                    ws = null;
+                }
+                showError("WebSocket Server [" + url +"] 连接关闭！");
+            };
+            // ws连接错误
+            ws.onerror = function () {
+                if (ws) {
+                    ws.close();
+                    ws = null;
+                }
+                showError("WebSocket Server [" + url +"] 连接关闭！");
+            };
+            // ws数据返回处理
+            ws.onmessage = function (result) {
+                showWaring(" > " + result.data);
+            };
+        } catch (e) {
+            alert(e.message);
+        }
+
+        // 按钮点击发送数据
+        $("#btnSend").on("click", function () {
+            if (ws == null) {
+                showError("WebSocket Server [" + url +"] 连接失败，请F5刷新页面!");
+                return;
+            }
+            var content = $.trim($("#txtContent").val()).replace("/[\n]/g", "");
+            if (content.length <= 0) {
+                alert("请输入发送内容!");
+                return;
+            }
+            $("#txtContent").val("")
+            showSuccess(content);
+            ws.send(content);
+        });
+
+        // 回车按钮触发发送点击事件
+        $("#txtContent").on("keydown", function (event) {
+            if (event.keyCode == 13) {
+                $("#btnSend").trigger("click");
+            }
+        });
+    })
+
+</script>
