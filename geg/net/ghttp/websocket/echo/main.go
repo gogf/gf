@@ -1,4 +1,4 @@
-package echo
+package main
 
 import (
     "gitee.com/johng/gf/g"
