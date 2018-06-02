@@ -80,6 +80,7 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
         * [平滑重启特性](http://gf.johng.cn/625833)
         * [服务性能分析](http://gf.johng.cn/592298)
         * [服务日志管理](http://gf.johng.cn/596202)
+        * [WebSocket服务](http://gf.johng.cn/643193)
         * [自定义状态码处理](http://gf.johng.cn/609401)
 * [网络服务开发](http://gf.johng.cn/494648)
     * [TCPServer](http://gf.johng.cn/494382)
