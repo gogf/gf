@@ -156,7 +156,7 @@ func forkReloadProcess(newExeFilePath...string) {
     if len(newExeFilePath) > 0 {
         path = newExeFilePath[0]
     }
-    p   := procManager.NewProcess(path, os.Args, os.Environ())
+    p   := gproc.NewProcess(path, os.Args, os.Environ())
     // 创建新的服务进程，子进程自动从父进程复制文件描述来监听同样的端口
     sfm := getServerFdMap()
     // 将sfm中的fd按照子进程创建时的文件描述符顺序进行整理，以便子进程获取到正确的fd
@@ -195,7 +195,7 @@ func forkRestartProcess(newExeFilePath...string) {
     os.Unsetenv(gADMIN_ACTION_RELOAD_ENVKEY)
     env := os.Environ()
     env  = append(env, gADMIN_ACTION_RESTART_ENVKEY + "=1")
-    p := procManager.NewProcess(path, os.Args, env)
+    p   := gproc.NewProcess(path, os.Args, env)
     if _, err := p.Start(); err != nil {
         glog.Errorfln("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
     }

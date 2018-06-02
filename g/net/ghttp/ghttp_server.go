@@ -24,6 +24,7 @@ import (
     "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/genv"
+    "github.com/gorilla/websocket"
 )
 
 const (
@@ -48,7 +49,6 @@ type Server struct {
     methodsMap       map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
     servedCount      *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
     closeQueue       *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
-    signalQueue      chan os.Signal           // 终端命令行监听队列
     // 服务注册相关
     hmmu             sync.RWMutex             // handler互斥锁
     hmcmu            sync.RWMutex             // handlerCache互斥锁
@@ -98,7 +98,7 @@ type HandlerItem struct {
     router   *Router      // 注册时绑定的路由对象
 }
 
-// http注册函数
+// HTTP注册函数
 type HandlerFunc func(r *Request)
 
 // 文件描述符map
@@ -107,13 +107,11 @@ type listenerFdMap map[string]string
 // Server表，用以存储和检索名称与Server对象之间的关联关系
 var serverMapping = gmap.NewStringInterfaceMap()
 
-// Web Server多进程管理器
-var procManager   = gproc.NewManager()
+// Web Socket默认配置
+var wsUpgrader    = websocket.Upgrader{}
 
-// Web Server开始执行事件通道，由于同一个进程支持多Server，因此该通道为非阻塞
-var readyChan     = make(chan struct{}, 100000)
 // Web Server已完成服务事件通道，当有事件时表示服务完成，当前进程退出
-var doneChan      = make(chan struct{}, 100000)
+var doneChan      = make(chan struct{}, 1000)
 
 // Web Server进程初始化
 func init() {
@@ -159,7 +157,6 @@ func GetServer(name...interface{}) (*Server) {
         sessionIdName    : gtype.NewString(gDEFAULT_SESSION_ID_NAME),
         servedCount      : gtype.NewInt(),
         closeQueue       : gqueue.New(),
-        signalQueue      : make(chan os.Signal),
         logPath          : gtype.NewString(),
         accessLogEnabled : gtype.NewBool(),
         errorLogEnabled  : gtype.NewBool(true),
