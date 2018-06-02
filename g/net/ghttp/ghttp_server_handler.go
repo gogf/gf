@@ -117,17 +117,20 @@ func (s *Server)serveFile(r *Request, path string) {
     }
     info, _ := f.Stat()
     if info.IsDir() {
-        // 处理访问目录
+        // 处理index files
         if len(s.config.IndexFiles) > 0 {
             for _, file := range s.config.IndexFiles {
-                fpath := path + gfile.Separator + file
-                if gfile.Exists(fpath) {
+                // 这里使用s.paths来检索，而不是直接使用path，避免多目录检索情况
+                // 例如：/tmp目录及源码目录都存在的情况按照优先级会返回/tmp，但是index files只在源码目录中存在
+                fpath := s.paths.Search(r.URL.Path + gfile.Separator + file)
+                if fpath != "" {
                     f.Close()
                     s.serveFile(r, fpath)
                     return
                 }
             }
         }
+        // 处理访问目录
         if s.config.IndexFolder {
             s.listDir(r, f)
         } else {

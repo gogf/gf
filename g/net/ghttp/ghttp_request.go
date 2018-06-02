@@ -58,7 +58,6 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
     return request
 }
 
-
 // 初始化GET请求参数
 func (r *Request) initGet() {
     if !r.parsedGet.Val() {
@@ -79,6 +78,17 @@ func (r *Request) initPost() {
         r.parsedPost.Set(true)
         // MultiMedia表单请求解析允许最大使用内存：1GB
         r.ParseMultipartForm(1024*1024*1024)
+    }
+}
+
+// 获取Web Socket连接对象
+func (r *Request) WebSocket() (*WebSocket, error) {
+    if conn, err := wsUpgrader.Upgrade(r.Response.ResponseWriter.ResponseWriter, &r.Request, nil); err == nil {
+        return &WebSocket {
+            conn,
+        }, nil
+    } else {
+        return nil, err
     }
 }
 
