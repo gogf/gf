@@ -8,13 +8,13 @@ import (
 func main() {
     s := g.Server()
     s.BindHandler("/ws", func(r *ghttp.Request) {
-        conn, _ := r.WebSocket()
+        ws, _ := r.WebSocket()
         for {
-            msgType, msg, err := conn.ReadMessage()
+            msgType, msg, err := ws.ReadMessage()
             if err != nil {
                 return
             }
-            if err = conn.WriteMessage(msgType, msg); err != nil {
+            if err = ws.WriteMessage(msgType, msg); err != nil {
                 return
             }
         }
