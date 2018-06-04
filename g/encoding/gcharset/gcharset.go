@@ -5,6 +5,9 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 //gcharset
+//@author wenzi1
+//@date   20180604
+
 package gcharset
 
 import (
