@@ -44,8 +44,7 @@ type PoolStats struct {
 // 连接池map
 var pools = gmap.NewStringInterfaceMap()
 
-// 创建redis操作对象
-// address参数格式 host:port
+// 创建redis操作对象.
 func New(config Config) *Redis {
     r       := &Redis{}
     poolKey := fmt.Sprintf("%s:%d,%d", config.Host, config.Port, config.Db)
