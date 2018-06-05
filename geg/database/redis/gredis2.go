@@ -2,15 +2,12 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/database/gredis"
 )
 
 func main() {
-    redis := gredis.New(gredis.Config{
-        Host : "127.0.0.1",
-        Port : 6379,
-    })
+    redis := g.Redis()
     defer redis.Close()
     redis.Do("SET", "k1", "v1")
     redis.Do("SET", "k2", "v2")
