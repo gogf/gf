@@ -8,7 +8,6 @@
 package g
 
 import (
-    "strings"
     "gitee.com/johng/gf/g/os/gcfg"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/util/gconv"
@@ -20,6 +19,7 @@ import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/net/gtcp"
     "gitee.com/johng/gf/g/net/gudp"
+    "gitee.com/johng/gf/g/util/gregx"
 )
 
 const (
@@ -138,10 +138,16 @@ func Redis(name...string) *gredis.Redis {
         return nil
     }
     if m := config.GetMap("redis"); m != nil {
+        // host:port[,db[,pass]]
         if v, ok := m[group]; ok {
-            array := strings.Split(gconv.String(v), ",")
-            if len(array) > 1 {
-                return gredis.New(array[0], array[1])
+            array, err := gregx.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, gconv.String(v))
+            if err == nil {
+                return gredis.New(gredis.Config{
+                    Host : array[1],
+                    Port : gconv.Int(array[2]),
+                      Db : gconv.Int(array[3]),
+                    Pass : array[4],
+                })
             }
         }
     }
