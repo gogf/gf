@@ -11,8 +11,10 @@ import (
     "github.com/clbanning/mxj"
     "encoding/xml"
     "io"
-	"gitee.com/johng/gf/g/encoding/gcharset"
 	"gitee.com/johng/gf/g/util/gregx"
+	"github.com/axgle/mahonia"
+	"errors"
+	"fmt"
 )
 
 // 将XML内容解析为map变量
@@ -47,9 +49,9 @@ func ToJson(xmlbyte []byte) ([]byte, error) {
 func Prepare(xmlbyte []byte) error {
 	patten := "<\\?xml\\s+version\\s*=.*?\\s+encoding\\s*=\\s*[\\'|\"](.*?)[\\'|\"]\\s*\\?\\s*>"
 	charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
-		reader, err := gcharset.GetCharset(charset)
-		if err != nil {
-			return nil, err
+		reader := mahonia.GetCharset(charset)
+		if reader == nil {
+			return nil, errors.New(fmt.Sprintf("not support charset:%s", charset))
 		}
 		return reader.NewDecoder().NewReader(input), nil
 	}
@@ -59,9 +61,9 @@ func Prepare(xmlbyte []byte) error {
 		return err
 	}
 
-	charset, err := gcharset.GetCharset(matchStr[1])
-	if err != nil {
-		return err
+	charset := mahonia.GetCharset(matchStr[1])
+	if charset == nil {
+		return errors.New(fmt.Sprintf("not support charset:%s", matchStr[1]))
 	}
 
 	if charset.Name != "UTF-8" {
