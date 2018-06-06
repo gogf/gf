@@ -18,15 +18,6 @@ import (
 )
 
 
-
-//获取支持的字符集
-func GetCharset(name string) (*mahonia.Charset, error) {
-	s := mahonia.GetCharset(name)
-	if s == nil {
-		return nil, errors.New(fmt.Sprintf("not support charset: %s", name))
-	}
-	return s, nil
-}
 //2个字符集之间的转换
 func Convert(dstCharset string, srcCharset string, src string) (dst string, err error) {
 	s := mahonia.GetCharset(srcCharset)
