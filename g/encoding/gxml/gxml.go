@@ -11,7 +11,7 @@ import (
     "github.com/clbanning/mxj"
     "encoding/xml"
     "io"
-	"gitee.com/wenzi1/gf/g/encoding/gcharset"
+	"gitee.com/johng/gf/g/encoding/gcharset"
 	"gitee.com/johng/gf/g/util/gregx"
 )
 
