@@ -7,7 +7,8 @@
 //gcharset
 //@author wenzi1
 //@date   20180604
-
+//字符集转换方法.
+//使用mahonia实现的字符集转换方法，支持的字符集包括常见的utf8/UTF-16/UTF-16LE/macintosh/big5/gbk/gb18030,支持的全量字符集可以参考mahonia包
 package gcharset
 
 import (
@@ -15,6 +16,8 @@ import (
 	"errors"
 	"fmt"
 )
+
+
 
 //获取支持的字符集
 func GetCharset(name string) (*mahonia.Charset, error) {

@@ -11,7 +11,7 @@ import (
     "github.com/clbanning/mxj"
     "encoding/xml"
     "io"
-	"gitee.com/johng/gf/g/encoding/gcharset"
+	"gitee.com/wenzi1/gf/g/encoding/gcharset"
 	"gitee.com/johng/gf/g/util/gregx"
 )
 
@@ -45,7 +45,7 @@ func ToJson(xmlbyte []byte) ([]byte, error) {
 //@author wenzi1 
 //@date 20180604
 func Prepare(xmlbyte []byte) error {
-	patten := "<\\?xml\\s+.*?\\s+encoding=\"(.*?)\""
+	patten := "<\\?xml\\s+version\\s*=.*?\\s+encoding\\s*=\\s*[\\'|\"](.*?)[\\'|\"]\\s*\\?\\s*>"
 	charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
 		reader, err := gcharset.GetCharset(charset)
 		if err != nil {
