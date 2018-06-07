@@ -1,9 +1,25 @@
-package gcharset
+package mahonia
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
 )
 
+var nameTests = map[string]string{
+	"utf8":       "utf8",
+	"ISO 8859-1": "iso88591",
+	"Big5":       "big5",
+	"":           "",
+}
+
+func TestSimplifyName(t *testing.T) {
+	for name, simple := range nameTests {
+		if simple != simplifyName(name) {
+			t.Errorf("%s came out as %s instead of as %s", name, simplifyName(name), simple)
+		}
+	}
+}
 
 var testData = []struct {
 	utf8, other, otherEncoding string
@@ -51,28 +67,46 @@ var testData = []struct {
 
 func TestDecode(t *testing.T) {
 	for _, data := range testData {
-		str := ""
-		str, err := Convert("UTF-8", data.otherEncoding, data.other)
-		if err != nil {
-			t.Errorf("Could not create decoder for %v", err)
+		d := NewDecoder(data.otherEncoding)
+		if d == nil {
+			t.Errorf("Could not create decoder for %s", data.otherEncoding)
 			continue
 		}
-		
+
+		str := d.ConvertString(data.other)
+
 		if str != data.utf8 {
 			t.Errorf("Unexpected value: %#v (expected %#v)", str, data.utf8)
 		}
 	}
 }
 
+func TestDecodeTranslate(t *testing.T) {
+	for _, data := range testData {
+		d := NewDecoder(data.otherEncoding)
+		if d == nil {
+			t.Errorf("Could not create decoder for %s", data.otherEncoding)
+			continue
+		}
+
+		_, cdata, _ := d.Translate([]byte(data.other), true)
+		str := string(cdata)
+
+		if str != data.utf8 {
+			t.Errorf("Unexpected value: %#v (expected %#v)", str, data.utf8)
+		}
+	}
+}
 
 func TestEncode(t *testing.T) {
 	for _, data := range testData {
-		str := ""
-		str, err := Convert(data.otherEncoding, "UTF-8", data.utf8)
-		if err != nil {
-			t.Errorf("Could not create decoder for %v", err)
+		e := NewEncoder(data.otherEncoding)
+		if e == nil {
+			t.Errorf("Could not create encoder for %s", data.otherEncoding)
 			continue
 		}
+
+		str := e.ConvertString(data.utf8)
 
 		if str != data.other {
 			t.Errorf("Unexpected value: %#v (expected %#v)", str, data.other)
@@ -80,19 +114,60 @@ func TestEncode(t *testing.T) {
 	}
 }
 
-func TestConvert(t *testing.T) {
-	srcCharset := "big5"
-	src := "Hello \xb1`\xa5\u03b0\xea\xa6r\xbc\u0437\u01e6r\xc5\xe9\xaa\xed"
-	dstCharset := "gbk"
-	dst := "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed"
+func TestReader(t *testing.T) {
+	for _, data := range testData {
+		d := NewDecoder(data.otherEncoding)
+		if d == nil {
+			t.Errorf("Could not create decoder for %s", data.otherEncoding)
+			continue
+		}
 
-	str, err := Convert(dstCharset, srcCharset, src)
-	if err != nil {
-		t.Errorf("convert error. %v", err)
-		return
+		b := bytes.NewBufferString(data.other)
+		r := d.NewReader(b)
+		result, _ := ioutil.ReadAll(r)
+		str := string(result)
+
+		if str != data.utf8 {
+			t.Errorf("Unexpected value: %#v (expected %#v)", str, data.utf8)
+		}
 	}
+}
 
-	if str != dst {
-		t.Errorf("unexpected value:%#v (expected %#v)", str, dst)
+func TestWriter(t *testing.T) {
+	for _, data := range testData {
+		e := NewEncoder(data.otherEncoding)
+		if e == nil {
+			t.Errorf("Could not create encoder for %s", data.otherEncoding)
+			continue
+		}
+
+		b := new(bytes.Buffer)
+		w := e.NewWriter(b)
+		w.Write([]byte(data.utf8))
+		str := b.String()
+
+		if str != data.other {
+			t.Errorf("Unexpected value: %#v (expected %#v)", str, data.other)
+		}
+	}
+}
+
+func TestFallback(t *testing.T) {
+	mixed := "résum\xe9 " // The space is needed because of the issue mentioned in the Note: in fallback.go
+	pure := "résumé "
+	d := FallbackDecoder(NewDecoder("utf8"), NewDecoder("ISO-8859-1"))
+	result := d.ConvertString(mixed)
+	if result != pure {
+		t.Errorf("Unexpected value: %#v (expected %#v)", result, pure)
+	}
+}
+
+func TestEntities(t *testing.T) {
+	escaped := "&notit; I'm &notin; I tell you&#X82&#32;&nLt; "
+	plain := "¬it; I'm ∉ I tell you\u201a \u226A\u20D2 "
+	d := FallbackDecoder(EntityDecoder(), NewDecoder("ISO-8859-1"))
+	result := d.ConvertString(escaped)
+	if result != plain {
+		t.Errorf("Unexpected value: %#v (expected %#v)", result, plain)
 	}
 }

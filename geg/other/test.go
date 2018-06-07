@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-    a , e := gregx.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, "127.0.0.1:12333")
+    a , e := gregx.MatchString(`<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`, `<?xml version= '1.0' encoding = "utf-8" ?>`)
     fmt.Println(e)
     for k, v := range a {
         fmt.Printf("%d:%v\n", k, v)
