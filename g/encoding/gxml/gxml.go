@@ -15,11 +15,12 @@ import (
 	"github.com/axgle/mahonia"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // 将XML内容解析为map变量
 func Decode(xmlbyte []byte) (map[string]interface{}, error) {
-    Prepare(xmlbyte)
+    prepare(xmlbyte)
     return mxj.NewMapXml(xmlbyte)
 }
 
@@ -34,7 +35,7 @@ func EncodeWithIndent(v map[string]interface{}, rootTag...string) ([]byte, error
 
 // XML格式内容直接转换为JSON格式内容
 func ToJson(xmlbyte []byte) ([]byte, error) {
-    Prepare(xmlbyte)
+    prepare(xmlbyte)
 	mv, err := mxj.NewMapXml(xmlbyte)
 	if err == nil {
         return mv.Json()
@@ -43,11 +44,11 @@ func ToJson(xmlbyte []byte) ([]byte, error) {
     }
 }
 
-//XML字符集预处理
-//@author wenzi1 
-//@date 20180604
-func Prepare(xmlbyte []byte) error {
-	patten := "<\\?xml\\s+version\\s*=.*?\\s+encoding\\s*=\\s*[\\'|\"](.*?)[\\'|\"]\\s*\\?\\s*>"
+// XML字符集预处理
+// @author wenzi1
+// @date 20180604
+func prepare(xmlbyte []byte) error {
+	patten := `<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`
 	charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
 		reader := mahonia.GetCharset(charset)
 		if reader == nil {
@@ -66,8 +67,8 @@ func Prepare(xmlbyte []byte) error {
 		return errors.New(fmt.Sprintf("not support charset:%s", matchStr[1]))
 	}
 
-	if charset.Name != "UTF-8" {
-		mxj.CustomDecoder = &xml.Decoder{Strict:false,CharsetReader:charsetReader}
+	if !strings.EqualFold(charset.Name, "UTF-8") {
+		mxj.CustomDecoder = &xml.Decoder{Strict : false, CharsetReader : charsetReader}
 	}
 	return nil
 }
