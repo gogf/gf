@@ -9,10 +9,17 @@ package gxml
 
 import (
     "github.com/clbanning/mxj"
+    "encoding/xml"
+    "io"
+	"gitee.com/johng/gf/g/util/gregx"
+	"github.com/axgle/mahonia"
+	"errors"
+	"fmt"
 )
 
 // 将XML内容解析为map变量
 func Decode(xmlbyte []byte) (map[string]interface{}, error) {
+    Prepare(xmlbyte)
     return mxj.NewMapXml(xmlbyte)
 }
 
@@ -27,9 +34,40 @@ func EncodeWithIndent(v map[string]interface{}, rootTag...string) ([]byte, error
 
 // XML格式内容直接转换为JSON格式内容
 func ToJson(xmlbyte []byte) ([]byte, error) {
-    if mv, err := mxj.NewMapXml(xmlbyte); err == nil {
+    Prepare(xmlbyte)
+	mv, err := mxj.NewMapXml(xmlbyte)
+	if err == nil {
         return mv.Json()
     } else {
         return nil, err
     }
+}
+
+//XML字符集预处理
+//@author wenzi1 
+//@date 20180604
+func Prepare(xmlbyte []byte) error {
+	patten := "<\\?xml\\s+version\\s*=.*?\\s+encoding\\s*=\\s*[\\'|\"](.*?)[\\'|\"]\\s*\\?\\s*>"
+	charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
+		reader := mahonia.GetCharset(charset)
+		if reader == nil {
+			return nil, errors.New(fmt.Sprintf("not support charset:%s", charset))
+		}
+		return reader.NewDecoder().NewReader(input), nil
+	}
+
+	matchStr, err := gregx.MatchString(patten, string(xmlbyte))
+	if err != nil {
+		return err
+	}
+
+	charset := mahonia.GetCharset(matchStr[1])
+	if charset == nil {
+		return errors.New(fmt.Sprintf("not support charset:%s", matchStr[1]))
+	}
+
+	if charset.Name != "UTF-8" {
+		mxj.CustomDecoder = &xml.Decoder{Strict:false,CharsetReader:charsetReader}
+	}
+	return nil
 }
