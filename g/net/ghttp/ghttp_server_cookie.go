@@ -64,6 +64,17 @@ func (c *Cookie) init() {
     c.mu.Unlock()
 }
 
+// 获取所有的Cookie并构造成map返回
+func (c *Cookie) Map() map[string]string {
+    m := make(map[string]string)
+    c.mu.RLock()
+    defer c.mu.RUnlock()
+    for k, v := range c.data {
+        m[k] = v.value
+    }
+    return m
+}
+
 // 获取SessionId
 func (c *Cookie) SessionId() string {
     v := c.Get(c.server.GetSessionIdName())
