@@ -19,7 +19,8 @@ import (
 
 // http客户端
 type Client struct {
-    http.Client
+    http.Client              // 底层http client对象
+    header map[string]string // header
 }
 
 // http客户端对象指针
@@ -30,7 +31,13 @@ func NewClient() (*Client) {
                 DisableKeepAlives: true,
             },
         },
+        make(map[string]string),
     }
+}
+
+// 设置HTTP Headerss
+func (c *Client) SetHeader(key, value string) {
+    c.header[key] = value
 }
 
 // 设置请求过期时间
@@ -52,8 +59,7 @@ func (c *Client) Put(url, data string) (*ClientResponse, error) {
 // 支持文件上传，需要字段格式为：FieldName=@file:
 func (c *Client) Post(url, data string) (*ClientResponse, error) {
     var req *http.Request
-    hasfile := strings.Contains(data, "@file:")
-    if hasfile {
+    if strings.Contains(data, "@file:") {
         buffer := new(bytes.Buffer)
         writer := multipart.NewWriter(buffer)
         for _, item := range strings.Split(data, "&") {
@@ -88,6 +94,12 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
         } else {
             req = r
             req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+        }
+    }
+    // 自定义header
+    if len(c.header) > 0 {
+        for k, v := range c.header {
+            req.Header.Set(k, v)
         }
     }
     // 执行请求
@@ -134,7 +146,13 @@ func (c *Client) DoRequest(method, url string, data []byte) (*ClientResponse, er
     if err != nil {
         return nil, err
     }
-
+    // 自定义header
+    if len(c.header) > 0 {
+        for k, v := range c.header {
+            req.Header.Set(k, v)
+        }
+    }
+    // 执行请求
     resp, err := c.Do(req)
     if err != nil {
         return nil, err
