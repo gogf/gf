@@ -8,7 +8,6 @@ orm增加更多数据库支持；
 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
 ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
 Cookie&Session数据池化处理；
-gcfg包增加可自定义默认配置文件类型的特性(目前默认为toml)；
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
