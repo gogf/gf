@@ -6,15 +6,16 @@ import (
 )
 
 func main () {
-    client := gkafka.New(gkafka.Config{
-        GroupId : "group_1",
-        Servers : "localhost:9092",
-        Topics  : "abc",
-    })
+    config        := gkafka.NewConfig()
+    config.GroupId = "group_2"
+    config.Servers = "localhost:9092"
+    config.Topics  = "abc"
+
+    client := gkafka.New(config)
     defer client.Close()
+
     for {
        msg, err := client.Receive()
-       fmt.Println(err)
-       fmt.Println(string(msg.Value))
+       fmt.Printf("value: %s, err: %v", string(msg.Value), err)
     }
 }
