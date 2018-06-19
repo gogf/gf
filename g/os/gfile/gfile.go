@@ -227,6 +227,11 @@ func Copy(src string, dst string) error {
     return nil
 }
 
+// 文件名正则匹配查找
+func Glob(pattern string) ([]string, error) {
+    return filepath.Glob(pattern)
+}
+
 // 文件/目录删除
 func Remove(path string) error {
     return os.RemoveAll(path)
