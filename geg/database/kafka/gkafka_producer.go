@@ -6,10 +6,11 @@ import (
 )
 
 func main () {
-    client := gkafka.New(gkafka.Config{
-        Servers : "localhost:9092",
-        Topics  : "abc",
-    })
+    config        := gkafka.NewConfig()
+    config.Servers = "localhost:9092"
+    config.Topics  = "abc"
+
+    client := gkafka.New(config)
     defer client.Close()
     err := client.SyncSend(&gkafka.Message{Value: []byte("111")})
     fmt.Println(err)
