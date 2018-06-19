@@ -35,7 +35,7 @@ var cmdFuncMap = make(map[string]func()) // 终端命令及函数地址对应表
 // 初始化时执行，不影响运行时性能
 func init() {
     Option.options = make(map[string]string)
-    reg       := regexp.MustCompile(`\-\-{0,1}(\w+?)=(.+)`)
+    reg       := regexp.MustCompile(`\-\-{0,1}(.+?)=(.+)`)
     for i := 0; i < len(os.Args); i++ {
         result := reg.FindStringSubmatch(os.Args[i])
         if len(result) > 1 {
