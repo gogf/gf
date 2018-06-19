@@ -12,6 +12,9 @@ import "gitee.com/johng/gf/g/encoding/gurl"
 func BuildParams(params map[string]string) string {
     var s string
     for k, v := range params {
+        if len(s) > 0 {
+            s += "&"
+        }
         s += k + "=" + gurl.Encode(v)
     }
     return s
