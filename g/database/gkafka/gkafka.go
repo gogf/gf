@@ -1,10 +1,10 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Kafka客户端.
+// Kafka Client.
 package gkafka
 
 import (
@@ -42,7 +42,7 @@ type Message struct {
 
 
 // New a kafka client.
-func New(config *Config) *Client {
+func NewClient(config *Config) *Client {
     return &Client {
         Config : config,
     }

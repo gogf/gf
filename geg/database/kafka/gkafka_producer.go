@@ -10,7 +10,7 @@ func main () {
     config.Servers = "localhost:9092"
     config.Topics  = "test"
 
-    client := gkafka.New(config)
+    client := gkafka.NewClient(config)
     defer client.Close()
     err := client.SyncSend(&gkafka.Message{Value: []byte("1")})
     fmt.Println(err)

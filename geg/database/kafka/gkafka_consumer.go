@@ -12,7 +12,7 @@ func main () {
     config.Servers = "localhost:9092"
     config.Topics  = "test"
 
-    client := gkafka.New(config)
+    client := gkafka.NewClient(config)
     defer client.Close()
 
     for {
