@@ -8,10 +8,10 @@ import (
 func main () {
     config        := gkafka.NewConfig()
     config.Servers = "localhost:9092"
-    config.Topics  = "abc"
+    config.Topics  = "test"
 
     client := gkafka.New(config)
     defer client.Close()
-    err := client.SyncSend(&gkafka.Message{Value: []byte("111")})
+    err := client.SyncSend(&gkafka.Message{Value: []byte("1")})
     fmt.Println(err)
 }
