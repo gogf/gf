@@ -23,7 +23,7 @@ var (
 )
 
 func init() {
-    timeRegex, _ = regexp.Compile(`(\d{4}-\d{2}-\d{2})\s{0,1}(\d{2}:\d{2}:\d{2}){0,1}`)
+    timeRegex, _ = regexp.Compile(`(\d{4}-\d{2}-\d{2})\s{0,1}(\d{2}:\d{2}:\d{2}){0,1}\.{0,1}(\d{0,9})`)
 }
 
 // 将变量i转换为字符串指定的类型t
@@ -74,6 +74,11 @@ func Time(i interface{}) time.Time {
     } else {
         // 标准日期时间格式
         if match := timeRegex.FindStringSubmatch(s); len(match) > 0 {
+            if match[3] != "" {
+                if t, err := time.Parse("2006-01-02 15:04:05.999999999", s); err == nil {
+                    return t
+                }
+            }
            if match[2] != "" {
                if t, err := time.Parse("2006-01-02 15:04:05", s); err == nil {
                    return t
