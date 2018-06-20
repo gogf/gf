@@ -3,19 +3,20 @@ package main
 import (
     "gitee.com/johng/gf/g/database/gkafka"
     "fmt"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 func main () {
     config        := gkafka.NewConfig()
-    config.GroupId = "group_2"
+    config.GroupId = "group_1"
     config.Servers = "localhost:9092"
-    config.Topics  = "abc"
+    config.Topics  = "test"
 
     client := gkafka.New(config)
     defer client.Close()
 
     for {
        msg, err := client.Receive()
-       fmt.Printf("value: %s, err: %v", string(msg.Value), err)
+       fmt.Printf("%s value: %s, err: %v\n", gtime.Datetime(), string(msg.Value), err)
     }
 }
