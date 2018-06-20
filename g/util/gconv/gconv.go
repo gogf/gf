@@ -13,7 +13,18 @@ import (
     "time"
     "strconv"
     "gitee.com/johng/gf/g/encoding/gbinary"
+    "gitee.com/johng/gf/g/util/gstr"
+    "regexp"
 )
+
+var (
+    // 用于time.Time转换使用，防止多次Compile
+    timeRegex *regexp.Regexp
+)
+
+func init() {
+    timeRegex, _ = regexp.Compile(`(\d{4}-\d{2}-\d{2})\s{0,1}(\d{2}:\d{2}:\d{2}){0,1}`)
+}
 
 // 将变量i转换为字符串指定的类型t
 func Convert(i interface{}, t string) interface{} {
@@ -45,10 +56,34 @@ func Time(i interface{}) time.Time {
     s := String(i)
     t := int64(0)
     n := int64(0)
-    if len(s) > 9 {
-        t = Int64(s[0  : 10])
-        if len(s) > 10 {
-            n = Int64(s[11 : ])
+    if gstr.IsNumeric(s) {
+        // 纯数字
+        if len(s) > 9 {
+            // 前面10位为时间戳秒，后面转纳秒
+            t = Int64(s[0  : 10])
+            if len(s) > 10 {
+                n = Int64(s[10 : ])
+                // 如果按照纳秒计算时间则完整字符串长度为19位，这里要将纳秒字段补齐
+                if len(s) < 19 {
+                    for i := 0; i < 19 - len(s); i++ {
+                        n *= 10
+                    }
+                }
+            }
+        }
+    } else {
+        // 标准日期时间格式
+        if match := timeRegex.FindStringSubmatch(s); len(match) > 0 {
+           if match[2] != "" {
+               if t, err := time.Parse("2006-01-02 15:04:05", s); err == nil {
+                   return t
+               }
+           }
+           if match[1] != "" {
+               if t, err := time.Parse("2006-01-02", s); err == nil {
+                   return t
+               }
+           }
         }
     }
     return time.Unix(t, n)
