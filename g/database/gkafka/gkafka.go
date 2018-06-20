@@ -17,9 +17,10 @@ import (
 
 // kafka Client based on sarama.Config
 type Config struct {
-    GroupId  string // group id for consumer.
-    Servers  string // server list, multiple servers joined by ','.
-    Topics   string // topic list, multiple topics joined by ','.
+    GroupId        string // group id for consumer.
+    Servers        string // server list, multiple servers joined by ','.
+    Topics         string // topic list, multiple topics joined by ','.
+    AutoMarkOffset bool   // auto mark message read after consumer message from server
     sarama.Config
 }
 
@@ -38,6 +39,8 @@ type Message struct {
     Topic          string
     Partition      int
     Offset         int
+    client         *Client
+    consumerMsg    *sarama.ConsumerMessage
 }
 
 
@@ -52,7 +55,6 @@ func NewClient(config *Config) *Client {
 func NewConfig() *Config {
     config       := &Config{}
     config.Config = *sarama.NewConfig()
-    config.Config = *sarama.NewConfig()
 
     // default config for consumer
     config.Consumer.Return.Errors          = true
@@ -63,6 +65,8 @@ func NewConfig() *Config {
     config.Producer.Return.Errors          = true
     config.Producer.Return.Successes       = true
     config.Producer.Timeout                = 5 * time.Second
+
+    config.AutoMarkOffset                  = true
     return config
 }
 
@@ -108,13 +112,17 @@ func (client *Client) Receive() (*Message, error) {
     }
 
     msg := <- client.consumer.Messages()
-    client.consumer.MarkOffset(msg, "")
+    if client.Config.AutoMarkOffset {
+        client.consumer.MarkOffset(msg, "")
+    }
     return &Message {
-        Value     : msg.Value,
-        Key       : msg.Key,
-        Topic     : msg.Topic,
-        Partition : int(msg.Partition),
-        Offset    : int(msg.Offset),
+        Value       : msg.Value,
+        Key         : msg.Key,
+        Topic       : msg.Topic,
+        Partition   : int(msg.Partition),
+        Offset      : int(msg.Offset),
+        client      : client,
+        consumerMsg : msg,
     }, nil
 }
 
