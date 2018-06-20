@@ -72,11 +72,11 @@ func Format(format string, timestamps...int64) string {
     return time.Unix(timestamp, 0).Format(format)
 }
 
-// 字符串转换为时间戳，需要给定字符串时间格式，format格式形如：2006-01-02 03:04:05 PM
-func StrToTime(format string, timestr string) (int64, error) {
+// 字符串转换为时间对象，需要给定字符串时间格式，format格式形如：2006-01-02 15:04:05
+func StrToTime(format string, timestr string) (time.Time, error) {
     t, err := time.Parse(format, timestr)
     if err != nil {
-        return 0, err
+        return time.Time{}, err
     }
-    return t.Unix(), nil
+    return t, nil
 }

@@ -5,7 +5,6 @@ import (
     "time"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/frame/gins"
 )
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
@@ -14,20 +13,20 @@ var db *gdb.Db
 
 // 初始化配置及创建数据库
 func init () {
-    //gdb.AddDefaultConfigNode(gdb.ConfigNode {
-    //    Host    : "127.0.0.1",
-    //    Port    : "3306",
-    //    User    : "root",
-    //    Pass    : "8692651",
-    //    Name    : "test",
-    //    Type    : "mysql",
-    //    Role    : "master",
-    //    Charset : "utf8",
-    //})
-    //db, _ = gdb.New()
+    gdb.AddDefaultConfigNode(gdb.ConfigNode {
+       Host    : "127.0.0.1",
+       Port    : "3306",
+       User    : "root",
+       Pass    : "123456",
+       Name    : "test",
+       Type    : "mysql",
+       Role    : "master",
+       Charset : "utf8",
+    })
+    db, _ = gdb.New()
 
-    gins.Config().SetPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame")
-    db = g.Database()
+    //gins.Config().SetPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame")
+    //db = g.Database()
 
     //gdb.SetConfig(gdb.ConfigNode {
     //    Host : "127.0.0.1",
@@ -477,8 +476,9 @@ func mapToStruct() {
 }
 
 func main() {
-    r, err := db.Table("user").Data(g.Map{"name" : "john11111"}).Insert()
-    fmt.Println(r)
+    r, err := db.Table("test").Where("id=1").One()
+    fmt.Println(r["datetime"])
+    fmt.Println(r["datetime"].Time().Date())
     fmt.Println(err)
     //create()
     //create()
