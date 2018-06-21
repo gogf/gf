@@ -324,7 +324,9 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
     // 支持目录递归创建
     dir := Dir(path)
     if !Exists(dir) {
-        Mkdir(dir)
+        if err := Mkdir(dir); err != nil {
+            return err
+        }
     }
     // 创建/打开文件
     f, err := os.OpenFile(path, flag, perm)
