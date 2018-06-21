@@ -14,17 +14,8 @@ import (
     "strconv"
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/util/gstr"
-    "regexp"
+    "gitee.com/johng/gf/g/os/gtime"
 )
-
-var (
-    // 用于time.Time转换使用，防止多次Compile
-    timeRegex *regexp.Regexp
-)
-
-func init() {
-    timeRegex, _ = regexp.Compile(`(\d{4}-\d{2}-\d{2})\s{0,1}(\d{2}:\d{2}:\d{2}){0,1}\.{0,1}(\d{0,9})`)
-}
 
 // 将变量i转换为字符串指定的类型t
 func Convert(i interface{}, t string) interface{} {
@@ -52,8 +43,13 @@ func Convert(i interface{}, t string) interface{} {
 }
 
 // 将变量i转换为time.Time类型
-func Time(i interface{}) time.Time {
+func Time(i interface{}, format...string) time.Time {
     s := String(i)
+    // 优先使用用户输入日期格式进行转换
+    if len(format) > 0 {
+        t, _ := gtime.StrToTime(s, format[0])
+        return t
+    }
     t := int64(0)
     n := int64(0)
     if gstr.IsNumeric(s) {
@@ -72,24 +68,8 @@ func Time(i interface{}) time.Time {
             }
         }
     } else {
-        // 标准日期时间格式
-        if match := timeRegex.FindStringSubmatch(s); len(match) > 0 {
-            if match[3] != "" {
-                if t, err := time.Parse("2006-01-02 15:04:05.999999999", s); err == nil {
-                    return t
-                }
-            }
-           if match[2] != "" {
-               if t, err := time.Parse("2006-01-02 15:04:05", s); err == nil {
-                   return t
-               }
-           }
-           if match[1] != "" {
-               if t, err := time.Parse("2006-01-02", s); err == nil {
-                   return t
-               }
-           }
-        }
+        t, _ := gtime.StrToTime(s)
+        return t
     }
     return time.Unix(t, n)
 }
