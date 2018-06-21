@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "gitee.com/johng/gf/g/os/gtime"
+    "time"
 )
 
 func main() {
@@ -16,10 +17,12 @@ func main() {
         "2018-02-09 20:46:17",
         "2018-02-09",
     }
+    cstLocal, _ := time.LoadLocation("Asia/Shanghai")
     for _, s := range array {
         fmt.Println(s)
         if t, err := gtime.StrToTime(s); err == nil {
             fmt.Println(t.String())
+            fmt.Println(t.In(cstLocal).String())
         } else {
             panic(err)
         }
