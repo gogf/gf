@@ -125,6 +125,9 @@ func StrToTime(str string, format...string) (time.Time, error) {
             }
         }
         // 如果字符串中有时区信息，那么执行时区转换，将时区转成UTC
+        if match[4] != "" && match[6] == "" {
+            match[6] = "000000"
+        }
         if match[6] != "" {
             zone := strings.Replace(match[6], ":", "", -1)
             zone  = strings.TrimLeft(zone, "+-")

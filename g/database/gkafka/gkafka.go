@@ -15,6 +15,13 @@ import (
     "gitee.com/johng/gf/g/os/glog"
 )
 
+var (
+    // 当使用Topics方法获取所有topic后，进行过滤忽略的topic，多个以','号分隔
+    ignoreTopics = map[string]bool {
+        "__consumer_offsets" : true,
+    }
+)
+
 // kafka Client based on sarama.Config
 type Config struct {
     GroupId        string // group id for consumer.
@@ -93,7 +100,16 @@ func (client *Client) Topics() ([]string, error) {
             client.rawConsumer = c
         }
     }
-    return client.rawConsumer.Topics()
+    if topics, err := client.rawConsumer.Topics(); err == nil {
+        for k, v := range topics {
+            if _, ok := ignoreTopics[v]; ok {
+                topics = append(topics[ : k], topics[k + 1 : ]...)
+            }
+        }
+        return topics, nil
+    } else {
+        return nil, err
+    }
 }
 
 // Receive message from kafka from specified topics in config, in BLOCKING way, gkafka will handle offset tracking automatically.
