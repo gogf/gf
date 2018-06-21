@@ -28,6 +28,7 @@ type Config struct {
 type Client struct {
     Config        *Config
     consumer      *cluster.Consumer
+    rawConsumer   sarama.Consumer
     syncProducer  sarama.SyncProducer
     asyncProducer sarama.AsyncProducer
 }
@@ -81,6 +82,18 @@ func (client *Client) Close() {
     if client.asyncProducer != nil {
         client.asyncProducer.Close()
     }
+}
+
+// Get all topics from kafka server.
+func (client *Client) Topics() ([]string, error) {
+    if client.rawConsumer == nil {
+        if c, err := sarama.NewConsumer(strings.Split(client.Config.Servers, ","), &client.Config.Config); err != nil {
+            return nil, err
+        } else {
+            client.rawConsumer = c
+        }
+    }
+    return client.rawConsumer.Topics()
 }
 
 // Receive message from kafka from specified topics in config, in BLOCKING way, gkafka will handle offset tracking automatically.
