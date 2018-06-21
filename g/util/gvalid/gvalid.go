@@ -502,11 +502,9 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
 
             // 日期格式，
             case "date":
-                for _, v := range []string{"2006-01-02", "20060102", "2006.01.02"} {
-                    if _, err := gtime.StrToTime(value, v); err == nil {
-                        match = true
-                        break
-                    }
+                if _, err := gtime.StrToTime(value); err == nil {
+                    match = true
+                    break
                 }
 
             // 日期格式，需要给定日期格式
