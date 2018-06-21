@@ -6,13 +6,11 @@ import (
 )
 
 func main() {
-    fmt.Println(gconv.Time("2018-06-07").Date())
-    fmt.Println(gconv.Time("2018-06-07").Clock())
+    fmt.Println(gconv.Time("2018-06-07").String())
 
-    fmt.Println(gconv.Time("2018-06-07 13:01:02").Date())
-    fmt.Println(gconv.Time("2018-06-07 13:01:02").Clock())
+    fmt.Println(gconv.Time("2018-06-07 13:01:02").String())
 
-    fmt.Println(gconv.Time("2018-06-07 13:01:02.096").Date())
-    fmt.Println(gconv.Time("2018-06-07 13:01:02.096").Clock())
-    fmt.Println(gconv.Time("2018-06-07 13:01:02.096").Nanosecond())
+    fmt.Println(gconv.Time("2018-06-07 13:01:02.096").String())
+
+
 }

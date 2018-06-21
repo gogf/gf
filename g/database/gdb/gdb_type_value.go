@@ -30,5 +30,5 @@ func (v Value) Uint64()         uint64          { return gconv.Uint64(v) }
 func (v Value) Float32()        float32         { return gconv.Float32(v) }
 func (v Value) Float64()        float64         { return gconv.Float64(v) }
 
-func (v Value) Time()           time.Time       { return gconv.Time(v) }
-func (v Value) TimeDuration()   time.Duration   { return gconv.TimeDuration(v) }
+func (v Value) Time(format...string) time.Time       { return gconv.Time(v, format...) }
+func (v Value) TimeDuration()        time.Duration   { return gconv.TimeDuration(v) }
