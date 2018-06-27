@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-    clientMax  := 10
+    clientMax  := 1000
     requestMax := 1000
     failureNum := gtype.NewInt64()
     successNum := gtype.NewInt64()
@@ -21,7 +21,7 @@ func main() {
         go func(clientId int) {
             url := "http://127.0.0.1:8199/"
             for i := 0; i < requestMax; i++ {
-                url = fmt.Sprintf("http://127.0.0.1:8199/%d_%d", clientId, i)
+                //url = fmt.Sprintf("http://127.0.0.1:8199/%d_%d", clientId, i)
                 if c, e := ghttp.Get(url); e == nil {
                     c.Close()
                     successNum.Add(1)

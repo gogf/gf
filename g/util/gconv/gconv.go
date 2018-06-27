@@ -106,7 +106,7 @@ func String(i interface{}) string {
         case uint16:  return strconv.FormatUint(uint64(value), 10)
         case uint32:  return strconv.FormatUint(uint64(value), 10)
         case uint64:  return strconv.FormatUint(uint64(value), 10)
-        case float32: return strconv.FormatFloat(float64(value), 'f', -1, 64)
+        case float32: return strconv.FormatFloat(float64(value), 'f', -1, 32)
         case float64: return strconv.FormatFloat(value, 'f', -1, 64)
         case bool:    return strconv.FormatBool(value)
         case string:  return value
@@ -289,7 +289,7 @@ func Float32 (i interface{}) float32 {
     if v, ok := i.(float32); ok {
         return v
     }
-    v, _ := strconv.ParseFloat(String(i), 32)
+    v, _ := strconv.ParseFloat(String(i), 64)
     return float32(v)
 }
 
