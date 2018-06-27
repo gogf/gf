@@ -1,11 +1,12 @@
 package main
 
 import (
-    "time"
     "fmt"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 func main() {
-    t := time.Now().Zone()
-    fmt.Println(z)
+    fmt.Println(gconv.Float64(float32(19.66)))
+    fmt.Println(float64(float32(19.66)))
+
 }
