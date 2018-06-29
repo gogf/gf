@@ -37,7 +37,9 @@ type sendQueueItem struct {
 
 // 进程管理/通信初始化操作
 func init() {
-    go startTcpListening()
+    if os.Getenv(gPROC_ENV_KEY_COMM_KEY) == "1" {
+        go startTcpListening()
+    }
 }
 
 // 获取指定进程的通信文件地址
