@@ -37,7 +37,8 @@ type sendQueueItem struct {
 
 // 进程管理/通信初始化操作
 func init() {
-    if os.Getenv(gPROC_ENV_KEY_COMM_KEY) == "1" {
+    // 默认下为空("")
+    if os.Getenv(gPROC_ENV_KEY_COMM_KEY) != "0" {
         go startTcpListening()
     }
 }

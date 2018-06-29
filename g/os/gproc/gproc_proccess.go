@@ -19,7 +19,7 @@ type Process struct {
     exec.Cmd
     Manager     *Manager // 所属进程管理器
     PPid        int      // 自定义关联的父进程ID
-    CommEnabled bool     // 是否开启TCP通信监听服务
+    DisableComm bool     // 是否关闭TCP通信监听服务
 }
 
 // 创建一个进程(不执行)
@@ -32,7 +32,6 @@ func NewProcess(path string, args []string, environment []string) *Process {
     p := &Process {
         Manager     : nil,
         PPid        : os.Getpid(),
-        CommEnabled : true,
         Cmd         : exec.Cmd {
             Args       : []string{path},
             Path       : path,
@@ -62,9 +61,9 @@ func (p *Process) Start() (int, error) {
     if p.Process != nil {
         return p.Pid(), nil
     }
-    commEnabled := 0
-    if p.CommEnabled {
-        commEnabled = 1
+    commEnabled := 1
+    if p.DisableComm {
+        commEnabled = 0
     }
     p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
     p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_COMM_KEY, commEnabled))
