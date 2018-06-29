@@ -240,8 +240,11 @@ func restartWebServers(newExeFilePath...string) {
         })
     } else {
         forkReloadProcess(newExeFilePath...)
-        go gracefulShutdownWebServers()
-        doneChan <- struct{}{}
+        // 异步2秒后再执行关闭，目的是让新进程将服务成功接管后，再关闭自身进程(后续可以根据进程间通信来改进)
+        gtime.SetTimeout(2*time.Second, func() {
+            go gracefulShutdownWebServers()
+            doneChan <- struct{}{}
+        })
     }
 }
 
