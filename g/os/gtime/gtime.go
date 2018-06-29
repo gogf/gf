@@ -15,6 +15,10 @@ import (
     "errors"
 )
 
+const (
+    TIME_REAGEX_PATTERN = `(\d{4}-\d{2}-\d{2})[\sT]{0,1}(\d{2}:\d{2}:\d{2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
+)
+
 var (
     // 用于time.Time转换使用，防止多次Compile
     timeRegex   *regexp.Regexp
@@ -22,7 +26,7 @@ var (
 
 func init() {
     // 使用正则判断会比直接使用ParseInLocation挨个轮训判断要快很多
-    timeRegex, _   = regexp.Compile(`(\d{4}-\d{2}-\d{2})[\sT]{0,1}(\d{2}:\d{2}:\d{2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`)
+    timeRegex, _   = regexp.Compile(TIME_REAGEX_PATTERN)
 
 }
 

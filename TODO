@@ -9,6 +9,10 @@ orm增加更多数据库支持；
 ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
 Cookie&Session数据池化处理；
 ghttp.Client增加proxy特性；
+gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
+改进gf-orm的where查询功能，参考thinkphp 里的where查询语法；
+
+
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；

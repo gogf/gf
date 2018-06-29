@@ -9,10 +9,7 @@ package gproc
 
 import (
     "os"
-    "strings"
-    "os/exec"
     "gitee.com/johng/gf/g/container/gmap"
-    "fmt"
 )
 
 // 进程管理器
@@ -25,40 +22,6 @@ func NewManager() *Manager {
     return &Manager{
         processes : gmap.NewIntInterfaceMap(),
     }
-}
-
-// 创建一个进程(不执行)
-func NewProcess(path string, args []string, environment []string) *Process {
-    env := make([]string, len(environment) + 1)
-    for k, v := range environment {
-        env[k] = v
-    }
-    env[len(env) - 1] = fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir())
-    p := &Process {
-        Manager   : nil,
-        PPid      : os.Getpid(),
-        Cmd       : exec.Cmd {
-            Args       : []string{path},
-            Path       : path,
-            Stdin      : os.Stdin,
-            Stdout     : os.Stdout,
-            Stderr     : os.Stderr,
-            Env        : env,
-            ExtraFiles : make([]*os.File, 0),
-        },
-    }
-    // 当前工作目录
-    if d, err := os.Getwd(); err == nil {
-        p.Dir = d
-    }
-    if len(args) > 0 {
-        start := 0
-        if strings.EqualFold(path, args[0]) {
-            start = 1
-        }
-        p.Args = append(p.Args, args[start : ]...)
-    }
-    return p
 }
 
 // 创建一个进程(不执行)
