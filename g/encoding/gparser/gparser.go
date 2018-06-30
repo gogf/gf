@@ -49,7 +49,7 @@ func (p *Parser) SetSplitChar(char byte) {
 
 // 设置自定义的层级分隔符号
 func (p *Parser) SetViolenceCheck(check bool) {
-    p.SetViolenceCheck(check)
+    p.json.SetViolenceCheck(check)
 }
 
 // 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
