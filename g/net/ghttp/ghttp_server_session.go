@@ -86,6 +86,10 @@ func (s *Session) GetUint (k string) uint {
     return gconv.Uint(s.Get(k))
 }
 
+func (s *Session) GetUint8 (k string) uint8 {
+    return gconv.Uint8(s.Get(k))
+}
+
 func (s *Session) GetFloat32 (k string) float32 {
     return gconv.Float32(s.Get(k))
 }

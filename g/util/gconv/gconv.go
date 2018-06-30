@@ -18,7 +18,7 @@ import (
 )
 
 // 将变量i转换为字符串指定的类型t
-func Convert(i interface{}, t string) interface{} {
+func Convert(i interface{}, t string, params...interface{}) interface{} {
     switch t {
         case "int":             return Int(i)
         case "int8":            return Int8(i)
@@ -35,7 +35,12 @@ func Convert(i interface{}, t string) interface{} {
         case "bool":            return Bool(i)
         case "string":          return String(i)
         case "[]byte":          return Bytes(i)
-        case "time.Time":       return Time(i)
+        case "time.Time":
+            if len(params) > 0 {
+                return Time(i, String(params[0]))
+            }
+            return Time(i)
+
         case "time.Duration":   return TimeDuration(i)
         default:
             return i

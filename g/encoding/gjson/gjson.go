@@ -101,9 +101,13 @@ func Load (path string) (*Json, error) {
 }
 
 // 支持的配置文件格式：xml, json, yaml/yml, toml
-func LoadContent (data []byte, t string) (*Json, error) {
+func LoadContent (data []byte, dataType...string) (*Json, error) {
     var err    error
     var result interface{}
+    t := "json"
+    if len(dataType) > 0 {
+        t = dataType[0]
+    }
     switch t {
         case  "xml":  fallthrough
         case ".xml":
