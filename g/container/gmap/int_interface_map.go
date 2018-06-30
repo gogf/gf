@@ -10,6 +10,7 @@ package gmap
 import (
 	"sync"
     "gitee.com/johng/gf/g/util/gconv"
+    "time"
 )
 
 type IntInterfaceMap struct {
@@ -139,6 +140,14 @@ func (this *IntInterfaceMap) GetString (key int) string {
 
 func (this *IntInterfaceMap) GetStrings (key int) []string {
     return gconv.Strings(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetTime (key int, format...string) time.Time {
+    return gconv.Time(this.Get(key), format...)
+}
+
+func (this *IntInterfaceMap) GetTimeDuration (key int) time.Duration {
+    return gconv.TimeDuration(this.Get(key))
 }
 
 // 删除键值对

@@ -132,6 +132,13 @@ func (c *Config) GetString(pattern string, file...string) string {
     return ""
 }
 
+func (c *Config) GetStrings(pattern string, file...string) []string {
+    if j := c.getJson(file...); j != nil {
+        return j.GetStrings(pattern)
+    }
+    return nil
+}
+
 // 返回指定json中的bool
 func (c *Config) GetBool(pattern string, file...string) bool {
     if j := c.getJson(file...); j != nil {
