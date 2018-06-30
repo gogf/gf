@@ -9,6 +9,7 @@ package gparser
 
 import (
     "gitee.com/johng/gf/g/encoding/gjson"
+    "time"
 )
 
 type Parser struct {
@@ -72,6 +73,18 @@ func (p *Parser) GetArray(pattern string) []interface{} {
 // 返回指定json中的string
 func (p *Parser) GetString(pattern string) string {
     return p.json.GetString(pattern)
+}
+
+func (p *Parser) GetStrings(pattern string) []string {
+    return p.json.GetStrings(pattern)
+}
+
+func (p *Parser) GetTime(pattern string, format ... string) time.Time {
+    return p.json.GetTime(pattern, format...)
+}
+
+func (p *Parser) GetTimeDuration(pattern string) time.Duration {
+    return p.json.GetTimeDuration(pattern)
 }
 
 // 返回指定json中的bool(false:"", 0, false, off)
@@ -138,11 +151,11 @@ func (p *Parser) Remove(pattern string) error {
     return p.json.Remove(pattern)
 }
 
-// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
-// 返回的结果类型的interface{}，因此需要自己做类型转换
-// 如果找不到对应节点的数据，返回nil
-func (p *Parser) Get(pattern string) interface{} {
-    return p.json.Get(pattern)
+// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"; 当pattern为空时，表示获取所有数据
+// 返回的结果类型的interface{}，因此需要自己做类型转换;
+// 如果找不到对应节点的数据，返回nil;
+func (p *Parser) Get(pattern...string) interface{} {
+    return p.json.Get(pattern...)
 }
 
 // 转换为map[string]interface{}类型,如果转换失败，返回nil

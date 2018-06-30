@@ -10,6 +10,7 @@ package gmap
 import (
 	"sync"
     "gitee.com/johng/gf/g/util/gconv"
+    "time"
 )
 
 type InterfaceInterfaceMap struct {
@@ -89,8 +90,40 @@ func (this *InterfaceInterfaceMap) GetInt(key interface{}) int {
     return gconv.Int(this.Get(key))
 }
 
+func (this *InterfaceInterfaceMap) GetInt8(key interface{}) int8 {
+    return gconv.Int8(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetInt16(key interface{}) int16 {
+    return gconv.Int16(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetInt32(key interface{}) int32 {
+    return gconv.Int32(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetInt64(key interface{}) int64 {
+    return gconv.Int64(this.Get(key))
+}
+
 func (this *InterfaceInterfaceMap) GetUint (key interface{}) uint {
     return gconv.Uint(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetUint8 (key interface{}) uint8 {
+	return gconv.Uint8(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetUint16 (key interface{}) uint16 {
+	return gconv.Uint16(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetUint32 (key interface{}) uint32 {
+	return gconv.Uint32(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetUint64 (key interface{}) uint64 {
+	return gconv.Uint64(this.Get(key))
 }
 
 func (this *InterfaceInterfaceMap) GetFloat32 (key interface{}) float32 {
@@ -103,6 +136,18 @@ func (this *InterfaceInterfaceMap) GetFloat64 (key interface{}) float64 {
 
 func (this *InterfaceInterfaceMap) GetString (key interface{}) string {
     return gconv.String(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetStrings (key interface{}) []string {
+    return gconv.Strings(this.Get(key))
+}
+
+func (this *InterfaceInterfaceMap) GetTime (key interface{}, format...string) time.Time {
+    return gconv.Time(this.Get(key), format...)
+}
+
+func (this *InterfaceInterfaceMap) GetTimeDuration (key interface{}) time.Duration {
+    return gconv.TimeDuration(this.Get(key))
 }
 
 // 删除键值对
