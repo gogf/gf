@@ -252,7 +252,7 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
     // 处理最后不构成指定批量的数据
     if len(bvalues) > 0 {
         r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
-            operation, tx.db.charl, table, tx.db.charr, kstr, strings.Join(bvalues, ","),
+            operation, tx.db.charl, table, tx.db.charr, keyStr, strings.Join(bvalues, ","),
             updatestr),
             params...)
         if err != nil {
