@@ -218,14 +218,15 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
         keys   = append(keys,   k)
         values = append(values, "?")
     }
-    var kstr = tx.db.charl + strings.Join(keys, tx.db.charl + "," + tx.db.charr) + tx.db.charr
+    keyStr         := tx.db.charl + strings.Join(keys, tx.db.charl + "," + tx.db.charr) + tx.db.charr
+    valueHolderStr := "(" + strings.Join(values, ",") + ")"
     // 操作判断
     operation := tx.db.getInsertOperationByOption(option)
     updatestr := ""
     if option == OPTION_SAVE {
         var updates []string
         for _, k := range keys {
-            updates = append(updates, fmt.Sprintf("%s=VALUES(%s)", tx.db.charl, k, tx.db.charr, k))
+            updates = append(updates, fmt.Sprintf("%s%s%s=VALUES(%s)", tx.db.charl, k, tx.db.charr, k))
         }
         updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
@@ -234,19 +235,26 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
         for _, k := range keys {
             params = append(params, list[i][k])
         }
-        bvalues = append(bvalues, "(" + strings.Join(values, ",") + ")")
+        bvalues = append(bvalues, valueHolderStr)
         if len(bvalues) == batch {
-            r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, tx.db.charl, table, tx.db.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
+            r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
+                operation, tx.db.charl, table, tx.db.charr, keyStr, strings.Join(bvalues, ","),
+                updatestr),
+                params...)
             if err != nil {
                 return result, err
             }
             result  = r
+            params  = params[:0]
             bvalues = bvalues[:0]
         }
     }
     // 处理最后不构成指定批量的数据
     if len(bvalues) > 0 {
-        r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s", operation, tx.db.charl, table, tx.db.charr, kstr, strings.Join(bvalues, ","), updatestr), params...)
+        r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
+            operation, tx.db.charl, table, tx.db.charr, keyStr, strings.Join(bvalues, ","),
+            updatestr),
+            params...)
         if err != nil {
             return result, err
         }
