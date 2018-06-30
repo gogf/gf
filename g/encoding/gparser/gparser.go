@@ -47,7 +47,8 @@ func (p *Parser) SetSplitChar(char byte) {
     p.json.SetSplitChar(char)
 }
 
-// 设置自定义的层级分隔符号
+// 设置是否执行层级冲突检查，当键名中存在层级符号时需要开启该特性，默认为关闭。
+// 开启比较耗性能，也不建议允许键名中存在分隔符，最好在应用端避免这种情况。
 func (p *Parser) SetViolenceCheck(check bool) {
     p.json.SetViolenceCheck(check)
 }

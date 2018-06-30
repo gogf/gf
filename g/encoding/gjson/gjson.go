@@ -33,7 +33,7 @@ type Json struct {
     mu sync.RWMutex
     p  *interface{} // 注意这是一个指针
     c  byte         // 层级分隔符，默认为"."
-    vc bool         // 是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
+    vc bool         // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
