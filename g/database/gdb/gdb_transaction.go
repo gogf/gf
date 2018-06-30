@@ -225,7 +225,7 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
     if option == OPTION_SAVE {
         var updates []string
         for _, k := range keys {
-            updates = append(updates, fmt.Sprintf("%s=VALUES(%s)", tx.db.charl, k, tx.db.charr, k))
+            updates = append(updates, fmt.Sprintf("%s%s%s=VALUES(%s)", tx.db.charl, k, tx.db.charr, k))
         }
         updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
