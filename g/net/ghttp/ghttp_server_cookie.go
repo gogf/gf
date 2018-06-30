@@ -12,7 +12,6 @@ package ghttp
 import (
     "sync"
     "time"
-    "strings"
     "net/http"
     "gitee.com/johng/gf/g/os/gtime"
 )
@@ -43,7 +42,7 @@ func GetCookie(r *Request) *Cookie {
     }
     c := &Cookie {
         data     : make(map[string]CookieItem),
-        domain   : strings.Split(r.Host, ":")[0],
+        domain   : r.GetHost(),
         server   : r.Server,
         request  : r,
         response : r.Response,
@@ -53,15 +52,13 @@ func GetCookie(r *Request) *Cookie {
     return c
 }
 
-// 从请求流中初始化
+// 从请求流中初始化，无锁
 func (c *Cookie) init() {
-    c.mu.Lock()
     for _, v := range c.request.Cookies() {
         c.data[v.Name] = CookieItem {
             v.Value, v.Domain, v.Path, v.Expires.Second(), v.HttpOnly,
         }
     }
-    c.mu.Unlock()
 }
 
 // 获取所有的Cookie并构造成map返回
@@ -137,6 +134,7 @@ func (c *Cookie) Close() {
 func (c *Cookie) Output() {
     c.mu.RLock()
     for k, v := range c.data {
+        // 只有expire != 0的才是服务端在本地请求中设置的cookie
         if v.expire == 0 {
             continue
         }

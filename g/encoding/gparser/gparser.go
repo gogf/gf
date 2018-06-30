@@ -32,9 +32,9 @@ func Load (path string) (*Parser, error) {
     }
 }
 
-// 支持的配置文件格式：xml, json, yaml/yml, toml
-func LoadContent (data []byte, fileType string) (*Parser, error) {
-    if j, e := gjson.LoadContent(data, fileType); e == nil {
+// 支持的数据内容格式：json(默认), xml, yaml/yml, toml
+func LoadContent (data []byte, dataType...string) (*Parser, error) {
+    if j, e := gjson.LoadContent(data, dataType...); e == nil {
         return &Parser{j}, nil
     } else {
         return nil, e

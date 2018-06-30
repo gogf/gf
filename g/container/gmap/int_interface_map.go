@@ -89,8 +89,40 @@ func (this *IntInterfaceMap) GetInt(key int) int {
     return gconv.Int(this.Get(key))
 }
 
+func (this *IntInterfaceMap) GetInt8(key int) int8 {
+    return gconv.Int8(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetInt16(key int) int16 {
+    return gconv.Int16(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetInt32(key int) int32 {
+    return gconv.Int32(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetInt64(key int) int64 {
+    return gconv.Int64(this.Get(key))
+}
+
 func (this *IntInterfaceMap) GetUint (key int) uint {
     return gconv.Uint(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetUint8 (key int) uint8 {
+    return gconv.Uint8(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetUint16 (key int) uint16 {
+    return gconv.Uint16(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetUint32 (key int) uint32 {
+    return gconv.Uint32(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetUint64 (key int) uint64 {
+    return gconv.Uint64(this.Get(key))
 }
 
 func (this *IntInterfaceMap) GetFloat32 (key int) float32 {
@@ -103,6 +135,10 @@ func (this *IntInterfaceMap) GetFloat64 (key int) float64 {
 
 func (this *IntInterfaceMap) GetString (key int) string {
     return gconv.String(this.Get(key))
+}
+
+func (this *IntInterfaceMap) GetStrings (key int) []string {
+    return gconv.Strings(this.Get(key))
 }
 
 // 删除键值对
