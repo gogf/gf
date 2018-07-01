@@ -9,8 +9,6 @@ package gmap
 
 import (
 	"sync"
-	"gitee.com/johng/gf/g/util/gconv"
-	"time"
 )
 
 type StringStringMap struct {
@@ -68,74 +66,6 @@ func (this *StringStringMap) Get(key string) string {
 	val, _ := this.m[key]
 	this.mu.RUnlock()
 	return val
-}
-
-func (this *StringStringMap) GetBool(key string) bool {
-	return gconv.Bool(this.Get(key))
-}
-
-func (this *StringStringMap) GetInt(key string) int {
-	return gconv.Int(this.Get(key))
-}
-
-func (this *StringStringMap) GetInt8(key string) int8 {
-	return gconv.Int8(this.Get(key))
-}
-
-func (this *StringStringMap) GetInt16(key string) int16 {
-	return gconv.Int16(this.Get(key))
-}
-
-func (this *StringStringMap) GetInt32(key string) int32 {
-	return gconv.Int32(this.Get(key))
-}
-
-func (this *StringStringMap) GetInt64(key string) int64 {
-	return gconv.Int64(this.Get(key))
-}
-
-func (this *StringStringMap) GetUint (key string) uint {
-	return gconv.Uint(this.Get(key))
-}
-
-func (this *StringStringMap) GetUint8 (key string) uint8 {
-	return gconv.Uint8(this.Get(key))
-}
-
-func (this *StringStringMap) GetUint16 (key string) uint16 {
-	return gconv.Uint16(this.Get(key))
-}
-
-func (this *StringStringMap) GetUint32 (key string) uint32 {
-	return gconv.Uint32(this.Get(key))
-}
-
-func (this *StringStringMap) GetUint64 (key string) uint64 {
-	return gconv.Uint64(this.Get(key))
-}
-
-func (this *StringStringMap) GetFloat32 (key string) float32 {
-	return gconv.Float32(this.Get(key))
-}
-
-func (this *StringStringMap) GetFloat64 (key string) float64 {
-	return gconv.Float64(this.Get(key))
-}
-
-func (this *StringStringMap) GetString (key string) string {
-	return gconv.String(this.Get(key))
-}
-
-func (this *StringStringMap) GetStrings (key string) []string {
-	return gconv.Strings(this.Get(key))
-}
-
-func (this *StringStringMap) GetTime (key string, format...string) time.Time {
-	return gconv.Time(this.Get(key), format...)
-}
-
-func (this *StringStringMap) GetTimeDuration (key string) time.Duration {
-	return gconv.TimeDuration(this.Get(key))
 }
 
 // 获取键值，如果键值不存在则写入默认值
