@@ -169,7 +169,7 @@ func (tx *Tx) insert(table string, data Map, option uint8) (sql.Result, error) {
     for k, v := range data {
         keys   = append(keys,   tx.db.charl + k + tx.db.charr)
         values = append(values, "?")
-        params = append(params, v)
+        params = append(params, gconv.String(v))
     }
     operation := tx.db.getInsertOperationByOption(option)
     updatestr := ""
@@ -182,7 +182,10 @@ func (tx *Tx) insert(table string, data Map, option uint8) (sql.Result, error) {
     }
     return tx.Exec(
         fmt.Sprintf("%s INTO %s%s%s(%s) VALUES(%s) %s",
-            operation, tx.db.charl, table, tx.db.charr, strings.Join(keys, ","), strings.Join(values, ","), updatestr), params...
+            operation, tx.db.charl, table, tx.db.charr, strings.Join(keys, ","),
+            strings.Join(values, ","),
+            updatestr),
+            params...
     )
 }
 
@@ -233,7 +236,7 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
     // 构造批量写入数据格式(注意map的遍历是无序的)
     for i := 0; i < size; i++ {
         for _, k := range keys {
-            params = append(params, list[i][k])
+            params = append(params, gconv.String(list[i][k]))
         }
         bvalues = append(bvalues, valueHolderStr)
         if len(bvalues) == batch {
