@@ -9,8 +9,6 @@ package gmap
 
 import (
 	"sync"
-    "gitee.com/johng/gf/g/util/gconv"
-    "time"
 )
 
 type IntInterfaceMap struct {
@@ -80,74 +78,6 @@ func (this *IntInterfaceMap) GetWithDefault(key int, value interface{}) interfac
     }
     this.mu.Unlock()
     return val
-}
-
-func (this *IntInterfaceMap) GetBool(key int) bool {
-    return gconv.Bool(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetInt(key int) int {
-    return gconv.Int(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetInt8(key int) int8 {
-    return gconv.Int8(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetInt16(key int) int16 {
-    return gconv.Int16(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetInt32(key int) int32 {
-    return gconv.Int32(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetInt64(key int) int64 {
-    return gconv.Int64(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetUint (key int) uint {
-    return gconv.Uint(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetUint8 (key int) uint8 {
-    return gconv.Uint8(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetUint16 (key int) uint16 {
-    return gconv.Uint16(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetUint32 (key int) uint32 {
-    return gconv.Uint32(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetUint64 (key int) uint64 {
-    return gconv.Uint64(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetFloat32 (key int) float32 {
-    return gconv.Float32(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetFloat64 (key int) float64 {
-    return gconv.Float64(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetString (key int) string {
-    return gconv.String(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetStrings (key int) []string {
-    return gconv.Strings(this.Get(key))
-}
-
-func (this *IntInterfaceMap) GetTime (key int, format...string) time.Time {
-    return gconv.Time(this.Get(key), format...)
-}
-
-func (this *IntInterfaceMap) GetTimeDuration (key int) time.Duration {
-    return gconv.TimeDuration(this.Get(key))
 }
 
 // 删除键值对

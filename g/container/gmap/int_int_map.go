@@ -9,8 +9,6 @@ package gmap
 
 import (
 	"sync"
-    "gitee.com/johng/gf/g/util/gconv"
-    "time"
 )
 
 type IntIntMap struct {
@@ -68,70 +66,6 @@ func (this *IntIntMap) Get(key int) (int) {
 	val, _ := this.m[key]
 	this.mu.RUnlock()
 	return val
-}
-
-func (this *IntIntMap) GetBool(key int) bool {
-    return gconv.Bool(this.Get(key))
-}
-
-func (this *IntIntMap) GetInt(key int) int {
-    return gconv.Int(this.Get(key))
-}
-
-func (this *IntIntMap) GetInt8(key int) int8 {
-    return gconv.Int8(this.Get(key))
-}
-
-func (this *IntIntMap) GetInt16(key int) int16 {
-    return gconv.Int16(this.Get(key))
-}
-
-func (this *IntIntMap) GetInt32(key int) int32 {
-    return gconv.Int32(this.Get(key))
-}
-
-func (this *IntIntMap) GetInt64(key int) int64 {
-    return gconv.Int64(this.Get(key))
-}
-
-func (this *IntIntMap) GetUint (key int) uint {
-    return gconv.Uint(this.Get(key))
-}
-
-func (this *IntIntMap) GetUint8 (key int) uint8 {
-    return gconv.Uint8(this.Get(key))
-}
-
-func (this *IntIntMap) GetUint16 (key int) uint16 {
-    return gconv.Uint16(this.Get(key))
-}
-
-func (this *IntIntMap) GetUint32 (key int) uint32 {
-    return gconv.Uint32(this.Get(key))
-}
-
-func (this *IntIntMap) GetUint64 (key int) uint64 {
-    return gconv.Uint64(this.Get(key))
-}
-
-func (this *IntIntMap) GetFloat32 (key int) float32 {
-    return gconv.Float32(this.Get(key))
-}
-
-func (this *IntIntMap) GetFloat64 (key int) float64 {
-    return gconv.Float64(this.Get(key))
-}
-
-func (this *IntIntMap) GetString (key int) string {
-    return gconv.String(this.Get(key))
-}
-
-func (this *IntIntMap) GetTime (key int, format...string) time.Time {
-    return gconv.Time(this.Get(key), format...)
-}
-
-func (this *IntIntMap) GetTimeDuration (key int) time.Duration {
-    return gconv.TimeDuration(this.Get(key))
 }
 
 // 获取键值，如果键值不存在则写入默认值

@@ -9,8 +9,6 @@ package gmap
 
 import (
 	"sync"
-    "gitee.com/johng/gf/g/util/gconv"
-	"time"
 )
 
 type StringInterfaceMap struct {
@@ -80,74 +78,6 @@ func (this *StringInterfaceMap) GetWithDefault(key string, value interface{}) in
     }
 	this.mu.Unlock()
 	return val
-}
-
-func (this *StringInterfaceMap) GetBool(key string) bool {
-	return gconv.Bool(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetInt(key string) int {
-	return gconv.Int(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetInt8(key string) int8 {
-	return gconv.Int8(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetInt16(key string) int16 {
-	return gconv.Int16(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetInt32(key string) int32 {
-	return gconv.Int32(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetInt64(key string) int64 {
-	return gconv.Int64(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetUint (key string) uint {
-	return gconv.Uint(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetUint8 (key string) uint8 {
-	return gconv.Uint8(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetUint16 (key string) uint16 {
-	return gconv.Uint16(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetUint32 (key string) uint32 {
-	return gconv.Uint32(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetUint64 (key string) uint64 {
-	return gconv.Uint64(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetFloat32 (key string) float32 {
-	return gconv.Float32(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetFloat64 (key string) float64 {
-	return gconv.Float64(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetString (key string) string {
-	return gconv.String(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetStrings (key string) []string {
-	return gconv.Strings(this.Get(key))
-}
-
-func (this *StringInterfaceMap) GetTime (key string, format...string) time.Time {
-	return gconv.Time(this.Get(key), format...)
-}
-
-func (this *StringInterfaceMap) GetTimeDuration (key string) time.Duration {
-	return gconv.TimeDuration(this.Get(key))
 }
 
 // 删除键值对
