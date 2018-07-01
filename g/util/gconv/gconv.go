@@ -15,6 +15,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gbinary"
     "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/os/gtime"
+    "github.com/gin-gonic/gin/json"
 )
 
 // 将变量i转换为字符串指定的类型t
@@ -117,7 +118,9 @@ func String(i interface{}) string {
         case string:  return value
         case []byte:  return string(value)
         default:
-            return fmt.Sprintf("%v", value)
+            // 默认使用json进行字符串转换
+            jsonContent, _ := json.Marshal(value)
+            return string(jsonContent)
     }
 }
 
