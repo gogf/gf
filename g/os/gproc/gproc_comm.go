@@ -50,7 +50,7 @@ func getCommFilePath(pid int) string {
 
 // 获取进程间通信目录地址
 func getCommDirPath() string {
-    tempDir := os.Getenv("gproc.tempdir")
+    tempDir := os.Getenv(gPROC_TEMP_DIR_ENV_KEY)
     if tempDir == "" {
         tempDir = gfile.TempDir()
     }
