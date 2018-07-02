@@ -12,10 +12,10 @@ import (
     "fmt"
     "time"
     "strconv"
-    "gitee.com/johng/gf/g/encoding/gbinary"
-    "gitee.com/johng/gf/g/util/gstr"
+    "encoding/json"
     "gitee.com/johng/gf/g/os/gtime"
-    "github.com/gin-gonic/gin/json"
+    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
 // 将变量i转换为字符串指定的类型t
