@@ -30,32 +30,32 @@ func NewArray(size int, cap ... int) *Array {
 // 获取指定索引的数据项, 调用方注意判断数组边界
 func (a *Array) Get(index int) interface{} {
     a.mu.RLock()
+    defer a.mu.RUnlock()
     value := a.array[index]
-    a.mu.RUnlock()
     return value
 }
 
 // 设置指定索引的数据项, 调用方注意判断数组边界
 func (a *Array) Set(index int, value interface{}) {
     a.mu.Lock()
+    defer a.mu.Unlock()
     a.array[index] = value
-    a.mu.Unlock()
 }
 
 // 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
 func (a *Array) Insert(index int, value interface{}) {
     a.mu.Lock()
+    defer a.mu.Unlock()
     rear   := append([]interface{}{}, a.array[index : ]...)
     a.array = append(a.array[0 : index], value)
     a.array = append(a.array, rear...)
-    a.mu.Unlock()
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
 func (a *Array) Remove(index int) {
     a.mu.Lock()
+    defer a.mu.Unlock()
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
-    a.mu.Unlock()
 }
 
 // 追加数据项

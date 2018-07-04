@@ -17,8 +17,9 @@ import (
 )
 
 const (
-    gPROC_ENV_KEY_PPID_KEY = "gproc.ppid"
-    gPROC_TEMP_DIR_ENV_KEY = "gproc.tempdir"
+    gPROC_ENV_KEY_PPID_KEY = "GPROC_PPID"
+    gPROC_ENV_KEY_COMM_KEY = "GPROC_COMM_ENABLED"
+    gPROC_TEMP_DIR_ENV_KEY = "GPROC_TEMP_DIR"
 )
 
 // 进程开始执行时间
@@ -36,7 +37,7 @@ func PPid() int {
     }
     // gPROC_ENV_KEY_PPID_KEY为gproc包自定义的父进程
     ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
-    if ppidValue != "" {
+    if ppidValue != "" && ppidValue != "0" {
         return gconv.Int(ppidValue)
     }
     return PPidOS()
@@ -49,7 +50,8 @@ func PPidOS() int {
 
 // 判断当前进程是否为gproc创建的子进程
 func IsChild() bool {
-    return os.Getenv(gPROC_ENV_KEY_PPID_KEY) != ""
+    ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
+    return ppidValue != "" && ppidValue != "0"
 }
 
 // 设置gproc父进程ID，当ppid为0时表示该进程为gproc主进程，否则为gproc子进程

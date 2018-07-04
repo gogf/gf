@@ -9,6 +9,7 @@ package gparser
 
 import (
     "gitee.com/johng/gf/g/encoding/gjson"
+    "time"
 )
 
 type Parser struct {
@@ -32,9 +33,9 @@ func Load (path string) (*Parser, error) {
     }
 }
 
-// 支持的配置文件格式：xml, json, yaml/yml, toml
-func LoadContent (data []byte, fileType string) (*Parser, error) {
-    if j, e := gjson.LoadContent(data, fileType); e == nil {
+// 支持的数据内容格式：json(默认), xml, yaml/yml, toml
+func LoadContent (data []byte, dataType...string) (*Parser, error) {
+    if j, e := gjson.LoadContent(data, dataType...); e == nil {
         return &Parser{j}, nil
     } else {
         return nil, e
@@ -46,9 +47,10 @@ func (p *Parser) SetSplitChar(char byte) {
     p.json.SetSplitChar(char)
 }
 
-// 设置自定义的层级分隔符号
+// 设置是否执行层级冲突检查，当键名中存在层级符号时需要开启该特性，默认为关闭。
+// 开启比较耗性能，也不建议允许键名中存在分隔符，最好在应用端避免这种情况。
 func (p *Parser) SetViolenceCheck(check bool) {
-    p.SetViolenceCheck(check)
+    p.json.SetViolenceCheck(check)
 }
 
 // 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
@@ -72,6 +74,18 @@ func (p *Parser) GetArray(pattern string) []interface{} {
 // 返回指定json中的string
 func (p *Parser) GetString(pattern string) string {
     return p.json.GetString(pattern)
+}
+
+func (p *Parser) GetStrings(pattern string) []string {
+    return p.json.GetStrings(pattern)
+}
+
+func (p *Parser) GetTime(pattern string, format ... string) time.Time {
+    return p.json.GetTime(pattern, format...)
+}
+
+func (p *Parser) GetTimeDuration(pattern string) time.Duration {
+    return p.json.GetTimeDuration(pattern)
 }
 
 // 返回指定json中的bool(false:"", 0, false, off)
@@ -138,11 +152,11 @@ func (p *Parser) Remove(pattern string) error {
     return p.json.Remove(pattern)
 }
 
-// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
-// 返回的结果类型的interface{}，因此需要自己做类型转换
-// 如果找不到对应节点的数据，返回nil
-func (p *Parser) Get(pattern string) interface{} {
-    return p.json.Get(pattern)
+// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"; 当pattern为空时，表示获取所有数据
+// 返回的结果类型的interface{}，因此需要自己做类型转换;
+// 如果找不到对应节点的数据，返回nil;
+func (p *Parser) Get(pattern...string) interface{} {
+    return p.json.Get(pattern...)
 }
 
 // 转换为map[string]interface{}类型,如果转换失败，返回nil

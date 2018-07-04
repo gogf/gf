@@ -26,6 +26,7 @@ type Config struct {
     paths  *gspath.SPath            // 搜索目录路径
     jsons  *gmap.StringInterfaceMap // 配置文件对象
     closed *gtype.Bool              // 是否已经被close
+    vc     *gtype.Bool              // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
 }
 
 // 生成一个配置管理对象
@@ -41,6 +42,7 @@ func New(path string, file...string) *Config {
         paths  : s,
         jsons  : gmap.NewStringInterfaceMap(),
         closed : gtype.NewBool(),
+        vc     : gtype.NewBool(),
     }
 }
 
@@ -60,6 +62,13 @@ func (c *Config) SetPath(path string) error {
     }
     c.jsons.Clear()
     return nil
+}
+
+// 设置是否执行层级冲突检查，当键名中存在层级符号时需要开启该特性，默认为关闭。
+// 开启比较耗性能，也不建议允许键名中存在分隔符，最好在应用端避免这种情况。
+func (c *Config) SetViolenceCheck(check bool) {
+    c.vc.Set(check)
+    c.Reload()
 }
 
 // 添加配置管理器的配置文件搜索路径
@@ -91,6 +100,7 @@ func (c *Config) getJson(file...string) *gjson.Json {
         return r.(*gjson.Json)
     }
     if j, err := gjson.Load(fpath); err == nil {
+        j.SetViolenceCheck(c.vc.Val())
         c.addMonitor(fpath)
         c.jsons.Set(fpath, j)
         return j
@@ -130,6 +140,13 @@ func (c *Config) GetString(pattern string, file...string) string {
         return j.GetString(pattern)
     }
     return ""
+}
+
+func (c *Config) GetStrings(pattern string, file...string) []string {
+    if j := c.getJson(file...); j != nil {
+        return j.GetStrings(pattern)
+    }
+    return nil
 }
 
 // 返回指定json中的bool

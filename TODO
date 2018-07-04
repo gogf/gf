@@ -8,6 +8,11 @@ orm增加更多数据库支持；
 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
 ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
 Cookie&Session数据池化处理；
+ghttp.Client增加proxy特性；
+gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
+改进gf-orm的where查询功能，参考thinkphp 里的where查询语法；
+gproc进程间通信增加分组特性，不同的进程见可以通过进程ID以及分组名称发送/获取消息；
+
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
@@ -35,6 +40,7 @@ DONE:
 23. 平滑重启机制改进，以便于开发阶段调试；
 24. 对grpool进行优化改进，包括属性原子操作封装采用gtype实现，修正设计BUG：https://github.com/johng-cn/gf/issues/6；
 25. gredis增加redis密码支持；
+26. 改进ghttp.Server平滑重启机制，当新进程接管服务后，再使用进程间通信方式通知父进程销毁；
 
 
 

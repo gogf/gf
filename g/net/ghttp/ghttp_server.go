@@ -25,6 +25,8 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/genv"
     "github.com/gorilla/websocket"
+    "gitee.com/johng/gf/g/os/gtime"
+    "time"
 )
 
 const (
@@ -127,6 +129,8 @@ func init() {
 
     // 信号量管理操作监听
     go handleProcessSignal()
+    // 异步监听进程间消息
+    go handleProcessMessage()
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
@@ -211,6 +215,13 @@ func (s *Server) Start() error {
     }
     if !reloaded {
         s.startServer(nil)
+    }
+
+    // 如果是子进程，那么服务开启后通知父进程销毁
+    if gproc.IsChild() {
+        gtime.SetTimeout(2*time.Second, func() {
+            gproc.Send(gproc.PPid(), []byte("exit"))
+        })
     }
 
     // 开启异步关闭队列处理循环

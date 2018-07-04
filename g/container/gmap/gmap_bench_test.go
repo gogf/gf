@@ -6,25 +6,24 @@
 
 // go test *.go -bench=".*"
 
-package gmap_test
+package gmap
 
 import (
     "testing"
-    "gitee.com/johng/gf/g/container/gmap"
     "strconv"
 )
 
 
-var ibm   = gmap.NewIntBoolMap()
-var iim   = gmap.NewIntIntMap()
-var iifm  = gmap.NewIntInterfaceMap()
-var ism   = gmap.NewIntStringMap()
-var ififm = gmap.NewInterfaceInterfaceMap()
-var sbm   = gmap.NewStringBoolMap()
-var sim   = gmap.NewStringIntMap()
-var sifm  = gmap.NewStringInterfaceMap()
-var ssm   = gmap.NewStringStringMap()
-var uifm  = gmap.NewUintInterfaceMap()
+var ibm   = NewIntBoolMap()
+var iim   = NewIntIntMap()
+var iifm  = NewIntInterfaceMap()
+var ism   = NewIntStringMap()
+var ififm = NewInterfaceInterfaceMap()
+var sbm   = NewStringBoolMap()
+var sim   = NewStringIntMap()
+var sifm  = NewStringInterfaceMap()
+var ssm   = NewStringStringMap()
+var uifm  = NewUintInterfaceMap()
 
 func BenchmarkIntBoolMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
