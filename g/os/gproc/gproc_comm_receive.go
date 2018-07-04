@@ -21,7 +21,8 @@ import (
 )
 
 const (
-    gPROC_DEFAULT_TCP_PORT = 10000 // 默认开始监听的TCP端口号，如果占用则递增
+    gPROC_DEFAULT_TCP_PORT     = 10000 // 默认开始监听的TCP端口号，如果占用则递增
+    gPROC_MSG_QUEUE_MAX_LENGTH = 10000 // 进程消息队列最大长度(每个分组)
 )
 
 var (

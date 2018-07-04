@@ -28,7 +28,7 @@ func main () {
         p.Start()
         for {
             msg := gproc.Receive()
-            fmt.Printf("%d: receive from %d, data: %s, group: %s\n", gproc.Pid(), msg.Pid, string(msg.Data), msg.Group)
+            fmt.Printf("%d: receive from %d, data: %s\n", gproc.Pid(), msg.Pid, string(msg.Data))
         }
     }
 }
