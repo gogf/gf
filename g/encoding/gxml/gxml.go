@@ -61,10 +61,15 @@ func prepare(xmlbyte []byte) error {
 	if err != nil {
 		return err
 	}
+	
+	xmlEncode := "UTF-8"
+	if len(matchStr) == 2 {
+		xmlEncode = matchStr[1]	
+	}
 
-	charset := mahonia.GetCharset(matchStr[1])
+	charset := mahonia.GetCharset(xmlEncode)
 	if charset == nil {
-		return errors.New(fmt.Sprintf("not support charset:%s", matchStr[1]))
+		return errors.New(fmt.Sprintf("not support charset:%s", xmlEncode))
 	}
 
 	if !strings.EqualFold(charset.Name, "UTF-8") {
