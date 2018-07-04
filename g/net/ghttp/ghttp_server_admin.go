@@ -31,6 +31,7 @@ const (
     gADMIN_ACTION_SHUTINGDOWN    = 2
     gADMIN_ACTION_RELOAD_ENVKEY  = "GF_SERVER_RELOAD"
     gADMIN_ACTION_RESTART_ENVKEY = "GF_SERVER_RESTART"
+    gADMIN_GPROC_COMM_GROUP      = "GF_GPROC_HTTP_SERVER"
 )
 
 // 用于服务管理的对象
@@ -282,7 +283,7 @@ func forcedlyCloseWebServers() {
 // 异步监听进程间消息
 func handleProcessMessage() {
     for {
-        if msg := gproc.Receive(); msg != nil {
+        if msg := gproc.Receive(gADMIN_GPROC_COMM_GROUP); msg != nil {
             if bytes.EqualFold(msg.Data, []byte("exit")) {
                 gracefulShutdownWebServers()
                 doneChan <- struct{}{}

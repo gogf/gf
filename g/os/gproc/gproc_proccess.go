@@ -19,7 +19,6 @@ type Process struct {
     exec.Cmd
     Manager     *Manager // 所属进程管理器
     PPid        int      // 自定义关联的父进程ID
-    DisableComm bool     // 是否关闭TCP通信监听服务
 }
 
 // 创建一个进程(不执行)
@@ -61,12 +60,7 @@ func (p *Process) Start() (int, error) {
     if p.Process != nil {
         return p.Pid(), nil
     }
-    commEnabled := 1
-    if p.DisableComm {
-        commEnabled = 0
-    }
     p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
-    p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_COMM_KEY, commEnabled))
     if err := p.Cmd.Start(); err == nil {
         if p.Manager != nil {
             p.Manager.processes.Set(p.Process.Pid, p)

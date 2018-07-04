@@ -10,6 +10,24 @@ import (
     "testing"
 )
 
+func BenchmarkSecond(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        Second()
+    }
+}
+
+func BenchmarkMillisecond(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        Millisecond()
+    }
+}
+
+func BenchmarkMicrosecond(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        Microsecond()
+    }
+}
+
 func BenchmarkNanosecond(b *testing.B) {
     for i := 0; i < b.N; i++ {
         Nanosecond()

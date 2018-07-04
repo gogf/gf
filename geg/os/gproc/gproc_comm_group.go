@@ -1,6 +1,4 @@
-// 多进程通信示例，
-// 子进程每个1秒向父进程发送当前时间，
-// 父进程监听进程消息，收到后打印到终端。
+// 该示例是gproc_comm.go的改进，增加了分组消息的演示。
 package main
 
 import (
@@ -14,9 +12,10 @@ import (
 
 func main () {
     fmt.Printf("%d: I am child? %v\n", gproc.Pid(), gproc.IsChild())
+    group := "test"
     if gproc.IsChild() {
         gtime.SetInterval(time.Second, func() bool {
-            if err := gproc.Send(gproc.PPid(), []byte(gtime.Datetime())); err != nil {
+            if err := gproc.Send(gproc.PPid(), []byte(gtime.Datetime()), group); err != nil {
                 glog.Error(err)
             }
             return true
@@ -27,8 +26,8 @@ func main () {
         p := m.NewProcess(os.Args[0], os.Args, os.Environ())
         p.Start()
         for {
-            msg := gproc.Receive()
-            fmt.Printf("%d: receive from %d, data: %s, group: %s\n", gproc.Pid(), msg.Pid, string(msg.Data), msg.Group)
+            msg := gproc.Receive(group)
+            fmt.Printf("receive from %d, data: %s, group: %s\n", msg.Pid, string(msg.Data), msg.Group)
         }
     }
 }

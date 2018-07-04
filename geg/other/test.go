@@ -2,11 +2,12 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
 func main() {
-    content := `[0.00000000059, 1.598877777409]`
-    j, _ := gjson.LoadContent([]byte(content), "json")
-    fmt.Println(j.GetString("0"))
+    i := 65533
+    b := gbinary.EncodeByLength(3, i)
+    fmt.Println(b)
+    fmt.Println(gbinary.DecodeToInt32(b))
 }

@@ -17,7 +17,7 @@ var length = 10000000
 var q1 = gchan.New(length)
 var q2 = make(chan int, length)
 
-func BenchmarkGqueuePushAndPop(b *testing.B) {
+func BenchmarkGchanPushAndPop(b *testing.B) {
     for i := 0; i < b.N; i++ {
         q1.Push(i)
         q1.Pop()

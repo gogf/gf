@@ -62,7 +62,6 @@ func New(path string, flag int, expire int) *Pool {
     // 独立的线程执行过期清理工作
     if expire != -1 {
         go func(p *Pool) {
-            // 遍历可用指针列表，判断是否过期
             for !p.closed.Val() {
                 if r := p.list.PopFront(); r != nil {
                     f := r.(*PoolItem)
