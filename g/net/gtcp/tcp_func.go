@@ -16,7 +16,7 @@ import (
 
 const (
     gDEFAULT_RETRY_INTERVAL   = 100   // (毫秒)默认重试时间间隔
-    gDEFAULT_READ_BUFFER_SIZE = 10    // 默认数据读取缓冲区大小
+    gDEFAULT_READ_BUFFER_SIZE = 1024  // 默认数据读取缓冲区大小
 
 )
 
@@ -40,8 +40,8 @@ func Checksum(buffer []byte) uint32 {
     return checksum
 }
 
-// 创建TCP链接
-func Conn(ip string, port int, timeout...int) (net.Conn, error) {
+// 创建原生TCP链接
+func NewNetConn(ip string, port int, timeout...int) (net.Conn, error) {
     addr := fmt.Sprintf("%s:%d", ip, port)
     if len(timeout) > 0 {
         return net.DialTimeout("tcp", addr, time.Duration(timeout[0]) * time.Millisecond)
@@ -52,19 +52,23 @@ func Conn(ip string, port int, timeout...int) (net.Conn, error) {
 
 // 获取数据
 func Receive(conn net.Conn, retry...Retry) ([]byte, error) {
-    var err error = nil
-    size   := gDEFAULT_READ_BUFFER_SIZE
-    data   := make([]byte, 0)
+    var err    error
+    var length int
+    var buffer []byte
+    size := gDEFAULT_READ_BUFFER_SIZE
+    data := make([]byte, 0)
     for {
-        buffer    := make([]byte, size)
-        length, e := conn.Read(buffer)
-        if length < 1 || e != nil {
-            if e == io.EOF {
+        buffer      = make([]byte, size)
+        length, err = conn.Read(buffer)
+        // 这里使用 "&&" 只要有数据不管有无错误都将先进行解析
+        if length < 1 && err != nil {
+            // 链接已关闭
+            if err == io.EOF {
                 break
             }
             if len(retry) > 0 {
+                // 其他错误，重试之后仍不能成功
                 if retry[0].Count == 0 {
-                    err = e
                     break
                 }
                 retry[0].Count--
@@ -81,7 +85,7 @@ func Receive(conn net.Conn, retry...Retry) ([]byte, error) {
                 break
             }
             data = append(data, buffer[0 : length]...)
-            if length < gDEFAULT_READ_BUFFER_SIZE || e == io.EOF {
+            if length < gDEFAULT_READ_BUFFER_SIZE || err == io.EOF {
                 break
             }
         }
@@ -104,6 +108,11 @@ func Send(conn net.Conn, data []byte, retry...Retry) error {
     for {
         n, err := conn.Write(data)
         if err != nil {
+            // 链接已关闭
+            if err == io.EOF {
+                return err
+            }
+            // 其他错误，重试之后仍不能成功
             if len(retry) == 0 || retry[0].Count == 0 {
                 return err
             }
@@ -121,6 +130,7 @@ func Send(conn net.Conn, data []byte, retry...Retry) error {
             }
         }
     }
+    return nil
 }
 
 // 带超时时间的数据发送

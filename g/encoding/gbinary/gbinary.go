@@ -47,6 +47,18 @@ func Encode(vs ...interface{}) []byte {
     return buf.Bytes()
 }
 
+// 将变量转换为二进制[]byte，并指定固定的[]byte长度返回，长度单位为字节(byte)；
+// 如果转换的二进制长度超过指定长度，那么进行截断处理
+func EncodeByLength(length int, vs ...interface{}) []byte {
+    b := Encode(vs...)
+    if len(b) < length {
+        b = append(b, make([]byte, length - len(b))...)
+    } else if len(b) > length {
+        b = b[0 : length]
+    }
+    return b
+}
+
 // 整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，以便确定解析的[]byte长度，
 // 例如：int8/16/32/64、uint8/16/32/64、float32/64等等
 func Decode(b []byte, vs ...interface{}) error {

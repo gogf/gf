@@ -13,34 +13,29 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/container/gqueue"
 )
 
-// 本地进程通信发送消息队列
-var commSendQueue    = gqueue.New()
-// 本地进程通信接收消息队列
-var commReceiveQueue = gqueue.New()
-// (用于发送)已建立的PID对应的Conn通信对象
-var commPidConnMap   = gmap.NewIntInterfaceMap()
+const (
+    gPROC_MSG_QUEUE_MAX_LENGTH = 10000 // 进程消息队列最大长度(每个分组)
+)
+
+// 本地进程通信接收消息队列(按照分组进行构建的map，键值为*gqueue.Queue对象)
+var commReceiveQueues = gmap.NewStringInterfaceMap()
+
+// (用于发送)已建立的PID对应的Conn通信对象，键值为一个Pool，防止并行使用同一个通信对象造成数据重叠
+var commPidConnMap    = gmap.NewIntInterfaceMap()
 
 // TCP通信数据结构定义
 type Msg struct {
-    Pid  int    // PID，来源哪个进程
-    Data []byte // 数据
+    Pid   int     // PID，来源哪个进程
+    Data  []byte  // 数据
+    Group string  // 分组名称
 }
 
 // TCP通信数据结构定义
 type sendQueueItem struct {
     Pid  int    // PID，发向哪个进程
     Data []byte // 数据
-}
-
-// 进程管理/通信初始化操作
-func init() {
-    // 默认下为空("")
-    if os.Getenv(gPROC_ENV_KEY_COMM_KEY) != "0" {
-        go startTcpListening()
-    }
 }
 
 // 获取指定进程的通信文件地址
