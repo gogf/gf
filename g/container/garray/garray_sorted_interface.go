@@ -55,16 +55,16 @@ func (a *SortedArray) Add(value interface{}) {
 // 获取指定索引的数据项, 调用方注意判断数组边界
 func (a *SortedArray) Get(index int) interface{} {
     a.mu.RLock()
+    defer a.mu.RUnlock()
     value := a.array[index]
-    a.mu.RUnlock()
     return value
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
 func (a *SortedArray) Remove(index int) {
     a.mu.Lock()
+    defer a.mu.Unlock()
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
-    a.mu.Unlock()
 }
 
 // 数组长度

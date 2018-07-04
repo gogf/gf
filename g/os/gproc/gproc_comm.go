@@ -37,7 +37,10 @@ type sendQueueItem struct {
 
 // 进程管理/通信初始化操作
 func init() {
-    go startTcpListening()
+    // 默认下为空("")
+    if os.Getenv(gPROC_ENV_KEY_COMM_KEY) != "0" {
+        go startTcpListening()
+    }
 }
 
 // 获取指定进程的通信文件地址
@@ -47,7 +50,7 @@ func getCommFilePath(pid int) string {
 
 // 获取进程间通信目录地址
 func getCommDirPath() string {
-    tempDir := os.Getenv("gproc.tempdir")
+    tempDir := os.Getenv(gPROC_TEMP_DIR_ENV_KEY)
     if tempDir == "" {
         tempDir = gfile.TempDir()
     }

@@ -9,7 +9,6 @@ package gmap
 
 import (
 	"sync"
-    "gitee.com/johng/gf/g/util/gconv"
 )
 
 type UintInterfaceMap struct {
@@ -78,30 +77,6 @@ func (this *UintInterfaceMap) GetWithDefault(key uint, value interface{}) interf
     }
     this.mu.Unlock()
     return val
-}
-
-func (this *UintInterfaceMap) GetBool(key uint) bool {
-    return gconv.Bool(this.Get(key))
-}
-
-func (this *UintInterfaceMap) GetInt(key uint) int {
-    return gconv.Int(this.Get(key))
-}
-
-func (this *UintInterfaceMap) GetUint (key uint) uint {
-    return gconv.Uint(this.Get(key))
-}
-
-func (this *UintInterfaceMap) GetFloat32 (key uint) float32 {
-    return gconv.Float32(this.Get(key))
-}
-
-func (this *UintInterfaceMap) GetFloat64 (key uint) float64 {
-    return gconv.Float64(this.Get(key))
-}
-
-func (this *UintInterfaceMap) GetString (key uint) string {
-    return gconv.String(this.Get(key))
 }
 
 // 删除键值对

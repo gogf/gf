@@ -15,6 +15,10 @@ import (
     "errors"
 )
 
+const (
+    TIME_REAGEX_PATTERN = `(\d{4}-\d{2}-\d{2})[\sT]{0,1}(\d{2}:\d{2}:\d{2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
+)
+
 var (
     // 用于time.Time转换使用，防止多次Compile
     timeRegex   *regexp.Regexp
@@ -22,7 +26,7 @@ var (
 
 func init() {
     // 使用正则判断会比直接使用ParseInLocation挨个轮训判断要快很多
-    timeRegex, _   = regexp.Compile(`(\d{4}-\d{2}-\d{2})[\sT]{0,1}(\d{2}:\d{2}:\d{2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`)
+    timeRegex, _   = regexp.Compile(TIME_REAGEX_PATTERN)
 
 }
 
@@ -88,6 +92,15 @@ func Format(format string, timestamps...int64) string {
 }
 
 // 字符串转换为时间对象，需要给定字符串时间格式，format格式形如：2006-01-02 15:04:05
+// 不传递自定义格式下默认支持的标准时间格式：
+// "2017-12-14 04:51:34 +0805 LMT",
+// "2006-01-02T15:04:05Z07:00",
+// "2014-01-17T01:19:15+08:00",
+// "2018-02-09T20:46:17.897Z",
+// "2018-02-09 20:46:17.897",
+// "2018-02-09T20:46:17Z",
+// "2018-02-09 20:46:17",
+// "2018-02-09",
 func StrToTime(str string, format...string) (time.Time, error) {
     // 优先使用用户输入日期格式进行转换
     if len(format) > 0 {

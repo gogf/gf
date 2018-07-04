@@ -21,6 +21,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gyaml"
     "gitee.com/johng/gf/g/encoding/gtoml"
     "gitee.com/johng/gf/g/util/gstr"
+    "time"
 )
 
 const (
@@ -32,7 +33,7 @@ type Json struct {
     mu sync.RWMutex
     p  *interface{} // 注意这是一个指针
     c  byte         // 层级分隔符，默认为"."
-    vc bool         // 是否执行分隔符冲突检测(默认为true，检测会比较影响检索效率)
+    vc bool         // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
@@ -42,13 +43,13 @@ func New(value interface{}) *Json {
             return &Json{
                 p  : &value,
                 c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : true ,
+                vc : false ,
             }
         case []interface{}:
             return &Json{
                 p  : &value,
                 c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : true ,
+                vc : false ,
             }
         default:
             // 这里效率会比较低
@@ -57,7 +58,7 @@ func New(value interface{}) *Json {
             return &Json{
                 p  : &v,
                 c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : true,
+                vc : false,
             }
     }
 }
@@ -101,9 +102,13 @@ func Load (path string) (*Json, error) {
 }
 
 // 支持的配置文件格式：xml, json, yaml/yml, toml
-func LoadContent (data []byte, t string) (*Json, error) {
+func LoadContent (data []byte, dataType...string) (*Json, error) {
     var err    error
     var result interface{}
+    t := "json"
+    if len(dataType) > 0 {
+        t = dataType[0]
+    }
     switch t {
         case  "xml":  fallthrough
         case ".xml":
@@ -140,7 +145,8 @@ func (j *Json) SetSplitChar(char byte) {
     j.mu.Unlock()
 }
 
-// 设置自定义的层级分隔符号
+// 设置是否执行层级冲突检查，当键名中存在层级符号时需要开启该特性，默认为关闭。
+// 开启比较耗性能，也不建议允许键名中存在分隔符，最好在应用端避免这种情况。
 func (j *Json) SetViolenceCheck(check bool) {
     j.mu.Lock()
     j.vc = check
@@ -199,6 +205,19 @@ func (j *Json) GetArray(pattern string) []interface{} {
 // 返回指定json中的string
 func (j *Json) GetString(pattern string) string {
     return gconv.String(j.Get(pattern))
+}
+
+// 返回指定json中的strings(转换为[]string数组)
+func (j *Json) GetStrings(pattern string) []string {
+    return gconv.Strings(j.Get(pattern))
+}
+
+func (j *Json) GetTime(pattern string, format ... string) time.Time {
+    return gconv.Time(j.Get(pattern), format...)
+}
+
+func (j *Json) GetTimeDuration(pattern string) time.Duration {
+    return gconv.TimeDuration(j.Get(pattern))
 }
 
 // 返回指定json中的bool(false:"", 0, false, off)
@@ -456,18 +475,22 @@ func (j *Json) setPointerWithValue(pointer *interface{}, key string, value inter
     return pointer
 }
 
-// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
-// 返回的结果类型的interface{}，因此需要自己做类型转换
-// 如果找不到对应节点的数据，返回nil
-func (j *Json) Get(pattern string) interface{} {
+// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"; 当pattern为空时，表示获取所有数据;
+// 返回的结果类型的interface{}，因此需要自己做类型转换;
+// 如果找不到对应节点的数据，返回nil;
+func (j *Json) Get(pattern...string) interface{} {
     j.mu.RLock()
     defer j.mu.RUnlock()
 
+    queryPattern := ""
+    if len(pattern) > 0 {
+        queryPattern = pattern[0]
+    }
     var result *interface{}
     if j.vc {
-        result = j.getPointerByPattern(pattern)
+        result = j.getPointerByPattern(queryPattern)
     } else {
-        result = j.getPointerByPatternWithoutSplitCharViolenceCheck(pattern)
+        result = j.getPointerByPatternWithoutSplitCharViolenceCheck(queryPattern)
     }
     if result != nil {
         return *result

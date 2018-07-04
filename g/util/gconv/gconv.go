@@ -12,13 +12,14 @@ import (
     "fmt"
     "time"
     "strconv"
-    "gitee.com/johng/gf/g/encoding/gbinary"
-    "gitee.com/johng/gf/g/util/gstr"
+    "encoding/json"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
 // 将变量i转换为字符串指定的类型t
-func Convert(i interface{}, t string) interface{} {
+func Convert(i interface{}, t string, params...interface{}) interface{} {
     switch t {
         case "int":             return Int(i)
         case "int8":            return Int8(i)
@@ -35,7 +36,12 @@ func Convert(i interface{}, t string) interface{} {
         case "bool":            return Bool(i)
         case "string":          return String(i)
         case "[]byte":          return Bytes(i)
-        case "time.Time":       return Time(i)
+        case "time.Time":
+            if len(params) > 0 {
+                return Time(i, String(params[0]))
+            }
+            return Time(i)
+
         case "time.Duration":   return TimeDuration(i)
         default:
             return i
@@ -106,13 +112,15 @@ func String(i interface{}) string {
         case uint16:  return strconv.FormatUint(uint64(value), 10)
         case uint32:  return strconv.FormatUint(uint64(value), 10)
         case uint64:  return strconv.FormatUint(uint64(value), 10)
-        case float32: return strconv.FormatFloat(float64(value), 'f', -1, 64)
+        case float32: return strconv.FormatFloat(float64(value), 'f', -1, 32)
         case float64: return strconv.FormatFloat(value, 'f', -1, 64)
         case bool:    return strconv.FormatBool(value)
         case string:  return value
         case []byte:  return string(value)
         default:
-            return fmt.Sprintf("%v", value)
+            // 默认使用json进行字符串转换
+            jsonContent, _ := json.Marshal(value)
+            return string(jsonContent)
     }
 }
 
@@ -289,7 +297,7 @@ func Float32 (i interface{}) float32 {
     if v, ok := i.(float32); ok {
         return v
     }
-    v, _ := strconv.ParseFloat(String(i), 32)
+    v, _ := strconv.ParseFloat(String(i), 64)
     return float32(v)
 }
 

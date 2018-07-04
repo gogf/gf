@@ -110,7 +110,7 @@ func (c *gCmdOption) GetBool(key string) bool {
     return false
 }
 
-// 绑定命令行参数及对应的命令函数，注意参数是函数的内存地址
+// 绑定命令行参数及对应的命令函数，注意命令函数参数是函数的内存地址
 // 如果操作失败返回错误信息
 func BindHandle (cmd string, f func()) error {
     if _, ok := cmdFuncMap[cmd]; ok {

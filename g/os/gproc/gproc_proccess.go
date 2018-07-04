@@ -11,13 +11,49 @@ import (
     "fmt"
     "os/exec"
     "errors"
+    "strings"
 )
 
 // 子进程
 type Process struct {
     exec.Cmd
-    Manager  *Manager // 所属进程管理器
-    PPid     int      // 自定义关联的父进程ID
+    Manager     *Manager // 所属进程管理器
+    PPid        int      // 自定义关联的父进程ID
+    DisableComm bool     // 是否关闭TCP通信监听服务
+}
+
+// 创建一个进程(不执行)
+func NewProcess(path string, args []string, environment []string) *Process {
+    env := make([]string, len(environment) + 1)
+    for k, v := range environment {
+        env[k] = v
+    }
+    env[len(env) - 1] = fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir())
+    p := &Process {
+        Manager     : nil,
+        PPid        : os.Getpid(),
+        Cmd         : exec.Cmd {
+            Args       : []string{path},
+            Path       : path,
+            Stdin      : os.Stdin,
+            Stdout     : os.Stdout,
+            Stderr     : os.Stderr,
+            Env        : env,
+            ExtraFiles : make([]*os.File, 0),
+        },
+    }
+    // 当前工作目录
+    if d, err := os.Getwd(); err == nil {
+        p.Dir = d
+    }
+    if len(args) > 0 {
+        start := 0
+        if strings.EqualFold(path, args[0]) {
+            start = 1
+        }
+        p.Args = append(p.Args, args[start : ]...)
+    }
+    return p
 }
 
 // 开始执行(非阻塞)
@@ -25,9 +61,12 @@ func (p *Process) Start() (int, error) {
     if p.Process != nil {
         return p.Pid(), nil
     }
-    if p.PPid > 0 {
-        p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
+    commEnabled := 1
+    if p.DisableComm {
+        commEnabled = 0
     }
+    p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
+    p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_COMM_KEY, commEnabled))
     if err := p.Cmd.Start(); err == nil {
         if p.Manager != nil {
             p.Manager.processes.Set(p.Process.Pid, p)

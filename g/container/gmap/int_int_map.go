@@ -148,7 +148,7 @@ func (this *IntIntMap) Size() int {
 // 哈希表是否为空
 func (this *IntIntMap) IsEmpty() bool {
     this.mu.RLock()
-    empty := (len(this.m) == 0)
+    empty := len(this.m) == 0
     this.mu.RUnlock()
     return empty
 }

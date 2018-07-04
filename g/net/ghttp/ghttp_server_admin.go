@@ -22,14 +22,15 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "time"
     "runtime"
+    "bytes"
 )
 
 const (
     gADMIN_ACTION_INTERVAL_LIMIT = 2000 // (毫秒)服务开启后允许执行管理操作的间隔限制
     gADMIN_ACTION_RESTARTING     = 1
     gADMIN_ACTION_SHUTINGDOWN    = 2
-    gADMIN_ACTION_RELOAD_ENVKEY  = "gf.server.reload"
-    gADMIN_ACTION_RESTART_ENVKEY = "gf.server.restart"
+    gADMIN_ACTION_RELOAD_ENVKEY  = "GF_SERVER_RELOAD"
+    gADMIN_ACTION_RESTART_ENVKEY = "GF_SERVER_RESTART"
 )
 
 // 用于服务管理的对象
@@ -240,8 +241,6 @@ func restartWebServers(newExeFilePath...string) {
         })
     } else {
         forkReloadProcess(newExeFilePath...)
-        go gracefulShutdownWebServers()
-        doneChan <- struct{}{}
     }
 }
 
@@ -278,4 +277,17 @@ func forcedlyCloseWebServers() {
             }
         }
     })
+}
+
+// 异步监听进程间消息
+func handleProcessMessage() {
+    for {
+        if msg := gproc.Receive(); msg != nil {
+            if bytes.EqualFold(msg.Data, []byte("exit")) {
+                gracefulShutdownWebServers()
+                doneChan <- struct{}{}
+                return
+            }
+        }
+    }
 }

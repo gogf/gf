@@ -65,16 +65,16 @@ func (a *SortedStringArray) Add(value string) {
 // 获取指定索引的数据项, 调用方注意判断数组边界
 func (a *SortedStringArray) Get(index int) string {
     a.mu.RLock()
+    defer a.mu.RUnlock()
     value := a.array[index]
-    a.mu.RUnlock()
     return value
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
 func (a *SortedStringArray) Remove(index int) {
     a.mu.Lock()
+    defer a.mu.Unlock()
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
-    a.mu.Unlock()
 }
 
 // 数组长度
