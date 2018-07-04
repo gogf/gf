@@ -15,10 +15,6 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
 )
 
-const (
-    gPROC_MSG_QUEUE_MAX_LENGTH = 10000 // 进程消息队列最大长度(每个分组)
-)
-
 // 本地进程通信接收消息队列(按照分组进行构建的map，键值为*gqueue.Queue对象)
 var commReceiveQueues = gmap.NewStringInterfaceMap()
 
