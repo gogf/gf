@@ -37,9 +37,18 @@ func (tx *Tx) Rollback() error {
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
     p         := tx.db.link.handleSqlBeforeExec(&query)
     rows, err := tx.tx.Query(*p, args ...)
-    err        = tx.db.formatError(err, p, args...)
+    if tx.db.debug.Val() {
+        tx.db.sqls.Put(&Sql{
+            Sql   : *p,
+            Args  : args,
+            Error : err,
+            Func  : "TX:Query",
+        })
+    }
     if err == nil {
         return rows, nil
+    } else {
+        err = tx.db.formatError(err, p, args...)
     }
     return nil, err
 }
@@ -48,8 +57,15 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
     p      := tx.db.link.handleSqlBeforeExec(&query)
     r, err := tx.tx.Exec(*p, args ...)
-    err     = tx.db.formatError(err, p, args...)
-    return r, err
+    if tx.db.debug.Val() {
+        tx.db.sqls.Put(&Sql{
+            Sql   : *p,
+            Args  : args,
+            Error : err,
+            Func  : "TX:Exec",
+        })
+    }
+    return r, tx.db.formatError(err, p, args...)
 }
 
 // 数据库查询，获取查询结果集，以列表结构返回

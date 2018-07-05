@@ -475,7 +475,19 @@ func mapToStruct() {
     }
 }
 
+// getQueriedSqls
+func getQueriedSqls() {
+    for k, v := range db.GetQueriedSqls() {
+        fmt.Println(k, ":")
+        fmt.Println("Sql  :", v.Sql)
+        fmt.Println("Args :", v.Args)
+        fmt.Println("Error:", v.Error)
+        fmt.Println("Func :", v.Func)
+    }
+}
+
 func main() {
+    db.SetDebug(true)
     r, err := db.Table("test").Where("id=1").One()
     fmt.Println(r["datetime"])
     fmt.Println(r["datetime"].Time().Date())
@@ -503,4 +515,7 @@ func main() {
     //transaction2()
     //
     //keepPing()
+    //likeQuery()
+    //mapToStruct()
+    getQueriedSqls()
 }

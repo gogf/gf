@@ -11,7 +11,6 @@ Cookie&Session数据池化处理；
 ghttp.Client增加proxy特性；
 gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
 改进gf-orm的where查询功能，参考thinkphp 里的where查询语法；
-ORM增加获取被执行的sql语句的方法；
 gpage分页增加对自定义后缀的支持，如:2.html, 2.php等等；
 
 DONE:
@@ -42,6 +41,6 @@ DONE:
 25. gredis增加redis密码支持；
 26. 改进ghttp.Server平滑重启机制，当新进程接管服务后，再使用进程间通信方式通知父进程销毁；
 27. gproc进程间通信增加分组特性，不同的进程间可以通过进程ID以及分组名称发送/获取进程消息；
-
+28. ORM增加获取被执行的sql语句的方法；
 
 

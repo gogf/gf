@@ -15,7 +15,37 @@ import (
     "database/sql"
     "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/container/gring"
 )
+
+const (
+    gDEFAULT_DEBUG_SQL_LENGTH = 1000 // 默认调试模式下记录的SQL条数
+)
+
+// 是否开启调试服务
+func (db *Db) SetDebug(debug bool) {
+    db.debug.Set(debug)
+    if debug && db.sqls == nil {
+        db.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH)
+    }
+}
+
+// 获取已经执行的SQL列表
+func (db *Db) GetQueriedSqls() []*Sql {
+    if db.sqls == nil {
+        return nil
+    }
+    sqls := make([]*Sql, 0)
+    db.sqls.Prev()
+    db.sqls.RLockIteratorPrev(func(value interface{}) bool {
+        if value == nil {
+            return false
+        }
+        sqls = append(sqls, value.(*Sql))
+        return true
+    })
+    return sqls
+}
 
 // 关闭链接
 func (db *Db) Close() error {
@@ -40,9 +70,18 @@ func (db *Db) Close() error {
 func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
     p         := db.link.handleSqlBeforeExec(&query)
     rows, err := db.slave.Query(*p, args ...)
-    err        = db.formatError(err, p, args...)
+    if db.debug.Val() {
+        db.sqls.Put(&Sql{
+            Sql   : *p,
+            Args  : args,
+            Error : err,
+            Func  : "DB:Query",
+        })
+    }
     if err == nil {
         return rows, nil
+    } else {
+        err = db.formatError(err, p, args...)
     }
     return nil, err
 }
@@ -51,8 +90,15 @@ func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
 func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
     p      := db.link.handleSqlBeforeExec(&query)
     r, err := db.master.Exec(*p, args ...)
-    err     = db.formatError(err, p, args...)
-    return r, err
+    if db.debug.Val() {
+        db.sqls.Put(&Sql{
+            Sql   : *p,
+            Args  : args,
+            Error : err,
+            Func  : "DB:Exec",
+        })
+    }
+    return r, db.formatError(err, p, args...)
 }
 
 // 格式化错误信息

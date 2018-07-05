@@ -14,6 +14,8 @@ import (
     "gitee.com/johng/gf/g/util/grand"
     _ "github.com/lib/pq"
     _ "github.com/go-sql-driver/mysql"
+    "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/gring"
 )
 
 const (
@@ -81,11 +83,21 @@ type Link interface {
 
 // 数据库链接对象
 type Db struct {
-    link   Link
-    master *sql.DB
-    slave  *sql.DB
-    charl  string
-    charr  string
+    link   Link        // 底层数据库类型管理对象
+    master *sql.DB     // 实例化数据库链接(master)
+    slave  *sql.DB     // 实例化数据库链接(slave，可能会与master相同)
+    charl  string      // SQL安全符号(左)
+    charr  string      // SQL安全符号(右)
+    debug  *gtype.Bool // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
+    sqls   *gring.Ring // (debug=true时有效)已执行的SQL列表
+}
+
+// 执行的SQL对象
+type Sql struct {
+    Sql   string        // SQL语句(可能带有预处理占位符)
+    Args  []interface{} // 预处理参数值列表
+    Error error         // 执行结果(nil为成功)
+    Func  string        // 执行方法名称
 }
 
 // 返回数据表记录值
@@ -208,6 +220,7 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
         slave  : slave,
         charl  : link.getQuoteCharLeft(),
         charr  : link.getQuoteCharRight(),
+        debug  : gtype.NewBool(),
     }, nil
 }
 
