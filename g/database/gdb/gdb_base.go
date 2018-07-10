@@ -16,6 +16,7 @@ import (
     "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/container/gring"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 const (
@@ -68,15 +69,22 @@ func (db *Db) Close() error {
 
 // 数据库sql查询操作，主要执行查询
 func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
-    p         := db.link.handleSqlBeforeExec(&query)
-    rows, err := db.slave.Query(*p, args ...)
+    var err  error
+    var rows *sql.Rows
+    p := db.link.handleSqlBeforeExec(&query)
     if db.debug.Val() {
+        militime1 := gtime.Millisecond()
+        rows, err  = db.slave.Query(*p, args ...)
+        militime2 := gtime.Millisecond()
         db.sqls.Put(&Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
+            Cost  : militime2 - militime1,
             Func  : "DB:Query",
         })
+    } else {
+        rows, err = db.slave.Query(*p, args ...)
     }
     if err == nil {
         return rows, nil
@@ -88,17 +96,24 @@ func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
 
 // 执行一条sql，并返回执行情况，主要用于非查询操作
 func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
-    p      := db.link.handleSqlBeforeExec(&query)
-    r, err := db.master.Exec(*p, args ...)
+    var err    error
+    var result sql.Result
+    p := db.link.handleSqlBeforeExec(&query)
     if db.debug.Val() {
+        militime1  := gtime.Millisecond()
+        result, err = db.master.Exec(*p, args ...)
+        militime2  := gtime.Millisecond()
         db.sqls.Put(&Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
+            Cost  : militime2 - militime1,
             Func  : "DB:Exec",
         })
+    } else {
+        result, err = db.master.Exec(*p, args ...)
     }
-    return r, db.formatError(err, p, args...)
+    return result, db.formatError(err, p, args...)
 }
 
 // 格式化错误信息
