@@ -15,6 +15,7 @@ import (
     _ "github.com/go-sql-driver/mysql"
     "gitee.com/johng/gf/g/util/gconv"
     "reflect"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 // 数据库事务对象
@@ -35,15 +36,22 @@ func (tx *Tx) Rollback() error {
 
 // (事务)数据库sql查询操作，主要执行查询
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
-    p         := tx.db.link.handleSqlBeforeExec(&query)
-    rows, err := tx.tx.Query(*p, args ...)
+    var err  error
+    var rows *sql.Rows
+    p := tx.db.link.handleSqlBeforeExec(&query)
     if tx.db.debug.Val() {
+        militime1 := gtime.Millisecond()
+        rows, err  = tx.tx.Query(*p, args ...)
+        militime2 := gtime.Millisecond()
         tx.db.sqls.Put(&Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
+            Cost  : militime2 - militime1,
             Func  : "TX:Query",
         })
+    } else {
+        rows, err  = tx.tx.Query(*p, args ...)
     }
     if err == nil {
         return rows, nil
@@ -55,17 +63,24 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 
 // (事务)执行一条sql，并返回执行情况，主要用于非查询操作
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
-    p      := tx.db.link.handleSqlBeforeExec(&query)
-    r, err := tx.tx.Exec(*p, args ...)
+    var err    error
+    var result sql.Result
+    p := tx.db.link.handleSqlBeforeExec(&query)
     if tx.db.debug.Val() {
+        militime1  := gtime.Millisecond()
+        result, err = tx.tx.Exec(*p, args ...)
+        militime2  := gtime.Millisecond()
         tx.db.sqls.Put(&Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
+            Cost  : militime2 - militime1,
             Func  : "TX:Exec",
         })
+    } else {
+        result, err = tx.tx.Exec(*p, args ...)
     }
-    return r, tx.db.formatError(err, p, args...)
+    return result, tx.db.formatError(err, p, args...)
 }
 
 // 数据库查询，获取查询结果集，以列表结构返回
