@@ -12,6 +12,7 @@ ghttp.Client增加proxy特性；
 gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
 改进gf-orm的where查询功能，参考thinkphp 里的where查询语法；
 gpage分页增加对自定义后缀的支持，如:2.html, 2.php等等；
+gvalid包增加tag与校验规则绑定的支持特性；
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
