@@ -8,7 +8,6 @@ package gtcp
 
 import (
     "net"
-    "fmt"
     "time"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gpool"
@@ -31,16 +30,15 @@ var (
 )
 
 // 创建TCP链接
-func NewConn(ip string, port int, timeout...int) (*Conn, error) {
+func NewConn(addr string, timeout...int) (*Conn, error) {
     var pool *gpool.Pool
-    addr := fmt.Sprintf("%s:%d", ip, port)
     if v := pools.Get(addr); v == nil {
         pools.LockFunc(func(m map[string]interface{}) {
             if v, ok := m[addr]; ok {
                 pool = v.(*gpool.Pool)
             } else {
                 pool = gpool.New(gDEFAULT_POOL_EXPIRE, func() (interface{}, error) {
-                    if conn, err := NewNetConn(ip, port, timeout...); err == nil {
+                    if conn, err := NewNetConn(addr, timeout...); err == nil {
                         return &Conn {
                             Conn : conn,
                             pool : pool,

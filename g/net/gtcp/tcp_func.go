@@ -10,7 +10,6 @@ import (
     "io"
     "net"
     "time"
-    "fmt"
     "bytes"
 )
 
@@ -40,9 +39,8 @@ func Checksum(buffer []byte) uint32 {
     return checksum
 }
 
-// 创建原生TCP链接
-func NewNetConn(ip string, port int, timeout...int) (net.Conn, error) {
-    addr := fmt.Sprintf("%s:%d", ip, port)
+// 创建原生TCP链接, addr地址格式形如：127.0.0.1:80
+func NewNetConn(addr string, timeout...int) (net.Conn, error) {
     if len(timeout) > 0 {
         return net.DialTimeout("tcp", addr, time.Duration(timeout[0]) * time.Millisecond)
     } else {
