@@ -81,19 +81,8 @@ func Datetime() string {
     return time.Now().Format("2006-01-02 15:04:05")
 }
 
-// 时间戳转换为指定格式的字符串，format格式形如：2006-01-02 03:04:05 PM
-// 第二个参数指定需要格式化的时间戳，为非必需参数，默认为当前时间戳
-func Format(format string, timestamps...int64) string {
-    timestamp := Second()
-    if len(timestamps) > 0 {
-        timestamp = timestamps[0]
-    }
-    return time.Unix(timestamp, 0).Format(format)
-}
-
-// 字符串转换为时间对象，需要给定字符串时间格式，format格式形如：2006-01-02 15:04:05
-// 不传递自定义格式下默认支持的标准时间格式：
-// "2017-12-14 04:51:34 +0805 LMT",
+// 字符串转换为时间对象，可以指定字符串时间格式，format格式形如：Y-m-d H:i:s。
+// 不传递自定义格式时，默认支持的标准时间格式：
 // "2006-01-02T15:04:05Z07:00",
 // "2014-01-17T01:19:15+08:00",
 // "2018-02-09T20:46:17.897Z",
@@ -104,11 +93,7 @@ func Format(format string, timestamps...int64) string {
 func StrToTime(str string, format...string) (time.Time, error) {
     // 优先使用用户输入日期格式进行转换
     if len(format) > 0 {
-        if t, err := time.ParseInLocation(format[0], str, time.Local); err == nil {
-            return t, nil
-        } else {
-            return time.Time{}, err
-        }
+        return StrToTimeLayout(str, formatToStdLayout(format[0]))
     }
     var result time.Time
     var local  = time.Local
@@ -187,4 +172,13 @@ func StrToTime(str string, format...string) (time.Time, error) {
         return result, nil
     }
     return result, errors.New("unsupported time format")
+}
+
+// 通过标准库layout模板解析字符串
+func StrToTimeLayout(str string, layout string) (time.Time, error) {
+    if t, err := time.ParseInLocation(layout, str, time.Local); err == nil {
+        return t, nil
+    } else {
+        return time.Time{}, err
+    }
 }
