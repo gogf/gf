@@ -113,7 +113,7 @@ func (t *Time) Format(format string) string {
                             s += r
                     }
                 } else {
-                    s += f
+                    s += string(format[i])
                 }
         }
         i++
