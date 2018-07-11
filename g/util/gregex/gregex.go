@@ -5,7 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 正则表达式.
-package gregx
+package gregex
 
 import (
     "regexp"

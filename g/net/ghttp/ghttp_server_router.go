@@ -11,7 +11,7 @@ import (
     "errors"
     "strings"
     "container/list"
-    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gregex"
 )
 
 // handler缓存项，根据URL.Path进行缓存，因此对象中带有缓存参数
@@ -52,11 +52,11 @@ func (s *Server)parsePattern(pattern string) (domain, method, uri string, err er
     uri    = pattern
     domain = gDEFAULT_DOMAIN
     method = gDEFAULT_METHOD
-    if array, err := gregx.MatchString(`([a-zA-Z]+):(.+)`, pattern); len(array) > 1 && err == nil {
+    if array, err := gregex.MatchString(`([a-zA-Z]+):(.+)`, pattern); len(array) > 1 && err == nil {
         method = array[1]
         uri    = array[2]
     }
-    if array, err := gregx.MatchString(`(.+)@([\w\.\-]+)`, uri); len(array) > 1 && err == nil {
+    if array, err := gregex.MatchString(`(.+)@([\w\.\-]+)`, uri); len(array) > 1 && err == nil {
         uri     = array[1]
         domain  = array[2]
     }
@@ -229,11 +229,11 @@ func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
                 item := e.Value.(*HandlerItem)
                 if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, r.Method) {
                     rule, names := s.patternToRegRule(item.router.Uri)
-                    if gregx.IsMatchString(rule, r.URL.Path) {
+                    if gregex.IsMatchString(rule, r.URL.Path) {
                         handlerItem := &handlerCacheItem{item, nil}
                         // 如果需要query匹配，那么需要重新解析URL
                         if len(names) > 0 {
-                            if match, err := gregx.MatchString(rule, r.URL.Path); err == nil {
+                            if match, err := gregex.MatchString(rule, r.URL.Path); err == nil {
                                 array := strings.Split(names, ",")
                                 if len(match) > len(array) {
                                     handlerItem.values = make(map[string][]string)

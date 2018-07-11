@@ -14,12 +14,12 @@ import (
     "strings"
     "regexp"
     "fmt"
-    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gregex"
 )
 
 // 判断所给地址是否是一个IPv4地址
 func Validate(ip string) bool {
-    return gregx.IsMatchString(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`, ip)
+    return gregex.IsMatchString(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`, ip)
 }
 
 // ip字符串转为整形

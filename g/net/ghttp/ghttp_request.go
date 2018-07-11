@@ -12,7 +12,7 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/os/gtime"
 )
 
@@ -320,7 +320,7 @@ func (r *Request) IsExited() bool {
 func (r *Request) GetHost() string {
     host := r.parsedHost.Val()
     if len(host) == 0 {
-        array, _ := gregx.MatchString(`(.+):(\d+)`, r.Host)
+        array, _ := gregex.MatchString(`(.+):(\d+)`, r.Host)
         if len(array) > 1 {
             host = array[1]
         } else {
@@ -335,7 +335,7 @@ func (r *Request) GetHost() string {
 func (r *Request) GetClientIp() string {
     ip := r.clientIp.Val()
     if len(ip) == 0 {
-        array, _ := gregx.MatchString(`(.+):(\d+)`, r.RemoteAddr)
+        array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
         if len(array) > 1 {
             ip = array[1]
         } else {

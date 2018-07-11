@@ -11,7 +11,7 @@ import (
     "errors"
     "strings"
     "container/list"
-    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gregex"
 )
 
 // hook缓存项，根据URL.Path进行缓存，因此对象中带有缓存参数
@@ -164,11 +164,11 @@ func (s *Server) searchHookHandler(r *Request, hook string) []*hookCacheItem {
                 item := e.Value.(*HandlerItem)
                 if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, r.Method) {
                     regrule, names := s.patternToRegRule(item.router.Uri)
-                    if gregx.IsMatchString(regrule, r.URL.Path) {
+                    if gregex.IsMatchString(regrule, r.URL.Path) {
                         hookItem := &hookCacheItem {item.faddr, nil}
                         // 如果需要query匹配，那么需要重新解析URL
                         if len(names) > 0 {
-                            if match, err := gregx.MatchString(regrule, r.URL.Path); err == nil {
+                            if match, err := gregex.MatchString(regrule, r.URL.Path); err == nil {
                                 array := strings.Split(names, ",")
                                 if len(match) > len(array) {
                                     hookItem.values = make(map[string][]string)
