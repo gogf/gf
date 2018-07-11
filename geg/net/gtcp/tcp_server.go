@@ -7,10 +7,10 @@ import (
 
 func main() {
     gtcp.NewServer(":8999", func(conn net.Conn) {
+        defer conn.Close()
         for {
-            buffer := make([]byte, 1024)
-            if length, err := conn.Read(buffer); err == nil {
-                conn.Write(append([]byte("> "), buffer[0 : length]...))
+            if data, err := gtcp.Receive(conn); err == nil {
+                gtcp.Send(conn, append([]byte("> "), data...))
             }
         }
     }).Run()

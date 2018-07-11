@@ -509,7 +509,7 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
 
             // 日期格式，需要给定日期格式
             case "date-format":
-                if _, err := gtime.StrToTime(value, ruleVal); err == nil {
+                if _, err := gtime.StrToTimeFormat(value, ruleVal); err == nil {
                     match = true
                 }
 

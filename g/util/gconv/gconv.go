@@ -53,7 +53,7 @@ func Time(i interface{}, format...string) time.Time {
     s := String(i)
     // 优先使用用户输入日期格式进行转换
     if len(format) > 0 {
-        t, _ := gtime.StrToTime(s, format[0])
+        t, _ := gtime.StrToTimeFormat(s, format[0])
         return t
     }
     t := int64(0)
