@@ -16,7 +16,7 @@ import (
     "runtime"
     "strconv"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/os/gfilepool"
 )
 
@@ -146,7 +146,7 @@ func (l *Logger) backtrace() string {
     for i := 1; i < 10000; i++ {
         if _, cfile, cline, ok := runtime.Caller(i + l.btSkip.Val()); ok {
             // 不打印出go源码路径
-            if !gregx.IsMatchString("^" + gfile.GoRootOfBuild(), cfile) {
+            if !gregex.IsMatchString("^" + gfile.GoRootOfBuild(), cfile) {
                 backtrace += strconv.Itoa(index) + ". " + cfile + ":" + strconv.Itoa(cline) + ln
                 index++
             }

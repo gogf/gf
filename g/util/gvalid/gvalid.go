@@ -16,7 +16,7 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/net/gipv4"
     "gitee.com/johng/gf/g/net/gipv6"
-    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gmap"
@@ -493,12 +493,12 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
                 // 需要判断是否被|符号截断，如果是，那么需要进行整合
                 for i := index + 1; i < len(items); i++ {
                     // 判断下一个规则是否合法，不合法那么和当前正则规则进行整合
-                    if !gregx.IsMatchString(gSINGLE_RULE_PATTERN, items[i]) {
+                    if !gregex.IsMatchString(gSINGLE_RULE_PATTERN, items[i]) {
                         ruleVal += "|" + items[i]
                         index++
                     }
                 }
-                match = gregx.IsMatchString(ruleVal, value)
+                match = gregex.IsMatchString(ruleVal, value)
 
             // 日期格式，
             case "date":
@@ -560,19 +560,19 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
              * 虚拟运营商：170、173
              */
             case "phone":
-                match = gregx.IsMatchString(`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^17[0,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$`, value)
+                match = gregex.IsMatchString(`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^17[0,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$`, value)
 
             // 国内座机电话号码："XXXX-XXXXXXX"、"XXXX-XXXXXXXX"、"XXX-XXXXXXX"、"XXX-XXXXXXXX"、"XXXXXXX"、"XXXXXXXX"
             case "telephone":
-                match = gregx.IsMatchString(`^((\d{3,4})|\d{3,4}-)?\d{7,8}$`, value)
+                match = gregex.IsMatchString(`^((\d{3,4})|\d{3,4}-)?\d{7,8}$`, value)
 
             // 腾讯QQ号，从10000开始
             case "qq":
-                match = gregx.IsMatchString(`^[1-9][0-9]{4,}$`, value)
+                match = gregex.IsMatchString(`^[1-9][0-9]{4,}$`, value)
 
                 // 中国邮政编码
             case "postcode":
-                match = gregx.IsMatchString(`^[1-9]\d{5}$`, value)
+                match = gregex.IsMatchString(`^[1-9]\d{5}$`, value)
 
             /*
                 公民身份证号
@@ -596,25 +596,25 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
                 (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)
              */
             case "id-number":
-                match = gregx.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)`, value)
+                match = gregex.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)`, value)
 
             // 通用帐号规则(字母开头，只能包含字母、数字和下划线，长度在6~18之间)
             case "passport":
-                match = gregx.IsMatchString(`^[a-zA-Z]{1}\w{5,17}$`, value)
+                match = gregex.IsMatchString(`^[a-zA-Z]{1}\w{5,17}$`, value)
 
             // 通用密码(任意可见字符，长度在6~18之间)
             case "password":
-                match = gregx.IsMatchString(`^[\w\S]{6,18}$`, value)
+                match = gregex.IsMatchString(`^[\w\S]{6,18}$`, value)
 
             // 中等强度密码(在弱密码的基础上，必须包含大小写字母和数字)
             case "password2":
-                if gregx.IsMatchString(`^[\w\S]{6,18}$`, value)  && gregx.IsMatchString(`[a-z]+`, value) && gregx.IsMatchString(`[A-Z]+`, value) && gregx.IsMatchString(`\d+`, value) {
+                if gregex.IsMatchString(`^[\w\S]{6,18}$`, value)  && gregex.IsMatchString(`[a-z]+`, value) && gregex.IsMatchString(`[A-Z]+`, value) && gregex.IsMatchString(`\d+`, value) {
                     match = true
                 }
 
             // 强等强度密码(在弱密码的基础上，必须包含大小写字母、数字和特殊字符)
             case "password3":
-                if gregx.IsMatchString(`^[\w\S]{6,18}$`, value) && gregx.IsMatchString(`[a-z]+`, value) && gregx.IsMatchString(`[A-Z]+`, value) && gregx.IsMatchString(`\d+`, value) && gregx.IsMatchString(`\S+`, value) {
+                if gregex.IsMatchString(`^[\w\S]{6,18}$`, value) && gregex.IsMatchString(`[a-z]+`, value) && gregex.IsMatchString(`[A-Z]+`, value) && gregex.IsMatchString(`\d+`, value) && gregex.IsMatchString(`\S+`, value) {
                     match = true
                 }
 
@@ -644,15 +644,15 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
 
             // 邮件
             case "email":
-                match = gregx.IsMatchString(`^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`, value)
+                match = gregex.IsMatchString(`^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`, value)
 
             // URL
             case "url":
-                match = gregx.IsMatchString(`^(?:([A-Za-z]+):)?(\/{0,3})([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#]*))?(?:\?([^#]*))?(?:#(.*))?$`, value)
+                match = gregex.IsMatchString(`^(?:([A-Za-z]+):)?(\/{0,3})([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#]*))?(?:\?([^#]*))?(?:#(.*))?$`, value)
 
             // domain
             case "domain":
-                match = gregx.IsMatchString(`^([0-9a-zA-Z][0-9a-zA-Z-]{0,62}\.)+([0-9a-zA-Z][0-9a-zA-Z-]{0,62})\.?$`, value)
+                match = gregex.IsMatchString(`^([0-9a-zA-Z][0-9a-zA-Z-]{0,62}\.)+([0-9a-zA-Z][0-9a-zA-Z-]{0,62})\.?$`, value)
 
             // IP(IPv4/IPv6)
             case "ip":
@@ -668,7 +668,7 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
 
             // MAC地址
             case "mac":
-                match = gregx.IsMatchString(`^([0-9A-Fa-f]{2}-){5}[0-9A-Fa-f]{2}$`, value)
+                match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}-){5}[0-9A-Fa-f]{2}$`, value)
 
             default:
                 errorMsgs[ruleKey] = "Invalid rule name:" + ruleKey
