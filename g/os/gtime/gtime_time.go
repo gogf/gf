@@ -37,8 +37,28 @@ func NewFromTime (t time.Time) *Time {
 }
 
 // 从字符串转换为时间对象，复杂的时间字符串需要给定格式
-func NewFromStr (str string, format...string) *Time {
-    if t, err := StrToTime(str, format...); err == nil {
+func NewFromStr (str string) *Time {
+    if t, err := StrToTime(str); err == nil {
+        return &Time{
+            t,
+        }
+    }
+    return nil
+}
+
+// 从字符串转换为时间对象，指定字符串时间格式，format格式形如：Y-m-d H:i:s
+func NewFromStrFormat (str string, format string) *Time {
+    if t, err := StrToTimeFormat(str, format); err == nil {
+        return &Time{
+            t,
+        }
+    }
+    return nil
+}
+
+// 从字符串转换为时间对象，通过标准库layout格式进行解析，layout格式形如：2006-01-02 15:04:05
+func NewFromStrLayout (str string, layout string) *Time {
+    if t, err := StrToTimeLayout(str, layout); err == nil {
         return &Time{
             t,
         }
