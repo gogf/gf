@@ -73,7 +73,7 @@ func NewFromTimeStamp (timestamp int64) *Time {
     }
 }
 
-// 秒数
+// 秒数(时间戳)
 func (t *Time) Second() int64 {
     return t.UnixNano()/1e9
 }
