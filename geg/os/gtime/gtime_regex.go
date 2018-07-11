@@ -3,10 +3,11 @@ package main
 import (
     "regexp"
     "fmt"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 func main() {
-    timeRegex, err := regexp.Compile(`(\d{4}-\d{2}-\d{2})[\sT]{0,1}(\d{2}:\d{2}:\d{2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`)
+    timeRegex, err := regexp.Compile(gtime.TIME_REAGEX_PATTERN)
     if err != nil {
         panic(err)
     }

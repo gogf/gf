@@ -11,7 +11,7 @@ import (
     "github.com/clbanning/mxj"
     "encoding/xml"
     "io"
-	"gitee.com/johng/gf/g/util/gregx"
+	"gitee.com/johng/gf/g/util/gregex"
 	"github.com/axgle/mahonia"
 	"errors"
 	"fmt"
@@ -57,7 +57,7 @@ func prepare(xmlbyte []byte) error {
 		return reader.NewDecoder().NewReader(input), nil
 	}
 
-	matchStr, err := gregx.MatchString(patten, string(xmlbyte))
+	matchStr, err := gregex.MatchString(patten, string(xmlbyte))
 	if err != nil {
 		return err
 	}

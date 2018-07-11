@@ -6,7 +6,7 @@
 
 // go test *.go -bench=".*"
 
-package gregx
+package gregex
 
 import (
     "testing"

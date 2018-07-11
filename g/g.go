@@ -19,7 +19,7 @@ import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/net/gtcp"
     "gitee.com/johng/gf/g/net/gudp"
-    "gitee.com/johng/gf/g/util/gregx"
+    "gitee.com/johng/gf/g/util/gregex"
 )
 
 const (
@@ -140,7 +140,7 @@ func Redis(name...string) *gredis.Redis {
     if m := config.GetMap("redis"); m != nil {
         // host:port[,db[,pass]]
         if v, ok := m[group]; ok {
-            array, err := gregx.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, gconv.String(v))
+            array, err := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, gconv.String(v))
             if err == nil {
                 return gredis.New(gredis.Config{
                     Host : array[1],
