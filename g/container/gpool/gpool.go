@@ -18,9 +18,9 @@ import (
 // 对象池
 type Pool struct {
     list    *glist.List // 可用/闲置的文件指针链表
-    idle    int64       // (毫秒)闲置最大时间，超过该时间则被系统回收
     closed  *gtype.Bool // 连接池是否已关闭
-    newFunc func()(interface{}, error) // 创建对象的方法定义
+    Expire  int64       // (毫秒)闲置最大时间，超过该时间则被系统回收
+    NewFunc func()(interface{}, error) // 创建对象的方法定义
 }
 
 // 对象池数据项
@@ -33,11 +33,11 @@ type poolItem struct {
 func New(expire int, newFunc...func() (interface{}, error)) *Pool {
     r := &Pool {
         list    : glist.New(),
-        idle    : int64(expire),
         closed  : gtype.NewBool(),
+        Expire  : int64(expire),
     }
     if len(newFunc) > 0 {
-        r.newFunc = newFunc[0]
+        r.NewFunc = newFunc[0]
     }
     go r.expireCheckingLoop()
     return r
@@ -46,7 +46,7 @@ func New(expire int, newFunc...func() (interface{}, error)) *Pool {
 // 放一个临时对象到池中
 func (p *Pool) Put(item interface{}) {
     p.list.PushBack(&poolItem{
-        expire : gtime.Millisecond() + p.idle,
+        expire : gtime.Millisecond() + p.Expire,
         value  : item,
     })
 }
@@ -63,8 +63,8 @@ func (p *Pool) Get() (interface{}, error) {
             break
         }
     }
-    if p.newFunc != nil {
-        return p.newFunc()
+    if p.NewFunc != nil {
+        return p.NewFunc()
     }
     return nil, errors.New("pool is empty")
 }

@@ -1,35 +1,38 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/net/gtcp"
+    "fmt"
     "time"
     "net"
-    "gitee.com/johng/gf/g/os/gtime"
-    "fmt"
+    "gitee.com/johng/gf/g/net/gtcp"
     "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 func main() {
+    // Server
     go gtcp.NewServer("127.0.0.1:8999", func(conn net.Conn) {
+        c := gtcp.NewConnByNetConn(conn)
+        defer c.Close()
         for {
-            buffer := make([]byte, 1024)
-            if length, err := conn.Read(buffer); err == nil {
-                conn.Write(append([]byte("> "), buffer[0 : length]...))
+            if data, _ := c.Receive(); len(data) > 0 {
+                c.Send(append([]byte("> "), data...))
             }
-            //conn.Close()
+            return
         }
     }).Run()
 
     time.Sleep(time.Second)
 
+    // Client
     for {
-       if conn, err := gtcp.NewConn("127.0.0.1", 8999); err == nil {
+       if conn, err := gtcp.NewConn("127.0.0.1:8999"); err == nil {
            if b, err := conn.SendReceive([]byte(gtime.Datetime())); err == nil {
                fmt.Println(string(b), conn.LocalAddr(), conn.RemoteAddr())
-               conn.Close()
            } else {
-               glog.Error(err)
+               fmt.Println(err)
            }
+           conn.Close()
        } else {
            glog.Error(err)
        }
