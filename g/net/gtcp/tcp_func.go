@@ -140,7 +140,7 @@ func SendWithTimeout(conn net.Conn, data []byte, timeout time.Duration, retry...
 // 发送数据并等待接收返回数据
 func SendReceive(conn net.Conn, data []byte, retry...Retry) ([]byte, error) {
     if err := Send(conn, data, retry...); err == nil {
-        return Receive(conn)
+        return Receive(conn, retry...)
     } else {
         return nil, err
     }
@@ -149,7 +149,7 @@ func SendReceive(conn net.Conn, data []byte, retry...Retry) ([]byte, error) {
 // 发送数据并等待接收返回数据(带返回超时等待时间)
 func SendReceiveWithTimeout(conn net.Conn, data []byte, timeout time.Duration, retry...Retry) ([]byte, error) {
     if err := Send(conn, data, retry...); err == nil {
-        return ReceiveWithTimeout(conn, timeout)
+        return ReceiveWithTimeout(conn, timeout, retry...)
     } else {
         return nil, err
     }
