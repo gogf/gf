@@ -15,12 +15,15 @@ func main() {
         c := gtcp.NewConnByNetConn(conn)
         defer c.Close()
         for {
-            if data, _ := c.Receive(-1); len(data) > 0 {
+            data, err := c.Receive(-1)
+            if len(data) > 0 {
                 if err := c.Send(append([]byte("> "), data...)); err != nil {
-                   fmt.Println(err)
+                    fmt.Println(err)
                 }
             }
-            // return
+            if err != nil {
+                break
+            }
         }
     }).Run()
 
