@@ -65,7 +65,7 @@ func tcpServiceHandler(conn *gtcp.Conn) {
     var retry = gtcp.Retry{3, 10}
     for {
         var result []byte
-        buffer, err := conn.Receive(retry)
+        buffer, err := conn.Receive(-1, retry)
         if len(buffer) > 0 {
             var msgs []*Msg
             for _, msg := range bufferToMsgs(buffer) {

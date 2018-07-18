@@ -1,11 +1,9 @@
 package main
-
 import (
-    "net"
     "fmt"
+    "net"
     "os"
 )
-
 func main() {
     conn, err := net.Dial("udp", "127.0.0.1:8999")
     defer conn.Close()
@@ -13,9 +11,11 @@ func main() {
         os.Exit(1)
     }
 
-    conn.Write([]byte(""))
-    var msg [20]byte
-    n, err := conn.Read(msg[0:])
+    conn.Write([]byte("Hello world!"))
 
-    fmt.Println(string(msg[0:n]))
+    buffer := make([]byte, 100)
+
+    conn.Read(buffer)
+
+    fmt.Println(string(buffer))
 }

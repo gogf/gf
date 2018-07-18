@@ -46,7 +46,7 @@ func Send(pid int, data []byte, group...string) error {
     for i := gPROC_COMM_FAILURE_RETRY_COUNT; i > 0; i-- {
         if conn, err = getConnByPid(pid); err == nil {
             defer conn.Close()
-            buf, err = conn.SendReceiveWithTimeout(buffer, gPROC_COMM_SEND_TIMEOUT*time.Millisecond)
+            buf, err = conn.SendReceiveWithTimeout(buffer, -1, gPROC_COMM_SEND_TIMEOUT*time.Millisecond)
             if len(buf) > 0 {
                 // 如果有返回值，如果不是"ok"，那么表示是错误信息
                 if !bytes.EqualFold(buf, []byte("ok")) {

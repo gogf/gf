@@ -15,8 +15,10 @@ func main() {
         c := gtcp.NewConnByNetConn(conn)
         defer c.Close()
         for {
-            if data, _ := c.Receive(); len(data) > 0 {
-                c.Send(append([]byte("> "), data...))
+            if data, _ := c.Receive(-1); len(data) > 0 {
+                if err := c.Send(append([]byte("> "), data...)); err != nil {
+                    fmt.Println(err)
+                }
             }
             return
         }
@@ -26,8 +28,8 @@ func main() {
 
     // Client
     for {
-       if conn, err := gtcp.NewConn("127.0.0.1:8999"); err == nil {
-           if b, err := conn.SendReceive([]byte(gtime.Datetime())); err == nil {
+       if conn, err := gtcp.NewPoolConn("127.0.0.1:8999"); err == nil {
+           if b, err := conn.SendReceive([]byte(gtime.Datetime()), -1); err == nil {
                fmt.Println(string(b), conn.LocalAddr(), conn.RemoteAddr())
            } else {
                fmt.Println(err)
@@ -38,4 +40,6 @@ func main() {
        }
        time.Sleep(time.Second)
     }
+
+    select{}
 }
