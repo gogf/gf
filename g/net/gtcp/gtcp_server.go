@@ -28,7 +28,7 @@ func (s *Server) Run() error {
     if s.handler == nil {
         return errors.New("start running failed: socket handler not defined")
     }
-    tcpaddr, err := net.ResolveTCPAddr("tcp4", s.address)
+    tcpaddr, err := net.ResolveTCPAddr("tcp", s.address)
     if err != nil {
         return err
     }

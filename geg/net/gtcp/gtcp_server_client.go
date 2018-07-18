@@ -17,10 +17,10 @@ func main() {
         for {
             if data, _ := c.Receive(-1); len(data) > 0 {
                 if err := c.Send(append([]byte("> "), data...)); err != nil {
-                   fmt.Println(err)
+                  fmt.Println(err)
                 }
             }
-            // return
+            //return
         }
     }).Run()
 
@@ -28,7 +28,7 @@ func main() {
 
     // Client
     for {
-       if conn, err := gtcp.NewPoolConn("127.0.0.1:8999"); err == nil {
+       if conn, err := gtcp.NewConn("127.0.0.1:8999"); err == nil {
            if b, err := conn.SendReceive([]byte(gtime.Datetime()), -1); err == nil {
                fmt.Println(string(b), conn.LocalAddr(), conn.RemoteAddr())
            } else {
