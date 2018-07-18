@@ -75,10 +75,10 @@ func (c *PoolConn) Close() error {
 // 发送数据
 func (c *PoolConn) Send(data []byte, retry...Retry) error {
     var err error
-    if err = c.Send(data, retry...); err != nil && c.status == gCONN_STATUS_UNKNOWN {
+    if err = c.Conn.Send(data, retry...); err != nil && c.status == gCONN_STATUS_UNKNOWN {
         if v, e := c.pool.NewFunc(); e == nil {
             c.Conn = v.(*PoolConn).Conn
-            err    = c.Send(data, retry...)
+            err    = c.Conn.Send(data, retry...)
         } else {
             err    = e
         }
@@ -93,7 +93,7 @@ func (c *PoolConn) Send(data []byte, retry...Retry) error {
 
 // 接收数据
 func (c *PoolConn) Receive(length int, retry...Retry) ([]byte, error) {
-    data, err := c.Receive(length, retry...)
+    data, err := c.Conn.Receive(length, retry...)
     if err != nil {
         c.status = gCONN_STATUS_ERROR
     } else {
