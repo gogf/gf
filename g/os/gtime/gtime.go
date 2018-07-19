@@ -51,6 +51,15 @@ func SetInterval(t time.Duration, callback func() bool) {
     }()
 }
 
+// 设置当前进程全局的默认时区
+func SetTimeZone(zone string) error {
+    location, err := time.LoadLocation(zone)
+    if err == nil {
+        time.Local = location
+    }
+    return err
+}
+
 // 获取当前的纳秒数
 func Nanosecond() int64 {
     return time.Now().UnixNano()

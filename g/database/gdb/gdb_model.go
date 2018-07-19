@@ -28,6 +28,9 @@ type Model struct {
     limit         int           // 分页条数
     data          interface{}   // 操作记录(支持Map/List/string类型)
     batch         int           // 批量操作条数
+    cacheEnabled  bool          // 当前SQL操作是否开启查询缓存功能
+    cacheTime     int           // 查询缓存时间
+    cacheName     string        // 查询缓存名称
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
@@ -243,13 +246,22 @@ func (md *Model) Batch(batch int) *Model {
     return md
 }
 
+// 查询缓存/清除缓存操作，需要注意的是，事务查询不支持缓存。
+// 当time < 0时表示清除缓存， time=0时表示不过期, time > 0时表示过期时间，time过期时间单位：秒；
+// name表示自定义的缓存名称，便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
+// 例如：查询缓存时设置名称，清理缓存时可以给定清理的缓存名称进行精准清理。
+func (md *Model) Cache(time int, name ... string) *Model {
+    md.cacheEnabled = true
+    md.cacheTime    = time
+    if len(name) > 0 {
+        md.cacheName = name[0]
+    }
+    return md
+}
+
 // 链式操作，select
 func (md *Model) Select() (Result, error) {
-    if md.tx == nil {
-        return md.db.GetAll(md.getFormattedSql(), md.whereArgs...)
-    } else {
-        return md.tx.GetAll(md.getFormattedSql(), md.whereArgs...)
-    }
+    return md.getAll(md.getFormattedSql(), md.whereArgs...)
 }
 
 // 链式操作，查询所有记录
@@ -269,15 +281,6 @@ func (md *Model) One() (Record, error) {
     return nil, nil
 }
 
-// 链式操作，查询单条记录，并自动转换为struct对象
-func (md *Model) Struct(obj interface{}) error {
-    one, err := md.One()
-    if err != nil {
-        return err
-    }
-    return one.ToStruct(obj)
-}
-
 // 链式操作，查询字段值
 func (md *Model) Value() (Value, error) {
     one, err := md.One()
@@ -290,8 +293,17 @@ func (md *Model) Value() (Value, error) {
     return nil, nil
 }
 
+// 链式操作，查询单条记录，并自动转换为struct对象
+func (md *Model) Struct(obj interface{}) error {
+    one, err := md.One()
+    if err != nil {
+        return err
+    }
+    return one.ToStruct(obj)
+}
+
 // 链式操作，查询数量，fields可以为空，也可以自定义查询字段，
-// 当给定自定义查询字段时，该字段必须为数量结果，否则会引起歧义，如：Fields("COUNT(id)")
+// 当给定自定义查询字段时，该字段必须为数量结果，否则会引起歧义，使用如：md.Fields("COUNT(id)")
 func (md *Model) Count() (int, error) {
     if md.fields == "" || md.fields == "*" {
         md.fields = "COUNT(1)"
@@ -300,11 +312,43 @@ func (md *Model) Count() (int, error) {
     if len(md.groupBy) > 0 {
         s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
     }
-    if md.tx == nil {
-        return md.db.GetCount(s, md.whereArgs...)
-    } else {
-        return md.tx.GetCount(s, md.whereArgs...)
+    list, err := md.getAll(s, md.whereArgs...)
+    if err != nil {
+        return 0, err
     }
+    if len(list) > 0 {
+        for _, v := range list[0] {
+            return gconv.Int(v), nil
+        }
+    }
+    return 0, nil
+}
+
+// 查询操作，对底层SQL操作的封装
+func (md *Model) getAll(sql string, args...interface{}) (Result, error) {
+    var err      error
+    var result   Result
+    var cacheKey string
+    // 查询缓存查询处理
+    if md.cacheEnabled && md.tx == nil {
+        cacheKey = md.cacheName
+        if len(cacheKey) == 0 {
+            cacheKey = sql
+        }
+        if v := md.db.cache.Get(cacheKey); v != nil {
+            return v.(Result), nil
+        }
+    }
+    if md.tx == nil {
+        result, err = md.db.GetAll(sql, args...)
+    } else {
+        result, err = md.tx.GetAll(sql, args...)
+    }
+    // 查询缓存保存处理
+    if len(cacheKey) > 0 && md.cacheTime >= 0 {
+        md.db.cache.Set(cacheKey, result, md.cacheTime*1000)
+    }
+    return result, err
 }
 
 // 格式化当前输入参数，返回可执行的SQL语句（不带参数）
