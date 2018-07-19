@@ -72,12 +72,12 @@ func SetCap(cap int) {
 }
 
 // (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为毫秒
-func Set(key string, value interface{}, expire int64)  {
+func Set(key string, value interface{}, expire int)  {
     cache.Set(key, value, expire)
 }
 
 // (使用全局KV缓存对象)批量设置kv缓存键值对，过期时间单位为毫秒
-func BatchSet(data map[string]interface{}, expire int64)  {
+func BatchSet(data map[string]interface{}, expire int)  {
     cache.BatchSet(data, expire)
 }
 
@@ -97,7 +97,7 @@ func BatchRemove(keys []string) {
 }
 
 // 基于内存缓存的锁，锁成功返回true，失败返回false，当失败时表示有其他的锁存在
-func Lock(key string, expire int64) bool {
+func Lock(key string, expire int) bool {
     if v := cache.Get(key); v != nil {
         return false
     }
@@ -160,7 +160,7 @@ func (c *Cache) getOrNewExpireSet(expire int64) *gset.StringSet {
 }
 
 // 设置kv缓存键值对，过期时间单位为毫秒，expire<=0表示不过期
-func (c *Cache) Set(key string, value interface{}, expire int64) {
+func (c *Cache) Set(key string, value interface{}, expire int) {
     var e int64
     if expire != 0 {
         e = gtime.Millisecond() + int64(expire)
@@ -174,7 +174,7 @@ func (c *Cache) Set(key string, value interface{}, expire int64) {
 }
 
 // 批量设置
-func (c *Cache) BatchSet(data map[string]interface{}, expire int64)  {
+func (c *Cache) BatchSet(data map[string]interface{}, expire int)  {
     var e int64
     if expire != 0 {
         e = gtime.Millisecond() + int64(expire)
@@ -190,7 +190,7 @@ func (c *Cache) BatchSet(data map[string]interface{}, expire int64)  {
 }
 
 // 基于内存缓存的锁，锁成功返回true，失败返回false，当失败时表示有其他的锁存在
-func (c *Cache) Lock(key string, expire int64) bool {
+func (c *Cache) Lock(key string, expire int) bool {
     if v := c.Get(key); v != nil {
         return false
     }
