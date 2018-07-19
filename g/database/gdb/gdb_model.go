@@ -50,6 +50,7 @@ func (db *Db) From(tables string) (*Model) {
 // (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
 func (tx *Tx) Table(tables string) (*Model) {
     return &Model {
+        db     : tx.db,
         tx     : tx,
         tables : tables,
     }
@@ -139,7 +140,12 @@ func (md *Model) Data(data...interface{}) (*Model) {
 }
 
 // 链式操作， CURD - Insert/BatchInsert
-func (md *Model) Insert() (sql.Result, error) {
+func (md *Model) Insert() (result sql.Result, err error) {
+    defer func() {
+        if err == nil {
+            md.checkAndRemoveCache()
+        }
+    }()
     if md.data == nil {
         return nil, errors.New("inserting into table with empty data")
     }
@@ -165,7 +171,12 @@ func (md *Model) Insert() (sql.Result, error) {
 }
 
 // 链式操作， CURD - Replace/BatchReplace
-func (md *Model) Replace() (sql.Result, error) {
+func (md *Model) Replace() (result sql.Result, err error) {
+    defer func() {
+        if err == nil {
+            md.checkAndRemoveCache()
+        }
+    }()
     if md.data == nil {
         return nil, errors.New("replacing into table with empty data")
     }
@@ -191,7 +202,12 @@ func (md *Model) Replace() (sql.Result, error) {
 }
 
 // 链式操作， CURD - Save/BatchSave
-func (md *Model) Save() (sql.Result, error) {
+func (md *Model) Save() (result sql.Result, err error) {
+    defer func() {
+        if err == nil {
+            md.checkAndRemoveCache()
+        }
+    }()
     if md.data == nil {
         return nil, errors.New("replacing into table with empty data")
     }
@@ -217,7 +233,12 @@ func (md *Model) Save() (sql.Result, error) {
 }
 
 // 链式操作， CURD - Update
-func (md *Model) Update() (sql.Result, error) {
+func (md *Model) Update() (result sql.Result, err error) {
+    defer func() {
+        if err == nil {
+            md.checkAndRemoveCache()
+        }
+    }()
     if md.data == nil {
         return nil, errors.New("updating table with empty data")
     }
@@ -229,7 +250,12 @@ func (md *Model) Update() (sql.Result, error) {
 }
 
 // 链式操作， CURD - Delete
-func (md *Model) Delete() (sql.Result, error) {
+func (md *Model) Delete() (result sql.Result, err error) {
+    defer func() {
+        if err == nil {
+            md.checkAndRemoveCache()
+        }
+    }()
     if md.where == "" {
         return nil, errors.New("where is required while deleting")
     }
@@ -251,10 +277,13 @@ func (md *Model) Batch(batch int) *Model {
 // name表示自定义的缓存名称，便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
 // 例如：查询缓存时设置名称，清理缓存时可以给定清理的缓存名称进行精准清理。
 func (md *Model) Cache(time int, name ... string) *Model {
-    md.cacheEnabled = true
-    md.cacheTime    = time
+    md.cacheTime = time
     if len(name) > 0 {
         md.cacheName = name[0]
+    }
+    // 查询缓存特性不支持事务操作
+    if md.tx == nil {
+        md.cacheEnabled = true
     }
     return md
 }
@@ -325,15 +354,13 @@ func (md *Model) Count() (int, error) {
 }
 
 // 查询操作，对底层SQL操作的封装
-func (md *Model) getAll(sql string, args...interface{}) (Result, error) {
-    var err      error
-    var result   Result
+func (md *Model) getAll(sql string, args...interface{}) (result Result, err error) {
     var cacheKey string
     // 查询缓存查询处理
-    if md.cacheEnabled && md.tx == nil {
+    if md.cacheEnabled {
         cacheKey = md.cacheName
         if len(cacheKey) == 0 {
-            cacheKey = sql
+            cacheKey = sql + "/" + gconv.String(args)
         }
         if v := md.db.cache.Get(cacheKey); v != nil {
             return v.(Result), nil
@@ -345,10 +372,21 @@ func (md *Model) getAll(sql string, args...interface{}) (Result, error) {
         result, err = md.tx.GetAll(sql, args...)
     }
     // 查询缓存保存处理
-    if len(cacheKey) > 0 && md.cacheTime >= 0 {
-        md.db.cache.Set(cacheKey, result, md.cacheTime*1000)
+    if len(cacheKey) > 0 && err == nil {
+        if md.cacheTime < 0 {
+            md.db.cache.Remove(cacheKey)
+        } else {
+            md.db.cache.Set(cacheKey, result, md.cacheTime*1000)
+        }
     }
     return result, err
+}
+
+// 检查是否需要查询查询缓存
+func (md *Model) checkAndRemoveCache() {
+    if md.cacheEnabled && md.cacheTime < 0 && len(md.cacheName) > 0 {
+        md.db.cache.Remove(md.cacheName)
+    }
 }
 
 // 格式化当前输入参数，返回可执行的SQL语句（不带参数）
