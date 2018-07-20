@@ -11,6 +11,7 @@ import (
     "time"
     "io"
     "bufio"
+    "fmt"
 )
 
 // 封装的链接对象
@@ -83,7 +84,10 @@ func (c *Conn) Receive(length int, retry...Retry) ([]byte, error) {
     } else {
         buffer = make([]byte, gDEFAULT_READ_BUFFER_SIZE)
     }
+
     for {
+        time.Sleep(time.Second)
+        fmt.Println(c.reader.Buffered())
         size, err = c.reader.Read(buffer[index:])
         if size > 0 {
             index += size
@@ -94,9 +98,9 @@ func (c *Conn) Receive(length int, retry...Retry) ([]byte, error) {
                 }
             } else {
                 // 否则读取所有缓冲区数据，直到没有可读数据为止
-                if c.reader.Buffered() < 1 {
-                    break
-                }
+                //if c.reader.Buffered() < 1 {
+                //    break
+                //}
                 // 如果长度超过了自定义的读取缓冲区，那么自动增长
                 if index >= gDEFAULT_READ_BUFFER_SIZE {
                     buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
