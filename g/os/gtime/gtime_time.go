@@ -109,41 +109,48 @@ func (t *Time) Clone() *Time {
 }
 
 // 当前时间加上指定时间段
-func (t *Time) Add(d time.Duration) {
+func (t *Time) Add(d time.Duration) *Time {
     t.Time = t.Time.Add(d)
+    return t
 }
 
 // 时区转换为指定的时区
-func (t *Time) ToLocation(location *time.Location) {
+func (t *Time) ToLocation(location *time.Location) *Time {
     t.Time = t.Time.In(location)
+    return t
 }
 
 // 时区转换为UTC时区
-func (t *Time) UTC() {
+func (t *Time) UTC() *Time {
     t.Time = t.Time.UTC()
+    return t
 }
 
 // 时区转换为当前设定的Local时区
-func (t *Time) Local() {
+func (t *Time) Local() *Time {
     t.Time = t.Time.Local()
+    return t
 }
 
 // 时间日期计算
-func (t *Time) AddDate(years int, months int, days int) {
+func (t *Time) AddDate(years int, months int, days int) *Time {
     t.Time = t.Time.AddDate(years, months, days)
+    return t
 }
 
 // Round将舍入t的结果返回到d的最接近的倍数(从零时间开始)。
 // 中间值的舍入行为是向上舍入。 如果d <= 0，Round返回t剥离任何单调时钟读数但不改变。
 // Round作为零时间以来的绝对持续时间运行; 它不适用于当时的演示形式。
 // 因此，Round(Hour)可能会返回非零分钟的时间，具体取决于时间的位置。
-func (t *Time) Round(d time.Duration) {
+func (t *Time) Round(d time.Duration) *Time {
     t.Time = t.Time.Round(d)
+    return t
 }
 
 // Truncate将舍入t的结果返回到d的倍数(从零时间开始)。 如果d <= 0，则Truncate返回t剥离任何单调时钟读数但不改变。
 // 截断时间作为零时间以来的绝对持续时间运行; 它不适用于当时的演示形式。
 // 因此，截断（小时）可能会返回非零分钟的时间，具体取决于时间的位置。
-func (t *Time) Truncate(d time.Duration) {
+func (t *Time) Truncate(d time.Duration) *Time {
     t.Time = t.Time.Truncate(d)
+    return t
 }
