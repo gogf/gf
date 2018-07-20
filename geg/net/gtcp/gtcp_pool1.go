@@ -3,7 +3,6 @@ package main
 import (
     "fmt"
     "time"
-    "net"
     "gitee.com/johng/gf/g/net/gtcp"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
@@ -11,13 +10,12 @@ import (
 
 func main() {
     // Server
-    go gtcp.NewServer("127.0.0.1:8999", func(conn net.Conn) {
-        c := gtcp.NewConnByNetConn(conn)
-        defer c.Close()
+    go gtcp.NewServer("127.0.0.1:8999", func(conn *gtcp.Conn) {
+        defer conn.Close()
         for {
-            data, err := c.Receive(-1)
+            data, err := conn.Receive(-1)
             if len(data) > 0 {
-                if err := c.Send(append([]byte("> "), data...)); err != nil {
+                if err := conn.Send(append([]byte("> "), data...)); err != nil {
                     fmt.Println(err)
                 }
             }
