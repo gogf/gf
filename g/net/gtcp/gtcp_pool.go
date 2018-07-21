@@ -7,7 +7,6 @@
 package gtcp
 
 import (
-    "time"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gpool"
 )
@@ -92,44 +91,12 @@ func (c *PoolConn) Send(data []byte, retry...Retry) error {
 }
 
 // 接收数据
-func (c *PoolConn) Receive(length int, retry...Retry) ([]byte, error) {
-    data, err := c.Conn.Receive(length, retry...)
+func (c *PoolConn) Recv(length int, retry...Retry) ([]byte, error) {
+    data, err := c.Conn.Recv(length, retry...)
     if err != nil {
         c.status = gCONN_STATUS_ERROR
     } else {
         c.status = gCONN_STATUS_ACTIVE
     }
     return data, err
-}
-
-// 带超时时间的数据获取
-func (c *PoolConn) ReceiveWithTimeout(length int, timeout time.Duration, retry...Retry) ([]byte, error) {
-    c.SetReadDeadline(time.Now().Add(timeout))
-    defer c.SetReadDeadline(time.Time{})
-    return c.Receive(length, retry...)
-}
-
-// 带超时时间的数据发送
-func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry...Retry) error {
-    c.SetWriteDeadline(time.Now().Add(timeout))
-    defer c.SetWriteDeadline(time.Time{})
-    return c.Send(data, retry...)
-}
-
-// 发送数据并等待接收返回数据
-func (c *PoolConn) SendReceive(data []byte, receive int, retry...Retry) ([]byte, error) {
-    if err := c.Send(data, retry...); err == nil {
-        return c.Receive(receive, retry...)
-    } else {
-        return nil, err
-    }
-}
-
-// 发送数据并等待接收返回数据(带返回超时等待时间)
-func (c *PoolConn) SendReceiveWithTimeout(data []byte, receive int, timeout time.Duration, retry...Retry) ([]byte, error) {
-    if err := c.Send(data, retry...); err == nil {
-        return c.ReceiveWithTimeout(receive, timeout, retry...)
-    } else {
-        return nil, err
-    }
 }

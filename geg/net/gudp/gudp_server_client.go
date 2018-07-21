@@ -13,7 +13,7 @@ func main() {
     go gudp.NewServer("127.0.0.1:8999", func(conn *gudp.Conn) {
         defer conn.Close()
         for {
-            if data, _ := conn.Receive(-1); len(data) > 0 {
+            if data, _ := conn.Recv(-1); len(data) > 0 {
                 if err := conn.Send(append([]byte("> "), data...)); err != nil {
                     glog.Error(err)
                 }
@@ -26,7 +26,7 @@ func main() {
     // Client
     for {
         if conn, err := gudp.NewConn("127.0.0.1:8999"); err == nil {
-            if b, err := conn.SendReceive([]byte(gtime.Datetime()), -1); err == nil {
+            if b, err := conn.SendRecv([]byte(gtime.Datetime()), -1); err == nil {
                 fmt.Println(string(b), conn.LocalAddr(), conn.RemoteAddr())
             } else {
                 glog.Error(err)

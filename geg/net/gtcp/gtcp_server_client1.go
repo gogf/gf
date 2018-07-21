@@ -13,7 +13,7 @@ func main() {
     go gtcp.NewServer("127.0.0.1:8999", func(conn *gtcp.Conn) {
         defer conn.Close()
         for {
-            data, err := conn.Receive(-1)
+            data, err := conn.Recv(-1)
             if len(data) > 0 {
                   fmt.Println(string(data))
             }
@@ -30,6 +30,7 @@ func main() {
     if err != nil {
         panic(err)
     }
+    defer conn.Close()
     for i := 0; i < 10000; i++ {
         if err := conn.Send([]byte(gconv.String(i))); err != nil {
             glog.Error(err)
