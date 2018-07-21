@@ -38,7 +38,7 @@ func startTcpListening() {
     }
     var listen *net.TCPListener
     for i := gPROC_DEFAULT_TCP_PORT; ; i++ {
-        addr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf("127.0.0.1:%d", i))
+        addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", i))
         if err != nil {
             continue
         }
@@ -65,7 +65,7 @@ func tcpServiceHandler(conn *gtcp.Conn) {
     var retry = gtcp.Retry{3, 10}
     for {
         var result []byte
-        buffer, err := conn.Receive(-1, retry)
+        buffer, err := conn.Recv(-1, retry)
         if len(buffer) > 0 {
             var msgs []*Msg
             for _, msg := range bufferToMsgs(buffer) {

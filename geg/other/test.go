@@ -2,17 +2,11 @@ package main
 
 import (
     "fmt"
-    "time"
-    "errors"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
-func test() (err error) {
-    defer func() {
-        fmt.Println(err)
-    }()
-    time.Sleep(time.Second)
-    return errors.New("111")
-}
+
 func main() {
-    test()
+    r, _ := ghttp.Get("http://johng.cn")
+    fmt.Println(string(r.ReadAll()))
 }
