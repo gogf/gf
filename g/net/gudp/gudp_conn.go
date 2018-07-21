@@ -91,11 +91,12 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
 
 // 接收数据
 func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
-    var err        error  // 读取错误
-    var size       int    // 读取长度
-    var index      int    // 已读取长度
-    var buffer     []byte // 读取缓冲区
-    var bufferWait bool   // 是否设置读取的超时时间
+    var err        error        // 读取错误
+    var size       int          // 读取长度
+    var index      int          // 已读取长度
+    var raddr      *net.UDPAddr // 当前读取的远程地址
+    var buffer     []byte       // 读取缓冲区
+    var bufferWait bool         // 是否设置读取的超时时间
 
     if length > 0 {
         buffer = make([]byte, length)
@@ -108,7 +109,10 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
             bufferWait = true
             c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait))
         }
-        size, c.raddr, err = c.conn.ReadFromUDP(buffer[index:])
+        size, raddr, err = c.conn.ReadFromUDP(buffer[index:])
+        if err == nil {
+            c.raddr = raddr
+        }
         if size > 0 {
             index += size
             if length > 0 {
@@ -120,9 +124,6 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
                 // 如果长度超过了自定义的读取缓冲区，那么自动增长
                 if index >= gDEFAULT_READ_BUFFER_SIZE {
                     buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
-                }
-                if size < gDEFAULT_READ_BUFFER_SIZE {
-                    break
                 }
             }
         }

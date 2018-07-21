@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-    conn, err := gtcp.NewConn("johng.cn:80")
+    conn, err := gtcp.NewConn("www.baidu.com:80")
     if err != nil {
         panic(err)
     }
