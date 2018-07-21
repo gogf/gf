@@ -30,6 +30,7 @@ type poolItem struct {
 }
 
 // 创建一个对象池，为保证执行效率，过期时间一旦设定之后无法修改
+// 注意过期时间单位为**毫秒**
 func New(expire int, newFunc...func() (interface{}, error)) *Pool {
     r := &Pool {
         list    : glist.New(),
@@ -82,13 +83,15 @@ func (p *Pool) Close() {
 // 超时检测循环
 func (p *Pool) expireCheckingLoop() {
     for !p.closed.Val() {
-        if r := p.list.PopFront(); r != nil {
-            f := r.(*poolItem)
-            if f.expire > gtime.Millisecond() {
-                p.list.PushFront(f)
-                break
+        for {
+            if r := p.list.PopFront(); r != nil {
+                f := r.(*poolItem)
+                if f.expire > gtime.Millisecond() {
+                    p.list.PushFront(f)
+                    break
+                }
             }
         }
-        time.Sleep(3 * time.Second)
+        time.Sleep(time.Second)
     }
 }
