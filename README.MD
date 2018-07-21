@@ -9,7 +9,7 @@ go get -u gitee.com/johng/gf
 
 # 介绍
 gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开源项目地址(仓库保持实时同步)：
-[Gitee](https://gitee.com/johng/gf)，[Github](https://github.com/johng-cn/gf)
+[Gitee](https://gitee.com/johng/gf)，[Github](https://github.com/johng-cn/gf)。
 使用中有任何问题/建议，欢迎加入技术QQ群交流：116707870。
 如有优秀的框架使用案例，欢迎联系作者将地址展示到项目库中，您的牛逼将被世人所瞻仰。
 
@@ -20,11 +20,12 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
 1. 支持多种形式的服务注册特性，灵活高效的路由控制管理；
 1. 支持服务事件回调注册功能，可供选择的pprof性能分析模块；
 1. 支持配置文件及模板文件的自动检测更新机制，即修改即生效；
+1. 支持自定义日期时间格式的时间模块，类似PHP日期时间格式化；
 1. 强大的数据/表单校验模块，支持常用的40种及自定义校验规则；
-1. 提供了对基本数据类型的并发安全封装，提供了常用的并发安全容器；
+1. 强大的网络通信TCP/UDP组件，并提供TCP连接池特性，简便高效；
+1. 提供了对基本数据类型的并发安全封装，提供了常用的数据结构容器；
 1. 支持Go变量/Json/Xml/Yml/Toml任意数据格式之间的相互转换及创建；
-1. 强大的数据库管理模块，支持应用层级的集群管理、读写分离、负载均衡，方法及链式ORM操作；
-1. 更多特点请查阅框架手册( http://gf.johng.cn )；
+1. 强大的数据库ORM，支持应用层级的集群管理、读写分离、负载均衡，查询缓存、方法及链式ORM操作；
 
 # 文档
 GoFrame开发文档：[http://gf.johng.cn](http://gf.johng.cn)
@@ -93,21 +94,16 @@ import (
     "gitee.com/johng/gf/g/frame/gmvc"
 )
 
-// 定义业务相关的控制器对象
 type ControllerUser struct {
     gmvc.Controller
 }
 
-// 定义操作逻辑 - 展示姓名
 func (c *ControllerUser) Name() {
     c.Response.Write("John")
 }
 
 func main() {
-    // 绑定控制器到指定URI，所有控制器的公开方法将会映射到指定URI末尾
-    // 例如该方法执行后，查看效果可访问：
-    // http://127.0.0.1:8199/user/name
-    s := ghttp.GetServer()
+    s := g.Server()
     s.BindController("/user", &ControllerUser{})
     s.Run()
 }
@@ -120,52 +116,11 @@ package main
 import "gitee.com/johng/gf/g/net/ghttp"
 
 func main() {
-    s := ghttp.GetServer()
+    s := g.Server()
     s.BindHandler("/:name/:action", func(r *ghttp.Request){
         r.Response.Write(r.Get("name"))
         r.Response.Write(r.Get("action"))
     })
-    s.SetPort(8199)
-    s.Run()
-}
-```
-
-## 模板引擎
-```go
-package main
-
-import (
-    "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/frame/gmvc"
-)
-
-type ControllerTemplate struct {
-    gmvc.Controller
-}
-
-func (c *ControllerTemplate) Info() {
-    c.View.Assign("name", "john")
-    c.View.Assigns(map[string]interface{}{
-        "age"   : 18,
-        "score" : 100,
-    })
-    c.View.DisplayContent(`
-        <html>
-            <head>
-                <title>gf template engine</title>
-            </head>
-            <body>
-                <p>Name: {{.name}}</p>
-                <p>Age:  {{.age}}</p>
-                <p>Score:{{.score}}</p>
-            </body>
-        </html>
-    `)
-}
-
-func main() {
-    s := ghttp.GetServer()
-    s.BindController("/template", &ControllerTemplate{})
     s.SetPort(8199)
     s.Run()
 }
@@ -212,7 +167,7 @@ r, err := db.Table("user").Where("u.uid=1",).One()
 ```go
 r, err := db.Table("user").Where("name like ?", "%john%").Select()
 ```
-    
+
 #### 链式更新/删除
 ```go
 // 更新
@@ -230,26 +185,6 @@ r, err := db.Table("user").Data(g.Map{"name" : "john"}).Update()
 r, err := db.Table("user").Data(gdb.Map{"name": "john"}).Insert()
 r, err := db.Table("user").Data(gdb.Map{"uid": 10000, "name": "john"}).Replace()
 r, err := db.Table("user").Data(gdb.Map{"uid": 10001, "name": "john"}).Save()
-```
-
-#### 链式批量写入
-```go
-r, err := db.Table("user").Data(gdb.List{
-    {"name": "john_1"},
-    {"name": "john_2"},
-    {"name": "john_3"},
-    {"name": "john_4"},
-}).Insert()
-```
-
-#### 链式批量保存
-```go
-r, err := db.Table("user").Data(gdb.List{
-    {"uid":10000, "name": "john_1"},
-    {"uid":10001, "name": "john_2"},
-    {"uid":10002, "name": "john_3"},
-    {"uid":10003, "name": "john_4"},
-}).Save()
 ```
 
 ### 事务操作
@@ -272,7 +207,7 @@ if tx, err := db.Begin(); err == nil {
     fmt.Println(r, err)
 }
 ```
-        
+
 #### 事务提交操作
 ```go
 if tx, err := db.Begin(); err == nil {
@@ -284,52 +219,13 @@ if tx, err := db.Begin(); err == nil {
     fmt.Println(r, err)
 }
 ```
-        
+
 #### 事务链式操作
 ```go
 if tx, err := db.Begin(); err == nil {
     r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john"}).Save()
     tx.Commit()
     fmt.Println(r, err)
-}
-```
-
-## 数据编码解析
-```go
-// JSON
-data :=
-    `{
-        "users" : {
-            "count" : 100,
-            "list"  : [
-                {"name" : "Ming", "score" : 60},
-                {"name" : "John", "score" : 99.5}
-            ]
-        }
-    }`
-
-if p, e := gparser.LoadContent([]byte(data), "json"); e != nil {
-    glog.Error(e)
-} else {
-    fmt.Println("John Score:", p.GetFloat32("users.list.1.score"))
-}
-```
-
-```go
-// XML
-data :=
-    `<?xml version="1.0" encoding="UTF-8"?>
-     <note>
-         <to>Tove</to>
-         <from>Jani</from>
-         <heading>Reminder</heading>
-         <body>Don't forget me this weekend!</body>
-     </note>`
-
-if p, e := gparser.LoadContent([]byte(data), "xml"); e != nil {
-    glog.Error(e)
-} else {
-    fmt.Println("Heading:", p.GetString("note.heading"))
 }
 ```
 
