@@ -13,10 +13,14 @@ func main() {
     go gudp.NewServer("127.0.0.1:8999", func(conn *gudp.Conn) {
         defer conn.Close()
         for {
-            if data, _ := conn.Recv(-1); len(data) > 0 {
+            data, err := conn.Recv(-1)
+            if len(data) > 0 {
                 if err := conn.Send(append([]byte("> "), data...)); err != nil {
                     glog.Error(err)
                 }
+            }
+            if err != nil {
+                glog.Error(err)
             }
         }
     }).Run()
