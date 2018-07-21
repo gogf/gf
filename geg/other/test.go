@@ -1,12 +1,17 @@
 package main
 
 import (
+    "gitee.com/johng/gf/g/container/gpool"
     "fmt"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "time"
 )
 
-
 func main() {
-    r, _ := ghttp.Get("http://johng.cn")
-    fmt.Println(string(r.ReadAll()))
+    p := gpool.New(1000)
+    for i := 0 ; i < 100; i++ {
+        p.Put(i)
+    }
+    fmt.Println(p.Size())
+    time.Sleep(2*time.Second)
+    fmt.Println(p.Size())
 }
