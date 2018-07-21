@@ -50,13 +50,13 @@ func Send(addr string, data []byte, retry...Retry) error {
 }
 
 // (面向短链接)发送数据并等待接收返回数据
-func SendReceive(addr string, data []byte, receive int, retry...Retry) ([]byte, error) {
+func SendRecv(addr string, data []byte, receive int, retry...Retry) ([]byte, error) {
     conn, err := NewConn(addr)
     if err != nil {
         return nil, err
     }
     defer conn.Close()
-    return conn.SendReceive(data, receive, retry...)
+    return conn.SendRecv(data, receive, retry...)
 }
 
 // (面向短链接)带超时时间的数据发送
@@ -70,11 +70,11 @@ func SendWithTimeout(addr string, data []byte, timeout time.Duration, retry...Re
 }
 
 // (面向短链接)发送数据并等待接收返回数据(带返回超时等待时间)
-func SendReceiveWithTimeout(addr string, data []byte, receive int, timeout time.Duration, retry...Retry) ([]byte, error) {
+func SendRecvWithTimeout(addr string, data []byte, receive int, timeout time.Duration, retry...Retry) ([]byte, error) {
     conn, err := NewConn(addr)
     if err != nil {
         return nil, err
     }
     defer conn.Close()
-    return conn.SendReceiveWithTimeout(data, receive, timeout, retry...)
+    return conn.SendRecvWithTimeout(data, receive, timeout, retry...)
 }
