@@ -14,8 +14,6 @@ func main() {
     }
     t := gtime.Now()
     for _, f := range formats {
-        fmt.Println(f)
         fmt.Println(t.Layout(f))
-        fmt.Println()
     }
 }
