@@ -19,19 +19,21 @@ import (
 
 // http客户端
 type Client struct {
-    http.Client              // 底层http client对象
-    header map[string]string // header
+    http.Client                // 底层http client对象
+    header   map[string]string // header
+    authUser string            // HTTP基本权限设置：名称
+    authPass string            // HTTP基本权限设置：密码
 }
 
 // http客户端对象指针
 func NewClient() (*Client) {
     return &Client{
-        http.Client {
+        Client : http.Client {
             Transport: &http.Transport {
                 DisableKeepAlives: true,
             },
         },
-        make(map[string]string),
+        header : make(map[string]string),
     }
 }
 
@@ -43,6 +45,12 @@ func (c *Client) SetHeader(key, value string) {
 // 设置请求过期时间
 func (c *Client) SetTimeOut(t time.Duration)  {
     c.Timeout = t
+}
+
+// 设置HTTP访问账号密码
+func (c *Client) SetBasicAuth(user, pass string) {
+    c.authUser = user
+    c.authPass = pass
 }
 
 // GET请求
@@ -101,6 +109,10 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
         for k, v := range c.header {
             req.Header.Set(k, v)
         }
+    }
+    // HTTP账号密码
+    if len(c.authUser) > 0 {
+        req.SetBasicAuth(c.authUser, c.authPass)
     }
     // 执行请求
     resp, err := c.Do(req)
