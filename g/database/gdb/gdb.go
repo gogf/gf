@@ -17,6 +17,7 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gring"
     "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 const (
@@ -126,6 +127,9 @@ var linkMysql = &dbmysql{}
 // PostgreSQL接口对象
 var linkPgsql = &dbpgsql{}
 
+// 数据库查询缓存对象map，使用数据库连接名称作为键名，键值为查询缓存对象
+var dbCaches  = gmap.NewStringInterfaceMap()
+
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
 func New(groupName...string) (*Db, error) {
     name := config.d
@@ -158,7 +162,7 @@ func New(groupName...string) (*Db, error) {
         if len(slaveList) > 0 {
             slaveNode = getConfigNodeByPriority(slaveList)
         }
-        return newDb(masterNode, slaveNode)
+        return newDb(masterNode, slaveNode, name)
     } else {
         return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", name))
     }
@@ -198,7 +202,7 @@ func getConfigNodeByPriority (cg ConfigGroup) *ConfigNode {
 }
 
 // 创建数据库链接对象
-func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
+func newDb (masterNode *ConfigNode, slaveNode *ConfigNode, groupName string) (*Db, error) {
     var link Link
     switch masterNode.Type {
         case "mysql": link = linkMysql
@@ -217,14 +221,27 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode) (*Db, error) {
             return nil, err
         }
     }
-    return &Db {
+    db := &Db {
         link   : link,
         master : master,
         slave  : slave,
         charl  : link.getQuoteCharLeft(),
         charr  : link.getQuoteCharRight(),
         debug  : gtype.NewBool(),
-        cache  : gcache.New(),
-    }, nil
+    }
+    if v := dbCaches.Get(groupName); v == nil {
+        dbCaches.LockFunc(func(m map[string]interface{}) {
+            if v, ok := m[groupName]; !ok {
+                db.cache     = gcache.New()
+                m[groupName] = db.cache
+            } else {
+                db.cache     = v.(*gcache.Cache)
+            }
+        })
+    } else {
+        db.cache = v.(*gcache.Cache)
+    }
+
+    return db, nil
 }
 

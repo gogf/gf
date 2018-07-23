@@ -20,7 +20,7 @@ import (
 // http客户端
 type Client struct {
     http.Client                // 底层http client对象
-    header   map[string]string // header
+    header   map[string]string // HEADER信息Map
     authUser string            // HTTP基本权限设置：名称
     authPass string            // HTTP基本权限设置：密码
 }
@@ -63,7 +63,8 @@ func (c *Client) Put(url, data string) (*ClientResponse, error) {
     return c.DoRequest("PUT", url, []byte(data))
 }
 
-// POST请求提交数据
+// POST请求提交数据，默认使用表单方式提交数据(绝大部分场景下也是如此)。
+// 如果服务端对Content-Type有要求，可使用Client对象进行请求，单独设置相关属性。
 // 支持文件上传，需要字段格式为：FieldName=@file:
 func (c *Client) Post(url, data string) (*ClientResponse, error) {
     var req *http.Request
