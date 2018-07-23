@@ -70,7 +70,7 @@ func (s *Server)parsePattern(pattern string) (domain, method, uri string, err er
     return
 }
 
-// 注册服务处理方法
+// 路由注册处理方法
 func (s *Server) setHandler(pattern string, item *HandlerItem) error {
     domain, method, uri, err := s.parsePattern(pattern)
     if err != nil {
@@ -91,7 +91,9 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
         if _, ok := s.handlerTree[domain]; !ok {
             s.handlerTree[domain] = make(map[string]interface{})
         }
+        // 用于遍历的指针
         p     := s.handlerTree[domain]
+        // 当前节点的规则链表
         lists := make([]*list.List, 0)
         array := strings.Split(uri[1:], "/")
         item.router.Priority = len(array)
@@ -117,7 +119,7 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
                     }
                     p = p.(map[string]interface{})[v]
                     // 到达叶子节点，往list中增加匹配规则
-                    if v != "/" && k == len(array) - 1 {
+                    if k == len(array) - 1 && v != "/" {
                         if v, ok := p.(map[string]interface{})["*list"]; !ok {
                             p.(map[string]interface{})["*list"] = list.New()
                             lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
@@ -127,7 +129,7 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
                     }
             }
         }
-        // 从头开始遍历链表，优先级高的放在前面
+        // 从头开始遍历每个节点的模糊匹配链表，将该路由项插入进去(按照优先级高的放在前面)
         for _, l := range lists {
             for e := l.Front(); e != nil; e = e.Next() {
                 if s.compareHandlerItemPriority(item, e.Value.(*HandlerItem)) {
@@ -147,6 +149,8 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
             s.handlerMap[s.handlerKey(domain, method, uri)] = item
         }
     }
+    //b, _ := gparser.VarToJsonIndent(s.handlerTree)
+    //fmt.Println(string(b))
     return nil
 }
 
