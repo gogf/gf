@@ -28,6 +28,11 @@ func getRegexp(pattern string) (*regexp.Regexp, error) {
     }
 }
 
+// 转移正则规则字符串，例如：Quote(`[foo]`) 返回 `\[foo\]`
+func Quote(s string) string {
+    return regexp.QuoteMeta(s)
+}
+
 // 校验所给定的正则表达式是否符合规范
 func Validate(pattern string) error {
     _, err := getRegexp(pattern)
@@ -76,4 +81,21 @@ func Replace(pattern string, replace, src []byte) ([]byte, error) {
 func ReplaceString(pattern, replace, src string) (string, error) {
     r, e := Replace(pattern, []byte(replace), []byte(src))
     return string(r), e
+}
+
+// 正则替换(全部替换)，给定自定义替换方法
+func ReplaceFunc(pattern string, src []byte, repl func(b []byte) []byte) ([]byte, error) {
+    if r, err := getRegexp(pattern); err == nil {
+        return r.ReplaceAllFunc(src, repl), nil
+    } else {
+        return nil, err
+    }
+}
+
+// 正则替换(全部替换)，给定自定义替换方法
+func ReplaceStringFunc(pattern string, src string, repl func(s string) string) (string, error) {
+    bytes, err := ReplaceFunc(pattern, []byte(src), func(bytes []byte) []byte {
+        return []byte(repl(string(bytes)))
+    })
+    return string(bytes), err
 }
