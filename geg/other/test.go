@@ -1,17 +1,11 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/container/gpool"
     "fmt"
-    "time"
+    "gitee.com/johng/gf/g/util/gregex"
 )
 
+
 func main() {
-    p := gpool.New(1000)
-    for i := 0 ; i < 100; i++ {
-        p.Put(i)
-    }
-    fmt.Println(p.Size())
-    time.Sleep(2*time.Second)
-    fmt.Println(p.Size())
+    fmt.Println(gregex.Quote(`/user/list/1.html`))
 }

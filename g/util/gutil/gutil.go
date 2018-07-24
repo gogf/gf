@@ -8,10 +8,21 @@
 package gutil
 
 import (
+    "fmt"
     "reflect"
+    "encoding/json"
     "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/util/gconv"
 )
+
+// 格式化打印变量(类似于PHP-vardump)
+func Dump(i interface{}) {
+    if b, err := json.MarshalIndent(i, "", "\t"); err == nil {
+        fmt.Println(string(b))
+    } else {
+        fmt.Errorf("%s\n", err.Error())
+    }
+}
 
 // 将map键值对映射到对应的struct对象属性上，需要注意：
 // 1、第二个参数为struct对象指针；
