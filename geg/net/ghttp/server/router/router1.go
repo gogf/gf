@@ -8,7 +8,7 @@ import (
 func main() {
     s := g.Server()
     s.BindHandler("/:name", func(r *ghttp.Request){
-       r.Response.Writeln(r.Router.Uri)
+        r.Response.Writeln(r.Router.Uri)
     })
     s.BindHandler("/:name/update", func(r *ghttp.Request){
         r.Response.Writeln(r.Router.Uri)
@@ -17,9 +17,9 @@ func main() {
         r.Response.Writeln(r.Router.Uri)
     })
     s.BindHandler("/:name/*any", func(r *ghttp.Request){
-       r.Response.Writeln(r.Router.Uri)
+        r.Response.Writeln(r.Router.Uri)
     })
-    s.BindHandler("/user/list/{page}.html", func(r *ghttp.Request){
+    s.BindHandler("/user/list/{field}.html", func(r *ghttp.Request){
         r.Response.Writeln(r.Router.Uri)
     })
     s.SetPort(8199)
