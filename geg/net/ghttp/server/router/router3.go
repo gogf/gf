@@ -12,8 +12,8 @@ func main() {
         r.Response.Writeln(r.Get("page"))
     })
     // {xxx} 规则与 :xxx 规则混合使用
-    s.BindHandler("/{obj}/:attr/{act}.php", func(r *ghttp.Request){
-        r.Response.Writeln(r.Get("obj"))
+    s.BindHandler("/{object}/:attr/{act}.php", func(r *ghttp.Request){
+        r.Response.Writeln(r.Get("object"))
         r.Response.Writeln(r.Get("attr"))
         r.Response.Writeln(r.Get("act"))
     })
