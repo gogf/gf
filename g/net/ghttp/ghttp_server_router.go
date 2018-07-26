@@ -21,28 +21,28 @@ type handlerCacheItem struct {
 }
 
 // 查询请求处理方法
-// 这里有个锁机制，可以并发读，但是不能并发写
+// 内部带锁机制，可以并发读，但是不能并发写；并且有缓存机制，按照Host、Method、Path进行缓存
 func (s *Server) getHandler(r *Request) *HandlerItem {
     // 缓存清空时是直接修改属性，因此必须使用互斥锁
     s.hmcmu.RLock()
     defer s.hmcmu.RUnlock()
 
-    var handlerItem *handlerCacheItem
+    var cacheItem *handlerCacheItem
     cacheKey := s.handlerKey(r.GetHost(), r.Method, r.URL.Path)
     if v := s.handlerCache.Get(cacheKey); v == nil {
-        handlerItem = s.searchHandler(r)
-        if handlerItem != nil {
-            s.handlerCache.Set(cacheKey, handlerItem, 0)
+        cacheItem = s.searchHandler(r)
+        if cacheItem != nil {
+            s.handlerCache.Set(cacheKey, cacheItem, 0)
         }
     } else {
-        handlerItem = v.(*handlerCacheItem)
+        cacheItem = v.(*handlerCacheItem)
     }
-    if handlerItem != nil {
-        for k, v := range handlerItem.values {
+    if cacheItem != nil {
+        for k, v := range cacheItem.values {
             r.queries[k] = v
         }
-        r.Router = handlerItem.item.router
-        return handlerItem.item
+        r.Router = cacheItem.item.router
+        return cacheItem.item
     }
     return nil
 }
@@ -81,6 +81,7 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
         Domain : domain,
         Method : method,
     }
+    item.router.RegRule, item.router.RegNames = s.patternToRegRule(uri)
     s.hmmu.Lock()
     defer s.hmmu.Unlock()
     defer s.clearHandlerCache()
@@ -251,23 +252,15 @@ func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
                 item := e.Value.(*HandlerItem)
                 // 动态匹配规则带有gDEFAULT_METHOD的情况，不会像静态规则那样直接解析为所有的HTTP METHOD存储
                 if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, r.Method) {
-                    // 不管正则关键字符转义问题
-                    //rule, names := s.patternToRegRule(gstr.ReplaceByMap(gregex.Quote(item.router.Uri), map[string]string {
-                    //    `\{` : `{`,
-                    //    `\}` : `}`,
-                    //    `\*` : `*`,
-                    //}))
-                    rule, names := s.patternToRegRule(item.router.Uri)
-                    if match, err := gregex.MatchString(rule, r.URL.Path); err == nil && len(match) > 1 {
+                    if match, err := gregex.MatchString(item.router.RegRule, r.URL.Path); err == nil && len(match) > 1 {
                         //gutil.Dump(match)
                         //gutil.Dump(names)
                         handlerItem := &handlerCacheItem{item, nil}
                         // 如果需要query匹配，那么需要重新正则解析URL
-                        if len(names) > 0 {
-                            array := strings.Split(names, ",")
-                            if len(match) > len(array) {
+                        if len(item.router.RegNames) > 0 {
+                            if len(match) > len(item.router.RegNames) {
                                 handlerItem.values = make(map[string][]string)
-                                for index, name := range array {
+                                for index, name := range item.router.RegNames {
                                     handlerItem.values[name] = []string{match[index + 1]}
                                 }
                             }
@@ -282,9 +275,9 @@ func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
 }
 
 // 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
-func (s *Server) patternToRegRule(rule string) (regrule string, names string) {
+func (s *Server) patternToRegRule(rule string) (regrule string, names []string) {
     if len(rule) < 2 {
-        return rule, ""
+        return rule, nil
     }
     regrule = "^"
     array  := strings.Split(rule[1:], "/")
@@ -295,22 +288,13 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names string) {
         switch v[0] {
             case ':':
                 regrule += `/([\w\.\-]+)`
-                if len(names) > 0 {
-                    names += ","
-                }
-                names += v[1:]
+                names    = append(names, v[1:])
             case '*':
                 regrule += `/{0,1}(.*)`
-                if len(names) > 0 {
-                    names += ","
-                }
-                names += v[1:]
+                names    = append(names, v[1:])
             default:
                 s, _ := gregex.ReplaceStringFunc(`{[\w\.\-]+}`, v, func(s string) string {
-                    if len(names) > 0 {
-                        names += ","
-                    }
-                    names += s[1 : len(s) - 1]
+                    names = append(names, s[1 : len(s) - 1])
                     return `([\w\.\-]+)`
                 })
                 if strings.EqualFold(s, v) {

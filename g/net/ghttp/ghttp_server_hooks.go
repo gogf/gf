@@ -32,6 +32,7 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
         Domain : domain,
         Method : method,
     }
+    item.router.RegRule, item.router.RegNames = s.patternToRegRule(uri)
 
     s.hhmu.Lock()
     defer s.hhmu.Unlock()
@@ -52,18 +53,13 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
         if len(v) == 0 {
             continue
         }
-        switch v[0] {
-            case ':':
-                fallthrough
-            case '*':
-                v = "/"
-                fallthrough
-            default:
-                if _, ok := p.(map[string]interface{})[v]; !ok {
-                    p.(map[string]interface{})[v] = make(map[string]interface{})
-                }
-                p = p.(map[string]interface{})[v]
+        if gregex.IsMatchString(`^[:\*]|{[\w\.\-]+}`, v) {
+            v = "*fuzz"
         }
+        if _, ok := p.(map[string]interface{})[v]; !ok {
+            p.(map[string]interface{})[v] = make(map[string]interface{})
+        }
+        p = p.(map[string]interface{})[v]
     }
     // 到达叶子节点
     var l *list.List
@@ -77,7 +73,7 @@ func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) 
     for e := l.Front(); e != nil; e = e.Next() {
         if s.compareHandlerItemPriority(item, e.Value.(*HandlerItem)) {
             l.InsertBefore(item, e)
-            return nil
+            break
         }
     }
     l.PushBack(item)
