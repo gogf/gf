@@ -1,23 +1,11 @@
 package main
 
 import (
-    "fmt"
-    "time"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
-var c = make(chan int, 10)
-
-func Chan() chan int {
-    fmt.Println("yes chan")
-    return c
-}
-
 func main() {
-    for {
-        select {
-            case <- Chan():
-            default:
-                time.Sleep(time.Second)
-        }
-    }
+    gfile.PutContentsAppend("/tmp/test", "1")
+    gfile.PutContentsAppend("/tmp/test", "2")
+    gfile.PutContentsAppend("/tmp/test", "3")
 }

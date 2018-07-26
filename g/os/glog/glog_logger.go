@@ -57,10 +57,10 @@ func (l *Logger) GetIO() io.Writer {
 }
 
 // 获取默认的文件IO
-func (l *Logger) getFileByPool() *gfilepool.PoolItem {
+func (l *Logger) getFileByPool() *gfilepool.File {
     if path := l.path.Val(); path != "" {
         fpath := path + gfile.Separator + time.Now().Format("2006-01-02.log")
-        if fp, err := gfilepool.OpenWithPool(fpath, gDEFAULT_FILE_POOL_FLAGS, 86400); err == nil {
+        if fp, err := gfilepool.OpenWithPool(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666, 86400000); err == nil {
             return fp
         } else {
             fmt.Fprintln(os.Stderr, err)
@@ -104,21 +104,22 @@ func (l *Logger) SetStdPrint(open bool) {
 
 // 这里的写锁保证统一时刻只会写入一行日志，防止串日志的情况
 func (l *Logger) print(defaultIO io.Writer, s string) {
-    w := l.GetIO()
-    if w == nil {
-        if v := l.getFileByPool(); v != nil {
-            w = v.File()
-            // 同时输出到文件和终端 @author zseeker
+    writer := l.GetIO()
+    if writer == nil {
+        if f := l.getFileByPool(); f != nil {
+            writer = f
+            // 同时输出到文件和终端
+            // @author zseeker
             if l.stdprint.Val() {
-                w = io.MultiWriter(w, defaultIO)
+                writer = io.MultiWriter(writer, defaultIO)
             }
-            defer v.Close()
+            defer f.Close()
         } else {
-            w = defaultIO
+            writer = defaultIO
         }
     }
     l.mu.Lock()
-    fmt.Fprint(w, l.format(s))
+    fmt.Fprint(writer, l.format(s))
     l.mu.Unlock()
 }
 

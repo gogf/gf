@@ -25,63 +25,127 @@ var sifm  = NewStringInterfaceMap()
 var ssm   = NewStringStringMap()
 var uifm  = NewUintInterfaceMap()
 
-func BenchmarkIntBoolMap_Set(b *testing.B) {
+// 写入性能测试
+
+func Benchmark_IntBoolMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ibm.Set(i, true)
     }
 }
 
-func BenchmarkIntIntMap_Set(b *testing.B) {
+func Benchmark_IntIntMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         iim.Set(i, i)
     }
 }
 
-func BenchmarkIntInterfaceMap_Set(b *testing.B) {
+func Benchmark_IntInterfaceMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         iifm.Set(i, i)
     }
 }
 
-func BenchmarkIntStringMap_Set(b *testing.B) {
+func Benchmark_IntStringMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ism.Set(i, strconv.Itoa(i))
     }
 }
 
-func BenchmarkInterfaceInterfaceMap_Set(b *testing.B) {
+func Benchmark_InterfaceInterfaceMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ififm.Set(i, i)
     }
 }
 
-func BenchmarkStringBoolMap_Set(b *testing.B) {
+func Benchmark_StringBoolMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         sbm.Set(strconv.Itoa(i), true)
     }
 }
 
-func BenchmarkStringIntMap_Set(b *testing.B) {
+func Benchmark_StringIntMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         sim.Set(strconv.Itoa(i), i)
     }
 }
 
-func BenchmarkStringInterfaceMap_Set(b *testing.B) {
+func Benchmark_StringInterfaceMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         sifm.Set(strconv.Itoa(i), i)
     }
 }
 
-func BenchmarkStringStringMap_Set(b *testing.B) {
+func Benchmark_StringStringMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ssm.Set(strconv.Itoa(i), strconv.Itoa(i))
     }
 }
 
-func BenchmarkUintInterfaceMap_Set(b *testing.B) {
+func Benchmark_UintInterfaceMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         uifm.Set(uint(i), i)
+    }
+}
+
+// 读取性能测试
+
+func Benchmark_IntBoolMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        ibm.Get(i)
+    }
+}
+
+func Benchmark_IntIntMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        iim.Get(i)
+    }
+}
+
+func Benchmark_IntInterfaceMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        iifm.Get(i)
+    }
+}
+
+func Benchmark_IntStringMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        ism.Get(i)
+    }
+}
+
+func Benchmark_InterfaceInterfaceMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        ififm.Get(i)
+    }
+}
+
+func Benchmark_StringBoolMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        sbm.Get(strconv.Itoa(i))
+    }
+}
+
+func Benchmark_StringIntMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        sim.Get(strconv.Itoa(i))
+    }
+}
+
+func Benchmark_StringInterfaceMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        sifm.Get(strconv.Itoa(i))
+    }
+}
+
+func Benchmark_StringStringMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        ssm.Get(strconv.Itoa(i))
+    }
+}
+
+func Benchmark_UintInterfaceMap_Get(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        uifm.Get(uint(i))
     }
 }
 

@@ -71,12 +71,12 @@ func SetCap(cap int) {
     cache.cap.Set(cap)
 }
 
-// (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为毫秒
+// (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为**毫秒**
 func Set(key string, value interface{}, expire int)  {
     cache.Set(key, value, expire)
 }
 
-// (使用全局KV缓存对象)批量设置kv缓存键值对，过期时间单位为毫秒
+// (使用全局KV缓存对象)批量设置kv缓存键值对，过期时间单位为**毫秒**
 func BatchSet(data map[string]interface{}, expire int)  {
     cache.BatchSet(data, expire)
 }
