@@ -2,10 +2,22 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/util/gregex"
+    "time"
 )
 
+var c = make(chan int, 10)
+
+func Chan() chan int {
+    fmt.Println("yes chan")
+    return c
+}
 
 func main() {
-    fmt.Println(gregex.Quote(`/user/list/1.html`))
+    for {
+        select {
+            case <- Chan():
+            default:
+                time.Sleep(time.Second)
+        }
+    }
 }
