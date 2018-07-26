@@ -9,123 +9,73 @@ package gfilepool
 
 import (
     "os"
-    "time"
     "sync"
-    "strconv"
-    "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/container/glist"
-    "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/gpool"
+    "fmt"
 )
 
 // 文件指针池
 type Pool struct {
-    path    string          // 文件绝对路径
-    flag    int             // 文件打开标识
-    list    *glist.List     // 可用/闲置的文件指针链表
-    idle    int             // 闲置最大时间，超过该时间则被系统回收(秒)
-    closed  *gtype.Bool     // 连接池是否已关闭
+    pool    *gpool.Pool     // 底层对象池
 }
 
 // 文件指针池指针
-type PoolItem struct {
-    mu     sync.RWMutex
+type File struct {
+    *os.File                // 底层文件指针
+    mu     sync.RWMutex     // 互斥锁
     pool   *Pool            // 所属池
-    file   *os.File         // 指针对象
-    expire *gtype.Int64     // 过期时间(秒)
 }
 
 // 全局指针池，expire < 0表示不过期，expire = 0表示使用完立即回收，expire > 0表示超时回收
 var pools = gmap.NewStringInterfaceMap()
 
 // 获得文件对象，并自动创建指针池
-func OpenWithPool(path string, flag int, expire int) (*PoolItem, error) {
-    key    := path + strconv.Itoa(flag) + strconv.Itoa(expire)
+func OpenWithPool(path string, flag int, perm os.FileMode, expire int) (*File, error) {
+    key    := fmt.Sprintf("%s&%d&%d&%d", path, flag, expire, perm)
     result := pools.Get(key)
     if result != nil {
         return result.(*Pool).File()
     }
-    pool := New(path, flag, expire)
+    pool := New(path, flag, perm, expire)
     pools.Set(key, pool)
     return pool.File()
 }
 
-// 创建一个文件指针池，expire < 0表示不过期，expire = 0表示使用完立即回收，expire > 0表示超时回收
-func New(path string, flag int, expire int) *Pool {
-    r := &Pool {
-        path    : path,
-        flag    : flag,
-        list    : glist.New(),
-        idle    : expire,
-        closed  : gtype.NewBool(),
-    }
-    // 独立的线程执行过期清理工作
-    if expire != -1 {
-        go func(p *Pool) {
-            for !p.closed.Val() {
-                if r := p.list.PopFront(); r != nil {
-                    f := r.(*PoolItem)
-                    // 必须小于，中间有1秒的缓存时间，防止同时获取和判断过期时冲突
-                    if f.expire.Val() < gtime.Second() {
-                        f.destroy()
-                    } else {
-                        // 重新推回去
-                        p.list.PushFront(f)
-                        break
-                    }
-                }
-                time.Sleep(3 * time.Second)
-            }
-        }(r)
-    }
-    return r
+// 创建一个文件指针池，expire = 0表示不过期，expire < 0表示使用完立即回收，expire > 0表示超时回收
+func New(path string, flag int, perm os.FileMode, expire int) *Pool {
+    p     := &Pool {}
+    p.pool = gpool.New(expire, func() (interface{}, error) {
+        file, err := os.OpenFile(path, flag, perm)
+        if err != nil {
+            return nil, err
+        }
+        return &File{
+            File : file,
+            pool : p,
+        }, nil
+    })
+    p.pool.SetExpireFunc(func(i interface{}) {
+        i.(*File).File.Close()
+    })
+    return p
 }
 
 // 获得一个文件打开指针
-func (p *Pool) File() (*PoolItem, error) {
-    if p.list.Len() > 0 {
-        for {
-            // 从队列头依次查找，返回一个未过期的指针
-            if r := p.list.PopFront(); r != nil {
-                f := r.(*PoolItem)
-                if f.expire.Val() > gtime.Second() {
-                    return f, nil
-                } else if f.file != nil {
-                    f.destroy()
-                }
-            } else {
-                break
-            }
-        }
-    }
-    file, err := os.OpenFile(p.path, p.flag, 0666)
-    if err != nil {
+func (p *Pool) File() (*File, error) {
+    if v, err := p.pool.Get(); err != nil {
         return nil, err
+    } else {
+        return v.(*File), nil
     }
-    return &PoolItem {
-        pool   : p,
-        file   : file,
-        expire : gtype.NewInt64(),
-    }, nil
 }
 
 // 关闭指针池
 func (p *Pool) Close() {
-    p.closed.Set(true)
+    p.pool.Close()
 }
 
 // 获得底层文件指针
-func (f *PoolItem) File() *os.File {
-    return f.file
-}
-
-// 关闭指针链接(软关闭)，放回池中重复使用
-func (f *PoolItem) Close() {
-    f.expire.Set(gtime.Second() + int64(f.pool.idle))
-    f.pool.list.PushBack(f)
-}
-
-// 销毁指针
-func (f *PoolItem) destroy() {
-    f.file.Close()
+func (f *File) Close() {
+    f.pool.pool.Put(f)
 }

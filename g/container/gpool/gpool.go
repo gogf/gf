@@ -9,18 +9,21 @@ package gpool
 
 import (
     "time"
+    "errors"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gtype"
-    "errors"
+    "math"
 )
 
 // 对象池
 type Pool struct {
-    list    *glist.List // 可用/闲置的文件指针链表
-    closed  *gtype.Bool // 连接池是否已关闭
-    Expire  int64       // (毫秒)闲置最大时间，超过该时间则被系统回收
-    NewFunc func()(interface{}, error) // 创建对象的方法定义
+    list       *glist.List                // 可用/闲置的文件指针链表
+    closed     *gtype.Bool                // 连接池是否已关闭
+    Expire     int64                      // (毫秒)闲置最大时间，超过该时间则被系统回收
+    NewFunc    func()(interface{}, error) // 创建对象的方法定义
+    ExpireFunc func(interface{})          // 对象的过期销毁方法(当池对象销毁需要执行额外的销毁操作时，需要定义该方法)
+                                          // 例如: net.Conn, os.File等对象都需要执行额外关闭操作
 }
 
 // 对象池数据项
@@ -30,8 +33,12 @@ type poolItem struct {
 }
 
 // 创建一个对象池，为保证执行效率，过期时间一旦设定之后无法修改
+// expire = 0表示不过期，expire < 0表示使用完立即回收，expire > 0表示超时回收
 // 注意过期时间单位为**毫秒**
 func New(expire int, newFunc...func() (interface{}, error)) *Pool {
+    if expire == 0 {
+        expire = math.MaxInt64
+    }
     r := &Pool {
         list    : glist.New(),
         closed  : gtype.NewBool(),
@@ -44,9 +51,14 @@ func New(expire int, newFunc...func() (interface{}, error)) *Pool {
     return r
 }
 
+// 设置对象过期销毁时的关闭方法
+func (p *Pool) SetExpireFunc(expireFunc func(interface{})) {
+    p.ExpireFunc = expireFunc
+}
+
 // 放一个临时对象到池中
 func (p *Pool) Put(item interface{}) {
-    p.list.PushBack(&poolItem{
+    p.list.PushBack(&poolItem {
         expire : gtime.Millisecond() + p.Expire,
         value  : item,
     })
@@ -85,10 +97,13 @@ func (p *Pool) expireCheckingLoop() {
     for !p.closed.Val() {
         for {
             if r := p.list.PopFront(); r != nil {
-                f := r.(*poolItem)
-                if f.expire > gtime.Millisecond() {
-                    p.list.PushFront(f)
+                item := r.(*poolItem)
+                if item.expire > gtime.Millisecond() {
+                    p.list.PushFront(item)
                     break
+                }
+                if p.ExpireFunc != nil {
+                    p.ExpireFunc(item.value)
                 }
             }
         }
