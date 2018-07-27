@@ -7,30 +7,29 @@
 package grpool_test
 
 import (
-    "fmt"
-    "runtime"
     "testing"
-    "gitee.com/johng/gf/g/os/grpool"
+    "runtime"
+    "fmt"
 )
 
 func increment() {
-    for i := 0; i < 1000000; i++ {}
+    for i := 0; i < 100000; i++ {}
 }
 
-func Test_GrpoolMemUsage(t *testing.T) {
-    for i := 0; i < n; i++ {
-        grpool.Add(increment)
-    }
-    mem := runtime.MemStats{}
-    runtime.ReadMemStats(&mem)
-    fmt.Println("mem usage:", mem.TotalAlloc/1024)
-}
-
-//func Test_GroroutineMemUsage(t *testing.T) {
+//func Test_GrpoolMemUsage(t *testing.T) {
 //    for i := 0; i < n; i++ {
-//        go increment()
+//        grpool.Add(increment)
 //    }
 //    mem := runtime.MemStats{}
 //    runtime.ReadMemStats(&mem)
 //    fmt.Println("mem usage:", mem.TotalAlloc/1024)
 //}
+
+func Test_GroroutineMemUsage(t *testing.T) {
+   for i := 0; i < n; i++ {
+       go increment()
+   }
+   mem := runtime.MemStats{}
+   runtime.ReadMemStats(&mem)
+   fmt.Println("mem usage:", mem.TotalAlloc/1024)
+}
