@@ -14,8 +14,8 @@ import (
     "gitee.com/johng/gf/g/util/gregex"
 )
 
-// handler缓存项，根据URL.Path进行缓存，因此对象中带有缓存参数
-type handlerCacheItem struct {
+// 路由检索缓存项，根据URL.Path进行缓存，因此对象中带有缓存参数
+type routerCacheItem struct {
     item    *HandlerItem         // 准确的执行方法内存地址
     values   map[string][]string // GET解析参数
 }
@@ -27,7 +27,7 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
     s.hmcmu.RLock()
     defer s.hmcmu.RUnlock()
 
-    var cacheItem *handlerCacheItem
+    var cacheItem *routerCacheItem
     cacheKey := s.handlerKey(r.GetHost(), r.Method, r.URL.Path)
     if v := s.handlerCache.Get(cacheKey); v == nil {
         cacheItem = s.searchHandler(r)
@@ -35,7 +35,7 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
             s.handlerCache.Set(cacheKey, cacheItem, 0)
         }
     } else {
-        cacheItem = v.(*handlerCacheItem)
+        cacheItem = v.(*routerCacheItem)
     }
     if cacheItem != nil {
         for k, v := range cacheItem.values {
@@ -184,7 +184,7 @@ func (s *Server) compareHandlerItemPriority(newItem, oldItem *HandlerItem) bool 
 }
 
 // 服务方法检索
-func (s *Server) searchHandler(r *Request) *handlerCacheItem {
+func (s *Server) searchHandler(r *Request) *routerCacheItem {
     item := s.searchHandlerStatic(r)
     if item == nil {
         item = s.searchHandlerDynamic(r)
@@ -193,21 +193,21 @@ func (s *Server) searchHandler(r *Request) *handlerCacheItem {
 }
 
 // 检索静态路由规则
-func (s *Server) searchHandlerStatic(r *Request) *handlerCacheItem {
+func (s *Server) searchHandlerStatic(r *Request) *routerCacheItem {
     s.hmmu.RLock()
     defer s.hmmu.RUnlock()
     domains := []string{r.GetHost(), gDEFAULT_DOMAIN}
     // 首先进行静态匹配
     for _, domain := range domains {
         if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
-            return &handlerCacheItem{f, nil}
+            return &routerCacheItem{f, nil}
         }
     }
     return nil
 }
 
 // 检索动态路由规则
-func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
+func (s *Server) searchHandlerDynamic(r *Request) *routerCacheItem {
     s.hmmu.RLock()
     defer s.hmmu.RUnlock()
     domains := []string{gDEFAULT_DOMAIN, r.GetHost()}
@@ -255,7 +255,7 @@ func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
                     if match, err := gregex.MatchString(item.router.RegRule, r.URL.Path); err == nil && len(match) > 1 {
                         //gutil.Dump(match)
                         //gutil.Dump(names)
-                        handlerItem := &handlerCacheItem{item, nil}
+                        handlerItem := &routerCacheItem{item, nil}
                         // 如果需要query匹配，那么需要重新正则解析URL
                         if len(item.router.RegNames) > 0 {
                             if len(match) > len(item.router.RegNames) {
