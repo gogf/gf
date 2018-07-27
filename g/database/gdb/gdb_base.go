@@ -17,6 +17,7 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/container/gring"
     "gitee.com/johng/gf/g/os/gtime"
+    "time"
 )
 
 const (
@@ -237,24 +238,42 @@ func (db *Db) Prepare(query string) (*sql.Stmt, error) {
 
 // ping一下，判断或保持数据库链接(master)
 func (db *Db) PingMaster() error {
-    err := db.master.Ping();
+    err := db.master.Ping()
     return err
 }
 
 // ping一下，判断或保持数据库链接(slave)
 func (db *Db) PingSlave() error {
-    err := db.slave.Ping();
+    err := db.slave.Ping()
     return err
 }
 
 // 设置数据库连接池中空闲链接的大小
 func (db *Db) SetMaxIdleConns(n int) {
-    db.master.SetMaxIdleConns(n);
+    db.master.SetMaxIdleConns(n)
+    // 比较的是指向的变量地址
+    if db.master != db.slave {
+        db.slave.SetMaxIdleConns(n)
+    }
 }
 
 // 设置数据库连接池最大打开的链接数量
 func (db *Db) SetMaxOpenConns(n int) {
-    db.master.SetMaxOpenConns(n);
+    db.master.SetMaxOpenConns(n)
+    // 比较的是指向的变量地址
+    if db.master != db.slave {
+        db.slave.SetMaxOpenConns(n)
+    }
+}
+
+// 设置数据库连接可重复利用的时间，超过该时间则被关闭废弃
+// 如果 d <= 0 表示该链接会一直重复利用
+func (db *Db) SetConnMaxLifetime(d time.Duration) {
+    db.master.SetConnMaxLifetime(d)
+    // 比较的是指向的变量地址
+    if db.master != db.slave {
+        db.slave.SetConnMaxLifetime(d)
+    }
 }
 
 // 事务操作，开启，会返回一个底层的事务操作对象链接如需要嵌套事务，那么可以使用该对象，否则请忽略
