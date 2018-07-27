@@ -107,6 +107,15 @@ func Database(name...string) *gdb.Db {
                         if value, ok := nodem["priority"]; ok {
                             node.Priority = gconv.Int(value)
                         }
+                        if value, ok := nodem["max-idle"]; ok {
+                            node.MaxIdleConnCount = gconv.Int(value)
+                        }
+                        if value, ok := nodem["max-open"]; ok {
+                            node.MaxOpenConnCount = gconv.Int(value)
+                        }
+                        if value, ok := nodem["max-lifetime"]; ok {
+                            node.MaxConnLifetime = gconv.Int(value)
+                        }
                         cg = append(cg, node)
                     }
                 }
