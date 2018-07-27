@@ -3,8 +3,8 @@ package main
 import (
     "time"
     "fmt"
-    "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/os/grpool"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 func job() {
@@ -12,21 +12,18 @@ func job() {
 }
 
 func main() {
-    grpool.SetSize(10)
+    pool := grpool.New(100)
     for i := 0; i < 1000; i++ {
-        grpool.Add(job)
+        pool.Add(job)
     }
-    fmt.Println("size:", grpool.Size())
-    fmt.Println("jobs:", grpool.Jobs())
-    gtime.SetInterval(2*time.Second, func() bool {
-        fmt.Println("size:", grpool.Size())
-        fmt.Println("jobs:", grpool.Jobs())
-        return true
+    fmt.Println("worker:", pool.Size())
+    fmt.Println("  jobs:", pool.Jobs())
+    gtime.SetInterval(time.Second, func() bool {
+       fmt.Println("worker:", pool.Size())
+       fmt.Println("  jobs:", pool.Jobs())
+       fmt.Println()
+       return true
     })
 
-    gtime.SetInterval(5*time.Second, func() bool {
-        grpool.SetSize(2)
-        return true
-    })
     select {}
 }

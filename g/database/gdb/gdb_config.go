@@ -30,16 +30,19 @@ type ConfigGroup []ConfigNode
 
 // 数据库单项配置
 type ConfigNode  struct {
-    Host     string // 地址
-    Port     string // 端口
-    User     string // 账号
-    Pass     string // 密码
-    Name     string // 数据库名称
-    Type     string // 数据库类型：mysql, sqlite, mssql, pgsql, oracle(目前仅支持mysql)
-    Role     string // (可选，默认为master)数据库的角色，用于主从操作分离，至少需要有一个master，参数值：master, slave
-    Charset  string // (可选，默认为 utf8)编码，默认为 utf8
-    Priority    int // (可选)用于负载均衡的权重计算，当集群中只有一个节点时，权重没有任何意义
-    Linkinfo string // (可选)自定义链接信息，当该字段被设置值时，以上链接字段(Host,Port,User,Pass,Name)将失效(该字段是一个扩展功能)
+    Host             string   // 地址
+    Port             string   // 端口
+    User             string   // 账号
+    Pass             string   // 密码
+    Name             string   // 数据库名称
+    Type             string   // 数据库类型：mysql, sqlite, mssql, pgsql, oracle(目前仅支持mysql)
+    Role             string   // (可选，默认为master)数据库的角色，用于主从操作分离，至少需要有一个master，参数值：master, slave
+    Charset          string   // (可选，默认为 utf8)编码，默认为 utf8
+    Priority         int      // (可选)用于负载均衡的权重计算，当集群中只有一个节点时，权重没有任何意义
+    Linkinfo         string   // (可选)自定义链接信息，当该字段被设置值时，以上链接字段(Host,Port,User,Pass,Name)将失效(该字段是一个扩展功能)
+    MaxIdleConnCount int      // (可选)连接池最大限制的连接数
+    MaxOpenConnCount int      // (可选)连接池最大打开的连接数
+    MaxConnLifetime  int      // (可选，单位秒)连接对象可重复使用的时间长度
 }
 
 // 数据库集群配置示例，支持主从处理，多数据库集群支持

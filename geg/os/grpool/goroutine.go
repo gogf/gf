@@ -11,10 +11,10 @@ import (
 func main() {
     start := gtime.Millisecond()
     wg    := sync.WaitGroup{}
-    for i := 0; i < 10000000; i++ {
+    for i := 0; i < 100000; i++ {
         wg.Add(1)
         go func() {
-            time.Sleep(time.Millisecond)
+            time.Sleep(time.Second)
             wg.Done()
         }()
     }
