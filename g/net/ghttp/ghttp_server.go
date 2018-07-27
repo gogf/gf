@@ -57,11 +57,6 @@ type Server struct {
     handlerMap       HandlerMap               // 所有注册的回调函数(静态匹配)
     handlerTree      map[string]interface{}   // 所有注册的回调函数(动态匹配，树型+链表优先级匹配)
     handlerCache     *gcache.Cache            // 服务注册路由内存缓存
-    // 事件回调注册
-    hhmu             sync.RWMutex             // hooks互斥锁
-    hhcmu            sync.RWMutex             // hooksCache互斥锁
-    hooksTree        map[string]interface{}   // 所有注册的事件回调函数(动态匹配，树型+链表优先级匹配)
-    hooksCache       *gcache.Cache            // 回调事件注册路由内存缓存
     // 自定义状态码回调
     hsmu             sync.RWMutex             // status handler互斥锁
     statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
@@ -82,7 +77,7 @@ type Server struct {
 }
 
 // 域名、URI与回调函数的绑定记录表
-type HandlerMap  map[string]*HandlerItem
+type HandlerMap  map[string]*handlerRegisterItem
 
 // 路由对象
 type Router struct {
@@ -99,7 +94,6 @@ type HandlerItem struct {
     ctype    reflect.Type // 控制器类型
     fname    string       // 回调方法名称
     faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
-    router   *Router      // 注册时绑定的路由对象
 }
 
 // HTTP注册函数

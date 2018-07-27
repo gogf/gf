@@ -12,12 +12,20 @@ import (
     "strings"
     "container/list"
     "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/container/glist"
 )
 
+// 路由注册项
+type handlerRegisterItem struct {
+    handler    *HandlerItem             // 准确的执行方法内存地址
+    hooks      map[string]*glist.List   // 当前的事件回调注册，键名为事件名称，键值为事件执行方法链表
+    router     *Router                  // 注册时绑定的路由对象
+}
+
 // 路由检索缓存项，根据URL.Path进行缓存，因此对象中带有缓存参数
-type routerCacheItem struct {
-    item    *HandlerItem         // 准确的执行方法内存地址
-    values   map[string][]string // GET解析参数
+type handlerCacheItem struct {
+    item    *handlerRegisterItem        // 路由注册项
+    values   map[string][]string       // 特定URL.Path的GET解析参数
 }
 
 // 查询请求处理方法
@@ -27,7 +35,7 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
     s.hmcmu.RLock()
     defer s.hmcmu.RUnlock()
 
-    var cacheItem *routerCacheItem
+    var cacheItem *handlerCacheItem
     cacheKey := s.handlerKey(r.GetHost(), r.Method, r.URL.Path)
     if v := s.handlerCache.Get(cacheKey); v == nil {
         cacheItem = s.searchHandler(r)
@@ -35,14 +43,15 @@ func (s *Server) getHandler(r *Request) *HandlerItem {
             s.handlerCache.Set(cacheKey, cacheItem, 0)
         }
     } else {
-        cacheItem = v.(*routerCacheItem)
+        cacheItem = v.(*handlerCacheItem)
     }
+
     if cacheItem != nil {
         for k, v := range cacheItem.values {
             r.queries[k] = v
         }
         r.Router = cacheItem.item.router
-        return cacheItem.item
+        return cacheItem.item.handler
     }
     return nil
 }
@@ -70,18 +79,39 @@ func (s *Server)parsePattern(pattern string) (domain, method, uri string, err er
     return
 }
 
-// 路由注册处理方法
-func (s *Server) setHandler(pattern string, item *HandlerItem) error {
+// 路由注册处理方法。
+// 如果带有hook参数，表示是回调注册方法，否则为普通路由执行方法。
+func (s *Server) setHandler(pattern string, handler *HandlerItem, hook ... string) error {
+    var hookName string
+    if len(hook) > 0 {
+        hookName = hook[0]
+    }
     domain, method, uri, err := s.parsePattern(pattern)
     if err != nil {
         return errors.New("invalid pattern")
     }
-    item.router = &Router {
-        Uri    : uri,
-        Domain : domain,
-        Method : method,
+
+    // 路由对象
+    router := &Router {
+        Uri      : uri,
+        Domain   : domain,
+        Method   : method,
+        Priority : strings.Count(uri[1:], "/"),
     }
-    item.router.RegRule, item.router.RegNames = s.patternToRegRule(uri)
+    router.RegRule, router.RegNames = s.patternToRegRule(uri)
+
+    // 注册对象
+    registerItem := &handlerRegisterItem {
+        handler : handler,
+        hooks   : make(map[string]*glist.List),
+        router  : router,
+    }
+    if len(hookName) > 0 {
+        registerItem.handler = nil
+        registerItem.hooks[hookName] = glist.New()
+        registerItem.hooks[hookName].PushBack(registerItem)
+    }
+
     s.hmmu.Lock()
     defer s.hmmu.Unlock()
     defer s.clearHandlerCache()
@@ -97,7 +127,6 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
         // 当前节点的规则链表
         lists := make([]*list.List, 0)
         array := strings.Split(uri[1:], "/")
-        item.router.Priority = len(array)
         // 键名"*fuzz"代表模糊匹配节点，其下会有一个链表；
         // 键名"*list"代表链表，叶子节点和模糊匹配节点都有该属性；
         for k, v := range array {
@@ -133,24 +162,100 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
         }
         // 得到的lists是该路由规则一路匹配下来相关的模糊匹配链表(注意不是这棵树所有的链表)，
         // 从头开始遍历每个节点的模糊匹配链表，将该路由项插入进去(按照优先级高的放在前面)
-        for _, l := range lists {
-            for e := l.Front(); e != nil; e = e.Next() {
-                if s.compareHandlerItemPriority(item, e.Value.(*HandlerItem)) {
-                    l.InsertBefore(item, e)
-                    break
+        if len(hookName) == 0 {
+            // 普通方法路由注册
+            for _, l := range lists {
+                pushed := false
+                for e := l.Front(); e != nil; e = e.Next() {
+                    item := e.Value.(*handlerRegisterItem)
+                    // 判断是否已存在相同的路由注册项
+                    if strings.EqualFold(router.Domain, item.router.Domain) &&
+                        strings.EqualFold(router.Method, item.router.Method) &&
+                        strings.EqualFold(router.Uri, item.router.Uri) {
+                        item.handler = handler
+                        pushed = true
+                        break
+                    }
+                    if s.compareRouterPriority(router, item.router) {
+                        l.InsertBefore(registerItem, e)
+                        pushed = true
+                        break
+                    }
+                }
+                if !pushed {
+                    l.PushBack(registerItem)
                 }
             }
-            l.PushBack(item)
+        } else {
+            // 回调方法路由注册
+            for _, l := range lists {
+                pushed := false
+                for e := l.Front(); e != nil; e = e.Next() {
+                    item := e.Value.(*handlerRegisterItem)
+                    // 判断是否已存在相同的路由注册项
+                    if strings.EqualFold(router.Domain, item.router.Domain) &&
+                        strings.EqualFold(router.Method, item.router.Method) &&
+                        strings.EqualFold(router.Uri, item.router.Uri) {
+                        if _, ok := item.hooks[hookName]; !ok {
+                            item.hooks[hookName] = glist.New()
+                        }
+                        item.hooks[hookName].PushBack(handler)
+                        pushed = true
+                        break
+                    }
+                    if s.compareRouterPriority(router, item.router) {
+                        l.InsertBefore(registerItem, e)
+                        pushed = true
+                        break
+                    }
+                }
+                if !pushed {
+                    l.PushBack(registerItem)
+                }
+            }
         }
     } else {
         // 静态注册
-        if method == gDEFAULT_METHOD {
-            for v, _ := range s.methodsMap {
-                s.handlerMap[s.handlerKey(domain, v, uri)] = item
+        if len(hookName) == 0 {
+            // 普通方法注册
+            if method == gDEFAULT_METHOD {
+                for v, _ := range s.methodsMap {
+                    key := s.handlerKey(domain, v, uri)
+                    if v, ok := s.handlerMap[key]; ok {
+                        v.handler = handler
+                    } else {
+                        s.handlerMap[key] = registerItem
+                    }
+                }
+            } else {
+                key := s.handlerKey(domain, method, uri)
+                if v, ok := s.handlerMap[key]; ok {
+                    v.handler = handler
+                } else {
+                    s.handlerMap[key] = registerItem
+                }
             }
         } else {
-            s.handlerMap[s.handlerKey(domain, method, uri)] = item
+            // 回调方法注册
+            if method == gDEFAULT_METHOD {
+                for v, _ := range s.methodsMap {
+                    key := s.handlerKey(domain, v, uri)
+                    if v, ok := s.handlerMap[key]; ok {
+
+                    } else {
+                        s.handlerMap[key] = registerItem
+                    }
+                }
+            } else {
+                key := s.handlerKey(domain, method, uri)
+                if v, ok := s.handlerMap[key]; ok {
+                    v.handler = handler
+                } else {
+                    s.handlerMap[key] = registerItem
+                }
+            }
         }
+
     }
     //b, _ := gparser.VarToJsonIndent(s.handlerTree)
     //fmt.Println(string(b))
@@ -161,21 +266,21 @@ func (s *Server) setHandler(pattern string, item *HandlerItem) error {
 // 优先级比较规则：
 // 1、层级越深优先级越高(对比/数量)；
 // 2、模糊规则优先级：{xxx} > :xxx > *xxx；
-func (s *Server) compareHandlerItemPriority(newItem, oldItem *HandlerItem) bool {
-    if newItem.router.Priority > oldItem.router.Priority {
+func (s *Server) compareRouterPriority(newRouter, oldRouter *Router) bool {
+    if newRouter.Priority > oldRouter.Priority {
         return true
     }
-    if newItem.router.Priority < oldItem.router.Priority {
+    if newRouter.Priority < oldRouter.Priority {
         return false
     }
     // 例如：/{user}/{act} 比 /:user/:act 优先级高
-    if strings.Count(newItem.router.Uri, "{") > strings.Count(oldItem.router.Uri, "{") {
+    if strings.Count(newRouter.Uri, "{") > strings.Count(oldRouter.Uri, "{") {
         return true
     }
     // 例如: /:name/update 比 /:name/:action优先级高
-    if strings.Count(newItem.router.Uri, "/:") < strings.Count(oldItem.router.Uri, "/:") {
+    if strings.Count(newRouter.Uri, "/:") < strings.Count(oldRouter.Uri, "/:") {
         // 例如: /:name/:action 比 /:name/*any 优先级高
-        if strings.Count(newItem.router.Uri, "/*") < strings.Count(oldItem.router.Uri, "/*") {
+        if strings.Count(newRouter.Uri, "/*") < strings.Count(oldRouter.Uri, "/*") {
             return true
         }
         return false
@@ -184,7 +289,7 @@ func (s *Server) compareHandlerItemPriority(newItem, oldItem *HandlerItem) bool 
 }
 
 // 服务方法检索
-func (s *Server) searchHandler(r *Request) *routerCacheItem {
+func (s *Server) searchHandler(r *Request) *handlerCacheItem {
     item := s.searchHandlerStatic(r)
     if item == nil {
         item = s.searchHandlerDynamic(r)
@@ -193,21 +298,21 @@ func (s *Server) searchHandler(r *Request) *routerCacheItem {
 }
 
 // 检索静态路由规则
-func (s *Server) searchHandlerStatic(r *Request) *routerCacheItem {
+func (s *Server) searchHandlerStatic(r *Request) *handlerCacheItem {
     s.hmmu.RLock()
     defer s.hmmu.RUnlock()
     domains := []string{r.GetHost(), gDEFAULT_DOMAIN}
     // 首先进行静态匹配
     for _, domain := range domains {
         if f, ok := s.handlerMap[s.handlerKey(domain, r.Method, r.URL.Path)]; ok {
-            return &routerCacheItem{f, nil}
+            return &handlerCacheItem{f, nil}
         }
     }
     return nil
 }
 
 // 检索动态路由规则
-func (s *Server) searchHandlerDynamic(r *Request) *routerCacheItem {
+func (s *Server) searchHandlerDynamic(r *Request) *handlerCacheItem {
     s.hmmu.RLock()
     defer s.hmmu.RUnlock()
     domains := []string{gDEFAULT_DOMAIN, r.GetHost()}
@@ -249,13 +354,13 @@ func (s *Server) searchHandlerDynamic(r *Request) *routerCacheItem {
         // 多层链表遍历检索，从数组末尾的链表开始遍历，末尾的深度高优先级也高
         for i := len(lists) - 1; i >= 0; i-- {
             for e := lists[i].Front(); e != nil; e = e.Next() {
-                item := e.Value.(*HandlerItem)
+                item := e.Value.(*handlerRegisterItem)
                 // 动态匹配规则带有gDEFAULT_METHOD的情况，不会像静态规则那样直接解析为所有的HTTP METHOD存储
                 if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, r.Method) {
                     if match, err := gregex.MatchString(item.router.RegRule, r.URL.Path); err == nil && len(match) > 1 {
                         //gutil.Dump(match)
                         //gutil.Dump(names)
-                        handlerItem := &routerCacheItem{item, nil}
+                        handlerItem := &handlerCacheItem{item, nil}
                         // 如果需要query匹配，那么需要重新正则解析URL
                         if len(item.router.RegNames) > 0 {
                             if len(match) > len(item.router.RegNames) {
