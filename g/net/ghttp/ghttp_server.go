@@ -89,6 +89,8 @@ type Router struct {
     Uri      string       // 注册时的pattern - uri
     Method   string       // 注册时的pattern - method
     Domain   string       // 注册时的pattern - domain
+    RegRule  string       // 路由规则解析后对应的正则表达式
+    RegNames []string     // 路由规则解析后对应的变量名称数组
     Priority int          // 优先级，用于链表排序，值越大优先级越高
 }
 
