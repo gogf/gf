@@ -22,63 +22,8 @@ type hookCacheItem struct {
 
 // 事件回调注册方法
 // 因为有事件回调优先级的关系，叶子节点必须为一个链表，因此这里只有动态注册
-func (s *Server) setHookHandler(pattern string, hook string, item *HandlerItem) error {
-    domain, method, uri, err := s.parsePattern(pattern)
-    if err != nil {
-        return errors.New("invalid pattern")
-    }
-    item.router = &Router {
-        Uri    : uri,
-        Domain : domain,
-        Method : method,
-    }
-    item.router.RegRule, item.router.RegNames = s.patternToRegRule(uri)
-
-    s.hhmu.Lock()
-    defer s.hhmu.Unlock()
-    defer s.clearHooksCache()
-
-    if _, ok := s.hooksTree[domain]; !ok {
-        s.hooksTree[domain] = make(map[string]interface{})
-    }
-    p := s.hooksTree[domain]
-    if _, ok := p.(map[string]interface{})[hook]; !ok {
-        p.(map[string]interface{})[hook] = make(map[string]interface{})
-    }
-    p = p.(map[string]interface{})[hook]
-
-    array := strings.Split(uri[1:], "/")
-    item.router.Priority = len(array)
-    for _, v := range array {
-        if len(v) == 0 {
-            continue
-        }
-        if gregex.IsMatchString(`^[:\*]|{[\w\.\-]+}`, v) {
-            v = "*fuzz"
-        }
-        if _, ok := p.(map[string]interface{})[v]; !ok {
-            p.(map[string]interface{})[v] = make(map[string]interface{})
-        }
-        p = p.(map[string]interface{})[v]
-    }
-    // 到达叶子节点
-    var l *list.List
-    if v, ok := p.(map[string]interface{})["*list"]; !ok {
-        l = list.New()
-        p.(map[string]interface{})["*list"] = l
-    } else {
-        l = v.(*list.List)
-    }
-    // 从头开始遍历链表，优先级高的放在前面
-    for e := l.Front(); e != nil; e = e.Next() {
-        if s.compareHandlerItemPriority(item, e.Value.(*HandlerItem)) {
-            l.InsertBefore(item, e)
-            break
-        }
-    }
-    l.PushBack(item)
-
-    return nil
+func (s *Server) setHookHandler(pattern string, hook string, handler *HandlerItem) error {
+    return s.setHandler(pattern, handler, hook)
 }
 
 // 事件回调 - 检索动态路由规则
@@ -113,76 +58,7 @@ func (s *Server) callHookHandler(r *Request, hook string) {
 }
 
 func (s *Server) searchHookHandler(r *Request, hook string) []*hookCacheItem {
-    s.hhmu.RLock()
-    defer s.hhmu.RUnlock()
-    hookItems := make([]*hookCacheItem, 0)
-    domains   := []string{r.GetHost(), gDEFAULT_DOMAIN}
-    array     := strings.Split(r.URL.Path[1:], "/")
-    for _, domain := range domains {
-        p, ok := s.hooksTree[domain]
-        if !ok {
-            continue
-        }
-        p, ok = p.(map[string]interface{})[hook]
-        if !ok {
-            continue
-        }
-        // 多层链表的目的是当叶子节点未有任何规则匹配时，让父级模糊匹配规则继续处理
-        lists := make([]*list.List, 0)
-        for k, v := range array {
-            if _, ok := p.(map[string]interface{})["*list"]; ok {
-                lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
-            }
-            if _, ok := p.(map[string]interface{})[v]; !ok {
-                if _, ok := p.(map[string]interface{})["/"]; ok {
-                    p = p.(map[string]interface{})["/"]
-                    if k == len(array) - 1 {
-                        if _, ok := p.(map[string]interface{})["*list"]; ok {
-                            lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
-                        }
-                    }
-                } else {
-                    break
-                }
-            } else {
-                p = p.(map[string]interface{})[v]
-                if k == len(array) - 1 {
-                    if _, ok := p.(map[string]interface{})["*list"]; ok {
-                        lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
-                    }
-                }
-            }
-        }
 
-        // 多层链表遍历检索，从数组末尾的链表开始遍历，末尾的深度高优先级也高
-        for i := len(lists) - 1; i >= 0; i-- {
-            for e := lists[i].Front(); e != nil; e = e.Next() {
-                item := e.Value.(*HandlerItem)
-                if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, r.Method) {
-                    regrule, names := s.patternToRegRule(item.router.Uri)
-                    if gregex.IsMatchString(regrule, r.URL.Path) {
-                        hookItem := &hookCacheItem {item.faddr, nil}
-                        // 如果需要query匹配，那么需要重新解析URL
-                        if len(names) > 0 {
-                            if match, err := gregex.MatchString(regrule, r.URL.Path); err == nil {
-                                array := strings.Split(names, ",")
-                                if len(match) > len(array) {
-                                    hookItem.values = make(map[string][]string)
-                                    // 这里需要注意的是，注册事件回调如果带有规则匹配，那么会修改Request对象传递参数的值
-                                    // 这个应当在注册事件回调的时候注意
-                                    for index, name := range array {
-                                        hookItem.values[name] = []string{match[index + 1]}
-                                    }
-                                }
-                            }
-                        }
-                        hookItems = append(hookItems, hookItem)
-                    }
-                }
-            }
-        }
-    }
-    return hookItems
 }
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
