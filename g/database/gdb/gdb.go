@@ -18,6 +18,7 @@ import (
     "gitee.com/johng/gf/g/container/gring"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/container/gmap"
+    "time"
 )
 
 const (
@@ -49,6 +50,7 @@ type Link interface {
     // 连接属性设置
     SetMaxIdleConns(n int)
     SetMaxOpenConns(n int)
+    SetConnMaxLifetime(d time.Duration)
 
     // 开启事务操作
     Begin() (*Tx, error)
@@ -228,6 +230,16 @@ func newDb (masterNode *ConfigNode, slaveNode *ConfigNode, groupName string) (*D
         charl  : link.getQuoteCharLeft(),
         charr  : link.getQuoteCharRight(),
         debug  : gtype.NewBool(),
+    }
+    // 设置连接属性，master和slave必须是一致的，所以这里使用的是master的属性设置
+    if masterNode.MaxIdleConnCount > 0 {
+        db.SetMaxIdleConns(masterNode.MaxIdleConnCount)
+    }
+    if masterNode.MaxOpenConnCount > 0 {
+        db.SetMaxOpenConns(masterNode.MaxOpenConnCount)
+    }
+    if masterNode.MaxConnLifetime > 0 {
+        db.SetConnMaxLifetime(time.Duration(masterNode.MaxConnLifetime)*time.Second)
     }
     if v := dbCaches.Get(groupName); v == nil {
         dbCaches.LockFunc(func(m map[string]interface{}) {
