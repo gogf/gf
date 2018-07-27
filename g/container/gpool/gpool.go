@@ -105,6 +105,8 @@ func (p *Pool) expireCheckingLoop() {
                 if p.ExpireFunc != nil {
                     p.ExpireFunc(item.value)
                 }
+            } else {
+                break
             }
         }
         time.Sleep(time.Second)
