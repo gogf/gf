@@ -1,12 +1,9 @@
 package main
 
-import (
-    "gitee.com/johng/gf/g/os/gfile"
-)
+import "fmt"
 
 func main() {
-    ghttp.
-    gfile.PutContentsAppend("/tmp/test", "1")
-    gfile.PutContentsAppend("/tmp/test", "2")
-    gfile.PutContentsAppend("/tmp/test", "3")
+    var a []int
+    a = append(a, 1)
+    fmt.Println(a)
 }
