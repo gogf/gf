@@ -53,7 +53,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     }()
 
     // 路由注册检索
-    handler := s.getHandler(request)
+    handler := s.getHandlerWithCache(request)
     if handler == nil {
         // 如果路由不匹配，那么执行静态文件检索
         path := s.paths.Search(r.URL.Path)
@@ -74,7 +74,9 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     s.callHookHandler(request, "BeforeServe")
 
     // 执行回调控制器/执行对象/方法
-    s.callHandler(handler, request)
+    if handler.handler != nil {
+        s.callHandler(handler.handler, request)
+    }
 
     // 事件 - AfterServe
     s.callHookHandler(request, "AfterServe")
@@ -93,7 +95,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // 初始化控制器
-func (s *Server)callHandler(h *HandlerItem, r *Request) {
+func (s *Server)callHandler(h *handlerItem, r *Request) {
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
