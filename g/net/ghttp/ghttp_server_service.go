@@ -97,7 +97,11 @@ func (s *Server)BindObject(pattern string, obj interface{}) error {
         }
         // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
         if strings.EqualFold(method, "Index") {
-            m[pattern] = &handlerItem {
+            p := key
+            if strings.EqualFold(p[len(p) - 6:], "/index") {
+                p = p[0 : len(p) - 6]
+            }
+            m[p] = &handlerItem {
                 ctype : nil,
                 fname : "",
                 faddr : v.Method(i).Interface().(func(*Request)),
@@ -128,7 +132,11 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string
         }
         // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
         if strings.EqualFold(mname, "Index") {
-            m[pattern] = &handlerItem {
+            p := key
+            if strings.EqualFold(p[len(p) - 6:], "/index") {
+                p = p[0 : len(p) - 6]
+            }
+            m[p] = &handlerItem {
                 ctype : nil,
                 fname : "",
                 faddr : fval.Interface().(func(*Request)),
@@ -181,7 +189,11 @@ func (s *Server)BindController(pattern string, c Controller) error {
         }
         // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
         if strings.EqualFold(mname, "Index") {
-            m[pattern] = &handlerItem {
+            p := key
+            if strings.EqualFold(p[len(p) - 6:], "/index") {
+                p = p[0 : len(p) - 6]
+            }
+            m[p] = &handlerItem {
                 ctype : v.Elem().Type(),
                 fname : mname,
                 faddr : nil,
@@ -212,7 +224,11 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, methods strin
         }
         // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
         if strings.EqualFold(mname, "Index") {
-            m[pattern] = &handlerItem {
+            p := key
+            if strings.EqualFold(p[len(p) - 6:], "/index") {
+                p = p[0 : len(p) - 6]
+            }
+            m[p] = &handlerItem {
                 ctype : t,
                 fname : mname,
                 faddr : nil,
