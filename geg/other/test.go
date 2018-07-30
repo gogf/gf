@@ -1,11 +1,10 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gfile"
+    "fmt"
+    "math"
 )
 
 func main() {
-    gfile.PutContentsAppend("/tmp/test", "1")
-    gfile.PutContentsAppend("/tmp/test", "2")
-    gfile.PutContentsAppend("/tmp/test", "3")
+    fmt.Println(int(math.MaxInt64))
 }
