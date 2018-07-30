@@ -10,7 +10,7 @@ import (
 func main() {
     s := ghttp.GetServer()
     s.BindHandler("/page/ajax", func(r *ghttp.Request){
-        page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router.Uri)
+        page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
         page.EnableAjax("DoAjax")
         buffer, _ := gview.ParseContent(`
         <html>

@@ -23,7 +23,7 @@ func wrapContent(page *gpage.Page) string {
 func main() {
     s := ghttp.GetServer()
     s.BindHandler("/page/custom1/*page", func(r *ghttp.Request){
-        page      := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router.Uri)
+        page      := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
         content   := wrapContent(page)
         buffer, _ := gview.ParseContent(`
         <html>

@@ -10,18 +10,18 @@ package gpage
 import (
     "fmt"
     "math"
-    "strings"
     url2 "net/url"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/util/gutil"
+    "gitee.com/johng/gf/g/util/gstr"
 )
 
 // 分页对象
 type Page struct {
     Url            *url2.URL      // 当前页面的URL对象
     Router         *ghttp.Router  // 当前页面的路由对象(与gf框架耦合，在静态分页下有效)
+    UrlTemplate    string         // URL生成规则，内部可使用{.page}变量指定页码
     TotalSize      int            // 总共数据条数
     TotalPage      int            // 总页数
     CurrentPage    int            // 当前页码
@@ -37,7 +37,7 @@ type Page struct {
 }
 
 // 创建一个分页对象，输入参数分别为：
-// 总数量、每页数量、当前页码、当前的URL(URI+QUERY)、(可选)路由规则(例如: /user/list/:page、/order/list/*page)
+// 总数量、每页数量、当前页码、当前的URL(URI+QUERY)、(可选)路由规则(例如: /user/list/:page、/order/list/*page、/order/list/{page}.html)
 func New(TotalSize, perPage int,  CurrentPage interface{}, url string, router...*ghttp.Router) *Page {
     u, _ := url2.Parse(url)
     page := &Page {
@@ -67,6 +67,11 @@ func New(TotalSize, perPage int,  CurrentPage interface{}, url string, router...
 // 启用AJAX分页
 func (page *Page) EnableAjax(actionName string) {
     page.AjaxActionName = actionName
+}
+
+// 设置URL生成规则模板，模板中可使用{.page}变量指定页码位置
+func (page *Page) SetUrlTemplate(template string) {
+    page.UrlTemplate = template
 }
 
 // 获取显示"下一页"的内容.
@@ -242,18 +247,29 @@ func (page *Page) GetContent(mode int) string {
 // 为指定的页面返回地址值
 func (page *Page) GetUrl(pageNo int) string {
     url := *page.Url
+    if len(page.UrlTemplate) > 0 {
+        // 指定URL生成模板
+        url.Path = gstr.Replace(page.UrlTemplate, "{.page}", gconv.String(pageNo))
+        return url.String()
+    }
     if page.Router != nil {
+        // Router的规则与ghttp高度耦合
         if page.Router != nil {
-            gutil.Dump(page.Router)
-
-            url.Path, _ = gregex.ReplaceStringFunc(page.Router.RegRule, url.Path, func(s string) string {
-                gutil.Dump(s)
-                if strings.EqualFold(s, page.PageName) {
-                    s = gconv.String(pageNo)
+            match1, _ := gregex.MatchString(page.Router.RegRule, page.Router.Uri)
+            match2, _ := gregex.MatchString(page.Router.RegRule, url.Path)
+            if len(match1) > 1 && len(match1) == len(match2) {
+                path := page.Router.Uri
+                rule := fmt.Sprintf(`^[:\*]%s|\{%s\}`, page.PageName, page.PageName)
+                for i := 1; i < len(match1); i++ {
+                    replace := match2[i]
+                    if gregex.IsMatchString(rule, match1[i]) {
+                        replace = gconv.String(pageNo)
+                    }
+                    path = gstr.Replace(path, match1[i], replace)
                 }
-                return s
-            })
-            return url.String()
+                url.Path = path
+                return url.String()
+            }
         }
     }
     values := page.Url.Query()
