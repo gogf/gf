@@ -3,12 +3,13 @@ package main
 import (
     "fmt"
     "gitee.com/johng/gf/g/net/ghttp"
+    "gitee.com/johng/gf/g"
 )
 
 func main() {
     // 基本事件回调使用
     p := "/:name/info/{uid}"
-    s := ghttp.GetServer()
+    s := g.Server()
     s.BindHookHandlerByMap(p, map[string]ghttp.HandlerFunc{
         "BeforeServe"  : func(r *ghttp.Request){ fmt.Println("BeforeServe") },
         "AfterServe"   : func(r *ghttp.Request){ fmt.Println("AfterServe") },
