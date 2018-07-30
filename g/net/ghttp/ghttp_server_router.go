@@ -112,7 +112,12 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     p     := s.handlerTree[domain]
     // 当前节点的规则链表
     lists := make([]*list.List, 0)
-    array := strings.Split(uri[1:], "/")
+    array := ([]string)(nil)
+    if strings.EqualFold("/", uri) {
+        array = []string{"/"}
+    } else {
+        array = strings.Split(uri[1:], "/")
+    }
     // 键名"*fuzz"代表模糊匹配节点，其下会有一个链表；
     // 键名"*list"代表链表，叶子节点和模糊匹配节点都有该属性；
     for k, v := range array {
@@ -259,7 +264,12 @@ func (s *Server) searchHandler(method, path, domain string) *handlerParsedItem {
     if !strings.EqualFold(gDEFAULT_DOMAIN, domain) {
         domains = append(domains, domain)
     }
-    array := strings.Split(path[1:], "/")
+    array := ([]string)(nil)
+    if strings.EqualFold("/", path) {
+        array = []string{"/"}
+    } else {
+        array = strings.Split(path[1:], "/")
+    }
     for _, domain := range domains {
         p, ok := s.handlerTree[domain]
         if !ok {
@@ -276,6 +286,7 @@ func (s *Server) searchHandler(method, path, domain string) *handlerParsedItem {
                 if k == len(array) - 1 {
                     if _, ok := p.(map[string]interface{})["*list"]; ok {
                         lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+                        break
                     }
                 }
             } else {
@@ -300,7 +311,8 @@ func (s *Server) searchHandler(method, path, domain string) *handlerParsedItem {
                 item := e.Value.(*handlerRegisterItem)
                 // 动态匹配规则带有gDEFAULT_METHOD的情况，不会像静态规则那样直接解析为所有的HTTP METHOD存储
                 if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, method) {
-                    if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 1 {
+                    // 注意当不带任何动态路由规则时，len(match) == 1
+                    if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 0 {
                         //gutil.Dump(match)
                         //gutil.Dump(names)
                         handlerItem := &handlerParsedItem{item, nil}
