@@ -3,25 +3,26 @@ package main
 import (
     "fmt"
     "gitee.com/johng/gf/g/net/ghttp"
+    "gitee.com/johng/gf/g"
 )
 
 func main() {
-    s := ghttp.GetServer()
+    s := g.Server()
 
     // 多事件回调示例，事件1
-    p1 := "/:name/info/{uid}"
-    s.BindHookHandlerByMap(p1, map[string]ghttp.HandlerFunc {
+    pattern1 := "/:name/info/{uid}"
+    s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc {
         "BeforeServe"  : func(r *ghttp.Request){
             fmt.Println("打印到Server端终端")
         },
     })
-    s.BindHandler(p1, func(r *ghttp.Request) {
+    s.BindHandler(pattern1, func(r *ghttp.Request) {
         r.Response.Write("用户:", r.Get("name"), ", uid:", r.Get("uid"))
     })
 
     // 多事件回调示例，事件2
-    p2 := "/{object}/list/{page}.java"
-    s.BindHookHandlerByMap(p2, map[string]ghttp.HandlerFunc{
+    pattern2 := "/{object}/list/{page}.java"
+    s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc {
         "BeforeOutput" : func(r *ghttp.Request){
             r.Response.SetBuffer([]byte(
                 fmt.Sprintf("通过事件修改输出内容, object: %s, page: %s",

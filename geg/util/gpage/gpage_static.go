@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-    s := ghttp.GetServer()
+    s := g.Server()
     s.BindHandler("/page/static/*page", func(r *ghttp.Request){
-        page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router.Uri)
+        page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
         buffer, _ := gview.ParseContent(`
         <html>
             <head>

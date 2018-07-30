@@ -223,9 +223,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
             }
         }
     }
-
-    //b, _ := gparser.VarToJsonIndent(s.handlerTree)
-    //fmt.Println(string(b))
+    //gutil.Dump(s.handlerTree)
     return nil
 }
 

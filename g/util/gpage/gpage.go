@@ -13,29 +13,32 @@ import (
     "strings"
     url2 "net/url"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/net/ghttp"
+    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 // 分页对象
 type Page struct {
-    Url            *url2.URL // 当前页面的URL对象
-    Route          string    // 当前页面的路由规则(在静态分页下有效)
-    TotalSize      int       // 总共数据条数
-    TotalPage      int       // 总页数
-    CurrentPage    int       // 当前页码
-    PageName       string    // 分页参数名称(GET参数)
-    NextPageTag    string    // 下一页标签
-    PrevPageTag    string    // 上一页标签
-    FirstPageTag   string    // 首页标签
-    LastPageTag    string    // 尾页标签
-    PrevBar        string    // 上一分页条
-    NextBar        string    // 下一分页条
-    PageBarNum     int       // 控制分页条的数量
-    AjaxActionName string    // AJAX方法名，当该属性有值时，表示使用AJAX分页
+    Url            *url2.URL      // 当前页面的URL对象
+    Router         *ghttp.Router  // 当前页面的路由对象(与gf框架耦合，在静态分页下有效)
+    TotalSize      int            // 总共数据条数
+    TotalPage      int            // 总页数
+    CurrentPage    int            // 当前页码
+    PageName       string         // 分页参数名称(GET参数)
+    NextPageTag    string         // 下一页标签
+    PrevPageTag    string         // 上一页标签
+    FirstPageTag   string         // 首页标签
+    LastPageTag    string         // 尾页标签
+    PrevBar        string         // 上一分页条
+    NextBar        string         // 下一分页条
+    PageBarNum     int            // 控制分页条的数量
+    AjaxActionName string         // AJAX方法名，当该属性有值时，表示使用AJAX分页
 }
 
 // 创建一个分页对象，输入参数分别为：
-// 总数量、每页数量、当前页码、当前的URL(可以只是URI+QUERY)、(可选)路由规则(例如: /user/list/:page、/order/list/*page)
-func New(TotalSize, perPage int,  CurrentPage interface{}, url string, route...string) *Page {
+// 总数量、每页数量、当前页码、当前的URL(URI+QUERY)、(可选)路由规则(例如: /user/list/:page、/order/list/*page)
+func New(TotalSize, perPage int,  CurrentPage interface{}, url string, router...*ghttp.Router) *Page {
     u, _ := url2.Parse(url)
     page := &Page {
         PageName     : "page",
@@ -55,8 +58,8 @@ func New(TotalSize, perPage int,  CurrentPage interface{}, url string, route...s
     if curPage > 0 {
         page.CurrentPage = curPage
     }
-    if len(route) > 0 {
-        page.Route = route[0]
+    if len(router) > 0 {
+        page.Router = router[0]
     }
     return page
 }
@@ -239,24 +242,17 @@ func (page *Page) GetContent(mode int) string {
 // 为指定的页面返回地址值
 func (page *Page) GetUrl(pageNo int) string {
     url := *page.Url
-    if len(page.Route) > 0 {
-        // 这里基于路由匹配的URL页码替换比较简单，但能满足绝大多数场景
-        index := -1
-        array := strings.Split(page.Route, "/")
-        for k, v := range array {
-            if strings.EqualFold(v, ":" + page.PageName) || strings.EqualFold(v, "*" + page.PageName) {
-                index = k
-                break
-            }
-        }
-        // 替换url.Path中的分页码
-        if index != -1 {
-            pathArray := strings.Split(page.Url.Path, "/")
-            for i := 0; i <= index - len(pathArray); i++ {
-                pathArray = append(pathArray, "")
-            }
-            pathArray[index] = gconv.String(pageNo)
-            url.Path         = strings.TrimRight(strings.Join(pathArray, "/"), "/")
+    if page.Router != nil {
+        if page.Router != nil {
+            gutil.Dump(page.Router)
+
+            url.Path, _ = gregex.ReplaceStringFunc(page.Router.RegRule, url.Path, func(s string) string {
+                gutil.Dump(s)
+                if strings.EqualFold(s, page.PageName) {
+                    s = gconv.String(pageNo)
+                }
+                return s
+            })
             return url.String()
         }
     }
