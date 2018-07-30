@@ -80,6 +80,9 @@ func NewConfig() *Config {
 
 // Close client.
 func (client *Client) Close() {
+    if client.rawConsumer != nil {
+        client.rawConsumer.Close()
+    }
     if client.consumer != nil {
         client.consumer.Close()
     }
