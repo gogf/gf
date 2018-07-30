@@ -1,9 +1,10 @@
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "math"
+)
 
 func main() {
-    var a []int
-    a = append(a, 1)
-    fmt.Println(a)
+    fmt.Println(int(math.MaxInt64))
 }

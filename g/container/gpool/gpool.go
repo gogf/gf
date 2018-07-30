@@ -13,7 +13,6 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gtype"
-    "math"
 )
 
 // 对象池
@@ -36,9 +35,6 @@ type poolItem struct {
 // expire = 0表示不过期，expire < 0表示使用完立即回收，expire > 0表示超时回收
 // 注意过期时间单位为**毫秒**
 func New(expire int, newFunc...func() (interface{}, error)) *Pool {
-    if expire == 0 {
-        expire = math.MaxInt64
-    }
     r := &Pool {
         list    : glist.New(),
         closed  : gtype.NewBool(),
@@ -57,11 +53,16 @@ func (p *Pool) SetExpireFunc(expireFunc func(interface{})) {
 }
 
 // 放一个临时对象到池中
-func (p *Pool) Put(item interface{}) {
-    p.list.PushBack(&poolItem {
-        expire : gtime.Millisecond() + p.Expire,
-        value  : item,
-    })
+func (p *Pool) Put(value interface{}) {
+    item := &poolItem {
+        value : value,
+    }
+    if p.Expire == 0 {
+        item.expire = 0
+    } else {
+        item.expire = gtime.Millisecond() + p.Expire
+    }
+    p.list.PushBack(item)
 }
 
 // 从池中获得一个临时对象
