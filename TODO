@@ -1,52 +1,53 @@
 ON THE WAY:
-    orm增加更多数据库支持；
-    增加对于数据表Model的封装；
-    更多数据库的ORM功能支持；
-    考虑gdb对象管理增加二级连接池特性，提高New&Close性能；
-    增加图形验证码支持，至少支持数字和英文字母；
-    增加热编译工具，提高开发环境的开发/测试效率（媲美PHP开发效率）；
-    增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
-    ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
-    Cookie&Session数据池化处理；
-    ghttp.Client增加proxy特性；
-    gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
-    改进gf-orm的where查询功能，参考thinkphp 里的where查询语法；
-    gpage分页增加对自定义后缀的支持，如:2.html, 2.php等等；
-    gvalid包增加tag与校验规则绑定的支持特性；
-    ghttp获取参数支持直接转struct功能；
-    map转struct增加对tag的支持；
+orm增加更多数据库支持；
+增加对于数据表Model的封装；
+更多数据库的ORM功能支持；
+考虑gdb对象管理增加二级连接池特性，提高New&Close性能；
+增加图形验证码支持，至少支持数字和英文字母；
+增加热编译工具，提高开发环境的开发/测试效率（媲美PHP开发效率）；
+增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
+ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
+Cookie&Session数据池化处理；
+ghttp.Client增加proxy特性；
+gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
+改进gf-orm的where查询功能，参考thinkphp 里的where查询语法；
+gpage分页增加对自定义后缀的支持，如:2.html, 2.php等等；
+gvalid包增加tag与校验规则绑定的支持特性；
+ghttp获取参数支持直接转struct功能；
+map转struct增加对tag的支持；
+gcache检查在i386下的int64->int转换问题；
 
 
 
 DONE:
-    1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
-    2.  ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
-    3.  ghttp.Response对象完善并改进数据返回方法(Write/WriteString)；
-    4.  ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
-    5.  增加fsnotify包支持；
-    6.  改进gcfg和gview的文件自动更新机制；
-    7.  将模板变量进行暴露，以便应用端可以进行灵活控制；
-    8.  跟踪第三方mxj包的issue问题：https://github.com/clbanning/mxj/issues/48；
-    9.  gdb Where方法参数的改进，研究是否可以将string参数类型修改为interface{}；
-    10. gpage分页控制功能；
-    11. https支持；
-    12. ghttp.Server日志中增加请求时间和返回时间，以便计算执行时间差；
-    13. 由于去掉了gdb的单例模式，并且将gins的部分对象封装迁移到了g包中，需要同时梳理文档，完善修改；
-    14. 在代码中增加https与http同时开启使用的示例代码，这块大家问得比较多；
-    15. ghttp.Server多个事件之间通过ghttp.Request.Param自定义参数传参；
-    16. 研究是否增加配置文件目录检索功能，特别是如何友好改进开发环境的配置文件默认目录问题；
-    17. 增加ghttp.Server不同状态码的自定义处理方法；
-    18. ghttp.Server平滑重启方案；
-    19. 完善gconv类型转换功能，增加time.Time/time.Duration类型转换，并增加benchmark测试脚本
-    20. 当二进制参数为nil时，gjson.LoadContent并将gjson.Json对象ToMap时会报错；
-    21. 改进控制器及执行对象注册，更友好地支持动态路由注册，例如：注册规则为 /channel/:name，现有的控制器及执行对象注册很难友好支持这种动态形式；
-    22. 当前gpage分页包的输出标签不支持li，大多数CSS框架都是li+a标签模式，需要提供可更加灵活的定制化功能实现；
-    23. 平滑重启机制改进，以便于开发阶段调试；
-    24. 对grpool进行优化改进，包括属性原子操作封装采用gtype实现，修正设计BUG：https://github.com/johng-cn/gf/issues/6；
-    25. gredis增加redis密码支持；
-    26. 改进ghttp.Server平滑重启机制，当新进程接管服务后，再使用进程间通信方式通知父进程销毁；
-    27. gproc进程间通信增加分组特性，不同的进程间可以通过进程ID以及分组名称发送/获取进程消息；
-    28. ORM增加获取被执行的sql语句的方法；
-    29. gdb增加查询缓存特性；
+1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
+2.  ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
+3.  ghttp.Response对象完善并改进数据返回方法(Write/WriteString)；
+4.  ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
+5.  增加fsnotify包支持；
+6.  改进gcfg和gview的文件自动更新机制；
+7.  将模板变量进行暴露，以便应用端可以进行灵活控制；
+8.  跟踪第三方mxj包的issue问题：https://github.com/clbanning/mxj/issues/48；
+9.  gdb Where方法参数的改进，研究是否可以将string参数类型修改为interface{}；
+10. gpage分页控制功能；
+11. https支持；
+12. ghttp.Server日志中增加请求时间和返回时间，以便计算执行时间差；
+13. 由于去掉了gdb的单例模式，并且将gins的部分对象封装迁移到了g包中，需要同时梳理文档，完善修改；
+14. 在代码中增加https与http同时开启使用的示例代码，这块大家问得比较多；
+15. ghttp.Server多个事件之间通过ghttp.Request.Param自定义参数传参；
+16. 研究是否增加配置文件目录检索功能，特别是如何友好改进开发环境的配置文件默认目录问题；
+17. 增加ghttp.Server不同状态码的自定义处理方法；
+18. ghttp.Server平滑重启方案；
+19. 完善gconv类型转换功能，增加time.Time/time.Duration类型转换，并增加benchmark测试脚本
+20. 当二进制参数为nil时，gjson.LoadContent并将gjson.Json对象ToMap时会报错；
+21. 改进控制器及执行对象注册，更友好地支持动态路由注册，例如：注册规则为 /channel/:name，现有的控制器及执行对象注册很难友好支持这种动态形式；
+22. 当前gpage分页包的输出标签不支持li，大多数CSS框架都是li+a标签模式，需要提供可更加灵活的定制化功能实现；
+23. 平滑重启机制改进，以便于开发阶段调试；
+24. 对grpool进行优化改进，包括属性原子操作封装采用gtype实现，修正设计BUG：https://github.com/johng-cn/gf/issues/6；
+25. gredis增加redis密码支持；
+26. 改进ghttp.Server平滑重启机制，当新进程接管服务后，再使用进程间通信方式通知父进程销毁；
+27. gproc进程间通信增加分组特性，不同的进程间可以通过进程ID以及分组名称发送/获取进程消息；
+28. ORM增加获取被执行的sql语句的方法；
+29. gdb增加查询缓存特性；
 
 
