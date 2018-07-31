@@ -20,13 +20,19 @@ func (r *Request) initPost() {
     }
 }
 
-// 设置GET参数，仅在ghttp.Server内有效，**注意并发安全性**
+// 设置POST参数，仅在ghttp.Server内有效，**注意并发安全性**
 func (r *Request) SetPost(k string, v string) {
+    r.initPost()
     r.PostForm[k] = []string{v}
 }
 
+func (r *Request) AddPost(k string, v string) {
+    r.initPost()
+    r.PostForm[k] = append(r.PostForm[k], v)
+}
+
 // 获得post参数
-func (r *Request) GetPost(k string) string {
+func (r *Request) GetPost(k string) []string {
     r.initPost()
     if v, ok := r.PostForm[k]; ok {
         return v

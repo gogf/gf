@@ -13,12 +13,17 @@ import (
     "encoding/json"
     "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/util/gconv"
+    "bytes"
 )
 
 // 格式化打印变量(类似于PHP-vardump)
 func Dump(i interface{}) {
-    if b, err := json.MarshalIndent(i, "", "\t"); err == nil {
-        fmt.Println(string(b))
+    buffer  := &bytes.Buffer{}
+    encoder := json.NewEncoder(buffer)
+    encoder.SetEscapeHTML(false)
+    encoder.SetIndent("", "\t")
+    if err := encoder.Encode(i); err == nil {
+        fmt.Println(buffer.String())
     } else {
         fmt.Errorf("%s\n", err.Error())
     }

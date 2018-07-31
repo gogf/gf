@@ -6,6 +6,14 @@
 
 package ghttp
 
+func (r *Request) SetRouterString(k, v string) {
+    r.routerVars[k] = []string{v}
+}
+
+func (r *Request) AddRouterString(k, v string) {
+    r.routerVars[k] = append(r.routerVars[k], v)
+}
+
 // 获得路由解析参数
 func (r *Request) GetRouterString(k string) string {
     if v := r.GetRouterArray(k); v != nil {
