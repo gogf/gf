@@ -1,27 +1,27 @@
 package demo
 
 import (
-    "gitee.com/johng/gf/g/net/ghttp"
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/frame/gmvc"
 )
 
-type ControllerMethod struct {
+type Method struct {
     gmvc.Controller
 }
 
 func init() {
-    ghttp.GetServer().BindControllerMethod("/method", &ControllerMethod{}, "Name, Age")
+    g.Server().BindControllerMethod("/method", &Method{}, "Name, Age")
 }
 
-func (c *ControllerMethod) Name() {
+func (c *Method) Name() {
     c.Response.Write("John")
 }
 
-func (c *ControllerMethod) Age() {
+func (c *Method) Age() {
     c.Response.Write("18")
 }
 
-func (c *ControllerMethod) Info() {
+func (c *Method) Info() {
     c.Response.Write("Info")
 }
 

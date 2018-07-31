@@ -10,14 +10,14 @@ func main() {
     s := g.Server()
 
     // 多事件回调示例，事件1
-    pattern1 := "/:name/info/{uid}"
+    pattern1 := "/:name/info"
     s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc {
         "BeforeServe"  : func(r *ghttp.Request) {
-            fmt.Println("打印到Server端终端")
+            r.SetQuery("uid", "1000")
         },
     })
     s.BindHandler(pattern1, func(r *ghttp.Request) {
-        r.Response.Write("用户:", r.Get("name"), ", uid:", r.Get("uid"))
+        r.Response.Write("用户:", r.Get("name"), ", uid:", r.GetQueryString("uid"))
     })
 
     // 多事件回调示例，事件2

@@ -13,10 +13,6 @@ func init() {
     g.Server().BindController("/{.struct}/{.method}", &Order{})
 }
 
-func (o *Order) Index() {
-    o.Response.Write("Order Index")
-}
-
 func (o *Order) List() {
-    o.Response.Write("Order List")
+    o.Response.Write("List")
 }

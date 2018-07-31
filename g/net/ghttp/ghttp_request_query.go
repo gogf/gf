@@ -13,23 +13,20 @@ import (
 // 初始化GET请求参数
 func (r *Request) initGet() {
     if !r.parsedGet.Val() {
-        if len(r.queryVars) == 0 {
-            r.queryVars = r.URL.Query()
-        } else {
-            for k, v := range r.URL.Query() {
-                r.queryVars[k] = v
-            }
-        }
+        r.parsedGet.Set(true)
+        r.queryVars = r.URL.Query()
     }
 }
 
 // 设置GET参数，仅在ghttp.Server内有效，**注意并发安全性**
 func (r *Request) SetQuery(k string, v string) {
+    r.initGet()
     r.queryVars[k] = []string{v}
 }
 
 // 添加GET参数，构成[]string
 func (r *Request) AddQuery(k string, v string) {
+    r.initGet()
     r.queryVars[k] = append(r.queryVars[k], v)
 }
 
