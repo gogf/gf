@@ -118,16 +118,24 @@ type listenerFdMap map[string]string
 
 
 // Server表，用以存储和检索名称与Server对象之间的关联关系
-var serverMapping = gmap.NewStringInterfaceMap()
+var serverMapping    = gmap.NewStringInterfaceMap()
 
 // Web Socket默认配置
-var wsUpgrader    = websocket.Upgrader{}
+var wsUpgrader       = websocket.Upgrader{}
 
 // Web Server已完成服务事件通道，当有事件时表示服务完成，当前进程退出
-var doneChan      = make(chan struct{}, 1000)
+var doneChan         = make(chan struct{}, 1000)
 
-// Web Server进程初始化
-func init() {
+// 用于服务进程初始化，只能初始化一次，采用“懒初始化”(在server运行时才初始化)
+var serverProcInited = gtype.NewBool()
+
+// Web Server进程初始化.
+// 注意该方法不能放置于包初始化方法init中，不使用ghttp.Server的功能便不能初始化对应的协程goroutine逻辑.
+func serverProcInit() {
+    if serverProcInited.Val() {
+        return
+    }
+    serverProcInited.Set(true)
     // 如果是完整重启，那么需要等待主进程销毁后，才开始执行监听，防止端口冲突
     if genv.Get(gADMIN_ACTION_RESTART_ENVKEY) != "" {
         if p, e := os.FindProcess(gproc.PPid()); e == nil {
@@ -193,6 +201,8 @@ func GetServer(name...interface{}) (*Server) {
 // 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行)
 // 需要结合Wait方式一起使用
 func (s *Server) Start() error {
+    serverProcInit()
+
     // 如果设置了静态文件目录，那么严格按照静态文件目录进行检索
     // 否则，默认使用当前可执行文件目录，并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索
     if s.config.ServerRoot != "" {
