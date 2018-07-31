@@ -23,6 +23,16 @@ func (r *Request) initGet() {
     }
 }
 
+// 设置GET参数，仅在ghttp.Server内有效，**注意并发安全性**
+func (r *Request) SetQuery(k string, v string) {
+    r.queryVars[k] = []string{v}
+}
+
+// 添加GET参数，构成[]string
+func (r *Request) AddQuery(k string, v string) {
+    r.queryVars[k] = append(r.queryVars[k], v)
+}
+
 // 获得指定名称的get参数列表
 func (r *Request) GetQuery(k string) []string {
     r.initGet()

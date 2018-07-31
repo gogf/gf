@@ -12,7 +12,7 @@ func main() {
     // 多事件回调示例，事件1
     pattern1 := "/:name/info/{uid}"
     s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc {
-        "BeforeServe"  : func(r *ghttp.Request){
+        "BeforeServe"  : func(r *ghttp.Request) {
             fmt.Println("打印到Server端终端")
         },
     })
