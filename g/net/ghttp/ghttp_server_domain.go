@@ -19,22 +19,22 @@ type Domain struct {
 }
 
 // 域名对象表，用以存储和检索域名(支持多域名)与域名对象之间的关联关系
-var domains = gmap.NewStringInterfaceMap()
+var domainMap = gmap.NewStringInterfaceMap()
 
 // 生成一个域名对象
-func (s *Server) Domain(domain string) *Domain {
-    if r := domains.Get(domain); r != nil {
+func (s *Server) Domain(domains string) *Domain {
+    if r := domainMap.Get(domains); r != nil {
         return r.(*Domain)
     }
     d := &Domain{
         s : s,
         m : make(map[string]bool),
     }
-    result := strings.Split(domain, ",")
+    result := strings.Split(domains, ",")
     for _, v := range result {
         d.m[strings.TrimSpace(v)] = true
     }
-    domains.Set(domain, d)
+    domainMap.Set(domains, d)
     return d
 }
 
