@@ -10,8 +10,6 @@ ghttp.Response增加输出内容后自动退出当前请求机制，不需要用
 Cookie&Session数据池化处理；
 ghttp.Client增加proxy特性；
 gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
-改进gf-orm的where查询功能，参考thinkphp 里的where查询语法；
-gpage分页增加对自定义后缀的支持，如:2.html, 2.php等等；
 gvalid包增加tag与校验规则绑定的支持特性；
 ghttp获取参数支持直接转struct功能；
 map转struct增加对tag的支持；
@@ -49,5 +47,6 @@ DONE:
 27. gproc进程间通信增加分组特性，不同的进程间可以通过进程ID以及分组名称发送/获取进程消息；
 28. ORM增加获取被执行的sql语句的方法；
 29. gdb增加查询缓存特性；
+30. gpage分页增加对自定义后缀的支持，如:2.html, 2.php等等；
 
 
