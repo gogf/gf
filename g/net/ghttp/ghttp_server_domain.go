@@ -53,7 +53,10 @@ func (d *Domain) BindHandler(pattern string, handler HandlerFunc) error {
 }
 
 // 执行对象方法
-func (d *Domain) BindObject(pattern string, obj interface{}) error {
+func (d *Domain) BindObject(pattern string, obj interface{}, methods...string) error {
+    if len(methods) > 0 {
+        return d.BindObjectMethod(pattern, obj, strings.Join(methods, ","))
+    }
     for domain, _ := range d.m {
         if err := d.s.BindObject(pattern + "@" + domain, obj); err != nil {
             return err
@@ -83,7 +86,10 @@ func (d *Domain) BindObjectRest(pattern string, obj interface{}) error {
 }
 
 // 控制器注册
-func (d *Domain) BindController(pattern string, c Controller) error {
+func (d *Domain) BindController(pattern string, c Controller, methods...string) error {
+    if len(methods) > 0 {
+        return d.BindControllerMethod(pattern, c, strings.Join(methods, ","))
+    }
     for domain, _ := range d.m {
         if err := d.s.BindController(pattern + "@" + domain, c); err != nil {
             return err
