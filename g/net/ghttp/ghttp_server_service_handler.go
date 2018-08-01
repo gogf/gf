@@ -14,7 +14,7 @@ import (
 )
 
 // 注意该方法是直接绑定函数的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
-func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
+func (s *Server) BindHandler(pattern string, handler HandlerFunc) error {
     return s.bindHandlerItem(pattern, &handlerItem{
         ctype : nil,
         fname : "",
@@ -25,15 +25,15 @@ func (s *Server)BindHandler(pattern string, handler HandlerFunc) error {
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user, post:/user@johng.cn
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server)bindHandlerItem(pattern string, item *handlerItem) error {
-    if s.status == 1 {
+func (s *Server) bindHandlerItem(pattern string, item *handlerItem) error {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server handlers cannot be changed while running")
     }
     return s.setHandler(pattern, item)
 }
 
 // 通过映射数组绑定URI到操作函数/方法
-func (s *Server)bindHandlerByMap(m handlerMap) error {
+func (s *Server) bindHandlerByMap(m handlerMap) error {
     for p, h := range m {
         if err := s.bindHandlerItem(p, h); err != nil {
             return err

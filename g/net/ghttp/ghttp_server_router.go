@@ -69,7 +69,7 @@ func (s *Server)parsePattern(pattern string) (domain, method, uri string, err er
 // 如果带有hook参数，表示是回调注册方法，否则为普通路由执行方法。
 func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... string) error {
     // Web Server正字运行时无法动态注册路由方法
-    if s.status == gSERVER_STATUS_RUNNING {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("cannnot bind handler while server running")
     }
     var hookName string

@@ -35,12 +35,12 @@ func handleProcessSignal() {
         switch sig {
             // 进程终止，停止所有子进程运行
             case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGTERM:
-                shutdownWebServers()
+                shutdownWebServers(true)
                 return
 
             // 用户信号，重启服务
             case syscall.SIGUSR1:
-                restartWebServers()
+                restartWebServers(true)
                 return
 
             default:
