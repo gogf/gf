@@ -25,8 +25,8 @@ type gracefulServer struct {
     httpServer   *http.Server
     rawListener  net.Listener // 原始listener
     listener     net.Listener // 接口化封装的listener
-    isHttps      bool
-    shutdownChan chan bool
+    isHttps      bool         // 是否HTTPS
+    status       int          // 当前Server状态(关闭/运行)
 }
 
 // 创建一个优雅的Http Server
@@ -34,7 +34,6 @@ func (s *Server) newGracefulServer(addr string, fd...int) *gracefulServer {
     gs := &gracefulServer {
         addr         : addr,
         httpServer   : s.newHttpServer(addr),
-        shutdownChan : make(chan bool),
     }
     // 是否有继承的文件描述符
     if len(fd) > 0 && fd[0] > 0 {
@@ -125,8 +124,9 @@ func (s *gracefulServer) doServe() error {
         action = "reloaded"
     }
     glog.Printfln("%d: %s server %s listening on [%s]", gproc.Pid(), s.getProto(), action, s.addr)
+    s.status = SERVER_STATUS_RUNNING
     err := s.httpServer.Serve(s.listener)
-    <-s.shutdownChan
+    s.status = SERVER_STATUS_STOPPED
     return err
 }
 
@@ -162,21 +162,21 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
 
 // 执行请求优雅关闭
 func (s *gracefulServer) shutdown() {
+    if s.status == SERVER_STATUS_STOPPED {
+        return
+    }
     if err := s.httpServer.Shutdown(context.Background()); err != nil {
         glog.Errorfln("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
-    } else {
-        //glog.Printfln("%d: %s server [%s] shutdown smoothly", gproc.Pid(), s.getProto(), s.addr)
-        s.shutdownChan <- true
     }
 }
 
 // 执行请求强制关闭
 func (s *gracefulServer) close() {
+    if s.status == SERVER_STATUS_STOPPED {
+        return
+    }
     if err := s.httpServer.Close(); err != nil {
         glog.Errorfln("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.addr, err)
-    } else {
-        //glog.Printfln("%d: %s server [%s] closed smoothly", gproc.Pid(), s.getProto(), s.addr)
-        s.shutdownChan <- true
     }
 }
 

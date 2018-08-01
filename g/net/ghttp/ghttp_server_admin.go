@@ -112,7 +112,7 @@ func (s *Server) Restart(newExeFilePath...string) error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
-    restartWebServers(newExeFilePath...)
+    restartWebServers(false, newExeFilePath...)
     return nil
 }
 
@@ -126,7 +126,7 @@ func (s *Server) Shutdown() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
-    shutdownWebServers()
+    shutdownWebServers(false)
     return nil
 }
 
@@ -231,29 +231,41 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 }
 
 // Web Server重启
-func restartWebServers(newExeFilePath...string) {
+func restartWebServers(isSignal bool, newExeFilePath...string) {
     serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
     glog.Printfln("%d: server restarting", gproc.Pid())
     if runtime.GOOS == "windows" {
-        // 异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
-        gtime.SetTimeout(time.Second, func() {
+        if isSignal {
+            // 在终端信号下，立即执行重启操作
             forcedlyCloseWebServers()
             forkRestartProcess(newExeFilePath...)
-        })
+        } else {
+            // 非终端信号下，异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+            gtime.SetTimeout(time.Second, func() {
+                forcedlyCloseWebServers()
+                forkRestartProcess(newExeFilePath...)
+            })
+        }
     } else {
         forkReloadProcess(newExeFilePath...)
     }
 }
 
 // Web Server关闭服务
-func shutdownWebServers() {
+func shutdownWebServers(isSignal bool) {
     serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
     glog.Printfln("%d: server shutting down", gproc.Pid())
-    // 异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
-    gtime.SetTimeout(time.Second, func() {
+    if isSignal {
+        // 在终端信号下，立即执行关闭操作
         forcedlyCloseWebServers()
         doneChan <- struct{}{}
-    })
+    } else {
+        // 非终端信号下，异步1秒后再执行关闭，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+        gtime.SetTimeout(time.Second, func() {
+            forcedlyCloseWebServers()
+            doneChan <- struct{}{}
+        })
+    }
 }
 
 // 关优雅闭进程所有端口的Web Server服务

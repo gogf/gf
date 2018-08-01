@@ -31,6 +31,10 @@ import (
 )
 
 const (
+    SERVER_STATUS_STOPPED      = 0               // Server状态：停止
+    SERVER_STATUS_RUNNING      = 1               // Server状态：运行
+)
+const (
     gHTTP_METHODS              = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
     gDEFAULT_SERVER            = "default"
     gDEFAULT_DOMAIN            = "default"
@@ -39,8 +43,6 @@ const (
     gDEFAULT_COOKIE_MAX_AGE    = 86400*365       // 默认cookie有效期(一年)
     gDEFAULT_SESSION_MAX_AGE   = 600             // 默认session有效期(600秒)
     gDEFAULT_SESSION_ID_NAME   = "gfsessionid"   // 默认存放Cookie中的SessionId名称
-    gSERVER_STATUS_STOPPED     = 0               // Server状态：停止
-    gSERVER_STATUS_RUNNING     = 1               // Server状态：运行
 )
 
 // ghttp.Server结构体
@@ -49,7 +51,6 @@ type Server struct {
     name             string                   // 服务名称，方便识别
     paths            *gspath.SPath            // 静态文件检索对象
     config           ServerConfig             // 配置对象
-    status           int8                     // 当前服务器状态(0：未启动，1：运行中)
     servers          []*gracefulServer        // 底层http.Server列表
     methodsMap       map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
     servedCount      *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
@@ -119,6 +120,9 @@ type listenerFdMap map[string]string
 
 // Server表，用以存储和检索名称与Server对象之间的关联关系
 var serverMapping    = gmap.NewStringInterfaceMap()
+
+// 正常运行的Server数量，如果没有运行、失败或者全部退出，那么该值为0
+var serverRunning    = gtype.NewInt()
 
 // Web Socket默认配置
 var wsUpgrader       = websocket.Upgrader{}
@@ -214,7 +218,7 @@ func (s *Server) Start() error {
         }
     }
 
-    if s.status == gSERVER_STATUS_RUNNING {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server is already running")
     }
     // 底层http server配置
@@ -351,20 +355,32 @@ func (s *Server) startServer(fdMap listenerFdMap) {
     // 开始执行异步监听
     for _, v := range s.servers {
         go func(server *gracefulServer) {
-            var err error
+            serverRunning.Add(1)
+            err := (error)(nil)
             if server.isHttps {
                 err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath)
             } else {
                 err = server.ListenAndServe()
             }
+            serverRunning.Add(-1)
             // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
             if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
                 glog.Error(err)
             }
+            // 如果所有异步的Server都已经停止，那么主Server就可以退出了
+            if serverRunning.Val() < 1 {
+                doneChan <- struct{}{}
+            }
         }(v)
     }
+}
 
-    s.status = gSERVER_STATUS_RUNNING
+// 获取当前服务器的状态
+func (s *Server) Status() int {
+    if serverRunning.Val() > 0 {
+        return SERVER_STATUS_RUNNING
+    }
+    return SERVER_STATUS_STOPPED
 }
 
 // 获取当前监听的文件描述符信息，构造成map返回

@@ -19,7 +19,7 @@ import (
 // http server setting设置
 // 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
 func (s *Server)SetConfig(c ServerConfig) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     if c.Handler == nil {
@@ -42,7 +42,7 @@ func (s *Server)SetConfig(c ServerConfig) error {
 
 // 设置http server参数 - Addr
 func (s *Server)SetAddr(addr string) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.Addr = addr
@@ -51,7 +51,7 @@ func (s *Server)SetAddr(addr string) error {
 
 // 设置http server参数 - Port
 func (s *Server)SetPort(port...int) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     if len(port) > 0 {
@@ -68,7 +68,7 @@ func (s *Server)SetPort(port...int) error {
 
 // 设置http server参数 - HTTPS Addr
 func (s *Server)SetHTTPSAddr(addr string) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.HTTPSAddr = addr
@@ -77,7 +77,7 @@ func (s *Server)SetHTTPSAddr(addr string) error {
 
 // 设置http server参数 - HTTPS Port
 func (s *Server)SetHTTPSPort(port...int) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     if len(port) > 0 {
@@ -94,7 +94,7 @@ func (s *Server)SetHTTPSPort(port...int) error {
 
 // 开启HTTPS支持，但是必须提供Cert和Key文件
 func (s *Server)EnableHTTPS(certFile, keyFile string) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.HTTPSCertPath = certFile
@@ -104,7 +104,7 @@ func (s *Server)EnableHTTPS(certFile, keyFile string) error {
 
 // 设置http server参数 - ReadTimeout
 func (s *Server)SetReadTimeout(t time.Duration) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.ReadTimeout = t
@@ -113,7 +113,7 @@ func (s *Server)SetReadTimeout(t time.Duration) error {
 
 // 设置http server参数 - WriteTimeout
 func (s *Server)SetWriteTimeout(t time.Duration) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.WriteTimeout = t
@@ -122,7 +122,7 @@ func (s *Server)SetWriteTimeout(t time.Duration) error {
 
 // 设置http server参数 - IdleTimeout
 func (s *Server)SetIdleTimeout(t time.Duration) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.IdleTimeout = t
@@ -131,7 +131,7 @@ func (s *Server)SetIdleTimeout(t time.Duration) error {
 
 // 设置http server参数 - MaxHeaderBytes
 func (s *Server)SetMaxHeaderBytes(b int) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.MaxHeaderBytes = b
@@ -140,7 +140,7 @@ func (s *Server)SetMaxHeaderBytes(b int) error {
 
 // 设置http server参数 - IndexFiles，默认展示文件，如：index.html, index.htm
 func (s *Server)SetIndexFiles(index []string) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.IndexFiles = index
@@ -149,7 +149,7 @@ func (s *Server)SetIndexFiles(index []string) error {
 
 // 允许展示访问目录的文件列表
 func (s *Server)SetIndexFolder(index bool) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.IndexFolder = index
@@ -158,7 +158,7 @@ func (s *Server)SetIndexFolder(index bool) error {
 
 // 设置http server参数 - ServerAgent
 func (s *Server)SetServerAgent(agent string) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     s.config.ServerAgent = agent
@@ -167,7 +167,7 @@ func (s *Server)SetServerAgent(agent string) error {
 
 // 设置http server参数 - ServerRoot
 func (s *Server)SetServerRoot(root string) error {
-    if s.status == 1 {
+    if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server config cannot be changed while running")
     }
     // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
