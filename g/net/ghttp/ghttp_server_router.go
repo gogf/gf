@@ -70,7 +70,7 @@ func (s *Server)parsePattern(pattern string) (domain, method, uri string, err er
 func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... string) error {
     // Web Server正字运行时无法动态注册路由方法
     if s.Status() == SERVER_STATUS_RUNNING {
-        return errors.New("cannnot bind handler while server running")
+        return errors.New("cannot bind handler while server running")
     }
     var hookName string
     if len(hook) > 0 {
@@ -82,34 +82,28 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     }
 
     // 路由对象
-    router := &Router {
+    handler.router = &Router {
         Uri      : uri,
         Domain   : domain,
         Method   : method,
         Priority : strings.Count(uri[1:], "/"),
     }
-    router.RegRule, router.RegNames = s.patternToRegRule(uri)
-
-    // 注册对象
-    registerItem := &handlerRegisterItem {
-        handler : handler,
-        hooks   : make(map[string]*list.List),
-        router  : router,
-    }
-    if len(hookName) > 0 {
-        registerItem.handler         = nil
-        registerItem.hooks[hookName] = list.New()
-        registerItem.hooks[hookName].PushBack(handler)
-    }
+    handler.router.RegRule, handler.router.RegNames = s.patternToRegRule(uri)
 
     // 动态注册，首先需要判断是否是动态注册，如果不是那么就没必要添加到动态注册记录变量中。
     // 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
     // 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表数据量不会很大，所以效率比较高；
-    if _, ok := s.handlerTree[domain]; !ok {
-        s.handlerTree[domain] = make(map[string]interface{})
+    tree := (map[string]interface{})(nil)
+    if len(hookName) == 0 {
+        tree = s.serveTree
+    } else {
+        tree = s.hooksTree
+    }
+    if _, ok := tree[domain]; !ok {
+        tree[domain] = make(map[string]interface{})
     }
     // 用于遍历的指针
-    p     := s.handlerTree[domain]
+    p     := tree[domain]
     // 当前节点的规则链表
     lists := make([]*list.List, 0)
     array := ([]string)(nil)
@@ -153,79 +147,29 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     }
     // 得到的lists是该路由规则一路匹配下来相关的模糊匹配链表(注意不是这棵树所有的链表)，
     // 从头开始遍历每个节点的模糊匹配链表，将该路由项插入进去(按照优先级高的放在前面)
-    item := (*handlerRegisterItem)(nil)
-    // 用以标记 *handlerRegisterItem 指向的对象是否已经处理过，因为多个节点可能会关联同一个该对象
-    pushedItemSet := gset.NewStringSet()
-    if len(hookName) == 0 {
-        // 普通方法路由注册，追加或者覆盖
-        for _, l := range lists {
-            pushed  := false
-            address := ""
-            for e := l.Front(); e != nil; e = e.Next() {
-                item    = e.Value.(*handlerRegisterItem)
-                address = fmt.Sprintf("%p", item)
-                if pushedItemSet.Contains(address) {
-                    pushed = true
-                    break
-                }
-                // 判断是否已存在相同的路由注册项
-                if strings.EqualFold(router.Domain, item.router.Domain) &&
-                    strings.EqualFold(router.Method, item.router.Method) &&
-                    strings.EqualFold(router.Uri, item.router.Uri) {
-                    item.handler = handler
-                    pushed = true
-                    break
-                }
-                if s.compareRouterPriority(router, item.router) {
-                    l.InsertBefore(registerItem, e)
+    item := (*handlerItem)(nil)
+    for _, l := range lists {
+        pushed  := false
+        for e := l.Front(); e != nil; e = e.Next() {
+            item = e.Value.(*handlerItem)
+            // 判断是否已存在相同的路由注册项
+            if len(hookName) == 0 {
+                if strings.EqualFold(handler.router.Domain, item.router.Domain) &&
+                    strings.EqualFold(handler.router.Method, item.router.Method) &&
+                    strings.EqualFold(handler.router.Uri, item.router.Uri) {
+                    e.Value = handler
                     pushed = true
                     break
                 }
             }
-            if pushed {
-                if len(address) > 0 {
-                    pushedItemSet.Add(address)
-                }
-            } else {
-                l.PushBack(registerItem)
+            if s.compareRouterPriority(handler.router, item.router) {
+                l.InsertBefore(handler, e)
+                pushed = true
+                break
             }
         }
-    } else {
-        // 回调方法路由注册，将方法追加到链表末尾
-        for _, l := range lists {
-            pushed  := false
-            address := ""
-            for e := l.Front(); e != nil; e = e.Next() {
-                item    = e.Value.(*handlerRegisterItem)
-                address = fmt.Sprintf("%p", item)
-                if pushedItemSet.Contains(address) {
-                    pushed = true
-                    break
-                }
-                // 判断是否已存在相同的路由注册项
-                if strings.EqualFold(router.Domain, item.router.Domain) &&
-                    strings.EqualFold(router.Method, item.router.Method) &&
-                    strings.EqualFold(router.Uri, item.router.Uri) {
-                    if _, ok := item.hooks[hookName]; !ok {
-                        item.hooks[hookName] = list.New()
-                    }
-                    item.hooks[hookName].PushBack(handler)
-                    pushed = true
-                    break
-                }
-                if s.compareRouterPriority(router, item.router) {
-                    l.InsertBefore(registerItem, e)
-                    pushed = true
-                    break
-                }
-            }
-            if pushed {
-                if len(address) > 0 {
-                    pushedItemSet.Add(address)
-                }
-            } else {
-                l.PushBack(registerItem)
-            }
+        if !pushed {
+            l.PushBack(handler)
         }
     }
     //gutil.Dump(s.handlerTree)
