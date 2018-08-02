@@ -27,7 +27,6 @@ import (
     "github.com/gorilla/websocket"
     "gitee.com/johng/gf/g/os/gtime"
     "time"
-    "container/list"
 )
 
 const (
@@ -43,6 +42,8 @@ const (
     gDEFAULT_COOKIE_MAX_AGE    = 86400*365       // 默认cookie有效期(一年)
     gDEFAULT_SESSION_MAX_AGE   = 600             // 默认session有效期(600秒)
     gDEFAULT_SESSION_ID_NAME   = "gfsessionid"   // 默认存放Cookie中的SessionId名称
+    gSERVE_CACHE_LRU_SIZE      = 100000          // 服务回调函数缓存LRU大小
+    gHOOKS_CACHE_LRU_SIZE      = 100000          // 事件回调函数缓存LRU大小
 )
 
 // ghttp.Server结构体
@@ -56,8 +57,9 @@ type Server struct {
     servedCount      *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
     closeQueue       *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
     // 服务注册相关
-    handlerTree      map[string]interface{}   // 所有注册的回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-    handlerCache     *gcache.Cache            // 服务注册路由内存缓存
+    serveTree        map[string]interface{}   // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+    hooksTree        map[string]interface{}   // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+    serveCache       *gcache.Cache            // 服务注册路由内存缓存
     hooksCache       *gcache.Cache            // 事件回调路由内存缓存
     // 自定义状态码回调
     hsmu             sync.RWMutex             // status handler互斥锁
@@ -88,7 +90,7 @@ type Router struct {
     Priority int          // 优先级，用于链表排序，值越大优先级越高
 }
 
-// 域名、URI与回调函数的绑定记录表
+// pattern与回调函数的绑定map
 type handlerMap  map[string]*handlerItem
 
 // http回调函数注册信息
@@ -96,19 +98,13 @@ type handlerItem struct {
     ctype    reflect.Type // 控制器类型(反射类型)
     fname    string       // 回调方法名称
     faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
-}
-
-// 路由注册项(这里使用了非并发安全的list.List，因为该对象的使用统一是由htmu互斥锁保证并发安全)
-type handlerRegisterItem struct {
-    handler    *handlerItem             // 准确的执行方法内存地址
-    hooks      map[string]*list.List   // 当前的事件回调注册，键名为事件名称，键值为事件执行方法链表
-    router     *Router                  // 注册时绑定的路由对象
+    router   *Router      // 注册时绑定的路由对象
 }
 
 // 根据特定URL.Path解析后的路由检索结果项
 type handlerParsedItem struct {
-    item    *handlerRegisterItem        // 路由注册项
-    values   map[string][]string        // 特定URL.Path的Router解析参数
+    item    *handlerItem          // 路由注册项
+    values   map[string][]string  // 特定URL.Path的Router解析参数
 }
 
 // HTTP注册函数
@@ -172,8 +168,9 @@ func GetServer(name...interface{}) (*Server) {
         servers          : make([]*gracefulServer, 0),
         methodsMap       : make(map[string]bool),
         statusHandlerMap : make(map[string]HandlerFunc),
-        handlerTree      : make(map[string]interface{}),
-        handlerCache     : gcache.New(),
+        serveTree        : make(map[string]interface{}),
+        hooksTree        : make(map[string]interface{}),
+        serveCache       : gcache.New(),
         hooksCache       : gcache.New(),
         cookies          : gmap.NewIntInterfaceMap(),
         sessions         : gcache.New(),
@@ -192,8 +189,8 @@ func GetServer(name...interface{}) (*Server) {
     s.errorLogger.SetBacktraceSkip(4)
     s.accessLogger.SetBacktraceSkip(4)
     // 设置路由解析缓存上限，使用LRU进行缓存淘汰
-    s.hooksCache.SetCap(10000)
-    s.handlerCache.SetCap(10000)
+    s.serveCache.SetCap(gSERVE_CACHE_LRU_SIZE)
+    s.hooksCache.SetCap(gHOOKS_CACHE_LRU_SIZE)
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = true
     }
