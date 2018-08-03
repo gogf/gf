@@ -3,7 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-// 路由控制.
+// 路由控制基本方法.
 
 package ghttp
 
@@ -12,35 +12,8 @@ import (
     "strings"
     "container/list"
     "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/container/gset"
-    "fmt"
 )
 
-// 查询请求处理方法.
-// 内部带锁机制，可以并发读，但是不能并发写；并且有缓存机制，按照Host、Method、Path进行缓存.
-func (s *Server) getHandlerWithCache(r *Request) *handlerRegisterItem {
-    var cacheItem *handlerParsedItem
-    cacheKey := s.handlerKey(r.Method, r.URL.Path, r.GetHost())
-    if v := s.handlerCache.Get(cacheKey); v == nil {
-        cacheItem = s.searchHandler(r.Method, r.URL.Path, r.GetHost())
-        if cacheItem != nil {
-            s.handlerCache.Set(cacheKey, cacheItem, 0)
-        }
-    } else {
-        cacheItem = v.(*handlerParsedItem)
-    }
-
-    if cacheItem != nil {
-        if r.Router == nil {
-            for k, v := range cacheItem.values {
-                r.routerVars[k] = v
-            }
-            r.Router = cacheItem.item.router
-        }
-        return cacheItem.item
-    }
-    return nil
-}
 
 // 解析pattern
 func (s *Server)parsePattern(pattern string) (domain, method, uri string, err error) {
@@ -103,7 +76,13 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
         tree[domain] = make(map[string]interface{})
     }
     // 用于遍历的指针
-    p     := tree[domain]
+    p := tree[domain]
+    if len(hookName) > 0 {
+        if _, ok := p.(map[string]interface{})[hookName]; !ok {
+            p.(map[string]interface{})[hookName] = make(map[string]interface{})
+        }
+        p = p.(map[string]interface{})[hookName]
+    }
     // 当前节点的规则链表
     lists := make([]*list.List, 0)
     array := ([]string)(nil)
@@ -172,7 +151,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
             l.PushBack(handler)
         }
     }
-    //gutil.Dump(s.handlerTree)
+    //gutil.Dump(s.serveTree)
+    //gutil.Dump(s.hooksTree)
     return nil
 }
 
@@ -200,87 +180,6 @@ func (s *Server) compareRouterPriority(newRouter, oldRouter *Router) bool {
         return false
     }
     return false
-}
-
-// 服务方法检索
-func (s *Server) searchHandler(method, path, domain string) *handlerParsedItem {
-    domains := []string{ gDEFAULT_DOMAIN }
-    if !strings.EqualFold(gDEFAULT_DOMAIN, domain) {
-        domains = append(domains, domain)
-    }
-    array := ([]string)(nil)
-    if strings.EqualFold("/", path) {
-        array = []string{"/"}
-    } else {
-        array = strings.Split(path[1:], "/")
-    }
-    for _, domain := range domains {
-        p, ok := s.handlerTree[domain]
-        if !ok {
-            continue
-        }
-        // 多层链表(每个节点都有一个*list链表)的目的是当叶子节点未有任何规则匹配时，让父级模糊匹配规则继续处理
-        lists := make([]*list.List, 0)
-        for k, v := range array {
-            if _, ok := p.(map[string]interface{})["*list"]; ok {
-                lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
-            }
-            if _, ok := p.(map[string]interface{})[v]; ok {
-                p = p.(map[string]interface{})[v]
-                if k == len(array) - 1 {
-                    if _, ok := p.(map[string]interface{})["*list"]; ok {
-                        lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
-                        break
-                    }
-                }
-            } else {
-                if _, ok := p.(map[string]interface{})["*fuzz"]; ok {
-                    p = p.(map[string]interface{})["*fuzz"]
-                }
-            }
-            // 如果是叶子节点，同时判断当前层级的"*fuzz"键名，解决例如：/user/*action 匹配 /user 的规则
-            if k == len(array) - 1 {
-                if _, ok := p.(map[string]interface{})["*fuzz"]; ok {
-                    p = p.(map[string]interface{})["*fuzz"]
-                }
-                if _, ok := p.(map[string]interface{})["*list"]; ok {
-                    lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
-                }
-            }
-        }
-
-        // 多层链表遍历检索，从数组末尾的链表开始遍历，末尾的深度高优先级也高
-        for i := len(lists) - 1; i >= 0; i-- {
-            for e := lists[i].Front(); e != nil; e = e.Next() {
-                item := e.Value.(*handlerRegisterItem)
-                // 动态匹配规则带有gDEFAULT_METHOD的情况，不会像静态规则那样直接解析为所有的HTTP METHOD存储
-                if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, method) {
-                    // 注意当不带任何动态路由规则时，len(match) == 1
-                    if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 0 {
-                        //gutil.Dump(match)
-                        //gutil.Dump(names)
-                        handlerItem := &handlerParsedItem{item, nil}
-                        // 如果需要query匹配，那么需要重新正则解析URL
-                        if len(item.router.RegNames) > 0 {
-                            if len(match) > len(item.router.RegNames) {
-                                handlerItem.values = make(map[string][]string)
-                                // 如果存在存在同名路由参数名称，那么执行数组追加
-                                for i, name := range item.router.RegNames {
-                                    if _, ok := handlerItem.values[name]; ok {
-                                        handlerItem.values[name] = append(handlerItem.values[name], match[i + 1])
-                                    } else {
-                                        handlerItem.values[name] = []string{match[i + 1]}
-                                    }
-                                }
-                            }
-                        }
-                        return handlerItem
-                    }
-                }
-            }
-        }
-    }
-    return nil
 }
 
 // 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
@@ -315,10 +214,5 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
     }
     regrule += `$`
     return
-}
-
-// 生成回调方法查询的Key
-func (s *Server) handlerKey(method, path, domain string) string {
-    return strings.ToUpper(method) + ":" + path + "@" + strings.ToLower(domain)
 }
 

@@ -2,8 +2,8 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 func main() {
@@ -25,10 +25,12 @@ func main() {
     s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc {
         "BeforeOutput" : func(r *ghttp.Request){
             r.Response.SetBuffer([]byte(
-                fmt.Sprintf("通过事件修改输出内容, object: %s, page: %s",
-                    r.Get("object"), r.GetRouterString("page"))),
+                fmt.Sprintf("通过事件修改输出内容, object:%s, page:%s", r.Get("object"), r.GetRouterString("page"))),
             )
         },
+    })
+    s.BindHandler(pattern2, func(r *ghttp.Request) {
+        r.Response.Write(r.Router.Uri)
     })
     s.SetPort(8199)
     s.Run()
