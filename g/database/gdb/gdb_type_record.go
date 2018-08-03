@@ -8,12 +8,18 @@ package gdb
 
 import (
     "gitee.com/johng/gf/g/util/gutil"
-    "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/encoding/gparser"
 )
 
 // 将记录结果转换为JSON字符串
 func (r Record) ToJson() string {
-    content, _ := gjson.Encode(r.ToMap())
+    content, _ := gparser.VarToJson(r.ToMap())
+    return string(content)
+}
+
+// 将记录结果转换为XML字符串
+func (r Record) ToXml() string {
+    content, _ := gparser.VarToXml(r.ToMap())
     return string(content)
 }
 
