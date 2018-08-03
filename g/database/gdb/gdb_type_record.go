@@ -8,7 +8,14 @@ package gdb
 
 import (
     "gitee.com/johng/gf/g/util/gutil"
+    "gitee.com/johng/gf/g/encoding/gjson"
 )
+
+// 将记录结果转换为JSON字符串
+func (r Record) ToJson() string {
+    content, _ := gjson.Encode(r.ToMap())
+    return string(content)
+}
 
 // 将Record转换为Map，其中最主要的区别是里面的键值被强制转换为string类型，方便json处理
 func (r Record) ToMap() Map {

@@ -6,6 +6,14 @@
 
 package gdb
 
+import "gitee.com/johng/gf/g/encoding/gjson"
+
+// 将结果集转换为JSON字符串
+func (r Result) ToJson() string {
+    content, _ := gjson.Encode(r.ToList())
+    return string(content)
+}
+
 // 将结果集转换为List类型返回，便于json处理
 func (r Result) ToList() List {
     l := make(List, len(r))
