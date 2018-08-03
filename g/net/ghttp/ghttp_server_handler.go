@@ -53,8 +53,9 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     }()
 
     // 路由注册检索
-    handler := s.getHandlerWithCache(request)
-    if handler == nil {
+    handler    := (*handlerItem)(nil)
+    parsedItem := s.getServeHandlerWithCache(request)
+    if parsedItem == nil {
         // 如果路由不匹配，那么执行静态文件检索
         path := s.paths.Search(r.URL.Path)
         if path != "" {
@@ -64,6 +65,14 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
             request.Response.OutputBuffer()
         }
         return
+    } else {
+        handler = parsedItem.handler
+        if request.Router == nil {
+            for k, v := range parsedItem.values {
+                request.routerVars[k] = v
+            }
+            request.Router = parsedItem.handler.router
+        }
     }
 
     // **********************************************
@@ -71,31 +80,31 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // **********************************************
 
     // 事件 - BeforeServe
-    s.callHookHandler(request, "BeforeServe")
+    s.callHookHandler("BeforeServe", request)
 
     // 执行回调控制器/执行对象/方法
-    if handler.handler != nil {
-        s.callHandler(handler.handler, request)
+    if handler != nil {
+        s.callServeHandler(handler, request)
     }
 
     // 事件 - AfterServe
-    s.callHookHandler(request, "AfterServe")
+    s.callHookHandler("AfterServe", request)
 
     // 设置请求完成时间
     request.LeaveTime = gtime.Microsecond()
 
     // 事件 - BeforeOutput
-    s.callHookHandler(request, "BeforeOutput")
+    s.callHookHandler("BeforeOutput", request)
     // 输出Cookie
     request.Cookie.Output()
     // 输出缓冲区
     request.Response.OutputBuffer()
     // 事件 - AfterOutput
-    s.callHookHandler(request, "AfterOutput")
+    s.callHookHandler("AfterOutput", request)
 }
 
 // 初始化控制器
-func (s *Server)callHandler(h *handlerItem, r *Request) {
+func (s *Server)callServeHandler(h *handlerItem, r *Request) {
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)
@@ -173,12 +182,12 @@ func (s *Server) startCloseQueueLoop() {
         for {
             if v := s.closeQueue.PopFront(); v != nil {
                 r := v.(*Request)
-                s.callHookHandler(r, "BeforeClose")
+                s.callHookHandler("BeforeClose", r)
                 // 关闭当前会话的Cookie
                 r.Cookie.Close()
                 // 更新Session会话超时时间
                 r.Session.UpdateExpire()
-                s.callHookHandler(r, "AfterClose")
+                s.callHookHandler("AfterClose", r)
             }
         }
     }()

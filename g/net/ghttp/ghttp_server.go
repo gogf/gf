@@ -103,7 +103,7 @@ type handlerItem struct {
 
 // 根据特定URL.Path解析后的路由检索结果项
 type handlerParsedItem struct {
-    item    *handlerItem          // 路由注册项
+    handler  *handlerItem         // 路由注册项
     values   map[string][]string  // 特定URL.Path的Router解析参数
 }
 
