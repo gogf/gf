@@ -6,11 +6,19 @@
 
 package gdb
 
-import "gitee.com/johng/gf/g/encoding/gjson"
+import (
+    "gitee.com/johng/gf/g/encoding/gparser"
+)
 
 // 将结果集转换为JSON字符串
 func (r Result) ToJson() string {
-    content, _ := gjson.Encode(r.ToList())
+    content, _ := gparser.VarToJson(r.ToList())
+    return string(content)
+}
+
+// 将结果集转换为JSON字符串
+func (r Result) ToXml() string {
+    content, _ := gparser.VarToXml(r.ToList())
     return string(content)
 }
 
