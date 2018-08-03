@@ -163,7 +163,6 @@ func (db *Db) GetAll(query string, args ...interface{}) (Result, error) {
             copy(v, col)
             row[k] = v
         }
-        //fmt.Printf("%p\n", row["typeid"])
         records = append(records, row)
     }
     return records, nil
