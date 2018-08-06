@@ -9,7 +9,7 @@ import (
 
 func main() {
     s := g.Server()
-    s.BindHandler("/page/template/{page}.html", func(r *ghttp.Request){
+    s.BindHandler("/:obj/*action/{page}.html", func(r *ghttp.Request){
         page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
         buffer, _ := gview.ParseContent(`
         <html>

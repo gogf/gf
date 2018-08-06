@@ -15,6 +15,7 @@ import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/util/gstr"
+    "strings"
 )
 
 // 分页对象
@@ -246,36 +247,46 @@ func (page *Page) GetContent(mode int) string {
 
 // 为指定的页面返回地址值
 func (page *Page) GetUrl(pageNo int) string {
+    // 复制一个URL对象
     url := *page.Url
+    if len(page.UrlTemplate) == 0  && page.Router != nil {
+        page.UrlTemplate = page.makeUrlTemplate(url.Path, page.Router)
+    }
     if len(page.UrlTemplate) > 0 {
         // 指定URL生成模板
         url.Path = gstr.Replace(page.UrlTemplate, "{.page}", gconv.String(pageNo))
         return url.String()
     }
-    if page.Router != nil {
-        // Router的规则与ghttp高度耦合
-        if page.Router != nil {
-            match1, _ := gregex.MatchString(page.Router.RegRule, page.Router.Uri)
-            match2, _ := gregex.MatchString(page.Router.RegRule, url.Path)
-            if len(match1) > 1 && len(match1) == len(match2) {
-                path := page.Router.Uri
-                rule := fmt.Sprintf(`^[:\*]%s|\{%s\}`, page.PageName, page.PageName)
-                for i := 1; i < len(match1); i++ {
-                    replace := match2[i]
-                    if gregex.IsMatchString(rule, match1[i]) {
-                        replace = gconv.String(pageNo)
-                    }
-                    path = gstr.Replace(path, match1[i], replace)
-                }
-                url.Path = path
-                return url.String()
-            }
-        }
-    }
+
     values := page.Url.Query()
     values.Set(page.PageName, gconv.String(pageNo))
     url.RawQuery = values.Encode()
     return url.String()
+}
+
+// 根据当前URL以及注册路由信息计算出对应的URL模板
+func (page *Page) makeUrlTemplate(url string, router *ghttp.Router) (tpl string) {
+    if page.Router != nil && len(router.RegNames) > 0 {
+        if match, err := gregex.MatchString(router.RegRule, url); err == nil && len(match) > 0 {
+            if len(match) > len(router.RegNames) {
+                tpl          = router.Uri
+                hasPageName := false
+                for i, name := range router.RegNames {
+                    rule := fmt.Sprintf(`[:\*]%s|\{%s\}`, name, name)
+                    if !hasPageName && strings.Compare(name, page.PageName) == 0 {
+                        hasPageName = true
+                        tpl, _ = gregex.ReplaceString(rule, `{.page}`, tpl)
+                    } else {
+                        tpl, _ = gregex.ReplaceString(rule, match[i + 1], tpl)
+                    }
+                }
+                if !hasPageName {
+                    tpl = ""
+                }
+            }
+        }
+    }
+    return
 }
 
 // 获取链接地址
