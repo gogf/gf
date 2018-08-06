@@ -9,6 +9,7 @@ package gtcp
 import (
     "net"
     "time"
+    "strings"
 )
 
 const (
@@ -77,4 +78,12 @@ func SendRecvWithTimeout(addr string, data []byte, receive int, timeout time.Dur
     }
     defer conn.Close()
     return conn.SendRecvWithTimeout(data, receive, timeout, retry...)
+}
+
+// 判断是否是超时错误
+func isTimeout(err error) bool {
+    if err == nil {
+        return false
+    }
+    return strings.Contains(err.Error(), "timeout")
 }

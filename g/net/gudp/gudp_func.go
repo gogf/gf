@@ -6,7 +6,10 @@
 
 package gudp
 
-import "net"
+import (
+    "net"
+    "strings"
+)
 
 // 创建标准库UDP链接操作对象
 func NewNetConn(raddr string, laddr...string) (*net.UDPConn, error) {
@@ -47,4 +50,12 @@ func SendRecv(addr string, data []byte, receive int, retry...Retry) ([]byte, err
     }
     defer conn.Close()
     return conn.SendRecv(data, receive, retry...)
+}
+
+// 判断是否是超时错误
+func isTimeout(err error) bool {
+    if err == nil {
+        return false
+    }
+    return strings.Contains(err.Error(), "timeout")
 }
