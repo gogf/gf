@@ -8,7 +8,8 @@ import (
 
 func main() {
     v      := g.View()
-    b, err := v.Parse("gview.tpl", map[string]interface{} {
+    v.SetDelimiters("${", "}")
+    b, err := v.Parse("gview_delimiters.tpl", map[string]interface{} {
         "k" : "v",
     })
     fmt.Println(err)

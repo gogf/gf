@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 视图管理
+// 视图管理.
 package gview
 
 import (
@@ -22,10 +22,11 @@ import (
 
 // 视图对象
 type View struct {
-    mu       sync.RWMutex
-    paths    *gspath.SPath           // 模板查找目录(绝对路径)
-    funcmap  map[string]interface{}  // FuncMap
-    contents *gmap.StringStringMap   // 已解析的模板文件内容
+    mu         sync.RWMutex
+    paths      *gspath.SPath           // 模板查找目录(绝对路径)
+    funcmap    map[string]interface{}  // FuncMap
+    contents   *gmap.StringStringMap   // 已解析的模板文件内容
+    delimiters []string                // 模板变量分隔符号
 }
 
 // 视图表
@@ -59,10 +60,12 @@ func New(path string) *View {
     s := gspath.New()
     s.Set(path)
     view := &View {
-        paths    : s,
-        funcmap  : make(map[string]interface{}),
-        contents : gmap.NewStringStringMap(),
+        paths      : s,
+        funcmap    : make(map[string]interface{}),
+        contents   : gmap.NewStringStringMap(),
+        delimiters : make([]string, 2),
     }
+    view.SetDelimiters("{{", "}}")
     view.BindFunc("include", view.funcInclude)
     return view
 }
@@ -95,7 +98,7 @@ func (view *View) Parse(file string, params map[string]interface{}) ([]byte, err
     view.mu.RLock()
     defer view.mu.RUnlock()
     buffer := bytes.NewBuffer(nil)
-    if tpl, err := template.New(path).Funcs(view.funcmap).Parse(content); err != nil {
+    if tpl, err := template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap).Parse(content); err != nil {
         return nil, err
     } else {
         if err := tpl.Execute(buffer, params); err != nil {
@@ -111,7 +114,7 @@ func (view *View) ParseContent(content string, params map[string]interface{}) ([
     defer view.mu.RUnlock()
     name   := gconv.String(ghash.BKDRHash64([]byte(content)))
     buffer := bytes.NewBuffer(nil)
-    if tpl, err := template.New(name).Funcs(view.funcmap).Parse(content); err != nil {
+    if tpl, err := template.New(name).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap).Parse(content); err != nil {
         return nil, err
     } else {
         if err := tpl.Execute(buffer, params); err != nil {
@@ -119,6 +122,12 @@ func (view *View) ParseContent(content string, params map[string]interface{}) ([
         }
     }
     return buffer.Bytes(), nil
+}
+
+// 设置模板变量解析分隔符号
+func (view *View) SetDelimiters(left, right string) {
+    view.delimiters[0] = left
+    view.delimiters[1] = right
 }
 
 // 绑定自定义函数，该函数是全局有效，即调用之后每个线程都会生效，因此有并发安全控制
