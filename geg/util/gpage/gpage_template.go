@@ -11,7 +11,7 @@ func main() {
     s := g.Server()
     s.BindHandler("/page/template/{page}.html", func(r *ghttp.Request){
         page := gpage.New(100, 10, r.Get("page"), r.URL.String())
-        page.SetUrlTemplate("/page/template/{.page}.html")
+        page.SetUrlTemplate("/order/list/{.page}.html")
         buffer, _ := gview.ParseContent(`
         <html>
             <head>
