@@ -8,7 +8,7 @@ go get -u gitee.com/johng/gf
 ```
 
 # 介绍
-gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开源项目地址(仓库保持实时同步)：
+gf(GoFrame)是一款模块化、松耦合、轻量级、高性能的Go语言Web开发框架。开源项目地址(仓库保持实时同步)：
 [Gitee](https://gitee.com/johng/gf)，[Github](https://github.com/johng-cn/gf)。
 使用中有任何问题/建议，欢迎加入技术QQ群交流：**116707870**。
 如有优秀的框架使用案例，欢迎联系作者将地址展示到项目库中，您的牛逼将被世人所瞻仰。
