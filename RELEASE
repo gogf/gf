@@ -1,4 +1,4 @@
-0.97 beta
+0.97.399 beta
     1、 增加gfsnotify文件监控模块；
     2、 配置管理模块增加配置文件自动检测更新机制；
     3、 模板引擎增加对模板文件的自动检测更新机制；
@@ -18,7 +18,8 @@
         反馈并跟踪完成第三方依赖mxj包的ISSUE修复(github.com/clbanning/mxj/issues/48)；
 
 
-0.98 beta
+
+0.98.503 beta
     新特性：
         1、平滑重启特性( http://gf.johng.cn/625833 )；
         2、gflock文件锁模块( http://gf.johng.cn/626062 )；
@@ -79,7 +80,8 @@
         6、修复gvalid包验证问题：如果值为nil，并且不需要require*验证时，其他验证失效。并增加单元测试项，测试通过。
 
 
-0.99 beta
+
+0.99.682 beta
     新特性：
         1、新增gdes包，用于DES加密/加密算法处理；
         2、新增gkafka包，kafka的golang客户端；
@@ -90,7 +92,7 @@
         7、gdb增加调试模式特性，使用SetDebug方法实现，在调试模式下可以获取详细的SQL执行记录，增加了详细的开发文档及示例代码(http://gf.johng.cn/702801)；
         8、gdb增加查询缓存特性，使用Cache方法实现，增加了详细的开发文档及示例代码(http://gf.johng.cn/702801)；
         9、ghttp.Server路由功能增加字段匹配规则特性，支持如：/order/list/{page}.html 动态路由规则特性(http://gf.johng.cn/702766)；
-        10、gpage分页包增加分页URL规则生成模板特性，内部可使用{.page}变量指定页码位置；
+        10、gpage分页包增加分页URL规则生成模板特性，内部可使用{.page}变量指定页码位置(http://gf.johng.cn/716438)；
         11、增加gmap.Map对象，这是gmap.InterfaceInterfaceMap的别名；
 
     新功能：
@@ -116,7 +118,7 @@
         9、ghttp.Server平滑重启机制增加可自定义重启可执行文件路径，特别是针对windows系统特别有用(因为windows下不支持可执行文件覆盖更新)
         10、改进ghttp.Server静态文件检索设计，增加开发环境时的main包源码目录查找机制；改进gcfg/gview的main包源码目录查找机制
         11、优化gcache设计，LRU特性非默认开启；优化gtype/gcache基准测试脚本；新增gregx基准测试脚本，改进设计，提升性能
-        12、gfile包增加GoRootOfBuild方法，用于获取编译时的GOROOT数值；并改进glog包中backtrace的GOROOT路径过滤处理；TODO++
+        12、gfile包增加GoRootOfBuild方法，用于获取编译时的GOROOT数值；并改进glog包中backtrace的GOROOT路径过滤处理；
         13、改进grpool代码质量，并改进对池化goroutine数量的限制设计
         14、改进gdb.Map/List及g.Map/List的类型定义，改用别名特性以便支持原生类型输入(map/slice)，并修复gdb.Model.Update方法参数处理问题
         15、调整ghttp包示例代码目录结构，增加ghttp.Client自定义Header方法，ghttp.Cookie增加Map方法用于获得客户端提交的所有cookie值，构造成map返回
