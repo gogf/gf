@@ -246,11 +246,3 @@ func (c *Conn) LocalAddr() net.Addr {
 func (c *Conn) RemoteAddr() net.Addr {
     return c.conn.RemoteAddr()
 }
-
-// 判断是否是超时错误
-func isTimeout(err error) bool {
-    if err == nil {
-        return false
-    }
-    return strings.Contains(err.Error(), "timeout")
-}

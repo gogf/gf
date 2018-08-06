@@ -10,7 +10,6 @@ import (
     "net"
     "time"
     "io"
-    "strings"
 )
 
 // 封装的链接对象
@@ -229,12 +228,4 @@ func (c *Conn) RemoteAddr() net.Addr {
 
 func (c *Conn) Close() error {
     return c.conn.Close()
-}
-
-// 判断是否是超时错误
-func isTimeout(err error) bool {
-    if err == nil {
-        return false
-    }
-    return strings.Contains(err.Error(), "timeout")
 }
