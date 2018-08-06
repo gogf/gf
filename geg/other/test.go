@@ -1,10 +1,15 @@
 package main
 
 import (
-    "fmt"
-    "math"
+	"gitee.com/johng/gf/g/os/gfile"
 )
 
 func main() {
-    fmt.Println(int(math.MaxInt64))
+	path := "/home/john/Documents/temp"
+	flags1 := gfile.IsFile(path)
+	if flags1 == true {
+		println("有")
+	} else {
+		println("无")
+	}
 }

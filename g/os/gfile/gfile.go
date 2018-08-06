@@ -103,7 +103,11 @@ func IsDir(path string) bool {
 
 // 判断所给路径是否为文件
 func IsFile(path string) bool {
-    return !IsDir(path)
+    s, err := os.Stat(path)
+    if err != nil {
+        return false
+    }
+    return !s.IsDir()
 }
 
 // 获取文件或目录信息

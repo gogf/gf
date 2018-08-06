@@ -17,7 +17,7 @@ type Controller struct {
 
 // 测试模板热更新机制
 func (c *Controller) Test() {
-    b, _ := c.View.Parse("test.tpl")
+    b, _ := c.View.Parse("gview.tpl")
     c.Response.Write(b)
 }
 
