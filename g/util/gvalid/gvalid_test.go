@@ -82,7 +82,7 @@ func Test_CheckObject(t *testing.T) {
         "Age"  : "年龄为18到30周岁",
     }
     obj := &Object{"john", 16}
-    if m := gvalid.CheckObject(obj, rules, msgs); m == nil {
+    if m := gvalid.CheckStruct(obj, rules, msgs); m == nil {
         t.Error("CheckObject校验失败")
     }
 }
