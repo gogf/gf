@@ -10,7 +10,7 @@ go get -u gitee.com/johng/gf
 # 介绍
 gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开源项目地址(仓库保持实时同步)：
 [Gitee](https://gitee.com/johng/gf)，[Github](https://github.com/johng-cn/gf)。
-使用中有任何问题/建议，欢迎加入技术QQ群交流：116707870。
+使用中有任何问题/建议，欢迎加入技术QQ群交流：**116707870**。
 如有优秀的框架使用案例，欢迎联系作者将地址展示到项目库中，您的牛逼将被世人所瞻仰。
 
 # 特点
@@ -26,14 +26,14 @@ gf是一款模块化、松耦合、轻量级、高性能的Web开发框架。开
 1. 提供了对基本数据类型的并发安全封装，提供了常用的数据结构容器；
 1. 支持Go变量/Json/Xml/Yml/Toml任意数据格式之间的相互转换及创建；
 1. 强大的数据库ORM，支持应用层级的集群管理、读写分离、负载均衡，查询缓存、方法及链式ORM操作；
-1. 更多特点请查阅框架手册和源码；
+1. 更多特点请查阅框架[手册](http://gf.johng.cn)和[源码](https://godoc.org/github.com/johng-cn/gf)；
 
 # 文档
 GoFrame开发文档：[http://gf.johng.cn](http://gf.johng.cn)
 
 
 # 使用
-## 哈喽世界！
+## Hello World
 ```go
 package main
 
@@ -45,7 +45,7 @@ import (
 func main() {
     s := g.Server()
     s.BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("哈喽世界！")
+        r.Response.Write("Hello World")
     })
     s.Run()
 }
@@ -61,7 +61,7 @@ import (
 
 func main() {
     s := g.Server()
-    s.Domain("localhost1，localhost2，localhost3").BindHandler("/", func(r *ghttp.Request) {
+    s.Domain("localhost1,localhost2").BindHandler("/", func(r *ghttp.Request) {
         r.Response.Write("localhostx")
     })
     s.Run()
@@ -85,70 +85,37 @@ func main() {
     s.Run()
 }
 ```
-
-## 服务注册
-```go
-package main
-
-import (
-    "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/frame/gmvc"
-)
-
-type ControllerUser struct {
-    gmvc.Controller
-}
-
-func (c *ControllerUser) Name() {
-    c.Response.Write("John")
-}
-
-func main() {
-    s := g.Server()
-    s.BindController("/user", &ControllerUser{})
-    s.Run()
-}
-```
-
 ## 路由控制
 ```go
 package main
 
-import "gitee.com/johng/gf/g/net/ghttp"
+import (
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/net/ghttp"
+)
 
 func main() {
     s := g.Server()
-    s.BindHandler("/:name/:action", func(r *ghttp.Request){
-        r.Response.Write(r.Get("name"))
-        r.Response.Write(r.Get("action"))
+    s.BindHandler("/order/:action/{page}.html", func(r *ghttp.Request){
+        r.Response.Writef("action:%s, page:%s", r.Get("action"), r.Get("page"))
     })
     s.SetPort(8199)
     s.Run()
 }
 ```
 
-## 数据校验
-```go
-rule := "url|min-length:11"
-msgs := map[string]string{
-    "url"       : "请输入正确的URL地址",
-    "minlength" : "地址长度至少为:min位"
-}
-fmt.Println(gvalid.Check("http://gfjohngcn", rule, msgs))
-```
-
 ## 数据库ORM
 
-### 链式操作
-
-#### ORM单例对象
+### ORM创建/关闭
 ```go
 // 获取默认配置的数据库对象(配置名称为"default")
 db, err := gdb.New()
 // 获取配置分组名称为"user-center"的数据库对象
 db, err := gdb.New("user-center")
+// 关闭数据库操作对象(丢回连接池对象复用)
+db.Close()
 ```
-#### 单表/联表查询
+### 单表/联表查询
 ```go
 // 查询多条记录并使用Limit分页
 r, err := db.Table("user").Where("u.uid > ?", 1).Limit(0, 10).Select()
@@ -164,12 +131,7 @@ r, err := db.Table("user u,user_detail ud").Where("u.uid=ud.uid").Fields("u.*,ud
 r, err := db.Table("user").Where("u.uid=1",).One()
 ```
 
-#### like查询
-```go
-r, err := db.Table("user").Where("name like ?", "%john%").Select()
-```
-
-#### 链式更新/删除
+### 更新/删除
 ```go
 // 更新
 r, err := db.Table("user").Data(gdb.Map{"name" : "john2"}).Where("name=?", "john").Update()
@@ -181,7 +143,7 @@ r, err := db.Table("user").Data(`name="john"`).Update()
 r, err := db.Table("user").Data("name", "john").Update()
 r, err := db.Table("user").Data(g.Map{"name" : "john"}).Update()
 ```
-#### 链式写入/保存
+### 写入/保存
 ```go
 r, err := db.Table("user").Data(gdb.Map{"name": "john"}).Insert()
 r, err := db.Table("user").Data(gdb.Map{"uid": 10000, "name": "john"}).Replace()
@@ -190,42 +152,14 @@ r, err := db.Table("user").Data(gdb.Map{"uid": 10001, "name": "john"}).Save()
 
 ### 事务操作
 
-#### 开启事务操作
 ```go
 if tx, err := db.Begin(); err == nil {
-    fmt.Println("开启事务操作")
-}
-```
+    if r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john"}).Save(); err == nil {
+        tx.Commit()
+    } else {
+        tx.Rollback()
+    }
 
-#### 事务回滚操作
-```go
-if tx, err := db.Begin(); err == nil {
-    r, err := tx.Save("user", gdb.Map{
-        "uid"  :  1,
-        "name" : "john",
-    })
-    tx.Rollback()
-    fmt.Println(r, err)
-}
-```
-
-#### 事务提交操作
-```go
-if tx, err := db.Begin(); err == nil {
-    r, err := tx.Save("user", gdb.Map{
-        "uid"  :  1,
-        "name" : "john",
-    })
-    tx.Commit()
-    fmt.Println(r, err)
-}
-```
-
-#### 事务链式操作
-```go
-if tx, err := db.Begin(); err == nil {
-    r, err := tx.Table("user").Data(gdb.Map{"uid":1, "name": "john"}).Save()
-    tx.Commit()
     fmt.Println(r, err)
 }
 ```
