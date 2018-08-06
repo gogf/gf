@@ -13,6 +13,7 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gparser"
     "strconv"
+    "fmt"
 )
 
 // 服务端请求返回对象
@@ -72,6 +73,11 @@ func (r *Response) Write(content ... interface{}) {
     r.mu.Unlock()
 }
 
+// 返回信息，支持自定义format格式
+func (r *Response) Writef(format string, params ... interface{}) {
+    r.Write(fmt.Sprintf(format, params...))
+}
+
 // 返回信息，末尾增加换行标识符"\n"
 func (r *Response) Writeln(content ... interface{}) {
     if len(content) == 0 {
@@ -80,6 +86,11 @@ func (r *Response) Writeln(content ... interface{}) {
     }
     content = append(content, "\n")
     r.Write(content...)
+}
+
+// 返回信息，末尾增加换行标识符"\n"
+func (r *Response) Writefln(format string, params ... interface{}) {
+    r.Writeln(fmt.Sprintf(format, params...))
 }
 
 // 返回JSON
