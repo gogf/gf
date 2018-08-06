@@ -421,7 +421,7 @@ func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map
 }
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法
-func CheckObject(object interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
+func CheckStruct(object interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
     return CheckMap(structs.Map(object), rules, msgs...)
 }
 
