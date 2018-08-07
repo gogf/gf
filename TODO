@@ -14,7 +14,7 @@ gvalid包增加tag与校验规则绑定的支持特性；
 ghttp获取参数支持直接转struct功能；
 map转struct增加对tag的支持；
 gcache检查在i386下的int64->int转换问题；
-
+gfsnotify增加对于目录的监控；
 
 
 DONE:
