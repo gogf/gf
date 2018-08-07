@@ -347,7 +347,7 @@ func (md *Model) Count() (int, error) {
     }
     if len(list) > 0 {
         for _, v := range list[0] {
-            return gconv.Int(v), nil
+            return v.Int(), nil
         }
     }
     return 0, nil
