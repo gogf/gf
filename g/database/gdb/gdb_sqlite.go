@@ -9,7 +9,6 @@ package gdb
 
 import (
 	"database/sql"
-	"os"
 )
 
 // 数据库链接对象
@@ -22,12 +21,12 @@ func (db *dbsqlite) Open(c *ConfigNode) (*sql.DB, error) {
 	if c.Linkinfo != "" {
 		source = c.Linkinfo
 	} else {
-		path, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
+		//path, err := os.Getwd()
+		//if err != nil {
+		//	return nil, err
+		//}
 		//先这样吧
-		source = path + c.Host + c.Name
+		source = c.Name
 	}
 	if db, err := sql.Open("sqlite3", source); err == nil {
 		return db, nil

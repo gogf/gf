@@ -11,8 +11,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
-
 	"gitee.com/johng/gf/g/container/gmap"
 	"gitee.com/johng/gf/g/container/gring"
 	"gitee.com/johng/gf/g/container/gtype"
@@ -20,6 +18,7 @@ import (
 	"gitee.com/johng/gf/g/util/grand"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	"time"
 )
 
 const (
@@ -128,8 +127,8 @@ var linkMysql = &dbmysql{}
 // PostgreSQL接口对象
 var linkPgsql = &dbpgsql{}
 
-//Sqlite接口对象
-//@author wxkj
+// Sqlite接口对象
+//@author wxkj<wxscz@qq.com>
 var linkSqlite = &dbsqlite{}
 
 // 数据库查询缓存对象map，使用数据库连接名称作为键名，键值为查询缓存对象
