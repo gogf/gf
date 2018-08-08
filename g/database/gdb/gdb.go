@@ -5,20 +5,20 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 数据库ORM.
+// 默认内置支持MySQL, 其他数据库需要手动import对应的数据库引擎第三方包.
 package gdb
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
+	"time"
+    "errors"
+    "database/sql"
 	"gitee.com/johng/gf/g/container/gmap"
 	"gitee.com/johng/gf/g/container/gring"
 	"gitee.com/johng/gf/g/container/gtype"
 	"gitee.com/johng/gf/g/os/gcache"
 	"gitee.com/johng/gf/g/util/grand"
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-	"time"
 )
 
 const (
@@ -127,8 +127,8 @@ var linkMysql = &dbmysql{}
 // PostgreSQL接口对象
 var linkPgsql = &dbpgsql{}
 
-//Sqlite接口对象
-//@author wxkj<wxscz@qq.com>
+// Sqlite接口对象
+// @author wxkj<wxscz@qq.com>
 var linkSqlite = &dbsqlite{}
 
 // 数据库查询缓存对象map，使用数据库连接名称作为键名，键值为查询缓存对象
@@ -209,14 +209,14 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 func newDb(masterNode *ConfigNode, slaveNode *ConfigNode, groupName string) (*Db, error) {
 	var link Link
 	switch masterNode.Type {
-	case "mysql":
-		link = linkMysql
-	case "pgsql":
-		link = linkPgsql
-	case "sqlite":
-		link = linkSqlite
-	default:
-		return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", masterNode.Type))
+		case "mysql":
+			link = linkMysql
+		case "pgsql":
+			link = linkPgsql
+		case "sqlite":
+			link = linkSqlite
+		default:
+			return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", masterNode.Type))
 	}
 	master, err := link.Open(masterNode)
 	if err != nil {
