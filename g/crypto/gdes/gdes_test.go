@@ -1,4 +1,4 @@
-package gdes_test
+package gdes
 
 import (
 	"testing"
