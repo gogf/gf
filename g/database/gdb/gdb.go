@@ -127,7 +127,7 @@ var linkMysql = &dbmysql{}
 // PostgreSQL接口对象
 var linkPgsql = &dbpgsql{}
 
-// Sqlite接口对象
+//Sqlite接口对象
 //@author wxkj<wxscz@qq.com>
 var linkSqlite = &dbsqlite{}
 
@@ -209,9 +209,12 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 func newDb(masterNode *ConfigNode, slaveNode *ConfigNode, groupName string) (*Db, error) {
 	var link Link
 	switch masterNode.Type {
-	case "mysql":link = linkMysql
-	case "pgsql":link = linkPgsql
-	case "sqlite":link = linkSqlite
+	case "mysql":
+		link = linkMysql
+	case "pgsql":
+		link = linkPgsql
+	case "sqlite":
+		link = linkSqlite
 	default:
 		return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", masterNode.Type))
 	}
