@@ -40,6 +40,9 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
             p := key
             if strings.EqualFold(p[len(p) - 6:], "/index") {
                 p = p[0 : len(p) - 6]
+                if len(p) == 0 {
+                    p = "/"
+                }
             }
             m[p] = &handlerItem {
                 ctype : v.Elem().Type(),
@@ -75,6 +78,9 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, methods strin
             p := key
             if strings.EqualFold(p[len(p) - 6:], "/index") {
                 p = p[0 : len(p) - 6]
+                if len(p) == 0 {
+                    p = "/"
+                }
             }
             m[p] = &handlerItem {
                 ctype : t,
