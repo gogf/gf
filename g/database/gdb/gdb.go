@@ -102,7 +102,8 @@ type Sql struct {
 	Sql   string        // SQL语句(可能带有预处理占位符)
 	Args  []interface{} // 预处理参数值列表
 	Error error         // 执行结果(nil为成功)
-	Cost  int64         // 执行时间消耗(毫秒)
+	Start int64         // 执行开始时间(毫秒)
+	End   int64         // 执行结束时间(毫秒)
 	Func  string        // 执行方法名称
 }
 

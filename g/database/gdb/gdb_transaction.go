@@ -46,7 +46,8 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
             Sql   : *p,
             Args  : args,
             Error : err,
-            Cost  : militime2 - militime1,
+            Start : militime1,
+            End   : militime2,
             Func  : "TX:Query",
         })
     } else {
@@ -73,7 +74,8 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
             Sql   : *p,
             Args  : args,
             Error : err,
-            Cost  : militime2 - militime1,
+            Start : militime1,
+            End   : militime2,
             Func  : "TX:Exec",
         })
     } else {
