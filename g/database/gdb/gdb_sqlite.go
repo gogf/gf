@@ -3,13 +3,16 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
-//@author wxkj<wxscz@qq.com>
+// @author wxkj<wxscz@qq.com>
 
 package gdb
 
 import (
 	"database/sql"
 )
+
+// 使用时需要import:
+// _ "github.com/mattn/go-sqlite3"
 
 // 数据库链接对象
 type dbsqlite struct {
@@ -21,11 +24,6 @@ func (db *dbsqlite) Open(c *ConfigNode) (*sql.DB, error) {
 	if c.Linkinfo != "" {
 		source = c.Linkinfo
 	} else {
-		//path, err := os.Getwd()
-		//if err != nil {
-		//	return nil, err
-		//}
-		//先这样吧
 		source = c.Name
 	}
 	if db, err := sql.Open("sqlite3", source); err == nil {

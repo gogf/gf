@@ -10,12 +10,11 @@ import (
     "fmt"
     "errors"
     "strings"
-    "database/sql"
-    _ "github.com/lib/pq"
-    _ "github.com/go-sql-driver/mysql"
-    "gitee.com/johng/gf/g/util/gconv"
     "reflect"
+    "database/sql"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gconv"
+    _ "github.com/go-sql-driver/mysql"
 )
 
 // 数据库事务对象
