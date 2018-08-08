@@ -66,10 +66,13 @@ func NewFromStrLayout (str string, layout string) *Time {
     return nil
 }
 
-// 时间戳转换为时间对象
+// 时间戳转换为时间对象，时间戳支持到纳秒的数值
 func NewFromTimeStamp (timestamp int64) *Time {
-    return &Time{
-        time.Unix(timestamp, 0),
+    for timestamp < 1e18 {
+        timestamp *= 10
+    }
+    return &Time {
+        time.Unix(int64(timestamp/1e9), timestamp%1e9),
     }
 }
 

@@ -32,7 +32,7 @@ func (db *Db) SetDebug(debug bool) {
     }
 }
 
-// 获取已经执行的SQL列表
+// 获取已经执行的SQL列表(仅在debug=true时有效)
 func (db *Db) GetQueriedSqls() []*Sql {
     if db.sqls == nil {
         return nil
@@ -47,6 +47,21 @@ func (db *Db) GetQueriedSqls() []*Sql {
         return true
     })
     return sqls
+}
+
+// 打印已经执行的SQL列表(仅在debug=true时有效)
+func (db *Db) PrintQueriedSqls() {
+    sqls := db.GetQueriedSqls()
+    for k, v := range sqls {
+        fmt.Println(len(sqls) - k, ":")
+        fmt.Println("    Sql  :", v.Sql)
+        fmt.Println("    Args :", v.Args)
+        fmt.Println("    Error:", v.Error)
+        fmt.Println("    Start:", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
+        fmt.Println("    End  :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
+        fmt.Println("    Cost :", v.End - v.Start, "ms")
+        fmt.Println("    Func :", v.Func)
+    }
 }
 
 // 关闭链接
@@ -81,7 +96,8 @@ func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
             Sql   : *p,
             Args  : args,
             Error : err,
-            Cost  : militime2 - militime1,
+            Start : militime1,
+            End   : militime2,
             Func  : "DB:Query",
         })
     } else {
@@ -108,7 +124,8 @@ func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
             Sql   : *p,
             Args  : args,
             Error : err,
-            Cost  : militime2 - militime1,
+            Start : militime1,
+            End   : militime2,
             Func  : "DB:Exec",
         })
     } else {
