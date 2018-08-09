@@ -10,12 +10,11 @@ import (
     "fmt"
     "errors"
     "strings"
-    "database/sql"
-    _ "github.com/lib/pq"
-    _ "github.com/go-sql-driver/mysql"
-    "gitee.com/johng/gf/g/util/gconv"
     "reflect"
+    "database/sql"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gconv"
+    _ "github.com/go-sql-driver/mysql"
 )
 
 // 数据库事务对象
@@ -47,7 +46,8 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
             Sql   : *p,
             Args  : args,
             Error : err,
-            Cost  : militime2 - militime1,
+            Start : militime1,
+            End   : militime2,
             Func  : "TX:Query",
         })
     } else {
@@ -74,7 +74,8 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
             Sql   : *p,
             Args  : args,
             Error : err,
-            Cost  : militime2 - militime1,
+            Start : militime1,
+            End   : militime2,
             Func  : "TX:Exec",
         })
     } else {
