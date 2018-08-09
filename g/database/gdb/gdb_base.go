@@ -308,7 +308,6 @@ func (db *Db) Begin() (*Tx, error) {
 func (db *Db) getInsertOperationByOption(option uint8) string {
     oper := "INSERT"
     switch option {
-        case OPTION_INSERT:
         case OPTION_REPLACE:
             oper = "REPLACE"
         case OPTION_SAVE:

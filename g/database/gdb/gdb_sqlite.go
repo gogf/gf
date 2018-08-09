@@ -44,6 +44,9 @@ func (db *dbsqlite) getQuoteCharRight() string {
 }
 
 // 在执行sql之前对sql进行进一步处理
+// @todo 需要增加对Save方法的支持，可使用正则来实现替换，
+// @todo 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
 func (db *dbsqlite) handleSqlBeforeExec(q *string) *string {
+
 	return q
 }
