@@ -15,7 +15,7 @@ ghttp获取参数支持直接转struct功能；
 map转struct增加对tag的支持；
 gcache检查在i386下的int64->int转换问题；
 gfsnotify增加对于目录的监控；
-
+orm增加sqlite对Save方法的支持(去掉触发器语句);
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
