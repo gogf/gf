@@ -36,6 +36,9 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
             p := key
             if strings.EqualFold(p[len(p) - 6:], "/index") {
                 p = p[0 : len(p) - 6]
+                if len(p) == 0 {
+                    p = "/"
+                }
             }
             m[p] = &handlerItem {
                 ctype : nil,
@@ -71,6 +74,9 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string
             p := key
             if strings.EqualFold(p[len(p) - 6:], "/index") {
                 p = p[0 : len(p) - 6]
+                if len(p) == 0 {
+                    p = "/"
+                }
             }
             m[p] = &handlerItem {
                 ctype : nil,

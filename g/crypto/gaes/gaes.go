@@ -9,31 +9,38 @@ package gaes
 
 import (
     "bytes"
+    "errors"
     "crypto/aes"
     "crypto/cipher"
-    "errors"
 )
 
 const (
     ivDefValue = "I Love Go Frame!"
 )
 
-func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
+// AES加密, 使用CBC模式，注意key必须为16/24/32位长度，iv初始化向量为非必需参数
+func Encrypt(plainText []byte, key []byte, iv...[]byte) ([]byte, error) {
     block, err := aes.NewCipher(key)
     if err != nil {
         return nil, err
     }
     blockSize := block.BlockSize()
-    plaintext = PKCS5Padding(plaintext, blockSize)
-    iv := []byte(ivDefValue)
-    blockMode  := cipher.NewCBCEncrypter(block, iv)
-    ciphertext := make([]byte, len(plaintext))
-    blockMode.CryptBlocks(ciphertext, plaintext)
+    plainText = PKCS5Padding(plainText, blockSize)
+    ivValue := ([]byte)(nil)
+    if len(iv) > 0 {
+        ivValue = iv[0]
+    } else {
+        ivValue = []byte(ivDefValue)
+    }
+    blockMode  := cipher.NewCBCEncrypter(block, ivValue)
+    ciphertext := make([]byte, len(plainText))
+    blockMode.CryptBlocks(ciphertext, plainText)
 
     return ciphertext, nil
 }
 
-func Decrypt(cipherText []byte, key []byte) ([]byte, error) {
+// AES解密, 使用CBC模式，注意key必须为16/24/32位长度，iv初始化向量为非必需参数
+func Decrypt(cipherText []byte, key []byte, iv...[]byte) ([]byte, error) {
     block, err := aes.NewCipher(key)
     if err != nil {
         return nil, err
@@ -42,16 +49,21 @@ func Decrypt(cipherText []byte, key []byte) ([]byte, error) {
     if len(cipherText) < blockSize {
         return nil, errors.New("cipherText too short")
     }
-    iv := []byte(ivDefValue)
+    ivValue := ([]byte)(nil)
+    if len(iv) > 0 {
+        ivValue = iv[0]
+    } else {
+        ivValue = []byte(ivDefValue)
+    }
     if len(cipherText)%blockSize != 0 {
         return nil, errors.New("cipherText is not a multiple of the block size")
     }
-    blockModel := cipher.NewCBCDecrypter(block, iv)
-    plaintext  := make([]byte, len(cipherText))
-    blockModel.CryptBlocks(plaintext, cipherText)
-    plaintext = PKCS5UnPadding(plaintext)
+    blockModel := cipher.NewCBCDecrypter(block, ivValue)
+    plainText  := make([]byte, len(cipherText))
+    blockModel.CryptBlocks(plainText, cipherText)
+    plainText = PKCS5UnPadding(plainText)
 
-    return plaintext, nil
+    return plainText, nil
 }
 
 func PKCS5Padding(src []byte, blockSize int) []byte {
@@ -61,7 +73,7 @@ func PKCS5Padding(src []byte, blockSize int) []byte {
 }
 
 func PKCS5UnPadding(src []byte) []byte {
-    length := len(src)
-    unpadding := int(src[length-1])
+    length    := len(src)
+    unpadding := int(src[length - 1])
     return src[:(length - unpadding)]
 }
