@@ -16,7 +16,6 @@ import (
     "encoding/json"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/encoding/gxml"
     "gitee.com/johng/gf/g/encoding/gyaml"
     "gitee.com/johng/gf/g/encoding/gtoml"
@@ -645,5 +644,5 @@ func (j *Json) ToToml() ([]byte, error) {
 func (j *Json) ToStruct(o interface{}) error {
     j.mu.RLock()
     defer j.mu.RUnlock()
-    return gutil.MapToStruct(j.ToMap(), o)
+    return gconv.MapToStruct(j.ToMap(), o)
 }
