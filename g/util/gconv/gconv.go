@@ -299,11 +299,12 @@ func Float64 (i interface{}) float64 {
     return v
 }
 
-// 将map键值对映射到对应的struct对象属性上，需要注意：
+// 将params键值对参数映射到对应的struct对象属性上，第三个参数mapping为非必需，表示自定义名称与属性名称的映射关系。
+// 需要注意：
 // 1、第二个参数为struct对象指针；
 // 2、struct对象的**公开属性(首字母大写)**才能被映射赋值；
 // 3、map中的键名可以为小写，映射转换时会自动将键名首字母转为大写做匹配映射，如果无法匹配则忽略；
-func MapToStruct(params map[string]interface{}, object interface{}) error {
+func MapToStruct(params map[string]interface{}, object interface{}, mapping...map[string]string) error {
     tagmap := make(map[string]string)
     fields := structs.Fields(object)
     // 将struct中定义的属性转换名称构建称tagmap
@@ -315,15 +316,36 @@ func MapToStruct(params map[string]interface{}, object interface{}) error {
         }
     }
     elem := reflect.ValueOf(object).Elem()
-    // 首先匹配对象定义时绑定的属性名称
+    dmap := make(map[string]bool)
+    // 首先按照传递的映射关系进行匹配
+    if len(mapping) > 0 {
+        for mappingk, mappingv := range mapping[0] {
+            if v, ok := params[mappingk]; ok {
+                dmap[mappingv] = true
+                bindVarToStruct(elem, mappingv, v)
+            }
+        }
+    }
+    // 其次匹配对象定义时绑定的属性名称
     for tagk, tagv := range tagmap {
+        if _, ok := dmap[tagv]; ok {
+            continue
+        }
         if v, ok := params[tagk]; ok {
+            dmap[tagv] = true
             bindVarToStruct(elem, tagv, v)
         }
     }
-    // 其次按照默认规则进行匹配
+    // 最后按照默认规则进行匹配
     for mapk, mapv := range params {
-        bindVarToStruct(elem, gstr.UcFirst(mapk), mapv)
+        name := gstr.UcFirst(mapk)
+        if _, ok := dmap[name]; ok {
+            continue
+        }
+        // 后续tag逻辑中会处理的key(重复的键名)这里便不处理
+        if _, ok := tagmap[mapk]; !ok {
+            bindVarToStruct(elem, name, mapv)
+        }
     }
     return nil
 }
