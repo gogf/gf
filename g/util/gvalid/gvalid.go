@@ -381,7 +381,7 @@ func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map
     var value interface{}
     // 自定义消息，非必须参数，因此这里需要做判断
     customMsgs := make(map[string]interface{})
-    if len(msgs) > 0 {
+    if len(msgs) > 0 && len(msgs[0]) > 0 {
         customMsgs = msgs[0]
     }
     errorMsgs := make(map[string]map[string]string)
@@ -421,8 +421,44 @@ func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map
 }
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法
-func CheckStruct(object interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
-    return CheckMap(structs.Map(object), rules, msgs...)
+func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
+    fields := structs.Fields(st)
+    if rules == nil {
+        rules = make(map[string]string)
+    }
+    params  := make(map[string]interface{})
+    errMsgs := (map[string]interface{})(nil)
+    if len(msgs) == 0 {
+        errMsgs = make(map[string]interface{})
+    } else {
+        errMsgs = msgs[0]
+    }
+    for _, field := range fields {
+        params[field.Name()] = field.Value()
+        if tag := field.Tag("gvalid"); tag != "" {
+            match, _ := gregex.MatchString(`([^#]+)#{0,1}(.*)`, tag)
+            // 校验规则
+            if _, ok := rules[field.Name()]; !ok {
+                rules[field.Name()] = match[1]
+            }
+            // 错误提示
+            if match[2] != "" {
+                ruleArray := strings.Split(match[1], "|")
+                msgArray  := strings.Split(match[2], "|")
+                for k, v := range ruleArray {
+                    if len(msgArray[k]) == 0 {
+                        continue
+                    }
+                    array := strings.Split(v, ":")
+                    if _, ok := errMsgs[field.Name()]; !ok {
+                        errMsgs[field.Name()] = make(map[string]string)
+                    }
+                    errMsgs[field.Name()].(map[string]string)[array[0]] = msgArray[k]
+                }
+            }
+        }
+    }
+    return CheckMap(params, rules, errMsgs)
 }
 
 // 检测单条数据的规则，其中params参数为非必须参数，可以传递所有的校验参数进来，进行多参数对比(部分校验规则需要)
