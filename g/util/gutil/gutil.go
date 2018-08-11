@@ -17,16 +17,19 @@ import (
 )
 
 // 格式化打印变量(类似于PHP-vardump)
-func Dump(i interface{}) {
-    buffer  := &bytes.Buffer{}
-    encoder := json.NewEncoder(buffer)
-    encoder.SetEscapeHTML(false)
-    encoder.SetIndent("", "\t")
-    if err := encoder.Encode(i); err == nil {
-        fmt.Println(buffer.String())
-    } else {
-        fmt.Errorf("%s\n", err.Error())
+func Dump(i...interface{}) {
+    for _, v := range i {
+        buffer  := &bytes.Buffer{}
+        encoder := json.NewEncoder(buffer)
+        encoder.SetEscapeHTML(false)
+        encoder.SetIndent("", "\t")
+        if err := encoder.Encode(v); err == nil {
+            fmt.Print(buffer.String())
+        } else {
+            fmt.Errorf("%s", err.Error())
+        }
     }
+    fmt.Println()
 }
 
 // 将map键值对映射到对应的struct对象属性上，需要注意：
