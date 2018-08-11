@@ -7,8 +7,8 @@
 package gdb
 
 import (
-    "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/encoding/gparser"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 // 将记录结果转换为JSON字符串
@@ -38,5 +38,5 @@ func (r Record) ToStruct(obj interface{}) error {
     for k, v := range r {
         m[k] = v
     }
-    return gutil.MapToStruct(m, obj)
+    return gconv.MapToStruct(m, obj)
 }

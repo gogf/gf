@@ -16,6 +16,9 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/encoding/gbinary"
+    "github.com/fatih/structs"
+    "strings"
+    "reflect"
 )
 
 // 将变量i转换为字符串指定的类型t
@@ -56,28 +59,12 @@ func Time(i interface{}, format...string) time.Time {
         t, _ := gtime.StrToTimeFormat(s, format[0])
         return t
     }
-    t := int64(0)
-    n := int64(0)
     if gstr.IsNumeric(s) {
-        // 纯数字
-        if len(s) > 9 {
-            // 前面10位为时间戳秒，后面转纳秒
-            t = Int64(s[0  : 10])
-            if len(s) > 10 {
-                n = Int64(s[10 : ])
-                // 如果按照纳秒计算时间则完整字符串长度为19位，这里要将纳秒字段补齐
-                if len(s) < 19 {
-                    for i := 0; i < 19 - len(s); i++ {
-                        n *= 10
-                    }
-                }
-            }
-        }
+        return gtime.NewFromTimeStamp(Int64(s)).Time
     } else {
         t, _ := gtime.StrToTime(s)
         return t
     }
-    return time.Unix(t, n)
 }
 
 // 将变量i转换为time.Time类型
@@ -312,4 +299,46 @@ func Float64 (i interface{}) float64 {
     return v
 }
 
+// 将map键值对映射到对应的struct对象属性上，需要注意：
+// 1、第二个参数为struct对象指针；
+// 2、struct对象的**公开属性(首字母大写)**才能被映射赋值；
+// 3、map中的键名可以为小写，映射转换时会自动将键名首字母转为大写做匹配映射，如果无法匹配则忽略；
+func MapToStruct(params map[string]interface{}, object interface{}) error {
+    tagmap := make(map[string]string)
+    fields := structs.Fields(object)
+    // 将struct中定义的属性转换名称构建称tagmap
+    for _, field := range fields {
+        if tag := field.Tag("gconv"); tag != "" {
+            for _, v := range strings.Split(tag, ",") {
+                tagmap[strings.TrimSpace(v)] = field.Name()
+            }
+        }
+    }
+    elem := reflect.ValueOf(object).Elem()
+    // 首先匹配对象定义时绑定的属性名称
+    for tagk, tagv := range tagmap {
+        if v, ok := params[tagk]; ok {
+            bindVarToStruct(elem, tagv, v)
+        }
+    }
+    // 其次按照默认规则进行匹配
+    for mapk, mapv := range params {
+        bindVarToStruct(elem, gstr.UcFirst(mapk), mapv)
+    }
+    return nil
+}
 
+// 将参数值绑定到对象指定名称的属性上
+func bindVarToStruct(elem reflect.Value, name string, value interface{}) {
+    structFieldValue := elem.FieldByName(name)
+    // 键名与对象属性匹配检测
+    if !structFieldValue.IsValid() {
+        return
+    }
+    // CanSet的属性必须为公开属性(首字母大写)
+    if !structFieldValue.CanSet() {
+        return
+    }
+    // 必须将value转换为struct属性的数据类型，这里必须用到gconv包
+    structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
+}
