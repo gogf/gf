@@ -11,6 +11,7 @@ import (
     "errors"
     "strings"
     "gitee.com/johng/gf/g/util/gstr"
+    "bytes"
 )
 
 // 注意该方法是直接绑定函数的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
@@ -69,22 +70,39 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 // 规则0: 全部转换为小写，方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词；
 // 规则1: 不处理名称，以原有名称构建成URI
 // 规则2: 仅转为小写，单词间不使用连接符号
+// 规则3: 采用驼峰命名方式
 func (s *Server) nameToUrlPart(name string) string {
     switch s.nameToUriType.Val() {
         case NAME_TO_URI_TYPE_FULLNAME:
             return name
+
         case NAME_TO_URI_TYPE_ALLLOWER:
             return strings.ToLower(name)
+
+        case NAME_TO_URI_TYPE_CAMEL:
+            part := bytes.NewBuffer(nil)
+            if gstr.IsLetterUpper(name[0]) {
+                part.WriteByte(name[0] + 32)
+            } else {
+                part.WriteByte(name[0])
+            }
+            part.WriteString(name[1:])
+            return part.String()
+
         case NAME_TO_URI_TYPE_DEFAULT:
             fallthrough
         default:
-            part := ""
+            part := bytes.NewBuffer(nil)
             for i := 0; i < len(name); i++ {
                 if i > 0 && gstr.IsLetterUpper(name[i]) {
-                    part += "-"
+                    part.WriteByte('-')
                 }
-                part += string(name[i])
+                if gstr.IsLetterUpper(name[i]) {
+                    part.WriteByte(name[i] + 32)
+                } else {
+                    part.WriteByte(name[i])
+                }
             }
-            return strings.ToLower(part)
+            return part.String()
     }
 }
