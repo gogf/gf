@@ -66,15 +66,25 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 }
 
 // 将给定的名称转换为URL规范格式。
-// 规范1: 全部转换为小写；
-// 规范2: 方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词；
+// 规则0: 全部转换为小写，方法名中间存在大写字母，转换为小写URI地址以“-”号链接每个单词；
+// 规则1: 不处理名称，以原有名称构建成URI
+// 规则2: 仅转为小写，单词间不使用连接符号
 func (s *Server) nameToUrlPart(name string) string {
-    part := ""
-    for i := 0; i < len(name); i++ {
-        if i > 0 && gstr.IsLetterUpper(name[i]) {
-            part += "-"
-        }
-        part += string(name[i])
+    switch s.nameToUriType.Val() {
+        case NAME_TO_URI_TYPE_FULLNAME:
+            return name
+        case NAME_TO_URI_TYPE_ALLLOWER:
+            return strings.ToLower(name)
+        case NAME_TO_URI_TYPE_DEFAULT:
+            fallthrough
+        default:
+            part := ""
+            for i := 0; i < len(name); i++ {
+                if i > 0 && gstr.IsLetterUpper(name[i]) {
+                    part += "-"
+                }
+                part += string(name[i])
+            }
+            return strings.ToLower(part)
     }
-    return strings.ToLower(part)
 }

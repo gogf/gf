@@ -49,7 +49,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
         Id         : s.servedCount.Add(1),
         Server     : s,
         Request    : *r,
-        Response   : newResponse(w),
+        Response   : newResponse(s, w),
         EnterTime  : gtime.Microsecond(),
         parsedHost : gtype.NewString(),
         clientIp   : gtype.NewString(),

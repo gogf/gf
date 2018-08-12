@@ -1,0 +1,38 @@
+package main
+
+import (
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/net/ghttp"
+)
+
+type User struct {}
+
+func (u *User) ShowList(r *ghttp.Request) {
+    r.Response.Write("list")
+}
+
+func main() {
+    s1 := g.Server(1)
+    s2 := g.Server(2)
+    s3 := g.Server(3)
+
+    s1.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_DEFAULT)
+    s2.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_FULLNAME)
+    s3.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_ALLLOWER)
+
+    s1.BindObject("/{.struct}/{.method}", new(User))
+    s2.BindObject("/{.struct}/{.method}", new(User))
+    s3.BindObject("/{.struct}/{.method}", new(User))
+
+    s1.SetPort(8100)
+    s2.SetPort(8200)
+    s3.SetPort(8300)
+
+    s1.Start()
+    s2.Start()
+    s3.Start()
+
+    g.Wait()
+}
+
+
