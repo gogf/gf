@@ -19,6 +19,7 @@ import (
 // 服务端请求返回对象
 type Response struct {
     ResponseWriter
+    Server  *Server
     Writer  *ResponseWriter // io.Writer
     mu      sync.RWMutex    // 缓冲区互斥锁
     buffer  []byte          // 每个请求的返回数据缓冲区
@@ -33,8 +34,9 @@ type ResponseWriter struct {
 }
 
 // 创建一个ghttp.Response对象指针
-func newResponse(w http.ResponseWriter) *Response {
+func newResponse(s *Server, w http.ResponseWriter) *Response {
     r := &Response {
+        Server         : s,
         ResponseWriter : ResponseWriter{w, http.StatusOK, 0},
     }
     r.Writer = &r.ResponseWriter
@@ -207,6 +209,7 @@ func (r *Response) ClearBuffer() {
 
 // 输出缓冲区数据到客户端
 func (r *Response) OutputBuffer() {
+    r.Header().Set("Server", r.Server.config.ServerAgent)
     if len(r.buffer) > 0 {
         r.mu.Lock()
         r.ResponseWriter.Write(r.buffer)

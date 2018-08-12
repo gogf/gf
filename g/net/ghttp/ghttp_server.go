@@ -78,6 +78,8 @@ type Server struct {
     accessLogEnabled *gtype.Bool              // 是否开启access log
     accessLogger     *glog.Logger             // access log日志对象
     errorLogger      *glog.Logger             // error log日志对象
+    // 其他属性
+    nameToUriType    *gtype.Int               // 服务注册时对象和方法名称转换为URI时的规则
 }
 
 // 路由对象
@@ -174,17 +176,19 @@ func GetServer(name...interface{}) (*Server) {
         hooksCache       : gcache.New(),
         cookies          : gmap.NewIntInterfaceMap(),
         sessions         : gcache.New(),
-        cookieMaxAge     : gtype.NewInt(gDEFAULT_COOKIE_MAX_AGE),
-        sessionMaxAge    : gtype.NewInt(gDEFAULT_SESSION_MAX_AGE),
-        sessionIdName    : gtype.NewString(gDEFAULT_SESSION_ID_NAME),
         servedCount      : gtype.NewInt(),
         closeQueue       : gqueue.New(),
-        logPath          : gtype.NewString(),
-        accessLogEnabled : gtype.NewBool(),
-        errorLogEnabled  : gtype.NewBool(true),
         accessLogger     : glog.New(),
         errorLogger      : glog.New(),
+        // 可设置的属性，具体设置由ServerConfig管理
+        cookieMaxAge     : gtype.NewInt(),
+        sessionMaxAge    : gtype.NewInt(),
+        sessionIdName    : gtype.NewString(),
+        logPath          : gtype.NewString(),
+        accessLogEnabled : gtype.NewBool(),
+        errorLogEnabled  : gtype.NewBool(),
         logHandler       : gtype.NewInterface(),
+        nameToUriType    : gtype.NewInt(),
     }
     s.errorLogger.SetBacktraceSkip(4)
     s.accessLogger.SetBacktraceSkip(4)
@@ -194,7 +198,9 @@ func GetServer(name...interface{}) (*Server) {
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = true
     }
+    // 初始化时使用默认配置
     s.SetConfig(defaultServerConfig)
+    // 记录到全局ServerMap中
     serverMapping.Set(sname, s)
     return s
 }
