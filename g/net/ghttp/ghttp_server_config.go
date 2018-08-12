@@ -22,6 +22,7 @@ const (
     NAME_TO_URI_TYPE_DEFAULT  = 0      // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
     NAME_TO_URI_TYPE_FULLNAME = 1      // 不处理名称，以原有名称构建成URI
     NAME_TO_URI_TYPE_ALLLOWER = 2      // 仅转为小写，单词间不使用连接符号
+    NAME_TO_URI_TYPE_CAMEL    = 3      // 采用驼峰命名方式
 )
 
 // HTTP Server 设置结构体，静态配置
