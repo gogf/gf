@@ -1,6 +1,7 @@
 package demo
 
 import (
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/net/ghttp"
 )
 
@@ -8,8 +9,8 @@ type ObjectMethod struct {}
 
 func init() {
     obj := &ObjectMethod{}
-    ghttp.GetServer().BindObjectMethod("/object-method", obj, "Show1, Show2, Show3")
-    ghttp.GetServer().Domain("localhost").BindObjectMethod("/object-method", obj, "Show4")
+    g.Server().BindObjectMethod("/object-method", obj, "Show1, Show2, Show3")
+    g.Server().Domain("localhost").BindObjectMethod("/object-method", obj, "Show4")
 }
 
 func (o *ObjectMethod) Show1(r *ghttp.Request) {

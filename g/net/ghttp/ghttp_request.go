@@ -13,6 +13,8 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/os/gtime"
+    "github.com/fatih/structs"
+    "strings"
 )
 
 // 请求对象
@@ -93,6 +95,11 @@ func (r *Request) GetJson() *gjson.Json {
     return nil
 }
 
+// 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
+func (r *Request) GetToStruct(object interface{}, mapping...map[string]string) {
+    r.GetRequestToStruct(object, mapping...)
+}
+
 // 退出当前请求执行，原理是在Request.exit做标记，由服务逻辑流程做判断，自行停止
 func (r *Request) Exit() {
     r.exit.Set(true)
@@ -133,3 +140,16 @@ func (r *Request) GetClientIp() string {
     return ip
 }
 
+// 获得结构体顶替的参数名称标签，构成map返回
+func (r *Request) getStructParamsTagMap(object interface{}) map[string]string {
+    tagmap := make(map[string]string)
+    fields := structs.Fields(object)
+    for _, field := range fields {
+        if tag := field.Tag("params"); tag != "" {
+            for _, v := range strings.Split(tag, ",") {
+                tagmap[strings.TrimSpace(v)] = field.Name()
+            }
+        }
+    }
+    return tagmap
+}

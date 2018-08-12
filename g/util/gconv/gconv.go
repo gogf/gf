@@ -318,7 +318,7 @@ func MapToStruct(params map[string]interface{}, object interface{}, mapping...ma
     elem := reflect.ValueOf(object).Elem()
     dmap := make(map[string]bool)
     // 首先按照传递的映射关系进行匹配
-    if len(mapping) > 0 {
+    if len(mapping) > 0 && len(mapping[0]) > 0 {
         for mappingk, mappingv := range mapping[0] {
             if v, ok := params[mappingk]; ok {
                 dmap[mappingv] = true

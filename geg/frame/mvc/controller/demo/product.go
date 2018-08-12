@@ -3,7 +3,6 @@ package demo
 import (
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/util/gconv"
 )
 
 type Product struct {
@@ -18,7 +17,7 @@ func init() {
 
 func (p *Product) Total(r *ghttp.Request) {
     p.total++
-    r.Response.Write("total: ", gconv.String(p.total))
+    r.Response.Write("total: ", p.total)
 }
 
 func (p *Product) List(r *ghttp.Request) {
