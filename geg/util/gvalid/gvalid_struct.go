@@ -6,10 +6,10 @@ import (
 )
 
 type User struct {
-    Uid   int    `gvalid:"integer|min:1"`
-    Name  string `gvalid:"required|length:6,30#请输入用户名称|用户名称长度非法"`
-    Pass1 string `gvalid:"required|password3"`
-    Pass2 string `gvalid:"required|password3|same:Pass1#||两次密码不一致，请重新输入"`
+    Uid   int    `gvalid:"uid      @integer|min:1"`
+    Name  string `gvalid:"name     @required|length:6,30#请输入用户名称|用户名称长度非法"`
+    Pass1 string `gvalid:"password1@required|password3"`
+    Pass2 string `gvalid:"password2@required|password3|same:password1#||两次密码不一致，请重新输入"`
 }
 
 func main() {

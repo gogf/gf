@@ -436,13 +436,23 @@ func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]inte
     for _, field := range fields {
         params[field.Name()] = field.Value()
         if tag := field.Tag("gvalid"); tag != "" {
-            match, _ := gregex.MatchString(`([^#]+)#{0,1}(.*)`, tag)
+            match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
+            name := match[2]
+            rule := match[3]
+            msg  := match[5]
+            if len(name) == 0 {
+                name = field.Name()
+            }
+            // params参数使用别名**扩容**(而不仅仅使用别名)，仅用于验证使用
+            if _, ok := params[name]; !ok {
+                params[name] = field.Value()
+            }
             // 校验规则
-            if _, ok := rules[field.Name()]; !ok {
-                rules[field.Name()] = match[1]
+            if _, ok := rules[name]; !ok {
+                rules[name] = rule
             }
             // 错误提示
-            if match[2] != "" {
+            if len(msg) > 0 {
                 ruleArray := strings.Split(match[1], "|")
                 msgArray  := strings.Split(match[2], "|")
                 for k, v := range ruleArray {
@@ -457,6 +467,7 @@ func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]inte
                 }
             }
         }
+
     }
     return CheckMap(params, rules, errMsgs)
 }
