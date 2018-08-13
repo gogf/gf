@@ -487,11 +487,11 @@ func getQueriedSqls() {
 }
 
 func main() {
-    db.SetDebug(true)
-    r, err := db.Table("test").Where("id=1").One()
-    fmt.Println(r["datetime"])
-    fmt.Println(r["datetime"].Time().Date())
-    fmt.Println(err)
+    //db.SetDebug(true)
+    //r, err := db.Table("test").Where("id=1").One()
+    //fmt.Println(r["datetime"])
+    //fmt.Println(r["datetime"].Time().Date())
+    //fmt.Println(err)
     //create()
     //create()
     //insert()
@@ -516,6 +516,6 @@ func main() {
     //
     //keepPing()
     //likeQuery()
-    //mapToStruct()
-    getQueriedSqls()
+    mapToStruct()
+    //getQueriedSqls()
 }

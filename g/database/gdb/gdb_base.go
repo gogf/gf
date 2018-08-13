@@ -336,9 +336,14 @@ func (db *Db) insert(table string, data Map, option uint8) (sql.Result, error) {
     if option == OPTION_SAVE {
         var updates []string
         for k, _ := range data {
-            updates = append(updates, fmt.Sprintf("%s%s%s=VALUES(%s)", db.charl, k, db.charr, k))
+            updates = append(updates,
+                fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
+                    db.charl, k, db.charr,
+                    db.charl, k, db.charr,
+                ),
+            )
         }
-        updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
+        updatestr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
     return db.Exec(
         fmt.Sprintf("%s INTO %s%s%s(%s) VALUES(%s) %s",
@@ -389,7 +394,12 @@ func (db *Db) batchInsert(table string, list List, batch int, option uint8) (sql
     if option == OPTION_SAVE {
         var updates []string
         for _, k := range keys {
-            updates = append(updates, fmt.Sprintf("%s%s%s=VALUES(%s)", db.charl, k, db.charr, k))
+            updates = append(updates,
+                fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
+                    db.charl, k, db.charr,
+                    db.charl, k, db.charr,
+                ),
+            )
         }
         updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
@@ -479,7 +489,7 @@ func (db *Db) formatCondition(condition interface{}) (where string) {
             value := gconv.String(vs.MapIndex(k).Interface())
             isNum := gstr.IsNumeric(value)
             if len(where) > 0 {
-                where += " and "
+                where += " AND "
             }
             if isNum || value == "?" {
                 where += key + "=" + value

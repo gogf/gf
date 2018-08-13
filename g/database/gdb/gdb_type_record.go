@@ -36,7 +36,7 @@ func (r Record) ToMap() Map {
 func (r Record) ToStruct(obj interface{}) error {
     m := make(map[string]interface{})
     for k, v := range r {
-        m[k] = v
+        m[k] = v.String()
     }
     return gconv.MapToStruct(m, obj)
 }
