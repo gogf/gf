@@ -2,6 +2,7 @@ package main
 
 import (
     "gitee.com/johng/gf/g/database/gdb"
+    "gitee.com/johng/gf/g"
 )
 
 func main() {
@@ -27,6 +28,8 @@ func main() {
     }
     // 构造一条错误查询
     db.Table("user").Where("no_such_field=?", "just_test").One()
+
+    db.Table("user").Data(g.Map{"name":"smith"}).Where("uid=?", 1).Save()
 
     db.PrintQueriedSqls()
 }
