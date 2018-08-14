@@ -436,8 +436,6 @@ func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) 
 			break
 		}
 
-		callback(data, err)
-
 		if len(data) < limit {
 			break
 		}
