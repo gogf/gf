@@ -101,6 +101,12 @@ func IsDir(path string) bool {
     return s.IsDir()
 }
 
+// 获取当前工作目录
+func Pwd() string {
+    pwd, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+    return pwd
+}
+
 // 判断所给路径是否为文件
 func IsFile(path string) bool {
     s, err := os.Stat(path)
