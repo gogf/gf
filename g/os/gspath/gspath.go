@@ -34,6 +34,12 @@ func New () *SPath {
 // 设置搜索路径，只保留当前设置项，其他搜索路径被清空
 func (sp *SPath) Set(path string) error {
     r := gfile.RealPath(path)
+    if r == "" {
+        r = sp.Search(path)
+        if r == "" {
+            r = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
+        }
+    }
     if r != "" && gfile.IsDir(r) {
         sp.mu.Lock()
         sp.paths = []string{strings.TrimRight(r, gfile.Separator)}
@@ -47,6 +53,12 @@ func (sp *SPath) Set(path string) error {
 // 添加搜索路径
 func (sp *SPath) Add(path string) error {
     r := gfile.RealPath(path)
+    if r == "" {
+        r = sp.Search(path)
+        if r == "" {
+            r = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
+        }
+    }
     if r != "" && gfile.IsDir(r) {
         sp.mu.Lock()
         sp.paths = append(sp.paths, r)

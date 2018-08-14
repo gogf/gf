@@ -81,7 +81,7 @@ func (view *View) AddPath(path string) error {
 }
 
 // 解析模板，返回解析后的内容
-func (view *View) Parse(file string, params map[string]interface{}) ([]byte, error) {
+func (view *View) Parse(file string, params...map[string]interface{}) ([]byte, error) {
     path    := view.paths.Search(file)
     content := view.contents.Get(path)
     if content == "" {
@@ -94,6 +94,11 @@ func (view *View) Parse(file string, params map[string]interface{}) ([]byte, err
     if content == "" {
         return nil, errors.New("tpl \"" + file + "\" not found")
     }
+    // 模板参数
+    data := (map[string]interface{})(nil)
+    if len(params) > 0 {
+        data = params[0]
+    }
     // 执行模板解析，互斥锁主要是用于funcmap
     view.mu.RLock()
     defer view.mu.RUnlock()
@@ -101,7 +106,7 @@ func (view *View) Parse(file string, params map[string]interface{}) ([]byte, err
     if tpl, err := template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap).Parse(content); err != nil {
         return nil, err
     } else {
-        if err := tpl.Execute(buffer, params); err != nil {
+        if err := tpl.Execute(buffer, data); err != nil {
             return nil, err
         }
     }
