@@ -413,27 +413,35 @@ func (md *Model) getFormattedSql() string {
 // 组块结果集
 // @author ymrjqyy
 // @author 2018-08-13
-func (md *Model) Chunk(limit int, callback func(result Result, err error)) {
+func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) {
 	var step = 0
 	var start = md.start
 	for {
 		md.limit = limit
 		md.start = start + step*limit
-		// 查询当前组块的数据
+
 		sqls := md.getFormattedSql()
 		data, err := md.getAll(sqls, md.whereArgs...)
+
 		if err != nil {
 			callback(nil, err)
 			break
 		}
+
 		if len(data) == 0 {
 			break
 		}
-		// 回调
-		callback(data, nil)
+
+		if callback(data, err) == false {
+			break
+		}
+
+		callback(data, err)
+
 		if len(data) < limit {
 			break
 		}
+
 		step++
 	}
 }
