@@ -420,32 +420,26 @@ func (md *Model) getFormattedSql() string {
 
 // 组块结果集
 // @author ymrjqyy
-// @author 2018-08-13
+// @author 2018-08-15
 func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) {
 	var page = 1
 	for {
 		md.ForPage(page, limit)
-
 		sqls := md.getFormattedSql()
 		data, err := md.getAll(sqls, md.whereArgs...)
-
 		if err != nil {
 			callback(nil, err)
 			break
 		}
-
 		if len(data) == 0 {
 			break
 		}
-
 		if callback(data, err) == false {
 			break
 		}
-
 		if len(data) < limit {
 			break
 		}
-
 		page++
 	}
 }
