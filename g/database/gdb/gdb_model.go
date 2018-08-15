@@ -421,7 +421,7 @@ func (md *Model) getFormattedSql() string {
 // 组块结果集
 // @author ymrjqyy
 // @author 2018-08-13
-func (md *Model) Chunks(limit int, callback func(result Result, err error) bool) {
+func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) {
 	var page = 1
 	for {
 		md.ForPage(page, limit)
