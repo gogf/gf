@@ -2,12 +2,10 @@ package main
 
 import (
     "fmt"
-    "path/filepath"
-    "os"
 )
 
-
-
 func main() {
-    fmt.Println(filepath.Abs(filepath.Dir(os.Args[0])))
+    methodMap := make(map[string]bool)
+    methodMap["t"] = true
+    fmt.Println(methodMap["t"])
 }

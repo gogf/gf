@@ -9,8 +9,9 @@ type ObjectMethod struct {}
 
 func init() {
     obj := &ObjectMethod{}
-    g.Server().BindObjectMethod("/object-method", obj, "Show1, Show2, Show3")
-    g.Server().Domain("localhost").BindObjectMethod("/object-method", obj, "Show4")
+    g.Server().BindObject("/object-method", obj, "Show1, Show2, Show3")
+    g.Server().BindObjectMethod("/object-method-show1", obj, "Show1")
+    g.Server().Domain("localhost").BindObject("/object-method", obj, "Show4")
 }
 
 func (o *ObjectMethod) Show1(r *ghttp.Request) {

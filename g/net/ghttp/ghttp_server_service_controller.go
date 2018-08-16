@@ -15,9 +15,14 @@ import (
 
 // 绑定控制器，控制器需要实现gmvc.Controller接口
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
+// 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写
 func (s *Server)BindController(pattern string, c Controller, methods...string) error {
+    methodMap := (map[string]bool)(nil)
     if len(methods) > 0 {
-        return s.BindControllerMethod(pattern, c, strings.Join(methods, ","))
+        methodMap = make(map[string]bool)
+        for _, v := range strings.Split(methods[0], ",") {
+            methodMap[strings.TrimSpace(v)] = true
+        }
     }
     // 遍历控制器，获取方法列表，并构造成uri
     m     := make(handlerMap)
@@ -26,10 +31,13 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
     sname := t.Elem().Name()
     for i := 0; i < v.NumMethod(); i++ {
         mname := t.Method(i).Name
+        if methodMap != nil && !methodMap[mname] {
+            continue
+        }
         if mname == "Init" || mname == "Shut" || mname == "Exit"  {
             continue
         }
-        key   := s.mergeBuildInNameToPattern(pattern, sname, mname)
+        key   := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
         m[key] = &handlerItem {
             ctype : v.Elem().Type(),
             fname : mname,
@@ -54,41 +62,39 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
     return s.bindHandlerByMap(m)
 }
 
-// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
-// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，不区分大小写
-func (s *Server)BindControllerMethod(pattern string, c Controller, methods string) error {
+// 绑定路由到指定的方法执行
+func (s *Server)BindControllerMethod(pattern string, c Controller, method string) error {
     m     := make(handlerMap)
     v     := reflect.ValueOf(c)
     e     := v.Type().Elem()
     t     := v.Elem().Type()
     sname := e.Name()
-    for _, method := range strings.Split(methods, ",") {
-        mname := strings.TrimSpace(method)
-        if !v.MethodByName(mname).IsValid() {
-            return errors.New("invalid method name:" + mname)
+    mname := strings.TrimSpace(method)
+    if !v.MethodByName(mname).IsValid() {
+        return errors.New("invalid method name:" + mname)
+    }
+    key    := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
+    m[key]  = &handlerItem {
+        ctype : t,
+        fname : mname,
+        faddr : nil,
+    }
+    // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
+    if strings.EqualFold(mname, "Index") {
+        p := key
+        if strings.EqualFold(p[len(p) - 6:], "/index") {
+            p = p[0 : len(p) - 6]
+            if len(p) == 0 {
+                p = "/"
+            }
         }
-        key    := s.mergeBuildInNameToPattern(pattern, sname, mname)
-        m[key]  = &handlerItem {
+        m[p] = &handlerItem {
             ctype : t,
             fname : mname,
             faddr : nil,
         }
-        // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
-        if strings.EqualFold(mname, "Index") {
-            p := key
-            if strings.EqualFold(p[len(p) - 6:], "/index") {
-                p = p[0 : len(p) - 6]
-                if len(p) == 0 {
-                    p = "/"
-                }
-            }
-            m[p] = &handlerItem {
-                ctype : t,
-                fname : mname,
-                faddr : nil,
-            }
-        }
     }
+
     return s.bindHandlerByMap(m)
 }
 
