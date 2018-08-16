@@ -48,7 +48,7 @@ func GetCookie(r *Request) *Cookie {
         response : r.Response,
     }
     c.init()
-    c.server.cookies.Set(r.Id, c)
+    r.Server.cookies.Set(r.Id, c)
     return c
 }
 

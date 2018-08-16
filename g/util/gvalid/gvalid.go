@@ -472,9 +472,10 @@ func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]inte
     return CheckMap(params, rules, errMsgs)
 }
 
-// 检测单条数据的规则，其中params参数为非必须参数，可以传递所有的校验参数进来，进行多参数对比(部分校验规则需要)
-// msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持string/map[string]string，允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误
-// values参数为表单联合校验参数，对于需要联合校验的规则有效，如：required-*、same、different
+// 检测单条数据的规则.
+// val为校验数据，可以为任意格式；
+// msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持string/map[string]string，允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误；
+// params参数为表单联合校验参数，对于需要联合校验的规则有效，如：required-*、same、different；
 func Check(val interface{}, rules string, msgs interface{}, params...map[string]interface{}) map[string]string {
     // 内部会将参数全部转换为字符串类型进行校验
     value  := strings.TrimSpace(gconv.String(val))

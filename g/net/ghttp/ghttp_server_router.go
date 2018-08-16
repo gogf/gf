@@ -12,6 +12,7 @@ import (
     "strings"
     "container/list"
     "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/util/gstr"
 )
 
 
@@ -98,7 +99,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
             continue
         }
         // 判断是否模糊匹配规则
-        if gregex.IsMatchString(`^[:\*]|{[\w\.\-]+}`, v) {
+        if gregex.IsMatchString(`^[:\*]|\{[\w\.\-]+\}|\*`, v) {
             v = "*fuzz"
             // 由于是模糊规则，因此这里会有一个*list，用以将后续的路由规则加进来，
             // 检索会从叶子节点的链表往根节点按照优先级进行检索
@@ -201,7 +202,13 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
                 regrule += `/{0,1}(.*)`
                 names    = append(names, v[1:])
             default:
-                s, _ := gregex.ReplaceStringFunc(`{[\w\.\-]+}`, v, func(s string) string {
+                // 特殊字符替换
+                v = gstr.ReplaceByMap(v, map[string]string{
+                    `.` : `\.`,
+                    `+` : `\+`,
+                    `*` : `.*`,
+                })
+                s, _ := gregex.ReplaceStringFunc(`\{[\w\.\-]+\}`, v, func(s string) string {
                     names = append(names, s[1 : len(s) - 1])
                     return `([\w\.\-]+)`
                 })
