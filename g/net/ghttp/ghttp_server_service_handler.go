@@ -47,12 +47,16 @@ func (s *Server) bindHandlerByMap(m handlerMap) error {
 // 规则1：pattern中的URI包含{.struct}关键字，则替换该关键字为结构体名称；
 // 规则1：pattern中的URI包含{.method}关键字，则替换该关键字为方法名称；
 // 规则2：如果不满足规则1，那么直接将防发明附加到pattern中的URI后面；
-func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string) string {
+func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string, allowAppend bool) string {
     structName = s.nameToUrlPart(structName)
     methodName = s.nameToUrlPart(methodName)
     pattern    = strings.Replace(pattern, "{.struct}", structName, -1)
     if strings.Index(pattern, "{.method}") != -1 {
         return strings.Replace(pattern, "{.method}", methodName, -1)
+    }
+    // 不允许将方法名称append到路由末尾
+    if !allowAppend {
+        return pattern
     }
     // 检测域名后缀
     array := strings.Split(pattern, "@")

@@ -14,25 +14,32 @@ import (
 )
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
-// 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
+// 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写
 func (s *Server)BindObject(pattern string, obj interface{}, methods...string) error {
+    methodMap := (map[string]bool)(nil)
     if len(methods) > 0 {
-        return s.BindObjectMethod(pattern, obj, strings.Join(methods, ","))
+        methodMap = make(map[string]bool)
+        for _, v := range strings.Split(methods[0], ",") {
+            methodMap[strings.TrimSpace(v)] = true
+        }
     }
     m := make(handlerMap)
     v := reflect.ValueOf(obj)
     t := v.Type()
     sname := t.Elem().Name()
     for i := 0; i < v.NumMethod(); i++ {
-        method := t.Method(i).Name
-        key    := s.mergeBuildInNameToPattern(pattern, sname, method)
+        mname := t.Method(i).Name
+        if methodMap != nil && !methodMap[mname] {
+            continue
+        }
+        key    := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
         m[key]  = &handlerItem {
             ctype : nil,
             fname : "",
             faddr : v.Method(i).Interface().(func(*Request)),
         }
         // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
-        if strings.EqualFold(method, "Index") {
+        if strings.EqualFold(mname, "Index") {
             p := key
             if strings.EqualFold(p[len(p) - 6:], "/index") {
                 p = p[0 : len(p) - 6]
@@ -52,39 +59,38 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
 // 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，区分大小写
-func (s *Server)BindObjectMethod(pattern string, obj interface{}, methods string) error {
+func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string) error {
     m     := make(handlerMap)
     v     := reflect.ValueOf(obj)
     t     := v.Type()
     sname := t.Elem().Name()
-    for _, method := range strings.Split(methods, ",") {
-        mname  := strings.TrimSpace(method)
-        fval   := v.MethodByName(mname)
-        if !fval.IsValid() {
-            return errors.New("invalid method name:" + mname)
+    mname := strings.TrimSpace(method)
+    fval  := v.MethodByName(mname)
+    if !fval.IsValid() {
+        return errors.New("invalid method name:" + mname)
+    }
+    key   := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
+    m[key] = &handlerItem{
+        ctype : nil,
+        fname : "",
+        faddr : fval.Interface().(func(*Request)),
+    }
+    // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
+    if strings.EqualFold(mname, "Index") {
+        p := key
+        if strings.EqualFold(p[len(p) - 6:], "/index") {
+            p = p[0 : len(p) - 6]
+            if len(p) == 0 {
+                p = "/"
+            }
         }
-        key   := s.mergeBuildInNameToPattern(pattern, sname, mname)
-        m[key] = &handlerItem{
+        m[p] = &handlerItem {
             ctype : nil,
             fname : "",
             faddr : fval.Interface().(func(*Request)),
         }
-        // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
-        if strings.EqualFold(mname, "Index") {
-            p := key
-            if strings.EqualFold(p[len(p) - 6:], "/index") {
-                p = p[0 : len(p) - 6]
-                if len(p) == 0 {
-                    p = "/"
-                }
-            }
-            m[p] = &handlerItem {
-                ctype : nil,
-                fname : "",
-                faddr : fval.Interface().(func(*Request)),
-            }
-        }
     }
+
     return s.bindHandlerByMap(m)
 }
 
