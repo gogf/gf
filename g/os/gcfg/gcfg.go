@@ -17,7 +17,7 @@ import (
 )
 
 const (
-    gDEFAULT_CONFIG_FILE = "config.yml" // 默认的配置管理文件名称
+    gDEFAULT_CONFIG_FILE = "config.toml" // 默认的配置管理文件名称
 )
 
 // 配置管理对象
