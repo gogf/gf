@@ -42,6 +42,7 @@ func GetSession(r *Request) *Session {
         data   : gmap.NewStringInterfaceMap(),
         server : s,
     }
+    s.sessions.Set(sid, ses, s.GetSessionMaxAge())
     return ses
 }
 

@@ -22,16 +22,22 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/os/gspath"
-    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/genv"
     "github.com/gorilla/websocket"
     "gitee.com/johng/gf/g/os/gtime"
     "time"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 const (
     SERVER_STATUS_STOPPED      = 0               // Server状态：停止
     SERVER_STATUS_RUNNING      = 1               // Server状态：运行
+    HOOK_BEFORE_SERVE          = "BeforeServe"
+    HOOK_AFTER_SERVE           = "AfterServe"
+    HOOK_BEFORE_OUTPUT         = "BeforeOutput"
+    HOOK_AFTER_OUTPUT          = "AfterOutput"
+    HOOK_BEFORE_CLOSE          = "BeforeClose"
+    HOOK_AFTER_CLOSE           = "AfterClose"
 )
 const (
     gHTTP_METHODS              = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
@@ -208,7 +214,13 @@ func GetServer(name...interface{}) (*Server) {
 // 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行)
 // 需要结合Wait方式一起使用
 func (s *Server) Start() error {
+    // 服务进程初始化，只会初始化一次
     serverProcInit()
+
+    // 当前Web Server状态判断
+    if s.Status() == SERVER_STATUS_RUNNING {
+        return errors.New("server is already running")
+    }
 
     // 如果设置了静态文件目录，那么严格按照静态文件目录进行检索
     // 否则，默认使用当前可执行文件目录，并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索
@@ -221,12 +233,18 @@ func (s *Server) Start() error {
         }
     }
 
-    if s.Status() == SERVER_STATUS_RUNNING {
-        return errors.New("server is already running")
-    }
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
+    }
+    // 不允许访问的路由注册
+    if s.config.DenyRoutes != nil {
+        for _, v := range s.config.DenyRoutes {
+            s.BindHookHandler(v, HOOK_BEFORE_SERVE, func(r *Request) {
+                r.Response.WriteStatus(403)
+                r.Exit()
+            })
+        }
     }
 
     // 启动http server

@@ -70,7 +70,7 @@ func (p *Pool) Get() (interface{}, error) {
     for !p.closed.Val() {
         if r := p.list.PopFront(); r != nil {
             f := r.(*poolItem)
-            if f.expire > gtime.Millisecond() {
+            if f.expire == 0 || f.expire > gtime.Millisecond() {
                 return f.value, nil
             }
         } else {
@@ -99,7 +99,7 @@ func (p *Pool) expireCheckingLoop() {
         for {
             if r := p.list.PopFront(); r != nil {
                 item := r.(*poolItem)
-                if item.expire > gtime.Millisecond() {
+                if item.expire == 0 || item.expire > gtime.Millisecond() {
                     p.list.PushFront(item)
                     break
                 }
