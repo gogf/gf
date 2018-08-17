@@ -196,11 +196,19 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
         }
         switch v[0] {
             case ':':
-                regrule += `/([\w\.\-]+)`
-                names    = append(names, v[1:])
+                if len(v) > 1 {
+                    regrule += `/([\w\.\-]+)`
+                    names    = append(names, v[1:])
+                    break
+                }
+                fallthrough
             case '*':
-                regrule += `/{0,1}(.*)`
-                names    = append(names, v[1:])
+                if len(v) > 1 {
+                    regrule += `/{0,1}(.*)`
+                    names    = append(names, v[1:])
+                    break
+                }
+                fallthrough
             default:
                 // 特殊字符替换
                 v = gstr.ReplaceByMap(v, map[string]string{
