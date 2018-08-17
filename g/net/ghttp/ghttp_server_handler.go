@@ -79,7 +79,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     }
 
     // 执行回调控制器/执行对象/方法
-    if handler != nil {
+    if handler != nil && !request.exit.Val() {
         s.callServeHandler(handler, request)
     }
 
@@ -107,12 +107,10 @@ func (s *Server)callServeHandler(h *handlerItem, r *Request) {
         c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
         if !r.IsExited() {
             c.MethodByName(h.fname).Call(nil)
+            c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
         }
-        c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
     } else {
-        if !r.IsExited() {
-            h.faddr(r)
-        }
+        h.faddr(r)
     }
 }
 

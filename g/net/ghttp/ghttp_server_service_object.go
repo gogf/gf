@@ -27,9 +27,20 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
     v := reflect.ValueOf(obj)
     t := v.Type()
     sname := t.Elem().Name()
+    finit := (func(*Request))(nil)
+    fshut := (func(*Request))(nil)
+    if v.MethodByName("Init").IsValid() {
+        finit = v.MethodByName("Init").Interface().(func(*Request))
+    }
+    if v.MethodByName("Shut").IsValid() {
+        fshut = v.MethodByName("Shut").Interface().(func(*Request))
+    }
     for i := 0; i < v.NumMethod(); i++ {
         mname := t.Method(i).Name
         if methodMap != nil && !methodMap[mname] {
+            continue
+        }
+        if mname == "Init" || mname == "Shut" {
             continue
         }
         key    := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
@@ -37,6 +48,8 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
             ctype : nil,
             fname : "",
             faddr : v.Method(i).Interface().(func(*Request)),
+            finit : finit,
+            fshut : fshut,
         }
         // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
         if strings.EqualFold(mname, "Index") {
@@ -51,6 +64,8 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
                 ctype : nil,
                 fname : "",
                 faddr : v.Method(i).Interface().(func(*Request)),
+                finit : finit,
+                fshut : fshut,
             }
         }
     }
@@ -69,26 +84,21 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
     if !fval.IsValid() {
         return errors.New("invalid method name:" + mname)
     }
+    finit := (func(*Request))(nil)
+    fshut := (func(*Request))(nil)
+    if v.MethodByName("Init").IsValid() {
+        finit = v.MethodByName("Init").Interface().(func(*Request))
+    }
+    if v.MethodByName("Shut").IsValid() {
+        fshut = v.MethodByName("Shut").Interface().(func(*Request))
+    }
     key   := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
     m[key] = &handlerItem{
         ctype : nil,
         fname : "",
         faddr : fval.Interface().(func(*Request)),
-    }
-    // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
-    if strings.EqualFold(mname, "Index") {
-        p := key
-        if strings.EqualFold(p[len(p) - 6:], "/index") {
-            p = p[0 : len(p) - 6]
-            if len(p) == 0 {
-                p = "/"
-            }
-        }
-        m[p] = &handlerItem {
-            ctype : nil,
-            fname : "",
-            faddr : fval.Interface().(func(*Request)),
-        }
+        finit : finit,
+        fshut : fshut,
     }
 
     return s.bindHandlerByMap(m)
@@ -97,9 +107,17 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
 // 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
 func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
-    m := make(handlerMap)
-    v := reflect.ValueOf(obj)
-    t := v.Type()
+    m     := make(handlerMap)
+    v     := reflect.ValueOf(obj)
+    t     := v.Type()
+    finit := (func(*Request))(nil)
+    fshut := (func(*Request))(nil)
+    if v.MethodByName("Init").IsValid() {
+        finit = v.MethodByName("Init").Interface().(func(*Request))
+    }
+    if v.MethodByName("Shut").IsValid() {
+        fshut = v.MethodByName("Shut").Interface().(func(*Request))
+    }
     for i := 0; i < v.NumMethod(); i++ {
         name   := t.Method(i).Name
         method := strings.ToUpper(name)
@@ -111,6 +129,8 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
             ctype : nil,
             fname : "",
             faddr : v.Method(i).Interface().(func(*Request)),
+            finit : finit,
+            fshut : fshut,
         }
     }
     return s.bindHandlerByMap(m)

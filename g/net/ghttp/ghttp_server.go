@@ -106,6 +106,8 @@ type handlerItem struct {
     ctype    reflect.Type // 控制器类型(反射类型)
     fname    string       // 回调方法名称
     faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
+    finit    HandlerFunc  // 初始化请求回调方法(执行对象注册方式下有效)
+    fshut    HandlerFunc  // 完成请求回调方法(执行对象注册方式下有效)
     router   *Router      // 注册时绑定的路由对象
 }
 
