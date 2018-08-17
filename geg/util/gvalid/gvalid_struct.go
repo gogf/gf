@@ -21,7 +21,7 @@ func main() {
 
     // 使用结构体定义的校验规则和错误提示进行校验
     gutil.Dump(gvalid.CheckStruct(user, nil))
-return
+
     // 自定义校验规则和错误提示，对定义的特定校验规则和错误提示进行覆盖
     rules := map[string]string {
         "Uid" : "required",
