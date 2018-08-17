@@ -79,22 +79,6 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
         fname : mname,
         faddr : nil,
     }
-    // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
-    if strings.EqualFold(mname, "Index") {
-        p := key
-        if strings.EqualFold(p[len(p) - 6:], "/index") {
-            p = p[0 : len(p) - 6]
-            if len(p) == 0 {
-                p = "/"
-            }
-        }
-        m[p] = &handlerItem {
-            ctype : t,
-            fname : mname,
-            faddr : nil,
-        }
-    }
-
     return s.bindHandlerByMap(m)
 }
 
