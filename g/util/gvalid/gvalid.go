@@ -453,17 +453,17 @@ func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]inte
             }
             // 错误提示
             if len(msg) > 0 {
-                ruleArray := strings.Split(match[1], "|")
-                msgArray  := strings.Split(match[2], "|")
+                ruleArray := strings.Split(rule, "|")
+                msgArray  := strings.Split(msg, "|")
                 for k, v := range ruleArray {
                     if len(msgArray[k]) == 0 {
                         continue
                     }
                     array := strings.Split(v, ":")
-                    if _, ok := errMsgs[field.Name()]; !ok {
-                        errMsgs[field.Name()] = make(map[string]string)
+                    if _, ok := errMsgs[name]; !ok {
+                        errMsgs[name] = make(map[string]string)
                     }
-                    errMsgs[field.Name()].(map[string]string)[array[0]] = msgArray[k]
+                    errMsgs[name].(map[string]string)[array[0]] = msgArray[k]
                 }
             }
         }
