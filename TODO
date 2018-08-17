@@ -17,6 +17,8 @@ gfsnotify增加对于目录的监控；
 orm增加sqlite对Save方法的支持(去掉触发器语句);
 ghttp.Server的Cookie及Session锁机制优化(去掉map锁机制);
 ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
+ghttp路由功能增加分组路由特性；
+
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；

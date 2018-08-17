@@ -95,6 +95,34 @@ func (r *Request) GetJson() *gjson.Json {
     return nil
 }
 
+func (r *Request) GetString(k string) string {
+    return r.GetRequestString(k)
+}
+
+func (r *Request) GetInt(k string) int {
+    return r.GetRequestInt(k)
+}
+
+func (r *Request) GetUint(k string) uint {
+    return r.GetRequestUint(k)
+}
+
+func (r *Request) GetFloat32(k string) float32 {
+    return r.GetRequestFloat32(k)
+}
+
+func (r *Request) GetFloat64(k string) float64 {
+    return r.GetRequestFloat64(k)
+}
+
+func (r *Request) GetArray(k string) []string {
+    return r.GetRequestArray(k)
+}
+
+func (r *Request) GetMap(defaultMap...map[string]string) map[string]string {
+    return r.GetRequestMap(defaultMap...)
+}
+
 // 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetToStruct(object interface{}, mapping...map[string]string) {
     r.GetRequestToStruct(object, mapping...)
