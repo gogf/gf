@@ -183,6 +183,11 @@ func (r *Response) WriteStatus(status int, content...string) {
     r.WriteHeader(status)
 }
 
+// 静态文件处理
+func (r *Response) ServeFile(path string) {
+    r.Server.serveFile(r.request, path)
+}
+
 // 返回location标识，引导客户端跳转
 func (r *Response) RedirectTo(location string) {
     r.Header().Set("Location", location)
