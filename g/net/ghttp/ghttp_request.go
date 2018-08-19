@@ -74,8 +74,8 @@ func (r *Request) WebSocket() (*WebSocket, error) {
 
 // 获得指定名称的参数字符串(Router/GET/POST)，同 GetRequestString
 // 这是常用方法的简化别名
-func (r *Request) Get(k string) string {
-    return r.GetRequestString(k)
+func (r *Request) Get(key string, def ... string) string {
+    return r.GetRequestString(key, def...)
 }
 
 // 获取原始请求输入字符串，注意：只能获取一次，读完就没了
@@ -95,32 +95,32 @@ func (r *Request) GetJson() *gjson.Json {
     return nil
 }
 
-func (r *Request) GetString(k string) string {
-    return r.GetRequestString(k)
+func (r *Request) GetString(key string, def ... string) string {
+    return r.GetRequestString(key, def...)
 }
 
-func (r *Request) GetInt(k string) int {
-    return r.GetRequestInt(k)
+func (r *Request) GetInt(key string, def ... int) int {
+    return r.GetRequestInt(key, def...)
 }
 
-func (r *Request) GetUint(k string) uint {
-    return r.GetRequestUint(k)
+func (r *Request) GetUint(key string, def ... uint) uint {
+    return r.GetRequestUint(key, def...)
 }
 
-func (r *Request) GetFloat32(k string) float32 {
-    return r.GetRequestFloat32(k)
+func (r *Request) GetFloat32(key string, def ... float32) float32 {
+    return r.GetRequestFloat32(key, def...)
 }
 
-func (r *Request) GetFloat64(k string) float64 {
-    return r.GetRequestFloat64(k)
+func (r *Request) GetFloat64(key string, def ... float64) float64 {
+    return r.GetRequestFloat64(key, def...)
 }
 
-func (r *Request) GetArray(k string) []string {
-    return r.GetRequestArray(k)
+func (r *Request) GetArray(key string, def ... []string) []string {
+    return r.GetRequestArray(key, def...)
 }
 
-func (r *Request) GetMap(defaultMap...map[string]string) map[string]string {
-    return r.GetRequestMap(defaultMap...)
+func (r *Request) GetMap(def...map[string]string) map[string]string {
+    return r.GetRequestMap(def...)
 }
 
 // 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
