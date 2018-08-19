@@ -44,26 +44,10 @@ const (
 )
 
 // 全局监听对象，方便应用端调用
-var watcher, _ = New()
-
-// 添加对指定文件/目录的监听，并给定回调函数
-func Add(path string, callback func(event *Event)) error {
-    if watcher == nil {
-        return errors.New("global watcher creating failed")
-    }
-    return watcher.Add(path, callback)
-}
-
-// 移除监听
-func Remove(path string) error {
-    if watcher == nil {
-        return errors.New("global watcher creating failed")
-    }
-    return watcher.Remove(path)
-}
+var watcher, _ = newWatcher()
 
 // 创建监听管理对象
-func New() (*Watcher, error) {
+func newWatcher() (*Watcher, error) {
     if watch, err := fsnotify.NewWatcher(); err == nil {
         w := &Watcher {
             watcher    : watch,
@@ -77,6 +61,22 @@ func New() (*Watcher, error) {
     } else {
         return nil, err
     }
+}
+
+// 添加对指定文件/目录的监听，并给定回调函数；如果给定的是一个目录，默认递归监控。
+func Add(path string, callback func(event *Event)) error {
+    if watcher == nil {
+        return errors.New("global watcher creating failed")
+    }
+    return watcher.AddRecursive(path, callback)
+}
+
+// 移除监听，默认递归删除。
+func Remove(path string) error {
+    if watcher == nil {
+        return errors.New("global watcher creating failed")
+    }
+    return watcher.RemoveRecursive(path)
 }
 
 // 关闭监听管理对象
@@ -110,10 +110,43 @@ func (w *Watcher) Add(path string, callback func(event *Event)) error {
     return nil
 }
 
+// 递归添加监控
+func (w *Watcher) AddRecursive(path string, callback func(event *Event)) error {
+    if gfile.IsDir(path) {
+        list := []string{path}
+        list  = append(list, gfile.ScanDir(path, true)...)
+        for _, v := range list {
+            if err := w.Add(v, callback); err != nil {
+                return err
+            }
+        }
+        return nil
+    } else {
+        return w.Add(path, callback)
+    }
+}
+
+
 // 移除监听
 func (w *Watcher) Remove(path string) error {
     w.callbacks.Remove(path)
     return w.watcher.Remove(path)
+}
+
+// 递归移除监听
+func (w *Watcher) RemoveRecursive(path string) error {
+    if gfile.IsDir(path) {
+        list := []string{path}
+        list  = append(list, gfile.ScanDir(path, true)...)
+        for _, v := range list {
+            if err := w.Remove(v); err != nil {
+                return err
+            }
+        }
+        return nil
+    } else {
+        return w.Remove(path)
+    }
 }
 
 // 监听循环
@@ -139,23 +172,48 @@ func (w *Watcher) startWatchLoop() {
     }()
 }
 
+// 检索给定path的回调方法**列表**
+func (w *Watcher) getCallbacks(path string) *glist.List {
+    for path != "/" {
+        if l := w.callbacks.Get(path); l != nil {
+            return l.(*glist.List)
+        } else {
+            path = gfile.Dir(path)
+        }
+    }
+    return nil
+}
+
 // 事件循环
 func (w *Watcher) startEventLoop() {
     go func() {
         for {
             if v := w.events.PopFront(); v != nil {
                 event := v.(*Event)
-                // 如果是文件删除事件，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，并重新添加监控
-                if event.IsRemove() && gfile.Exists(event.Path){
-                    w.watcher.Add(event.Path)
-                    continue
+                if event.IsRemove() {
+                    if gfile.Exists(event.Path) {
+                        // 如果是文件删除事件，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，
+                        // 并重新添加监控(底层fsnotify会自动删除掉监控，这里重新添加回去)
+                        w.watcher.Add(event.Path)
+                        continue
+                    } else {
+                        // 如果是真实删除，那么递归删除监控信息
+                        w.RemoveRecursive(event.Path)
+                    }
                 }
-                if l := w.callbacks.Get(event.Path); l != nil {
-                    go func(list interface{}) {
-                        for _, v := range list.(*glist.List).FrontAll() {
-                            v.(func(event *Event))(event)
+                callbacks := w.getCallbacks(event.Path)
+                // 如果创建了新的目录，那么将这个目录递归添加到监控中
+                if event.IsCreate() && gfile.IsDir(event.Path) {
+                    for _, callback := range callbacks.FrontAll() {
+                        w.AddRecursive(event.Path, callback.(func(event *Event)))
+                    }
+                }
+                if callbacks != nil {
+                    go func(callbacks *glist.List) {
+                        for _, callback := range callbacks.FrontAll() {
+                            callback.(func(event *Event))(event)
                         }
-                    }(l)
+                    }(callbacks)
                 }
             } else {
                 break

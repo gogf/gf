@@ -41,11 +41,7 @@ func (s *Server) Domain(domains string) *Domain {
 // 注意该方法是直接绑定方法的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (d *Domain) BindHandler(pattern string, handler HandlerFunc) error {
     for domain, _ := range d.m {
-        if err := d.s.bindHandlerItem(pattern + "@" + domain, &handlerItem{
-                ctype : nil,
-                fname : "",
-                faddr : handler,
-            }); err != nil {
+        if err := d.s.BindHandler(pattern + "@" + domain, handler); err != nil {
             return err
         }
     }
@@ -66,9 +62,9 @@ func (d *Domain) BindObject(pattern string, obj interface{}, methods...string) e
 }
 
 // 执行对象方法注册，methods参数不区分大小写
-func (d *Domain) BindObjectMethod(pattern string, obj interface{}, methods string) error {
+func (d *Domain) BindObjectMethod(pattern string, obj interface{}, method string) error {
     for domain, _ := range d.m {
-        if err := d.s.BindObjectMethod(pattern + "@" + domain, obj, methods); err != nil {
+        if err := d.s.BindObjectMethod(pattern + "@" + domain, obj, method); err != nil {
             return err
         }
     }
@@ -98,20 +94,20 @@ func (d *Domain) BindController(pattern string, c Controller, methods...string) 
     return nil
 }
 
-// RESTful控制器注册
-func (d *Domain) BindControllerRest(pattern string, c Controller) error {
+// 控制器方法注册，methods参数区分大小写
+func (d *Domain) BindControllerMethod(pattern string, c Controller, method string) error {
     for domain, _ := range d.m {
-        if err := d.s.BindControllerRest(pattern + "@" + domain, c); err != nil {
+        if err := d.s.BindControllerMethod(pattern + "@" + domain, c, method); err != nil {
             return err
         }
     }
     return nil
 }
 
-// 控制器方法注册，methods参数区分大小写
-func (d *Domain) BindControllerMethod(pattern string, c Controller, methods string) error {
+// RESTful控制器注册
+func (d *Domain) BindControllerRest(pattern string, c Controller) error {
     for domain, _ := range d.m {
-        if err := d.s.BindControllerMethod(pattern + "@" + domain, c, methods); err != nil {
+        if err := d.s.BindControllerRest(pattern + "@" + domain, c); err != nil {
             return err
         }
     }

@@ -43,9 +43,9 @@ func (l *Logger) SetBacktraceSkip(skip int) {
 
 // 可自定义IO接口
 func (l *Logger) SetIO(w io.Writer) {
-    l.mu.RLock()
+    l.mu.Lock()
     l.io = w
-    l.mu.RUnlock()
+    l.mu.Unlock()
 }
 
 // 返回自定义IO

@@ -110,7 +110,16 @@ func (s *Server)callServeHandler(h *handlerItem, r *Request) {
             c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
         }
     } else {
-        h.faddr(r)
+        // 是否有初始化及完成回调方法
+        if h.finit != nil {
+            h.finit(r)
+        }
+        if !r.IsExited() {
+            h.faddr(r)
+            if h.fshut != nil {
+                h.fshut(r)
+            }
+        }
     }
 }
 

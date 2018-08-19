@@ -13,7 +13,7 @@ func main() {
     }
     defer watch.Close()
     //添加要监控的对象，文件或文件夹
-    err = watch.Add("/home/john/Documents/temp")
+    err = watch.Add("/home/john/temp")
     if err != nil {
         log.Fatal(err)
     }

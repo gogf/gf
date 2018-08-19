@@ -159,10 +159,7 @@ func (view *View) funcInclude(file string, data...map[string]interface{}) templa
 func (view *View) addMonitor(path string) {
     if view.contents.Get(path) == "" {
         gfsnotify.Add(path, func(event *gfsnotify.Event) {
-            if event.IsRemove() {
-                gfsnotify.Remove(event.Path)
-                return
-            }
+            // 删除文件内容缓存，下一次查询会自动更新
             view.contents.Remove(event.Path)
         })
     }

@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-    err := gfsnotify.Add("./temp.txt", func(event *gfsnotify.Event) {
+    err := gfsnotify.Add("/home/john/temp", func(event *gfsnotify.Event) {
         if event.IsCreate() {
             log.Println("创建文件 : ", event.Path)
         }

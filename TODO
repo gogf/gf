@@ -18,6 +18,7 @@ orm增加sqlite对Save方法的支持(去掉触发器语句);
 ghttp.Server的Cookie及Session锁机制优化(去掉map锁机制);
 ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
 ghttp路由功能增加分组路由特性；
+解决glog串日志情况；
 
 
 DONE:

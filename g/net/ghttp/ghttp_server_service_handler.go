@@ -16,7 +16,8 @@ import (
 
 // 注意该方法是直接绑定函数的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (s *Server) BindHandler(pattern string, handler HandlerFunc) error {
-    return s.bindHandlerItem(pattern, &handlerItem{
+    return s.bindHandlerItem(pattern, &handlerItem {
+        rtype : gROUTE_REGISTER_HANDLER,
         ctype : nil,
         fname : "",
         faddr : handler,

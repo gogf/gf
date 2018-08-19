@@ -50,6 +50,9 @@ const (
     gDEFAULT_SESSION_ID_NAME   = "gfsessionid"   // 默认存放Cookie中的SessionId名称
     gSERVE_CACHE_LRU_SIZE      = 100000          // 服务回调函数缓存LRU大小
     gHOOKS_CACHE_LRU_SIZE      = 100000          // 事件回调函数缓存LRU大小
+    gROUTE_REGISTER_HANDLER    = 1
+    gROUTE_REGISTER_OBJECT     = 2
+    gROUTE_REGISTER_CONTROLLER = 3
 )
 
 // ghttp.Server结构体
@@ -67,6 +70,7 @@ type Server struct {
     hooksTree        map[string]interface{}   // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
     serveCache       *gcache.Cache            // 服务注册路由内存缓存
     hooksCache       *gcache.Cache            // 事件回调路由内存缓存
+    routesMap        map[string]string        // 已经注册的路由及对应的注册方法文件地址
     // 自定义状态码回调
     hsmu             sync.RWMutex             // status handler互斥锁
     statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
@@ -103,6 +107,7 @@ type handlerMap  map[string]*handlerItem
 
 // http回调函数注册信息
 type handlerItem struct {
+    rtype    int          // 注册方式
     ctype    reflect.Type // 控制器类型(反射类型)
     fname    string       // 回调方法名称
     faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
@@ -182,6 +187,7 @@ func GetServer(name...interface{}) (*Server) {
         hooksTree        : make(map[string]interface{}),
         serveCache       : gcache.New(),
         hooksCache       : gcache.New(),
+        routesMap        : make(map[string]string),
         cookies          : gmap.NewIntInterfaceMap(),
         sessions         : gcache.New(),
         servedCount      : gtype.NewInt(),
