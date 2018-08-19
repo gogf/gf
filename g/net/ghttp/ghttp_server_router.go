@@ -13,6 +13,9 @@ import (
     "container/list"
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/os/glog"
+    "fmt"
+    "runtime"
 )
 
 
@@ -39,13 +42,38 @@ func (s *Server)parsePattern(pattern string) (domain, method, uri string, err er
     return
 }
 
+// 获得服务注册的文件地址信息
+func (s *Server) getHandlerRegisterCallerLine(handler *handlerItem) string {
+    skip := 5
+    if handler.rtype == gROUTE_REGISTER_HANDLER {
+       skip = 4
+    }
+    if _, cfile, cline, ok := runtime.Caller(skip); ok {
+        return fmt.Sprintf("%s:%d", cfile, cline)
+    }
+    return ""
+}
+
 // 路由注册处理方法。
 // 如果带有hook参数，表示是回调注册方法，否则为普通路由执行方法。
-func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... string) error {
+func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... string) (resultErr error) {
     // Web Server正字运行时无法动态注册路由方法
     if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("cannot bind handler while server running")
     }
+    caller := s.getHandlerRegisterCallerLine(handler)
+    if line, ok := s.routesMap[pattern]; ok {
+        s := fmt.Sprintf(`duplicated route registry "%s" in %s , former in %s`, pattern, caller, line)
+        glog.Errorfln(s)
+        return errors.New(s)
+    } else {
+        defer func() {
+            if resultErr == nil {
+                s.routesMap[pattern] = caller
+            }
+        }()
+    }
+
     var hookName string
     if len(hook) > 0 {
         hookName = hook[0]
@@ -132,13 +160,13 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
         pushed  := false
         for e := l.Front(); e != nil; e = e.Next() {
             item = e.Value.(*handlerItem)
-            // 判断是否已存在相同的路由注册项
+            // 判断是否已存在相同的路由注册项，是则进行替换
             if len(hookName) == 0 {
                 if strings.EqualFold(handler.router.Domain, item.router.Domain) &&
                     strings.EqualFold(handler.router.Method, item.router.Method) &&
                     strings.EqualFold(handler.router.Uri, item.router.Uri) {
                     e.Value = handler
-                    pushed = true
+                    pushed  = true
                     break
                 }
             }
@@ -157,7 +185,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     return nil
 }
 
-// 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序
+// 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。
 // 优先级比较规则：
 // 1、层级越深优先级越高(对比/数量)；
 // 2、模糊规则优先级：{xxx} > :xxx > *xxx；
@@ -168,19 +196,66 @@ func (s *Server) compareRouterPriority(newRouter, oldRouter *Router) bool {
     if newRouter.Priority < oldRouter.Priority {
         return false
     }
-    // 例如：/{user}/{act} 比 /:user/:act 优先级高
-    if strings.Count(newRouter.Uri, "{") > strings.Count(oldRouter.Uri, "{") {
+    // 精准匹配比模糊匹配规则优先级高，例如：/name/act 比 /{name}/:act 优先级高
+    var fuzzyCountFieldNew, fuzzyCountFieldOld int
+    var fuzzyCountNameNew,  fuzzyCountNameOld  int
+    var fuzzyCountAnyNew,   fuzzyCountAnyOld   int
+    var fuzzyCountTotalNew, fuzzyCountTotalOld int
+    for _, v := range newRouter.Uri {
+        switch v {
+            case '{':
+                fuzzyCountFieldNew++
+            case ':':
+                fuzzyCountNameNew++
+            case '*':
+                fuzzyCountAnyNew++
+        }
+    }
+    for _, v := range oldRouter.Uri {
+        switch v {
+            case '{':
+                fuzzyCountFieldOld++
+            case ':':
+                fuzzyCountNameOld++
+            case '*':
+                fuzzyCountAnyOld++
+        }
+    }
+    fuzzyCountTotalNew = fuzzyCountFieldNew + fuzzyCountNameNew + fuzzyCountAnyNew
+    fuzzyCountTotalOld = fuzzyCountFieldOld + fuzzyCountNameOld + fuzzyCountAnyOld
+    if fuzzyCountTotalNew < fuzzyCountTotalOld {
         return true
     }
-    // 例如: /:name/update 比 /:name/:action优先级高
-    if strings.Count(newRouter.Uri, "/:") < strings.Count(oldRouter.Uri, "/:") {
-        // 例如: /:name/:action 比 /:name/*any 优先级高
-        if strings.Count(newRouter.Uri, "/*") < strings.Count(oldRouter.Uri, "/*") {
-            return true
-        }
+    if fuzzyCountTotalNew > fuzzyCountTotalOld {
         return false
     }
-    return false
+
+    /** 如果模糊规则数量相等，那么执行分别的数量判断 **/
+
+    // 例如：/name/{act} 比 /name/:act 优先级高
+    if fuzzyCountFieldNew > fuzzyCountFieldOld {
+        return true
+    }
+    if fuzzyCountFieldNew < fuzzyCountFieldOld {
+        return false
+    }
+    // 例如: /name/:act 比 /name/*act 优先级高
+    if fuzzyCountNameNew > fuzzyCountNameOld {
+        return true
+    }
+    if fuzzyCountNameNew < fuzzyCountNameOld {
+        return false
+    }
+    // 比较HTTP METHOD，更精准的优先级更高
+    if newRouter.Method != gDEFAULT_METHOD {
+        return true
+    }
+    if oldRouter.Method != gDEFAULT_METHOD {
+        return true
+    }
+    // 模糊规则数量相等，后续不用再判断*规则的数量比较了，
+    // 这种情况下新的规则比旧的规则优先级更高
+    return true
 }
 
 // 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串

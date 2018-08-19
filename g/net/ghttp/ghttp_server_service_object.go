@@ -45,6 +45,7 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
         }
         key    := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
         m[key]  = &handlerItem {
+            rtype : gROUTE_REGISTER_OBJECT,
             ctype : nil,
             fname : "",
             faddr : v.Method(i).Interface().(func(*Request)),
@@ -61,6 +62,7 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
                 }
             }
             m[p] = &handlerItem {
+                rtype : gROUTE_REGISTER_OBJECT,
                 ctype : nil,
                 fname : "",
                 faddr : v.Method(i).Interface().(func(*Request)),
@@ -94,6 +96,7 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
     }
     key   := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
     m[key] = &handlerItem{
+        rtype : gROUTE_REGISTER_OBJECT,
         ctype : nil,
         fname : "",
         faddr : fval.Interface().(func(*Request)),
@@ -126,6 +129,7 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
         }
         key   := name + ":" + pattern
         m[key] = &handlerItem {
+            rtype : gROUTE_REGISTER_OBJECT,
             ctype : nil,
             fname : "",
             faddr : v.Method(i).Interface().(func(*Request)),

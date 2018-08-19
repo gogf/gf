@@ -260,10 +260,7 @@ func (c *Config) Close() {
 func (c *Config) addMonitor(path string) {
     if c.jsons.Get(path) == nil {
         gfsnotify.Add(path, func(event *gfsnotify.Event) {
-            if event.IsRemove() {
-                gfsnotify.Remove(event.Path)
-                return
-            }
+            // 删除文件内容缓存，下一次查询会自动更新
             c.jsons.Remove(event.Path)
         })
     }

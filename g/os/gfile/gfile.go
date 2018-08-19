@@ -287,8 +287,9 @@ func Chmod(path string, mode os.FileMode) error {
     return os.Chmod(path, mode)
 }
 
-// 打开目录，并返回其下一级子目录名称列表，按照文件名称大小写进行排序
-func ScanDir(path string) []string {
+// 打开目录，并返回其下一级子目录名称列表，按照文件名称大小写进行排序，支持目录递归遍历。
+// 当递归遍历时，结果集返回的是子级文件/目录的绝对路径，而不仅仅是一个名字
+func ScanDir(path string, recursive ... bool) []string {
     f, err := os.Open(path)
     if err != nil {
         return nil
@@ -299,6 +300,17 @@ func ScanDir(path string) []string {
     if err != nil {
         return nil
     }
+    // 是否递归遍历
+    if len(recursive) > 0 && recursive[0] && len(list) > 0 {
+        for k, v := range list {
+            p      := fmt.Sprintf("%s%s%s", path, Separator, v)
+            list[k] = p
+            if IsDir(p) {
+                list = append(list, ScanDir(p, true)...)
+            }
+        }
+    }
+    // 默认按照字符串大小排序
     sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
     return list
 }

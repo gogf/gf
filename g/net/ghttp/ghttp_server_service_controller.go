@@ -39,6 +39,7 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
         }
         key   := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
         m[key] = &handlerItem {
+            rtype : gROUTE_REGISTER_CONTROLLER,
             ctype : v.Elem().Type(),
             fname : mname,
             faddr : nil,
@@ -53,6 +54,7 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
                 }
             }
             m[p] = &handlerItem {
+                rtype : gROUTE_REGISTER_CONTROLLER,
                 ctype : v.Elem().Type(),
                 fname : mname,
                 faddr : nil,
@@ -75,6 +77,7 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
     }
     key    := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
     m[key]  = &handlerItem {
+        rtype : gROUTE_REGISTER_CONTROLLER,
         ctype : t,
         fname : mname,
         faddr : nil,
@@ -100,6 +103,7 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
         }
         key   := name + ":" + pattern
         m[key] = &handlerItem {
+            rtype : gROUTE_REGISTER_CONTROLLER,
             ctype : v.Elem().Type(),
             fname : name,
             faddr : nil,
