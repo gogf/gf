@@ -6,25 +6,25 @@
 
 package ghttp
 
-func (r *Request) SetRouterString(k, v string) {
-    r.routerVars[k] = []string{v}
+func (r *Request) SetRouterString(key, value string) {
+    r.routerVars[key] = []string{value}
 }
 
-func (r *Request) AddRouterString(k, v string) {
-    r.routerVars[k] = append(r.routerVars[k], v)
+func (r *Request) AddRouterString(key, value string) {
+    r.routerVars[key] = append(r.routerVars[key], value)
 }
 
 // 获得路由解析参数
-func (r *Request) GetRouterString(k string) string {
-    if v := r.GetRouterArray(k); v != nil {
+func (r *Request) GetRouterString(key string) string {
+    if v := r.GetRouterArray(key); v != nil {
         return v[0]
     }
     return ""
 }
 
 // 获得路由解析参数
-func (r *Request) GetRouterArray(k string) []string {
-    if v, ok := r.routerVars[k]; ok {
+func (r *Request) GetRouterArray(key string) []string {
+    if v, ok := r.routerVars[key]; ok {
         return v
     }
     return nil

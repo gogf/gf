@@ -11,62 +11,102 @@ import (
 )
 
 // 获得router、post或者get提交的参数，如果有同名参数，那么按照router->get->post优先级进行覆盖
-func (r *Request) GetRequest(k string) []string {
-    v := r.GetRouterArray(k)
+func (r *Request) GetRequest(key string, def ... []string) []string {
+    v := r.GetRouterArray(key)
     if v == nil {
-        v = r.GetQuery(k)
+        v = r.GetQuery(key)
     }
     if v == nil {
-        v = r.GetPost(k)
+        v = r.GetPost(key)
+    }
+    if v == nil && len(def) > 0 {
+        return def[0]
     }
     return v
 }
 
-func (r *Request) GetRequestString(k string) string {
-    v := r.GetRequest(k)
-    if v == nil {
-        return ""
-    } else {
-        return v[0]
+func (r *Request) GetRequestString(key string, def ... string) string {
+    value := r.GetRequest(key)
+    if value != nil && value[0] != "" {
+        return value[0]
     }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return ""
 }
 
-func (r *Request) GetRequestBool(k string) bool {
-    return gconv.Bool(r.GetRequestString(k))
+func (r *Request) GetRequestBool(key string, def ... bool) bool {
+    value := r.GetRequestString(key)
+    if value != "" {
+        return gconv.Bool(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return false
 }
 
-func (r *Request) GetRequestInt(k string) int {
-    return gconv.Int(r.GetRequestString(k))
+func (r *Request) GetRequestInt(key string, def ... int) int {
+    value := r.GetRequestString(key)
+    if value != "" {
+        return gconv.Int(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return 0
 }
 
-func (r *Request) GetRequestUint(k string) uint {
-    return gconv.Uint(r.GetRequestString(k))
+func (r *Request) GetRequestUint(key string, def ... uint) uint {
+    value := r.GetRequestString(key)
+    if value != "" {
+        return gconv.Uint(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return 0
 }
 
-func (r *Request) GetRequestFloat32(k string) float32 {
-    return gconv.Float32(r.GetRequestString(k))
+func (r *Request) GetRequestFloat32(key string, def ... float32) float32 {
+    value := r.GetRequestString(key)
+    if value != "" {
+        return gconv.Float32(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return 0
 }
 
-func (r *Request) GetRequestFloat64(k string) float64 {
-    return gconv.Float64(r.GetRequestString(k))
+func (r *Request) GetRequestFloat64(key string, def ... float64) float64 {
+    value := r.GetRequestString(key)
+    if value != "" {
+        return gconv.Float64(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return 0
 }
 
-func (r *Request) GetRequestArray(k string) []string {
-    return r.GetRequest(k)
+func (r *Request) GetRequestArray(key string, def ... []string) []string {
+    return r.GetRequest(key, def...)
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
 // 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetRequestArray获取特定字段内容
-func (r *Request) GetRequestMap(defaultMap...map[string]string) map[string]string {
+func (r *Request) GetRequestMap(def...map[string]string) map[string]string {
     m := r.GetQueryMap()
-    if len(defaultMap) == 0 {
+    if len(def) == 0 {
         for k, v := range r.GetPostMap() {
             if _, ok := m[k]; !ok {
                 m[k] = v
             }
         }
     } else {
-        for k, v := range defaultMap[0] {
+        for k, v := range def[0] {
             v2 := r.GetRequest(k)
             if v2 != nil {
                 m[k] = v2[0]

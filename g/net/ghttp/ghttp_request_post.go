@@ -21,69 +21,109 @@ func (r *Request) initPost() {
 }
 
 // 设置POST参数，仅在ghttp.Server内有效，**注意并发安全性**
-func (r *Request) SetPost(k string, v string) {
+func (r *Request) SetPost(key string, value string) {
     r.initPost()
-    r.PostForm[k] = []string{v}
+    r.PostForm[key] = []string{value}
 }
 
-func (r *Request) AddPost(k string, v string) {
+func (r *Request) AddPost(key string, value string) {
     r.initPost()
-    r.PostForm[k] = append(r.PostForm[k], v)
+    r.PostForm[key] = append(r.PostForm[key], value)
 }
 
 // 获得post参数
-func (r *Request) GetPost(k string) []string {
+func (r *Request) GetPost(key string, def...[]string) []string {
     r.initPost()
-    if v, ok := r.PostForm[k]; ok {
+    if v, ok := r.PostForm[key]; ok {
         return v
+    }
+    if len(def) > 0 {
+        return def[0]
     }
     return nil
 }
 
-func (r *Request) GetPostBool(k string) bool {
-    return gconv.Bool(r.GetPostString(k))
-}
-
-func (r *Request) GetPostInt(k string) int {
-    return gconv.Int(r.GetPostString(k))
-}
-
-func (r *Request) GetPostUint(k string) uint {
-    return gconv.Uint(r.GetPostString(k))
-}
-
-func (r *Request) GetPostFloat32(k string) float32 {
-    return gconv.Float32(r.GetPostString(k))
-}
-
-func (r *Request) GetPostFloat64(k string) float64 {
-    return gconv.Float64(r.GetPostString(k))
-}
-
-func (r *Request) GetPostString(k string) string {
-    v := r.GetPost(k)
-    if v == nil {
-        return ""
-    } else {
-        return v[0]
+func (r *Request) GetPostString(key string, def ... string) string {
+    value := r.GetPost(key)
+    if value != nil && value[0] != "" {
+        return value[0]
     }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return ""
 }
 
-func (r *Request) GetPostArray(k string) []string {
-    return r.GetPost(k)
+func (r *Request) GetPostBool(key string, def ... bool) bool {
+    value := r.GetPostString(key)
+    if value != "" {
+        return gconv.Bool(value)
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return false
+}
+
+func (r *Request) GetPostInt(key string, def ... int) int {
+    value := r.GetPostString(key)
+    if value != "" {
+        return gconv.Int(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return 0
+}
+
+func (r *Request) GetPostUint(key string, def ... uint) uint {
+    value := r.GetPostString(key)
+    if value != "" {
+        return gconv.Uint(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return 0
+}
+
+func (r *Request) GetPostFloat32(key string, def ... float32) float32 {
+    value := r.GetPostString(key)
+    if value != "" {
+        return gconv.Float32(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return 0
+}
+
+func (r *Request) GetPostFloat64(key string, def ... float64) float64 {
+    value := r.GetPostString(key)
+    if value != "" {
+        return gconv.Float64(value[0])
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return 0
+}
+
+func (r *Request) GetPostArray(key string, def ... []string) []string {
+    return r.GetPost(key, def...)
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
 // 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetPostArray获取特定字段内容
-func (r *Request) GetPostMap(defaultMap...map[string]string) map[string]string {
+func (r *Request) GetPostMap(def...map[string]string) map[string]string {
     r.initPost()
     m := make(map[string]string)
-    if len(defaultMap) == 0 {
+    if len(def) == 0 {
         for k, v := range r.PostForm {
             m[k] = v[0]
         }
     } else {
-        for k, v := range defaultMap[0] {
+        for k, v := range def[0] {
             if v2, ok := r.PostForm[k]; ok {
                 m[k] = v2[0]
             } else {
