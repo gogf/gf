@@ -44,10 +44,10 @@ const (
 )
 
 // 全局监听对象，方便应用端调用
-var watcher, _ = newWatcher()
+var watcher, _ = New()
 
 // 创建监听管理对象
-func newWatcher() (*Watcher, error) {
+func New() (*Watcher, error) {
     if watch, err := fsnotify.NewWatcher(); err == nil {
         w := &Watcher {
             watcher    : watch,
@@ -68,7 +68,7 @@ func Add(path string, callback func(event *Event)) error {
     if watcher == nil {
         return errors.New("global watcher creating failed")
     }
-    return watcher.AddRecursive(path, callback)
+    return watcher.Add(path, callback)
 }
 
 // 移除监听，默认递归删除。
@@ -76,7 +76,7 @@ func Remove(path string) error {
     if watcher == nil {
         return errors.New("global watcher creating failed")
     }
-    return watcher.RemoveRecursive(path)
+    return watcher.Remove(path)
 }
 
 // 关闭监听管理对象
@@ -87,7 +87,7 @@ func (w *Watcher) Close() {
 }
 
 // 添加对指定文件/目录的监听，并给定回调函数
-func (w *Watcher) Add(path string, callback func(event *Event)) error {
+func (w *Watcher) addWatch(path string, callback func(event *Event)) error {
     // 这里统一转换为当前系统的绝对路径，便于统一监控文件名称
     t := gfile.RealPath(path)
     if t == "" {
@@ -111,41 +111,41 @@ func (w *Watcher) Add(path string, callback func(event *Event)) error {
 }
 
 // 递归添加监控
-func (w *Watcher) AddRecursive(path string, callback func(event *Event)) error {
+func (w *Watcher) Add(path string, callback func(event *Event)) error {
     if gfile.IsDir(path) {
         list := []string{path}
         list  = append(list, gfile.ScanDir(path, true)...)
         for _, v := range list {
-            if err := w.Add(v, callback); err != nil {
+            if err := w.addWatch(v, callback); err != nil {
                 return err
             }
         }
         return nil
     } else {
-        return w.Add(path, callback)
+        return w.addWatch(path, callback)
     }
 }
 
 
 // 移除监听
-func (w *Watcher) Remove(path string) error {
+func (w *Watcher) removeWatch(path string) error {
     w.callbacks.Remove(path)
     return w.watcher.Remove(path)
 }
 
 // 递归移除监听
-func (w *Watcher) RemoveRecursive(path string) error {
+func (w *Watcher) Remove(path string) error {
     if gfile.IsDir(path) {
         list := []string{path}
         list  = append(list, gfile.ScanDir(path, true)...)
         for _, v := range list {
-            if err := w.Remove(v); err != nil {
+            if err := w.removeWatch(v); err != nil {
                 return err
             }
         }
         return nil
     } else {
-        return w.Remove(path)
+        return w.removeWatch(path)
     }
 }
 
@@ -198,14 +198,14 @@ func (w *Watcher) startEventLoop() {
                         continue
                     } else {
                         // 如果是真实删除，那么递归删除监控信息
-                        w.RemoveRecursive(event.Path)
+                        w.Remove(event.Path)
                     }
                 }
                 callbacks := w.getCallbacks(event.Path)
                 // 如果创建了新的目录，那么将这个目录递归添加到监控中
                 if event.IsCreate() && gfile.IsDir(event.Path) {
                     for _, callback := range callbacks.FrontAll() {
-                        w.AddRecursive(event.Path, callback.(func(event *Event)))
+                        w.Add(event.Path, callback.(func(event *Event)))
                     }
                 }
                 if callbacks != nil {
