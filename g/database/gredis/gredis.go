@@ -59,13 +59,13 @@ func New(config Config) *Redis {
                 if err != nil {
                     return nil, err
                 }
-                if _, err := c.Do("SELECT", config.Db); err != nil {
-                    return nil, err
-                }
                 if len(config.Pass) > 0 {
                     if _, err := c.Do("AUTH", config.Pass); err != nil {
                         return nil, err
                     }
+                }
+                if _, err := c.Do("SELECT", config.Db); err != nil {
+                    return nil, err
                 }
                 return c, nil
             },
