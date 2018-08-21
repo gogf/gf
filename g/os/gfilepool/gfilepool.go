@@ -70,12 +70,14 @@ func (p *Pool) File() (*File, error) {
     }
 }
 
-// 关闭指针池
-func (p *Pool) Close() {
+// 关闭指针池(返回error是标准库io.ReadWriteCloser接口实现)
+func (p *Pool) Close() error {
     p.pool.Close()
+    return nil
 }
 
-// 获得底层文件指针
-func (f *File) Close() {
+// 获得底层文件指针(返回error是标准库io.ReadWriteCloser接口实现)
+func (f *File) Close() error {
     f.pool.pool.Put(f)
+    return nil
 }

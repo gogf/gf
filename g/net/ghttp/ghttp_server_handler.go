@@ -97,6 +97,12 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request.Response.OutputBuffer()
     // 事件 - AfterOutput
     s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+
+    // gzip压缩处理
+    encoding := request.Header.Get("Accept-Encoding")
+    if encoding != "" {
+
+    }
 }
 
 // 初始化控制器
