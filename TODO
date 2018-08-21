@@ -19,6 +19,7 @@ ghttp.Server的Cookie及Session锁机制优化(去掉map锁机制);
 ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
 ghttp路由功能增加分组路由特性；
 解决glog串日志情况；
+ghttp增加返回数据压缩机制；
 
 
 DONE:
@@ -53,4 +54,4 @@ DONE:
 29. gdb增加查询缓存特性；
 30. gpage分页增加对自定义后缀的支持，如:2.html, 2.php等等；
 31. gvalid包增加struct tag的校验规则、自定义错误提示信息绑定的支持特性；
-
+32. 增加文件缓存包，可根据fsnotify机制进行缓存更新；

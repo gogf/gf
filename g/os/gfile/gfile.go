@@ -28,16 +28,19 @@ import (
 
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
 
+
 // 文件分隔符
 const (
     Separator = string(filepath.Separator)
 )
 
-// 源码的main包所在目录，仅仅会设置一次
-var mainPkgPath   = gtype.NewString()
+var (
+    // 源码的main包所在目录，仅仅会设置一次
+    mainPkgPath   = gtype.NewString()
 
-// 编译时的 GOROOT 数值
-var goRootOfBuild = gtype.NewString()
+    // 编译时的 GOROOT 数值
+    goRootOfBuild = gtype.NewString()
+)
 
 // 给定文件的绝对路径创建文件
 func Mkdir(path string) error {

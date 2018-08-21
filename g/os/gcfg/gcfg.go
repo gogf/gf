@@ -25,7 +25,6 @@ type Config struct {
     name   *gtype.String            // 默认配置文件名称
     paths  *gspath.SPath            // 搜索目录路径
     jsons  *gmap.StringInterfaceMap // 配置文件对象
-    closed *gtype.Bool              // 是否已经被close
     vc     *gtype.Bool              // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
 }
 
@@ -41,7 +40,6 @@ func New(path string, file...string) *Config {
         name   : gtype.NewString(name),
         paths  : s,
         jsons  : gmap.NewStringInterfaceMap(),
-        closed : gtype.NewBool(),
         vc     : gtype.NewBool(),
     }
 }
@@ -251,17 +249,14 @@ func (c *Config) Reload() {
     c.jsons.Clear()
 }
 
-// 关闭Config对象，自动关闭异步协程
-func (c *Config) Close() {
-    c.closed.Set(true)
-}
-
 // 添加文件监控
 func (c *Config) addMonitor(path string) {
-    if c.jsons.Get(path) == nil {
-        gfsnotify.Add(path, func(event *gfsnotify.Event) {
-            // 删除文件内容缓存，下一次查询会自动更新
-            c.jsons.Remove(event.Path)
-        })
+    // 防止多goroutine同时调用
+    if c.jsons.Get(path) != nil {
+        return
     }
+    gfsnotify.Add(path, func(event *gfsnotify.Event) {
+        // 删除文件内容缓存，下一次查询会自动更新
+        c.jsons.Remove(event.Path)
+    })
 }
