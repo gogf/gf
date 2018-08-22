@@ -7,6 +7,14 @@
 
 package ghttp
 
+import (
+    "mime"
+    "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/encoding/gcompress"
+    "strings"
+    "gitee.com/johng/gf/g/util/gconv"
+)
+
 // 默认的gzip压缩文件类型
 var defaultGzipContentTypes = []string{
     "application/atom+xml",
@@ -42,4 +50,29 @@ var defaultGzipContentTypes = []string{
     "text/x-component",
     "text/x-cross-domain-policy",
     "text/xml",
+}
+
+// 返回内容gzip检查处理
+func (r *Response) handleGzip() {
+    // 如果客户端支持gzip压缩，并且服务端设置开启gzip压缩特性，那么执行压缩
+    encoding := r.request.Header.Get("Accept-Encoding")
+    if encoding != "" && strings.Contains(encoding, "gzip") {
+        mimeType := ""
+        ext := gfile.Ext(r.request.URL.Path)
+        if ext != "" {
+            mimeType = strings.Split(mime.TypeByExtension(ext), ";")[0]
+        }
+        if mimeType == "" {
+            contentType := r.Header().Get("Content-Type")
+            if contentType != "" {
+                mimeType = strings.Split(contentType, ";")[0]
+            }
+        }
+
+        if _, ok := r.Server.gzipMimesMap[mimeType]; ok {
+            r.SetBuffer(gcompress.Gzip(r.buffer))
+            r.Header().Set("Content-Length",   gconv.String(len(r.buffer)))
+            r.Header().Set("Content-Encoding", "gzip")
+        }
+    }
 }
