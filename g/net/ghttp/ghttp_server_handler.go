@@ -52,28 +52,32 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         s.closeQueue.PushBack(request)
     }()
 
+    // 优先执行静态文件检索
+    filePath := s.paths.Search(r.URL.Path)
+    if filePath != "" {
+        request.isFileRequest = true
+    }
+
     // 事件 - BeforeServe
     s.callHookHandler(HOOK_BEFORE_SERVE, request)
 
-    // 路由注册检索
+    // 服务路由信息检索
     handler := (*handlerItem)(nil)
     if !request.exit.Val() {
-        parsedItem := s.getServeHandlerWithCache(request)
-        if parsedItem == nil {
-            // 如果路由不匹配，那么执行静态文件检索
-            path := s.paths.Search(r.URL.Path)
-            if path != "" {
-                s.serveFile(request, path)
-            } else {
-                request.Response.WriteStatus(http.StatusNotFound)
-            }
+        if request.IsFileRequest() {
+            s.serveFile(request, filePath)
         } else {
-            handler = parsedItem.handler
-            if request.Router == nil {
-                for k, v := range parsedItem.values {
-                    request.routerVars[k] = v
+            parsedItem := s.getServeHandlerWithCache(request)
+            if parsedItem == nil {
+                request.Response.WriteStatus(http.StatusNotFound)
+            } else {
+                handler = parsedItem.handler
+                if request.Router == nil {
+                    for k, v := range parsedItem.values {
+                        request.routerVars[k] = v
+                    }
+                    request.Router = parsedItem.handler.router
                 }
-                request.Router = parsedItem.handler.router
             }
         }
     }
