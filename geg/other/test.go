@@ -1,28 +1,15 @@
 package main
 
-import "fmt"
+import (
+    "gitee.com/johng/gf/g"
+    "fmt"
+)
 
-type A struct {
-    S string
-}
-
-type B struct {
-    A
-}
-
-
-func (a *A) editA () {
-    a.S += "a"
-}
-
-func (b *B) editB () {
-    b.S += "b"
-}
 
 func main() {
-    b := new(B)
-    b.editA()
-    b.editB()
-    b.A.editA()
-    fmt.Println(b.S)
+    v := g.View()
+    v.AddPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/other")
+    b, e := v.Parse("index.html")
+    fmt.Println(e)
+    fmt.Println(string(b))
 }

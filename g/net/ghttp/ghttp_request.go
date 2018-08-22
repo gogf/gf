@@ -153,6 +153,11 @@ func (r *Request) GetHost() string {
     return host
 }
 
+// 判断是否为AJAX请求
+func (r *Request) IsAjax() bool {
+    return strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest")
+}
+
 // 获取请求的客户端IP地址
 func (r *Request) GetClientIp() string {
     ip := r.clientIp.Val()

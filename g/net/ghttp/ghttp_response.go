@@ -207,5 +207,6 @@ func (r *Response) ClearBuffer() {
 // 输出缓冲区数据到客户端
 func (r *Response) OutputBuffer() {
     r.Header().Set("Server", r.Server.config.ServerAgent)
+    //r.handleGzip()
     r.Writer.OutputBuffer()
 }

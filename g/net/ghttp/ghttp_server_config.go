@@ -112,7 +112,10 @@ func (s *Server)SetConfig(c ServerConfig) {
     if s.config.ServerAgent == "" {
         s.SetServerAgent(defaultServerConfig.ServerAgent)
     }
-    // 其他可动态设置的配置
+
+    // **********************
+    // 可动态设置的配置处理
+    // **********************
     s.SetLogPath(c.LogPath)
     s.SetLogHandler(c.LogHandler)
     s.SetErrorLogEnabled(c.ErrorLogEnabled)
@@ -128,7 +131,6 @@ func (s *Server)SetConfig(c ServerConfig) {
         s.SetSessionIdName(c.SessionIdName)
     }
     s.SetNameToUriType(c.NameToUriType)
-    
 }
 
 // 设置http server参数 - Addr
@@ -285,6 +287,13 @@ func (s *Server) SetDenyRoutes(routes []string) {
         glog.Error("cannot be changed while running")
     }
     s.config.DenyRoutes = routes
+}
+
+func (s *Server) SetGzipContentTypes(types []string) {
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error("cannot be changed while running")
+    }
+    s.config.GzipContentTypes = types
 }
 
 // 设置http server参数 - CookieMaxAge
