@@ -17,8 +17,8 @@ func (r Result) ToJson() string {
 }
 
 // 将结果集转换为JSON字符串
-func (r Result) ToXml() string {
-    content, _ := gparser.VarToXml(r.ToList())
+func (r Result) ToXml(rootTag...string) string {
+    content, _ := gparser.VarToXml(r.ToList(), rootTag...)
     return string(content)
 }
 
