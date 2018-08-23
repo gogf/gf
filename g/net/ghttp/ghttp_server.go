@@ -62,7 +62,7 @@ type Server struct {
     paths            *gspath.SPath            // 静态文件检索对象
     config           ServerConfig             // 配置对象
     servers          []*gracefulServer        // 底层http.Server列表
-    methodsMap       map[string]bool          // 所有支持的HTTP Method(初始化时自动填充)
+    methodsMap       map[string]struct{}      // 所有支持的HTTP Method(初始化时自动填充)
     servedCount      *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
     closeQueue       *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
     // 服务注册相关
@@ -90,6 +90,7 @@ type Server struct {
     errorLogger      *glog.Logger             // error log日志对象
     // 其他属性
     nameToUriType    *gtype.Int               // 服务注册时对象和方法名称转换为URI时的规则
+    gzipMimesMap     map[string]struct{}      // 支持gzip压缩的类型
 }
 
 // 路由对象
@@ -181,7 +182,7 @@ func GetServer(name...interface{}) (*Server) {
         name             : sname,
         paths            : gspath.New(),
         servers          : make([]*gracefulServer, 0),
-        methodsMap       : make(map[string]bool),
+        methodsMap       : make(map[string]struct{}),
         statusHandlerMap : make(map[string]HandlerFunc),
         serveTree        : make(map[string]interface{}),
         hooksTree        : make(map[string]interface{}),
@@ -203,6 +204,7 @@ func GetServer(name...interface{}) (*Server) {
         errorLogEnabled  : gtype.NewBool(),
         logHandler       : gtype.NewInterface(),
         nameToUriType    : gtype.NewInt(),
+        gzipMimesMap     : make(map[string]struct{}),
     }
     s.errorLogger.SetBacktraceSkip(4)
     s.accessLogger.SetBacktraceSkip(4)
@@ -210,7 +212,7 @@ func GetServer(name...interface{}) (*Server) {
     s.serveCache.SetCap(gSERVE_CACHE_LRU_SIZE)
     s.hooksCache.SetCap(gHOOKS_CACHE_LRU_SIZE)
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
-        s.methodsMap[v] = true
+        s.methodsMap[v] = struct{}{}
     }
     // 初始化时使用默认配置
     s.SetConfig(defaultServerConfig)
@@ -252,6 +254,12 @@ func (s *Server) Start() error {
                 r.Response.WriteStatus(403)
                 r.Exit()
             })
+        }
+    }
+    // gzip压缩文件类型
+    if s.config.GzipContentTypes != nil {
+        for _, v := range s.config.GzipContentTypes {
+            s.gzipMimesMap[v] = struct{}{}
         }
     }
 

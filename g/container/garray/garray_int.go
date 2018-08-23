@@ -48,14 +48,14 @@ func (a *IntArray) Get(index int) int {
 // 设置指定索引的数据项, 调用方注意判断数组边界
 func (a *IntArray) Set(index int, value int) {
     a.mu.Lock()
-    defer a.mu.RUnlock()
+    defer a.mu.Unlock()
     a.array[index] = value
 }
 
 // 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
 func (a *IntArray) Insert(index int, value int) {
     a.mu.Lock()
-    defer a.mu.RUnlock()
+    defer a.mu.Unlock()
     rear   := append([]int{}, a.array[index : ]...)
     a.array = append(a.array[0 : index], value)
     a.array = append(a.array, rear...)
@@ -65,14 +65,14 @@ func (a *IntArray) Insert(index int, value int) {
 // 删除指定索引的数据项, 调用方注意判断数组边界
 func (a *IntArray) Remove(index int) {
     a.mu.Lock()
-    defer a.mu.RUnlock()
+    defer a.mu.Unlock()
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
 }
 
 // 追加数据项
 func (a *IntArray) Append(value int) {
     a.mu.Lock()
-    defer a.mu.RUnlock()
+    defer a.mu.Unlock()
     a.array = append(a.array, value)
 }
 
@@ -95,7 +95,7 @@ func (a *IntArray) Slice() []int {
 // 清空数据数组
 func (a *IntArray) Clear() {
     a.mu.Lock()
-    defer a.mu.RUnlock()
+    defer a.mu.Unlock()
     if a.cap > 0 {
         a.array = make([]int, a.size, a.cap)
     } else {
@@ -148,6 +148,6 @@ func (a *IntArray) LockFunc(f func(array []int)) {
 // 使用自定义方法执行加锁读取操作
 func (a *IntArray) RLockFunc(f func(array []int)) {
     a.mu.RLock()
-    defer a.mu.Unlock()
+    defer a.mu.RUnlock()
     f(a.array)
 }

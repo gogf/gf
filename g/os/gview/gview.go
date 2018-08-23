@@ -12,12 +12,11 @@ import (
     "bytes"
     "errors"
     "html/template"
-    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/ghash"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/os/gspath"
+    "gitee.com/johng/gf/g/os/gfcache"
 )
 
 // 视图对象
@@ -25,7 +24,6 @@ type View struct {
     mu         sync.RWMutex
     paths      *gspath.SPath           // 模板查找目录(绝对路径)
     funcmap    map[string]interface{}  // FuncMap
-    contents   *gmap.StringStringMap   // 已解析的模板文件内容
     delimiters []string                // 模板变量分隔符号
 }
 
@@ -62,7 +60,6 @@ func New(path string) *View {
     view := &View {
         paths      : s,
         funcmap    : make(map[string]interface{}),
-        contents   : gmap.NewStringStringMap(),
         delimiters : make([]string, 2),
     }
     view.SetDelimiters("{{", "}}")
@@ -82,18 +79,12 @@ func (view *View) AddPath(path string) error {
 
 // 解析模板，返回解析后的内容
 func (view *View) Parse(file string, params...map[string]interface{}) ([]byte, error) {
-    path    := view.paths.Search(file)
-    content := view.contents.Get(path)
-    if content == "" {
-        content = gfile.GetContents(path)
-        if content != "" {
-            view.addMonitor(path)
-            view.contents.Set(path, content)
-        }
-    }
-    if content == "" {
+    path := view.paths.Search(file)
+    if path == "" {
         return nil, errors.New("tpl \"" + file + "\" not found")
     }
+    content := gfcache.GetContents(path)
+
     // 模板参数
     data := (map[string]interface{})(nil)
     if len(params) > 0 {
@@ -153,14 +144,4 @@ func (view *View) funcInclude(file string, data...map[string]interface{}) templa
         return template.HTML(err.Error())
     }
     return template.HTML(content)
-}
-
-// 添加模板文件监控
-func (view *View) addMonitor(path string) {
-    if view.contents.Get(path) == "" {
-        gfsnotify.Add(path, func(event *gfsnotify.Event) {
-            // 删除文件内容缓存，下一次查询会自动更新
-            view.contents.Remove(event.Path)
-        })
-    }
 }

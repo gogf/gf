@@ -67,7 +67,7 @@ func (r *Request) GetQueryBool(key string, def ... bool) bool {
 func (r *Request) GetQueryInt(key string, def ... int) int {
     value := r.GetQueryString(key)
     if value != "" {
-        return gconv.Int(value[0])
+        return gconv.Int(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -78,7 +78,7 @@ func (r *Request) GetQueryInt(key string, def ... int) int {
 func (r *Request) GetQueryUint(key string, def ... uint) uint {
     value := r.GetQueryString(key)
     if value != "" {
-        return gconv.Uint(value[0])
+        return gconv.Uint(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -89,7 +89,7 @@ func (r *Request) GetQueryUint(key string, def ... uint) uint {
 func (r *Request) GetQueryFloat32(key string, def ... float32) float32 {
     value := r.GetQueryString(key)
     if value != "" {
-        return gconv.Float32(value[0])
+        return gconv.Float32(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -100,7 +100,7 @@ func (r *Request) GetQueryFloat32(key string, def ... float32) float32 {
 func (r *Request) GetQueryFloat64(key string, def ... float64) float64 {
     value := r.GetQueryString(key)
     if value != "" {
-        return gconv.Float64(value[0])
+        return gconv.Float64(value)
     }
     if len(def) > 0 {
         return def[0]

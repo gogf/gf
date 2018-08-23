@@ -26,7 +26,7 @@ func (s *Server) handleAccessLog(r *Request) {
     content := fmt.Sprintf(`"%s %s %s %s" %s %s`,
         r.Method, r.Host, r.URL.String(), r.Proto,
         gconv.String(r.Response.Status),
-        gconv.String(r.Response.Length),
+        gconv.String(r.Response.BufferLength()),
     )
     content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime - r.EnterTime)/1000)
     content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
