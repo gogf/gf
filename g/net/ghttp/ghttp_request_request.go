@@ -39,7 +39,7 @@ func (r *Request) GetRequestString(key string, def ... string) string {
 func (r *Request) GetRequestBool(key string, def ... bool) bool {
     value := r.GetRequestString(key)
     if value != "" {
-        return gconv.Bool(value[0])
+        return gconv.Bool(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -50,7 +50,7 @@ func (r *Request) GetRequestBool(key string, def ... bool) bool {
 func (r *Request) GetRequestInt(key string, def ... int) int {
     value := r.GetRequestString(key)
     if value != "" {
-        return gconv.Int(value[0])
+        return gconv.Int(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -61,7 +61,7 @@ func (r *Request) GetRequestInt(key string, def ... int) int {
 func (r *Request) GetRequestUint(key string, def ... uint) uint {
     value := r.GetRequestString(key)
     if value != "" {
-        return gconv.Uint(value[0])
+        return gconv.Uint(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -72,7 +72,7 @@ func (r *Request) GetRequestUint(key string, def ... uint) uint {
 func (r *Request) GetRequestFloat32(key string, def ... float32) float32 {
     value := r.GetRequestString(key)
     if value != "" {
-        return gconv.Float32(value[0])
+        return gconv.Float32(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -83,7 +83,7 @@ func (r *Request) GetRequestFloat32(key string, def ... float32) float32 {
 func (r *Request) GetRequestFloat64(key string, def ... float64) float64 {
     value := r.GetRequestString(key)
     if value != "" {
-        return gconv.Float64(value[0])
+        return gconv.Float64(value)
     }
     if len(def) > 0 {
         return def[0]

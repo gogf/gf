@@ -8,7 +8,6 @@
 package ghttp
 
 import (
-    "sync"
     "net/http"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gparser"
@@ -17,44 +16,27 @@ import (
     "gitee.com/johng/gf/g/frame/gins"
 )
 
-// 服务端请求返回对象
+// 服务端请求返回对象。
+// 注意该对象并没有实现http.ResponseWriter接口，而是依靠ghttp.ResponseWriter实现。
 type Response struct {
     ResponseWriter
     Server  *Server
-    Writer  *ResponseWriter // io.Writer
-    mu      sync.RWMutex    // 缓冲区互斥锁
-    buffer  []byte          // 每个请求的返回数据缓冲区
+    Writer  *ResponseWriter // ResponseWriter的别名
     request *Request        // 关联的Request请求对象
-}
-
-// 自定义的ResponseWriter，用于写入流的控制
-type ResponseWriter struct {
-    http.ResponseWriter
-    Status int // http status
-    Length int // response length
 }
 
 // 创建一个ghttp.Response对象指针
 func newResponse(s *Server, w http.ResponseWriter) *Response {
     r := &Response {
         Server         : s,
-        ResponseWriter : ResponseWriter{w, http.StatusOK, 0},
+        ResponseWriter : ResponseWriter{
+            ResponseWriter : w,
+            Status         : http.StatusOK,
+            buffer         : make([]byte, 0),
+        },
     }
     r.Writer = &r.ResponseWriter
     return r
-}
-
-// 覆盖父级的WriteHeader方法
-func (w *ResponseWriter) Write(buffer []byte) (int, error) {
-    n, e := w.ResponseWriter.Write(buffer)
-    w.Length += n
-    return n, e
-}
-
-// 覆盖父级的WriteHeader方法
-func (w *ResponseWriter) WriteHeader(code int) {
-    w.Status = code
-    w.ResponseWriter.WriteHeader(code)
 }
 
 // 返回信息，任何变量自动转换为bytes
@@ -225,11 +207,6 @@ func (r *Response) ClearBuffer() {
 // 输出缓冲区数据到客户端
 func (r *Response) OutputBuffer() {
     r.Header().Set("Server", r.Server.config.ServerAgent)
-    if len(r.buffer) > 0 {
-        r.mu.Lock()
-        r.ResponseWriter.Write(r.buffer)
-        r.buffer = make([]byte, 0)
-        r.mu.Unlock()
-    }
-
+    //r.handleGzip()
+    r.Writer.OutputBuffer()
 }

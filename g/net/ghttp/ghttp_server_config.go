@@ -59,27 +59,31 @@ type ServerConfig struct {
     AllowIps         []string     // 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
     // 路由访问控制
     DenyRoutes       []string     // 不允许访问的路由规则列表
+    // Gzip压缩文件类型
+    GzipContentTypes []string     // 允许进行gzip压缩的文件类型
 }
 
 // 默认HTTP Server
 var defaultServerConfig = ServerConfig {
-    Addr            : "",
-    HTTPSAddr       : "",
-    Handler         : nil,
-    ReadTimeout     : 60 * time.Second,
-    WriteTimeout    : 60 * time.Second,
-    IdleTimeout     : 60 * time.Second,
-    MaxHeaderBytes  : 1024,
-    IndexFiles      : []string{"index.html", "index.htm"},
-    IndexFolder     : false,
-    ServerAgent     : "gf",
-    ServerRoot      : "",
+    Addr             : "",
+    HTTPSAddr        : "",
+    Handler          : nil,
+    ReadTimeout      : 60 * time.Second,
+    WriteTimeout     : 60 * time.Second,
+    IdleTimeout      : 60 * time.Second,
+    MaxHeaderBytes   : 1024,
+    IndexFiles       : []string{"index.html", "index.htm"},
+    IndexFolder      : false,
+    ServerAgent      : "gf",
+    ServerRoot       : "",
 
-    CookieMaxAge    : gDEFAULT_COOKIE_MAX_AGE,
-    SessionMaxAge   : gDEFAULT_SESSION_MAX_AGE,
-    SessionIdName   : gDEFAULT_SESSION_ID_NAME,
+    CookieMaxAge     : gDEFAULT_COOKIE_MAX_AGE,
+    SessionMaxAge    : gDEFAULT_SESSION_MAX_AGE,
+    SessionIdName    : gDEFAULT_SESSION_ID_NAME,
 
-    ErrorLogEnabled : true,
+    ErrorLogEnabled  : true,
+
+    GzipContentTypes : defaultGzipContentTypes,
 }
 
 // 获取默认的http server设置
@@ -108,7 +112,10 @@ func (s *Server)SetConfig(c ServerConfig) {
     if s.config.ServerAgent == "" {
         s.SetServerAgent(defaultServerConfig.ServerAgent)
     }
-    // 其他可动态设置的配置
+
+    // **********************
+    // 可动态设置的配置处理
+    // **********************
     s.SetLogPath(c.LogPath)
     s.SetLogHandler(c.LogHandler)
     s.SetErrorLogEnabled(c.ErrorLogEnabled)
@@ -124,7 +131,6 @@ func (s *Server)SetConfig(c ServerConfig) {
         s.SetSessionIdName(c.SessionIdName)
     }
     s.SetNameToUriType(c.NameToUriType)
-    
 }
 
 // 设置http server参数 - Addr
@@ -281,6 +287,13 @@ func (s *Server) SetDenyRoutes(routes []string) {
         glog.Error("cannot be changed while running")
     }
     s.config.DenyRoutes = routes
+}
+
+func (s *Server) SetGzipContentTypes(types []string) {
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error("cannot be changed while running")
+    }
+    s.config.GzipContentTypes = types
 }
 
 // 设置http server参数 - CookieMaxAge
