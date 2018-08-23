@@ -13,7 +13,6 @@ import (
     "gitee.com/johng/gf/g/encoding/gparser"
     "strconv"
     "fmt"
-    "gitee.com/johng/gf/g/frame/gins"
 )
 
 // 服务端请求返回对象。
@@ -114,15 +113,6 @@ func (r *Response) WriteXml(content interface{}, rootTag...string) error {
         return err
     } else {
         r.Header().Set("Content-Type", "application/xml")
-        r.Write(b)
-    }
-    return nil
-}
-
-func (r *Response) Template(tpl string, params...map[string]interface{}) error {
-    if b, err := gins.View().Parse(tpl, params...); err != nil {
-        return err
-    } else {
         r.Write(b)
     }
     return nil

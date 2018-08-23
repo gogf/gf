@@ -148,7 +148,7 @@ func (this *IntInterfaceMap) Size() int {
 // 哈希表是否为空
 func (this *IntInterfaceMap) IsEmpty() bool {
     this.mu.RLock()
-    empty := (len(this.m) == 0)
+    empty := len(this.m) == 0
     this.mu.RUnlock()
     return empty
 }
@@ -163,13 +163,13 @@ func (this *IntInterfaceMap) Clear() {
 // 使用自定义方法执行加锁修改操作
 func (this *IntInterfaceMap) LockFunc(f func(m map[int]interface{})) {
     this.mu.Lock()
+    defer this.mu.Unlock()
     f(this.m)
-    this.mu.Unlock()
 }
 
 // 使用自定义方法执行加锁读取操作
 func (this *IntInterfaceMap) RLockFunc(f func(m map[int]interface{})) {
     this.mu.RLock()
+    defer this.mu.RUnlock()
     f(this.m)
-    this.mu.RUnlock()
 }

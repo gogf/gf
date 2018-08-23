@@ -27,16 +27,20 @@ type View struct {
     delimiters []string                // 模板变量分隔符号
 }
 
+// 输出到模板页面时保留HTML标签原意，不做自动escape处理
+type HTML    = template.HTML
+
+// 模板变量
+type Params  = map[string]interface{}
+
+// 函数映射表
+type FuncMap = map[string]interface{}
+
 // 视图表
 var viewMap = gmap.NewStringInterfaceMap()
 
 // 默认的视图对象
 var viewObj = Get(".")
-
-// 输出到模板页面时保留HTML标签原意，不做自动escape处理
-func HTML(content string) template.HTML {
-    return template.HTML(content)
-}
 
 // 直接解析模板内容，返回解析后的内容
 func ParseContent(content string, params map[string]interface{}) ([]byte, error) {
@@ -63,6 +67,7 @@ func New(path string) *View {
         delimiters : make([]string, 2),
     }
     view.SetDelimiters("{{", "}}")
+    // 内置方法
     view.BindFunc("include", view.funcInclude)
     return view
 }
@@ -78,26 +83,24 @@ func (view *View) AddPath(path string) error {
 }
 
 // 解析模板，返回解析后的内容
-func (view *View) Parse(file string, params...map[string]interface{}) ([]byte, error) {
+func (view *View) Parse(file string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
     path := view.paths.Search(file)
     if path == "" {
         return nil, errors.New("tpl \"" + file + "\" not found")
     }
     content := gfcache.GetContents(path)
-
-    // 模板参数
-    data := (map[string]interface{})(nil)
-    if len(params) > 0 {
-        data = params[0]
-    }
     // 执行模板解析，互斥锁主要是用于funcmap
     view.mu.RLock()
     defer view.mu.RUnlock()
     buffer := bytes.NewBuffer(nil)
-    if tpl, err := template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap).Parse(content); err != nil {
+    tplobj := template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap)
+    if len(funcmap) > 0 {
+        tplobj = tplobj.Funcs(funcmap[0])
+    }
+    if tpl, err := tplobj.Parse(content); err != nil {
         return nil, err
     } else {
-        if err := tpl.Execute(buffer, data); err != nil {
+        if err := tpl.Execute(buffer, params); err != nil {
             return nil, err
         }
     }
@@ -105,12 +108,16 @@ func (view *View) Parse(file string, params...map[string]interface{}) ([]byte, e
 }
 
 // 直接解析模板内容，返回解析后的内容
-func (view *View) ParseContent(content string, params map[string]interface{}) ([]byte, error) {
+func (view *View) ParseContent(content string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
     name   := gconv.String(ghash.BKDRHash64([]byte(content)))
     buffer := bytes.NewBuffer(nil)
-    if tpl, err := template.New(name).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap).Parse(content); err != nil {
+    tplobj := template.New(name).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap)
+    if len(funcmap) > 0 {
+        tplobj = tplobj.Funcs(funcmap[0])
+    }
+    if tpl, err := tplobj.Parse(content); err != nil {
         return nil, err
     } else {
         if err := tpl.Execute(buffer, params); err != nil {

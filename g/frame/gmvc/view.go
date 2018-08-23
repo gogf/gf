@@ -17,7 +17,8 @@ import (
 type View struct {
     mu       sync.RWMutex              // 并发互斥锁
     view     *gview.View               // 底层视图对象
-    data     map[string]interface{}    // 视图数据/模板变量
+    data     gview.Params              // 视图数据/模板变量
+    fmap     gview.FuncMap             // 绑定的模板函数
     response *ghttp.Response           // 数据返回对象
 }
 
@@ -25,13 +26,14 @@ type View struct {
 func NewView(w *ghttp.Response) *View {
     return &View {
         view     : gins.View(),
-        data     : make(map[string]interface{}),
+        data     : make(gview.Params),
+        fmap     : make(gview.FuncMap),
         response : w,
     }
 }
 
 // 批量绑定模板变量，即调用之后每个线程都会生效，因此有并发安全控制
-func (view *View) Assigns(data map[string]interface{}) {
+func (view *View) Assigns(data gview.Params) {
     view.mu.Lock()
     for k, v := range data {
         view.data[k] = v
@@ -46,34 +48,41 @@ func (view *View) Assign(key string, value interface{}) {
     view.mu.Unlock()
 }
 
+// 绑定自定义模板函数
+func (view *View) BindFunc(name string, function interface{}){
+    view.mu.Lock()
+    view.fmap[name] = function
+    view.mu.Unlock()
+}
+
 // 解析模板，并返回解析后的内容
 func (view *View) Parse(file string) ([]byte, error) {
     view.mu.RLock()
-    buffer, err := view.view.Parse(file, view.data)
-    view.mu.RUnlock()
+    defer view.mu.RUnlock()
+    buffer, err := view.view.Parse(file, view.data, view.fmap)
     return buffer, err
 }
 
 // 直接解析模板内容，并返回解析后的内容
 func (view *View) ParseContent(content string) ([]byte, error) {
     view.mu.RLock()
-    buffer, err := view.view.ParseContent(content, view.data)
-    view.mu.RUnlock()
+    defer view.mu.RUnlock()
+    buffer, err := view.view.ParseContent(content, view.data, view.fmap)
     return buffer, err
 }
 
 // 使用自定义方法对模板变量执行加锁修改操作
-func (view *View) LockFunc(f func(vars map[string]interface{})) {
+func (view *View) LockFunc(f func(data gview.Params)) {
     view.mu.Lock()
+    defer view.mu.Unlock()
     f(view.data)
-    view.mu.Unlock()
 }
 
 // 使用自定义方法对模板变量执行加锁读取操作
-func (view *View) RLockFunc(f func(vars map[string]interface{})) {
+func (view *View) RLockFunc(f func(data gview.Params)) {
     view.mu.RLock()
+    defer view.mu.RUnlock()
     f(view.data)
-    view.mu.RUnlock()
 }
 
 // 解析并显示指定模板
