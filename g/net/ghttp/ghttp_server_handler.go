@@ -55,7 +55,21 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 优先执行静态文件检索
     filePath := s.paths.Search(r.URL.Path)
     if filePath != "" {
-        request.isFileRequest = true
+        if gfile.IsDir(filePath) {
+            // 如果是目录需要处理index files
+            if len(s.config.IndexFiles) > 0 {
+                for _, file := range s.config.IndexFiles {
+                    fpath := s.paths.Search(filePath + gfile.Separator + file)
+                    if fpath != "" {
+                        filePath              = fpath
+                        request.isFileRequest = true
+                        break
+                    }
+                }
+            }
+        } else {
+            request.isFileRequest = true
+        }
     }
 
     // 事件 - BeforeServe
@@ -65,12 +79,20 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     handler := (*handlerItem)(nil)
     if !request.exit.Val() {
         if request.IsFileRequest() {
+            // 如果存在请求的具体文件，那么优先服务文件
             s.serveFile(request, filePath)
         } else {
+            // 其次进行服务路由注册检索
             parsedItem := s.getServeHandlerWithCache(request)
             if parsedItem == nil {
-                request.Response.WriteStatus(http.StatusNotFound)
+                // 目录是优先级最低的操作
+                if filePath != "" {
+                    s.serveFile(request, filePath)
+                } else {
+                    request.Response.WriteStatus(http.StatusNotFound)
+                }
             } else {
+                // 执行服务
                 handler = parsedItem.handler
                 if request.Router == nil {
                     for k, v := range parsedItem.values {
@@ -135,20 +157,6 @@ func (s *Server)serveFile(r *Request, path string) {
     }
     info, _ := f.Stat()
     if info.IsDir() {
-        // 处理index files
-        if len(s.config.IndexFiles) > 0 {
-            for _, file := range s.config.IndexFiles {
-                // 这里使用s.paths来检索，而不是直接使用path，避免多目录检索情况
-                // 例如：/tmp目录及源码目录都存在的情况按照优先级会返回/tmp，但是index files只在源码目录中存在
-                fpath := s.paths.Search(r.URL.Path + gfile.Separator + file)
-                if fpath != "" {
-                    f.Close()
-                    s.serveFile(r, fpath)
-                    return
-                }
-            }
-        }
-        // 处理访问目录
         if s.config.IndexFolder {
             s.listDir(r, f)
         } else {
