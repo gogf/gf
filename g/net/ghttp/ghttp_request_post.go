@@ -68,7 +68,7 @@ func (r *Request) GetPostBool(key string, def ... bool) bool {
 func (r *Request) GetPostInt(key string, def ... int) int {
     value := r.GetPostString(key)
     if value != "" {
-        return gconv.Int(value[0])
+        return gconv.Int(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -79,7 +79,7 @@ func (r *Request) GetPostInt(key string, def ... int) int {
 func (r *Request) GetPostUint(key string, def ... uint) uint {
     value := r.GetPostString(key)
     if value != "" {
-        return gconv.Uint(value[0])
+        return gconv.Uint(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -90,7 +90,7 @@ func (r *Request) GetPostUint(key string, def ... uint) uint {
 func (r *Request) GetPostFloat32(key string, def ... float32) float32 {
     value := r.GetPostString(key)
     if value != "" {
-        return gconv.Float32(value[0])
+        return gconv.Float32(value)
     }
     if len(def) > 0 {
         return def[0]
@@ -101,7 +101,7 @@ func (r *Request) GetPostFloat32(key string, def ... float32) float32 {
 func (r *Request) GetPostFloat64(key string, def ... float64) float64 {
     value := r.GetPostString(key)
     if value != "" {
-        return gconv.Float64(value[0])
+        return gconv.Float64(value)
     }
     if len(def) > 0 {
         return def[0]
