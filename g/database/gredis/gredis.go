@@ -69,6 +69,11 @@ func New(config Config) *Redis {
                 }
                 return c, nil
             },
+            // 用来测试连接是否可用
+            TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			    _, err := c.Do("PING")
+			    return err
+		    },
         }
         pools.Set(poolKey, pool)
         r.pool = pool
