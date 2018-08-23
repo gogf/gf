@@ -18,8 +18,8 @@ func (r Record) ToJson() string {
 }
 
 // 将记录结果转换为XML字符串
-func (r Record) ToXml() string {
-    content, _ := gparser.VarToXml(r.ToMap())
+func (r Record) ToXml(rootTag...string) string {
+    content, _ := gparser.VarToXml(r.ToMap(), rootTag...)
     return string(content)
 }
 
