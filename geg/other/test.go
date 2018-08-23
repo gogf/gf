@@ -1,15 +1,15 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/util/gregex"
     "fmt"
 )
 
 
 func main() {
-    v := g.View()
-    v.AddPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/other")
-    b, e := v.Parse("index.html")
-    fmt.Println(e)
-    fmt.Println(string(b))
+    s := `<a href="baidu.com">百度</a>"`
+    gregex.ReplaceStringFunc(`href="(.+?)"`, s, func(s string) string {
+        fmt.Println(s)
+        return s
+    })
 }
