@@ -33,32 +33,32 @@ func NewStringArray(size int, cap ... int) *StringArray {
 // 获取指定索引的数据项, 调用方注意判断数组边界
 func (a *StringArray) Get(index int) string {
 	a.mu.RLock()
+	defer a.mu.RUnlock()
 	value := a.array[index]
-	a.mu.RUnlock()
 	return value
 }
 
 // 设置指定索引的数据项, 调用方注意判断数组边界
 func (a *StringArray) Set(index int, value string) {
 	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.array[index] = value
-	a.mu.Unlock()
 }
 
 // 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
 func (a *StringArray) Insert(index int, value string) {
 	a.mu.Lock()
-	rear := append([]string{}, a.array[index:]...)
+	defer a.mu.Unlock()
+	rear   := append([]string{}, a.array[index:]...)
 	a.array = append(a.array[0:index], value)
 	a.array = append(a.array, rear...)
-	a.mu.Unlock()
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
 func (a *StringArray) Remove(index int) {
 	a.mu.Lock()
+	defer a.mu.RUnlock()
 	a.array = append(a.array[:index], a.array[index+1:]...)
-	a.mu.RUnlock()
 }
 
 // 追加数据项
@@ -109,20 +109,19 @@ func (a *StringArray) Search(value string) int {
 		}
 	}
 	a.mu.RUnlock()
-
 	return result
 }
 
 // 使用自定义方法执行加锁修改操作
 func (a *StringArray) LockFunc(f func(array []string)) {
 	a.mu.Lock()
+	defer a.mu.Unlock()
 	f(a.array)
-	a.mu.Unlock()
 }
 
 // 使用自定义方法执行加锁读取操作
 func (a *StringArray) RLockFunc(f func(array []string)) {
 	a.mu.RLock()
+	defer a.mu.RUnlock()
 	f(a.array)
-	a.mu.RUnlock()
 }
