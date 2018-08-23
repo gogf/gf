@@ -53,6 +53,8 @@ func View() *gview.View {
         if p := gfile.MainPkgPath(); gfile.Exists(p) {
             view.AddPath(p)
         }
+        // 框架内置函数
+        view.BindFunc("config", funcConfig)
         Set(gFRAME_CORE_COMPONENT_NAME_VIEW, view)
         return view
     }
@@ -84,3 +86,9 @@ func Config() *gcfg.Config {
     }
     return nil
 }
+
+// 模板内置方法：config
+func funcConfig(pattern string, file...string) gview.HTML {
+    return gview.HTML(Config().GetString(pattern, file...))
+}
+

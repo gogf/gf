@@ -148,7 +148,7 @@ func (this *StringInterfaceMap) Size() int {
 // 哈希表是否为空
 func (this *StringInterfaceMap) IsEmpty() bool {
 	this.mu.RLock()
-	empty := (len(this.m) == 0)
+	empty := len(this.m) == 0
 	this.mu.RUnlock()
 	return empty
 }
@@ -163,13 +163,13 @@ func (this *StringInterfaceMap) Clear() {
 // 使用自定义方法执行加锁修改操作
 func (this *StringInterfaceMap) LockFunc(f func(m map[string]interface{})) {
 	this.mu.Lock()
+	defer this.mu.Unlock()
 	f(this.m)
-	this.mu.Unlock()
 }
 
 // 使用自定义方法执行加锁读取操作
 func (this *StringInterfaceMap) RLockFunc(f func(m map[string]interface{})) {
 	this.mu.RLock()
+	defer this.mu.RUnlock()
 	f(this.m)
-	this.mu.RUnlock()
 }

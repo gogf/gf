@@ -5,7 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 并发安全的动态队列.
-// 优点：
+// 特点：
 // 1、队列初始化速度快；
 // 2、可以向队头/队尾进行Push/Pop操作；
 // 3、取数据时如果队列为空那么会阻塞等待；

@@ -148,7 +148,7 @@ func (this *IntStringMap) Size() int {
 // 哈希表是否为空
 func (this *IntStringMap) IsEmpty() bool {
     this.mu.RLock()
-    empty := (len(this.m) == 0)
+    empty := len(this.m) == 0
     this.mu.RUnlock()
     return empty
 }
@@ -170,6 +170,6 @@ func (this *IntStringMap) LockFunc(f func(m map[int]string)) {
 // 使用自定义方法执行加锁读取操作
 func (this *IntStringMap) RLockFunc(f func(m map[int]string)) {
     this.mu.RLock()
+    defer this.mu.RUnlock()
     f(this.m)
-    this.mu.RUnlock()
 }
