@@ -99,6 +99,7 @@ func (a *SortedIntArray) Slice() []int {
 }
 
 // 查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
+// 返回值: 最后比较位置, 比较结果
 func (a *SortedIntArray) Search(value int) (int, int) {
     if len(a.array) == 0 {
         return -1, -2
@@ -109,20 +110,15 @@ func (a *SortedIntArray) Search(value int) (int, int) {
     mid := 0
     cmp := -2
     for {
+        mid = int((min + max) / 2)
+        cmp = a.compareFunc(value, a.array[mid])
+        switch cmp {
+            case -1 : max = mid - 1
+            case  0 :
+            case  1 : min = mid + 1
+        }
         if cmp == 0 || min > max {
             break
-        }
-        for {
-            mid = int((min + max) / 2)
-            cmp = a.compareFunc(value, a.array[mid])
-            switch cmp {
-                case -1 : max = mid - 1
-                case  0 :
-                case  1 : min = mid + 1
-            }
-            if cmp == 0 || min > max {
-                break
-            }
         }
     }
     a.mu.RUnlock()
