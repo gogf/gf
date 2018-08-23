@@ -164,13 +164,13 @@ func (a *SortedStringArray) Clear() {
 // 使用自定义方法执行加锁修改操作
 func (a *SortedStringArray) LockFunc(f func(array []string)) {
     a.mu.Lock()
+    defer a.mu.Unlock()
     f(a.array)
-    a.mu.Unlock()
 }
 
 // 使用自定义方法执行加锁读取操作
 func (a *SortedStringArray) RLockFunc(f func(array []string)) {
     a.mu.RLock()
+    defer a.mu.RUnlock()
     f(a.array)
-    a.mu.RUnlock()
 }

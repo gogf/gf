@@ -20,7 +20,7 @@ ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
 ghttp路由功能增加分组路由特性；
 解决glog串日志情况；
 ghttp增加返回数据压缩机制；
-
+*any模糊匹配路由改进支持不带名字的*路由规则；
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；

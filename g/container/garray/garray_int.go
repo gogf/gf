@@ -62,8 +62,8 @@ func (a *IntArray) Remove(index int) {
 // 追加数据项
 func (a *IntArray) Append(value int) {
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	a.array = append(a.array, value)
+    a.mu.Unlock()
 }
 
 // 数组长度
@@ -85,12 +85,12 @@ func (a *IntArray) Slice() []int {
 // 清空数据数组
 func (a *IntArray) Clear() {
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	if a.cap > 0 {
 		a.array = make([]int, a.size, a.cap)
 	} else {
 		a.array = make([]int, a.size)
 	}
+    a.mu.Unlock()
 }
 
 // 查找指定数值的索引位置，返回索引位置，如果查找不到则返回-1

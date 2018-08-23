@@ -92,16 +92,34 @@ func (a *Array) Clear() {
     a.mu.Unlock()
 }
 
+// 查找指定数值的索引位置，返回索引位置，如果查找不到则返回-1
+func (a *Array) Search(value interface{}) int {
+    if len(a.array) == 0 {
+        return -1
+    }
+    a.mu.RLock()
+    result := -1
+    for index, v := range a.array {
+        if v == value {
+            result = index
+            break
+        }
+    }
+    a.mu.RUnlock()
+
+    return result
+}
+
 // 使用自定义方法执行加锁修改操作
 func (a *Array) LockFunc(f func(array []interface{})) {
     a.mu.Lock()
+    defer a.mu.Unlock()
     f(a.array)
-    a.mu.Unlock()
 }
 
 // 使用自定义方法执行加锁读取操作
 func (a *Array) RLockFunc(f func(array []interface{})) {
     a.mu.RLock()
+    defer a.mu.RUnlock()
     f(a.array)
-    a.mu.RUnlock()
 }
