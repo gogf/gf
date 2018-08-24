@@ -72,41 +72,32 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    // 事件 - BeforeServe
-    s.callHookHandler(HOOK_BEFORE_SERVE, request)
-
-    // 服务路由信息检索
+    // 其次进行服务路由信息检索
     handler := (*handlerItem)(nil)
-    if !request.exit.Val() {
-        if request.IsFileRequest() {
-            // 如果存在请求的具体文件，那么优先服务文件
-            s.serveFile(request, filePath)
-        } else {
-            // 其次进行服务路由注册检索
-            parsedItem := s.getServeHandlerWithCache(request)
-            if parsedItem == nil {
-                // 目录是优先级最低的操作
-                if filePath != "" {
-                    s.serveFile(request, filePath)
-                } else {
-                    request.Response.WriteStatus(http.StatusNotFound)
-                }
-            } else {
-                // 执行服务
-                handler = parsedItem.handler
-                if request.Router == nil {
-                    for k, v := range parsedItem.values {
-                        request.routerVars[k] = v
-                    }
-                    request.Router = parsedItem.handler.router
-                }
+    if !request.IsFileRequest() {
+        if parsedItem := s.getServeHandlerWithCache(request); parsedItem != nil {
+            handler = parsedItem.handler
+            for k, v := range parsedItem.values {
+                request.routerVars[k] = v
             }
+            request.Router = parsedItem.handler.router
         }
     }
 
-    // 执行回调控制器/执行对象/方法
-    if handler != nil && !request.exit.Val() {
-        s.callServeHandler(handler, request)
+    // 事件 - BeforeServe
+    s.callHookHandler(HOOK_BEFORE_SERVE, request)
+
+    // 执行静态文件服务/回调控制器/执行对象/方法
+    if !request.exit.Val() {
+        if filePath != "" && (request.IsFileRequest() || handler == nil) {
+            s.serveFile(request, filePath)
+        } else {
+            if handler != nil {
+                s.callServeHandler(handler, request)
+            } else {
+                request.Response.WriteStatus(http.StatusNotFound)
+            }
+        }
     }
 
     // 事件 - AfterServe
