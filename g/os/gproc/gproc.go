@@ -14,6 +14,10 @@ import (
     "time"
     "gitee.com/johng/gf/g/util/gconv"
     "strings"
+    "bytes"
+    "io"
+    "runtime"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 const (
@@ -72,6 +76,29 @@ func Uptime() int {
     return int(time.Now().UnixNano()/1e6 - processStartTime.UnixNano()/1e6)
 }
 
+// 阻塞执行shell指令，并给定输入输出对象
+func Shell(cmd string, out io.Writer, in io.Reader) error {
+    p := NewProcess(getShell(), []string{getShellOption(), cmd})
+    p.Stdin  = in
+    p.Stdout = out
+    return p.Run()
+}
+
+// 阻塞执行shell指令，并输出结果当终端(如果需要异步，请使用goroutine)
+func ShellRun(cmd string) error {
+    p := NewProcess(getShell(), []string{getShellOption(), cmd})
+    return p.Run()
+}
+
+// 阻塞执行shell指令，并返回输出结果(如果需要异步，请使用goroutine)
+func ShellExec(cmd string) (string, error) {
+    buf := bytes.NewBuffer(nil)
+    p   := NewProcess(getShell(), []string{getShellOption(), cmd})
+    p.Stdout = buf
+    err := p.Run()
+    return buf.String(), err
+}
+
 // 检测环境变量中是否已经存在指定键名
 func checkEnvKey(env []string, key string) bool {
     for _, v := range env {
@@ -80,5 +107,58 @@ func checkEnvKey(env []string, key string) bool {
         }
     }
     return false
+}
+
+// 获取当前系统下的shell路径
+func getShell() string {
+    switch runtime.GOOS {
+        case "windows":
+            return searchBinFromEnvPath("cmd.exe")
+        default:
+            path := searchBinFromEnvPath("bash")
+            if path == "" {
+                path = searchBinFromEnvPath("sh")
+            }
+            return path
+    }
+    return ""
+}
+
+// 获取当前系统默认shell执行指令的option参数
+func getShellOption() string {
+    switch runtime.GOOS {
+        case "windows":
+            return "/c"
+        default:
+            return "-c"
+    }
+    return ""
+}
+
+// 从环境变量PATH中搜索可执行文件
+func searchBinFromEnvPath(file string) string {
+    // 如果是绝对路径，或者相对路径下存在，那么直接返回
+    if gfile.Exists(file) {
+        return file
+    }
+    array := ([]string)(nil)
+    switch runtime.GOOS {
+        case "windows":
+            array = strings.Split(os.Getenv("Path"), ";")
+            if gfile.Ext(file) != "exe" {
+                file += ".exe"
+            }
+        default:
+            array = strings.Split(os.Getenv("PATH"), ":")
+    }
+    if len(array) > 0 {
+        for _, v := range array {
+            path := v + gfile.Separator + file
+            if gfile.Exists(path) {
+                return path
+            }
+        }
+    }
+    return ""
 }
 

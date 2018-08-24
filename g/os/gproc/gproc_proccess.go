@@ -22,12 +22,17 @@ type Process struct {
 }
 
 // 创建一个进程(不执行)
-func NewProcess(path string, args []string, environment []string) *Process {
-    env := make([]string, len(environment) + 1)
-    for k, v := range environment {
-        env[k] = v
+func NewProcess(path string, args []string, environment...[]string) *Process {
+    var env []string
+    if len(environment) > 0 {
+        env = make([]string, 0)
+        for _, v := range environment[0] {
+            env = append(env, v)
+        }
+    } else {
+        env = os.Environ()
     }
-    env[len(env) - 1] = fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir())
+    env= append(env, fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir()))
     p := &Process {
         Manager     : nil,
         PPid        : os.Getpid(),
