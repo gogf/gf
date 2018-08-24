@@ -12,28 +12,35 @@ import (
     "io"
     "sync"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/gmap"
 )
 
 type Logger struct {
-    mu     sync.RWMutex
-    io     io.Writer           // 日志内容写入的IO接口
-    path   *gtype.String       // 日志写入的目录路径
-    debug  *gtype.Bool         // 是否允许输出DEBUG信息
-    btSkip *gtype.Int          // 错误产生时的backtrace回调信息skip条数
-    stdprint *gtype.Bool       // 控制台打印开关 @author zseeker
+    mu       sync.RWMutex
+    pr       *Logger             // 父级Logger
+    io       io.Writer           // 日志内容写入的IO接口
+    path     *gtype.String       // 日志写入的目录路径
+    debug    *gtype.Bool         // 是否允许输出DEBUG信息
+    btSkip   *gtype.Int          // 错误产生时的backtrace回调信息skip条数
+    stdprint *gtype.Bool         // 控制台打印开关，当输出到文件时也同时打印到终端
+                                 // @author zseeker,john
 }
 
-// 默认的日志对象
-var logger = New()
+var (
+    // 默认的日志对象
+    logger    = New()
+    // 基于文件路径的logger对象集合，用于对象复用
+    loggerMap = gmap.NewStringInterfaceMap()
+)
 
 // 新建自定义的日志操作对象
 func New() *Logger {
     return &Logger {
-        io     : nil,
-        path   : gtype.NewString(),
-        debug  : gtype.NewBool(true),
-        btSkip : gtype.NewInt(3),
-        stdprint : gtype.NewBool(false),
+        io       : nil,
+        path     : gtype.NewString(),
+        debug    : gtype.NewBool(true),
+        btSkip   : gtype.NewInt(3),
+        stdprint : gtype.NewBool(true),
     }
 }
 
@@ -50,6 +57,11 @@ func SetDebug(debug bool) {
 // 获取日志目录绝对路径
 func GetPath() string {
     return logger.path.Val()
+}
+
+// 设置下一次输出的分类，支持多级分类设置
+func Cat(category string) *Logger {
+    return logger.Cat(category)
 }
 
 // 设置写日志的同时开启or关闭控制台打印，默认是关闭的

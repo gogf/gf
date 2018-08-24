@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-    //glog.SetLogPath("/tmp/")
+    //glog.SetPath("/tmp/")
     glog.Error("This is error!")
 }
 
