@@ -275,12 +275,18 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
                     regrule += `/([\w\.\-]+)`
                     names    = append(names, v[1:])
                     break
+                } else {
+                    regrule += `/[\w\.\-]+`
+                    break
                 }
                 fallthrough
             case '*':
                 if len(v) > 1 {
                     regrule += `/{0,1}(.*)`
                     names    = append(names, v[1:])
+                    break
+                } else {
+                    regrule += `/{0,1}.*`
                     break
                 }
                 fallthrough
