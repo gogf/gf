@@ -166,6 +166,11 @@ func (r *Response) RedirectTo(location string) {
     r.WriteHeader(http.StatusFound)
 }
 
+// 返回location标识，引导客户端跳转到来源页面
+func (r *Response) RedirectBack() {
+    r.RedirectTo(r.request.GetReferer())
+}
+
 // 获取当前缓冲区中的数据
 func (r *Response) Buffer() []byte {
     r.mu.RLock()

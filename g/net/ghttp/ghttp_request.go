@@ -179,6 +179,11 @@ func (r *Request) GetClientIp() string {
     return ip
 }
 
+// 获得来源URL地址
+func (r *Request) GetReferer() string {
+    return r.Header.Get("Referer")
+}
+
 // 获得结构体顶替的参数名称标签，构成map返回
 func (r *Request) getStructParamsTagMap(object interface{}) map[string]string {
     tagmap := make(map[string]string)
