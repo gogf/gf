@@ -16,6 +16,7 @@ import (
     "time"
     "bytes"
     "gitee.com/johng/gf/g/os/glog"
+    "io"
 )
 
 const (
@@ -55,8 +56,8 @@ func Send(pid int, data []byte, group...string) error {
                     break
                 }
             }
-
-            if err == nil {
+            // EOF不算异常错误
+            if err == nil || err == io.EOF {
                 break
             } else {
                 glog.Error(err)

@@ -76,6 +76,7 @@ func tcpServiceHandler(conn *gtcp.Conn) {
                     break
                 }
             }
+            // 成功时会返回ok给peer
             if len(result) == 0 {
                 result = []byte("ok")
                 for _, msg := range msgs {
@@ -129,9 +130,9 @@ func bufferToMsgs(buffer []byte) []*Msg {
     return msgs
 }
 
-// 获取其他进程传递到当前进程的消息包，阻塞执行
+// 获取其他进程传递到当前进程的消息包，阻塞执行。
 func Receive(group...string) *Msg {
-    // 开启端口监听
+    // 开启接收协程时才会开启端口监听
     go startTcpListening()
 
     var queue *gqueue.Queue

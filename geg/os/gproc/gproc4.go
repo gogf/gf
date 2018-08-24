@@ -8,7 +8,7 @@ import (
     "gitee.com/johng/gf/g/os/gproc"
 )
 
-// 查看进程的环境变量
+// 查看父子进程的环境变量
 func main () {
     time.Sleep(5*time.Second)
     glog.Printfln("%d: %v", gproc.Pid(), genv.All())

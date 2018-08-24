@@ -7,6 +7,7 @@ import (
     "gitee.com/johng/gf/g/os/gproc"
 )
 
+// 父子进程基本演示
 func main () {
     if gproc.IsChild() {
         glog.Printfln("%d: Hi, I am child, waiting 3 seconds to die", gproc.Pid())
