@@ -18,6 +18,7 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/os/gfilepool"
+    "gitee.com/johng/gf/g/container/gtype"
 )
 
 const (
@@ -36,23 +37,56 @@ func init() {
     }
 }
 
+// Logger浅拷贝，除了path，其他都是父对象属性的指针
+func (l *Logger) Clone() *Logger {
+    return &Logger {
+        pr       : l,
+        io       : l.GetIO(),
+        path     : gtype.NewString(l.path.Val()),
+        debug    : l.debug,
+        btSkip   : l.btSkip,
+        stdprint : l.stdprint,
+    }
+}
+
+// 设置下一次输出的日志分类(可以按照文件目录层级设置)，在当前logpath或者当前工作目录下创建category目录，
+// 这是一个链式操作，可以设置多个分类，将会创建层级的日志分类目录。
+func (l *Logger) Cat(category string) *Logger {
+    path := l.path.Val()
+    if path == "" {
+        path = gfile.Pwd()
+    }
+    path += gfile.Separator + category
+    if v := loggerMap.Get(path); v != nil {
+        return v.(*Logger)
+    } else {
+        logger := l.Clone()
+        logger.SetPath(path)
+        loggerMap.Set(path, logger)
+        return logger
+    }
+}
+
 // 设置BacktraceSkip
 func (l *Logger) SetBacktraceSkip(skip int) {
     l.btSkip.Set(skip)
 }
 
-// 可自定义IO接口
+// 可自定义IO接口，IO可以是文件输出、标准输出、网络输出
 func (l *Logger) SetIO(w io.Writer) {
     l.mu.Lock()
     l.io = w
     l.mu.Unlock()
 }
 
-// 返回自定义IO
+// 返回自定义的IO，默认为nil
 func (l *Logger) GetIO() io.Writer {
     l.mu.RLock()
     r := l.io
     l.mu.RUnlock()
+    if r == nil && l.pr != nil {
+        return l.pr.GetIO()
+    }
     return r
 }
 
@@ -82,7 +116,7 @@ func (l *Logger) SetPath(path string) error {
     // 检测目录权限
     if !gfile.Exists(path) {
         if err := gfile.Mkdir(path); err != nil {
-            fmt.Fprintln(os.Stderr, err)
+            fmt.Fprintln(os.Stderr, "glog mkdir failed: " + err.Error())
             return err
         }
     }
@@ -103,19 +137,21 @@ func (l *Logger) SetStdPrint(open bool) {
 }
 
 // 这里的写锁保证统一时刻只会写入一行日志，防止串日志的情况
-func (l *Logger) print(defaultIO io.Writer, s string) {
+func (l *Logger) print(def io.Writer, s string) {
+    // 优先使用自定义的IO输出
     writer := l.GetIO()
     if writer == nil {
+        // 如果设置的IO为空，那么其次判断是否有文件输出设置
         if f := l.getFileByPool(); f != nil {
             writer = f
-            // 同时输出到文件和终端
+            // 如果有文件设置那么需要判断是否同时输出到文件和终端
             // @author zseeker
             if l.stdprint.Val() {
-                writer = io.MultiWriter(writer, defaultIO)
+                writer = io.MultiWriter(writer, def)
             }
             defer f.Close()
         } else {
-            writer = defaultIO
+            writer = def
         }
     }
     l.mu.Lock()
