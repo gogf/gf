@@ -7,7 +7,8 @@ import (
     "gitee.com/johng/gf/g/os/gproc"
 )
 
-// 父进程销毁后，请使用进程管理器查看存活的子进程
+// 父进程销毁后，使用进程管理器查看存活的子进程。
+// 请使用go build编译后运行，不要使用IDE运行，因为IDE大多采用的是子进程方式执行。
 func main () {
     if gproc.IsChild() {
         glog.Printfln("%d: I am child, waiting 10 seconds to die", gproc.Pid())

@@ -7,6 +7,6 @@ import (
 
 // 执行shell指令
 func main () {
-    r, err := gproc.ShellExec("echo 'hello';")
+    r, err := gproc.ShellExec("sleep 3s; echo 'hello';")
     fmt.Println("result:", r, err)
 }

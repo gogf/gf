@@ -28,12 +28,6 @@ type Msg struct {
     Group string  // 分组名称
 }
 
-// TCP通信数据结构定义
-type sendQueueItem struct {
-    Pid  int    // PID，发向哪个进程
-    Data []byte // 数据
-}
-
 // 获取指定进程的通信文件地址
 func getCommFilePath(pid int) string {
     return getCommDirPath() + gfile.Separator + gconv.String(pid)
