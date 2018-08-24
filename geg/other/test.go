@@ -1,15 +1,10 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gregex"
-    "fmt"
+    "gitee.com/johng/gf/g/util/gutil"
+    "gitee.com/johng/gf/g/os/genv"
 )
 
-
 func main() {
-    s := `<a href="baidu.com">百度</a>"`
-    gregex.ReplaceStringFunc(`href="(.+?)"`, s, func(s string) string {
-        fmt.Println(s)
-        return s
-    })
+    gutil.Dump(genv.All())
 }
