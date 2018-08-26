@@ -142,7 +142,10 @@ func (s *Server)callServeHandler(h *handlerItem, r *Request) {
 
 // http server静态文件处理，path可以为相对路径也可以为绝对路径
 func (s *Server)serveFile(r *Request, path string) {
-    path = s.paths.Search(path)
+    // 首先判断是否给定的path已经是一个绝对路径
+    if !gfile.Exists(path) {
+        path = s.paths.Search(path)
+    }
     if path == "" {
         r.Response.WriteStatus(http.StatusNotFound)
         return

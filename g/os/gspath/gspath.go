@@ -69,21 +69,18 @@ func (sp *SPath) Add(path string) error {
 }
 
 // 按照优先级搜索文件，返回搜索到的文件绝对路径，找不到该文件时，返回空字符串
+// 给定的name只是相对文件路径，或者只是一个文件名
 func (sp *SPath) Search(name string) string {
     path := sp.cache.Get(name)
     if path == "" {
-        // 优先判断是否给定是已经是一个绝对路径
-        path = gfile.RealPath(name)
-        if path == "" {
-            sp.mu.RLock()
-            for _, v := range sp.paths {
-                path = gfile.RealPath(v + gfile.Separator + name)
-                if path != "" && gfile.Exists(path) {
-                    break
-                }
+        sp.mu.RLock()
+        for _, v := range sp.paths {
+            path = gfile.RealPath(v + gfile.Separator + name)
+            if path != "" && gfile.Exists(path) {
+                break
             }
-            sp.mu.RUnlock()
         }
+        sp.mu.RUnlock()
         if path != "" {
             sp.cache.Set(name, path)
             sp.addMonitor(name, path)
