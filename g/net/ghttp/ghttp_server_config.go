@@ -347,6 +347,11 @@ func (s *Server) SetNameToUriType(t int) {
     s.nameToUriType.Set(t)
 }
 
+// 添加静态文件搜索目录，必须给定目录的绝对路径
+func (s *Server) AddSearchPath(path string) error {
+    return s.paths.Add(path)
+}
+
 // 获取日志写入的回调函数
 func (s *Server) GetLogHandler() func(r *Request, error ... interface{}) {
     if v := s.logHandler.Val(); v != nil {

@@ -140,10 +140,11 @@ func (s *Server)callServeHandler(h *handlerItem, r *Request) {
     }
 }
 
-// http server静态文件处理
+// http server静态文件处理，path必须为完整的**绝对路径**
 func (s *Server)serveFile(r *Request, path string) {
     f, err := os.Open(path)
-    if err != nil {
+    if os.IsExist(err) {
+        r.Response.WriteStatus(http.StatusNotFound)
         return
     }
     info, _ := f.Stat()
