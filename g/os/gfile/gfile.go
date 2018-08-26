@@ -285,6 +285,20 @@ func IsWritable(path string) bool {
     return result
 }
 
+// 文件是否可执行
+func IsExecutable(path string) bool {
+    info, err := os.Stat(path)
+    if err != nil || info.IsDir() {
+        return false
+    }
+    // 73: 000 001 001 001
+    flag := info.Mode().Perm() & os.FileMode(73)
+    if uint32(flag) == uint32(73) {
+        return true
+    }
+    return false
+}
+
 // 修改文件/目录权限
 func Chmod(path string, mode os.FileMode) error {
     return os.Chmod(path, mode)
