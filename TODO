@@ -24,6 +24,8 @@ ghttp增加返回数据压缩机制；
 gview中的template标签失效问题；
 gfile文件stat信息使用gfsnotify进行缓存更新改进；
 ghttp.Server增加proxy功能特性，本地proxy和远程proxy，本地即将路由规则映射；远程即反向代理；
+gjson对大json数据的解析效率问题；
+
 
 
 DONE:
