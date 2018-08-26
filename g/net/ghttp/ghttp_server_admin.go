@@ -23,10 +23,12 @@ import (
     "time"
     "runtime"
     "bytes"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 const (
     gADMIN_ACTION_INTERVAL_LIMIT = 2000 // (毫秒)服务开启后允许执行管理操作的间隔限制
+    gADMIN_ACTION_NONE           = 0
     gADMIN_ACTION_RESTARTING     = 1
     gADMIN_ACTION_SHUTINGDOWN    = 2
     gADMIN_ACTION_RELOAD_ENVKEY  = "GF_SERVER_RELOAD"
@@ -68,7 +70,16 @@ func (p *utilAdmin) Index(r *Request) {
 // 服务重启
 func (p *utilAdmin) Restart(r *Request) {
     var err error = nil
+    // 必须检查可执行文件的权限
     path := r.GetQueryString("newExeFilePath")
+    if path == "" {
+        path = os.Args[0]
+    }
+    if !gfile.IsExecutable(path) {
+        r.Response.Writef("file '%s' is not executable", path)
+        return
+    }
+    // 执行重启操作
     if len(path) > 0 {
         err = r.Server.Restart(path)
     } else {
@@ -112,8 +123,7 @@ func (s *Server) Restart(newExeFilePath...string) error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
-    restartWebServers(false, newExeFilePath...)
-    return nil
+    return restartWebServers(false, newExeFilePath...)
 }
 
 // 关闭Web Server
@@ -153,7 +163,7 @@ func (s *Server) checkActionStatus() error {
 }
 
 // 平滑重启：创建一个子进程，通过环境变量传参
-func forkReloadProcess(newExeFilePath...string) {
+func forkReloadProcess(newExeFilePath...string) error {
     path := os.Args[0]
     if len(newExeFilePath) > 0 {
         path = newExeFilePath[0]
@@ -184,11 +194,13 @@ func forkReloadProcess(newExeFilePath...string) {
     p.Env = append(p.Env, gADMIN_ACTION_RELOAD_ENVKEY + "=" + string(buffer))
     if _, err := p.Start(); err != nil {
         glog.Errorfln("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
+        return err
     }
+    return nil
 }
 
 // 完整重启：创建一个新的子进程
-func forkRestartProcess(newExeFilePath...string) {
+func forkRestartProcess(newExeFilePath...string) error {
     path := os.Args[0]
     if len(newExeFilePath) > 0 {
         path = newExeFilePath[0]
@@ -200,7 +212,9 @@ func forkRestartProcess(newExeFilePath...string) {
     p   := gproc.NewProcess(path, os.Args, env)
     if _, err := p.Start(); err != nil {
         glog.Errorfln("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
+        return err
     }
+    return nil
 }
 
 // 获取所有Web Server的文件描述符map
@@ -231,24 +245,30 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 }
 
 // Web Server重启
-func restartWebServers(isSignal bool, newExeFilePath...string) {
+func restartWebServers(isSignal bool, newExeFilePath...string) error {
     serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
-    glog.Printfln("%d: server restarting", gproc.Pid())
     if runtime.GOOS == "windows" {
         if isSignal {
             // 在终端信号下，立即执行重启操作
             forcedlyCloseWebServers()
             forkRestartProcess(newExeFilePath...)
         } else {
-            // 非终端信号下，异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
-            gtime.SetTimeout(time.Second, func() {
+            // 非终端信号下，异步3秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+            gtime.SetTimeout(3*time.Second, func() {
                 forcedlyCloseWebServers()
                 forkRestartProcess(newExeFilePath...)
             })
         }
     } else {
-        forkReloadProcess(newExeFilePath...)
+        if err := forkReloadProcess(newExeFilePath...); err != nil {
+            glog.Printfln("%d: server restarts failed", gproc.Pid())
+            serverProcessStatus.Set(gADMIN_ACTION_NONE)
+            return err
+        } else {
+            glog.Printfln("%d: server restarting", gproc.Pid())
+        }
     }
+    return nil
 }
 
 // Web Server关闭服务
