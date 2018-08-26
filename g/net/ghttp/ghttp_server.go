@@ -232,15 +232,14 @@ func (s *Server) Start() error {
         return errors.New("server is already running")
     }
 
-    // 如果设置了静态文件目录，那么严格按照静态文件目录进行检索
-    // 否则，默认使用当前可执行文件目录，并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索
+    // 如果设置了静态文件目录，那么优先按照静态文件目录进行检索，其次是当前可执行文件工作目录；
+    // 并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索。
     if s.config.ServerRoot != "" {
         s.paths.Set(s.config.ServerRoot)
-    } else {
-        s.paths.Set(gfile.SelfDir())
-        if p := gfile.MainPkgPath(); gfile.Exists(p) {
-            s.paths.Add(p)
-        }
+    }
+    s.paths.Add(gfile.SelfDir())
+    if p := gfile.MainPkgPath(); gfile.Exists(p) {
+        s.paths.Add(p)
     }
 
     // 底层http server配置
