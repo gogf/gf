@@ -59,7 +59,7 @@ const (
 type Server struct {
     // 基本属性变量
     name             string                   // 服务名称，方便识别
-    paths            *gspath.SPath            // 静态文件检索对象
+    paths            *gspath.SPath            // 静态文件检索对象(类似nginx tryfile功能)
     config           ServerConfig             // 配置对象
     servers          []*gracefulServer        // 底层http.Server列表
     methodsMap       map[string]struct{}      // 所有支持的HTTP Method(初始化时自动填充)

@@ -1,10 +1,10 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gutil"
-    "gitee.com/johng/gf/g/os/genv"
+    "fmt"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 func main() {
-    gutil.Dump(genv.All())
+    fmt.Println(gfile.RealPath())
 }
