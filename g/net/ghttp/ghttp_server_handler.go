@@ -140,13 +140,19 @@ func (s *Server)callServeHandler(h *handlerItem, r *Request) {
     }
 }
 
-// http server静态文件处理，path必须为完整的**绝对路径**
+// http server静态文件处理，path可以为相对路径也可以为绝对路径
 func (s *Server)serveFile(r *Request, path string) {
-    f, err := os.Open(path)
-    if os.IsExist(err) {
+    path = s.paths.Search(path)
+    if path == "" {
         r.Response.WriteStatus(http.StatusNotFound)
         return
     }
+    f, err := os.Open(path)
+    if err != nil {
+        r.Response.WriteStatus(http.StatusForbidden)
+        return
+    }
+    defer f.Close()
     info, _ := f.Stat()
     if info.IsDir() {
         if s.config.IndexFolder {
@@ -158,7 +164,6 @@ func (s *Server)serveFile(r *Request, path string) {
         // 读取文件内容返回, no buffer
         http.ServeContent(r.Response.Writer, &r.Request, info.Name(), info.ModTime(), f)
     }
-    f.Close()
 }
 
 // 目录列表
