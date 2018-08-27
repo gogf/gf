@@ -18,6 +18,7 @@ import (
     "gitee.com/johng/gf/g/container/gring"
     "gitee.com/johng/gf/g/os/gtime"
     "time"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 const (
@@ -64,6 +65,22 @@ func (db *Db) PrintQueriedSqls() {
     }
 }
 
+// 打印SQL对象(仅在debug=true时有效)
+func (db *Db) printSql(v *Sql) {
+    s := fmt.Sprintf("%s, %v, %s, %s, %d ms, %s", v.Sql, v.Args,
+        gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"),
+        gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"),
+        v.End - v.Start, v.Func,
+    )
+    if v.Error != nil {
+        s += "\nError: " + v.Error.Error()
+        glog.Error(s)
+    } else {
+        glog.Debug(s)
+    }
+
+}
+
 // 关闭链接
 func (db *Db) Close() error {
     if db.master != nil {
@@ -92,14 +109,16 @@ func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
         militime1 := gtime.Millisecond()
         rows, err  = db.slave.Query(*p, args ...)
         militime2 := gtime.Millisecond()
-        db.sqls.Put(&Sql{
+        s := &Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
             Start : militime1,
             End   : militime2,
             Func  : "DB:Query",
-        })
+        }
+        db.sqls.Put(s)
+        db.printSql(s)
     } else {
         rows, err = db.slave.Query(*p, args ...)
     }
@@ -120,14 +139,16 @@ func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
         militime1  := gtime.Millisecond()
         result, err = db.master.Exec(*p, args ...)
         militime2  := gtime.Millisecond()
-        db.sqls.Put(&Sql{
+        s := &Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
             Start : militime1,
             End   : militime2,
             Func  : "DB:Exec",
-        })
+        }
+        db.sqls.Put(s)
+        db.printSql(s)
     } else {
         result, err = db.master.Exec(*p, args ...)
     }
