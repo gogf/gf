@@ -167,7 +167,7 @@ func (l *Logger) stdPrint(s string) {
 // 核心打印数据方法(标准错误)
 func (l *Logger) errPrint(s string) {
     // 记录调用回溯信息
-    backtrace := l.backtrace()
+    backtrace := l.GetBacktrace(3)
     if s[len(s) - 1] == byte('\n') {
         s = s + backtrace + ln
     } else {
@@ -176,15 +176,28 @@ func (l *Logger) errPrint(s string) {
     l.print(os.Stderr, s)
 }
 
-// 调用回溯字符串
-func (l *Logger) backtrace() string {
-    backtrace := "Trace:" + ln
+// 直接打印回溯信息，参数skip表示调用端往上多少级开始回溯
+func (l *Logger) PrintBacktrace(skip...int) {
+    customSkip := 1
+    if len(skip) > 0 {
+        customSkip += skip[0]
+    }
+    l.Println(l.GetBacktrace(customSkip))
+}
+
+// 获取文件调用回溯字符串，参数skip表示调用端往上多少级开始回溯
+func (l *Logger) GetBacktrace(skip...int) string {
+    customSkip := 0
+    if len(skip) > 0 {
+        customSkip += skip[0]
+    }
+    backtrace := ""
     index     := 1
     for i := 1; i < 10000; i++ {
-        if _, cfile, cline, ok := runtime.Caller(i + l.btSkip.Val()); ok {
+        if _, cfile, cline, ok := runtime.Caller(customSkip + i + l.btSkip.Val()); ok {
             // 不打印出go源码路径
             if !gregex.IsMatchString("^" + gfile.GoRootOfBuild(), cfile) {
-                backtrace += strconv.Itoa(index) + ". " + cfile + ":" + strconv.Itoa(cline) + ln
+                backtrace += strconv.Itoa(index) + ".\t" + cfile + ":" + strconv.Itoa(cline) + ln
                 index++
             }
         } else {

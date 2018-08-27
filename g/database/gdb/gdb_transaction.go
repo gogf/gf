@@ -42,14 +42,16 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
         militime1 := gtime.Millisecond()
         rows, err  = tx.tx.Query(*p, args ...)
         militime2 := gtime.Millisecond()
-        tx.db.sqls.Put(&Sql{
+        s := &Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
             Start : militime1,
             End   : militime2,
             Func  : "TX:Query",
-        })
+        }
+        tx.db.sqls.Put(s)
+        tx.db.printSql(s)
     } else {
         rows, err  = tx.tx.Query(*p, args ...)
     }
@@ -70,14 +72,16 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
         militime1  := gtime.Millisecond()
         result, err = tx.tx.Exec(*p, args ...)
         militime2  := gtime.Millisecond()
-        tx.db.sqls.Put(&Sql{
+        s := &Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
             Start : militime1,
             End   : militime2,
             Func  : "TX:Exec",
-        })
+        }
+        tx.db.sqls.Put(s)
+        tx.db.printSql(s)
     } else {
         result, err = tx.tx.Exec(*p, args ...)
     }

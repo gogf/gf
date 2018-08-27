@@ -10,7 +10,7 @@ func main() {
         Host:    "127.0.0.1",
         Port:    "3306",
         User:    "root",
-        Pass:    "123456",
+        Pass:    "8692651",
         Name:    "test",
         Type:    "mysql",
         Role:    "master",
@@ -31,5 +31,5 @@ func main() {
 
     db.Table("user").Data(g.Map{"name":"smith"}).Where("uid=?", 1).Save()
 
-    db.PrintQueriedSqls()
+    //db.PrintQueriedSqls()
 }

@@ -39,7 +39,7 @@ func New() *Logger {
         io       : nil,
         path     : gtype.NewString(),
         debug    : gtype.NewBool(true),
-        btSkip   : gtype.NewInt(3),
+        btSkip   : gtype.NewInt(),
         stdprint : gtype.NewBool(true),
     }
 }
@@ -62,6 +62,24 @@ func GetPath() string {
 // 设置下一次输出的分类，支持多级分类设置
 func Cat(category string) *Logger {
     return logger.Cat(category)
+}
+
+// 打印文件调用回溯信息
+func PrintBacktrace(skip...int) {
+    customSkip := 1
+    if len(skip) > 0 {
+        customSkip += skip[0]
+    }
+    logger.PrintBacktrace(customSkip)
+}
+
+// 获取文件调用回溯信息
+func GetBacktrace(skip...int) string {
+    customSkip := 1
+    if len(skip) > 0 {
+        customSkip += skip[0]
+    }
+    return logger.GetBacktrace(customSkip)
 }
 
 // 设置写日志的同时开启or关闭控制台打印，默认是关闭的

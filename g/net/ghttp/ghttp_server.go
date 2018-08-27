@@ -204,8 +204,8 @@ func GetServer(name...interface{}) (*Server) {
         nameToUriType    : gtype.NewInt(),
         gzipMimesMap     : make(map[string]struct{}),
     }
-    s.errorLogger.SetBacktraceSkip(4)
-    s.accessLogger.SetBacktraceSkip(4)
+    s.errorLogger.SetBacktraceSkip(1)
+    s.accessLogger.SetBacktraceSkip(1)
     // 设置路由解析缓存上限，使用LRU进行缓存淘汰
     s.serveCache.SetCap(gSERVE_CACHE_LRU_SIZE)
     s.hooksCache.SetCap(gHOOKS_CACHE_LRU_SIZE)
