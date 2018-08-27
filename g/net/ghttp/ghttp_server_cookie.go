@@ -37,19 +37,18 @@ type CookieItem struct {
 
 // 获取或者创建一个cookie对象，与传入的请求对应
 func GetCookie(r *Request) *Cookie {
-    if v := r.Server.cookies.Get(r.Id); v != nil {
-        return v.(*Cookie)
+    if r.Cookie != nil {
+        return r.Cookie
     }
-    c := &Cookie {
+    r.Cookie = &Cookie {
         data     : make(map[string]CookieItem),
         domain   : r.GetHost(),
         server   : r.Server,
         request  : r,
         response : r.Response,
     }
-    c.init()
-    r.Server.cookies.Set(r.Id, c)
-    return c
+    r.Cookie.init()
+    return r.Cookie
 }
 
 // 从请求流中初始化，无锁
@@ -125,14 +124,10 @@ func (c *Cookie) Remove(key, domain, path string) {
     c.SetCookie(key, "", domain, path, -86400)
 }
 
-// 请求完毕后删除已经存在的Cookie对象
-func (c *Cookie) Close() {
-    c.server.cookies.Remove(c.request.Id)
-}
-
 // 输出到客户端
 func (c *Cookie) Output() {
     c.mu.RLock()
+    defer c.mu.RUnlock()
     for k, v := range c.data {
         // 只有expire != 0的才是服务端在本地请求中设置的cookie
         if v.expire == 0 {
@@ -150,5 +145,4 @@ func (c *Cookie) Output() {
             },
         )
     }
-    c.mu.RUnlock()
 }

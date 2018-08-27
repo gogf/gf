@@ -198,8 +198,6 @@ func (s *Server) startCloseQueueLoop() {
             if v := s.closeQueue.PopFront(); v != nil {
                 r := v.(*Request)
                 s.callHookHandler(HOOK_BEFORE_CLOSE, r)
-                // 关闭当前会话的Cookie
-                r.Cookie.Close()
                 // 更新Session会话超时时间
                 r.Session.UpdateExpire()
                 s.callHookHandler(HOOK_AFTER_CLOSE, r)
