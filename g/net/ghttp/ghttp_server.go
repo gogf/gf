@@ -403,8 +403,8 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
                 glog.Error(err)
             }
-            // 如果所有异步的Server都已经停止，那么主Server就可以退出了
-            if serverRunning.Val() < 1 {
+            // 如果所有异步的Server都已经停止，并且没有在管理操作(重启/关闭)进行中，那么主Server就可以退出了
+            if serverRunning.Val() < 1 && serverProcessStatus.Val() == 0 {
                 doneChan <- struct{}{}
             }
         }(v)

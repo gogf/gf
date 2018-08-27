@@ -10,22 +10,18 @@ ghttp.Response增加输出内容后自动退出当前请求机制，不需要用
 Cookie&Session数据池化处理；
 ghttp.Client增加proxy特性；
 gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
-ghttp获取参数支持直接转struct功能；
-map转struct增加对tag的支持；
-gcache检查在i386下的int64->int转换问题；
-gfsnotify增加对于目录的监控；
 orm增加sqlite对Save方法的支持(去掉触发器语句);
 ghttp.Server的Cookie及Session锁机制优化(去掉map锁机制);
 ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
 ghttp路由功能增加分组路由特性；
 解决glog串日志情况；
 ghttp增加返回数据压缩机制；
-检查windows下的平滑重启失效问题；
 gview中的template标签失效问题；
 gfile文件stat信息使用gfsnotify进行缓存更新改进；
 ghttp.Server增加proxy功能特性，本地proxy和远程proxy，本地即将路由规则映射；远程即反向代理；
 gjson对大json数据的解析效率问题；
 ghttp增加route name特性，并同时支持backend和template(提供内置函数)引用，可以通过RedirectRoute方法给定route name和路由参数跳转到指定的路由地址上；
+
 
 
 DONE:
@@ -63,3 +59,8 @@ DONE:
 32. 增加文件缓存包，可根据fsnotify机制进行缓存更新；
 33. *any/:name路由匹配路由改进支持不带名字的*/:路由规则；
 34. ghttp静态文件服务改进(特别是403返回状态的修改)；
+35. map转struct增加对tag的支持；
+36. gcache检查在i386下的int64->int转换问题；
+37. ghttp获取参数支持直接转struct功能；
+38. gfsnotify增加对于目录的监控；
+39. 检查windows下的平滑重启失效问题；
