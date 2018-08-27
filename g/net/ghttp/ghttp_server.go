@@ -76,7 +76,6 @@ type Server struct {
     statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
     // COOKIE
     cookieMaxAge     *gtype.Int               // Cookie有效期
-    cookies          *gmap.IntInterfaceMap    // 当前服务器正在服务(请求正在执行)的Cookie(每个请求一个Cookie对象)
     // SESSION
     sessionMaxAge    *gtype.Int               // Session有效期
     sessionIdName    *gtype.String            // SessionId名称
@@ -189,7 +188,6 @@ func GetServer(name...interface{}) (*Server) {
         serveCache       : gcache.New(),
         hooksCache       : gcache.New(),
         routesMap        : make(map[string]string),
-        cookies          : gmap.NewIntInterfaceMap(),
         sessions         : gcache.New(),
         servedCount      : gtype.NewInt(),
         closeQueue       : gqueue.New(),
