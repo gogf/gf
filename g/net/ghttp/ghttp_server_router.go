@@ -35,7 +35,7 @@ func (s *Server)parsePattern(pattern string) (domain, method, uri string, err er
     if uri == "" {
         err = errors.New("invalid pattern")
     }
-    // 去掉末尾的"/"符号，与路由匹配时处理一直
+    // 去掉末尾的"/"符号，与路由匹配时处理一致
     if uri != "/" {
         uri = strings.TrimRight(uri, "/")
     }
@@ -61,7 +61,15 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("cannot bind handler while server running")
     }
-    regkey := fmt.Sprintf(`%s@%v`, pattern, hook)
+    var hookName string
+    if len(hook) > 0 {
+        hookName = hook[0]
+    }
+    domain, method, uri, err := s.parsePattern(pattern)
+    if err != nil {
+        return errors.New("invalid pattern")
+    }
+    regkey := s.hookHandlerKey(hookName, method, uri, domain)
     caller := s.getHandlerRegisterCallerLine(handler)
     if line, ok := s.routesMap[regkey]; ok {
         s := fmt.Sprintf(`duplicated route registry "%s" in %s , former in %s`, pattern, caller, line)
@@ -73,15 +81,6 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
                 s.routesMap[regkey] = caller
             }
         }()
-    }
-
-    var hookName string
-    if len(hook) > 0 {
-        hookName = hook[0]
-    }
-    domain, method, uri, err := s.parsePattern(pattern)
-    if err != nil {
-        return errors.New("invalid pattern")
     }
 
     // 路由对象
