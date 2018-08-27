@@ -61,15 +61,16 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("cannot bind handler while server running")
     }
+    regkey := fmt.Sprintf(`%s@%v`, pattern, hook)
     caller := s.getHandlerRegisterCallerLine(handler)
-    if line, ok := s.routesMap[pattern]; ok {
+    if line, ok := s.routesMap[regkey]; ok {
         s := fmt.Sprintf(`duplicated route registry "%s" in %s , former in %s`, pattern, caller, line)
         glog.Errorfln(s)
         return errors.New(s)
     } else {
         defer func() {
             if resultErr == nil {
-                s.routesMap[pattern] = caller
+                s.routesMap[regkey] = caller
             }
         }()
     }

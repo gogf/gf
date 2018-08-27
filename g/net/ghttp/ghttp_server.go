@@ -70,7 +70,7 @@ type Server struct {
     hooksTree        map[string]interface{}   // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
     serveCache       *gcache.Cache            // 服务注册路由内存缓存
     hooksCache       *gcache.Cache            // 事件回调路由内存缓存
-    routesMap        map[string]string        // 已经注册的路由及对应的注册方法文件地址
+    routesMap        map[string]string        // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
     // 自定义状态码回调
     hsmu             sync.RWMutex             // status handler互斥锁
     statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
