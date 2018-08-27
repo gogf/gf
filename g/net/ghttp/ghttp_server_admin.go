@@ -23,7 +23,6 @@ import (
     "time"
     "runtime"
     "bytes"
-    "gitee.com/johng/gf/g/os/gfile"
 )
 
 const (
@@ -74,10 +73,6 @@ func (p *utilAdmin) Restart(r *Request) {
     path := r.GetQueryString("newExeFilePath")
     if path == "" {
         path = os.Args[0]
-    }
-    if !gfile.IsExecutable(path) {
-        r.Response.Writef("file '%s' is not executable", path)
-        return
     }
     // 执行重启操作
     if len(path) > 0 {
@@ -253,8 +248,8 @@ func restartWebServers(isSignal bool, newExeFilePath...string) error {
             forcedlyCloseWebServers()
             forkRestartProcess(newExeFilePath...)
         } else {
-            // 非终端信号下，异步3秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
-            gtime.SetTimeout(3*time.Second, func() {
+            // 非终端信号下，异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+            gtime.SetTimeout(time.Second, func() {
                 forcedlyCloseWebServers()
                 forkRestartProcess(newExeFilePath...)
             })

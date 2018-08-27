@@ -61,6 +61,11 @@ func (s *Session) Set (k string, v interface{}) {
     s.data.Set(k, v)
 }
 
+// 批量设置(BatchSet别名)
+func (s *Session) Sets (m map[string]interface{}) {
+    s.BatchSet(m)
+}
+
 // 批量设置
 func (s *Session) BatchSet (m map[string]interface{}) {
     s.data.BatchSet(m)
