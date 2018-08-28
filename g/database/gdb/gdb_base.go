@@ -74,11 +74,10 @@ func (db *Db) printSql(v *Sql) {
     )
     if v.Error != nil {
         s += "\nError: " + v.Error.Error()
-        glog.Error(s)
+        glog.Backtrace(true, 1).Error(s)
     } else {
         glog.Debug(s)
     }
-
 }
 
 // 关闭链接
