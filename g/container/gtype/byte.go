@@ -21,14 +21,18 @@ func NewByte(value...byte) *Byte {
     return &Byte{}
 }
 
-func (t *Byte)Set(value byte) {
+func (t *Byte) Clone() *Byte {
+    return NewByte(t.Val())
+}
+
+func (t *Byte) Set(value byte) {
     atomic.StoreInt32(&t.val, int32(value))
 }
 
-func (t *Byte)Val() byte {
+func (t *Byte) Val() byte {
     return byte(atomic.LoadInt32(&t.val))
 }
 
-func (t *Byte)Add(delta int) byte {
+func (t *Byte) Add(delta int) byte {
     return byte(atomic.AddInt32(&t.val, int32(delta)))
 }

@@ -21,14 +21,18 @@ func NewInt(value...int) *Int {
     return &Int{}
 }
 
-func (t *Int)Set(value int) {
+func (t *Int) Clone() *Int {
+    return NewInt(t.Val())
+}
+
+func (t *Int) Set(value int) {
     atomic.StoreInt64(&t.val, int64(value))
 }
 
-func (t *Int)Val() int {
+func (t *Int) Val() int {
     return int(atomic.LoadInt64(&t.val))
 }
 
-func (t *Int)Add(delta int) int {
+func (t *Int) Add(delta int) int {
     return int(atomic.AddInt64(&t.val, int64(delta)))
 }

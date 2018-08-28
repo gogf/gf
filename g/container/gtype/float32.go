@@ -22,15 +22,19 @@ func NewFloat32(value...float32) *Float32 {
     return &Float32{}
 }
 
-func (t *Float32)Set(value float32) {
+func (t *Float32) Clone() *Float32 {
+    return NewFloat32(t.Val())
+}
+
+func (t *Float32) Set(value float32) {
     atomic.StoreUint32(&t.val, float32ToUint32InBits(value) )
 }
 
-func (t *Float32)Val() float32 {
+func (t *Float32) Val() float32 {
     return uint32ToFloat32InBits(atomic.LoadUint32(&t.val))
 }
 
-func (t *Float32)Add(delta float32) float32 {
+func (t *Float32) Add(delta float32) float32 {
     return uint32ToFloat32InBits(atomic.AddUint32(&t.val, float32ToUint32InBits(delta)))
 }
 

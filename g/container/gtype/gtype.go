@@ -6,3 +6,9 @@
 
 // 并发安全的基本类型.
 package gtype
+
+type Type = Interface
+
+func New(value ... interface{}) *Type {
+    return NewInterface(value...)
+}

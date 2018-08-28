@@ -26,7 +26,11 @@ func NewBool(value...bool) *Bool {
     return t
 }
 
-func (t *Bool)Set(value bool) {
+func (t *Bool) Clone() *Bool {
+    return NewBool(t.Val())
+}
+
+func (t *Bool) Set(value bool) {
     if value {
         atomic.StoreInt32(&t.val, 1)
     } else {
@@ -34,6 +38,6 @@ func (t *Bool)Set(value bool) {
     }
 }
 
-func (t *Bool)Val() bool {
+func (t *Bool) Val() bool {
     return atomic.LoadInt32(&t.val) > 0
 }

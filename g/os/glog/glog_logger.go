@@ -37,33 +37,29 @@ func init() {
     }
 }
 
-// Logger浅拷贝，除了path，其他都是父对象属性的指针
-func (l *Logger) Clone() *Logger {
+
+// 新建自定义的日志操作对象
+func New() *Logger {
     return &Logger {
-        pr       : l,
-        io       : l.GetIO(),
-        path     : gtype.NewString(l.path.Val()),
-        debug    : l.debug,
-        btSkip   : l.btSkip,
-        stdprint : l.stdprint,
+        io         : nil,
+        path       : gtype.NewString(),
+        debug      : gtype.NewBool(true),
+        btSkip     : gtype.NewInt(),
+        btEnabled  : gtype.NewBool(true),
+        allowMulti : gtype.NewBool(true),
     }
 }
 
-// 设置下一次输出的日志分类(可以按照文件目录层级设置)，在当前logpath或者当前工作目录下创建category目录，
-// 这是一个链式操作，可以设置多个分类，将会创建层级的日志分类目录。
-func (l *Logger) Cat(category string) *Logger {
-    path := l.path.Val()
-    if path == "" {
-        path = gfile.Pwd()
-    }
-    path += gfile.Separator + category
-    if v := loggerMap.Get(path); v != nil {
-        return v.(*Logger)
-    } else {
-        logger := l.Clone()
-        logger.SetPath(path)
-        loggerMap.Set(path, logger)
-        return logger
+// Logger深拷贝
+func (l *Logger) Clone() *Logger {
+    return &Logger {
+        pr         : l,
+        io         : l.GetIO(),
+        path       : l.path.Clone(),
+        debug      : l.debug.Clone(),
+        btSkip     : l.btSkip.Clone(),
+        btEnabled  : l.btEnabled.Clone(),
+        allowMulti : l.allowMulti.Clone(),
     }
 }
 
@@ -84,9 +80,6 @@ func (l *Logger) GetIO() io.Writer {
     l.mu.RLock()
     r := l.io
     l.mu.RUnlock()
-    if r == nil && l.pr != nil {
-        return l.pr.GetIO()
-    }
     return r
 }
 
@@ -105,6 +98,10 @@ func (l *Logger) getFileByPool() *gfilepool.File {
 
 func (l *Logger) GetDebug() bool {
     return l.debug.Val()
+}
+
+func (l *Logger) SetBacktrace(enabled bool) {
+    l.btEnabled.Set(enabled)
 }
 
 func (l *Logger) SetDebug(debug bool) {
@@ -133,7 +130,7 @@ func (l *Logger) SetPath(path string) error {
 // @author zseeker
 // @date   2018-05-24
 func (l *Logger) SetStdPrint(open bool) {
-    l.stdprint.Set(open)
+    l.allowMulti.Set(open)
 }
 
 // 这里的写锁保证统一时刻只会写入一行日志，防止串日志的情况
@@ -146,7 +143,7 @@ func (l *Logger) print(def io.Writer, s string) {
             writer = f
             // 如果有文件设置那么需要判断是否同时输出到文件和终端
             // @author zseeker
-            if l.stdprint.Val() {
+            if l.allowMulti.Val() {
                 writer = io.MultiWriter(writer, def)
             }
             defer f.Close()
@@ -167,11 +164,13 @@ func (l *Logger) stdPrint(s string) {
 // 核心打印数据方法(标准错误)
 func (l *Logger) errPrint(s string) {
     // 记录调用回溯信息
-    backtrace := l.GetBacktrace(3)
-    if s[len(s) - 1] == byte('\n') {
-        s = s + backtrace + ln
-    } else {
-        s = s + ln + backtrace + ln
+    if l.btEnabled.Val() {
+        backtrace := l.GetBacktrace(3)
+        if s[len(s) - 1] == byte('\n') {
+            s = s + backtrace + ln
+        } else {
+            s = s + ln + backtrace + ln
+        }
     }
     l.print(os.Stderr, s)
 }

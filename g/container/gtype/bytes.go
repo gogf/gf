@@ -22,13 +22,17 @@ func NewBytes(value...[]byte) *Bytes {
     return &Bytes{}
 }
 
-func (t *Bytes)Set(value []byte) {
+func (t *Bytes) Clone() *Bytes {
+    return NewBytes(t.Val())
+}
+
+func (t *Bytes) Set(value []byte) {
     t.mu.Lock()
     t.val = value
     t.mu.Unlock()
 }
 
-func (t *Bytes)Val() []byte {
+func (t *Bytes) Val() []byte {
     t.mu.RLock()
     b := t.val
     t.mu.RUnlock()
