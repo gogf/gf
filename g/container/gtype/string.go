@@ -22,13 +22,17 @@ func NewString(value...string) *String {
     return &String{}
 }
 
-func (t *String)Set(value string) {
+func (t *String) Clone() *String {
+    return NewString(t.Val())
+}
+
+func (t *String) Set(value string) {
     t.mu.Lock()
     t.val = value
     t.mu.Unlock()
 }
 
-func (t *String)Val() string {
+func (t *String) Val() string {
     t.mu.RLock()
     s := t.val
     t.mu.RUnlock()

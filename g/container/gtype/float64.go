@@ -22,15 +22,19 @@ func NewFloat64(value...float64) *Float64 {
     return &Float64{}
 }
 
-func (t *Float64)Set(value float64) {
+func (t *Float64) Clone() *Float64 {
+    return NewFloat64(t.Val())
+}
+
+func (t *Float64) Set(value float64) {
     atomic.StoreUint64(&t.val, float64ToUint64InBits(value) )
 }
 
-func (t *Float64)Val() float64 {
+func (t *Float64) Val() float64 {
     return uint64ToFloat64InBits(atomic.LoadUint64(&t.val))
 }
 
-func (t *Float64)Add(delta float64) float64 {
+func (t *Float64) Add(delta float64) float64 {
     return uint64ToFloat64InBits(atomic.AddUint64(&t.val, float64ToUint64InBits(delta)))
 }
 

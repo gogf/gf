@@ -23,13 +23,17 @@ func NewInterface(value...interface{}) *Interface {
     return &Interface{}
 }
 
-func (t *Interface)Set(value interface{}) {
+func (t *Interface) Clone() *Interface{
+    return NewInterface(t.Val())
+}
+
+func (t *Interface) Set(value interface{}) {
     t.mu.Lock()
     t.val = value
     t.mu.Unlock()
 }
 
-func (t *Interface)Val() interface{} {
+func (t *Interface) Val() interface{} {
     t.mu.RLock()
     b := t.val
     t.mu.RUnlock()

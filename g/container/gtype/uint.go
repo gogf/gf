@@ -21,14 +21,18 @@ func NewUint(value...uint) *Uint {
     return &Uint{}
 }
 
-func (t *Uint)Set(value uint) {
+func (t *Uint) Clone() *Uint {
+    return NewUint(t.Val())
+}
+
+func (t *Uint) Set(value uint) {
     atomic.StoreUint64(&t.val, uint64(value))
 }
 
-func (t *Uint)Val() uint {
+func (t *Uint) Val() uint {
     return uint(atomic.LoadUint64(&t.val))
 }
 
-func (t *Uint)Add(delta uint) int {
+func (t *Uint) Add(delta uint) int {
     return int(atomic.AddUint64(&t.val, uint64(delta)))
 }

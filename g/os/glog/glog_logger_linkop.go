@@ -1,0 +1,41 @@
+// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://gitee.com/johng/gf.
+
+package glog
+
+import "gitee.com/johng/gf/g/os/gfile"
+
+// 链式操作，设置下一次输出的日志分类(可以按照文件目录层级设置)，在当前logpath或者当前工作目录下创建category目录，
+// 这是一个链式操作，可以设置多个分类，将会创建层级的日志分类目录。
+func (l *Logger) Cat(category string) *Logger {
+    logger := (*Logger)(nil)
+    if l.pr == nil {
+        logger = l.Clone()
+    } else {
+        logger = l
+    }
+    path := l.path.Val()
+    if path == "" {
+        path = gfile.Pwd()
+    }
+    logger.SetPath(path + gfile.Separator + category)
+    return logger
+}
+
+// 设置文件调用回溯信息
+func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
+    logger := (*Logger)(nil)
+    if l.pr == nil {
+        logger = l.Clone()
+    } else {
+        logger = l
+    }
+    logger.SetBacktrace(enabled)
+    if len(skip) > 0 {
+        logger.SetBacktraceSkip(skip[0])
+    }
+    return logger
+}

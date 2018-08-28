@@ -21,14 +21,18 @@ func NewUint32(value...uint32) *Uint32 {
     return &Uint32{}
 }
 
-func (t *Uint32)Set(value uint32) {
+func (t *Uint32) Clone() *Uint32 {
+    return NewUint32(t.Val())
+}
+
+func (t *Uint32) Set(value uint32) {
     atomic.StoreUint32(&t.val, value)
 }
 
-func (t *Uint32)Val() uint32 {
+func (t *Uint32) Val() uint32 {
     return atomic.LoadUint32(&t.val)
 }
 
-func (t *Uint32)Add(delta uint32) uint32 {
+func (t *Uint32) Add(delta uint32) uint32 {
     return atomic.AddUint32(&t.val, delta)
 }
