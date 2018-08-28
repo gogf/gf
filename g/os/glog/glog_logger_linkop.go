@@ -39,3 +39,15 @@ func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
     }
     return logger
 }
+
+// 是否允许在设置输出文件时同时也输出到终端
+func (l *Logger) StdPrint(enabled bool) *Logger {
+    logger := (*Logger)(nil)
+    if l.pr == nil {
+        logger = l.Clone()
+    } else {
+        logger = l
+    }
+    logger.SetStdPrint(enabled)
+    return logger
+}

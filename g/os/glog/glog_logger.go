@@ -129,8 +129,8 @@ func (l *Logger) SetPath(path string) error {
 // 设置写日志时开启or关闭控制台打印，默认是关闭的
 // @author zseeker
 // @date   2018-05-24
-func (l *Logger) SetStdPrint(open bool) {
-    l.allowMulti.Set(open)
+func (l *Logger) SetStdPrint(enabled bool) {
+    l.allowMulti.Set(enabled)
 }
 
 // 这里的写锁保证统一时刻只会写入一行日志，防止串日志的情况

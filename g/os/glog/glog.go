@@ -45,11 +45,6 @@ func GetPath() string {
     return logger.path.Val()
 }
 
-// 设置下一次输出的分类，支持多级分类设置
-func Cat(category string) *Logger {
-    return logger.Cat(category)
-}
-
 // 打印文件调用回溯信息
 func PrintBacktrace(skip...int) {
     customSkip := 1
@@ -73,6 +68,21 @@ func GetBacktrace(skip...int) string {
 // @date   2018-05-24
 func SetStdPrint(open bool) {
     logger.SetStdPrint(open)
+}
+
+// 设置下一次输出的分类，支持多级分类设置
+func Cat(category string) *Logger {
+    return logger.Cat(category)
+}
+
+// 设置文件调用回溯信息
+func Backtrace(enabled bool, skip...int) *Logger {
+    return logger.Backtrace(enabled, skip...)
+}
+
+// 是否允许在设置输出文件时同时也输出到终端
+func StdPrint(enabled bool) *Logger {
+    return logger.StdPrint(enabled)
 }
 
 func Print(v ...interface{}) {
