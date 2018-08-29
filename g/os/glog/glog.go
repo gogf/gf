@@ -15,14 +15,14 @@ import (
 )
 
 type Logger struct {
-    mu         sync.RWMutex
-    pr         *Logger             // 父级Logger
-    io         io.Writer           // 日志内容写入的IO接口
-    path       *gtype.String       // 日志写入的目录路径
-    debug      *gtype.Bool         // 是否允许输出DEBUG信息
-    btSkip     *gtype.Int          // 错误产生时的backtrace回调信息skip条数
-    btEnabled  *gtype.Bool         // 是否当打印错误时同时开启backtrace打印
-    allowMulti *gtype.Bool         // 控制台打印开关，当输出到文件时也同时打印到终端
+    mu           sync.RWMutex
+    pr           *Logger             // 父级Logger
+    io           io.Writer           // 日志内容写入的IO接口
+    path         *gtype.String       // 日志写入的目录路径
+    debug        *gtype.Bool         // 是否允许输出DEBUG信息
+    btSkip       *gtype.Int          // 错误产生时的backtrace回调信息skip条数
+    btEnabled    *gtype.Bool         // 是否当打印错误时同时开启backtrace打印
+    alsoStdPrint *gtype.Bool         // 控制台打印开关，当输出到文件/自定义输出时也同时打印到终端
 }
 
 var (

@@ -28,15 +28,15 @@ type Cache struct {
     smu        sync.RWMutex              // eksets锁
     lru        *_Lru                     // LRU缓存限制(只有限定池大小时才启用)
     cap        *gtype.Int                // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
-    data       map[string]_CacheItem     // 缓存数据(所有的缓存数据存放哈希表)
-    ekmap      map[string]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)
-    eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表(用于自动过期快速删除)
+    data       map[string]CacheItem      // 缓存数据(所有的缓存数据存放哈希表)
+    ekmap      map[string]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)，键值为秒级时间戳
+    eksets     map[int64]*gset.StringSet // 分组过期时间对应的键名列表(用于自动过期快速删除)，键值为秒级时间戳
     eventQueue *gqueue.Queue             // 异步处理队列
     stopEvents chan struct{}             // 关闭时间通知
 }
 
 // 缓存数据项
-type _CacheItem struct {
+type CacheItem struct {
     v interface{} // 缓存键值
     e int64       // 过期时间
 }
@@ -48,14 +48,14 @@ type _EventItem struct {
 }
 
 // 全局缓存管理对象
-var cache *Cache = New()
+var cache = New()
 
 // Cache对象按照缓存键名首字母做了分组
 func New() *Cache {
     c := &Cache {
         lru        : newLru(),
         cap        : gtype.NewInt(),
-        data       : make(map[string]_CacheItem),
+        data       : make(map[string]CacheItem),
         ekmap      : make(map[string]int64),
         eksets     : make(map[int64]*gset.StringSet),
         eventQueue : gqueue.New(),
@@ -94,20 +94,6 @@ func Remove(key string) {
 // (使用全局KV缓存对象)批量删除指定键值对
 func BatchRemove(keys []string) {
     cache.BatchRemove(keys)
-}
-
-// 基于内存缓存的锁，锁成功返回true，失败返回false，当失败时表示有其他的锁存在
-func Lock(key string, expire int) bool {
-    if v := cache.Get(key); v != nil {
-        return false
-    }
-    cache.Set(key, struct {}{}, expire)
-    return true
-}
-
-// 解除基于内存缓存的锁
-func Unlock(key string) {
-    cache.Remove(key)
 }
 
 // 获得所有的键名，组成字符串数组返回
@@ -168,7 +154,7 @@ func (c *Cache) Set(key string, value interface{}, expire int) {
         e = gDEFAULT_MAX_EXPIRE
     }
     c.dmu.Lock()
-    c.data[key] = _CacheItem{v : value, e : e}
+    c.data[key] = CacheItem{v : value, e : e}
     c.dmu.Unlock()
     c.eventQueue.PushBack(_EventItem{k : key, e : e})
 }
@@ -183,24 +169,10 @@ func (c *Cache) BatchSet(data map[string]interface{}, expire int)  {
     }
     for k, v := range data {
         c.dmu.Lock()
-        c.data[k] = _CacheItem{v: v, e: e}
+        c.data[k] = CacheItem{v: v, e: e}
         c.dmu.Unlock()
         c.eventQueue.PushBack(_EventItem{k: k, e:e})
     }
-}
-
-// 基于内存缓存的锁，锁成功返回true，失败返回false，当失败时表示有其他的锁存在
-func (c *Cache) Lock(key string, expire int) bool {
-    if v := c.Get(key); v != nil {
-        return false
-    }
-    c.Set(key, struct {}{}, expire)
-    return true
-}
-
-// 解除基于内存缓存的锁
-func (c *Cache) Unlock(key string) {
-    c.Remove(key)
 }
 
 // 获取指定键名的值
@@ -208,10 +180,8 @@ func (c *Cache) Get(key string) interface{} {
     c.dmu.RLock()
     item, ok := c.data[key]
     c.dmu.RUnlock()
-    if ok {
-        if item.e > gtime.Millisecond() {
-            return item.v
-        }
+    if ok && !item.IsExpired() {
+        return item.v
     }
     return nil
 }
@@ -225,7 +195,7 @@ func (c *Cache) Remove(key string) {
 func (c *Cache) BatchRemove(keys []string) {
     for _, key := range keys {
         c.dmu.Lock()
-        c.data[key] = _CacheItem{v: nil, e: -1000}
+        c.data[key] = CacheItem{v: nil, e: -1000}
         c.dmu.Unlock()
         c.eventQueue.PushBack(_EventItem{k: key, e: -1000})
     }
@@ -336,7 +306,13 @@ func (c *Cache) autoClearLoop() {
 func (c *Cache) clearByKey(key string) bool {
     // 删除缓存数据
     c.dmu.Lock()
-    delete(c.data,  key)
+    // 为防止删除时正好该key正在进行写操作，因此在内部需要使用写锁再进行一次确认
+    if item, ok := c.data[key]; ok && item.IsExpired() {
+        delete(c.data, key)
+    } else {
+        c.dmu.Unlock()
+        return true
+    }
     c.dmu.Unlock()
 
     // 删除异步处理数据项，并更新缓存的内存使用大小记录值
