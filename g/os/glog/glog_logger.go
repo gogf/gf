@@ -3,6 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
+// @author john, zseeker
 
 package glog
 
@@ -19,6 +20,7 @@ import (
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/os/gfilepool"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/os/gmlock"
 )
 
 const (
@@ -41,25 +43,25 @@ func init() {
 // 新建自定义的日志操作对象
 func New() *Logger {
     return &Logger {
-        io         : nil,
-        path       : gtype.NewString(),
-        debug      : gtype.NewBool(true),
-        btSkip     : gtype.NewInt(),
-        btEnabled  : gtype.NewBool(true),
-        allowMulti : gtype.NewBool(true),
+        io           : nil,
+        path         : gtype.NewString(),
+        debug        : gtype.NewBool(true),
+        btSkip       : gtype.NewInt(),
+        btEnabled    : gtype.NewBool(true),
+        alsoStdPrint : gtype.NewBool(true),
     }
 }
 
 // Logger深拷贝
 func (l *Logger) Clone() *Logger {
     return &Logger {
-        pr         : l,
-        io         : l.GetIO(),
-        path       : l.path.Clone(),
-        debug      : l.debug.Clone(),
-        btSkip     : l.btSkip.Clone(),
-        btEnabled  : l.btEnabled.Clone(),
-        allowMulti : l.allowMulti.Clone(),
+        pr           : l,
+        io           : l.GetIO(),
+        path         : l.path.Clone(),
+        debug        : l.debug.Clone(),
+        btSkip       : l.btSkip.Clone(),
+        btEnabled    : l.btEnabled.Clone(),
+        alsoStdPrint : l.alsoStdPrint.Clone(),
     }
 }
 
@@ -130,30 +132,30 @@ func (l *Logger) SetPath(path string) error {
 // @author zseeker
 // @date   2018-05-24
 func (l *Logger) SetStdPrint(enabled bool) {
-    l.allowMulti.Set(enabled)
+    l.alsoStdPrint.Set(enabled)
 }
 
 // 这里的写锁保证统一时刻只会写入一行日志，防止串日志的情况
-func (l *Logger) print(def io.Writer, s string) {
+func (l *Logger) print(std io.Writer, s string) {
     // 优先使用自定义的IO输出
+    str    := l.format(s)
     writer := l.GetIO()
     if writer == nil {
         // 如果设置的IO为空，那么其次判断是否有文件输出设置
+        // 内部使用了内存锁，保证在glog中对同一个日志文件的并发写入不会串日志
         if f := l.getFileByPool(); f != nil {
-            writer = f
-            // 如果有文件设置那么需要判断是否同时输出到文件和终端
-            // @author zseeker
-            if l.allowMulti.Val() {
-                writer = io.MultiWriter(writer, def)
-            }
             defer f.Close()
-        } else {
-            writer = def
+            key := l.path.Val()
+            gmlock.Lock(key)
+            io.WriteString(f, str)
+            gmlock.Unlock(key)
         }
+    } else {
+        io.WriteString(writer, str)
     }
-    l.mu.Lock()
-    fmt.Fprint(writer, l.format(s))
-    l.mu.Unlock()
+    if l.alsoStdPrint.Val() {
+        io.WriteString(std, str)
+    }
 }
 
 // 核心打印数据方法(标准输出)

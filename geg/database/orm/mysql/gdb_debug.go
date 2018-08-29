@@ -3,6 +3,7 @@ package main
 import (
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 func main() {
@@ -10,7 +11,7 @@ func main() {
         Host:    "127.0.0.1",
         Port:    "3306",
         User:    "root",
-        Pass:    "123456",
+        Pass:    "8692651",
         Name:    "test",
         Type:    "mysql",
         Role:    "master",
@@ -20,7 +21,7 @@ func main() {
     if err != nil {
         panic(err)
     }
-
+    glog.SetPath("/tmp")
     db.SetDebug(true)
     // 执行3条SQL查询
     for i := 1; i <= 3; i++ {
