@@ -78,8 +78,11 @@ func (l *Locker) doLock(key string, expire int, try bool) bool {
     }
     if ok && expire > 0 {
         // 异步goroutine计时处理
+        wid := mu.wid.Val()
         gtime.SetTimeout(time.Duration(expire)*time.Millisecond, func() {
-            mu.Unlock()
+            if wid == mu.wid.Val() {
+                mu.Unlock()
+            }
         })
     }
     return ok
@@ -96,8 +99,11 @@ func (l *Locker) doRLock(key string, expire int, try bool) bool {
     }
     if ok && expire > 0 {
         // 异步goroutine计时处理
+        rid := mu.rid.Val()
         gtime.SetTimeout(time.Duration(expire)*time.Millisecond, func() {
-            mu.RUnlock()
+            if rid == mu.rid.Val() {
+                mu.RUnlock()
+            }
         })
     }
     return ok
