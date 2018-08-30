@@ -342,9 +342,10 @@ func checkSize(value, ruleKey, ruleVal string, custonMsgs map[string]string) str
             if min, err := strconv.ParseFloat(ruleVal, 10); err == nil {
                 if v, err := strconv.ParseFloat(value, 10); err == nil {
                     if v < min {
-                        msg, ok := custonMsgs[ruleKey]
-                        if !ok {
+                        if v, ok := custonMsgs[ruleKey]; !ok {
                             msg = errorMsgMap.Get(ruleKey)
+                        } else {
+                            msg = v
                         }
                         msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
                     }
@@ -360,9 +361,10 @@ func checkSize(value, ruleKey, ruleVal string, custonMsgs map[string]string) str
             if max, err := strconv.ParseFloat(ruleVal, 10); err == nil {
                 if v, err := strconv.ParseFloat(value, 10); err == nil {
                     if v > max {
-                        msg, ok := custonMsgs[ruleKey]
-                        if !ok {
+                        if v, ok := custonMsgs[ruleKey]; !ok {
                             msg = errorMsgMap.Get(ruleKey)
+                        } else {
+                            msg = v
                         }
                         msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
                     }
