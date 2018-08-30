@@ -117,11 +117,29 @@ const (
     gSINGLE_RULE_PATTERN = `^([\w-]+):{0,1}(.*)` // 单条规则匹配正则
 )
 
-// 默认错误消息管理对象(并发安全)
-var errorMsgMap  = gmap.NewStringStringMap()
+var (
+    // 默认错误消息管理对象(并发安全)
+    errorMsgMap  = gmap.NewStringStringMap()
 
-// 单规则正则对象，这里使用包内部变量存储，不需要多次解析
-var ruleRegex, _ = regexp.Compile(gSINGLE_RULE_PATTERN)
+    // 单规则正则对象，这里使用包内部变量存储，不需要多次解析
+    ruleRegex, _ = regexp.Compile(gSINGLE_RULE_PATTERN)
+
+    // 即时参数为空(nil|"")也需要校验的规则，主要是必需规则及关联规则
+    mustCheckRulesEvenValueEmpty = map[string]struct{}{
+        "required"             : struct{}{},
+        "required-if"          : struct{}{},
+        "required-unless"      : struct{}{},
+        "required-with"        : struct{}{},
+        "required-with-all"    : struct{}{},
+        "required-without"     : struct{}{},
+        "required-without-all" : struct{}{},
+        "same"                 : struct{}{},
+        "different"            : struct{}{},
+        "in"                   : struct{}{},
+        "not-in"               : struct{}{},
+        "regex"                : struct{}{},
+    }
+)
 
 // 初始化错误消息管理对象
 func init() {
@@ -397,10 +415,11 @@ func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map
         if m := Check(value, rule, msg, params); m != nil {
             // 如果值为nil|""，并且不需要require*验证时，其他验证失效
             if value == nil || gconv.String(value) == "" {
-                required := false;
+                required := false
+                // rule => error
                 for k, _ := range m {
-                    if strings.Index(k, "required") != -1 {
-                        required = true;
+                    if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
+                        required = true
                         break
                     }
                 }
@@ -475,13 +494,13 @@ func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]inte
 }
 
 // 检测单条数据的规则.
-// val为校验数据，可以为任意格式；
+// val为校验数据，可以为任意基本数据格式；
 // msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持string/map[string]string，允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误；
 // params参数为表单联合校验参数，对于需要联合校验的规则有效，如：required-*、same、different；
 func Check(val interface{}, rules string, msgs interface{}, params...map[string]interface{}) map[string]string {
     // 内部会将参数全部转换为字符串类型进行校验
-    value  := strings.TrimSpace(gconv.String(val))
-    data   := make(map[string]string)
+    value     := strings.TrimSpace(gconv.String(val))
+    data      := make(map[string]string)
     errorMsgs := make(map[string]string)
     if len(params) > 0 {
         for k, v := range params[0] {
