@@ -32,7 +32,6 @@ type Map  = map[string]interface{}
 // 常用list数据结构(使用别名)
 type List = []Map
 
-
 // 阻塞等待HTTPServer执行完成(同一进程多HTTPServer情况下)
 func Wait() {
     ghttp.Wait()

@@ -13,7 +13,6 @@ gtime增加对时区转换的封装，并简化失去转换时对类似+80500时
 orm增加sqlite对Save方法的支持(去掉触发器语句);
 ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
 ghttp路由功能增加分组路由特性；
-解决glog串日志情况；
 ghttp增加返回数据压缩机制；
 gview中的template标签失效问题；
 gfile文件stat信息使用gfsnotify进行缓存更新改进；
@@ -64,3 +63,4 @@ DONE:
 38. gfsnotify增加对于目录的监控；
 39. 检查windows下的平滑重启失效问题；
 40. ghttp.Server的Cookie及Session锁机制优化(去掉map锁机制);
+41. 解决glog串日志情况；

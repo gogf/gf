@@ -25,6 +25,18 @@ func (l *Logger) Cat(category string) *Logger {
     return logger
 }
 
+// 设置日志打印等级
+func (l *Logger) Level(level int) *Logger {
+    logger := (*Logger)(nil)
+    if l.pr == nil {
+        logger = l.Clone()
+    } else {
+        logger = l
+    }
+    logger.SetLevel(level)
+    return logger
+}
+
 // 设置文件调用回溯信息
 func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
     logger := (*Logger)(nil)
