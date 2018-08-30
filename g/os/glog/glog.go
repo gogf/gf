@@ -19,11 +19,21 @@ type Logger struct {
     pr           *Logger             // 父级Logger
     io           io.Writer           // 日志内容写入的IO接口
     path         *gtype.String       // 日志写入的目录路径
-    debug        *gtype.Bool         // 是否允许输出DEBUG信息
+    level        *gtype.Int          // 日志输出等级
     btSkip       *gtype.Int          // 错误产生时的backtrace回调信息skip条数
     btEnabled    *gtype.Bool         // 是否当打印错误时同时开启backtrace打印
     alsoStdPrint *gtype.Bool         // 控制台打印开关，当输出到文件/自定义输出时也同时打印到终端
 }
+
+const (
+    LEVEL_ALL  = LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
+    LEVEL_DEBU = 1 << iota
+    LEVEL_INFO
+    LEVEL_NOTI
+    LEVEL_WARN
+    LEVEL_ERRO
+    LEVEL_CRIT
+)
 
 var (
     // 默认的日志对象
