@@ -1,11 +1,14 @@
 package main
 
 import (
-    "sync"
+    "context"
 )
 
 func main() {
-    mu := sync.RWMutex{}
-    mu.RLocker()
-    mu.Lock()
+    ctx, cancel := context.WithCancel(nil)
+    go func() {
+        for {
+            
+        }
+    }()
 }
