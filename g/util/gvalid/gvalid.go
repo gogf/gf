@@ -397,7 +397,7 @@ func checkSize(value, ruleKey, ruleVal string, custonMsgs map[string]string) str
 }
 
 // 检测键值对参数Map，注意返回参数是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息
-func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
+func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map[string]interface{}) Error {
     var value interface{}
     // 自定义消息，非必须参数，因此这里需要做判断
     customMsgs := make(map[string]interface{})
@@ -412,7 +412,8 @@ func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map
             value = v
         }
         msg, _ := customMsgs[key]
-        if m := Check(value, rule, msg, params); m != nil {
+        if e := Check(value, rule, msg, params); e != nil {
+            _, m := e.FirstItem()
             // 如果值为nil|""，并且不需要require*验证时，其他验证失效
             if value == nil || gconv.String(value) == "" {
                 required := false
@@ -442,7 +443,7 @@ func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map
 }
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法
-func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]interface{}) map[string]map[string]string {
+func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]interface{}) Error {
     fields := structs.Fields(st)
     if rules == nil {
         rules = make(map[string]string)
@@ -497,7 +498,7 @@ func CheckStruct(st interface{}, rules map[string]string, msgs...map[string]inte
 // val为校验数据，可以为任意基本数据格式；
 // msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持string/map[string]string，允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误；
 // params参数为表单联合校验参数，对于需要联合校验的规则有效，如：required-*、same、different；
-func Check(val interface{}, rules string, msgs interface{}, params...map[string]interface{}) map[string]string {
+func Check(val interface{}, rules string, msgs interface{}, params...map[string]interface{}) Error {
     // 内部会将参数全部转换为字符串类型进行校验
     value     := strings.TrimSpace(gconv.String(val))
     data      := make(map[string]string)
@@ -758,7 +759,9 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
         index++
     }
     if len(errorMsgs) > 0 {
-        return errorMsgs
+        e := make(Error)
+        e[value] = errorMsgs
+        return e
     }
     return nil
 }
