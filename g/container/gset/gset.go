@@ -6,3 +6,10 @@
 
 // 并发安全的集合SET.
 package gset
+
+type Set = InterfaceSet
+
+// 默认Set类型
+func New() *Set {
+    return NewInterfaceSet()
+}

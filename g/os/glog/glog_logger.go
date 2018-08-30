@@ -31,21 +31,18 @@ const (
 var ln = "\n"
 
 // 初始化日志换行符
-// @author zseeker
-// @date   2018-05-23
 func init() {
     if runtime.GOOS == "windows" {
         ln = "\r\n"
     }
 }
 
-
 // 新建自定义的日志操作对象
 func New() *Logger {
     return &Logger {
         io           : nil,
         path         : gtype.NewString(),
-        debug        : gtype.NewBool(true),
+        level        : gtype.NewInt(LEVEL_ALL),
         btSkip       : gtype.NewInt(),
         btEnabled    : gtype.NewBool(true),
         alsoStdPrint : gtype.NewBool(true),
@@ -58,11 +55,25 @@ func (l *Logger) Clone() *Logger {
         pr           : l,
         io           : l.GetIO(),
         path         : l.path.Clone(),
-        debug        : l.debug.Clone(),
+        level        : l.level.Clone(),
         btSkip       : l.btSkip.Clone(),
         btEnabled    : l.btEnabled.Clone(),
         alsoStdPrint : l.alsoStdPrint.Clone(),
     }
+}
+
+// 设置日志记录等级
+func (l *Logger) SetLevel(level int) {
+    l.level.Set(level)
+}
+
+// 快捷方法，打开或关闭DEBU日志信息
+func (l *Logger) SetDebug(debug bool) {
+    l.level.Set(l.level.Val()|LEVEL_DEBU)
+}
+
+func (l *Logger) SetBacktrace(enabled bool) {
+    l.btEnabled.Set(enabled)
 }
 
 // 设置BacktraceSkip
@@ -98,18 +109,6 @@ func (l *Logger) getFileByPool() *gfilepool.File {
     return nil
 }
 
-func (l *Logger) GetDebug() bool {
-    return l.debug.Val()
-}
-
-func (l *Logger) SetBacktrace(enabled bool) {
-    l.btEnabled.Set(enabled)
-}
-
-func (l *Logger) SetDebug(debug bool) {
-    l.debug.Set(debug)
-}
-
 // 设置日志文件的存储目录路径
 func (l *Logger) SetPath(path string) error {
     // 检测目录权限
@@ -129,8 +128,6 @@ func (l *Logger) SetPath(path string) error {
 }
 
 // 设置写日志时开启or关闭控制台打印，默认是关闭的
-// @author zseeker
-// @date   2018-05-24
 func (l *Logger) SetStdPrint(enabled bool) {
     l.alsoStdPrint.Set(enabled)
 }
@@ -273,79 +270,114 @@ func (l *Logger) Panicfln(format string, v ...interface{}) {
 }
 
 func (l *Logger) Info(v ...interface{}) {
-    l.stdPrint("[INFO] " + fmt.Sprint(v...) + ln)
+    if l.level.Val() & LEVEL_INFO > 0 {
+        l.stdPrint("[INFO] " + fmt.Sprint(v...) + ln)
+    }
 }
 
 func (l *Logger) Debug(v ...interface{}) {
-    if l.GetDebug() {
+    if l.level.Val() & LEVEL_DEBU > 0 {
         l.stdPrint("[DEBU] " + fmt.Sprint(v...) + ln)
     }
 }
 
 func (l *Logger) Notice(v ...interface{}) {
+    if l.level.Val() & LEVEL_NOTI > 0 {
+
+    }
     l.errPrint("[NOTI] " + fmt.Sprint(v...) + ln)
 }
 
 func (l *Logger) Warning(v ...interface{}) {
+    if l.level.Val() & LEVEL_INFO > 0 {
+
+    }
     l.errPrint("[WARN] " + fmt.Sprint(v...) + ln)
 }
 
 func (l *Logger) Error(v ...interface{}) {
+    if l.level.Val() & LEVEL_INFO > 0 {
+
+    }
     l.errPrint("[ERRO] " + fmt.Sprint(v...) + ln)
 }
 
 func (l *Logger) Critical(v ...interface{}) {
+    if l.level.Val() & LEVEL_INFO > 0 {
+
+    }
     l.errPrint("[CRIT] " + fmt.Sprint(v...) + ln)
 }
 
 func (l *Logger) Infof(format string, v ...interface{}) {
+    if l.level.Val() & LEVEL_INFO > 0 {
+
+    }
     l.stdPrint("[INFO] " + fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Debugf(format string, v ...interface{}) {
-    if l.GetDebug() {
+    if l.level.Val() & LEVEL_INFO > 0 {
         l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...))
     }
 }
 
 func (l *Logger) Noticef(format string, v ...interface{}) {
-    l.errPrint("[NOTI] " + fmt.Sprintf(format, v...))
+    if l.level.Val() & LEVEL_NOTI > 0 {
+        l.errPrint("[NOTI] " + fmt.Sprintf(format, v...))
+    }
 }
 
 func (l *Logger) Warningf(format string, v ...interface{}) {
-    l.errPrint("[WARN] " + fmt.Sprintf(format, v...))
+    if l.level.Val() & LEVEL_WARN > 0 {
+        l.errPrint("[WARN] " + fmt.Sprintf(format, v...))
+    }
 }
 
 func (l *Logger) Errorf(format string, v ...interface{}) {
-    l.errPrint("[ERRO] " + fmt.Sprintf(format, v...))
+    if l.level.Val() & LEVEL_ERRO > 0 {
+        l.errPrint("[ERRO] " + fmt.Sprintf(format, v...))
+    }
 }
 
 func (l *Logger) Criticalf(format string, v ...interface{}) {
-    l.errPrint("[CRIT] " + fmt.Sprintf(format, v...))
+    if l.level.Val() & LEVEL_CRIT > 0 {
+        l.errPrint("[CRIT] " + fmt.Sprintf(format, v...))
+    }
 }
 
 func (l *Logger) Infofln(format string, v ...interface{}) {
-    l.stdPrint("[INFO] " + fmt.Sprintf(format, v...) + ln)
+    if l.level.Val() & LEVEL_INFO > 0 {
+        l.stdPrint("[INFO] " + fmt.Sprintf(format, v...) + ln)
+    }
 }
 
 func (l *Logger) Debugfln(format string, v ...interface{}) {
-    if l.GetDebug() {
+    if l.level.Val() & LEVEL_DEBU > 0 {
         l.stdPrint("[DEBU] " + fmt.Sprintf(format, v...) + ln)
     }
 }
 
 func (l *Logger) Noticefln(format string, v ...interface{}) {
-    l.errPrint("[NOTI] " + fmt.Sprintf(format, v...) + ln)
+    if l.level.Val() & LEVEL_NOTI > 0 {
+        l.errPrint("[NOTI] " + fmt.Sprintf(format, v...) + ln)
+    }
 }
 
 func (l *Logger) Warningfln(format string, v ...interface{}) {
-    l.errPrint("[WARN] " + fmt.Sprintf(format, v...) + ln)
+    if l.level.Val() & LEVEL_WARN > 0 {
+        l.errPrint("[WARN] " + fmt.Sprintf(format, v...) + ln)
+    }
 }
 
 func (l *Logger) Errorfln(format string, v ...interface{}) {
-    l.errPrint("[ERRO] " + fmt.Sprintf(format, v...) + ln)
+    if l.level.Val() & LEVEL_ERRO > 0 {
+        l.errPrint("[ERRO] " + fmt.Sprintf(format, v...) + ln)
+    }
 }
 
 func (l *Logger) Criticalfln(format string, v ...interface{}) {
-    l.errPrint("[CRIT] " + fmt.Sprintf(format, v...) + ln)
+    if l.level.Val() & LEVEL_CRIT > 0 {
+        l.errPrint("[CRIT] " + fmt.Sprintf(format, v...) + ln)
+    }
 }
