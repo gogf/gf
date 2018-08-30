@@ -3,6 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
+// @author john, zseeker
 
 // 日志模块.
 // 直接文件/输出操作，没有异步逻辑，没有使用缓存或者通道
@@ -36,6 +37,9 @@ const (
 )
 
 var (
+    // glog默认的日志等级，影响全局
+    defaultLevel = gtype.NewInt(LEVEL_ALL)
+
     // 默认的日志对象
     logger = New()
 )
@@ -45,9 +49,25 @@ func SetPath(path string) {
     logger.SetPath(path)
 }
 
+// 设置全局的日志记录等级
+func SetLevel(level int) {
+    logger.SetLevel(level)
+    defaultLevel.Set(level)
+}
+
+// 获取全局的日志记录等级
+func GetLevel() int {
+    return defaultLevel.Val()
+}
+
 // 设置是否允许输出DEBUG信息
 func SetDebug(debug bool) {
     logger.SetDebug(debug)
+}
+
+// 设置写日志的同时开启or关闭控制台打印，默认是关闭的
+func SetStdPrint(open bool) {
+    logger.SetStdPrint(open)
 }
 
 // 获取日志目录绝对路径
@@ -73,16 +93,14 @@ func GetBacktrace(skip...int) string {
     return logger.GetBacktrace(customSkip)
 }
 
-// 设置写日志的同时开启or关闭控制台打印，默认是关闭的
-// @author zseeker
-// @date   2018-05-24
-func SetStdPrint(open bool) {
-    logger.SetStdPrint(open)
-}
-
 // 设置下一次输出的分类，支持多级分类设置
 func Cat(category string) *Logger {
     return logger.Cat(category)
+}
+
+// 设置日志打印等级
+func Level(level int) *Logger {
+    return logger.Level(level)
 }
 
 // 设置文件调用回溯信息
