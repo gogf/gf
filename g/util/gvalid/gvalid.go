@@ -395,8 +395,8 @@ func CheckMap(params map[string]interface{}, rules map[string]string, msgs...map
         }
         msg, _ := customMsgs[key]
         if m := Check(value, rule, msg, params); m != nil {
-            // 如果值为nil，并且不需要require*验证时，其他验证失效
-            if value == nil {
+            // 如果值为nil|""，并且不需要require*验证时，其他验证失效
+            if value == nil || gconv.String(value) == "" {
                 required := false;
                 for k, _ := range m {
                     if strings.Index(k, "required") != -1 {
