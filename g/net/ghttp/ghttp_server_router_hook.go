@@ -84,6 +84,9 @@ func (s *Server) getHookHandlerWithCache(hook string, r *Request) []*handlerPars
 
 // 事件方法检索
 func (s *Server) searchHookHandler(method, path, domain, hook string) []*handlerParsedItem {
+    if len(path) == 0 {
+        return nil
+    }
     // 遍历检索的域名列表
     domains := []string{ gDEFAULT_DOMAIN }
     if !strings.EqualFold(gDEFAULT_DOMAIN, domain) {

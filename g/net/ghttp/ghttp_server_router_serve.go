@@ -31,6 +31,9 @@ func (s *Server) getServeHandlerWithCache(r *Request) *handlerParsedItem {
 
 // 服务方法检索
 func (s *Server) searchServeHandler(method, path, domain string) *handlerParsedItem {
+    if len(path) == 0 {
+        return nil
+    }
     // 遍历检索的域名列表
     domains := []string{ gDEFAULT_DOMAIN }
     if !strings.EqualFold(gDEFAULT_DOMAIN, domain) {
