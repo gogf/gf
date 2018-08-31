@@ -11,6 +11,7 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
 )
 
+func (v Value) IsNil()          bool            { return v == nil }
 func (v Value) Bytes()          []byte          { return []byte(v) }
 func (v Value) String()         string          { return string(v.Bytes()) }
 func (v Value) Bool()           bool            { return gconv.Bool(v.Bytes()) }
