@@ -1,8 +1,8 @@
 package main
 
 import (
-    "fmt"
     "gitee.com/johng/gf/g/database/gdb"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
     // 执行2次查询并将查询结果缓存3秒，并可执行缓存名称(可选)
     for i := 0; i < 2; i++ {
         r, _ := db.Table("user").Cache(3, "vip-user").Where("uid=?", 1).One()
-        fmt.Println(r.ToMap())
+        gutil.Dump(r.ToMap())
     }
 
     // 执行更新操作，并清理指定名称的查询缓存
@@ -34,14 +34,5 @@ func main() {
 
     // 再次执行查询，启用查询缓存特性
     r, _ := db.Table("user").Cache(3, "vip-user").Where("uid=?", 1).One()
-    fmt.Println(r.ToMap())
-
-    for k, v := range db.GetQueriedSqls() {
-        fmt.Println(k, ":")
-        fmt.Println("Sql  :", v.Sql)
-        fmt.Println("Args :", v.Args)
-        fmt.Println("Error:", v.Error)
-        fmt.Println("Cost :", v.Cost)
-        fmt.Println("Func :", v.Func)
-    }
+    gutil.Dump(r.ToMap())
 }
