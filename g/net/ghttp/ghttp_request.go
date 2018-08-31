@@ -168,11 +168,13 @@ func (r *Request) IsAjaxRequest() bool {
 func (r *Request) GetClientIp() string {
     ip := r.clientIp.Val()
     if len(ip) == 0 {
-        array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
-        if len(array) > 1 {
-            ip = array[1]
-        } else {
-            ip = r.RemoteAddr
+        if ip = r.Header.Get("X-Real-IP"); ip == "" {
+            array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
+            if len(array) > 1 {
+                ip = array[1]
+            } else {
+                ip = r.RemoteAddr
+            }
         }
         r.clientIp.Set(ip)
     }
