@@ -152,3 +152,4 @@ func (view *View) funcInclude(file string, data...map[string]interface{}) templa
     }
     return template.HTML(content)
 }
+
