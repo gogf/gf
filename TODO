@@ -23,7 +23,8 @@ ghttp日志增加客户端IP信息；
 ghttp.Client自动Close机制；
 gvalid校验支持当第一个规则失败后便不再校验后续的规则，最好做成链式操作；
 检查ghttp.Server超时问题；
-
+gvalid增加支持对[]rune的长度校验(一个中文占3个字节)；
+ghttp.Request增加对输入参数的自动HtmlEncode机制；
 
 
 

@@ -62,9 +62,9 @@ func (a *StringArray) Remove(index int) {
 }
 
 // 追加数据项
-func (a *StringArray) Append(value string) {
+func (a *StringArray) Append(value...string) {
 	a.mu.Lock()
-	a.array = append(a.array, value)
+	a.array = append(a.array, value...)
 	a.mu.Unlock()
 }
 

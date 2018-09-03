@@ -1,14 +1,9 @@
 package main
 
 import (
-    "context"
+    "fmt"
 )
 
 func main() {
-    ctx, cancel := context.WithCancel(nil)
-    go func() {
-        for {
-            
-        }
-    }()
+    fmt.Println(len([]rune("中国人")))
 }

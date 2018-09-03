@@ -40,26 +40,28 @@ func NewSortedStringArray(size int, cap ... int) *SortedStringArray {
 }
 
 // 添加加数据项
-func (a *SortedStringArray) Add(value string) {
-    index, cmp := a.Search(value)
-    if a.unique.Val() && cmp == 0 {
-        return
+func (a *SortedStringArray) Add(values...string) {
+    if len(values) > 0 {
+        for _, value := range values {
+            index, cmp := a.Search(value)
+            if a.unique.Val() && cmp == 0 {
+                return
+            }
+            a.mu.Lock()
+            defer a.mu.Unlock()
+            if index < 0 {
+                a.array = append(a.array, value)
+                return
+            }
+            // 加到指定索引后面
+            if cmp > 0 {
+                index++
+            }
+            rear   := append([]string{}, a.array[index : ]...)
+            a.array = append(a.array[0 : index], value)
+            a.array = append(a.array, rear...)
+        }
     }
-    if index < 0 {
-        a.mu.Lock()
-        a.array = append(a.array, value)
-        a.mu.Unlock()
-        return
-    }
-    // 加到指定索引后面
-    if cmp > 0 {
-        index++
-    }
-    a.mu.Lock()
-    rear   := append([]string{}, a.array[index : ]...)
-    a.array = append(a.array[0 : index], value)
-    a.array = append(a.array, rear...)
-    a.mu.Unlock()
 }
 
 // 获取指定索引的数据项, 调用方注意判断数组边界

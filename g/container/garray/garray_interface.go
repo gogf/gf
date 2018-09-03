@@ -59,9 +59,9 @@ func (a *Array) Remove(index int) {
 }
 
 // 追加数据项
-func (a *Array) Append(value interface{}) {
+func (a *Array) Append(value...interface{}) {
     a.mu.Lock()
-    a.array = append(a.array, value)
+    a.array = append(a.array, value...)
     a.mu.Unlock()
 }
 
