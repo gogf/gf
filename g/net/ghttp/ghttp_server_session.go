@@ -71,6 +71,11 @@ func (s *Session) BatchSet (m map[string]interface{}) {
     s.data.BatchSet(m)
 }
 
+// 判断键名是否存在
+func (s *Session) Contains (k string) bool {
+    return s.data.Get(k) != nil
+}
+
 // 获取session
 func (s *Session) Get (k string) interface{} {
     return s.data.Get(k)
