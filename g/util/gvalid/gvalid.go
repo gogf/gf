@@ -50,9 +50,9 @@ ipv6                 格式：ipv6                                  说明：IPv
 mac                  格式：mac                                   说明：MAC地址
 url                  格式：url                                   说明：URL
 domain               格式：domain                                说明：域名
-length               格式：length:min,max                        说明：参数长度为min到max(长度参数为整形)
-min-length           格式：min-length:min                        说明：参数长度最小为min(长度参数为整形)
-max-length           格式：max-length:max                        说明：参数长度最大为max(长度参数为整形)
+length               格式：length:min,max                        说明：参数长度为min到max(长度参数为整形)，注意中文一个汉字占3字节
+min-length           格式：min-length:min                        说明：参数长度最小为min(长度参数为整形)，注意中文一个汉字占3字节
+max-length           格式：max-length:max                        说明：参数长度最大为max(长度参数为整形)，注意中文一个汉字占3字节
 between              格式：between:min,max                       说明：参数大小为min到max(支持整形和浮点类型参数)
 min                  格式：min:min                               说明：参数最小为min(支持整形和浮点类型参数)
 max                  格式：max:max                               说明：参数最大为max(支持整形和浮点类型参数)

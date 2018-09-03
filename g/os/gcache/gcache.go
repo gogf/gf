@@ -159,6 +159,16 @@ func (c *Cache) Set(key string, value interface{}, expire int) {
     c.eventQueue.PushBack(_EventItem{k : key, e : e})
 }
 
+// 当键名不存在时写入，并返回true；否则返回false。
+// 常用来做对并发性要求不高的内存锁。
+func (c *Cache) SetIfNotExist(key string, value interface{}, expire int) bool {
+    if !c.Contains(key) {
+        c.Set(key, value, expire)
+        return true
+    }
+    return false
+}
+
 // 批量设置
 func (c *Cache) BatchSet(data map[string]interface{}, expire int)  {
     var e int64
@@ -184,6 +194,11 @@ func (c *Cache) Get(key string) interface{} {
         return item.v
     }
     return nil
+}
+
+// 是否存在指定的键名，true表示存在，false表示不存在。
+func (c *Cache) Contains(key string) bool {
+    return c.Get(key) != nil
 }
 
 // 删除指定键值对

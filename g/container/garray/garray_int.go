@@ -60,9 +60,9 @@ func (a *IntArray) Remove(index int) {
 }
 
 // 追加数据项
-func (a *IntArray) Append(value int) {
+func (a *IntArray) Append(value...int) {
 	a.mu.Lock()
-	a.array = append(a.array, value)
+	a.array = append(a.array, value...)
     a.mu.Unlock()
 }
 
