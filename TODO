@@ -22,7 +22,10 @@ ghttp增加route name特性，并同时支持backend和template(提供内置函�
 ghttp日志增加客户端IP信息；
 ghttp.Client自动Close机制；
 gvalid校验支持当第一个规则失败后便不再校验后续的规则，最好做成链式操作；
-gvalid返回的数据类型调整map[string]map[string]string->map[string]map[string]error，这样更容易被第三方框架兼容；
+检查ghttp.Server超时问题；
+
+
+
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
