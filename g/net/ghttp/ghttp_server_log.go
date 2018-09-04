@@ -9,7 +9,6 @@ package ghttp
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/util/gconv"
     "net/http"
 )
 
@@ -23,10 +22,10 @@ func (s *Server) handleAccessLog(r *Request) {
         v(r)
         return
     }
-    content := fmt.Sprintf(`"%s %s %s %s" %s %s`,
+    content := fmt.Sprintf(`"%s %s %s %s" %d %d`,
         r.Method, r.Host, r.URL.String(), r.Proto,
-        gconv.String(r.Response.Status),
-        gconv.String(r.Response.BufferLength()),
+        r.Response.Status,
+        r.Response.ContentSize(),
     )
     content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime - r.EnterTime)/1000)
     content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())

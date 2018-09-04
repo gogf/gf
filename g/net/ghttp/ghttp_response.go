@@ -19,7 +19,8 @@ import (
 // 注意该对象并没有实现http.ResponseWriter接口，而是依靠ghttp.ResponseWriter实现。
 type Response struct {
     ResponseWriter
-    Server  *Server
+    length  int             // 请求返回的内容长度(byte)
+    Server  *Server         // 所属Web Server
     Writer  *ResponseWriter // ResponseWriter的别名
     request *Request        // 关联的Request请求对象
 }
@@ -43,18 +44,21 @@ func (r *Response) Write(content ... interface{}) {
     if len(content) == 0 {
         return
     }
-    r.mu.Lock()
     for _, v := range content {
         switch v.(type) {
             case []byte:
                 // 如果是二进制数据，那么返回二进制数据
+                r.mu.Lock()
                 r.buffer = append(r.buffer, gconv.Bytes(v)...)
+                r.mu.Unlock()
             default:
                 // 否则一律按照可显示的字符串进行转换
+                r.mu.Lock()
                 r.buffer = append(r.buffer, gconv.String(v)...)
+                r.mu.Unlock()
         }
     }
-    r.mu.Unlock()
+    r.length = len(r.buffer)
 }
 
 // 返回信息，支持自定义format格式
@@ -187,6 +191,7 @@ func (r *Response) BufferLength() int {
 
 // 手动设置缓冲区内容
 func (r *Response) SetBuffer(buffer []byte) {
+    r.length = 0
     r.mu.Lock()
     r.buffer = buffer
     r.mu.Unlock()
@@ -204,4 +209,15 @@ func (r *Response) OutputBuffer() {
     r.Header().Set("Server", r.Server.config.ServerAgent)
     //r.handleGzip()
     r.Writer.OutputBuffer()
+}
+
+// 获取输出到客户端的数据大小
+func (r *Response) ContentSize() int {
+    if r.length > 0 {
+        return r.length
+    }
+    if length := r.Header().Get("Content-Length"); length != "" {
+        return gconv.Int(length)
+    }
+    return r.BufferLength()
 }
