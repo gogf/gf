@@ -48,7 +48,7 @@ func (r *Response) ParseTpl(tpl string, params map[string]interface{}, funcmap..
     if len(funcmap) > 0 {
         fmap = funcmap[0]
     }
-    return gins.View().Parse(tpl, r.buildInParams(params), r.buildInfuncs(fmap))
+    return gins.View().Parse(tpl, r.buildInVars(params), r.buildInfuncs(fmap))
 }
 
 // 解析并返回模板内容
@@ -57,11 +57,12 @@ func (r *Response) ParseTplContent(content string, params map[string]interface{}
     if len(funcmap) > 0 {
         fmap = funcmap[0]
     }
-    return gins.View().ParseContent(content, r.buildInParams(params), r.buildInfuncs(fmap))
+    return gins.View().ParseContent(content, r.buildInVars(params), r.buildInfuncs(fmap))
 }
 
 // 内置变量
-func (r *Response) buildInParams(params map[string]interface{}) map[string]interface{} {
+func (r *Response) buildInVars(params map[string]interface{}) map[string]interface{} {
+    params["Config"]  = gins.Config().GetMap("")
     params["Cookie"]  = r.request.Cookie.Map()
     params["Session"] = r.request.Session.Data()
     return params
