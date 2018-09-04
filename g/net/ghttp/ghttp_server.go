@@ -411,8 +411,15 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 
 // 获取当前服务器的状态
 func (s *Server) Status() int {
-    if serverRunning.Val() > 0 {
-        return SERVER_STATUS_RUNNING
+    // 当全局运行的Web Server数量为0时表示所有Server都是停止状态
+    if serverRunning.Val() == 0 {
+        return SERVER_STATUS_STOPPED
+    }
+    // 只要有一个Server处于运行状态，那么都表示运行状态
+    for _, v := range s.servers {
+        if v.status == SERVER_STATUS_RUNNING {
+            return SERVER_STATUS_RUNNING
+        }
     }
     return SERVER_STATUS_STOPPED
 }
