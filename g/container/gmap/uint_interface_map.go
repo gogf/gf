@@ -33,14 +33,14 @@ func (this *UintInterfaceMap) Iterator(f func (k uint, v interface{}) bool) {
 }
 
 // 哈希表克隆
-func (this *UintInterfaceMap) Clone() *map[uint]interface{} {
+func (this *UintInterfaceMap) Clone() map[uint]interface{} {
 	m := make(map[uint]interface{})
 	this.mu.RLock()
 	for k, v := range this.m {
 		m[k] = v
 	}
     this.mu.RUnlock()
-	return &m
+	return m
 }
 
 // 设置键值对

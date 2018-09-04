@@ -119,7 +119,7 @@ func (l *Logger) SetPath(path string) error {
     // 检测目录权限
     if !gfile.Exists(path) {
         if err := gfile.Mkdir(path); err != nil {
-            fmt.Fprintln(os.Stderr, "glog mkdir failed: " + err.Error())
+            fmt.Fprintln(os.Stderr, fmt.Sprintf(`glog mkdir "%s" failed: %s`, path, err.Error()))
             return err
         }
     }
