@@ -34,14 +34,14 @@ func (this *StringIntMap) Iterator(f func (k string, v int) bool) {
 }
 
 // 哈希表克隆
-func (this *StringIntMap) Clone() *map[string]int {
+func (this *StringIntMap) Clone() map[string]int {
     m := make(map[string]int)
     this.mu.RLock()
     for k, v := range this.m {
         m[k] = v
     }
     this.mu.RUnlock()
-    return &m
+    return m
 }
 
 // 设置键值对

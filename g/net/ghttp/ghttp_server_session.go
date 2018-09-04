@@ -53,7 +53,7 @@ func (s *Session) Id() string {
 
 // 获取当前session所有数据
 func (s *Session) Data () map[string]interface{} {
-    return *s.data.Clone()
+    return s.data.Clone()
 }
 
 // 设置session

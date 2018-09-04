@@ -59,7 +59,7 @@ func (view *View) BindFunc(name string, function interface{}){
 func (view *View) Parse(file string) ([]byte, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
-    buffer, err := view.view.Parse(file, view.data, view.fmap)
+    buffer, err := view.response.ParseTpl(file, view.data, view.fmap)
     return buffer, err
 }
 
@@ -67,7 +67,7 @@ func (view *View) Parse(file string) ([]byte, error) {
 func (view *View) ParseContent(content string) ([]byte, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
-    buffer, err := view.view.ParseContent(content, view.data, view.fmap)
+    buffer, err := view.response.ParseTplContent(content, view.data, view.fmap)
     return buffer, err
 }
 

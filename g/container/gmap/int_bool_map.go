@@ -23,14 +23,14 @@ func NewIntBoolMap() *IntBoolMap {
 }
 
 // 哈希表克隆
-func (this *IntBoolMap) Clone() *map[int]bool {
+func (this *IntBoolMap) Clone() map[int]bool {
 	m := make(map[int]bool)
 	this.mu.RLock()
 	for k, v := range this.m {
 		m[k] = v
 	}
     this.mu.RUnlock()
-	return &m
+	return m
 }
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历

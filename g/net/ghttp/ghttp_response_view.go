@@ -13,22 +13,66 @@ import (
 )
 
 // 展示模板，可以给定模板参数，及临时的自定义模板函数
-func (r *Response) Template(tpl string, params map[string]interface{}, funcmap...map[string]interface{}) error {
+func (r *Response) Tpl(tpl string, params map[string]interface{}, funcmap...map[string]interface{}) error {
     fmap := make(gview.FuncMap)
     if len(funcmap) > 0 {
         fmap = funcmap[0]
     }
-    // 内置函数
-    fmap["get"]       = r.funcGet
-    fmap["post"]      = r.funcPost
-    fmap["request"]   = r.funcRequest
-    if b, err := gins.View().Parse(tpl, params, fmap); err != nil {
+    if b, err := r.ParseTpl(tpl, params, fmap); err != nil {
         r.Write("Tpl Parsing Error: " + err.Error())
         return err
     } else {
         r.Write(b)
     }
     return nil
+}
+
+// 展示模板内容，可以给定模板参数，及临时的自定义模板函数
+func (r *Response) TplContent(content string, params map[string]interface{}, funcmap...map[string]interface{}) error {
+    fmap := make(gview.FuncMap)
+    if len(funcmap) > 0 {
+        fmap = funcmap[0]
+    }
+    if b, err := r.ParseTplContent(content, params, fmap); err != nil {
+        r.Write("Tpl Parsing Error: " + err.Error())
+        return err
+    } else {
+        r.Write(b)
+    }
+    return nil
+}
+
+// 解析模板文件，并返回模板内容
+func (r *Response) ParseTpl(tpl string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
+    fmap := make(gview.FuncMap)
+    if len(funcmap) > 0 {
+        fmap = funcmap[0]
+    }
+    return gins.View().Parse(tpl, r.buildInParams(params), r.buildInfuncs(fmap))
+}
+
+// 解析并返回模板内容
+func (r *Response) ParseTplContent(content string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
+    fmap := make(gview.FuncMap)
+    if len(funcmap) > 0 {
+        fmap = funcmap[0]
+    }
+    return gins.View().ParseContent(content, r.buildInParams(params), r.buildInfuncs(fmap))
+}
+
+// 内置变量
+func (r *Response) buildInParams(params map[string]interface{}) map[string]interface{} {
+    params["Cookie"]  = r.request.Cookie.Map()
+    params["Session"] = r.request.Session.Data()
+    return params
+}
+
+// 内置函数
+func (r *Response) buildInfuncs(funcmap map[string]interface{}) map[string]interface{} {
+    funcmap["get"]       = r.funcGet
+    funcmap["post"]      = r.funcPost
+    funcmap["request"]   = r.funcRequest
+    return funcmap
 }
 
 // 模板内置函数: get
