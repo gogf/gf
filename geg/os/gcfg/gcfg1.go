@@ -7,9 +7,9 @@ import (
 
 func main() {
     c              := gcfg.New("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/os/gcfg")
-    redisConfig    := c.GetArray("redis-cache", "redis.yml")
-    memcacheConfig := c.GetArray("", "memcache.yml")
+    redisConfig    := c.GetArray("redis-cache", "redis.toml")
+    memConfig      := c.GetArray("",    "memcache.yml")
     fmt.Println(redisConfig)
-    fmt.Println(memcacheConfig)
+    fmt.Println(memConfig)
 }
 
