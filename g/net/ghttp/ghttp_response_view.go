@@ -62,6 +62,9 @@ func (r *Response) ParseTplContent(content string, params map[string]interface{}
 
 // 内置变量
 func (r *Response) buildInVars(params map[string]interface{}) map[string]interface{} {
+    if params == nil {
+        params = make(map[string]interface{})
+    }
     params["Config"]  = gins.Config().GetMap("")
     params["Cookie"]  = r.request.Cookie.Map()
     params["Session"] = r.request.Session.Data()
@@ -70,6 +73,9 @@ func (r *Response) buildInVars(params map[string]interface{}) map[string]interfa
 
 // 内置函数
 func (r *Response) buildInfuncs(funcmap map[string]interface{}) map[string]interface{} {
+    if funcmap == nil {
+        funcmap = make(map[string]interface{})
+    }
     funcmap["get"]       = r.funcGet
     funcmap["post"]      = r.funcPost
     funcmap["request"]   = r.funcRequest
