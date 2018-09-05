@@ -9,20 +9,21 @@ package gring
 
 import (
     "container/ring"
-    "sync"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/internal/rwmutex"
 )
 
 type Ring struct {
-    mu    sync.RWMutex // 互斥锁
-    ring  *ring.Ring   // 底层环形数据结构
-    len   *gtype.Int   // 数据大小(已使用的大小)
-    cap   *gtype.Int   // 总长度(分配的环大小，包括未使用的数据项数量)
-    dirty *gtype.Bool  // 标记环是否脏了(需要重新计算大小，当环大小发生改变时做标记)
+    mu    *rwmutex.RWMutex // 互斥锁
+    ring  *ring.Ring       // 底层环形数据结构
+    len   *gtype.Int       // 数据大小(已使用的大小)
+    cap   *gtype.Int       // 总长度(分配的环大小，包括未使用的数据项数量)
+    dirty *gtype.Bool      // 标记环是否脏了(需要重新计算大小，当环大小发生改变时做标记)
 }
 
-func New(cap int) *Ring {
+func New(cap int, safe...bool) *Ring {
     return &Ring {
+        mu    : rwmutex.New(safe...),
         ring  : ring.New(cap),
         len   : gtype.NewInt(),
         cap   : gtype.NewInt(cap),

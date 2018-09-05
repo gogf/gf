@@ -7,18 +7,17 @@
 
 package gmap
 
-import (
-	"sync"
-)
+import "gitee.com/johng/gf/g/container/internal/rwmutex"
 
 type IntInterfaceMap struct {
-	mu sync.RWMutex
+	mu *rwmutex.RWMutex
 	m  map[int]interface{}
 }
 
-func NewIntInterfaceMap() *IntInterfaceMap {
+func NewIntInterfaceMap(safe...bool) *IntInterfaceMap {
 	return &IntInterfaceMap{
-        m: make(map[int]interface{}),
+        m  : make(map[int]interface{}),
+        mu : rwmutex.New(safe...),
     }
 }
 

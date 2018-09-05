@@ -7,13 +7,13 @@
 package garray
 
 import (
-    "sync"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/internal/rwmutex"
 )
 
 // 默认按照从低到高进行排序
 type SortedIntArray struct {
-    mu          sync.RWMutex         // 互斥锁
+    mu          *rwmutex.RWMutex     // 互斥锁
     cap         int                  // 初始化设置的数组容量
     size        int                  // 初始化设置的数组大小
     array       []int                // 底层数组
@@ -21,8 +21,9 @@ type SortedIntArray struct {
     compareFunc func(v1, v2 int) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
-func NewSortedIntArray(size int, cap ... int) *SortedIntArray {
+func NewSortedIntArray(size int, cap int, safe...bool) *SortedIntArray {
     a := &SortedIntArray {
+        mu          : rwmutex.New(safe...),
         unique      : gtype.NewBool(),
         compareFunc : func(v1, v2 int) int {
             if v1 < v2 {
@@ -35,9 +36,9 @@ func NewSortedIntArray(size int, cap ... int) *SortedIntArray {
         },
     }
     a.size = size
-    if len(cap) > 0 {
-        a.cap   = cap[0]
-        a.array = make([]int, size, cap[0])
+    if cap > 0 {
+        a.cap   = cap
+        a.array = make([]int, size, cap)
     } else {
         a.array = make([]int, size)
     }

@@ -7,23 +7,25 @@
 package garray
 
 import (
-	"sync"
 	"strings"
+	"gitee.com/johng/gf/g/container/internal/rwmutex"
 )
 
 type StringArray struct {
-	mu    sync.RWMutex // 互斥锁
-	cap   int          // 初始化设置的数组容量
-	size  int          // 初始化设置的数组大小
-	array []string     // 底层数组
+	mu    *rwmutex.RWMutex // 互斥锁
+	cap   int              // 初始化设置的数组容量
+	size  int              // 初始化设置的数组大小
+	array []string         // 底层数组
 }
 
-func NewStringArray(size int, cap ... int) *StringArray {
-	a := &StringArray{}
+func NewStringArray(size int, cap int, safe...bool) *StringArray {
+	a := &StringArray{
+		mu : rwmutex.New(safe...),
+	}
 	a.size = size
-	if len(cap) > 0 {
-		a.cap = cap[0]
-		a.array = make([]string, size, cap[0])
+	if cap > 0 {
+		a.cap   = cap
+		a.array = make([]string, size, cap)
 	} else {
 		a.array = make([]string, size)
 	}

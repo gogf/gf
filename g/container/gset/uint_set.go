@@ -9,16 +9,19 @@ package gset
 
 import (
 	"fmt"
-	"sync"
+	"gitee.com/johng/gf/g/container/internal/rwmutex"
 )
 
 type UintSet struct {
-	mu sync.RWMutex
+	mu *rwmutex.RWMutex
 	m  map[uint]struct{}
 }
 
-func NewUintSet() *UintSet {
-	return &UintSet{m: make(map[uint]struct{})}
+func NewUintSet(safe...bool) *UintSet {
+	return &UintSet{
+		m  : make(map[uint]struct{}),
+		mu : rwmutex.New(safe...),
+	}
 }
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历

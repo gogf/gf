@@ -14,6 +14,6 @@ package gmap
 // 3、底层实现比较类似于sync.Map；
 type Map = InterfaceInterfaceMap
 
-func NewMap() *Map {
-    return NewInterfaceInterfaceMap()
+func New(safe...bool) *Map {
+    return NewInterfaceInterfaceMap(safe...)
 }

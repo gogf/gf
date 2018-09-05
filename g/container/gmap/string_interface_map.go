@@ -8,17 +8,18 @@
 package gmap
 
 import (
-	"sync"
+	"gitee.com/johng/gf/g/container/internal/rwmutex"
 )
 
 type StringInterfaceMap struct {
-	mu sync.RWMutex
+	mu *rwmutex.RWMutex
 	m  map[string]interface{}
 }
 
-func NewStringInterfaceMap() *StringInterfaceMap {
+func NewStringInterfaceMap(safe...bool) *StringInterfaceMap {
 	return &StringInterfaceMap{
-		m: make(map[string]interface{}),
+		m  : make(map[string]interface{}),
+		mu : rwmutex.New(safe...),
 	}
 }
 

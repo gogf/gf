@@ -9,16 +9,19 @@ package gset
 
 import (
 	"fmt"
-	"sync"
+	"gitee.com/johng/gf/g/container/internal/rwmutex"
 )
 
 type InterfaceSet struct {
-	mu sync.RWMutex
+	mu *rwmutex.RWMutex
 	m  map[interface{}]struct{}
 }
 
-func NewInterfaceSet() *InterfaceSet {
-	return &InterfaceSet{m: make(map[interface{}]struct{})}
+func NewInterfaceSet(safe...bool) *InterfaceSet {
+	return &InterfaceSet{
+		m  : make(map[interface{}]struct{}),
+		mu : rwmutex.New(safe...),
+    }
 }
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
