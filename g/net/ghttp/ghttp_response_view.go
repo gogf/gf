@@ -13,7 +13,7 @@ import (
 )
 
 // 展示模板，可以给定模板参数，及临时的自定义模板函数
-func (r *Response) Tpl(tpl string, params map[string]interface{}, funcmap...map[string]interface{}) error {
+func (r *Response) WriteTpl(tpl string, params map[string]interface{}, funcmap...map[string]interface{}) error {
     fmap := make(gview.FuncMap)
     if len(funcmap) > 0 {
         fmap = funcmap[0]
@@ -28,7 +28,7 @@ func (r *Response) Tpl(tpl string, params map[string]interface{}, funcmap...map[
 }
 
 // 展示模板内容，可以给定模板参数，及临时的自定义模板函数
-func (r *Response) TplContent(content string, params map[string]interface{}, funcmap...map[string]interface{}) error {
+func (r *Response) WriteTplContent(content string, params map[string]interface{}, funcmap...map[string]interface{}) error {
     fmap := make(gview.FuncMap)
     if len(funcmap) > 0 {
         fmap = funcmap[0]
