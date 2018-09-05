@@ -6,3 +6,7 @@
 
 // 并发安全的数组.
 package garray
+
+func New(size int, cap int, safe...bool) *Array {
+    return NewArray(size, cap, safe...)
+}

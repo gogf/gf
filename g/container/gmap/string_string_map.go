@@ -7,18 +7,17 @@
 
 package gmap
 
-import (
-	"sync"
-)
+import "gitee.com/johng/gf/g/container/internal/rwmutex"
 
 type StringStringMap struct {
-	mu sync.RWMutex
+	mu *rwmutex.RWMutex
 	m  map[string]string
 }
 
-func NewStringStringMap() *StringStringMap {
+func NewStringStringMap(safe...bool) *StringStringMap {
 	return &StringStringMap{
-		m: make(map[string]string),
+		m  : make(map[string]string),
+        mu : rwmutex.New(safe...),
 	}
 }
 

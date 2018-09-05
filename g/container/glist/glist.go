@@ -9,19 +9,22 @@
 package glist
 
 import (
-	"sync"
 	"container/list"
+	"gitee.com/johng/gf/g/container/internal/rwmutex"
 )
 
 // 变长双向链表
 type List struct {
-	mu   sync.RWMutex
+	mu   *rwmutex.RWMutex
 	list *list.List
 }
 
 // 获得一个变长链表指针
-func New() *List {
-	return &List{list: list.New()}
+func New(safe...bool) *List {
+	return &List{
+	    mu   : rwmutex.New(safe...),
+		list : list.New(),
+    }
 }
 
 // 往链表头入栈数据项

@@ -6,21 +6,25 @@
 
 package garray
 
-import "sync"
+import (
+    "gitee.com/johng/gf/g/container/internal/rwmutex"
+)
 
 type Array struct {
-    mu           sync.RWMutex  // 互斥锁
-    cap          int           // 初始化设置的数组容量
-    size         int           // 初始化设置的数组大小
-    array        []interface{} // 底层数组
+    mu     *rwmutex.RWMutex  // 互斥锁
+    cap    int               // 初始化设置的数组容量
+    size   int               // 初始化设置的数组大小
+    array  []interface{}     // 底层数组
 }
 
-func NewArray(size int, cap ... int) *Array {
-    a     := &Array{}
+func NewArray(size int, cap int, safe...bool) *Array {
+    a := &Array{
+        mu : rwmutex.New(safe...),
+    }
     a.size = size
-    if len(cap) > 0 {
-        a.cap   = cap[0]
-        a.array = make([]interface{}, size, cap[0])
+    if cap > 0 {
+        a.cap   = cap
+        a.array = make([]interface{}, size, cap)
     } else {
         a.array = make([]interface{}, size)
     }

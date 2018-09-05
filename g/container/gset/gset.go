@@ -10,6 +10,6 @@ package gset
 type Set = InterfaceSet
 
 // 默认Set类型
-func New() *Set {
-    return NewInterfaceSet()
+func New(safe...bool) *Set {
+    return NewInterfaceSet(safe...)
 }
