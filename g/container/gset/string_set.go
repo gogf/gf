@@ -26,13 +26,13 @@ func NewStringSet(safe...bool) *StringSet {
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *StringSet) Iterator(f func (v string) bool) {
-	this.mu.RLock()
+    this.mu.RLock()
+    defer this.mu.RUnlock()
 	for k, _ := range this.m {
 		if !f(k) {
 			break
 		}
 	}
-	this.mu.RUnlock()
 }
 
 // 设置键
@@ -102,13 +102,13 @@ func (this *StringSet) String() string {
 	return fmt.Sprint(this.Slice())
 }
 
-func (this *StringSet) LockFunc(f func(map[string]struct{})) {
+func (this *StringSet) LockFunc(f func(m map[string]struct{})) {
 	this.mu.Lock(true)
 	defer this.mu.Unlock(true)
 	f(this.m)
 }
 
-func (this *StringSet) RLockFunc(f func(map[string]struct{})) {
+func (this *StringSet) RLockFunc(f func(m map[string]struct{})) {
 	this.mu.RLock(true)
 	defer this.mu.RUnlock(true)
 	f(this.m)
