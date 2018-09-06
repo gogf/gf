@@ -148,6 +148,7 @@ func (r *Ring) Unlink(n int) *Ring {
 // 往后只读遍历，回调函数返回true表示继续遍历，否则退出遍历
 func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
     r.mu.RLock()
+    defer r.mu.RUnlock()
     if !f(r.ring.Value) {
         return
     }
@@ -156,12 +157,12 @@ func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
             break
         }
     }
-    r.mu.RUnlock()
 }
 
 // 往前只读遍历，回调函数返回true表示继续遍历，否则退出遍历
 func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
     r.mu.RLock()
+    defer r.mu.RUnlock()
     if !f(r.ring.Value) {
         return
     }
@@ -170,12 +171,12 @@ func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
             break
         }
     }
-    r.mu.RUnlock()
 }
 
 // 往后写遍历，回调函数返回true表示继续遍历，否则退出遍历
 func (r *Ring) LockIteratorNext(f func(item *ring.Ring) bool) {
-    r.mu.Lock()
+    r.mu.RLock()
+    defer r.mu.RUnlock()
     if !f(r.ring) {
         return
     }
@@ -184,12 +185,12 @@ func (r *Ring) LockIteratorNext(f func(item *ring.Ring) bool) {
             break
         }
     }
-    r.mu.Unlock()
 }
 
 // 往前写遍历，回调函数返回true表示继续遍历，否则退出遍历
 func (r *Ring) LockIteratorPrev(f func(item *ring.Ring) bool) {
-    r.mu.Lock()
+    r.mu.RLock()
+    defer r.mu.RUnlock()
     if !f(r.ring) {
         return
     }
@@ -198,7 +199,6 @@ func (r *Ring) LockIteratorPrev(f func(item *ring.Ring) bool) {
             break
         }
     }
-    r.mu.Unlock()
 }
 
 // 从当前位置，往后只读完整遍历，返回非空数据项值构成的数组

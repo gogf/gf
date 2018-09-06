@@ -24,12 +24,12 @@ func NewIntInterfaceMap(safe...bool) *IntInterfaceMap {
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *IntInterfaceMap) Iterator(f func (k int, v interface{}) bool) {
     this.mu.RLock()
+    defer this.mu.RUnlock()
     for k, v := range this.m {
         if !f(k, v) {
             break
         }
     }
-    this.mu.RUnlock()
 }
 
 // 哈希表克隆

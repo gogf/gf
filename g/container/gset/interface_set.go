@@ -27,12 +27,12 @@ func NewInterfaceSet(safe...bool) *InterfaceSet {
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *InterfaceSet) Iterator(f func (v interface{}) bool) {
     this.mu.RLock()
+    defer this.mu.RUnlock()
     for k, _ := range this.m {
 		if !f(k) {
 			break
 		}
     }
-    this.mu.RUnlock()
 }
 
 // 添加
@@ -101,13 +101,13 @@ func (this *InterfaceSet) String() string {
 	return fmt.Sprint(this.Slice())
 }
 
-func (this *InterfaceSet) LockFunc(f func(map[interface{}]struct{})) {
+func (this *InterfaceSet) LockFunc(f func(m map[interface{}]struct{})) {
 	this.mu.Lock(true)
 	defer this.mu.Unlock(true)
 	f(this.m)
 }
 
-func (this *InterfaceSet) RLockFunc(f func(map[interface{}]struct{})) {
+func (this *InterfaceSet) RLockFunc(f func(m map[interface{}]struct{})) {
 	this.mu.RLock(true)
 	defer this.mu.RUnlock(true)
 	f(this.m)

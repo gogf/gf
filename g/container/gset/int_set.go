@@ -27,13 +27,13 @@ func NewIntSet(safe...bool) *IntSet {
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *IntSet) Iterator(f func (v int) bool) {
-	this.mu.RLock()
+    this.mu.RLock()
+    defer this.mu.RUnlock()
 	for k, _ := range this.m {
 		if !f(k) {
 			break
 		}
 	}
-	this.mu.RUnlock()
 }
 
 // 设置键
@@ -103,13 +103,13 @@ func (this *IntSet) String() string {
 	return fmt.Sprint(this.Slice())
 }
 
-func (this *IntSet) LockFunc(f func(map[int]struct{})) {
+func (this *IntSet) LockFunc(f func(m map[int]struct{})) {
 	this.mu.Lock(true)
 	defer this.mu.Unlock(true)
 	f(this.m)
 }
 
-func (this *IntSet) RLockFunc(f func(map[int]struct{})) {
+func (this *IntSet) RLockFunc(f func(m map[int]struct{})) {
     this.mu.RLock(true)
     defer this.mu.RUnlock(true)
     f(this.m)

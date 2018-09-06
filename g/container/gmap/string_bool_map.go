@@ -25,13 +25,13 @@ func NewStringBoolMap(safe...bool) *StringBoolMap {
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (this *StringBoolMap) Iterator(f func (k string, v bool) bool) {
-    this.mu.RLock()
+	this.mu.RLock()
+	defer this.mu.RUnlock()
     for k, v := range this.m {
 		if !f(k, v) {
 			break
 		}
     }
-    this.mu.RUnlock()
 }
 
 // 哈希表克隆

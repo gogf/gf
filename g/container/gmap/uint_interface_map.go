@@ -25,12 +25,12 @@ func NewUintInterfaceMap(safe...bool) *UintInterfaceMap {
 
 func (this *UintInterfaceMap) Iterator(f func (k uint, v interface{}) bool) {
     this.mu.RLock()
+    defer this.mu.RUnlock()
     for k, v := range this.m {
         if !f(k, v) {
             break
         }
     }
-    this.mu.RUnlock()
 }
 
 // 哈希表克隆
