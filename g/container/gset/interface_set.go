@@ -100,3 +100,15 @@ func (this *InterfaceSet) Slice() []interface{} {
 func (this *InterfaceSet) String() string {
 	return fmt.Sprint(this.Slice())
 }
+
+func (this *InterfaceSet) LockFunc(f func(map[interface{}]struct{})) {
+	this.mu.Lock(true)
+	defer this.mu.Unlock(true)
+	f(this.m)
+}
+
+func (this *InterfaceSet) RLockFunc(f func(map[interface{}]struct{})) {
+	this.mu.RLock(true)
+	defer this.mu.RUnlock(true)
+	f(this.m)
+}
