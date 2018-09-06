@@ -161,16 +161,16 @@ func (this *IntStringMap) Clear() {
     this.mu.Unlock()
 }
 
-// 使用自定义方法执行加锁修改操作
+// 并发安全锁操作，使用自定义方法执行加锁修改操作
 func (this *IntStringMap) LockFunc(f func(m map[int]string)) {
-    this.mu.Lock()
+    this.mu.Lock(true)
+    defer this.mu.Unlock(true)
     f(this.m)
-    this.mu.Unlock()
 }
 
-// 使用自定义方法执行加锁读取操作
+// 并发安全锁操作，使用自定义方法执行加锁读取操作
 func (this *IntStringMap) RLockFunc(f func(m map[int]string)) {
-    this.mu.RLock()
-    defer this.mu.RUnlock()
+    this.mu.RLock(true)
+    defer this.mu.RUnlock(true)
     f(this.m)
 }

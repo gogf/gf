@@ -48,11 +48,20 @@ func (a *StringArray) Set(index int, value string) {
 }
 
 // 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
-func (a *StringArray) Insert(index int, value string) {
+func (a *StringArray) InsertBefore(index int, value string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	rear   := append([]string{}, a.array[index:]...)
 	a.array = append(a.array[0:index], value)
+	a.array = append(a.array, rear...)
+}
+
+// 在当前索引位置后插入一个数据项, 调用方注意判断数组边界
+func (a *StringArray) InsertAfter(index int, value string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	rear   := append([]string{}, a.array[index+1:]...)
+	a.array = append(a.array[0:index+1], value)
 	a.array = append(a.array, rear...)
 }
 
@@ -116,14 +125,14 @@ func (a *StringArray) Search(value string) int {
 
 // 使用自定义方法执行加锁修改操作
 func (a *StringArray) LockFunc(f func(array []string)) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+	a.mu.Lock(true)
+	defer a.mu.Unlock(true)
 	f(a.array)
 }
 
 // 使用自定义方法执行加锁读取操作
 func (a *StringArray) RLockFunc(f func(array []string)) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
+	a.mu.RLock(true)
+	defer a.mu.RUnlock(true)
 	f(a.array)
 }

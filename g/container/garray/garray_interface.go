@@ -47,11 +47,20 @@ func (a *Array) Set(index int, value interface{}) {
 }
 
 // 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
-func (a *Array) Insert(index int, value interface{}) {
+func (a *Array) InsertBefore(index int, value interface{}) {
     a.mu.Lock()
     defer a.mu.Unlock()
     rear   := append([]interface{}{}, a.array[index : ]...)
     a.array = append(a.array[0 : index], value)
+    a.array = append(a.array, rear...)
+}
+
+// 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
+func (a *Array) InsertAfter(index int, value interface{}) {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    rear   := append([]interface{}{}, a.array[index+1 : ]...)
+    a.array = append(a.array[0 : index+1], value)
     a.array = append(a.array, rear...)
 }
 
@@ -116,14 +125,14 @@ func (a *Array) Search(value interface{}) int {
 
 // 使用自定义方法执行加锁修改操作
 func (a *Array) LockFunc(f func(array []interface{})) {
-    a.mu.Lock()
-    defer a.mu.Unlock()
+    a.mu.Lock(true)
+    defer a.mu.Unlock(true)
     f(a.array)
 }
 
 // 使用自定义方法执行加锁读取操作
 func (a *Array) RLockFunc(f func(array []interface{})) {
-    a.mu.RLock()
-    defer a.mu.RUnlock()
+    a.mu.RLock(true)
+    defer a.mu.RUnlock(true)
     f(a.array)
 }

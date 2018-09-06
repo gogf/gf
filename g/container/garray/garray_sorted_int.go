@@ -21,6 +21,7 @@ type SortedIntArray struct {
     compareFunc func(v1, v2 int) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
+// 创建一个排序的int数组
 func NewSortedIntArray(size int, cap int, safe...bool) *SortedIntArray {
     a := &SortedIntArray {
         mu          : rwmutex.New(safe...),
@@ -168,14 +169,14 @@ func (a *SortedIntArray) Clear() {
 
 // 使用自定义方法执行加锁修改操作
 func (a *SortedIntArray) LockFunc(f func(array []int)) {
-    a.mu.Lock()
-    defer a.mu.Unlock()
+    a.mu.Lock(true)
+    defer a.mu.Unlock(true)
     f(a.array)
 }
 
 // 使用自定义方法执行加锁读取操作
 func (a *SortedIntArray) RLockFunc(f func(array []int)) {
-    a.mu.RLock()
-    defer a.mu.RUnlock()
+    a.mu.RLock(true)
+    defer a.mu.RUnlock(true)
     f(a.array)
 }
