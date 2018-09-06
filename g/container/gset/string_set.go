@@ -101,3 +101,15 @@ func (this *StringSet) Slice() []string {
 func (this *StringSet) String() string {
 	return fmt.Sprint(this.Slice())
 }
+
+func (this *StringSet) LockFunc(f func(map[string]struct{})) {
+	this.mu.Lock(true)
+	defer this.mu.Unlock(true)
+	f(this.m)
+}
+
+func (this *StringSet) RLockFunc(f func(map[string]struct{})) {
+	this.mu.RLock(true)
+	defer this.mu.RUnlock(true)
+	f(this.m)
+}

@@ -102,3 +102,15 @@ func (this *IntSet) Slice() []int {
 func (this *IntSet) String() string {
 	return fmt.Sprint(this.Slice())
 }
+
+func (this *IntSet) LockFunc(f func(map[int]struct{})) {
+	this.mu.Lock(true)
+	defer this.mu.Unlock(true)
+	f(this.m)
+}
+
+func (this *IntSet) RLockFunc(f func(map[int]struct{})) {
+    this.mu.RLock(true)
+    defer this.mu.RUnlock(true)
+    f(this.m)
+}
