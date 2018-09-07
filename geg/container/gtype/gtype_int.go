@@ -16,8 +16,5 @@ func main() {
     fmt.Println(i.Val())
 
     // (整型/浮点型有效)数值 增加/删除 delta
-    // 返回修改之前的数值
     fmt.Println(i.Add(-1))
-
-    fmt.Println(i.Val())
 }
