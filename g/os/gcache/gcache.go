@@ -76,6 +76,12 @@ func Set(key string, value interface{}, expire int)  {
     cache.Set(key, value, expire)
 }
 
+// 当键名不存在时写入，并返回true；否则返回false。
+// 常用来做对并发性要求不高的内存锁。
+func SetIfNotExist(key string, value interface{}, expire int) bool {
+    return cache.SetIfNotExist(key, value, expire)
+}
+
 // (使用全局KV缓存对象)批量设置kv缓存键值对，过期时间单位为**毫秒**
 func BatchSet(data map[string]interface{}, expire int)  {
     cache.BatchSet(data, expire)
@@ -84,6 +90,21 @@ func BatchSet(data map[string]interface{}, expire int)  {
 // (使用全局KV缓存对象)获取指定键名的值
 func Get(key string) interface{} {
     return cache.Get(key)
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值
+func GetOrSet(key string, value interface{}, expire int) interface{} {
+    return cache.GetOrSet(key, value, expire)
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
+func GetOrSetFunc(key string, f func() interface{}, expire int) interface{} {
+    return cache.GetOrSetFunc(key, f, expire)
+}
+
+// 是否存在指定的键名，true表示存在，false表示不存在。
+func Contains(key string) bool {
+    return cache.Contains(key)
 }
 
 // (使用全局KV缓存对象)删除指定键值对
@@ -194,6 +215,27 @@ func (c *Cache) Get(key string) interface{} {
         return item.v
     }
     return nil
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值
+func (c *Cache) GetOrSet(key string, value interface{}, expire int) interface{} {
+    if v := c.Get(key); v == nil {
+        c.Set(key, value, expire)
+        return value
+    } else {
+        return v
+    }
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
+func (c *Cache) GetOrSetFunc(key string, f func() interface{}, expire int) interface{} {
+    if v := c.Get(key); v == nil {
+        v = f()
+        c.Set(key, v, expire)
+        return v
+    } else {
+        return v
+    }
 }
 
 // 是否存在指定的键名，true表示存在，false表示不存在。
