@@ -38,7 +38,8 @@ func main() {
 
     // 直到所有人都死亡，否则循环一直执行
     for deadCount < playerCount {
-        r.Next() // 跳到下一个人
+        // 跳到下一个人
+        r.Next()
 
         // 如果是活着的人，则报数
         if r.Val().(*Player).alive {
