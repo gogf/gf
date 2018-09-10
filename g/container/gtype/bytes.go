@@ -16,10 +16,11 @@ type Bytes struct {
 }
 
 func NewBytes(value...[]byte) *Bytes {
+    t := &Bytes{}
     if len(value) > 0 {
-        return &Bytes{val:value[0]}
+        t.val = value[0]
     }
-    return &Bytes{}
+    return t
 }
 
 func (t *Bytes) Clone() *Bytes {

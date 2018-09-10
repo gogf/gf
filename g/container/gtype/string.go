@@ -16,10 +16,11 @@ type String struct {
 }
 
 func NewString(value...string) *String {
+    t := &String{}
     if len(value) > 0 {
-        return &String{val:value[0]}
+        t.val = value[0]
     }
-    return &String{}
+    return t
 }
 
 func (t *String) Clone() *String {

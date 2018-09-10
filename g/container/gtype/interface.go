@@ -17,10 +17,11 @@ type Interface struct {
 }
 
 func NewInterface(value...interface{}) *Interface {
+    t := &Interface{}
     if len(value) > 0 {
-        return &Interface{val:value[0]}
+        t.val = value[0]
     }
-    return &Interface{}
+    return t
 }
 
 func (t *Interface) Clone() *Interface{
@@ -43,13 +44,13 @@ func (t *Interface) Val() interface{} {
 // 使用自定义方法执行加锁修改操作
 func (t *Interface) LockFunc(f func(value interface{}) interface{}) {
     t.mu.Lock()
+    defer t.mu.Unlock()
     t.val = f(t.val)
-    t.mu.Unlock()
 }
 
 // 使用自定义方法执行加锁读取操作
 func (t *Interface) RLockFunc(f func(value interface{})) {
     t.mu.RLock()
+    defer t.mu.RUnlock()
     f(t.val)
-    t.mu.RUnlock()
 }
