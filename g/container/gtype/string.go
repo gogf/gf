@@ -7,18 +7,17 @@
 package gtype
 
 import (
-    "sync"
+    "sync/atomic"
 )
 
 type String struct {
-    mu  sync.RWMutex
-    val string
+    val atomic.Value
 }
 
 func NewString(value...string) *String {
     t := &String{}
     if len(value) > 0 {
-        t.val = value[0]
+        t.val.Store(value[0])
     }
     return t
 }
@@ -28,30 +27,13 @@ func (t *String) Clone() *String {
 }
 
 func (t *String) Set(value string) {
-    t.mu.Lock()
-    t.val = value
-    t.mu.Unlock()
+    t.val.Store(value)
 }
 
 func (t *String) Val() string {
-    t.mu.RLock()
-    s := t.val
-    t.mu.RUnlock()
-    return s
+    v := t.val.Load()
+    if v != nil {
+        return v.(string)
+    }
+    return ""
 }
-
-// 使用自定义方法执行加锁修改操作
-func (t *String) LockFunc(f func(value string) string) {
-    t.mu.Lock()
-    t.val = f(t.val)
-    t.mu.Unlock()
-}
-
-// 使用自定义方法执行加锁读取操作
-func (t *String) RLockFunc(f func(value string)) {
-    t.mu.RLock()
-    f(t.val)
-    t.mu.RUnlock()
-}
-
-
