@@ -7,17 +7,18 @@
 package gtype
 
 import (
-    "sync/atomic"
+    "sync"
 )
 
 type Bytes struct {
-    val atomic.Value
+    mu  sync.RWMutex
+    val []byte
 }
 
 func NewBytes(value...[]byte) *Bytes {
     t := &Bytes{}
-    if len(value) > 0 && value[0] != nil{
-        t.val.Store(value[0])
+    if len(value) > 0 {
+        t.val = value[0]
     }
     return t
 }
@@ -27,16 +28,14 @@ func (t *Bytes) Clone() *Bytes {
 }
 
 func (t *Bytes) Set(value []byte) {
-    if value == nil {
-        return
-    }
-    t.val.Store(value)
+    t.mu.Lock()
+    t.val = value
+    t.mu.Unlock()
 }
 
 func (t *Bytes) Val() []byte {
-    v := t.val.Load()
-    if v != nil {
-        return v.([]byte)
-    }
-    return nil
+    t.mu.RLock()
+    b := t.val
+    t.mu.RUnlock()
+    return b
 }
