@@ -16,7 +16,7 @@ type Int32 struct {
 
 func NewInt32(value...int32) *Int32 {
     if len(value) > 0 {
-        return &Int32{val:value[0]}
+        return &Int32{val: value[0]}
     }
     return &Int32{}
 }
