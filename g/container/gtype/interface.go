@@ -7,19 +7,18 @@
 package gtype
 
 import (
-    "sync"
+    "sync/atomic"
 )
 
 // 比较通用的并发安全数据类型
 type Interface struct {
-    mu  sync.RWMutex
-    val interface{}
+    val atomic.Value
 }
 
 func NewInterface(value...interface{}) *Interface {
     t := &Interface{}
-    if len(value) > 0 {
-        t.val = value[0]
+    if len(value) > 0 && value[0] != nil {
+        t.val.Store(value[0])
     }
     return t
 }
@@ -29,28 +28,12 @@ func (t *Interface) Clone() *Interface{
 }
 
 func (t *Interface) Set(value interface{}) {
-    t.mu.Lock()
-    t.val = value
-    t.mu.Unlock()
+    if value == nil {
+        return
+    }
+    t.val.Store(value)
 }
 
 func (t *Interface) Val() interface{} {
-    t.mu.RLock()
-    b := t.val
-    t.mu.RUnlock()
-    return b
-}
-
-// 使用自定义方法执行加锁修改操作
-func (t *Interface) LockFunc(f func(value interface{}) interface{}) {
-    t.mu.Lock()
-    defer t.mu.Unlock()
-    t.val = f(t.val)
-}
-
-// 使用自定义方法执行加锁读取操作
-func (t *Interface) RLockFunc(f func(value interface{})) {
-    t.mu.RLock()
-    defer t.mu.RUnlock()
-    f(t.val)
+    return t.val.Load()
 }

@@ -7,18 +7,17 @@
 package gtype
 
 import (
-    "sync"
+    "sync/atomic"
 )
 
 type Bytes struct {
-    mu  sync.RWMutex
-    val []byte
+    val atomic.Value
 }
 
 func NewBytes(value...[]byte) *Bytes {
     t := &Bytes{}
-    if len(value) > 0 {
-        t.val = value[0]
+    if len(value) > 0 && value[0] != nil{
+        t.val.Store(value[0])
     }
     return t
 }
@@ -28,28 +27,16 @@ func (t *Bytes) Clone() *Bytes {
 }
 
 func (t *Bytes) Set(value []byte) {
-    t.mu.Lock()
-    t.val = value
-    t.mu.Unlock()
+    if value == nil {
+        return
+    }
+    t.val.Store(value)
 }
 
 func (t *Bytes) Val() []byte {
-    t.mu.RLock()
-    b := t.val
-    t.mu.RUnlock()
-    return b
-}
-
-// 使用自定义方法执行加锁修改操作
-func (t *Bytes) LockFunc(f func(value []byte) []byte) {
-    t.mu.Lock()
-    t.val = f(t.val)
-    t.mu.Unlock()
-}
-
-// 使用自定义方法执行加锁读取操作
-func (t *Bytes) RLockFunc(f func(value []byte)) {
-    t.mu.RLock()
-    f(t.val)
-    t.mu.RUnlock()
+    v := t.val.Load()
+    if v != nil {
+        return v.([]byte)
+    }
+    return nil
 }
