@@ -118,7 +118,7 @@ func (s *Server) Restart(newExeFilePath...string) error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
-    return restartWebServers(false, newExeFilePath...)
+    return restartWebServers("", newExeFilePath...)
 }
 
 // 关闭Web Server
@@ -131,7 +131,7 @@ func (s *Server) Shutdown() error {
     if err := s.checkActionFrequence(); err != nil {
         return err
     }
-    shutdownWebServers(false)
+    shutdownWebServers("")
     return nil
 }
 
@@ -240,10 +240,10 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 }
 
 // Web Server重启
-func restartWebServers(isSignal bool, newExeFilePath...string) error {
+func restartWebServers(signal string, newExeFilePath...string) error {
     serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
     if runtime.GOOS == "windows" {
-        if isSignal {
+        if len(signal) > 0 {
             // 在终端信号下，立即执行重启操作
             forcedlyCloseWebServers()
             forkRestartProcess(newExeFilePath...)
@@ -260,21 +260,27 @@ func restartWebServers(isSignal bool, newExeFilePath...string) error {
             serverProcessStatus.Set(gADMIN_ACTION_NONE)
             return err
         } else {
-            glog.Printfln("%d: server restarting", gproc.Pid())
+            if len(signal) > 0 {
+                glog.Printfln("%d: server restarting by signal: %s", gproc.Pid(), signal)
+            } else {
+                glog.Printfln("%d: server restarting by web admin", gproc.Pid())
+            }
+
         }
     }
     return nil
 }
 
 // Web Server关闭服务
-func shutdownWebServers(isSignal bool) {
+func shutdownWebServers(signal string) {
     serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
-    glog.Printfln("%d: server shutting down", gproc.Pid())
-    if isSignal {
+    if len(signal) > 0 {
+        glog.Printfln("%d: server shutting down by signal: %s", gproc.Pid(), signal)
         // 在终端信号下，立即执行关闭操作
         forcedlyCloseWebServers()
         doneChan <- struct{}{}
     } else {
+        glog.Printfln("%d: server shutting down by web admin", gproc.Pid())
         // 非终端信号下，异步1秒后再执行关闭，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
         gtime.SetTimeout(time.Second, func() {
             forcedlyCloseWebServers()

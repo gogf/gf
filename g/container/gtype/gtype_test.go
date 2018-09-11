@@ -12,6 +12,7 @@ import (
     "testing"
     "strconv"
     "gitee.com/johng/gf/g/encoding/gbinary"
+    "sync/atomic"
 )
 
 var it    = NewInt()
@@ -24,6 +25,8 @@ var bl    = NewBool()
 var bytes = NewBytes()
 var str   = NewString()
 var inf   = NewInterface()
+
+var at    = atomic.Value{}
 
 func BenchmarkInt_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
@@ -190,6 +193,19 @@ func BenchmarkInterface_Set(b *testing.B) {
 func BenchmarkInterface_Val(b *testing.B) {
     for i := 0; i < b.N; i++ {
         inf.Val()
+    }
+}
+
+
+func BenchmarkAtomicString_Store(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        at.Store(i)
+    }
+}
+
+func BenchmarkAtomicString_Load(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        at.Load()
     }
 }
 
