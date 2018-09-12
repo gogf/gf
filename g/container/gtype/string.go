@@ -7,19 +7,19 @@
 package gtype
 
 import (
-    "sync"
+    "sync/atomic"
 )
 
 type String struct {
-    mu  sync.RWMutex
-    val string
+    val atomic.Value
 }
 
 func NewString(value...string) *String {
+    t := &String{}
     if len(value) > 0 {
-        return &String{val:value[0]}
+        t.val.Store(value[0])
     }
-    return &String{}
+    return t
 }
 
 func (t *String) Clone() *String {
@@ -27,16 +27,15 @@ func (t *String) Clone() *String {
 }
 
 func (t *String) Set(value string) {
-    t.mu.Lock()
-    t.val = value
-    t.mu.Unlock()
+    t.val.Store(value)
 }
 
 func (t *String) Val() string {
-    t.mu.RLock()
-    s := t.val
-    t.mu.RUnlock()
-    return s
+    s := t.val.Load()
+    if s != nil {
+        return s.(string)
+    }
+    return ""
 }
 
 

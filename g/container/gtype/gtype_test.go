@@ -197,13 +197,13 @@ func BenchmarkInterface_Val(b *testing.B) {
 }
 
 
-func BenchmarkAtomicString_Store(b *testing.B) {
+func BenchmarkAtomicValue_Store(b *testing.B) {
     for i := 0; i < b.N; i++ {
         at.Store(i)
     }
 }
 
-func BenchmarkAtomicString_Load(b *testing.B) {
+func BenchmarkAtomicValue_Load(b *testing.B) {
     for i := 0; i < b.N; i++ {
         at.Load()
     }
