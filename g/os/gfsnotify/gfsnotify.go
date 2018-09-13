@@ -113,8 +113,9 @@ func (w *Watcher) addWatch(path string, callback func(event *Event)) error {
 // 递归添加监控
 func (w *Watcher) Add(path string, callback func(event *Event)) error {
     if gfile.IsDir(path) {
-        list := []string{path}
-        list  = append(list, gfile.ScanDir(path, true)...)
+        paths, _ := gfile.ScanDir(path, "*", true)
+        list  := []string{path}
+        list   = append(list, paths...)
         for _, v := range list {
             if err := w.addWatch(v, callback); err != nil {
                 return err
@@ -136,8 +137,9 @@ func (w *Watcher) removeWatch(path string) error {
 // 递归移除监听
 func (w *Watcher) Remove(path string) error {
     if gfile.IsDir(path) {
+        paths, _ := gfile.ScanDir(path, "*", true)
         list := []string{path}
-        list  = append(list, gfile.ScanDir(path, true)...)
+        list  = append(list, paths...)
         for _, v := range list {
             if err := w.removeWatch(v); err != nil {
                 return err

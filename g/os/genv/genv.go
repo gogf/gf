@@ -13,8 +13,13 @@ func All() []string {
     return os.Environ()
 }
 
-func Get(k string) string {
-    return os.Getenv(k)
+// 获取环境变量，并可以指定当环境变量不存在时的默认值
+func Get(k string, def...string) string {
+    v, ok := os.LookupEnv(k)
+    if !ok && len(def) > 0 {
+        return def[0]
+    }
+    return v
 }
 
 func Set(k, v string) error {

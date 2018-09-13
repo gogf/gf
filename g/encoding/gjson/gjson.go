@@ -9,7 +9,6 @@
 package gjson
 
 import (
-    "sync"
     "strings"
     "strconv"
     "io/ioutil"
@@ -21,6 +20,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gtoml"
     "gitee.com/johng/gf/g/util/gstr"
     "time"
+    "gitee.com/johng/gf/g/encoding/gjson/internal/rwmutex"
 )
 
 const (
@@ -29,37 +29,48 @@ const (
 
 // json解析结果存放数组
 type Json struct {
-    mu sync.RWMutex
+    mu *rwmutex.RWMutex
     p  *interface{} // 注意这是一个指针
     c  byte         // 层级分隔符，默认为"."
     vc bool         // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
-func New(value interface{}) *Json {
-    switch value.(type) {
-        case map[string]interface{}:
-            return &Json{
-                p  : &value,
-                c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : false ,
-            }
-        case []interface{}:
-            return &Json{
-                p  : &value,
-                c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : false ,
-            }
-        default:
-            // 这里效率会比较低
-            b, _ := Encode(value)
-            v, _ := Decode(b)
-            return &Json{
-                p  : &v,
-                c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : false,
-            }
+func New(value interface{}, safe...bool) *Json {
+    j := (*Json)(nil)
+    if value != nil {
+        switch value.(type) {
+            case map[string]interface{}:
+                j = &Json{
+                    p  : &value,
+                    c  : byte(gDEFAULT_SPLIT_CHAR),
+                    vc : false ,
+                }
+            case []interface{}:
+                j = &Json{
+                    p  : &value,
+                    c  : byte(gDEFAULT_SPLIT_CHAR),
+                    vc : false ,
+                }
+            default:
+                // 这里效率会比较低
+                b, _ := Encode(value)
+                v, _ := Decode(b)
+                j = &Json{
+                    p  : &v,
+                    c  : byte(gDEFAULT_SPLIT_CHAR),
+                    vc : false,
+                }
+        }
+    } else {
+        j = &Json{
+            p  : nil,
+            c  : byte(gDEFAULT_SPLIT_CHAR),
+            vc : false,
+        }
     }
+    j.mu = rwmutex.New(safe...)
+    return j
 }
 
 // 编码go变量为json字符串，并返回json字符串指针
@@ -100,7 +111,7 @@ func Load (path string) (*Json, error) {
     return LoadContent(data, gfile.Ext(path))
 }
 
-// 支持的配置文件格式：xml, json, yaml/yml, toml
+// 支持的配置文件格式：xml, json, yaml/yml, toml，默认为json
 func LoadContent (data []byte, dataType...string) (*Json, error) {
     var err    error
     var result interface{}

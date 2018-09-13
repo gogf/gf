@@ -17,12 +17,9 @@ type Parser struct {
 }
 
 // 将变量转换为Parser对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
-// 该参数为非必需参数，默认为创建一个空的Parser对象
-func New (values...interface{}) *Parser {
-    if len(values) > 0 {
-        return &Parser{gjson.New(values[0])}
-    }
-    return &Parser{gjson.New(nil)}
+// value可以传递nil, 表示创建一个空的Parser对象
+func New (value interface{}, safe...bool) *Parser {
+    return &Parser{gjson.New(value, safe...)}
 }
 
 func Load (path string) (*Parser, error) {

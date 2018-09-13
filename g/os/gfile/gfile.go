@@ -11,7 +11,6 @@ import (
     "os"
     "io"
     "io/ioutil"
-    "sort"
     "fmt"
     "time"
     "strings"
@@ -24,6 +23,7 @@ import (
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gfilepool"
+    "sort"
 )
 
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
@@ -241,9 +241,20 @@ func Copy(src string, dst string) error {
     return nil
 }
 
-// 文件名正则匹配查找
-func Glob(pattern string) ([]string, error) {
-    return filepath.Glob(pattern)
+// 文件名正则匹配查找，第二个可选参数指定返回的列表是否仅为文件名(非绝对路径)，默认返回绝对路径
+func Glob(pattern string, onlyNames...bool) ([]string, error) {
+    if list, err := filepath.Glob(pattern); err == nil {
+        if len(onlyNames) > 0 && onlyNames[0] && len(list) > 0 {
+            array := make([]string, len(list))
+            for k, v := range list {
+                array[k] = Basename(v)
+            }
+            return array, nil
+        }
+        return list, nil
+    } else {
+        return nil, err
+    }
 }
 
 // 文件/目录删除
@@ -290,32 +301,49 @@ func Chmod(path string, mode os.FileMode) error {
     return os.Chmod(path, mode)
 }
 
-// 打开目录，并返回其下一级子目录名称列表，按照文件名称大小写进行排序，支持目录递归遍历。
-// 当递归遍历时，结果集返回的是子级文件/目录的绝对路径，而不仅仅是一个名字
-func ScanDir(path string, recursive ... bool) []string {
-    f, err := os.Open(path)
+// 打开目录，并返回其下一级文件列表(绝对路径)，按照文件名称大小写进行排序，支持目录递归遍历。
+func ScanDir(path string, pattern string, recursive ... bool) ([]string, error) {
+    list, err := doScanDir(path, pattern, recursive...)
     if err != nil {
-        return nil
+        return nil, err
     }
+    if len(list) > 0 {
+        sort.Strings(list)
+    }
+    return list, nil
+}
 
-    list, err := f.Readdirnames(-1)
-    f.Close()
+// 内部检索目录方法，支持递归，返回没有排序的文件绝对路径列表结果
+func doScanDir(path string, pattern string, recursive ... bool) ([]string, error) {
+    var list []string
+    // 打开目录
+    dfile, err := os.Open(path)
     if err != nil {
-        return nil
+        return nil, err
+    }
+    defer dfile.Close()
+    // 读取目录下的文件列表
+    names, err := dfile.Readdirnames(-1)
+    if err != nil {
+        return nil, err
     }
     // 是否递归遍历
-    if len(recursive) > 0 && recursive[0] && len(list) > 0 {
-        for k, v := range list {
-            p      := fmt.Sprintf("%s%s%s", path, Separator, v)
-            list[k] = p
-            if IsDir(p) {
-                list = append(list, ScanDir(p, true)...)
+    if len(recursive) > 0 && recursive[0] && len(names) > 0 {
+        for _, name := range names {
+            path := fmt.Sprintf("%s%s%s", path, Separator, name)
+            if IsDir(path) {
+                array, _ := doScanDir(path, pattern, true)
+                if len(array) > 0 {
+                    list = append(list, array...)
+                }
+            }
+            // 满足pattern才加入结果列表
+            if match, err := filepath.Match(pattern, name); err == nil && match {
+                list = append(list, path)
             }
         }
     }
-    // 默认按照字符串大小排序
-    sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
-    return list
+    return list, nil
 }
 
 // 将所给定的路径转换为绝对路径

@@ -26,6 +26,7 @@ gvalid校验支持当第一个规则失败后便不再校验后续的规则，�
 gvalid增加支持对[]rune的长度校验(一个中文占3个字节)；
 ghttp.Request增加对输入参数的自动HtmlEncode机制；
 常量命名风格根据golint进行修改；
+开放rwmutex包，并将gjson的互斥锁使用自定义的mutex替换；
 文档完善：
     gconv struct tag、
     控制器及执行对象注册的Init&Shut方法、

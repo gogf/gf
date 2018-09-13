@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-    gutil.Dump(gfile.ScanDir("/home/john/Documents"))
-    gutil.Dump(gfile.ScanDir("/home/john/temp/newproject", true))
+    gutil.Dump(gfile.ScanDir("/home/john/Documents", "*"))
+    gutil.Dump(gfile.ScanDir("/home/john/temp/newproject", "*", true))
 }

@@ -27,10 +27,14 @@ const (
 )
 
 // 常用map数据结构(使用别名)
-type Map  = map[string]interface{}
+type Map   = map[string]interface{}
 
 // 常用list数据结构(使用别名)
-type List = []Map
+type List  = []Map
+
+// 常用slice数据结构(使用别名)
+type Slice = []interface{}
+type Array = Slice
 
 // 阻塞等待HTTPServer执行完成(同一进程多HTTPServer情况下)
 func Wait() {

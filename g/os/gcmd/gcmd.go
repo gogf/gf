@@ -10,10 +10,8 @@ package gcmd
 
 import (
 	"os"
-    "regexp"
     "errors"
-    "strconv"
-    "strings"
+    "regexp"
 )
 
 // 命令行参数列表
@@ -34,8 +32,8 @@ var cmdFuncMap = make(map[string]func()) // 终端命令及函数地址对应表
 // 检查并初始化console参数，在包加载的时候触发
 // 初始化时执行，不影响运行时性能
 func init() {
+    reg := regexp.MustCompile(`\-\-{0,1}(.+?)=(.+)`)
     Option.options = make(map[string]string)
-    reg       := regexp.MustCompile(`\-\-{0,1}(.+?)=(.+)`)
     for i := 0; i < len(os.Args); i++ {
         result := reg.FindStringSubmatch(os.Args[i])
         if len(result) > 1 {
@@ -57,57 +55,23 @@ func (c *gCmdOption) GetAll() map[string]string {
 }
 
 // 获得一条指定索引位置的value参数
-func (c *gCmdValue) Get(index uint8) string {
+func (c *gCmdValue) Get(index uint8, def...string) string {
     if index < uint8(len(c.values)) {
         return c.values[index]
+    } else if len(def) > 0 {
+        return def[0]
     }
     return ""
-}
-
-// 类型转换
-func (c *gCmdValue) GetInt(key uint8) int {
-    if v := c.Get(key); v != "" {
-        i, _ := strconv.Atoi(v)
-        return i
-    }
-    return 0
-}
-
-// 类型转换bool
-func (c *gCmdValue) GetBool(key uint8) bool {
-    v := c.Get(key)
-    v  = strings.ToLower(v)
-    if v != "" && v != "0" && v != "false" {
-        return true
-    }
-    return false
 }
 
 // 获得一条指定索引位置的option参数;
-func (c *gCmdOption) Get(key string) string {
+func (c *gCmdOption) Get(key string, def...string) string {
     if option, ok := c.options[key]; ok {
         return option
+    } else if len(def) > 0 {
+        return def[0]
     }
     return ""
-}
-
-// 类型转换int
-func (c *gCmdOption) GetInt(key string) int {
-    if v := c.Get(key); v != "" {
-        i, _ := strconv.Atoi(v)
-        return i
-    }
-    return 0
-}
-
-// 类型转换bool
-func (c *gCmdOption) GetBool(key string) bool {
-    v := c.Get(key)
-    v  = strings.ToLower(v)
-    if v != "" && v != "0" && v != "false" {
-        return true
-    }
-    return false
 }
 
 // 绑定命令行参数及对应的命令函数，注意命令函数参数是函数的内存地址

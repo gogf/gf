@@ -4,6 +4,7 @@ package main
 import (
     "gitee.com/johng/gf/g/os/gfile"
     "fmt"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 var dirpath1  = "/home/john/Workspace/temp/"
@@ -22,8 +23,7 @@ func info () {
 }
 
 func scanDir() {
-    files := gfile.ScanDir(dirpath1)
-    fmt.Println(files)
+    gutil.Dump(gfile.ScanDir(dirpath1, "*"))
 }
 
 func getContents() {
