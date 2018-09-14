@@ -381,7 +381,7 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
             return err
         }
     }
-    // 创建/打开文件，使用文件指针池，默认为60秒
+    // 创建/打开文件
     f, err := os.OpenFile(path, flag, perm)
     if err != nil {
         return err
