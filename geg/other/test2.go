@@ -5,9 +5,8 @@ import (
 )
 
 func main() {
-	j := gjson.NewUnsafe([]int{1,2,3})
-    j.Append("", 4)
-    j.Append("", "abc")
+	j := gjson.New(nil)
+	j.Set("array", []int{1,2,3})
+    j.Append("array", 4)
     j.Dump()
-
 }

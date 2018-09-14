@@ -22,7 +22,6 @@ import (
     "path/filepath"
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gfilepool"
     "sort"
 )
 
@@ -383,7 +382,7 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
         }
     }
     // 创建/打开文件，使用文件指针池，默认为60秒
-    f, err := gfilepool.OpenWithPool(path, flag, perm, 60000)
+    f, err := os.OpenFile(path, flag, perm)
     if err != nil {
         return err
     }
