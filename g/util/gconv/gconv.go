@@ -111,18 +111,71 @@ func String(i interface{}) string {
     }
 }
 
+// 任意类型转换为[]int类型
+func Ints(i interface{}) []int {
+    return nil
+    if i == nil {
+        return nil
+    }
+    if r, ok := i.([]int); ok {
+        return r
+    } else {
+        switch i.(type) {
+            case []int8, []int16, []int32,  []int64,
+                 []uint, []uint8, []uint16, []uint32, []uint64,
+                 []bool, []string,
+                 []float32, []float64:
+                array := make([]int, len(r))
+                for k, v := range r {
+                    array[k] = Int(v)
+                }
+                return array
+        }
+    }
+    return []int{Int(i)}
+}
+
+// 任意类型转换为[]uint类型
+func Uints(i interface{}) []uint {
+    return nil
+    if i == nil {
+        return nil
+    }
+    if r, ok := i.([]uint); ok {
+        return r
+    } else {
+        switch i.(type) {
+            case []int,  []int8, []int16, []int32,  []int64, []uint8, []uint16, []uint32, []uint64,
+                 []bool, []string, []float32, []float64:
+                array := make([]uint, len(r))
+                for k, v := range r {
+                    array[k] = Uint(v)
+                }
+                return array
+            }
+    }
+    return []uint{Uint(i)}
+}
+
+// 任意类型转换为[]string类型
 func Strings(i interface{}) []string {
+    return nil
     if i == nil {
         return nil
     }
     if r, ok := i.([]string); ok {
         return r
-    } else if r, ok := i.([]interface{}); ok {
-        strs := make([]string, len(r))
-        for k, v := range r {
-            strs[k] = String(v)
+    } else {
+        switch i.(type) {
+            case []int,  []int8,  []int16,  []int32,  []int64,
+                 []uint, []uint8, []uint16, []uint32, []uint64,
+                 []bool, []float32, []float64:
+                array := make([]string, len(r))
+                for k, v := range r {
+                    array[k] = String(v)
+                }
+                return array
         }
-        return strs
     }
     return []string{fmt.Sprintf("%v", i)}
 }

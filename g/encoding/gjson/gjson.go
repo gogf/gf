@@ -21,6 +21,8 @@ import (
     "gitee.com/johng/gf/g/util/gstr"
     "time"
     "gitee.com/johng/gf/g/encoding/gjson/internal/rwmutex"
+    "fmt"
+    "github.com/pkg/errors"
 )
 
 const (
@@ -71,6 +73,14 @@ func New(value interface{}, safe...bool) *Json {
     }
     j.mu = rwmutex.New(safe...)
     return j
+}
+
+// 创建一个非并发安全的Json对象
+func NewUnsafe(value...interface{}) *Json {
+    if len(value) > 0 {
+        return New(value[0], false)
+    }
+    return New(nil, false)
 }
 
 // 编码go变量为json字符串，并返回json字符串指针
@@ -508,6 +518,18 @@ func (j *Json) Get(pattern...string) interface{} {
     return nil
 }
 
+// 指定pattern追加元素
+func (j *Json) Append(pattern string, value interface{}) error {
+    p := j.getPointerByPattern(pattern)
+    switch t := (*p).(type) {
+        case []interface{}:
+            *p = append((*p).([]interface{}), value)
+            return nil
+        default:
+            return errors.New(fmt.Sprintf("invalid type '%s' to append", t))
+    }
+}
+
 // 根据pattern层级查找**变量指针**
 // 检索方式：例如检索 a.a.a ，值为1
 // 1. 检索 a.a.a.a 是否存在对应map的键名；
@@ -656,4 +678,16 @@ func (j *Json) ToStruct(o interface{}) error {
     j.mu.RLock()
     defer j.mu.RUnlock()
     return gconv.MapToStruct(j.ToMap(), o)
+}
+
+// 打印Json对象
+func (j *Json) Dump() error {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
+    if b, err := j.ToJsonIndent(); err != nil {
+        return err
+    } else {
+        fmt.Println(string(b))
+    }
+    return nil
 }

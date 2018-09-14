@@ -9,23 +9,27 @@ package gutil
 
 import (
     "fmt"
-    "encoding/json"
     "bytes"
+    "encoding/json"
 )
 
 // 格式化打印变量(类似于PHP-vardump)
 func Dump(i...interface{}) {
     for _, v := range i {
-        buffer  := &bytes.Buffer{}
-        encoder := json.NewEncoder(buffer)
-        encoder.SetEscapeHTML(false)
-        encoder.SetIndent("", "\t")
-        if err := encoder.Encode(v); err == nil {
-            fmt.Print(buffer.String())
+        if b, ok := v.([]byte); ok {
+            fmt.Print(string(b))
         } else {
-            fmt.Errorf("%s", err.Error())
+            buffer  := &bytes.Buffer{}
+            encoder := json.NewEncoder(buffer)
+            encoder.SetEscapeHTML(false)
+            encoder.SetIndent("", "\t")
+            if err := encoder.Encode(v); err == nil {
+                fmt.Print(buffer.String())
+            } else {
+                fmt.Errorf("%s", err.Error())
+            }
         }
+        fmt.Println()
     }
-    fmt.Println()
 }
 
