@@ -14,7 +14,7 @@ import (
 // 设置日志目录
 func (s *Server)SetLogPath(path string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     if len(path) == 0 {
         return
@@ -25,7 +25,7 @@ func (s *Server)SetLogPath(path string) {
 // 设置是否开启access log日志功能
 func (s *Server)SetAccessLogEnabled(enabled bool) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.AccessLogEnabled = enabled
 }
@@ -33,7 +33,7 @@ func (s *Server)SetAccessLogEnabled(enabled bool) {
 // 设置是否开启error log日志功能
 func (s *Server)SetErrorLogEnabled(enabled bool) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.ErrorLogEnabled = enabled
 }
@@ -41,7 +41,7 @@ func (s *Server)SetErrorLogEnabled(enabled bool) {
 // 设置日志写入的回调函数
 func (s *Server) SetLogHandler(handler LogHandler) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.LogHandler = handler
 }

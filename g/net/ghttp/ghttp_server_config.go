@@ -17,16 +17,17 @@ import (
 )
 
 const (
-    gDEFAULT_HTTP_ADDR        = ":80"            // 默认HTTP监听地址
-    gDEFAULT_HTTPS_ADDR       = ":443"           // 默认HTTPS监听地址
-    NAME_TO_URI_TYPE_DEFAULT  = 0                // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
-    NAME_TO_URI_TYPE_FULLNAME = 1                // 不处理名称，以原有名称构建成URI
-    NAME_TO_URI_TYPE_ALLLOWER = 2                // 仅转为小写，单词间不使用连接符号
-    NAME_TO_URI_TYPE_CAMEL    = 3                // 采用驼峰命名方式
-    gDEFAULT_COOKIE_PATH       = "/"             // 默认path
-    gDEFAULT_COOKIE_MAX_AGE    = 86400*365       // 默认cookie有效期(一年)
-    gDEFAULT_SESSION_MAX_AGE   = 600             // 默认session有效期(600秒)
-    gDEFAULT_SESSION_ID_NAME   = "gfsessionid"   // 默认存放Cookie中的SessionId名称
+    gDEFAULT_HTTP_ADDR                 = ":80"            // 默认HTTP监听地址
+    gDEFAULT_HTTPS_ADDR                = ":443"           // 默认HTTPS监听地址
+    NAME_TO_URI_TYPE_DEFAULT           = 0                // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
+    NAME_TO_URI_TYPE_FULLNAME          = 1                // 不处理名称，以原有名称构建成URI
+    NAME_TO_URI_TYPE_ALLLOWER          = 2                // 仅转为小写，单词间不使用连接符号
+    NAME_TO_URI_TYPE_CAMEL             = 3                // 采用驼峰命名方式
+    gDEFAULT_COOKIE_PATH               = "/"              // 默认path
+    gDEFAULT_COOKIE_MAX_AGE            = 86400*365        // 默认cookie有效期(一年)
+    gDEFAULT_SESSION_MAX_AGE           = 600              // 默认session有效期(600秒)
+    gDEFAULT_SESSION_ID_NAME           = "gfsessionid"    // 默认存放Cookie中的SessionId名称
+    gCHANGE_CONFIG_WHILE_RUNNING_ERROR = "cannot be changed while running"
 )
 
 // 自定义日志处理方法类型
@@ -112,7 +113,7 @@ func Config() ServerConfig {
 // 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
 func (s *Server)SetConfig(c ServerConfig) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     if c.Handler == nil {
         c.Handler = http.HandlerFunc(s.defaultHttpHandle)
@@ -127,7 +128,7 @@ func (s *Server)SetConfig(c ServerConfig) {
 // 设置http server参数 - Addr
 func (s *Server)SetAddr(addr string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.Addr = addr
 }
@@ -151,7 +152,7 @@ func (s *Server)SetPort(port...int) {
 // 设置http server参数 - HTTPS Addr
 func (s *Server)SetHTTPSAddr(addr string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.HTTPSAddr = addr
 }
@@ -159,7 +160,7 @@ func (s *Server)SetHTTPSAddr(addr string) {
 // 设置http server参数 - HTTPS Port
 func (s *Server)SetHTTPSPort(port...int) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     if len(port) > 0 {
         s.config.HTTPSAddr = ""
@@ -175,7 +176,7 @@ func (s *Server)SetHTTPSPort(port...int) {
 // 开启HTTPS支持，但是必须提供Cert和Key文件
 func (s *Server)EnableHTTPS(certFile, keyFile string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.HTTPSCertPath = certFile
     s.config.HTTPSKeyPath  = keyFile
@@ -184,7 +185,7 @@ func (s *Server)EnableHTTPS(certFile, keyFile string) {
 // 设置http server参数 - ReadTimeout
 func (s *Server)SetReadTimeout(t time.Duration) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.ReadTimeout = t
 }
@@ -192,7 +193,7 @@ func (s *Server)SetReadTimeout(t time.Duration) {
 // 设置http server参数 - WriteTimeout
 func (s *Server)SetWriteTimeout(t time.Duration) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.WriteTimeout = t
 }
@@ -200,7 +201,7 @@ func (s *Server)SetWriteTimeout(t time.Duration) {
 // 设置http server参数 - IdleTimeout
 func (s *Server)SetIdleTimeout(t time.Duration) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.IdleTimeout = t
 }
@@ -208,7 +209,7 @@ func (s *Server)SetIdleTimeout(t time.Duration) {
 // 设置http server参数 - MaxHeaderBytes
 func (s *Server)SetMaxHeaderBytes(b int) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.MaxHeaderBytes = b
     
@@ -217,7 +218,7 @@ func (s *Server)SetMaxHeaderBytes(b int) {
 // 设置http server参数 - IndexFiles，默认展示文件，如：index.html, index.htm
 func (s *Server)SetIndexFiles(index []string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.IndexFiles = index
 }
@@ -225,7 +226,7 @@ func (s *Server)SetIndexFiles(index []string) {
 // 允许展示访问目录的文件列表
 func (s *Server)SetIndexFolder(index bool) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.IndexFolder = index
     
@@ -234,7 +235,7 @@ func (s *Server)SetIndexFolder(index bool) {
 // 设置http server参数 - ServerAgent
 func (s *Server)SetServerAgent(agent string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.ServerAgent = agent
     
@@ -243,7 +244,7 @@ func (s *Server)SetServerAgent(agent string) {
 // 设置http server参数 - ServerRoot
 func (s *Server)SetServerRoot(root string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
     path := gfile.RealPath(root)
@@ -255,28 +256,28 @@ func (s *Server)SetServerRoot(root string) {
 
 func (s *Server) SetDenyIps(ips []string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.DenyIps = ips
 }
 
 func (s *Server) SetAllowIps(ips []string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.AllowIps = ips
 }
 
 func (s *Server) SetDenyRoutes(routes []string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.DenyRoutes = routes
 }
 
 func (s *Server) SetGzipContentTypes(types []string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.GzipContentTypes = types
 }
@@ -284,7 +285,7 @@ func (s *Server) SetGzipContentTypes(types []string) {
 // 服务注册时对象和方法名称转换为URI时的规则
 func (s *Server) SetNameToUriType(t int) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.NameToUriType = t
 }

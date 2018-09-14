@@ -15,7 +15,7 @@ import (
 // 设置http server参数 - CookieMaxAge
 func (s *Server)SetCookieMaxAge(age int) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.CookieMaxAge = age
 }
@@ -23,7 +23,7 @@ func (s *Server)SetCookieMaxAge(age int) {
 // 设置http server参数 - CookiePath
 func (s *Server)SetCookiePath(path string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.CookiePath = path
 }
@@ -31,7 +31,7 @@ func (s *Server)SetCookiePath(path string) {
 // 设置http server参数 - CookieDomain
 func (s *Server)SetCookieDomain(domain string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.CookieDomain = domain
 }

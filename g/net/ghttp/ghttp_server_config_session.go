@@ -12,7 +12,7 @@ import "gitee.com/johng/gf/g/os/glog"
 // 设置http server参数 - SessionMaxAge
 func (s *Server) SetSessionMaxAge(age int) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.SessionMaxAge = age
 }
@@ -20,7 +20,7 @@ func (s *Server) SetSessionMaxAge(age int) {
 // 设置http server参数 - SessionIdName
 func (s *Server) SetSessionIdName(name string) {
     if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error("cannot be changed while running")
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.SessionIdName = name
 }
