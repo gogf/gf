@@ -22,6 +22,14 @@ func New (value interface{}, safe...bool) *Parser {
     return &Parser{gjson.New(value, safe...)}
 }
 
+// 非并发安全Parser对象
+func NewUnsafe (value...interface{}) *Parser {
+    if len(value) > 0 {
+        return &Parser{gjson.New(value[0], false)}
+    }
+    return &Parser{gjson.New(nil, false)}
+}
+
 func Load (path string) (*Parser, error) {
     if j, e := gjson.Load(path); e == nil {
         return &Parser{j}, nil
@@ -142,6 +150,11 @@ func (p *Parser) GetFloat64(pattern string) float64 {
 // 注意：写入的时候"."符号只能表示层级，不能使用带"."符号的键名
 func (p *Parser) Set(pattern string, value interface{}) error {
     return p.json.Set(pattern, value)
+}
+
+// 指定pattern追加元素
+func (j *Parser) Append(pattern string, value interface{}) error {
+    return j.json.Append(pattern, value)
 }
 
 // 动态删除变量节点
