@@ -44,10 +44,6 @@ const (
     gDEFAULT_SERVER            = "default"
     gDEFAULT_DOMAIN            = "default"
     gDEFAULT_METHOD            = "ALL"
-    gDEFAULT_COOKIE_PATH       = "/"             // 默认path
-    gDEFAULT_COOKIE_MAX_AGE    = 86400*365       // 默认cookie有效期(一年)
-    gDEFAULT_SESSION_MAX_AGE   = 600             // 默认session有效期(600秒)
-    gDEFAULT_SESSION_ID_NAME   = "gfsessionid"   // 默认存放Cookie中的SessionId名称
     gSERVE_CACHE_LRU_SIZE      = 100000          // 服务回调函数缓存LRU大小
     gHOOKS_CACHE_LRU_SIZE      = 100000          // 事件回调函数缓存LRU大小
     gROUTE_REGISTER_HANDLER    = 1
@@ -74,22 +70,10 @@ type Server struct {
     // 自定义状态码回调
     hsmu             sync.RWMutex             // status handler互斥锁
     statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
-    // COOKIE
-    cookieMaxAge     *gtype.Int               // Cookie有效期
     // SESSION
-    sessionMaxAge    *gtype.Int               // Session有效期
-    sessionIdName    *gtype.String            // SessionId名称
     sessions         *gcache.Cache            // Session内存缓存
-    // 日志相关属性
-    logPath          *gtype.String            // 存放日志的目录路径
-    logHandler       *gtype.Interface         // 自定义日志处理回调方法
-    errorLogEnabled  *gtype.Bool              // 是否开启error log
-    accessLogEnabled *gtype.Bool              // 是否开启access log
-    accessLogger     *glog.Logger             // access log日志对象
-    errorLogger      *glog.Logger             // error log日志对象
-    // 其他属性
-    nameToUriType    *gtype.Int               // 服务注册时对象和方法名称转换为URI时的规则
-    gzipMimesMap     map[string]struct{}      // 支持gzip压缩的类型
+    // Logger
+    logger           *glog.Logger             // 日志管理对象
 }
 
 // 路由对象
@@ -191,21 +175,8 @@ func GetServer(name...interface{}) (*Server) {
         sessions         : gcache.New(),
         servedCount      : gtype.NewInt(),
         closeQueue       : gqueue.New(),
-        accessLogger     : glog.New(),
-        errorLogger      : glog.New(),
-        // 可设置的属性，具体设置由ServerConfig管理
-        cookieMaxAge     : gtype.NewInt(),
-        sessionMaxAge    : gtype.NewInt(),
-        sessionIdName    : gtype.NewString(),
-        logPath          : gtype.NewString(),
-        accessLogEnabled : gtype.NewBool(),
-        errorLogEnabled  : gtype.NewBool(),
-        logHandler       : gtype.NewInterface(),
-        nameToUriType    : gtype.NewInt(),
-        gzipMimesMap     : make(map[string]struct{}),
+        logger           : glog.New(),
     }
-    //s.errorLogger.SetBacktraceSkip(1)
-    //s.accessLogger.SetBacktraceSkip(1)
     // 设置路由解析缓存上限，使用LRU进行缓存淘汰
     s.serveCache.SetCap(gSERVE_CACHE_LRU_SIZE)
     s.hooksCache.SetCap(gHOOKS_CACHE_LRU_SIZE)
@@ -254,11 +225,11 @@ func (s *Server) Start() error {
         }
     }
     // gzip压缩文件类型
-    if s.config.GzipContentTypes != nil {
-        for _, v := range s.config.GzipContentTypes {
-            s.gzipMimesMap[v] = struct{}{}
-        }
-    }
+    //if s.config.GzipContentTypes != nil {
+    //    for _, v := range s.config.GzipContentTypes {
+    //        s.gzipMimesMap[v] = struct{}{}
+    //    }
+    //}
 
     // 启动http server
     reloaded := false
