@@ -20,6 +20,7 @@ func (s *Server)SetLogPath(path string) {
         return
     }
     s.config.LogPath = path
+    s.logger.SetPath(path)
 }
 
 // 设置是否开启access log日志功能
