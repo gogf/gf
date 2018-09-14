@@ -1,11 +1,13 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gutil"
-    "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/encoding/gjson"
 )
 
 func main() {
-	gutil.Dump(gfile.ScanDir("/tmp", "*test*"))
-	gutil.Dump(gfile.Glob("/tmp/*", true))
+	j := gjson.NewUnsafe([]int{1,2,3})
+    j.Append("", 4)
+    j.Append("", "abc")
+    j.Dump()
+
 }
