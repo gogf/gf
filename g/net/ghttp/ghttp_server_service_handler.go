@@ -77,7 +77,7 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 // 规则2: 仅转为小写，单词间不使用连接符号
 // 规则3: 采用驼峰命名方式
 func (s *Server) nameToUrlPart(name string) string {
-    switch s.nameToUriType.Val() {
+    switch s.config.NameToUriType {
         case NAME_TO_URI_TYPE_FULLNAME:
             return name
 

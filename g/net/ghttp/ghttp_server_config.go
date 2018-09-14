@@ -17,13 +17,20 @@ import (
 )
 
 const (
-    gDEFAULT_HTTP_ADDR        = ":80"  // 默认HTTP监听地址
-    gDEFAULT_HTTPS_ADDR       = ":443" // 默认HTTPS监听地址
-    NAME_TO_URI_TYPE_DEFAULT  = 0      // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
-    NAME_TO_URI_TYPE_FULLNAME = 1      // 不处理名称，以原有名称构建成URI
-    NAME_TO_URI_TYPE_ALLLOWER = 2      // 仅转为小写，单词间不使用连接符号
-    NAME_TO_URI_TYPE_CAMEL    = 3      // 采用驼峰命名方式
+    gDEFAULT_HTTP_ADDR        = ":80"            // 默认HTTP监听地址
+    gDEFAULT_HTTPS_ADDR       = ":443"           // 默认HTTPS监听地址
+    NAME_TO_URI_TYPE_DEFAULT  = 0                // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
+    NAME_TO_URI_TYPE_FULLNAME = 1                // 不处理名称，以原有名称构建成URI
+    NAME_TO_URI_TYPE_ALLLOWER = 2                // 仅转为小写，单词间不使用连接符号
+    NAME_TO_URI_TYPE_CAMEL    = 3                // 采用驼峰命名方式
+    gDEFAULT_COOKIE_PATH       = "/"             // 默认path
+    gDEFAULT_COOKIE_MAX_AGE    = 86400*365       // 默认cookie有效期(一年)
+    gDEFAULT_SESSION_MAX_AGE   = 600             // 默认session有效期(600秒)
+    gDEFAULT_SESSION_ID_NAME   = "gfsessionid"   // 默认存放Cookie中的SessionId名称
 )
+
+// 自定义日志处理方法类型
+type LogHandler func(r *Request, error ... interface{})
 
 // HTTP Server 设置结构体，静态配置
 type ServerConfig struct {
@@ -33,33 +40,40 @@ type ServerConfig struct {
     HTTPSCertPath    string        // HTTPS证书文件路径
     HTTPSKeyPath     string        // HTTPS签名文件路径
     Handler          http.Handler  // 默认的处理函数
-    ReadTimeout      time.Duration
-    WriteTimeout     time.Duration
-    IdleTimeout      time.Duration
+    ReadTimeout      time.Duration // 读取超时
+    WriteTimeout     time.Duration // 写入超时
+    IdleTimeout      time.Duration // 等待超时
     MaxHeaderBytes   int           // 最大的header长度
+
     // 静态文件配置
     IndexFiles       []string      // 默认访问的文件列表
     IndexFolder      bool          // 如果访问目录是否显示目录列表
     ServerAgent      string        // server agent
     ServerRoot       string        // 服务器服务的本地目录根路径
-    // 日志配置
-    LogPath          string       // 存放日志的目录路径
-    LogHandler       func(r *Request, error ... interface{})  // 自定义日志处理回调方法
-    ErrorLogEnabled  bool         // 是否开启error log
-    AccessLogEnabled bool         // 是否开启access log
+
     // COOKIE
     CookieMaxAge     int          // Cookie有效期
+    CookiePath       string       // Cookie有效Path(注意同时也会影响SessionID)
+    CookieDomain     string       // Cookie有效Domain(注意同时也会影响SessionID)
+
     // SESSION
     SessionMaxAge    int          // Session有效期
     SessionIdName    string       // SessionId名称
-    // 其他设置
-    NameToUriType    int          // 服务注册时对象和方法名称转换为URI时的规则
+
     // ip访问控制
     DenyIps          []string     // 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
     AllowIps         []string     // 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
     // 路由访问控制
     DenyRoutes       []string     // 不允许访问的路由规则列表
-    // Gzip压缩文件类型
+
+    // 日志配置
+    LogPath          string       // 存放日志的目录路径
+    LogHandler       LogHandler   // 自定义日志处理回调方法
+    ErrorLogEnabled  bool         // 是否开启error log
+    AccessLogEnabled bool         // 是否开启access log
+
+    // 其他设置
+    NameToUriType    int          // 服务注册时对象和方法名称转换为URI时的规则
     GzipContentTypes []string     // 允许进行gzip压缩的文件类型
 }
 
@@ -78,6 +92,9 @@ var defaultServerConfig = ServerConfig {
     ServerRoot       : "",
 
     CookieMaxAge     : gDEFAULT_COOKIE_MAX_AGE,
+    CookiePath       : gDEFAULT_COOKIE_PATH,
+    CookieDomain     : "",
+
     SessionMaxAge    : gDEFAULT_SESSION_MAX_AGE,
     SessionIdName    : gDEFAULT_SESSION_ID_NAME,
 
@@ -87,7 +104,7 @@ var defaultServerConfig = ServerConfig {
 }
 
 // 获取默认的http server设置
-func DefaultSetting() ServerConfig {
+func Config() ServerConfig {
     return defaultServerConfig
 }
 
@@ -101,36 +118,10 @@ func (s *Server)SetConfig(c ServerConfig) {
         c.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
     s.config = c
-    // 需要处理server root最后的目录分隔符号
-    if s.config.ServerRoot != "" {
-        s.SetServerRoot(s.config.ServerRoot)
-    }
-    // 必需设置默认值的属性
-    if len(s.config.IndexFiles) < 1 {
-        s.SetIndexFiles(defaultServerConfig.IndexFiles)
-    }
-    if s.config.ServerAgent == "" {
-        s.SetServerAgent(defaultServerConfig.ServerAgent)
-    }
 
-    // **********************
-    // 可动态设置的配置处理
-    // **********************
-    s.SetLogPath(c.LogPath)
-    s.SetLogHandler(c.LogHandler)
-    s.SetErrorLogEnabled(c.ErrorLogEnabled)
-    s.SetAccessLogEnabled(c.AccessLogEnabled)
-
-    if c.CookieMaxAge > 0 {
-        s.SetCookieMaxAge(c.CookieMaxAge)
+    if c.LogPath != "" {
+        s.logger.SetPath(c.LogPath)
     }
-    if c.SessionMaxAge > 0 {
-        s.SetSessionMaxAge(c.SessionMaxAge)
-    }
-    if len(c.SessionIdName) > 0 {
-        s.SetSessionIdName(c.SessionIdName)
-    }
-    s.SetNameToUriType(c.NameToUriType)
 }
 
 // 设置http server参数 - Addr
@@ -163,7 +154,6 @@ func (s *Server)SetHTTPSAddr(addr string) {
         glog.Error("cannot be changed while running")
     }
     s.config.HTTPSAddr = addr
-    
 }
 
 // 设置http server参数 - HTTPS Port
@@ -189,7 +179,6 @@ func (s *Server)EnableHTTPS(certFile, keyFile string) {
     }
     s.config.HTTPSCertPath = certFile
     s.config.HTTPSKeyPath  = keyFile
-    
 }
 
 // 设置http server参数 - ReadTimeout
@@ -198,7 +187,6 @@ func (s *Server)SetReadTimeout(t time.Duration) {
         glog.Error("cannot be changed while running")
     }
     s.config.ReadTimeout = t
-    
 }
 
 // 设置http server参数 - WriteTimeout
@@ -207,7 +195,6 @@ func (s *Server)SetWriteTimeout(t time.Duration) {
         glog.Error("cannot be changed while running")
     }
     s.config.WriteTimeout = t
-    
 }
 
 // 设置http server参数 - IdleTimeout
@@ -216,7 +203,6 @@ func (s *Server)SetIdleTimeout(t time.Duration) {
         glog.Error("cannot be changed while running")
     }
     s.config.IdleTimeout = t
-    
 }
 
 // 设置http server参数 - MaxHeaderBytes
@@ -234,7 +220,6 @@ func (s *Server)SetIndexFiles(index []string) {
         glog.Error("cannot be changed while running")
     }
     s.config.IndexFiles = index
-    
 }
 
 // 允许展示访问目录的文件列表
@@ -296,55 +281,12 @@ func (s *Server) SetGzipContentTypes(types []string) {
     s.config.GzipContentTypes = types
 }
 
-// 设置http server参数 - CookieMaxAge
-func (s *Server)SetCookieMaxAge(maxage int) {
-    s.cookieMaxAge.Set(maxage)
-}
-
-// 设置http server参数 - SessionMaxAge
-func (s *Server)SetSessionMaxAge(maxage int) {
-    s.sessionMaxAge.Set(maxage)
-}
-
-// 设置http server参数 - SessionIdName
-func (s *Server)SetSessionIdName(name string) {
-    s.sessionIdName.Set(name)
-}
-
-// 设置日志目录
-func (s *Server)SetLogPath(path string) {
-    if len(path) == 0 {
-        return
-    }
-    errorLogPath  := strings.TrimRight(path, gfile.Separator) + gfile.Separator + "error"
-    accessLogPath := strings.TrimRight(path, gfile.Separator) + gfile.Separator + "access"
-    if err := s.accessLogger.SetPath(accessLogPath); err != nil {
-        glog.Error(err)
-    }
-    if err := s.errorLogger.SetPath(errorLogPath); err != nil {
-        glog.Error(err)
-    }
-    s.logPath.Set(path)
-}
-
-// 设置是否开启access log日志功能
-func (s *Server)SetAccessLogEnabled(enabled bool) {
-    s.accessLogEnabled.Set(enabled)
-}
-
-// 设置是否开启error log日志功能
-func (s *Server)SetErrorLogEnabled(enabled bool) {
-    s.errorLogEnabled.Set(enabled)
-}
-
-// 设置日志写入的回调函数
-func (s *Server) SetLogHandler(handler func(r *Request, error ... interface{})) {
-    s.logHandler.Set(handler)
-}
-
 // 服务注册时对象和方法名称转换为URI时的规则
 func (s *Server) SetNameToUriType(t int) {
-    s.nameToUriType.Set(t)
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error("cannot be changed while running")
+    }
+    s.config.NameToUriType = t
 }
 
 // 添加静态文件搜索目录，必须给定目录的绝对路径
@@ -352,45 +294,7 @@ func (s *Server) AddSearchPath(path string) error {
     return s.paths.Add(path)
 }
 
-// 获取日志写入的回调函数
-func (s *Server) GetLogHandler() func(r *Request, error ... interface{}) {
-    if v := s.logHandler.Val(); v != nil {
-        return v.(func(r *Request, error ... interface{}))
-    }
-    return nil
-}
-
-// 获取日志目录
-func (s *Server)GetLogPath() string {
-    return s.logPath.Val()
-}
-
-// access log日志功能是否开启
-func (s *Server)IsAccessLogEnabled() bool {
-    return s.accessLogEnabled.Val()
-}
-
-// error log日志功能是否开启
-func (s *Server)IsErrorLogEnabled() bool {
-    return s.errorLogEnabled.Val()
-}
-
 // 获取
 func (s *Server) GetName() string {
     return s.name
-}
-
-// 获取http server参数 - CookieMaxAge
-func (s *Server)GetCookieMaxAge() int {
-    return s.cookieMaxAge.Val()
-}
-
-// 获取http server参数 - SessionMaxAge
-func (s *Server)GetSessionMaxAge() int {
-    return s.sessionMaxAge.Val()
-}
-
-// 获取http server参数 - SessionIdName
-func (s *Server)GetSessionIdName() string {
-    return s.sessionIdName.Val()
 }

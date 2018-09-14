@@ -20,7 +20,9 @@ import (
 type Cookie struct {
     mu       sync.RWMutex          // 并发安全互斥锁
     data     map[string]CookieItem // 数据项
-    domain   string                // 默认的cookie域名
+    path     string                // 默认的cookie path
+    domain   string                // 默认的cookie domain
+    maxage   int                   // 默认的cookie maxage
     server   *Server               // 所属Server
     request  *Request              // 所属HTTP请求对象
     response *Response             // 所属HTTP返回对象
@@ -42,10 +44,16 @@ func GetCookie(r *Request) *Cookie {
     }
     r.Cookie = &Cookie {
         data     : make(map[string]CookieItem),
-        domain   : r.GetHost(),
+        path     : r.Server.GetCookiePath(),
+        domain   : r.Server.GetCookieDomain(),
+        maxage   : r.Server.GetCookieMaxAge(),
         server   : r.Server,
         request  : r,
         response : r.Response,
+    }
+    // 默认有效域名
+    if r.Cookie.domain == "" {
+        r.Cookie.domain = r.GetHost()
     }
     r.Cookie.init()
     return r.Cookie
@@ -82,13 +90,13 @@ func (c *Cookie) SessionId() string {
 }
 
 // 设置SessionId
-func (c *Cookie) SetSessionId(sessionid string)  {
-    c.Set(c.server.GetSessionIdName(), sessionid)
+func (c *Cookie) SetSessionId(id string)  {
+    c.Set(c.server.GetSessionIdName(), id)
 }
 
 // 设置cookie，使用默认参数
 func (c *Cookie) Set(key, value string) {
-    c.SetCookie(key, value, c.domain, gDEFAULT_COOKIE_PATH, c.server.GetCookieMaxAge())
+    c.SetCookie(key, value, c.domain, c.path, c.server.GetCookieMaxAge())
 }
 
 // 设置cookie，带详细cookie参数

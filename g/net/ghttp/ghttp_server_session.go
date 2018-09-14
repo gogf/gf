@@ -116,5 +116,5 @@ func (s *Session) Remove (k string) {
 
 // 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
 func (s *Session) UpdateExpire() {
-    s.server.sessions.Set(s.id, s, s.server.sessionMaxAge.Val()*1000)
+    s.server.sessions.Set(s.id, s, s.server.GetSessionMaxAge()*1000)
 }

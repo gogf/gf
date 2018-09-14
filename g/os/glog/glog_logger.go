@@ -169,7 +169,7 @@ func (l *Logger) stdPrint(s string) {
 func (l *Logger) errPrint(s string) {
     // 记录调用回溯信息
     if l.btEnabled.Val() {
-        backtrace := l.GetBacktrace(3)
+        backtrace := "Backtrace:" + ln + l.GetBacktrace(3)
         if s[len(s) - 1] == byte('\n') {
             s = s + backtrace + ln
         } else {
