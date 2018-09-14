@@ -187,6 +187,36 @@ func Test_Set11(t *testing.T) {
     }
 }
 
+func Test_Set12(t *testing.T) {
+    e := []byte(`[0,1]`)
+    p := gparser.New(nil)
+    p.Set("0", 0)
+    p.Set("1", 1)
+    if c, err := p.ToJson(); err == nil {
+        fmt.Println(string(c))
+        if bytes.Compare(c, e) != 0 {
+            t.Error("expect:", string(e))
+        }
+    } else {
+        t.Error(err)
+    }
+}
+
+func Test_Set13(t *testing.T) {
+    e := []byte(`{"array":[0,1]}`)
+    p := gparser.New(nil)
+    p.Set("array.0", 0)
+    p.Set("array.1", 1)
+    if c, err := p.ToJson(); err == nil {
+        fmt.Println(string(c))
+        if bytes.Compare(c, e) != 0 {
+            t.Error("expect:", string(e))
+        }
+    } else {
+        t.Error(err)
+    }
+}
+
 
 
 

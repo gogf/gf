@@ -40,36 +40,22 @@ type Json struct {
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
 func New(value interface{}, safe...bool) *Json {
     j := (*Json)(nil)
-    if value != nil {
-        switch value.(type) {
-            case map[string]interface{}:
-                j = &Json{
-                    p  : &value,
-                    c  : byte(gDEFAULT_SPLIT_CHAR),
-                    vc : false ,
-                }
-            case []interface{}:
-                j = &Json{
-                    p  : &value,
-                    c  : byte(gDEFAULT_SPLIT_CHAR),
-                    vc : false ,
-                }
-            default:
-                // 这里效率会比较低
-                b, _ := Encode(value)
-                v, _ := Decode(b)
-                j = &Json{
-                    p  : &v,
-                    c  : byte(gDEFAULT_SPLIT_CHAR),
-                    vc : false,
-                }
-        }
-    } else {
-        j = &Json{
-            p  : nil,
-            c  : byte(gDEFAULT_SPLIT_CHAR),
-            vc : false,
-        }
+    switch value.(type) {
+        case map[string]interface{}, []interface{}, nil:
+            j = &Json{
+                p  : &value,
+                c  : byte(gDEFAULT_SPLIT_CHAR),
+                vc : false ,
+            }
+        default:
+            // 这里效率会比较低
+            b, _ := Encode(value)
+            v, _ := Decode(b)
+            j = &Json{
+                p  : &v,
+                c  : byte(gDEFAULT_SPLIT_CHAR),
+                vc : false,
+            }
     }
     j.mu = rwmutex.New(safe...)
     return j
@@ -389,7 +375,16 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
                         if removed && value == nil {
                             goto done
                         }
-                        j.setPointerWithValue(pointer, array[i], value)
+                        if pparent == nil {
+                            // 表示根节点
+                            j.setPointerWithValue(pointer, array[i], value)
+                        } else {
+                            // 非根节点
+                            s := make([]interface{}, valn + 1)
+                            copy(s, (*pointer).([]interface{}))
+                            s[valn] = value
+                            j.setPointerWithValue(pparent, array[i - 1], s)
+                        }
                     }
                 } else {
                     if gstr.IsNumeric(array[i + 1]) {
@@ -518,16 +513,29 @@ func (j *Json) Get(pattern...string) interface{} {
     return nil
 }
 
+// 计算指定pattern的元素长度(pattern对应数据类型为map[string]interface{}/[]interface{}时有效)
+func (j *Json) Len(pattern string) int {
+    p := j.getPointerByPattern(pattern)
+    if p != nil {
+        switch (*p).(type) {
+            case map[string]interface{}:
+                return len((*p).(map[string]interface{}))
+            case []interface{}:
+                return len((*p).([]interface{}))
+            default:
+                return -1
+        }
+    }
+    return -1
+}
+
 // 指定pattern追加元素
 func (j *Json) Append(pattern string, value interface{}) error {
-    p := j.getPointerByPattern(pattern)
-    switch t := (*p).(type) {
-        case []interface{}:
-            *p = append((*p).([]interface{}), value)
-            return nil
-        default:
-            return errors.New(fmt.Sprintf("invalid type '%s' to append", t))
+    length := j.Len(pattern)
+    if length != -1 {
+        return j.Set(fmt.Sprintf("%s.%d", pattern, length), value)
     }
+    return errors.New(fmt.Sprintf("cannot find item for pattern: %s", pattern))
 }
 
 // 根据pattern层级查找**变量指针**

@@ -18,7 +18,6 @@ import (
     "strconv"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/os/gfilepool"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gmlock"
 )
@@ -102,10 +101,10 @@ func (l *Logger) GetIO() io.Writer {
 }
 
 // 获取默认的文件IO
-func (l *Logger) getFileByPool() *gfilepool.File {
+func (l *Logger) getFilePointer() *os.File {
     if path := l.path.Val(); path != "" {
         fpath := path + gfile.Separator + time.Now().Format("2006-01-02.log")
-        if fp, err := gfilepool.OpenWithPool(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666, 86400000); err == nil {
+        if fp, err := os.OpenFile(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666); err == nil {
             return fp
         } else {
             fmt.Fprintln(os.Stderr, err)
@@ -145,7 +144,7 @@ func (l *Logger) print(std io.Writer, s string) {
     if writer == nil {
         // 如果设置的IO为空，那么其次判断是否有文件输出设置
         // 内部使用了内存锁，保证在glog中对同一个日志文件的并发写入不会串日志
-        if f := l.getFileByPool(); f != nil {
+        if f := l.getFilePointer(); f != nil {
             defer f.Close()
             key := l.path.Val()
             gmlock.Lock(key)

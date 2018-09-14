@@ -152,9 +152,14 @@ func (p *Parser) Set(pattern string, value interface{}) error {
     return p.json.Set(pattern, value)
 }
 
+// 计算指定pattern的元素长度(pattern对应数据类型为map[string]interface{}/[]interface{}时有效)
+func (p *Parser) Len(pattern string) int {
+    return p.json.Len(pattern)
+}
+
 // 指定pattern追加元素
-func (j *Parser) Append(pattern string, value interface{}) error {
-    return j.json.Append(pattern, value)
+func (p *Parser) Append(pattern string, value interface{}) error {
+    return p.json.Append(pattern, value)
 }
 
 // 动态删除变量节点
@@ -205,6 +210,11 @@ func (p *Parser) ToToml() ([]byte, error) {
     return p.json.ToToml()
 }
 
+// 打印Json对象
+func (p *Parser) Dump() error {
+    return p.json.Dump()
+}
+
 // 将变量解析为对应的struct对象，注意传递的参数为struct对象指针
 func (p *Parser) ToStruct(o interface{}) error {
     return p.json.ToStruct(o)
@@ -238,3 +248,4 @@ func VarToToml(value interface{}) ([]byte, error) {
 func VarToStruct(value interface{}, obj interface{}) error {
     return New(value).ToStruct(obj)
 }
+
