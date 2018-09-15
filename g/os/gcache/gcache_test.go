@@ -10,24 +10,85 @@ package gcache
 
 import (
     "testing"
-    "strconv"
+    "sync"
 )
 
 
-func BenchmarkSet(b *testing.B) {
+var (
+    c     = New()
+    mInt  = make(map[int]int)
+    mMap  = make(map[interface{}]interface{})
+
+    muInt = sync.RWMutex{}
+    muMap = sync.RWMutex{}
+)
+
+func Benchmark_CacheSet(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        Set(strconv.Itoa(i), strconv.Itoa(i), 0)
+        c.Set(i, i, 0)
     }
 }
 
-func BenchmarkGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        Get(strconv.Itoa(i))
-    }
+func Benchmark_CacheGet(b *testing.B) {
+   for i := 0; i < b.N; i++ {
+       c.Get(i)
+   }
 }
 
-func BenchmarkRemove(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        Remove(strconv.Itoa(i))
-    }
+func Benchmark_CacheRemove(b *testing.B) {
+   for i := 0; i < b.N; i++ {
+       c.Remove(i)
+   }
+}
+
+func Benchmark_InterfaceMapWithLockSet(b *testing.B) {
+   for i := 0; i < b.N; i++ {
+       muMap.Lock()
+       mMap[i] = i
+       muMap.Unlock()
+   }
+}
+
+func Benchmark_InterfaceMapWithLockGet(b *testing.B) {
+   for i := 0; i < b.N; i++ {
+       muMap.RLock()
+       if _, ok := mMap[i]; ok {
+
+       }
+       muMap.RUnlock()
+   }
+}
+
+func Benchmark_InterfaceMapWithLockRemove(b *testing.B) {
+   for i := 0; i < b.N; i++ {
+       muMap.Lock()
+       delete(mMap, i)
+       muMap.Unlock()
+   }
+}
+
+func Benchmark_IntMapWithLockWithLockSet(b *testing.B) {
+   for i := 0; i < b.N; i++ {
+       muInt.Lock()
+       mInt[i] = i
+       muInt.Unlock()
+   }
+}
+
+func Benchmark_IntMapWithLockGet(b *testing.B) {
+   for i := 0; i < b.N; i++ {
+       muInt.RLock()
+       if _, ok := mInt[i]; ok {
+
+       }
+       muInt.RUnlock()
+   }
+}
+
+func Benchmark_IntMapWithLockRemove(b *testing.B) {
+   for i := 0; i < b.N; i++ {
+       muInt.Lock()
+       delete(mInt, i)
+       muInt.Unlock()
+   }
 }

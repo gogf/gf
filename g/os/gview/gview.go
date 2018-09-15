@@ -17,6 +17,7 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gfcache"
+    "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
 // 视图对象
@@ -68,6 +69,7 @@ func New(path string) *View {
     }
     view.SetDelimiters("{{", "}}")
     // 内置方法
+    view.BindFunc("text",    view.funcText)
     view.BindFunc("include", view.funcInclude)
     return view
 }
@@ -151,5 +153,10 @@ func (view *View) funcInclude(file string, data...map[string]interface{}) templa
         return template.HTML(err.Error())
     }
     return template.HTML(content)
+}
+
+// 模板内置方法：text
+func (view *View) funcText(html interface{}) string {
+    return ghtml.StripTags(gconv.String(html))
 }
 

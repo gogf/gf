@@ -4,12 +4,11 @@ import (
     "gitee.com/johng/gf/g/os/gcache"
     "time"
     "fmt"
-    "strconv"
 )
 
 func main() {
     for i := 0; i < 10; i++ {
-        gcache.Set(strconv.Itoa(i), strconv.Itoa(i), 0)
+        gcache.Set(i, i, 0)
     }
     fmt.Println(gcache.Size())
     fmt.Println(gcache.Keys())

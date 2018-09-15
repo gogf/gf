@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// go test *.go -bench=".*"
+// go test *.go -bench=".*" -benchmem
 
 package gqueue_test
 
@@ -13,39 +13,37 @@ import (
     "gitee.com/johng/gf/g/container/gqueue"
 )
 
-var length = 10000000
-var q      = gqueue.New(length)
-var c      = make(chan int, length)
+var length    = 10000000
+var qstatic   = gqueue.New(length)
+var qdynamic  = gqueue.New()
+var cany      = make(chan interface{}, length)
+var cint      = make(chan int, length)
 
-func BenchmarkGqueueNew1000W(b *testing.B) {
+func Benchmark_GqueueStaticPushAndPop(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        gqueue.New(length)
+        qstatic.Push(i)
+        qstatic.Pop()
     }
 }
 
-func BenchmarkChannelNew1000W(b *testing.B) {
+func Benchmark_GqueueDynamicPushAndPop(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        c = make(chan int, length)
+        qdynamic.Push(i)
+        qdynamic.Pop()
     }
 }
 
-func BenchmarkGqueuePush(b *testing.B) {
+func Benchmark_ChannelInterfacePushAndPop(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        q.PushBack(i)
+        cany <- i
+        <- cany
     }
 }
 
-func BenchmarkGqueuePushAndPop(b *testing.B) {
+func Benchmark_ChannelIntPushAndPop(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        q.PushBack(i)
-        q.PopFront()
-    }
-}
-
-func BenchmarkChannelPushAndPop(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        c <- i
-        <- c
+        cint <- i
+        <- cint
     }
 }
 

@@ -9,7 +9,7 @@ package gcache
 import "gitee.com/johng/gf/g/os/gtime"
 
 // 判断缓存项是否已过期
-func (item *CacheItem) IsExpired() bool {
+func (item *memCacheItem) IsExpired() bool {
     if item.e > gtime.Millisecond() {
         return false
     }

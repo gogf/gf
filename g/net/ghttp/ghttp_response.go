@@ -213,7 +213,7 @@ func (r *Response) OutputBuffer() {
 
 // 获取输出到客户端的数据大小
 func (r *Response) ContentSize() int {
-    if r.length > 0 {
+    if r.Status == http.StatusOK && r.length > 0 {
         return r.length
     }
     if length := r.Header().Get("Content-Length"); length != "" {

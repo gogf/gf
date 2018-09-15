@@ -12,8 +12,8 @@ func main() {
     // 数据生产者，每隔1秒往队列写数据
     gtime.SetInterval(time.Second, func() bool {
         v := gtime.Now().String()
-        q.PushBack(v)
-        fmt.Println("PushBack:", v)
+        q.Push(v)
+        fmt.Println("Push:", v)
         return true
     })
 
@@ -24,8 +24,8 @@ func main() {
 
     // 消费者，不停读取队列数据并输出到终端
     for {
-        if v := q.PopFront(); v != nil {
-            fmt.Println("PopFront:", v)
+        if v := q.Pop(); v != nil {
+            fmt.Println(" Pop:", v)
         } else {
             break
         }

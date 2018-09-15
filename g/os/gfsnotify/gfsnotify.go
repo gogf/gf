@@ -162,7 +162,7 @@ func (w *Watcher) startWatchLoop() {
 
                 // 监听事件
                 case ev := <- w.watcher.Events:
-                    w.events.PushBack(&Event{
+                    w.events.Push(&Event{
                         Path : ev.Name,
                         Op   : Op(ev.Op),
                     })
@@ -190,7 +190,7 @@ func (w *Watcher) getCallbacks(path string) *glist.List {
 func (w *Watcher) startEventLoop() {
     go func() {
         for {
-            if v := w.events.PopFront(); v != nil {
+            if v := w.events.Pop(); v != nil {
                 event := v.(*Event)
                 if event.IsRemove() {
                     if gfile.Exists(event.Path) {

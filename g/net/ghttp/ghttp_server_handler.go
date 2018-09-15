@@ -49,7 +49,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
             s.handleErrorLog(e, request)
         }
         // 将Request对象指针丢到队列中异步关闭
-        s.closeQueue.PushBack(request)
+        s.closeQueue.Push(request)
     }()
 
     // 优先执行静态文件检索
@@ -196,7 +196,7 @@ func (s *Server)listDir(r *Request, f http.File) {
 func (s *Server) startCloseQueueLoop() {
     go func() {
         for {
-            if v := s.closeQueue.PopFront(); v != nil {
+            if v := s.closeQueue.Pop(); v != nil {
                 r := v.(*Request)
                 s.callHookHandler(HOOK_BEFORE_CLOSE, r)
                 // 更新Session会话超时时间

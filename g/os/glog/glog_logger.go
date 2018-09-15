@@ -12,7 +12,6 @@ import (
     "io"
     "time"
     "fmt"
-    "errors"
     "strings"
     "runtime"
     "strconv"
@@ -115,18 +114,18 @@ func (l *Logger) getFilePointer() *os.File {
 
 // 设置日志文件的存储目录路径
 func (l *Logger) SetPath(path string) error {
-    // 检测目录权限
-    if !gfile.Exists(path) {
-        if err := gfile.Mkdir(path); err != nil {
-            fmt.Fprintln(os.Stderr, fmt.Sprintf(`glog mkdir "%s" failed: %s`, path, err.Error()))
-            return err
-        }
-    }
-    if !gfile.IsWritable(path) {
-        errstr := path + " is no writable for current user"
-        fmt.Fprintln(os.Stderr, errstr)
-        return errors.New(errstr)
-    }
+    //// 检测目录权限
+    //if !gfile.Exists(path) {
+    //    if err := gfile.Mkdir(path); err != nil {
+    //        fmt.Fprintln(os.Stderr, fmt.Sprintf(`glog mkdir "%s" failed: %s`, path, err.Error()))
+    //        return err
+    //    }
+    //}
+    //if !gfile.IsWritable(path) {
+    //    errstr := path + " is no writable for current user"
+    //    fmt.Fprintln(os.Stderr, errstr)
+    //    return errors.New(errstr)
+    //}
     l.path.Set(strings.TrimRight(path, gfile.Separator))
     return nil
 }
@@ -148,14 +147,21 @@ func (l *Logger) print(std io.Writer, s string) {
             defer f.Close()
             key := l.path.Val()
             gmlock.Lock(key)
-            io.WriteString(f, str)
+            _, err := io.WriteString(f, str)
             gmlock.Unlock(key)
+            if err != nil {
+                fmt.Fprintln(os.Stderr, err.Error())
+            }
         }
     } else {
-        io.WriteString(writer, str)
+        if _, err := io.WriteString(writer, str); err != nil {
+            fmt.Fprintln(os.Stderr, err.Error())
+        }
     }
     if l.alsoStdPrint.Val() {
-        io.WriteString(std, str)
+        if _, err := io.WriteString(std, str); err != nil {
+            fmt.Fprintln(os.Stderr, err.Error())
+        }
     }
 }
 
