@@ -23,6 +23,7 @@ import (
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/container/gtype"
     "sort"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 // 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
@@ -277,7 +278,7 @@ func IsWritable(path string) bool {
     result := true
     if IsDir(path) {
         // 如果是目录，那么创建一个临时文件进行写入测试
-        tfile := strings.TrimRight(path, Separator) + Separator + string(time.Now().UnixNano())
+        tfile := strings.TrimRight(path, Separator) + Separator + gconv.String(time.Now().UnixNano())
         err   := Create(tfile)
         if err != nil || !Exists(tfile){
             result = false

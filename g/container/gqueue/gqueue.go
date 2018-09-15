@@ -6,130 +6,87 @@
 
 // 并发安全的动态队列.
 // 特点：
-// 1、队列初始化速度快；
-// 2、可以向队头/队尾进行Push/Pop操作；
+// 1、动态队列初始化速度快；
+// 2、动态的队列大小(不限大小)；
 // 3、取数据时如果队列为空那么会阻塞等待；
 package gqueue
 
 import (
+    "gitee.com/johng/gf/g/container/glist"
     "math"
-    "sync"
-    "errors"
-    "container/list"
-    "gitee.com/johng/gf/g/container/gtype"
 )
 
+// 0、这是一个先进先出的队列(chan <-- list)；
+// 1、当创建Queue对象时限定大小，那么等同于一个同步的chan并发安全队列；
+// 2、不限制大小时，list链表用以存储数据，临时chan负责为客户端读取数据，当从chan获取数据时，list往chan中不停补充数据；
+// 3、由于功能主体是chan，那么操作仍然像chan那样具有阻塞效果；
 type Queue struct {
-    mu     sync.RWMutex   // 用于队列并发安全处理
-    list   *list.List     // 数据队列
-    limit  int            // 队列限制大小
-    limits chan struct{}  // 用于队列写入限制
-    events chan struct{}  // 用于队列出列限制
-    closed *gtype.Bool    // 队列是否关闭
+    limit  int              // 队列限制大小
+    queue  chan interface{} // 用于队列写入限制
+    list   *glist.List      // 数据链表
+    events chan struct{}    // 当不限制队列大小时的写入事件chan
 }
+
+const (
+    // 默认临时队列大小,注意是临时的
+    gDEFAULT_QUEUE_SIZE = 10000
+)
 
 // 队列大小为非必须参数，默认不限制
 func New(limit...int) *Queue {
-    size := 0
+    size := gDEFAULT_QUEUE_SIZE
     if len(limit) > 0 {
         size = limit[0]
     }
-    return &Queue {
-        list   : list.New(),
+    q := &Queue {
+        list   : glist.New(),
         limit  : size,
-        limits : make(chan struct{}, size),
+        queue  : make(chan interface{}, size),
         events : make(chan struct{}, math.MaxInt32),
-        closed : gtype.NewBool(),
     }
+    go q.startAsyncLoop()
+    return q
 }
 
-// 将数据压入队列, 队尾
-func (q *Queue) PushBack(v interface{}) error {
-    if q.closed.Val() {
-        return errors.New("closed")
+// 异步list->chan同步队列
+func (q *Queue) startAsyncLoop() {
+    for {
+        <- q.events
+        if v := q.list.PopFront(); v != nil {
+            q.queue <- v
+        } else {
+            if q.list.Len() == 0 {
+                break
+            }
+        }
     }
-    if q.limit > 0 {
-        q.limits <- struct{}{}
-    }
-    q.mu.Lock()
-    q.list.PushBack(v)
-    q.mu.Unlock()
-    if q.limit == 0 {
-        q.events <- struct{}{}
-    }
-    return nil
 }
 
 // 将数据压入队列, 队头
-func (q *Queue) PushFront(v interface{}) error {
-    if q.closed.Val() {
-        return errors.New("closed")
-    }
-    // 限制队列大小，使用channel进行阻塞限制
+func (q *Queue) Push(v interface{}) {
     if q.limit > 0 {
-        q.limits <- struct{}{}
-    }
-    q.mu.Lock()
-    q.list.PushFront(v)
-    q.mu.Unlock()
-    if q.limit == 0 {
+        q.queue <- v
+    } else {
+        q.list.PushBack(v)
         q.events <- struct{}{}
     }
-    return nil
 }
 
-// 从队头先进先出地从队列取出一项数据，当没有数据可获取时，阻塞等待
-func (q *Queue) PopFront() interface{} {
-    if q.closed.Val() {
-        return nil
-    }
-    if q.limit > 0 {
-        <- q.limits
-    } else {
-        <- q.events
-    }
-    q.mu.Lock()
-    if elem := q.list.Front(); elem != nil {
-        item := q.list.Remove(elem)
-        q.mu.Unlock()
-        return item
-    }
-    q.mu.Unlock()
-    return nil
-}
-
-// 从队尾先进先出地从队列取出一项数据，当没有数据可获取时，阻塞等待
-func (q *Queue) PopBack() interface{} {
-    if q.closed.Val() {
-        return nil
-    }
-    if q.limit > 0 {
-        <- q.limits
-    } else {
-        <- q.events
-    }
-    q.mu.Lock()
-    if elem := q.list.Front(); elem != nil {
-        item := q.list.Remove(elem)
-        q.mu.Unlock()
-        return item
-    }
-    q.mu.Unlock()
-    return nil
+// 从队头先进先出地从队列取出一项数据
+func (q *Queue) Pop() interface{} {
+    return <- q.queue
 }
 
 // 关闭队列(通知所有通过Pop*阻塞的协程退出)
 func (q *Queue) Close() {
-    if !q.closed.Val() {
-        q.closed.Set(true)
-        close(q.limits)
-        close(q.events)
-    }
+    q.list.RemoveAll()
+    close(q.queue)
+    close(q.events)
 }
 
 // 获取当前队列大小
 func (q *Queue) Size() int {
-    return len(q.events)
+    return len(q.queue) + q.list.Len()
 }
 
 

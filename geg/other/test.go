@@ -1,17 +1,10 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gfile"
-    "strings"
-    "gitee.com/johng/gf/g/os/gfcache"
-    "fmt"
+	"fmt"
+	"math"
 )
 
 func main() {
-	files, _ := gfile.ScanDir("/home/john/Workspace/med3-svr", "*", true)
-	for _, file := range files {
-	    if strings.Index(gfcache.GetContents(file), "ENV") != -1 {
-            fmt.Println(file)
-        }
-    }
+	fmt.Println(int64(math.Ceil(float64(11111/10000) + 1)*10000))
 }

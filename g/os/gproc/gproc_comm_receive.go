@@ -81,7 +81,7 @@ func tcpServiceHandler(conn *gtcp.Conn) {
                 result = []byte("ok")
                 for _, msg := range msgs {
                     if v := commReceiveQueues.Get(msg.Group); v != nil {
-                        v.(*gqueue.Queue).PushBack(msg)
+                        v.(*gqueue.Queue).Push(msg)
                     }
                 }
             }
@@ -154,7 +154,7 @@ func Receive(group...string) *Msg {
         queue = v.(*gqueue.Queue)
     }
 
-    if v := queue.PopFront(); v != nil {
+    if v := queue.Pop(); v != nil {
         return v.(*Msg)
     }
     return nil

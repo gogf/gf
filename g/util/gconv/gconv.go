@@ -111,70 +111,75 @@ func String(i interface{}) string {
     }
 }
 
-// 任意类型转换为[]int类型
-func Ints(i interface{}) []int {
-    return nil
-    if i == nil {
-        return nil
-    }
-    if r, ok := i.([]int); ok {
-        return r
-    } else {
-        switch i.(type) {
-            case []int8, []int16, []int32,  []int64,
-                 []uint, []uint8, []uint16, []uint32, []uint64,
-                 []bool, []string,
-                 []float32, []float64:
-                array := make([]int, len(r))
-                for k, v := range r {
-                    array[k] = Int(v)
-                }
-                return array
-        }
-    }
-    return []int{Int(i)}
-}
-
-// 任意类型转换为[]uint类型
-func Uints(i interface{}) []uint {
-    return nil
-    if i == nil {
-        return nil
-    }
-    if r, ok := i.([]uint); ok {
-        return r
-    } else {
-        switch i.(type) {
-            case []int,  []int8, []int16, []int32,  []int64, []uint8, []uint16, []uint32, []uint64,
-                 []bool, []string, []float32, []float64:
-                array := make([]uint, len(r))
-                for k, v := range r {
-                    array[k] = Uint(v)
-                }
-                return array
-            }
-    }
-    return []uint{Uint(i)}
-}
-
 // 任意类型转换为[]string类型
 func Strings(i interface{}) []string {
-    return nil
     if i == nil {
         return nil
     }
     if r, ok := i.([]string); ok {
         return r
     } else {
+        array := make([]string, 0)
         switch i.(type) {
-            case []int,  []int8,  []int16,  []int32,  []int64,
-                 []uint, []uint8, []uint16, []uint32, []uint64,
-                 []bool, []float32, []float64:
-                array := make([]string, len(r))
-                for k, v := range r {
-                    array[k] = String(v)
+            case []int:
+                for _, v := range i.([]int) {
+                    array = append(array, String(v))
                 }
-                return array
+            case []int8:
+                for _, v := range i.([]int8) {
+                    array = append(array, String(v))
+                }
+            case []int16:
+                for _, v := range i.([]int16) {
+                    array = append(array, String(v))
+                }
+            case []int32:
+                for _, v := range i.([]int32) {
+                    array = append(array, String(v))
+                }
+            case []int64:
+                for _, v := range i.([]int64) {
+                    array = append(array, String(v))
+                }
+            case []uint:
+                for _, v := range i.([]uint) {
+                    array = append(array, String(v))
+                }
+            case []uint8:
+                for _, v := range i.([]uint8) {
+                    array = append(array, String(v))
+                }
+            case []uint16:
+                for _, v := range i.([]uint16) {
+                    array = append(array, String(v))
+                }
+            case []uint32:
+                for _, v := range i.([]uint32) {
+                    array = append(array, String(v))
+                }
+            case []uint64:
+                for _, v := range i.([]uint64) {
+                    array = append(array, String(v))
+                }
+            case []bool:
+                for _, v := range i.([]bool) {
+                    array = append(array, String(v))
+                }
+            case []float32:
+                for _, v := range i.([]float32) {
+                    array = append(array, String(v))
+                }
+            case []float64:
+                for _, v := range i.([]float64) {
+                    array = append(array, String(v))
+                }
+            case []interface{}:
+                for _, v := range i.([]interface{}) {
+                    array = append(array, String(v))
+                }
+        }
+        if len(array) > 0 {
+            return array
         }
     }
     return []string{fmt.Sprintf("%v", i)}
