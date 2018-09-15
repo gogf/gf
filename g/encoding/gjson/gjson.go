@@ -9,6 +9,7 @@
 package gjson
 
 import (
+    "errors"
     "strings"
     "strconv"
     "io/ioutil"
@@ -22,7 +23,6 @@ import (
     "time"
     "gitee.com/johng/gf/g/encoding/gjson/internal/rwmutex"
     "fmt"
-    "github.com/pkg/errors"
 )
 
 const (
