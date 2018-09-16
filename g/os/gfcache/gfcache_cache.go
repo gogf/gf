@@ -54,6 +54,7 @@ func (c *Cache) addMonitor(path string) {
         return
     }
     c.notify.Add(path, func(event *gfsnotify.Event) {
+        //glog.Debug("gfcache:", event)
         r := c.cache.Get(path).([]byte)
         // 是否删除
         if event.IsRemove() {
