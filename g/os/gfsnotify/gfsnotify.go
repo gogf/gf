@@ -162,6 +162,7 @@ func (w *Watcher) startWatchLoop() {
 
                 // 监听事件
                 case ev := <- w.watcher.Events:
+                    //glog.Debug("gfsnotify:", ev)
                     w.events.Push(&Event{
                         Path : ev.Name,
                         Op   : Op(ev.Op),
