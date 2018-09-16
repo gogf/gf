@@ -114,18 +114,13 @@ func (l *Logger) getFilePointer() *os.File {
 
 // 设置日志文件的存储目录路径
 func (l *Logger) SetPath(path string) error {
-    //// 检测目录权限
-    //if !gfile.Exists(path) {
-    //    if err := gfile.Mkdir(path); err != nil {
-    //        fmt.Fprintln(os.Stderr, fmt.Sprintf(`glog mkdir "%s" failed: %s`, path, err.Error()))
-    //        return err
-    //    }
-    //}
-    //if !gfile.IsWritable(path) {
-    //    errstr := path + " is no writable for current user"
-    //    fmt.Fprintln(os.Stderr, errstr)
-    //    return errors.New(errstr)
-    //}
+    // 如果目录不存在，则递归创建
+    if !gfile.Exists(path) {
+       if err := gfile.Mkdir(path); err != nil {
+           fmt.Fprintln(os.Stderr, fmt.Sprintf(`glog mkdir "%s" failed: %s`, path, err.Error()))
+           return err
+       }
+    }
     l.path.Set(strings.TrimRight(path, gfile.Separator))
     return nil
 }
