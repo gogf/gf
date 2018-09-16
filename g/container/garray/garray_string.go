@@ -89,9 +89,17 @@ func (a *StringArray) Len() int {
 
 // 返回原始数据数组
 func (a *StringArray) Slice() []string {
-	a.mu.RLock()
-	array := a.array
-	a.mu.RUnlock()
+	array := ([]string)(nil)
+	if a.mu.IsSafe() {
+        a.mu.RLock()
+		array = make([]string, len(a.array))
+		for k, v := range a.array {
+            array[k] = v
+		}
+        a.mu.RUnlock()
+	} else {
+		array = a.array
+	}
 	return array
 }
 

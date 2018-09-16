@@ -21,10 +21,11 @@ import (
 // 2、不限制大小时，list链表用以存储数据，临时chan负责为客户端读取数据，当从chan获取数据时，list往chan中不停补充数据；
 // 3、由于功能主体是chan，那么操作仍然像chan那样具有阻塞效果；
 type Queue struct {
-    limit  int              // 队列限制大小
-    queue  chan interface{} // 用于队列写入限制
-    list   *glist.List      // 数据链表
-    events chan struct{}    // 当不限制队列大小时的写入事件chan
+    limit     int              // 队列限制大小
+    queue     chan interface{} // 用于队列写入限制
+    list      *glist.List      // 数据链表
+    events    chan struct{}    // 通知chan，当不限制队列大小时的写入事件通知
+    closeChan chan struct{}    // 关闭channel
 }
 
 const (
@@ -39,25 +40,30 @@ func New(limit...int) *Queue {
         size = limit[0]
     }
     q := &Queue {
-        list   : glist.New(),
-        limit  : size,
-        queue  : make(chan interface{}, size),
-        events : make(chan struct{}, math.MaxInt32),
+        list      : glist.New(),
+        queue     : make(chan interface{}, size),
+        events    : make(chan struct{}, math.MaxInt32),
+        closeChan : make(chan struct{}, 0),
     }
-    go q.startAsyncLoop()
+    if len(limit) > 0 {
+        q.limit = size
+    } else {
+        // 如果是动态队列大小，那么额外会运行一个goroutine
+        go q.startAsyncLoop()
+    }
     return q
 }
 
 // 异步list->chan同步队列
 func (q *Queue) startAsyncLoop() {
     for {
-        <- q.events
-        if v := q.list.PopFront(); v != nil {
-            q.queue <- v
-        } else {
-            if q.list.Len() == 0 {
-                break
-            }
+        select {
+            case <- q.closeChan:
+                return
+            case <- q.events:
+                if v := q.list.PopFront(); v != nil {
+                    q.queue <- v
+                }
         }
     }
 }
@@ -68,7 +74,9 @@ func (q *Queue) Push(v interface{}) {
         q.queue <- v
     } else {
         q.list.PushBack(v)
-        q.events <- struct{}{}
+        if len(q.events) == 0 {
+            q.events <- struct{}{}
+        }
     }
 }
 
@@ -82,6 +90,7 @@ func (q *Queue) Close() {
     q.list.RemoveAll()
     close(q.queue)
     close(q.events)
+    close(q.closeChan)
 }
 
 // 获取当前队列大小

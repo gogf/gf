@@ -11,6 +11,8 @@ import (
     "fmt"
     "bytes"
     "encoding/json"
+    "reflect"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 // 格式化打印变量(类似于PHP-vardump)
@@ -19,6 +21,19 @@ func Dump(i...interface{}) {
         if b, ok := v.([]byte); ok {
             fmt.Print(string(b))
         } else {
+            // 主要针对 map[interface{}]* 进行处理，json无法进行encode，
+            // 这里强制对所有map进行反射处理转换
+            refValue := reflect.ValueOf(v)
+            if refValue.Kind() == reflect.Map {
+                m := make(map[string]interface{})
+                keys := refValue.MapKeys()
+                for _, k := range keys {
+                    key   := gconv.String(k.Interface())
+                    m[key] = refValue.MapIndex(k).Interface()
+                }
+                v = m
+            }
+            // json encode并打印到终端
             buffer  := &bytes.Buffer{}
             encoder := json.NewEncoder(buffer)
             encoder.SetEscapeHTML(false)

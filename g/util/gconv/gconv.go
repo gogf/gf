@@ -9,16 +9,9 @@
 package gconv
 
 import (
-    "fmt"
-    "time"
     "strconv"
     "encoding/json"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/gstr"
     "gitee.com/johng/gf/g/encoding/gbinary"
-    "github.com/fatih/structs"
-    "strings"
-    "reflect"
 )
 
 // 将变量i转换为字符串指定的类型t
@@ -49,27 +42,6 @@ func Convert(i interface{}, t string, params...interface{}) interface{} {
         default:
             return i
     }
-}
-
-// 将变量i转换为time.Time类型
-func Time(i interface{}, format...string) time.Time {
-    s := String(i)
-    // 优先使用用户输入日期格式进行转换
-    if len(format) > 0 {
-        t, _ := gtime.StrToTimeFormat(s, format[0])
-        return t
-    }
-    if gstr.IsNumeric(s) {
-        return gtime.NewFromTimeStamp(Int64(s)).Time
-    } else {
-        t, _ := gtime.StrToTime(s)
-        return t
-    }
-}
-
-// 将变量i转换为time.Time类型
-func TimeDuration(i interface{}) time.Duration {
-    return time.Duration(Int64(i))
 }
 
 func Bytes(i interface{}) []byte {
@@ -109,80 +81,6 @@ func String(i interface{}) string {
             jsonContent, _ := json.Marshal(value)
             return string(jsonContent)
     }
-}
-
-// 任意类型转换为[]string类型
-func Strings(i interface{}) []string {
-    if i == nil {
-        return nil
-    }
-    if r, ok := i.([]string); ok {
-        return r
-    } else {
-        array := make([]string, 0)
-        switch i.(type) {
-            case []int:
-                for _, v := range i.([]int) {
-                    array = append(array, String(v))
-                }
-            case []int8:
-                for _, v := range i.([]int8) {
-                    array = append(array, String(v))
-                }
-            case []int16:
-                for _, v := range i.([]int16) {
-                    array = append(array, String(v))
-                }
-            case []int32:
-                for _, v := range i.([]int32) {
-                    array = append(array, String(v))
-                }
-            case []int64:
-                for _, v := range i.([]int64) {
-                    array = append(array, String(v))
-                }
-            case []uint:
-                for _, v := range i.([]uint) {
-                    array = append(array, String(v))
-                }
-            case []uint8:
-                for _, v := range i.([]uint8) {
-                    array = append(array, String(v))
-                }
-            case []uint16:
-                for _, v := range i.([]uint16) {
-                    array = append(array, String(v))
-                }
-            case []uint32:
-                for _, v := range i.([]uint32) {
-                    array = append(array, String(v))
-                }
-            case []uint64:
-                for _, v := range i.([]uint64) {
-                    array = append(array, String(v))
-                }
-            case []bool:
-                for _, v := range i.([]bool) {
-                    array = append(array, String(v))
-                }
-            case []float32:
-                for _, v := range i.([]float32) {
-                    array = append(array, String(v))
-                }
-            case []float64:
-                for _, v := range i.([]float64) {
-                    array = append(array, String(v))
-                }
-            case []interface{}:
-                for _, v := range i.([]interface{}) {
-                    array = append(array, String(v))
-                }
-        }
-        if len(array) > 0 {
-            return array
-        }
-    }
-    return []string{fmt.Sprintf("%v", i)}
 }
 
 //false: "", 0, false, off
@@ -357,68 +255,3 @@ func Float64 (i interface{}) float64 {
     return v
 }
 
-// 将params键值对参数映射到对应的struct对象属性上，第三个参数mapping为非必需，表示自定义名称与属性名称的映射关系。
-// 需要注意：
-// 1、第二个参数为struct对象指针；
-// 2、struct对象的**公开属性(首字母大写)**才能被映射赋值；
-// 3、map中的键名可以为小写，映射转换时会自动将键名首字母转为大写做匹配映射，如果无法匹配则忽略；
-func MapToStruct(params map[string]interface{}, object interface{}, mapping...map[string]string) error {
-    tagmap := make(map[string]string)
-    fields := structs.Fields(object)
-    // 将struct中定义的属性转换名称构建称tagmap
-    for _, field := range fields {
-        if tag := field.Tag("gconv"); tag != "" {
-            for _, v := range strings.Split(tag, ",") {
-                tagmap[strings.TrimSpace(v)] = field.Name()
-            }
-        }
-    }
-    elem := reflect.ValueOf(object).Elem()
-    dmap := make(map[string]bool)
-    // 首先按照传递的映射关系进行匹配
-    if len(mapping) > 0 && len(mapping[0]) > 0 {
-        for mappingk, mappingv := range mapping[0] {
-            if v, ok := params[mappingk]; ok {
-                dmap[mappingv] = true
-                bindVarToStruct(elem, mappingv, v)
-            }
-        }
-    }
-    // 其次匹配对象定义时绑定的属性名称
-    for tagk, tagv := range tagmap {
-        if _, ok := dmap[tagv]; ok {
-            continue
-        }
-        if v, ok := params[tagk]; ok {
-            dmap[tagv] = true
-            bindVarToStruct(elem, tagv, v)
-        }
-    }
-    // 最后按照默认规则进行匹配
-    for mapk, mapv := range params {
-        name := gstr.UcFirst(mapk)
-        if _, ok := dmap[name]; ok {
-            continue
-        }
-        // 后续tag逻辑中会处理的key(重复的键名)这里便不处理
-        if _, ok := tagmap[mapk]; !ok {
-            bindVarToStruct(elem, name, mapv)
-        }
-    }
-    return nil
-}
-
-// 将参数值绑定到对象指定名称的属性上
-func bindVarToStruct(elem reflect.Value, name string, value interface{}) {
-    structFieldValue := elem.FieldByName(name)
-    // 键名与对象属性匹配检测
-    if !structFieldValue.IsValid() {
-        return
-    }
-    // CanSet的属性必须为公开属性(首字母大写)
-    if !structFieldValue.CanSet() {
-        return
-    }
-    // 必须将value转换为struct属性的数据类型，这里必须用到gconv包
-    structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
-}

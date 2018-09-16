@@ -26,10 +26,9 @@ func Benchmark_GqueueStaticPushAndPop(b *testing.B) {
     }
 }
 
-func Benchmark_GqueueDynamicPushAndPop(b *testing.B) {
+func Benchmark_GqueueDynamicPush(b *testing.B) {
     for i := 0; i < b.N; i++ {
         qdynamic.Push(i)
-        qdynamic.Pop()
     }
 }
 
