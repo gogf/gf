@@ -20,6 +20,7 @@ import (
     "gitee.com/johng/gf/g/net/gtcp"
     "gitee.com/johng/gf/g/net/gudp"
     "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 const (
@@ -164,6 +165,11 @@ func Redis(name...string) *gredis.Redis {
         }
     }
     return nil
+}
+
+// 打印变量
+func Dump(i...interface{}) {
+    gutil.Dump(i...)
 }
 
 

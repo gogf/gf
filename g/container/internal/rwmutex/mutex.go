@@ -19,6 +19,10 @@ func New(safe...bool) *RWMutex {
     return mu
 }
 
+func (mu *RWMutex) IsSafe() bool {
+    return mu.safe
+}
+
 func (mu *RWMutex) Lock(force...bool) {
     if mu.safe || (len(force) > 0 && force[0]) {
         mu.RWMutex.Lock()

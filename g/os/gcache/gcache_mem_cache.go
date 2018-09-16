@@ -62,7 +62,6 @@ func newMemCache() *memCache {
     }
     go c.autoSyncLoop()
     go c.autoClearLoop()
-    //time.Sleep(time.Hour)
     return c
 }
 

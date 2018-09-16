@@ -81,9 +81,17 @@ func (a *SortedArray) Len() int {
 
 // 返回原始数据数组
 func (a *SortedArray) Slice() []interface{} {
-    a.mu.RLock()
-    array := a.array
-    a.mu.RUnlock()
+    array := ([]interface{})(nil)
+    if a.mu.IsSafe() {
+        a.mu.RLock()
+        array = make([]interface{}, len(a.array))
+        for k, v := range a.array {
+            array[k] = v
+        }
+        a.mu.RUnlock()
+    } else {
+        array = a.array
+    }
     return array
 }
 
