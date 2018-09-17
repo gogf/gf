@@ -13,12 +13,8 @@ const (
 )
 
 // 全局缓存管理对象
-var cache = New()
-
-// 设置缓存池大小，内部依靠LRU算法进行缓存淘汰处理
-func SetCap(cap int) {
-    cache.cap.Set(cap)
-}
+//var cache = New()
+var cache = (*Cache)(nil)
 
 // (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为**毫秒**
 func Set(key interface{}, value interface{}, expire int)  {
@@ -57,13 +53,13 @@ func Contains(key interface{}) bool {
 }
 
 // (使用全局KV缓存对象)删除指定键值对
-func Remove(key interface{}) {
-    cache.Remove(key)
+func Remove(key interface{}) interface{} {
+    return cache.Remove(key)
 }
 
 // (使用全局KV缓存对象)批量删除指定键值对
-func BatchRemove(keys []interface{}) {
-    cache.BatchRemove(keys)
+func BatchRemove(keys []interface{}) map[interface{}]interface{} {
+    return cache.BatchRemove(keys)
 }
 
 // 获得所有的键名，组成数组返回

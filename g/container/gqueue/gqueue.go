@@ -61,8 +61,12 @@ func (q *Queue) startAsyncLoop() {
             case <- q.closeChan:
                 return
             case <- q.events:
-                if v := q.list.PopFront(); v != nil {
-                    q.queue <- v
+                for {
+                    if v := q.list.PopFront(); v != nil {
+                        q.queue <- v
+                    } else {
+                        break
+                    }
                 }
         }
     }
@@ -74,9 +78,7 @@ func (q *Queue) Push(v interface{}) {
         q.queue <- v
     } else {
         q.list.PushBack(v)
-        if len(q.events) == 0 {
-            q.events <- struct{}{}
-        }
+        q.events <- struct{}{}
     }
 }
 
