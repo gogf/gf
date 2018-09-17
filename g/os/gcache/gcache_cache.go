@@ -14,13 +14,13 @@ import (
 // 缓存对象。
 // 底层只有一个缓存对象，如果需要提高并发性能，可新增缓存对象无锁哈希表，用键名做固定分区。
 type Cache struct {
-    *memCache // 底层缓存对象
+    memCache
 }
 
 // Cache对象按照缓存键名首字母做了分组
 func New() *Cache {
     return &Cache {
-        memCache : newMemCache(),
+        memCache : *newMemCache(),
     }
 }
 
