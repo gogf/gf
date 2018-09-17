@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"math"
+	"gitee.com/johng/gf/g"
 )
 
 func main() {
-	fmt.Println(int64(math.Ceil(float64(11111/10000) + 1)*10000))
+	g.Dump(1,2,3)
+	g.Dump(1,2,3)
 }

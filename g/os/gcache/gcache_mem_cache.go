@@ -176,20 +176,26 @@ func (c *memCache) Contains(key interface{}) bool {
     return c.Get(key) != nil
 }
 
-// 删除指定键值对
-func (c *memCache) Remove(key interface{}) {
+// 删除指定键值对，并返回被删除的键值
+func (c *memCache) Remove(key interface{}) interface{} {
     c.dmu.Lock()
-    delete(c.data, key)
+    item, ok := c.data[key]
+    if ok {
+        delete(c.data, key)
+    }
     c.dmu.Unlock()
+    return item.v
 }
 
-// 批量删除键值对
-func (c *memCache) BatchRemove(keys []interface{}) {
+// 批量删除键值对，并返回被删除的键值对数据
+func (c *memCache) BatchRemove(keys []interface{}) map[interface{}]interface{} {
+    m := make(map[interface{}]interface{})
     for _, key := range keys {
-        c.dmu.Lock()
-        delete(c.data, key)
-        c.dmu.Unlock()
+        if v := c.Remove(key); v != nil {
+            m[key] = v
+        }
     }
+    return m
 }
 
 // 获得所有的键名，组成数组返回
