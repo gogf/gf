@@ -1,10 +1,16 @@
 package main
 
 import (
-	"gitee.com/johng/gf/g"
+    "time"
+    "gitee.com/johng/gf/g/os/gcache"
+    "fmt"
 )
 
 func main() {
-	g.Dump(1,2,3)
-	g.Dump(1,2,3)
+	c := gcache.New(1000)
+	c.Set(1, 1, 0)
+	c.Set(2, 2, 0)
+	c.Clear()
+	fmt.Println(c.Size())
+	time.Sleep(time.Second)
 }

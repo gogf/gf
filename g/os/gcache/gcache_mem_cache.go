@@ -7,14 +7,13 @@
 package gcache
 
 import (
-    "time"
     "math"
     "gitee.com/johng/gf/g/container/gset"
     "gitee.com/johng/gf/g/os/gtime"
     "sync"
-    "gitee.com/johng/gf/g/container/gtype"
-    "fmt"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/container/glist"
+    "time"
 )
 
 // 缓存对象
@@ -23,11 +22,11 @@ type memCache struct {
     emu        sync.RWMutex                   // ekmap锁(expire key map)
     smu        sync.RWMutex                   // eksets锁(expire key sets)
     lru        *memCacheLru                   // LRU缓存限制(只有限定池大小时才启用)
-    cap        *gtype.Int                     // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
+    cap        int                            // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
     data       map[interface{}]memCacheItem   // 缓存数据(所有的缓存数据存放哈希表)
     ekmap      map[interface{}]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)，键值为10秒级时间戳
     eksets     map[int64]*gset.Set            // 分组过期时间对应的键名列表(用于自动过期快速删除)，键值为10秒级时间戳
-    eventChan  chan memCacheEvent             // 异步处理队列
+    eventQueue *glist.List                    // 异步处理队列
     stopChan   chan struct{}                  // 关闭时间通知
 }
 
@@ -43,31 +42,20 @@ type memCacheEvent struct {
     e int64       // 过期时间
 }
 
-const (
-    // 这个数值不能太大，否则初始化会占用太多无意义的内存
-    // 60W，这个数值是创始人的机器上支持基准测试的参考结果
-    gEVENT_QUEUE_SIZE = 10000000
-)
-
 // 创建底层的缓存对象
-func newMemCache() *memCache {
+func newMemCache(lruCap...int) *memCache {
     c := &memCache {
         lru        : newMemCacheLru(),
-        cap        : gtype.NewInt(),
         data       : make(map[interface{}]memCacheItem),
         ekmap      : make(map[interface{}]int64),
         eksets     : make(map[int64]*gset.Set),
         stopChan   : make(chan struct{}),
-        eventChan  : make(chan memCacheEvent, gEVENT_QUEUE_SIZE),
+        eventQueue : glist.New(),
     }
-    go c.autoSyncLoop()
-    go c.autoClearLoop()
+    if len(lruCap) > 0 {
+       c.cap = lruCap[0]
+    }
     return c
-}
-
-// 设置缓存池大小，内部依靠LRU算法进行缓存淘汰处理
-func (c *memCache) SetCap(cap int) {
-    c.cap.Set(cap)
 }
 
 // 计算过期缓存的键名(将毫秒换算成秒的整数毫秒)
@@ -106,23 +94,43 @@ func (c *memCache) getOrNewExpireSet(expire int64) *gset.Set {
 
 // 设置kv缓存键值对，过期时间单位为毫秒，expire<=0表示不过期
 func (c *memCache) Set(key interface{}, value interface{}, expire int) {
-    var e int64
-    if expire != 0 {
-        e = gtime.Millisecond() + int64(expire)
-    } else {
-        e = gDEFAULT_MAX_EXPIRE
-    }
+    expireTimestamp := c.getInternalExpire(expire)
     c.dmu.Lock()
-    c.data[key] = memCacheItem{v : value, e : e}
+    c.data[key] = memCacheItem{v : value, e : expireTimestamp}
     c.dmu.Unlock()
-    c.eventChan <- memCacheEvent{k : key, e : e}
+    c.eventQueue.PushBack(memCacheEvent{k : key, e : expireTimestamp})
 }
+
+// 设置kv缓存键值对，内部会对键名的存在性使用写锁进行二次检索确认，如果存在则不再写入；返回键名对应的键值。
+// 在高并发下有用，防止数据写入的并发逻辑错误。
+func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire int) interface{} {
+    expireTimestamp := c.getInternalExpire(expire)
+    c.dmu.Lock()
+    if v, ok := c.data[key]; ok && !v.IsExpired() {
+        c.dmu.Unlock()
+        return v
+    }
+    c.data[key] = memCacheItem{v : value, e : expireTimestamp}
+    c.dmu.Unlock()
+    c.eventQueue.PushBack(memCacheEvent{k : key, e : expireTimestamp})
+    return value
+}
+
+// 根据给定expire参数计算内部使用的expire过期时间
+func (c *memCache) getInternalExpire(expire int) int64 {
+    if expire != 0 {
+        return gtime.Millisecond() + int64(expire)
+    } else {
+        return gDEFAULT_MAX_EXPIRE
+    }
+}
+
 
 // 当键名不存在时写入，并返回true；否则返回false。
 // 常用来做对并发性要求不高的内存锁。
 func (c *memCache) SetIfNotExist(key interface{}, value interface{}, expire int) bool {
     if !c.Contains(key) {
-        c.Set(key, value, expire)
+        c.doSetWithLockCheck(key, value, expire)
         return true
     }
     return false
@@ -130,17 +138,12 @@ func (c *memCache) SetIfNotExist(key interface{}, value interface{}, expire int)
 
 // 批量设置
 func (c *memCache) BatchSet(data map[interface{}]interface{}, expire int)  {
-    var e int64
-    if expire != 0 {
-        e = gtime.Millisecond() + int64(expire)
-    } else {
-        e = gDEFAULT_MAX_EXPIRE
-    }
+    expireTimestamp := c.getInternalExpire(expire)
     for k, v := range data {
         c.dmu.Lock()
-        c.data[k] = memCacheItem{v: v, e: e}
+        c.data[k] = memCacheItem{v: v, e: expireTimestamp}
         c.dmu.Unlock()
-        c.eventChan <- memCacheEvent{k: k, e:e}
+        c.eventQueue.PushBack(memCacheEvent{k: k, e: expireTimestamp})
     }
 }
 
@@ -151,7 +154,7 @@ func (c *memCache) Get(key interface{}) interface{} {
     c.dmu.RUnlock()
     if ok && !item.IsExpired() {
         // LRU(Least Recently Used)操作记录
-        if c.cap.Val() > 0 {
+        if c.cap > 0 {
             c.lru.Push(key)
         }
         return item.v
@@ -162,8 +165,7 @@ func (c *memCache) Get(key interface{}) interface{} {
 // 当键名存在时返回其键值，否则写入指定的键值
 func (c *memCache) GetOrSet(key interface{}, value interface{}, expire int) interface{} {
     if v := c.Get(key); v == nil {
-        c.Set(key, value, expire)
-        return value
+        return c.doSetWithLockCheck(key, value, expire)
     } else {
         return v
     }
@@ -172,8 +174,9 @@ func (c *memCache) GetOrSet(key interface{}, value interface{}, expire int) inte
 // 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
 func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, expire int) interface{} {
     if v := c.Get(key); v == nil {
+        // 可能存在多个goroutine被阻塞在这里，f可能是并发运行
         v = f()
-        c.Set(key, v, expire)
+        c.doSetWithLockCheck(key, v, expire)
         return v
     } else {
         return v
@@ -249,63 +252,79 @@ func (c *memCache) Size() int {
 // 删除缓存对象
 func (c *memCache) Close()  {
     close(c.stopChan)
-    close(c.eventChan)
     c.lru.Close()
 }
 
 // 数据自动同步循环
 func (c *memCache) autoSyncLoop() {
     for {
-        if len(c.eventChan) > gEVENT_QUEUE_SIZE - 1000 {
-            fmt.Println("full")
-        }
-        item := <- c.eventChan
-        if item.k == nil {
-            break
-        }
-        // 添加该key到对应的过期集合中
-        // 注意：这里不需要检查存在性，
-        // 因为在key过期的时候，会和原始的键值对中的过期时间做核对
-        newe := c.makeExpireKey(item.e)
-        c.getOrNewExpireSet(newe).Add(item.k)
-        // 重新设置对应键名的过期时间
-        c.emu.Lock()
-        c.ekmap[item.k] = newe
-        c.emu.Unlock()
+       select {
+           case <-c.stopChan:
+               return
+           default:
+               for {
+                   v := c.eventQueue.PopFront()
+                   if v == nil {
+                       break
+                   }
+                   item := v.(memCacheEvent)
+                   // 添加该key到对应的过期集合中
+                   // 注意：这里不需要检查存在性，
+                   // 因为在key过期的时候，会和原始的键值对中的过期时间做核对
+                   newe := c.makeExpireKey(item.e)
+                   c.getOrNewExpireSet(newe).Add(item.k)
+                   // 重新设置对应键名的过期时间
+                   c.emu.Lock()
+                   c.ekmap[item.k] = newe
+                   c.emu.Unlock()
+               }
+               time.Sleep(time.Second)
+       }
     }
 }
 
 // LRU缓存淘汰处理+自动清理过期键值对
 // 每隔10秒清除过去30秒的键值对数据
 func (c *memCache) autoClearLoop() {
+   for {
+       select {
+           case <- c.stopChan:
+               return
+           default:
+               // 缓存过期处理
+               ek  := c.makeExpireKey(gtime.Millisecond())
+               eks := []int64{ek - 10000, ek - 20000, ek - 30000}
+               for _, v := range eks {
+                   if ekset := c.getExpireSet(v); ekset != nil {
+                       ekset.Iterator(func(v interface{}) bool {
+                           return c.clearByKey(v)
+                       })
+                   }
+                   // 数据处理完之后从集合中删除该时间段
+                   c.smu.Lock()
+                   delete(c.eksets, v)
+                   c.smu.Unlock()
+               }
+               time.Sleep(10*time.Second)
+       }
+   }
+}
+
+// LRU缓存淘汰清理
+func (c *memCache) autoLruClearLoop() {
     for {
         select {
-            case <- c.stopChan:
+            case <-c.stopChan:
                 return
             default:
-                // 缓存过期处理
-                ek  := c.makeExpireKey(gtime.Millisecond())
-                eks := []int64{ek - 10000, ek - 20000, ek - 30000}
-                for _, v := range eks {
-                    if ekset := c.getExpireSet(v); ekset != nil {
-                        ekset.Iterator(func(v interface{}) bool {
-                            return c.clearByKey(v)
-                        })
-                    }
-                    // 数据处理完之后从集合中删除该时间段
-                    c.smu.Lock()
-                    delete(c.eksets, v)
-                    c.smu.Unlock()
-                }
-                // LRU缓存淘汰处理
-                if c.cap.Val() > 0 {
-                    for i := c.Size() - c.cap.Val(); i > 0; i-- {
+                if c.cap > 0 {
+                    for i := c.Size() - c.cap; i > 0; i-- {
                         if s := c.lru.Pop(); s != "" {
                             c.clearByKey(s, true)
                         }
                     }
                 }
-                time.Sleep(10*time.Second)
+                time.Sleep(time.Second)
         }
     }
 }

@@ -44,8 +44,6 @@ const (
     gDEFAULT_SERVER            = "default"
     gDEFAULT_DOMAIN            = "default"
     gDEFAULT_METHOD            = "ALL"
-    gSERVE_CACHE_LRU_SIZE      = 100000          // 服务回调函数缓存LRU大小
-    gHOOKS_CACHE_LRU_SIZE      = 100000          // 事件回调函数缓存LRU大小
     gROUTE_REGISTER_HANDLER    = 1
     gROUTE_REGISTER_OBJECT     = 2
     gROUTE_REGISTER_CONTROLLER = 3
@@ -177,9 +175,6 @@ func GetServer(name...interface{}) (*Server) {
         closeQueue       : gqueue.New(),
         logger           : glog.New(),
     }
-    // 设置路由解析缓存上限，使用LRU进行缓存淘汰
-    s.serveCache.SetCap(gSERVE_CACHE_LRU_SIZE)
-    s.hooksCache.SetCap(gHOOKS_CACHE_LRU_SIZE)
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = struct{}{}
     }
