@@ -19,6 +19,7 @@ import (
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gmlock"
+    "gitee.com/johng/gf/g/os/gfpool"
 )
 
 const (
@@ -100,10 +101,10 @@ func (l *Logger) GetIO() io.Writer {
 }
 
 // 获取默认的文件IO
-func (l *Logger) getFilePointer() *os.File {
+func (l *Logger) getFilePointer() *gfpool.File {
     if path := l.path.Val(); path != "" {
         fpath := path + gfile.Separator + time.Now().Format("2006-01-02.log")
-        if fp, err := os.OpenFile(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666); err == nil {
+        if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666); err == nil {
             return fp
         } else {
             fmt.Fprintln(os.Stderr, err)

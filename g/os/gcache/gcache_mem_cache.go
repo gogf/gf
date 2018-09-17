@@ -46,7 +46,7 @@ type memCacheEvent struct {
 const (
     // 这个数值不能太大，否则初始化会占用太多无意义的内存
     // 60W，这个数值是创始人的机器上支持基准测试的参考结果
-    gEVENT_QUEUE_SIZE = 600000
+    gEVENT_QUEUE_SIZE = 10000000
 )
 
 // 创建底层的缓存对象
@@ -91,7 +91,12 @@ func (c *memCache) getOrNewExpireSet(expire int64) *gset.Set {
     if ekset := c.getExpireSet(expire); ekset == nil {
         set := gset.New()
         c.smu.Lock()
-        c.eksets[expire] = set
+        // 二次检索确认
+        if ekset, ok := c.eksets[expire]; !ok {
+            c.eksets[expire] = set
+        } else {
+            set = ekset
+        }
         c.smu.Unlock()
         return set
     } else {
@@ -145,6 +150,10 @@ func (c *memCache) Get(key interface{}) interface{} {
     item, ok := c.data[key]
     c.dmu.RUnlock()
     if ok && !item.IsExpired() {
+        // LRU(Least Recently Used)操作记录
+        if c.cap.Val() > 0 {
+            c.lru.Push(key)
+        }
         return item.v
     }
     return nil
@@ -263,10 +272,6 @@ func (c *memCache) autoSyncLoop() {
         c.emu.Lock()
         c.ekmap[item.k] = newe
         c.emu.Unlock()
-        // LRU操作记录(只有新增和修改操作才会记录到LRU管理对象中，删除不会)
-        if c.cap.Val() > 0 {
-            c.lru.Push(item.k)
-        }
     }
 }
 

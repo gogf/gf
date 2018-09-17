@@ -81,6 +81,23 @@ func (this *StringInterfaceMap) GetWithDefault(key string, value interface{}) in
 	return val
 }
 
+func (this *StringInterfaceMap) GetOrSetFunc(key string, f func() interface{}) interface{} {
+	if v := this.Get(key); v == nil {
+		this.mu.Lock()
+		defer this.mu.Unlock()
+		// 写锁二次检索确认
+		if v, ok := this.m[key]; !ok {
+			v           = f()
+			this.m[key] = v
+            return v
+		} else {
+            return v
+        }
+	} else {
+		return v
+	}
+}
+
 // 删除键值对
 func (this *StringInterfaceMap) Remove(key string) {
 	this.mu.Lock()
