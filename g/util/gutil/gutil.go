@@ -44,7 +44,7 @@ func Dump(i...interface{}) {
                 fmt.Errorf("%s", err.Error())
             }
         }
-        fmt.Println()
+        //fmt.Println()
     }
 }
 
