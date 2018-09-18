@@ -24,9 +24,6 @@ func New(lruCap...int) *Cache {
     }
     go c.autoSyncLoop()
     go c.autoClearLoop()
-    if c.cap > 0 {
-        go c.autoLruClearLoop()
-    }
     return c
 }
 

@@ -99,6 +99,10 @@ func (c *memCache) Set(key interface{}, value interface{}, expire int) {
     c.data[key] = memCacheItem{v : value, e : expireTimestamp}
     c.dmu.Unlock()
     c.eventQueue.PushBack(memCacheEvent{k : key, e : expireTimestamp})
+    // LRU(Least Recently Used)操作记录
+    if c.cap > 0 {
+        c.lru.Push(key)
+    }
 }
 
 // 设置kv缓存键值对，内部会对键名的存在性使用写锁进行二次检索确认，如果存在则不再写入；返回键名对应的键值。
@@ -113,6 +117,9 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire
     c.data[key] = memCacheItem{v : value, e : expireTimestamp}
     c.dmu.Unlock()
     c.eventQueue.PushBack(memCacheEvent{k : key, e : expireTimestamp})
+    if c.cap > 0 {
+        c.lru.Push(key)
+    }
     return value
 }
 
@@ -144,6 +151,9 @@ func (c *memCache) BatchSet(data map[interface{}]interface{}, expire int)  {
         c.data[k] = memCacheItem{v: v, e: expireTimestamp}
         c.dmu.Unlock()
         c.eventQueue.PushBack(memCacheEvent{k: k, e: expireTimestamp})
+        if c.cap > 0 {
+            c.lru.Push(k)
+        }
     }
 }
 
@@ -305,28 +315,17 @@ func (c *memCache) autoClearLoop() {
                    delete(c.eksets, v)
                    c.smu.Unlock()
                }
+               // LRU缓存淘汰清理
+               if c.cap > 0 {
+                   for i := c.Size() - c.cap; i > 0; i-- {
+                       if s := c.lru.Pop(); s != "" {
+                           c.clearByKey(s, true)
+                       }
+                   }
+               }
                time.Sleep(10*time.Second)
        }
    }
-}
-
-// LRU缓存淘汰清理
-func (c *memCache) autoLruClearLoop() {
-    for {
-        select {
-            case <-c.stopChan:
-                return
-            default:
-                if c.cap > 0 {
-                    for i := c.Size() - c.cap; i > 0; i-- {
-                        if s := c.lru.Pop(); s != "" {
-                            c.clearByKey(s, true)
-                        }
-                    }
-                }
-                time.Sleep(time.Second)
-        }
-    }
 }
 
 // 删除对应键名的缓存数据
