@@ -177,9 +177,7 @@ func GetServer(name...interface{}) (*Server) {
         closeQueue       : gqueue.New(),
         logger           : glog.New(),
     }
-    // 设置路由解析缓存上限，使用LRU进行缓存淘汰
-    s.serveCache.SetCap(gSERVE_CACHE_LRU_SIZE)
-    s.hooksCache.SetCap(gHOOKS_CACHE_LRU_SIZE)
+    s.logger.SetStdPrint(false)
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = struct{}{}
     }

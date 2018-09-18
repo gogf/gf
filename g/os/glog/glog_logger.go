@@ -72,7 +72,11 @@ func (l *Logger) GetLevel() int {
 
 // 快捷方法，打开或关闭DEBU日志信息
 func (l *Logger) SetDebug(debug bool) {
-    l.level.Set(l.level.Val()|LEVEL_DEBU)
+    if debug {
+        l.level.Set(l.level.Val()|LEVEL_DEBU)
+    } else {
+        l.level.Set(l.level.Val()&^LEVEL_DEBU)
+    }
 }
 
 func (l *Logger) SetBacktrace(enabled bool) {
