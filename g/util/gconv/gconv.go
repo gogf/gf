@@ -12,6 +12,7 @@ import (
     "strconv"
     "encoding/json"
     "gitee.com/johng/gf/g/encoding/gbinary"
+    "strings"
 )
 
 // 将变量i转换为字符串指定的类型t
@@ -120,7 +121,7 @@ func Int(i interface{}) int {
             }
             return 0
         default:
-            v, _ := strconv.Atoi(String(value))
+            v, _ := strconv.Atoi(strings.TrimSpace(String(value)))
             return v
     }
 }
@@ -188,7 +189,7 @@ func Uint(i interface{}) uint {
             }
             return 0
         default:
-            v, _ := strconv.ParseUint(String(value), 10, 64)
+            v, _ := strconv.ParseUint(strings.TrimSpace(String(value)), 10, 64)
             return uint(v)
     }
 }
@@ -240,7 +241,7 @@ func Float32 (i interface{}) float32 {
     if v, ok := i.(float32); ok {
         return v
     }
-    v, _ := strconv.ParseFloat(String(i), 64)
+    v, _ := strconv.ParseFloat(strings.TrimSpace(String(i)), 64)
     return float32(v)
 }
 
@@ -251,7 +252,7 @@ func Float64 (i interface{}) float64 {
     if v, ok := i.(float64); ok {
         return v
     }
-    v, _ := strconv.ParseFloat(String(i), 64)
+    v, _ := strconv.ParseFloat(strings.TrimSpace(String(i)), 64)
     return v
 }
 

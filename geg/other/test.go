@@ -1,16 +1,14 @@
 package main
 
 import (
-    "time"
-    "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/g/container/gmap"
     "fmt"
 )
 
 func main() {
-	c := gcache.New(1000)
-	c.Set(1, 1, 0)
-	c.Set(2, 2, 0)
-	c.Clear()
-	fmt.Println(c.Size())
-	time.Sleep(time.Second)
+	m1 := gmap.NewIntInterfaceMap()
+	m1.Set(1, gmap.NewIntIntMap())
+	v1 := m1.Get(1).(*gmap.IntIntMap)
+	v1.Set(2, 2)
+	fmt.Println(m1.Get(1).(*gmap.IntIntMap).Size())
 }

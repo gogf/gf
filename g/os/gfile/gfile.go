@@ -242,6 +242,20 @@ func Copy(src string, dst string) error {
     return nil
 }
 
+// 返回目录下的文件名列表
+func DirNames(path string) ([]string, error) {
+    f, err := os.Open(path)
+    if err != nil {
+        return nil, err
+    }
+    list, err := f.Readdirnames(-1)
+    f.Close()
+    if err != nil {
+        return nil, err
+    }
+    return list, nil
+}
+
 // 文件名正则匹配查找，第二个可选参数指定返回的列表是否仅为文件名(非绝对路径)，默认返回绝对路径
 func Glob(pattern string, onlyNames...bool) ([]string, error) {
     if list, err := filepath.Glob(pattern); err == nil {

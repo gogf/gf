@@ -106,6 +106,7 @@ func (p *Pool) File() (*File, error) {
             if err := f.Truncate(0); err != nil {
                 return nil, err
             }
+            f.Seek(0, 0)
         }
         return f, nil
     }
