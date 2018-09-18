@@ -13,8 +13,7 @@ const (
 )
 
 // 全局缓存管理对象
-//var cache = New()
-var cache = (*Cache)(nil)
+var cache = New()
 
 // (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为**毫秒**
 func Set(key interface{}, value interface{}, expire int)  {
