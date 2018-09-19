@@ -26,7 +26,8 @@ type memCache struct {
     data       map[interface{}]memCacheItem   // 缓存数据(所有的缓存数据存放哈希表)
     ekmap      map[interface{}]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)，键值为10秒级时间戳
     eksets     map[int64]*gset.Set            // 分组过期时间对应的键名列表(用于自动过期快速删除)，键值为10秒级时间戳
-    eventQueue *glist.List                    // 异步处理队列
+    eventList  *glist.List                    // 异步处理队列
+    lruGetList *glist.List                    // 获取方法的LRU列表
     stopChan   chan struct{}                  // 关闭时间通知
 }
 
@@ -38,8 +39,8 @@ type memCacheItem struct {
 
 // 异步队列数据项
 type memCacheEvent struct {
-    k interface{} // 键名
-    e int64       // 过期时间
+    k   interface{} // 键名
+    e   int64       // 过期时间
 }
 
 // 创建底层的缓存对象
@@ -50,7 +51,8 @@ func newMemCache(lruCap...int) *memCache {
         ekmap      : make(map[interface{}]int64),
         eksets     : make(map[int64]*gset.Set),
         stopChan   : make(chan struct{}),
-        eventQueue : glist.New(),
+        eventList  : glist.New(),
+        lruGetList : glist.New(),
     }
     if len(lruCap) > 0 {
        c.cap = lruCap[0]
@@ -98,11 +100,7 @@ func (c *memCache) Set(key interface{}, value interface{}, expire int) {
     c.dmu.Lock()
     c.data[key] = memCacheItem{v : value, e : expireTimestamp}
     c.dmu.Unlock()
-    c.eventQueue.PushBack(memCacheEvent{k : key, e : expireTimestamp})
-    // LRU(Least Recently Used)操作记录
-    if c.cap > 0 {
-        c.lru.Push(key)
-    }
+    c.eventList.PushBack(memCacheEvent{k : key, e : expireTimestamp})
 }
 
 // 设置kv缓存键值对，内部会对键名的存在性使用写锁进行二次检索确认，如果存在则不再写入；返回键名对应的键值。
@@ -116,10 +114,7 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire
     }
     c.data[key] = memCacheItem{v : value, e : expireTimestamp}
     c.dmu.Unlock()
-    c.eventQueue.PushBack(memCacheEvent{k : key, e : expireTimestamp})
-    if c.cap > 0 {
-        c.lru.Push(key)
-    }
+    c.eventList.PushBack(memCacheEvent{k : key, e : expireTimestamp})
     return value
 }
 
@@ -150,10 +145,7 @@ func (c *memCache) BatchSet(data map[interface{}]interface{}, expire int)  {
         c.dmu.Lock()
         c.data[k] = memCacheItem{v: v, e: expireTimestamp}
         c.dmu.Unlock()
-        c.eventQueue.PushBack(memCacheEvent{k: k, e: expireTimestamp})
-        if c.cap > 0 {
-            c.lru.Push(k)
-        }
+        c.eventList.PushBack(memCacheEvent{k: k, e: expireTimestamp})
     }
 }
 
@@ -165,7 +157,7 @@ func (c *memCache) Get(key interface{}) interface{} {
     if ok && !item.IsExpired() {
         // LRU(Least Recently Used)操作记录
         if c.cap > 0 {
-            c.lru.Push(key)
+            c.lruGetList.PushBack(key)
         }
         return item.v
     }
@@ -267,34 +259,56 @@ func (c *memCache) Close()  {
 
 // 数据自动同步循环
 func (c *memCache) autoSyncLoop() {
+    newe := int64(0)
     for {
-       select {
-           case <-c.stopChan:
-               return
-           default:
-               for {
-                   v := c.eventQueue.PopFront()
-                   if v == nil {
-                       break
-                   }
-                   item := v.(memCacheEvent)
-                   // 添加该key到对应的过期集合中
-                   // 注意：这里不需要检查存在性，
-                   // 因为在key过期的时候，会和原始的键值对中的过期时间做核对
-                   newe := c.makeExpireKey(item.e)
-                   c.getOrNewExpireSet(newe).Add(item.k)
-                   // 重新设置对应键名的过期时间
-                   c.emu.Lock()
-                   c.ekmap[item.k] = newe
-                   c.emu.Unlock()
-               }
-               time.Sleep(time.Second)
-       }
+        select {
+            case <-c.stopChan:
+                return
+            default:
+                for {
+                    v := c.eventList.PopFront()
+                    if v == nil {
+                        break
+                    }
+                    item := v.(memCacheEvent)
+                    nowm := gtime.Millisecond()
+                    // 如果用户设置的时间比当前时间还小，那么表示要自动清除了，
+                    // 这里赋值一个当前时间-10秒的时间，在自动清理的goroutine中会自动检测删除该key
+                    if item.e < nowm {
+                        newe = c.makeExpireKey(nowm) - 10000
+                    } else {
+                        newe = c.makeExpireKey(item.e)
+                    }
+                    // 添加该key到对应的过期集合中
+                    // 注意：这里不需要检查存在性，
+                    // 因为在key过期的时候，会和原始的键值对中的过期时间做核对。
+                    c.getOrNewExpireSet(newe).Add(item.k)
+                    // 重新设置对应键名的过期时间
+                    c.emu.Lock()
+                    c.ekmap[item.k] = newe
+                    c.emu.Unlock()
+                    // LRU(Least Recently Used)操作记录
+                    if c.cap > 0 {
+                        c.lru.Push(item.k)
+                    }
+                }
+                if c.cap > 0 {
+                    // 优先级高的lru key放后面，读取列表
+                    for {
+                        if v := c.lruGetList.PopFront(); v != nil {
+                            c.lru.Push(v)
+                        } else {
+                            break
+                        }
+                    }
+                }
+                time.Sleep(10 * time.Second)
+        }
     }
 }
 
 // LRU缓存淘汰处理+自动清理过期键值对
-// 每隔10秒清除过去30秒的键值对数据
+// 每隔10秒清除过去60秒的键值对数据
 func (c *memCache) autoClearLoop() {
    for {
        select {
@@ -303,7 +317,7 @@ func (c *memCache) autoClearLoop() {
            default:
                // 缓存过期处理
                ek  := c.makeExpireKey(gtime.Millisecond())
-               eks := []int64{ek - 10000, ek - 20000, ek - 30000}
+               eks := []int64{ek - 10000, ek - 20000, ek - 30000, ek - 40000, ek - 50000, ek - 60000}
                for _, v := range eks {
                    if ekset := c.getExpireSet(v); ekset != nil {
                        ekset.Iterator(func(v interface{}) bool {
@@ -318,7 +332,7 @@ func (c *memCache) autoClearLoop() {
                // LRU缓存淘汰清理
                if c.cap > 0 {
                    for i := c.Size() - c.cap; i > 0; i-- {
-                       if s := c.lru.Pop(); s != "" {
+                       if s := c.lru.Pop(); s != nil {
                            c.clearByKey(s, true)
                        }
                    }

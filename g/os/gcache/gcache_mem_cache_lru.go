@@ -46,6 +46,11 @@ func (lru *memCacheLru) Remove(key interface{}) {
     }
 }
 
+// 当前LRU数据大小
+func (lru *memCacheLru) Size() int {
+    return lru.data.Size()
+}
+
 // 添加LRU数据项
 func (lru *memCacheLru) Push(key interface{}) {
     lru.queue.Push(key)
@@ -67,7 +72,7 @@ func (lru *memCacheLru) Print() {
     }
 }
 
-// 异步执行协程
+// 异步执行协程，将queue中的数据同步到list中
 func (lru *memCacheLru) StartAutoLoop() {
     for {
         if v := lru.queue.Pop(); v != nil {

@@ -52,7 +52,7 @@ func New() (*Watcher, error) {
         w := &Watcher {
             watcher    : watch,
             events     : gqueue.New(),
-            closeChan  : make(chan struct{}, 1),
+            closeChan  : make(chan struct{}),
             callbacks  : gmap.NewStringInterfaceMap(),
         }
         w.startWatchLoop()
@@ -83,7 +83,7 @@ func Remove(path string) error {
 func (w *Watcher) Close() {
     w.watcher.Close()
     w.events.Close()
-    w.closeChan <- struct{}{}
+    close(w.closeChan)
 }
 
 // 添加对指定文件/目录的监听，并给定回调函数
