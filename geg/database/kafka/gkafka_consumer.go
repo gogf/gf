@@ -17,10 +17,12 @@ func newKafkaClientConsumer(topic, group string) *gkafka.Client {
 }
 
 func main () {
-    group  := "test-group-11"
-    client := newKafkaClientConsumer("test", group)
+    group  := "test-group-206"
+    topic  := "test"
+    client := newKafkaClientConsumer(topic, group)
     defer client.Close()
 
+    client.MarkOffset(topic, 0, 6)
     for {
         fmt.Println(group + " reading...")
         for {

@@ -39,8 +39,8 @@ type memCacheItem struct {
 
 // 异步队列数据项
 type memCacheEvent struct {
-    k   interface{} // 键名
-    e   int64       // 过期时间
+    k interface{} // 键名
+    e int64       // 过期时间
 }
 
 // 创建底层的缓存对象
@@ -112,6 +112,9 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire
         c.dmu.Unlock()
         return v
     }
+    if f, ok := value.(func() interface {}); ok {
+        value = f()
+    }
     c.data[key] = memCacheItem{v : value, e : expireTimestamp}
     c.dmu.Unlock()
     c.eventList.PushBack(memCacheEvent{k : key, e : expireTimestamp})
@@ -127,9 +130,7 @@ func (c *memCache) getInternalExpire(expire int) int64 {
     }
 }
 
-
 // 当键名不存在时写入，并返回true；否则返回false。
-// 常用来做对并发性要求不高的内存锁。
 func (c *memCache) SetIfNotExist(key interface{}, value interface{}, expire int) bool {
     if !c.Contains(key) {
         c.doSetWithLockCheck(key, value, expire)
@@ -179,6 +180,16 @@ func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, expire in
         // 可能存在多个goroutine被阻塞在这里，f可能是并发运行
         v = f()
         c.doSetWithLockCheck(key, v, expire)
+        return v
+    } else {
+        return v
+    }
+}
+
+// 与GetOrSetFunc不同的是，f是在写锁机制内执行
+func (c *memCache) GetOrSetFuncLock(key interface{}, f func() interface{}, expire int) interface{} {
+    if v := c.Get(key); v == nil {
+        c.doSetWithLockCheck(key, f, expire)
         return v
     } else {
         return v
