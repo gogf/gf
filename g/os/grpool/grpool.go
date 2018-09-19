@@ -28,8 +28,7 @@ type Pool struct {
 // 该对象与进程同生命周期，无需Close
 var defaultPool = New()
 
-// 创建goroutine池管理对象，给定过期时间(秒)
-// 第二个参数用于限制限制最大的goroutine数量/线程数/worker数量，非必需参数，默认不做限制
+// 创建goroutine池管理对象， 参数用于限制限制最大的goroutine数量/线程数/worker数量，非必需参数，默认不做限制
 func New(size...int) *Pool {
     s := 0
     if len(size) > 0 {

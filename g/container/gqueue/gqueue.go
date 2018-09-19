@@ -61,6 +61,7 @@ func (q *Queue) startAsyncLoop() {
             case <- q.closeChan:
                 return
             case <- q.events:
+                // 循环读取链表，直到为空才跳出
                 for {
                     if v := q.list.PopFront(); v != nil {
                         q.queue <- v
@@ -78,7 +79,9 @@ func (q *Queue) Push(v interface{}) {
         q.queue <- v
     } else {
         q.list.PushBack(v)
-        q.events <- struct{}{}
+        if len(q.events) == 0 {
+            q.events <- struct{}{}
+        }
     }
 }
 

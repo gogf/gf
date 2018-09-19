@@ -83,13 +83,13 @@ func (this *StringInterfaceMap) GetWithDefault(key string, value interface{}) in
 
 func (this *StringInterfaceMap) GetOrSetFunc(key string, f func() interface{}) interface{} {
 	if v := this.Get(key); v == nil {
+		value := f()
 		this.mu.Lock()
 		defer this.mu.Unlock()
 		// 写锁二次检索确认
 		if v, ok := this.m[key]; !ok {
-			v           = f()
-			this.m[key] = v
-            return v
+			this.m[key] = value
+            return value
 		} else {
             return v
         }
