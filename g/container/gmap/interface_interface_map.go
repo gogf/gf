@@ -69,16 +69,59 @@ func (this *InterfaceInterfaceMap) Get(key interface{}) interface{} {
 	return val
 }
 
-// 获取键值，如果键值不存在则写入默认值
-func (this *InterfaceInterfaceMap) GetWithDefault(key interface{}, value interface{}) interface{} {
+// 设置kv缓存键值对，内部会对键名的存在性使用写锁进行二次检索确认，如果存在则不再写入；返回键名对应的键值。
+// 在高并发下有用，防止数据写入的并发逻辑错误。
+func (this *InterfaceInterfaceMap) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
 	this.mu.Lock()
-	val, ok := this.m[key]
-	if !ok {
-		this.m[key] = value
-		val         = value
+	if v, ok := this.m[key]; ok {
+		this.mu.Unlock()
+		return v
 	}
+	if f, ok := value.(func() interface {}); ok {
+		value = f()
+	}
+	this.m[key] = value
 	this.mu.Unlock()
-	return val
+	return value
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值
+func (this *InterfaceInterfaceMap) GetOrSet(key interface{}, value interface{}) interface{} {
+	if v := this.Get(key); v == nil {
+		return this.doSetWithLockCheck(key, value)
+	} else {
+		return v
+	}
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
+func (this *InterfaceInterfaceMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
+	if v := this.Get(key); v == nil {
+		v = f()
+		this.doSetWithLockCheck(key, v)
+		return v
+	} else {
+		return v
+	}
+}
+
+// 与GetOrSetFunc不同的是，f是在写锁机制内执行
+func (this *InterfaceInterfaceMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
+	if v := this.Get(key); v == nil {
+		this.doSetWithLockCheck(key, f)
+		return v
+	} else {
+		return v
+	}
+}
+
+// 当键名不存在时写入，并返回true；否则返回false。
+func (this *InterfaceInterfaceMap) SetIfNotExist(key interface{}, value interface{}) bool {
+	if !this.Contains(key) {
+		this.doSetWithLockCheck(key, value)
+		return true
+	}
+	return false
 }
 
 // 删除键值对

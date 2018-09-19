@@ -11,7 +11,7 @@ import (
     "time"
     "strings"
     "github.com/Shopify/sarama"
-    "github.com/bsm/sarama-cluster"
+    "github.com/johng-cn/sarama-cluster"
     "errors"
 )
 
@@ -115,19 +115,40 @@ func (client *Client) Topics() ([]string, error) {
     }
 }
 
-// Receive message from kafka from specified topics in config, in BLOCKING way, gkafka will handle offset tracking automatically.
-func (client *Client) Receive() (*Message, error) {
+// 初始化内部消费客户端
+func (client *Client) initConsumer() error {
     if client.consumer == nil {
         config       := cluster.NewConfig()
         config.Config = client.Config.Config
         config.Group.Return.Notifications = false
-
         c, err := cluster.NewConsumer(strings.Split(client.Config.Servers, ","), client.Config.GroupId, strings.Split(client.Config.Topics, ","), config)
         if err != nil {
-            return nil, err
+            return err
         } else {
             client.consumer = c
         }
+    }
+    return nil
+}
+
+// 标记指定topic 分区开始读取位置
+func (client *Client) MarkOffset(topic string, partition int, offset int, metadata...string) error {
+    if err := client.initConsumer(); err != nil {
+        return err
+    }
+    meta := ""
+    if len(metadata) > 0 {
+        meta = metadata[0]
+    }
+    client.consumer.MarkPartitionOffset(topic, int32(partition), int64(offset), meta)
+    return nil
+}
+
+
+// Receive message from kafka from specified topics in config, in BLOCKING way, gkafka will handle offset tracking automatically.
+func (client *Client) Receive() (*Message, error) {
+    if err := client.initConsumer(); err != nil {
+        return nil, err
     }
     errorsChan  := client.consumer.Errors()
     notifyChan  := client.consumer.Notifications()
