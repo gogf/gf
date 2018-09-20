@@ -23,7 +23,6 @@ var sbm   = NewStringBoolMap()
 var sim   = NewStringIntMap()
 var sifm  = NewStringInterfaceMap()
 var ssm   = NewStringStringMap()
-var uifm  = NewUintInterfaceMap()
 
 // 写入性能测试
 
@@ -81,11 +80,6 @@ func Benchmark_StringStringMap_Set(b *testing.B) {
     }
 }
 
-func Benchmark_UintInterfaceMap_Set(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        uifm.Set(uint(i), i)
-    }
-}
 
 // 读取性能测试
 
@@ -140,12 +134,6 @@ func Benchmark_StringInterfaceMap_Get(b *testing.B) {
 func Benchmark_StringStringMap_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ssm.Get(strconv.Itoa(i))
-    }
-}
-
-func Benchmark_UintInterfaceMap_Get(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        uifm.Get(uint(i))
     }
 }
 

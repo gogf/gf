@@ -213,14 +213,12 @@ func (c *memCache) Remove(key interface{}) interface{} {
 }
 
 // 批量删除键值对，并返回被删除的键值对数据
-func (c *memCache) BatchRemove(keys []interface{}) map[interface{}]interface{} {
-    m := make(map[interface{}]interface{})
+func (c *memCache) BatchRemove(keys []interface{}) {
+    c.dmu.Lock()
     for _, key := range keys {
-        if v := c.Remove(key); v != nil {
-            m[key] = v
-        }
+        delete(c.data, key)
     }
-    return m
+    c.dmu.Unlock()
 }
 
 // 获得所有的键名，组成数组返回

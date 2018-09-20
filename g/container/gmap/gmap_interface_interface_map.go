@@ -73,15 +73,14 @@ func (this *InterfaceInterfaceMap) Get(key interface{}) interface{} {
 // 在高并发下有用，防止数据写入的并发逻辑错误。
 func (this *InterfaceInterfaceMap) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
 	this.mu.Lock()
+	defer this.mu.Unlock()
 	if v, ok := this.m[key]; ok {
-		this.mu.Unlock()
 		return v
 	}
 	if f, ok := value.(func() interface {}); ok {
 		value = f()
 	}
 	this.m[key] = value
-	this.mu.Unlock()
 	return value
 }
 
@@ -124,13 +123,6 @@ func (this *InterfaceInterfaceMap) SetIfNotExist(key interface{}, value interfac
 	return false
 }
 
-// 删除键值对
-func (this *InterfaceInterfaceMap) Remove(key interface{}) {
-	this.mu.Lock()
-	delete(this.m, key)
-	this.mu.Unlock()
-}
-
 // 批量删除键值对
 func (this *InterfaceInterfaceMap) BatchRemove(keys []interface{}) {
     this.mu.Lock()
@@ -141,7 +133,7 @@ func (this *InterfaceInterfaceMap) BatchRemove(keys []interface{}) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *InterfaceInterfaceMap) GetAndRemove(key interface{}) (interface{}) {
+func (this *InterfaceInterfaceMap) Remove(key interface{}) interface{} {
 	this.mu.Lock()
 	val, exists := this.m[key]
 	if exists {

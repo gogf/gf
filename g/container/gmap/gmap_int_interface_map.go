@@ -67,23 +67,58 @@ func (this *IntInterfaceMap) Get(key int) (interface{}) {
 	return val
 }
 
-// 获取键值，如果键值不存在则写入默认值
-func (this *IntInterfaceMap) GetWithDefault(key int, value interface{}) interface{} {
+// 设置kv缓存键值对，内部会对键名的存在性使用写锁进行二次检索确认，如果存在则不再写入；返回键名对应的键值。
+// 在高并发下有用，防止数据写入的并发逻辑错误。
+func (this *IntInterfaceMap) doSetWithLockCheck(key int, value interface{}) interface{} {
     this.mu.Lock()
-    val, ok := this.m[key]
-    if !ok {
-        this.m[key] = value
-        val         = value
+    defer this.mu.Unlock()
+    if v, ok := this.m[key]; ok {
+        return v
     }
-    this.mu.Unlock()
-    return val
+    if f, ok := value.(func() interface {}); ok {
+        value = f()
+    }
+    this.m[key] = value
+    return value
 }
 
-// 删除键值对
-func (this *IntInterfaceMap) Remove(key int) {
-    this.mu.Lock()
-    delete(this.m, key)
-    this.mu.Unlock()
+// 当键名存在时返回其键值，否则写入指定的键值
+func (this *IntInterfaceMap) GetOrSet(key int, value interface{}) interface{} {
+    if v := this.Get(key); v == nil {
+        return this.doSetWithLockCheck(key, value)
+    } else {
+        return v
+    }
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
+func (this *IntInterfaceMap) GetOrSetFunc(key int, f func() interface{}) interface{} {
+    if v := this.Get(key); v == nil {
+        v = f()
+        this.doSetWithLockCheck(key, v)
+        return v
+    } else {
+        return v
+    }
+}
+
+// 与GetOrSetFunc不同的是，f是在写锁机制内执行
+func (this *IntInterfaceMap) GetOrSetFuncLock(key int, f func() interface{}) interface{} {
+    if v := this.Get(key); v == nil {
+        this.doSetWithLockCheck(key, f)
+        return v
+    } else {
+        return v
+    }
+}
+
+// 当键名不存在时写入，并返回true；否则返回false。
+func (this *IntInterfaceMap) SetIfNotExist(key int, value interface{}) bool {
+    if !this.Contains(key) {
+        this.doSetWithLockCheck(key, value)
+        return true
+    }
+    return false
 }
 
 // 批量删除键值对
@@ -96,7 +131,7 @@ func (this *IntInterfaceMap) BatchRemove(keys []int) {
 }
 
 // 返回对应的键值，并删除该键值
-func (this *IntInterfaceMap) GetAndRemove(key int) (interface{}) {
+func (this *IntInterfaceMap) Remove(key int) interface{} {
     this.mu.Lock()
     val, exists := this.m[key]
     if exists {
