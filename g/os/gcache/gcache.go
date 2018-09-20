@@ -46,6 +46,11 @@ func GetOrSetFunc(key interface{}, f func() interface{}, expire int) interface{}
     return cache.GetOrSetFunc(key, f, expire)
 }
 
+// 与GetOrSetFunc不同的是，f是在写锁机制内执行
+func GetOrSetFuncLock(key interface{}, f func() interface{}, expire int) interface{} {
+    return cache.GetOrSetFuncLock(key, f, expire)
+}
+
 // 是否存在指定的键名，true表示存在，false表示不存在。
 func Contains(key interface{}) bool {
     return cache.Contains(key)
@@ -57,8 +62,8 @@ func Remove(key interface{}) interface{} {
 }
 
 // (使用全局KV缓存对象)批量删除指定键值对
-func BatchRemove(keys []interface{}) map[interface{}]interface{} {
-    return cache.BatchRemove(keys)
+func BatchRemove(keys []interface{}) {
+    cache.BatchRemove(keys)
 }
 
 // 获得所有的键名，组成数组返回
