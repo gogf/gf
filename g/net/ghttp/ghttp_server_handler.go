@@ -59,7 +59,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
             // 如果是目录需要处理index files
             if len(s.config.IndexFiles) > 0 {
                 for _, file := range s.config.IndexFiles {
-                    fpath := s.paths.Search(filePath + gfile.Separator + file)
+                    fpath := s.paths.Search(file)
                     if fpath != "" {
                         filePath              = fpath
                         request.isFileRequest = true

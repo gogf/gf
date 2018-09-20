@@ -175,6 +175,7 @@ func GetServer(name...interface{}) (*Server) {
         closeQueue       : gqueue.New(),
         logger           : glog.New(),
     }
+    s.logger.SetStdPrint(false)
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = struct{}{}
     }
