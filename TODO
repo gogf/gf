@@ -33,7 +33,8 @@ ghttp.Request增加对输入参数的自动HtmlEncode机制；
     ghttp.Response&ServeFile、gfcache、gproc shell执行、
     ghttp Server&Client basic auth、
     glog分类&日志等级&链式操作、gdb debug自动输出调试信息、gmlock内存锁、
-
+服务注册域名增加对泛域名的支持；
+服务注册时判断方法定义满足规范时才执行绑定，否则提示WARN信息；
 
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
