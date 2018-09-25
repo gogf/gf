@@ -8,7 +8,6 @@ package gudp
 
 import (
     "net"
-    "strings"
 )
 
 // 创建标准库UDP链接操作对象
@@ -57,5 +56,8 @@ func isTimeout(err error) bool {
     if err == nil {
         return false
     }
-    return strings.Contains(err.Error(), "timeout")
+    if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+        return true
+    }
+    return false
 }

@@ -9,7 +9,6 @@ package gtcp
 import (
     "net"
     "time"
-    "strings"
 )
 
 const (
@@ -85,5 +84,8 @@ func isTimeout(err error) bool {
     if err == nil {
         return false
     }
-    return strings.Contains(err.Error(), "timeout")
+    if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+        return true
+    }
+    return false
 }
