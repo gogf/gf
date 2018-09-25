@@ -89,6 +89,8 @@ func (p *Pool) File() (*File, error) {
             if _, err := f.Seek(0, 2); err != nil {
                 return nil, err
             }
+        } else {
+            f.Seek(0, 0)
         }
         if f.flag & os.O_CREATE > 0 {
             _, err := f.Stat()
@@ -103,10 +105,13 @@ func (p *Pool) File() (*File, error) {
             }
         }
         if f.flag & os.O_TRUNC > 0 {
-            if err := f.Truncate(0); err != nil {
-                return nil, err
+            if stat, err := f.Stat(); err == nil {
+                if stat.Size() > 0 {
+                    if err := f.Truncate(0); err != nil {
+                        return nil, err
+                    }
+                }
             }
-            f.Seek(0, 0)
         }
         return f, nil
     }
