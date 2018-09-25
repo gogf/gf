@@ -85,13 +85,6 @@ func (p *Pool) File() (*File, error) {
         return nil, err
     } else {
         f := v.(*File)
-        if f.flag & os.O_APPEND > 0 {
-            if _, err := f.Seek(0, 2); err != nil {
-                return nil, err
-            }
-        } else {
-            f.Seek(0, 0)
-        }
         if f.flag & os.O_CREATE > 0 {
             if _, err := os.Stat(f.path); os.IsNotExist(err) {
                 if file, err := os.OpenFile(f.path, f.flag, f.perm); err != nil {
@@ -109,6 +102,13 @@ func (p *Pool) File() (*File, error) {
                     }
                 }
             }
+        }
+        if f.flag & os.O_APPEND > 0 {
+            if _, err := f.Seek(0, 2); err != nil {
+                return nil, err
+            }
+        } else {
+            f.Seek(0, 0)
         }
         return f, nil
     }
