@@ -93,14 +93,11 @@ func (p *Pool) File() (*File, error) {
             f.Seek(0, 0)
         }
         if f.flag & os.O_CREATE > 0 {
-            _, err := f.Stat()
-            if err != nil {
-                if !os.IsExist(err) {
-                    if file, err := os.OpenFile(f.path, f.flag, f.perm); err != nil {
-                        return nil, err
-                    } else {
-                        f.File = *file
-                    }
+            if _, err := os.Stat(f.path); os.IsNotExist(err) {
+                if file, err := os.OpenFile(f.path, f.flag, f.perm); err != nil {
+                    return nil, err
+                } else {
+                    f.File = *file
                 }
             }
         }
