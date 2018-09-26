@@ -15,6 +15,9 @@ import (
     "mime/multipart"
     "os"
     "io"
+    "gitee.com/johng/gf/g/os/gfile"
+    "errors"
+    "fmt"
 )
 
 // http客户端
@@ -74,8 +77,12 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
         for _, item := range strings.Split(data, "&") {
             array := strings.Split(item, "=")
             if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
-                if file, err := writer.CreateFormFile(array[0], array[1][6:]); err == nil {
-                    if f, err := os.Open(array[1][6:]); err == nil {
+                path := array[1][6:]
+                if !gfile.Exists(path) {
+                    return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
+                }
+                if file, err := writer.CreateFormFile(array[0], path); err == nil {
+                    if f, err := os.Open(path); err == nil {
                         defer f.Close()
                         if _, err = io.Copy(file, f); err != nil {
                             return nil, err
