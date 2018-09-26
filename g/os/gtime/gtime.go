@@ -27,7 +27,6 @@ var (
 func init() {
     // 使用正则判断会比直接使用ParseInLocation挨个轮训判断要快很多
     timeRegex, _   = regexp.Compile(TIME_REAGEX_PATTERN)
-
 }
 
 // 类似与js中的SetTimeout，一段时间后执行回调函数
