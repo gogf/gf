@@ -41,10 +41,18 @@ type FuncMap = map[string]interface{}
 var viewMap = gmap.NewStringInterfaceMap()
 
 // 默认的视图对象
-var viewObj = Get(".")
+var viewObj *View
+
+// 初始化默认的视图对象
+func checkAndInitDefaultView() {
+    if viewObj == nil {
+        viewObj = Get(".")
+    }
+}
 
 // 直接解析模板内容，返回解析后的内容
 func ParseContent(content string, params map[string]interface{}) ([]byte, error) {
+    checkAndInitDefaultView()
     return viewObj.ParseContent(content, params)
 }
 
