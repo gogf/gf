@@ -111,5 +111,5 @@ func (sp *SPath) addMonitor(name, path string) {
         if event.IsRemove() {
             sp.cache.Remove(name)
         }
-    })
+    }, false)
 }
