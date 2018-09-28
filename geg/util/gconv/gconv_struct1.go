@@ -24,7 +24,7 @@ func main() {
         "pass1" : "123",
         "pass2" : "123",
     }
-    if err := gconv.MapToStruct(params1, user); err == nil {
+    if err := gconv.Struct(params1, user); err == nil {
         fmt.Println(user)
     }
 
@@ -36,7 +36,7 @@ func main() {
         "password1" : "456",
         "password2" : "456",
     }
-    if err := gconv.MapToStruct(params2, user); err == nil {
+    if err := gconv.Struct(params2, user); err == nil {
         fmt.Println(user)
     }
 }
