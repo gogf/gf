@@ -33,6 +33,8 @@ func Convert(i interface{}, t string, params...interface{}) interface{} {
         case "bool":            return Bool(i)
         case "string":          return String(i)
         case "[]byte":          return Bytes(i)
+        case "[]int":           return Ints(i)
+        case "[]string":        return Strings(i)
         case "time.Time":
             if len(params) > 0 {
                 return Time(i, String(params[0]))
