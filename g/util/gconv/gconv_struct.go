@@ -11,6 +11,8 @@ import (
     "reflect"
     "github.com/fatih/structs"
     "strings"
+    "errors"
+    "fmt"
 )
 
 // 将params键值对参数映射到对应的struct对象属性上，第三个参数mapping为非必需，表示自定义名称与属性名称的映射关系。
@@ -40,7 +42,9 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     elem := reflect.ValueOf(objPointer).Elem()
     // 如果给定的参数不是map类型，那么直接将参数值映射到第一个属性上
     if !isParamMap {
-        bindVarToStructByIndex(elem, 0, params)
+        if err := bindVarToStructByIndex(elem, 0, params); err != nil {
+            return err
+        }
         return nil
     }
     // 标签映射关系map，如果有的话
@@ -60,7 +64,9 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         for mappingk, mappingv := range attrMapping[0] {
             if v, ok := paramsMap[mappingk]; ok {
                 dmap[mappingv] = true
-                bindVarToStruct(elem, mappingv, v)
+                if err := bindVarToStruct(elem, mappingv, v); err != nil {
+                    return err
+                }
             }
         }
     }
@@ -71,7 +77,9 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
         if v, ok := paramsMap[tagk]; ok {
             dmap[tagv] = true
-            bindVarToStruct(elem, tagv, v)
+            if err := bindVarToStruct(elem, tagv, v); err != nil {
+                return err
+            }
         }
     }
     // 最后按照默认规则进行匹配
@@ -82,39 +90,43 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
         // 后续tag逻辑中会处理的key(重复的键名)这里便不处理
         if _, ok := tagmap[mapk]; !ok {
-            bindVarToStruct(elem, name, mapv)
+            if err := bindVarToStruct(elem, name, mapv); err != nil {
+                return err
+            }
         }
     }
     return nil
 }
 
 // 将参数值绑定到对象指定名称的属性上
-func bindVarToStruct(elem reflect.Value, name string, value interface{}) {
+func bindVarToStruct(elem reflect.Value, name string, value interface{}) error {
     structFieldValue := elem.FieldByName(name)
     // 键名与对象属性匹配检测
     if !structFieldValue.IsValid() {
-        return
+        return errors.New(fmt.Sprintf(`invalid struct attribute of name "%s"`, name))
     }
     // CanSet的属性必须为公开属性(首字母大写)
     if !structFieldValue.CanSet() {
-        return
+        return errors.New(fmt.Sprintf(`struct attribute of name "%s" cannot be set`, name))
     }
     // 必须将value转换为struct属性的数据类型，这里必须用到gconv包
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
+    return nil
 }
 
 // 将参数值绑定到对象指定索引位置的属性上
-func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) {
+func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) error {
     structFieldValue := elem.FieldByIndex([]int{index})
     // 键名与对象属性匹配检测
     if !structFieldValue.IsValid() {
-        return
+        return errors.New(fmt.Sprintf("invalid struct attribute at index %d", index))
     }
     // CanSet的属性必须为公开属性(首字母大写)
     if !structFieldValue.CanSet() {
-        return
+        return errors.New(fmt.Sprintf("struct attribute cannot be set at index %d", index))
     }
     // 必须将value转换为struct属性的数据类型，这里必须用到gconv包
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
+    return nil
 }
 
