@@ -685,7 +685,7 @@ func (j *Json) ToToml() ([]byte, error) {
 func (j *Json) ToStruct(o interface{}) error {
     j.mu.RLock()
     defer j.mu.RUnlock()
-    return gconv.MapToStruct(j.ToMap(), o)
+    return gconv.Struct(j.ToMap(), o)
 }
 
 // 打印Json对象

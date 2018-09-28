@@ -145,5 +145,5 @@ func (r *Request) GetQueryToStruct(object interface{}, mapping...map[string]stri
     for k, v := range r.GetQueryMap() {
         params[k] = v
     }
-    gconv.MapToStruct(params, object, tagmap)
+    gconv.Struct(params, object, tagmap)
 }

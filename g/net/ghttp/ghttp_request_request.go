@@ -130,6 +130,6 @@ func (r *Request) GetRequestToStruct(object interface{}, mapping...map[string]st
     for k, v := range r.GetRequestMap() {
         params[k] = v
     }
-    gconv.MapToStruct(params, object, tagmap)
+    gconv.Struct(params, object, tagmap)
 }
 
