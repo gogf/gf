@@ -16,6 +16,7 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gqueue"
+    "fmt"
 )
 
 // 监听管理对象
@@ -64,11 +65,11 @@ func New() (*Watcher, error) {
 }
 
 // 添加对指定文件/目录的监听，并给定回调函数；如果给定的是一个目录，默认递归监控。
-func Add(path string, callback func(event *Event)) error {
+func Add(path string, callback func(event *Event), recursive...bool) error {
     if watcher == nil {
         return errors.New("global watcher creating failed")
     }
-    return watcher.Add(path, callback)
+    return watcher.Add(path, callback, recursive...)
 }
 
 // 移除监听，默认递归删除。
@@ -91,7 +92,7 @@ func (w *Watcher) addWatch(path string, callback func(event *Event)) error {
     // 这里统一转换为当前系统的绝对路径，便于统一监控文件名称
     t := gfile.RealPath(path)
     if t == "" {
-        return errors.New(path + " does not exist")
+        return errors.New(fmt.Sprintf(`"%s" does not exist`, path))
     }
     path = t
     // 注册回调函数
@@ -110,9 +111,9 @@ func (w *Watcher) addWatch(path string, callback func(event *Event)) error {
     return nil
 }
 
-// 递归添加监控
-func (w *Watcher) Add(path string, callback func(event *Event)) error {
-    if gfile.IsDir(path) {
+// 添加监控，path参数支持文件或者目录路径，recursive为非必需参数，默认为递归添加监控(当path为目录时)
+func (w *Watcher) Add(path string, callback func(event *Event), recursive...bool) error {
+    if gfile.IsDir(path) && (len(recursive) == 0 || recursive[0]) {
         paths, _ := gfile.ScanDir(path, "*", true)
         list  := []string{path}
         list   = append(list, paths...)
