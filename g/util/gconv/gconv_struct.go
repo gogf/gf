@@ -13,6 +13,7 @@ import (
     "strings"
     "errors"
     "fmt"
+    "os"
 )
 
 // 将params键值对参数映射到对应的struct对象属性上，第三个参数mapping为非必需，表示自定义名称与属性名称的映射关系。
@@ -50,7 +51,7 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     // 标签映射关系map，如果有的话
     tagmap := make(map[string]string)
     fields := structs.Fields(objPointer)
-    // 将struct中定义的属性转换名称构建称tagmap
+    // 将struct中定义的属性转换名称构建成tagmap
     for _, field := range fields {
         if tag := field.Tag("gconv"); tag != "" {
             for _, v := range strings.Split(tag, ",") {
@@ -110,6 +111,36 @@ func bindVarToStruct(elem reflect.Value, name string, value interface{}) error {
         return errors.New(fmt.Sprintf(`struct attribute of name "%s" cannot be set`, name))
     }
     // 必须将value转换为struct属性的数据类型，这里必须用到gconv包
+    defer func() {
+        // 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
+        if recover() != nil {
+            v  := structFieldValue.Interface()
+            //Struct(value, &v)
+            //fmt.Println(structs.Fields(v))
+            for _, field := range structs.Fields(v) {
+               fmt.Println(field.Name())
+            }
+            fmt.Println(reflect.ValueOf(v).Kind())
+            fmt.Println(reflect.ValueOf(&v).Elem().Kind())
+            fmt.Println(v)
+            fmt.Println(reflect.TypeOf(v))
+            os.Exit(1)
+            //v := reflect.New(structFieldValue.Type()).Interface()
+            //if b, err := json.Marshal(value); err == nil {
+            //    if err := json.Unmarshal(b, &v); err == nil {
+            //
+            //    } else {
+            //        fmt.Println(err)
+            //    }
+            //} else {
+            //    fmt.Println(err)
+            //}
+            //fmt.Println(v)
+            //fmt.Println(reflect.TypeOf(v))
+            //structFieldValue.Set(reflect.ValueOf(v).Elem())
+            //os.Exit(1)
+        }
+    }()
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
     return nil
 }
