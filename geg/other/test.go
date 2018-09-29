@@ -1,19 +1,11 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/glog"
-    "time"
-    "gitee.com/johng/gf/g"
+    "fmt"
+    "gitee.com/johng/gf/g/util/gregex"
 )
 
 func main() {
-    g.Config().AddPath("eeee")
-    g.Config().AddPath(".")
-    glog.SetPath(g.Config().GetString("logPath"))
-    glog.SetPath("/tmp/test-logs")
-    for {
-        glog.Println("1")
-        time.Sleep(time.Second)
-    }
+    fmt.Println(gregex.IsMatchString("g/os/glog/glog.+$", "g/os/glog/glog_logger.go"))
 }
 
