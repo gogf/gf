@@ -1,28 +1,21 @@
 package main
 
 import (
-    "encoding/json"
     "fmt"
+    "reflect"
 )
 
-func main() {
-    type B struct {
-        Name string
-    }
-    type A struct {
-        Name  string
-        Child B
-    }
+type S struct {
 
-    a := A {
-        Name  : "A",
-        Child : B {
-            Name : "B",
-        },
-    }
-    b, _ := json.Marshal(a)
-    a2 := new(A)
-    json.Unmarshal(b, a2)
-    fmt.Println(*a2)
+}
+
+func main() {
+    s := S{}
+    fmt.Println(reflect.ValueOf(s).Kind())
+    fmt.Println(reflect.ValueOf(&s).Elem().Kind())
+
+    v := reflect.ValueOf(s).Interface()
+    fmt.Println(reflect.ValueOf(v).Kind())
+    fmt.Println(reflect.ValueOf(&v).Elem().Type().PkgPath())
 }
 

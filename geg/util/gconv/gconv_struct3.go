@@ -6,19 +6,25 @@ import (
     "fmt"
 )
 
-// 演示slice类型属性的赋值
 func main() {
+    type Score struct {
+        Name   string
+        Result int
+    }
     type User struct {
-        Scores []int
+        Scores Score
     }
 
     user   := new(User)
-    scores := []int{99, 100, 60, 140}
+    scores := map[string]interface{}{
+        "Scores" :
+            map[string]interface{}{
+                "Name"   : "john",
+                "Result" : 100,
+            },
+    }
 
-    err := gconv.Struct(g.Map{
-        "Scores" : scores,
-    }, user)
-    if err != nil {
+    if err := gconv.Struct(scores, user); err != nil {
         fmt.Println(err)
     } else {
         g.Dump(user)
