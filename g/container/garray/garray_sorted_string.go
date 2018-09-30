@@ -16,28 +16,20 @@ import (
 type SortedStringArray struct {
     mu          *rwmutex.RWMutex        // 互斥锁
     cap         int                     // 初始化设置的数组容量
-    size        int                     // 初始化设置的数组大小
     array       []string                // 底层数组
     unique      *gtype.Bool             // 是否要求不能重复
     compareFunc func(v1, v2 string) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
-func NewSortedStringArray(size int, cap int, safe...bool) *SortedStringArray {
-    a := &SortedStringArray {
+func NewSortedStringArray(cap int, safe...bool) *SortedStringArray {
+    return &SortedStringArray {
         mu          : rwmutex.New(safe...),
+        array       : make([]string, 0, cap),
         unique      : gtype.NewBool(),
         compareFunc : func(v1, v2 string) int {
             return strings.Compare(v1, v2)
         },
     }
-    a.size = size
-    if cap > 0 {
-        a.cap   = cap
-        a.array = make([]string, size, cap)
-    } else {
-        a.array = make([]string, size)
-    }
-    return a
 }
 
 // 添加加数据项
@@ -161,11 +153,7 @@ func (a *SortedStringArray) doUnique() {
 // 清空数据数组
 func (a *SortedStringArray) Clear() {
     a.mu.Lock()
-    if a.cap > 0 {
-        a.array = make([]string, a.size, a.cap)
-    } else {
-        a.array = make([]string, a.size)
-    }
+    a.array = make([]string, 0, a.cap)
     a.mu.Unlock()
 }
 
