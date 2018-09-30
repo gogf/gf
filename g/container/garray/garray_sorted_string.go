@@ -24,7 +24,7 @@ type SortedStringArray struct {
 
 func NewSortedStringArray(size int, cap int, safe...bool) *SortedStringArray {
     a := &SortedStringArray {
-        mu : rwmutex.New(safe...),
+        mu          : rwmutex.New(safe...),
         unique      : gtype.NewBool(),
         compareFunc : func(v1, v2 string) int {
             return strings.Compare(v1, v2)
@@ -49,9 +49,9 @@ func (a *SortedStringArray) Add(values...string) {
                 return
             }
             a.mu.Lock()
-            defer a.mu.Unlock()
             if index < 0 {
                 a.array = append(a.array, value)
+                a.mu.Unlock()
                 return
             }
             // 加到指定索引后面
@@ -61,6 +61,7 @@ func (a *SortedStringArray) Add(values...string) {
             rear   := append([]string{}, a.array[index : ]...)
             a.array = append(a.array[0 : index], value)
             a.array = append(a.array, rear...)
+            a.mu.Unlock()
         }
     }
 }
