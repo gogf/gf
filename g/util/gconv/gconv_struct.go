@@ -13,7 +13,6 @@ import (
     "strings"
     "errors"
     "fmt"
-    "os"
 )
 
 // 将params键值对参数映射到对应的struct对象属性上，第三个参数mapping为非必需，表示自定义名称与属性名称的映射关系。
@@ -40,7 +39,12 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
     }
     // struct的反射对象
-    elem := reflect.ValueOf(objPointer).Elem()
+    elem := reflect.Value{}
+    if v, ok := objPointer.(reflect.Value); ok {
+        elem = v
+    } else {
+        elem = reflect.ValueOf(objPointer).Elem()
+    }
     // 如果给定的参数不是map类型，那么直接将参数值映射到第一个属性上
     if !isParamMap {
         if err := bindVarToStructByIndex(elem, 0, params); err != nil {
@@ -48,17 +52,7 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
         return nil
     }
-    // 标签映射关系map，如果有的话
-    tagmap := make(map[string]string)
-    fields := structs.Fields(objPointer)
-    // 将struct中定义的属性转换名称构建成tagmap
-    for _, field := range fields {
-        if tag := field.Tag("gconv"); tag != "" {
-            for _, v := range strings.Split(tag, ",") {
-                tagmap[strings.TrimSpace(v)] = field.Name()
-            }
-        }
-    }
+    // 已执行过转换的属性，只执行一次转换
     dmap := make(map[string]bool)
     // 首先按照传递的映射关系进行匹配
     if len(attrMapping) > 0 && len(attrMapping[0]) > 0 {
@@ -72,6 +66,8 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
     }
     // 其次匹配对象定义时绑定的属性名称
+    // 标签映射关系map，如果有的话
+    tagmap := getTagMapOfStruct(objPointer)
     for tagk, tagv := range tagmap {
         if _, ok := dmap[tagv]; ok {
             continue
@@ -99,6 +95,27 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     return nil
 }
 
+// 解析指针对象的tag
+func getTagMapOfStruct(objPointer interface{}) map[string]string {
+    tagmap := make(map[string]string)
+    // 反射类型判断
+    fields := ([]*structs.Field)(nil)
+    if v, ok := objPointer.(reflect.Value); ok {
+        fields = structs.Fields(v.Interface())
+    } else {
+        fields = structs.Fields(objPointer)
+    }
+    // 将struct中定义的属性转换名称构建成tagmap
+    for _, field := range fields {
+        if tag := field.Tag("gconv"); tag != "" {
+            for _, v := range strings.Split(tag, ",") {
+                tagmap[strings.TrimSpace(v)] = field.Name()
+            }
+        }
+    }
+    return tagmap
+}
+
 // 将参数值绑定到对象指定名称的属性上
 func bindVarToStruct(elem reflect.Value, name string, value interface{}) error {
     structFieldValue := elem.FieldByName(name)
@@ -114,31 +131,29 @@ func bindVarToStruct(elem reflect.Value, name string, value interface{}) error {
     defer func() {
         // 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
         if recover() != nil {
-            v  := structFieldValue.Interface()
-            //Struct(value, &v)
-            //fmt.Println(structs.Fields(v))
-            for _, field := range structs.Fields(v) {
-               fmt.Println(field.Name())
+            switch structFieldValue.Kind() {
+                case reflect.Struct:
+                    Struct(value, structFieldValue)
+                case reflect.Slice:
+                    a := reflect.Value{}
+                    v := reflect.ValueOf(value)
+                    if v.Kind() == reflect.Slice {
+                        a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
+                        for i := 0; i < v.Len(); i++ {
+                            n := reflect.New(structFieldValue.Type().Elem()).Elem()
+                            Struct(v.Index(i).Interface(), n)
+                            a.Index(i).Set(n)
+                        }
+                    } else {
+                        a = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
+                        n := reflect.New(structFieldValue.Type().Elem()).Elem()
+                        Struct(value, n)
+                        a.Index(0).Set(n)
+                    }
+                    structFieldValue.Set(a)
+                default:
+                    panic(errors.New(fmt.Sprintf(`cannot convert to type "%s"`, structFieldValue.Type().String())))
             }
-            fmt.Println(reflect.ValueOf(v).Kind())
-            fmt.Println(reflect.ValueOf(&v).Elem().Kind())
-            fmt.Println(v)
-            fmt.Println(reflect.TypeOf(v))
-            os.Exit(1)
-            //v := reflect.New(structFieldValue.Type()).Interface()
-            //if b, err := json.Marshal(value); err == nil {
-            //    if err := json.Unmarshal(b, &v); err == nil {
-            //
-            //    } else {
-            //        fmt.Println(err)
-            //    }
-            //} else {
-            //    fmt.Println(err)
-            //}
-            //fmt.Println(v)
-            //fmt.Println(reflect.TypeOf(v))
-            //structFieldValue.Set(reflect.ValueOf(v).Elem())
-            //os.Exit(1)
         }
     }()
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
@@ -157,6 +172,14 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) er
         return errors.New(fmt.Sprintf("struct attribute cannot be set at index %d", index))
     }
     // 必须将value转换为struct属性的数据类型，这里必须用到gconv包
+    defer func() {
+        // 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
+        if recover() != nil {
+            if structFieldValue.Kind() == reflect.Struct {
+                Struct(value, structFieldValue)
+            }
+        }
+    }()
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
     return nil
 }
