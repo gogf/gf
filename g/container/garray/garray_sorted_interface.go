@@ -15,17 +15,16 @@ import (
 type SortedArray struct {
     mu          *rwmutex.RWMutex             // 互斥锁
     cap         int                          // 初始化设置的数组容量
-    size        int                          // 初始化设置的数组大小
     array       []interface{}                // 底层数组
     unique      *gtype.Bool                  // 是否要求不能重复
     compareFunc func(v1, v2 interface{}) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
-func NewSortedArray(size int, cap int, compareFunc func(v1, v2 interface{}) int, safe...bool) *SortedArray {
+func NewSortedArray(cap int, compareFunc func(v1, v2 interface{}) int, safe...bool) *SortedArray {
     return &SortedArray{
         mu          : rwmutex.New(safe...),
         unique      : gtype.NewBool(),
-        array       : make([]interface{}, size, cap),
+        array       : make([]interface{}, 0, cap),
         compareFunc : compareFunc,
     }
 }
@@ -152,11 +151,7 @@ func (a *SortedArray) doUnique() {
 // 清空数据数组
 func (a *SortedArray) Clear() {
     a.mu.Lock()
-    if a.cap > 0 {
-        a.array = make([]interface{}, a.size, a.cap)
-    } else {
-        a.array = make([]interface{}, a.size)
-    }
+    a.array = make([]interface{}, 0, a.cap)
     a.mu.Unlock()
 }
 
