@@ -57,9 +57,9 @@ func (a *SortedIntArray) Add(values...int) {
             return
         }
         a.mu.Lock()
-        defer a.mu.Unlock()
         if index < 0 {
             a.array = append(a.array, value)
+            a.mu.Unlock()
             return
         }
         // 加到指定索引后面
@@ -69,6 +69,7 @@ func (a *SortedIntArray) Add(values...int) {
         rear   := append([]int{}, a.array[index : ]...)
         a.array = append(a.array[0 : index], value)
         a.array = append(a.array, rear...)
+        a.mu.Unlock()
     }
 }
 

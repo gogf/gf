@@ -41,9 +41,9 @@ func (a *SortedArray) Add(values...interface{}) {
             return
         }
         a.mu.Lock()
-        defer a.mu.Unlock()
         if index < 0 {
             a.array = append(a.array, value)
+            a.mu.Unlock()
             return
         }
         // 加到指定索引后面
@@ -53,6 +53,7 @@ func (a *SortedArray) Add(values...interface{}) {
         rear   := append([]interface{}{}, a.array[index : ]...)
         a.array = append(a.array[0 : index], value)
         a.array = append(a.array, rear...)
+        a.mu.Unlock()
     }
 }
 
