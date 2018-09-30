@@ -15,8 +15,8 @@ import (
     "strings"
 )
 
-// 将变量i转换为字符串指定的类型t
-func Convert(i interface{}, t string, params...interface{}) interface{} {
+// 将变量i转换为字符串指定的类型t，非必须参数extraParams泳衣额外的参数传递
+func Convert(i interface{}, t string, extraParams...interface{}) interface{} {
     switch t {
         case "int":             return Int(i)
         case "int8":            return Int8(i)
@@ -36,8 +36,8 @@ func Convert(i interface{}, t string, params...interface{}) interface{} {
         case "[]int":           return Ints(i)
         case "[]string":        return Strings(i)
         case "time.Time":
-            if len(params) > 0 {
-                return Time(i, String(params[0]))
+            if len(extraParams) > 0 {
+                return Time(i, String(extraParams[0]))
             }
             return Time(i)
 
