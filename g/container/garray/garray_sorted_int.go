@@ -54,13 +54,13 @@ func (a *SortedIntArray) Add(values...int) {
     for _, value := range values {
         index, cmp := a.Search(value)
         if a.unique.Val() && cmp == 0 {
-            return
+            continue
         }
         a.mu.Lock()
         if index < 0 {
             a.array = append(a.array, value)
             a.mu.Unlock()
-            return
+            continue
         }
         // 加到指定索引后面
         if cmp > 0 {
