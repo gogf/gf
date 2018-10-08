@@ -279,6 +279,11 @@ func (j *Json) GetFloat64(pattern string) float64 {
     return gconv.Float64(j.Get(pattern))
 }
 
+// 将指定变量转换为struct对象(对象属性赋值)
+func (j *Json) GetToStruct(pattern string, objPointer interface{}) error {
+    return gconv.Struct(j.Get(pattern), objPointer)
+}
+
 // 动态设置层级变量
 func (j *Json) Set(pattern string, value interface{}) error {
     return j.setValue(pattern, value, false)
@@ -685,7 +690,7 @@ func (j *Json) ToToml() ([]byte, error) {
 func (j *Json) ToStruct(o interface{}) error {
     j.mu.RLock()
     defer j.mu.RUnlock()
-    return gconv.Struct(j.ToMap(), o)
+    return gconv.Struct(*(j.p), o)
 }
 
 // 打印Json对象

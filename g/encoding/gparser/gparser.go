@@ -146,6 +146,11 @@ func (p *Parser) GetFloat64(pattern string) float64 {
     return p.json.GetFloat64(pattern)
 }
 
+// 将指定变量转换为struct对象(对象属性赋值)
+func (p *Parser) GetToStruct(pattern string, objPointer interface{}) error {
+    return p.json.GetToStruct(pattern, objPointer)
+}
+
 // 根据pattern查找并设置数据
 // 注意：写入的时候"."符号只能表示层级，不能使用带"."符号的键名
 func (p *Parser) Set(pattern string, value interface{}) error {
