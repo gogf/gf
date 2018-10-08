@@ -21,6 +21,9 @@ import (
 // 2、struct对象的**公开属性(首字母大写)**才能被映射赋值；
 // 3、map中的键名可以为小写，映射转换时会自动将键名首字母转为大写做匹配映射，如果无法匹配则忽略；
 func Struct(params interface{}, objPointer interface{}, attrMapping...map[string]string) error {
+    if params == nil {
+        return nil
+    }
     isParamMap := true
     paramsMap  := (map[string]interface{})(nil)
     // 先将参数转为 map[string]interface{} 类型

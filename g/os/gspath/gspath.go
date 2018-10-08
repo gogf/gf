@@ -47,10 +47,10 @@ func (sp *SPath) Set(path string) error {
         sp.paths = []string{r}
         sp.mu.Unlock()
         sp.cache.Clear()
-        glog.Debug("gspath.SetPath: ", r)
+        glog.Debug("gspath.SetPath:", r)
         return nil
     }
-    glog.Debug("gspath.SetPath failed: ", path)
+    glog.Debug("gspath.SetPath failed:", path)
     return errors.New("invalid path:" + path)
 }
 
@@ -68,10 +68,10 @@ func (sp *SPath) Add(path string) error {
         sp.mu.Lock()
         sp.paths = append(sp.paths, r)
         sp.mu.Unlock()
-        glog.Debug("gspath.Add: ", r)
+        glog.Debug("gspath.Add:", r)
         return nil
     }
-    glog.Debug("gspath.Add failed: ", path)
+    glog.Debug("gspath.Add failed:", path)
     return errors.New("invalid path:" + path)
 }
 

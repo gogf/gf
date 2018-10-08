@@ -14,6 +14,8 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gtype"
+    "errors"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 const (
@@ -56,9 +58,11 @@ func (c *Config) filePath(file...string) string {
 // 设置配置管理器的配置文件存放目录绝对路径
 func (c *Config) SetPath(path string) error {
     if err := c.paths.Set(path); err != nil {
+        glog.Debug("gcfg.SetPath failed:", path, err)
         return err
     }
     c.jsons.Clear()
+    glog.Debug("gcfg.SetPath:", path)
     return nil
 }
 
@@ -72,8 +76,10 @@ func (c *Config) SetViolenceCheck(check bool) {
 // 添加配置管理器的配置文件搜索路径
 func (c *Config) AddPath(path string) error {
     if err := c.paths.Add(path); err != nil {
+        glog.Debug("gcfg.AddPath failed:", path, err)
         return err
     }
+    glog.Debug("gcfg.AddPath:", path)
     return nil
 }
 
@@ -242,6 +248,13 @@ func (c *Config) GetUint64(pattern string, file...string)  uint64 {
         return j.GetUint64(pattern)
     }
     return 0
+}
+
+func (c *Config) GetToStruct(pattern string, objPointer interface{}, file...string) error {
+    if j := c.getJson(file...); j != nil {
+        return j.GetToStruct(pattern, objPointer)
+    }
+    return errors.New("config file not found")
 }
 
 // 清空当前配置文件缓存，强制重新从磁盘文件读取配置文件内容

@@ -13,7 +13,7 @@ func main() {
     }
 
     user   := new(User)
-    scores := []int{99, 100, 60, 140}
+    scores := []interface{}{99, 100, 60, 140}
 
     // 通过map映射转换
     if err := gconv.Struct(g.Map{"Scores" : scores}, user); err != nil {
@@ -22,7 +22,7 @@ func main() {
         g.Dump(user)
     }
 
-    // 通过变量映射转换
+    // 通过变量映射转换，直接slice赋值
     if err := gconv.Struct(scores, user); err != nil {
         fmt.Println(err)
     } else {

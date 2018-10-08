@@ -17,13 +17,13 @@ func main() {
 
     user   := new(User)
     scores := map[string]interface{}{
-        "Scores" :
-            map[string]interface{}{
-                "Name"   : "john",
-                "Result" : 100,
-            },
+        "Scores" : map[string]interface{}{
+            "Name"   : "john",
+            "Result" : 100,
+        },
     }
 
+    // 嵌套struct转换
     if err := gconv.Struct(scores, user); err != nil {
         fmt.Println(err)
     } else {

@@ -23,6 +23,7 @@ func main() {
         },
     }
 
+    // 嵌套struct转换，属性为slice类型，数值为map类型
     if err := gconv.Struct(scores, user); err != nil {
         fmt.Println(err)
     } else {
