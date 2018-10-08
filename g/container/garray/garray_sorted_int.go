@@ -15,7 +15,6 @@ import (
 type SortedIntArray struct {
     mu          *rwmutex.RWMutex     // 互斥锁
     cap         int                  // 初始化设置的数组容量
-    size        int                  // 初始化设置的数组大小
     array       []int                // 底层数组
     unique      *gtype.Bool          // 是否要求不能重复
     compareFunc func(v1, v2 int) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
@@ -23,8 +22,9 @@ type SortedIntArray struct {
 
 // 创建一个排序的int数组
 func NewSortedIntArray(size int, cap int, safe...bool) *SortedIntArray {
-    a := &SortedIntArray {
+    return &SortedIntArray {
         mu          : rwmutex.New(safe...),
+        array       : make([]int, 0, cap),
         unique      : gtype.NewBool(),
         compareFunc : func(v1, v2 int) int {
             if v1 < v2 {
@@ -36,14 +36,6 @@ func NewSortedIntArray(size int, cap int, safe...bool) *SortedIntArray {
             return 0
         },
     }
-    a.size = size
-    if cap > 0 {
-        a.cap   = cap
-        a.array = make([]int, size, cap)
-    } else {
-        a.array = make([]int, size)
-    }
-    return a
 }
 
 // 添加加数据项
@@ -54,13 +46,13 @@ func (a *SortedIntArray) Add(values...int) {
     for _, value := range values {
         index, cmp := a.Search(value)
         if a.unique.Val() && cmp == 0 {
-            return
+            continue
         }
         a.mu.Lock()
-        defer a.mu.Unlock()
         if index < 0 {
             a.array = append(a.array, value)
-            return
+            a.mu.Unlock()
+            continue
         }
         // 加到指定索引后面
         if cmp > 0 {
@@ -69,6 +61,7 @@ func (a *SortedIntArray) Add(values...int) {
         rear   := append([]int{}, a.array[index : ]...)
         a.array = append(a.array[0 : index], value)
         a.array = append(a.array, rear...)
+        a.mu.Unlock()
     }
 }
 
@@ -167,11 +160,7 @@ func (a *SortedIntArray) doUnique() {
 // 清空数据数组
 func (a *SortedIntArray) Clear() {
     a.mu.Lock()
-    if a.cap > 0 {
-        a.array = make([]int, a.size, a.cap)
-    } else {
-        a.array = make([]int, a.size)
-    }
+    a.array = make([]int, 0, a.cap)
     a.mu.Unlock()
 }
 
