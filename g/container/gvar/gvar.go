@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 动态变量.
+// 通用动态变量(支持并发安全).
 package gvar
 
 import (
@@ -46,6 +46,10 @@ func (v *Var) Val() interface{} {
     }
 }
 
+func (v *Var) Interface() interface{} {
+    return v.Val()
+}
+
 func (v *Var) IsNil()          bool            { return v.Val() == nil }
 func (v *Var) Bytes()          []byte          { return gconv.Bytes(v.Val()) }
 func (v *Var) String()         string          { return gconv.String(v.Val()) }
@@ -66,7 +70,10 @@ func (v *Var) Uint64()         uint64          { return gconv.Uint64(v.Val()) }
 func (v *Var) Float32()        float32         { return gconv.Float32(v.Val()) }
 func (v *Var) Float64()        float64         { return gconv.Float64(v.Val()) }
 
+func (v *Var) Ints()           []int           { return gconv.Ints(v.Val()) }
+func (v *Var) Floats()         []float64       { return gconv.Floats(v.Val()) }
 func (v *Var) Strings()        []string        { return gconv.Strings(v.Val()) }
+func (v *Var) Interfaces()     []interface{}   { return gconv.Interfaces(v.Val()) }
 
 func (v *Var) Time(format...string) time.Time       { return gconv.Time(v.Val(), format...) }
 func (v *Var) TimeDuration()        time.Duration   { return gconv.TimeDuration(v.Val()) }

@@ -76,6 +76,17 @@ func (r *Request) GetPostInt(key string, def ... int) int {
     return 0
 }
 
+func (r *Request) GetPostInts(key string, def ... []int) []int {
+    value := r.GetPost(key)
+    if value != nil {
+        return gconv.Ints(value)
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return nil
+}
+
 func (r *Request) GetPostUint(key string, def ... uint) uint {
     value := r.GetPostString(key)
     if value != "" {
@@ -109,8 +120,34 @@ func (r *Request) GetPostFloat64(key string, def ... float64) float64 {
     return 0
 }
 
+func (r *Request) GetPostFloats(key string, def ... []float64) []float64 {
+    value := r.GetPost(key)
+    if value != nil {
+        return gconv.Floats(value)
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return nil
+}
+
 func (r *Request) GetPostArray(key string, def ... []string) []string {
     return r.GetPost(key, def...)
+}
+
+func (r *Request) GetPostStrings(key string, def ... []string) []string {
+    return r.GetPost(key, def...)
+}
+
+func (r *Request) GetPostInterfaces(key string, def ... []interface{}) []interface{} {
+    value := r.GetPost(key)
+    if value != nil {
+        return gconv.Interfaces(value)
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return nil
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值

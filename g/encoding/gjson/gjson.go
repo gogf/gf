@@ -218,6 +218,10 @@ func (j *Json) GetStrings(pattern string) []string {
     return gconv.Strings(j.Get(pattern))
 }
 
+func (j *Json) GetInterfaces(pattern string) []interface{} {
+    return gconv.Interfaces(j.Get(pattern))
+}
+
 func (j *Json) GetTime(pattern string, format ... string) time.Time {
     return gconv.Time(j.Get(pattern), format...)
 }
@@ -251,6 +255,10 @@ func (j *Json) GetInt64(pattern string) int64 {
     return gconv.Int64(j.Get(pattern))
 }
 
+func (j *Json) GetInts(pattern string) []int {
+    return gconv.Ints(j.Get(pattern))
+}
+
 func (j *Json) GetUint(pattern string) uint {
     return gconv.Uint(j.Get(pattern))
 }
@@ -277,6 +285,10 @@ func (j *Json) GetFloat32(pattern string) float32 {
 
 func (j *Json) GetFloat64(pattern string) float64 {
     return gconv.Float64(j.Get(pattern))
+}
+
+func (j *Json) GetFloats(pattern string) []float64 {
+    return gconv.Floats(j.Get(pattern))
 }
 
 // 将指定变量转换为struct对象(对象属性赋值)

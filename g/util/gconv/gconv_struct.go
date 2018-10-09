@@ -134,29 +134,7 @@ func bindVarToStruct(elem reflect.Value, name string, value interface{}) error {
     defer func() {
         // 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
         if recover() != nil {
-            switch structFieldValue.Kind() {
-                case reflect.Struct:
-                    Struct(value, structFieldValue)
-                case reflect.Slice:
-                    a := reflect.Value{}
-                    v := reflect.ValueOf(value)
-                    if v.Kind() == reflect.Slice {
-                        a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
-                        for i := 0; i < v.Len(); i++ {
-                            n := reflect.New(structFieldValue.Type().Elem()).Elem()
-                            Struct(v.Index(i).Interface(), n)
-                            a.Index(i).Set(n)
-                        }
-                    } else {
-                        a = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
-                        n := reflect.New(structFieldValue.Type().Elem()).Elem()
-                        Struct(value, n)
-                        a.Index(0).Set(n)
-                    }
-                    structFieldValue.Set(a)
-                default:
-                    panic(errors.New(fmt.Sprintf(`cannot convert to type "%s"`, structFieldValue.Type().String())))
-            }
+            bindVarToStructIfDefaultConvertionFailed(structFieldValue, value)
         }
     }()
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
@@ -178,12 +156,37 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) er
     defer func() {
         // 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
         if recover() != nil {
-            if structFieldValue.Kind() == reflect.Struct {
-                Struct(value, structFieldValue)
-            }
+            bindVarToStructIfDefaultConvertionFailed(structFieldValue, value)
         }
     }()
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
     return nil
+}
+
+// 当默认的基本类型转换失败时，通过recover判断后执行反射类型转换
+func bindVarToStructIfDefaultConvertionFailed(structFieldValue reflect.Value, value interface{}) {
+    switch structFieldValue.Kind() {
+        case reflect.Struct:
+            Struct(value, structFieldValue)
+        case reflect.Slice:
+            a := reflect.Value{}
+            v := reflect.ValueOf(value)
+            if v.Kind() == reflect.Slice {
+                a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
+                for i := 0; i < v.Len(); i++ {
+                    n := reflect.New(structFieldValue.Type().Elem()).Elem()
+                    Struct(v.Index(i).Interface(), n)
+                    a.Index(i).Set(n)
+                }
+            } else {
+                a = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
+                n := reflect.New(structFieldValue.Type().Elem()).Elem()
+                Struct(value, n)
+                a.Index(0).Set(n)
+            }
+            structFieldValue.Set(a)
+        default:
+            panic(errors.New(fmt.Sprintf(`cannot convert to type "%s"`, structFieldValue.Type().String())))
+    }
 }
 
