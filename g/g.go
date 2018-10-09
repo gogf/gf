@@ -7,6 +7,11 @@
 
 package g
 
+import "gitee.com/johng/gf/g/container/gvar"
+
+// 框架动态变量，可以用该类型替代interface{}类型
+type Var   = gvar.Var
+
 // 常用map数据结构(使用别名)
 type Map   = map[string]interface{}
 

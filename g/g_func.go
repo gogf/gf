@@ -10,6 +10,7 @@ import (
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/util/gutil"
     "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/container/gvar"
 )
 
 const (
@@ -21,6 +22,11 @@ const (
     LOG_LEVEL_ERRO = glog.LEVEL_ERRO
     LOG_LEVEL_CRIT = glog.LEVEL_CRIT
 )
+
+// 动态变量
+func NewVar(i interface{}, safe...bool) *Var {
+    return gvar.New(i, safe...)
+}
 
 // 阻塞等待HTTPServer执行完成(同一进程多HTTPServer情况下)
 func Wait() {

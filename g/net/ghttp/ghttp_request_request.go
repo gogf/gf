@@ -8,6 +8,7 @@ package ghttp
 
 import (
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/container/gvar"
 )
 
 // 获得router、post或者get提交的参数，如果有同名参数，那么按照router->get->post优先级进行覆盖
@@ -23,6 +24,17 @@ func (r *Request) GetRequest(key string, def ... []string) []string {
         return def[0]
     }
     return v
+}
+
+func (r *Request) GetRequestVar(key string, def ... interface{}) *gvar.Var {
+    value := r.GetRequest(key)
+    if value != nil {
+        return gvar.New(value)
+    }
+    if len(def) > 0 {
+        return gvar.New(def[0])
+    }
+    return nil
 }
 
 func (r *Request) GetRequestString(key string, def ... string) string {

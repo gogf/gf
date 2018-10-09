@@ -19,6 +19,7 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "time"
     "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/container/gvar"
 )
 
 const (
@@ -195,10 +196,9 @@ func (db *Db) GetAll(query string, args ...interface{}) (Result, error) {
         row := make(Record)
         // 注意col字段是一个[]byte类型(slice类型本身是一个指针)，多个记录循环时该变量指向的是同一个内存地址
         for i, col := range values {
-            k := columns[i]
             v := make([]byte, len(col))
             copy(v, col)
-            row[k] = v
+            row[columns[i]] = gvar.New(v)
         }
         records = append(records, row)
     }

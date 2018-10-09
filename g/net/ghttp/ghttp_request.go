@@ -15,6 +15,7 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "github.com/fatih/structs"
     "strings"
+    "gitee.com/johng/gf/g/container/gvar"
 )
 
 // 请求对象
@@ -77,6 +78,10 @@ func (r *Request) WebSocket() (*WebSocket, error) {
 // 这是常用方法的简化别名
 func (r *Request) Get(key string, def ... string) string {
     return r.GetRequestString(key, def...)
+}
+
+func (r *Request) GetVar(key string, def ... interface{}) *gvar.Var {
+    return r.GetRequestVar(key, def...)
 }
 
 // 获取原始请求输入字符串，注意：只能获取一次，读完就没了
