@@ -153,6 +153,13 @@ func (c *Config) GetStrings(pattern string, file...string) []string {
     return nil
 }
 
+func (c *Config) GetInterfaces(pattern string, file...string) []interface{} {
+    if j := c.getJson(file...); j != nil {
+        return j.GetInterfaces(pattern)
+    }
+    return nil
+}
+
 // 返回指定json中的bool
 func (c *Config) GetBool(pattern string, file...string) bool {
     if j := c.getJson(file...); j != nil {
@@ -175,6 +182,13 @@ func (c *Config) GetFloat64(pattern string, file...string) float64 {
         return j.GetFloat64(pattern)
     }
     return 0
+}
+
+func (c *Config) GetFloats(pattern string, file...string) []float64 {
+    if j := c.getJson(file...); j != nil {
+        return j.GetFloats(pattern)
+    }
+    return nil
 }
 
 // 返回指定json中的float64->int
@@ -212,6 +226,13 @@ func (c *Config) GetInt64(pattern string, file...string)  int64 {
         return j.GetInt64(pattern)
     }
     return 0
+}
+
+func (c *Config) GetInts(pattern string, file...string) []int {
+    if j := c.getJson(file...); j != nil {
+        return j.GetInts(pattern)
+    }
+    return nil
 }
 
 // 返回指定json中的float64->uint

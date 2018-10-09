@@ -104,6 +104,10 @@ func (r *Request) GetInt(key string, def ... int) int {
     return r.GetRequestInt(key, def...)
 }
 
+func (r *Request) GetInts(key string, def ... []int) []int {
+    return r.GetRequestInts(key, def...)
+}
+
 func (r *Request) GetUint(key string, def ... uint) uint {
     return r.GetRequestUint(key, def...)
 }
@@ -116,8 +120,20 @@ func (r *Request) GetFloat64(key string, def ... float64) float64 {
     return r.GetRequestFloat64(key, def...)
 }
 
+func (r *Request) GetFloats(key string, def ... []float64) []float64 {
+    return r.GetRequestFloats(key, def...)
+}
+
 func (r *Request) GetArray(key string, def ... []string) []string {
     return r.GetRequestArray(key, def...)
+}
+
+func (r *Request) GetStrings(key string, def ... []string) []string {
+    return r.GetRequestStrings(key, def...)
+}
+
+func (r *Request) GetInterfaces(key string, def ... []interface{}) []interface{} {
+    return r.GetRequestInterfaces(key, def...)
 }
 
 func (r *Request) GetMap(def...map[string]string) map[string]string {

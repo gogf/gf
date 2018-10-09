@@ -85,6 +85,10 @@ func (p *Parser) GetStrings(pattern string) []string {
     return p.json.GetStrings(pattern)
 }
 
+func (p *Parser) GetInterfaces(pattern string) []interface{} {
+    return p.json.GetInterfaces(pattern)
+}
+
 func (p *Parser) GetTime(pattern string, format ... string) time.Time {
     return p.json.GetTime(pattern, format...)
 }
@@ -118,6 +122,10 @@ func (p *Parser) GetInt64(pattern string) int64 {
     return p.json.GetInt64(pattern)
 }
 
+func (p *Parser) GetInts(pattern string) []int {
+    return p.json.GetInts(pattern)
+}
+
 func (p *Parser) GetUint(pattern string) uint {
     return p.json.GetUint(pattern)
 }
@@ -144,6 +152,10 @@ func (p *Parser) GetFloat32(pattern string) float32 {
 
 func (p *Parser) GetFloat64(pattern string) float64 {
     return p.json.GetFloat64(pattern)
+}
+
+func (p *Parser) GetFloats(pattern string) []float64 {
+    return p.json.GetFloats(pattern)
 }
 
 // 将指定变量转换为struct对象(对象属性赋值)

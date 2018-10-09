@@ -75,6 +75,17 @@ func (r *Request) GetQueryInt(key string, def ... int) int {
     return 0
 }
 
+func (r *Request) GetQueryInts(key string, def ... []int) []int {
+    value := r.GetQuery(key)
+    if value != nil {
+        return gconv.Ints(value)
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return nil
+}
+
 func (r *Request) GetQueryUint(key string, def ... uint) uint {
     value := r.GetQueryString(key)
     if value != "" {
@@ -108,8 +119,34 @@ func (r *Request) GetQueryFloat64(key string, def ... float64) float64 {
     return 0
 }
 
+func (r *Request) GetQueryFloats(key string, def ... []float64) []float64 {
+    value := r.GetQuery(key)
+    if value != nil {
+        return gconv.Floats(value)
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return nil
+}
+
 func (r *Request) GetQueryArray(key string, def ... []string) []string {
     return r.GetQuery(key, def...)
+}
+
+func (r *Request) GetQueryStrings(key string, def ... []string) []string {
+    return r.GetQuery(key, def...)
+}
+
+func (r *Request) GetQueryInterfaces(key string, def ... []interface{}) []interface{} {
+    value := r.GetQuery(key)
+    if value != nil {
+        return gconv.Interfaces(value)
+    }
+    if len(def) > 0 {
+        return def[0]
+    }
+    return nil
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
