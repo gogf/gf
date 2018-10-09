@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// go test *.go -bench=".*"
+// go test *.go -bench=".*" -benchmem
 
 package gtype
 

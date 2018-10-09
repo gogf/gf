@@ -19,6 +19,7 @@ import (
 	"gitee.com/johng/gf/g/os/gcache"
 	"gitee.com/johng/gf/g/util/grand"
 	_ "github.com/go-sql-driver/mysql"
+	"gitee.com/johng/gf/g/container/gvar"
 )
 
 const (
@@ -108,7 +109,7 @@ type Sql struct {
 }
 
 // 返回数据表记录值
-type Value []byte
+type Value = *gvar.Var
 
 // 返回数据表记录Map
 type Record map[string]Value
