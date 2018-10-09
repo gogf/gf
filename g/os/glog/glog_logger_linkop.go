@@ -25,6 +25,22 @@ func (l *Logger) Cat(category string) *Logger {
     return logger
 }
 
+// 日志文件格式
+func (l *Logger) File(file string) *Logger {
+    logger := (*Logger)(nil)
+    if l.pr == nil {
+        logger = l.Clone()
+    } else {
+        logger = l
+    }
+    path := l.path.Val()
+    if path == "" {
+        path = gfile.Pwd()
+    }
+    logger.SetFile(file)
+    return logger
+}
+
 // 设置日志打印等级
 func (l *Logger) Level(level int) *Logger {
     logger := (*Logger)(nil)

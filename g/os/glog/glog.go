@@ -10,21 +10,8 @@
 package glog
 
 import (
-    "io"
-    "sync"
     "gitee.com/johng/gf/g/container/gtype"
 )
-
-type Logger struct {
-    mu           sync.RWMutex
-    pr           *Logger             // 父级Logger
-    io           io.Writer           // 日志内容写入的IO接口
-    path         *gtype.String       // 日志写入的目录路径
-    level        *gtype.Int          // 日志输出等级
-    btSkip       *gtype.Int          // 错误产生时的backtrace回调信息skip条数
-    btEnabled    *gtype.Bool         // 是否当打印错误时同时开启backtrace打印
-    alsoStdPrint *gtype.Bool         // 控制台打印开关，当输出到文件/自定义输出时也同时打印到终端
-}
 
 const (
     LEVEL_ALL  = LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
@@ -47,6 +34,11 @@ var (
 // 日志日志目录绝对路径
 func SetPath(path string) {
     logger.SetPath(path)
+}
+
+// 日志文件名称
+func SetFile(file string) {
+    logger.SetFile(file)
 }
 
 // 设置全局的日志记录等级
@@ -96,6 +88,11 @@ func GetBacktrace(skip...int) string {
 // 设置下一次输出的分类，支持多级分类设置
 func Cat(category string) *Logger {
     return logger.Cat(category)
+}
+
+// 设置日志输出文件名称格式
+func File(file string) *Logger {
+    return logger.File(file)
 }
 
 // 设置日志打印等级
