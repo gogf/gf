@@ -19,9 +19,24 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gmlock"
     "gitee.com/johng/gf/g/os/gfpool"
+    "sync"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
+type Logger struct {
+    mu           sync.RWMutex
+    pr           *Logger             // 父级Logger
+    io           io.Writer           // 日志内容写入的IO接口
+    path         *gtype.String       // 日志写入的目录路径
+    file         *gtype.String       // 日志文件名称格式
+    level        *gtype.Int          // 日志输出等级
+    btSkip       *gtype.Int          // 错误产生时的backtrace回调信息skip条数
+    btEnabled    *gtype.Bool         // 是否当打印错误时同时开启backtrace打印
+    alsoStdPrint *gtype.Bool         // 控制台打印开关，当输出到文件/自定义输出时也同时打印到终端
+}
+
 const (
+    gDEFAULT_FILE_FORMAT     = `{Y-m-d}.log`
     gDEFAULT_FILE_POOL_FLAGS = os.O_CREATE|os.O_WRONLY|os.O_APPEND
 )
 
@@ -40,6 +55,7 @@ func New() *Logger {
     return &Logger {
         io           : nil,
         path         : gtype.NewString(),
+        file         : gtype.NewString(gDEFAULT_FILE_FORMAT),
         level        : gtype.NewInt(defaultLevel.Val()),
         btSkip       : gtype.NewInt(),
         btEnabled    : gtype.NewBool(true),
@@ -53,6 +69,7 @@ func (l *Logger) Clone() *Logger {
         pr           : l,
         io           : l.GetIO(),
         path         : l.path.Clone(),
+        file         : l.path.Clone(),
         level        : l.level.Clone(),
         btSkip       : l.btSkip.Clone(),
         btEnabled    : l.btEnabled.Clone(),
@@ -106,7 +123,11 @@ func (l *Logger) GetIO() io.Writer {
 // 获取默认的文件IO
 func (l *Logger) getFilePointer() *gfpool.File {
     if path := l.path.Val(); path != "" {
-        fpath := path + gfile.Separator + time.Now().Format("2006-01-02.log")
+        // 文件名称中使用"{}"包含的内容使用gtime格式化
+        file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.file.Val(), func(s string) string {
+            return gtime.Now().Format(strings.Trim(s, "{}"))
+        })
+        fpath   := path + gfile.Separator + file
         if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666); err == nil {
             return fp
         } else {
@@ -127,6 +148,11 @@ func (l *Logger) SetPath(path string) error {
     }
     l.path.Set(strings.TrimRight(path, gfile.Separator))
     return nil
+}
+
+// 日志文件名称
+func (l *Logger) SetFile(file string) {
+    l.file.Set(file)
 }
 
 // 设置写日志时开启or关闭控制台打印，默认是关闭的
