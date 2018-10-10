@@ -75,7 +75,7 @@ func (db *Db) printSql(v *Sql) {
     )
     if v.Error != nil {
         s += "\nError: " + v.Error.Error()
-        glog.Backtrace(true, 1).Error(s)
+        glog.Backtrace(true).Error(s)
     } else {
         glog.Debug(s)
     }

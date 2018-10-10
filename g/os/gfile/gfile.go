@@ -339,19 +339,17 @@ func doScanDir(path string, pattern string, recursive ... bool) ([]string, error
         return nil, err
     }
     // 是否递归遍历
-    if len(recursive) > 0 && recursive[0] && len(names) > 0 {
-        for _, name := range names {
-            path := fmt.Sprintf("%s%s%s", path, Separator, name)
-            if IsDir(path) {
-                array, _ := doScanDir(path, pattern, true)
-                if len(array) > 0 {
-                    list = append(list, array...)
-                }
+    for _, name := range names {
+        path := fmt.Sprintf("%s%s%s", path, Separator, name)
+        if IsDir(path) && len(recursive) > 0 && recursive[0] {
+            array, _ := doScanDir(path, pattern, true)
+            if len(array) > 0 {
+                list = append(list, array...)
             }
-            // 满足pattern才加入结果列表
-            if match, err := filepath.Match(pattern, name); err == nil && match {
-                list = append(list, path)
-            }
+        }
+        // 满足pattern才加入结果列表
+        if match, err := filepath.Match(pattern, name); err == nil && match {
+            list = append(list, path)
         }
     }
     return list, nil

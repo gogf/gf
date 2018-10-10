@@ -4,7 +4,7 @@ import (
     "gitee.com/johng/gf/g/os/glog"
 )
 
-// 设置日志等级
+// 设置日志等级，过滤掉Info日志信息
 func main() {
     l := glog.New()
     l.Info("info1")

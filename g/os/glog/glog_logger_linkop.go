@@ -54,7 +54,7 @@ func (l *Logger) Level(level int) *Logger {
 }
 
 // 设置文件调用回溯信息
-func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
+func (l *Logger) Backtrace(enabled bool) *Logger {
     logger := (*Logger)(nil)
     if l.pr == nil {
         logger = l.Clone()
@@ -62,9 +62,6 @@ func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
         logger = l
     }
     logger.SetBacktrace(enabled)
-    if len(skip) > 0 {
-        logger.SetBacktraceSkip(skip[0])
-    }
     return logger
 }
 

@@ -68,21 +68,13 @@ func GetPath() string {
 }
 
 // 打印文件调用回溯信息
-func PrintBacktrace(skip...int) {
-    customSkip := 1
-    if len(skip) > 0 {
-        customSkip += skip[0]
-    }
-    logger.PrintBacktrace(customSkip)
+func PrintBacktrace() {
+    logger.PrintBacktrace()
 }
 
 // 获取文件调用回溯信息
-func GetBacktrace(skip...int) string {
-    customSkip := 1
-    if len(skip) > 0 {
-        customSkip += skip[0]
-    }
-    return logger.GetBacktrace(customSkip)
+func GetBacktrace() string {
+    return logger.GetBacktrace()
 }
 
 // 设置下一次输出的分类，支持多级分类设置
@@ -101,8 +93,8 @@ func Level(level int) *Logger {
 }
 
 // 设置文件调用回溯信息
-func Backtrace(enabled bool, skip...int) *Logger {
-    return logger.Backtrace(enabled, skip...)
+func Backtrace(enabled bool) *Logger {
+    return logger.Backtrace(enabled)
 }
 
 // 是否允许在设置输出文件时同时也输出到终端
