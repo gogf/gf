@@ -19,6 +19,8 @@ import (
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gcfg"
     "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/os/glog"
+    "fmt"
 )
 const (
     gIS_DATABASE_CONFIG_CACHED = "gf.core.component.database.cached"
@@ -55,10 +57,11 @@ func Config() *gcfg.Config {
 func Database(name...string) *gdb.Db {
     config := gins.Config()
     if config == nil {
+        glog.Error("Config component init failed")
         return nil
     }
     // 数据库配置是否已经设置
-    if gcache.Get(gIS_DATABASE_CONFIG_CACHED) == nil {
+    gcache.GetOrSetFuncLock(gIS_DATABASE_CONFIG_CACHED, func() interface{} {
         if m := config.GetMap("database"); m != nil {
             c := gdb.Config{}
             for group, v := range m {
@@ -109,16 +112,20 @@ func Database(name...string) *gdb.Db {
                 c[group] = cg
             }
             gdb.SetConfig(c)
-            gcache.Set(gIS_DATABASE_CONFIG_CACHED, struct{}{}, 0)
             // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空数据库配置缓存
             gfsnotify.Add(Config().GetFilePath(), func(event *gfsnotify.Event) {
                 gcache.Remove(gIS_DATABASE_CONFIG_CACHED)
             })
+            return struct{}{}
+        } else {
+            glog.Error(fmt.Sprintf(`incomplete configuration for database: "database" node not found in config file "%s"`, config.GetFilePath()))
         }
-    }
+        return nil
+    }, 0)
     if db, err := gdb.New(name...); err == nil {
         return db
     } else {
+        glog.Error(err)
         return nil
     }
 }

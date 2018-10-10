@@ -64,17 +64,17 @@ func SetStdPrint(open bool) {
 
 // 获取日志目录绝对路径
 func GetPath() string {
-    return logger.path.Val()
+    return logger.GetPath()
 }
 
 // 打印文件调用回溯信息
-func PrintBacktrace() {
-    logger.PrintBacktrace()
+func PrintBacktrace(skip...int) {
+    logger.PrintBacktrace(skip...)
 }
 
 // 获取文件调用回溯信息
-func GetBacktrace() string {
-    return logger.GetBacktrace()
+func GetBacktrace(skip...int) string {
+    return logger.GetBacktrace(skip...)
 }
 
 // 设置下一次输出的分类，支持多级分类设置
@@ -93,8 +93,8 @@ func Level(level int) *Logger {
 }
 
 // 设置文件调用回溯信息
-func Backtrace(enabled bool) *Logger {
-    return logger.Backtrace(enabled)
+func Backtrace(enabled bool, skip...int) *Logger {
+    return logger.Backtrace(enabled, skip...)
 }
 
 // 是否允许在设置输出文件时同时也输出到终端
