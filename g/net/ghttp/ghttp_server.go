@@ -175,6 +175,7 @@ func GetServer(name...interface{}) (*Server) {
         closeQueue       : gqueue.New(),
         logger           : glog.New(),
     }
+    // 日志的标准输出默认关闭，但是错误信息会特殊处理
     s.logger.SetStdPrint(false)
     for _, v := range strings.Split(gHTTP_METHODS, ",") {
         s.methodsMap[v] = struct{}{}
