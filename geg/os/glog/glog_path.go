@@ -6,11 +6,12 @@ import (
     "gitee.com/johng/gf/g"
 )
 
+// 设置日志输出路径
 func main() {
-    path := "/tmp/glog-cat"
+    path := "/tmp/glog"
     glog.SetPath(path)
-    glog.StdPrint(false).Cat("cat1").Cat("cat2").Println("test")
-    list, err := gfile.ScanDir(path, "*", true)
+    glog.Println("日志内容")
+    list, err := gfile.ScanDir(path, "*")
     g.Dump(err)
     g.Dump(list)
 }

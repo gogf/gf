@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 通用动态变量(支持并发安全).
+// 通用动态变量.
 package gvar
 
 import (

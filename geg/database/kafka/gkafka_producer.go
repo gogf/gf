@@ -4,7 +4,7 @@ import (
     "gitee.com/johng/gf/g/database/gkafka"
     "fmt"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/gconv"
+    "time"
 )
 
 // 创建kafka生产客户端
@@ -19,17 +19,10 @@ func newKafkaClientProducer(topic string) *gkafka.Client {
 func main () {
     client := newKafkaClientProducer("test")
     defer client.Close()
-
-    for i := 1; i < 10; i++ {
-        if err := client.SyncSend(&gkafka.Message{Value: []byte(gconv.String(i))}); err != nil {
+    for {
+        if err := client.SyncSend(&gkafka.Message{Value: []byte(gtime.Now().String())}); err != nil {
             fmt.Println(err)
         }
+        time.Sleep(time.Second)
     }
-
-    if err := client.SyncSend(&gkafka.Message{Value: []byte(gtime.Now().String())}); err != nil {
-        fmt.Println(err)
-    }
-
-
-    fmt.Println("done")
 }

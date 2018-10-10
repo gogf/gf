@@ -30,7 +30,6 @@ type Logger struct {
     path         *gtype.String       // 日志写入的目录路径
     file         *gtype.String       // 日志文件名称格式
     level        *gtype.Int          // 日志输出等级
-    btSkip       *gtype.Int          // 错误产生时的backtrace回调信息skip条数
     btEnabled    *gtype.Bool         // 是否当打印错误时同时开启backtrace打印
     alsoStdPrint *gtype.Bool         // 控制台打印开关，当输出到文件/自定义输出时也同时打印到终端
 }
@@ -57,7 +56,6 @@ func New() *Logger {
         path         : gtype.NewString(),
         file         : gtype.NewString(gDEFAULT_FILE_FORMAT),
         level        : gtype.NewInt(defaultLevel.Val()),
-        btSkip       : gtype.NewInt(),
         btEnabled    : gtype.NewBool(true),
         alsoStdPrint : gtype.NewBool(true),
     }
@@ -69,9 +67,8 @@ func (l *Logger) Clone() *Logger {
         pr           : l,
         io           : l.GetIO(),
         path         : l.path.Clone(),
-        file         : l.path.Clone(),
+        file         : l.file.Clone(),
         level        : l.level.Clone(),
-        btSkip       : l.btSkip.Clone(),
         btEnabled    : l.btEnabled.Clone(),
         alsoStdPrint : l.alsoStdPrint.Clone(),
     }
@@ -98,11 +95,6 @@ func (l *Logger) SetDebug(debug bool) {
 
 func (l *Logger) SetBacktrace(enabled bool) {
     l.btEnabled.Set(enabled)
-}
-
-// 设置BacktraceSkip
-func (l *Logger) SetBacktraceSkip(skip int) {
-    l.btSkip.Set(skip)
 }
 
 // 可自定义IO接口，IO可以是文件输出、标准输出、网络输出
@@ -199,35 +191,30 @@ func (l *Logger) stdPrint(s string) {
 func (l *Logger) errPrint(s string) {
     // 记录调用回溯信息
     if l.btEnabled.Val() {
-        backtrace := "Backtrace:" + ln + l.GetBacktrace()
-        if s[len(s) - 1] == byte('\n') {
-            s = s + backtrace + ln
-        } else {
-            s = s + ln + backtrace + ln
+        tracestr := l.GetBacktrace()
+        if tracestr != "" {
+            backtrace := "Backtrace:" + ln + tracestr
+            if s[len(s) - 1] == byte('\n') {
+                s = s + backtrace + ln
+            } else {
+                s = s + ln + backtrace + ln
+            }
         }
     }
     l.print(os.Stderr, s)
 }
 
-// 直接打印回溯信息，参数skip表示调用端往上多少级开始回溯
-func (l *Logger) PrintBacktrace(skip...int) {
-    customSkip := 1
-    if len(skip) > 0 {
-        customSkip += skip[0]
-    }
-    l.Println(l.GetBacktrace(customSkip))
+// 直接打印回溯信息
+func (l *Logger) PrintBacktrace() {
+    l.Println(l.GetBacktrace())
 }
 
-// 获取文件调用回溯字符串，参数skip表示调用端往上多少级开始回溯
-func (l *Logger) GetBacktrace(skip...int) string {
-    customSkip := 0
-    if len(skip) > 0 {
-        customSkip += skip[0]
-    }
+// 获取文件调用回溯字符串
+func (l *Logger) GetBacktrace() string {
     backtrace := ""
     index     := 1
     for i := 1; i < 10000; i++ {
-        if _, cfile, cline, ok := runtime.Caller(customSkip + i + l.btSkip.Val()); ok {
+        if _, cfile, cline, ok := runtime.Caller(i); ok {
             // 不打印出go源码路径及glog包文件路径
             if !gregex.IsMatchString("/g/os/glog/glog.+$", cfile) &&
                !gregex.IsMatchString("^" + gfile.GoRootOfBuild(), cfile) &&
