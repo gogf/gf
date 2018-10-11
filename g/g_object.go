@@ -60,7 +60,7 @@ func Database(name...string) *gdb.Db {
         glog.Error("Config component init failed")
         return nil
     }
-    // 数据库配置是否已经设置
+    // 数据库配置是否已经设置到gdb模块中
     gcache.GetOrSetFuncLock(gIS_DATABASE_CONFIG_CACHED, func() interface{} {
         if m := config.GetMap("database"); m != nil {
             c := gdb.Config{}
