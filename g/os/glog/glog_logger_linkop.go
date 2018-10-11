@@ -18,10 +18,9 @@ func (l *Logger) Cat(category string) *Logger {
         logger = l
     }
     path := l.path.Val()
-    if path == "" {
-        path = gfile.Pwd()
+    if path != "" {
+        logger.SetPath(path + gfile.Separator + category)
     }
-    logger.SetPath(path + gfile.Separator + category)
     return logger
 }
 
@@ -32,10 +31,6 @@ func (l *Logger) File(file string) *Logger {
         logger = l.Clone()
     } else {
         logger = l
-    }
-    path := l.path.Val()
-    if path == "" {
-        path = gfile.Pwd()
     }
     logger.SetFile(file)
     return logger

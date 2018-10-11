@@ -106,6 +106,7 @@ func (sp *SPath) Size() int {
 
 // 添加文件监控，当文件删除时，同时也删除搜索结果缓存
 func (sp *SPath) addMonitor(name, path string) {
+    glog.Debug("gspath.addMonitor:", name, path)
     gfsnotify.Add(path, func(event *gfsnotify.Event) {
         glog.Debug("gspath.monitor:", event)
         if event.IsRemove() {

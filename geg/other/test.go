@@ -3,7 +3,13 @@ package main
 import (
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/net/ghttp"
+    "fmt"
+    "gitee.com/johng/gf/g/os/gfile"
 )
+
+func init() {
+    fmt.Println(gfile.MainPkgPath())
+}
 
 func main() {
     s := g.Server()
