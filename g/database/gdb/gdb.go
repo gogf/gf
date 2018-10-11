@@ -151,7 +151,7 @@ func New(groupName ...string) (*Db, error) {
 	if list, ok := config.c[name]; ok {
 		// 将master, slave集群列表拆分出来
 		masterList := make(ConfigGroup, 0)
-		slaveList := make(ConfigGroup, 0)
+		slaveList  := make(ConfigGroup, 0)
 		for i := 0; i < len(list); i++ {
 			if list[i].Role == "slave" {
 				slaveList = append(slaveList, list[i])
@@ -252,7 +252,7 @@ func newDb(masterNode *ConfigNode, slaveNode *ConfigNode, groupName string) (*Db
 	if v := dbCaches.Get(groupName); v == nil {
 		dbCaches.LockFunc(func(m map[string]interface{}) {
 			if v, ok := m[groupName]; !ok {
-				db.cache = gcache.New()
+				db.cache     = gcache.New()
 				m[groupName] = db.cache
 			} else {
 				db.cache = v.(*gcache.Cache)
