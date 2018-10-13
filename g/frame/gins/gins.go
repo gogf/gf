@@ -83,28 +83,38 @@ func View() *gview.View {
 
 // 核心对象：Config
 // 配置文件目录查找依次为：启动参数cfgpath、当前程序运行目录
-func Config() *gcfg.Config {
-    return instances.GetOrSetFuncLock(gFRAME_CORE_COMPONENT_NAME_CONFIG, func() interface{} {
-        path := gcmd.Option.Get("gf.cfgpath")
-        if path == "" {
-            path = genv.Get("gf.cfgpath")
+func Config(file...string) *gcfg.Config {
+    configFile := gcfg.DEFAULT_CONFIG_FILE
+    if len(file) > 0 {
+        configFile = file[0]
+    }
+    return instances.GetOrSetFuncLock(fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile),
+        func() interface{} {
+            path := gcmd.Option.Get("gf.cfgpath")
             if path == "" {
-                path = gfile.SelfDir()
+                path = genv.Get("gf.cfgpath")
+                if path == "" {
+                    path = gfile.SelfDir()
+                }
             }
-        }
-        config := gcfg.New(path)
-        // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
-        if p := gfile.MainPkgPath(); gfile.Exists(p) {
-            config.AddPath(p)
-        }
-        return config
+            config := gcfg.New(path, configFile)
+            // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
+            if p := gfile.MainPkgPath(); gfile.Exists(p) {
+                config.AddPath(p)
+            }
+            return config
     }).(*gcfg.Config)
 }
 
 // 数据库操作对象，使用了连接池
 func Database(name...string) *gdb.Db {
     config := Config()
-    db := instances.GetOrSetFuncLock(gFRAME_CORE_COMPONENT_NAME_DATABASE, func() interface{} {
+    group  := gdb.DEFAULT_GROUP_NAME
+    if len(name) > 0 {
+        group = name[0]
+    }
+    key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
+    db  := instances.GetOrSetFuncLock(key, func() interface{} {
         m := config.GetMap("database")
         if m == nil {
             panic(fmt.Sprintf(`incomplete configuration for database: "database" node not found in config file "%s"`, config.GetFilePath()))
@@ -158,7 +168,7 @@ func Database(name...string) *gdb.Db {
         }
         // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空数据库配置缓存
         gfsnotify.Add(config.GetFilePath(), func(event *gfsnotify.Event) {
-            instances.Remove(gFRAME_CORE_COMPONENT_NAME_DATABASE)
+            instances.Remove(key)
         })
         if db, err := gdb.New(name...); err == nil {
             return db

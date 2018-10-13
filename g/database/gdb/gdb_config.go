@@ -12,7 +12,7 @@ import (
 )
 
 const (
-    gDEFAULT_CONFIG_GROUP_NAME = "default" // 默认配置名称
+    DEFAULT_GROUP_NAME = "default" // 默认配置名称
 )
 
 // 数据库配置包内对象
@@ -79,7 +79,7 @@ var DatabaseConfiguration = Config {
 // 包初始化
 func init() {
     config.c = make(Config)
-    config.d = gDEFAULT_CONFIG_GROUP_NAME
+    config.d = DEFAULT_GROUP_NAME
 }
 
 // 设置当前应用的数据库配置信息，进行全局数据库配置覆盖操作
@@ -105,12 +105,12 @@ func AddConfigNode (group string, node ConfigNode) {
 
 // 添加默认链接的一台数据库服务器配置
 func AddDefaultConfigNode (node ConfigNode) {
-    AddConfigNode(gDEFAULT_CONFIG_GROUP_NAME, node)
+    AddConfigNode(DEFAULT_GROUP_NAME, node)
 }
 
 // 添加默认链接的数据库服务器集群配置
 func AddDefaultConfigGroup (nodes ConfigGroup) {
-    AddConfigGroup(gDEFAULT_CONFIG_GROUP_NAME, nodes)
+    AddConfigGroup(DEFAULT_GROUP_NAME, nodes)
 }
 
 // 设置默认链接的数据库链接配置项(默认是 default)
