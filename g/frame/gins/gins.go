@@ -19,11 +19,14 @@ import (
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/os/gfsnotify"
     "fmt"
+    "gitee.com/johng/gf/g/database/gredis"
+    "gitee.com/johng/gf/g/util/gregex"
 )
 
 const (
     gFRAME_CORE_COMPONENT_NAME_VIEW       = "gf.core.component.view"
     gFRAME_CORE_COMPONENT_NAME_CONFIG     = "gf.core.component.config"
+    gFRAME_CORE_COMPONENT_NAME_REDIS      = "gf.core.component.redis"
     gFRAME_CORE_COMPONENT_NAME_DATABASE   = "gf.core.component.database"
 )
 
@@ -179,6 +182,44 @@ func Database(name...string) *gdb.Db {
     })
     if db != nil {
         return db.(*gdb.Db)
+    }
+    return nil
+}
+
+// Redis操作对象，使用了连接池
+func Redis(name...string) *gredis.Redis {
+    config := Config()
+    group  := "default"
+    if len(name) > 0 {
+        group = name[0]
+    }
+    key    := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
+    result := instances.GetOrSetFuncLock(key, func() interface{} {
+        if m := config.GetMap("redis"); m != nil {
+            // host:port[,db[,pass]]
+            if v, ok := m[group]; ok {
+                line     := gconv.String(v)
+                array, _ := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, line)
+                if len(array) > 4 {
+                    return gredis.New(gredis.Config{
+                        Host : array[1],
+                        Port : gconv.Int(array[2]),
+                        Db   : gconv.Int(array[3]),
+                        Pass : array[4],
+                    })
+                } else {
+                    panic(fmt.Sprintf(`invalid redis node configuration: "%s"`, line))
+                }
+            } else {
+                panic(fmt.Sprintf(`configuration for redis not found for group "%s"`, group))
+            }
+        } else {
+            panic(fmt.Sprintf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.GetFilePath()))
+        }
+        return nil
+    })
+    if result != nil {
+        return result.(*gredis.Redis)
     }
     return nil
 }

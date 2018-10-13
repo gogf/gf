@@ -7,7 +7,6 @@
 package g
 
 import (
-    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/database/gredis"
     "gitee.com/johng/gf/g/frame/gins"
@@ -16,7 +15,6 @@ import (
     "gitee.com/johng/gf/g/net/gudp"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gcfg"
-    "gitee.com/johng/gf/g/util/gregex"
 )
 
 // HTTPServer单例对象
@@ -57,27 +55,5 @@ func DB(name...string) *gdb.Db {
 
 // Redis操作对象，使用了连接池
 func Redis(name...string) *gredis.Redis {
-    group := "default"
-    if len(name) > 0 {
-        group = name[0]
-    }
-    config := gins.Config()
-    if config == nil {
-        return nil
-    }
-    if m := config.GetMap("redis"); m != nil {
-        // host:port[,db[,pass]]
-        if v, ok := m[group]; ok {
-            array, err := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, gconv.String(v))
-            if err == nil {
-                return gredis.New(gredis.Config{
-                    Host : array[1],
-                    Port : gconv.Int(array[2]),
-                    Db   : gconv.Int(array[3]),
-                    Pass : array[4],
-                })
-            }
-        }
-    }
-    return nil
+    return gins.Redis(name...)
 }
