@@ -20,18 +20,23 @@ import (
 
 // 数据库事务对象
 type Tx struct {
-    db *Db
-    tx *sql.Tx
+    db     *Db
+    tx     *sql.Tx
+    master *sql.DB
 }
 
 // 事务操作，提交
 func (tx *Tx) Commit() error {
-    return tx.tx.Commit()
+    err := tx.tx.Commit()
+    tx.master.Close()
+    return err
 }
 
 // 事务操作，回滚
 func (tx *Tx) Rollback() error {
-    return tx.tx.Rollback()
+    err := tx.tx.Rollback()
+    tx.master.Close()
+    return err
 }
 
 // (事务)数据库sql查询操作，主要执行查询
