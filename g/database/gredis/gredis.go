@@ -24,7 +24,6 @@ const (
 
 // Redis客户端
 type Redis struct {
-    conn redis.Conn
     pool *redis.Pool
 }
 
@@ -80,13 +79,12 @@ func New(config Config) *Redis {
     } else {
         r.pool = v.(*redis.Pool)
     }
-    r.conn = r.pool.Get()
     return r
 }
 
-// 关闭链接，将底层的redis对象放回池中
+// 关闭redis管理对象，将会关闭底层的
 func (r *Redis) Close() error {
-    return r.conn.Close()
+    return r.pool.Close()
 }
 
 // 设置属性 - MaxIdle
@@ -116,11 +114,15 @@ func (r *Redis) Stats() *PoolStats {
 
 // 执行同步命令 - Do
 func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
-    return r.conn.Do(command, args...)
+    conn := r.pool.Get()
+    defer conn.Close()
+    return conn.Do(command, args...)
 }
 
 // 执行异步命令 - Send
 func (r *Redis) Send(command string, args ...interface{}) error {
-    return r.conn.Send(command, args...)
+    conn := r.pool.Get()
+    defer conn.Close()
+    return conn.Send(command, args...)
 }
 
