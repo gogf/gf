@@ -17,7 +17,6 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/container/gring"
     "gitee.com/johng/gf/g/os/gtime"
-    "time"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/container/gvar"
 )
@@ -81,35 +80,22 @@ func (db *Db) printSql(v *Sql) {
     }
 }
 
-// 关闭链接
-func (db *Db) Close() error {
-    if db.master != nil {
-        if err := db.master.Close(); err == nil {
-            db.master = nil
-        } else {
-            return err
-        }
-    }
-    if db.slave != nil {
-        if err := db.slave.Close(); err == nil {
-            db.slave = nil
-        } else {
-            return err
-        }
-    }
-    return nil
-}
-
 // 数据库sql查询操作，主要执行查询
 func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
-    var err  error
-    var rows *sql.Rows
+    var err   error
+    var rows  *sql.Rows
+    var slave *sql.DB
+    slave, err = db.Slave();
+    if err != nil {
+        return nil,err
+    }
+    defer slave.Close()
     p := db.link.handleSqlBeforeExec(&query)
     if db.debug.Val() {
         militime1 := gtime.Millisecond()
-        rows, err  = db.slave.Query(*p, args ...)
+        rows, err  = slave.Query(*p, args ...)
         militime2 := gtime.Millisecond()
-        s := &Sql{
+        s         := &Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
@@ -120,7 +106,7 @@ func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
         db.sqls.Put(s)
         db.printSql(s)
     } else {
-        rows, err = db.slave.Query(*p, args ...)
+        rows, err = slave.Query(*p, args ...)
     }
     if err == nil {
         return rows, nil
@@ -134,12 +120,18 @@ func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
 func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
     var err    error
     var result sql.Result
+    var master *sql.DB
+    master, err = db.Master();
+    if err != nil {
+        return nil,err
+    }
+    defer master.Close()
     p := db.link.handleSqlBeforeExec(&query)
     if db.debug.Val() {
         militime1  := gtime.Millisecond()
-        result, err = db.master.Exec(*p, args ...)
+        result, err = master.Exec(*p, args ...)
         militime2  := gtime.Millisecond()
-        s := &Sql{
+        s          := &Sql{
             Sql   : *p,
             Args  : args,
             Error : err,
@@ -150,7 +142,7 @@ func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
         db.sqls.Put(s)
         db.printSql(s)
     } else {
-        result, err = db.master.Exec(*p, args ...)
+        result, err = master.Exec(*p, args ...)
     }
     return result, db.formatError(err, p, args...)
 }
@@ -269,58 +261,49 @@ func (db *Db) Select(tables, fields string, condition interface{}, groupBy, orde
 // sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
 // 记得调用sql.Stmt.Close关闭操作对象
 func (db *Db) Prepare(query string) (*sql.Stmt, error) {
-    return db.master.Prepare(query)
+    if master, err := db.Master(); err != nil {
+        return nil, err
+    } else {
+        defer master.Close()
+        return master.Prepare(query)
+    }
 }
 
 // ping一下，判断或保持数据库链接(master)
 func (db *Db) PingMaster() error {
-    err := db.master.Ping()
-    return err
+    if master, err := db.Master(); err != nil {
+        return err
+    } else {
+        defer master.Close()
+        return master.Ping()
+    }
 }
 
 // ping一下，判断或保持数据库链接(slave)
 func (db *Db) PingSlave() error {
-    err := db.slave.Ping()
-    return err
-}
-
-// 设置数据库连接池中空闲链接的大小
-func (db *Db) SetMaxIdleConns(n int) {
-    db.master.SetMaxIdleConns(n)
-    // 比较的是指向的变量地址
-    if db.master != db.slave {
-        db.slave.SetMaxIdleConns(n)
-    }
-}
-
-// 设置数据库连接池最大打开的链接数量
-func (db *Db) SetMaxOpenConns(n int) {
-    db.master.SetMaxOpenConns(n)
-    // 比较的是指向的变量地址
-    if db.master != db.slave {
-        db.slave.SetMaxOpenConns(n)
-    }
-}
-
-// 设置数据库连接可重复利用的时间，超过该时间则被关闭废弃
-// 如果 d <= 0 表示该链接会一直重复利用
-func (db *Db) SetConnMaxLifetime(d time.Duration) {
-    db.master.SetConnMaxLifetime(d)
-    // 比较的是指向的变量地址
-    if db.master != db.slave {
-        db.slave.SetConnMaxLifetime(d)
+    if slave, err := db.Slave(); err != nil {
+        return err
+    } else {
+        defer slave.Close()
+        return slave.Ping()
     }
 }
 
 // 事务操作，开启，会返回一个底层的事务操作对象链接如需要嵌套事务，那么可以使用该对象，否则请忽略
+// 只有在tx.Commit/tx.Rollback时，链接会自动Close
 func (db *Db) Begin() (*Tx, error) {
-    if tx, err := db.master.Begin(); err == nil {
-        return &Tx {
-            db : db,
-            tx : tx,
-        }, nil
-    } else {
+    if master, err := db.Master(); err != nil {
         return nil, err
+    } else {
+        if tx, err := master.Begin(); err == nil {
+            return &Tx {
+                db     : db,
+                tx     : tx,
+                master : master,
+            }, nil
+        } else {
+            return nil, err
+        }
     }
 }
 
@@ -522,4 +505,3 @@ func (db *Db) formatCondition(condition interface{}) (where string) {
     }
     return
 }
-

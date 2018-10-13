@@ -173,11 +173,31 @@ func Uint(i interface{}) uint {
         return 0
     }
     switch value := i.(type) {
-        case int:     return uint(value)
-        case int8:    return uint(value)
-        case int16:   return uint(value)
-        case int32:   return uint(value)
-        case int64:   return uint(value)
+        case int:
+            if value < 0 {
+                value = -value
+            }
+            return uint(value)
+        case int8:
+            if value < 0 {
+                value = -value
+            }
+            return uint(value)
+        case int16:
+            if value < 0 {
+                value = -value
+            }
+            return uint(value)
+        case int32:
+            if value < 0 {
+                value = -value
+            }
+            return uint(value)
+        case int64:
+            if value < 0 {
+                value = -value
+            }
+            return uint(value)
         case uint:    return value
         case uint8:   return uint(value)
         case uint16:  return uint(value)

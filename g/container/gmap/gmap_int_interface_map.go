@@ -94,9 +94,7 @@ func (this *IntInterfaceMap) GetOrSet(key int, value interface{}) interface{} {
 // 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
 func (this *IntInterfaceMap) GetOrSetFunc(key int, f func() interface{}) interface{} {
     if v := this.Get(key); v == nil {
-        v = f()
-        this.doSetWithLockCheck(key, v)
-        return v
+        return this.doSetWithLockCheck(key, f())
     } else {
         return v
     }
@@ -105,8 +103,7 @@ func (this *IntInterfaceMap) GetOrSetFunc(key int, f func() interface{}) interfa
 // 与GetOrSetFunc不同的是，f是在写锁机制内执行
 func (this *IntInterfaceMap) GetOrSetFuncLock(key int, f func() interface{}) interface{} {
     if v := this.Get(key); v == nil {
-        this.doSetWithLockCheck(key, f)
-        return v
+        return this.doSetWithLockCheck(key, f)
     } else {
         return v
     }

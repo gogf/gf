@@ -119,3 +119,19 @@ func SetDefaultGroup (groupName string) {
     config.d = groupName
     config.Unlock()
 }
+
+// 设置数据库连接池中空闲链接的大小
+func (db *Db) SetMaxIdleConns(n int) {
+    db.maxIdleConnCount.Set(n)
+}
+
+// 设置数据库连接池最大打开的链接数量
+func (db *Db) SetMaxOpenConns(n int) {
+    db.maxOpenConnCount.Set(n)
+}
+
+// 设置数据库连接可重复利用的时间，超过该时间则被关闭废弃
+// 如果 d <= 0 表示该链接会一直重复利用
+func (db *Db) SetConnMaxLifetime(n int) {
+    db.maxConnLifetime.Set(n)
+}
