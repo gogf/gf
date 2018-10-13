@@ -19,7 +19,7 @@ import (
 )
 
 const (
-    gDEFAULT_CONFIG_FILE = "config.toml" // 默认的配置管理文件名称
+    DEFAULT_CONFIG_FILE = "config.toml" // 默认的配置管理文件名称
 )
 
 // 配置管理对象
@@ -32,7 +32,7 @@ type Config struct {
 
 // 生成一个配置管理对象
 func New(path string, file...string) *Config {
-    name := gDEFAULT_CONFIG_FILE
+    name := DEFAULT_CONFIG_FILE
     if len(file) > 0 {
         name = file[0]
     }

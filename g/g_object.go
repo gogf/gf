@@ -41,8 +41,8 @@ func View() *gview.View {
 
 // Config配置管理对象
 // 配置文件目录查找依次为：启动参数cfgpath、当前程序运行目录
-func Config() *gcfg.Config {
-    return gins.Config()
+func Config(file...string) *gcfg.Config {
+    return gins.Config(file...)
 }
 
 // 数据库操作对象，使用了连接池
