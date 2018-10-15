@@ -117,13 +117,13 @@ func main() {
 ## 数据库ORM
 
 ### ORM创建/关闭
+
 ```go
-// 获取默认配置的数据库对象(配置名称为"default")
-db, err := gdb.New()
-// 获取配置分组名称为"user-center"的数据库对象
-db, err := gdb.New("user-center")
-// 关闭数据库操作对象(丢回连接池对象复用)
-db.Close()
+// 获取默认配置的单例数据库对象(配置名称为"default")
+db, err := gdb.DB()
+// 获取配置分组名称为"user-center"的单例数据库对象
+db, err := gdb.DB("user-center")
+// 无须显示Close，数据库引擎底层采用了链接池设计，当链接不再使用时会自动关闭
 ```
 ### 单表/联表查询
 ```go
