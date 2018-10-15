@@ -78,6 +78,7 @@ func New(path string) *View {
     view.SetDelimiters("{{", "}}")
     // 内置方法
     view.BindFunc("text",    view.funcText)
+    view.BindFunc("html",    view.funcHtml)
     view.BindFunc("include", view.funcInclude)
     return view
 }
@@ -167,4 +168,10 @@ func (view *View) funcInclude(file string, data...map[string]interface{}) templa
 func (view *View) funcText(html interface{}) string {
     return ghtml.StripTags(gconv.String(html))
 }
+
+// 模板内置方法：html
+func (view *View) funcHtml(html interface{}) template.HTML {
+    return template.HTML(gconv.String(html))
+}
+
 
