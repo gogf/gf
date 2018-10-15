@@ -112,7 +112,7 @@ func (view *View) Assign(key string, value interface{}) {
 }
 
 // 解析模板，返回解析后的内容
-func (view *View) Parse(file string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
+func (view *View) Parse(file string, params Params, funcmap...map[string]interface{}) ([]byte, error) {
     path := view.paths.Search(file)
     if path == "" {
         return nil, errors.New("tpl \"" + file + "\" not found")
@@ -155,7 +155,7 @@ func (view *View) Parse(file string, params map[string]interface{}, funcmap...ma
 }
 
 // 直接解析模板内容，返回解析后的内容
-func (view *View) ParseContent(content string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
+func (view *View) ParseContent(content string, params Params, funcmap...map[string]interface{}) ([]byte, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
     name   := gconv.String(ghash.BKDRHash64([]byte(content)))

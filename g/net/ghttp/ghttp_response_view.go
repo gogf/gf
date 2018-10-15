@@ -43,7 +43,7 @@ func (r *Response) WriteTplContent(content string, params map[string]interface{}
 }
 
 // 解析模板文件，并返回模板内容
-func (r *Response) ParseTpl(tpl string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
+func (r *Response) ParseTpl(tpl string, params gview.Params, funcmap...map[string]interface{}) ([]byte, error) {
     fmap := make(gview.FuncMap)
     if len(funcmap) > 0 {
         fmap = funcmap[0]
@@ -52,7 +52,7 @@ func (r *Response) ParseTpl(tpl string, params map[string]interface{}, funcmap..
 }
 
 // 解析并返回模板内容
-func (r *Response) ParseTplContent(content string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
+func (r *Response) ParseTplContent(content string, params gview.Params, funcmap...map[string]interface{}) ([]byte, error) {
     fmap := make(gview.FuncMap)
     if len(funcmap) > 0 {
         fmap = funcmap[0]
