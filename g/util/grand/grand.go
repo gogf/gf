@@ -9,24 +9,14 @@ package grand
 
 import (
     "time"
-    "gitee.com/johng/gf/g/util/gconv"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 var digits  = []rune("0123456789")
-var numChan = make(chan uint, 10000)
-
-func init() {
-    go func() {
-        for {
-            numChan <- gconv.Uint(time.Now().UnixNano())
-        }
-    }()
-}
 
 // 自定义的 rand.Intn
 func intn (max int) int {
-    return int(<- numChan)%max
+    return int(time.Now().UnixNano())%max
 }
 
 // 获得一个 min, max 之间的随机数(min <= x <= max)
