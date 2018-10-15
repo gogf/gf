@@ -24,6 +24,7 @@ import (
 type View struct {
     mu         sync.RWMutex
     paths      *gspath.SPath           // 模板查找目录(绝对路径)
+    data       map[string]interface{}  // 模板变量
     funcmap    map[string]interface{}  // FuncMap
     delimiters []string                // 模板变量分隔符号
 }
@@ -72,6 +73,7 @@ func New(path string) *View {
     s.Set(path)
     view := &View {
         paths      : s,
+        data       : make(map[string]interface{}),
         funcmap    : make(map[string]interface{}),
         delimiters : make([]string, 2),
     }
@@ -93,6 +95,22 @@ func (view *View) AddPath(path string) error {
     return view.paths.Add(path)
 }
 
+// 批量绑定模板变量，即调用之后每个线程都会生效，因此有并发安全控制
+func (view *View) Assigns(data Params) {
+    view.mu.Lock()
+    for k, v := range data {
+        view.data[k] = v
+    }
+    view.mu.Unlock()
+}
+
+// 绑定模板变量，即调用之后每个线程都会生效，因此有并发安全控制
+func (view *View) Assign(key string, value interface{}) {
+    view.mu.Lock()
+    view.data[key] = value
+    view.mu.Unlock()
+}
+
 // 解析模板，返回解析后的内容
 func (view *View) Parse(file string, params map[string]interface{}, funcmap...map[string]interface{}) ([]byte, error) {
     path := view.paths.Search(file)
@@ -111,7 +129,25 @@ func (view *View) Parse(file string, params map[string]interface{}, funcmap...ma
     if tpl, err := tplobj.Parse(content); err != nil {
         return nil, err
     } else {
-        if err := tpl.Execute(buffer, params); err != nil {
+        // 注意模板变量赋值不能改变已有的params或者view.data的值，因为这两个变量都是指针
+        // 因此在必要条件下，需要合并两个map的值到一个新的map
+        vars := (map[string]interface{})(nil)
+        if len(view.data) > 0 {
+            if len(params) > 0 {
+                vars = make(map[string]interface{}, len(view.data) + len(params))
+                for k, v := range params {
+                    vars[k] = v
+                }
+                for k, v := range view.data {
+                    vars[k] = v
+                }
+            } else {
+                vars = view.data
+            }
+        } else {
+            vars = params
+        }
+        if err := tpl.Execute(buffer, vars); err != nil {
             return nil, err
         }
     }
@@ -131,7 +167,25 @@ func (view *View) ParseContent(content string, params map[string]interface{}, fu
     if tpl, err := tplobj.Parse(content); err != nil {
         return nil, err
     } else {
-        if err := tpl.Execute(buffer, params); err != nil {
+        // 注意模板变量赋值不能改变已有的params或者view.data的值，因为这两个变量都是指针
+        // 因此在必要条件下，需要合并两个map的值到一个新的map
+        vars := (map[string]interface{})(nil)
+        if len(view.data) > 0 {
+            if len(params) > 0 {
+                vars = make(map[string]interface{}, len(view.data) + len(params))
+                for k, v := range params {
+                    vars[k] = v
+                }
+                for k, v := range view.data {
+                    vars[k] = v
+                }
+            } else {
+                vars = view.data
+            }
+        } else {
+            vars = params
+        }
+        if err := tpl.Execute(buffer, vars); err != nil {
             return nil, err
         }
     }

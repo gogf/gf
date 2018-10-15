@@ -33,8 +33,8 @@ func UdpServer(name...interface{}) *gudp.Server {
 }
 
 // 核心对象：View
-func View() *gview.View {
-    return gins.View()
+func View(name...string) *gview.View {
+    return gins.View(name...)
 }
 
 // Config配置管理对象
