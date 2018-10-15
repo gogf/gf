@@ -52,7 +52,7 @@ func checkAndInitDefaultView() {
 }
 
 // 直接解析模板内容，返回解析后的内容
-func ParseContent(content string, params map[string]interface{}) ([]byte, error) {
+func ParseContent(content string, params Params) ([]byte, error) {
     checkAndInitDefaultView()
     return viewObj.ParseContent(content, params)
 }
