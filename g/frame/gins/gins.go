@@ -64,8 +64,13 @@ func SetIfNotExist(key string, value interface{}) bool {
 }
 
 // 核心对象：View
-func View() *gview.View {
-    return instances.GetOrSetFuncLock(gFRAME_CORE_COMPONENT_NAME_VIEW, func() interface{} {
+func View(name...string) *gview.View {
+    group := "default"
+    if len(name) > 0 {
+        group = name[0]
+    }
+    key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEW, group)
+    return instances.GetOrSetFuncLock(key, func() interface{} {
         path := gcmd.Option.Get("gf.viewpath")
         if path == "" {
             path = genv.Get("gf.viewpath")
