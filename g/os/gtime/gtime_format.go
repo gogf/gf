@@ -8,6 +8,7 @@ package gtime
 
 import (
     "strings"
+    "bytes"
 )
 
 var (
@@ -53,41 +54,42 @@ var (
 
 // 将自定义的格式转换为标准库时间格式
 func formatToStdLayout(format string) string {
-    s := ""
+    b := bytes.NewBuffer(nil)
     for i := 0; i < len(format); {
         switch format[i] {
             case '\\':
-                if i < len(format)-1 {
-                    s += string(format[i+1])
+                if i < len(format) - 1 {
+                    b.WriteByte(format[i + 1])
                     i += 2
                     continue
                 } else {
-                    return s
+                    return b.String()
                 }
 
             default:
                 if f, ok := formats[format[i]]; ok {
                     switch format[i] {
                         case 'j':
-                            s += "02"
+                            b.WriteString("02")
                         case 'G':
-                            s += "15"
+                            b.WriteString("15")
                         case 'u':
                             if i > 0 && format[i - 1] == '.' {
-                                s += "000"
+                                b.WriteString("000")
                             } else {
-                                s += ".000"
+                                b.WriteString(".000")
                             }
 
                         default:
-                            s += f
+                            b.WriteString(f)
                     }
                 } else {
-                    s += f
+                    b.WriteByte(format[i])
                 }
+                i++
         }
     }
-    return s
+    return b.String()
 }
 
 // 格式化，使用自定义日期格式
