@@ -1,14 +1,12 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gtime"
     "fmt"
+    "gitee.com/johng/gf/g/encoding/gurl"
+    "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
 func main() {
-    t := gtime.Now()
-    err := t.ToZone("Asia/Aden")
-    fmt.Println(err)
-    fmt.Println(t.String())
-    //fmt.Println(string([]byte{112,108,97,121,101,114,105,100}))
+    fmt.Println(gurl.Decode("<"))
+    fmt.Println(ghtml.SpecialChars("<"))
 }

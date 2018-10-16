@@ -50,8 +50,8 @@ func (a *IntArray) Set(index int, value int) {
 func (a *IntArray) InsertBefore(index int, value int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	rear   := append([]int{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	rear   := append([]int{}, a.array[index : ]...)
+	a.array = append(a.array[0 : index], value)
 	a.array = append(a.array, rear...)
 }
 
@@ -59,17 +59,19 @@ func (a *IntArray) InsertBefore(index int, value int) {
 func (a *IntArray) InsertAfter(index int, value int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	rear   := append([]int{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	rear   := append([]int{}, a.array[index + 1:]...)
+	a.array = append(a.array[0 : index + 1], value)
 	a.array = append(a.array, rear...)
 
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
-func (a *IntArray) Remove(index int) {
+func (a *IntArray) Remove(index int) int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.array = append(a.array[:index], a.array[index+1:]...)
+	value  := a.array[index]
+	a.array = append(a.array[ : index], a.array[index + 1 : ]...)
+	return value
 }
 
 // 追加数据项
