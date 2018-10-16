@@ -34,27 +34,27 @@ func NewSortedStringArray(cap int, safe...bool) *SortedStringArray {
 
 // 添加加数据项
 func (a *SortedStringArray) Add(values...string) {
-    if len(values) > 0 {
-        for _, value := range values {
-            index, cmp := a.Search(value)
-            if a.unique.Val() && cmp == 0 {
-                continue
-            }
-            a.mu.Lock()
-            if index < 0 {
-                a.array = append(a.array, value)
-                a.mu.Unlock()
-                continue
-            }
-            // 加到指定索引后面
-            if cmp > 0 {
-                index++
-            }
-            rear   := append([]string{}, a.array[index : ]...)
-            a.array = append(a.array[0 : index], value)
-            a.array = append(a.array, rear...)
-            a.mu.Unlock()
+    if len(values) == 0 {
+        return
+    }
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    for _, value := range values {
+        index, cmp := a.binSearch(value, false)
+        if a.unique.Val() && cmp == 0 {
+            continue
         }
+        if index < 0 {
+            a.array = append(a.array, value)
+            continue
+        }
+        // 加到指定索引后面
+        if cmp > 0 {
+            index++
+        }
+        rear   := append([]string{}, a.array[index : ]...)
+        a.array = append(a.array[0 : index], value)
+        a.array = append(a.array, rear...)
     }
 }
 
@@ -67,10 +67,31 @@ func (a *SortedStringArray) Get(index int) string {
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
-func (a *SortedStringArray) Remove(index int) {
+func (a *SortedStringArray) Remove(index int) string {
     a.mu.Lock()
     defer a.mu.Unlock()
+    value  := a.array[index]
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
+    return value
+}
+
+// 将最左端(索引为0)的数据项移出数组，并返回该数据项
+func (a *SortedStringArray) PopLeft() string {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    value  := a.array[0]
+    a.array = a.array[1 : ]
+    return value
+}
+
+// 将最右端(索引为length - 1)的数据项移出数组，并返回该数据项
+func (a *SortedStringArray) PopRight() string {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    length := len(a.array)
+    value  := a.array[length - 1]
+    a.array = a.array[: length - 1]
+    return value
 }
 
 // 数组长度
@@ -100,10 +121,17 @@ func (a *SortedStringArray) Slice() []string {
 // 查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
 // 返回值: 最后比较位置, 比较结果
 func (a *SortedStringArray) Search(value string) (int, int) {
+    return a.binSearch(value, true)
+}
+
+func (a *SortedStringArray) binSearch(value string, lock bool) (int, int) {
     if len(a.array) == 0 {
         return -1, -2
     }
-    a.mu.RLock()
+    if lock {
+        a.mu.RLock()
+        defer a.mu.RUnlock()
+    }
     min := 0
     max := len(a.array) - 1
     mid := 0
@@ -120,7 +148,6 @@ func (a *SortedStringArray) Search(value string) (int, int) {
             break
         }
     }
-    a.mu.RUnlock()
     return mid, cmp
 }
 

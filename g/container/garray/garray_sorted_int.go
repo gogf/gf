@@ -21,7 +21,7 @@ type SortedIntArray struct {
 }
 
 // 创建一个排序的int数组
-func NewSortedIntArray(size int, cap int, safe...bool) *SortedIntArray {
+func NewSortedIntArray(cap int, safe...bool) *SortedIntArray {
     return &SortedIntArray {
         mu          : rwmutex.New(safe...),
         array       : make([]int, 0, cap),
@@ -43,15 +43,15 @@ func (a *SortedIntArray) Add(values...int) {
     if len(values) == 0 {
         return
     }
+    a.mu.Lock()
+    defer a.mu.Unlock()
     for _, value := range values {
-        index, cmp := a.Search(value)
+        index, cmp := a.binSearch(value, false)
         if a.unique.Val() && cmp == 0 {
             continue
         }
-        a.mu.Lock()
         if index < 0 {
             a.array = append(a.array, value)
-            a.mu.Unlock()
             continue
         }
         // 加到指定索引后面
@@ -61,7 +61,6 @@ func (a *SortedIntArray) Add(values...int) {
         rear   := append([]int{}, a.array[index : ]...)
         a.array = append(a.array[0 : index], value)
         a.array = append(a.array, rear...)
-        a.mu.Unlock()
     }
 }
 
@@ -74,10 +73,31 @@ func (a *SortedIntArray) Get(index int) int {
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
-func (a *SortedIntArray) Remove(index int) {
+func (a *SortedIntArray) Remove(index int) int {
     a.mu.Lock()
     defer a.mu.Unlock()
+    value  := a.array[index]
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
+    return value
+}
+
+// 将最左端(索引为0)的数据项移出数组，并返回该数据项
+func (a *SortedIntArray) PopLeft() int {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    value  := a.array[0]
+    a.array = a.array[1 : ]
+    return value
+}
+
+// 将最右端(索引为length - 1)的数据项移出数组，并返回该数据项
+func (a *SortedIntArray) PopRight() int {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    length := len(a.array)
+    value  := a.array[length - 1]
+    a.array = a.array[: length - 1]
+    return value
 }
 
 // 数组长度
@@ -107,10 +127,17 @@ func (a *SortedIntArray) Slice() []int {
 // 查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
 // 返回值: 最后比较位置, 比较结果
 func (a *SortedIntArray) Search(value int) (int, int) {
+    return a.binSearch(value, true)
+}
+
+func (a *SortedIntArray) binSearch(value int, lock bool) (int, int) {
     if len(a.array) == 0 {
         return -1, -2
     }
-    a.mu.RLock()
+    if lock {
+        a.mu.RLock()
+        defer a.mu.RUnlock()
+    }
     min := 0
     max := len(a.array) - 1
     mid := 0
@@ -127,7 +154,6 @@ func (a *SortedIntArray) Search(value int) (int, int) {
             break
         }
     }
-    a.mu.RUnlock()
     return mid, cmp
 }
 

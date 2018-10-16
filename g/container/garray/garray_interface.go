@@ -59,16 +59,18 @@ func (a *Array) InsertBefore(index int, value interface{}) {
 func (a *Array) InsertAfter(index int, value interface{}) {
     a.mu.Lock()
     defer a.mu.Unlock()
-    rear   := append([]interface{}{}, a.array[index+1 : ]...)
-    a.array = append(a.array[0 : index+1], value)
+    rear   := append([]interface{}{}, a.array[index + 1 : ]...)
+    a.array = append(a.array[0 : index + 1], value)
     a.array = append(a.array, rear...)
 }
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
-func (a *Array) Remove(index int) {
+func (a *Array) Remove(index int) interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
+    value  := a.array[index]
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
+    return value
 }
 
 // 追加数据项
