@@ -117,10 +117,21 @@ func (t *Time) Add(d time.Duration) *Time {
     return t
 }
 
-// 时区转换为指定的时区
+// 时区转换为指定的时区(通过time.Location)
 func (t *Time) ToLocation(location *time.Location) *Time {
     t.Time = t.Time.In(location)
     return t
+}
+
+// 时区转换为指定的时区(通过时区名称，如：AsiaShanghai)
+func (t *Time) ToZone(zone string) *Time {
+    if l, err := time.LoadLocation(zone); err == nil {
+        t.Time = t.Time.In(l)
+        return t
+    } else {
+        panic(err)
+        return nil
+    }
 }
 
 // 时区转换为UTC时区
