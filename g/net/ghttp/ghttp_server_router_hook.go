@@ -13,11 +13,14 @@ import (
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/container/gset"
     "fmt"
+    "runtime"
+    "reflect"
 )
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
 func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc) error {
-    return s.setHandler(pattern, &handlerItem{
+    return s.setHandler(pattern, &handlerItem {
+        name  : runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
         ctype : nil,
         fname : "",
         faddr : handler,
