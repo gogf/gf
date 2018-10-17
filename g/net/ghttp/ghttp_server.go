@@ -27,6 +27,7 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "time"
     "gitee.com/johng/gf/g/os/gfile"
+    "fmt"
 )
 
 const (
@@ -52,26 +53,26 @@ const (
 // ghttp.Server结构体
 type Server struct {
     // 基本属性变量
-    name             string                   // 服务名称，方便识别
-    paths            *gspath.SPath            // 静态文件检索对象(类似nginx tryfile功能)
-    config           ServerConfig             // 配置对象
-    servers          []*gracefulServer        // 底层http.Server列表
-    methodsMap       map[string]struct{}      // 所有支持的HTTP Method(初始化时自动填充)
-    servedCount      *gtype.Int               // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
-    closeQueue       *gqueue.Queue            // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
+    name             string                         // 服务名称，方便识别
+    paths            *gspath.SPath                  // 静态文件检索对象(类似nginx tryfile功能)
+    config           ServerConfig                   // 配置对象
+    servers          []*gracefulServer              // 底层http.Server列表
+    methodsMap       map[string]struct{}            // 所有支持的HTTP Method(初始化时自动填充)
+    servedCount      *gtype.Int                     // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
+    closeQueue       *gqueue.Queue                  // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
     // 服务注册相关
-    serveTree        map[string]interface{}   // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-    hooksTree        map[string]interface{}   // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-    serveCache       *gcache.Cache            // 服务注册路由内存缓存
-    hooksCache       *gcache.Cache            // 事件回调路由内存缓存
-    routesMap        map[string]string        // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
+    serveTree        map[string]interface{}         // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+    hooksTree        map[string]interface{}         // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+    serveCache       *gcache.Cache                  // 服务注册路由内存缓存
+    hooksCache       *gcache.Cache                  // 事件回调路由内存缓存
+    routesMap        map[string]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
     // 自定义状态码回调
-    hsmu             sync.RWMutex             // status handler互斥锁
-    statusHandlerMap map[string]HandlerFunc   // 不同状态码下的注册处理方法(例如404状态时的处理方法)
+    hsmu             sync.RWMutex                   // status handler互斥锁
+    statusHandlerMap map[string]HandlerFunc         // 不同状态码下的注册处理方法(例如404状态时的处理方法)
     // SESSION
-    sessions         *gcache.Cache            // Session内存缓存
+    sessions         *gcache.Cache                  // Session内存缓存
     // Logger
-    logger           *glog.Logger             // 日志管理对象
+    logger           *glog.Logger                   // 日志管理对象
 }
 
 // 路由对象
@@ -89,7 +90,8 @@ type handlerMap  map[string]*handlerItem
 
 // http回调函数注册信息
 type handlerItem struct {
-    rtype    int          // 注册方式
+    name     string       // 注册的方法名称信息
+    rtype    int          // 注册方式(执行对象/回调函数/控制器)
     ctype    reflect.Type // 控制器类型(反射类型)
     fname    string       // 回调方法名称
     faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
@@ -102,6 +104,12 @@ type handlerItem struct {
 type handlerParsedItem struct {
     handler  *handlerItem         // 路由注册项
     values   map[string][]string  // 特定URL.Path的Router解析参数
+}
+
+// 已注册的路由项
+type registeredRouteItem struct {
+    file     string               // 文件路径及行数地址
+    handler  *handlerItem         // 路由注册项
 }
 
 // HTTP注册函数
@@ -169,7 +177,7 @@ func GetServer(name...interface{}) (*Server) {
         hooksTree        : make(map[string]interface{}),
         serveCache       : gcache.New(),
         hooksCache       : gcache.New(),
-        routesMap        : make(map[string]string),
+        routesMap        : make(map[string]registeredRouteItem),
         sessions         : gcache.New(),
         servedCount      : gtype.NewInt(),
         closeQueue       : gqueue.New(),
@@ -251,7 +259,26 @@ func (s *Server) Start() error {
 
     // 开启异步关闭队列处理循环
     s.startCloseQueueLoop()
+
+    // 打印展示路由表
+    s.DumpRoutesMap()
     return nil
+}
+
+// 打印展示路由表
+func (s *Server) DumpRoutesMap() {
+    for _, v := range s.routesMap {
+        fmt.Println(v.handler.name)
+        //switch v.handler.rtype {
+        //   case gROUTE_REGISTER_HANDLER:
+        //       fmt.Println(v.handler.name)
+        //   case gROUTE_REGISTER_OBJECT:
+        //       //fmt.Println(v.handler.name)
+        //   case gROUTE_REGISTER_CONTROLLER:
+        //       fmt.Println(v.handler.name)
+        //
+        //}
+    }
 }
 
 // 阻塞执行监听

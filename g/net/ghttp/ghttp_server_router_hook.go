@@ -177,8 +177,8 @@ func (s *Server) searchHookHandler(method, path, domain, hook string) []*handler
     return nil
 }
 
-// 生成hook key
+// 生成hook key，如果是hook key，那么使用'%'符号分隔
 func (s *Server) hookHandlerKey(hook, method, path, domain string) string {
-    return hook + "@" + s.serveHandlerKey(method, path, domain)
+    return hook + "%" + s.serveHandlerKey(method, path, domain)
 }
 

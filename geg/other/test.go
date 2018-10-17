@@ -2,11 +2,18 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/encoding/gurl"
-    "gitee.com/johng/gf/g/encoding/ghtml"
+    "reflect"
+    "runtime"
 )
 
+type T struct {
+
+}
+func (t *T) Test() {
+
+}
+
 func main() {
-    fmt.Println(gurl.Decode("<"))
-    fmt.Println(ghtml.SpecialChars("<"))
+    t := new(T)
+    fmt.Println(runtime.FuncForPC(reflect.ValueOf(t.Test).Pointer()).Name())
 }
