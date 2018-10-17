@@ -27,6 +27,10 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "time"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/container/garray"
+    "github.com/olekukonko/tablewriter"
+    "bytes"
     "fmt"
 )
 
@@ -267,18 +271,68 @@ func (s *Server) Start() error {
 
 // 打印展示路由表
 func (s *Server) DumpRoutesMap() {
-    for _, v := range s.routesMap {
-        fmt.Println(v.handler.name)
-        //switch v.handler.rtype {
-        //   case gROUTE_REGISTER_HANDLER:
-        //       fmt.Println(v.handler.name)
-        //   case gROUTE_REGISTER_OBJECT:
-        //       //fmt.Println(v.handler.name)
-        //   case gROUTE_REGISTER_CONTROLLER:
-        //       fmt.Println(v.handler.name)
-        //
-        //}
+    fmt.Println(s.GetRoutesMap())
+}
+
+// 获得路由表(格式化字符串)
+func (s *Server) GetRoutesMap() string {
+    type tableItem struct {
+        hook    string
+        domain  string
+        method  string
+        route   string
+        handler string
     }
+
+    buf   := bytes.NewBuffer(nil)
+    table := tablewriter.NewWriter(buf)
+    table.SetHeader([]string{"DOMAIN", "METHOD", "ROUTE", "HANDLER", "HOOK"})
+    table.SetRowLine(true)
+    table.SetBorder(false)
+    table.SetCenterSeparator("|")
+
+    m := make(map[string]*garray.SortedArray)
+    for k, v := range s.routesMap {
+        array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
+        item := &tableItem{
+            hook    : array[1],
+            domain  : array[4],
+            method  : array[2],
+            route   : array[3],
+            handler : v.handler.name,
+        }
+        if _, ok := m[item.domain]; !ok {
+            m[item.domain] = garray.NewSortedArray(100, func(v1, v2 interface{}) int {
+                item1 := v1.(*tableItem)
+                item2 := v2.(*tableItem)
+                r := 0
+                if r = strings.Compare(item1.domain, item2.domain); r == 0 {
+                    if r = strings.Compare(item1.route, item2.route); r == 0 {
+                        if r = strings.Compare(item1.method, item2.method); r == 0 {
+                            r = strings.Compare(item1.hook, item2.hook)
+                        }
+                    }
+                }
+                return r
+            }, false)
+        }
+        m[item.domain].Add(item)
+    }
+    for _, a := range m {
+        s := make([]string, 5)
+        for _, v := range a.Slice() {
+            item := v.(*tableItem)
+            s[0] = item.domain
+            s[1] = item.method
+            s[2] = item.route
+            s[3] = item.handler
+            s[4] = item.hook
+            table.Append(s)
+        }
+    }
+    table.Render()
+
+    return buf.String()
 }
 
 // 阻塞执行监听
