@@ -78,7 +78,10 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     } else {
         defer func() {
             if resultErr == nil {
-                s.routesMap[regkey] = caller
+                s.routesMap[regkey] = registeredRouteItem{
+                    file    : caller,
+                    handler : handler,
+                }
             }
         }()
     }

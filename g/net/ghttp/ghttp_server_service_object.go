@@ -11,6 +11,9 @@ import (
     "errors"
     "strings"
     "reflect"
+    "fmt"
+    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
@@ -23,9 +26,9 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
             methodMap[strings.TrimSpace(v)] = true
         }
     }
-    m := make(handlerMap)
-    v := reflect.ValueOf(obj)
-    t := v.Type()
+    m     := make(handlerMap)
+    v     := reflect.ValueOf(obj)
+    t     := v.Type()
     sname := t.Elem().Name()
     finit := (func(*Request))(nil)
     fshut := (func(*Request))(nil)
@@ -35,6 +38,8 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
     if v.MethodByName("Shut").IsValid() {
         fshut = v.MethodByName("Shut").Interface().(func(*Request))
     }
+    pkgPath := t.Elem().PkgPath()
+    pkgName := gfile.Basename(pkgPath)
     for i := 0; i < v.NumMethod(); i++ {
         mname := t.Method(i).Name
         if methodMap != nil && !methodMap[mname] {
@@ -43,8 +48,13 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
         if mname == "Init" || mname == "Shut" {
             continue
         }
+        objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
+        if objName[0] == '*' {
+            objName = fmt.Sprintf(`(%s)`, objName)
+        }
         key    := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
         m[key]  = &handlerItem {
+            name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
             rtype : gROUTE_REGISTER_OBJECT,
             ctype : nil,
             fname : "",
@@ -62,6 +72,7 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
                 }
             }
             m[p] = &handlerItem {
+                name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
                 rtype : gROUTE_REGISTER_OBJECT,
                 ctype : nil,
                 fname : "",
@@ -94,8 +105,15 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
     if v.MethodByName("Shut").IsValid() {
         fshut = v.MethodByName("Shut").Interface().(func(*Request))
     }
+    pkgPath := t.Elem().PkgPath()
+    pkgName := gfile.Basename(pkgPath)
+    objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
+    if objName[0] == '*' {
+        objName = fmt.Sprintf(`(%s)`, objName)
+    }
     key   := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
     m[key] = &handlerItem{
+        name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
         rtype : gROUTE_REGISTER_OBJECT,
         ctype : nil,
         fname : "",
@@ -121,14 +139,21 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
     if v.MethodByName("Shut").IsValid() {
         fshut = v.MethodByName("Shut").Interface().(func(*Request))
     }
+    pkgPath := t.Elem().PkgPath()
     for i := 0; i < v.NumMethod(); i++ {
-        name   := t.Method(i).Name
-        method := strings.ToUpper(name)
+        mname  := t.Method(i).Name
+        method := strings.ToUpper(mname)
         if _, ok := s.methodsMap[method]; !ok {
             continue
         }
-        key   := name + ":" + pattern
+        pkgName := gfile.Basename(pkgPath)
+        objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
+        if objName[0] == '*' {
+            objName = fmt.Sprintf(`(%s)`, objName)
+        }
+        key   := mname + ":" + pattern
         m[key] = &handlerItem {
+            name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
             rtype : gROUTE_REGISTER_OBJECT,
             ctype : nil,
             fname : "",

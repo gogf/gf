@@ -11,6 +11,9 @@ import (
     "errors"
     "strings"
     "reflect"
+    "fmt"
+    "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/util/gstr"
 )
 
 // 绑定控制器，控制器需要实现gmvc.Controller接口
@@ -25,10 +28,12 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
         }
     }
     // 遍历控制器，获取方法列表，并构造成uri
-    m     := make(handlerMap)
-    v     := reflect.ValueOf(c)
-    t     := v.Type()
-    sname := t.Elem().Name()
+    m       := make(handlerMap)
+    v       := reflect.ValueOf(c)
+    t       := v.Type()
+    sname   := t.Elem().Name()
+    pkgPath := t.Elem().PkgPath()
+    pkgName := gfile.Basename(pkgPath)
     for i := 0; i < v.NumMethod(); i++ {
         mname := t.Method(i).Name
         if methodMap != nil && !methodMap[mname] {
@@ -37,8 +42,13 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
         if mname == "Init" || mname == "Shut" || mname == "Exit"  {
             continue
         }
+        ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
+        if ctlName[0] == '*' {
+            ctlName = fmt.Sprintf(`(%s)`, ctlName)
+        }
         key   := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
         m[key] = &handlerItem {
+            name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
             rtype : gROUTE_REGISTER_CONTROLLER,
             ctype : v.Elem().Type(),
             fname : mname,
@@ -54,6 +64,7 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
                 }
             }
             m[p] = &handlerItem {
+                name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
                 rtype : gROUTE_REGISTER_CONTROLLER,
                 ctype : v.Elem().Type(),
                 fname : mname,
@@ -68,15 +79,21 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
 func (s *Server)BindControllerMethod(pattern string, c Controller, method string) error {
     m     := make(handlerMap)
     v     := reflect.ValueOf(c)
-    e     := v.Type().Elem()
-    t     := v.Elem().Type()
-    sname := e.Name()
+    t     := v.Type()
+    sname := t.Elem().Name()
     mname := strings.TrimSpace(method)
     if !v.MethodByName(mname).IsValid() {
         return errors.New("invalid method name:" + mname)
     }
-    key    := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
-    m[key]  = &handlerItem {
+    pkgPath := t.Elem().PkgPath()
+    pkgName := gfile.Basename(pkgPath)
+    ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
+    if ctlName[0] == '*' {
+        ctlName = fmt.Sprintf(`(%s)`, ctlName)
+    }
+    key     := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
+    m[key]   = &handlerItem {
+        name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
         rtype : gROUTE_REGISTER_CONTROLLER,
         ctype : t,
         fname : mname,
@@ -91,21 +108,28 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
 func (s *Server)BindControllerRest(pattern string, c Controller) error {
     // 遍历控制器，获取方法列表，并构造成uri
-    m := make(handlerMap)
-    v := reflect.ValueOf(c)
-    t := v.Type()
+    m       := make(handlerMap)
+    v       := reflect.ValueOf(c)
+    t       := v.Type()
+    pkgPath := t.Elem().PkgPath()
     // 如果存在与HttpMethod对应名字的方法，那么绑定这些方法
     for i := 0; i < v.NumMethod(); i++ {
-        name   := t.Method(i).Name
-        method := strings.ToUpper(name)
+        mname  := t.Method(i).Name
+        method := strings.ToUpper(mname)
         if _, ok := s.methodsMap[method]; !ok {
             continue
         }
-        key   := name + ":" + pattern
+        pkgName := gfile.Basename(pkgPath)
+        ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
+        if ctlName[0] == '*' {
+            ctlName = fmt.Sprintf(`(%s)`, ctlName)
+        }
+        key   := mname + ":" + pattern
         m[key] = &handlerItem {
+            name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
             rtype : gROUTE_REGISTER_CONTROLLER,
             ctype : v.Elem().Type(),
-            fname : name,
+            fname : mname,
             faddr : nil,
         }
     }

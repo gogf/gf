@@ -12,11 +12,14 @@ import (
     "strings"
     "gitee.com/johng/gf/g/util/gstr"
     "bytes"
+    "runtime"
+    "reflect"
 )
 
 // 注意该方法是直接绑定函数的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (s *Server) BindHandler(pattern string, handler HandlerFunc) error {
     return s.bindHandlerItem(pattern, &handlerItem {
+        name  : runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
         rtype : gROUTE_REGISTER_HANDLER,
         ctype : nil,
         fname : "",
