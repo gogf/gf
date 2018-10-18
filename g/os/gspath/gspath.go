@@ -50,7 +50,7 @@ func (sp *SPath) Set(path string) error {
         glog.Debug("gspath.SetPath:", r)
         return nil
     }
-    glog.Debug("gspath.SetPath failed:", path)
+    glog.Warning("gspath.SetPath failed:", path)
     return errors.New("invalid path:" + path)
 }
 
@@ -71,7 +71,7 @@ func (sp *SPath) Add(path string) error {
         glog.Debug("gspath.Add:", r)
         return nil
     }
-    glog.Debug("gspath.Add failed:", path)
+    glog.Warning("gspath.Add failed:", path)
     return errors.New("invalid path:" + path)
 }
 

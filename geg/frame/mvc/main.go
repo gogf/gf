@@ -7,6 +7,9 @@ import (
 )
 
 func main() {
+
+    //g.Server().SetDumpRouteMap(false)
     g.Server().SetPort(8199)
     g.Server().Run()
+
 }

@@ -74,3 +74,15 @@ func (l *Logger) StdPrint(enabled bool) *Logger {
     logger.SetStdPrint(enabled)
     return logger
 }
+
+// 是否打印每行日志头信息(默认开启)
+func (l *Logger) Header(enabled bool) *Logger {
+    logger := (*Logger)(nil)
+    if l.pr == nil {
+        logger = l.Clone()
+    } else {
+        logger = l
+    }
+    logger.printHeader.Set(enabled)
+    return logger
+}
