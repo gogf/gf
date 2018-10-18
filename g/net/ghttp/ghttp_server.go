@@ -216,7 +216,7 @@ func (s *Server) Start() error {
         s.paths.Set(s.config.ServerRoot)
     }
     s.paths.Add(gfile.SelfDir())
-    if p := gfile.MainPkgPath(); gfile.Exists(p) {
+    if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
         s.paths.Add(p)
     }
 
@@ -271,11 +271,16 @@ func (s *Server) Start() error {
 
 // 打印展示路由表
 func (s *Server) DumpRoutesMap() {
-    fmt.Println(s.GetRoutesMap())
+    if s.config.DumpRouteMap {
+        // (等待一定时间后)当所有框架初始化信息打印完毕之后才打印路由表信息
+        gtime.SetTimeout(50*time.Millisecond, func() {
+            glog.Header(false).Println(fmt.Sprintf("\n%s\n", s.GetRouteMap()))
+        })
+    }
 }
 
 // 获得路由表(格式化字符串)
-func (s *Server) GetRoutesMap() string {
+func (s *Server) GetRouteMap() string {
     type tableItem struct {
         hook    string
         domain  string
@@ -286,7 +291,7 @@ func (s *Server) GetRoutesMap() string {
 
     buf   := bytes.NewBuffer(nil)
     table := tablewriter.NewWriter(buf)
-    table.SetHeader([]string{"DOMAIN", "METHOD", "ROUTE", "HANDLER", "HOOK"})
+    table.SetHeader([]string{"SERVER", "ADDRESS", "DOMAIN", "METHOD", "ROUTE", "HANDLER", "HOOK"})
     table.SetRowLine(true)
     table.SetBorder(false)
     table.SetCenterSeparator("|")
@@ -319,15 +324,17 @@ func (s *Server) GetRoutesMap() string {
         m[item.domain].Add(item)
     }
     for _, a := range m {
-        s := make([]string, 5)
+        data := make([]string, 7)
         for _, v := range a.Slice() {
             item := v.(*tableItem)
-            s[0] = item.domain
-            s[1] = item.method
-            s[2] = item.route
-            s[3] = item.handler
-            s[4] = item.hook
-            table.Append(s)
+            data[0] = s.name
+            data[1] = s.config.Addr
+            data[2] = item.domain
+            data[3] = item.method
+            data[4] = item.route
+            data[5] = item.handler
+            data[6] = item.hook
+            table.Append(data)
         }
     }
     table.Render()

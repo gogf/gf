@@ -80,7 +80,7 @@ func View(name...string) *gview.View {
         }
         view := gview.Get(path)
         // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
-        if p := gfile.MainPkgPath(); gfile.Exists(p) {
+        if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
             view.AddPath(p)
         }
         // 框架内置函数
@@ -107,7 +107,7 @@ func Config(file...string) *gcfg.Config {
             }
             config := gcfg.New(path, configFile)
             // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
-            if p := gfile.MainPkgPath(); gfile.Exists(p) {
+            if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
                 config.AddPath(p)
             }
             return config

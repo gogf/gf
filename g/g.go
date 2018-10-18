@@ -21,4 +21,3 @@ type List  = []Map
 // 常用slice数据结构(使用别名)
 type Slice = []interface{}
 type Array = Slice
-

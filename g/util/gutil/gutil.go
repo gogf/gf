@@ -13,6 +13,8 @@ import (
     "encoding/json"
     "reflect"
     "gitee.com/johng/gf/g/util/gconv"
+    "runtime"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 // 格式化打印变量(类似于PHP-vardump)
@@ -46,5 +48,20 @@ func Dump(i...interface{}) {
         }
         //fmt.Println()
     }
+}
+
+// 打印完整的调用回溯信息
+func PrintBacktrace() {
+    index  := 1
+    buffer := bytes.NewBuffer(nil)
+    for i := 0; i < 10000; i++ {
+        if _, cfile, cline, ok := runtime.Caller(i); ok {
+            buffer.WriteString(fmt.Sprintf(`%d. %s:%d%s`, index, cfile, cline, "\n"))
+            index++
+        } else {
+            break
+        }
+    }
+    glog.Header(false).Print(buffer.String())
 }
 

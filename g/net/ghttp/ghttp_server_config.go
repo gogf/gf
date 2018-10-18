@@ -76,6 +76,7 @@ type ServerConfig struct {
     // 其他设置
     NameToUriType    int          // 服务注册时对象和方法名称转换为URI时的规则
     GzipContentTypes []string     // 允许进行gzip压缩的文件类型
+    DumpRouteMap     bool         // 是否在程序启动时默认打印路由表信息
 }
 
 // 默认HTTP Server
@@ -102,6 +103,8 @@ var defaultServerConfig = ServerConfig {
     ErrorLogEnabled  : true,
 
     GzipContentTypes : defaultGzipContentTypes,
+
+    DumpRouteMap     : true,
 }
 
 // 获取默认的http server设置
@@ -288,6 +291,14 @@ func (s *Server) SetNameToUriType(t int) {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
     }
     s.config.NameToUriType = t
+}
+
+// 是否在程序启动时打印路由表信息
+func (s *Server) SetDumpRouteMap(enabled bool) {
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+    }
+    s.config.DumpRouteMap = enabled
 }
 
 // 添加静态文件搜索目录，必须给定目录的绝对路径

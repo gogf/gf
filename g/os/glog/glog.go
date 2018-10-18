@@ -102,6 +102,10 @@ func StdPrint(enabled bool) *Logger {
     return logger.StdPrint(enabled)
 }
 
+// 是否打印每行日志头信息(默认开启)
+func Header(enabled bool) *Logger {
+    return logger.Header(enabled)
+}
 func Print(v ...interface{}) {
     logger.Print(v ...)
 }
