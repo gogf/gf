@@ -173,7 +173,6 @@ func (l *Logger) SetStdPrint(enabled bool) {
 }
 
 // 这里的写锁保证统一时刻只会写入一行日志，防止串日志的情况
-// 注意这里的std io.Writer为值赋值，会造成标准输出串日志的情况
 func (l *Logger) print(std io.Writer, s string) {
     // 优先使用自定义的IO输出
     if l.printHeader.Val() {
