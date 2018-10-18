@@ -332,7 +332,7 @@ func (db *Db) insert(table string, data Map, option uint8) (sql.Result, error) {
     for k, v := range data {
         fields = append(fields,   db.charl + k + db.charr)
         values = append(values, "?")
-        params = append(params, gconv.String(v))
+        params = append(params, v)
     }
     operation := db.getInsertOperationByOption(option)
     updatestr := ""
@@ -409,7 +409,7 @@ func (db *Db) batchInsert(table string, list List, batch int, option uint8) (sql
     // 构造批量写入数据格式(注意map的遍历是无序的)
     for i := 0; i < size; i++ {
         for _, k := range keys {
-            params = append(params, gconv.String(list[i][k]))
+            params = append(params, list[i][k])
         }
         bvalues = append(bvalues, valueHolderStr)
         if len(bvalues) == batch {
