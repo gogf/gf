@@ -1,2 +1,0 @@
-// MMAP
-package gmmap
