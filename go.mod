@@ -30,3 +30,8 @@ require (
 	gopkg.in/yaml.v2 v2.2.1
 )
 
+replace (
+	golang.org/x/sys => ./vendor/golang.org/x/sys
+	gopkg.in/check.v1 => ./vendor/gopkg.in/check.v1
+	gopkg.in/yaml.v2 => ./vendor/gopkg.in/yaml.v2
+)
