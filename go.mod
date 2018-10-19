@@ -25,7 +25,7 @@ require (
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/theckman/go-flock v0.7.0
-	golang.org/x/sys v0.0.0
+	golang.org/x/sys v0.0.0 // indirect
 	gopkg.in/check.v1 v1.0.0
 	gopkg.in/yaml.v2 v2.2.1
 )
