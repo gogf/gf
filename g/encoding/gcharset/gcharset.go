@@ -11,7 +11,7 @@
 package gcharset
 
 import (
-	"github.com/axgle/mahonia"
+	"gitee.com/johng/gf/third/github.com/axgle/mahonia"
 	"errors"
 	"fmt"
 )

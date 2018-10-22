@@ -1,7 +1,7 @@
 package main
 
 import (
-    "github.com/fsnotify/fsnotify"
+    "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
     "log"
 )
 

@@ -8,11 +8,11 @@
 package gxml
 
 import (
-    "github.com/clbanning/mxj"
+    "gitee.com/johng/gf/third/github.com/clbanning/mxj"
     "encoding/xml"
     "io"
 	"gitee.com/johng/gf/g/util/gregex"
-	"github.com/axgle/mahonia"
+	"gitee.com/johng/gf/third/github.com/axgle/mahonia"
 	"errors"
 	"fmt"
 	"strings"

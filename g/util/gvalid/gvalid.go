@@ -12,7 +12,7 @@ import (
     "strings"
     "regexp"
     "strconv"
-    "github.com/fatih/structs"
+    "gitee.com/johng/gf/third/github.com/fatih/structs"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/net/gipv4"
     "gitee.com/johng/gf/g/net/gipv6"

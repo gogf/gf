@@ -9,7 +9,7 @@ package gflock
 
 import (
     "sync"
-    "github.com/theckman/go-flock"
+    "gitee.com/johng/gf/third/github.com/theckman/go-flock"
     "gitee.com/johng/gf/g/os/gfile"
 )
 

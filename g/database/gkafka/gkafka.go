@@ -10,8 +10,8 @@ package gkafka
 import (
     "time"
     "strings"
-    "github.com/Shopify/sarama"
-    "github.com/johng-cn/sarama-cluster"
+    "gitee.com/johng/gf/third/github.com/Shopify/sarama"
+    "gitee.com/johng/gf/third/github.com/johng-cn/sarama-cluster"
     "errors"
 )
 

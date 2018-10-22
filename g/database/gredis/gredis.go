@@ -10,7 +10,7 @@ package gredis
 
 import (
     "time"
-    "github.com/gomodule/redigo/redis"
+    "gitee.com/johng/gf/third/github.com/gomodule/redigo/redis"
     "gitee.com/johng/gf/g/container/gmap"
     "fmt"
 )

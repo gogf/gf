@@ -11,7 +11,7 @@ package gfsnotify
 import (
     "errors"
     "gitee.com/johng/gf/g/os/glog"
-    "github.com/fsnotify/fsnotify"
+    "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/glist"

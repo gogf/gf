@@ -10,7 +10,7 @@ package gtoml
 import (
     "bytes"
     "encoding/json"
-    "github.com/BurntSushi/toml"
+    "gitee.com/johng/gf/third/github.com/BurntSushi/toml"
 )
 
 func Encode(v interface{}) ([]byte, error) {
