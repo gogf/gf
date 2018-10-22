@@ -61,7 +61,7 @@ func Create(path string) error {
     return nil
 }
 
-// 打开文件
+// 打开文件(os.O_RDWR|os.O_CREATE, 0666)
 func Open(path string) (*os.File, error) {
     f, err  := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
     if err != nil {
@@ -70,9 +70,18 @@ func Open(path string) (*os.File, error) {
     return f, nil
 }
 
-// 打开文件
+// 打开文件(带flag)
 func OpenWithFlag(path string, flag int) (*os.File, error) {
     f, err  := os.OpenFile(path, flag, 0666)
+    if err != nil {
+        return nil, err
+    }
+    return f, nil
+}
+
+// 打开文件(带flag&perm)
+func OpenWithFlagPerm(path string, flag int, perm int) (*os.File, error) {
+    f, err  := os.OpenFile(path, flag, os.FileMode(perm))
     if err != nil {
         return nil, err
     }
