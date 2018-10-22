@@ -1,1 +1,1 @@
-`GF` self-maintains its thirdparty-packages, developers do need worry about the dependences.
+`GF` self-maintains its thirdparty-packages, developers do not need worry about the dependences.
