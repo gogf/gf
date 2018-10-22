@@ -275,11 +275,11 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
         switch v[0] {
             case ':':
                 if len(v) > 1 {
-                    regrule += `/([\w\.\-]+)`
+                    regrule += `/(.+)`
                     names    = append(names, v[1:])
                     break
                 } else {
-                    regrule += `/[\w\.\-]+`
+                    regrule += `/.+`
                     break
                 }
                 fallthrough
@@ -302,7 +302,7 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
                 })
                 s, _ := gregex.ReplaceStringFunc(`\{[\w\.\-]+\}`, v, func(s string) string {
                     names = append(names, s[1 : len(s) - 1])
-                    return `([\w\.\-]+)`
+                    return `(.+)`
                 })
                 if strings.EqualFold(s, v) {
                     regrule += "/" + v
