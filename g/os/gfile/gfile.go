@@ -8,27 +8,22 @@
 package gfile
 
 import (
-    "os"
-    "io"
-    "io/ioutil"
-    "fmt"
-    "time"
-    "strings"
     "bytes"
-    "os/exec"
     "errors"
-    "os/user"
-    "runtime"
-    "path/filepath"
+    "fmt"
     "gitee.com/johng/gf/g/container/gtype"
-    "sort"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/os/gfpool"
     "gitee.com/johng/gf/g/util/gregex"
+    "io"
+    "os"
+    "os/exec"
+    "os/user"
+    "path/filepath"
+    "runtime"
+    "sort"
+    "strings"
+    "time"
 )
-
-// 封装了常用的文件操作方法，如需更详细的文件控制，请查看官方os包
-
 
 // 文件分隔符
 const (
@@ -125,85 +120,6 @@ func Info(path string) *os.FileInfo {
     return &info
 }
 
-// 修改时间(秒)
-func MTime(path string) int64 {
-    f, e := os.Stat(path)
-    if e != nil {
-        return 0
-    }
-    return f.ModTime().Unix()
-}
-
-// 修改时间(毫秒)
-func MTimeMillisecond(path string) int64 {
-    f, e := os.Stat(path)
-    if e != nil {
-        return 0
-    }
-    return int64(f.ModTime().Nanosecond()/1000000)
-}
-
-// 文件大小(bytes)
-func Size(path string) int64 {
-    f, e := os.Stat(path)
-    if e != nil {
-        return 0
-    }
-    return f.Size()
-}
-
-// 格式化文件大小
-func ReadableSize(path string) string {
-    return FormatSize(float64(Size(path)))
-}
-
-// 格式化文件大小
-func FormatSize(raw float64) string {
-    var t float64 = 1024
-    var d float64 = 1
-
-    if raw < t {
-        return fmt.Sprintf("%.2fB", raw/d)
-    }
-
-    d *= 1024
-    t *= 1024
-
-    if raw < t {
-        return fmt.Sprintf("%.2fK", raw/d)
-    }
-
-    d *= 1024
-    t *= 1024
-
-    if raw < t {
-        return fmt.Sprintf("%.2fM", raw/d)
-    }
-
-    d *= 1024
-    t *= 1024
-
-    if raw < t {
-        return fmt.Sprintf("%.2fG", raw/d)
-    }
-
-    d *= 1024
-    t *= 1024
-
-    if raw < t {
-        return fmt.Sprintf("%.2fT", raw/d)
-    }
-
-    d *= 1024
-    t *= 1024
-
-    if raw < t {
-        return fmt.Sprintf("%.2fP", raw/d)
-    }
-
-    return "TooLarge"
-}
-
 // 文件移动/重命名
 func Move(src string, dst string) error {
     return os.Rename(src, dst)
@@ -273,7 +189,7 @@ func Remove(path string) error {
     return os.RemoveAll(path)
 }
 
-// 文件是否可
+// 文件是否可读
 func IsReadable(path string) bool {
     result    := true
     file, err := os.OpenFile(path, os.O_RDONLY, 0666)
@@ -368,68 +284,6 @@ func RealPath(path string) string {
     return p
 }
 
-// (文本)读取文件内容
-func GetContents(path string) string {
-    return string(GetBinContents(path))
-}
-
-// (二进制)读取文件内容
-func GetBinContents(path string) []byte {
-    data, err := ioutil.ReadFile(path)
-    if err != nil {
-        return nil
-    }
-    return data
-}
-
-// 写入文件内容
-func putContents(path string, data []byte, flag int, perm os.FileMode) error {
-    // 支持目录递归创建
-    dir := Dir(path)
-    if !Exists(dir) {
-        if err := Mkdir(dir); err != nil {
-            return err
-        }
-    }
-    // 创建/打开文件，使用文件指针池，默认60秒
-    f, err := gfpool.OpenFile(path, flag, perm, 60000)
-    if err != nil {
-        return err
-    }
-    defer f.Close()
-    if n, err := f.Write(data); err != nil {
-        return err
-    } else if n < len(data) {
-        return io.ErrShortWrite
-    }
-    return nil
-}
-
-// Truncate
-func Truncate(path string, size int) error {
-    return os.Truncate(path, int64(size))
-}
-
-// (文本)写入文件内容
-func PutContents(path string, content string) error {
-    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-}
-
-// (文本)追加内容到文件末尾
-func PutContentsAppend(path string, content string) error {
-    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-}
-
-// (二进制)写入文件内容
-func PutBinContents(path string, content []byte) error {
-    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-}
-
-// (二进制)追加内容到文件末尾
-func PutBinContentsAppend(path string, content []byte) error {
-    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-}
-
 
 // 获取当前执行文件的绝对路径
 func SelfPath() string {
@@ -500,33 +354,6 @@ func homeWindows() (string, error) {
     }
 
     return home, nil
-}
-
-// 获得文件内容下一个指定字节的位置
-func GetNextCharOffset(file *os.File, char string, start int64) int64 {
-    c := []byte(char)[0]
-    b := make([]byte, 1)
-    o := start
-    for {
-        _, err := file.ReadAt(b, o)
-        if err != nil {
-            return 0
-        }
-        if b[0] == c {
-            return o
-        }
-        o++
-    }
-    return 0
-}
-
-// 获得文件内容中两个offset之间的内容 [start, end)
-func GetBinContentByTwoOffsets(file *os.File, start int64, end int64) []byte {
-    buffer := make([]byte, end - start)
-    if _, err := file.ReadAt(buffer, start); err != nil {
-        return nil
-    }
-    return buffer
 }
 
 // 获取入口函数文件所在目录(main包文件目录)，
