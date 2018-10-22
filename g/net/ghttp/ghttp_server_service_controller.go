@@ -95,7 +95,7 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
     m[key]   = &handlerItem {
         name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
         rtype : gROUTE_REGISTER_CONTROLLER,
-        ctype : t,
+        ctype : v.Elem().Type(),
         fname : mname,
         faddr : nil,
     }
