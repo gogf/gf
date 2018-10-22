@@ -13,6 +13,11 @@ import (
     "os"
 )
 
+const (
+    // 方法中涉及到读取的时候的缓冲大小
+    gREAD_BUFFER = 1024
+)
+
 // (文本)读取文件内容
 func GetContents(path string) string {
     return string(GetBinContents(path))
@@ -76,25 +81,34 @@ func PutBinContentsAppend(path string, content []byte) error {
 }
 
 // 获得文件内容下一个指定字节的位置
-func GetNextCharOffset(file *os.File, char string, start int64) int64 {
-    c := []byte(char)[0]
-    b := make([]byte, 1)
-    o := start
+func GetNextCharOffset(file *os.File, char byte, start int64) int64 {
+    buffer := make([]byte, gREAD_BUFFER)
+    offset := start
     for {
-        _, err := file.ReadAt(b, o)
-        if err != nil {
-            return 0
+        if n, err := file.ReadAt(buffer, offset); n > 0 {
+            for i := 0; i < n; i++ {
+                if buffer[i] == char {
+                    return int64(i)
+                }
+            }
+            offset++
+        } else if err != nil {
+            break
         }
-        if b[0] == c {
-            return o
-        }
-        o++
     }
-    return 0
+    return -1
+}
+
+// 获得文件内容直到下一个指定字节的位置(返回值不包含该位置字符内容)
+func GetBinContentsTilChar(file *os.File, char byte, start int64) ([]byte, int64) {
+    if offset := GetNextCharOffset(file, char, start); offset != -1 {
+        return GetBinContentsByTwoOffsets(file, start, offset), offset
+    }
+    return nil, -1
 }
 
 // 获得文件内容中两个offset之间的内容 [start, end)
-func GetBinContentByTwoOffsets(file *os.File, start int64, end int64) []byte {
+func GetBinContentsByTwoOffsets(file *os.File, start int64, end int64) []byte {
     buffer := make([]byte, end - start)
     if _, err := file.ReadAt(buffer, start); err != nil {
         return nil
