@@ -13,7 +13,7 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/os/gtime"
-    "github.com/fatih/structs"
+    "gitee.com/johng/gf/third/github.com/fatih/structs"
     "strings"
     "gitee.com/johng/gf/g/container/gvar"
 )

@@ -11,7 +11,7 @@ import (
 	"errors"
 	"database/sql"
 	"gitee.com/johng/gf/g/util/gconv"
-	_ "github.com/go-sql-driver/mysql"
+	_ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
 )
 
 // 数据库链式操作模型对象

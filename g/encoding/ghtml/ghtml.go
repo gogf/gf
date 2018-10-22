@@ -10,7 +10,7 @@ package ghtml
 import (
     "strings"
     "html"
-    "github.com/grokify/html-strip-tags-go"
+    "gitee.com/johng/gf/third/github.com/grokify/html-strip-tags-go"
 )
 
 // 过滤掉HTML标签，只返回text内容

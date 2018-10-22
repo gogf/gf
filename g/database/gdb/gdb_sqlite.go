@@ -12,7 +12,7 @@ import (
 )
 
 // 使用时需要import:
-// _ "github.com/mattn/go-sqlite3"
+// _ "gitee.com/johng/gf/third/github.com/mattn/go-sqlite3"
 
 // 数据库链接对象
 type dbsqlite struct {

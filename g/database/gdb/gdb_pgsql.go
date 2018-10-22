@@ -15,7 +15,7 @@ import (
 
 // PostgreSQL的适配.
 // 使用时需要import:
-// _ "github.com/lib/pq"
+// _ "gitee.com/johng/gf/third/github.com/lib/pq"
 // @todo 需要完善replace和save的操作覆盖
 
 // 数据库链接对象

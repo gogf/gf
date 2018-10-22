@@ -7,7 +7,7 @@
 // YAML
 package gyaml
 
-import "github.com/ghodss/yaml"
+import "gitee.com/johng/gf/third/github.com/ghodss/yaml"
 
 func Encode(v interface{}) ([]byte, error) {
     return yaml.Marshal(v)

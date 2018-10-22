@@ -18,7 +18,7 @@ import (
 	"gitee.com/johng/gf/g/container/gtype"
 	"gitee.com/johng/gf/g/os/gcache"
 	"gitee.com/johng/gf/g/util/grand"
-	_ "github.com/go-sql-driver/mysql"
+	_ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
 	"gitee.com/johng/gf/g/container/gvar"
 )
 

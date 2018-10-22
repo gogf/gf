@@ -14,7 +14,7 @@ import (
     "database/sql"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
-    _ "github.com/go-sql-driver/mysql"
+    _ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
     "gitee.com/johng/gf/g/container/gvar"
 )
 

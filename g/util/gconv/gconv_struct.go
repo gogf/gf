@@ -9,7 +9,7 @@ package gconv
 import (
     "gitee.com/johng/gf/g/util/gstr"
     "reflect"
-    "github.com/fatih/structs"
+    "gitee.com/johng/gf/third/github.com/fatih/structs"
     "strings"
     "errors"
     "fmt"
