@@ -15,7 +15,9 @@ import (
 
 const (
     // 方法中涉及到读取的时候的缓冲大小
-    gREAD_BUFFER = 1024
+    gREAD_BUFFER      = 1024
+    // 方法中涉及到文件指针池的默认缓存时间(秒)
+    gFILE_POOL_EXPIRE = 60
 )
 
 // (文本)读取文件内容
@@ -88,10 +90,10 @@ func GetNextCharOffset(file *os.File, char byte, start int64) int64 {
         if n, err := file.ReadAt(buffer, offset); n > 0 {
             for i := 0; i < n; i++ {
                 if buffer[i] == char {
-                    return int64(i)
+                    return int64(i) + offset
                 }
             }
-            offset++
+            offset += int64(n)
         } else if err != nil {
             break
         }
@@ -99,10 +101,32 @@ func GetNextCharOffset(file *os.File, char byte, start int64) int64 {
     return -1
 }
 
-// 获得文件内容直到下一个指定字节的位置(返回值不包含该位置字符内容)
+// 获得文件内容下一个指定字节的位置
+func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
+    if f, err := gfpool.Open(path, os.O_RDONLY, 0666, gFILE_POOL_EXPIRE*1000); err == nil {
+        defer f.Close()
+        return GetNextCharOffset(&f.File, char, start)
+    } else {
+        // panic(err)
+    }
+    return -1
+}
+
+// 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
 func GetBinContentsTilChar(file *os.File, char byte, start int64) ([]byte, int64) {
     if offset := GetNextCharOffset(file, char, start); offset != -1 {
-        return GetBinContentsByTwoOffsets(file, start, offset), offset
+        return GetBinContentsByTwoOffsets(file, start, offset + 1), offset
+    }
+    return nil, -1
+}
+
+// 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
+func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
+    if f, err := gfpool.Open(path, os.O_RDONLY, 0666, gFILE_POOL_EXPIRE*1000); err == nil {
+        defer f.Close()
+        return GetBinContentsTilChar(&f.File, char, start)
+    } else {
+        // panic(err)
     }
     return nil, -1
 }
@@ -114,4 +138,15 @@ func GetBinContentsByTwoOffsets(file *os.File, start int64, end int64) []byte {
         return nil
     }
     return buffer
+}
+
+// 获得文件内容中两个offset之间的内容 [start, end)
+func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
+    if f, err := gfpool.Open(path, os.O_RDONLY, 0666, gFILE_POOL_EXPIRE*1000); err == nil {
+        defer f.Close()
+        return GetBinContentsByTwoOffsets(&f.File, start, end)
+    } else {
+        // panic(err)
+    }
+    return nil
 }

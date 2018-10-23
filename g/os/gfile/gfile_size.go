@@ -13,11 +13,11 @@ import (
 
 // 文件大小(bytes)
 func Size(path string) int64 {
-    f, e := os.Stat(path)
+    s, e := os.Stat(path)
     if e != nil {
         return 0
     }
-    return f.Size()
+    return s.Size()
 }
 
 // 格式化文件大小
