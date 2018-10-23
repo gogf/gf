@@ -200,7 +200,7 @@ func (client *Client) SyncSend(message *Message) error {
     return nil
 }
 
-// Send data to kafka in asynchronized way.
+// Send data to kafka in asynchronized way(concurrent safe).
 func (client *Client) AsyncSend(message *Message) error {
     if client.asyncProducer == nil {
         if p, err := sarama.NewAsyncProducer(strings.Split(client.Config.Servers, ","), &client.Config.Config); err != nil {

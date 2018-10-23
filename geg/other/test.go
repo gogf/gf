@@ -2,10 +2,13 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/gtime"
 )
 
+func test() {
+    defer fmt.Println(1)
+    fmt.Println(2)
+}
+
 func main() {
-    fmt.Println(gtime.NewFromTimeStamp(gfile.MTime("/home/john/Documents/temp")).String())
+    test()
 }
