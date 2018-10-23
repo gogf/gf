@@ -1,4 +1,4 @@
-0.97.399 beta
+v0.97.399 beta (2018-04-23)
     1、 增加gfsnotify文件监控模块；
     2、 配置管理模块增加配置文件自动检测更新机制；
     3、 模板引擎增加对模板文件的自动检测更新机制；
@@ -19,7 +19,7 @@
 
 
 
-0.98.503 beta
+v0.98.503 beta (2018-05-21)
     新特性：
         1、平滑重启特性( http://gf.johng.cn/625833 )；
         2、gflock文件锁模块( http://gf.johng.cn/626062 )；
@@ -81,7 +81,7 @@
 
 
 
-0.99.682 beta
+v0.99.682 beta (2018-08-07)
     新特性：
         1、新增gdes包，用于DES加密/加密算法处理；
         2、新增gkafka包，kafka的golang客户端；
@@ -136,3 +136,103 @@
         5、修复gdb批量数据Save错误
         6、去掉gpool中math.MAXINT64常量的使用，以修复int64到int类型的转换错误，兼容32位系统
         7、修正ghttp包没有使用Server仍然初始化相关异步goroutine的问题
+
+v1.0.898 stable (2018-10-23)
+
+新增sqlite支持
+修复ghttp.Server在windows下的重启失效问题；去掉gfile.IsExecutable方法
+将加密/解密相关的包从encoding目录迁移到crypto目录下，并改进包中的interface{]参数转换方式
+修复ghttp服务注册与回调注册重复判断问题
+改进ghttp.Server配置管理
+glog.Cat当目录不存在时自动创建
+gfsnotify/gfcache调试信息
+改进gcache底层对象继承关系
+gfpool改进，gkafka测试，gcache基准测试
+改进gfpool，改进gmap
+修复garray排序数组Add变参时的死锁问题
+改进gconv.Struct对象转换
+改进grand随机数生成规则
+增加go modules支持
+改进gkafka，获取topics使用临时的消费对象
+修复gkafka异步发送消息问题，改进gfile常量管理
+完成gfile文件内容操作方法改进
+新增gcron定时任务包
+orm允许写入的键值为nil时往数据库中写入null
+Web Server路由注册项打印特性
+改进gtime模块，并增加时区转换方法
+统一使用gview.Params类型作为模板变量类型
+g.View增加分组名称；模板引擎增加Assign/Assigns方法
+模板引擎增加text/html方法，用于过滤html标签及保留html标签
+改进SESSION方法
+gredis改进为单例操作方式，每次操作redis服务器时开发者无需显示调用Close方法
+g.DB/g.Config改进单例缓存键名
+改进gdb，增加数据库操作自动Close特性(使用链接池)，用户无需再defer db.Close()，并增加g.DB数据库对象单例别名
+gspath添加debug信息，改进glog链式操作方法
+改进glog的backtrace skip功能，g模块增加错误日志信息提示
+glog增加对文件名称格式的自定义设置，支持gtime日期格式
+gconv增加Ints/Floats/Interfaces转换方法，完善gconv.Struct方法封装，改进相关依赖包对gconv的引用
+改进glog backtrace输出判断
+修复gfsnotify默认递归监控整个gspath.Add添加的目录的问题
+改进gconv对象转换方法，名称修改gconv.MapToStruct -> gconv.Struct
+修复ghttp.BindParams对@file文件上传标识符的转义问题
+增加gvar包，并改进默认的g包
+改进gtcp/gudp超时错误判断机制
+garray.Slice方法改进，gqueue改进
+改进gcache/gqueue，提高执行效率，并完善相应的基准测试用例
+修复ghttp.Server日志路径丢失问题
+改进gparser，增加NewUnsafe/Append方法
+gjson增加Append方法，gconv增加Ints/Uints/Strings方法
+gtype底层统一修改为原子操作
+ghttp.Server完善重启及停止的终端提示信息
+gcache增加GetOrSet/GetOrSetFunc方法
+完善gring包，增加约瑟夫问题代码作为gring示例程序
+去掉gset.Uint类型，gset增加LockFunc/RLockFunc方法
+并发安全容器的并发安全方法改进
+数据结构容器增加并发安全特性开启/关闭功能，当关闭后和普通的数据结构无异，非并发安全模式下性能会得到提高
+完成gaes包开发
+ghttp.Response方法完善，增加ParseTpl/ParseTplContent/TplContent方法，Template修改为Tpl方法
+glog增加日志等级特性
+完善日志中的内容大小记录；模板引擎新增Config内置变量
+改进cookie，去掉锁机制
+gdb增加调试模式的自动调试信息输出，开发中
+新增gmlock内存锁组件，改进glog日志写文件时的文件锁机制
+改进gvalid对struct的string属性的默认值非必需校验
+ghttp.Request增加获取用户真实IP判断
+Session增加Contains方法
+修复多WebServer下的状态检测问题
+完善ghtml包，增加多个方法
+改进garray包，gcache新增Contains/SetIfNotExist方法
+websocket增加消息类型常量
+gvalid增加Error对象，用以管理校验错误信息
+改进gvalid在关联规则下的非必需校验
+修复gvalid包min/max校验问题
+完成orm的调试模式下日志自动输出改进，改进glog增加日志等级管理功能、增加链式操作、日志分类管理
+修复控制器和执行对象绑定'/'路由的问题
+增加调试模式下的SQL列表打印方法PrintQueriedSqls;改进gtime.NewFromTimeStamp方法，支持纳秒级的时间戳参数
+gvalid包增加struct tag的校验规则、自定义错误提示信息绑定的支持特性
+将gutil.MapToStruct方法迁移到gconv包中，并增加gconv的struct tag支持
+ghttp.Server/gspath包静态文件检索改进
+ghttp.Server静态文件处理改进，增加AddSearchPath方法，可添加自定义的静态文件w搜索路径
+glog增加日志分类特性
+gconv.MapToStruct方法增加自定义参数属性映射关系参数，非必需
+ghttp增加输入参数与struct的绑定机制，并增加对应params标签支持
+优化ghttp.ServerConfig配置，增加struct/method名称到uri的转换规则，通过SetNameToUri方法进行灵活配置
+*any/:name路由匹配路由改进支持不带名字的*/:路由规则
+SetNameToUri增加驼峰命名规则的名称转换方式
+ghttp.Request增加服务端BasicAuth功能
+gvalid增加字段校验别名，用于自定义返回结果字段，并更新WebServer中相关使用的模块
+添加ForPage方法，调整Chunks方法
+修改默认配置文件名称 config.yml -> config.toml
+调整BindControllerMethod及BindObjectMethod逻辑为绑定路由到指定的方法执行
+修复gvalid.CheckStruct自定义错误提示失效问题
+gproc增加执行shell命令方法
+ghttp.Server修复hook与serve方法的路由影响，并新增跳转方法
+ghttp对象路由注册增加Init&Shut自动回调方法；ghttp增加重复路由注册检测功能；gfsnotify增加默认递归Add/Remove特性
+ghttp.Response增加ServiceFile方法
+增加gfcache包，改进gcfg/gview包
+改进Web Server静态文件与服务的优先级判断
+garray的int和string的search方法修改
+修复garray锁机制问题
+改进garray二分查找方法
+改进garray包，增加安全操作处理
+改进gdb.Result/Recorde ToXml方法，增加可选的rootTag参数
