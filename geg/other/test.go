@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g/container/gvar"
 )
 
 func test() {
@@ -10,5 +11,7 @@ func test() {
 }
 
 func main() {
-    test()
+    var v *gvar.Var
+    //v := new(gvar.Var)
+    fmt.Println(v.String())
 }

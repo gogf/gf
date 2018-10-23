@@ -27,7 +27,9 @@ import (
 
 // 文件分隔符
 const (
-    Separator = string(filepath.Separator)
+    Separator     = string(filepath.Separator)
+    // 默认的文件打开权限
+    gDEFAULT_PERM = 0666
 )
 
 var (
@@ -63,7 +65,7 @@ func Create(path string) error {
 
 // 打开文件(os.O_RDWR|os.O_CREATE, 0666)
 func Open(path string) (*os.File, error) {
-    f, err  := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+    f, err  := os.OpenFile(path, os.O_RDWR|os.O_CREATE, gDEFAULT_PERM)
     if err != nil {
         return nil, err
     }
@@ -72,7 +74,7 @@ func Open(path string) (*os.File, error) {
 
 // 打开文件(带flag)
 func OpenWithFlag(path string, flag int) (*os.File, error) {
-    f, err  := os.OpenFile(path, flag, 0666)
+    f, err  := os.OpenFile(path, flag, gDEFAULT_PERM)
     if err != nil {
         return nil, err
     }
@@ -201,7 +203,7 @@ func Remove(path string) error {
 // 文件是否可读
 func IsReadable(path string) bool {
     result    := true
-    file, err := os.OpenFile(path, os.O_RDONLY, 0666)
+    file, err := os.OpenFile(path, os.O_RDONLY, gDEFAULT_PERM)
     if err != nil {
         result = false
     }
@@ -223,7 +225,7 @@ func IsWritable(path string) bool {
         }
     } else {
         // 如果是文件，那么判断文件是否可打开
-        file, err := os.OpenFile(path, os.O_WRONLY, 0666)
+        file, err := os.OpenFile(path, os.O_WRONLY, gDEFAULT_PERM)
         if err != nil {
             result = false
         }

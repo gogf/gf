@@ -8,6 +8,7 @@
 package gkafka
 
 import (
+    "gitee.com/johng/gf/g/os/glog"
     "time"
     "strings"
     "gitee.com/johng/gf/third/github.com/Shopify/sarama"
@@ -207,19 +208,19 @@ func (client *Client) AsyncSend(message *Message) error {
             return err
         } else {
             client.asyncProducer = p
-            //go func(p sarama.AsyncProducer) {
-            //    errors  := p.Errors()
-            //    success := p.Successes()
-            //    for {
-            //        select {
-            //            case err := <-errors:
-            //                if err != nil {
-            //                    glog.Error(err)
-            //                }
-            //            case <-success:
-            //        }
-            //    }
-            //}(client.asyncProducer)
+            go func(p sarama.AsyncProducer) {
+               errors  := p.Errors()
+               success := p.Successes()
+               for {
+                   select {
+                       case err := <-errors:
+                           if err != nil {
+                               glog.Error(err)
+                           }
+                       case <-success:
+                   }
+               }
+            }(client.asyncProducer)
         }
     }
 

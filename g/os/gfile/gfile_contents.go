@@ -44,7 +44,7 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
         }
     }
     // 创建/打开文件，使用文件指针池，默认60秒
-    f, err := gfpool.OpenFile(path, flag, perm, 60000)
+    f, err := gfpool.OpenFile(path, flag, perm, gFILE_POOL_EXPIRE*1000)
     if err != nil {
         return err
     }
@@ -64,22 +64,22 @@ func Truncate(path string, size int) error {
 
 // (文本)写入文件内容
 func PutContents(path string, content string) error {
-    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, gDEFAULT_PERM)
 }
 
 // (文本)追加内容到文件末尾
 func PutContentsAppend(path string, content string) error {
-    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+    return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, gDEFAULT_PERM)
 }
 
 // (二进制)写入文件内容
 func PutBinContents(path string, content []byte) error {
-    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, gDEFAULT_PERM)
 }
 
 // (二进制)追加内容到文件末尾
 func PutBinContentsAppend(path string, content []byte) error {
-    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+    return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, gDEFAULT_PERM)
 }
 
 // 获得文件内容下一个指定字节的位置
@@ -103,7 +103,7 @@ func GetNextCharOffset(file *os.File, char byte, start int64) int64 {
 
 // 获得文件内容下一个指定字节的位置
 func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
-    if f, err := gfpool.Open(path, os.O_RDONLY, 0666, gFILE_POOL_EXPIRE*1000); err == nil {
+    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE*1000); err == nil {
         defer f.Close()
         return GetNextCharOffset(&f.File, char, start)
     } else {
@@ -122,7 +122,7 @@ func GetBinContentsTilChar(file *os.File, char byte, start int64) ([]byte, int64
 
 // 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
 func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
-    if f, err := gfpool.Open(path, os.O_RDONLY, 0666, gFILE_POOL_EXPIRE*1000); err == nil {
+    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE*1000); err == nil {
         defer f.Close()
         return GetBinContentsTilChar(&f.File, char, start)
     } else {
@@ -142,7 +142,7 @@ func GetBinContentsByTwoOffsets(file *os.File, start int64, end int64) []byte {
 
 // 获得文件内容中两个offset之间的内容 [start, end)
 func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
-    if f, err := gfpool.Open(path, os.O_RDONLY, 0666, gFILE_POOL_EXPIRE*1000); err == nil {
+    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE*1000); err == nil {
         defer f.Close()
         return GetBinContentsByTwoOffsets(&f.File, start, end)
     } else {
