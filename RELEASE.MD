@@ -140,13 +140,13 @@
 1. 增加go语言最新版本的`go modules`特性支持；
 1. 增加`gcron`定时任务模块([http://gf.johng.cn/os/gcron/index](http://gf.johng.cn/os/gcron/index))；
 1. `Web Server`增加路由注册项获取/打印特性，所有的路由注册/回调注册一览无余；
-1. 模板引擎增加全局变量设置，并增加多个常用的内置函数及内置变量（[http://gf.johng.cn/os/gview/funcs](http://gf.johng.cn/os/gview/funcs)）；
-1. `gredis`改进为单例操作方式，每次操作`redis`服务器时开发者无需显示调用`Close`方法执行关闭（[http://gf.johng.cn/database/gredis/index](http://gf.johng.cn/database/gredis/index)）；
-1. `gf-orm`增加数据库操作自动`Close`特性(使用链接池)，用户无需再`defer db.Close()`，并增加`g.DB`数据库对象单例别名（[http://gf.johng.cn/database/orm/linkop](http://gf.johng.cn/database/orm/linkop)）；
+1. 模板引擎增加全局变量管理，并增加多个常用的内置函数及内置变量（[http://gf.johng.cn/os/gview/funcs](http://gf.johng.cn/os/gview/funcs)）；
+1. `gredis`改进为单例操作方式(基于基层连接池特性)，每次操作`redis`服务器时开发者无需显示调用`Close`方法执行关闭（[http://gf.johng.cn/database/gredis/index](http://gf.johng.cn/database/gredis/index)）；
+1. `gf-orm`增加数据库操作自动`Close`特性(基于底层链接池特性)，开发者无需再`defer db.Close()`，并增加`g.DB`数据库对象单例别名（[http://gf.johng.cn/database/orm/linkop](http://gf.johng.cn/database/orm/linkop)）；
 1. 增加`gvar`通用动态变量模块（[http://gf.johng.cn/container/gvar/index](http://gf.johng.cn/container/gvar/index)）；
-1. 数据结构容器增加`并发安全特性开启/关闭功能`，当关闭后和普通的数据结构无异，非并发安全模式下性能会得到提高;
+1. 数据结构容器增加`并发安全特性开启/关闭功能`，当关闭后和普通的数据结构无异，且在非并发安全模式下性能会得到提高;
 1. 新增`gmlock`内存锁模块（[http://gf.johng.cn/os/gmlock/index](http://gf.johng.cn/os/gmlock/index)）；
-1. 增加`gaes`模块（[http://gf.johng.cn/crypto/gaes/index](http://gf.johng.cn/crypto/gaes/index)）；
+1. 增加`gaes`算法模块（[http://gf.johng.cn/crypto/gaes/index](http://gf.johng.cn/crypto/gaes/index)）；
 1. `gproc`模块增加执行`shell`命令方法（[http://gf.johng.cn/os/gproc/index](http://gf.johng.cn/os/gproc/index)）；
 1. 新增`gfcache`模块，用于带自动缓存更新的文件内容操作（文档待完善）；
 
@@ -166,7 +166,7 @@
 1. `gcache`新增`Contains/SetIfNotExist`方法；
 1. `gvalid`增加`Error`对象，用以管理校验错误信息；
 1. `gvalid`模块增加`struct tag`的校验规则、自定义错误提示信息绑定的支持特性（[http://gf.johng.cn/util/gvalid/index](http://gf.johng.cn/util/gvalid/index)）；
-1. `ghttp`增加输入参数与`struct`的`绑定机制`，并增加对应`params`标签支持（文档待完善）；
+1. `ghttp`增加输入参数与`struct`的`绑定机制`，并增加对应`params`标签支持（[http://gf.johng.cn/net/ghttp/service/handler](http://gf.johng.cn/net/ghttp/service/handler)）；
 1. `ghttp.Request`增加服务端`BasicAuth`功能(文档待完善)；
 1. `gvalid`增加字段校验别名，用于自定义返回结果字段，并更新WebServer中相关使用的模块；
 1. `gf-orm`链式操作增加`ForPage`方法，调整`Chunks`方法;
