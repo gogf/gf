@@ -77,6 +77,11 @@ func GetBacktrace(skip...int) string {
     return logger.GetBacktrace(skip...)
 }
 
+// 是否关闭全局的backtrace信息
+func SetBacktrace(enabled bool) {
+    logger.SetBacktrace(enabled)
+}
+
 // 设置下一次输出的分类，支持多级分类设置
 func Cat(category string) *Logger {
     return logger.Cat(category)
