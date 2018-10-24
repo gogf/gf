@@ -132,7 +132,7 @@
     6、去掉gpool中math.MAXINT64常量的使用，以修复int64到int类型的转换错误，兼容32位系统
     7、修正ghttp包没有使用Server仍然初始化相关异步goroutine的问题
 
-# `v1.0.898 stable` (2018-10-23)
+# `v1.0.898 stable` (2018-10-24)
 
 ## 新特性
 1. `gf-orm`增加`sqlite`数据库类型支持([http://gf.johng.cn/database/orm/database](http://gf.johng.cn/database/orm/database))；
