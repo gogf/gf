@@ -317,7 +317,7 @@ func Dir(path string) string {
     return filepath.Dir(path)
 }
 
-// 获取指定文件路径的文件扩展名
+// 获取指定文件路径的文件扩展名(包含"."号)
 func Ext(path string) string {
     return filepath.Ext(path)
 }
