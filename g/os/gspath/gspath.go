@@ -9,13 +9,12 @@
 package gspath
 
 import (
-    "sync"
     "errors"
-    "strings"
-    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gfsnotify"
-    "gitee.com/johng/gf/g/os/glog"
+    "strings"
+    "sync"
 )
 
 // 文件目录搜索管理对象
@@ -47,10 +46,10 @@ func (sp *SPath) Set(path string) error {
         sp.paths = []string{r}
         sp.mu.Unlock()
         sp.cache.Clear()
-        glog.Debug("gspath.SetPath:", r)
+        //glog.Debug("gspath.SetPath:", r)
         return nil
     }
-    glog.Warning("gspath.SetPath failed:", path)
+    //glog.Warning("gspath.SetPath failed:", path)
     return errors.New("invalid path:" + path)
 }
 
@@ -68,10 +67,10 @@ func (sp *SPath) Add(path string) error {
         sp.mu.Lock()
         sp.paths = append(sp.paths, r)
         sp.mu.Unlock()
-        glog.Debug("gspath.Add:", r)
+        //glog.Debug("gspath.Add:", r)
         return nil
     }
-    glog.Warning("gspath.Add failed:", path)
+    //glog.Warning("gspath.Add failed:", path)
     return errors.New("invalid path:" + path)
 }
 
@@ -106,9 +105,9 @@ func (sp *SPath) Size() int {
 
 // 添加文件监控，当文件删除时，同时也删除搜索结果缓存
 func (sp *SPath) addMonitor(name, path string) {
-    glog.Debug("gspath.addMonitor:", name, path)
+    //glog.Debug("gspath.addMonitor:", name, path)
     gfsnotify.Add(path, func(event *gfsnotify.Event) {
-        glog.Debug("gspath.monitor:", event)
+        //glog.Debug("gspath.monitor:", event)
         if event.IsRemove() {
             sp.cache.Remove(name)
         }
