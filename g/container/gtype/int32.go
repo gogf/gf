@@ -25,8 +25,8 @@ func (t *Int32) Clone() *Int32 {
     return NewInt32(t.Val())
 }
 
-func (t *Int32) Set(value int32) {
-    atomic.StoreInt32(&t.val, value)
+func (t *Int32) Set(value int32) (old int32) {
+    return atomic.SwapInt32(&t.val, value)
 }
 
 func (t *Int32) Val() int32 {

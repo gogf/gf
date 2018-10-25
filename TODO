@@ -37,6 +37,9 @@ ghttp.Request增加对输入参数的自动HtmlEncode机制；
 Cookie设置中文失效问题；
 ghttp hook回调使用方式在注册路由比较多的时候，优先级可能使得开发者混乱，考虑方式便于管理；
 使用gconv将slice映射到struct属性上，例如redis hscan的结果集；
+项目参考：
+    https://github.com/namreg/godown
+    https://github.com/Masterminds/sprig
 
 
 

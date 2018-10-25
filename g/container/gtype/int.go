@@ -25,8 +25,9 @@ func (t *Int) Clone() *Int {
     return NewInt(t.Val())
 }
 
-func (t *Int) Set(value int) {
-    atomic.StoreInt64(&t.val, int64(value))
+// 并发安全设置变量值，返回之前的旧值
+func (t *Int) Set(value int) (old int) {
+    return int(atomic.SwapInt64(&t.val, int64(value)))
 }
 
 func (t *Int) Val() int {

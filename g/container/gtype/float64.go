@@ -26,8 +26,8 @@ func (t *Float64) Clone() *Float64 {
     return NewFloat64(t.Val())
 }
 
-func (t *Float64) Set(value float64) {
-    atomic.StoreUint64(&t.val, float64ToUint64InBits(value) )
+func (t *Float64) Set(value float64) (old float64) {
+    return uint64ToFloat64InBits(atomic.SwapUint64(&t.val, float64ToUint64InBits(value)))
 }
 
 func (t *Float64) Val() float64 {

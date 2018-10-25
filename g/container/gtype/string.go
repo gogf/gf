@@ -26,8 +26,10 @@ func (t *String) Clone() *String {
     return NewString(t.Val())
 }
 
-func (t *String) Set(value string) {
+func (t *String) Set(value string) (old string) {
+    old = t.Val()
     t.val.Store(value)
+    return
 }
 
 func (t *String) Val() string {

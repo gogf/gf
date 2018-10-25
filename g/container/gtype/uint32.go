@@ -25,8 +25,8 @@ func (t *Uint32) Clone() *Uint32 {
     return NewUint32(t.Val())
 }
 
-func (t *Uint32) Set(value uint32) {
-    atomic.StoreUint32(&t.val, value)
+func (t *Uint32) Set(value uint32) (old uint32) {
+    return atomic.SwapUint32(&t.val, value)
 }
 
 func (t *Uint32) Val() uint32 {

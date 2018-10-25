@@ -25,8 +25,8 @@ func (t *Int64) Clone() *Int64 {
     return NewInt64(t.Val())
 }
 
-func (t *Int64) Set(value int64) {
-    atomic.StoreInt64(&t.val, value)
+func (t *Int64) Set(value int64) (old int64) {
+    return atomic.SwapInt64(&t.val, value)
 }
 
 func (t *Int64) Val() int64 {
