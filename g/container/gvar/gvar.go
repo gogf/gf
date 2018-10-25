@@ -30,12 +30,14 @@ func New(value interface{}, safe...bool) *Var {
     return v
 }
 
-func (v *Var) Set(value interface{}) {
+func (v *Var) Set(value interface{}) (old interface{}) {
     if v.safe {
-        v.value.(*gtype.Interface).Set(value)
+        old = v.value.(*gtype.Interface).Set(value)
     } else {
+        old = v.value
         v.value = value
     }
+    return
 }
 
 func (v *Var) Val() interface{} {
