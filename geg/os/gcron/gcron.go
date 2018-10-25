@@ -1,22 +1,26 @@
 package main
 
 import (
-    "fmt"
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/os/gcron"
+    "gitee.com/johng/gf/g/os/glog"
     "time"
 )
 
 func main() {
-    gcron.Add("0 30 * * * *", func() { fmt.Println("Every hour on the half hour") })
-    gcron.Add("* * * * * *",  func() { fmt.Println("Every second") }, "second-cron")
-    gcron.Add("@hourly",      func() { fmt.Println("Every hour") })
-    gcron.Add("@every 1h30m", func() { fmt.Println("Every hour thirty") })
+    gcron.Add("0 30 * * * *", func() { glog.Println("Every hour on the half hour") })
+    gcron.Add("* * * * * *",  func() { glog.Println("Every second") }, "second-cron")
+    gcron.Add("@hourly",      func() { glog.Println("Every hour") })
+    gcron.Add("@every 1h30m", func() { glog.Println("Every hour thirty") })
     g.Dump(gcron.Entries())
 
     time.Sleep(3*time.Second)
 
-    gcron.Remove("second-cron")
+    gcron.Stop("second-cron")
+
+    time.Sleep(3*time.Second)
+
+    gcron.Start("second-cron")
 
     time.Sleep(3*time.Second)
 }

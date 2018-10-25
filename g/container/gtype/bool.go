@@ -30,12 +30,14 @@ func (t *Bool) Clone() *Bool {
     return NewBool(t.Val())
 }
 
-func (t *Bool) Set(value bool) {
+// 并发安全设置变量值，返回之前的旧值
+func (t *Bool) Set(value bool) (old bool) {
     if value {
-        atomic.StoreInt32(&t.val, 1)
+        old = atomic.SwapInt32(&t.val, 1) == 1
     } else {
-        atomic.StoreInt32(&t.val, 0)
+        old = atomic.SwapInt32(&t.val, 0) == 1
     }
+    return
 }
 
 func (t *Bool) Val() bool {

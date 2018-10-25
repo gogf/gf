@@ -25,8 +25,8 @@ func (t *Uint) Clone() *Uint {
     return NewUint(t.Val())
 }
 
-func (t *Uint) Set(value uint) {
-    atomic.StoreUint64(&t.val, uint64(value))
+func (t *Uint) Set(value uint) (old uint) {
+    return uint(atomic.SwapUint64(&t.val, uint64(value)))
 }
 
 func (t *Uint) Val() uint {

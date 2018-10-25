@@ -23,15 +23,17 @@ func NewInterface(value...interface{}) *Interface {
     return t
 }
 
-func (t *Interface) Clone() *Interface{
+func (t *Interface) Clone() *Interface {
     return NewInterface(t.Val())
 }
 
-func (t *Interface) Set(value interface{}) {
+func (t *Interface) Set(value interface{}) (old interface{}) {
     if value == nil {
         return
     }
+    old = t.Val()
     t.val.Store(value)
+    return
 }
 
 func (t *Interface) Val() interface{} {

@@ -26,8 +26,8 @@ func (t *Float32) Clone() *Float32 {
     return NewFloat32(t.Val())
 }
 
-func (t *Float32) Set(value float32) {
-    atomic.StoreUint32(&t.val, float32ToUint32InBits(value) )
+func (t *Float32) Set(value float32) (old float32) {
+    return uint32ToFloat32InBits(atomic.SwapUint32(&t.val, float32ToUint32InBits(value)))
 }
 
 func (t *Float32) Val() float32 {

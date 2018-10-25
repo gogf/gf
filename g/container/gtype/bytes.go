@@ -24,13 +24,14 @@ func (t *Bytes) Clone() *Bytes {
     return NewBytes(t.Val())
 }
 
-func (t *Bytes) Set(value []byte) {
+func (t *Bytes) Set(value []byte) (old []byte) {
+    old = t.Val()
     t.val.Store(value)
+    return
 }
 
 func (t *Bytes) Val() []byte {
-    s := t.val.Load()
-    if s != nil {
+    if s := t.val.Load(); s != nil {
         return s.([]byte)
     }
     return nil

@@ -25,8 +25,9 @@ func (t *Byte) Clone() *Byte {
     return NewByte(t.Val())
 }
 
-func (t *Byte) Set(value byte) {
-    atomic.StoreInt32(&t.val, int32(value))
+// 并发安全设置变量值，返回之前的旧值
+func (t *Byte) Set(value byte) (old byte) {
+    return byte(atomic.SwapInt32(&t.val, int32(value)))
 }
 
 func (t *Byte) Val() byte {
