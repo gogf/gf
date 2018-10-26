@@ -1,17 +1,24 @@
 package main
 
 import (
-    "fmt"
-    "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/frame/gmvc"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
-
-func test() {
-    defer fmt.Println(1)
-    fmt.Println(2)
+type ControllerIndex struct {
+    gmvc.Controller
 }
-
+func (c *ControllerIndex) Info() {
+    c.View.Assign("title", "Go Frame 第一个网站")
+    c.View.Assigns(map[string]interface{}{
+        "name"   : "很开心",
+        "score" : 100,
+    })
+    c.View.Display("web/index.html")
+}
 func main() {
-    v := gtype.NewInt(1)
-    fmt.Println(v.Set(2))
-    fmt.Println(v.Set(2))
+    s := ghttp.GetServer()
+    s.SetServerRoot("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/other/web/")
+    s.BindController("/", new(ControllerIndex))
+    s.SetPort(8199)
+    s.Run()
 }
