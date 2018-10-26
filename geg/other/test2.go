@@ -1,16 +1,18 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gcron"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 func main() {
-    start := gtime.Second()
-    gcron.Add("*/5 * * * * ?", func() {
-        glog.Println(gtime.Second() - start)
+    s := g.Server()
+    s.BindHandler("/{class}-{course}/:name/*act", func(r *ghttp.Request){
+        r.Response.Writeln(r.Get("class"))
+        r.Response.Writeln(r.Get("course"))
+        r.Response.Writeln(r.Get("name"))
+        r.Response.Writeln(r.Get("act"))
     })
-
-    select{}
+    s.SetPort(8199)
+    s.Run()
 }
