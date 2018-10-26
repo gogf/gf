@@ -251,7 +251,8 @@ func ScanDir(path string, pattern string, recursive ... bool) ([]string, error) 
     return list, nil
 }
 
-// 内部检索目录方法，支持递归，返回没有排序的文件绝对路径列表结果
+// 内部检索目录方法，支持递归，返回没有排序的文件绝对路径列表结果。
+// pattern参数支持多个文件名称模式匹配，使用','符号分隔多个模式。
 func doScanDir(path string, pattern string, recursive ... bool) ([]string, error) {
     var list []string
     // 打开目录
@@ -275,8 +276,10 @@ func doScanDir(path string, pattern string, recursive ... bool) ([]string, error
             }
         }
         // 满足pattern才加入结果列表
-        if match, err := filepath.Match(pattern, name); err == nil && match {
-            list = append(list, path)
+        for _, p := range strings.Split(pattern, ",") {
+            if match, err := filepath.Match(strings.TrimSpace(p), name); err == nil && match {
+                list = append(list, path)
+            }
         }
     }
     return list, nil
