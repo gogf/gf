@@ -18,6 +18,10 @@ import (
 // _ "gitee.com/johng/gf/third/github.com/lib/pq"
 // @todo 需要完善replace和save的操作覆盖
 
+// PostgreSQL接口对象
+var linkPgsql = &dbpgsql{}
+
+
 // 数据库链接对象
 type dbpgsql struct {
     Db
@@ -58,4 +62,3 @@ func (db *dbpgsql) handleSqlBeforeExec(q *string) *string {
     })
     return &str
 }
-
