@@ -163,7 +163,7 @@ func (w *Watcher) startWatchLoop() {
 
                 // 监听事件
                 case ev := <- w.watcher.Events:
-                    //glog.Debug("gfsnotify:", ev)
+                    //glog.Debug("gfsnotify: watch loop", ev)
                     w.events.Push(&Event{
                         Path : ev.Name,
                         Op   : Op(ev.Op),
@@ -193,18 +193,21 @@ func (w *Watcher) startEventLoop() {
     go func() {
         for {
             if v := w.events.Pop(); v != nil {
+                //glog.Debug("gfsnotidy: event loop", v)
                 event := v.(*Event)
                 if event.IsRemove() {
                     if gfile.Exists(event.Path) {
                         // 如果是文件删除事件，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，
                         // 并重新添加监控(底层fsnotify会自动删除掉监控，这里重新添加回去)
                         w.watcher.Add(event.Path)
-                        continue
+                        // 修改时间操作为写入
+                        event.Op = WRITE
                     } else {
                         // 如果是真实删除，那么递归删除监控信息
                         w.Remove(event.Path)
                     }
                 }
+                //glog.Debug("gfsnotidy: event loop callbacks", v)
                 callbacks := w.getCallbacks(event.Path)
                 // 如果创建了新的目录，那么将这个目录递归添加到监控中
                 if event.IsCreate() && gfile.IsDir(event.Path) {

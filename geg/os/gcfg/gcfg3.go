@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-    fmt.Println(g.Config().Get("serverpath"))
+    fmt.Println(g.Config().GetVar("memcache.0").String())
 }
 
