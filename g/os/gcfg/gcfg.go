@@ -9,6 +9,7 @@
 package gcfg
 
 import (
+    "gitee.com/johng/gf/g/container/gvar"
     "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/container/gmap"
@@ -116,6 +117,14 @@ func (c *Config) getJson(file...string) *gjson.Json {
 func (c *Config) Get(pattern string, file...string) interface{} {
     if j := c.getJson(file...); j != nil {
         return j.Get(pattern)
+    }
+    return nil
+}
+
+// 获得配置项，返回动态变量
+func (c *Config) GetVar(pattern string, file...string) *gvar.Var {
+    if j := c.getJson(file...); j != nil {
+        return gvar.New(j.Get(pattern))
     }
     return nil
 }
