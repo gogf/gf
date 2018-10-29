@@ -38,6 +38,7 @@ type Request struct {
     parsedHost    *gtype.String       // 解析过后不带端口号的服务器域名名称
     clientIp      *gtype.String       // 解析过后的客户端IP地址
     isFileRequest bool                // 是否为静态文件请求(非服务请求，当静态文件存在时，优先级会被服务请求高，被识别为文件请求)
+    isFileServe   bool                // 是否为文件处理(调用Server.serveFile时设置为true), isFileRequest为true时isFileServe也为true
 }
 
 // 创建一个Request对象
@@ -178,6 +179,11 @@ func (r *Request) GetHost() string {
 // 判断是否为静态文件请求
 func (r *Request) IsFileRequest() bool {
     return r.isFileRequest
+}
+
+// 判断请求是否为文件处理
+func (r *Request) IsFileServe() bool {
+    return r.isFileServe
 }
 
 // 判断是否为AJAX请求

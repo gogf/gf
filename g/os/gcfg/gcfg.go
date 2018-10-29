@@ -59,7 +59,7 @@ func (c *Config) filePath(file...string) string {
 // 设置配置管理器的配置文件存放目录绝对路径
 func (c *Config) SetPath(path string) error {
     if err := c.paths.Set(path); err != nil {
-        glog.Debug("gcfg.SetPath failed:", path, err)
+        glog.Error("gcfg.SetPath failed:", path, err)
         return err
     }
     c.jsons.Clear()
@@ -109,6 +109,8 @@ func (c *Config) getJson(file...string) *gjson.Json {
         c.addMonitor(fpath)
         c.jsons.Set(fpath, j)
         return j
+    } else {
+        glog.Errorfln(`gcfg.Load config file "%s" failed: %s`, fpath, err.Error())
     }
     return nil
 }
