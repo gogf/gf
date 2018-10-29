@@ -474,7 +474,7 @@ func (db *Db) Update(table string, data interface{}, condition interface{}, args
     for _, v := range args {
         params = append(params, gconv.String(v))
     }
-    return db.Exec(fmt.Sprintf("UPDATE %s%s%s SET %s WHERE %s", db.charl, table, db.charr, updates, db.formatCondition(condition)), params...)
+    return db.Exec(fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, db.formatCondition(condition)), params...)
 }
 
 // CURD操作:删除数据
