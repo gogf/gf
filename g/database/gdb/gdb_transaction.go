@@ -222,8 +222,8 @@ func (tx *Tx) insert(table string, data Map, option uint8) (sql.Result, error) {
         updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
     return tx.Exec(
-        fmt.Sprintf("%s INTO %s%s%s(%s) VALUES(%s) %s",
-            operation, tx.db.charl, table, tx.db.charr, strings.Join(keys, ","),
+        fmt.Sprintf("%s INTO %s(%s) VALUES(%s) %s",
+            operation, table, strings.Join(keys, ","),
             strings.Join(values, ","),
             updatestr),
             params...
@@ -281,8 +281,8 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
         }
         bvalues = append(bvalues, valueHolderStr)
         if len(bvalues) == batch {
-            r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
-                operation, tx.db.charl, table, tx.db.charr, keyStr, strings.Join(bvalues, ","),
+            r, err := tx.Exec(fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
+                operation, table, keyStr, strings.Join(bvalues, ","),
                 updatestr),
                 params...)
             if err != nil {
@@ -295,8 +295,8 @@ func (tx *Tx) batchInsert(table string, list List, batch int, option uint8) (sql
     }
     // 处理最后不构成指定批量的数据
     if len(bvalues) > 0 {
-        r, err := tx.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
-            operation, tx.db.charl, table, tx.db.charr, keyStr, strings.Join(bvalues, ","),
+        r, err := tx.Exec(fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
+            operation, table, keyStr, strings.Join(bvalues, ","),
             updatestr),
             params...)
         if err != nil {
@@ -347,6 +347,6 @@ func (tx *Tx) Update(table string, data interface{}, condition interface{}, args
 
 // CURD操作:删除数据
 func (tx *Tx) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-    return tx.Exec(fmt.Sprintf("DELETE FROM %s%s%s WHERE %s", tx.db.charl, table, tx.db.charr, tx.db.formatCondition(condition)), args...)
+    return tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", table, tx.db.formatCondition(condition)), args...)
 }
 
