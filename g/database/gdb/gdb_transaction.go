@@ -342,7 +342,7 @@ func (tx *Tx) Update(table string, data interface{}, condition interface{}, args
     for _, v := range args {
         params = append(params, gconv.String(v))
     }
-    return tx.Exec(fmt.Sprintf("UPDATE %s%s%s SET %s WHERE %s", tx.db.charl, table, tx.db.charr, updates, tx.db.formatCondition(condition)), params...)
+    return tx.Exec(fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, tx.db.formatCondition(condition)), params...)
 }
 
 // CURD操作:删除数据
