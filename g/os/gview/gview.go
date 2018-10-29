@@ -8,10 +8,14 @@
 package gview
 
 import (
+    "gitee.com/johng/gf/g/encoding/gurl"
+    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gstr"
+    "strings"
     "sync"
     "bytes"
     "errors"
-    "html/template"
+    "text/template"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/encoding/ghash"
     "gitee.com/johng/gf/g/util/gconv"
@@ -30,7 +34,7 @@ type View struct {
 }
 
 // 输出到模板页面时保留HTML标签原意，不做自动escape处理
-type HTML    = template.HTML
+type HTML    = string
 
 // 模板变量
 type Params  = map[string]interface{}
@@ -79,9 +83,19 @@ func New(path string) *View {
     }
     view.SetDelimiters("{{", "}}")
     // 内置方法
-    view.BindFunc("text",    view.funcText)
-    view.BindFunc("html",    view.funcHtml)
-    view.BindFunc("include", view.funcInclude)
+    view.BindFunc("text",        view.funcText)
+    view.BindFunc("html",        view.funcHtmlEncode)
+    view.BindFunc("htmlencode",  view.funcHtmlEncode)
+    view.BindFunc("htmldecode",  view.funcHtmlDecode)
+    //view.BindFunc("htmlchars",   view.funcHtmlChars)
+    //view.BindFunc("htmldechars", view.funcHtmlCharsDecode)
+    view.BindFunc("url",         view.funcUrlEncode)
+    view.BindFunc("urlencode",   view.funcUrlEncode)
+    view.BindFunc("urldecode",   view.funcUrlDecode)
+    view.BindFunc("date",        view.funcDate)
+    view.BindFunc("substr",      view.funcSubStr)
+    view.BindFunc("compare",     view.funcCompare)
+    view.BindFunc("include",     view.funcInclude)
     return view
 }
 
@@ -206,16 +220,16 @@ func (view *View) BindFunc(name string, function interface{}) {
 }
 
 // 模板内置方法：include
-func (view *View) funcInclude(file string, data...map[string]interface{}) template.HTML {
+func (view *View) funcInclude(file string, data...map[string]interface{}) string {
     var m map[string]interface{} = nil
     if len(data) > 0 {
         m = data[0]
     }
     content, err := view.Parse(file, m)
     if err != nil {
-        return template.HTML(err.Error())
+        return err.Error()
     }
-    return template.HTML(content)
+    return string(content)
 }
 
 // 模板内置方法：text
@@ -224,8 +238,52 @@ func (view *View) funcText(html interface{}) string {
 }
 
 // 模板内置方法：html
-func (view *View) funcHtml(html interface{}) template.HTML {
-    return template.HTML(gconv.String(html))
+func (view *View) funcHtmlEncode(html interface{}) string {
+    return ghtml.Entities(gconv.String(html))
+}
+
+// 模板内置方法：htmldecode
+func (view *View) funcHtmlDecode(html interface{}) string {
+    return ghtml.EntitiesDecode(gconv.String(html))
+}
+
+// 模板内置方法：htmlchars
+func (view *View) funcHtmlChars(html interface{}) string {
+    return ghtml.SpecialChars(gconv.String(html))
+}
+
+// 模板内置方法：htmlcharsdecode
+func (view *View) funcHtmlCharsDecode(html interface{}) string {
+    return ghtml.SpecialCharsDecode(gconv.String(html))
+}
+
+// 模板内置方法：url
+func (view *View) funcUrlEncode(url interface{}) string {
+    return gurl.Encode(gconv.String(url))
+}
+
+// 模板内置方法：urldecode
+func (view *View) funcUrlDecode(url interface{}) string {
+    if content, err := gurl.Decode(gconv.String(url)); err == nil {
+        return content
+    } else {
+        return err.Error()
+    }
+}
+
+// 模板内置方法：date
+func (view *View) funcDate(format string, timestamp interface{}) string {
+    return gtime.NewFromTimeStamp(gconv.Int64(timestamp)).Format(format)
+}
+
+// 模板内置方法：compare
+func (view *View) funcCompare(value1, value2 interface{}) int {
+    return strings.Compare(gconv.String(value1), gconv.String(value2))
+}
+
+// 模板内置方法：substr
+func (view *View) funcSubStr(start, end int, str interface{}) string {
+    return gstr.SubStr(gconv.String(str), start, end)
 }
 
 
