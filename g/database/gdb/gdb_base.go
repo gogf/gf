@@ -349,8 +349,8 @@ func (db *Db) insert(table string, data Map, option uint8) (sql.Result, error) {
         updatestr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
     return db.Exec(
-        fmt.Sprintf("%s INTO %s%s%s(%s) VALUES(%s) %s",
-            operation, db.charl, table, db.charr, strings.Join(fields, ","),
+        fmt.Sprintf("%s INTO %s(%s) VALUES(%s) %s",
+            operation, table, strings.Join(fields, ","),
             strings.Join(values, ","),
             updatestr),
             params...
@@ -413,8 +413,8 @@ func (db *Db) batchInsert(table string, list List, batch int, option uint8) (sql
         }
         bvalues = append(bvalues, valueHolderStr)
         if len(bvalues) == batch {
-            r, err := db.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
-                operation, db.charl, table, db.charr, keyStr, strings.Join(bvalues, ","),
+            r, err := db.Exec(fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
+                operation, table, keyStr, strings.Join(bvalues, ","),
                 updatestr),
                 params...)
             if err != nil {
@@ -427,8 +427,8 @@ func (db *Db) batchInsert(table string, list List, batch int, option uint8) (sql
     }
     // 处理最后不构成指定批量的数据
     if len(bvalues) > 0 {
-        r, err := db.Exec(fmt.Sprintf("%s INTO %s%s%s(%s) VALUES%s %s",
-            operation, db.charl, table, db.charr, keyStr, strings.Join(bvalues, ","),
+        r, err := db.Exec(fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
+            operation, table, keyStr, strings.Join(bvalues, ","),
             updatestr),
             params...)
         if err != nil {
@@ -479,7 +479,7 @@ func (db *Db) Update(table string, data interface{}, condition interface{}, args
 
 // CURD操作:删除数据
 func (db *Db) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-    return db.Exec(fmt.Sprintf("DELETE FROM %s%s%s WHERE %s", db.charl, table, db.charr, db.formatCondition(condition)), args...)
+    return db.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", table, db.formatCondition(condition)), args...)
 }
 
 // 格式化SQL查询条件
