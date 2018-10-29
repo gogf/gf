@@ -11,7 +11,7 @@ func main() {
 {{"<div>测试</div>"|html}}
 {{"&lt;div&gt;测试&lt;/div&gt;"|htmldecode}}
 {{"https://gfer.me"|url}}
-{{"https://gfer.me"|urldecode}}
+{{"https%3A%2F%2Fgfer.me"|urldecode}}
 {{1540822968 | date "Y-m-d"}}
 {{"1540822968" | date "Y-m-d H:i:s"}}
 {{compare "A" "B"}}

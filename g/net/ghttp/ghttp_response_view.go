@@ -83,16 +83,16 @@ func (r *Response) buildInFuncs(funcmap map[string]interface{}) map[string]inter
 }
 
 // 模板内置函数: get
-func (r *Response) funcGet(key string, def...string) gview.HTML {
-    return gview.HTML(r.request.GetQueryString(key, def...))
+func (r *Response) funcGet(key string, def...string) string {
+    return r.request.GetQueryString(key, def...)
 }
 
 // 模板内置函数: post
-func (r *Response) funcPost(key string, def...string) gview.HTML {
-    return gview.HTML(r.request.GetPostString(key, def...))
+func (r *Response) funcPost(key string, def...string) string {
+    return r.request.GetPostString(key, def...)
 }
 
 // 模板内置函数: request
-func (r *Response) funcRequest(key string, def...string) gview.HTML {
-    return gview.HTML(r.request.Get(key, def...))
+func (r *Response) funcRequest(key string, def...string) string {
+    return r.request.Get(key, def...)
 }

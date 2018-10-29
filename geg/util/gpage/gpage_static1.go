@@ -27,10 +27,10 @@ func main() {
             </body>
         </html>
         `, g.Map{
-            "page1" : gview.HTML(page.GetContent(1)),
-            "page2" : gview.HTML(page.GetContent(2)),
-            "page3" : gview.HTML(page.GetContent(3)),
-            "page4" : gview.HTML(page.GetContent(4)),
+            "page1" : page.GetContent(1),
+            "page2" : page.GetContent(2),
+            "page3" : page.GetContent(3),
+            "page4" : page.GetContent(4),
         })
         r.Response.Write(buffer)
     })

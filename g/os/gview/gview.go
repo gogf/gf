@@ -33,9 +33,6 @@ type View struct {
     delimiters []string                // 模板变量分隔符号
 }
 
-// 输出到模板页面时保留HTML标签原意，不做自动escape处理
-type HTML    = string
-
 // 模板变量
 type Params  = map[string]interface{}
 
