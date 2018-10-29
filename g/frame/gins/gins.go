@@ -230,7 +230,7 @@ func Redis(name...string) *gredis.Redis {
 }
 
 // 模板内置方法：config
-func funcConfig(pattern string, file...string) gview.HTML {
-    return gview.HTML(Config().GetString(pattern, file...))
+func funcConfig(pattern string, file...string) string {
+    return Config().GetString(pattern, file...)
 }
 
