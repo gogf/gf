@@ -85,3 +85,29 @@ func IsNumeric(s string) bool {
     }
     return true
 }
+
+// 字符串截取，支持中文
+func SubStr(str string, start int, length...int) (substr string) {
+    // 将字符串的转换成[]rune
+    rs  := []rune(str)
+    lth := len(rs)
+    // 简单的越界判断
+    if start < 0 {
+        start = 0
+    }
+    if start >= lth {
+        start = lth
+    }
+    end := lth
+    if len(length) > 0 {
+        end = start + length[0]
+        if end < start {
+            end = lth
+        }
+    }
+    if end > lth {
+        end = lth
+    }
+    // 返回子串
+    return string(rs[start : end])
+}
