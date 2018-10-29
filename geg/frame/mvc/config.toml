@@ -1,5 +1,6 @@
 # 模板引擎目录
 viewpath = "/home/www/templates/"
+test = "v=1"
 # MySQL数据库配置
 [database]
     [[database.default]]

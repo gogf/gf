@@ -1,10 +1,10 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g"
+    "fmt"
     "gitee.com/johng/gf/g/os/gfile"
 )
 
 func main() {
-    g.Dump(gfile.ScanDir("/var/log", "*.log, *.gz", true))
+    fmt.Println(gfile.Dir("c:\111\222"))
 }

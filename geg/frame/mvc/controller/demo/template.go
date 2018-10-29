@@ -15,7 +15,7 @@ func (c *ControllerTemplate) Info() {
         "age"   : 18,
         "score" : 100,
     })
-    c.View.Display("user/index.tpl")
+    c.View.Display("view/user/index.tpl")
 }
 
 func init() {

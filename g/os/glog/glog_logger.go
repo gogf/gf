@@ -257,7 +257,7 @@ func (l *Logger) GetBacktrace(skip...int) string {
         }
     }
     // 从业务文件开始位置根据自定义的skip开始backtrace
-    goroot := gfile.GoRootOfBuild()
+    goroot := runtime.GOROOT()
     for i := from + customSkip + l.btSkip.Val(); i < 10000; i++ {
         if _, cfile, cline, ok := runtime.Caller(i); ok && cfile != "" {
             // 不打印出go源码路径及glog包文件路径，日志打印必须从业务源码文件开始，且从glog包文件开始检索

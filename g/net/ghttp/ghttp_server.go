@@ -323,12 +323,16 @@ func (s *Server) GetRouteMap() string {
         }
         m[item.domain].Add(item)
     }
+    addr := s.config.Addr
+    if s.config.HTTPSAddr != "" {
+        addr += ",tls" + s.config.HTTPSAddr
+    }
     for _, a := range m {
         data := make([]string, 7)
         for _, v := range a.Slice() {
             item := v.(*tableItem)
             data[0] = s.name
-            data[1] = s.config.Addr
+            data[1] = addr
             data[2] = item.domain
             data[3] = item.method
             data[4] = item.route
