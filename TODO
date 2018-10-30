@@ -43,6 +43,8 @@ ghttp hook回调使用方式在注册路由比较多的时候，优先级可能�
 gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
 完善配置管理章节，说明默认的配置文件更改方式；
 完善gform配置管理说明，g.DB/Database和gdb.New的区别；
+改进gconv.Struct方法，支持不区分大小写的属性-键名匹配，便于开发者执行对象转换；
+
 
 
 DONE:

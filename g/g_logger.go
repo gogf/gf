@@ -6,3 +6,19 @@
 
 package g
 
+import "gitee.com/johng/gf/g/os/glog"
+
+// 是否显示调试信息
+func SetDebug(debug bool) {
+    glog.SetDebug(debug)
+}
+
+// 设置日志的显示等级
+func SetLogLevel(level int) {
+    glog.SetLevel(level)
+}
+
+// 获取设置的日志显示等级
+func GetLogLevel() int {
+    return glog.GetLevel()
+}

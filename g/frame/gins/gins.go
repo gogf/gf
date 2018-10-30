@@ -12,6 +12,7 @@ import (
     "gitee.com/johng/gf/g/os/gcfg"
     "gitee.com/johng/gf/g/os/gcmd"
     "gitee.com/johng/gf/g/os/genv"
+    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
@@ -125,7 +126,7 @@ func Database(name...string) *gdb.Db {
     db  := instances.GetOrSetFuncLock(key, func() interface{} {
         m := config.GetMap("database")
         if m == nil {
-            panic(fmt.Sprintf(`incomplete configuration for database: "database" node not found in config file "%s"`, config.GetFilePath()))
+            glog.Errorfln(`incomplete configuration for database: "database" node not found in config file "%s"`, config.GetFilePath())
         }
         for group, v := range m {
             cg := gdb.ConfigGroup{}
@@ -181,7 +182,7 @@ func Database(name...string) *gdb.Db {
         if db, err := gdb.New(name...); err == nil {
             return db
         } else {
-            panic(err)
+            glog.Error(err)
         }
         return nil
     })
@@ -213,13 +214,13 @@ func Redis(name...string) *gredis.Redis {
                         Pass : array[4],
                     })
                 } else {
-                    panic(fmt.Sprintf(`invalid redis node configuration: "%s"`, line))
+                    glog.Errorfln(`invalid redis node configuration: "%s"`, line)
                 }
             } else {
-                panic(fmt.Sprintf(`configuration for redis not found for group "%s"`, group))
+                glog.Errorfln(`configuration for redis not found for group "%s"`, group)
             }
         } else {
-            panic(fmt.Sprintf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.GetFilePath()))
+            glog.Errorfln(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.GetFilePath())
         }
         return nil
     })
