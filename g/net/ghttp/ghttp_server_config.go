@@ -303,7 +303,13 @@ func (s *Server) SetDumpRouteMap(enabled bool) {
 
 // 添加静态文件搜索目录，必须给定目录的绝对路径
 func (s *Server) AddSearchPath(path string) error {
-    return s.paths.Add(path)
+    if rp, err := s.paths.Add(path); err != nil {
+        glog.Error("ghttp.AddSearchPath failed:", err.Error())
+        return err
+    } else {
+        glog.Debug("ghttp.AddSearchPath:", rp)
+    }
+    return nil
 }
 
 // 获取

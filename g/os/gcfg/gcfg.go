@@ -9,14 +9,14 @@
 package gcfg
 
 import (
-    "gitee.com/johng/gf/g/container/gvar"
-    "gitee.com/johng/gf/g/os/gspath"
-    "gitee.com/johng/gf/g/os/gfsnotify"
-    "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/encoding/gjson"
-    "gitee.com/johng/gf/g/container/gtype"
     "errors"
+    "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/gvar"
+    "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gspath"
 )
 
 const (
@@ -37,14 +37,14 @@ func New(path string, file...string) *Config {
     if len(file) > 0 {
         name = file[0]
     }
-    s := gspath.New()
-    s.Set(path)
-    return &Config {
+    c := &Config {
         name   : gtype.NewString(name),
-        paths  : s,
+        paths  : gspath.New(),
         jsons  : gmap.NewStringInterfaceMap(),
         vc     : gtype.NewBool(),
     }
+    c.SetPath(path)
+    return c
 }
 
 // 判断从哪个配置文件中获取内容，返回配置文件的绝对路径
@@ -58,12 +58,13 @@ func (c *Config) filePath(file...string) string {
 
 // 设置配置管理器的配置文件存放目录绝对路径
 func (c *Config) SetPath(path string) error {
-    if err := c.paths.Set(path); err != nil {
-        glog.Error("gcfg.SetPath failed:", path, err)
+    if rp, err := c.paths.Set(path); err != nil {
+        glog.Error("gcfg.SetPath failed:", err.Error())
         return err
+    } else {
+        c.jsons.Clear()
+        glog.Debug("gcfg.SetPath:", rp)
     }
-    c.jsons.Clear()
-    glog.Debug("gcfg.SetPath:", path)
     return nil
 }
 
@@ -76,11 +77,12 @@ func (c *Config) SetViolenceCheck(check bool) {
 
 // 添加配置管理器的配置文件搜索路径
 func (c *Config) AddPath(path string) error {
-    if err := c.paths.Add(path); err != nil {
-        glog.Debug("gcfg.AddPath failed:", path, err)
+    if rp, err := c.paths.Add(path); err != nil {
+        glog.Debug("gcfg.AddPath failed:", err.Error())
         return err
+    } else {
+        glog.Debug("gcfg.AddPath:", rp)
     }
-    glog.Debug("gcfg.AddPath:", path)
     return nil
 }
 
@@ -95,6 +97,7 @@ func (c *Config) GetFilePath(file...string) string {
 
 // 设置配置管理对象的默认文件名称
 func (c *Config) SetFileName(name string) {
+    glog.Debug("gcfg.SetFileName:", name)
     c.name.Set(name)
 }
 
