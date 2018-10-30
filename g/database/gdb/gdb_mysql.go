@@ -12,6 +12,10 @@ import (
     "database/sql"
 )
 
+// MySQL接口对象
+var linkMysql = &dbmysql{}
+
+
 // 数据库链接对象
 type dbmysql struct {
     Db
