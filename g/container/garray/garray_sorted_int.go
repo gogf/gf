@@ -126,11 +126,11 @@ func (a *SortedIntArray) Slice() []int {
 
 // 查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
 // 返回值: 最后比较位置, 比较结果
-func (a *SortedIntArray) Search(value int) (int, int) {
+func (a *SortedIntArray) Search(value int) (index int, result int) {
     return a.binSearch(value, true)
 }
 
-func (a *SortedIntArray) binSearch(value int, lock bool) (int, int) {
+func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int) {
     if len(a.array) == 0 {
         return -1, -2
     }
