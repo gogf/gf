@@ -93,6 +93,11 @@ func (p *Pool) Close() {
     p.closed.Set(true)
 }
 
+// 池是否已关闭
+func (p *Pool) IsClosed() bool {
+    return p.closed.Val()
+}
+
 // 超时检测循环
 func (p *Pool) expireCheckingLoop() {
     for !p.closed.Val() {
