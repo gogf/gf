@@ -7,11 +7,19 @@
 // 字符串操作.
 package gstr
 
-import "strings"
+import (
+    "bytes"
+    "math"
+    "strings"
+)
 
 // 字符串替换
-func Replace(origin, search, replace string) string {
-    return strings.Replace(origin, search, replace, -1)
+func Replace(origin, search, replace string, count...int) string {
+    n := -1
+    if len(count) > 0 {
+        n = count[0]
+    }
+    return strings.Replace(origin, search, replace, n)
 }
 
 // 使用map进行字符串替换
@@ -120,4 +128,51 @@ func SubStr(str string, start int, length...int) (substr string) {
     }
     // 返回子串
     return string(rs[start : end])
+}
+
+// 字符串长度截取限制，超过长度限制被截取并在字符串末尾追加指定的内容，支持中文
+func StrLimit(str string, length int, suffix...string) (string) {
+    rs := []rune(str)
+    if len(str) < length {
+        return str
+    }
+    addstr := "..."
+    if len(suffix) > 0 {
+        addstr = suffix[0]
+    }
+    return string(rs[0 : length]) + addstr
+}
+
+// 按照百分比从字符串中间向两边隐藏字符(主要用于姓名、手机号、邮箱地址、身份证号等的隐藏)，支持utf-8中文，支持email格式。
+func HideStr(str string, percent int, hide string) string {
+    array := strings.Split(str, "@")
+    if len(array) > 1 {
+        str = array[0]
+    }
+    rs       := []rune(str)
+    length   := len(rs)
+    mid      := math.Floor(float64(length/2))
+    hideLen  := int(math.Floor(float64(length) * (float64(percent)/100)))
+    start    := int(mid - math.Floor(float64(hideLen) / 2))
+    hideStr  := []rune("")
+    hideRune := []rune(hide)
+    for i := 0; i < int(hideLen); i++ {
+        hideStr = append(hideStr, hideRune...)
+    }
+    buffer := bytes.NewBuffer(nil)
+    buffer.WriteString(string(rs[0 : start]))
+    buffer.WriteString(string(hideStr))
+    buffer.WriteString(string(rs[start + hideLen : ]))
+    if len(array) > 1 {
+        buffer.WriteString(array[1])
+    }
+    return buffer.String()
+}
+
+// 将\n\r替换为html中的<br>标签。
+func Nl2Br(str string) string {
+    str = Replace(str, "\r\n", "\n")
+    str = Replace(str, "\n\r", "\n")
+    str = Replace(str, "\n", "<br />")
+    return str
 }

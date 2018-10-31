@@ -8,6 +8,7 @@
 package gview
 
 import (
+    "fmt"
     "gitee.com/johng/gf/g/encoding/gurl"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
@@ -84,14 +85,18 @@ func New(path string) *View {
     view.BindFunc("html",        view.funcHtmlEncode)
     view.BindFunc("htmlencode",  view.funcHtmlEncode)
     view.BindFunc("htmldecode",  view.funcHtmlDecode)
-    //view.BindFunc("htmlchars",   view.funcHtmlChars)
-    //view.BindFunc("htmldechars", view.funcHtmlCharsDecode)
     view.BindFunc("url",         view.funcUrlEncode)
     view.BindFunc("urlencode",   view.funcUrlEncode)
     view.BindFunc("urldecode",   view.funcUrlDecode)
     view.BindFunc("date",        view.funcDate)
     view.BindFunc("substr",      view.funcSubStr)
+    view.BindFunc("strlimit",    view.funcStrLimit)
     view.BindFunc("compare",     view.funcCompare)
+    view.BindFunc("hidestr",     view.funcHideStr)
+    view.BindFunc("highlight",   view.funcHighlight)
+    view.BindFunc("toupper",     view.funcToUpper)
+    view.BindFunc("tolower",     view.funcToLower)
+    view.BindFunc("nl2br",       view.funcNl2Br)
     view.BindFunc("include",     view.funcInclude)
     return view
 }
@@ -256,16 +261,6 @@ func (view *View) funcHtmlDecode(html interface{}) string {
     return ghtml.EntitiesDecode(gconv.String(html))
 }
 
-// 模板内置方法：htmlchars
-func (view *View) funcHtmlChars(html interface{}) string {
-    return ghtml.SpecialChars(gconv.String(html))
-}
-
-// 模板内置方法：htmlcharsdecode
-func (view *View) funcHtmlCharsDecode(html interface{}) string {
-    return ghtml.SpecialCharsDecode(gconv.String(html))
-}
-
 // 模板内置方法：url
 func (view *View) funcUrlEncode(url interface{}) string {
     return gurl.Encode(gconv.String(url))
@@ -293,6 +288,36 @@ func (view *View) funcCompare(value1, value2 interface{}) int {
 // 模板内置方法：substr
 func (view *View) funcSubStr(start, end int, str interface{}) string {
     return gstr.SubStr(gconv.String(str), start, end)
+}
+
+// 模板内置方法：strlimit
+func (view *View) funcStrLimit(length int, suffix string, str interface{}) string {
+    return gstr.StrLimit(gconv.String(str), length, suffix)
+}
+
+// 模板内置方法：highlight
+func (view *View) funcHighlight(key string, color string, str interface{}) string {
+    return gstr.Replace(gconv.String(str), key, fmt.Sprintf(`<span style="color:%s;">%s</span>`, color, key))
+}
+
+// 模板内置方法：hidestr
+func (view *View) funcHideStr(percent int, hide string, str interface{}) string {
+    return gstr.HideStr(gconv.String(str), percent, hide)
+}
+
+// 模板内置方法：toupper
+func (view *View) funcToUpper(str interface{}) string {
+    return gstr.ToUpper(gconv.String(str))
+}
+
+// 模板内置方法：toupper
+func (view *View) funcToLower(str interface{}) string {
+    return gstr.ToLower(gconv.String(str))
+}
+
+// 模板内置方法：nl2br
+func (view *View) funcNl2Br(str interface{}) string {
+    return gstr.Nl2Br(gconv.String(str))
 }
 
 

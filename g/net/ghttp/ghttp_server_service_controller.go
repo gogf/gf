@@ -9,6 +9,7 @@ package ghttp
 
 import (
     "errors"
+    "gitee.com/johng/gf/g/os/glog"
     "strings"
     "reflect"
     "fmt"
@@ -40,6 +41,14 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
             continue
         }
         if mname == "Init" || mname == "Shut" || mname == "Exit"  {
+            continue
+        }
+        if _, ok := v.Method(i).Interface().(func()); !ok {
+            if methodMap != nil {
+                s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
+                glog.Warning(s)
+                return errors.New(s)
+            }
             continue
         }
         ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -82,8 +91,14 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
     t     := v.Type()
     sname := t.Elem().Name()
     mname := strings.TrimSpace(method)
-    if !v.MethodByName(mname).IsValid() {
+    fval  := v.MethodByName(mname)
+    if !fval.IsValid() {
         return errors.New("invalid method name:" + mname)
+    }
+    if _, ok := fval.Interface().(func()); !ok {
+        s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, fval.Type().String())
+        glog.Warning(s)
+        return errors.New(s)
     }
     pkgPath := t.Elem().PkgPath()
     pkgName := gfile.Basename(pkgPath)
@@ -118,6 +133,11 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
         method := strings.ToUpper(mname)
         if _, ok := s.methodsMap[method]; !ok {
             continue
+        }
+        if _, ok := v.Method(i).Interface().(func()); !ok {
+            s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
+            glog.Warning(s)
+            return errors.New(s)
         }
         pkgName := gfile.Basename(pkgPath)
         ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
