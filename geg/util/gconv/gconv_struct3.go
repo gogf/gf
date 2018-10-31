@@ -6,24 +6,23 @@ import (
     "fmt"
 )
 
+// 演示slice类型属性的赋值
 func main() {
-    type Score struct {
-        Name   string
-        Result int
-    }
     type User struct {
-        Scores Score
+        Scores []int
     }
 
     user   := new(User)
-    scores := map[string]interface{}{
-        "Scores" : map[string]interface{}{
-            "Name"   : "john",
-            "Result" : 100,
-        },
+    scores := []interface{}{99, 100, 60, 140}
+
+    // 通过map映射转换
+    if err := gconv.Struct(g.Map{"Scores" : scores}, user); err != nil {
+        fmt.Println(err)
+    } else {
+        g.Dump(user)
     }
 
-    // 嵌套struct转换
+    // 通过变量映射转换，直接slice赋值
     if err := gconv.Struct(scores, user); err != nil {
         fmt.Println(err)
     } else {

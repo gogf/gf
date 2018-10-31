@@ -7,6 +7,7 @@
 package gconv
 
 import (
+    "gitee.com/johng/gf/g/container/gset"
     "gitee.com/johng/gf/g/util/gstr"
     "reflect"
     "gitee.com/johng/gf/third/github.com/fatih/structs"
@@ -83,16 +84,38 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
     }
     // 最后按照默认规则进行匹配
+    attrset  := gset.NewStringSet(false)
+    elemtype := elem.Type()
+    for i := 0; i < elem.NumField(); i++ {
+        attrset.Add(elemtype.Field(i).Name)
+    }
     for mapk, mapv := range paramsMap {
-        name := gstr.UcFirst(mapk)
-        if _, ok := dmap[name]; ok {
+        name := ""
+        for _, v := range []string{gstr.UcFirst(mapk), gstr.ToLower(mapk), gstr.ToUpper(mapk)} {
+            if _, ok := dmap[v]; ok {
+                continue
+            }
+            if _, ok := tagmap[v]; ok {
+                continue
+            }
+            // 循环查找属性名称进行匹配
+            attrset.Iterator(func(value string) bool {
+                if strings.EqualFold(value, v) {
+                    name = value
+                    return false
+                }
+                return true
+            })
+            if name != "" {
+                break
+            }
+        }
+        // 如果没有匹配到属性名称，放弃
+        if name == "" {
             continue
         }
-        // 后续tag逻辑中会处理的key(重复的键名)这里便不处理
-        if _, ok := tagmap[mapk]; !ok {
-            if err := bindVarToStruct(elem, name, mapv); err != nil {
-                return err
-            }
+        if err := bindVarToStruct(elem, name, mapv); err != nil {
+            return err
         }
     }
     return nil
@@ -120,7 +143,7 @@ func getTagMapOfStruct(objPointer interface{}) map[string]string {
 }
 
 // 将参数值绑定到对象指定名称的属性上
-func bindVarToStruct(elem reflect.Value, name string, value interface{}) error {
+func bindVarToStruct(elem reflect.Value, name string, value interface{}) (err error) {
     structFieldValue := elem.FieldByName(name)
     // 键名与对象属性匹配检测，map中如果有struct不存在的属性，那么不做处理，直接return
     if !structFieldValue.IsValid() {
@@ -136,7 +159,7 @@ func bindVarToStruct(elem reflect.Value, name string, value interface{}) error {
     defer func() {
         // 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
         if recover() != nil {
-            bindVarToStructIfDefaultConvertionFailed(structFieldValue, value)
+            err = bindVarToStructIfDefaultConvertionFailed(structFieldValue, value)
         }
     }()
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
@@ -144,7 +167,7 @@ func bindVarToStruct(elem reflect.Value, name string, value interface{}) error {
 }
 
 // 将参数值绑定到对象指定索引位置的属性上
-func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) error {
+func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) (err error) {
     structFieldValue := elem.FieldByIndex([]int{index})
     // 键名与对象属性匹配检测
     if !structFieldValue.IsValid() {
@@ -160,7 +183,7 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) er
     defer func() {
         // 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
         if recover() != nil {
-            bindVarToStructIfDefaultConvertionFailed(structFieldValue, value)
+            err = bindVarToStructIfDefaultConvertionFailed(structFieldValue, value)
         }
     }()
     structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
@@ -168,7 +191,7 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) er
 }
 
 // 当默认的基本类型转换失败时，通过recover判断后执行反射类型转换
-func bindVarToStructIfDefaultConvertionFailed(structFieldValue reflect.Value, value interface{}) {
+func bindVarToStructIfDefaultConvertionFailed(structFieldValue reflect.Value, value interface{}) error {
     switch structFieldValue.Kind() {
         case reflect.Struct:
             Struct(value, structFieldValue)
@@ -190,7 +213,8 @@ func bindVarToStructIfDefaultConvertionFailed(structFieldValue reflect.Value, va
             }
             structFieldValue.Set(a)
         default:
-            panic(errors.New(fmt.Sprintf(`cannot convert to type "%s"`, structFieldValue.Type().String())))
+            return errors.New(fmt.Sprintf(`cannot convert to type "%s"`, structFieldValue.Type().String()))
     }
+    return nil
 }
 

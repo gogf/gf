@@ -23,6 +23,16 @@ func ReplaceByMap(origin string, replaces map[string]string) string {
     return result
 }
 
+// 字符串转换为小写
+func ToLower(s string) string {
+    return strings.ToLower(s)
+}
+
+// 字符串转换为大写
+func ToUpper(s string) string {
+    return strings.ToUpper(s)
+}
+
 // 字符串首字母转换为大写
 func UcFirst(s string) string {
     if len(s) == 0 {
