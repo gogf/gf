@@ -22,7 +22,7 @@ func main() {
         "uid"   : 1,
         "Name"  : "john",
         "PASS1" : "123",
-        "PASS2" : "456",
+        "PaSs2" : "456",
     }
     if err := gconv.Struct(params1, user); err == nil {
         fmt.Println(user)
