@@ -9,17 +9,17 @@
 package gdb
 
 import (
-	"fmt"
-	"time"
-    "errors"
     "database/sql"
-	"gitee.com/johng/gf/g/container/gmap"
-	"gitee.com/johng/gf/g/container/gring"
-	"gitee.com/johng/gf/g/container/gtype"
-	"gitee.com/johng/gf/g/os/gcache"
-	"gitee.com/johng/gf/g/util/grand"
-	_ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
-	"gitee.com/johng/gf/g/container/gvar"
+    "errors"
+    "fmt"
+    "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/container/gring"
+    "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/gvar"
+    "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/g/util/grand"
+    _ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
+    "time"
 )
 
 const (
@@ -122,18 +122,17 @@ type Map = map[string]interface{}
 // 关联数组列表(索引从0开始的数组)，绑定多条记录(使用别名)
 type List = []Map
 
-var driverLink  map[string]interface{}
-
-// 数据库查询缓存对象map，使用数据库连接名称作为键名，键值为查询缓存对象
-var dbCaches = gmap.NewStringInterfaceMap()
-
-
+var (
+    // 支持的数据库类型map
+    driverMap = make(map[string]interface{})
+    // 数据库查询缓存对象map，使用数据库连接名称作为键名，键值为查询缓存对象
+    dbCaches  = gmap.NewStringInterfaceMap()
+)
 func init() {
-	driverLink = make(map[string]interface{})
-	driverLink["mysql"] = linkMysql
-	driverLink["oracle"] = linkOracle
-	driverLink["sqllite"] = linkSqlite
-	driverLink["pgsql"]   = linkPgsql
+	driverMap["mysql"]   = linkMysql
+	driverMap["oracle"]  = linkOracle
+	driverMap["sqllite"] = linkSqlite
+	driverMap["pgsql"]   = linkPgsql
 }
 
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
@@ -240,7 +239,7 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 
 // 根据配置的数据库；类型获得Link接口对象
 func getLinkByType(dbType string) (Link, error) {
-	if dblink, ok := driverLink[dbType]; ok == false {
+	if dblink, ok := driverMap[dbType]; ok == false {
 		return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", dbType))
 	} else {
 		return dblink.(Link), nil
