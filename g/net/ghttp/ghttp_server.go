@@ -296,7 +296,7 @@ func (s *Server) GetRouteMap() string {
 
     buf   := bytes.NewBuffer(nil)
     table := tablewriter.NewWriter(buf)
-    table.SetHeader([]string{"SERVER", "ADDRESS", "DOMAIN", "METHOD", "ROUTE", "HANDLER", "HOOK"})
+    table.SetHeader([]string{"SERVER", "ADDRESS", "DOMAIN", "METHOD", "P", "ROUTE", "HANDLER", "HOOK"})
     table.SetRowLine(true)
     table.SetBorder(false)
     table.SetCenterSeparator("|")
@@ -333,16 +333,17 @@ func (s *Server) GetRouteMap() string {
         addr += ",tls" + s.config.HTTPSAddr
     }
     for _, a := range m {
-        data := make([]string, 7)
+        data := make([]string, 8)
         for _, v := range a.Slice() {
             item := v.(*tableItem)
             data[0] = s.name
             data[1] = addr
             data[2] = item.domain
             data[3] = item.method
-            data[4] = item.route
-            data[5] = item.handler
-            data[6] = item.hook
+            data[4] = gconv.String(len(strings.Split(item.route, "/")) - 1)
+            data[5] = item.route
+            data[6] = item.handler
+            data[7] = item.hook
             table.Append(data)
         }
     }
