@@ -46,7 +46,7 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
         if _, ok := v.Method(i).Interface().(func()); !ok {
             if methodMap != nil {
                 s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
-                glog.Warning(s)
+                glog.Error(s)
                 return errors.New(s)
             }
             continue
@@ -97,7 +97,7 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
     }
     if _, ok := fval.Interface().(func()); !ok {
         s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, fval.Type().String())
-        glog.Warning(s)
+        glog.Error(s)
         return errors.New(s)
     }
     pkgPath := t.Elem().PkgPath()
@@ -136,7 +136,7 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
         }
         if _, ok := v.Method(i).Interface().(func()); !ok {
             s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
-            glog.Warning(s)
+            glog.Error(s)
             return errors.New(s)
         }
         pkgName := gfile.Basename(pkgPath)
