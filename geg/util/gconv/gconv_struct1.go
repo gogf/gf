@@ -16,13 +16,13 @@ type User struct {
 func main() {
     user    := (*User)(nil)
 
-    // 使用map直接映射绑定属性值到对象
+    // 使用默认映射规则绑定属性值到对象
     user     = new(User)
     params1 := g.Map{
         "uid"   : 1,
-        "name"  : "john",
-        "pass1" : "123",
-        "pass2" : "123",
+        "Name"  : "john",
+        "PASS1" : "123",
+        "PaSs2" : "456",
     }
     if err := gconv.Struct(params1, user); err == nil {
         fmt.Println(user)
@@ -33,8 +33,8 @@ func main() {
     params2 := g.Map {
         "uid"       : 2,
         "name"      : "smith",
-        "password1" : "456",
-        "password2" : "456",
+        "password1" : "111",
+        "password2" : "222",
     }
     if err := gconv.Struct(params2, user); err == nil {
         fmt.Println(user)

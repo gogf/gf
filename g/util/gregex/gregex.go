@@ -8,12 +8,12 @@
 package gregex
 
 import (
+    "gitee.com/johng/gf/g/container/gmap"
     "regexp"
-    "gitee.com/johng/gf/g/os/gcache"
 )
 
 // 缓存对象，主要用于缓存底层regx对象
-var regxCache = gcache.New()
+var regxCache = gmap.NewStringInterfaceMap(true)
 
 // 根据pattern生成对应的regexp正则对象
 func getRegexp(pattern string) (*regexp.Regexp, error) {
@@ -21,7 +21,7 @@ func getRegexp(pattern string) (*regexp.Regexp, error) {
         return v.(*regexp.Regexp), nil
     }
     if r, err := regexp.Compile(pattern); err == nil {
-        regxCache.Set(pattern, r, 0)
+        regxCache.Set(pattern, r)
         return r, nil
     } else {
         return nil, err

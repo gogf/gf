@@ -10,6 +10,7 @@ package gspath
 
 import (
     "errors"
+    "fmt"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gfsnotify"
@@ -32,46 +33,52 @@ func New () *SPath {
 }
 
 // 设置搜索路径，只保留当前设置项，其他搜索路径被清空
-func (sp *SPath) Set(path string) error {
-    r := gfile.RealPath(path)
-    if r == "" {
-        r = sp.Search(path)
-        if r == "" {
-            r = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
+func (sp *SPath) Set(path string) (realpath string, err error) {
+    realpath = gfile.RealPath(path)
+    if realpath == "" {
+        realpath = sp.Search(path)
+        if realpath == "" {
+            realpath = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
         }
     }
-    if r != "" && gfile.IsDir(r) {
-        r = strings.TrimRight(r, gfile.Separator)
+    if realpath == "" {
+        return realpath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+    }
+    if realpath != "" && gfile.IsDir(realpath) {
+        realpath = strings.TrimRight(realpath, gfile.Separator)
         sp.mu.Lock()
-        sp.paths = []string{r}
+        sp.paths = []string{realpath}
         sp.mu.Unlock()
         sp.cache.Clear()
         //glog.Debug("gspath.SetPath:", r)
-        return nil
+        return realpath, nil
     }
     //glog.Warning("gspath.SetPath failed:", path)
-    return errors.New("invalid path:" + path)
+    return realpath, errors.New("invalid path:" + path)
 }
 
 // 添加搜索路径
-func (sp *SPath) Add(path string) error {
-    r := gfile.RealPath(path)
-    if r == "" {
-        r = sp.Search(path)
-        if r == "" {
-            r = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
+func (sp *SPath) Add(path string) (realpath string, err error) {
+    realpath = gfile.RealPath(path)
+    if realpath == "" {
+        realpath = sp.Search(path)
+        if realpath == "" {
+            realpath = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
         }
     }
-    if r != "" && gfile.IsDir(r) {
-        r = strings.TrimRight(r, gfile.Separator)
+    if realpath == "" {
+        return realpath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+    }
+    if realpath != "" && gfile.IsDir(realpath) {
+        realpath = strings.TrimRight(realpath, gfile.Separator)
         sp.mu.Lock()
-        sp.paths = append(sp.paths, r)
+        sp.paths = append(sp.paths, realpath)
         sp.mu.Unlock()
         //glog.Debug("gspath.Add:", r)
-        return nil
+        return realpath, nil
     }
     //glog.Warning("gspath.Add failed:", path)
-    return errors.New("invalid path:" + path)
+    return realpath, errors.New("invalid path:" + path)
 }
 
 // 按照优先级搜索文件，返回搜索到的文件绝对路径，找不到该文件时，返回空字符串

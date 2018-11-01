@@ -45,6 +45,7 @@ gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
 完善gform配置管理说明，g.DB/Database和gdb.New的区别；
 
 
+
 DONE:
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
 2.  ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
