@@ -19,6 +19,7 @@ import (
 
 // 文件指针池
 type Pool struct {
+    id         *gtype.Int        // 指针池ID，用以识别指针池是否重建
     pool       *gpool.Pool       // 底层对象池
     inited     *gtype.Bool       // 是否初始化(在执行第一次File方法后初始化)
     watcher    *fsnotify.Watcher // 文件监控对象
@@ -31,6 +32,7 @@ type File struct {
     os.File                // 底层文件指针
     mu     sync.RWMutex     // 互斥锁
     pool   *Pool            // 所属池
+    poolid int              // 所属池ID，如果池ID不同表示池已经重建，那么该文件指针也应当销毁，不能重新丢到原有的池中
     flag   int              // 打开标志
     perm   os.FileMode      // 打开权限
     path   string           // 绝对路径
@@ -63,6 +65,7 @@ func New(path string, flag int, perm os.FileMode, expire...int) *Pool {
         fpExpire = expire[0]
     }
     p := &Pool {
+        id        : gtype.NewInt(),
         expire    : fpExpire,
         inited    : gtype.NewBool(),
         closeChan : make(chan struct{}),
@@ -84,11 +87,12 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, expire int) *
             return nil, err
         }
         return &File{
-            File : *file,
-            pool : p,
-            flag : flag,
-            perm : perm,
-            path : path,
+            File   : *file,
+            pool   : p,
+            poolid : p.id.Val(),
+            flag   : flag,
+            perm   : perm,
+            path   : path,
         }, nil
     })
     pool.SetExpireFunc(func(i interface{}) {
@@ -136,18 +140,22 @@ func (p *Pool) File() (*File, error) {
             go func() {
                 for {
                     select {
-                    // 关闭事件
-                    case <- p.closeChan:
-                        return
+                        // 关闭事件
+                        case <- p.closeChan:
+                            return
 
                         // 监听事件
-                    case ev := <- p.watcher.Events:
-                        // 如果文件被删除或者重命名，重建指针池
-                        if ev.Op & fsnotify.Remove == fsnotify.Remove || ev.Op & fsnotify.Rename == fsnotify.Rename {
-                            p.pool.Close()
-                            p.pool = newFilePool(p, f.Name(), f.flag, f.perm, f.pool.expire)
-                            p.watcher.Remove(ev.Name)
-                        }
+                        case ev := <- p.watcher.Events:
+                            // 如果文件被删除或者重命名，立即重建指针池
+                            if ev.Op & fsnotify.Remove == fsnotify.Remove || ev.Op & fsnotify.Rename == fsnotify.Rename {
+                                // 原有的指针都不要了
+                                p.id.Add(1)
+                                // Clear相当于重建指针池
+                                p.pool.Clear()
+                                // 为保证原子操作，但又不想加锁，
+                                // 这里再执行一次原子Add，将在两次Add中间可能分配出去的文件指针丢弃掉
+                                p.id.Add(1)
+                            }
                     }
                 }
             }()
@@ -165,6 +173,8 @@ func (p *Pool) Close() error {
 
 // 获得底层文件指针(返回error是标准库io.ReadWriteCloser接口实现)
 func (f *File) Close() error {
-    f.pool.pool.Put(f)
+    if f.poolid == f.pool.id.Val() {
+        f.pool.pool.Put(f)
+    }
     return nil
 }

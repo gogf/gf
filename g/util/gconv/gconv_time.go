@@ -18,13 +18,13 @@ func Time(i interface{}, format...string) time.Time {
     // 优先使用用户输入日期格式进行转换
     if len(format) > 0 {
         t, _ := gtime.StrToTimeFormat(s, format[0])
-        return t
+        return t.Time
     }
     if gstr.IsNumeric(s) {
         return gtime.NewFromTimeStamp(Int64(s)).Time
     } else {
         t, _ := gtime.StrToTime(s)
-        return t
+        return t.Time
     }
 }
 

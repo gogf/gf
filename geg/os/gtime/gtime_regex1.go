@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-    timeRegex, err := regexp.Compile(gtime.TIME_REAGEX_PATTERN)
+    timeRegex, err := regexp.Compile(gtime.TIME_REAGEX_PATTERN1)
     if err != nil {
         panic(err)
     }
