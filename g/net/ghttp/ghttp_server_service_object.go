@@ -53,7 +53,7 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
         if !ok {
             if methodMap != nil {
                 s := fmt.Sprintf(`invalid medthod definition "%s", while "func(*Request))" is required`, v.Method(i).Type().String())
-                glog.Warning(s)
+                glog.Error(s)
                 return errors.New(s)
             }
             continue
@@ -110,7 +110,7 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
     faddr, ok := fval.Interface().(func(*Request))
     if !ok {
         s := fmt.Sprintf(`invalid medthod definition "%s", while "func(*Request)" is required`, fval.Type().String())
-        glog.Warning(s)
+        glog.Error(s)
         return errors.New(s)
     }
     finit := (func(*Request))(nil)
@@ -165,7 +165,7 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
         faddr, ok := v.Method(i).Interface().(func(*Request))
         if !ok {
             s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
-            glog.Warning(s)
+            glog.Error(s)
             return errors.New(s)
         }
         pkgName := gfile.Basename(pkgPath)
