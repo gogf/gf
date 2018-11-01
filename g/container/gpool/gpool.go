@@ -65,6 +65,11 @@ func (p *Pool) Put(value interface{}) {
     p.list.PushBack(item)
 }
 
+// 清空对象池
+func (p *Pool) Clear() {
+    p.list.RemoveAll()
+}
+
 // 从池中获得一个临时对象
 func (p *Pool) Get() (interface{}, error) {
     for !p.closed.Val() {
@@ -91,11 +96,6 @@ func (p *Pool) Size() int {
 // 关闭池
 func (p *Pool) Close() {
     p.closed.Set(true)
-}
-
-// 池是否已关闭
-func (p *Pool) IsClosed() bool {
-    return p.closed.Val()
 }
 
 // 超时检测循环

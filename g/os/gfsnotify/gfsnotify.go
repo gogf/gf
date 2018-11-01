@@ -29,8 +29,8 @@ type Watcher struct {
 
 // 监听事件对象
 type Event struct {
-    Path string      // 文件绝对路径
-    Op   Op          // 触发监听的文件操作
+    Path    string   // 文件绝对路径
+    Op      Op       // 触发监听的文件操作
     Watcher *Watcher // 时间对应的监听对象
 }
 
@@ -201,7 +201,7 @@ func (w *Watcher) startEventLoop() {
                         // 如果是文件删除事件，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，
                         // 并重新添加监控(底层fsnotify会自动删除掉监控，这里重新添加回去)
                         w.watcher.Add(event.Path)
-                        // 修改时间操作为重命名(相当于重命名为自身名称，最终名称没变)
+                        // 修改事件操作为重命名(相当于重命名为自身名称，最终名称没变)
                         event.Op = RENAME
                     } else {
                         // 如果是真实删除，那么递归删除监控信息
