@@ -20,6 +20,13 @@ func main() {
 {{compare 1 1}}
 {{"我是中国人" | substr 2 -1}}
 {{"我是中国人" | substr 2  2}}
+{{"我是中国人" | strlimit 2  "..."}}
+{{"热爱GF热爱生活" | hidestr 20  "*"}}
+{{"热爱GF热爱生活" | hidestr 50  "*"}}
+{{"热爱GF热爱生活" | highlight "GF" "red"}}
+{{"gf" | toupper}}
+{{"GF" | tolower}}
+{{"Go\nFrame" | nl2br}}
 `
     content, err := g.View().ParseContent(tplContent, nil)
     fmt.Println(err)

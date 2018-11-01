@@ -1,31 +1,28 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g"
     "fmt"
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
-// 演示slice类型属性的赋值
+
+// 使用默认映射规则绑定属性值到对象
 func main() {
     type User struct {
-        Scores []int
+        Uid   int
+        Name  string
+        Pass1 string
+        Pass2 string
     }
-
-    user   := new(User)
-    scores := []interface{}{99, 100, 60, 140}
-
-    // 通过map映射转换
-    if err := gconv.Struct(g.Map{"Scores" : scores}, user); err != nil {
-        fmt.Println(err)
-    } else {
-        g.Dump(user)
+    user    := new(User)
+    params  := g.Map {
+        "uid"   : 1,
+        "Name"  : "john",
+        "PASS1" : "123",
+        "PASS2" : "456",
     }
-
-    // 通过变量映射转换，直接slice赋值
-    if err := gconv.Struct(scores, user); err != nil {
-        fmt.Println(err)
-    } else {
-        g.Dump(user)
+    if err := gconv.Struct(params, user); err == nil {
+        fmt.Println(user)
     }
 }

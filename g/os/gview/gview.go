@@ -8,7 +8,9 @@
 package gview
 
 import (
+    "fmt"
     "gitee.com/johng/gf/g/encoding/gurl"
+    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gstr"
     "strings"
@@ -70,40 +72,55 @@ func Get(path string) *View {
 
 // 生成一个视图对象
 func New(path string) *View {
-    s := gspath.New()
-    s.Set(path)
     view := &View {
-        paths      : s,
+        paths      : gspath.New(),
         data       : make(map[string]interface{}),
         funcmap    : make(map[string]interface{}),
         delimiters : make([]string, 2),
     }
+    view.SetPath(path)
     view.SetDelimiters("{{", "}}")
     // 内置方法
     view.BindFunc("text",        view.funcText)
     view.BindFunc("html",        view.funcHtmlEncode)
     view.BindFunc("htmlencode",  view.funcHtmlEncode)
     view.BindFunc("htmldecode",  view.funcHtmlDecode)
-    //view.BindFunc("htmlchars",   view.funcHtmlChars)
-    //view.BindFunc("htmldechars", view.funcHtmlCharsDecode)
     view.BindFunc("url",         view.funcUrlEncode)
     view.BindFunc("urlencode",   view.funcUrlEncode)
     view.BindFunc("urldecode",   view.funcUrlDecode)
     view.BindFunc("date",        view.funcDate)
     view.BindFunc("substr",      view.funcSubStr)
+    view.BindFunc("strlimit",    view.funcStrLimit)
     view.BindFunc("compare",     view.funcCompare)
+    view.BindFunc("hidestr",     view.funcHideStr)
+    view.BindFunc("highlight",   view.funcHighlight)
+    view.BindFunc("toupper",     view.funcToUpper)
+    view.BindFunc("tolower",     view.funcToLower)
+    view.BindFunc("nl2br",       view.funcNl2Br)
     view.BindFunc("include",     view.funcInclude)
     return view
 }
 
 // 设置模板目录绝对路径
 func (view *View) SetPath(path string) error {
-    return view.paths.Set(path)
+    if rp, err := view.paths.Set(path); err != nil {
+        glog.Error("gview.SetPath failed:", err.Error())
+        return err
+    } else {
+        glog.Debug("gview.SetPath:", rp)
+    }
+    return nil
 }
 
 // 添加模板目录搜索路径
 func (view *View) AddPath(path string) error {
-    return view.paths.Add(path)
+    if rp, err := view.paths.Add(path); err != nil {
+        glog.Error("gview.AddPath failed:", err.Error())
+        return err
+    } else {
+        glog.Debug("gview.SetPath:", rp)
+    }
+    return nil
 }
 
 // 批量绑定模板变量，即调用之后每个线程都会生效，因此有并发安全控制
@@ -244,16 +261,6 @@ func (view *View) funcHtmlDecode(html interface{}) string {
     return ghtml.EntitiesDecode(gconv.String(html))
 }
 
-// 模板内置方法：htmlchars
-func (view *View) funcHtmlChars(html interface{}) string {
-    return ghtml.SpecialChars(gconv.String(html))
-}
-
-// 模板内置方法：htmlcharsdecode
-func (view *View) funcHtmlCharsDecode(html interface{}) string {
-    return ghtml.SpecialCharsDecode(gconv.String(html))
-}
-
 // 模板内置方法：url
 func (view *View) funcUrlEncode(url interface{}) string {
     return gurl.Encode(gconv.String(url))
@@ -281,6 +288,36 @@ func (view *View) funcCompare(value1, value2 interface{}) int {
 // 模板内置方法：substr
 func (view *View) funcSubStr(start, end int, str interface{}) string {
     return gstr.SubStr(gconv.String(str), start, end)
+}
+
+// 模板内置方法：strlimit
+func (view *View) funcStrLimit(length int, suffix string, str interface{}) string {
+    return gstr.StrLimit(gconv.String(str), length, suffix)
+}
+
+// 模板内置方法：highlight
+func (view *View) funcHighlight(key string, color string, str interface{}) string {
+    return gstr.Replace(gconv.String(str), key, fmt.Sprintf(`<span style="color:%s;">%s</span>`, color, key))
+}
+
+// 模板内置方法：hidestr
+func (view *View) funcHideStr(percent int, hide string, str interface{}) string {
+    return gstr.HideStr(gconv.String(str), percent, hide)
+}
+
+// 模板内置方法：toupper
+func (view *View) funcToUpper(str interface{}) string {
+    return gstr.ToUpper(gconv.String(str))
+}
+
+// 模板内置方法：toupper
+func (view *View) funcToLower(str interface{}) string {
+    return gstr.ToLower(gconv.String(str))
+}
+
+// 模板内置方法：nl2br
+func (view *View) funcNl2Br(str interface{}) string {
+    return gstr.Nl2Br(gconv.String(str))
 }
 
 
