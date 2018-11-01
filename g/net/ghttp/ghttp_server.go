@@ -213,9 +213,14 @@ func (s *Server) Start() error {
     // 如果设置了静态文件目录，那么优先按照静态文件目录进行检索，其次是当前可执行文件工作目录；
     // 并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索。
     if s.config.ServerRoot != "" {
-        s.paths.Set(s.config.ServerRoot)
+        if rp, err := s.paths.Set(s.config.ServerRoot); err != nil {
+            glog.Error("ghttp.SetServerRoot failed:", err.Error())
+            return err
+        } else {
+            glog.Debug("ghttp.SetServerRoot:", rp)
+        }
     }
-    s.paths.Add(gfile.SelfDir())
+    s.AddSearchPath(gfile.SelfDir())
     if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
         s.paths.Add(p)
     }
@@ -271,7 +276,7 @@ func (s *Server) Start() error {
 
 // 打印展示路由表
 func (s *Server) DumpRoutesMap() {
-    if s.config.DumpRouteMap {
+    if s.config.DumpRouteMap && len(s.routesMap) > 0 {
         // (等待一定时间后)当所有框架初始化信息打印完毕之后才打印路由表信息
         gtime.SetTimeout(50*time.Millisecond, func() {
             glog.Header(false).Println(fmt.Sprintf("\n%s\n", s.GetRouteMap()))

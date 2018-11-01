@@ -36,10 +36,10 @@ golang版本 >= 1.9.2
 1. 提供了对基本数据类型的并发安全封装，提供了常用的数据结构容器；
 1. 支持Go变量/Json/Xml/Yml/Toml任意数据格式之间的相互转换及创建；
 1. 强大的数据库ORM，支持应用层级的集群管理、读写分离、负载均衡，查询缓存、方法及链式ORM操作；
-1. 更多特点请查阅框架[手册](http://gf.johng.cn)和[源码](https://godoc.org/github.com/johng-cn/gf)；
+1. 更多特点请查阅框架[手册](https://gfer.me)和[源码](https://godoc.org/github.com/johng-cn/gf)；
 
 # 文档
-GoFrame开发文档：[http://gf.johng.cn](http://gf.johng.cn)
+GoFrame开发文档：[gfer.me](https://gfer.me)
 
 
 # 使用
@@ -178,4 +178,4 @@ if tx, err := db.Begin(); err == nil {
 ...
 
 
-更多特性及示例请查看官方开发文档：[gf.johng.cn](http://gf.johng.cn)
+更多特性及示例请查看官方开发文档：[gfer.me](https://gfer.me)
