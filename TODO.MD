@@ -1,52 +1,51 @@
-ON THE WAY:
-orm增加更多数据库支持；
-增加对于数据表Model的封装；
-更多数据库的ORM功能支持；
-考虑gdb对象管理增加二级连接池特性，提高New&Close性能；
-增加图形验证码支持，至少支持数字和英文字母；
-增加热编译工具，提高开发环境的开发/测试效率（媲美PHP开发效率）；
-增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
-ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
-Cookie&Session数据池化处理；
-ghttp.Client增加proxy特性；
-gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
-orm增加sqlite对Save方法的支持(去掉触发器语句);
-ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
-ghttp路由功能增加分组路由特性；
-ghttp增加返回数据压缩机制；
-gview中的template标签失效问题；
-gfile文件stat信息使用gfsnotify进行缓存更新改进；
-ghttp.Server增加proxy功能特性，本地proxy和远程proxy，本地即将路由规则映射；远程即反向代理；
-gjson对大json数据的解析效率问题；
-ghttp增加route name特性，并同时支持backend和template(提供内置函数)引用，可以通过RedirectRoute方法给定route name和路由参数跳转到指定的路由地址上；
-ghttp.Client自动Close机制；
-gvalid校验支持当第一个规则失败后便不再校验后续的规则，最好做成链式操作；
-检查ghttp.Server超时问题；
-gvalid增加支持对[]rune的长度校验(一个中文占3个字节)；
-ghttp.Request增加对输入参数的自动HtmlEncode机制；
-常量命名风格根据golint进行修改；
-开放rwmutex包，并将gjson的互斥锁使用自定义的mutex替换；
-文档完善：
-    gconv struct tag、
-    控制器及执行对象注册的Init&Shut方法、
-    ghttp.Response&ServeFile、gfcache、gproc shell执行、
-    ghttp Server&Client basic auth、
-    glog分类&日志等级&链式操作、gdb debug自动输出调试信息、gmlock内存锁、
-服务注册域名增加对泛域名的支持；
-服务注册时判断方法定义满足规范时才执行绑定，否则提示WARN信息；
-Cookie设置中文失效问题；
-ghttp hook回调使用方式在注册路由比较多的时候，优先级可能使得开发者混乱，考虑方式便于管理；
-使用gconv将slice映射到struct属性上，例如redis hscan的结果集；
-项目参考：
-    https://github.com/namreg/godown
-    https://github.com/Masterminds/sprig
-gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
-完善配置管理章节，说明默认的配置文件更改方式；
-完善gform配置管理说明，g.DB/Database和gdb.New的区别；
+# ON THE WAY
+1. orm增加更多数据库支持；
+1. 增加对于数据表Model的封装；
+1. 更多数据库的ORM功能支持；
+1. 考虑gdb对象管理增加二级连接池特性，提高New&Close性能；
+1. 增加图形验证码支持，至少支持数字和英文字母；
+1. 增加热编译工具，提高开发环境的开发/测试效率（媲美PHP开发效率）；
+1. 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
+1. ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
+1. Cookie&Session数据池化处理；
+1. ghttp.Client增加proxy特性；
+1. gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
+1. orm增加sqlite对Save方法的支持(去掉触发器语句);
+1. ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
+1. ghttp路由功能增加分组路由特性；
+1. ghttp增加返回数据压缩机制；
+1. gview中的template标签失效问题；
+1. gfile文件stat信息使用gfsnotify进行缓存更新改进；
+1. ghttp.Server增加proxy功能特性，本地proxy和远程proxy，本地即将路由规则映射；远程即反向代理；
+1. gjson对大json数据的解析效率问题；
+1. ghttp增加route name特性，并同时支持backend和template(提供内置函数)引用，可以通过RedirectRoute方法给定route name和路由参数跳转到指定的路由地址上；
+1. ghttp.Client自动Close机制；
+1. gvalid校验支持当第一个规则失败后便不再校验后续的规则，最好做成链式操作；
+1. 检查ghttp.Server超时问题；
+1. gvalid增加支持对[]rune的长度校验(一个中文占3个字节)；
+1. ghttp.Request增加对输入参数的自动HtmlEncode机制；
+1. 常量命名风格根据golint进行修改；
+1. 开放rwmutex包，并将gjson的互斥锁使用自定义的mutex替换；
+1. 文档完善：
+    - gconv struct tag、
+    - 控制器及执行对象注册的Init&Shut方法、
+    - ghttp.Response&ServeFile、gfcache、gproc shell执行、
+    - ghttp Server&Client basic auth、
+    - glog分类&日志等级&链式操作、gdb debug自动输出调试信息、gmlock内存锁、
+1. 服务注册域名增加对泛域名的支持；
+1. Cookie设置中文失效问题；
+1. ghttp hook回调使用方式在注册路由比较多的时候，优先级可能使得开发者混乱，考虑方式便于管理；
+1. 使用gconv将slice映射到struct属性上，例如redis hscan的结果集；
+1. 项目参考：
+    - https://github.com/namreg/godown
+    - https://github.com/Masterminds/sprig
+1. gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
 
 
 
-DONE:
+
+
+# DONE
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
 2.  ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
 3.  ghttp.Response对象完善并改进数据返回方法(Write/WriteString)；
@@ -90,3 +89,8 @@ DONE:
 41. 解决glog串日志情况；
 42. glog增加对日志文件名称的生成规则设定，支持时间格式规则；
 43. ghttp日志增加客户端IP信息；
+44. 完善gform配置管理说明，g.DB/Database和gdb.New的区别；
+1. 完善配置管理章节，说明默认的配置文件更改方式；
+1. 服务注册时判断方法定义满足规范时才执行绑定，否则提示WARN信息；
+
+
