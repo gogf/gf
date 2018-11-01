@@ -161,6 +161,9 @@ func Database(name...string) *gdb.Db {
                     if value, ok := nodem["priority"]; ok {
                         node.Priority = gconv.Int(value)
                     }
+                    if value, ok := nodem["linkinfo"]; ok {
+                        node.Linkinfo = gconv.String(value)
+                    }
                     if value, ok := nodem["max-idle"]; ok {
                         node.MaxIdleConnCount = gconv.Int(value)
                     }
