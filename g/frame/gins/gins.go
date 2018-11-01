@@ -74,7 +74,7 @@ func View(name...string) *gview.View {
     return instances.GetOrSetFuncLock(key, func() interface{} {
         path := gcmd.Option.Get("gf.viewpath")
         if path == "" {
-            path = genv.Get("gf.viewpath")
+            path = genv.Get("GF_VIEWPATH")
             if path == "" {
                 path = gfile.SelfDir()
             }
@@ -101,7 +101,7 @@ func Config(file...string) *gcfg.Config {
         func() interface{} {
             path := gcmd.Option.Get("gf.cfgpath")
             if path == "" {
-                path = genv.Get("gf.cfgpath")
+                path = genv.Get("GF_CFGPATH")
                 if path == "" {
                     path = gfile.SelfDir()
                 }
@@ -160,6 +160,9 @@ func Database(name...string) *gdb.Db {
                     }
                     if value, ok := nodem["priority"]; ok {
                         node.Priority = gconv.Int(value)
+                    }
+                    if value, ok := nodem["linkinfo"]; ok {
+                        node.Linkinfo = gconv.String(value)
                     }
                     if value, ok := nodem["max-idle"]; ok {
                         node.MaxIdleConnCount = gconv.Int(value)
