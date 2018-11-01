@@ -9,6 +9,7 @@ package ghttp
 
 import (
     "errors"
+    "gitee.com/johng/gf/g/os/glog"
     "strings"
     "reflect"
     "fmt"
@@ -48,6 +49,15 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
         if mname == "Init" || mname == "Shut" {
             continue
         }
+        faddr, ok := v.Method(i).Interface().(func(*Request))
+        if !ok {
+            if methodMap != nil {
+                s := fmt.Sprintf(`invalid medthod definition "%s", while "func(*Request))" is required`, v.Method(i).Type().String())
+                glog.Error(s)
+                return errors.New(s)
+            }
+            continue
+        }
         objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
         if objName[0] == '*' {
             objName = fmt.Sprintf(`(%s)`, objName)
@@ -58,7 +68,7 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
             rtype : gROUTE_REGISTER_OBJECT,
             ctype : nil,
             fname : "",
-            faddr : v.Method(i).Interface().(func(*Request)),
+            faddr : faddr,
             finit : finit,
             fshut : fshut,
         }
@@ -76,7 +86,7 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
                 rtype : gROUTE_REGISTER_OBJECT,
                 ctype : nil,
                 fname : "",
-                faddr : v.Method(i).Interface().(func(*Request)),
+                faddr : faddr,
                 finit : finit,
                 fshut : fshut,
             }
@@ -96,6 +106,12 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
     fval  := v.MethodByName(mname)
     if !fval.IsValid() {
         return errors.New("invalid method name:" + mname)
+    }
+    faddr, ok := fval.Interface().(func(*Request))
+    if !ok {
+        s := fmt.Sprintf(`invalid medthod definition "%s", while "func(*Request)" is required`, fval.Type().String())
+        glog.Error(s)
+        return errors.New(s)
     }
     finit := (func(*Request))(nil)
     fshut := (func(*Request))(nil)
@@ -117,7 +133,7 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
         rtype : gROUTE_REGISTER_OBJECT,
         ctype : nil,
         fname : "",
-        faddr : fval.Interface().(func(*Request)),
+        faddr : faddr,
         finit : finit,
         fshut : fshut,
     }
@@ -146,6 +162,12 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
         if _, ok := s.methodsMap[method]; !ok {
             continue
         }
+        faddr, ok := v.Method(i).Interface().(func(*Request))
+        if !ok {
+            s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
+            glog.Error(s)
+            return errors.New(s)
+        }
         pkgName := gfile.Basename(pkgPath)
         objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
         if objName[0] == '*' {
@@ -157,7 +179,7 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
             rtype : gROUTE_REGISTER_OBJECT,
             ctype : nil,
             fname : "",
-            faddr : v.Method(i).Interface().(func(*Request)),
+            faddr : faddr,
             finit : finit,
             fshut : fshut,
         }
