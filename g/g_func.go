@@ -33,16 +33,6 @@ func Wait() {
     ghttp.Wait()
 }
 
-// 是否显示调试信息
-func SetDebug(debug bool) {
-    glog.SetDebug(debug)
-}
-
-// 设置日志的显示等级
-func SetLogLevel(level int) {
-    glog.SetLevel(level)
-}
-
 // 打印变量
 func Dump(i...interface{}) {
     gutil.Dump(i...)
