@@ -91,7 +91,12 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     }
     for mapk, mapv := range paramsMap {
         name := ""
-        for _, v := range []string{gstr.UcFirst(mapk), gstr.ToLower(mapk), gstr.ToUpper(mapk)} {
+        for _, v := range []string{
+            gstr.UcFirst(mapk),
+            gstr.ReplaceByMap(mapk, map[string]string{
+                "_" : "",
+                "-" : "",
+            })} {
             if _, ok := dmap[v]; ok {
                 continue
             }
