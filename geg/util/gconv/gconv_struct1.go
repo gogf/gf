@@ -1,16 +1,17 @@
 package main
 
 import (
-    "fmt"
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/util/gconv"
 )
 
 type User struct {
-    Uid   int
-    Name  string
-    Pass1 string `gconv:"password1"`
-    Pass2 string `gconv:"password2"`
+    Uid      int
+    Name     string
+    Site_Url string
+    NickName string
+    Pass1    string `gconv:"password1"`
+    Pass2    string `gconv:"password2"`
 }
 
 func main() {
@@ -19,13 +20,15 @@ func main() {
     // 使用默认映射规则绑定属性值到对象
     user     = new(User)
     params1 := g.Map{
-        "uid"   : 1,
-        "Name"  : "john",
-        "PASS1" : "123",
-        "PaSs2" : "456",
+        "uid"       : 1,
+        "Name"      : "john",
+        "siteurl"   : "https://gfer.me",
+        "nick_name" : "johng",
+        "PASS1"     : "123",
+        "PASS2"     : "456",
     }
     if err := gconv.Struct(params1, user); err == nil {
-        fmt.Println(user)
+        g.Dump(user)
     }
 
     // 使用struct tag映射绑定属性值到对象
@@ -33,10 +36,12 @@ func main() {
     params2 := g.Map {
         "uid"       : 2,
         "name"      : "smith",
+        "site-url"  : "https://gfer.me",
+        "nick name" : "johng",
         "password1" : "111",
         "password2" : "222",
     }
     if err := gconv.Struct(params2, user); err == nil {
-        fmt.Println(user)
+        g.Dump(user)
     }
 }
