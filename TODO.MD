@@ -40,7 +40,7 @@
     - https://github.com/namreg/godown
     - https://github.com/Masterminds/sprig
 1. gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
-
+1. 模板引擎增加对对象的支持(参考https://segmentfault.com/q/1010000016829214)；
 
 
 
