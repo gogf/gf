@@ -107,7 +107,7 @@ func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
         defer f.Close()
         return GetNextCharOffset(&f.File, char, start)
     } else {
-        // panic(err)
+        panic(err)
     }
     return -1
 }
@@ -126,7 +126,7 @@ func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, i
         defer f.Close()
         return GetBinContentsTilChar(&f.File, char, start)
     } else {
-        // panic(err)
+        panic(err)
     }
     return nil, -1
 }
@@ -146,7 +146,7 @@ func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byt
         defer f.Close()
         return GetBinContentsByTwoOffsets(&f.File, start, end)
     } else {
-        // panic(err)
+        panic(err)
     }
     return nil
 }
