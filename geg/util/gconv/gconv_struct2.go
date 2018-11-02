@@ -10,17 +10,20 @@ import (
 // 使用默认映射规则绑定属性值到对象
 func main() {
     type User struct {
-        Uid   int
-        Name  string
-        Pass1 string
-        Pass2 string
+        Uid     int
+        Name    string
+        SiteUrl string
+        Pass1   string
+        Pass2   string
+
     }
     user    := new(User)
     params  := g.Map {
-        "uid"   : 1,
-        "Name"  : "john",
-        "PASS1" : "123",
-        "PASS2" : "456",
+        "uid"      : 1,
+        "Name"     : "john",
+        "site_url" : "https://gfer.me",
+        "PASS1"    : "123",
+        "PASS2"    : "456",
     }
     if err := gconv.Struct(params, user); err == nil {
         fmt.Println(user)

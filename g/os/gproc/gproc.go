@@ -145,7 +145,7 @@ func searchBinFromEnvPath(file string) string {
     switch runtime.GOOS {
         case "windows":
             array = strings.Split(os.Getenv("Path"), ";")
-            if gfile.Ext(file) != "exe" {
+            if gfile.Ext(file) != ".exe" {
                 file += ".exe"
             }
         default:

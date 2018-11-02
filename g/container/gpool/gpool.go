@@ -65,6 +65,11 @@ func (p *Pool) Put(value interface{}) {
     p.list.PushBack(item)
 }
 
+// 清空对象池
+func (p *Pool) Clear() {
+    p.list.RemoveAll()
+}
+
 // 从池中获得一个临时对象
 func (p *Pool) Get() (interface{}, error) {
     for !p.closed.Val() {

@@ -91,16 +91,26 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     }
     for mapk, mapv := range paramsMap {
         name := ""
-        for _, v := range []string{gstr.UcFirst(mapk), gstr.ToLower(mapk), gstr.ToUpper(mapk)} {
-            if _, ok := dmap[v]; ok {
+        for _, checkName := range []string {
+            gstr.UcFirst(mapk),
+            gstr.ReplaceByMap(mapk, map[string]string{
+                "_" : "",
+                "-" : "",
+                " " : "",
+            })} {
+            if _, ok := dmap[checkName]; ok {
                 continue
             }
-            if _, ok := tagmap[v]; ok {
+            if _, ok := tagmap[checkName]; ok {
                 continue
             }
             // 循环查找属性名称进行匹配
             attrset.Iterator(func(value string) bool {
-                if strings.EqualFold(value, v) {
+                if strings.EqualFold(checkName, value) {
+                    name = value
+                    return false
+                }
+                if strings.EqualFold(checkName, gstr.Replace(value, "_", "")) {
                     name = value
                     return false
                 }
