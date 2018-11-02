@@ -1,20 +1,12 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "fmt"
+    "gitee.com/johng/gf/g/util/gregex"
 )
 
-
 func main() {
-    s := g.Server()
-    s.Domain("www.a.com").BindHandler("/*", func(r *ghttp.Request) {
-        r.Response.ServeFile("/home/john/www1" + r.URL.Path)
-    })
-    s.Domain("www.b.com").BindHandler("/*", func(r *ghttp.Request) {
-        r.Response.ServeFile("/home/john/www2" + r.URL.Path)
-    })
-    s.SetIndexFolder(true)
-    s.SetPort(8080)
-    s.Run()
+    s := `[0-9][0-9]/Jan/[0-9][0-9][0-9][0-9]:[0-9][0-9]:[0-9][0-9]:[0-9][0-9] \+[0-9][0-9][0-9][0-9]`
+    s,_  = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
+    fmt.Println(s)
 }

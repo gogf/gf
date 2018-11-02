@@ -7,8 +7,9 @@
 package gtime
 
 import (
-    "strings"
     "bytes"
+    "gitee.com/johng/gf/g/util/gregex"
+    "strings"
 )
 
 var (
@@ -68,6 +69,7 @@ func formatToStdLayout(format string) string {
 
             default:
                 if f, ok := formats[format[i]]; ok {
+                    // 有几个转换的符号需要特殊处理
                     switch format[i] {
                         case 'j':
                             b.WriteString("02")
@@ -92,6 +94,14 @@ func formatToStdLayout(format string) string {
     return b.String()
 }
 
+// 将format格式转换为正则表达式规则
+func formatToRegexPattern(format string) string {
+    s    := gregex.Quote(formatToStdLayout(format))
+    s, _  = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
+    s, _  = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
+    return s
+}
+
 // 格式化，使用自定义日期格式
 func (t *Time) Format(format string) string {
     s := ""
@@ -109,6 +119,7 @@ func (t *Time) Format(format string) string {
             default:
                 if f, ok := formats[format[i]]; ok {
                     r := t.Time.Format(f)
+                    // 有几个转换的符号需要特殊处理
                     switch format[i] {
                         case 'j':
                             s += strings.Replace(r, "=j=0", "", -1)

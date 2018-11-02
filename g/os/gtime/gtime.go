@@ -8,11 +8,12 @@
 package gtime
 
 import (
-    "time"
-    "regexp"
-    "strings"
-    "strconv"
     "errors"
+    "gitee.com/johng/gf/g/util/gregex"
+    "regexp"
+    "strconv"
+    "strings"
+    "time"
 )
 
 const (
@@ -28,12 +29,45 @@ const (
     // "2018/10/31 - 16:38:46"
     // "2018-02-09",
     // 日期连接符号支持'-'或者'/'
-    TIME_REAGEX_PATTERN = `(\d{2,4}[-/]\d{2}[-/]\d{2})[\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
+    TIME_REAGEX_PATTERN1 = `(\d{2,4}[-/]\d{2}[-/]\d{2})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]*)([\+-]{0,1})([:\d]*)`
+    // 01-Nov-2018 11:50:28
+    // 01/Nov/2018 11:50:28
+    // 01/Nov/2018:11:50:28
+    // 01/Nov/18 11:50:28
+    TIME_REAGEX_PATTERN2 = `(\d{1,2}[-/][A-Za-z]{3,}[-/]\d{2,4})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]*)([\+-]{0,1})([:\d]*)`
 )
 
 var (
     // 使用正则判断会比直接使用ParseInLocation挨个轮训判断要快很多
-    timeRegex, _   = regexp.Compile(TIME_REAGEX_PATTERN)
+    timeRegex1, _   = regexp.Compile(TIME_REAGEX_PATTERN1)
+    timeRegex2, _   = regexp.Compile(TIME_REAGEX_PATTERN2)
+    // 月份英文与阿拉伯数字对应关系
+    monthMap = map[string]int {
+        "jan"        : 1,
+        "feb"        : 2,
+        "mar"        : 3,
+        "apr"        : 4,
+        "may"        : 5,
+        "jun"        : 6,
+        "jul"        : 7,
+        "aug"        : 8,
+        "sep"        : 9,
+        "sept"       : 9,
+        "oct"        : 10,
+        "nov"        : 11,
+        "dec"        : 12,
+        "january"    : 1,
+        "february"   : 2,
+        "march"      : 3,
+        "april"      : 4,
+        "june"       : 6,
+        "july"       : 7,
+        "august"     : 8,
+        "september"  : 9,
+        "october"    : 10,
+        "november"   : 11,
+        "december"   : 12,
+    }
 )
 
 // 类似与js中的SetTimeout，一段时间后执行回调函数
@@ -96,13 +130,19 @@ func Datetime() string {
     return time.Now().Format("2006-01-02 15:04:05")
 }
 
-// 字符串转换为时间对象
-func StrToTime(str string) (time.Time, error) {
-    var result time.Time
-    var local  = time.Local
-    if match := timeRegex.FindStringSubmatch(str); len(match) > 0 {
-        var year, month, day, hour, min, sec, nsec int
-        var array []string
+// 字符串转换为时间对象，第二个参数指定格式的format(如: Y-m-d H:i:s)，当指定第二个参数时同StrToTimeFormat方法
+func StrToTime(str string, format...string) (*Time, error) {
+    if len(format) > 0 {
+        return StrToTimeFormat(str, format[0])
+    }
+    var year, month, day, hour, min, sec, nsec int
+    var array, match []string
+    var local = time.Local
+    match = timeRegex1.FindStringSubmatch(str)
+    if len(match) > 0 {
+        for k, v := range match {
+            match[k] = strings.TrimSpace(v)
+        }
         // 日期(支持'-'或'/'连接符号)
         array = strings.Split(match[1], "-")
         if len(array) < 3 {
@@ -117,32 +157,63 @@ func StrToTime(str string) (time.Time, error) {
             month, _ = strconv.Atoi(array[1])
             day, _   = strconv.Atoi(array[2])
         }
-        // 时间
-        if len(match[2]) > 0 {
-            array   = strings.Split(match[2], ":")
-            hour, _ = strconv.Atoi(array[0])
-            if len(array) >= 2 {
-                min, _ = strconv.Atoi(array[1])
+    } else {
+        match = timeRegex2.FindStringSubmatch(str)
+        if len(match) > 0 {
+            for k, v := range match {
+                match[k] = strings.TrimSpace(v)
+            }
+            // 日期(支持'-'或'/'连接符号)
+            array = strings.Split(match[1], "-")
+            if len(array) < 3 {
+                array = strings.Split(match[1], "/")
             }
             if len(array) >= 3 {
-                sec, _ = strconv.Atoi(array[2])
+                day, _ = strconv.Atoi(array[0])
+                if v, ok := monthMap[strings.ToLower(array[1])]; ok {
+                    month = v
+                } else {
+                    return nil, errors.New("invalid month:" + array[1])
+                }
+                // 年是否为缩写，如果是，那么需要补上前缀
+                year, _  = strconv.Atoi(array[2])
+                if year < 100 {
+                    year = int(time.Now().Year()/100)*100 + year
+                }
             }
         }
-        // 纳秒，检查并执行位补齐
-        if len(match[3]) > 0 {
-            nsec, _   = strconv.Atoi(match[3])
-            for i := 0; i < 9 - len(match[3]); i++ {
-                nsec *= 10
-            }
+    }
+    if len(match) == 0 {
+        return nil, errors.New("unsupported time format")
+    }
+
+    // 时间
+    if len(match[2]) > 0 {
+        array   = strings.Split(match[2], ":")
+        hour, _ = strconv.Atoi(array[0])
+        if len(array) >= 2 {
+            min, _ = strconv.Atoi(array[1])
         }
-        // 如果字符串中有时区信息(具体时间信息)，那么执行时区转换，将时区转成UTC
-        if match[4] != "" && match[6] == "" {
-            match[6] = "000000"
+        if len(array) >= 3 {
+            sec, _ = strconv.Atoi(array[2])
         }
-        // 如果offset有值优先处理offset，否则处理后面的时区名称
-        if match[6] != "" {
-            zone := strings.Replace(match[6], ":", "", -1)
-            zone  = strings.TrimLeft(zone, "+-")
+    }
+    // 纳秒，检查并执行位补齐
+    if len(match[3]) > 0 {
+        nsec, _   = strconv.Atoi(match[3])
+        for i := 0; i < 9 - len(match[3]); i++ {
+            nsec *= 10
+        }
+    }
+    // 如果字符串中有时区信息(具体时间信息)，那么执行时区转换，将时区转成UTC
+    if match[4] != "" && match[6] == "" {
+        match[6] = "000000"
+    }
+    // 如果offset有值优先处理offset，否则处理后面的时区名称
+    if match[6] != "" {
+        zone := strings.Replace(match[6], ":", "", -1)
+        zone  = strings.TrimLeft(zone, "+-")
+        if len(zone) <= 6 {
             zone += strings.Repeat("0", 6 - len(zone))
             h, _ := strconv.Atoi(zone[0 : 2])
             m, _ := strconv.Atoi(zone[2 : 4])
@@ -158,65 +229,81 @@ func StrToTime(str string) (time.Time, error) {
                     operation = "-"
                 }
                 switch operation {
-                    case "+":
-                        if h > 0 {
-                            hour -= h
-                        }
-                        if m > 0 {
-                            min  -= m
-                        }
-                        if s > 0 {
-                            sec  -= s
-                        }
-                    case "-":
-                        if h > 0 {
-                            hour += h
-                        }
-                        if m > 0 {
-                            min  += m
-                        }
-                        if s > 0 {
-                            sec  += s
-                        }
+                case "+":
+                    if h > 0 {
+                        hour -= h
+                    }
+                    if m > 0 {
+                        min  -= m
+                    }
+                    if s > 0 {
+                        sec  -= s
+                    }
+                case "-":
+                    if h > 0 {
+                        hour += h
+                    }
+                    if m > 0 {
+                        min  += m
+                    }
+                    if s > 0 {
+                        sec  += s
+                    }
                 }
             }
         }
-        // 生成UTC时间对象
-        result = time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)
-        return result, nil
     }
-    return result, errors.New("unsupported time format")
+    // 统一生成UTC时间对象
+    return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil
 }
 
 // 时区转换
-func ConvertZone(strTime string, toZone string, fromZone...string) (time.Time, error) {
+func ConvertZone(strTime string, toZone string, fromZone...string) (*Time, error) {
    t, err := StrToTime(strTime)
    if err != nil {
-       return time.Time{}, err
+       return nil, err
    }
    if len(fromZone) > 0 {
        if l, err := time.LoadLocation(fromZone[0]); err != nil {
-           return time.Time{}, err
+           return nil, err
        } else {
-           t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), l)
+           t.Time = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Time.Second(), t.Time.Nanosecond(), l)
        }
    }
     if l, err := time.LoadLocation(toZone); err != nil {
-        return time.Time{}, err
+        return nil, err
     } else {
-        return t.In(l), nil
+        return t.ToLocation(l), nil
     }
 }
 
 // 字符串转换为时间对象，指定字符串时间格式，format格式形如：Y-m-d H:i:s
-func StrToTimeFormat(str string, format string) (time.Time, error) {
+func StrToTimeFormat(str string, format string) (*Time, error) {
     return StrToTimeLayout(str, formatToStdLayout(format))
 }
+
 // 字符串转换为时间对象，通过标准库layout格式进行解析，layout格式形如：2006-01-02 15:04:05
-func StrToTimeLayout(str string, layout string) (time.Time, error) {
+func StrToTimeLayout(str string, layout string) (*Time, error) {
     if t, err := time.ParseInLocation(layout, str, time.Local); err == nil {
-        return t, nil
+        return NewFromTime(t), nil
     } else {
-        return time.Time{}, err
+        return nil, err
     }
+}
+
+// 从文本内容中解析时间，并返回解析成功的时间对象。注意当文本中存在多个时间时，会解析第一个。
+// format参数可以指定需要解析的时间格式。
+func ParseTimeFromContent(content string, format...string) *Time {
+    if len(format) > 0 {
+        if match, err := gregex.MatchString(formatToRegexPattern(format[0]), content); err == nil && len(match) > 0 {
+            return NewFromStrFormat(match[0], format[0])
+        }
+    } else {
+        if match := timeRegex1.FindStringSubmatch(content); len(match) >= 1 {
+            return NewFromStr(match[0])
+        } else if match := timeRegex2.FindStringSubmatch(content); len(match) >= 1 {
+            return NewFromStr(match[0])
+        }
+    }
+    return nil
 }
