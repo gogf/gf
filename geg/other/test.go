@@ -1,21 +1,17 @@
 package main
 
 import (
-    "html/template"
-    "log"
-    "os"
+    "fmt"
+    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
 )
 
-type Person string
-
-func (p Person) Label() string {
-    return "This is " + string(p)
-}
-
 func main() {
-    tmpl, err := template.New("").Parse(`{{sum 1 2 3}}`)
-    if err != nil {
-        log.Fatalf("Parse: %v", err)
+    if w, err := fsnotify.NewWatcher(); err != nil {
+        fmt.Println(err)
+    } else {
+        fmt.Println(gtime.Now().String())
+        w.Add("/tmp/test")
     }
-    tmpl.Execute(os.Stdout, nil)
+
 }

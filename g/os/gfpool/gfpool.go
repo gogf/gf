@@ -42,24 +42,32 @@ type File struct {
 var pools = gmap.NewStringInterfaceMap()
 
 // 获得文件对象，并自动创建指针池(过期时间单位：毫秒)
-func Open(path string, flag int, perm os.FileMode, expire...int) (*File, error) {
+func Open(path string, flag int, perm os.FileMode, expire...int) (file *File, err error) {
     fpExpire := 0
     if len(expire) > 0 {
         fpExpire = expire[0]
     }
     pool := pools.GetOrSetFuncLock(fmt.Sprintf("%s&%d&%d&%d", path, flag, expire, perm), func() interface{} {
-        return New(path, flag, perm, fpExpire)
+        if p, e := New(path, flag, perm, fpExpire); e == nil {
+            return p
+        } else {
+            err = e
+        }
+        return nil
     }).(*Pool)
+    if pool == nil {
+        return nil, err
+    }
     return pool.File()
 }
 
-func OpenFile(path string, flag int, perm os.FileMode, expire...int) (*File, error) {
+func OpenFile(path string, flag int, perm os.FileMode, expire...int) (file *File, err error) {
     return Open(path, flag, perm, expire...)
 }
 
 // 创建一个文件指针池，expire = 0表示不过期，expire < 0表示使用完立即回收，expire > 0表示超时回收，默认值为0不过期
 // 过期时间单位：毫秒
-func New(path string, flag int, perm os.FileMode, expire...int) *Pool {
+func New(path string, flag int, perm os.FileMode, expire...int) (*Pool, error) {
     fpExpire := 0
     if len(expire) > 0 {
         fpExpire = expire[0]
@@ -74,9 +82,9 @@ func New(path string, flag int, perm os.FileMode, expire...int) *Pool {
     if watcher, err := fsnotify.NewWatcher(); err == nil {
         p.watcher = watcher
     } else {
-        return nil
+        return nil, err
     }
-    return p
+    return p, nil
 }
 
 // 创建文件指针池
