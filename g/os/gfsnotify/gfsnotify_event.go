@@ -6,9 +6,13 @@
 
 package gfsnotify
 
+func (e *Event) String() string {
+    return e.event.String()
+}
+
 // 文件/目录创建
 func (e *Event) IsCreate() bool {
-    return  e.Op & CREATE == CREATE
+    return  e.Op == 1 || e.Op & CREATE == CREATE
 }
 
 // 文件/目录修改

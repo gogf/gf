@@ -12,7 +12,7 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gpool"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
+    "gitee.com/johng/gf/g/os/gfsnotify"
     "os"
     "sync"
 )
@@ -21,8 +21,7 @@ import (
 type Pool struct {
     id         *gtype.Int        // 指针池ID，用以识别指针池是否重建
     pool       *gpool.Pool       // 底层对象池
-    inited     *gtype.Bool       // 是否初始化(在执行第一次File方法后初始化)
-    watcher    *fsnotify.Watcher // 文件监控对象
+    inited     *gtype.Bool       // 是否初始化(在执行第一次File方法后初始化，主要用于监听的添加，但是只能添加一次)
     closeChan  chan struct{}     // 关闭事件
     expire     int               // 过期时间
 }
@@ -48,16 +47,9 @@ func Open(path string, flag int, perm os.FileMode, expire...int) (file *File, er
         fpExpire = expire[0]
     }
     pool := pools.GetOrSetFuncLock(fmt.Sprintf("%s&%d&%d&%d", path, flag, expire, perm), func() interface{} {
-        if p, e := New(path, flag, perm, fpExpire); e == nil {
-            return p
-        } else {
-            err = e
-        }
-        return nil
+        return New(path, flag, perm, fpExpire)
     }).(*Pool)
-    if pool == nil {
-        return nil, err
-    }
+
     return pool.File()
 }
 
@@ -67,7 +59,7 @@ func OpenFile(path string, flag int, perm os.FileMode, expire...int) (file *File
 
 // 创建一个文件指针池，expire = 0表示不过期，expire < 0表示使用完立即回收，expire > 0表示超时回收，默认值为0不过期
 // 过期时间单位：毫秒
-func New(path string, flag int, perm os.FileMode, expire...int) (*Pool, error) {
+func New(path string, flag int, perm os.FileMode, expire...int) *Pool {
     fpExpire := 0
     if len(expire) > 0 {
         fpExpire = expire[0]
@@ -79,12 +71,7 @@ func New(path string, flag int, perm os.FileMode, expire...int) (*Pool, error) {
         closeChan : make(chan struct{}),
     }
     p.pool = newFilePool(p, path, flag, perm, fpExpire)
-    if watcher, err := fsnotify.NewWatcher(); err == nil {
-        p.watcher = watcher
-    } else {
-        return nil, err
-    }
-    return p, nil
+    return p
 }
 
 // 创建文件指针池
@@ -142,31 +129,18 @@ func (p *Pool) File() (*File, error) {
         }
 
         if !p.inited.Set(true) {
-            if err := p.watcher.Add(f.path); err != nil {
-                p.inited.Set(false)
-            }
-            go func() {
-                for {
-                    select {
-                        // 关闭事件
-                        case <- p.closeChan:
-                            return
-
-                        // 监听事件
-                        case ev := <- p.watcher.Events:
-                            // 如果文件被删除或者重命名，立即重建指针池
-                            if ev.Op & fsnotify.Remove == fsnotify.Remove || ev.Op & fsnotify.Rename == fsnotify.Rename {
-                                // 原有的指针都不要了
-                                p.id.Add(1)
-                                // Clear相当于重建指针池
-                                p.pool.Clear()
-                                // 为保证原子操作，但又不想加锁，
-                                // 这里再执行一次原子Add，将在两次Add中间可能分配出去的文件指针丢弃掉
-                                p.id.Add(1)
-                            }
-                    }
+            gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
+                // 如果文件被删除或者重命名，立即重建指针池
+                if event.IsRemove() || event.IsRename() {
+                    // 原有的指针都不要了
+                    p.id.Add(1)
+                    // Clear相当于重建指针池
+                    p.pool.Clear()
+                    // 为保证原子操作，但又不想加锁，
+                    // 这里再执行一次原子Add，将在两次Add中间可能分配出去的文件指针丢弃掉
+                    p.id.Add(1)
                 }
-            }()
+            }, false)
         }
         return f, nil
     }

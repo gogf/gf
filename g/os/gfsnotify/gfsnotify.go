@@ -9,14 +9,11 @@
 package gfsnotify
 
 import (
-    "errors"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
-    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gqueue"
-    "fmt"
+    "gitee.com/johng/gf/g/encoding/ghash"
+    "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
 )
 
 // 监听管理对象
@@ -25,18 +22,21 @@ type Watcher struct {
     events     *gqueue.Queue            // 过滤后的事件通知，不会出现重复事件
     closeChan  chan struct{}            // 关闭事件
     callbacks  *gmap.StringInterfaceMap // 监听的回调函数
+    cache      *gcache.Cache            // 缓存对象，用于事件重复过滤
 }
 
 // 监听事件对象
 type Event struct {
-    Path    string   // 文件绝对路径
-    Op      Op       // 触发监听的文件操作
-    Watcher *Watcher // 时间对应的监听对象
+    event   fsnotify.Event  // 底层事件对象
+    Path    string          // 文件绝对路径
+    Op      Op              // 触发监听的文件操作
+    Watcher *Watcher        // 事件对应的监听对象
 }
 
 // 按位进行识别的操作集合
 type Op uint32
 
+// 必须放到一个const分组里面
 const (
     CREATE Op = 1 << iota
     WRITE
@@ -45,13 +45,30 @@ const (
     CHMOD
 )
 
-// 全局监听对象，方便应用端调用
-var watcher, _ = New()
+const (
+    REPEAT_EVENT_FILTER_INTERVAL = 1 // (毫秒)重复事件过滤间隔
+    DEFAULT_WATCHER_COUNT        = 4 // 默认创建的监控对象数量(使用哈希取模)
+)
 
-// 创建监听管理对象
+// 全局监听对象，方便应用端调用
+var watchers = make([]*Watcher, DEFAULT_WATCHER_COUNT)
+
+// 包初始化，创建8个watcher对象，用于包默认管理监听
+func init() {
+    for i := 0; i < DEFAULT_WATCHER_COUNT; i++ {
+        if w, err := New(); err == nil {
+            watchers[i] = w
+        } else {
+            panic(err)
+        }
+    }
+}
+
+// 创建监听管理对象，主要注意的是创建监听对象会占用系统的inotify句柄数量，受到 fs.inotify.max_user_instances 的限制
 func New() (*Watcher, error) {
     if watch, err := fsnotify.NewWatcher(); err == nil {
         w := &Watcher {
+            cache      : gcache.New(),
             watcher    : watch,
             events     : gqueue.New(),
             closeChan  : make(chan struct{}),
@@ -67,165 +84,15 @@ func New() (*Watcher, error) {
 
 // 添加对指定文件/目录的监听，并给定回调函数；如果给定的是一个目录，默认递归监控。
 func Add(path string, callback func(event *Event), recursive...bool) error {
-    if watcher == nil {
-        return errors.New("global watcher creating failed")
-    }
-    return watcher.Add(path, callback, recursive...)
+    return getWatcherByPath(path).Add(path, callback, recursive...)
 }
 
 // 移除监听，默认递归删除。
 func Remove(path string) error {
-    if watcher == nil {
-        return errors.New("global watcher creating failed")
-    }
-    return watcher.Remove(path)
+    return getWatcherByPath(path).Remove(path)
 }
 
-// 关闭监听管理对象
-func (w *Watcher) Close() {
-    w.watcher.Close()
-    w.events.Close()
-    close(w.closeChan)
-}
-
-// 添加对指定文件/目录的监听，并给定回调函数
-func (w *Watcher) addWatch(path string, callback func(event *Event)) error {
-    // 这里统一转换为当前系统的绝对路径，便于统一监控文件名称
-    t := gfile.RealPath(path)
-    if t == "" {
-        return errors.New(fmt.Sprintf(`"%s" does not exist`, path))
-    }
-    path = t
-    // 注册回调函数
-    w.callbacks.LockFunc(func(m map[string]interface{}) {
-        var result interface{}
-        if v, ok := m[path]; !ok {
-            result  = glist.New()
-            m[path] = result
-        } else {
-            result = v
-        }
-        result.(*glist.List).PushBack(callback)
-    })
-    // 添加底层监听
-    w.watcher.Add(path)
-    return nil
-}
-
-// 添加监控，path参数支持文件或者目录路径，recursive为非必需参数，默认为递归添加监控(当path为目录时)
-func (w *Watcher) Add(path string, callback func(event *Event), recursive...bool) error {
-    if gfile.IsDir(path) && (len(recursive) == 0 || recursive[0]) {
-        paths, _ := gfile.ScanDir(path, "*", true)
-        list  := []string{path}
-        list   = append(list, paths...)
-        for _, v := range list {
-            if err := w.addWatch(v, callback); err != nil {
-                return err
-            }
-        }
-        return nil
-    } else {
-        return w.addWatch(path, callback)
-    }
-}
-
-
-// 移除监听
-func (w *Watcher) removeWatch(path string) error {
-    w.callbacks.Remove(path)
-    return w.watcher.Remove(path)
-}
-
-// 递归移除监听
-func (w *Watcher) Remove(path string) error {
-    if gfile.IsDir(path) {
-        paths, _ := gfile.ScanDir(path, "*", true)
-        list := []string{path}
-        list  = append(list, paths...)
-        for _, v := range list {
-            if err := w.removeWatch(v); err != nil {
-                return err
-            }
-        }
-        return nil
-    } else {
-        return w.removeWatch(path)
-    }
-}
-
-// 监听循环
-func (w *Watcher) startWatchLoop() {
-    go func() {
-        for {
-            select {
-                // 关闭事件
-                case <- w.closeChan:
-                    return
-
-                // 监听事件
-                case ev := <- w.watcher.Events:
-                    //glog.Debug("gfsnotify: watch loop", ev)
-                    w.events.Push(&Event{
-                        Path : ev.Name,
-                        Op   : Op(ev.Op),
-                    })
-
-                case err := <- w.watcher.Errors:
-                    glog.Error("error : ", err);
-            }
-        }
-    }()
-}
-
-// 检索给定path的回调方法**列表**
-func (w *Watcher) getCallbacks(path string) *glist.List {
-    for path != "/" {
-        if l := w.callbacks.Get(path); l != nil {
-            return l.(*glist.List)
-        } else {
-            path = gfile.Dir(path)
-        }
-    }
-    return nil
-}
-
-// 事件循环
-func (w *Watcher) startEventLoop() {
-    go func() {
-        for {
-            if v := w.events.Pop(); v != nil {
-                //glog.Debug("gfsnotidy: event loop", v)
-                event := v.(*Event)
-                if event.IsRemove() {
-                    if gfile.Exists(event.Path) {
-                        // 如果是文件删除事件，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，
-                        // 并重新添加监控(底层fsnotify会自动删除掉监控，这里重新添加回去)
-                        w.watcher.Add(event.Path)
-                        // 修改事件操作为重命名(相当于重命名为自身名称，最终名称没变)
-                        event.Op = RENAME
-                    } else {
-                        // 如果是真实删除，那么递归删除监控信息
-                        w.Remove(event.Path)
-                    }
-                }
-                //glog.Debug("gfsnotidy: event loop callbacks", v)
-                callbacks := w.getCallbacks(event.Path)
-                // 如果创建了新的目录，那么将这个目录递归添加到监控中
-                if event.IsCreate() && gfile.IsDir(event.Path) {
-                    for _, callback := range callbacks.FrontAll() {
-                        w.Add(event.Path, callback.(func(event *Event)))
-                    }
-                }
-                if callbacks != nil {
-                    go func(callbacks *glist.List) {
-                        for _, callback := range callbacks.FrontAll() {
-                            callback.(func(event *Event))(event)
-                        }
-                    }(callbacks)
-                }
-            } else {
-                break
-            }
-        }
-    }()
+// 根据path计算对应的watcher对象
+func getWatcherByPath(path string) *Watcher {
+    return watchers[ghash.BKDRHash([]byte(path)) % DEFAULT_WATCHER_COUNT]
 }
