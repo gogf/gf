@@ -7,7 +7,6 @@
 package gfile
 
 import (
-    "gitee.com/johng/gf/g/os/gfpool"
     "io"
     "io/ioutil"
     "os"
@@ -35,7 +34,7 @@ func GetBinContents(path string) []byte {
 }
 
 // 写入文件内容
-func putContents(path string, data []byte, flag int, perm os.FileMode) error {
+func putContents(path string, data []byte, flag int, perm int) error {
     // 支持目录递归创建
     dir := Dir(path)
     if !Exists(dir) {
@@ -43,8 +42,8 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
             return err
         }
     }
-    // 创建/打开文件，使用文件指针池，默认60秒
-    f, err := gfpool.OpenFile(path, flag, perm, gFILE_POOL_EXPIRE*1000)
+    // 创建/打开文件
+    f, err := OpenWithFlagPerm(path, flag, perm)
     if err != nil {
         return err
     }
@@ -103,9 +102,9 @@ func GetNextCharOffset(file *os.File, char byte, start int64) int64 {
 
 // 获得文件内容下一个指定字节的位置
 func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
-    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE*1000); err == nil {
+    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
-        return GetNextCharOffset(&f.File, char, start)
+        return GetNextCharOffset(f, char, start)
     } else {
         panic(err)
     }
@@ -122,9 +121,9 @@ func GetBinContentsTilChar(file *os.File, char byte, start int64) ([]byte, int64
 
 // 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
 func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
-    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE*1000); err == nil {
+    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
-        return GetBinContentsTilChar(&f.File, char, start)
+        return GetBinContentsTilChar(f, char, start)
     } else {
         panic(err)
     }
@@ -142,9 +141,9 @@ func GetBinContentsByTwoOffsets(file *os.File, start int64, end int64) []byte {
 
 // 获得文件内容中两个offset之间的内容 [start, end)
 func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
-    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE*1000); err == nil {
+    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
-        return GetBinContentsByTwoOffsets(&f.File, start, end)
+        return GetBinContentsByTwoOffsets(f, start, end)
     } else {
         panic(err)
     }
