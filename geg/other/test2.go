@@ -1,12 +1,11 @@
 package main
 
 import (
-    "fmt"
-    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/container/garray"
 )
 
 func main() {
-    s := `[0-9][0-9]/Jan/[0-9][0-9][0-9][0-9]:[0-9][0-9]:[0-9][0-9]:[0-9][0-9] \+[0-9][0-9][0-9][0-9]`
-    s,_  = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
-    fmt.Println(s)
+    a := garray.NewSortedIntArray(0)
+    a.Add(1)
+    a.Remove(0)
 }

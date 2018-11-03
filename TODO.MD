@@ -41,8 +41,8 @@
     - https://github.com/Masterminds/sprig
 1. gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
 1. 模板引擎增加对对象的支持(参考https://segmentfault.com/q/1010000016829214)；
-
-
+1. 由于系统对inotify实例数量(`fs.inotify.max_user_instances`)以及队列大小(`fs.inotify.max_user_watches`)有限制，需要改进`gfsnotify`；
+1. 改进gfpool在文件指针变化时的更新；
 
 
 # DONE
