@@ -1,24 +1,21 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/frame/gmvc"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "html/template"
+    "log"
+    "os"
 )
-type ControllerIndex struct {
-    gmvc.Controller
+
+type Person string
+
+func (p Person) Label() string {
+    return "This is " + string(p)
 }
-func (c *ControllerIndex) Info() {
-    c.View.Assign("title", "Go Frame 第一个网站")
-    c.View.Assigns(map[string]interface{}{
-        "name"   : "很开心",
-        "score" : 100,
-    })
-    c.View.Display("web/index.html")
-}
+
 func main() {
-    s := ghttp.GetServer()
-    s.SetServerRoot("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/other/web/")
-    s.BindController("/", new(ControllerIndex))
-    s.SetPort(8199)
-    s.Run()
+    tmpl, err := template.New("").Parse(`{{sum 1 2 3}}`)
+    if err != nil {
+        log.Fatalf("Parse: %v", err)
+    }
+    tmpl.Execute(os.Stdout, nil)
 }
