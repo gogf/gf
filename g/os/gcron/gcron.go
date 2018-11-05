@@ -50,6 +50,11 @@ func Add(spec string, f func(), name ... string) error {
     return defaultCron.Add(spec, f, name...)
 }
 
+// 延迟添加定时任务，delay参数单位为秒
+func DelayAdd(delay int, spec string, f func(), name ... string) {
+    defaultCron.DelayAdd(delay, spec, f, name...)
+}
+
 // 检索指定名称的定时任务
 func Search(name string) *Entry {
     return defaultCron.Search(name)

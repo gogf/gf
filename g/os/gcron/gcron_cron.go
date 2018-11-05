@@ -14,6 +14,7 @@ import (
     "gitee.com/johng/gf/third/github.com/robfig/cron"
     "reflect"
     "runtime"
+    "time"
 )
 
 // 添加定时任务
@@ -39,7 +40,7 @@ func (c *Cron) Add(spec string, f func(), name ... string) error {
         }
     } else {
         if err := c.cron.AddFunc(spec, f); err == nil {
-            entry := &Entry{
+            entry := &Entry {
                 Spec   : spec,
                 Cmd    : runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name(),
                 Time   : gtime.Now(),
@@ -53,6 +54,15 @@ func (c *Cron) Add(spec string, f func(), name ... string) error {
         }
     }
     return nil
+}
+
+// 延迟添加定时任务，delay参数单位为秒
+func (c *Cron) DelayAdd(delay int, spec string, f func(), name ... string) {
+    gtime.SetTimeout(time.Duration(delay)*time.Second, func() {
+        if err := c.Add(spec, f, name ...); err != nil {
+            panic(err)
+        }
+    })
 }
 
 // 检索指定名称的定时任务
