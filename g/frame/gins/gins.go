@@ -41,7 +41,7 @@ func Get(key string) interface{} {
 
 // 设置单例对象
 func Set(key string, value interface{}) {
-    instances.Set(key, key)
+    instances.Set(key, value)
 }
 
 // 当键名存在时返回其键值，否则写入指定的键值
