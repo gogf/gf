@@ -8,16 +8,14 @@
 package gfcache
 
 import (
-    "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gfsnotify"
+    "gitee.com/johng/gf/g/os/gcache"
 )
 
 type Cache struct {
     cap    *gtype.Int         // 缓存容量(byte)，设置为0表示不限制
     size   *gtype.Int         // 缓存大小(Byte)
     cache  *gcache.Cache      // 缓存对象
-    notify *gfsnotify.Watcher // 文件监控管理对象
 }
 
 const (
@@ -35,12 +33,10 @@ func New(cap ... int) *Cache {
     if len(cap) > 0 {
         c = cap[0]
     }
-    notify, _ := gfsnotify.New()
     return &Cache {
         cap    : gtype.NewInt(c),
         size   : gtype.NewInt(),
         cache  : gcache.New(),
-        notify : notify,
     }
 }
 
