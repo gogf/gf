@@ -15,6 +15,6 @@ import (
 
 func Benchmark_Rand(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        grand.Rand(0, 200)
+        grand.Rand(0, 999999999)
     }
 }

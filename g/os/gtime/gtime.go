@@ -307,3 +307,10 @@ func ParseTimeFromContent(content string, format...string) *Time {
     }
     return nil
 }
+
+// 计算函数f执行的时间，单位纳秒
+func FuncCost(f func()) int64 {
+    t := Nanosecond()
+    f()
+    return Nanosecond() - t
+}
