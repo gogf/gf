@@ -44,6 +44,9 @@
 1. 由于系统对inotify实例数量(`fs.inotify.max_user_instances`)以及队列大小(`fs.inotify.max_user_watches`)有限制，需要改进`gfsnotify`；
 1. 改进gfpool在文件指针变化时的更新；
 1. `gfsnotify`增加添加监听文件时的监听ID返回，以便调用端删除监听时只删除自己添加的监听，而不影响其他对该同一文件的监听回调；
+1. `gfsnotify`针对添加目录监听时无法使用多个`Watcher`，考虑改进，并考虑动态扩容全局`Watcher`方案；
+
+
 
 
 # DONE
