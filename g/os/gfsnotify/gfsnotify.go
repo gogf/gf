@@ -11,6 +11,7 @@ package gfsnotify
 import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gqueue"
+    "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/ghash"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
@@ -52,17 +53,20 @@ const (
 
 var (
     // 全局监听对象，方便应用端调用
-    watchers = make([]*Watcher, DEFAULT_WATCHER_COUNT)
+    watchers      = make([]*Watcher, DEFAULT_WATCHER_COUNT)
+    // 默认的watchers是否初始化，使用时才创建
+    watcherInited = gtype.NewBool()
 )
 
-
-// 包初始化，创建8个watcher对象，用于包默认管理监听
-func init() {
-    for i := 0; i < DEFAULT_WATCHER_COUNT; i++ {
-        if w, err := New(); err == nil {
-            watchers[i] = w
-        } else {
-            panic(err)
+// 初始化创建8个watcher对象，用于包默认管理监听
+func initWatcher() {
+    if !watcherInited.Set(true) {
+        for i := 0; i < DEFAULT_WATCHER_COUNT; i++ {
+            if w, err := New(); err == nil {
+                watchers[i] = w
+            } else {
+                panic(err)
+            }
         }
     }
 }
@@ -97,5 +101,6 @@ func Remove(path string) error {
 
 // 根据path计算对应的watcher对象
 func getWatcherByPath(path string) *Watcher {
+    initWatcher()
     return watchers[ghash.BKDRHash([]byte(path)) % DEFAULT_WATCHER_COUNT]
 }
