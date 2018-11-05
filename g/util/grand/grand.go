@@ -7,17 +7,8 @@
 // 随机数管理
 package grand
 
-import (
-    "time"
-)
-
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 var digits  = []rune("0123456789")
-
-// 自定义的 rand.Intn
-func intn (max int) int {
-    return int(time.Now().UnixNano())%max
-}
 
 // 获得一个 min, max 之间的随机数(min <= x <= max)
 func Rand (min, max int) int {

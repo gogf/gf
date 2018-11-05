@@ -26,7 +26,7 @@ type Session struct {
     server *Server                  // 所属Server
 }
 
-// 生成一个唯一的sessionid字符串
+// 生成一个唯一的sessionid字符串，长度16
 func makeSessionId() string {
     return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 32) + grand.RandStr(3))
 }

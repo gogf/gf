@@ -15,7 +15,7 @@ import (
     "strings"
 )
 
-// 将变量i转换为字符串指定的类型t，非必须参数extraParams泳衣额外的参数传递
+// 将变量i转换为字符串指定的类型t，非必须参数extraParams用以额外的参数传递
 func Convert(i interface{}, t string, extraParams...interface{}) interface{} {
     switch t {
         case "int":             return Int(i)
