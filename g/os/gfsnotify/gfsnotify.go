@@ -50,8 +50,11 @@ const (
     DEFAULT_WATCHER_COUNT        = 8 // 默认创建的监控对象数量(使用哈希取模)
 )
 
-// 全局监听对象，方便应用端调用
-var watchers = make([]*Watcher, DEFAULT_WATCHER_COUNT)
+var (
+    // 全局监听对象，方便应用端调用
+    watchers = make([]*Watcher, DEFAULT_WATCHER_COUNT)
+)
+
 
 // 包初始化，创建8个watcher对象，用于包默认管理监听
 func init() {
