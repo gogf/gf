@@ -14,6 +14,9 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/encoding/ghash"
     "gitee.com/johng/gf/g/os/gcache"
+    "gitee.com/johng/gf/g/os/gcmd"
+    "gitee.com/johng/gf/g/os/genv"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
 )
 
@@ -53,15 +56,24 @@ const (
 
 var (
     // 全局监听对象，方便应用端调用
-    watchers      = make([]*Watcher, DEFAULT_WATCHER_COUNT)
+    watchers []*Watcher
     // 默认的watchers是否初始化，使用时才创建
     watcherInited = gtype.NewBool()
 )
 
-// 初始化创建8个watcher对象，用于包默认管理监听
+// 初始化创建watcher对象，用于包默认管理监听
 func initWatcher() {
     if !watcherInited.Set(true) {
-        for i := 0; i < DEFAULT_WATCHER_COUNT; i++ {
+        // 默认的创建的inotify数量
+        watcherCount := gconv.Int(genv.Get("GF_INOTIFY_COUNT"))
+        if watcherCount == 0 {
+            watcherCount = gconv.Int(gcmd.Option.Get("gf.inotify-count"))
+        }
+        if watcherCount == 0 {
+            watcherCount = DEFAULT_WATCHER_COUNT
+        }
+        watchers = make([]*Watcher, watcherCount)
+        for i := 0; i < watcherCount; i++ {
             if w, err := New(); err == nil {
                 watchers[i] = w
             } else {
