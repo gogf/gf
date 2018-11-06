@@ -279,7 +279,8 @@ func StrToTimeLayout(str string, layout string) (*Time, error) {
     }
 }
 
-// 从文本内容中解析时间，并返回解析成功的时间对象。注意当文本中存在多个时间时，会解析第一个。
+// 从字符串内容中(也可以是文件名称等等)解析时间，并返回解析成功的时间对象，否则返回nil。
+// 注意当内容中存在多个时间时，会解析第一个。
 // format参数可以指定需要解析的时间格式。
 func ParseTimeFromContent(content string, format...string) *Time {
     if len(format) > 0 {
