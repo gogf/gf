@@ -7,8 +7,10 @@
 // 随机数管理
 package grand
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-var digits  = []rune("0123456789")
+var (
+    letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+    digits  = []rune("0123456789")
+)
 
 // 获得一个 min, max 之间的随机数(min <= x <= max)
 func Rand (min, max int) int {

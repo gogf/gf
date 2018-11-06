@@ -6,7 +6,9 @@ import (
 )
 
 func main() {
-    err := gfsnotify.Add("/home/john/temp", func(event *gfsnotify.Event) {
+    // /home/john/temp 是一个目录，当然也可以指定文件
+    path := "/home/john/temp"
+    _, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
         if event.IsCreate() {
             glog.Println("创建文件 : ", event.Path)
         }
@@ -24,6 +26,8 @@ func main() {
         }
         glog.Println(event)
     })
+    // 移除对该path的监听
+    gfsnotify.Remove(path)
     if err != nil {
         glog.Fatalln(err)
     } else {

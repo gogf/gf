@@ -34,6 +34,7 @@ const (
     // 01/Nov/2018 11:50:28
     // 01/Nov/2018:11:50:28
     // 01/Nov/18 11:50:28
+    // 01/Nov/18 11:50:28
     TIME_REAGEX_PATTERN2 = `(\d{1,2}[-/][A-Za-z]{3,}[-/]\d{2,4})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
 )
 
@@ -130,72 +131,59 @@ func Datetime() string {
     return time.Now().Format("2006-01-02 15:04:05")
 }
 
+// 解析日期字符串(支持'-'或'/'连接符号)
+func parseDateStr(s string) (year, month, day int) {
+    array := strings.Split(s, "-")
+    if len(array) < 3 {
+        array = strings.Split(s, "/")
+    }
+    if len(array) >= 3 {
+        // 年是否为缩写，如果是，那么需要补上前缀
+        year, _  = strconv.Atoi(array[0])
+        if year < 100 {
+            year = int(time.Now().Year()/100)*100 + year
+        }
+        month, _ = strconv.Atoi(array[1])
+        day, _   = strconv.Atoi(array[2])
+    }
+    return
+}
+
 // 字符串转换为时间对象，第二个参数指定格式的format(如: Y-m-d H:i:s)，当指定第二个参数时同StrToTimeFormat方法
 func StrToTime(str string, format...string) (*Time, error) {
     if len(format) > 0 {
         return StrToTimeFormat(str, format[0])
     }
-    var year, month, day, hour, min, sec, nsec int
+    var year, month, day int
+    var hour, min, sec, nsec int
     var array, match []string
     var local = time.Local
-    match = timeRegex1.FindStringSubmatch(str)
-    if len(match) > 0 {
+    if match = timeRegex1.FindStringSubmatch(str); len(match) > 0 {
         for k, v := range match {
             match[k] = strings.TrimSpace(v)
         }
-        // 日期(支持'-'或'/'连接符号)
-        array = strings.Split(match[1], "-")
-        if len(array) < 3 {
-            array = strings.Split(match[1], "/")
+        year, month, day = parseDateStr(match[1])
+    } else if match = timeRegex2.FindStringSubmatch(str); len(match) > 0 {
+        for k, v := range match {
+            match[k] = strings.TrimSpace(v)
         }
-        if len(array) >= 3 {
-            // 年是否为缩写，如果是，那么需要补上前缀
-            year, _  = strconv.Atoi(array[0])
-            if year < 100 {
-                year = int(time.Now().Year()/100)*100 + year
-            }
-            month, _ = strconv.Atoi(array[1])
-            day, _   = strconv.Atoi(array[2])
-        }
+        year, month, day = parseDateStr(match[1])
     } else {
-        match = timeRegex2.FindStringSubmatch(str)
-        if len(match) > 0 {
-            for k, v := range match {
-                match[k] = strings.TrimSpace(v)
-            }
-            // 日期(支持'-'或'/'连接符号)
-            array = strings.Split(match[1], "-")
-            if len(array) < 3 {
-                array = strings.Split(match[1], "/")
-            }
-            if len(array) >= 3 {
-                day, _ = strconv.Atoi(array[0])
-                if v, ok := monthMap[strings.ToLower(array[1])]; ok {
-                    month = v
-                } else {
-                    return nil, errors.New("invalid month:" + array[1])
-                }
-                // 年是否为缩写，如果是，那么需要补上前缀
-                year, _  = strconv.Atoi(array[2])
-                if year < 100 {
-                    year = int(time.Now().Year()/100)*100 + year
-                }
-            }
-        }
-    }
-    if len(match) == 0 {
         return nil, errors.New("unsupported time format")
     }
 
     // 时间
     if len(match[2]) > 0 {
-        array   = strings.Split(match[2], ":")
-        hour, _ = strconv.Atoi(array[0])
+        s := strings.Replace(match[2], ":", "", -1)
+        if len(s) < 6 {
+            s += strings.Repeat("0", 6 - len(s))
+        }
+        hour, _ = strconv.Atoi(s[0 : 2])
         if len(array) >= 2 {
-            min, _ = strconv.Atoi(array[1])
+            min, _ = strconv.Atoi(s[2 : 4])
         }
         if len(array) >= 3 {
-            sec, _ = strconv.Atoi(array[2])
+            sec, _ = strconv.Atoi(s[4 : 6])
         }
     }
     // 纳秒，检查并执行位补齐
@@ -291,7 +279,8 @@ func StrToTimeLayout(str string, layout string) (*Time, error) {
     }
 }
 
-// 从文本内容中解析时间，并返回解析成功的时间对象。注意当文本中存在多个时间时，会解析第一个。
+// 从字符串内容中(也可以是文件名称等等)解析时间，并返回解析成功的时间对象，否则返回nil。
+// 注意当内容中存在多个时间时，会解析第一个。
 // format参数可以指定需要解析的时间格式。
 func ParseTimeFromContent(content string, format...string) *Time {
     if len(format) > 0 {
@@ -300,9 +289,9 @@ func ParseTimeFromContent(content string, format...string) *Time {
         }
     } else {
         if match := timeRegex1.FindStringSubmatch(content); len(match) >= 1 {
-            return NewFromStr(match[0])
+            return NewFromStr(strings.Trim(match[0], "./_- \n\r"))
         } else if match := timeRegex2.FindStringSubmatch(content); len(match) >= 1 {
-            return NewFromStr(match[0])
+            return NewFromStr(strings.Trim(match[0], "./_- \n\r"))
         }
     }
     return nil

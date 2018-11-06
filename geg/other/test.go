@@ -2,12 +2,12 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gtime"
-    "strconv"
+    "strings"
 )
 
 func main() {
-    fmt.Println(strconv.FormatInt(gtime.Nanosecond(), 32))
-    fmt.Println(gtime.Second())
-    fmt.Println(gtime.Nanosecond())
+    fmt.Println(strings.Trim(`  1  `, "./- \n\r"))
+    //fmt.Println(math.MaxInt64)
+    //fmt.Println(gtime.Second())
+    //fmt.Println(gtime.Nanosecond())
 }
