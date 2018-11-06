@@ -20,8 +20,8 @@ func main() {
     if err != nil {
         panic(err)
     }
-    // 3秒后移除c1的回调函数注册，仅剩c2
-    gtime.SetTimeout(3*time.Second, func() {
+    // 5秒后移除c1的回调函数注册，仅剩c2
+    gtime.SetTimeout(5*time.Second, func() {
         gfsnotify.RemoveCallback(c1.Id)
         glog.Println("remove callback c1")
     })
