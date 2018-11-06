@@ -112,9 +112,9 @@ func (l *Logger) SetBacktraceSkip(skip int) {
 }
 
 // 可自定义IO接口，IO可以是文件输出、标准输出、网络输出
-func (l *Logger) SetWriter(w io.Writer) {
+func (l *Logger) SetWriter(writer io.Writer) {
     l.mu.Lock()
-    l.io = w
+    l.io = writer
     l.mu.Unlock()
 }
 
@@ -191,12 +191,12 @@ func (l *Logger) print(std io.Writer, s string) {
                 fmt.Fprintln(os.Stderr, err.Error())
             }
         }
+        // 当没有设置writer时，需要判断是否允许输出到标准输出
+        if l.alsoStdPrint.Val() {
+            l.doStdLockPrint(std, s)
+        }
     } else {
         l.doStdLockPrint(writer, s)
-    }
-    // 是否允许输出到标准输出
-    if l.alsoStdPrint.Val() {
-        l.doStdLockPrint(std, s)
     }
 }
 

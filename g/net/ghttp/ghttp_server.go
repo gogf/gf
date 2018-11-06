@@ -52,6 +52,7 @@ const (
     gROUTE_REGISTER_HANDLER    = 1
     gROUTE_REGISTER_OBJECT     = 2
     gROUTE_REGISTER_CONTROLLER = 3
+    gEXCEPTION_EXIT            = "exit"
 )
 
 // ghttp.Server结构体

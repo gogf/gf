@@ -11,6 +11,7 @@ package glog
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
+    "io"
 )
 
 const (
@@ -47,6 +48,16 @@ func SetLevel(level int) {
     defaultLevel.Set(level)
 }
 
+// 可自定义IO接口，IO可以是文件输出、标准输出、网络输出
+func SetWriter(writer io.Writer) {
+    logger.SetWriter(writer)
+}
+
+// 返回自定义的IO，默认为nil
+func GetWriter() io.Writer {
+    return logger.GetWriter()
+}
+
 // 获取全局的日志记录等级
 func GetLevel() int {
     return defaultLevel.Val()
@@ -80,6 +91,11 @@ func GetBacktrace(skip...int) string {
 // 是否关闭全局的backtrace信息
 func SetBacktrace(enabled bool) {
     logger.SetBacktrace(enabled)
+}
+
+// 链式操作，设置下一次写入日志内容的Writer
+func To(writer io.Writer) *Logger {
+    return logger.To(writer)
 }
 
 // 设置下一次输出的分类，支持多级分类设置
