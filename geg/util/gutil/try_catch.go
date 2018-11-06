@@ -8,7 +8,7 @@ import (
 func main() {
     gutil.TryCatch(func() {
         fmt.Println(1)
-        panic("error")
+        gutil.Throw("error")
         fmt.Println(2)
     }, func(err interface{}) {
         fmt.Println(err)

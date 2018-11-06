@@ -37,3 +37,13 @@ func Wait() {
 func Dump(i...interface{}) {
     gutil.Dump(i...)
 }
+
+// 抛出一个异常
+func Throw(err interface{}) {
+    gutil.Throw(err)
+}
+
+// try...catch...
+func TryCatch(try func(), catch func(err interface{})) {
+    gutil.TryCatch(try, catch)
+}
