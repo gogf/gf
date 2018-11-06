@@ -15,10 +15,10 @@ func main() {
         r.Response.Writeln("end")
     })
     s.BindHookHandlerByMap(p, map[string]ghttp.HandlerFunc{
-        "BeforeServe" : func(r *ghttp.Request){
+        ghttp.HOOK_BEFORE_SERVE : func(r *ghttp.Request){
             glog.To(r.Response.Writer).Println("BeforeServe")
         },
-        "AfterServe"  : func(r *ghttp.Request){
+        ghttp.HOOK_AFTER_SERVE  : func(r *ghttp.Request){
             glog.To(r.Response.Writer).Println("AfterServe")
         },
     })
