@@ -65,3 +65,18 @@ func PrintBacktrace() {
     glog.Header(false).Print(buffer.String())
 }
 
+// 抛出一个异常
+func Throw(err interface{}) {
+    panic(err)
+}
+
+// try...catch...
+func TryCatch(try func(), catch func(err interface{})) {
+    defer func() {
+        if err := recover(); err != nil {
+            catch(err)
+        }
+    }()
+    try()
+}
+
