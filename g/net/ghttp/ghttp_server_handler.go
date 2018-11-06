@@ -8,16 +8,16 @@
 package ghttp
 
 import (
-    "os"
     "fmt"
-    "sort"
-    "reflect"
-    "strings"
-    "net/url"
-    "net/http"
+    "gitee.com/johng/gf/g/encoding/ghtml"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/encoding/ghtml"
+    "net/http"
+    "net/url"
+    "os"
+    "reflect"
+    "sort"
+    "strings"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -118,6 +118,11 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
 // 初始化控制器
 func (s *Server)callServeHandler(h *handlerItem, r *Request) {
+    defer func() {
+        if e := recover(); e != nil && e != gEXCEPTION_EXIT {
+            panic(e)
+        }
+    }()
     if h.faddr == nil {
         // 新建一个控制器对象处理请求
         c := reflect.New(h.ctype)

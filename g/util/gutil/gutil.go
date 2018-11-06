@@ -66,17 +66,19 @@ func PrintBacktrace() {
 }
 
 // 抛出一个异常
-func Throw(err interface{}) {
-    panic(err)
+func Throw(exception interface{}) {
+    panic(exception)
 }
 
 // try...catch...
-func TryCatch(try func(), catch func(err interface{})) {
-    defer func() {
-        if err := recover(); err != nil {
-            catch(err)
-        }
-    }()
+func TryCatch(try func(), catch ... func(exception interface{})) {
+    if len(catch) > 0 {
+        defer func() {
+            if e := recover(); e != nil {
+                catch[0](e)
+            }
+        }()
+    }
     try()
 }
 

@@ -154,6 +154,7 @@ func (r *Request) GetToStruct(object interface{}, mapping...map[string]string) {
 // 退出当前请求执行，原理是在Request.exit做标记，由服务逻辑流程做判断，自行停止
 func (r *Request) Exit() {
     r.exit.Set(true)
+    panic(gEXCEPTION_EXIT)
 }
 
 // 判断当前请求是否停止执行

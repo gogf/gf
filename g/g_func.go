@@ -39,11 +39,11 @@ func Dump(i...interface{}) {
 }
 
 // 抛出一个异常
-func Throw(err interface{}) {
-    gutil.Throw(err)
+func Throw(exception interface{}) {
+    gutil.Throw(exception)
 }
 
 // try...catch...
-func TryCatch(try func(), catch func(err interface{})) {
-    gutil.TryCatch(try, catch)
+func TryCatch(try func(), catch ... func(exception interface{})) {
+    gutil.TryCatch(try, catch...)
 }

@@ -43,6 +43,11 @@ func (s *Server)BindHookHandlerByMap(pattern string, hookmap map[string]HandlerF
 func (s *Server) callHookHandler(hook string, r *Request) {
     hookItems := s.getHookHandlerWithCache(hook, r)
     if len(hookItems) > 0 {
+        defer func() {
+            if e := recover(); e != nil && e != gEXCEPTION_EXIT {
+                panic(e)
+            }
+        }()
         // 备份原有的router变量
         oldRouterVars := r.routerVars
         for _, item := range hookItems {
