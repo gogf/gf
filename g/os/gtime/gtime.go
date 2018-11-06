@@ -156,7 +156,7 @@ func StrToTime(str string, format...string) (*Time, error) {
     }
     var year, month, day int
     var hour, min, sec, nsec int
-    var array, match []string
+    var match []string
     var local = time.Local
     if match = timeRegex1.FindStringSubmatch(str); len(match) > 0 {
         for k, v := range match {
@@ -179,12 +179,8 @@ func StrToTime(str string, format...string) (*Time, error) {
             s += strings.Repeat("0", 6 - len(s))
         }
         hour, _ = strconv.Atoi(s[0 : 2])
-        if len(array) >= 2 {
-            min, _ = strconv.Atoi(s[2 : 4])
-        }
-        if len(array) >= 3 {
-            sec, _ = strconv.Atoi(s[4 : 6])
-        }
+        min, _  = strconv.Atoi(s[2 : 4])
+        sec, _  = strconv.Atoi(s[4 : 6])
     }
     // 纳秒，检查并执行位补齐
     if len(match[3]) > 0 {
