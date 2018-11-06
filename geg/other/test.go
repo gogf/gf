@@ -3,11 +3,12 @@ package main
 import (
     "fmt"
     "gitee.com/johng/gf/g/os/gtime"
-    "strconv"
+    "math"
 )
 
 func main() {
-    fmt.Println(strconv.FormatInt(gtime.Nanosecond(), 32))
+    fmt.Println(gtime.NewFromStr("2018-10-24 00:00:00").Nanosecond())
+    fmt.Println(math.MaxInt64)
     fmt.Println(gtime.Second())
     fmt.Println(gtime.Nanosecond())
 }
