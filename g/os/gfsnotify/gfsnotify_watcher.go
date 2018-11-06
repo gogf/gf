@@ -10,6 +10,7 @@ import (
     "errors"
     "fmt"
     "gitee.com/johng/gf/g/container/glist"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 // 关闭监听管理对象
@@ -20,13 +21,41 @@ func (w *Watcher) Close() {
 }
 
 // 添加对指定文件/目录的监听，并给定回调函数
-func (w *Watcher) addWatch(path string, callback func(event *Event)) error {
+func (w *Watcher) addWatch(path string, calbackFunc func(event *Event), parentCallback *Callback) (callback *Callback, err error) {
     // 这里统一转换为当前系统的绝对路径，便于统一监控文件名称
     t := fileRealPath(path)
     if t == "" {
-        return errors.New(fmt.Sprintf(`"%s" does not exist`, path))
+        return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
     }
     path = t
+    // 添加成功后会注册该callback id到全局的哈希表，并绑定到父级的注册回调中
+    defer func() {
+        if err == nil {
+            if parentCallback == nil {
+                // 只有主callback才记录到id map中，因为子callback是自动管理的
+                callbackIdMap.Set(callback.Id, callback)
+            }
+            if parentCallback != nil {
+                // 需要递归查找到顶级的callback
+                parent := parentCallback
+                for {
+                    if p := parent.parent; p != nil {
+                        parent = p
+                    } else {
+                        break
+                    }
+                }
+                parent.subs.PushFront(callback)
+            }
+        }
+    }()
+    callback = &Callback {
+        Id     : int(gtime.Nanosecond()),
+        Func   : calbackFunc,
+        Path   : path,
+        subs   : glist.New(),
+        parent : parentCallback,
+    }
     // 注册回调函数
     w.callbacks.LockFunc(func(m map[string]interface{}) {
         var result interface{}
@@ -36,52 +65,97 @@ func (w *Watcher) addWatch(path string, callback func(event *Event)) error {
         } else {
             result = v
         }
-        result.(*glist.List).PushBack(callback)
+        callback.elem = result.(*glist.List).PushBack(callback)
     })
     // 添加底层监听
     w.watcher.Add(path)
-    return nil
+    return
 }
 
-// 添加监控，path参数支持文件或者目录路径，recursive为非必需参数，默认为递归添加监控(当path为目录时)
-func (w *Watcher) Add(path string, callback func(event *Event), recursive...bool) error {
+// 添加监控，path参数支持文件或者目录路径，recursive为非必需参数，默认为递归添加监控(当path为目录时)。
+// 如果添加目录，这里只会返回目录的callback，按照callback删除时会递归删除。
+func (w *Watcher) addWithCallback(parentCallback *Callback, path string, callbackFunc func(event *Event), recursive...bool) (callback *Callback, err error) {
+    // 首先添加这个目录
+    if callback, err = w.addWatch(path, callbackFunc, parentCallback); err != nil {
+        return nil, err
+    }
+    // 其次递归添加其下的文件/目录
     if fileIsDir(path) && (len(recursive) == 0 || recursive[0]) {
         paths, _ := fileScanDir(path, "*", true)
-        list  := []string{path}
-        list   = append(list, paths...)
-        for _, v := range list {
-            if err := w.addWatch(v, callback); err != nil {
+        for _, v := range paths {
+            w.addWatch(v, callbackFunc, callback)
+        }
+    }
+    return
+}
+
+// 添加监控，path参数支持文件或者目录路径，recursive为非必需参数，默认为递归添加监控(当path为目录时)。
+// 如果添加目录，这里只会返回目录的callback，按照callback删除时会递归删除。
+func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive...bool) (callback *Callback, err error) {
+    return w.addWithCallback(nil, path, callbackFunc, recursive...)
+}
+
+// 递归移除对指定文件/目录的所有监听回调
+func (w *Watcher) Remove(path string) error {
+    if fileIsDir(path) {
+        paths, _ := fileScanDir(path, "*", true)
+        paths     = append(paths, path)
+        for _, v := range paths {
+            if err := w.removeAll(v); err != nil {
                 return err
             }
         }
         return nil
     } else {
-        return w.addWatch(path, callback)
+        return w.removeAll(path)
     }
 }
 
-
-// 移除监听
-func (w *Watcher) removeWatch(path string) error {
+// 移除对指定文件/目录的所有监听
+func (w *Watcher) removeAll(path string) error {
     w.callbacks.Remove(path)
     return w.watcher.Remove(path)
 }
 
-// 递归移除监听
-func (w *Watcher) Remove(path string) error {
-    if fileIsDir(path) {
-        paths, _ := fileScanDir(path, "*", true)
-        list := []string{path}
-        list  = append(list, paths...)
-        for _, v := range list {
-            if err := w.removeWatch(v); err != nil {
-                return err
+// 根据指定的回调函数ID，移出指定的inotify回调函数
+func (w *Watcher) RemoveCallback(callbackId int) error {
+    callback := (*Callback)(nil)
+    if r := callbackIdMap.Get(callbackId); r != nil {
+        callback = r.(*Callback)
+    }
+    if callback == nil {
+        return errors.New(fmt.Sprintf(`callback for id %d not found`, callbackId))
+    }
+    // 首先删除主callback
+    if err := w.removeCallback(callback); err != nil {
+        return err
+    }
+    // 如果存在子级callback，那么也一并删除
+    if callback.subs.Len() > 0 {
+        for {
+            if r := callback.subs.PopBack(); r != nil {
+                w.removeCallback(r.(*Callback))
+            } else {
+                break
             }
         }
         return nil
-    } else {
-        return w.removeWatch(path)
     }
+    return nil
+}
+
+// 移除对指定文件/目录的所有监听
+func (w *Watcher) removeCallback(callback *Callback) error {
+    if r := w.callbacks.Get(callback.Path); r != nil {
+        list := r.(*glist.List)
+        list.Remove(callback.elem)
+        if list.Len() == 0 {
+            return w.watcher.Remove(callback.Path)
+        }
+    } else {
+        return errors.New(fmt.Sprintf(`callbacks not found for "%s"`, callback.Path))
+    }
+    return nil
 }
 
 // 监听循环
@@ -146,14 +220,16 @@ func (w *Watcher) startEventLoop() {
                 callbacks := w.getCallbacks(event.Path)
                 // 如果创建了新的目录，那么将这个目录递归添加到监控中
                 if event.IsCreate() && fileIsDir(event.Path) {
-                    for _, callback := range callbacks.FrontAll() {
-                        w.Add(event.Path, callback.(func(event *Event)))
+                    for _, v := range callbacks.FrontAll() {
+                        callback := v.(*Callback)
+                        w.addWithCallback(callback, event.Path, callback.Func)
                     }
                 }
+                // 执行回调处理，异步处理
                 if callbacks != nil {
                     go func(callbacks *glist.List) {
-                        for _, callback := range callbacks.FrontAll() {
-                            callback.(func(event *Event))(event)
+                        for _, v := range callbacks.FrontAll() {
+                            go v.(*Callback).Func(event)
                         }
                     }(callbacks)
                 }
