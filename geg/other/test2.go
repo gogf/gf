@@ -2,12 +2,10 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/container/garray"
+    "gitee.com/johng/gf/g/util/gconv"
 )
 
 func main() {
-    a := garray.NewSortedIntArray(0)
-    a.Add(1)
-    a.Remove(0)
-    fmt.Println(a.Len())
+    fmt.Println(int(gconv.Float64("2.99s")))
+    //fmt.Println(strconv.Atoi(strings.TrimSpace("1.99")))
 }

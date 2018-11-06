@@ -1,13 +1,14 @@
 package main
 
 import (
-    "fmt"
-    "strings"
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/net/ghttp"
 )
 
 func main() {
-    fmt.Println(strings.Trim(`  1  `, "./- \n\r"))
-    //fmt.Println(math.MaxInt64)
-    //fmt.Println(gtime.Second())
-    //fmt.Println(gtime.Nanosecond())
+    g.Server().BindHandler("/", func(r *ghttp.Request) {
+        r.Response.Write(r.GetInt("amount"))
+    })
+    g.Server().SetPort(8199)
+    g.Server().Run()
 }

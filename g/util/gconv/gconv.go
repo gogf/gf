@@ -123,8 +123,7 @@ func Int(i interface{}) int {
             }
             return 0
         default:
-            v, _ := strconv.Atoi(strings.TrimSpace(String(value)))
-            return v
+            return int(Float64(value))
     }
 }
 
@@ -211,8 +210,7 @@ func Uint(i interface{}) uint {
             }
             return 0
         default:
-            v, _ := strconv.ParseUint(strings.TrimSpace(String(value)), 10, 64)
-            return uint(v)
+            return uint(Float64(value))
     }
 }
 
