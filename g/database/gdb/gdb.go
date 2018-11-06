@@ -131,7 +131,7 @@ var (
 func init() {
 	driverMap["mysql"]   = linkMysql
 	driverMap["oracle"]  = linkOracle
-	driverMap["sqllite"] = linkSqlite
+	driverMap["sqlite"]  = linkSqlite
 	driverMap["pgsql"]   = linkPgsql
 }
 
