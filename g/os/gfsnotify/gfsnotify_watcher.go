@@ -32,20 +32,12 @@ func (w *Watcher) addWatch(path string, calbackFunc func(event *Event), parentCa
     defer func() {
         if err == nil {
             if parentCallback == nil {
-                // 只有主callback才记录到id map中，因为子callback是自动管理的
+                // 只有主callback才记录到id map中，因为子callback是自动管理的无需添加到全局id映射map中
                 callbackIdMap.Set(callback.Id, callback)
             }
             if parentCallback != nil {
-                // 需要递归查找到顶级的callback
-                parent := parentCallback
-                for {
-                    if p := parent.parent; p != nil {
-                        parent = p
-                    } else {
-                        break
-                    }
-                }
-                parent.subs.PushFront(callback)
+                // 添加到直属父级的subs属性中，建立关联关系，便于后续删除
+                parentCallback.subs.PushBack(callback)
             }
         }
     }()
@@ -113,7 +105,20 @@ func (w *Watcher) Remove(path string) error {
 
 // 移除对指定文件/目录的所有监听
 func (w *Watcher) removeAll(path string) error {
+    // 首先移除所有该path的回调注册
+    if r := w.callbacks.Get(path); r != nil {
+        list := r.(*glist.List)
+        for {
+            if r := list.PopFront(); r != nil {
+                w.removeCallback(r.(*Callback))
+            } else {
+                break
+            }
+        }
+    }
+    // 其次移除该path的监听注册
     w.callbacks.Remove(path)
+    // 最后移除底层的监听
     return w.watcher.Remove(path)
 }
 
@@ -126,21 +131,7 @@ func (w *Watcher) RemoveCallback(callbackId int) error {
     if callback == nil {
         return errors.New(fmt.Sprintf(`callback for id %d not found`, callbackId))
     }
-    // 首先删除主callback
-    if err := w.removeCallback(callback); err != nil {
-        return err
-    }
-    // 如果存在子级callback，那么也一并删除
-    if callback.subs.Len() > 0 {
-        for {
-            if r := callback.subs.PopBack(); r != nil {
-                w.removeCallback(r.(*Callback))
-            } else {
-                break
-            }
-        }
-        return nil
-    }
+    w.removeCallback(callback)
     return nil
 }
 
@@ -149,6 +140,17 @@ func (w *Watcher) removeCallback(callback *Callback) error {
     if r := w.callbacks.Get(callback.Path); r != nil {
         list := r.(*glist.List)
         list.Remove(callback.elem)
+        // 如果存在子级callback，那么也一并递归删除
+        if callback.subs.Len() > 0 {
+            for {
+                if r := callback.subs.PopFront(); r != nil {
+                    w.removeCallback(r.(*Callback))
+                } else {
+                    break
+                }
+            }
+        }
+        // 如果该文件/目录的所有回调都被删除，那么移除监听
         if list.Len() == 0 {
             return w.watcher.Remove(callback.Path)
         }
