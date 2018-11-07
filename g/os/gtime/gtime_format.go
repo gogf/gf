@@ -104,39 +104,41 @@ func formatToRegexPattern(format string) string {
 
 // 格式化，使用自定义日期格式
 func (t *Time) Format(format string) string {
-    s := ""
-    for i := 0; i < len(format); {
-        switch format[i] {
+    runes  := []rune(format)
+    buffer := bytes.NewBuffer(nil)
+    for i := 0; i < len(runes); {
+        switch runes[i] {
             case '\\':
-                if i < len(format) - 1 {
-                    s += string(format[i + 1])
+                if i < len(runes) - 1 {
+                    buffer.WriteRune(runes[i + 1])
                     i += 2
                     continue
                 } else {
-                    return s
+                    return buffer.String()
                 }
 
             default:
-                if f, ok := formats[format[i]]; ok {
-                    r := t.Time.Format(f)
+                if runes[i] > 255 {
+                    buffer.WriteRune(runes[i])
+                    break
+                }
+                if f, ok := formats[byte(runes[i])]; ok {
+                    result := t.Time.Format(f)
                     // 有几个转换的符号需要特殊处理
-                    switch format[i] {
-                        case 'j':
-                            s += strings.Replace(r, "=j=0", "", -1)
-                        case 'G':
-                            s += strings.Replace(r, "=G=0", "", -1)
-                        case 'u':
-                            s += strings.Replace(r, "=u=.", "", -1)
+                    switch runes[i] {
+                        case 'j': buffer.WriteString(strings.Replace(result, "=j=0", "", -1))
+                        case 'G': buffer.WriteString(strings.Replace(result, "=G=0", "", -1))
+                        case 'u': buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
                         default:
-                            s += r
+                            buffer.WriteString(result)
                     }
                 } else {
-                    s += string(format[i])
+                    buffer.WriteRune(runes[i])
                 }
         }
         i++
     }
-    return s
+    return buffer.String()
 }
 
 // 格式化，使用标准库格式
