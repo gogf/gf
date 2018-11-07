@@ -2,62 +2,9 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/encoding/gjson"
-    "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/os/gtime"
 )
 
 func main() {
-    s := `title = "TOML Example"
-
-[owner]
-name = "Tom Preston-Werner"
-dob = 1979-05-27T07:32:00-08:00 # First class dates
-
-[database]
-server = "192.168.1.1"
-ports = [ 8001, 8001, 8002 ]
-connection_max = 5000
-enabled = true
-
-[servers]
-
-  # Indentation (tabs and/or spaces) is allowed but not required
-  [servers.alpha]
-  ip = "10.0.0.1"
-  dc = "eqdc10"
-
-  [servers.beta]
-  ip = "10.0.0.2"
-  dc = "eqdc10"
-
-[clients]
-data = [ ["gamma", "delta"], [1, 2] ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-test = 1
-# Line breaks are OK when inside arrays
-hosts = [
-  "alpha",
-  "omega"
-]`
-    j, err := gjson.LoadContent([]byte(s), "toml")
-    fmt.Println(err)
-    fmt.Println(gconv.Strings(j.GetStrings("servers")))
+    fmt.Println(gtime.Now().Format("Y年m月d日 H时i分s秒"))
 }
