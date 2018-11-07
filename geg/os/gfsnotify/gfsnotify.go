@@ -26,8 +26,10 @@ func main() {
         }
         glog.Println(event)
     })
+
     // 移除对该path的监听
     gfsnotify.Remove(path)
+
     if err != nil {
         glog.Fatalln(err)
     } else {
