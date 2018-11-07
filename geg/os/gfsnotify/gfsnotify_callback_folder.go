@@ -24,5 +24,4 @@ func main() {
     })
 
     select {}
-
 }
