@@ -2,9 +2,15 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gtime"
+    "os"
+    "time"
 )
 
 func main() {
-    fmt.Println(gtime.Now().Format("Y年m月d日 H时i分s秒"))
+    for {
+        stat, err := os.Stat("/home/john/temp/log")
+        fmt.Println(err)
+        fmt.Println(stat.Size())
+        time.Sleep(time.Second)
+    }
 }
