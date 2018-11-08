@@ -28,7 +28,7 @@ type Pool struct {
 
 // 文件指针池指针
 type File struct {
-    os.File                // 底层文件指针
+    *os.File                // 底层文件指针
     mu     sync.RWMutex     // 互斥锁
     pool   *Pool            // 所属池
     poolid int              // 所属池ID，如果池ID不同表示池已经重建，那么该文件指针也应当销毁，不能重新丢到原有的池中
@@ -81,8 +81,8 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, expire int) *
         if err != nil {
             return nil, err
         }
-        return &File{
-            File   : *file,
+        return &File {
+            File   : file,
             pool   : p,
             poolid : p.id.Val(),
             flag   : flag,
@@ -108,7 +108,7 @@ func (p *Pool) File() (*File, error) {
                if file, err := os.OpenFile(f.path, f.flag, f.perm); err != nil {
                    return nil, err
                } else {
-                   f.File = *file
+                   f.File = file
                    if stat, err = f.Stat(); err != nil {
                        return nil, err
                    }
@@ -127,7 +127,9 @@ func (p *Pool) File() (*File, error) {
                return nil, err
            }
         } else {
-           f.Seek(0, 0)
+           if _, err := f.Seek(0, 0); err != nil {
+               return nil, err
+           }
         }
         if !p.inited.Set(true) {
             gfsnotify.Add(f.path, func(event *gfsnotify.Event) {

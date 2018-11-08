@@ -7,6 +7,7 @@
 package gfile
 
 import (
+    "gitee.com/johng/gf/g/os/gfpool"
     "io"
     "io/ioutil"
     "os"
@@ -15,8 +16,8 @@ import (
 const (
     // 方法中涉及到读取的时候的缓冲大小
     gREAD_BUFFER      = 1024
-    // 方法中涉及到文件指针池的默认缓存时间(秒)
-    gFILE_POOL_EXPIRE = 60
+    // 方法中涉及到文件指针池的默认缓存时间(毫秒)
+    gFILE_POOL_EXPIRE = 60000
 )
 
 // (文本)读取文件内容
@@ -43,7 +44,7 @@ func putContents(path string, data []byte, flag int, perm int) error {
         }
     }
     // 创建/打开文件
-    f, err := OpenWithFlagPerm(path, flag, perm)
+    f, err := gfpool.Open(path, flag, os.FileMode(perm), gFILE_POOL_EXPIRE)
     if err != nil {
         return err
     }
@@ -82,11 +83,11 @@ func PutBinContentsAppend(path string, content []byte) error {
 }
 
 // 获得文件内容下一个指定字节的位置
-func GetNextCharOffset(file *os.File, char byte, start int64) int64 {
+func GetNextCharOffset(reader io.ReaderAt, char byte, start int64) int64 {
     buffer := make([]byte, gREAD_BUFFER)
     offset := start
     for {
-        if n, err := file.ReadAt(buffer, offset); n > 0 {
+        if n, err := reader.ReadAt(buffer, offset); n > 0 {
             for i := 0; i < n; i++ {
                 if buffer[i] == char {
                     return int64(i) + offset
@@ -102,7 +103,7 @@ func GetNextCharOffset(file *os.File, char byte, start int64) int64 {
 
 // 获得文件内容下一个指定字节的位置
 func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
-    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
+    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE); err == nil {
         defer f.Close()
         return GetNextCharOffset(f, char, start)
     } else {
@@ -112,16 +113,16 @@ func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
 }
 
 // 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
-func GetBinContentsTilChar(file *os.File, char byte, start int64) ([]byte, int64) {
-    if offset := GetNextCharOffset(file, char, start); offset != -1 {
-        return GetBinContentsByTwoOffsets(file, start, offset + 1), offset
+func GetBinContentsTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, int64) {
+    if offset := GetNextCharOffset(reader, char, start); offset != -1 {
+        return GetBinContentsByTwoOffsets(reader, start, offset + 1), offset
     }
     return nil, -1
 }
 
 // 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
 func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
-    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
+    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE); err == nil {
         defer f.Close()
         return GetBinContentsTilChar(f, char, start)
     } else {
@@ -131,9 +132,9 @@ func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, i
 }
 
 // 获得文件内容中两个offset之间的内容 [start, end)
-func GetBinContentsByTwoOffsets(file *os.File, start int64, end int64) []byte {
+func GetBinContentsByTwoOffsets(reader io.ReaderAt, start int64, end int64) []byte {
     buffer := make([]byte, end - start)
-    if _, err := file.ReadAt(buffer, start); err != nil {
+    if _, err := reader.ReadAt(buffer, start); err != nil {
         return nil
     }
     return buffer
@@ -141,7 +142,7 @@ func GetBinContentsByTwoOffsets(file *os.File, start int64, end int64) []byte {
 
 // 获得文件内容中两个offset之间的内容 [start, end)
 func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
-    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
+    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE); err == nil {
         defer f.Close()
         return GetBinContentsByTwoOffsets(f, start, end)
     } else {
