@@ -207,6 +207,7 @@ func (w *Watcher) startEventLoop() {
         for {
             if v := w.events.Pop(); v != nil {
                 event := v.(*Event)
+                // 如果是删除操作，那么需要判断是否文件真正不存在了
                 if event.IsRemove() {
                     if fileExists(event.Path) {
                         // 如果是文件删除事件，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，

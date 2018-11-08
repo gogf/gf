@@ -64,7 +64,7 @@ const (
 
 const (
     REPEAT_EVENT_FILTER_INTERVAL = 1 // (毫秒)重复事件过滤间隔
-    DEFAULT_WATCHER_COUNT        = 2 // 默认创建的监控对象数量(使用哈希取模)
+    DEFAULT_WATCHER_COUNT        = 4 // 默认创建的监控对象数量(使用哈希取模)
 )
 
 var (

@@ -101,22 +101,24 @@ func (p *Pool) File() (*File, error) {
     if v, err := p.pool.Get(); err != nil {
         return nil, err
     } else {
-        f := v.(*File)
+        f         := v.(*File)
+        stat, err := os.Stat(f.path)
         if f.flag & os.O_CREATE > 0 {
-           if _, err := os.Stat(f.path); os.IsNotExist(err) {
+           if os.IsNotExist(err) {
                if file, err := os.OpenFile(f.path, f.flag, f.perm); err != nil {
                    return nil, err
                } else {
                    f.File = *file
+                   if stat, err = f.Stat(); err != nil {
+                       return nil, err
+                   }
                }
            }
         }
         if f.flag & os.O_TRUNC > 0 {
-           if stat, err := f.Stat(); err == nil {
-               if stat.Size() > 0 {
-                   if err := f.Truncate(0); err != nil {
-                       return nil, err
-                   }
+           if stat.Size() > 0 {
+               if err := f.Truncate(0); err != nil {
+                   return nil, err
                }
            }
         }
@@ -127,7 +129,6 @@ func (p *Pool) File() (*File, error) {
         } else {
            f.Seek(0, 0)
         }
-
         if !p.inited.Set(true) {
             gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
                 // 如果文件被删除或者重命名，立即重建指针池
