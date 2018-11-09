@@ -65,7 +65,13 @@ func (r *Response) buildInVars(params map[string]interface{}) map[string]interfa
     if params == nil {
         params = make(map[string]interface{})
     }
-    params["Config"]  = gins.Config().GetMap("")
+
+    c := gins.Config()
+    if c.GetFilePath() != "" {
+        params["Config"]  = c.GetMap("")
+    } else {
+        params["Config"]  = nil
+    }
     params["Cookie"]  = r.request.Cookie.Map()
     params["Session"] = r.request.Session.Data()
     return params

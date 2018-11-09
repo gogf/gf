@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "gitee.com/johng/gf/g/frame/gins"
+)
 
 func main() {
-    fmt.Print(1)
+    fmt.Print(gins.Config().GetFilePath())
 }
