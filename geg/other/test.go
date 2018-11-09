@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func main() {
-    <- make(chan struct{})
+    fmt.Print(1)
 }
