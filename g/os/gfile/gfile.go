@@ -14,6 +14,7 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/util/gstr"
     "io"
     "os"
     "os/exec"
@@ -379,6 +380,10 @@ func MainPkgPath() string {
     }
     f      := ""
     goroot := runtime.GOROOT()
+    // runtime.GOROOT() 在windows下有可能是以'\'符号分隔，
+    // 而 runtime.Caller(i) 获取到的文件路径却是以'/'符号分隔，
+    // 因此这里统一转换为'/'符号再进行比较
+    goroot  = gstr.Replace(goroot, "\\", "/")
     for i := 1; i < 10000; i++ {
         if _, file, _, ok := runtime.Caller(i); ok {
             // 不包含go源码路径
