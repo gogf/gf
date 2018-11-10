@@ -118,7 +118,7 @@ func (view *View) AddPath(path string) error {
         glog.Error("gview.AddPath failed:", err.Error())
         return err
     } else {
-        glog.Debug("gview.SetPath:", rp)
+        glog.Debug("gview.AddPath:", rp)
     }
     return nil
 }
