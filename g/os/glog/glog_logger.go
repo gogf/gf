@@ -11,6 +11,7 @@ import (
     "fmt"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gfpool"
     "gitee.com/johng/gf/g/os/gmlock"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gregex"
@@ -127,14 +128,14 @@ func (l *Logger) GetWriter() io.Writer {
 }
 
 // 获取默认的文件IO
-func (l *Logger) getFilePointer() *os.File {
+func (l *Logger) getFilePointer() *gfpool.File {
     if path := l.path.Val(); path != "" {
         // 文件名称中使用"{}"包含的内容使用gtime格式化
         file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.file.Val(), func(s string) string {
             return gtime.Now().Format(strings.Trim(s, "{}"))
         })
         fpath   := path + gfile.Separator + file
-        if fp, err := gfile.OpenWithFlagPerm(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666); err == nil {
+        if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666, 60000); err == nil {
             return fp
         } else {
             fmt.Fprintln(os.Stderr, err)
