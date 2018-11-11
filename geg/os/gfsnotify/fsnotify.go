@@ -3,6 +3,7 @@ package main
 import (
     "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
     "log"
+    "gitee.com/johng/gf/g/os/glog"
 )
 
 func main() {
@@ -13,7 +14,7 @@ func main() {
     }
     defer watch.Close()
     //添加要监控的对象，文件或文件夹
-    err = watch.Add("/home/john/temp")
+    err = watch.Add("D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go")
     if err != nil {
         log.Fatal(err)
     }
@@ -21,32 +22,12 @@ func main() {
     go func() {
         for {
             select {
-                case ev := <-watch.Events:
-                    //判断事件发生的类型，如下5种
-                    // Create 创建
-                    // Write 写入
-                    // Remove 删除
-                    // Rename 重命名
-                    // Chmod 修改权限
-                    if ev.Op&fsnotify.Create == fsnotify.Create {
-                        log.Println("创建文件 : ", ev.Name)
-                    }
-                    if ev.Op&fsnotify.Write == fsnotify.Write {
-                        log.Println("写入文件 : ", ev.Name)
-                    }
-                    if ev.Op&fsnotify.Remove == fsnotify.Remove {
-                        log.Println("删除文件 : ", ev.Name)
-                    }
-                    if ev.Op&fsnotify.Rename == fsnotify.Rename {
-                        log.Println("重命名文件 : ", ev.Name)
-                    }
-                    if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
-                        log.Println("修改权限 : ", ev.Name)
-                    }
+            case ev := <-watch.Events:
+                glog.Println(ev)
 
-                case err := <-watch.Errors:
-                    log.Println("error : ", err)
-                    return
+            case err := <-watch.Errors:
+                log.Println("error : ", err)
+                return
 
             }
         }

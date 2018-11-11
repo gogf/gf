@@ -191,14 +191,39 @@ func (w *Watcher) startWatchLoop() {
 
 // 检索给定path的回调方法**列表**
 func (w *Watcher) getCallbacks(path string) *glist.List {
-    for path != "/" {
+    for {
         if l := w.callbacks.Get(path); l != nil {
             return l.(*glist.List)
         } else {
-            path = fileDir(path)
+            if p := fileDir(path); p != path {
+                path = p
+            } else {
+                break
+            }
         }
     }
     return nil
+}
+
+// 获得真正监听的文件路径，判断规则：
+// 1、在 callbacks 中应当有回调注册函数(否则监听根本没意义)；
+// 2、如果该path下不存在回调注册函数，则按照path长度从右往左递减，直到减到目录地址为止(不包含)；
+// 3、如果仍旧无法匹配回调函数，那么忽略，否则使用查找到的新path覆盖掉event的path；
+func (w *Watcher) getWatchTruePath(path string) string {
+    if w.getCallbacks(path) != nil {
+        return path
+    }
+    dirPath := fileDir(path)
+    for {
+        path = path[0 : len(path) - 1]
+        if path == dirPath {
+            break
+        }
+        if w.getCallbacks(path) != nil {
+            return path
+        }
+    }
+    return ""
 }
 
 // 事件循环
@@ -207,8 +232,11 @@ func (w *Watcher) startEventLoop() {
         for {
             if v := w.events.Pop(); v != nil {
                 event := v.(*Event)
-                fmt.Println(event)
-                fmt.Println(fileExists(event.Path))
+                if path := w.getWatchTruePath(event.Path); path == "" {
+                    continue
+                } else {
+                    event.Path = path
+                }
                 switch {
                     // 如果是删除操作，那么需要判断是否文件真正不存在了，如果存在，那么将此事件认为“假删除”
                     case event.IsRemove():
