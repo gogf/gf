@@ -39,6 +39,8 @@ type Logger struct {
 const (
     gDEFAULT_FILE_FORMAT     = `{Y-m-d}.log`
     gDEFAULT_FILE_POOL_FLAGS = os.O_CREATE|os.O_WRONLY|os.O_APPEND
+    gDEFAULT_FPOOL_PERM      = os.FileMode(0666)
+    gDEFAULT_FPOOL_EXPIRE    = 60000
 )
 
 var (
@@ -135,7 +137,7 @@ func (l *Logger) getFilePointer() *gfpool.File {
             return gtime.Now().Format(strings.Trim(s, "{}"))
         })
         fpath   := path + gfile.Separator + file
-        if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666, 60000); err == nil {
+        if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, gDEFAULT_FPOOL_PERM, gDEFAULT_FPOOL_EXPIRE); err == nil {
             return fp
         } else {
             fmt.Fprintln(os.Stderr, err)
