@@ -191,14 +191,39 @@ func (w *Watcher) startWatchLoop() {
 
 // 检索给定path的回调方法**列表**
 func (w *Watcher) getCallbacks(path string) *glist.List {
-    for path != "/" {
+    for {
         if l := w.callbacks.Get(path); l != nil {
             return l.(*glist.List)
         } else {
-            path = fileDir(path)
+            if p := fileDir(path); p != path {
+                path = p
+            } else {
+                break
+            }
         }
     }
     return nil
+}
+
+// 获得真正监听的文件路径，判断规则：
+// 1、在 callbacks 中应当有回调注册函数(否则监听根本没意义)；
+// 2、如果该path下不存在回调注册函数，则按照path长度从右往左递减，直到减到目录地址为止(不包含)；
+// 3、如果仍旧无法匹配回调函数，那么忽略，否则使用查找到的新path覆盖掉event的path；
+func (w *Watcher) getWatchTruePath(path string) string {
+    if w.getCallbacks(path) != nil {
+        return path
+    }
+    dirPath := fileDir(path)
+    for {
+        path = path[0 : len(path) - 1]
+        if path == dirPath {
+            break
+        }
+        if w.getCallbacks(path) != nil {
+            return path
+        }
+    }
+    return ""
 }
 
 // 事件循环
@@ -207,19 +232,34 @@ func (w *Watcher) startEventLoop() {
         for {
             if v := w.events.Pop(); v != nil {
                 event := v.(*Event)
-                // 如果是删除操作，那么需要判断是否文件真正不存在了
-                if event.IsRemove() {
-                    if fileExists(event.Path) {
-                        // 如果是文件删除事件，判断该文件是否存在，如果存在，那么将此事件认为“假删除”，
-                        // 并重新添加监控(底层fsnotify会自动删除掉监控，这里重新添加回去)
-                        w.watcher.Add(event.Path)
-                        // 修改事件操作为重命名(相当于重命名为自身名称，最终名称没变)
-                        event.Op = RENAME
-                    } else {
-                        // 如果是真实删除，那么递归删除监控信息
-                        w.Remove(event.Path)
-                    }
+                if path := w.getWatchTruePath(event.Path); path == "" {
+                    continue
+                } else {
+                    event.Path = path
                 }
+                switch {
+                    // 如果是删除操作，那么需要判断是否文件真正不存在了，如果存在，那么将此事件认为“假删除”
+                    case event.IsRemove():
+                        if fileExists(event.Path) {
+                            // 重新添加监控(底层fsnotify会自动删除掉监控，这里重新添加回去)
+                            // 注意这里调用的是底层fsnotify添加监控，只会产生回调事件，并不会使回调函数重复注册
+                            w.watcher.Add(event.Path)
+                            // 修改事件操作为重命名(相当于重命名为自身名称，最终名称没变)
+                            event.Op = RENAME
+                        } else {
+                            // 如果是真实删除，那么递归删除监控信息
+                            w.Remove(event.Path)
+                        }
+
+                    // 如果是删除操作，那么需要判断是否文件真正不存在了，如果存在，那么将此事件认为“假命名”
+                    // (特别是某些编辑器在编辑文件时会先对文件RENAME再CHMOD)
+                    case event.IsRename():
+                        if fileExists(event.Path) {
+                            // 重新添加监控
+                            w.watcher.Add(event.Path)
+                        }
+                }
+
                 callbacks := w.getCallbacks(event.Path)
                 // 如果创建了新的目录，那么将这个目录递归添加到监控中
                 if event.IsCreate() && fileIsDir(event.Path) {

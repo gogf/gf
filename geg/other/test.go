@@ -2,15 +2,9 @@ package main
 
 import (
     "fmt"
-    "os"
-    "time"
+    "gitee.com/johng/gf/g/frame/gins"
 )
 
 func main() {
-    for {
-        stat, err := os.Stat("/home/john/temp/log")
-        fmt.Println(err)
-        fmt.Println(stat.Size())
-        time.Sleep(time.Second)
-    }
+    fmt.Print(gins.Config().GetFilePath())
 }

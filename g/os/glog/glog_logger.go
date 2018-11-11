@@ -11,6 +11,7 @@ import (
     "fmt"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gfpool"
     "gitee.com/johng/gf/g/os/gmlock"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gregex"
@@ -38,6 +39,8 @@ type Logger struct {
 const (
     gDEFAULT_FILE_FORMAT     = `{Y-m-d}.log`
     gDEFAULT_FILE_POOL_FLAGS = os.O_CREATE|os.O_WRONLY|os.O_APPEND
+    gDEFAULT_FPOOL_PERM      = os.FileMode(0666)
+    gDEFAULT_FPOOL_EXPIRE    = 60000
 )
 
 var (
@@ -127,14 +130,14 @@ func (l *Logger) GetWriter() io.Writer {
 }
 
 // 获取默认的文件IO
-func (l *Logger) getFilePointer() *os.File {
+func (l *Logger) getFilePointer() *gfpool.File {
     if path := l.path.Val(); path != "" {
         // 文件名称中使用"{}"包含的内容使用gtime格式化
         file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.file.Val(), func(s string) string {
             return gtime.Now().Format(strings.Trim(s, "{}"))
         })
         fpath   := path + gfile.Separator + file
-        if fp, err := gfile.OpenWithFlagPerm(fpath, gDEFAULT_FILE_POOL_FLAGS, 0666); err == nil {
+        if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, gDEFAULT_FPOOL_PERM, gDEFAULT_FPOOL_EXPIRE); err == nil {
             return fp
         } else {
             fmt.Fprintln(os.Stderr, err)
