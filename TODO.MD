@@ -41,10 +41,8 @@
     - https://github.com/Masterminds/sprig
 1. gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
 1. 模板引擎增加对对象的支持(参考https://segmentfault.com/q/1010000016829214)；
-1. 由于系统对inotify实例数量(`fs.inotify.max_user_instances`)以及队列大小(`fs.inotify.max_user_watches`)有限制，需要改进`gfsnotify`；
 1. 改进gfpool在文件指针变化时的更新；
-1. `gfsnotify`增加添加监听文件时的监听ID返回，以便调用端删除监听时只删除自己添加的监听，而不影响其他对该同一文件的监听回调；
-1. `gfsnotify`针对添加目录监听时无法使用多个`Watcher`，考虑改进，并考虑动态扩容全局`Watcher`方案；
+
 
 
 
@@ -96,5 +94,7 @@
 44. 完善gform配置管理说明，g.DB/Database和gdb.New的区别；
 1. 完善配置管理章节，说明默认的配置文件更改方式；
 1. 服务注册时判断方法定义满足规范时才执行绑定，否则提示WARN信息；
-
+1. `gfsnotify`增加添加监听文件时的监听ID返回，以便调用端删除监听时只删除自己添加的监听，而不影响其他对该同一文件的监听回调；
+1. `gfsnotify`针对添加目录监听时无法使用多个`Watcher`，考虑改进，并考虑动态扩容全局`Watcher`方案；
+1. 由于系统对inotify实例数量(`fs.inotify.max_user_instances`)以及队列大小(`fs.inotify.max_user_watches`)有限制，需要改进`gfsnotify`；
 
