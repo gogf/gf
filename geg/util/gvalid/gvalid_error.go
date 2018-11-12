@@ -1,12 +1,12 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gutil"
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/util/gvalid"
 )
 
 
-// same校验
+// 返回结果方法示例
 func main() {
     type User struct {
         Password        string `gvalid:"password@password"`
@@ -18,11 +18,12 @@ func main() {
         ConfiemPassword : "",
     }
 
-    err := gvalid.CheckStruct(user, nil)
-    gutil.Dump(err)
-    gutil.Dump(err.String())
-    gutil.Dump(err.Strings())
-    gutil.Dump(err.FirstItem())
-    gutil.Dump(err.FirstRule())
-    gutil.Dump(err.FirstString())
+    e := gvalid.CheckStruct(user, nil)
+    g.Dump(e.Map())
+    g.Dump(e.Maps())
+    g.Dump(e.String())
+    g.Dump(e.Strings())
+    g.Dump(e.FirstItem())
+    g.Dump(e.FirstRule())
+    g.Dump(e.FirstString())
 }

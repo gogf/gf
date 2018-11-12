@@ -42,7 +42,7 @@
 1. gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
 1. 模板引擎增加对对象的支持(参考https://segmentfault.com/q/1010000016829214)；
 1. 改进gfpool在文件指针变化时的更新；
-
+1. 去掉ghhtp路由注册和检索时的并发安全锁控制，由于注册并不会产生并发安全，并且不能动态注册(去掉动态注册特性)，因此并发安全锁便没有意义；
 
 
 

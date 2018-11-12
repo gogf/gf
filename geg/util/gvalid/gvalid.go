@@ -1,8 +1,8 @@
 package main
 
 import (
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/util/gvalid"
-    "gitee.com/johng/gf/g/util/gutil"
 )
 
 func main() {
@@ -60,6 +60,8 @@ func main() {
             "same"     : "两次密码输入不相等",
         },
     }
-    gutil.Dump(gvalid.CheckMap(params, rules, msgs))
+    if e := gvalid.CheckMap(params, rules, msgs); e != nil {
+        g.Dump(e.Maps())
+    }
     // map[passport:map[length:账号长度应当在6到16之间] password:map[same:两次密码输入不相等]]
 }

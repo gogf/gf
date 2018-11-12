@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gutil"
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/util/gvalid"
 )
 
@@ -14,5 +14,5 @@ func main() {
 
     user := &User{}
 
-    gutil.Dump(gvalid.CheckStruct(user, nil))
+    g.Dump(gvalid.CheckStruct(user, nil))
 }
