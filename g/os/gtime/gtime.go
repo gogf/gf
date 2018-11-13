@@ -10,6 +10,7 @@ package gtime
 import (
     "errors"
     "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/util/gstr"
     "regexp"
     "strconv"
     "strings"
@@ -28,14 +29,17 @@ const (
     // "2018-02-09 20:46:17",
     // "2018/10/31 - 16:38:46"
     // "2018-02-09",
-    // 日期连接符号支持'-'或者'/'
-    TIME_REAGEX_PATTERN1 = `(\d{2,4}[-/]\d{2}[-/]\d{2})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
+    // "2018.02.09",
+    // 日期连接符号支持'-'、'/'、'.'
+    TIME_REAGEX_PATTERN1 = `(\d{2,4}[-/\.]\d{2}[-/\.]\d{2})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
     // 01-Nov-2018 11:50:28
     // 01/Nov/2018 11:50:28
     // 01/Nov/2018:11:50:28
     // 01/Nov/18 11:50:28
     // 01/Nov/18 11:50:28
-    TIME_REAGEX_PATTERN2 = `(\d{1,2}[-/][A-Za-z]{3,}[-/]\d{2,4})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
+    // 01.Nov.18 11:50:28
+    // 日期连接符号支持'-'、'/'、'.'
+    TIME_REAGEX_PATTERN2 = `(\d{1,2}[-/\.][A-Za-z]{3,}[-/\.]\d{2,4})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
 )
 
 var (
@@ -131,25 +135,42 @@ func Datetime() string {
     return time.Now().Format("2006-01-02 15:04:05")
 }
 
-// 解析日期字符串(支持'-'或'/'连接符号)
+// 解析日期字符串(日期支持'-'或'/'或'.'连接符号)
 func parseDateStr(s string) (year, month, day int) {
     array := strings.Split(s, "-")
     if len(array) < 3 {
         array = strings.Split(s, "/")
     }
-    if len(array) >= 3 {
-        // 年是否为缩写，如果是，那么需要补上前缀
+    if len(array) < 3 {
+        array = strings.Split(s, ".")
+    }
+    // 解析失败
+    if len(array) < 3 {
+        return
+    }
+    // 判断年份在开头还是末尾
+    if gstr.IsNumeric(array[1]) {
         year, _  = strconv.Atoi(array[0])
-        if year < 100 {
-            year = int(time.Now().Year()/100)*100 + year
-        }
         month, _ = strconv.Atoi(array[1])
         day, _   = strconv.Atoi(array[2])
+    } else {
+        if v, ok := monthMap[strings.ToLower(array[1])]; ok {
+            month = v
+        } else {
+            return
+        }
+        year, _  = strconv.Atoi(array[2])
+        day, _   = strconv.Atoi(array[1])
+    }
+    // 年是否为缩写，如果是，那么需要补上前缀
+    if year < 100 {
+        year = int(time.Now().Year()/100)*100 + year
     }
     return
 }
 
-// 字符串转换为时间对象，第二个参数指定格式的format(如: Y-m-d H:i:s)，当指定第二个参数时同StrToTimeFormat方法
+// 字符串转换为时间对象，format参数指定格式的format(如: Y-m-d H:i:s)，当指定format参数时效果同StrToTimeFormat方法。
+// 注意：自动解析日期时间时，必须有日期才能解析成功，如果字符串中不带有日期字段，那么解析失败。
 func StrToTime(str string, format...string) (*Time, error) {
     if len(format) > 0 {
         return StrToTimeFormat(str, format[0])
@@ -158,12 +179,12 @@ func StrToTime(str string, format...string) (*Time, error) {
     var hour, min, sec, nsec int
     var match []string
     var local = time.Local
-    if match = timeRegex1.FindStringSubmatch(str); len(match) > 0 {
+    if match = timeRegex1.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
         for k, v := range match {
             match[k] = strings.TrimSpace(v)
         }
         year, month, day = parseDateStr(match[1])
-    } else if match = timeRegex2.FindStringSubmatch(str); len(match) > 0 {
+    } else if match = timeRegex2.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
         for k, v := range match {
             match[k] = strings.TrimSpace(v)
         }

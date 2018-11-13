@@ -42,8 +42,7 @@
 1. gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
 1. 模板引擎增加对对象的支持(参考https://segmentfault.com/q/1010000016829214)；
 1. 改进gfpool在文件指针变化时的更新；
-1. 去掉ghhtp路由注册和检索时的并发安全锁控制，由于注册并不会产生并发安全，并且不能动态注册(去掉动态注册特性)，因此并发安全锁便没有意义；
-
+1. gtcp提供简便的包发送/接收方法(SendPkg/RecvPkg)以解决常见的TCP通信粘包问题，并完善文档（参考：https://www.cnblogs.com/kex1n/p/6502002.html）；
 
 
 

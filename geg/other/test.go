@@ -1,10 +1,21 @@
 package main
 
 import (
-    "fmt"
-    "gitee.com/johng/gf/g/frame/gins"
+	"gitee.com/johng/gf/g"
+	"gitee.com/johng/gf/g/net/ghttp"
 )
 
 func main() {
-    fmt.Print(gins.Config().GetFilePath())
+	s := g.Server()
+	s.BindHandler("/", func(r *ghttp.Request) {
+
+	})
+	s.BindHandler("/user", func(r *ghttp.Request) {
+
+	})
+	s.BindHandler("/user/:id", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("id"))
+	})
+	s.SetPort(3000)
+	s.Run()
 }
