@@ -71,8 +71,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     }
     regkey := s.hookHandlerKey(hookName, method, uri, domain)
     caller := s.getHandlerRegisterCallerLine(handler)
-    if line, ok := s.routesMap[regkey]; ok {
-        s := fmt.Sprintf(`duplicated route registry "%s" in %s , former in %s`, pattern, caller, line)
+    if item, ok := s.routesMap[regkey]; ok {
+        s := fmt.Sprintf(`duplicated route registry "%s", already registered in %s`, pattern, item.file)
         glog.Errorfln(s)
         return errors.New(s)
     } else {

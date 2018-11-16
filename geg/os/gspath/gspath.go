@@ -2,8 +2,10 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gtime"
+    "time"
 )
 
 func main() {
@@ -12,8 +14,13 @@ func main() {
     rp, err := sp.Add(path)
     fmt.Println(err)
     fmt.Println(rp)
-    fmt.Println(gtime.FuncCost(func() {
-        sp.Search("1")
-    }))
-    fmt.Println(sp.Search("1", "index.html"))
+
+    gtime.SetInterval(5*time.Second, func() bool {
+        g.Dump(sp.AllPaths())
+        return true
+    })
+
+    select {
+
+    }
 }

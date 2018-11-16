@@ -15,9 +15,9 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gfsnotify"
-    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/util/gstr"
     "runtime"
+    "sort"
     "strings"
 )
 
@@ -33,7 +33,6 @@ type SPathCacheItem struct {
     isDir bool                      // 是否目录
 }
 
-
 // 创建一个搜索对象
 func New () *SPath {
     return &SPath {
@@ -46,7 +45,7 @@ func New () *SPath {
 func (sp *SPath) Set(path string) (realPath string, err error) {
     realPath = gfile.RealPath(path)
     if realPath == "" {
-        realPath = sp.Search(path)
+        realPath, _ = sp.Search(path)
         if realPath == "" {
             realPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
         }
@@ -80,7 +79,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 func (sp *SPath) Add(path string) (realPath string, err error) {
     realPath = gfile.RealPath(path)
     if realPath == "" {
-        realPath = sp.Search(path)
+        realPath, _ = sp.Search(path)
         if realPath == "" {
             realPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
         }
@@ -107,22 +106,32 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 }
 
 // 给定的name只是相对文件路径，找不到该文件时，返回空字符串;
-// 当给定indexFiles时，如果name时一个目录，那么会进一步检索其下对应的indexFiles文件是否存在，存在则返回indexFile 绝对路径；
+// 当给定indexFiles时，如果name时一个目录，那么会进一步检索其下对应的indexFiles文件是否存在，存在则返回indexFile绝对路径；
 // 否则返回name目录绝对路径。
-func (sp *SPath) Search(name string, indexFiles...string) string {
+func (sp *SPath) Search(name string, indexFiles...string) (path string, isDir bool) {
     name = sp.formatCacheName(name)
     if v := sp.cache.Get(name); v != nil {
         item := v.(*SPathCacheItem)
         if len(indexFiles) > 0 && item.isDir {
             for _, file := range indexFiles {
                 if v := sp.cache.Get(name + "/" + file); v != nil {
-                    return v.(*SPathCacheItem).path
+                    item := v.(*SPathCacheItem)
+                    return item.path, item.isDir
                 }
             }
         }
-        return item.path
+        return item.path, item.isDir
     }
-    return ""
+    return "", false
+}
+
+// 返回当前对象缓存的所有路径列表
+func (sp *SPath) AllPaths() []string {
+    paths := sp.cache.Keys()
+    if len(paths) > 0 {
+        sort.Strings(paths)
+    }
+    return paths
 }
 
 // 当前的搜索路径数量
@@ -140,6 +149,7 @@ func (sp *SPath) formatCacheName(name string) string {
     if name == "" {
         return "/"
     }
+    name = strings.TrimLeft(name, ".")
     if runtime.GOOS != "linux" {
         name = gstr.Replace(name, "\\", "/")
     }
@@ -180,7 +190,7 @@ func (sp *SPath) addToCache(filePath, dirPath string) {
 // 这里需要注意的点是，由于添加监听是递归添加的，那么假如删除一个目录，那么该目录下的文件(包括目录)也会产生一条删除事件，总共会产生N条事件。
 func (sp *SPath) addMonitorByPath(path string) {
     gfsnotify.Add(path, func(event *gfsnotify.Event) {
-        glog.Debug(event.String())
+        //glog.Debug(event.String())
         switch {
             case event.IsRemove():
                 sp.cache.Remove(sp.nameFromPath(event.Path, path))
@@ -193,7 +203,7 @@ func (sp *SPath) addMonitorByPath(path string) {
             case event.IsCreate():
                 sp.addToCache(event.Path, path)
         }
-    })
+    }, true)
 }
 
 // 删除监听(递归)

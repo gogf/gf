@@ -10,7 +10,8 @@ import "gitee.com/johng/gf/g/os/gtime"
 
 // 判断缓存项是否已过期
 func (item *memCacheItem) IsExpired() bool {
-    if item.e > gtime.Millisecond() {
+    // 注意这里应当包含等于，试想一下缓存时间只有最小粒度为1毫秒的情况
+    if item.e >= gtime.Millisecond() {
         return false
     }
     return true

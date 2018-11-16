@@ -11,7 +11,6 @@ import (
     "fmt"
     "gitee.com/johng/gf/g/encoding/ghtml"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
     "net/http"
     "net/url"
@@ -55,12 +54,28 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         s.callHookHandler(HOOK_AFTER_CLOSE, request)
     }()
 
+    // ============================================================
+    // 优先级控制:
+    // 静态文件 > 动态服务 > 静态目录
+    // ============================================================
+
     // 优先执行静态文件检索(检测是否存在对应的静态文件，包括index files处理)
-    staticFile := s.paths.Search(r.URL.Path, s.config.IndexFiles...)
+    staticFile, isStaticDir := s.paths.Search(r.URL.Path, s.config.IndexFiles...)
     if staticFile != "" {
         request.isFileRequest = true
     }
-    glog.Info(staticFile)
+
+    // 动态服务检索
+    handler := (*handlerItem)(nil)
+    if !request.IsFileRequest() || isStaticDir {
+        if parsedItem := s.getServeHandlerWithCache(request); parsedItem != nil {
+            handler = parsedItem.handler
+            for k, v := range parsedItem.values {
+                request.routerVars[k] = v
+            }
+            request.Router = parsedItem.handler.router
+        }
+    }
 
     // 事件 - BeforeServe
     s.callHookHandler(HOOK_BEFORE_SERVE, request)
@@ -68,22 +83,20 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 执行静态文件服务/回调控制器/执行对象/方法
     if !request.IsExited() {
         // 需要再次判断文件是否真实存在，因为文件检索可能使用了缓存，从健壮性考虑这里需要二次判断
-        if request.IsFileRequest() && gfile.Exists(staticFile) && gfile.SelfPath() != staticFile {
+        if request.IsFileRequest() && !isStaticDir /* && gfile.Exists(staticFile) */ && gfile.SelfPath() != staticFile {
+            // 静态文件
             s.serveFile(request, staticFile)
         } else {
-            // 动态服务检索
-            handler := (*handlerItem)(nil)
-            if parsedItem := s.getServeHandlerWithCache(request); parsedItem != nil {
-                handler = parsedItem.handler
-                for k, v := range parsedItem.values {
-                    request.routerVars[k] = v
-                }
-                request.Router = parsedItem.handler.router
-            }
             if handler != nil {
+                // 动态服务
                 s.callServeHandler(handler, request)
             } else {
-                request.Response.WriteStatus(http.StatusNotFound)
+                if isStaticDir {
+                    // 静态目录
+                    s.serveFile(request, staticFile)
+                } else {
+                    request.Response.WriteStatus(http.StatusNotFound)
+                }
             }
         }
     }

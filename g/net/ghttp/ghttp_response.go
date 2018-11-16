@@ -159,7 +159,7 @@ func (r *Response) ServeFile(path string) {
     r.request.isFileServe = true
     // 首先判断是否给定的path已经是一个绝对路径
     if !gfile.Exists(path) {
-        path = r.Server.paths.Search(path)
+        path, _ = r.Server.paths.Search(path)
     }
     if path == "" {
         r.WriteStatus(http.StatusNotFound)

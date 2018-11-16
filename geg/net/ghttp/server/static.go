@@ -6,7 +6,7 @@ import "gitee.com/johng/gf/g"
 func main() {
     s := g.Server()
     s.SetIndexFolder(true)
-    s.SetServerRoot("/Users/john/Documents")
+    s.SetServerRoot("/Users/john/Temp")
     s.SetPort(8199)
     s.Run()
 }

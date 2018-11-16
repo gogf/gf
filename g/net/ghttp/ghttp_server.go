@@ -237,6 +237,18 @@ func (s *Server) Start() error {
         }
     }
 
+    // 配置相关相对路径处理
+    if !gfile.Exists(s.config.HTTPSCertPath) {
+        if t, _ := s.paths.Search(s.config.HTTPSCertPath); t != "" {
+            s.config.HTTPSCertPath = t
+        }
+    }
+    if !gfile.Exists(s.config.HTTPSKeyPath) {
+        if t, _ := s.paths.Search(s.config.HTTPSKeyPath); t != "" {
+            s.config.HTTPSKeyPath  = t
+        }
+    }
+
     // gzip压缩文件类型
     //if s.config.GzipContentTypes != nil {
     //    for _, v := range s.config.GzipContentTypes {

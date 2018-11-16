@@ -255,15 +255,15 @@ func ScanDir(path string, pattern string, recursive ... bool) ([]string, error) 
 // 内部检索目录方法，支持递归，返回没有排序的文件绝对路径列表结果。
 // pattern参数支持多个文件名称模式匹配，使用','符号分隔多个模式。
 func doScanDir(path string, pattern string, recursive ... bool) ([]string, error) {
-    var list []string
+    list := ([]string)(nil)
     // 打开目录
-    dfile, err := os.Open(path)
+    file, err := os.Open(path)
     if err != nil {
         return nil, err
     }
-    defer dfile.Close()
+    defer file.Close()
     // 读取目录下的文件列表
-    names, err := dfile.Readdirnames(-1)
+    names, err := file.Readdirnames(-1)
     if err != nil {
         return nil, err
     }

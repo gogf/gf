@@ -53,7 +53,8 @@ func (c *Config) filePath(file...string) string {
     if len(file) > 0 {
         name = file[0]
     }
-    return c.paths.Search(name)
+    path, _ := c.paths.Search(name)
+    return path
 }
 
 // 设置配置管理器的配置文件存放目录绝对路径
@@ -92,7 +93,8 @@ func (c *Config) GetFilePath(file...string) string {
     if len(file) > 0 {
         name = file[0]
     }
-    return c.paths.Search(name)
+    path, _ := c.paths.Search(name)
+    return path
 }
 
 // 设置配置管理对象的默认文件名称

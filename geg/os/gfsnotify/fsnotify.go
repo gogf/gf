@@ -15,7 +15,7 @@ func main() {
     defer watch.Close()
     //添加要监控的对象，文件或文件夹
     //err = watch.Add("D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go")
-    err = watch.Add("/Users/john/Temp/1/2")
+    err = watch.Add("/Users/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/other/test.go")
     if err != nil {
         log.Fatal(err)
     }

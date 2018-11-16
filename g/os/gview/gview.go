@@ -141,7 +141,7 @@ func (view *View) Assign(key string, value interface{}) {
 
 // 解析模板，返回解析后的内容
 func (view *View) Parse(file string, params Params, funcmap...map[string]interface{}) ([]byte, error) {
-    path := view.paths.Search(file)
+    path, _ := view.paths.Search(file)
     if path == "" {
         return nil, errors.New("tpl \"" + file + "\" not found")
     }
