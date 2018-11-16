@@ -102,11 +102,11 @@ func (w *Watcher) watcher(path string) *fsnotify.Watcher {
 
 // 关闭监听管理对象
 func (w *Watcher) Close() {
-    w.events.Close()
-    close(w.closeChan)
     for _, watcher := range w.watchers  {
         watcher.Close()
     }
+    w.events.Close()
+    close(w.closeChan)
 }
 
 // 递归移除对指定文件/目录的所有监听回调

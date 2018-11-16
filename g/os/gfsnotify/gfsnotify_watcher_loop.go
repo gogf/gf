@@ -7,12 +7,8 @@
 package gfsnotify
 
 import (
-    "errors"
     "fmt"
     "gitee.com/johng/gf/g/container/glist"
-    "gitee.com/johng/gf/g/encoding/ghash"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
     "sync"
     "time"
 )
@@ -54,16 +50,20 @@ func (w *Watcher) startWatchLoop() {
 // 3、如果仍旧无法匹配回调函数，那么忽略，否则使用查找到的新path覆盖掉event的path；
 // 解决问题：
 // 1、部分IDE修改文件时生成的临时文件，如: /index.html -> /index.html__jdold__；
-// 2、新增文件目录的回调搜索；
 func (w *Watcher) getWatchPathAndCallbacks(path string) (watchPath string, callbacks *glist.List) {
     if path == "" {
         return "", nil
     }
+    dirPath := fileDir(path)
     for {
         if v := w.callbacks.Get(path); v != nil {
             return path, v.(*glist.List)
         }
         path = path[0 : len(path) - 1]
+        // 递减到上一级目录为止
+        if path == dirPath {
+            break
+        }
         // 如果不能再继续递减，那么退出
         if len(path) == 0 {
             break
@@ -90,7 +90,7 @@ func (w *Watcher) startEventLoop() {
                         if fileExists(watchPath) {
                             // 重新添加监控(底层fsnotify会自动删除掉监控，这里重新添加回去)
                             // 注意这里调用的是底层fsnotify添加监控，只会产生回调事件，并不会使回调函数重复注册
-                            w.watcher.Add(event.Path)
+                            w.watcher(watchPath).Add(event.Path)
                             // 修改事件操作为重命名(相当于重命名为自身名称，最终名称没变)
                             event.Op = RENAME
                         } else {
@@ -116,11 +116,11 @@ func (w *Watcher) startEventLoop() {
                     case event.IsRename():
                         if fileExists(watchPath) {
                             // 重新添加监控
-                            w.watcher.Add(watchPath)
+                            w.watcher(watchPath).Add(watchPath)
                         } else if watchPath != event.Path && fileExists(event.Path) {
                             for _, v := range callbacks.FrontAll() {
                                 callback := v.(*Callback)
-                                w.addWithCallback(callback, event.Path, callback.Func)
+                                w.addWithCallbackFunc(callback, event.Path, callback.Func)
                             }
                         }
 
@@ -128,7 +128,7 @@ func (w *Watcher) startEventLoop() {
                     case event.IsCreate():
                         for _, v := range callbacks.FrontAll() {
                             callback := v.(*Callback)
-                            w.addWithCallback(callback, event.Path, callback.Func)
+                            w.addWithCallbackFunc(callback, event.Path, callback.Func)
                         }
 
                 }
