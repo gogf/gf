@@ -10,15 +10,13 @@
 package ghttp
 
 import (
-    "sync"
-    "time"
-    "net/http"
     "gitee.com/johng/gf/g/os/gtime"
+    "net/http"
+    "time"
 )
 
-// cookie对象
+// COOKIE对象
 type Cookie struct {
-    mu       sync.RWMutex          // 并发安全互斥锁
     data     map[string]CookieItem // 数据项
     path     string                // 默认的cookie path
     domain   string                // 默认的cookie domain
@@ -71,22 +69,30 @@ func (c *Cookie) init() {
 // 获取所有的Cookie并构造成map返回
 func (c *Cookie) Map() map[string]string {
     m := make(map[string]string)
-    c.mu.RLock()
-    defer c.mu.RUnlock()
     for k, v := range c.data {
         m[k] = v.value
     }
     return m
 }
 
-// 获取SessionId
+// 获取SessionId，不存在时则创建
 func (c *Cookie) SessionId() string {
-    v := c.Get(c.server.GetSessionIdName())
-    if v == "" {
-        v = makeSessionId()
-        c.SetSessionId(v)
+    id := c.Get(c.server.GetSessionIdName())
+    if id == "" {
+        id = makeSessionId()
+        c.SetSessionId(id)
     }
-    return v
+    return id
+}
+
+// 判断Cookie中是否存在制定键名(并且没有过期)
+func (c *Cookie) Contains(key string) bool {
+    if r, ok := c.data[key]; ok {
+        if r.expire >= 0 {
+            return true
+        }
+    }
+    return false
 }
 
 // 设置SessionId
@@ -101,7 +107,6 @@ func (c *Cookie) Set(key, value string) {
 
 // 设置cookie，带详细cookie参数
 func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int, httpOnly ... bool) {
-    c.mu.Lock()
     isHttpOnly := false
     if len(httpOnly) > 0 {
         isHttpOnly = httpOnly[0]
@@ -109,13 +114,10 @@ func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int, httpOnly
     c.data[key] = CookieItem {
         value, domain, path, int(gtime.Second()) + maxAge, isHttpOnly,
     }
-    c.mu.Unlock()
 }
 
 // 查询cookie
 func (c *Cookie) Get(key string) string {
-    c.mu.RLock()
-    defer c.mu.RUnlock()
     if r, ok := c.data[key]; ok {
         if r.expire >= 0 {
             return r.value
@@ -134,10 +136,8 @@ func (c *Cookie) Remove(key, domain, path string) {
 
 // 输出到客户端
 func (c *Cookie) Output() {
-    c.mu.RLock()
-    defer c.mu.RUnlock()
     for k, v := range c.data {
-        // 只有expire != 0的才是服务端在本地请求中设置的cookie
+        // 只有 expire != 0 的才是服务端在本次请求中设置的cookie
         if v.expire == 0 {
             continue
         }

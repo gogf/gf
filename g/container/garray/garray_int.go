@@ -108,10 +108,12 @@ func (a *IntArray) Slice() []int {
 // 清空数据数组
 func (a *IntArray) Clear() {
 	a.mu.Lock()
-	if a.cap > 0 {
-		a.array = make([]int, a.size, a.cap)
-	} else {
-		a.array = make([]int, a.size)
+	if len(a.array) > 0 {
+		if a.cap > 0 {
+			a.array = make([]int, a.size, a.cap)
+		} else {
+			a.array = make([]int, a.size)
+		}
 	}
     a.mu.Unlock()
 }

@@ -12,9 +12,9 @@ import (
 
 // 初始化GET请求参数
 func (r *Request) initGet() {
-    if !r.parsedGet.Val() {
-        r.parsedGet.Set(true)
+    if !r.parsedGet {
         r.queryVars = r.URL.Query()
+        r.parsedGet = true
     }
 }
 

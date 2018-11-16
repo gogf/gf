@@ -9,13 +9,11 @@ package ghttp
 
 import (
     "net/http"
-    "sync"
 )
 
 // 自定义的ResponseWriter，用于写入流的控制
 type ResponseWriter struct {
     http.ResponseWriter
-    mu     sync.RWMutex    // 缓冲区互斥锁
     Status int             // http status
     buffer []byte          // 缓冲区内容
 }
@@ -35,9 +33,7 @@ func (w *ResponseWriter) WriteHeader(code int) {
 // 输出buffer数据到客户端
 func (w *ResponseWriter) OutputBuffer() {
     if len(w.buffer) > 0 {
-        w.mu.Lock()
         w.ResponseWriter.Write(w.buffer)
-        w.buffer = make([]byte, 0)
-        w.mu.Unlock()
+        w.buffer = w.buffer[:0]
     }
 }

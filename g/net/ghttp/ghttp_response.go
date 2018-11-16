@@ -8,6 +8,7 @@
 package ghttp
 
 import (
+    "gitee.com/johng/gf/g/os/gfile"
     "net/http"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gparser"
@@ -19,7 +20,6 @@ import (
 // 注意该对象并没有实现http.ResponseWriter接口，而是依靠ghttp.ResponseWriter实现。
 type Response struct {
     ResponseWriter
-    length  int             // 请求返回的内容长度(byte)
     Server  *Server         // 所属Web Server
     Writer  *ResponseWriter // ResponseWriter的别名
     request *Request        // 关联的Request请求对象
@@ -29,7 +29,7 @@ type Response struct {
 func newResponse(s *Server, w http.ResponseWriter) *Response {
     r := &Response {
         Server         : s,
-        ResponseWriter : ResponseWriter{
+        ResponseWriter : ResponseWriter {
             ResponseWriter : w,
             Status         : http.StatusOK,
             buffer         : make([]byte, 0),
@@ -48,17 +48,12 @@ func (r *Response) Write(content ... interface{}) {
         switch v.(type) {
             case []byte:
                 // 如果是二进制数据，那么返回二进制数据
-                r.mu.Lock()
                 r.buffer = append(r.buffer, gconv.Bytes(v)...)
-                r.mu.Unlock()
             default:
                 // 否则一律按照可显示的字符串进行转换
-                r.mu.Lock()
                 r.buffer = append(r.buffer, gconv.String(v)...)
-                r.mu.Unlock()
         }
     }
-    r.length = len(r.buffer)
 }
 
 // 返回信息，支持自定义format格式
@@ -161,6 +156,15 @@ func (r *Response) WriteStatus(status int, content...string) {
 
 // 静态文件处理
 func (r *Response) ServeFile(path string) {
+    r.request.isFileServe = true
+    // 首先判断是否给定的path已经是一个绝对路径
+    if !gfile.Exists(path) {
+        path = r.Server.paths.Search(path)
+    }
+    if path == "" {
+        r.WriteStatus(http.StatusNotFound)
+        return
+    }
     r.Server.serveFile(r.request, path)
 }
 
@@ -177,31 +181,22 @@ func (r *Response) RedirectBack() {
 
 // 获取当前缓冲区中的数据
 func (r *Response) Buffer() []byte {
-    r.mu.RLock()
-    defer r.mu.RUnlock()
     return r.buffer
 }
 
 // 获取当前缓冲区中的数据大小
 func (r *Response) BufferLength() int {
-    r.mu.RLock()
-    defer r.mu.RUnlock()
     return len(r.buffer)
 }
 
 // 手动设置缓冲区内容
 func (r *Response) SetBuffer(buffer []byte) {
-    r.length = 0
-    r.mu.Lock()
     r.buffer = buffer
-    r.mu.Unlock()
 }
 
 // 清空缓冲区内容
 func (r *Response) ClearBuffer() {
-    r.mu.Lock()
-    r.buffer = make([]byte, 0)
-    r.mu.Unlock()
+    r.buffer = r.buffer[:0]
 }
 
 // 输出缓冲区数据到客户端
@@ -211,13 +206,3 @@ func (r *Response) OutputBuffer() {
     r.Writer.OutputBuffer()
 }
 
-// 获取输出到客户端的数据大小
-func (r *Response) ContentSize() int {
-    if r.Status == http.StatusOK && r.length > 0 {
-        return r.length
-    }
-    if length := r.Header().Get("Content-Length"); length != "" {
-        return gconv.Int(length)
-    }
-    return r.BufferLength()
-}

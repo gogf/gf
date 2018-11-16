@@ -67,6 +67,17 @@ func (a *SortedArray) Get(index int) interface{} {
 func (a *SortedArray) Remove(index int) interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
+    // 边界删除判断，以提高删除效率
+    if index == 0 {
+        value  := a.array[0]
+        a.array = a.array[1 : ]
+        return value
+    } else if index == len(a.array) - 1 {
+        value  := a.array[index]
+        a.array = a.array[: index]
+        return value
+    }
+    // 如果非边界删除，会涉及到数组创建，那么删除的效率差一些
     value  := a.array[index]
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
     return value
@@ -85,9 +96,9 @@ func (a *SortedArray) PopLeft() interface{} {
 func (a *SortedArray) PopRight() interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
-    length := len(a.array)
-    value  := a.array[length - 1]
-    a.array = a.array[: length - 1]
+    index  := len(a.array) - 1
+    value  := a.array[index]
+    a.array = a.array[: index]
     return value
 }
 
@@ -179,7 +190,9 @@ func (a *SortedArray) doUnique() {
 // 清空数据数组
 func (a *SortedArray) Clear() {
     a.mu.Lock()
-    a.array = make([]interface{}, 0, a.cap)
+    if len(a.array) > 0 {
+        a.array = make([]interface{}, 0, a.cap)
+    }
     a.mu.Unlock()
 }
 

@@ -8,77 +8,88 @@
 package ghttp
 
 import (
-    "sync"
+    "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/util/grand"
     "strconv"
     "strings"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/grand"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/container/gmap"
     "time"
 )
 
-// 单个session对象
+// SESSION对象
 type Session struct {
-    mu     sync.RWMutex             // 并发安全互斥锁
-    id     string                   // SessionId
-    data   *gmap.StringInterfaceMap // Session数据
-    server *Server                  // 所属Server
+    id      string                   // SessionId
+    data    *gmap.StringInterfaceMap // Session数据
+    server  *Server                  // 所属Server
+    request *Request                 // 关联的请求
 }
 
-// 生成一个唯一的sessionid字符串，长度16
+// 生成一个唯一的SessionId字符串，长度16位
 func makeSessionId() string {
     return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 32) + grand.RandStr(3))
 }
 
 // 获取或者生成一个session对象
 func GetSession(r *Request) *Session {
-    s   := r.Server
-    sid := r.Cookie.SessionId()
-    if r := s.sessions.Get(sid); r != nil {
-        return r.(*Session)
+    return &Session {
+        data    : gmap.NewStringInterfaceMap(),
+        server  : r.Server,
+        request : r,
     }
-    ses := &Session {
-        id     : sid,
-        data   : gmap.NewStringInterfaceMap(),
-        server : s,
-    }
-    s.sessions.Set(sid, ses, s.GetSessionMaxAge())
-    return ses
 }
 
-// 获取sessionid
+// 执行初始化(用于延迟初始化)
+func (s *Session) init() {
+    if len(s.id) == 0 {
+        s.id   = s.request.Cookie.SessionId()
+        s.data = s.server.sessions.GetOrSetFuncLock(s.id, func() interface{} {
+            return gmap.NewStringInterfaceMap()
+        }, s.server.GetSessionMaxAge()).(*gmap.StringInterfaceMap)
+    }
+}
+
+// 获取SessionId
 func (s *Session) Id() string {
+    s.init()
     return s.id
 }
 
 // 获取当前session所有数据
-func (s *Session) Data () map[string]interface{} {
+func (s *Session) Data() map[string]interface{} {
+    s.init()
     return s.data.Clone()
 }
 
 // 设置session
-func (s *Session) Set (key string, value interface{}) {
+func (s *Session) Set(key string, value interface{}) {
+    s.init()
     s.data.Set(key, value)
 }
 
 // 批量设置(BatchSet别名)
 func (s *Session) Sets (m map[string]interface{}) {
+    s.init()
     s.BatchSet(m)
 }
 
 // 批量设置
 func (s *Session) BatchSet (m map[string]interface{}) {
+    s.init()
     s.data.BatchSet(m)
 }
 
 // 判断键名是否存在
 func (s *Session) Contains (key string) bool {
+    s.init()
     return s.data.Contains(key)
 }
 
 // 获取session
-func (s *Session) Get (key string) interface{}  { return s.data.Get(key)          }
+func (s *Session) Get (key string) interface{}  {
+    s.init()
+    return s.data.Get(key)
+}
 func (s *Session) GetString (key string) string { return gconv.String(s.Get(key)) }
 func (s *Session) GetBool(key string) bool      { return gconv.Bool(s.Get(key))   }
 
@@ -113,15 +124,19 @@ func (s *Session) GetStruct(key string, objPointer interface{}, attrMapping...ma
 
 // 删除session
 func (s *Session) Remove (key string) {
+    s.init()
     s.data.Remove(key)
 }
 
 // 清空session
 func (s *Session) Clear () {
+    s.init()
     s.data.Clear()
 }
 
 // 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
 func (s *Session) UpdateExpire() {
-    s.server.sessions.Set(s.id, s, s.server.GetSessionMaxAge()*1000)
+    if len(s.id) > 0 {
+        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
+    }
 }

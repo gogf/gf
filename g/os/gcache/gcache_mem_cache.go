@@ -178,9 +178,7 @@ func (c *memCache) GetOrSet(key interface{}, value interface{}, expire int) inte
 func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, expire int) interface{} {
     if v := c.Get(key); v == nil {
         // 可能存在多个goroutine被阻塞在这里，f可能是并发运行
-        v = f()
-        c.doSetWithLockCheck(key, v, expire)
-        return v
+        return c.doSetWithLockCheck(key, f(), expire)
     } else {
         return v
     }
@@ -189,8 +187,7 @@ func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, expire in
 // 与GetOrSetFunc不同的是，f是在写锁机制内执行
 func (c *memCache) GetOrSetFuncLock(key interface{}, f func() interface{}, expire int) interface{} {
     if v := c.Get(key); v == nil {
-        c.doSetWithLockCheck(key, f, expire)
-        return v
+        return c.doSetWithLockCheck(key, f, expire)
     } else {
         return v
     }

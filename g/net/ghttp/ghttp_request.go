@@ -7,25 +7,24 @@
 package ghttp
 
 import (
+    "gitee.com/johng/gf/g/container/gvar"
+    "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/third/github.com/fatih/structs"
     "io/ioutil"
     "net/http"
-    "gitee.com/johng/gf/g/encoding/gjson"
-    "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/third/github.com/fatih/structs"
     "strings"
-    "gitee.com/johng/gf/g/container/gvar"
 )
 
 // 请求对象
 type Request struct {
     http.Request
-    parsedGet     *gtype.Bool         // GET参数是否已经解析
-    parsedPost    *gtype.Bool         // POST参数是否已经解析
+    parsedGet     bool                // GET参数是否已经解析
+    parsedPost    bool                // POST参数是否已经解析
     queryVars     map[string][]string // GET参数
     routerVars    map[string][]string // 路由解析参数
-    exit          *gtype.Bool         // 是否退出当前请求流程执行
+    exit          bool                // 是否退出当前请求流程执行
     Id            int                 // 请求id(唯一)
     Server        *Server             // 请求关联的服务器对象
     Cookie        *Cookie             // 与当前请求绑定的Cookie对象(并发安全)
@@ -35,27 +34,21 @@ type Request struct {
     EnterTime     int64               // 请求进入时间(微秒)
     LeaveTime     int64               // 请求完成时间(微秒)
     Param         interface{}         // 开发者自定义参数
-    parsedHost    *gtype.String       // 解析过后不带端口号的服务器域名名称
-    clientIp      *gtype.String       // 解析过后的客户端IP地址
+    parsedHost    string              // 解析过后不带端口号的服务器域名名称
+    clientIp      string              // 解析过后的客户端IP地址
     isFileRequest bool                // 是否为静态文件请求(非服务请求，当静态文件存在时，优先级会被服务请求高，被识别为文件请求)
     isFileServe   bool                // 是否为文件处理(调用Server.serveFile时设置为true), isFileRequest为true时isFileServe也为true
 }
 
 // 创建一个Request对象
 func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
-    request := &Request{
-        parsedGet  : gtype.NewBool(),
-        parsedPost : gtype.NewBool(),
-        queryVars  : make(map[string][]string),
+    request := &Request {
         routerVars : make(map[string][]string),
-        exit       : gtype.NewBool(),
         Id         : s.servedCount.Add(1),
         Server     : s,
         Request    : *r,
         Response   : newResponse(s, w),
         EnterTime  : gtime.Microsecond(),
-        parsedHost : gtype.NewString(),
-        clientIp   : gtype.NewString(),
     }
     // 会话处理
     request.Cookie           = GetCookie(request)
@@ -153,28 +146,26 @@ func (r *Request) GetToStruct(object interface{}, mapping...map[string]string) {
 
 // 退出当前请求执行，原理是在Request.exit做标记，由服务逻辑流程做判断，自行停止
 func (r *Request) Exit() {
-    r.exit.Set(true)
+    r.exit = true
     panic(gEXCEPTION_EXIT)
 }
 
 // 判断当前请求是否停止执行
 func (r *Request) IsExited() bool {
-    return r.exit.Val()
+    return r.exit
 }
 
 // 获取请求的服务端IP/域名
 func (r *Request) GetHost() string {
-    host := r.parsedHost.Val()
-    if len(host) == 0 {
+    if len(r.parsedHost) == 0 {
         array, _ := gregex.MatchString(`(.+):(\d+)`, r.Host)
         if len(array) > 1 {
-            host = array[1]
+            r.parsedHost = array[1]
         } else {
-            host = r.Host
+            r.parsedHost = r.Host
         }
-        r.parsedHost.Set(host)
     }
-    return host
+    return r.parsedHost
 }
 
 // 判断是否为静态文件请求
@@ -194,19 +185,17 @@ func (r *Request) IsAjaxRequest() bool {
 
 // 获取请求的客户端IP地址
 func (r *Request) GetClientIp() string {
-    ip := r.clientIp.Val()
-    if len(ip) == 0 {
-        if ip = r.Header.Get("X-Real-IP"); ip == "" {
+    if len(r.clientIp) == 0 {
+        if r.clientIp = r.Header.Get("X-Real-IP"); r.clientIp == "" {
             array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
             if len(array) > 1 {
-                ip = array[1]
+                r.clientIp = array[1]
             } else {
-                ip = r.RemoteAddr
+                r.clientIp = r.RemoteAddr
             }
         }
-        r.clientIp.Set(ip)
     }
-    return ip
+    return r.clientIp
 }
 
 // 获得来源URL地址

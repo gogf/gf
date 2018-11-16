@@ -11,112 +11,192 @@ package gspath
 import (
     "errors"
     "fmt"
+    "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gfsnotify"
+    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/util/gstr"
+    "runtime"
     "strings"
-    "sync"
 )
 
 // 文件目录搜索管理对象
 type SPath struct {
-    mu    sync.RWMutex
-    paths []string              // 搜索路径，按照优先级进行排序
-    cache *gmap.StringStringMap // 搜索结果缓存map
+    paths *garray.StringArray       // 搜索路径，按照优先级进行排序
+    cache *gmap.StringInterfaceMap  // 搜索结果缓存map
 }
 
+// 文件搜索缓存项
+type SPathCacheItem struct {
+    path  string                    // 文件/目录绝对路径
+    isDir bool                      // 是否目录
+}
+
+
+// 创建一个搜索对象
 func New () *SPath {
-    return &SPath{
-        paths : make([]string, 0),
-        cache : gmap.NewStringStringMap(),
+    return &SPath {
+        paths : garray.NewStringArray(0, 2),
+        cache : gmap.NewStringInterfaceMap(),
     }
 }
 
 // 设置搜索路径，只保留当前设置项，其他搜索路径被清空
-func (sp *SPath) Set(path string) (realpath string, err error) {
-    realpath = gfile.RealPath(path)
-    if realpath == "" {
-        realpath = sp.Search(path)
-        if realpath == "" {
-            realpath = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
+func (sp *SPath) Set(path string) (realPath string, err error) {
+    realPath = gfile.RealPath(path)
+    if realPath == "" {
+        realPath = sp.Search(path)
+        if realPath == "" {
+            realPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
         }
     }
-    if realpath == "" {
-        return realpath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+    if realPath == "" {
+        return realPath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
     }
-    if realpath != "" && gfile.IsDir(realpath) {
-        realpath = strings.TrimRight(realpath, gfile.Separator)
-        sp.mu.Lock()
-        sp.paths = []string{realpath}
-        sp.mu.Unlock()
+    if realPath == "" {
+        return realPath, errors.New("invalid path:" + path)
+    }
+    // 设置的搜索路径必须为目录
+    if gfile.IsDir(realPath) {
+        realPath = strings.TrimRight(realPath, gfile.Separator)
+        if sp.paths.Search(realPath) != -1 {
+            for _, v := range sp.paths.Slice() {
+                sp.removeMonitorByPath(v)
+            }
+        }
+        sp.paths.Clear()
         sp.cache.Clear()
-        //glog.Debug("gspath.SetPath:", r)
-        return realpath, nil
+        sp.paths.Append(realPath)
+        sp.updateCacheByPath(realPath)
+        sp.addMonitorByPath(realPath)
+        return realPath, nil
+    } else {
+        return "", errors.New(path + " should be a folder")
     }
-    //glog.Warning("gspath.SetPath failed:", path)
-    return realpath, errors.New("invalid path:" + path)
 }
 
 // 添加搜索路径
-func (sp *SPath) Add(path string) (realpath string, err error) {
-    realpath = gfile.RealPath(path)
-    if realpath == "" {
-        realpath = sp.Search(path)
-        if realpath == "" {
-            realpath = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
+func (sp *SPath) Add(path string) (realPath string, err error) {
+    realPath = gfile.RealPath(path)
+    if realPath == "" {
+        realPath = sp.Search(path)
+        if realPath == "" {
+            realPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + path)
         }
     }
-    if realpath == "" {
-        return realpath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+    if realPath == "" {
+        return realPath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
     }
-    if realpath != "" && gfile.IsDir(realpath) {
-        realpath = strings.TrimRight(realpath, gfile.Separator)
-        sp.mu.Lock()
-        sp.paths = append(sp.paths, realpath)
-        sp.mu.Unlock()
-        //glog.Debug("gspath.Add:", r)
-        return realpath, nil
+    if realPath == "" {
+        return realPath, errors.New("invalid path:" + path)
     }
-    //glog.Warning("gspath.Add failed:", path)
-    return realpath, errors.New("invalid path:" + path)
+    // 添加的搜索路径必须为目录
+    if gfile.IsDir(realPath) {
+        // 如果已经添加则不再添加
+        if sp.paths.Search(realPath) < 0 {
+            realPath = strings.TrimRight(realPath, gfile.Separator)
+            sp.paths.Append(realPath)
+            sp.updateCacheByPath(realPath)
+            sp.addMonitorByPath(realPath)
+        }
+        return realPath, nil
+    } else {
+        return "", errors.New(path + " should be a folder")
+    }
 }
 
-// 按照优先级搜索文件，返回搜索到的文件绝对路径，找不到该文件时，返回空字符串
-// 给定的name只是相对文件路径，或者只是一个文件名
-func (sp *SPath) Search(name string) string {
-    path := sp.cache.Get(name)
-    if path == "" {
-        sp.mu.RLock()
-        for _, v := range sp.paths {
-            path = gfile.RealPath(v + gfile.Separator + name)
-            if path != "" && gfile.Exists(path) {
-                break
+// 给定的name只是相对文件路径，找不到该文件时，返回空字符串;
+// 当给定indexFiles时，如果name时一个目录，那么会进一步检索其下对应的indexFiles文件是否存在，存在则返回indexFile 绝对路径；
+// 否则返回name目录绝对路径。
+func (sp *SPath) Search(name string, indexFiles...string) string {
+    name = sp.formatCacheName(name)
+    if v := sp.cache.Get(name); v != nil {
+        item := v.(*SPathCacheItem)
+        if len(indexFiles) > 0 && item.isDir {
+            for _, file := range indexFiles {
+                if v := sp.cache.Get(name + "/" + file); v != nil {
+                    return v.(*SPathCacheItem).path
+                }
             }
         }
-        sp.mu.RUnlock()
-        if path != "" {
-            sp.cache.Set(name, path)
-            sp.addMonitor(name, path)
-        }
+        return item.path
     }
-    return path
+    return ""
 }
 
 // 当前的搜索路径数量
 func (sp *SPath) Size() int {
-    sp.mu.RLock()
-    length := len(sp.paths)
-    sp.mu.RUnlock()
-    return length
+    return sp.paths.Len()
 }
 
-// 添加文件监控，当文件删除时，同时也删除搜索结果缓存
-func (sp *SPath) addMonitor(name, path string) {
-    //glog.Debug("gspath.addMonitor:", name, path)
-    gfsnotify.Add(path, func(event *gfsnotify.Event) {
-        //glog.Debug("gspath.monitor:", event)
-        if event.IsRemove() {
-            sp.cache.Remove(name)
+// 递归添加目录下的文件
+func (sp *SPath) updateCacheByPath(path string) {
+    sp.addToCache(path, path)
+}
+
+// 格式化name返回符合规范的缓存名称，分隔符号统一为'/'，且前缀必须以'/'开头(类似HTTP URI).
+func (sp *SPath) formatCacheName(name string) string {
+    if name == "" {
+        return "/"
+    }
+    if runtime.GOOS != "linux" {
+        name = gstr.Replace(name, "\\", "/")
+    }
+    if name[0] == '/' {
+        return name
+    }
+    return "/" + name
+}
+
+// 根据path计算出对应的缓存name
+func (sp *SPath) nameFromPath(filePath, dirPath string) string {
+    name  := gstr.Replace(filePath, dirPath, "")
+    name   = sp.formatCacheName(name)
+    return name
+}
+
+// 添加path到缓存中(递归)
+func (sp *SPath) addToCache(filePath, dirPath string) {
+    // 首先添加自身
+    idDir := gfile.IsDir(filePath)
+    sp.cache.SetIfNotExist(sp.nameFromPath(filePath, dirPath), func() interface{} {
+        return &SPathCacheItem {
+            path  : filePath,
+            isDir : idDir,
         }
-    }, false)
+    })
+    // 如果添加的是目录，那么需要递归
+    if idDir {
+        if files, err := gfile.ScanDir(filePath, "*", true); err == nil {
+            for _, path := range files {
+                sp.addToCache(path, dirPath)
+            }
+        }
+    }
+}
+
+// 添加文件目录监控(递归)，当目录下的文件有更新时，会同时更新缓存。
+// 这里需要注意的点是，由于添加监听是递归添加的，那么假如删除一个目录，那么该目录下的文件(包括目录)也会产生一条删除事件，总共会产生N条事件。
+func (sp *SPath) addMonitorByPath(path string) {
+    gfsnotify.Add(path, func(event *gfsnotify.Event) {
+        glog.Debug(event.String())
+        switch {
+            case event.IsRemove():
+                sp.cache.Remove(sp.nameFromPath(event.Path, path))
+
+            case event.IsRename():
+                if !gfile.Exists(event.Path) {
+                    sp.cache.Remove(sp.nameFromPath(event.Path, path))
+                }
+
+            case event.IsCreate():
+                sp.addToCache(event.Path, path)
+        }
+    })
+}
+
+// 删除监听(递归)
+func (sp *SPath) removeMonitorByPath(path string) {
+    gfsnotify.Remove(path)
 }

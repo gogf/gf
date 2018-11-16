@@ -8,13 +8,13 @@
 package ghttp
 
 import (
-    "strings"
     "container/list"
-    "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/container/gset"
     "fmt"
-    "runtime"
+    "gitee.com/johng/gf/g/container/gset"
+    "gitee.com/johng/gf/g/util/gregex"
     "reflect"
+    "runtime"
+    "strings"
 )
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
@@ -41,6 +41,10 @@ func (s *Server)BindHookHandlerByMap(pattern string, hookmap map[string]HandlerF
 // 事件回调处理，内部使用了缓存处理.
 // 并按照指定hook回调函数的优先级及注册顺序进行调用
 func (s *Server) callHookHandler(hook string, r *Request) {
+    // 如果没有hook注册，那么不用执行后续逻辑
+    if len(s.hooksTree) == 0 {
+        return
+    }
     hookItems := s.getHookHandlerWithCache(hook, r)
     if len(hookItems) > 0 {
         defer func() {
@@ -74,15 +78,14 @@ func (s *Server) callHookHandler(hook string, r *Request) {
     }
 }
 
-// 查询请求处理方法.
-// 内部带锁机制，可以并发读，但是不能并发写；并且有缓存机制，按照Host、Method、Path进行缓存.
+// 查询请求处理方法, 带缓存机制，按照Host、Method、Path进行缓存.
 func (s *Server) getHookHandlerWithCache(hook string, r *Request) []*handlerParsedItem {
     cacheItems := ([]*handlerParsedItem)(nil)
     cacheKey   := s.hookHandlerKey(hook, r.Method, r.URL.Path, r.GetHost())
     if v := s.hooksCache.Get(cacheKey); v == nil {
         cacheItems = s.searchHookHandler(r.Method, r.URL.Path, r.GetHost(), hook)
         if cacheItems != nil {
-            s.hooksCache.Set(cacheKey, cacheItems, 0)
+            s.hooksCache.Set(cacheKey, cacheItems)
         }
     } else {
         cacheItems = v.([]*handlerParsedItem)
@@ -148,7 +151,7 @@ func (s *Server) searchHookHandler(method, path, domain, hook string) []*handler
         }
 
         // 多层链表遍历检索，从数组末尾的链表开始遍历，末尾的深度高优先级也高
-        pushedSet := gset.NewStringSet()
+        pushedSet := gset.NewStringSet(false)
         for i := len(lists) - 1; i >= 0; i-- {
             for e := lists[i].Front(); e != nil; e = e.Next() {
                 handler := e.Value.(*handlerItem)

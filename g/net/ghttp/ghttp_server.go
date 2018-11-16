@@ -7,31 +7,30 @@
 package ghttp
 
 import (
-    "os"
-    "sync"
+    "bytes"
     "errors"
-    "strings"
-    "reflect"
-    "runtime"
-    "net/http"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/gproc"
-    "gitee.com/johng/gf/g/os/gcache"
-    "gitee.com/johng/gf/g/util/gconv"
+    "fmt"
+    "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/container/gqueue"
-    "gitee.com/johng/gf/g/os/gspath"
+    "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/os/genv"
-    "gitee.com/johng/gf/third/github.com/gorilla/websocket"
-    "gitee.com/johng/gf/g/os/gtime"
-    "time"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gproc"
+    "gitee.com/johng/gf/g/os/gspath"
+    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/container/garray"
+    "gitee.com/johng/gf/third/github.com/gorilla/websocket"
     "gitee.com/johng/gf/third/github.com/olekukonko/tablewriter"
-    "bytes"
-    "fmt"
+    "net/http"
+    "os"
+    "reflect"
+    "runtime"
+    "strings"
+    "sync"
+    "time"
 )
 
 const (
@@ -64,12 +63,11 @@ type Server struct {
     servers          []*gracefulServer              // 底层http.Server列表
     methodsMap       map[string]struct{}            // 所有支持的HTTP Method(初始化时自动填充)
     servedCount      *gtype.Int                     // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
-    closeQueue       *gqueue.Queue                  // 请求结束的关闭队列(存放的是需要异步关闭处理的*Request对象)
     // 服务注册相关
     serveTree        map[string]interface{}         // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
     hooksTree        map[string]interface{}         // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-    serveCache       *gcache.Cache                  // 服务注册路由内存缓存
-    hooksCache       *gcache.Cache                  // 事件回调路由内存缓存
+    serveCache       *gmap.StringInterfaceMap       // 服务注册路由内存缓存
+    hooksCache       *gmap.StringInterfaceMap       // 事件回调路由内存缓存
     routesMap        map[string]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
     // 自定义状态码回调
     hsmu             sync.RWMutex                   // status handler互斥锁
@@ -180,12 +178,11 @@ func GetServer(name...interface{}) (*Server) {
         statusHandlerMap : make(map[string]HandlerFunc),
         serveTree        : make(map[string]interface{}),
         hooksTree        : make(map[string]interface{}),
-        serveCache       : gcache.New(),
-        hooksCache       : gcache.New(),
+        serveCache       : gmap.NewStringInterfaceMap(),
+        hooksCache       : gmap.NewStringInterfaceMap(),
         routesMap        : make(map[string]registeredRouteItem),
         sessions         : gcache.New(),
         servedCount      : gtype.NewInt(),
-        closeQueue       : gqueue.New(),
         logger           : glog.New(),
     }
     // 日志的标准输出默认关闭，但是错误信息会特殊处理
@@ -239,6 +236,7 @@ func (s *Server) Start() error {
             })
         }
     }
+
     // gzip压缩文件类型
     //if s.config.GzipContentTypes != nil {
     //    for _, v := range s.config.GzipContentTypes {
@@ -266,9 +264,6 @@ func (s *Server) Start() error {
             gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP)
         })
     }
-
-    // 开启异步关闭队列处理循环
-    s.startCloseQueueLoop()
 
     // 打印展示路由表
     s.DumpRoutesMap()

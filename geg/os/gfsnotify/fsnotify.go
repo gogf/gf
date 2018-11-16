@@ -7,14 +7,15 @@ import (
 )
 
 func main() {
-    //创建一个监控对象
+    // 创建一个监控对象
     watch, err := fsnotify.NewWatcher()
     if err != nil {
         log.Fatal(err)
     }
     defer watch.Close()
     //添加要监控的对象，文件或文件夹
-    err = watch.Add("D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go")
+    //err = watch.Add("D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go")
+    err = watch.Add("/Users/john/Temp/1/2")
     if err != nil {
         log.Fatal(err)
     }

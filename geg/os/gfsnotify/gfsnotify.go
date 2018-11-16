@@ -6,7 +6,8 @@ import (
 )
 
 func main() {
-    path := "D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go"
+    //path := "D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go"
+    path := "/Users/john/Temp/1/2/3"
     _, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
         glog.Println(event)
     })

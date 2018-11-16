@@ -11,6 +11,7 @@ import (
     "fmt"
     "gitee.com/johng/gf/g/encoding/ghtml"
     "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
     "net/http"
     "net/url"
@@ -42,56 +43,43 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         if request.LeaveTime == 0 {
             request.LeaveTime = gtime.Microsecond()
         }
+        s.callHookHandler(HOOK_BEFORE_CLOSE, request)
         // access log
         s.handleAccessLog(request)
         // error log使用recover进行判断
         if e := recover(); e != nil {
             s.handleErrorLog(e, request)
         }
-        // 将Request对象指针丢到队列中异步关闭
-        s.closeQueue.Push(request)
+        // 更新Session会话超时时间
+        request.Session.UpdateExpire()
+        s.callHookHandler(HOOK_AFTER_CLOSE, request)
     }()
 
-    // 优先执行静态文件检索
-    filePath := s.paths.Search(r.URL.Path)
-    if filePath != "" {
-        if gfile.IsDir(filePath) {
-            // 如果是目录需要处理index files
-            if len(s.config.IndexFiles) > 0 {
-                for _, file := range s.config.IndexFiles {
-                    fpath := s.paths.Search(file)
-                    if fpath != "" {
-                        filePath              = fpath
-                        request.isFileRequest = true
-                        break
-                    }
-                }
-            }
-        } else {
-            request.isFileRequest = true
-        }
+    // 优先执行静态文件检索(检测是否存在对应的静态文件，包括index files处理)
+    staticFile := s.paths.Search(r.URL.Path, s.config.IndexFiles...)
+    if staticFile != "" {
+        request.isFileRequest = true
     }
-
-    // 其次进行服务路由信息检索
-    handler := (*handlerItem)(nil)
-    if !request.IsFileRequest() {
-        if parsedItem := s.getServeHandlerWithCache(request); parsedItem != nil {
-            handler = parsedItem.handler
-            for k, v := range parsedItem.values {
-                request.routerVars[k] = v
-            }
-            request.Router = parsedItem.handler.router
-        }
-    }
+    glog.Info(staticFile)
 
     // 事件 - BeforeServe
     s.callHookHandler(HOOK_BEFORE_SERVE, request)
 
     // 执行静态文件服务/回调控制器/执行对象/方法
-    if !request.exit.Val() {
-        if filePath != "" && (request.IsFileRequest() || handler == nil) {
-            s.serveFile(request, filePath)
+    if !request.IsExited() {
+        // 需要再次判断文件是否真实存在，因为文件检索可能使用了缓存，从健壮性考虑这里需要二次判断
+        if request.IsFileRequest() && gfile.Exists(staticFile) && gfile.SelfPath() != staticFile {
+            s.serveFile(request, staticFile)
         } else {
+            // 动态服务检索
+            handler := (*handlerItem)(nil)
+            if parsedItem := s.getServeHandlerWithCache(request); parsedItem != nil {
+                handler = parsedItem.handler
+                for k, v := range parsedItem.values {
+                    request.routerVars[k] = v
+                }
+                request.Router = parsedItem.handler.router
+            }
             if handler != nil {
                 s.callServeHandler(handler, request)
             } else {
@@ -117,7 +105,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // 初始化控制器
-func (s *Server)callServeHandler(h *handlerItem, r *Request) {
+func (s *Server) callServeHandler(h *handlerItem, r *Request) {
     defer func() {
         if e := recover(); e != nil && e != gEXCEPTION_EXIT {
             panic(e)
@@ -147,16 +135,6 @@ func (s *Server)callServeHandler(h *handlerItem, r *Request) {
 
 // http server静态文件处理，path可以为相对路径也可以为绝对路径
 func (s *Server)serveFile(r *Request, path string) {
-    r.isFileServe = true
-
-    // 首先判断是否给定的path已经是一个绝对路径
-    if !gfile.Exists(path) {
-        path = s.paths.Search(path)
-    }
-    if path == "" {
-        r.Response.WriteStatus(http.StatusNotFound)
-        return
-    }
     f, err := os.Open(path)
     if err != nil {
         r.Response.WriteStatus(http.StatusForbidden)
@@ -172,7 +150,6 @@ func (s *Server)serveFile(r *Request, path string) {
         }
     } else {
         // 读取文件内容返回, no buffer
-        r.Response.length = int(info.Size())
         http.ServeContent(r.Response.Writer, &r.Request, info.Name(), info.ModTime(), f)
     }
 }
@@ -197,19 +174,4 @@ func (s *Server)listDir(r *Request, f http.File) {
         r.Response.Write(fmt.Sprintf("<a href=\"%s\">%s</a>\n", u.String(), ghtml.SpecialChars(name)))
     }
     r.Response.Write("</pre>\n")
-}
-
-// 开启异步队列处理循环，该异步线程与Server同生命周期
-func (s *Server) startCloseQueueLoop() {
-    go func() {
-        for {
-            if v := s.closeQueue.Pop(); v != nil {
-                r := v.(*Request)
-                s.callHookHandler(HOOK_BEFORE_CLOSE, r)
-                // 更新Session会话超时时间
-                r.Session.UpdateExpire()
-                s.callHookHandler(HOOK_AFTER_CLOSE, r)
-            }
-        }
-    }()
 }

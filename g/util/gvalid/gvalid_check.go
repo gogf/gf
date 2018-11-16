@@ -126,7 +126,13 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
 
             // 日期格式，
             case "date":
+                // 使用标准日期格式检查，但是日期之间必须带连接符号
                 if _, err := gtime.StrToTime(val); err == nil {
+                    match = true
+                    break
+                }
+                // 检查是否不带日期连接符号的格式
+                if _, err := gtime.StrToTime(val, "Ymd"); err == nil {
                     match = true
                     break
                 }

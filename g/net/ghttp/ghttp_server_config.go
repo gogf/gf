@@ -254,7 +254,7 @@ func (s *Server)SetServerRoot(root string) {
     if path == "" {
         glog.Error("invalid root path \"" + root + "\"")
     }
-    s.config.ServerRoot = strings.TrimRight(path, string(gfile.Separator))
+    s.config.ServerRoot = strings.TrimRight(path, gfile.Separator)
 }
 
 func (s *Server) SetDenyIps(ips []string) {
