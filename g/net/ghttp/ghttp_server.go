@@ -482,7 +482,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             serverRunning.Add(-1)
             // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
             if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-                glog.Error(err)
+                glog.Fatal(err)
             }
             // 如果所有异步的Server都已经停止，并且没有在管理操作(重启/关闭)进行中，那么主Server就可以退出了
             if serverRunning.Val() < 1 && serverProcessStatus.Val() == 0 {

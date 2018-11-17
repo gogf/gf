@@ -295,46 +295,35 @@ func (l *Logger) Printfln(format string, v ...interface{}) {
 }
 
 func (l *Logger) Fatal(v ...interface{}) {
-    l.errPrint(fmt.Sprintln(v...))
+    l.errPrint("[FATA] " + fmt.Sprintln(v...))
     os.Exit(1)
 }
 
 func (l *Logger) Fatalf(format string, v ...interface{}) {
-    l.errPrint(fmt.Sprintf(format, v...))
-    os.Exit(1)
-}
-
-func (l *Logger) Fatalln(v ...interface{}) {
-    l.errPrint(fmt.Sprintln(v...))
+    l.errPrint("[FATA] " + fmt.Sprintf(format, v...))
     os.Exit(1)
 }
 
 func (l *Logger) Fatalfln(format string, v ...interface{}) {
-    l.errPrint(fmt.Sprintf(format + ln, v...))
+    l.errPrint("[FATA] " + fmt.Sprintf(format + ln, v...))
     os.Exit(1)
 }
 
 func (l *Logger) Panic(v ...interface{}) {
     s := fmt.Sprintln(v...)
-    l.errPrint(s)
+    l.errPrint("[PANI] " + s)
     panic(s)
 }
 
 func (l *Logger) Panicf(format string, v ...interface{}) {
     s := fmt.Sprintf(format, v...)
-    l.errPrint(s)
-    panic(s)
-}
-
-func (l *Logger) Panicln(v ...interface{}) {
-    s := fmt.Sprintln(v...)
-    l.errPrint(s)
+    l.errPrint("[PANI] " + s)
     panic(s)
 }
 
 func (l *Logger) Panicfln(format string, v ...interface{}) {
     s := fmt.Sprintf(format + ln, v...)
-    l.errPrint(s)
+    l.errPrint("[PANI] " + s)
     panic(s)
 }
 

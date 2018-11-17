@@ -151,10 +151,6 @@ func Fatalf(format string, v ...interface{}) {
     logger.Fatalf(format, v ...)
 }
 
-func Fatalln(v ...interface{}) {
-    logger.Fatalln(v ...)
-}
-
 func Fatalfln(format string, v ...interface{}) {
     logger.Fatalfln(format, v ...)
 }
@@ -165,10 +161,6 @@ func Panic(v ...interface{}) {
 
 func Panicf(format string, v ...interface{}) {
     logger.Panicf(format, v ...)
-}
-
-func Panicln(v ...interface{}) {
-    logger.Panicln(v ...)
 }
 
 func Panicfln(format string, v ...interface{}) {
