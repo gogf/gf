@@ -7,7 +7,6 @@
 package gfile
 
 import (
-    "gitee.com/johng/gf/g/os/gfpool"
     "io"
     "io/ioutil"
     "os"
@@ -17,7 +16,7 @@ const (
     // 方法中涉及到读取的时候的缓冲大小
     gREAD_BUFFER      = 1024
     // 方法中涉及到文件指针池的默认缓存时间(毫秒)
-    gFILE_POOL_EXPIRE = 60000
+    //gFILE_POOL_EXPIRE = 60000
 )
 
 // (文本)读取文件内容
@@ -44,7 +43,7 @@ func putContents(path string, data []byte, flag int, perm int) error {
         }
     }
     // 创建/打开文件
-    f, err := gfpool.Open(path, flag, os.FileMode(perm), gFILE_POOL_EXPIRE)
+    f, err := OpenWithFlagPerm(path, flag, perm)
     if err != nil {
         return err
     }
@@ -103,7 +102,7 @@ func GetNextCharOffset(reader io.ReaderAt, char byte, start int64) int64 {
 
 // 获得文件内容下一个指定字节的位置
 func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
-    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE); err == nil {
+    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
         return GetNextCharOffset(f, char, start)
     } else {
@@ -122,7 +121,7 @@ func GetBinContentsTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, 
 
 // 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
 func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
-    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE); err == nil {
+    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
         return GetBinContentsTilChar(f, char, start)
     } else {
@@ -142,7 +141,7 @@ func GetBinContentsByTwoOffsets(reader io.ReaderAt, start int64, end int64) []by
 
 // 获得文件内容中两个offset之间的内容 [start, end)
 func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
-    if f, err := gfpool.Open(path, os.O_RDONLY, gDEFAULT_PERM, gFILE_POOL_EXPIRE); err == nil {
+    if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
         return GetBinContentsByTwoOffsets(f, start, end)
     } else {
