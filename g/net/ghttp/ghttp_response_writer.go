@@ -8,6 +8,7 @@
 package ghttp
 
 import (
+    "bytes"
     "net/http"
 )
 
@@ -15,13 +16,13 @@ import (
 type ResponseWriter struct {
     http.ResponseWriter
     Status int             // http status
-    buffer []byte          // 缓冲区内容
+    buffer *bytes.Buffer   // 缓冲区内容
 }
 
 // 覆盖父级的WriteHeader方法
-func (w *ResponseWriter) Write(buffer []byte) (int, error) {
-    w.buffer = append(w.buffer, buffer...)
-    return len(buffer), nil
+func (w *ResponseWriter) Write(data []byte) (int, error) {
+    w.buffer.Write(data)
+    return len(data), nil
 }
 
 // 覆盖父级的WriteHeader方法
@@ -32,8 +33,8 @@ func (w *ResponseWriter) WriteHeader(code int) {
 
 // 输出buffer数据到客户端
 func (w *ResponseWriter) OutputBuffer() {
-    if len(w.buffer) > 0 {
-        w.ResponseWriter.Write(w.buffer)
-        w.buffer = w.buffer[:0]
+    if w.buffer.Len() > 0 {
+        w.ResponseWriter.Write(w.buffer.Bytes())
+        w.buffer.Reset()
     }
 }

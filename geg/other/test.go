@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	fmt.Println(gfile.TempDir())
+	fmt.Println(gfile.SelfPath())
 }

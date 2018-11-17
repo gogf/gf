@@ -218,16 +218,20 @@ func (s *Server) Start() error {
             glog.Debug("ghttp.SetServerRoot:", rp)
         }
     }
-    s.AddSearchPath(gfile.SelfDir())
+    // 添加当前可执行文件运行目录到搜索目录
+    s.paths.Add(gfile.SelfDir())
+    // (开发环境)添加main源码包到搜索目录
     if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
         s.paths.Add(p)
     }
+    // (安全控制)不能访问当前执行文件
+    s.paths.Remove(gfile.SelfPath())
 
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
-    // 不允许访问的路由注册
+    // 不允许访问的路由注册(通过HOOK实现)
     if s.config.DenyRoutes != nil {
         for _, v := range s.config.DenyRoutes {
             s.BindHookHandler(v, HOOK_BEFORE_SERVE, func(r *Request) {
@@ -238,12 +242,12 @@ func (s *Server) Start() error {
     }
 
     // 配置相关相对路径处理
-    if !gfile.Exists(s.config.HTTPSCertPath) {
+    if s.config.HTTPSCertPath != "" && !gfile.Exists(s.config.HTTPSCertPath) {
         if t, _ := s.paths.Search(s.config.HTTPSCertPath); t != "" {
             s.config.HTTPSCertPath = t
         }
     }
-    if !gfile.Exists(s.config.HTTPSKeyPath) {
+    if s.config.HTTPSKeyPath != "" && !gfile.Exists(s.config.HTTPSKeyPath) {
         if t, _ := s.paths.Search(s.config.HTTPSKeyPath); t != "" {
             s.config.HTTPSKeyPath  = t
         }

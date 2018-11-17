@@ -8,6 +8,7 @@
 package ghttp
 
 import (
+    "bytes"
     "gitee.com/johng/gf/g/os/gfile"
     "net/http"
     "gitee.com/johng/gf/g/util/gconv"
@@ -32,7 +33,7 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
         ResponseWriter : ResponseWriter {
             ResponseWriter : w,
             Status         : http.StatusOK,
-            buffer         : make([]byte, 0),
+            buffer         : bytes.NewBuffer(nil),
         },
     }
     r.Writer = &r.ResponseWriter
@@ -48,10 +49,11 @@ func (r *Response) Write(content ... interface{}) {
         switch v.(type) {
             case []byte:
                 // 如果是二进制数据，那么返回二进制数据
-                r.buffer = append(r.buffer, gconv.Bytes(v)...)
+                r.buffer.Write(gconv.Bytes(v))
+
             default:
                 // 否则一律按照可显示的字符串进行转换
-                r.buffer = append(r.buffer, gconv.String(v)...)
+                r.buffer.WriteString(gconv.String(v))
         }
     }
 }
@@ -130,7 +132,7 @@ func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods s
 
 // 返回HTTP Code状态码
 func (r *Response) WriteStatus(status int, content...string) {
-    if len(r.buffer) == 0 {
+    if r.buffer.Len() == 0 {
         // 状态码注册回调函数处理
         if status != http.StatusOK {
             if f := r.request.Server.getStatusHandler(status, r.request); f != nil {
@@ -181,22 +183,23 @@ func (r *Response) RedirectBack() {
 
 // 获取当前缓冲区中的数据
 func (r *Response) Buffer() []byte {
-    return r.buffer
+    return r.buffer.Bytes()
 }
 
 // 获取当前缓冲区中的数据大小
 func (r *Response) BufferLength() int {
-    return len(r.buffer)
+    return r.buffer.Len()
 }
 
 // 手动设置缓冲区内容
-func (r *Response) SetBuffer(buffer []byte) {
-    r.buffer = buffer
+func (r *Response) SetBuffer(data []byte) {
+    r.buffer.Reset()
+    r.buffer.Write(data)
 }
 
 // 清空缓冲区内容
 func (r *Response) ClearBuffer() {
-    r.buffer = r.buffer[:0]
+    r.buffer.Reset()
 }
 
 // 输出缓冲区数据到客户端

@@ -10,10 +10,8 @@ package ghttp
 import (
     "fmt"
     "gitee.com/johng/gf/g/encoding/ghtml"
-    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gtime"
     "net/http"
-    "net/url"
     "os"
     "reflect"
     "sort"
@@ -83,7 +81,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 执行静态文件服务/回调控制器/执行对象/方法
     if !request.IsExited() {
         // 需要再次判断文件是否真实存在，因为文件检索可能使用了缓存，从健壮性考虑这里需要二次判断
-        if request.IsFileRequest() && !isStaticDir /* && gfile.Exists(staticFile) */ && gfile.SelfPath() != staticFile {
+        if request.IsFileRequest() && !isStaticDir /* && gfile.Exists(staticFile) */{
             // 静态文件
             s.serveFile(request, staticFile)
         } else {
@@ -167,24 +165,20 @@ func (s *Server)serveFile(r *Request, path string) {
     }
 }
 
-// 目录列表
+// 显示目录列表
 func (s *Server)listDir(r *Request, f http.File) {
-    dirs, err := f.Readdir(-1)
+    files, err := f.Readdir(-1)
     if err != nil {
         r.Response.WriteStatus(http.StatusInternalServerError, "Error reading directory")
         return
     }
-    sort.Slice(dirs, func(i, j int) bool { return dirs[i].Name() < dirs[j].Name() })
+    sort.Slice(files, func(i, j int) bool { return files[i].Name() < files[j].Name() })
 
     r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
     r.Response.Write("<pre>\n")
-    for _, d := range dirs {
-        name := d.Name()
-        if d.IsDir() {
-            name += "/"
-        }
-        u := url.URL{Path: name}
-        r.Response.Write(fmt.Sprintf("<a href=\"%s\">%s</a>\n", u.String(), ghtml.SpecialChars(name)))
+    for _, file := range files {
+        name := file.Name()
+        r.Response.Write(fmt.Sprintf("<a href=\"%s/%s\">%s</a>\n", r.URL.Path, name, ghtml.SpecialChars(name)))
     }
     r.Response.Write("</pre>\n")
 }

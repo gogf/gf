@@ -125,6 +125,21 @@ func (sp *SPath) Search(name string, indexFiles...string) (path string, isDir bo
     return "", false
 }
 
+// 从搜索路径中移除指定的文件，这样该文件无法给搜索。
+// path可以是绝对路径，也可以相对路径。
+func (sp *SPath) Remove(path string) {
+    if gfile.Exists(path) {
+        for _, v := range sp.paths.Slice() {
+            name := gstr.Replace(path, v, "")
+            name  = sp.formatCacheName(name)
+            sp.cache.Remove(name)
+        }
+    } else {
+        name := sp.formatCacheName(path)
+        sp.cache.Remove(name)
+    }
+}
+
 // 返回当前对象缓存的所有路径列表
 func (sp *SPath) AllPaths() []string {
     paths := sp.cache.Keys()

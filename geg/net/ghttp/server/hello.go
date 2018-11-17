@@ -7,6 +7,7 @@ import (
 
 func main() {
     s := g.Server()
+    s.SetIndexFolder(true)
     s.BindHandler("/", func(r *ghttp.Request){
         r.Response.Writeln("哈喽世界！")
     })
