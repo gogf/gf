@@ -113,6 +113,9 @@ func (sp *SPath) Search(name string, indexFiles...string) (path string, isDir bo
     if v := sp.cache.Get(name); v != nil {
         item := v.(*SPathCacheItem)
         if len(indexFiles) > 0 && item.isDir {
+            if name == "/" {
+                name = ""
+            }
             for _, file := range indexFiles {
                 if v := sp.cache.Get(name + "/" + file); v != nil {
                     item := v.(*SPathCacheItem)
@@ -161,15 +164,9 @@ func (sp *SPath) updateCacheByPath(path string) {
 
 // 格式化name返回符合规范的缓存名称，分隔符号统一为'/'，且前缀必须以'/'开头(类似HTTP URI).
 func (sp *SPath) formatCacheName(name string) string {
-    if name == "" {
-        return "/"
-    }
-    name = strings.TrimLeft(name, ".")
+    name = strings.Trim(name, "./")
     if runtime.GOOS != "linux" {
         name = gstr.Replace(name, "\\", "/")
-    }
-    if name[0] == '/' {
-        return name
     }
     return "/" + name
 }

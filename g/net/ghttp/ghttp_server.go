@@ -129,7 +129,12 @@ var serverMapping    = gmap.NewStringInterfaceMap()
 var serverRunning    = gtype.NewInt()
 
 // Web Socket默认配置
-var wsUpgrader       = websocket.Upgrader{}
+var wsUpgrader       = websocket.Upgrader {
+    // 默认允许WebSocket请求跨域，权限控制可以由业务层自己负责，灵活度更高
+    CheckOrigin: func(r *http.Request) bool {
+        return true
+    },
+}
 
 // Web Server已完成服务事件通道，当有事件时表示服务完成，当前进程退出
 var doneChan         = make(chan struct{}, 1000)
