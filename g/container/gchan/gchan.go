@@ -40,8 +40,7 @@ func (q *Chan) Pop() interface{} {
 
 // 关闭队列(通知所有通过Pop阻塞的协程退出)
 func (q *Chan) Close() {
-    if !q.closed.Val() {
-        q.closed.Set(true)
+    if !q.closed.Set(true) {
         close(q.list)
     }
 }

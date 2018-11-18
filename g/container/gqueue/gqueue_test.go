@@ -13,36 +13,38 @@ import (
     "gitee.com/johng/gf/g/container/gqueue"
 )
 
-var length    = 10000000
+var bn        = 20000000
+var length    = 1000000
 var qstatic   = gqueue.New(length)
 var qdynamic  = gqueue.New()
 var cany      = make(chan interface{}, length)
-var cint      = make(chan int, length)
 
-func Benchmark_GqueueStaticPushAndPop(b *testing.B) {
+func Benchmark_Gqueue_StaticPushAndPop(b *testing.B) {
+    b.N = bn
     for i := 0; i < b.N; i++ {
         qstatic.Push(i)
         qstatic.Pop()
     }
 }
 
-func Benchmark_GqueueDynamicPush(b *testing.B) {
+func Benchmark_Gqueue_DynamicPush(b *testing.B) {
+    b.N = bn
     for i := 0; i < b.N; i++ {
         qdynamic.Push(i)
     }
 }
 
-func Benchmark_ChannelInterfacePushAndPop(b *testing.B) {
+func Benchmark_Gqueue_DynamicPop(b *testing.B) {
+    b.N = bn
+    for i := 0; i < b.N; i++ {
+        qdynamic.Pop()
+    }
+}
+
+func Benchmark_Channel_PushAndPop(b *testing.B) {
+    b.N = bn
     for i := 0; i < b.N; i++ {
         cany <- i
         <- cany
     }
 }
-
-func Benchmark_ChannelIntPushAndPop(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        cint <- i
-        <- cint
-    }
-}
-
