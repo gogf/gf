@@ -164,11 +164,10 @@ func (sp *SPath) updateCacheByPath(path string) {
 
 // 格式化name返回符合规范的缓存名称，分隔符号统一为'/'，且前缀必须以'/'开头(类似HTTP URI).
 func (sp *SPath) formatCacheName(name string) string {
-    name = strings.Trim(name, "./")
     if runtime.GOOS != "linux" {
         name = gstr.Replace(name, "\\", "/")
     }
-    return "/" + name
+    return "/" + strings.Trim(name, "./")
 }
 
 // 根据path计算出对应的缓存name
