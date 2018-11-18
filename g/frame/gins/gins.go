@@ -76,10 +76,12 @@ func View(name...string) *gview.View {
         if path == "" {
             path = genv.Get("GF_VIEWPATH")
             if path == "" {
-                path = gfile.SelfDir()
+                if gfile.SelfDir() != gfile.TempDir() {
+                    path = gfile.SelfDir()
+                }
             }
         }
-        view := gview.Get(path)
+        view := gview.New(path)
         // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
         if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
             view.AddPath(p)
@@ -103,7 +105,9 @@ func Config(file...string) *gcfg.Config {
             if path == "" {
                 path = genv.Get("GF_CFGPATH")
                 if path == "" {
-                    path = gfile.SelfDir()
+                    if gfile.SelfDir() != gfile.TempDir() {
+                        path = gfile.SelfDir()
+                    }
                 }
             }
             config := gcfg.New(path, configFile)

@@ -2,9 +2,11 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g/os/gfile"
 )
 
 func main() {
-    s := ""
-	fmt.Println(s[0])
+    fmt.Println(gfile.TempDir())
+    fmt.Println(gfile.SelfDir())
+    fmt.Println(gfile.Pwd())
 }

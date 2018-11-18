@@ -108,10 +108,9 @@ func IsDir(path string) bool {
     return s.IsDir()
 }
 
-// 获取当前工作目录
+// 获取当前工作目录(SelfDir()方法的别名)
 func Pwd() string {
-    pwd, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-    return pwd
+    return SelfDir()
 }
 
 // 判断所给路径是否为文件

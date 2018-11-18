@@ -8,22 +8,22 @@
 package gview
 
 import (
+    "bytes"
+    "errors"
     "fmt"
+    "gitee.com/johng/gf/g/encoding/ghash"
+    "gitee.com/johng/gf/g/encoding/ghtml"
     "gitee.com/johng/gf/g/encoding/gurl"
+    "gitee.com/johng/gf/g/os/gfcache"
+    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/gstr"
     "strings"
     "sync"
-    "bytes"
-    "errors"
     "text/template"
-    "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/encoding/ghash"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/os/gspath"
-    "gitee.com/johng/gf/g/os/gfcache"
-    "gitee.com/johng/gf/g/encoding/ghtml"
 )
 
 // 视图对象
@@ -41,16 +41,17 @@ type Params  = map[string]interface{}
 // 函数映射表
 type FuncMap = map[string]interface{}
 
-// 视图表
-var viewMap = gmap.NewStringInterfaceMap()
-
 // 默认的视图对象
 var viewObj *View
 
 // 初始化默认的视图对象
 func checkAndInitDefaultView() {
     if viewObj == nil {
-        viewObj = Get(".")
+        if gfile.SelfDir() != gfile.TempDir() {
+            viewObj = New(gfile.SelfDir())
+        } else {
+            viewObj = New()
+        }
     }
 }
 
@@ -60,25 +61,17 @@ func ParseContent(content string, params Params) ([]byte, error) {
     return viewObj.ParseContent(content, params)
 }
 
-// 获取或者创建一个视图对象
-func Get(path string) *View {
-    if r := viewMap.Get(path); r != nil {
-        return r.(*View)
-    }
-    v := New(path)
-    viewMap.Set(path, v)
-    return v
-}
-
 // 生成一个视图对象
-func New(path string) *View {
+func New(path...string) *View {
     view := &View {
         paths      : gspath.New(),
         data       : make(map[string]interface{}),
         funcmap    : make(map[string]interface{}),
         delimiters : make([]string, 2),
     }
-    view.SetPath(path)
+    if len(path) > 0 && len(path[0]) > 0 {
+        view.SetPath(path[0])
+    }
     view.SetDelimiters("{{", "}}")
     // 内置方法
     view.BindFunc("text",        view.funcText)
@@ -103,6 +96,11 @@ func New(path string) *View {
 
 // 设置模板目录绝对路径
 func (view *View) SetPath(path string) error {
+    if p := gfile.RealPath(path); p == "" {
+        return errors.New(path + " does not exist")
+    } else {
+        path = p
+    }
     if rp, err := view.paths.Set(path); err != nil {
         glog.Error("gview.SetPath failed:", err.Error())
         return err
@@ -114,6 +112,11 @@ func (view *View) SetPath(path string) error {
 
 // 添加模板目录搜索路径
 func (view *View) AddPath(path string) error {
+    if p := gfile.RealPath(path); p == "" {
+        return errors.New(path + " does not exist")
+    } else {
+        path = p
+    }
     if rp, err := view.paths.Add(path); err != nil {
         glog.Error("gview.AddPath failed:", err.Error())
         return err

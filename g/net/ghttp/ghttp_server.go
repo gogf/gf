@@ -224,7 +224,9 @@ func (s *Server) Start() error {
         }
     }
     // 添加当前可执行文件运行目录到搜索目录
-    s.paths.Add(gfile.SelfDir())
+    if gfile.SelfDir() != gfile.TempDir() {
+        s.paths.Add(gfile.SelfDir())
+    }
     // (开发环境)添加main源码包到搜索目录
     if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
         s.paths.Add(p)
