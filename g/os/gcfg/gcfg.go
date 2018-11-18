@@ -43,7 +43,9 @@ func New(path string, file...string) *Config {
         jsons  : gmap.NewStringInterfaceMap(),
         vc     : gtype.NewBool(),
     }
-    c.SetPath(path)
+    if len(path) > 0 {
+        c.SetPath(path)
+    }
     return c
 }
 

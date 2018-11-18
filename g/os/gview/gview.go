@@ -96,11 +96,6 @@ func New(path...string) *View {
 
 // 设置模板目录绝对路径
 func (view *View) SetPath(path string) error {
-    if p := gfile.RealPath(path); p == "" {
-        return errors.New(path + " does not exist")
-    } else {
-        path = p
-    }
     if rp, err := view.paths.Set(path); err != nil {
         glog.Error("gview.SetPath failed:", err.Error())
         return err
@@ -112,11 +107,6 @@ func (view *View) SetPath(path string) error {
 
 // 添加模板目录搜索路径
 func (view *View) AddPath(path string) error {
-    if p := gfile.RealPath(path); p == "" {
-        return errors.New(path + " does not exist")
-    } else {
-        path = p
-    }
     if rp, err := view.paths.Add(path); err != nil {
         glog.Error("gview.AddPath failed:", err.Error())
         return err
