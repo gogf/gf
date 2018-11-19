@@ -108,7 +108,7 @@ type Sql struct {
 }
 
 // 返回数据表记录值
-type Value = *gvar.Var
+type Value = gvar.VarRead
 
 // 返回数据表记录Map
 type Record map[string]Value

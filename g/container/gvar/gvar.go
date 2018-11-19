@@ -8,14 +8,43 @@
 package gvar
 
 import (
-    "time"
-    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/util/gconv"
+    "time"
 )
 
 type Var struct {
     value interface{} // 变量值
     safe  bool        // 当为true时,value为 *gtype.Interface 类型
+}
+
+// 只读变量接口
+type VarRead interface {
+    Val() interface{}
+    IsNil() bool
+    Bytes() []byte
+    String() string
+    Bool() bool
+    Int() int
+    Int8() int8
+    Int16() int16
+    Int32() int32
+    Int64() int64
+    Uint() uint
+    Uint8() uint8
+    Uint16() uint16
+    Uint32() uint32
+    Uint64() uint64
+    Float32() float32
+    Float64() float64
+    Interface() interface{}
+    Ints() []int
+    Floats() []float64
+    Strings() []string
+    Interfaces() []interface{}
+    Time(format ...string) time.Time
+    TimeDuration() time.Duration
+    Struct(objPointer interface{}, attrMapping ...map[string]string) error
 }
 
 // 创建一个动态变量，value参数可以为nil
@@ -28,6 +57,16 @@ func New(value interface{}, safe...bool) *Var {
         v.value = value
     }
     return v
+}
+
+// 创建一个只读动态变量，value参数可以为nil
+func NewRead(value interface{}, safe...bool) VarRead {
+    return VarRead(New(value, safe...))
+}
+
+// 返回动态变量的只读接口
+func (v *Var) ReadOnly() VarRead {
+    return VarRead(v)
 }
 
 func (v *Var) Set(value interface{}) (old interface{}) {
@@ -48,6 +87,7 @@ func (v *Var) Val() interface{} {
     }
 }
 
+// Val() 别名
 func (v *Var) Interface() interface{} {
     return v.Val()
 }

@@ -7,10 +7,10 @@ import (
 
 func main() {
     gdb.AddDefaultConfigNode(gdb.ConfigNode {
-        Host    : "127.0.0.1",
+        Host    : "192.168.1.11",
         Port    : "3306",
         User    : "root",
-        Pass    : "123456",
+        Pass    : "8692651",
         Name    : "test",
         Type    : "mysql",
         Role    : "master",

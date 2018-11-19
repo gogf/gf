@@ -131,7 +131,7 @@ func (c *Config) Get(pattern string, file...string) interface{} {
 }
 
 // 获得配置项，返回动态变量
-func (c *Config) GetVar(pattern string, file...string) *gvar.Var {
+func (c *Config) GetVar(pattern string, file...string) gvar.VarRead {
     if j := c.getJson(file...); j != nil {
         return gvar.New(j.Get(pattern))
     }

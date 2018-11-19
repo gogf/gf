@@ -26,7 +26,7 @@ func (r *Request) GetRequest(key string, def ... []string) []string {
     return v
 }
 
-func (r *Request) GetRequestVar(key string, def ... interface{}) *gvar.Var {
+func (r *Request) GetRequestVar(key string, def ... interface{}) gvar.VarRead {
     value := r.GetRequest(key)
     if value != nil {
         return gvar.New(value)
