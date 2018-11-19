@@ -55,7 +55,7 @@ func (s *Server) getHandlerRegisterCallerLine(handler *handlerItem) string {
 }
 
 // 路由注册处理方法。
-// 如果带有hook参数，表示是回调注册方法，否则为普通路由执行方法。
+// 如果带有hook参数，表示是回调注册方法; 否则为普通路由执行方法。
 func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... string) (resultErr error) {
     // Web Server正字运行时无法动态注册路由方法
     if s.Status() == SERVER_STATUS_RUNNING {
@@ -69,6 +69,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     if err != nil {
         return errors.New("invalid pattern")
     }
+    // 注册地址记录及重复注册判断
     regkey := s.hookHandlerKey(hookName, method, uri, domain)
     caller := s.getHandlerRegisterCallerLine(handler)
     if item, ok := s.routesMap[regkey]; ok {
@@ -156,8 +157,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
             }
         }
     }
-    // 得到的lists是该路由规则一路匹配下来相关的模糊匹配链表(注意不是这棵树所有的链表)，
-    // 从头开始遍历每个节点的模糊匹配链表，将该路由项插入进去(按照优先级高的放在前面)
+    // 上面循环后得到的lists是该路由规则一路匹配下来相关的模糊匹配链表(注意不是这棵树所有的链表)。
+    // 下面从头开始遍历每个节点的模糊匹配链表，将该路由项插入进去(按照优先级高的放在lists链表的前面)
     item := (*handlerItem)(nil)
     for _, l := range lists {
         pushed  := false
@@ -173,6 +174,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
                     break
                 }
             }
+            // 如果路由注册项不相等，那么判断优先级，决定插入顺序
             if s.compareRouterPriority(handler.router, item.router) {
                 l.InsertBefore(handler, e)
                 pushed = true

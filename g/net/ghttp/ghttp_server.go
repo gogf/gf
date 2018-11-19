@@ -33,6 +33,75 @@ import (
     "time"
 )
 
+type (
+    // Server结构体
+    Server struct {
+        // 基本属性变量
+        name             string                         // 服务名称，方便识别
+        paths            *gspath.SPath                  // 静态文件检索对象(类似nginx tryfile功能)
+        config           ServerConfig                   // 配置对象
+        servers          []*gracefulServer              // 底层http.Server列表
+        methodsMap       map[string]struct{}            // 所有支持的HTTP Method(初始化时自动填充)
+        servedCount      *gtype.Int                     // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
+        // 服务注册相关
+        serveTree        map[string]interface{}         // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+        hooksTree        map[string]interface{}         // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+        serveCache       *gmap.StringInterfaceMap       // 服务注册路由内存缓存
+        hooksCache       *gmap.StringInterfaceMap       // 事件回调路由内存缓存
+        routesMap        map[string]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
+        // 自定义状态码回调
+        hsmu             sync.RWMutex                   // status handler互斥锁
+        statusHandlerMap map[string]HandlerFunc         // 不同状态码下的注册处理方法(例如404状态时的处理方法)
+        // SESSION
+        sessions         *gcache.Cache                  // Session内存缓存
+        // Logger
+        logger           *glog.Logger                   // 日志管理对象
+    }
+
+    // 路由对象
+    Router struct {
+        Uri      string       // 注册时的pattern - uri
+        Method   string       // 注册时的pattern - method
+        Domain   string       // 注册时的pattern - domain
+        RegRule  string       // 路由规则解析后对应的正则表达式
+        RegNames []string     // 路由规则解析后对应的变量名称数组
+        Priority int          // 优先级，用于链表排序，值越大优先级越高
+    }
+
+    // http回调函数注册信息
+    handlerItem struct {
+        name     string       // 注册的方法名称信息
+        rtype    int          // 注册方式(执行对象/回调函数/控制器)
+        ctype    reflect.Type // 控制器类型(反射类型)
+        fname    string       // 回调方法名称
+        faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
+        finit    HandlerFunc  // 初始化请求回调方法(执行对象注册方式下有效)
+        fshut    HandlerFunc  // 完成请求回调方法(执行对象注册方式下有效)
+        router   *Router      // 注册时绑定的路由对象
+    }
+
+    // 根据特定URL.Path解析后的路由检索结果项
+    handlerParsedItem struct {
+        handler  *handlerItem         // 路由注册项
+        values   map[string][]string  // 特定URL.Path的Router解析参数
+    }
+
+    // 已注册的路由项
+    registeredRouteItem struct {
+        file     string               // 文件路径及行数地址
+        handler  *handlerItem         // 路由注册项
+    }
+
+    // pattern与回调函数的绑定map
+    handlerMap  map[string]*handlerItem
+
+    // HTTP注册函数
+    HandlerFunc func(r *Request)
+
+    // 文件描述符map
+    listenerFdMap map[string]string
+)
+
 const (
     SERVER_STATUS_STOPPED      = 0               // Server状态：停止
     SERVER_STATUS_RUNNING      = 1               // Server状态：运行
@@ -42,8 +111,7 @@ const (
     HOOK_AFTER_OUTPUT          = "AfterOutput"
     HOOK_BEFORE_CLOSE          = "BeforeClose"
     HOOK_AFTER_CLOSE           = "AfterClose"
-)
-const (
+
     gHTTP_METHODS              = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
     gDEFAULT_SERVER            = "default"
     gDEFAULT_DOMAIN            = "default"
@@ -54,93 +122,27 @@ const (
     gEXCEPTION_EXIT            = "exit"
 )
 
-// ghttp.Server结构体
-type Server struct {
-    // 基本属性变量
-    name             string                         // 服务名称，方便识别
-    paths            *gspath.SPath                  // 静态文件检索对象(类似nginx tryfile功能)
-    config           ServerConfig                   // 配置对象
-    servers          []*gracefulServer              // 底层http.Server列表
-    methodsMap       map[string]struct{}            // 所有支持的HTTP Method(初始化时自动填充)
-    servedCount      *gtype.Int                     // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
-    // 服务注册相关
-    serveTree        map[string]interface{}         // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-    hooksTree        map[string]interface{}         // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-    serveCache       *gmap.StringInterfaceMap       // 服务注册路由内存缓存
-    hooksCache       *gmap.StringInterfaceMap       // 事件回调路由内存缓存
-    routesMap        map[string]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
-    // 自定义状态码回调
-    hsmu             sync.RWMutex                   // status handler互斥锁
-    statusHandlerMap map[string]HandlerFunc         // 不同状态码下的注册处理方法(例如404状态时的处理方法)
-    // SESSION
-    sessions         *gcache.Cache                  // Session内存缓存
-    // Logger
-    logger           *glog.Logger                   // 日志管理对象
-}
+var (
+    // Server表，用以存储和检索名称与Server对象之间的关联关系
+    serverMapping    = gmap.NewStringInterfaceMap()
 
-// 路由对象
-type Router struct {
-    Uri      string       // 注册时的pattern - uri
-    Method   string       // 注册时的pattern - method
-    Domain   string       // 注册时的pattern - domain
-    RegRule  string       // 路由规则解析后对应的正则表达式
-    RegNames []string     // 路由规则解析后对应的变量名称数组
-    Priority int          // 优先级，用于链表排序，值越大优先级越高
-}
+    // 正常运行的Server数量，如果没有运行、失败或者全部退出，那么该值为0
+    serverRunning    = gtype.NewInt()
 
-// pattern与回调函数的绑定map
-type handlerMap  map[string]*handlerItem
+    // Web Socket默认配置
+    wsUpgrader       = websocket.Upgrader {
+        // 默认允许WebSocket请求跨域，权限控制可以由业务层自己负责，灵活度更高
+        CheckOrigin: func(r *http.Request) bool {
+            return true
+        },
+    }
+    // Web Server已完成服务事件通道，当有事件时表示服务完成，当前进程退出
+    doneChan         = make(chan struct{}, 1000)
 
-// http回调函数注册信息
-type handlerItem struct {
-    name     string       // 注册的方法名称信息
-    rtype    int          // 注册方式(执行对象/回调函数/控制器)
-    ctype    reflect.Type // 控制器类型(反射类型)
-    fname    string       // 回调方法名称
-    faddr    HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
-    finit    HandlerFunc  // 初始化请求回调方法(执行对象注册方式下有效)
-    fshut    HandlerFunc  // 完成请求回调方法(执行对象注册方式下有效)
-    router   *Router      // 注册时绑定的路由对象
-}
+    // 用于服务进程初始化，只能初始化一次，采用“懒初始化”(在server运行时才初始化)
+    serverProcInited = gtype.NewBool()
+)
 
-// 根据特定URL.Path解析后的路由检索结果项
-type handlerParsedItem struct {
-    handler  *handlerItem         // 路由注册项
-    values   map[string][]string  // 特定URL.Path的Router解析参数
-}
-
-// 已注册的路由项
-type registeredRouteItem struct {
-    file     string               // 文件路径及行数地址
-    handler  *handlerItem         // 路由注册项
-}
-
-// HTTP注册函数
-type HandlerFunc func(r *Request)
-
-// 文件描述符map
-type listenerFdMap map[string]string
-
-
-// Server表，用以存储和检索名称与Server对象之间的关联关系
-var serverMapping    = gmap.NewStringInterfaceMap()
-
-// 正常运行的Server数量，如果没有运行、失败或者全部退出，那么该值为0
-var serverRunning    = gtype.NewInt()
-
-// Web Socket默认配置
-var wsUpgrader       = websocket.Upgrader {
-    // 默认允许WebSocket请求跨域，权限控制可以由业务层自己负责，灵活度更高
-    CheckOrigin: func(r *http.Request) bool {
-        return true
-    },
-}
-
-// Web Server已完成服务事件通道，当有事件时表示服务完成，当前进程退出
-var doneChan         = make(chan struct{}, 1000)
-
-// 用于服务进程初始化，只能初始化一次，采用“懒初始化”(在server运行时才初始化)
-var serverProcInited = gtype.NewBool()
 
 // Web Server进程初始化.
 // 注意该方法不能放置于包初始化方法init中，不使用ghttp.Server的功能便不能初始化对应的协程goroutine逻辑.
