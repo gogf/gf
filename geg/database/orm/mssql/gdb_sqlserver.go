@@ -3,24 +3,24 @@ package main
 import (
     "fmt"
     "time"
-    //_ "github.com/mattn/go-oci8"
+    //_ "github.com/denisenkom/go-mssqldb"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g"
 )
 
-// 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
+// 本文件用于gf框架的mssql数据库操作示例，不作为单元测试使用
 
 var db *gdb.Db
 
 // 初始化配置及创建数据库
 func init () {
     gdb.AddDefaultConfigNode(gdb.ConfigNode {
-        Host    : "192.168.146.0",
-        Port    : "1521",
+        Host    : "127.0.0.1",
+        Port    : "1433",
         User    : "test",
         Pass    : "test",
-        Name    : "orcl",
-        Type    : "oracle",
+        Name    : "test",
+        Type    : "mssql",
         Role    : "master",
         Charset : "utf8",
      })
@@ -98,10 +98,10 @@ func create() error {
 
     s := `
         CREATE TABLE aa_user (
-            id  number(10) not null,
-            name VARCHAR2(45),
-            age  number(8),
-            addr varchar2(60),
+            id  int not null,
+            name VARCHAR(60),
+            age  int,
+            addr varchar(60),
             PRIMARY KEY (id)
         )
     `
@@ -112,12 +112,12 @@ func create() error {
         return err
     }
 
-    _, err = db.Exec("drop sequence id_seq")
+    /*_, err = db.Exec("drop sequence id_seq")
     if err != nil {
         fmt.Println("drop sequence id_seq", err)
     }
 
-    /*fmt.Println("create sequence id_seq")
+    fmt.Println("create sequence id_seq")
     _, err = db.Exec("create sequence id_seq increment by 1 start with 1 maxvalue 9999999999 cycle cache 10")
     if err != nil {
         fmt.Println("create sequence id_seq error.", err)
@@ -143,8 +143,8 @@ func create() error {
 
     s = `
         CREATE TABLE user_detail (
-            id   number(10) not null,
-            site  VARCHAR2(255),
+            id   int not null,
+            site  VARCHAR(255),
             PRIMARY KEY (id)
         )
     `
@@ -189,7 +189,7 @@ func insert(id int) {
 // 基本sql查询
 func query() {
     fmt.Println("query:")
-    list, err := db.GetAll("select * from aa_user")
+    list, err := db.GetAll("select * from aa_user where id='1'")
     if err == nil {
         fmt.Println(list)
     } else {
@@ -294,7 +294,7 @@ func update3() {
 // 链式查询操作1
 func linkopSelect1() {
     fmt.Println("linkopSelect1:")
-    r, err := db.Table("aa_user u").LeftJoin("user_detail ud", "u.id=ud.id").Fields("u.*, ud.site").Where("u.id > ?", 1).Limit(0, 2).Select()
+    r, err := db.Table("aa_user u").LeftJoin("user_detail ud", "u.id=ud.id").Fields("u.*, ud.site").Where("u.id > ?", 1).Limit(3, 5).Select()
     if err == nil {
         fmt.Println(r)
     } else {
@@ -457,7 +457,7 @@ func transaction1() {
 func transaction2() {
     fmt.Println("transaction2:")
     if tx, err := db.Begin(); err == nil {
-        r, err := tx.Table("user_detail").Data(gdb.Map{"id":5, "site": "www.baidu.com哈哈哈*?~!@#$%^&*()"}).Insert()
+        r, err := tx.Table("user_detail").Data(gdb.Map{"id":6, "site": "www.baidu.com哈哈哈*?''\"~!@#$%^&*()"}).Insert()
         tx.Commit()
         fmt.Println(r, err)
     }
@@ -540,9 +540,10 @@ func main() {
     //test1
     /*for i := 1; i < 5; i++ {
         insert(i)
-    }
+    }*/
+    //insert(2)
     query()
-    */
+    
 
     //batchInsert()
     //query()
@@ -550,10 +551,11 @@ func main() {
     //replace()
     //save()
     
-    //update1()
-    //update2()
-    //update3()
-    
+    /*update1()
+    update2()
+    update3()
+    */
+
     /*linkopSelect1()
     linkopSelect2()
     linkopSelect3()
@@ -575,6 +577,6 @@ func main() {
     //
     //keepPing()
     //likeQuery()
-    mapToStruct()
+    //mapToStruct()
     //getQueriedSqls()
 }
