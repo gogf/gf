@@ -133,6 +133,7 @@ func init() {
 	driverMap["oracle"]  = linkOracle
 	driverMap["sqlite"]  = linkSqlite
 	driverMap["pgsql"]   = linkPgsql
+	driverMap["mssql"]	 = linkMssql
 }
 
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default

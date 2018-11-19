@@ -99,8 +99,9 @@ func (db *dboracle) parseSql(sql *string) *string {
 		}
 
 		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", *sql)
-		queryExpr[0] = strings.TrimRight(queryExpr[0], "LIMIT")
-		queryExpr[0] = strings.TrimRight(queryExpr[0], "limit")
+		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false{
+			break
+		}
 
 		//取limit后面的取值范围
 		first, limit := 0, 0
@@ -117,7 +118,7 @@ func (db *dboracle) parseSql(sql *string) *string {
 		}
 
 		//也可以使用between,据说这种写法的性能会比between好点,里层SQL中的ROWNUM_ >= limit可以缩小查询后的数据集规模
-		*sql = fmt.Sprintf("SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d", queryExpr[0], limit, first)
+		*sql = fmt.Sprintf("SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d", queryExpr[1], queryExpr[2], limit, first)
 	case "INSERT":
 		//获取VALUE的值，匹配所有带括号的值,会将INSERT INTO后的值匹配到，所以下面的判断语句会判断数组长度是否小于3
 		valueExpr, err := gregex.MatchAllString(`(\s*\(([^\(\)]*)\))`, *sql)
