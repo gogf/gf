@@ -37,25 +37,25 @@ type (
     // Server结构体
     Server struct {
         // 基本属性变量
-        name             string                         // 服务名称，方便识别
-        paths            *gspath.SPath                  // 静态文件检索对象(类似nginx tryfile功能)
-        config           ServerConfig                   // 配置对象
-        servers          []*gracefulServer              // 底层http.Server列表
-        methodsMap       map[string]struct{}            // 所有支持的HTTP Method(初始化时自动填充)
-        servedCount      *gtype.Int                     // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
+        name             string                           // 服务名称，方便识别
+        paths            *gspath.SPath                    // 静态文件检索对象(类似nginx tryfile功能)
+        config           ServerConfig                     // 配置对象
+        servers          []*gracefulServer                // 底层http.Server列表
+        methodsMap       map[string]struct{}              // 所有支持的HTTP Method(初始化时自动填充)
+        servedCount      *gtype.Int                       // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
         // 服务注册相关
-        serveTree        map[string]interface{}         // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-        hooksTree        map[string]interface{}         // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-        serveCache       *gmap.StringInterfaceMap       // 服务注册路由内存缓存
-        hooksCache       *gmap.StringInterfaceMap       // 事件回调路由内存缓存
-        routesMap        map[string]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
+        serveTree        map[string]interface{}           // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+        hooksTree        map[string]interface{}           // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+        serveCache       *gmap.StringInterfaceMap         // 服务注册路由内存缓存
+        hooksCache       *gmap.StringInterfaceMap         // 事件回调路由内存缓存
+        routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
         // 自定义状态码回调
-        hsmu             sync.RWMutex                   // status handler互斥锁
-        statusHandlerMap map[string]HandlerFunc         // 不同状态码下的注册处理方法(例如404状态时的处理方法)
+        hsmu             sync.RWMutex                     // status handler互斥锁
+        statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
         // SESSION
-        sessions         *gcache.Cache                  // Session内存缓存
+        sessions         *gcache.Cache                    // Session内存缓存
         // Logger
-        logger           *glog.Logger                   // 日志管理对象
+        logger           *glog.Logger                     // 日志管理对象
     }
 
     // 路由对象
@@ -187,7 +187,7 @@ func GetServer(name...interface{}) (*Server) {
         hooksTree        : make(map[string]interface{}),
         serveCache       : gmap.NewStringInterfaceMap(),
         hooksCache       : gmap.NewStringInterfaceMap(),
-        routesMap        : make(map[string]registeredRouteItem),
+        routesMap        : make(map[string][]registeredRouteItem),
         sessions         : gcache.New(),
         servedCount      : gtype.NewInt(),
         logger           : glog.New(),
@@ -308,11 +308,12 @@ func (s *Server) DumpRoutesMap() {
 // 获得路由表(格式化字符串)
 func (s *Server) GetRouteMap() string {
     type tableItem struct {
-        hook    string
-        domain  string
-        method  string
-        route   string
-        handler string
+        hook     string
+        domain   string
+        method   string
+        route    string
+        handler  string
+        priority int
     }
 
     buf   := bytes.NewBuffer(nil)
@@ -323,31 +324,37 @@ func (s *Server) GetRouteMap() string {
     table.SetCenterSeparator("|")
 
     m := make(map[string]*garray.SortedArray)
-    for k, v := range s.routesMap {
+    for k, registeredItems := range s.routesMap {
         array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
-        item := &tableItem{
-            hook    : array[1],
-            domain  : array[4],
-            method  : array[2],
-            route   : array[3],
-            handler : v.handler.name,
-        }
-        if _, ok := m[item.domain]; !ok {
-            m[item.domain] = garray.NewSortedArray(100, func(v1, v2 interface{}) int {
-                item1 := v1.(*tableItem)
-                item2 := v2.(*tableItem)
-                r := 0
-                if r = strings.Compare(item1.domain, item2.domain); r == 0 {
-                    if r = strings.Compare(item1.route, item2.route); r == 0 {
-                        if r = strings.Compare(item1.method, item2.method); r == 0 {
-                            r = strings.Compare(item1.hook, item2.hook)
+        for index, registeredItem := range registeredItems {
+            item := &tableItem {
+                hook     : array[1],
+                domain   : array[4],
+                method   : array[2],
+                route    : array[3],
+                handler  : registeredItem.handler.name,
+                priority : len(registeredItems) - index - 1,
+            }
+            if _, ok := m[item.domain]; !ok {
+                // 注意排序函数的逻辑
+                m[item.domain] = garray.NewSortedArray(100, func(v1, v2 interface{}) int {
+                    item1 := v1.(*tableItem)
+                    item2 := v2.(*tableItem)
+                    r := 0
+                    if r = strings.Compare(item1.domain, item2.domain); r == 0 {
+                        if r = strings.Compare(item1.route, item2.route); r == 0 {
+                            if r = strings.Compare(item1.method, item2.method); r == 0 {
+                                if r = strings.Compare(item1.hook, item2.hook); r == 0 {
+                                    r = item2.priority - item1.priority
+                                }
+                            }
                         }
                     }
-                }
-                return r
-            }, false)
+                    return r
+                }, false)
+            }
+            m[item.domain].Add(item)
         }
-        m[item.domain].Add(item)
     }
     addr := s.config.Addr
     if s.config.HTTPSAddr != "" {
@@ -361,7 +368,7 @@ func (s *Server) GetRouteMap() string {
             data[1] = addr
             data[2] = item.domain
             data[3] = item.method
-            data[4] = gconv.String(len(strings.Split(item.route, "/")) - 1)
+            data[4] = gconv.String(len(strings.Split(item.route, "/")) - 1 + item.priority)
             data[5] = item.route
             data[6] = item.handler
             data[7] = item.hook
