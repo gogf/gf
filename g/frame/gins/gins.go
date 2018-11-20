@@ -130,7 +130,12 @@ func Database(name...string) *gdb.Db {
     db  := instances.GetOrSetFuncLock(key, func() interface{} {
         m := config.GetMap("database")
         if m == nil {
-            glog.Errorfln(`incomplete configuration for database: "database" node not found in config file "%s"`, config.GetFilePath())
+            if path := config.GetFilePath(); path == "" {
+                glog.Error(`incomplete configuration for database: config file not found`)
+            } else {
+                glog.Errorfln(`incomplete configuration for database: "database" node not found in config file "%s"`, path)
+            }
+            return nil
         }
         for group, v := range m {
             cg := gdb.ConfigGroup{}

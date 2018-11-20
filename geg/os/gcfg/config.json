@@ -1,0 +1,33 @@
+{
+    "viewpath"   : "/home/www/templates/",
+    "database"   : {
+        "default" : [
+            {
+                "host"     : "127.0.0.1",
+                "port"     : "3306",
+                "user"     : "root",
+                "pass"     : "123456",
+                "name"     : "test",
+                "type"     : "mysql",
+                "role"     : "master",
+                "charset"  : "utf8",
+                "priority" : "1"
+            },
+            {
+                "host"     : "127.0.0.1",
+                "port"     : "3306",
+                "user"     : "root",
+                "pass"     : "123456",
+                "name"     : "test",
+                "type"     : "mysql",
+                "role"     : "master",
+                "charset"  : "utf8",
+                "priority" : "1"
+            }
+        ]
+    },
+    "redis"   : {
+        "disk"  : "127.0.0.1:6379,0",
+        "cache" : "127.0.0.1:6379,1"
+    }
+}
