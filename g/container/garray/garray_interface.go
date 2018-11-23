@@ -66,10 +66,38 @@ func (a *Array) InsertAfter(index int, value interface{}) {
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
 func (a *Array) Remove(index int) interface{} {
-    a.mu.Lock()
-    defer a.mu.Unlock()
+    // 边界删除判断，以提高删除效率
+    if index == 0 {
+        value  := a.array[0]
+        a.array = a.array[1 : ]
+        return value
+    } else if index == len(a.array) - 1 {
+        value  := a.array[index]
+        a.array = a.array[: index]
+        return value
+    }
+    // 如果非边界删除，会涉及到数组创建，那么删除的效率差一些
     value  := a.array[index]
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
+    return value
+}
+
+// 将最左端(索引为0)的数据项移出数组，并返回该数据项
+func (a *Array) PopLeft() interface{} {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    value  := a.array[0]
+    a.array = a.array[1 : ]
+    return value
+}
+
+// 将最右端(索引为length - 1)的数据项移出数组，并返回该数据项
+func (a *Array) PopRight() interface{} {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    index  := len(a.array) - 1
+    value  := a.array[index]
+    a.array = a.array[: index]
     return value
 }
 

@@ -33,11 +33,10 @@ type Request struct {
     Router        *Router                 // 匹配到的路由对象
     EnterTime     int64                   // 请求进入时间(微秒)
     LeaveTime     int64                   // 请求完成时间(微秒)
-    params        map[string]gvar.VarRead // 开发者自定义参数(请求流程中有效)
+    params        map[string]interface{}  // 开发者自定义参数(请求流程中有效)
     parsedHost    string                  // 解析过后不带端口号的服务器域名名称
     clientIp      string                  // 解析过后的客户端IP地址
     isFileRequest bool                    // 是否为静态文件请求(非服务请求，当静态文件存在时，优先级会被服务请求高，被识别为文件请求)
-    isFileServe   bool                    // 是否为文件处理(调用Server.serveFile时设置为true), isFileRequest为true时isFileServe也为true
 }
 
 // 创建一个Request对象
@@ -74,6 +73,7 @@ func (r *Request) Get(key string, def ... string) string {
     return r.GetRequestString(key, def...)
 }
 
+// 建议都用该参数替代参数获取
 func (r *Request) GetVar(key string, def ... interface{}) gvar.VarRead {
     return r.GetRequestVar(key, def...)
 }
@@ -173,11 +173,6 @@ func (r *Request) IsFileRequest() bool {
     return r.isFileRequest
 }
 
-// 判断请求是否为文件处理
-func (r *Request) IsFileServe() bool {
-    return r.isFileServe
-}
-
 // 判断是否为AJAX请求
 func (r *Request) IsAjaxRequest() bool {
     return strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest")
@@ -203,7 +198,7 @@ func (r *Request) GetReferer() string {
     return r.Header.Get("Referer")
 }
 
-// 获得结构体顶替的参数名称标签，构成map返回
+// 获得结构体对象的参数名称标签，构成map返回
 func (r *Request) getStructParamsTagMap(object interface{}) map[string]string {
     tagmap := make(map[string]string)
     fields := structs.Fields(object)

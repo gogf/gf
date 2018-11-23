@@ -9,6 +9,7 @@ package ghttp
 
 import (
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/container/gvar"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/grand"
@@ -30,11 +31,12 @@ func makeSessionId() string {
     return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 32) + grand.RandStr(3))
 }
 
-// 获取或者生成一个session对象
+// 获取或者生成一个session对象(延迟初始化)
 func GetSession(r *Request) *Session {
+    if r.Session != nil {
+        return r.Session
+    }
     return &Session {
-        data    : gmap.NewStringInterfaceMap(),
-        server  : r.Server,
         request : r,
     }
 }
@@ -42,8 +44,9 @@ func GetSession(r *Request) *Session {
 // 执行初始化(用于延迟初始化)
 func (s *Session) init() {
     if len(s.id) == 0 {
-        s.id   = s.request.Cookie.SessionId()
-        s.data = s.server.sessions.GetOrSetFuncLock(s.id, func() interface{} {
+        s.id     = s.request.Cookie.SessionId()
+        s.server = s.request.Server
+        s.data   = s.server.sessions.GetOrSetFuncLock(s.id, func() interface{} {
             return gmap.NewStringInterfaceMap()
         }, s.server.GetSessionMaxAge()).(*gmap.StringInterfaceMap)
     }
@@ -68,13 +71,13 @@ func (s *Session) Set(key string, value interface{}) {
 }
 
 // 批量设置(BatchSet别名)
-func (s *Session) Sets (m map[string]interface{}) {
+func (s *Session) Sets(m map[string]interface{}) {
     s.init()
     s.BatchSet(m)
 }
 
 // 批量设置
-func (s *Session) BatchSet (m map[string]interface{}) {
+func (s *Session) BatchSet(m map[string]interface{}) {
     s.init()
     s.data.BatchSet(m)
 }
@@ -85,13 +88,24 @@ func (s *Session) Contains (key string) bool {
     return s.data.Contains(key)
 }
 
-// 获取session
+// 获取SESSION
 func (s *Session) Get (key string) interface{}  {
     s.init()
     return s.data.Get(key)
 }
-func (s *Session) GetString (key string) string { return gconv.String(s.Get(key)) }
-func (s *Session) GetBool(key string) bool      { return gconv.Bool(s.Get(key))   }
+
+// 获取SESSION，建议都用该方法获取参数
+func (s *Session) GetVar(key string) gvar.VarRead  {
+    s.init()
+    if v := s.data.Get(key); v != nil {
+        return gvar.NewRead(v, false)
+    }
+    return nil
+}
+
+
+func (s *Session) GetString (key string)        string          { return gconv.String(s.Get(key)) }
+func (s *Session) GetBool(key string)           bool            { return gconv.Bool(s.Get(key))   }
 
 func (s *Session) GetInt(key string)            int             { return gconv.Int(s.Get(key))   }
 func (s *Session) GetInt8(key string)           int8            { return gconv.Int8(s.Get(key))  }
@@ -105,8 +119,8 @@ func (s *Session) GetUint16(key string)         uint16          { return gconv.U
 func (s *Session) GetUint32(key string)         uint32          { return gconv.Uint32(s.Get(key)) }
 func (s *Session) GetUint64(key string)         uint64          { return gconv.Uint64(s.Get(key)) }
 
-func (s *Session) GetFloat32 (key string) float32 { return gconv.Float32(s.Get(key)) }
-func (s *Session) GetFloat64 (key string) float64 { return gconv.Float64(s.Get(key)) }
+func (s *Session) GetFloat32 (key string)       float32         { return gconv.Float32(s.Get(key)) }
+func (s *Session) GetFloat64 (key string)       float64         { return gconv.Float64(s.Get(key)) }
 
 func (s *Session) GetBytes(key string)          []byte          { return gconv.Bytes(s.Get(key))      }
 func (s *Session) GetInts(key string)           []int           { return gconv.Ints(s.Get(key))       }
@@ -123,13 +137,13 @@ func (s *Session) GetStruct(key string, objPointer interface{}, attrMapping...ma
 }
 
 // 删除session
-func (s *Session) Remove (key string) {
+func (s *Session) Remove(key string) {
     s.init()
     s.data.Remove(key)
 }
 
 // 清空session
-func (s *Session) Clear () {
+func (s *Session) Clear() {
     s.init()
     s.data.Clear()
 }

@@ -13,6 +13,7 @@ import "gitee.com/johng/gf/g/os/glog"
 func (s *Server) SetSessionMaxAge(age int) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     s.config.SessionMaxAge = age
 }
@@ -21,6 +22,7 @@ func (s *Server) SetSessionMaxAge(age int) {
 func (s *Server) SetSessionIdName(name string) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     s.config.SessionIdName = name
 }

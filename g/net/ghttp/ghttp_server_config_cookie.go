@@ -16,6 +16,7 @@ import (
 func (s *Server)SetCookieMaxAge(age int) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     s.config.CookieMaxAge = age
 }
@@ -24,6 +25,7 @@ func (s *Server)SetCookieMaxAge(age int) {
 func (s *Server)SetCookiePath(path string) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     s.config.CookiePath = path
 }
@@ -32,6 +34,7 @@ func (s *Server)SetCookiePath(path string) {
 func (s *Server)SetCookieDomain(domain string) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     s.config.CookieDomain = domain
 }

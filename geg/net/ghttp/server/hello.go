@@ -9,7 +9,7 @@ func main() {
     s := g.Server()
     s.SetIndexFolder(true)
     s.BindHandler("/", func(r *ghttp.Request){
-        r.Response.Writeln("哈喽世界！")
+        r.Response.ServeFileDownload("/Users/john/Temp/edrawmax-cn-9.3.dmg")
     })
     s.SetPort(8199)
     s.Run()

@@ -16,7 +16,7 @@ func main() {
     //gfsnotify.Remove(path)
 
     if err != nil {
-        glog.Fatalln(err)
+        glog.Fatal(err)
     } else {
         select {}
     }

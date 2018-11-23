@@ -215,32 +215,35 @@ func (s *Server) Start() error {
         return errors.New("server is already running")
     }
 
-    // 如果设置了静态文件目录，那么优先按照静态文件目录进行检索，其次是当前可执行文件工作目录；
-    // 并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索。
-    if s.config.ServerRoot != "" {
-        if rp, err := s.paths.Set(s.config.ServerRoot); err != nil {
-            glog.Error("ghttp.SetServerRoot failed:", err.Error())
-            return err
-        } else {
-            glog.Debug("ghttp.SetServerRoot:", rp)
+    // 仅在开启静态文件服务的时候有效
+    if s.config.FileServerEnabled {
+        // 如果设置了静态文件目录，那么优先按照静态文件目录进行检索，其次是当前可执行文件工作目录；
+        // 并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索。
+        if s.config.ServerRoot != "" {
+            if rp, err := s.paths.Set(s.config.ServerRoot); err != nil {
+                glog.Error("ghttp.SetServerRoot failed:", err.Error())
+                return err
+            } else {
+                glog.Debug("ghttp.SetServerRoot:", rp)
+            }
         }
+        // 添加当前可执行文件运行目录到搜索目录
+        if gfile.SelfDir() != gfile.TempDir() {
+            s.paths.Add(gfile.SelfDir())
+        }
+        // (开发环境)添加main源码包到搜索目录
+        if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
+            s.paths.Add(p)
+        }
+        // (安全控制)不能访问当前执行文件
+        s.paths.Remove(gfile.SelfPath())
     }
-    // 添加当前可执行文件运行目录到搜索目录
-    if gfile.SelfDir() != gfile.TempDir() {
-        s.paths.Add(gfile.SelfDir())
-    }
-    // (开发环境)添加main源码包到搜索目录
-    if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
-        s.paths.Add(p)
-    }
-    // (安全控制)不能访问当前执行文件
-    s.paths.Remove(gfile.SelfPath())
 
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
-    // 不允许访问的路由注册(通过HOOK实现)
+    // 不允许访问的路由注册(使用HOOK实现)
     if s.config.DenyRoutes != nil {
         for _, v := range s.config.DenyRoutes {
             s.BindHookHandler(v, HOOK_BEFORE_SERVE, func(r *Request) {

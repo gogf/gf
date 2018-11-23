@@ -11,16 +11,16 @@ import "gitee.com/johng/gf/g/container/gvar"
 // 设置请求流程共享变量
 func (r *Request) SetParam(key string, value interface{}) {
     if r.params == nil {
-        r.params = make(map[string]gvar.VarRead)
+        r.params = make(map[string]interface{})
     }
-    r.params[key] = gvar.New(value, false)
+    r.params[key] = value
 }
 
 // 获取请求流程共享变量
 func (r *Request) GetParam(key string) gvar.VarRead {
     if r.params != nil {
         if v, ok := r.params[key]; ok {
-            return v
+            return gvar.New(v, false).ReadOnly()
         }
     }
     return nil

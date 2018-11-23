@@ -15,6 +15,7 @@ import (
 func (s *Server)SetLogPath(path string) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     if len(path) == 0 {
         return
@@ -27,6 +28,7 @@ func (s *Server)SetLogPath(path string) {
 func (s *Server)SetAccessLogEnabled(enabled bool) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     s.config.AccessLogEnabled = enabled
 }
@@ -35,6 +37,7 @@ func (s *Server)SetAccessLogEnabled(enabled bool) {
 func (s *Server)SetErrorLogEnabled(enabled bool) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     s.config.ErrorLogEnabled = enabled
 }
@@ -43,6 +46,7 @@ func (s *Server)SetErrorLogEnabled(enabled bool) {
 func (s *Server) SetLogHandler(handler LogHandler) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
     }
     s.config.LogHandler = handler
 }

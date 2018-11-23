@@ -15,7 +15,6 @@ import (
     "os"
     "reflect"
     "sort"
-    "strings"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -30,7 +29,9 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 去掉末尾的"/"号
     if r.URL.Path != "/" {
-        r.URL.Path = strings.TrimRight(r.URL.Path, "/")
+        for r.URL.Path[len(r.URL.Path) - 1] == '/' {
+            r.URL.Path = r.URL.Path[:len(r.URL.Path) - 1]
+        }
     }
 
     // 创建请求处理对象
@@ -57,10 +58,14 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 静态文件 > 动态服务 > 静态目录
     // ============================================================
 
+    staticFile  := ""
+    isStaticDir := false
     // 优先执行静态文件检索(检测是否存在对应的静态文件，包括index files处理)
-    staticFile, isStaticDir := s.paths.Search(r.URL.Path, s.config.IndexFiles...)
-    if staticFile != "" {
-        request.isFileRequest = true
+    if s.config.FileServerEnabled {
+        staticFile, isStaticDir = s.paths.Search(r.URL.Path, s.config.IndexFiles...)
+        if staticFile != "" {
+            request.isFileRequest = true
+        }
     }
 
     // 动态服务检索
@@ -75,13 +80,18 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         }
     }
 
+    // 判断最终对该请求提供的服务方式
+    if isStaticDir && handler != nil {
+        request.isFileRequest = false
+    }
+
     // 事件 - BeforeServe
     s.callHookHandler(HOOK_BEFORE_SERVE, request)
 
     // 执行静态文件服务/回调控制器/执行对象/方法
     if !request.IsExited() {
         // 需要再次判断文件是否真实存在，因为文件检索可能使用了缓存，从健壮性考虑这里需要二次判断
-        if request.IsFileRequest() && !isStaticDir /* && gfile.Exists(staticFile) */{
+        if request.isFileRequest /* && gfile.Exists(staticFile) */{
             // 静态文件
             s.serveFile(request, staticFile)
         } else {
@@ -176,9 +186,15 @@ func (s *Server)listDir(r *Request, f http.File) {
 
     r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
     r.Response.Write("<pre>\n")
+    if r.URL.Path != "/" {
+        r.Response.Write(fmt.Sprint("<a href=\"..\">..</a>\n"))
+    }
     for _, file := range files {
         name := file.Name()
-        r.Response.Write(fmt.Sprintf("<a href=\"%s/%s\">%s</a>\n", r.URL.Path, name, ghtml.SpecialChars(name)))
+        if file.IsDir() {
+            name += "/"
+        }
+        r.Response.Write(fmt.Sprintf("<a href=\"%s\">%s</a>\n", name, ghtml.SpecialChars(name)))
     }
     r.Response.Write("</pre>\n")
 }

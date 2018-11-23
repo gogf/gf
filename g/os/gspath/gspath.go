@@ -170,28 +170,33 @@ func (sp *SPath) formatCacheName(name string) string {
     return "/" + strings.Trim(name, "./")
 }
 
-// 根据path计算出对应的缓存name
-func (sp *SPath) nameFromPath(filePath, dirPath string) string {
-    name  := gstr.Replace(filePath, dirPath, "")
+// 根据path计算出对应的缓存name, dirPath为检索根目录路径
+func (sp *SPath) nameFromPath(filePath, rootPath string) string {
+    name  := gstr.Replace(filePath, rootPath, "")
     name   = sp.formatCacheName(name)
     return name
 }
 
 // 添加path到缓存中(递归)
-func (sp *SPath) addToCache(filePath, dirPath string) {
+func (sp *SPath) addToCache(filePath, rootPath string) {
     // 首先添加自身
     idDir := gfile.IsDir(filePath)
-    sp.cache.SetIfNotExist(sp.nameFromPath(filePath, dirPath), func() interface{} {
+    sp.cache.SetIfNotExist(sp.nameFromPath(filePath, rootPath), func() interface{} {
         return &SPathCacheItem {
             path  : filePath,
             isDir : idDir,
         }
     })
-    // 如果添加的是目录，那么需要递归
+    // 如果添加的是目录，那么需要递归添加
     if idDir {
         if files, err := gfile.ScanDir(filePath, "*", true); err == nil {
             for _, path := range files {
-                sp.addToCache(path, dirPath)
+                sp.cache.SetIfNotExist(sp.nameFromPath(path, rootPath), func() interface{} {
+                    return &SPathCacheItem {
+                        path  : filePath,
+                        isDir : gfile.IsDir(path),
+                    }
+                })
             }
         }
     }
