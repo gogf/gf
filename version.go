@@ -1,5 +1,5 @@
 package gf
 
-const VERSION  = "v1.2.10"
+const VERSION  = "v1.3.1"
 const AUTHORS  = "john<john@johng.cn>"
 
