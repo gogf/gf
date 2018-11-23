@@ -1,11 +1,10 @@
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "gitee.com/johng/gf/g/os/gtime"
+)
 
 func main() {
-    s := "我是中国人//"
-    for _, v := range s {
-        fmt.Println(v)
-    }
-    fmt.Println(s)
+    fmt.Println(gtime.Now())
 }

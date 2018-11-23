@@ -179,9 +179,15 @@ func (r *Response) ServeFileDownload(path string, name...string) {
         r.WriteStatus(http.StatusNotFound)
         return
     }
+    downloadName := ""
+    if len(name) > 0 {
+        downloadName = name[0]
+    } else {
+        downloadName = gfile.Basename(path)
+    }
     r.Header().Set("Content-Type",        "application/force-download")
     r.Header().Set("Accept-Ranges",       "bytes")
-    r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, gfile.Basename(path)))
+    r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, downloadName))
     r.Server.serveFile(r.request, path)
 }
 

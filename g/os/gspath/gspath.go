@@ -23,8 +23,8 @@ import (
 
 // 文件目录搜索管理对象
 type SPath struct {
-    paths *garray.StringArray       // 搜索路径，按照优先级进行排序
-    cache *gmap.StringInterfaceMap  // 搜索结果缓存map
+    paths *garray.StringArray    // 搜索路径，按照优先级进行排序
+    cache *gmap.StringStringMap  // 搜索结果缓存map
 }
 
 // 文件搜索缓存项
@@ -37,7 +37,7 @@ type SPathCacheItem struct {
 func New () *SPath {
     return &SPath {
         paths : garray.NewStringArray(0, 2),
-        cache : gmap.NewStringInterfaceMap(),
+        cache : gmap.NewStringStringMap(),
     }
 }
 
@@ -108,24 +108,22 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 // 给定的name只是相对文件路径，找不到该文件时，返回空字符串;
 // 当给定indexFiles时，如果name时一个目录，那么会进一步检索其下对应的indexFiles文件是否存在，存在则返回indexFile绝对路径；
 // 否则返回name目录绝对路径。
-func (sp *SPath) Search(name string, indexFiles...string) (path string, isDir bool) {
+func (sp *SPath) Search(name string, indexFiles...string) (filePath string, isDir bool) {
     name = sp.formatCacheName(name)
-    if v := sp.cache.Get(name); v != nil {
-        item := v.(*SPathCacheItem)
-        if len(indexFiles) > 0 && item.isDir {
+    if v := sp.cache.Get(name); v != "" {
+        filePath, isDir = sp.parseCacheValue(v)
+        if len(indexFiles) > 0 && isDir {
             if name == "/" {
                 name = ""
             }
             for _, file := range indexFiles {
-                if v := sp.cache.Get(name + "/" + file); v != nil {
-                    item := v.(*SPathCacheItem)
-                    return item.path, item.isDir
+                if v := sp.cache.Get(name + "/" + file); v != "" {
+                    return sp.parseCacheValue(v)
                 }
             }
         }
-        return item.path, item.isDir
     }
-    return "", false
+    return
 }
 
 // 从搜索路径中移除指定的文件，这样该文件无法给搜索。
@@ -177,26 +175,32 @@ func (sp *SPath) nameFromPath(filePath, rootPath string) string {
     return name
 }
 
+// 按照一定数据结构生成缓存的数据项字符串
+func (sp *SPath) makeCacheValue(filePath string, isDir bool) string {
+    if isDir {
+        return filePath + "_D_"
+    }
+    return filePath + "_F_"
+}
+
+// 按照一定数据结构解析数据项字符串
+func (sp *SPath) parseCacheValue(value string) (filePath string, isDir bool) {
+    if value[len(value) - 2 : len(value) - 1][0] == 'F' {
+        return value[: len(value) - 3], false
+    }
+    return value[: len(value) - 3], true
+}
+
 // 添加path到缓存中(递归)
 func (sp *SPath) addToCache(filePath, rootPath string) {
     // 首先添加自身
     idDir := gfile.IsDir(filePath)
-    sp.cache.SetIfNotExist(sp.nameFromPath(filePath, rootPath), func() interface{} {
-        return &SPathCacheItem {
-            path  : filePath,
-            isDir : idDir,
-        }
-    })
+    sp.cache.SetIfNotExist(sp.nameFromPath(filePath, rootPath), sp.makeCacheValue(filePath, idDir))
     // 如果添加的是目录，那么需要递归添加
     if idDir {
         if files, err := gfile.ScanDir(filePath, "*", true); err == nil {
             for _, path := range files {
-                sp.cache.SetIfNotExist(sp.nameFromPath(path, rootPath), func() interface{} {
-                    return &SPathCacheItem {
-                        path  : filePath,
-                        isDir : gfile.IsDir(path),
-                    }
-                })
+                sp.cache.SetIfNotExist(sp.nameFromPath(path, rootPath), sp.makeCacheValue(path, gfile.IsDir(path)))
             }
         }
     }
