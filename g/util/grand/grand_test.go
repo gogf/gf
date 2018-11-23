@@ -9,12 +9,22 @@
 package grand_test
 
 import (
-    "testing"
     "gitee.com/johng/gf/g/util/grand"
+    "testing"
 )
+
+var buffer = make([]byte, 8)
 
 func Benchmark_Rand(b *testing.B) {
     for i := 0; i < b.N; i++ {
         grand.Rand(0, 999999999)
     }
 }
+
+//func Benchmark_Buffer(b *testing.B) {
+//    for i := 0; i < b.N; i++ {
+//        if _, err := rand.Read(buffer); err == nil {
+//            binary.LittleEndian.Uint64(buffer)
+//        }
+//    }
+//}
