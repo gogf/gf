@@ -1,3 +1,49 @@
+# `v1.2.11`
+## 新特性
+1. `ORM`新增对`SQLServer`及`Oracle`的支持([https://gfer.me/database/orm/database](https://gfer.me/database/orm/database))；
+1. 完成`gvalid`模块校验结果的顺序特性([https://gfer.me/util/gvalid/checkmap](https://gfer.me/util/gvalid/checkmap));
+1. 改进`ghttp.Request.Exit`，使得调用该方法时立即退出业务执行，开发者无需调用`Exit`方法时再使用`return`返回([https://gfer.me/net/ghttp/service/object](https://gfer.me/net/ghttp/service/object))；
+1. 模板引擎新增若干内置函数:`text/html/htmldecode/url/urldecode/date/compare/substr/strlimit/hidestr/highlight/toupper/tolower/nl2br` ([https://gfer.me/os/gview/funcs](https://gfer.me/os/gview/funcs));
+1. 模板引擎新增内置变量`Config` ([https://gfer.me/os/gview/vars](https://gfer.me/os/gview/vars));
+1. 改进`gconv.Struct`转换默认规则，支持不区分大小写的键名与属性名称匹配；
+1. `gform`配置文件支持`linkinfo`自定义数据库连接字段([https://gfer.me/database/orm/config](https://gfer.me/database/orm/config))；
+1. `gfsnotify`模块增加对特定回调的取消注册功能（[https://gfer.me/os/gfsnotify/index](https://gfer.me/os/gfsnotify/index)）；
+
+
+## 新功能
+1. 改进`ghttp.Request`，增加`SetParam/GetParam`请求流程自定义变量设置/获取方法，用于在请求流程中的回调函数共享变量（[https://gfer.me/net/ghttp/request](https://gfer.me/net/ghttp/request)）;
+1. 改进`ghttp.Response`，增加`ServeFileDownload`方法，用于WebServer引导客户端下载文件([https://gfer.me/net/ghttp/response](https://gfer.me/net/ghttp/response));
+1. `gvar`模块新增`gvar.VarRead`只读接口，用于控制对外只暴露数据读取功能；
+1. 增加`g.Throw`抛异常方法，`g.TryCatch`异常捕获方法封装;
+1. 改进`gcron`模块，增加自定义的Cron管理对象，增加`New/Start/Stop`方法;
+
+
+## 功能改进
+1. WebServer添加`RouterCacheExpire`配置参数，用于设置路由检索缓存过期时间；
+1. WebServer允许同一`HOOK`事件被多次绑定注册，先注册的回调函数优先级更高([https://gfer.me/net/ghttp/service/hook](https://gfer.me/net/ghttp/service/hook));
+1. 当前工作目录为系统临时目录时，`gcfg`/`gview`/`ghttp`模块默认不添加工作目录到搜索路径;
+1. 改进`WebSocket`默认支持跨域请求([https://gfer.me/net/ghttp/websocket](https://gfer.me/net/ghttp/websocket));
+1. 改进`gtime.Format`支持中文;
+1. 改进`gfsnotify`，支持编辑器对文件非执行标准编辑时(RENAME+CHMOD)的热更新问题;
+1. 改进`gtype.Set`方法，增加Set原子操作返回旧的变量值;
+1. `gfile.ScanDir`增加支持`pattern`多个文件模式匹配，使用'`,`'符号分隔多个匹配模式;
+1. `gcfg`模块增加获取配置变量为`*gvar.Var`;
+1. `gstr`模块增加对中文截取方法;
+1. 改进`gtime.StrToTime`对常用时间格式匹配模式，新增`gtime.ParseTimeFromContent`方法;
+1. 修改配置管理、模板引擎、调试模式的环境变量名称为大写下划线标准格式;
+1. 改进`grand`模块随机数生成设计，底层使用`crypto/rand`+缓冲区实现高速的随机数生成([https://gfer.me/util/grand/index](https://gfer.me/util/grand/index));
+
+## 问题修复
+1. 修复`gspath`模块在`windows`下搜索失效问题；
+1. 修复`gspath`模块Search时带有indexFiles的检索问题;
+1. bug fix INZS1([https://gitee.com/johng/gf/issues/INZS1](https://gitee.com/johng/gf/issues/INZS1));
+1. 修复`gproc.ShellRun`在windows下的执行问题;
+
+
+
+
+
+
 # `v1.0.898 stable` (2018-10-24)
 
 ## 新特性
