@@ -1,0 +1,13 @@
+
+# MySQL数据库配置
+[database]
+    [[database.default]]
+        host     = "127.0.0.1"
+        port     = "3306"
+        user     = "root"
+        pass     = "12345678"
+        name     = "test"
+        type     = "mysql"
+        role     = "master"
+        charset  = "utf8"
+        priority = "1"
