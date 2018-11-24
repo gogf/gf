@@ -78,9 +78,10 @@ type ServerConfig struct {
     NameToUriType     int           // 服务注册时对象和方法名称转换为URI时的规则
     GzipContentTypes  []string      // 允许进行gzip压缩的文件类型
     DumpRouteMap      bool          // 是否在程序启动时默认打印路由表信息
+    RouterCacheExpire int           // 路由检索缓存过期时间(秒)
 }
 
-// 默认HTTP Server
+// 默认HTTP Server配置
 var defaultServerConfig = ServerConfig {
     Addr              : "",
     HTTPSAddr         : "",
@@ -107,6 +108,8 @@ var defaultServerConfig = ServerConfig {
     GzipContentTypes  : defaultGzipContentTypes,
 
     DumpRouteMap      : true,
+
+    RouterCacheExpire : 60,
 }
 
 // 获取默认的http server设置
@@ -330,6 +333,15 @@ func (s *Server) SetDumpRouteMap(enabled bool) {
         return
     }
     s.config.DumpRouteMap = enabled
+}
+
+// 设置路由缓存过期时间(秒)
+func (s *Server) SetRouterCacheExpire(expire int) {
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
+    }
+    s.config.RouterCacheExpire = expire
 }
 
 // 添加静态文件搜索目录，必须给定目录的绝对路径

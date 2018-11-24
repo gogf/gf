@@ -46,8 +46,8 @@ type (
         // 服务注册相关
         serveTree        map[string]interface{}           // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
         hooksTree        map[string]interface{}           // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-        serveCache       *gmap.StringInterfaceMap         // 服务注册路由内存缓存
-        hooksCache       *gmap.StringInterfaceMap         // 事件回调路由内存缓存
+        serveCache       *gcache.Cache                    // 服务注册路由内存缓存
+        hooksCache       *gcache.Cache                    // 事件回调路由内存缓存
         routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
         // 自定义状态码回调
         hsmu             sync.RWMutex                     // status handler互斥锁
@@ -185,8 +185,8 @@ func GetServer(name...interface{}) (*Server) {
         statusHandlerMap : make(map[string]HandlerFunc),
         serveTree        : make(map[string]interface{}),
         hooksTree        : make(map[string]interface{}),
-        serveCache       : gmap.NewStringInterfaceMap(),
-        hooksCache       : gmap.NewStringInterfaceMap(),
+        serveCache       : gcache.New(),
+        hooksCache       : gcache.New(),
         routesMap        : make(map[string][]registeredRouteItem),
         sessions         : gcache.New(),
         servedCount      : gtype.NewInt(),

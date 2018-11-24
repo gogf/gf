@@ -21,7 +21,7 @@ func (s *Server) getServeHandlerWithCache(r *Request) *handlerParsedItem {
     if v := s.serveCache.Get(cacheKey); v == nil {
         cacheItem = s.searchServeHandler(r.Method, r.URL.Path, r.GetHost())
         if cacheItem != nil {
-            s.serveCache.Set(cacheKey, cacheItem)
+            s.serveCache.Set(cacheKey, cacheItem, s.config.RouterCacheExpire*1000)
         }
     } else {
         cacheItem = v.(*handlerParsedItem)

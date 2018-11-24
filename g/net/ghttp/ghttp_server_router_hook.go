@@ -81,11 +81,11 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 // 查询请求处理方法, 带缓存机制，按照Host、Method、Path进行缓存.
 func (s *Server) getHookHandlerWithCache(hook string, r *Request) []*handlerParsedItem {
     cacheItems := ([]*handlerParsedItem)(nil)
-    cacheKey   := s.hookHandlerKey(hook, r.Method, r.URL.Path, r.GetHost())
+    cacheKey   := s.handlerKey(hook, r.Method, r.URL.Path, r.GetHost())
     if v := s.hooksCache.Get(cacheKey); v == nil {
         cacheItems = s.searchHookHandler(r.Method, r.URL.Path, r.GetHost(), hook)
         if cacheItems != nil {
-            s.hooksCache.Set(cacheKey, cacheItems)
+            s.hooksCache.Set(cacheKey, cacheItems, s.config.RouterCacheExpire*1000)
         }
     } else {
         cacheItems = v.([]*handlerParsedItem)
@@ -189,7 +189,7 @@ func (s *Server) searchHookHandler(method, path, domain, hook string) []*handler
 }
 
 // 生成hook key，如果是hook key，那么使用'%'符号分隔
-func (s *Server) hookHandlerKey(hook, method, path, domain string) string {
+func (s *Server) handlerKey(hook, method, path, domain string) string {
     return hook + "%" + s.serveHandlerKey(method, path, domain)
 }
 

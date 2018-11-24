@@ -70,7 +70,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
         return errors.New("invalid pattern")
     }
     // 注册地址记录及重复注册判断
-    regkey := s.hookHandlerKey(hookName, method, uri, domain)
+    regkey := s.handlerKey(hookName, method, uri, domain)
     caller := s.getHandlerRegisterCallerLine(handler)
     if len(hook) == 0 {
         if item, ok := s.routesMap[regkey]; ok {
