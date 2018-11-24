@@ -34,18 +34,15 @@
     - glog分类&日志等级&链式操作、gdb debug自动输出调试信息、gmlock内存锁、
 1. 服务注册域名增加对泛域名的支持；
 1. Cookie设置中文失效问题；
-1. ghttp hook回调使用方式在注册路由比较多的时候，优先级可能使得开发者混乱，考虑方式便于管理；
 1. 使用gconv将slice映射到struct属性上，例如redis hscan的结果集；
 1. 项目参考：
     - https://github.com/namreg/godown
     - https://github.com/Masterminds/sprig
 1. gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
-1. 模板引擎增加对对象的支持(参考https://segmentfault.com/q/1010000016829214)；
-1. 改进gfpool在文件指针变化时的更新；
 1. gtcp提供简便的包发送/接收方法(SendPkg/RecvPkg)以解决常见的TCP通信粘包问题，并完善文档（参考：https://www.cnblogs.com/kex1n/p/6502002.html）；
 1. gfile对于文件的读写强行使用了gfpool，在某些场景下不合适，需要考虑剥离开，并为开发者提供单独的指针池文件操作特性；
-1. gcfg/gview/ghttp等模块加上对临时文件目录的自动添加监听判断（基本是开发环境下，特别是windows环境），去掉临时文件的监听，避免临时文件过大引起的运行缓慢占用内存问题；
 1. 路由增加不区分大小写得匹配方式；
+1. gform对于MySQL字段类型为datetime类型的时区问题分析；
 
 
 # DONE
@@ -99,3 +96,6 @@
 1. `gfsnotify`针对添加目录监听时无法使用多个`Watcher`，考虑改进，并考虑动态扩容全局`Watcher`方案；
 1. 由于系统对inotify实例数量(`fs.inotify.max_user_instances`)以及队列大小(`fs.inotify.max_user_watches`)有限制，需要改进`gfsnotify`；
 1. WebServer事件回调允许对同一个路由规则绑定多个事件回调；
+1. gcfg/gview/ghttp等模块加上对临时文件目录的自动添加监听判断（基本是开发环境下，特别是windows环境），去掉临时文件的监听，避免临时文件过大引起的运行缓慢占用内存问题；
+1. 改进gfpool在文件指针变化时的更新；
+1. ghttp hook回调使用方式在注册路由比较多的时候，优先级可能使得开发者混乱，考虑方式便于管理；

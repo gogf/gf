@@ -1,137 +1,3 @@
-# `v0.97.399 beta` (2018-04-23)
-    1、 增加gfsnotify文件监控模块；
-    2、 配置管理模块增加配置文件自动检测更新机制；
-    3、 模板引擎增加对模板文件的自动检测更新机制；
-    4、 改进gconv包基本类型转换功能，提高转换性能；
-    5、 增加gpage分页管理包，支持动态分页、静态分页以及自定义分页样式特性；
-    6、 ghttp.Request增加Exit方法，用以标记服务退出，当在服务执行前调用后，服务将不再执行；
-    7、 ghttp.Response去掉WriteString方法，统一使用Write方法返回数据流，是使用灵活的参数形式；
-    8、 模板引擎增加模板变量暴露接口LockFunc/RLockFunc，以便支持开发者灵活处理模板变量；
-    9、 ghttp.Server增加access & error log功能，并支持开发者自定义日志处理回调函数注册；
-    10、增加gredis包，支持对redis的客户端操作封装，并将gredis.Redis对象加入到gins单例管理器中进行统一配置管理维护；
-    11、gins单例管理器增加对单例对象配置文件的自动检测更新机制，当配置文件在外部发生变更时，自动刷新单例管理器中的单例对象；
-    12、gdb数据库ORM包增加And/Or条件链式方法，并改进Where/Data方法参数灵活性；
-    13、对于新增加的模块，同时也增加了对应的开发文档，并梳理完善了现有的其他模块开发文档；
-    14、修复ISSUE:
-        #IISWI gitee.com/johng/gf/issues/IISWI,
-        #IISMY gitee.com/johng/gf/issues/IISMY,
-        反馈并跟踪完成第三方依赖mxj包的ISSUE修复(github.com/clbanning/mxj/issues/48)；
-
-
-
-# `v0.98.503 beta` (2018-05-21)
-## 新特性
-    1、平滑重启特性( http://gf.johng.cn/625833 )；
-    2、gflock文件锁模块( http://gf.johng.cn/626062 )；
-    3、gproc进程管理及通信模块( http://gf.johng.cn/626063 )；
-    4、gpage分页管理模块，强大的动态分页及静态分页功能，并为开发者自定义分页样式提供了极高的灵活度( http://gf.johng.cn/597431 )；
-    5、ghttp.Server增加多端口监听特性，并支持HTTP/HTTPS( http://gf.johng.cn/494366 , http://gf.johng.cn/598802 )；
-    6、增加gspath目录检索包管理工具，支持对多目录下的文件检索特性；
-    7、ghttp包控制器及执行对象注册增加更灵活的动态路由特性，路由规则增加{method}变量支持；
-
-## 新功能
-    1、gutil包增加MapToStruct方法，支持将map数据类型映射为struct对象；
-    2、gconv
-        1)、gconv包增加按照类型名称字符串进行类型转换；
-        2)、gconv包新增Time/TimeDuration类型转换方法；
-    3、ghttp
-        1)、增加Web Server目录安全访问控制机制；
-        2)、ghttp.Server增加自定义状态码回调函数注册处理；
-    4、gdb
-        1)、gdb包增加gdb.GetStruct/gdb.Model.Struct方法，获取查询结果记录自动转换为指定对象；
-        2)、gdb增加Value/Record/Result类型，增加对Value类型的系列类型转换方法；
-        3)、gdb包增加db.GetCount,tx.GetCount,model.Count数量查询方法；
-
-## 功能改进
-    1、改进gredis客户端功能封装；
-    2、改进grand包随机数生成性能；
-    3、grand/gdb/gredis包增加benchmark性能测试脚本；
-    4、改进gjson/gparser包的ToStruct方法实现；
-    5、gdb  ：改进gdb.New获取ORM操作对象性能；
-    6、gcfg ：改进配置文件检索功能；
-    7、gview：模板引擎增加多目录检索功能；
-    8、gfile：增加源码main包目录获取方法MainPkgPath；
-    9、ghttp
-        1)、ghttp.Request增加请求进入和完成时间记录，并增加到默认日志内容中；
-        2)、ghttp.Server事件回调之间支持通过ghttp.Request.Param自定义参数进行流程传参；
-    10、gdb
-        1)、改进gdb.Result与gdb.List, gdb.Record与gdb.Map之间的类型转换，便于业务层数据编码处理(如json/xml)；
-        2)、改进gdb.Tx.GetValue返回值类型；
-        3)、gdb.Model.Data参数支持更加灵活的map参数；
-
-## 问题修复
-    1、ghttp
-        1)、修复ghttp包路由缓存问题；
-        2)、修复服务注册时的控制器及执行对象方法丢失问题；
-    2、gconv
-        1)、修正gconv.Float64方法位大小设置问题；
-        2)、修复gconv.Int64(float64(xxx))问题；
-    2、gdb
-        1)、修复gdb.GetAll针对返回数据列表的for..range...的返回结果slice相同指针问题；
-        2)、修复gdb.Delete方法错误；
-        3)、修复gdb.Model.And/Or方法；
-        4)、修复gdb.Model.Where方法参数处理问题；
-    3、garray：修复garray包Remove方法锁机制问题；
-    4、gtype ：修复gtype.Float32/gtype.Float64对象类型的方法逻辑错误；
-    5、gfsnotify：修复在windows下文件参数中不同文件分隔符引起的热更新机制失效问题；
-    6、修复gvalid包验证问题：如果值为nil，并且不需要require*验证时，其他验证失效。并增加单元测试项，测试通过。
-
-# `v0.99.682 beta` (2018-08-07)
-## 新特性
-    1、新增gdes包，用于DES加密/加密算法处理；
-    2、新增gkafka包，kafka的golang客户端；
-    3、新增gpool对象复用池，比较于标准库的sync.Pool更加灵活强大，可自定义对象的缓存时间、创建方法、销毁方法(http://gf.johng.cn/686654)；
-    4、完成网络通信gtcp/gudp包的重构，并进行了大量的改进工作，新增了详尽的开发文档及示例代码(http://gf.johng.cn/494382)；
-    5、增加gring并发安全环，标准库container/ring包的并发安全版本，并做了易用性的封装(http://gf.johng.cn/686655)；
-    6、gtime包新增了自定义日期格式话的支持，格式化语法类似PHP的date语法(http://gf.johng.cn/494387)；
-    7、gdb增加调试模式特性，使用SetDebug方法实现，在调试模式下可以获取详细的SQL执行记录，增加了详细的开发文档及示例代码(http://gf.johng.cn/702801)；
-    8、gdb增加查询缓存特性，使用Cache方法实现，增加了详细的开发文档及示例代码(http://gf.johng.cn/702801)；
-    9、ghttp.Server路由功能增加字段匹配规则特性，支持如：/order/list/{page}.html 动态路由规则特性(http://gf.johng.cn/702766)；
-    10、gpage分页包增加分页URL规则生成模板特性，内部可使用{.page}变量指定页码位置(http://gf.johng.cn/716438)；
-    11、增加gmap.Map对象，这是gmap.InterfaceInterfaceMap的别名；
-
-## 新功能
-    1、gdb增加MaxIdleConnCount/MaxOpenConnCount/MaxConnLifetime三项配置，并增加SetMaxConnLifetime方法；
-    2、ghttp.Client增加HTTP账号密码设置功能(SetBasicAuth)；
-    3、glog新增对系统换行符号的自适配调整(\n|\r\n)；
-    4、增加glog控制台调试模式打印开关(SetDebug)；
-    5、gcfg增加SetFileName方法设置默认读取的配置文件名称；
-    6、gcfg/gjson/gparser包新增Int8/16/32/64,Uint8/16/32/64方法；
-    7、增加gzip方法的封装(Zip/Unzip)；
-    8、gview增加模板变量分隔符设置方法SetDelimiters；
-    9、ghttp.Response增加Writef、Writefln方法；
-
-## 功能改进
-    1、改进gfilepool文件指针池设计；改进gfile文本内容写入，增加指针池使用
-    2、gdb包增加调试模式特性，并支持在调试模式下获得已执行的SQL列表结果
-    3、改进gproc进程间通信机制，增加进程消息分组特性，并限定队列大小
-    4、gdb结果方法处理增加ToXml/ToJson方法
-    5、gregx包名修改为gregex
-    6、改进gtime.StrToTime方法，新增对常见标准时间日期的自动转换，以及对时区的自动识别支持，并调整gconv,gvalid对该包的引用
-    7、增加对字符集转换的封装，gxml包中使用新增的字符集转换包来做处理
-    8、ghttp.Server.EnableAdmin页面Restart接口支持GET参数newExeFilePath支持
-    9、ghttp.Server平滑重启机制增加可自定义重启可执行文件路径，特别是针对windows系统特别有用(因为windows下不支持可执行文件覆盖更新)
-    10、改进ghttp.Server静态文件检索设计，增加开发环境时的main包源码目录查找机制；改进gcfg/gview的main包源码目录查找机制
-    11、优化gcache设计，LRU特性非默认开启；优化gtype/gcache基准测试脚本；新增gregx基准测试脚本，改进设计，提升性能
-    12、gfile包增加GoRootOfBuild方法，用于获取编译时的GOROOT数值；并改进glog包中backtrace的GOROOT路径过滤处理；
-    13、改进grpool代码质量，并改进对池化goroutine数量的限制设计
-    14、改进gdb.Map/List及g.Map/List的类型定义，改用别名特性以便支持原生类型输入(map/slice)，并修复gdb.Model.Update方法参数处理问题
-    15、调整ghttp包示例代码目录结构，增加ghttp.Client自定义Header方法，ghttp.Cookie增加Map方法用于获得客户端提交的所有cookie值，构造成map返回
-    16、删除gcharset中的getcharset方法
-    17、去掉gmap中常用的基本数据类型转换获取方法
-    18、改进gconv.String方法，当无法使用基本类型进行字符串转换时，使用json.Marshal进行转换
-    19、gvalid.CheckObject方法名称修改为gvalid.CheckStruct
-
-
-## 问题修复
-    1、修正gstr.IsNumeric错误
-    2、修复当xml中encoding字符集为非UTF-8字符集时报错的问题
-    3、修正gconv包float32->float64精度问题
-    4、修复gpage包分页计数问题
-    5、修复gdb批量数据Save错误
-    6、去掉gpool中math.MAXINT64常量的使用，以修复int64到int类型的转换错误，兼容32位系统
-    7、修正ghttp包没有使用Server仍然初始化相关异步goroutine的问题
-
 # `v1.0.898 stable` (2018-10-24)
 
 ## 新特性
@@ -225,5 +91,147 @@
 1. `ghttp.Server`完善重启及停止的终端提示信息；
 1. 完善`gring`模块，增加`约瑟夫问题`代码作为`gring`示例程序；
 1. 其他一些改动；
+
+
+
+# `v0.99.682 beta` (2018-08-07)
+## 新特性
+    1、新增gdes包，用于DES加密/加密算法处理；
+    2、新增gkafka包，kafka的golang客户端；
+    3、新增gpool对象复用池，比较于标准库的sync.Pool更加灵活强大，可自定义对象的缓存时间、创建方法、销毁方法(http://gf.johng.cn/686654)；
+    4、完成网络通信gtcp/gudp包的重构，并进行了大量的改进工作，新增了详尽的开发文档及示例代码(http://gf.johng.cn/494382)；
+    5、增加gring并发安全环，标准库container/ring包的并发安全版本，并做了易用性的封装(http://gf.johng.cn/686655)；
+    6、gtime包新增了自定义日期格式话的支持，格式化语法类似PHP的date语法(http://gf.johng.cn/494387)；
+    7、gdb增加调试模式特性，使用SetDebug方法实现，在调试模式下可以获取详细的SQL执行记录，增加了详细的开发文档及示例代码(http://gf.johng.cn/702801)；
+    8、gdb增加查询缓存特性，使用Cache方法实现，增加了详细的开发文档及示例代码(http://gf.johng.cn/702801)；
+    9、ghttp.Server路由功能增加字段匹配规则特性，支持如：/order/list/{page}.html 动态路由规则特性(http://gf.johng.cn/702766)；
+    10、gpage分页包增加分页URL规则生成模板特性，内部可使用{.page}变量指定页码位置(http://gf.johng.cn/716438)；
+    11、增加gmap.Map对象，这是gmap.InterfaceInterfaceMap的别名；
+
+## 新功能
+    1、gdb增加MaxIdleConnCount/MaxOpenConnCount/MaxConnLifetime三项配置，并增加SetMaxConnLifetime方法；
+    2、ghttp.Client增加HTTP账号密码设置功能(SetBasicAuth)；
+    3、glog新增对系统换行符号的自适配调整(\n|\r\n)；
+    4、增加glog控制台调试模式打印开关(SetDebug)；
+    5、gcfg增加SetFileName方法设置默认读取的配置文件名称；
+    6、gcfg/gjson/gparser包新增Int8/16/32/64,Uint8/16/32/64方法；
+    7、增加gzip方法的封装(Zip/Unzip)；
+    8、gview增加模板变量分隔符设置方法SetDelimiters；
+    9、ghttp.Response增加Writef、Writefln方法；
+
+## 功能改进
+    1、改进gfilepool文件指针池设计；改进gfile文本内容写入，增加指针池使用
+    2、gdb包增加调试模式特性，并支持在调试模式下获得已执行的SQL列表结果
+    3、改进gproc进程间通信机制，增加进程消息分组特性，并限定队列大小
+    4、gdb结果方法处理增加ToXml/ToJson方法
+    5、gregx包名修改为gregex
+    6、改进gtime.StrToTime方法，新增对常见标准时间日期的自动转换，以及对时区的自动识别支持，并调整gconv,gvalid对该包的引用
+    7、增加对字符集转换的封装，gxml包中使用新增的字符集转换包来做处理
+    8、ghttp.Server.EnableAdmin页面Restart接口支持GET参数newExeFilePath支持
+    9、ghttp.Server平滑重启机制增加可自定义重启可执行文件路径，特别是针对windows系统特别有用(因为windows下不支持可执行文件覆盖更新)
+    10、改进ghttp.Server静态文件检索设计，增加开发环境时的main包源码目录查找机制；改进gcfg/gview的main包源码目录查找机制
+    11、优化gcache设计，LRU特性非默认开启；优化gtype/gcache基准测试脚本；新增gregx基准测试脚本，改进设计，提升性能
+    12、gfile包增加GoRootOfBuild方法，用于获取编译时的GOROOT数值；并改进glog包中backtrace的GOROOT路径过滤处理；
+    13、改进grpool代码质量，并改进对池化goroutine数量的限制设计
+    14、改进gdb.Map/List及g.Map/List的类型定义，改用别名特性以便支持原生类型输入(map/slice)，并修复gdb.Model.Update方法参数处理问题
+    15、调整ghttp包示例代码目录结构，增加ghttp.Client自定义Header方法，ghttp.Cookie增加Map方法用于获得客户端提交的所有cookie值，构造成map返回
+    16、删除gcharset中的getcharset方法
+    17、去掉gmap中常用的基本数据类型转换获取方法
+    18、改进gconv.String方法，当无法使用基本类型进行字符串转换时，使用json.Marshal进行转换
+    19、gvalid.CheckObject方法名称修改为gvalid.CheckStruct
+
+
+## 问题修复
+    1、修正gstr.IsNumeric错误
+    2、修复当xml中encoding字符集为非UTF-8字符集时报错的问题
+    3、修正gconv包float32->float64精度问题
+    4、修复gpage包分页计数问题
+    5、修复gdb批量数据Save错误
+    6、去掉gpool中math.MAXINT64常量的使用，以修复int64到int类型的转换错误，兼容32位系统
+    7、修正ghttp包没有使用Server仍然初始化相关异步goroutine的问题
+
+
+
+
+# `v0.98.503 beta` (2018-05-21)
+## 新特性
+    1、平滑重启特性( http://gf.johng.cn/625833 )；
+    2、gflock文件锁模块( http://gf.johng.cn/626062 )；
+    3、gproc进程管理及通信模块( http://gf.johng.cn/626063 )；
+    4、gpage分页管理模块，强大的动态分页及静态分页功能，并为开发者自定义分页样式提供了极高的灵活度( http://gf.johng.cn/597431 )；
+    5、ghttp.Server增加多端口监听特性，并支持HTTP/HTTPS( http://gf.johng.cn/494366 , http://gf.johng.cn/598802 )；
+    6、增加gspath目录检索包管理工具，支持对多目录下的文件检索特性；
+    7、ghttp包控制器及执行对象注册增加更灵活的动态路由特性，路由规则增加{method}变量支持；
+
+## 新功能
+    1、gutil包增加MapToStruct方法，支持将map数据类型映射为struct对象；
+    2、gconv
+        1)、gconv包增加按照类型名称字符串进行类型转换；
+        2)、gconv包新增Time/TimeDuration类型转换方法；
+    3、ghttp
+        1)、增加Web Server目录安全访问控制机制；
+        2)、ghttp.Server增加自定义状态码回调函数注册处理；
+    4、gdb
+        1)、gdb包增加gdb.GetStruct/gdb.Model.Struct方法，获取查询结果记录自动转换为指定对象；
+        2)、gdb增加Value/Record/Result类型，增加对Value类型的系列类型转换方法；
+        3)、gdb包增加db.GetCount,tx.GetCount,model.Count数量查询方法；
+
+## 功能改进
+    1、改进gredis客户端功能封装；
+    2、改进grand包随机数生成性能；
+    3、grand/gdb/gredis包增加benchmark性能测试脚本；
+    4、改进gjson/gparser包的ToStruct方法实现；
+    5、gdb  ：改进gdb.New获取ORM操作对象性能；
+    6、gcfg ：改进配置文件检索功能；
+    7、gview：模板引擎增加多目录检索功能；
+    8、gfile：增加源码main包目录获取方法MainPkgPath；
+    9、ghttp
+        1)、ghttp.Request增加请求进入和完成时间记录，并增加到默认日志内容中；
+        2)、ghttp.Server事件回调之间支持通过ghttp.Request.Param自定义参数进行流程传参；
+    10、gdb
+        1)、改进gdb.Result与gdb.List, gdb.Record与gdb.Map之间的类型转换，便于业务层数据编码处理(如json/xml)；
+        2)、改进gdb.Tx.GetValue返回值类型；
+        3)、gdb.Model.Data参数支持更加灵活的map参数；
+
+## 问题修复
+    1、ghttp
+        1)、修复ghttp包路由缓存问题；
+        2)、修复服务注册时的控制器及执行对象方法丢失问题；
+    2、gconv
+        1)、修正gconv.Float64方法位大小设置问题；
+        2)、修复gconv.Int64(float64(xxx))问题；
+    2、gdb
+        1)、修复gdb.GetAll针对返回数据列表的for..range...的返回结果slice相同指针问题；
+        2)、修复gdb.Delete方法错误；
+        3)、修复gdb.Model.And/Or方法；
+        4)、修复gdb.Model.Where方法参数处理问题；
+    3、garray：修复garray包Remove方法锁机制问题；
+    4、gtype ：修复gtype.Float32/gtype.Float64对象类型的方法逻辑错误；
+    5、gfsnotify：修复在windows下文件参数中不同文件分隔符引起的热更新机制失效问题；
+    6、修复gvalid包验证问题：如果值为nil，并且不需要require*验证时，其他验证失效。并增加单元测试项，测试通过。
+
+
+
+
+
+# `v0.97.399 beta` (2018-04-23)
+    1、 增加gfsnotify文件监控模块；
+    2、 配置管理模块增加配置文件自动检测更新机制；
+    3、 模板引擎增加对模板文件的自动检测更新机制；
+    4、 改进gconv包基本类型转换功能，提高转换性能；
+    5、 增加gpage分页管理包，支持动态分页、静态分页以及自定义分页样式特性；
+    6、 ghttp.Request增加Exit方法，用以标记服务退出，当在服务执行前调用后，服务将不再执行；
+    7、 ghttp.Response去掉WriteString方法，统一使用Write方法返回数据流，是使用灵活的参数形式；
+    8、 模板引擎增加模板变量暴露接口LockFunc/RLockFunc，以便支持开发者灵活处理模板变量；
+    9、 ghttp.Server增加access & error log功能，并支持开发者自定义日志处理回调函数注册；
+    10、增加gredis包，支持对redis的客户端操作封装，并将gredis.Redis对象加入到gins单例管理器中进行统一配置管理维护；
+    11、gins单例管理器增加对单例对象配置文件的自动检测更新机制，当配置文件在外部发生变更时，自动刷新单例管理器中的单例对象；
+    12、gdb数据库ORM包增加And/Or条件链式方法，并改进Where/Data方法参数灵活性；
+    13、对于新增加的模块，同时也增加了对应的开发文档，并梳理完善了现有的其他模块开发文档；
+    14、修复ISSUE:
+        #IISWI gitee.com/johng/gf/issues/IISWI,
+        #IISMY gitee.com/johng/gf/issues/IISMY,
+        反馈并跟踪完成第三方依赖mxj包的ISSUE修复(github.com/clbanning/mxj/issues/48)；
+
 
 
