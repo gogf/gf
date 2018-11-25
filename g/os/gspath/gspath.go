@@ -141,6 +141,11 @@ func (sp *SPath) Remove(path string) {
     }
 }
 
+// 返回当前对象搜索目录路径列表
+func (sp *SPath) Paths() []string {
+    return sp.paths.Slice()
+}
+
 // 返回当前对象缓存的所有路径列表
 func (sp *SPath) AllPaths() []string {
     paths := sp.cache.Keys()

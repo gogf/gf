@@ -123,7 +123,7 @@ func (tx *Tx) GetAll(query string, args ...interface{}) (Result, error) {
         for i, col := range values {
             v := make([]byte, len(col))
             copy(v, col)
-            row[columns[i]] = gvar.New(v)
+            row[columns[i]] = gvar.New(v, false)
         }
         //fmt.Printf("%p\n", row["typeid"])
         records = append(records, row)

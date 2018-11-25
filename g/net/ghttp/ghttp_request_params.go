@@ -20,9 +20,9 @@ func (r *Request) SetParam(key string, value interface{}) {
 func (r *Request) GetParam(key string) gvar.VarRead {
     if r.params != nil {
         if v, ok := r.params[key]; ok {
-            return gvar.New(v, false).ReadOnly()
+            return gvar.New(v, false)
         }
     }
-    return nil
+    return gvar.New(nil, false)
 }
 

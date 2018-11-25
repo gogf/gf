@@ -29,12 +29,12 @@ func (r *Request) GetRequest(key string, def ... []string) []string {
 func (r *Request) GetRequestVar(key string, def ... interface{}) gvar.VarRead {
     value := r.GetRequest(key)
     if value != nil {
-        return gvar.New(value)
+        return gvar.New(value, false)
     }
     if len(def) > 0 {
-        return gvar.New(def[0])
+        return gvar.New(def[0], false)
     }
-    return nil
+    return gvar.New(nil, false)
 }
 
 func (r *Request) GetRequestString(key string, def ... string) string {

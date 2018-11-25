@@ -97,10 +97,7 @@ func (s *Session) Get (key string) interface{}  {
 // 获取SESSION，建议都用该方法获取参数
 func (s *Session) GetVar(key string) gvar.VarRead  {
     s.init()
-    if v := s.data.Get(key); v != nil {
-        return gvar.NewRead(v, false)
-    }
-    return nil
+    return gvar.NewRead(s.data.Get(key), false)
 }
 
 

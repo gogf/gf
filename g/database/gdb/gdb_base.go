@@ -190,7 +190,7 @@ func (db *Db) GetAll(query string, args ...interface{}) (Result, error) {
         for i, col := range values {
             v := make([]byte, len(col))
             copy(v, col)
-            row[columns[i]] = gvar.New(v)
+            row[columns[i]] = gvar.New(v, false)
         }
         records = append(records, row)
     }
