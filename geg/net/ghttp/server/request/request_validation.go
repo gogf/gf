@@ -4,7 +4,6 @@ import (
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/util/gvalid"
-    "gitee.com/johng/gf/g/encoding/gparser"
 )
 
 func main() {
@@ -19,9 +18,11 @@ func main() {
     s.BindHandler("/user", func(r *ghttp.Request){
         user := new(User)
         r.GetToStruct(user)
-        result  := gvalid.CheckStruct(user, nil)
-        json, _ := gparser.VarToJsonIndent(result)
-        r.Response.Write(json)
+        if err := gvalid.CheckStruct(user, nil); err != nil {
+            r.Response.WriteJson(err.Maps())
+        } else {
+            r.Response.Write("ok")
+        }
     })
     s.SetPort(8199)
     s.Run()
