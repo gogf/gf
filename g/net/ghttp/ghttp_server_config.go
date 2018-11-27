@@ -123,7 +123,6 @@ func (s *Server)SetConfig(c ServerConfig) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
         return
-        return
     }
     if c.Handler == nil {
         c.Handler = http.HandlerFunc(s.defaultHttpHandle)

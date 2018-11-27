@@ -1,4 +1,4 @@
-# `v1.2.11`
+# `v1.2.11` (2018-11-26)
 ## 新特性
 1. `ORM`新增对`SQLServer`及`Oracle`的支持([https://gfer.me/database/orm/database](https://gfer.me/database/orm/database))；
 1. 完成`gvalid`模块校验结果的顺序特性([https://gfer.me/util/gvalid/checkmap](https://gfer.me/util/gvalid/checkmap));
