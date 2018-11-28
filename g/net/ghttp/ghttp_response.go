@@ -195,6 +195,7 @@ func (r *Response) ServeFileDownload(path string, name...string) {
 func (r *Response) RedirectTo(location string) {
     r.Header().Set("Location", location)
     r.WriteHeader(http.StatusFound)
+    r.request.Exit()
 }
 
 // 返回location标识，引导客户端跳转到来源页面

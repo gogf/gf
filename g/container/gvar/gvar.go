@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gvar provides a universal variable type.
 // 通用动态变量.
 package gvar
 

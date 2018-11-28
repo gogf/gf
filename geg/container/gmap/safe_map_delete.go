@@ -1,4 +1,3 @@
-// 验证 map 的delete方法是否并发安全
 package main
 
 import (
@@ -7,6 +6,7 @@ import (
     "fmt"
 )
 
+// 验证 map 的delete方法是否并发安全
 func main() {
     // 创建一个初始化的map
     m := make(map[int]int)

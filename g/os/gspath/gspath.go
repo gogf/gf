@@ -29,8 +29,8 @@ type SPath struct {
 
 // 文件搜索缓存项
 type SPathCacheItem struct {
-    path  string                    // 文件/目录绝对路径
-    isDir bool                      // 是否目录
+    path  string                 // 文件/目录绝对路径
+    isDir bool                   // 是否目录
 }
 
 // 创建一个搜索对象
@@ -52,9 +52,6 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
     }
     if realPath == "" {
         return realPath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
-    }
-    if realPath == "" {
-        return realPath, errors.New("invalid path:" + path)
     }
     // 设置的搜索路径必须为目录
     if gfile.IsDir(realPath) {
@@ -86,9 +83,6 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
     }
     if realPath == "" {
         return realPath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
-    }
-    if realPath == "" {
-        return realPath, errors.New("invalid path:" + path)
     }
     // 添加的搜索路径必须为目录
     if gfile.IsDir(realPath) {
