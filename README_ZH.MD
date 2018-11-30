@@ -1,0 +1,47 @@
+<div align=center>
+    <img src="https://gfer.me/cover.png" width="150"/>
+</div>
+
+
+`GF(Go Frame)`是一款模块化、松耦合、轻量级、高性能的Go应用开发框架。支持热重启、热更新、多域名、多端口、多服务、HTTP/HTTPS、动态路由等特性
+，并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、服务注册、配置管理、模板引擎、数据校验、分页管理、数据库ORM等等等等，
+并且提供了数十个内置核心开发模块集，如：缓存、日志、时间、命令行、二进制、文件锁、内存锁、对象池、连接池、数据编码、进程管理、进程通信、文件监控、定时任务、TCP/UDP组件、
+并发安全容器等等等等等等。
+
+# 安装
+```html
+go get -u gitee.com/johng/gf
+```
+
+# 限制
+```shell
+golang版本 >= 1.9.2
+```
+
+# 架构
+<div align=center>
+<img src="https://gfer.me/images/arch.png"/>
+</div>
+
+
+# 文档
+[https://gfer.me](https://gfer.me)
+
+
+# 使用
+```go
+package main
+
+import (
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/net/ghttp"
+)
+
+func main() {
+    s := g.Server()
+    s.BindHandler("/", func(r *ghttp.Request) {
+        r.Response.Write("Hello World")
+    })
+    s.Run()
+}
+```
