@@ -2,28 +2,27 @@
     <img src="https://gfer.me/cover.png" width="150"/>
 </div>
 
-# GoFrame
 `GF(GoFrame)` is a modular, lightweight, loosely coupled, high performance application development framework written in Go. Supporting graceful server, hot updates, multi-domain, multi-port, multi-service, HTTP/HTTPS, dynamic/hook routing and many more features. Providing a series of core components and dozens of practical modules.
 
-## Installation
+# Installation
 ```
 go get -u gitee.com/johng/gf
 ```
-## Limitation
+# Limitation
 ```
 golang version >= 1.9.2
 ```
 
-## Documentation
+# Documentation
 
 * [中文文档](https://gfer.me/)
 
-##  Architecture
+# Architecture
 <div align=center>
 <img src="https://gfer.me/images/arch.png"/>
 </div>
 
-## Quick Start
+# Quick Start
 
 ```go
 package main
@@ -42,6 +41,6 @@ func main() {
 }
 ```
 
-## License
+# License
 
 GF is licensed under the [MIT License](LICENSE), 100% free and open-source.
