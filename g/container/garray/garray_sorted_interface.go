@@ -154,7 +154,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool)(index int, result 
             case  0 :
             case  1 : min = mid + 1
         }
-        if cmp == 0 || min > max {
+        if cmp == 0 || min >= max {
             break
         }
     }

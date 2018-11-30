@@ -48,13 +48,20 @@ func New(value interface{}, safe...bool) *Json {
                 vc : false ,
             }
         default:
-            // 这里效率会比较低
-            b, _ := Encode(value)
-            v, _ := Decode(b)
-            j = &Json{
-                p  : &v,
-                c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : false,
+            v := (interface{})(nil)
+            if v = gconv.Map(value); v != nil {
+                j = &Json {
+                    p  : &v,
+                    c  : byte(gDEFAULT_SPLIT_CHAR),
+                    vc : false,
+                }
+            } else {
+                v = gconv.Interfaces(value)
+                j = &Json {
+                    p  : &v,
+                    c  : byte(gDEFAULT_SPLIT_CHAR),
+                    vc : false,
+                }
             }
     }
     j.mu = rwmutex.New(safe...)

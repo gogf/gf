@@ -18,7 +18,6 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
-    "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/gregex"
@@ -215,26 +214,10 @@ func (s *Server) Start() error {
 
     // 仅在开启静态文件服务的时候有效
     if s.config.FileServerEnabled {
-        // 如果设置了静态文件目录，那么优先按照静态文件目录进行检索，其次是当前可执行文件工作目录；
-        // 并且如果是开发环境，默认也会添加main包的源码目录路径做为二级检索。
-        if s.config.ServerRoot != "" {
-            if rp, err := s.paths.Set(s.config.ServerRoot); err != nil {
-                glog.Error("ghttp.SetServerRoot failed:", err.Error())
-                return err
-            } else {
-                glog.Debug("ghttp.SetServerRoot:", rp)
-            }
-        }
-        // 添加当前可执行文件运行目录到搜索目录
-        if gfile.SelfDir() != gfile.TempDir() {
-            s.paths.Add(gfile.SelfDir())
-        }
         // (开发环境)添加main源码包到搜索目录
         if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
-            s.paths.Add(p)
+            s.AddSearchPath(p)
         }
-        // (安全控制)不能访问当前执行文件
-        s.paths.Remove(gfile.SelfPath())
     }
 
     // 底层http server配置
@@ -248,18 +231,6 @@ func (s *Server) Start() error {
                 r.Response.WriteStatus(403)
                 r.Exit()
             })
-        }
-    }
-
-    // 配置相关相对路径处理
-    if s.config.HTTPSCertPath != "" && !gfile.Exists(s.config.HTTPSCertPath) {
-        if t, _ := s.paths.Search(s.config.HTTPSCertPath); t != "" {
-            s.config.HTTPSCertPath = t
-        }
-    }
-    if s.config.HTTPSKeyPath != "" && !gfile.Exists(s.config.HTTPSKeyPath) {
-        if t, _ := s.paths.Search(s.config.HTTPSKeyPath); t != "" {
-            s.config.HTTPSKeyPath  = t
         }
     }
 

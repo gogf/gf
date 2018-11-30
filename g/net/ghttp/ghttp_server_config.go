@@ -7,6 +7,8 @@
 package ghttp
 
 import (
+    "fmt"
+    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/glog"
     "net/http"
     "strconv"
@@ -49,7 +51,7 @@ type ServerConfig struct {
     ServerAgent       string                // Server Agent
     ServerRoot        string                // 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
     SearchPaths       []string              // 静态文件搜索目录(包含ServerRoot，按照优先级进行排序)
-    StaticPaths       []map[string]string   // 静态文件目录映射(按照优先级进行排序)
+    StaticPaths       []staticPathItem      // 静态文件目录映射(按照优先级进行排序)
     FileServerEnabled bool                  // 是否允许静态文件服务(总开关，默认开启)
 
     // COOKIE
@@ -94,7 +96,7 @@ var defaultServerConfig = ServerConfig {
     IndexFolder       : false,
     ServerAgent       : "gf",
     ServerRoot        : "",
-    StaticPaths       : make([]map[string]string, 0),
+    StaticPaths       : make([]staticPathItem, 0),
     FileServerEnabled : true,
 
     CookieMaxAge      : gDEFAULT_COOKIE_MAX_AGE,
@@ -192,8 +194,16 @@ func (s *Server)EnableHTTPS(certFile, keyFile string) {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
         return
     }
-    s.config.HTTPSCertPath = certFile
-    s.config.HTTPSKeyPath  = keyFile
+    certFileRealPath := gfile.RealPath(certFile)
+    if certFileRealPath == "" {
+        glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
+    }
+    keyFileRealPath := gfile.RealPath(keyFile)
+    if keyFileRealPath == "" {
+        glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
+    }
+    s.config.HTTPSCertPath = certFileRealPath
+    s.config.HTTPSKeyPath  = keyFileRealPath
 }
 
 // 设置http server参数 - ReadTimeout

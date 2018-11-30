@@ -6,7 +6,10 @@
 
 package gconv
 
-import "fmt"
+import (
+    "fmt"
+    "reflect"
+)
 
 // 任意类型转换为[]int类型
 func Ints(i interface{}) []int {
@@ -295,6 +298,26 @@ func Interfaces(i interface{}) []interface{} {
             case []float64:
                 for _, v := range i.([]float64) {
                     array = append(array, v)
+                }
+            // 不是常见类型，则使用反射
+            default:
+                rv   := reflect.ValueOf(i)
+                kind := rv.Kind()
+                // 如果是指针，那么需要转换到指针对应的数据项，以便识别真实的类型
+                if kind == reflect.Ptr {
+                    rv   = rv.Elem()
+                    kind = rv.Kind()
+                }
+                switch kind {
+                    case reflect.Slice: fallthrough
+                    case reflect.Array:
+                        for i := 0; i < rv.Len(); i++ {
+                            array = append(array, rv.Index(i).Interface())
+                        }
+                    case reflect.Struct:
+                        for i := 0; i < rv.NumField(); i++ {
+                            array = append(array, rv.Field(i).Interface())
+                        }
                 }
         }
         if len(array) > 0 {

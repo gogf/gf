@@ -12,10 +12,12 @@ import (
     "bytes"
     "errors"
     "fmt"
+    "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gvar"
     "gitee.com/johng/gf/g/encoding/gjson"
+    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gspath"
@@ -28,7 +30,7 @@ const (
 // 配置管理对象
 type Config struct {
     name   *gtype.String            // 默认配置文件名称
-    paths  *gspath.SPath            // 搜索目录路径
+    paths  *garray.StringArray      // 搜索目录路径
     jsons  *gmap.StringInterfaceMap // 配置文件对象
     vc     *gtype.Bool              // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
 }
@@ -41,7 +43,7 @@ func New(path string, file...string) *Config {
     }
     c := &Config {
         name   : gtype.NewString(name),
-        paths  : gspath.New(),
+        paths  : garray.NewStringArray(0, 1),
         jsons  : gmap.NewStringInterfaceMap(),
         vc     : gtype.NewBool(),
     }
@@ -52,18 +54,26 @@ func New(path string, file...string) *Config {
 }
 
 // 判断从哪个配置文件中获取内容，返回配置文件的绝对路径
-func (c *Config) filePath(file...string) string {
+func (c *Config) filePath(file...string) (path string) {
     name := c.name.Val()
     if len(file) > 0 {
         name = file[0]
     }
-    path, _ := c.paths.Search(name)
+    c.paths.RLockFunc(func(array []string) {
+        for _, v := range array {
+            if path, _ = gspath.Search(v, name); path != "" {
+                break
+            }
+        }
+    })
     if path == "" {
         buffer := bytes.NewBuffer(nil)
         buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
-        for k, v := range c.paths.Paths() {
-            buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
-        }
+        c.paths.RLockFunc(func(array []string) {
+            for k, v := range array {
+                buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+            }
+        })
         glog.Error(buffer.String())
     }
     return path
@@ -71,13 +81,16 @@ func (c *Config) filePath(file...string) string {
 
 // 设置配置管理器的配置文件存放目录绝对路径
 func (c *Config) SetPath(path string) error {
-    if rp, err := c.paths.Set(path); err != nil {
-        glog.Error("[gcfg] SetPath failed:", err.Error())
+    realPath := gfile.RealPath(path)
+    if realPath == "" {
+        err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+        glog.Error(fmt.Sprintf(`[gcfg] SetPath failed: %s`, err.Error()))
         return err
-    } else {
-        c.jsons.Clear()
-        glog.Debug("[gcfg] SetPath:", rp)
     }
+    c.jsons.Clear()
+    c.paths.Clear()
+    c.paths.Append(realPath)
+    glog.Debug("[gcfg] SetPath:", realPath)
     return nil
 }
 
@@ -90,12 +103,14 @@ func (c *Config) SetViolenceCheck(check bool) {
 
 // 添加配置管理器的配置文件搜索路径
 func (c *Config) AddPath(path string) error {
-    if rp, err := c.paths.Add(path); err != nil {
-        glog.Debug("[gcfg] AddPath failed:", err.Error())
+    realPath := gfile.RealPath(path)
+    if realPath == "" {
+        err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+        glog.Error(fmt.Sprintf(`[gcfg] AddPath failed: %s`, err.Error()))
         return err
-    } else {
-        glog.Debug("[gcfg] AddPath:", rp)
     }
+    c.paths.Append(realPath)
+    glog.Debug("[gcfg] AddPath:", realPath)
     return nil
 }
 

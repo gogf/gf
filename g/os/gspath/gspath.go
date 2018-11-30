@@ -33,13 +33,35 @@ type SPathCacheItem struct {
     isDir bool                   // 是否目录
 }
 
+var (
+    // 单个目录路径对应的SPath对象指针，用于路径检索对象复用
+    pathsMap = gmap.NewStringInterfaceMap()
+)
+
 // 创建一个搜索对象
-func New () *SPath {
-    return &SPath {
-        paths : garray.NewStringArray(0, 2),
+func New(path...string) *SPath {
+    sp := &SPath {
+        paths : garray.NewStringArray(0, 1),
         cache : gmap.NewStringStringMap(),
     }
+    if len(path) > 0 {
+        sp.Add(path[0])
+    }
+    return sp
 }
+
+// 创建/获取一个单例的搜索对象, root必须为目录的绝对路径
+func Get(root string) *SPath {
+    return pathsMap.GetOrSetFuncLock(root, func() interface{} {
+        return New(root)
+    }).(*SPath)
+}
+
+// 检索root目录(必须为绝对路径)下面的name文件的绝对路径，indexFiles用于指定当检索到的结果为目录时，同时检索是否存在这些indexFiles文件
+func Search(root string, name string, indexFiles...string) (filePath string, isDir bool) {
+    return Get(root).Search(name, indexFiles...)
+}
+
 
 // 设置搜索路径，只保留当前设置项，其他搜索路径被清空
 func (sp *SPath) Set(path string) (realPath string, err error) {
@@ -63,6 +85,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
         }
         sp.paths.Clear()
         sp.cache.Clear()
+
         sp.paths.Append(realPath)
         sp.updateCacheByPath(realPath)
         sp.addMonitorByPath(realPath)

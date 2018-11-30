@@ -9,12 +9,12 @@ package ghttp
 
 import (
     "bytes"
-    "gitee.com/johng/gf/g/os/gfile"
-    "net/http"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/encoding/gparser"
-    "strconv"
     "fmt"
+    "gitee.com/johng/gf/g/encoding/gparser"
+    "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/util/gconv"
+    "net/http"
+    "strconv"
 )
 
 // 服务端请求返回对象。
@@ -159,9 +159,7 @@ func (r *Response) WriteStatus(status int, content...string) {
 // 静态文件处理
 func (r *Response) ServeFile(path string) {
     // 首先判断是否给定的path已经是一个绝对路径
-    if !gfile.Exists(path) {
-        path, _ = r.Server.paths.Search(path)
-    }
+    path = gfile.RealPath(path)
     if path == "" {
         r.WriteStatus(http.StatusNotFound)
         return
@@ -172,9 +170,7 @@ func (r *Response) ServeFile(path string) {
 // 静态文件下载处理
 func (r *Response) ServeFileDownload(path string, name...string) {
     // 首先判断是否给定的path已经是一个绝对路径
-    if !gfile.Exists(path) {
-        path, _ = r.Server.paths.Search(path)
-    }
+    path = gfile.RealPath(path)
     if path == "" {
         r.WriteStatus(http.StatusNotFound)
         return

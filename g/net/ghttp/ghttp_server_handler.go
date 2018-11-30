@@ -10,11 +10,13 @@ package ghttp
 import (
     "fmt"
     "gitee.com/johng/gf/g/encoding/ghtml"
+    "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gtime"
     "net/http"
     "os"
     "reflect"
     "sort"
+    "strings"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -62,7 +64,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     isStaticDir := false
     // 优先执行静态文件检索(检测是否存在对应的静态文件，包括index files处理)
     if s.config.FileServerEnabled {
-        staticFile, isStaticDir = s.paths.Search(r.URL.Path, s.config.IndexFiles...)
+        staticFile, isStaticDir = s.searchStaticFile(r.URL.Path)
         if staticFile != "" {
             request.isFileRequest = true
         }
@@ -123,6 +125,31 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request.Response.OutputBuffer()
     // 事件 - AfterOutput
     s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+}
+
+// 查找静态文件的绝对路径
+func (s *Server) searchStaticFile(uri string) (filePath string, isDir bool) {
+    // 优先查找URI映射
+    if len(s.config.StaticPaths) > 0 {
+        for _, item := range s.config.StaticPaths {
+            if len(uri) >= len(item.prefix) && strings.EqualFold(item.prefix, uri[0 : len(item.prefix)]) {
+                // 防止类似 /static/style 映射到 /static/style.css 的情况
+                if len(uri) > len(item.prefix) && uri[len(item.prefix)] != '/' {
+                    continue
+                }
+                return gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
+            }
+        }
+    }
+    // 其次查找root和search path
+    if len(s.config.SearchPaths) > 0 {
+        for _, path := range s.config.SearchPaths {
+            if filePath, isDir = gspath.Search(path, uri, s.config.IndexFiles...); filePath != "" {
+                return filePath, isDir
+            }
+        }
+    }
+    return "", false
 }
 
 // 初始化控制器

@@ -5,7 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // 单元测试
-// go test *.go -bench=".*"
+// go test *.go
 
 package gvalid
 

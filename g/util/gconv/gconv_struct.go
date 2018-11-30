@@ -205,10 +205,12 @@ func bindVarToStructIfDefaultConvertionFailed(structFieldValue reflect.Value, va
     switch structFieldValue.Kind() {
         case reflect.Struct:
             Struct(value, structFieldValue)
-        case reflect.Slice:
+
+        case reflect.Slice: fallthrough
+        case reflect.Array:
             a := reflect.Value{}
             v := reflect.ValueOf(value)
-            if v.Kind() == reflect.Slice {
+            if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
                 a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
                 for i := 0; i < v.Len(); i++ {
                     n := reflect.New(structFieldValue.Type().Elem()).Elem()

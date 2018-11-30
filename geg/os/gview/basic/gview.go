@@ -11,6 +11,8 @@ func main() {
     b, err := v.Parse("gview.tpl", map[string]interface{} {
         "k" : "v",
     })
-    fmt.Println(err)
+    if err != nil {
+        panic(err)
+    }
     fmt.Println(string(b))
 }
