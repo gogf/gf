@@ -87,6 +87,12 @@ func (r *Redis) Close() error {
     return r.pool.Close()
 }
 
+// 获得一个原生的redis连接对象，用于自定义连接操作，
+// 但是需要注意的是如果不再使用该连接对象时，需要手动Close连接，否则会造成连接数超限。
+func (r *Redis) GetConn() redis.Conn {
+    return r.pool.Get()
+}
+
 // 设置属性 - MaxIdle
 func (r *Redis) SetMaxIdle(value int) {
     r.pool.MaxIdle = value
