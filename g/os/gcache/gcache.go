@@ -1,16 +1,11 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017-2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 单进程高速缓存.
+// 并发安全的单进程高速缓存.
 package gcache
-
-const (
-    // 当数据不过期时，默认设置的过期属性值，相当于：math.MaxInt64/1000000
-    gDEFAULT_MAX_EXPIRE = 9223372036854
-)
 
 // 全局缓存管理对象
 var cache = New()

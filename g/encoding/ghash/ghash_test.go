@@ -9,103 +9,106 @@
 package ghash_test
 
 import (
-    "testing"
     "gitee.com/johng/gf/g/encoding/ghash"
-    "gitee.com/johng/gf/g/encoding/gbinary"
+    "testing"
+)
+
+var (
+    str = []byte("This is the test string for hash.")
 )
 
 func BenchmarkBKDRHash(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.BKDRHash(gbinary.EncodeInt(i))
+        ghash.BKDRHash(str)
     }
 }
 
 func BenchmarkBKDRHash64(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.BKDRHash64(gbinary.EncodeInt(i))
+        ghash.BKDRHash64(str)
     }
 }
 
 func BenchmarkSDBMHash(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.SDBMHash(gbinary.EncodeInt(i))
+        ghash.SDBMHash(str)
     }
 }
 
 func BenchmarkSDBMHash64(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.SDBMHash64(gbinary.EncodeInt(i))
+        ghash.SDBMHash64(str)
     }
 }
 
 func BenchmarkRSHash(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.RSHash(gbinary.EncodeInt(i))
+        ghash.RSHash(str)
     }
 }
 
 func BenchmarkSRSHash64(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.RSHash64(gbinary.EncodeInt(i))
+        ghash.RSHash64(str)
     }
 }
 
 func BenchmarkJSHash(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.JSHash(gbinary.EncodeInt(i))
+        ghash.JSHash(str)
     }
 }
 
 func BenchmarkJSHash64(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.JSHash64(gbinary.EncodeInt(i))
+        ghash.JSHash64(str)
     }
 }
 
 func BenchmarkPJWHash(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.PJWHash(gbinary.EncodeInt(i))
+        ghash.PJWHash(str)
     }
 }
 
 func BenchmarkPJWHash64(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.PJWHash64(gbinary.EncodeInt(i))
+        ghash.PJWHash64(str)
     }
 }
 
 func BenchmarkELFHash(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.ELFHash(gbinary.EncodeInt(i))
+        ghash.ELFHash(str)
     }
 }
 
 func BenchmarkELFHash64(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.ELFHash64(gbinary.EncodeInt(i))
+        ghash.ELFHash64(str)
     }
 }
 
 func BenchmarkDJBHash(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.DJBHash(gbinary.EncodeInt(i))
+        ghash.DJBHash(str)
     }
 }
 
 func BenchmarkDJBHash64(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.DJBHash64(gbinary.EncodeInt(i))
+        ghash.DJBHash64(str)
     }
 }
 
 func BenchmarkAPHash(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.APHash(gbinary.EncodeInt(i))
+        ghash.APHash(str)
     }
 }
 
 func BenchmarkAPHash64(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ghash.APHash64(gbinary.EncodeInt(i))
+        ghash.APHash64(str)
     }
 }

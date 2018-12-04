@@ -22,8 +22,7 @@ func New(lruCap...int) *Cache {
     c := &Cache {
         memCache : newMemCache(lruCap...),
     }
-    go c.autoSyncLoop()
-    go c.autoClearLoop()
+    go c.autoLoop()
     return c
 }
 

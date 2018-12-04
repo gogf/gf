@@ -18,55 +18,55 @@ var ints  = gset.NewIntSet()
 var itfs  = gset.NewInterfaceSet()
 var strs  = gset.NewStringSet()
 
-func BenchmarkIntSet_Add(b *testing.B) {
+func Benchmark_IntSet_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ints.Add(i)
     }
 }
 
-func BenchmarkIntSet_Contains(b *testing.B) {
+func Benchmark_IntSet_Contains(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ints.Contains(i)
     }
 }
 
-func BenchmarkIntSet_Remove(b *testing.B) {
+func Benchmark_IntSet_Remove(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ints.Remove(i)
     }
 }
 
-func BenchmarkInterfaceSet_Add(b *testing.B) {
+func Benchmark_InterfaceSet_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfs.Add(i)
     }
 }
 
-func BenchmarkInterfaceSet_Contains(b *testing.B) {
+func Benchmark_InterfaceSet_Contains(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfs.Contains(i)
     }
 }
 
-func BenchmarkInterfaceSet_Remove(b *testing.B) {
+func Benchmark_InterfaceSet_Remove(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfs.Remove(i)
     }
 }
 
-func BenchmarkStringSet_Add(b *testing.B) {
+func Benchmark_StringSet_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
         strs.Add(strconv.Itoa(i))
     }
 }
 
-func BenchmarkStringSet_Contains(b *testing.B) {
+func Benchmark_StringSet_Contains(b *testing.B) {
     for i := 0; i < b.N; i++ {
         strs.Contains(strconv.Itoa(i))
     }
 }
 
-func BenchmarkStringSet_Remove(b *testing.B) {
+func Benchmark_StringSet_Remove(b *testing.B) {
     for i := 0; i < b.N; i++ {
         strs.Remove(strconv.Itoa(i))
     }

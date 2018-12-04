@@ -12,7 +12,8 @@ import (
 
 // 任意类型转换为 map[string]interface{} 类型,
 // 如果给定的输入参数i不是map类型，那么转换会失败，返回nil.
-func Map(i interface{}) map[string]interface{} {
+// 当i为struct对象时，第二个参数noTagCheck表示不检测json标签，否则将会使用json tag作为map的键名。
+func Map(i interface{}, noTagCheck...bool) map[string]interface{} {
     if i == nil {
         return nil
     }
@@ -95,9 +96,13 @@ func Map(i interface{}) map[string]interface{} {
                         m[String(k.Interface())] = rv.MapIndex(k).Interface()
                     }
                 } else if kind == reflect.Struct {
-                    rt := rv.Type()
+                    rt   := rv.Type()
+                    name := ""
                     for i := 0; i < rv.NumField(); i++ {
-                        m[rt.Field(i).Name] = rv.Field(i).Interface()
+                        if name = rt.Field(i).Tag.Get("json"); name == "" {
+                            name = rt.Field(i).Name
+                        }
+                        m[name] = rv.Field(i).Interface()
                     }
                 } else {
                     return nil

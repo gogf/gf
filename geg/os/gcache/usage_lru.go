@@ -20,8 +20,8 @@ func main() {
     // 读取键名1，保证该键名是优先保留
     fmt.Println(c.Get(1))
 
-    // 等待一定时间后(默认10秒检查一次)，元素会被按照从旧到新的顺序进行淘汰
-    time.Sleep(10*time.Second)
+    // 等待一定时间后(默认1秒检查一次)，元素会被按照从旧到新的顺序进行淘汰
+    time.Sleep(2*time.Second)
     fmt.Println(c.Size())
     fmt.Println(c.Keys())
 }

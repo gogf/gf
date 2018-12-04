@@ -14,31 +14,31 @@ import (
 
 var l = New()
 
-func BenchmarkPushBack(b *testing.B) {
+func Benchmark_PushBack(b *testing.B) {
     for i := 0; i < b.N; i++ {
         l.PushBack(i)
     }
 }
 
-func BenchmarkPopFront(b *testing.B) {
+func Benchmark_PopFront(b *testing.B) {
     for i := 0; i < b.N; i++ {
         l.PopFront()
     }
 }
 
-func BenchmarkPushFront(b *testing.B) {
+func Benchmark_PushFront(b *testing.B) {
     for i := 0; i < b.N; i++ {
         l.PushFront(i)
     }
 }
 
-func BenchmarkPopBack(b *testing.B) {
+func Benchmark_PopBack(b *testing.B) {
     for i := 0; i < b.N; i++ {
         l.PopBack()
     }
 }
 
-func BenchmarkLen(b *testing.B) {
+func Benchmark_Len(b *testing.B) {
     for i := 0; i < b.N; i++ {
         l.Len()
     }
