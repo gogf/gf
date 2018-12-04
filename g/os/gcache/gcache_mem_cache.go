@@ -266,8 +266,10 @@ func (c *memCache) Size() (size int) {
 
 // 删除缓存对象
 func (c *memCache) Close()  {
+    if c.cap > 0 {
+        c.lru.Close()
+    }
     c.closed.Set(true)
-    c.lru.Close()
 }
 
 // 数据异步任务循环:

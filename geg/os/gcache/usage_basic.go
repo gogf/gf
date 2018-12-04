@@ -1,8 +1,8 @@
 package main
 
 import (
+    "fmt"
     "gitee.com/johng/gf/g/os/gcache"
-    "gitee.com/johng/gf/g"
 )
 
 func main() {
@@ -13,16 +13,16 @@ func main() {
     c.Set("k1", "v1", 0)
 
     // 获取缓存
-    g.Dump(c.Get("k1"))
+    fmt.Println(c.Get("k1"))
 
     // 获取缓存大小
-    g.Dump(c.Size())
+    fmt.Println(c.Size())
 
     // 缓存中是否存在指定键名
-    g.Dump(c.Contains("k1"))
+    fmt.Println(c.Contains("k1"))
 
     // 删除并返回被删除的键值
-    g.Dump(c.Remove("k1"))
+    fmt.Println(c.Remove("k1"))
 
     // 关闭缓存对象，让GC回收资源
     c.Close()
