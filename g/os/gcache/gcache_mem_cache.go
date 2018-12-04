@@ -52,7 +52,6 @@ const (
     gDEFAULT_MAX_EXPIRE = 9223372036854
 )
 
-
 // 创建底层的缓存对象
 func newMemCache(lruCap...int) *memCache {
     c := &memCache {
@@ -223,6 +222,19 @@ func (c *memCache) BatchRemove(keys []interface{}) {
     for _, key := range keys {
         c.Remove(key)
     }
+}
+
+// 返回缓存的所有数据键值对(不包含已过期数据)
+func (c *memCache) Data() map[interface{}]interface{} {
+    m := make(map[interface{}]interface{})
+    c.dataMu.RLock()
+    for k, v := range c.data {
+        if !v.IsExpired() {
+            m[k] = v.v
+        }
+    }
+    c.dataMu.RUnlock()
+    return m
 }
 
 // 获得所有的键名，组成数组返回

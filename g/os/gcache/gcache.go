@@ -61,6 +61,11 @@ func BatchRemove(keys []interface{}) {
     cache.BatchRemove(keys)
 }
 
+// 返回缓存的所有数据键值对(不包含已过期数据)
+func Data() map[interface{}]interface{} {
+    return cache.Data()
+}
+
 // 获得所有的键名，组成数组返回
 func Keys() []interface{} {
     return cache.Keys()

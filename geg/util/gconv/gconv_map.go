@@ -5,21 +5,24 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
 )
 
-
-// struct转map
 func main() {
     type User struct {
-        Uid  int
-        Name string
+        Uid  int    `json:"uid"`
+        Name string `json:"name"`
     }
     // 对象
     fmt.Println(gconv.Map(User{
         Uid      : 1,
         Name     : "john",
     }))
-    // 指针
+    // 对象指针
     fmt.Println(gconv.Map(&User{
         Uid      : 1,
         Name     : "john",
+    }))
+
+    // 任意map类型
+    fmt.Println(gconv.Map(map[int]int{
+        100 : 10000,
     }))
 }
