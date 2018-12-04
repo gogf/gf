@@ -10,6 +10,7 @@
 1. `gfsnotify`模块增加对特定回调的取消注册功能（[https://gfer.me/os/gfsnotify/index](https://gfer.me/os/gfsnotify/index)）；
 
 
+
 ## 新功能
 1. 改进`ghttp.Request`，增加`SetParam/GetParam`请求流程自定义变量设置/获取方法，用于在请求流程中的回调函数共享变量（[https://gfer.me/net/ghttp/request](https://gfer.me/net/ghttp/request)）;
 1. 改进`ghttp.Response`，增加`ServeFileDownload`方法，用于WebServer引导客户端下载文件([https://gfer.me/net/ghttp/response](https://gfer.me/net/ghttp/response));
