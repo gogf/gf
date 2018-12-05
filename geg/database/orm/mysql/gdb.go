@@ -291,7 +291,7 @@ func linkopSelect3() {
 // 链式查询数量1
 func linkopCount1() {
     fmt.Println("linkopCount1:")
-    r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Where("u.uid=?", 1).Count()
+    r, err := db.Table("user u").Fields("uid").LeftJoin("user_detail ud", "u.uid=ud.uid").Where("u.uid=?", 1).Count()
     if err == nil {
         fmt.Println(r)
     } else {
@@ -505,17 +505,17 @@ func main() {
     //linkopSelect1()
     //linkopSelect2()
     //linkopSelect3()
-    //linkopCount1()
+    linkopCount1()
     //linkopUpdate1()
     //linkopUpdate2()
     //linkopUpdate3()
     //linkopUpdate4()
     //
-    transaction1()
-    transaction2()
+    //transaction1()
+    //transaction2()
     //
     //keepPing()
     //likeQuery()
-    mapToStruct()
+    //mapToStruct()
     //getQueriedSqls()
 }

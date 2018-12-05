@@ -344,6 +344,8 @@ func (md *Model) Struct(obj interface{}) error {
 func (md *Model) Count() (int, error) {
 	if md.fields == "" || md.fields == "*" {
 		md.fields = "COUNT(1)"
+	} else {
+        md.fields = fmt.Sprintf(`COUNT(%s)`, md.fields)
 	}
 	s := md.getFormattedSql()
 	if len(md.groupBy) > 0 {
