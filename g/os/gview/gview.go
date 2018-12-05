@@ -290,8 +290,14 @@ func (view *View) funcUrlDecode(url interface{}) string {
 }
 
 // 模板内置方法：date
-func (view *View) funcDate(format string, timestamp interface{}) string {
-    return gtime.NewFromTimeStamp(gconv.Int64(timestamp)).Format(format)
+func (view *View) funcDate(format string, timestamp...interface{}) string {
+    t := int64(0)
+    if len(timestamp) > 0 {
+        t = gconv.Int64(timestamp[0])
+    } else {
+        t = gtime.Millisecond()
+    }
+    return gtime.NewFromTimeStamp(t).Format(format)
 }
 
 // 模板内置方法：compare
