@@ -294,7 +294,8 @@ func (view *View) funcDate(format string, timestamp...interface{}) string {
     t := int64(0)
     if len(timestamp) > 0 {
         t = gconv.Int64(timestamp[0])
-    } else {
+    }
+    if t == 0 {
         t = gtime.Millisecond()
     }
     return gtime.NewFromTimeStamp(t).Format(format)
