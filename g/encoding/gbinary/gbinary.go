@@ -174,24 +174,28 @@ func EncodeFloat64(f float64) []byte {
 
 // 当b位数不够时，进行高位补0
 func fillUpSize(b []byte, l int) []byte {
+    if len(b) >= l {
+        return b
+    }
     c := make([]byte, 0)
     c  = append(c, b...)
-    for i := 0; i <= l - len(b); i++ {
+    for i := 0; i < l - len(b); i++ {
         c = append(c, 0x00)
     }
     return c
 }
 
-// 将二进制解析为int类型，根据[]byte的长度进行自动转换
+// 将二进制解析为int类型，根据[]byte的长度进行自动转换.
+// 注意内部使用的是uint*，使用int会造成位丢失。
 func DecodeToInt(b []byte) int {
     if len(b) < 2 {
-        return int(DecodeToInt8(b))
+        return int(DecodeToUint8(b))
     } else if len(b) < 3 {
-        return int(DecodeToInt16(b))
+        return int(DecodeToUint16(b))
     } else if len(b) < 5 {
-        return int(DecodeToInt32(b))
+        return int(DecodeToUint32(b))
     } else {
-        return int(DecodeToInt64(b))
+        return int(DecodeToUint64(b))
     }
 }
 

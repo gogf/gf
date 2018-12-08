@@ -50,16 +50,18 @@ var serverProcessStatus  = gtype.NewInt()
 // 服务管理首页
 func (p *utilAdmin) Index(r *Request) {
     data := map[string]interface{}{
+        "pid" : gproc.Pid(),
         "uri" : strings.TrimRight(r.URL.Path, "/"),
     }
     buffer, _ := gview.ParseContent(`
             <html>
             <head>
-                <title>gf ghttp admin</title>
+                <title>GoFrame Web Server Admin</title>
             </head>
             <body>
-                <p><a href="{{$.uri}}/restart">restart</a></p>
-                <p><a href="{{$.uri}}/shutdown">shutdown</a></p>
+                <p>PID: {{.pid}}</p>
+                <p><a href="{{$.uri}}/restart">Restart</a></p>
+                <p><a href="{{$.uri}}/shutdown">Shutdown</a></p>
             </body>
             </html>
     `, data)

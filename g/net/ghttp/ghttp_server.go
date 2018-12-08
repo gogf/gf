@@ -258,7 +258,9 @@ func (s *Server) Start() error {
     // 如果是子进程，那么服务开启后通知父进程销毁
     if gproc.IsChild() {
         gtime.SetTimeout(2*time.Second, func() {
-            gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP)
+            if err := gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP); err != nil {
+                panic(err)
+            }
         })
     }
 

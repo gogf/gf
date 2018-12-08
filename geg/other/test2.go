@@ -2,22 +2,12 @@ package main
 
 import (
     "fmt"
-    "reflect"
+    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
-type Home struct {
-    i int `nljb:"100"`
-}
-
 func main() {
-    home := new(Home)
-    home.i = 5
-    rcvr := reflect.ValueOf(home)
-    typ := reflect.Indirect(rcvr).Type()
-    fmt.Println(typ.Kind().String())
-    x := typ.NumField()
-    for i := 0; i < x; i++ {
-        nljb := typ.Field(0).Tag.Get("nljb")
-        fmt.Println(nljb)
-    }
+    pid := 41902
+    b := gbinary.EncodeByLength(2, pid)
+    fmt.Println(b)
+    fmt.Println(gbinary.DecodeToInt(b))
 }

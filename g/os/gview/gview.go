@@ -11,6 +11,7 @@ import (
     "bytes"
     "errors"
     "fmt"
+    "gitee.com/johng/gf"
     "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/encoding/ghash"
     "gitee.com/johng/gf/g/encoding/ghtml"
@@ -74,6 +75,10 @@ func New(path...string) *View {
         view.SetPath(path[0])
     }
     view.SetDelimiters("{{", "}}")
+    // 内置变量
+    view.data["GF"] = map[string]interface{} {
+        "version" : gf.VERSION,
+    }
     // 内置方法
     view.BindFunc("text",        view.funcText)
     view.BindFunc("html",        view.funcHtmlEncode)
