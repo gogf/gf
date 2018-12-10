@@ -35,7 +35,7 @@ func (db *dbmssql) Open(c *ConfigNode) (*sql.DB, error) {
 	if c.Linkinfo != "" {
 		source = c.Linkinfo
 	} else {
-		source = fmt.Sprintf("uid=%s;pwd=%s;server=%s;port=%s;database=%s;encrypt=disable", c.User, c.Pass, c.Host, c.Port, c.Name)
+		source = fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable", c.User, c.Pass, c.Host, c.Port, c.Name)
 	}
 	if db, err := sql.Open("sqlserver", source); err == nil {
 		return db, nil
