@@ -63,11 +63,13 @@ type ServerConfig struct {
     SessionMaxAge     int                   // Session有效期
     SessionIdName     string                // SessionId名称
 
-    // ip访问控制
+    // IP访问控制
     DenyIps           []string              // 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
     AllowIps          []string              // 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
+
     // 路由访问控制
     DenyRoutes        []string              // 不允许访问的路由规则列表
+    Rewrites          map[string]string     // URI Rewrite重写配置
 
     // 日志配置
     LogPath           string                // 存放日志的目录路径
@@ -113,6 +115,7 @@ var defaultServerConfig = ServerConfig {
     DumpRouteMap      : true,
 
     RouterCacheExpire : 60,
+    Rewrites          : make(map[string]string),
 }
 
 // 获取默认的http server设置
@@ -196,9 +199,15 @@ func (s *Server)EnableHTTPS(certFile, keyFile string) {
     }
     certFileRealPath := gfile.RealPath(certFile)
     if certFileRealPath == "" {
+        certFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + certFileRealPath)
+    }
+    if certFileRealPath == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
     }
     keyFileRealPath := gfile.RealPath(keyFile)
+    if keyFileRealPath == "" {
+        keyFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + keyFileRealPath)
+    }
     if keyFileRealPath == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
     }
@@ -250,30 +259,6 @@ func (s *Server)SetServerAgent(agent string) {
         return
     }
     s.config.ServerAgent = agent
-}
-
-func (s *Server) SetDenyIps(ips []string) {
-    if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-        return
-    }
-    s.config.DenyIps = ips
-}
-
-func (s *Server) SetAllowIps(ips []string) {
-    if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-        return
-    }
-    s.config.AllowIps = ips
-}
-
-func (s *Server) SetDenyRoutes(routes []string) {
-    if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-        return
-    }
-    s.config.DenyRoutes = routes
 }
 
 func (s *Server) SetGzipContentTypes(types []string) {

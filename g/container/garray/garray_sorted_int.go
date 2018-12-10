@@ -16,7 +16,7 @@ type SortedIntArray struct {
     mu          *rwmutex.RWMutex     // 互斥锁
     cap         int                  // 初始化设置的数组容量
     array       []int                // 底层数组
-    unique      *gtype.Bool          // 是否要求不能重复
+    unique      *gtype.Bool          // 是否要求不能重复(默认false)
     compareFunc func(v1, v2 int) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 

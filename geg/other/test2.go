@@ -2,12 +2,19 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/encoding/gbinary"
 )
 
+
+func Map() map[int]int {
+    return nil
+}
+
+
 func main() {
-    pid := 41902
-    b := gbinary.EncodeByLength(2, pid)
-    fmt.Println(b)
-    fmt.Println(gbinary.DecodeToInt(b))
+    v := (interface{})(nil)
+    fmt.Println(v == nil)
+    if v = Map(); v != nil {
+        fmt.Println(v == nil)
+    }
+    fmt.Println(Map() == nil)
 }

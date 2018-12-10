@@ -3,6 +3,7 @@ package main
 import (
     "gitee.com/johng/gf/g/database/gdb"
     "fmt"
+    "gitee.com/johng/gf/g/encoding/gparser"
 )
 
 func main() {
@@ -23,9 +24,11 @@ func main() {
     // 开启调试模式，以便于记录所有执行的SQL
     db.SetDebug(true)
 
-    r, _ := db.Table("user").Where("uid=?", 1).One()
+    r, _ := db.Table("user").All()
     if r != nil {
-        fmt.Println(r["uid"].Int())
-        fmt.Println(r["name"].String())
+        fmt.Println(r.ToList())
+        b, e := gparser.VarToJson(r.ToList())
+        fmt.Println(e)
+        fmt.Println(string(b))
     }
 }

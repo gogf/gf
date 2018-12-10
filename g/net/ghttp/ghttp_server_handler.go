@@ -29,6 +29,12 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
 func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
+    // 重写规则判断
+    if len(s.config.Rewrites) > 0 {
+        if rewrite, ok := s.config.Rewrites[r.URL.Path]; ok {
+            r.URL.Path = rewrite
+        }
+    }
     // 去掉末尾的"/"号
     if r.URL.Path != "/" {
         for r.URL.Path[len(r.URL.Path) - 1] == '/' {

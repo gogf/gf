@@ -136,6 +136,20 @@ func (a *IntArray) Search(value int) int {
 	return result
 }
 
+// 清理数组中重复的元素项
+func (a *IntArray) Unique() *IntArray {
+	a.mu.Lock()
+	for i := 0; i < len(a.array) - 1; i++ {
+		for j := i + 1; j < len(a.array); j++ {
+			if a.array[i] == a.array[j] {
+				a.array = append(a.array[ : j], a.array[j + 1 : ]...)
+			}
+		}
+	}
+	a.mu.Unlock()
+	return a
+}
+
 // 使用自定义方法执行加锁修改操作
 func (a *IntArray) LockFunc(f func(array []int)) {
 	a.mu.Lock(true)

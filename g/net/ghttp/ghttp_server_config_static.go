@@ -59,12 +59,15 @@ func (s *Server)SetServerRoot(root string) {
     // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
     path := gfile.RealPath(root)
     if path == "" {
+        path = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + root)
+    }
+    if path == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: path "%s" does not exist`, root))
     }
     s.config.SearchPaths = []string{strings.TrimRight(path, gfile.Separator)}
 }
 
-// 添加静态文件搜索目录，必须给定目录的绝对路径
+// 添加静态文件搜索**目录**，必须给定目录的绝对路径
 func (s *Server) AddSearchPath(path string) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
@@ -73,12 +76,15 @@ func (s *Server) AddSearchPath(path string) {
     // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
     realPath := gfile.RealPath(path)
     if realPath == "" {
+        realPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + path)
+    }
+    if realPath == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: path "%s" does not exist`, path))
     }
     s.config.SearchPaths = append(s.config.SearchPaths, realPath)
 }
 
-// 添加URI与静态目录的映射
+// 添加URI与静态**目录**的映射
 func (s *Server) AddStaticPath(prefix string, path string) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
@@ -86,6 +92,9 @@ func (s *Server) AddStaticPath(prefix string, path string) {
     }
     // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
     realPath := gfile.RealPath(path)
+    if realPath == "" {
+        realPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + path)
+    }
     if realPath == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: path "%s" does not exist`, path))
     }

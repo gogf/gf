@@ -49,7 +49,7 @@ func New(value interface{}, safe...bool) *Json {
         }
     default:
         v := (interface{})(nil)
-        if m := gconv.Map(value); len(m) > 0 {
+        if m := gconv.Map(value); m != nil {
             v = m
             j = &Json {
                 p  : &v,
