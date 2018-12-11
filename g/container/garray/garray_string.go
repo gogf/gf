@@ -68,7 +68,18 @@ func (a *StringArray) InsertAfter(index int, value string) {
 // 删除指定索引的数据项, 调用方注意判断数组边界
 func (a *StringArray) Remove(index int) string {
 	a.mu.Lock()
-	defer a.mu.RUnlock()
+	defer a.mu.Unlock()
+	// 边界删除判断，以提高删除效率
+	if index == 0 {
+		value  := a.array[0]
+		a.array = a.array[1 : ]
+		return value
+	} else if index == len(a.array) - 1 {
+		value  := a.array[index]
+		a.array = a.array[: index]
+		return value
+	}
+	// 如果非边界删除，会涉及到数组创建，那么删除的效率差一些
 	value  := a.array[index]
 	a.array = append(a.array[ : index], a.array[index + 1 : ]...)
 	return value

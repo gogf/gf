@@ -66,6 +66,8 @@ func (a *Array) InsertAfter(index int, value interface{}) {
 
 // 删除指定索引的数据项, 调用方注意判断数组边界
 func (a *Array) Remove(index int) interface{} {
+    a.mu.Lock()
+    defer a.mu.Unlock()
     // 边界删除判断，以提高删除效率
     if index == 0 {
         value  := a.array[0]
