@@ -15,7 +15,6 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/os/genv"
-    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
     "gitee.com/johng/gf/g/os/gtime"
@@ -210,14 +209,6 @@ func (s *Server) Start() error {
     // 当前Web Server状态判断
     if s.Status() == SERVER_STATUS_RUNNING {
         return errors.New("server is already running")
-    }
-
-    // 仅在开启静态文件服务的时候有效
-    if s.config.FileServerEnabled {
-        // (开发环境)添加main源码包到搜索目录
-        if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
-            s.AddSearchPath(p)
-        }
     }
 
     // 底层http server配置
