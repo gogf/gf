@@ -8,6 +8,7 @@
 package gdb
 
 import (
+    "fmt"
     "sync"
 )
 
@@ -134,4 +135,15 @@ func (db *Db) SetMaxOpenConns(n int) {
 // 如果 d <= 0 表示该链接会一直重复利用
 func (db *Db) SetConnMaxLifetime(n int) {
     db.maxConnLifetime.Set(n)
+}
+
+// 节点配置转换为字符串
+func (node *ConfigNode) String() string {
+    if node.Linkinfo != "" {
+        return node.Linkinfo
+    }
+    return fmt.Sprintf(`%s@%s:%s,%s,%s,%s,%s,%d-%d-%d`, node.User, node.Host, node.Port,
+        node.Name, node.Type, node.Role, node.Charset,
+        node.MaxIdleConnCount, node.MaxOpenConnCount, node.MaxConnLifetime,
+    )
 }

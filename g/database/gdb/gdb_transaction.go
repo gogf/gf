@@ -27,16 +27,12 @@ type Tx struct {
 
 // 事务操作，提交
 func (tx *Tx) Commit() error {
-    err := tx.tx.Commit()
-    tx.master.Close()
-    return err
+    return tx.tx.Commit()
 }
 
 // 事务操作，回滚
 func (tx *Tx) Rollback() error {
-    err := tx.tx.Rollback()
-    tx.master.Close()
-    return err
+    return tx.tx.Rollback()
 }
 
 // (事务)数据库sql查询操作，主要执行查询
@@ -193,7 +189,6 @@ func (tx *Tx) Select(tables, fields string, condition interface{}, groupBy, orde
 }
 
 // sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
-// 记得调用sql.Stmt.Close关闭操作对象
 func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
     return tx.tx.Prepare(query)
 }

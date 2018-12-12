@@ -89,7 +89,6 @@ func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
     if err != nil {
         return nil,err
     }
-    defer slave.Close()
     p := db.link.handleSqlBeforeExec(&query)
     if db.debug.Val() {
         militime1 := gtime.Millisecond()
@@ -125,7 +124,6 @@ func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
     if err != nil {
         return nil,err
     }
-    defer master.Close()
     p := db.link.handleSqlBeforeExec(&query)
     if db.debug.Val() {
         militime1  := gtime.Millisecond()
@@ -259,12 +257,10 @@ func (db *Db) Select(tables, fields string, condition interface{}, groupBy, orde
 }
 
 // sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
-// 记得调用sql.Stmt.Close关闭操作对象
 func (db *Db) Prepare(query string) (*sql.Stmt, error) {
     if master, err := db.Master(); err != nil {
         return nil, err
     } else {
-        defer master.Close()
         return master.Prepare(query)
     }
 }
@@ -274,7 +270,6 @@ func (db *Db) PingMaster() error {
     if master, err := db.Master(); err != nil {
         return err
     } else {
-        defer master.Close()
         return master.Ping()
     }
 }
@@ -284,7 +279,6 @@ func (db *Db) PingSlave() error {
     if slave, err := db.Slave(); err != nil {
         return err
     } else {
-        defer slave.Close()
         return slave.Ping()
     }
 }

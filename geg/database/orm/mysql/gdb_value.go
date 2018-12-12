@@ -1,9 +1,8 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/database/gdb"
     "fmt"
-    "gitee.com/johng/gf/g/encoding/gparser"
+    "gitee.com/johng/gf/g/database/gdb"
 )
 
 func main() {
@@ -27,8 +26,5 @@ func main() {
     r, _ := db.Table("user").All()
     if r != nil {
         fmt.Println(r.ToList())
-        b, e := gparser.VarToJson(r.ToList())
-        fmt.Println(e)
-        fmt.Println(string(b))
     }
 }

@@ -91,7 +91,7 @@ type Db struct {
 	charr            string        // SQL安全符号(右)
 	debug            *gtype.Bool   // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
 	sqls             *gring.Ring   // (debug=true时有效)已执行的SQL列表
-	cache            *gcache.Cache // 查询缓存，需要注意的是，事务查询不支持缓存
+	cache            *gcache.Cache // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
     maxIdleConnCount *gtype.Int    // 连接池最大限制的连接数
     maxOpenConnCount *gtype.Int    // 连接池最大打开的连接数
     maxConnLifetime  *gtype.Int    // (单位秒)连接对象可重复使用的时间长度
@@ -248,40 +248,51 @@ func getLinkByType(dbType string) (Link, error) {
 }
 
 // 获得底层数据库链接对象
-func (db *Db) getSqlDb(master bool) (*sql.DB, error) {
+func (db *Db) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
+    // 负载均衡
     node, err := getConfigNodeByGroup(db.group, master)
     if err != nil {
         return nil, err
     }
+    // 类型对象
     link, err := getLinkByType(node.Type)
     if err != nil {
         return nil, err
     }
-    sqlDb, err := link.Open(node)
-    if err != nil {
-        return nil, err
+    // 检查缓存连接池对象
+    cacheKey := node.String()
+    if v := db.cache.Get(cacheKey); v != nil {
+        return v.(*sql.DB), nil
     }
-    if node.MaxIdleConnCount > 0 {
-        sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
-    }
-    if n := db.maxIdleConnCount.Val(); n > 0 {
-        sqlDb.SetMaxIdleConns(n)
-    }
+    v := db.cache.GetOrSetFuncLock(node.String(), func() interface{} {
+        sqlDb, err = link.Open(node)
+        if err != nil {
+            return nil
+        }
 
-    if node.MaxOpenConnCount > 0 {
-        sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
-    }
-    if n := db.maxOpenConnCount.Val(); n > 0 {
-        sqlDb.SetMaxOpenConns(n)
-    }
+        if n := db.maxIdleConnCount.Val(); n > 0 {
+            sqlDb.SetMaxIdleConns(n)
+        } else if node.MaxIdleConnCount > 0 {
+            sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
+        }
 
-    if node.MaxConnLifetime > 0 {
-        sqlDb.SetConnMaxLifetime(time.Duration(node.MaxConnLifetime) * time.Second)
+        if n := db.maxOpenConnCount.Val(); n > 0 {
+            sqlDb.SetMaxOpenConns(n)
+        } else if node.MaxOpenConnCount > 0 {
+            sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
+        }
+
+        if n := db.maxConnLifetime.Val(); n > 0 {
+            sqlDb.SetConnMaxLifetime(time.Duration(n) * time.Second)
+        } else if node.MaxConnLifetime > 0 {
+            sqlDb.SetConnMaxLifetime(time.Duration(node.MaxConnLifetime) * time.Second)
+        }
+        return sqlDb
+    }, 0)
+    if v != nil && sqlDb == nil {
+        sqlDb = v.(*sql.DB)
     }
-    if n := db.maxConnLifetime.Val(); n > 0 {
-        sqlDb.SetConnMaxLifetime(time.Duration(n) * time.Second)
-    }
-    return sqlDb, nil
+    return
 }
 
 // 创建底层数据库master链接对象
