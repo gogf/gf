@@ -21,11 +21,11 @@ import (
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gspath"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/os/gview/internal/text/template"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/gstr"
     "strings"
     "sync"
-    "text/template"
 )
 
 // 视图对象
