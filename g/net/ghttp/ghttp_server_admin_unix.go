@@ -25,7 +25,6 @@ func handleProcessSignal() {
         syscall.SIGINT,
         syscall.SIGQUIT,
         syscall.SIGKILL,
-        syscall.SIGHUP,
         syscall.SIGTERM,
         syscall.SIGUSR1,
         syscall.SIGUSR2,
@@ -34,7 +33,7 @@ func handleProcessSignal() {
         sig = <- procSignalChan
         switch sig {
             // 进程终止，停止所有子进程运行
-            case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGTERM:
+            case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM:
                 shutdownWebServers(sig.String())
                 return
 
