@@ -14,7 +14,12 @@ import (
 // 检测键值对参数Map，
 // rules参数支持 []string / map[string]string 类型，前面一种类型支持返回校验结果顺序(具体格式参考struct tag)，后一种不支持；
 // rules参数中得 map[string]string 是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息。
-func CheckMap(params map[string]interface{}, rules interface{}, msgs...CustomMsg) *Error {
+func CheckMap(params interface{}, rules interface{}, msgs...CustomMsg) *Error {
+    // 将参数转换为 map[string]interface{}类型
+    data := gconv.Map(params)
+    if data == nil {
+        return newErrorStr("invalid_params", "invalid params type: convert to map[string]interface{} failed")
+    }
     // 真实校验规则数据结构
     checkRules := make(map[string]string)
     // 真实自定义错误信息数据结构
@@ -74,10 +79,10 @@ func CheckMap(params map[string]interface{}, rules interface{}, msgs...CustomMsg
     // 这里的rule变量为多条校验规则，不包含名字或者错误信息定义
     for key, rule := range checkRules {
         value = nil
-        if v, ok := params[key]; ok {
+        if v, ok := data[key]; ok {
             value = v
         }
-        if e := Check(value, rule, customMsgs[key], params); e != nil {
+        if e := Check(value, rule, customMsgs[key], data); e != nil {
             _, item := e.FirstItem()
             // 如果值为nil|""，并且不需要require*验证时，其他验证失效
             if value == nil || gconv.String(value) == "" {

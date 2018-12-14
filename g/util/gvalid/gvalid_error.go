@@ -22,11 +22,23 @@ type Error struct {
 type ErrorMap map[string]map[string]string
 
 
-// 创建一个校验错误对象指针
+// 创建一个校验错误对象指针(校验错误)
 func newError(rules []string, errors map[string]map[string]string) *Error {
     return &Error {
         rules  : rules,
         errors : errors,
+    }
+}
+
+// 创建一个校验错误对象指针(内部错误)
+func newErrorStr(key, err string) *Error {
+    return &Error {
+        rules  : nil,
+        errors : map[string]map[string]string{
+            "__gvalid__" : {
+                key: err,
+            },
+        },
     }
 }
 

@@ -42,6 +42,8 @@
 1. gtcp提供简便的包发送/接收方法(SendPkg/RecvPkg)以解决常见的TCP通信粘包问题，并完善文档（参考：https://www.cnblogs.com/kex1n/p/6502002.html）；
 1. gfile对于文件的读写强行使用了gfpool，在某些场景下不合适，需要考虑剥离开，并为开发者提供单独的指针池文件操作特性；
 1. 路由增加不区分大小写得匹配方式；
+1. str_ireplace: http://php.net/manual/en/function.str-ireplace.php
+1. strpos/stripos/strrpos/strripos: http://php.net/manual/en/function.stripos.php
 
 
 

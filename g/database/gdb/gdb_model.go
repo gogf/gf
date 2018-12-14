@@ -12,12 +12,14 @@ import (
 	"database/sql"
 	"gitee.com/johng/gf/g/util/gconv"
 	_ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
+    "strings"
 )
 
 // 数据库链式操作模型对象
 type Model struct {
 	tx           *Tx           // 数据库事务对象
 	db           *Db           // 数据库操作对象
+	tablesInit   string        // 初始化Model时的表名称(可以是多个)
 	tables       string        // 数据库操作表
 	fields       string        // 操作字段
 	where        string        // 操作条件
@@ -36,9 +38,10 @@ type Model struct {
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
 func (db *Db) Table(tables string) (*Model) {
 	return &Model{
-		db:     db,
-		tables: tables,
-		fields: "*",
+		db         : db,
+        tablesInit : tables,
+		tables     : tables,
+		fields     : "*",
 	}
 }
 
@@ -50,15 +53,25 @@ func (db *Db) From(tables string) (*Model) {
 // (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
 func (tx *Tx) Table(tables string) (*Model) {
 	return &Model{
-		db:     tx.db,
-		tx:     tx,
-		tables: tables,
+		db         : tx.db,
+		tx         : tx,
+        tablesInit : tables,
+		tables     : tables,
 	}
 }
 
 // (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
 func (tx *Tx) From(tables string) (*Model) {
 	return tx.Table(tables)
+}
+
+// 清空链式操作数据，以便改model可以重复使用
+func (md *Model) clear() {
+    if md.tx != nil {
+        *md = *md.tx.Table(md.tablesInit)
+    } else {
+        *md = *md.db.Table(md.tablesInit)
+    }
 }
 
 // 链式操作，左联表
@@ -87,21 +100,25 @@ func (md *Model) Fields(fields string) (*Model) {
 
 // 链式操作，condition，支持string & gdb.Map
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
-	md.where = md.db.formatCondition(where)
+	md.where     = md.db.formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
+	// 支持 Where("uid", 1)这种格式
+	if len(args) == 1 && strings.Index(md.where , "?") < 0 {
+        md.where += "=?"
+    }
 	return md
 }
 
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
-	md.where += " AND " + md.db.formatCondition(where)
+	md.where    += " AND " + md.db.formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
 	return md
 }
 
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
-	md.where += " OR " + md.db.formatCondition(where)
+	md.where    += " OR " + md.db.formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
 	return md
 }
@@ -153,6 +170,7 @@ func (md *Model) Insert() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+		md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("inserting into table with empty data")
@@ -184,6 +202,7 @@ func (md *Model) Replace() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("replacing into table with empty data")
@@ -215,6 +234,7 @@ func (md *Model) Save() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("replacing into table with empty data")
@@ -246,6 +266,7 @@ func (md *Model) Update() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("updating table with empty data")
@@ -263,6 +284,7 @@ func (md *Model) Delete() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+        md.clear()
 	}()
 	if md.where == "" {
 		return nil, errors.New("where is required while deleting")
@@ -298,6 +320,7 @@ func (md *Model) Cache(time int, name ... string) *Model {
 
 // 链式操作，select
 func (md *Model) Select() (Result, error) {
+    defer md.clear()
 	return md.getAll(md.getFormattedSql(), md.whereArgs...)
 }
 
@@ -342,6 +365,7 @@ func (md *Model) Struct(obj interface{}) error {
 // 链式操作，查询数量，fields可以为空，也可以自定义查询字段，
 // 当给定自定义查询字段时，该字段必须为数量结果，否则会引起歧义，使用如：md.Fields("COUNT(id)")
 func (md *Model) Count() (int, error) {
+    defer md.clear()
 	if md.fields == "" || md.fields == "*" {
 		md.fields = "COUNT(1)"
 	} else {
@@ -424,11 +448,11 @@ func (md *Model) getFormattedSql() string {
 // @author ymrjqyy
 // @author 2018-08-15
 func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) {
-	var page = 1
+    defer md.clear()
+	page := 1
 	for {
 		md.ForPage(page, limit)
-		sqls := md.getFormattedSql()
-		data, err := md.getAll(sqls, md.whereArgs...)
+		data, err := md.getAll(md.getFormattedSql(), md.whereArgs...)
 		if err != nil {
 			callback(nil, err)
 			break
