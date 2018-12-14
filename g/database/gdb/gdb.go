@@ -12,7 +12,6 @@ import (
     "database/sql"
     "errors"
     "fmt"
-    "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gring"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/container/gvar"
@@ -30,19 +29,16 @@ const (
 )
 
 // 数据库操作接口
-type Link interface {
-	// 打开数据库连接，建立数据库操作对象
-	Open(c *ConfigNode) (*sql.DB, error)
-
+type DB interface {
 	// SQL操作方法
-	Query(q string, args ...interface{}) (*sql.Rows, error)
-	Exec(q string, args ...interface{}) (sql.Result, error)
-	Prepare(q string) (*sql.Stmt, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Prepare(sql string, execOnMaster...bool) (*sql.Stmt, error)
 
 	// 数据库查询
-	GetAll(q string, args ...interface{}) (Result, error)
-	GetOne(q string, args ...interface{}) (Record, error)
-	GetValue(q string, args ...interface{}) (Value, error)
+	GetAll(query string, args ...interface{}) (Result, error)
+	GetOne(query string, args ...interface{}) (Record, error)
+	GetValue(query string, args ...interface{}) (Value, error)
 
 	// Ping
 	PingMaster() error
@@ -74,21 +70,23 @@ type Link interface {
 	Table(tables string) *Model
 	From(tables string) *Model
 
-	// 内部方法
-	insert(table string, data Map, option uint8) (sql.Result, error)
-	batchInsert(table string, list List, batch int, option uint8) (sql.Result, error)
+	// 设置管理
+    SetDebug(debug bool)
 
-	getQuoteCharLeft() string
-	getQuoteCharRight() string
-	handleSqlBeforeExec(q *string) *string
+	// 内部方法接口
+    open(c *ConfigNode) (*sql.DB, error)
+	getCache() (*gcache.Cache)
+	getChars() (charLeft string, charRight string)
+	getDebug() bool
+	putSql(s *Sql)
+    formatCondition(condition interface{}) (where string)
+	handleSqlBeforeExec(sql string) string
 }
 
 // 数据库链接对象
-type Db struct {
-	link             Link          // 底层数据库类型管理对象
+type dbBase struct {
+	db               DB            // 数据库对象
 	group            string        // 配置分组名称
-	charl            string        // SQL安全符号(左)
-	charr            string        // SQL安全符号(右)
 	debug            *gtype.Bool   // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
 	sqls             *gring.Ring   // (debug=true时有效)已执行的SQL列表
 	cache            *gcache.Cache // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
@@ -104,7 +102,7 @@ type Sql struct {
 	Error error         // 执行结果(nil为成功)
 	Start int64         // 执行开始时间(毫秒)
 	End   int64         // 执行结束时间(毫秒)
-	Func  string        // 执行方法名称
+	Func  string        // 执行方法
 }
 
 // 返回数据表记录值
@@ -117,27 +115,13 @@ type Record map[string]Value
 type Result []Record
 
 // 关联数组，绑定一条数据表记录(使用别名)
-type Map = map[string]interface{}
+type Map  = map[string]interface{}
 
 // 关联数组列表(索引从0开始的数组)，绑定多条记录(使用别名)
 type List = []Map
 
-var (
-    // 支持的数据库类型map
-    driverMap = make(map[string]interface{})
-    // 数据库查询缓存对象map，使用数据库连接名称作为键名，键值为查询缓存对象
-    dbCaches  = gmap.NewStringInterfaceMap()
-)
-func init() {
-	driverMap["mysql"]   = linkMysql
-	driverMap["oracle"]  = linkOracle
-	driverMap["sqlite"]  = linkSqlite
-	driverMap["pgsql"]   = linkPgsql
-	driverMap["mssql"]	 = linkMssql
-}
-
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
-func New(groupName ...string) (*Db, error) {
+func New(groupName ...string) (db DB, err error) {
 	group := config.d
 	if len(groupName) > 0 {
         group = groupName[0]
@@ -150,24 +134,29 @@ func New(groupName ...string) (*Db, error) {
 	}
 	if _, ok := config.c[group]; ok {
 	    if node, err := getConfigNodeByGroup(group, true); err == nil {
-	        link, err := getLinkByType(node.Type)
-	        if err != nil {
-	            return nil, err
-            }
-            db := &Db {
-                link             : link,
+	        base := &dbBase {
                 group            : group,
-                charl            : link.getQuoteCharLeft(),
-                charr            : link.getQuoteCharRight(),
                 debug            : gtype.NewBool(),
+                cache            : gcache.New(),
                 maxIdleConnCount : gtype.NewInt(),
                 maxOpenConnCount : gtype.NewInt(),
                 maxConnLifetime  : gtype.NewInt(),
             }
-            db.cache = dbCaches.GetOrSetFuncLock(group, func() interface{} {
-                return gcache.New()
-            }).(*gcache.Cache)
-            return db, nil
+            switch node.Type {
+                case "mysql":
+                    base.db = &dbMysql{dbBase  : base}
+                case "pgsql":
+                    base.db = &dbPgsql{dbBase  : base}
+                case "mssql":
+                    base.db = &dbMssql{dbBase  : base}
+                case "sqlite":
+                    base.db = &dbSqlite{dbBase : base}
+                case "oracle":
+                    base.db = &dbOracle{dbBase : base}
+                default:
+                    return nil, errors.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
+            }
+            return base.db, nil
         } else {
             return nil, err
         }
@@ -238,24 +227,10 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 	return nil
 }
 
-// 根据配置的数据库；类型获得Link接口对象
-func getLinkByType(dbType string) (Link, error) {
-	if dblink, ok := driverMap[dbType]; ok == false {
-		return nil, errors.New(fmt.Sprintf("unsupported db type '%s'", dbType))
-	} else {
-		return dblink.(Link), nil
-	}
-}
-
 // 获得底层数据库链接对象
-func (db *Db) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
+func (db *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
     // 负载均衡
     node, err := getConfigNodeByGroup(db.group, master)
-    if err != nil {
-        return nil, err
-    }
-    // 类型对象
-    link, err := getLinkByType(node.Type)
     if err != nil {
         return nil, err
     }
@@ -265,7 +240,7 @@ func (db *Db) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
         return v.(*sql.DB), nil
     }
     v := db.cache.GetOrSetFuncLock(node.String(), func() interface{} {
-        sqlDb, err = link.Open(node)
+        sqlDb, err = db.db.open(node)
         if err != nil {
             return nil
         }
@@ -296,11 +271,11 @@ func (db *Db) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 }
 
 // 创建底层数据库master链接对象
-func (db *Db) Master() (*sql.DB, error) {
+func (db *dbBase) Master() (*sql.DB, error) {
 	return db.getSqlDb(true)
 }
 
 // 创建底层数据库slave链接对象
-func (db *Db) Slave() (*sql.DB, error) {
+func (db *dbBase) Slave() (*sql.DB, error) {
     return db.getSqlDb(false)
 }

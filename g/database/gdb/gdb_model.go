@@ -18,7 +18,7 @@ import (
 // 数据库链式操作模型对象
 type Model struct {
 	tx           *Tx           // 数据库事务对象
-	db           *Db           // 数据库操作对象
+	db           DB            // 数据库操作对象
 	tablesInit   string        // 初始化Model时的表名称(可以是多个)
 	tables       string        // 数据库操作表
 	fields       string        // 操作字段
@@ -36,9 +36,9 @@ type Model struct {
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (db *Db) Table(tables string) (*Model) {
+func (db *dbBase) Table(tables string) (*Model) {
 	return &Model{
-		db         : db,
+		db         : db.db,
         tablesInit : tables,
 		tables     : tables,
 		fields     : "*",
@@ -46,7 +46,7 @@ func (db *Db) Table(tables string) (*Model) {
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (db *Db) From(tables string) (*Model) {
+func (db *dbBase) From(tables string) (*Model) {
 	return db.Table(tables)
 }
 
@@ -396,7 +396,7 @@ func (md *Model) getAll(sql string, args ...interface{}) (result Result, err err
 		if len(cacheKey) == 0 {
 			cacheKey = sql + "/" + gconv.String(args)
 		}
-		if v := md.db.cache.Get(cacheKey); v != nil {
+		if v := md.db.getCache().Get(cacheKey); v != nil {
 			return v.(Result), nil
 		}
 	}
@@ -408,9 +408,9 @@ func (md *Model) getAll(sql string, args ...interface{}) (result Result, err err
 	// 查询缓存保存处理
 	if len(cacheKey) > 0 && err == nil {
 		if md.cacheTime < 0 {
-			md.db.cache.Remove(cacheKey)
+			md.db.getCache().Remove(cacheKey)
 		} else {
-			md.db.cache.Set(cacheKey, result, md.cacheTime*1000)
+			md.db.getCache().Set(cacheKey, result, md.cacheTime*1000)
 		}
 	}
 	return result, err
@@ -419,7 +419,7 @@ func (md *Model) getAll(sql string, args ...interface{}) (result Result, err err
 // 检查是否需要查询查询缓存
 func (md *Model) checkAndRemoveCache() {
 	if md.cacheEnabled && md.cacheTime < 0 && len(md.cacheName) > 0 {
-		md.db.cache.Remove(md.cacheName)
+		md.db.getCache().Remove(md.cacheName)
 	}
 }
 

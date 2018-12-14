@@ -18,17 +18,13 @@ import (
 // _ "gitee.com/johng/gf/third/github.com/lib/pq"
 // @todo 需要完善replace和save的操作覆盖
 
-// PostgreSQL接口对象
-var linkPgsql = &dbpgsql{}
-
-
 // 数据库链接对象
-type dbpgsql struct {
-    Db
+type dbPgsql struct {
+    *dbBase
 }
 
 // 创建SQL操作对象，内部采用了lazy link处理
-func (db *dbpgsql) Open (c *ConfigNode) (*sql.DB, error) {
+func (db *dbPgsql) open (c *ConfigNode) (*sql.DB, error) {
     var source string
     if c.Linkinfo != "" {
         source = c.Linkinfo
@@ -42,23 +38,18 @@ func (db *dbpgsql) Open (c *ConfigNode) (*sql.DB, error) {
     }
 }
 
-// 获得关键字操作符 - 左
-func (db *dbpgsql) getQuoteCharLeft () string {
-    return "\""
-}
-
-// 获得关键字操作符 - 右
-func (db *dbpgsql) getQuoteCharRight () string {
-    return "\""
+// 获得关键字操作符
+func (db *dbPgsql) getChars () (charLeft string, charRight string) {
+    return "\"", "\""
 }
 
 // 在执行sql之前对sql进行进一步处理
-func (db *dbpgsql) handleSqlBeforeExec(q *string) *string {
+func (db *dbPgsql) handleSqlBeforeExec(query string) string {
     reg   := regexp.MustCompile("\\?")
     index := 0
-    str   := reg.ReplaceAllStringFunc(*q, func (s string) string {
+    str   := reg.ReplaceAllStringFunc(query, func (s string) string {
         index ++
         return fmt.Sprintf("$%d", index)
     })
-    return &str
+    return str
 }

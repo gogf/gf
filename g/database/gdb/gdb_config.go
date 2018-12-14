@@ -9,6 +9,7 @@ package gdb
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g/container/gring"
     "sync"
 )
 
@@ -122,18 +123,18 @@ func SetDefaultGroup (groupName string) {
 }
 
 // 设置数据库连接池中空闲链接的大小
-func (db *Db) SetMaxIdleConns(n int) {
+func (db *dbBase) SetMaxIdleConns(n int) {
     db.maxIdleConnCount.Set(n)
 }
 
 // 设置数据库连接池最大打开的链接数量
-func (db *Db) SetMaxOpenConns(n int) {
+func (db *dbBase) SetMaxOpenConns(n int) {
     db.maxOpenConnCount.Set(n)
 }
 
 // 设置数据库连接可重复利用的时间，超过该时间则被关闭废弃
 // 如果 d <= 0 表示该链接会一直重复利用
-func (db *Db) SetConnMaxLifetime(n int) {
+func (db *dbBase) SetConnMaxLifetime(n int) {
     db.maxConnLifetime.Set(n)
 }
 
@@ -146,4 +147,17 @@ func (node *ConfigNode) String() string {
         node.Name, node.Type, node.Role, node.Charset,
         node.MaxIdleConnCount, node.MaxOpenConnCount, node.MaxConnLifetime,
     )
+}
+
+// 是否开启调试服务
+func (db *dbBase) SetDebug(debug bool) {
+    db.debug.Set(debug)
+    if debug && db.sqls == nil {
+        db.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH)
+    }
+}
+
+// 获取是否开启调试服务
+func (db *dbBase) getDebug() bool {
+    return db.debug.Val()
 }

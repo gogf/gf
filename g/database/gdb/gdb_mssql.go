@@ -22,15 +22,13 @@ import (
 )
 
 
-var linkMssql = &dbmssql{}
-
 // 数据库链接对象
-type dbmssql struct {
-	Db
+type dbMssql struct {
+	*dbBase
 }
 
 // 创建SQL操作对象
-func (db *dbmssql) Open(c *ConfigNode) (*sql.DB, error) {
+func (db *dbMssql) open(c *ConfigNode) (*sql.DB, error) {
 	var source string
 	if c.Linkinfo != "" {
 		source = c.Linkinfo
@@ -44,43 +42,38 @@ func (db *dbmssql) Open(c *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// 获得关键字操作符 - 左
-func (db *dbmssql) getQuoteCharLeft() string {
-	return "\""
-}
-
-// 获得关键字操作符 - 右
-func (db *dbmssql) getQuoteCharRight() string {
-	return "\""
+// 获得关键字操作符
+func (db *dbMssql) getChars () (charLeft string, charRight string) {
+	return "\"", "\""
 }
 
 // 在执行sql之前对sql进行进一步处理
-func (db *dbmssql) handleSqlBeforeExec(q *string) *string {
+func (db *dbMssql) handleSqlBeforeExec(query string) string {
 	index := 0
-	str, _ := gregex.ReplaceStringFunc("\\?", *q, func(s string) string {
+	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
 		index++
 		return fmt.Sprintf("@p%d", index)
 	})
 
 	str, _ = gregex.ReplaceString("\"", "", str)
 
-	return db.parseSql(&str)
+	return db.parseSql(str)
 }
 
 //将MYSQL的SQL语法转换为MSSQL的语法
 //1.由于mssql不支持limit写法所以需要对mysql中的limit用法做转换
-func (db *dbmssql) parseSql(sql *string) *string {
+func (db *dbMssql) parseSql(sql string) string {
 	//下面的正则表达式匹配出SELECT和INSERT的关键字后分别做不同的处理，如有LIMIT则将LIMIT的关键字也匹配出
 	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
-	if gregex.IsMatchString(patten, *sql) == false {
+	if gregex.IsMatchString(patten, sql) == false {
 		fmt.Println("not matched..")
 		return sql
 	}
 
-	res, err := gregex.MatchAllString(patten, *sql)
+	res, err := gregex.MatchAllString(patten, sql)
 	if err != nil {
 		fmt.Println("MatchString error.", err)
-		return nil
+		return ""
 	}
 
 	index := 0
@@ -96,17 +89,17 @@ func (db *dbmssql) parseSql(sql *string) *string {
 		}
 
 		//不含LIMIT则不处理
-		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", *sql) == false {
+		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		} 
 
 		//判断SQL中是否含有order by
 		selectStr := ""
 		orderbyStr := ""
-		haveOrderby := gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", *sql)
+		haveOrderby := gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
 		if haveOrderby {
 			//取order by 前面的字符串
-			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", *sql)
+			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
 			
 			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "ORDER BY") == false{
 				break
@@ -114,13 +107,13 @@ func (db *dbmssql) parseSql(sql *string) *string {
 			selectStr = queryExpr[2]
 
 			//取order by表达式的值
-			orderbyExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", *sql)
+			orderbyExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", sql)
 			if len(orderbyExpr) != 4 || strings.EqualFold(orderbyExpr[1], "ORDER BY") == false || strings.EqualFold(orderbyExpr[3], "LIMIT") == false{
 				break
 			}
 			orderbyStr = orderbyExpr[2]
 		} else {
-			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", *sql)
+			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
 			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false{
 				break
 			}
@@ -144,14 +137,14 @@ func (db *dbmssql) parseSql(sql *string) *string {
 		}
 
 		if haveOrderby {
-			*sql = fmt.Sprintf("SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s   ) as TMP_ WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d", orderbyStr, selectStr, first, limit)
+			sql = fmt.Sprintf("SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s   ) as TMP_ WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d", orderbyStr, selectStr, first, limit)
 		} else {
 			if first == 0 {
 				first = limit
 			} else {
 				first = limit - first
 			}
-			*sql = fmt.Sprintf("SELECT * FROM (SELECT TOP %d * FROM (SELECT TOP %d %s) as TMP1_ ) as TMP2_ ", first, limit, selectStr)
+			sql = fmt.Sprintf("SELECT * FROM (SELECT TOP %d * FROM (SELECT TOP %d %s) as TMP1_ ) as TMP2_ ", first, limit, selectStr)
 		}
 	default:
 	}
