@@ -114,7 +114,7 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire
     c.dataMu.Lock()
     if v, ok := c.data[key]; ok && !v.IsExpired() {
         c.dataMu.Unlock()
-        return v
+        return v.v
     }
     if f, ok := value.(func() interface {}); ok {
         value = f()
