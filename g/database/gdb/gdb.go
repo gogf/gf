@@ -30,27 +30,39 @@ const (
 
 // 数据库操作接口
 type DB interface {
+    // 建立数据库连接方法(开发者一般不需要直接调用)
+    Open(config *ConfigNode) (*sql.DB, error)
+
 	// SQL操作方法
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	Prepare(sql string, execOnMaster...bool) (*sql.Stmt, error)
 
+    doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
+    doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
+    doPrepare(link dbLink, query string) (*sql.Stmt, error)
+    doInsert(link dbLink, table string, data Map, option int) (result sql.Result, err error)
+    doBatchInsert(link dbLink, table string, list List, batch int, option int) (result sql.Result, err error)
+    doUpdate(link dbLink, table string, data interface{}, condition interface{}, args ...interface{}) (result sql.Result, err error)
+    doDelete(link dbLink, table string, condition interface{}, args ...interface{}) (result sql.Result, err error)
+
 	// 数据库查询
 	GetAll(query string, args ...interface{}) (Result, error)
 	GetOne(query string, args ...interface{}) (Record, error)
 	GetValue(query string, args ...interface{}) (Value, error)
+    GetCount(query string, args ...interface{}) (int, error)
+    GetStruct(obj interface{}, query string, args ...interface{}) error
 
-	// Ping
+    // 创建底层数据库master/slave链接对象
+    Master() (*sql.DB, error)
+    Slave() (*sql.DB, error)
+
+    // Ping
 	PingMaster() error
 	PingSlave() error
 
-	// 连接属性设置
-	SetMaxIdleConns(n int)
-	SetMaxOpenConns(n int)
-	SetConnMaxLifetime(n int)
-
 	// 开启事务操作
-	Begin() (*Tx, error)
+	Begin() (*TX, error)
 
 	// 数据表插入/更新/保存操作
 	Insert(table string, data Map) (sql.Result, error)
@@ -72,15 +84,24 @@ type DB interface {
 
 	// 设置管理
     SetDebug(debug bool)
+    GetQueriedSqls() []*Sql
+    PrintQueriedSqls()
+    SetMaxIdleConns(n int)
+    SetMaxOpenConns(n int)
+    SetConnMaxLifetime(n int)
 
 	// 内部方法接口
-    open(c *ConfigNode) (*sql.DB, error)
 	getCache() (*gcache.Cache)
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
-	putSql(s *Sql)
-    formatCondition(condition interface{}) (where string)
 	handleSqlBeforeExec(sql string) string
+}
+
+// 执行底层数据库操作的核心接口
+type dbLink interface {
+    Query(query string, args ...interface{}) (*sql.Rows, error)
+    Exec(sql string, args ...interface{}) (sql.Result, error)
+    Prepare(sql string) (*sql.Stmt, error)
 }
 
 // 数据库链接对象
@@ -228,36 +249,36 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 }
 
 // 获得底层数据库链接对象
-func (db *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
+func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
     // 负载均衡
-    node, err := getConfigNodeByGroup(db.group, master)
+    node, err := getConfigNodeByGroup(bs.group, master)
     if err != nil {
         return nil, err
     }
     // 检查缓存连接池对象
     cacheKey := node.String()
-    if v := db.cache.Get(cacheKey); v != nil {
+    if v := bs.cache.Get(cacheKey); v != nil {
         return v.(*sql.DB), nil
     }
-    v := db.cache.GetOrSetFuncLock(node.String(), func() interface{} {
-        sqlDb, err = db.db.open(node)
+    v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
+        sqlDb, err = bs.db.Open(node)
         if err != nil {
             return nil
         }
 
-        if n := db.maxIdleConnCount.Val(); n > 0 {
+        if n := bs.maxIdleConnCount.Val(); n > 0 {
             sqlDb.SetMaxIdleConns(n)
         } else if node.MaxIdleConnCount > 0 {
             sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
         }
 
-        if n := db.maxOpenConnCount.Val(); n > 0 {
+        if n := bs.maxOpenConnCount.Val(); n > 0 {
             sqlDb.SetMaxOpenConns(n)
         } else if node.MaxOpenConnCount > 0 {
             sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
         }
 
-        if n := db.maxConnLifetime.Val(); n > 0 {
+        if n := bs.maxConnLifetime.Val(); n > 0 {
             sqlDb.SetConnMaxLifetime(time.Duration(n) * time.Second)
         } else if node.MaxConnLifetime > 0 {
             sqlDb.SetConnMaxLifetime(time.Duration(node.MaxConnLifetime) * time.Second)
@@ -271,11 +292,11 @@ func (db *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 }
 
 // 创建底层数据库master链接对象
-func (db *dbBase) Master() (*sql.DB, error) {
-	return db.getSqlDb(true)
+func (bs *dbBase) Master() (*sql.DB, error) {
+	return bs.getSqlDb(true)
 }
 
 // 创建底层数据库slave链接对象
-func (db *dbBase) Slave() (*sql.DB, error) {
-    return db.getSqlDb(false)
+func (bs *dbBase) Slave() (*sql.DB, error) {
+    return bs.getSqlDb(false)
 }

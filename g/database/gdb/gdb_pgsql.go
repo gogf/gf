@@ -24,12 +24,12 @@ type dbPgsql struct {
 }
 
 // 创建SQL操作对象，内部采用了lazy link处理
-func (db *dbPgsql) open (c *ConfigNode) (*sql.DB, error) {
+func (db *dbPgsql) Open (config *ConfigNode) (*sql.DB, error) {
     var source string
-    if c.Linkinfo != "" {
-        source = c.Linkinfo
+    if config.Linkinfo != "" {
+        source = config.Linkinfo
     } else {
-        source = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", c.User, c.Pass, c.Host, c.Port, c.Name)
+        source = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", config.User, config.Pass, config.Host, config.Port, config.Name)
     }
     if db, err := sql.Open("postgres", source); err == nil {
         return db, nil

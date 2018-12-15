@@ -13,64 +13,11 @@ import (
     "gitee.com/johng/gf/g/container/gvar"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/util/gstr"
     _ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
-    "strings"
+    "reflect"
 )
-
-type dbLink interface {
-    Query(query string, args ...interface{}) (*sql.Rows, error)
-    Exec(sql string, args ...interface{}) (sql.Result, error)
-    Prepare(sql string) (*sql.Stmt, error)
-}
-
-// 数据库sql查询操作，主要执行查询
-func doQuery(db DB, link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error) {
-    query = db.handleSqlBeforeExec(query)
-    if db.getDebug() {
-        mTime1    := gtime.Millisecond()
-        rows, err  = link.Query(query, args...)
-        mTime2    := gtime.Millisecond()
-        s         := &Sql{
-            Sql   : query,
-            Args  : args,
-            Error : err,
-            Start : mTime1,
-            End   : mTime2,
-        }
-        db.putSql(s)
-        printSql(s)
-    } else {
-        rows, err = link.Query(query, args ...)
-    }
-    if err == nil {
-        return rows, nil
-    } else {
-        err = formatError(err, query, args...)
-    }
-    return nil, err
-}
-
-// 执行一条sql，并返回执行情况，主要用于非查询操作
-func doExec(db DB, link dbLink, query string, args ...interface{}) (result sql.Result, err error) {
-    query = db.handleSqlBeforeExec(query)
-    if db.getDebug() {
-        mTime1     := gtime.Millisecond()
-        result, err = link.Exec(query, args ...)
-        mTime2     := gtime.Millisecond()
-        s := &Sql{
-            Sql   : query,
-            Args  : args,
-            Error : err,
-            Start : mTime1,
-            End   : mTime2,
-        }
-        db.putSql(s)
-        printSql(s)
-    } else {
-        result, err = link.Exec(query, args ...)
-    }
-    return result, formatError(err, query, args...)
-}
 
 // 将数据查询的列表数据*sql.Rows转换为Result类型
 func rowsToResult(rows *sql.Rows) (Result, error) {
@@ -103,34 +50,31 @@ func rowsToResult(rows *sql.Rows) (Result, error) {
     return records, nil
 }
 
-func formatInsertQuery(db DB, table string, data Map, option uint8) (string, []interface{}) {
-    var fields []string
-    var values []string
-    var params []interface{}
-    charl, charr := db.getChars()
-    for k, v := range data {
-        fields = append(fields,   charl + k + charr)
-        values = append(values, "?")
-        params = append(params, v)
-    }
-    operation := getInsertOperationByOption(option)
-    updatestr := ""
-    if option == OPTION_SAVE {
-        var updates []string
-        for k, _ := range data {
-            updates = append(updates,
-                fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
-                    charl, k, charr,
-                    charl, k, charr,
-                ),
-            )
+// 格式化SQL查询条件
+func formatCondition(condition interface{}) (where string) {
+    if reflect.ValueOf(condition).Kind() == reflect.Map {
+        ks := reflect.ValueOf(condition).MapKeys()
+        vs := reflect.ValueOf(condition)
+        for _, k := range ks {
+            key   := gconv.String(k.Interface())
+            value := gconv.String(vs.MapIndex(k).Interface())
+            isNum := gstr.IsNumeric(value)
+            if len(where) > 0 {
+                where += " AND "
+            }
+            if isNum || value == "?" {
+                where += key + "=" + value
+            } else {
+                where += key + "='" + value + "'"
+            }
         }
-        updatestr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
+    } else {
+        where += gconv.String(condition)
     }
-    return fmt.Sprintf("%s INTO %s(%s) VALUES(%s) %s",
-            operation, table, strings.Join(fields, ","),
-            strings.Join(values, ","), updatestr),
-            params
+    if len(where) == 0 {
+        where = "1"
+    }
+    return
 }
 
 // 打印SQL对象(仅在debug=true时有效)
@@ -163,7 +107,7 @@ func formatError(err error, query string, args ...interface{}) error {
 }
 
 // 根据insert选项获得操作名称
-func getInsertOperationByOption(option uint8) string {
+func getInsertOperationByOption(option int) string {
     oper := "INSERT"
     switch option {
         case OPTION_REPLACE:

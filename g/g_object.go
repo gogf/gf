@@ -44,12 +44,12 @@ func Config(file...string) *gcfg.Config {
 }
 
 // 数据库操作对象，使用了连接池
-func Database(name...string) *gdb.Db {
+func Database(name...string) gdb.DB {
     return gins.Database(name...)
 }
 
 // (别名)Database
-func DB(name...string) *gdb.Db {
+func DB(name...string) gdb.DB {
     return gins.Database(name...)
 }
 

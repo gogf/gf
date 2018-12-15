@@ -120,7 +120,7 @@ func Config(file...string) *gcfg.Config {
 }
 
 // 数据库操作对象，使用了连接池
-func Database(name...string) *gdb.Db {
+func Database(name...string) gdb.DB {
     config := Config()
     group  := gdb.DEFAULT_GROUP_NAME
     if len(name) > 0 {
@@ -195,7 +195,7 @@ func Database(name...string) *gdb.Db {
         return nil
     })
     if db != nil {
-        return db.(*gdb.Db)
+        return db.(gdb.DB)
     }
     return nil
 }

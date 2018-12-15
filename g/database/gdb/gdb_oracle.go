@@ -27,12 +27,12 @@ type dbOracle struct {
 }
 
 // 创建SQL操作对象
-func (db *dbOracle) open(c *ConfigNode) (*sql.DB, error) {
+func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if c.Linkinfo != "" {
-		source = c.Linkinfo
+	if config.Linkinfo != "" {
+		source = config.Linkinfo
 	} else {
-		source = fmt.Sprintf("%s/%s@%s", c.User, c.Pass, c.Name)
+		source = fmt.Sprintf("%s/%s@%s", config.User, config.Pass, config.Name)
 	}
 	if db, err := sql.Open("oci8", source); err == nil {
 		return db, nil

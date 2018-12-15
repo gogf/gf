@@ -123,19 +123,19 @@ func SetDefaultGroup (groupName string) {
 }
 
 // 设置数据库连接池中空闲链接的大小
-func (db *dbBase) SetMaxIdleConns(n int) {
-    db.maxIdleConnCount.Set(n)
+func (bs *dbBase) SetMaxIdleConns(n int) {
+    bs.maxIdleConnCount.Set(n)
 }
 
 // 设置数据库连接池最大打开的链接数量
-func (db *dbBase) SetMaxOpenConns(n int) {
-    db.maxOpenConnCount.Set(n)
+func (bs *dbBase) SetMaxOpenConns(n int) {
+    bs.maxOpenConnCount.Set(n)
 }
 
 // 设置数据库连接可重复利用的时间，超过该时间则被关闭废弃
 // 如果 d <= 0 表示该链接会一直重复利用
-func (db *dbBase) SetConnMaxLifetime(n int) {
-    db.maxConnLifetime.Set(n)
+func (bs *dbBase) SetConnMaxLifetime(n int) {
+    bs.maxConnLifetime.Set(n)
 }
 
 // 节点配置转换为字符串
@@ -150,14 +150,14 @@ func (node *ConfigNode) String() string {
 }
 
 // 是否开启调试服务
-func (db *dbBase) SetDebug(debug bool) {
-    db.debug.Set(debug)
-    if debug && db.sqls == nil {
-        db.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH)
+func (bs *dbBase) SetDebug(debug bool) {
+    bs.debug.Set(debug)
+    if debug && bs.sqls == nil {
+        bs.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH)
     }
 }
 
 // 获取是否开启调试服务
-func (db *dbBase) getDebug() bool {
-    return db.debug.Val()
+func (bs *dbBase) getDebug() bool {
+    return bs.debug.Val()
 }

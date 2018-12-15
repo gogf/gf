@@ -85,6 +85,23 @@ type DBTest struct {
 	db *sql.DB
 }
 
+type netErrorMock struct {
+	temporary bool
+	timeout   bool
+}
+
+func (e netErrorMock) Temporary() bool {
+	return e.temporary
+}
+
+func (e netErrorMock) Timeout() bool {
+	return e.timeout
+}
+
+func (e netErrorMock) Error() string {
+	return fmt.Sprintf("mock net error. Temporary: %v, Timeout %v", e.temporary, e.timeout)
+}
+
 func runTestsWithMultiStatement(t *testing.T, dsn string, tests ...func(dbt *DBTest)) {
 	if !available {
 		t.Skipf("MySQL server not running on %s", netAddr)
@@ -1287,7 +1304,7 @@ func TestFoundRows(t *testing.T) {
 }
 
 func TestTLS(t *testing.T) {
-	tlsTest := func(dbt *DBTest) {
+	tlsTestReq := func(dbt *DBTest) {
 		if err := dbt.db.Ping(); err != nil {
 			if err == ErrNoTLS {
 				dbt.Skip("server does not support TLS")
@@ -1304,19 +1321,27 @@ func TestTLS(t *testing.T) {
 				dbt.Fatal(err.Error())
 			}
 
-			if value == nil {
-				dbt.Fatal("no Cipher")
+			if (*value == nil) || (len(*value) == 0) {
+				dbt.Fatalf("no Cipher")
+			} else {
+				dbt.Logf("Cipher: %s", *value)
 			}
 		}
 	}
+	tlsTestOpt := func(dbt *DBTest) {
+		if err := dbt.db.Ping(); err != nil {
+			dbt.Fatalf("error on Ping: %s", err.Error())
+		}
+	}
 
-	runTests(t, dsn+"&tls=skip-verify", tlsTest)
+	runTests(t, dsn+"&tls=preferred", tlsTestOpt)
+	runTests(t, dsn+"&tls=skip-verify", tlsTestReq)
 
 	// Verify that registering / using a custom cfg works
 	RegisterTLSConfig("custom-skip-verify", &tls.Config{
 		InsecureSkipVerify: true,
 	})
-	runTests(t, dsn+"&tls=custom-skip-verify", tlsTest)
+	runTests(t, dsn+"&tls=custom-skip-verify", tlsTestReq)
 }
 
 func TestReuseClosedConnection(t *testing.T) {
@@ -1799,6 +1824,38 @@ func TestConcurrent(t *testing.T) {
 
 		dbt.Logf("reached %d concurrent connections\r\n", succeeded)
 	})
+}
+
+func testDialError(t *testing.T, dialErr error, expectErr error) {
+	RegisterDial("mydial", func(addr string) (net.Conn, error) {
+		return nil, dialErr
+	})
+
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@mydial(%s)/%s?timeout=30s", user, pass, addr, dbname))
+	if err != nil {
+		t.Fatalf("error connecting: %s", err.Error())
+	}
+	defer db.Close()
+
+	_, err = db.Exec("DO 1")
+	if err != expectErr {
+		t.Fatalf("was expecting %s. Got: %s", dialErr, err)
+	}
+}
+
+func TestDialUnknownError(t *testing.T) {
+	testErr := fmt.Errorf("test")
+	testDialError(t, testErr, testErr)
+}
+
+func TestDialNonRetryableNetErr(t *testing.T) {
+	testErr := netErrorMock{}
+	testDialError(t, testErr, testErr)
+}
+
+func TestDialTemporaryNetErr(t *testing.T) {
+	testErr := netErrorMock{temporary: true}
+	testDialError(t, testErr, driver.ErrBadConn)
 }
 
 // Tests custom dial functions

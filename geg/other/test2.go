@@ -1,25 +1,15 @@
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "gitee.com/johng/gf/g/util/gregex"
+)
 
-type User struct {
-    Uid   int
-}
 
-func New() *User {
-    return &User{
-        100,
-    }
-}
-
-func (user *User) Clear() {
-    user = New()
-}
 
 func main() {
-    user := New()
-    user.Uid = 10000
-    fmt.Println(user)
-    user.Clear()
-    fmt.Println(user)
+    query := "select * from user"
+    q, err := gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, query)
+    fmt.Println(err)
+    fmt.Println(q)
 }

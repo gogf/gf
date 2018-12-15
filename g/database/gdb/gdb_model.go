@@ -17,8 +17,8 @@ import (
 
 // 数据库链式操作模型对象
 type Model struct {
-	tx           *Tx           // 数据库事务对象
 	db           DB            // 数据库操作对象
+	tx           *TX           // 数据库事务对象
 	tablesInit   string        // 初始化Model时的表名称(可以是多个)
 	tables       string        // 数据库操作表
 	fields       string        // 操作字段
@@ -36,9 +36,9 @@ type Model struct {
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (db *dbBase) Table(tables string) (*Model) {
-	return &Model{
-		db         : db.db,
+func (bs *dbBase) Table(tables string) (*Model) {
+	return &Model {
+		db         : bs.db,
         tablesInit : tables,
 		tables     : tables,
 		fields     : "*",
@@ -46,12 +46,12 @@ func (db *dbBase) Table(tables string) (*Model) {
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (db *dbBase) From(tables string) (*Model) {
-	return db.Table(tables)
+func (bs *dbBase) From(tables string) (*Model) {
+	return bs.db.Table(tables)
 }
 
 // (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (tx *Tx) Table(tables string) (*Model) {
+func (tx *TX) Table(tables string) (*Model) {
 	return &Model{
 		db         : tx.db,
 		tx         : tx,
@@ -61,7 +61,7 @@ func (tx *Tx) Table(tables string) (*Model) {
 }
 
 // (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (tx *Tx) From(tables string) (*Model) {
+func (tx *TX) From(tables string) (*Model) {
 	return tx.Table(tables)
 }
 
@@ -100,7 +100,7 @@ func (md *Model) Fields(fields string) (*Model) {
 
 // 链式操作，condition，支持string & gdb.Map
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
-	md.where     = md.db.formatCondition(where)
+	md.where     = formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
 	// 支持 Where("uid", 1)这种格式
 	if len(args) == 1 && strings.Index(md.where , "?") < 0 {
@@ -111,14 +111,14 @@ func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
 
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
-	md.where    += " AND " + md.db.formatCondition(where)
+	md.where    += " AND " + formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
 	return md
 }
 
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
-	md.where    += " OR " + md.db.formatCondition(where)
+	md.where    += " OR " + formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
 	return md
 }
@@ -220,9 +220,9 @@ func (md *Model) Replace() (result sql.Result, err error) {
 		}
 	} else if dataMap, ok := md.data.(Map); ok {
 		if md.tx == nil {
-			return md.db.Insert(md.tables, dataMap)
+			return md.db.Replace(md.tables, dataMap)
 		} else {
-			return md.tx.Insert(md.tables, dataMap)
+			return md.tx.Replace(md.tables, dataMap)
 		}
 	}
 	return nil, errors.New("replacing into table with invalid data type")
@@ -286,9 +286,6 @@ func (md *Model) Delete() (result sql.Result, err error) {
 		}
         md.clear()
 	}()
-	if md.where == "" {
-		return nil, errors.New("where is required while deleting")
-	}
 	if md.tx == nil {
 		return md.db.Delete(md.tables, md.where, md.whereArgs...)
 	} else {
@@ -320,13 +317,13 @@ func (md *Model) Cache(time int, name ... string) *Model {
 
 // 链式操作，select
 func (md *Model) Select() (Result, error) {
-    defer md.clear()
-	return md.getAll(md.getFormattedSql(), md.whereArgs...)
+	return md.All()
 }
 
 // 链式操作，查询所有记录
 func (md *Model) All() (Result, error) {
-	return md.Select()
+	defer md.clear()
+	return md.getAll(md.getFormattedSql(), md.whereArgs...)
 }
 
 // 链式操作，查询单条记录

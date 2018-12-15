@@ -22,12 +22,12 @@ type dbSqlite struct {
 	*dbBase
 }
 
-func (db *dbSqlite) open(c *ConfigNode) (*sql.DB, error) {
+func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if c.Linkinfo != "" {
-		source = c.Linkinfo
+	if config.Linkinfo != "" {
+		source = config.Linkinfo
 	} else {
-		source = c.Name
+		source = config.Name
 	}
 	if db, err := sql.Open("sqlite3", source); err == nil {
 		return db, nil

@@ -9,7 +9,7 @@
 // The driver should be used via the database/sql package:
 //
 //  import "database/sql"
-//  import _ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
+//  import _ "github.com/go-sql-driver/mysql"
 //
 //  db, err := sql.Open("mysql", "user:password@/dbname")
 //
@@ -50,7 +50,7 @@ func RegisterDial(net string, dial DialFunc) {
 
 // Open new Connection.
 // See https://github.com/go-sql-driver/mysql#dsn-data-source-name for how
-// the DSN string is formated
+// the DSN string is formatted
 func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
 	var err error
 
@@ -77,6 +77,10 @@ func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
 		mc.netConn, err = nd.Dial(mc.cfg.Net, mc.cfg.Addr)
 	}
 	if err != nil {
+		if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
+			errLog.Print("net.Error from Dial()': ", nerr.Error())
+			return nil, driver.ErrBadConn
+		}
 		return nil, err
 	}
 
@@ -110,18 +114,18 @@ func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
 	}
 
 	// Send Client Authentication Packet
-	authResp, addNUL, err := mc.auth(authData, plugin)
+	authResp, err := mc.auth(authData, plugin)
 	if err != nil {
 		// try the default auth plugin, if using the requested plugin failed
 		errLog.Print("could not use requested auth plugin '"+plugin+"': ", err.Error())
 		plugin = defaultAuthPlugin
-		authResp, addNUL, err = mc.auth(authData, plugin)
+		authResp, err = mc.auth(authData, plugin)
 		if err != nil {
 			mc.cleanup()
 			return nil, err
 		}
 	}
-	if err = mc.writeHandshakeResponsePacket(authResp, addNUL, plugin); err != nil {
+	if err = mc.writeHandshakeResponsePacket(authResp, plugin); err != nil {
 		mc.cleanup()
 		return nil, err
 	}

@@ -28,12 +28,13 @@ type dbMssql struct {
 }
 
 // 创建SQL操作对象
-func (db *dbMssql) open(c *ConfigNode) (*sql.DB, error) {
-	var source string
-	if c.Linkinfo != "" {
-		source = c.Linkinfo
+func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
+	source := ""
+	if config.Linkinfo != "" {
+		source = config.Linkinfo
 	} else {
-		source = fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable", c.User, c.Pass, c.Host, c.Port, c.Name)
+		source = fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
+            config.User, config.Pass, config.Host, config.Port, config.Name)
 	}
 	if db, err := sql.Open("sqlserver", source); err == nil {
 		return db, nil
