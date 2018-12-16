@@ -10,6 +10,7 @@ package gvar
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
     "time"
 )
@@ -91,6 +92,8 @@ func (v *Var) Interfaces()     []interface{}   { return gconv.Interfaces(v.Val()
 
 func (v *Var) Time(format...string) time.Time       { return gconv.Time(v.Val(), format...) }
 func (v *Var) TimeDuration()        time.Duration   { return gconv.TimeDuration(v.Val()) }
+
+func (v *Var) GTime(format...string) *gtime.Time    { return gconv.GTime(v.Val(), format...) }
 
 // 将变量转换为对象，注意 objPointer 参数必须为struct指针
 func (v *Var) Struct(objPointer interface{}, attrMapping...map[string]string) error {

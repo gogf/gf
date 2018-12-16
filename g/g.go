@@ -10,14 +10,27 @@ package g
 import "gitee.com/johng/gf/g/container/gvar"
 
 // 框架动态变量，可以用该类型替代interface{}类型
-type Var   = gvar.Var
+type Var       = gvar.Var
 
 // 常用map数据结构(使用别名)
-type Map   = map[string]interface{}
+type Map        = map[string]interface{}
+type MapStrStr  = map[string]string
+type MapStrInt  = map[string]int
+type MapIntStr  = map[int]string
+type MapIntInt  = map[int]int
 
 // 常用list数据结构(使用别名)
-type List  = []Map
+type List       = []Map
+type ListStrStr = []map[string]string
+type ListStrInt = []map[string]int
+type ListIntStr = []map[int]string
+type ListIntInt = []map[int]int
+
 
 // 常用slice数据结构(使用别名)
-type Slice = []interface{}
-type Array = Slice
+type Slice      = []interface{}
+type SliceStr   = []string
+type SliceInt   = []int
+type Array      = Slice
+type ArrayStr   = SliceStr
+type ArrayInt   = SliceInt

@@ -99,8 +99,11 @@ func Map(i interface{}, noTagCheck...bool) map[string]interface{} {
                     rt   := rv.Type()
                     name := ""
                     for i := 0; i < rv.NumField(); i++ {
-                        if name = rt.Field(i).Tag.Get("json"); name == "" {
-                            name = rt.Field(i).Name
+                        // 检查json tag
+                        if len(noTagCheck) == 0 || !noTagCheck[0] {
+                            if name = rt.Field(i).Tag.Get("json"); name == "" {
+                                name = rt.Field(i).Name
+                            }
                         }
                         m[name] = rv.Field(i).Interface()
                     }

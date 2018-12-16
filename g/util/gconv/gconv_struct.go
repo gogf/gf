@@ -157,12 +157,10 @@ func bindVarToStruct(elem reflect.Value, name string, value interface{}) (err er
     structFieldValue := elem.FieldByName(name)
     // 键名与对象属性匹配检测，map中如果有struct不存在的属性，那么不做处理，直接return
     if !structFieldValue.IsValid() {
-        //return errors.New(fmt.Sprintf(`invalid struct attribute of name "%s"`, name))
         return nil
     }
     // CanSet的属性必须为公开属性(首字母大写)
     if !structFieldValue.CanSet() {
-        //return errors.New(fmt.Sprintf(`struct attribute of name "%s" cannot be set`, name))
         return nil
     }
     // 必须将value转换为struct属性的数据类型，这里必须用到gconv包
@@ -181,12 +179,10 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) (e
     structFieldValue := elem.FieldByIndex([]int{index})
     // 键名与对象属性匹配检测
     if !structFieldValue.IsValid() {
-        //return errors.New(fmt.Sprintf("invalid struct attribute at index %d", index))
         return nil
     }
     // CanSet的属性必须为公开属性(首字母大写)
     if !structFieldValue.CanSet() {
-        //return errors.New(fmt.Sprintf("struct attribute cannot be set at index %d", index))
         return nil
     }
     // 必须将value转换为struct属性的数据类型，这里必须用到gconv包

@@ -12,22 +12,18 @@ import (
     "database/sql"
 )
 
-// MySQL接口对象
-var linkMysql = &dbmysql{}
-
-
 // 数据库链接对象
-type dbmysql struct {
-    Db
+type dbMysql struct {
+    *dbBase
 }
 
 // 创建SQL操作对象，内部采用了lazy link处理
-func (db *dbmysql) Open (c *ConfigNode) (*sql.DB, error) {
+func (db *dbMysql) Open (config *ConfigNode) (*sql.DB, error) {
     var source string
-    if c.Linkinfo != "" {
-        source = c.Linkinfo
+    if config.Linkinfo != "" {
+        source = config.Linkinfo
     } else {
-        source = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.User, c.Pass, c.Host, c.Port, c.Name)
+        source = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?multiStatements=true", config.User, config.Pass, config.Host, config.Port, config.Name)
     }
     if db, err := sql.Open("mysql", source); err == nil {
         return db, nil
@@ -36,17 +32,12 @@ func (db *dbmysql) Open (c *ConfigNode) (*sql.DB, error) {
     }
 }
 
-// 获得关键字操作符 - 左
-func (db *dbmysql) getQuoteCharLeft () string {
-    return "`"
-}
-
-// 获得关键字操作符 - 右
-func (db *dbmysql) getQuoteCharRight () string {
-    return "`"
+// 获得关键字操作符
+func (db *dbMysql) getChars () (charLeft string, charRight string) {
+    return "`", "`"
 }
 
 // 在执行sql之前对sql进行进一步处理
-func (db *dbmysql) handleSqlBeforeExec(q *string) *string {
-    return q
+func (db *dbMysql) handleSqlBeforeExec(query string) string {
+    return query
 }

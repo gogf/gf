@@ -370,7 +370,7 @@ func homeWindows() (string, error) {
     return home, nil
 }
 
-// 获取入口函数文件所在目录(main包文件目录)，
+// 获取入口函数文件所在目录(main包文件目录),
 // **仅对源码开发环境有效(即仅对生成该可执行文件的系统下有效)**
 func MainPkgPath() string {
     path := mainPkgPath.Val()
@@ -401,6 +401,7 @@ func MainPkgPath() string {
             if p == f {
                 break
             }
+            // 会自动扫描源码，寻找main包
             if paths, err := ScanDir(p, "*.go"); err == nil && len(paths) > 0 {
                 for _, path := range paths {
                     if gregex.IsMatchString(`package\s+main`, GetContents(path)) {

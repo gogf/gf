@@ -1,28 +1,16 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/database/gdb"
+    "gitee.com/johng/gf/g"
     "time"
 )
 
 func main() {
-    gdb.AddDefaultConfigNode(gdb.ConfigNode {
-        Host             : "127.0.0.1",
-        Port             : "3306",
-        User             : "root",
-        Pass             : "12345678",
-        Name             : "test",
-        Type             : "mysql",
-        Role             : "master",
-        Charset          : "utf8",
-        MaxIdleConnCount : 10,
-        MaxOpenConnCount : 10,
-        MaxConnLifetime  : 10,
-    })
-    db, err := gdb.New()
-    if err != nil {
-        panic(err)
-    }
+    db := g.DB()
+    db.SetMaxIdleConns(10)
+    db.SetMaxOpenConns(10)
+    db.SetConnMaxLifetime(10)
+
     // 开启调试模式，以便于记录所有执行的SQL
     db.SetDebug(true)
 

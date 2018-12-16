@@ -6,7 +6,10 @@
 
 package gvar
 
-import "time"
+import (
+    "gitee.com/johng/gf/g/os/gtime"
+    "time"
+)
 
 // 只读变量接口
 type VarRead interface {
@@ -34,5 +37,6 @@ type VarRead interface {
     Interfaces() []interface{}
     Time(format ...string) time.Time
     TimeDuration() time.Duration
+    GTime(format...string) *gtime.Time
     Struct(objPointer interface{}, attrMapping ...map[string]string) error
 }

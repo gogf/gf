@@ -15,6 +15,7 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/os/genv"
+    "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
     "gitee.com/johng/gf/g/os/gtime"
@@ -253,6 +254,10 @@ func (s *Server) Start() error {
                 panic(err)
             }
         })
+    }
+    // 是否处于开发环境
+    if gfile.MainPkgPath() != "" {
+        glog.Backtrace(false, 0).Notice("GF notices that you're in develop environment, so error logs are auto enabled to stdout.")
     }
 
     // 打印展示路由表

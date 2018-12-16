@@ -21,20 +21,18 @@ import (
 	"strings"
 )
 
-var linkOracle = &dboracle{}
-
 // 数据库链接对象
-type dboracle struct {
-	Db
+type dbOracle struct {
+	*dbBase
 }
 
 // 创建SQL操作对象
-func (db *dboracle) Open(c *ConfigNode) (*sql.DB, error) {
+func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if c.Linkinfo != "" {
-		source = c.Linkinfo
+	if config.Linkinfo != "" {
+		source = config.Linkinfo
 	} else {
-		source = fmt.Sprintf("%s/%s@%s", c.User, c.Pass, c.Name)
+		source = fmt.Sprintf("%s/%s@%s", config.User, config.Pass, config.Name)
 	}
 	if db, err := sql.Open("oci8", source); err == nil {
 		return db, nil
@@ -43,42 +41,37 @@ func (db *dboracle) Open(c *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// 获得关键字操作符 - 左
-func (db *dboracle) getQuoteCharLeft() string {
-	return "\""
-}
-
-// 获得关键字操作符 - 右
-func (db *dboracle) getQuoteCharRight() string {
-	return "\""
+// 获得关键字操作符
+func (db *dbOracle) getChars () (charLeft string, charRight string) {
+	return "\"", "\""
 }
 
 // 在执行sql之前对sql进行进一步处理
-func (db *dboracle) handleSqlBeforeExec(q *string) *string {
+func (db *dbOracle) handleSqlBeforeExec(query string) string {
 	index := 0
-	str, _ := gregex.ReplaceStringFunc("\\?", *q, func(s string) string {
+	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
 		index++
 		return fmt.Sprintf(":%d", index)
 	})
 
 	str, _ = gregex.ReplaceString("\"", "", str)
 
-	return db.parseSql(&str)
+	return db.parseSql(str)
 }
 
 //由于ORACLE中对LIMIT和批量插入的语法与MYSQL不一致，所以这里需要对LIMIT和批量插入做语法上的转换
-func (db *dboracle) parseSql(sql *string) *string {
+func (db *dbOracle) parseSql(sql string) string {
 	//下面的正则表达式匹配出SELECT和INSERT的关键字后分别做不同的处理，如有LIMIT则将LIMIT的关键字也匹配出
 	patten := `^\s*(?i)(SELECT)|(INSERT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
-	if gregex.IsMatchString(patten, *sql) == false {
+	if gregex.IsMatchString(patten, sql) == false {
 		fmt.Println("not matched..")
 		return sql
 	}
 
-	res, err := gregex.MatchAllString(patten, *sql)
+	res, err := gregex.MatchAllString(patten, sql)
 	if err != nil {
 		fmt.Println("MatchString error.", err)
-		return nil
+		return ""
 	}
 
 	index := 0
@@ -94,11 +87,11 @@ func (db *dboracle) parseSql(sql *string) *string {
 		}
 
 		//取limit前面的字符串
-		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", *sql) == false {
+		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
 
-		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", *sql)
+		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
 		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false{
 			break
 		}
@@ -118,10 +111,10 @@ func (db *dboracle) parseSql(sql *string) *string {
 		}
 
 		//也可以使用between,据说这种写法的性能会比between好点,里层SQL中的ROWNUM_ >= limit可以缩小查询后的数据集规模
-		*sql = fmt.Sprintf("SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d", queryExpr[1], queryExpr[2], limit, first)
+		sql = fmt.Sprintf("SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d", queryExpr[1], queryExpr[2], limit, first)
 	case "INSERT":
 		//获取VALUE的值，匹配所有带括号的值,会将INSERT INTO后的值匹配到，所以下面的判断语句会判断数组长度是否小于3
-		valueExpr, err := gregex.MatchAllString(`(\s*\(([^\(\)]*)\))`, *sql)
+		valueExpr, err := gregex.MatchAllString(`(\s*\(([^\(\)]*)\))`, sql)
 		if err != nil {
 			return sql
 		}
@@ -132,17 +125,17 @@ func (db *dboracle) parseSql(sql *string) *string {
 		}
 
 		//获取INTO后面的值
-		tableExpr, err := gregex.MatchString(`(?i)\s*(INTO\s+\w+\(([^\(\)]*)\))`, *sql)
+		tableExpr, err := gregex.MatchString(`(?i)\s*(INTO\s+\w+\(([^\(\)]*)\))`, sql)
 		if err != nil {
 			return sql
 		}
 		tableExpr[0] = strings.TrimSpace(tableExpr[0])
 
-		*sql = "INSERT ALL"
+		sql = "INSERT ALL"
 		for i := 1; i < len(valueExpr); i++ {
-			*sql += fmt.Sprintf(" %s VALUES%s", tableExpr[0], strings.TrimSpace(valueExpr[i][0]))
+			sql += fmt.Sprintf(" %s VALUES%s", tableExpr[0], strings.TrimSpace(valueExpr[i][0]))
 		}
-		*sql += " SELECT 1 FROM DUAL"
+		sql += " SELECT 1 FROM DUAL"
 
 	default:
 	}

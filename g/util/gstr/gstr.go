@@ -13,7 +13,7 @@ import (
     "strings"
 )
 
-// 字符串替换
+// 字符串替换(大小写敏感)
 func Replace(origin, search, replace string, count...int) string {
     n := -1
     if len(count) > 0 {
@@ -22,7 +22,7 @@ func Replace(origin, search, replace string, count...int) string {
     return strings.Replace(origin, search, replace, n)
 }
 
-// 使用map进行字符串替换
+// 使用map进行字符串替换(大小写敏感)
 func ReplaceByMap(origin string, replaces map[string]string) string {
     result := origin
     for k, v := range replaces {

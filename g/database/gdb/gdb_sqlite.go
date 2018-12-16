@@ -16,20 +16,18 @@ import (
 
 // Sqlite接口对象
 // @author wxkj<wxscz@qq.com>
-var linkSqlite = &dbsqlite{}
-
 
 // 数据库链接对象
-type dbsqlite struct {
-	Db
+type dbSqlite struct {
+	*dbBase
 }
 
-func (db *dbsqlite) Open(c *ConfigNode) (*sql.DB, error) {
+func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if c.Linkinfo != "" {
-		source = c.Linkinfo
+	if config.Linkinfo != "" {
+		source = config.Linkinfo
 	} else {
-		source = c.Name
+		source = config.Name
 	}
 	if db, err := sql.Open("sqlite3", source); err == nil {
 		return db, nil
@@ -38,20 +36,14 @@ func (db *dbsqlite) Open(c *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// 获得关键字操作符 - 左
-func (db *dbsqlite) getQuoteCharLeft() string {
-	return "`"
-}
-
-// 获得关键字操作符 - 右
-func (db *dbsqlite) getQuoteCharRight() string {
-	return "`"
+// 获得关键字操作符
+func (db *dbSqlite) getChars () (charLeft string, charRight string) {
+	return "`", "`"
 }
 
 // 在执行sql之前对sql进行进一步处理
 // @todo 需要增加对Save方法的支持，可使用正则来实现替换，
 // @todo 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
-func (db *dbsqlite) handleSqlBeforeExec(q *string) *string {
-
-	return q
+func (db *dbSqlite) handleSqlBeforeExec(query string) string {
+	return query
 }

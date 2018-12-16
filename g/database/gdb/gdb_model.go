@@ -12,12 +12,15 @@ import (
 	"database/sql"
 	"gitee.com/johng/gf/g/util/gconv"
 	_ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
+    "reflect"
+    "strings"
 )
 
 // 数据库链式操作模型对象
 type Model struct {
-	tx           *Tx           // 数据库事务对象
-	db           *Db           // 数据库操作对象
+	db           DB            // 数据库操作对象
+	tx           *TX           // 数据库事务对象
+	tablesInit   string        // 初始化Model时的表名称(可以是多个)
 	tables       string        // 数据库操作表
 	fields       string        // 操作字段
 	where        string        // 操作条件
@@ -28,37 +31,49 @@ type Model struct {
 	limit        int           // 分页条数
 	data         interface{}   // 操作记录(支持Map/List/string类型)
 	batch        int           // 批量操作条数
+	filter       bool          // 是否按照表字段过滤data参数
 	cacheEnabled bool          // 当前SQL操作是否开启查询缓存功能
 	cacheTime    int           // 查询缓存时间
 	cacheName    string        // 查询缓存名称
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (db *Db) Table(tables string) (*Model) {
-	return &Model{
-		db:     db,
-		tables: tables,
-		fields: "*",
+func (bs *dbBase) Table(tables string) (*Model) {
+	return &Model {
+		db         : bs.db,
+        tablesInit : tables,
+		tables     : tables,
+		fields     : "*",
 	}
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (db *Db) From(tables string) (*Model) {
-	return db.Table(tables)
+func (bs *dbBase) From(tables string) (*Model) {
+	return bs.db.Table(tables)
 }
 
 // (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (tx *Tx) Table(tables string) (*Model) {
+func (tx *TX) Table(tables string) (*Model) {
 	return &Model{
-		db:     tx.db,
-		tx:     tx,
-		tables: tables,
+		db         : tx.db,
+		tx         : tx,
+        tablesInit : tables,
+		tables     : tables,
 	}
 }
 
 // (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (tx *Tx) From(tables string) (*Model) {
+func (tx *TX) From(tables string) (*Model) {
 	return tx.Table(tables)
+}
+
+// 清空链式操作数据，以便改model可以重复使用
+func (md *Model) clear() {
+    if md.tx != nil {
+        *md = *md.tx.Table(md.tablesInit)
+    } else {
+        *md = *md.db.Table(md.tablesInit)
+    }
 }
 
 // 链式操作，左联表
@@ -85,23 +100,33 @@ func (md *Model) Fields(fields string) (*Model) {
 	return md
 }
 
+// 链式操作，过滤字段
+func (md *Model) Filter() (*Model) {
+    md.filter = true
+    return md
+}
+
 // 链式操作，condition，支持string & gdb.Map
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
-	md.where = md.db.formatCondition(where)
+	md.where     = formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
+	// 支持 Where("uid", 1)这种格式
+	if len(args) == 1 && strings.Index(md.where , "?") < 0 {
+        md.where += "=?"
+    }
 	return md
 }
 
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
-	md.where += " AND " + md.db.formatCondition(where)
+	md.where    += " AND " + formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
 	return md
 }
 
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
-	md.where += " OR " + md.db.formatCondition(where)
+	md.where    += " OR " + formatCondition(where)
 	md.whereArgs = append(md.whereArgs, args...)
 	return md
 }
@@ -142,7 +167,32 @@ func (md *Model) Data(data ...interface{}) (*Model) {
 		}
 		md.data = m
 	} else {
-		md.data = data[0]
+		switch data[0].(type) {
+			case List:
+				md.data = data[0]
+			case Map:
+				md.data = data[0]
+			default:
+                rv   := reflect.ValueOf(data[0])
+                kind := rv.Kind()
+                if kind == reflect.Ptr {
+                    rv   = rv.Elem()
+                    kind = rv.Kind()
+                }
+                switch kind {
+                    case reflect.Slice: fallthrough
+                    case reflect.Array:
+                        list := make(List, rv.Len())
+                        for i := 0; i < rv.Len(); i++ {
+                            list[i] = gconv.Map(rv.Index(i).Interface())
+                        }
+                        md.data = list
+                    case reflect.Map:
+                        md.data = gconv.Map(data[0])
+                    default:
+                        md.data = data[0]
+                }
+		}
 	}
 	return md
 }
@@ -153,6 +203,7 @@ func (md *Model) Insert() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+		md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("inserting into table with empty data")
@@ -163,16 +214,24 @@ func (md *Model) Insert() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
+		if md.filter {
+		    for k, m := range list {
+                list[k] = md.db.filterFields(md.tables, m)
+            }
+        }
 		if md.tx == nil {
 			return md.db.BatchInsert(md.tables, list, batch)
 		} else {
 			return md.tx.BatchInsert(md.tables, list, batch)
 		}
-	} else if dataMap, ok := md.data.(Map); ok {
+	} else if data, ok := md.data.(Map); ok {
+        if md.filter {
+            data = md.db.filterFields(md.tables, data)
+        }
 		if md.tx == nil {
-			return md.db.Insert(md.tables, dataMap)
+			return md.db.Insert(md.tables, data)
 		} else {
-			return md.tx.Insert(md.tables, dataMap)
+			return md.tx.Insert(md.tables, data)
 		}
 	}
 	return nil, errors.New("inserting into table with invalid data type")
@@ -184,6 +243,7 @@ func (md *Model) Replace() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("replacing into table with empty data")
@@ -194,16 +254,24 @@ func (md *Model) Replace() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
+        if md.filter {
+            for k, m := range list {
+                list[k] = md.db.filterFields(md.tables, m)
+            }
+        }
 		if md.tx == nil {
 			return md.db.BatchReplace(md.tables, list, batch)
 		} else {
 			return md.tx.BatchReplace(md.tables, list, batch)
 		}
-	} else if dataMap, ok := md.data.(Map); ok {
+	} else if data, ok := md.data.(Map); ok {
+        if md.filter {
+            data = md.db.filterFields(md.tables, data)
+        }
 		if md.tx == nil {
-			return md.db.Insert(md.tables, dataMap)
+			return md.db.Replace(md.tables, data)
 		} else {
-			return md.tx.Insert(md.tables, dataMap)
+			return md.tx.Replace(md.tables, data)
 		}
 	}
 	return nil, errors.New("replacing into table with invalid data type")
@@ -215,6 +283,7 @@ func (md *Model) Save() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("replacing into table with empty data")
@@ -225,16 +294,24 @@ func (md *Model) Save() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
+        if md.filter {
+            for k, m := range list {
+                list[k] = md.db.filterFields(md.tables, m)
+            }
+        }
 		if md.tx == nil {
 			return md.db.BatchSave(md.tables, list, batch)
 		} else {
 			return md.tx.BatchSave(md.tables, list, batch)
 		}
-	} else if dataMap, ok := md.data.(Map); ok {
+	} else if data, ok := md.data.(Map); ok {
+        if md.filter {
+            data = md.db.filterFields(md.tables, data)
+        }
 		if md.tx == nil {
-			return md.db.Save(md.tables, dataMap)
+			return md.db.Save(md.tables, data)
 		} else {
-			return md.tx.Save(md.tables, dataMap)
+			return md.tx.Save(md.tables, data)
 		}
 	}
 	return nil, errors.New("saving into table with invalid data type")
@@ -246,10 +323,18 @@ func (md *Model) Update() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("updating table with empty data")
 	}
+    if md.filter {
+        if data, ok := md.data.(Map); ok {
+            if md.filter {
+                md.data = md.db.filterFields(md.tables, data)
+            }
+        }
+    }
 	if md.tx == nil {
 		return md.db.Update(md.tables, md.data, md.where, md.whereArgs ...)
 	} else {
@@ -263,10 +348,8 @@ func (md *Model) Delete() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
+        md.clear()
 	}()
-	if md.where == "" {
-		return nil, errors.New("where is required while deleting")
-	}
 	if md.tx == nil {
 		return md.db.Delete(md.tables, md.where, md.whereArgs...)
 	} else {
@@ -298,12 +381,13 @@ func (md *Model) Cache(time int, name ... string) *Model {
 
 // 链式操作，select
 func (md *Model) Select() (Result, error) {
-	return md.getAll(md.getFormattedSql(), md.whereArgs...)
+	return md.All()
 }
 
 // 链式操作，查询所有记录
 func (md *Model) All() (Result, error) {
-	return md.Select()
+	defer md.clear()
+	return md.getAll(md.getFormattedSql(), md.whereArgs...)
 }
 
 // 链式操作，查询单条记录
@@ -342,6 +426,7 @@ func (md *Model) Struct(obj interface{}) error {
 // 链式操作，查询数量，fields可以为空，也可以自定义查询字段，
 // 当给定自定义查询字段时，该字段必须为数量结果，否则会引起歧义，使用如：md.Fields("COUNT(id)")
 func (md *Model) Count() (int, error) {
+    defer md.clear()
 	if md.fields == "" || md.fields == "*" {
 		md.fields = "COUNT(1)"
 	} else {
@@ -372,7 +457,7 @@ func (md *Model) getAll(sql string, args ...interface{}) (result Result, err err
 		if len(cacheKey) == 0 {
 			cacheKey = sql + "/" + gconv.String(args)
 		}
-		if v := md.db.cache.Get(cacheKey); v != nil {
+		if v := md.db.getCache().Get(cacheKey); v != nil {
 			return v.(Result), nil
 		}
 	}
@@ -384,9 +469,9 @@ func (md *Model) getAll(sql string, args ...interface{}) (result Result, err err
 	// 查询缓存保存处理
 	if len(cacheKey) > 0 && err == nil {
 		if md.cacheTime < 0 {
-			md.db.cache.Remove(cacheKey)
+			md.db.getCache().Remove(cacheKey)
 		} else {
-			md.db.cache.Set(cacheKey, result, md.cacheTime*1000)
+			md.db.getCache().Set(cacheKey, result, md.cacheTime*1000)
 		}
 	}
 	return result, err
@@ -395,7 +480,7 @@ func (md *Model) getAll(sql string, args ...interface{}) (result Result, err err
 // 检查是否需要查询查询缓存
 func (md *Model) checkAndRemoveCache() {
 	if md.cacheEnabled && md.cacheTime < 0 && len(md.cacheName) > 0 {
-		md.db.cache.Remove(md.cacheName)
+		md.db.getCache().Remove(md.cacheName)
 	}
 }
 
@@ -424,11 +509,11 @@ func (md *Model) getFormattedSql() string {
 // @author ymrjqyy
 // @author 2018-08-15
 func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) {
-	var page = 1
+    defer md.clear()
+	page := 1
 	for {
 		md.ForPage(page, limit)
-		sqls := md.getFormattedSql()
-		data, err := md.getAll(sqls, md.whereArgs...)
+		data, err := md.getAll(md.getFormattedSql(), md.whereArgs...)
 		if err != nil {
 			callback(nil, err)
 			break

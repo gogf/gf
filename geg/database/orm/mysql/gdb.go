@@ -9,7 +9,7 @@ import (
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
 
-var db *gdb.Db
+var db gdb.DB
 
 // 初始化配置及创建数据库
 func init () {
@@ -17,7 +17,7 @@ func init () {
        Host    : "127.0.0.1",
        Port    : "3306",
        User    : "root",
-       Pass    : "8692651",
+       Pass    : "12345678",
        Name    : "test",
        Type    : "mysql",
        Role    : "master",

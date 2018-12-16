@@ -31,7 +31,7 @@ type Logger struct {
     file         *gtype.String       // 日志文件名称格式
     level        *gtype.Int          // 日志输出等级
     btSkip       *gtype.Int          // 错误产生时的backtrace回调信息skip条数
-    btEnabled    *gtype.Bool         // 是否当打印错误时同时开启backtrace打印
+    btStatus     *gtype.Int          // 是否当打印错误时同时开启backtrace打印(默认-1，表示默认打印逻辑 - 错误才打印)
     printHeader  *gtype.Bool         // 是否不打印前缀信息(时间，级别等)
     alsoStdPrint *gtype.Bool         // 控制台打印开关，当输出到文件/自定义输出时也同时打印到终端
 }
@@ -65,7 +65,7 @@ func New() *Logger {
         file         : gtype.NewString(gDEFAULT_FILE_FORMAT),
         level        : gtype.NewInt(defaultLevel.Val()),
         btSkip       : gtype.NewInt(),
-        btEnabled    : gtype.NewBool(true),
+        btStatus     : gtype.NewInt(-1),
         printHeader  : gtype.NewBool(true),
         alsoStdPrint : gtype.NewBool(true),
     }
@@ -80,7 +80,7 @@ func (l *Logger) Clone() *Logger {
         file         : l.file.Clone(),
         level        : l.level.Clone(),
         btSkip       : l.btSkip.Clone(),
-        btEnabled    : l.btEnabled.Clone(),
+        btStatus    : l.btStatus.Clone(),
         printHeader  : l.printHeader.Clone(),
         alsoStdPrint : l.alsoStdPrint.Clone(),
     }
@@ -106,7 +106,12 @@ func (l *Logger) SetDebug(debug bool) {
 }
 
 func (l *Logger) SetBacktrace(enabled bool) {
-    l.btEnabled.Set(enabled)
+    if enabled {
+        l.btStatus.Set(1)
+    } else {
+        l.btStatus.Set(0)
+    }
+
 }
 
 // 设置BacktraceSkip
@@ -214,25 +219,35 @@ func (l *Logger) doStdLockPrint(std io.Writer, s string) {
 
 // 核心打印数据方法(标准输出)
 func (l *Logger) stdPrint(s string) {
+    if l.btStatus.Val() == 1 {
+        s = l.appendBacktrace(s)
+    }
     l.print(os.Stdout, s)
 }
 
 // 核心打印数据方法(标准错误)
 func (l *Logger) errPrint(s string) {
     // 记录调用回溯信息
-    if l.btEnabled.Val() {
-        tracestr := l.GetBacktrace()
-        if tracestr != "" {
-            backtrace := "Backtrace:" + ln + tracestr
-            if s[len(s) - 1] == byte('\n') {
-                s = s + backtrace + ln
-            } else {
-                s = s + ln + backtrace + ln
-            }
-        }
+    status := l.btStatus.Val()
+    if status == -1 || status == 1 {
+        s = l.appendBacktrace(s)
     }
     // 防止串日志情况，这里不使用stderr，而是使用stdout
     l.print(os.Stdout, s)
+}
+
+// 输出内容中添加回溯信息
+func (l *Logger) appendBacktrace(s string) string {
+    trace := l.GetBacktrace()
+    if trace != "" {
+        backtrace := "Backtrace:" + ln + trace
+        if s[len(s) - 1] == byte('\n') {
+            s = s + backtrace + ln
+        } else {
+            s = s + ln + backtrace + ln
+        }
+    }
+    return s
 }
 
 // 直接打印回溯信息，参数skip表示调用端往上多少级开始回溯

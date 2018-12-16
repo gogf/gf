@@ -8,39 +8,29 @@
 package gdb
 
 import (
-    "fmt"
-    "errors"
-    "strings"
-    "reflect"
     "database/sql"
-    "gitee.com/johng/gf/g/util/gstr"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/container/gring"
+    "errors"
+    "fmt"
+    "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/container/gvar"
+    "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/util/gregex"
+    "reflect"
+    "strings"
 )
 
 const (
     gDEFAULT_DEBUG_SQL_LENGTH = 1000 // 默认调试模式下记录的SQL条数
 )
 
-// 是否开启调试服务
-func (db *Db) SetDebug(debug bool) {
-    db.debug.Set(debug)
-    if debug && db.sqls == nil {
-        db.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH)
-    }
-}
-
 // 获取已经执行的SQL列表(仅在debug=true时有效)
-func (db *Db) GetQueriedSqls() []*Sql {
-    if db.sqls == nil {
+func (bs *dbBase) GetQueriedSqls() []*Sql {
+    if bs.sqls == nil {
         return nil
     }
     sqls := make([]*Sql, 0)
-    db.sqls.Prev()
-    db.sqls.RLockIteratorPrev(func(value interface{}) bool {
+    bs.sqls.Prev()
+    bs.sqls.RLockIteratorPrev(func(value interface{}) bool {
         if value == nil {
             return false
         }
@@ -51,8 +41,8 @@ func (db *Db) GetQueriedSqls() []*Sql {
 }
 
 // 打印已经执行的SQL列表(仅在debug=true时有效)
-func (db *Db) PrintQueriedSqls() {
-    sqls := db.GetQueriedSqls()
+func (bs *dbBase) PrintQueriedSqls() {
+    sqls := bs.GetQueriedSqls()
     for k, v := range sqls {
         fmt.Println(len(sqls) - k, ":")
         fmt.Println("    Sql  :", v.Sql)
@@ -61,143 +51,110 @@ func (db *Db) PrintQueriedSqls() {
         fmt.Println("    Start:", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
         fmt.Println("    End  :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
         fmt.Println("    Cost :", v.End - v.Start, "ms")
-        fmt.Println("    Func :", v.Func)
-    }
-}
-
-// 打印SQL对象(仅在debug=true时有效)
-func (db *Db) printSql(v *Sql) {
-    s := fmt.Sprintf("%s, %v, %s, %s, %d ms, %s", v.Sql, v.Args,
-        gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"),
-        gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"),
-        v.End - v.Start, v.Func,
-    )
-    if v.Error != nil {
-        s += "\nError: " + v.Error.Error()
-        glog.Backtrace(true, 2).Error(s)
-    } else {
-        glog.Debug(s)
     }
 }
 
 // 数据库sql查询操作，主要执行查询
-func (db *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
-    var err   error
-    var rows  *sql.Rows
-    var slave *sql.DB
-    slave, err = db.Slave();
+func (bs *dbBase) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+    link, err := bs.db.Slave()
     if err != nil {
         return nil,err
     }
-    p := db.link.handleSqlBeforeExec(&query)
-    if db.debug.Val() {
-        militime1 := gtime.Millisecond()
-        rows, err  = slave.Query(*p, args ...)
-        militime2 := gtime.Millisecond()
-        s         := &Sql{
-            Sql   : *p,
+    return bs.db.doQuery(link, query, args...)
+}
+
+// 数据库sql查询操作，主要执行查询
+func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error) {
+    query = bs.db.handleSqlBeforeExec(query)
+    if bs.db.getDebug() {
+        mTime1    := gtime.Millisecond()
+        rows, err  = link.Query(query, args...)
+        mTime2    := gtime.Millisecond()
+        s         := &Sql {
+            Sql   : query,
             Args  : args,
             Error : err,
-            Start : militime1,
-            End   : militime2,
-            Func  : "DB:Query",
+            Start : mTime1,
+            End   : mTime2,
         }
-        db.sqls.Put(s)
-        db.printSql(s)
+        bs.sqls.Put(s)
+        printSql(s)
     } else {
-        rows, err = slave.Query(*p, args ...)
+        rows, err = link.Query(query, args ...)
     }
     if err == nil {
         return rows, nil
     } else {
-        err = db.formatError(err, p, args...)
+        err = formatError(err, query, args...)
     }
     return nil, err
 }
 
 // 执行一条sql，并返回执行情况，主要用于非查询操作
-func (db *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
-    var err    error
-    var result sql.Result
-    var master *sql.DB
-    master, err = db.Master();
+func (bs *dbBase) Exec(query string, args ...interface{}) (result sql.Result, err error) {
+    link, err := bs.db.Master()
     if err != nil {
         return nil,err
     }
-    p := db.link.handleSqlBeforeExec(&query)
-    if db.debug.Val() {
-        militime1  := gtime.Millisecond()
-        result, err = master.Exec(*p, args ...)
-        militime2  := gtime.Millisecond()
-        s          := &Sql{
-            Sql   : *p,
+    return bs.db.doExec(link, query, args...)
+}
+
+// 执行一条sql，并返回执行情况，主要用于非查询操作
+func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error) {
+    query = bs.db.handleSqlBeforeExec(query)
+    if bs.db.getDebug() {
+        mTime1     := gtime.Millisecond()
+        result, err = link.Exec(query, args ...)
+        mTime2     := gtime.Millisecond()
+        s := &Sql{
+            Sql   : query,
             Args  : args,
             Error : err,
-            Start : militime1,
-            End   : militime2,
-            Func  : "DB:Exec",
+            Start : mTime1,
+            End   : mTime2,
         }
-        db.sqls.Put(s)
-        db.printSql(s)
+        bs.sqls.Put(s)
+        printSql(s)
     } else {
-        result, err = master.Exec(*p, args ...)
+        result, err = link.Exec(query, args ...)
     }
-    return result, db.formatError(err, p, args...)
+    return result, formatError(err, query, args...)
 }
 
-// 格式化错误信息
-func (db *Db) formatError(err error, query *string, args ...interface{}) error {
-    if err != nil {
-        errstr := fmt.Sprintf("DB ERROR: %s\n", err.Error())
-        errstr += fmt.Sprintf("DB QUERY: %s\n", *query)
-        if len(args) > 0 {
-            errstr += fmt.Sprintf("DB PARAM: %v\n", args)
+// SQL预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作; 默认执行在Slave上, 通过第二个参数指定执行在Master上
+func (bs *dbBase) Prepare(query string, execOnMaster...bool) (*sql.Stmt, error) {
+    err   := (error)(nil)
+    link  := (dbLink)(nil)
+    if len(execOnMaster) > 0 && execOnMaster[0] {
+        if link, err = bs.db.Master(); err != nil {
+            return nil, err
         }
-        err = errors.New(errstr)
+    } else {
+        if link, err = bs.db.Slave(); err != nil {
+            return nil, err
+        }
     }
-    return err
+    return bs.db.doPrepare(link, query)
 }
 
+// SQL预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
+func (bs *dbBase) doPrepare(link dbLink, query string) (*sql.Stmt, error) {
+    return link.Prepare(query)
+}
 
 // 数据库查询，获取查询结果集，以列表结构返回
-func (db *Db) GetAll(query string, args ...interface{}) (Result, error) {
-    // 执行sql
-    rows, err := db.Query(query, args ...)
+func (bs *dbBase) GetAll(query string, args ...interface{}) (Result, error) {
+    rows, err := bs.Query(query, args ...)
     if err != nil || rows == nil {
         return nil, err
     }
-    // 列名称列表
-    columns, err := rows.Columns()
-    if err != nil {
-        return nil, err
-    }
-    // 返回结构组装
-    values   := make([]sql.RawBytes, len(columns))
-    scanArgs := make([]interface{}, len(values))
-    records  := make(Result, 0)
-    for i := range values {
-        scanArgs[i] = &values[i]
-    }
-    for rows.Next() {
-        err = rows.Scan(scanArgs...)
-        if err != nil {
-            return records, err
-        }
-        row := make(Record)
-        // 注意col字段是一个[]byte类型(slice类型本身是一个指针)，多个记录循环时该变量指向的是同一个内存地址
-        for i, col := range values {
-            v := make([]byte, len(col))
-            copy(v, col)
-            row[columns[i]] = gvar.New(v, false)
-        }
-        records = append(records, row)
-    }
-    return records, nil
+    defer rows.Close()
+    return rowsToResult(rows)
 }
 
 // 数据库查询，获取查询结果记录，以关联数组结构返回
-func (db *Db) GetOne(query string, args ...interface{}) (Record, error) {
-    list, err := db.GetAll(query, args ...)
+func (bs *dbBase) GetOne(query string, args ...interface{}) (Record, error) {
+    list, err := bs.GetAll(query, args ...)
     if err != nil {
         return nil, err
     }
@@ -208,18 +165,17 @@ func (db *Db) GetOne(query string, args ...interface{}) (Record, error) {
 }
 
 // 数据库查询，获取查询结果记录，自动映射数据到给定的struct对象中
-func (db *Db) GetStruct(obj interface{}, query string, args ...interface{}) error {
-    one, err := db.GetOne(query, args...)
+func (bs *dbBase) GetStruct(obj interface{}, query string, args ...interface{}) error {
+    one, err := bs.GetOne(query, args...)
     if err != nil {
         return err
     }
     return one.ToStruct(obj)
 }
 
-
 // 数据库查询，获取查询字段值
-func (db *Db) GetValue(query string, args ...interface{}) (Value, error) {
-    one, err := db.GetOne(query, args ...)
+func (bs *dbBase) GetValue(query string, args ...interface{}) (Value, error) {
+    one, err := bs.GetOne(query, args ...)
     if err != nil {
         return nil, err
     }
@@ -230,44 +186,20 @@ func (db *Db) GetValue(query string, args ...interface{}) (Value, error) {
 }
 
 // 数据库查询，获取查询数量
-func (db *Db) GetCount(query string, args ...interface{}) (int, error) {
-    val, err := db.GetValue(query, args ...)
+func (bs *dbBase) GetCount(query string, args ...interface{}) (int, error) {
+    if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, query) {
+        query, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, query)
+    }
+    value, err := bs.GetValue(query, args ...)
     if err != nil {
         return 0, err
     }
-    return gconv.Int(val), nil
-}
-
-// 数据表查询，其中tables可以是多个联表查询语句，这种查询方式较复杂，建议使用链式操作
-func (db *Db) Select(tables, fields string, condition interface{}, groupBy, orderBy string, first, limit int, args ... interface{}) (Result, error) {
-    s := fmt.Sprintf("SELECT %s FROM %s ", fields, tables)
-    if condition != nil {
-        s += fmt.Sprintf("WHERE %s ", db.formatCondition(condition))
-    }
-    if len(groupBy) > 0 {
-        s += fmt.Sprintf("GROUP BY %s ", groupBy)
-    }
-    if len(orderBy) > 0 {
-        s += fmt.Sprintf("ORDER BY %s ", orderBy)
-    }
-    if limit > 0 {
-        s += fmt.Sprintf("LIMIT %d,%d ", first, limit)
-    }
-    return db.GetAll(s, args ... )
-}
-
-// sql预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
-func (db *Db) Prepare(query string) (*sql.Stmt, error) {
-    if master, err := db.Master(); err != nil {
-        return nil, err
-    } else {
-        return master.Prepare(query)
-    }
+    return value.Int(), nil
 }
 
 // ping一下，判断或保持数据库链接(master)
-func (db *Db) PingMaster() error {
-    if master, err := db.Master(); err != nil {
+func (bs *dbBase) PingMaster() error {
+    if master, err := bs.db.Master(); err != nil {
         return err
     } else {
         return master.Ping()
@@ -275,8 +207,8 @@ func (db *Db) PingMaster() error {
 }
 
 // ping一下，判断或保持数据库链接(slave)
-func (db *Db) PingSlave() error {
-    if slave, err := db.Slave(); err != nil {
+func (bs *dbBase) PingSlave() error {
+    if slave, err := bs.db.Slave(); err != nil {
         return err
     } else {
         return slave.Ping()
@@ -285,13 +217,13 @@ func (db *Db) PingSlave() error {
 
 // 事务操作，开启，会返回一个底层的事务操作对象链接如需要嵌套事务，那么可以使用该对象，否则请忽略
 // 只有在tx.Commit/tx.Rollback时，链接会自动Close
-func (db *Db) Begin() (*Tx, error) {
-    if master, err := db.Master(); err != nil {
+func (bs *dbBase) Begin() (*TX, error) {
+    if master, err := bs.db.Master(); err != nil {
         return nil, err
     } else {
         if tx, err := master.Begin(); err == nil {
-            return &Tx {
-                db     : db,
+            return &TX {
+                db     : bs.db,
                 tx     : tx,
                 master : master,
             }, nil
@@ -301,17 +233,19 @@ func (db *Db) Begin() (*Tx, error) {
     }
 }
 
-// 根据insert选项获得操作名称
-func (db *Db) getInsertOperationByOption(option uint8) string {
-    oper := "INSERT"
-    switch option {
-        case OPTION_REPLACE:
-            oper = "REPLACE"
-        case OPTION_SAVE:
-        case OPTION_IGNORE:
-            oper = "INSERT IGNORE"
-    }
-    return oper
+// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
+func (bs *dbBase) Insert(table string, data Map) (sql.Result, error) {
+    return bs.db.doInsert(nil, table, data, OPTION_INSERT)
+}
+
+// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
+func (bs *dbBase) Replace(table string, data Map) (sql.Result, error) {
+    return bs.db.doInsert(nil, table, data, OPTION_REPLACE)
+}
+
+// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
+func (bs *dbBase) Save(table string, data Map) (sql.Result, error) {
+    return bs.db.doInsert(nil, table, data, OPTION_SAVE)
 }
 
 // insert、replace, save， ignore操作
@@ -319,95 +253,102 @@ func (db *Db) getInsertOperationByOption(option uint8) string {
 // 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 // 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 // 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做
-func (db *Db) insert(table string, data Map, option uint8) (sql.Result, error) {
+func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (result sql.Result, err error) {
     var fields []string
     var values []string
     var params []interface{}
+    charl, charr := bs.db.getChars()
     for k, v := range data {
-        fields = append(fields,   db.charl + k + db.charr)
+        fields = append(fields,   charl + k + charr)
         values = append(values, "?")
         params = append(params, v)
     }
-    operation := db.getInsertOperationByOption(option)
+    operation := getInsertOperationByOption(option)
     updatestr := ""
     if option == OPTION_SAVE {
         var updates []string
         for k, _ := range data {
             updates = append(updates,
                 fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
-                    db.charl, k, db.charr,
-                    db.charl, k, db.charr,
+                    charl, k, charr,
+                    charl, k, charr,
                 ),
             )
         }
         updatestr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
-    return db.Exec(
-        fmt.Sprintf("%s INTO %s(%s) VALUES(%s) %s",
-            operation, table, strings.Join(fields, ","),
-            strings.Join(values, ","),
-            updatestr),
-            params...
-    )
+    if link == nil {
+        if link, err = bs.db.Master(); err != nil {
+            return nil, err
+        }
+    }
+    return bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES(%s) %s",
+        operation, table, strings.Join(fields, ","),
+        strings.Join(values, ","), updatestr),
+        params...)
 }
 
-// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
-func (db *Db) Insert(table string, data Map) (sql.Result, error) {
-    return db.insert(table, data, OPTION_INSERT)
+// CURD操作:批量数据指定批次量写入
+func (bs *dbBase) BatchInsert(table string, list List, batch int) (sql.Result, error) {
+    return bs.db.doBatchInsert(nil, table, list, batch, OPTION_INSERT)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (db *Db) Replace(table string, data Map) (sql.Result, error) {
-    return db.insert(table, data, OPTION_REPLACE)
+// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
+func (bs *dbBase) BatchReplace(table string, list List, batch int) (sql.Result, error) {
+    return bs.db.doBatchInsert(nil, table, list, batch, OPTION_REPLACE)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (db *Db) Save(table string, data Map) (sql.Result, error) {
-    return db.insert(table, data, OPTION_SAVE)
+// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
+func (bs *dbBase) BatchSave(table string, list List, batch int) (sql.Result, error) {
+    return bs.db.doBatchInsert(nil, table, list, batch, OPTION_SAVE)
 }
 
 // 批量写入数据
-func (db *Db) batchInsert(table string, list List, batch int, option uint8) (sql.Result, error) {
+func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int, option int) (result sql.Result, err error) {
     var keys    []string
     var values  []string
     var bvalues []string
     var params  []interface{}
-    var result  sql.Result
-    var size = len(list)
     // 判断长度
-    if size < 1 {
+    if len(list) < 1 {
         return result, errors.New("empty data list")
+    }
+    if link == nil {
+        if link, err = bs.db.Master(); err != nil {
+            return
+        }
     }
     // 首先获取字段名称及记录长度
     for k, _ := range list[0] {
         keys   = append(keys,   k)
         values = append(values, "?")
     }
-    keyStr         := db.charl + strings.Join(keys, db.charl + "," + db.charr) + db.charr
+    charl, charr   := bs.db.getChars()
+    keyStr         := charl + strings.Join(keys, charl + "," + charr) + charr
     valueHolderStr := "(" + strings.Join(values, ",") + ")"
     // 操作判断
-    operation := db.getInsertOperationByOption(option)
+    operation := getInsertOperationByOption(option)
     updatestr := ""
     if option == OPTION_SAVE {
         var updates []string
         for _, k := range keys {
             updates = append(updates,
                 fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
-                    db.charl, k, db.charr,
-                    db.charl, k, db.charr,
+                    charl, k, charr,
+                    charl, k, charr,
                 ),
             )
         }
         updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
     // 构造批量写入数据格式(注意map的遍历是无序的)
-    for i := 0; i < size; i++ {
+    for i := 0; i < len(list); i++ {
         for _, k := range keys {
             params = append(params, list[i][k])
         }
         bvalues = append(bvalues, valueHolderStr)
         if len(bvalues) == batch {
-            r, err := db.Exec(fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
+            r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
                 operation, table, keyStr, strings.Join(bvalues, ","),
                 updatestr),
                 params...)
@@ -421,7 +362,7 @@ func (db *Db) batchInsert(table string, list List, batch int, option uint8) (sql
     }
     // 处理最后不构成指定批量的数据
     if len(bvalues) > 0 {
-        r, err := db.Exec(fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
+        r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
             operation, table, keyStr, strings.Join(bvalues, ","),
             updatestr),
             params...)
@@ -433,32 +374,28 @@ func (db *Db) batchInsert(table string, list List, batch int, option uint8) (sql
     return result, nil
 }
 
-// CURD操作:批量数据指定批次量写入
-func (db *Db) BatchInsert(table string, list List, batch int) (sql.Result, error) {
-    return db.batchInsert(table, list, batch, OPTION_INSERT)
-}
-
-// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (db *Db) BatchReplace(table string, list List, batch int) (sql.Result, error) {
-    return db.batchInsert(table, list, batch, OPTION_REPLACE)
-}
-
-// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (db *Db) BatchSave(table string, list List, batch int) (sql.Result, error) {
-    return db.batchInsert(table, list, batch, OPTION_SAVE)
+// CURD操作:数据更新，统一采用sql预处理
+// data参数支持字符串或者关联数组类型，内部会自行做判断处理
+func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
+    link, err := bs.db.Master()
+    if err != nil {
+        return nil, err
+    }
+    return bs.db.doUpdate(link, table, data, condition, args ...)
 }
 
 // CURD操作:数据更新，统一采用sql预处理
 // data参数支持字符串或者关联数组类型，内部会自行做判断处理
-func (db *Db) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-    var params  []interface{}
-    var updates string
-    refValue := reflect.ValueOf(data)
+func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, condition interface{}, args ...interface{}) (result sql.Result, err error) {
+    params       := ([]interface{})(nil)
+    updates      := ""
+    charl, charr := bs.db.getChars()
+    refValue     := reflect.ValueOf(data)
     if refValue.Kind() == reflect.Map {
         var fields []string
         keys := refValue.MapKeys()
         for _, k := range keys {
-            fields = append(fields, fmt.Sprintf("%s%s%s=?", db.charl, k, db.charr))
+            fields = append(fields, fmt.Sprintf("%s%s%s=?", charl, k, charr))
             params = append(params, gconv.String(refValue.MapIndex(k).Interface()))
         }
         updates = strings.Join(fields, ",")
@@ -468,34 +405,62 @@ func (db *Db) Update(table string, data interface{}, condition interface{}, args
     for _, v := range args {
         params = append(params, gconv.String(v))
     }
-    return db.Exec(fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, db.formatCondition(condition)), params...)
+    if link == nil {
+        if link, err = bs.db.Master(); err != nil {
+            return nil, err
+        }
+    }
+    return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, formatCondition(condition)), params...)
 }
 
 // CURD操作:删除数据
-func (db *Db) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-    return db.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s", table, db.formatCondition(condition)), args...)
+func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
+    link, err := bs.db.Master()
+    if err != nil {
+        return nil, err
+    }
+    return bs.db.doDelete(link, table, condition, args ...)
 }
 
-// 格式化SQL查询条件
-func (db *Db) formatCondition(condition interface{}) (where string) {
-    if reflect.ValueOf(condition).Kind() == reflect.Map {
-        ks := reflect.ValueOf(condition).MapKeys()
-        vs := reflect.ValueOf(condition)
-        for _, k := range ks {
-            key   := gconv.String(k.Interface())
-            value := gconv.String(vs.MapIndex(k).Interface())
-            isNum := gstr.IsNumeric(value)
-            if len(where) > 0 {
-                where += " AND "
-            }
-            if isNum || value == "?" {
-                where += key + "=" + value
-            } else {
-                where += key + "='" + value + "'"
+// CURD操作:删除数据
+func (bs *dbBase) doDelete(link dbLink, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
+    return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s WHERE %s", table, formatCondition(condition)), args...)
+}
+
+// 获得缓存对象
+func (bs *dbBase) getCache() *gcache.Cache {
+    return bs.cache
+}
+
+// 将map的数据按照fields进行过滤，只保留与表字段同名的数据
+func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
+    if fields, err := bs.db.getTableFields(table); err == nil {
+        for k, _ := range data {
+            if _, ok := fields[k]; !ok {
+                delete(data, k)
             }
         }
-    } else {
-        where += gconv.String(condition)
+    }
+    return data
+}
+
+// 获得指定表表的数据结构map
+func (bs *dbBase) getTableFields(table string) (fields map[string]string, err error) {
+    v := bs.cache.GetOrSetFunc("table_fields_" + table, func() interface{} {
+        result       := (Result)(nil)
+        charl, charr := bs.db.getChars()
+        result, err   = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s%s%s`, charl, table, charr))
+        if err != nil {
+            return nil
+        }
+        fields = make(map[string]string)
+        for _, m := range result {
+            fields[m["Field"].String()] = m["Type"].String()
+        }
+        return fields
+    }, 0)
+    if err == nil {
+        fields = v.(map[string]string)
     }
     return
 }
