@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"gitee.com/johng/gf/g/util/gconv"
 	_ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
+    "reflect"
     "strings"
 )
 
@@ -30,6 +31,7 @@ type Model struct {
 	limit        int           // 分页条数
 	data         interface{}   // 操作记录(支持Map/List/string类型)
 	batch        int           // 批量操作条数
+	filter       bool          // 是否按照表字段过滤data参数
 	cacheEnabled bool          // 当前SQL操作是否开启查询缓存功能
 	cacheTime    int           // 查询缓存时间
 	cacheName    string        // 查询缓存名称
@@ -98,6 +100,12 @@ func (md *Model) Fields(fields string) (*Model) {
 	return md
 }
 
+// 链式操作，过滤字段
+func (md *Model) Filter() (*Model) {
+    md.filter = true
+    return md
+}
+
 // 链式操作，condition，支持string & gdb.Map
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
 	md.where     = formatCondition(where)
@@ -159,7 +167,32 @@ func (md *Model) Data(data ...interface{}) (*Model) {
 		}
 		md.data = m
 	} else {
-		md.data = data[0]
+		switch data[0].(type) {
+			case List:
+				md.data = data[0]
+			case Map:
+				md.data = data[0]
+			default:
+                rv   := reflect.ValueOf(data[0])
+                kind := rv.Kind()
+                if kind == reflect.Ptr {
+                    rv   = rv.Elem()
+                    kind = rv.Kind()
+                }
+                switch kind {
+                    case reflect.Slice: fallthrough
+                    case reflect.Array:
+                        list := make(List, rv.Len())
+                        for i := 0; i < rv.Len(); i++ {
+                            list[i] = gconv.Map(rv.Index(i).Interface())
+                        }
+                        md.data = list
+                    case reflect.Map:
+                        md.data = gconv.Map(data[0])
+                    default:
+                        md.data = data[0]
+                }
+		}
 	}
 	return md
 }
@@ -181,16 +214,24 @@ func (md *Model) Insert() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
+		if md.filter {
+		    for k, m := range list {
+                list[k] = md.db.filterFields(md.tables, m)
+            }
+        }
 		if md.tx == nil {
 			return md.db.BatchInsert(md.tables, list, batch)
 		} else {
 			return md.tx.BatchInsert(md.tables, list, batch)
 		}
-	} else if dataMap, ok := md.data.(Map); ok {
+	} else if data, ok := md.data.(Map); ok {
+        if md.filter {
+            data = md.db.filterFields(md.tables, data)
+        }
 		if md.tx == nil {
-			return md.db.Insert(md.tables, dataMap)
+			return md.db.Insert(md.tables, data)
 		} else {
-			return md.tx.Insert(md.tables, dataMap)
+			return md.tx.Insert(md.tables, data)
 		}
 	}
 	return nil, errors.New("inserting into table with invalid data type")
@@ -213,16 +254,24 @@ func (md *Model) Replace() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
+        if md.filter {
+            for k, m := range list {
+                list[k] = md.db.filterFields(md.tables, m)
+            }
+        }
 		if md.tx == nil {
 			return md.db.BatchReplace(md.tables, list, batch)
 		} else {
 			return md.tx.BatchReplace(md.tables, list, batch)
 		}
-	} else if dataMap, ok := md.data.(Map); ok {
+	} else if data, ok := md.data.(Map); ok {
+        if md.filter {
+            data = md.db.filterFields(md.tables, data)
+        }
 		if md.tx == nil {
-			return md.db.Replace(md.tables, dataMap)
+			return md.db.Replace(md.tables, data)
 		} else {
-			return md.tx.Replace(md.tables, dataMap)
+			return md.tx.Replace(md.tables, data)
 		}
 	}
 	return nil, errors.New("replacing into table with invalid data type")
@@ -245,16 +294,24 @@ func (md *Model) Save() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
+        if md.filter {
+            for k, m := range list {
+                list[k] = md.db.filterFields(md.tables, m)
+            }
+        }
 		if md.tx == nil {
 			return md.db.BatchSave(md.tables, list, batch)
 		} else {
 			return md.tx.BatchSave(md.tables, list, batch)
 		}
-	} else if dataMap, ok := md.data.(Map); ok {
+	} else if data, ok := md.data.(Map); ok {
+        if md.filter {
+            data = md.db.filterFields(md.tables, data)
+        }
 		if md.tx == nil {
-			return md.db.Save(md.tables, dataMap)
+			return md.db.Save(md.tables, data)
 		} else {
-			return md.tx.Save(md.tables, dataMap)
+			return md.tx.Save(md.tables, data)
 		}
 	}
 	return nil, errors.New("saving into table with invalid data type")
@@ -271,6 +328,13 @@ func (md *Model) Update() (result sql.Result, err error) {
 	if md.data == nil {
 		return nil, errors.New("updating table with empty data")
 	}
+    if md.filter {
+        if data, ok := md.data.(Map); ok {
+            if md.filter {
+                md.data = md.db.filterFields(md.tables, data)
+            }
+        }
+    }
 	if md.tx == nil {
 		return md.db.Update(md.tables, md.data, md.where, md.whereArgs ...)
 	} else {

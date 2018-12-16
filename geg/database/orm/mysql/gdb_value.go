@@ -10,7 +10,7 @@ func main() {
     // 开启调试模式，以便于记录所有执行的SQL
     db.SetDebug(true)
 
-    r, _ := db.Table("user").All()
+    r, _ := db.Table("test").Where("id IN (?,?)", 1,2).All()
     if r != nil {
         fmt.Println(r.ToList())
     }

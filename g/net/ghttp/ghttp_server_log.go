@@ -9,6 +9,7 @@ package ghttp
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g/os/gfile"
     "net/http"
 )
 
@@ -36,7 +37,7 @@ func (s *Server) handleErrorLog(error interface{}, r *Request) {
     r.Response.WriteStatus(http.StatusInternalServerError)
 
     // 错误输出默认是开启的
-    if !s.IsErrorLogEnabled() {
+    if !s.IsErrorLogEnabled() && gfile.MainPkgPath() == "" {
         return
     }
 
@@ -56,5 +57,9 @@ func (s *Server) handleErrorLog(error interface{}, r *Request) {
         s.logger.Cat("error").Backtrace(true, 2).StdPrint(true).Error(content)
     } else {
         s.logger.Cat("error").Backtrace(true, 2).Error(content)
+        // 开发环境下(MainPkgPath)自动输出错误信息到标准输出
+        if gfile.MainPkgPath() != "" {
+            s.logger.Cat("error").Backtrace(true, 2).StdPrint(true).Error(content)
+        }
     }
 }

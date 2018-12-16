@@ -41,9 +41,13 @@ func rowsToResult(rows *sql.Rows) (Result, error) {
         row := make(Record)
         // 注意col字段是一个[]byte类型(slice类型本身是一个指针)，多个记录循环时该变量指向的是同一个内存地址
         for i, col := range values {
-            v := make([]byte, len(col))
-            copy(v, col)
-            row[columns[i]] = gvar.New(v, false)
+            if col == nil {
+                row[columns[i]] = gvar.New(nil, false)
+            } else {
+                v := make([]byte, len(col))
+                copy(v, col)
+                row[columns[i]] = gvar.New(v, false)
+            }
         }
         records = append(records, row)
     }

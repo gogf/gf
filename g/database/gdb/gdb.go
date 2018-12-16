@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gdb provides ORM features for popular relationship databases.
 // 数据库ORM.
 // 默认内置支持MySQL, 其他数据库需要手动import对应的数据库引擎第三方包.
 package gdb
@@ -94,7 +95,9 @@ type DB interface {
 	getCache() (*gcache.Cache)
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
-	handleSqlBeforeExec(sql string) string
+    filterFields(table string, data map[string]interface{}) map[string]interface{}
+    getTableFields(table string) (map[string]string, error)
+    handleSqlBeforeExec(sql string) string
 }
 
 // 执行底层数据库操作的核心接口

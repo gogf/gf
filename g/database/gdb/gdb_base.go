@@ -431,3 +431,36 @@ func (bs *dbBase) doDelete(link dbLink, table string, condition interface{}, arg
 func (bs *dbBase) getCache() *gcache.Cache {
     return bs.cache
 }
+
+// 将map的数据按照fields进行过滤，只保留与表字段同名的数据
+func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
+    if fields, err := bs.db.getTableFields(table); err == nil {
+        for k, _ := range data {
+            if _, ok := fields[k]; !ok {
+                delete(data, k)
+            }
+        }
+    }
+    return data
+}
+
+// 获得指定表表的数据结构map
+func (bs *dbBase) getTableFields(table string) (fields map[string]string, err error) {
+    v := bs.cache.GetOrSetFunc("table_fields_" + table, func() interface{} {
+        result       := (Result)(nil)
+        charl, charr := bs.db.getChars()
+        result, err   = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s%s%s`, charl, table, charr))
+        if err != nil {
+            return nil
+        }
+        fields = make(map[string]string)
+        for _, m := range result {
+            fields[m["Field"].String()] = m["Type"].String()
+        }
+        return fields
+    }, 0)
+    if err == nil {
+        fields = v.(map[string]string)
+    }
+    return
+}

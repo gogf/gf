@@ -8,8 +8,9 @@ import (
 )
 
 func TestModel_Insert(t *testing.T) {
-    result, err := db.Table("user").Data(g.Map{
+    result, err := db.Table("user").Filter().Data(g.Map{
         "id"          : 1,
+        "uid"         : 1,
         "passport"    : "t1",
         "password"    : "25d55ad283aa400af464c76d713c07ad",
         "nickname"    : "T1",
@@ -23,9 +24,10 @@ func TestModel_Insert(t *testing.T) {
 }
 
 func TestModel_Batch(t *testing.T) {
-    result, err := db.Table("user").Data(g.List{
+    result, err := db.Table("user").Filter().Data(g.List{
         {
             "id"          : 2,
+            "uid"         : 2,
             "passport"    : "t2",
             "password"    : "25d55ad283aa400af464c76d713c07ad",
             "nickname"    : "T2",
@@ -33,6 +35,7 @@ func TestModel_Batch(t *testing.T) {
         },
         {
             "id"          : 3,
+            "uid"         : 3,
             "passport"    : "t3",
             "password"    : "25d55ad283aa400af464c76d713c07ad",
             "nickname"    : "T3",

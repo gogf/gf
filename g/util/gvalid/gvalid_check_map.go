@@ -78,6 +78,10 @@ func CheckMap(params interface{}, rules interface{}, msgs...CustomMsg) *Error {
     value := (interface{})(nil)
     // 这里的rule变量为多条校验规则，不包含名字或者错误信息定义
     for key, rule := range checkRules {
+        // 如果规则为空，那么不执行校验
+        if len(rule) == 0 {
+            continue
+        }
         value = nil
         if v, ok := data[key]; ok {
             value = v
