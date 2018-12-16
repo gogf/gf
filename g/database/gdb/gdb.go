@@ -232,6 +232,13 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 	for i := 0; i < len(cg); i++ {
 		total += cg[i].Priority * 100
 	}
+	// 如果total为0表示所有连接都没有配置priority属性，那么默认都是1
+	if total == 0 {
+        for i := 0; i < len(cg); i++ {
+            cg[i].Priority = 1
+            total         += cg[i].Priority * 100
+        }
+    }
 	// 不能取到末尾的边界点
 	r := grand.Rand(0, total)
 	if r > 0 {
