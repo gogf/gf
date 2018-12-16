@@ -444,8 +444,9 @@ func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[st
     return data
 }
 
-// 获得指定表表的数据结构map
+// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值暂无用途(默认为字段数据类型).
 func (bs *dbBase) getTableFields(table string) (fields map[string]string, err error) {
+    // 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
     v := bs.cache.GetOrSetFunc("table_fields_" + table, func() interface{} {
         result       := (Result)(nil)
         charl, charr := bs.db.getChars()
