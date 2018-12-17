@@ -1,7 +1,6 @@
 language: go
 
 go:
-- "1.10.x"
 - "1.11.x"
 
 branches:
@@ -9,8 +8,21 @@ branches:
   - master
   - develop
 
+matrix:
+fast_finish: true
+include:
+- go : 1.11.x
+  env: GO111MODULE=on
+
+before_install:
+- go get -t -v ./...
+
 script:
 - cd g && go test -v ./...
+- cd g && go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 
 
 
