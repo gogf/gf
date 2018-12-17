@@ -16,17 +16,16 @@ services:
 
 before_install:
 - pwd
-- mkdir -p $GITEE_GF
-- cd $GITEE_GF
 
 install:
 - pwd
+- mkdir -p $GITEE_GF
 - cp * $GITEE_GF -R
 - cd $GITEE_GF
 
 script:
-# - cd $GITEE_GF/g && go test -v ./...
-- cd $GITEE_GF/g && go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+# - cd g && go test -v ./...
+- cd g && go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)
