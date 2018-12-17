@@ -34,7 +34,7 @@ func init() {
         gtest.Fatal(err)
     }
     db.SetSchema("test")
-    if _, err := db.Exec("DROP TABLE `user`"); err != nil {
+    if _, err := db.Exec("DROP TABLE IF EXISTS `user`"); err != nil {
         gtest.Fatal(err)
     }
     if _, err := db.Exec(`
