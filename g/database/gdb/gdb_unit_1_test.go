@@ -33,6 +33,9 @@ func init() {
 		db = r
 	}
 	// 准备测试数据结构
+    if _, err := db.Exec("CREATE DATABASE IF NOT EXISTS `test` CHARACTER SET UTF8"); err != nil {
+        gtest.Fatal(err)
+    }
     if _, err := db.Exec("DROP TABLE `user`"); err != nil {
         gtest.Fatal(err)
     }

@@ -63,8 +63,8 @@ func newMemCache(lruCap...int) *memCache {
         closed      : gtype.NewBool(),
     }
     if len(lruCap) > 0 {
-        c.lru = newMemCacheLru(c)
         c.cap = lruCap[0]
+        c.lru = newMemCacheLru(c)
     }
     return c
 }
