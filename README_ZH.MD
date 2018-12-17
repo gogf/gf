@@ -4,6 +4,7 @@
 [![Go Doc](https://godoc.org/github.com/johng-cn/gf?status.svg)](https://godoc.org/github.com/johng-cn/gf)
 [![Build Status](https://travis-ci.org/johng-cn/gf.svg?branch=master)](https://travis-ci.org/johng-cn/gf)
 [![Go Report](https://goreportcard.com/badge/github.com/johng-cn/gf)](https://goreportcard.com/report/github.com/johng-cn/gf)
+[![Code Coverage](https://codecov.io/gh/johng-cn/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/johng-cn/gf)
 [![Code Helper](https://www.codetriage.com/johng-cn/gf/badges/users.svg)](https://www.codetriage.com/johng-cn/gf)
 [![Release](https://img.shields.io/github/release/johng-cn/gf.svg?style=flat-square)](https://github.com/johng-cn/gf/releases)
 
