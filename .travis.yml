@@ -15,7 +15,7 @@ include:
   env: GO111MODULE=on
 
 before_install:
-- go get -t -v ./...
+- ls -l
 
 script:
 - cd g && go test -v ./...
