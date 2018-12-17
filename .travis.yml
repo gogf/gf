@@ -16,6 +16,8 @@ include:
 
 before_install:
 - ls -l
+- pwd
+- go get -u http://gitee.com/johng/gf
 
 script:
 - cd g && go test -v ./...
