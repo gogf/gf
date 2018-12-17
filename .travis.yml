@@ -10,8 +10,12 @@ branches:
 
 env:
 - GITEE_GF=$GOPATH/src/gitee.com/johng/gf
+- GO111MODULE=on
 
 before_install:
+- pwd
+
+install:
 - mkdir -p $GITEE_GF
 - cp * $GITEE_GF -R
 - cd $GITEE_GF
