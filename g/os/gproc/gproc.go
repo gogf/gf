@@ -121,7 +121,6 @@ func getShell() string {
             }
             return path
     }
-    return ""
 }
 
 // 获取当前系统默认shell执行指令的option参数
@@ -132,7 +131,6 @@ func getShellOption() string {
         default:
             return "-c"
     }
-    return ""
 }
 
 // 从环境变量PATH中搜索可执行文件

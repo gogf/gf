@@ -25,7 +25,6 @@ func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc
         fname : "",
         faddr : handler,
     }, hook)
-    return nil
 }
 
 // 通过map批量绑定回调函数

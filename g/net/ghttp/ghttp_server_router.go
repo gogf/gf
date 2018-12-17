@@ -293,7 +293,6 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
                     regrule += `/[^/]+`
                     break
                 }
-                fallthrough
             case '*':
                 if len(v) > 1 {
                     regrule += `/{0,1}(.*)`
@@ -303,7 +302,6 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
                     regrule += `/{0,1}.*`
                     break
                 }
-                fallthrough
             default:
                 // 特殊字符替换
                 v = gstr.ReplaceByMap(v, map[string]string{

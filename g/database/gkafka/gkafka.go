@@ -9,11 +9,10 @@ package gkafka
 
 import (
     "gitee.com/johng/gf/g/os/glog"
-    "time"
-    "strings"
     "gitee.com/johng/gf/third/github.com/Shopify/sarama"
     "gitee.com/johng/gf/third/github.com/johng-cn/sarama-cluster"
-    "errors"
+    "strings"
+    "time"
 )
 
 var (
@@ -177,8 +176,6 @@ func (client *Client) Receive() (*Message, error) {
             case <-notifyChan:
         }
     }
-
-    return nil, errors.New("unknown error")
 }
 
 // Send data to kafka in synchronized way.

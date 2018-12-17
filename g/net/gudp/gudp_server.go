@@ -77,5 +77,4 @@ func (s *Server) Run() error {
     for {
         s.handler(NewConnByNetConn(conn))
     }
-    return nil
 }

@@ -85,7 +85,6 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
             }
         }
     }
-    return nil
 }
 
 // 接收数据

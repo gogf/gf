@@ -487,7 +487,6 @@ func (j *Json) convertValue(value interface{}) interface{} {
         v, _ := Decode(b)
         return v
     }
-    return value
 }
 
 // 用于Set方法中，对指针指向的内存地址进行赋值

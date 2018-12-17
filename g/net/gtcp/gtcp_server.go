@@ -82,5 +82,4 @@ func (s *Server) Run() error {
             go s.handler(NewConnByNetConn(conn))
         }
     }
-    return nil
 }

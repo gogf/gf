@@ -105,8 +105,6 @@ func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
     if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
         return GetNextCharOffset(f, char, start)
-    } else {
-        panic(err)
     }
     return -1
 }
@@ -124,8 +122,6 @@ func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, i
     if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
         return GetBinContentsTilChar(f, char, start)
-    } else {
-        panic(err)
     }
     return nil, -1
 }
@@ -144,8 +140,6 @@ func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byt
     if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
         return GetBinContentsByTwoOffsets(f, start, end)
-    } else {
-        panic(err)
     }
     return nil
 }

@@ -272,6 +272,4 @@ func convertToJSONableObject(yamlObj interface{}, jsonTarget *reflect.Value) (in
 		}
 		return yamlObj, nil
 	}
-
-	return nil, nil
 }

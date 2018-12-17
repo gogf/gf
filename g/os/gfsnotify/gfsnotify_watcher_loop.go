@@ -9,6 +9,7 @@ package gfsnotify
 import (
     "fmt"
     "gitee.com/johng/gf/g/container/glist"
+    "os"
 )
 
 // 监听循环
@@ -33,7 +34,7 @@ func (w *Watcher) startWatchLoop() {
                     }, REPEAT_EVENT_FILTER_INTERVAL)
 
                 case err := <- w.watcher.Errors:
-                    fmt.Errorf("error: %s\n" + err.Error());
+                    fmt.Fprintf(os.Stderr, "error: %s\n" + err.Error())
             }
         }
     }()

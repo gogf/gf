@@ -123,7 +123,7 @@ func (t *Time) ToZone(zone string) *Time {
         t.Time = t.Time.In(l)
         return t
     } else {
-        panic(err)
+        //panic(err)
         return nil
     }
 }

@@ -23,12 +23,12 @@ func Server(name...interface{}) *ghttp.Server {
 }
 
 // TCPServer单例对象
-func TcpServer(name...interface{}) *gtcp.Server {
+func TCPServer(name...interface{}) *gtcp.Server {
     return gtcp.GetServer(name...)
 }
 
 // UDPServer单例对象
-func UdpServer(name...interface{}) *gudp.Server {
+func UDPServer(name...interface{}) *gudp.Server {
     return gudp.GetServer(name...)
 }
 

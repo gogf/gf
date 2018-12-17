@@ -3,6 +3,7 @@ package main
 import (
     "gitee.com/johng/gf/g/net/gtcp"
     "fmt"
+    "os"
 )
 
 func main() {
@@ -11,6 +12,6 @@ func main() {
         fmt.Println(string(data))
     }
     if err != nil {
-        fmt.Errorf("ERROR: %s\n", err.Error())
+        fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
     }
 }

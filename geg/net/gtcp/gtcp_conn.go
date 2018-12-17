@@ -5,6 +5,7 @@ import (
     "bytes"
     "gitee.com/johng/gf/g/net/gtcp"
     "gitee.com/johng/gf/g/util/gconv"
+    "os"
 )
 
 func main() {
@@ -39,7 +40,7 @@ func main() {
             break
         }
         if err != nil {
-            fmt.Errorf("ERROR: %s\n", err.Error())
+            fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
             break
         }
     }

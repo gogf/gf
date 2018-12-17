@@ -62,7 +62,10 @@ func startTcpListening() {
 
 // TCP数据通信处理回调函数
 func tcpServiceHandler(conn *gtcp.Conn) {
-    var retry = gtcp.Retry{3, 10}
+    retry := gtcp.Retry {
+        Count   : 3,
+        Interval: 10,
+    }
     for {
         var result []byte
         buffer, err := conn.Recv(-1, retry)

@@ -1,11 +1,11 @@
-package gdes
+package gdes_test
 
 import (
 	"testing"
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"gitee.com/johng/gf/g/encoding/gdes"
+	"gitee.com/johng/gf/g/crypto/gdes"
 )
 
 func TestDesECB(t *testing.T){
