@@ -8,23 +8,20 @@ branches:
   - master
   - develop
 
-matrix:
-fast_finish: true
-include:
-- go : 1.11.x
-  env: GO111MODULE=on
+env:
+- GITEE_GF=$GOPATH/src/gitee.com/johng/gf
 
 before_install:
-- ls -l
-- pwd
-- go get -u gitee.com/johng/gf
+- mkdir -p $GITEE_GF
+- cp * $GITEE_GF -R
+- cd $GITEE_GF
 
 script:
-- cd g && go test -v ./...
-- cd g && go test -race -coverprofile=coverage.txt -covermode=atomic
+- cd $GITEE_GF/g && go test -v ./...
+- cd $GITEE_GF/g && go test -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash)
 
 
 
