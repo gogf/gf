@@ -7,6 +7,7 @@
 package gdb
 
 import (
+    "bytes"
     "database/sql"
     "errors"
     "fmt"
@@ -14,9 +15,11 @@ import (
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/g/util/gstr"
     _ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
+    "strings"
 )
 
 // 将数据查询的列表数据*sql.Rows转换为Result类型
@@ -55,30 +58,61 @@ func rowsToResult(rows *sql.Rows) (Result, error) {
 }
 
 // 格式化SQL查询条件
-func formatCondition(condition interface{}) (where string) {
-    if reflect.ValueOf(condition).Kind() == reflect.Map {
-        ks := reflect.ValueOf(condition).MapKeys()
-        vs := reflect.ValueOf(condition)
+func formatCondition(where interface{}, args []interface{}) (string, []interface{}) {
+    // 条件字符串处理
+    buffer := bytes.NewBuffer(nil)
+    if reflect.ValueOf(where).Kind() == reflect.Map {
+        ks := reflect.ValueOf(where).MapKeys()
+        vs := reflect.ValueOf(where)
         for _, k := range ks {
             key   := gconv.String(k.Interface())
             value := gconv.String(vs.MapIndex(k).Interface())
-            isNum := gstr.IsNumeric(value)
-            if len(where) > 0 {
-                where += " AND "
+            if buffer.Len() > 0 {
+                buffer.WriteString(" AND ")
             }
-            if isNum || value == "?" {
-                where += key + "=" + value
+            if gstr.IsNumeric(value) || value == "?" {
+                buffer.WriteString(key + "=" + value)
             } else {
-                where += key + "='" + value + "'"
+                buffer.WriteString(key + "='" + value + "'")
             }
         }
     } else {
-        where += gconv.String(condition)
+        buffer.Write(gconv.Bytes(where))
     }
-    if len(where) == 0 {
-        where = "1"
+    if buffer.Len() == 0 {
+        buffer.WriteString("1")
     }
-    return
+    // 查询条件处理
+    newWhere := buffer.String()
+    newArgs  := make([]interface{}, 0)
+    if len(args) > 0 {
+        for index, arg := range args {
+            rv   := reflect.ValueOf(arg)
+            kind := rv.Kind()
+            if kind == reflect.Ptr {
+                rv   = rv.Elem()
+                kind = rv.Kind()
+            }
+            switch kind {
+                case reflect.Slice: fallthrough
+                case reflect.Array:
+                    for i := 0; i < rv.Len(); i++ {
+                        newArgs = append(newArgs, rv.Index(i).Interface())
+                    }
+                    counter    := 0
+                    newWhere, _ = gregex.ReplaceStringFunc(`\?`, newWhere, func(s string) string {
+                        counter++
+                        if counter == index + 1 {
+                            return "?" + strings.Repeat(",?", rv.Len() - 1)
+                        }
+                        return s
+                    })
+                default:
+                    newArgs = append(newArgs, arg)
+            }
+        }
+    }
+    return newWhere, newArgs
 }
 
 // 打印SQL对象(仅在debug=true时有效)

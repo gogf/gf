@@ -108,8 +108,9 @@ func (md *Model) Filter() (*Model) {
 
 // 链式操作，condition，支持string & gdb.Map
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
-	md.where     = formatCondition(where)
-	md.whereArgs = append(md.whereArgs, args...)
+    newWhere, newArgs := formatCondition(where, args)
+	md.where           = newWhere
+	md.whereArgs       = append(md.whereArgs, newArgs...)
 	// 支持 Where("uid", 1)这种格式
 	if len(args) == 1 && strings.Index(md.where , "?") < 0 {
         md.where += "=?"
@@ -119,15 +120,17 @@ func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
 
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
-	md.where    += " AND " + formatCondition(where)
-	md.whereArgs = append(md.whereArgs, args...)
+    newWhere, newArgs := formatCondition(where, args)
+	md.where          += " AND " + newWhere
+	md.whereArgs       = append(md.whereArgs, newArgs...)
 	return md
 }
 
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
-	md.where    += " OR " + formatCondition(where)
-	md.whereArgs = append(md.whereArgs, args...)
+    newWhere, newArgs := formatCondition(where, args)
+	md.where          += " OR " + newWhere
+	md.whereArgs       = append(md.whereArgs, newArgs...)
 	return md
 }
 

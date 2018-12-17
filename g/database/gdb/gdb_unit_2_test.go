@@ -168,6 +168,25 @@ func TestModel_GroupBy(t *testing.T) {
     gtest.Assert(result[0]["nickname"].String(), "T111")
 }
 
+func TestModel_Where1(t *testing.T) {
+    result, err := db.Table("user").Where("id IN(?)", g.Slice{1,3}).OrderBy("id ASC").All()
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    gtest.Assert(len(result), 2)
+    gtest.Assert(result[0]["id"].Int(), 1)
+    gtest.Assert(result[1]["id"].Int(), 3)
+}
+
+func TestModel_Where2(t *testing.T) {
+    result, err := db.Table("user").Where("nickname=? AND id IN(?)", "T3", g.Slice{1,3}).OrderBy("id ASC").All()
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    gtest.Assert(len(result), 1)
+    gtest.Assert(result[0]["id"].Int(), 3)
+}
+
 func TestModel_Delete(t *testing.T) {
     result, err := db.Table("user").Delete()
     if err != nil {

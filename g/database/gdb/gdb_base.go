@@ -410,7 +410,8 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
             return nil, err
         }
     }
-    return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, formatCondition(condition)), params...)
+    newWhere, newArgs := formatCondition(condition, params)
+    return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, newWhere), newArgs...)
 }
 
 // CURD操作:删除数据
@@ -424,7 +425,8 @@ func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{
 
 // CURD操作:删除数据
 func (bs *dbBase) doDelete(link dbLink, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-    return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s WHERE %s", table, formatCondition(condition)), args...)
+    newWhere, newArgs := formatCondition(condition, args)
+    return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s WHERE %s", table, newWhere), newArgs...)
 }
 
 // 获得缓存对象
