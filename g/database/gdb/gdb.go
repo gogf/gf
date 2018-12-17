@@ -34,11 +34,12 @@ type DB interface {
     // 建立数据库连接方法(开发者一般不需要直接调用)
     Open(config *ConfigNode) (*sql.DB, error)
 
-	// SQL操作方法
+	// SQL操作方法 API
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	Prepare(sql string, execOnMaster...bool) (*sql.Stmt, error)
 
+    // 内部实现API的方法(不同数据库可覆盖这些方法实现自定义的操作)
     doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
     doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
     doPrepare(link dbLink, query string) (*sql.Stmt, error)
@@ -85,6 +86,7 @@ type DB interface {
 
 	// 设置管理
     SetDebug(debug bool)
+    SetSchema(schema string)
     GetQueriedSqls() []*Sql
     PrintQueriedSqls()
     SetMaxIdleConns(n int)
@@ -114,7 +116,8 @@ type dbBase struct {
 	debug            *gtype.Bool   // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
 	sqls             *gring.Ring   // (debug=true时有效)已执行的SQL列表
 	cache            *gcache.Cache // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
-    maxIdleConnCount *gtype.Int    // 连接池最大限制的连接数
+    schema           *gtype.String // 手动切换的数据库名称
+	maxIdleConnCount *gtype.Int    // 连接池最大限制的连接数
     maxOpenConnCount *gtype.Int    // 连接池最大打开的连接数
     maxConnLifetime  *gtype.Int    // (单位秒)连接对象可重复使用的时间长度
 }
@@ -162,6 +165,7 @@ func New(groupName ...string) (db DB, err error) {
                 group            : group,
                 debug            : gtype.NewBool(),
                 cache            : gcache.New(),
+                schema           : gtype.NewString(),
                 maxIdleConnCount : gtype.NewInt(),
                 maxOpenConnCount : gtype.NewInt(),
                 maxConnLifetime  : gtype.NewInt(),
@@ -265,11 +269,6 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
     if err != nil {
         return nil, err
     }
-    // 检查缓存连接池对象
-    cacheKey := node.String()
-    if v := bs.cache.Get(cacheKey); v != nil {
-        return v.(*sql.DB), nil
-    }
     v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
         sqlDb, err = bs.db.Open(node)
         if err != nil {
@@ -298,7 +297,16 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
     if v != nil && sqlDb == nil {
         sqlDb = v.(*sql.DB)
     }
+    // 是否手动选择数据库
+    if v := bs.schema.Val(); v != "" {
+        sqlDb.Exec("USE " + v)
+    }
     return
+}
+
+// 切换操作的数据库(注意该切换是全局的)
+func (bs *dbBase) SetSchema(schema string) {
+    bs.schema.Set(schema)
 }
 
 // 创建底层数据库master链接对象

@@ -15,10 +15,6 @@ import (
 
 var n = 500000
 
-func increment2() {
-    for i := 0; i < 1000000; i++ {}
-}
-
 func BenchmarkGrpool2(b *testing.B) {
     b.N = n
     for i := 0; i < b.N; i++ {

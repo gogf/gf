@@ -13,18 +13,18 @@ import (
     "gitee.com/johng/gf/g/os/grpool"
 )
 
-func increment1() {
+func increment() {
     for i := 0; i < 1000000; i++ {}
 }
 
 func BenchmarkGrpool_1(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        grpool.Add(increment1)
+        grpool.Add(increment)
     }
 }
 
 func BenchmarkGoroutine_1(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        go increment1()
+        go increment()
     }
 }

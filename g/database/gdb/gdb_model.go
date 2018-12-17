@@ -452,22 +452,23 @@ func (md *Model) Count() (int, error) {
 }
 
 // 查询操作，对底层SQL操作的封装
-func (md *Model) getAll(sql string, args ...interface{}) (result Result, err error) {
-	var cacheKey string
+func (md *Model) getAll(query string, args ...interface{}) (result Result, err error) {
+	cacheKey := ""
 	// 查询缓存查询处理
 	if md.cacheEnabled {
 		cacheKey = md.cacheName
 		if len(cacheKey) == 0 {
-			cacheKey = sql + "/" + gconv.String(args)
+			cacheKey = query + "/" + gconv.String(args)
 		}
 		if v := md.db.getCache().Get(cacheKey); v != nil {
 			return v.(Result), nil
 		}
 	}
+
 	if md.tx == nil {
-		result, err = md.db.GetAll(sql, args...)
+		result, err = md.db.GetAll(query, args...)
 	} else {
-		result, err = md.tx.GetAll(sql, args...)
+		result, err = md.tx.GetAll(query, args...)
 	}
 	// 查询缓存保存处理
 	if len(cacheKey) > 0 && err == nil {
