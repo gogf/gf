@@ -6,6 +6,7 @@
 [![Go Report](https://goreportcard.com/badge/github.com/johng-cn/gf)](https://goreportcard.com/report/github.com/johng-cn/gf) 
 [![Documents](https://img.shields.io/badge/docs-100%25-green.svg)](https://gfer.me) 
 [![License](https://img.shields.io/github/license/johng-cn/gf.svg?style=flat)](https://github.com/johng-cn/gf)
+[![Language](https://img.shields.io/badge/language-go-blue.svg)](https://github.com/johng-cn/gf)
 [![Release](https://img.shields.io/github/release/johng-cn/gf.svg?style=flat)](https://github.com/johng-cn/gf/releases)
 
 <!--
