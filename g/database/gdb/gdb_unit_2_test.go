@@ -88,6 +88,27 @@ func TestModel_Update(t *testing.T) {
     gtest.Assert(n, 1)
 }
 
+func TestModel_Clone(t *testing.T) {
+    md := db.Table("user").Where("id IN(?)", g.Slice{1,3})
+    count, err := md.Count()
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    record, err := md.OrderBy("id DESC").One()
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    result, err := md.OrderBy("id ASC").All()
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    gtest.Assert(count, 2)
+    gtest.Assert(record["id"].Int(), 3)
+    gtest.Assert(len(result), 2)
+    gtest.Assert(result[0]["id"].Int(), 1)
+    gtest.Assert(result[1]["id"].Int(), 3)
+}
+
 func TestModel_All(t *testing.T) {
     result, err := db.Table("user").All()
     if err != nil {

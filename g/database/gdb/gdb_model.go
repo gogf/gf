@@ -67,43 +67,46 @@ func (tx *TX) From(tables string) (*Model) {
 	return tx.Table(tables)
 }
 
-// 清空链式操作数据，以便改model可以重复使用
-func (md *Model) clear() {
-    if md.tx != nil {
-        *md = *md.tx.Table(md.tablesInit)
-    } else {
-        *md = *md.db.Table(md.tablesInit)
-    }
+// 克隆一个当前对象
+func (md *Model) Clone() *Model {
+    newModel := (*Model)(nil)
+	if md.tx != nil {
+        newModel = md.tx.Table(md.tablesInit)
+	} else {
+        newModel = md.db.Table(md.tablesInit)
+	}
+    *newModel = *md
+    return newModel
 }
 
 // 链式操作，左联表
 func (md *Model) LeftJoin(joinTable string, on string) (*Model) {
 	md.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", joinTable, on)
-	return md
+	return md.Clone()
 }
 
 // 链式操作，右联表
 func (md *Model) RightJoin(joinTable string, on string) (*Model) {
 	md.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", joinTable, on)
-	return md
+	return md.Clone()
 }
 
 // 链式操作，内联表
 func (md *Model) InnerJoin(joinTable string, on string) (*Model) {
 	md.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", joinTable, on)
-	return md
+	return md.Clone()
 }
 
 // 链式操作，查询字段
 func (md *Model) Fields(fields string) (*Model) {
 	md.fields = fields
-	return md
+	return md.Clone()
 }
 
 // 链式操作，过滤字段
 func (md *Model) Filter() (*Model) {
     md.filter = true
-    return md
+    return md.Clone()
 }
 
 // 链式操作，condition，支持string & gdb.Map
@@ -115,7 +118,7 @@ func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
 	if len(args) == 1 && strings.Index(md.where , "?") < 0 {
         md.where += "=?"
     }
-	return md
+	return md.Clone()
 }
 
 // 链式操作，添加AND条件到Where中
@@ -123,7 +126,7 @@ func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
     newWhere, newArgs := formatCondition(where, args)
 	md.where          += " AND " + newWhere
 	md.whereArgs       = append(md.whereArgs, newArgs...)
-	return md
+	return md.Clone()
 }
 
 // 链式操作，添加OR条件到Where中
@@ -131,26 +134,26 @@ func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
     newWhere, newArgs := formatCondition(where, args)
 	md.where          += " OR " + newWhere
 	md.whereArgs       = append(md.whereArgs, newArgs...)
-	return md
+	return md.Clone()
 }
 
 // 链式操作，group by
 func (md *Model) GroupBy(groupBy string) (*Model) {
 	md.groupBy = groupBy
-	return md
+	return md.Clone()
 }
 
 // 链式操作，order by
 func (md *Model) OrderBy(orderBy string) (*Model) {
 	md.orderBy = orderBy
-	return md
+	return md.Clone()
 }
 
 // 链式操作，limit
 func (md *Model) Limit(start int, limit int) (*Model) {
 	md.start = start
 	md.limit = limit
-	return md
+	return md.Clone()
 }
 
 // 链式操作，翻页
@@ -158,7 +161,7 @@ func (md *Model) Limit(start int, limit int) (*Model) {
 func (md *Model) ForPage(page, limit int) (*Model) {
 	md.start = (page - 1) * limit
 	md.limit = limit
-	return md
+	return md.Clone()
 }
 
 // 链式操作，操作数据记录项，可以是string/Map, 也可以是：key,value,key,value,...
@@ -197,7 +200,7 @@ func (md *Model) Data(data ...interface{}) (*Model) {
                 }
 		}
 	}
-	return md
+	return md.Clone()
 }
 
 // 链式操作， CURD - Insert/BatchInsert
@@ -206,7 +209,6 @@ func (md *Model) Insert() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
-		md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("inserting into table with empty data")
@@ -246,7 +248,6 @@ func (md *Model) Replace() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
-        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("replacing into table with empty data")
@@ -286,7 +287,6 @@ func (md *Model) Save() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
-        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("replacing into table with empty data")
@@ -326,7 +326,6 @@ func (md *Model) Update() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
-        md.clear()
 	}()
 	if md.data == nil {
 		return nil, errors.New("updating table with empty data")
@@ -351,7 +350,6 @@ func (md *Model) Delete() (result sql.Result, err error) {
 		if err == nil {
 			md.checkAndRemoveCache()
 		}
-        md.clear()
 	}()
 	if md.tx == nil {
 		return md.db.Delete(md.tables, md.where, md.whereArgs...)
@@ -363,7 +361,7 @@ func (md *Model) Delete() (result sql.Result, err error) {
 // 设置批处理的大小
 func (md *Model) Batch(batch int) *Model {
 	md.batch = batch
-	return md
+	return md.Clone()
 }
 
 // 查询缓存/清除缓存操作，需要注意的是，事务查询不支持缓存。
@@ -379,7 +377,7 @@ func (md *Model) Cache(time int, name ... string) *Model {
 	if md.tx == nil {
 		md.cacheEnabled = true
 	}
-	return md
+	return md.Clone()
 }
 
 // 链式操作，select
@@ -389,7 +387,6 @@ func (md *Model) Select() (Result, error) {
 
 // 链式操作，查询所有记录
 func (md *Model) All() (Result, error) {
-	defer md.clear()
 	return md.getAll(md.getFormattedSql(), md.whereArgs...)
 }
 
@@ -429,7 +426,9 @@ func (md *Model) Struct(obj interface{}) error {
 // 链式操作，查询数量，fields可以为空，也可以自定义查询字段，
 // 当给定自定义查询字段时，该字段必须为数量结果，否则会引起歧义，使用如：md.Fields("COUNT(id)")
 func (md *Model) Count() (int, error) {
-    defer md.clear()
+    defer func(fields string) {
+        md.fields = fields
+    }(md.fields)
 	if md.fields == "" || md.fields == "*" {
 		md.fields = "COUNT(1)"
 	} else {
@@ -513,7 +512,6 @@ func (md *Model) getFormattedSql() string {
 // @author ymrjqyy
 // @author 2018-08-15
 func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) {
-    defer md.clear()
 	page := 1
 	for {
 		md.ForPage(page, limit)
