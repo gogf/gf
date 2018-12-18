@@ -34,7 +34,7 @@ func (w *Watcher) startWatchLoop() {
                     }, REPEAT_EVENT_FILTER_INTERVAL)
 
                 case err := <- w.watcher.Errors:
-                    fmt.Fprintf(os.Stderr, "error: %s\n" + err.Error())
+                    fmt.Fprintf(os.Stderr, "[gfsnotify] error: %s\n", err.Error())
             }
         }
     }()

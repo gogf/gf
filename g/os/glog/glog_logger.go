@@ -219,9 +219,6 @@ func (l *Logger) doStdLockPrint(std io.Writer, s string) {
 
 // 核心打印数据方法(标准输出)
 func (l *Logger) stdPrint(s string) {
-    if l.btStatus.Val() == 1 {
-        s = l.appendBacktrace(s)
-    }
     l.print(os.Stdout, s)
 }
 
@@ -237,14 +234,18 @@ func (l *Logger) errPrint(s string) {
 }
 
 // 输出内容中添加回溯信息
-func (l *Logger) appendBacktrace(s string) string {
-    trace := l.GetBacktrace()
+func (l *Logger) appendBacktrace(s string, skip...int) string {
+    trace := l.GetBacktrace(skip...)
     if trace != "" {
         backtrace := "Backtrace:" + ln + trace
-        if s[len(s) - 1] == byte('\n') {
-            s = s + backtrace + ln
+        if len(s) > 0 {
+            if s[len(s)-1] == byte('\n') {
+                s = s + backtrace + ln
+            } else {
+                s = s + ln + backtrace + ln
+            }
         } else {
-            s = s + ln + backtrace + ln
+            s = backtrace
         }
     }
     return s
@@ -252,7 +253,7 @@ func (l *Logger) appendBacktrace(s string) string {
 
 // 直接打印回溯信息，参数skip表示调用端往上多少级开始回溯
 func (l *Logger) PrintBacktrace(skip...int) {
-    l.Println(l.GetBacktrace(skip...))
+    l.Println(l.appendBacktrace("", skip...))
 }
 
 // 获取文件调用回溯字符串，参数skip表示调用端往上多少级开始回溯

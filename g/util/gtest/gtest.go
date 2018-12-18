@@ -18,13 +18,15 @@ import (
 // 断言判断
 func Assert(value, expect interface{}) {
     if gconv.String(value) != gconv.String(expect) {
-        glog.Backtrace(true, 1).Printfln(`[ASSERT] VALUE: %v, EXPECT: %v`, value, expect)
+        glog.Printfln(`[ASSERT] VALUE: %v, EXPECT: %v`, value, expect)
+        glog.Header(false).PrintBacktrace(1)
         os.Exit(1)
     }
 }
 
 // 提示错误并退出
 func Fatal(message...interface{}) {
-    glog.Backtrace(true, 1).Println(`[FATAL] `, fmt.Sprint(message...))
+    glog.Println(`[FATAL] `, fmt.Sprint(message...))
+    glog.Header(false).PrintBacktrace(1)
     os.Exit(1)
 }

@@ -49,10 +49,12 @@ var viewObj *View
 // 初始化默认的视图对象
 func checkAndInitDefaultView() {
     if viewObj == nil {
-        if gfile.SelfDir() != gfile.TempDir() {
+        // gfile.MainPkgPath() 用以判断是否开发环境
+        mainPkgPath := gfile.MainPkgPath()
+        if gfile.MainPkgPath() == "" {
             viewObj = New(gfile.SelfDir())
         } else {
-            viewObj = New()
+            viewObj = New(mainPkgPath)
         }
     }
 }
