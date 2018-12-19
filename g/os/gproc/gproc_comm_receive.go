@@ -100,32 +100,32 @@ func tcpServiceHandler(conn *gtcp.Conn) {
 }
 
 // 数据解包，防止黏包
-// 数据格式：总长度(24bit)|发送进程PID(16bit)|接收进程PID(16bit)|分组长度(8bit)|分组名称(变长)|校验(32bit)|参数(变长)
+// 数据格式：总长度(24bit)|发送进程PID(24bit)|接收进程PID(24bit)|分组长度(8bit)|分组名称(变长)|校验(32bit)|参数(变长)
 func bufferToMsgs(buffer []byte) []*Msg {
     s    := 0
     msgs := make([]*Msg, 0)
     for s < len(buffer) {
         // 长度解析及校验
         length := gbinary.DecodeToInt(buffer[s : s + 3])
-        if length < 12 || length > len(buffer) {
+        if length < 14 || length > len(buffer) {
             s++
             continue
         }
         // 分组信息解析
-        groupLen  := gbinary.DecodeToInt(buffer[s + 7 : s + 8])
+        groupLen  := gbinary.DecodeToInt(buffer[s + 9 : s + 10])
         // checksum校验(仅对参数做校验，提高校验效率)
-        checksum1 := gbinary.DecodeToUint32(buffer[s + 8 + groupLen : s + 8 + groupLen + 4])
-        checksum2 := gtcp.Checksum(buffer[s + 8 + groupLen + 4 : s + length])
+        checksum1 := gbinary.DecodeToUint32(buffer[s + 10 + groupLen : s + 10 + groupLen + 4])
+        checksum2 := gtcp.Checksum(buffer[s + 10 + groupLen + 4 : s + length])
         if checksum1 != checksum2 {
             s++
             continue
         }
         // 接收进程PID校验
-        if Pid() ==  gbinary.DecodeToInt(buffer[s + 5 : s + 7]) {
+        if Pid() ==  gbinary.DecodeToInt(buffer[s + 6 : s + 9]) {
             msgs = append(msgs, &Msg {
-                Pid   : gbinary.DecodeToInt(buffer[s + 3 : s + 5]),
-                Data  : buffer[s + 8 + groupLen + 4 : s + length],
-                Group : string(buffer[s + 8 : s + 8 + groupLen]),
+                Pid   : gbinary.DecodeToInt(buffer[s + 3 : s + 6]),
+                Data  : buffer[s + 10 + groupLen + 4 : s + length],
+                Group : string(buffer[s + 10 : s + 10 + groupLen]),
             })
         }
         s += length
