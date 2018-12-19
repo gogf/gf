@@ -11,7 +11,6 @@ package glog
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gfile"
     "io"
 )
 
@@ -32,13 +31,6 @@ var (
     // 默认的日志对象
     logger = New()
 )
-
-func init() {
-    // 自动识别开发环境
-    if gfile.MainPkgPath() != "" {
-        logger.SetDebug(true)
-    }
-}
 
 // 日志日志目录绝对路径
 func SetPath(path string) {

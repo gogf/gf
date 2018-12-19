@@ -76,10 +76,7 @@ func View(name...string) *gview.View {
         if path == "" {
             path = genv.Get("GF_VIEWPATH")
             if path == "" {
-                // gfile.MainPkgPath() 用以判断是否开发环境
-                if gfile.MainPkgPath() == "" {
-                    path = gfile.SelfDir()
-                }
+                path = gfile.SelfDir()
             }
         }
         view := gview.New(path)
@@ -106,10 +103,7 @@ func Config(file...string) *gcfg.Config {
             if path == "" {
                 path = genv.Get("GF_CFGPATH")
                 if path == "" {
-                    // gfile.MainPkgPath() 用以判断是否开发环境
-                    if gfile.MainPkgPath() == "" {
-                        path = gfile.SelfDir()
-                    }
+                    path = gfile.SelfDir()
                 }
             }
             config := gcfg.New(path, configFile)
