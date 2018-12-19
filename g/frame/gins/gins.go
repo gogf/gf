@@ -124,60 +124,62 @@ func Database(name...string) gdb.DB {
     }
     key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
     db  := instances.GetOrSetFuncLock(key, func() interface{} {
-        m := config.GetMap("database")
-        if m == nil {
-            glog.Error(`database init failed: "database" node not found, is config file or configuration missing?`)
-            return nil
-        }
-        for group, v := range m {
-            cg := gdb.ConfigGroup{}
-            if list, ok := v.([]interface{}); ok {
-                for _, nodev := range list {
-                    node  := gdb.ConfigNode{}
-                    nodem := nodev.(map[string]interface{})
-                    if value, ok := nodem["host"]; ok {
-                        node.Host = gconv.String(value)
-                    }
-                    if value, ok := nodem["port"]; ok {
-                        node.Port = gconv.String(value)
-                    }
-                    if value, ok := nodem["user"]; ok {
-                        node.User = gconv.String(value)
-                    }
-                    if value, ok := nodem["pass"]; ok {
-                        node.Pass = gconv.String(value)
-                    }
-                    if value, ok := nodem["name"]; ok {
-                        node.Name = gconv.String(value)
-                    }
-                    if value, ok := nodem["type"]; ok {
-                        node.Type = gconv.String(value)
-                    }
-                    if value, ok := nodem["role"]; ok {
-                        node.Role = gconv.String(value)
-                    }
-                    if value, ok := nodem["charset"]; ok {
-                        node.Charset = gconv.String(value)
-                    }
-                    if value, ok := nodem["priority"]; ok {
-                        node.Priority = gconv.Int(value)
-                    }
-                    if value, ok := nodem["linkinfo"]; ok {
-                        node.Linkinfo = gconv.String(value)
-                    }
-                    if value, ok := nodem["max-idle"]; ok {
-                        node.MaxIdleConnCount = gconv.Int(value)
-                    }
-                    if value, ok := nodem["max-open"]; ok {
-                        node.MaxOpenConnCount = gconv.Int(value)
-                    }
-                    if value, ok := nodem["max-lifetime"]; ok {
-                        node.MaxConnLifetime = gconv.Int(value)
-                    }
-                    cg = append(cg, node)
-                }
+        if gdb.GetConfig(group) == nil {
+            m := config.GetMap("database")
+            if m == nil {
+                glog.Error(`database init failed: "database" node not found, is config file or configuration missing?`)
+                return nil
             }
-            gdb.AddConfigGroup(group, cg)
+            for group, v := range m {
+                cg := gdb.ConfigGroup{}
+                if list, ok := v.([]interface{}); ok {
+                    for _, nodev := range list {
+                        node  := gdb.ConfigNode{}
+                        nodem := nodev.(map[string]interface{})
+                        if value, ok := nodem["host"]; ok {
+                            node.Host = gconv.String(value)
+                        }
+                        if value, ok := nodem["port"]; ok {
+                            node.Port = gconv.String(value)
+                        }
+                        if value, ok := nodem["user"]; ok {
+                            node.User = gconv.String(value)
+                        }
+                        if value, ok := nodem["pass"]; ok {
+                            node.Pass = gconv.String(value)
+                        }
+                        if value, ok := nodem["name"]; ok {
+                            node.Name = gconv.String(value)
+                        }
+                        if value, ok := nodem["type"]; ok {
+                            node.Type = gconv.String(value)
+                        }
+                        if value, ok := nodem["role"]; ok {
+                            node.Role = gconv.String(value)
+                        }
+                        if value, ok := nodem["charset"]; ok {
+                            node.Charset = gconv.String(value)
+                        }
+                        if value, ok := nodem["priority"]; ok {
+                            node.Priority = gconv.Int(value)
+                        }
+                        if value, ok := nodem["linkinfo"]; ok {
+                            node.Linkinfo = gconv.String(value)
+                        }
+                        if value, ok := nodem["max-idle"]; ok {
+                            node.MaxIdleConnCount = gconv.Int(value)
+                        }
+                        if value, ok := nodem["max-open"]; ok {
+                            node.MaxOpenConnCount = gconv.Int(value)
+                        }
+                        if value, ok := nodem["max-lifetime"]; ok {
+                            node.MaxConnLifetime = gconv.Int(value)
+                        }
+                        cg = append(cg, node)
+                    }
+                }
+                gdb.AddConfigGroup(group, cg)
+            }
         }
         // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空数据库配置缓存
         gfsnotify.Add(config.GetFilePath(), func(event *gfsnotify.Event) {

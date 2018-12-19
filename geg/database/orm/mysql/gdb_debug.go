@@ -11,7 +11,7 @@ func main() {
         Host:    "127.0.0.1",
         Port:    "3306",
         User:    "root",
-        Pass:    "123456",
+        Pass:    "12345678",
         Name:    "test",
         Type:    "mysql",
         Role:    "master",
