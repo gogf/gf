@@ -23,7 +23,8 @@ func (db *dbMysql) Open (config *ConfigNode) (*sql.DB, error) {
     if config.Linkinfo != "" {
         source = config.Linkinfo
     } else {
-        source = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?multiStatements=true", config.User, config.Pass, config.Host, config.Port, config.Name)
+        source = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true",
+            config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset)
     }
     if db, err := sql.Open("mysql", source); err == nil {
         return db, nil
