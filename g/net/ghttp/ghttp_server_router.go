@@ -21,16 +21,16 @@ import (
 
 // 解析pattern
 func (s *Server)parsePattern(pattern string) (domain, method, uri string, err error) {
-    uri    = pattern
+    uri    = strings.TrimSpace(pattern)
     domain = gDEFAULT_DOMAIN
     method = gDEFAULT_METHOD
-    if array, err := gregex.MatchString(`([a-zA-Z]+):(.+)`, pattern); len(array) > 1 && err == nil {
-        method = array[1]
-        uri    = array[2]
+    if array, err := gregex.MatchString(`(.+):(.+)`, pattern); len(array) > 1 && err == nil {
+        method  = strings.TrimSpace(array[1])
+        uri     = strings.TrimSpace(array[2])
     }
-    if array, err := gregex.MatchString(`(.+)@([\w\.\-]+)`, uri); len(array) > 1 && err == nil {
-        uri     = array[1]
-        domain  = array[2]
+    if array, err := gregex.MatchString(`(.+)@(.+)`, uri); len(array) > 1 && err == nil {
+        uri     = strings.TrimSpace(array[1])
+        domain  = strings.TrimSpace(array[2])
     }
     if uri == "" {
         err = errors.New("invalid pattern")

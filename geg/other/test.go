@@ -1,7 +1,33 @@
 package main
 
-import "gitee.com/johng/gf/g/util/gtest"
+type Registry struct {
+    Method  string
+    Uri     string
+    Handler interface{}
+    Object  interface{}
+}
+
+func BindGroup(group string, routers []Registry) {
+
+}
+
+type User    struct { }
+type Order   struct { }
+type Product struct { }
+
+func HookFunc() {
+
+}
 
 func main() {
-    gtest.Assert(1, 2)
+    user := new(User)
+    BindGroup("/api", []Registry {
+        {"ALL",   "/api/*",           "BeforeServe",   HookFunc},
+        {"ALL",   "/order",           "",              new(Order)},
+        {"REST",  "/product",         "",              new(Product)},
+        {"GET",   "/user/register",   "Register",      user},
+        {"GET",   "/user/reset-pass", "ResetPassword", user},
+        {"POST",  "/user/reset-pass", "ResetPassword", user},
+        {"POST",  "/user/login",      "Login",         user},
+    })
 }
