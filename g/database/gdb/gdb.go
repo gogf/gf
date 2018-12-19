@@ -269,6 +269,10 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
     if err != nil {
         return nil, err
     }
+    // 默认值设定
+    if node.Charset == "" {
+        node.Charset = "utf8"
+    }
     v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
         sqlDb, err = bs.db.Open(node)
         if err != nil {

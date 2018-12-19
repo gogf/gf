@@ -115,6 +115,13 @@ func AddDefaultConfigGroup (nodes ConfigGroup) {
     AddConfigGroup(DEFAULT_GROUP_NAME, nodes)
 }
 
+// 添加一台数据库服务器配置
+func GetConfig (group string) ConfigGroup {
+    config.RLock()
+    defer config.RUnlock()
+    return config.c[group]
+}
+
 // 设置默认链接的数据库链接配置项(默认是 default)
 func SetDefaultGroup (groupName string) {
     config.Lock()

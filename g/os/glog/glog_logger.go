@@ -141,6 +141,13 @@ func (l *Logger) getFilePointer() *gfpool.File {
         file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.file.Val(), func(s string) string {
             return gtime.Now().Format(strings.Trim(s, "{}"))
         })
+        // 如果日志目录不存在则创建目录路径
+        if !gfile.Exists(path) {
+            if err := gfile.Mkdir(path); err != nil {
+                fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
+                return nil
+            }
+        }
         fpath   := path + gfile.Separator + file
         if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, gDEFAULT_FPOOL_PERM, gDEFAULT_FPOOL_EXPIRE); err == nil {
             return fp
@@ -156,7 +163,7 @@ func (l *Logger) SetPath(path string) error {
     // 如果目录不存在，则递归创建
     if !gfile.Exists(path) {
        if err := gfile.Mkdir(path); err != nil {
-           fmt.Fprintln(os.Stderr, fmt.Sprintf(`glog mkdir "%s" failed: %s`, path, err.Error()))
+           fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
            return err
        }
     }
