@@ -9,7 +9,6 @@ package grand
 import (
     "crypto/rand"
     "encoding/binary"
-    "time"
 )
 
 const (
@@ -34,8 +33,8 @@ func init() {
                     bufferChan <- binary.LittleEndian.Uint64(buffer[i : i + 8])
                     i ++
                 }
-                // 充分利用缓冲区数据，字节倒序生成，随机索引递增
-                step = int(time.Now().UnixNano())%n
+                // 充分利用缓冲区数据，随机索引递增
+                step = int(buffer[0])%10
                 for i := 0; i < n - 8; {
                     bufferChan <- binary.BigEndian.Uint64(buffer[i : i + 8])
                     i += step

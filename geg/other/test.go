@@ -7,7 +7,7 @@ type Registry struct {
     Object  interface{}
 }
 
-func BindGroup(group string, routers []Registry) {
+func BindGroup(group string, routers [][]interface{}) {
 
 }
 
@@ -21,10 +21,10 @@ func HookFunc() {
 
 func main() {
     user := new(User)
-    BindGroup("/api", []Registry {
-        {"ALL",   "/api/*",           "BeforeServe",   HookFunc},
-        {"ALL",   "/order",           "",              new(Order)},
-        {"REST",  "/product",         "",              new(Product)},
+    BindGroup("/api", [][]interface{} {
+        {"ALL",   "/*",               HookFunc, "BeforeServe"},
+        {"ALL",   "/order",           new(Order)},
+        {"REST",  "/product",         new(Product)},
         {"GET",   "/user/register",   "Register",      user},
         {"GET",   "/user/reset-pass", "ResetPassword", user},
         {"POST",  "/user/reset-pass", "ResetPassword", user},

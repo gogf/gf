@@ -7,7 +7,6 @@
 package gconv
 
 import (
-    "fmt"
     "reflect"
 )
 
@@ -77,12 +76,11 @@ func Ints(i interface{}) []int {
                 for _, v := range i.([]interface{}) {
                     array = append(array, Int(v))
                 }
+            default:
+                return []int{Int(i)}
         }
-        if len(array) > 0 {
-            return array
-        }
+        return array
     }
-    return []int{Int(i)}
 }
 
 // 任意类型转换为[]string类型
@@ -95,71 +93,70 @@ func Strings(i interface{}) []string {
     } else {
         array := make([]string, 0)
         switch i.(type) {
-        case []int:
-            for _, v := range i.([]int) {
-                array = append(array, String(v))
-            }
-        case []int8:
-            for _, v := range i.([]int8) {
-                array = append(array, String(v))
-            }
-        case []int16:
-            for _, v := range i.([]int16) {
-                array = append(array, String(v))
-            }
-        case []int32:
-            for _, v := range i.([]int32) {
-                array = append(array, String(v))
-            }
-        case []int64:
-            for _, v := range i.([]int64) {
-                array = append(array, String(v))
-            }
-        case []uint:
-            for _, v := range i.([]uint) {
-                array = append(array, String(v))
-            }
-        case []uint8:
-            for _, v := range i.([]uint8) {
-                array = append(array, String(v))
-            }
-        case []uint16:
-            for _, v := range i.([]uint16) {
-                array = append(array, String(v))
-            }
-        case []uint32:
-            for _, v := range i.([]uint32) {
-                array = append(array, String(v))
-            }
-        case []uint64:
-            for _, v := range i.([]uint64) {
-                array = append(array, String(v))
-            }
-        case []bool:
-            for _, v := range i.([]bool) {
-                array = append(array, String(v))
-            }
-        case []float32:
-            for _, v := range i.([]float32) {
-                array = append(array, String(v))
-            }
-        case []float64:
-            for _, v := range i.([]float64) {
-                array = append(array, String(v))
-            }
-        case []interface{}:
-            for _, v := range i.([]interface{}) {
-                array = append(array, String(v))
-            }
+            case []int:
+                for _, v := range i.([]int) {
+                    array = append(array, String(v))
+                }
+            case []int8:
+                for _, v := range i.([]int8) {
+                    array = append(array, String(v))
+                }
+            case []int16:
+                for _, v := range i.([]int16) {
+                    array = append(array, String(v))
+                }
+            case []int32:
+                for _, v := range i.([]int32) {
+                    array = append(array, String(v))
+                }
+            case []int64:
+                for _, v := range i.([]int64) {
+                    array = append(array, String(v))
+                }
+            case []uint:
+                for _, v := range i.([]uint) {
+                    array = append(array, String(v))
+                }
+            case []uint8:
+                for _, v := range i.([]uint8) {
+                    array = append(array, String(v))
+                }
+            case []uint16:
+                for _, v := range i.([]uint16) {
+                    array = append(array, String(v))
+                }
+            case []uint32:
+                for _, v := range i.([]uint32) {
+                    array = append(array, String(v))
+                }
+            case []uint64:
+                for _, v := range i.([]uint64) {
+                    array = append(array, String(v))
+                }
+            case []bool:
+                for _, v := range i.([]bool) {
+                    array = append(array, String(v))
+                }
+            case []float32:
+                for _, v := range i.([]float32) {
+                    array = append(array, String(v))
+                }
+            case []float64:
+                for _, v := range i.([]float64) {
+                    array = append(array, String(v))
+                }
+            case []interface{}:
+                for _, v := range i.([]interface{}) {
+                    array = append(array, String(v))
+                }
+            default:
+                return []string{String(i)}
         }
-        if len(array) > 0 {
-            return array
-        }
+        return array
     }
-    return []string{fmt.Sprintf("%v", i)}
 }
 
-// 任意类型转换为[]float64类型
+// 将类型转换为[]float64类型
 func Floats(i interface{}) []float64 {
     if i == nil {
         return nil
@@ -225,12 +222,11 @@ func Floats(i interface{}) []float64 {
                 for _, v := range i.([]interface{}) {
                     array = append(array, Float64(v))
                 }
+            default:
+                return []float64{Float64(i)}
         }
-        if len(array) > 0 {
-            return array
-        }
+        return array
     }
-    return []float64{Float64(i)}
 }
 
 // 任意类型转换为[]interface{}类型
@@ -318,11 +314,10 @@ func Interfaces(i interface{}) []interface{} {
                         for i := 0; i < rv.NumField(); i++ {
                             array = append(array, rv.Field(i).Interface())
                         }
+                    default:
+                        return []interface{}{i}
                 }
         }
-        if len(array) > 0 {
-            return array
-        }
+        return array
     }
-    return []interface{}{i}
 }

@@ -20,24 +20,28 @@ import (
 
 
 // 解析pattern
-func (s *Server)parsePattern(pattern string) (domain, method, uri string, err error) {
-    uri    = strings.TrimSpace(pattern)
+func (s *Server)parsePattern(pattern string) (domain, method, path string, err error) {
+    path   = strings.TrimSpace(pattern)
     domain = gDEFAULT_DOMAIN
     method = gDEFAULT_METHOD
-    if array, err := gregex.MatchString(`(.+):(.+)`, pattern); len(array) > 1 && err == nil {
-        method  = strings.TrimSpace(array[1])
-        uri     = strings.TrimSpace(array[2])
+    if array, err := gregex.MatchString(`([a-zA-Z]+):(.+)`, pattern); len(array) > 1 && err == nil {
+        path = strings.TrimSpace(array[2])
+        if v := strings.TrimSpace(array[1]); v != "" {
+            method = v
+        }
     }
-    if array, err := gregex.MatchString(`(.+)@(.+)`, uri); len(array) > 1 && err == nil {
-        uri     = strings.TrimSpace(array[1])
-        domain  = strings.TrimSpace(array[2])
+    if array, err := gregex.MatchString(`(.+)@([\w\.\-]+)`, path); len(array) > 1 && err == nil {
+        path = strings.TrimSpace(array[1])
+        if v := strings.TrimSpace(array[2]); v != "" {
+            domain = v
+        }
     }
-    if uri == "" {
+    if path == "" {
         err = errors.New("invalid pattern")
     }
     // 去掉末尾的"/"符号，与路由匹配时处理一致
-    if uri != "/" {
-        uri = strings.TrimRight(uri, "/")
+    if path != "/" {
+        path = strings.TrimRight(path, "/")
     }
     return
 }

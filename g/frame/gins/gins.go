@@ -9,18 +9,18 @@
 package gins
 
 import (
+    "fmt"
+    "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/database/gdb"
+    "gitee.com/johng/gf/g/database/gredis"
     "gitee.com/johng/gf/g/os/gcfg"
     "gitee.com/johng/gf/g/os/gcmd"
     "gitee.com/johng/gf/g/os/genv"
+    "gitee.com/johng/gf/g/os/gfile"
+    "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/database/gdb"
-    "gitee.com/johng/gf/g/os/gfsnotify"
-    "fmt"
-    "gitee.com/johng/gf/g/database/gredis"
     "gitee.com/johng/gf/g/util/gregex"
 )
 
@@ -180,11 +180,11 @@ func Database(name...string) gdb.DB {
                 }
                 gdb.AddConfigGroup(group, cg)
             }
+            // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空数据库配置缓存
+            gfsnotify.Add(config.GetFilePath(), func(event *gfsnotify.Event) {
+                instances.Remove(key)
+            })
         }
-        // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空数据库配置缓存
-        gfsnotify.Add(config.GetFilePath(), func(event *gfsnotify.Event) {
-            instances.Remove(key)
-        })
         if db, err := gdb.New(name...); err == nil {
             return db
         } else {

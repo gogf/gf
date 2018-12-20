@@ -91,13 +91,13 @@ type (
     }
 
     // pattern与回调函数的绑定map
-    handlerMap  map[string]*handlerItem
+    handlerMap    = map[string]*handlerItem
 
     // HTTP注册函数
-    HandlerFunc func(r *Request)
+    HandlerFunc   = func(r *Request)
 
     // 文件描述符map
-    listenerFdMap map[string]string
+    listenerFdMap = map[string]string
 )
 
 const (

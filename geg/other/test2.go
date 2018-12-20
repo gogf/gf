@@ -2,24 +2,20 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/gfsnotify"
+    "gitee.com/johng/gf/g"
+    "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/os/glog"
 )
 
 func main() {
-    path := "/Users/john/Temp"
-    _, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
-        fmt.Println(event)
-        if event.IsWrite() {
-            glog.Println("写入文件 : ", event.Path)
-            fmt.Printf("%s\n", gfile.GetContents(event.Path))
-        }
+    gdb.AddDefaultConfigNode(gdb.ConfigNode{
+        Type     : "mysql",
+        Linkinfo : "root:12345678@tcp(127.0.0.1:3306)/test",
     })
-    if err != nil {
-        glog.Fatal(err)
-    } else {
-        select {}
-    }
 
+    if r, err := g.Database().GetOne("select now() as time"); err != nil {
+        glog.Error("Mysql Init Select Now : %v", err)
+    } else {
+        fmt.Println(r.ToMap())
+    }
 }

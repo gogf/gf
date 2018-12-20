@@ -24,7 +24,6 @@ install:
 - cd $GITEE_GF
 
 script:
-# - cd g && go test -v ./...
 - cd g && go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
