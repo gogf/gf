@@ -42,19 +42,19 @@ func main() {
     ctl := new(Controller)
 
     // 分组路由方法注册
-    g := s.Group("/api")
-    g.ALL ("*",            HookHandler, ghttp.HOOK_BEFORE_SERVE)
-    g.ALL ("/handler",     Handler)
-    g.ALL ("/ctl",         ctl)
-    g.GET ("/ctl/my-show", ctl, "Show")
-    g.REST("/ctl/rest",    ctl)
-    g.ALL ("/obj",         obj)
-    g.GET ("/obj/my-show", obj, "Show")
-    g.REST("/obj/rest",    obj)
+    //g := s.Group("/api")
+    //g.ALL ("*",            HookHandler, ghttp.HOOK_BEFORE_SERVE)
+    //g.ALL ("/handler",     Handler)
+    //g.ALL ("/ctl",         ctl)
+    //g.GET ("/ctl/my-show", ctl, "Show")
+    //g.REST("/ctl/rest",    ctl)
+    //g.ALL ("/obj",         obj)
+    //g.GET ("/obj/my-show", obj, "Show")
+    //g.REST("/obj/rest",    obj)
 
     // 分组路由批量注册
     s.Group("/api").Bind("/api", []ghttp.GroupItem{
-        {"ALL",  "*",            HookHandler, ghttp.HOOK_BEFORE_SERVE},
+
         {"ALL",  "/handler",     Handler},
         {"ALL",  "/ctl",         ctl},
         {"GET",  "/ctl/my-show", ctl, "Show"},
@@ -62,6 +62,7 @@ func main() {
         {"ALL",  "/obj",         obj},
         {"GET",  "/obj/my-show", obj, "Show"},
         {"REST", "/obj/rest",    obj},
+        {"ALL",  "*",            HookHandler, ghttp.HOOK_BEFORE_SERVE},
     })
 
     s.SetPort(8199)
