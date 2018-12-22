@@ -81,103 +81,140 @@ func (md *Model) Clone() *Model {
 
 // 链式操作，左联表
 func (md *Model) LeftJoin(joinTable string, on string) (*Model) {
-	md.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", joinTable, on)
-	return md.Clone()
+    model        := md.Clone()
+    model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", joinTable, on)
+	return model
 }
 
 // 链式操作，右联表
 func (md *Model) RightJoin(joinTable string, on string) (*Model) {
-	md.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", joinTable, on)
-	return md.Clone()
+    model        := md.Clone()
+    model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", joinTable, on)
+	return model
 }
 
 // 链式操作，内联表
 func (md *Model) InnerJoin(joinTable string, on string) (*Model) {
-	md.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", joinTable, on)
-	return md.Clone()
+    model        := md.Clone()
+    model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", joinTable, on)
+	return model
 }
 
 // 链式操作，查询字段
 func (md *Model) Fields(fields string) (*Model) {
-	md.fields = fields
-	return md.Clone()
+    model       := md.Clone()
+    model.fields = fields
+	return model
 }
 
 // 链式操作，过滤字段
 func (md *Model) Filter() (*Model) {
-    md.filter = true
-    return md.Clone()
+    model       := md.Clone()
+    model.filter = true
+    return model
 }
 
 // 链式操作，condition，支持string & gdb.Map
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
+    model             := md.Clone()
     newWhere, newArgs := formatCondition(where, args)
-	md.where           = newWhere
-	md.whereArgs       = append(md.whereArgs, newArgs...)
+    model.where        = newWhere
+    model.whereArgs    = append(model.whereArgs, newArgs...)
 	// 支持 Where("uid", 1)这种格式
-	if len(args) == 1 && strings.Index(md.where , "?") < 0 {
-        md.where += "=?"
+	if len(args) == 1 && strings.Index(model.where , "?") < 0 {
+        model.where += "=?"
     }
-	return md.Clone()
+	return model
 }
 
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
+    model             := md.Clone()
     newWhere, newArgs := formatCondition(where, args)
-	md.where          += " AND " + newWhere
-	md.whereArgs       = append(md.whereArgs, newArgs...)
-	return md.Clone()
+    model.where       += " AND " + newWhere
+    model.whereArgs    = append(model.whereArgs, newArgs...)
+	return model
 }
 
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
+    model             := md.Clone()
     newWhere, newArgs := formatCondition(where, args)
-	md.where          += " OR " + newWhere
-	md.whereArgs       = append(md.whereArgs, newArgs...)
-	return md.Clone()
+    model.where       += " OR " + newWhere
+    model.whereArgs    = append(model.whereArgs, newArgs...)
+	return model
 }
 
 // 链式操作，group by
 func (md *Model) GroupBy(groupBy string) (*Model) {
-	md.groupBy = groupBy
-	return md.Clone()
+    model        := md.Clone()
+    model.groupBy = groupBy
+	return model
 }
 
 // 链式操作，order by
 func (md *Model) OrderBy(orderBy string) (*Model) {
-	md.orderBy = orderBy
-	return md.Clone()
+    model        := md.Clone()
+    model.orderBy = orderBy
+	return model
 }
 
 // 链式操作，limit
 func (md *Model) Limit(start int, limit int) (*Model) {
-	md.start = start
-	md.limit = limit
-	return md.Clone()
+    model      := md.Clone()
+    model.start = start
+    model.limit = limit
+	return model
 }
 
 // 链式操作，翻页
 // @author ymrjqyy
 func (md *Model) ForPage(page, limit int) (*Model) {
-	md.start = (page - 1) * limit
-	md.limit = limit
-	return md.Clone()
+    model      := md.Clone()
+    model.start = (page - 1) * limit
+    model.limit = limit
+	return model
+}
+
+// 设置批处理的大小
+func (md *Model) Batch(batch int) *Model {
+    model      := md.Clone()
+    model.batch = batch
+    return model
+}
+
+// 查询缓存/清除缓存操作，需要注意的是，事务查询不支持缓存。
+// 当time < 0时表示清除缓存， time=0时表示不过期, time > 0时表示过期时间，time过期时间单位：秒；
+// name表示自定义的缓存名称，便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
+// 例如：查询缓存时设置名称，清理缓存时可以给定清理的缓存名称进行精准清理。
+func (md *Model) Cache(time int, name ... string) *Model {
+    model          := md.Clone()
+    model.cacheTime = time
+    if len(name) > 0 {
+        model.cacheName = name[0]
+    }
+    // 查询缓存特性不支持事务操作
+    if model.tx == nil {
+        model.cacheEnabled = true
+    }
+    return model
 }
 
 // 链式操作，操作数据记录项，可以是string/Map, 也可以是：key,value,key,value,...
 func (md *Model) Data(data ...interface{}) (*Model) {
+    model := md.Clone()
 	if len(data) > 1 {
 		m := make(map[string]interface{})
 		for i := 0; i < len(data); i += 2 {
 			m[gconv.String(data[i])] = data[i+1]
 		}
-		md.data = m
+        model.data = m
 	} else {
 		switch data[0].(type) {
 			case List:
-				md.data = data[0]
+                model.data = data[0]
 			case Map:
-				md.data = data[0]
+                model.data = data[0]
 			default:
                 rv   := reflect.ValueOf(data[0])
                 kind := rv.Kind()
@@ -192,15 +229,15 @@ func (md *Model) Data(data ...interface{}) (*Model) {
                         for i := 0; i < rv.Len(); i++ {
                             list[i] = gconv.Map(rv.Index(i).Interface())
                         }
-                        md.data = list
+                        model.data = list
                     case reflect.Map:
-                        md.data = gconv.Map(data[0])
+                        model.data = gconv.Map(data[0])
                     default:
-                        md.data = data[0]
+                        model.data = data[0]
                 }
 		}
 	}
-	return md.Clone()
+	return model
 }
 
 // 链式操作， CURD - Insert/BatchInsert
@@ -356,28 +393,6 @@ func (md *Model) Delete() (result sql.Result, err error) {
 	} else {
 		return md.tx.Delete(md.tables, md.where, md.whereArgs...)
 	}
-}
-
-// 设置批处理的大小
-func (md *Model) Batch(batch int) *Model {
-	md.batch = batch
-	return md.Clone()
-}
-
-// 查询缓存/清除缓存操作，需要注意的是，事务查询不支持缓存。
-// 当time < 0时表示清除缓存， time=0时表示不过期, time > 0时表示过期时间，time过期时间单位：秒；
-// name表示自定义的缓存名称，便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
-// 例如：查询缓存时设置名称，清理缓存时可以给定清理的缓存名称进行精准清理。
-func (md *Model) Cache(time int, name ... string) *Model {
-	md.cacheTime = time
-	if len(name) > 0 {
-		md.cacheName = name[0]
-	}
-	// 查询缓存特性不支持事务操作
-	if md.tx == nil {
-		md.cacheEnabled = true
-	}
-	return md.Clone()
 }
 
 // 链式操作，select
