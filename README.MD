@@ -20,6 +20,11 @@
 ```
 go get -u gitee.com/johng/gf
 ```
+or use `go.mod`
+```
+require gitee.com/johng/gf latest
+```
+
 # Limitation
 ```
 golang version >= 1.9.2
@@ -52,6 +57,7 @@ func main() {
     s.Run()
 }
 ```
+
 
 # License
 

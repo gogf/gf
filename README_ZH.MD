@@ -23,7 +23,11 @@
 ```html
 go get -u gitee.com/johng/gf
 ```
-
+或者
+`go.mod`
+```
+require gitee.com/johng/gf latest
+```
 # 限制
 ```shell
 golang版本 >= 1.9.2
