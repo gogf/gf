@@ -1,3 +1,40 @@
+# `v1.3.8` (2018-12-26)
+
+## 新特性
+1. 对`gform`完成重构，以提高扩展性，并修复部分细节问题、完善单元测试用例([https://gfer.me/database/orm/index](https://gfer.me/database/orm/index))；
+1. `WebServer`路由注册新增分组路由特性([https://gfer.me/net/ghttp/group](https://gfer.me/net/ghttp/group));
+1. `WebServer`新增`Rewrite`路由重写特性([https://gfer.me/net/ghttp/static](https://gfer.me/net/ghttp/static));
+1. 增加框架运行时对开发环境的自动识别；
+1. 增加了`Travis CI`自动化构建/测试；
+
+## 新功能
+1. 改进`WebServer`静态文件服务功能，增加`SetStaticPath`/`AddStaticPath`方法([https://gfer.me/net/ghttp/static](https://gfer.me/net/ghttp/static))；
+1. `gform`新增`Filter`链式操作方法，用于过滤参数中的非表字段键值对（[https://gfer.me/database/orm/linkop](https://gfer.me/database/orm/linkop)）；
+1. `gcache`新增`Data`方法，用以获取所有的缓存数据项；
+1. `gredis`增加`GetConn`方法获取原生redis连接对象；
+
+## 功能改进
+1. 改进`gform`的`Where`方法，支持`slice`类型的参数，并更方便地支持`in`操作查询（[https://gfer.me/database/orm/linkop](https://gfer.me/database/orm/linkop)）；
+1. 改进`gproc`进程间通信数据结构，将`pid`字段从`16bit`扩展为`24bit`；
+1. 改进`gconv`/`gmap`/`garray`，增加若干操作方法；
+1. 改进`gview`模板引擎中的`date`内置函数，当给定的时间戳为空时打印当前的系统时间；
+1. 改进`gview`模板引擎中，当打印的变量不存在时，显示为空（标准库默认显示为`<no value>`）；
+1. 改进`WebServer`，去掉`HANGUP`的信号监听，避免程序通过`nohup`运行时产生异常退出问题；
+1. 改进`gcache`性能，并完善基准测试；
+
+## Bug Fix
+1. 修复`gcache`在非LRU特性开启时的缓存关闭资源竞争问题，并修复`doSetWithLockCheck`内部方法的返回值问题；
+1. 修复`grand.intn`内部方法在`x86`架构下的随机数位溢出问题；
+1. 修复`gbinary`中`Int`方法针对`[]byte`参数长度自动匹配造成的字节长度溢出问题；
+1. 修复`gjson`由于官方标准库`json`不支持`map[interface{}]*`类型造成的Go变量编码问题；
+1. 修复`garray`中部分方法的数据竞争问题，修复二分查找排序问题；
+1. 修复`ghttp.Request.GetVar`方法获取参数问题；
+1. 修复`gform`的数据库连接池不起作用的问题；
+
+
+
+
+
 # `v1.2.11` (2018-11-26)
 ## 新特性
 1. `ORM`新增对`SQLServer`及`Oracle`的支持([https://gfer.me/database/orm/database](https://gfer.me/database/orm/database))；
