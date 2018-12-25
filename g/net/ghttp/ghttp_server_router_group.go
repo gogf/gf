@@ -10,6 +10,7 @@ package ghttp
 import (
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/util/gconv"
+    "reflect"
     "strings"
 )
 
@@ -136,18 +137,18 @@ func (g *RouterGroup) bind(bindType string, pattern string, object interface{}, 
                 } else {
                     g.domain.BindHandler(pattern, h)
                 }
-            } else if c, ok := object.(Controller); ok {
+            } else if g.isController(object) {
                 if len(methods) > 0 {
                     if g.server != nil {
-                        g.server.BindControllerMethod(pattern, c, methods[0])
+                        g.server.BindControllerMethod(pattern, object.(Controller), methods[0])
                     } else {
-                        g.domain.BindControllerMethod(pattern, c, methods[0])
+                        g.domain.BindControllerMethod(pattern, object.(Controller), methods[0])
                     }
                 } else {
                     if g.server != nil {
-                        g.server.BindController(pattern, c)
+                        g.server.BindController(pattern, object.(Controller))
                     } else {
-                        g.domain.BindController(pattern, c)
+                        g.domain.BindController(pattern, object.(Controller))
                     }
                 }
             } else {
@@ -166,11 +167,11 @@ func (g *RouterGroup) bind(bindType string, pattern string, object interface{}, 
                 }
             }
         case "REST":
-            if c, ok := object.(Controller); ok {
+            if g.isController(object) {
                 if g.server != nil {
-                    g.server.BindControllerRest(pattern, c)
+                    g.server.BindControllerRest(pattern, object.(Controller))
                 } else {
-                    g.domain.BindControllerRest(pattern, c)
+                    g.domain.BindControllerRest(pattern, object.(Controller))
                 }
             } else {
                 if g.server != nil {
@@ -190,4 +191,24 @@ func (g *RouterGroup) bind(bindType string, pattern string, object interface{}, 
                 glog.Fatalfln("invalid hook handler for pattern:%s", pattern)
             }
     }
+}
+
+// 判断给定对象是否控制器对象：
+// 控制器必须包含以下公开的属性对象：Request/Response/Server/Cookie/Session/View.
+func (g *RouterGroup) isController(value interface{}) bool {
+    // 首先判断是否满足控制器接口定义
+    if _, ok := value.(Controller); !ok {
+        return false
+    }
+    // 其次检查控制器的必需属性
+    v := reflect.ValueOf(value)
+    if v.Kind() == reflect.Ptr {
+        v = v.Elem()
+    }
+    if v.FieldByName("Request").IsValid() && v.FieldByName("Response").IsValid() &&
+        v.FieldByName("Server").IsValid() && v.FieldByName("Cookie").IsValid() &&
+        v.FieldByName("Session").IsValid() && v.FieldByName("View").IsValid() {
+        return true
+    }
+    return false
 }
