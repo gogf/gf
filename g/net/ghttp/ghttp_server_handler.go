@@ -171,7 +171,7 @@ func (s *Server) callServeHandler(h *handlerItem, r *Request) {
         c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
         if !r.IsExited() {
             c.MethodByName(h.fname).Call(nil)
-            c.MethodByName("Shut").Call([]reflect.Value{reflect.ValueOf(r)})
+            c.MethodByName("Shut").Call(nil)
         }
     } else {
         // 是否有初始化及完成回调方法

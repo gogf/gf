@@ -16,6 +16,10 @@ func (o *Object) Delete(r *ghttp.Request) {
     r.Response.Writeln("Object REST Delete")
 }
 
+func (o *Object) Shut(r *ghttp.Request) {
+    r.Response.Writeln("Object Shut")
+}
+
 type Controller struct {
     gmvc.Controller
 }
@@ -26,6 +30,10 @@ func (c *Controller) Show() {
 
 func (c *Controller) Post() {
     c.Response.Writeln("Controller REST Post")
+}
+
+func (c *Controller) Shut() {
+    c.Response.Writeln("Controller Shut")
 }
 
 func Handler(r *ghttp.Request) {
