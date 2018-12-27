@@ -61,6 +61,13 @@ func main() {
 }
 ```
 
+[更多..](https://gfer.me/start/index)
+
+
+# 协议
+
+GF使用非常友好的[MIT](LICENSE)开源协议进行发布，永久`100%`开源免费。
+
 # 贡献者
 
 <a href="https://gitee.com/johng" target="_blank" title="John"><img src="https://gitee.com/uploads/27/1309327_johng.png?1530630243" width="60" align="left"></a>
