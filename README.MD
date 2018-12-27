@@ -63,7 +63,7 @@ func main() {
 
 # License
 
-GF is licensed under the [MIT License](LICENSE), 100% free and open-source.
+`GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
 # Contributors
 
