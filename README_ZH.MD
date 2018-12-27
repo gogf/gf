@@ -100,9 +100,7 @@ func main() {
 
 <a href="https://gitee.com/garfieldkwong" target="_blank" title="GarfieldKwong"><img src="https://gfer.me/images/contributors/garfieldkwong.png" width="60" align="left"></a>
 
-&nbsp;
-
-&nbsp;
+<br /><br /><br />
 
 # 捐赠者
 
