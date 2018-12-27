@@ -44,8 +44,8 @@
 1. 路由增加不区分大小写得匹配方式；
 1. str_ireplace: http://php.net/manual/en/function.str-ireplace.php
 1. strpos/stripos/strrpos/strripos: http://php.net/manual/en/function.stripos.php
-
-
+1. 改进WebServer获取POST参数处理逻辑，当提交非form数据时，例如json数据，针对某些方法可以直接解析；
+1. WebServer增加可选择的路由覆盖配置，默认情况下不覆盖；
 
 
 # DONE

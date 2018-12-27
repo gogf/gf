@@ -82,22 +82,14 @@ func main() {
 # 贡献者
 
 <a href="https://gitee.com/johng" target="_blank" title="John"><img src="https://gitee.com/uploads/27/1309327_johng.png?1530630243" width="60" align="left"></a>
-
 <a href="https://gitee.com/wenzi1" target="_blank" title="蚊子"><img src="https://gfer.me/images/contributors/wenzi.png" width="60" align="left"></a>
-
 <a href="https://gitee.com/zseeker" target="_blank" title="zseeker"><img src="https://gfer.me/images/contributors/zseeker.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/ymrjqyy" target="_blank" title="一墨染尽青衣颜"><img src="https://gfer.me/images/contributors/ymrjqyy.png" width="60" align="left"></a>
-
+<a href="https://gitee.com/ymrjqyy" target="_blank" title="一墨染尽青衣颜"><img src="https://images.gitee.com/uploads/27/876827_ymrjqyy.png" width="60" align="left"></a>
 <a href="https://github.com/chenyang351" target="_blank" title="chenyang351"><img src="https://avatars1.githubusercontent.com/u/30063958?s=60&v=4" width="60" align="left"></a>
-
 <a href="https://gitee.com/wxkj" target="_blank" title="wxkj"><img src="https://gitee.com/uploads/56/91356_wxkj.png" width="60" align="left"></a>
-
 <a href="https://github.com/wxkj001" target="_blank" title="3wxkj001
 "><img src="https://avatars0.githubusercontent.com/u/7794279?s=60&v=4" width="60" align="left"></a>
-
-<a href="https://gitee.com/zhangjinfu" target="_blank" title="张金富"><img src="https://gfer.me/images/contributors/zjf.png" width="60" align="left"></a>
-
+<a href="https://gitee.com/zhangjinfu" target="_blank" title="张金富"><img src="https://images.gitee.com/uploads/63/356163_zhangjinfu.png" width="60" align="left"></a>
 <a href="https://gitee.com/garfieldkwong" target="_blank" title="GarfieldKwong"><img src="https://gfer.me/images/contributors/garfieldkwong.png" width="60" align="left"></a>
 
 <br /><br /><br />
