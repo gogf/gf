@@ -5,11 +5,11 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // JSON解析/封装.
-// 单元测试请参考gpaser包.
 package gjson
 
 import (
     "errors"
+    "gitee.com/johng/gf/g/util/gregex"
     "strings"
     "strconv"
     "io/ioutil"
@@ -37,33 +37,35 @@ type Json struct {
     vc bool         // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
 }
 
-// 将变量转换为Json对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
+// 将变量转换为Json对象进行处理，该变量至少应当是一个map或者slice，否者转换没有意义
 func New(value interface{}, safe...bool) *Json {
     j := (*Json)(nil)
     switch value.(type) {
-    case map[string]interface{}, []interface{}, nil:
-        j = &Json{
-            p  : &value,
-            c  : byte(gDEFAULT_SPLIT_CHAR),
-            vc : false ,
-        }
-    default:
-        v := (interface{})(nil)
-        if m := gconv.Map(value); m != nil {
-            v = m
+        case map[string]interface{}, []interface{}, nil:
             j = &Json {
-                p  : &v,
+                p  : &value,
                 c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : false,
+                vc : false ,
             }
-        } else {
-            v = gconv.Interfaces(value)
-            j = &Json {
-                p  : &v,
-                c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : false,
+        case string, []byte:
+            j, _ = LoadContent(gconv.Bytes(value))
+        default:
+            v := (interface{})(nil)
+            if m := gconv.Map(value); m != nil {
+                v = m
+                j = &Json {
+                    p  : &v,
+                    c  : byte(gDEFAULT_SPLIT_CHAR),
+                    vc : false,
+                }
+            } else {
+                v = gconv.Interfaces(value)
+                j = &Json {
+                    p  : &v,
+                    c  : byte(gDEFAULT_SPLIT_CHAR),
+                    vc : false,
+                }
             }
-        }
     }
     j.mu = rwmutex.New(safe...)
     return j
@@ -115,40 +117,48 @@ func Load (path string) (*Json, error) {
     return LoadContent(data, gfile.Ext(path))
 }
 
-// 支持的配置文件格式：xml, json, yaml/yml, toml，默认为json
-func LoadContent (data []byte, dataType...string) (*Json, error) {
+// 支持的配置文件格式：xml, json, yaml/yml, toml,
+// 默认为自动识别，当无法检测成功时使用json解析。
+func LoadContent(data []byte, dataType...string) (*Json, error) {
     var err    error
     var result interface{}
     t := "json"
     if len(dataType) > 0 {
         t = dataType[0]
+    } else {
+        if gregex.IsMatch(`<.+>.*</.+>`, data) {
+            t = "xml"
+        } else if gregex.IsMatch(`\w+\s*:\s*\w+`, data) {
+            t = "yml"
+        } else if gregex.IsMatch(`\w+\s*=\s*\w+`, data) {
+            t = "toml"
+        }
     }
     switch t {
-    case  "xml":  fallthrough
-    case ".xml":
-        data, err = gxml.ToJson(data)
-        if err != nil {
-            return nil, err
-        }
-    case   "yml": fallthrough
-    case  "yaml": fallthrough
-    case  ".yml": fallthrough
-    case ".yaml":
-        data, err = gyaml.ToJson(data)
-        if err != nil {
-            return nil, err
-        }
+        case  "xml", ".xml":
+            data, err = gxml.ToJson(data)
+            if err != nil {
+                return nil, err
+            }
 
-    case  "toml": fallthrough
-    case ".toml":
-        data, err = gtoml.ToJson(data)
-        if err != nil {
-            return nil, err
-        }
+        case  "json", ".json":
+            if err := json.Unmarshal(data, &result); err != nil {
+                return nil, err
+            }
+
+        case   "yml", "yaml", ".yml", ".yaml":
+            data, err = gyaml.ToJson(data)
+            if err != nil {
+                return nil, err
+            }
+
+        case  "toml", ".toml":
+            data, err = gtoml.ToJson(data)
+            if err != nil {
+                return nil, err
+            }
     }
-    if err := json.Unmarshal(data, &result); err != nil {
-        return nil, err
-    }
+
     return New(result), nil
 }
 
@@ -654,10 +664,10 @@ func (j *Json) ToMap() map[string]interface{} {
     j.mu.RLock()
     defer j.mu.RUnlock()
     switch (*(j.p)).(type) {
-    case map[string]interface{}:
-        return (*(j.p)).(map[string]interface{})
-    default:
-        return nil
+        case map[string]interface{}:
+            return (*(j.p)).(map[string]interface{})
+        default:
+            return nil
     }
 }
 

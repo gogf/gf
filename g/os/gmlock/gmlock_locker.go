@@ -110,22 +110,8 @@ func (l *Locker) doRLock(key string, expire int, try bool) bool {
 }
 
 // 根据指定key查询或者创建新的Mutex
-func (l *Locker) getOrNewMutex(key string) (mu *Mutex) {
-    // 优先进行读取检查，提高读取效率
-    if v := l.m.Get(key); v != nil {
-        mu = v.(*Mutex)
-    }
-    if mu == nil {
-        l.m.LockFunc(func(m map[string]interface{}) {
-            // 这里必须再进行一次查询，上面那一次使用的是读锁，支持并发效率高；这里面的是写锁，只支持1个goroutine操作
-            if v, ok := m[key]; ok {
-                mu = v.(*Mutex)
-            }
-            if mu == nil {
-                mu     = NewMutex()
-                m[key] = mu
-            }
-        })
-    }
-    return
+func (l *Locker) getOrNewMutex(key string) (*Mutex) {
+    return l.m.GetOrSetFuncLock(key, func() interface{} {
+        return NewMutex()
+    }).(*Mutex)
 }

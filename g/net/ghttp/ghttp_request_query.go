@@ -153,17 +153,13 @@ func (r *Request) GetQueryInterfaces(key string, def ... []interface{}) []interf
 func (r *Request) GetQueryMap(def ... map[string]string) map[string]string {
     r.initGet()
     m := make(map[string]string)
-    if len(def) == 0 {
-        for k, v := range r.queryVars {
-            m[k] = v[0]
-        }
-    } else {
+    for k, v := range r.queryVars {
+        m[k] = v[0]
+    }
+    if len(def) > 0 {
         for k, v := range def[0] {
-            v2 := r.GetQueryArray(k)
-            if v2 == nil {
+            if _, ok := m[k]; !ok {
                 m[k] = v
-            } else {
-                m[k] = v2[0]
             }
         }
     }

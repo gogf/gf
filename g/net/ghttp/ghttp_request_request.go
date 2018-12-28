@@ -148,18 +148,12 @@ func (r *Request) GetRequestInterfaces(key string, def ... []interface{}) []inte
 // 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetRequestArray获取特定字段内容
 func (r *Request) GetRequestMap(def...map[string]string) map[string]string {
     m := r.GetQueryMap()
-    if len(def) == 0 {
-        for k, v := range r.GetPostMap() {
-            if _, ok := m[k]; !ok {
-                m[k] = v
-            }
-        }
-    } else {
+    if len(m) == 0 {
+        m = r.GetPostMap()
+    }
+    if len(def) > 0 {
         for k, v := range def[0] {
-            v2 := r.GetRequest(k)
-            if v2 != nil {
-                m[k] = v2[0]
-            } else {
+            if _, ok := m[k]; !ok {
                 m[k] = v
             }
         }
@@ -178,6 +172,11 @@ func (r *Request) GetRequestToStruct(object interface{}, mapping...map[string]st
     params := make(map[string]interface{})
     for k, v := range r.GetRequestMap() {
         params[k] = v
+    }
+    if len(params) == 0 {
+        if j := r.GetJson(); j != nil {
+            params = j.ToMap()
+        }
     }
     gconv.Struct(params, object, tagmap)
 }

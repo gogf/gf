@@ -36,6 +36,7 @@ type Request struct {
     params        map[string]interface{}  // 开发者自定义参数(请求流程中有效)
     parsedHost    string                  // 解析过后不带端口号的服务器域名名称
     clientIp      string                  // 解析过后的客户端IP地址
+    rawContent    []byte                  // 客户端提交的原始参数
     isFileRequest bool                    // 是否为静态文件请求(非服务请求，当静态文件存在时，优先级会被服务请求高，被识别为文件请求)
 }
 
@@ -78,10 +79,12 @@ func (r *Request) GetVar(key string, def ... interface{}) gvar.VarRead {
     return r.GetRequestVar(key, def...)
 }
 
-// 获取原始请求输入字符串，注意：只能获取一次，读完就没了
+// 获取原始请求输入字符串
 func (r *Request) GetRaw() []byte {
-    result, _ := ioutil.ReadAll(r.Body)
-    return result
+    if r.rawContent == nil {
+        r.rawContent, _ = ioutil.ReadAll(r.Body)
+    }
+    return r.rawContent
 }
 
 // 获取原始json请求输入字符串，并解析为json对象

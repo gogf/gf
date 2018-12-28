@@ -1,21 +1,33 @@
 package main
 
 import (
-    "fmt"
     "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/database/gdb"
-    "gitee.com/johng/gf/g/os/glog"
+    "gitee.com/johng/gf/g/frame/gmvc"
+
 )
 
-func main() {
-    gdb.AddDefaultConfigNode(gdb.ConfigNode{
-        Type     : "mysql",
-        Linkinfo : "root:12345678@tcp(127.0.0.1:3306)/test",
-    })
 
-    if r, err := g.Database().GetOne("select now() as time"); err != nil {
-        glog.Error("Mysql Init Select Now : %v", err)
-    } else {
-        fmt.Println(r.ToMap())
-    }
+type User struct {
+    gmvc.Controller
+}
+
+func main(){
+    s := g.Server()
+    s.BindController("/user",                       new(User))
+    s.BindController("/user/{.method}/{uid}",       new(User), "Info")
+    s.BindController("/user/{.method}/{page}.html", new(User), "List")
+    s.SetPort(8293)
+    s.Run()
+}
+
+func (u *User) Index() {
+    u.Response.Write("User")
+}
+
+func (u *User) Info() {
+    u.Response.Write("Info - Uid: ", u.Request.Get("uid"))
+}
+
+func (u *User) List() {
+    u.Response.Write("List - Page: ", u.Request.Get("page"))
 }
