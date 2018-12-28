@@ -146,7 +146,7 @@ const (
     OPTION_SAVE    = 2
     OPTION_IGNORE  = 3
     // 默认的连接池连接存活时间(秒)
-    gDEFAULT_CONN_MAX_LIFE = 10
+    gDEFAULT_CONN_MAX_LIFE = 30
 )
 
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
