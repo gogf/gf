@@ -146,7 +146,7 @@ const (
     OPTION_SAVE    = 2
     OPTION_IGNORE  = 3
     // 默认的连接池连接存活时间(秒)
-    gDEFAULT_CONN_MAX_LIFE = 30
+    gDEFAULT_CONN_MAX_LIFE_TIME = 30
 )
 
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
@@ -170,7 +170,7 @@ func New(groupName ...string) (db DB, err error) {
                 schema           : gtype.NewString(),
                 maxIdleConnCount : gtype.NewInt(),
                 maxOpenConnCount : gtype.NewInt(),
-                maxConnLifetime  : gtype.NewInt(gDEFAULT_CONN_MAX_LIFE),
+                maxConnLifetime  : gtype.NewInt(gDEFAULT_CONN_MAX_LIFE_TIME),
             }
             switch node.Type {
                 case "mysql":
