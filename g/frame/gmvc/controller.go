@@ -32,7 +32,7 @@ func (c *Controller) Init(r *ghttp.Request) {
 }
 
 // 控制器结束请求接口方法
-func (c *Controller) Shut(r *ghttp.Request) {
+func (c *Controller) Shut() {
 
 }
 

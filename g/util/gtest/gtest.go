@@ -26,7 +26,7 @@ func Assert(value, expect interface{}) {
 
 // 提示错误并退出
 func Fatal(message...interface{}) {
-    glog.Println(`[FATAL] `, fmt.Sprint(message...))
+    glog.Println(`[FATAL]`, fmt.Sprint(message...))
     glog.Header(false).PrintBacktrace(1)
     os.Exit(1)
 }

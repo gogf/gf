@@ -22,13 +22,6 @@ import (
     "time"
 )
 
-const (
-	OPTION_INSERT  = 0
-	OPTION_REPLACE = 1
-	OPTION_SAVE    = 2
-	OPTION_IGNORE  = 3
-)
-
 // 数据库操作接口
 type DB interface {
     // 建立数据库连接方法(开发者一般不需要直接调用)
@@ -147,6 +140,15 @@ type Map  = map[string]interface{}
 // 关联数组列表(索引从0开始的数组)，绑定多条记录(使用别名)
 type List = []Map
 
+const (
+    OPTION_INSERT  = 0
+    OPTION_REPLACE = 1
+    OPTION_SAVE    = 2
+    OPTION_IGNORE  = 3
+    // 默认的连接池连接存活时间(秒)
+    gDEFAULT_CONN_MAX_LIFE_TIME = 30
+)
+
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
 func New(groupName ...string) (db DB, err error) {
 	group := config.d
@@ -168,7 +170,7 @@ func New(groupName ...string) (db DB, err error) {
                 schema           : gtype.NewString(),
                 maxIdleConnCount : gtype.NewInt(),
                 maxOpenConnCount : gtype.NewInt(),
-                maxConnLifetime  : gtype.NewInt(),
+                maxConnLifetime  : gtype.NewInt(gDEFAULT_CONN_MAX_LIFE_TIME),
             }
             switch node.Type {
                 case "mysql":
