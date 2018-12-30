@@ -220,7 +220,11 @@ func Uint(i interface{}) uint {
             }
             return 0
         default:
-            return uint(Float64(value))
+            v := Float64(value)
+            if v < 0 {
+                v = -v
+            }
+            return uint(v)
     }
 }
 

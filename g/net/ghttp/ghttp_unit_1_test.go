@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-
+// 基本路由功能以及优先级测试
 package ghttp_test
 
 import (
@@ -16,7 +16,7 @@ import (
     "time"
 )
 
-// 基本路由功能以及优先级测试
+
 func Test_Router_Basic(t *testing.T) {
     s := g.Server(gtime.Nanosecond())
     s.BindHandler("/:name", func(r *ghttp.Request){
@@ -41,9 +41,12 @@ func Test_Router_Basic(t *testing.T) {
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(func() {
-        gtest.Assert(ghttp.GetContent("http://127.0.0.1:8199/john"),               "")
-        gtest.Assert(ghttp.GetContent("http://127.0.0.1:8199/john/update"),        "john")
-        gtest.Assert(ghttp.GetContent("http://127.0.0.1:8199/john/edit"),          "edit")
-        gtest.Assert(ghttp.GetContent("http://127.0.0.1:8199/user/list/100.html"), "100")
+        client := ghttp.NewClient()
+        client.SetPrefix("http://127.0.0.1:8199")
+        
+        gtest.Assert(client.GetContent("/john"),               "")
+        gtest.Assert(client.GetContent("/john/update"),        "john")
+        gtest.Assert(client.GetContent("/john/edit"),          "edit")
+        gtest.Assert(client.GetContent("/user/list/100.html"), "100")
     })
 }

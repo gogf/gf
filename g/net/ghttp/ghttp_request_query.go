@@ -8,12 +8,21 @@ package ghttp
 
 import (
     "gitee.com/johng/gf/g/util/gconv"
+    "strings"
 )
 
 // 初始化GET请求参数
 func (r *Request) initGet() {
     if !r.parsedGet {
         r.queryVars = r.URL.Query()
+        if strings.EqualFold(r.Method, "GET") {
+            if raw := r.GetRaw(); len(raw) > 0 {
+                for _, item := range strings.Split(string(raw), "&") {
+                    array                := strings.Split(item, "=")
+                    r.queryVars[array[0]] = append(r.queryVars[array[0]], array[1])
+                }
+            }
+        }
         r.parsedGet = true
     }
 }

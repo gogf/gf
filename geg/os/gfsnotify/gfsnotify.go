@@ -7,14 +7,10 @@ import (
 
 func main() {
     //path := "D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go"
-    path := "/Users/john/Temp/"
+    path := "/Users/john/Temp/test"
     _, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
         glog.Println(event)
     }, true)
-
-    // 移除对该path的监听
-    //gfsnotify.Remove(path)
-
     if err != nil {
         glog.Fatal(err)
     } else {

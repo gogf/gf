@@ -4,12 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 分组路由测试
+// 请求参数测试
 package ghttp_test
 
 import (
     "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/frame/gmvc"
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gtest"
@@ -17,98 +16,131 @@ import (
     "time"
 )
 
-// 执行对象
-type Object struct {}
-
-func (o *Object) Show(r *ghttp.Request) {
-    r.Response.Write("Object Show")
-}
-
-func (o *Object) Delete(r *ghttp.Request) {
-    r.Response.Write("Object REST Delete")
-}
-
-// 控制器
-type Controller struct {
-    gmvc.Controller
-}
-
-func (c *Controller) Show() {
-    c.Response.Write("Controller Show")
-}
-
-func (c *Controller) Post() {
-    c.Response.Write("Controller REST Post")
-}
-
-func Handler(r *ghttp.Request) {
-    r.Response.Write("Handler")
-}
-
-func Test_Router_Group1(t *testing.T) {
-    s   := g.Server(gtime.Nanosecond())
-    obj := new(Object)
-    ctl := new(Controller)
-    // 分组路由方法注册
-    g := s.Group("/api")
-    g.ALL ("/handler",     Handler)
-    g.ALL ("/ctl",         ctl)
-    g.GET ("/ctl/my-show", ctl, "Show")
-    g.REST("/ctl/rest",    ctl)
-    g.ALL ("/obj",         obj)
-    g.GET ("/obj/my-show", obj, "Show")
-    g.REST("/obj/rest",    obj)
+func Test_Params(t *testing.T) {
+    type User struct {
+        Id    int
+        Name  string
+        Pass1 string `params:"password1"`
+        Pass2 string `params:"password2"`
+    }
+    s := g.Server(gtime.Nanosecond())
+    s.BindHandler("/get", func(r *ghttp.Request){
+        if r.GetQuery("slice") != nil {
+            r.Response.Write(r.GetQuery("slice"))
+        }
+        if r.GetQuery("bool") != nil {
+            r.Response.Write(r.GetQueryBool("bool"))
+        }
+        if r.GetQuery("float32") != nil {
+            r.Response.Write(r.GetQueryFloat32("float32"))
+        }
+        if r.GetQuery("float64") != nil {
+            r.Response.Write(r.GetQueryFloat64("float64"))
+        }
+        if r.GetQuery("int") != nil {
+            r.Response.Write(r.GetQueryInt("int"))
+        }
+        if r.GetQuery("uint") != nil {
+            r.Response.Write(r.GetQueryUint("uint"))
+        }
+        if r.GetQuery("string") != nil {
+            r.Response.Write(r.GetQueryString("string"))
+        }
+    })
+    s.BindHandler("/post", func(r *ghttp.Request){
+        if r.GetPost("slice") != nil {
+            r.Response.Write(r.GetPost("slice"))
+        }
+        if r.GetPost("bool") != nil {
+            r.Response.Write(r.GetPostBool("bool"))
+        }
+        if r.GetPost("float32") != nil {
+            r.Response.Write(r.GetPostFloat32("float32"))
+        }
+        if r.GetPost("float64") != nil {
+            r.Response.Write(r.GetPostFloat64("float64"))
+        }
+        if r.GetPost("int") != nil {
+            r.Response.Write(r.GetPostInt("int"))
+        }
+        if r.GetPost("uint") != nil {
+            r.Response.Write(r.GetPostUint("uint"))
+        }
+        if r.GetPost("string") != nil {
+            r.Response.Write(r.GetPostString("string"))
+        }
+    })
+    s.BindHandler("/map", func(r *ghttp.Request){
+        if m := r.GetQueryMap(); len(m) > 0 {
+            r.Response.Write(m["name"])
+        }
+        if m := r.GetPostMap(); len(m) > 0 {
+            r.Response.Write(m["name"])
+        }
+    })
+    s.BindHandler("/raw", func(r *ghttp.Request){
+        r.Response.Write(r.GetRaw())
+    })
+    s.BindHandler("/json", func(r *ghttp.Request){
+        r.Response.Write(r.GetJson().Get("name"))
+    })
+    s.BindHandler("/struct", func(r *ghttp.Request){
+        if m := r.GetQueryMap(); len(m) > 0 {
+            user := new(User)
+            r.GetQueryToStruct(user)
+            r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
+        }
+        if m := r.GetPostMap(); len(m) > 0 {
+            user := new(User)
+            r.GetPostToStruct(user)
+            r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
+        }
+    })
     s.SetPort(8199)
     s.SetDumpRouteMap(false)
     go s.Run()
     defer s.Shutdown()
+    // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(func() {
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/handler"),     "Handler")
+        client := ghttp.NewClient()
+        client.SetPrefix("http://127.0.0.1:8199")
+        // GET
+        gtest.Assert(client.GetContent("/get", "slice=1&slice=2"), `["1","2"]`)
+        gtest.Assert(client.GetContent("/get", "bool=1"),          `true`)
+        gtest.Assert(client.GetContent("/get", "bool=0"),          `false`)
+        gtest.Assert(client.GetContent("/get", "float32=0.11"),    `0.11`)
+        gtest.Assert(client.GetContent("/get", "float64=0.22"),    `0.22`)
+        gtest.Assert(client.GetContent("/get", "int=-10000"),      `-10000`)
+        gtest.Assert(client.GetContent("/get", "int=10000"),       `10000`)
+        gtest.Assert(client.GetContent("/get", "uint=-10000"),     `10000`)
+        gtest.Assert(client.GetContent("/get", "uint=9"),          `9`)
+        gtest.Assert(client.GetContent("/get", "string=key"),      `key`)
 
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/ctl/my-show"), "Controller Show")
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/ctl/post"),    "Controller REST Post")
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/ctl/show"),    "Controller Show")
-        gtest.Assert(ghttp.PostContent("http://127.0.0.1:8199/api/ctl/rest"),    "Controller REST Post")
+        // POST
+        gtest.Assert(client.PostContent("/post", "slice=1&slice=2"), `["1","2"]`)
+        gtest.Assert(client.PostContent("/post", "bool=1"),          `true`)
+        gtest.Assert(client.PostContent("/post", "bool=0"),          `false`)
+        gtest.Assert(client.PostContent("/post", "float32=0.11"),    `0.11`)
+        gtest.Assert(client.PostContent("/post", "float64=0.22"),    `0.22`)
+        gtest.Assert(client.PostContent("/post", "int=-10000"),      `-10000`)
+        gtest.Assert(client.PostContent("/post", "int=10000"),       `10000`)
+        gtest.Assert(client.PostContent("/post", "uint=-10000"),     `10000`)
+        gtest.Assert(client.PostContent("/post", "uint=9"),          `9`)
+        gtest.Assert(client.PostContent("/post", "string=key"),      `key`)
 
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/obj/delete"),  "Object REST Delete")
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/obj/my-show"), "Object Show")
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/obj/show"),    "Object Show")
-        gtest.Assert(ghttp.DeleteContent("http://127.0.0.1:8199/api/obj/rest"),  "Object REST Delete")
+        // Map
+        gtest.Assert(client.GetContent ("/map",  "id=1&name=john"), `john`)
+        gtest.Assert(client.PostContent("/map",  "id=1&name=john"), `john`)
 
-    })
-}
+        // Raw
+        gtest.Assert(client.PutContent("/raw",   "id=1&name=john"), `id=1&name=john`)
 
-func Test_Router_Group2(t *testing.T) {
-    s   := g.Server(gtime.Nanosecond())
-    obj := new(Object)
-    ctl := new(Controller)
-    // 分组路由批量注册
-    s.Group("/api").Bind("/api", []ghttp.GroupItem{
-        {"ALL",  "/handler",     Handler},
-        {"ALL",  "/ctl",         ctl},
-        {"GET",  "/ctl/my-show", ctl, "Show"},
-        {"REST", "/ctl/rest",    ctl},
-        {"ALL",  "/obj",         obj},
-        {"GET",  "/obj/my-show", obj, "Show"},
-        {"REST", "/obj/rest",    obj},
-    })
-    s.SetPort(8199)
-    s.SetDumpRouteMap(false)
-    go s.Run()
-    defer s.Shutdown()
-    time.Sleep(time.Second)
-    gtest.Case(func() {
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/handler"),     "Handler")
+        // Json
+        gtest.Assert(client.PostContent("/json", `{"id":1, "name":"john"}`), `john`)
 
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/ctl/my-show"), "Controller Show")
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/ctl/post"),    "Controller REST Post")
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/ctl/show"),    "Controller Show")
-        gtest.Assert(ghttp.PostContent("http://127.0.0.1:8199/api/ctl/rest"),    "Controller REST Post")
-
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/obj/delete"),  "Object REST Delete")
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/obj/my-show"), "Object Show")
-        gtest.Assert(ghttp.GetContent ("http://127.0.0.1:8199/api/obj/show"),    "Object Show")
-        gtest.Assert(ghttp.DeleteContent("http://127.0.0.1:8199/api/obj/rest"),  "Object REST Delete")
+        // Struct
+        gtest.Assert(client.GetContent("/struct",  `id=1&name=john&password1=123&password2=456`), `1john123456`)
+        gtest.Assert(client.PostContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
     })
 }
