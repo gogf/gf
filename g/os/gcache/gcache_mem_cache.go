@@ -344,7 +344,8 @@ func (c *memCache) syncEventAndClearExpired() {
         if expireSet := c.getExpireSet(expireTime); expireSet != nil {
             // 遍历Set，执行数据过期删除
             expireSet.Iterator(func(key interface{}) bool {
-                return c.clearByKey(key)
+                c.clearByKey(key)
+                return true
             })
             // Set数据处理完之后删除该Set
             c.expireSetMu.Lock()
@@ -355,7 +356,7 @@ func (c *memCache) syncEventAndClearExpired() {
 }
 
 // 删除对应键名的缓存数据
-func (c *memCache) clearByKey(key interface{}, force...bool) bool {
+func (c *memCache) clearByKey(key interface{}, force...bool) {
     // 删除缓存数据
     c.dataMu.Lock()
     // 删除核对，真正的过期才删除
@@ -373,6 +374,4 @@ func (c *memCache) clearByKey(key interface{}, force...bool) bool {
     if c.cap > 0 {
         c.lru.Remove(key)
     }
-
-    return true
 }

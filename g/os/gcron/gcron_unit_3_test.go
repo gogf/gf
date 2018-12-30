@@ -15,16 +15,18 @@ import (
 )
 
 func TestCron_AddOnce(t *testing.T) {
-    cron  := gcron.New()
-    array := garray.New(0, 0)
-    cron.AddOnce("* * * * * *", func() {
-        array.Append(1)
+    gtest.Case(func() {
+        cron  := gcron.New()
+        array := garray.New(0, 0)
+        cron.AddOnce("* * * * * *", func() {
+            array.Append(1)
+        })
+        cron.AddOnce("* * * * * *", func() {
+            array.Append(1)
+        })
+        gtest.Assert(len(cron.Entries()), 2)
+        time.Sleep(2500*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+        gtest.Assert(len(cron.Entries()), 0)
     })
-    cron.AddOnce("* * * * * *", func() {
-        array.Append(1)
-    })
-    gtest.Assert(len(cron.Entries()), 2)
-    time.Sleep(2500*time.Millisecond)
-    gtest.Assert(array.Len(), 2)
-    gtest.Assert(len(cron.Entries()), 0)
 }

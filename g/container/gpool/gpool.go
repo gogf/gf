@@ -4,16 +4,15 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gpool provides a object-reusable concurrent-safe pool.
-// 对象复用池.
+// Package gpool provides a object-reusable concurrent-safe pool/对象复用池.
 package gpool
 
 import (
-    "time"
     "errors"
-    "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/os/gtimew"
 )
 
 // 对象池
@@ -44,7 +43,7 @@ func New(expire int, newFunc...func() (interface{}, error)) *Pool {
     if len(newFunc) > 0 {
         r.NewFunc = newFunc[0]
     }
-    go r.expireCheckingLoop()
+    gtimew.AddSingleton(1, r.checkExpire)
     return r
 }
 
@@ -100,22 +99,22 @@ func (p *Pool) Close() {
 }
 
 // 超时检测循环
-func (p *Pool) expireCheckingLoop() {
-    for !p.closed.Val() {
-        for {
-            if r := p.list.PopFront(); r != nil {
-                item := r.(*poolItem)
-                if item.expire == 0 || item.expire > gtime.Millisecond() {
-                    p.list.PushFront(item)
-                    break
-                }
-                if p.ExpireFunc != nil {
-                    p.ExpireFunc(item.value)
-                }
-            } else {
+func (p *Pool) checkExpire() {
+    if p.closed.Val() {
+        gtimew.ExitJob()
+    }
+    for {
+        if r := p.list.PopFront(); r != nil {
+            item := r.(*poolItem)
+            if item.expire == 0 || item.expire > gtime.Millisecond() {
+                p.list.PushFront(item)
                 break
             }
+            if p.ExpireFunc != nil {
+                p.ExpireFunc(item.value)
+            }
+        } else {
+            break
         }
-        time.Sleep(time.Second)
     }
 }
