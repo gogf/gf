@@ -32,7 +32,7 @@ func TestWheel_Add_Close(t *testing.T) {
         gtest.AssertNE(entry1, nil)
         gtest.AssertNE(entry2, nil)
         gtest.AssertNE(entry3, nil)
-        gtest.Assert(len(wheel.Entries()), 3)
+        gtest.Assert(wheel.Size(), 3)
         time.Sleep(1100*time.Millisecond)
         gtest.Assert(array.Len(), 2)
         time.Sleep(1100*time.Millisecond)
@@ -54,7 +54,7 @@ func TestWheel_Singlton(t *testing.T) {
             time.Sleep(10*time.Second)
         })
         gtest.AssertNE(entry, nil)
-        gtest.Assert(len(wheel.Entries()), 1)
+        gtest.Assert(wheel.Size(), 1)
         time.Sleep(1100*time.Millisecond)
         gtest.Assert(array.Len(), 1)
 
@@ -91,9 +91,9 @@ func TestWheel_DelayAdd(t *testing.T) {
     gtest.Case(func() {
         wheel := gtimew.New()
         wheel.DelayAdd(1, 1, func() {})
-        gtest.Assert(len(wheel.Entries()), 0)
+        gtest.Assert(wheel.Size(), 0)
         time.Sleep(1100*time.Millisecond)
-        gtest.Assert(len(wheel.Entries()), 1)
+        gtest.Assert(wheel.Size(), 1)
     })
 }
 
@@ -105,9 +105,9 @@ func TestWheel_DelayAdd_Singleton(t *testing.T) {
             array.Append(1)
             time.Sleep(10*time.Second)
         })
-        gtest.Assert(len(wheel.Entries()), 0)
+        gtest.Assert(wheel.Size(), 0)
         time.Sleep(1100*time.Millisecond)
-        gtest.Assert(len(wheel.Entries()), 1)
+        gtest.Assert(wheel.Size(), 1)
         gtest.Assert(array.Len(), 0)
 
         time.Sleep(1100*time.Millisecond)
@@ -122,9 +122,9 @@ func TestWheel_DelayAdd_Once(t *testing.T) {
         wheel.DelayAddOnce(1, 1, func() {
             array.Append(1)
         })
-        gtest.Assert(len(wheel.Entries()), 0)
+        gtest.Assert(wheel.Size(), 0)
         time.Sleep(1100*time.Millisecond)
-        gtest.Assert(len(wheel.Entries()), 1)
+        gtest.Assert(wheel.Size(), 1)
         gtest.Assert(array.Len(), 0)
 
         time.Sleep(1100*time.Millisecond)
@@ -145,6 +145,6 @@ func TestWheel_ExitJob(t *testing.T) {
         })
         time.Sleep(1100*time.Millisecond)
         gtest.Assert(array.Len(), 1)
-        gtest.Assert(len(wheel.Entries()), 0)
+        gtest.Assert(wheel.Size(), 0)
     })
 }

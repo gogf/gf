@@ -75,6 +75,11 @@ func (w *Wheel) DelayAddOnce(delay int, interval int, job JobFunc) {
     }()
 }
 
+// 当前时间轮已注册的任务数
+func (w *Wheel) Size() int {
+    return w.entries.Len()
+}
+
 // 关闭循环任务
 func (w *Wheel) Close() {
     w.status.Set(STATUS_CLOSED)

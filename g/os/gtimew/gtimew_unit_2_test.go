@@ -23,7 +23,7 @@ func TestWheel_Entry_Operation(t *testing.T) {
         array.Append(1)
     })
     gtest.AssertNE(entry, nil)
-    gtest.Assert(len(wheel.Entries()), 1)
+    gtest.Assert(wheel.Size(), 1)
     time.Sleep(1100*time.Millisecond)
     gtest.Assert(array.Len(), 1)
     entry.Stop()
@@ -44,7 +44,7 @@ func TestWheel_Entry_Singlton(t *testing.T) {
     entry.SetMode(gtimew.MODE_SINGLETON)
 
     gtest.AssertNE(entry, nil)
-    gtest.Assert(len(wheel.Entries()), 1)
+    gtest.Assert(wheel.Size(), 1)
     time.Sleep(1100*time.Millisecond)
     gtest.Assert(array.Len(), 1)
 
@@ -61,8 +61,8 @@ func TestWheel_Entry_Once(t *testing.T) {
     entry.SetMode(gtimew.MODE_ONCE)
 
     gtest.AssertNE(entry, nil)
-    gtest.Assert(len(wheel.Entries()), 1)
+    gtest.Assert(wheel.Size(), 1)
     time.Sleep(1100*time.Millisecond)
     gtest.Assert(array.Len(), 1)
-    gtest.Assert(len(wheel.Entries()), 0)
+    gtest.Assert(wheel.Size(), 0)
 }

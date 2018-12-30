@@ -3,6 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
+
 // HTTP客户端请求.
 
 package ghttp
@@ -40,7 +41,7 @@ func NewClient() (*Client) {
     }
 }
 
-// 设置HTTP Headerss
+// 设置HTTP Header
 func (c *Client) SetHeader(key, value string) {
     c.header[key] = value
 }
@@ -223,3 +224,58 @@ func Trace(url, data string) (*ClientResponse, error) {
 func DoRequest(method, url string, data []byte) (*ClientResponse, error) {
     return NewClient().DoRequest(method, url, data)
 }
+
+// GET请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
+func GetContent(url string, data...string) string {
+    return RequestContent("GET", url, data...)
+}
+
+// PUT请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
+func PutContent(url string, data...string) string {
+    return RequestContent("PUT", url, data...)
+}
+
+// POST请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
+func PostContent(url string, data...string) string {
+    return RequestContent("POST", url, data...)
+}
+
+// DELETE请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
+func DeleteContent(url string, data...string) string {
+    return RequestContent("DELETE", url, data...)
+}
+
+func HeadContent(url string, data...string) string {
+    return RequestContent("HEAD", url, data...)
+}
+
+func PatchContent(url string, data...string) string {
+    return RequestContent("PATCH", url, data...)
+}
+
+func ConnectContent(url string, data...string) string {
+    return RequestContent("CONNECT", url, data...)
+}
+
+func OptionsContent(url string, data...string) string {
+    return RequestContent("OPTIONS", url, data...)
+}
+
+func TraceContent(url string, data...string) string {
+    return RequestContent("TRACE", url, data...)
+}
+
+// 请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
+func RequestContent(method string, url string, data...string) string {
+    content := ""
+    if len(data) > 0 {
+        content = data[0]
+    }
+    response, err := NewClient().DoRequest(method, url, []byte(content))
+    if err != nil {
+        return ""
+    }
+    defer response.Close()
+    return string(response.ReadAll())
+}
+

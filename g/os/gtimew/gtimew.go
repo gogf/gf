@@ -5,7 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gtimew provides Time Wheel for interval jobs running management/时间轮.
-// 高效的时间轮任务执行管理，用于管理异步的间隔运行任务，或者异步延迟只运行一次的任务(最小时间粒度为秒)。
+// 高效的时间轮任务执行管理，用于管理异步的间隔运行任务，或者异步只运行一次的任务(最小时间粒度为秒)。
 // 与其他定时任务管理模块的区别是，时间轮模块只管理间隔执行任务，并且更注重执行效率(纳秒级别)。
 package gtimew
 
@@ -59,6 +59,11 @@ func DelayAddOnce(delay int, interval int, job JobFunc) {
 // 获取所有已注册的循环任务项
 func Entries() []*Entry {
    return defaultWheel.Entries()
+}
+
+// 当前时间轮已注册的任务数
+func Size() int {
+    return defaultWheel.Size()
 }
 
 // 在Job方法中调用，停止当前运行的Job
