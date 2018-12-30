@@ -4,55 +4,52 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 定时任务.
+// Package gcron implements a cron pattern parser and job runner/定时任务.
 package gcron
 
-import (
-    "gitee.com/johng/gf/g/container/garray"
-    "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/third/github.com/robfig/cron"
+const (
+    MODE_NORMAL    = 0
+    MODE_SINGLETON = 1
+    MODE_ONCE      = 2
+
+    STATUS_READY   = 0
+    STATUS_RUNNING = 1
+    STATUS_CLOSED  = -1
 )
-
-// 定时任务项
-type Entry struct {
-    Spec   string      // 注册定时任务时间格式
-    Cmd    string      // 注册定时任务名称
-    Time   *gtime.Time // 注册时间
-    Name   string      // 定时任务名称
-    Status *gtype.Int  // 定时任务状态(0: 未执行; > 0: 运行中)
-    cron   *cron.Cron  // 定时任务单独的底层定时管理对象
-}
-
-// 定时任务管理对象
-type Cron struct {
-    cron    *cron.Cron    // 底层定时管理对象
-    entries *garray.Array // 定时任务注册项
-    status  *gtype.Int    // 默认定时任务管理对象状态(不带名称的定时任务，0: 未执行; > 0: 运行中)
-}
 
 var (
     // 默认的cron管理对象
     defaultCron = New()
 )
 
-// 创建自定义的定时任务管理对象
-func New() *Cron {
-    return &Cron {
-        cron    : cron.New(),
-        entries : garray.New(0, 0, true),
-        status  : gtype.NewInt(),
-    }
+// 添加执行方法，可以给定名字，以便于后续执行删除
+func Add(pattern string, job func(), name ... string) (*Entry, error) {
+    return defaultCron.Add(pattern, job, name...)
 }
 
-// 添加执行方法，可以给定名字，以便于后续执行删除
-func Add(spec string, f func(), name ... string) error {
-    return defaultCron.Add(spec, f, name...)
+// 添加单例运行定时任务
+func AddSingleton(pattern string, job func(), name ... string) (*Entry, error) {
+    return defaultCron.AddSingleton(pattern, job, name...)
+}
+
+// 添加只运行一次的定时任务
+func AddOnce(pattern string, job func(), name ... string) (*Entry, error) {
+    return defaultCron.AddOnce(pattern, job, name...)
 }
 
 // 延迟添加定时任务，delay参数单位为秒
-func DelayAdd(delay int, spec string, f func(), name ... string) {
-    defaultCron.DelayAdd(delay, spec, f, name...)
+func DelayAdd(delay int, pattern string, job func(), name ... string) {
+    defaultCron.DelayAdd(delay, pattern, job, name...)
+}
+
+// 延迟添加单例定时任务，delay参数单位为秒
+func DelayAddSingleton(delay int, pattern string, job func(), name ... string) {
+    defaultCron.DelayAddSingleton(delay, pattern, job, name...)
+}
+
+// 延迟添加只运行一次的定时任务，delay参数单位为秒
+func DelayAddOnce(delay int, pattern string, job func(), name ... string) {
+    defaultCron.DelayAddOnce(delay, pattern, job, name...)
 }
 
 // 检索指定名称的定时任务

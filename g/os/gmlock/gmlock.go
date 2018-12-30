@@ -24,12 +24,12 @@ func Unlock(key string) {
     locker.Unlock(key)
 }
 
-// 内存读锁，如果锁成功返回true，失败则返回false;过期时间单位为毫秒，默认为0表示不过期
+// 内存读锁，如果锁成功返回true，失败则返回false; 过期时间单位为秒，默认为0表示不过期
 func TryRLock(key string, expire...int) bool {
     return locker.TryRLock(key, expire...)
 }
 
-// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有写锁存在;过期时间单位为毫秒，默认为0表示不过期
+// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有写锁存在; 过期时间单位为秒，默认为0表示不过期
 func RLock(key string, expire...int) {
     locker.RLock(key, expire...)
 }

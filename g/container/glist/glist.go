@@ -1,7 +1,7 @@
 // Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file,
+// If a copy of the MIT was not distributed with l file,
 // You can obtain one at https://gitee.com/johng/gf.
 //
 
@@ -29,77 +29,77 @@ func New(safe...bool) *List {
 }
 
 // 往链表头入栈数据项
-func (this *List) PushFront(v interface{}) *list.Element {
-	this.mu.Lock()
-	e := this.list.PushFront(v)
-	this.mu.Unlock()
+func (l *List) PushFront(v interface{}) *list.Element {
+	l.mu.Lock()
+	e := l.list.PushFront(v)
+	l.mu.Unlock()
 	return e
 }
 
 // 往链表尾入栈数据项
-func (this *List) PushBack(v interface{}) *list.Element {
-	this.mu.Lock()
-	r := this.list.PushBack(v)
-	this.mu.Unlock()
+func (l *List) PushBack(v interface{}) *list.Element {
+	l.mu.Lock()
+	r := l.list.PushBack(v)
+	l.mu.Unlock()
 	return r
 }
 
 // 在list 中元素mark之后插入一个值为v的元素，并返回该元素，如果mark不是list中元素，则list不改变。
-func (this *List) InsertAfter(v interface{}, mark *list.Element) *list.Element {
-    this.mu.Lock()
-    r := this.list.InsertAfter(v, mark)
-    this.mu.Unlock()
+func (l *List) InsertAfter(v interface{}, mark *list.Element) *list.Element {
+    l.mu.Lock()
+    r := l.list.InsertAfter(v, mark)
+    l.mu.Unlock()
     return r
 }
 
 // 在list 中元素mark之前插入一个值为v的元素，并返回该元素，如果mark不是list中元素，则list不改变。
-func (this *List) InsertBefore(v interface{}, mark *list.Element) *list.Element {
-    this.mu.Lock()
-    r := this.list.InsertBefore(v, mark)
-    this.mu.Unlock()
+func (l *List) InsertBefore(v interface{}, mark *list.Element) *list.Element {
+    l.mu.Lock()
+    r := l.list.InsertBefore(v, mark)
+    l.mu.Unlock()
     return r
 }
 
 
 // 批量往链表头入栈数据项
-func (this *List) BatchPushFront(vs []interface{}) {
-	this.mu.Lock()
+func (l *List) BatchPushFront(vs []interface{}) {
+	l.mu.Lock()
 	for _, item := range vs {
-		this.list.PushFront(item)
+		l.list.PushFront(item)
 	}
-	this.mu.Unlock()
+	l.mu.Unlock()
 }
 
 // 从链表尾端出栈数据项(删除)
-func (this *List) PopBack() interface{} {
-	this.mu.Lock()
-	if elem := this.list.Back(); elem != nil {
-		item := this.list.Remove(elem)
-		this.mu.Unlock()
+func (l *List) PopBack() interface{} {
+	l.mu.Lock()
+	if elem := l.list.Back(); elem != nil {
+		item := l.list.Remove(elem)
+		l.mu.Unlock()
 		return item
 	}
-	this.mu.Unlock()
+	l.mu.Unlock()
 	return nil
 }
 
 // 从链表头端出栈数据项(删除)
-func (this *List) PopFront() interface{} {
-	this.mu.Lock()
-	if elem := this.list.Front(); elem != nil {
-		item := this.list.Remove(elem)
-		this.mu.Unlock()
+func (l *List) PopFront() interface{} {
+	l.mu.Lock()
+	if elem := l.list.Front(); elem != nil {
+		item := l.list.Remove(elem)
+		l.mu.Unlock()
 		return item
 	}
-	this.mu.Unlock()
+	l.mu.Unlock()
 	return nil
 }
 
 // 批量从链表尾端出栈数据项(删除)
-func (this *List) BatchPopBack(max int) []interface{} {
-	this.mu.Lock()
-	count := this.list.Len()
+func (l *List) BatchPopBack(max int) []interface{} {
+	l.mu.Lock()
+	count := l.list.Len()
 	if count == 0 {
-		this.mu.Unlock()
+		l.mu.Unlock()
 		return []interface{}{}
 	}
 
@@ -108,18 +108,18 @@ func (this *List) BatchPopBack(max int) []interface{} {
 	}
 	items := make([]interface{}, count)
 	for i := 0; i < count; i++ {
-		items[i] = this.list.Remove(this.list.Back())
+		items[i] = l.list.Remove(l.list.Back())
 	}
-	this.mu.Unlock()
+	l.mu.Unlock()
 	return items
 }
 
 // 批量从链表头端出栈数据项(删除)
-func (this *List) BatchPopFront(max int) []interface{} {
-	this.mu.Lock()
-	count := this.list.Len()
+func (l *List) BatchPopFront(max int) []interface{} {
+	l.mu.Lock()
+	count := l.list.Len()
 	if count == 0 {
-		this.mu.Unlock()
+		l.mu.Unlock()
 		return []interface{}{}
 	}
 
@@ -128,137 +128,151 @@ func (this *List) BatchPopFront(max int) []interface{} {
 	}
 	items := make([]interface{}, count)
 	for i := 0; i < count; i++ {
-		items[i] = this.list.Remove(this.list.Front())
+		items[i] = l.list.Remove(l.list.Front())
 	}
-	this.mu.Unlock()
+	l.mu.Unlock()
 	return items
 }
 
 // 批量从链表尾端依次获取所有数据(删除)
-func (this *List) PopBackAll() []interface{} {
-	this.mu.Lock()
-	count := this.list.Len()
+func (l *List) PopBackAll() []interface{} {
+	l.mu.Lock()
+	count := l.list.Len()
 	if count == 0 {
-		this.mu.Unlock()
+		l.mu.Unlock()
 		return []interface{}{}
 	}
 	items := make([]interface{}, count)
 	for i := 0; i < count; i++ {
-		items[i] = this.list.Remove(this.list.Back())
+		items[i] = l.list.Remove(l.list.Back())
 	}
-	this.mu.Unlock()
+	l.mu.Unlock()
 	return items
 }
 
 // 批量从链表头端依次获取所有数据(删除)
-func (this *List) PopFrontAll() []interface{} {
-    this.mu.Lock()
-    count := this.list.Len()
+func (l *List) PopFrontAll() []interface{} {
+    l.mu.Lock()
+    count := l.list.Len()
     if count == 0 {
-        this.mu.Unlock()
+        l.mu.Unlock()
         return []interface{}{}
     }
     items := make([]interface{}, count)
     for i := 0; i < count; i++ {
-        items[i] = this.list.Remove(this.list.Front())
+        items[i] = l.list.Remove(l.list.Front())
     }
-    this.mu.Unlock()
+    l.mu.Unlock()
     return items
 }
 
 // 删除数据项
-func (this *List) Remove(e *list.Element) interface{} {
-	this.mu.Lock()
-	r := this.list.Remove(e)
-	this.mu.Unlock()
+func (l *List) Remove(e *list.Element) interface{} {
+	l.mu.Lock()
+	r := l.list.Remove(e)
+	l.mu.Unlock()
 	return r
 }
 
 // 删除所有数据项
-func (this *List) RemoveAll() {
-	this.mu.Lock()
-	this.list = list.New()
-	this.mu.Unlock()
+func (l *List) RemoveAll() {
+	l.mu.Lock()
+	l.list = list.New()
+	l.mu.Unlock()
 }
 
 // 从链表头获取所有数据(不删除)
-func (this *List) FrontAll() []interface{} {
-	this.mu.RLock()
-	count := this.list.Len()
+func (l *List) FrontAll() []interface{} {
+	l.mu.RLock()
+	count := l.list.Len()
 	if count == 0 {
-        this.mu.RUnlock()
+        l.mu.RUnlock()
 		return []interface{}{}
 	}
 
 	items := make([]interface{}, 0, count)
-	for e := this.list.Front(); e != nil; e = e.Next() {
+	for e := l.list.Front(); e != nil; e = e.Next() {
 		items = append(items, e.Value)
 	}
-    this.mu.RUnlock()
+    l.mu.RUnlock()
 	return items
 }
 
 // 从链表尾获取所有数据(不删除)
-func (this *List) BackAll() []interface{} {
-	this.mu.RLock()
-	count := this.list.Len()
+func (l *List) BackAll() []interface{} {
+	l.mu.RLock()
+	count := l.list.Len()
 	if count == 0 {
-        this.mu.RUnlock()
+        l.mu.RUnlock()
 		return []interface{}{}
 	}
 
 	items := make([]interface{}, 0, count)
-	for e := this.list.Back(); e != nil; e = e.Prev() {
+	for e := l.list.Back(); e != nil; e = e.Prev() {
 		items = append(items, e.Value)
 	}
-    this.mu.RUnlock()
+    l.mu.RUnlock()
 	return items
 }
 
 // 获取链表头值(不删除)
-func (this *List) FrontItem() interface{} {
-	this.mu.RLock()
-	if f := this.list.Front(); f != nil {
-		this.mu.RUnlock()
+func (l *List) FrontItem() interface{} {
+	l.mu.RLock()
+	if f := l.list.Front(); f != nil {
+		l.mu.RUnlock()
 		return f.Value
 	}
 
-	this.mu.RUnlock()
+	l.mu.RUnlock()
 	return nil
 }
 
 // 获取链表尾值(不删除)
-func (this *List) BackItem() interface{} {
-    this.mu.RLock()
-    if f := this.list.Back(); f != nil {
-        this.mu.RUnlock()
+func (l *List) BackItem() interface{} {
+    l.mu.RLock()
+    if f := l.list.Back(); f != nil {
+        l.mu.RUnlock()
         return f.Value
     }
 
-    this.mu.RUnlock()
+    l.mu.RUnlock()
     return nil
 }
 
 // 获取表头指针
-func (this *List) Front() *list.Element {
-    this.mu.RLock()
-    r := this.list.Front()
-    this.mu.RUnlock()
+func (l *List) Front() *list.Element {
+    l.mu.RLock()
+    r := l.list.Front()
+    l.mu.RUnlock()
     return r
 }
 
 // 获取表位指针
-func (this *List) Back() *list.Element {
-    this.mu.RLock()
-    r := this.list.Back()
-    this.mu.RUnlock()
+func (l *List) Back() *list.Element {
+    l.mu.RLock()
+    r := l.list.Back()
+    l.mu.RUnlock()
     return r
 }
 
 // 获取链表长度
-func (this *List) Len() int {
-	this.mu.RLock()
-    length := this.list.Len()
-	this.mu.RUnlock()
+func (l *List) Len() int {
+	l.mu.RLock()
+    length := l.list.Len()
+	l.mu.RUnlock()
 	return length
+}
+
+// 读锁操作
+func (l *List) RLockFunc(f func(l *list.List)) {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	f(l.list)
+}
+
+// 写锁操作
+func (l *List) LockFunc(f func(l *list.List)) {
+    l.mu.Lock()
+    defer l.mu.Unlock()
+    f(l.list)
 }

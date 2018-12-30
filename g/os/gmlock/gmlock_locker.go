@@ -7,7 +7,9 @@
 package gmlock
 
 import (
+    "fmt"
     "gitee.com/johng/gf/g/container/gmap"
+    "gitee.com/johng/gf/g/os/gcron"
     "gitee.com/johng/gf/g/os/gtime"
     "time"
 )
@@ -24,12 +26,12 @@ func New() *Locker {
     }
 }
 
-// 内存写锁，如果锁成功返回true，失败则返回false;过期时间单位为毫秒，默认为0表示不过期
+// 内存写锁，如果锁成功返回true，失败则返回false; 过期时间单位为秒，默认为0表示不过期
 func (l *Locker) TryLock(key string, expire...int) bool {
     return l.doLock(key, l.getExpire(expire...), true)
 }
 
-// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有其他写锁存在;过期时间单位为毫秒，默认为0表示不过期
+// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有其他写锁存在;过期时间单位为秒，默认为0表示不过期
 func (l *Locker) Lock(key string, expire...int) {
     l.doLock(key, l.getExpire(expire...), false)
 }
@@ -41,12 +43,12 @@ func (l *Locker) Unlock(key string) {
     }
 }
 
-// 内存读锁，如果锁成功返回true，失败则返回false;过期时间单位为毫秒，默认为0表示不过期
+// 内存读锁，如果锁成功返回true，失败则返回false; 过期时间单位为秒，默认为0表示不过期
 func (l *Locker) TryRLock(key string, expire...int) bool {
     return l.doRLock(key, l.getExpire(expire...), true)
 }
 
-// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有写锁存在;过期时间单位为毫秒，默认为0表示不过期
+// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有写锁存在; 过期时间单位为秒，默认为0表示不过期
 func (l *Locker) RLock(key string, expire...int) {
     l.doRLock(key, l.getExpire(expire...), false)
 }
@@ -98,9 +100,8 @@ func (l *Locker) doRLock(key string, expire int, try bool) bool {
         mu.RLock()
     }
     if ok && expire > 0 {
-        // 异步goroutine计时处理
         rid := mu.rid.Val()
-        gtime.SetTimeout(time.Duration(expire)*time.Millisecond, func() {
+        gcron.AddOnce(fmt.Sprintf(`@every %ds`, expire), func() {
             if rid == mu.rid.Val() {
                 mu.RUnlock()
             }

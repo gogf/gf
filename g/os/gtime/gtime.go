@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 时间管理
+// Package gtime provides functionality for measuring and displaying time/时间管理.
 package gtime
 
 import (
@@ -120,7 +120,7 @@ func Millisecond() int64 {
 
 // 获取当前的秒数(时间戳)
 func Second() int64 {
-    return time.Now().UnixNano()/1e9
+    return time.Now().Unix()
 }
 
 // 获得当前的日期(例如：2006-01-02)
