@@ -4,16 +4,17 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-package gtimec_test
+package gtimew_test
 
 import (
-    "gitee.com/johng/gf/g/os/gtimec"
+    "gitee.com/johng/gf/g/os/gtimew"
     "testing"
 )
 
 func Benchmark_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        gtimec.Add(1, func() {
+        // 基准测试的时候不能设置为1秒，否则大量的任务会崩掉系统
+        gtimew.Add(100000, func() {
 
         })
     }

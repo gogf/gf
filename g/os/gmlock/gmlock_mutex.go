@@ -31,15 +31,6 @@ func NewMutex() *Mutex {
     }
 }
 
-// 不阻塞Lock
-func (l *Mutex) TryLock() bool {
-    if l.wcount.Val() == 0 && l.rcount.Val() == 0 {
-        l.Lock()
-        return true
-    }
-    return false
-}
-
 func (l *Mutex) Lock() {
     l.wcount.Add(1)
     l.mu.Lock()
@@ -49,18 +40,10 @@ func (l *Mutex) Lock() {
 // 安全的Unlock
 func (l *Mutex) Unlock() {
     if l.wcount.Val() > 0 {
-        l.mu.Unlock()
-        l.wcount.Add(-1)
+        if l.wcount.Add(-1) >= 0 {
+            l.mu.Unlock()
+        }
     }
-}
-
-// 不阻塞RLock
-func (l *Mutex) TryRLock() bool {
-    if l.wcount.Val() == 0 {
-        l.RLock()
-        return true
-    }
-    return false
 }
 
 func (l *Mutex) RLock() {
@@ -72,7 +55,35 @@ func (l *Mutex) RLock() {
 // 安全的RUnlock
 func (l *Mutex) RUnlock() {
     if l.rcount.Val() > 0 {
-        l.mu.RUnlock()
-        l.rcount.Add(-1)
+        if l.wcount.Add(-1) >= 0 {
+            l.mu.RUnlock()
+        }
     }
 }
+
+// 不阻塞Lock
+func (l *Mutex) TryLock() bool {
+    // 初步读写次数检查, 但无法保证原子性
+    if l.wcount.Val() == 0 && l.rcount.Val() == 0 {
+        // 第二次检查, 保证原子操作
+        if l.wcount.Add(1) == 1 {
+            l.mu.Lock()
+            l.wid.Set(gtime.Nanosecond())
+            return true
+        }
+    }
+    return false
+}
+
+// 不阻塞RLock
+func (l *Mutex) TryRLock() bool {
+    // 只要不存在写锁
+    if l.wcount.Val() == 0 {
+        l.rcount.Add(1)
+        l.mu.RLock()
+        l.rid.Set(gtime.Nanosecond())
+        return true
+    }
+    return false
+}
+

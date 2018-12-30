@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gtest provides useful test utils/测试模块.
+// Package gtest provides simple and useful test utils/测试模块.
 package gtest
 
 import (
@@ -15,6 +15,17 @@ import (
     "reflect"
 )
 
+// 封装一个测试用例
+func Case(f func()) {
+    defer func() {
+        if err := recover(); err != nil {
+            glog.To(os.Stderr).Println(err)
+            glog.Header(false).PrintBacktrace(4)
+        }
+    }()
+    f()
+}
+
 // 断言判断, 相等
 func Assert(value, expect interface{}) {
     rv := reflect.ValueOf(value)
@@ -24,9 +35,7 @@ func Assert(value, expect interface{}) {
         }
     }
     if value != expect {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v == %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
     }
 }
 
@@ -39,9 +48,7 @@ func AssertEQ(value, expect interface{}) {
         }
     }
     if value != expect {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v == %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
     }
 }
 
@@ -54,9 +61,7 @@ func AssertNE(value, expect interface{}) {
         }
     }
     if value == expect {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v != %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, value, expect))
     }
 }
 
@@ -77,9 +82,7 @@ func AssertGT(value, expect interface{}) {
             passed = gconv.Float64(value) > gconv.Float64(expect)
     }
     if !passed {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v > %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v > %v`, value, expect))
     }
 }
 
@@ -100,9 +103,7 @@ func AssertGTE(value, expect interface{}) {
             passed = gconv.Float64(value) >= gconv.Float64(expect)
     }
     if !passed {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v >= %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v >= %v`, value, expect))
     }
 }
 
@@ -123,9 +124,7 @@ func AssertLT(value, expect interface{}) {
             passed = gconv.Float64(value) < gconv.Float64(expect)
     }
     if !passed {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v < %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v < %v`, value, expect))
     }
 }
 
@@ -146,9 +145,7 @@ func AssertLTE(value, expect interface{}) {
             passed = gconv.Float64(value) <= gconv.Float64(expect)
     }
     if !passed {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v <= %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v <= %v`, value, expect))
     }
 }
 
@@ -166,9 +163,7 @@ func AssertIN(value, expect interface{}) {
             }
     }
     if !passed {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v IN %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v IN %v`, value, expect))
     }
 }
 
@@ -185,9 +180,7 @@ func AssertNI(value, expect interface{}) {
             }
     }
     if passed {
-        glog.To(os.Stderr).Printfln(`[ASSERT] EXPECT %v NOT IN %v`, value, expect)
-        glog.Header(false).PrintBacktrace(1)
-        os.Exit(1)
+        panic(fmt.Sprintf(`[ASSERT] EXPECT %v NOT IN %v`, value, expect))
     }
 }
 

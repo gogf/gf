@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gcache provides memory cache for process/缓存模块.
 // 并发安全的单进程高速缓存.
 package gcache
 

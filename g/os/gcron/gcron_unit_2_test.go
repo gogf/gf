@@ -14,18 +14,15 @@ import (
     "time"
 )
 
-var (
-    singletonCron = gcron.New()
-)
-
 func TestCron_AddSingleton(t *testing.T) {
+    cron  := gcron.New()
     array := garray.New(0, 0)
-    singletonCron.AddSingleton("* * * * * *", func() {
+    cron.AddSingleton("* * * * * *", func() {
         array.Append(1)
         time.Sleep(5*time.Second)
 
     })
-    gtest.Assert(len(singletonCron.Entries()), 1)
+    gtest.Assert(len(cron.Entries()), 1)
     time.Sleep(3500*time.Millisecond)
     gtest.Assert(array.Len(), 1)
 }

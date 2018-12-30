@@ -34,7 +34,7 @@ func (t *Int) Val() int {
     return int(atomic.LoadInt64(&t.val))
 }
 
-// 数值增加delta，并返回新的数值
+// 数值增加delta，并返回**新**的数值
 func (t *Int) Add(delta int) int {
     return int(atomic.AddInt64(&t.val, int64(delta)))
 }

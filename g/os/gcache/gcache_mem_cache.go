@@ -11,10 +11,10 @@ import (
     "gitee.com/johng/gf/g/container/gset"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/os/gtimew"
     "gitee.com/johng/gf/g/util/gconv"
     "math"
     "sync"
-    "time"
 )
 
 
@@ -26,8 +26,8 @@ type memCache struct {
 
     cap          int                            // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
     data         map[interface{}]memCacheItem   // 缓存数据(所有的缓存数据存放哈希表)
-    expireTimes  map[interface{}]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)，键值为10秒级时间戳
-    expireSets   map[int64]*gset.Set            // 分组过期时间对应的键名列表(用于自动过期快速删除)，键值为10秒级时间戳
+    expireTimes  map[interface{}]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)，键值为1秒级时间戳
+    expireSets   map[int64]*gset.Set            // 分组过期时间对应的键名列表(用于自动过期快速删除)，键值为1秒级时间戳
 
     lru          *memCacheLru                   // LRU缓存限制(只有限定cap池大小时才启用)
     lruGetList   *glist.List                    // Get操作的LRU记录
@@ -69,17 +69,17 @@ func newMemCache(lruCap...int) *memCache {
     return c
 }
 
-// 计算过期缓存的键名(将毫秒换算成秒的整数毫秒，按照10秒进行分组)
+// 计算过期缓存的键名(将毫秒换算成秒的整数毫秒，按照1秒进行分组)
 func (c *memCache) makeExpireKey(expire int64) int64 {
-    return int64(math.Ceil(float64(expire/10000) + 1)*10000)
+    return int64(math.Ceil(float64(expire/1000) + 1)*1000)
 }
 
-// 获取一个过期键名存放Set,如果没有则返回nil
+// 获取一个过期键名存放Set, 如果没有则返回nil
 func (c *memCache) getExpireSet(expire int64) (expireSet *gset.Set) {
     c.expireSetMu.RLock()
     expireSet, _ = c.expireSets[expire]
     c.expireSetMu.RUnlock()
-    return nil
+    return
 }
 
 // 获取或者创建一个过期键名存放Set(由于是异步单线程执行，因此不会出现创建set时的覆盖问题)
@@ -287,74 +287,70 @@ func (c *memCache) Close()  {
 // 数据异步任务循环:
 // 1、将事件列表中的数据异步处理，并同步结果到expireTimes和expireSets属性中；
 // 2、清理过期键值对数据；
-func (c *memCache) autoLoop() {
+func (c *memCache) syncEventAndClearExpired() {
     event         := (*memCacheEvent)(nil)
     oldExpireTime := int64(0)
     newExpireTime := int64(0)
+    if c.closed.Val() {
+        gtimew.ExitJob()
+        return
+    }
+    // ========================
+    // 数据同步处理
+    // ========================
     for {
-        if c.closed.Val() {
-            return
+        v := c.eventList.PopFront()
+        if v == nil {
+            break
         }
-        // ========================
-        // 数据同步处理
-        // ========================
+        event = v.(*memCacheEvent)
+        // 获得旧的过期时间分组
+        c.expireTimeMu.RLock()
+        oldExpireTime = c.expireTimes[event.k]
+        c.expireTimeMu.RUnlock()
+        // 计算新的过期时间分组
+        newExpireTime = c.makeExpireKey(event.e)
+        if newExpireTime != oldExpireTime {
+            c.getOrNewExpireSet(newExpireTime).Add(event.k)
+            if oldExpireTime != 0 {
+                c.getOrNewExpireSet(oldExpireTime).Remove(event.k)
+            }
+            // 重新设置对应键名的过期时间
+            c.expireTimeMu.Lock()
+            c.expireTimes[event.k] = newExpireTime
+            c.expireTimeMu.Unlock()
+        }
+        // 写入操作也会增加到LRU(Least Recently Used)操作记录
+        if c.cap > 0 {
+            c.lru.Push(event.k)
+        }
+    }
+    // 异步处理读取操作的LRU列表
+    if c.cap > 0 && c.lruGetList.Len() > 0 {
         for {
-            v := c.eventList.PopFront()
-            if v == nil {
+            if v := c.lruGetList.PopFront(); v != nil {
+                c.lru.Push(v)
+            } else {
                 break
             }
-            event = v.(*memCacheEvent)
-            // 获得旧的过期时间分组
-            c.expireTimeMu.RLock()
-            oldExpireTime = c.expireTimes[event.k]
-            c.expireTimeMu.RUnlock()
-            // 计算新的过期时间分组
-            newExpireTime = c.makeExpireKey(event.e)
-            if newExpireTime != oldExpireTime {
-                c.getOrNewExpireSet(newExpireTime).Add(event.k)
-                if oldExpireTime != 0 {
-                    c.getOrNewExpireSet(oldExpireTime).Remove(event.k)
-                }
-                // 重新设置对应键名的过期时间
-                c.expireTimeMu.Lock()
-                c.expireTimes[event.k] = newExpireTime
-                c.expireTimeMu.Unlock()
-            }
-            // 写入操作也会增加到LRU(Least Recently Used)操作记录
-            if c.cap > 0 {
-                c.lru.Push(event.k)
-            }
         }
-        // 异步处理读取操作的LRU列表
-        if c.cap > 0 && c.lruGetList.Len() > 0 {
-            for {
-                if v := c.lruGetList.PopFront(); v != nil {
-                    c.lru.Push(v)
-                } else {
-                    break
-                }
-            }
+    }
+    // ========================
+    // 缓存过期处理
+    // ========================
+    ek := c.makeExpireKey(gtime.Millisecond())
+    eks := []int64{ek - 1000, ek - 2000, ek - 3000, ek - 4000, ek - 5000}
+    for _, expireTime := range eks {
+        if expireSet := c.getExpireSet(expireTime); expireSet != nil {
+            // 遍历Set，执行数据过期删除
+            expireSet.Iterator(func(key interface{}) bool {
+                return c.clearByKey(key)
+            })
+            // Set数据处理完之后删除该Set
+            c.expireSetMu.Lock()
+            delete(c.expireSets, expireTime)
+            c.expireSetMu.Unlock()
         }
-        // ========================
-        // 缓存过期处理
-        // ========================
-        ek := c.makeExpireKey(gtime.Millisecond())
-        eks := []int64{ek - 10000, ek - 20000, ek - 30000, ek - 40000, ek - 50000}
-        for _, expireTime := range eks {
-            if expireSet := c.getExpireSet(expireTime); expireSet != nil {
-                // 遍历Set，执行数据过期删除
-                expireSet.Iterator(func(key interface{}) bool {
-                    return c.clearByKey(key)
-                })
-                // Set数据处理完之后删除该Set
-                c.expireSetMu.Lock()
-                delete(c.expireSets, expireTime)
-                c.expireSetMu.Unlock()
-            }
-        }
-
-        // 每间隔1秒批量处理一次
-        time.Sleep(time.Second)
     }
 }
 
@@ -374,7 +370,9 @@ func (c *memCache) clearByKey(key interface{}, force...bool) bool {
     c.expireTimeMu.Unlock()
 
     // 删除LRU管理对象中指定键名
-    c.lru.Remove(key)
+    if c.cap > 0 {
+        c.lru.Remove(key)
+    }
 
     return true
 }

@@ -7,6 +7,7 @@
 package gcache
 
 import (
+    "gitee.com/johng/gf/g/os/gtimew"
     "sync/atomic"
     "unsafe"
 )
@@ -22,7 +23,7 @@ func New(lruCap...int) *Cache {
     c := &Cache {
         memCache : newMemCache(lruCap...),
     }
-    go c.autoLoop()
+    gtimew.AddSingleton(1, c.syncEventAndClearExpired)
     return c
 }
 

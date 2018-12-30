@@ -6,16 +6,17 @@
 
 // go test *.go -bench=".*" -benchmem
 
-package gcache
+package gcache_test
 
 import (
+    "gitee.com/johng/gf/g/os/gcache"
     "testing"
     "sync"
 )
 
 var (
-    c    = New()
-    clru = New(10000)
+    c    = gcache.New()
+    clru = gcache.New(10000)
     mInt = make(map[int]int)
     mMap = make(map[interface{}]interface{})
 

@@ -13,7 +13,7 @@ import (
 
 func Benchmark_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        gcron.Add("* * * * * *", func() {
+        gcron.Add("1 1 1 1 1 1", func() {
 
         })
     }

@@ -3,7 +3,6 @@ package rwmutex
 import "sync"
 
 // RWMutex的封装，支持对并发安全开启/关闭的控制。
-// 但是只能初始化时确定并发安全性，不能在运行时动态修改并发安全特性设置。
 type RWMutex struct {
     sync.RWMutex
     safe bool
