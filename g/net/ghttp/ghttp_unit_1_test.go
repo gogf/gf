@@ -34,15 +34,18 @@ func Test_Router_Basic(t *testing.T) {
     s.BindHandler("/user/list/{field}.html", func(r *ghttp.Request){
         r.Response.Write(r.Get("field"))
     })
-    s.SetPort(8199)
+    s.SetPort(8100)
     s.SetDumpRouteMap(false)
     go s.Run()
-    defer s.Shutdown()
+    defer func() {
+        s.Shutdown()
+        time.Sleep(time.Second)
+    }()
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8199")
+        client.SetPrefix("http://127.0.0.1:8100")
         
         gtest.Assert(client.GetContent("/john"),               "")
         gtest.Assert(client.GetContent("/john/update"),        "john")

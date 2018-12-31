@@ -24,9 +24,9 @@ func TestCron_AddOnce(t *testing.T) {
         cron.AddOnce("* * * * * *", func() {
             array.Append(1)
         })
-        gtest.Assert(len(cron.Entries()), 2)
+        gtest.Assert(cron.Size(), 2)
         time.Sleep(2500*time.Millisecond)
         gtest.Assert(array.Len(), 2)
-        gtest.Assert(len(cron.Entries()), 0)
+        gtest.Assert(cron.Size(), 0)
     })
 }

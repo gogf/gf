@@ -58,14 +58,17 @@ func Test_Router_Group1(t *testing.T) {
     g.ALL ("/obj",         obj)
     g.GET ("/obj/my-show", obj, "Show")
     g.REST("/obj/rest",    obj)
-    s.SetPort(8199)
+    s.SetPort(8200)
     s.SetDumpRouteMap(false)
     go s.Run()
-    defer s.Shutdown()
+    defer func() {
+        s.Shutdown()
+        time.Sleep(time.Second)
+    }()
     time.Sleep(time.Second)
     gtest.Case(func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8199")
+        client.SetPrefix("http://127.0.0.1:8200")
 
         gtest.Assert(client.GetContent ("/api/handler"),     "Handler")
 
@@ -96,14 +99,17 @@ func Test_Router_Group2(t *testing.T) {
         {"GET",  "/obj/my-show", obj, "Show"},
         {"REST", "/obj/rest",    obj},
     })
-    s.SetPort(8199)
+    s.SetPort(8300)
     s.SetDumpRouteMap(false)
     go s.Run()
-    defer s.Shutdown()
+    defer func() {
+        s.Shutdown()
+        time.Sleep(time.Second)
+    }()
     time.Sleep(time.Second)
     gtest.Case(func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8199")
+        client.SetPrefix("http://127.0.0.1:8300")
 
         gtest.Assert(client.GetContent ("/api/handler"),     "Handler")
 

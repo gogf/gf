@@ -62,6 +62,11 @@ func Remove(name string) {
     defaultCron.Remove(name)
 }
 
+// 获取所有已注册的定时任务数量
+func Size() int {
+    return defaultCron.Size()
+}
+
 // 获取所有已注册的定时任务项
 func Entries() []*Entry {
     return defaultCron.Entries()

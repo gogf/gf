@@ -145,6 +145,11 @@ func (c *Cron) Close() {
     c.status.Set(STATUS_CLOSED)
 }
 
+// 获取所有已注册的定时任务数量
+func (c *Cron) Size() int {
+    return c.entries.Size()
+}
+
 // 获取所有已注册的定时任务项(按照注册时间从小到大进行排序)
 func (c *Cron) Entries() []*Entry {
     array := garray.NewSortedArray(c.entries.Size(), func(v1, v2 interface{}) int {

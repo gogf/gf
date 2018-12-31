@@ -23,7 +23,7 @@ func TestCron_AddSingleton(t *testing.T) {
             time.Sleep(5*time.Second)
 
         })
-        gtest.Assert(len(cron.Entries()), 1)
+        gtest.Assert(cron.Size(), 1)
         time.Sleep(3500*time.Millisecond)
         gtest.Assert(array.Len(), 1)
     })

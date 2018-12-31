@@ -117,7 +117,7 @@ func newSchedule(pattern string) (*cronSchedule, error) {
             schedule.hour = m
         }
         // 天
-        if m, err := parseItem(match[4], 0, 30, false); err != nil {
+        if m, err := parseItem(match[4], 1, 31, false); err != nil {
             return nil, err
         } else {
             schedule.day = m

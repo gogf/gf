@@ -20,7 +20,7 @@ func Case(f func()) {
     defer func() {
         if err := recover(); err != nil {
             glog.To(os.Stderr).Println(err)
-            glog.Header(false).PrintBacktrace(4)
+            glog.Header(false).PrintBacktrace(2)
         }
     }()
     f()
@@ -34,7 +34,7 @@ func Assert(value, expect interface{}) {
             value = nil
         }
     }
-    if value != expect {
+    if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
     }
 }
@@ -47,7 +47,7 @@ func AssertEQ(value, expect interface{}) {
             value = nil
         }
     }
-    if value != expect {
+    if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
     }
 }
@@ -60,7 +60,7 @@ func AssertNE(value, expect interface{}) {
             value = nil
         }
     }
-    if value == expect {
+    if fmt.Sprintf("%v", value) == fmt.Sprintf("%v", expect) {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, value, expect))
     }
 }

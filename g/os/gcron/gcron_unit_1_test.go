@@ -35,7 +35,7 @@ func TestCron_Add_Close(t *testing.T) {
         gtest.Assert(err2, nil)
         gtest.AssertNE(err3, nil)
         gtest.Assert(err4, nil)
-        gtest.Assert(len(cron.Entries()), 3)
+        gtest.Assert(cron.Size(), 3)
         time.Sleep(1100*time.Millisecond)
         gtest.Assert(array.Len(), 2)
         time.Sleep(1100*time.Millisecond)
@@ -48,17 +48,17 @@ func TestCron_Add_Close(t *testing.T) {
     })
 }
 
-func TestCron_Mathod(t *testing.T) {
+func TestCron_Method(t *testing.T) {
     gtest.Case(func() {
         cron  := gcron.New()
         cron.Add("* * * * * *", func() {}, "add")
         cron.DelayAdd(1, "* * * * * *", func() {}, "delay_add")
-        gtest.Assert(len(cron.Entries()), 1)
-        time.Sleep(1100*time.Millisecond)
-        gtest.Assert(len(cron.Entries()), 2)
+        gtest.Assert(cron.Size(), 1)
+        time.Sleep(1500*time.Millisecond)
+        gtest.Assert(cron.Size(), 2)
 
         cron.Remove("delay_add")
-        gtest.Assert(len(cron.Entries()), 1)
+        gtest.Assert(cron.Size(), 1)
 
         entry1 := cron.Search("add")
         entry2 := cron.Search("test-none")

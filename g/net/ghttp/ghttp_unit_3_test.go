@@ -96,15 +96,18 @@ func Test_Params(t *testing.T) {
             r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
         }
     })
-    s.SetPort(8199)
+    s.SetPort(8400)
     s.SetDumpRouteMap(false)
     go s.Run()
-    defer s.Shutdown()
+    defer func() {
+        s.Shutdown()
+        time.Sleep(time.Second)
+    }()
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8199")
+        client.SetPrefix("http://127.0.0.1:8400")
         // GET
         gtest.Assert(client.GetContent("/get", "slice=1&slice=2"), `["1","2"]`)
         gtest.Assert(client.GetContent("/get", "bool=1"),          `true`)
