@@ -8,6 +8,7 @@
 package gcron_test
 
 import (
+    "fmt"
     "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/os/gcron"
     "gitee.com/johng/gf/g/util/gtest"
@@ -52,9 +53,10 @@ func TestCron_Method(t *testing.T) {
     gtest.Case(func() {
         cron  := gcron.New()
         cron.Add("* * * * * *", func() {}, "add")
+        fmt.Println("start", time.Now())
         cron.DelayAdd(1, "* * * * * *", func() {}, "delay_add")
         gtest.Assert(cron.Size(), 1)
-        time.Sleep(1500*time.Millisecond)
+        time.Sleep(1200*time.Millisecond)
         gtest.Assert(cron.Size(), 2)
 
         cron.Remove("delay_add")

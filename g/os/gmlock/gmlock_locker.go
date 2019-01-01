@@ -8,7 +8,7 @@ package gmlock
 
 import (
     "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/os/gtimew"
+    "gitee.com/johng/gf/g/os/gwheel"
 )
 
 // 内存锁管理对象
@@ -78,7 +78,7 @@ func (l *Locker) doLock(key string, expire int, try bool) bool {
     if ok && expire > 0 {
         // 异步goroutine计时处理
         wid := mu.wid.Val()
-        gtimew.AddOnce(expire, func() {
+        gwheel.AddOnce(expire, func() {
             if wid == mu.wid.Val() {
                 mu.Unlock()
             }
@@ -98,7 +98,7 @@ func (l *Locker) doRLock(key string, expire int, try bool) bool {
     }
     if ok && expire > 0 {
         rid := mu.rid.Val()
-        gtimew.AddOnce(expire, func() {
+        gwheel.AddOnce(expire, func() {
             if rid == mu.rid.Val() {
                 mu.RUnlock()
             }

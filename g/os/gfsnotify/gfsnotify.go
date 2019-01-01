@@ -8,9 +8,9 @@
 package gfsnotify
 
 import (
-    "container/list"
     "errors"
     "fmt"
+    "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gqueue"
     "gitee.com/johng/gf/g/container/gtype"
@@ -32,7 +32,7 @@ type Callback struct {
     Id        int                 // 唯一ID
     Func      func(event *Event)  // 回调方法
     Path      string              // 监听的文件/目录
-    elem      *list.Element       // 指向回调函数链表中的元素项位置(便于删除)
+    elem      *glist.Element      // 指向回调函数链表中的元素项位置(便于删除)
     recursive bool                // 当目录时，是否递归监听(使用在子文件/目录回溯查找回调函数时)
 }
 

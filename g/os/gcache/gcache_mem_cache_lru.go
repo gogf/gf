@@ -7,12 +7,11 @@
 package gcache
 
 import (
-    "container/list"
     "fmt"
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gtimew"
+    "gitee.com/johng/gf/g/os/gwheel"
 )
 
 // LRU算法实现对象，底层双向链表使用了标准库的list.List
@@ -33,7 +32,7 @@ func newMemCacheLru(cache *memCache) *memCacheLru {
         rawList   : glist.New(),
         closed    : gtype.NewBool(),
     }
-    gtimew.AddSingleton(1, lru.SyncAndClear)
+    gwheel.AddSingleton(1, lru.SyncAndClear)
     return lru
 }
 
@@ -46,7 +45,7 @@ func (lru *memCacheLru) Close() {
 func (lru *memCacheLru) Remove(key interface{}) {
     if v := lru.data.Get(key); v != nil {
         lru.data.Remove(key)
-        lru.list.Remove(v.(*list.Element))
+        lru.list.Remove(v.(*glist.Element))
     }
 }
 
@@ -80,7 +79,7 @@ func (lru *memCacheLru) Print() {
 // 异步执行协程，将queue中的数据同步到list中
 func (lru *memCacheLru) SyncAndClear() {
     if lru.closed.Val() {
-        gtimew.ExitJob()
+        gwheel.ExitJob()
         return
     }
     // 数据同步
@@ -88,7 +87,7 @@ func (lru *memCacheLru) SyncAndClear() {
         if v := lru.rawList.PopFront(); v != nil {
             // 删除对应链表项
             if v := lru.data.Get(v); v != nil {
-                lru.list.Remove(v.(*list.Element))
+                lru.list.Remove(v.(*glist.Element))
             }
             // 将数据插入到链表头，并记录对应的链表项到哈希表中，便于检索
             lru.data.Set(v, lru.list.PushFront(v))

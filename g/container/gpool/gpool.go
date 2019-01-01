@@ -12,7 +12,7 @@ import (
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/gtimew"
+    "gitee.com/johng/gf/g/os/gwheel"
 )
 
 // 对象池
@@ -43,7 +43,7 @@ func New(expire int, newFunc...func() (interface{}, error)) *Pool {
     if len(newFunc) > 0 {
         r.NewFunc = newFunc[0]
     }
-    gtimew.AddSingleton(1, r.checkExpire)
+    gwheel.AddSingleton(1, r.checkExpire)
     return r
 }
 
@@ -101,7 +101,7 @@ func (p *Pool) Close() {
 // 超时检测循环
 func (p *Pool) checkExpire() {
     if p.closed.Val() {
-        gtimew.ExitJob()
+        gwheel.ExitJob()
     }
     for {
         if r := p.list.PopFront(); r != nil {
