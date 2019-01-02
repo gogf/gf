@@ -4,8 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gdb provides ORM features for popular relationship databases.
-// 数据库ORM.
+// Package gdb provides ORM features for popular relationship databases/数据库ORM.
 // 默认内置支持MySQL, 其他数据库需要手动import对应的数据库引擎第三方包.
 package gdb
 

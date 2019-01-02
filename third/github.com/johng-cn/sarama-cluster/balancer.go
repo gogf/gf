@@ -116,12 +116,13 @@ func (info topicInfo) RoundRobin() map[string][]int32 {
 // --------------------------------------------------------------------
 
 type balancer struct {
-	client sarama.Client
-	topics map[string]topicInfo
+	client   sarama.Client
+	topics   map[string]topicInfo
+	strategy Strategy
 }
 
-func newBalancerFromMeta(client sarama.Client, members map[string]sarama.ConsumerGroupMemberMetadata) (*balancer, error) {
-	balancer := newBalancer(client)
+func newBalancerFromMeta(client sarama.Client, strategy Strategy, members map[string]sarama.ConsumerGroupMemberMetadata) (*balancer, error) {
+	balancer := newBalancer(client, strategy)
 	for memberID, meta := range members {
 		for _, topic := range meta.Topics {
 			if err := balancer.Topic(topic, memberID); err != nil {
@@ -132,10 +133,11 @@ func newBalancerFromMeta(client sarama.Client, members map[string]sarama.Consume
 	return balancer, nil
 }
 
-func newBalancer(client sarama.Client) *balancer {
+func newBalancer(client sarama.Client, strategy Strategy) *balancer {
 	return &balancer{
 		client: client,
 		topics: make(map[string]topicInfo),
+		strategy: strategy,
 	}
 }
 
@@ -156,10 +158,10 @@ func (r *balancer) Topic(name string, memberID string) error {
 	return nil
 }
 
-func (r *balancer) Perform(s Strategy) map[string]map[string][]int32 {
+func (r *balancer) Perform() map[string]map[string][]int32 {
 	res := make(map[string]map[string][]int32, 1)
 	for topic, info := range r.topics {
-		for memberID, partitions := range info.Perform(s) {
+		for memberID, partitions := range info.Perform(r.strategy) {
 			if _, ok := res[memberID]; !ok {
 				res[memberID] = make(map[string][]int32, 1)
 			}

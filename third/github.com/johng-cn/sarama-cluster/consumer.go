@@ -374,7 +374,7 @@ func (c *Consumer) nextTick() {
 
 	// Issue rebalance start notification
 	if c.client.config.Group.Return.Notifications {
-		c.handleNotification(notification)
+		c.handleNotification(newNotification(c.subs.Info()))
 	}
 
 	// Rebalance, fetch new subscriptions
@@ -705,7 +705,7 @@ func (c *Consumer) joinGroup() (*balancer, error) {
 			return nil, err
 		}
 
-		strategy, err = newBalancerFromMeta(c.client, members)
+		strategy, err = newBalancerFromMeta(c.client, Strategy(resp.GroupProtocol), members)
 		if err != nil {
 			return nil, err
 		}
@@ -730,7 +730,7 @@ func (c *Consumer) syncGroup(strategy *balancer) (map[string][]int32, error) {
 	}
 
 	if strategy != nil {
-		for memberID, topics := range strategy.Perform(c.client.config.Group.PartitionStrategy) {
+		for memberID, topics := range strategy.Perform() {
 			if err := req.AddGroupAssignmentMember(memberID, &sarama.ConsumerGroupMemberAssignment{
 				Topics: topics,
 			}); err != nil {
@@ -860,7 +860,11 @@ func (c *Consumer) createConsumer(tomb *loopTomb, topic string, partition int32,
 	})
 
 	if c.client.config.Group.Mode == ConsumerModePartitions {
-		c.partitions <- pc
+		select {
+		case c.partitions <- pc:
+		case <-c.dying:
+			pc.Close()
+		}
 	}
 	return nil
 }

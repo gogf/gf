@@ -52,6 +52,17 @@ var (
 		5, 93, 204, 2, // LZ4 checksum
 	}
 
+	emptyZSTDMessage = []byte{
+		180, 172, 84, 179, // CRC
+		0x01,                          // version byte
+		0x04,                          // attribute flags: zstd
+		0, 0, 1, 88, 141, 205, 89, 56, // timestamp
+		0xFF, 0xFF, 0xFF, 0xFF, // key
+		0x00, 0x00, 0x00, 0x09, // len
+		// ZSTD data
+		0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x00, 0x01, 0x00, 0x00,
+	}
+
 	emptyBulkSnappyMessage = []byte{
 		180, 47, 53, 209, //CRC
 		0x00,                   // magic version byte
@@ -86,6 +97,17 @@ var (
 		112, 185, 52, 0, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 121, 87, 72, 224, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 14, 121, 87, 72, 224, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0,
 		71, 129, 23, 111, // LZ4 checksum
 	}
+
+	emptyBulkZSTDMessage = []byte{
+		203, 151, 133, 28, // CRC
+		0x01,                                  // Version
+		0x04,                                  // attribute flags (ZSTD)
+		255, 255, 249, 209, 212, 181, 73, 201, // timestamp
+		0xFF, 0xFF, 0xFF, 0xFF, // key
+		0x00, 0x00, 0x00, 0x26, // len
+		// ZSTD data
+		0x28, 0xb5, 0x2f, 0xfd, 0x24, 0x34, 0xcd, 0x0, 0x0, 0x78, 0x0, 0x0, 0xe, 0x79, 0x57, 0x48, 0xe0, 0x0, 0x0, 0xff, 0xff, 0xff, 0xff, 0x0, 0x1, 0x3, 0x0, 0x3d, 0xbd, 0x0, 0x3b, 0x15, 0x0, 0xb, 0xd2, 0x34, 0xc1, 0x78,
+	}
 )
 
 func TestMessageEncoding(t *testing.T) {
@@ -101,6 +123,12 @@ func TestMessageEncoding(t *testing.T) {
 	message.Timestamp = time.Unix(1479847795, 0)
 	message.Version = 1
 	testEncodable(t, "empty lz4", &message, emptyLZ4Message)
+
+	message.Value = []byte{}
+	message.Codec = CompressionZSTD
+	message.Timestamp = time.Unix(1479847795, 0)
+	message.Version = 1
+	testEncodable(t, "empty zstd", &message, emptyZSTDMessage)
 }
 
 func TestMessageDecoding(t *testing.T) {
@@ -168,6 +196,22 @@ func TestMessageDecodingBulkLZ4(t *testing.T) {
 	testDecodable(t, "bulk lz4", &message, emptyBulkLZ4Message)
 	if message.Codec != CompressionLZ4 {
 		t.Errorf("Decoding produced codec %d, but expected %d.", message.Codec, CompressionLZ4)
+	}
+	if message.Key != nil {
+		t.Errorf("Decoding produced key %+v, but none was expected.", message.Key)
+	}
+	if message.Set == nil {
+		t.Error("Decoding produced no set, but one was expected.")
+	} else if len(message.Set.Messages) != 2 {
+		t.Errorf("Decoding produced a set with %d messages, but 2 were expected.", len(message.Set.Messages))
+	}
+}
+
+func TestMessageDecodingBulkZSTD(t *testing.T) {
+	message := Message{}
+	testDecodable(t, "bulk zstd", &message, emptyBulkZSTDMessage)
+	if message.Codec != CompressionZSTD {
+		t.Errorf("Decoding produced codec %d, but expected %d.", message.Codec, CompressionZSTD)
 	}
 	if message.Key != nil {
 		t.Errorf("Decoding produced key %+v, but none was expected.", message.Key)

@@ -1,6 +1,9 @@
 package sarama
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 var (
 	offsetCommitRequestNoBlocksV0 = []byte{
@@ -76,15 +79,17 @@ func TestOffsetCommitRequestV1(t *testing.T) {
 	testRequest(t, "one block v1", request, offsetCommitRequestOneBlockV1)
 }
 
-func TestOffsetCommitRequestV2(t *testing.T) {
-	request := new(OffsetCommitRequest)
-	request.ConsumerGroup = "foobar"
-	request.ConsumerID = "cons"
-	request.ConsumerGroupGeneration = 0x1122
-	request.RetentionTime = 0x4433
-	request.Version = 2
-	testRequest(t, "no blocks v2", request, offsetCommitRequestNoBlocksV2)
+func TestOffsetCommitRequestV2ToV4(t *testing.T) {
+	for version := 2; version <= 4; version++ {
+		request := new(OffsetCommitRequest)
+		request.ConsumerGroup = "foobar"
+		request.ConsumerID = "cons"
+		request.ConsumerGroupGeneration = 0x1122
+		request.RetentionTime = 0x4433
+		request.Version = int16(version)
+		testRequest(t, fmt.Sprintf("no blocks v%d", version), request, offsetCommitRequestNoBlocksV2)
 
-	request.AddBlock("topic", 0x5221, 0xDEADBEEF, 0, "metadata")
-	testRequest(t, "one block v2", request, offsetCommitRequestOneBlockV2)
+		request.AddBlock("topic", 0x5221, 0xDEADBEEF, 0, "metadata")
+		testRequest(t, fmt.Sprintf("one block v%d", version), request, offsetCommitRequestOneBlockV2)
+	}
 }

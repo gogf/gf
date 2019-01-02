@@ -51,9 +51,19 @@ func TestBrokerAccessors(t *testing.T) {
 		t.Error("New broker didn't have the correct address")
 	}
 
+	if broker.Rack() != "" {
+		t.Error("New broker didn't have an unknown rack.")
+	}
+
 	broker.id = 34
 	if broker.ID() != 34 {
 		t.Error("Manually setting broker ID did not take effect.")
+	}
+
+	rack := "dc1"
+	broker.rack = &rack
+	if broker.Rack() != rack {
+		t.Error("Manually setting broker rack did not take effect.")
 	}
 }
 
