@@ -15,7 +15,7 @@ import (
 func (c *Cron) startLoop() {
     gwheel.Add(1, func() {
         if c.status.Val() == STATUS_CLOSED {
-            gwheel.ExitJob()
+            gwheel.Exit()
         }
         if c.status.Val() == STATUS_RUNNING {
             go c.checkEntries(time.Now())

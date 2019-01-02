@@ -292,7 +292,7 @@ func (c *memCache) syncEventAndClearExpired() {
     oldExpireTime := int64(0)
     newExpireTime := int64(0)
     if c.closed.Val() {
-        gwheel.ExitJob()
+        gwheel.Exit()
         return
     }
     // ========================

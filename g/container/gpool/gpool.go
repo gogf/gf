@@ -101,7 +101,7 @@ func (p *Pool) Close() {
 // 超时检测循环
 func (p *Pool) checkExpire() {
     if p.closed.Val() {
-        gwheel.ExitJob()
+        gwheel.Exit()
     }
     for {
         if r := p.list.PopFront(); r != nil {

@@ -43,7 +43,7 @@ func Test_Router_Basic(t *testing.T) {
     }()
     // 等待启动完成
     time.Sleep(time.Second)
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         client := ghttp.NewClient()
         client.SetPrefix("http://127.0.0.1:8100")
         

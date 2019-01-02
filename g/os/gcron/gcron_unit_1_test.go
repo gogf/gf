@@ -17,7 +17,7 @@ import (
 )
 
 func TestCron_Add_Close(t *testing.T) {
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         cron  := gcron.New()
         array := garray.New(0, 0)
         _, err1 := cron.Add("* * * * * *", func() {
@@ -37,20 +37,20 @@ func TestCron_Add_Close(t *testing.T) {
         gtest.AssertNE(err3, nil)
         gtest.Assert(err4, nil)
         gtest.Assert(cron.Size(), 3)
-        time.Sleep(1100*time.Millisecond)
+        time.Sleep(1200*time.Millisecond)
         gtest.Assert(array.Len(), 2)
-        time.Sleep(1100*time.Millisecond)
+        time.Sleep(1200*time.Millisecond)
         gtest.Assert(array.Len(), 5)
         cron.Close()
-        time.Sleep(1100*time.Millisecond)
+        time.Sleep(1200*time.Millisecond)
         fixedLength := array.Len()
-        time.Sleep(1100*time.Millisecond)
+        time.Sleep(1200*time.Millisecond)
         gtest.Assert(array.Len(), fixedLength)
     })
 }
 
 func TestCron_Method(t *testing.T) {
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         cron  := gcron.New()
         cron.Add("* * * * * *", func() {}, "add")
         fmt.Println("start", time.Now())

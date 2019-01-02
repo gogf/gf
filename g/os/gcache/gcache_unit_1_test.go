@@ -16,7 +16,7 @@ import (
 )
 
 func TestCache_Set(t *testing.T) {
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         cache := gcache.New()
         cache.Set(1, 11, 0)
         gtest.Assert(cache.Get(1), 11)
@@ -24,7 +24,7 @@ func TestCache_Set(t *testing.T) {
 }
 
 func TestCache_Set_Expire(t *testing.T) {
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         cache := gcache.New()
         cache.Set(2, 22, 100)
         gtest.Assert(cache.Get(2), 22)
@@ -36,7 +36,7 @@ func TestCache_Set_Expire(t *testing.T) {
 }
 
 func TestCache_Keys_Values(t *testing.T) {
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         cache := gcache.New()
         for i := 0; i < 10; i++ {
             cache.Set(i, i*10, 0)
@@ -49,7 +49,7 @@ func TestCache_Keys_Values(t *testing.T) {
 }
 
 func TestCache_LRU(t *testing.T) {
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         cache := gcache.New(2)
         for i := 0; i < 10; i++ {
             cache.Set(i, i, 0)

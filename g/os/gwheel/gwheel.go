@@ -39,7 +39,6 @@ func Add(interval int, job JobFunc) *Entry {
 
 // 添加单例运行循环任务
 func AddSingleton(interval int, job JobFunc) *Entry {
-    return nil
     return defaultWheel.AddSingleton(10*interval, job)
 }
 
@@ -83,7 +82,7 @@ func Size() int {
     return defaultWheel.Size()
 }
 
-// 在Job方法中调用，停止当前运行的Job
-func ExitJob() {
+// 在Job方法中调用，停止当前运行的任务
+func Exit() {
     panic(gPANIC_EXIT)
 }

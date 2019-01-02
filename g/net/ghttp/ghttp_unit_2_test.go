@@ -66,7 +66,7 @@ func Test_Router_Group1(t *testing.T) {
         time.Sleep(time.Second)
     }()
     time.Sleep(time.Second)
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         client := ghttp.NewClient()
         client.SetPrefix("http://127.0.0.1:8200")
 
@@ -107,7 +107,7 @@ func Test_Router_Group2(t *testing.T) {
         time.Sleep(time.Second)
     }()
     time.Sleep(time.Second)
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         client := ghttp.NewClient()
         client.SetPrefix("http://127.0.0.1:8300")
 

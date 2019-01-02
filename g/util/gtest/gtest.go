@@ -13,14 +13,16 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "os"
     "reflect"
+    "testing"
 )
 
 // 封装一个测试用例
-func Case(f func()) {
+func Case(t *testing.T, f func()) {
     defer func() {
         if err := recover(); err != nil {
             glog.To(os.Stderr).Println(err)
             glog.Header(false).PrintBacktrace(2)
+            t.Fail()
         }
     }()
     f()

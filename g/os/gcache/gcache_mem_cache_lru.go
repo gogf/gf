@@ -79,7 +79,7 @@ func (lru *memCacheLru) Print() {
 // 异步执行协程，将queue中的数据同步到list中
 func (lru *memCacheLru) SyncAndClear() {
     if lru.closed.Val() {
-        gwheel.ExitJob()
+        gwheel.Exit()
         return
     }
     // 数据同步

@@ -15,7 +15,7 @@ import (
 )
 
 func TestCron_AddOnce(t *testing.T) {
-    gtest.Case(func() {
+    gtest.Case(t, func() {
         cron  := gcron.New()
         array := garray.New(0, 0)
         cron.AddOnce("* * * * * *", func() {
