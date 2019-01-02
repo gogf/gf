@@ -79,7 +79,7 @@ func (c *memCache) getExpireSet(expire int64) (expireSet *gset.Set) {
     c.expireSetMu.RLock()
     expireSet, _ = c.expireSets[expire]
     c.expireSetMu.RUnlock()
-    return nil
+    return
 }
 
 // 获取或者创建一个过期键名存放Set(由于是异步单线程执行，因此不会出现创建set时的覆盖问题)
