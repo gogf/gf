@@ -21,7 +21,6 @@ import (
 	"strings"
 )
 
-
 // 数据库链接对象
 type dbMssql struct {
 	*dbBase
@@ -34,7 +33,7 @@ func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
 		source = config.Linkinfo
 	} else {
 		source = fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
-            config.User, config.Pass, config.Host, config.Port, config.Name)
+			config.User, config.Pass, config.Host, config.Port, config.Name)
 	}
 	if db, err := sql.Open("sqlserver", source); err == nil {
 		return db, nil
@@ -44,7 +43,7 @@ func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
 }
 
 // 获得关键字操作符
-func (db *dbMssql) getChars () (charLeft string, charRight string) {
+func (db *dbMssql) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
@@ -92,7 +91,7 @@ func (db *dbMssql) parseSql(sql string) string {
 		//不含LIMIT则不处理
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
-		} 
+		}
 
 		//判断SQL中是否含有order by
 		selectStr := ""
@@ -101,27 +100,25 @@ func (db *dbMssql) parseSql(sql string) string {
 		if haveOrderby {
 			//取order by 前面的字符串
 			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
-			
-			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "ORDER BY") == false{
+
+			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "ORDER BY") == false {
 				break
 			}
 			selectStr = queryExpr[2]
 
 			//取order by表达式的值
 			orderbyExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", sql)
-			if len(orderbyExpr) != 4 || strings.EqualFold(orderbyExpr[1], "ORDER BY") == false || strings.EqualFold(orderbyExpr[3], "LIMIT") == false{
+			if len(orderbyExpr) != 4 || strings.EqualFold(orderbyExpr[1], "ORDER BY") == false || strings.EqualFold(orderbyExpr[3], "LIMIT") == false {
 				break
 			}
 			orderbyStr = orderbyExpr[2]
 		} else {
 			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false{
+			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false {
 				break
 			}
 			selectStr = queryExpr[2]
 		}
-
-		
 
 		//取limit后面的取值范围
 		first, limit := 0, 0
@@ -150,4 +147,31 @@ func (db *dbMssql) parseSql(sql string) string {
 	default:
 	}
 	return sql
+}
+
+// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值暂无用途(默认为字段数据类型).
+func (db *dbMssql) getTableFields(table string) (fields map[string]string, err error) {
+	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
+	v := db.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
+		result := (Result)(nil)
+		result, err = db.GetAll(fmt.Sprintf(`
+		SELECT c.name as FIELD, CASE t.name 
+			WHEN 'numeric' THEN t.name + '(' + convert(varchar(20),c.xprec) + ',' + convert(varchar(20),c.xscale) + ')' 
+			WHEN 'char' THEN t.name + '(' + convert(varchar(20),c.length)+ ')'
+			WHEN 'varchar' THEN t.name + '(' + convert(varchar(20),c.length)+ ')'
+			ELSE t.name + '(' + convert(varchar(20),c.length)+ ')' END as TYPE
+		FROM systypes t,syscolumns c WHERE t.xtype=c.xtype AND c.id = (SELECT id FROM sysobjects WHERE name='%s') ORDER BY c.colid`, strings.ToUpper(table)))
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]string)
+		for _, m := range result {
+			fields[strings.ToLower(m["FIELD"].String())] = strings.ToLower(m["TYPE"].String()) //sqlserver返回的field为大写的需要转为小写的
+		}
+		return fields
+	}, 0)
+	if err == nil {
+		fields = v.(map[string]string)
+	}
+	return
 }
