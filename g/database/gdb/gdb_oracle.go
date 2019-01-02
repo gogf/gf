@@ -42,7 +42,7 @@ func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 }
 
 // 获得关键字操作符
-func (db *dbOracle) getChars () (charLeft string, charRight string) {
+func (db *dbOracle) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
@@ -92,7 +92,7 @@ func (db *dbOracle) parseSql(sql string) string {
 		}
 
 		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false{
+		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false {
 			break
 		}
 
@@ -140,4 +140,31 @@ func (db *dbOracle) parseSql(sql string) string {
 	default:
 	}
 	return sql
+}
+
+// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值暂无用途(默认为字段数据类型).
+func (db *dbOracle) getTableFields(table string) (fields map[string]string, err error) {
+	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
+	v := db.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
+		result := (Result)(nil)
+		result, err = db.GetAll(fmt.Sprintf(`
+		SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
+		    WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+			WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+			ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
+		FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`, strings.ToUpper(table)))
+		if err != nil {
+			return nil
+		}
+
+		fields = make(map[string]string)
+		for _, m := range result {
+			fields[strings.ToLower(m["FIELD"].String())] = strings.ToLower(m["TYPE"].String()) //ORACLE返回的值默认都是大写的，需要转为小写
+		}
+		return fields
+	}, 0)
+	if err == nil {
+		fields = v.(map[string]string)
+	}
+	return
 }
