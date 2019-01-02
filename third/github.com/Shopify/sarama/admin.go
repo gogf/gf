@@ -118,6 +118,7 @@ func (ca *clusterAdmin) CreateTopic(topic string, detail *TopicDetail, validateO
 	request := &CreateTopicsRequest{
 		TopicDetails: topicDetails,
 		ValidateOnly: validateOnly,
+		Timeout:      ca.conf.Admin.Timeout,
 	}
 
 	if ca.conf.Version.IsAtLeast(V0_11_0_0) {
@@ -155,7 +156,10 @@ func (ca *clusterAdmin) DeleteTopic(topic string) error {
 		return ErrInvalidTopic
 	}
 
-	request := &DeleteTopicsRequest{Topics: []string{topic}}
+	request := &DeleteTopicsRequest{
+		Topics:  []string{topic},
+		Timeout: ca.conf.Admin.Timeout,
+	}
 
 	if ca.conf.Version.IsAtLeast(V0_11_0_0) {
 		request.Version = 1
@@ -192,6 +196,7 @@ func (ca *clusterAdmin) CreatePartitions(topic string, count int32, assignment [
 
 	request := &CreatePartitionsRequest{
 		TopicPartitions: topicPartitions,
+		Timeout:         ca.conf.Admin.Timeout,
 	}
 
 	b, err := ca.Controller()
@@ -225,7 +230,9 @@ func (ca *clusterAdmin) DeleteRecords(topic string, partitionOffsets map[int32]i
 	topics := make(map[string]*DeleteRecordsRequestTopic)
 	topics[topic] = &DeleteRecordsRequestTopic{PartitionOffsets: partitionOffsets}
 	request := &DeleteRecordsRequest{
-		Topics: topics}
+		Topics:  topics,
+		Timeout: ca.conf.Admin.Timeout,
+	}
 
 	b, err := ca.Controller()
 	if err != nil {

@@ -36,20 +36,30 @@ var (
 		0, 0, 0, 1, // 1 config
 		2,                   // a topic
 		0, 3, 'f', 'o', 'o', // topic name: foo
+		255, 255, 255, 255, // all configs
+	}
+
+	singleDescribeConfigsRequestAllConfigsv1 = []byte{
+		0, 0, 0, 1, // 1 config
+		2,                   // a topic
+		0, 3, 'f', 'o', 'o', // topic name: foo
 		255, 255, 255, 255, // no configs
+		1, //synoms
 	}
 )
 
-func TestDescribeConfigsRequest(t *testing.T) {
+func TestDescribeConfigsRequestv0(t *testing.T) {
 	var request *DescribeConfigsRequest
 
 	request = &DescribeConfigsRequest{
+		Version:   0,
 		Resources: []*ConfigResource{},
 	}
 	testRequest(t, "no requests", request, emptyDescribeConfigsRequest)
 
 	configs := []string{"segment.ms"}
 	request = &DescribeConfigsRequest{
+		Version: 0,
 		Resources: []*ConfigResource{
 			&ConfigResource{
 				Type:        TopicResource,
@@ -62,6 +72,7 @@ func TestDescribeConfigsRequest(t *testing.T) {
 	testRequest(t, "one config", request, singleDescribeConfigsRequest)
 
 	request = &DescribeConfigsRequest{
+		Version: 0,
 		Resources: []*ConfigResource{
 			&ConfigResource{
 				Type:        TopicResource,
@@ -78,6 +89,7 @@ func TestDescribeConfigsRequest(t *testing.T) {
 	testRequest(t, "two configs", request, doubleDescribeConfigsRequest)
 
 	request = &DescribeConfigsRequest{
+		Version: 0,
 		Resources: []*ConfigResource{
 			&ConfigResource{
 				Type: TopicResource,
@@ -87,4 +99,21 @@ func TestDescribeConfigsRequest(t *testing.T) {
 	}
 
 	testRequest(t, "one topic, all configs", request, singleDescribeConfigsRequestAllConfigs)
+}
+
+func TestDescribeConfigsRequestv1(t *testing.T) {
+	var request *DescribeConfigsRequest
+
+	request = &DescribeConfigsRequest{
+		Version: 1,
+		Resources: []*ConfigResource{
+			{
+				Type: TopicResource,
+				Name: "foo",
+			},
+		},
+		IncludeSynonyms: true,
+	}
+
+	testRequest(t, "one topic, all configs", request, singleDescribeConfigsRequestAllConfigsv1)
 }

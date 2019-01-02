@@ -17,7 +17,7 @@ type Client interface {
 	// altered after it has been created.
 	Config() *Config
 
-	// Controller returns the cluster controller broker.
+	// Controller returns the cluster controller broker. Requires Kafka 0.10 or higher.
 	Controller() (*Broker, error)
 
 	// Brokers returns the current set of active brokers as retrieved from cluster metadata.
@@ -67,6 +67,9 @@ type Client interface {
 	// in local cache. This function only works on Kafka 0.8.2 and higher.
 	RefreshCoordinator(consumerGroup string) error
 
+	// InitProducerID retrieves information required for Idempotent Producer
+	InitProducerID() (*InitProducerIDResponse, error)
+
 	// Close shuts down all broker connections managed by this client. It is required
 	// to call this function before a client object passes out of scope, as it will
 	// otherwise leak memory. You must close any Producers or Consumers using a client
@@ -100,10 +103,11 @@ type client struct {
 	seedBrokers []*Broker
 	deadSeeds   []*Broker
 
-	controllerID int32                                   // cluster controller broker id
-	brokers      map[int32]*Broker                       // maps broker ids to brokers
-	metadata     map[string]map[int32]*PartitionMetadata // maps topics to partition ids to metadata
-	coordinators map[string]int32                        // Maps consumer group names to coordinating broker IDs
+	controllerID   int32                                   // cluster controller broker id
+	brokers        map[int32]*Broker                       // maps broker ids to brokers
+	metadata       map[string]map[int32]*PartitionMetadata // maps topics to partition ids to metadata
+	metadataTopics map[string]none                         // topics that need to collect metadata
+	coordinators   map[string]int32                        // Maps consumer group names to coordinating broker IDs
 
 	// If the number of partitions is large, we can get some churn calling cachedPartitions,
 	// so the result is cached.  It is important to update this value whenever metadata is changed
@@ -136,6 +140,7 @@ func NewClient(addrs []string, conf *Config) (Client, error) {
 		closed:                  make(chan none),
 		brokers:                 make(map[int32]*Broker),
 		metadata:                make(map[string]map[int32]*PartitionMetadata),
+		metadataTopics:          make(map[string]none),
 		cachedPartitionsResults: make(map[string][maxPartitionIndex][]int32),
 		coordinators:            make(map[string]int32),
 	}
@@ -174,11 +179,31 @@ func (client *client) Config() *Config {
 func (client *client) Brokers() []*Broker {
 	client.lock.RLock()
 	defer client.lock.RUnlock()
-	brokers := make([]*Broker, 0)
+	brokers := make([]*Broker, 0, len(client.brokers))
 	for _, broker := range client.brokers {
 		brokers = append(brokers, broker)
 	}
 	return brokers
+}
+
+func (client *client) InitProducerID() (*InitProducerIDResponse, error) {
+	var err error
+	for broker := client.any(); broker != nil; broker = client.any() {
+
+		req := &InitProducerIDRequest{}
+
+		response, err := broker.InitProducerID(req)
+		switch err.(type) {
+		case nil:
+			return response, nil
+		default:
+			// some error, remove that broker and try again
+			Logger.Printf("Client got error from broker %d when issuing InitProducerID : %v\n", broker.ID(), err)
+			_ = broker.Close()
+			client.deregisterBroker(broker)
+		}
+	}
+	return nil, err
 }
 
 func (client *client) Close() error {
@@ -207,6 +232,7 @@ func (client *client) Close() error {
 
 	client.brokers = nil
 	client.metadata = nil
+	client.metadataTopics = nil
 
 	return nil
 }
@@ -225,6 +251,22 @@ func (client *client) Topics() ([]string, error) {
 
 	ret := make([]string, 0, len(client.metadata))
 	for topic := range client.metadata {
+		ret = append(ret, topic)
+	}
+
+	return ret, nil
+}
+
+func (client *client) MetadataTopics() ([]string, error) {
+	if client.Closed() {
+		return nil, ErrClosedClient
+	}
+
+	client.lock.RLock()
+	defer client.lock.RUnlock()
+
+	ret := make([]string, 0, len(client.metadataTopics))
+	for topic := range client.metadataTopics {
 		ret = append(ret, topic)
 	}
 
@@ -386,6 +428,10 @@ func (client *client) GetOffset(topic string, partitionID int32, time int64) (in
 func (client *client) Controller() (*Broker, error) {
 	if client.Closed() {
 		return nil, ErrClosedClient
+	}
+
+	if !client.conf.Version.IsAtLeast(V0_10_0_0) {
+		return nil, ErrUnsupportedVersion
 	}
 
 	controller := client.cachedController()
@@ -645,7 +691,7 @@ func (client *client) refreshMetadata() error {
 	topics := []string{}
 
 	if !client.conf.Metadata.Full {
-		if specificTopics, err := client.Topics(); err != nil {
+		if specificTopics, err := client.MetadataTopics(); err != nil {
 			return err
 		} else if len(specificTopics) == 0 {
 			return ErrNoTopicsToUpdateMetadata
@@ -700,7 +746,7 @@ func (client *client) tryRefreshMetadata(topics []string, attemptsRemaining int)
 			return err
 		default:
 			// some other error, remove that broker and try again
-			Logger.Println("client/metadata got error from broker while fetching metadata:", err)
+			Logger.Printf("client/metadata got error from broker %d while fetching metadata: %v\n", broker.ID(), err)
 			_ = broker.Close()
 			client.deregisterBroker(broker)
 		}
@@ -728,9 +774,16 @@ func (client *client) updateMetadata(data *MetadataResponse, allKnownMetaData bo
 
 	if allKnownMetaData {
 		client.metadata = make(map[string]map[int32]*PartitionMetadata)
+		client.metadataTopics = make(map[string]none)
 		client.cachedPartitionsResults = make(map[string][maxPartitionIndex][]int32)
 	}
 	for _, topic := range data.Topics {
+		// topics must be added firstly to `metadataTopics` to guarantee that all
+		// requested topics must be recorded to keep them trackable for periodically
+		// metadata refresh.
+		if _, exists := client.metadataTopics[topic.Name]; !exists {
+			client.metadataTopics[topic.Name] = none{}
+		}
 		delete(client.metadata, topic.Name)
 		delete(client.cachedPartitionsResults, topic.Name)
 
