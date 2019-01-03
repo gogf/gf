@@ -26,8 +26,8 @@ func New(safe...bool) *List {
     }
 	l.root      = newElement(nil, safe...)
 	l.root.list = l
-    l.root.setNext(l.root)
-    l.root.setPrev(l.root)
+    l.root.next = l.root
+    l.root.prev = l.root
     if len(safe) > 0 {
         l.safe = safe[0]
     } else {
@@ -43,23 +43,23 @@ func (l *List) PushFront(v interface{}) *Element {
 
 // 往链表尾入栈数据项
 func (l *List) PushBack(v interface{}) *Element {
-    return l.insertValue(v, l.root.getPrev())
+    return l.insertValue(v, l.root.prev)
 }
 
 // 在list 中元素mark之后插入一个值为v的元素，并返回该元素，如果mark不是list中元素，则list不改变。
-func (l *List) InsertAfter(v interface{}, mark *Element) *Element {
-    if mark.list != l {
+func (l *List) InsertAfter(v interface{}, p *Element) *Element {
+    if p.checkList(l) == false {
         return nil
     }
-    return l.insertValue(v, mark)
+    return l.insertValue(v, p)
 }
 
 // 在list 中元素mark之前插入一个值为v的元素，并返回该元素，如果mark不是list中元素，则list不改变。
-func (l *List) InsertBefore(v interface{}, mark *Element) *Element {
-    if mark.list != l {
+func (l *List) InsertBefore(v interface{}, p *Element) *Element {
+    if p.checkList(l) == false {
         return nil
     }
-    return l.insertValue(v, mark.getPrev())
+    return l.insertValue(v, p.getPrev())
 }
 
 // 批量往链表头入栈数据项
@@ -189,7 +189,7 @@ func (l *List) Front() *Element {
     if l.length.Val() == 0 {
         return nil
     }
-    return l.root.getNext()
+    return l.root.next
 }
 
 // 获取表位指针
@@ -197,7 +197,7 @@ func (l *List) Back() *Element {
     if l.length.Val() == 0 {
         return nil
     }
-    return l.root.getPrev()
+    return l.root.prev
 }
 
 // 获取链表长度
@@ -205,37 +205,38 @@ func (l *List) Len() int {
 	return l.length.Val()
 }
 
-func (l *List) MoveBefore(e, mark *Element) {
-    if e.list != l || e == mark || mark.list != l {
+// 内部使用insertValue而非insert, 是为去掉insert方法中对元素项e的并发安全保护，提高并发执行效率
+func (l *List) MoveBefore(e, p *Element) {
+    if e.checkList(l) == false || e == p || p.checkList(l) == false {
         return
     }
-    l.insert(l.remove(e), mark.getPrev())
+    l.insert(l.remove(e), p.getPrev())
 }
 
-func (l *List) MoveAfter(e, mark *Element) {
-    if e.list != l || e == mark || mark.list != l {
+func (l *List) MoveAfter(e, p *Element) {
+    if e.checkList(l) == false || e == p || p.checkList(l) == false {
         return
     }
-    l.insert(l.remove(e), mark)
+    l.insert(l.remove(e), p)
 }
 
 func (l *List) MoveToFront(e *Element) {
-    if e.list != l || l.root.getNext() == e {
+    if e.checkList(l) == false || l.root.next == e {
         return
     }
     l.insert(l.remove(e), l.root)
 }
 
 func (l *List) MoveToBack(e *Element) {
-    if e.list != l || l.root.getPrev() == e {
+    if e.checkList(l) == false || l.root.prev == e {
         return
     }
-    l.insert(l.remove(e), l.root.getPrev())
+    l.insert(l.remove(e), l.root.prev)
 }
 
 func (l *List) PushBackList(other *List) {
     for i, e := other.Len(), other.Front(); i > 0; i, e = i - 1, e.Next() {
-        l.insertValue(e.Value(), l.root.getPrev())
+        l.insertValue(e.Value(), l.root.prev)
     }
 }
 
@@ -250,17 +251,14 @@ func (l *List) insertValue(value interface{}, p *Element) *Element {
     return l.insert(newElement(value, l.safe), p)
 }
 
-// 在元素项p后添加元素项e
+// 在元素项p后添加**新增**元素项e, 注意这里的e不需要加锁
 func (l *List) insert(e, p *Element) *Element {
-    p.LockFunc(func(p *Element) {
-        e.LockFunc(func(e *Element) {
-            n     := p.next
-            p.next = e
-            e.prev = p
-            e.next = n
-            n.prev = e
-            e.list = l
-        })
+    n := p.setNext(e)
+    n.setPrev(e)
+    e.LockFunc(func(e *Element) {
+        e.prev = p
+        e.next = n
+        e.list = l
     })
     l.length.Add(1)
     return e
@@ -268,12 +266,14 @@ func (l *List) insert(e, p *Element) *Element {
 
 // 从列表中删除元素项e
 func (l *List) remove(e *Element) *Element {
-    e.LockFunc(func(e *Element) {
+    e.RLockFunc(func(e *Element) {
         e.prev.setNext(e.next)
         e.next.setPrev(e.prev)
-        e.next      = nil
-        e.prev      = nil
-        e.list      = nil
+    })
+    e.LockFunc(func(e *Element) {
+        e.next = nil
+        e.prev = nil
+        e.list = nil
     })
     l.length.Add(-1)
     return e

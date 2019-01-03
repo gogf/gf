@@ -9,12 +9,13 @@ package gwheel_test
 import (
     "gitee.com/johng/gf/g/os/gwheel"
     "testing"
+    "time"
 )
 
 func Benchmark_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
         // 基准测试的时候不能设置为1秒，否则大量的任务会崩掉系统
-        gwheel.Add(100000, func() {
+        gwheel.Add(time.Hour, func() {
 
         })
     }

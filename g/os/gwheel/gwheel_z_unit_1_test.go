@@ -21,22 +21,18 @@ func TestWheel_Add_Close(t *testing.T) {
         wheel  := gwheel.NewDefault()
         array  := garray.New(0, 0)
         //fmt.Println("start", time.Now())
-        entry1 := wheel.Add(10, func() {
+        wheel.Add(time.Second, func() {
             //fmt.Println("entry1", time.Now())
             array.Append(1)
         })
-        entry2 := wheel.Add(10, func() {
+        wheel.Add(time.Second, func() {
             //fmt.Println("entry2", time.Now())
             array.Append(1)
         })
-        entry3 := wheel.Add(20, func() {
+        wheel.Add(2*time.Second, func() {
             //fmt.Println("entry3", time.Now())
             array.Append(1)
         })
-        gtest.AssertNE(entry1, nil)
-        gtest.AssertNE(entry2, nil)
-        gtest.AssertNE(entry3, nil)
-        gtest.Assert(wheel.Size(), 3)
         time.Sleep(1300*time.Millisecond)
         gtest.Assert(array.Len(), 2)
         time.Sleep(1300*time.Millisecond)
@@ -53,12 +49,10 @@ func TestWheel_Singlton(t *testing.T) {
    gtest.Case(t, func() {
        wheel := gwheel.NewDefault()
        array := garray.New(0, 0)
-       entry := wheel.AddSingleton(10, func() {
+       wheel.AddSingleton(10, func() {
            array.Append(1)
            time.Sleep(10*time.Second)
        })
-       gtest.AssertNE(entry, nil)
-       gtest.Assert(wheel.Size(), 1)
        time.Sleep(1200*time.Millisecond)
        gtest.Assert(array.Len(), 1)
 
@@ -71,14 +65,12 @@ func TestWheel_Once(t *testing.T) {
    gtest.Case(t, func() {
        wheel  := gwheel.NewDefault()
        array  := garray.New(0, 0)
-       entry1 := wheel.AddOnce(10, func() {
+       wheel.AddOnce(10, func() {
            array.Append(1)
        })
-       entry2 := wheel.AddOnce(10, func() {
+       wheel.AddOnce(10, func() {
            array.Append(1)
        })
-       gtest.AssertNE(entry1, nil)
-       gtest.AssertNE(entry2, nil)
        time.Sleep(1200*time.Millisecond)
        gtest.Assert(array.Len(), 2)
        time.Sleep(1200*time.Millisecond)
@@ -143,12 +135,11 @@ func TestWheel_ExitJob(t *testing.T) {
    gtest.Case(t, func() {
        wheel := gwheel.NewDefault()
        array := garray.New(0, 0)
-       wheel.Add(10, func() {
+       wheel.Add(time.Second, func() {
            array.Append(1)
            gwheel.Exit()
        })
        time.Sleep(1200*time.Millisecond)
        gtest.Assert(array.Len(), 1)
-       gtest.Assert(wheel.Size(), 0)
    })
 }

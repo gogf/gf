@@ -6,7 +6,9 @@
 
 package glist
 
-import "testing"
+import (
+    "testing"
+)
 
 func checkListLen(t *testing.T, l *List, len int) bool {
     if n := l.Len(); n != len {
@@ -59,6 +61,34 @@ func checkListPointers(t *testing.T, l *List, es []*Element) {
         if n := e.Next(); n != Next {
             t.Errorf("elt[%d](%p).Next() = %p, want %p", i, e, n, Next)
         }
+    }
+}
+
+func TestBasic(t *testing.T) {
+    l := New()
+    l.PushFront(1)
+    l.PushFront(2)
+    if v := l.PopBack(); v != 1 {
+        t.Errorf("EXPECT %v, GOT %v", 1, v)
+    } else {
+        //fmt.Println(v)
+    }
+    if v := l.PopBack(); v != 2 {
+        t.Errorf("EXPECT %v, GOT %v", 2, v)
+    } else {
+        //fmt.Println(v)
+    }
+    l.PushBack(1)
+    l.PushBack(2)
+    if v := l.PopFront(); v != 1 {
+        t.Errorf("EXPECT %v, GOT %v", 1, v)
+    } else {
+        //fmt.Println(v)
+    }
+    if v := l.PopFront(); v != 2 {
+        t.Errorf("EXPECT %v, GOT %v", 2, v)
+    } else {
+        //fmt.Println(v)
     }
 }
 
@@ -313,7 +343,7 @@ func TestInsertBeforeUnknownMark(t *testing.T) {
     l.PushBack(1)
     l.PushBack(2)
     l.PushBack(3)
-    l.InsertBefore(1, new(Element))
+    l.InsertBefore(1, newElement(nil))
     checkList(t, l, []interface{}{1, 2, 3})
 }
 
@@ -323,7 +353,7 @@ func TestInsertAfterUnknownMark(t *testing.T) {
     l.PushBack(1)
     l.PushBack(2)
     l.PushBack(3)
-    l.InsertAfter(1, new(Element))
+    l.InsertAfter(1, newElement(nil))
     checkList(t, l, []interface{}{1, 2, 3})
 }
 

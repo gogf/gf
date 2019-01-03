@@ -13,6 +13,7 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/os/gwheel"
+    "time"
 )
 
 // 对象池
@@ -43,7 +44,7 @@ func New(expire int, newFunc...func() (interface{}, error)) *Pool {
     if len(newFunc) > 0 {
         r.NewFunc = newFunc[0]
     }
-    gwheel.AddSingleton(1, r.checkExpire)
+    gwheel.AddSingleton(time.Second, r.checkExpire)
     return r
 }
 

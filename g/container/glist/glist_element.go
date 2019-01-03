@@ -86,6 +86,14 @@ func (e *Element) setNext(next *Element) (old *Element) {
     return
 }
 
+// 检查当前元素项是否属于所给的l
+func (e *Element) checkList(l *List) (ok bool) {
+    e.mu.RLock()
+    ok = e.list == l
+    e.mu.RUnlock()
+    return
+}
+
 // 获得前一个元素项(内部并发安全使用)
 func (e *Element) getPrev() (prev *Element) {
     e.mu.RLock()

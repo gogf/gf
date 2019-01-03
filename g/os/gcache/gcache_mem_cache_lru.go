@@ -12,6 +12,7 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gwheel"
+    "time"
 )
 
 // LRU算法实现对象，底层双向链表使用了标准库的list.List
@@ -32,7 +33,7 @@ func newMemCacheLru(cache *memCache) *memCacheLru {
         rawList   : glist.New(),
         closed    : gtype.NewBool(),
     }
-    gwheel.AddSingleton(1, lru.SyncAndClear)
+    gwheel.AddSingleton(time.Second, lru.SyncAndClear)
     return lru
 }
 

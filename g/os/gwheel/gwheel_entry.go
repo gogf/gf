@@ -7,95 +7,98 @@
 package gwheel
 
 import (
+    "errors"
+    "fmt"
     "gitee.com/johng/gf/g/container/gtype"
     "time"
 )
 
 // 循环任务项
 type Entry struct {
-    mode      *gtype.Int    // 任务运行模式(0: normal; 1: singleton; 2: once; 3: times)
-    status    *gtype.Int    // 循环任务状态(0: ready;  1: running;  -1: stopped)
-    times     *gtype.Int    // 还需运行次数, 当mode=3时启用, 当times值为0时表示不再执行(自动该任务删除)
+    singleton *gtype.Bool   // 任务是否单例运行
+    status    *gtype.Int    // 任务状态(0: ready;  1: running;  -1: closed)
+    times     *gtype.Int    // 还需运行次数(<0: 无限制; >=0: 限制次数)
     update    *gtype.Int64  // 任务上一次的运行时间点(纳秒时间戳)
-    interval  int64         // 运行间隔(纳秒)
+    interval  int64         // 设置的运行间隔(纳秒)
+    create    int64         // 创建的时间点(纳秒, 时间轮刻度整数)
     Job       JobFunc       // 注册循环任务方法
     Create    time.Time     // 任务的创建时间点
-
 }
 
 // 任务执行方法
 type JobFunc func()
 
 // 创建循环任务
-func (w *Wheel) newEntry(interval int, job JobFunc, mode int, times int) *Entry {
-    now     := time.Now()
-    pos     := (interval + w.index.Val()) % w.number
-    entry   := &Entry {
-        mode     : gtype.NewInt(mode),
-        status   : gtype.NewInt(),
-        times    : gtype.NewInt(times),
-        update   : gtype.NewInt64(now.UnixNano()),
-        Job      : job,
-        Create   : now,
-        interval : int64(interval),
+func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, times int) (*Entry, error) {
+    // 安装任务的间隔时间(纳秒)
+    n       := interval.Nanoseconds()
+    // 计算出所需的插槽数量
+    num     := int(n/w.interval)
+    if num == 0 {
+      return nil, errors.New(fmt.Sprintf(`interval "%v" should not be less than timing wheel interval`, interval))
     }
-    w.slots[pos].PushBack(entry)
-    return entry
+    now     := time.Now()
+    nano    := now.UnixNano()
+    update  := nano - (nano%w.interval)
+    entry   := &Entry {
+        singleton : gtype.NewBool(singleton),
+        status    : gtype.NewInt(STATUS_READY),
+        times     : gtype.NewInt(times),
+        update    : gtype.NewInt64(update),
+        Job       : job,
+        interval  : n,
+    }
+    // 计算安装的slot数量(可能多个)
+    index := w.index.Val()
+    for i := 0; i < w.number; i += num {
+       w.slots[(i + index + num) % w.number].PushBack(entry)
+    }
+    return entry, nil
 }
 
-// 获取任务运行模式
-func (entry *Entry) Mode() int {
-    return entry.mode.Val()
-}
-
-// 设置任务运行模式(0: normal; 1: singleton; 2: once; 3: times)
-func (entry *Entry) SetMode(mode int) {
-    entry.mode.Set(mode)
-}
-
-// 设置任务的运行次数, 并自动更改运行模式为MODE_TIMES
-func (entry *Entry) SetTimes(times int) {
-    entry.mode.Set(MODE_TIMES)
-    entry.times.Set(times)
-}
-
-// 循环任务状态
+// 获取任务状态
 func (entry *Entry) Status() int {
     return entry.status.Val()
 }
 
-// 启动循环任务
-func (entry *Entry) Start() {
-    entry.status.Set(STATUS_READY)
-}
-
-// 停止循环任务
-func (entry *Entry) Stop() {
+// 关闭当前任务
+func (entry *Entry) Close() {
     entry.status.Set(STATUS_CLOSED)
 }
 
-// 检测当前任务是否可运行, 内部将事件转换为微秒数来计算(int64), 精度更高
-func (entry *Entry) runnableCheck(t time.Time) bool {
-    if t.UnixNano() - entry.update.Val() >= entry.interval {
-        // 判断任务的运行模式
-        switch entry.mode.Val() {
-            // 是否只允许单例运行
-            case MODE_SINGLETON:
-                if  entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
-                    return false
-                }
-            // 只运行一次的任务
-            case MODE_ONCE:
-                if  entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED {
-                    return false
-                }
-            // 运行指定次数的任务
-            case MODE_TIMES:
-                if entry.times.Add(-1) < 0 {
-                    if  entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED {
-                        return false
-                    }
-                }
+// 是否单例运行
+func (entry *Entry) IsSingleton() bool {
+    return entry.singleton.Val()
+}
+
+// 设置单例运行
+func (entry *Entry) SetSingleton(enabled bool) {
+    entry.singleton.Set(enabled)
+}
+
+// 设置任务的运行次数
+func (entry *Entry) SetTimes(times int) {
+    entry.times.Set(times)
+}
+
+// 检测当前任务是否可运行, 参数为当前时间的纳秒数, 精度更高
+func (entry *Entry) runnableCheck(n int64) bool {
+    if n - entry.update.Val() >= entry.interval {
+        // 是否关闭
+        if entry.status.Val() == STATUS_CLOSED {
+            return false
+        }
+        // 是否单例
+        if entry.IsSingleton() {
+            if entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
+                return false
+            }
+        }
+        // 次数限制
+        if entry.times.Add(-1) == 0 {
+            if  entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED {
+                return false
+            }
         }
         entry.update.Add(entry.interval)
         return true

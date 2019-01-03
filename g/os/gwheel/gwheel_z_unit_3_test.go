@@ -20,10 +20,9 @@ func TestWheel_Times(t *testing.T) {
     gtest.Case(t, func() {
         wheel := gwheel.NewDefault()
         array := garray.New(0, 0)
-        entry := wheel.AddTimes(10, 2, func() {
+        wheel.AddTimes(time.Second, 2, func() {
             array.Append(1)
         })
-        gtest.AssertNE(entry, nil)
         time.Sleep(3500*time.Millisecond)
         gtest.Assert(array.Len(), 2)
     })

@@ -1,9 +1,14 @@
 package main
 
-import "time"
+import (
+    "fmt"
+    "gitee.com/johng/gf/g/os/gwheel"
+    "time"
+)
 
 func main() {
-    for {
-        time.Sleep(10*time.Millisecond)
-    }
+    gwheel.Add(time.Second, func() {
+        fmt.Println(time.Now().String())
+    })
+    select { }
 }

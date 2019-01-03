@@ -13,7 +13,7 @@ import (
 
 // 延迟添加定时任务，delay参数单位为秒
 func (c *Cron) startLoop() {
-    gwheel.Add(1, func() {
+    gwheel.Add(time.Second, func() {
         if c.status.Val() == STATUS_CLOSED {
             gwheel.Exit()
         }

@@ -14,6 +14,8 @@ import (
 
 var l = New()
 
+
+
 func Benchmark_PushBack(b *testing.B) {
     for i := 0; i < b.N; i++ {
         l.PushBack(i)
