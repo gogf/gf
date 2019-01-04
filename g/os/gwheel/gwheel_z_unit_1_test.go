@@ -45,11 +45,11 @@ func TestWheel_Add_Close(t *testing.T) {
     })
 }
 
-func TestWheel_Singlton(t *testing.T) {
+func TestWheel_Singleton(t *testing.T) {
    gtest.Case(t, func() {
        wheel := gwheel.NewDefault()
        array := garray.New(0, 0)
-       wheel.AddSingleton(10, func() {
+       wheel.AddSingleton(time.Second, func() {
            array.Append(1)
            time.Sleep(10*time.Second)
        })
@@ -65,10 +65,10 @@ func TestWheel_Once(t *testing.T) {
    gtest.Case(t, func() {
        wheel  := gwheel.NewDefault()
        array  := garray.New(0, 0)
-       wheel.AddOnce(10, func() {
+       wheel.AddOnce(time.Second, func() {
            array.Append(1)
        })
-       wheel.AddOnce(10, func() {
+       wheel.AddOnce(time.Second, func() {
            array.Append(1)
        })
        time.Sleep(1200*time.Millisecond)
@@ -87,7 +87,7 @@ func TestWheel_DelayAdd(t *testing.T) {
    gtest.Case(t, func() {
        wheel := gwheel.NewDefault()
        array := garray.New(0, 0)
-       wheel.DelayAdd(10, 10, func() {
+       wheel.DelayAdd(time.Second, time.Second, func() {
            array.Append(1)
        })
        time.Sleep(1200*time.Millisecond)
@@ -101,7 +101,7 @@ func TestWheel_DelayAdd_Singleton(t *testing.T) {
    gtest.Case(t, func() {
        wheel := gwheel.NewDefault()
        array := garray.New(0, 0)
-       wheel.DelayAddSingleton(10, 10, func() {
+       wheel.DelayAddSingleton(time.Second, time.Second, func() {
            array.Append(1)
            time.Sleep(10*time.Second)
        })
@@ -117,7 +117,7 @@ func TestWheel_DelayAdd_Once(t *testing.T) {
    gtest.Case(t, func() {
        wheel := gwheel.NewDefault()
        array := garray.New(0, 0)
-       wheel.DelayAddOnce(10, 10, func() {
+       wheel.DelayAddOnce(time.Second, time.Second, func() {
            array.Append(1)
        })
        time.Sleep(1200*time.Millisecond)

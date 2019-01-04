@@ -51,7 +51,7 @@ func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, ti
     // 计算安装的slot数量(可能多个)
     index := w.index.Val()
     for i := 0; i < w.number; i += num {
-       w.slots[(i + index + num) % w.number].PushBack(entry)
+        w.slots[(i + index + num) % w.number].PushBack(entry)
     }
     return entry, nil
 }
@@ -59,6 +59,11 @@ func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, ti
 // 获取任务状态
 func (entry *Entry) Status() int {
     return entry.status.Val()
+}
+
+// 设置任务状态
+func (entry *Entry) SetStatus(status int) int {
+    return entry.status.Set(status)
 }
 
 // 关闭当前任务
@@ -100,7 +105,7 @@ func (entry *Entry) runnableCheck(n int64) bool {
                 return false
             }
         }
-        entry.update.Add(entry.interval)
+        entry.update.Set(n)
         return true
     }
     return false

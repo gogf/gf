@@ -83,6 +83,7 @@ func (lru *memCacheLru) SyncAndClear() {
         gwheel.Exit()
         return
     }
+    fmt.Println("loop", time.Now())
     // 数据同步
     for {
         if v := lru.rawList.PopFront(); v != nil {
@@ -99,6 +100,7 @@ func (lru *memCacheLru) SyncAndClear() {
     // 数据清理
     for i := lru.Size() - lru.cache.cap; i > 0; i-- {
         if s := lru.Pop(); s != nil {
+            fmt.Println("clear:", s)
             lru.cache.clearByKey(s, true)
         }
     }

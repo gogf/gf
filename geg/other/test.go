@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-    gwheel.Add(time.Second, func() {
+    gwheel.AddSingleton(time.Second, func() {
         fmt.Println(time.Now().String())
     })
     select { }

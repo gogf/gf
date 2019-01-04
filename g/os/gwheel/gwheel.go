@@ -16,7 +16,7 @@ const (
     STATUS_RUNNING          = 1
     STATUS_CLOSED           = -1
     gPANIC_EXIT             = "exit"
-    gDEFAULT_SLOT_NUMBER    = 10
+    gDEFAULT_SLOT_NUMBER    = 100
     gDEFAULT_WHEEL_INTERVAL = 10*time.Millisecond
 )
 

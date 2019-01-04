@@ -78,6 +78,11 @@ func TestBasic(t *testing.T) {
     } else {
         //fmt.Println(v)
     }
+    if v := l.PopBack(); v != nil {
+        t.Errorf("EXPECT %v, GOT %v", nil, v)
+    } else {
+        //fmt.Println(v)
+    }
     l.PushBack(1)
     l.PushBack(2)
     if v := l.PopFront(); v != 1 {
@@ -87,6 +92,11 @@ func TestBasic(t *testing.T) {
     }
     if v := l.PopFront(); v != 2 {
         t.Errorf("EXPECT %v, GOT %v", 2, v)
+    } else {
+        //fmt.Println(v)
+    }
+    if v := l.PopFront(); v != nil {
+        t.Errorf("EXPECT %v, GOT %v", nil, v)
     } else {
         //fmt.Println(v)
     }

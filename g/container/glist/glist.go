@@ -10,6 +10,7 @@ package glist
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/container/internal/rwmutex"
 )
 
 // 变长双向链表
@@ -43,7 +44,7 @@ func (l *List) PushFront(v interface{}) *Element {
 
 // 往链表尾入栈数据项
 func (l *List) PushBack(v interface{}) *Element {
-    return l.insertValue(v, l.root.prev)
+    return l.insertValue(v, l.root.getPrev())
 }
 
 // 在list 中元素mark之后插入一个值为v的元素，并返回该元素，如果mark不是list中元素，则list不改变。
@@ -127,7 +128,7 @@ func (l *List) PopFrontAll() []interface{} {
     return l.BatchPopFront(l.Len())
 }
 
-// 删除数据项e
+// 删除数据项e, 并返回删除项的数值
 func (l *List) Remove(e *Element) interface{} {
     if e.list == l {
         l.remove(e)
@@ -138,8 +139,10 @@ func (l *List) Remove(e *Element) interface{} {
 // 删除所有数据项
 func (l *List) RemoveAll() {
     l.length.Set(0)
-    l.root.setNext(l.root)
-    l.root.setPrev(l.root)
+    l.root.mu.Lock()
+    l.root.prev = l.root
+    l.root.next = l.root
+    l.root.mu.Unlock()
 }
 
 // 从链表头获取所有数据(不删除)
@@ -197,7 +200,7 @@ func (l *List) Back() *Element {
     if l.length.Val() == 0 {
         return nil
     }
-    return l.root.prev
+    return l.root.getPrev()
 }
 
 // 获取链表长度
@@ -205,38 +208,37 @@ func (l *List) Len() int {
 	return l.length.Val()
 }
 
-// 内部使用insertValue而非insert, 是为去掉insert方法中对元素项e的并发安全保护，提高并发执行效率
 func (l *List) MoveBefore(e, p *Element) {
     if e.checkList(l) == false || e == p || p.checkList(l) == false {
         return
     }
-    l.insert(l.remove(e), p.getPrev())
+    l.insertElement(l.remove(e), p.getPrev())
 }
 
 func (l *List) MoveAfter(e, p *Element) {
     if e.checkList(l) == false || e == p || p.checkList(l) == false {
         return
     }
-    l.insert(l.remove(e), p)
+    l.insertElement(l.remove(e), p)
 }
 
 func (l *List) MoveToFront(e *Element) {
     if e.checkList(l) == false || l.root.next == e {
         return
     }
-    l.insert(l.remove(e), l.root)
+    l.insertElement(l.remove(e), l.root)
 }
 
 func (l *List) MoveToBack(e *Element) {
-    if e.checkList(l) == false || l.root.prev == e {
+    if e.checkList(l) == false || l.root.getPrev() == e {
         return
     }
-    l.insert(l.remove(e), l.root.prev)
+    l.insertElement(l.remove(e), l.root.getPrev())
 }
 
 func (l *List) PushBackList(other *List) {
     for i, e := other.Len(), other.Front(); i > 0; i, e = i - 1, e.Next() {
-        l.insertValue(e.Value(), l.root.prev)
+        l.insertValue(e.Value(), l.root.getPrev())
     }
 }
 
@@ -246,35 +248,47 @@ func (l *List) PushFrontList(other *List) {
     }
 }
 
-// 在元素项p后添加数值value, 自动创建元素项
+// 在元素项p后添加数值value, 自动创建元素项, 新创建的元素项可以不加锁，因此效率更高
 func (l *List) insertValue(value interface{}, p *Element) *Element {
-    return l.insert(newElement(value, l.safe), p)
+    n := p.getNext()
+    e := &Element {
+        mu    : rwmutex.New(l.safe),
+        value : value,
+        prev  : p,
+        next  : n,
+        list  : l,
+    }
+    p.setNext(e)
+    n.setPrev(e)
+    l.length.Add(1)
+    return e
 }
 
-// 在元素项p后添加**新增**元素项e, 注意这里的e不需要加锁
-func (l *List) insert(e, p *Element) *Element {
-    n := p.setNext(e)
-    n.setPrev(e)
-    e.LockFunc(func(e *Element) {
-        e.prev = p
-        e.next = n
-        e.list = l
-    })
+// 在元素项p后添加元素项e, 注意这里的p和e都需要加锁，以保证并发安全性
+func (l *List) insertElement(e, p *Element) *Element {
+    o := p.setNext(e)
+    o.setPrev(e)
+    e.mu.Lock()
+    e.prev = p
+    e.next = o
+    e.list = l
+    e.mu.Unlock()
     l.length.Add(1)
     return e
 }
 
 // 从列表中删除元素项e
 func (l *List) remove(e *Element) *Element {
-    e.RLockFunc(func(e *Element) {
-        e.prev.setNext(e.next)
-        e.next.setPrev(e.prev)
-    })
-    e.LockFunc(func(e *Element) {
-        e.next = nil
-        e.prev = nil
-        e.list = nil
-    })
+    e.mu.RLock()
+    e.prev.setNext(e.next)
+    e.next.setPrev(e.prev)
+    e.mu.RUnlock()
+
+    e.mu.Lock()
+    e.next = nil
+    e.prev = nil
+    e.list = nil
+    e.mu.Unlock()
     l.length.Add(-1)
     return e
 }

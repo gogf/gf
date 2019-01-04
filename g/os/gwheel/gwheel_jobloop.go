@@ -56,8 +56,13 @@ func (w *Wheel) checkEntries(n int64, l *glist.List) {
                         entry.Close()
                     }
                 }
-                if entry.Status() == STATUS_CLOSED {
-                    l.Remove(e)
+                switch entry.Status() {
+                    case STATUS_CLOSED:
+                        l.Remove(e)
+
+                    case STATUS_RUNNING:
+                        entry.SetStatus(STATUS_READY)
+
                 }
             }()
             entry.Job()
