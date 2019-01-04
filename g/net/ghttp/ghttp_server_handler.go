@@ -160,35 +160,46 @@ func (s *Server) searchStaticFile(uri string) (filePath string, isDir bool) {
 
 // 初始化控制器
 func (s *Server) callServeHandler(h *handlerItem, r *Request) {
+    if h.faddr == nil {
+        c := reflect.New(h.ctype)
+        s.niceCall(func() {
+            c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
+        })
+        s.niceCall(func() {
+            c.MethodByName(h.fname).Call(nil)
+        })
+        s.niceCall(func() {
+            c.MethodByName("Shut").Call(nil)
+        })
+    } else {
+        if h.finit != nil {
+            s.niceCall(func() {
+                h.finit(r)
+            })
+        }
+        s.niceCall(func() {
+            h.faddr(r)
+        })
+        if h.fshut != nil {
+            s.niceCall(func() {
+                h.fshut(r)
+            })
+        }
+    }
+}
+
+// 友好地调用方法
+func (s *Server) niceCall(f func()) {
     defer func() {
         if e := recover(); e != nil && e != gEXCEPTION_EXIT {
             panic(e)
         }
     }()
-    if h.faddr == nil {
-        // 新建一个控制器对象处理请求
-        c := reflect.New(h.ctype)
-        c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
-        if !r.IsExited() {
-            c.MethodByName(h.fname).Call(nil)
-            c.MethodByName("Shut").Call(nil)
-        }
-    } else {
-        // 是否有初始化及完成回调方法
-        if h.finit != nil {
-            h.finit(r)
-        }
-        if !r.IsExited() {
-            h.faddr(r)
-            if h.fshut != nil {
-                h.fshut(r)
-            }
-        }
-    }
+    f()
 }
 
 // http server静态文件处理，path可以为相对路径也可以为绝对路径
-func (s *Server)serveFile(r *Request, path string) {
+func (s *Server) serveFile(r *Request, path string) {
     f, err := os.Open(path)
     if err != nil {
         r.Response.WriteStatus(http.StatusForbidden)
