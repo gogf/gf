@@ -46,9 +46,9 @@
 1. strpos/stripos/strrpos/strripos: http://php.net/manual/en/function.stripos.php
 1. 改进WebServer获取POST参数处理逻辑，当提交非form数据时，例如json数据，针对某些方法可以直接解析；
 1. WebServer增加可选择的路由覆盖配置，默认情况下不覆盖；
+1. gkafka这个包比较重，未来从框架中剥离出来；
 1. grpool性能压测结果变慢的问题；
 1. glist增加Element类型的并发安全处理；
-
 
 
 
