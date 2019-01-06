@@ -1,14 +1,27 @@
 package main
 
 import (
-    "fmt"
+    "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gwheel"
     "time"
 )
 
 func main() {
-    gwheel.AddSingleton(time.Second, func() {
-        fmt.Println(time.Now().String())
-    })
-    select { }
+    v := gtype.NewInt()
+    w := gwheel.New(100, 10*time.Millisecond)
+    glog.Println("start")
+    for i := 0; i < 10000000; i++ {
+        w.AddOnce(time.Second, func() {
+           //glog.Println("add")
+           v.Add(1)
+        })
+    }
+    glog.Println("end")
+    time.Sleep(1100*time.Millisecond)
+    glog.Println(v.Val())
+    //gwheel.AddSingleton(time.Second, func() {
+    //    fmt.Println(time.Now().String())
+    //})
+    //select { }
 }

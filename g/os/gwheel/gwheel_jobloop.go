@@ -39,7 +39,7 @@ func (w *Wheel) checkEntries(n int64, l *glist.List) {
         entry := e.Value().(*Entry)
         // 是否已停止运行, 那么移除
         if entry.Status() == STATUS_CLOSED {
-            l.Remove(e)
+            //l.Remove(e)
             continue
         }
         // 是否满足运行条件
@@ -49,24 +49,18 @@ func (w *Wheel) checkEntries(n int64, l *glist.List) {
         // 异步执行运行
         go func(e *glist.Element, l *glist.List) {
             defer func() {
-                if err := recover(); err != nil {
-                    if err != gPANIC_EXIT {
-                        panic(err)
-                    } else {
-                        entry.Close()
-                    }
-                }
-                switch entry.Status() {
-                    case STATUS_CLOSED:
-                        l.Remove(e)
-
-                    case STATUS_RUNNING:
-                        entry.SetStatus(STATUS_READY)
-
-                }
+               if err := recover(); err != nil {
+                   if err != gPANIC_EXIT {
+                       panic(err)
+                   } else {
+                       entry.Close()
+                   }
+               }
+               if entry.Status() == STATUS_RUNNING {
+                   entry.SetStatus(STATUS_READY)
+               }
             }()
             entry.Job()
         }(e, l)
-
     }
 }

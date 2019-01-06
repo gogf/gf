@@ -11,6 +11,7 @@ import (
     "fmt"
     "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/os/gcron"
+    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/util/gtest"
     "testing"
     "time"
@@ -21,15 +22,18 @@ func TestCron_Add_Close(t *testing.T) {
         cron  := gcron.New()
         array := garray.New(0, 0)
         _, err1 := cron.Add("* * * * * *", func() {
+            glog.Println("cron1")
             array.Append(1)
         })
         _, err2 := cron.Add("* * * * * *", func() {
+            glog.Println("cron2")
             array.Append(1)
         }, "test")
         _, err3 := cron.Add("* * * * * *", func() {
             array.Append(1)
         }, "test")
         _, err4 := cron.Add("@every 2s", func() {
+            glog.Println("cron3")
             array.Append(1)
         })
         gtest.Assert(err1, nil)
@@ -37,14 +41,14 @@ func TestCron_Add_Close(t *testing.T) {
         gtest.AssertNE(err3, nil)
         gtest.Assert(err4, nil)
         gtest.Assert(cron.Size(), 3)
-        time.Sleep(1200*time.Millisecond)
+        time.Sleep(1100*time.Millisecond)
         gtest.Assert(array.Len(), 2)
-        time.Sleep(1200*time.Millisecond)
+        time.Sleep(1100*time.Millisecond)
         gtest.Assert(array.Len(), 5)
         cron.Close()
-        time.Sleep(1200*time.Millisecond)
+        time.Sleep(1100*time.Millisecond)
         fixedLength := array.Len()
-        time.Sleep(1200*time.Millisecond)
+        time.Sleep(1100*time.Millisecond)
         gtest.Assert(array.Len(), fixedLength)
     })
 }

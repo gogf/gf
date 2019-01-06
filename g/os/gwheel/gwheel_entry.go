@@ -35,7 +35,7 @@ func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, ti
     // 计算出所需的插槽数量
     num     := int(n/w.interval)
     if num == 0 {
-      return nil, errors.New(fmt.Sprintf(`interval "%v" should not be less than timing wheel interval`, interval))
+      return nil, errors.New(fmt.Sprintf(`interval "%v" should not be less than timing wheel interval "%v"`, interval, time.Duration(w.interval)))
     }
     now     := time.Now()
     nano    := now.UnixNano()

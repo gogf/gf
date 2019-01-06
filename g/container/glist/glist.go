@@ -284,11 +284,11 @@ func (l *List) remove(e *Element) *Element {
     e.next.setPrev(e.prev)
     e.mu.RUnlock()
 
-    e.mu.Lock()
-    e.next = nil
-    e.prev = nil
-    e.list = nil
-    e.mu.Unlock()
+    //e.mu.Lock()
+    //e.next = nil
+    //e.prev = nil
+    //e.list = nil
+    //e.mu.Unlock()
     l.length.Add(-1)
     return e
 }

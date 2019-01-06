@@ -5,8 +5,8 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gwheel provides Timing Wheel for interval jobs running and management/时间轮.
-// 高效的时间轮任务执行管理，用于管理异步的间隔运行任务，或者异步只运行一次的任务(默认最小时间粒度为秒)。
-// 与其他定时任务管理模块的区别是，时间轮模块只管理间隔执行任务，并且更注重执行效率(纳秒级别)。
+// 高效的时间轮任务管理模块，用于管理间隔/延迟运行任务。
+// 与gcron模块的区别是，时间轮模块只管理间隔执行任务，并且更注重执行效率(纳秒级别)。
 package gwheel
 
 import "time"
@@ -16,8 +16,8 @@ const (
     STATUS_RUNNING          = 1
     STATUS_CLOSED           = -1
     gPANIC_EXIT             = "exit"
-    gDEFAULT_SLOT_NUMBER    = 100
-    gDEFAULT_WHEEL_INTERVAL = 10*time.Millisecond
+    gDEFAULT_SLOT_NUMBER    = 10
+    gDEFAULT_WHEEL_INTERVAL = 50*time.Millisecond
 )
 
 var (
