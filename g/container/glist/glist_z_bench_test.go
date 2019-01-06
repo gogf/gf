@@ -14,17 +14,9 @@ import (
 
 var l = New()
 
-
-
 func Benchmark_PushBack(b *testing.B) {
     for i := 0; i < b.N; i++ {
         l.PushBack(i)
-    }
-}
-
-func Benchmark_PopFront(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        l.PopFront()
     }
 }
 
@@ -34,15 +26,23 @@ func Benchmark_PushFront(b *testing.B) {
     }
 }
 
+func Benchmark_Len(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        l.Len()
+    }
+}
+
+func Benchmark_PopFront(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        l.PopFront()
+    }
+}
+
 func Benchmark_PopBack(b *testing.B) {
     for i := 0; i < b.N; i++ {
         l.PopBack()
     }
 }
 
-func Benchmark_Len(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        l.Len()
-    }
-}
+
 

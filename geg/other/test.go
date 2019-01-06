@@ -9,10 +9,10 @@ import (
 
 func main() {
     v := gtype.NewInt()
-    w := gwheel.New(100, 10*time.Millisecond)
+    //w := gwheel.New(10, 100*time.Millisecond)
     glog.Println("start")
     for i := 0; i < 10000000; i++ {
-        w.AddOnce(time.Second, func() {
+        gwheel.AddOnce(time.Second, func() {
            //glog.Println("add")
            v.Add(1)
         })

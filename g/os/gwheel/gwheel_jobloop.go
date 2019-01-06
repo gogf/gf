@@ -19,13 +19,11 @@ func (w *Wheel) startLoop() {
                     return
 
                 case t := <- w.ticker.C:
-                    // 去掉余数，调整为时间轮间隔整数的时间对象
-                    n := t.UnixNano()
-                    n -= n%w.interval
+                    //fmt.Println(t)
                     i := w.index.Val()
                     l := w.slots[i]
                     if l.Len() > 0 {
-                        go w.checkEntries(n, l)
+                        go w.checkEntries(t.UnixNano(), l)
                     }
                     w.index.Set((i + 1) % w.number)
             }
@@ -37,14 +35,9 @@ func (w *Wheel) startLoop() {
 func (w *Wheel) checkEntries(n int64, l *glist.List) {
     for e := l.Front(); e != nil; e = e.Next() {
         entry := e.Value().(*Entry)
-        // 是否已停止运行, 那么移除
-        if entry.Status() == STATUS_CLOSED {
-            //l.Remove(e)
-            continue
-        }
         // 是否满足运行条件
         if !entry.runnableCheck(n) {
-            continue
+           continue
         }
         // 异步执行运行
         go func(e *glist.Element, l *glist.List) {
@@ -56,8 +49,13 @@ func (w *Wheel) checkEntries(n int64, l *glist.List) {
                        entry.Close()
                    }
                }
-               if entry.Status() == STATUS_RUNNING {
-                   entry.SetStatus(STATUS_READY)
+               switch entry.Status() {
+                   case STATUS_CLOSED:
+                       l.Remove(e)
+
+                   case STATUS_RUNNING:
+                       entry.SetStatus(STATUS_READY)
+
                }
             }()
             entry.Job()

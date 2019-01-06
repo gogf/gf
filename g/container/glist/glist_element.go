@@ -21,38 +21,41 @@ type Element struct {
 }
 
 // 创建一个并发安全的列表元素项
-func newElement(value interface{}, safe...bool) *Element {
+func newElement(value interface{}, list *List, safe...bool) *Element {
 	return &Element {
 	    mu    : rwmutex.New(safe...),
 		value : value,
+	    list  : list,
     }
 }
 
 // 获得元素项值
-func (e *Element) Value() interface{} {
+func (e *Element) Value() (v interface{}) {
 	e.mu.RLock()
-	r := e.value
+	v = e.value
 	e.mu.RUnlock()
-	return r
+	return
 }
 
 // 获得下一个元素项(遍历使用)
 func (e *Element) Next() *Element {
     e.mu.RLock()
-    defer e.mu.RUnlock()
-    if p := e.next; e.list != nil && p != e.list.root {
+    if p := e.next; p != e.list.root {
+        e.mu.RUnlock()
         return p
     }
+    e.mu.RUnlock()
     return nil
 }
 
 // 获得前一个元素项(遍历使用)
 func (e *Element) Prev() *Element {
     e.mu.RLock()
-    defer e.mu.RUnlock()
-    if p := e.prev; e.list != nil && p != e.list.root {
+    if p := e.prev; p != e.list.root {
+        e.mu.RUnlock()
         return p
     }
+    e.mu.RUnlock()
     return nil
 }
 
@@ -86,12 +89,10 @@ func (e *Element) setNext(next *Element) (old *Element) {
     return
 }
 
-// 检查当前元素项是否属于所给的l
-func (e *Element) checkList(l *List) (ok bool) {
-    e.mu.RLock()
-    ok = e.list == l
-    e.mu.RUnlock()
-    return
+func (e *Element) setList(list *List) {
+    e.mu.Lock()
+    e.list = list
+    e.mu.Unlock()
 }
 
 // 获得前一个元素项(内部并发安全使用)
@@ -106,6 +107,13 @@ func (e *Element) getPrev() (prev *Element) {
 func (e *Element) getNext() (next *Element) {
     e.mu.RLock()
     next = e.next
+    e.mu.RUnlock()
+    return
+}
+
+func (e *Element) getList() (list *List) {
+    e.mu.RLock()
+    list = e.list
     e.mu.RUnlock()
     return
 }

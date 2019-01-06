@@ -31,20 +31,18 @@ type JobFunc func()
 // 创建循环任务
 func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, times int) (*Entry, error) {
     // 安装任务的间隔时间(纳秒)
-    n       := interval.Nanoseconds()
+    n     := interval.Nanoseconds()
     // 计算出所需的插槽数量
-    num     := int(n/w.interval)
+    num   := int(n/w.interval)
     if num == 0 {
       return nil, errors.New(fmt.Sprintf(`interval "%v" should not be less than timing wheel interval "%v"`, interval, time.Duration(w.interval)))
     }
-    now     := time.Now()
-    nano    := now.UnixNano()
-    update  := nano - (nano%w.interval)
-    entry   := &Entry {
+    now   := time.Now().UnixNano()
+    entry := &Entry {
         singleton : gtype.NewBool(singleton),
         status    : gtype.NewInt(STATUS_READY),
         times     : gtype.NewInt(times),
-        update    : gtype.NewInt64(update),
+        update    : gtype.NewInt64(now - (now%w.interval)),
         Job       : job,
         interval  : n,
     }
