@@ -17,12 +17,11 @@ import (
 )
 
 func TestWheel_Entry_Operation(t *testing.T) {
-    wheel      := gwheel.NewDefault()
-    array      := garray.New(0, 0)
-    entry, err := wheel.Add(time.Second, func() {
+    wheel := gwheel.NewDefault()
+    array := garray.New(0, 0)
+    entry := wheel.Add(time.Second, func() {
         array.Append(1)
     })
-    gtest.Assert(err, nil)
     time.Sleep(1200*time.Millisecond)
     gtest.Assert(array.Len(), 1)
     entry.Close()
@@ -33,12 +32,11 @@ func TestWheel_Entry_Operation(t *testing.T) {
 func TestWheel_Entry_Singleton(t *testing.T) {
     wheel      := gwheel.NewDefault()
     array      := garray.New(0, 0)
-    entry, err := wheel.Add(time.Second, func() {
+    entry := wheel.Add(time.Second, func() {
         array.Append(1)
         time.Sleep(10*time.Second)
     })
     entry.SetSingleton(true)
-    gtest.Assert(err, nil)
     time.Sleep(1200*time.Millisecond)
     gtest.Assert(array.Len(), 1)
 
@@ -47,13 +45,12 @@ func TestWheel_Entry_Singleton(t *testing.T) {
 }
 
 func TestWheel_Entry_Once(t *testing.T) {
-    wheel      := gwheel.NewDefault()
-    array      := garray.New(0, 0)
-    entry, err := wheel.Add(time.Second, func() {
+    wheel := gwheel.NewDefault()
+    array := garray.New(0, 0)
+    entry := wheel.Add(time.Second, func() {
         array.Append(1)
     })
     entry.SetTimes(1)
-    gtest.Assert(err, nil)
     time.Sleep(1200*time.Millisecond)
     gtest.Assert(array.Len(), 1)
 }

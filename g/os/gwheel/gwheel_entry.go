@@ -7,8 +7,6 @@
 package gwheel
 
 import (
-    "errors"
-    "fmt"
     "gitee.com/johng/gf/g/container/gtype"
     "time"
 )
@@ -27,13 +25,15 @@ type Entry struct {
 type JobFunc func()
 
 // 创建循环任务
-func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, times int) (*Entry, error) {
+func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
     // 安装任务的间隔时间(纳秒)
     n     := interval.Nanoseconds()
     // 计算出所需的插槽数量
     num   := int(n/w.interval)
     if num == 0 {
-        return nil, errors.New(fmt.Sprintf(`interval "%v" should not be less than timing wheel interval "%v"`, interval, time.Duration(w.interval)))
+        // 如果添加的任务间隔时间比时间轮的刻度还小，
+        // 那么默认为1个刻度
+        num = 1
     }
     ticks := w.ticks.Val()
     entry := &Entry {
@@ -49,7 +49,7 @@ func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, ti
     for i := 0; i < w.number; i += num {
         w.slots[(i + index + num) % w.number].PushBack(entry)
     }
-    return entry, nil
+    return entry
 }
 
 // 获取任务状态

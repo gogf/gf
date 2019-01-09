@@ -45,47 +45,47 @@ func New(slot int, interval time.Duration) *Wheel {
 }
 
 // 添加循环任务
-func (w *Wheel) Add(interval time.Duration, job JobFunc) (*Entry, error) {
+func (w *Wheel) Add(interval time.Duration, job JobFunc) *Entry {
     return w.newEntry(interval, job, false, gDEFAULT_TIMES)
 }
 
 // 添加单例运行循环任务
-func (w *Wheel) AddSingleton(interval time.Duration, job JobFunc) (*Entry, error) {
+func (w *Wheel) AddSingleton(interval time.Duration, job JobFunc) *Entry {
     return w.newEntry(interval, job, true, gDEFAULT_TIMES)
 }
 
 // 添加只运行一次的循环任务
-func (w *Wheel) AddOnce(interval time.Duration, job JobFunc) (*Entry, error) {
+func (w *Wheel) AddOnce(interval time.Duration, job JobFunc) *Entry {
     return w.newEntry(interval, job, false, 1)
 }
 
 // 添加运行指定次数的循环任务
-func (w *Wheel) AddTimes(interval time.Duration, times int, job JobFunc) (*Entry, error) {
+func (w *Wheel) AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
     return w.newEntry(interval, job, false, times)
 }
 
-// 延迟添加循环任务，delay参数单位为时间轮刻度
+// 延迟添加循环任务
 func (w *Wheel) DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
     w.AddOnce(delay, func() {
         w.Add(interval, job)
     })
 }
 
-// 延迟添加单例循环任务，delay参数单位为时间轮刻度
+// 延迟添加单例循环任务
 func (w *Wheel) DelayAddSingleton(delay time.Duration, interval time.Duration, job JobFunc) {
     w.AddOnce(delay, func() {
         w.AddSingleton(interval, job)
     })
 }
 
-// 延迟添加只运行一次的循环任务，delay参数单位为时间轮刻度
+// 延迟添加只运行一次的循环任务
 func (w *Wheel) DelayAddOnce(delay time.Duration, interval time.Duration, job JobFunc) {
     w.AddOnce(delay, func() {
         w.AddOnce(interval, job)
     })
 }
 
-// 延迟添加只运行一次的循环任务，delay参数单位为时间轮刻度
+// 延迟添加只运行一次的循环任务
 func (w *Wheel) DelayAddTimes(delay time.Duration, interval time.Duration, times int, job JobFunc) {
     w.AddOnce(delay, func() {
         w.AddTimes(interval, times, job)

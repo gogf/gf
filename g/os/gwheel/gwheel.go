@@ -31,22 +31,22 @@ var (
 )
 
 // 添加执行方法，可以给定名字，以便于后续执行删除
-func Add(interval time.Duration, job JobFunc) (*Entry, error) {
+func Add(interval time.Duration, job JobFunc) *Entry {
     return defaultWheel.Add(interval, job)
 }
 
 // 添加单例运行循环任务
-func AddSingleton(interval time.Duration, job JobFunc) (*Entry, error) {
+func AddSingleton(interval time.Duration, job JobFunc) *Entry {
     return defaultWheel.AddSingleton(interval, job)
 }
 
 // 添加只运行一次的循环任务
-func AddOnce(interval time.Duration, job JobFunc) (*Entry, error) {
+func AddOnce(interval time.Duration, job JobFunc) *Entry {
     return defaultWheel.AddOnce(interval, job)
 }
 
 // 添加运行指定次数的循环任务
-func AddTimes(interval time.Duration, times int, job JobFunc) (*Entry, error) {
+func AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
     return defaultWheel.AddTimes(interval, times, job)
 }
 
