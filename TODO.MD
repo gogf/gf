@@ -49,8 +49,8 @@
 1. gkafka这个包比较重，未来从框架中剥离出来；
 1. grpool性能压测结果变慢的问题；
 1. glist增加Element类型的并发安全处理；
-
-
+1. 改进证书打开失败时的WebServer错误提示，前置HOOK校验后关闭后续的HOOK逻辑执行；
+1. 目前WebServer的HOOK是按照优先级执行的，需要增加覆盖特性；
 
 
 

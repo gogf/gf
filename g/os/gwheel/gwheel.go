@@ -7,15 +7,20 @@
 // Package gwheel provides Timing Wheel for interval jobs running and management/时间轮.
 // 高效的时间轮任务管理模块，用于管理间隔/延迟运行任务。
 // 与gcron模块的区别是，时间轮模块只管理间隔执行任务，并且更注重执行效率(纳秒级别)。
+// 需要注意执行时间间隔的准确性问题: https://github.com/golang/go/issues/14410
 package gwheel
 
-import "time"
+import (
+    "math"
+    "time"
+)
 
 const (
     STATUS_READY            = 0
     STATUS_RUNNING          = 1
     STATUS_CLOSED           = -1
     gPANIC_EXIT             = "exit"
+    gDEFAULT_TIMES          = math.MaxInt64
     gDEFAULT_SLOT_NUMBER    = 10
     gDEFAULT_WHEEL_INTERVAL = 50*time.Millisecond
 )

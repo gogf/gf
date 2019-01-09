@@ -17,12 +17,10 @@ import (
 type Entry struct {
     singleton *gtype.Bool   // 任务是否单例运行
     status    *gtype.Int    // 任务状态(0: ready;  1: running;  -1: closed)
-    times     *gtype.Int    // 还需运行次数(<0: 无限制; >=0: 限制次数)
-    update    *gtype.Int64  // 任务上一次的运行时间点(纳秒时间戳)
-    interval  int64         // 设置的运行间隔(纳秒)
-    create    int64         // 创建的时间点(纳秒, 时间轮刻度整数)
-    Job       JobFunc       // 注册循环任务方法
-    Create    time.Time     // 任务的创建时间点
+    times     *gtype.Int64  // 还需运行次数
+    create    int           // 注册时的时间轮ticks
+    interval  int           // 设置的运行间隔(时间轮刻度数量)
+    job       JobFunc       // 注册循环任务方法
 }
 
 // 任务执行方法
@@ -35,19 +33,19 @@ func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, ti
     // 计算出所需的插槽数量
     num   := int(n/w.interval)
     if num == 0 {
-      return nil, errors.New(fmt.Sprintf(`interval "%v" should not be less than timing wheel interval "%v"`, interval, time.Duration(w.interval)))
+        return nil, errors.New(fmt.Sprintf(`interval "%v" should not be less than timing wheel interval "%v"`, interval, time.Duration(w.interval)))
     }
-    now   := time.Now().UnixNano()
+    ticks := w.ticks.Val()
     entry := &Entry {
         singleton : gtype.NewBool(singleton),
         status    : gtype.NewInt(STATUS_READY),
-        times     : gtype.NewInt(times),
-        update    : gtype.NewInt64(now - (now%w.interval)),
-        Job       : job,
-        interval  : n,
+        times     : gtype.NewInt64(int64(times)),
+        job       : job,
+        create    : ticks,
+        interval  : num,
     }
     // 计算安装的slot数量(可能多个)
-    index := w.index.Val()
+    index := ticks%w.number
     for i := 0; i < w.number; i += num {
         w.slots[(i + index + num) % w.number].PushBack(entry)
     }
@@ -81,12 +79,18 @@ func (entry *Entry) SetSingleton(enabled bool) {
 
 // 设置任务的运行次数
 func (entry *Entry) SetTimes(times int) {
-    entry.times.Set(times)
+    entry.times.Set(int64(times))
+}
+
+// 执行任务
+func (entry *Entry) Run() {
+    entry.job()
 }
 
 // 检测当前任务是否可运行, 参数为当前时间的纳秒数, 精度更高
-func (entry *Entry) runnableCheck(n int64) bool {
-    if n - entry.update.Val() >= entry.interval {
+func (entry *Entry) runnableCheck(ticks int) bool {
+    diff := ticks - entry.create
+    if diff > 0 && diff%entry.interval == 0 {
         // 是否关闭
         if entry.status.Val() == STATUS_CLOSED {
             return false
@@ -98,12 +102,11 @@ func (entry *Entry) runnableCheck(n int64) bool {
             }
         }
         // 次数限制
-        if entry.times.Add(-1) == 0 {
+        if entry.times.Add(-1) <= 0 {
             if  entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED {
                 return false
             }
         }
-        entry.update.Set(n)
         return true
     }
     return false

@@ -14,12 +14,11 @@ import (
 
 // 循环任务管理对象
 type Wheel struct {
-    index     *gtype.Int      // 时间轮处理的当前索引位置
     slots     []*glist.List   // 所有的循环任务项, 按照Slot Number进行分组
     number    int             // Slot Number
     closed    chan struct{}   // 停止事件
-    create    time.Time       // 创建时间
-    ticker    *time.Ticker    // 时间轮间隔
+    ticks     *gtype.Int      // 当前时间轮已转动的刻度数量
+    ticker    *time.Ticker    // 时间轮刻度间隔
     interval  int64           // 时间间隔(slot时间长度, 纳秒)
 }
 
@@ -31,11 +30,10 @@ func NewDefault() *Wheel {
 // 创建自定义的循环任务管理对象
 func New(slot int, interval time.Duration) *Wheel {
     w := &Wheel {
-        index     : gtype.NewInt(),
         slots     : make([]*glist.List, slot),
         number    : slot,
         closed    : make(chan struct{}, 1),
-        create    : time.Now(),
+        ticks     : gtype.NewInt(),
         ticker    : time.NewTicker(interval),
         interval  : interval.Nanoseconds(),
     }
@@ -48,12 +46,12 @@ func New(slot int, interval time.Duration) *Wheel {
 
 // 添加循环任务
 func (w *Wheel) Add(interval time.Duration, job JobFunc) (*Entry, error) {
-    return w.newEntry(interval, job, false, -1)
+    return w.newEntry(interval, job, false, gDEFAULT_TIMES)
 }
 
 // 添加单例运行循环任务
 func (w *Wheel) AddSingleton(interval time.Duration, job JobFunc) (*Entry, error) {
-    return w.newEntry(interval, job, true, -1)
+    return w.newEntry(interval, job, true, gDEFAULT_TIMES)
 }
 
 // 添加只运行一次的循环任务
@@ -92,6 +90,14 @@ func (w *Wheel) DelayAddTimes(delay time.Duration, interval time.Duration, times
     w.AddOnce(delay, func() {
         w.AddTimes(interval, times, job)
     })
+}
+
+// 任务数量
+func (w *Wheel) Size() (size int) {
+    for _, l := range w.slots {
+        size += l.Len()
+    }
+    return
 }
 
 // 关闭循环任务
