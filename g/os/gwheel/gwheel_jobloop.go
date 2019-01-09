@@ -21,10 +21,7 @@ func (w *Wheel) startLoop() {
 
                case <- w.ticker.C:
                    n := w.ticks.Add(1)
-                   l := w.slots[n%w.number]
-                   //if w.interval == 10*time.Millisecond.Nanoseconds() {
-                   //   fmt.Println(" loop:", w.ticks.Val(), t, n/1000000)
-                   //}
+                   l := w.slots[int(n%int64(w.number))]
                    if l.Len() > 0 {
                        go w.checkEntries(l, n)
                    }
@@ -34,7 +31,7 @@ func (w *Wheel) startLoop() {
 }
 
 // 遍历检查可执行循环任务，并异步执行
-func (w *Wheel) checkEntries(l *glist.List, ticks int) {
+func (w *Wheel) checkEntries(l *glist.List, ticks int64) {
     l.RLockFunc(func(list *list.List) {
         for e := list.Front(); e != nil; e = e.Next() {
             entry := e.Value.(*Entry)

@@ -17,7 +17,7 @@ type Wheel struct {
     slots     []*glist.List   // 所有的循环任务项, 按照Slot Number进行分组
     number    int             // Slot Number
     closed    chan struct{}   // 停止事件
-    ticks     *gtype.Int      // 当前时间轮已转动的刻度数量
+    ticks     *gtype.Int64    // 当前时间轮已转动的刻度数量
     ticker    *time.Ticker    // 时间轮刻度间隔
     interval  int64           // 时间间隔(slot时间长度, 纳秒)
 }
@@ -33,7 +33,7 @@ func New(slot int, interval time.Duration) *Wheel {
         slots     : make([]*glist.List, slot),
         number    : slot,
         closed    : make(chan struct{}, 1),
-        ticks     : gtype.NewInt(),
+        ticks     : gtype.NewInt64(),
         ticker    : time.NewTicker(interval),
         interval  : interval.Nanoseconds(),
     }
