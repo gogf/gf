@@ -25,7 +25,7 @@ type Entry struct {
 type JobFunc func()
 
 // 创建循环任务
-func (w *Wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
+func (w *wheel) newEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
     // 安装任务的间隔时间(纳秒)
     n     := interval.Nanoseconds()
     // 计算出所需的插槽数量

@@ -23,6 +23,7 @@ const (
     gDEFAULT_TIMES          = math.MaxInt64
     gDEFAULT_SLOT_NUMBER    = 10
     gDEFAULT_WHEEL_INTERVAL = 50*time.Millisecond
+    gDEFAULT_WHEEL_LEVEL    = 10
 )
 
 var (
