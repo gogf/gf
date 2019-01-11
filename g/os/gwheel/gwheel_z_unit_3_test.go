@@ -10,7 +10,6 @@ package gwheel_test
 
 import (
     "gitee.com/johng/gf/g/container/garray"
-    "gitee.com/johng/gf/g/os/gwheel"
     "gitee.com/johng/gf/g/util/gtest"
     "testing"
     "time"
@@ -18,7 +17,7 @@ import (
 
 func TestWheel_Times(t *testing.T) {
     gtest.Case(t, func() {
-        wheel := gwheel.NewDefault()
+        wheel := New()
         array := garray.New(0, 0)
         wheel.AddTimes(time.Second, 2, func() {
             array.Append(1)

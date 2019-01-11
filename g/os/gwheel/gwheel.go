@@ -20,7 +20,7 @@ const (
     STATUS_RUNNING          = 1
     STATUS_CLOSED           = -1
     gPANIC_EXIT             = "exit"
-    gDEFAULT_TIMES          = math.MaxInt64
+    gDEFAULT_TIMES          = math.MaxInt32
     gDEFAULT_SLOT_NUMBER    = 10
     gDEFAULT_WHEEL_INTERVAL = 50*time.Millisecond
     gDEFAULT_WHEEL_LEVEL    = 10
@@ -28,47 +28,47 @@ const (
 
 var (
     // 默认的wheel管理对象
-    defaultWheel = NewDefault()
+    defaultWheels = New(gDEFAULT_SLOT_NUMBER, gDEFAULT_WHEEL_INTERVAL, gDEFAULT_WHEEL_LEVEL)
 )
 
 // 添加执行方法，可以给定名字，以便于后续执行删除
 func Add(interval time.Duration, job JobFunc) *Entry {
-    return defaultWheel.Add(interval, job)
+    return defaultWheels.Add(interval, job)
 }
 
 // 添加单例运行循环任务
 func AddSingleton(interval time.Duration, job JobFunc) *Entry {
-    return defaultWheel.AddSingleton(interval, job)
+    return defaultWheels.AddSingleton(interval, job)
 }
 
 // 添加只运行一次的循环任务
 func AddOnce(interval time.Duration, job JobFunc) *Entry {
-    return defaultWheel.AddOnce(interval, job)
+    return defaultWheels.AddOnce(interval, job)
 }
 
 // 添加运行指定次数的循环任务
 func AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
-    return defaultWheel.AddTimes(interval, times, job)
+    return defaultWheels.AddTimes(interval, times, job)
 }
 
 // 延迟添加循环任务，delay参数单位为秒
 func DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
-    defaultWheel.DelayAdd(delay, interval, job)
+    defaultWheels.DelayAdd(delay, interval, job)
 }
 
 // 延迟添加单例循环任务，delay参数单位为秒
 func DelayAddSingleton(delay time.Duration, interval time.Duration, job JobFunc) {
-    defaultWheel.DelayAddSingleton(delay, interval, job)
+    defaultWheels.DelayAddSingleton(delay, interval, job)
 }
 
 // 延迟添加只运行一次的循环任务，delay参数单位为秒
 func DelayAddOnce(delay time.Duration, interval time.Duration, job JobFunc) {
-    defaultWheel.DelayAddOnce(delay, interval, job)
+    defaultWheels.DelayAddOnce(delay, interval, job)
 }
 
 // 延迟添加运行指定次数的循环任务，delay参数单位为秒
 func DelayAddTimes(delay time.Duration, interval time.Duration, times int, job JobFunc) {
-    defaultWheel.DelayAddTimes(delay, interval, times, job)
+    defaultWheels.DelayAddTimes(delay, interval, times, job)
 }
 
 // 在Job方法中调用，停止当前运行的任务

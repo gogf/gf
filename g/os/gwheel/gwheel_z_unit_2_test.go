@@ -10,14 +10,13 @@ package gwheel_test
 
 import (
     "gitee.com/johng/gf/g/container/garray"
-    "gitee.com/johng/gf/g/os/gwheel"
     "gitee.com/johng/gf/g/util/gtest"
     "testing"
     "time"
 )
 
 func TestWheel_Entry_Operation(t *testing.T) {
-    wheel := gwheel.NewDefault()
+    wheel := New()
     array := garray.New(0, 0)
     entry := wheel.Add(time.Second, func() {
         array.Append(1)
@@ -30,7 +29,7 @@ func TestWheel_Entry_Operation(t *testing.T) {
 }
 
 func TestWheel_Entry_Singleton(t *testing.T) {
-    wheel      := gwheel.NewDefault()
+    wheel      := New()
     array      := garray.New(0, 0)
     entry := wheel.Add(time.Second, func() {
         array.Append(1)
@@ -45,7 +44,7 @@ func TestWheel_Entry_Singleton(t *testing.T) {
 }
 
 func TestWheel_Entry_Once(t *testing.T) {
-    wheel := gwheel.NewDefault()
+    wheel := New()
     array := garray.New(0, 0)
     entry := wheel.Add(time.Second, func() {
         array.Append(1)

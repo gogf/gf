@@ -7,9 +7,10 @@ import (
 )
 
 func main() {
-    _, err := gwheel.Add(time.Second, func() {
+    fmt.Println("START:", time.Now())
+    gwheel.Add(1400*time.Millisecond, func() {
         fmt.Println(time.Now())
     })
-    fmt.Println(err)
+
     select { }
 }

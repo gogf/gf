@@ -7,15 +7,17 @@
 package gwheel
 
 import (
+    "gitee.com/johng/gf/g/container/glist"
+    "gitee.com/johng/gf/g/container/gtype"
     "time"
 )
 
 // 分层时间轮
 type Wheels struct {
-    levels    []*wheel        // 分层
-    length    int             // 层数
-    number    int             // 每一层Slot Number
-    interval  int64           // 最小时间刻度(纳秒)
+    levels     []*wheel        // 分层
+    length     int             // 层数
+    number     int             // 每一层Slot Number
+    intervalMs int64           // 最小时间刻度(毫秒)
 }
 
 // 创建分层时间轮
@@ -24,64 +26,146 @@ func New(slot int, interval time.Duration, level...int) *Wheels {
     if len(level) > 0 {
         length = level[0]
     }
-    w := &Wheels {
-        levels   : make([]*wheel, length),
-        length   : length,
-        number   : slot,
-        interval : interval.Nanoseconds(),
+    ws := &Wheels {
+        levels     : make([]*wheel, length),
+        length     : length,
+        number     : slot,
+        intervalMs : interval.Nanoseconds()/1e6,
     }
     for i := 0; i < length; i++ {
         if i > 0 {
-            n          := interval*time.Duration(slot*i)
-            w.levels[i] = newWheel(slot, n)
-            w.levels[i - 1].Add(n, func() {
-                w.levels[i].proceed()
-            })
+            n           := time.Duration(ws.levels[i - 1].totalMs)*time.Millisecond
+            w           := ws.newWheel(i, slot, n)
+            ws.levels[i] = w
+            ws.levels[i - 1].newEntry(n, w.proceed, false, gDEFAULT_TIMES)
         } else {
-            w.levels[i] = newWheel(slot, interval)
+            ws.levels[i] = ws.newWheel(i, slot, interval)
         }
     }
-    w.levels[0].start()
+    ws.levels[0].start()
+    return ws
+}
+
+// 创建自定义的循环任务管理对象
+func (ws *Wheels) newWheel(level int, slot int, interval time.Duration) *wheel {
+    w := &wheel {
+        wheels     : ws,
+        level      : level,
+        slots      : make([]*glist.List, slot),
+        number     : int64(slot),
+        closed     : make(chan struct{}, 1),
+        ticks      : gtype.NewInt64(),
+        totalMs    : int64(slot)*interval.Nanoseconds()/1e6,
+        createMs   : time.Now().UnixNano()/1e6,
+        intervalMs : interval.Nanoseconds()/1e6,
+    }
+    for i := int64(0); i < w.number; i++ {
+        w.slots[i] = glist.New()
+    }
     return w
 }
 
 // 添加循环任务
-func (w *Wheels) Add(interval time.Duration, job JobFunc) *Entry {
-    n        := interval.Nanoseconds()
-    pos, cmp := w.binSearchIndex(n)
+func (ws *Wheels) Add(interval time.Duration, job JobFunc) *Entry {
+    return ws.newEntry(interval, job, false, gDEFAULT_TIMES)
+}
+
+// 添加单例运行循环任务
+func (ws *Wheels) AddSingleton(interval time.Duration, job JobFunc) *Entry {
+    return ws.newEntry(interval, job, true, gDEFAULT_TIMES)
+}
+
+// 添加只运行一次的循环任务
+func (ws *Wheels) AddOnce(interval time.Duration, job JobFunc) *Entry {
+    return ws.newEntry(interval, job, false, 1)
+}
+
+// 添加运行指定次数的循环任务
+func (ws *Wheels) AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
+    return ws.newEntry(interval, job, false, times)
+}
+
+// 延迟添加循环任务
+func (ws *Wheels) DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
+    ws.AddOnce(delay, func() {
+        ws.Add(interval, job)
+    })
+}
+
+// 延迟添加单例循环任务
+func (ws *Wheels) DelayAddSingleton(delay time.Duration, interval time.Duration, job JobFunc) {
+    ws.AddOnce(delay, func() {
+        ws.AddSingleton(interval, job)
+    })
+}
+
+// 延迟添加只运行一次的循环任务
+func (ws *Wheels) DelayAddOnce(delay time.Duration, interval time.Duration, job JobFunc) {
+    ws.AddOnce(delay, func() {
+        ws.AddOnce(interval, job)
+    })
+}
+
+// 延迟添加只运行一次的循环任务
+func (ws *Wheels) DelayAddTimes(delay time.Duration, interval time.Duration, times int, job JobFunc) {
+    ws.AddOnce(delay, func() {
+        ws.AddTimes(interval, times, job)
+    })
+}
+
+// 关闭分层时间轮
+func (ws *Wheels) Close() {
+    for _, w := range ws.levels {
+        w.Close()
+    }
+}
+
+// 添加循环任务
+func (ws *Wheels) newEntry(interval time.Duration, job JobFunc, singleton bool, times int, from...*wheel) *Entry {
+    intervalMs := interval.Nanoseconds()/1e6
+    pos, cmp   := ws.binSearchIndex(intervalMs)
+    if len(from) > 0 {
+        pos = from[0].level - 1
+        cmp = -1
+    }
     switch cmp {
-        case -1 :
-            for i := pos; i >= 0; i-- {
-                if n > w.levels[i].interval {
-                    return w.levels[i].Add(time.Duration(n), job)
+        // n比最后匹配值小
+        case -1:
+            i := pos
+            for ; i > 0; i-- {
+                if intervalMs > ws.levels[i].totalMs {
+                    return ws.levels[i].newEntry(interval, job, singleton, times)
                 }
             }
-            return w.levels[0].Add(time.Duration(n), job)
-        case  1 :
-            for i := pos; i < w.length; i++ {
-                if n > w.levels[i].interval {
-                    return w.levels[i].Add(time.Duration(n), job)
+            return ws.levels[i].newEntry(interval, job, singleton, times)
+        // n比最后匹配值大
+        case  1:
+            i := pos
+            for ; i < ws.length - 1; i++ {
+                if intervalMs < ws.levels[i].totalMs {
+                    return ws.levels[i].newEntry(interval, job, singleton, times)
                 }
             }
-            return w.levels[w.length - 1].Add(time.Duration(n), job)
-        case  0 :
-            return w.levels[pos].Add(time.Duration(n), job)
+            return ws.levels[i].newEntry(interval, job, singleton, times)
+
+        case  0:
+            return ws.levels[pos].newEntry(interval, job, singleton, times)
     }
     return nil
 }
 
 
-func (w *Wheels) binSearchIndex(n int64)(index int, result int) {
+func (ws *Wheels) binSearchIndex(n int64)(index int, result int) {
     min := 0
-    max := w.length - 1
+    max := ws.length - 1
     mid := 0
     cmp := -2
     for min <= max {
         mid = int((min + max) / 2)
         switch {
-            case w.levels[mid].interval == n : cmp =  0
-            case w.levels[mid].interval  > n : cmp =  1
-            case w.levels[mid].interval  < n : cmp = -1
+            case ws.levels[mid].totalMs == n : cmp =  0
+            case ws.levels[mid].totalMs  > n : cmp = -1
+            case ws.levels[mid].totalMs  < n : cmp =  1
         }
         switch cmp {
             case -1 : max = mid - 1

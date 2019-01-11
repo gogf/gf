@@ -1,8 +1,4 @@
 # ON THE WAY
-1. orm增加更多数据库支持；
-1. 增加对于数据表Model的封装；
-1. 更多数据库的ORM功能支持；
-1. 考虑gdb对象管理增加二级连接池特性，提高New&Close性能；
 1. 增加图形验证码支持，至少支持数字和英文字母；
 1. 增加热编译工具，提高开发环境的开发/测试效率（媲美PHP开发效率）；
 1. 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
@@ -51,8 +47,8 @@
 1. glist增加Element类型的并发安全处理；
 1. 改进证书打开失败时的WebServer错误提示，前置HOOK校验后关闭后续的HOOK逻辑执行；
 1. 目前WebServer的HOOK是按照优先级执行的，需要增加覆盖特性；
-
-
+1. 增加jumplist的数据结构容器；
+1. DelayQueue/PriorityQueue；
 
 
 # DONE

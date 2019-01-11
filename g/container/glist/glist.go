@@ -272,6 +272,16 @@ func (l *List) Remove(e *Element) (value interface{}) {
     return
 }
 
+// 批量删除数据项
+func (l *List) BatchRemove(es []*Element) {
+    l.mu.Lock()
+    for _, e := range es {
+        l.list.Remove(e)
+    }
+    l.mu.Unlock()
+    return
+}
+
 // 删除所有数据项
 func (l *List) RemoveAll() {
     l.mu.Lock()

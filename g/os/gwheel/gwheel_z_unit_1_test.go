@@ -16,9 +16,14 @@ import (
     "time"
 )
 
+
+func New() *gwheel.Wheels {
+    return gwheel.New(10, 10*time.Millisecond)
+}
+
 func TestWheel_Add_Close(t *testing.T) {
     gtest.Case(t, func() {
-        wheel  := gwheel.NewDefault()
+        wheel  := New()
         array  := garray.New(0, 0)
         //fmt.Println("start", time.Now())
         wheel.Add(time.Second, func() {
@@ -47,7 +52,7 @@ func TestWheel_Add_Close(t *testing.T) {
 
 func TestWheel_Singleton(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := gwheel.NewDefault()
+       wheel := New()
        array := garray.New(0, 0)
        wheel.AddSingleton(time.Second, func() {
            array.Append(1)
@@ -63,7 +68,7 @@ func TestWheel_Singleton(t *testing.T) {
 
 func TestWheel_Once(t *testing.T) {
    gtest.Case(t, func() {
-       wheel  := gwheel.NewDefault()
+       wheel  := New()
        array  := garray.New(0, 0)
        wheel.AddOnce(time.Second, func() {
            array.Append(1)
@@ -85,7 +90,7 @@ func TestWheel_Once(t *testing.T) {
 
 func TestWheel_DelayAdd(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := gwheel.NewDefault()
+       wheel := New()
        array := garray.New(0, 0)
        wheel.DelayAdd(time.Second, time.Second, func() {
            array.Append(1)
@@ -99,7 +104,7 @@ func TestWheel_DelayAdd(t *testing.T) {
 
 func TestWheel_DelayAdd_Singleton(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := gwheel.NewDefault()
+       wheel := New()
        array := garray.New(0, 0)
        wheel.DelayAddSingleton(time.Second, time.Second, func() {
            array.Append(1)
@@ -115,7 +120,7 @@ func TestWheel_DelayAdd_Singleton(t *testing.T) {
 
 func TestWheel_DelayAdd_Once(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := gwheel.NewDefault()
+       wheel := New()
        array := garray.New(0, 0)
        wheel.DelayAddOnce(time.Second, time.Second, func() {
            array.Append(1)
@@ -133,7 +138,7 @@ func TestWheel_DelayAdd_Once(t *testing.T) {
 
 func TestWheel_ExitJob(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := gwheel.NewDefault()
+       wheel := New()
        array := garray.New(0, 0)
        wheel.Add(time.Second, func() {
            array.Append(1)
