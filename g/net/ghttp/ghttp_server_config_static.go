@@ -64,7 +64,8 @@ func (s *Server)SetServerRoot(root string) {
     if path == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: path "%s" does not exist`, root))
     }
-    s.config.SearchPaths = []string{strings.TrimRight(path, gfile.Separator)}
+    s.config.SearchPaths       = []string{strings.TrimRight(path, gfile.Separator)}
+    s.config.FileServerEnabled = true
 }
 
 // 添加静态文件搜索**目录**，必须给定目录的绝对路径
@@ -81,7 +82,8 @@ func (s *Server) AddSearchPath(path string) {
     if realPath == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: path "%s" does not exist`, path))
     }
-    s.config.SearchPaths = append(s.config.SearchPaths, realPath)
+    s.config.SearchPaths       = append(s.config.SearchPaths, realPath)
+    s.config.FileServerEnabled = true
 }
 
 // 添加URI与静态**目录**的映射
@@ -132,5 +134,6 @@ func (s *Server) AddStaticPath(prefix string, path string) {
     } else {
         s.config.StaticPaths = []staticPathItem { addItem }
     }
+    s.config.FileServerEnabled = true
 }
 

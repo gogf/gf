@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+    "errors"
     "os"
     "fmt"
     "net"
@@ -92,11 +93,11 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string) error {
     if config.NextProtos == nil {
         config.NextProtos = []string{"http/1.1"}
     }
-    var err error
+    err := error(nil)
     config.Certificates         = make([]tls.Certificate, 1)
     config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
     if err != nil {
-        return err
+        return errors.New(fmt.Sprintf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error()))
     }
     ln, err := s.getNetListener(addr)
     if err != nil {

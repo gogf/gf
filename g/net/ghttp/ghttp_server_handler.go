@@ -118,19 +118,25 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     }
 
     // 事件 - AfterServe
-    s.callHookHandler(HOOK_AFTER_SERVE, request)
+    if !request.IsExited() {
+        s.callHookHandler(HOOK_AFTER_SERVE, request)
+    }
 
     // 设置请求完成时间
     request.LeaveTime = gtime.Microsecond()
 
     // 事件 - BeforeOutput
-    s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
+    if !request.IsExited() {
+        s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
+    }
     // 输出Cookie
     request.Cookie.Output()
     // 输出缓冲区
     request.Response.OutputBuffer()
     // 事件 - AfterOutput
-    s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+    if !request.IsExited() {
+        s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+    }
 }
 
 // 查找静态文件的绝对路径
@@ -158,44 +164,48 @@ func (s *Server) searchStaticFile(uri string) (filePath string, isDir bool) {
     return "", false
 }
 
-// 初始化控制器
+// 调用服务接口
 func (s *Server) callServeHandler(h *handlerItem, r *Request) {
     if h.faddr == nil {
         c := reflect.New(h.ctype)
-        s.niceCall(func() {
+        s.niceCallFunc(func() {
             c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
         })
-        s.niceCall(func() {
+        s.niceCallFunc(func() {
             c.MethodByName(h.fname).Call(nil)
         })
-        s.niceCall(func() {
+        s.niceCallFunc(func() {
             c.MethodByName("Shut").Call(nil)
         })
     } else {
         if h.finit != nil {
-            s.niceCall(func() {
-                h.finit(r)
-            })
+            s.niceCallServeHandler(h.finit, r)
         }
-        s.niceCall(func() {
-            h.faddr(r)
-        })
+        s.niceCallServeHandler(h.faddr, r)
         if h.fshut != nil {
-            s.niceCall(func() {
-                h.fshut(r)
-            })
+            s.niceCallServeHandler(h.fshut, r)
         }
     }
 }
 
-// 友好地调用方法
-func (s *Server) niceCall(f func()) {
+// 友好地调用通用方法
+func (s *Server) niceCallFunc(f func()) {
     defer func() {
         if e := recover(); e != nil && e != gEXCEPTION_EXIT {
             panic(e)
         }
     }()
     f()
+}
+
+// 友好地调用HandlerFunc
+func (s *Server) niceCallServeHandler(f HandlerFunc, r *Request) {
+    defer func() {
+        if e := recover(); e != nil && e != gEXCEPTION_EXIT {
+            panic(e)
+        }
+    }()
+    f(r)
 }
 
 // http server静态文件处理，path可以为相对路径也可以为绝对路径

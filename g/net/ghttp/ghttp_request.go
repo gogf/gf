@@ -147,10 +147,20 @@ func (r *Request) GetToStruct(object interface{}, mapping...map[string]string) {
     r.GetRequestToStruct(object, mapping...)
 }
 
-// 退出当前请求执行，原理是在Request.exit做标记，由服务逻辑流程做判断，自行停止
+// 仅退出当前逻辑执行函数, 如:服务函数、HOOK函数
 func (r *Request) Exit() {
+    panic(gEXCEPTION_EXIT)
+}
+
+// 退出当前请求执行，后续所有的服务逻辑流程(包括其他的HOOK)将不会执行
+func (r *Request) ExitAll() {
     r.exit = true
     panic(gEXCEPTION_EXIT)
+}
+
+// 仅针对HOOK执行，默认情况下HOOK会按照优先级进行调用，当使用ExitHook后当前类型的后续HOOK将不会被调用
+func (r *Request) ExitHook() {
+    panic(gEXCEPTION_EXIT_HOOK)
 }
 
 // 判断当前请求是否停止执行

@@ -46,11 +46,6 @@ func (s *Server) callHookHandler(hook string, r *Request) {
     }
     hookItems := s.getHookHandlerWithCache(hook, r)
     if len(hookItems) > 0 {
-        defer func() {
-            if e := recover(); e != nil && e != gEXCEPTION_EXIT {
-                panic(e)
-            }
-        }()
         // 备份原有的router变量
         oldRouterVars := r.routerVars
         for _, item := range hookItems {
@@ -70,11 +65,28 @@ func (s *Server) callHookHandler(hook string, r *Request) {
             }
             // 不使用hook的router对象，保留路由注册服务的router对象，不能覆盖
             // r.Router = item.handler.router
-            item.handler.faddr(r)
+            if err := s.niceCallHookHandler(item.handler.faddr, r); err != nil {
+                switch err {
+                    case gEXCEPTION_EXIT:
+                    case gEXCEPTION_EXIT_HOOK:
+                        return
+                    default:
+                        panic(err)
+                }
+            }
         }
         // 恢复原有的router变量
         r.routerVars = oldRouterVars
     }
+}
+
+// 友好地调用方法
+func (s *Server) niceCallHookHandler(f HandlerFunc, r *Request) (err interface{}) {
+    defer func() {
+        err = recover()
+    }()
+    f(r)
+    return
 }
 
 // 查询请求处理方法, 带缓存机制，按照Host、Method、Path进行缓存.

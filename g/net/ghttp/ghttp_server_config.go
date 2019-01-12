@@ -52,7 +52,7 @@ type ServerConfig struct {
     ServerRoot        string                // 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
     SearchPaths       []string              // 静态文件搜索目录(包含ServerRoot，按照优先级进行排序)
     StaticPaths       []staticPathItem      // 静态文件目录映射(按照优先级进行排序)
-    FileServerEnabled bool                  // 是否允许静态文件服务(总开关，默认开启)
+    FileServerEnabled bool                  // 是否允许静态文件服务(通过静态文件服务方法调用自动识别)
 
     // COOKIE
     CookieMaxAge      int                   // Cookie有效期
@@ -99,7 +99,7 @@ var defaultServerConfig = ServerConfig {
     ServerAgent       : "gf",
     ServerRoot        : "",
     StaticPaths       : make([]staticPathItem, 0),
-    FileServerEnabled : true,
+    FileServerEnabled : false,
 
     CookieMaxAge      : gDEFAULT_COOKIE_MAX_AGE,
     CookiePath        : gDEFAULT_COOKIE_PATH,

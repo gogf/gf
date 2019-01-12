@@ -1,12 +1,19 @@
 package main
 
-import (
-    "fmt"
-)
+import "fmt"
+
+func test() (err interface{}) {
+    defer func() {
+        err = recover()
+    }()
+    panic(1)
+    return
+}
 
 func main() {
-    i := int64(5)
-    n := int64(3)
-    m := i/n
-    fmt.Println(m)
+
+    switch err := test(); err {
+    default:
+        fmt.Println(err)
+    }
 }
