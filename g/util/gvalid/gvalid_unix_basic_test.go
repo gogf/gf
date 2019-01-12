@@ -4,9 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 单元测试
-// go test *.go
-
 package gvalid
 
 import (
