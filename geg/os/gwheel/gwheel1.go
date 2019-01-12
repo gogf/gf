@@ -7,9 +7,11 @@ import (
 )
 
 func main() {
-    fmt.Println("START:", time.Now())
-    gwheel.Add(1400*time.Millisecond, func() {
-        fmt.Println(time.Now())
+    now      := time.Now()
+    interval := 1400*time.Millisecond
+    gwheel.Add(interval, func() {
+        fmt.Println(time.Now(), time.Duration(time.Now().UnixNano() - now.UnixNano()))
+        now = time.Now()
     })
 
     select { }

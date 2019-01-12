@@ -7,7 +7,6 @@
 package gwheel
 
 import (
-    "container/list"
     "gitee.com/johng/gf/g/container/glist"
     "time"
 )
@@ -29,29 +28,26 @@ func (w *wheel) start() {
     }()
 }
 
-// 执行时间轮刻度逻辑, 遍历检查可执行循环任务，并异步执行
+// 执行时间轮刻度逻辑
 func (w *wheel) proceed() {
     n := w.ticks.Add(1)
     l := w.slots[int(n%w.number)]
     if l.Len() > 0 {
         go func(l *glist.List, nowTicks int64) {
-            nowMs       := time.Now().UnixNano()/1e6
-            removeArray := make([]*glist.Element, 0)
-            l.RLockFunc(func(list *list.List) {
-                for e := list.Front(); e != nil; e = e.Next() {
-                    entry := e.Value.(*Entry)
-                    // 任务是否已关闭，那么需要删除
-                    if entry.Status() == STATUS_CLOSED {
-                        removeElement := e
-                        removeArray    = append(removeArray, removeElement)
-                        continue
-                    }
-                    // 是否满足运行条件
-                    if !entry.runnableCheck(nowTicks, nowMs) {
-                        continue
-                    }
+            nowMs := time.Now().UnixNano()/1e6
+            for i := l.Len(); i > 0; i-- {
+                v := l.PopFront()
+                if v == nil {
+                    break
+                }
+                entry := v.(*Entry)
+                if entry.Status() == STATUS_CLOSED {
+                    continue
+                }
+                // 是否满足运行条件
+                if entry.check(nowTicks, nowMs) {
                     // 异步执行运行
-                    go func(entry *Entry, e *glist.Element, l *glist.List) {
+                    go func(entry *Entry) {
                         defer func() {
                             if err := recover(); err != nil {
                                 if err != gPANIC_EXIT {
@@ -60,33 +56,24 @@ func (w *wheel) proceed() {
                                     entry.Close()
                                 }
                             }
-                            switch entry.Status() {
-                                case STATUS_CLOSED:
-                                    //fmt.Println("remove:", w.level, entry.interval)
-                                    l.Remove(e)
-
-                                case STATUS_RUNNING:
-                                    entry.SetStatus(STATUS_READY)
+                            if entry.Status() == STATUS_RUNNING {
+                                entry.SetStatus(STATUS_READY)
                             }
                         }()
-
-                        //if entry.interval == 8 {
-                        //   fmt.Println(w.level, ticks, entry.create, entry.interval,
-                        //       entry.times.Val(),
-                        //       entry.Status(),
-                        //       time.Duration(w.interval),
-                        //       time.Duration(entry.interval)*time.Duration(w.interval),
-                        //       time.Now(),
-                        //       entry.id,
-                        //   )
-                        //}
-
                         entry.job()
-                    }(entry, e, l)
+                    }(entry)
                 }
-            })
-            if len(removeArray) > 0 {
-                l.BatchRemove(removeArray)
+                // 是否继续添运行
+                if entry.status.Val() != STATUS_CLOSED {
+                    left := entry.interval - (nowTicks - entry.create)
+                    if left <= 0 {
+                        left           = entry.interval
+                        entry.create   = nowTicks
+                        entry.createMs = nowMs
+                        entry.updateMs = nowMs
+                    }
+                    w.slots[(nowTicks + left) % w.number].PushBack(entry)
+                }
             }
         }(l, n)
     }

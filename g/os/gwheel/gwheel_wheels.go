@@ -37,7 +37,7 @@ func New(slot int, interval time.Duration, level...int) *Wheels {
             n           := time.Duration(ws.levels[i - 1].totalMs)*time.Millisecond
             w           := ws.newWheel(i, slot, n)
             ws.levels[i] = w
-            ws.levels[i - 1].newEntry(n, w.proceed, false, gDEFAULT_TIMES)
+            ws.levels[i - 1].addEntry(n, w.proceed, false, gDEFAULT_TIMES)
         } else {
             ws.levels[i] = ws.newWheel(i, slot, interval)
         }
@@ -67,22 +67,22 @@ func (ws *Wheels) newWheel(level int, slot int, interval time.Duration) *wheel {
 
 // 添加循环任务
 func (ws *Wheels) Add(interval time.Duration, job JobFunc) *Entry {
-    return ws.newEntry(interval, job, false, gDEFAULT_TIMES)
+    return ws.addEntry(interval, job, false, gDEFAULT_TIMES)
 }
 
 // 添加单例运行循环任务
 func (ws *Wheels) AddSingleton(interval time.Duration, job JobFunc) *Entry {
-    return ws.newEntry(interval, job, true, gDEFAULT_TIMES)
+    return ws.addEntry(interval, job, true, gDEFAULT_TIMES)
 }
 
 // 添加只运行一次的循环任务
 func (ws *Wheels) AddOnce(interval time.Duration, job JobFunc) *Entry {
-    return ws.newEntry(interval, job, false, 1)
+    return ws.addEntry(interval, job, false, 1)
 }
 
 // 添加运行指定次数的循环任务
 func (ws *Wheels) AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
-    return ws.newEntry(interval, job, false, times)
+    return ws.addEntry(interval, job, false, times)
 }
 
 // 延迟添加循环任务
@@ -121,35 +121,31 @@ func (ws *Wheels) Close() {
 }
 
 // 添加循环任务
-func (ws *Wheels) newEntry(interval time.Duration, job JobFunc, singleton bool, times int, from...*wheel) *Entry {
+func (ws *Wheels) addEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
     intervalMs := interval.Nanoseconds()/1e6
     pos, cmp   := ws.binSearchIndex(intervalMs)
-    if len(from) > 0 {
-        pos = from[0].level - 1
-        cmp = -1
-    }
     switch cmp {
         // n比最后匹配值小
         case -1:
             i := pos
             for ; i > 0; i-- {
                 if intervalMs > ws.levels[i].totalMs {
-                    return ws.levels[i].newEntry(interval, job, singleton, times)
+                    return ws.levels[i].addEntry(interval, job, singleton, times)
                 }
             }
-            return ws.levels[i].newEntry(interval, job, singleton, times)
+            return ws.levels[i].addEntry(interval, job, singleton, times)
         // n比最后匹配值大
         case  1:
             i := pos
             for ; i < ws.length - 1; i++ {
                 if intervalMs < ws.levels[i].totalMs {
-                    return ws.levels[i].newEntry(interval, job, singleton, times)
+                    return ws.levels[i].addEntry(interval, job, singleton, times)
                 }
             }
-            return ws.levels[i].newEntry(interval, job, singleton, times)
+            return ws.levels[i].addEntry(interval, job, singleton, times)
 
         case  0:
-            return ws.levels[pos].newEntry(interval, job, singleton, times)
+            return ws.levels[pos].addEntry(interval, job, singleton, times)
     }
     return nil
 }
