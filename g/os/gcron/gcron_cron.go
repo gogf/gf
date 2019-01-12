@@ -12,7 +12,7 @@ import (
     "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gwheel"
+    "gitee.com/johng/gf/g/os/gtimer"
     "strconv"
     "time"
 )
@@ -77,7 +77,7 @@ func (c *Cron) AddOnce(pattern string, job func(), name ... string) (*Entry, err
 
 // 延迟添加定时任务，delay参数单位为秒
 func (c *Cron) DelayAdd(delay int, pattern string, job func(), name ... string) {
-    gwheel.AddOnce(time.Duration(delay)*time.Second, func() {
+    gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
         if _, err := c.Add(pattern, job, name ...); err != nil {
             panic(err)
         }
@@ -86,7 +86,7 @@ func (c *Cron) DelayAdd(delay int, pattern string, job func(), name ... string) 
 
 // 延迟添加单例定时任务，delay参数单位为秒
 func (c *Cron) DelayAddSingleton(delay int, pattern string, job func(), name ... string) {
-    gwheel.AddOnce(time.Duration(delay)*time.Second, func() {
+    gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
         if _, err := c.AddSingleton(pattern, job, name ...); err != nil {
             panic(err)
         }
@@ -95,7 +95,7 @@ func (c *Cron) DelayAddSingleton(delay int, pattern string, job func(), name ...
 
 // 延迟添加只运行一次的定时任务，delay参数单位为秒
 func (c *Cron) DelayAddOnce(delay int, pattern string, job func(), name ... string) {
-    gwheel.AddOnce(time.Duration(delay)*time.Second, func() {
+    gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
         if _, err := c.AddOnce(pattern, job, name ...); err != nil {
             panic(err)
         }

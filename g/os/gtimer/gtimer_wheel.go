@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-package gwheel
+package gtimer
 
 import (
     "gitee.com/johng/gf/g/container/glist"
@@ -13,7 +13,7 @@ import (
 
 // 单层时间轮
 type wheel struct {
-    wheels     *Wheels         // 所属分层时间轮
+    wheels     *Timer          // 所属定时器
     level      int             // 所属分层索引号
     slots      []*glist.List   // 所有的循环任务项, 按照Slot Number进行分组
     number     int64           // Slot Number

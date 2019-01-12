@@ -7,15 +7,15 @@
 package gcron
 
 import (
-    "gitee.com/johng/gf/g/os/gwheel"
+    "gitee.com/johng/gf/g/os/gtimer"
     "time"
 )
 
 // 延迟添加定时任务，delay参数单位为秒
 func (c *Cron) startLoop() {
-    gwheel.Add(time.Second, func() {
+    gtimer.Add(time.Second, func() {
         if c.status.Val() == STATUS_CLOSED {
-            gwheel.Exit()
+            gtimer.Exit()
         }
         if c.status.Val() == STATUS_RUNNING {
             go c.checkEntries(time.Now())

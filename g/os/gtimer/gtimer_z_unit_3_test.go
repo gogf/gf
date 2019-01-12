@@ -6,7 +6,7 @@
 
 // 指定次数运行测试
 
-package gwheel_test
+package gtimer_test
 
 import (
     "gitee.com/johng/gf/g/container/garray"

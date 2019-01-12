@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-package gwheel
+package gtimer
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
@@ -13,7 +13,6 @@ import (
 
 // 循环任务项
 type Entry struct {
-    id         int64         // ID
     job        JobFunc       // 注册循环任务方法
     wheel      *wheel        // 所属时间轮
     singleton  *gtype.Bool   // 任务是否单例运行
@@ -29,7 +28,7 @@ type Entry struct {
 // 任务执行方法
 type JobFunc = func()
 
-// 创建循环任务(失败返回nil)
+// 创建定时任务
 func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
     ms  := interval.Nanoseconds()/1e6
     num := ms/w.intervalMs
@@ -41,7 +40,6 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
     nowMs   := time.Now().UnixNano()/1e6
     ticks   := w.ticks.Val()
     entry   := &Entry {
-        id         : time.Now().UnixNano(),
         wheel      : w,
         singleton  : gtype.NewBool(singleton),
         status     : gtype.NewInt(STATUS_READY),
@@ -56,6 +54,18 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
     // 安装任务
     w.slots[(ticks + num) % w.number].PushBack(entry)
     return entry
+}
+
+// 递增添加任务
+func (w *wheel) reAddEntry(entry *Entry, nowTicks int64, nowMs int64) {
+    left := entry.interval - (nowTicks - entry.create)
+    if left <= 0 {
+        left           = entry.interval
+        entry.create   = nowTicks
+        entry.createMs = nowMs
+        entry.updateMs = nowMs
+    }
+    w.slots[(nowTicks + left) % w.number].PushBack(entry)
 }
 
 // 获取任务状态
@@ -95,9 +105,6 @@ func (entry *Entry) Run() {
 
 // 检测当前任务是否可运行, 参数为当前时间的纳秒数, 精度更高
 func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
-    //if entry.intervalMs == 1400 {
-    //   fmt.Println(nowTicks, entry.create, entry.interval, time.Now())
-    //}
     // 运行检查
     if diff := nowTicks - entry.create; diff > 0 && diff%entry.interval == 0 {
         // 是否单例
@@ -121,9 +128,8 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
         }
         // 分层转换
         if entry.wheel.level > 0 {
-            if diffMs   := nowMs - entry.updateMs; diffMs < entry.intervalMs {
+            if diffMs := nowMs - entry.updateMs; diffMs < entry.intervalMs {
                 if leftMs := entry.intervalMs - diffMs; leftMs > entry.wheel.wheels.intervalMs {
-                    entry.status.Set(STATUS_CLOSED)
                     delay := time.Duration(leftMs)*time.Millisecond
                     // 往底层添加
                     entry.wheel.wheels.addEntry(delay, entry.job, false, 1)
@@ -136,6 +142,7 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
                             entry.job,
                         )
                     }
+                    entry.status.Set(STATUS_CLOSED)
                     return false
                 }
             }

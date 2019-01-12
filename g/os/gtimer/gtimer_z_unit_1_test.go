@@ -6,19 +6,19 @@
 
 // 包方法操作
 
-package gwheel_test
+package gtimer_test
 
 import (
     "gitee.com/johng/gf/g/container/garray"
-    "gitee.com/johng/gf/g/os/gwheel"
+    "gitee.com/johng/gf/g/os/gtimer"
     "gitee.com/johng/gf/g/util/gtest"
     "testing"
     "time"
 )
 
 
-func New() *gwheel.Wheels {
-    return gwheel.New(10, 10*time.Millisecond)
+func New() *gtimer.Timer {
+    return gtimer.New(10, 10*time.Millisecond)
 }
 
 func TestWheel_Add_Close(t *testing.T) {
@@ -142,7 +142,7 @@ func TestWheel_ExitJob(t *testing.T) {
        array := garray.New(0, 0)
        wheel.Add(time.Second, func() {
            array.Append(1)
-           gwheel.Exit()
+           gtimer.Exit()
        })
        time.Sleep(1200*time.Millisecond)
        gtest.Assert(array.Len(), 1)

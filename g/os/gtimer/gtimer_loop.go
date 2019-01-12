@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-package gwheel
+package gtimer
 
 import (
     "gitee.com/johng/gf/g/container/glist"
@@ -34,13 +34,14 @@ func (w *wheel) proceed() {
     l := w.slots[int(n%w.number)]
     if l.Len() > 0 {
         go func(l *glist.List, nowTicks int64) {
+            entry := (*Entry)(nil)
             nowMs := time.Now().UnixNano()/1e6
             for i := l.Len(); i > 0; i-- {
-                v := l.PopFront()
-                if v == nil {
+                if v := l.PopFront(); v == nil {
                     break
+                } else {
+                    entry = v.(*Entry)
                 }
-                entry := v.(*Entry)
                 if entry.Status() == STATUS_CLOSED {
                     continue
                 }
@@ -65,14 +66,7 @@ func (w *wheel) proceed() {
                 }
                 // 是否继续添运行
                 if entry.status.Val() != STATUS_CLOSED {
-                    left := entry.interval - (nowTicks - entry.create)
-                    if left <= 0 {
-                        left           = entry.interval
-                        entry.create   = nowTicks
-                        entry.createMs = nowMs
-                        entry.updateMs = nowMs
-                    }
-                    w.slots[(nowTicks + left) % w.number].PushBack(entry)
+                    w.reAddEntry(entry, nowTicks, nowMs)
                 }
             }
         }(l, n)

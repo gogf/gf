@@ -11,7 +11,7 @@ import (
     "gitee.com/johng/gf/g/container/gset"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/gwheel"
+    "gitee.com/johng/gf/g/os/gtimer"
     "gitee.com/johng/gf/g/util/gconv"
     "math"
     "sync"
@@ -292,7 +292,7 @@ func (c *memCache) syncEventAndClearExpired() {
     oldExpireTime := int64(0)
     newExpireTime := int64(0)
     if c.closed.Val() {
-        gwheel.Exit()
+        gtimer.Exit()
         return
     }
     // ========================

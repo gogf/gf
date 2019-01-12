@@ -7,7 +7,7 @@
 package gcache
 
 import (
-    "gitee.com/johng/gf/g/os/gwheel"
+    "gitee.com/johng/gf/g/os/gtimer"
     "sync/atomic"
     "time"
     "unsafe"
@@ -24,7 +24,7 @@ func New(lruCap...int) *Cache {
     c := &Cache {
         memCache : newMemCache(lruCap...),
     }
-    gwheel.AddSingleton(time.Second, c.syncEventAndClearExpired)
+    gtimer.AddSingleton(time.Second, c.syncEventAndClearExpired)
     return c
 }
 

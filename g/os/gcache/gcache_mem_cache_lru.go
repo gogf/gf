@@ -11,7 +11,7 @@ import (
     "gitee.com/johng/gf/g/container/glist"
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gwheel"
+    "gitee.com/johng/gf/g/os/gtimer"
     "time"
 )
 
@@ -33,7 +33,7 @@ func newMemCacheLru(cache *memCache) *memCacheLru {
         rawList   : glist.New(),
         closed    : gtype.NewBool(),
     }
-    gwheel.AddSingleton(time.Second, lru.SyncAndClear)
+    gtimer.AddSingleton(time.Second, lru.SyncAndClear)
     return lru
 }
 
@@ -80,7 +80,7 @@ func (lru *memCacheLru) Print() {
 // 异步执行协程，将queue中的数据同步到list中
 func (lru *memCacheLru) SyncAndClear() {
     if lru.closed.Val() {
-        gwheel.Exit()
+        gtimer.Exit()
         return
     }
     // 数据同步
