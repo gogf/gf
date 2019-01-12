@@ -8,7 +8,7 @@ package garray
 
 import (
 	"strings"
-	"gitee.com/johng/gf/g/container/internal/rwmutex"
+	"gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type StringArray struct {
@@ -18,9 +18,9 @@ type StringArray struct {
 	array []string         // 底层数组
 }
 
-func NewStringArray(size int, cap int, safe...bool) *StringArray {
+func NewStringArray(size int, cap int, unsafe...bool) *StringArray {
 	a := &StringArray{
-		mu : rwmutex.New(safe...),
+		mu : rwmutex.New(unsafe...),
 	}
 	a.size = size
 	if cap > 0 {

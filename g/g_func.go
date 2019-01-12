@@ -24,8 +24,8 @@ const (
 )
 
 // 动态变量
-func NewVar(i interface{}, safe...bool) *Var {
-    return gvar.New(i, safe...)
+func NewVar(i interface{}, unsafe...bool) *Var {
+    return gvar.New(i, unsafe...)
 }
 
 // 阻塞等待HTTPServer执行完成(同一进程多HTTPServer情况下)

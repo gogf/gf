@@ -84,7 +84,7 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
     }
     // 最后按照默认规则进行匹配
-    attrset  := gset.NewStringSet(false)
+    attrset  := gset.NewStringSet(true)
     elemtype := elem.Type()
     for i := 0; i < elem.NumField(); i++ {
         attrset.Add(elemtype.Field(i).Name)

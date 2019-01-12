@@ -8,7 +8,7 @@
 package gmap
 
 import (
-    "gitee.com/johng/gf/g/container/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type IntStringMap struct {
@@ -16,10 +16,10 @@ type IntStringMap struct {
 	m  map[int]string
 }
 
-func NewIntStringMap(safe...bool) *IntStringMap {
+func NewIntStringMap(unsafe...bool) *IntStringMap {
 	return &IntStringMap{
         m  : make(map[int]string),
-        mu : rwmutex.New(safe...),
+        mu : rwmutex.New(unsafe...),
     }
 }
 

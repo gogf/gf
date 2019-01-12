@@ -7,17 +7,17 @@
 
 package gmap
 
-import "gitee.com/johng/gf/g/container/internal/rwmutex"
+import "gitee.com/johng/gf/g/internal/rwmutex"
 
 type StringStringMap struct {
 	mu *rwmutex.RWMutex
 	m  map[string]string
 }
 
-func NewStringStringMap(safe...bool) *StringStringMap {
+func NewStringStringMap(unsafe...bool) *StringStringMap {
 	return &StringStringMap{
 		m  : make(map[string]string),
-        mu : rwmutex.New(safe...),
+        mu : rwmutex.New(unsafe...),
 	}
 }
 

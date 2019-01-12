@@ -10,7 +10,7 @@ package gset
 
 import (
 	"fmt"
-	"gitee.com/johng/gf/g/container/internal/rwmutex"
+	"gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type IntSet struct {
@@ -18,18 +18,18 @@ type IntSet struct {
 	m  map[int]struct{}
 }
 
-func NewIntSet(safe...bool) *IntSet {
+func NewIntSet(unsafe...bool) *IntSet {
 	return &IntSet{
 		m  : make(map[int]struct{}),
-		mu : rwmutex.New(safe...),
+		mu : rwmutex.New(unsafe...),
 	}
 }
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
-func (this *IntSet) Iterator(f func (v int) bool) {
-    this.mu.RLock()
-    defer this.mu.RUnlock()
-	for k, _ := range this.m {
+func (set *IntSet) Iterator(f func (v int) bool) {
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+	for k, _ := range set.m {
 		if !f(k) {
 			break
 		}
@@ -37,80 +37,80 @@ func (this *IntSet) Iterator(f func (v int) bool) {
 }
 
 // 设置键
-func (this *IntSet) Add(item int) *IntSet {
-	this.mu.Lock()
-	this.m[item] = struct{}{}
-	this.mu.Unlock()
-	return this
+func (set *IntSet) Add(item int) *IntSet {
+	set.mu.Lock()
+	set.m[item] = struct{}{}
+	set.mu.Unlock()
+	return set
 }
 
 // 批量添加设置键
-func (this *IntSet) BatchAdd(items []int) *IntSet {
-	this.mu.Lock()
+func (set *IntSet) BatchAdd(items []int) *IntSet {
+	set.mu.Lock()
 	for _, item := range items {
-		this.m[item] = struct{}{}
+		set.m[item] = struct{}{}
 	}
-	this.mu.Unlock()
-    return this
+	set.mu.Unlock()
+    return set
 }
 
 // 键是否存在
-func (this *IntSet) Contains(item int) bool {
-	this.mu.RLock()
-	_, exists := this.m[item]
-	this.mu.RUnlock()
+func (set *IntSet) Contains(item int) bool {
+	set.mu.RLock()
+	_, exists := set.m[item]
+	set.mu.RUnlock()
 	return exists
 }
 
 // 删除键值对
-func (this *IntSet) Remove(key int) {
-	this.mu.Lock()
-	delete(this.m, key)
-	this.mu.Unlock()
+func (set *IntSet) Remove(key int) {
+	set.mu.Lock()
+	delete(set.m, key)
+	set.mu.Unlock()
 }
 
 // 大小
-func (this *IntSet) Size() int {
-	this.mu.RLock()
-	l := len(this.m)
-	this.mu.RUnlock()
+func (set *IntSet) Size() int {
+	set.mu.RLock()
+	l := len(set.m)
+	set.mu.RUnlock()
 	return l
 }
 
 // 清空set
-func (this *IntSet) Clear() {
-	this.mu.Lock()
-	this.m = make(map[int]struct{})
-	this.mu.Unlock()
+func (set *IntSet) Clear() {
+	set.mu.Lock()
+	set.m = make(map[int]struct{})
+	set.mu.Unlock()
 }
 
 // 转换为数组
-func (this *IntSet) Slice() []int {
-	this.mu.RLock()
-	ret := make([]int, len(this.m))
+func (set *IntSet) Slice() []int {
+	set.mu.RLock()
+	ret := make([]int, len(set.m))
 	i := 0
-	for item := range this.m {
+	for item := range set.m {
 		ret[i] = item
 		i++
 	}
 
-	this.mu.RUnlock()
+	set.mu.RUnlock()
 	return ret
 }
 
 // 转换为字符串
-func (this *IntSet) String() string {
-	return fmt.Sprint(this.Slice())
+func (set *IntSet) String() string {
+	return fmt.Sprint(set.Slice())
 }
 
-func (this *IntSet) LockFunc(f func(m map[int]struct{})) {
-	this.mu.Lock(true)
-	defer this.mu.Unlock(true)
-	f(this.m)
+func (set *IntSet) LockFunc(f func(m map[int]struct{})) {
+	set.mu.Lock(true)
+	defer set.mu.Unlock(true)
+	f(set.m)
 }
 
-func (this *IntSet) RLockFunc(f func(m map[int]struct{})) {
-    this.mu.RLock(true)
-    defer this.mu.RUnlock(true)
-    f(this.m)
+func (set *IntSet) RLockFunc(f func(m map[int]struct{})) {
+    set.mu.RLock(true)
+    defer set.mu.RUnlock(true)
+    f(set.m)
 }

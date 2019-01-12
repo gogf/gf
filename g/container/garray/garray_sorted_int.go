@@ -8,7 +8,7 @@ package garray
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/container/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 // 默认按照从低到高进行排序
@@ -21,9 +21,9 @@ type SortedIntArray struct {
 }
 
 // 创建一个排序的int数组
-func NewSortedIntArray(cap int, safe...bool) *SortedIntArray {
+func NewSortedIntArray(cap int, unsafe...bool) *SortedIntArray {
     return &SortedIntArray {
-        mu          : rwmutex.New(safe...),
+        mu          : rwmutex.New(unsafe...),
         array       : make([]int, 0, cap),
         unique      : gtype.NewBool(),
         compareFunc : func(v1, v2 int) int {

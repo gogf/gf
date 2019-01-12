@@ -7,7 +7,7 @@
 package garray
 
 import (
-    "gitee.com/johng/gf/g/container/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type Array struct {
@@ -17,9 +17,9 @@ type Array struct {
     array  []interface{}     // 底层数组
 }
 
-func NewArray(size int, cap int, safe...bool) *Array {
+func NewArray(size int, cap int, unsafe...bool) *Array {
     a := &Array{
-        mu : rwmutex.New(safe...),
+        mu : rwmutex.New(unsafe...),
     }
     a.size = size
     if cap > 0 {

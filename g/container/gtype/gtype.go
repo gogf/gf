@@ -4,8 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gtype provides kinds of concurrent-safe basic-types.
-// 并发安全的基本类型.
+// Package gtype provides kinds of concurrent-safe basic-types/并发安全基本类型.
 package gtype
 
 type Type = Interface

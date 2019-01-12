@@ -8,7 +8,7 @@
 package gmap
 
 import (
-	"gitee.com/johng/gf/g/container/internal/rwmutex"
+	"gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type StringBoolMap struct {
@@ -16,10 +16,10 @@ type StringBoolMap struct {
 	m  map[string]bool
 }
 
-func NewStringBoolMap(safe...bool) *StringBoolMap {
+func NewStringBoolMap(unsafe...bool) *StringBoolMap {
 	return &StringBoolMap{
 		m  : make(map[string]bool),
-		mu : rwmutex.New(safe...),
+		mu : rwmutex.New(unsafe...),
 	}
 }
 

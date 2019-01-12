@@ -8,10 +8,10 @@ type RWMutex struct {
     safe bool
 }
 
-func New(safe...bool) *RWMutex {
+func New(unsafe...bool) *RWMutex {
     mu := new(RWMutex)
-    if len(safe) > 0 {
-        mu.safe = safe[0]
+    if len(unsafe) > 0 {
+        mu.safe = !unsafe[0]
     } else {
         mu.safe = true
     }

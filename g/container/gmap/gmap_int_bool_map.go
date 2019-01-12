@@ -8,7 +8,7 @@
 package gmap
 
 import (
-    "gitee.com/johng/gf/g/container/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type IntBoolMap struct {
@@ -16,10 +16,10 @@ type IntBoolMap struct {
     mu *rwmutex.RWMutex
 }
 
-func NewIntBoolMap(safe...bool) *IntBoolMap {
+func NewIntBoolMap(unsafe...bool) *IntBoolMap {
 	return &IntBoolMap{
         m  : make(map[int]bool),
-        mu : rwmutex.New(safe...),
+        mu : rwmutex.New(unsafe...),
     }
 }
 

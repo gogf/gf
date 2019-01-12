@@ -21,7 +21,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gtoml"
     "gitee.com/johng/gf/g/util/gstr"
     "time"
-    "gitee.com/johng/gf/g/encoding/gjson/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
     "fmt"
 )
 
@@ -38,7 +38,7 @@ type Json struct {
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者slice，否者转换没有意义
-func New(value interface{}, safe...bool) *Json {
+func New(value interface{}, unsafe...bool) *Json {
     j := (*Json)(nil)
     switch value.(type) {
         case map[string]interface{}, []interface{}, nil:
@@ -67,7 +67,7 @@ func New(value interface{}, safe...bool) *Json {
                 }
             }
     }
-    j.mu = rwmutex.New(safe...)
+    j.mu = rwmutex.New(unsafe...)
     return j
 }
 

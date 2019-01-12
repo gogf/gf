@@ -10,7 +10,7 @@ package glist
 
 import (
     "container/list"
-    "gitee.com/johng/gf/g/container/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 // 变长双向链表
@@ -23,9 +23,9 @@ type Element = list.Element
 
 
 // 获得一个变长链表指针
-func New(safe...bool) *List {
+func New(unsafe...bool) *List {
 	return &List {
-	    mu   : rwmutex.New(safe...),
+	    mu   : rwmutex.New(unsafe...),
 	    list : list.New(),
     }
 }

@@ -8,7 +8,7 @@
 package gmap
 
 import (
-	"gitee.com/johng/gf/g/container/internal/rwmutex"
+	"gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type StringInterfaceMap struct {
@@ -16,10 +16,10 @@ type StringInterfaceMap struct {
 	m  map[string]interface{}
 }
 
-func NewStringInterfaceMap(safe...bool) *StringInterfaceMap {
+func NewStringInterfaceMap(unsafe...bool) *StringInterfaceMap {
 	return &StringInterfaceMap{
 		m  : make(map[string]interface{}),
-		mu : rwmutex.New(safe...),
+		mu : rwmutex.New(unsafe...),
 	}
 }
 

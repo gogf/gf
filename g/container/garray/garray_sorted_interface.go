@@ -8,7 +8,7 @@ package garray
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/container/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 // 默认按照从低到高进行排序
@@ -20,9 +20,9 @@ type SortedArray struct {
     compareFunc func(v1, v2 interface{}) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
-func NewSortedArray(cap int, compareFunc func(v1, v2 interface{}) int, safe...bool) *SortedArray {
+func NewSortedArray(cap int, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     return &SortedArray{
-        mu          : rwmutex.New(safe...),
+        mu          : rwmutex.New(unsafe...),
         unique      : gtype.NewBool(),
         array       : make([]interface{}, 0, cap),
         compareFunc : compareFunc,

@@ -4,8 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gvar provides a universal variable type.
-// 通用动态变量.
+// Package gvar provides a universal variable type/通用动态变量.
 package gvar
 
 import (
@@ -21,10 +20,10 @@ type Var struct {
 }
 
 // 创建一个动态变量，value参数可以为nil
-func New(value interface{}, safe...bool) *Var {
+func New(value interface{}, unsafe...bool) *Var {
     v := &Var{}
-    if len(safe) > 0 && safe[0] {
-        v.safe  = safe[0]
+    if len(unsafe) == 0 || !unsafe[0] {
+        v.safe  = true
         v.value = gtype.NewInterface(value)
     } else {
         v.value = value
@@ -33,8 +32,8 @@ func New(value interface{}, safe...bool) *Var {
 }
 
 // 创建一个只读动态变量，value参数可以为nil
-func NewRead(value interface{}, safe...bool) VarRead {
-    return VarRead(New(value, safe...))
+func NewRead(value interface{}, unsafe...bool) VarRead {
+    return VarRead(New(value, unsafe...))
 }
 
 // 返回动态变量的只读接口
@@ -90,10 +89,16 @@ func (v *Var) Floats()         []float64       { return gconv.Floats(v.Val()) }
 func (v *Var) Strings()        []string        { return gconv.Strings(v.Val()) }
 func (v *Var) Interfaces()     []interface{}   { return gconv.Interfaces(v.Val()) }
 
-func (v *Var) Time(format...string) time.Time       { return gconv.Time(v.Val(), format...) }
-func (v *Var) TimeDuration()        time.Duration   { return gconv.TimeDuration(v.Val()) }
+func (v *Var) Time(format...string) time.Time {
+    return gconv.Time(v.Val(), format...)
+}
+func (v *Var) TimeDuration() time.Duration {
+    return gconv.TimeDuration(v.Val())
+}
 
-func (v *Var) GTime(format...string) *gtime.Time    { return gconv.GTime(v.Val(), format...) }
+func (v *Var) GTime(format...string) *gtime.Time {
+    return gconv.GTime(v.Val(), format...)
+}
 
 // 将变量转换为对象，注意 objPointer 参数必须为struct指针
 func (v *Var) Struct(objPointer interface{}, attrMapping...map[string]string) error {

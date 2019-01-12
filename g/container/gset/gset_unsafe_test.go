@@ -14,9 +14,9 @@ import (
     "gitee.com/johng/gf/g/container/gset"
 )
 
-var intsUnsafe  = gset.NewIntSet(false)
-var itfsUnsafe  = gset.NewInterfaceSet(false)
-var strsUnsafe  = gset.NewStringSet(false)
+var intsUnsafe  = gset.NewIntSet(true)
+var itfsUnsafe  = gset.NewInterfaceSet(true)
+var strsUnsafe  = gset.NewStringSet(true)
 
 func Benchmark_Unsafe_IntSet_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {

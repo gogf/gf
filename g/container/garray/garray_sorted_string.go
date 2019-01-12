@@ -9,7 +9,7 @@ package garray
 import (
     "gitee.com/johng/gf/g/container/gtype"
     "strings"
-    "gitee.com/johng/gf/g/container/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 // 默认按照从低到高进行排序
@@ -21,9 +21,9 @@ type SortedStringArray struct {
     compareFunc func(v1, v2 string) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
-func NewSortedStringArray(cap int, safe...bool) *SortedStringArray {
+func NewSortedStringArray(cap int, unsafe...bool) *SortedStringArray {
     return &SortedStringArray {
-        mu          : rwmutex.New(safe...),
+        mu          : rwmutex.New(unsafe...),
         array       : make([]string, 0, cap),
         unique      : gtype.NewBool(),
         compareFunc : func(v1, v2 string) int {

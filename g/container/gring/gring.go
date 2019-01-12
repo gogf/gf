@@ -4,13 +4,13 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gring provides a concurrent-safe(alternative) ring(circular lists)/并发安全的环.
+// Package gring provides a concurrent-safe(alternative) ring(circular lists)/并发安全环.
 package gring
 
 import (
     "container/ring"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/container/internal/rwmutex"
+    "gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type Ring struct {
@@ -21,9 +21,9 @@ type Ring struct {
     dirty *gtype.Bool      // 标记环是否脏了(需要重新计算大小，当环大小发生改变时做标记)
 }
 
-func New(cap int, safe...bool) *Ring {
+func New(cap int, unsafe...bool) *Ring {
     return &Ring {
-        mu    : rwmutex.New(safe...),
+        mu    : rwmutex.New(unsafe...),
         ring  : ring.New(cap),
         len   : gtype.NewInt(),
         cap   : gtype.NewInt(cap),

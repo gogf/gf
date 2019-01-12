@@ -9,7 +9,7 @@ package gset
 
 import (
 	"fmt"
-	"gitee.com/johng/gf/g/container/internal/rwmutex"
+	"gitee.com/johng/gf/g/internal/rwmutex"
 )
 
 type InterfaceSet struct {
@@ -17,18 +17,18 @@ type InterfaceSet struct {
 	m  map[interface{}]struct{}
 }
 
-func NewInterfaceSet(safe...bool) *InterfaceSet {
+func NewInterfaceSet(unsafe...bool) *InterfaceSet {
 	return &InterfaceSet{
 		m  : make(map[interface{}]struct{}),
-		mu : rwmutex.New(safe...),
+		mu : rwmutex.New(unsafe...),
     }
 }
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
-func (this *InterfaceSet) Iterator(f func (v interface{}) bool) {
-    this.mu.RLock()
-    defer this.mu.RUnlock()
-    for k, _ := range this.m {
+func (set *InterfaceSet) Iterator(f func (v interface{}) bool) {
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    for k, _ := range set.m {
 		if !f(k) {
 			break
 		}
@@ -36,79 +36,79 @@ func (this *InterfaceSet) Iterator(f func (v interface{}) bool) {
 }
 
 // 添加
-func (this *InterfaceSet) Add(item interface{}) *InterfaceSet {
-	this.mu.Lock()
-	this.m[item] = struct{}{}
-	this.mu.Unlock()
-	return this
+func (set *InterfaceSet) Add(item interface{}) *InterfaceSet {
+	set.mu.Lock()
+	set.m[item] = struct{}{}
+	set.mu.Unlock()
+	return set
 }
 
 // 批量添加
-func (this *InterfaceSet) BatchAdd(items []interface{}) *InterfaceSet {
-	this.mu.Lock()
+func (set *InterfaceSet) BatchAdd(items []interface{}) *InterfaceSet {
+	set.mu.Lock()
 	for _, item := range items {
-		this.m[item] = struct{}{}
+		set.m[item] = struct{}{}
 	}
-	this.mu.Unlock()
-    return this
+	set.mu.Unlock()
+    return set
 }
 
 // 键是否存在
-func (this *InterfaceSet) Contains(item interface{}) bool {
-	this.mu.RLock()
-	_, exists := this.m[item]
-	this.mu.RUnlock()
+func (set *InterfaceSet) Contains(item interface{}) bool {
+	set.mu.RLock()
+	_, exists := set.m[item]
+	set.mu.RUnlock()
 	return exists
 }
 
 // 删除键值对
-func (this *InterfaceSet) Remove(key interface{}) {
-	this.mu.Lock()
-	delete(this.m, key)
-	this.mu.Unlock()
+func (set *InterfaceSet) Remove(key interface{}) {
+	set.mu.Lock()
+	delete(set.m, key)
+	set.mu.Unlock()
 }
 
 // 大小
-func (this *InterfaceSet) Size() int {
-	this.mu.RLock()
-	l := len(this.m)
-	this.mu.RUnlock()
+func (set *InterfaceSet) Size() int {
+	set.mu.RLock()
+	l := len(set.m)
+	set.mu.RUnlock()
 	return l
 }
 
 // 清空set
-func (this *InterfaceSet) Clear() {
-	this.mu.Lock()
-	this.m = make(map[interface{}]struct{})
-	this.mu.Unlock()
+func (set *InterfaceSet) Clear() {
+	set.mu.Lock()
+	set.m = make(map[interface{}]struct{})
+	set.mu.Unlock()
 }
 
 // 转换为数组
-func (this *InterfaceSet) Slice() []interface{} {
-	this.mu.RLock()
+func (set *InterfaceSet) Slice() []interface{} {
+	set.mu.RLock()
 	i   := 0
-	ret := make([]interface{}, len(this.m))
-	for item := range this.m {
+	ret := make([]interface{}, len(set.m))
+	for item := range set.m {
 		ret[i] = item
 		i++
 	}
-	this.mu.RUnlock()
+	set.mu.RUnlock()
 	return ret
 }
 
 // 转换为字符串
-func (this *InterfaceSet) String() string {
-	return fmt.Sprint(this.Slice())
+func (set *InterfaceSet) String() string {
+	return fmt.Sprint(set.Slice())
 }
 
-func (this *InterfaceSet) LockFunc(f func(m map[interface{}]struct{})) {
-	this.mu.Lock(true)
-	defer this.mu.Unlock(true)
-	f(this.m)
+func (set *InterfaceSet) LockFunc(f func(m map[interface{}]struct{})) {
+	set.mu.Lock(true)
+	defer set.mu.Unlock(true)
+	f(set.m)
 }
 
-func (this *InterfaceSet) RLockFunc(f func(m map[interface{}]struct{})) {
-	this.mu.RLock(true)
-	defer this.mu.RUnlock(true)
-	f(this.m)
+func (set *InterfaceSet) RLockFunc(f func(m map[interface{}]struct{})) {
+	set.mu.RLock(true)
+	defer set.mu.RUnlock(true)
+	f(set.m)
 }
