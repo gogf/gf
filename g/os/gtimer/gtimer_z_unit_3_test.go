@@ -15,7 +15,7 @@ import (
     "time"
 )
 
-func TestWheel_Times(t *testing.T) {
+func TestTimer_Times(t *testing.T) {
     gtest.Case(t, func() {
         wheel := New()
         array := garray.New(0, 0)

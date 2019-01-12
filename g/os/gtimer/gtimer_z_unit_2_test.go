@@ -15,7 +15,7 @@ import (
     "time"
 )
 
-func TestWheel_Entry_Operation(t *testing.T) {
+func TestTimer_Entry_Operation(t *testing.T) {
     wheel := New()
     array := garray.New(0, 0)
     entry := wheel.Add(time.Second, func() {
@@ -28,7 +28,7 @@ func TestWheel_Entry_Operation(t *testing.T) {
     gtest.Assert(array.Len(), 1)
 }
 
-func TestWheel_Entry_Singleton(t *testing.T) {
+func TestTimer_Entry_Singleton(t *testing.T) {
     wheel      := New()
     array      := garray.New(0, 0)
     entry := wheel.Add(time.Second, func() {
@@ -43,7 +43,7 @@ func TestWheel_Entry_Singleton(t *testing.T) {
     gtest.Assert(array.Len(), 1)
 }
 
-func TestWheel_Entry_Once(t *testing.T) {
+func TestTimer_Entry_Once(t *testing.T) {
     wheel := New()
     array := garray.New(0, 0)
     entry := wheel.Add(time.Second, func() {

@@ -21,7 +21,7 @@ func New() *gtimer.Timer {
     return gtimer.New(10, 10*time.Millisecond)
 }
 
-func TestWheel_Add_Close(t *testing.T) {
+func TestTimer_Add_Close(t *testing.T) {
     gtest.Case(t, func() {
         wheel  := New()
         array  := garray.New(0, 0)
@@ -50,7 +50,7 @@ func TestWheel_Add_Close(t *testing.T) {
     })
 }
 
-func TestWheel_Singleton(t *testing.T) {
+func TestTimer_Singleton(t *testing.T) {
    gtest.Case(t, func() {
        wheel := New()
        array := garray.New(0, 0)
@@ -66,7 +66,7 @@ func TestWheel_Singleton(t *testing.T) {
    })
 }
 
-func TestWheel_Once(t *testing.T) {
+func TestTimer_Once(t *testing.T) {
    gtest.Case(t, func() {
        wheel  := New()
        array  := garray.New(0, 0)
@@ -88,7 +88,7 @@ func TestWheel_Once(t *testing.T) {
    })
 }
 
-func TestWheel_DelayAdd(t *testing.T) {
+func TestTimer_DelayAdd(t *testing.T) {
    gtest.Case(t, func() {
        wheel := New()
        array := garray.New(0, 0)
@@ -102,7 +102,7 @@ func TestWheel_DelayAdd(t *testing.T) {
    })
 }
 
-func TestWheel_DelayAdd_Singleton(t *testing.T) {
+func TestTimer_DelayAdd_Singleton(t *testing.T) {
    gtest.Case(t, func() {
        wheel := New()
        array := garray.New(0, 0)
@@ -118,7 +118,7 @@ func TestWheel_DelayAdd_Singleton(t *testing.T) {
    })
 }
 
-func TestWheel_DelayAdd_Once(t *testing.T) {
+func TestTimer_DelayAdd_Once(t *testing.T) {
    gtest.Case(t, func() {
        wheel := New()
        array := garray.New(0, 0)
@@ -136,7 +136,7 @@ func TestWheel_DelayAdd_Once(t *testing.T) {
    })
 }
 
-func TestWheel_ExitJob(t *testing.T) {
+func TestTimer_ExitJob(t *testing.T) {
    gtest.Case(t, func() {
        wheel := New()
        array := garray.New(0, 0)
