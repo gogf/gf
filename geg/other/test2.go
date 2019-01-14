@@ -1,22 +1,19 @@
 package main
 
 import (
-    "container/list"
-    "gitee.com/johng/gf/g/os/glog"
+    "fmt"
+    "gitee.com/johng/gf/g/util/gconv"
     "time"
 )
 
 func main(){
-    list := list.New()
-    glog.Println("start1")
-    for i := 0; i < 10000000; i++ {
-        list.PushBack(i)
+    type Test struct {
+        Date time.Time `json:"date"`
     }
-    glog.Println("end1")
-
-    glog.Println("start2")
-    for e := list.Front(); e != nil; e = e.Next() {
-        time.Sleep(25*time.Nanosecond)
+    o := new(Test)
+    m := map[string]interface{}{
+        "Date" : "",
     }
-    glog.Println("end2")
+    gconv.Struct(m, o)
+    fmt.Println(o)
 }

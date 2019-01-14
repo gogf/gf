@@ -25,6 +25,9 @@ func TimeDuration(i interface{}) time.Duration {
 // 将变量i转换为time.Time类型
 func GTime(i interface{}, format...string) *gtime.Time {
     s := String(i)
+    if len(s) == 0 {
+        return gtime.New()
+    }
     // 优先使用用户输入日期格式进行转换
     if len(format) > 0 {
         t, _ := gtime.StrToTimeFormat(s, format[0])
