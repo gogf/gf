@@ -12,15 +12,27 @@ var (
     digits  = []rune("0123456789")
 )
 
+// 随机计算是否满足给定的概率(分子/分母)
+func Meet(num, total int) bool {
+    return Rand(0, total) <= num
+}
+
+// 随机计算是否满足给定的概率(float64)
+func MeetProb(prob float64) bool {
+    return Rand(0, 1e17) <= int(prob*1e17)
+}
+
+// Rand 别名
+func N (min, max int) int {
+   return Rand(min, max)
+}
+
 // 获得一个 min, max 之间的随机数(min <= x <= max)
 func Rand (min, max int) int {
     if min >= max {
         return min
     }
-    if min == 0 {
-        return intn(max + 1)
-    }
-    if min > 0 {
+    if min >= 0 {
         // 数值往左平移，再使用底层随机方法获得随机数，随后将结果数值往右平移
         return intn(max - (min - 0) + 1) + (min - 0)
     }
@@ -29,6 +41,11 @@ func Rand (min, max int) int {
         return intn(max + (0 - min) + 1) - (0 - min)
     }
     return 0
+}
+
+// RandStr 别名
+func Str(n int) string {
+    return RandStr(n)
 }
 
 // 获得指定长度的随机字符串(可能包含数字和字母)
@@ -44,6 +61,11 @@ func RandStr(n int) string {
     return string(b)
 }
 
+// RandDigits 别名
+func Digits(n int) string {
+    return RandDigits(n)
+}
+
 // 获得指定长度的随机数字字符串
 func RandDigits(n int) string {
     b := make([]rune, n)
@@ -51,6 +73,11 @@ func RandDigits(n int) string {
         b[i] = digits[intn(10)]
     }
     return string(b)
+}
+
+// RandLetters 别名
+func Letters(n int) string {
+    return RandLetters(n)
 }
 
 // 获得指定长度的随机字母字符串

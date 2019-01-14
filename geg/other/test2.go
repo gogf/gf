@@ -2,31 +2,11 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g/util/grand"
 )
 
 func main() {
-    type Score struct {
-        Name   string
-        Result int
-    }
-    type User struct {
-        Scores []*Score
-    }
-
-    user   := new(User)
-    scores := map[string]interface{}{
-        "Scores" : map[string]interface{}{
-            "Name"   : "john",
-            "Result" : 100,
-        },
-    }
-
-    // 嵌套struct转换，属性为slice类型，数值为map类型
-    if err := gconv.Struct(scores, user); err != nil {
-        fmt.Println(err)
-    } else {
-        g.Dump(user)
-    }
+    fmt.Println(float64(10)/3)
+    fmt.Println(grand.Meet(1, 1))
+    fmt.Println(grand.MeetProb(float64(1)/2))
 }
