@@ -12,7 +12,7 @@ func main() {
         Result int
     }
     type User struct {
-        Scores []Score
+        Scores []*Score
     }
 
     user   := new(User)

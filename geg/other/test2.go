@@ -2,18 +2,31 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/util/gconv"
-    "time"
 )
 
-func main(){
-    type Test struct {
-        Date time.Time `json:"date"`
+func main() {
+    type Score struct {
+        Name   string
+        Result int
     }
-    o := new(Test)
-    m := map[string]interface{}{
-        "Date" : "",
+    type User struct {
+        Scores []*Score
     }
-    gconv.Struct(m, o)
-    fmt.Println(o)
+
+    user   := new(User)
+    scores := map[string]interface{}{
+        "Scores" : map[string]interface{}{
+            "Name"   : "john",
+            "Result" : 100,
+        },
+    }
+
+    // 嵌套struct转换，属性为slice类型，数值为map类型
+    if err := gconv.Struct(scores, user); err != nil {
+        fmt.Println(err)
+    } else {
+        g.Dump(user)
+    }
 }
