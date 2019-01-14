@@ -74,9 +74,9 @@ func New(value interface{}, unsafe...bool) *Json {
 // 创建一个非并发安全的Json对象
 func NewUnsafe(value...interface{}) *Json {
     if len(value) > 0 {
-        return New(value[0], false)
+        return New(value[0], true)
     }
-    return New(nil, false)
+    return New(nil, true)
 }
 
 // 编码go变量为json字符串，并返回json字符串指针
@@ -141,11 +141,6 @@ func LoadContent(data []byte, dataType...string) (*Json, error) {
                 return nil, err
             }
 
-        case  "json", ".json":
-            if err := json.Unmarshal(data, &result); err != nil {
-                return nil, err
-            }
-
         case   "yml", "yaml", ".yml", ".yaml":
             data, err = gyaml.ToJson(data)
             if err != nil {
@@ -158,7 +153,11 @@ func LoadContent(data []byte, dataType...string) (*Json, error) {
                 return nil, err
             }
     }
-
+    if result == nil {
+        if err := json.Unmarshal(data, &result); err != nil {
+            return nil, err
+        }
+    }
     return New(result), nil
 }
 

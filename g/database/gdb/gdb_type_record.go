@@ -27,7 +27,7 @@ func (r Record) ToXml(rootTag...string) string {
 func (r Record) ToMap() Map {
     m := make(map[string]interface{})
     for k, v := range r {
-        m[k] = v.String()
+        m[k] = v.Val()
     }
     return m
 }
@@ -36,7 +36,7 @@ func (r Record) ToMap() Map {
 func (r Record) ToStruct(obj interface{}) error {
     m := make(map[string]interface{})
     for k, v := range r {
-        m[k] = v.String()
+        m[k] = v.Val()
     }
     return gconv.Struct(m, obj)
 }

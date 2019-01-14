@@ -156,9 +156,9 @@ func (c *Config) Get(pattern string, file...string) interface{} {
 // 获得配置项，返回动态变量
 func (c *Config) GetVar(pattern string, file...string) gvar.VarRead {
     if j := c.getJson(file...); j != nil {
-        return gvar.New(j.Get(pattern), false)
+        return gvar.New(j.Get(pattern), true)
     }
-    return gvar.New(nil, false)
+    return gvar.New(nil, true)
 }
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换

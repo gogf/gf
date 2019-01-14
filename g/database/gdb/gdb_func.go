@@ -8,10 +8,8 @@ package gdb
 
 import (
     "bytes"
-    "database/sql"
     "errors"
     "fmt"
-    "gitee.com/johng/gf/g/container/gvar"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
@@ -21,41 +19,6 @@ import (
     "reflect"
     "strings"
 )
-
-// 将数据查询的列表数据*sql.Rows转换为Result类型
-func rowsToResult(rows *sql.Rows) (Result, error) {
-    // 列名称列表
-    columns, err := rows.Columns()
-    if err != nil {
-        return nil, err
-    }
-    // 返回结构组装
-    values   := make([]sql.RawBytes, len(columns))
-    scanArgs := make([]interface{}, len(values))
-    records  := make(Result, 0)
-    for i := range values {
-        scanArgs[i] = &values[i]
-    }
-    for rows.Next() {
-        err = rows.Scan(scanArgs...)
-        if err != nil {
-            return records, err
-        }
-        row := make(Record)
-        // 注意col字段是一个[]byte类型(slice类型本身是一个指针)，多个记录循环时该变量指向的是同一个内存地址
-        for i, col := range values {
-            if col == nil {
-                row[columns[i]] = gvar.New(nil, false)
-            } else {
-                v := make([]byte, len(col))
-                copy(v, col)
-                row[columns[i]] = gvar.New(v, false)
-            }
-        }
-        records = append(records, row)
-    }
-    return records, nil
-}
 
 // 格式化SQL查询条件
 func formatCondition(where interface{}, args []interface{}) (string, []interface{}) {

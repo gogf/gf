@@ -51,7 +51,7 @@ func (tx *TX) GetAll(query string, args ...interface{}) (Result, error) {
         return nil, err
     }
     defer rows.Close()
-    return rowsToResult(rows)
+    return tx.db.rowsToResult(rows)
 }
 
 // 数据库查询，获取查询结果记录，以关联数组结构返回

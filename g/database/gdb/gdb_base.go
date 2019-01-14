@@ -11,6 +11,7 @@ import (
     "database/sql"
     "errors"
     "fmt"
+    "gitee.com/johng/gf/g/container/gvar"
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
@@ -149,7 +150,7 @@ func (bs *dbBase) GetAll(query string, args ...interface{}) (Result, error) {
         return nil, err
     }
     defer rows.Close()
-    return rowsToResult(rows)
+    return bs.db.rowsToResult(rows)
 }
 
 // 数据库查询，获取查询结果记录，以关联数组结构返回
@@ -434,36 +435,40 @@ func (bs *dbBase) getCache() *gcache.Cache {
     return bs.cache
 }
 
-// 将map的数据按照fields进行过滤，只保留与表字段同名的数据
-func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
-    if fields, err := bs.db.getTableFields(table); err == nil {
-        for k, _ := range data {
-            if _, ok := fields[k]; !ok {
-                delete(data, k)
+// 将数据查询的列表数据*sql.Rows转换为Result类型
+func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
+    // 列信息列表, 名称与类型
+    types          := make([]string, 0)
+    columns        := make([]string, 0)
+    columnTypes, _ := rows.ColumnTypes()
+    for _, t := range columnTypes {
+        types   = append(types, t.DatabaseTypeName())
+        columns = append(columns, t.Name())
+    }
+    // 返回结构组装
+    values   := make([]sql.RawBytes, len(columns))
+    scanArgs := make([]interface{}, len(values))
+    records  := make(Result, 0)
+    for i := range values {
+        scanArgs[i] = &values[i]
+    }
+    for rows.Next() {
+        if err := rows.Scan(scanArgs...); err != nil {
+            return records, err
+        }
+        row := make(Record)
+        // 注意col字段是一个[]byte类型(slice类型本身是一个指针)，多个记录循环时该变量指向的是同一个内存地址
+        for i, col := range values {
+            if col == nil {
+                row[columns[i]] = gvar.New(nil, true)
+            } else {
+                // 由于 sql.RawBytes 是slice类型, 这里必须使用值复制
+                v := make([]byte, len(col))
+                copy(v, col)
+                row[columns[i]] = gvar.New(bs.db.convertValue(v, types[i]), true)
             }
         }
+        records = append(records, row)
     }
-    return data
-}
-
-// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值暂无用途(默认为字段数据类型).
-func (bs *dbBase) getTableFields(table string) (fields map[string]string, err error) {
-    // 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
-    v := bs.cache.GetOrSetFunc("table_fields_" + table, func() interface{} {
-        result       := (Result)(nil)
-        charl, charr := bs.db.getChars()
-        result, err   = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s%s%s`, charl, table, charr))
-        if err != nil {
-            return nil
-        }
-        fields = make(map[string]string)
-        for _, m := range result {
-            fields[m["Field"].String()] = m["Type"].String()
-        }
-        return fields
-    }, 0)
-    if err == nil {
-        fields = v.(map[string]string)
-    }
-    return
+    return records, nil
 }

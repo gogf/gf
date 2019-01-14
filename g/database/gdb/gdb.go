@@ -90,7 +90,9 @@ type DB interface {
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
     filterFields(table string, data map[string]interface{}) map[string]interface{}
+    convertValue(fieldValue interface{}, fieldType string) interface{}
     getTableFields(table string) (map[string]string, error)
+    rowsToResult(rows *sql.Rows) (Result, error)
     handleSqlBeforeExec(sql string) string
 }
 
@@ -103,15 +105,16 @@ type dbLink interface {
 
 // 数据库链接对象
 type dbBase struct {
-	db               DB            // 数据库对象
-	group            string        // 配置分组名称
-	debug            *gtype.Bool   // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
-	sqls             *gring.Ring   // (debug=true时有效)已执行的SQL列表
-	cache            *gcache.Cache // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
-    schema           *gtype.String // 手动切换的数据库名称
-	maxIdleConnCount *gtype.Int    // 连接池最大限制的连接数
-    maxOpenConnCount *gtype.Int    // 连接池最大打开的连接数
-    maxConnLifetime  *gtype.Int    // (单位秒)连接对象可重复使用的时间长度
+	db               DB                           // 数据库对象
+	group            string                       // 配置分组名称
+	debug            *gtype.Bool                  // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
+	sqls             *gring.Ring                  // (debug=true时有效)已执行的SQL列表
+	cache            *gcache.Cache                // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
+    schema           *gtype.String                // 手动切换的数据库名称
+    tables           map[string]map[string]string // 数据库表结构
+	maxIdleConnCount *gtype.Int                   // 连接池最大限制的连接数
+    maxOpenConnCount *gtype.Int                   // 连接池最大打开的连接数
+    maxConnLifetime  *gtype.Int                   // (单位秒)连接对象可重复使用的时间长度
 }
 
 // 执行的SQL对象
@@ -125,7 +128,7 @@ type Sql struct {
 }
 
 // 返回数据表记录值
-type Value = gvar.VarRead
+type Value = *gvar.Var
 
 // 返回数据表记录Map
 type Record map[string]Value
