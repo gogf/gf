@@ -13,7 +13,7 @@ import (
 )
 
 // 缓存对象，主要用于缓存底层regx对象
-var regxCache = gmap.NewStringInterfaceMap(true)
+var regxCache = gmap.NewStringInterfaceMap()
 
 // 根据pattern生成对应的regexp正则对象
 func getRegexp(pattern string) (*regexp.Regexp, error) {
