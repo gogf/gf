@@ -41,8 +41,14 @@ func Assert(value, expect interface{}) {
     }
 }
 
-// 断言判断, 相等
+// 断言判断, 相等, 包括数据类型
 func AssertEQ(value, expect interface{}) {
+    // 类型判断
+    t1 := reflect.TypeOf(value)
+    t2 := reflect.TypeOf(expect)
+    if t1 != t2 {
+        panic(fmt.Sprintf(`[ASSERT] EXPECT TYPE %v == %v`, t1, t2))
+    }
     rv := reflect.ValueOf(value)
     if rv.Kind() == reflect.Ptr {
         if rv.IsNil() {
