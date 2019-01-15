@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gstr provides useful API for string handling.
 // 字符串操作.
 package gstr
 

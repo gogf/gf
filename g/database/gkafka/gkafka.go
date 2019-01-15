@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gkafka provides producer and consumer client for kafka server/Kafka客户端.
+// Package gkafka provides producer and consumer client for kafka server.
+// Kafka客户端.
 package gkafka
 
 import (

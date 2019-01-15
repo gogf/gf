@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gchan provides graceful operations for channel/优雅的Channel操作.
+// Package gchan provides graceful operations for channel.
+// 优雅的Channel操作.
 package gchan
 
 import (

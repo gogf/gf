@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 随机数管理
+// Package grand provides high performance API for random feature.
+// 随机数管理.
 package grand
 
 var (

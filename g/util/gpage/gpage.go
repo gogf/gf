@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gpage provides useful paging functionality for web pages.
 // 分页管理.
 package gpage
 

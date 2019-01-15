@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gmap provides kinds of concurrent-safe(alternative) maps/并发安全的哈希MAP.
+// Package gmap provides kinds of concurrent-safe(alternative) maps.
+// 并发安全的哈希MAP.
 package gmap
 
 // 默认的Map对象其实就是InterfaceInterfaceMap的别名。

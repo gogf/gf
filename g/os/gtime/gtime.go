@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gtime provides functionality for measuring and displaying time/时间管理.
+// Package gtime provides functionality for measuring and displaying time.
+// 时间管理.
 package gtime
 
 import (

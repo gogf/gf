@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 常用的hash函数
+// Package ghash provides some popular hash functions(uint32/uint64) in go.
+// 常用的hash函数.
 package ghash
 
 

@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package genv provides operations for environment variables of system.
 // 环境变量管理
 package genv
 

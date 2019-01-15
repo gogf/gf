@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// CRC32
+// Package gcrc32 provides useful API for CRC32 encryption/decryption algorithms.
+// CRC32算法.
 package gcrc32
 
 import (

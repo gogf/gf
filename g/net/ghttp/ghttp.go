@@ -4,5 +4,5 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// HTTP Client & Server.
+// Package ghttp provides quite powerful HTTP server and simple client implementations.
 package ghttp

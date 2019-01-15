@@ -4,5 +4,4 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 数据编码/解码.
 package encoding

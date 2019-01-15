@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gmlock implements a thread-safe memory locker.
 // 内存锁.
 package gmlock
 

@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gtest provides simple and useful test utils/测试模块.
+// Package gtest provides simple and useful test utils.
+// 测试模块.
 package gtest
 
 import (

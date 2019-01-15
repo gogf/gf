@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gvalid implements powerful and useful data/form validation functionality.
 // 数据校验.
 package gvalid
 

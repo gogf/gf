@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gconv implements powerful and easy-to-use converting functionality for any types of variables.
 // 类型转换.
 // 内部使用了bytes作为底层转换类型，效率很高。
 package gconv

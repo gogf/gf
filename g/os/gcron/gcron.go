@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gcron implements a cron pattern parser and job runner/定时任务.
+// Package gcron implements a cron pattern parser and job runner.
+// 定时任务.
 package gcron
 
 const (

@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 // @author: wenzi1<liyz23@qq.com>
 
+// Package gdes provides useful API for DES encryption/decryption algorithms.
 package gdes
 
 import (

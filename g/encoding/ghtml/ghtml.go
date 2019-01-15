@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// HTML编码
+// Package ghtml provides useful API for HTML content handling.
+// HTML编码.
 package ghtml
 
 import (

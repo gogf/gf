@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gtimer implements Levelled Timing Wheel for interval/delayed jobs running and management/任务定时器(分层时间轮).
+// Package gtimer implements Levelled Timing Wheel for interval/delayed jobs running and management.
+// 任务定时器(分层时间轮).
 // 高效的时间轮任务管理模块，用于管理间隔/延迟运行任务。
 // 与gcron模块的区别是，时间轮模块只管理间隔执行任务，并且更注重执行效率(纳秒级别)。
 // 需要注意执行时间间隔的准确性问题: https://github.com/golang/go/issues/14410

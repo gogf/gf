@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gutil provides some uncategorized util functions.
 // 工具包
 package gutil
 

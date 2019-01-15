@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// YAML
+// Package gyaml provides accessing and converting for YAML content.
+// YAML.
 package gyaml
 
 import "gitee.com/johng/gf/third/github.com/ghodss/yaml"

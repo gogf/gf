@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// AES
+// Package gaes provides useful API for AES encryption/decryption algorithms.
+// AES算法.
 package gaes
 
 import (

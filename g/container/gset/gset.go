@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gset provides kinds of concurrent-safe(alternative) sets/并发安全集合.
+// Package gset provides kinds of concurrent-safe(alternative) sets.
+// 并发安全集合.
 package gset
 
 type Set = InterfaceSet

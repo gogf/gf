@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+// Package gbase64 provides useful API for BASE64 encoding/decoding algorithms.
 // BASE64
 package gbase64
 

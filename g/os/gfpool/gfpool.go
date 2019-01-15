@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 文件指针池
+// Package gfpool provides io-reuse pool for file pointer.
+// 文件指针池.
 package gfpool
 
 import (

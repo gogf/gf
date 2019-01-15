@@ -5,7 +5,8 @@
 // You can obtain one at https://gitee.com/johng/gf.
 //
 
-// Package glist provides a concurrent-safe(alternative) doubly linked list/并发安全的双向链表.
+// Package glist provides a concurrent-safe(alternative) doubly linked list.
+// 并发安全的双向链表.
 package glist
 
 import (
