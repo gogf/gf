@@ -15,23 +15,25 @@ import (
 
 // 定时任务项
 type Entry struct {
-    mode      *gtype.Int    // 任务运行模式(0: normal; 1: singleton; 2: once)
-    status    *gtype.Int    // 定时任务状态(0: ready;  1: running;  -1: stopped)
-    schedule  *cronSchedule // 定时任务配置对象
-    Name      string        // 定时任务名称
-    Job       func()        // 注册定时任务方法
-    JobName   string        // 注册定时任务名称
-    Time      time.Time     // 注册时间
+    singleton  *gtype.Bool   // 任务是否单例运行
+    times      *gtype.Int    // 还需运行次数
+    status     *gtype.Int    // 定时任务状态(0: ready;  1: running;  -1: stopped)
+    schedule   *cronSchedule // 定时任务配置对象
+    Name       string        // 定时任务名称
+    Job        func()        // 注册定时任务方法
+    JobName    string        // 注册定时任务名称
+    Time       time.Time     // 注册时间
 }
 
 // 创建定时任务
-func newEntry(pattern string, job func(), name ... string) (*Entry, error) {
+func newEntry(pattern string, job func(), singleton bool, times int, name ... string) (*Entry, error) {
     schedule, err := newSchedule(pattern)
     if err != nil {
         return nil, err
     }
     entry := &Entry {
-        mode      : gtype.NewInt(),
+        singleton : gtype.NewBool(singleton),
+        times     : gtype.NewInt(times),
         status    : gtype.NewInt(),
         schedule  : schedule,
         Job       : job,
@@ -44,14 +46,29 @@ func newEntry(pattern string, job func(), name ... string) (*Entry, error) {
     return entry, nil
 }
 
-// 设置任务运行模式(0: normal; 1: singleton; 2: once)
-func (entry *Entry) SetMode(mode int) {
-    entry.mode.Set(mode)
+// 是否单例运行
+func (entry *Entry) IsSingleton() bool {
+    return entry.singleton.Val()
+}
+
+// 设置单例运行
+func (entry *Entry) SetSingleton(enabled bool) {
+    entry.singleton.Set(enabled)
+}
+
+// 设置任务的运行次数
+func (entry *Entry) SetTimes(times int) {
+    entry.times.Set(times)
 }
 
 // 定时任务状态
 func (entry *Entry) Status() int {
     return entry.status.Val()
+}
+
+// 设置定时任务状态, 返回设置之前的状态
+func (entry *Entry) SetStatus(status int) int {
+    return entry.status.Set(status)
 }
 
 // 启动定时任务
@@ -62,4 +79,9 @@ func (entry *Entry) Start() {
 // 停止定时任务
 func (entry *Entry) Stop() {
     entry.status.Set(STATUS_STOPPED)
+}
+
+// 关闭定时任务
+func (entry *Entry) Close() {
+    entry.status.Set(STATUS_CLOSED)
 }

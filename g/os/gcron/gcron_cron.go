@@ -49,7 +49,7 @@ func (c *Cron) Add(pattern string, job func(), name ... string) (*Entry, error) 
             return nil, errors.New(fmt.Sprintf(`cron job "%s" already exists`, name[0]))
         }
     }
-    entry, err := newEntry(pattern, job, name ...)
+    entry, err := newEntry(pattern, job, false, gDEFAULT_TIMES, name ...)
     if err != nil {
         return nil, err
     }
@@ -67,7 +67,7 @@ func (c *Cron) AddSingleton(pattern string, job func(), name ... string) (*Entry
     if entry, err := c.Add(pattern, job, name ...); err != nil {
         return nil, err
     } else {
-        entry.SetMode(MODE_SINGLETON)
+        entry.SetSingleton(true)
         return entry, nil
     }
 }
@@ -77,7 +77,17 @@ func (c *Cron) AddOnce(pattern string, job func(), name ... string) (*Entry, err
     if entry, err := c.Add(pattern, job, name ...); err != nil {
         return nil, err
     } else {
-        entry.SetMode(MODE_ONCE)
+        entry.SetTimes(1)
+        return entry, nil
+    }
+}
+
+// 添加运行指定次数的定时任务
+func (c *Cron) AddTimes(pattern string, times int, job func(), name ... string) (*Entry, error) {
+    if entry, err := c.Add(pattern, job, name ...); err != nil {
+        return nil, err
+    } else {
+        entry.SetTimes(times)
         return entry, nil
     }
 }
@@ -100,10 +110,19 @@ func (c *Cron) DelayAddSingleton(delay int, pattern string, job func(), name ...
     })
 }
 
-// 延迟添加只运行一次的定时任务，delay参数单位为秒
+// 延迟添加运行指定次数的定时任务，delay参数单位为秒
 func (c *Cron) DelayAddOnce(delay int, pattern string, job func(), name ... string) {
     gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
         if _, err := c.AddOnce(pattern, job, name ...); err != nil {
+            panic(err)
+        }
+    })
+}
+
+// 延迟添加只运行一次的定时任务，delay参数单位为秒
+func (c *Cron) DelayAddTimes(delay int, pattern string, times int, job func(), name ... string) {
+    gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
+        if _, err := c.AddTimes(pattern, times, job, name ...); err != nil {
             panic(err)
         }
     })
@@ -184,33 +203,45 @@ func (c *Cron) Entries() []*Entry {
 
 // 遍历检查可执行定时任务，并异步执行
 func (c *Cron) checkEntries(t time.Time) {
+    removeKeys := make([]string, 0)
     c.entries.RLockFunc(func(m map[string]interface{}) {
-        for _, v := range m {
+        for k, v := range m {
             entry := v.(*Entry)
             if entry.schedule.meet(t) {
-                // 是否已命令停止运行
+                // 是否停止
                 if entry.status.Val() == STATUS_STOPPED {
                     continue
                 }
-                switch entry.mode.Val() {
-                    // 是否只允许单例运行
-                    case MODE_SINGLETON:
-                        if  entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
-                            continue
-                        }
-                        // 只运行一次的任务
-                    case MODE_ONCE:
-                        if  entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED {
-                            continue
-                        }
+                // 是否关闭
+                if entry.status.Val() == STATUS_CLOSED {
+                    removeKeys = append(removeKeys, k)
+                    continue
+                }
+                // 单例模式
+                if entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
+                    if entry.IsSingleton() {
+                        continue
+                    }
+                }
+                // 运行次数
+                if t := entry.times.Add(-1); t <= 0 {
+                    if entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED {
+                        continue
+                    }
+                } else if t < 2000000000 && t > 1000000000 {
+                    entry.times.Set(gDEFAULT_TIMES)
                 }
                 // 执行异步运行
                 go func() {
                     defer func() {
-                        if entry.status.Val() != STATUS_CLOSED {
-                            entry.status.Set(STATUS_READY)
-                        } else {
-                            c.Remove(entry.Name)
+                        switch entry.status.Val() {
+                            case STATUS_CLOSED:
+                                c.Remove(entry.Name)
+
+                            case STATUS_STOPPED:
+
+                            default:
+                                entry.status.Set(STATUS_READY)
                         }
                     }()
                     entry.Job()
@@ -218,4 +249,7 @@ func (c *Cron) checkEntries(t time.Time) {
             }
         }
     })
+    if len(removeKeys) > 0 {
+        c.entries.BatchRemove(removeKeys)
+    }
 }

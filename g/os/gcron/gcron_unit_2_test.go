@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+
 package gcron_test
 
 import (
@@ -14,17 +15,30 @@ import (
     "time"
 )
 
-func TestCron_AddSingleton(t *testing.T) {
+func TestCron_Entry_Operations(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
         array := garray.New(0, 0)
-        cron.AddSingleton("* * * * * *", func() {
+        entry, err1 := cron.Add("* * * * * *", func() {
             array.Append(1)
-            time.Sleep(5*time.Second)
-
         })
+        gtest.Assert(err1, nil)
+        gtest.Assert(array.Len(), 0)
         gtest.Assert(cron.Size(), 1)
-        time.Sleep(3500*time.Millisecond)
+        time.Sleep(1200*time.Millisecond)
         gtest.Assert(array.Len(), 1)
+        gtest.Assert(cron.Size(), 1)
+        entry.Stop()
+        time.Sleep(1200*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+        gtest.Assert(cron.Size(), 1)
+        entry.Start()
+        time.Sleep(1200*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+        gtest.Assert(cron.Size(), 1)
+        entry.Close()
+        time.Sleep(1200*time.Millisecond)
+        gtest.Assert(cron.Size(), 0)
+
     })
 }

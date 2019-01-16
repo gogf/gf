@@ -53,7 +53,7 @@ func TestCron_Add_Close(t *testing.T) {
     })
 }
 
-func TestCron_Method(t *testing.T) {
+func TestCron_Basic(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
         cron.Add("* * * * * *", func() {}, "add")
@@ -70,5 +70,113 @@ func TestCron_Method(t *testing.T) {
         entry2 := cron.Search("test-none")
         gtest.AssertNE(entry1, nil)
         gtest.Assert(entry2, nil)
+    })
+}
+
+func TestCron_AddSingleton(t *testing.T) {
+    gtest.Case(t, func() {
+        cron  := gcron.New()
+        array := garray.New(0, 0)
+        cron.AddSingleton("* * * * * *", func() {
+            array.Append(1)
+            time.Sleep(5*time.Second)
+
+        })
+        gtest.Assert(cron.Size(), 1)
+        time.Sleep(3500*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+    })
+}
+
+func TestCron_AddOnce(t *testing.T) {
+    gtest.Case(t, func() {
+        cron  := gcron.New()
+        array := garray.New(0, 0)
+        cron.AddOnce("* * * * * *", func() {
+            array.Append(1)
+        })
+        cron.AddOnce("* * * * * *", func() {
+            array.Append(1)
+        })
+        gtest.Assert(cron.Size(), 2)
+        time.Sleep(2500*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+        gtest.Assert(cron.Size(), 0)
+    })
+}
+
+func TestCron_AddTimes(t *testing.T) {
+    gtest.Case(t, func() {
+        cron  := gcron.New()
+        array := garray.New(0, 0)
+        cron.AddTimes("* * * * * *", 2, func() {
+            array.Append(1)
+        })
+        time.Sleep(3500*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+        gtest.Assert(cron.Size(), 0)
+    })
+}
+
+func TestCron_DelayAdd(t *testing.T) {
+    gtest.Case(t, func() {
+        cron  := gcron.New()
+        array := garray.New(0, 0)
+        cron.DelayAdd(1, "* * * * * *", func() {
+            array.Append(1)
+        })
+        gtest.Assert(cron.Size(), 0)
+        time.Sleep(1200*time.Millisecond)
+        gtest.Assert(array.Len(), 0)
+        gtest.Assert(cron.Size(), 1)
+        time.Sleep(1200*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+        gtest.Assert(cron.Size(), 1)
+    })
+}
+
+func TestCron_DelayAddSingleton(t *testing.T) {
+    gtest.Case(t, func() {
+        cron  := gcron.New()
+        array := garray.New(0, 0)
+        cron.DelayAddSingleton(1, "* * * * * *", func() {
+            array.Append(1)
+            time.Sleep(10*time.Second)
+        })
+        gtest.Assert(cron.Size(), 0)
+        time.Sleep(2200*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+        gtest.Assert(cron.Size(), 1)
+    })
+}
+
+func TestCron_DelayAddOnce(t *testing.T) {
+    gtest.Case(t, func() {
+        cron  := gcron.New()
+        array := garray.New(0, 0)
+        cron.DelayAddOnce(1, "* * * * * *", func() {
+            array.Append(1)
+        })
+        gtest.Assert(cron.Size(), 0)
+        time.Sleep(1200*time.Millisecond)
+        gtest.Assert(array.Len(), 0)
+        gtest.Assert(cron.Size(), 1)
+        time.Sleep(1200*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+        gtest.Assert(cron.Size(), 0)
+    })
+}
+
+func TestCron_DelayAddTimes(t *testing.T) {
+    gtest.Case(t, func() {
+        cron  := gcron.New()
+        array := garray.New(0, 0)
+        cron.DelayAddTimes(1, "* * * * * *", 2, func() {
+            array.Append(1)
+        })
+        gtest.Assert(cron.Size(), 0)
+        time.Sleep(5000*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+        gtest.Assert(cron.Size(), 0)
     })
 }
