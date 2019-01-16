@@ -1,12 +1,15 @@
 package main
 
 import (
-    "fmt"
-    "gitee.com/johng/gf/g/util/grand"
+    "gitee.com/johng/gf/g/os/gcron"
+    "gitee.com/johng/gf/g/os/glog"
+    "time"
 )
 
 func main() {
-    fmt.Println(float64(10)/3)
-    fmt.Println(grand.Meet(1, 1))
-    fmt.Println(grand.MeetProb(float64(1)/2))
+    gcron.AddSingleton("* * * * * *", func() {
+        glog.Println("doing")
+        time.Sleep(2*time.Second)
+    })
+    select { }
 }
