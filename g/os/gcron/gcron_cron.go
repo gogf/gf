@@ -20,7 +20,7 @@ import (
 // 定时任务管理对象
 type Cron struct {
     idgen    *gtype.Int               // 用于唯一名称生成
-    status   *gtype.Int               // 定时任务状态(0: 未执行; 1: 运行中; -1:删除关闭)
+    status   *gtype.Int               // 定时任务状态(0: 未执行; 1: 运行中; 2: 已停止; -1:删除关闭)
     entries  *gmap.StringInterfaceMap // 所有的定时任务项
 }
 
@@ -31,7 +31,14 @@ func New() *Cron {
         status   : gtype.NewInt(STATUS_RUNNING),
         entries  : gmap.NewStringInterfaceMap(),
     }
-    cron.startLoop()
+    gtimer.Add(time.Second, func() {
+        if cron.status.Val() == STATUS_CLOSED {
+            gtimer.Exit()
+        }
+        if cron.status.Val() == STATUS_RUNNING {
+            go cron.checkEntries(time.Now())
+        }
+    })
     return cron
 }
 
@@ -124,7 +131,7 @@ func (c *Cron) Start(name...string) {
             }
         }
     } else {
-        c.status.Set(STATUS_RUNNING)
+        c.status.Set(STATUS_READY)
     }
 }
 
@@ -137,7 +144,7 @@ func (c *Cron) Stop(name...string) {
             }
         }
     } else {
-        c.status.Set(STATUS_READY)
+        c.status.Set(STATUS_STOPPED)
     }
 }
 
@@ -160,7 +167,7 @@ func (c *Cron) Entries() []*Entry {
             return 1
         }
         return -1
-    }, false)
+    }, true)
     c.entries.RLockFunc(func(m map[string]interface{}) {
         for _, v := range m {
             array.Add(v.(*Entry))
@@ -173,4 +180,42 @@ func (c *Cron) Entries() []*Entry {
         }
     })
     return entries
+}
+
+// 遍历检查可执行定时任务，并异步执行
+func (c *Cron) checkEntries(t time.Time) {
+    c.entries.RLockFunc(func(m map[string]interface{}) {
+        for _, v := range m {
+            entry := v.(*Entry)
+            if entry.schedule.meet(t) {
+                // 是否已命令停止运行
+                if entry.status.Val() == STATUS_STOPPED {
+                    continue
+                }
+                switch entry.mode.Val() {
+                    // 是否只允许单例运行
+                    case MODE_SINGLETON:
+                        if  entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
+                            continue
+                        }
+                        // 只运行一次的任务
+                    case MODE_ONCE:
+                        if  entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED {
+                            continue
+                        }
+                }
+                // 执行异步运行
+                go func() {
+                    defer func() {
+                        if entry.status.Val() != STATUS_CLOSED {
+                            entry.status.Set(STATUS_READY)
+                        } else {
+                            c.Remove(entry.Name)
+                        }
+                    }()
+                    entry.Job()
+                }()
+            }
+        }
+    })
 }

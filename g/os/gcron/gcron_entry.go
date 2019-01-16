@@ -61,5 +61,5 @@ func (entry *Entry) Start() {
 
 // 停止定时任务
 func (entry *Entry) Stop() {
-    entry.status.Set(STATUS_CLOSED)
+    entry.status.Set(STATUS_STOPPED)
 }

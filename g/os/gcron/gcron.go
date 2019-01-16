@@ -16,6 +16,7 @@ const (
 
     STATUS_READY   = 0
     STATUS_RUNNING = 1
+    STATUS_STOPPED = 2
     STATUS_CLOSED  = -1
 )
 
