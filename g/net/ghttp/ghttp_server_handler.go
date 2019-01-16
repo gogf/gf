@@ -171,41 +171,49 @@ func (s *Server) callServeHandler(h *handlerItem, r *Request) {
         s.niceCallFunc(func() {
             c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
         })
-        s.niceCallFunc(func() {
-            c.MethodByName(h.fname).Call(nil)
-        })
-        s.niceCallFunc(func() {
-            c.MethodByName("Shut").Call(nil)
-        })
+        if !r.IsExited() {
+            s.niceCallFunc(func() {
+                c.MethodByName(h.fname).Call(nil)
+            })
+        }
+        if !r.IsExited() {
+            s.niceCallFunc(func() {
+                c.MethodByName("Shut").Call(nil)
+            })
+        }
     } else {
         if h.finit != nil {
-            s.niceCallServeHandler(h.finit, r)
+            s.niceCallFunc(func() {
+                h.finit(r)
+            })
         }
-        s.niceCallServeHandler(h.faddr, r)
-        if h.fshut != nil {
-            s.niceCallServeHandler(h.fshut, r)
+        if !r.IsExited() {
+            s.niceCallFunc(func() {
+                h.faddr(r)
+            })
+        }
+        if h.fshut != nil && !r.IsExited() {
+            s.niceCallFunc(func() {
+                h.fshut(r)
+            })
         }
     }
 }
 
-// 友好地调用通用方法
+// 友好地调用方法
 func (s *Server) niceCallFunc(f func()) {
     defer func() {
-        if e := recover(); e != nil && e != gEXCEPTION_EXIT {
-            panic(e)
+        if err := recover(); err != nil {
+            switch err {
+                case gEXCEPTION_EXIT:    fallthrough
+                case gEXCEPTION_EXIT_ALL:
+                    return
+                default:
+                    panic(err)
+            }
         }
     }()
     f()
-}
-
-// 友好地调用HandlerFunc
-func (s *Server) niceCallServeHandler(f HandlerFunc, r *Request) {
-    defer func() {
-        if e := recover(); e != nil && e != gEXCEPTION_EXIT {
-            panic(e)
-        }
-    }()
-    f(r)
 }
 
 // http server静态文件处理，path可以为相对路径也可以为绝对路径

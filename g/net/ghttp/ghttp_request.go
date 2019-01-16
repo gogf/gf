@@ -155,7 +155,7 @@ func (r *Request) Exit() {
 // 退出当前请求执行，后续所有的服务逻辑流程(包括其他的HOOK)将不会执行
 func (r *Request) ExitAll() {
     r.exit = true
-    panic(gEXCEPTION_EXIT)
+    panic(gEXCEPTION_EXIT_ALL)
 }
 
 // 仅针对HOOK执行，默认情况下HOOK会按照优先级进行调用，当使用ExitHook后当前类型的后续HOOK将不会被调用

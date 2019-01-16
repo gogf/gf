@@ -68,6 +68,8 @@ func (s *Server) callHookHandler(hook string, r *Request) {
             if err := s.niceCallHookHandler(item.handler.faddr, r); err != nil {
                 switch err {
                     case gEXCEPTION_EXIT:
+                        break
+                    case gEXCEPTION_EXIT_ALL: fallthrough
                     case gEXCEPTION_EXIT_HOOK:
                         return
                     default:

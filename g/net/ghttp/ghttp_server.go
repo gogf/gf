@@ -118,6 +118,7 @@ const (
     gROUTE_REGISTER_OBJECT     = 2
     gROUTE_REGISTER_CONTROLLER = 3
     gEXCEPTION_EXIT            = "exit"
+    gEXCEPTION_EXIT_ALL        = "exit_all"
     gEXCEPTION_EXIT_HOOK       = "exit_hook"
 )
 
