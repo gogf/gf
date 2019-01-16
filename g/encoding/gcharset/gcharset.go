@@ -7,7 +7,8 @@
 // @date   20180604
 
 // Package gcharset provides converting string to requested character encoding.
-// 字符集转换方法.
+//
+// 字符集转换方法,
 // 使用mahonia实现的字符集转换方法，支持的字符集包括常见的utf8/UTF-16/UTF-16LE/macintosh/big5/gbk/gb18030,支持的全量字符集可以参考mahonia包
 package gcharset
 

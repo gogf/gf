@@ -5,8 +5,9 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gproc implements communication and management of processes.
-// 进程管理/通信.
-// 本进程管理从syscall, os.StartProcess, exec.Cmd都使用过，
+// 
+// 进程管理/通信, 
+// 本进程管理从syscall, os.StartProcess, exec.Cmd都使用过, 
 // 最后采用了exec.Cmd来实现多进程管理，这是一个顶层的跨平台封装，兼容性更好，另外两个是偏底层的接口。
 package gproc
 

@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gipv4 provides useful API for IPv6 address handling.
-// IPv6.
 package gipv6
 
 import "gitee.com/johng/gf/g/util/gregex"

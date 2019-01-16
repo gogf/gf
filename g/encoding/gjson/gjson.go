@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gjson provides quite flexible and useful API for JSON/XML/YAML/TOML content handling.
-// JSON解析/封装.
 package gjson
 
 import (

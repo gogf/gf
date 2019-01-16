@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gfcache provides reading and caching for file contents.
+// 
 // 文件缓存.
 package gfcache
 

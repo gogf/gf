@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package ghash provides some popular hash functions(uint32/uint64) in go.
+//
 // 常用的hash函数.
 package ghash
 

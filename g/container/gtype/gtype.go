@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gtype provides kinds of high performance, concurrent-safe basic variable types.
+//
 // 并发安全基本类型.
 package gtype
 

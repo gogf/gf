@@ -5,11 +5,13 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gqueue provides a dynamic/static concurrent-safe(alternative) queue.
+//
 // 并发安全的动态队列.
-// 特点：
-// 1、动态队列初始化速度快；
-// 2、动态的队列大小(不限大小)；
-// 3、取数据时如果队列为空那么会阻塞等待；
+//
+//   特点：
+//   1. 动态队列初始化速度快；
+//   2. 动态的队列大小(不限大小)；
+//   3. 取数据时如果队列为空那么会阻塞等待；
 package gqueue
 
 import (
@@ -18,10 +20,13 @@ import (
     "sync"
 )
 
-// 0、这是一个先进先出的队列(chan <-- list)；
-// 1、当创建Queue对象时限定大小，那么等同于一个同步的chan并发安全队列；
-// 2、不限制大小时，list链表用以存储数据，临时chan负责为客户端读取数据，当从chan获取数据时，list往chan中不停补充数据；
-// 3、由于功能主体是chan，那么操作仍然像chan那样具有阻塞效果；
+// 1、这是一个先进先出的队列(chan <-- list)；
+//
+// 2、当创建Queue对象时限定大小，那么等同于一个同步的chan并发安全队列；
+//
+// 3、不限制大小时，list链表用以存储数据，临时chan负责为客户端读取数据，当从chan获取数据时，list往chan中不停补充数据；
+//
+// 4、由于功能主体是chan，那么操作仍然像chan那样具有阻塞效果；
 type Queue struct {
     mu        sync.Mutex       // 底层链表写锁
     limit     int              // 队列限制大小

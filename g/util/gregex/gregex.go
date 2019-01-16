@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gregex provides high performance API for regular expression functionality.
+// 
 // 正则表达式.
 package gregex
 

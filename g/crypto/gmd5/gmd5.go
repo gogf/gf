@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gmd5 provides useful API for MD5 encryption/decryption algorithms.
-// MD5算法.
 package gmd5
 
 import (

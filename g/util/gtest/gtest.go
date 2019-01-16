@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gtest provides simple and useful test utils.
+// 
 // 测试模块.
 package gtest
 

@@ -6,7 +6,8 @@
 // @author john, zseeker
 
 // Package glog implements powerful and easy-to-use levelled logging functionality.
-// 日志模块.
+// 
+// 日志模块,
 // 直接文件/输出操作，没有异步逻辑，没有使用缓存或者通道
 package glog
 

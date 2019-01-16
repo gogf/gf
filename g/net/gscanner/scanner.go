@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gscanner provides a port scanner for local intranet.
-// IP扫描器.
 package gscanner
 
 import (

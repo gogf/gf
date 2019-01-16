@@ -6,6 +6,7 @@
 //
 
 // Package gcmd provides console operations, like options/values reading and command running.
+// 
 // 命令行管理.
 package gcmd
 

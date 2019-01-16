@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gmvc provides basic object classes for MVC.
-// MVC.
 package gmvc
 
 import (

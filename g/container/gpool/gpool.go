@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gpool provides a object-reusable concurrent-safe pool.
+//
 // 对象复用池.
 package gpool
 

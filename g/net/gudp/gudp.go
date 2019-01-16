@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gtcp provides UDP server and client implementations.
-// UDP.
 package gudp
 
 

@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gcompress provides kinds of compression algorithms for binary/bytes data.
+//
 // 数据压缩/解压.
 package gcompress
 

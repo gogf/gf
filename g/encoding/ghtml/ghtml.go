@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package ghtml provides useful API for HTML content handling.
+//
 // HTML编码.
 package ghtml
 

@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gfile provides easy-to-use operations for file system.
+// 
 // 文件管理.
 package gfile
 

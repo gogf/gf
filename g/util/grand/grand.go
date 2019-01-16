@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package grand provides high performance API for random functionality.
+// 
 // 随机数管理.
 package grand
 

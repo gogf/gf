@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gsmtp provides a SMTP client to access remote mail server.
-// SMTP.
 package gsmtp
 
 import (

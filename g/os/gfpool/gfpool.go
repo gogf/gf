@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gfpool provides io-reusable pool for file pointer.
+// 
 // 文件指针池.
 package gfpool
 

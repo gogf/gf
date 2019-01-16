@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gfsnotify provides a platform-independent interface for file system notifications.
+//
 // 文件监控.
 package gfsnotify
 

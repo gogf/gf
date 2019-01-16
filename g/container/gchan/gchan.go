@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gchan provides graceful operations for channel.
+//
 // 优雅的Channel操作.
 package gchan
 

@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gurl provides useful API for URL handling.
-// URL编码.
 package gurl
 
 import "net/url"

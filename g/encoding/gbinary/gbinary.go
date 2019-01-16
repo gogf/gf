@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gbinary provides useful API for handling binary/bytes data.
-// 二进制及byte操作
 package gbinary
 
 import (

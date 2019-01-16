@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gtcp provides TCP server and client implementations.
-// TCP服务端.
 package gtcp
 
 

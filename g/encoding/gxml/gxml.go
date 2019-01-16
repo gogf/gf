@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gxml provides accessing and converting for XML content.
-// XML.
 package gxml
 
 import (

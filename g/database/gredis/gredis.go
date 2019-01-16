@@ -5,8 +5,9 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gredis provides client for redis server.
+//
 // Redis客户端.
-// Redis中文手册文档请参考：http://redisdoc.com/ ，Redis官方命令请参考：https://redis.io/commands
+// Redis中文手册文档请参考：http://redisdoc.com/ , Redis官方命令请参考：https://redis.io/commands
 package gredis
 
 import (

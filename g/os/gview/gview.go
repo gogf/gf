@@ -5,7 +5,8 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gview implements a template engine based on text/template.
-// 视图管理.
+// 
+// 模板引擎.
 package gview
 
 import (

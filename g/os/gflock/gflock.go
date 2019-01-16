@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gflock implements a thread-safe sync.Locker interface for file locking.
+// 
 // 文件锁.
 package gflock
 

@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gtoml provides accessing and converting for TOML content.
-// TOML.
 package gtoml
 
 import (

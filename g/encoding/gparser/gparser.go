@@ -5,7 +5,6 @@
 // You can obtain one at https://gitee.com/johng/gp.
 
 // Package gparser provides a flexible and easy way for accessing/converting variable and JSON/XML/YAML/TOML contents.
-// 数据文件编码/解析.
 package gparser
 
 import (

@@ -5,6 +5,7 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gring provides a concurrent-safe(alternative) ring(circular lists).
+//
 // 并发安全环.
 package gring
 

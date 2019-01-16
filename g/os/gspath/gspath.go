@@ -5,7 +5,8 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // Package gspath implements file index and search for folders.
-// 搜索目录管理.
+// 
+// 搜索目录管理, 
 // 可以添加搜索目录，按照添加的优先级进行文件检索，并在内部进行高效缓存处理。
 package gspath
 
