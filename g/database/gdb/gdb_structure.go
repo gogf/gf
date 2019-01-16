@@ -47,23 +47,23 @@ func (bs *dbBase) convertValue(fieldValue interface{}, fieldType string) interfa
     default:
         // 自动识别类型, 以便默认支持更多数据库类型
         switch {
-        case strings.Contains(t, "int"):
-            return gconv.Int(fieldValue)
+            case strings.Contains(t, "int"):
+                return gconv.Int(fieldValue)
 
-        case strings.Contains(t, "text") || strings.Contains(t, "char"):
-            return gconv.String(fieldValue)
+            case strings.Contains(t, "text") || strings.Contains(t, "char"):
+                return gconv.String(fieldValue)
 
-        case strings.Contains(t, "float") || strings.Contains(t, "double"):
-            return gconv.Float64(fieldValue)
+            case strings.Contains(t, "float") || strings.Contains(t, "double"):
+                return gconv.Float64(fieldValue)
 
-        case strings.Contains(t, "bool"):
-            return gconv.Bool(fieldValue)
+            case strings.Contains(t, "bool"):
+                return gconv.Bool(fieldValue)
 
-        case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
-            return gconv.Bytes(fieldValue)
+            case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
+                return gconv.Bytes(fieldValue)
 
-        default:
-            return gconv.String(fieldValue)
+            default:
+                return gconv.String(fieldValue)
         }
     }
 }

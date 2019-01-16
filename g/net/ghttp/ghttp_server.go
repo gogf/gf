@@ -18,7 +18,7 @@ import (
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
-    "gitee.com/johng/gf/g/os/gtime"
+    "gitee.com/johng/gf/g/os/gtimer"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/gregex"
     "gitee.com/johng/gf/third/github.com/gorilla/websocket"
@@ -251,7 +251,7 @@ func (s *Server) Start() error {
 
     // 如果是子进程，那么服务开启后通知父进程销毁
     if gproc.IsChild() {
-        gtime.SetTimeout(2*time.Second, func() {
+        gtimer.SetTimeout(2*time.Second, func() {
             if err := gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP); err != nil {
                 panic(err)
             }
@@ -271,7 +271,7 @@ func (s *Server) Start() error {
 func (s *Server) DumpRoutesMap() {
     if s.config.DumpRouteMap && len(s.routesMap) > 0 {
         // (等待一定时间后)当所有框架初始化信息打印完毕之后才打印路由表信息
-        gtime.SetTimeout(50*time.Millisecond, func() {
+        gtimer.SetTimeout(50*time.Millisecond, func() {
             glog.Header(false).Println(fmt.Sprintf("\n%s\n", s.GetRouteMap()))
         })
     }

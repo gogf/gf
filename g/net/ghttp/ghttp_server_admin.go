@@ -8,6 +8,7 @@
 package ghttp
 
 import (
+    "gitee.com/johng/gf/g/os/gtimer"
     "strings"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/os/gproc"
@@ -251,7 +252,7 @@ func restartWebServers(signal string, newExeFilePath...string) error {
             forkRestartProcess(newExeFilePath...)
         } else {
             // 非终端信号下，异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
-            gtime.SetTimeout(time.Second, func() {
+            gtimer.SetTimeout(time.Second, func() {
                 forcedlyCloseWebServers()
                 forkRestartProcess(newExeFilePath...)
             })
@@ -284,7 +285,7 @@ func shutdownWebServers(signal string) {
     } else {
         glog.Printfln("%d: server shutting down by web admin", gproc.Pid())
         // 非终端信号下，异步1秒后再执行关闭，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
-        gtime.SetTimeout(time.Second, func() {
+        gtimer.SetTimeout(time.Second, func() {
             forcedlyCloseWebServers()
             doneChan <- struct{}{}
         })

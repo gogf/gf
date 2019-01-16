@@ -33,6 +33,17 @@ var (
     defaultTimer = New(gDEFAULT_SLOT_NUMBER, gDEFAULT_WHEEL_INTERVAL, gDEFAULT_WHEEL_LEVEL)
 )
 
+// 类似与js中的SetTimeout，一段时间后执行回调函数
+func SetTimeout(delay time.Duration, job JobFunc) {
+    AddOnce(delay, job)
+}
+
+// 类似与js中的SetInterval，每隔一段时间后执行回调函数，当回调函数返回true，那么继续执行，否则终止执行，该方法是异步的
+// 注意：由于采用的是循环而不是递归操作，因此间隔时间将会以上一次回调函数执行完成的时间来计算
+func SetInterval(interval time.Duration, job JobFunc) {
+    Add(interval, job)
+}
+
 // 添加执行方法，可以给定名字，以便于后续执行删除
 func Add(interval time.Duration, job JobFunc) *Entry {
     return defaultTimer.Add(interval, job)
