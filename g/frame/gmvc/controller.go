@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gmvc provides base object classes for MVC.
+// Package gmvc provides basic object classes for MVC.
 // MVC.
 package gmvc
 

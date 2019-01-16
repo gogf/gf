@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gfcache provides for file reading and caching.
+// Package gfcache provides reading and caching for file contents.
 // 文件缓存.
 package gfcache
 
