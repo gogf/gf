@@ -120,7 +120,7 @@ func (t *Time) ToLocation(location *time.Location) *Time {
     return t
 }
 
-// 时区转换为指定的时区(通过时区名称，如：AsiaShanghai)
+// 时区转换为指定的时区(通过时区名称，如：Asia/Shanghai)
 func (t *Time) ToZone(zone string) *Time {
     if l, err := time.LoadLocation(zone); err == nil {
         t.Time = t.Time.In(l)

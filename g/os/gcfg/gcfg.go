@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Package gcfg provides management for configuration files reading and caching.
+// Package gcfg provides reading, caching and managing for configuration files.
 // 配置管理.
 // 配置文件格式支持：json, xml, toml, yaml/yml
 package gcfg
