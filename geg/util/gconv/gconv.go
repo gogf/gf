@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-    i := 123
+    i := 123.456
     fmt.Printf("%10s %v\n", "Int:",        gconv.Int(i))
     fmt.Printf("%10s %v\n", "Int8:",       gconv.Int8(i))
     fmt.Printf("%10s %v\n", "Int16:",      gconv.Int16(i))

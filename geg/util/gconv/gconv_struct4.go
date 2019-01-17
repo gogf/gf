@@ -11,11 +11,15 @@ func main() {
         Name   string
         Result int
     }
-    type User struct {
+    type User1 struct {
         Scores Score
     }
+    type User2 struct {
+        Scores *Score
+    }
 
-    user   := new(User)
+    user1  := new(User1)
+    user2  := new(User2)
     scores := map[string]interface{}{
         "Scores" : map[string]interface{}{
             "Name"   : "john",
@@ -23,10 +27,14 @@ func main() {
         },
     }
 
-    // 嵌套struct转换
-    if err := gconv.Struct(scores, user); err != nil {
+    if err := gconv.Struct(scores, user1); err != nil {
         fmt.Println(err)
     } else {
-        g.Dump(user)
+        g.Dump(user1)
+    }
+    if err := gconv.Struct(scores, user2); err != nil {
+        fmt.Println(err)
+    } else {
+        g.Dump(user2)
     }
 }
