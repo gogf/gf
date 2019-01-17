@@ -24,7 +24,7 @@ install:
 - cd $GITEE_GF/g
 
 script:
-- GOARCH=386 go test -v ./... -race -covermode=atomic
+- GOARCH=386 go test -v ./...
 - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
 
