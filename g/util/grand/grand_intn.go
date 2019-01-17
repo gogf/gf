@@ -12,11 +12,11 @@ import (
 )
 
 const (
-    gBUFFER_SIZE = 10000 // 缓冲区uint64数量大小
+    gBUFFER_SIZE = 10000 // 缓冲区uint32数量大小
 )
 
 var (
-    bufferChan = make(chan uint64, gBUFFER_SIZE)
+    bufferChan = make(chan uint32, gBUFFER_SIZE)
 )
 
 // 使用缓冲区实现快速的随机数生成
@@ -29,14 +29,14 @@ func init() {
                 panic(err)
             } else {
                 // 使用缓冲区数据进行一次完整的随机数生成
-                for i := 0; i < n - 8; {
-                    bufferChan <- binary.LittleEndian.Uint64(buffer[i : i + 8])
+                for i := 0; i < n - 4; {
+                    bufferChan <- binary.LittleEndian.Uint32(buffer[i : i + 4])
                     i ++
                 }
                 // 充分利用缓冲区数据，随机索引递增
                 step = int(buffer[0])%10
-                for i := 0; i < n - 8; {
-                    bufferChan <- binary.BigEndian.Uint64(buffer[i : i + 8])
+                for i := 0; i < n - 4; {
+                    bufferChan <- binary.BigEndian.Uint32(buffer[i : i + 4])
                     i += step
                 }
             }

@@ -16,12 +16,11 @@ type Entry struct {
     job        JobFunc       // 注册循环任务方法
     wheel      *wheel        // 所属时间轮
     singleton  *gtype.Bool   // 任务是否单例运行
-    status     *gtype.Int    // 任务状态(0: ready;  1: running;  -1: closed)
+    status     *gtype.Int    // 任务状态(0: ready;  1: running; 2: stopped; -1: closed)
     times      *gtype.Int    // 还需运行次数
     create     int64         // 注册时的时间轮ticks
     interval   int64         // 设置的运行间隔(时间轮刻度数量)
     createMs   int64         // 创建时间(毫秒)
-    updateMs   int64         // 更新时间(上一次检查/运行时间, 毫秒)
     intervalMs int64         // 间隔时间(毫秒)
 }
 
@@ -48,7 +47,6 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
         create     : ticks,
         interval   : num,
         createMs   : nowMs,
-        updateMs   : nowMs,
         intervalMs : ms,
     }
     // 安装任务
@@ -56,14 +54,13 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
     return entry
 }
 
-// 递增添加任务
+// 重新添加任务
 func (w *wheel) reAddEntry(entry *Entry, nowTicks int64, nowMs int64) {
     left := entry.interval - (nowTicks - entry.create)
     if left <= 0 {
         left           = entry.interval
         entry.create   = nowTicks
         entry.createMs = nowMs
-        entry.updateMs = nowMs
     }
     w.slots[(nowTicks + left) % w.number].PushBack(entry)
 }
@@ -76,6 +73,16 @@ func (entry *Entry) Status() int {
 // 设置任务状态
 func (entry *Entry) SetStatus(status int) int {
     return entry.status.Set(status)
+}
+
+// 启动当前任务
+func (entry *Entry) Start() {
+    entry.status.Set(STATUS_READY)
+}
+
+// 停止当前任务
+func (entry *Entry) Stop() {
+    entry.status.Set(STATUS_STOPPED)
 }
 
 // 关闭当前任务
@@ -105,6 +112,10 @@ func (entry *Entry) Run() {
 
 // 检测当前任务是否可运行, 参数为当前时间的纳秒数, 精度更高
 func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
+    // 是否停止
+    if entry.status.Val() == STATUS_STOPPED {
+        return false
+    }
     // 运行检查
     if diff := nowTicks - entry.create; diff > 0 && diff%entry.interval == 0 {
         // 是否单例
@@ -126,16 +137,18 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
             times = gDEFAULT_TIMES
             entry.times.Set(gDEFAULT_TIMES)
         }
-        // 分层转换
+        // 分层转换处理
         if entry.wheel.level > 0 {
-            if diffMs := nowMs - entry.updateMs; diffMs < entry.intervalMs {
-                if leftMs := entry.intervalMs - diffMs; leftMs > entry.wheel.wheels.intervalMs {
+            // 是否达到任务运行间隔
+            if diffMs := nowMs - entry.createMs; diffMs < entry.intervalMs {
+                // 任务是否有必要进行分层转换
+                if leftMs := entry.intervalMs - diffMs; leftMs > entry.wheel.timer.intervalMs {
                     delay := time.Duration(leftMs)*time.Millisecond
                     // 往底层添加
-                    entry.wheel.wheels.addEntry(delay, entry.job, false, 1)
+                    entry.wheel.timer.addEntry(delay, entry.job, false, 1)
                     // 延迟重新添加
                     if times > 0 {
-                        entry.wheel.wheels.DelayAddTimes(
+                        entry.wheel.timer.DelayAddTimes(
                             delay,
                             time.Duration(entry.intervalMs)*time.Millisecond,
                             times,

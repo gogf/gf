@@ -14,6 +14,7 @@ import (
 
 // 定时器/分层时间轮
 type Timer struct {
+    status     *gtype.Int      // 状态
     wheels     []*wheel        // 分层
     length     int             // 层数
     number     int             // 每一层Slot Number
@@ -27,6 +28,7 @@ func New(slot int, interval time.Duration, level...int) *Timer {
         length = level[0]
     }
     t := &Timer {
+        status     : gtype.NewInt(STATUS_RUNNING),
         wheels     : make([]*wheel, length),
         length     : length,
         number     : slot,
@@ -49,11 +51,10 @@ func New(slot int, interval time.Duration, level...int) *Timer {
 // 创建自定义的循环任务管理对象
 func (t *Timer) newWheel(level int, slot int, interval time.Duration) *wheel {
     w := &wheel {
-        wheels     : t,
+        timer      : t,
         level      : level,
         slots      : make([]*glist.List, slot),
         number     : int64(slot),
-        closed     : make(chan struct{}, 1),
         ticks      : gtype.NewInt64(),
         totalMs    : int64(slot)*interval.Nanoseconds()/1e6,
         createMs   : time.Now().UnixNano()/1e6,
@@ -113,11 +114,19 @@ func (t *Timer) DelayAddTimes(delay time.Duration, interval time.Duration, times
     })
 }
 
-// 关闭分层时间轮
+// 启动定时器
+func (t *Timer) Start() {
+    t.status.Set(STATUS_RUNNING)
+}
+
+// 定制定时器
+func (t *Timer) Stop() {
+    t.status.Set(STATUS_STOPPED)
+}
+
+// 关闭定时器
 func (t *Timer) Close() {
-    for _, w := range t.wheels {
-        w.Close()
-    }
+    t.status.Set(STATUS_CLOSED)
 }
 
 // 添加定时任务

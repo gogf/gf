@@ -23,9 +23,15 @@ func TestTimer_Entry_Operation(t *testing.T) {
     })
     time.Sleep(1200*time.Millisecond)
     gtest.Assert(array.Len(), 1)
-    entry.Close()
+    entry.Stop()
     time.Sleep(1200*time.Millisecond)
     gtest.Assert(array.Len(), 1)
+    entry.Start()
+    time.Sleep(1200*time.Millisecond)
+    gtest.Assert(array.Len(), 2)
+    entry.Close()
+    time.Sleep(1200*time.Millisecond)
+    gtest.Assert(array.Len(), 2)
 }
 
 func TestTimer_Entry_Singleton(t *testing.T) {

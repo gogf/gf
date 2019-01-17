@@ -12,12 +12,20 @@ import (
     "time"
 )
 
-
+var (
+    timer = gtimer.New(5, 30*time.Millisecond)
+)
 func Benchmark_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        // 基准测试的时候不能设置为1秒，否则大量的任务会崩掉系统
-        gtimer.Add(time.Hour, func() {
+        timer.Add(time.Hour, func() {
 
         })
+    }
+}
+
+func Benchmark_StartStop(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        timer.Start()
+        timer.Stop()
     }
 }
