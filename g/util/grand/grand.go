@@ -19,9 +19,9 @@ func Meet(num, total int) bool {
     return Rand(0, total) <= num
 }
 
-// 随机计算是否满足给定的概率(float64)
-func MeetProb(prob float64) bool {
-    return Rand(0, 1e17) <= int(prob*1e17)
+// 随机计算是否满足给定的概率(float32)
+func MeetProb(prob float32) bool {
+    return Rand(0, 1e7) <= int(prob*1e7)
 }
 
 // Rand 别名

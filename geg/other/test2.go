@@ -1,15 +1,9 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gcron"
-    "gitee.com/johng/gf/g/os/glog"
-    "time"
+    "fmt"
 )
 
 func main() {
-    gcron.AddSingleton("* * * * * *", func() {
-        glog.Println("doing")
-        time.Sleep(2*time.Second)
-    })
-    select { }
+    fmt.Println(float32(10)/3)
 }
