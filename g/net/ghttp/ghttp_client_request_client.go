@@ -9,6 +9,7 @@
 package ghttp
 
 import (
+    "gitee.com/johng/gf/g/util/gregex"
     "time"
     "bytes"
     "strings"
@@ -45,6 +46,14 @@ func NewClient() (*Client) {
 // 设置HTTP Header
 func (c *Client) SetHeader(key, value string) {
     c.header[key] = value
+}
+
+// 通过字符串设置HTTP Header
+func (c *Client) SetHeaderRaw(header string) {
+    for _, line := range strings.Split(strings.TrimSpace(header), "\n") {
+        array, _ := gregex.MatchString(`^([\w\-]+):\s*(.+)`, line)
+        c.header[array[1]] = array[2]
+    }
 }
 
 // 设置请求的URL前缀

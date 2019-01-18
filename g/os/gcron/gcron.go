@@ -9,7 +9,10 @@
 // 定时任务.
 package gcron
 
-import "math"
+import (
+    "math"
+    "time"
+)
 
 const (
     STATUS_READY   = 0
@@ -45,23 +48,23 @@ func AddTimes(pattern string, times int, job func(), name ... string) (*Entry, e
     return defaultCron.AddTimes(pattern, times, job, name...)
 }
 
-// 延迟添加定时任务，delay参数单位为秒
-func DelayAdd(delay int, pattern string, job func(), name ... string) {
+// 延迟添加定时任务
+func DelayAdd(delay time.Duration, pattern string, job func(), name ... string) {
     defaultCron.DelayAdd(delay, pattern, job, name...)
 }
 
 // 延迟添加单例定时任务，delay参数单位为秒
-func DelayAddSingleton(delay int, pattern string, job func(), name ... string) {
+func DelayAddSingleton(delay time.Duration, pattern string, job func(), name ... string) {
     defaultCron.DelayAddSingleton(delay, pattern, job, name...)
 }
 
 // 延迟添加只运行一次的定时任务，delay参数单位为秒
-func DelayAddOnce(delay int, pattern string, job func(), name ... string) {
+func DelayAddOnce(delay time.Duration, pattern string, job func(), name ... string) {
     defaultCron.DelayAddOnce(delay, pattern, job, name...)
 }
 
 // 延迟添加运行指定次数的定时任务，delay参数单位为秒
-func DelayAddTimes(delay int, pattern string, times int, job func(), name ... string) {
+func DelayAddTimes(delay time.Duration, pattern string, times int, job func(), name ... string) {
     defaultCron.DelayAddTimes(delay, pattern, times, job, name...)
 }
 

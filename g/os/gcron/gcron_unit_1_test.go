@@ -122,14 +122,14 @@ func TestCron_DelayAdd(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
         array := garray.New(0, 0)
-        cron.DelayAdd(1, "* * * * * *", func() {
+        cron.DelayAdd(500*time.Millisecond, "* * * * * *", func() {
             array.Append(1)
         })
         gtest.Assert(cron.Size(), 0)
-        time.Sleep(1200*time.Millisecond)
+        time.Sleep(800*time.Millisecond)
         gtest.Assert(array.Len(), 0)
         gtest.Assert(cron.Size(), 1)
-        time.Sleep(1200*time.Millisecond)
+        time.Sleep(500*time.Millisecond)
         gtest.Assert(array.Len(), 1)
         gtest.Assert(cron.Size(), 1)
     })

@@ -92,36 +92,36 @@ func (c *Cron) AddTimes(pattern string, times int, job func(), name ... string) 
     }
 }
 
-// 延迟添加定时任务，delay参数单位为秒
-func (c *Cron) DelayAdd(delay int, pattern string, job func(), name ... string) {
-    gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
+// 延迟添加定时任务
+func (c *Cron) DelayAdd(delay time.Duration, pattern string, job func(), name ... string) {
+    gtimer.AddOnce(delay, func() {
         if _, err := c.Add(pattern, job, name ...); err != nil {
             panic(err)
         }
     })
 }
 
-// 延迟添加单例定时任务，delay参数单位为秒
-func (c *Cron) DelayAddSingleton(delay int, pattern string, job func(), name ... string) {
-    gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
+// 延迟添加单例定时任务
+func (c *Cron) DelayAddSingleton(delay time.Duration, pattern string, job func(), name ... string) {
+    gtimer.AddOnce(delay, func() {
         if _, err := c.AddSingleton(pattern, job, name ...); err != nil {
             panic(err)
         }
     })
 }
 
-// 延迟添加运行指定次数的定时任务，delay参数单位为秒
-func (c *Cron) DelayAddOnce(delay int, pattern string, job func(), name ... string) {
-    gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
+// 延迟添加运行指定次数的定时任务
+func (c *Cron) DelayAddOnce(delay time.Duration, pattern string, job func(), name ... string) {
+    gtimer.AddOnce(delay, func() {
         if _, err := c.AddOnce(pattern, job, name ...); err != nil {
             panic(err)
         }
     })
 }
 
-// 延迟添加只运行一次的定时任务，delay参数单位为秒
-func (c *Cron) DelayAddTimes(delay int, pattern string, times int, job func(), name ... string) {
-    gtimer.AddOnce(time.Duration(delay)*time.Second, func() {
+// 延迟添加只运行一次的定时任务
+func (c *Cron) DelayAddTimes(delay time.Duration, pattern string, times int, job func(), name ... string) {
+    gtimer.AddOnce(delay, func() {
         if _, err := c.AddTimes(pattern, times, job, name ...); err != nil {
             panic(err)
         }
