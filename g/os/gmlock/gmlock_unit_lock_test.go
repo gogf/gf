@@ -50,8 +50,9 @@ func TestLocker_Lock_Expire(t *testing.T) {
             array.Append(1)
         }()
         go func() {
+            time.Sleep(10*time.Millisecond)
             gmlock.Lock("test")
-            time.Sleep(50*time.Millisecond)
+            time.Sleep(100*time.Millisecond)
             array.Append(1)
             gmlock.Unlock("test")
         }()
