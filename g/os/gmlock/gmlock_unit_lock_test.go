@@ -16,7 +16,7 @@ import (
 
 func TestLocker_Lock_Unlock(t *testing.T) {
     gtest.Case(t, func() {
-        array := garray.New(0, 0, true)
+        array := garray.New(0, 0)
         go func() {
             gmlock.Lock("test")
             array.Append(1)
@@ -44,7 +44,7 @@ func TestLocker_Lock_Unlock(t *testing.T) {
 
 func TestLocker_Lock_Expire(t *testing.T) {
     gtest.Case(t, func() {
-        array := garray.New(0, 0, true)
+        array := garray.New(0, 0)
         go func() {
             gmlock.Lock("test", 50*time.Millisecond)
             array.Append(1)
@@ -64,7 +64,7 @@ func TestLocker_Lock_Expire(t *testing.T) {
 
 func TestLocker_TryLock_Expire(t *testing.T) {
     gtest.Case(t, func() {
-        array := garray.New(0, 0, true)
+        array := garray.New(0, 0)
         go func() {
             gmlock.Lock("test", 200*time.Millisecond)
             array.Append(1)
