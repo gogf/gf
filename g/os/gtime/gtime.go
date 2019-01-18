@@ -20,6 +20,15 @@ import (
 )
 
 const (
+    // 时间间隔缩写
+    D  = 24*time.Hour
+    H  = time.Hour
+    M  = time.Minute
+    S  = time.Second
+    MS = time.Millisecond
+    US = time.Microsecond
+    NS = time.Nanosecond
+
     // 常用时间格式正则匹配，支持的标准时间格式：
     // "2017-12-14 04:51:34 +0805 LMT",
     // "2017-12-14 04:51:34 +0805 LMT",
