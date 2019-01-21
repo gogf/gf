@@ -43,7 +43,7 @@ func formatCondition(where interface{}, args []interface{}) (string, []interface
         buffer.Write(gconv.Bytes(where))
     }
     if buffer.Len() == 0 {
-        buffer.WriteString("1")
+        buffer.WriteString("1=1")
     }
     // 查询条件处理
     newWhere := buffer.String()
