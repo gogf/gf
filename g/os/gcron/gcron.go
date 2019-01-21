@@ -10,15 +10,16 @@
 package gcron
 
 import (
+    "gitee.com/johng/gf/g/os/gtimer"
     "math"
     "time"
 )
 
 const (
-    STATUS_READY   = 0
-    STATUS_RUNNING = 1
-    STATUS_STOPPED = 2
-    STATUS_CLOSED  = -1
+    STATUS_READY   = gtimer.STATUS_READY
+    STATUS_RUNNING = gtimer.STATUS_RUNNING
+    STATUS_STOPPED = gtimer.STATUS_STOPPED
+    STATUS_CLOSED  = gtimer.STATUS_CLOSED
 
     gDEFAULT_TIMES = math.MaxInt32
 )

@@ -12,12 +12,12 @@ func main() {
     //w := gtimer.New(10, 10*time.Millisecond)
     fmt.Println("start:", time.Now())
     for i := 0; i < 1000000; i++ {
-        gtimer.AddOnce(time.Second, func() {
+        gtimer.AddTimes(time.Second, 2, func() {
             v.Add(1)
         })
     }
     fmt.Println("end  :", time.Now())
-    time.Sleep(1300*time.Millisecond)
+    time.Sleep(5000*time.Millisecond)
     fmt.Println(v.Val(), time.Now())
 
     //gtimer.AddSingleton(time.Second, func() {

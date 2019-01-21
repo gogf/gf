@@ -68,28 +68,40 @@ func (t *Timer) newWheel(level int, slot int, interval time.Duration) *wheel {
 
 // 添加循环任务
 func (t *Timer) Add(interval time.Duration, job JobFunc) *Entry {
-    return t.addEntry(interval, job, false, gDEFAULT_TIMES)
+    return t.AddEntry(interval, job, false, gDEFAULT_TIMES)
+}
+
+// 添加定时任务
+func (t *Timer) AddEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
+    return t.doAddEntry(interval, job, singleton, times, nil)
 }
 
 // 添加单例运行循环任务
 func (t *Timer) AddSingleton(interval time.Duration, job JobFunc) *Entry {
-    return t.addEntry(interval, job, true, gDEFAULT_TIMES)
+    return t.AddEntry(interval, job, true, gDEFAULT_TIMES)
 }
 
 // 添加只运行一次的循环任务
 func (t *Timer) AddOnce(interval time.Duration, job JobFunc) *Entry {
-    return t.addEntry(interval, job, false, 1)
+    return t.AddEntry(interval, job, false, 1)
 }
 
-// 添加运行指定次数的循环任务
+// 添加运行指定次数的循环任务。
 func (t *Timer) AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
-    return t.addEntry(interval, job, false, times)
+    return t.AddEntry(interval, job, false, times)
 }
 
-// 延迟添加循环任务
+// 延迟添加循环任务。
 func (t *Timer) DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
     t.AddOnce(delay, func() {
         t.Add(interval, job)
+    })
+}
+
+// 延迟添加循环任务, 支持完整的参数。
+func (t *Timer) DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int) {
+    t.AddOnce(delay, func() {
+        t.AddEntry(interval, job, singleton, times)
     })
 }
 
@@ -130,33 +142,42 @@ func (t *Timer) Close() {
 }
 
 // 添加定时任务
-func (t *Timer) addEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
-    intervalMs := interval.Nanoseconds()/1e6
-    pos, cmp   := t.binSearchIndex(intervalMs)
+func (t *Timer) doAddEntry(interval time.Duration, job JobFunc, singleton bool, times int, parent *Entry) *Entry {
+    return t.wheels[t.getLevelByIntervalMs(interval.Nanoseconds()/1e6)].addEntry(interval, job, singleton, times)
+}
+
+// 添加定时任务
+func (t *Timer) doAddEntryByParent(interval time.Duration, parent *Entry) *Entry {
+    return t.wheels[t.getLevelByIntervalMs(interval.Nanoseconds()/1e6)].addEntryByParent(interval, parent)
+}
+
+// 根据intervalMs计算添加的分层索引
+func (t *Timer) getLevelByIntervalMs(intervalMs int64) int {
+    pos, cmp := t.binSearchIndex(intervalMs)
     switch cmp {
-        // n比最后匹配值小
+        // intervalMs与最后匹配值相等
+        case  0: fallthrough
+        // intervalMs比最后匹配值小
         case -1:
             i := pos
             for ; i > 0; i-- {
-                if intervalMs >= t.wheels[i].intervalMs && intervalMs < t.wheels[i].totalMs {
-                    return t.wheels[i].addEntry(interval, job, singleton, times)
+                if intervalMs > t.wheels[i].intervalMs && intervalMs <= t.wheels[i].totalMs {
+                    return i
                 }
             }
-            return t.wheels[i].addEntry(interval, job, singleton, times)
-        // n比最后匹配值大
+            return i
+
+        // intervalMs比最后匹配值大
         case  1:
             i := pos
             for ; i < t.length - 1; i++ {
-                if intervalMs >= t.wheels[i].intervalMs && intervalMs < t.wheels[i].totalMs {
-                    return t.wheels[i].addEntry(interval, job, singleton, times)
+                if intervalMs > t.wheels[i].intervalMs && intervalMs <= t.wheels[i].totalMs {
+                    return i
                 }
             }
-            return t.wheels[i].addEntry(interval, job, singleton, times)
-
-        case  0:
-            return t.wheels[pos].addEntry(interval, job, singleton, times)
+            return i
     }
-    return nil
+    return 0
 }
 
 // 二分查找当前任务可以添加的时间轮对象索引

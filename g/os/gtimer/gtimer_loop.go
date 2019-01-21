@@ -19,7 +19,7 @@ func (w *wheel) start() {
            select {
                case <- ticker.C:
                    switch w.timer.status.Val() {
-                       case STATUS_READY:  fallthrough
+                       case STATUS_READY: fallthrough
                        case STATUS_RUNNING:
                            w.proceed()
                        case STATUS_STOPPED:
@@ -35,18 +35,25 @@ func (w *wheel) start() {
 
 // 执行时间轮刻度逻辑
 func (w *wheel) proceed() {
-    n := w.ticks.Add(1)
-    l := w.slots[int(n%w.number)]
-    if l.Len() > 0 {
+    n      := w.ticks.Add(1)
+    l      := w.slots[int(n%w.number)]
+    length := l.Len()
+    //if w.level > 0 {
+    //    fmt.Println("loop:", w.level, w.ticks.Val(), time.Now().String())
+    //}
+
+    if length > 0 {
+
         go func(l *glist.List, nowTicks int64) {
             entry := (*Entry)(nil)
             nowMs := time.Now().UnixNano()/1e6
-            for i := l.Len(); i > 0; i-- {
+            for i := length; i > 0; i-- {
                 if v := l.PopFront(); v == nil {
                     break
                 } else {
                     entry = v.(*Entry)
                 }
+                //fmt.Println(w.level, w.ticks.Val(), entry.create, entry.rawIntervalMs)
                 if entry.Status() == STATUS_CLOSED {
                     continue
                 }
@@ -71,7 +78,7 @@ func (w *wheel) proceed() {
                 }
                 // 是否继续添运行
                 if entry.status.Val() != STATUS_CLOSED {
-                    w.reAddEntry(entry, nowTicks, nowMs)
+                    entry.wheel.timer.doAddEntryByParent(time.Duration(entry.rawIntervalMs)*time.Millisecond, entry)
                 }
             }
         }(l, n)

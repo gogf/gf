@@ -50,6 +50,11 @@ func Add(interval time.Duration, job JobFunc) *Entry {
     return defaultTimer.Add(interval, job)
 }
 
+// 添加执行方法，可以给定名字，以便于后续执行删除
+func AddEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
+    return defaultTimer.AddEntry(interval, job, singleton, times)
+}
+
 // 添加单例运行循环任务
 func AddSingleton(interval time.Duration, job JobFunc) *Entry {
     return defaultTimer.AddSingleton(interval, job)
@@ -68,6 +73,11 @@ func AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
 // 延迟添加循环任务，delay参数单位为秒
 func DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
     defaultTimer.DelayAdd(delay, interval, job)
+}
+
+// 延迟添加循环任务, 支持完整的参数。
+func DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int) {
+    defaultTimer.DelayAddEntry(delay, interval, job, singleton, times)
 }
 
 // 延迟添加单例循环任务，delay参数单位为秒

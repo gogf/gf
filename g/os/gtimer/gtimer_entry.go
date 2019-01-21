@@ -13,15 +13,16 @@ import (
 
 // 循环任务项
 type Entry struct {
-    job        JobFunc       // 注册循环任务方法
-    wheel      *wheel        // 所属时间轮
-    singleton  *gtype.Bool   // 任务是否单例运行
-    status     *gtype.Int    // 任务状态(0: ready;  1: running; 2: stopped; -1: closed)
-    times      *gtype.Int    // 还需运行次数
-    create     int64         // 注册时的时间轮ticks
-    interval   int64         // 设置的运行间隔(时间轮刻度数量)
-    createMs   int64         // 创建时间(毫秒)
-    intervalMs int64         // 间隔时间(毫秒)
+    wheel         *wheel        // 所属时间轮
+    job           JobFunc       // 注册循环任务方法
+    singleton     *gtype.Bool   // 任务是否单例运行
+    status        *gtype.Int    // 任务状态(0: ready;  1: running; 2: stopped; -1: closed), 层级entry共享状态
+    times         *gtype.Int    // 还需运行次数
+    create        int64         // 注册时的时间轮ticks
+    interval      int64         // 设置的运行间隔(时间轮刻度数量)
+    createMs      int64         // 创建时间(毫秒)
+    intervalMs    int64         // 间隔时间(毫秒)
+    rawIntervalMs int64         // 原始间隔
 }
 
 // 任务执行方法
@@ -36,33 +37,48 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
         // 那么将会在下一刻度被执行
         num = 1
     }
-    nowMs   := time.Now().UnixNano()/1e6
-    ticks   := w.ticks.Val()
-    entry   := &Entry {
-        wheel      : w,
-        singleton  : gtype.NewBool(singleton),
-        status     : gtype.NewInt(STATUS_READY),
-        times      : gtype.NewInt(times),
-        job        : job,
-        create     : ticks,
-        interval   : num,
-        createMs   : nowMs,
-        intervalMs : ms,
+    nowMs := time.Now().UnixNano()/1e6
+    ticks := w.ticks.Val()
+    entry := &Entry {
+        wheel         : w,
+        job           : job,
+        times         : gtype.NewInt(times),
+        status        : gtype.NewInt(STATUS_READY),
+        create        : ticks,
+        interval      : num,
+        singleton     : gtype.NewBool(singleton),
+        createMs      : nowMs,
+        intervalMs    : ms,
+        rawIntervalMs : ms,
     }
     // 安装任务
     w.slots[(ticks + num) % w.number].PushBack(entry)
     return entry
 }
 
-// 重新添加任务
-func (w *wheel) reAddEntry(entry *Entry, nowTicks int64, nowMs int64) {
-    left := entry.interval - (nowTicks - entry.create)
-    if left <= 0 {
-        left           = entry.interval
-        entry.create   = nowTicks
-        entry.createMs = nowMs
+// 创建定时任务
+func (w *wheel) addEntryByParent(interval time.Duration, parent *Entry) *Entry {
+    ms  := interval.Nanoseconds()/1e6
+    num := ms/w.intervalMs
+    if num == 0 {
+        num = 1
     }
-    w.slots[(nowTicks + left) % w.number].PushBack(entry)
+    nowMs := time.Now().UnixNano()/1e6
+    ticks := w.ticks.Val()
+    entry := &Entry {
+        wheel         : w,
+        job           : parent.job,
+        times         : parent.times,
+        status        : parent.status,
+        create        : ticks,
+        interval      : num,
+        singleton     : parent.singleton,
+        createMs      : nowMs,
+        intervalMs    : ms,
+        rawIntervalMs : parent.rawIntervalMs,
+    }
+    w.slots[(ticks + num) % w.number].PushBack(entry)
+    return entry
 }
 
 // 获取任务状态
@@ -112,14 +128,44 @@ func (entry *Entry) Run() {
 
 // 检测当前任务是否可运行, 参数为当前时间的纳秒数, 精度更高
 func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
-    // 是否停止
-    if entry.status.Val() == STATUS_STOPPED {
-        return false
+    switch entry.status.Val() {
+        case STATUS_STOPPED: fallthrough
+        case STATUS_CLOSED:
+            return false
     }
-    // 运行检查
     if diff := nowTicks - entry.create; diff > 0 && diff%entry.interval == 0 {
+        // 分层转换处理
+        if entry.wheel.level > 0 {
+            diffMs := nowMs - entry.createMs
+
+            //fmt.Println("diffMs:", entry.wheel.level, diffMs, entry.intervalMs, entry.rawIntervalMs)
+            switch {
+                // 表示新增
+                case diffMs < entry.wheel.timer.intervalMs:
+                    entry.wheel.slots[(nowTicks+entry.interval)%entry.wheel.number].PushBack(entry)
+                    return false
+
+                // 正常任务
+                case diffMs >= entry.wheel.timer.intervalMs:
+                    // 任务是否有必要进行分层转换
+                    if leftMs := entry.intervalMs - diffMs; leftMs > entry.wheel.timer.intervalMs {
+                        //fmt.Println("leveled",
+                        //   entry.wheel.level,
+                        //   entry.wheel.ticks.Val(),
+                        //   entry.create,
+                        //   diffMs,
+                        //   leftMs,
+                        //   entry.rawIntervalMs,
+                        //)
+                        // 往底层添加
+                        entry.wheel.timer.doAddEntryByParent(time.Duration(leftMs)*time.Millisecond, entry)
+                        return false
+                    }
+            }
+        }
         // 是否单例
         if entry.IsSingleton() {
+            //fmt.Println("IsSingleton", entry.status.Val(), entry.intervalMs)
             if entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
                 return false
             }
@@ -127,8 +173,8 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
         // 次数限制
         times := entry.times.Add(-1)
         if times <= 0 {
-            entry.status.Set(STATUS_CLOSED)
-            if times < 0 {
+            // 注意原子操作
+            if entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED || times < 0 {
                 return false
             }
         }
@@ -137,29 +183,7 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
             times = gDEFAULT_TIMES
             entry.times.Set(gDEFAULT_TIMES)
         }
-        // 分层转换处理
-        if entry.wheel.level > 0 {
-            // 是否达到任务运行间隔
-            if diffMs := nowMs - entry.createMs; diffMs < entry.intervalMs {
-                // 任务是否有必要进行分层转换
-                if leftMs := entry.intervalMs - diffMs; leftMs > entry.wheel.timer.intervalMs {
-                    delay := time.Duration(leftMs)*time.Millisecond
-                    // 往底层添加
-                    entry.wheel.timer.addEntry(delay, entry.job, false, 1)
-                    // 延迟重新添加
-                    if times > 0 {
-                        entry.wheel.timer.DelayAddTimes(
-                            delay,
-                            time.Duration(entry.intervalMs)*time.Millisecond,
-                            times,
-                            entry.job,
-                        )
-                    }
-                    entry.status.Set(STATUS_CLOSED)
-                    return false
-                }
-            }
-        }
+
         return true
     }
     return false

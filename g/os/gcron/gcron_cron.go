@@ -13,7 +13,6 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gtimer"
-    "strconv"
     "time"
 )
 
@@ -26,20 +25,11 @@ type Cron struct {
 
 // 创建自定义的定时任务管理对象
 func New() *Cron {
-    cron := &Cron {
+    return &Cron {
         idgen    : gtype.NewInt(1000000),
         status   : gtype.NewInt(STATUS_RUNNING),
         entries  : gmap.NewStringInterfaceMap(),
     }
-    gtimer.Add(time.Second, func() {
-        if cron.status.Val() == STATUS_CLOSED {
-            gtimer.Exit()
-        }
-        if cron.status.Val() == STATUS_RUNNING {
-            go cron.checkEntries(time.Now())
-        }
-    })
-    return cron
 }
 
 // 添加定时任务
@@ -49,17 +39,7 @@ func (c *Cron) Add(pattern string, job func(), name ... string) (*Entry, error) 
             return nil, errors.New(fmt.Sprintf(`cron job "%s" already exists`, name[0]))
         }
     }
-    entry, err := newEntry(pattern, job, false, gDEFAULT_TIMES, name ...)
-    if err != nil {
-        return nil, err
-    }
-    if len(name) > 0 {
-        entry.Name = name[0]
-    } else {
-        entry.Name = strconv.Itoa(c.idgen.Add(1))
-    }
-    c.entries.Set(entry.Name, entry)
-    return entry, nil
+    return c.addEntry(pattern, job, false, gDEFAULT_TIMES, name...)
 }
 
 // 添加单例运行定时任务
@@ -199,57 +179,4 @@ func (c *Cron) Entries() []*Entry {
         }
     })
     return entries
-}
-
-// 遍历检查可执行定时任务，并异步执行
-func (c *Cron) checkEntries(t time.Time) {
-    removeKeys := make([]string, 0)
-    c.entries.RLockFunc(func(m map[string]interface{}) {
-        for k, v := range m {
-            entry := v.(*Entry)
-            if entry.schedule.meet(t) {
-                // 是否停止
-                if entry.status.Val() == STATUS_STOPPED {
-                    continue
-                }
-                // 是否关闭
-                if entry.status.Val() == STATUS_CLOSED {
-                    removeKeys = append(removeKeys, k)
-                    continue
-                }
-                // 单例模式
-                if entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
-                    if entry.IsSingleton() {
-                        continue
-                    }
-                }
-                // 运行次数
-                if t := entry.times.Add(-1); t <= 0 {
-                    if entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED {
-                        continue
-                    }
-                } else if t < 2000000000 && t > 1000000000 {
-                    entry.times.Set(gDEFAULT_TIMES)
-                }
-                // 执行异步运行
-                go func() {
-                    defer func() {
-                        switch entry.status.Val() {
-                            case STATUS_CLOSED:
-                                c.Remove(entry.Name)
-
-                            case STATUS_STOPPED:
-
-                            default:
-                                entry.status.Set(STATUS_READY)
-                        }
-                    }()
-                    entry.Job()
-                }()
-            }
-        }
-    })
-    if len(removeKeys) > 0 {
-        c.entries.BatchRemove(removeKeys)
-    }
 }
