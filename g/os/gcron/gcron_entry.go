@@ -81,6 +81,7 @@ func (entry *Entry) Stop() {
 
 // 关闭定时任务
 func (entry *Entry) Close() {
+    entry.cron.Remove(entry.Name)
     entry.entry.Close()
 }
 
@@ -92,6 +93,7 @@ func (entry *Entry) check() {
                 return
 
             case STATUS_CLOSED:
+                entry.cron.Remove(entry.Name)
                 gtimer.Exit()
 
             case STATUS_READY: fallthrough

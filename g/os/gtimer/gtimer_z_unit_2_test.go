@@ -4,21 +4,22 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// Entry操作
+// Entry Operations
 
 package gtimer_test
 
 import (
     "gitee.com/johng/gf/g/container/garray"
+    "gitee.com/johng/gf/g/os/gtimer"
     "gitee.com/johng/gf/g/util/gtest"
     "testing"
     "time"
 )
 
-func TestTimer_Entry_Operation(t *testing.T) {
-    wheel := New()
+func TestEntry_Start_Stop_Close(t *testing.T) {
+    timer := New()
     array := garray.New(0, 0)
-    entry := wheel.Add(time.Second, func() {
+    entry := timer.Add(time.Second, func() {
         array.Append(1)
     })
     time.Sleep(1200*time.Millisecond)
@@ -32,16 +33,20 @@ func TestTimer_Entry_Operation(t *testing.T) {
     entry.Close()
     time.Sleep(1200*time.Millisecond)
     gtest.Assert(array.Len(), 2)
+
+    gtest.Assert(entry.Status(), gtimer.STATUS_CLOSED)
 }
 
-func TestTimer_Entry_Singleton(t *testing.T) {
-    wheel      := New()
-    array      := garray.New(0, 0)
-    entry := wheel.Add(time.Second, func() {
+func TestEntry_Singleton(t *testing.T) {
+    timer := New()
+    array := garray.New(0, 0)
+    entry := timer.Add(time.Second, func() {
         array.Append(1)
         time.Sleep(10*time.Second)
     })
+    gtest.Assert(entry.IsSingleton(), false)
     entry.SetSingleton(true)
+    gtest.Assert(entry.IsSingleton(), true)
     time.Sleep(1200*time.Millisecond)
     gtest.Assert(array.Len(), 1)
 
@@ -49,13 +54,14 @@ func TestTimer_Entry_Singleton(t *testing.T) {
     gtest.Assert(array.Len(), 1)
 }
 
-func TestTimer_Entry_Once(t *testing.T) {
-    wheel := New()
+func TestEntry_SetTimes(t *testing.T) {
+    timer := New()
     array := garray.New(0, 0)
-    entry := wheel.Add(time.Second, func() {
+    entry := timer.Add(200*time.Millisecond, func() {
         array.Append(1)
     })
-    entry.SetTimes(1)
+    entry.SetTimes(2)
     time.Sleep(1200*time.Millisecond)
-    gtest.Assert(array.Len(), 1)
+    gtest.Assert(array.Len(), 2)
 }
+

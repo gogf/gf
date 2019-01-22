@@ -38,12 +38,7 @@ func (w *wheel) proceed() {
     n      := w.ticks.Add(1)
     l      := w.slots[int(n%w.number)]
     length := l.Len()
-    //if w.level > 0 {
-    //    fmt.Println("loop:", w.level, w.ticks.Val(), time.Now().String())
-    //}
-
     if length > 0 {
-
         go func(l *glist.List, nowTicks int64) {
             entry := (*Entry)(nil)
             nowMs := time.Now().UnixNano()/1e6
@@ -52,10 +47,6 @@ func (w *wheel) proceed() {
                     break
                 } else {
                     entry = v.(*Entry)
-                }
-                //fmt.Println(w.level, w.ticks.Val(), entry.create, entry.rawIntervalMs)
-                if entry.Status() == STATUS_CLOSED {
-                    continue
                 }
                 // 是否满足运行条件
                 if entry.check(nowTicks, nowMs) {
@@ -76,9 +67,9 @@ func (w *wheel) proceed() {
                         entry.job()
                     }(entry)
                 }
-                // 是否继续添运行
+                // 是否继续添运行, 滚动任务
                 if entry.status.Val() != STATUS_CLOSED {
-                    entry.wheel.timer.doAddEntryByParent(time.Duration(entry.rawIntervalMs)*time.Millisecond, entry)
+                    entry.wheel.timer.doAddEntryByParent(entry.rawIntervalMs, entry)
                 }
             }
         }(l, n)

@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
-// 包方法操作
+// Timer Operations
 
 package gtimer_test
 
@@ -21,20 +21,42 @@ func New() *gtimer.Timer {
     return gtimer.New(10, 10*time.Millisecond)
 }
 
+func TestSetTimeout(t *testing.T) {
+    gtest.Case(t, func() {
+        array := garray.New(0, 0)
+        gtimer.SetTimeout(200*time.Millisecond, func() {
+            array.Append(1)
+        })
+        time.Sleep(1000*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+    })
+}
+
+func TestSetInterval(t *testing.T) {
+    gtest.Case(t, func() {
+        array := garray.New(0, 0)
+        gtimer.SetInterval(200*time.Millisecond, func() {
+            array.Append(1)
+        })
+        time.Sleep(1100*time.Millisecond)
+        gtest.Assert(array.Len(), 5)
+    })
+}
+
 func TestTimer_Add_Close(t *testing.T) {
     gtest.Case(t, func() {
-        wheel  := New()
+        timer  := New()
         array  := garray.New(0, 0)
         //fmt.Println("start", time.Now())
-        wheel.Add(time.Second, func() {
+        timer.Add(time.Second, func() {
             //fmt.Println("entry1", time.Now())
             array.Append(1)
         })
-        wheel.Add(time.Second, func() {
+        timer.Add(time.Second, func() {
             //fmt.Println("entry2", time.Now())
             array.Append(1)
         })
-        wheel.Add(2*time.Second, func() {
+        timer.Add(2*time.Second, func() {
             //fmt.Println("entry3", time.Now())
             array.Append(1)
         })
@@ -42,7 +64,7 @@ func TestTimer_Add_Close(t *testing.T) {
         gtest.Assert(array.Len(), 2)
         time.Sleep(1300*time.Millisecond)
         gtest.Assert(array.Len(), 5)
-        wheel.Close()
+        timer.Close()
         time.Sleep(1200*time.Millisecond)
         fixedLength := array.Len()
         time.Sleep(1200*time.Millisecond)
@@ -50,11 +72,34 @@ func TestTimer_Add_Close(t *testing.T) {
     })
 }
 
-func TestTimer_Singleton(t *testing.T) {
+func TestTimer_Start_Stop_Close(t *testing.T) {
+    gtest.Case(t, func() {
+        timer  := New()
+        array  := garray.New(0, 0)
+        timer.Add(200*time.Millisecond, func() {
+            //glog.Println("add...")
+            array.Append(1)
+        })
+        gtest.Assert(array.Len(), 0)
+        time.Sleep(300*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+        timer.Stop()
+        time.Sleep(1000*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+        timer.Start()
+        time.Sleep(200*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+        timer.Close()
+        time.Sleep(1000*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+    })
+}
+
+func TestTimer_AddSingleton(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := New()
+       timer := New()
        array := garray.New(0, 0)
-       wheel.AddSingleton(time.Second, func() {
+       timer.AddSingleton(time.Second, func() {
            array.Append(1)
            time.Sleep(10*time.Second)
        })
@@ -66,21 +111,21 @@ func TestTimer_Singleton(t *testing.T) {
    })
 }
 
-func TestTimer_Once(t *testing.T) {
+func TestTimer_AddOnce(t *testing.T) {
    gtest.Case(t, func() {
-       wheel  := New()
+       timer  := New()
        array  := garray.New(0, 0)
-       wheel.AddOnce(time.Second, func() {
+       timer.AddOnce(time.Second, func() {
            array.Append(1)
        })
-       wheel.AddOnce(time.Second, func() {
+       timer.AddOnce(time.Second, func() {
            array.Append(1)
        })
        time.Sleep(1200*time.Millisecond)
        gtest.Assert(array.Len(), 2)
        time.Sleep(1200*time.Millisecond)
        gtest.Assert(array.Len(), 2)
-       wheel.Close()
+       timer.Close()
        time.Sleep(1200*time.Millisecond)
        fixedLength := array.Len()
        time.Sleep(1200*time.Millisecond)
@@ -88,11 +133,23 @@ func TestTimer_Once(t *testing.T) {
    })
 }
 
+func TestTimer_AddTimes(t *testing.T) {
+    gtest.Case(t, func() {
+        timer := New()
+        array := garray.New(0, 0)
+        timer.AddTimes(time.Second, 2, func() {
+            array.Append(1)
+        })
+        time.Sleep(3500*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+    })
+}
+
 func TestTimer_DelayAdd(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := New()
+       timer := New()
        array := garray.New(0, 0)
-       wheel.DelayAdd(time.Second, time.Second, func() {
+       timer.DelayAdd(time.Second, time.Second, func() {
            array.Append(1)
        })
        time.Sleep(1200*time.Millisecond)
@@ -102,11 +159,11 @@ func TestTimer_DelayAdd(t *testing.T) {
    })
 }
 
-func TestTimer_DelayAdd_Singleton(t *testing.T) {
+func TestTimer_DelayAddSingleton(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := New()
+       timer := New()
        array := garray.New(0, 0)
-       wheel.DelayAddSingleton(time.Second, time.Second, func() {
+       timer.DelayAddSingleton(time.Second, time.Second, func() {
            array.Append(1)
            time.Sleep(10*time.Second)
        })
@@ -118,11 +175,11 @@ func TestTimer_DelayAdd_Singleton(t *testing.T) {
    })
 }
 
-func TestTimer_DelayAdd_Once(t *testing.T) {
+func TestTimer_DelayAddOnce(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := New()
+       timer := New()
        array := garray.New(0, 0)
-       wheel.DelayAddOnce(time.Second, time.Second, func() {
+       timer.DelayAddOnce(time.Second, time.Second, func() {
            array.Append(1)
        })
        time.Sleep(1200*time.Millisecond)
@@ -136,15 +193,36 @@ func TestTimer_DelayAdd_Once(t *testing.T) {
    })
 }
 
-func TestTimer_ExitJob(t *testing.T) {
+func TestTimer_DelayAddTimes(t *testing.T) {
+    gtest.Case(t, func() {
+        timer := New()
+        array := garray.New(0, 0)
+        timer.DelayAddTimes(200*time.Millisecond, 500*time.Millisecond, 2, func() {
+            array.Append(1)
+        })
+        time.Sleep(200*time.Millisecond)
+        gtest.Assert(array.Len(), 0)
+
+        time.Sleep(600*time.Millisecond)
+        gtest.Assert(array.Len(), 1)
+
+        time.Sleep(600*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+
+        time.Sleep(1000*time.Millisecond)
+        gtest.Assert(array.Len(), 2)
+    })
+}
+
+func TestTimer_Exit(t *testing.T) {
    gtest.Case(t, func() {
-       wheel := New()
+       timer := New()
        array := garray.New(0, 0)
-       wheel.Add(time.Second, func() {
+       timer.Add(200*time.Millisecond, func() {
            array.Append(1)
            gtimer.Exit()
        })
-       time.Sleep(1200*time.Millisecond)
+       time.Sleep(1000*time.Millisecond)
        gtest.Assert(array.Len(), 1)
    })
 }

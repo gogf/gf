@@ -72,6 +72,7 @@ func TestCron_Basic(t *testing.T) {
 }
 
 func TestCron_AddSingleton(t *testing.T) {
+    // un used, can be removed
     gtest.Case(t, func() {
         cron  := gcron.New()
         cron.Add("* * * * * *", func() {}, "add")
@@ -88,7 +89,7 @@ func TestCron_AddSingleton(t *testing.T) {
         gtest.AssertNE(entry1, nil)
         gtest.Assert(entry2, nil)
     })
-
+    // keep this
     gtest.Case(t, func() {
         cron  := gcron.New()
         array := garray.New(0, 0)
@@ -193,7 +194,7 @@ func TestCron_DelayAddTimes(t *testing.T) {
         time.Sleep(800*time.Millisecond)
         gtest.Assert(array.Len(), 0)
         gtest.Assert(cron.Size(), 1)
-        time.Sleep(5000*time.Millisecond)
+        time.Sleep(3000*time.Millisecond)
         gtest.Assert(array.Len(), 2)
         gtest.Assert(cron.Size(), 0)
     })

@@ -28,7 +28,7 @@ type Entry struct {
 // 任务执行方法
 type JobFunc = func()
 
-// 创建定时任务
+// 创建定时任务。
 func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
     ms  := interval.Nanoseconds()/1e6
     num := ms/w.intervalMs
@@ -56,10 +56,9 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
     return entry
 }
 
-// 创建定时任务
-func (w *wheel) addEntryByParent(interval time.Duration, parent *Entry) *Entry {
-    ms  := interval.Nanoseconds()/1e6
-    num := ms/w.intervalMs
+// 创建定时任务，给定父级Entry, 间隔参数参数为毫秒数.
+func (w *wheel) addEntryByParent(interval int64, parent *Entry) *Entry {
+    num := interval/w.intervalMs
     if num == 0 {
         num = 1
     }
@@ -74,7 +73,7 @@ func (w *wheel) addEntryByParent(interval time.Duration, parent *Entry) *Entry {
         interval      : num,
         singleton     : parent.singleton,
         createMs      : nowMs,
-        intervalMs    : ms,
+        intervalMs    : interval,
         rawIntervalMs : parent.rawIntervalMs,
     }
     w.slots[(ticks + num) % w.number].PushBack(entry)
@@ -126,21 +125,20 @@ func (entry *Entry) Run() {
     entry.job()
 }
 
-// 检测当前任务是否可运行, 参数为当前时间的纳秒数, 精度更高
+// 检测当前任务是否可运行。
 func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
     switch entry.status.Val() {
         case STATUS_STOPPED: fallthrough
         case STATUS_CLOSED:
             return false
     }
+    // 时间轮客户端判断，是否满足运行刻度条件，误差会比较大
     if diff := nowTicks - entry.create; diff > 0 && diff%entry.interval == 0 {
         // 分层转换处理
         if entry.wheel.level > 0 {
             diffMs := nowMs - entry.createMs
-
-            //fmt.Println("diffMs:", entry.wheel.level, diffMs, entry.intervalMs, entry.rawIntervalMs)
             switch {
-                // 表示新增
+                // 表示新增(当添加任务后在下一时间轮刻度马上触发)
                 case diffMs < entry.wheel.timer.intervalMs:
                     entry.wheel.slots[(nowTicks+entry.interval)%entry.wheel.number].PushBack(entry)
                     return false
@@ -149,23 +147,15 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
                 case diffMs >= entry.wheel.timer.intervalMs:
                     // 任务是否有必要进行分层转换
                     if leftMs := entry.intervalMs - diffMs; leftMs > entry.wheel.timer.intervalMs {
-                        //fmt.Println("leveled",
-                        //   entry.wheel.level,
-                        //   entry.wheel.ticks.Val(),
-                        //   entry.create,
-                        //   diffMs,
-                        //   leftMs,
-                        //   entry.rawIntervalMs,
-                        //)
-                        // 往底层添加
-                        entry.wheel.timer.doAddEntryByParent(time.Duration(leftMs)*time.Millisecond, entry)
+                        // 往底层添加，通过毫秒计算并重新添加任务到对应的时间轮上，减小运行误差
+                        entry.wheel.timer.doAddEntryByParent(leftMs, entry)
                         return false
                     }
             }
         }
         // 是否单例
         if entry.IsSingleton() {
-            //fmt.Println("IsSingleton", entry.status.Val(), entry.intervalMs)
+            // 注意原子操作结果判断
             if entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
                 return false
             }
@@ -173,7 +163,7 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
         // 次数限制
         times := entry.times.Add(-1)
         if times <= 0 {
-            // 注意原子操作
+            // 注意原子操作结果判断
             if entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED || times < 0 {
                 return false
             }
@@ -183,7 +173,6 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) bool {
             times = gDEFAULT_TIMES
             entry.times.Set(gDEFAULT_TIMES)
         }
-
         return true
     }
     return false
