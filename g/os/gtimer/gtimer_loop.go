@@ -49,7 +49,8 @@ func (w *wheel) proceed() {
                     entry = v.(*Entry)
                 }
                 // 是否满足运行条件
-                if entry.check(nowTicks, nowMs) {
+                runnable, addable := entry.check(nowTicks, nowMs)
+                if runnable {
                     // 异步执行运行
                     go func(entry *Entry) {
                         defer func() {
@@ -68,7 +69,7 @@ func (w *wheel) proceed() {
                     }(entry)
                 }
                 // 是否继续添运行, 滚动任务
-                if entry.status.Val() != STATUS_CLOSED {
+                if addable {
                     entry.wheel.timer.doAddEntryByParent(entry.rawIntervalMs, entry)
                 }
             }

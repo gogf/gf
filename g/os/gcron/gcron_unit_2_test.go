@@ -23,6 +23,7 @@ func TestCron_Entry_Operations(t *testing.T) {
             cron  := gcron.New()
             array := garray.New(0, 0)
             cron.DelayAddTimes(500*time.Millisecond, "* * * * * *", 2, func() {
+                glog.Println("add times")
                 array.Append(1)
             })
             gtest.Assert(cron.Size(), 0)
@@ -52,7 +53,7 @@ func TestCron_Entry_Operations(t *testing.T) {
         gtest.Assert(cron.Size(), 1)
         entry.Start()
         glog.Println("start")
-        time.Sleep(1000*time.Millisecond)
+        time.Sleep(1200*time.Millisecond)
         gtest.Assert(array.Len(), 2)
         gtest.Assert(cron.Size(), 1)
         entry.Close()
