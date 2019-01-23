@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "gitee.com/johng/gf/g/os/gtimer"
     "time"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/container/gqueue"
@@ -10,15 +11,14 @@ import (
 func main() {
     q := gqueue.New()
     // 数据生产者，每隔1秒往队列写数据
-    gtime.SetInterval(time.Second, func() bool {
+    gtimer.SetInterval(time.Second, func() {
         v := gtime.Now().String()
         q.Push(v)
         fmt.Println("Push:", v)
-        return true
     })
 
     // 3秒后关闭队列
-    gtime.SetTimeout(3*time.Second, func() {
+    gtimer.SetTimeout(3*time.Second, func() {
         q.Close()
     })
 

@@ -1,3 +1,33 @@
+# `v1.4.6` (2019-01-24)
+
+## 新特性
+1. 新增并发安全的高性能任务定时器模块`gtimer`, 类似于Java的`Timer`，但是比较于Java的`Timer`更加强大，内部实现采用灵活高效的`分层时间轮`设计，被设计为可管理维护百万级别以上数量的定时任务。`gtimer`为`GF`框架的核心模块之一，单元测试覆盖率达到`93.6%`：[https://goframe.org/os/gtimer/index](https://goframe.org/os/gtimer/index)
+1. 采用任务定时器`gtimer`重构`gcron`定时任务模块，去掉第三方`github.com/robfig/cron`包的使用。`gcron`增加单例模式的定时任务：[https://goframe.org/os/gcron/index#](https://goframe.org/os/gcron/index#)；
+1. `gconv`类型转换模块支持对`struct`结构体中的**指针属性**转换：[https://goframe.org/util/gconv/struct](https://goframe.org/util/gconv/struct)；
+1. `gform`增加对数据库类型的自动识别特性，这一特性在需要将查询结果`json`编码返回时非常有用: [https://goframe.org/database/orm/index](https://goframe.org/database/orm/index)
+1. `Travis CI`增加对`386`架构的自动化测试支持(目前已支持`386`和`amd64`)；
+
+## 新功能
+1. `ghttp`模块新增`Exit`、`ExitAll`、`ExitHook`方法，用于HTTP请求处理流程控制: [https://goframe.org/net/ghttp/service/object](https://goframe.org/net/ghttp/service/object)；
+1. `grand`模块增加`Meet/MeetProb`方法，用于给定概率的随机满足判断，增加别名方法`N/Str/Digits/Letters`；
+1. `gvalid`数据/表单校验模块增加`16X`及`19X`手机号的校验支持；
+
+## 功能改进
+1. `gform`设置默认的数据库连接池`CONN_MAX_LIFE`参数值为`30`秒；
+1. 改进`glist`模块，提高约`20%`左右性能，并增加若干链表操作方法；
+1. 改进`gqueue`模块，提高约`50`左右性能，并增加模块对`select`语法的支持(使用`Queue.C`): [https://goframe.org/container/gqueue/index](https://goframe.org/container/gqueue/index)；
+1. 改进`gmlock`内存锁模块，并完善单元测试用例：[https://goframe.org/os/gmlock/index](https://goframe.org/os/gmlock/index)；
+1. 改进并发安全容器所有的模块，调整并发安全控制非必需参数`safe...bool`为`unsafe...bool`；
+1. 改进`gpool`对象复用模块，支持并发安全；
+1. 更新`gkafka`模块的第三方依赖包；
+1. 完善`ghttp`模块的单元测试用例；
+
+
+## Bug Fix
+1. 修复`gmd5`模块操作文件时的文件指针未关闭问题；
+1. 修复`gcache`缓存项过期删除失效问题；
+1. 其他修复；
+
 # `v1.3.8` (2018-12-26)
 
 ## 新特性
