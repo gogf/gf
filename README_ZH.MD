@@ -51,8 +51,10 @@ golang版本 >= 1.9.2
 
 
 # 文档
-[https://gfer.me](https://gfer.me)
 
+开发文档：[https://goframe.org](https://goframe.org)
+
+接口文档：[https://godoc.org/github.com/gogf/gf](https://godoc.org/github.com/gogf/gf)
 
 # 使用
 ```go

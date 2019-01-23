@@ -32,7 +32,7 @@ golang version >= 1.9.2
 
 # Documentation
 
-* [中文文档](https://gfer.me/)
+* [中文文档](https://goframe.org)
 
 # Architecture
 <div align=center>
