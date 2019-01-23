@@ -143,7 +143,7 @@ func TestTimer_DelayAddEntry(t *testing.T) {
         array := garray.New(0, 0)
         timer.DelayAddEntry(200*time.Millisecond, 200*time.Millisecond, func() {
             array.Append(1)
-        }, false, 100)
+        }, false, 100, gtimer.STATUS_READY)
         time.Sleep(250*time.Millisecond)
         gtest.Assert(array.Len(), 0)
         time.Sleep(250*time.Millisecond)

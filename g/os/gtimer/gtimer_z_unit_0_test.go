@@ -44,7 +44,7 @@ func TestAddEntry(t *testing.T) {
         array := garray.New(0, 0)
         gtimer.AddEntry(200*time.Millisecond, func() {
             array.Append(1)
-        }, false, 2)
+        }, false, 2, gtimer.STATUS_READY)
         time.Sleep(1100*time.Millisecond)
         gtest.Assert(array.Len(), 2)
     })
@@ -91,7 +91,7 @@ func TestDelayAddEntry(t *testing.T) {
         array := garray.New(0, 0)
         gtimer.DelayAddEntry(200*time.Millisecond, 200*time.Millisecond, func() {
             array.Append(1)
-        }, false, 2)
+        }, false, 2, gtimer.STATUS_READY)
         time.Sleep(300*time.Millisecond)
         gtest.Assert(array.Len(), 0)
         time.Sleep(1000*time.Millisecond)
