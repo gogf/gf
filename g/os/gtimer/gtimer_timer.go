@@ -80,27 +80,27 @@ func (t *Timer) newWheel(level int, slot int, interval time.Duration) *wheel {
 
 // 添加循环任务
 func (t *Timer) Add(interval time.Duration, job JobFunc) *Entry {
-    return t.doAddEntry(interval, job, false, gDEFAULT_TIMES, STATUS_READY, nil)
+    return t.doAddEntry(interval, job, false, gDEFAULT_TIMES, STATUS_READY)
 }
 
 // 添加定时任务
 func (t *Timer) AddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
-    return t.doAddEntry(interval, job, singleton, times, STATUS_READY, nil)
+    return t.doAddEntry(interval, job, singleton, times, status)
 }
 
 // 添加单例运行循环任务
 func (t *Timer) AddSingleton(interval time.Duration, job JobFunc) *Entry {
-    return t.doAddEntry(interval, job, true, gDEFAULT_TIMES, STATUS_READY, nil)
+    return t.doAddEntry(interval, job, true, gDEFAULT_TIMES, STATUS_READY)
 }
 
 // 添加只运行一次的循环任务
 func (t *Timer) AddOnce(interval time.Duration, job JobFunc) *Entry {
-    return t.doAddEntry(interval, job, true, 1, STATUS_READY, nil)
+    return t.doAddEntry(interval, job, true, 1, STATUS_READY)
 }
 
 // 添加运行指定次数的循环任务。
 func (t *Timer) AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
-    return t.doAddEntry(interval, job, true, times, STATUS_READY, nil)
+    return t.doAddEntry(interval, job, true, times, STATUS_READY)
 }
 
 // 延迟添加循环任务。
@@ -154,7 +154,7 @@ func (t *Timer) Close() {
 }
 
 // 添加定时任务
-func (t *Timer) doAddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int, parent *Entry) *Entry {
+func (t *Timer) doAddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
     return t.wheels[t.getLevelByIntervalMs(interval.Nanoseconds()/1e6)].addEntry(interval, job, singleton, times, status)
 }
 

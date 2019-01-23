@@ -16,19 +16,20 @@ import (
 
 func TestLocker_RLock1(t *testing.T) {
     gtest.Case(t, func() {
+        key   := "test100"
         array := garray.New(0, 0)
         go func() {
-            gmlock.RLock("test")
+            gmlock.RLock(key)
             array.Append(1)
             time.Sleep(50*time.Millisecond)
             array.Append(1)
-            gmlock.RUnlock("test")
+            gmlock.RUnlock(key)
         }()
         go func() {
             time.Sleep(10*time.Millisecond)
-            gmlock.Lock("test")
+            gmlock.Lock(key)
             array.Append(1)
-            gmlock.Unlock("test")
+            gmlock.Unlock(key)
         }()
         time.Sleep(20*time.Millisecond)
         gtest.Assert(array.Len(), 1)
@@ -39,18 +40,19 @@ func TestLocker_RLock1(t *testing.T) {
 
 func TestLocker_RLock2(t *testing.T) {
     gtest.Case(t, func() {
+        key   := "test200"
         array := garray.New(0, 0)
         go func() {
-            gmlock.Lock("test")
+            gmlock.Lock(key)
             array.Append(1)
             time.Sleep(100*time.Millisecond)
-            gmlock.Unlock("test")
+            gmlock.Unlock(key)
         }()
         go func() {
             time.Sleep(10*time.Millisecond)
-            gmlock.RLock("test")
+            gmlock.RLock(key)
             array.Append(1)
-            gmlock.RUnlock("test")
+            gmlock.RUnlock(key)
         }()
 
         time.Sleep(20*time.Millisecond)

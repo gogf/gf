@@ -16,20 +16,22 @@ import (
 
 func TestLocker_Lock_Unlock(t *testing.T) {
     gtest.Case(t, func() {
+        key   := "test1"
         array := garray.New(0, 0)
         go func() {
-            gmlock.Lock("test")
+            gmlock.Lock(key)
             array.Append(1)
             time.Sleep(100*time.Millisecond)
             array.Append(1)
-            gmlock.Unlock("test")
+            gmlock.Unlock(key)
         }()
         go func() {
-            gmlock.Lock("test")
+            time.Sleep(10*time.Millisecond)
+            gmlock.Lock(key)
             array.Append(1)
             time.Sleep(200*time.Millisecond)
             array.Append(1)
-            gmlock.Unlock("test")
+            gmlock.Unlock(key)
         }()
         time.Sleep(50*time.Millisecond)
         gtest.Assert(array.Len(), 1)
@@ -44,48 +46,50 @@ func TestLocker_Lock_Unlock(t *testing.T) {
 
 func TestLocker_Lock_Expire(t *testing.T) {
     gtest.Case(t, func() {
+        key   := "test2"
         array := garray.New(0, 0)
         go func() {
-            gmlock.Lock("test", 50*time.Millisecond)
+            gmlock.Lock(key, 100*time.Millisecond)
             array.Append(1)
         }()
         go func() {
             time.Sleep(10*time.Millisecond)
-            gmlock.Lock("test")
+            gmlock.Lock(key)
             time.Sleep(100*time.Millisecond)
             array.Append(1)
-            gmlock.Unlock("test")
+            gmlock.Unlock(key)
         }()
-        time.Sleep(80*time.Millisecond)
+        time.Sleep(150*time.Millisecond)
         gtest.Assert(array.Len(), 1)
-        time.Sleep(80*time.Millisecond)
+        time.Sleep(250*time.Millisecond)
         gtest.Assert(array.Len(), 2)
     })
 }
 
 func TestLocker_TryLock_Expire(t *testing.T) {
     gtest.Case(t, func() {
+        key   := "test3"
         array := garray.New(0, 0)
         go func() {
-            gmlock.Lock("test", 200*time.Millisecond)
+            gmlock.Lock(key, 200*time.Millisecond)
             array.Append(1)
         }()
         go func() {
-            time.Sleep(50*time.Millisecond)
-            if !gmlock.TryLock("test") {
+            time.Sleep(100*time.Millisecond)
+            if !gmlock.TryLock(key) {
                 array.Append(1)
             } else {
-                gmlock.Unlock("test")
+                gmlock.Unlock(key)
             }
         }()
         go func() {
             time.Sleep(300*time.Millisecond)
-            if gmlock.TryLock("test") {
+            if gmlock.TryLock(key) {
                 array.Append(1)
-                gmlock.Unlock("test")
+                gmlock.Unlock(key)
             }
         }()
-        time.Sleep(20*time.Millisecond)
+        time.Sleep(50*time.Millisecond)
         gtest.Assert(array.Len(), 1)
         time.Sleep(80*time.Millisecond)
         gtest.Assert(array.Len(), 2)
