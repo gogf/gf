@@ -83,7 +83,8 @@ func main() {
 
 # 捐赠
 
-捐赠时请备注您的`github`/`gitee`账号名称
+捐赠支持`GF`框架的研发，
+请在捐赠时备注您的`github`/`gitee`账号名称。
 
 <a href="https://goframe.org/images/donate.png" target="_blank">
 <img src="https://goframe.org/images/donate.png" width="300"/>
