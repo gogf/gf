@@ -13,7 +13,7 @@ import (
     "sync"
 )
 
-var pool  = New(99999999)
+var pool  = New(99999999, nil)
 var syncp = sync.Pool{}
 
 func BenchmarkGPoolPut(b *testing.B) {
