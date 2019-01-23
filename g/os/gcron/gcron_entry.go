@@ -39,7 +39,8 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, times int, n
     } else {
         entry.Name = strconv.Itoa(c.idgen.Add(1))
     }
-    entry.entry = gtimer.Add(time.Second, entry.check)
+    entry.entry = gtimer.AddEntry(time.Second, entry.check, singleton, times, gtimer.STATUS_STOPPED)
+    entry.entry.Start()
     c.entries.Set(entry.Name, entry)
     return entry, nil
 }

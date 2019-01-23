@@ -13,6 +13,7 @@
 package gtimer
 
 import (
+    "gitee.com/johng/gf/g/internal/cmdenv"
     "math"
     "time"
 )
@@ -25,13 +26,17 @@ const (
     gPANIC_EXIT             = "exit"
     gDEFAULT_TIMES          = math.MaxInt32
     gDEFAULT_SLOT_NUMBER    = 10
-    gDEFAULT_WHEEL_INTERVAL = 50*time.Millisecond
+    gDEFAULT_WHEEL_INTERVAL = 50
     gDEFAULT_WHEEL_LEVEL    = 6
 )
 
 var (
-    // 默认的wheel管理对象。
-    defaultTimer = New(gDEFAULT_SLOT_NUMBER, gDEFAULT_WHEEL_INTERVAL, gDEFAULT_WHEEL_LEVEL)
+    // 默认定时器属性参数值
+    defaultSlots    = cmdenv.Get("gf.gtimer.slots",    gDEFAULT_SLOT_NUMBER).Int()
+    defaultLevel    = cmdenv.Get("gf.gtimer.level",    gDEFAULT_WHEEL_LEVEL).Int()
+    defaultInterval = cmdenv.Get("gf.gtimer.interval", gDEFAULT_WHEEL_INTERVAL).TimeDuration()*time.Millisecond
+    // 默认的wheel管理对象
+    defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
 )
 
 // 类似与js中的SetTimeout，一段时间后执行回调函数。
@@ -50,8 +55,8 @@ func Add(interval time.Duration, job JobFunc) *Entry {
 }
 
 // 添加执行方法，更多参数控制。
-func AddEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
-    return defaultTimer.AddEntry(interval, job, singleton, times)
+func AddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
+    return defaultTimer.AddEntry(interval, job, singleton, times, status)
 }
 
 // 添加单例运行循环任务。
@@ -75,8 +80,8 @@ func DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
 }
 
 // 延迟添加循环任务, 支持完整的参数。
-func DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int) {
-    defaultTimer.DelayAddEntry(delay, interval, job, singleton, times)
+func DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int, status int) {
+    defaultTimer.DelayAddEntry(delay, interval, job, singleton, times, status)
 }
 
 // 延迟添加单例循环任务，delay参数单位为秒

@@ -29,7 +29,7 @@ type Entry struct {
 type JobFunc = func()
 
 // 创建定时任务。
-func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
+func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
     ms  := interval.Nanoseconds()/1e6
     num := ms/w.intervalMs
     if num == 0 {
@@ -43,7 +43,7 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
         wheel         : w,
         job           : job,
         times         : gtype.NewInt(times),
-        status        : gtype.NewInt(STATUS_READY),
+        status        : gtype.NewInt(status),
         create        : ticks,
         interval      : num,
         singleton     : gtype.NewBool(singleton),

@@ -13,6 +13,7 @@ package glog
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
+    "gitee.com/johng/gf/g/internal/cmdenv"
     "io"
 )
 
@@ -33,6 +34,10 @@ var (
     // 默认的日志对象
     logger = New()
 )
+
+func init() {
+    SetDebug(cmdenv.Get("gf.glog.debug", true).Bool())
+}
 
 // 日志日志目录绝对路径
 func SetPath(path string) {

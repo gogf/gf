@@ -7,20 +7,8 @@
 package g
 
 import (
-    "gitee.com/johng/gf/g/os/gcmd"
-    "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/util/gconv"
 )
-
-func init() {
-    if v := genv.Get("GF_DEBUG"); v != "" {
-        SetDebug(gconv.Bool(v))
-    }
-    if v := gcmd.Option.Get("gf.debug"); v != "" {
-        SetDebug(gconv.Bool(v))
-    }
-}
 
 // 是否显示调试信息
 func SetDebug(debug bool) {

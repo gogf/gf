@@ -15,9 +15,8 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/database/gdb"
     "gitee.com/johng/gf/g/database/gredis"
+    "gitee.com/johng/gf/g/internal/cmdenv"
     "gitee.com/johng/gf/g/os/gcfg"
-    "gitee.com/johng/gf/g/os/gcmd"
-    "gitee.com/johng/gf/g/os/genv"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gfsnotify"
     "gitee.com/johng/gf/g/os/glog"
@@ -74,13 +73,7 @@ func View(name...string) *gview.View {
     }
     key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEW, group)
     return instances.GetOrSetFuncLock(key, func() interface{} {
-        path := gcmd.Option.Get("gf.viewpath")
-        if path == "" {
-            path = genv.Get("GF_VIEWPATH")
-            if path == "" {
-                path = gfile.SelfDir()
-            }
-        }
+        path := cmdenv.Get("gf.gview.path", gfile.SelfDir()).String()
         view := gview.New(path)
         // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
         if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
@@ -101,13 +94,7 @@ func Config(file...string) *gcfg.Config {
     }
     return instances.GetOrSetFuncLock(fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile),
         func() interface{} {
-            path := gcmd.Option.Get("gf.cfgpath")
-            if path == "" {
-                path = genv.Get("GF_CFGPATH")
-                if path == "" {
-                    path = gfile.SelfDir()
-                }
-            }
+            path   := cmdenv.Get("gf.gcfg.path", gfile.SelfDir()).String()
             config := gcfg.New(path, configFile)
             // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
             if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {

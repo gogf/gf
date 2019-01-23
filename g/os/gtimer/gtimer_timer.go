@@ -51,7 +51,7 @@ func New(slot int, interval time.Duration, level...int) *Timer {
             n          := time.Duration(t.wheels[i - 1].totalMs)*time.Millisecond
             w          := t.newWheel(i, slot, n)
             t.wheels[i] = w
-            t.wheels[i - 1].addEntry(n, w.proceed, false, gDEFAULT_TIMES)
+            t.wheels[i - 1].addEntry(n, w.proceed, false, gDEFAULT_TIMES, STATUS_READY)
         } else {
             t.wheels[i] = t.newWheel(i, slot, interval)
         }
@@ -80,27 +80,27 @@ func (t *Timer) newWheel(level int, slot int, interval time.Duration) *wheel {
 
 // 添加循环任务
 func (t *Timer) Add(interval time.Duration, job JobFunc) *Entry {
-    return t.AddEntry(interval, job, false, gDEFAULT_TIMES)
+    return t.doAddEntry(interval, job, false, gDEFAULT_TIMES, STATUS_READY, nil)
 }
 
 // 添加定时任务
-func (t *Timer) AddEntry(interval time.Duration, job JobFunc, singleton bool, times int) *Entry {
-    return t.doAddEntry(interval, job, singleton, times, nil)
+func (t *Timer) AddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
+    return t.doAddEntry(interval, job, singleton, times, STATUS_READY, nil)
 }
 
 // 添加单例运行循环任务
 func (t *Timer) AddSingleton(interval time.Duration, job JobFunc) *Entry {
-    return t.AddEntry(interval, job, true, gDEFAULT_TIMES)
+    return t.doAddEntry(interval, job, true, gDEFAULT_TIMES, STATUS_READY, nil)
 }
 
 // 添加只运行一次的循环任务
 func (t *Timer) AddOnce(interval time.Duration, job JobFunc) *Entry {
-    return t.AddEntry(interval, job, false, 1)
+    return t.doAddEntry(interval, job, true, 1, STATUS_READY, nil)
 }
 
 // 添加运行指定次数的循环任务。
 func (t *Timer) AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
-    return t.AddEntry(interval, job, false, times)
+    return t.doAddEntry(interval, job, true, times, STATUS_READY, nil)
 }
 
 // 延迟添加循环任务。
@@ -111,9 +111,9 @@ func (t *Timer) DelayAdd(delay time.Duration, interval time.Duration, job JobFun
 }
 
 // 延迟添加循环任务, 支持完整的参数。
-func (t *Timer) DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int) {
+func (t *Timer) DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int, status int) {
     t.AddOnce(delay, func() {
-        t.AddEntry(interval, job, singleton, times)
+        t.AddEntry(interval, job, singleton, times, status)
     })
 }
 
@@ -154,8 +154,8 @@ func (t *Timer) Close() {
 }
 
 // 添加定时任务
-func (t *Timer) doAddEntry(interval time.Duration, job JobFunc, singleton bool, times int, parent *Entry) *Entry {
-    return t.wheels[t.getLevelByIntervalMs(interval.Nanoseconds()/1e6)].addEntry(interval, job, singleton, times)
+func (t *Timer) doAddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int, parent *Entry) *Entry {
+    return t.wheels[t.getLevelByIntervalMs(interval.Nanoseconds()/1e6)].addEntry(interval, job, singleton, times, status)
 }
 
 // 添加定时任务，给定父级Entry, 间隔参数参数为毫秒数.
