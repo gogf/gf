@@ -52,7 +52,9 @@ func (c *Client) SetHeader(key, value string) {
 func (c *Client) SetHeaderRaw(header string) {
     for _, line := range strings.Split(strings.TrimSpace(header), "\n") {
         array, _ := gregex.MatchString(`^([\w\-]+):\s*(.+)`, line)
-        c.header[array[1]] = array[2]
+        if len(array) >= 3 {
+            c.header[array[1]] = array[2]
+        }
     }
 }
 

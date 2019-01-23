@@ -34,25 +34,27 @@ type poolItem struct {
     value  interface{}         // 对象值
 }
 
+// 对象创建方法类型
+type NewFunc    func() (interface{}, error)
+
+// 对象过期方法类型
+type ExpireFunc func(interface{})
+
 // 创建一个对象池，为保证执行效率，过期时间一旦设定之后无法修改
 // expire = 0表示不过期，expire < 0表示使用完立即回收，expire > 0表示超时回收
 // 注意过期时间单位为**毫秒**
-func New(expire int, newFunc...func() (interface{}, error)) *Pool {
+func New(expire int, newFunc NewFunc, expireFunc...ExpireFunc) *Pool {
     r := &Pool {
         list    : glist.New(),
         closed  : gtype.NewBool(),
         Expire  : int64(expire),
+        NewFunc : newFunc,
     }
-    if len(newFunc) > 0 {
-        r.NewFunc = newFunc[0]
+    if len(expireFunc) > 0 {
+        r.ExpireFunc = expireFunc[0]
     }
     gtimer.AddSingleton(time.Second, r.checkExpire)
     return r
-}
-
-// 设置对象过期销毁时的关闭方法
-func (p *Pool) SetExpireFunc(expireFunc func(interface{})) {
-    p.ExpireFunc = expireFunc
 }
 
 // 放一个临时对象到池中

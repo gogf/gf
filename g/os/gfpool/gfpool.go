@@ -91,8 +91,7 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, expire int) *
             perm   : perm,
             path   : path,
         }, nil
-    })
-    pool.SetExpireFunc(func(i interface{}) {
+    }, func(i interface{}) {
         i.(*File).File.Close()
     })
     return pool
