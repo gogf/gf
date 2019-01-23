@@ -15,6 +15,7 @@ import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/os/gtimer"
+    "time"
 )
 
 // 对象池
@@ -45,7 +46,7 @@ func New(expire int, newFunc...func() (interface{}, error)) *Pool {
     if len(newFunc) > 0 {
         r.NewFunc = newFunc[0]
     }
-    //gtimer.AddSingleton(time.Second, r.checkExpire)
+    gtimer.AddSingleton(time.Second, r.checkExpire)
     return r
 }
 

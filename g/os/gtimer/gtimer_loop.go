@@ -19,9 +19,9 @@ func (w *wheel) start() {
            select {
                case <- ticker.C:
                    switch w.timer.status.Val() {
-                       case STATUS_READY: fallthrough
                        case STATUS_RUNNING:
                            w.proceed()
+
                        case STATUS_STOPPED:
                        case STATUS_CLOSED:
                            ticker.Stop()

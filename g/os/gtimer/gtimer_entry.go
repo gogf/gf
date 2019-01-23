@@ -133,7 +133,7 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) (runnable, addable bool) 
         case STATUS_CLOSED:
             return false, false
     }
-    // 时间轮客户端判断，是否满足运行刻度条件，误差会比较大
+    // 时间轮刻度判断，是否满足运行刻度条件，刻度判断的误差会比较大
     if diff := nowTicks - entry.create; diff > 0 && diff%entry.interval == 0 {
         // 分层转换处理
         if entry.wheel.level > 0 {
@@ -148,6 +148,7 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) (runnable, addable bool) 
                 case diffMs >= entry.wheel.timer.intervalMs:
                     // 任务是否有必要进行分层转换
                     if leftMs := entry.intervalMs - diffMs; leftMs > entry.wheel.timer.intervalMs {
+
                         // 往底层添加，通过毫秒计算并重新添加任务到对应的时间轮上，减小运行误差
                         entry.wheel.timer.doAddEntryByParent(leftMs, entry)
                         return false, false
