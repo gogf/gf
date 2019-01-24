@@ -52,19 +52,19 @@ func (p *utilPprof) Index(r *Request) {
 }
 
 func (p *utilPprof) Cmdline(r *Request) {
-    netpprof.Cmdline(r.Response.Writer, &r.Request)
+    netpprof.Cmdline(r.Response.Writer, r.Request)
 }
 
 func (p *utilPprof) Profile(r *Request) {
-    netpprof.Profile(r.Response.Writer, &r.Request)
+    netpprof.Profile(r.Response.Writer, r.Request)
 }
 
 func (p *utilPprof) Symbol(r *Request) {
-    netpprof.Symbol(r.Response.Writer, &r.Request)
+    netpprof.Symbol(r.Response.Writer, r.Request)
 }
 
 func (p *utilPprof) Trace(r *Request) {
-    netpprof.Trace(r.Response.Writer, &r.Request)
+    netpprof.Trace(r.Response.Writer, r.Request)
 }
 
 // 开启pprof支持
