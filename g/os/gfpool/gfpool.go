@@ -24,7 +24,6 @@ type Pool struct {
     id         *gtype.Int        // 指针池ID，用以识别指针池是否重建
     pool       *gpool.Pool       // 底层对象池
     inited     *gtype.Bool       // 是否初始化(在执行第一次File方法后初始化，主要用于监听的添加，但是只能添加一次)
-    closeChan  chan struct{}     // 关闭事件
     expire     int               // 过期时间
 }
 
@@ -67,10 +66,9 @@ func New(path string, flag int, perm os.FileMode, expire...int) *Pool {
         fpExpire = expire[0]
     }
     p := &Pool {
-        id        : gtype.NewInt(),
-        expire    : fpExpire,
-        inited    : gtype.NewBool(),
-        closeChan : make(chan struct{}),
+        id     : gtype.NewInt(),
+        expire : fpExpire,
+        inited : gtype.NewBool(),
     }
     p.pool = newFilePool(p, path, flag, perm, fpExpire)
     return p
@@ -132,7 +130,7 @@ func (p *Pool) File() (*File, error) {
                return nil, err
            }
         }
-        if !p.inited.Set(true) {
+        if !p.inited.Val() || p.inited.Set(true) == false {
             gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
                 // 如果文件被删除或者重命名，立即重建指针池
                 if event.IsRemove() || event.IsRename() {
@@ -150,11 +148,9 @@ func (p *Pool) File() (*File, error) {
     }
 }
 
-// 关闭指针池(返回error是标准库io.ReadWriteCloser接口实现)
-func (p *Pool) Close() error {
-    close(p.closeChan)
+// 关闭指针池
+func (p *Pool) Close() {
     p.pool.Close()
-    return nil
 }
 
 // 获得底层文件指针(返回error是标准库io.ReadWriteCloser接口实现)
