@@ -9,6 +9,7 @@
 package gstr_test
 
 import (
+    "strings"
     "testing"
 )
 
@@ -32,3 +33,16 @@ func Benchmark_BytesToString(b *testing.B) {
         }
     }
 }
+
+func Benchmark_Strings_ToUpper(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        strings.ToUpper(str)
+    }
+}
+
+func Benchmark_Strings_ToLower(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        strings.ToLower(str)
+    }
+}
+

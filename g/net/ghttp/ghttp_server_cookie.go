@@ -141,6 +141,9 @@ func (c *Cookie) Remove(key, domain, path string) {
 
 // 输出到客户端
 func (c *Cookie) Output() {
+    if len(c.data) == 0 {
+        return
+    }
     for k, v := range c.data {
         // 只有 expire != 0 的才是服务端在本次请求中设置的cookie
         if v.expire == 0 {

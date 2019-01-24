@@ -19,7 +19,7 @@ import (
 
 // 请求对象
 type Request struct {
-    http.Request
+    *http.Request
     parsedGet     bool                    // GET参数是否已经解析
     parsedPost    bool                    // POST参数是否已经解析
     queryVars     map[string][]string     // GET参数
@@ -46,7 +46,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
         routerVars : make(map[string][]string),
         Id         : s.servedCount.Add(1),
         Server     : s,
-        Request    : *r,
+        Request    : r,
         Response   : newResponse(s, w),
         EnterTime  : gtime.Microsecond(),
     }
@@ -59,7 +59,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 
 // 获取Web Socket连接对象(如果是非WS请求会失败，注意检查然会的error结果)
 func (r *Request) WebSocket() (*WebSocket, error) {
-    if conn, err := wsUpgrader.Upgrade(r.Response.ResponseWriter.ResponseWriter, &r.Request, nil); err == nil {
+    if conn, err := wsUpgrader.Upgrade(r.Response.ResponseWriter.ResponseWriter, r.Request, nil); err == nil {
         return &WebSocket {
             conn,
         }, nil
