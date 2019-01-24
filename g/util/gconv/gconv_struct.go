@@ -143,7 +143,11 @@ func getTagMapOfStruct(objPointer interface{}) map[string]string {
     }
     // 将struct中定义的属性转换名称构建成tagmap
     for _, field := range fields {
-        if tag := field.Tag("gconv"); tag != "" {
+        tag := field.Tag("gconv")
+        if tag == "" {
+            tag = field.Tag("json")
+        }
+        if tag != "" {
             for _, v := range strings.Split(tag, ",") {
                 tagmap[strings.TrimSpace(v)] = field.Name()
             }
