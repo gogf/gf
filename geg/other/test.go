@@ -2,24 +2,14 @@ package main
 
 import (
     "fmt"
-    "github.com/kavu/go_reuseport"
-    "html"
-    "net/http"
-    "os"
+    "gitee.com/johng/gf/g/net/ghttp"
+    "strings"
+    "time"
 )
 
 func main() {
-    listener, err := reuseport.Listen("tcp", "localhost:8881")
-    if err != nil {
-        panic(err)
+    for {
+        time.Sleep(500*time.Millisecond)
+        fmt.Println(strings.TrimSpace(ghttp.GetContent("http://127.0.0.1:8881")))
     }
-    defer listener.Close()
-
-    server := &http.Server{}
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Println(os.Getgid())
-        fmt.Fprintf(w, "Hello, %q\n", html.EscapeString(r.URL.Path))
-    })
-
-    panic(server.Serve(listener))
 }
