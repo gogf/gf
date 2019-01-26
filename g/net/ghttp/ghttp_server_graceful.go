@@ -7,15 +7,15 @@
 package ghttp
 
 import (
-    "errors"
-    "os"
-    "fmt"
-    "net"
     "context"
-    "net/http"
     "crypto/tls"
+    "errors"
+    "fmt"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
+    "net"
+    "net/http"
+    "os"
     "time"
 )
 

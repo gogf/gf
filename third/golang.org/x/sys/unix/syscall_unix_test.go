@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build darwin dragonfly freebsd linux netbsd openbsd solaris
+// +build aix darwin dragonfly freebsd linux netbsd openbsd solaris
 
 package unix_test
 
@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"syscall"
 	"testing"
 	"time"
 
@@ -59,6 +60,62 @@ func _() {
 	)
 }
 
+func TestErrnoSignalName(t *testing.T) {
+	testErrors := []struct {
+		num  syscall.Errno
+		name string
+	}{
+		{syscall.EPERM, "EPERM"},
+		{syscall.EINVAL, "EINVAL"},
+		{syscall.ENOENT, "ENOENT"},
+	}
+
+	for _, te := range testErrors {
+		t.Run(fmt.Sprintf("%d/%s", te.num, te.name), func(t *testing.T) {
+			e := unix.ErrnoName(te.num)
+			if e != te.name {
+				t.Errorf("ErrnoName(%d) returned %s, want %s", te.num, e, te.name)
+			}
+		})
+	}
+
+	testSignals := []struct {
+		num  syscall.Signal
+		name string
+	}{
+		{syscall.SIGHUP, "SIGHUP"},
+		{syscall.SIGPIPE, "SIGPIPE"},
+		{syscall.SIGSEGV, "SIGSEGV"},
+	}
+
+	for _, ts := range testSignals {
+		t.Run(fmt.Sprintf("%d/%s", ts.num, ts.name), func(t *testing.T) {
+			s := unix.SignalName(ts.num)
+			if s != ts.name {
+				t.Errorf("SignalName(%d) returned %s, want %s", ts.num, s, ts.name)
+			}
+		})
+	}
+}
+
+func TestFcntlInt(t *testing.T) {
+	t.Parallel()
+	file, err := ioutil.TempFile("", "TestFnctlInt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+	f := file.Fd()
+	flags, err := unix.FcntlInt(f, unix.F_GETFD, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if flags&unix.FD_CLOEXEC == 0 {
+		t.Errorf("flags %#x do not include FD_CLOEXEC", flags)
+	}
+}
+
 // TestFcntlFlock tests whether the file locking structure matches
 // the calling convention of each kernel.
 func TestFcntlFlock(t *testing.T) {
@@ -86,6 +143,13 @@ func TestFcntlFlock(t *testing.T) {
 // "-test.run=^TestPassFD$" and an environment variable used to signal
 // that the test should become the child process instead.
 func TestPassFD(t *testing.T) {
+	if runtime.GOOS == "darwin" && (runtime.GOARCH == "arm" || runtime.GOARCH == "arm64") {
+		t.Skip("cannot exec subprocess on iOS, skipping test")
+	}
+	if runtime.GOOS == "aix" {
+		t.Skip("getsockname issue on AIX 7.2 tl1, skipping test")
+	}
+
 	if os.Getenv("GO_WANT_HELPER_PROCESS") == "1" {
 		passFDChild()
 		return
@@ -273,6 +337,12 @@ func TestRlimit(t *testing.T) {
 	}
 	set := rlimit
 	set.Cur = set.Max - 1
+	if runtime.GOOS == "darwin" && set.Cur > 10240 {
+		// The max file limit is 10240, even though
+		// the max returned by Getrlimit is 1<<63-1.
+		// This is OPEN_MAX in sys/syslimits.h.
+		set.Cur = 10240
+	}
 	err = unix.Setrlimit(unix.RLIMIT_NOFILE, &set)
 	if err != nil {
 		t.Fatalf("Setrlimit: set failed: %#v %v", set, err)
@@ -351,6 +421,11 @@ func TestDup(t *testing.T) {
 }
 
 func TestPoll(t *testing.T) {
+	if runtime.GOOS == "android" ||
+		(runtime.GOOS == "darwin" && (runtime.GOARCH == "arm" || runtime.GOARCH == "arm64")) {
+		t.Skip("mkfifo syscall is not available on android and iOS, skipping test")
+	}
+
 	f, cleanup := mktmpfifo(t)
 	defer cleanup()
 
@@ -384,10 +459,13 @@ func TestGetwd(t *testing.T) {
 		t.Fatalf("Open .: %s", err)
 	}
 	defer fd.Close()
-	// These are chosen carefully not to be symlinks on a Mac
-	// (unlike, say, /var, /etc)
-	dirs := []string{"/", "/usr/bin"}
-	if runtime.GOOS == "darwin" {
+	// Directory list for test. Do not worry if any are symlinks or do not
+	// exist on some common unix desktop environments. That will be checked.
+	dirs := []string{"/", "/usr/bin", "/etc", "/var", "/opt"}
+	switch runtime.GOOS {
+	case "android":
+		dirs = []string{"/", "/system/bin"}
+	case "darwin":
 		switch runtime.GOARCH {
 		case "arm", "arm64":
 			d1, err := ioutil.TempDir("", "d1")
@@ -403,6 +481,17 @@ func TestGetwd(t *testing.T) {
 	}
 	oldwd := os.Getenv("PWD")
 	for _, d := range dirs {
+		// Check whether d exists, is a dir and that d's path does not contain a symlink
+		fi, err := os.Stat(d)
+		if err != nil || !fi.IsDir() {
+			t.Logf("Test dir %s stat error (%v) or not a directory, skipping", d, err)
+			continue
+		}
+		check, err := filepath.EvalSymlinks(d)
+		if err != nil || check != d {
+			t.Logf("Test dir %s (%s) is symlink or other error (%v), skipping", d, check, err)
+			continue
+		}
 		err = os.Chdir(d)
 		if err != nil {
 			t.Fatalf("Chdir: %v", err)
@@ -495,7 +584,7 @@ func TestFchmodat(t *testing.T) {
 	didChmodSymlink := true
 	err = unix.Fchmodat(unix.AT_FDCWD, "symlink1", uint32(mode), unix.AT_SYMLINK_NOFOLLOW)
 	if err != nil {
-		if (runtime.GOOS == "linux" || runtime.GOOS == "solaris") && err == unix.EOPNOTSUPP {
+		if (runtime.GOOS == "android" || runtime.GOOS == "linux" || runtime.GOOS == "solaris") && err == unix.EOPNOTSUPP {
 			// Linux and Illumos don't support flags != 0
 			didChmodSymlink = false
 		} else {
@@ -518,6 +607,42 @@ func TestFchmodat(t *testing.T) {
 	got := os.FileMode(st.Mode & 0777)
 	if got != mode {
 		t.Errorf("Fchmodat: failed to change symlink mode: expected %v, got %v", mode, got)
+	}
+}
+
+func TestMkdev(t *testing.T) {
+	major := uint32(42)
+	minor := uint32(7)
+	dev := unix.Mkdev(major, minor)
+
+	if unix.Major(dev) != major {
+		t.Errorf("Major(%#x) == %d, want %d", dev, unix.Major(dev), major)
+	}
+	if unix.Minor(dev) != minor {
+		t.Errorf("Minor(%#x) == %d, want %d", dev, unix.Minor(dev), minor)
+	}
+}
+
+func TestRenameat(t *testing.T) {
+	defer chtmpdir(t)()
+
+	from, to := "renamefrom", "renameto"
+
+	touch(t, from)
+
+	err := unix.Renameat(unix.AT_FDCWD, from, unix.AT_FDCWD, to)
+	if err != nil {
+		t.Fatalf("Renameat: unexpected error: %v", err)
+	}
+
+	_, err = os.Stat(to)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = os.Stat(from)
+	if err == nil {
+		t.Errorf("Renameat: stat of renamed file %q unexpectedly suceeded", from)
 	}
 }
 
