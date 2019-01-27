@@ -46,7 +46,15 @@
 1. grpool性能压测结果变慢的问题；
 1. 增加jumplist的数据结构容器；
 1. DelayQueue/PriorityQueue；
-1. gconv针对struct的转换增加json tag支持，gconv.Map默认也支持json tag;
+1. gconv针对struct的转换增加json tag支持，gconv.Map默认也支持json tag, 完善开发文档；
+1. 增加SO_REUSEPORT的支持；
+1. 权限管理模块；
+
+
+
+
+
+
 
 # DONE
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；

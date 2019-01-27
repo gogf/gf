@@ -1,3 +1,5 @@
+// 链式操作
+
 package gdb_test
 
 import (
@@ -41,7 +43,7 @@ func TestModel_Batch(t *testing.T) {
             "nickname"    : "T3",
             "create_time" : gtime.Now().String(),
         },
-    }).Batch(10).Insert()
+    }).Batch(1).Insert()
     if err != nil {
         gtest.Fatal(err)
     }

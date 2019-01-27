@@ -265,7 +265,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (res
         params = append(params, v)
     }
     operation := getInsertOperationByOption(option)
-    updatestr := ""
+    updateStr := ""
     if option == OPTION_SAVE {
         var updates []string
         for k, _ := range data {
@@ -276,7 +276,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (res
                 ),
             )
         }
-        updatestr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
+        updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
     if link == nil {
         if link, err = bs.db.Master(); err != nil {
@@ -285,7 +285,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (res
     }
     return bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES(%s) %s",
         operation, table, strings.Join(fields, ","),
-        strings.Join(values, ","), updatestr),
+        strings.Join(values, ","), updateStr),
         params...)
 }
 
@@ -324,12 +324,13 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
         keys   = append(keys,   k)
         values = append(values, "?")
     }
+    batchResult    := new(batchSqlResult)
     charl, charr   := bs.db.getChars()
     keyStr         := charl + strings.Join(keys, charl + "," + charr) + charr
     valueHolderStr := "(" + strings.Join(values, ",") + ")"
     // 操作判断
     operation := getInsertOperationByOption(option)
-    updatestr := ""
+    updateStr := ""
     if option == OPTION_SAVE {
         var updates []string
         for _, k := range keys {
@@ -340,7 +341,7 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
                 ),
             )
         }
-        updatestr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
+        updateStr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
     // 构造批量写入数据格式(注意map的遍历是无序的)
     for i := 0; i < len(list); i++ {
@@ -351,12 +352,17 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
         if len(bvalues) == batch {
             r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
                 operation, table, keyStr, strings.Join(bvalues, ","),
-                updatestr),
+                updateStr),
                 params...)
             if err != nil {
-                return result, err
+                return r, err
             }
-            result  = r
+            if n, err := r.RowsAffected(); err != nil  {
+                return r, err
+            } else {
+                batchResult.lastResult    = r
+                batchResult.rowsAffected += n
+            }
             params  = params[:0]
             bvalues = bvalues[:0]
         }
@@ -365,14 +371,19 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
     if len(bvalues) > 0 {
         r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
             operation, table, keyStr, strings.Join(bvalues, ","),
-            updatestr),
+            updateStr),
             params...)
         if err != nil {
-            return result, err
+            return r, err
         }
-        result = r
+        if n, err := r.RowsAffected(); err != nil  {
+            return r, err
+        } else {
+            batchResult.lastResult    = r
+            batchResult.rowsAffected += n
+        }
     }
-    return result, nil
+    return batchResult, nil
 }
 
 // CURD操作:数据更新，统一采用sql预处理

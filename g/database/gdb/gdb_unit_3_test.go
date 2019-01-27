@@ -1,3 +1,5 @@
+// 事务操作
+
 package gdb_test
 
 import (

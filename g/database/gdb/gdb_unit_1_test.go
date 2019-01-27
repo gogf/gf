@@ -1,3 +1,5 @@
+// 方法操作
+
 package gdb_test
 
 import (
@@ -57,7 +59,7 @@ func TestDbBase_Insert(t *testing.T) {
 }
 
 func TestDbBase_BatchInsert(t *testing.T) {
-    if _, err := db.BatchInsert("user", g.List {
+    if r, err := db.BatchInsert("user", g.List {
         {
             "id"          : 2,
             "passport"    : "t2",
@@ -72,8 +74,11 @@ func TestDbBase_BatchInsert(t *testing.T) {
             "nickname"    : "T3",
             "create_time" : gtime.Now().String(),
         },
-    }, 10); err != nil {
+    }, 1); err != nil {
         gtest.Fatal(err)
+    } else {
+        n, _ := r.RowsAffected()
+        gtest.Assert(n, 2)
     }
 }
 
