@@ -270,7 +270,10 @@ func (s *Server) Start() error {
 // 打印展示路由表
 func (s *Server) DumpRoutesMap() {
     if s.config.DumpRouteMap && len(s.routesMap) > 0 {
-        glog.Header(false).Println(fmt.Sprintf("\n%s", s.GetRouteMap()))
+        // (等待一定时间后)当所有框架初始化信息打印完毕之后才打印路由表信息
+        gtimer.SetTimeout(50*time.Millisecond, func() {
+            glog.Header(false).Println(fmt.Sprintf("\n%s", s.GetRouteMap()))
+        })
     }
 }
 
