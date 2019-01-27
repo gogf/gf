@@ -1,6 +1,6 @@
 // +build windows
 
-package reuseport
+package greuseport
 
 import (
     "syscall"

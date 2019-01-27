@@ -1,11 +1,11 @@
 // +build linux darwin dragonfly freebsd netbsd openbsd
 
-package reuseport_test
+package greuseport_test
 
 import (
 	"fmt"
-	"gitee.com/johng/gf/g/internal/reuseport"
-	"html"
+	"gitee.com/johng/gf/g/net/greuseport"
+    "html"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -29,37 +29,37 @@ func NewHTTPServer(resp string) *httptest.Server {
 	}))
 }
 func TestNewReusablePortListener(t *testing.T) {
-	listenerOne, err := reuseport.Listen("tcp4", "localhost:10081")
+	listenerOne, err := greuseport.Listen("tcp4", "localhost:10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerOne.Close()
 
-	listenerTwo, err := reuseport.Listen("tcp", "127.0.0.1:10081")
+	listenerTwo, err := greuseport.Listen("tcp", "127.0.0.1:10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerTwo.Close()
 
-	listenerThree, err := reuseport.Listen("tcp6", "[::1]:10081")
+	listenerThree, err := greuseport.Listen("tcp6", "[::1]:10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerThree.Close()
 
-	listenerFour, err := reuseport.Listen("tcp6", ":10081")
+	listenerFour, err := greuseport.Listen("tcp6", ":10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerFour.Close()
 
-	listenerFive, err := reuseport.Listen("tcp4", ":10081")
+	listenerFive, err := greuseport.Listen("tcp4", ":10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerFive.Close()
 
-	listenerSix, err := reuseport.Listen("tcp", ":10081")
+	listenerSix, err := greuseport.Listen("tcp", ":10081")
 	if err != nil {
 		t.Error(err)
 	}
@@ -67,37 +67,37 @@ func TestNewReusablePortListener(t *testing.T) {
 }
 
 func TestListen(t *testing.T) {
-	listenerOne, err := reuseport.Listen("tcp4", "localhost:10081")
+	listenerOne, err := greuseport.Listen("tcp4", "localhost:10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerOne.Close()
 
-	listenerTwo, err := reuseport.Listen("tcp", "127.0.0.1:10081")
+	listenerTwo, err := greuseport.Listen("tcp", "127.0.0.1:10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerTwo.Close()
 
-	listenerThree, err := reuseport.Listen("tcp6", "[::1]:10081")
+	listenerThree, err := greuseport.Listen("tcp6", "[::1]:10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerThree.Close()
 
-	listenerFour, err := reuseport.Listen("tcp6", ":10081")
+	listenerFour, err := greuseport.Listen("tcp6", ":10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerFour.Close()
 
-	listenerFive, err := reuseport.Listen("tcp4", ":10081")
+	listenerFive, err := greuseport.Listen("tcp4", ":10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerFive.Close()
 
-	listenerSix, err := reuseport.Listen("tcp", ":10081")
+	listenerSix, err := greuseport.Listen("tcp", ":10081")
 	if err != nil {
 		t.Error(err)
 	}
@@ -105,13 +105,13 @@ func TestListen(t *testing.T) {
 }
 
 func TestNewReusablePortServers(t *testing.T) {
-	listenerOne, err := reuseport.Listen("tcp4", "localhost:10081")
+	listenerOne, err := greuseport.Listen("tcp4", "localhost:10081")
 	if err != nil {
 		t.Error(err)
 	}
 	defer listenerOne.Close()
 
-	listenerTwo, err := reuseport.Listen("tcp6", ":10081")
+	listenerTwo, err := greuseport.Listen("tcp6", ":10081")
 	if err != nil {
 		t.Error(err)
 	}
@@ -186,7 +186,7 @@ func TestNewReusablePortServers(t *testing.T) {
 
 func BenchmarkNewReusablePortListener(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		listener, err := reuseport.Listen("tcp", ":10081")
+		listener, err := greuseport.Listen("tcp", ":10081")
 
 		if err != nil {
 			b.Error(err)
@@ -197,7 +197,7 @@ func BenchmarkNewReusablePortListener(b *testing.B) {
 }
 
 func ExampleNewReusablePortListener() {
-	listener, err := reuseport.Listen("tcp", ":8881")
+	listener, err := greuseport.Listen("tcp", ":8881")
 	if err != nil {
 		panic(err)
 	}

@@ -1,6 +1,6 @@
 // +build linux darwin dragonfly freebsd netbsd openbsd
 
-package reuseport
+package greuseport
 
 import (
     "gitee.com/johng/gf/third/golang.org/x/sys/unix"

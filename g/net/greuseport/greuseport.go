@@ -15,7 +15,7 @@
 //
 // Note: cant dial self because tcp/ip stacks use 4-tuples to identify connections,
 // and doing so would clash.
-package reuseport
+package greuseport
 
 import (
 	"context"

@@ -1,6 +1,6 @@
 // +build !windows,!linux,!darwin,!dragonfly,!freebsd,!netbsd,!openbsd
 
-package reuseport
+package greuseport
 
 import (
     "syscall"
