@@ -7,6 +7,10 @@ import (
     "syscall"
 )
 
+func init() {
+    Enabled = true
+}
+
 // See net.RawConn.Control
 func Control(network, address string, c syscall.RawConn) (err error) {
 	c.Control(func(fd uintptr) {
@@ -18,6 +22,7 @@ func Control(network, address string, c syscall.RawConn) (err error) {
 			panic(err)
 		    return
 		}
+
 	})
 	return
 }

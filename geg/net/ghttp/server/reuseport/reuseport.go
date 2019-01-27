@@ -1,6 +1,7 @@
 package main
 
 import (
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/os/glog"
 )
@@ -12,15 +13,15 @@ func main() {
         glog.Println("s1")
         r.Response.Writeln("s1")
     })
-    go s1.Run()
+    s1.Start()
 
     s2 := ghttp.GetServer("s2")
     s2.SetPort(8882)
     s2.BindHandler("/", func(r *ghttp.Request) {
         glog.Println("s2")
-        r.Response.Writeln("s1")
+        r.Response.Writeln("s2")
     })
-    go s2.Run()
+    s2.Start()
 
-    select{}
+    g.Wait()
 }

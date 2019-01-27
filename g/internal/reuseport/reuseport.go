@@ -22,9 +22,12 @@ import (
 	"net"
 )
 
-var listenConfig = net.ListenConfig {
-	Control: Control,
-}
+var (
+	Enabled      = false
+	listenConfig = net.ListenConfig {
+		Control: Control,
+	}
+)
 
 // Listen listens at the given network and address. see net.Listen
 // Returns a net.Listener created from a file discriptor for a socket
