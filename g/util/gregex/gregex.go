@@ -53,7 +53,16 @@ func IsMatchString(pattern string, src string) bool {
     return IsMatch(pattern, []byte(src))
 }
 
-// 正则匹配，并返回匹配的列表
+// 正则匹配，并返回匹配的列表(参数[]byte)
+func Match(pattern string, src []byte) ([][]byte, error) {
+    if r, err := getRegexp(pattern); err == nil {
+        return r.FindSubmatch(src), nil
+    } else {
+        return nil, err
+    }
+}
+
+// 正则匹配，并返回匹配的列表(参数[]string)
 func MatchString(pattern string, src string) ([]string, error) {
     if r, err := getRegexp(pattern); err == nil {
         return r.FindStringSubmatch(src), nil
@@ -62,6 +71,16 @@ func MatchString(pattern string, src string) ([]string, error) {
     }
 }
 
+// 正则匹配，并返回所有匹配的列表(参数[]string)
+func MatchAll(pattern string, src []byte) ([][][]byte, error) {
+    if r, err := getRegexp(pattern); err == nil {
+        return r.FindAllSubmatch(src, -1), nil
+    } else {
+        return nil, err
+    }
+}
+
+// 正则匹配，并返回所有匹配的列表(参数[][]string)
 func MatchAllString(pattern string, src string) ([][]string, error) {
     if r, err := getRegexp(pattern); err == nil {
         return r.FindAllStringSubmatch(src, -1), nil
@@ -86,18 +105,18 @@ func ReplaceString(pattern, replace, src string) (string, error) {
 }
 
 // 正则替换(全部替换)，给定自定义替换方法
-func ReplaceFunc(pattern string, src []byte, repl func(b []byte) []byte) ([]byte, error) {
+func ReplaceFunc(pattern string, src []byte, replaceFunc func(b []byte) []byte) ([]byte, error) {
     if r, err := getRegexp(pattern); err == nil {
-        return r.ReplaceAllFunc(src, repl), nil
+        return r.ReplaceAllFunc(src, replaceFunc), nil
     } else {
         return nil, err
     }
 }
 
 // 正则替换(全部替换)，给定自定义替换方法
-func ReplaceStringFunc(pattern string, src string, repl func(s string) string) (string, error) {
+func ReplaceStringFunc(pattern string, src string, replaceFunc func(s string) string) (string, error) {
     bytes, err := ReplaceFunc(pattern, []byte(src), func(bytes []byte) []byte {
-        return []byte(repl(string(bytes)))
+        return []byte(replaceFunc(string(bytes)))
     })
     return string(bytes), err
 }

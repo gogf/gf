@@ -49,7 +49,7 @@
 1. gconv针对struct的转换增加json tag支持，gconv.Map默认也支持json tag, 完善开发文档；
 1. 增加SO_REUSEPORT的支持；
 1. 权限管理模块；
-
+1. 从ghttp中剥离SESSION功能构成单独的模块gsession；
 
 
 
