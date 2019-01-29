@@ -111,7 +111,11 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
                     // 静态目录
                     s.serveFile(request, staticFile)
                 } else {
-                    request.Response.WriteStatus(http.StatusNotFound)
+                    if len(request.Response.Header()) == 0 &&
+                        request.Response.Status == 0 &&
+                        request.Response.BufferLength() == 0 {
+                        request.Response.WriteStatus(http.StatusNotFound)
+                    }
                 }
             }
         }
