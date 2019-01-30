@@ -34,6 +34,7 @@ func EncryptFile(path string) string {
     if e != nil {
         return ""
     }
+    defer f.Close()
     h := sha1.New()
     _, e = io.Copy(h, f)
     if e != nil {

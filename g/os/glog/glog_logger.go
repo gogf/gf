@@ -14,7 +14,7 @@ import (
     "gitee.com/johng/gf/g/os/gfpool"
     "gitee.com/johng/gf/g/os/gmlock"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/string/gregex"
     "io"
     "os"
     "runtime"

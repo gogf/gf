@@ -20,7 +20,7 @@ import (
     "gitee.com/johng/gf/g/os/gproc"
     "gitee.com/johng/gf/g/os/gtimer"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/string/gregex"
     "gitee.com/johng/gf/third/github.com/gorilla/websocket"
     "gitee.com/johng/gf/third/github.com/olekukonko/tablewriter"
     "net/http"

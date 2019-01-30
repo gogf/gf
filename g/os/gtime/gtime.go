@@ -11,8 +11,8 @@ package gtime
 
 import (
     "errors"
-    "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/string/gstr"
     "regexp"
     "strconv"
     "strings"

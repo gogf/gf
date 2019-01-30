@@ -221,3 +221,16 @@ func (this *StringBoolMap) RLockFunc(f func(m map[string]bool)) {
 	defer this.mu.RUnlock(true)
 	f(this.m)
 }
+
+// 合并两个Map.
+func (this *StringBoolMap) Merge(m *StringBoolMap) {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	if m != this {
+		m.mu.RLock()
+		defer m.mu.RUnlock()
+	}
+	for k, v := range m.m {
+		this.m[k] = v
+	}
+}

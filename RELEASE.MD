@@ -31,20 +31,20 @@
 # `v1.3.8` (2018-12-26)
 
 ## 新特性
-1. 对`gform`完成重构，以提高扩展性，并修复部分细节问题、完善单元测试用例([https://gfer.me/database/orm/index](https://gfer.me/database/orm/index))；
-1. `WebServer`路由注册新增分组路由特性([https://gfer.me/net/ghttp/group](https://gfer.me/net/ghttp/group));
-1. `WebServer`新增`Rewrite`路由重写特性([https://gfer.me/net/ghttp/static](https://gfer.me/net/ghttp/static));
+1. 对`gform`完成重构，以提高扩展性，并修复部分细节问题、完善单元测试用例([https://goframe.org/database/orm/index](https://goframe.org/database/orm/index))；
+1. `WebServer`路由注册新增分组路由特性([https://goframe.org/net/ghttp/group](https://goframe.org/net/ghttp/group));
+1. `WebServer`新增`Rewrite`路由重写特性([https://goframe.org/net/ghttp/static](https://goframe.org/net/ghttp/static));
 1. 增加框架运行时对开发环境的自动识别；
 1. 增加了`Travis CI`自动化构建/测试；
 
 ## 新功能
-1. 改进`WebServer`静态文件服务功能，增加`SetStaticPath`/`AddStaticPath`方法([https://gfer.me/net/ghttp/static](https://gfer.me/net/ghttp/static))；
-1. `gform`新增`Filter`链式操作方法，用于过滤参数中的非表字段键值对（[https://gfer.me/database/orm/linkop](https://gfer.me/database/orm/linkop)）；
+1. 改进`WebServer`静态文件服务功能，增加`SetStaticPath`/`AddStaticPath`方法([https://goframe.org/net/ghttp/static](https://goframe.org/net/ghttp/static))；
+1. `gform`新增`Filter`链式操作方法，用于过滤参数中的非表字段键值对（[https://goframe.org/database/orm/linkop](https://goframe.org/database/orm/linkop)）；
 1. `gcache`新增`Data`方法，用以获取所有的缓存数据项；
 1. `gredis`增加`GetConn`方法获取原生redis连接对象；
 
 ## 功能改进
-1. 改进`gform`的`Where`方法，支持`slice`类型的参数，并更方便地支持`in`操作查询（[https://gfer.me/database/orm/linkop](https://gfer.me/database/orm/linkop)）；
+1. 改进`gform`的`Where`方法，支持`slice`类型的参数，并更方便地支持`in`操作查询（[https://goframe.org/database/orm/linkop](https://goframe.org/database/orm/linkop)）；
 1. 改进`gproc`进程间通信数据结构，将`pid`字段从`16bit`扩展为`24bit`；
 1. 改进`gconv`/`gmap`/`garray`，增加若干操作方法；
 1. 改进`gview`模板引擎中的`date`内置函数，当给定的时间戳为空时打印当前的系统时间；
@@ -67,20 +67,20 @@
 
 # `v1.2.11` (2018-11-26)
 ## 新特性
-1. `ORM`新增对`SQLServer`及`Oracle`的支持([https://gfer.me/database/orm/database](https://gfer.me/database/orm/database))；
-1. 完成`gvalid`模块校验结果的顺序特性([https://gfer.me/util/gvalid/checkmap](https://gfer.me/util/gvalid/checkmap));
-1. 改进`ghttp.Request.Exit`，使得调用该方法时立即退出业务执行，开发者无需调用`Exit`方法时再使用`return`返回([https://gfer.me/net/ghttp/service/object](https://gfer.me/net/ghttp/service/object))；
-1. 模板引擎新增若干内置函数:`text/html/htmldecode/url/urldecode/date/compare/substr/strlimit/hidestr/highlight/toupper/tolower/nl2br` ([https://gfer.me/os/gview/funcs](https://gfer.me/os/gview/funcs));
-1. 模板引擎新增内置变量`Config` ([https://gfer.me/os/gview/vars](https://gfer.me/os/gview/vars));
+1. `ORM`新增对`SQLServer`及`Oracle`的支持([https://goframe.org/database/orm/database](https://goframe.org/database/orm/database))；
+1. 完成`gvalid`模块校验结果的顺序特性([https://goframe.org/util/gvalid/checkmap](https://goframe.org/util/gvalid/checkmap));
+1. 改进`ghttp.Request.Exit`，使得调用该方法时立即退出业务执行，开发者无需调用`Exit`方法时再使用`return`返回([https://goframe.org/net/ghttp/service/object](https://goframe.org/net/ghttp/service/object))；
+1. 模板引擎新增若干内置函数:`text/html/htmldecode/url/urldecode/date/compare/substr/strlimit/hidestr/highlight/toupper/tolower/nl2br` ([https://goframe.org/os/gview/funcs](https://goframe.org/os/gview/funcs));
+1. 模板引擎新增内置变量`Config` ([https://goframe.org/os/gview/vars](https://goframe.org/os/gview/vars));
 1. 改进`gconv.Struct`转换默认规则，支持不区分大小写的键名与属性名称匹配；
-1. `gform`配置文件支持`linkinfo`自定义数据库连接字段([https://gfer.me/database/orm/config](https://gfer.me/database/orm/config))；
-1. `gfsnotify`模块增加对特定回调的取消注册功能（[https://gfer.me/os/gfsnotify/index](https://gfer.me/os/gfsnotify/index)）；
+1. `gform`配置文件支持`linkinfo`自定义数据库连接字段([https://goframe.org/database/orm/config](https://goframe.org/database/orm/config))；
+1. `gfsnotify`模块增加对特定回调的取消注册功能（[https://goframe.org/os/gfsnotify/index](https://goframe.org/os/gfsnotify/index)）；
 
 
 
 ## 新功能
-1. 改进`ghttp.Request`，增加`SetParam/GetParam`请求流程自定义变量设置/获取方法，用于在请求流程中的回调函数共享变量（[https://gfer.me/net/ghttp/request](https://gfer.me/net/ghttp/request)）;
-1. 改进`ghttp.Response`，增加`ServeFileDownload`方法，用于WebServer引导客户端下载文件([https://gfer.me/net/ghttp/response](https://gfer.me/net/ghttp/response));
+1. 改进`ghttp.Request`，增加`SetParam/GetParam`请求流程自定义变量设置/获取方法，用于在请求流程中的回调函数共享变量（[https://goframe.org/net/ghttp/request](https://goframe.org/net/ghttp/request)）;
+1. 改进`ghttp.Response`，增加`ServeFileDownload`方法，用于WebServer引导客户端下载文件([https://goframe.org/net/ghttp/response](https://goframe.org/net/ghttp/response));
 1. `gvar`模块新增`gvar.VarRead`只读接口，用于控制对外只暴露数据读取功能；
 1. 增加`g.Throw`抛异常方法，`g.TryCatch`异常捕获方法封装;
 1. 改进`gcron`模块，增加自定义的Cron管理对象，增加`New/Start/Stop`方法;
@@ -88,9 +88,9 @@
 
 ## 功能改进
 1. WebServer添加`RouterCacheExpire`配置参数，用于设置路由检索缓存过期时间；
-1. WebServer允许同一`HOOK`事件被多次绑定注册，先注册的回调函数优先级更高([https://gfer.me/net/ghttp/service/hook](https://gfer.me/net/ghttp/service/hook));
+1. WebServer允许同一`HOOK`事件被多次绑定注册，先注册的回调函数优先级更高([https://goframe.org/net/ghttp/service/hook](https://goframe.org/net/ghttp/service/hook));
 1. 当前工作目录为系统临时目录时，`gcfg`/`gview`/`ghttp`模块默认不添加工作目录到搜索路径;
-1. 改进`WebSocket`默认支持跨域请求([https://gfer.me/net/ghttp/websocket](https://gfer.me/net/ghttp/websocket));
+1. 改进`WebSocket`默认支持跨域请求([https://goframe.org/net/ghttp/websocket](https://goframe.org/net/ghttp/websocket));
 1. 改进`gtime.Format`支持中文;
 1. 改进`gfsnotify`，支持编辑器对文件非执行标准编辑时(RENAME+CHMOD)的热更新问题;
 1. 改进`gtype.Set`方法，增加Set原子操作返回旧的变量值;
@@ -99,7 +99,7 @@
 1. `gstr`模块增加对中文截取方法;
 1. 改进`gtime.StrToTime`对常用时间格式匹配模式，新增`gtime.ParseTimeFromContent`方法;
 1. 修改配置管理、模板引擎、调试模式的环境变量名称为大写下划线标准格式;
-1. 改进`grand`模块随机数生成设计，底层使用`crypto/rand`+缓冲区实现高速的随机数生成([https://gfer.me/util/grand/index](https://gfer.me/util/grand/index));
+1. 改进`grand`模块随机数生成设计，底层使用`crypto/rand`+缓冲区实现高速的随机数生成([https://goframe.org/util/grand/index](https://goframe.org/util/grand/index));
 
 ## 问题修复
 1. 修复`gspath`模块在`windows`下搜索失效问题；

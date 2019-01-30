@@ -221,3 +221,27 @@ func (this *IntIntMap) RLockFunc(f func(m map[int]int)) {
     defer this.mu.RUnlock(true)
     f(this.m)
 }
+
+// 交换Map中的键和值.
+func (this *IntIntMap) Flip() {
+    this.mu.Lock()
+    defer this.mu.Unlock()
+    n := make(map[int]int, len(this.m))
+    for k, v := range this.m {
+        n[v] = k
+    }
+    this.m = n
+}
+
+// 合并两个Map.
+func (this *IntIntMap) Merge(m *IntIntMap) {
+    this.mu.Lock()
+    defer this.mu.Unlock()
+    if m != this {
+        m.mu.RLock()
+        defer m.mu.RUnlock()
+    }
+    for k, v := range m.m {
+        this.m[k] = v
+    }
+}

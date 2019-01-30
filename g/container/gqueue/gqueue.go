@@ -6,7 +6,7 @@
 
 // Package gqueue provides a dynamic/static concurrent-safe(alternative) queue.
 //
-// 并发安全的动态队列.
+// 并发安全动态队列.
 //
 //   特点：
 //   1. 动态队列初始化速度快；

@@ -10,7 +10,7 @@ package gcache_test
 
 import (
     "gitee.com/johng/gf/g/os/gcache"
-    "gitee.com/johng/gf/g/util/gtest"
+    "gitee.com/johng/gf/g/test/gtest"
     "testing"
     "time"
 )

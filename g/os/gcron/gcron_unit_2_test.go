@@ -11,7 +11,7 @@ import (
     "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/os/gcron"
     "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/util/gtest"
+    "gitee.com/johng/gf/g/test/gtest"
     "testing"
     "time"
 )

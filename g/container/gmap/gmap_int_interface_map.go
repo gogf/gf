@@ -7,7 +7,10 @@
 
 package gmap
 
-import "gitee.com/johng/gf/g/internal/rwmutex"
+import (
+    "gitee.com/johng/gf/g/internal/rwmutex"
+    "gitee.com/johng/gf/g/util/gconv"
+)
 
 type IntInterfaceMap struct {
 	mu *rwmutex.RWMutex
@@ -203,4 +206,28 @@ func (this *IntInterfaceMap) RLockFunc(f func(m map[int]interface{})) {
     this.mu.RLock(true)
     defer this.mu.RUnlock(true)
     f(this.m)
+}
+
+// 交换Map中的键和值.
+func (this *IntInterfaceMap) Flip() {
+    this.mu.Lock()
+    defer this.mu.Unlock()
+    n := make(map[int]interface{}, len(this.m))
+    for k, v := range this.m {
+        n[gconv.Int(v)] = k
+    }
+    this.m = n
+}
+
+// 合并两个Map.
+func (this *IntInterfaceMap) Merge(m *IntInterfaceMap) {
+    this.mu.Lock()
+    defer this.mu.Unlock()
+    if m != this {
+        m.mu.RLock()
+        defer m.mu.RUnlock()
+    }
+    for k, v := range m.m {
+        this.m[k] = v
+    }
 }

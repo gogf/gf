@@ -15,8 +15,8 @@ import (
     "fmt"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/string/gstr"
     "io"
     "os"
     "os/exec"
@@ -202,7 +202,7 @@ func Remove(path string) error {
     return os.RemoveAll(path)
 }
 
-// 文件是否可读
+// 文件是否可读(支持文件/目录)
 func IsReadable(path string) bool {
     result    := true
     file, err := os.OpenFile(path, os.O_RDONLY, gDEFAULT_PERM)
@@ -213,17 +213,17 @@ func IsReadable(path string) bool {
     return result
 }
 
-// 文件是否可写
+// 文件是否可写(支持文件/目录)
 func IsWritable(path string) bool {
     result := true
     if IsDir(path) {
         // 如果是目录，那么创建一个临时文件进行写入测试
-        tfile := strings.TrimRight(path, Separator) + Separator + gconv.String(time.Now().UnixNano())
-        err   := Create(tfile)
-        if err != nil || !Exists(tfile){
+        tmpFile := strings.TrimRight(path, Separator) + Separator + gconv.String(time.Now().UnixNano())
+        err     := Create(tmpFile)
+        if err != nil || !Exists(tmpFile){
             result = false
         } else {
-            Remove(tfile)
+            Remove(tmpFile)
         }
     } else {
         // 如果是文件，那么判断文件是否可打开

@@ -15,8 +15,8 @@ import (
     url2 "net/url"
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/util/gregex"
-    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/string/gstr"
     "strings"
 )
 

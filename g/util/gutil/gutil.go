@@ -57,8 +57,8 @@ func PrintBacktrace() {
     index  := 1
     buffer := bytes.NewBuffer(nil)
     for i := 0; i < 10000; i++ {
-        if _, cfile, cline, ok := runtime.Caller(i); ok {
-            buffer.WriteString(fmt.Sprintf(`%d. %s:%d%s`, index, cfile, cline, "\n"))
+        if _, path, line, ok := runtime.Caller(i); ok {
+            buffer.WriteString(fmt.Sprintf(`%d. %s:%d%s`, index, path, line, "\n"))
             index++
         } else {
             break
@@ -83,4 +83,5 @@ func TryCatch(try func(), catch ... func(exception interface{})) {
     }
     try()
 }
+
 

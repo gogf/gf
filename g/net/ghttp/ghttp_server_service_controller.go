@@ -14,7 +14,7 @@ import (
     "reflect"
     "fmt"
     "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/string/gstr"
 )
 
 // 绑定控制器，控制器需要实现gmvc.Controller接口

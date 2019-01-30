@@ -9,12 +9,13 @@
 package gipv4
 
 import (
+    "encoding/binary"
     "net"
     "strconv"
     "strings"
     "regexp"
     "fmt"
-    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/string/gregex"
 )
 
 // 判断所给地址是否是一个IPv4地址
@@ -22,33 +23,58 @@ func Validate(ip string) bool {
     return gregex.IsMatchString(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`, ip)
 }
 
-// ip字符串转为整形
-func Ip2long(ipstr string) (ip uint32) {
-    reg, _ := regexp.Compile(`^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$`)
-    ips    := reg.FindStringSubmatch(ipstr)
-    if ips == nil {
-        return
+// Get the IPv4 address corresponding to a given Internet host name.
+func GetHostByName(hostname string) (string, error) {
+    ips, err := net.LookupIP(hostname)
+    if ips != nil {
+        for _, v := range ips {
+            if v.To4() != nil {
+                return v.String(), nil
+            }
+        }
+        return "", nil
     }
+    return "", err
+}
 
-    ip1, _ := strconv.Atoi(ips[1])
-    ip2, _ := strconv.Atoi(ips[2])
-    ip3, _ := strconv.Atoi(ips[3])
-    ip4, _ := strconv.Atoi(ips[4])
-
-    if ip1>255 || ip2>255 || ip3>255 || ip4 > 255 {
-        return
+// Get a list of IPv4 addresses corresponding to a given Internet host name.
+func GetHostsByName(hostname string) ([]string, error) {
+    ips, err := net.LookupIP(hostname)
+    if ips != nil {
+        var ipStrs []string
+        for _, v := range ips {
+            if v.To4() != nil {
+                ipStrs = append(ipStrs, v.String())
+            }
+        }
+        return ipStrs, nil
     }
+    return nil, err
+}
 
-    ip += uint32(ip1 * 0x1000000)
-    ip += uint32(ip2 * 0x10000)
-    ip += uint32(ip3 * 0x100)
-    ip += uint32(ip4)
-    return
+// Get the Internet host name corresponding to a given IP address.
+func GetNameByAddr(ipAddress string) (string, error) {
+    names, err := net.LookupAddr(ipAddress)
+    if names != nil {
+        return strings.TrimRight(names[0], "."), nil
+    }
+    return "", err
+}
+
+// IP字符串转为整形.
+func Ip2long(ipAddress string) uint32 {
+    ip := net.ParseIP(ipAddress)
+    if ip == nil {
+        return 0
+    }
+    return binary.BigEndian.Uint32(ip.To4())
 }
 
 // ip整形转为字符串
-func Long2ip(ip uint32) string {
-    return fmt.Sprintf("%d.%d.%d.%d", ip>>24, ip<<8>>24, ip<<16>>24, ip<<24>>24)
+func Long2ip(properAddress uint32) string {
+    ipByte := make([]byte, 4)
+    binary.BigEndian.PutUint32(ipByte, properAddress)
+    return net.IP(ipByte).String()
 }
 
 // 获得ip的网段，例如：192.168.2.102 -> 192.168.2
