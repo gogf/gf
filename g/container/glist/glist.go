@@ -7,7 +7,7 @@
 
 // Package glist provides a concurrent-safe(alternative) doubly linked list.
 //
-// 并发安全的双向链表.
+// 并发安全双向链表.
 package glist
 
 import (

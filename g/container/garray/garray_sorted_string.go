@@ -8,11 +8,14 @@ package garray
 
 import (
     "gitee.com/johng/gf/g/container/gtype"
-    "strings"
     "gitee.com/johng/gf/g/internal/rwmutex"
+    "gitee.com/johng/gf/g/util/grand"
+    "math"
+    "sort"
+    "strings"
 )
 
-// 默认按照从低到高进行排序
+// 默认按照从小到大进行排序
 type SortedStringArray struct {
     mu          *rwmutex.RWMutex        // 互斥锁
     cap         int                     // 初始化设置的数组容量
@@ -32,10 +35,34 @@ func NewSortedStringArray(cap int, unsafe...bool) *SortedStringArray {
     }
 }
 
+func NewSortedStringArrayFrom(array []string, unsafe...bool) *SortedStringArray {
+    a := NewSortedStringArray(0, unsafe...)
+    a.array = array
+    sort.Strings(a.array)
+    return a
+}
+
+// 设置底层数组变量.
+func (a *SortedStringArray) SetArray(array []string) *SortedStringArray {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    a.array = array
+    sort.Strings(a.array)
+    return a
+}
+
+// 将数组重新排序(从小到大).
+func (a *SortedStringArray) Sort() *SortedStringArray {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    sort.Strings(a.array)
+    return a
+}
+
 // 添加加数据项
-func (a *SortedStringArray) Add(values...string) {
+func (a *SortedStringArray) Add(values...string) *SortedStringArray {
     if len(values) == 0 {
-        return
+        return a
     }
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -56,6 +83,7 @@ func (a *SortedStringArray) Add(values...string) {
         a.array = append(a.array[0 : index], value)
         a.array = append(a.array, rear...)
     }
+    return a
 }
 
 // 获取指定索引的数据项, 调用方注意判断数组边界
@@ -118,15 +146,19 @@ func (a *SortedStringArray) Slice() []string {
     array := ([]string)(nil)
     if a.mu.IsSafe() {
         a.mu.RLock()
+        defer a.mu.RUnlock()
         array = make([]string, len(a.array))
-        for k, v := range a.array {
-            array[k] = v
-        }
-        a.mu.RUnlock()
+        copy(array, a.array)
     } else {
         array = a.array
     }
     return array
+}
+
+// 查找指定数值是否存在
+func (a *SortedStringArray) Contains(value string) bool {
+    _, r := a.Search(value)
+    return r == 0
 }
 
 // 查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
@@ -161,16 +193,17 @@ func (a *SortedStringArray) binSearch(value string, lock bool) (index int, resul
 }
 
 // 设置是否允许数组唯一
-func (a *SortedStringArray) SetUnique(unique bool) {
+func (a *SortedStringArray) SetUnique(unique bool) *SortedStringArray {
     oldUnique := a.unique.Val()
     a.unique.Set(unique)
     if unique && oldUnique != unique {
-        a.doUnique()
+        a.Unique()
     }
+    return a
 }
 
 // 清理数组中重复的元素项
-func (a *SortedStringArray) doUnique() {
+func (a *SortedStringArray) Unique() *SortedStringArray {
     a.mu.Lock()
     i := 0
     for {
@@ -184,27 +217,109 @@ func (a *SortedStringArray) doUnique() {
         }
     }
     a.mu.Unlock()
+    return a
 }
 
 // 清空数据数组
-func (a *SortedStringArray) Clear() {
+func (a *SortedStringArray) Clear() *SortedStringArray {
     a.mu.Lock()
     if len(a.array) > 0 {
         a.array = make([]string, 0, a.cap)
     }
     a.mu.Unlock()
+    return a
 }
 
 // 使用自定义方法执行加锁修改操作
-func (a *SortedStringArray) LockFunc(f func(array []string)) {
+func (a *SortedStringArray) LockFunc(f func(array []string)) *SortedStringArray {
     a.mu.Lock(true)
     defer a.mu.Unlock(true)
     f(a.array)
+    return a
 }
 
 // 使用自定义方法执行加锁读取操作
-func (a *SortedStringArray) RLockFunc(f func(array []string)) {
+func (a *SortedStringArray) RLockFunc(f func(array []string)) *SortedStringArray {
     a.mu.RLock(true)
     defer a.mu.RUnlock(true)
     f(a.array)
+    return a
+}
+
+// 合并两个数组.
+func (a *SortedStringArray) Merge(array *SortedStringArray) *SortedStringArray {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    if a != array {
+        array.mu.RLock()
+        defer array.mu.RUnlock()
+    }
+    a.array = append(a.array, array.array...)
+    sort.Strings(a.array)
+    return a
+}
+
+// Chunks an array into arrays with size elements. The last chunk may contain less than size elements.
+func (a *SortedStringArray) Chunk(size int) [][]string {
+    if size < 1 {
+        panic("size: cannot be less than 1")
+    }
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    length := len(a.array)
+    chunks := int(math.Ceil(float64(length) / float64(size)))
+    var n [][]string
+    for i, end := 0, 0; chunks > 0; chunks-- {
+        end = (i + 1) * size
+        if end > length {
+            end = length
+        }
+        n = append(n, a.array[i*size : end])
+        i++
+    }
+    return n
+}
+
+// Extract a slice of the array(If in concurrent safe usage, it returns a copy of the slice; else a pointer).
+// It returns the sequence of elements from the array array as specified by the offset and length parameters.
+func (a *SortedStringArray) SubSlice(offset, size int) []string {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    if offset > len(a.array) {
+        return nil
+    }
+    if offset + size > len(a.array) {
+        size = len(a.array) - offset
+    }
+    if a.mu.IsSafe() {
+        s := make([]string, size)
+        copy(s, a.array[offset:])
+        return s
+    } else {
+        return a.array[offset:]
+    }
+}
+
+// Picks one or more random entries out of an array(a copy), and returns the key (or keys) of the random entries.
+func (a *SortedStringArray) Rand(size int) []string {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    if size > len(a.array) {
+        size = len(a.array)
+    }
+    n := make([]string, size)
+    for i, v := range grand.Perm(len(a.array)) {
+        n[i] = a.array[v]
+        if i == size - 1 {
+            break
+        }
+    }
+    return n
+}
+
+// Join array elements with a string.
+func (a *SortedStringArray) Join(glue string) string {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    return strings.Join(a.array, glue)
 }

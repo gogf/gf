@@ -25,7 +25,7 @@ import (
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/os/gview/internal/text/template"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/string/gstr"
     "strings"
     "sync"
 )

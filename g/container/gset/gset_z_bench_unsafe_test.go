@@ -15,7 +15,7 @@ import (
 )
 
 var intsUnsafe  = gset.NewIntSet(true)
-var itfsUnsafe  = gset.NewInterfaceSet(true)
+var itfsUnsafe  = gset.NewSet(true)
 var strsUnsafe  = gset.NewStringSet(true)
 
 func Benchmark_Unsafe_IntSet_Add(b *testing.B) {
@@ -36,19 +36,19 @@ func Benchmark_Unsafe_IntSet_Remove(b *testing.B) {
     }
 }
 
-func Benchmark_Unsafe_InterfaceSet_Add(b *testing.B) {
+func Benchmark_Unsafe_Set_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfsUnsafe.Add(i)
     }
 }
 
-func Benchmark_Unsafe_InterfaceSet_Contains(b *testing.B) {
+func Benchmark_Unsafe_Set_Contains(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfsUnsafe.Contains(i)
     }
 }
 
-func Benchmark_Unsafe_InterfaceSet_Remove(b *testing.B) {
+func Benchmark_Unsafe_Set_Remove(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfsUnsafe.Remove(i)
     }

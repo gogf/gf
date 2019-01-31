@@ -12,7 +12,7 @@ import (
     "gitee.com/johng/gf/g/frame/gmvc"
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/gtest"
+    "gitee.com/johng/gf/g/test/gtest"
     "testing"
     "time"
 )

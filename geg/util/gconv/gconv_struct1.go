@@ -22,7 +22,7 @@ func main() {
     params1 := g.Map{
         "uid"       : 1,
         "Name"      : "john",
-        "siteurl"   : "https://gfer.me",
+        "siteurl"   : "https://goframe.org",
         "nick_name" : "johng",
         "PASS1"     : "123",
         "PASS2"     : "456",
@@ -36,7 +36,7 @@ func main() {
     params2 := g.Map {
         "uid"       : 2,
         "name"      : "smith",
-        "site-url"  : "https://gfer.me",
+        "site-url"  : "https://goframe.org",
         "nick name" : "johng",
         "password1" : "111",
         "password2" : "222",

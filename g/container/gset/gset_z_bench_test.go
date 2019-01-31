@@ -15,7 +15,7 @@ import (
 )
 
 var ints  = gset.NewIntSet()
-var itfs  = gset.NewInterfaceSet()
+var itfs  = gset.NewSet()
 var strs  = gset.NewStringSet()
 
 func Benchmark_IntSet_Add(b *testing.B) {
@@ -36,19 +36,19 @@ func Benchmark_IntSet_Remove(b *testing.B) {
     }
 }
 
-func Benchmark_InterfaceSet_Add(b *testing.B) {
+func Benchmark_Set_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfs.Add(i)
     }
 }
 
-func Benchmark_InterfaceSet_Contains(b *testing.B) {
+func Benchmark_Set_Contains(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfs.Contains(i)
     }
 }
 
-func Benchmark_InterfaceSet_Remove(b *testing.B) {
+func Benchmark_Set_Remove(b *testing.B) {
     for i := 0; i < b.N; i++ {
         itfs.Remove(i)
     }

@@ -63,8 +63,13 @@ func (c *Config) filePath(file...string) (path string) {
     }
     c.paths.RLockFunc(func(array []string) {
         for _, v := range array {
+            //fmt.Println("search:", v, name)
             if path, _ = gspath.Search(v, name); path != "" {
                 break
+            } else {
+                //if strings.EqualFold(v, "/Users/john/Temp/config") {
+                //    gutil.Dump(gspath.Get(v).AllPaths())
+                //}
             }
         }
     })

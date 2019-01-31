@@ -10,7 +10,7 @@ package ghttp
 import (
     "errors"
     "strings"
-    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/string/gstr"
     "bytes"
     "runtime"
     "reflect"

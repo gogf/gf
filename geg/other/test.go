@@ -2,9 +2,8 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gfile"
 )
 
 func main() {
-    fmt.Println(gfile.RealPath("config"))
+    fmt.Println(string([]byte{'\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0}))
 }

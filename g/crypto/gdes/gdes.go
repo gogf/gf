@@ -262,14 +262,14 @@ func PKCS5Unpadding(text []byte) []byte{
 //补位方法
 func Padding(text []byte, padding int)([]byte, error) {
 	switch padding {
-	case NOPADDING:
-		if len(text) % 8 != 0 {
-			return nil, errors.New("text length invalid")
-		}
-	case PKCS5PADDING:
-		return PKCS5Padding(text, 8), nil
-	default:
-		return nil, errors.New("padding type error")
+		case NOPADDING:
+			if len(text) % 8 != 0 {
+				return nil, errors.New("text length invalid")
+			}
+		case PKCS5PADDING:
+			return PKCS5Padding(text, 8), nil
+		default:
+			return nil, errors.New("padding type error")
 	}
 
 	return text, nil
@@ -278,14 +278,14 @@ func Padding(text []byte, padding int)([]byte, error) {
 //去除补位方法
 func UnPadding(text []byte, padding int)([]byte, error) {
 	switch padding {
-	case NOPADDING:
-		if len(text) % 8 != 0 {
-			return nil, errors.New("text length invalid")
-		}
-	case PKCS5PADDING:
-		return PKCS5Unpadding(text), nil
-	default:
-		return nil, errors.New("padding type error.")
+		case NOPADDING:
+			if len(text) % 8 != 0 {
+				return nil, errors.New("text length invalid")
+			}
+		case PKCS5PADDING:
+			return PKCS5Unpadding(text), nil
+		default:
+			return nil, errors.New("padding type error.")
 	}
 	return text, nil
 }

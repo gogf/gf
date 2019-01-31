@@ -24,23 +24,23 @@ func MeetProb(prob float32) bool {
     return Rand(0, 1e7) <= int(prob*1e7)
 }
 
-// Rand 别名
+// Rand 别名, 返回: [min, max]
 func N (min, max int) int {
    return Rand(min, max)
 }
 
-// 获得一个 min, max 之间的随机数(min <= x <= max)
+// 获得一个 min, max 之间的随机数: [min, max]
 func Rand (min, max int) int {
     if min >= max {
         return min
     }
     if min >= 0 {
         // 数值往左平移，再使用底层随机方法获得随机数，随后将结果数值往右平移
-        return intn(max - (min - 0) + 1) + (min - 0)
+        return Intn(max - (min - 0) + 1) + (min - 0)
     }
     if min < 0 {
         // 数值往右平移，再使用底层随机方法获得随机数，随后将结果数值往左平移
-        return intn(max + (0 - min) + 1) - (0 - min)
+        return Intn(max + (0 - min) + 1) - (0 - min)
     }
     return 0
 }
@@ -54,10 +54,10 @@ func Str(n int) string {
 func RandStr(n int) string {
     b := make([]rune, n)
     for i := range b {
-        if intn(2) == 1 {
-            b[i] = digits[intn(10)]
+        if Intn(2) == 1 {
+            b[i] = digits[Intn(10)]
         } else {
-            b[i] = letters[intn(52)]
+            b[i] = letters[Intn(52)]
         }
     }
     return string(b)
@@ -72,7 +72,7 @@ func Digits(n int) string {
 func RandDigits(n int) string {
     b := make([]rune, n)
     for i := range b {
-        b[i] = digits[intn(10)]
+        b[i] = digits[Intn(10)]
     }
     return string(b)
 }
@@ -86,7 +86,18 @@ func Letters(n int) string {
 func RandLetters(n int) string {
     b := make([]rune, n)
     for i := range b {
-        b[i] = letters[intn(52)]
+        b[i] = letters[Intn(52)]
     }
     return string(b)
+}
+
+// Perm returns, as a slice of n ints, a pseudo-random permutation of the integers [0,n).
+func Perm(n int) []int {
+    m := make([]int, n)
+    for i := 0; i < n; i++ {
+        j := Intn(i + 1)
+        m[i] = m[j]
+        m[j] = i
+    }
+    return m
 }

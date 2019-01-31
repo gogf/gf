@@ -9,7 +9,7 @@ package gjson
 
 import (
     "errors"
-    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/string/gregex"
     "strings"
     "strconv"
     "io/ioutil"
@@ -19,7 +19,7 @@ import (
     "gitee.com/johng/gf/g/encoding/gxml"
     "gitee.com/johng/gf/g/encoding/gyaml"
     "gitee.com/johng/gf/g/encoding/gtoml"
-    "gitee.com/johng/gf/g/util/gstr"
+    "gitee.com/johng/gf/g/string/gstr"
     "time"
     "gitee.com/johng/gf/g/internal/rwmutex"
     "fmt"

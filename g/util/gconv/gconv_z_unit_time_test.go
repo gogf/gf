@@ -9,7 +9,7 @@ package gconv_test
 import (
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/util/gtest"
+    "gitee.com/johng/gf/g/test/gtest"
     "testing"
     "time"
 )

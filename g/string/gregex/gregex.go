@@ -10,25 +10,8 @@
 package gregex
 
 import (
-    "gitee.com/johng/gf/g/container/gmap"
     "regexp"
 )
-
-// 缓存对象，主要用于缓存底层regx对象
-var regxCache = gmap.NewStringInterfaceMap()
-
-// 根据pattern生成对应的regexp正则对象
-func getRegexp(pattern string) (*regexp.Regexp, error) {
-    if v := regxCache.Get(pattern); v != nil {
-        return v.(*regexp.Regexp), nil
-    }
-    if r, err := regexp.Compile(pattern); err == nil {
-        regxCache.Set(pattern, r)
-        return r, nil
-    } else {
-        return nil, err
-    }
-}
 
 // 转移正则规则字符串，例如：Quote(`[foo]`) 返回 `\[foo\]`
 func Quote(s string) string {

@@ -21,7 +21,7 @@ func main() {
     params  := g.Map {
         "uid"      : 1,
         "Name"     : "john",
-        "site_url" : "https://gfer.me",
+        "site_url" : "https://goframe.org",
         "PASS1"    : "123",
         "PASS2"    : "456",
     }

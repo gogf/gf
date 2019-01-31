@@ -6,7 +6,7 @@
 
 // Package gmap provides kinds of concurrent-safe(alternative) maps.
 //
-// 并发安全的哈希MAP.
+// 并发安全MAP.
 package gmap
 
 // 默认的Map对象其实就是InterfaceInterfaceMap的别名。

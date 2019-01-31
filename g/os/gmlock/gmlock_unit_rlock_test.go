@@ -9,7 +9,7 @@ package gmlock_test
 import (
     "gitee.com/johng/gf/g/container/garray"
     "gitee.com/johng/gf/g/os/gmlock"
-    "gitee.com/johng/gf/g/util/gtest"
+    "gitee.com/johng/gf/g/test/gtest"
     "testing"
     "time"
 )

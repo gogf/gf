@@ -5,7 +5,7 @@ package gdb_test
 import (
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/gtest"
+    "gitee.com/johng/gf/g/test/gtest"
     "testing"
 )
 

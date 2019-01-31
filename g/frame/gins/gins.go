@@ -22,7 +22,7 @@ import (
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/string/gregex"
 )
 
 const (

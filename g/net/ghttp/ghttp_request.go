@@ -10,7 +10,7 @@ import (
     "gitee.com/johng/gf/g/container/gvar"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/string/gregex"
     "gitee.com/johng/gf/third/github.com/fatih/structs"
     "io/ioutil"
     "net/http"

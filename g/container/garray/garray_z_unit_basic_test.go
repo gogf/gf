@@ -10,12 +10,11 @@ package garray_test
 
 import (
     "gitee.com/johng/gf/g/container/garray"
+    "gitee.com/johng/gf/g/test/gtest"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/util/gtest"
     "strings"
     "testing"
 )
-
 
 func Test_IntArray_Unique(t *testing.T) {
     expect := []int{1, 2, 3, 4, 5, 6}

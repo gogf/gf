@@ -26,7 +26,7 @@ func NewIntSet(unsafe...bool) *IntSet {
 }
 
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
-func (set *IntSet) Iterator(f func (v int) bool) {
+func (set *IntSet) Iterator(f func (v int) bool) *IntSet {
     set.mu.RLock()
     defer set.mu.RUnlock()
 	for k, _ := range set.m {
@@ -34,6 +34,7 @@ func (set *IntSet) Iterator(f func (v int) bool) {
 			break
 		}
 	}
+    return set
 }
 
 // 设置键
@@ -62,11 +63,12 @@ func (set *IntSet) Contains(item int) bool {
 	return exists
 }
 
-// 删除键值对
-func (set *IntSet) Remove(key int) {
+// 删除元素项
+func (set *IntSet) Remove(key int) *IntSet {
 	set.mu.Lock()
 	delete(set.m, key)
 	set.mu.Unlock()
+	return set
 }
 
 // 大小
@@ -78,10 +80,11 @@ func (set *IntSet) Size() int {
 }
 
 // 清空set
-func (set *IntSet) Clear() {
+func (set *IntSet) Clear() *IntSet {
 	set.mu.Lock()
 	set.m = make(map[int]struct{})
 	set.mu.Unlock()
+    return set
 }
 
 // 转换为数组
@@ -89,11 +92,10 @@ func (set *IntSet) Slice() []int {
 	set.mu.RLock()
 	ret := make([]int, len(set.m))
 	i := 0
-	for item := range set.m {
-		ret[i] = item
+	for k, _ := range set.m {
+		ret[i] = k
 		i++
 	}
-
 	set.mu.RUnlock()
 	return ret
 }
@@ -103,14 +105,125 @@ func (set *IntSet) String() string {
 	return fmt.Sprint(set.Slice())
 }
 
-func (set *IntSet) LockFunc(f func(m map[int]struct{})) {
+func (set *IntSet) LockFunc(f func(m map[int]struct{})) *IntSet {
 	set.mu.Lock(true)
 	defer set.mu.Unlock(true)
 	f(set.m)
+    return set
 }
 
-func (set *IntSet) RLockFunc(f func(m map[int]struct{})) {
+func (set *IntSet) RLockFunc(f func(m map[int]struct{})) *IntSet {
     set.mu.RLock(true)
     defer set.mu.RUnlock(true)
     f(set.m)
+    return set
+}
+
+// 判断两个集合是否相等.
+func (set *IntSet) Equal(other *IntSet) bool {
+    if set == other {
+        return true
+    }
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    other.mu.RLock()
+    defer other.mu.RUnlock()
+	if len(set.m) != len(other.m) {
+		return false
+	}
+	for key := range set.m {
+		if _, ok := other.m[key]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+// 判断当前集合是否为other集合的子集.
+func (set *IntSet) IsSubsetOf(other *IntSet) bool {
+    if set == other {
+        return true
+    }
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    other.mu.RLock()
+    defer other.mu.RUnlock()
+    for key := range set.m {
+        if _, ok := other.m[key]; !ok {
+            return false
+        }
+    }
+    return true
+}
+
+// 并集, 返回新的集合：属于set或属于other的元素为元素的集合.
+func (set *IntSet) Union(other *IntSet) (newSet *IntSet) {
+    newSet = NewIntSet(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    if set != other {
+        other.mu.RLock()
+        defer other.mu.RUnlock()
+    }
+    for k, v := range set.m {
+        newSet.m[k] = v
+    }
+    if set != other {
+        for k, v := range other.m {
+            newSet.m[k] = v
+        }
+    }
+    return
+}
+
+// 差集, 返回新的集合: 属于set且不属于other的元素为元素的集合.
+func (set *IntSet) Diff(other *IntSet) (newSet *IntSet) {
+    newSet = NewIntSet(true)
+    if set == other {
+        return newSet
+    }
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    other.mu.RLock()
+    defer other.mu.RUnlock()
+
+    for k, v := range set.m {
+        if _, ok := other.m[k]; !ok {
+            newSet.m[k] = v
+        }
+    }
+    return
+}
+
+// 交集, 返回新的集合: 属于set且属于other的元素为元素的集合.
+func (set *IntSet) Inter(other *IntSet) (newSet *IntSet) {
+    newSet = NewIntSet(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    if set != other {
+        other.mu.RLock()
+        defer other.mu.RUnlock()
+    }
+    for k, v := range set.m {
+        if _, ok := other.m[k]; ok {
+            newSet.m[k] = v
+        }
+    }
+    return
+}
+
+// 补集, 返回新的集合: (前提: set应当为full的子集)属于全集full不属于集合set的元素组成的集合.
+// 如果给定的full集合不是set的全集时，返回full与set的差集.
+func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
+    newSet = NewIntSet(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    full.mu.RLock()
+    defer full.mu.RUnlock()
+    for k, v := range full.m {
+        if _, ok := set.m[k]; !ok {
+            newSet.m[k] = v
+        }
+    }
+    return
 }

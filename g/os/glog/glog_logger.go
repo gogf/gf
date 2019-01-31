@@ -8,13 +8,14 @@
 package glog
 
 import (
+    "errors"
     "fmt"
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gfpool"
     "gitee.com/johng/gf/g/os/gmlock"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/util/gregex"
+    "gitee.com/johng/gf/g/string/gregex"
     "io"
     "os"
     "runtime"
@@ -160,6 +161,10 @@ func (l *Logger) getFilePointer() *gfpool.File {
 
 // 设置日志文件的存储目录路径
 func (l *Logger) SetPath(path string) error {
+    // path必须有值
+    if path == "" {
+        return errors.New("path is empty")
+    }
     // 如果目录不存在，则递归创建
     if !gfile.Exists(path) {
        if err := gfile.Mkdir(path); err != nil {

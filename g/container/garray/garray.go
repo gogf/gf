@@ -6,7 +6,7 @@
 
 // Package garray provides kinds of concurrent-safe(alternative) arrays.
 //
-// 并发安全的数组.
+// 并发安全数组.
 package garray
 
 func New(size int, cap int, unsafe...bool) *Array {

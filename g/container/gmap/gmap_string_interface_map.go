@@ -9,6 +9,7 @@ package gmap
 
 import (
 	"gitee.com/johng/gf/g/internal/rwmutex"
+	"gitee.com/johng/gf/g/util/gconv"
 )
 
 type StringInterfaceMap struct {
@@ -205,4 +206,28 @@ func (this *StringInterfaceMap) RLockFunc(f func(m map[string]interface{})) {
 	this.mu.RLock(true)
 	defer this.mu.RUnlock(true)
 	f(this.m)
+}
+
+// 交换Map中的键和值.
+func (this *StringInterfaceMap) Flip() {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	n := make(map[string]interface{}, len(this.m))
+	for k, v := range this.m {
+		n[gconv.String(v)] = k
+	}
+	this.m = n
+}
+
+// 合并两个Map.
+func (this *StringInterfaceMap) Merge(m *StringInterfaceMap) {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	if m != this {
+		m.mu.RLock()
+		defer m.mu.RUnlock()
+	}
+	for k, v := range m.m {
+		this.m[k] = v
+	}
 }

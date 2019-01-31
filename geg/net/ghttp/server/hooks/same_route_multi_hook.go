@@ -13,7 +13,7 @@ func beforeServeHook1(r *ghttp.Request) {
 
 // 随后调用的HOOK
 func beforeServeHook2(r *ghttp.Request) {
-    r.SetParam("site", "https://gfer.me")
+    r.SetParam("site", "https://goframe.org")
     r.Response.Writeln("set site")
 }
 

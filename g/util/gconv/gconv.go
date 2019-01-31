@@ -11,9 +11,9 @@
 package gconv
 
 import (
-    "strconv"
     "encoding/json"
     "gitee.com/johng/gf/g/encoding/gbinary"
+    "strconv"
     "strings"
 )
 
@@ -116,27 +116,10 @@ func Int(i interface{}) int {
     if i == nil {
         return 0
     }
-    switch value := i.(type) {
-        case int:     return value
-        case int8:    return int(value)
-        case int16:   return int(value)
-        case int32:   return int(value)
-        case int64:   return int(value)
-        case uint:    return int(value)
-        case uint8:   return int(value)
-        case uint16:  return int(value)
-        case uint32:  return int(value)
-        case uint64:  return int(value)
-        case float32: return int(value)
-        case float64: return int(value)
-        case bool:
-            if value {
-                return 1
-            }
-            return 0
-        default:
-            return int(Float64(value))
+    if v, ok := i.(int); ok {
+        return v
     }
+    return int(Int64(i))
 }
 
 func Int8(i interface{}) int8 {
@@ -146,7 +129,7 @@ func Int8(i interface{}) int8 {
     if v, ok := i.(int8); ok {
         return v
     }
-    return int8(Int(i))
+    return int8(Int64(i))
 }
 
 func Int16(i interface{}) int16 {
@@ -156,7 +139,7 @@ func Int16(i interface{}) int16 {
     if v, ok := i.(int16); ok {
         return v
     }
-    return int16(Int(i))
+    return int16(Int64(i))
 }
 
 func Int32(i interface{}) int32 {
@@ -166,7 +149,7 @@ func Int32(i interface{}) int32 {
     if v, ok := i.(int32); ok {
         return v
     }
-    return int32(Int(i))
+    return int32(Int64(i))
 }
 
 func Int64(i interface{}) int64 {
@@ -176,58 +159,55 @@ func Int64(i interface{}) int64 {
     if v, ok := i.(int64); ok {
         return v
     }
-    return int64(Int(i))
-}
-
-func Uint(i interface{}) uint {
-    if i == nil {
-        return 0
-    }
     switch value := i.(type) {
-        case int:
-            if value < 0 {
-                value = -value
-            }
-            return uint(value)
-        case int8:
-            if value < 0 {
-                value = -value
-            }
-            return uint(value)
-        case int16:
-            if value < 0 {
-                value = -value
-            }
-            return uint(value)
-        case int32:
-            if value < 0 {
-                value = -value
-            }
-            return uint(value)
-        case int64:
-            if value < 0 {
-                value = -value
-            }
-            return uint(value)
-        case uint:    return value
-        case uint8:   return uint(value)
-        case uint16:  return uint(value)
-        case uint32:  return uint(value)
-        case uint64:  return uint(value)
-        case float32: return uint(value)
-        case float64: return uint(value)
+        case int:     return int64(value)
+        case int8:    return int64(value)
+        case int16:   return int64(value)
+        case int32:   return int64(value)
+        case int64:   return value
+        case uint:    return int64(value)
+        case uint8:   return int64(value)
+        case uint16:  return int64(value)
+        case uint32:  return int64(value)
+        case uint64:  return int64(value)
+        case float32: return int64(value)
+        case float64: return int64(value)
         case bool:
             if value {
                 return 1
             }
             return 0
         default:
-            v := Float64(value)
-            if v < 0 {
-                v = -v
+            s := String(value)
+            // 按照十六进制解析
+            if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
+                if v, e := strconv.ParseInt(s[2 : ], 16, 64); e == nil {
+                    return v
+                }
             }
-            return uint(v)
+            // 按照八进制解析
+            if len(s) > 1 && s[0] == '0' {
+                if v, e := strconv.ParseInt(s[1 : ], 8, 64); e == nil {
+                    return v
+                }
+            }
+            // 按照十进制解析
+            if v, e := strconv.ParseInt(s, 10, 64); e == nil {
+                return v
+            }
+            // 按照浮点数解析
+            return int64(Float64(value))
     }
+}
+
+func Uint(i interface{}) uint {
+    if i == nil {
+        return 0
+    }
+    if v, ok := i.(uint); ok {
+        return v
+    }
+    return uint(Uint64(i))
 }
 
 func Uint8(i interface{}) uint8 {
@@ -237,7 +217,7 @@ func Uint8(i interface{}) uint8 {
     if v, ok := i.(uint8); ok {
         return v
     }
-    return uint8(Uint(i))
+    return uint8(Uint64(i))
 }
 
 func Uint16(i interface{}) uint16 {
@@ -247,7 +227,7 @@ func Uint16(i interface{}) uint16 {
     if v, ok := i.(uint16); ok {
         return v
     }
-    return uint16(Uint(i))
+    return uint16(Uint64(i))
 }
 
 func Uint32(i interface{}) uint32 {
@@ -257,17 +237,52 @@ func Uint32(i interface{}) uint32 {
     if v, ok := i.(uint32); ok {
         return v
     }
-    return uint32(Uint(i))
+    return uint32(Uint64(i))
 }
 
 func Uint64(i interface{}) uint64 {
     if i == nil {
         return 0
     }
-    if v, ok := i.(uint64); ok {
-        return v
+    switch value := i.(type) {
+        case int:     return uint64(value)
+        case int8:    return uint64(value)
+        case int16:   return uint64(value)
+        case int32:   return uint64(value)
+        case int64:   return uint64(value)
+        case uint:    return uint64(value)
+        case uint8:   return uint64(value)
+        case uint16:  return uint64(value)
+        case uint32:  return uint64(value)
+        case uint64:  return value
+        case float32: return uint64(value)
+        case float64: return uint64(value)
+        case bool:
+            if value {
+                return 1
+            }
+            return 0
+        default:
+            s := String(value)
+            // 按照十六进制解析
+            if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
+                if v, e := strconv.ParseUint(s[2 : ], 16, 64); e == nil {
+                    return v
+                }
+            }
+            // 按照八进制解析
+            if len(s) > 1 && s[0] == '0' {
+                if v, e := strconv.ParseUint(s[1 : ], 8, 64); e == nil {
+                    return v
+                }
+            }
+            // 按照十进制解析
+            if v, e := strconv.ParseUint(s, 10, 64); e == nil {
+                return v
+            }
+            // 按照浮点数解析
+            return uint64(Float64(value))
     }
-    return uint64(Uint(i))
 }
 
 func Float32 (i interface{}) float32 {

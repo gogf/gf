@@ -44,8 +44,8 @@ func init() {
     }()
 }
 
-// 自定义的 rand.Intn ，绝对随机
-func intn (max int) int {
+// 自定义的 rand.Intn ，绝对随机, 返回: [0, max)
+func Intn (max int) int {
     n := int(<- bufferChan)%max
     if n < 0 {
         return -n
