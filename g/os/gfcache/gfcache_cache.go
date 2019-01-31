@@ -12,7 +12,7 @@ import (
     "gitee.com/johng/gf/g/os/gfsnotify"
 )
 
-// 设置容量大小(MB)
+// 设置容量大小(byte)
 func (c *Cache) SetCap(cap int) {
     c.cap.Set(cap)
 }
@@ -34,15 +34,15 @@ func (c *Cache) GetContents(path string) string {
 
 // 获得文件内容 []byte
 func (c *Cache) GetBinContents(path string) []byte {
-    v := c.cache.Get(path)
-    if v != nil {
+    if v := c.cache.Get(path); v != nil {
         return v.([]byte)
     }
     b := gfile.GetBinContents(path)
-    if b != nil && (c.cap.Val() == 0 || c.size.Val() < c.cap.Val()) {
-        c.addMonitor(path)
-        c.cache.Set(path, b, 0)
+    // 读取到内容，并且没有超过缓存容量限制时才会执行缓存
+    if len(b) > 0 && (c.cap.Val() == 0 || c.size.Val() < c.cap.Val()) {
         c.size.Add(len(b))
+        c.cache.Set(path, b)
+        c.addMonitor(path)
     }
     return b
 }
@@ -55,19 +55,22 @@ func (c *Cache) addMonitor(path string) {
     }
     gfsnotify.Add(path, func(event *gfsnotify.Event) {
         //glog.Debug("gfcache:", event)
-        r := c.cache.Get(path).([]byte)
+        length := 0
+        if r := c.cache.Get(path); r != nil {
+            length = len(r.([]byte))
+        }
         // 是否删除
         if event.IsRemove() {
             c.cache.Remove(path)
-            c.size.Add(-len(r))
+            c.size.Add(-length)
+            return
         }
         // 更新缓存内容
         if c.cap.Val() == 0 || c.size.Val() < c.cap.Val() {
             b := gfile.GetBinContents(path)
-            if b != nil {
-                dif := len(b) - len(r)
-                c.cache.Set(path, b, 0)
-                c.size.Add(dif)
+            if len(b) > 0 {
+                c.size.Add(len(b) - length)
+                c.cache.Set(path, b)
             }
         }
     })

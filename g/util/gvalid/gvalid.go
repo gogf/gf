@@ -50,7 +50,7 @@ min                  格式：min:min                               说明：参
 max                  格式：max:max                               说明：参数最大为max(支持整形和浮点类型参数)
 json                 格式：json                                  说明：判断数据格式为JSON
 integer              格式：integer                               说明：整数
-float                格式：float                                 说明：浮点数
+float                格式：float                                 说明：浮点数(整数也是浮点数)
 boolean              格式：boolean                               说明：布尔值(1,true,on,yes:true | 0,false,off,no,"":false)
 same                 格式：same:field                            说明：参数值必需与field参数的值相同
 different            格式：different:field                       说明：参数值不能与field参数的值相同

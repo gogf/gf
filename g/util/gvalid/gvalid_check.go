@@ -45,6 +45,63 @@ var (
         "not-in"               : struct{}{},
         "regex"                : struct{}{},
     }
+    // 所有支持的校验规则
+    allSupportedRules = map[string]struct{} {
+        "required"                  : struct{}{},
+        "required-if"               : struct{}{},
+        "required-unless"           : struct{}{},
+        "required-with"             : struct{}{},
+        "required-with-all"         : struct{}{},
+        "required-without"          : struct{}{},
+        "required-without-all"      : struct{}{},
+        "date"                      : struct{}{},
+        "date-format"               : struct{}{},
+        "email"                     : struct{}{},
+        "phone"                     : struct{}{},
+        "telephone"                 : struct{}{},
+        "passport"                  : struct{}{},
+        "password"                  : struct{}{},
+        "password2"                 : struct{}{},
+        "password3"                 : struct{}{},
+        "postcode"                  : struct{}{},
+        "id-number"                 : struct{}{},
+        "qq"                        : struct{}{},
+        "ip"                        : struct{}{},
+        "ipv4"                      : struct{}{},
+        "ipv6"                      : struct{}{},
+        "mac"                       : struct{}{},
+        "url"                       : struct{}{},
+        "domain"                    : struct{}{},
+        "length"                    : struct{}{},
+        "min-length"                : struct{}{},
+        "max-length"                : struct{}{},
+        "between"                   : struct{}{},
+        "min"                       : struct{}{},
+        "max"                       : struct{}{},
+        "json"                      : struct{}{},
+        "integer"                   : struct{}{},
+        "float"                     : struct{}{},
+        "boolean"                   : struct{}{},
+        "same"                      : struct{}{},
+        "different"                 : struct{}{},
+        "in"                        : struct{}{},
+        "not-in"                    : struct{}{},
+        "regex"                     : struct{}{},
+    }
+    // 布尔Map
+    boolMap = map[string]struct{} {
+        // true
+        "1"     : struct{}{},
+        "true"  : struct{}{},
+        "on"    : struct{}{},
+        "yes"   : struct{}{},
+        // false
+        ""      : struct{}{},
+        "0"     : struct{}{},
+        "false" : struct{}{},
+        "off"   : struct{}{},
+        "no"    : struct{}{},
+    }
 )
 
 // 检测单条数据的规则:
@@ -62,24 +119,41 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
         }
     }
     // 自定义错误消息处理
-    list       := make([]string, 0)
-    customMsgs := make(map[string]string)
+    msgArray     := make([]string, 0)
+    customMsgMap := make(map[string]string)
     switch v := msgs.(type) {
         case map[string]string:
-            customMsgs = v
+            customMsgMap = v
 
         case string:
-            list = strings.Split(v, "|")
+            msgArray = strings.Split(v, "|")
     }
-    items := strings.Split(strings.TrimSpace(rules), "|")
-    for index := 0; index < len(items); {
-        item    := items[index]
+    ruleItems := strings.Split(strings.TrimSpace(rules), "|")
+    // 规则项预处理, 主要解决规则中存在的"|"关键字符号
+    for i := 0; ; {
+        array := strings.Split(ruleItems[i], ":")
+        if _, ok := allSupportedRules[array[0]]; !ok {
+            if i > 0 {
+                ruleItems[i - 1] += "|" + ruleItems[i]
+                ruleItems = append(ruleItems[ : i], ruleItems[i + 1 : ]...)
+            } else {
+                return newErrorStr("invalid_rules", "invalid rules:" + rules)
+            }
+        } else {
+            i++
+        }
+        if i == len(ruleItems) {
+            break
+        }
+    }
+    for index := 0; index < len(ruleItems); {
+        item    := ruleItems[index]
         results := ruleRegex.FindStringSubmatch(item)
         ruleKey := strings.TrimSpace(results[1])
         ruleVal := strings.TrimSpace(results[2])
         match   := false
-        if len(list) > index {
-            customMsgs[ruleKey] = strings.TrimSpace(list[index])
+        if len(msgArray) > index {
+            customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
         }
         switch ruleKey {
             // 必须字段
@@ -96,7 +170,7 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
             case "length":            fallthrough
             case "min-length":        fallthrough
             case "max-length":
-                if msg := checkLength(val, ruleKey, ruleVal, customMsgs); msg != "" {
+                if msg := checkLength(val, ruleKey, ruleVal, customMsgMap); msg != "" {
                     errorMsgs[ruleKey] = msg
                 } else {
                     match = true
@@ -106,7 +180,7 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
             case "min":               fallthrough
             case "max":               fallthrough
             case "between":
-                if msg := checkSize(val, ruleKey, ruleVal, customMsgs); msg != "" {
+                if msg := checkSize(val, ruleKey, ruleVal, customMsgMap); msg != "" {
                     errorMsgs[ruleKey] = msg
                 } else {
                     match = true
@@ -115,10 +189,10 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
             // 自定义正则判断
             case "regex":
                 // 需要判断是否被|符号截断，如果是，那么需要进行整合
-                for i := index + 1; i < len(items); i++ {
+                for i := index + 1; i < len(ruleItems); i++ {
                     // 判断下一个规则是否合法，不合法那么和当前正则规则进行整合
-                    if !gregex.IsMatchString(gSINGLE_RULE_PATTERN, items[i]) {
-                        ruleVal += "|" + items[i]
+                    if !gregex.IsMatchString(gSINGLE_RULE_PATTERN, ruleItems[i]) {
+                        ruleVal += "|" + ruleItems[i]
                         index++
                     }
                 }
@@ -201,9 +275,9 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
             case "qq":
                 match = gregex.IsMatchString(`^[1-9][0-9]{4,}$`, val)
 
-                // 中国邮政编码
+            // 中国邮政编码
             case "postcode":
-                match = gregex.IsMatchString(`^[1-9]\d{5}$`, val)
+                match = gregex.IsMatchString(`^\d{6}$`, val)
 
             /*
                 公民身份证号
@@ -221,13 +295,13 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
                 校验码：   [0-9Xx]
 
                 十八位：^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$
-                十五位：^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$
+                十五位：^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$
 
                 总：
-                (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)
+                (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
              */
             case "id-number":
-                match = gregex.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)`, val)
+                match = gregex.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)`, val)
 
             // 通用帐号规则(字母开头，只能包含字母、数字和下划线，长度在6~18之间)
             case "passport":
@@ -245,7 +319,7 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
 
             // 强等强度密码(在弱密码的基础上，必须包含大小写字母、数字和特殊字符)
             case "password3":
-                if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) && gregex.IsMatchString(`[a-z]+`, val) && gregex.IsMatchString(`[A-Z]+`, val) && gregex.IsMatchString(`\d+`, val) && gregex.IsMatchString(`\S+`, val) {
+                if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) && gregex.IsMatchString(`[a-z]+`, val) && gregex.IsMatchString(`[A-Z]+`, val) && gregex.IsMatchString(`\d+`, val) && gregex.IsMatchString(`[^a-zA-Z0-9]+`, val) {
                     match = true
                 }
 
@@ -269,17 +343,18 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
 
             // 布尔值(1,true,on,yes:true | 0,false,off,no,"":false)
             case "boolean":
-                if val != "" && val != "0" && val != "false" && val != "off" && val != "no" {
+                match = false
+                if _, ok := boolMap[strings.ToLower(val)]; ok {
                     match = true
                 }
 
             // 邮件
             case "email":
-                match = gregex.IsMatchString(`^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`, val)
+                match = gregex.IsMatchString(`^[a-zA-Z0-9_\-\.]+@[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)+$`, val)
 
             // URL
             case "url":
-                match = gregex.IsMatchString(`^(?:([A-Za-z]+):)?(\/{0,3})([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#]*))?(?:\?([^#]*))?(?:#(.*))?$`, val)
+                match = gregex.IsMatchString(`(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]`, val)
 
             // domain
             case "domain":
@@ -299,7 +374,7 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
 
             // MAC地址
             case "mac":
-                match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}-){5}[0-9A-Fa-f]{2}$`, val)
+                match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, val)
 
             default:
                 errorMsgs[ruleKey] = "Invalid rule name:" + ruleKey
@@ -310,7 +385,7 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
             // 不存在则使用默认的错误信息，
             // 如果在校验过程中已经设置了错误信息，那么这里便不作处理
             if _, ok := errorMsgs[ruleKey]; !ok {
-                if msg, ok := customMsgs[ruleKey]; ok {
+                if msg, ok := customMsgMap[ruleKey]; ok {
                     errorMsgs[ruleKey] = msg
                 } else {
                     errorMsgs[ruleKey] = errorMsgMap.Get(ruleKey)
@@ -333,99 +408,91 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
 func checkRequired(value, ruleKey, ruleVal string, params map[string]string) bool {
     required := false
     switch ruleKey {
-    // 必须字段
-    case "required":
-        required = true
+        // 必须字段
+        case "required":
+            required = true
 
         // 必须字段(当任意所给定字段值与所给值相等时)
-    case "required-if":
-        required = false
-        array   := strings.Split(ruleVal, ",")
-        // 必须为偶数，才能是键值对匹配
-        if len(array)%2 == 0 {
-            for i := 0; i < len(array); {
-                tk := array[i]
-                tv := array[i+1]
-                if v, ok := params[tk]; ok {
-                    if strings.Compare(tv, v) == 0 {
-                        required = true
-                        break
+        case "required-if":
+            required = false
+            array   := strings.Split(ruleVal, ",")
+            // 必须为偶数，才能是键值对匹配
+            if len(array)%2 == 0 {
+                for i := 0; i < len(array); {
+                    tk := array[i]
+                    tv := array[i+1]
+                    if v, ok := params[tk]; ok {
+                        if strings.Compare(tv, v) == 0 {
+                            required = true
+                            break
+                        }
                     }
+                    i += 2
                 }
-                i += 2
             }
-        }
 
         // 必须字段(当所给定字段值与所给值都不相等时)
-    case "required-unless":
-        required = true
-        array   := strings.Split(ruleVal, ",")
-        // 必须为偶数，才能是键值对匹配
-        if len(array)%2 == 0 {
-            for i := 0; i < len(array); {
-                tk := array[i]
-                tv := array[i+1]
-                if v, ok := params[tk]; ok {
-                    if strings.Compare(tv, v) == 0 {
-                        required = false
-                        break
+        case "required-unless":
+            required = true
+            array   := strings.Split(ruleVal, ",")
+            // 必须为偶数，才能是键值对匹配
+            if len(array)%2 == 0 {
+                for i := 0; i < len(array); {
+                    tk := array[i]
+                    tv := array[i+1]
+                    if v, ok := params[tk]; ok {
+                        if strings.Compare(tv, v) == 0 {
+                            required = false
+                            break
+                        }
                     }
+                    i += 2
                 }
-                i += 2
             }
-        }
 
         // 必须字段(当所给定任意字段值不为空时)
-    case "required-with":
-        required = false
-        array   := strings.Split(ruleVal, ",")
-        for i := 0; i < len(array); i++ {
-            if v, ok := params[array[i]]; ok {
-                if v != "" {
+        case "required-with":
+            required = false
+            array   := strings.Split(ruleVal, ",")
+            for i := 0; i < len(array); i++ {
+                if params[array[i]] != "" {
                     required = true
                     break
                 }
             }
-        }
 
         // 必须字段(当所给定所有字段值都不为空时)
-    case "required-with-all":
-        required = true
-        array   := strings.Split(ruleVal, ",")
-        for i := 0; i < len(array); i++ {
-            if v, ok := params[array[i]]; ok {
-                if v == "" {
+        case "required-with-all":
+            required = true
+            array   := strings.Split(ruleVal, ",")
+            for i := 0; i < len(array); i++ {
+                if params[array[i]] == "" {
                     required = false
                     break
                 }
             }
-        }
 
         // 必须字段(当所给定任意字段值为空时)
-    case "required-without":
-        required = false
-        array   := strings.Split(ruleVal, ",")
-        for i := 0; i < len(array); i++ {
-            if v, ok := params[array[i]]; ok {
-                if v == "" {
+        case "required-without":
+            required = false
+            array   := strings.Split(ruleVal, ",")
+            for i := 0; i < len(array); i++ {
+                if params[array[i]] == "" {
                     required = true
                     break
                 }
             }
-        }
 
         // 必须字段(当所给定所有字段值都为空时)
-    case "required-without-all":
-        required = true
-        array   := strings.Split(ruleVal, ",")
-        for i := 0; i < len(array); i++ {
-            if v, ok := params[array[i]]; ok {
-                if v != "" {
+        case "required-without-all":
+            required = true
+            array   := strings.Split(ruleVal, ",")
+            for i := 0; i < len(array); i++ {
+                if params[array[i]] != "" {
                     required = false
                     break
                 }
             }
-        }
     }
     if required {
         return !(value == "")
@@ -435,138 +502,138 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 }
 
 // 对字段值长度进行检测
-func checkLength(value, ruleKey, ruleVal string, custonMsgs map[string]string) string {
+func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
     msg := ""
     switch ruleKey {
-    // 长度范围
-    case "length":
-        array := strings.Split(ruleVal, ",")
-        min   := 0
-        max   := 0
-        if len(array) > 0 {
-            if v, err := strconv.Atoi(strings.TrimSpace(array[0])); err == nil {
-                min = v
+        // 长度范围
+        case "length":
+            array := strings.Split(ruleVal, ",")
+            min   := 0
+            max   := 0
+            if len(array) > 0 {
+                if v, err := strconv.Atoi(strings.TrimSpace(array[0])); err == nil {
+                    min = v
+                }
             }
-        }
-        if len(array) > 1 {
-            if v, err := strconv.Atoi(strings.TrimSpace(array[1])); err == nil {
-                max = v
+            if len(array) > 1 {
+                if v, err := strconv.Atoi(strings.TrimSpace(array[1])); err == nil {
+                    max = v
+                }
             }
-        }
-        if len(value) < min || len(value) > max {
-            if v, ok := custonMsgs[ruleKey]; !ok {
-                msg = errorMsgMap.Get(ruleKey)
-            } else {
-                msg = v
-            }
-            msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
-            msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
-            return msg
-        }
-
-        // 最小长度
-    case "min-length":
-        if min, err := strconv.Atoi(ruleVal); err == nil {
-            if len(value) < min {
-                if v, ok := custonMsgs[ruleKey]; !ok {
+            if len(value) < min || len(value) > max {
+                if v, ok := customMsgMap[ruleKey]; !ok {
                     msg = errorMsgMap.Get(ruleKey)
                 } else {
                     msg = v
                 }
                 msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
+                msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
+                return msg
             }
-        } else {
-            msg = "校验参数[" + ruleVal + "]应当为整数类型"
-        }
+
+        // 最小长度
+        case "min-length":
+            if min, err := strconv.Atoi(ruleVal); err == nil {
+                if len(value) < min {
+                    if v, ok := customMsgMap[ruleKey]; !ok {
+                        msg = errorMsgMap.Get(ruleKey)
+                    } else {
+                        msg = v
+                    }
+                    msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
+                }
+            } else {
+                msg = "校验参数[" + ruleVal + "]应当为整数类型"
+            }
 
         // 最大长度
-    case "max-length":
-        if max, err := strconv.Atoi(ruleVal); err == nil {
-            if len(value) > max {
-                if v, ok := custonMsgs[ruleKey]; !ok {
-                    msg = errorMsgMap.Get(ruleKey)
-                } else {
-                    msg = v
+        case "max-length":
+            if max, err := strconv.Atoi(ruleVal); err == nil {
+                if len(value) > max {
+                    if v, ok := customMsgMap[ruleKey]; !ok {
+                        msg = errorMsgMap.Get(ruleKey)
+                    } else {
+                        msg = v
+                    }
+                    msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
                 }
-                msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
+            } else {
+                msg = "校验参数[" + ruleVal + "]应当为整数类型"
             }
-        } else {
-            msg = "校验参数[" + ruleVal + "]应当为整数类型"
-        }
     }
     return msg
 }
 
 // 对字段值大小进行检测
-func checkSize(value, ruleKey, ruleVal string, custonMsgs map[string]string) string {
+func checkSize(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
     msg := ""
     switch ruleKey {
-    // 大小范围
-    case "between":
-        array := strings.Split(ruleVal, ",")
-        min   := float64(0)
-        max   := float64(0)
-        if len(array) > 0 {
-            if v, err := strconv.ParseFloat(strings.TrimSpace(array[0]), 10); err == nil {
-                min = v
-            }
-        }
-        if len(array) > 1 {
-            if v, err := strconv.ParseFloat(strings.TrimSpace(array[1]), 10); err == nil {
-                max = v
-            }
-        }
-        if v, err := strconv.ParseFloat(value, 10); err == nil {
-            if v < min || v > max {
-                if v, ok := custonMsgs[ruleKey]; !ok {
-                    msg = errorMsgMap.Get(ruleKey)
-                } else {
-                    msg = v
+        // 大小范围
+        case "between":
+            array := strings.Split(ruleVal, ",")
+            min   := float64(0)
+            max   := float64(0)
+            if len(array) > 0 {
+                if v, err := strconv.ParseFloat(strings.TrimSpace(array[0]), 10); err == nil {
+                    min = v
                 }
-                msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
-                msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
             }
-        } else {
-            msg = "输入参数[" + value + "]应当为数字类型"
-        }
-
-        // 最小值
-    case "min":
-        if min, err := strconv.ParseFloat(ruleVal, 10); err == nil {
+            if len(array) > 1 {
+                if v, err := strconv.ParseFloat(strings.TrimSpace(array[1]), 10); err == nil {
+                    max = v
+                }
+            }
             if v, err := strconv.ParseFloat(value, 10); err == nil {
-                if v < min {
-                    if v, ok := custonMsgs[ruleKey]; !ok {
+                if v < min || v > max {
+                    if v, ok := customMsgMap[ruleKey]; !ok {
                         msg = errorMsgMap.Get(ruleKey)
                     } else {
                         msg = v
                     }
                     msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
-                }
-            } else {
-                msg = "输入参数[" + value + "]应当为数字类型"
-            }
-        } else {
-            msg = "校验参数[" + ruleVal + "]应当为数字类型"
-        }
-
-        // 最大值
-    case "max":
-        if max, err := strconv.ParseFloat(ruleVal, 10); err == nil {
-            if v, err := strconv.ParseFloat(value, 10); err == nil {
-                if v > max {
-                    if v, ok := custonMsgs[ruleKey]; !ok {
-                        msg = errorMsgMap.Get(ruleKey)
-                    } else {
-                        msg = v
-                    }
                     msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
                 }
             } else {
                 msg = "输入参数[" + value + "]应当为数字类型"
             }
-        } else {
-            msg = "校验参数[" + ruleVal + "]应当为数字类型"
-        }
+
+        // 最小值
+        case "min":
+            if min, err := strconv.ParseFloat(ruleVal, 10); err == nil {
+                if v, err := strconv.ParseFloat(value, 10); err == nil {
+                    if v < min {
+                        if v, ok := customMsgMap[ruleKey]; !ok {
+                            msg = errorMsgMap.Get(ruleKey)
+                        } else {
+                            msg = v
+                        }
+                        msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
+                    }
+                } else {
+                    msg = "输入参数[" + value + "]应当为数字类型"
+                }
+            } else {
+                msg = "校验参数[" + ruleVal + "]应当为数字类型"
+            }
+
+        // 最大值
+        case "max":
+            if max, err := strconv.ParseFloat(ruleVal, 10); err == nil {
+                if v, err := strconv.ParseFloat(value, 10); err == nil {
+                    if v > max {
+                        if v, ok := customMsgMap[ruleKey]; !ok {
+                            msg = errorMsgMap.Get(ruleKey)
+                        } else {
+                            msg = v
+                        }
+                        msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
+                    }
+                } else {
+                    msg = "输入参数[" + value + "]应当为数字类型"
+                }
+            } else {
+                msg = "校验参数[" + ruleVal + "]应当为数字类型"
+            }
     }
     return msg
 }
