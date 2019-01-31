@@ -10,14 +10,14 @@
 package gfcache
 
 import (
+    "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gcache"
 )
 
 type Cache struct {
-    cap    *gtype.Int         // 缓存容量(byte)，设置为0表示不限制
-    size   *gtype.Int         // 缓存大小(Byte)
-    cache  *gcache.Cache      // 缓存对象
+    cap    *gtype.Int               // 缓存容量(byte)，设置为0表示不限制
+    size   *gtype.Int               // 缓存大小(Byte)
+    cache  *gmap.StringInterfaceMap // 缓存对象
 }
 
 const (
@@ -38,10 +38,9 @@ func New(cap ... int) *Cache {
     return &Cache {
         cap    : gtype.NewInt(c),
         size   : gtype.NewInt(),
-        cache  : gcache.New(),
+        cache  : gmap.NewStringInterfaceMap(),
     }
 }
-
 
 // 获得已缓存的文件大小(byte)
 func GetSize() int {
