@@ -47,7 +47,9 @@ func New(path...string) *SPath {
         cache : gmap.NewStringStringMap(),
     }
     if len(path) > 0 {
-        sp.Add(path[0])
+        if _, err := sp.Add(path[0]); err != nil {
+            //fmt.Errorf(err.Error())
+        }
     }
     return sp
 }
@@ -111,6 +113,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
     }
     // 添加的搜索路径必须为目录
     if gfile.IsDir(realPath) {
+        //fmt.Println("gspath:", realPath, sp.paths.Search(realPath))
         // 如果已经添加则不再添加
         if sp.paths.Search(realPath) < 0 {
             realPath = strings.TrimRight(realPath, gfile.Separator)
@@ -223,9 +226,12 @@ func (sp *SPath) addToCache(filePath, rootPath string) {
     // 如果添加的是目录，那么需要递归添加
     if idDir {
         if files, err := gfile.ScanDir(filePath, "*", true); err == nil {
+            //fmt.Println("gspath add to cache:", filePath, files)
             for _, path := range files {
                 sp.cache.SetIfNotExist(sp.nameFromPath(path, rootPath), sp.makeCacheValue(path, gfile.IsDir(path)))
             }
+        } else {
+            //fmt.Errorf(err.Error())
         }
     }
 }

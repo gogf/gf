@@ -12,7 +12,6 @@ package gtime
 import (
     "errors"
     "gitee.com/johng/gf/g/string/gregex"
-    "gitee.com/johng/gf/g/string/gstr"
     "regexp"
     "strconv"
     "strings"
@@ -137,7 +136,7 @@ func parseDateStr(s string) (year, month, day int) {
         return
     }
     // 判断年份在开头还是末尾
-    if gstr.IsNumeric(array[1]) {
+    if isNumeric(array[1]) {
         year, _  = strconv.Atoi(array[0])
         month, _ = strconv.Atoi(array[1])
         day, _   = strconv.Atoi(array[2])
@@ -307,4 +306,18 @@ func FuncCost(f func()) int64 {
     t := Nanosecond()
     f()
     return Nanosecond() - t
+}
+
+// 判断锁给字符串是否为数字
+func isNumeric(s string) bool {
+    length := len(s)
+    if length == 0 {
+        return false
+    }
+    for i := 0; i < len(s); i++ {
+        if s[i] < byte('0') || s[i] > byte('9') {
+            return false
+        }
+    }
+    return true
 }

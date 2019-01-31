@@ -33,24 +33,15 @@ func Case(t *testing.T, f func()) {
 
 // 断言判断, 相等
 func Assert(value, expect interface{}) {
-    rvValue  := reflect.ValueOf(value)
-    rvExpect := reflect.ValueOf(expect)
+    rvValue := reflect.ValueOf(value)
     if rvValue.Kind() == reflect.Ptr {
         if rvValue.IsNil() {
             value = nil
         }
     }
-    //if rvExpect.Kind() == reflect.Map {
-    //    if rvValue.Kind() == reflect.Map {
-    //        ksExpect := rvExpect.MapKeys()
-    //        for _, k := range ksExpect {
-    //            rvValue.M.MapIndex()
-    //            m[String(k.Interface())] = rv.MapIndex(k).Interface()
-    //        }
-    //    } else {
-    //        panic(fmt.Sprint(`[ASSERT] EXPECT VALUE TO BE A MAP`))
-    //    }
-    //}
+    if err := compareMap(value, expect); err != nil {
+        panic(err)
+    }
     if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
     }
@@ -64,10 +55,32 @@ func AssertEQ(value, expect interface{}) {
     if t1 != t2 {
         panic(fmt.Sprintf(`[ASSERT] EXPECT TYPE %v == %v`, t1, t2))
     }
-    rv := reflect.ValueOf(value)
-    if rv.Kind() == reflect.Ptr {
-        if rv.IsNil() {
+    rvValue  := reflect.ValueOf(value)
+    rvExpect := reflect.ValueOf(expect)
+    if rvValue.Kind() == reflect.Ptr {
+        if rvValue.IsNil() {
             value = nil
+        }
+    }
+    // map类型比较
+    if rvExpect.Kind() == reflect.Map {
+        if rvValue.Kind() == reflect.Map {
+            if rvExpect.Len() == rvValue.Len() {
+                ksExpect := rvExpect.MapKeys()
+                for _, key := range ksExpect {
+                    if rvValue.MapIndex(key).Interface() != rvExpect.MapIndex(key).Interface() {
+                        panic(fmt.Sprintf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`,
+                            key,
+                            rvValue.MapIndex(key).Interface(),
+                            rvExpect.MapIndex(key).Interface(),
+                        ))
+                    }
+                }
+            } else {
+                panic(fmt.Sprintf(`[ASSERT] EXPECT MAP LENGTH %d == %d`, rvExpect.Len(), rvValue.Len()))
+            }
+        } else {
+            panic(fmt.Sprint(`[ASSERT] EXPECT VALUE TO BE A MAP`))
         }
     }
     if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
@@ -77,9 +90,9 @@ func AssertEQ(value, expect interface{}) {
 
 // 断言判断, 不相等
 func AssertNE(value, expect interface{}) {
-    rv := reflect.ValueOf(value)
-    if rv.Kind() == reflect.Ptr {
-        if rv.IsNil() {
+    rvValue := reflect.ValueOf(value)
+    if rvValue.Kind() == reflect.Ptr {
+        if rvValue.IsNil() {
             value = nil
         }
     }
@@ -218,6 +231,38 @@ func Fatal(message...interface{}) {
     glog.To(os.Stderr).Println(`[FATAL]`, fmt.Sprint(message...))
     glog.Header(false).PrintBacktrace(1)
     os.Exit(1)
+}
+
+// Map比较，如果相等返回nil，否则返回错误信息.
+func compareMap(value, expect interface{}) error {
+    rvValue  := reflect.ValueOf(value)
+    rvExpect := reflect.ValueOf(expect)
+    if rvValue.Kind() == reflect.Ptr {
+        if rvValue.IsNil() {
+            value = nil
+        }
+    }
+    if rvExpect.Kind() == reflect.Map {
+        if rvValue.Kind() == reflect.Map {
+            if rvExpect.Len() == rvValue.Len() {
+                ksExpect := rvExpect.MapKeys()
+                for _, key := range ksExpect {
+                    if rvValue.MapIndex(key).Interface() != rvExpect.MapIndex(key).Interface() {
+                        return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`,
+                            key,
+                            rvValue.MapIndex(key).Interface(),
+                            rvExpect.MapIndex(key).Interface(),
+                        )
+                    }
+                }
+            } else {
+                return fmt.Errorf(`[ASSERT] EXPECT MAP LENGTH %d == %d`, rvExpect.Len(), rvValue.Len())
+            }
+        } else {
+            return fmt.Errorf(`[ASSERT] EXPECT VALUE TO BE A MAP`)
+        }
+    }
+    return nil
 }
 
 // 获取文件调用回溯字符串，参数skip表示调用端往上多少级开始回溯

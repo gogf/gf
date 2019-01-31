@@ -1,10 +1,10 @@
 package main
 
 import (
-    "fmt"
-    "gitee.com/johng/gf/g/string/gstr"
+    "gitee.com/johng/gf/g/os/gspath"
+    "gitee.com/johng/gf/g/util/gutil"
 )
 
 func main() {
-    fmt.Println(gstr.PosI("abcdEfg", "eF", 0))
+    gutil.Dump(gspath.Get("/Users/john/Temp/config").AllPaths())
 }
