@@ -11,7 +11,6 @@ package gtest
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/util/gconv"
     "os"
     "reflect"
@@ -218,14 +217,12 @@ func AssertNI(value, expect interface{}) {
 
 // 提示错误不退出
 func Error(message...interface{}) {
-    glog.To(os.Stderr).Println(`[ERROR]`, fmt.Sprint(message...))
-    glog.Header(false).PrintBacktrace(1)
+    fmt.Fprintf(os.Stderr, "[ERROR] %s\n%s", fmt.Sprint(message...), getBacktrace())
 }
 
 // 提示错误并退出
 func Fatal(message...interface{}) {
-    glog.To(os.Stderr).Println(`[FATAL]`, fmt.Sprint(message...))
-    glog.Header(false).PrintBacktrace(1)
+    fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), getBacktrace())
     os.Exit(1)
 }
 

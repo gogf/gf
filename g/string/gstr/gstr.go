@@ -71,11 +71,15 @@ func LcFirst(s string) string {
 }
 
 // Uppercase the first character of each word in a string.
+//
+// 大写字符串中每个单词的第一个字符。
 func UcWords(str string) string {
     return strings.Title(str)
 }
 
-// 便利数组查找字符串索引位置，如果不存在则返回-1，使用完整遍历查找
+// Traverse the array to find the string index position, if not exist, return-1.
+//
+// 遍历数组查找字符串索引位置，如果不存在则返回-1，使用完整遍历查找.
 func SearchArray (a []string, s string) int {
     for i, v := range a {
         if s == v {
@@ -172,6 +176,9 @@ func Reverse(str string) string {
 // decimals: Sets the number of decimal points.
 // decPoint: Sets the separator for the decimal point.
 // thousandsSep: Sets the thousands separator.
+// See http://php.net/manual/en/function.number-format.php.
+//
+// 以千位分隔符方式格式化一个数字.
 func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) string {
     neg := false
     if number < 0 {
@@ -214,18 +221,24 @@ func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) s
 }
 
 // Split a string into smaller chunks.
-func ChunkSplit(body string, chunkLen uint, end string) string {
+// Can be used to split a string into smaller chunks which is useful for
+// e.g. converting BASE64 string output to match RFC 2045 semantics.
+// It inserts end every chunkLen characters.
+//
+// 将字符串分割成小块。使用此函数将字符串分割成小块非常有用。
+// 例如将BASE64的输出转换成符合RFC2045语义的字符串。
+// 它会在每 chunkLen 个字符后边插入 end。
+func ChunkSplit(body string, chunkLen int, end string) string {
     if end == "" {
         end = "\r\n"
     }
     runes, endRunes := []rune(body), []rune(end)
-    l := uint(len(runes))
+    l := len(runes)
     if l <= 1 || l < chunkLen {
         return body + end
     }
     ns := make([]rune, 0, len(runes) + len(endRunes))
-    var i uint
-    for i = 0; i < l; i += chunkLen {
+    for i := 0; i < l; i += chunkLen {
         if i + chunkLen > l {
             ns = append(ns, runes[i : ]...)
         } else {
@@ -242,26 +255,27 @@ func WordCount(str string) []string {
 }
 
 // Wraps a string to a given number of characters.
-func WordWrap(str string, width uint, br string) string {
+// TODO: Enable cut param, see http://php.net/manual/en/function.wordwrap.php.
+func WordWrap(str string, width int, br string) string {
     if br == "" {
         br = "\n"
     }
     init := make([]byte, 0, len(str))
     buf := bytes.NewBuffer(init)
-    var current uint
+    var current int
     var wordBuf, spaceBuf bytes.Buffer
     for _, char := range str {
         if char == '\n' {
             if wordBuf.Len() == 0 {
-                if current+uint(spaceBuf.Len()) > width {
+                if current + spaceBuf.Len() > width {
                     current = 0
                 } else {
-                    current += uint(spaceBuf.Len())
+                    current += spaceBuf.Len()
                     spaceBuf.WriteTo(buf)
                 }
                 spaceBuf.Reset()
             } else {
-                current += uint(spaceBuf.Len() + wordBuf.Len())
+                current += spaceBuf.Len() + wordBuf.Len()
                 spaceBuf.WriteTo(buf)
                 spaceBuf.Reset()
                 wordBuf.WriteTo(buf)
@@ -271,7 +285,7 @@ func WordWrap(str string, width uint, br string) string {
             current = 0
         } else if unicode.IsSpace(char) {
             if spaceBuf.Len() == 0 || wordBuf.Len() > 0 {
-                current += uint(spaceBuf.Len() + wordBuf.Len())
+                current += spaceBuf.Len() + wordBuf.Len()
                 spaceBuf.WriteTo(buf)
                 spaceBuf.Reset()
                 wordBuf.WriteTo(buf)
@@ -280,7 +294,7 @@ func WordWrap(str string, width uint, br string) string {
             spaceBuf.WriteRune(char)
         } else {
             wordBuf.WriteRune(char)
-            if current+uint(spaceBuf.Len()+wordBuf.Len()) > width && uint(wordBuf.Len()) < width {
+            if current + spaceBuf.Len()+wordBuf.Len() > width && wordBuf.Len() < width {
                 buf.WriteString(br)
                 current = 0
                 spaceBuf.Reset()
@@ -289,7 +303,7 @@ func WordWrap(str string, width uint, br string) string {
     }
 
     if wordBuf.Len() == 0 {
-        if current+uint(spaceBuf.Len()) <= width {
+        if current + spaceBuf.Len() <= width {
             spaceBuf.WriteTo(buf)
         }
     } else {
@@ -311,6 +325,8 @@ func Repeat(input string, multiplier int) string {
 
 // Returns part of haystack string starting from and including the first occurrence of needle to the end of haystack.
 // See http://php.net/manual/en/function.strstr.php.
+//
+// 查找字符串的首次出现。返回 haystack 字符串从 needle 第一次出现的位置开始到 haystack 结尾的字符串。
 func Str(haystack string, needle string) string {
     if needle == "" {
         return ""
@@ -328,6 +344,9 @@ func Str(haystack string, needle string) string {
 // Tr("baab", map[string]string{"ab": "01"}) will return "ba01".
 // If the params length is 2, type is: string, string
 // Tr("baab", "ab", "01") will return "1001", a => 0; b => 1.
+// See http://php.net/manual/en/function.strtr.php.
+//
+// 转换或者替换指定字符。
 func Tr(haystack string, params ...interface{}) string {
     ac := len(params)
     if ac == 1 {
@@ -389,6 +408,8 @@ func Tr(haystack string, params ...interface{}) string {
 }
 
 // Randomly shuffles a string.
+//
+// 将字符串打乱。
 func Shuffle(str string) string {
     runes := []rune(str)
     s     := make([]rune, len(runes))
@@ -399,21 +420,23 @@ func Shuffle(str string) string {
 }
 
 // Strip whitespace (or other characters) from the beginning and end of a string.
+//
+// 去除字符串首尾处的空白字符（或者其他字符）。
 func Trim(str string, characterMask ...string) string {
-    mask := ""
-    if len(characterMask) == 0 {
-        mask = " \\t\\n\\r\\0\\x0B"
+    if len(characterMask) > 0 {
+        return strings.Trim(str, characterMask[0])
     } else {
-        mask = characterMask[0]
+        return strings.TrimSpace(str)
     }
-    return strings.Trim(str, mask)
 }
 
 // Strip whitespace (or other characters) from the beginning of a string.
+//
+// 去除字符串首的空白字符（或者其他字符）。
 func TrimLeft(str string, characterMask ...string) string {
     mask := ""
     if len(characterMask) == 0 {
-        mask = " \\t\\n\\r\\0\\x0B"
+        mask = string([]byte{'\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0})
     } else {
         mask = characterMask[0]
     }
@@ -421,33 +444,45 @@ func TrimLeft(str string, characterMask ...string) string {
 }
 
 // Strip whitespace (or other characters) from the end of a string.
+//
+// 去除字符串尾的空白字符（或者其他字符）。
 func TrimRight(str string, characterMask ...string) string {
     mask := ""
     if len(characterMask) == 0 {
-        mask = " \\t\\n\\r\\0\\x0B"
+        mask = string([]byte{'\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0})
     } else {
         mask = characterMask[0]
     }
     return strings.TrimRight(str, mask)
 }
 
-// Split a string by a string.
+// Split a string by a string, to an array.
+//
+// 此函数返回由字符串组成的数组，每个元素都是 str 的一个子串，它们被字符串 delimiter 作为边界点分割出来。
 func Split(str, delimiter string) []string {
     return strings.Split(str, delimiter)
 }
 
 // Join concatenates the elements of a to create a single string. The separator string
 // sep is placed between elements in the resulting string.
+//
+// 用sep将字符串数组array连接为一个字符串。
 func Join(array []string, sep string) string {
     return strings.Join(array, sep)
 }
 
-// Split a string by a string.
+// Split a string by a string, to an array.
+// See http://php.net/manual/en/function.explode.php.
+//
+// 此函数返回由字符串组成的数组，每个元素都是 str 的一个子串，它们被字符串 delimiter 作为边界点分割出来。
 func Explode(delimiter, str string) []string {
     return Split(str, delimiter)
 }
 
 // Join array elements with a string.
+// http://php.net/manual/en/function.implode.php
+//
+// 用glue将字符串数组pieces连接为一个字符串。
 func Implode(glue string, pieces []string) string {
     var buf bytes.Buffer
     l := len(pieces)
@@ -461,14 +496,17 @@ func Implode(glue string, pieces []string) string {
 }
 
 // Generate a single-byte string from a number.
+//
+// 返回相对应于 ascii 所指定的单个字符。
 func Chr(ascii int) string {
     return string(ascii)
 }
 
 // Convert the first byte of a string to a value between 0 and 255.
+//
+// 解析 char 二进制值第一个字节为 0 到 255 范围的无符号整型类型。
 func Ord(char string) int {
-    r, _ := utf8.DecodeRune([]byte(char))
-    return int(r)
+    return int(char[0])
 }
 
 // 按照百分比从字符串中间向两边隐藏字符(主要用于姓名、手机号、邮箱地址、身份证号等的隐藏)，支持utf-8中文，支持email格式。
@@ -499,6 +537,8 @@ func HideStr(str string, percent int, hide string) string {
 
 // Inserts HTML line breaks before all newlines in a string.
 // \n\r, \r\n, \r, \n
+//
+// 在字符串 string 所有新行之前插入 '<br />' 或 '<br>'，并返回。
 func Nl2Br(str string, isXhtml...bool) string {
     r, n, runes := '\r', '\n', []rune(str)
     var br []byte
@@ -531,12 +571,14 @@ func Nl2Br(str string, isXhtml...bool) string {
 }
 
 // Quote string with slashes.
+//
+// 转义字符串中的单引号（'）、双引号（"）、反斜线（\）与 NUL（NULL 字符）。
 func AddSlashes(str string) string {
     var buf bytes.Buffer
     for _, char := range str {
         switch char {
-        case '\'', '"', '\\':
-            buf.WriteRune('\\')
+            case '\'', '"', '\\':
+                buf.WriteRune('\\')
         }
         buf.WriteRune(char)
     }
@@ -544,6 +586,8 @@ func AddSlashes(str string) string {
 }
 
 // Un-quotes a quoted string.
+//
+// 反转义字符串。
 func StripSlashes(str string) string {
     var buf bytes.Buffer
     l, skip := len(str), false
@@ -551,7 +595,7 @@ func StripSlashes(str string) string {
         if skip {
             skip = false
         } else if char == '\\' {
-            if i+1 < l && str[i+1] == '\\' {
+            if i + 1 < l && str[i + 1] == '\\' {
                 skip = true
             }
             continue
@@ -563,6 +607,8 @@ func StripSlashes(str string) string {
 
 // Returns a version of str with a backslash character (\) before every character that is among:
 // .\+*?[^]($)
+//
+// 转义字符串，转义的特殊字符包括：.\+*?[^]($)。
 func QuoteMeta(str string) string {
     var buf bytes.Buffer
     for _, char := range str {

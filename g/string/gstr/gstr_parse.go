@@ -15,6 +15,8 @@ import (
 // f[][]=m&f[][]=n -> map[f:[map[]]] // Currently does not support nested slice.
 // f=m&f[a]=n -> error // This is not the same as PHP.
 // a .[[b=c -> map[a___[b:c]
+//
+// 将字符串解析成Map。
 func Parse(encodedString string, result map[string]interface{}) error {
     // build nested map.
     var build func(map[string]interface{}, []string, interface{}) error

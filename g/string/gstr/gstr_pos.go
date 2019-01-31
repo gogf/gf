@@ -3,8 +3,14 @@ package gstr
 import "strings"
 
 // Find the position of the first occurrence of a substring in a string.
-func Pos(haystack, needle string, offset int) int {
+//
+// 返回 needle 在 haystack 中首次出现的数字位置。
+func Pos(haystack, needle string, startOffset...int) int {
     length := len(haystack)
+    offset := 0
+    if len(startOffset) > 0 {
+        offset = startOffset[0]
+    }
     if length == 0 || offset > length || -offset > length {
         return -1
     }
@@ -12,7 +18,7 @@ func Pos(haystack, needle string, offset int) int {
     if offset < 0 {
         offset += length
     }
-    pos := strings.Index(haystack[offset:], needle)
+    pos := strings.Index(haystack[offset : ], needle)
     if pos == -1 {
         return -1
     }
@@ -20,13 +26,19 @@ func Pos(haystack, needle string, offset int) int {
 }
 
 // Find the position of the first occurrence of a case-insensitive substring in a string.
-func PosI(haystack, needle string, offset int) int {
+//
+// 返回在字符串 haystack 中 needle 首次出现的数字位置（不区分大小写）。
+func PosI(haystack, needle string, startOffset...int) int {
     length := len(haystack)
+    offset := 0
+    if len(startOffset) > 0 {
+        offset = startOffset[0]
+    }
     if length == 0 || offset > length || -offset > length {
         return -1
     }
 
-    haystack = haystack[offset:]
+    haystack = haystack[offset : ]
     if offset < 0 {
         offset += length
     }
@@ -38,16 +50,22 @@ func PosI(haystack, needle string, offset int) int {
 }
 
 // Find the position of the last occurrence of a substring in a string.
-func PosR(haystack, needle string, offset int) int {
+//
+// 查找指定字符串在目标字符串中最后一次出现的位置。
+func PosR(haystack, needle string, startOffset...int) int {
+    offset := 0
+    if len(startOffset) > 0 {
+        offset = startOffset[0]
+    }
     pos, length := 0, len(haystack)
     if length == 0 || offset > length || -offset > length {
         return -1
     }
 
     if offset < 0 {
-        haystack = haystack[:offset+length+1]
+        haystack = haystack[ : offset + length + 1]
     } else {
-        haystack = haystack[offset:]
+        haystack = haystack[offset : ]
     }
     pos = strings.LastIndex(haystack, needle)
     if offset > 0 && pos != -1 {
@@ -57,7 +75,13 @@ func PosR(haystack, needle string, offset int) int {
 }
 
 // Find the position of the last occurrence of a case-insensitive substring in a string.
-func PosRI(haystack, needle string, offset int) int {
+//
+// 以不区分大小写的方式查找指定字符串在目标字符串中最后一次出现的位置。
+func PosRI(haystack, needle string, startOffset...int) int {
+    offset := 0
+    if len(startOffset) > 0 {
+        offset = startOffset[0]
+    }
     pos, length := 0, len(haystack)
     if length == 0 || offset > length || -offset > length {
         return -1
