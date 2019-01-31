@@ -139,8 +139,8 @@ func (set *StringSet) Equal(other *StringSet) bool {
 	return true
 }
 
-// 判断other集合是否为当前集合的子集.
-func (set *StringSet) IsSubset(other *StringSet) bool {
+// 判断当前集合是否为other集合的子集.
+func (set *StringSet) IsSubsetOf(other *StringSet) bool {
 	if set == other {
 		return true
 	}
@@ -148,11 +148,8 @@ func (set *StringSet) IsSubset(other *StringSet) bool {
 	defer set.mu.RUnlock()
 	other.mu.RLock()
 	defer other.mu.RUnlock()
-	if len(set.m) != len(other.m) {
-		return false
-	}
-	for key := range other.m {
-		if _, ok := set.m[key]; !ok {
+	for key := range set.m {
+		if _, ok := other.m[key]; !ok {
 			return false
 		}
 	}
@@ -216,6 +213,7 @@ func (set *StringSet) Inter(other *StringSet) (newSet *StringSet) {
 }
 
 // 补集, 返回新的集合: (前提: set应当为full的子集)属于全集full不属于集合set的元素组成的集合.
+// 如果给定的full集合不是set的全集时，返回full与set的差集.
 func (set *StringSet) Complement(full *StringSet) (newSet *StringSet) {
 	newSet = NewStringSet(true)
 	set.mu.RLock()

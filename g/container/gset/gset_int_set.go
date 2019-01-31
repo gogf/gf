@@ -92,8 +92,8 @@ func (set *IntSet) Slice() []int {
 	set.mu.RLock()
 	ret := make([]int, len(set.m))
 	i := 0
-	for item := range set.m {
-		ret[i] = item
+	for k, _ := range set.m {
+		ret[i] = k
 		i++
 	}
 	set.mu.RUnlock()
@@ -139,8 +139,8 @@ func (set *IntSet) Equal(other *IntSet) bool {
 	return true
 }
 
-// 判断other集合是否为当前集合的子集.
-func (set *IntSet) IsSubset(other *IntSet) bool {
+// 判断当前集合是否为other集合的子集.
+func (set *IntSet) IsSubsetOf(other *IntSet) bool {
     if set == other {
         return true
     }
@@ -148,11 +148,8 @@ func (set *IntSet) IsSubset(other *IntSet) bool {
     defer set.mu.RUnlock()
     other.mu.RLock()
     defer other.mu.RUnlock()
-    if len(set.m) != len(other.m) {
-        return false
-    }
-    for key := range other.m {
-        if _, ok := set.m[key]; !ok {
+    for key := range set.m {
+        if _, ok := other.m[key]; !ok {
             return false
         }
     }
@@ -216,6 +213,7 @@ func (set *IntSet) Inter(other *IntSet) (newSet *IntSet) {
 }
 
 // 补集, 返回新的集合: (前提: set应当为full的子集)属于全集full不属于集合set的元素组成的集合.
+// 如果给定的full集合不是set的全集时，返回full与set的差集.
 func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
     newSet = NewIntSet(true)
     set.mu.RLock()

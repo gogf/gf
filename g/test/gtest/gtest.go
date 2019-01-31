@@ -33,14 +33,18 @@ func Case(t *testing.T, f func()) {
 
 // 断言判断, 相等
 func Assert(value, expect interface{}) {
-    rvValue := reflect.ValueOf(value)
+    rvValue  := reflect.ValueOf(value)
+    rvExpect := reflect.ValueOf(expect)
     if rvValue.Kind() == reflect.Ptr {
         if rvValue.IsNil() {
             value = nil
         }
     }
-    if err := compareMap(value, expect); err != nil {
-        panic(err)
+    if rvExpect.Kind() == reflect.Map {
+        if err := compareMap(value, expect); err != nil {
+            panic(err)
+        }
+        return
     }
     if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
@@ -62,26 +66,11 @@ func AssertEQ(value, expect interface{}) {
             value = nil
         }
     }
-    // map类型比较
     if rvExpect.Kind() == reflect.Map {
-        if rvValue.Kind() == reflect.Map {
-            if rvExpect.Len() == rvValue.Len() {
-                ksExpect := rvExpect.MapKeys()
-                for _, key := range ksExpect {
-                    if rvValue.MapIndex(key).Interface() != rvExpect.MapIndex(key).Interface() {
-                        panic(fmt.Sprintf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`,
-                            key,
-                            rvValue.MapIndex(key).Interface(),
-                            rvExpect.MapIndex(key).Interface(),
-                        ))
-                    }
-                }
-            } else {
-                panic(fmt.Sprintf(`[ASSERT] EXPECT MAP LENGTH %d == %d`, rvExpect.Len(), rvValue.Len()))
-            }
-        } else {
-            panic(fmt.Sprint(`[ASSERT] EXPECT VALUE TO BE A MAP`))
+        if err := compareMap(value, expect); err != nil {
+            panic(err)
         }
+        return
     }
     if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
@@ -90,11 +79,18 @@ func AssertEQ(value, expect interface{}) {
 
 // 断言判断, 不相等
 func AssertNE(value, expect interface{}) {
-    rvValue := reflect.ValueOf(value)
+    rvValue  := reflect.ValueOf(value)
+    rvExpect := reflect.ValueOf(expect)
     if rvValue.Kind() == reflect.Ptr {
         if rvValue.IsNil() {
             value = nil
         }
+    }
+    if rvExpect.Kind() == reflect.Map {
+        if err := compareMap(value, expect); err == nil {
+            panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, value, expect))
+        }
+        return
     }
     if fmt.Sprintf("%v", value) == fmt.Sprintf("%v", expect) {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, value, expect))

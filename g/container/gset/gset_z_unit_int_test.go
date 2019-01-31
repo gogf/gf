@@ -15,11 +15,11 @@ import (
     "testing"
 )
 
-func TestSet_Basic(t *testing.T) {
+func TestIntSet_Basic(t *testing.T) {
     gtest.Case(t, func() {
-        s := gset.NewSet()
+        s := gset.NewIntSet()
         s.Add(1).Add(1).Add(2)
-        s.BatchAdd([]interface{}{3,4})
+        s.BatchAdd([]int{3,4})
         gtest.Assert(s.Size(), 4)
         gtest.AssertIN(1, s.Slice())
         gtest.AssertIN(2, s.Slice())
@@ -35,19 +35,19 @@ func TestSet_Basic(t *testing.T) {
     })
 }
 
-func TestSet_Iterator(t *testing.T) {
+func TestIntSet_Iterator(t *testing.T) {
     gtest.Case(t, func() {
-        s := gset.NewSet()
+        s := gset.NewIntSet()
         s.Add(1).Add(2).Add(3)
         gtest.Assert(s.Size(), 3)
 
         a1 := garray.New(0, 0)
         a2 := garray.New(0, 0)
-        s.Iterator(func(v interface{}) bool {
+        s.Iterator(func(v int) bool {
             a1.Append(1)
             return false
         })
-        s.Iterator(func(v interface{}) bool {
+        s.Iterator(func(v int) bool {
             a2.Append(1)
             return true
         })
@@ -56,17 +56,17 @@ func TestSet_Iterator(t *testing.T) {
     })
 }
 
-func TestSet_LockFunc(t *testing.T) {
+func TestIntSet_LockFunc(t *testing.T) {
     gtest.Case(t, func() {
-        s := gset.NewSet()
+        s := gset.NewIntSet()
         s.Add(1).Add(2).Add(3)
         gtest.Assert(s.Size(), 3)
-        s.LockFunc(func(m map[interface{}]struct{}) {
+        s.LockFunc(func(m map[int]struct{}) {
             delete(m, 1)
         })
         gtest.Assert(s.Size(), 2)
-        s.RLockFunc(func(m map[interface{}]struct{}) {
-            gtest.Assert(m, map[interface{}]struct{}{
+        s.RLockFunc(func(m map[int]struct{}) {
+            gtest.Assert(m, map[int]struct{}{
                 3 : struct{}{},
                 2 : struct{}{},
             })
@@ -74,11 +74,11 @@ func TestSet_LockFunc(t *testing.T) {
     })
 }
 
-func TestSet_Equal(t *testing.T) {
+func TestIntSet_Equal(t *testing.T) {
     gtest.Case(t, func() {
-        s1 := gset.NewSet()
-        s2 := gset.NewSet()
-        s3 := gset.NewSet()
+        s1 := gset.NewIntSet()
+        s2 := gset.NewIntSet()
+        s3 := gset.NewIntSet()
         s1.Add(1).Add(2).Add(3)
         s2.Add(1).Add(2).Add(3)
         s3.Add(1).Add(2).Add(3).Add(4)
@@ -87,11 +87,11 @@ func TestSet_Equal(t *testing.T) {
     })
 }
 
-func TestSet_IsSubsetOf(t *testing.T) {
+func TestIntSet_IsSubsetOf(t *testing.T) {
     gtest.Case(t, func() {
-        s1 := gset.NewSet()
-        s2 := gset.NewSet()
-        s3 := gset.NewSet()
+        s1 := gset.NewIntSet()
+        s2 := gset.NewIntSet()
+        s3 := gset.NewIntSet()
         s1.Add(1).Add(2)
         s2.Add(1).Add(2).Add(3)
         s3.Add(1).Add(2).Add(3).Add(4)
@@ -103,10 +103,10 @@ func TestSet_IsSubsetOf(t *testing.T) {
     })
 }
 
-func TestSet_Union(t *testing.T) {
+func TestIntSet_Union(t *testing.T) {
     gtest.Case(t, func() {
-        s1 := gset.NewSet()
-        s2 := gset.NewSet()
+        s1 := gset.NewIntSet()
+        s2 := gset.NewIntSet()
         s1.Add(1).Add(2)
         s2.Add(3).Add(4)
         s3 := s1.Union(s2)
@@ -117,10 +117,10 @@ func TestSet_Union(t *testing.T) {
     })
 }
 
-func TestSet_Diff(t *testing.T) {
+func TestIntSet_Diff(t *testing.T) {
     gtest.Case(t, func() {
-        s1 := gset.NewSet()
-        s2 := gset.NewSet()
+        s1 := gset.NewIntSet()
+        s2 := gset.NewIntSet()
         s1.Add(1).Add(2).Add(3)
         s2.Add(3).Add(4).Add(5)
         s3 := s1.Diff(s2)
@@ -131,10 +131,10 @@ func TestSet_Diff(t *testing.T) {
     })
 }
 
-func TestSet_Inter(t *testing.T) {
+func TestIntSet_Inter(t *testing.T) {
     gtest.Case(t, func() {
-        s1 := gset.NewSet()
-        s2 := gset.NewSet()
+        s1 := gset.NewIntSet()
+        s2 := gset.NewIntSet()
         s1.Add(1).Add(2).Add(3)
         s2.Add(3).Add(4).Add(5)
         s3 := s1.Inter(s2)
@@ -145,10 +145,10 @@ func TestSet_Inter(t *testing.T) {
     })
 }
 
-func TestSet_Complement(t *testing.T) {
+func TestIntSet_Complement(t *testing.T) {
     gtest.Case(t, func() {
-        s1 := gset.NewSet()
-        s2 := gset.NewSet()
+        s1 := gset.NewIntSet()
+        s2 := gset.NewIntSet()
         s1.Add(1).Add(2).Add(3)
         s2.Add(3).Add(4).Add(5)
         s3 := s1.Complement(s2)
