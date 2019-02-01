@@ -128,7 +128,7 @@ func Test_Params(t *testing.T) {
         gtest.Assert(client.PostContent("/post", "float64=0.22"),    `0.22`)
         gtest.Assert(client.PostContent("/post", "int=-10000"),      `-10000`)
         gtest.Assert(client.PostContent("/post", "int=10000"),       `10000`)
-        gtest.Assert(client.PostContent("/post", "uint=-10000"),     `10000`)
+        gtest.Assert(client.PostContent("/post", "uint=10000"),      `10000`)
         gtest.Assert(client.PostContent("/post", "uint=9"),          `9`)
         gtest.Assert(client.PostContent("/post", "string=key"),      `key`)
 
