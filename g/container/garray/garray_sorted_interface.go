@@ -34,6 +34,10 @@ func NewSortedArray(cap int, compareFunc func(v1, v2 interface{}) int, unsafe...
     }
 }
 
+func NewSortedArrayEmpty(compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+    return NewSortedArray(0, compareFunc, unsafe...)
+}
+
 func NewSortedArrayFrom(array []interface{}, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     a := NewSortedArray(0, compareFunc, unsafe...)
     a.array = array
@@ -55,7 +59,7 @@ func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 }
 
 // 将数组重新排序(从小到大).
-func (a *SortedArray) Sort() *SortedArray {
+func (a *SortedArray) Sort(reverse...bool) *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
     sort.Slice(a.array, func(i, j int) bool {
@@ -136,6 +140,18 @@ func (a *SortedArray) PopRight() interface{} {
     value  := a.array[index]
     a.array = a.array[: index]
     return value
+}
+
+// Calculate the sum of values in an array.
+//
+// 对数组中的元素项求和(将元素值转换为int类型后叠加)。
+func (a *SortedArray) Sum() (sum int) {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    for _, v := range a.array {
+        sum += gconv.Int(v)
+    }
+    return
 }
 
 // 数组长度

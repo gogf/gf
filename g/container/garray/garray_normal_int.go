@@ -36,6 +36,10 @@ func NewIntArray(size int, cap int, unsafe...bool) *IntArray {
 	return a
 }
 
+func NewIntArrayEmpty(unsafe...bool) *IntArray {
+    return NewIntArray(0, 0, unsafe...)
+}
+
 func NewIntArrayFrom(array []int, unsafe...bool) *IntArray {
 	return &IntArray{
         mu    : rwmutex.New(unsafe...),
@@ -65,6 +69,32 @@ func (a *IntArray) SetArray(array []int) *IntArray {
     defer a.mu.Unlock()
     a.array = array
     return a
+}
+
+// 使用指定数组替换到对应的索引元素值.
+func (a *IntArray) Replace(array []int) *IntArray {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    max := len(array)
+    if max > len(a.array) {
+        max = len(a.array)
+    }
+    for i := 0; i < max; i++ {
+        a.array[i] = array[i]
+    }
+    return a
+}
+
+// Calculate the sum of values in an array.
+//
+// 对数组中的元素项求和。
+func (a *IntArray) Sum() (sum int) {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    for _, v := range a.array {
+        sum += v
+    }
+    return
 }
 
 // 将数组重新排序(从小到大).

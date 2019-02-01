@@ -156,74 +156,86 @@ func (set *StringSet) IsSubsetOf(other *StringSet) bool {
 	return true
 }
 
-// 并集, 返回新的集合：属于set或属于other的元素为元素的集合.
-func (set *StringSet) Union(other *StringSet) (newSet *StringSet) {
-	newSet = NewStringSet(true)
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	if set != other {
-		other.mu.RLock()
-		defer other.mu.RUnlock()
-	}
-	for k, v := range set.m {
-		newSet.m[k] = v
-	}
-	if set != other {
-		for k, v := range other.m {
-			newSet.m[k] = v
-		}
-	}
-	return
+// 并集, 返回新的集合：属于set或属于others的元素为元素的集合.
+func (set *StringSet) Union(others ... *StringSet) (newSet *StringSet) {
+    newSet = NewStringSet(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    for _, other := range others {
+        if set != other {
+            other.mu.RLock()
+        }
+        for k, v := range set.m {
+            newSet.m[k] = v
+        }
+        if set != other {
+            for k, v := range other.m {
+                newSet.m[k] = v
+            }
+        }
+        if set != other {
+            other.mu.RUnlock()
+        }
+    }
+
+    return
 }
 
-// 差集, 返回新的集合: 属于set且不属于other的元素为元素的集合.
-func (set *StringSet) Diff(other *StringSet) (newSet *StringSet) {
-	newSet = NewStringSet(true)
-	if set == other {
-		return newSet
-	}
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	other.mu.RLock()
-	defer other.mu.RUnlock()
-
-	for k, v := range set.m {
-		if _, ok := other.m[k]; !ok {
-			newSet.m[k] = v
-		}
-	}
-	return
+// 差集, 返回新的集合: 属于set且不属于others的元素为元素的集合.
+func (set *StringSet) Diff(others...*StringSet) (newSet *StringSet) {
+    newSet = NewStringSet(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    for _, other := range others {
+        if set == other {
+            continue
+        }
+        other.mu.RLock()
+        for k, v := range set.m {
+            if _, ok := other.m[k]; !ok {
+                newSet.m[k] = v
+            }
+        }
+        other.mu.RUnlock()
+    }
+    return
 }
 
-// 交集, 返回新的集合: 属于set且属于other的元素为元素的集合.
-func (set *StringSet) Inter(other *StringSet) (newSet *StringSet) {
-	newSet = NewStringSet(true)
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	if set != other {
-		other.mu.RLock()
-		defer other.mu.RUnlock()
-	}
-	for k, v := range set.m {
-		if _, ok := other.m[k]; ok {
-			newSet.m[k] = v
-		}
-	}
-	return
+// 交集, 返回新的集合: 属于set且属于others的元素为元素的集合.
+func (set *StringSet) Intersect(others...*StringSet) (newSet *StringSet) {
+    newSet = NewStringSet(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    for _, other := range others {
+        if set != other {
+            other.mu.RLock()
+        }
+        for k, v := range set.m {
+            if _, ok := other.m[k]; ok {
+                newSet.m[k] = v
+            }
+        }
+        if set != other {
+            other.mu.RUnlock()
+        }
+    }
+    return
 }
 
 // 补集, 返回新的集合: (前提: set应当为full的子集)属于全集full不属于集合set的元素组成的集合.
 // 如果给定的full集合不是set的全集时，返回full与set的差集.
 func (set *StringSet) Complement(full *StringSet) (newSet *StringSet) {
-	newSet = NewStringSet(true)
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	full.mu.RLock()
-	defer full.mu.RUnlock()
-	for k, v := range full.m {
-		if _, ok := set.m[k]; !ok {
-			newSet.m[k] = v
-		}
-	}
-	return
+    newSet = NewStringSet(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    if set != full {
+        full.mu.RLock()
+        defer full.mu.RUnlock()
+    }
+    for k, v := range full.m {
+        if _, ok := set.m[k]; !ok {
+            newSet.m[k] = v
+        }
+    }
+    return
 }

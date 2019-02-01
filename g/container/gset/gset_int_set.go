@@ -156,57 +156,67 @@ func (set *IntSet) IsSubsetOf(other *IntSet) bool {
     return true
 }
 
-// 并集, 返回新的集合：属于set或属于other的元素为元素的集合.
-func (set *IntSet) Union(other *IntSet) (newSet *IntSet) {
+// 并集, 返回新的集合：属于set或属于others的元素为元素的集合.
+func (set *IntSet) Union(others ... *IntSet) (newSet *IntSet) {
     newSet = NewIntSet(true)
     set.mu.RLock()
     defer set.mu.RUnlock()
-    if set != other {
-        other.mu.RLock()
-        defer other.mu.RUnlock()
-    }
-    for k, v := range set.m {
-        newSet.m[k] = v
-    }
-    if set != other {
-        for k, v := range other.m {
+    for _, other := range others {
+        if set != other {
+            other.mu.RLock()
+        }
+        for k, v := range set.m {
             newSet.m[k] = v
         }
+        if set != other {
+            for k, v := range other.m {
+                newSet.m[k] = v
+            }
+        }
+        if set != other {
+            other.mu.RUnlock()
+        }
+    }
+
+    return
+}
+
+// 差集, 返回新的集合: 属于set且不属于others的元素为元素的集合.
+func (set *IntSet) Diff(others...*IntSet) (newSet *IntSet) {
+    newSet = NewIntSet(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
+    for _, other := range others {
+        if set == other {
+            continue
+        }
+        other.mu.RLock()
+        for k, v := range set.m {
+            if _, ok := other.m[k]; !ok {
+                newSet.m[k] = v
+            }
+        }
+        other.mu.RUnlock()
     }
     return
 }
 
-// 差集, 返回新的集合: 属于set且不属于other的元素为元素的集合.
-func (set *IntSet) Diff(other *IntSet) (newSet *IntSet) {
+// 交集, 返回新的集合: 属于set且属于others的元素为元素的集合.
+func (set *IntSet) Intersect(others...*IntSet) (newSet *IntSet) {
     newSet = NewIntSet(true)
-    if set == other {
-        return newSet
-    }
     set.mu.RLock()
     defer set.mu.RUnlock()
-    other.mu.RLock()
-    defer other.mu.RUnlock()
-
-    for k, v := range set.m {
-        if _, ok := other.m[k]; !ok {
-            newSet.m[k] = v
+    for _, other := range others {
+        if set != other {
+            other.mu.RLock()
         }
-    }
-    return
-}
-
-// 交集, 返回新的集合: 属于set且属于other的元素为元素的集合.
-func (set *IntSet) Inter(other *IntSet) (newSet *IntSet) {
-    newSet = NewIntSet(true)
-    set.mu.RLock()
-    defer set.mu.RUnlock()
-    if set != other {
-        other.mu.RLock()
-        defer other.mu.RUnlock()
-    }
-    for k, v := range set.m {
-        if _, ok := other.m[k]; ok {
-            newSet.m[k] = v
+        for k, v := range set.m {
+            if _, ok := other.m[k]; ok {
+                newSet.m[k] = v
+            }
+        }
+        if set != other {
+            other.mu.RUnlock()
         }
     }
     return
@@ -218,8 +228,10 @@ func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
     newSet = NewIntSet(true)
     set.mu.RLock()
     defer set.mu.RUnlock()
-    full.mu.RLock()
-    defer full.mu.RUnlock()
+    if set != full {
+        full.mu.RLock()
+        defer full.mu.RUnlock()
+    }
     for k, v := range full.m {
         if _, ok := set.m[k]; !ok {
             newSet.m[k] = v

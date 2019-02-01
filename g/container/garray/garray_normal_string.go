@@ -8,6 +8,7 @@ package garray
 
 import (
     "gitee.com/johng/gf/g/internal/rwmutex"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/grand"
     "math"
     "sort"
@@ -33,6 +34,10 @@ func NewStringArray(size int, cap int, unsafe...bool) *StringArray {
 		a.array = make([]string, size)
 	}
 	return a
+}
+
+func NewStringArrayEmpty(unsafe...bool) *StringArray {
+    return NewStringArray(0, 0, unsafe...)
 }
 
 func NewStringArrayFrom(array []string, unsafe...bool) *StringArray {
@@ -64,6 +69,32 @@ func (a *StringArray) SetArray(array []string) *StringArray {
     defer a.mu.Unlock()
     a.array = array
     return a
+}
+
+// 使用指定数组替换到对应的索引元素值.
+func (a *StringArray) Replace(array []string) *StringArray {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    max := len(array)
+    if max > len(a.array) {
+        max = len(a.array)
+    }
+    for i := 0; i < max; i++ {
+        a.array[i] = array[i]
+    }
+    return a
+}
+
+// Calculate the sum of values in an array.
+//
+// 对数组中的元素项求和(将元素值转换为int类型后叠加)。
+func (a *StringArray) Sum() (sum int) {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    for _, v := range a.array {
+        sum += gconv.Int(v)
+    }
+    return
 }
 
 // 将数组重新排序(从小到大).

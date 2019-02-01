@@ -43,6 +43,10 @@ func NewSortedIntArray(cap int, unsafe...bool) *SortedIntArray {
     }
 }
 
+func NewSortedIntArrayEmpty(unsafe...bool) *SortedIntArray {
+    return NewSortedIntArray(0, unsafe...)
+}
+
 func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
     a := NewSortedIntArray(0, unsafe...)
     a.array = array
@@ -147,6 +151,18 @@ func (a *SortedIntArray) Len() int {
     length := len(a.array)
     a.mu.RUnlock()
     return length
+}
+
+// Calculate the sum of values in an array.
+//
+// 对数组中的元素项求和。
+func (a *SortedIntArray) Sum() (sum int) {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    for _, v := range a.array {
+        sum += v
+    }
+    return
 }
 
 // 返回原始数据数组

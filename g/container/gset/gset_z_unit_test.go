@@ -131,13 +131,13 @@ func TestSet_Diff(t *testing.T) {
     })
 }
 
-func TestSet_Inter(t *testing.T) {
+func TestSet_Intersect(t *testing.T) {
     gtest.Case(t, func() {
         s1 := gset.NewSet()
         s2 := gset.NewSet()
         s1.Add(1).Add(2).Add(3)
         s2.Add(3).Add(4).Add(5)
-        s3 := s1.Inter(s2)
+        s3 := s1.Intersect(s2)
         gtest.Assert(s3.Contains(1), false)
         gtest.Assert(s3.Contains(2), false)
         gtest.Assert(s3.Contains(3), true)

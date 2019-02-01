@@ -22,6 +22,10 @@ type Array struct {
     array  []interface{}     // 底层数组
 }
 
+func New(size int, cap int, unsafe...bool) *Array {
+    return NewArray(size, cap, unsafe...)
+}
+
 func NewArray(size int, cap int, unsafe...bool) *Array {
     a := &Array{
         mu : rwmutex.New(unsafe...),
@@ -34,6 +38,10 @@ func NewArray(size int, cap int, unsafe...bool) *Array {
         a.array = make([]interface{}, size)
     }
     return a
+}
+
+func NewArrayEmpty(unsafe...bool) *Array {
+    return NewArray(0, 0, unsafe...)
 }
 
 func NewArrayFrom(array []interface{}, unsafe...bool) *Array {
@@ -65,6 +73,32 @@ func (a *Array) SetArray(array []interface{}) *Array {
     defer a.mu.Unlock()
     a.array = array
     return a
+}
+
+// 使用指定数组替换到对应的索引元素值.
+func (a *Array) Replace(array []interface{}) *Array {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    max := len(array)
+    if max > len(a.array) {
+        max = len(a.array)
+    }
+    for i := 0; i < max; i++ {
+        a.array[i] = array[i]
+    }
+    return a
+}
+
+// Calculate the sum of values in an array.
+//
+// 对数组中的元素项求和(将元素值转换为int类型后叠加)。
+func (a *Array) Sum() (sum int) {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    for _, v := range a.array {
+        sum += gconv.Int(v)
+    }
+    return
 }
 
 // 将数组重新排序(从小到大).
@@ -390,4 +424,17 @@ func (a *Array) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
     return strings.Join(gconv.Strings(a.array), glue)
+}
+
+// Counts all the values of an array.
+//
+// 统计数组中所有的值出现的次数.
+func (a *Array) CountValues() map[interface{}]int {
+    m := make(map[interface{}]int)
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    for _, v := range a.array {
+        m[v]++
+    }
+    return m
 }

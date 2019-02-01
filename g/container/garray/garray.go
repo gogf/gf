@@ -9,6 +9,3 @@
 // 并发安全数组.
 package garray
 
-func New(size int, cap int, unsafe...bool) *Array {
-    return NewArray(size, cap, unsafe...)
-}

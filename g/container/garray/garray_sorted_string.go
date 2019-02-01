@@ -9,6 +9,7 @@ package garray
 import (
     "gitee.com/johng/gf/g/container/gtype"
     "gitee.com/johng/gf/g/internal/rwmutex"
+    "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/util/grand"
     "math"
     "sort"
@@ -33,6 +34,10 @@ func NewSortedStringArray(cap int, unsafe...bool) *SortedStringArray {
             return strings.Compare(v1, v2)
         },
     }
+}
+
+func NewSortedStringArrayEmpty(unsafe...bool) *SortedStringArray {
+    return NewSortedStringArray(0, unsafe...)
 }
 
 func NewSortedStringArrayFrom(array []string, unsafe...bool) *SortedStringArray {
@@ -131,6 +136,18 @@ func (a *SortedStringArray) PopRight() string {
     value  := a.array[index]
     a.array = a.array[: index]
     return value
+}
+
+// Calculate the sum of values in an array.
+//
+// 对数组中的元素项求和(将元素值转换为int类型后叠加)。
+func (a *SortedStringArray) Sum() (sum int) {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    for _, v := range a.array {
+        sum += gconv.Int(v)
+    }
+    return
 }
 
 // 数组长度

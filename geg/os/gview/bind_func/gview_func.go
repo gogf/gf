@@ -14,7 +14,7 @@ func funcTest() string {
 
 func main() {
     view   := g.View()
-    b, err := view.Parse("gview.tpl", nil, gview.FuncMap{
+    b, err := view.Parse("index.html", nil, gview.FuncMap{
         "test" : funcTest,
     })
     fmt.Println(err)
