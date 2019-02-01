@@ -1,4 +1,4 @@
-// Package reuseport provides Listen and Dial functions that set socket
+// Package greuseport provides Listen and Dial functions that set socket
 // options in order to be able to reuse ports. You should only use this
 // package if you know what SO_REUSEADDR and SO_REUSEPORT are.
 //
