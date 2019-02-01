@@ -101,11 +101,13 @@ func (a *Array) Sum() (sum int) {
     return
 }
 
-// 将数组重新排序.
-func (a *Array) Sort(less func(i, j int) bool) *Array {
+// 使用自定义的排序函数将数组重新排序.
+func (a *Array) SortFunc(less func(v1, v2 interface{}) bool) *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
-    sort.Slice(a.array, less)
+    sort.Slice(a.array, func(i, j int) bool {
+        return less(a.array[i], a.array[j])
+    })
     return a
 }
 

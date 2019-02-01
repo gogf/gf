@@ -97,7 +97,7 @@ func (a *IntArray) Sum() (sum int) {
     return
 }
 
-// 将数组重新排序(从小到大).
+// 将数组重新排序.
 func (a *IntArray) Sort(reverse...bool) *IntArray {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -111,6 +111,16 @@ func (a *IntArray) Sort(reverse...bool) *IntArray {
     } else {
         sort.Ints(a.array)
     }
+    return a
+}
+
+// 使用自定义的排序函数将数组重新排序.
+func (a *IntArray) SortFunc(less func(v1, v2 int) bool) *IntArray {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    sort.Slice(a.array, func(i, j int) bool {
+        return less(a.array[i], a.array[j])
+    })
     return a
 }
 

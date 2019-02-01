@@ -114,6 +114,16 @@ func (a *StringArray) Sort(reverse...bool) *StringArray {
     return a
 }
 
+// 使用自定义的排序函数将数组重新排序.
+func (a *StringArray) SortFunc(less func(v1, v2 string) bool) *StringArray {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    sort.Slice(a.array, func(i, j int) bool {
+        return less(a.array[i], a.array[j])
+    })
+    return a
+}
+
 // 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
 func (a *StringArray) InsertBefore(index int, value string) *StringArray {
 	a.mu.Lock()
