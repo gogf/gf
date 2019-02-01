@@ -41,7 +41,7 @@ func TestNewReusablePortListener(t *testing.T) {
 	}
 	defer listenerTwo.Close()
 
-	listenerThree, err := greuseport.Listen("tcp6", "[::1]:10081")
+	listenerThree, err := greuseport.Listen("tcp6", "[::]:10081")
 	if err != nil {
 		t.Error(err)
 	}
@@ -79,7 +79,7 @@ func TestListen(t *testing.T) {
 	}
 	defer listenerTwo.Close()
 
-	listenerThree, err := greuseport.Listen("tcp6", "[::1]:10081")
+	listenerThree, err := greuseport.Listen("tcp6", "[::]:10081")
 	if err != nil {
 		t.Error(err)
 	}
