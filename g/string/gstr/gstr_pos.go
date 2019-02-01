@@ -4,7 +4,7 @@ import "strings"
 
 // Find the position of the first occurrence of a substring in a string.
 //
-// 返回 needle 在 haystack 中首次出现的数字位置。
+// 返回 needle 在 haystack 中首次出现的数字位置，找不到返回-1。
 func Pos(haystack, needle string, startOffset...int) int {
     length := len(haystack)
     offset := 0
@@ -27,7 +27,7 @@ func Pos(haystack, needle string, startOffset...int) int {
 
 // Find the position of the first occurrence of a case-insensitive substring in a string.
 //
-// 返回在字符串 haystack 中 needle 首次出现的数字位置（不区分大小写）。
+// 返回在字符串 haystack 中 needle 首次出现的数字位置（不区分大小写），找不到返回-1。
 func PosI(haystack, needle string, startOffset...int) int {
     length := len(haystack)
     offset := 0
@@ -51,7 +51,7 @@ func PosI(haystack, needle string, startOffset...int) int {
 
 // Find the position of the last occurrence of a substring in a string.
 //
-// 查找指定字符串在目标字符串中最后一次出现的位置。
+// 查找指定字符串在目标字符串中最后一次出现的位置，找不到返回-1。
 func PosR(haystack, needle string, startOffset...int) int {
     offset := 0
     if len(startOffset) > 0 {
@@ -76,7 +76,7 @@ func PosR(haystack, needle string, startOffset...int) int {
 
 // Find the position of the last occurrence of a case-insensitive substring in a string.
 //
-// 以不区分大小写的方式查找指定字符串在目标字符串中最后一次出现的位置。
+// 以不区分大小写的方式查找指定字符串在目标字符串中最后一次出现的位置，找不到返回-1。
 func PosRI(haystack, needle string, startOffset...int) int {
     offset := 0
     if len(startOffset) > 0 {

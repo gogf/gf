@@ -149,10 +149,38 @@ func Test_ChunkSplit(t *testing.T) {
     })
 }
 
-func Test_WordCount(t *testing.T) {
+func Test_Fields(t *testing.T) {
     gtest.Case(t, func() {
-        gtest.Assert(gstr.WordCount("我爱 GoFrame!"),    []string{"我爱", "GoFrame!"})
-        gtest.Assert(gstr.WordCount("I love GoFrame!"), []string{"I", "love", "GoFrame!"})
+        gtest.Assert(gstr.Fields("我爱 Go Frame"), []string{
+            "我爱", "Go", "Frame",
+        })
+    })
+}
+
+func Test_CountWords(t *testing.T) {
+    gtest.Case(t, func() {
+        gtest.Assert(gstr.CountWords("我爱 Go Go Go"), map[string]int{
+            "Go"  : 3,
+            "我爱" : 1,
+        })
+    })
+}
+
+func Test_CountChars(t *testing.T) {
+    gtest.Case(t, func() {
+        gtest.Assert(gstr.CountChars("我爱 Go Go Go"), map[string]int{
+            " "  : 3,
+            "G"  : 3,
+            "o"  : 3,
+            "我" : 1,
+            "爱" : 1,
+        })
+        gtest.Assert(gstr.CountChars("我爱 Go Go Go", true), map[string]int{
+            "G"  : 3,
+            "o"  : 3,
+            "我" : 1,
+            "爱" : 1,
+        })
     })
 }
 
@@ -204,10 +232,22 @@ func Test_TrimRight(t *testing.T) {
     })
 }
 
+func Test_TrimRightStr(t *testing.T) {
+    gtest.Case(t, func() {
+        gtest.Assert(gstr.TrimRightStr("gogo我爱gogo", "go"), "gogo我爱")
+    })
+}
+
 func Test_TrimLeft(t *testing.T) {
     gtest.Case(t, func() {
         gtest.Assert(gstr.TrimLeft(" \r123456\n "), "123456\n ")
         gtest.Assert(gstr.TrimLeft("#;123456#;", "#;"), "123456#;")
+    })
+}
+
+func Test_TrimLeftStr(t *testing.T) {
+    gtest.Case(t, func() {
+        gtest.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go"), "我爱gogo")
     })
 }
 

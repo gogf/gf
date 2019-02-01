@@ -20,6 +20,8 @@ import (
     "unicode/utf8"
 )
 
+// Replace returns a copy of the string <origin> with string <search> replaced by <replace>.
+//
 // 字符串替换(大小写敏感)
 func Replace(origin, search, replace string, count...int) string {
     n := -1
@@ -29,6 +31,8 @@ func Replace(origin, search, replace string, count...int) string {
     return strings.Replace(origin, search, replace, n)
 }
 
+// Replace string by map.
+//
 // 使用map进行字符串替换(大小写敏感)
 func ReplaceByMap(origin string, replaces map[string]string) string {
     result := origin
@@ -38,16 +42,21 @@ func ReplaceByMap(origin string, replaces map[string]string) string {
     return result
 }
 
+// ToLower returns a copy of the string s with all Unicode letters mapped to their lower case.
 // 字符串转换为小写
 func ToLower(s string) string {
     return strings.ToLower(s)
 }
 
+// ToUpper returns a copy of the string s with all Unicode letters mapped to their upper case.
+//
 // 字符串转换为大写
 func ToUpper(s string) string {
     return strings.ToUpper(s)
 }
 
+// UcFirst returns a copy of the string s with the first letter mapped to its upper case.
+//
 // 字符串首字母转换为大写
 func UcFirst(s string) string {
     if len(s) == 0 {
@@ -59,6 +68,8 @@ func UcFirst(s string) string {
     return s
 }
 
+// LcFirst returns a copy of the string s with the first letter mapped to its lower case.
+//
 // 字符串首字母转换为小写
 func LcFirst(s string) string {
     if len(s) == 0 {
@@ -89,11 +100,15 @@ func SearchArray (a []string, s string) int {
     return -1
 }
 
+// InArray tests whether the given string s is in string array a.
+//
 // 判断字符串是否在数组中
 func InArray (a []string, s string) bool {
     return SearchArray(a, s) != -1
 }
 
+// IsLetterLower tests whether the given byte b is in lower case.
+//
 // 判断给定字符是否小写
 func IsLetterLower(b byte) bool {
     if b >= byte('a') && b <= byte('z') {
@@ -102,6 +117,8 @@ func IsLetterLower(b byte) bool {
     return false
 }
 
+// IsLetterUpper tests whether the given byte b is in upper case.
+//
 // 判断给定字符是否大写
 func IsLetterUpper(b byte) bool {
     if b >= byte('A') && b <= byte('Z') {
@@ -110,7 +127,9 @@ func IsLetterUpper(b byte) bool {
     return false
 }
 
-// 判断锁给字符串是否为数字
+// IsNumeric tests whether the given string s is numeric.
+//
+// 判断锁给字符串是否为数字.
 func IsNumeric(s string) bool {
     length := len(s)
     if length == 0 {
@@ -124,6 +143,8 @@ func IsNumeric(s string) bool {
     return true
 }
 
+// Returns the portion of string specified by the start and length parameters.
+//
 // 字符串截取，支持中文
 func SubStr(str string, start int, length...int) (substr string) {
     // 将字符串的转换成[]rune
@@ -150,6 +171,10 @@ func SubStr(str string, start int, length...int) (substr string) {
     return string(rs[start : end])
 }
 
+// Returns the portion of string specified by the <length> parameters,
+// if the length of str is greater than <length>,
+// then the <suffix> will be appended to the result.
+//
 // 字符串长度截取限制，超过长度限制被截取并在字符串末尾追加指定的内容，支持中文
 func StrLimit(str string, length int, suffix...string) (string) {
     rs := []rune(str)
@@ -164,6 +189,8 @@ func StrLimit(str string, length int, suffix...string) (string) {
 }
 
 // Reverse a string.
+//
+// 字符串反转.
 func Reverse(str string) string {
     runes := []rune(str)
     for i, j := 0, len(runes) - 1; i < j; i, j = i + 1, j - 1 {
@@ -249,13 +276,94 @@ func ChunkSplit(body string, chunkLen int, end string) string {
     return string(ns)
 }
 
-//  Return information about words used in a string.
-func WordCount(str string) []string {
+// Compare returns an integer comparing two strings lexicographically.
+// The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
+//
+// 比较两个字符串。
+func Compare(a, b string) int {
+    return strings.Compare(a, b)
+}
+
+// Equal reports whether s and t, interpreted as UTF-8 strings,
+// are equal under Unicode case-folding, case-insensitive.
+//
+// 比较两个字符串是否相等（不区分大小写）。
+func Equal(a, b string) bool {
+    return strings.EqualFold(a, b)
+}
+
+// Return the words used in a string.
+//
+// 分割字符串中的单词。
+func Fields(str string) []string {
     return strings.Fields(str)
+}
+
+// Contains reports whether substr is within str.
+//
+// 判断是否substr存在于str中。
+func Contains(str, substr string) bool {
+    return strings.Contains(str, substr)
+}
+
+// Contains reports whether substr is within str, case-insensitive.
+//
+// 判断是否substr存在于str中(不区分大小写)。
+func ContainsI(str, substr string) bool {
+    return PosI(str, substr) != -1
+}
+
+// ContainsAny reports whether any Unicode code points in chars are within s.
+//
+// 判断是否s中是否包含chars指定的任意字符。
+func ContainsAny(s, chars string) bool {
+    return strings.ContainsAny(s, chars)
+}
+
+// Return information about words used in a string.
+//
+// 返回字符串中单词的使用情况。
+func CountWords(str string) map[string]int {
+    m      := make(map[string]int)
+    buffer := bytes.NewBuffer(nil)
+    for _, rune := range []rune(str) {
+        if unicode.IsSpace(rune) {
+            if buffer.Len() > 0 {
+                m[buffer.String()]++
+                buffer.Reset()
+            }
+        } else {
+            buffer.WriteRune(rune)
+        }
+    }
+    if buffer.Len() > 0 {
+        m[buffer.String()]++
+    }
+    return m
+}
+
+// Return information about words used in a string.
+//
+// 返回字符串中字符的使用情况。
+func CountChars(str string, noSpace...bool) map[string]int {
+    m := make(map[string]int)
+    countSpace := true
+    if len(noSpace) > 0 && noSpace[0] {
+        countSpace = false
+    }
+    for _, rune := range []rune(str) {
+        if !countSpace && unicode.IsSpace(rune) {
+            continue
+        }
+        m[string(rune)]++
+    }
+    return m
 }
 
 // Wraps a string to a given number of characters.
 // TODO: Enable cut param, see http://php.net/manual/en/function.wordwrap.php.
+//
+// 使用字符串断点将字符串打断为指定数量的字串。
 func WordWrap(str string, width int, br string) string {
     if br == "" {
         br = "\n"
@@ -314,11 +422,15 @@ func WordWrap(str string, width int, br string) string {
 }
 
 // Get string length of unicode.
+//
+// UTF-8字符串长度。
 func RuneLen(str string) int {
     return utf8.RuneCountInString(str)
 }
 
-// Repeat a string.
+// Repeat returns a new string consisting of multiplier copies of the string input.
+//
+// 按照指定大小创建重复的字符串。
 func Repeat(input string, multiplier int) string {
     return strings.Repeat(input, multiplier)
 }
@@ -348,43 +460,6 @@ func Shuffle(str string) string {
         s[i] = runes[v]
     }
     return string(s)
-}
-
-// Strip whitespace (or other characters) from the beginning and end of a string.
-//
-// 去除字符串首尾处的空白字符（或者其他字符）。
-func Trim(str string, characterMask ...string) string {
-    if len(characterMask) > 0 {
-        return strings.Trim(str, characterMask[0])
-    } else {
-        return strings.TrimSpace(str)
-    }
-}
-
-// Strip whitespace (or other characters) from the beginning of a string.
-//
-// 去除字符串首的空白字符（或者其他字符）。
-func TrimLeft(str string, characterMask ...string) string {
-    mask := ""
-    if len(characterMask) == 0 {
-        mask = string([]byte{'\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0})
-    } else {
-        mask = characterMask[0]
-    }
-    return strings.TrimLeft(str, mask)
-}
-
-// Strip whitespace (or other characters) from the end of a string.
-//
-// 去除字符串尾的空白字符（或者其他字符）。
-func TrimRight(str string, characterMask ...string) string {
-    mask := ""
-    if len(characterMask) == 0 {
-        mask = string([]byte{'\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0})
-    } else {
-        mask = characterMask[0]
-    }
-    return strings.TrimRight(str, mask)
 }
 
 // Split a string by a string, to an array.
@@ -440,6 +515,8 @@ func Ord(char string) int {
     return int(char[0])
 }
 
+// HideStr replaces part of the the string by percentage from the middle.
+//
 // 按照百分比从字符串中间向两边隐藏字符(主要用于姓名、手机号、邮箱地址、身份证号等的隐藏)，支持utf-8中文，支持email格式。
 func HideStr(str string, percent int, hide string) string {
     array := strings.Split(str, "@")
