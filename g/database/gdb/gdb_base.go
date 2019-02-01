@@ -15,7 +15,7 @@ import (
     "gitee.com/johng/gf/g/os/gcache"
     "gitee.com/johng/gf/g/os/gtime"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
     "reflect"
     "strings"
 )

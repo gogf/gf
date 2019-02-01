@@ -8,7 +8,7 @@ package gdb
 
 import (
     "database/sql"
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
     _ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
 )
 

@@ -10,7 +10,7 @@ package gdb
 import (
     "fmt"
     "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
     "strings"
 )
 

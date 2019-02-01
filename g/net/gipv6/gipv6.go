@@ -7,7 +7,7 @@
 // Package gipv4 provides useful API for IPv6 address handling.
 package gipv6
 
-import "gitee.com/johng/gf/g/string/gregex"
+import "gitee.com/johng/gf/g/text/gregex"
 
 // 判断所给地址是否是一个IPv6地址
 func Validate(ip string) bool {

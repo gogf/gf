@@ -3,7 +3,7 @@ package main
 import (
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/string/gstr"
+    "gitee.com/johng/gf/g/text/gstr"
     "gitee.com/johng/gf/g/net/ghttp"
     "gitee.com/johng/gf/g/util/gpage"
 )

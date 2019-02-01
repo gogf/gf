@@ -17,7 +17,7 @@ import (
     "gitee.com/johng/gf/g/container/gmap"
     "gitee.com/johng/gf/g/os/gfile"
     "gitee.com/johng/gf/g/os/gfsnotify"
-    "gitee.com/johng/gf/g/string/gstr"
+    "gitee.com/johng/gf/g/text/gstr"
     "runtime"
     "sort"
     "strings"

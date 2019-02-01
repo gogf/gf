@@ -15,7 +15,7 @@ import (
     "strings"
     "regexp"
     "fmt"
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
 )
 
 // 判断所给地址是否是一个IPv4地址

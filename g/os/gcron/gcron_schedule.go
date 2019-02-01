@@ -9,7 +9,7 @@ package gcron
 import (
     "errors"
     "fmt"
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
     "strconv"
     "strings"
     "time"

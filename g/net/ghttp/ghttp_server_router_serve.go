@@ -10,7 +10,7 @@ package ghttp
 import (
     "strings"
     "container/list"
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
 )
 
 // 查询请求处理方法.

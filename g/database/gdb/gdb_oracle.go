@@ -16,7 +16,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"gitee.com/johng/gf/g/string/gregex"
+	"gitee.com/johng/gf/g/text/gregex"
 	"strconv"
 	"strings"
 )

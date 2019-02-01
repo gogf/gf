@@ -10,7 +10,7 @@
 package gvalid
 
 import (
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
     "strings"
 )
 

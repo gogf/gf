@@ -11,7 +11,7 @@ import (
     "container/list"
     "fmt"
     "gitee.com/johng/gf/g/container/gset"
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
     "reflect"
     "runtime"
     "strings"

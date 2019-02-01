@@ -10,7 +10,7 @@ import (
     "errors"
     "fmt"
     "gitee.com/johng/gf/g/container/gset"
-    "gitee.com/johng/gf/g/string/gstr"
+    "gitee.com/johng/gf/g/text/gstr"
     "gitee.com/johng/gf/third/github.com/fatih/structs"
     "reflect"
     "strings"

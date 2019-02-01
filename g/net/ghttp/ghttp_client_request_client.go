@@ -9,7 +9,7 @@
 package ghttp
 
 import (
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
     "time"
     "bytes"
     "strings"

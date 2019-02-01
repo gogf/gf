@@ -9,7 +9,7 @@
 package gstr_test
 
 import (
-    "gitee.com/johng/gf/g/string/gstr"
+    "gitee.com/johng/gf/g/text/gstr"
     "gitee.com/johng/gf/g/test/gtest"
     "testing"
 )

@@ -12,8 +12,8 @@ import (
     "errors"
     "fmt"
     "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/string/gregex"
-    "gitee.com/johng/gf/g/string/gstr"
+    "gitee.com/johng/gf/g/text/gregex"
+    "gitee.com/johng/gf/g/text/gstr"
     "runtime"
     "strings"
 )

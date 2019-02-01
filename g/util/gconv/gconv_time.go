@@ -9,7 +9,7 @@ package gconv
 import (
     "time"
     "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/string/gstr"
+    "gitee.com/johng/gf/g/text/gstr"
 )
 
 // 将变量i转换为time.Time类型

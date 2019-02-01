@@ -11,7 +11,7 @@ import (
     "gitee.com/johng/gf/third/github.com/clbanning/mxj"
     "encoding/xml"
     "io"
-	"gitee.com/johng/gf/g/string/gregex"
+	"gitee.com/johng/gf/g/text/gregex"
 	"gitee.com/johng/gf/third/github.com/axgle/mahonia"
 	"errors"
 	"fmt"

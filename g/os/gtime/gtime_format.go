@@ -8,7 +8,7 @@ package gtime
 
 import (
     "bytes"
-    "gitee.com/johng/gf/g/string/gregex"
+    "gitee.com/johng/gf/g/text/gregex"
     "strings"
 )
 
