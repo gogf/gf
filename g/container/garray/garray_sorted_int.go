@@ -156,10 +156,10 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
     for min <= max {
         mid = int((min + max) / 2)
         cmp = a.compareFunc(value, a.array[mid])
-        switch cmp {
-            case -1 : max = mid - 1
-            case  1 : min = mid + 1
-            case  0 :
+        switch {
+            case cmp < 0 : max = mid - 1
+            case cmp > 0 : min = mid + 1
+            default :
                 return mid, cmp
         }
     }
