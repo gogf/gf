@@ -7,15 +7,16 @@
 package ghttp
 
 import (
-    "errors"
-    "os"
-    "fmt"
-    "net"
     "context"
-    "net/http"
     "crypto/tls"
+    "errors"
+    "fmt"
+    "gitee.com/johng/gf/g/net/greuseport"
     "gitee.com/johng/gf/g/os/glog"
     "gitee.com/johng/gf/g/os/gproc"
+    "net"
+    "net/http"
+    "os"
     "time"
 )
 
@@ -145,7 +146,7 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
     } else {
         // 如果监听失败，1秒后重试，最多重试3次
         for i := 0; i < 3; i++ {
-            ln, err = net.Listen("tcp", addr)
+            ln, err = greuseport.Listen("tcp", addr)
             if err != nil {
                 err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
                 time.Sleep(time.Second)
