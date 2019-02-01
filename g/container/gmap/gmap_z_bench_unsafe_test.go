@@ -14,15 +14,15 @@ import (
 )
 
 
-var ibmUnsafe   = NewIntBoolMap(false)
-var iimUnsafe   = NewIntIntMap(false)
-var iifmUnsafe  = NewIntInterfaceMap(false)
-var ismUnsafe   = NewIntStringMap(false)
-var ififmUnsafe = NewInterfaceInterfaceMap(false)
-var sbmUnsafe   = NewStringBoolMap(false)
-var simUnsafe   = NewStringIntMap(false)
-var sifmUnsafe  = NewStringInterfaceMap(false)
-var ssmUnsafe   = NewStringStringMap(false)
+var ibmUnsafe   = NewIntBoolMap(true)
+var iimUnsafe   = NewIntIntMap(true)
+var iifmUnsafe  = NewIntInterfaceMap(true)
+var ismUnsafe   = NewIntStringMap(true)
+var ififmUnsafe = NewMap(true)
+var sbmUnsafe   = NewStringBoolMap(true)
+var simUnsafe   = NewStringIntMap(true)
+var sifmUnsafe  = NewStringInterfaceMap(true)
+var ssmUnsafe   = NewStringStringMap(true)
 
 // 写入性能测试
 
