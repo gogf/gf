@@ -98,10 +98,19 @@ func (a *IntArray) Sum() (sum int) {
 }
 
 // 将数组重新排序(从小到大).
-func (a *IntArray) Sort() *IntArray {
+func (a *IntArray) Sort(reverse...bool) *IntArray {
     a.mu.Lock()
     defer a.mu.Unlock()
-    sort.Ints(a.array)
+    if len(reverse) > 0 && reverse[0] {
+        sort.Slice(a.array, func(i, j int) bool {
+            if a.array[i] < a.array[j] {
+                return false
+            }
+            return true
+        })
+    } else {
+        sort.Ints(a.array)
+    }
     return a
 }
 

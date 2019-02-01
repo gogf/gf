@@ -101,7 +101,7 @@ func (a *Array) Sum() (sum int) {
     return
 }
 
-// 将数组重新排序(从小到大).
+// 将数组重新排序.
 func (a *Array) Sort(less func(i, j int) bool) *Array {
     a.mu.Lock()
     defer a.mu.Unlock()

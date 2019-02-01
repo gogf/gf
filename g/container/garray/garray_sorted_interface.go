@@ -59,7 +59,7 @@ func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 }
 
 // 将数组重新排序(从小到大).
-func (a *SortedArray) Sort(reverse...bool) *SortedArray {
+func (a *SortedArray) Sort() *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
     sort.Slice(a.array, func(i, j int) bool {

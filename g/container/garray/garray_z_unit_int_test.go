@@ -40,13 +40,16 @@ func Test_IntArray_Basic(t *testing.T) {
 
 func TestIntArray_Sort(t *testing.T) {
     gtest.Case(t, func() {
-        expect := []int{0, 1, 2, 3}
-        array  := garray.NewIntArray(0, 0)
+        expect1 := []int{0, 1, 2, 3}
+        expect2 := []int{3, 2, 1, 0}
+        array   := garray.NewIntArray(0, 0)
         for i := 3; i >= 0; i-- {
             array.Append(i)
         }
         array.Sort()
-        gtest.Assert(array.Slice(), expect)
+        gtest.Assert(array.Slice(), expect1)
+        array.Sort(true)
+        gtest.Assert(array.Slice(), expect2)
     })
 }
 
