@@ -69,6 +69,14 @@ func (g *RouterGroup) ALL(pattern string, object interface{}, params...interface
     g.bind("HANDLER", gDEFAULT_METHOD + ":" + pattern, object, params...)
 }
 
+// 绑定常用方法: GET/PUT/POST/DELETE
+func (g *RouterGroup) COMMON(pattern string, object interface{}, params...interface{}) {
+    g.GET(pattern, object, params...)
+    g.PUT(pattern, object, params...)
+    g.POST(pattern, object, params...)
+    g.DELETE(pattern, object, params...)
+}
+
 func (g *RouterGroup) GET(pattern string, object interface{}, params...interface{}) {
     g.bind("HANDLER", "GET:" + pattern, object, params...)
 }
