@@ -24,6 +24,29 @@ func NewStringInterfaceMap(unsafe...bool) *StringInterfaceMap {
 	}
 }
 
+func NewStringInterfaceMapFrom(m map[string]interface{}, unsafe...bool) *StringInterfaceMap {
+    return &StringInterfaceMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
+func NewStringInterfaceMapFromArray(keys []string, values []interface{}, unsafe...bool) *StringInterfaceMap {
+    m := make(map[string]interface{})
+    l := len(values)
+    for i, k := range keys {
+        if i < l {
+            m[k] = values[i]
+        } else {
+            m[k] = interface{}(nil)
+        }
+    }
+    return &StringInterfaceMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (gm *StringInterfaceMap) Iterator(f func (k string, v interface{}) bool) {
 	gm.mu.RLock()
@@ -35,8 +58,13 @@ func (gm *StringInterfaceMap) Iterator(f func (k string, v interface{}) bool) {
 	}
 }
 
-// 哈希表克隆
-func (gm *StringInterfaceMap) Clone() map[string]interface{} {
+// 哈希表克隆.
+func (gm *StringInterfaceMap) Clone() *StringInterfaceMap {
+    return NewStringInterfaceMapFrom(gm.Map(), !gm.mu.IsSafe())
+}
+
+// 返回当前哈希表的数据Map.
+func (gm *StringInterfaceMap) Map() map[string]interface{} {
     m := make(map[string]interface{})
     gm.mu.RLock()
     for k, v := range gm.m {

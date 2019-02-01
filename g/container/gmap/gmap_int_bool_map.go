@@ -23,8 +23,36 @@ func NewIntBoolMap(unsafe...bool) *IntBoolMap {
     }
 }
 
-// 哈希表克隆
-func (gm *IntBoolMap) Clone() map[int]bool {
+func NewIntBoolMapFrom(m map[int]bool, unsafe...bool) *IntBoolMap {
+    return &IntBoolMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
+func NewIntBoolMapFromArray(keys []int, values []bool, unsafe...bool) *IntBoolMap {
+    m := make(map[int]bool)
+    l := len(values)
+    for i, k := range keys {
+        if i < l {
+            m[k] = values[i]
+        } else {
+            m[k] = false
+        }
+    }
+    return &IntBoolMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
+// 哈希表克隆.
+func (gm *IntBoolMap) Clone() *IntBoolMap {
+    return NewIntBoolMapFrom(gm.Map(), !gm.mu.IsSafe())
+}
+
+// 返回当前哈希表的数据Map.
+func (gm *IntBoolMap) Map() map[int]bool {
 	m := make(map[int]bool)
 	gm.mu.RLock()
 	for k, v := range gm.m {

@@ -21,13 +21,20 @@ type Map struct {
     m  map[interface{}]interface{}
 }
 
-func New(safe...bool) *Map {
-    return NewMap(safe...)
+func New(unsafe...bool) *Map {
+    return NewMap(unsafe...)
 }
 
 func NewMap(unsafe...bool) *Map {
     return &Map{
         m  : make(map[interface{}]interface{}),
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
+func NewFrom(m map[interface{}]interface{}, unsafe...bool) *Map {
+    return &Map{
+        m  : m,
         mu : rwmutex.New(unsafe...),
     }
 }
@@ -59,8 +66,13 @@ func (gm *Map) Iterator(f func (k interface{}, v interface{}) bool) {
     }
 }
 
-// 哈希表克隆
-func (gm *Map) Clone() map[interface{}]interface{} {
+// 哈希表克隆.
+func (gm *Map) Clone() *Map {
+    return NewFrom(gm.Map(), !gm.mu.IsSafe())
+}
+
+// 返回当前哈希表的数据Map.
+func (gm *Map) Map() map[interface{}]interface{} {
     m := make(map[interface{}]interface{})
     gm.mu.RLock()
     for k, v := range gm.m {

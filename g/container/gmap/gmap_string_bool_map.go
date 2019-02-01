@@ -23,6 +23,29 @@ func NewStringBoolMap(unsafe...bool) *StringBoolMap {
 	}
 }
 
+func NewStringBoolMapFrom(m map[string]bool, unsafe...bool) *StringBoolMap {
+    return &StringBoolMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
+func NewStringBoolMapFromArray(keys []string, values []bool, unsafe...bool) *StringBoolMap {
+    m := make(map[string]bool)
+    l := len(values)
+    for i, k := range keys {
+        if i < l {
+            m[k] = values[i]
+        } else {
+            m[k] = false
+        }
+    }
+    return &StringBoolMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (gm *StringBoolMap) Iterator(f func (k string, v bool) bool) {
 	gm.mu.RLock()
@@ -34,8 +57,13 @@ func (gm *StringBoolMap) Iterator(f func (k string, v bool) bool) {
     }
 }
 
-// 哈希表克隆
-func (gm *StringBoolMap) Clone() map[string]bool {
+// 哈希表克隆.
+func (gm *StringBoolMap) Clone() *StringBoolMap {
+    return NewStringBoolMapFrom(gm.Map(), !gm.mu.IsSafe())
+}
+
+// 返回当前哈希表的数据Map.
+func (gm *StringBoolMap) Map() map[string]bool {
     m := make(map[string]bool)
     gm.mu.RLock()
     for k, v := range gm.m {

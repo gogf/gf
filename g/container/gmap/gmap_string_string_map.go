@@ -23,6 +23,29 @@ func NewStringStringMap(unsafe...bool) *StringStringMap {
 	}
 }
 
+func NewStringStringMapFrom(m map[string]string, unsafe...bool) *StringStringMap {
+    return &StringStringMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
+func NewStringStringMapFromArray(keys []string, values []string, unsafe...bool) *StringStringMap {
+    m := make(map[string]string)
+    l := len(values)
+    for i, k := range keys {
+        if i < l {
+            m[k] = values[i]
+        } else {
+            m[k] = ""
+        }
+    }
+    return &StringStringMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (gm *StringStringMap) Iterator(f func (k string, v string) bool) {
 	gm.mu.RLock()
@@ -34,8 +57,13 @@ func (gm *StringStringMap) Iterator(f func (k string, v string) bool) {
 	}
 }
 
-// 哈希表克隆
-func (gm *StringStringMap) Clone() map[string]string {
+// 哈希表克隆.
+func (gm *StringStringMap) Clone() *StringStringMap {
+    return NewStringStringMapFrom(gm.Map(), !gm.mu.IsSafe())
+}
+
+// 返回当前哈希表的数据Map.
+func (gm *StringStringMap) Map() map[string]string {
     m := make(map[string]string)
     gm.mu.RLock()
     for k, v := range gm.m {

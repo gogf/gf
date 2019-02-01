@@ -24,6 +24,29 @@ func NewIntInterfaceMap(unsafe...bool) *IntInterfaceMap {
     }
 }
 
+func NewIntInterfaceMapFrom(m map[int]interface{}, unsafe...bool) *IntInterfaceMap {
+    return &IntInterfaceMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
+func NewIntInterfaceMapFromArray(keys []int, values []interface{}, unsafe...bool) *IntInterfaceMap {
+    m := make(map[int]interface{})
+    l := len(values)
+    for i, k := range keys {
+        if i < l {
+            m[k] = values[i]
+        } else {
+            m[k] = interface{}(nil)
+        }
+    }
+    return &IntInterfaceMap{
+        m  : m,
+        mu : rwmutex.New(unsafe...),
+    }
+}
+
 // 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
 func (gm *IntInterfaceMap) Iterator(f func (k int, v interface{}) bool) {
     gm.mu.RLock()
@@ -35,8 +58,13 @@ func (gm *IntInterfaceMap) Iterator(f func (k int, v interface{}) bool) {
     }
 }
 
-// 哈希表克隆
-func (gm *IntInterfaceMap) Clone() map[int]interface{} {
+// 哈希表克隆.
+func (gm *IntInterfaceMap) Clone() *IntInterfaceMap {
+    return NewIntInterfaceMapFrom(gm.Map(), !gm.mu.IsSafe())
+}
+
+// 返回当前哈希表的数据Map.
+func (gm *IntInterfaceMap) Map() map[int]interface{} {
 	m := make(map[int]interface{})
 	gm.mu.RLock()
 	for k, v := range gm.m {
