@@ -6,7 +6,7 @@ import (
 )
 
 func main()  {
-    array := garray.NewSortedStringArray(0, false)
+    array := garray.NewSortedStringArray()
     array.Add("1")
     array.Add("2")
     array.Add("3")

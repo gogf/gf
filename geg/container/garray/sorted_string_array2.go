@@ -8,7 +8,7 @@ import (
 )
 
 func main()  {
-    array := garray.NewSortedStringArray(0, false)
+    array := garray.NewSortedStringArray()
     array.Add("/api/ctl/show")
     array.Add("/api/ctl/post")
     array.Add("/api/obj/rest")

@@ -309,7 +309,7 @@ func (s *Server) GetRouteMap() string {
             }
             if _, ok := m[item.domain]; !ok {
                 // 注意排序函数的逻辑
-                m[item.domain] = garray.NewSortedArray(100, func(v1, v2 interface{}) int {
+                m[item.domain] = garray.NewSortedArraySize(100, func(v1, v2 interface{}) int {
                     item1 := v1.(*tableItem)
                     item2 := v2.(*tableItem)
                     r := 0

@@ -159,7 +159,7 @@ func (c *Cron) Size() int {
 
 // 获取所有已注册的定时任务项(按照注册时间从小到大进行排序)
 func (c *Cron) Entries() []*Entry {
-    array := garray.NewSortedArray(c.entries.Size(), func(v1, v2 interface{}) int {
+    array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 interface{}) int {
         entry1 := v1.(*Entry)
         entry2 := v2.(*Entry)
         if entry1.Time.Nanosecond() > entry2.Time.Nanosecond() {

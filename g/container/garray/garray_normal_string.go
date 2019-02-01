@@ -17,27 +17,23 @@ import (
 
 type StringArray struct {
 	mu    *rwmutex.RWMutex // 互斥锁
-	cap   int              // 初始化设置的数组容量
-	size  int              // 初始化设置的数组大小
 	array []string         // 底层数组
 }
 
-func NewStringArray(size int, cap int, unsafe...bool) *StringArray {
-	a := &StringArray{
-		mu : rwmutex.New(unsafe...),
-	}
-	a.size = size
-	if cap > 0 {
-		a.cap   = cap
-		a.array = make([]string, size, cap)
-	} else {
-		a.array = make([]string, size)
-	}
-	return a
+// Create an empty array.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 创建一个空的数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+func NewStringArray(unsafe...bool) *StringArray {
+    return NewStringArraySize(0, 0, unsafe...)
 }
 
-func NewStringArrayEmpty(unsafe...bool) *StringArray {
-    return NewStringArray(0, 0, unsafe...)
+func NewStringArraySize(size int, cap int, unsafe...bool) *StringArray {
+    return &StringArray{
+        mu    : rwmutex.New(unsafe...),
+        array : make([]string, size, cap),
+    }
 }
 
 func NewStringArrayFrom(array []string, unsafe...bool) *StringArray {
@@ -234,17 +230,24 @@ func (a *StringArray) Slice() []string {
 	return array
 }
 
+// Return a new array, which is a copy of current array.
+//
+// 克隆当前数组，返回当前数组的一个拷贝。
+func (a *StringArray) Clone() (newArray *StringArray) {
+    a.mu.RLock()
+    array := make([]string, len(a.array))
+    copy(array, a.array)
+    a.mu.RUnlock()
+    return NewStringArrayFrom(array, !a.mu.IsSafe())
+}
+
 // 清空数据数组
 func (a *StringArray) Clear() *StringArray {
-	a.mu.Lock()
-	if len(a.array) > 0 {
-		if a.cap > 0 {
-			a.array = make([]string, a.size, a.cap)
-		} else {
-			a.array = make([]string, a.size)
-		}
-	}
-	a.mu.Unlock()
+    a.mu.Lock()
+    if len(a.array) > 0 {
+        a.array = make([]string, 0)
+    }
+    a.mu.Unlock()
     return a
 }
 
@@ -313,6 +316,8 @@ func (a *StringArray) Merge(array *StringArray) *StringArray {
 }
 
 // Fills an array with num entries of the value of the value parameter, keys starting at the start_index parameter.
+//
+// 用value参数的值将数组填充num个条目，位置由startIndex参数指定的开始。
 func (a *StringArray) Fill(startIndex int, num int, value string) *StringArray {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -330,6 +335,8 @@ func (a *StringArray) Fill(startIndex int, num int, value string) *StringArray {
 }
 
 // Chunks an array into arrays with size elements. The last chunk may contain less than size elements.
+//
+// 将一个数组分割成多个数组，其中每个数组的单元数目由size决定。最后一个数组的单元数目可能会少于size个。
 func (a *StringArray) Chunk(size int) [][]string {
     if size < 1 {
         panic("size: cannot be less than 1")
@@ -355,6 +362,10 @@ func (a *StringArray) Chunk(size int) [][]string {
 // if it's negative then on the left.
 // If the absolute value of size is less than or equal to the length of the array
 // then no padding takes place.
+//
+// 返回数组的一个拷贝，并用value将其填补到size指定的长度。
+// 如果size为正数，则填补到数组的右侧，如果为负数则从左侧开始填补。
+// 如果size的绝对值小于或等于数组的长度则没有任何填补。
 func (a *StringArray) Pad(size int, value string) *StringArray {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -380,6 +391,8 @@ func (a *StringArray) Pad(size int, value string) *StringArray {
 
 // Extract a slice of the array(If in concurrent safe usage, it returns a copy of the slice; else a pointer).
 // It returns the sequence of elements from the array array as specified by the offset and length parameters.
+//
+// 返回根据offset和size参数所指定的数组中的一段序列。
 func (a *StringArray) SubSlice(offset, size int) []string {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -399,6 +412,8 @@ func (a *StringArray) SubSlice(offset, size int) []string {
 }
 
 // Picks one or more random entries out of an array(a copy), and returns the key (or keys) of the random entries.
+//
+// 从数组中随机取出size个元素项，构成slice返回。
 func (a *StringArray) Rand(size int) []string {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -416,6 +431,8 @@ func (a *StringArray) Rand(size int) []string {
 }
 
 // Randomly shuffles the array.
+//
+// 随机打乱当前数组。
 func (a *StringArray) Shuffle() *StringArray {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -426,6 +443,8 @@ func (a *StringArray) Shuffle() *StringArray {
 }
 
 // Make array with elements in reverse order.
+//
+// 将当前数组反转。
 func (a *StringArray) Reverse() *StringArray {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -436,6 +455,8 @@ func (a *StringArray) Reverse() *StringArray {
 }
 
 // Join array elements with a string.
+//
+// 使用glue字符串串连当前数组的元素项，构造成新的字符串返回。
 func (a *StringArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()

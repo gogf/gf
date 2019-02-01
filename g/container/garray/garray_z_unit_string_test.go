@@ -43,7 +43,7 @@ func TestStringArray_Sort(t *testing.T) {
     gtest.Case(t, func() {
         expect1 := []string{"0", "1", "2", "3"}
         expect2 := []string{"3", "2", "1", "0"}
-        array   := garray.NewStringArray(0, 0)
+        array   := garray.NewStringArray()
         for i := 3; i >= 0; i-- {
             array.Append(gconv.String(i))
         }

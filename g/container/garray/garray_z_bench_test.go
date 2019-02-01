@@ -14,7 +14,7 @@ import (
 )
 
 var (
-    sortedIntArray = garray.NewSortedIntArray(0)
+    sortedIntArray = garray.NewSortedIntArray()
 )
 
 func BenchmarkSortedIntArray_Add(b *testing.B) {

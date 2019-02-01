@@ -8,7 +8,7 @@ import (
 
 func main () {
     // 创建普通的int类型数组，并关闭默认的并发安全特性
-    a := garray.NewIntArray(0, 0, false)
+    a := garray.NewIntArray(true)
 
     // 添加数据项
     for i := 0; i < 10; i++ {

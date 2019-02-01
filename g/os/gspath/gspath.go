@@ -43,7 +43,7 @@ var (
 // 创建一个搜索对象
 func New(path...string) *SPath {
     sp := &SPath {
-        paths : garray.NewStringArray(0, 1),
+        paths : garray.NewStringArray(),
         cache : gmap.NewStringStringMap(),
     }
     if len(path) > 0 {

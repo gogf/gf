@@ -8,7 +8,7 @@ import (
 
 func main () {
     // 自定义排序数组，降序排序(SortedIntArray管理的数据是升序)
-    a := garray.NewSortedArray(0, 0, func(v1, v2 interface{}) int {
+    a := garray.NewSortedArray(func(v1, v2 interface{}) int {
         if v1.(int) < v2.(int) {
             return 1
         }

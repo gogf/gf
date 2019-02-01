@@ -18,7 +18,7 @@ import (
 
 func TestEntry_Start_Stop_Close(t *testing.T) {
     timer := New()
-    array := garray.New(0, 0)
+    array := garray.New()
     entry := timer.Add(200*time.Millisecond, func() {
         array.Append(1)
     })
@@ -39,7 +39,7 @@ func TestEntry_Start_Stop_Close(t *testing.T) {
 
 func TestEntry_Singleton(t *testing.T) {
     timer := New()
-    array := garray.New(0, 0)
+    array := garray.New()
     entry := timer.Add(200*time.Millisecond, func() {
         array.Append(1)
         time.Sleep(10*time.Second)
@@ -56,7 +56,7 @@ func TestEntry_Singleton(t *testing.T) {
 
 func TestEntry_SetTimes(t *testing.T) {
     timer := New()
-    array := garray.New(0, 0)
+    array := garray.New()
     entry := timer.Add(200*time.Millisecond, func() {
         array.Append(1)
     })
@@ -67,7 +67,7 @@ func TestEntry_SetTimes(t *testing.T) {
 
 func TestEntry_Run(t *testing.T) {
     timer := New()
-    array := garray.New(0, 0)
+    array := garray.New()
     entry := timer.Add(1000*time.Millisecond, func() {
         array.Append(1)
     })

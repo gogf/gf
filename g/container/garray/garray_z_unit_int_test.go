@@ -42,7 +42,7 @@ func TestIntArray_Sort(t *testing.T) {
     gtest.Case(t, func() {
         expect1 := []int{0, 1, 2, 3}
         expect2 := []int{3, 2, 1, 0}
-        array   := garray.NewIntArray(0, 0)
+        array   := garray.NewIntArray()
         for i := 3; i >= 0; i-- {
             array.Append(i)
         }

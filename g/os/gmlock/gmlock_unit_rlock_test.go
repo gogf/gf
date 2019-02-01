@@ -17,7 +17,7 @@ import (
 func TestLocker_RLock1(t *testing.T) {
     gtest.Case(t, func() {
         key   := "test100"
-        array := garray.New(0, 0)
+        array := garray.New()
         go func() {
             gmlock.RLock(key)
             array.Append(1)
@@ -41,7 +41,7 @@ func TestLocker_RLock1(t *testing.T) {
 func TestLocker_RLock2(t *testing.T) {
     gtest.Case(t, func() {
         key   := "test200"
-        array := garray.New(0, 0)
+        array := garray.New()
         go func() {
             gmlock.Lock(key)
             array.Append(1)

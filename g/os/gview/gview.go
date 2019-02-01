@@ -70,7 +70,7 @@ func ParseContent(content string, params Params) ([]byte, error) {
 // 生成一个视图对象
 func New(path...string) *View {
     view := &View {
-        paths      : garray.NewStringArray(0, 1),
+        paths      : garray.NewStringArray(),
         data       : make(map[string]interface{}),
         funcmap    : make(map[string]interface{}),
         delimiters : make([]string, 2),

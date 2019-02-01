@@ -7,7 +7,7 @@ import (
 
 
 func main () {
-    a := garray.NewIntArray(0, 0)
+    a := garray.NewIntArray()
     a.Append(1, 2, 3)
 
     v   := a.Slice()

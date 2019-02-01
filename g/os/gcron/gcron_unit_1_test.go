@@ -18,7 +18,7 @@ import (
 func TestCron_Add_Close(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
-        array := garray.New(0, 0)
+        array := garray.New()
         _, err1 := cron.Add("* * * * * *", func() {
             //glog.Println("cron1")
             array.Append(1)
@@ -92,7 +92,7 @@ func TestCron_AddSingleton(t *testing.T) {
     // keep this
     gtest.Case(t, func() {
         cron  := gcron.New()
-        array := garray.New(0, 0)
+        array := garray.New()
         cron.AddSingleton("* * * * * *", func() {
             array.Append(1)
             time.Sleep(50*time.Second)
@@ -107,7 +107,7 @@ func TestCron_AddSingleton(t *testing.T) {
 func TestCron_AddOnce(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
-        array := garray.New(0, 0)
+        array := garray.New()
         cron.AddOnce("* * * * * *", func() {
             array.Append(1)
         })
@@ -124,7 +124,7 @@ func TestCron_AddOnce(t *testing.T) {
 func TestCron_AddTimes(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
-        array := garray.New(0, 0)
+        array := garray.New()
         cron.AddTimes("* * * * * *", 2, func() {
             array.Append(1)
         })
@@ -137,7 +137,7 @@ func TestCron_AddTimes(t *testing.T) {
 func TestCron_DelayAdd(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
-        array := garray.New(0, 0)
+        array := garray.New()
         cron.DelayAdd(500*time.Millisecond, "* * * * * *", func() {
             array.Append(1)
         })
@@ -154,7 +154,7 @@ func TestCron_DelayAdd(t *testing.T) {
 func TestCron_DelayAddSingleton(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
-        array := garray.New(0, 0)
+        array := garray.New()
         cron.DelayAddSingleton(500*time.Millisecond, "* * * * * *", func() {
             array.Append(1)
             time.Sleep(10*time.Second)
@@ -169,7 +169,7 @@ func TestCron_DelayAddSingleton(t *testing.T) {
 func TestCron_DelayAddOnce(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
-        array := garray.New(0, 0)
+        array := garray.New()
         cron.DelayAddOnce(500*time.Millisecond, "* * * * * *", func() {
             array.Append(1)
         })
@@ -186,7 +186,7 @@ func TestCron_DelayAddOnce(t *testing.T) {
 func TestCron_DelayAddTimes(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
-        array := garray.New(0, 0)
+        array := garray.New()
         cron.DelayAddTimes(500*time.Millisecond, "* * * * * *", 2, func() {
             array.Append(1)
         })

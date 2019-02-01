@@ -19,14 +19,21 @@ import (
 // 默认按照从小到大进行排序
 type SortedIntArray struct {
     mu          *rwmutex.RWMutex     // 互斥锁
-    cap         int                  // 初始化设置的数组容量
     array       []int                // 底层数组
     unique      *gtype.Bool          // 是否要求不能重复(默认false)
     compareFunc func(v1, v2 int) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
-// 创建一个排序的int数组
-func NewSortedIntArray(cap int, unsafe...bool) *SortedIntArray {
+// Create an empty sorted array.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 创建一个空的排序数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+func NewSortedIntArray(unsafe...bool) *SortedIntArray {
+    return NewSortedIntArraySize(0, unsafe...)
+}
+
+func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
     return &SortedIntArray {
         mu          : rwmutex.New(unsafe...),
         array       : make([]int, 0, cap),
@@ -43,12 +50,8 @@ func NewSortedIntArray(cap int, unsafe...bool) *SortedIntArray {
     }
 }
 
-func NewSortedIntArrayEmpty(unsafe...bool) *SortedIntArray {
-    return NewSortedIntArray(0, unsafe...)
-}
-
 func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
-    a := NewSortedIntArray(0, unsafe...)
+    a := NewSortedIntArraySize(0, unsafe...)
     a.array = array
     sort.Ints(a.array)
     return a
@@ -244,11 +247,22 @@ func (a *SortedIntArray) Unique() *SortedIntArray {
     return a
 }
 
+// Return a new array, which is a copy of current array.
+//
+// 克隆当前数组，返回当前数组的一个拷贝。
+func (a *SortedIntArray) Clone() (newArray *SortedIntArray) {
+    a.mu.RLock()
+    array := make([]int, len(a.array))
+    copy(array, a.array)
+    a.mu.RUnlock()
+    return NewSortedIntArrayFrom(array, !a.mu.IsSafe())
+}
+
 // 清空数据数组
 func (a *SortedIntArray) Clear() *SortedIntArray {
     a.mu.Lock()
     if len(a.array) > 0 {
-        a.array = make([]int, 0, a.cap)
+        a.array = make([]int, 0)
     }
     a.mu.Unlock()
     return a
@@ -284,6 +298,8 @@ func (a *SortedIntArray) Merge(array *SortedIntArray) *SortedIntArray {
 }
 
 // Chunks an array into arrays with size elements. The last chunk may contain less than size elements.
+//
+// 将一个数组分割成多个数组，其中每个数组的单元数目由size决定。最后一个数组的单元数目可能会少于size个。
 func (a *SortedIntArray) Chunk(size int) [][]int {
     if size < 1 {
         panic("size: cannot be less than 1")
@@ -306,6 +322,8 @@ func (a *SortedIntArray) Chunk(size int) [][]int {
 
 // Extract a slice of the array(If in concurrent safe usage, it returns a copy of the slice; else a pointer).
 // It returns the sequence of elements from the array array as specified by the offset and length parameters.
+//
+// 返回根据offset和size参数所指定的数组中的一段序列。
 func (a *SortedIntArray) SubSlice(offset, size int) []int {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -325,6 +343,8 @@ func (a *SortedIntArray) SubSlice(offset, size int) []int {
 }
 
 // Picks one or more random entries out of an array(a copy), and returns the key (or keys) of the random entries.
+//
+// 从数组中随机取出size个元素项，构成slice返回。
 func (a *SortedIntArray) Rand(size int) []int {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -342,6 +362,8 @@ func (a *SortedIntArray) Rand(size int) []int {
 }
 
 // Join array elements with a string.
+//
+// 使用glue字符串串连当前数组的元素项，构造成新的字符串返回。
 func (a *SortedIntArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()

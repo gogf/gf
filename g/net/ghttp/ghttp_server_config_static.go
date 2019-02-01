@@ -108,7 +108,7 @@ func (s *Server) AddStaticPath(prefix string, path string) {
         // 先添加item
         s.config.StaticPaths = append(s.config.StaticPaths, addItem)
         // 按照prefix从长到短进行排序
-        array := garray.NewSortedArray(0, func(v1, v2 interface{}) int {
+        array := garray.NewSortedArray(func(v1, v2 interface{}) int {
             s1 := gconv.String(v1)
             s2 := gconv.String(v2)
             r  := len(s2) - len(s1)

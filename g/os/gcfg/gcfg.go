@@ -45,7 +45,7 @@ func New(path string, file...string) *Config {
     }
     c := &Config {
         name   : gtype.NewString(name),
-        paths  : garray.NewStringArray(0, 1),
+        paths  : garray.NewStringArray(),
         jsons  : gmap.NewStringInterfaceMap(),
         vc     : gtype.NewBool(),
     }

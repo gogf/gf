@@ -16,32 +16,28 @@ import (
 )
 
 type Array struct {
-    mu     *rwmutex.RWMutex  // 互斥锁
-    cap    int               // 初始化设置的数组容量
-    size   int               // 初始化设置的数组大小
-    array  []interface{}     // 底层数组
+    mu    *rwmutex.RWMutex  // 互斥锁
+    array []interface{}     // 底层数组
 }
 
-func New(size int, cap int, unsafe...bool) *Array {
-    return NewArray(size, cap, unsafe...)
+// Create an empty array.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 创建一个空的数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+func New(unsafe...bool) *Array {
+    return NewArraySize(0, 0, unsafe...)
 }
 
-func NewArray(size int, cap int, unsafe...bool) *Array {
-    a := &Array{
-        mu : rwmutex.New(unsafe...),
+func NewArray(unsafe...bool) *Array {
+    return NewArraySize(0, 0, unsafe...)
+}
+
+func NewArraySize(size int, cap int, unsafe...bool) *Array {
+    return &Array{
+        mu    : rwmutex.New(unsafe...),
+        array : make([]interface{}, size, cap),
     }
-    a.size = size
-    if cap > 0 {
-        a.cap   = cap
-        a.array = make([]interface{}, size, cap)
-    } else {
-        a.array = make([]interface{}, size)
-    }
-    return a
-}
-
-func NewArrayEmpty(unsafe...bool) *Array {
-    return NewArray(0, 0, unsafe...)
 }
 
 func NewArrayFrom(array []interface{}, unsafe...bool) *Array {
@@ -219,15 +215,22 @@ func (a *Array) Slice() []interface{} {
     return array
 }
 
+// Return a new array, which is a copy of current array.
+//
+// 克隆当前数组，返回当前数组的一个拷贝。
+func (a *Array) Clone() (newArray *Array) {
+    a.mu.RLock()
+    array := make([]interface{}, len(a.array))
+    copy(array, a.array)
+    a.mu.RUnlock()
+    return NewArrayFrom(array, !a.mu.IsSafe())
+}
+
 // 清空数据数组
 func (a *Array) Clear() *Array {
     a.mu.Lock()
     if len(a.array) > 0 {
-        if a.cap > 0 {
-            a.array = make([]interface{}, a.size, a.cap)
-        } else {
-            a.array = make([]interface{}, a.size)
-        }
+        a.array = make([]interface{}, 0)
     }
     a.mu.Unlock()
     return a
@@ -299,6 +302,8 @@ func (a *Array) Merge(array *Array) *Array {
 }
 
 // Fills an array with num entries of the value of the value parameter, keys starting at the start_index parameter.
+//
+// 用value参数的值将数组填充num个条目，位置由startIndex参数指定的开始。
 func (a *Array) Fill(startIndex int, num int, value interface{}) *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -316,6 +321,8 @@ func (a *Array) Fill(startIndex int, num int, value interface{}) *Array {
 }
 
 // Chunks an array into arrays with size elements. The last chunk may contain less than size elements.
+//
+// 将一个数组分割成多个数组，其中每个数组的单元数目由size决定。最后一个数组的单元数目可能会少于size个。
 func (a *Array) Chunk(size int) [][]interface{} {
     if size < 1 {
         panic("size: cannot be less than 1")
@@ -341,6 +348,10 @@ func (a *Array) Chunk(size int) [][]interface{} {
 // if it's negative then on the left.
 // If the absolute value of size is less than or equal to the length of the array
 // then no padding takes place.
+//
+// 返回数组的一个拷贝，并用value将其填补到size指定的长度。
+// 如果size为正数，则填补到数组的右侧，如果为负数则从左侧开始填补。
+// 如果size的绝对值小于或等于数组的长度则没有任何填补。
 func (a *Array) Pad(size int, val interface{}) *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -366,6 +377,8 @@ func (a *Array) Pad(size int, val interface{}) *Array {
 
 // Extract a slice of the array(If in concurrent safe usage, it returns a copy of the slice; else a pointer).
 // It returns the sequence of elements from the array array as specified by the offset and length parameters.
+//
+// 返回根据offset和size参数所指定的数组中的一段序列。
 func (a *Array) SubSlice(offset, size int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -385,6 +398,8 @@ func (a *Array) SubSlice(offset, size int) []interface{} {
 }
 
 // Picks one or more random entries out of an array(a copy), and returns the key (or keys) of the random entries.
+//
+// 从数组中随机取出size个元素项，构成slice返回。
 func (a *Array) Rand(size int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -402,6 +417,8 @@ func (a *Array) Rand(size int) []interface{} {
 }
 
 // Randomly shuffles the array.
+//
+// 随机打乱当前数组。
 func (a *Array) Shuffle() *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -412,6 +429,8 @@ func (a *Array) Shuffle() *Array {
 }
 
 // Make array with elements in reverse order.
+//
+// 将当前数组反转。
 func (a *Array) Reverse() *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -422,6 +441,8 @@ func (a *Array) Reverse() *Array {
 }
 
 // Join array elements with a string.
+//
+// 使用glue字符串串连当前数组的元素项，构造成新的字符串返回。
 func (a *Array) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()

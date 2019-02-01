@@ -19,13 +19,29 @@ import (
 // 默认按照从小到大进行排序
 type SortedArray struct {
     mu          *rwmutex.RWMutex             // 互斥锁
-    cap         int                          // 初始化设置的数组容量
     array       []interface{}                // 底层数组
     unique      *gtype.Bool                  // 是否要求不能重复
     compareFunc func(v1, v2 interface{}) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
 }
 
-func NewSortedArray(cap int, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+// Create an empty sorted array.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+// The param <compareFunc> used to compare values to sort in array,
+// if it returns value < 0, means v1 < v2;
+// if it returns value = 0, means v1 = v2;
+// if it returns value > 0, means v1 > v2;
+//
+// 创建一个空的排序数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+// 参数compareFunc用于指定排序方法：
+// 如果返回值 < 0, 表示 v1 < v2;
+// 如果返回值 = 0, 表示 v1 = v2;
+// 如果返回值 > 0, 表示 v1 > v2;
+func NewSortedArray(compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+    return NewSortedArraySize(0, compareFunc, unsafe...)
+}
+
+func NewSortedArraySize(cap int, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     return &SortedArray{
         mu          : rwmutex.New(unsafe...),
         unique      : gtype.NewBool(),
@@ -34,12 +50,8 @@ func NewSortedArray(cap int, compareFunc func(v1, v2 interface{}) int, unsafe...
     }
 }
 
-func NewSortedArrayEmpty(compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
-    return NewSortedArray(0, compareFunc, unsafe...)
-}
-
 func NewSortedArrayFrom(array []interface{}, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
-    a := NewSortedArray(0, compareFunc, unsafe...)
+    a := NewSortedArraySize(0, compareFunc, unsafe...)
     a.array = array
     sort.Slice(a.array, func(i, j int) bool {
         return a.compareFunc(a.array[i], a.array[j]) < 0
@@ -243,11 +255,22 @@ func (a *SortedArray) Unique() *SortedArray {
     return a
 }
 
+// Return a new array, which is a copy of current array.
+//
+// 克隆当前数组，返回当前数组的一个拷贝。
+func (a *SortedArray) Clone() (newArray *SortedArray) {
+    a.mu.RLock()
+    array := make([]interface{}, len(a.array))
+    copy(array, a.array)
+    a.mu.RUnlock()
+    return NewSortedArrayFrom(array, a.compareFunc, !a.mu.IsSafe())
+}
+
 // 清空数据数组
 func (a *SortedArray) Clear() *SortedArray {
     a.mu.Lock()
     if len(a.array) > 0 {
-        a.array = make([]interface{}, 0, a.cap)
+        a.array = make([]interface{}, 0)
     }
     a.mu.Unlock()
     return a
@@ -285,6 +308,8 @@ func (a *SortedArray) Merge(array *SortedArray) *SortedArray {
 }
 
 // Chunks an array into arrays with size elements. The last chunk may contain less than size elements.
+//
+// 将一个数组分割成多个数组，其中每个数组的单元数目由size决定。最后一个数组的单元数目可能会少于size个。
 func (a *SortedArray) Chunk(size int) [][]interface{} {
     if size < 1 {
         panic("size: cannot be less than 1")
@@ -307,6 +332,8 @@ func (a *SortedArray) Chunk(size int) [][]interface{} {
 
 // Extract a slice of the array(If in concurrent safe usage, it returns a copy of the slice; else a pointer).
 // It returns the sequence of elements from the array array as specified by the offset and length parameters.
+//
+// 返回根据offset和size参数所指定的数组中的一段序列。
 func (a *SortedArray) SubSlice(offset, size int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -326,6 +353,8 @@ func (a *SortedArray) SubSlice(offset, size int) []interface{} {
 }
 
 // Picks one or more random entries out of an array(a copy), and returns the key (or keys) of the random entries.
+//
+// 从数组中随机取出size个元素项，构成slice返回。
 func (a *SortedArray) Rand(size int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -343,6 +372,8 @@ func (a *SortedArray) Rand(size int) []interface{} {
 }
 
 // Join array elements with a string.
+//
+// 使用glue字符串串连当前数组的元素项，构造成新的字符串返回。
 func (a *SortedArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
