@@ -116,7 +116,7 @@ func Test_Params(t *testing.T) {
         gtest.Assert(client.GetContent("/get", "float64=0.22"),    `0.22`)
         gtest.Assert(client.GetContent("/get", "int=-10000"),      `-10000`)
         gtest.Assert(client.GetContent("/get", "int=10000"),       `10000`)
-        gtest.Assert(client.GetContent("/get", "uint=-10000"),     `10000`)
+        gtest.Assert(client.GetContent("/get", "uint=10000"),      `10000`)
         gtest.Assert(client.GetContent("/get", "uint=9"),          `9`)
         gtest.Assert(client.GetContent("/get", "string=key"),      `key`)
 

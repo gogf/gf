@@ -159,7 +159,7 @@ func Test_WordCount(t *testing.T) {
 func Test_WordWrap(t *testing.T) {
     gtest.Case(t, func() {
         gtest.Assert(gstr.WordWrap("12 34", 2, "<br>"), "12<br>34")
-        gtest.Assert(gstr.WordWrap("A very long woooooooooooooooooord. and something", 2, "<br>"),
+        gtest.Assert(gstr.WordWrap("A very long woooooooooooooooooord. and something", 7, "<br>"),
             "A very<br>long<br>woooooooooooooooooord.<br>and<br>something")
     })
 }
@@ -181,12 +181,6 @@ func Test_Repeat(t *testing.T) {
 func Test_Str(t *testing.T) {
     gtest.Case(t, func() {
         gtest.Assert(gstr.Str("name@example.com", "@"), "@example.com")
-    })
-}
-
-func Test_Tr(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.Tr("name@example.com", "@"), "@example.com")
     })
 }
 

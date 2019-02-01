@@ -7,8 +7,9 @@
 package gconv_test
 
 import (
-    "gitee.com/johng/gf/g/util/gconv"
+    "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/test/gtest"
+    "gitee.com/johng/gf/g/util/gconv"
     "testing"
 )
 
@@ -22,10 +23,16 @@ func Test_Map(t *testing.T) {
             3 : "v",
         }
         m3 := map[float64]float32{
-            1.22 : 3.1,
+           1.22 : 3.1,
         }
-        gtest.Assert(gconv.Map(m1), m1)
-        gtest.Assert(gconv.Map(m2), m2)
-        gtest.Assert(gconv.Map(m3), m3)
+        gtest.Assert(gconv.Map(m1), g.Map{
+            "k" : "v",
+        })
+        gtest.Assert(gconv.Map(m2), g.Map{
+            "3" : "v",
+        })
+        gtest.Assert(gconv.Map(m3), g.Map{
+            "1.22" : "3.1",
+        })
     })
 }

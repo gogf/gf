@@ -240,7 +240,7 @@ func compareMap(value, expect interface{}) error {
             if rvExpect.Len() == rvValue.Len() {
                 ksExpect := rvExpect.MapKeys()
                 for _, key := range ksExpect {
-                    if rvValue.MapIndex(key).Interface() != rvExpect.MapIndex(key).Interface() {
+                    if fmt.Sprintf("%v", rvValue.MapIndex(key).Interface()) != rvExpect.MapIndex(key).Interface() {
                         return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`,
                             key,
                             rvValue.MapIndex(key).Interface(),
