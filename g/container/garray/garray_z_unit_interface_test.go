@@ -80,6 +80,34 @@ func TestArray_PushAndPop(t *testing.T) {
     })
 }
 
+func TestArray_PopLeftsAndPopRights(t *testing.T) {
+    gtest.Case(t, func() {
+        value1 := []interface{}{0,1,2,3,4,5,6}
+        value2 := []interface{}{0,1,2,3,4,5,6}
+        array1 := garray.NewArrayFrom(value1)
+        array2 := garray.NewArrayFrom(value2)
+        gtest.Assert(array1.PopLefts(2), []interface{}{0,1})
+        gtest.Assert(array1.Slice(), []interface{}{2,3,4,5,6})
+        gtest.Assert(array1.PopRights(2), []interface{}{5,6})
+        gtest.Assert(array1.Slice(), []interface{}{2,3,4})
+        gtest.Assert(array1.PopRights(20), []interface{}{2,3,4})
+        gtest.Assert(array1.Slice(), []interface{}{})
+        gtest.Assert(array2.PopLefts(20), []interface{}{0,1,2,3,4,5,6})
+        gtest.Assert(array2.Slice(), []interface{}{})
+    })
+}
+
+func TestArray_Range(t *testing.T) {
+    gtest.Case(t, func() {
+        value1 := []interface{}{0,1,2,3,4,5,6}
+        array1 := garray.NewArrayFrom(value1)
+        gtest.Assert(array1.Range(0, 1), []interface{}{0})
+        gtest.Assert(array1.Range(1, 2), []interface{}{1})
+        gtest.Assert(array1.Range(0, 2), []interface{}{0, 1})
+        gtest.Assert(array1.Range(-1, 10), value1)
+    })
+}
+
 func TestArray_Merge(t *testing.T) {
     gtest.Case(t, func() {
         a1 := []interface{}{0, 1, 2, 3}

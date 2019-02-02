@@ -76,6 +76,34 @@ func TestIntArray_PushAndPop(t *testing.T) {
     })
 }
 
+func TestIntArray_PopLeftsAndPopRights(t *testing.T) {
+    gtest.Case(t, func() {
+        value1 := []int{0,1,2,3,4,5,6}
+        value2 := []int{0,1,2,3,4,5,6}
+        array1 := garray.NewIntArrayFrom(value1)
+        array2 := garray.NewIntArrayFrom(value2)
+        gtest.Assert(array1.PopLefts(2), []int{0,1})
+        gtest.Assert(array1.Slice(), []int{2,3,4,5,6})
+        gtest.Assert(array1.PopRights(2), []int{5,6})
+        gtest.Assert(array1.Slice(), []int{2,3,4})
+        gtest.Assert(array1.PopRights(20), []int{2,3,4})
+        gtest.Assert(array1.Slice(), []int{})
+        gtest.Assert(array2.PopLefts(20), []int{0,1,2,3,4,5,6})
+        gtest.Assert(array2.Slice(), []int{})
+    })
+}
+
+func TestIntArray_Range(t *testing.T) {
+    gtest.Case(t, func() {
+        value1 := []int{0,1,2,3,4,5,6}
+        array1 := garray.NewIntArrayFrom(value1)
+        gtest.Assert(array1.Range(0, 1), []int{0})
+        gtest.Assert(array1.Range(1, 2), []int{1})
+        gtest.Assert(array1.Range(0, 2), []int{0, 1})
+        gtest.Assert(array1.Range(-1, 10), value1)
+    })
+}
+
 func TestIntArray_Merge(t *testing.T) {
     gtest.Case(t, func() {
         a1 := []int{0, 1, 2, 3}

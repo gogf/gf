@@ -29,10 +29,18 @@ func New(unsafe...bool) *Array {
     return NewArraySize(0, 0, unsafe...)
 }
 
+// See New.
+//
+// 同New方法。
 func NewArray(unsafe...bool) *Array {
     return NewArraySize(0, 0, unsafe...)
 }
 
+// Create an array with given size and cap.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 创建一个指定大小的数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
 func NewArraySize(size int, cap int, unsafe...bool) *Array {
     return &Array{
         mu    : rwmutex.New(unsafe...),
@@ -40,6 +48,11 @@ func NewArraySize(size int, cap int, unsafe...bool) *Array {
     }
 }
 
+// Create an array with given slice <array>.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 通过给定的slice变量创建数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
 func NewArrayFrom(array []interface{}, unsafe...bool) *Array {
     return &Array{
         mu    : rwmutex.New(unsafe...),
@@ -47,6 +60,8 @@ func NewArrayFrom(array []interface{}, unsafe...bool) *Array {
     }
 }
 
+// Get value by index.
+//
 // 获取指定索引的数据项, 调用方注意判断数组边界
 func (a *Array) Get(index int) interface{} {
     a.mu.RLock()
@@ -55,6 +70,8 @@ func (a *Array) Get(index int) interface{} {
     return value
 }
 
+// Set value by index.
+//
 // 设置指定索引的数据项, 调用方注意判断数组边界
 func (a *Array) Set(index int, value interface{}) *Array {
     a.mu.Lock()
@@ -63,6 +80,8 @@ func (a *Array) Set(index int, value interface{}) *Array {
     return a
 }
 
+// Set the underlying slice array with the given <array> param.
+//
 // 设置底层数组变量.
 func (a *Array) SetArray(array []interface{}) *Array {
     a.mu.Lock()
@@ -71,6 +90,8 @@ func (a *Array) SetArray(array []interface{}) *Array {
     return a
 }
 
+// Replace the array items by given <array> from the beginning of array.
+//
 // 使用指定数组替换到对应的索引元素值.
 func (a *Array) Replace(array []interface{}) *Array {
     a.mu.Lock()
@@ -97,6 +118,8 @@ func (a *Array) Sum() (sum int) {
     return
 }
 
+// Sort the array by custom function <less>.
+//
 // 使用自定义的排序函数将数组重新排序.
 func (a *Array) SortFunc(less func(v1, v2 interface{}) bool) *Array {
     a.mu.Lock()
@@ -107,7 +130,9 @@ func (a *Array) SortFunc(less func(v1, v2 interface{}) bool) *Array {
     return a
 }
 
-// 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
+// Insert the <value> to the front of <index>.
+//
+// 在当前索引位置前插入一个数据项, 调用方注意判断数组边界。
 func (a *Array) InsertBefore(index int, value interface{}) *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -117,7 +142,9 @@ func (a *Array) InsertBefore(index int, value interface{}) *Array {
     return a
 }
 
-// 在当前索引位置前插入一个数据项, 调用方注意判断数组边界
+// Insert the <value> to the back of <index>.
+//
+// 在当前索引位置前插入一个数据项, 调用方注意判断数组边界。
 func (a *Array) InsertAfter(index int, value interface{}) *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -127,7 +154,9 @@ func (a *Array) InsertAfter(index int, value interface{}) *Array {
     return a
 }
 
-// 删除指定索引的数据项, 调用方注意判断数组边界
+// Remove an item by index.
+//
+// 删除指定索引的数据项, 调用方注意判断数组边界。
 func (a *Array) Remove(index int) interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -147,7 +176,9 @@ func (a *Array) Remove(index int) interface{} {
     return value
 }
 
-// 将数据项添加到数组的最左端(索引为0)
+// Push new items to the beginning of array.
+//
+// 将数据项添加到数组的最左端(索引为0)。
 func (a *Array) PushLeft(value...interface{}) *Array {
     a.mu.Lock()
     a.array = append(value, a.array...)
@@ -155,7 +186,9 @@ func (a *Array) PushLeft(value...interface{}) *Array {
     return a
 }
 
-// 将数据项添加到数组的最右端(索引为length - 1), 等于: Append
+// Push new items to the end of array.
+//
+// 将数据项添加到数组的最右端(索引为length - 1), 等于: Append。
 func (a *Array) PushRight(value...interface{}) *Array {
     a.mu.Lock()
     a.array = append(a.array, value...)
@@ -163,7 +196,16 @@ func (a *Array) PushRight(value...interface{}) *Array {
     return a
 }
 
-// 将最左端(索引为0)的数据项移出数组，并返回该数据项
+// Pop an random item from array.
+//
+// 随机将一个数据项移出数组，并返回该数据项。
+func (a *Array) PopRand() interface{} {
+    return a.Remove(grand.Intn(len(a.array)))
+}
+
+// Pop an item from the beginning of array.
+//
+// 将最左端(索引为0)的数据项移出数组，并返回该数据项。
 func (a *Array) PopLeft() interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -172,7 +214,9 @@ func (a *Array) PopLeft() interface{} {
     return value
 }
 
-// 将最右端(索引为length - 1)的数据项移出数组，并返回该数据项
+// Pop an item from the end of array.
+//
+// 将最右端(索引为length - 1)的数据项移出数组，并返回该数据项。
 func (a *Array) PopRight() interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -182,18 +226,77 @@ func (a *Array) PopRight() interface{} {
     return value
 }
 
-// 随机将一个数据项移出数组，并返回该数据项
-func (a *Array) PopRand() interface{} {
-    return a.Remove(grand.Intn(len(a.array)))
+// Pop <size> items from the beginning of array.
+//
+// 将最左端(首部)的size个数据项移出数组，并返回该数据项
+func (a *Array) PopLefts(size int) []interface{} {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    length := len(a.array)
+    if size > length {
+        size = length
+    }
+    value  := a.array[0 : size]
+    a.array = a.array[size : ]
+    return value
 }
 
-// 追加数据项, 等于: PushRight
+// Pop <size> items from the end of array.
+//
+// 将最右端(尾部)的size个数据项移出数组，并返回该数据项
+func (a *Array) PopRights(size int) []interface{} {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    index := len(a.array) - size
+    if index < 0 {
+        index = 0
+    }
+    value  := a.array[index :]
+    a.array = a.array[ : index]
+    return value
+}
+
+// Get items by range, returns array[start:end].
+// Be aware that, if in concurrent-safe usage, it returns a copy of slice;
+// else a pointer to the underlying data.
+//
+// 将最右端(尾部)的size个数据项移出数组，并返回该数据项
+func (a *Array) Range(start, end int) []interface{} {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    length := len(a.array)
+    if start > length || start > end {
+        return nil
+    }
+    if start < 0 {
+        start = 0
+    }
+    if end > length {
+        end = length
+    }
+    array  := ([]interface{})(nil)
+    if a.mu.IsSafe() {
+        a.mu.RLock()
+        defer a.mu.RUnlock()
+        array = make([]interface{}, end - start)
+        copy(array, a.array[start : end])
+    } else {
+        array = a.array[start : end]
+    }
+    return array
+}
+
+// See PushRight.
+//
+// 追加数据项, 等于: PushRight。
 func (a *Array) Append(value...interface{}) *Array {
     a.PushRight(value...)
     return a
 }
 
-// 数组长度
+// Get the length of array.
+//
+// 数组长度。
 func (a *Array) Len() int {
     a.mu.RLock()
     length := len(a.array)
@@ -201,7 +304,11 @@ func (a *Array) Len() int {
     return length
 }
 
-// 返回原始数据数组
+// Get the underlying data of array.
+// Be aware that, if in concurrent-safe usage, it returns a copy of slice;
+// else a pointer to the underlying data.
+//
+// 返回原始数据数组.
 func (a *Array) Slice() []interface{} {
     array := ([]interface{})(nil)
     if a.mu.IsSafe() {
@@ -226,6 +333,8 @@ func (a *Array) Clone() (newArray *Array) {
     return NewArrayFrom(array, !a.mu.IsSafe())
 }
 
+// Clear array.
+//
 // 清空数据数组
 func (a *Array) Clear() *Array {
     a.mu.Lock()
@@ -236,11 +345,15 @@ func (a *Array) Clear() *Array {
     return a
 }
 
+// Check whether a value exists in the array.
+//
 // 查找指定数值是否存在
 func (a *Array) Contains(value interface{}) bool {
     return a.Search(value) != -1
 }
 
+// Search array by <value>, returns the index of <value>, returns -1 if not exists.
+//
 // 查找指定数值的索引位置，返回索引位置，如果查找不到则返回-1
 func (a *Array) Search(value interface{}) int {
     if len(a.array) == 0 {
@@ -259,6 +372,8 @@ func (a *Array) Search(value interface{}) int {
     return result
 }
 
+// Unique the array, clear repeated values.
+//
 // 清理数组中重复的元素项
 func (a *Array) Unique() *Array {
     a.mu.Lock()
@@ -273,6 +388,8 @@ func (a *Array) Unique() *Array {
     return a
 }
 
+// Lock writing by callback function f.
+//
 // 使用自定义方法执行加锁修改操作
 func (a *Array) LockFunc(f func(array []interface{})) *Array {
     a.mu.Lock(true)
@@ -281,6 +398,8 @@ func (a *Array) LockFunc(f func(array []interface{})) *Array {
     return a
 }
 
+// Lock reading by callback function f.
+//
 // 使用自定义方法执行加锁读取操作
 func (a *Array) RLockFunc(f func(array []interface{})) *Array {
     a.mu.RLock(true)
@@ -289,6 +408,8 @@ func (a *Array) RLockFunc(f func(array []interface{})) *Array {
     return a
 }
 
+// Merge two arrays.
+//
 // 合并两个数组.
 func (a *Array) Merge(array *Array) *Array {
     a.mu.Lock()
@@ -301,7 +422,8 @@ func (a *Array) Merge(array *Array) *Array {
     return a
 }
 
-// Fills an array with num entries of the value of the value parameter, keys starting at the start_index parameter.
+// Fills an array with num entries of the value of the value parameter,
+// keys starting at the start_index parameter.
 //
 // 用value参数的值将数组填充num个条目，位置由startIndex参数指定的开始。
 func (a *Array) Fill(startIndex int, num int, value interface{}) *Array {
@@ -320,7 +442,8 @@ func (a *Array) Fill(startIndex int, num int, value interface{}) *Array {
     return a
 }
 
-// Chunks an array into arrays with size elements. The last chunk may contain less than size elements.
+// Chunks an array into arrays with size elements.
+// The last chunk may contain less than size elements.
 //
 // 将一个数组分割成多个数组，其中每个数组的单元数目由size决定。最后一个数组的单元数目可能会少于size个。
 func (a *Array) Chunk(size int) [][]interface{} {
@@ -397,7 +520,8 @@ func (a *Array) SubSlice(offset, size int) []interface{} {
     }
 }
 
-// Picks one or more random entries out of an array(a copy), and returns the key (or keys) of the random entries.
+// Picks one or more random entries out of an array(a copy),
+// and returns the key (or keys) of the random entries.
 //
 // 从数组中随机取出size个元素项，构成slice返回。
 func (a *Array) Rand(size int) []interface{} {

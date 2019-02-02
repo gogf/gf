@@ -32,7 +32,7 @@ func TrimLeft(str string, characterMask ...string) string {
     return strings.TrimLeft(str, mask)
 }
 
-// Strip all of the given cut string from the beginning of a string.
+// Strip all of the given <cut> string from the beginning of a string.
 //
 // 去除字符串首的给定字符串。
 func TrimLeftStr(str string, cut string) string {
@@ -55,7 +55,7 @@ func TrimRight(str string, characterMask ...string) string {
     return strings.TrimRight(str, mask)
 }
 
-// Strip all of the given cut string from the end of a string.
+// Strip all of the given <cut> string from the end of a string.
 //
 // 去除字符串尾的给定字符串。
 func TrimRightStr(str string, cut string) string {

@@ -33,6 +33,11 @@ func NewSortedIntArray(unsafe...bool) *SortedIntArray {
     return NewSortedIntArraySize(0, unsafe...)
 }
 
+// Create a sorted array with given size and cap.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 创建一个指定大小的排序数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
 func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
     return &SortedIntArray {
         mu          : rwmutex.New(unsafe...),
@@ -50,6 +55,11 @@ func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
     }
 }
 
+// Create an array with given slice <array>.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 通过给定的slice变量创建排序数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
 func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
     a := NewSortedIntArraySize(0, unsafe...)
     a.array = array
@@ -57,6 +67,8 @@ func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
     return a
 }
 
+// Set the underlying slice array with the given <array> param.
+//
 // 设置底层数组变量.
 func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
     a.mu.Lock()
@@ -66,7 +78,9 @@ func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
     return a
 }
 
-// 将数组重新排序(从小到大).
+// Sort the array in increasing order.
+//
+// 将数组排序(默认从低到高).
 func (a *SortedIntArray) Sort() *SortedIntArray {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -74,7 +88,9 @@ func (a *SortedIntArray) Sort() *SortedIntArray {
     return a
 }
 
-// 添加加数据项
+// And values to sorted array, the array always keeps sorted.
+//
+// 添加数据项.
 func (a *SortedIntArray) Add(values...int) *SortedIntArray {
     if len(values) == 0 {
         return a
@@ -101,7 +117,9 @@ func (a *SortedIntArray) Add(values...int) *SortedIntArray {
     return a
 }
 
-// 获取指定索引的数据项, 调用方注意判断数组边界
+// Get value by index.
+//
+// 获取指定索引的数据项, 调用方注意判断数组边界。
 func (a *SortedIntArray) Get(index int) int {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -109,7 +127,9 @@ func (a *SortedIntArray) Get(index int) int {
     return value
 }
 
-// 删除指定索引的数据项, 调用方注意判断数组边界
+// Remove an item by index.
+//
+// 删除指定索引的数据项, 调用方注意判断数组边界。
 func (a *SortedIntArray) Remove(index int) int {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -129,7 +149,9 @@ func (a *SortedIntArray) Remove(index int) int {
     return value
 }
 
-// 将最左端(索引为0)的数据项移出数组，并返回该数据项
+// Push new items to the beginning of array.
+//
+// 将数据项添加到数组的最左端(索引为0)。
 func (a *SortedIntArray) PopLeft() int {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -138,7 +160,9 @@ func (a *SortedIntArray) PopLeft() int {
     return value
 }
 
-// 将最右端(索引为length - 1)的数据项移出数组，并返回该数据项
+// Push new items to the end of array.
+//
+// 将数据项添加到数组的最右端(索引为length - 1)。
 func (a *SortedIntArray) PopRight() int {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -148,7 +172,76 @@ func (a *SortedIntArray) PopRight() int {
     return value
 }
 
-// 数组长度
+// Pop an random item from array.
+//
+// 随机将一个数据项移出数组，并返回该数据项。
+func (a *SortedIntArray) PopRand() int {
+    return a.Remove(grand.Intn(len(a.array)))
+}
+
+// Pop <size> items from the beginning of array.
+//
+// 将最左端(首部)的size个数据项移出数组，并返回该数据项
+func (a *SortedIntArray) PopLefts(size int) []int {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    length := len(a.array)
+    if size > length {
+        size = length
+    }
+    value  := a.array[0 : size]
+    a.array = a.array[size : ]
+    return value
+}
+
+// Pop <size> items from the end of array.
+//
+// 将最右端(尾部)的size个数据项移出数组，并返回该数据项
+func (a *SortedIntArray) PopRights(size int) []int {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    index := len(a.array) - size
+    if index < 0 {
+        index = 0
+    }
+    value  := a.array[index :]
+    a.array = a.array[ : index]
+    return value
+}
+
+// Get items by range, returns array[start:end].
+// Be aware that, if in concurrent-safe usage, it returns a copy of slice;
+// else a pointer to the underlying data.
+//
+// 将最右端(尾部)的size个数据项移出数组，并返回该数据项
+func (a *SortedIntArray) Range(start, end int) []int {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    length := len(a.array)
+    if start > length || start > end {
+        return nil
+    }
+    if start < 0 {
+        start = 0
+    }
+    if end > length {
+        end = length
+    }
+    array  := ([]int)(nil)
+    if a.mu.IsSafe() {
+        a.mu.RLock()
+        defer a.mu.RUnlock()
+        array = make([]int, end - start)
+        copy(array, a.array[start : end])
+    } else {
+        array = a.array[start : end]
+    }
+    return array
+}
+
+// Get the length of array.
+//
+// 数组长度。
 func (a *SortedIntArray) Len() int {
     a.mu.RLock()
     length := len(a.array)
@@ -168,7 +261,11 @@ func (a *SortedIntArray) Sum() (sum int) {
     return
 }
 
-// 返回原始数据数组
+// Get the underlying data of array.
+// Be aware that, if in concurrent-safe usage, it returns a copy of slice;
+// else a pointer to the underlying data.
+//
+// 返回原始数据数组.
 func (a *SortedIntArray) Slice() []int {
     array := ([]int)(nil)
     if a.mu.IsSafe() {
@@ -182,18 +279,24 @@ func (a *SortedIntArray) Slice() []int {
     return array
 }
 
-// 查找指定数值是否存在
+// Check whether a value exists in the array.
+//
+// 查找指定数值是否存在。
 func (a *SortedIntArray) Contains(value int) bool {
-    _, r := a.Search(value)
-    return r == 0
+    return a.Search(value) == 0
 }
 
-// 查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
-// 返回值: 最后比较位置, 比较结果
-func (a *SortedIntArray) Search(value int) (index int, result int) {
-    return a.binSearch(value, true)
+// Search array by <value>, returns the index of <value>, returns -1 if not exists.
+//
+// 查找指定数值的索引位置，返回索引位置，如果查找不到则返回-1。
+func (a *SortedIntArray) Search(value int) (index int) {
+    index, _ = a.binSearch(value, true)
+    return
 }
 
+// Binary search.
+//
+// 二分查找.
 func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int) {
     if len(a.array) == 0 {
         return -1, -2
@@ -219,7 +322,11 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
     return mid, cmp
 }
 
-// 设置是否允许数组唯一
+// Set unique mark to the array,
+// which means it does not contain any repeated items.
+// It also do unique check, remove all repeated items.
+//
+// 设置是否允许数组唯一.
 func (a *SortedIntArray) SetUnique(unique bool) *SortedIntArray {
     oldUnique := a.unique.Val()
     a.unique.Set(unique)
@@ -229,7 +336,9 @@ func (a *SortedIntArray) SetUnique(unique bool) *SortedIntArray {
     return a
 }
 
-// 清理数组中重复的元素项
+// Do unique check, remove all repeated items.
+//
+// 清理数组中重复的元素项.
 func (a *SortedIntArray) Unique() *SortedIntArray {
     a.mu.Lock()
     i := 0
@@ -258,7 +367,9 @@ func (a *SortedIntArray) Clone() (newArray *SortedIntArray) {
     return NewSortedIntArrayFrom(array, !a.mu.IsSafe())
 }
 
-// 清空数据数组
+// Clear array.
+//
+// 清空数据数组。
 func (a *SortedIntArray) Clear() *SortedIntArray {
     a.mu.Lock()
     if len(a.array) > 0 {
@@ -268,7 +379,9 @@ func (a *SortedIntArray) Clear() *SortedIntArray {
     return a
 }
 
-// 使用自定义方法执行加锁修改操作
+// Lock writing by callback function f.
+//
+// 使用自定义方法执行加锁修改操作。
 func (a *SortedIntArray) LockFunc(f func(array []int)) *SortedIntArray {
     a.mu.Lock(true)
     defer a.mu.Unlock(true)
@@ -276,7 +389,9 @@ func (a *SortedIntArray) LockFunc(f func(array []int)) *SortedIntArray {
     return a
 }
 
-// 使用自定义方法执行加锁读取操作
+// Lock reading by callback function f.
+//
+// 使用自定义方法执行加锁读取操作。
 func (a *SortedIntArray) RLockFunc(f func(array []int)) *SortedIntArray {
     a.mu.RLock(true)
     defer a.mu.RUnlock(true)
@@ -284,6 +399,8 @@ func (a *SortedIntArray) RLockFunc(f func(array []int)) *SortedIntArray {
     return a
 }
 
+// Merge two arrays.
+//
 // 合并两个数组.
 func (a *SortedIntArray) Merge(array *SortedIntArray) *SortedIntArray {
     a.mu.Lock()
@@ -297,7 +414,8 @@ func (a *SortedIntArray) Merge(array *SortedIntArray) *SortedIntArray {
     return a
 }
 
-// Chunks an array into arrays with size elements. The last chunk may contain less than size elements.
+// Chunks an array into arrays with size elements.
+// The last chunk may contain less than size elements.
 //
 // 将一个数组分割成多个数组，其中每个数组的单元数目由size决定。最后一个数组的单元数目可能会少于size个。
 func (a *SortedIntArray) Chunk(size int) [][]int {
@@ -320,8 +438,10 @@ func (a *SortedIntArray) Chunk(size int) [][]int {
     return n
 }
 
-// Extract a slice of the array(If in concurrent safe usage, it returns a copy of the slice; else a pointer).
-// It returns the sequence of elements from the array array as specified by the offset and length parameters.
+// Extract a slice of the array(If in concurrent safe usage,
+// it returns a copy of the slice; else a pointer).
+// It returns the sequence of elements from the array array as specified
+// by the offset and length parameters.
 //
 // 返回根据offset和size参数所指定的数组中的一段序列。
 func (a *SortedIntArray) SubSlice(offset, size int) []int {
@@ -342,7 +462,8 @@ func (a *SortedIntArray) SubSlice(offset, size int) []int {
     }
 }
 
-// Picks one or more random entries out of an array(a copy), and returns the key (or keys) of the random entries.
+// Picks one or more random entries out of an array(a copy),
+// and returns the key (or keys) of the random entries.
 //
 // 从数组中随机取出size个元素项，构成slice返回。
 func (a *SortedIntArray) Rand(size int) []int {

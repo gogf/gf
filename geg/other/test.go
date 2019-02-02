@@ -2,32 +2,18 @@ package main
 
 import (
     "fmt"
-<<<<<<< HEAD
-    "gitee.com/johng/gf/g/text/gstr"
+    "gitee.com/johng/gf/g/container/garray"
 )
 
 func main() {
-    fmt.Println(gstr.TrimLeftStr("gogo我爱gogo", "go"))
-    fmt.Println(gstr.TrimRightStr("gogo我爱gogo", "go"))
+    value1 := []interface{}{0,1,2,3,4,5,6}
+    fmt.Println(value1[1:2])
+    return
+    array1 := garray.NewArrayFrom(value1)
+    a := array1.Range(0, 1)
+    fmt.Println(a)
+    fmt.Println(array1.Slice())
+    a = append(a, 100)
+    fmt.Println(a)
+    fmt.Println(array1.Slice())
 }
-=======
-<<<<<<< HEAD
-    "gitee.com/johng/gf/g/net/ghttp"
-    "strings"
-    "time"
-)
-
-func main() {
-    for {
-        time.Sleep(500*time.Millisecond)
-        fmt.Println(strings.TrimSpace(ghttp.GetContent("http://127.0.0.1:8881")))
-    }
-=======
-    "gitee.com/johng/gf/g/os/gfile"
-)
-
-func main() {
-    fmt.Println(gfile.RealPath("config"))
->>>>>>> master
-}
->>>>>>> qiangg_reuseport
