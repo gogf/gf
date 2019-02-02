@@ -3,8 +3,8 @@ package main
 import (
     "os"
     "time"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/gproc"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/gproc"
 )
 
 // 父进程销毁后，使用进程管理器查看存活的子进程。

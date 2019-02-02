@@ -104,7 +104,7 @@
 ## 问题修复
 1. 修复`gspath`模块在`windows`下搜索失效问题；
 1. 修复`gspath`模块Search时带有indexFiles的检索问题;
-1. bug fix INZS1([https://gitee.com/johng/gf/issues/INZS1](https://gitee.com/johng/gf/issues/INZS1));
+1. bug fix INZS1([https://github.com/gogf/gf/issues/INZS1](https://github.com/gogf/gf/issues/INZS1));
 1. 修复`gproc.ShellRun`在windows下的执行问题;
 
 
@@ -343,8 +343,8 @@
     12、gdb数据库ORM包增加And/Or条件链式方法，并改进Where/Data方法参数灵活性；
     13、对于新增加的模块，同时也增加了对应的开发文档，并梳理完善了现有的其他模块开发文档；
     14、修复ISSUE:
-        #IISWI gitee.com/johng/gf/issues/IISWI,
-        #IISMY gitee.com/johng/gf/issues/IISMY,
+        #IISWI github.com/gogf/gf/issues/IISWI,
+        #IISMY github.com/gogf/gf/issues/IISMY,
         反馈并跟踪完成第三方依赖mxj包的ISSUE修复(github.com/clbanning/mxj/issues/48)；
 
 

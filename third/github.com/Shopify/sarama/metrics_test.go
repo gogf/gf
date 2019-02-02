@@ -3,7 +3,7 @@ package sarama
 import (
 	"testing"
 
-	"gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
+	"github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
 )
 
 func TestGetOrRegisterHistogram(t *testing.T) {

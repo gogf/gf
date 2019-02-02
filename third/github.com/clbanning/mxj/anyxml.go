@@ -21,7 +21,7 @@ const (
 	import (
 		"encoding/json"
 		"fmt"
-		"gitee.com/johng/gf/third/github.com/clbanning/mxj"
+		"github.com/gogf/gf/third/github.com/clbanning/mxj"
 	)
 
 	func main() {

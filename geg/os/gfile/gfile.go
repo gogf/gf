@@ -2,9 +2,9 @@ package main
 
 
 import (
-    "gitee.com/johng/gf/g/os/gfile"
+    "github.com/gogf/gf/g/os/gfile"
     "fmt"
-    "gitee.com/johng/gf/g/util/gutil"
+    "github.com/gogf/gf/g/util/gutil"
 )
 
 var dirpath1  = "/home/john/Workspace/temp/"

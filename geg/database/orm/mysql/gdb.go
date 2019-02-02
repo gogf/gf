@@ -3,8 +3,8 @@ package main
 import (
     "fmt"
     "time"
-    "gitee.com/johng/gf/g/database/gdb"
-    "gitee.com/johng/gf/g"
+    "github.com/gogf/gf/g/database/gdb"
+    "github.com/gogf/gf/g"
 )
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用
@@ -25,7 +25,7 @@ func init () {
     })
     db, _ = gdb.New()
 
-    //gins.Config().SetPath("/home/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/frame")
+    //gins.Config().SetPath("/home/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/geg/frame")
     //db = g.Database()
 
     //gdb.SetConfig(gdb.ConfigNode {

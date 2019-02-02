@@ -6,6 +6,6 @@
 
 package fsnotify
 
-import "gitee.com/johng/gf/third/golang.org/x/sys/unix"
+import "github.com/gogf/gf/third/golang.org/x/sys/unix"
 
 const openMode = unix.O_NONBLOCK | unix.O_RDONLY

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitee.com/johng/gf/third/github.com/Shopify/sarama"
+	"github.com/gogf/gf/third/github.com/Shopify/sarama"
 )
 
 func TestMockSyncProducerImplementsSyncProducerInterface(t *testing.T) {

@@ -1,8 +1,8 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package gview implements a template engine based on text/template.
 // 
@@ -13,19 +13,19 @@ import (
     "bytes"
     "errors"
     "fmt"
-    "gitee.com/johng/gf"
-    "gitee.com/johng/gf/g/container/garray"
-    "gitee.com/johng/gf/g/encoding/ghash"
-    "gitee.com/johng/gf/g/encoding/ghtml"
-    "gitee.com/johng/gf/g/encoding/gurl"
-    "gitee.com/johng/gf/g/os/gfcache"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/gspath"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/gview/internal/text/template"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/text/gstr"
+    "github.com/gogf/gf"
+    "github.com/gogf/gf/g/container/garray"
+    "github.com/gogf/gf/g/encoding/ghash"
+    "github.com/gogf/gf/g/encoding/ghtml"
+    "github.com/gogf/gf/g/encoding/gurl"
+    "github.com/gogf/gf/g/os/gfcache"
+    "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/gspath"
+    "github.com/gogf/gf/g/os/gtime"
+    "github.com/gogf/gf/g/os/gview/internal/text/template"
+    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g/text/gstr"
     "strings"
     "sync"
 )

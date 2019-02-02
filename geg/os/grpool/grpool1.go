@@ -3,8 +3,8 @@ package main
 import (
     "time"
     "fmt"
-    "gitee.com/johng/gf/g/os/grpool"
-    "gitee.com/johng/gf/g/os/gtime"
+    "github.com/gogf/gf/g/os/grpool"
+    "github.com/gogf/gf/g/os/gtime"
 )
 
 func job() {

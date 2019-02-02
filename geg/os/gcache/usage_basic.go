@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gcache"
+    "github.com/gogf/gf/g/os/gcache"
 )
 
 func main() {

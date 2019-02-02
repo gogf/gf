@@ -13,7 +13,7 @@ import (
 	"os"
 	"regexp"
 
-	"gitee.com/johng/gf/third/github.com/clbanning/mxj"
+	"github.com/gogf/gf/third/github.com/clbanning/mxj"
 )
 
 // XmlMsgsFromFileAsJson()

@@ -2,7 +2,7 @@ package main
 
 import (
     "net/http"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/net/ghttp"
 )
 
 func main() {

@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g"
+    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g"
     "fmt"
 )
 

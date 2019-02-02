@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"sync"
 
-	"gitee.com/johng/gf/third/github.com/eapache/go-xerial-snappy"
-	"gitee.com/johng/gf/third/github.com/pierrec/lz4"
+	"github.com/gogf/gf/third/github.com/eapache/go-xerial-snappy"
+	"github.com/gogf/gf/third/github.com/pierrec/lz4"
 )
 
 var (

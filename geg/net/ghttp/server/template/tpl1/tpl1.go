@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/frame/gmvc"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/frame/gmvc"
+    "github.com/gogf/gf/g/net/ghttp"
 )
 type ControllerIndex struct {
     gmvc.Controller

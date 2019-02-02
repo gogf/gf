@@ -1,8 +1,8 @@
 package demo
 
 import (
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/frame/gmvc"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/frame/gmvc"
 )
 
 type Rest struct {

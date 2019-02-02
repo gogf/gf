@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g"
+    "github.com/gogf/gf/g"
 )
 
 // 使用默认的config.toml配置文件读取配置

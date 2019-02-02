@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gmlock"
+    "github.com/gogf/gf/g/os/gmlock"
     "sync"
     "fmt"
     "time"

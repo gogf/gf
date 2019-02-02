@@ -4,8 +4,8 @@ package main
 import (
     "fmt"
     "time"
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/os/gtime"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/os/gtime"
 )
 
 func main() {

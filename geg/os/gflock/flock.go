@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/third/github.com/theckman/go-flock"
+    "github.com/gogf/gf/third/github.com/theckman/go-flock"
     "time"
 )
 

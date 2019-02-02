@@ -25,7 +25,7 @@ import (
 	"os"
 	"os/signal"
 
-	cluster "gitee.com/johng/gf/third/github.com/bsm/sarama-cluster"
+	cluster "github.com/gogf/gf/third/github.com/bsm/sarama-cluster"
 )
 
 func main() {
@@ -89,7 +89,7 @@ import (
   "os"
   "os/signal"
 
-  cluster "gitee.com/johng/gf/third/github.com/bsm/sarama-cluster"
+  cluster "github.com/gogf/gf/third/github.com/bsm/sarama-cluster"
 )
 
 func main() {

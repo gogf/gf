@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/container/garray"
-    "gitee.com/johng/gf/g"
+    "github.com/gogf/gf/g/container/garray"
+    "github.com/gogf/gf/g"
 )
 
 

@@ -2,7 +2,7 @@
 
 package sarama
 
-import "gitee.com/johng/gf/third/github.com/DataDog/zstd"
+import "github.com/gogf/gf/third/github.com/DataDog/zstd"
 
 func zstdDecompress(dst, src []byte) ([]byte, error) {
 	return zstd.Decompress(dst, src)

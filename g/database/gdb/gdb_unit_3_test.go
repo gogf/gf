@@ -3,9 +3,9 @@
 package gdb_test
 
 import (
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/test/gtest"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/os/gtime"
+    "github.com/gogf/gf/g/test/gtest"
     "testing"
 )
 

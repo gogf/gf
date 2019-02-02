@@ -8,7 +8,7 @@ package x2j
 import (
 	"strings"
 
-	"gitee.com/johng/gf/third/github.com/clbanning/mxj"
+	"github.com/gogf/gf/third/github.com/clbanning/mxj"
 )
 
 //----------------------------- find all paths to a key --------------------------------

@@ -1,9 +1,9 @@
 package main
 
 import (
-    "gitee.com/johng/gf/third/github.com/fsnotify/fsnotify"
+    "github.com/gogf/gf/third/github.com/fsnotify/fsnotify"
     "log"
-    "gitee.com/johng/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/glog"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
     defer watch.Close()
     //添加要监控的对象，文件或文件夹
     //err = watch.Add("D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go")
-    err = watch.Add("/Users/john/Workspace/Go/GOPATH/src/gitee.com/johng/gf/geg/other/test.go")
+    err = watch.Add("/Users/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/geg/other/test.go")
     if err != nil {
         log.Fatal(err)
     }

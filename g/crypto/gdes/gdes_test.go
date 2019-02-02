@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"gitee.com/johng/gf/g/crypto/gdes"
+	"github.com/gogf/gf/g/crypto/gdes"
 )
 
 func TestDesECB(t *testing.T){

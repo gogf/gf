@@ -39,7 +39,7 @@ $ go get -u github.com/davecgh/go-spew/spew
 Add this import line to the file you're working in:
 
 ```Go
-import "gitee.com/johng/gf/third/github.com/davecgh/go-spew/spew"
+import "github.com/gogf/gf/third/github.com/davecgh/go-spew/spew"
 ```
 
 To dump a variable with full newlines, indentation, type, and pointer
@@ -75,7 +75,7 @@ import (
     "html"
     "net/http"
 
-    "gitee.com/johng/gf/third/github.com/davecgh/go-spew/spew"
+    "github.com/gogf/gf/third/github.com/davecgh/go-spew/spew"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {

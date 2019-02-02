@@ -9,7 +9,7 @@ branches:
   - develop
 
 env:
-- GITEE_GF=$GOPATH/src/gitee.com/johng/gf GO111MODULE=on
+- GITEE_GF=$GOPATH/src/github.com/gogf/gf GO111MODULE=on
 
 services:
 - mysql

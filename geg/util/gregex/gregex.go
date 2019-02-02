@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/util/gregex"
+    "github.com/gogf/gf/g/util/gregex"
 )
 
 func main() {

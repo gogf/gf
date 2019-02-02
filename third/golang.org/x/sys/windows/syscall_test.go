@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"testing"
 
-	"gitee.com/johng/gf/third/golang.org/x/sys/windows"
+	"github.com/gogf/gf/third/golang.org/x/sys/windows"
 )
 
 func testSetGetenv(t *testing.T, key, value string) {

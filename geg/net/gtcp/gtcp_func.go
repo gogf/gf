@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/net/gtcp"
+    "github.com/gogf/gf/g/net/gtcp"
     "fmt"
     "os"
 )

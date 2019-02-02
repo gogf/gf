@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"gitee.com/johng/gf/third/github.com/golang/snappy"
+	"github.com/gogf/gf/third/github.com/golang/snappy"
 )
 
 var (

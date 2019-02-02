@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g"
+    "github.com/gogf/gf/g/net/ghttp"
+    "github.com/gogf/gf/g"
     "fmt"
 )
 

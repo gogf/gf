@@ -3,7 +3,7 @@ package main
 import (
     "fmt"
     "sync"
-    "gitee.com/johng/gf/g/os/grpool"
+    "github.com/gogf/gf/g/os/grpool"
 )
 
 func main() {

@@ -27,7 +27,7 @@ $ go get github.com/grokify/html-strip-tags-go
 
 ```go
 import(
-    "gitee.com/johng/gf/third/github.com/grokify/html-strip-tags-go" // => strip
+    "github.com/gogf/gf/third/github.com/grokify/html-strip-tags-go" // => strip
 )
 
 func main() {

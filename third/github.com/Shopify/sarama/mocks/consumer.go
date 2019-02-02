@@ -4,7 +4,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"gitee.com/johng/gf/third/github.com/Shopify/sarama"
+	"github.com/gogf/gf/third/github.com/Shopify/sarama"
 )
 
 // Consumer implements sarama's Consumer interface for testing purposes.

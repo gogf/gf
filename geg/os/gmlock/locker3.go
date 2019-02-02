@@ -2,9 +2,9 @@ package main
 
 import (
     "sync"
-    "gitee.com/johng/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/glog"
     "time"
-    "gitee.com/johng/gf/g/os/gmlock"
+    "github.com/gogf/gf/g/os/gmlock"
 )
 
 // 内存锁 - TryLock

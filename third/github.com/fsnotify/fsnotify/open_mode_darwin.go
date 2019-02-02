@@ -6,7 +6,7 @@
 
 package fsnotify
 
-import "gitee.com/johng/gf/third/golang.org/x/sys/unix"
+import "github.com/gogf/gf/third/golang.org/x/sys/unix"
 
 // note: this constant is not defined on BSD
 const openMode = unix.O_EVTONLY

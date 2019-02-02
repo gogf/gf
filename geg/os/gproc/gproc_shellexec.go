@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gproc"
+    "github.com/gogf/gf/g/os/gproc"
     "fmt"
 )
 

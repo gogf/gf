@@ -19,7 +19,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitee.com/johng/gf/third/golang.org/x/sys/unix"
+	"github.com/gogf/gf/third/golang.org/x/sys/unix"
 )
 
 type testProc struct {

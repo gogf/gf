@@ -25,7 +25,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"gitee.com/johng/gf/third/github.com/gomodule/redigo/internal"
+	"github.com/gogf/gf/third/github.com/gomodule/redigo/internal"
 )
 
 var (

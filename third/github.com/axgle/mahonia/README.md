@@ -18,7 +18,7 @@ example
 
 	package main
 	import "fmt"
-	import "gitee.com/johng/gf/third/github.com/axgle/mahonia"
+	import "github.com/gogf/gf/third/github.com/axgle/mahonia"
 	func main(){
 	  enc:=mahonia.NewEncoder("gbk")
 	  //converts a  string from UTF-8 to gbk encoding.

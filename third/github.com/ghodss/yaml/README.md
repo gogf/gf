@@ -38,7 +38,7 @@ $ go get github.com/ghodss/yaml
 And import using:
 
 ```
-import "gitee.com/johng/gf/third/github.com/ghodss/yaml"
+import "github.com/gogf/gf/third/github.com/ghodss/yaml"
 ```
 
 Usage is very similar to the JSON library:
@@ -49,7 +49,7 @@ package main
 import (
 	"fmt"
 
-	"gitee.com/johng/gf/third/github.com/ghodss/yaml"
+	"github.com/gogf/gf/third/github.com/ghodss/yaml"
 )
 
 type Person struct {
@@ -93,7 +93,7 @@ package main
 import (
 	"fmt"
 
-	"gitee.com/johng/gf/third/github.com/ghodss/yaml"
+	"github.com/gogf/gf/third/github.com/ghodss/yaml"
 )
 
 func main() {

@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
+	"github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
 )
 
 // Broker represents a single Kafka broker connection. All operations on this object are entirely concurrency-safe.

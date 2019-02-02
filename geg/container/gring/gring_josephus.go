@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/container/gring"
+    "github.com/gogf/gf/g/container/gring"
 )
 
 type Player struct {

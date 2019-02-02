@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-	"gitee.com/johng/gf/g/os/gview/internal/text/template/parse"
+	"github.com/gogf/gf/g/os/gview/internal/text/template/parse"
 )
 
 // maxExecDepth specifies the maximum stack depth of templates within

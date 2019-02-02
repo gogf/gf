@@ -3,7 +3,7 @@ package cluster
 import (
 	"sync"
 
-	"gitee.com/johng/gf/third/github.com/Shopify/sarama"
+	"github.com/gogf/gf/third/github.com/Shopify/sarama"
 )
 
 // OffsetStash allows to accumulate offsets and

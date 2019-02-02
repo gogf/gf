@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"gitee.com/johng/gf/third/github.com/eapache/go-resiliency/breaker"
-	"gitee.com/johng/gf/third/github.com/eapache/queue"
+	"github.com/gogf/gf/third/github.com/eapache/go-resiliency/breaker"
+	"github.com/gogf/gf/third/github.com/eapache/queue"
 )
 
 // AsyncProducer publishes Kafka messages using a non-blocking API. It routes messages

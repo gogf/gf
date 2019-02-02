@@ -19,7 +19,7 @@ package spew_test
 import (
 	"fmt"
 
-	"gitee.com/johng/gf/third/github.com/davecgh/go-spew/spew"
+	"github.com/gogf/gf/third/github.com/davecgh/go-spew/spew"
 )
 
 type Flag int

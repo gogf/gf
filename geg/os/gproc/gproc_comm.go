@@ -7,9 +7,9 @@ import (
     "os"
     "fmt"
     "time"
-    "gitee.com/johng/gf/g/os/gproc"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/gproc"
+    "github.com/gogf/gf/g/os/gtime"
+    "github.com/gogf/gf/g/os/glog"
 )
 
 func main () {

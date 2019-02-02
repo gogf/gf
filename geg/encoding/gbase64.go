@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/encoding/gbase64"
+    "github.com/gogf/gf/g/encoding/gbase64"
 )
 
 func main() {

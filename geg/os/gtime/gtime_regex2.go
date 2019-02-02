@@ -3,7 +3,7 @@ package main
 import (
     "regexp"
     "fmt"
-    "gitee.com/johng/gf/g/os/gtime"
+    "github.com/gogf/gf/g/os/gtime"
 )
 
 func main() {

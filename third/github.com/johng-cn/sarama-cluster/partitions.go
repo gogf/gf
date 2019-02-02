@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"gitee.com/johng/gf/third/github.com/Shopify/sarama"
+	"github.com/gogf/gf/third/github.com/Shopify/sarama"
 )
 
 // PartitionConsumer allows code to consume individual partitions from the cluster.

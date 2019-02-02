@@ -1,9 +1,9 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/database/gkafka"
+    "github.com/gogf/gf/g/database/gkafka"
     "fmt"
-    "gitee.com/johng/gf/g/os/gtime"
+    "github.com/gogf/gf/g/os/gtime"
     "time"
 )
 

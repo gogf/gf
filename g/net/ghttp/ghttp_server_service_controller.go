@@ -1,20 +1,20 @@
-// Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 // 服务注册.
 
 package ghttp
 
 import (
     "errors"
-    "gitee.com/johng/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/glog"
     "strings"
     "reflect"
     "fmt"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/text/gstr"
+    "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/text/gstr"
 )
 
 // 绑定控制器，控制器需要实现gmvc.Controller接口

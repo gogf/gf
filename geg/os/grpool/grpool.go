@@ -4,8 +4,8 @@ import (
     "fmt"
     "sync"
     "time"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/grpool"
+    "github.com/gogf/gf/g/os/gtime"
+    "github.com/gogf/gf/g/os/grpool"
 )
 
 func main() {

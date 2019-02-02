@@ -1,8 +1,8 @@
 package gdb_test
 
 import (
-    "gitee.com/johng/gf/g/database/gdb"
-    "gitee.com/johng/gf/g/test/gtest"
+    "github.com/gogf/gf/g/database/gdb"
+    "github.com/gogf/gf/g/test/gtest"
 )
 
 var (

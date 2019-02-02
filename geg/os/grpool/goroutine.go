@@ -4,7 +4,7 @@ import (
     "fmt"
     "sync"
     "time"
-    "gitee.com/johng/gf/g/os/gtime"
+    "github.com/gogf/gf/g/os/gtime"
 )
 
 

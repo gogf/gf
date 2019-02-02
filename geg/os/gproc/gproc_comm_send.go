@@ -3,7 +3,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gproc"
+    "github.com/gogf/gf/g/os/gproc"
 )
 
 func main () {

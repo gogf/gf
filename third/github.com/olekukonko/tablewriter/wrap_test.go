@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitee.com/johng/gf/third/github.com/mattn/go-runewidth"
+	"github.com/gogf/gf/third/github.com/mattn/go-runewidth"
 )
 
 var text = "The quick brown fox jumps over the lazy dog."

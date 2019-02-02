@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/text/gstr"
+    "github.com/gogf/gf/g/text/gstr"
 )
 
 func main() {

@@ -1,21 +1,21 @@
-// Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 package gproc
 
 import (
-    "gitee.com/johng/gf/g/net/gtcp"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/encoding/gbinary"
+    "github.com/gogf/gf/g/net/gtcp"
+    "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g/encoding/gbinary"
     "fmt"
     "errors"
     "time"
     "bytes"
-    "gitee.com/johng/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/glog"
     "io"
 )
 

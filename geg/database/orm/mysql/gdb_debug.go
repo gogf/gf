@@ -1,9 +1,9 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/database/gdb"
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/os/glog"
+    "github.com/gogf/gf/g/database/gdb"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/os/glog"
 )
 
 func main() {

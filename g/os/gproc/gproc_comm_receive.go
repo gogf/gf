@@ -1,8 +1,8 @@
-// Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 // "不要通过共享内存来通信，而应该通过通信来共享内存"
 
 
@@ -11,13 +11,13 @@ package gproc
 import (
     "fmt"
     "net"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/net/gtcp"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/encoding/gbinary"
-    "gitee.com/johng/gf/g/container/gqueue"
-    "gitee.com/johng/gf/g/container/gtype"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/net/gtcp"
+    "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g/encoding/gbinary"
+    "github.com/gogf/gf/g/container/gqueue"
+    "github.com/gogf/gf/g/container/gtype"
 )
 
 const (

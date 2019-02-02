@@ -58,7 +58,7 @@ _Go MySQL Driver_ is an implementation of Go's `database/sql/driver` interface. 
 Use `mysql` as `driverName` and a valid [DSN](#dsn-data-source-name)  as `dataSourceName`:
 ```go
 import "database/sql"
-import _ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
+import _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
 
 db, err := sql.Open("mysql", "user:password@/dbname")
 ```
@@ -431,7 +431,7 @@ See [context support in the database/sql package](https://golang.org/doc/go1.8#d
 ### `LOAD DATA LOCAL INFILE` support
 For this feature you need direct access to the package. Therefore you must change the import path (no `_`):
 ```go
-import "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
+import "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
 ```
 
 Files must be whitelisted by registering them with `mysql.RegisterLocalFile(filepath)` (recommended) or the Whitelist check must be deactivated by using the DSN parameter `allowAllFiles=true` ([*Might be insecure!*](http://dev.mysql.com/doc/refman/5.7/en/load-data-local.html)).

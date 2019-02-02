@@ -1,8 +1,8 @@
-// Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package gpage provides useful paging functionality for web pages.
 // 
@@ -13,10 +13,10 @@ import (
     "fmt"
     "math"
     url2 "net/url"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/text/gregex"
-    "gitee.com/johng/gf/g/text/gstr"
+    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/text/gregex"
+    "github.com/gogf/gf/g/text/gstr"
     "strings"
 )
 

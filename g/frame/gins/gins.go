@@ -1,8 +1,8 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package gins provides instances management and some core components.
 // 
@@ -12,17 +12,17 @@ package gins
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/container/gmap"
-    "gitee.com/johng/gf/g/database/gdb"
-    "gitee.com/johng/gf/g/database/gredis"
-    "gitee.com/johng/gf/g/internal/cmdenv"
-    "gitee.com/johng/gf/g/os/gcfg"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/os/gfsnotify"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/util/gconv"
-    "gitee.com/johng/gf/g/text/gregex"
+    "github.com/gogf/gf/g/container/gmap"
+    "github.com/gogf/gf/g/database/gdb"
+    "github.com/gogf/gf/g/database/gredis"
+    "github.com/gogf/gf/g/internal/cmdenv"
+    "github.com/gogf/gf/g/os/gcfg"
+    "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/os/gfsnotify"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/gview"
+    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g/text/gregex"
 )
 
 const (

@@ -2,12 +2,12 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/net/ghttp"
 )
 
 func main() {
-    path := "/home/john/Workspace/Go/gitee.com/johng/gf/version.go"
+    path := "/home/john/Workspace/Go/github.com/gogf/gf/version.go"
     r, e := ghttp.Post("http://127.0.0.1:8199/upload", "name=john&age=18&upload-file=@file:" + path)
     if e != nil {
         glog.Error(e)

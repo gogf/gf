@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/container/gpool"
+    "github.com/gogf/gf/g/container/gpool"
     "fmt"
     "time"
 )

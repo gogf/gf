@@ -16,7 +16,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"gitee.com/johng/gf/third/golang.org/x/sys/unix"
+	"github.com/gogf/gf/third/golang.org/x/sys/unix"
 )
 
 // Watcher watches a set of files, delivering events to a channel.

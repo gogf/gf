@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/util/gconv"
+    "github.com/gogf/gf/g/util/gconv"
     "fmt"
     "time"
 )

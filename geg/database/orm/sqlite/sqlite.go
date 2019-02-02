@@ -1,9 +1,9 @@
 package main
 
 //import (
-//    _ "gitee.com/johng/gf/third/github.com/mattn/go-sqlite3"
-//    "gitee.com/johng/gf/g/database/gdb"
-//    "gitee.com/johng/gf/g"
+//    _ "github.com/gogf/gf/third/github.com/mattn/go-sqlite3"
+//    "github.com/gogf/gf/g/database/gdb"
+//    "github.com/gogf/gf/g"
 //    "fmt"
 //)
 //

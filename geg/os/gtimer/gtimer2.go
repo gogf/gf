@@ -2,8 +2,8 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/os/gtimer"
+    "github.com/gogf/gf/g/container/gtype"
+    "github.com/gogf/gf/g/os/gtimer"
     "time"
 )
 

@@ -1,15 +1,15 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with gm file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package gmap provides kinds of concurrent-safe(alternative) maps.
 //
 // 并发安全MAP.
 package gmap
 
-import "gitee.com/johng/gf/g/internal/rwmutex"
+import "github.com/gogf/gf/g/internal/rwmutex"
 
 // 注意:
 // 1、这个Map是所有并发安全Map中效率最低的，如果对效率要求比较高的场合，请合理选择对应数据类型的Map；

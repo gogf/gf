@@ -3,8 +3,8 @@ package main
 import (
     "time"
     "sync"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/gmlock"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/gmlock"
 )
 
 // 内存锁基本使用

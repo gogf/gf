@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"gitee.com/johng/gf/third/github.com/Shopify/sarama"
-	"gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
+	"github.com/gogf/gf/third/github.com/Shopify/sarama"
+	"github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
 )
 
 var (

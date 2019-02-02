@@ -4,7 +4,7 @@ package greuseport_test
 
 import (
 	"fmt"
-	"gitee.com/johng/gf/g/net/greuseport"
+	"github.com/gogf/gf/g/net/greuseport"
     "html"
 	"io/ioutil"
 	"net/http"

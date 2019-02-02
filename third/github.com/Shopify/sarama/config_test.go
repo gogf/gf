@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
+	"github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
 )
 
 func TestDefaultConfigValidates(t *testing.T) {

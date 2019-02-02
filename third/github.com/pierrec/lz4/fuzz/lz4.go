@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 
-	"gitee.com/johng/gf/third/github.com/pierrec/lz4"
+	"github.com/gogf/gf/third/github.com/pierrec/lz4"
 )
 
 // lz4.Reader fuzz function

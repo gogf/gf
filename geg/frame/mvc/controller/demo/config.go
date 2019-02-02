@@ -1,8 +1,8 @@
 package demo
 
 import (
-    "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/frame/gins"
+    "github.com/gogf/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/frame/gins"
 )
 
 func init() {

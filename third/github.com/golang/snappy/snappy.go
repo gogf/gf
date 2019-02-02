@@ -17,7 +17,7 @@
 //
 // The canonical, C++ implementation is at https://github.com/google/snappy and
 // it only implements the block format.
-package snappy // import "gitee.com/johng/gf/third/github.com/golang/snappy"
+package snappy // import "github.com/gogf/gf/third/github.com/golang/snappy"
 
 import (
 	"hash/crc32"

@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package internal // import "gitee.com/johng/gf/third/github.com/gomodule/redigo/internal"
+package internal // import "github.com/gogf/gf/third/github.com/gomodule/redigo/internal"
 
 import (
 	"strings"

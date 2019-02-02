@@ -1,8 +1,8 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package gmd5 provides useful API for MD5 encryption/decryption algorithms.
 package gmd5
@@ -12,7 +12,7 @@ import (
     "fmt"
     "os"
     "io"
-    "gitee.com/johng/gf/g/util/gconv"
+    "github.com/gogf/gf/g/util/gconv"
 )
 
 // 将任意类型的变量进行md5摘要(注意map等非排序变量造成的不同结果)

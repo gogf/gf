@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/net/gudp"
+    "github.com/gogf/gf/g/net/gudp"
     "fmt"
 )
 

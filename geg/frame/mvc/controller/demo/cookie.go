@@ -1,8 +1,8 @@
 package demo
 
 import (
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/os/gtime"
+    "github.com/gogf/gf/g/net/ghttp"
 )
 
 func init() {

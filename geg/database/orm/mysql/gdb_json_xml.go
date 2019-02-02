@@ -1,10 +1,10 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/database/gdb"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/database/gdb"
     "fmt"
-    "gitee.com/johng/gf/g/encoding/gparser"
+    "github.com/gogf/gf/g/encoding/gparser"
 )
 
 func main() {

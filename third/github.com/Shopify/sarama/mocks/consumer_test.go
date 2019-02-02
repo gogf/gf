@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"gitee.com/johng/gf/third/github.com/Shopify/sarama"
+	"github.com/gogf/gf/third/github.com/Shopify/sarama"
 )
 
 func TestMockConsumerImplementsConsumerInterface(t *testing.T) {

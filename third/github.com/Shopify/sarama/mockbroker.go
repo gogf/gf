@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"gitee.com/johng/gf/third/github.com/davecgh/go-spew/spew"
+	"github.com/gogf/gf/third/github.com/davecgh/go-spew/spew"
 )
 
 const (

@@ -1,10 +1,10 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/os/gview"
-    "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/util/gpage"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/os/gview"
+    "github.com/gogf/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/util/gpage"
 )
 
 // 自定义分页名称

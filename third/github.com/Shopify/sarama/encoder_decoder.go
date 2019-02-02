@@ -3,7 +3,7 @@ package sarama
 import (
 	"fmt"
 
-	"gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
+	"github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
 )
 
 // Encoder is the interface that wraps the basic Encode method.

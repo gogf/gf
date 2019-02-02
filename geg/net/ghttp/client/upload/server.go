@@ -1,9 +1,9 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/net/ghttp"
 )
 
 // 执行文件上传处理，上传到系统临时目录 /tmp

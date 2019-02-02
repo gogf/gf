@@ -13,8 +13,8 @@ import (
 	"runtime"
 	"strings"
 
-	"gitee.com/johng/gf/third/github.com/pierrec/lz4"
-	"gitee.com/johng/gf/third/github.com/pkg/profile"
+	"github.com/gogf/gf/third/github.com/pierrec/lz4"
+	"github.com/gogf/gf/third/github.com/pkg/profile"
 )
 
 func main() {

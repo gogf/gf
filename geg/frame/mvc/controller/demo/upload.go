@@ -1,8 +1,8 @@
 package demo
 
 import (
-    "gitee.com/johng/gf/g/os/gfile"
-    "gitee.com/johng/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/net/ghttp"
 )
 
 func Upload(r *ghttp.Request) {

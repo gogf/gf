@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	master "gitee.com/johng/gf/third/github.com/golang/snappy"
+	master "github.com/gogf/gf/third/github.com/golang/snappy"
 )
 
 var xerialHeader = []byte{130, 83, 78, 65, 80, 80, 89, 0}

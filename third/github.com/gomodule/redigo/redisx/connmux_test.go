@@ -19,9 +19,9 @@ import (
 	"sync"
 	"testing"
 
-	"gitee.com/johng/gf/third/github.com/gomodule/redigo/internal/redistest"
-	"gitee.com/johng/gf/third/github.com/gomodule/redigo/redis"
-	"gitee.com/johng/gf/third/github.com/gomodule/redigo/redisx"
+	"github.com/gogf/gf/third/github.com/gomodule/redigo/internal/redistest"
+	"github.com/gogf/gf/third/github.com/gomodule/redigo/redis"
+	"github.com/gogf/gf/third/github.com/gomodule/redigo/redisx"
 )
 
 func TestConnMux(t *testing.T) {

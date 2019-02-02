@@ -1,13 +1,13 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package gipv4 provides useful API for IPv6 address handling.
 package gipv6
 
-import "gitee.com/johng/gf/g/text/gregex"
+import "github.com/gogf/gf/g/text/gregex"
 
 // 判断所给地址是否是一个IPv6地址
 func Validate(ip string) bool {

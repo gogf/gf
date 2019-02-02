@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gcache"
+    "github.com/gogf/gf/g/os/gcache"
     "time"
     "fmt"
 )

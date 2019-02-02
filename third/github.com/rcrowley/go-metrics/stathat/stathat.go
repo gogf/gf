@@ -2,8 +2,8 @@
 package stathat
 
 import (
-	"gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
-	"gitee.com/johng/gf/third/github.com/stathat/go"
+	"github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
+	"github.com/gogf/gf/third/github.com/stathat/go"
 	"log"
 	"time"
 )

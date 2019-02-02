@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gfcache"
-    "gitee.com/johng/gf/g/os/gfile"
+    "github.com/gogf/gf/g/os/gfcache"
+    "github.com/gogf/gf/g/os/gfile"
     "fmt"
     "time"
 )

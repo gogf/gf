@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/net/greuseport"
+    "github.com/gogf/gf/g/net/greuseport"
     "net/http"
     "os"
 )

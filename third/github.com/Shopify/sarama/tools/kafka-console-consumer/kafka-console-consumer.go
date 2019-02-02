@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"gitee.com/johng/gf/third/github.com/Shopify/sarama"
+	"github.com/gogf/gf/third/github.com/Shopify/sarama"
 )
 
 var (

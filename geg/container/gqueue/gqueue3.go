@@ -2,9 +2,9 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/container/gqueue"
-    "gitee.com/johng/gf/g/os/gtime"
-    "gitee.com/johng/gf/g/os/gtimer"
+    "github.com/gogf/gf/g/container/gqueue"
+    "github.com/gogf/gf/g/os/gtime"
+    "github.com/gogf/gf/g/os/gtimer"
     "time"
 )
 

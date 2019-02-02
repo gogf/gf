@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g"
-    "gitee.com/johng/gf/g/container/garray"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/container/garray"
 )
 
 func main()  {

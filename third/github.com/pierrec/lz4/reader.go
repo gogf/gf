@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"gitee.com/johng/gf/third/github.com/pierrec/lz4/internal/xxh32"
+	"github.com/gogf/gf/third/github.com/pierrec/lz4/internal/xxh32"
 )
 
 // Reader implements the LZ4 frame decoder.

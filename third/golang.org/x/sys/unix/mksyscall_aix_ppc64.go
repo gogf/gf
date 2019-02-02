@@ -504,7 +504,7 @@ func main() {
 	}
 	imp := ""
 	if pack != "unix" {
-		imp = "import \"gitee.com/johng/gf/third/golang.org/x/sys/unix\"\n"
+		imp = "import \"github.com/gogf/gf/third/golang.org/x/sys/unix\"\n"
 
 	}
 

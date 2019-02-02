@@ -3,8 +3,8 @@ package main
 import (
     "fmt"
     "bytes"
-    "gitee.com/johng/gf/g/net/gtcp"
-    "gitee.com/johng/gf/g/util/gconv"
+    "github.com/gogf/gf/g/net/gtcp"
+    "github.com/gogf/gf/g/util/gconv"
     "os"
 )
 

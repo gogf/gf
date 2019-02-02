@@ -1,8 +1,8 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package ghtml provides useful API for HTML content handling.
 //
@@ -12,7 +12,7 @@ package ghtml
 import (
     "strings"
     "html"
-    "gitee.com/johng/gf/third/github.com/grokify/html-strip-tags-go"
+    "github.com/gogf/gf/third/github.com/grokify/html-strip-tags-go"
 )
 
 // 过滤掉HTML标签，只返回text内容

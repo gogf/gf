@@ -12,7 +12,7 @@ import (
 	"errors"
 	"syscall"
 
-	"gitee.com/johng/gf/third/golang.org/x/sys/windows"
+	"github.com/gogf/gf/third/golang.org/x/sys/windows"
 )
 
 // Log provides access to the system log.

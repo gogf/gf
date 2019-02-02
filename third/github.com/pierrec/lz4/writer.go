@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"gitee.com/johng/gf/third/github.com/pierrec/lz4/internal/xxh32"
+	"github.com/gogf/gf/third/github.com/pierrec/lz4/internal/xxh32"
 )
 
 // Writer implements the LZ4 frame encoder.

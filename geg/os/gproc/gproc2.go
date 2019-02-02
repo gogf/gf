@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/os/gproc"
+    "github.com/gogf/gf/g/os/gproc"
 )
 
 // 使用gproc kill指定其他进程(清确保运行该程序的用户有足够权限)

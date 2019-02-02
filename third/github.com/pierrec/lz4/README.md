@@ -6,7 +6,7 @@ LZ4 compression and decompression in pure Go.
 ## Usage
 
 ```go
-import "gitee.com/johng/gf/third/github.com/pierrec/lz4"
+import "github.com/gogf/gf/third/github.com/pierrec/lz4"
 ```
 
 ## Description

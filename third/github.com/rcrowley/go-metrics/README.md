@@ -75,7 +75,7 @@ Periodically emit every metric to Graphite using the [Graphite client](https://g
 
 ```go
 
-import "gitee.com/johng/gf/third/github.com/cyberdelia/go-metrics-graphite"
+import "github.com/gogf/gf/third/github.com/cyberdelia/go-metrics-graphite"
 
 addr, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:2003")
 go graphite.Graphite(metrics.DefaultRegistry, 10e9, "metrics", addr)
@@ -89,7 +89,7 @@ issues [#121](https://github.com/rcrowley/go-metrics/issues/121) and
 [#124](https://github.com/rcrowley/go-metrics/issues/124) for progress and details.
 
 ```go
-import "gitee.com/johng/gf/third/github.com/vrischmann/go-metrics-influxdb"
+import "github.com/gogf/gf/third/github.com/vrischmann/go-metrics-influxdb"
 
 go influxdb.InfluxDB(metrics.DefaultRegistry,
   10e9, 
@@ -106,7 +106,7 @@ Periodically upload every metric to Librato using the [Librato client](https://g
 has been deprecated and moved to the repository linked above.
 
 ```go
-import "gitee.com/johng/gf/third/github.com/mihasya/go-metrics-librato"
+import "github.com/gogf/gf/third/github.com/mihasya/go-metrics-librato"
 
 go librato.Librato(metrics.DefaultRegistry,
     10e9,                  // interval
@@ -121,7 +121,7 @@ go librato.Librato(metrics.DefaultRegistry,
 Periodically emit every metric to StatHat:
 
 ```go
-import "gitee.com/johng/gf/third/github.com/rcrowley/go-metrics/stathat"
+import "github.com/gogf/gf/third/github.com/rcrowley/go-metrics/stathat"
 
 go stathat.Stathat(metrics.DefaultRegistry, 10e9, "example@example.com")
 ```
@@ -134,7 +134,7 @@ as well as all your go-metrics.
 
 
 ```go
-import "gitee.com/johng/gf/third/github.com/rcrowley/go-metrics/exp"
+import "github.com/gogf/gf/third/github.com/rcrowley/go-metrics/exp"
 
 exp.Exp(metrics.DefaultRegistry)
 ```

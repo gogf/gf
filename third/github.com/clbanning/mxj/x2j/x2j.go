@@ -7,7 +7,7 @@
 package x2j
 
 import (
-	. "gitee.com/johng/gf/third/github.com/clbanning/mxj"
+	. "github.com/gogf/gf/third/github.com/clbanning/mxj"
 	"io"
 )
 

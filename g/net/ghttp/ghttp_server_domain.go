@@ -1,15 +1,15 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 // 域名服务注册管理.
 
 package ghttp
 
 import (
     "strings"
-    "gitee.com/johng/gf/g/container/gmap"
+    "github.com/gogf/gf/g/container/gmap"
 )
 
 // 域名管理器对象

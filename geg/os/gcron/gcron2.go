@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gitee.com/johng/gf/g/os/gcron"
-    "gitee.com/johng/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/gcron"
+    "github.com/gogf/gf/g/os/glog"
     "time"
 )
 

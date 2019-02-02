@@ -6,7 +6,7 @@ import (
 	"hash/fnv"
 	"testing"
 
-	"gitee.com/johng/gf/third/github.com/pierrec/xxHash/xxHash32"
+	"github.com/gogf/gf/third/github.com/pierrec/xxHash/xxHash32"
 )
 
 type test struct {

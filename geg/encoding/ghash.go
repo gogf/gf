@@ -3,7 +3,7 @@ package main
 import (
     "strconv"
     "fmt"
-    "gitee.com/johng/gf/g/encoding/ghash"
+    "github.com/gogf/gf/g/encoding/ghash"
 )
 
 func main () {

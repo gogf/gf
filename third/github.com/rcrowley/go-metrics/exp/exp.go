@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"sync"
 
-	"gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
+	"github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
 )
 
 type exp struct {

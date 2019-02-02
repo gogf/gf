@@ -3,9 +3,9 @@ package main
 import (
     "fmt"
     "time"
-    "gitee.com/johng/gf/g/net/gtcp"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/util/gconv"
+    "github.com/gogf/gf/g/net/gtcp"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/util/gconv"
 )
 
 func main() {

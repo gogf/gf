@@ -1,8 +1,8 @@
-// Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://gitee.com/johng/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package gdb provides ORM features for popular relationship databases.
 //
@@ -14,12 +14,12 @@ import (
     "database/sql"
     "errors"
     "fmt"
-    "gitee.com/johng/gf/g/container/gring"
-    "gitee.com/johng/gf/g/container/gtype"
-    "gitee.com/johng/gf/g/container/gvar"
-    "gitee.com/johng/gf/g/os/gcache"
-    "gitee.com/johng/gf/g/util/grand"
-    _ "gitee.com/johng/gf/third/github.com/go-sql-driver/mysql"
+    "github.com/gogf/gf/g/container/gring"
+    "github.com/gogf/gf/g/container/gtype"
+    "github.com/gogf/gf/g/container/gvar"
+    "github.com/gogf/gf/g/os/gcache"
+    "github.com/gogf/gf/g/util/grand"
+    _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "time"
 )
 

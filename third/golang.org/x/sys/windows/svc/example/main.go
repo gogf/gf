@@ -20,7 +20,7 @@ import (
 	"os"
 	"strings"
 
-	"gitee.com/johng/gf/third/golang.org/x/sys/windows/svc"
+	"github.com/gogf/gf/third/golang.org/x/sys/windows/svc"
 )
 
 func usage(errmsg string) {

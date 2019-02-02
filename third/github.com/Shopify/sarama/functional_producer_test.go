@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	toxiproxy "gitee.com/johng/gf/third/github.com/Shopify/toxiproxy/client"
-	"gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
+	toxiproxy "github.com/gogf/gf/third/github.com/Shopify/toxiproxy/client"
+	"github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
 )
 
 const TestBatchSize = 1000

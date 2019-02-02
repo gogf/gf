@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"gitee.com/johng/gf/third/github.com/Shopify/sarama"
+	"github.com/gogf/gf/third/github.com/Shopify/sarama"
 )
 
 // Consumer is a cluster group consumer

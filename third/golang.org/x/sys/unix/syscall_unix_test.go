@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"gitee.com/johng/gf/third/golang.org/x/sys/unix"
+	"github.com/gogf/gf/third/golang.org/x/sys/unix"
 )
 
 // Tests that below functions, structures and constants are consistent

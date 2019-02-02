@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	toxiproxy "gitee.com/johng/gf/third/github.com/Shopify/toxiproxy/client"
+	toxiproxy "github.com/gogf/gf/third/github.com/Shopify/toxiproxy/client"
 )
 
 const (

@@ -3,9 +3,9 @@ package main
 import (
     "os"
     "time"
-    "gitee.com/johng/gf/g/os/glog"
-    "gitee.com/johng/gf/g/os/genv"
-    "gitee.com/johng/gf/g/os/gproc"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/os/genv"
+    "github.com/gogf/gf/g/os/gproc"
 )
 
 // 查看父子进程的环境变量

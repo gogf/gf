@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g"
+    "github.com/gogf/gf/g"
 )
 
 // 使用GetVar获取动态变量

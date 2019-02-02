@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    "gitee.com/johng/gf/g/database/gkafka"
+    "github.com/gogf/gf/g/database/gkafka"
 )
 
 // 创建kafka消费客户端

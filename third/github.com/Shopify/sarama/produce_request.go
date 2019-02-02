@@ -1,6 +1,6 @@
 package sarama
 
-import "gitee.com/johng/gf/third/github.com/rcrowley/go-metrics"
+import "github.com/gogf/gf/third/github.com/rcrowley/go-metrics"
 
 // RequiredAcks is used in Produce Requests to tell the broker how many replica acknowledgements
 // it must see before responding. Any of the constants defined here are valid. On broker versions

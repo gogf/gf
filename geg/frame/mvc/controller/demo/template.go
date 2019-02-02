@@ -1,8 +1,8 @@
 package demo
 
 import (
-    "gitee.com/johng/gf/g/net/ghttp"
-    "gitee.com/johng/gf/g/frame/gmvc"
+    "github.com/gogf/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/frame/gmvc"
 )
 
 type ControllerTemplate struct {
