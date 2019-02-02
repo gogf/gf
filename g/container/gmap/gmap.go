@@ -305,7 +305,7 @@ func (gm *Map) RLockFunc(f func(m map[interface{}]interface{})) {
     f(gm.m)
 }
 
-// Exchange key-value in the hash map, it will result key-value to value-key.
+// Exchange key-value in the hash map, it will change key-value to value-key.
 //
 // 交换Map中的键和值.
 func (gm *Map) Flip() {
