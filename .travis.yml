@@ -9,7 +9,7 @@ branches:
   - develop
 
 env:
-- GITEE_GF=$GOPATH/src/github.com/gogf/gf GO111MODULE=on
+- GO111MODULE=on
 
 services:
 - mysql
@@ -19,9 +19,6 @@ before_install:
 
 install:
 - pwd
-- mkdir -p $GITEE_GF
-- cp * $GITEE_GF -R
-- cd $GITEE_GF/g
 
 script:
 - GOARCH=386 go test -v ./...
