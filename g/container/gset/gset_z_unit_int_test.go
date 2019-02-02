@@ -19,7 +19,7 @@ func TestIntSet_Basic(t *testing.T) {
     gtest.Case(t, func() {
         s := gset.NewIntSet()
         s.Add(1).Add(1).Add(2)
-        s.BatchAdd([]int{3,4})
+        s.Add([]int{3,4}...)
         gtest.Assert(s.Size(), 4)
         gtest.AssertIN(1, s.Slice())
         gtest.AssertIN(2, s.Slice())

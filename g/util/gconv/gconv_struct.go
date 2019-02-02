@@ -9,7 +9,6 @@ package gconv
 import (
     "errors"
     "fmt"
-    "gitee.com/johng/gf/g/container/gset"
     "gitee.com/johng/gf/g/text/gstr"
     "gitee.com/johng/gf/third/github.com/fatih/structs"
     "reflect"
@@ -84,10 +83,10 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
     }
     // 最后按照默认规则进行匹配
-    attrset  := gset.NewStringSet(true)
-    elemtype := elem.Type()
+    attrMap  := make(map[string]struct{})
+    elemType := elem.Type()
     for i := 0; i < elem.NumField(); i++ {
-        attrset.Add(elemtype.Field(i).Name)
+        attrMap[elemType.Field(i).Name] = struct{}{}
     }
     for mapk, mapv := range paramsMap {
         name := ""
@@ -105,17 +104,16 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
                 continue
             }
             // 循环查找属性名称进行匹配
-            attrset.Iterator(func(value string) bool {
+            for value, _ := range attrMap {
                 if strings.EqualFold(checkName, value) {
                     name = value
-                    return false
+                    break
                 }
                 if strings.EqualFold(checkName, gstr.Replace(value, "_", "")) {
                     name = value
-                    return false
+                    break
                 }
-                return true
-            })
+            }
             if name != "" {
                 break
             }

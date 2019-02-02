@@ -14,9 +14,12 @@ import (
     "gitee.com/johng/gf/g/container/gset"
 )
 
-var ints  = gset.NewIntSet()
-var itfs  = gset.NewSet()
-var strs  = gset.NewStringSet()
+var ints       = gset.NewIntSet()
+var itfs       = gset.NewSet()
+var strs       = gset.NewStringSet()
+var intsUnsafe = gset.NewIntSet(true)
+var itfsUnsafe = gset.NewSet(true)
+var strsUnsafe = gset.NewStringSet(true)
 
 func Benchmark_IntSet_Add(b *testing.B) {
     for i := 0; i < b.N; i++ {
@@ -69,5 +72,59 @@ func Benchmark_StringSet_Contains(b *testing.B) {
 func Benchmark_StringSet_Remove(b *testing.B) {
     for i := 0; i < b.N; i++ {
         strs.Remove(strconv.Itoa(i))
+    }
+}
+
+func Benchmark_Unsafe_IntSet_Add(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        intsUnsafe.Add(i)
+    }
+}
+
+func Benchmark_Unsafe_IntSet_Contains(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        intsUnsafe.Contains(i)
+    }
+}
+
+func Benchmark_Unsafe_IntSet_Remove(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        intsUnsafe.Remove(i)
+    }
+}
+
+func Benchmark_Unsafe_Set_Add(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        itfsUnsafe.Add(i)
+    }
+}
+
+func Benchmark_Unsafe_Set_Contains(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        itfsUnsafe.Contains(i)
+    }
+}
+
+func Benchmark_Unsafe_Set_Remove(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        itfsUnsafe.Remove(i)
+    }
+}
+
+func Benchmark_Unsafe_StringSet_Add(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        strsUnsafe.Add(strconv.Itoa(i))
+    }
+}
+
+func Benchmark_Unsafe_StringSet_Contains(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        strsUnsafe.Contains(strconv.Itoa(i))
+    }
+}
+
+func Benchmark_Unsafe_StringSet_Remove(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        strsUnsafe.Remove(strconv.Itoa(i))
     }
 }

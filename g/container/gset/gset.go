@@ -10,8 +10,9 @@
 package gset
 
 import (
-    "fmt"
     "gitee.com/johng/gf/g/internal/rwmutex"
+    "gitee.com/johng/gf/g/util/gconv"
+    "strings"
 )
 
 type Set struct {
@@ -19,10 +20,18 @@ type Set struct {
     m  map[interface{}]struct{}
 }
 
+// Create a set, which contains un-repeated items.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 创建一个空的集合对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
 func New(unsafe...bool) *Set {
     return NewSet(unsafe...)
 }
 
+// See New.
+//
+// 同New.
 func NewSet(unsafe...bool) *Set {
     return &Set{
         m  : make(map[interface{}]struct{}),
@@ -30,7 +39,10 @@ func NewSet(unsafe...bool) *Set {
     }
 }
 
-// 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历
+// Iterate the set by given callback <f>,
+// if <f> returns true then continue iterating; or false to stop.
+//
+// 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历。
 func (set *Set) Iterator(f func (v interface{}) bool) *Set {
     set.mu.RLock()
     defer set.mu.RUnlock()
@@ -42,25 +54,21 @@ func (set *Set) Iterator(f func (v interface{}) bool) *Set {
     return set
 }
 
-// 添加
-func (set *Set) Add(item interface{}) *Set {
+// Add one or multiple items to the set.
+//
+// 添加元素项到集合中(支持多个).
+func (set *Set) Add(item...interface{}) *Set {
     set.mu.Lock()
-    set.m[item] = struct{}{}
-    set.mu.Unlock()
-    return set
-}
-
-// 批量添加
-func (set *Set) BatchAdd(items []interface{}) *Set {
-    set.mu.Lock()
-    for _, item := range items {
-        set.m[item] = struct{}{}
+    for _, v := range item {
+        set.m[v] = struct{}{}
     }
     set.mu.Unlock()
     return set
 }
 
-// 键是否存在
+// Check whether the set contains <item>.
+//
+// 键是否存在.
 func (set *Set) Contains(item interface{}) bool {
     set.mu.RLock()
     _, exists := set.m[item]
@@ -68,15 +76,19 @@ func (set *Set) Contains(item interface{}) bool {
     return exists
 }
 
-// 删除键值对
-func (set *Set) Remove(key interface{}) *Set {
+// Remove <item> from set.
+//
+// 删除元素项。
+func (set *Set) Remove(item interface{}) *Set {
     set.mu.Lock()
-    delete(set.m, key)
+    delete(set.m, item)
     set.mu.Unlock()
     return set
 }
 
-// 大小
+// Get size of the set.
+//
+// 获得集合大小。
 func (set *Set) Size() int {
     set.mu.RLock()
     l := len(set.m)
@@ -84,7 +96,9 @@ func (set *Set) Size() int {
     return l
 }
 
-// 清空set
+// Clear the set.
+//
+// 清空集合。
 func (set *Set) Clear() *Set {
     set.mu.Lock()
     set.m = make(map[interface{}]struct{})
@@ -92,7 +106,9 @@ func (set *Set) Clear() *Set {
     return set
 }
 
-// 转换为数组
+// Get the copy of items from set as slice.
+//
+// 获得集合元素项列表.
 func (set *Set) Slice() []interface{} {
     set.mu.RLock()
     i   := 0
@@ -105,12 +121,23 @@ func (set *Set) Slice() []interface{} {
     return ret
 }
 
-// 转换为字符串
-func (set *Set) String() string {
-    return fmt.Sprint(set.Slice())
+// Join set items with a string.
+//
+// 使用glue字符串串连当前集合的元素项，构造成新的字符串返回。
+func (set *Set) Join(glue string) string {
+    return strings.Join(gconv.Strings(set.Slice()), ",")
 }
 
-// 写锁操作
+// Return set items as a string, which are joined by char ','.
+//
+// 使用glue字符串串连当前集合的元素项，构造成新的字符串返回。
+func (set *Set) String() string {
+    return set.Join(",")
+}
+
+// Lock writing by callback function f.
+//
+// 使用自定义方法执行加锁修改操作。
 func (set *Set) LockFunc(f func(m map[interface{}]struct{})) *Set {
     set.mu.Lock(true)
     defer set.mu.Unlock(true)
@@ -118,7 +145,9 @@ func (set *Set) LockFunc(f func(m map[interface{}]struct{})) *Set {
     return set
 }
 
-// 读锁操作
+// Lock reading by callback function f.
+//
+// 使用自定义方法执行加锁读取操作。
 func (set *Set) RLockFunc(f func(m map[interface{}]struct{})) *Set {
     set.mu.RLock(true)
     defer set.mu.RUnlock(true)
@@ -126,6 +155,8 @@ func (set *Set) RLockFunc(f func(m map[interface{}]struct{})) *Set {
     return set
 }
 
+// Check whether the two sets equal.
+//
 // 判断两个集合是否相等.
 func (set *Set) Equal(other *Set) bool {
     if set == other {
@@ -146,6 +177,8 @@ func (set *Set) Equal(other *Set) bool {
     return true
 }
 
+// Check whether the current set is sub-set of <other>.
+//
 // 判断当前集合是否为other集合的子集.
 func (set *Set) IsSubsetOf(other *Set) bool {
     if set == other {
@@ -163,6 +196,9 @@ func (set *Set) IsSubsetOf(other *Set) bool {
     return true
 }
 
+// Returns a new set which is the union of <set> and <other>.
+// Which means, all the items in <newSet> is in <set> or in <other>.
+//
 // 并集, 返回新的集合：属于set或属于others的元素为元素的集合.
 func (set *Set) Union(others ... *Set) (newSet *Set) {
     newSet = NewSet(true)
@@ -188,6 +224,9 @@ func (set *Set) Union(others ... *Set) (newSet *Set) {
     return
 }
 
+// Returns a new set which is the difference set from <set> to <other>.
+// Which means, all the items in <newSet> is in <set> and not in <other>.
+//
 // 差集, 返回新的集合: 属于set且不属于others的元素为元素的集合.
 func (set *Set) Diff(others...*Set) (newSet *Set) {
     newSet = NewSet(true)
@@ -208,6 +247,9 @@ func (set *Set) Diff(others...*Set) (newSet *Set) {
     return
 }
 
+// Returns a new set which is the intersection from <set> to <other>.
+// Which means, all the items in <newSet> is in <set> and also in <other>.
+//
 // 交集, 返回新的集合: 属于set且属于others的元素为元素的集合.
 func (set *Set) Intersect(others...*Set) (newSet *Set) {
     newSet = NewSet(true)
@@ -229,6 +271,9 @@ func (set *Set) Intersect(others...*Set) (newSet *Set) {
     return
 }
 
+// Returns a new set which is the complement from <set> to <full>.
+// Which means, all the items in <newSet> is in <full> and not in <set>.
+//
 // 补集, 返回新的集合: (前提: set应当为full的子集)属于全集full不属于集合set的元素组成的集合.
 // 如果给定的full集合不是set的全集时，返回full与set的差集.
 func (set *Set) Complement(full *Set) (newSet *Set) {
