@@ -296,7 +296,7 @@ func (a *SortedStringArray) Merge(array *SortedStringArray) *SortedStringArray {
 // 将一个数组分割成多个数组，其中每个数组的单元数目由size决定。最后一个数组的单元数目可能会少于size个。
 func (a *SortedStringArray) Chunk(size int) [][]string {
     if size < 1 {
-        panic("size: cannot be less than 1")
+        return nil
     }
     a.mu.RLock()
     defer a.mu.RUnlock()
