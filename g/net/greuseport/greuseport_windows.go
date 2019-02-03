@@ -3,6 +3,7 @@
 package greuseport
 
 import (
+    "github.com/gogf/gf/third/golang.org/x/sys/windows"
     "syscall"
 )
 
