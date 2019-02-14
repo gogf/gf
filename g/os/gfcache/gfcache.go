@@ -12,6 +12,7 @@ package gfcache
 import (
     "github.com/gogf/gf/g/container/gmap"
     "github.com/gogf/gf/g/container/gtype"
+    "github.com/gogf/gf/g/internal/cmdenv"
 )
 
 type Cache struct {
@@ -21,17 +22,19 @@ type Cache struct {
 }
 
 const (
-    // 默认的缓存容量(不限制)
-    gDEFAULT_CACHE_CAP = 0
+    // 默认的缓存容量(10MB)
+    gDEFAULT_CACHE_CAP = 10*1024*1024
 )
 
 var (
+    // 默认的缓存容量
+    cacheCap = cmdenv.Get("gf.gfcache.cap", gDEFAULT_CACHE_CAP).Int()
     // 默认的文件缓存对象
-    cache = New()
+    cache    = New()
 )
 
 func New(cap ... int) *Cache {
-    c := gDEFAULT_CACHE_CAP
+    c := cacheCap
     if len(cap) > 0 {
         c = cap[0]
     }

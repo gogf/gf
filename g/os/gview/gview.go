@@ -108,6 +108,9 @@ func New(path...string) *View {
 func (view *View) SetPath(path string) error {
     realPath := gfile.RealPath(path)
     if realPath == "" {
+        realPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + path)
+    }
+    if realPath == "" {
         err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
         glog.Error(fmt.Sprintf(`[gview] SetPath failed: %s`, err.Error()))
         return err
@@ -121,6 +124,9 @@ func (view *View) SetPath(path string) error {
 // 添加模板目录搜索路径
 func (view *View) AddPath(path string) error {
     realPath := gfile.RealPath(path)
+    if realPath == "" {
+        realPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + path)
+    }
     if realPath == "" {
         err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
         glog.Error(fmt.Sprintf(`[gview] AddPath failed: %s`, err.Error()))

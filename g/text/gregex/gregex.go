@@ -103,3 +103,14 @@ func ReplaceStringFunc(pattern string, src string, replaceFunc func(s string) st
     })
     return string(bytes), err
 }
+
+// Split slices s into substrings separated by the expression and returns a slice of
+// the substrings between those expression matches.
+//
+// 通过一个正则表达式分隔字符串.
+func Split(pattern string, src string) []string {
+    if r, err := getRegexp(pattern); err == nil {
+        return r.Split(src, -1)
+    }
+    return nil
+}

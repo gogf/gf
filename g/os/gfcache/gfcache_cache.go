@@ -41,8 +41,8 @@ func (c *Cache) GetBinContents(path string) []byte {
     // 读取到内容，并且没有超过缓存容量限制时才会执行缓存
     if len(b) > 0 && (c.cap.Val() == 0 || c.size.Val() < c.cap.Val()) {
         c.size.Add(len(b))
-        c.cache.Set(path, b)
         c.addMonitor(path)
+        c.cache.Set(path, b)
     }
     return b
 }
@@ -50,7 +50,7 @@ func (c *Cache) GetBinContents(path string) []byte {
 // 添加文件监控
 func (c *Cache) addMonitor(path string) {
     // 防止多goroutine同时调用
-    if c.cache.Get(path) != nil {
+    if c.cache.Contains(path) {
         return
     }
     gfsnotify.Add(path, func(event *gfsnotify.Event) {
