@@ -20,7 +20,7 @@
 ```
 go get -u github.com/gogf/gf
 ```
-or use `go.mod`
+or use `go.mod`:
 ```
 require github.com/gogf/gf latest
 ```
@@ -32,6 +32,7 @@ golang version >= 1.9.2
 
 # Documentation
 
+* [GoDoc](https://godoc.org/github.com/gogf/gf)
 * [中文文档](https://goframe.org)
 
 # Architecture
@@ -91,6 +92,8 @@ func main() {
 <br /><br /><br />
 
 # Donators
+
+<a href="https://gitee.com/tiangenglan" target="_blank" title="zhuhuan12"><img src="https://images.gitee.com/uploads/99/1167099_tiangenglan.png" width="60" align="left"></a>
 
 <a href="https://gitee.com/zhuhuan12" target="_blank" title="zhuhuan12"><img src="https://gitee.com/uploads/39/751839_zhuhuan12.png" width="60" align="left"></a>
 
