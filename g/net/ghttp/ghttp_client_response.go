@@ -17,13 +17,18 @@ type ClientResponse struct {
     http.Response
 }
 
-// 获取返回的数据
+// 获取返回的数据(二进制).
 func (r *ClientResponse) ReadAll() []byte {
     body, err := ioutil.ReadAll(r.Body)
     if err != nil {
         return nil
     }
     return body
+}
+
+// 获取返回的数据(字符串).
+func (r *ClientResponse) ReadAllString() string {
+    return string(r.ReadAll())
 }
 
 // 关闭返回的HTTP链接

@@ -76,26 +76,30 @@ func (c *Client) SetBasicAuth(user, pass string) {
 
 // GET请求
 func (c *Client) Get(url string) (*ClientResponse, error) {
-    return c.DoRequest("GET", url, []byte(""))
+    return c.DoRequest("GET", url)
 }
 
 // PUT请求
-func (c *Client) Put(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("PUT", url, []byte(data))
+func (c *Client) Put(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("PUT", url, data...)
 }
 
 // POST请求提交数据，默认使用表单方式提交数据(绝大部分场景下也是如此)。
 // 如果服务端对Content-Type有要求，可使用Client对象进行请求，单独设置相关属性。
 // 支持文件上传，需要字段格式为：FieldName=@file:
-func (c *Client) Post(url, data string) (*ClientResponse, error) {
+func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
     if len(c.prefix) > 0 {
         url = c.prefix + url
     }
+    param := ""
+    if len(data) > 0 {
+        param = data[0]
+    }
     req := (*http.Request)(nil)
-    if strings.Contains(data, "@file:") {
+    if strings.Contains(param, "@file:") {
         buffer := new(bytes.Buffer)
         writer := multipart.NewWriter(buffer)
-        for _, item := range strings.Split(data, "&") {
+        for _, item := range strings.Split(param, "&") {
             array := strings.Split(item, "=")
             if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
                 path := array[1][6:]
@@ -126,7 +130,7 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
             req.Header.Set("Content-Type", writer.FormDataContentType())
         }
     } else {
-        if r, err := http.NewRequest("POST", url, bytes.NewReader([]byte(data))); err != nil {
+        if r, err := http.NewRequest("POST", url, bytes.NewReader([]byte(param))); err != nil {
             return nil, err
         } else {
             req = r
@@ -154,28 +158,28 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
 }
 
 // DELETE请求
-func (c *Client) Delete(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("DELETE", url, []byte(data))
+func (c *Client) Delete(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("DELETE", url, data...)
 }
 
-func (c *Client) Head(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("HEAD", url, []byte(data))
+func (c *Client) Head(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("HEAD", url, data...)
 }
 
-func (c *Client) Patch(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("PATCH", url, []byte(data))
+func (c *Client) Patch(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("PATCH", url, data...)
 }
 
-func (c *Client) Connect(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("CONNECT", url, []byte(data))
+func (c *Client) Connect(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("CONNECT", url, data...)
 }
 
-func (c *Client) Options(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("OPTIONS", url, []byte(data))
+func (c *Client) Options(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("OPTIONS", url, data...)
 }
 
-func (c *Client) Trace(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("TRACE", url, []byte(data))
+func (c *Client) Trace(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("TRACE", url, data...)
 }
 
 // GET请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
@@ -220,11 +224,7 @@ func (c *Client) TraceContent(url string, data...string) string {
 
 // 请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
 func (c *Client) DoRequestContent(method string, url string, data...string) string {
-    content := ""
-    if len(data) > 0 {
-        content = data[0]
-    }
-    response, err := c.DoRequest(method, url, []byte(content))
+    response, err := c.DoRequest(method, url, data...)
     if err != nil {
         return ""
     }
@@ -233,14 +233,18 @@ func (c *Client) DoRequestContent(method string, url string, data...string) stri
 }
 
 // 请求并返回response对象，该方法支持二进制提交数据
-func (c *Client) DoRequest(method, url string, data []byte) (*ClientResponse, error) {
+func (c *Client) DoRequest(method, url string, data...string) (*ClientResponse, error) {
     if strings.EqualFold("POST", method) {
-        return c.Post(url, string(data))
+        return c.Post(url, data...)
     }
     if len(c.prefix) > 0 {
         url = c.prefix + url
     }
-    req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader(data))
+    param := ""
+    if len(data) > 0 {
+        param = data[0]
+    }
+    req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader([]byte(param)))
     if err != nil {
         return nil, err
     }

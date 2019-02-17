@@ -32,7 +32,6 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
         Server         : s,
         ResponseWriter : ResponseWriter {
             ResponseWriter : w,
-            Status         : http.StatusOK,
             buffer         : bytes.NewBuffer(nil),
         },
     }

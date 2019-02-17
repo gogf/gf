@@ -82,6 +82,11 @@ func Test_Router_Group1(t *testing.T) {
         gtest.Assert(client.GetContent ("/api/obj/show"),    "Object Show")
         gtest.Assert(client.DeleteContent("/api/obj/rest"),  "Object REST Delete")
 
+        // 测试404
+        resp, err := client.Get("/ThisDoesNotExist")
+        defer resp.Close()
+        gtest.Assert(err,             nil)
+        gtest.Assert(resp.StatusCode, 404)
     })
 }
 
@@ -122,5 +127,11 @@ func Test_Router_Group2(t *testing.T) {
         gtest.Assert(client.GetContent ("/api/obj/my-show"), "Object Show")
         gtest.Assert(client.GetContent ("/api/obj/show"),    "Object Show")
         gtest.Assert(client.DeleteContent("/api/obj/rest"),  "Object REST Delete")
+
+        // 测试404
+        resp, err := client.Get("/ThisDoesNotExist")
+        defer resp.Close()
+        gtest.Assert(err,             nil)
+        gtest.Assert(resp.StatusCode, 404)
     })
 }
