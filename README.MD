@@ -14,7 +14,7 @@
 [![Code Helper](https://www.codetriage.com/gogf/gf/badges/users.svg)](https://www.codetriage.com/gogf/gf) 
 --> 
 
-`GF(GoFrame)` is a modular, lightweight, loosely coupled, high performance application development framework written in Go. Supporting graceful server, hot updates, multi-domain, multi-port, multi-service, HTTP/HTTPS, dynamic/hook routing and many more features. Providing a series of core components and dozens of practical modules.
+`GF(GoFrame)` is a modular, loose-coupled and production-ready application development framework written in Go. Providing a series of core components and dozens of practical modules, such as: cache, logging, array/queue/set/map, timer/timing tasks, file/memory lock, object pool, validator, database ORM, etc. Supporting web server with graceful server, hot updates, multi-domain, multi-port, multi-service, HTTP/HTTPS, dynamic/hook routing, rewrite rules and many more features. 
 
 # Installation
 ```
