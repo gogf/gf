@@ -2,11 +2,13 @@ package main
 
 import (
     "fmt"
-    "github.com/gogf/gf/g/os/gfile"
 )
 
 func main() {
-    f, e := gfile.Open("/Users/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/third")
-    fmt.Println(e)
-    fmt.Println(f)
+    s := "abc我是中国人é"
+    fmt.Println(len(s))
+
+    for i := 0; i < len(s); i++ {
+        fmt.Println(s[i])
+    }
 }

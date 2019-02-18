@@ -149,11 +149,14 @@ func Test_Router_Status(t *testing.T) {
     })
 }
 
-// 测试不存在的路由.
-func Test_Router_404(t *testing.T) {
+// 自定义状态码处理.
+func Test_Router_CustomStatusHandler(t *testing.T) {
     s := g.Server(gtime.Nanosecond())
     s.BindHandler("/", func(r *ghttp.Request){
         r.Response.Write("hello")
+    })
+    s.BindStatusHandler(404, func(r *ghttp.Request){
+        r.Response.Write("404 page")
     })
     s.SetPort(8120)
     s.SetDumpRouteMap(false)
@@ -167,6 +170,34 @@ func Test_Router_404(t *testing.T) {
     gtest.Case(t, func() {
         client := ghttp.NewClient()
         client.SetPrefix("http://127.0.0.1:8120")
+
+        gtest.Assert(client.GetContent("/"), "hello")
+        resp, err := client.Get("/ThisDoesNotExist")
+        defer resp.Close()
+        gtest.Assert(err,             nil)
+        gtest.Assert(resp.StatusCode, 404)
+        gtest.Assert(resp.ReadAllString(), "404 page")
+    })
+}
+
+// 测试不存在的路由.
+func Test_Router_404(t *testing.T) {
+    s := g.Server(gtime.Nanosecond())
+    s.BindHandler("/", func(r *ghttp.Request){
+        r.Response.Write("hello")
+    })
+    s.SetPort(8130)
+    s.SetDumpRouteMap(false)
+    go s.Run()
+    defer func() {
+        s.Shutdown()
+        time.Sleep(time.Second)
+    }()
+    // 等待启动完成
+    time.Sleep(time.Second)
+    gtest.Case(t, func() {
+        client := ghttp.NewClient()
+        client.SetPrefix("http://127.0.0.1:8130")
 
         gtest.Assert(client.GetContent("/"), "hello")
         resp, err := client.Get("/ThisDoesNotExist")

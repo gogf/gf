@@ -136,9 +136,8 @@ func (r *Response) WriteStatus(status int, content...string) {
         if status != http.StatusOK {
             if f := r.request.Server.getStatusHandler(status, r.request); f != nil {
                 f(r.request)
-                // 如果是http.StatusOK那么表示回调函数内部没有设置header status，
-                // 那么这里就可以设置status，防止多次设置(http: multiple response.WriteHeader calls)
-                if r.Status == http.StatusOK {
+                // 防止多次设置(http: multiple response.WriteHeader calls)
+                if r.Status == 0 {
                     r.WriteHeader(status)
                 }
                 return

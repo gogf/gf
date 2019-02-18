@@ -88,25 +88,6 @@ func UcWords(str string) string {
     return strings.Title(str)
 }
 
-// Traverse the array to find the string index position, if not exist, return-1.
-//
-// 遍历数组查找字符串索引位置，如果不存在则返回-1，使用完整遍历查找.
-func SearchArray (a []string, s string) int {
-    for i, v := range a {
-        if s == v {
-            return i
-        }
-    }
-    return -1
-}
-
-// InArray tests whether the given string s is in string array a.
-//
-// 判断字符串是否在数组中
-func InArray (a []string, s string) bool {
-    return SearchArray(a, s) != -1
-}
-
 // IsLetterLower tests whether the given byte b is in lower case.
 //
 // 判断给定字符是否小写
@@ -490,15 +471,7 @@ func Explode(delimiter, str string) []string {
 //
 // 用glue将字符串数组pieces连接为一个字符串。
 func Implode(glue string, pieces []string) string {
-    var buf bytes.Buffer
-    l := len(pieces)
-    for _, str := range pieces {
-        buf.WriteString(str)
-        if l--; l > 0 {
-            buf.WriteString(glue)
-        }
-    }
-    return buf.String()
+    return strings.Join(pieces, glue)
 }
 
 // Generate a single-byte string from a number.

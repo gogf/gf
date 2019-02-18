@@ -68,26 +68,6 @@ func Test_UcWords(t *testing.T) {
     })
 }
 
-func Test_SearchArray(t *testing.T) {
-    gtest.Case(t, func() {
-        array := []string{"a", "b", "c"}
-        gtest.Assert(gstr.SearchArray(array, "a"),  0)
-        gtest.Assert(gstr.SearchArray(array, "b"),  1)
-        gtest.Assert(gstr.SearchArray(array, "c"),  2)
-        gtest.Assert(gstr.SearchArray(array, "d"), -1)
-    })
-}
-
-func Test_InArray(t *testing.T) {
-    gtest.Case(t, func() {
-        array := []string{"a", "b", "c"}
-        gtest.Assert(gstr.InArray(array, "a"), true)
-        gtest.Assert(gstr.InArray(array, "b"), true)
-        gtest.Assert(gstr.InArray(array, "c"), true)
-        gtest.Assert(gstr.InArray(array, "d"), false)
-    })
-}
-
 func Test_IsLetterLower(t *testing.T) {
     gtest.Case(t, func() {
         gtest.Assert(gstr.IsLetterLower('a'), true)

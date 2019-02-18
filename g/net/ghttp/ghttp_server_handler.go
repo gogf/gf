@@ -46,14 +46,28 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     request := newRequest(s, r, w)
 
     defer func() {
-        if request.LeaveTime == 0 {
-            request.LeaveTime = gtime.Microsecond()
+        // 设置请求完成时间
+        request.LeaveTime = gtime.Microsecond()
+        // 事件 - BeforeOutput
+        if !request.IsExited() {
+            s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
         }
+        // 输出Cookie
+        request.Cookie.Output()
+        // 输出缓冲区
+        request.Response.OutputBuffer()
+        // 事件 - AfterOutput
+        if !request.IsExited() {
+            s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+        }
+
+        // 事件 - BeforeClose
         s.callHookHandler(HOOK_BEFORE_CLOSE, request)
         // access log
         s.handleAccessLog(request)
         // error log使用recover进行判断
         if e := recover(); e != nil {
+            request.Response.WriteStatus(http.StatusInternalServerError)
             s.handleErrorLog(e, request)
         }
         // 更新Session会话超时时间
@@ -124,22 +138,6 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
     // 事件 - AfterServe
     if !request.IsExited() {
         s.callHookHandler(HOOK_AFTER_SERVE, request)
-    }
-
-    // 设置请求完成时间
-    request.LeaveTime = gtime.Microsecond()
-
-    // 事件 - BeforeOutput
-    if !request.IsExited() {
-        s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
-    }
-    // 输出Cookie
-    request.Cookie.Output()
-    // 输出缓冲区
-    request.Response.OutputBuffer()
-    // 事件 - AfterOutput
-    if !request.IsExited() {
-        s.callHookHandler(HOOK_AFTER_OUTPUT, request)
     }
 }
 
