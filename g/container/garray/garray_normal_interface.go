@@ -8,6 +8,7 @@ package garray
 
 import (
     "bytes"
+    "fmt"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/util/grand"
@@ -51,6 +52,11 @@ func NewFrom(array []interface{}, unsafe...bool) *Array {
     return NewArrayFrom(array, unsafe...)
 }
 
+// See NewArrayFromCopy.
+func NewFromCopy(array []interface{}, unsafe...bool) *Array {
+    return NewArrayFromCopy(array, unsafe...)
+}
+
 // Create an array with given slice <array>.
 // The param <unsafe> used to specify whether using array with un-concurrent-safety,
 // which is false in default, means concurrent-safe in default.
@@ -60,6 +66,20 @@ func NewArrayFrom(array []interface{}, unsafe...bool) *Array {
     return &Array{
         mu    : rwmutex.New(unsafe...),
         array : array,
+    }
+}
+
+// Create an array from a copy of given slice <array>.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 通过给定的slice拷贝创建数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+func NewArrayFromCopy(array []interface{}, unsafe...bool) *Array {
+    newArray := make([]interface{}, len(array))
+    copy(newArray, array)
+    return &Array{
+        mu    : rwmutex.New(unsafe...),
+        array : newArray,
     }
 }
 
@@ -199,11 +219,29 @@ func (a *Array) PushRight(value...interface{}) *Array {
     return a
 }
 
-// Pop an random item from array.
+// PopRand picks an random item out of array.
 //
 // 随机将一个数据项移出数组，并返回该数据项。
 func (a *Array) PopRand() interface{} {
     return a.Remove(grand.Intn(len(a.array)))
+}
+
+// PopRands picks <size> items out of array.
+//
+// 随机将size个数据项移出数组，并返回该数据项。
+func (a *Array) PopRands(size int) []interface{} {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    if size > len(a.array) {
+        size = len(a.array)
+    }
+    array := make([]interface{}, size)
+    for i := 0; i < size; i++ {
+        index   := grand.Intn(len(a.array))
+        array[i] = a.array[index]
+        a.array  = append(a.array[ : index], a.array[index + 1 : ]...)
+    }
+    return array
 }
 
 // Pop an item from the beginning of array.
@@ -411,20 +449,24 @@ func (a *Array) RLockFunc(f func(array []interface{})) *Array {
     return a
 }
 
-// Merge two arrays. The parameter <array> can be *Array or any slice type.
+// Merge two arrays. The parameter <array> can be any garray type or slice type.
 //
 // 合并两个数组.
 func (a *Array) Merge(array interface{}) *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
-    if other, ok := array.(*Array); ok {
-        if a != array {
-            other.mu.RLock()
-            defer other.mu.RUnlock()
-        }
-        a.array = append(a.array, other.array...)
+    if a == array {
+        a.array = append(a.array, a.array...)
     } else {
-        a.array = append(a.array, gconv.Interfaces(array)...)
+        if f, ok := array.(apiSliceInterface); ok {
+            a.array = append(a.array, f.Slice()...)
+        } else if f, ok := array.(apiSliceInt); ok {
+            a.array = append(a.array, gconv.Interfaces(f.Slice())...)
+        } else if f, ok := array.(apiSliceString); ok {
+            a.array = append(a.array, gconv.Interfaces(f.Slice())...)
+        } else {
+            a.array = append(a.array, gconv.Interfaces(array)...)
+        }
     }
     return a
 }
@@ -527,11 +569,19 @@ func (a *Array) SubSlice(offset, size int) []interface{} {
     }
 }
 
-// Picks one or more random entries out of an array(a copy),
-// and returns the key (or keys) of the random entries.
+// Rand gets one random entry from array.
 //
-// 从数组中随机取出size个元素项，构成slice返回。
-func (a *Array) Rand(size int) []interface{} {
+// 从数组中随机获得1个元素项(不删除)。
+func (a *Array) Rand() interface{} {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    return a.array[grand.Intn(len(a.array))]
+}
+
+// Rands gets one or more random entries from array(a copy).
+//
+// 从数组中随机拷贝size个元素项，构成slice返回。
+func (a *Array) Rands(size int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
     if size > len(a.array) {
@@ -606,9 +656,5 @@ func (a *Array) CountValues() map[interface{}]int {
 func (a *Array) String() string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    buffer := bytes.NewBuffer(nil)
-    for _, v := range a.array {
-        buffer.WriteString(gconv.String(v))
-    }
-    return buffer.String()
+    return fmt.Sprint(a.array)
 }

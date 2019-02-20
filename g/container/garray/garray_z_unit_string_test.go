@@ -162,9 +162,17 @@ func TestStringArray_Rand(t *testing.T) {
     gtest.Case(t, func() {
         a1 := []string{"0","1","2","3","4","5","6"}
         array1 := garray.NewStringArrayFrom(a1)
-        gtest.Assert(len(array1.Rand(2)),  "2")
-        gtest.Assert(len(array1.Rand(10)), "7")
-        gtest.AssertIN(array1.Rand(1)[0], a1)
+        gtest.Assert(len(array1.Rands(2)),  "2")
+        gtest.Assert(len(array1.Rands(10)), "7")
+        gtest.AssertIN(array1.Rands(1)[0], a1)
+    })
+}
+
+func TestStringArray_PopRands(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []interface{}{"100", "200", "300", "400", "500", "600"}
+        array := garray.NewFromCopy(a1)
+        gtest.AssertIN(array.PopRands(2), a1)
     })
 }
 

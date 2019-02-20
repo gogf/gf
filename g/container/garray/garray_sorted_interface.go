@@ -69,6 +69,20 @@ func NewSortedArrayFrom(array []interface{}, compareFunc func(v1, v2 interface{}
     return a
 }
 
+// Create an array from a copy of given slice <array>.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 通过给定的slice拷贝创建数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+func NewSortedArrayFromCopy(array []interface{}, unsafe...bool) *SortedArray {
+    newArray := make([]interface{}, len(array))
+    copy(newArray, array)
+    return &SortedArray{
+        mu    : rwmutex.New(unsafe...),
+        array : newArray,
+    }
+}
+
 // Set the underlying slice array with the given <array> param.
 //
 // 设置底层数组变量.
@@ -178,11 +192,29 @@ func (a *SortedArray) PopRight() interface{} {
     return value
 }
 
-// Pop an random item from array.
+// PopRand picks an random item out of array.
 //
 // 随机将一个数据项移出数组，并返回该数据项。
 func (a *SortedArray) PopRand() interface{} {
     return a.Remove(grand.Intn(len(a.array)))
+}
+
+// PopRands picks <size> items out of array.
+//
+// 随机将size个数据项移出数组，并返回该数据项。
+func (a *SortedArray) PopRands(size int) []interface{} {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    if size > len(a.array) {
+        size = len(a.array)
+    }
+    array := make([]interface{}, size)
+    for i := 0; i < size; i++ {
+        index   := grand.Intn(len(a.array))
+        array[i] = a.array[index]
+        a.array  = append(a.array[ : index], a.array[index + 1 : ]...)
+    }
+    return array
 }
 
 // Pop <size> items from the beginning of array.
@@ -406,20 +438,24 @@ func (a *SortedArray) RLockFunc(f func(array []interface{})) *SortedArray {
     return a
 }
 
-// Merge two arrays. The parameter <array> can be *SortedArray or any slice type.
+// Merge two arrays. The parameter <array> can be any garray type or slice type.
 //
 // 合并两个数组.
 func (a *SortedArray) Merge(array interface{}) *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
-    if other, ok := array.(*SortedArray); ok {
-        if a != array {
-            other.mu.RLock()
-            defer other.mu.RUnlock()
-        }
-        a.array = append(a.array, other.array...)
+    if a == array {
+        a.array = append(a.array, a.array...)
     } else {
-        a.array = append(a.array, gconv.Interfaces(array)...)
+        if f, ok := array.(apiSliceInterface); ok {
+            a.array = append(a.array, f.Slice()...)
+        } else if f, ok := array.(apiSliceInt); ok {
+            a.array = append(a.array, gconv.Interfaces(f.Slice())...)
+        } else if f, ok := array.(apiSliceString); ok {
+            a.array = append(a.array, gconv.Interfaces(f.Slice())...)
+        } else {
+            a.array = append(a.array, gconv.Interfaces(array)...)
+        }
     }
     sort.Slice(a.array, func(i, j int) bool {
         return a.compareFunc(a.array[i], a.array[j]) < 0
@@ -475,11 +511,19 @@ func (a *SortedArray) SubSlice(offset, size int) []interface{} {
     }
 }
 
-// Picks one or more random entries out of an array(a copy),
-// and returns the key (or keys) of the random entries.
+// Rand gets one random entry from array.
 //
-// 从数组中随机取出size个元素项，构成slice返回。
-func (a *SortedArray) Rand(size int) []interface{} {
+// 从数组中随机获得1个元素项(不删除)。
+func (a *SortedArray) Rand() interface{} {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    return a.array[grand.Intn(len(a.array))]
+}
+
+// Rands gets one or more random entries from array(a copy).
+//
+// 从数组中随机拷贝size个元素项，构成slice返回。
+func (a *SortedArray) Rands(size int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
     if size > len(a.array) {

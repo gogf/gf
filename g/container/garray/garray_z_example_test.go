@@ -70,18 +70,42 @@ func Example_basic() {
     // []
 }
 
+func Example_rand() {
+    array := garray.NewFrom([]interface{}{1,2,3,4,5,6,7,8,9})
+    // 随机返回两个数据项(不删除)
+    fmt.Println(array.Rands(2))
+    fmt.Println(array.PopRand())
+}
+
+func Example_pop() {
+    array := garray.NewFrom([]interface{}{1,2,3,4,5,6,7,8,9})
+    fmt.Println(array.PopLeft())
+    fmt.Println(array.PopLefts(2))
+    fmt.Println(array.PopRight())
+    fmt.Println(array.PopRights(2))
+
+    // Output:
+    // 1
+    // [2 3]
+    // 9
+    // [7 8]
+}
+
 func Example_merge() {
     array1 := garray.NewFrom([]interface{}{1,2})
     array2 := garray.NewFrom([]interface{}{3,4})
     slice1 := []interface{}{5,6}
     slice2 := []int{7,8}
+    slice3 := []string{"9","0"}
     fmt.Println(array1.Slice())
+    array1.Merge(array1)
     array1.Merge(array2)
     array1.Merge(slice1)
     array1.Merge(slice2)
+    array1.Merge(slice3)
     fmt.Println(array1.Slice())
 
     // Output:
     // [1 2]
-    // [1 2 3 4 5 6 7 8]
+    // [1 2 1 2 3 4 5 6 7 8 9 0]
 }

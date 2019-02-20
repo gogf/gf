@@ -181,14 +181,22 @@ func AssertLTE(value, expect interface{}) {
 }
 
 
-// 断言判断, value IN expect; 注意: expect必须为slice类型
+// 断言判断, value IN expect; 注意: expect必须为slice类型。
+// 注意：value参数可以为普通变量，也可以为slice类型。
 func AssertIN(value, expect interface{}) {
-    passed := false
+    passed := true
     switch reflect.ValueOf(expect).Kind() {
         case reflect.Slice, reflect.Array:
-            for _, v := range gconv.Interfaces(expect) {
-                if v == value {
-                    passed = true
+            for _, v1 := range gconv.Interfaces(value) {
+                result := false
+                for _, v2 := range gconv.Interfaces(expect) {
+                    if v1 == v2 {
+                        result = true
+                        break
+                    }
+                }
+                if !result {
+                    passed = false
                     break
                 }
             }
@@ -200,17 +208,24 @@ func AssertIN(value, expect interface{}) {
 
 // 断言判断, value NOT IN expect; 注意: expect必须为slice类型
 func AssertNI(value, expect interface{}) {
-    passed := false
+    passed := true
     switch reflect.ValueOf(expect).Kind() {
         case reflect.Slice, reflect.Array:
-            for _, v := range gconv.Interfaces(expect) {
-                if v == value {
-                    passed = true
+            for _, v1 := range gconv.Interfaces(value) {
+                result := true
+                for _, v2 := range gconv.Interfaces(expect) {
+                    if v1 == v2 {
+                        result = false
+                        break
+                    }
+                }
+                if !result {
+                    passed = false
                     break
                 }
             }
     }
-    if passed {
+    if !passed {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v NOT IN %v`, value, expect))
     }
 }
