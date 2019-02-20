@@ -1,17 +1,18 @@
 package main
 
 import (
+    "fmt"
     "github.com/gogf/gf/g/os/gcron"
-    "github.com/gogf/gf/g/os/glog"
     "time"
 )
 
-func main() {
-    cron := gcron.New()
-    glog.Println("start")
-    cron.DelayAddOnce(1, "* * * * * *", func() {
-        glog.Println("run")
-    })
+func test() {
 
+}
+
+func main() {
+    _, err := gcron.Add("*/10 * * * * ?", test)
+    fmt.Println(err)
+    fmt.Println(gcron.Entries())
     time.Sleep(10*time.Second)
 }

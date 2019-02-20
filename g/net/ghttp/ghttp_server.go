@@ -140,17 +140,24 @@ var (
     doneChan         = make(chan struct{}, 1000)
 
     // 用于服务进程初始化，只能初始化一次，采用“懒初始化”(在server运行时才初始化)
-    serverProcInited = gtype.NewBool()
+    serverProcessInited = gtype.NewBool()
+
+    // 是否开启WebServer平滑重启特性, 会开启额外的本地端口监听，用于进程管理通信
+    gracefulEnabled     = true
 )
 
+// 是否开启平滑重启特性
+func SetGraceful(enabled bool) {
+    gracefulEnabled = enabled
+}
 
 // Web Server进程初始化.
 // 注意该方法不能放置于包初始化方法init中，不使用ghttp.Server的功能便不能初始化对应的协程goroutine逻辑.
-func serverProcInit() {
-    if serverProcInited.Val() {
+func serverProcessInit() {
+    if serverProcessInited.Val() {
         return
     }
-    serverProcInited.Set(true)
+    serverProcessInited.Set(true)
     // 如果是完整重启，那么需要等待主进程销毁后，才开始执行监听，防止端口冲突
     if genv.Get(gADMIN_ACTION_RESTART_ENVKEY) != "" {
         if p, e := os.FindProcess(gproc.PPid()); e == nil {
@@ -164,7 +171,9 @@ func serverProcInit() {
     // 信号量管理操作监听
     go handleProcessSignal()
     // 异步监听进程间消息
-    go handleProcessMessage()
+    if gracefulEnabled {
+        go handleProcessMessage()
+    }
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
@@ -207,7 +216,7 @@ func GetServer(name...interface{}) (*Server) {
 // 需要结合Wait方式一起使用
 func (s *Server) Start() error {
     // 服务进程初始化，只会初始化一次
-    serverProcInit()
+    serverProcessInit()
 
     // 当前Web Server状态判断
     if s.Status() == SERVER_STATUS_RUNNING {
@@ -253,7 +262,7 @@ func (s *Server) Start() error {
     if gproc.IsChild() {
         gtimer.SetTimeout(2*time.Second, func() {
             if err := gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP); err != nil {
-                panic(err)
+                glog.Error("ghttp server error in process communication:", err)
             }
         })
     }
