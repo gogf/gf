@@ -7,16 +7,16 @@
 package gproc
 
 import (
-    "github.com/gogf/gf/g/net/gtcp"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/util/gconv"
-    "github.com/gogf/gf/g/encoding/gbinary"
-    "fmt"
-    "errors"
-    "time"
     "bytes"
+    "errors"
+    "fmt"
+    "github.com/gogf/gf/g/encoding/gbinary"
+    "github.com/gogf/gf/g/net/gtcp"
+    "github.com/gogf/gf/g/os/gfcache"
     "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/util/gconv"
     "io"
+    "time"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
     gPROC_COMM_DEAFULT_GRUOP_NAME    = ""   // 默认分组名称
 )
 
-// 向指定gproc进程发送数据
+// 向指定gproc进程发送数据.
 // 数据格式：总长度(24bit)|发送进程PID(24bit)|接收进程PID(24bit)|分组长度(8bit)|分组名称(变长)|校验(32bit)|参数(变长)
 func Send(pid int, data []byte, group...string) error {
     groupName := gPROC_COMM_DEAFULT_GRUOP_NAME
@@ -85,6 +85,6 @@ func getConnByPid(pid int) (*gtcp.Conn, error) {
 // 获取指定进程监听的端口号
 func getPortByPid(pid int) int {
     path    := getCommFilePath(pid)
-    content := gfile.GetContents(path)
+    content := gfcache.GetContents(path)
     return gconv.Int(content)
 }
