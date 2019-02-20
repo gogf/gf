@@ -7,12 +7,12 @@
 package garray
 
 import (
+    "bytes"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/util/grand"
     "math"
     "sort"
-    "strings"
 )
 
 type IntArray struct {
@@ -425,17 +425,21 @@ func (a *IntArray) RLockFunc(f func(array []int)) *IntArray {
     return a
 }
 
-// Merge two arrays.
+// Merge two arrays. The parameter <array> can be *IntArray or any slice type.
 //
 // 合并两个数组.
-func (a *IntArray) Merge(array *IntArray) *IntArray {
+func (a *IntArray) Merge(array interface{}) *IntArray {
     a.mu.Lock()
     defer a.mu.Unlock()
-    if a != array {
-        array.mu.RLock()
-        defer array.mu.RUnlock()
+    if other, ok := array.(*IntArray); ok {
+        if a != array {
+            other.mu.RLock()
+            defer other.mu.RUnlock()
+        }
+        a.array = append(a.array, other.array...)
+    } else {
+        a.array = append(a.array, gconv.Ints(array)...)
     }
-    a.array = append(a.array, array.array...)
     return a
 }
 
@@ -588,5 +592,12 @@ func (a *IntArray) Reverse() *IntArray {
 func (a *IntArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    return strings.Join(gconv.Strings(a.array), glue)
+    buffer := bytes.NewBuffer(nil)
+    for k, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+        if k != len(a.array) - 1 {
+            buffer.WriteString(glue)
+        }
+    }
+    return buffer.String()
 }

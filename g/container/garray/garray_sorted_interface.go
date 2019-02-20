@@ -7,13 +7,13 @@
 package garray
 
 import (
+    "bytes"
     "github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/util/grand"
     "math"
     "sort"
-    "strings"
 )
 
 // 默认按照从小到大进行排序
@@ -406,17 +406,21 @@ func (a *SortedArray) RLockFunc(f func(array []interface{})) *SortedArray {
     return a
 }
 
-// Merge two arrays.
+// Merge two arrays. The parameter <array> can be *SortedArray or any slice type.
 //
 // 合并两个数组.
-func (a *SortedArray) Merge(array *SortedArray) *SortedArray {
+func (a *SortedArray) Merge(array interface{}) *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
-    if a != array {
-        array.mu.RLock()
-        defer array.mu.RUnlock()
+    if other, ok := array.(*SortedArray); ok {
+        if a != array {
+            other.mu.RLock()
+            defer other.mu.RUnlock()
+        }
+        a.array = append(a.array, other.array...)
+    } else {
+        a.array = append(a.array, gconv.Interfaces(array)...)
     }
-    a.array = append(a.array, array.array...)
     sort.Slice(a.array, func(i, j int) bool {
         return a.compareFunc(a.array[i], a.array[j]) < 0
     })
@@ -497,5 +501,12 @@ func (a *SortedArray) Rand(size int) []interface{} {
 func (a *SortedArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    return strings.Join(gconv.Strings(a.array), glue)
+    buffer := bytes.NewBuffer(nil)
+    for k, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+        if k != len(a.array) - 1 {
+            buffer.WriteString(glue)
+        }
+    }
+    return buffer.String()
 }

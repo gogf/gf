@@ -7,6 +7,7 @@
 package garray
 
 import (
+    "bytes"
     "github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
@@ -393,17 +394,21 @@ func (a *SortedStringArray) RLockFunc(f func(array []string)) *SortedStringArray
     return a
 }
 
-// Merge two arrays.
+// Merge two arrays. The parameter <array> can be *SortedStringArray or any slice type.
 //
 // 合并两个数组.
-func (a *SortedStringArray) Merge(array *SortedStringArray) *SortedStringArray {
+func (a *SortedStringArray) Merge(array interface{}) *SortedStringArray {
     a.mu.Lock()
     defer a.mu.Unlock()
-    if a != array {
-        array.mu.RLock()
-        defer array.mu.RUnlock()
+    if other, ok := array.(*SortedStringArray); ok {
+        if a != array {
+            other.mu.RLock()
+            defer other.mu.RUnlock()
+        }
+        a.array = append(a.array, other.array...)
+    } else {
+        a.array = append(a.array, gconv.Strings(array)...)
     }
-    a.array = append(a.array, array.array...)
     sort.Strings(a.array)
     return a
 }
@@ -482,5 +487,12 @@ func (a *SortedStringArray) Rand(size int) []string {
 func (a *SortedStringArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    return strings.Join(a.array, glue)
+    buffer := bytes.NewBuffer(nil)
+    for k, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+        if k != len(a.array) - 1 {
+            buffer.WriteString(glue)
+        }
+    }
+    return buffer.String()
 }

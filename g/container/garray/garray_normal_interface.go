@@ -7,12 +7,12 @@
 package garray
 
 import (
+    "bytes"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/util/grand"
     "math"
     "sort"
-    "strings"
 )
 
 type Array struct {
@@ -30,8 +30,6 @@ func New(unsafe...bool) *Array {
 }
 
 // See New.
-//
-// 同New方法。
 func NewArray(unsafe...bool) *Array {
     return NewArraySize(0, 0, unsafe...)
 }
@@ -46,6 +44,11 @@ func NewArraySize(size int, cap int, unsafe...bool) *Array {
         mu    : rwmutex.New(unsafe...),
         array : make([]interface{}, size, cap),
     }
+}
+
+// See NewArrayFrom.
+func NewFrom(array []interface{}, unsafe...bool) *Array {
+    return NewArrayFrom(array, unsafe...)
 }
 
 // Create an array with given slice <array>.
@@ -408,17 +411,21 @@ func (a *Array) RLockFunc(f func(array []interface{})) *Array {
     return a
 }
 
-// Merge two arrays.
+// Merge two arrays. The parameter <array> can be *Array or any slice type.
 //
 // 合并两个数组.
-func (a *Array) Merge(array *Array) *Array {
+func (a *Array) Merge(array interface{}) *Array {
     a.mu.Lock()
     defer a.mu.Unlock()
-    if a != array {
-        array.mu.RLock()
-        defer array.mu.RUnlock()
+    if other, ok := array.(*Array); ok {
+        if a != array {
+            other.mu.RLock()
+            defer other.mu.RUnlock()
+        }
+        a.array = append(a.array, other.array...)
+    } else {
+        a.array = append(a.array, gconv.Interfaces(array)...)
     }
-    a.array = append(a.array, array.array...)
     return a
 }
 
@@ -570,7 +577,14 @@ func (a *Array) Reverse() *Array {
 func (a *Array) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    return strings.Join(gconv.Strings(a.array), glue)
+    buffer := bytes.NewBuffer(nil)
+    for k, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+        if k != len(a.array) - 1 {
+            buffer.WriteString(glue)
+        }
+    }
+    return buffer.String()
 }
 
 // Counts all the values of an array.
@@ -584,4 +598,17 @@ func (a *Array) CountValues() map[interface{}]int {
         m[v]++
     }
     return m
+}
+
+// String returns current array as a string.
+//
+// 将当前数组转换为字符串返回。
+func (a *Array) String() string {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    buffer := bytes.NewBuffer(nil)
+    for _, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+    }
+    return buffer.String()
 }

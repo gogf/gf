@@ -7,6 +7,7 @@
 package garray
 
 import (
+    "bytes"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/util/grand"
@@ -423,17 +424,21 @@ func (a *StringArray) RLockFunc(f func(array []string)) *StringArray {
     return a
 }
 
-// Merge two arrays.
+// Merge two arrays. The parameter <array> can be *StringArray or any slice type.
 //
 // 合并两个数组.
-func (a *StringArray) Merge(array *StringArray) *StringArray {
+func (a *StringArray) Merge(array interface{}) *StringArray {
     a.mu.Lock()
     defer a.mu.Unlock()
-    if a != array {
-        array.mu.RLock()
-        defer array.mu.RUnlock()
+    if other, ok := array.(*StringArray); ok {
+        if a != array {
+            other.mu.RLock()
+            defer other.mu.RUnlock()
+        }
+        a.array = append(a.array, other.array...)
+    } else {
+        a.array = append(a.array, gconv.Strings(array)...)
     }
-    a.array = append(a.array, array.array...)
     return a
 }
 
@@ -587,6 +592,13 @@ func (a *StringArray) Reverse() *StringArray {
 func (a *StringArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    return strings.Join(a.array, glue)
+    buffer := bytes.NewBuffer(nil)
+    for k, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+        if k != len(a.array) - 1 {
+            buffer.WriteString(glue)
+        }
+    }
+    return buffer.String()
 }
 
