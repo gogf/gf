@@ -58,6 +58,8 @@ func init() {
     }
 }
 
+// New creates a custom logger.
+//
 // 新建自定义的日志操作对象
 func New() *Logger {
     return &Logger {
@@ -72,7 +74,9 @@ func New() *Logger {
     }
 }
 
-// Logger深拷贝
+// Clone returns a new logger, which is the clone the current logger.
+//
+// Logger拷贝.
 func (l *Logger) Clone() *Logger {
     return &Logger {
         pr           : l,
@@ -87,16 +91,23 @@ func (l *Logger) Clone() *Logger {
     }
 }
 
+// SetLevel sets the logging level.
+//
 // 设置日志记录等级
 func (l *Logger) SetLevel(level int) {
     l.level.Set(level)
 }
 
+// GetLevel returns the logging level value.
+//
 // 获取日志记录等级
 func (l *Logger) GetLevel() int {
     return l.level.Val()
 }
 
+// SetDebug enables/disables the debug level for logger.
+// The debug level is enbaled in default.
+// 
 // 快捷方法，打开或关闭DEBU日志信息
 func (l *Logger) SetDebug(debug bool) {
     if debug {
@@ -106,6 +117,7 @@ func (l *Logger) SetDebug(debug bool) {
     }
 }
 
+// SetBacktrace enables/disables the backtrace feature in failure logging outputs.
 func (l *Logger) SetBacktrace(enabled bool) {
     if enabled {
         l.btStatus.Set(1)
@@ -115,11 +127,16 @@ func (l *Logger) SetBacktrace(enabled bool) {
 
 }
 
-// 设置BacktraceSkip
+// SetBacktraceSkip sets the backtrace offset from the end point.
 func (l *Logger) SetBacktraceSkip(skip int) {
     l.btSkip.Set(skip)
 }
 
+// SetWriter sets the customed logging <writer> for logging.
+// The <writer> object should implements the io.Writer interface.
+// Developer can use customed logging <writer> to redirect logging output to another service, 
+// eg: kafka, mysql, mongodb, etc.
+//
 // 可自定义IO接口，IO可以是文件输出、标准输出、网络输出
 func (l *Logger) SetWriter(writer io.Writer) {
     l.mu.Lock()
@@ -127,6 +144,9 @@ func (l *Logger) SetWriter(writer io.Writer) {
     l.mu.Unlock()
 }
 
+// GetWriter returns the customed writer object, which implements the io.Writer interface.
+// It returns nil if no customed writer set.
+//
 // 返回自定义的IO，默认为nil
 func (l *Logger) GetWriter() io.Writer {
     l.mu.RLock()
@@ -135,7 +155,10 @@ func (l *Logger) GetWriter() io.Writer {
     return r
 }
 
-// 获取默认的文件IO
+// getFilePointer returns the file pinter for file logging.
+// It returns nil if file logging disabled, or file open fails.
+//
+// 获取默认的文件IO.
 func (l *Logger) getFilePointer() *gfpool.File {
     if path := l.path.Val(); path != "" {
         // 文件名称中使用"{}"包含的内容使用gtime格式化
@@ -159,7 +182,9 @@ func (l *Logger) getFilePointer() *gfpool.File {
     return nil
 }
 
-// 设置日志文件的存储目录路径
+// SetPath sets the directory path for file logging.
+//
+// 设置日志文件的存储目录路径.
 func (l *Logger) SetPath(path string) error {
     // path必须有值
     if path == "" {
@@ -176,16 +201,25 @@ func (l *Logger) SetPath(path string) error {
     return nil
 }
 
+// GetPath returns the logging directory path for file logging.
+// It returns empty string if no directory path set.
+//
 // 获取设置的日志目录路径
 func (l *Logger) GetPath() string {
     return l.path.Val()
 }
 
-// 日志文件名称
-func (l *Logger) SetFile(file string) {
-    l.file.Set(file)
+// SetFile sets the file name <pattern> for file logging.
+// Datetime pattern can be used in <pattern>, eg: access-{Ymd}.log.
+// The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
+//
+// 设置日志文件名称格式.
+func (l *Logger) SetFile(pattern string) {
+    l.file.Set(pattern)
 }
 
+// SetStdPrint sets whether ouptput the logging contents to stdout, which is false indefault.
+// 
 // 设置写日志时开启or关闭控制台打印，默认是关闭的
 func (l *Logger) SetStdPrint(enabled bool) {
     l.alsoStdPrint.Set(enabled)
@@ -263,11 +297,17 @@ func (l *Logger) appendBacktrace(s string, skip...int) string {
     return s
 }
 
+// PrintBacktrace prints the caller backtrace, 
+// the optional parameter <skip> specify the skipped backtraces offset from the end point.
+//
 // 直接打印回溯信息，参数skip表示调用端往上多少级开始回溯
 func (l *Logger) PrintBacktrace(skip...int) {
     l.Println(l.appendBacktrace("", skip...))
 }
 
+// GetBacktrace returns the caller backtrace content, 
+// the optional parameter <skip> specify the skipped backtraces offset from the end point.
+//
 // 获取文件调用回溯字符串，参数skip表示调用端往上多少级开始回溯
 func (l *Logger) GetBacktrace(skip...int) string {
     customSkip := 0
@@ -322,16 +362,19 @@ func (l *Logger) Printfln(format string, v ...interface{}) {
     l.stdPrint(fmt.Sprintf(format + ln, v...))
 }
 
+// Fatal prints the logging content with [FATA] header and newline, then exit the current process.
 func (l *Logger) Fatal(v ...interface{}) {
     l.errPrint("[FATA] " + fmt.Sprintln(v...))
     os.Exit(1)
 }
 
+// Fatalf prints the logging content with [FATA] header and custom format, then exit the current process.
 func (l *Logger) Fatalf(format string, v ...interface{}) {
     l.errPrint("[FATA] " + fmt.Sprintf(format, v...))
     os.Exit(1)
 }
 
+// Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
 func (l *Logger) Fatalfln(format string, v ...interface{}) {
     l.errPrint("[FATA] " + fmt.Sprintf(format + ln, v...))
     os.Exit(1)
@@ -463,6 +506,8 @@ func (l *Logger) Criticalfln(format string, v ...interface{}) {
     }
 }
 
+// checkLevel checks whether the given <level> could be output.
+//
 // 判断给定level是否满足
 func (l *Logger) checkLevel(level int) bool {
     return l.level.Val() & level > 0
