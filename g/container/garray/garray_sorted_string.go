@@ -427,25 +427,21 @@ func (a *SortedStringArray) RLockFunc(f func(array []string)) *SortedStringArray
 }
 
 // Merge two arrays. The parameter <array> can be any garray type or slice type.
+// The difference between Merge and Add is Add supports only specified slice type,
+// but Merge supports more variable types.
 //
-// 合并两个数组.
+// 合并两个数组, 支持任意的garray数组类型及slice类型.
 func (a *SortedStringArray) Merge(array interface{}) *SortedStringArray {
-    a.mu.Lock()
-    defer a.mu.Unlock()
-    if a == array {
-        a.array = append(a.array, a.array...)
-    } else {
-        if f, ok := array.(apiSliceString); ok {
-            a.array = append(a.array, f.Slice()...)
-        } else if f, ok := array.(apiSliceInterface); ok {
-            a.array = append(a.array, gconv.Strings(f.Slice())...)
-        } else if f, ok := array.(apiSliceInt); ok {
-            a.array = append(a.array, gconv.Strings(f.Slice())...)
-        } else {
-            a.array = append(a.array, gconv.Strings(array)...)
-        }
+    switch v := array.(type) {
+        case *Array:             a.Add(gconv.Strings(v.Slice())...)
+        case *IntArray:          a.Add(gconv.Strings(v.Slice())...)
+        case *StringArray:       a.Add(gconv.Strings(v.Slice())...)
+        case *SortedArray:       a.Add(gconv.Strings(v.Slice())...)
+        case *SortedIntArray:    a.Add(gconv.Strings(v.Slice())...)
+        case *SortedStringArray: a.Add(gconv.Strings(v.Slice())...)
+        default:
+            a.Add(gconv.Strings(array)...)
     }
-    sort.Strings(a.array)
     return a
 }
 

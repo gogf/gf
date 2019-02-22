@@ -450,23 +450,20 @@ func (a *Array) RLockFunc(f func(array []interface{})) *Array {
 }
 
 // Merge two arrays. The parameter <array> can be any garray type or slice type.
+// The difference between Merge and Append is Append supports only specified slice type,
+// but Merge supports more variable types.
 //
-// 合并两个数组.
+// 合并两个数组, 支持任意的garray数组类型及slice类型.
 func (a *Array) Merge(array interface{}) *Array {
-    a.mu.Lock()
-    defer a.mu.Unlock()
-    if a == array {
-        a.array = append(a.array, a.array...)
-    } else {
-        if f, ok := array.(apiSliceInterface); ok {
-            a.array = append(a.array, f.Slice()...)
-        } else if f, ok := array.(apiSliceInt); ok {
-            a.array = append(a.array, gconv.Interfaces(f.Slice())...)
-        } else if f, ok := array.(apiSliceString); ok {
-            a.array = append(a.array, gconv.Interfaces(f.Slice())...)
-        } else {
-            a.array = append(a.array, gconv.Interfaces(array)...)
-        }
+    switch v := array.(type) {
+        case *Array:             a.Append(gconv.Interfaces(v.Slice())...)
+        case *IntArray:          a.Append(gconv.Interfaces(v.Slice())...)
+        case *StringArray:       a.Append(gconv.Interfaces(v.Slice())...)
+        case *SortedArray:       a.Append(gconv.Interfaces(v.Slice())...)
+        case *SortedIntArray:    a.Append(gconv.Interfaces(v.Slice())...)
+        case *SortedStringArray: a.Append(gconv.Interfaces(v.Slice())...)
+        default:
+            a.Append(gconv.Interfaces(array)...)
     }
     return a
 }
