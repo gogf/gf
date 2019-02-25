@@ -14,9 +14,8 @@ import (
     "github.com/gogf/gf/g/container/gvar"
     "github.com/gogf/gf/g/os/gcache"
     "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/text/gregex"
-    "reflect"
+    "github.com/gogf/gf/g/util/gconv"
     "strings"
 )
 
@@ -235,32 +234,35 @@ func (bs *dbBase) Begin() (*TX, error) {
 }
 
 // CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
-func (bs *dbBase) Insert(table string, data Map) (sql.Result, error) {
+func (bs *dbBase) Insert(table string, data interface{}) (sql.Result, error) {
     return bs.db.doInsert(nil, table, data, OPTION_INSERT)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (bs *dbBase) Replace(table string, data Map) (sql.Result, error) {
+func (bs *dbBase) Replace(table string, data interface{}) (sql.Result, error) {
     return bs.db.doInsert(nil, table, data, OPTION_REPLACE)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (bs *dbBase) Save(table string, data Map) (sql.Result, error) {
+func (bs *dbBase) Save(table string, data interface{}) (sql.Result, error) {
     return bs.db.doInsert(nil, table, data, OPTION_SAVE)
 }
 
-// insert、replace, save， ignore操作
-// 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
-// 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-// 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-// 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做
-func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (result sql.Result, err error) {
+// insert、replace, save， ignore操作。
+// 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回;
+// 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条;
+// 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据;
+// 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做;
+//
+// 参数data支持任意map类型，或者struct类型。
+func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option int) (result sql.Result, err error) {
     var fields []string
     var values []string
     var params []interface{}
-    charl, charr := bs.db.getChars()
-    for k, v := range data {
-        fields = append(fields,   charl + k + charr)
+    charL, charR := bs.db.getChars()
+    dataMap := gconv.Map(data)
+    for k, v := range dataMap {
+        fields = append(fields,   charL + k + charR)
         values = append(values, "?")
         params = append(params, v)
     }
@@ -268,11 +270,11 @@ func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (res
     updateStr := ""
     if option == OPTION_SAVE {
         var updates []string
-        for k, _ := range data {
+        for k, _ := range dataMap {
             updates = append(updates,
                 fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
-                    charl, k, charr,
-                    charl, k, charr,
+                    charL, k, charR,
+                    charL, k, charR,
                 ),
             )
         }
@@ -325,8 +327,8 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
         values = append(values, "?")
     }
     batchResult    := new(batchSqlResult)
-    charl, charr   := bs.db.getChars()
-    keyStr         := charl + strings.Join(keys, charl + "," + charr) + charr
+    charL, charR   := bs.db.getChars()
+    keyStr         := charL + strings.Join(keys, charL + "," + charR) + charR
     valueHolderStr := "(" + strings.Join(values, ",") + ")"
     // 操作判断
     operation := getInsertOperationByOption(option)
@@ -336,8 +338,8 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
         for _, k := range keys {
             updates = append(updates,
                 fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
-                    charl, k, charr,
-                    charl, k, charr,
+                    charL, k, charR,
+                    charL, k, charR,
                 ),
             )
         }
@@ -401,18 +403,16 @@ func (bs *dbBase) Update(table string, data interface{}, condition interface{}, 
 func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, condition interface{}, args ...interface{}) (result sql.Result, err error) {
     params       := ([]interface{})(nil)
     updates      := ""
-    charl, charr := bs.db.getChars()
-    refValue     := reflect.ValueOf(data)
-    if refValue.Kind() == reflect.Map {
+    charL, charR := bs.db.getChars()
+    if s, ok := data.(string); ok {
+        updates = s
+    } else {
         var fields []string
-        keys := refValue.MapKeys()
-        for _, k := range keys {
-            fields = append(fields, fmt.Sprintf("%s%s%s=?", charl, k, charr))
-            params = append(params, gconv.String(refValue.MapIndex(k).Interface()))
+        for k, v := range gconv.Map(data) {
+            fields = append(fields, fmt.Sprintf("%s%s%s=?", charL, k, charR))
+            params = append(params, gconv.String(v))
         }
         updates = strings.Join(fields, ",")
-    } else {
-        updates = gconv.String(data)
     }
     for _, v := range args {
         params = append(params, gconv.String(v))

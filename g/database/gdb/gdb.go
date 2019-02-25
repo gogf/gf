@@ -37,7 +37,7 @@ type DB interface {
     doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
     doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
     doPrepare(link dbLink, query string) (*sql.Stmt, error)
-    doInsert(link dbLink, table string, data Map, option int) (result sql.Result, err error)
+    doInsert(link dbLink, table string, data interface{}, option int) (result sql.Result, err error)
     doBatchInsert(link dbLink, table string, list List, batch int, option int) (result sql.Result, err error)
     doUpdate(link dbLink, table string, data interface{}, condition interface{}, args ...interface{}) (result sql.Result, err error)
     doDelete(link dbLink, table string, condition interface{}, args ...interface{}) (result sql.Result, err error)
@@ -61,9 +61,9 @@ type DB interface {
 	Begin() (*TX, error)
 
 	// 数据表插入/更新/保存操作
-	Insert(table string, data Map) (sql.Result, error)
-	Replace(table string, data Map) (sql.Result, error)
-	Save(table string, data Map) (sql.Result, error)
+	Insert(table string, data interface{}) (sql.Result, error)
+	Replace(table string, data interface{}) (sql.Result, error)
+	Save(table string, data interface{}) (sql.Result, error)
 
 	// 数据表插入/更新/保存操作(批量)
 	BatchInsert(table string, list List, batch int) (sql.Result, error)

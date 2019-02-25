@@ -24,12 +24,12 @@ import (
 func formatCondition(where interface{}, args []interface{}) (string, []interface{}) {
     // 条件字符串处理
     buffer := bytes.NewBuffer(nil)
-    if reflect.ValueOf(where).Kind() == reflect.Map {
-        ks := reflect.ValueOf(where).MapKeys()
-        vs := reflect.ValueOf(where)
-        for _, k := range ks {
-            key   := gconv.String(k.Interface())
-            value := gconv.String(vs.MapIndex(k).Interface())
+    if s, ok := where.(string); ok {
+        buffer.WriteString(s)
+    } else {
+        for k, v := range gconv.Map(where) {
+            key   := gconv.String(k)
+            value := gconv.String(v)
             if buffer.Len() > 0 {
                 buffer.WriteString(" AND ")
             }
@@ -39,8 +39,6 @@ func formatCondition(where interface{}, args []interface{}) (string, []interface
                 buffer.WriteString(key + "='" + value + "'")
             }
         }
-    } else {
-        buffer.Write(gconv.Bytes(where))
     }
     if buffer.Len() == 0 {
         buffer.WriteString("1=1")
@@ -57,6 +55,7 @@ func formatCondition(where interface{}, args []interface{}) (string, []interface
                 kind = rv.Kind()
             }
             switch kind {
+                // Where条件参数支持slice类型
                 case reflect.Slice: fallthrough
                 case reflect.Array:
                     for i := 0; i < rv.Len(); i++ {
@@ -109,13 +108,13 @@ func formatError(err error, query string, args ...interface{}) error {
 
 // 根据insert选项获得操作名称
 func getInsertOperationByOption(option int) string {
-    oper := "INSERT"
+    operator := "INSERT"
     switch option {
         case OPTION_REPLACE:
-            oper = "REPLACE"
+            operator = "REPLACE"
         case OPTION_SAVE:
         case OPTION_IGNORE:
-            oper = "INSERT IGNORE"
+            operator = "INSERT IGNORE"
     }
-    return oper
+    return operator
 }

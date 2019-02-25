@@ -99,10 +99,13 @@ func Map(i interface{}, noTagCheck...bool) map[string]interface{} {
                     rt   := rv.Type()
                     name := ""
                     for i := 0; i < rv.NumField(); i++ {
-                        // 检查json tag
+                        // 检查tag, 支持gconv, json标签, 优先使用gconv
                         if len(noTagCheck) == 0 || !noTagCheck[0] {
-                            if name = rt.Field(i).Tag.Get("json"); name == "" {
-                                name = rt.Field(i).Name
+                            tag := rt.Field(i).Tag
+                            if name = tag.Get("gconv"); name == "" {
+                                if name = tag.Get("json"); name == "" {
+                                    name = rt.Field(i).Name
+                                }
                             }
                         }
                         m[name] = rv.Field(i).Interface()

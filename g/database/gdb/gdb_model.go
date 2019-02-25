@@ -200,13 +200,14 @@ func (md *Model) Cache(time int, name ... string) *Model {
     return model
 }
 
-// 链式操作，操作数据记录项，可以是string/Map, 也可以是：key,value,key,value,...
+// 链式操作，操作数据记录项，参数data类型可以是 string/map/struct/*struct ,
+// 也可以是：key,value,key,value,...
 func (md *Model) Data(data ...interface{}) (*Model) {
     model := md.Clone()
 	if len(data) > 1 {
 		m := make(map[string]interface{})
 		for i := 0; i < len(data); i += 2 {
-			m[gconv.String(data[i])] = data[i+1]
+			m[gconv.String(data[i])] = data[i + 1]
 		}
         model.data = m
 	} else {
@@ -223,6 +224,7 @@ func (md *Model) Data(data ...interface{}) (*Model) {
                     kind = rv.Kind()
                 }
                 switch kind {
+                	// 如果是slice，那么转换为List类型
                     case reflect.Slice: fallthrough
                     case reflect.Array:
                         list := make(List, rv.Len())
@@ -230,8 +232,9 @@ func (md *Model) Data(data ...interface{}) (*Model) {
                             list[i] = gconv.Map(rv.Index(i).Interface())
                         }
                         model.data = list
-                    case reflect.Map:
-                        model.data = gconv.Map(data[0])
+                    case reflect.Map:   fallthrough
+                    case reflect.Struct:
+                        model.data = Map(gconv.Map(data[0]))
                     default:
                         model.data = data[0]
                 }
