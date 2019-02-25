@@ -52,7 +52,7 @@ func (s *Session) init() {
     }
 }
 
-// 获取SessionId
+// 获取/创建SessionId
 func (s *Session) Id() string {
     s.init()
     return s.id
@@ -60,8 +60,11 @@ func (s *Session) Id() string {
 
 // 获取当前session所有数据
 func (s *Session) Data() map[string]interface{} {
-    s.init()
-    return s.data.Map()
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+        s.init()
+        return s.data.Map()
+    }
+    return nil
 }
 
 // 设置session
@@ -84,20 +87,25 @@ func (s *Session) BatchSet(m map[string]interface{}) {
 
 // 判断键名是否存在
 func (s *Session) Contains (key string) bool {
-    s.init()
-    return s.data.Contains(key)
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+        s.init()
+        return s.data.Contains(key)
+    }
+    return false
 }
 
 // 获取SESSION
 func (s *Session) Get (key string) interface{}  {
-    s.init()
-    return s.data.Get(key)
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+        s.init()
+        return s.data.Get(key)
+    }
+    return nil
 }
 
 // 获取SESSION，建议都用该方法获取参数
 func (s *Session) GetVar(key string) gvar.VarRead  {
-    s.init()
-    return gvar.NewRead(s.data.Get(key), true)
+    return gvar.NewRead(s.Get(key), true)
 }
 
 
@@ -128,21 +136,26 @@ func (s *Session) GetInterfaces(key string)     []interface{}   { return gconv.I
 func (s *Session) GetTime(key string, format...string) time.Time       { return gconv.Time(s.Get(key), format...) }
 func (s *Session) GetTimeDuration(key string)          time.Duration   { return gconv.TimeDuration(s.Get(key)) }
 
-// 将变量转换为对象，注意 objPointer 参数必须为struct指针
+// Deprecated, use GetVar instead.
+// (已废弃, 请使用GetVar) 将变量转换为对象，注意 objPointer 参数必须为struct指针
 func (s *Session) GetStruct(key string, objPointer interface{}, attrMapping...map[string]string) error {
     return gconv.Struct(s.Get(key), objPointer, attrMapping...)
 }
 
 // 删除session
 func (s *Session) Remove(key string) {
-    s.init()
-    s.data.Remove(key)
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+        s.init()
+        s.data.Remove(key)
+    }
 }
 
 // 清空session
 func (s *Session) Clear() {
-    s.init()
-    s.data.Clear()
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+        s.init()
+        s.data.Clear()
+    }
 }
 
 // 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)

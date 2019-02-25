@@ -115,6 +115,11 @@ func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int, httpOnly
     }
 }
 
+// 获得客户端提交的SessionId
+func (c *Cookie) GetSessionId() string {
+    return c.Get(c.server.GetSessionIdName())
+}
+
 // 设置SessionId
 func (c *Cookie) SetSessionId(id string) {
     c.Set(c.server.GetSessionIdName(), id)
