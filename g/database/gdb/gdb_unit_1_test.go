@@ -56,6 +56,67 @@ func TestDbBase_Insert(t *testing.T) {
     }); err != nil {
         gtest.Fatal(err)
     }
+
+    result, err := db.Insert("user", map[interface{}]interface{} {
+        "id"          : "2",
+        "passport"    : "t2",
+        "password"    : "25d55ad283aa400af464c76d713c07ad",
+        "nickname"    : "T2",
+        "create_time" : gtime.Now().String(),
+    })
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    n, _ := result.RowsAffected()
+    gtest.Assert(n, 1)
+
+    type User struct {
+        Id         int    `gconv:"id"`
+        Passport   string `json:"passport"`
+        Password   string `gconv:"password"`
+        Nickname   string `gconv:"nickname"`
+        CreateTime string `json:"create_time"`
+    }
+    result, err = db.Insert("user", User{
+        Id          : 3,
+        Uid         : 3,
+        Passport    : "t3",
+        Password    : "25d55ad283aa400af464c76d713c07ad",
+        Nickname    : "T3",
+        CreateTime  : gtime.Now().String(),
+    })
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    n, _ = result.RowsAffected()
+    gtest.Assert(n, 1)
+    value, err := db.Table("user").Fields("passport").Where("id=3").Value()
+    gtest.Assert(err, nil)
+    gtest.Assert(value.String(), "t3")
+
+    result, err = db.Insert("user", &User{
+        Id          : 4,
+        Uid         : 4,
+        Passport    : "t4",
+        Password    : "25d55ad283aa400af464c76d713c07ad",
+        Nickname    : "T4",
+        CreateTime  : gtime.Now().String(),
+    })
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    n, _ = result.RowsAffected()
+    gtest.Assert(n, 1)
+    value, err = db.Table("user").Fields("passport").Where("id=4").Value()
+    gtest.Assert(err, nil)
+    gtest.Assert(value.String(), "t4")
+
+    result, err = db.Table("user").Where("id>?", 1).Delete()
+    if err != nil {
+        gtest.Fatal(err)
+    }
+    n, _ = result.RowsAffected()
+    gtest.Assert(n, 3)
 }
 
 func TestDbBase_BatchInsert(t *testing.T) {

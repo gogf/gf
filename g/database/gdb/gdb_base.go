@@ -16,6 +16,7 @@ import (
     "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/text/gregex"
     "github.com/gogf/gf/g/util/gconv"
+    "reflect"
     "strings"
 )
 
@@ -404,15 +405,24 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
     params       := ([]interface{})(nil)
     updates      := ""
     charL, charR := bs.db.getChars()
-    if s, ok := data.(string); ok {
-        updates = s
-    } else {
-        var fields []string
-        for k, v := range gconv.Map(data) {
-            fields = append(fields, fmt.Sprintf("%s%s%s=?", charL, k, charR))
-            params = append(params, gconv.String(v))
-        }
-        updates = strings.Join(fields, ",")
+    // 使用反射进行类型判断
+    rv   := reflect.ValueOf(data)
+    kind := rv.Kind()
+    if kind == reflect.Ptr {
+        rv   = rv.Elem()
+        kind = rv.Kind()
+    }
+    switch kind {
+        case reflect.Map:   fallthrough
+        case reflect.Struct:
+            var fields []string
+            for k, v := range gconv.Map(data) {
+                fields = append(fields, fmt.Sprintf("%s%s%s=?", charL, k, charR))
+                params = append(params, gconv.String(v))
+            }
+            updates = strings.Join(fields, ",")
+        default:
+            updates = gconv.String(data)
     }
     for _, v := range args {
         params = append(params, gconv.String(v))

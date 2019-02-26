@@ -24,21 +24,30 @@ import (
 func formatCondition(where interface{}, args []interface{}) (string, []interface{}) {
     // 条件字符串处理
     buffer := bytes.NewBuffer(nil)
-    if s, ok := where.(string); ok {
-        buffer.WriteString(s)
-    } else {
-        for k, v := range gconv.Map(where) {
-            key   := gconv.String(k)
-            value := gconv.String(v)
-            if buffer.Len() > 0 {
-                buffer.WriteString(" AND ")
+    // 使用反射进行类型判断
+    rv   := reflect.ValueOf(where)
+    kind := rv.Kind()
+    if kind == reflect.Ptr {
+        rv   = rv.Elem()
+        kind = rv.Kind()
+    }
+    switch kind {
+        case reflect.Map:   fallthrough
+        case reflect.Struct:
+            for k, v := range gconv.Map(where) {
+                key   := gconv.String(k)
+                value := gconv.String(v)
+                if buffer.Len() > 0 {
+                    buffer.WriteString(" AND ")
+                }
+                if gstr.IsNumeric(value) || value == "?" {
+                    buffer.WriteString(key + "=" + value)
+                } else {
+                    buffer.WriteString(key + "='" + value + "'")
+                }
             }
-            if gstr.IsNumeric(value) || value == "?" {
-                buffer.WriteString(key + "=" + value)
-            } else {
-                buffer.WriteString(key + "='" + value + "'")
-            }
-        }
+        default:
+            buffer.WriteString(gconv.String(where))
     }
     if buffer.Len() == 0 {
         buffer.WriteString("1=1")
