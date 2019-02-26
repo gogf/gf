@@ -130,7 +130,9 @@ func (p *Pool) File() (*File, error) {
                return nil, err
            }
         }
-        if p.inited.Set(true) == false {
+        // !p.inited.Val() 使用原子读取操作判断，保证该操作判断的效率；
+        // p.inited.Set(true) == false 使用原子写入操作，保证该操作的原子性；
+        if !p.inited.Val() && p.inited.Set(true) == false {
             gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
                 // 如果文件被删除或者重命名，立即重建指针池
                 if event.IsRemove() || event.IsRename() {
