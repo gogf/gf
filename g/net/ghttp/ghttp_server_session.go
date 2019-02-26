@@ -38,6 +38,7 @@ func GetSession(r *Request) *Session {
     }
     return &Session {
         request : r,
+        server  : r.Server,
     }
 }
 
@@ -45,7 +46,6 @@ func GetSession(r *Request) *Session {
 func (s *Session) init() {
     if len(s.id) == 0 {
         s.id     = s.request.Cookie.SessionId()
-        s.server = s.request.Server
         s.data   = s.server.sessions.GetOrSetFuncLock(s.id, func() interface{} {
             return gmap.NewStringInterfaceMap()
         }, s.server.GetSessionMaxAge()).(*gmap.StringInterfaceMap)
