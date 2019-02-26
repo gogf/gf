@@ -20,6 +20,10 @@ import (
 // 执行对象
 type Object struct {}
 
+func (o *Object) Index(r *ghttp.Request) {
+    r.Response.Write("Object Index")
+}
+
 func (o *Object) Show(r *ghttp.Request) {
     r.Response.Write("Object Show")
 }
@@ -31,6 +35,10 @@ func (o *Object) Delete(r *ghttp.Request) {
 // 控制器
 type Controller struct {
     gmvc.Controller
+}
+
+func (c *Controller) Index() {
+    c.Response.Write("Controller Index")
 }
 
 func (c *Controller) Show() {
@@ -72,11 +80,17 @@ func Test_Router_Group1(t *testing.T) {
 
         gtest.Assert(client.GetContent ("/api/handler"),     "Handler")
 
+        gtest.Assert(client.GetContent ("/api/ctl"),         "Controller Index")
+        gtest.Assert(client.GetContent ("/api/ctl/"),        "Controller Index")
+        gtest.Assert(client.GetContent ("/api/ctl/index"),   "Controller Index")
         gtest.Assert(client.GetContent ("/api/ctl/my-show"), "Controller Show")
         gtest.Assert(client.GetContent ("/api/ctl/post"),    "Controller REST Post")
         gtest.Assert(client.GetContent ("/api/ctl/show"),    "Controller Show")
         gtest.Assert(client.PostContent("/api/ctl/rest"),    "Controller REST Post")
 
+        gtest.Assert(client.GetContent ("/api/obj"),         "Object Index")
+        gtest.Assert(client.GetContent ("/api/obj/"),        "Object Index")
+        gtest.Assert(client.GetContent ("/api/obj/index"),   "Object Index")
         gtest.Assert(client.GetContent ("/api/obj/delete"),  "Object REST Delete")
         gtest.Assert(client.GetContent ("/api/obj/my-show"), "Object Show")
         gtest.Assert(client.GetContent ("/api/obj/show"),    "Object Show")
