@@ -130,7 +130,7 @@ func (p *Pool) File() (*File, error) {
                return nil, err
            }
         }
-        if !p.inited.Val() || p.inited.Set(true) == false {
+        if p.inited.Set(true) == false {
             gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
                 // 如果文件被删除或者重命名，立即重建指针池
                 if event.IsRemove() || event.IsRename() {
