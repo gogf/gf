@@ -1,34 +1,33 @@
-<!-- Please answer these questions before submitting your issue. Thanks! -->
-### 1. What version of `Go` are you using (`go version`)?
+<!-- 为更高效率地交流并解决问题，请按照以下模板提交issue，感谢！ -->
+### 1. 您当前使用的`Go`版本（将终端`go version`指令结果粘贴到下面）？
 
 <pre>
 $ go version
 
 </pre>
 
-### 2. What version of `GoFrame` are you using?
+### 2. 您当前使用的`GoFrame`版本（可以查看`go.mod`/`version.go`/`gf.VERSION`）？
 
 
 
-### 3. Does this issue reproduce with the latest release?
+### 3. 您所遇到的问题是否在框架最新版本中也可复现？
 
 
 
-### 4. What did you do?
+### 4. 问题描述？
 
 <!--
-If possible, provide a copy of shortest codes for reproducing the error.
-A complete runnable program is good.
-A link on play.golang.org is best.
+请您尽可能地提供一份最短的，可复现问题的代码。
+代码尽可能地完整，最好是可以直接编译运行。
 -->
 
 
 
-### 5. What did you expect to see?
+### 5. 您期望得到的结果？
 
 
 
-### 6. What did you see instead?
+### 6. 您实际得到的结果？
 
 
 

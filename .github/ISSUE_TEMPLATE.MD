@@ -18,8 +18,7 @@ $ go version
 
 <!--
 If possible, provide a copy of shortest codes for reproducing the error.
-A complete runnable program is good.
-A link on play.golang.org is best.
+A complete runnable program is best.
 -->
 
 
