@@ -79,7 +79,6 @@ func TestDbBase_Insert(t *testing.T) {
     }
     result, err = db.Insert("user", User{
         Id          : 3,
-        Uid         : 3,
         Passport    : "t3",
         Password    : "25d55ad283aa400af464c76d713c07ad",
         Nickname    : "T3",
@@ -96,7 +95,6 @@ func TestDbBase_Insert(t *testing.T) {
 
     result, err = db.Insert("user", &User{
         Id          : 4,
-        Uid         : 4,
         Passport    : "t4",
         Password    : "25d55ad283aa400af464c76d713c07ad",
         Nickname    : "T4",

@@ -100,33 +100,33 @@ func (tx *TX) GetCount(query string, args ...interface{}) (int, error) {
 }
 
 // CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
-func (tx *TX) Insert(table string, data interface{}) (sql.Result, error) {
-    return tx.db.doInsert(tx.tx, table, data, OPTION_INSERT)
+func (tx *TX) Insert(table string, data interface{}, batch...int) (sql.Result, error) {
+    return tx.db.doInsert(tx.tx, table, data, OPTION_INSERT, batch...)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (tx *TX) Replace(table string, data interface{}) (sql.Result, error) {
-    return tx.db.doInsert(tx.tx, table, data, OPTION_REPLACE)
+func (tx *TX) Replace(table string, data interface{}, batch...int) (sql.Result, error) {
+    return tx.db.doInsert(tx.tx, table, data, OPTION_REPLACE, batch...)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (tx *TX) Save(table string, data interface{}) (sql.Result, error) {
-    return tx.db.doInsert(tx.tx, table, data, OPTION_SAVE)
+func (tx *TX) Save(table string, data interface{}, batch...int) (sql.Result, error) {
+    return tx.db.doInsert(tx.tx, table, data, OPTION_SAVE, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入
-func (tx *TX) BatchInsert(table string, list List, batch int) (sql.Result, error) {
-    return tx.db.doBatchInsert(tx.tx, table, list, batch, OPTION_INSERT)
+func (tx *TX) BatchInsert(table string, list interface{}, batch...int) (sql.Result, error) {
+    return tx.db.doBatchInsert(tx.tx, table, list, OPTION_INSERT, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (tx *TX) BatchReplace(table string, list List, batch int) (sql.Result, error) {
-    return tx.db.doBatchInsert(tx.tx, table, list, batch, OPTION_REPLACE)
+func (tx *TX) BatchReplace(table string, list interface{}, batch...int) (sql.Result, error) {
+    return tx.db.doBatchInsert(tx.tx, table, list, OPTION_REPLACE, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (tx *TX) BatchSave(table string, list List, batch int) (sql.Result, error) {
-    return tx.db.doBatchInsert(tx.tx, table, list, batch, OPTION_SAVE)
+func (tx *TX) BatchSave(table string, list interface{}, batch...int) (sql.Result, error) {
+    return tx.db.doBatchInsert(tx.tx, table, list, OPTION_SAVE, batch...)
 }
 
 // CURD操作:数据更新，统一采用sql预处理

@@ -333,7 +333,7 @@ func (md *Model) Save() (result sql.Result, err error) {
 	}
 	// 批量操作
 	if list, ok := md.data.(List); ok {
-		batch := 10
+		batch := gDEFAULT_BATCH_NUM
 		if md.batch > 0 {
 			batch = md.batch
 		}
