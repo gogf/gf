@@ -87,7 +87,7 @@ func (s *Session) BatchSet(m map[string]interface{}) {
 
 // 判断键名是否存在
 func (s *Session) Contains (key string) bool {
-    if len(s.id) > 0 || s.request.Cookie.Contains(s.server.GetSessionIdName()) {
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
         s.init()
         return s.data.Contains(key)
     }
@@ -96,7 +96,7 @@ func (s *Session) Contains (key string) bool {
 
 // 获取SESSION
 func (s *Session) Get (key string) interface{}  {
-    if len(s.id) > 0 || s.request.Cookie.Contains(s.server.GetSessionIdName()) {
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
         s.init()
         return s.data.Get(key)
     }
@@ -110,7 +110,7 @@ func (s *Session) GetVar(key string) gvar.VarRead  {
 
 // 删除session
 func (s *Session) Remove(key string) {
-    if len(s.id) > 0 || s.request.Cookie.Contains(s.server.GetSessionIdName()) {
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
         s.init()
         s.data.Remove(key)
     }
@@ -118,7 +118,7 @@ func (s *Session) Remove(key string) {
 
 // 清空session
 func (s *Session) Clear() {
-    if len(s.id) > 0 || s.request.Cookie.Contains(s.server.GetSessionIdName()) {
+    if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
         s.init()
         s.data.Clear()
     }
@@ -126,7 +126,7 @@ func (s *Session) Clear() {
 
 // 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
 func (s *Session) UpdateExpire() {
-    if len(s.id) > 0 {
+    if len(s.id) > 0 && s.data.Size() > 0 {
         s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
     }
 }

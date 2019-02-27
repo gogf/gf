@@ -24,11 +24,13 @@ import (
 
 // http客户端
 type Client struct {
-    http.Client                // 底层http client对象
-    header   map[string]string // HEADER信息Map
-    prefix   string            // 设置请求的URL前缀
-    authUser string            // HTTP基本权限设置：名称
-    authPass string            // HTTP基本权限设置：密码
+    http.Client                   // 底层http client对象
+    header      map[string]string // HEADER信息Map
+    cookies     map[string]string // 自定义COOKIE
+    prefix      string            // 设置请求的URL前缀
+    authUser    string            // HTTP基本权限设置：名称
+    authPass    string            // HTTP基本权限设置：密码
+    browserMode bool              // 是否模拟浏览器模式(自动保存提交COOKIE)
 }
 
 // http客户端对象指针
@@ -39,8 +41,14 @@ func NewClient() (*Client) {
                 DisableKeepAlives: true,
             },
         },
-        header : make(map[string]string),
+        header  : make(map[string]string),
+        cookies : make(map[string]string),
     }
+}
+
+// 是否模拟浏览器模式(自动保存提交COOKIE)
+func (c *Client) SetBrowserMode(enabled bool) {
+    c.browserMode = enabled
 }
 
 // 设置HTTP Header
@@ -55,6 +63,18 @@ func (c *Client) SetHeaderRaw(header string) {
         if len(array) >= 3 {
             c.header[array[1]] = array[2]
         }
+    }
+}
+
+// 设置COOKIE
+func (c *Client) SetCookie(key, value string) {
+    c.cookies[key] = value
+}
+
+// 使用Map设置COOKIE
+func (c *Client) SetCookieMap(cookieMap map[string]string) {
+    for k, v := range cookieMap {
+        c.cookies[k] = v
     }
 }
 
@@ -143,6 +163,19 @@ func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
             req.Header.Set(k, v)
         }
     }
+    // COOKIE
+    if len(c.cookies) > 0 {
+        headerCookie := ""
+        for k, v := range c.cookies {
+            if len(headerCookie) > 0 {
+                headerCookie += ";"
+            }
+            headerCookie += k + "=" + v
+        }
+        if len(headerCookie) > 0 {
+            req.Header.Set("Cookie", headerCookie)
+        }
+    }
     // HTTP账号密码
     if len(c.authUser) > 0 {
         req.SetBasicAuth(c.authUser, c.authPass)
@@ -152,8 +185,10 @@ func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
     if err != nil {
         return nil, err
     }
-    r := &ClientResponse{}
-    r.Response = *resp
+    r := &ClientResponse{
+        cookies : make(map[string]string),
+    }
+    r.Response = resp
     return r, nil
 }
 
@@ -254,13 +289,40 @@ func (c *Client) DoRequest(method, url string, data...string) (*ClientResponse, 
             req.Header.Set(k, v)
         }
     }
+    // COOKIE
+    if len(c.cookies) > 0 {
+        headerCookie := ""
+        for k, v := range c.cookies {
+            if len(headerCookie) > 0 {
+                headerCookie += ";"
+            }
+            headerCookie += k + "=" + v
+        }
+        if len(headerCookie) > 0 {
+            req.Header.Set("Cookie", headerCookie)
+        }
+    }
     // 执行请求
     resp, err := c.Do(req)
     if err != nil {
         return nil, err
     }
-    r := &ClientResponse{}
-    r.Response = *resp
+    r := &ClientResponse{
+        cookies : make(map[string]string),
+    }
+    r.Response = resp
+    // 浏览器模式
+    if c.browserMode {
+        now := time.Now()
+        for _, v := range r.Cookies() {
+            if v.Expires.UnixNano() < now.UnixNano() {
+                delete(c.cookies, v.Name)
+            } else {
+                c.cookies[v.Name] = v.Value
+            }
+        }
+    }
+    //fmt.Println(url, c.cookies)
     return r, nil
 }
 
