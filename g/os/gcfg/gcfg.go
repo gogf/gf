@@ -63,13 +63,8 @@ func (c *Config) filePath(file...string) (path string) {
     }
     c.paths.RLockFunc(func(array []string) {
         for _, v := range array {
-            //fmt.Println("search:", v, name)
             if path, _ = gspath.Search(v, name); path != "" {
                 break
-            } else {
-                //if strings.EqualFold(v, "/Users/john/Temp/config") {
-                //    gutil.Dump(gspath.Get(v).AllPaths())
-                //}
             }
         }
     })
@@ -94,6 +89,10 @@ func (c *Config) SetPath(path string) error {
         glog.Error(fmt.Sprintf(`[gcfg] SetPath failed: %s`, err.Error()))
         return err
     }
+    // 重复判断
+    if c.paths.Search(realPath) != -1 {
+        return nil
+    }
     c.jsons.Clear()
     c.paths.Clear()
     c.paths.Append(realPath)
@@ -116,14 +115,29 @@ func (c *Config) AddPath(path string) error {
         glog.Error(fmt.Sprintf(`[gcfg] AddPath failed: %s`, err.Error()))
         return err
     }
+    // 重复判断
+    if c.paths.Search(realPath) != -1 {
+        return nil
+    }
     c.paths.Append(realPath)
     glog.Debug("[gcfg] AddPath:", realPath)
     return nil
 }
 
-// 获取指定文件的绝对路径，默认获取默认的配置文件路径
-func (c *Config) GetFilePath(file...string) string {
-    return c.filePath(file...)
+// 获取指定文件的绝对路径，默认获取默认的配置文件路径，当指定的配置文件不存在时，返回空字符串，并且不会报错。
+func (c *Config) GetFilePath(file...string) (path string) {
+    name := c.name.Val()
+    if len(file) > 0 {
+        name = file[0]
+    }
+    c.paths.RLockFunc(func(array []string) {
+        for _, v := range array {
+            if path, _ = gspath.Search(v, name); path != "" {
+                break
+            }
+        }
+    })
+    return
 }
 
 // 设置配置管理对象的默认文件名称

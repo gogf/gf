@@ -115,6 +115,10 @@ func (view *View) SetPath(path string) error {
         glog.Error(fmt.Sprintf(`[gview] SetPath failed: %s`, err.Error()))
         return err
     }
+    // 重复判断
+    if view.paths.Search(realPath) != -1 {
+        return nil
+    }
     view.paths.Clear()
     view.paths.Append(realPath)
     glog.Debug("[gview] SetPath:", realPath)
@@ -131,6 +135,10 @@ func (view *View) AddPath(path string) error {
         err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
         glog.Error(fmt.Sprintf(`[gview] AddPath failed: %s`, err.Error()))
         return err
+    }
+    // 重复判断
+    if view.paths.Search(realPath) != -1 {
+        return nil
     }
     view.paths.Append(realPath)
     glog.Debug("[gview] AddPath:", realPath)
