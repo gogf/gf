@@ -200,9 +200,9 @@ func (md *Model) Cache(time int, name ... string) *Model {
     return model
 }
 
-// 链式操作，操作数据记录项，参数data类型可以是 string/map/struct/*struct ,
-// 也可以是：key,value,key,value,...
-func (md *Model) Data(data ...interface{}) (*Model) {
+// 链式操作，操作数据项，参数data类型支持 string/map/slice/struct/*struct ,
+// 也可以是：key,value,key,value,...。
+func (md *Model) Data(data ...interface{}) *Model {
     model := md.Clone()
 	if len(data) > 1 {
 		m := make(map[string]interface{})
@@ -243,7 +243,9 @@ func (md *Model) Data(data ...interface{}) (*Model) {
 	return model
 }
 
-// 链式操作， CURD - Insert/BatchInsert
+// 链式操作， CURD - Insert/BatchInsert。
+// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
+// 如果Data方法传递的是slice类型，那么为批量操作。
 func (md *Model) Insert() (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
@@ -282,7 +284,9 @@ func (md *Model) Insert() (result sql.Result, err error) {
 	return nil, errors.New("inserting into table with invalid data type")
 }
 
-// 链式操作， CURD - Replace/BatchReplace
+// 链式操作， CURD - Replace/BatchReplace。
+// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
+// 如果Data方法传递的是slice类型，那么为批量操作。
 func (md *Model) Replace() (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
@@ -321,7 +325,9 @@ func (md *Model) Replace() (result sql.Result, err error) {
 	return nil, errors.New("replacing into table with invalid data type")
 }
 
-// 链式操作， CURD - Save/BatchSave
+// 链式操作， CURD - Save/BatchSave。
+// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
+// 如果Data方法传递的是slice类型，那么为批量操作。
 func (md *Model) Save() (result sql.Result, err error) {
 	defer func() {
 		if err == nil {

@@ -234,17 +234,23 @@ func (bs *dbBase) Begin() (*TX, error) {
     }
 }
 
-// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
+// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回。
+// 参数data支持map/struct/*struct/slice类型，
+// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Insert(table string, data interface{}, batch...int) (sql.Result, error) {
     return bs.db.doInsert(nil, table, data, OPTION_INSERT, batch...)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
+// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条。
+// 参数data支持map/struct/*struct/slice类型，
+// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Replace(table string, data interface{}, batch...int) (sql.Result, error) {
     return bs.db.doInsert(nil, table, data, OPTION_REPLACE, batch...)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
+// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据。
+// 参数data支持map/struct/*struct/slice类型，
+// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Save(table string, data interface{}, batch...int) (sql.Result, error) {
     return bs.db.doInsert(nil, table, data, OPTION_SAVE, batch...)
 }
