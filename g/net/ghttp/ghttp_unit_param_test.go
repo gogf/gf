@@ -16,7 +16,7 @@ import (
     "time"
 )
 
-func Test_Params(t *testing.T) {
+func Test_Params_Basic(t *testing.T) {
     type User struct {
         Id    int
         Name  string
