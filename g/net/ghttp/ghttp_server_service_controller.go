@@ -68,7 +68,11 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
         // 这里处理新增/user路由绑定
         if strings.EqualFold(mname, "Index") {
             p := gstr.PosR(key, "/index")
-            m[key[0 : p] + key[p + 6 : ]] = &handlerItem {
+            k := key[0 : p] + key[p + 6 : ]
+            if len(k) == 0 {
+                k = "/"
+            }
+            m[k] = &handlerItem {
                 name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
                 rtype : gROUTE_REGISTER_CONTROLLER,
                 ctype : v.Elem().Type(),
