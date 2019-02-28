@@ -52,7 +52,7 @@
 1. 从ghttp中剥离SESSION功能构成单独的模块gsession；
 1. 改进gproc进程间通信处理逻辑，提高稳定性，以应对进程间大批量的数据发送/接收；
 1. gdb的Data方法支持struct参数传入；
-
+1. gfcache依旧使用gcache作为缓存控制对象，不要使用gmap；
 
 
 
