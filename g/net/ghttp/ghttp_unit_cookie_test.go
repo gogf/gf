@@ -8,16 +8,17 @@
 package ghttp_test
 
 import (
+    "fmt"
     "github.com/gogf/gf/g"
     "github.com/gogf/gf/g/net/ghttp"
-    "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/test/gtest"
     "testing"
     "time"
 )
 
 func Test_Cookie(t *testing.T) {
-    s := g.Server(gtime.Nanosecond())
+    p := ports.PopRand()
+    s := g.Server(p)
     s.BindHandler("/set", func(r *ghttp.Request){
         r.Cookie.Set(r.Get("k"), r.Get("v"))
     })
@@ -28,19 +29,17 @@ func Test_Cookie(t *testing.T) {
     s.BindHandler("/remove", func(r *ghttp.Request){
         r.Cookie.Remove(r.Get("k"))
     })
-    s.SetPort(8500)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
         client.SetBrowserMode(true)
-        client.SetPrefix("http://127.0.0.1:8500")
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
         r1, e1 := client.Get("/set?k=key1&v=100")
         if r1 != nil {
             defer r1.Close()

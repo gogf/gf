@@ -8,10 +8,10 @@
 package ghttp_test
 
 import (
+    "fmt"
     "github.com/gogf/gf/g"
     "github.com/gogf/gf/g/frame/gmvc"
     "github.com/gogf/gf/g/net/ghttp"
-    "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/test/gtest"
     "testing"
     "time"
@@ -19,6 +19,14 @@ import (
 
 // 执行对象
 type Object struct {}
+
+func (o *Object) Init(r *ghttp.Request) {
+    r.Response.Write("1")
+}
+
+func (o *Object) Shut(r *ghttp.Request) {
+    r.Response.Write("2")
+}
 
 func (o *Object) Index(r *ghttp.Request) {
     r.Response.Write("Object Index")
@@ -35,6 +43,15 @@ func (o *Object) Delete(r *ghttp.Request) {
 // 控制器
 type Controller struct {
     gmvc.Controller
+}
+
+func (c *Controller) Init(r *ghttp.Request) {
+    c.Controller.Init(r)
+    c.Response.Write("1")
+}
+
+func (c *Controller) Shut() {
+    c.Response.Write("2")
 }
 
 func (c *Controller) Index() {
@@ -54,7 +71,8 @@ func Handler(r *ghttp.Request) {
 }
 
 func Test_Router_Group1(t *testing.T) {
-    s   := g.Server(gtime.Nanosecond())
+    p   := ports.PopRand()
+    s   := g.Server(p)
     obj := new(Object)
     ctl := new(Controller)
     // 分组路由方法注册
@@ -66,35 +84,33 @@ func Test_Router_Group1(t *testing.T) {
     g.ALL ("/obj",         obj)
     g.GET ("/obj/my-show", obj, "Show")
     g.REST("/obj/rest",    obj)
-    s.SetPort(8200)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8200")
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
         gtest.Assert(client.GetContent ("/api/handler"),     "Handler")
 
-        gtest.Assert(client.GetContent ("/api/ctl"),         "Controller Index")
-        gtest.Assert(client.GetContent ("/api/ctl/"),        "Controller Index")
-        gtest.Assert(client.GetContent ("/api/ctl/index"),   "Controller Index")
-        gtest.Assert(client.GetContent ("/api/ctl/my-show"), "Controller Show")
-        gtest.Assert(client.GetContent ("/api/ctl/post"),    "Controller REST Post")
-        gtest.Assert(client.GetContent ("/api/ctl/show"),    "Controller Show")
-        gtest.Assert(client.PostContent("/api/ctl/rest"),    "Controller REST Post")
+        gtest.Assert(client.GetContent ("/api/ctl"),         "1Controller Index2")
+        gtest.Assert(client.GetContent ("/api/ctl/"),        "1Controller Index2")
+        gtest.Assert(client.GetContent ("/api/ctl/index"),   "1Controller Index2")
+        gtest.Assert(client.GetContent ("/api/ctl/my-show"), "1Controller Show2")
+        gtest.Assert(client.GetContent ("/api/ctl/post"),    "1Controller REST Post2")
+        gtest.Assert(client.GetContent ("/api/ctl/show"),    "1Controller Show2")
+        gtest.Assert(client.PostContent("/api/ctl/rest"),    "1Controller REST Post2")
 
-        gtest.Assert(client.GetContent ("/api/obj"),         "Object Index")
-        gtest.Assert(client.GetContent ("/api/obj/"),        "Object Index")
-        gtest.Assert(client.GetContent ("/api/obj/index"),   "Object Index")
-        gtest.Assert(client.GetContent ("/api/obj/delete"),  "Object REST Delete")
-        gtest.Assert(client.GetContent ("/api/obj/my-show"), "Object Show")
-        gtest.Assert(client.GetContent ("/api/obj/show"),    "Object Show")
-        gtest.Assert(client.DeleteContent("/api/obj/rest"),  "Object REST Delete")
+        gtest.Assert(client.GetContent ("/api/obj"),         "1Object Index2")
+        gtest.Assert(client.GetContent ("/api/obj/"),        "1Object Index2")
+        gtest.Assert(client.GetContent ("/api/obj/index"),   "1Object Index2")
+        gtest.Assert(client.GetContent ("/api/obj/delete"),  "1Object REST Delete2")
+        gtest.Assert(client.GetContent ("/api/obj/my-show"), "1Object Show2")
+        gtest.Assert(client.GetContent ("/api/obj/show"),    "1Object Show2")
+        gtest.Assert(client.DeleteContent("/api/obj/rest"),  "1Object REST Delete2")
 
         // 测试404
         resp, err := client.Get("/ThisDoesNotExist")
@@ -105,7 +121,8 @@ func Test_Router_Group1(t *testing.T) {
 }
 
 func Test_Router_Group2(t *testing.T) {
-    s   := g.Server(gtime.Nanosecond())
+    p   := ports.PopRand()
+    s   := g.Server(p)
     obj := new(Object)
     ctl := new(Controller)
     // 分组路由批量注册
@@ -118,29 +135,27 @@ func Test_Router_Group2(t *testing.T) {
         {"GET",  "/obj/my-show", obj, "Show"},
         {"REST", "/obj/rest",    obj},
     })
-    s.SetPort(8300)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8300")
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
         gtest.Assert(client.GetContent ("/api/handler"),     "Handler")
 
-        gtest.Assert(client.GetContent ("/api/ctl/my-show"), "Controller Show")
-        gtest.Assert(client.GetContent ("/api/ctl/post"),    "Controller REST Post")
-        gtest.Assert(client.GetContent ("/api/ctl/show"),    "Controller Show")
-        gtest.Assert(client.PostContent("/api/ctl/rest"),    "Controller REST Post")
+        gtest.Assert(client.GetContent ("/api/ctl/my-show"), "1Controller Show2")
+        gtest.Assert(client.GetContent ("/api/ctl/post"),    "1Controller REST Post2")
+        gtest.Assert(client.GetContent ("/api/ctl/show"),    "1Controller Show2")
+        gtest.Assert(client.PostContent("/api/ctl/rest"),    "1Controller REST Post2")
 
-        gtest.Assert(client.GetContent ("/api/obj/delete"),  "Object REST Delete")
-        gtest.Assert(client.GetContent ("/api/obj/my-show"), "Object Show")
-        gtest.Assert(client.GetContent ("/api/obj/show"),    "Object Show")
-        gtest.Assert(client.DeleteContent("/api/obj/rest"),  "Object REST Delete")
+        gtest.Assert(client.GetContent ("/api/obj/delete"),  "1Object REST Delete2")
+        gtest.Assert(client.GetContent ("/api/obj/my-show"), "1Object Show2")
+        gtest.Assert(client.GetContent ("/api/obj/show"),    "1Object Show2")
+        gtest.Assert(client.DeleteContent("/api/obj/rest"),  "1Object REST Delete2")
 
         // 测试404
         resp, err := client.Get("/ThisDoesNotExist")

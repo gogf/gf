@@ -8,18 +8,18 @@
 package ghttp_test
 
 import (
+    "fmt"
     "github.com/gogf/gf/g"
     "github.com/gogf/gf/g/net/ghttp"
-    "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/test/gtest"
     "testing"
     "time"
 )
 
-
 // 基本路由功能测试
 func Test_Router_Basic(t *testing.T) {
-    s := g.Server(gtime.Nanosecond())
+    p := ports.PopRand()
+    s := g.Server(p)
     s.BindHandler("/:name", func(r *ghttp.Request){
         r.Response.Write("/:name")
     })
@@ -35,19 +35,16 @@ func Test_Router_Basic(t *testing.T) {
     s.BindHandler("/user/list/{field}.html", func(r *ghttp.Request){
         r.Response.Write(r.Get("field"))
     })
-    s.SetPort(8100)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8100")
-        
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
         gtest.Assert(client.GetContent("/john"),               "")
         gtest.Assert(client.GetContent("/john/update"),        "john")
         gtest.Assert(client.GetContent("/john/edit"),          "edit")
@@ -57,25 +54,24 @@ func Test_Router_Basic(t *testing.T) {
 
 // 测试HTTP Method注册.
 func Test_Router_Method(t *testing.T) {
-    s := g.Server(gtime.Nanosecond())
+    p := ports.PopRand()
+    s := g.Server(p)
     s.BindHandler("GET:/get", func(r *ghttp.Request){
 
     })
     s.BindHandler("POST:/post", func(r *ghttp.Request){
 
     })
-    s.SetPort(8105)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8105")
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
         resp1, err := client.Get("/get")
         defer resp1.Close()
@@ -101,7 +97,8 @@ func Test_Router_Method(t *testing.T) {
 
 // 测试状态返回.
 func Test_Router_Status(t *testing.T) {
-    s := g.Server(gtime.Nanosecond())
+    p := ports.PopRand()
+    s := g.Server(p)
     s.BindHandler("/200", func(r *ghttp.Request){
         r.Response.WriteStatus(200)
     })
@@ -114,18 +111,16 @@ func Test_Router_Status(t *testing.T) {
     s.BindHandler("/500", func(r *ghttp.Request){
         r.Response.WriteStatus(500)
     })
-    s.SetPort(8110)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8110")
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
         resp1, err := client.Get("/200")
         defer resp1.Close()
@@ -151,25 +146,24 @@ func Test_Router_Status(t *testing.T) {
 
 // 自定义状态码处理.
 func Test_Router_CustomStatusHandler(t *testing.T) {
-    s := g.Server(gtime.Nanosecond())
+    p := ports.PopRand()
+    s := g.Server(p)
     s.BindHandler("/", func(r *ghttp.Request){
         r.Response.Write("hello")
     })
     s.BindStatusHandler(404, func(r *ghttp.Request){
         r.Response.Write("404 page")
     })
-    s.SetPort(8120)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8120")
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
         gtest.Assert(client.GetContent("/"), "hello")
         resp, err := client.Get("/ThisDoesNotExist")
@@ -182,22 +176,21 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 
 // 测试不存在的路由.
 func Test_Router_404(t *testing.T) {
-    s := g.Server(gtime.Nanosecond())
+    p := ports.PopRand()
+    s := g.Server(p)
     s.BindHandler("/", func(r *ghttp.Request){
         r.Response.Write("hello")
     })
-    s.SetPort(8130)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8130")
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
         gtest.Assert(client.GetContent("/"), "hello")
         resp, err := client.Get("/ThisDoesNotExist")

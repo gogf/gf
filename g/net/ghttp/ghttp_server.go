@@ -19,8 +19,8 @@ import (
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gproc"
     "github.com/gogf/gf/g/os/gtimer"
-    "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/text/gregex"
+    "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/third/github.com/gorilla/websocket"
     "github.com/gogf/gf/third/github.com/olekukonko/tablewriter"
     "net/http"
@@ -39,6 +39,8 @@ type (
         name             string                           // 服务名称，方便识别
         config           ServerConfig                     // 配置对象
         servers          []*gracefulServer                // 底层http.Server列表
+        serverCount      *gtype.Int                       // 底层http.Server数量
+        closeChan        chan struct{}                    // 用以关闭事件通知的通道
         methodsMap       map[string]struct{}              // 所有支持的HTTP Method(初始化时自动填充)
         servedCount      *gtype.Int                       // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
         // 服务注册相关
@@ -101,8 +103,8 @@ type (
 )
 
 const (
-    SERVER_STATUS_STOPPED      = 0               // Server状态：停止
-    SERVER_STATUS_RUNNING      = 1               // Server状态：运行
+    SERVER_STATUS_STOPPED      = 0 // Server状态：停止
+    SERVER_STATUS_RUNNING      = 1 // Server状态：运行
     HOOK_BEFORE_SERVE          = "BeforeServe"
     HOOK_AFTER_SERVE           = "AfterServe"
     HOOK_BEFORE_OUTPUT         = "BeforeOutput"
@@ -123,21 +125,21 @@ const (
 )
 
 var (
-    // Server表，用以存储和检索名称与Server对象之间的关联关系
+    // WebServer表，用以存储和检索名称与Server对象之间的关联关系
     serverMapping    = gmap.NewStringInterfaceMap()
 
-    // 正常运行的Server数量，如果没有运行、失败或者全部退出，那么该值为0
+    // 正常运行的WebServer数量，如果没有运行、失败或者全部退出，那么该值为0
     serverRunning    = gtype.NewInt()
 
-    // Web Socket默认配置
+    // WebSocket默认配置
     wsUpgrader       = websocket.Upgrader {
         // 默认允许WebSocket请求跨域，权限控制可以由业务层自己负责，灵活度更高
         CheckOrigin: func(r *http.Request) bool {
             return true
         },
     }
-    // Web Server已完成服务事件通道，当有事件时表示服务完成，当前进程退出
-    doneChan         = make(chan struct{}, 1000)
+    // WebServer已完成服务事件通道，当有事件时表示服务完成，当前进程退出
+    allDoneChan         = make(chan struct{}, 1000)
 
     // 用于服务进程初始化，只能初始化一次，采用“懒初始化”(在server运行时才初始化)
     serverProcessInited = gtype.NewBool()
@@ -174,6 +176,11 @@ func serverProcessInit() {
     if gracefulEnabled {
         go handleProcessMessage()
     }
+
+    // 是否处于开发环境
+    if gfile.MainPkgPath() != "" {
+        glog.Debug("GF notices that you're in develop environment, so error logs are auto enabled to stdout.")
+    }
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
@@ -189,6 +196,8 @@ func GetServer(name...interface{}) (*Server) {
     s := &Server {
         name             : sname,
         servers          : make([]*gracefulServer, 0),
+        closeChan        : make(chan struct{}, 100),
+        serverCount      : gtype.NewInt(),
         methodsMap       : make(map[string]struct{}),
         statusHandlerMap : make(map[string]HandlerFunc),
         serveTree        : make(map[string]interface{}),
@@ -212,8 +221,8 @@ func GetServer(name...interface{}) (*Server) {
     return s
 }
 
-// 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行)
-// 需要结合Wait方式一起使用
+// 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行),
+// 需要结合Wait方式一起使用.
 func (s *Server) Start() error {
     // 服务进程初始化，只会初始化一次
     serverProcessInit()
@@ -228,11 +237,12 @@ func (s *Server) Start() error {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
     // 不允许访问的路由注册(使用HOOK实现)
+    // @TODO 去掉HOOK的实现方式
     if s.config.DenyRoutes != nil {
         for _, v := range s.config.DenyRoutes {
             s.BindHookHandler(v, HOOK_BEFORE_SERVE, func(r *Request) {
                 r.Response.WriteStatus(403)
-                r.Exit()
+                r.ExitAll()
             })
         }
     }
@@ -265,10 +275,6 @@ func (s *Server) Start() error {
                 glog.Error("ghttp server error in process communication:", err)
             }
         })
-    }
-    // 是否处于开发环境
-    if gfile.MainPkgPath() != "" {
-        glog.Debug("GF notices that you're in develop environment, so error logs are auto enabled to stdout.")
     }
 
     // 打印展示路由表
@@ -367,7 +373,7 @@ func (s *Server) Run() error {
         return err
     }
     // 阻塞等待服务执行完成
-    <- doneChan
+    <- s.closeChan
 
     glog.Printfln("%d: all servers shutdown", gproc.Pid())
     return nil
@@ -378,7 +384,7 @@ func (s *Server) Run() error {
 // 这是一个与进程相关的方法
 func Wait() {
     // 阻塞等待服务执行完成
-    <- doneChan
+    <- allDoneChan
 
     glog.Printfln("%d: all servers shutdown", gproc.Pid())
 }
@@ -462,23 +468,28 @@ func (s *Server) startServer(fdMap listenerFdMap) {
         }
     }
     // 开始执行异步监听
+    serverRunning.Add(1)
     for _, v := range s.servers {
         go func(server *gracefulServer) {
-            serverRunning.Add(1)
+            s.serverCount.Add(1)
             err := (error)(nil)
             if server.isHttps {
                 err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath)
             } else {
                 err = server.ListenAndServe()
             }
-            serverRunning.Add(-1)
             // 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
             if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
                 glog.Fatal(err)
             }
-            // 如果所有异步的Server都已经停止，并且没有在管理操作(重启/关闭)进行中，那么主Server就可以退出了
-            if serverRunning.Val() < 1 && serverProcessStatus.Val() == 0 {
-                doneChan <- struct{}{}
+            // 如果所有异步的http.Server都已经停止，那么WebServer就可以退出了
+            if s.serverCount.Add(-1) < 1 {
+                s.closeChan <- struct{}{}
+                // 如果所有WebServer都退出，那么退出Wait等待
+                if serverRunning.Add(-1) < 1 {
+                    serverMapping.Remove(s.name)
+                    allDoneChan <- struct{}{}
+                }
             }
         }(v)
     }
