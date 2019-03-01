@@ -1,5 +1,5 @@
 <!-- Please answer these questions before submitting your issue. Thanks! -->
-### 1. What version of `Go` are you using (`go version`)?
+### 1. What version of `Go` are you using (output of command: `go version`)?
 
 <pre>
 $ go version
@@ -10,7 +10,7 @@ $ go version
 
 
 
-### 3. Does this issue reproduce with the latest release?
+### 3. Can this issue be reproduced with the latest release?
 
 
 
