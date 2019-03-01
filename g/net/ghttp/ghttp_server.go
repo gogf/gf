@@ -41,7 +41,6 @@ type (
         servers          []*gracefulServer                // 底层http.Server列表
         serverCount      *gtype.Int                       // 底层http.Server数量
         closeChan        chan struct{}                    // 用以关闭事件通知的通道
-        methodsMap       map[string]struct{}              // 所有支持的HTTP Method(初始化时自动填充)
         servedCount      *gtype.Int                       // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
         // 服务注册相关
         serveTree        map[string]interface{}           // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
@@ -112,7 +111,7 @@ const (
     HOOK_BEFORE_CLOSE          = "BeforeClose"
     HOOK_AFTER_CLOSE           = "AfterClose"
 
-    gHTTP_METHODS              = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+    HTTP_METHODS               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
     gDEFAULT_SERVER            = "default"
     gDEFAULT_DOMAIN            = "default"
     gDEFAULT_METHOD            = "ALL"
@@ -125,6 +124,10 @@ const (
 )
 
 var (
+    // 所有支持的HTTP Method Map(初始化时自动填充),
+    // 用于快速检索需要
+    methodsMap       = make(map[string]struct{})
+
     // WebServer表，用以存储和检索名称与Server对象之间的关联关系
     serverMapping    = gmap.NewStringInterfaceMap()
 
@@ -147,6 +150,12 @@ var (
     // 是否开启WebServer平滑重启特性, 会开启额外的本地端口监听，用于进程管理通信
     gracefulEnabled     = true
 )
+
+func init() {
+    for _, v := range strings.Split(HTTP_METHODS, ",") {
+        methodsMap[v] = struct{}{}
+    }
+}
 
 // 是否开启平滑重启特性
 func SetGraceful(enabled bool) {
@@ -198,7 +207,6 @@ func GetServer(name...interface{}) (*Server) {
         servers          : make([]*gracefulServer, 0),
         closeChan        : make(chan struct{}, 100),
         serverCount      : gtype.NewInt(),
-        methodsMap       : make(map[string]struct{}),
         statusHandlerMap : make(map[string]HandlerFunc),
         serveTree        : make(map[string]interface{}),
         hooksTree        : make(map[string]interface{}),
@@ -211,9 +219,6 @@ func GetServer(name...interface{}) (*Server) {
     }
     // 日志的标准输出默认关闭，但是错误信息会特殊处理
     s.logger.SetStdPrint(false)
-    for _, v := range strings.Split(gHTTP_METHODS, ",") {
-        s.methodsMap[v] = struct{}{}
-    }
     // 初始化时使用默认配置
     s.SetConfig(defaultServerConfig)
     // 记录到全局ServerMap中

@@ -70,12 +70,16 @@ func (c *Config) filePath(file...string) (path string) {
     })
     if path == "" {
         buffer := bytes.NewBuffer(nil)
-        buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
-        c.paths.RLockFunc(func(array []string) {
-            for k, v := range array {
-                buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
-            }
-        })
+        if c.paths.Len() > 0 {
+            buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
+            c.paths.RLockFunc(func(array []string) {
+                for k, v := range array {
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+                }
+            })
+        } else {
+            buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path set/add", name))
+        }
         glog.Error(buffer.String())
     }
     return path
@@ -96,7 +100,7 @@ func (c *Config) SetPath(path string) error {
     c.jsons.Clear()
     c.paths.Clear()
     c.paths.Append(realPath)
-    glog.Debug("[gcfg] SetPath:", realPath)
+    //glog.Debug("[gcfg] SetPath:", realPath)
     return nil
 }
 
@@ -120,7 +124,7 @@ func (c *Config) AddPath(path string) error {
         return nil
     }
     c.paths.Append(realPath)
-    glog.Debug("[gcfg] AddPath:", realPath)
+    //glog.Debug("[gcfg] AddPath:", realPath)
     return nil
 }
 
@@ -142,7 +146,7 @@ func (c *Config) GetFilePath(file...string) (path string) {
 
 // 设置配置管理对象的默认文件名称
 func (c *Config) SetFileName(name string) {
-    glog.Debug("[gcfg] SetFileName:", name)
+    //glog.Debug("[gcfg] SetFileName:", name)
     c.name.Set(name)
 }
 

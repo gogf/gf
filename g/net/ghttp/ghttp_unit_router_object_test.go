@@ -15,22 +15,21 @@ import (
     "time"
 )
 
-// 执行对象
-type ObjectBasic struct {}
+type Object struct {}
 
-func (o *ObjectBasic) Init(r *ghttp.Request) {
+func (o *Object) Init(r *ghttp.Request) {
     r.Response.Write("1")
 }
 
-func (o *ObjectBasic) Shut(r *ghttp.Request) {
+func (o *Object) Shut(r *ghttp.Request) {
     r.Response.Write("2")
 }
 
-func (o *ObjectBasic) Index(r *ghttp.Request) {
+func (o *Object) Index(r *ghttp.Request) {
     r.Response.Write("Object Index")
 }
 
-func (o *ObjectBasic) Show(r *ghttp.Request) {
+func (o *Object) Show(r *ghttp.Request) {
     r.Response.Write("Object Show")
 }
 
@@ -38,7 +37,8 @@ func (o *ObjectBasic) Show(r *ghttp.Request) {
 func Test_Router_Object(t *testing.T) {
     p := ports.PopRand()
     s := g.Server(p)
-    s.BindObject("/", new(ObjectBasic))
+    s.BindObject("/", new(Object))
+    s.BindObject("/{.struct}/{.method}", new(Object))
     s.SetPort(p)
     s.SetDumpRouteMap(false)
     s.Start()
@@ -55,6 +55,13 @@ func Test_Router_Object(t *testing.T) {
         gtest.Assert(client.GetContent("/shut"),        "Not Found")
         gtest.Assert(client.GetContent("/index"),       "1Object Index2")
         gtest.Assert(client.GetContent("/show"),        "1Object Show2")
+
+        gtest.Assert(client.GetContent("/object"),            "Not Found")
+        gtest.Assert(client.GetContent("/object/init"),       "Not Found")
+        gtest.Assert(client.GetContent("/object/shut"),       "Not Found")
+        gtest.Assert(client.GetContent("/object/index"),      "1Object Index2")
+        gtest.Assert(client.GetContent("/object/show"),       "1Object Show2")
+
         gtest.Assert(client.GetContent("/none-exist"),  "Not Found")
     })
 }

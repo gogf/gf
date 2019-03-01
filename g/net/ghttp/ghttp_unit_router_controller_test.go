@@ -17,24 +17,24 @@ import (
 )
 
 // 控制器
-type ControllerBasic struct {
+type Controller struct {
     gmvc.Controller
 }
 
-func (c *ControllerBasic) Init(r *ghttp.Request) {
+func (c *Controller) Init(r *ghttp.Request) {
     c.Controller.Init(r)
     c.Response.Write("1")
 }
 
-func (c *ControllerBasic) Shut() {
+func (c *Controller) Shut() {
     c.Response.Write("2")
 }
 
-func (c *ControllerBasic) Index() {
+func (c *Controller) Index() {
     c.Response.Write("Controller Index")
 }
 
-func (c *ControllerBasic) Show() {
+func (c *Controller) Show() {
     c.Response.Write("Controller Show")
 }
 
@@ -43,7 +43,8 @@ func (c *ControllerBasic) Show() {
 func Test_Router_Controller(t *testing.T) {
     p := ports.PopRand()
     s := g.Server(p)
-    s.BindController("/", new(ControllerBasic))
+    s.BindController("/", new(Controller))
+    s.BindController("/{.struct}/{.method}", new(Controller))
     s.SetPort(p)
     s.SetDumpRouteMap(false)
     s.Start()
@@ -60,6 +61,13 @@ func Test_Router_Controller(t *testing.T) {
         gtest.Assert(client.GetContent("/shut"),        "Not Found")
         gtest.Assert(client.GetContent("/index"),       "1Controller Index2")
         gtest.Assert(client.GetContent("/show"),        "1Controller Show2")
+
+        gtest.Assert(client.GetContent("/controller"),             "Not Found")
+        gtest.Assert(client.GetContent("/controller/init"),        "Not Found")
+        gtest.Assert(client.GetContent("/controller/shut"),        "Not Found")
+        gtest.Assert(client.GetContent("/controller/index"),       "1Controller Index2")
+        gtest.Assert(client.GetContent("/controller/show"),        "1Controller Show2")
+
         gtest.Assert(client.GetContent("/none-exist"),  "Not Found")
     })
 }

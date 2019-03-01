@@ -118,15 +118,17 @@ func (r *Response) WriteXml(content interface{}, rootTag...string) error {
     return nil
 }
 
-// 允许AJAX跨域访问
+// Deprecated, please use CORSDefault instead.
+//
+// (已废弃，请使用CORSDefault)允许AJAX跨域访问.
 func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods string, maxAge...int) {
     age := 3628800
     if len(maxAge) > 0 {
         age = maxAge[0]
     }
-    r.Header().Set("Access-Control-Allow-Origin",  allowOrigin);
-    r.Header().Set("Access-Control-Allow-Methods", allowMethods);
-    r.Header().Set("Access-Control-Max-Age",       strconv.Itoa(age));
+    r.Header().Set("Access-Control-Allow-Origin",      allowOrigin)
+    r.Header().Set("Access-Control-Allow-Methods",     allowMethods)
+    r.Header().Set("Access-Control-Max-Age",           strconv.Itoa(age))
 }
 
 // 返回HTTP Code状态码

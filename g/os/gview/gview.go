@@ -121,7 +121,7 @@ func (view *View) SetPath(path string) error {
     }
     view.paths.Clear()
     view.paths.Append(realPath)
-    glog.Debug("[gview] SetPath:", realPath)
+    //glog.Debug("[gview] SetPath:", realPath)
     return nil
 }
 
@@ -141,7 +141,7 @@ func (view *View) AddPath(path string) error {
         return nil
     }
     view.paths.Append(realPath)
-    glog.Debug("[gview] AddPath:", realPath)
+    //glog.Debug("[gview] AddPath:", realPath)
     return nil
 }
 
@@ -173,12 +173,16 @@ func (view *View) Parse(file string, params Params, funcmap...map[string]interfa
     })
     if path == "" {
         buffer := bytes.NewBuffer(nil)
-        buffer.WriteString(fmt.Sprintf("[gview] cannot find template file \"%s\" in following paths:", file))
-        view.paths.RLockFunc(func(array []string) {
-            for k, v := range array {
-                buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
-            }
-        })
+        if view.paths.Len() > 0 {
+            buffer.WriteString(fmt.Sprintf("[gview] cannot find template file \"%s\" in following paths:", file))
+            view.paths.RLockFunc(func(array []string) {
+                for k, v := range array {
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+                }
+            })
+        } else {
+            buffer.WriteString(fmt.Sprintf("[gview] cannot find template file \"%s\" with no path set/add", file))
+        }
         glog.Error(buffer.String())
         return nil, errors.New(fmt.Sprintf(`tpl "%s" not found`, file))
     }
