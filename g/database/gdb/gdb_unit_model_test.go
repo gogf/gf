@@ -255,8 +255,51 @@ func TestModel_GroupBy(t *testing.T) {
     gtest.Assert(result[0]["nickname"].String(), "T111")
 }
 
-// slice
-func TestModel_Where1(t *testing.T) {
+// where string
+func TestModel_WhereString(t *testing.T) {
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where("id=? and nickname=?", 3, "T3").One()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(result["id"].Int(), 3)
+    })
+}
+
+// where map
+func TestModel_WhereMap(t *testing.T) {
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where(g.Map{"id" : 3, "nickname" : "T3"}).One()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(result["id"].Int(), 3)
+    })
+}
+
+// where struct
+func TestModel_WhereStruct(t *testing.T) {
+    gtest.Case(t, func() {
+        type User struct {
+            Id       int    `json:"id"`
+            Nickname string `gconv:"nickname"`
+        }
+        result, err := db.Table("user").Where(User{3, "T3"}).One()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(result["id"].Int(), 3)
+
+        result, err  = db.Table("user").Where(&User{3, "T3"}).One()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(result["id"].Int(), 3)
+    })
+}
+
+// where slice
+func TestModel_WhereSlice1(t *testing.T) {
     result, err := db.Table("user").Where("id IN(?)", g.Slice{1,3}).OrderBy("id ASC").All()
     if err != nil {
         gtest.Fatal(err)
@@ -266,8 +309,8 @@ func TestModel_Where1(t *testing.T) {
     gtest.Assert(result[1]["id"].Int(), 3)
 }
 
-// slice
-func TestModel_Where2(t *testing.T) {
+// where slice
+func TestModel_WhereSlice2(t *testing.T) {
     result, err := db.Table("user").Where("nickname=? AND id IN(?)", "T3", g.Slice{1,3}).OrderBy("id ASC").All()
     if err != nil {
         gtest.Fatal(err)

@@ -17,7 +17,7 @@ func init() {
 		Host:     "127.0.0.1",
 		Port:     "3306",
 		User:     "root",
-		Pass:     "",
+		Pass:     "12345678",
 		Name:     "",
 		Type:     "mysql",
 		Role:     "master",

@@ -12,16 +12,15 @@ import (
     "fmt"
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/text/gregex"
-    "github.com/gogf/gf/g/text/gstr"
+    "github.com/gogf/gf/g/util/gconv"
     _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
     "strings"
 )
 
 // 格式化SQL查询条件
-func formatCondition(where interface{}, args []interface{}) (string, []interface{}) {
+func formatCondition(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
     // 条件字符串处理
     buffer := bytes.NewBuffer(nil)
     // 使用反射进行类型判断
@@ -32,29 +31,25 @@ func formatCondition(where interface{}, args []interface{}) (string, []interface
         kind = rv.Kind()
     }
     switch kind {
+        // 注意当where为map/struct类型时，args参数必须为空。
         case reflect.Map:   fallthrough
         case reflect.Struct:
             for k, v := range gconv.Map(where) {
-                key   := gconv.String(k)
-                value := gconv.String(v)
                 if buffer.Len() > 0 {
                     buffer.WriteString(" AND ")
                 }
-                if gstr.IsNumeric(value) || value == "?" {
-                    buffer.WriteString(key + "=" + value)
-                } else {
-                    buffer.WriteString(key + "='" + value + "'")
-                }
+                buffer.WriteString(k + "=?")
+                newArgs = append(newArgs, v)
             }
+            newWhere = buffer.String()
         default:
             buffer.WriteString(gconv.String(where))
     }
     if buffer.Len() == 0 {
         buffer.WriteString("1=1")
     }
-    // 查询条件处理
-    newWhere := buffer.String()
-    newArgs  := make([]interface{}, 0)
+    // 查询条件参数处理，主要处理slice参数类型
+    newWhere = buffer.String()
     if len(args) > 0 {
         for index, arg := range args {
             rv   := reflect.ValueOf(arg)
@@ -64,7 +59,8 @@ func formatCondition(where interface{}, args []interface{}) (string, []interface
                 kind = rv.Kind()
             }
             switch kind {
-                // Where条件参数支持slice类型
+                // '?'占位符支持slice类型,
+                // 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
                 case reflect.Slice: fallthrough
                 case reflect.Array:
                     for i := 0; i < rv.Len(); i++ {
@@ -83,7 +79,7 @@ func formatCondition(where interface{}, args []interface{}) (string, []interface
             }
         }
     }
-    return newWhere, newArgs
+    return
 }
 
 // 打印SQL对象(仅在debug=true时有效)

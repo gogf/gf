@@ -54,7 +54,7 @@
 1. gdb的Data方法支持struct参数传入；
 1. gfcache依旧使用gcache作为缓存控制对象，不要使用gmap；
 1. 增加对ghttp路由注册的{.struct}/{.method}单元测试；
-
+1. 更新跨域请求CORS相关功能文档；
 
 
 
