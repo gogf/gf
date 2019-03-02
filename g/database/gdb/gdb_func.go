@@ -14,7 +14,6 @@ import (
     "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/text/gregex"
-    "github.com/gogf/gf/g/text/gstr"
     _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
     "strings"
@@ -37,13 +36,20 @@ func formatCondition(where interface{}, args []interface{}) (string, []interface
             for k, v := range gconv.Map(where) {
                 key   := gconv.String(k)
                 value := gconv.String(v)
+                if len(value) == 0 {
+                    continue
+                }
                 if buffer.Len() > 0 {
                     buffer.WriteString(" AND ")
                 }
-                if gstr.IsNumeric(value) || value == "?" {
+                if value == "?" {
                     buffer.WriteString(key + "=" + value)
                 } else {
-                    buffer.WriteString(key + "='" + value + "'")
+                    buffer.WriteString(key + "=?")
+                    if (args == nil || len(args) == 0) {
+                        args = make([]interface{}, 0)
+                    }
+                    args = append(args, value)
                 }
             }
         default:
