@@ -3,6 +3,7 @@ package gdb_test
 import (
     "github.com/gogf/gf/g/database/gdb"
     "github.com/gogf/gf/g/test/gtest"
+	"os"
 )
 
 var (
@@ -13,7 +14,7 @@ var (
 // 初始化连接参数。
 // 测试前需要修改连接参数。
 func init() {
-	gdb.AddDefaultConfigNode(gdb.ConfigNode{
+	node := gdb.ConfigNode{
 		Host:     "127.0.0.1",
 		Port:     "3306",
 		User:     "root",
@@ -22,8 +23,13 @@ func init() {
 		Type:     "mysql",
 		Role:     "master",
 		Charset:  "utf8",
-        Priority: 1,
-	})
+		Priority: 1,
+	}
+	hostname, _ := os.Hostname()
+	if hostname == "ijohn" {
+		node.Pass = "12345678"
+	}
+	gdb.AddDefaultConfigNode(node)
 	if r, err := gdb.New(); err != nil {
         gtest.Fatal(err)
 	} else {
