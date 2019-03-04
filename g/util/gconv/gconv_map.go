@@ -7,7 +7,9 @@
 package gconv
 
 import (
+    "github.com/gogf/gf/g/internal/empty"
     "reflect"
+    "strings"
 )
 
 // 任意类型转换为 map[string]interface{} 类型,
@@ -100,12 +102,33 @@ func Map(value interface{}, noTagCheck...bool) map[string]interface{} {
                         rt   := rv.Type()
                         name := ""
                         for i := 0; i < rv.NumField(); i++ {
+                            name = ""
                             // 检查tag, 支持gconv, json标签, 优先使用gconv
                             if len(noTagCheck) == 0 || !noTagCheck[0] {
                                 tag := rt.Field(i).Tag
                                 if name = tag.Get("gconv"); name == "" {
-                                    if name = tag.Get("json"); name == "" {
-                                        name = rt.Field(i).Name
+                                    name = tag.Get("json")
+                                }
+                            }
+                            if name == "" {
+                                name = strings.TrimSpace(rt.Field(i).Name)
+                            } else {
+                                // 支持标准库json特性: -, omitempty
+                                name = strings.TrimSpace(name)
+                                if name == "-" {
+                                    continue
+                                }
+                                array := strings.Split(name, ",")
+                                if len(array) > 1 {
+                                    switch strings.TrimSpace(array[1]) {
+                                        case "omitempty":
+                                            if empty.IsEmpty(rv.Field(i).Interface()) {
+                                                continue
+                                            } else {
+                                                name = strings.TrimSpace(array[0])
+                                            }
+                                        default:
+                                            name = strings.TrimSpace(array[0])
                                     }
                                 }
                             }
