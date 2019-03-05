@@ -36,7 +36,10 @@ func IsEmpty(value interface{}) bool {
         case []byte:  return len(value) == 0
         default:
             // 最后通过反射来判断
-            rv   := reflect.ValueOf(value)
+            rv := reflect.ValueOf(value)
+            if rv.IsNil() {
+                return true
+            }
             kind := rv.Kind()
             switch kind {
                 case reflect.Map:   fallthrough

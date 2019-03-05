@@ -1,13 +1,23 @@
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "github.com/gogf/gf/g/util/gconv"
+)
+
+type User struct {
+    Id int
+}
+
+type RPCResponse struct {
+    ID      interface{}  `json:"id,omitempty"`
+    JsonRPC string       `json:"jsonrpc"`
+    Error   *User        `json:"error,omitempty"`
+    Result  interface{}  `json:"result,omitempty"`
+}
 
 func main() {
-    for i := 0; i < 10; i++ {
-        switch 1 {
-            default:
-                //continue
-        }
-        fmt.Println(i)
-    }
+    var rpc RPCResponse
+    fmt.Println(rpc.Error)
+    fmt.Println(gconv.Map(rpc))
 }

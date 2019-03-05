@@ -147,7 +147,7 @@ var (
     // 用于服务进程初始化，只能初始化一次，采用“懒初始化”(在server运行时才初始化)
     serverProcessInited = gtype.NewBool()
 
-    // 是否开启WebServer平滑重启特性, 会开启额外的本地端口监听，用于进程管理通信
+    // 是否开启WebServer平滑重启特性, 会开启额外的本地端口监听，用于进程管理通信(默认开启)
     gracefulEnabled     = true
 )
 

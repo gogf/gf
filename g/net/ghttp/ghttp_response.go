@@ -187,7 +187,8 @@ func (r *Response) ServeFileDownload(path string, name...string) {
     r.Server.serveFile(r.request, path)
 }
 
-// 返回location标识，引导客户端跳转
+// 返回location标识，引导客户端跳转。
+// 注意这里要先把设置的cookie输出，否则会被忽略。
 func (r *Response) RedirectTo(location string) {
     r.Header().Set("Location", location)
     r.WriteHeader(http.StatusFound)
@@ -220,8 +221,17 @@ func (r *Response) ClearBuffer() {
     r.buffer.Reset()
 }
 
-// 输出缓冲区数据到客户端
+// Deprecated.
+//
+// 输出缓冲区数据到客户端.
 func (r *Response) OutputBuffer() {
+    r.Header().Set("Server", r.Server.config.ServerAgent)
+    //r.handleGzip()
+    r.Writer.OutputBuffer()
+}
+
+// 输出缓冲区数据到客户端.
+func (r *Response) Output() {
     r.Header().Set("Server", r.Server.config.ServerAgent)
     //r.handleGzip()
     r.Writer.OutputBuffer()
