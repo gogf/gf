@@ -63,24 +63,23 @@ func (c *Config) filePath(file...string) (path string) {
     }
     c.paths.RLockFunc(func(array []string) {
         for _, v := range array {
-            //fmt.Println("search:", v, name)
             if path, _ = gspath.Search(v, name); path != "" {
                 break
-            } else {
-                //if strings.EqualFold(v, "/Users/john/Temp/config") {
-                //    gutil.Dump(gspath.Get(v).AllPaths())
-                //}
             }
         }
     })
     if path == "" {
         buffer := bytes.NewBuffer(nil)
-        buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
-        c.paths.RLockFunc(func(array []string) {
-            for k, v := range array {
-                buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
-            }
-        })
+        if c.paths.Len() > 0 {
+            buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
+            c.paths.RLockFunc(func(array []string) {
+                for k, v := range array {
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+                }
+            })
+        } else {
+            buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path set/add", name))
+        }
         glog.Error(buffer.String())
     }
     return path
@@ -94,10 +93,14 @@ func (c *Config) SetPath(path string) error {
         glog.Error(fmt.Sprintf(`[gcfg] SetPath failed: %s`, err.Error()))
         return err
     }
+    // 重复判断
+    if c.paths.Search(realPath) != -1 {
+        return nil
+    }
     c.jsons.Clear()
     c.paths.Clear()
     c.paths.Append(realPath)
-    glog.Debug("[gcfg] SetPath:", realPath)
+    //glog.Debug("[gcfg] SetPath:", realPath)
     return nil
 }
 
@@ -116,19 +119,34 @@ func (c *Config) AddPath(path string) error {
         glog.Error(fmt.Sprintf(`[gcfg] AddPath failed: %s`, err.Error()))
         return err
     }
+    // 重复判断
+    if c.paths.Search(realPath) != -1 {
+        return nil
+    }
     c.paths.Append(realPath)
-    glog.Debug("[gcfg] AddPath:", realPath)
+    //glog.Debug("[gcfg] AddPath:", realPath)
     return nil
 }
 
-// 获取指定文件的绝对路径，默认获取默认的配置文件路径
-func (c *Config) GetFilePath(file...string) string {
-    return c.filePath(file...)
+// 获取指定文件的绝对路径，默认获取默认的配置文件路径，当指定的配置文件不存在时，返回空字符串，并且不会报错。
+func (c *Config) GetFilePath(file...string) (path string) {
+    name := c.name.Val()
+    if len(file) > 0 {
+        name = file[0]
+    }
+    c.paths.RLockFunc(func(array []string) {
+        for _, v := range array {
+            if path, _ = gspath.Search(v, name); path != "" {
+                break
+            }
+        }
+    })
+    return
 }
 
 // 设置配置管理对象的默认文件名称
 func (c *Config) SetFileName(name string) {
-    glog.Debug("[gcfg] SetFileName:", name)
+    //glog.Debug("[gcfg] SetFileName:", name)
     c.name.Set(name)
 }
 

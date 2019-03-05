@@ -10,6 +10,7 @@ package ghttp
 import (
     "errors"
     "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/text/gregex"
     "strings"
     "reflect"
     "fmt"
@@ -72,10 +73,15 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
             finit : finit,
             fshut : fshut,
         }
-        // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI
-        if strings.EqualFold(mname, "Index") {
+        // 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI。
+        // 注意，当pattern带有内置变量时，不会自动加该路由。
+        if strings.EqualFold(mname, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
             p := gstr.PosR(key, "/index")
-            m[key[0 : p] + key[p + 6 : ]] = &handlerItem {
+            k := key[0 : p] + key[p + 6 : ]
+            if len(k) == 0 {
+                k = "/"
+            }
+            m[k] = &handlerItem {
                 name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
                 rtype : gROUTE_REGISTER_OBJECT,
                 ctype : nil,
@@ -141,6 +147,7 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
     m     := make(handlerMap)
     v     := reflect.ValueOf(obj)
     t     := v.Type()
+    sname := t.Elem().Name()
     finit := (func(*Request))(nil)
     fshut := (func(*Request))(nil)
     if v.MethodByName("Init").IsValid() {
@@ -153,7 +160,7 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
     for i := 0; i < v.NumMethod(); i++ {
         mname  := t.Method(i).Name
         method := strings.ToUpper(mname)
-        if _, ok := s.methodsMap[method]; !ok {
+        if _, ok := methodsMap[method]; !ok {
             continue
         }
         faddr, ok := v.Method(i).Interface().(func(*Request))
@@ -167,7 +174,7 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
         if objName[0] == '*' {
             objName = fmt.Sprintf(`(%s)`, objName)
         }
-        key   := mname + ":" + pattern
+        key   := s.mergeBuildInNameToPattern(mname + ":" + pattern, sname, mname, false)
         m[key] = &handlerItem {
             name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
             rtype : gROUTE_REGISTER_OBJECT,

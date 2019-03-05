@@ -2,13 +2,22 @@ package main
 
 import (
     "fmt"
+    "github.com/gogf/gf/g/util/gconv"
 )
 
-func main() {
-    s := "abc我是中国人é"
-    fmt.Println(len(s))
+type User struct {
+    Id int
+}
 
-    for i := 0; i < len(s); i++ {
-        fmt.Println(s[i])
-    }
+type RPCResponse struct {
+    ID      interface{}  `json:"id,omitempty"`
+    JsonRPC string       `json:"jsonrpc"`
+    Error   *User        `json:"error,omitempty"`
+    Result  interface{}  `json:"result,omitempty"`
+}
+
+func main() {
+    var rpc RPCResponse
+    fmt.Println(rpc.Error)
+    fmt.Println(gconv.Map(rpc))
 }

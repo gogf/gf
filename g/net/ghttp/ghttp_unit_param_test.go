@@ -8,22 +8,23 @@
 package ghttp_test
 
 import (
+    "fmt"
     "github.com/gogf/gf/g"
     "github.com/gogf/gf/g/net/ghttp"
-    "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/test/gtest"
     "testing"
     "time"
 )
 
-func Test_Params(t *testing.T) {
+func Test_Params_Basic(t *testing.T) {
     type User struct {
         Id    int
         Name  string
         Pass1 string `params:"password1"`
         Pass2 string `params:"password2"`
     }
-    s := g.Server(gtime.Nanosecond())
+    p := ports.PopRand()
+    s := g.Server(p)
     s.BindHandler("/get", func(r *ghttp.Request){
         if r.GetQuery("slice") != nil {
             r.Response.Write(r.GetQuery("slice"))
@@ -96,18 +97,16 @@ func Test_Params(t *testing.T) {
             r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
         }
     })
-    s.SetPort(8400)
+    s.SetPort(p)
     s.SetDumpRouteMap(false)
-    go s.Run()
-    defer func() {
-        s.Shutdown()
-        time.Sleep(time.Second)
-    }()
+    s.Start()
+    defer s.Shutdown()
+
     // 等待启动完成
     time.Sleep(time.Second)
     gtest.Case(t, func() {
         client := ghttp.NewClient()
-        client.SetPrefix("http://127.0.0.1:8400")
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
         // GET
         gtest.Assert(client.GetContent("/get", "slice=1&slice=2"), `["1","2"]`)
         gtest.Assert(client.GetContent("/get", "bool=1"),          `true`)

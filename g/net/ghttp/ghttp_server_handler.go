@@ -24,7 +24,7 @@ func (s *Server)defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
     s.handleRequest(w, r)
 }
 
-// 执行处理HTTP请求
+// 执行处理HTTP请求，
 // 首先，查找是否有对应域名的处理接口配置；
 // 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
 // 最后，如果以上都没有找到处理接口，那么进行文件处理；
@@ -55,12 +55,11 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         // 输出Cookie
         request.Cookie.Output()
         // 输出缓冲区
-        request.Response.OutputBuffer()
+        request.Response.Output()
         // 事件 - AfterOutput
         if !request.IsExited() {
             s.callHookHandler(HOOK_AFTER_OUTPUT, request)
         }
-
         // 事件 - BeforeClose
         s.callHookHandler(HOOK_BEFORE_CLOSE, request)
         // access log
@@ -92,7 +91,7 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
     // 动态服务检索
     handler := (*handlerItem)(nil)
-    if !request.IsFileRequest() || isStaticDir {
+    if !request.isFileRequest || isStaticDir {
         if parsedItem := s.getServeHandlerWithCache(request); parsedItem != nil {
             handler = parsedItem.handler
             for k, v := range parsedItem.values {
@@ -112,9 +111,9 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
 
     // 执行静态文件服务/回调控制器/执行对象/方法
     if !request.IsExited() {
-        // 需要再次判断文件是否真实存在，因为文件检索可能使用了缓存，从健壮性考虑这里需要二次判断
+        // 需要再次判断文件是否真实存在，
+        // 因为文件检索可能使用了缓存，从健壮性考虑这里需要二次判断
         if request.isFileRequest /* && gfile.Exists(staticFile) */{
-            // 静态文件
             s.serveFile(request, staticFile)
         } else {
             if handler != nil {

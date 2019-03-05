@@ -31,15 +31,78 @@ func Replace(origin, search, replace string, count...int) string {
     return strings.Replace(origin, search, replace, n)
 }
 
+// Replace returns a copy of the string <origin> with string <search> replaced by <replace>
+// with case-insensitive.
+//
+// 字符串替换(大小写不敏感)
+func ReplaceI(origin, search, replace string, count...int) string {
+    n := -1
+    if len(count) > 0 {
+        n = count[0]
+    }
+    if n == 0 {
+        return origin
+    }
+    length      := len(search)
+    searchLower := strings.ToLower(search)
+    for {
+        originLower := strings.ToLower(origin)
+        if pos := strings.Index(originLower, searchLower); pos != -1 {
+            origin = origin[ : pos] + replace + origin[pos + length : ]
+            if n -= 1; n == 0 {
+                break
+            }
+        } else {
+            break
+        }
+    }
+    return origin
+}
+
+// Replace string by array/slice.
+//
+// 使用map进行字符串替换(大小写敏感)
+func ReplaceByArray(origin string, array []string) string {
+    for i := 0; i < len(array); i += 2 {
+        if i + 1 >= len(array) {
+            break
+        }
+        origin = Replace(origin, array[i], array[i + 1])
+    }
+    return origin
+}
+
+// Replace string by array/slice with case-insensitive.
+//
+// 使用map进行字符串替换(大小写不敏感)
+func ReplaceIByArray(origin string, array []string) string {
+    for i := 0; i < len(array); i += 2 {
+        if i + 1 >= len(array) {
+            break
+        }
+        origin = ReplaceI(origin, array[i], array[i + 1])
+    }
+    return origin
+}
+
 // Replace string by map.
 //
 // 使用map进行字符串替换(大小写敏感)
 func ReplaceByMap(origin string, replaces map[string]string) string {
-    result := origin
     for k, v := range replaces {
-        result = strings.Replace(result, k, v, -1)
+        origin = Replace(origin, k, v)
     }
-    return result
+    return origin
+}
+
+// Replace string by map with case-insensitive.
+//
+// 使用map进行字符串替换(大小写不敏感)
+func ReplaceIByMap(origin string, replaces map[string]string) string {
+    for k, v := range replaces {
+        origin = ReplaceI(origin, k, v)
+    }
+    return origin
 }
 
 // ToLower returns a copy of the string s with all Unicode letters mapped to their lower case.
