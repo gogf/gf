@@ -32,12 +32,12 @@ func (w *ResponseWriter) WriteHeader(status int) {
 
 // 输出buffer数据到客户端.
 func (w *ResponseWriter) OutputBuffer() {
+    if w.Status != 0 {
+        w.ResponseWriter.WriteHeader(w.Status)
+    }
     if w.buffer.Len() > 0 {
         w.ResponseWriter.Write(w.buffer.Bytes())
         w.buffer.Reset()
-    }
-    if w.Status != 0 {
-        w.ResponseWriter.WriteHeader(w.Status)
     }
 }
 
