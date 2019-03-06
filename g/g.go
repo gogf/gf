@@ -39,7 +39,8 @@ type ListIntAny = []map[int]interface{}
 type ListIntStr = []map[int]string
 type ListIntInt = []map[int]int
 
-
+// Frequently-used slice type alias.
+//
 // 常用slice数据结构(使用别名)
 type Slice      = []interface{}
 type SliceAny   = []interface{}

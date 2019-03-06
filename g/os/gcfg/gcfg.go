@@ -37,6 +37,8 @@ type Config struct {
     vc     *gtype.Bool              // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
 }
 
+// New returns a new configuration management object.
+//
 // 生成一个配置管理对象
 func New(path string, file...string) *Config {
     name := DEFAULT_CONFIG_FILE
@@ -55,6 +57,8 @@ func New(path string, file...string) *Config {
     return c
 }
 
+// filePath returns the absolute configuration file path for the given filename by <file>.
+//
 // 判断从哪个配置文件中获取内容，返回配置文件的绝对路径
 func (c *Config) filePath(file...string) (path string) {
     name := c.name.Val()

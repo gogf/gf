@@ -18,8 +18,8 @@ import (
 )
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
-func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc) error {
-    return s.setHandler(pattern, &handlerItem {
+func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc) {
+    s.setHandler(pattern, &handlerItem {
         name  : runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
         ctype : nil,
         fname : "",
@@ -28,13 +28,10 @@ func (s *Server)BindHookHandler(pattern string, hook string, handler HandlerFunc
 }
 
 // 通过map批量绑定回调函数
-func (s *Server)BindHookHandlerByMap(pattern string, hookmap map[string]HandlerFunc) error {
+func (s *Server)BindHookHandlerByMap(pattern string, hookmap map[string]HandlerFunc) {
     for k, v := range hookmap {
-        if err := s.BindHookHandler(pattern, k, v); err != nil {
-            return err
-        }
+        s.BindHookHandler(pattern, k, v)
     }
-    return nil
 }
 
 // 事件回调处理，内部使用了缓存处理.

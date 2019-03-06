@@ -16,10 +16,10 @@ services:
   - mysql
 
 before_install:
-  - pwd
+  - echo "127.0.0.1 local" >> /etc/hosts
 
 install:
-  - pwd
+  - cat /etc/hosts
 
 script:
   - cd g

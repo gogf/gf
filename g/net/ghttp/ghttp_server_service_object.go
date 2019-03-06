@@ -8,19 +8,18 @@
 package ghttp
 
 import (
-    "errors"
+    "fmt"
+    "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/text/gregex"
-    "strings"
-    "reflect"
-    "fmt"
     "github.com/gogf/gf/g/text/gstr"
-    "github.com/gogf/gf/g/os/gfile"
+    "reflect"
+    "strings"
 )
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
 // 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写
-func (s *Server)BindObject(pattern string, obj interface{}, methods...string) error {
+func (s *Server)BindObject(pattern string, obj interface{}, methods...string) {
     methodMap := (map[string]bool)(nil)
     if len(methods) > 0 {
         methodMap = make(map[string]bool)
@@ -52,11 +51,7 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
         }
         faddr, ok := v.Method(i).Interface().(func(*Request))
         if !ok {
-            if methodMap != nil {
-                s := fmt.Sprintf(`invalid medthod definition "%s", while "func(*Request))" is required`, v.Method(i).Type().String())
-                glog.Error(s)
-                return errors.New(s)
-            }
+            glog.Errorfln(`invalid method definition "%s", while "func(*Request))" is required`, v.Method(i).Type().String())
             continue
         }
         objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -78,8 +73,8 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
         if strings.EqualFold(mname, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
             p := gstr.PosR(key, "/index")
             k := key[0 : p] + key[p + 6 : ]
-            if len(k) == 0 {
-                k = "/"
+            if len(k) == 0 || k[0] == '@' {
+                k = "/" + k
             }
             m[k] = &handlerItem {
                 name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
@@ -92,12 +87,12 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) er
             }
         }
     }
-    return s.bindHandlerByMap(m)
+    s.bindHandlerByMap(m)
 }
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
-// 第三个参数methods支持多个方法注册，多个方法以英文“,”号分隔，区分大小写
-func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string) error {
+// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面，
+// 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
+func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string) {
     m     := make(handlerMap)
     v     := reflect.ValueOf(obj)
     t     := v.Type()
@@ -105,13 +100,13 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
     mname := strings.TrimSpace(method)
     fval  := v.MethodByName(mname)
     if !fval.IsValid() {
-        return errors.New("invalid method name:" + mname)
+        glog.Error("invalid method name:" + mname)
+        return
     }
     faddr, ok := fval.Interface().(func(*Request))
     if !ok {
-        s := fmt.Sprintf(`invalid medthod definition "%s", while "func(*Request)" is required`, fval.Type().String())
-        glog.Error(s)
-        return errors.New(s)
+        glog.Errorfln(`invalid method definition "%s", while "func(*Request)" is required`, fval.Type().String())
+        return
     }
     finit := (func(*Request))(nil)
     fshut := (func(*Request))(nil)
@@ -138,12 +133,12 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
         fshut : fshut,
     }
 
-    return s.bindHandlerByMap(m)
+    s.bindHandlerByMap(m)
 }
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
-// 需要注意对象方法的定义必须按照ghttp.HandlerFunc来定义
-func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
+// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面,
+// 需要注意对象方法的定义必须按照 ghttp.HandlerFunc 来定义
+func (s *Server)BindObjectRest(pattern string, obj interface{}) {
     m     := make(handlerMap)
     v     := reflect.ValueOf(obj)
     t     := v.Type()
@@ -165,9 +160,8 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
         }
         faddr, ok := v.Method(i).Interface().(func(*Request))
         if !ok {
-            s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
-            glog.Error(s)
-            return errors.New(s)
+            glog.Errorfln(`invalid method definition "%s", while "func(*Request)" is required`, v.Method(i).Type().String())
+            continue
         }
         pkgName := gfile.Basename(pkgPath)
         objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -185,5 +179,5 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) error {
             fshut : fshut,
         }
     }
-    return s.bindHandlerByMap(m)
+    s.bindHandlerByMap(m)
 }

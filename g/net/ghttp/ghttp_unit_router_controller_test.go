@@ -38,9 +38,11 @@ func (c *Controller) Show() {
     c.Response.Write("Controller Show")
 }
 
+func (c *Controller) Info() {
+    c.Response.Write("Controller Info")
+}
 
-// 控制器注册测试
-func Test_Router_Controller(t *testing.T) {
+func Test_Router_Controller1(t *testing.T) {
     p := ports.PopRand()
     s := g.Server(p)
     s.BindController("/", new(Controller))
@@ -69,5 +71,60 @@ func Test_Router_Controller(t *testing.T) {
         gtest.Assert(client.GetContent("/controller/show"),        "1Controller Show2")
 
         gtest.Assert(client.GetContent("/none-exist"),  "Not Found")
+    })
+}
+
+func Test_Router_Controller2(t *testing.T) {
+    p := ports.PopRand()
+    s := g.Server(p)
+    s.BindController("/controller", new(Controller), "Show, Info")
+    s.SetPort(p)
+    s.SetDumpRouteMap(false)
+    s.Start()
+    defer s.Shutdown()
+
+    // 等待启动完成
+    time.Sleep(time.Second)
+    gtest.Case(t, func() {
+        client := ghttp.NewClient()
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+        gtest.Assert(client.GetContent("/"),                       "Not Found")
+        gtest.Assert(client.GetContent("/controller"),             "Not Found")
+        gtest.Assert(client.GetContent("/controller/init"),        "Not Found")
+        gtest.Assert(client.GetContent("/controller/shut"),        "Not Found")
+        gtest.Assert(client.GetContent("/controller/index"),       "Not Found")
+        gtest.Assert(client.GetContent("/controller/show"),        "1Controller Show2")
+        gtest.Assert(client.GetContent("/controller/info"),        "1Controller Info2")
+
+        gtest.Assert(client.GetContent("/none-exist"),             "Not Found")
+    })
+}
+
+func Test_Router_ControllerMethod(t *testing.T) {
+    p := ports.PopRand()
+    s := g.Server(p)
+    s.BindControllerMethod("/controller-info", new(Controller), "Info")
+    s.SetPort(p)
+    s.SetDumpRouteMap(false)
+    s.Start()
+    defer s.Shutdown()
+
+    // 等待启动完成
+    time.Sleep(time.Second)
+    gtest.Case(t, func() {
+        client := ghttp.NewClient()
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+        gtest.Assert(client.GetContent("/"),                       "Not Found")
+        gtest.Assert(client.GetContent("/controller"),             "Not Found")
+        gtest.Assert(client.GetContent("/controller/init"),        "Not Found")
+        gtest.Assert(client.GetContent("/controller/shut"),        "Not Found")
+        gtest.Assert(client.GetContent("/controller/index"),       "Not Found")
+        gtest.Assert(client.GetContent("/controller/show"),        "Not Found")
+        gtest.Assert(client.GetContent("/controller/info"),        "Not Found")
+        gtest.Assert(client.GetContent("/controller-info"),        "1Controller Info2")
+
+        gtest.Assert(client.GetContent("/none-exist"),             "Not Found")
     })
 }

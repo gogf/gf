@@ -23,7 +23,6 @@ import (
 func Case(t *testing.T, f func()) {
     defer func() {
         if err := recover(); err != nil {
-            panic(err)
             fmt.Fprintf(os.Stderr, "%v\n%s", err, getBacktrace())
             t.Fail()
         }
