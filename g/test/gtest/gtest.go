@@ -23,6 +23,7 @@ import (
 func Case(t *testing.T, f func()) {
     defer func() {
         if err := recover(); err != nil {
+            panic(err)
             fmt.Fprintf(os.Stderr, "%v\n%s", err, getBacktrace())
             t.Fail()
         }
@@ -253,14 +254,21 @@ func compareMap(value, expect interface{}) error {
     if rvExpect.Kind() == reflect.Map {
         if rvValue.Kind() == reflect.Map {
             if rvExpect.Len() == rvValue.Len() {
+                // 将两个map类型转换为同一个map类型, 才能执行比较,
+                // 直接使用 rvValue.MapIndex(key).Interface() 当key类型不一致时会报错。
+                mValue   := make(map[string]string)
+                mExpect  := make(map[string]string)
+                ksValue  := rvValue.MapKeys()
                 ksExpect := rvExpect.MapKeys()
+                for _, key := range ksValue {
+                    mValue[gconv.String(key.Interface())] = gconv.String(rvValue.MapIndex(key).Interface())
+                }
                 for _, key := range ksExpect {
-                    if fmt.Sprintf("%v", rvValue.MapIndex(key).Interface()) != fmt.Sprintf("%v", rvExpect.MapIndex(key).Interface()) {
-                        return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`,
-                            key,
-                            rvValue.MapIndex(key).Interface(),
-                            rvExpect.MapIndex(key).Interface(),
-                        )
+                    mExpect[gconv.String(key.Interface())] = gconv.String(rvExpect.MapIndex(key).Interface())
+                }
+                for k, v := range mExpect {
+                    if v != mValue[k] {
+                        return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`, k, mValue[k], v)
                     }
                 }
             } else {
