@@ -37,8 +37,8 @@ type DB interface {
     doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
     doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
     doPrepare(link dbLink, query string) (*sql.Stmt, error)
-    doInsert(link dbLink, table string, data Map, option int) (result sql.Result, err error)
-    doBatchInsert(link dbLink, table string, list List, batch int, option int) (result sql.Result, err error)
+    doInsert(link dbLink, table string, data interface{}, option int, batch...int) (result sql.Result, err error)
+    doBatchInsert(link dbLink, table string, list interface{}, option int, batch...int) (result sql.Result, err error)
     doUpdate(link dbLink, table string, data interface{}, condition interface{}, args ...interface{}) (result sql.Result, err error)
     doDelete(link dbLink, table string, condition interface{}, args ...interface{}) (result sql.Result, err error)
 
@@ -61,14 +61,14 @@ type DB interface {
 	Begin() (*TX, error)
 
 	// 数据表插入/更新/保存操作
-	Insert(table string, data Map) (sql.Result, error)
-	Replace(table string, data Map) (sql.Result, error)
-	Save(table string, data Map) (sql.Result, error)
+	Insert(table string, data interface{}, batch...int) (sql.Result, error)
+	Replace(table string, data interface{}, batch...int) (sql.Result, error)
+	Save(table string, data interface{}, batch...int) (sql.Result, error)
 
 	// 数据表插入/更新/保存操作(批量)
-	BatchInsert(table string, list List, batch int) (sql.Result, error)
-	BatchReplace(table string, list List, batch int) (sql.Result, error)
-	BatchSave(table string, list List, batch int) (sql.Result, error)
+	BatchInsert(table string, list interface{}, batch...int) (sql.Result, error)
+	BatchReplace(table string, list interface{}, batch...int) (sql.Result, error)
+	BatchSave(table string, list interface{}, batch...int) (sql.Result, error)
 
 	// 数据修改/删除
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
@@ -149,8 +149,11 @@ const (
     OPTION_REPLACE = 1
     OPTION_SAVE    = 2
     OPTION_IGNORE  = 3
+    // 默认批量操作的数量值(Batch*操作)
+    gDEFAULT_BATCH_NUM          = 10
     // 默认的连接池连接存活时间(秒)
     gDEFAULT_CONN_MAX_LIFE_TIME = 30
+
 )
 
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default

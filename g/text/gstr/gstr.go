@@ -31,15 +31,78 @@ func Replace(origin, search, replace string, count...int) string {
     return strings.Replace(origin, search, replace, n)
 }
 
+// Replace returns a copy of the string <origin> with string <search> replaced by <replace>
+// with case-insensitive.
+//
+// 字符串替换(大小写不敏感)
+func ReplaceI(origin, search, replace string, count...int) string {
+    n := -1
+    if len(count) > 0 {
+        n = count[0]
+    }
+    if n == 0 {
+        return origin
+    }
+    length      := len(search)
+    searchLower := strings.ToLower(search)
+    for {
+        originLower := strings.ToLower(origin)
+        if pos := strings.Index(originLower, searchLower); pos != -1 {
+            origin = origin[ : pos] + replace + origin[pos + length : ]
+            if n -= 1; n == 0 {
+                break
+            }
+        } else {
+            break
+        }
+    }
+    return origin
+}
+
+// Replace string by array/slice.
+//
+// 使用map进行字符串替换(大小写敏感)
+func ReplaceByArray(origin string, array []string) string {
+    for i := 0; i < len(array); i += 2 {
+        if i + 1 >= len(array) {
+            break
+        }
+        origin = Replace(origin, array[i], array[i + 1])
+    }
+    return origin
+}
+
+// Replace string by array/slice with case-insensitive.
+//
+// 使用map进行字符串替换(大小写不敏感)
+func ReplaceIByArray(origin string, array []string) string {
+    for i := 0; i < len(array); i += 2 {
+        if i + 1 >= len(array) {
+            break
+        }
+        origin = ReplaceI(origin, array[i], array[i + 1])
+    }
+    return origin
+}
+
 // Replace string by map.
 //
 // 使用map进行字符串替换(大小写敏感)
 func ReplaceByMap(origin string, replaces map[string]string) string {
-    result := origin
     for k, v := range replaces {
-        result = strings.Replace(result, k, v, -1)
+        origin = Replace(origin, k, v)
     }
-    return result
+    return origin
+}
+
+// Replace string by map with case-insensitive.
+//
+// 使用map进行字符串替换(大小写不敏感)
+func ReplaceIByMap(origin string, replaces map[string]string) string {
+    for k, v := range replaces {
+        origin = ReplaceI(origin, k, v)
+    }
+    return origin
 }
 
 // ToLower returns a copy of the string s with all Unicode letters mapped to their lower case.
@@ -86,25 +149,6 @@ func LcFirst(s string) string {
 // 大写字符串中每个单词的第一个字符。
 func UcWords(str string) string {
     return strings.Title(str)
-}
-
-// Traverse the array to find the string index position, if not exist, return-1.
-//
-// 遍历数组查找字符串索引位置，如果不存在则返回-1，使用完整遍历查找.
-func SearchArray (a []string, s string) int {
-    for i, v := range a {
-        if s == v {
-            return i
-        }
-    }
-    return -1
-}
-
-// InArray tests whether the given string s is in string array a.
-//
-// 判断字符串是否在数组中
-func InArray (a []string, s string) bool {
-    return SearchArray(a, s) != -1
 }
 
 // IsLetterLower tests whether the given byte b is in lower case.
@@ -490,15 +534,7 @@ func Explode(delimiter, str string) []string {
 //
 // 用glue将字符串数组pieces连接为一个字符串。
 func Implode(glue string, pieces []string) string {
-    var buf bytes.Buffer
-    l := len(pieces)
-    for _, str := range pieces {
-        buf.WriteString(str)
-        if l--; l > 0 {
-            buf.WriteString(glue)
-        }
-    }
-    return buf.String()
+    return strings.Join(pieces, glue)
 }
 
 // Generate a single-byte string from a number.

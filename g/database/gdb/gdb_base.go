@@ -14,8 +14,8 @@ import (
     "github.com/gogf/gf/g/container/gvar"
     "github.com/gogf/gf/g/os/gcache"
     "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/text/gregex"
+    "github.com/gogf/gf/g/util/gconv"
     "reflect"
     "strings"
 )
@@ -234,33 +234,60 @@ func (bs *dbBase) Begin() (*TX, error) {
     }
 }
 
-// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
-func (bs *dbBase) Insert(table string, data Map) (sql.Result, error) {
-    return bs.db.doInsert(nil, table, data, OPTION_INSERT)
+// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回。
+// 参数data支持map/struct/*struct/slice类型，
+// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+func (bs *dbBase) Insert(table string, data interface{}, batch...int) (sql.Result, error) {
+    return bs.db.doInsert(nil, table, data, OPTION_INSERT, batch...)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (bs *dbBase) Replace(table string, data Map) (sql.Result, error) {
-    return bs.db.doInsert(nil, table, data, OPTION_REPLACE)
+// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条。
+// 参数data支持map/struct/*struct/slice类型，
+// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+func (bs *dbBase) Replace(table string, data interface{}, batch...int) (sql.Result, error) {
+    return bs.db.doInsert(nil, table, data, OPTION_REPLACE, batch...)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (bs *dbBase) Save(table string, data Map) (sql.Result, error) {
-    return bs.db.doInsert(nil, table, data, OPTION_SAVE)
+// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据。
+// 参数data支持map/struct/*struct/slice类型，
+// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+func (bs *dbBase) Save(table string, data interface{}, batch...int) (sql.Result, error) {
+    return bs.db.doInsert(nil, table, data, OPTION_SAVE, batch...)
 }
 
-// insert、replace, save， ignore操作
-// 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回
-// 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-// 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-// 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做
-func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (result sql.Result, err error) {
-    var fields []string
-    var values []string
-    var params []interface{}
-    charl, charr := bs.db.getChars()
-    for k, v := range data {
-        fields = append(fields,   charl + k + charr)
+// 支持insert、replace, save， ignore操作。
+// 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回;
+// 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条;
+// 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据;
+// 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做;
+//
+// 参数data支持map/struct/*struct/slice类型，
+// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option int, batch...int) (result sql.Result, err error) {
+    var fields  []string
+    var values  []string
+    var params  []interface{}
+    var dataMap Map
+    // 使用反射判断data数据类型，如果为slice类型，那么自动转为批量操作
+    rv   := reflect.ValueOf(data)
+    kind := rv.Kind()
+    if kind == reflect.Ptr {
+        rv   = rv.Elem()
+        kind = rv.Kind()
+    }
+    switch kind {
+        case reflect.Slice: fallthrough
+        case reflect.Array:
+            return bs.db.doBatchInsert(link, table, data, option, batch...)
+        case reflect.Map:   fallthrough
+        case reflect.Struct:
+            dataMap = Map(gconv.Map(data))
+        default:
+            return result, errors.New(fmt.Sprint("unsupported data type:", kind))
+    }
+    charL, charR := bs.db.getChars()
+    for k, v := range dataMap {
+        fields = append(fields, charL + k + charR)
         values = append(values, "?")
         params = append(params, v)
     }
@@ -268,11 +295,11 @@ func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (res
     updateStr := ""
     if option == OPTION_SAVE {
         var updates []string
-        for k, _ := range data {
+        for k, _ := range dataMap {
             updates = append(updates,
                 fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
-                    charl, k, charr,
-                    charl, k, charr,
+                    charL, k, charR,
+                    charL, k, charR,
                 ),
             )
         }
@@ -290,28 +317,55 @@ func (bs *dbBase) doInsert(link dbLink, table string, data Map, option int) (res
 }
 
 // CURD操作:批量数据指定批次量写入
-func (bs *dbBase) BatchInsert(table string, list List, batch int) (sql.Result, error) {
-    return bs.db.doBatchInsert(nil, table, list, batch, OPTION_INSERT)
+func (bs *dbBase) BatchInsert(table string, list interface{}, batch...int) (sql.Result, error) {
+    return bs.db.doBatchInsert(nil, table, list, OPTION_INSERT, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
-func (bs *dbBase) BatchReplace(table string, list List, batch int) (sql.Result, error) {
-    return bs.db.doBatchInsert(nil, table, list, batch, OPTION_REPLACE)
+func (bs *dbBase) BatchReplace(table string, list interface{}, batch...int) (sql.Result, error) {
+    return bs.db.doBatchInsert(nil, table, list, OPTION_REPLACE, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
-func (bs *dbBase) BatchSave(table string, list List, batch int) (sql.Result, error) {
-    return bs.db.doBatchInsert(nil, table, list, batch, OPTION_SAVE)
+func (bs *dbBase) BatchSave(table string, list interface{}, batch...int) (sql.Result, error) {
+    return bs.db.doBatchInsert(nil, table, list, OPTION_SAVE, batch...)
 }
 
-// 批量写入数据
-func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int, option int) (result sql.Result, err error) {
-    var keys    []string
-    var values  []string
-    var bvalues []string
-    var params  []interface{}
+// 批量写入数据, 参数list支持slice类型，例如: []map/[]struct/[]*struct。
+func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, option int, batch...int) (result sql.Result, err error) {
+    var keys   []string
+    var values []string
+    var params []interface{}
+    listMap := (List)(nil)
+    switch v := list.(type) {
+        case List:
+            listMap = v
+        case Map:
+            listMap = List{v}
+        default:
+            rv   := reflect.ValueOf(list)
+            kind := rv.Kind()
+            if kind == reflect.Ptr {
+                rv   = rv.Elem()
+                kind = rv.Kind()
+            }
+            switch kind {
+                // 如果是slice，那么转换为List类型
+                case reflect.Slice: fallthrough
+                case reflect.Array:
+                    listMap = make(List, rv.Len())
+                    for i := 0; i < rv.Len(); i++ {
+                        listMap[i] = gconv.Map(rv.Index(i).Interface())
+                    }
+                case reflect.Map:   fallthrough
+                case reflect.Struct:
+                    listMap = List{Map(gconv.Map(list))}
+                default:
+                    return result, errors.New(fmt.Sprint("unsupported list type:", kind))
+            }
+    }
     // 判断长度
-    if len(list) < 1 {
+    if len(listMap) < 1 {
         return result, errors.New("empty data list")
     }
     if link == nil {
@@ -320,14 +374,15 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
         }
     }
     // 首先获取字段名称及记录长度
-    for k, _ := range list[0] {
-        keys   = append(keys,   k)
-        values = append(values, "?")
+    holders := []string(nil)
+    for k, _ := range listMap[0] {
+        keys    = append(keys,   k)
+        holders = append(holders, "?")
     }
     batchResult    := new(batchSqlResult)
-    charl, charr   := bs.db.getChars()
-    keyStr         := charl + strings.Join(keys, charl + "," + charr) + charr
-    valueHolderStr := "(" + strings.Join(values, ",") + ")"
+    charL, charR   := bs.db.getChars()
+    keyStr         := charL + strings.Join(keys, charL + "," + charR) + charR
+    valueHolderStr := "(" + strings.Join(holders, ",") + ")"
     // 操作判断
     operation := getInsertOperationByOption(option)
     updateStr := ""
@@ -336,22 +391,26 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
         for _, k := range keys {
             updates = append(updates,
                 fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
-                    charl, k, charr,
-                    charl, k, charr,
+                    charL, k, charR,
+                    charL, k, charR,
                 ),
             )
         }
         updateStr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", strings.Join(updates, ","))
     }
     // 构造批量写入数据格式(注意map的遍历是无序的)
-    for i := 0; i < len(list); i++ {
+    batchNum := gDEFAULT_BATCH_NUM
+    if len(batch) > 0 {
+        batchNum = batch[0]
+    }
+    for i := 0; i < len(listMap); i++ {
         for _, k := range keys {
-            params = append(params, list[i][k])
+            params = append(params, listMap[i][k])
         }
-        bvalues = append(bvalues, valueHolderStr)
-        if len(bvalues) == batch {
+        values = append(values, valueHolderStr)
+        if len(values) == batchNum {
             r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
-                operation, table, keyStr, strings.Join(bvalues, ","),
+                operation, table, keyStr, strings.Join(values, ","),
                 updateStr),
                 params...)
             if err != nil {
@@ -363,14 +422,14 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
                 batchResult.lastResult    = r
                 batchResult.rowsAffected += n
             }
-            params  = params[:0]
-            bvalues = bvalues[:0]
+            params = params[:0]
+            values = values[:0]
         }
     }
     // 处理最后不构成指定批量的数据
-    if len(bvalues) > 0 {
+    if len(values) > 0 {
         r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
-            operation, table, keyStr, strings.Join(bvalues, ","),
+            operation, table, keyStr, strings.Join(values, ","),
             updateStr),
             params...)
         if err != nil {
@@ -386,8 +445,8 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list List, batch int,
     return batchResult, nil
 }
 
-// CURD操作:数据更新，统一采用sql预处理
-// data参数支持字符串或者关联数组类型，内部会自行做判断处理
+// CURD操作:数据更新，统一采用sql预处理。
+// data参数支持string/map/struct/*struct类型。
 func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
     link, err := bs.db.Master()
     if err != nil {
@@ -396,23 +455,30 @@ func (bs *dbBase) Update(table string, data interface{}, condition interface{}, 
     return bs.db.doUpdate(link, table, data, condition, args ...)
 }
 
-// CURD操作:数据更新，统一采用sql预处理
-// data参数支持字符串或者关联数组类型，内部会自行做判断处理
+// CURD操作:数据更新，统一采用sql预处理。
+// data参数支持string/map/struct/*struct类型类型。
 func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, condition interface{}, args ...interface{}) (result sql.Result, err error) {
     params       := ([]interface{})(nil)
     updates      := ""
-    charl, charr := bs.db.getChars()
-    refValue     := reflect.ValueOf(data)
-    if refValue.Kind() == reflect.Map {
-        var fields []string
-        keys := refValue.MapKeys()
-        for _, k := range keys {
-            fields = append(fields, fmt.Sprintf("%s%s%s=?", charl, k, charr))
-            params = append(params, gconv.String(refValue.MapIndex(k).Interface()))
-        }
-        updates = strings.Join(fields, ",")
-    } else {
-        updates = gconv.String(data)
+    charL, charR := bs.db.getChars()
+    // 使用反射进行类型判断
+    rv   := reflect.ValueOf(data)
+    kind := rv.Kind()
+    if kind == reflect.Ptr {
+        rv   = rv.Elem()
+        kind = rv.Kind()
+    }
+    switch kind {
+        case reflect.Map:   fallthrough
+        case reflect.Struct:
+            var fields []string
+            for k, v := range gconv.Map(data) {
+                fields = append(fields, fmt.Sprintf("%s%s%s=?", charL, k, charR))
+                params = append(params, gconv.String(v))
+            }
+            updates = strings.Join(fields, ",")
+        default:
+            updates = gconv.String(data)
     }
     for _, v := range args {
         params = append(params, gconv.String(v))

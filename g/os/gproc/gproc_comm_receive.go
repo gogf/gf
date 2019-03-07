@@ -3,6 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
 // "不要通过共享内存来通信，而应该通过通信来共享内存"
 
 
@@ -26,16 +27,43 @@ const (
 )
 
 var (
-    // 是否已开启TCP端口监听服务(使用int而非bool，以便于使用原子操作判断是否开启)
-    tcpListeningCount = gtype.NewInt()
+    // 是否已开启TCP端口监听服务
+    tcpListened = gtype.NewBool()
 )
+
+// 获取其他进程传递到当前进程的消息包，阻塞执行。
+// 进程只有在执行该方法后才会打开请求端口，默认情况下不允许进程间通信。
+func Receive(group...string) *Msg {
+    // 一个进程只能开启一个监听goroutine
+    if tcpListened.Set(true) == false {
+        go startTcpListening()
+    }
+    queue     := (*gqueue.Queue)(nil)
+    groupName := gPROC_COMM_DEAFULT_GRUOP_NAME
+    if len(group) > 0 {
+        groupName = group[0]
+    }
+    if v := commReceiveQueues.Get(groupName); v == nil {
+        commReceiveQueues.LockFunc(func(m map[string]interface{}) {
+            if v, ok := m[groupName]; ok {
+                queue        = v.(*gqueue.Queue)
+            } else {
+                queue        = gqueue.New(gPROC_MSG_QUEUE_MAX_LENGTH)
+                m[groupName] = queue
+            }
+        })
+    } else {
+        queue = v.(*gqueue.Queue)
+    }
+
+    if v := queue.Pop(); v != nil {
+        return v.(*Msg)
+    }
+    return nil
+}
 
 // 创建本地进程TCP通信服务
 func startTcpListening() {
-    // 一个进程只能开启一个监听goroutine
-    if tcpListeningCount.Add(1) != 1 {
-        return
-    }
     var listen *net.TCPListener
     for i := gPROC_DEFAULT_TCP_PORT; ; i++ {
         addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", i))
@@ -48,7 +76,6 @@ func startTcpListening() {
         }
         // 将监听的端口保存到通信文件中(字符串类型存放)
         gfile.PutContents(getCommFilePath(Pid()), gconv.String(i))
-        //glog.Printfln("%d: gproc listening on [%s]", Pid(), addr)
         break
     }
     for  {
@@ -133,32 +160,3 @@ func bufferToMsgs(buffer []byte) []*Msg {
     return msgs
 }
 
-// 获取其他进程传递到当前进程的消息包，阻塞执行。
-func Receive(group...string) *Msg {
-    // 开启接收协程时才会开启端口监听
-    go startTcpListening()
-
-    var queue *gqueue.Queue
-    groupName := gPROC_COMM_DEAFULT_GRUOP_NAME
-    if len(group) > 0 {
-        groupName = group[0]
-    }
-
-    if v := commReceiveQueues.Get(groupName); v == nil {
-        commReceiveQueues.LockFunc(func(m map[string]interface{}) {
-            if v, ok := m[groupName]; ok {
-                queue        = v.(*gqueue.Queue)
-            } else {
-                queue        = gqueue.New(gPROC_MSG_QUEUE_MAX_LENGTH)
-                m[groupName] = queue
-            }
-        })
-    } else {
-        queue = v.(*gqueue.Queue)
-    }
-
-    if v := queue.Pop(); v != nil {
-        return v.(*Msg)
-    }
-    return nil
-}

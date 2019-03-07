@@ -42,6 +42,7 @@ func GetCookie(r *Request) *Cookie {
     }
     return &Cookie {
         request : r,
+        server  : r.Server,
     }
 }
 
@@ -52,7 +53,6 @@ func (c *Cookie) init() {
         c.path     = c.request.Server.GetCookiePath()
         c.domain   = c.request.Server.GetCookieDomain()
         c.maxage   = c.request.Server.GetCookieMaxAge()
-        c.server   = c.request.Server
         c.response = c.request.Response
         // 如果没有设置COOKIE有效域名，那么设置HOST为默认有效域名
         if c.domain == "" {
@@ -115,6 +115,11 @@ func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int, httpOnly
     }
 }
 
+// 获得客户端提交的SessionId
+func (c *Cookie) GetSessionId() string {
+    return c.Get(c.server.GetSessionIdName())
+}
+
 // 设置SessionId
 func (c *Cookie) SetSessionId(id string) {
     c.Set(c.server.GetSessionIdName(), id)
@@ -133,9 +138,14 @@ func (c *Cookie) Get(key string) string {
     return ""
 }
 
+// 删除COOKIE，使用默认的domain&path
+func (c *Cookie) Remove(key string) {
+    c.SetCookie(key, "", c.domain, c.path, -86400)
+}
+
 // 标记该cookie在对应的域名和路径失效
 // 删除cookie的重点是需要通知浏览器客户端cookie已过期
-func (c *Cookie) Remove(key, domain, path string) {
+func (c *Cookie) RemoveCookie(key, domain, path string) {
     c.SetCookie(key, "", domain, path, -86400)
 }
 

@@ -24,11 +24,13 @@ import (
 
 // http客户端
 type Client struct {
-    http.Client                // 底层http client对象
-    header   map[string]string // HEADER信息Map
-    prefix   string            // 设置请求的URL前缀
-    authUser string            // HTTP基本权限设置：名称
-    authPass string            // HTTP基本权限设置：密码
+    http.Client                   // 底层http client对象
+    header      map[string]string // HEADER信息Map
+    cookies     map[string]string // 自定义COOKIE
+    prefix      string            // 设置请求的URL前缀
+    authUser    string            // HTTP基本权限设置：名称
+    authPass    string            // HTTP基本权限设置：密码
+    browserMode bool              // 是否模拟浏览器模式(自动保存提交COOKIE)
 }
 
 // http客户端对象指针
@@ -39,8 +41,14 @@ func NewClient() (*Client) {
                 DisableKeepAlives: true,
             },
         },
-        header : make(map[string]string),
+        header  : make(map[string]string),
+        cookies : make(map[string]string),
     }
+}
+
+// 是否模拟浏览器模式(自动保存提交COOKIE)
+func (c *Client) SetBrowserMode(enabled bool) {
+    c.browserMode = enabled
 }
 
 // 设置HTTP Header
@@ -55,6 +63,18 @@ func (c *Client) SetHeaderRaw(header string) {
         if len(array) >= 3 {
             c.header[array[1]] = array[2]
         }
+    }
+}
+
+// 设置COOKIE
+func (c *Client) SetCookie(key, value string) {
+    c.cookies[key] = value
+}
+
+// 使用Map设置COOKIE
+func (c *Client) SetCookieMap(cookieMap map[string]string) {
+    for k, v := range cookieMap {
+        c.cookies[k] = v
     }
 }
 
@@ -76,26 +96,30 @@ func (c *Client) SetBasicAuth(user, pass string) {
 
 // GET请求
 func (c *Client) Get(url string) (*ClientResponse, error) {
-    return c.DoRequest("GET", url, []byte(""))
+    return c.DoRequest("GET", url)
 }
 
 // PUT请求
-func (c *Client) Put(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("PUT", url, []byte(data))
+func (c *Client) Put(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("PUT", url, data...)
 }
 
 // POST请求提交数据，默认使用表单方式提交数据(绝大部分场景下也是如此)。
 // 如果服务端对Content-Type有要求，可使用Client对象进行请求，单独设置相关属性。
 // 支持文件上传，需要字段格式为：FieldName=@file:
-func (c *Client) Post(url, data string) (*ClientResponse, error) {
+func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
     if len(c.prefix) > 0 {
         url = c.prefix + url
     }
+    param := ""
+    if len(data) > 0 {
+        param = data[0]
+    }
     req := (*http.Request)(nil)
-    if strings.Contains(data, "@file:") {
+    if strings.Contains(param, "@file:") {
         buffer := new(bytes.Buffer)
         writer := multipart.NewWriter(buffer)
-        for _, item := range strings.Split(data, "&") {
+        for _, item := range strings.Split(param, "&") {
             array := strings.Split(item, "=")
             if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
                 path := array[1][6:]
@@ -126,7 +150,7 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
             req.Header.Set("Content-Type", writer.FormDataContentType())
         }
     } else {
-        if r, err := http.NewRequest("POST", url, bytes.NewReader([]byte(data))); err != nil {
+        if r, err := http.NewRequest("POST", url, bytes.NewReader([]byte(param))); err != nil {
             return nil, err
         } else {
             req = r
@@ -139,6 +163,19 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
             req.Header.Set(k, v)
         }
     }
+    // COOKIE
+    if len(c.cookies) > 0 {
+        headerCookie := ""
+        for k, v := range c.cookies {
+            if len(headerCookie) > 0 {
+                headerCookie += ";"
+            }
+            headerCookie += k + "=" + v
+        }
+        if len(headerCookie) > 0 {
+            req.Header.Set("Cookie", headerCookie)
+        }
+    }
     // HTTP账号密码
     if len(c.authUser) > 0 {
         req.SetBasicAuth(c.authUser, c.authPass)
@@ -148,34 +185,36 @@ func (c *Client) Post(url, data string) (*ClientResponse, error) {
     if err != nil {
         return nil, err
     }
-    r := &ClientResponse{}
-    r.Response = *resp
+    r := &ClientResponse{
+        cookies : make(map[string]string),
+    }
+    r.Response = resp
     return r, nil
 }
 
 // DELETE请求
-func (c *Client) Delete(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("DELETE", url, []byte(data))
+func (c *Client) Delete(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("DELETE", url, data...)
 }
 
-func (c *Client) Head(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("HEAD", url, []byte(data))
+func (c *Client) Head(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("HEAD", url, data...)
 }
 
-func (c *Client) Patch(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("PATCH", url, []byte(data))
+func (c *Client) Patch(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("PATCH", url, data...)
 }
 
-func (c *Client) Connect(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("CONNECT", url, []byte(data))
+func (c *Client) Connect(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("CONNECT", url, data...)
 }
 
-func (c *Client) Options(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("OPTIONS", url, []byte(data))
+func (c *Client) Options(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("OPTIONS", url, data...)
 }
 
-func (c *Client) Trace(url, data string) (*ClientResponse, error) {
-    return c.DoRequest("TRACE", url, []byte(data))
+func (c *Client) Trace(url string, data...string) (*ClientResponse, error) {
+    return c.DoRequest("TRACE", url, data...)
 }
 
 // GET请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
@@ -220,11 +259,7 @@ func (c *Client) TraceContent(url string, data...string) string {
 
 // 请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
 func (c *Client) DoRequestContent(method string, url string, data...string) string {
-    content := ""
-    if len(data) > 0 {
-        content = data[0]
-    }
-    response, err := c.DoRequest(method, url, []byte(content))
+    response, err := c.DoRequest(method, url, data...)
     if err != nil {
         return ""
     }
@@ -233,14 +268,18 @@ func (c *Client) DoRequestContent(method string, url string, data...string) stri
 }
 
 // 请求并返回response对象，该方法支持二进制提交数据
-func (c *Client) DoRequest(method, url string, data []byte) (*ClientResponse, error) {
+func (c *Client) DoRequest(method, url string, data...string) (*ClientResponse, error) {
     if strings.EqualFold("POST", method) {
-        return c.Post(url, string(data))
+        return c.Post(url, data...)
     }
     if len(c.prefix) > 0 {
         url = c.prefix + url
     }
-    req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader(data))
+    param := ""
+    if len(data) > 0 {
+        param = data[0]
+    }
+    req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader([]byte(param)))
     if err != nil {
         return nil, err
     }
@@ -250,13 +289,40 @@ func (c *Client) DoRequest(method, url string, data []byte) (*ClientResponse, er
             req.Header.Set(k, v)
         }
     }
+    // COOKIE
+    if len(c.cookies) > 0 {
+        headerCookie := ""
+        for k, v := range c.cookies {
+            if len(headerCookie) > 0 {
+                headerCookie += ";"
+            }
+            headerCookie += k + "=" + v
+        }
+        if len(headerCookie) > 0 {
+            req.Header.Set("Cookie", headerCookie)
+        }
+    }
     // 执行请求
     resp, err := c.Do(req)
     if err != nil {
         return nil, err
     }
-    r := &ClientResponse{}
-    r.Response = *resp
+    r := &ClientResponse{
+        cookies : make(map[string]string),
+    }
+    r.Response = resp
+    // 浏览器模式
+    if c.browserMode {
+        now := time.Now()
+        for _, v := range r.Cookies() {
+            if v.Expires.UnixNano() < now.UnixNano() {
+                delete(c.cookies, v.Name)
+            } else {
+                c.cookies[v.Name] = v.Value
+            }
+        }
+    }
+    //fmt.Println(url, c.cookies)
     return r, nil
 }
 

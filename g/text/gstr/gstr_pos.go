@@ -9,6 +9,7 @@ package gstr
 import "strings"
 
 // Find the position of the first occurrence of a substring in a string.
+// It returns -1, if none found.
 //
 // 返回 needle 在 haystack 中首次出现的数字位置，找不到返回-1。
 func Pos(haystack, needle string, startOffset...int) int {
@@ -32,6 +33,7 @@ func Pos(haystack, needle string, startOffset...int) int {
 }
 
 // Find the position of the first occurrence of a case-insensitive substring in a string.
+// It returns -1, if none found.
 //
 // 返回在字符串 haystack 中 needle 首次出现的数字位置（不区分大小写），找不到返回-1。
 func PosI(haystack, needle string, startOffset...int) int {
@@ -56,6 +58,7 @@ func PosI(haystack, needle string, startOffset...int) int {
 }
 
 // Find the position of the last occurrence of a substring in a string.
+// It returns -1, if none found.
 //
 // 查找指定字符串在目标字符串中最后一次出现的位置，找不到返回-1。
 func PosR(haystack, needle string, startOffset...int) int {
@@ -81,6 +84,7 @@ func PosR(haystack, needle string, startOffset...int) int {
 }
 
 // Find the position of the last occurrence of a case-insensitive substring in a string.
+// It returns -1, if none found.
 //
 // 以不区分大小写的方式查找指定字符串在目标字符串中最后一次出现的位置，找不到返回-1。
 func PosRI(haystack, needle string, startOffset...int) int {

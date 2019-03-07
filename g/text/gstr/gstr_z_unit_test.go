@@ -21,10 +21,47 @@ func Test_Replace(t *testing.T) {
         gtest.Assert(gstr.Replace(s1, "ab", "AB"), "ABcdEFG乱入的中文ABcdefg")
         gtest.Assert(gstr.Replace(s1, "EF", "ef"), "abcdefG乱入的中文abcdefg")
         gtest.Assert(gstr.Replace(s1, "MN", "mn"), s1)
+
+        gtest.Assert(gstr.ReplaceByArray(s1, g.ArrayStr {
+            "a" , "A",
+            "A" , "-",
+            "a",
+        }), "-bcdEFG乱入的中文-bcdefg")
+
         gtest.Assert(gstr.ReplaceByMap(s1, g.MapStrStr{
             "a" : "A",
             "G" : "g",
         }), "AbcdEFg乱入的中文Abcdefg")
+    })
+}
+
+func Test_ReplaceI_1(t *testing.T) {
+    gtest.Case(t, func() {
+        s1 := "abcd乱入的中文ABCD"
+        s2 := "a"
+        gtest.Assert(gstr.ReplaceI(s1, "ab", "aa"),     "aacd乱入的中文aaCD")
+        gtest.Assert(gstr.ReplaceI(s1, "ab", "aa", 0),  "abcd乱入的中文ABCD")
+        gtest.Assert(gstr.ReplaceI(s1, "ab", "aa", 1),  "aacd乱入的中文ABCD")
+
+        gtest.Assert(gstr.ReplaceI(s1, "abcd", "-"),     "-乱入的中文-")
+        gtest.Assert(gstr.ReplaceI(s1, "abcd", "-", 1),  "-乱入的中文ABCD")
+
+        gtest.Assert(gstr.ReplaceI(s1, "abcd乱入的", ""), "中文ABCD")
+        gtest.Assert(gstr.ReplaceI(s1, "ABCD乱入的", ""), "中文ABCD")
+
+        gtest.Assert(gstr.ReplaceI(s2, "A", "-"), "-")
+        gtest.Assert(gstr.ReplaceI(s2, "a", "-"), "-")
+
+        gtest.Assert(gstr.ReplaceIByArray(s1, g.ArrayStr {
+            "abcd乱入的" , "-",
+            "-" , "=",
+            "a",
+        }), "=中文ABCD")
+
+        gtest.Assert(gstr.ReplaceIByMap(s1, g.MapStrStr {
+            "ab" : "-",
+            "CD" : "=",
+        }), "-=乱入的中文-=")
     })
 }
 
@@ -65,26 +102,6 @@ func Test_UcWords(t *testing.T) {
         s1 := "我爱GF: i love go frame"
         e1 := "我爱GF: I Love Go Frame"
         gtest.Assert(gstr.UcWords(s1), e1)
-    })
-}
-
-func Test_SearchArray(t *testing.T) {
-    gtest.Case(t, func() {
-        array := []string{"a", "b", "c"}
-        gtest.Assert(gstr.SearchArray(array, "a"),  0)
-        gtest.Assert(gstr.SearchArray(array, "b"),  1)
-        gtest.Assert(gstr.SearchArray(array, "c"),  2)
-        gtest.Assert(gstr.SearchArray(array, "d"), -1)
-    })
-}
-
-func Test_InArray(t *testing.T) {
-    gtest.Case(t, func() {
-        array := []string{"a", "b", "c"}
-        gtest.Assert(gstr.InArray(array, "a"), true)
-        gtest.Assert(gstr.InArray(array, "b"), true)
-        gtest.Assert(gstr.InArray(array, "c"), true)
-        gtest.Assert(gstr.InArray(array, "d"), false)
     })
 }
 

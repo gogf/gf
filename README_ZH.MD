@@ -32,7 +32,7 @@
 go get -u github.com/gogf/gf
 ```
 或者
-`go.mod`
+`go.mod`:
 ```
 require github.com/gogf/gf latest
 ```
@@ -81,6 +81,14 @@ func main() {
 
 `GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
 
+# 捐赠
+
+捐赠支持`GF`框架的研发，
+请在捐赠时备注您的`github`/`gitee`账号名称。
+
+<a href="https://goframe.org/images/donate.png" target="_blank">
+<img src="https://goframe.org/images/donate.png" width="300"/>
+</a>
 
 # 贡献者(TOP 10)
 
@@ -99,6 +107,8 @@ func main() {
 <br /><br /><br />
 
 # 捐赠者
+
+<a href="https://gitee.com/tiangenglan" target="_blank" title="zhuhuan12"><img src="https://images.gitee.com/uploads/99/1167099_tiangenglan.png" width="60" align="left"></a>
 
 <a href="https://gitee.com/zhuhuan12" target="_blank" title="zhuhuan12"><img src="https://gitee.com/uploads/39/751839_zhuhuan12.png" width="60" align="left"></a>
 
