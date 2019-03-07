@@ -168,11 +168,28 @@ func TestModel_Clone(t *testing.T) {
     if err != nil {
         gtest.Fatal(err)
     }
-    gtest.Assert(count, 2)
-    gtest.Assert(record["id"].Int(), 3)
-    gtest.Assert(len(result), 2)
+    gtest.Assert(count,                 2)
+    gtest.Assert(record["id"].Int(),    3)
+    gtest.Assert(len(result),           2)
     gtest.Assert(result[0]["id"].Int(), 1)
     gtest.Assert(result[1]["id"].Int(), 3)
+}
+
+func TestModel_Alterable(t *testing.T) {
+    gtest.Case(t, func() {
+        md := db.Table("user").Alterable().Where("id IN(?)", g.Slice{1,3})
+        count, err := md.Count()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(count, 2)
+        md.And("id = ?", 1)
+        count, err = md.Count()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(count, 1)
+    })
 }
 
 func TestModel_All(t *testing.T) {
