@@ -35,6 +35,7 @@ type Model struct {
 	cacheEnabled bool          // 当前SQL操作是否开启查询缓存功能
 	cacheTime    int           // 查询缓存时间
 	cacheName    string        // 查询缓存名称
+    alterable    bool          // 当前模型是否运行可修改模式（默认情况下链式操作不会修改当前模型，而是创建新的模型返回）
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
@@ -79,44 +80,65 @@ func (md *Model) Clone() *Model {
     return newModel
 }
 
+// 标识当前对象可被修改。
+// 1. 默认情况下，模型对象的对象属性无法被修改，
+// 每一次链式操作都是克隆一个新的模型对象，这样所有的操作都不会污染模型对象。
+// 但是链式操作如果需要分开执行，那么需要将新的克隆对象赋值给旧的模型对象继续操作。
+// 2. 当标识模型对象为可修改，那么在当前模型对象的所有链式操作均会影响下一次的链式操作，
+// 即使是链式操作分开执行。
+// 3. 大部分ORM框架默认模型对象是可修改的，但是GF框架的ORM提供给开发者更灵活，更安全的链式操作选项。
+func (md *Model) Alterable() *Model {
+    md.alterable = true
+    return md
+}
+
+// 返回操作的模型对象，可能是当前对象，也可能是新的克隆对象，根据alterable决定。
+func (md *Model) getModel() *Model {
+    if md.alterable {
+        return md
+    } else {
+        return md.Clone()
+    }
+}
+
 // 链式操作，左联表
 func (md *Model) LeftJoin(joinTable string, on string) (*Model) {
-    model        := md.Clone()
+    model        := md.getModel()
     model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", joinTable, on)
 	return model
 }
 
 // 链式操作，右联表
 func (md *Model) RightJoin(joinTable string, on string) (*Model) {
-    model        := md.Clone()
+    model        := md.getModel()
     model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", joinTable, on)
 	return model
 }
 
 // 链式操作，内联表
 func (md *Model) InnerJoin(joinTable string, on string) (*Model) {
-    model        := md.Clone()
+    model        := md.getModel()
     model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", joinTable, on)
 	return model
 }
 
 // 链式操作，查询字段
 func (md *Model) Fields(fields string) (*Model) {
-    model       := md.Clone()
+    model       := md.getModel()
     model.fields = fields
 	return model
 }
 
 // 链式操作，过滤字段
 func (md *Model) Filter() (*Model) {
-    model       := md.Clone()
+    model       := md.getModel()
     model.filter = true
     return model
 }
 
 // 链式操作，condition，支持string & gdb.Map
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
-    model             := md.Clone()
+    model             := md.getModel()
     newWhere, newArgs := formatCondition(where, args)
     model.where        = newWhere
     model.whereArgs    = append(model.whereArgs, newArgs...)
@@ -129,7 +151,7 @@ func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
 
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
-    model             := md.Clone()
+    model             := md.getModel()
     newWhere, newArgs := formatCondition(where, args)
     model.where       += " AND " + newWhere
     model.whereArgs    = append(model.whereArgs, newArgs...)
@@ -138,7 +160,7 @@ func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
 
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
-    model             := md.Clone()
+    model             := md.getModel()
     newWhere, newArgs := formatCondition(where, args)
     model.where       += " OR " + newWhere
     model.whereArgs    = append(model.whereArgs, newArgs...)
@@ -147,21 +169,21 @@ func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
 
 // 链式操作，group by
 func (md *Model) GroupBy(groupBy string) (*Model) {
-    model        := md.Clone()
+    model        := md.getModel()
     model.groupBy = groupBy
 	return model
 }
 
 // 链式操作，order by
 func (md *Model) OrderBy(orderBy string) (*Model) {
-    model        := md.Clone()
+    model        := md.getModel()
     model.orderBy = orderBy
 	return model
 }
 
 // 链式操作，limit
 func (md *Model) Limit(start int, limit int) (*Model) {
-    model      := md.Clone()
+    model      := md.getModel()
     model.start = start
     model.limit = limit
 	return model
@@ -170,7 +192,7 @@ func (md *Model) Limit(start int, limit int) (*Model) {
 // 链式操作，翻页
 // @author ymrjqyy
 func (md *Model) ForPage(page, limit int) (*Model) {
-    model      := md.Clone()
+    model      := md.getModel()
     model.start = (page - 1) * limit
     model.limit = limit
 	return model
@@ -178,7 +200,7 @@ func (md *Model) ForPage(page, limit int) (*Model) {
 
 // 设置批处理的大小
 func (md *Model) Batch(batch int) *Model {
-    model      := md.Clone()
+    model      := md.getModel()
     model.batch = batch
     return model
 }
@@ -188,7 +210,7 @@ func (md *Model) Batch(batch int) *Model {
 // name表示自定义的缓存名称，便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
 // 例如：查询缓存时设置名称，清理缓存时可以给定清理的缓存名称进行精准清理。
 func (md *Model) Cache(time int, name ... string) *Model {
-    model          := md.Clone()
+    model          := md.getModel()
     model.cacheTime = time
     if len(name) > 0 {
         model.cacheName = name[0]
@@ -203,7 +225,7 @@ func (md *Model) Cache(time int, name ... string) *Model {
 // 链式操作，操作数据项，参数data类型支持 string/map/slice/struct/*struct ,
 // 也可以是：key,value,key,value,...。
 func (md *Model) Data(data ...interface{}) *Model {
-    model := md.Clone()
+    model := md.getModel()
 	if len(data) > 1 {
 		m := make(map[string]interface{})
 		for i := 0; i < len(data); i += 2 {
@@ -438,13 +460,44 @@ func (md *Model) Value() (Value, error) {
 	return nil, nil
 }
 
-// 链式操作，查询单条记录，并自动转换为struct对象
-func (md *Model) Struct(obj interface{}) error {
+// 链式操作，查询单条记录，并自动转换为struct对象, 参数必须为对象的指针，不能为空指针。
+func (md *Model) Struct(objPointer interface{}) error {
 	one, err := md.One()
 	if err != nil {
 		return err
 	}
-	return one.ToStruct(obj)
+	return one.ToStruct(objPointer)
+}
+
+// 链式操作，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
+func (md *Model) Structs(objPointerSlice interface{}) error {
+	r, err := md.All()
+	if err != nil {
+		return err
+	}
+	return r.ToStructs(objPointerSlice)
+}
+
+// 链式操作，将结果转换为指定的struct/*struct/[]struct/[]*struct,
+// 参数应该为指针类型，否则返回失败。
+// 该方法自动识别参数类型，调用Struct/Structs方法。
+func (md *Model) Scan(objPointer interface{}) error {
+    t := reflect.TypeOf(objPointer)
+    k := t.Kind()
+    if k != reflect.Ptr {
+        return fmt.Errorf("params should be type of pointer, but got: %v", k)
+    }
+    k = t.Elem().Kind()
+    switch k {
+        case reflect.Array:
+        case reflect.Slice:
+            return md.Structs(objPointer)
+        case reflect.Struct:
+            return md.Struct(objPointer)
+        default:
+            return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
+    }
+    return nil
 }
 
 // 链式操作，查询数量，fields可以为空，也可以自定义查询字段，

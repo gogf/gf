@@ -7,7 +7,9 @@
 package gdb
 
 import (
+    "fmt"
     "github.com/gogf/gf/g/encoding/gparser"
+    "reflect"
 )
 
 // 将结果集转换为JSON字符串
@@ -95,4 +97,31 @@ func (r Result) ToUintRecord(key string) map[uint]Record {
         }
     }
     return m
+}
+
+// 将结果列表转换为指定对象的slice。
+func (r Result) ToStructs(objPointerSlice interface{}) error {
+    l := len(r)
+    if l == 0 {
+        return nil
+    }
+    t := reflect.TypeOf(objPointerSlice)
+    if t.Kind() != reflect.Ptr {
+        return fmt.Errorf("params should be type of pointer, but got: %v", t.Kind())
+    }
+    a := reflect.MakeSlice(t.Elem(), l, l)
+    itemType := a.Index(0).Type()
+    for i := 0; i < l; i++ {
+        if itemType.Kind() == reflect.Ptr {
+            e := reflect.New(itemType.Elem()).Elem()
+            r[i].ToStruct(e)
+            a.Index(i).Set(e.Addr())
+        } else {
+            e := reflect.New(itemType).Elem()
+            r[i].ToStruct(e)
+            a.Index(i).Set(e)
+        }
+    }
+    reflect.ValueOf(objPointerSlice).Elem().Set(a)
+    return nil
 }
