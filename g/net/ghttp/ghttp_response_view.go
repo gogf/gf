@@ -65,7 +65,6 @@ func (r *Response) buildInVars(params map[string]interface{}) map[string]interfa
     if params == nil {
         params = make(map[string]interface{})
     }
-
     c := gins.Config()
     if c.GetFilePath() != "" {
         params["Config"]  = c.GetMap("")

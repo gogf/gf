@@ -25,16 +25,19 @@ func (w *ResponseWriter) Write(data []byte) (int, error) {
     return len(data), nil
 }
 
-// 覆盖父级的WriteHeader方法
-func (w *ResponseWriter) WriteHeader(code int) {
-    w.Status = code
-    w.ResponseWriter.WriteHeader(code)
+// 覆盖父级的WriteHeader方法, 这里只会记录Status做缓冲处理, 并不会立即输出到HEADER。
+func (w *ResponseWriter) WriteHeader(status int) {
+    w.Status = status
 }
 
-// 输出buffer数据到客户端
+// 输出buffer数据到客户端.
 func (w *ResponseWriter) OutputBuffer() {
+    if w.Status != 0 {
+        w.ResponseWriter.WriteHeader(w.Status)
+    }
     if w.buffer.Len() > 0 {
         w.ResponseWriter.Write(w.buffer.Bytes())
         w.buffer.Reset()
     }
 }
+

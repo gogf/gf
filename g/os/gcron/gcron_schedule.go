@@ -117,22 +117,22 @@ func newSchedule(pattern string) (*cronSchedule, error) {
             schedule.hour = m
         }
         // 天
-        if m, err := parseItem(match[4], 1, 31, false); err != nil {
+        if m, err := parseItem(match[4], 1, 31, true); err != nil {
             return nil, err
         } else {
             schedule.day = m
         }
-        // 周
-        if m, err := parseItem(match[5], 0, 6, false); err != nil {
-            return nil, err
-        } else {
-            schedule.week = m
-        }
         // 月
-        if m, err := parseItem(match[6], 1, 12, false); err != nil {
+        if m, err := parseItem(match[5], 1, 12, false); err != nil {
             return nil, err
         } else {
             schedule.month = m
+        }
+        // 周
+        if m, err := parseItem(match[6], 0, 6, true); err != nil {
+            return nil, err
+        } else {
+            schedule.week = m
         }
         return schedule, nil
     } else {
@@ -200,12 +200,12 @@ func parseItemValue(value string, valueType byte) (int, error) {
     } else {
         // 英文字母
         switch valueType {
-            case 'w':
-                if i, ok := weekMap[strings.ToLower(value)]; ok {
-                    return int(i), nil
-                }
             case 'm':
                 if i, ok := monthMap[strings.ToLower(value)]; ok {
+                    return int(i), nil
+                }
+            case 'w':
+                if i, ok := weekMap[strings.ToLower(value)]; ok {
                     return int(i), nil
                 }
         }
@@ -234,10 +234,10 @@ func (s *cronSchedule) meet(t time.Time) bool {
         if _, ok := s.day[t.Day()]; !ok {
             return false
         }
-        if _, ok := s.week[int(t.Weekday())]; !ok {
+        if _, ok := s.month[int(t.Month())]; !ok {
             return false
         }
-        if _, ok := s.month[int(t.Month())]; !ok {
+        if _, ok := s.week[int(t.Weekday())]; !ok {
             return false
         }
         return true

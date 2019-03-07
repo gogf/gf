@@ -49,7 +49,7 @@ func (s *Server) bindHandlerByMap(m handlerMap) error {
 
 // 将内置的名称按照设定的规则合并到pattern中，内置名称按照{.xxx}规则命名。
 // 规则1：pattern中的URI包含{.struct}关键字，则替换该关键字为结构体名称；
-// 规则1：pattern中的URI包含{.method}关键字，则替换该关键字为方法名称；
+// 规则2：pattern中的URI包含{.method}关键字，则替换该关键字为方法名称；
 // 规则2：如果不满足规则1，那么直接将防发明附加到pattern中的URI后面；
 func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string, allowAppend bool) string {
     structName = s.nameToUrlPart(structName)

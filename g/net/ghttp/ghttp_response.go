@@ -32,7 +32,6 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
         Server         : s,
         ResponseWriter : ResponseWriter {
             ResponseWriter : w,
-            Status         : http.StatusOK,
             buffer         : bytes.NewBuffer(nil),
         },
     }
@@ -119,15 +118,17 @@ func (r *Response) WriteXml(content interface{}, rootTag...string) error {
     return nil
 }
 
-// 允许AJAX跨域访问
+// Deprecated, please use CORSDefault instead.
+//
+// (已废弃，请使用CORSDefault)允许AJAX跨域访问.
 func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods string, maxAge...int) {
     age := 3628800
     if len(maxAge) > 0 {
         age = maxAge[0]
     }
-    r.Header().Set("Access-Control-Allow-Origin",  allowOrigin);
-    r.Header().Set("Access-Control-Allow-Methods", allowMethods);
-    r.Header().Set("Access-Control-Max-Age",       strconv.Itoa(age));
+    r.Header().Set("Access-Control-Allow-Origin",      allowOrigin)
+    r.Header().Set("Access-Control-Allow-Methods",     allowMethods)
+    r.Header().Set("Access-Control-Max-Age",           strconv.Itoa(age))
 }
 
 // 返回HTTP Code状态码
@@ -137,9 +138,8 @@ func (r *Response) WriteStatus(status int, content...string) {
         if status != http.StatusOK {
             if f := r.request.Server.getStatusHandler(status, r.request); f != nil {
                 f(r.request)
-                // 如果是http.StatusOK那么表示回调函数内部没有设置header status，
-                // 那么这里就可以设置status，防止多次设置(http: multiple response.WriteHeader calls)
-                if r.Status == http.StatusOK {
+                // 防止多次设置(http: multiple response.WriteHeader calls)
+                if r.Status == 0 {
                     r.WriteHeader(status)
                 }
                 return
@@ -187,7 +187,8 @@ func (r *Response) ServeFileDownload(path string, name...string) {
     r.Server.serveFile(r.request, path)
 }
 
-// 返回location标识，引导客户端跳转
+// 返回location标识，引导客户端跳转。
+// 注意这里要先把设置的cookie输出，否则会被忽略。
 func (r *Response) RedirectTo(location string) {
     r.Header().Set("Location", location)
     r.WriteHeader(http.StatusFound)
@@ -220,8 +221,17 @@ func (r *Response) ClearBuffer() {
     r.buffer.Reset()
 }
 
-// 输出缓冲区数据到客户端
+// Deprecated.
+//
+// 输出缓冲区数据到客户端.
 func (r *Response) OutputBuffer() {
+    r.Header().Set("Server", r.Server.config.ServerAgent)
+    //r.handleGzip()
+    r.Writer.OutputBuffer()
+}
+
+// 输出缓冲区数据到客户端.
+func (r *Response) Output() {
     r.Header().Set("Server", r.Server.config.ServerAgent)
     //r.handleGzip()
     r.Writer.OutputBuffer()

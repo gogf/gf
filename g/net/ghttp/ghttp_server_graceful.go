@@ -11,7 +11,6 @@ import (
     "crypto/tls"
     "errors"
     "fmt"
-    "github.com/gogf/gf/g/net/greuseport"
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gproc"
     "net"
@@ -146,7 +145,7 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
     } else {
         // 如果监听失败，1秒后重试，最多重试3次
         for i := 0; i < 3; i++ {
-            ln, err = greuseport.Listen("tcp", addr)
+            ln, err = net.Listen("tcp", addr)
             if err != nil {
                 err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
                 time.Sleep(time.Second)

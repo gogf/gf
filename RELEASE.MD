@@ -1,3 +1,38 @@
+# `v1.5.8` (2019-02-28)
+
+## 新特性
+1. 主库从`gitee`迁移到了`github`( https://github.com/gogf/gf )，`gitee`作为镜像站，用于国内的代码贡献及ISSUE提交，迁移说明详见：https://goframe.org/upgradeto150
+1. 对常用的`container`数组模块: `garray`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/g/container/garray
+1. 对常用的`container`集合模块: `gset`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/g/container/gset
+1. 对常用的`container`MAP模块: `gmap`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/g/container/gmap
+1. 对常用的字符串模块: `gstr`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/g/text/gstr
+1. 改进`gform`中对`struct`/`*struct`参数的支持，`*Insert/*Save/*Replace/*Update/Where/Data`方法的参数调整为`interface{}`类型，并支持任意类型的: `string/map/slice/struct/*struct`参数传递，具体请参考：https://goframe.org/database/orm/chaining
+1. 新增/完善若干模块的单元测试用例, 包括：`gvalid`/`gregex`/`garray`/`gset`/`gmap`/`gstr`/`gconv`/`ghttp`/`gdb`；
+1. 由于`gkafka`模块比较重，且不是框架核心模块，因此将该模块迁移到新的仓库中独立管理，并去掉相关依赖包：https://github.com/gogf/gkafka
+1. 新增`greuseport`模块，用以实现TCP的`REUSEPORT`特性：https://godoc.org/github.com/gogf/gf/g/net/greuseport
+
+## 新功能/改进
+1. 去掉模板引擎内置变量中自动初始化`session`对象带来的内存占用问题；
+1. `ghttp.Client`改进，增加若干方法，详见：https://goframe.org/net/ghttp/client 
+1. `ghttp`分组路由增加`COMMON`方法，用以注册常用的`HTTP METHOD`(`GET/PUT/POST/DELETE`)路由；
+1. 更新框架依赖的`golang.org/x/sys`模块；
+1. 改进`gform`的批量操作(`Batch*`操作)返回结果对象，可以通过该结果对象获得批量操作准确的受影响记录行数；
+1. 将`gstr`/`gregex`模块从`util`分类迁移到了`text`分类目录下；
+1. 将`gtest`模块从`util`分类迁移到了`test`分类目录下；
+1. 完善`glog`方法注释；
+
+## Bug Fix
+1. 修复带点的邮件格式,用`gvalid.Check`的"`email`"规则不能匹配成功;
+1. 修复`gvalid.Check`在`regex`规则下的检查失败问题；
+1. 修复`gcron`模块定时规则中天和周不允许`?`符号的问题；
+1. 修复`ghttp.Server`在部分异常情况下仍然返回`200`状态码的问题；
+1. 修复`gfpool`模块中由于原子操作问题造成的高并发"内存泄露"问题；
+1. 修复分组路由注册对象/控制时，方法`Index`的路由仅能通过`/xxx/index`访问的问题；
+1. 修复模板引擎使用中，当不存在`config.toml`(即使没使用)配置文件时的报错问题；
+1. 其他一些修复；
+
+
+
 # `v1.4.6` (2019-01-24)
 
 ## 新特性

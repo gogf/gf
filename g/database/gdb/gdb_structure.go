@@ -4,7 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-
 package gdb
 
 import (
@@ -85,8 +84,8 @@ func (bs *dbBase) getTableFields(table string) (fields map[string]string, err er
     // 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
     v := bs.cache.GetOrSetFunc("table_fields_" + table, func() interface{} {
         result       := (Result)(nil)
-        charl, charr := bs.db.getChars()
-        result, err   = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s%s%s`, charl, table, charr))
+        charL, charR := bs.db.getChars()
+        result, err   = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s%s%s`, charL, table, charR))
         if err != nil {
             return nil
         }

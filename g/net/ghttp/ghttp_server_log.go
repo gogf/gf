@@ -10,7 +10,6 @@ package ghttp
 import (
     "fmt"
     "github.com/gogf/gf/g/os/gfile"
-    "net/http"
 )
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
@@ -34,8 +33,6 @@ func (s *Server) handleAccessLog(r *Request) {
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
 func (s *Server) handleErrorLog(error interface{}, r *Request) {
-    r.Response.WriteStatus(http.StatusInternalServerError)
-
     // 错误输出默认是开启的
     if !s.IsErrorLogEnabled() && gfile.MainPkgPath() == "" {
         return

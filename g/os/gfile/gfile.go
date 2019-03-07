@@ -28,8 +28,8 @@ import (
     "time"
 )
 
-// 文件分隔符
 const (
+    // 文件分隔符
     Separator     = string(filepath.Separator)
     // 默认的文件打开权限
     gDEFAULT_PERM = 0666
@@ -43,7 +43,9 @@ var (
     goRootOfBuild = gtype.NewString()
 )
 
-// 给定文件的绝对路径创建文件
+// Create directories recursively.
+//
+// 给定目录的绝对路径创建目录(递归创建)。
 func Mkdir(path string) error {
     err  := os.MkdirAll(path, os.ModePerm)
     if err != nil {
@@ -52,29 +54,33 @@ func Mkdir(path string) error {
     return nil
 }
 
-// 给定文件的绝对路径创建文件
-func Create(path string) error {
+// Create file with given path recursively.
+//
+// 给定文件的绝对路径创建文件。
+func Create(path string) (*os.File, error) {
     dir := Dir(path)
     if !Exists(dir) {
         Mkdir(dir)
     }
-    f, err  := os.Create(path)
-    if err != nil {
-        return err
-    }
-    f.Close()
-    return nil
+    return os.Create(path)
 }
 
-// 打开文件(os.O_RDWR|os.O_CREATE, 0666)
+// Open file/directory with readonly.
+//
+// 只读打开文件
 func Open(path string) (*os.File, error) {
-    f, err  := os.OpenFile(path, os.O_RDWR|os.O_CREATE, gDEFAULT_PERM)
-    if err != nil {
-        return nil, err
-    }
-    return f, nil
+    return os.Open(path)
 }
 
+// Open file/directory with given <flag> and <perm>.
+//
+// 打开文件(带flag&perm)
+func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
+    return os.OpenFile(path, flag, perm)
+}
+
+// Open file/directory with default perm and given <flag>.
+//
 // 打开文件(带flag)
 func OpenWithFlag(path string, flag int) (*os.File, error) {
     f, err  := os.OpenFile(path, flag, gDEFAULT_PERM)
@@ -84,6 +90,8 @@ func OpenWithFlag(path string, flag int) (*os.File, error) {
     return f, nil
 }
 
+// Open file/directory with given <flag> and <perm>.
+//
 // 打开文件(带flag&perm)
 func OpenWithFlagPerm(path string, flag int, perm int) (*os.File, error) {
     f, err  := os.OpenFile(path, flag, os.FileMode(perm))
@@ -93,6 +101,8 @@ func OpenWithFlagPerm(path string, flag int, perm int) (*os.File, error) {
     return f, nil
 }
 
+// Check whether given path exist.
+//
 // 判断所给路径文件/文件夹是否存在
 func Exists(path string) bool {
     if _, err := os.Stat(path); !os.IsNotExist(err) {
@@ -101,6 +111,8 @@ func Exists(path string) bool {
     return false
 }
 
+// Check whether given path a directory.
+//
 // 判断所给路径是否为文件夹
 func IsDir(path string) bool {
     s, err := os.Stat(path)
@@ -110,11 +122,15 @@ func IsDir(path string) bool {
     return s.IsDir()
 }
 
+// Get current working absolute directory path.
+//
 // 获取当前工作目录(SelfDir()方法的别名)
 func Pwd() string {
     return SelfDir()
 }
 
+// Check whether given path a file(not a directory).
+//
 // 判断所给路径是否为文件
 func IsFile(path string) bool {
     s, err := os.Stat(path)
@@ -124,36 +140,43 @@ func IsFile(path string) bool {
     return !s.IsDir()
 }
 
-// 获取文件或目录信息
-func Info(path string) *os.FileInfo {
-    info, err := os.Stat(path)
-    if err != nil {
-        return nil
-    }
-    return &info
+// Info returns a FileInfo describing the named file.
+// If there is an error, it will be of type *PathError.
+//
+// 获取文件或目录信息.
+func Info(path string) (os.FileInfo, error) {
+    return os.Stat(path)
 }
 
+// Move renames (moves) src to dst path.
+//
 // 文件移动/重命名
 func Move(src string, dst string) error {
     return os.Rename(src, dst)
 }
 
-
-// 文件移动/重命名
+// Rename renames (moves) src to dst path.
+//
+// 文件移动/重命名.
 func Rename(src string, dst string) error {
     return Move(src, dst)
 }
 
-// 文件复制
+// Copy file from src to dst.
+//
+// 文件复制.
+// @TODO 支持目录复制.
 func Copy(src string, dst string) error {
-    srcFile, err := os.Open(src)
+    srcFile, err := Open(src)
     if err != nil {
         return err
     }
-    dstFile, err := os.Create(dst)
+    defer srcFile.Close()
+    dstFile, err := Create(dst)
     if err != nil {
         return err
     }
+    defer dstFile.Close()
     _, err = io.Copy(dstFile, srcFile)
     if err != nil {
         return err
@@ -162,11 +185,11 @@ func Copy(src string, dst string) error {
     if err != nil {
         return err
     }
-    srcFile.Close()
-    dstFile.Close()
     return nil
 }
 
+// Get sub-file names of path.
+//
 // 返回目录下的文件名列表
 func DirNames(path string) ([]string, error) {
     f, err := os.Open(path)
@@ -181,6 +204,15 @@ func DirNames(path string) ([]string, error) {
     return list, nil
 }
 
+// Glob returns the names of all files matching pattern or nil
+// if there is no matching file. The syntax of patterns is the same
+// as in Match. The pattern may describe hierarchical names such as
+// /usr/*/bin/ed (assuming the Separator is '/').
+//
+// Glob ignores file system errors such as I/O errors reading directories.
+// The only possible returned error is ErrBadPattern, when pattern
+// is malformed.
+//
 // 文件名正则匹配查找，第二个可选参数指定返回的列表是否仅为文件名(非绝对路径)，默认返回绝对路径
 func Glob(pattern string, onlyNames...bool) ([]string, error) {
     if list, err := filepath.Glob(pattern); err == nil {
@@ -197,11 +229,15 @@ func Glob(pattern string, onlyNames...bool) ([]string, error) {
     }
 }
 
+// Remove file/directory with <path> parameter.
+//
 // 文件/目录删除
 func Remove(path string) error {
     return os.RemoveAll(path)
 }
 
+// Check whether given <path> is readable.
+//
 // 文件是否可读(支持文件/目录)
 func IsReadable(path string) bool {
     result    := true
@@ -213,16 +249,19 @@ func IsReadable(path string) bool {
     return result
 }
 
+// Check whether given <path> is writable.
+//
 // 文件是否可写(支持文件/目录)
+// @TODO 改进性能，利用 golang.org/x/sys 来实现跨平台的权限判断。
 func IsWritable(path string) bool {
     result := true
     if IsDir(path) {
         // 如果是目录，那么创建一个临时文件进行写入测试
         tmpFile := strings.TrimRight(path, Separator) + Separator + gconv.String(time.Now().UnixNano())
-        err     := Create(tmpFile)
-        if err != nil || !Exists(tmpFile){
+        if f, err := Create(tmpFile); err != nil || !Exists(tmpFile){
             result = false
         } else {
+            f.Close()
             Remove(tmpFile)
         }
     } else {
@@ -236,11 +275,16 @@ func IsWritable(path string) bool {
     return result
 }
 
+// See os.Chmod.
+//
 // 修改文件/目录权限
 func Chmod(path string, mode os.FileMode) error {
     return os.Chmod(path, mode)
 }
 
+// Get all sub-files(absolute) of given <path>,
+// can be recursively with given parameter <recursive> true.
+//
 // 打开目录，并返回其下一级文件列表(绝对路径)，按照文件名称大小写进行排序，支持目录递归遍历。
 func ScanDir(path string, pattern string, recursive ... bool) ([]string, error) {
     list, err := doScanDir(path, pattern, recursive...)
@@ -287,6 +331,8 @@ func doScanDir(path string, pattern string, recursive ... bool) ([]string, error
     return list, nil
 }
 
+// See filepath.Abs.
+//
 // 将所给定的路径转换为绝对路径
 // 并判断文件路径是否存在，如果文件不存在，那么返回空字符串
 func RealPath(path string) string {
@@ -300,33 +346,44 @@ func RealPath(path string) string {
     return p
 }
 
-
+// Get absolute file path of current running process(binary).
+//
 // 获取当前执行文件的绝对路径
 func SelfPath() string {
     p, _ := filepath.Abs(os.Args[0])
     return p
 }
 
+// Get absolute directory path of current running process(binary).
+//
 // 获取当前执行文件的目录绝对路径
 func SelfDir() string {
     return filepath.Dir(SelfPath())
 }
 
+// See filepath.Base.
+//
 // 获取指定文件路径的文件名称
 func Basename(path string) string {
     return filepath.Base(path)
 }
 
-// 获取指定文件路径的目录地址绝对路径
+// See filepath.Dir.
+//
+// 获取指定文件路径的目录地址绝对路径.
 func Dir(path string) string {
     return filepath.Dir(path)
 }
 
+// See filepath.Ext.
+//
 // 获取指定文件路径的文件扩展名(包含"."号)
 func Ext(path string) string {
     return filepath.Ext(path)
 }
 
+// Get absolute home directory path of current user.
+//
 // 获取用户主目录
 func Home() (string, error) {
     u, err := user.Current()
@@ -372,6 +429,9 @@ func homeWindows() (string, error) {
     return home, nil
 }
 
+// Get absolute file path of main file, which contains the entrance function main.
+// Available in develop environment.
+//
 // 获取入口函数文件所在目录(main包文件目录),
 // **仅对源码开发环境有效(即仅对生成该可执行文件的系统下有效)**
 func MainPkgPath() string {
@@ -418,6 +478,8 @@ func MainPkgPath() string {
     return ""
 }
 
+// See os.TempDir().
+//
 // 系统临时目录
 func TempDir() string {
     return os.TempDir()

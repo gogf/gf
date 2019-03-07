@@ -15,9 +15,11 @@ func main() {
         for {
             data, err := conn.Recv(-1)
             if len(data) > 0 {
-                  fmt.Println(string(data))
+                fmt.Println(string(data))
             }
             if err != nil {
+                // client closed, err will be: EOF
+                fmt.Println(err)
                 break
             }
         }
@@ -36,5 +38,12 @@ func main() {
             glog.Error(err)
         }
         time.Sleep(time.Second)
+        if i == 5 {
+            conn.Close()
+            break
+        }
     }
+
+    // exit after 5 seconds
+    time.Sleep(5*time.Second)
 }

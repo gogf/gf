@@ -9,44 +9,44 @@
 package ghttp
 
 func Get(url string) (*ClientResponse, error) {
-    return DoRequest("GET", url, []byte(""))
+    return DoRequest("GET", url)
 }
 
-func Put(url, data string) (*ClientResponse, error) {
-    return DoRequest("PUT", url, []byte(data))
+func Put(url string, data...string) (*ClientResponse, error) {
+    return DoRequest("PUT", url, data...)
 }
 
-func Post(url, data string) (*ClientResponse, error) {
-    return DoRequest("POST", url, []byte(data))
+func Post(url string, data...string) (*ClientResponse, error) {
+    return DoRequest("POST", url, data...)
 }
 
-func Delete(url, data string) (*ClientResponse, error) {
-    return DoRequest("DELETE", url, []byte(data))
+func Delete(url string, data...string) (*ClientResponse, error) {
+    return DoRequest("DELETE", url, data...)
 }
 
-func Head(url, data string) (*ClientResponse, error) {
-    return DoRequest("HEAD", url, []byte(data))
+func Head(url string, data...string) (*ClientResponse, error) {
+    return DoRequest("HEAD", url, data...)
 }
 
-func Patch(url, data string) (*ClientResponse, error) {
-    return DoRequest("PATCH", url, []byte(data))
+func Patch(url string, data...string) (*ClientResponse, error) {
+    return DoRequest("PATCH", url, data...)
 }
 
-func Connect(url, data string) (*ClientResponse, error) {
-    return DoRequest("CONNECT", url, []byte(data))
+func Connect(url string, data...string) (*ClientResponse, error) {
+    return DoRequest("CONNECT", url, data...)
 }
 
-func Options(url, data string) (*ClientResponse, error) {
-    return DoRequest("OPTIONS", url, []byte(data))
+func Options(url string, data...string) (*ClientResponse, error) {
+    return DoRequest("OPTIONS", url, data...)
 }
 
-func Trace(url, data string) (*ClientResponse, error) {
-    return DoRequest("TRACE", url, []byte(data))
+func Trace(url string, data...string) (*ClientResponse, error) {
+    return DoRequest("TRACE", url, data...)
 }
 
 // 该方法支持二进制提交数据
-func DoRequest(method, url string, data []byte) (*ClientResponse, error) {
-    return NewClient().DoRequest(method, url, data)
+func DoRequest(method, url string, data...string) (*ClientResponse, error) {
+    return NewClient().DoRequest(method, url, data...)
 }
 
 // GET请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)

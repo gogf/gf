@@ -200,13 +200,14 @@ func (md *Model) Cache(time int, name ... string) *Model {
     return model
 }
 
-// 链式操作，操作数据记录项，可以是string/Map, 也可以是：key,value,key,value,...
-func (md *Model) Data(data ...interface{}) (*Model) {
+// 链式操作，操作数据项，参数data类型支持 string/map/slice/struct/*struct ,
+// 也可以是：key,value,key,value,...。
+func (md *Model) Data(data ...interface{}) *Model {
     model := md.Clone()
 	if len(data) > 1 {
 		m := make(map[string]interface{})
 		for i := 0; i < len(data); i += 2 {
-			m[gconv.String(data[i])] = data[i+1]
+			m[gconv.String(data[i])] = data[i + 1]
 		}
         model.data = m
 	} else {
@@ -223,6 +224,7 @@ func (md *Model) Data(data ...interface{}) (*Model) {
                     kind = rv.Kind()
                 }
                 switch kind {
+                	// 如果是slice，那么转换为List类型
                     case reflect.Slice: fallthrough
                     case reflect.Array:
                         list := make(List, rv.Len())
@@ -230,8 +232,9 @@ func (md *Model) Data(data ...interface{}) (*Model) {
                             list[i] = gconv.Map(rv.Index(i).Interface())
                         }
                         model.data = list
-                    case reflect.Map:
-                        model.data = gconv.Map(data[0])
+                    case reflect.Map:   fallthrough
+                    case reflect.Struct:
+                        model.data = Map(gconv.Map(data[0]))
                     default:
                         model.data = data[0]
                 }
@@ -240,7 +243,9 @@ func (md *Model) Data(data ...interface{}) (*Model) {
 	return model
 }
 
-// 链式操作， CURD - Insert/BatchInsert
+// 链式操作， CURD - Insert/BatchInsert。
+// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
+// 如果Data方法传递的是slice类型，那么为批量操作。
 func (md *Model) Insert() (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
@@ -279,7 +284,9 @@ func (md *Model) Insert() (result sql.Result, err error) {
 	return nil, errors.New("inserting into table with invalid data type")
 }
 
-// 链式操作， CURD - Replace/BatchReplace
+// 链式操作， CURD - Replace/BatchReplace。
+// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
+// 如果Data方法传递的是slice类型，那么为批量操作。
 func (md *Model) Replace() (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
@@ -318,7 +325,9 @@ func (md *Model) Replace() (result sql.Result, err error) {
 	return nil, errors.New("replacing into table with invalid data type")
 }
 
-// 链式操作， CURD - Save/BatchSave
+// 链式操作， CURD - Save/BatchSave。
+// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
+// 如果Data方法传递的是slice类型，那么为批量操作。
 func (md *Model) Save() (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
@@ -330,7 +339,7 @@ func (md *Model) Save() (result sql.Result, err error) {
 	}
 	// 批量操作
 	if list, ok := md.data.(List); ok {
-		batch := 10
+		batch := gDEFAULT_BATCH_NUM
 		if md.batch > 0 {
 			batch = md.batch
 		}

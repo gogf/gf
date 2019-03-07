@@ -23,27 +23,36 @@ const (
     LOG_LEVEL_CRIT = glog.LEVEL_CRIT
 )
 
+// NewVar creates a *Var.
+//
 // 动态变量
 func NewVar(i interface{}, unsafe...bool) *Var {
     return gvar.New(i, unsafe...)
 }
 
+// Wait blocks until all the web servers shutdown.
+//
 // 阻塞等待HTTPServer执行完成(同一进程多HTTPServer情况下)
 func Wait() {
     ghttp.Wait()
 }
 
+// Dump dumps a variable to stdout with more manually readable.
+//
 // 打印变量
 func Dump(i...interface{}) {
     gutil.Dump(i...)
 }
 
+// Throw throws a exception, which can be caught by Catch function.
+// It always be used in TryCatch function.
+//
 // 抛出一个异常
 func Throw(exception interface{}) {
     gutil.Throw(exception)
 }
 
-// try...catch...
+// TryCatch does the try...catch... logic.
 func TryCatch(try func(), catch ... func(exception interface{})) {
     gutil.TryCatch(try, catch...)
 }

@@ -27,8 +27,10 @@ const (
     gPROC_TEMP_DIR_ENV_KEY = "GPROC_TEMP_DIR"
 )
 
-// 进程开始执行时间
-var processStartTime = time.Now()
+var (
+    // 进程开始执行时间
+    processStartTime = time.Now()
+)
 
 // 获取当前进程ID
 func Pid() int {

@@ -16,9 +16,10 @@ func (r *Request) initGet() {
     if !r.parsedGet {
         r.queryVars = r.URL.Query()
         if strings.EqualFold(r.Method, "GET") {
-            if raw := r.GetRaw(); len(raw) > 0 {
-                for _, item := range strings.Split(string(raw), "&") {
-                    array                := strings.Split(item, "=")
+            if raw := r.GetRawString(); len(raw) > 0 {
+                var array []string
+                for _, item := range strings.Split(raw, "&") {
+                    array                 = strings.Split(item, "=")
                     r.queryVars[array[0]] = append(r.queryVars[array[0]], array[1])
                 }
             }

@@ -11,6 +11,7 @@
     2.不支持save/replace方法
     3.不支持LastInsertId方法
 */
+
 package gdb
 
 import (

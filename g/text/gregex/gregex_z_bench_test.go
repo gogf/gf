@@ -6,9 +6,10 @@
 
 // go test *.go -bench=".*"
 
-package gregex
+package gregex_test
 
 import (
+    "github.com/gogf/gf/g/text/gregex"
     "testing"
 )
 
@@ -18,42 +19,42 @@ var replace = "johng.cn"
 
 func BenchmarkValidate(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        Validate(pattern)
+        gregex.Validate(pattern)
     }
 }
 
 func BenchmarkIsMatch(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        IsMatch(pattern, []byte(src))
+        gregex.IsMatch(pattern, []byte(src))
     }
 }
 
 func BenchmarkIsMatchString(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        IsMatchString(pattern, src)
+        gregex.IsMatchString(pattern, src)
     }
 }
 
 func BenchmarkMatchString(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        MatchString(pattern, src)
+        gregex.MatchString(pattern, src)
     }
 }
 
 func BenchmarkMatchAllString(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        MatchAllString(pattern, src)
+        gregex.MatchAllString(pattern, src)
     }
 }
 
 func BenchmarkReplace(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        Replace(pattern, []byte(replace), []byte(src))
+        gregex.Replace(pattern, []byte(replace), []byte(src))
     }
 }
 
 func BenchmarkReplaceString(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        ReplaceString(pattern, replace, src)
+        gregex.ReplaceString(pattern, replace, src)
     }
 }

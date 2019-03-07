@@ -47,31 +47,16 @@ func (c *Cache) GetBinContents(path string) []byte {
     return b
 }
 
-// 添加文件监控
+// 添加文件监控，一旦文件有变化立即清除缓存，下一次读取的时候再执行缓存。
 func (c *Cache) addMonitor(path string) {
     // 防止多goroutine同时调用
     if c.cache.Contains(path) {
         return
     }
     gfsnotify.Add(path, func(event *gfsnotify.Event) {
-        //glog.Debug("gfcache:", event)
-        length := 0
         if r := c.cache.Get(path); r != nil {
-            length = len(r.([]byte))
-        }
-        // 是否删除
-        if event.IsRemove() {
             c.cache.Remove(path)
-            c.size.Add(-length)
-            return
-        }
-        // 更新缓存内容
-        if c.cap.Val() == 0 || c.size.Val() < c.cap.Val() {
-            b := gfile.GetBinContents(path)
-            if len(b) > 0 {
-                c.size.Add(len(b) - length)
-                c.cache.Set(path, b)
-            }
+            c.size.Add(-len(r.([]byte)))
         }
     })
 }

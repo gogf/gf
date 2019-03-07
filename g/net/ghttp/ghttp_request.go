@@ -79,12 +79,20 @@ func (r *Request) GetVar(key string, def ... interface{}) gvar.VarRead {
     return r.GetRequestVar(key, def...)
 }
 
-// 获取原始请求输入字符串
+// 获取原始请求输入二进制。
 func (r *Request) GetRaw() []byte {
     if r.rawContent == nil {
         r.rawContent, _ = ioutil.ReadAll(r.Body)
     }
     return r.rawContent
+}
+
+// 获取原始请求输入字符串。
+func (r *Request) GetRawString() string {
+    if r.rawContent == nil {
+        r.rawContent, _ = ioutil.ReadAll(r.Body)
+    }
+    return string(r.rawContent)
 }
 
 // 获取原始json请求输入字符串，并解析为json对象
