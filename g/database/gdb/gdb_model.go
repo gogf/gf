@@ -438,13 +438,44 @@ func (md *Model) Value() (Value, error) {
 	return nil, nil
 }
 
-// 链式操作，查询单条记录，并自动转换为struct对象
-func (md *Model) Struct(obj interface{}) error {
+// 链式操作，查询单条记录，并自动转换为struct对象, 参数必须为对象的指针，不能为空指针。
+func (md *Model) Struct(objPointer interface{}) error {
 	one, err := md.One()
 	if err != nil {
 		return err
 	}
-	return one.ToStruct(obj)
+	return one.ToStruct(objPointer)
+}
+
+// 链式操作，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
+func (md *Model) Structs(objPointerSlice interface{}) error {
+	r, err := md.All()
+	if err != nil {
+		return err
+	}
+	return r.ToStructs(objPointerSlice)
+}
+
+// 链式操作，将结果转换为指定的struct/*struct/[]struct/[]*struct,
+// 参数应该为指针类型，否则返回失败。
+// 该方法自动识别参数类型，调用Struct/Structs方法。
+func (md *Model) Scan(objPointer interface{}) error {
+    t := reflect.TypeOf(objPointer)
+    k := t.Kind()
+    if k != reflect.Ptr {
+        return fmt.Errorf("params should be type of pointer, but got: %v", k)
+    }
+    k = t.Elem().Kind()
+    switch k {
+        case reflect.Array:
+        case reflect.Slice:
+            return md.Structs(objPointer)
+        case reflect.Struct:
+            return md.Struct(objPointer)
+        default:
+            return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
+    }
+    return nil
 }
 
 // 链式操作，查询数量，fields可以为空，也可以自定义查询字段，

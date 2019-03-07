@@ -121,7 +121,7 @@ func TestModel_Replace(t *testing.T) {
         "passport"    : "t11",
         "password"    : "25d55ad283aa400af464c76d713c07ad",
         "nickname"    : "T11",
-        "create_time" : gtime.Now().String(),
+        "create_time" : "2018-10-10 00:01:10",
     }).Replace()
     if err != nil {
         gtest.Fatal(err)
@@ -136,7 +136,7 @@ func TestModel_Save(t *testing.T) {
         "passport"    : "t111",
         "password"    : "25d55ad283aa400af464c76d713c07ad",
         "nickname"    : "T111",
-        "create_time" : gtime.Now().String(),
+        "create_time" : "2018-10-10 00:01:10",
     }).Save()
     if err != nil {
         gtest.Fatal(err)
@@ -222,19 +222,164 @@ func TestModel_Select(t *testing.T) {
 }
 
 func TestModel_Struct(t *testing.T) {
-    type User struct {
-        Id         int
-        Passport   string
-        Password   string
-        NickName   string
-        CreateTime gtime.Time
-    }
-    user := new(User)
-    err := db.Table("user").Where("id=1").Struct(user)
-    if err != nil {
-        gtest.Fatal(err)
-    }
-    gtest.Assert(user.NickName, "T111")
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        user := new(User)
+        err := db.Table("user").Where("id=1").Struct(user)
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(user.NickName,            "T111")
+        gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
+    })
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        user := new(User)
+        err := db.Table("user").Where("id=1").Struct(user)
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(user.NickName,            "T111")
+        gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
+    })
+}
+
+func TestModel_Structs(t *testing.T) {
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        var users []User
+        err := db.Table("user").OrderBy("id asc").Structs(&users)
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  3)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T111")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
+    })
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        var users []*User
+        err := db.Table("user").OrderBy("id asc").Structs(&users)
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  3)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T111")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
+    })
+}
+
+func TestModel_Scan(t *testing.T) {
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        user := new(User)
+        err := db.Table("user").Where("id=1").Scan(user)
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(user.NickName,            "T111")
+        gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
+    })
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        user := new(User)
+        err := db.Table("user").Where("id=1").Scan(user)
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(user.NickName,            "T111")
+        gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
+    })
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        var users []User
+        err := db.Table("user").OrderBy("id asc").Scan(&users)
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  3)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T111")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
+    })
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        var users []*User
+        err := db.Table("user").OrderBy("id asc").Scan(&users)
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  3)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T111")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
+    })
 }
 
 func TestModel_OrderBy(t *testing.T) {

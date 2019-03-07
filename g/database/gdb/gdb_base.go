@@ -165,13 +165,44 @@ func (bs *dbBase) GetOne(query string, args ...interface{}) (Record, error) {
     return nil, nil
 }
 
-// 数据库查询，获取查询结果记录，自动映射数据到给定的struct对象中
-func (bs *dbBase) GetStruct(obj interface{}, query string, args ...interface{}) error {
+// 数据库查询，查询单条记录，自动映射数据到给定的struct对象中
+func (bs *dbBase) GetStruct(objPointer interface{}, query string, args ...interface{}) error {
     one, err := bs.GetOne(query, args...)
     if err != nil {
         return err
     }
-    return one.ToStruct(obj)
+    return one.ToStruct(objPointer)
+}
+
+// 数据库查询，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
+func (bs *dbBase) GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error {
+    all, err := bs.GetAll(query, args...)
+    if err != nil {
+        return err
+    }
+    return all.ToStructs(objPointerSlice)
+}
+
+// 将结果转换为指定的struct/*struct/[]struct/[]*struct,
+// 参数应该为指针类型，否则返回失败。
+// 该方法自动识别参数类型，调用Struct/Structs方法。
+func (bs *dbBase) GetScan(objPointer interface{}, query string, args ...interface{}) error {
+    t := reflect.TypeOf(objPointer)
+    k := t.Kind()
+    if k != reflect.Ptr {
+        return fmt.Errorf("params should be type of pointer, but got: %v", k)
+    }
+    k = t.Elem().Kind()
+    switch k {
+        case reflect.Array:
+        case reflect.Slice:
+            return bs.db.GetStructs(objPointer, query, args ...)
+        case reflect.Struct:
+            return bs.db.GetStruct(objPointer, query, args ...)
+        default:
+            return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
+    }
+    return nil
 }
 
 // 数据库查询，获取查询字段值

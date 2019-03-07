@@ -266,19 +266,159 @@ func TestDbBase_GetCount(t *testing.T) {
 }
 
 func TestDbBase_GetStruct(t *testing.T) {
-    type User struct {
-        Id         int
-        Passport   string
-        Password   string
-        NickName   string
-        CreateTime gtime.Time
-    }
-    user := new(User)
-    if err := db.GetStruct(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
-        gtest.Fatal(err)
-    } else {
-        gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
-    }
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        user := new(User)
+        if err := db.GetStruct(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
+            gtest.Fatal(err)
+        } else {
+            gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
+        }
+    })
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        user := new(User)
+        if err := db.GetStruct(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
+            gtest.Fatal(err)
+        } else {
+            gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
+        }
+    })
+}
+
+func TestDbBase_GetStructs(t *testing.T) {
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        var users []User
+        if err := db.GetStructs(&users, "SELECT * FROM user WHERE id>=?", 1); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  3)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T111")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[2].CreateTime.String(), "2010-10-10 00:00:01")
+    })
+
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        var users []User
+        if err := db.GetStructs(&users, "SELECT * FROM user WHERE id>=?", 1); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  3)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T111")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[2].CreateTime.String(), "2010-10-10 00:00:01")
+    })
+}
+
+func TestDbBase_GetScan(t *testing.T) {
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        user := new(User)
+        if err := db.GetScan(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
+            gtest.Fatal(err)
+        } else {
+            gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
+        }
+    })
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        user := new(User)
+        if err := db.GetScan(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
+            gtest.Fatal(err)
+        } else {
+            gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
+        }
+    })
+
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        var users []User
+        if err := db.GetScan(&users, "SELECT * FROM user WHERE id>=?", 1); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  3)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T111")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[2].CreateTime.String(), "2010-10-10 00:00:01")
+    })
+
+    gtest.Case(t, func() {
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        var users []User
+        if err := db.GetScan(&users, "SELECT * FROM user WHERE id>=?", 1); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  3)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T111")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[2].CreateTime.String(), "2010-10-10 00:00:01")
+    })
 }
 
 func TestDbBase_Delete(t *testing.T) {
