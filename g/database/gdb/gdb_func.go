@@ -13,6 +13,7 @@ import (
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/text/gregex"
+    "github.com/gogf/gf/g/text/gstr"
     "github.com/gogf/gf/g/util/gconv"
     _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
@@ -44,7 +45,11 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
                     case reflect.Array:
                         buffer.WriteString(k + " IN(?)")
                     default:
-                        buffer.WriteString(k + "=?")
+                        if gstr.Pos(k, "<") == -1 && gstr.Pos(k, ">") == -1 && gstr.Pos(k, "=") == -1 {
+                            buffer.WriteString(k + "=?")
+                        } else {
+                            buffer.WriteString(k + "?")
+                        }
                 }
                 // 当给定的Where参数为map/struct时，args参数必定为空，
                 // 考虑到后续还会对args做处理，特别是判断slice类型，这里直接给args赋值。

@@ -434,6 +434,14 @@ func TestModel_Where(t *testing.T) {
         }
         gtest.Assert(result["id"].Int(), 3)
     })
+    // map key operator
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where(g.Map{"id>" : 1, "id<" : 3}).One()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(result["id"].Int(), 2)
+    })
     // struct
     gtest.Case(t, func() {
         type User struct {
@@ -454,7 +462,7 @@ func TestModel_Where(t *testing.T) {
     })
     // slice single
     gtest.Case(t, func() {
-        result, err := db.Table("user").Where("id IN(?)", g.Slice{1,3}).OrderBy("id ASC").All()
+        result, err := db.Table("user").Where("id IN(?)", g.Slice{1, 3}).OrderBy("id ASC").All()
         if err != nil {
             gtest.Fatal(err)
         }
