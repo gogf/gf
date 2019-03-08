@@ -38,8 +38,17 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
                 if buffer.Len() > 0 {
                     buffer.WriteString(" AND ")
                 }
-                buffer.WriteString(k + "=?")
-                newArgs = append(newArgs, v)
+                // 支持slice键值/属性，这个时候作为IN查询
+                switch reflect.ValueOf(v).Kind() {
+                    case reflect.Slice: fallthrough
+                    case reflect.Array:
+                        buffer.WriteString(k + " IN(?)")
+                    default:
+                        buffer.WriteString(k + "=?")
+                }
+                // 当给定的Where参数为map/struct时，args参数必定为空，
+                // 考虑到后续还会对args做处理，特别是判断slice类型，这里直接给args赋值。
+                args = append(args, v)
             }
             newWhere = buffer.String()
         default:
