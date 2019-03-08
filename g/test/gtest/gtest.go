@@ -232,7 +232,7 @@ func AssertNI(value, expect interface{}) {
 
 // 提示错误不退出进程执行
 func Error(message...interface{}) {
-    fmt.Fprintf(os.Stderr, "[ERROR] %s\n%s", fmt.Sprint(message...), getBacktrace())
+    panic(fmt.Sprintf(`[ERROR] %s\n%s`, fmt.Sprint(message...), getBacktrace()))
 }
 
 // 提示错误并退出进程执行
