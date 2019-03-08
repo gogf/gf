@@ -136,12 +136,13 @@ func (md *Model) Filter() (*Model) {
     return model
 }
 
-// 链式操作，condition，支持string & gdb.Map
+// 链式操作，condition，支持string & gdb.Map.
+// 注意，多个Where调用时，会相互覆盖，只有最后一个Where语句生效。
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
     model             := md.getModel()
     newWhere, newArgs := formatCondition(where, args)
     model.where        = newWhere
-    model.whereArgs    = append(model.whereArgs, newArgs...)
+    model.whereArgs    = newArgs
 	// 支持 Where("uid", 1)这种格式
 	if len(args) == 1 && strings.Index(model.where , "?") < 0 {
         model.where += "=?"

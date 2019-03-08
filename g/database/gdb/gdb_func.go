@@ -66,6 +66,7 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
                     for i := 0; i < rv.Len(); i++ {
                         newArgs = append(newArgs, rv.Index(i).Interface())
                     }
+                    // counter用于匹配该参数的位置(与index对应)
                     counter    := 0
                     newWhere, _ = gregex.ReplaceStringFunc(`\?`, newWhere, func(s string) string {
                         counter++
