@@ -75,6 +75,10 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
         glog.Error("invalid pattern:", pattern)
         return
     }
+    if len(uri) == 0 || uri[0] != '/' {
+        glog.Error("invalid pattern:", pattern)
+        return
+    }
     // 注册地址记录及重复注册判断
     regkey := s.handlerKey(hookName, method, uri, domain)
     caller := s.getHandlerRegisterCallerLine(handler)

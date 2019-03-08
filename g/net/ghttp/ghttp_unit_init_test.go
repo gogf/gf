@@ -17,7 +17,7 @@ var (
 )
 
 func init() {
-    for i := 8000; i <= 8100; i++ {
+    for i := 8000; i <= 9000; i++ {
         ports.Append(i)
     }
 }
