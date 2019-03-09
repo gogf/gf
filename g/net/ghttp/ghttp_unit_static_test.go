@@ -17,6 +17,46 @@ import (
     "time"
 )
 
+func Test_Static_ServerRoot(t *testing.T) {
+    // SetServerRoot with absolute path
+    gtest.Case(t, func() {
+        p := ports.PopRand()
+        s := g.Server(p)
+        path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
+        defer gfile.Remove(path)
+        gfile.PutContents(path + "/index.htm", "index")
+        s.SetServerRoot(path)
+        s.SetPort(p)
+        s.Start()
+        defer s.Shutdown()
+        time.Sleep(time.Second)
+        client := ghttp.NewClient()
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+        gtest.Assert(client.GetContent("/"),            "index")
+        gtest.Assert(client.GetContent("/index.htm"),   "index")
+    })
+
+    // SetServerRoot with relative path
+    gtest.Case(t, func() {
+        p := ports.PopRand()
+        s := g.Server(p)
+        path := fmt.Sprintf(`static/test/%d`, p)
+        defer gfile.Remove(path)
+        gfile.PutContents(path + "/index.htm", "index")
+        s.SetServerRoot(path)
+        s.SetPort(p)
+        s.Start()
+        defer s.Shutdown()
+        time.Sleep(time.Second)
+        client := ghttp.NewClient()
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+        gtest.Assert(client.GetContent("/"),            "index")
+        gtest.Assert(client.GetContent("/index.htm"),   "index")
+    })
+}
+
 func Test_Static_Folder_Forbidden(t *testing.T) {
     gtest.Case(t, func() {
         p := ports.PopRand()

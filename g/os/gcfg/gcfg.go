@@ -26,7 +26,8 @@ import (
 )
 
 const (
-    DEFAULT_CONFIG_FILE = "config.toml" // 默认的配置管理文件名称
+    // 默认的配置管理文件名称
+    DEFAULT_CONFIG_FILE = "config.toml"
 )
 
 // 配置管理对象
