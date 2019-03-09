@@ -16,7 +16,8 @@ type Var        = gvar.Var
 // Frequently-used map type alias.
 //
 // 常用map数据结构(使用别名)
-type Map        = map[interface{}]interface{}
+type Map        = map[string]interface{}
+type MapAnyAny  = map[interface{}]interface{}
 type MapAnyStr  = map[interface{}]string
 type MapAnyInt  = map[interface{}]int
 type MapStrAny  = map[string]interface{}
