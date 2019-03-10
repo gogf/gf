@@ -267,6 +267,29 @@ func TestTX_Save(t *testing.T) {
     }
 }
 
+func TestTX_Update(t *testing.T) {
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        if result, err := db.Update("user", "create_time='2010-10-10 00:00:01'", "id=3"); err != nil {
+            gtest.Fatal(err)
+        } else {
+            n, _ := result.RowsAffected()
+            gtest.Assert(n, 1)
+        }
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+        if value, err := db.Table("user").Fields("create_time").Where("id", 3).Value(); err != nil {
+            gtest.Fatal(err)
+        } else {
+            gtest.Assert(value.String(), "2010-10-10 00:00:01")
+        }
+    })
+}
+
 func TestTX_GetAll(t *testing.T) {
     tx, err := db.Begin()
     if err != nil {
@@ -331,26 +354,215 @@ func TestTX_GetCount(t *testing.T) {
 }
 
 func TestTX_GetStruct(t *testing.T) {
-    tx, err := db.Begin()
-    if err != nil {
-        gtest.Fatal(err)
-    }
-    type User struct {
-        Id         int
-        Passport   string
-        Password   string
-        NickName   string
-        CreateTime gtime.Time
-    }
-    user := new(User)
-    if err := tx.GetStruct(user, "SELECT * FROM user WHERE id=?", 1); err != nil {
-        gtest.Fatal(err)
-    } else {
-        gtest.Assert(user.NickName, "T11")
-    }
-    if err := tx.Commit(); err != nil {
-        gtest.Fatal(err)
-    }
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        user := new(User)
+        if err := tx.GetStruct(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(user.NickName,            "T3")
+        gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+    })
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        user := new(User)
+        if err := tx.GetStruct(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(user.NickName,            "T3")
+        gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+    })
+}
+
+func TestTX_GetStructs(t *testing.T) {
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        var users []User
+        if err := tx.GetStructs(&users, "SELECT * FROM user WHERE id>=?", 1); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  4)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T11")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[2].CreateTime.String(), "2010-10-10 00:00:01")
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+    })
+
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        var users []User
+        if err := tx.GetStructs(&users, "SELECT * FROM user WHERE id>=?", 1); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  4)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T11")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[2].CreateTime.String(), "2010-10-10 00:00:01")
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+    })
+}
+
+func TestTX_GetScan(t *testing.T) {
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        user := new(User)
+        if err := tx.GetScan(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(user.NickName,            "T3")
+        gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+    })
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        user := new(User)
+        if err := tx.GetScan(user, "SELECT * FROM user WHERE id=?", 3); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(user.NickName,            "T3")
+        gtest.Assert(user.CreateTime.String(), "2010-10-10 00:00:01")
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+    })
+
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime gtime.Time
+        }
+        var users []User
+        if err := tx.GetScan(&users, "SELECT * FROM user WHERE id>=?", 1); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  4)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T11")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[2].CreateTime.String(), "2010-10-10 00:00:01")
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+    })
+
+    gtest.Case(t, func() {
+        tx, err := db.Begin()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        type User struct {
+            Id         int
+            Passport   string
+            Password   string
+            NickName   string
+            CreateTime *gtime.Time
+        }
+        var users []User
+        if err := tx.GetScan(&users, "SELECT * FROM user WHERE id>=?", 1); err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(len(users),  4)
+        gtest.Assert(users[0].Id, 1)
+        gtest.Assert(users[1].Id, 2)
+        gtest.Assert(users[2].Id, 3)
+        gtest.Assert(users[0].NickName,            "T11")
+        gtest.Assert(users[1].NickName,            "T2")
+        gtest.Assert(users[2].NickName,            "T3")
+        gtest.Assert(users[2].CreateTime.String(), "2010-10-10 00:00:01")
+        if err := tx.Commit(); err != nil {
+            gtest.Fatal(err)
+        }
+    })
 }
 
 func TestTX_Delete(t *testing.T) {

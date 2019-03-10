@@ -47,7 +47,9 @@ type DB interface {
 	GetOne(query string, args ...interface{}) (Record, error)
 	GetValue(query string, args ...interface{}) (Value, error)
     GetCount(query string, args ...interface{}) (int, error)
-    GetStruct(obj interface{}, query string, args ...interface{}) error
+    GetStruct(objPointer interface{}, query string, args ...interface{}) error
+    GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error
+    GetScan(objPointer interface{}, query string, args ...interface{}) error
 
     // 创建底层数据库master/slave链接对象
     Master() (*sql.DB, error)

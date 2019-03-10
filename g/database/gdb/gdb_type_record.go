@@ -33,10 +33,6 @@ func (r Record) ToMap() Map {
 }
 
 // 将Map变量映射到指定的struct对象中，注意参数应当是一个对象的指针
-func (r Record) ToStruct(obj interface{}) error {
-    m := make(map[string]interface{})
-    for k, v := range r {
-        m[k] = v.Val()
-    }
-    return gconv.Struct(m, obj)
+func (r Record) ToStruct(objPointer interface{}) error {
+    return gconv.Struct(r.ToMap(), objPointer)
 }

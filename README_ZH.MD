@@ -4,15 +4,10 @@
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf) 
 [![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf) 
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf)](https://goreportcard.com/report/github.com/gogf/gf) 
-[![Documents](https://img.shields.io/badge/docs-100%25-green.svg)](https://goframe.org) 
+[![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
 [![Language](https://img.shields.io/badge/language-go-blue.svg)](https://github.com/gogf/gf)
 [![Release](https://img.shields.io/github/release/gogf/gf.svg?style=flat)](https://github.com/gogf/gf/releases)
-
-<!--
-[![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf)
-[![Code Helper](https://www.codetriage.com/gogf/gf/badges/users.svg)](https://www.codetriage.com/gogf/gf) 
---> 
 
 `GF(Go Frame)`是一款模块化、松耦合、生产级Go应用开发框架。提供了常用的核心开发组件，如：缓存、日志、文件、时间、队列、数组、集合、字符串、定时器、命令行、文件锁、内存锁、对象池、连接池、数据校验、数据编码、文件监控、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信、
 并发安全容器等等。并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、服务注册、配置管理、模板引擎等等，支持热重启、热更新、多域名、多端口、多服务、HTTPS、Rewrite等特性。

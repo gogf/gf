@@ -105,16 +105,20 @@ var (
 )
 
 // 检测单条数据的规则:
-// value为需要校验的数据，可以为任意基本数据类型；
-// msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持 string/map[string]string ，允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误；
-// params参数为联合校验参数，对于需要联合校验的规则有效，如：required-*、same、different；
-func Check(value interface{}, rules string, msgs interface{}, params...map[string]interface{}) *Error {
+//
+// 1. value为需要校验的数据，可以为任意基本数据类型；
+//
+// 2. msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持 string/map/struct/*struct,
+// 允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误；
+//
+// 3. params参数为联合校验参数，支持任意的map/struct/*struct类型，对于需要联合校验的规则有效，如：required-*、same、different；
+func Check(value interface{}, rules string, msgs interface{}, params...interface{}) *Error {
     // 内部会将参数全部转换为字符串类型进行校验
     val       := strings.TrimSpace(gconv.String(value))
     data      := make(map[string]string)
     errorMsgs := make(map[string]string)
     if len(params) > 0 {
-        for k, v := range params[0] {
+        for k, v := range gconv.Map(params[0]) {
             data[k] = gconv.String(v)
         }
     }
@@ -122,11 +126,12 @@ func Check(value interface{}, rules string, msgs interface{}, params...map[strin
     msgArray     := make([]string, 0)
     customMsgMap := make(map[string]string)
     switch v := msgs.(type) {
-        case map[string]string:
-            customMsgMap = v
-
         case string:
             msgArray = strings.Split(v, "|")
+        default:
+            for k, v := range gconv.Map(msgs) {
+                data[k] = gconv.String(v)
+            }
     }
     ruleItems := strings.Split(strings.TrimSpace(rules), "|")
     // 规则项预处理, 主要解决规则中存在的"|"关键字符号

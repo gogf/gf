@@ -235,7 +235,7 @@ func TestTimer_AddLeveledEntry1(t *testing.T) {
         })
         time.Sleep(1500*time.Millisecond)
         gtest.Assert(array.Len(), 0)
-        time.Sleep(1200*time.Millisecond)
+        time.Sleep(1300*time.Millisecond)
         //glog.Println("check")
         gtest.Assert(array.Len(), 1)
     })

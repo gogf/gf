@@ -18,7 +18,7 @@ func (w *Watcher) startWatchLoop() {
                 // 关闭事件
                 case <- w.closeChan: return
 
-                    // 监听事件
+                // 监听事件
                 case ev := <- w.watcher.Events:
                     //fmt.Println("ev:", ev.String())
                     w.cache.SetIfNotExist(ev.String(), func() interface{} {

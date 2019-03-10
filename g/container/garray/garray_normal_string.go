@@ -7,6 +7,7 @@
 package garray
 
 import (
+    "bytes"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/util/grand"
@@ -51,6 +52,20 @@ func NewStringArrayFrom(array []string, unsafe...bool) *StringArray {
 		mu    : rwmutex.New(unsafe...),
 		array : array,
 	}
+}
+
+// Create an array from a copy of given slice <array>.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 通过给定的slice拷贝创建数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+func NewStringArrayFromCopy(array []string, unsafe...bool) *StringArray {
+    newArray := make([]string, len(array))
+    copy(newArray, array)
+    return &StringArray{
+        mu    : rwmutex.New(unsafe...),
+        array : newArray,
+    }
 }
 
 // Get value by index.
@@ -233,11 +248,29 @@ func (a *StringArray) PopRight() string {
     return value
 }
 
-// Pop an random item from array.
+// PopRand picks an random item out of array.
 //
 // 随机将一个数据项移出数组，并返回该数据项。
 func (a *StringArray) PopRand() string {
     return a.Remove(grand.Intn(len(a.array)))
+}
+
+// PopRands picks <size> items out of array.
+//
+// 随机将size个数据项移出数组，并返回该数据项。
+func (a *StringArray) PopRands(size int) []string {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    if size > len(a.array) {
+        size = len(a.array)
+    }
+    array := make([]string, size)
+    for i := 0; i < size; i++ {
+        index   := grand.Intn(len(a.array))
+        array[i] = a.array[index]
+        a.array  = append(a.array[ : index], a.array[index + 1 : ]...)
+    }
+    return array
 }
 
 // Pop <size> items from the beginning of array.
@@ -423,17 +456,22 @@ func (a *StringArray) RLockFunc(f func(array []string)) *StringArray {
     return a
 }
 
-// Merge two arrays.
+// Merge two arrays. The parameter <array> can be any garray type or slice type.
+// The difference between Merge and Append is Append supports only specified slice type,
+// but Merge supports more variable types.
 //
-// 合并两个数组.
-func (a *StringArray) Merge(array *StringArray) *StringArray {
-    a.mu.Lock()
-    defer a.mu.Unlock()
-    if a != array {
-        array.mu.RLock()
-        defer array.mu.RUnlock()
+// 合并两个数组, 支持任意的garray数组类型及slice类型.
+func (a *StringArray) Merge(array interface{}) *StringArray {
+    switch v := array.(type) {
+        case *Array:             a.Append(gconv.Strings(v.Slice())...)
+        case *IntArray:          a.Append(gconv.Strings(v.Slice())...)
+        case *StringArray:       a.Append(gconv.Strings(v.Slice())...)
+        case *SortedArray:       a.Append(gconv.Strings(v.Slice())...)
+        case *SortedIntArray:    a.Append(gconv.Strings(v.Slice())...)
+        case *SortedStringArray: a.Append(gconv.Strings(v.Slice())...)
+        default:
+            a.Append(gconv.Strings(array)...)
     }
-    a.array = append(a.array, array.array...)
     return a
 }
 
@@ -537,11 +575,19 @@ func (a *StringArray) SubSlice(offset, size int) []string {
     }
 }
 
-// Picks one or more random entries out of an array(a copy),
-// and returns the key (or keys) of the random entries.
+// Rand gets one random entry from array.
 //
-// 从数组中随机取出size个元素项，构成slice返回。
-func (a *StringArray) Rand(size int) []string {
+// 从数组中随机获得1个元素项(不删除)。
+func (a *StringArray) Rand() string {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    return a.array[grand.Intn(len(a.array))]
+}
+
+// Rands gets one or more random entries from array(a copy).
+//
+// 从数组中随机拷贝size个元素项，构成slice返回。
+func (a *StringArray) Rands(size int) []string {
     a.mu.RLock()
     defer a.mu.RUnlock()
     if size > len(a.array) {
@@ -587,6 +633,13 @@ func (a *StringArray) Reverse() *StringArray {
 func (a *StringArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    return strings.Join(a.array, glue)
+    buffer := bytes.NewBuffer(nil)
+    for k, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+        if k != len(a.array) - 1 {
+            buffer.WriteString(glue)
+        }
+    }
+    return buffer.String()
 }
 

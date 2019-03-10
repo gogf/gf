@@ -4,17 +4,16 @@
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf) 
 [![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf) 
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf)](https://goreportcard.com/report/github.com/gogf/gf) 
-[![Documents](https://img.shields.io/badge/docs-100%25-green.svg)](https://goframe.org) 
+[![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
 [![Language](https://img.shields.io/badge/language-go-blue.svg)](https://github.com/gogf/gf)
 [![Release](https://img.shields.io/github/release/gogf/gf.svg?style=flat)](https://github.com/gogf/gf/releases)
 
 <!--
-[![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf)
-[![Code Helper](https://www.codetriage.com/gogf/gf/badges/users.svg)](https://www.codetriage.com/gogf/gf) 
---> 
+GoFrame is a modular, loose-coupled, production-ready and most-powerful application development framework of golang. Providing a series of core components and dozens of practical modules, such as: cache, logging, containers, timer, validator, database orm, etc. Supporting web server integrated with router, cookie, session, logger, configure, template, https, hooks, rewrites and many more features. 
+-->
 
-`GF(GoFrame)` is a modular, loose-coupled and production-ready application development framework written in Go. Providing a series of core components and dozens of practical modules, such as: cache, logging, array/queue/set/map, timer/timing tasks, file/memory lock, object pool, validator, database ORM, etc. Supporting web server with graceful server, hot updates, multi-domain, multi-port, multi-service, HTTP/HTTPS, dynamic/hook routing, rewrite rules and many more features. 
+`GF(GoFrame)` is a modular, loose-coupled, production-ready and most-powerful application development framework of golang. Providing a series of core components and dozens of practical modules, such as: memcache, configure, validator, logging, array/queue/set/map containers, timer/timing tasks, file/memory lock, object pool, database ORM, etc. Supporting web server integrated with router, cookie, session, logger, template, https, hooks, rewrites and many more features. 
 
 # Installation
 ```

@@ -15,68 +15,60 @@ import (
     "strings"
 )
 
-// 将params键值对参数映射到对应的struct对象属性上，第三个参数mapping为非必需，表示自定义名称与属性名称的映射关系。
+// 将params键值对参数映射到对应的struct对象属性上，
+// 第三个参数mapping为非必需，表示自定义名称与属性名称的映射关系。
 // 需要注意：
 // 1、第二个参数应当为struct对象指针；
 // 2、struct对象的**公开属性(首字母大写)**才能被映射赋值；
 // 3、map中的键名可以为小写，映射转换时会自动将键名首字母转为大写做匹配映射，如果无法匹配则忽略；
 func Struct(params interface{}, objPointer interface{}, attrMapping...map[string]string) error {
     if params == nil {
-        return nil
+        return errors.New("params cannot be nil")
     }
-    isParamMap := true
-    paramsMap  := (map[string]interface{})(nil)
-    // 先将参数转为 map[string]interface{} 类型
-    if m, ok := params.(map[string]interface{}); ok {
-        paramsMap = m
-    } else {
-        paramsMap = make(map[string]interface{})
-        if reflect.ValueOf(params).Kind() == reflect.Map {
-            ks := reflect.ValueOf(params).MapKeys()
-            vs := reflect.ValueOf(params)
-            for _, k := range ks {
-                paramsMap[String(k.Interface())] = vs.MapIndex(k).Interface()
-            }
-        } else {
-            isParamMap = false
-        }
+    if objPointer == nil {
+        return errors.New("object pointer cannot be nil")
+    }
+    paramsMap := Map(params)
+    if paramsMap == nil {
+        return fmt.Errorf("invalid params: %v", params)
     }
     // struct的反射对象
     elem := reflect.Value{}
     if v, ok := objPointer.(reflect.Value); ok {
         elem = v
     } else {
-        elem = reflect.ValueOf(objPointer).Elem()
-    }
-    // 如果给定的参数不是map类型，那么直接将参数值映射到第一个属性上
-    if !isParamMap {
-        if err := bindVarToStructByIndex(elem, 0, params); err != nil {
-            return err
+        rv := reflect.ValueOf(objPointer)
+        if kind := rv.Kind(); kind != reflect.Ptr {
+            return fmt.Errorf("object pointer should be type of: %v", kind)
         }
-        return nil
+        if !rv.IsValid() || rv.IsNil() {
+            return errors.New("object pointer cannot be nil")
+        }
+        elem = rv.Elem()
     }
-    // 已执行过转换的属性，只执行一次转换
-    dmap := make(map[string]bool)
+    // 已执行过转换的属性，只执行一次转换。
+    // 或者是已经执行过转换检查的属性(即使不进行转换), 以便重复判断。
+    doneMap := make(map[string]bool)
     // 首先按照传递的映射关系进行匹配
     if len(attrMapping) > 0 && len(attrMapping[0]) > 0 {
-        for mappingk, mappingv := range attrMapping[0] {
-            if v, ok := paramsMap[mappingk]; ok {
-                dmap[mappingv] = true
-                if err := bindVarToStructAttr(elem, mappingv, v); err != nil {
+        for mapK, mapV := range attrMapping[0] {
+            if v, ok := paramsMap[mapK]; ok {
+                doneMap[mapV] = true
+                if err := bindVarToStructAttr(elem, mapV, v); err != nil {
                     return err
                 }
             }
         }
     }
-    // 其次匹配对象定义时绑定的属性名称
+    // 其次匹配对象定义时绑定的属性名称,
     // 标签映射关系map，如果有的话
-    tagmap := getTagMapOfStruct(objPointer)
-    for tagk, tagv := range tagmap {
-        if _, ok := dmap[tagv]; ok {
+    tagMap := getTagMapOfStruct(objPointer)
+    for tagk, tagv := range tagMap {
+        if _, ok := doneMap[tagv]; ok {
             continue
         }
         if v, ok := paramsMap[tagk]; ok {
-            dmap[tagv] = true
+            doneMap[tagv] = true
             if err := bindVarToStructAttr(elem, tagv, v); err != nil {
                 return err
             }
@@ -88,19 +80,19 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     for i := 0; i < elem.NumField(); i++ {
         attrMap[elemType.Field(i).Name] = struct{}{}
     }
-    for mapk, mapv := range paramsMap {
+    for mapK, mapV := range paramsMap {
         name := ""
         for _, checkName := range []string {
-            gstr.UcFirst(mapk),
-            gstr.ReplaceByMap(mapk, map[string]string{
+            gstr.UcFirst(mapK),
+            gstr.ReplaceByMap(mapK, map[string]string{
                 "_" : "",
                 "-" : "",
                 " " : "",
-            })} {
-            if _, ok := dmap[checkName]; ok {
+            })}  {
+            if _, ok := doneMap[checkName]; ok {
                 continue
             }
-            if _, ok := tagmap[checkName]; ok {
+            if _, ok := tagMap[checkName]; ok {
                 continue
             }
             // 循环查找属性名称进行匹配
@@ -114,6 +106,7 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
                     break
                 }
             }
+            doneMap[checkName] = true
             if name != "" {
                 break
             }
@@ -122,7 +115,7 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         if name == "" {
             continue
         }
-        if err := bindVarToStructAttr(elem, name, mapv); err != nil {
+        if err := bindVarToStructAttr(elem, name, mapV); err != nil {
             return err
         }
     }

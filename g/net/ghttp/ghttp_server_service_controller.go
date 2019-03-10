@@ -8,20 +8,19 @@
 package ghttp
 
 import (
-    "errors"
-    "github.com/gogf/gf/g/os/glog"
-    "github.com/gogf/gf/g/text/gregex"
-    "strings"
-    "reflect"
     "fmt"
     "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/os/glog"
+    "github.com/gogf/gf/g/text/gregex"
     "github.com/gogf/gf/g/text/gstr"
+    "reflect"
+    "strings"
 )
 
-// 绑定控制器，控制器需要实现gmvc.Controller接口
-// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
-// 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写
-func (s *Server)BindController(pattern string, c Controller, methods...string) error {
+// 绑定控制器，控制器需要实现 gmvc.Controller 接口,
+// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话,
+// 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写.
+func (s *Server)BindController(pattern string, c Controller, methods...string) {
     methodMap := (map[string]bool)(nil)
     if len(methods) > 0 {
         methodMap = make(map[string]bool)
@@ -45,11 +44,7 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
             continue
         }
         if _, ok := v.Method(i).Interface().(func()); !ok {
-            if methodMap != nil {
-                s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
-                glog.Error(s)
-                return errors.New(s)
-            }
+            glog.Errorfln(`invalid method definition "%s", while "func()" is required`, v.Method(i).Type().String())
             continue
         }
         ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -71,8 +66,8 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
         if strings.EqualFold(mname, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
             p := gstr.PosR(key, "/index")
             k := key[0 : p] + key[p + 6 : ]
-            if len(k) == 0 {
-                k = "/"
+            if len(k) == 0 || k[0] == '@' {
+                k = "/" + k
             }
             m[k] = &handlerItem {
                 name  : fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
@@ -83,11 +78,11 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) e
             }
         }
     }
-    return s.bindHandlerByMap(m)
+    s.bindHandlerByMap(m)
 }
 
-// 绑定路由到指定的方法执行
-func (s *Server)BindControllerMethod(pattern string, c Controller, method string) error {
+// 绑定路由到指定的方法执行, 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
+func (s *Server)BindControllerMethod(pattern string, c Controller, method string) {
     m     := make(handlerMap)
     v     := reflect.ValueOf(c)
     t     := v.Type()
@@ -95,12 +90,12 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
     mname := strings.TrimSpace(method)
     fval  := v.MethodByName(mname)
     if !fval.IsValid() {
-        return errors.New("invalid method name:" + mname)
+        glog.Error("invalid method name:" + mname)
+        return
     }
     if _, ok := fval.Interface().(func()); !ok {
-        s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, fval.Type().String())
-        glog.Error(s)
-        return errors.New(s)
+        glog.Errorfln(`invalid method definition "%s", while "func()" is required`, fval.Type().String())
+        return
     }
     pkgPath := t.Elem().PkgPath()
     pkgName := gfile.Basename(pkgPath)
@@ -116,14 +111,14 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
         fname : mname,
         faddr : nil,
     }
-    return s.bindHandlerByMap(m)
+    s.bindHandlerByMap(m)
 }
 
 // 绑定控制器(RESTFul)，控制器需要实现gmvc.Controller接口
 // 方法会识别HTTP方法，并做REST绑定处理，例如：Post方法会绑定到HTTP POST的方法请求处理，Delete方法会绑定到HTTP DELETE的方法请求处理
 // 因此只会绑定HTTP Method对应的方法，其他方法不会自动注册绑定
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
-func (s *Server)BindControllerRest(pattern string, c Controller) error {
+func (s *Server)BindControllerRest(pattern string, c Controller) {
     // 遍历控制器，获取方法列表，并构造成uri
     m       := make(handlerMap)
     v       := reflect.ValueOf(c)
@@ -138,9 +133,8 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
             continue
         }
         if _, ok := v.Method(i).Interface().(func()); !ok {
-            s := fmt.Sprintf(`invalid medthod definition "%s", while "func()" is required`, v.Method(i).Type().String())
-            glog.Error(s)
-            return errors.New(s)
+            glog.Errorfln(`invalid method definition "%s", while "func()" is required`, v.Method(i).Type().String())
+            return
         }
         pkgName := gfile.Basename(pkgPath)
         ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -156,5 +150,5 @@ func (s *Server)BindControllerRest(pattern string, c Controller) error {
             faddr : nil,
         }
     }
-    return s.bindHandlerByMap(m)
+    s.bindHandlerByMap(m)
 }

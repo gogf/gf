@@ -45,13 +45,10 @@ func (r *Response) Write(content ... interface{}) {
         return
     }
     for _, v := range content {
-        switch v.(type) {
-            case []byte:
-                // 如果是二进制数据，那么返回二进制数据
-                r.buffer.Write(gconv.Bytes(v))
-
+        switch value := v.(type) {
+            case []byte: r.buffer.Write(value)
+            case string: r.buffer.WriteString(value)
             default:
-                // 否则一律按照可显示的字符串进行转换
                 r.buffer.WriteString(gconv.String(v))
         }
     }

@@ -7,6 +7,7 @@
 package garray
 
 import (
+    "bytes"
     "github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
@@ -59,6 +60,20 @@ func NewSortedStringArrayFrom(array []string, unsafe...bool) *SortedStringArray 
     a.array = array
     sort.Strings(a.array)
     return a
+}
+
+// Create an array from a copy of given slice <array>.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 通过给定的slice拷贝创建数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+func NewSortedStringArrayFromCopy(array []string, unsafe...bool) *SortedStringArray {
+    newArray := make([]string, len(array))
+    copy(newArray, array)
+    return &SortedStringArray{
+        mu    : rwmutex.New(unsafe...),
+        array : newArray,
+    }
 }
 
 // Set the underlying slice array with the given <array> param.
@@ -166,11 +181,29 @@ func (a *SortedStringArray) PopRight() string {
     return value
 }
 
-// Pop an random item from array.
+// PopRand picks an random item out of array.
 //
 // 随机将一个数据项移出数组，并返回该数据项。
 func (a *SortedStringArray) PopRand() string {
     return a.Remove(grand.Intn(len(a.array)))
+}
+
+// PopRands picks <size> items out of array.
+//
+// 随机将size个数据项移出数组，并返回该数据项。
+func (a *SortedStringArray) PopRands(size int) []string {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    if size > len(a.array) {
+        size = len(a.array)
+    }
+    array := make([]string, size)
+    for i := 0; i < size; i++ {
+        index   := grand.Intn(len(a.array))
+        array[i] = a.array[index]
+        a.array  = append(a.array[ : index], a.array[index + 1 : ]...)
+    }
+    return array
 }
 
 // Pop <size> items from the beginning of array.
@@ -393,18 +426,22 @@ func (a *SortedStringArray) RLockFunc(f func(array []string)) *SortedStringArray
     return a
 }
 
-// Merge two arrays.
+// Merge two arrays. The parameter <array> can be any garray type or slice type.
+// The difference between Merge and Add is Add supports only specified slice type,
+// but Merge supports more variable types.
 //
-// 合并两个数组.
-func (a *SortedStringArray) Merge(array *SortedStringArray) *SortedStringArray {
-    a.mu.Lock()
-    defer a.mu.Unlock()
-    if a != array {
-        array.mu.RLock()
-        defer array.mu.RUnlock()
+// 合并两个数组, 支持任意的garray数组类型及slice类型.
+func (a *SortedStringArray) Merge(array interface{}) *SortedStringArray {
+    switch v := array.(type) {
+        case *Array:             a.Add(gconv.Strings(v.Slice())...)
+        case *IntArray:          a.Add(gconv.Strings(v.Slice())...)
+        case *StringArray:       a.Add(gconv.Strings(v.Slice())...)
+        case *SortedArray:       a.Add(gconv.Strings(v.Slice())...)
+        case *SortedIntArray:    a.Add(gconv.Strings(v.Slice())...)
+        case *SortedStringArray: a.Add(gconv.Strings(v.Slice())...)
+        default:
+            a.Add(gconv.Strings(array)...)
     }
-    a.array = append(a.array, array.array...)
-    sort.Strings(a.array)
     return a
 }
 
@@ -456,11 +493,19 @@ func (a *SortedStringArray) SubSlice(offset, size int) []string {
     }
 }
 
-// Picks one or more random entries out of an array(a copy),
-// and returns the key (or keys) of the random entries.
+// Rand gets one random entry from array.
 //
-// 从数组中随机取出size个元素项，构成slice返回。
-func (a *SortedStringArray) Rand(size int) []string {
+// 从数组中随机获得1个元素项(不删除)。
+func (a *SortedStringArray) Rand() string {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    return a.array[grand.Intn(len(a.array))]
+}
+
+// Rands gets one or more random entries from array(a copy).
+//
+// 从数组中随机拷贝size个元素项，构成slice返回。
+func (a *SortedStringArray) Rands(size int) []string {
     a.mu.RLock()
     defer a.mu.RUnlock()
     if size > len(a.array) {
@@ -482,5 +527,12 @@ func (a *SortedStringArray) Rand(size int) []string {
 func (a *SortedStringArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    return strings.Join(a.array, glue)
+    buffer := bytes.NewBuffer(nil)
+    for k, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+        if k != len(a.array) - 1 {
+            buffer.WriteString(glue)
+        }
+    }
+    return buffer.String()
 }

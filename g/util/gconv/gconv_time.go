@@ -22,7 +22,7 @@ func TimeDuration(i interface{}) time.Duration {
     return time.Duration(Int64(i))
 }
 
-// 将变量i转换为time.Time类型
+// 将变量i转换为time.Time类型, 自动识别i为时间戳或者标准化的时间字符串。
 func GTime(i interface{}, format...string) *gtime.Time {
     s := String(i)
     if len(s) == 0 {

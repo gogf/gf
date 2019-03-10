@@ -13,6 +13,7 @@ import (
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/text/gregex"
+    "github.com/gogf/gf/g/text/gstr"
     "github.com/gogf/gf/g/util/gconv"
     _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
@@ -38,8 +39,21 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
                 if buffer.Len() > 0 {
                     buffer.WriteString(" AND ")
                 }
-                buffer.WriteString(k + "=?")
-                newArgs = append(newArgs, v)
+                // 支持slice键值/属性，这个时候作为IN查询
+                switch reflect.ValueOf(v).Kind() {
+                    case reflect.Slice: fallthrough
+                    case reflect.Array:
+                        buffer.WriteString(k + " IN(?)")
+                    default:
+                        if gstr.Pos(k, "<") == -1 && gstr.Pos(k, ">") == -1 && gstr.Pos(k, "=") == -1 {
+                            buffer.WriteString(k + "=?")
+                        } else {
+                            buffer.WriteString(k + "?")
+                        }
+                }
+                // 当给定的Where参数为map/struct时，args参数必定为空，
+                // 考虑到后续还会对args做处理，特别是判断slice类型，这里直接给args赋值。
+                args = append(args, v)
             }
             newWhere = buffer.String()
         default:
@@ -66,6 +80,7 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
                     for i := 0; i < rv.Len(); i++ {
                         newArgs = append(newArgs, rv.Index(i).Interface())
                     }
+                    // counter用于匹配该参数的位置(与index对应)
                     counter    := 0
                     newWhere, _ = gregex.ReplaceStringFunc(`\?`, newWhere, func(s string) string {
                         counter++

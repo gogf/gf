@@ -47,7 +47,16 @@ func Convert(i interface{}, t string, extraParams...interface{}) interface{} {
                 return Time(i, String(extraParams[0]))
             }
             return Time(i)
-
+        case "gtime.Time":
+            if len(extraParams) > 0 {
+                return GTime(i, String(extraParams[0]))
+            }
+            return *GTime(i)
+        case "*gtime.Time":
+            if len(extraParams) > 0 {
+                return GTime(i, String(extraParams[0]))
+            }
+            return GTime(i)
         case "time.Duration":   return TimeDuration(i)
         default:
             return i
