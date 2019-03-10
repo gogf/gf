@@ -64,6 +64,7 @@ func (s *Server)SetServerRoot(root string) {
     if path == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: path "%s" does not exist`, root))
     }
+    glog.Debug("[ghttp] SetServerRoot path:", path)
     s.config.SearchPaths       = []string{strings.TrimRight(path, gfile.Separator)}
     s.config.FileServerEnabled = true
 }

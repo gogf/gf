@@ -109,21 +109,9 @@ func Test_Struct_Attr_Slice(t *testing.T) {
         type User struct {
             Scores []int
         }
-
-        user   := new(User)
         scores := []interface{}{99, 100, 60, 140}
-
-        // 通过map映射转换
+        user   := new(User)
         if err := gconv.Struct(g.Map{"Scores" : scores}, user); err != nil {
-            gtest.Error(err)
-        } else {
-            gtest.Assert(user, &User{
-                Scores : []int{99, 100, 60, 140},
-            })
-        }
-
-        // 通过变量映射转换，直接slice赋值
-        if err := gconv.Struct(scores, user); err != nil {
             gtest.Error(err)
         } else {
             gtest.Assert(user, &User{

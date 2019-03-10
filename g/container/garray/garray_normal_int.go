@@ -7,12 +7,12 @@
 package garray
 
 import (
+    "bytes"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/util/grand"
     "math"
     "sort"
-    "strings"
 )
 
 type IntArray struct {
@@ -50,6 +50,20 @@ func NewIntArrayFrom(array []int, unsafe...bool) *IntArray {
 	return &IntArray{
         mu    : rwmutex.New(unsafe...),
         array : array,
+    }
+}
+
+// Create an array from a copy of given slice <array>.
+// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// which is false in default, means concurrent-safe in default.
+//
+// 通过给定的slice拷贝创建数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+func NewIntArrayFromCopy(array []int, unsafe...bool) *IntArray {
+    newArray := make([]int, len(array))
+    copy(newArray, array)
+    return &IntArray{
+        mu    : rwmutex.New(unsafe...),
+        array : newArray,
     }
 }
 
@@ -233,11 +247,29 @@ func (a *IntArray) PopRight() int {
     return value
 }
 
-// Pop an random item from array.
+// PopRand picks an random item out of array.
 //
 // 随机将一个数据项移出数组，并返回该数据项。
 func (a *IntArray) PopRand() int {
     return a.Remove(grand.Intn(len(a.array)))
+}
+
+// PopRands picks <size> items out of array.
+//
+// 随机将size个数据项移出数组，并返回该数据项。
+func (a *IntArray) PopRands(size int) []int {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+    if size > len(a.array) {
+        size = len(a.array)
+    }
+    array := make([]int, size)
+    for i := 0; i < size; i++ {
+        index   := grand.Intn(len(a.array))
+        array[i] = a.array[index]
+        a.array  = append(a.array[ : index], a.array[index + 1 : ]...)
+    }
+    return array
 }
 
 // Pop <size> items from the beginning of array.
@@ -425,17 +457,22 @@ func (a *IntArray) RLockFunc(f func(array []int)) *IntArray {
     return a
 }
 
-// Merge two arrays.
+// Merge two arrays. The parameter <array> can be any garray type or slice type.
+// The difference between Merge and Append is Append supports only specified slice type,
+// but Merge supports more variable types.
 //
-// 合并两个数组.
-func (a *IntArray) Merge(array *IntArray) *IntArray {
-    a.mu.Lock()
-    defer a.mu.Unlock()
-    if a != array {
-        array.mu.RLock()
-        defer array.mu.RUnlock()
+// 合并两个数组, 支持任意的garray数组类型及slice类型.
+func (a *IntArray) Merge(array interface{}) *IntArray {
+    switch v := array.(type) {
+        case *Array:             a.Append(gconv.Ints(v.Slice())...)
+        case *IntArray:          a.Append(gconv.Ints(v.Slice())...)
+        case *StringArray:       a.Append(gconv.Ints(v.Slice())...)
+        case *SortedArray:       a.Append(gconv.Ints(v.Slice())...)
+        case *SortedIntArray:    a.Append(gconv.Ints(v.Slice())...)
+        case *SortedStringArray: a.Append(gconv.Ints(v.Slice())...)
+        default:
+            a.Append(gconv.Ints(array)...)
     }
-    a.array = append(a.array, array.array...)
     return a
 }
 
@@ -538,11 +575,19 @@ func (a *IntArray) SubSlice(offset, size int) []int {
     }
 }
 
-// Picks one or more random entries out of an array(a copy),
-// and returns the key (or keys) of the random entries.
+// Rand gets one random entry from array.
 //
-// 从数组中随机取出size个元素项，构成slice返回。
-func (a *IntArray) Rand(size int) []int {
+// 从数组中随机获得1个元素项(不删除)。
+func (a *IntArray) Rand() int {
+    a.mu.RLock()
+    defer a.mu.RUnlock()
+    return a.array[grand.Intn(len(a.array))]
+}
+
+// Rands gets one or more random entries from array(a copy).
+//
+// 从数组中随机拷贝size个元素项，构成slice返回。
+func (a *IntArray) Rands(size int) []int {
     a.mu.RLock()
     defer a.mu.RUnlock()
     if size > len(a.array) {
@@ -588,5 +633,12 @@ func (a *IntArray) Reverse() *IntArray {
 func (a *IntArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
-    return strings.Join(gconv.Strings(a.array), glue)
+    buffer := bytes.NewBuffer(nil)
+    for k, v := range a.array {
+        buffer.WriteString(gconv.String(v))
+        if k != len(a.array) - 1 {
+            buffer.WriteString(glue)
+        }
+    }
+    return buffer.String()
 }

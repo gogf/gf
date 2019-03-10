@@ -60,10 +60,11 @@ func (s *Server) getHandlerRegisterCallerLine(handler *handlerItem) string {
 
 // 路由注册处理方法。
 // 如果带有hook参数，表示是回调注册方法; 否则为普通路由执行方法。
-func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... string) (resultErr error) {
+func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... string) {
     // Web Server正常运行时无法动态注册路由方法
     if s.Status() == SERVER_STATUS_RUNNING {
-        return errors.New("cannot bind handler while server running")
+        glog.Error("cannot bind handler while server running")
+        return
     }
     var hookName string
     if len(hook) > 0 {
@@ -71,29 +72,22 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     }
     domain, method, uri, err := s.parsePattern(pattern)
     if err != nil {
-        return errors.New("invalid pattern")
+        glog.Error("invalid pattern:", pattern)
+        return
+    }
+    if len(uri) == 0 || uri[0] != '/' {
+        glog.Error("invalid pattern:", pattern)
+        return
     }
     // 注册地址记录及重复注册判断
     regkey := s.handlerKey(hookName, method, uri, domain)
     caller := s.getHandlerRegisterCallerLine(handler)
     if len(hook) == 0 {
         if item, ok := s.routesMap[regkey]; ok {
-            s := fmt.Sprintf(`duplicated route registry "%s", already registered in %s`, pattern, item[0].file)
-            glog.Errorfln(s)
-            return errors.New(s)
+            glog.Errorfln(`duplicated route registry "%s", already registered in %s`, pattern, item[0].file)
+            return
         }
     }
-    defer func() {
-        if resultErr == nil {
-            if _, ok := s.routesMap[regkey]; !ok {
-                s.routesMap[regkey] = make([]registeredRouteItem, 0)
-            }
-            s.routesMap[regkey] = append(s.routesMap[regkey], registeredRouteItem {
-                file    : caller,
-                handler : handler,
-            })
-        }
-    }()
 
     // 路由对象
     handler.router = &Router {
@@ -193,9 +187,15 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
             l.PushBack(handler)
         }
     }
-    //gutil.Dump(s.serveTree)
-    //gutil.Dump(s.hooksTree)
-    return nil
+    // gutil.Dump(s.serveTree)
+    // gutil.Dump(s.hooksTree)
+    if _, ok := s.routesMap[regkey]; !ok {
+        s.routesMap[regkey] = make([]registeredRouteItem, 0)
+    }
+    s.routesMap[regkey] = append(s.routesMap[regkey], registeredRouteItem {
+        file    : caller,
+        handler : handler,
+    })
 }
 
 // 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。

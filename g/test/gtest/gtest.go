@@ -181,14 +181,22 @@ func AssertLTE(value, expect interface{}) {
 }
 
 
-// 断言判断, value IN expect; 注意: expect必须为slice类型
+// 断言判断, value IN expect; 注意: expect必须为slice类型。
+// 注意：value参数可以为普通变量，也可以为slice类型。
 func AssertIN(value, expect interface{}) {
-    passed := false
+    passed := true
     switch reflect.ValueOf(expect).Kind() {
         case reflect.Slice, reflect.Array:
-            for _, v := range gconv.Interfaces(expect) {
-                if v == value {
-                    passed = true
+            for _, v1 := range gconv.Interfaces(value) {
+                result := false
+                for _, v2 := range gconv.Interfaces(expect) {
+                    if v1 == v2 {
+                        result = true
+                        break
+                    }
+                }
+                if !result {
+                    passed = false
                     break
                 }
             }
@@ -200,24 +208,31 @@ func AssertIN(value, expect interface{}) {
 
 // 断言判断, value NOT IN expect; 注意: expect必须为slice类型
 func AssertNI(value, expect interface{}) {
-    passed := false
+    passed := true
     switch reflect.ValueOf(expect).Kind() {
         case reflect.Slice, reflect.Array:
-            for _, v := range gconv.Interfaces(expect) {
-                if v == value {
-                    passed = true
+            for _, v1 := range gconv.Interfaces(value) {
+                result := true
+                for _, v2 := range gconv.Interfaces(expect) {
+                    if v1 == v2 {
+                        result = false
+                        break
+                    }
+                }
+                if !result {
+                    passed = false
                     break
                 }
             }
     }
-    if passed {
+    if !passed {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v NOT IN %v`, value, expect))
     }
 }
 
 // 提示错误不退出进程执行
 func Error(message...interface{}) {
-    fmt.Fprintf(os.Stderr, "[ERROR] %s\n%s", fmt.Sprint(message...), getBacktrace())
+    panic(fmt.Sprintf("[ERROR] %s", fmt.Sprint(message...)))
 }
 
 // 提示错误并退出进程执行
@@ -238,14 +253,21 @@ func compareMap(value, expect interface{}) error {
     if rvExpect.Kind() == reflect.Map {
         if rvValue.Kind() == reflect.Map {
             if rvExpect.Len() == rvValue.Len() {
+                // 将两个map类型转换为同一个map类型, 才能执行比较,
+                // 直接使用 rvValue.MapIndex(key).Interface() 当key类型不一致时会报错。
+                mValue   := make(map[string]string)
+                mExpect  := make(map[string]string)
+                ksValue  := rvValue.MapKeys()
                 ksExpect := rvExpect.MapKeys()
+                for _, key := range ksValue {
+                    mValue[gconv.String(key.Interface())] = gconv.String(rvValue.MapIndex(key).Interface())
+                }
                 for _, key := range ksExpect {
-                    if fmt.Sprintf("%v", rvValue.MapIndex(key).Interface()) != fmt.Sprintf("%v", rvExpect.MapIndex(key).Interface()) {
-                        return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`,
-                            key,
-                            rvValue.MapIndex(key).Interface(),
-                            rvExpect.MapIndex(key).Interface(),
-                        )
+                    mExpect[gconv.String(key.Interface())] = gconv.String(rvExpect.MapIndex(key).Interface())
+                }
+                for k, v := range mExpect {
+                    if v != mValue[k] {
+                        return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`, k, mValue[k], v)
                     }
                 }
             } else {
