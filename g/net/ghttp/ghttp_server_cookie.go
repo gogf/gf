@@ -5,7 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 // HTTP Cookie管理对象，
-// 由于Cookie是和HTTP请求挂钩的，因此被包含到 ghttp 包中进行管理
+// 由于Cookie是和HTTP请求挂钩的，因此被包含到 ghttp 包中进行管理。
 
 package ghttp
 
@@ -84,6 +84,14 @@ func (c *Cookie) SessionId() string {
         id = makeSessionId()
         c.SetSessionId(id)
     }
+    return id
+}
+
+// 获取SessionId，不存在时则创建
+func (c *Cookie) MakeSessionId() string {
+    c.init()
+    id := makeSessionId()
+    c.SetSessionId(id)
     return id
 }
 

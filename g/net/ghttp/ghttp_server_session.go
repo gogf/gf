@@ -26,9 +26,9 @@ type Session struct {
     request *Request                 // 关联的请求
 }
 
-// 生成一个唯一的SessionId字符串，长度16位
+// 生成一个唯一的SessionId字符串，长度18位。
 func makeSessionId() string {
-    return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 32) + grand.RandStr(3))
+    return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 36) + grand.RandStr(6))
 }
 
 // 获取或者生成一个session对象(延迟初始化)
@@ -41,14 +41,24 @@ func GetSession(r *Request) *Session {
     }
 }
 
-// 执行初始化(用于延迟初始化)
+// 执行初始化(用于延迟初始化).
 func (s *Session) init() {
     if len(s.id) == 0 {
-        s.id     = s.request.Cookie.SessionId()
         s.server = s.request.Server
-        s.data   = s.server.sessions.GetOrSetFuncLock(s.id, func() interface{} {
-            return gmap.NewStringInterfaceMap()
-        }, s.server.GetSessionMaxAge()).(*gmap.StringInterfaceMap)
+        // 根据提交的SESSION ID获取已存在SESSION
+        id := s.request.Cookie.GetSessionId()
+        if id != "" {
+            data := s.server.sessions.Get(id)
+            if data != nil {
+                s.id   = id
+                s.data = data.(*gmap.StringInterfaceMap)
+                return
+            }
+        }
+        // 否则执行初始化创建
+        s.id   = s.request.Cookie.MakeSessionId()
+        s.data = gmap.NewStringInterfaceMap()
+        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge())
     }
 }
 

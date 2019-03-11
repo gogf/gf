@@ -24,7 +24,7 @@ const (
     NAME_TO_URI_TYPE_CAMEL             = 3                // 采用驼峰命名方式
     gDEFAULT_COOKIE_PATH               = "/"              // 默认path
     gDEFAULT_COOKIE_MAX_AGE            = 86400*365        // 默认cookie有效期(一年)
-    gDEFAULT_SESSION_MAX_AGE           = 600              // 默认session有效期(600秒)
+    gDEFAULT_SESSION_MAX_AGE           = 600000           // 默认session有效期(600秒)
     gDEFAULT_SESSION_ID_NAME           = "gfsessionid"    // 默认存放Cookie中的SessionId名称
     gCHANGE_CONFIG_WHILE_RUNNING_ERROR = "cannot be changed while running"
 )
