@@ -41,15 +41,24 @@ func GetSession(r *Request) *Session {
     }
 }
 
-// 执行初始化(用于延迟初始化)
-// @TODO 验证提交的SESSIONID合法性
+// 执行初始化(用于延迟初始化).
 func (s *Session) init() {
     if len(s.id) == 0 {
-        s.id     = s.request.Cookie.SessionId()
         s.server = s.request.Server
-        s.data   = s.server.sessions.GetOrSetFuncLock(s.id, func() interface{} {
-            return gmap.NewStringInterfaceMap()
-        }, s.server.GetSessionMaxAge()).(*gmap.StringInterfaceMap)
+        // 根据提交的SESSION ID获取已存在SESSION
+        id := s.request.Cookie.GetSessionId()
+        if id != "" {
+            data := s.server.sessions.Get(id)
+            if data != nil {
+                s.id   = id
+                s.data = data.(*gmap.StringInterfaceMap)
+                return
+            }
+        }
+        // 否则执行初始化创建
+        s.id   = s.request.Cookie.MakeSessionId()
+        s.data = gmap.NewStringInterfaceMap()
+        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge())
     }
 }
 
