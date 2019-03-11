@@ -73,7 +73,7 @@ func View(name...string) *gview.View {
     }
     key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEW, group)
     return instances.GetOrSetFuncLock(key, func() interface{} {
-        path := cmdenv.Get("gf.gview.path", gfile.SelfDir()).String()
+        path := cmdenv.Get("gf.gview.path", gfile.Pwd()).String()
         view := gview.New(path)
         // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
         if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
@@ -94,7 +94,7 @@ func Config(file...string) *gcfg.Config {
     }
     return instances.GetOrSetFuncLock(fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile),
         func() interface{} {
-            path   := cmdenv.Get("gf.gcfg.path", gfile.SelfDir()).String()
+            path   := cmdenv.Get("gf.gcfg.path", gfile.Pwd()).String()
             config := gcfg.New(path, configFile)
             // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
             if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {

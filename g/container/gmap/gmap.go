@@ -291,8 +291,8 @@ func (gm *Map) Clear() {
 //
 // 并发安全锁操作，使用自定义方法执行加锁修改操作
 func (gm *Map) LockFunc(f func(m map[interface{}]interface{})) {
-    gm.mu.Lock(true)
-    defer gm.mu.Unlock(true)
+    gm.mu.Lock()
+    defer gm.mu.Unlock()
     f(gm.m)
 }
 
@@ -300,8 +300,8 @@ func (gm *Map) LockFunc(f func(m map[interface{}]interface{})) {
 //
 // 并发安全锁操作，使用自定义方法执行加锁读取操作
 func (gm *Map) RLockFunc(f func(m map[interface{}]interface{})) {
-    gm.mu.RLock(true)
-    defer gm.mu.RUnlock(true)
+    gm.mu.RLock()
+    defer gm.mu.RUnlock()
     f(gm.m)
 }
 

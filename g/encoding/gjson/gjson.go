@@ -8,21 +8,21 @@
 package gjson
 
 import (
-    "errors"
-    "github.com/gogf/gf/g/text/gregex"
-    "strings"
-    "strconv"
-    "io/ioutil"
     "encoding/json"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/util/gconv"
+    "errors"
+    "fmt"
+    "github.com/gogf/gf/g/encoding/gtoml"
     "github.com/gogf/gf/g/encoding/gxml"
     "github.com/gogf/gf/g/encoding/gyaml"
-    "github.com/gogf/gf/g/encoding/gtoml"
-    "github.com/gogf/gf/g/text/gstr"
-    "time"
     "github.com/gogf/gf/g/internal/rwmutex"
-    "fmt"
+    "github.com/gogf/gf/g/os/gfcache"
+    "github.com/gogf/gf/g/os/gfile"
+    "github.com/gogf/gf/g/text/gregex"
+    "github.com/gogf/gf/g/text/gstr"
+    "github.com/gogf/gf/g/util/gconv"
+    "strconv"
+    "strings"
+    "time"
 )
 
 const (
@@ -110,11 +110,7 @@ func DecodeToJson (b []byte) (*Json, error) {
 
 // 支持多种配置文件类型转换为json格式内容并解析为gjson.Json对象
 func Load (path string) (*Json, error) {
-    data, err := ioutil.ReadFile(path)
-    if err != nil {
-        return nil, err
-    }
-    return LoadContent(data, gfile.Ext(path))
+    return LoadContent(gfcache.GetBinContents(path), gfile.Ext(path))
 }
 
 // 支持的配置文件格式：xml, json, yaml/yml, toml,
