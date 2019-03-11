@@ -5,7 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 // HTTP Cookie管理对象，
-// 由于Cookie是和HTTP请求挂钩的，因此被包含到 ghttp 包中进行管理
+// 由于Cookie是和HTTP请求挂钩的，因此被包含到 ghttp 包中进行管理。
 
 package ghttp
 

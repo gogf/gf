@@ -26,9 +26,9 @@ type Session struct {
     request *Request                 // 关联的请求
 }
 
-// 生成一个唯一的SessionId字符串，长度16位
+// 生成一个唯一的SessionId字符串，长度18位。
 func makeSessionId() string {
-    return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 32) + grand.RandStr(3))
+    return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 36) + grand.RandStr(6))
 }
 
 // 获取或者生成一个session对象(延迟初始化)
@@ -42,6 +42,7 @@ func GetSession(r *Request) *Session {
 }
 
 // 执行初始化(用于延迟初始化)
+// @TODO 验证提交的SESSIONID合法性
 func (s *Session) init() {
     if len(s.id) == 0 {
         s.id     = s.request.Cookie.SessionId()
