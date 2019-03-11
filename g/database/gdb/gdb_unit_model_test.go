@@ -175,9 +175,9 @@ func TestModel_Clone(t *testing.T) {
     gtest.Assert(result[1]["id"].Int(), 3)
 }
 
-func TestModel_Alterable(t *testing.T) {
+func TestModel_Safe(t *testing.T) {
     gtest.Case(t, func() {
-        md := db.Table("user").Alterable().Where("id IN(?)", g.Slice{1,3})
+        md := db.Table("user").Safe(false).Where("id IN(?)", g.Slice{1,3})
         count, err := md.Count()
         if err != nil {
             gtest.Fatal(err)
@@ -189,6 +189,20 @@ func TestModel_Alterable(t *testing.T) {
             gtest.Fatal(err)
         }
         gtest.Assert(count, 1)
+    })
+    gtest.Case(t, func() {
+        md := db.Table("user").Safe(true).Where("id IN(?)", g.Slice{1,3})
+        count, err := md.Count()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(count, 2)
+        md.And("id = ?", 1)
+        count, err = md.Count()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(count, 2)
     })
 }
 
@@ -420,10 +434,50 @@ func TestModel_GroupBy(t *testing.T) {
 func TestModel_Where(t *testing.T) {
     // string
     gtest.Case(t, func() {
-        result, err := db.Table("user").Where("id=? and nickname=?", 3, "T3").One()
+       result, err := db.Table("user").Where("id=? and nickname=?", 3, "T3").One()
+       if err != nil {
+           gtest.Fatal(err)
+       }
+       gtest.AssertGT(len(result),      0)
+       gtest.Assert(result["id"].Int(), 3)
+    })
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where("id", 3).One()
+        if err != nil {
+           gtest.Fatal(err)
+        }
+        gtest.AssertGT(len(result),      0)
+        gtest.Assert(result["id"].Int(), 3)
+    })
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where("id", 3).Where("nickname", "T3").One()
         if err != nil {
             gtest.Fatal(err)
         }
+        gtest.Assert(result["id"].Int(), 3)
+    })
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where("id", 3).And("nickname", "T3").One()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(result["id"].Int(), 3)
+    })
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where("id", 30).Or("nickname", "T3").One()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        gtest.Assert(result["id"].Int(), 3)
+    })
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where("id", 30).Or("nickname", "T3").And("id>?", 1).One()
+        gtest.Assert(err,                nil)
+        gtest.Assert(result["id"].Int(), 3)
+    })
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Where("id", 30).Or("nickname", "T3").And("id>", 1).One()
+        gtest.Assert(err,                nil)
         gtest.Assert(result["id"].Int(), 3)
     })
     // map
@@ -437,10 +491,38 @@ func TestModel_Where(t *testing.T) {
     // map key operator
     gtest.Case(t, func() {
         result, err := db.Table("user").Where(g.Map{"id>" : 1, "id<" : 3}).One()
-        if err != nil {
-            gtest.Fatal(err)
-        }
+        gtest.Assert(err,                nil)
         gtest.Assert(result["id"].Int(), 2)
+    })
+    // complicated where 1
+    gtest.Case(t, func() {
+        //db.SetDebug(true)
+        conditions := g.Map{
+           "nickname like ?"      : "%T%",
+           "id between ? and ?"   : g.Slice{1,3},
+           "id > 0"               : nil,
+           "create_time > 0"      : nil,
+           "id"                   : g.Slice{1,2,3},
+        }
+        result, err := db.Table("user").Where(conditions).OrderBy("id asc").All()
+        gtest.Assert(err,                   nil)
+        gtest.Assert(len(result),           3)
+        gtest.Assert(result[0]["id"].Int(), 1)
+    })
+    // complicated where 2
+    gtest.Case(t, func() {
+        //db.SetDebug(true)
+        conditions := g.Map{
+            "nickname like ?"      : "%T%",
+            "id between ? and ?"   : g.Slice{1,3},
+            "id >= ?"              : 1,
+            "create_time > ?"      : 0,
+            "id in(?)"             : g.Slice{1,2,3},
+        }
+        result, err := db.Table("user").Where(conditions).OrderBy("id asc").All()
+        gtest.Assert(err,                   nil)
+        gtest.Assert(len(result),           3)
+        gtest.Assert(result[0]["id"].Int(), 1)
     })
     // struct
     gtest.Case(t, func() {

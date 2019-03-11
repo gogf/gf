@@ -31,41 +31,61 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
         rv   = rv.Elem()
         kind = rv.Kind()
     }
+    tmpArgs := []interface{}(nil)
     switch kind {
-        // 注意当where为map/struct类型时，args参数必须为空。
+        // map/struct类型
         case reflect.Map:   fallthrough
         case reflect.Struct:
-            for k, v := range gconv.Map(where) {
+            for key, value := range gconv.Map(where) {
                 if buffer.Len() > 0 {
                     buffer.WriteString(" AND ")
                 }
-                // 支持slice键值/属性，这个时候作为IN查询
-                switch reflect.ValueOf(v).Kind() {
+                // 支持slice键值/属性，如果只有一个?占位符号，那么作为IN查询，否则打散作为多个查询参数
+                rv := reflect.ValueOf(value)
+                switch rv.Kind() {
                     case reflect.Slice: fallthrough
                     case reflect.Array:
-                        buffer.WriteString(k + " IN(?)")
-                    default:
-                        if gstr.Pos(k, "<") == -1 && gstr.Pos(k, ">") == -1 && gstr.Pos(k, "=") == -1 {
-                            buffer.WriteString(k + "=?")
+                        count := gstr.Count(key, "?")
+                        if count == 0 {
+                            buffer.WriteString(key + " IN(?)")
+                            tmpArgs = append(tmpArgs, value)
+                        } else if count != rv.Len() {
+                            buffer.WriteString(key)
+                            tmpArgs = append(tmpArgs, value)
                         } else {
-                            buffer.WriteString(k + "?")
+                            buffer.WriteString(key)
+                            // 如果键名/属性名称中带有多个?占位符号，那么将参数打散
+                            tmpArgs = append(tmpArgs, gconv.Interfaces(value)...)
+                        }
+                    default:
+                        if value == nil {
+                            buffer.WriteString(key)
+                        } else {
+                            if gstr.Pos(key, "?") == -1 {
+                                if gstr.Pos(key, "<") == -1 && gstr.Pos(key, ">") == -1 && gstr.Pos(key, "=") == -1 {
+                                    buffer.WriteString(key + "=?")
+                                } else {
+                                    buffer.WriteString(key + "?")
+                                }
+                            } else {
+                                buffer.WriteString(key)
+                            }
+                            tmpArgs = append(tmpArgs, value)
                         }
                 }
-                // 当给定的Where参数为map/struct时，args参数必定为空，
-                // 考虑到后续还会对args做处理，特别是判断slice类型，这里直接给args赋值。
-                args = append(args, v)
             }
-            newWhere = buffer.String()
+
         default:
             buffer.WriteString(gconv.String(where))
     }
     if buffer.Len() == 0 {
         buffer.WriteString("1=1")
     }
-    // 查询条件参数处理，主要处理slice参数类型
     newWhere = buffer.String()
-    if len(args) > 0 {
-        for index, arg := range args {
+    tmpArgs  = append(tmpArgs, args...)
+    // 查询条件参数处理，主要处理slice参数类型
+    if len(tmpArgs) > 0 {
+        for index, arg := range tmpArgs {
             rv   := reflect.ValueOf(arg)
             kind := rv.Kind()
             if kind == reflect.Ptr {
@@ -90,6 +110,14 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
                         return s
                     })
                 default:
+                    // 支持例如 Where/And/Or("uid", 1) 这种格式
+                    if gstr.Pos(newWhere, "?") == -1 {
+                        if gstr.Pos(newWhere, "<") == -1 && gstr.Pos(newWhere, ">") == -1 && gstr.Pos(newWhere, "=") == -1 {
+                            newWhere += "=?"
+                        } else {
+                            newWhere += "?"
+                        }
+                    }
                     newArgs = append(newArgs, arg)
             }
         }

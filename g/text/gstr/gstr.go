@@ -59,6 +59,20 @@ func ReplaceI(origin, search, replace string, count...int) string {
     return origin
 }
 
+// Count counts the number of <substr> appears in <s>. It returns 0 if no <substr> found in <s>.
+//
+// 计算字符串substr在字符串s中出现的次数，如果没有在s中找到substr，那么返回0。
+func Count(s, substr string) int {
+    return strings.Count(s, substr)
+}
+
+// Count counts the number of <substr> appears in <s>, case-insensitive. It returns 0 if no <substr> found in <s>.
+//
+// (非大小写敏感)计算字符串substr在字符串s中出现的次数，如果没有在s中找到substr，那么返回0。
+func CountI(s, substr string) int {
+    return strings.Count(ToLower(s), ToLower(substr))
+}
+
 // Replace string by array/slice.
 //
 // 使用map进行字符串替换(大小写敏感)

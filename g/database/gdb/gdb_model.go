@@ -3,17 +3,18 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+//
+// @author john, ymrjqyy
 
 package gdb
 
 import (
-	"fmt"
-	"errors"
-	"database/sql"
-	"github.com/gogf/gf/g/util/gconv"
-	_ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
+    "database/sql"
+    "errors"
+    "fmt"
+    "github.com/gogf/gf/g/util/gconv"
+    _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
-    "strings"
 )
 
 // 数据库链式操作模型对象
@@ -35,7 +36,7 @@ type Model struct {
 	cacheEnabled bool          // 当前SQL操作是否开启查询缓存功能
 	cacheTime    int           // 查询缓存时间
 	cacheName    string        // 查询缓存名称
-    alterable    bool          // 当前模型是否运行可修改模式（默认情况下链式操作不会修改当前模型，而是创建新的模型返回）
+    safe         bool          // 当前模型是否运行安全模式（可修改当前模型，否则每一次链式操作都是返回新的模型对象）
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
@@ -45,6 +46,7 @@ func (bs *dbBase) Table(tables string) (*Model) {
         tablesInit : tables,
 		tables     : tables,
 		fields     : "*",
+        safe       : false,
 	}
 }
 
@@ -60,6 +62,7 @@ func (tx *TX) Table(tables string) (*Model) {
 		tx         : tx,
         tablesInit : tables,
 		tables     : tables,
+        safe       : false,
 	}
 }
 
@@ -80,21 +83,25 @@ func (md *Model) Clone() *Model {
     return newModel
 }
 
-// 标识当前对象可被修改。
+// 标识当前对象运行安全模式(可被修改)。
 // 1. 默认情况下，模型对象的对象属性无法被修改，
 // 每一次链式操作都是克隆一个新的模型对象，这样所有的操作都不会污染模型对象。
 // 但是链式操作如果需要分开执行，那么需要将新的克隆对象赋值给旧的模型对象继续操作。
 // 2. 当标识模型对象为可修改，那么在当前模型对象的所有链式操作均会影响下一次的链式操作，
 // 即使是链式操作分开执行。
 // 3. 大部分ORM框架默认模型对象是可修改的，但是GF框架的ORM提供给开发者更灵活，更安全的链式操作选项。
-func (md *Model) Alterable() *Model {
-    md.alterable = true
+func (md *Model) Safe(safe...bool) *Model {
+    if len(safe) > 0 {
+        md.safe = safe[0]
+    } else {
+        md.safe = true
+    }
     return md
 }
 
 // 返回操作的模型对象，可能是当前对象，也可能是新的克隆对象，根据alterable决定。
 func (md *Model) getModel() *Model {
-    if md.alterable {
+    if !md.safe {
         return md
     } else {
         return md.Clone()
@@ -137,16 +144,15 @@ func (md *Model) Filter() (*Model) {
 }
 
 // 链式操作，condition，支持string & gdb.Map.
-// 注意，多个Where调用时，会相互覆盖，只有最后一个Where语句生效。
+// 注意，多个Where调用时，会自动转换为And条件调用。
 func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
-    model             := md.getModel()
+    model := md.getModel()
+    if model.where != "" {
+        return md.And(where, args...)
+    }
     newWhere, newArgs := formatCondition(where, args)
     model.where        = newWhere
     model.whereArgs    = newArgs
-	// 支持 Where("uid", 1)这种格式
-	if len(args) == 1 && strings.Index(model.where , "?") < 0 {
-        model.where += "=?"
-    }
 	return model
 }
 
@@ -154,8 +160,12 @@ func (md *Model) Where(where interface{}, args ...interface{}) (*Model) {
 func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
     model             := md.getModel()
     newWhere, newArgs := formatCondition(where, args)
-    model.where       += " AND " + newWhere
-    model.whereArgs    = append(model.whereArgs, newArgs...)
+    if len(model.where) > 0 && model.where[0] == '(' {
+        model.where = fmt.Sprintf(`%s AND (%s)`, model.where, newWhere)
+    } else {
+        model.where = fmt.Sprintf(`(%s) AND (%s)`, model.where, newWhere)
+    }
+    model.whereArgs = append(model.whereArgs, newArgs...)
 	return model
 }
 
@@ -163,8 +173,12 @@ func (md *Model) And(where interface{}, args ...interface{}) (*Model) {
 func (md *Model) Or(where interface{}, args ...interface{}) (*Model) {
     model             := md.getModel()
     newWhere, newArgs := formatCondition(where, args)
-    model.where       += " OR " + newWhere
-    model.whereArgs    = append(model.whereArgs, newArgs...)
+    if len(model.where) > 0 && model.where[0] == '(' {
+        model.where = fmt.Sprintf(`%s OR (%s)`, model.where, newWhere)
+    } else {
+        model.where = fmt.Sprintf(`(%s) OR (%s)`, model.where, newWhere)
+    }
+    model.whereArgs = append(model.whereArgs, newArgs...)
 	return model
 }
 
@@ -190,8 +204,7 @@ func (md *Model) Limit(start int, limit int) (*Model) {
 	return model
 }
 
-// 链式操作，翻页
-// @author ymrjqyy
+// 链式操作，翻页，注意分页页码从1开始，而Limit方法从0开始。
 func (md *Model) ForPage(page, limit int) (*Model) {
     model      := md.getModel()
     model.start = (page - 1) * limit
@@ -586,14 +599,13 @@ func (md *Model) getFormattedSql() string {
 	return s
 }
 
-// 组块结果集
-// @author ymrjqyy
-// @author 2018-08-15
+// 组块结果集。
 func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) {
-	page := 1
+	page  := 1
+	model := md
 	for {
-		md.ForPage(page, limit)
-		data, err := md.getAll(md.getFormattedSql(), md.whereArgs...)
+        model      = model.ForPage(page, limit)
+		data, err := model.All()
 		if err != nil {
 			callback(nil, err)
 			break
