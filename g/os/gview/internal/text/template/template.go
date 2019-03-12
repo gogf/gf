@@ -7,7 +7,7 @@ package template
 import (
 	"reflect"
 	"sync"
-	"github.com/gogf/gf/g/os/gview/internal/text/template/parse"
+	"text/template/parse"
 )
 
 // common holds the information shared by related templates.

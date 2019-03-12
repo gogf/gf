@@ -59,15 +59,9 @@ func New(path string, cache bool) *SPath {
 
 // 创建/获取一个单例的搜索对象, root必须为目录的绝对路径
 func Get(root string, cache bool) *SPath {
-    if cache {
-        return pathsCacheMap.GetOrSetFuncLock(root, func() interface{} {
-            return New(root, true)
-        }).(*SPath)
-    } else {
-        return pathsMap.GetOrSetFuncLock(root, func() interface{} {
-            return New(root, false)
-        }).(*SPath)
-    }
+    return pathsMap.GetOrSetFuncLock(root, func() interface{} {
+        return New(root, cache)
+    }).(*SPath)
 }
 
 // 检索root目录(必须为绝对路径)下面的name文件的绝对路径，indexFiles用于指定当检索到的结果为目录时，同时检索是否存在这些indexFiles文件
@@ -79,7 +73,6 @@ func Search(root string, name string, indexFiles...string) (filePath string, isD
 func SearchWithCache(root string, name string, indexFiles...string) (filePath string, isDir bool) {
     return Get(root, true).Search(name, indexFiles...)
 }
-
 
 // 设置搜索路径，只保留当前设置项，其他搜索路径被清空
 func (sp *SPath) Set(path string) (realPath string, err error) {
