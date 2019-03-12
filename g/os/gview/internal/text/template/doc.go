@@ -142,9 +142,7 @@ An argument is a simple value, denoted by one of the following.
 
 	- A boolean, string, character, integer, floating-point, imaginary
 	  or complex constant in Go syntax. These behave like Go's untyped
-	  constants. Note that, as in Go, whether a large integer constant
-	  overflows when assigned or passed to a function can depend on whether
-	  the host machine's ints are 32 or 64 bits.
+	  constants.
 	- The keyword nil, representing an untyped Go nil.
 	- The character '.' (period):
 		.
