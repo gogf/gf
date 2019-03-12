@@ -6,7 +6,7 @@ package fmtsort_test
 
 import (
 	"fmt"
-	"internal/fmtsort"
+	"github.com/gogf/gf/g/os/gview/internal/fmtsort"
 	"math"
 	"reflect"
 	"strings"
