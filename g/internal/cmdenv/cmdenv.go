@@ -17,7 +17,7 @@ import (
 // 规则:
 // 1、命令行参数以小写字母格式，使用: gf.包名.变量名 传递；
 // 2、环境变量参数以大写字母格式，使用: GF_包名_变量名 传递；
-func Get(key string, def...interface{}) *gvar.Var {
+func Get(key string, def...interface{}) gvar.VarRead {
     value := interface{}(nil)
     if len(def) > 0 {
         value = def[0]

@@ -94,11 +94,36 @@ func Config(file...string) *gcfg.Config {
     }
     return instances.GetOrSetFuncLock(fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile),
         func() interface{} {
-            path   := cmdenv.Get("gf.gcfg.path", gfile.Pwd()).String()
-            config := gcfg.New(path, configFile)
-            // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
-            if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
-                config.AddPath(p)
+            pwdPath  := gfile.Pwd()
+            envPath  := cmdenv.Get("gf.gcfg.path").String()
+            selfPath := gfile.SelfDir()
+            mainPath := gfile.MainPkgPath()
+
+            config   := gcfg.New(pwdPath, configFile)
+            // 添加工作目录下的config目录
+            if path := envPath + gfile.Separator + "config"; gfile.Exists(path) {
+                config.AddPath(path)
+            }
+            // 自定义的环境变量/启动参数路径，优先级最高，覆盖默认的工作目录
+            if envPath != "" && gfile.Exists(envPath) {
+                config.SetPath(envPath)
+                if path := envPath + gfile.Separator + "config"; gfile.Exists(path) {
+                    config.AddPath(path)
+                }
+            }
+            // 二进制文件执行目录
+            if selfPath != "" && gfile.Exists(selfPath) {
+                config.AddPath(selfPath)
+                if path := selfPath + gfile.Separator + "config"; gfile.Exists(path) {
+                    config.AddPath(path)
+                }
+            }
+            // 开发环境源码main包目录
+            if mainPath != "" && gfile.Exists(mainPath) {
+                config.AddPath(mainPath)
+                if path := mainPath + gfile.Separator + "config"; gfile.Exists(path) {
+                    config.AddPath(path)
+                }
             }
             return config
     }).(*gcfg.Config)
