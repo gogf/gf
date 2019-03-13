@@ -51,6 +51,7 @@ test = "v=1"
     err  := gfile.PutContents(path, config)
     gtest.Assert(err, nil)
     defer gfile.Remove(path)
+    defer gins.Config().Reload()
 
     gtest.Case(t, func() {
         dbDefault := gins.Database()
