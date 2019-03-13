@@ -7,6 +7,7 @@
 package gins_test
 
 import (
+    "fmt"
     "github.com/gogf/gf/g/frame/gins"
     "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/test/gtest"
@@ -17,7 +18,7 @@ func Test_Redis(t *testing.T) {
     config := `
 # 模板引擎目录
 viewpath = "/home/www/templates/"
-test = "v=1"
+test = "v=3"
 # MySQL数据库配置
 [database]
     [[database.default]]
@@ -54,6 +55,8 @@ test = "v=1"
     defer gins.Config().Reload()
 
     gtest.Case(t, func() {
+        fmt.Println("gins Test_Redis", gins.Config().Get("test"))
+
         redisDefault := gins.Redis()
         redisCache   := gins.Redis("cache")
         gtest.AssertNE(redisDefault, nil)
