@@ -15,20 +15,23 @@ import (
 
 func Test_Basic(t *testing.T) {
     gtest.Case(t, func() {
-        value := 123.456
-        gtest.AssertEQ(gconv.Int(value),     int(123))
-        gtest.AssertEQ(gconv.Int8(value),    int8(123))
-        gtest.AssertEQ(gconv.Int16(value),   int16(123))
-        gtest.AssertEQ(gconv.Int32(value),   int32(123))
-        gtest.AssertEQ(gconv.Int64(value),   int64(123))
-        gtest.AssertEQ(gconv.Uint(value),    uint(123))
-        gtest.AssertEQ(gconv.Uint8(value),   uint8(123))
-        gtest.AssertEQ(gconv.Uint16(value),  uint16(123))
-        gtest.AssertEQ(gconv.Uint32(value),  uint32(123))
-        gtest.AssertEQ(gconv.Uint64(value),  uint64(123))
-        gtest.AssertEQ(gconv.Float32(value), float32(123.456))
-        gtest.AssertEQ(gconv.Float64(value), float64(123.456))
-        gtest.AssertEQ(gconv.Bool(value),    true)
-        gtest.AssertEQ(gconv.String(value),  "123.456")
+        vint   := 123.456
+        vint64 := 1552578474888
+        gtest.AssertEQ(gconv.Int(vint),       int(123))
+        gtest.AssertEQ(gconv.Int8(vint),      int8(123))
+        gtest.AssertEQ(gconv.Int16(vint),     int16(123))
+        gtest.AssertEQ(gconv.Int32(vint),     int32(123))
+        gtest.AssertEQ(gconv.Int64(vint),     int64(123))
+        gtest.AssertEQ(gconv.Int64(vint),     int64(123))
+        gtest.AssertEQ(gconv.Uint(vint),      uint(123))
+        gtest.AssertEQ(gconv.Uint8(vint),     uint8(123))
+        gtest.AssertEQ(gconv.Uint16(vint),    uint16(123))
+        gtest.AssertEQ(gconv.Uint32(vint),    uint32(123))
+        gtest.AssertEQ(gconv.Uint64(vint),    uint64(123))
+        gtest.AssertEQ(gconv.Float32(vint),   float32(123.456))
+        gtest.AssertEQ(gconv.Float64(vint),   float64(123.456))
+        gtest.AssertEQ(gconv.Bool(vint),      true)
+        gtest.AssertEQ(gconv.String(vint),    "123.456")
+        gtest.AssertEQ(gconv.String(vint64),  "1552578474888")
     })
 }
