@@ -12,6 +12,7 @@ import (
     "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/test/gtest"
     "testing"
+    "time"
 )
 
 func Test_Database(t *testing.T) {
@@ -53,6 +54,9 @@ test = "v=2"
     gtest.Assert(err, nil)
     defer gfile.Remove(path)
     defer gins.Config().Reload()
+
+    // for gfsnotify callbacks to refresh cache of config file
+    time.Sleep(time.Second)
 
     gtest.Case(t, func() {
         fmt.Println("gins Test_Database", gins.Config().Get("test"))

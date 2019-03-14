@@ -74,7 +74,7 @@ func (w *Watcher) getCallbacks(path string) (callbacks []*Callback) {
     return
 }
 
-// 事件循环
+// 事件循环(核心逻辑)
 func (w *Watcher) startEventLoop() {
     go func() {
         for {
@@ -126,10 +126,22 @@ func (w *Watcher) startEventLoop() {
 
                 }
                 // 执行回调处理，异步处理
-                for _, callback := range callbacks {
-                    go callback.Func(event)
+                for _, v := range callbacks {
+                    go func(callback *Callback) {
+                        defer func() {
+                            // 是否退出监控
+                            if err := recover(); err != nil {
+                                switch err {
+                                    case gFSNOTIFY_EVENT_EXIT:
+                                        w.RemoveCallback(callback.Id)
+                                    default:
+                                        panic(err)
+                                }
+                            }
+                        }()
+                        callback.Func(event)
+                    }(v)
                 }
-
             } else {
                 break
             }
