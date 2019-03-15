@@ -15,8 +15,8 @@ import (
 
 func Test_Basic(t *testing.T) {
     gtest.Case(t, func() {
-        vint   := 123.456
-        vint64 := 1552578474888
+        vint   := float32(123.456)
+        vint64 := int64(1552578474888)
         gtest.AssertEQ(gconv.Int(vint),       int(123))
         gtest.AssertEQ(gconv.Int8(vint),      int8(123))
         gtest.AssertEQ(gconv.Int16(vint),     int16(123))
