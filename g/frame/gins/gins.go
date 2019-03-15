@@ -98,32 +98,18 @@ func Config(file...string) *gcfg.Config {
             envPath  := cmdenv.Get("gf.gcfg.path").String()
             selfPath := gfile.SelfDir()
             mainPath := gfile.MainPkgPath()
-
             config   := gcfg.New(pwdPath, configFile)
-            // 添加工作目录下的config目录
-            if path := envPath + gfile.Separator + "config"; gfile.Exists(path) {
-                config.AddPath(path)
-            }
             // 自定义的环境变量/启动参数路径，优先级最高，覆盖默认的工作目录
             if envPath != "" && gfile.Exists(envPath) {
                 config.SetPath(envPath)
-                if path := envPath + gfile.Separator + "config"; gfile.Exists(path) {
-                    config.AddPath(path)
-                }
             }
             // 二进制文件执行目录
             if selfPath != "" && gfile.Exists(selfPath) {
                 config.AddPath(selfPath)
-                if path := selfPath + gfile.Separator + "config"; gfile.Exists(path) {
-                    config.AddPath(path)
-                }
             }
             // 开发环境源码main包目录
             if mainPath != "" && gfile.Exists(mainPath) {
                 config.AddPath(mainPath)
-                if path := mainPath + gfile.Separator + "config"; gfile.Exists(path) {
-                    config.AddPath(path)
-                }
             }
             return config
     }).(*gcfg.Config)

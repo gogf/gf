@@ -542,6 +542,11 @@ func (j *Json) Get(pattern...string) interface{} {
     return nil
 }
 
+// 判断锁给定pattern是否数据存在
+func (j *Json) Contains(pattern...string) bool {
+    return j.Get(pattern...) != nil
+}
+
 // 计算指定pattern的元素长度(pattern对应数据类型为map[string]interface{}/[]interface{}时有效)
 func (j *Json) Len(pattern string) int {
     p := j.getPointerByPattern(pattern)

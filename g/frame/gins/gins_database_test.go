@@ -56,7 +56,7 @@ test = "v=2"
     defer gins.Config().Reload()
 
     // for gfsnotify callbacks to refresh cache of config file
-    time.Sleep(time.Second)
+    time.Sleep(500*time.Millisecond)
 
     gtest.Case(t, func() {
         fmt.Println("gins Test_Database", gins.Config().Get("test"))
