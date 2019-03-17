@@ -39,8 +39,8 @@ type DB interface {
     doPrepare(link dbLink, query string) (*sql.Stmt, error)
     doInsert(link dbLink, table string, data interface{}, option int, batch...int) (result sql.Result, err error)
     doBatchInsert(link dbLink, table string, list interface{}, option int, batch...int) (result sql.Result, err error)
-    doUpdate(link dbLink, table string, data interface{}, condition interface{}, args ...interface{}) (result sql.Result, err error)
-    doDelete(link dbLink, table string, condition interface{}, args ...interface{}) (result sql.Result, err error)
+    doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
+    doDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error)
 
 	// 数据库查询
 	GetAll(query string, args ...interface{}) (Result, error)
