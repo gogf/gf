@@ -78,8 +78,9 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
         default:
             buffer.WriteString(gconv.String(where))
     }
+    // 没有任何条件查询参数，直接返回
     if buffer.Len() == 0 {
-        buffer.WriteString("1=1")
+        return "", args
     }
     newWhere = buffer.String()
     tmpArgs  = append(tmpArgs, args...)
@@ -123,6 +124,22 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
         }
     }
     return
+}
+
+// 将预处理参数转换为底层数据库引擎支持的格式。
+// 主要是判断参数是否为复杂数据类型，如果是，那么转换为基础类型。
+func convertParam(value interface{}) interface{} {
+    rv   := reflect.ValueOf(value)
+    kind := rv.Kind()
+    if kind == reflect.Ptr {
+        rv   = rv.Elem()
+        kind = rv.Kind()
+    }
+    switch kind {
+        case reflect.Struct:
+            return gconv.String(value)
+    }
+    return value
 }
 
 // 打印SQL对象(仅在debug=true时有效)
