@@ -24,7 +24,7 @@ func GetContents(path string) string {
     return string(GetBinContents(path))
 }
 
-// (二进制)读取文件内容
+// (二进制)读取文件内容，如果文件不存在或者读取失败，返回nil。
 func GetBinContents(path string) []byte {
     data, err := ioutil.ReadFile(path)
     if err != nil {

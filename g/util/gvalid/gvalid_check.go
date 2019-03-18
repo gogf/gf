@@ -130,7 +130,7 @@ func Check(value interface{}, rules string, msgs interface{}, params...interface
             msgArray = strings.Split(v, "|")
         default:
             for k, v := range gconv.Map(msgs) {
-                data[k] = gconv.String(v)
+                customMsgMap[k] = gconv.String(v)
             }
     }
     ruleItems := strings.Split(strings.TrimSpace(rules), "|")

@@ -14,6 +14,7 @@ env:
 
 services:
   - mysql
+  - redis-server
 
 addons:
   hosts:

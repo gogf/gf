@@ -235,39 +235,6 @@ func Test_Shuffle(t *testing.T) {
     })
 }
 
-func Test_Trim(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.Trim(" 123456\n "), "123456")
-        gtest.Assert(gstr.Trim("#123456#;", "#;"), "123456")
-    })
-}
-
-func Test_TrimRight(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.TrimRight(" 123456\n "), " 123456")
-        gtest.Assert(gstr.TrimRight("#123456#;", "#;"), "#123456")
-    })
-}
-
-func Test_TrimRightStr(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.TrimRightStr("gogo我爱gogo", "go"), "gogo我爱")
-    })
-}
-
-func Test_TrimLeft(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.TrimLeft(" \r123456\n "), "123456\n ")
-        gtest.Assert(gstr.TrimLeft("#;123456#;", "#;"), "123456#;")
-    })
-}
-
-func Test_TrimLeftStr(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go"), "我爱gogo")
-    })
-}
-
 func Test_Split(t *testing.T) {
     gtest.Case(t, func() {
         gtest.Assert(gstr.Split("1.2", "."), []string{"1", "2"})
@@ -334,5 +301,25 @@ func Test_StripSlashes(t *testing.T) {
 func Test_QuoteMeta(t *testing.T) {
     gtest.Case(t, func() {
         gtest.Assert(gstr.QuoteMeta(`.\+*?[^]($)`), `\.\\\+\*\?\[\^\]\(\$\)`)
+    })
+}
+
+func Test_Count(t *testing.T) {
+    gtest.Case(t, func() {
+        s := "abcdaAD"
+        gtest.Assert(gstr.Count(s, "0"), 0)
+        gtest.Assert(gstr.Count(s, "a"), 2)
+        gtest.Assert(gstr.Count(s, "b"), 1)
+        gtest.Assert(gstr.Count(s, "d"), 1)
+    })
+}
+
+func Test_CountI(t *testing.T) {
+    gtest.Case(t, func() {
+        s := "abcdaAD"
+        gtest.Assert(gstr.CountI(s, "0"), 0)
+        gtest.Assert(gstr.CountI(s, "a"), 3)
+        gtest.Assert(gstr.CountI(s, "b"), 1)
+        gtest.Assert(gstr.CountI(s, "d"), 2)
     })
 }

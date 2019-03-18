@@ -149,8 +149,8 @@ func (r *Ring) Unlink(n int) *Ring {
 
 // 读锁遍历，往后只读遍历，回调函数返回true表示继续遍历，否则退出遍历
 func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
-    r.mu.RLock(true)
-    defer r.mu.RUnlock(true)
+    r.mu.RLock()
+    defer r.mu.RUnlock()
     if !f(r.ring.Value) {
         return
     }
@@ -163,8 +163,8 @@ func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
 
 // 读锁遍历，往前只读遍历，回调函数返回true表示继续遍历，否则退出遍历
 func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
-    r.mu.RLock(true)
-    defer r.mu.RUnlock(true)
+    r.mu.RLock()
+    defer r.mu.RUnlock()
     if !f(r.ring.Value) {
         return
     }
@@ -177,8 +177,8 @@ func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
 
 // 写锁遍历，往后写遍历，回调函数返回true表示继续遍历，否则退出遍历
 func (r *Ring) LockIteratorNext(f func(item *ring.Ring) bool) {
-    r.mu.RLock(true)
-    defer r.mu.RUnlock(true)
+    r.mu.RLock()
+    defer r.mu.RUnlock()
     if !f(r.ring) {
         return
     }
@@ -191,8 +191,8 @@ func (r *Ring) LockIteratorNext(f func(item *ring.Ring) bool) {
 
 // 写锁遍历，往前写遍历，回调函数返回true表示继续遍历，否则退出遍历
 func (r *Ring) LockIteratorPrev(f func(item *ring.Ring) bool) {
-    r.mu.RLock(true)
-    defer r.mu.RUnlock(true)
+    r.mu.RLock()
+    defer r.mu.RUnlock()
     if !f(r.ring) {
         return
     }

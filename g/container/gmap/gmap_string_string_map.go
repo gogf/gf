@@ -238,15 +238,15 @@ func (gm *StringStringMap) Clear() {
 
 // 并发安全写锁操作，使用自定义方法执行加锁修改操作
 func (gm *StringStringMap) LockFunc(f func(m map[string]string)) {
-	gm.mu.Lock(true)
-	defer gm.mu.Unlock(true)
+	gm.mu.Lock()
+	defer gm.mu.Unlock()
 	f(gm.m)
 }
 
 // 并发安全读锁操作，使用自定义方法执行加锁读取操作
 func (gm *StringStringMap) RLockFunc(f func(m map[string]string)) {
-	gm.mu.RLock(true)
-	defer gm.mu.RUnlock(true)
+	gm.mu.RLock()
+	defer gm.mu.RUnlock()
 	f(gm.m)
 }
 

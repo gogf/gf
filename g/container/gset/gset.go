@@ -139,8 +139,8 @@ func (set *Set) String() string {
 //
 // 使用自定义方法执行加锁修改操作。
 func (set *Set) LockFunc(f func(m map[interface{}]struct{})) *Set {
-    set.mu.Lock(true)
-    defer set.mu.Unlock(true)
+    set.mu.Lock()
+    defer set.mu.Unlock()
     f(set.m)
     return set
 }
@@ -149,8 +149,8 @@ func (set *Set) LockFunc(f func(m map[interface{}]struct{})) *Set {
 //
 // 使用自定义方法执行加锁读取操作。
 func (set *Set) RLockFunc(f func(m map[interface{}]struct{})) *Set {
-    set.mu.RLock(true)
-    defer set.mu.RUnlock(true)
+    set.mu.RLock()
+    defer set.mu.RUnlock()
     f(set.m)
     return set
 }
