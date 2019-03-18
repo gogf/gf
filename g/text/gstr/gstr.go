@@ -588,7 +588,7 @@ func HideStr(str string, percent int, hide string) string {
     buffer.WriteString(string(hideStr))
     buffer.WriteString(string(rs[start + hideLen : ]))
     if len(array) > 1 {
-        buffer.WriteString(array[1])
+        buffer.WriteString("@" + array[1])
     }
     return buffer.String()
 }
