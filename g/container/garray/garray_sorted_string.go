@@ -410,8 +410,8 @@ func (a *SortedStringArray) Clear() *SortedStringArray {
 //
 // 使用自定义方法执行加锁修改操作。
 func (a *SortedStringArray) LockFunc(f func(array []string)) *SortedStringArray {
-    a.mu.Lock(true)
-    defer a.mu.Unlock(true)
+    a.mu.Lock()
+    defer a.mu.Unlock()
     f(a.array)
     return a
 }
@@ -420,8 +420,8 @@ func (a *SortedStringArray) LockFunc(f func(array []string)) *SortedStringArray 
 //
 // 使用自定义方法执行加锁读取操作。
 func (a *SortedStringArray) RLockFunc(f func(array []string)) *SortedStringArray {
-    a.mu.RLock(true)
-    defer a.mu.RUnlock(true)
+    a.mu.RLock()
+    defer a.mu.RUnlock()
     f(a.array)
     return a
 }

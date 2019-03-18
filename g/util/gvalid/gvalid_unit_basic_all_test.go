@@ -400,6 +400,9 @@ func Test_QQ(t *testing.T) {
 }
 
 func Test_Ip(t *testing.T) {
+    if m := gvalid.Check("10.0.0.1", "ip", nil);  m != nil {
+        t.Error(m)
+    }
     if m := gvalid.Check("10.0.0.1", "ipv4", nil);  m != nil {
         t.Error(m)
     }
@@ -409,10 +412,19 @@ func Test_Ip(t *testing.T) {
     if m := gvalid.Check("1920.0.0.0", "ipv4", nil);  m == nil {
         t.Error("ipv4校验失败")
     }
+    if m := gvalid.Check("1920.0.0.0", "ip", nil);  m == nil {
+        t.Error("ipv4校验失败")
+    }
     if m := gvalid.Check("fe80::5484:7aff:fefe:9799", "ipv6", nil);  m != nil {
         t.Error(m)
     }
     if m := gvalid.Check("fe80::5484:7aff:fefe:9799123", "ipv6", nil);  m == nil {
+        t.Error(m)
+    }
+    if m := gvalid.Check("fe80::5484:7aff:fefe:9799", "ip", nil);  m != nil {
+        t.Error(m)
+    }
+    if m := gvalid.Check("fe80::5484:7aff:fefe:9799123", "ip", nil);  m == nil {
         t.Error(m)
     }
 }

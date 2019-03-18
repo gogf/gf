@@ -68,34 +68,3 @@ func parseSequenceTag(tag string) (name, rule, msg string) {
     match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
     return strings.TrimSpace(match[2]), strings.TrimSpace(match[3]), strings.TrimSpace(match[5])
 }
-
-// 解析sequence tag为标准校验规则及自定义错误
-func parseSequenceTags(tags []string) (rules map[string]string, msgs map[string]interface{}) {
-    rules = make(map[string]string)
-    msgs  = make(map[string]interface{})
-    for _, tag := range tags {
-        name, rule, msg := parseSequenceTag(tag)
-        // 校验规则
-        if len(name) == 0 {
-            continue
-        }
-        rules[name] = rule
-        // 错误提示
-        if len(msg) > 0 {
-            ruleArray := strings.Split(rule, "|")
-            msgArray  := strings.Split(msg, "|")
-            for k, v := range ruleArray {
-                if len(msgArray[k]) == 0 {
-                    continue
-                }
-                // 关联校验会有":"符号
-                array := strings.Split(v, ":")
-                if _, ok := msgs[name]; !ok {
-                    msgs[name] = make(map[string]string)
-                }
-                msgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
-            }
-        }
-    }
-    return
-}

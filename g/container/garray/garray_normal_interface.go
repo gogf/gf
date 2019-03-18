@@ -433,8 +433,8 @@ func (a *Array) Unique() *Array {
 //
 // 使用自定义方法执行加锁修改操作
 func (a *Array) LockFunc(f func(array []interface{})) *Array {
-    a.mu.Lock(true)
-    defer a.mu.Unlock(true)
+    a.mu.Lock()
+    defer a.mu.Unlock()
     f(a.array)
     return a
 }
@@ -443,8 +443,8 @@ func (a *Array) LockFunc(f func(array []interface{})) *Array {
 //
 // 使用自定义方法执行加锁读取操作
 func (a *Array) RLockFunc(f func(array []interface{})) *Array {
-    a.mu.RLock(true)
-    defer a.mu.RUnlock(true)
+    a.mu.RLock()
+    defer a.mu.RUnlock()
     f(a.array)
     return a
 }

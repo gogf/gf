@@ -31,15 +31,15 @@ var serverMapping = gmap.NewStringInterfaceMap()
 // 获取/创建一个空配置的TCP Server
 // 单例模式，请保证name的唯一性
 func GetServer(name...interface{}) (*Server) {
-    sname := gDEFAULT_SERVER
+    serverName := gDEFAULT_SERVER
     if len(name) > 0 {
-        sname = gconv.String(name[0])
+        serverName = gconv.String(name[0])
     }
-    if s := serverMapping.Get(sname); s != nil {
+    if s := serverMapping.Get(serverName); s != nil {
         return s.(*Server)
     }
     s := NewServer("", nil)
-    serverMapping.Set(sname, s)
+    serverMapping.Set(serverName, s)
     return s
 }
 
@@ -65,19 +65,24 @@ func (s *Server) SetHandler (handler func (*Conn)) {
 // 执行监听
 func (s *Server) Run() error {
     if s.handler == nil {
-        return errors.New("start running failed: socket handler not defined")
-    }
-    tcpaddr, err := net.ResolveTCPAddr("tcp", s.address)
-    if err != nil {
+        err := errors.New("start running failed: socket handler not defined")
+        glog.Error(err)
         return err
     }
-    listen, err := net.ListenTCP("tcp", tcpaddr)
+    addr, err := net.ResolveTCPAddr("tcp", s.address)
     if err != nil {
+        glog.Error(err)
+        return err
+    }
+    listen, err := net.ListenTCP("tcp", addr)
+    if err != nil {
+        glog.Error(err)
         return err
     }
     for  {
         if conn, err := listen.Accept(); err != nil {
             glog.Error(err)
+            return err
         } else if conn != nil {
             go s.handler(NewConnByNetConn(conn))
         }

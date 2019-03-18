@@ -3,11 +3,10 @@ package main
 import (
     "fmt"
     "github.com/gogf/gf/g/os/gtime"
-    "strconv"
-    "strings"
+    "github.com/gogf/gf/g/util/gconv"
 )
 
 func main() {
     //t := gconv.GTime("2010-10-10 00:00:01")
-    fmt.Println(strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 36)))
+    fmt.Println(gconv.String(gtime.Millisecond()))
 }

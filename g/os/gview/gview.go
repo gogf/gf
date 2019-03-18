@@ -54,7 +54,7 @@ func checkAndInitDefaultView() {
         // gfile.MainPkgPath() 用以判断是否开发环境
         mainPkgPath := gfile.MainPkgPath()
         if gfile.MainPkgPath() == "" {
-            viewObj = New(gfile.SelfDir())
+            viewObj = New(gfile.Pwd())
         } else {
             viewObj = New(mainPkgPath)
         }

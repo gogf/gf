@@ -122,11 +122,12 @@ func IsDir(path string) bool {
     return s.IsDir()
 }
 
-// Get current working absolute directory path.
+// Get current working directory absolute path.
 //
-// 获取当前工作目录(SelfDir()方法的别名)
+// 获取当前工作目录(注意与SelfDir的区别).
 func Pwd() string {
-    return SelfDir()
+    path, _ := os.Getwd()
+    return path
 }
 
 // Check whether given path a file(not a directory).
@@ -140,11 +141,18 @@ func IsFile(path string) bool {
     return !s.IsDir()
 }
 
-// Info returns a FileInfo describing the named file.
+// See Stat.
+//
+// Stat 方法的别名。
+func Info(path string) (os.FileInfo, error) {
+    return Stat(path)
+}
+
+// Stat returns a FileInfo describing the named file.
 // If there is an error, it will be of type *PathError.
 //
 // 获取文件或目录信息.
-func Info(path string) (os.FileInfo, error) {
+func Stat(path string) (os.FileInfo, error) {
     return os.Stat(path)
 }
 

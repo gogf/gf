@@ -312,7 +312,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
             return bs.db.doBatchInsert(link, table, data, option, batch...)
         case reflect.Map:   fallthrough
         case reflect.Struct:
-            dataMap = Map(gconv.Map(data))
+            dataMap = gconv.Map(data)
         default:
             return result, errors.New(fmt.Sprint("unsupported data type:", kind))
     }
@@ -320,7 +320,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
     for k, v := range dataMap {
         fields = append(fields, charL + k + charR)
         values = append(values, "?")
-        params = append(params, v)
+        params = append(params, convertParam(v))
     }
     operation := getInsertOperationByOption(option)
     updateStr := ""
@@ -369,6 +369,10 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
     var params []interface{}
     listMap := (List)(nil)
     switch v := list.(type) {
+        case Result:
+            listMap = v.ToList()
+        case Record:
+            listMap = List{v.ToMap()}
         case List:
             listMap = v
         case Map:
@@ -436,7 +440,7 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
     }
     for i := 0; i < len(listMap); i++ {
         for _, k := range keys {
-            params = append(params, listMap[i][k])
+            params = append(params, convertParam(listMap[i][k]))
         }
         values = append(values, valueHolderStr)
         if len(values) == batchNum {
@@ -479,17 +483,13 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 // CURD操作:数据更新，统一采用sql预处理。
 // data参数支持string/map/struct/*struct类型。
 func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-    link, err := bs.db.Master()
-    if err != nil {
-        return nil, err
-    }
-    return bs.db.doUpdate(link, table, data, condition, args ...)
+    newWhere, newArgs := formatCondition(condition, args)
+    return bs.db.doUpdate(nil, table, data, newWhere, newArgs ...)
 }
 
 // CURD操作:数据更新，统一采用sql预处理。
 // data参数支持string/map/struct/*struct类型类型。
-func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-    params       := ([]interface{})(nil)
+func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
     updates      := ""
     charL, charR := bs.db.getChars()
     // 使用反射进行类型判断
@@ -499,43 +499,51 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
         rv   = rv.Elem()
         kind = rv.Kind()
     }
+    params := []interface{}(nil)
     switch kind {
         case reflect.Map:   fallthrough
         case reflect.Struct:
             var fields []string
             for k, v := range gconv.Map(data) {
                 fields = append(fields, fmt.Sprintf("%s%s%s=?", charL, k, charR))
-                params = append(params, gconv.String(v))
+                params = append(params, convertParam(v))
             }
             updates = strings.Join(fields, ",")
         default:
             updates = gconv.String(data)
     }
-    for _, v := range args {
-        params = append(params, gconv.String(v))
+    if len(params) > 0 {
+        args = append(params, args...)
     }
+    // 如果没有传递link，那么使用默认的写库对象
     if link == nil {
         if link, err = bs.db.Master(); err != nil {
             return nil, err
         }
     }
-    newWhere, newArgs := formatCondition(condition, params)
-    return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, newWhere), newArgs...)
+    if len(condition) == 0 {
+        return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s", table, updates), args...)
+    }
+    return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, condition), args...)
 }
 
 // CURD操作:删除数据
 func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-    link, err := bs.db.Master()
-    if err != nil {
-        return nil, err
-    }
-    return bs.db.doDelete(link, table, condition, args ...)
+    newWhere, newArgs := formatCondition(condition, args)
+    return bs.db.doDelete(nil, table, newWhere, newArgs ...)
 }
 
 // CURD操作:删除数据
-func (bs *dbBase) doDelete(link dbLink, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-    newWhere, newArgs := formatCondition(condition, args)
-    return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s WHERE %s", table, newWhere), newArgs...)
+func (bs *dbBase) doDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error) {
+    if link == nil {
+        if link, err = bs.db.Master(); err != nil {
+            return nil, err
+        }
+    }
+    if len(condition) == 0 {
+        return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s", table), args...)
+    }
+    return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s WHERE %s", table, condition), args...)
 }
 
 // 获得缓存对象

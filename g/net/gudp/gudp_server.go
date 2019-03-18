@@ -8,6 +8,7 @@
 package gudp
 
 import (
+    "github.com/gogf/gf/g/os/glog"
     "net"
     "errors"
     "github.com/gogf/gf/g/container/gmap"
@@ -30,15 +31,15 @@ var serverMapping = gmap.NewStringInterfaceMap()
 // 获取/创建一个空配置的UDP Server
 // 单例模式，请保证name的唯一性
 func GetServer(name...interface{}) (*Server) {
-    sname := gDEFAULT_SERVER
+    serverName := gDEFAULT_SERVER
     if len(name) > 0 {
-        sname = gconv.String(name[0])
+        serverName = gconv.String(name[0])
     }
-    if s := serverMapping.Get(sname); s != nil {
+    if s := serverMapping.Get(serverName); s != nil {
         return s.(*Server)
     }
     s := NewServer("", nil)
-    serverMapping.Set(sname, s)
+    serverMapping.Set(serverName, s)
     return s
 }
 
@@ -64,14 +65,18 @@ func (s *Server) SetHandler (handler func (*Conn)) {
 // 执行监听
 func (s *Server) Run() error {
     if s.handler == nil {
-        return errors.New("start running failed: socket handler not defined")
+        err := errors.New("start running failed: socket handler not defined")
+        glog.Error(err)
+        return err
     }
     addr, err := net.ResolveUDPAddr("udp", s.address)
     if err != nil {
+        glog.Error(err)
         return err
     }
     conn, err := net.ListenUDP("udp", addr)
     if err != nil {
+        glog.Error(err)
         return err
     }
     for {

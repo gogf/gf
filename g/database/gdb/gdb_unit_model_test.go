@@ -90,29 +90,66 @@ func TestModel_Insert(t *testing.T) {
 }
 
 func TestModel_Batch(t *testing.T) {
-    result, err := db.Table("user").Filter().Data(g.List{
-        {
-            "id"          : 2,
-            "uid"         : 2,
-            "passport"    : "t2",
-            "password"    : "25d55ad283aa400af464c76d713c07ad",
-            "nickname"    : "T2",
-            "create_time" : gtime.Now().String(),
-        },
-        {
-            "id"          : 3,
-            "uid"         : 3,
-            "passport"    : "t3",
-            "password"    : "25d55ad283aa400af464c76d713c07ad",
-            "nickname"    : "T3",
-            "create_time" : gtime.Now().String(),
-        },
-    }).Batch(1).Insert()
-    if err != nil {
-        gtest.Fatal(err)
-    }
-    n, _ := result.RowsAffected()
-    gtest.Assert(n, 2)
+    // batch insert
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Filter().Data(g.List{
+            {
+                "id"          : 2,
+                "uid"         : 2,
+                "passport"    : "t2",
+                "password"    : "25d55ad283aa400af464c76d713c07ad",
+                "nickname"    : "T2",
+                "create_time" : gtime.Now().String(),
+            },
+            {
+                "id"          : 3,
+                "uid"         : 3,
+                "passport"    : "t3",
+                "password"    : "25d55ad283aa400af464c76d713c07ad",
+                "nickname"    : "T3",
+                "create_time" : gtime.Now().String(),
+            },
+        }).Batch(1).Insert()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        n, _ := result.RowsAffected()
+        gtest.Assert(n, 2)
+    })
+
+    // batch save
+    gtest.Case(t, func() {
+        table := createInitTable()
+        defer dropTable(table)
+        result, err  := db.Table(table).All()
+        gtest.Assert(err,         nil)
+        gtest.Assert(len(result), INIT_DATA_SIZE)
+        for _, v := range result {
+            v["nickname"].Set(v["nickname"].String() + v["id"].String())
+        }
+        r, e := db.Table(table).Data(result).Save()
+        gtest.Assert(e, nil)
+        n, e := r.RowsAffected()
+        gtest.Assert(e, nil)
+        gtest.Assert(n, INIT_DATA_SIZE*2)
+    })
+
+    // batch replace
+    gtest.Case(t, func() {
+        table := createInitTable()
+        defer dropTable(table)
+        result, err  := db.Table(table).All()
+        gtest.Assert(err,         nil)
+        gtest.Assert(len(result), INIT_DATA_SIZE)
+        for _, v := range result {
+            v["nickname"].Set(v["nickname"].String() + v["id"].String())
+        }
+        r, e := db.Table(table).Data(result).Replace()
+        gtest.Assert(e, nil)
+        n, e := r.RowsAffected()
+        gtest.Assert(e, nil)
+        gtest.Assert(n, INIT_DATA_SIZE*2)
+    })
 }
 
 func TestModel_Replace(t *testing.T) {
@@ -146,12 +183,23 @@ func TestModel_Save(t *testing.T) {
 }
 
 func TestModel_Update(t *testing.T) {
-    result, err := db.Table("user").Data("passport", "t22").Where("passport=?", "t2").Update()
-    if err != nil {
-        gtest.Fatal(err)
-    }
-    n, _ := result.RowsAffected()
-    gtest.Assert(n, 1)
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Data("passport", "t22").Where("passport=?", "t2").Update()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        n, _ := result.RowsAffected()
+        gtest.Assert(n, 1)
+    })
+
+    gtest.Case(t, func() {
+        result, err := db.Table("user").Data("passport", "t2").Where("passport='t22'").Update()
+        if err != nil {
+            gtest.Fatal(err)
+        }
+        n, _ := result.RowsAffected()
+        gtest.Assert(n, 1)
+    })
 }
 
 func TestModel_Clone(t *testing.T) {

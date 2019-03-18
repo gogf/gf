@@ -247,13 +247,17 @@ func (md *Model) Data(data ...interface{}) *Model {
 		}
         model.data = m
 	} else {
-		switch data[0].(type) {
+		switch params := data[0].(type) {
+			case Result:
+				model.data = params.ToList()
+			case Record:
+				model.data = params.ToMap()
 			case List:
-                model.data = data[0]
+                model.data = params
 			case Map:
-                model.data = data[0]
+                model.data = params
 			default:
-                rv   := reflect.ValueOf(data[0])
+                rv   := reflect.ValueOf(params)
                 kind := rv.Kind()
                 if kind == reflect.Ptr {
                     rv   = rv.Elem()
@@ -420,9 +424,9 @@ func (md *Model) Update() (result sql.Result, err error) {
         }
     }
 	if md.tx == nil {
-		return md.db.Update(md.tables, md.data, md.where, md.whereArgs ...)
+		return md.db.doUpdate(nil, md.tables, md.data, md.where, md.whereArgs ...)
 	} else {
-		return md.tx.Update(md.tables, md.data, md.where, md.whereArgs ...)
+		return md.tx.doUpdate(md.tables, md.data, md.where, md.whereArgs ...)
 	}
 }
 
@@ -434,9 +438,9 @@ func (md *Model) Delete() (result sql.Result, err error) {
 		}
 	}()
 	if md.tx == nil {
-		return md.db.Delete(md.tables, md.where, md.whereArgs...)
+		return md.db.doDelete(nil, md.tables, md.where, md.whereArgs...)
 	} else {
-		return md.tx.Delete(md.tables, md.where, md.whereArgs...)
+		return md.tx.doDelete(md.tables, md.where, md.whereArgs...)
 	}
 }
 

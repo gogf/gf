@@ -66,13 +66,7 @@ func (c *Config) filePath(file...string) (path string) {
     if len(file) > 0 {
         name = file[0]
     }
-    c.paths.RLockFunc(func(array []string) {
-        for _, v := range array {
-            if path, _ = gspath.Search(v, name); path != "" {
-                break
-            }
-        }
-    })
+    path = c.GetFilePath(name)
     if path == "" {
         buffer := bytes.NewBuffer(nil)
         if c.paths.Len() > 0 {
@@ -133,7 +127,8 @@ func (c *Config) AddPath(path string) error {
     return nil
 }
 
-// 获取指定文件的绝对路径，默认获取默认的配置文件路径，当指定的配置文件不存在时，返回空字符串，并且不会报错。
+// 查找配置文件，获取指定配置文件的绝对路径，默认获取默认的配置文件路径；
+// 当指定的配置文件不存在时，返回空字符串，并且不会报错。
 func (c *Config) GetFilePath(file...string) (path string) {
     name := c.name.Val()
     if len(file) > 0 {
@@ -141,7 +136,12 @@ func (c *Config) GetFilePath(file...string) (path string) {
     }
     c.paths.RLockFunc(func(array []string) {
         for _, v := range array {
+            // 查找当前目录
             if path, _ = gspath.Search(v, name); path != "" {
+                break
+            }
+            // 查找当前目录下的config子目录
+            if path, _ = gspath.Search(v, "config" + gfile.Separator + name); path != "" {
                 break
             }
         }
@@ -189,6 +189,14 @@ func (c *Config) GetVar(pattern string, file...string) gvar.VarRead {
         return gvar.New(j.Get(pattern), true)
     }
     return gvar.New(nil, true)
+}
+
+// 判断指定的配置项是否存在
+func (c *Config) Contains(pattern string, file...string) bool {
+    if j := c.getJson(file...); j != nil {
+        return j.Contains(pattern)
+    }
+    return false
 }
 
 // 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换

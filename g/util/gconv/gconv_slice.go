@@ -321,3 +321,23 @@ func Interfaces(i interface{}) []interface{} {
         return array
     }
 }
+
+// 将类型转换为[]map[string]interface{}类型.
+func Maps(i interface{}) []map[string]interface{} {
+    if i == nil {
+        return nil
+    }
+    if r, ok := i.([]map[string]interface{}); ok {
+        return r
+    } else {
+        array := Interfaces(i)
+        if len(array) == 0 {
+            return nil
+        }
+        list := make([]map[string]interface{}, len(array))
+        for k, v := range array {
+            list[k] = Map(v)
+        }
+        return list
+    }
+}

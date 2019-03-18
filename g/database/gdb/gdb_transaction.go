@@ -162,14 +162,28 @@ func (tx *TX) BatchSave(table string, list interface{}, batch...int) (sql.Result
     return tx.db.doBatchInsert(tx.tx, table, list, OPTION_SAVE, batch...)
 }
 
-// CURD操作:数据更新，统一采用sql预处理
-// data参数支持字符串或者关联数组类型，内部会自行做判断处理
+// CURD操作:数据更新，统一采用sql预处理,
+// data参数支持字符串或者关联数组类型，内部会自行做判断处理.
 func (tx *TX) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
+    newWhere, newArgs := formatCondition(condition, args)
+    return tx.doUpdate(table, data, newWhere, newArgs ...)
+}
+
+// 与Update方法的区别是不处理条件参数
+func (tx *TX) doUpdate(table string, data interface{}, condition string, args ...interface{}) (sql.Result, error) {
     return tx.db.doUpdate(tx.tx, table, data, condition, args ...)
 }
 
 // CURD操作:删除数据
 func (tx *TX) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
+    newWhere, newArgs := formatCondition(condition, args)
+    return tx.doDelete(table, newWhere, newArgs ...)
+}
+
+// 与Delete方法的区别是不处理条件参数
+func (tx *TX) doDelete(table string, condition string, args ...interface{}) (sql.Result, error) {
     return tx.db.doDelete(tx.tx, table, condition, args ...)
 }
+
+
 

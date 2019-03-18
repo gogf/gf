@@ -13,6 +13,7 @@ package gconv
 import (
     "encoding/json"
     "github.com/gogf/gf/g/encoding/gbinary"
+    "reflect"
     "strconv"
     "strings"
 )
@@ -21,6 +22,16 @@ import (
 type apiString interface {
     String() string
 }
+
+var (
+    // 为空的字符串
+    emptyStringMap = map[string]struct{}{
+        ""      : struct {}{},
+        "0"     : struct {}{},
+        "off"   : struct {}{},
+        "false" : struct {}{},
+    }
+)
 
 // 将变量i转换为字符串指定的类型t，非必须参数extraParams用以额外的参数传递
 func Convert(i interface{}, t string, extraParams...interface{}) interface{} {
@@ -63,6 +74,7 @@ func Convert(i interface{}, t string, extraParams...interface{}) interface{} {
     }
 }
 
+// 转换为二进制[]byte
 func Bytes(i interface{}) []byte {
     if i == nil {
         return nil
@@ -80,11 +92,11 @@ func String(i interface{}) string {
         return ""
     }
     switch value := i.(type) {
-        case int:     return strconv.Itoa(value)
+        case int:     return strconv.FormatInt(int64(value), 10)
         case int8:    return strconv.Itoa(int(value))
         case int16:   return strconv.Itoa(int(value))
         case int32:   return strconv.Itoa(int(value))
-        case int64:   return strconv.Itoa(int(value))
+        case int64:   return strconv.FormatInt(int64(value), 10)
         case uint:    return strconv.FormatUint(uint64(value), 10)
         case uint8:   return strconv.FormatUint(uint64(value), 10)
         case uint16:  return strconv.FormatUint(uint64(value), 10)
@@ -107,7 +119,7 @@ func String(i interface{}) string {
     }
 }
 
-//false: "", 0, false, off
+//false: false, "", 0, "false", "off", empty slice/map
 func Bool(i interface{}) bool {
     if i == nil {
         return false
@@ -115,10 +127,27 @@ func Bool(i interface{}) bool {
     if v, ok := i.(bool); ok {
         return v
     }
-    if s := String(i); s != "" && s != "0" && s != "false" && s != "off" {
+    if s, ok := i.(string); ok {
+        if _, ok := emptyStringMap[s]; ok {
+            return false
+        }
         return true
     }
-    return false
+    rv := reflect.ValueOf(i)
+    switch rv.Kind() {
+        case reflect.Ptr:    return !rv.IsNil()
+        case reflect.Map:    fallthrough
+        case reflect.Array:  fallthrough
+        case reflect.Slice:  return rv.Len() != 0
+        case reflect.Struct: return true
+        default:
+            s := String(i)
+            if _, ok := emptyStringMap[s]; ok {
+                return false
+            }
+            return true
+
+    }
 }
 
 func Int(i interface{}) int {

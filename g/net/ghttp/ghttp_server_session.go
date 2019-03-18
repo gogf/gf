@@ -104,8 +104,8 @@ func (s *Session) Contains (key string) bool {
     return false
 }
 
-// 获取SESSION
-func (s *Session) Get (key string) interface{}  {
+// 获取SESSION变量
+func (s *Session) Get(key string) interface{}  {
     if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
         s.init()
         return s.data.Get(key)
@@ -141,112 +141,95 @@ func (s *Session) UpdateExpire() {
     }
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetString(key string) string {
     return gconv.String(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetBool(key string) bool {
     return gconv.Bool(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetInt(key string) int {
     return gconv.Int(s.Get(key)) }
 
-// Deprecated, use GetVar instead.
+
 func (s *Session) GetInt8(key string) int8 {
     return gconv.Int8(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetInt16(key string) int16 {
     return gconv.Int16(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetInt32(key string) int32 {
     return gconv.Int32(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetInt64(key string) int64 {
     return gconv.Int64(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetUint(key string) uint {
     return gconv.Uint(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetUint8(key string) uint8 {
     return gconv.Uint8(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetUint16(key string) uint16 {
     return gconv.Uint16(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetUint32(key string) uint32 {
     return gconv.Uint32(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetUint64(key string) uint64 {
     return gconv.Uint64(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetFloat32(key string) float32 {
     return gconv.Float32(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetFloat64(key string) float64 {
     return gconv.Float64(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetBytes(key string) []byte {
     return gconv.Bytes(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetInts(key string) []int {
     return gconv.Ints(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetFloats(key string) []float64 {
     return gconv.Floats(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetStrings(key string) []string {
     return gconv.Strings(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetInterfaces(key string) []interface{} {
     return gconv.Interfaces(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
 func (s *Session) GetTime(key string, format...string) time.Time {
     return gconv.Time(s.Get(key), format...)
 }
 
-// Deprecated, use GetVar instead.
+func (s *Session) GetGTime(key string, format...string) *gtime.Time {
+    return gconv.GTime(s.Get(key), format...)
+}
+
 func (s *Session) GetTimeDuration(key string) time.Duration {
     return gconv.TimeDuration(s.Get(key))
 }
 
-// Deprecated, use GetVar instead.
-// (已废弃, 请使用GetVar) 将变量转换为对象，注意 objPointer 参数必须为struct指针
+// 将变量转换为对象，注意 objPointer 参数必须为struct指针
 func (s *Session) GetStruct(key string, objPointer interface{}, attrMapping...map[string]string) error {
     return gconv.Struct(s.Get(key), objPointer, attrMapping...)
 }

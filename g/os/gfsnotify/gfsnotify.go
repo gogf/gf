@@ -59,7 +59,8 @@ const (
 )
 
 const (
-    REPEAT_EVENT_FILTER_INTERVAL = 1 // (毫秒)重复事件过滤间隔
+    REPEAT_EVENT_FILTER_INTERVAL = 1      // (毫秒)重复事件过滤间隔
+    gFSNOTIFY_EVENT_EXIT         = "exit" // 是否退出回调执行
 )
 
 var (
@@ -112,4 +113,9 @@ func RemoveCallback(callbackId int) error {
     }
     defaultWatcher.RemoveCallback(callbackId)
     return nil
+}
+
+// 在回调方法中调用该方法退出回调注册
+func Exit() {
+    panic(gFSNOTIFY_EVENT_EXIT)
 }
