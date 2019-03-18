@@ -487,6 +487,22 @@ func getQueriedSqls() {
 }
 
 func main() {
+    //data := g.Map{
+    //    "nickname" : "john",
+    //}
+    //db.SetDebug(true)
+    //r, err := db.Table("user").Where("id=1").Data(data).Update()
+    //fmt.Println(err)
+    //fmt.Println(r.RowsAffected())
+
+    //data2 := g.Map{
+    //   "adsys1" : "ss",
+    //}
+    //db.SetDebug(true)
+    //r, err := db.Table("cd_adsys").Where("adsys0=1").Data(data2).Update()
+    //fmt.Println(err)
+    //fmt.Println(r.RowsAffected())
+    //return
     //db.SetDebug(true)
     //r, err := db.Table("test").Where("id=1").One()
     //fmt.Println(r["datetime"])
