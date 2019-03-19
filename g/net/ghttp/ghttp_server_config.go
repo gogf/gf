@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+    "crypto/tls"
     "fmt"
     "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/os/glog"
@@ -44,6 +45,7 @@ type ServerConfig struct {
     WriteTimeout      time.Duration         // 写入超时
     IdleTimeout       time.Duration         // 等待超时
     MaxHeaderBytes    int                   // 最大的header长度
+    TLSConfig         tls.Config
 
     // 静态文件配置
     IndexFiles        []string              // 默认访问的文件列表
@@ -191,28 +193,46 @@ func (s *Server)SetHTTPSPort(port...int) {
     }
 }
 
-// 开启HTTPS支持，但是必须提供Cert和Key文件
-func (s *Server)EnableHTTPS(certFile, keyFile string) {
+// 开启HTTPS支持，但是必须提供Cert和Key文件，tlsConfig为可选项
+func (s *Server)EnableHTTPS(certFile, keyFile string, tlsConfig...tls.Config) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
         return
     }
     certFileRealPath := gfile.RealPath(certFile)
     if certFileRealPath == "" {
-        certFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + certFileRealPath)
+        certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
+        if certFileRealPath == "" {
+            certFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + certFile)
+        }
     }
     if certFileRealPath == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
     }
     keyFileRealPath := gfile.RealPath(keyFile)
     if keyFileRealPath == "" {
-        keyFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + keyFileRealPath)
+        keyFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + keyFile)
+        if keyFileRealPath == "" {
+            keyFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + keyFile)
+        }
     }
     if keyFileRealPath == "" {
         glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
     }
     s.config.HTTPSCertPath = certFileRealPath
     s.config.HTTPSKeyPath  = keyFileRealPath
+    if len(tlsConfig) > 0 {
+        s.config.TLSConfig = tlsConfig[0]
+    }
+}
+
+// 设置TLS配置对象
+func (s *Server)SetTLSConfig(tlsConfig tls.Config)  {
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
+    }
+    s.config.TLSConfig = tlsConfig
 }
 
 // 设置http server参数 - ReadTimeout

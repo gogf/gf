@@ -9,6 +9,7 @@
 package ghttp
 
 import (
+    "encoding/json"
     "github.com/gogf/gf/g/text/gregex"
     "time"
     "bytes"
@@ -117,6 +118,7 @@ func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
     }
     req := (*http.Request)(nil)
     if strings.Contains(param, "@file:") {
+        // 文件上传
         buffer := new(bytes.Buffer)
         writer := multipart.NewWriter(buffer)
         for _, item := range strings.Split(param, "&") {
@@ -150,11 +152,17 @@ func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
             req.Header.Set("Content-Type", writer.FormDataContentType())
         }
     } else {
-        if r, err := http.NewRequest("POST", url, bytes.NewReader([]byte(param))); err != nil {
+        // 识别提交数据格式
+        paramBytes := []byte(param)
+        if r, err := http.NewRequest("POST", url, bytes.NewReader(paramBytes)); err != nil {
             return nil, err
         } else {
             req = r
-            req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+            if json.Valid(paramBytes) {
+                req.Header.Set("Content-Type", "application/json")
+            } else {
+                req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+            }
         }
     }
     // 自定义header

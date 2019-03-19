@@ -398,7 +398,8 @@ func Wait() {
 // 开启底层Web Server执行
 func (s *Server) startServer(fdMap listenerFdMap) {
     var httpsEnabled bool
-    if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
+    // 判断是否启用HTTPS
+    if len(s.config.TLSConfig.Certificates) > 0 || (len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0) {
         // ================
         // HTTPS
         // ================
@@ -479,7 +480,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             s.serverCount.Add(1)
             err := (error)(nil)
             if server.isHttps {
-                err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath)
+                err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath, &s.config.TLSConfig)
             } else {
                 err = server.ListenAndServe()
             }

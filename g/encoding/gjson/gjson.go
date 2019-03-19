@@ -79,6 +79,11 @@ func NewUnsafe(value...interface{}) *Json {
     return New(nil, true)
 }
 
+// 识别当前给定内容是否为JSON格式
+func Valid (v interface{}) bool {
+    return json.Valid(gconv.Bytes(v))
+}
+
 // 编码go变量为json字符串，并返回json字符串指针
 func Encode (v interface{}) ([]byte, error) {
     return json.Marshal(v)
