@@ -17,9 +17,15 @@ import (
 
 func Test_Intn(t *testing.T) {
     gtest.Case(t, func() {
-        for i := 0; i < 100; i++ {
+        for i := 0; i < 1000000; i++ {
             n := grand.Intn(100)
             gtest.AssertLT(n, 100)
+            gtest.AssertGTE(n, 0)
+        }
+        for i := 0; i < 1000000; i++ {
+            n := grand.Intn(-100)
+            gtest.AssertLTE(n, 0)
+            gtest.AssertGT(n,  -100)
         }
     })
 }
@@ -76,6 +82,9 @@ func Test_Rand(t *testing.T) {
         }
         for i := 0; i < 100; i++ {
             gtest.AssertIN(grand.Rand(1, 2), []int{1, 2})
+        }
+        for i := 0; i < 100; i++ {
+            gtest.AssertIN(grand.Rand(-1, 2), []int{-1, 0, 1, 2})
         }
     })
 }

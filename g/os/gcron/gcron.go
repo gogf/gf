@@ -29,7 +29,27 @@ var (
     defaultCron = New()
 )
 
-// 添加执行方法，可以给定名字，以便于后续执行删除
+// 设置日志输出路径
+func SetLogPath(path string) {
+    defaultCron.SetLogPath(path)
+}
+
+// 获取设置的日志输出路径
+func GetLogPath() string {
+    return defaultCron.GetLogPath()
+}
+
+// 设置日志输出等级。
+func SetLogLevel(level int) {
+    defaultCron.SetLogLevel(level)
+}
+
+// 获取日志输出等级。
+func GetLogLevel() int {
+    return defaultCron.GetLogLevel()
+}
+
+// 添加定时任务，可以给定名字，以便于后续执行删除
 func Add(pattern string, job func(), name ... string) (*Entry, error) {
     return defaultCron.Add(pattern, job, name...)
 }

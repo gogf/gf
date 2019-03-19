@@ -242,7 +242,7 @@ func (s *Server) Start() error {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
     // 不允许访问的路由注册(使用HOOK实现)
-    // @TODO 去掉HOOK的实现方式
+    // TODO 去掉HOOK的实现方式
     if s.config.DenyRoutes != nil {
         for _, v := range s.config.DenyRoutes {
             s.BindHookHandler(v, HOOK_BEFORE_SERVE, func(r *Request) {
