@@ -12,7 +12,7 @@ import (
 )
 
 // To is a chaining function, 
-// which redirects current logging content output to the sepecified <writer>.
+// which redirects current logging content output to the specified <writer>.
 // 
 // 链式操作，设置下一次写入日志内容的Writer
 func (l *Logger) To(writer io.Writer) *Logger {

@@ -9,7 +9,6 @@ package gjson
 
 import (
     "encoding/json"
-    "errors"
     "fmt"
     "github.com/gogf/gf/g/encoding/gtoml"
     "github.com/gogf/gf/g/encoding/gxml"
@@ -20,6 +19,7 @@ import (
     "github.com/gogf/gf/g/text/gregex"
     "github.com/gogf/gf/g/text/gstr"
     "github.com/gogf/gf/g/util/gconv"
+    "reflect"
     "strconv"
     "strings"
     "time"
@@ -486,16 +486,28 @@ done:
 // 数据结构转换，map参数必须转换为map[string]interface{}，数组参数必须转换为[]interface{}
 func (j *Json) convertValue(value interface{}) interface{} {
     switch value.(type) {
-    case map[string]interface{}:
-        return value
-    case []interface{}:
-        return value
-    default:
-        // 这里效率会比较低，当然比直接用反射也不会差到哪儿去
-        // 为了操作的灵活性，牺牲了一定的效率
-        b, _ := Encode(value)
-        v, _ := Decode(b)
-        return v
+        case map[string]interface{}:
+            return value
+        case []interface{}:
+            return value
+        default:
+            rv   := reflect.ValueOf(value)
+            kind := rv.Kind()
+            if kind == reflect.Ptr {
+                rv   = rv.Elem()
+                kind = rv.Kind()
+            }
+            switch kind {
+                case reflect.Array:  return gconv.Interfaces(value)
+                case reflect.Slice:  return gconv.Interfaces(value)
+                case reflect.Map:    return gconv.Map(value)
+                case reflect.Struct: return gconv.Map(value)
+                default:
+                    // 最后使用JSON编解码
+                    b, _ := Encode(value)
+                    v, _ := Decode(b)
+                    return v
+            }
     }
 }
 
@@ -503,23 +515,23 @@ func (j *Json) convertValue(value interface{}) interface{} {
 // 返回修改后的父级指针
 func (j *Json) setPointerWithValue(pointer *interface{}, key string, value interface{}) *interface{} {
     switch (*pointer).(type) {
-    case map[string]interface{}:
-        (*pointer).(map[string]interface{})[key] = value
-        return &value
-    case []interface{}:
-        n, _ := strconv.Atoi(key)
-        if len((*pointer).([]interface{})) > n {
-            (*pointer).([]interface{})[n] = value
-            return &(*pointer).([]interface{})[n]
-        } else {
-            s := make([]interface{}, n + 1)
-            copy(s, (*pointer).([]interface{}))
-            s[n] = value
-            *pointer = s
-            return &s[n]
-        }
-    default:
-        *pointer = value
+        case map[string]interface{}:
+            (*pointer).(map[string]interface{})[key] = value
+            return &value
+        case []interface{}:
+            n, _ := strconv.Atoi(key)
+            if len((*pointer).([]interface{})) > n {
+                (*pointer).([]interface{})[n] = value
+                return &(*pointer).([]interface{})[n]
+            } else {
+                s := make([]interface{}, n + 1)
+                copy(s, (*pointer).([]interface{}))
+                s[n] = value
+                *pointer = s
+                return &s[n]
+            }
+        default:
+            *pointer = value
     }
     return pointer
 }
@@ -539,7 +551,7 @@ func (j *Json) Get(pattern...string) interface{} {
     if j.vc {
         result = j.getPointerByPattern(queryPattern)
     } else {
-        result = j.getPointerByPatternWithoutSplitCharViolenceCheck(queryPattern)
+        result = j.getPointerByPatternWithoutViolenceCheck(queryPattern)
     }
     if result != nil {
         return *result
@@ -552,17 +564,18 @@ func (j *Json) Contains(pattern...string) bool {
     return j.Get(pattern...) != nil
 }
 
-// 计算指定pattern的元素长度(pattern对应数据类型为map[string]interface{}/[]interface{}时有效)
+// 计算指定pattern的元素长度(pattern对应数据类型为map/slice时有效)。
+// 当pattern对应的数据类型非map/slice时，返回-1。
 func (j *Json) Len(pattern string) int {
     p := j.getPointerByPattern(pattern)
     if p != nil {
         switch (*p).(type) {
-        case map[string]interface{}:
-            return len((*p).(map[string]interface{}))
-        case []interface{}:
-            return len((*p).([]interface{}))
-        default:
-            return -1
+            case map[string]interface{}:
+                return len((*p).(map[string]interface{}))
+            case []interface{}:
+                return len((*p).([]interface{}))
+            default:
+                return -1
         }
     }
     return -1
@@ -570,14 +583,27 @@ func (j *Json) Len(pattern string) int {
 
 // 指定pattern追加元素
 func (j *Json) Append(pattern string, value interface{}) error {
-    length := j.Len(pattern)
-    if length != -1 {
-        return j.Set(fmt.Sprintf("%s.%d", pattern, length), value)
+    p := j.getPointerByPattern(pattern)
+    if p == nil {
+        return j.Set(fmt.Sprintf("%s.0", pattern), value)
     }
-    return errors.New(fmt.Sprintf("cannot find item for pattern: %s", pattern))
+    switch (*p).(type) {
+        case []interface{}:
+            return j.Set(fmt.Sprintf("%s.%d", pattern, len((*p).([]interface{}))), value)
+    }
+    return fmt.Errorf("invalid variable type of %s", pattern)
 }
 
-// 根据pattern层级查找**变量指针**
+// 根据pattern获取对应元素项的指针
+func (j *Json) getPointerByPattern(pattern string) *interface{} {
+    if j.vc {
+        return j.getPointerByPatternWithViolenceCheck(pattern)
+    } else {
+        return j.getPointerByPatternWithoutViolenceCheck(pattern)
+    }
+}
+
+// 根据pattern层级查找**变量指针**, 执行冲突检测。
 // 检索方式：例如检索 a.a.a ，值为1
 // 1. 检索 a.a.a.a 是否存在对应map的键名；
 // 2. 检索 a.a.a   是否存在对应map的键名；
@@ -589,7 +615,10 @@ func (j *Json) Append(pattern string, value interface{}) error {
 // 8. 在m2中检索 a.a   否存在对应map的键名；
 // 9. 在m2中检索 a     否存在对应map的键名，检索到有值，值为1；
 // 这样检索的复杂度很高，主要是为了避免键名中存在分隔符号(默认为".")的情况，避免歧义。
-func (j *Json) getPointerByPattern(pattern string) *interface{} {
+func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *interface{} {
+    if !j.vc {
+        return j.getPointerByPatternWithoutViolenceCheck(pattern)
+    }
     index   := len(pattern)
     start   := 0
     length  := 0
@@ -625,7 +654,10 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
 }
 
 // 层级检索，内部不执行分隔符冲突检查，检索效率会有所提高，但是冲突需要开发者自己根据自定义的分隔符来进行解决
-func (j *Json) getPointerByPatternWithoutSplitCharViolenceCheck(pattern string) *interface{} {
+func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *interface{} {
+    if j.vc {
+        return j.getPointerByPatternWithViolenceCheck(pattern)
+    }
     pointer := j.p
     if len(pattern) == 0 {
         return pointer
@@ -645,21 +677,21 @@ func (j *Json) getPointerByPatternWithoutSplitCharViolenceCheck(pattern string) 
     return nil
 }
 
-// 判断给定的key在当前的pointer下是否有值，并返回对应的pointer
+// 判断给定的key在当前的pointer下是否有值，并返回对应的pointer,
 // 注意这里返回的指针都是临时变量的内存地址
 func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interface{} {
     switch (*pointer).(type) {
-    case map[string]interface{}:
-        if v, ok := (*pointer).(map[string]interface{})[key]; ok {
-            return &v
-        }
-    case []interface{}:
-        if gstr.IsNumeric(key) {
-            n, err := strconv.Atoi(key)
-            if err == nil && len((*pointer).([]interface{})) > n {
-                return &(*pointer).([]interface{})[n]
+        case map[string]interface{}:
+            if v, ok := (*pointer).(map[string]interface{})[key]; ok {
+                return &v
             }
-        }
+        case []interface{}:
+            if gstr.IsNumeric(key) {
+                n, err := strconv.Atoi(key)
+                if err == nil && len((*pointer).([]interface{})) > n {
+                    return &(*pointer).([]interface{})[n]
+                }
+            }
     }
     return nil
 }

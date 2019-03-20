@@ -18,7 +18,7 @@ import (
 
 type Var struct {
     value interface{} // 变量值
-    safe  bool        // 当为true时,value为 *gtype.Interface 类型
+    safe  bool        // 当为true时, value为 *gtype.Interface 类型
 }
 
 // 创建一个动态变量，value参数可以为nil

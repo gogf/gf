@@ -21,8 +21,10 @@ import (
     "github.com/gogf/gf/g/os/gfsnotify"
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gview"
+    "github.com/gogf/gf/g/text/gstr"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/text/gregex"
+    "time"
 )
 
 const (
@@ -163,16 +165,32 @@ func Database(name...string) gdb.DB {
                         if value, ok := nodem["priority"]; ok {
                             node.Priority = gconv.Int(value)
                         }
+                        // Deprecated
                         if value, ok := nodem["linkinfo"]; ok {
                             node.Linkinfo = gconv.String(value)
                         }
+                        if value, ok := nodem["linkInfo"]; ok {
+                            node.Linkinfo = gconv.String(value)
+                        }
+                        // Deprecated
                         if value, ok := nodem["max-idle"]; ok {
                             node.MaxIdleConnCount = gconv.Int(value)
                         }
+                        if value, ok := nodem["maxIdle"]; ok {
+                            node.MaxIdleConnCount = gconv.Int(value)
+                        }
+                        // Deprecated
                         if value, ok := nodem["max-open"]; ok {
                             node.MaxOpenConnCount = gconv.Int(value)
                         }
+                        if value, ok := nodem["maxOpen"]; ok {
+                            node.MaxOpenConnCount = gconv.Int(value)
+                        }
+                        // Deprecated
                         if value, ok := nodem["max-lifetime"]; ok {
+                            node.MaxConnLifetime = gconv.Int(value)
+                        }
+                        if value, ok := nodem["maxLifetime"]; ok {
                             node.MaxConnLifetime = gconv.Int(value)
                         }
                         cg = append(cg, node)
@@ -208,11 +226,34 @@ func Redis(name...string) *gredis.Redis {
     key    := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
     result := instances.GetOrSetFuncLock(key, func() interface{} {
         if m := config.GetMap("redis"); m != nil {
-            // host:port[,db[,pass]]
+            // host:port[,db,pass?maxIdle=x&maxActive=x&idleTimeout=x&maxConnLifetime=x]
             if v, ok := m[group]; ok {
-                line     := gconv.String(v)
-                array, _ := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, line)
-                if len(array) > 4 {
+                line := gconv.String(v)
+                array, _ := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)\?(.+)`, line)
+                if len(array) == 6 {
+                    parse, _ := gstr.Parse(array[5])
+                    config   := gredis.Config{
+                        Host : array[1],
+                        Port : gconv.Int(array[2]),
+                        Db   : gconv.Int(array[3]),
+                        Pass : array[4],
+                    }
+                    if v, ok := parse["maxIdle"]; ok {
+                        config.MaxIdle = gconv.Int(v)
+                    }
+                    if v, ok := parse["maxActive"]; ok {
+                        config.MaxActive = gconv.Int(v)
+                    }
+                    if v, ok := parse["idleTimeout"]; ok {
+                        config.IdleTimeout = gconv.TimeDuration(v)*time.Second
+                    }
+                    if v, ok := parse["maxConnLifetime"]; ok {
+                        config.MaxConnLifetime = gconv.TimeDuration(v)*time.Second
+                    }
+                    return gredis.New(config)
+                }
+                array, _ = gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, line)
+                if len(array) == 5 {
                     return gredis.New(gredis.Config{
                         Host : array[1],
                         Port : gconv.Int(array[2]),

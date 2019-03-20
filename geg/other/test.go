@@ -1,12 +1,13 @@
 package main
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/text/gregex"
 )
 
 func main() {
-    //t := gconv.GTime("2010-10-10 00:00:01")
-    fmt.Println(gconv.String(gtime.Millisecond()))
+    s := "127.0.0.1:6379,1,nhytaf176tg?maxIdle=1&maxActive=0&idleTimeout=60&maxConnLifetime=60"
+    array, err := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)\?(.+)`, s)
+    g.Dump(err)
+    g.Dump(array)
 }

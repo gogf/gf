@@ -7,7 +7,6 @@
 package gins_test
 
 import (
-    "fmt"
     "github.com/gogf/gf/g/frame/gins"
     "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/test/gtest"
@@ -48,6 +47,7 @@ test = "v=3"
 [redis]
     default = "127.0.0.1:6379,0"
     cache   = "127.0.0.1:6379,1"
+    disk    = "127.0.0.1:6379,1,?maxIdle=1&maxActive=10&idleTimeout=10&maxConnLifetime=10"
 `
     path := "config.toml"
     err  := gfile.PutContents(path, config)
@@ -59,12 +59,14 @@ test = "v=3"
     time.Sleep(500*time.Millisecond)
 
     gtest.Case(t, func() {
-        fmt.Println("gins Test_Redis", gins.Config().Get("test"))
+        //fmt.Println("gins Test_Redis", gins.Config().Get("test"))
 
         redisDefault := gins.Redis()
         redisCache   := gins.Redis("cache")
+        redisDisk    := gins.Redis("disk")
         gtest.AssertNE(redisDefault, nil)
         gtest.AssertNE(redisCache,   nil)
+        gtest.AssertNE(redisDisk,   nil)
 
         r, err := redisDefault.Do("PING")
         gtest.Assert(err, nil)
@@ -73,6 +75,12 @@ test = "v=3"
         r, err  = redisCache.Do("PING")
         gtest.Assert(err, nil)
         gtest.Assert(r,   "PONG")
+
+        _, err  = redisDisk.Do("SET", "k", "v")
+        gtest.Assert(err, nil)
+        r, err  = redisDisk.Do("GET", "k")
+        gtest.Assert(err, nil)
+        gtest.Assert(r, []byte("v"))
     })
 }
 

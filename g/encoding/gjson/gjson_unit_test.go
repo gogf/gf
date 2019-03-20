@@ -4,19 +4,19 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 单元测试
-
-package gparser_test
+package gjson_test
 
 import (
     "bytes"
-    "github.com/gogf/gf/g/encoding/gparser"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/encoding/gjson"
+    "github.com/gogf/gf/g/test/gtest"
     "testing"
 )
 
 func Test_Set1(t *testing.T) {
     e := []byte(`{"k1":{"k11":[1,2,3]},"k2":"v2"}`)
-    p := gparser.New(map[string]string{
+    p := gjson.New(map[string]string{
         "k1" : "v1",
         "k2" : "v2",
     })
@@ -33,7 +33,7 @@ func Test_Set1(t *testing.T) {
 
 func Test_Set2(t *testing.T) {
     e := []byte(`[[null,1]]`)
-    p := gparser.New([]string{"a"})
+    p := gjson.New([]string{"a"})
     p.Set("0.1", 1)
     if c, err := p.ToJson(); err == nil {
         
@@ -47,8 +47,8 @@ func Test_Set2(t *testing.T) {
 
 func Test_Set3(t *testing.T) {
     e := []byte(`{"kv":{"k1":"v1"}}`)
-    p := gparser.New([]string{"a"})
-    p.Set("kv", map[string]string{
+    p := gjson.New([]string{"a"})
+    p.Set("kv", map[string]string {
         "k1" : "v1",
     })
     if c, err := p.ToJson(); err == nil {
@@ -63,7 +63,7 @@ func Test_Set3(t *testing.T) {
 
 func Test_Set4(t *testing.T) {
     e := []byte(`["a",[{"k1":"v1"}]]`)
-    p := gparser.New([]string{"a"})
+    p := gjson.New([]string{"a"})
     p.Set("1.0", map[string]string{
         "k1" : "v1",
     })
@@ -79,7 +79,7 @@ func Test_Set4(t *testing.T) {
 
 func Test_Set5(t *testing.T) {
     e := []byte(`[[[[[[[[[[[[[[[[[[[[[1,2,3]]]]]]]]]]]]]]]]]]]]]`)
-    p := gparser.New([]string{"a"})
+    p := gjson.New([]string{"a"})
     p.Set("0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0", []int{1,2,3})
     if c, err := p.ToJson(); err == nil {
         
@@ -93,7 +93,7 @@ func Test_Set5(t *testing.T) {
 
 func Test_Set6(t *testing.T) {
     e := []byte(`["a",[1,2,3]]`)
-    p := gparser.New([]string{"a"})
+    p := gjson.New([]string{"a"})
     p.Set("1", []int{1,2,3})
     if c, err := p.ToJson(); err == nil {
         
@@ -107,7 +107,7 @@ func Test_Set6(t *testing.T) {
 
 func Test_Set7(t *testing.T) {
     e := []byte(`{"0":[null,[1,2,3]],"k1":"v1","k2":"v2"}`)
-    p := gparser.New(map[string]string{
+    p := gjson.New(map[string]string{
         "k1" : "v1",
         "k2" : "v2",
     })
@@ -124,7 +124,7 @@ func Test_Set7(t *testing.T) {
 
 func Test_Set8(t *testing.T) {
     e := []byte(`{"0":[[[[[[null,[1,2,3]]]]]]],"k1":"v1","k2":"v2"}`)
-    p := gparser.New(map[string]string{
+    p := gjson.New(map[string]string{
         "k1" : "v1",
         "k2" : "v2",
     })
@@ -141,7 +141,7 @@ func Test_Set8(t *testing.T) {
 
 func Test_Set9(t *testing.T) {
     e := []byte(`{"k1":[null,[1,2,3]],"k2":"v2"}`)
-    p := gparser.New(map[string]string{
+    p := gjson.New(map[string]string{
         "k1" : "v1",
         "k2" : "v2",
     })
@@ -159,7 +159,7 @@ func Test_Set9(t *testing.T) {
 
 func Test_Set10(t *testing.T) {
     e := []byte(`{"a":{"b":{"c":1}}}`)
-    p := gparser.New(nil)
+    p := gjson.New(nil)
     p.Set("a.b.c", 1)
     if c, err := p.ToJson(); err == nil {
         
@@ -174,7 +174,7 @@ func Test_Set10(t *testing.T) {
 
 func Test_Set11(t *testing.T) {
     e    := []byte(`{"a":{"b":{}}}`)
-    p, _ := gparser.LoadContent([]byte(`{"a":{"b":{"c":1}}}`), "json")
+    p, _ := gjson.LoadContent([]byte(`{"a":{"b":{"c":1}}}`), "json")
     p.Remove("a.b.c")
     if c, err := p.ToJson(); err == nil {
         
@@ -188,7 +188,7 @@ func Test_Set11(t *testing.T) {
 
 func Test_Set12(t *testing.T) {
     e := []byte(`[0,1]`)
-    p := gparser.New(nil)
+    p := gjson.New(nil)
     p.Set("0", 0)
     p.Set("1", 1)
     if c, err := p.ToJson(); err == nil {
@@ -203,7 +203,7 @@ func Test_Set12(t *testing.T) {
 
 func Test_Set13(t *testing.T) {
     e := []byte(`{"array":[0,1]}`)
-    p := gparser.New(nil)
+    p := gjson.New(nil)
     p.Set("array.0", 0)
     p.Set("array.1", 1)
     if c, err := p.ToJson(); err == nil {
@@ -216,7 +216,65 @@ func Test_Set13(t *testing.T) {
     }
 }
 
+func Test_Set14(t *testing.T) {
+    e := []byte(`{"f":{"a":1}}`)
+    p := gjson.New(nil)
+    p.Set("f",   "m")
+    p.Set("f.a", 1)
+    if c, err := p.ToJson(); err == nil {
+        
+        if bytes.Compare(c, e) != 0 {
+            t.Error("expect:", string(e))
+        }
+    } else {
+        t.Error(err)
+    }
+}
 
+func Test_Len(t *testing.T) {
+    gtest.Case(t, func() {
+        p := gjson.New(nil)
+        p.Append("a", 1)
+        p.Append("a", 2)
+        gtest.Assert(p.Len("a"), 2)
+    })
+    gtest.Case(t, func() {
+        p := gjson.New(nil)
+        p.Append("a.b", 1)
+        p.Append("a.c", 2)
+        gtest.Assert(p.Len("a"), 2)
+    })
+    gtest.Case(t, func() {
+        p := gjson.New(nil)
+        p.Set("a", 1)
+        gtest.Assert(p.Len("a"), -1)
+    })
+}
+
+func Test_Append(t *testing.T) {
+    gtest.Case(t, func() {
+        p := gjson.New(nil)
+        p.Append("a", 1)
+        p.Append("a", 2)
+        gtest.Assert(p.Get("a"), g.Slice{1, 2})
+    })
+    gtest.Case(t, func() {
+        p := gjson.New(nil)
+        p.Append("a.b", 1)
+        p.Append("a.c", 2)
+        gtest.Assert(p.Get("a"), g.Map{
+            "b" : g.Slice{1},
+            "c" : g.Slice{2},
+        })
+    })
+    gtest.Case(t, func() {
+        p := gjson.New(nil)
+        p.Set("a", 1)
+        err := p.Append("a", 2)
+        gtest.AssertNE(err, nil)
+        gtest.Assert(p.Get("a"), 1)
+    })
+}
 
 
 
