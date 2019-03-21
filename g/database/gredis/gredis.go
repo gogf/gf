@@ -24,12 +24,12 @@ const (
 
 // Redis客户端(管理连接池)
 type Redis struct {
-    pool *redis.Pool
+    pool   *redis.Pool
+    config Config
 }
 
 // Redis连接对象(连接池中的单个连接)
 type Conn redis.Conn
-
 
 // Redis服务端但节点连接配置信息
 type Config struct {
@@ -63,7 +63,8 @@ func New(config Config) *Redis {
         config.MaxConnLifetime = gDEFAULT_POOL_MAX_LIFE_TIME
     }
     return &Redis{
-        pool : pools.GetOrSetFuncLock(fmt.Sprintf("%v", config), func() interface{} {
+        config : config,
+        pool   : pools.GetOrSetFuncLock(fmt.Sprintf("%v", config), func() interface{} {
             return &redis.Pool {
                 IdleTimeout     : config.IdleTimeout,
                 MaxConnLifetime : config.MaxConnLifetime,
@@ -97,8 +98,9 @@ func New(config Config) *Redis {
 // Close closes the redis connection pool,
 // it will release all connections reserved by this pool.
 //
-// 关闭redis管理对象，将会关闭底层的
+// 关闭redis管理对象，将会关闭底层的连接池。
 func (r *Redis) Close() error {
+    pools.Remove(fmt.Sprintf("%v", r.config))
     return r.pool.Close()
 }
 
@@ -107,8 +109,9 @@ func (r *Redis) Conn() Conn {
     return r.GetConn()
 }
 
-// GetConn returns a raw connection object, which expose more methods communication with server.
-// You should call Close function manually if you do not use this connection any more.
+// GetConn returns a raw connection object,
+// which expose more methods communication with server.
+// **You should call Close function manually if you do not use this connection any further.**
 //
 // 获得一个原生的redis连接对象，用于自定义连接操作，
 // 但是需要注意的是如果不再使用该连接对象时，需要手动Close连接，否则会造成连接数超限。
@@ -146,20 +149,22 @@ func (r *Redis) SetMaxConnLifetime(value time.Duration) {
 
 // Stats returns pool's statistics.
 //
-// 获取当前连接池统计信息
+// 获取当前连接池统计信息。
 func (r *Redis) Stats() *PoolStats {
     return &PoolStats{r.pool.Stats()}
 }
 
 // Do sends a command to the server and returns the received reply.
+// Do automatically get a connection from pool, and close it when reply received.
 //
-// 执行同步命令 - Do
+// 执行同步命令，自动从连接池中获取连接，使用完毕后关闭连接（丢回连接池），开发者不用自行Close.
 func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
     conn := r.pool.Get()
     defer conn.Close()
     return conn.Do(command, args...)
 }
 
+// Deprecated, use Conn instead.
 // Send writes the command to the client's output buffer.
 //
 // 执行异步命令 - Send

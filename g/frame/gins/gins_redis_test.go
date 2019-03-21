@@ -45,9 +45,9 @@ test = "v=3"
         priority = "1"
 # Redis数据库配置
 [redis]
-    default = "127.0.0.1:6379,0"
-    cache   = "127.0.0.1:6379,1"
-    disk    = "127.0.0.1:6379,1,?maxIdle=1&maxActive=10&idleTimeout=10&maxConnLifetime=10"
+    default = "127.0.0.1:6379,10"
+    cache   = "127.0.0.1:6379,20"
+    disk    = "127.0.0.1:6379,30,?maxIdle=1&maxActive=10&idleTimeout=10&maxConnLifetime=10"
 `
     path := "config.toml"
     err  := gfile.PutContents(path, config)

@@ -91,3 +91,22 @@ func Test_Stats(t *testing.T) {
         //gtest.Assert(stats.IdleCount,    0)
     })
 }
+
+func Test_Conn(t *testing.T) {
+    gtest.Case(t, func() {
+        redis := gredis.New(config)
+        defer redis.Close()
+        conn := redis.Conn()
+        defer conn.Close()
+
+        r, err := conn.Do("GET", "k")
+        gtest.Assert(err, nil)
+        gtest.Assert(r,   []byte("v"))
+
+        _, err  = conn.Do("DEL", "k")
+        gtest.Assert(err, nil)
+        r, err  = conn.Do("GET", "k")
+        gtest.Assert(err, nil)
+        gtest.Assert(r, nil)
+    })
+}
