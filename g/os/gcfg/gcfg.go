@@ -155,22 +155,37 @@ func (c *Config) SetFileName(name string) {
     c.name.Set(name)
 }
 
+// 获取配置管理对象的默认文件名称
+func (c *Config) GetFileName() string {
+    return c.name.Val()
+}
+
 // 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中
+// 内部带缓存控制功能。
 func (c *Config) getJson(file...string) *gjson.Json {
-    filePath := c.filePath(file...)
-    if filePath == "" {
+    name := c.name.Val()
+    if len(file) > 0 {
+        name = file[0]
+    }
+    r := c.jsons.GetOrSetFuncLock(name, func() interface{} {
+        filePath := c.filePath(file...)
+        if filePath == "" {
+            return nil
+        }
+        if j, err := gjson.Load(filePath); err == nil {
+            j.SetViolenceCheck(c.vc.Val())
+            // 添加配置文件监听，如果有任何变化，删除文件内容缓存，下一次查询会自动更新
+            gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+                c.jsons.Remove(event.Path)
+            })
+            return j
+        } else {
+            glog.Errorfln(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+        }
         return nil
-    }
-    if r := c.jsons.Get(filePath); r != nil {
+    })
+    if r != nil {
         return r.(*gjson.Json)
-    }
-    if j, err := gjson.Load(filePath); err == nil {
-        j.SetViolenceCheck(c.vc.Val())
-        c.addMonitor(filePath)
-        c.jsons.Set(filePath, j)
-        return j
-    } else {
-        glog.Errorfln(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
     }
     return nil
 }
@@ -362,14 +377,3 @@ func (c *Config) Reload() {
     c.jsons.Clear()
 }
 
-// 添加文件监控
-func (c *Config) addMonitor(path string) {
-    // 防止多goroutine同时调用
-    if c.jsons.Get(path) != nil {
-        return
-    }
-    gfsnotify.Add(path, func(event *gfsnotify.Event) {
-        // 删除文件内容缓存，下一次查询会自动更新
-        c.jsons.Remove(event.Path)
-    })
-}

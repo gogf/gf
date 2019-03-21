@@ -109,7 +109,9 @@ func (gm *StringInterfaceMap) doSetWithLockCheck(key string, value interface{}) 
     if f, ok := value.(func() interface {}); ok {
         value = f()
     }
-    gm.m[key] = value
+    if value != nil {
+        gm.m[key] = value
+    }
     return value
 }
 

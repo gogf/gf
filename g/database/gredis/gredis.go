@@ -164,7 +164,6 @@ func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
     return conn.Do(command, args...)
 }
 
-// Deprecated, use Conn instead.
 // Send writes the command to the client's output buffer.
 //
 // 执行异步命令 - Send

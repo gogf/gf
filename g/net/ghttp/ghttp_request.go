@@ -57,7 +57,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
     return request
 }
 
-// 获取Web Socket连接对象(如果是非WS请求会失败，注意检查然会的error结果)
+// 获取Web Socket连接对象(如果是非WS请求会失败，注意检查返回的error结果)
 func (r *Request) WebSocket() (*WebSocket, error) {
     if conn, err := wsUpgrader.Upgrade(r.Response.ResponseWriter.ResponseWriter, r.Request, nil); err == nil {
         return &WebSocket {
@@ -101,6 +101,8 @@ func (r *Request) GetJson() *gjson.Json {
     if data != nil {
         if j, err := gjson.DecodeToJson(data); err == nil {
             return j
+        } else {
+            panic(err)
         }
     }
     return nil
@@ -221,14 +223,14 @@ func (r *Request) GetReferer() string {
 
 // 获得结构体对象的参数名称标签，构成map返回
 func (r *Request) getStructParamsTagMap(object interface{}) map[string]string {
-    tagmap := make(map[string]string)
+    tagMap := make(map[string]string)
     fields := structs.Fields(object)
     for _, field := range fields {
         if tag := field.Tag("params"); tag != "" {
             for _, v := range strings.Split(tag, ",") {
-                tagmap[strings.TrimSpace(v)] = field.Name()
+                tagMap[strings.TrimSpace(v)] = field.Name()
             }
         }
     }
-    return tagmap
+    return tagMap
 }
