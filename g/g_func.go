@@ -29,9 +29,16 @@ func Wait() {
 
 // Dump dumps a variable to stdout with more manually readable.
 //
-// 打印变量
+// 格式化打印变量.
 func Dump(i...interface{}) {
     gutil.Dump(i...)
+}
+
+// Export exports a variable to string with more manually readable.
+//
+// 格式化导出变量.
+func Export(i...interface{}) string {
+    return gutil.Export(i...)
 }
 
 // Throw throws a exception, which can be caught by Catch function.
