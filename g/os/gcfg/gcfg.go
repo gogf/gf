@@ -176,11 +176,11 @@ func (c *Config) getJson(file...string) *gjson.Json {
             j.SetViolenceCheck(c.vc.Val())
             // 添加配置文件监听，如果有任何变化，删除文件内容缓存，下一次查询会自动更新
             gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-                c.jsons.Remove(event.Path)
+                c.jsons.Remove(name)
             })
             return j
         } else {
-            glog.Errorfln(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+            glog.Criticalfln(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
         }
         return nil
     })
