@@ -3,12 +3,13 @@ package main
 import (
     "github.com/gogf/gf/g"
     "github.com/gogf/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/os/glog"
 )
 
 func main() {
     s := g.Server()
-    s.BindHandler("/ws", func(r *ghttp.Request) {
+    s.BindHandler("/wss", func(r *ghttp.Request) {
         ws, err := r.WebSocket()
         if err != nil {
             glog.Error(err)
@@ -24,6 +25,8 @@ func main() {
             }
         }
     })
+    s.SetServerRoot(gfile.MainPkgPath())
+    s.EnableHTTPS("../../https/server.crt", "../../https/server.key")
     s.SetPort(8199)
     s.Run()
 }

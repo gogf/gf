@@ -350,7 +350,10 @@ func (s *Server) GetRouteMap() string {
     }
     addr := s.config.Addr
     if s.config.HTTPSAddr != "" {
-        addr += ",tls" + s.config.HTTPSAddr
+        if len(addr) > 0 {
+            addr += ","
+        }
+        addr += "tls" + s.config.HTTPSAddr
     }
     for _, a := range m {
         data := make([]string, 8)
