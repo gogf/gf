@@ -85,7 +85,8 @@ func New(config Config) *Redis {
                     }
                     return c, nil
                 },
-                // 用来测试连接是否可用
+                // 在被应用从连接池中获取出来之后，用以测试连接是否可用，
+                // 如果返回error那么关闭该连接对象重新创建新的连接。
                 TestOnBorrow: func(c redis.Conn, t time.Time) error {
                     _, err := c.Do("PING")
                     return err

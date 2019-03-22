@@ -17,3 +17,4 @@ func main() {
     v, _ := redis.Do("GET", "k")
     fmt.Println(gconv.String(v))
 }
+
