@@ -1,13 +1,33 @@
 package main
 
 import (
+    "fmt"
     "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/text/gregex"
+    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g/util/gvalid"
 )
 
+type User struct {
+    Id   int
+    name string
+}
+
+func NewMessage(mobile string, msgType int, content string, templateId string, param string) *Message {
+    return &Message{
+        Mobile:     mobile,
+        Type:       msgType,
+        Content:    content,
+        TemplateId: templateId,
+        Param:      param,
+        config:     make(map[string]interface{}),
+    }
+}
+
 func main() {
-    s := "127.0.0.1:6379,1,nhytaf176tg?maxIdle=1&maxActive=0&idleTimeout=60&maxConnLifetime=60"
-    array, err := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)\?(.+)`, s)
-    g.Dump(err)
-    g.Dump(array)
+    message := NewMessage("123",1,"456","333","1,3,9")
+    fmt.Println(gconv.Map(message))
+    if e := gvalid.CheckStruct(message,nil); e != nil {
+        g.Dump(e.Maps())
+    }
+
 }

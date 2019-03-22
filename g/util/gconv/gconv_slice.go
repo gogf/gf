@@ -7,6 +7,7 @@
 package gconv
 
 import (
+    "github.com/gogf/gf/g/text/gstr"
     "reflect"
 )
 
@@ -311,7 +312,12 @@ func Interfaces(i interface{}) []interface{} {
                             array = append(array, rv.Index(i).Interface())
                         }
                     case reflect.Struct:
+                        rt := rv.Type()
                         for i := 0; i < rv.NumField(); i++ {
+                            // 只获取公开属性
+                            if !gstr.IsLetterUpper(rt.Field(i).Name[0]) {
+                                continue
+                            }
                             array = append(array, rv.Field(i).Interface())
                         }
                     default:

@@ -112,3 +112,15 @@ func Test_Map_StructWithJsonTag(t *testing.T) {
         gtest.Assert(map2["password2"], "456")
     })
 }
+
+// 私有属性不会进行转换
+func Test_Map_PrivateAttribute(t *testing.T) {
+    type User struct {
+        Id   int
+        name string
+    }
+    gtest.Case(t, func() {
+        user := &User{1, "john"}
+        gtest.Assert(gconv.Map(user), g.Map{"Id" : 1})
+    })
+}
