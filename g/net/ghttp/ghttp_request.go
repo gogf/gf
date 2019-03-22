@@ -81,28 +81,29 @@ func (r *Request) GetVar(key string, def ... interface{}) gvar.VarRead {
 
 // 获取原始请求输入二进制。
 func (r *Request) GetRaw() []byte {
+    err := error(nil)
     if r.rawContent == nil {
-        r.rawContent, _ = ioutil.ReadAll(r.Body)
+        r.rawContent, err = ioutil.ReadAll(r.Body)
+        if err != nil {
+            r.Error("error reading request body: ", err)
+        }
     }
     return r.rawContent
 }
 
 // 获取原始请求输入字符串。
 func (r *Request) GetRawString() string {
-    if r.rawContent == nil {
-        r.rawContent, _ = ioutil.ReadAll(r.Body)
-    }
-    return string(r.rawContent)
+    return string(r.GetRaw())
 }
 
 // 获取原始json请求输入字符串，并解析为json对象
 func (r *Request) GetJson() *gjson.Json {
     data := r.GetRaw()
-    if data != nil {
+    if len(data) > 0 {
         if j, err := gjson.DecodeToJson(data); err == nil {
             return j
         } else {
-            panic(err)
+            r.Error(err, ": ", string(data))
         }
     }
     return nil
