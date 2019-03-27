@@ -75,11 +75,18 @@ func View(name...string) *gview.View {
     }
     key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEW, group)
     return instances.GetOrSetFuncLock(key, func() interface{} {
-        path := cmdenv.Get("gf.gview.path", gfile.Pwd()).String()
-        view := gview.New(path)
-        // 添加基于源码的搜索目录检索地址，常用于开发环境调试，只添加入口文件目录
-        if p := gfile.MainPkgPath(); p != "" && gfile.Exists(p) {
-            view.AddPath(p)
+        view := gview.New(gfile.Pwd())
+        // 自定义的环境变量/启动参数路径，优先级最高，覆盖默认的工作目录
+        if envPath := cmdenv.Get("gf.gview.path").String(); envPath != "" && gfile.Exists(envPath) {
+            view.SetPath(envPath)
+        }
+        // 二进制文件执行目录
+        if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
+            view.AddPath(selfPath)
+        }
+        // 开发环境源码main包目录
+        if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
+            view.AddPath(mainPath)
         }
         // 框架内置函数
         view.BindFunc("config", funcConfig)
@@ -96,21 +103,18 @@ func Config(file...string) *gcfg.Config {
     }
     return instances.GetOrSetFuncLock(fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile),
         func() interface{} {
-            pwdPath  := gfile.Pwd()
-            envPath  := cmdenv.Get("gf.gcfg.path").String()
-            selfPath := gfile.SelfDir()
-            mainPath := gfile.MainPkgPath()
-            config   := gcfg.New(pwdPath, configFile)
+            // 默认当前工作目录
+            config := gcfg.New(gfile.Pwd(), configFile)
             // 自定义的环境变量/启动参数路径，优先级最高，覆盖默认的工作目录
-            if envPath != "" && gfile.Exists(envPath) {
+            if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" && gfile.Exists(envPath) {
                 config.SetPath(envPath)
             }
             // 二进制文件执行目录
-            if selfPath != "" && gfile.Exists(selfPath) {
+            if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
                 config.AddPath(selfPath)
             }
             // 开发环境源码main包目录
-            if mainPath != "" && gfile.Exists(mainPath) {
+            if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
                 config.AddPath(mainPath)
             }
             return config

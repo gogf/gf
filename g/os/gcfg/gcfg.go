@@ -86,10 +86,40 @@ func (c *Config) filePath(file...string) (path string) {
 
 // 设置配置管理器的配置文件存放目录绝对路径
 func (c *Config) SetPath(path string) error {
+    // 判断绝对路径(或者工作目录下目录)
     realPath := gfile.RealPath(path)
     if realPath == "" {
-        err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
-        glog.Error(fmt.Sprintf(`[gcfg] SetPath failed: %s`, err.Error()))
+        // 判断相对路径
+        c.paths.RLockFunc(func(array []string) {
+            for _, v := range array {
+                if path, _ := gspath.Search(v, path); path != "" {
+                    realPath = path
+                    break
+                }
+            }
+        })
+    }
+    // 目录不存在错误处理
+    if realPath == "" {
+        buffer := bytes.NewBuffer(nil)
+        if c.paths.Len() > 0 {
+            buffer.WriteString(fmt.Sprintf("[gcfg] SetPath failed: cannot find directory \"%s\" in following paths:", path))
+            c.paths.RLockFunc(func(array []string) {
+                for k, v := range array {
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+                }
+            })
+        } else {
+            buffer.WriteString(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" does not exist`, path))
+        }
+        err := errors.New(buffer.String())
+        glog.Error(err)
+        return err
+    }
+    // 路径必须为目录类型
+    if !gfile.IsDir(realPath) {
+        err := errors.New(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" should be directory type`, path))
+        glog.Error(err)
         return err
     }
     // 重复判断
@@ -112,10 +142,40 @@ func (c *Config) SetViolenceCheck(check bool) {
 
 // 添加配置管理器的配置文件搜索路径
 func (c *Config) AddPath(path string) error {
+    // 判断绝对路径(或者工作目录下目录)
     realPath := gfile.RealPath(path)
     if realPath == "" {
-        err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
-        glog.Error(fmt.Sprintf(`[gcfg] AddPath failed: %s`, err.Error()))
+        // 判断相对路径
+        c.paths.RLockFunc(func(array []string) {
+            for _, v := range array {
+                if path, _ := gspath.Search(v, path); path != "" {
+                    realPath = path
+                    break
+                }
+            }
+        })
+    }
+    // 目录不存在错误处理
+    if realPath == "" {
+        buffer := bytes.NewBuffer(nil)
+        if c.paths.Len() > 0 {
+            buffer.WriteString(fmt.Sprintf("[gcfg] AddPath failed: cannot find directory \"%s\" in following paths:", path))
+            c.paths.RLockFunc(func(array []string) {
+                for k, v := range array {
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+                }
+            })
+        } else {
+            buffer.WriteString(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" does not exist`, path))
+        }
+        err := errors.New(buffer.String())
+        glog.Error(err)
+        return err
+    }
+    // 路径必须为目录类型
+    if !gfile.IsDir(realPath) {
+        err := errors.New(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" should be directory type`, path))
+        glog.Error(err)
         return err
     }
     // 重复判断
