@@ -26,21 +26,21 @@ func (r *Request) setBasicAuth(tips...string) {
 }
 
 // 设置HTTP基础账号密码认证，如果用户没有提交账号密码，那么提示用户输出信息。
-// 验证成功之后返回true，否则返回false
+// 验证成功之后返回true，否则返回false。
 func (r *Request) BasicAuth(user, pass string, tips...string) bool {
     auth := r.Header.Get("Authorization")
     if auth == "" {
         r.setBasicAuth(tips...)
         return false
     }
-    auths := strings.SplitN(auth, " ", 2)
-    if len(auths) != 2 {
+    authArray := strings.SplitN(auth, " ", 2)
+    if len(authArray) != 2 {
         r.Response.WriteStatus(http.StatusForbidden)
         return false
     }
-    switch auths[0] {
+    switch authArray[0] {
         case "Basic":
-            authStr, err := gbase64.Decode(auths[1])
+            authStr, err := gbase64.Decode(authArray[1])
             if err != nil {
                 r.Response.WriteStatus(http.StatusForbidden, err.Error())
                 return false
@@ -54,11 +54,12 @@ func (r *Request) BasicAuth(user, pass string, tips...string) bool {
                 r.setBasicAuth(tips...)
                 return false
             }
+            return true
 
         default:
             r.Response.WriteStatus(http.StatusForbidden)
             return false
     }
-    return true
+    return false
 }
 
