@@ -237,6 +237,11 @@ func (s *Server) Start() error {
         return errors.New("server is already running")
     }
 
+    // 没有注册任何路由，且没有开启文件服务，那么提示错误
+    if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
+        glog.Fatal("[ghttp] no router set or static feature enabled, did you forget import the router?")
+    }
+
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
@@ -277,7 +282,7 @@ func (s *Server) Start() error {
     if gproc.IsChild() {
         gtimer.SetTimeout(2*time.Second, func() {
             if err := gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP); err != nil {
-                glog.Error("ghttp server error in process communication:", err)
+                glog.Error("[ghttp] server error in process communication:", err)
             }
         })
     }
