@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gxml provides accessing and converting for XML content.
+//
+// XML数据格式解析。
 package gxml
 
 import (
@@ -19,9 +21,9 @@ import (
 )
 
 // 将XML内容解析为map变量
-func Decode(xmlbyte []byte) (map[string]interface{}, error) {
-    prepare(xmlbyte)
-    return mxj.NewMapXml(xmlbyte)
+func Decode(content []byte) (map[string]interface{}, error) {
+    prepare(content)
+    return mxj.NewMapXml(content)
 }
 
 // 将map变量解析为XML格式内容
@@ -34,9 +36,9 @@ func EncodeWithIndent(v map[string]interface{}, rootTag...string) ([]byte, error
 }
 
 // XML格式内容直接转换为JSON格式内容
-func ToJson(xmlbyte []byte) ([]byte, error) {
-    prepare(xmlbyte)
-	mv, err := mxj.NewMapXml(xmlbyte)
+func ToJson(content []byte) ([]byte, error) {
+    prepare(content)
+	mv, err := mxj.NewMapXml(content)
 	if err == nil {
         return mv.Json()
     } else {
@@ -61,10 +63,10 @@ func prepare(xmlbyte []byte) error {
 	if err != nil {
 		return err
 	}
-	
+
 	xmlEncode := "UTF-8"
 	if len(matchStr) == 2 {
-		xmlEncode = matchStr[1]	
+		xmlEncode = matchStr[1]
 	}
 
 	charset := mahonia.GetCharset(xmlEncode)

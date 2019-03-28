@@ -8,9 +8,7 @@ package gjson_test
 
 import (
     "bytes"
-    "github.com/gogf/gf/g"
     "github.com/gogf/gf/g/encoding/gjson"
-    "github.com/gogf/gf/g/test/gtest"
     "testing"
 )
 
@@ -230,51 +228,3 @@ func Test_Set14(t *testing.T) {
         t.Error(err)
     }
 }
-
-func Test_Len(t *testing.T) {
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Append("a", 1)
-        p.Append("a", 2)
-        gtest.Assert(p.Len("a"), 2)
-    })
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Append("a.b", 1)
-        p.Append("a.c", 2)
-        gtest.Assert(p.Len("a"), 2)
-    })
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Set("a", 1)
-        gtest.Assert(p.Len("a"), -1)
-    })
-}
-
-func Test_Append(t *testing.T) {
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Append("a", 1)
-        p.Append("a", 2)
-        gtest.Assert(p.Get("a"), g.Slice{1, 2})
-    })
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Append("a.b", 1)
-        p.Append("a.c", 2)
-        gtest.Assert(p.Get("a"), g.Map{
-            "b" : g.Slice{1},
-            "c" : g.Slice{2},
-        })
-    })
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Set("a", 1)
-        err := p.Append("a", 2)
-        gtest.AssertNE(err, nil)
-        gtest.Assert(p.Get("a"), 1)
-    })
-}
-
-
-

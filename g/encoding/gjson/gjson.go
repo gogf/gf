@@ -4,11 +4,15 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gjson provides quite flexible and useful API for JSON/XML/YAML/TOML content handling.
+// Package gjson provides flexible and useful API for JSON/XML/YAML/TOML content handling.
+//
+// JSON/XML/YAML/TOML数据格式处理。
 package gjson
 
 import (
+    "bytes"
     "encoding/json"
+    "errors"
     "fmt"
     "github.com/gogf/gf/g/encoding/gtoml"
     "github.com/gogf/gf/g/encoding/gxml"
@@ -38,20 +42,20 @@ type Json struct {
 }
 
 // 将变量转换为Json对象进行处理，该变量至少应当是一个map或者slice，否者转换没有意义
-func New(value interface{}, unsafe...bool) *Json {
+func New(data interface{}, unsafe...bool) *Json {
     j := (*Json)(nil)
-    switch value.(type) {
+    switch data.(type) {
         case map[string]interface{}, []interface{}, nil:
             j = &Json {
-                p  : &value,
+                p  : &data,
                 c  : byte(gDEFAULT_SPLIT_CHAR),
                 vc : false ,
             }
         case string, []byte:
-            j, _ = LoadContent(gconv.Bytes(value))
+            j, _ = LoadContent(gconv.Bytes(data))
         default:
             v := (interface{})(nil)
-            if m := gconv.Map(value); m != nil {
+            if m := gconv.Map(data); m != nil {
                 v = m
                 j = &Json {
                     p  : &v,
@@ -59,7 +63,7 @@ func New(value interface{}, unsafe...bool) *Json {
                     vc : false,
                 }
             } else {
-                v = gconv.Interfaces(value)
+                v = gconv.Interfaces(data)
                 j = &Json {
                     p  : &v,
                     c  : byte(gDEFAULT_SPLIT_CHAR),
@@ -72,41 +76,43 @@ func New(value interface{}, unsafe...bool) *Json {
 }
 
 // 创建一个非并发安全的Json对象
-func NewUnsafe(value...interface{}) *Json {
-    if len(value) > 0 {
-        return New(value[0], true)
+func NewUnsafe(data...interface{}) *Json {
+    if len(data) > 0 {
+        return New(data[0], true)
     }
     return New(nil, true)
 }
 
 // 识别当前给定内容是否为JSON格式
-func Valid (v interface{}) bool {
-    return json.Valid(gconv.Bytes(v))
+func Valid(data interface{}) bool {
+    return json.Valid(gconv.Bytes(data))
 }
 
 // 编码go变量为json字符串，并返回json字符串指针
-func Encode (v interface{}) ([]byte, error) {
-    return json.Marshal(v)
+func Encode(value interface{}) ([]byte, error) {
+    return json.Marshal(value)
 }
 
-// 解码字符串为interface{}变量
-func Decode (b []byte) (interface{}, error) {
-    var v interface{}
-    if err := DecodeTo(b, &v); err != nil {
+// 解码字符串/[]byte为interface{}变量
+func Decode(data interface{}) (interface{}, error) {
+    var value interface{}
+    if err := DecodeTo(gconv.Bytes(data), &value); err != nil {
         return nil, err
     } else {
-        return v, nil
+        return value, nil
     }
 }
 
-// 解析json字符串为go变量，注意第二个参数为指针(任意结构的变量)
-func DecodeTo (b []byte, v interface{}) error {
-    return json.Unmarshal(b, v)
+// 解析json字符串/[]byte为go变量，注意第二个参数为指针(任意结构的变量)
+func DecodeTo(data interface{}, v interface{}) error {
+    decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
+    decoder.UseNumber()
+    return decoder.Decode(v)
 }
 
 // 解析json字符串为gjson.Json对象，并返回操作对象指针
-func DecodeToJson (b []byte) (*Json, error) {
-    if v, err := Decode(b); err != nil {
+func DecodeToJson(data interface{}) (*Json, error) {
+    if v, err := Decode(gconv.Bytes(data)); err != nil {
         return nil, err
     } else {
         return New(v), nil
@@ -114,48 +120,53 @@ func DecodeToJson (b []byte) (*Json, error) {
 }
 
 // 支持多种配置文件类型转换为json格式内容并解析为gjson.Json对象
-func Load (path string) (*Json, error) {
+func Load(path string) (*Json, error) {
     return LoadContent(gfcache.GetBinContents(path), gfile.Ext(path))
 }
 
 // 支持的配置文件格式：xml, json, yaml/yml, toml,
 // 默认为自动识别，当无法检测成功时使用json解析。
-func LoadContent(data []byte, dataType...string) (*Json, error) {
+func LoadContent(data interface{}, dataType...string) (*Json, error) {
     var err    error
     var result interface{}
+    b := gconv.Bytes(data)
     t := "json"
     if len(dataType) > 0 {
         t = dataType[0]
     } else {
-        if gregex.IsMatch(`<.+>.*</.+>`, data) {
+        if json.Valid(b) {
+            t = "json"
+        } else if gregex.IsMatch(`<.+>.*</.+>`, b) {
             t = "xml"
-        } else if gregex.IsMatch(`\w+\s*:\s*\w+`, data) {
+        } else if gregex.IsMatch(`\w+\s*:\s*.+`, b) {
             t = "yml"
-        } else if gregex.IsMatch(`\w+\s*=\s*\w+`, data) {
+        } else if gregex.IsMatch(`\w+\s*=\s*.+`, b) {
             t = "toml"
         }
     }
+    // 其他数据格式解析
     switch t {
-        case  "xml", ".xml":
-            data, err = gxml.ToJson(data)
-            if err != nil {
-                return nil, err
-            }
+        case "json", ".json":
+            // ok
+        case "xml", ".xml":
+            b, err = gxml.ToJson(b)
 
-        case   "yml", "yaml", ".yml", ".yaml":
-            data, err = gyaml.ToJson(data)
-            if err != nil {
-                return nil, err
-            }
+        case "yml", "yaml", ".yml", ".yaml":
+            b, err = gyaml.ToJson(b)
 
-        case  "toml", ".toml":
-            data, err = gtoml.ToJson(data)
-            if err != nil {
-                return nil, err
-            }
+        case "toml", ".toml":
+            b, err = gtoml.ToJson(b)
+
+        default:
+            err = errors.New("nonsupport type " + t)
+    }
+    if err != nil {
+        return nil, err
     }
     if result == nil {
-        if err := json.Unmarshal(data, &result); err != nil {
+        decoder := json.NewDecoder(bytes.NewReader(b))
+        decoder.UseNumber()
+        if err := decoder.Decode(&result); err != nil {
             return nil, err
         }
     }
@@ -205,7 +216,7 @@ func (j *Json) GetMap(pattern string) map[string]interface{} {
     return nil
 }
 
-// 将检索值转换为Json对象指针返回
+// 将检索值转换为Json对象指针返回。
 func (j *Json) GetJson(pattern string) *Json {
     result := j.Get(pattern)
     if result != nil {
@@ -214,16 +225,22 @@ func (j *Json) GetJson(pattern string) *Json {
     return nil
 }
 
-// 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
-// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (j *Json) GetArray(pattern string) []interface{} {
-    result := j.Get(pattern)
-    if result != nil {
-        if r, ok := result.([]interface{}); ok {
-            return r
+// 将检索值转换为Json对象指针数组返回。
+func (j *Json) GetJsons(pattern string) []*Json {
+    array := j.GetArray(pattern)
+    if len(array) > 0 {
+        jsons := make([]*Json, len(array))
+        for i := 0; i < len(array); i++ {
+            jsons[i] = New(array[i], !j.mu.IsSafe())
         }
+        return jsons
     }
     return nil
+}
+
+// 获得一个数组[]interface{}，方便操作，不需要自己做类型转换。
+func (j *Json) GetArray(pattern string) []interface{} {
+    return gconv.Interfaces(j.Get(pattern))
 }
 
 // 返回指定json中的string
@@ -724,8 +741,18 @@ func (j *Json) ToXml(rootTag...string) ([]byte, error) {
     return gxml.Encode(j.ToMap(), rootTag...)
 }
 
+func (j *Json) ToXmlString(rootTag...string) (string, error) {
+    b, e := j.ToXml(rootTag...)
+    return string(b), e
+}
+
 func (j *Json) ToXmlIndent(rootTag...string) ([]byte, error) {
     return gxml.EncodeWithIndent(j.ToMap(), rootTag...)
+}
+
+func (j *Json) ToXmlIndentString(rootTag...string) (string, error) {
+    b, e := j.ToXmlIndent(rootTag...)
+    return string(b), e
 }
 
 func (j *Json) ToJson() ([]byte, error) {
@@ -734,10 +761,20 @@ func (j *Json) ToJson() ([]byte, error) {
     return Encode(*(j.p))
 }
 
+func (j *Json) ToJsonString() (string, error) {
+    b, e := j.ToJson()
+    return string(b), e
+}
+
 func (j *Json) ToJsonIndent() ([]byte, error) {
     j.mu.RLock()
     defer j.mu.RUnlock()
     return json.MarshalIndent(*(j.p), "", "\t")
+}
+
+func (j *Json) ToJsonIndentString() (string, error) {
+    b, e := j.ToJsonIndent()
+    return string(b), e
 }
 
 func (j *Json) ToYaml() ([]byte, error) {
@@ -746,10 +783,20 @@ func (j *Json) ToYaml() ([]byte, error) {
     return gyaml.Encode(*(j.p))
 }
 
+func (j *Json) ToYamlString() (string, error) {
+    b, e := j.ToYaml()
+    return string(b), e
+}
+
 func (j *Json) ToToml() ([]byte, error) {
     j.mu.RLock()
     defer j.mu.RUnlock()
     return gtoml.Encode(*(j.p))
+}
+
+func (j *Json) ToTomlString() (string, error) {
+    b, e := j.ToToml()
+    return string(b), e
 }
 
 // 转换为指定的struct对象

@@ -1,21 +1,18 @@
 package main
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/net/ghttp"
-    "github.com/gogf/gf/g/os/gproc"
+    "bytes"
+    "encoding/json"
+    "fmt"
 )
 
 func main() {
-    s := g.Server()
-    s.SetIndexFolder(true)
-    s.BindHandler("/", func(r *ghttp.Request){
-        r.Response.Write("pid:", gproc.Pid())
-    })
-    s.BindHandler("/panic", func(r *ghttp.Request){
-        panic("error")
-    })
-    s.SetAccessLogEnabled(true)
-    s.SetPort(8199)
-    s.Run()
+    value := interface{}(nil)
+    data  := []byte(`{"n": 123456789}`)
+    decoder := json.NewDecoder(bytes.NewReader(data))
+    decoder.UseNumber()
+    err := decoder.Decode(&value)
+    //err   := json.Unmarshal(data, &value)
+    fmt.Println(err)
+    fmt.Println(value)
 }
