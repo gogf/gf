@@ -23,6 +23,15 @@ func (s *Server)SetLogPath(path string) {
     s.logger.SetPath(path)
 }
 
+// 设置日志内容是否输出到终端
+func (s *Server)SetLogStdPrint(enabled bool) {
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
+    }
+    s.config.LogStdPrint = enabled
+}
+
 // 设置是否开启access log日志功能
 func (s *Server)SetAccessLogEnabled(enabled bool) {
     if s.Status() == SERVER_STATUS_RUNNING {

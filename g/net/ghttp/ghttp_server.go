@@ -15,7 +15,6 @@ import (
     "github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/os/gcache"
     "github.com/gogf/gf/g/os/genv"
-    "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gproc"
     "github.com/gogf/gf/g/os/gtimer"
@@ -108,8 +107,6 @@ const (
     HOOK_AFTER_SERVE           = "AfterServe"
     HOOK_BEFORE_OUTPUT         = "BeforeOutput"
     HOOK_AFTER_OUTPUT          = "AfterOutput"
-    HOOK_BEFORE_CLOSE          = "BeforeClose"
-    HOOK_AFTER_CLOSE           = "AfterClose"
 
     HTTP_METHODS               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
     gDEFAULT_SERVER            = "default"
@@ -187,9 +184,9 @@ func serverProcessInit() {
     }
 
     // 是否处于开发环境
-    if gfile.MainPkgPath() != "" {
-        glog.Debug("GF notices that you're in develop environment, so error logs are auto enabled to stdout.")
-    }
+    //if gfile.MainPkgPath() != "" {
+    //    glog.Debug("GF notices that you're in develop environment, so error logs are auto enabled to stdout.")
+    //}
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
@@ -217,8 +214,6 @@ func GetServer(name...interface{}) (*Server) {
         servedCount      : gtype.NewInt(),
         logger           : glog.New(),
     }
-    // 日志的标准输出默认关闭，但是错误信息会特殊处理
-    s.logger.SetStdPrint(false)
     // 初始化时使用默认配置
     s.SetConfig(defaultServerConfig)
     // 记录到全局ServerMap中

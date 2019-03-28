@@ -52,6 +52,13 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         if !request.IsExited() {
             s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
         }
+        // error log
+        if e := recover(); e != nil {
+            request.Response.WriteStatus(http.StatusInternalServerError)
+            s.handleErrorLog(e, request)
+        }
+        // access log
+        s.handleAccessLog(request)
         // 输出Cookie
         request.Cookie.Output()
         // 输出缓冲区
@@ -60,18 +67,8 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         if !request.IsExited() {
             s.callHookHandler(HOOK_AFTER_OUTPUT, request)
         }
-        // 事件 - BeforeClose
-        s.callHookHandler(HOOK_BEFORE_CLOSE, request)
-        // access log
-        s.handleAccessLog(request)
-        // error log使用recover进行判断
-        if e := recover(); e != nil {
-            request.Response.WriteStatus(http.StatusInternalServerError)
-            s.handleErrorLog(e, request)
-        }
         // 更新Session会话超时时间
         request.Session.UpdateExpire()
-        s.callHookHandler(HOOK_AFTER_CLOSE, request)
     }()
 
     // ============================================================

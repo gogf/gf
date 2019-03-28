@@ -76,8 +76,9 @@ type ServerConfig struct {
     // 日志配置
     LogPath           string                // 存放日志的目录路径
     LogHandler        LogHandler            // 自定义日志处理回调方法
-    ErrorLogEnabled   bool                  // 是否开启error log
-    AccessLogEnabled  bool                  // 是否开启access log
+    LogStdPrint       bool                  // 是否打印日志到终端(默认开启)
+    ErrorLogEnabled   bool                  // 是否开启error log(默认开启)
+    AccessLogEnabled  bool                  // 是否开启access log(默认关闭)
 
     // 其他设置
     NameToUriType     int                   // 服务注册时对象和方法名称转换为URI时的规则
@@ -110,12 +111,11 @@ var defaultServerConfig = ServerConfig {
     SessionMaxAge     : gDEFAULT_SESSION_MAX_AGE,
     SessionIdName     : gDEFAULT_SESSION_ID_NAME,
 
+    LogStdPrint       : true,
     ErrorLogEnabled   : true,
-
+    AccessLogEnabled  : false,
     GzipContentTypes  : defaultGzipContentTypes,
-
     DumpRouteMap      : true,
-
     RouterCacheExpire : 60,
     Rewrites          : make(map[string]string),
 }
