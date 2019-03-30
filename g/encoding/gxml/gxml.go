@@ -70,7 +70,7 @@ func convert(xmlbyte []byte) (res []byte, err error) {
 	if s == nil {
 		return nil, fmt.Errorf("not support charset:%s\n", xmlEncode)
 	}
-	fmt.Println(s.Name, xmlEncode)
+
 	res, err = gregex.Replace(patten, []byte(""), []byte(xmlbyte))
 	if err != nil {
 		return nil, err
