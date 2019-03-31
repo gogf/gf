@@ -16,7 +16,7 @@ func main() {
             data, err := conn.Recv(-1)
             if len(data) > 0 {
                 if err := conn.Send(append([]byte("> "), data...)); err != nil {
-                    glog.Error(err)
+                  glog.Error(err)
                 }
             }
             if err != nil {
