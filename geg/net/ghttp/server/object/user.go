@@ -20,7 +20,7 @@ func (c *User) Test(r *ghttp.Request, value interface{}) {
 
 func main() {
     s := g.Server()
-    s.BindObjectMethod("/user", new(User), "Test")
+    s.BindObject("/user", new(User))
     s.SetPort(8199)
     s.Run()
 }

@@ -108,6 +108,11 @@ const (
     HOOK_BEFORE_OUTPUT         = "BeforeOutput"
     HOOK_AFTER_OUTPUT          = "AfterOutput"
 
+    // deprecated.
+    HOOK_BEFORE_CLOSE          = "BeforeClose"
+    // deprecated.
+    HOOK_AFTER_CLOSE           = "AfterClose"
+
     HTTP_METHODS               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
     gDEFAULT_SERVER            = "default"
     gDEFAULT_DOMAIN            = "default"
