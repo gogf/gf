@@ -1,23 +1,16 @@
 # ON THE WAY
 1. 增加图形验证码支持，至少支持数字和英文字母；
-1. 增加热编译工具，提高开发环境的开发/测试效率（媲美PHP开发效率）；
-1. 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
-1. ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
 1. Cookie&Session数据池化处理；
 1. ghttp.Client增加proxy特性；
 1. gtime增加对时区转换的封装，并简化失去转换时对类似+80500时区的支持；
 1. orm增加sqlite对Save方法的支持(去掉触发器语句);
 1. ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
-1. ghttp路由功能增加分组路由特性；
 1. ghttp增加返回数据压缩机制；
 1. gview中的template标签失效问题；
-1. gfile文件stat信息使用gfsnotify进行缓存更新改进；
 1. ghttp.Server增加proxy功能特性，本地proxy和远程proxy，本地即将路由规则映射；远程即反向代理；
 1. gjson对大json数据的解析效率问题；
 1. ghttp增加route name特性，并同时支持backend和template(提供内置函数)引用，可以通过RedirectRoute方法给定route name和路由参数跳转到指定的路由地址上；
-1. ghttp.Client自动Close机制；
 1. gvalid校验支持当第一个规则失败后便不再校验后续的规则，最好做成链式操作；
-1. 检查ghttp.Server超时问题；
 1. gvalid增加支持对[]rune的长度校验(一个中文占3个字节)；
 1. ghttp.Request增加对输入参数的自动HtmlEncode机制；
 1. 常量命名风格根据golint进行修改；
@@ -36,29 +29,17 @@
     - https://github.com/Masterminds/sprig
 1. gform参考 https://gohouse.github.io/gorose/dist/index.html 进行改进
 1. gtcp提供简便的包发送/接收方法(SendPkg/RecvPkg)以解决常见的TCP通信粘包问题，并完善文档（参考：https://www.cnblogs.com/kex1n/p/6502002.html）；
-1. gfile对于文件的读写强行使用了gfpool，在某些场景下不合适，需要考虑剥离开，并为开发者提供单独的指针池文件操作特性；
 1. 路由增加不区分大小写得匹配方式；
-1. str_ireplace: http://php.net/manual/en/function.str-ireplace.php
-1. strpos/stripos/strrpos/strripos: http://php.net/manual/en/function.stripos.php
 1. 改进WebServer获取POST参数处理逻辑，当提交非form数据时，例如json数据，针对某些方法可以直接解析；
 1. WebServer增加可选择的路由覆盖配置，默认情况下不覆盖；
-1. gkafka这个包比较重，未来从框架中剥离出来；
 1. grpool性能压测结果变慢的问题；
 1. 增加jumplist的数据结构容器；
 1. DelayQueue/PriorityQueue；
-1. gconv针对struct的转换增加json tag支持，gconv.Map默认也支持json tag, 完善开发文档；
-1. 增加SO_REUSEPORT的支持；
 1. 权限管理模块；
 1. 从ghttp中剥离SESSION功能构成单独的模块gsession；
 1. 改进gproc进程间通信处理逻辑，提高稳定性，以应对进程间大批量的数据发送/接收；
-1. gdb的Data方法支持struct参数传入；
-1. gfcache依旧使用gcache作为缓存控制对象，不要使用gmap；
-1. 增加对ghttp路由注册的{.struct}/{.method}单元测试；
-1. 更新跨域请求CORS相关功能文档；
 1. ghttp的热重启的本地进程端口监听，在不使用该特性时默认关闭掉；
-1. gcfg包目前允许添加重复的目录路径，需要在SetPath/AddPath时判断重复性，不能添加重复的路径；
-1. gdb执行数据写入时，如果参数为struct/[]struct，自动映射与表字段对应关系，不再使用gconv标签标识；
-
+1. gtcp增加对TLS加密通信的支持；
 
 
 
@@ -119,4 +100,19 @@
 1. gform对于MySQL字段类型为datetime类型的时区问题分析；
 1. 改进证书打开失败时的WebServer错误提示，前置HOOK校验后关闭后续的HOOK逻辑执行；
 1. 目前WebServer的HOOK是按照优先级执行的，需要增加覆盖特性；
-
+1. 更新跨域请求CORS相关功能文档；
+1. ghttp.Response增加输出内容后自动退出当前请求机制，不需要用户手动return，参考beego如何实现；
+1. gcfg包目前允许添加重复的目录路径，需要在SetPath/AddPath时判断重复性，不能添加重复的路径；
+1. gdb执行数据写入时，如果参数为struct/[]struct，自动映射与表字段对应关系，不再使用gconv标签标识；
+1. gdb的Data方法支持struct参数传入；
+1. gfcache依旧使用gcache作为缓存控制对象，不要使用gmap；
+1. 增加对ghttp路由注册的{.struct}/{.method}单元测试；
+1. gconv针对struct的转换增加json tag支持，gconv.Map默认也支持json tag, 完善开发文档；
+1. 增加SO_REUSEPORT的支持；
+1. gkafka这个包比较重，未来从框架中剥离出来；
+1. str_ireplace: http://php.net/manual/en/function.str-ireplace.php
+1. strpos/stripos/strrpos/strripos: http://php.net/manual/en/function.stripos.php
+1. gfile对于文件的读写强行使用了gfpool，在某些场景下不合适，需要考虑剥离开，并为开发者提供单独的指针池文件操作特性；
+1. ghttp.Client自动Close机制；
+1. ghttp路由功能增加分组路由特性；
+1. 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
