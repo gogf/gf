@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"github.com/gogf/gf/g/encoding/gcharset"
 	"github.com/gogf/gf/g/encoding/gparser"
-	"github.com/wenzi1/gf/g/encoding/gxml"
+	"github.com/gogf/gf/g/encoding/gxml"
 	"strings"
 	"testing"
 )
