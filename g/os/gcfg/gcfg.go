@@ -438,7 +438,7 @@ func (c *Config) GetToStruct(pattern string, objPointer interface{}, file...stri
 }
 
 // Deprecated. See Clear.
-func (c *Config) Clear() {
+func (c *Config) Reload() {
     c.jsons.Clear()
 }
 
