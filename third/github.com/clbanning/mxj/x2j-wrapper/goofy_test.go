@@ -9,7 +9,7 @@ import (
 func TestGoofy(t *testing.T) {
 	var doc = `<xml><tag one="1" pi="3.1415962535" bool="true"/><tagJR key="value"/></xml>`
 	type goofy struct {
-		S string
+		S  string
 		Sp *string
 	}
 	g := new(goofy)
@@ -19,7 +19,7 @@ func TestGoofy(t *testing.T) {
 
 	m, err := DocToMap(doc)
 	if err != nil {
-		fmt.Println("err:",err.Error())
+		fmt.Println("err:", err.Error())
 		return
 	}
 
@@ -27,13 +27,13 @@ func TestGoofy(t *testing.T) {
 	m["byteVal"] = interface{}([]byte(`the aid of their country`))
 	m["nilVal"] = interface{}(nil)
 
-	fmt.Println("\nTestGoofy ... MapToDoc:",m)
+	fmt.Println("\nTestGoofy ... MapToDoc:", m)
 	var v []byte
-	v,err = json.Marshal(m)
+	v, err = json.Marshal(m)
 	if err != nil {
-		fmt.Println("err:",err.Error())
+		fmt.Println("err:", err.Error())
 	}
-	fmt.Println("v:",string(v))
+	fmt.Println("v:", string(v))
 
 	type goofier struct {
 		G *goofy
@@ -46,11 +46,10 @@ func TestGoofy(t *testing.T) {
 	gg.N = nil
 	m["goofierVal"] = interface{}(gg)
 
-	fmt.Println("\nTestGoofier ... MapToDoc:",m)
-	v,err = json.Marshal(m)
+	fmt.Println("\nTestGoofier ... MapToDoc:", m)
+	v, err = json.Marshal(m)
 	if err != nil {
-		fmt.Println("err:",err.Error())
+		fmt.Println("err:", err.Error())
 	}
-	fmt.Println("v:",string(v))
+	fmt.Println("v:", string(v))
 }
-

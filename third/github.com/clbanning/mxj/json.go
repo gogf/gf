@@ -105,7 +105,7 @@ func (mv Map) JsonIndentWriterRaw(jsonWriter io.Writer, prefix, indent string, s
 // --------------------------- read JSON -----------------------------
 
 // Decode numericvalues as json.Number type Map values - see encoding/json#Number.
-// NOTE: this is for decoding JSON into a Map with NewMapJson(), NewMapJsonReader(), 
+// NOTE: this is for decoding JSON into a Map with NewMapJson(), NewMapJsonReader(),
 // etc.; it does not affect NewMapXml(), etc.  The XML encoders mv.Xml() and mv.XmlIndent()
 // do recognize json.Number types; a JSON object can be decoded to a Map with json.Number
 // value types and the resulting Map can be correctly encoded into a XML object.

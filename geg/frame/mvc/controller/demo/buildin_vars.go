@@ -1,16 +1,16 @@
 package demo
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
 )
 
-type Order struct { }
+type Order struct{}
 
 func init() {
-    g.Server().BindObject("/{.struct}-{.method}", new(Order))
+	g.Server().BindObject("/{.struct}-{.method}", new(Order))
 }
 
 func (o *Order) List(r *ghttp.Request) {
-    r.Response.Write("List")
+	r.Response.Write("List")
 }

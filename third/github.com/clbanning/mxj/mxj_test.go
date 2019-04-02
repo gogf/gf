@@ -37,9 +37,9 @@ func TestMap(t *testing.T) {
 	fmt.Println("TestMap, m_fromXML:")
 	fmt.Printf("%#v\n", m)
 	fmt.Println("TestMap, StringIndent -")
-	fmt.Println( m.StringIndent())
+	fmt.Println(m.StringIndent())
 	fmt.Println("TestMap, StringIndent NoTypeInfo -")
-	fmt.Println( m.StringIndentNoTypeInfo())
+	fmt.Println(m.StringIndentNoTypeInfo())
 
 	mm, _ := m.Copy()
 	fmt.Println("TestMap, m.Copy() -\n", mm)

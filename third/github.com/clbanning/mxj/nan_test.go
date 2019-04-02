@@ -78,4 +78,3 @@ func TestCastNanInf(t *testing.T) {
 	}
 	fmt.Println("foo.bar:", v)
 }
-
