@@ -27,4 +27,3 @@ func useCustomDecoder(d *xml.Decoder) {
 	d.CharsetReader = CustomDecoder.CharsetReader
 	d.DefaultSpace = CustomDecoder.DefaultSpace
 }
-

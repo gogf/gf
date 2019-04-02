@@ -1,31 +1,31 @@
 package main
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/os/gview"
-    "github.com/gogf/gf/g/net/ghttp"
-    "github.com/gogf/gf/g/util/gpage"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/g/os/gview"
+	"github.com/gogf/gf/g/util/gpage"
 )
 
 // 自定义分页名称
 func pageContent(page *gpage.Page) string {
-    page.NextPageTag  = "NextPage"
-    page.PrevPageTag  = "PrevPage"
-    page.FirstPageTag = "HomePage"
-    page.LastPageTag  = "LastPage"
-    pageStr := page.FirstPage()
-    pageStr += page.PrevPage()
-    pageStr += page.PageBar("current-page")
-    pageStr += page.NextPage()
-    pageStr += page.LastPage()
-    return pageStr
+	page.NextPageTag = "NextPage"
+	page.PrevPageTag = "PrevPage"
+	page.FirstPageTag = "HomePage"
+	page.LastPageTag = "LastPage"
+	pageStr := page.FirstPage()
+	pageStr += page.PrevPage()
+	pageStr += page.PageBar("current-page")
+	pageStr += page.NextPage()
+	pageStr += page.LastPage()
+	return pageStr
 }
 
 func main() {
-    s := ghttp.GetServer()
-    s.BindHandler("/page/custom2/*page", func(r *ghttp.Request){
-        page      := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
-        buffer, _ := gview.ParseContent(`
+	s := ghttp.GetServer()
+	s.BindHandler("/page/custom2/*page", func(r *ghttp.Request) {
+		page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
+		buffer, _ := gview.ParseContent(`
         <html>
             <head>
                 <style>
@@ -38,10 +38,10 @@ func main() {
             </body>
         </html>
         `, g.Map{
-            "page" : pageContent(page),
-        })
-        r.Response.Write(buffer)
-    })
-    s.SetPort(10000)
-    s.Run()
+			"page": pageContent(page),
+		})
+		r.Response.Write(buffer)
+	})
+	s.SetPort(10000)
+	s.Run()
 }

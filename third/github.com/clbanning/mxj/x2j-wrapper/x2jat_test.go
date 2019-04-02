@@ -85,49 +85,49 @@ func TestValuesAtKeyPath(t *testing.T) {
 	fmt.Println("\n=============== TestValuesAtKeyPath ...")
 	fmt.Println("\nValuesAtKeyPath ... doc1#author")
 	m, _ := DocToMap(doc1)
-	ss := PathsForKey(m,"author")
+	ss := PathsForKey(m, "author")
 	fmt.Println("ss:", ss)
-	for _,v := range ss {
-		vv := ValuesAtKeyPath(m,v,true)
+	for _, v := range ss {
+		vv := ValuesAtKeyPath(m, v, true)
 		fmt.Println("vv:", vv)
 	}
 
 	fmt.Println("\nValuesAtKeyPath ... doc1#first_name")
 	// m, _ := DocToMap(doc1)
-	ss = PathsForKey(m,"first_name")
+	ss = PathsForKey(m, "first_name")
 	fmt.Println("ss:", ss)
-	for _,v := range ss {
-		vv := ValuesAtKeyPath(m,v,true)
+	for _, v := range ss {
+		vv := ValuesAtKeyPath(m, v, true)
 		fmt.Println("vv:", vv)
 	}
 
 	fmt.Println("\nGetKeyPaths...doc2#book")
 	m, _ = DocToMap(doc2)
-	ss = PathsForKey(m,"book")
+	ss = PathsForKey(m, "book")
 	fmt.Println("ss:", ss)
-	for _,v := range ss {
-		vv := ValuesAtKeyPath(m,v,true)
+	for _, v := range ss {
+		vv := ValuesAtKeyPath(m, v, true)
 		fmt.Println("vv:", vv)
 	}
-	s := PathForKeyShortest(m,"book")
-	vv := ValuesAtKeyPath(m,s)
-	fmt.Println("vv,shortest_path:",vv)
+	s := PathForKeyShortest(m, "book")
+	vv := ValuesAtKeyPath(m, s)
+	fmt.Println("vv,shortest_path:", vv)
 
 	fmt.Println("\nValuesAtKeyPath ... msg1#pub")
 	m, _ = DocToMap(msg1)
-	ss = PathsForKey(m,"pub")
+	ss = PathsForKey(m, "pub")
 	fmt.Println("ss:", ss)
-	for _,v := range ss {
-		vv := ValuesAtKeyPath(m,v,true)
+	for _, v := range ss {
+		vv := ValuesAtKeyPath(m, v, true)
 		fmt.Println("vv:", vv)
 	}
 
 	fmt.Println("\nValuesAtKeyPath ... msg2#pub")
 	m, _ = DocToMap(msg2)
-	ss = PathsForKey(m,"pub")
+	ss = PathsForKey(m, "pub")
 	fmt.Println("ss:", ss)
-	for _,v := range ss {
-		vv := ValuesAtKeyPath(m,v,true)
+	for _, v := range ss {
+		vv := ValuesAtKeyPath(m, v, true)
 		fmt.Println("vv:", vv)
 	}
 }
@@ -136,32 +136,31 @@ func TestValuesAtTagPath(t *testing.T) {
 	fmt.Println("\n=============== TestValuesAtTagPath ...")
 	fmt.Println("\nValuesAtTagPath ... doc1#author")
 	m, _ := DocToMap(doc1)
-	ss := PathsForKey(m,"author")
+	ss := PathsForKey(m, "author")
 	fmt.Println("ss:", ss)
-	for _,v := range ss {
-		vv,_ := ValuesAtTagPath(doc1,v,true)
+	for _, v := range ss {
+		vv, _ := ValuesAtTagPath(doc1, v, true)
 		fmt.Println("vv:", vv)
 	}
 
 	fmt.Println("\nValuesAtTagPath ... doc1#first_name")
 	// m, _ := DocToMap(doc1)
-	ss = PathsForKey(m,"first_name")
+	ss = PathsForKey(m, "first_name")
 	fmt.Println("ss:", ss)
-	for _,v := range ss {
-		vv,_ := ValuesAtTagPath(doc1,v,true)
+	for _, v := range ss {
+		vv, _ := ValuesAtTagPath(doc1, v, true)
 		fmt.Println("vv:", vv)
 	}
 
 	fmt.Println("\nValuesAtTagPath...doc2#book")
 	m, _ = DocToMap(doc2)
-	ss = PathsForKey(m,"book")
+	ss = PathsForKey(m, "book")
 	fmt.Println("ss:", ss)
-	for _,v := range ss {
-		vv,_ := ValuesAtTagPath(doc2,v,true)
+	for _, v := range ss {
+		vv, _ := ValuesAtTagPath(doc2, v, true)
 		fmt.Println("vv:", vv)
 	}
-	s := PathForKeyShortest(m,"book")
-	vv,_ := ValuesAtTagPath(doc2,s)
-	fmt.Println("vv,shortest_path:",vv)
+	s := PathForKeyShortest(m, "book")
+	vv, _ := ValuesAtTagPath(doc2, s)
+	fmt.Println("vv,shortest_path:", vv)
 }
-

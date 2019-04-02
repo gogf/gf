@@ -1,19 +1,19 @@
 package stats
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
 )
 
 var (
-    total int
+	total int
 )
 
 func init() {
-    g.Server().BindHandler("/stats/total", showTotal)
+	g.Server().BindHandler("/stats/total", showTotal)
 }
 
 func showTotal(r *ghttp.Request) {
-    total++
-    r.Response.Write("total:", total)
+	total++
+	r.Response.Write("total:", total)
 }
