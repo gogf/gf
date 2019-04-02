@@ -14,6 +14,7 @@ import (
     "database/sql"
     "errors"
     "fmt"
+    "github.com/gogf/gf/g/container/gmap"
     "github.com/gogf/gf/g/container/gring"
     "github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/container/gvar"
@@ -155,22 +156,26 @@ const (
     gDEFAULT_BATCH_NUM          = 10
     // 默认的连接池连接存活时间(秒)
     gDEFAULT_CONN_MAX_LIFE_TIME = 30
+)
 
+var (
+    // 单例对象Map
+    instances = gmap.NewStringInterfaceMap()
 )
 
 // 使用默认/指定分组配置进行连接，数据库集群配置项：default
-func New(groupName ...string) (db DB, err error) {
-	group := config.d
-	if len(groupName) > 0 {
-        group = groupName[0]
+func New(name...string) (db DB, err error) {
+	group := configs.defaultGroup
+	if len(name) > 0 {
+        group = name[0]
 	}
-	config.RLock()
-	defer config.RUnlock()
+	configs.RLock()
+	defer configs.RUnlock()
 
-	if len(config.c) < 1 {
+	if len(configs.config) < 1 {
 		return nil, errors.New("empty database configuration")
 	}
-	if _, ok := config.c[group]; ok {
+	if _, ok := configs.config[group]; ok {
 	    if node, err := getConfigNodeByGroup(group, true); err == nil {
 	        base := &dbBase {
                 group            : group,
@@ -204,9 +209,25 @@ func New(groupName ...string) (db DB, err error) {
 	}
 }
 
+// 获得数据库操作对象单例
+func Instance(name...string) (db DB, err error) {
+    group := configs.defaultGroup
+    if len(name) > 0 {
+        group = name[0]
+    }
+    v := instances.GetOrSetFuncLock(group, func() interface{} {
+        db, err = New(group)
+        return db
+    })
+    if v != nil {
+        return v.(DB), nil
+    }
+    return
+}
+
 // 获取指定数据库角色的一个配置项，内部根据权重计算负载均衡
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
-    if list, ok := config.c[group]; ok {
+    if list, ok := configs.config[group]; ok {
         // 将master, slave集群列表拆分出来
         masterList := make(ConfigGroup, 0)
         slaveList  := make(ConfigGroup, 0)
@@ -319,17 +340,17 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
     return
 }
 
-// 切换操作的数据库(注意该切换是全局的)
+// 切换当前数据库对象操作的数据库。
 func (bs *dbBase) SetSchema(schema string) {
     bs.schema.Set(schema)
 }
 
-// 创建底层数据库master链接对象
+// 创建底层数据库master链接对象。
 func (bs *dbBase) Master() (*sql.DB, error) {
 	return bs.getSqlDb(true)
 }
 
-// 创建底层数据库slave链接对象
+// 创建底层数据库slave链接对象。
 func (bs *dbBase) Slave() (*sql.DB, error) {
     return bs.getSqlDb(false)
 }

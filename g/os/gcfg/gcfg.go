@@ -4,10 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gcfg provides reading, caching and managing for configuration files.
-// 
-// 配置管理,
-// 配置文件格式支持：json, xml, toml, yaml/yml
+// Package gcfg provides reading, caching and managing for configuration files/contents.
 package gcfg
 
 import (
@@ -26,21 +23,20 @@ import (
 )
 
 const (
-    // 默认的配置管理文件名称
+    // Default configuration file name.
     DEFAULT_CONFIG_FILE = "config.toml"
 )
 
-// 配置管理对象
+// Configuration struct.
 type Config struct {
-    name   *gtype.String            // 默认配置文件名称
-    paths  *garray.StringArray      // 搜索目录路径
-    jsons  *gmap.StringInterfaceMap // 配置文件对象
-    vc     *gtype.Bool              // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
+    name   *gtype.String            // Default configuration file name.
+    paths  *garray.StringArray      // Searching path array.
+    jsons  *gmap.StringInterfaceMap // The pared JSON objects for configuration files.
+    vc     *gtype.Bool              // Whether do violence check in value index searching.
+                                    // It affects the performance when set true(false in default).
 }
 
 // New returns a new configuration management object.
-//
-// 生成一个配置管理对象
 func New(path string, file...string) *Config {
     name := DEFAULT_CONFIG_FILE
     if len(file) > 0 {
@@ -59,8 +55,6 @@ func New(path string, file...string) *Config {
 }
 
 // filePath returns the absolute configuration file path for the given filename by <file>.
-//
-// 判断从哪个配置文件中获取内容，返回配置文件的绝对路径
 func (c *Config) filePath(file...string) (path string) {
     name := c.name.Val()
     if len(file) > 0 {
@@ -228,19 +222,30 @@ func (c *Config) getJson(file...string) *gjson.Json {
         name = file[0]
     }
     r := c.jsons.GetOrSetFuncLock(name, func() interface{} {
-        filePath := c.filePath(file...)
-        if filePath == "" {
-            return nil
+        content  := ""
+        filePath := ""
+        if content = GetContent(name); content == "" {
+            filePath = c.filePath(name)
+            if filePath == "" {
+                return nil
+            }
+            content = gfile.GetContents(filePath)
         }
-        if j, err := gjson.Load(filePath); err == nil {
+        if j, err := gjson.LoadContent(content); err == nil {
             j.SetViolenceCheck(c.vc.Val())
             // 添加配置文件监听，如果有任何变化，删除文件内容缓存，下一次查询会自动更新
-            gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-                c.jsons.Remove(name)
-            })
+            if filePath != "" {
+                gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+                    c.jsons.Remove(name)
+                })
+            }
             return j
         } else {
-            glog.Criticalfln(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+            if filePath != "" {
+                glog.Criticalfln(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+            } else {
+                glog.Criticalfln(`[gcfg] Load configuration failed: %s`, err.Error())
+            }
         }
         return nil
     })

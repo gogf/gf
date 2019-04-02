@@ -138,9 +138,9 @@ func LoadContent(data interface{}, dataType...string) (*Json, error) {
             t = "json"
         } else if gregex.IsMatch(`<.+>.*</.+>`, b) {
             t = "xml"
-        } else if gregex.IsMatch(`\w+\s*:\s*.+`, b) {
+        } else if gregex.IsMatch(`\n[\s\t]*\w+\s*:\s*.+`, b) {
             t = "yml"
-        } else if gregex.IsMatch(`\w+\s*=\s*.+`, b) {
+        } else if gregex.IsMatch(`\n[\s\t]*\w+\s*=\s*.+`, b) {
             t = "toml"
         }
     }
@@ -168,6 +168,10 @@ func LoadContent(data interface{}, dataType...string) (*Json, error) {
         decoder.UseNumber()
         if err := decoder.Decode(&result); err != nil {
             return nil, err
+        }
+        switch result.(type) {
+            case string, []byte:
+                return nil, fmt.Errorf(`json decoding failed for content: %s`, string(b))
         }
     }
     return New(result), nil

@@ -9,9 +9,8 @@ func main() {
     gudp.NewServer("127.0.0.1:8999", func(conn *gudp.Conn) {
         defer conn.Close()
         for {
-            if data, _ := conn.Recv(-1); len(data) > 0 {
-                fmt.Println(string(data))
-            }
+            data, err := conn.Recv(-1)
+            fmt.Println(err, string(data))
         }
     }).Run()
 }

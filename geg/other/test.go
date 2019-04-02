@@ -1,18 +1,9 @@
 package main
 
-import (
-    "bytes"
-    "encoding/json"
-    "fmt"
-)
+import "fmt"
 
 func main() {
-    value := interface{}(nil)
-    data  := []byte(`{"n": 123456789}`)
-    decoder := json.NewDecoder(bytes.NewReader(data))
-    decoder.UseNumber()
-    err := decoder.Decode(&value)
-    //err   := json.Unmarshal(data, &value)
-    fmt.Println(err)
-    fmt.Println(value)
+    x := uintptr(1)
+    fmt.Println(x^0)
+    fmt.Println(2^0)
 }
