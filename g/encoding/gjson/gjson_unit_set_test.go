@@ -172,7 +172,7 @@ func Test_Set10(t *testing.T) {
 
 func Test_Set11(t *testing.T) {
     e    := []byte(`{"a":{"b":{}}}`)
-    p, _ := gjson.LoadContent([]byte(`{"a":{"b":{"c":1}}}`), "json")
+    p, _ := gjson.LoadContent([]byte(`{"a":{"b":{"c":1}}}`))
     p.Remove("a.b.c")
     if c, err := p.ToJson(); err == nil {
         

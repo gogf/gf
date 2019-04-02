@@ -4,11 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gjson_test
+package gparser_test
 
 import (
     "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/encoding/gjson"
+    "github.com/gogf/gf/g/encoding/gparser"
     "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/test/gtest"
     "testing"
@@ -19,7 +19,7 @@ func Test_Load_JSON(t *testing.T) {
     data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
     // JSON
     gtest.Case(t, func() {
-        j, err := gjson.LoadContent(data)
+        j, err := gparser.LoadContent(data)
         gtest.Assert(err,        nil)
         gtest.Assert(j.Get("n"),   "123456789")
         gtest.Assert(j.Get("m"),   g.Map{"k" : "v"})
@@ -32,7 +32,7 @@ func Test_Load_JSON(t *testing.T) {
         path := "test.json"
         gfile.PutBinContents(path, data)
         defer gfile.Remove(path)
-        j, err := gjson.Load(path)
+        j, err := gparser.Load(path)
         gtest.Assert(err,          nil)
         gtest.Assert(j.Get("n"),   "123456789")
         gtest.Assert(j.Get("m"),   g.Map{"k" : "v"})
@@ -46,7 +46,7 @@ func Test_Load_XML(t *testing.T) {
     data := []byte(`<doc><a>1</a><a>2</a><a>3</a><m><k>v</k></m><n>123456789</n></doc>`)
     // XML
     gtest.Case(t, func() {
-        j, err := gjson.LoadContent(data)
+        j, err := gparser.LoadContent(data)
         gtest.Assert(err, nil)
         gtest.Assert(j.Get("doc.n"),   "123456789")
         gtest.Assert(j.Get("doc.m"),   g.Map{"k" : "v"})
@@ -59,7 +59,7 @@ func Test_Load_XML(t *testing.T) {
         path := "test.xml"
         gfile.PutBinContents(path, data)
         defer gfile.Remove(path)
-        j, err := gjson.Load(path)
+        j, err := gparser.Load(path)
         gtest.Assert(err, nil)
         gtest.Assert(j.Get("doc.n"),   "123456789")
         gtest.Assert(j.Get("doc.m"),   g.Map{"k" : "v"})
@@ -81,7 +81,7 @@ m:
     `)
     // YAML
     gtest.Case(t, func() {
-        j, err := gjson.LoadContent(data)
+        j, err := gparser.LoadContent(data)
         gtest.Assert(err,          nil)
         gtest.Assert(j.Get("n"),   "123456789")
         gtest.Assert(j.Get("m"),   g.Map{"k" : "v"})
@@ -94,7 +94,7 @@ m:
         path := "test.yaml"
         gfile.PutBinContents(path, data)
         defer gfile.Remove(path)
-        j, err := gjson.Load(path)
+        j, err := gparser.Load(path)
         gtest.Assert(err,          nil)
         gtest.Assert(j.Get("n"),   "123456789")
         gtest.Assert(j.Get("m"),   g.Map{"k" : "v"})
@@ -107,7 +107,7 @@ m:
 func Test_Load_YAML2(t *testing.T) {
     data := []byte("i : 123456789")
     gtest.Case(t, func() {
-        j, err := gjson.LoadContent(data)
+        j, err := gparser.LoadContent(data)
         gtest.Assert(err,          nil)
         gtest.Assert(j.Get("i"),   "123456789")
     })
@@ -123,7 +123,7 @@ n = "123456789"
 `)
     // TOML
     gtest.Case(t, func() {
-        j, err := gjson.LoadContent(data)
+        j, err := gparser.LoadContent(data)
         gtest.Assert(err,          nil)
         gtest.Assert(j.Get("n"),   "123456789")
         gtest.Assert(j.Get("m"),   g.Map{"k" : "v"})
@@ -136,7 +136,7 @@ n = "123456789"
         path := "test.toml"
         gfile.PutBinContents(path, data)
         defer gfile.Remove(path)
-        j, err := gjson.Load(path)
+        j, err := gparser.Load(path)
         gtest.Assert(err,          nil)
         gtest.Assert(j.Get("n"),   "123456789")
         gtest.Assert(j.Get("m"),   g.Map{"k" : "v"})
@@ -149,7 +149,7 @@ n = "123456789"
 func Test_Load_TOML2(t *testing.T) {
     data := []byte("i=123456789")
     gtest.Case(t, func() {
-        j, err := gjson.LoadContent(data)
+        j, err := gparser.LoadContent(data)
         gtest.Assert(err,          nil)
         gtest.Assert(j.Get("i"),   "123456789")
     })
