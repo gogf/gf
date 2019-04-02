@@ -10,58 +10,55 @@
 package gxml
 
 import (
-    "github.com/gogf/gf/third/github.com/clbanning/mxj"
-    "encoding/xml"
-    "io"
+	"fmt"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/third/github.com/axgle/mahonia"
-	"errors"
-	"fmt"
+	"github.com/gogf/gf/third/github.com/clbanning/mxj"
 	"strings"
 )
 
 // 将XML内容解析为map变量
 func Decode(content []byte) (map[string]interface{}, error) {
-    prepare(content)
-    return mxj.NewMapXml(content)
+	res, err := convert(content)
+	if err != nil {
+		return nil, err
+	}
+	return mxj.NewMapXml(res)
 }
 
 // 将map变量解析为XML格式内容
-func Encode(v map[string]interface{}, rootTag...string) ([]byte, error) {
-    return mxj.Map(v).Xml(rootTag...)
+func Encode(v map[string]interface{}, rootTag ...string) ([]byte, error) {
+	return mxj.Map(v).Xml(rootTag...)
 }
 
-func EncodeWithIndent(v map[string]interface{}, rootTag...string) ([]byte, error) {
-    return mxj.Map(v).XmlIndent("", "\t", rootTag...)
+func EncodeWithIndent(v map[string]interface{}, rootTag ...string) ([]byte, error) {
+	return mxj.Map(v).XmlIndent("", "\t", rootTag...)
 }
 
 // XML格式内容直接转换为JSON格式内容
 func ToJson(content []byte) ([]byte, error) {
-    prepare(content)
-	mv, err := mxj.NewMapXml(content)
+	res, err := convert(content)
+	if err != nil {
+		fmt.Println("convert error. ", err)
+		return nil, err
+	}
+
+	mv, err := mxj.NewMapXml(res)
 	if err == nil {
-        return mv.Json()
-    } else {
-        return nil, err
-    }
+		return mv.Json()
+	} else {
+		return nil, err
+	}
 }
 
 // XML字符集预处理
 // @author wenzi1
-// @date 20180604
-func prepare(xmlbyte []byte) error {
+// @date 20180604  修复并发安全问题,改为如果非UTF8字符集则先做字符集转换
+func convert(xmlbyte []byte) (res []byte, err error) {
 	patten := `<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`
-	charsetReader := func(charset string, input io.Reader) (io.Reader, error) {
-		reader := mahonia.GetCharset(charset)
-		if reader == nil {
-			return nil, errors.New(fmt.Sprintf("not support charset:%s", charset))
-		}
-		return reader.NewDecoder().NewReader(input), nil
-	}
-
 	matchStr, err := gregex.MatchString(patten, string(xmlbyte))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	xmlEncode := "UTF-8"
@@ -69,13 +66,19 @@ func prepare(xmlbyte []byte) error {
 		xmlEncode = matchStr[1]
 	}
 
-	charset := mahonia.GetCharset(xmlEncode)
-	if charset == nil {
-		return errors.New(fmt.Sprintf("not support charset:%s", xmlEncode))
+	s := mahonia.GetCharset(xmlEncode)
+	if s == nil {
+		return nil, fmt.Errorf("not support charset:%s\n", xmlEncode)
 	}
 
-	if !strings.EqualFold(charset.Name, "UTF-8") {
-		mxj.CustomDecoder = &xml.Decoder{Strict : false, CharsetReader : charsetReader}
+	res, err = gregex.Replace(patten, []byte(""), []byte(xmlbyte))
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	if !strings.EqualFold(s.Name, "UTF-8") {
+		res = []byte(s.NewDecoder().ConvertString(string(res)))
+	}
+
+	return res, nil
 }
