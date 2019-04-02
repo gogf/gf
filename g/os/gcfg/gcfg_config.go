@@ -32,3 +32,8 @@ func GetContent(file...string) string {
     }
     return configs.Get(name)
 }
+
+// ClearContent removes all global configuration contents.
+func ClearContent() {
+    configs.Clear()
+}

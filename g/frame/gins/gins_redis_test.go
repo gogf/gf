@@ -53,7 +53,7 @@ test = "v=3"
     err  := gfile.PutContents(path, config)
     gtest.Assert(err, nil)
     defer gfile.Remove(path)
-    defer gins.Config().Reload()
+    defer gins.Config().Clear()
 
     // for gfsnotify callbacks to refresh cache of config file
     time.Sleep(500*time.Millisecond)

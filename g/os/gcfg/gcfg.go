@@ -131,7 +131,7 @@ func (c *Config) SetPath(path string) error {
 // 开启比较耗性能，也不建议允许键名中存在分隔符，最好在应用端避免这种情况。
 func (c *Config) SetViolenceCheck(check bool) {
     c.vc.Set(check)
-    c.Reload()
+    c.Clear()
 }
 
 // 添加配置管理器的配置文件搜索路径
@@ -437,8 +437,14 @@ func (c *Config) GetToStruct(pattern string, objPointer interface{}, file...stri
     return errors.New("config file not found")
 }
 
-// 清空当前配置文件缓存，强制重新从磁盘文件读取配置文件内容
-func (c *Config) Reload() {
+// Deprecated. See Clear.
+func (c *Config) Clear() {
+    c.jsons.Clear()
+}
+
+// Clear removes all parsed configuration files content cache,
+// which will force reload configuration content from file.
+func (c *Config) Clear() {
     c.jsons.Clear()
 }
 

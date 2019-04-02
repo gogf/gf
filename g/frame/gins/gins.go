@@ -204,7 +204,7 @@ func Database(name...string) gdb.DB {
                 }
                 gdb.AddConfigGroup(group, cg)
             }
-            addConfigMonitor(key)
+            addConfigMonitor(key, config)
         }
         if db, err := gdb.New(name...); err == nil {
             return db
@@ -234,31 +234,31 @@ func Redis(name...string) *gredis.Redis {
                 line := gconv.String(v)
                 array, _ := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)\?(.+)`, line)
                 if len(array) == 6 {
-                    parse, _ := gstr.Parse(array[5])
-                    config   := gredis.Config{
+                    parse, _    := gstr.Parse(array[5])
+                    redisConfig := gredis.Config{
                         Host : array[1],
                         Port : gconv.Int(array[2]),
                         Db   : gconv.Int(array[3]),
                         Pass : array[4],
                     }
                     if v, ok := parse["maxIdle"]; ok {
-                        config.MaxIdle = gconv.Int(v)
+                        redisConfig.MaxIdle = gconv.Int(v)
                     }
                     if v, ok := parse["maxActive"]; ok {
-                        config.MaxActive = gconv.Int(v)
+                        redisConfig.MaxActive = gconv.Int(v)
                     }
                     if v, ok := parse["idleTimeout"]; ok {
-                        config.IdleTimeout = gconv.TimeDuration(v)*time.Second
+                        redisConfig.IdleTimeout = gconv.TimeDuration(v)*time.Second
                     }
                     if v, ok := parse["maxConnLifetime"]; ok {
-                        config.MaxConnLifetime = gconv.TimeDuration(v)*time.Second
+                        redisConfig.MaxConnLifetime = gconv.TimeDuration(v)*time.Second
                     }
-                    addConfigMonitor(key)
-                    return gredis.New(config)
+                    addConfigMonitor(key, config)
+                    return gredis.New(redisConfig)
                 }
                 array, _ = gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, line)
                 if len(array) == 5 {
-                    addConfigMonitor(key)
+                    addConfigMonitor(key, config)
                     return gredis.New(gredis.Config{
                         Host : array[1],
                         Port : gconv.Int(array[2]),
@@ -283,9 +283,9 @@ func Redis(name...string) *gredis.Redis {
 }
 
 // 添加对单例对象的配置文件inotify监控
-func addConfigMonitor(key string) {
+func addConfigMonitor(key string, config *gcfg.Config) {
     // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空对象单例缓存
-    if path := Config().GetFilePath(); path != "" {
+    if path := config.GetFilePath(); path != "" {
         gfsnotify.Add(path, func(event *gfsnotify.Event) {
             instances.Remove(key)
         })

@@ -88,6 +88,8 @@ array = [1,2,3]
     cache = "127.0.0.1:6379,1"
 `
     gcfg.SetContent(content)
+    defer gcfg.ClearContent()
+
     gtest.Case(t, func() {
         c := gcfg.New(".")
         gtest.Assert(c.Get("v1"),           1)
