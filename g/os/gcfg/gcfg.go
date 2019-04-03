@@ -38,7 +38,8 @@ type Config struct {
 }
 
 // New returns a new configuration management object.
-func New(file...string) *Config {
+// The param <file> specifies the default configuration file name for reading.
+func New(file ...string) *Config {
     name := DEFAULT_CONFIG_FILE
     if len(file) > 0 {
         name = file[0]
@@ -49,19 +50,24 @@ func New(file...string) *Config {
         jsons  : gmap.NewStringInterfaceMap(),
         vc     : gtype.NewBool(),
     }
-    // Dir path of working dir.
-    c.SetPath(gfile.Pwd())
-	// Dir path from env/cmd, most high priority, will overwrite previous dir path setting.
-	if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" && gfile.Exists(envPath) {
-		c.SetPath(envPath)
-	}
-	// Dir path of binary.
-	if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-		c.AddPath(selfPath)
-	}
-	// Dir path of main package.
-	if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-		c.AddPath(mainPath)
+	// Customized dir path from env/cmd.
+	if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" {
+		if gfile.Exists(envPath) {
+			c.SetPath(envPath)
+		} else {
+			glog.Errorfln("Configuration directory path does not exist: %s", envPath)
+		}
+	} else {
+		// Dir path of working dir.
+		c.SetPath(gfile.Pwd())
+		// Dir path of binary.
+		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
+			c.AddPath(selfPath)
+		}
+		// Dir path of main package.
+		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
+			c.AddPath(mainPath)
+		}
 	}
     return c
 }

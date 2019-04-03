@@ -40,7 +40,9 @@
 1. 改进gproc进程间通信处理逻辑，提高稳定性，以应对进程间大批量的数据发送/接收；
 1. ghttp的热重启的本地进程端口监听，在不使用该特性时默认关闭掉；
 1. gtcp增加对TLS加密通信的支持；
-
+1. 添加Save/Replace/BatchSave/BatchReplace方法对sqlite数据库的支持；
+1. 添加sqlite数据库的单元测试用例；
+1. gredis增加cluster支持；
 
 
 # DONE
