@@ -4,8 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package garray provides kinds of concurrent-safe(alternative) arrays.
-//
-// 并发安全数组.
+// Package garray provides concurrent-safe/unsafe arrays.
 package garray
 
