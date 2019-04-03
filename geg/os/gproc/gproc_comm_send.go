@@ -2,11 +2,11 @@
 package main
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g/os/gproc"
+	"fmt"
+	"github.com/gogf/gf/g/os/gproc"
 )
 
-func main () {
-    err := gproc.Send(22988, []byte{30})
-    fmt.Println(err)
+func main() {
+	err := gproc.Send(22988, []byte{30})
+	fmt.Println(err)
 }

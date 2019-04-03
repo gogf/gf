@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gp.
 
-// Package gparser provides a flexible and easy way for accessing/converting variable and JSON/XML/YAML/TOML contents.
+// Package gparser provides convenient API for accessing/converting variable and JSON/XML/YAML/TOML.
 package gparser
 
 import (
@@ -16,13 +16,16 @@ type Parser struct {
     json *gjson.Json
 }
 
-// 将变量转换为Parser对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
-// value可以传递nil, 表示创建一个空的Parser对象
-func New (value interface{}, unsafe...bool) *Parser {
+// New creates a Parser object with any variable type of <data>,
+// but <data> should be a map or slice for data access reason,
+// or it will make no sense.
+// The <unsafe> param specifies whether using this Parser object
+// in un-concurrent-safe context, which is false in default.
+func New(value interface{}, unsafe...bool) *Parser {
     return &Parser{gjson.New(value, unsafe...)}
 }
 
-// 非并发安全Parser对象
+// NewUnsafe creates a un-concurrent-safe Parser object.
 func NewUnsafe (value...interface{}) *Parser {
     if len(value) > 0 {
         return &Parser{gjson.New(value[0], false)}
@@ -30,57 +33,64 @@ func NewUnsafe (value...interface{}) *Parser {
     return &Parser{gjson.New(nil, false)}
 }
 
-func Load (path string) (*Parser, error) {
-    if j, e := gjson.Load(path); e == nil {
+// Load loads content from specified file <path>,
+// and creates a Parser object from its content.
+func Load (path string, unsafe...bool) (*Parser, error) {
+    if j, e := gjson.Load(path, unsafe...); e == nil {
         return &Parser{j}, nil
     } else {
         return nil, e
     }
 }
 
-// 支持的数据内容格式：json(默认), xml, yaml/yml, toml
-func LoadContent (data []byte, dataType...string) (*Parser, error) {
-    if j, e := gjson.LoadContent(data, dataType...); e == nil {
+// LoadContent creates a Parser object from given content,
+// it checks the data type of <content> automatically,
+// supporting JSON, XML, YAML and TOML types of data.
+func LoadContent (data []byte, unsafe...bool) (*Parser, error) {
+    if j, e := gjson.LoadContent(data, unsafe...); e == nil {
         return &Parser{j}, nil
     } else {
         return nil, e
     }
 }
 
-// 设置自定义的层级分隔符号
+// SetSplitChar sets the separator char for hierarchical data access.
 func (p *Parser) SetSplitChar(char byte) {
     p.json.SetSplitChar(char)
 }
 
-// 设置是否执行层级冲突检查，当键名中存在层级符号时需要开启该特性，默认为关闭。
-// 开启比较耗性能，也不建议允许键名中存在分隔符，最好在应用端避免这种情况。
+// SetViolenceCheck enables/disables violence check for hierarchical data access.
 func (p *Parser) SetViolenceCheck(check bool) {
     p.json.SetViolenceCheck(check)
 }
 
-// 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
-// 注意第二个参数需要给的是变量地址
+// GetToVar gets the value by specified <pattern>,
+// and converts it to specified golang variable <v>.
+// The <v> should be a pointer type.
 func (p *Parser) GetToVar(pattern string, v interface{}) error {
     return p.json.GetToVar(pattern, v)
 }
 
-// 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
-// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
+// GetMap gets the value by specified <pattern>,
+// and converts it to map[string]interface{}.
 func (p *Parser) GetMap(pattern string) map[string]interface{} {
     return p.json.GetMap(pattern)
 }
 
-// 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
-// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
+// GetArray gets the value by specified <pattern>,
+// and converts it to a slice of []interface{}.
 func (p *Parser) GetArray(pattern string) []interface{} {
     return p.json.GetArray(pattern)
 }
 
-// 返回指定json中的string
+// GetString gets the value by specified <pattern>,
+// and converts it to string.
 func (p *Parser) GetString(pattern string) string {
     return p.json.GetString(pattern)
 }
 
+// GetStrings gets the value by specified <pattern>,
+// and converts it to a slice of []string.
 func (p *Parser) GetStrings(pattern string) []string {
     return p.json.GetStrings(pattern)
 }
@@ -97,7 +107,10 @@ func (p *Parser) GetTimeDuration(pattern string) time.Duration {
     return p.json.GetTimeDuration(pattern)
 }
 
-// 返回指定json中的bool(false:"", 0, false, off)
+// GetBool gets the value by specified <pattern>,
+// and converts it to bool.
+// It returns false when value is: "", 0, false, off, nil;
+// or returns true instead.
 func (p *Parser) GetBool(pattern string) bool {
     return p.json.GetBool(pattern)
 }
@@ -158,50 +171,59 @@ func (p *Parser) GetFloats(pattern string) []float64 {
     return p.json.GetFloats(pattern)
 }
 
-// 将指定变量转换为struct对象(对象属性赋值)
+// GetToStruct gets the value by specified <pattern>,
+// and converts it to specified object <objPointer>.
+// The <objPointer> should be the pointer to an object.
 func (p *Parser) GetToStruct(pattern string, objPointer interface{}) error {
     return p.json.GetToStruct(pattern, objPointer)
 }
 
-// 根据pattern查找并设置数据
-// 注意：写入的时候"."符号只能表示层级，不能使用带"."符号的键名
+// Set sets value with specified <pattern>.
+// It supports hierarchical data access by char separator, which is '.' in default.
 func (p *Parser) Set(pattern string, value interface{}) error {
     return p.json.Set(pattern, value)
 }
 
-// 计算指定pattern的元素长度(pattern对应数据类型为map[string]interface{}/[]interface{}时有效)
+// Len returns the length/size of the value by specified <pattern>.
+// The target value by <pattern> should be type of slice or map.
+// It returns -1 if the target value is not found, or its type is invalid.
 func (p *Parser) Len(pattern string) int {
     return p.json.Len(pattern)
 }
 
-// 指定pattern追加元素
+// Append appends value to the value by specified <pattern>.
+// The target value by <pattern> should be type of slice.
 func (p *Parser) Append(pattern string, value interface{}) error {
     return p.json.Append(pattern, value)
 }
 
-// 动态删除变量节点
+// Remove deletes value with specified <pattern>.
+// It supports hierarchical data access by char separator, which is '.' in default.
 func (p *Parser) Remove(pattern string) error {
     return p.json.Remove(pattern)
 }
 
-// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"; 当pattern为空时，表示获取所有数据
-// 返回的结果类型的interface{}，因此需要自己做类型转换;
-// 如果找不到对应节点的数据，返回nil;
+// Get returns value by specified <pattern>.
+// It returns all values of current Json object, if <pattern> is empty or not specified.
+// It returns nil if no value found by <pattern>.
+//
+// We can also access slice item by its index number in <pattern>,
+// eg: "items.name.first", "list.10".
 func (p *Parser) Get(pattern...string) interface{} {
     return p.json.Get(pattern...)
 }
 
-// 转换为map[string]interface{}类型,如果转换失败，返回nil
+// ToMap converts current object values to map[string]interface{}.
+// It returns nil if fails.
 func (p *Parser) ToMap() map[string]interface{} {
     return p.json.ToMap()
 }
 
-// 转换为[]interface{}类型,如果转换失败，返回nil
+// ToArray converts current object values to []interface{}.
+// It returns nil if fails.
 func (p *Parser) ToArray() []interface{} {
     return p.json.ToArray()
 }
-
-/* 以下为数据文件格式转换，支持类型：xml, json, yaml/yml, toml */
 
 func (p *Parser) ToXml(rootTag...string) ([]byte, error) {
     return p.json.ToXml(rootTag...)
@@ -227,12 +249,13 @@ func (p *Parser) ToToml() ([]byte, error) {
     return p.json.ToToml()
 }
 
-// 打印Json对象
+// Dump prints current Json object with more manually readable.
 func (p *Parser) Dump() error {
     return p.json.Dump()
 }
 
-// 将变量解析为对应的struct对象，注意传递的参数为struct对象指针
+// ToStruct converts current Json object to specified object.
+// The <objPointer> should be a pointer type.
 func (p *Parser) ToStruct(o interface{}) error {
     return p.json.ToStruct(o)
 }
@@ -261,7 +284,6 @@ func VarToToml(value interface{}) ([]byte, error) {
     return New(value).ToToml()
 }
 
-// 将变量解析为对应的struct对象，注意传递的参数为struct对象指针
 func VarToStruct(value interface{}, obj interface{}) error {
     return New(value).ToStruct(obj)
 }

@@ -19,7 +19,7 @@ type MBCSTable struct {
 	fromUnicode map[rune]string
 }
 
-// AddCharacter adds a character to the table. rune is its Unicode code point, 
+// AddCharacter adds a character to the table. rune is its Unicode code point,
 // and bytes contains the bytes used to encode it in the character set.
 func (table *MBCSTable) AddCharacter(c rune, bytes string) {
 	if table.fromUnicode == nil {

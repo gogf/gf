@@ -66,7 +66,7 @@ func BytePathForTagShortest(doc []byte, key string) (string, error) {
 // Get all paths through the map (in dot-notation) that terminate with the specified key.
 // Results can be used with ValuesAtKeyPath() and ValuesFromKeyPath().
 func PathsForKey(m map[string]interface{}, key string) []string {
-	breadbasket := make(map[string]bool,0)
+	breadbasket := make(map[string]bool, 0)
 	breadcrumb := ""
 
 	hasKeyPath(breadcrumb, m, key, &breadbasket)
@@ -75,9 +75,9 @@ func PathsForKey(m map[string]interface{}, key string) []string {
 	}
 
 	// unpack map keys to return
-	res := make([]string,len(breadbasket))
+	res := make([]string, len(breadbasket))
 	var i int
-	for k,_ := range breadbasket {
+	for k, _ := range breadbasket {
 		res[i] = k
 		i++
 	}
@@ -88,7 +88,7 @@ func PathsForKey(m map[string]interface{}, key string) []string {
 // Extract the shortest path from all possible paths - from PathsForKey().
 // Paths are strings using dot-notation.
 func PathForKeyShortest(m map[string]interface{}, key string) string {
-	paths := PathsForKey(m,key)
+	paths := PathsForKey(m, key)
 
 	lp := len(paths)
 	if lp == 0 {
@@ -99,10 +99,10 @@ func PathForKeyShortest(m map[string]interface{}, key string) string {
 	}
 
 	shortest := paths[0]
-	shortestLen := len(strings.Split(shortest,"."))
+	shortestLen := len(strings.Split(shortest, "."))
 
-	for i := 1 ; i < len(paths) ; i++ {
-		vlen := len(strings.Split(paths[i],"."))
+	for i := 1; i < len(paths); i++ {
+		vlen := len(strings.Split(paths[i], "."))
 		if vlen < shortestLen {
 			shortest = paths[i]
 			shortestLen = vlen
@@ -145,4 +145,3 @@ func hasKeyPath(crumb string, iv interface{}, key string, basket *map[string]boo
 		}
 	}
 }
-

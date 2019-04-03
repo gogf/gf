@@ -4,10 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gredis provides client for redis server.
+// Package gredis provides convenient client for redis server.
 //
 // Redis客户端.
-// Redis中文手册文档请参考：http://redisdoc.com/ , Redis官方命令请参考：https://redis.io/commands
+// Redis中文手册请参考：http://redisdoc.com/
+// Redis官方命令请参考：https://redis.io/commands
 package gredis
 
 import (
@@ -24,8 +25,9 @@ const (
 
 // Redis客户端(管理连接池)
 type Redis struct {
-    pool   *redis.Pool
-    config Config
+    pool   *redis.Pool // 底层连接池
+    group  string      // 配置分组
+    config Config      // 配置对象
 }
 
 // Redis连接对象(连接池中的单个连接)
@@ -48,13 +50,17 @@ type PoolStats struct {
     redis.PoolStats
 }
 
-// 连接池map
-var pools = gmap.NewStringInterfaceMap()
+var (
+    // 单例对象Map
+    instances = gmap.NewStringInterfaceMap()
+    // 连接池Map
+    pools     = gmap.NewStringInterfaceMap()
+)
 
 // New creates a redis client object with given configuration.
 // Redis client maintains a connection pool automatically.
 //
-// 创建redis操作对象.
+// 创建redis操作对象，底层根据配置信息公用的连接池（连接池单例）。
 func New(config Config) *Redis {
     if config.IdleTimeout == 0 {
         config.IdleTimeout = gDEFAULT_POOL_IDLE_TIMEOUT
@@ -96,11 +102,41 @@ func New(config Config) *Redis {
     }
 }
 
+// Instance returns an instance of redis client with specified group.
+// The <group> param is unnecessary, if <group> is not passed,
+// return redis instance with default group.
+//
+// 获取指定分组名称的Redis单例对象，底层根据配置信息公用的连接池（连接池单例）。
+func Instance(name...string) *Redis {
+    group := DEFAULT_GROUP_NAME
+    if len(name) > 0 {
+        group = name[0]
+    }
+    v := instances.GetOrSetFuncLock(group, func() interface{} {
+        if config, ok := GetConfig(group); ok {
+            r      := New(config)
+            r.group = group
+            return r
+        }
+        return nil
+    })
+    if v != nil {
+        return v.(*Redis)
+    }
+    return nil
+}
+
 // Close closes the redis connection pool,
 // it will release all connections reserved by this pool.
+// It always not necessary to call Close manually.
 //
 // 关闭redis管理对象，将会关闭底层的连接池。
+// 往往没必要手动调用，跟随进程销毁即可。
 func (r *Redis) Close() error {
+    if r.group != "" {
+        // 如果是单例对象，那么需要从单例对象Map中删除
+        instances.Remove(r.group)
+    }
     pools.Remove(fmt.Sprintf("%v", r.config))
     return r.pool.Close()
 }

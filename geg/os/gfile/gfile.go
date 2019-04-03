@@ -1,47 +1,45 @@
 package main
 
-
 import (
-    "github.com/gogf/gf/g/os/gfile"
-    "fmt"
-    "github.com/gogf/gf/g/util/gutil"
+	"fmt"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/util/gutil"
 )
 
-var dirpath1  = "/home/john/Workspace/temp/"
-var dirpath2  = "/home/john/Workspace/temp/1"
+var dirpath1 = "/home/john/Workspace/temp/"
+var dirpath2 = "/home/john/Workspace/temp/1"
 var filepath1 = "/home/john/Workspace/temp/test.php"
 var filepath2 = "/tmp/tmp.test"
 
-
-type BinData struct{
-    name string
-    age  int
+type BinData struct {
+	name string
+	age  int
 }
 
-func info () {
-    fmt.Println(gfile.Info(dirpath1))
+func info() {
+	fmt.Println(gfile.Info(dirpath1))
 }
 
 func scanDir() {
-    gutil.Dump(gfile.ScanDir(dirpath1, "*"))
+	gutil.Dump(gfile.ScanDir(dirpath1, "*"))
 }
 
 func getContents() {
-    fmt.Printf("%s\n", gfile.GetContents(filepath1))
+	fmt.Printf("%s\n", gfile.GetContents(filepath1))
 }
 
 func putContents() {
-    fmt.Println(gfile.PutContentsAppend(filepath2, "123"))
+	fmt.Println(gfile.PutContentsAppend(filepath2, "123"))
 }
 
 func putBinContents() {
-    fmt.Println(gfile.PutBinContents(filepath2, []byte("abc")))
+	fmt.Println(gfile.PutBinContents(filepath2, []byte("abc")))
 }
 
 func main() {
-    //info()
-    //getContents()
-    //putContents()
-    putBinContents()
-    //scanDir()
+	//info()
+	//getContents()
+	//putContents()
+	putBinContents()
+	//scanDir()
 }

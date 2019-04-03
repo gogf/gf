@@ -99,6 +99,33 @@ func Test_Conn(t *testing.T) {
         conn := redis.Conn()
         defer conn.Close()
 
+
+        r, err := conn.Do("GET", "k")
+        gtest.Assert(err, nil)
+        gtest.Assert(r,   []byte("v"))
+
+        _, err  = conn.Do("DEL", "k")
+        gtest.Assert(err, nil)
+        r, err  = conn.Do("GET", "k")
+        gtest.Assert(err, nil)
+        gtest.Assert(r, nil)
+    })
+}
+
+func Test_Instance(t *testing.T) {
+    gtest.Case(t, func() {
+        group := "my-test"
+        gredis.SetConfig(config, group)
+        defer gredis.RemoveConfig(group)
+        redis := gredis.Instance(group)
+        defer redis.Close()
+
+        conn := redis.Conn()
+        defer conn.Close()
+
+        _, err := conn.Do("SET", "k", "v")
+        gtest.Assert(err, nil)
+
         r, err := conn.Do("GET", "k")
         gtest.Assert(err, nil)
         gtest.Assert(r,   []byte("v"))

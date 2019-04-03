@@ -69,7 +69,7 @@ func Test_Load_XML(t *testing.T) {
     })
 }
 
-func Test_Load_YAML(t *testing.T) {
+func Test_Load_YAML1(t *testing.T) {
     data := []byte(`
 a:
 - 1
@@ -104,7 +104,16 @@ m:
     })
 }
 
-func Test_Load_TOML(t *testing.T) {
+func Test_Load_YAML2(t *testing.T) {
+    data := []byte("i : 123456789")
+    gtest.Case(t, func() {
+        j, err := gjson.LoadContent(data)
+        gtest.Assert(err,          nil)
+        gtest.Assert(j.Get("i"),   "123456789")
+    })
+}
+
+func Test_Load_TOML1(t *testing.T) {
     data := []byte(`
 a = ["1", "2", "3"]
 n = "123456789"
@@ -134,5 +143,14 @@ n = "123456789"
         gtest.Assert(j.Get("m.k"), "v")
         gtest.Assert(j.Get("a"),   g.Slice{1, 2, 3})
         gtest.Assert(j.Get("a.1"), 2)
+    })
+}
+
+func Test_Load_TOML2(t *testing.T) {
+    data := []byte("i=123456789")
+    gtest.Case(t, func() {
+        j, err := gjson.LoadContent(data)
+        gtest.Assert(err,          nil)
+        gtest.Assert(j.Get("i"),   "123456789")
     })
 }

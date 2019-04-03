@@ -141,11 +141,6 @@ func (c *Cron) Search(name string) *Entry {
     return nil
 }
 
-// 根据指定名称删除定时任务
-func (c *Cron) Remove(name string) {
-    c.entries.Remove(name)
-}
-
 // 开启定时任务执行(可以指定特定名称的一个或若干个定时任务)
 func (c *Cron) Start(name...string) {
     if len(name) > 0 {
@@ -169,6 +164,13 @@ func (c *Cron) Stop(name...string) {
         }
     } else {
         c.status.Set(STATUS_STOPPED)
+    }
+}
+
+// 根据指定名称删除定时任务。
+func (c *Cron) Remove(name string) {
+    if v := c.entries.Get(name); v != nil {
+        v.(*Entry).Close()
     }
 }
 

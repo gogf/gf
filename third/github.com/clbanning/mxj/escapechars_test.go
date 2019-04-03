@@ -26,7 +26,7 @@ func TestXMLEscapeChars(t *testing.T) {
 	XMLEscapeChars(true)
 	defer XMLEscapeChars(false)
 
-	m := map[string]interface{}{"mychars":s}
+	m := map[string]interface{}{"mychars": s}
 
 	x, err := AnyXmlIndent(s, "", "  ")
 	if err != nil {

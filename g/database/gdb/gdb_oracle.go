@@ -30,8 +30,8 @@ type dbOracle struct {
 // 创建SQL操作对象
 func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if config.Linkinfo != "" {
-		source = config.Linkinfo
+	if config.LinkInfo != "" {
+		source = config.LinkInfo
 	} else {
 		source = fmt.Sprintf("%s/%s@%s", config.User, config.Pass, config.Name)
 	}
