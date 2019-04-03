@@ -44,4 +44,3 @@ func TestSetSubkeyFieldSeparator(t *testing.T) {
 		t.Fatal("|expecting: value 2; got:", vals[0].(map[string]interface{})["#text"])
 	}
 }
-

@@ -26,8 +26,8 @@ type dbPgsql struct {
 // 创建SQL操作对象，内部采用了lazy link处理
 func (db *dbPgsql) Open (config *ConfigNode) (*sql.DB, error) {
     var source string
-    if config.Linkinfo != "" {
-        source = config.Linkinfo
+    if config.LinkInfo != "" {
+        source = config.LinkInfo
     } else {
         source = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", config.User, config.Pass, config.Host, config.Port, config.Name)
     }

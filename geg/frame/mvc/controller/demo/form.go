@@ -1,19 +1,19 @@
 package demo
 
 import (
-    "github.com/gogf/gf/g/net/ghttp"
-    "fmt"
+	"fmt"
+	"github.com/gogf/gf/g/net/ghttp"
 )
 
 func Form(r *ghttp.Request) {
-    fmt.Println(r.GetPostMap())
-    fmt.Println(r.GetPostString("name"))
-    fmt.Println(r.GetPostString("age"))
+	fmt.Println(r.GetPostMap())
+	fmt.Println(r.GetPostString("name"))
+	fmt.Println(r.GetPostString("age"))
 
 }
 
 func FormShow(r *ghttp.Request) {
-    r.Response.Write(`
+	r.Response.Write(`
 <html>
 <head>
     <title>表单提交</title>
@@ -30,6 +30,6 @@ func FormShow(r *ghttp.Request) {
 }
 
 func init() {
-    ghttp.GetServer().BindHandler("/form",      Form)
-    ghttp.GetServer().BindHandler("/form/show", FormShow)
+	ghttp.GetServer().BindHandler("/form", Form)
+	ghttp.GetServer().BindHandler("/form/show", FormShow)
 }

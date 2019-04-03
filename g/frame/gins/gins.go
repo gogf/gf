@@ -4,10 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gins provides instances management and some core components.
-// 
-// 单例对象管理.
-// 框架内置了一些核心对象获取方法，并且可以通过Set和Get方法实现IoC以及对内置核心对象的自定义替换
+// Package gins provides instances management and core components management.
 package gins
 
 import (
@@ -21,9 +18,9 @@ import (
     "github.com/gogf/gf/g/os/gfsnotify"
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gview"
+    "github.com/gogf/gf/g/text/gregex"
     "github.com/gogf/gf/g/text/gstr"
     "github.com/gogf/gf/g/util/gconv"
-    "github.com/gogf/gf/g/text/gregex"
     "time"
 )
 
@@ -101,23 +98,9 @@ func Config(file...string) *gcfg.Config {
     if len(file) > 0 {
         configFile = file[0]
     }
-    return instances.GetOrSetFuncLock(fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile),
-        func() interface{} {
-            // 默认当前工作目录
-            config := gcfg.New(gfile.Pwd(), configFile)
-            // 自定义的环境变量/启动参数路径，优先级最高，覆盖默认的工作目录
-            if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" && gfile.Exists(envPath) {
-                config.SetPath(envPath)
-            }
-            // 二进制文件执行目录
-            if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-                config.AddPath(selfPath)
-            }
-            // 开发环境源码main包目录
-            if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-                config.AddPath(mainPath)
-            }
-            return config
+    key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile)
+    return instances.GetOrSetFuncLock(key, func() interface{} {
+        return gcfg.New(configFile)
     }).(*gcfg.Config)
 }
 
@@ -139,62 +122,66 @@ func Database(name...string) gdb.DB {
             for group, v := range m {
                 cg := gdb.ConfigGroup{}
                 if list, ok := v.([]interface{}); ok {
-                    for _, nodev := range list {
-                        node  := gdb.ConfigNode{}
-                        nodem := nodev.(map[string]interface{})
-                        if value, ok := nodem["host"]; ok {
+                    for _, nodeValue := range list {
+                        node    := gdb.ConfigNode{}
+                        nodeMap := nodeValue.(map[string]interface{})
+                        if value, ok := nodeMap["host"]; ok {
                             node.Host = gconv.String(value)
                         }
-                        if value, ok := nodem["port"]; ok {
+                        if value, ok := nodeMap["port"]; ok {
                             node.Port = gconv.String(value)
                         }
-                        if value, ok := nodem["user"]; ok {
+                        if value, ok := nodeMap["user"]; ok {
                             node.User = gconv.String(value)
                         }
-                        if value, ok := nodem["pass"]; ok {
+                        if value, ok := nodeMap["pass"]; ok {
                             node.Pass = gconv.String(value)
                         }
-                        if value, ok := nodem["name"]; ok {
+                        if value, ok := nodeMap["name"]; ok {
                             node.Name = gconv.String(value)
                         }
-                        if value, ok := nodem["type"]; ok {
+                        if value, ok := nodeMap["type"]; ok {
                             node.Type = gconv.String(value)
                         }
-                        if value, ok := nodem["role"]; ok {
+                        if value, ok := nodeMap["role"]; ok {
                             node.Role = gconv.String(value)
                         }
-                        if value, ok := nodem["charset"]; ok {
+                        if value, ok := nodeMap["charset"]; ok {
                             node.Charset = gconv.String(value)
                         }
-                        if value, ok := nodem["priority"]; ok {
+                        if value, ok := nodeMap["priority"]; ok {
                             node.Priority = gconv.Int(value)
                         }
                         // Deprecated
-                        if value, ok := nodem["linkinfo"]; ok {
-                            node.Linkinfo = gconv.String(value)
-                        }
-                        if value, ok := nodem["linkInfo"]; ok {
-                            node.Linkinfo = gconv.String(value)
+                        if value, ok := nodeMap["linkinfo"]; ok {
+                            node.LinkInfo = gconv.String(value)
                         }
                         // Deprecated
-                        if value, ok := nodem["max-idle"]; ok {
+                        if value, ok := nodeMap["link-info"]; ok {
+                            node.LinkInfo = gconv.String(value)
+                        }
+                        if value, ok := nodeMap["linkInfo"]; ok {
+                            node.LinkInfo = gconv.String(value)
+                        }
+                        // Deprecated
+                        if value, ok := nodeMap["max-idle"]; ok {
                             node.MaxIdleConnCount = gconv.Int(value)
                         }
-                        if value, ok := nodem["maxIdle"]; ok {
+                        if value, ok := nodeMap["maxIdle"]; ok {
                             node.MaxIdleConnCount = gconv.Int(value)
                         }
                         // Deprecated
-                        if value, ok := nodem["max-open"]; ok {
+                        if value, ok := nodeMap["max-open"]; ok {
                             node.MaxOpenConnCount = gconv.Int(value)
                         }
-                        if value, ok := nodem["maxOpen"]; ok {
+                        if value, ok := nodeMap["maxOpen"]; ok {
                             node.MaxOpenConnCount = gconv.Int(value)
                         }
                         // Deprecated
-                        if value, ok := nodem["max-lifetime"]; ok {
+                        if value, ok := nodeMap["max-lifetime"]; ok {
                             node.MaxConnLifetime = gconv.Int(value)
                         }
-                        if value, ok := nodem["maxLifetime"]; ok {
+                        if value, ok := nodeMap["maxLifetime"]; ok {
                             node.MaxConnLifetime = gconv.Int(value)
                         }
                         cg = append(cg, node)
@@ -202,10 +189,7 @@ func Database(name...string) gdb.DB {
                 }
                 gdb.AddConfigGroup(group, cg)
             }
-            // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空数据库配置缓存
-            gfsnotify.Add(config.GetFilePath(), func(event *gfsnotify.Event) {
-                instances.Remove(key)
-            })
+            addConfigMonitor(key, config)
         }
         if db, err := gdb.New(name...); err == nil {
             return db
@@ -235,29 +219,31 @@ func Redis(name...string) *gredis.Redis {
                 line := gconv.String(v)
                 array, _ := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)\?(.+)`, line)
                 if len(array) == 6 {
-                    parse, _ := gstr.Parse(array[5])
-                    config   := gredis.Config{
+                    parse, _    := gstr.Parse(array[5])
+                    redisConfig := gredis.Config{
                         Host : array[1],
                         Port : gconv.Int(array[2]),
                         Db   : gconv.Int(array[3]),
                         Pass : array[4],
                     }
                     if v, ok := parse["maxIdle"]; ok {
-                        config.MaxIdle = gconv.Int(v)
+                        redisConfig.MaxIdle = gconv.Int(v)
                     }
                     if v, ok := parse["maxActive"]; ok {
-                        config.MaxActive = gconv.Int(v)
+                        redisConfig.MaxActive = gconv.Int(v)
                     }
                     if v, ok := parse["idleTimeout"]; ok {
-                        config.IdleTimeout = gconv.TimeDuration(v)*time.Second
+                        redisConfig.IdleTimeout = gconv.TimeDuration(v)*time.Second
                     }
                     if v, ok := parse["maxConnLifetime"]; ok {
-                        config.MaxConnLifetime = gconv.TimeDuration(v)*time.Second
+                        redisConfig.MaxConnLifetime = gconv.TimeDuration(v)*time.Second
                     }
-                    return gredis.New(config)
+                    addConfigMonitor(key, config)
+                    return gredis.New(redisConfig)
                 }
                 array, _ = gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, line)
                 if len(array) == 5 {
+                    addConfigMonitor(key, config)
                     return gredis.New(gredis.Config{
                         Host : array[1],
                         Port : gconv.Int(array[2]),
@@ -279,6 +265,16 @@ func Redis(name...string) *gredis.Redis {
         return result.(*gredis.Redis)
     }
     return nil
+}
+
+// 添加对单例对象的配置文件inotify监控
+func addConfigMonitor(key string, config *gcfg.Config) {
+    // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空对象单例缓存
+    if path := config.GetFilePath(); path != "" {
+        gfsnotify.Add(path, func(event *gfsnotify.Event) {
+            instances.Remove(key)
+        })
+    }
 }
 
 // 模板内置方法：config

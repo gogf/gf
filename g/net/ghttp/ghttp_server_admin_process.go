@@ -168,7 +168,7 @@ func getServerFdMap() map[string]listenerFdMap {
 func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
     sfm := make(map[string]listenerFdMap)
     if len(buffer) > 0 {
-        j, _ := gjson.LoadContent(buffer, "json")
+        j, _ := gjson.LoadContent(buffer)
         for k, _ := range j.ToMap() {
             m := make(map[string]string)
             for k, v := range j.GetMap(k) {

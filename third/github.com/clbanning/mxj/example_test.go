@@ -333,12 +333,12 @@ func ExampleMap_Copy() {
 	//     struct_ptr : [*mxj_test.str] &{IntVal:4 StrVal:now's the time FloatVal:3.14159 BoolVal:true private:Skies are blue}
 	// cp:
 	//    misc : [string] Now is the time
-	//    struct : 
+	//    struct :
 	//      bool : [bool] true
 	//      float : [float64] 3.14159
 	//      int : [float64] 4
 	//      str : [string] now's the time
-	//    struct_ptr : 
+	//    struct_ptr :
 	//      bool : [bool] true
 	//      float : [float64] 3.14159
 	//      int : [float64] 4

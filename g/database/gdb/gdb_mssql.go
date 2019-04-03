@@ -30,8 +30,8 @@ type dbMssql struct {
 // 创建SQL操作对象
 func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	source := ""
-	if config.Linkinfo != "" {
-		source = config.Linkinfo
+	if config.LinkInfo != "" {
+		source = config.LinkInfo
 	} else {
 		source = fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
 			config.User, config.Pass, config.Host, config.Port, config.Name)

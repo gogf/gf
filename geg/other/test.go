@@ -1,18 +1,22 @@
 package main
 
 import (
-    "bytes"
-    "encoding/json"
-    "fmt"
+	"fmt"
+	"github.com/gogf/gf/g/encoding/gjson"
 )
 
 func main() {
-    value := interface{}(nil)
-    data  := []byte(`{"n": 123456789}`)
-    decoder := json.NewDecoder(bytes.NewReader(data))
-    decoder.UseNumber()
-    err := decoder.Decode(&value)
-    //err   := json.Unmarshal(data, &value)
-    fmt.Println(err)
-    fmt.Println(value)
+	config := `
+v1    = 1
+v2    = "true"
+v3    = "off"
+v4    = "1.23"
+array = [1,2,3]
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
+`
+	j, err := gjson.LoadContent(config)
+	fmt.Println(err)
+	fmt.Println(j.ToJsonIndentString())
 }

@@ -56,7 +56,7 @@ func (r *Response) CORS(options CORSOptions) {
     }
 }
 
-// 允许请求跨域访问(使用more配置).
+// 允许请求跨域访问(使用默认配置).
 func (r *Response) CORSDefault() {
     r.CORS(r.DefaultCORSOptions())
 }

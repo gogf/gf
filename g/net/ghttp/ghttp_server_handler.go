@@ -35,6 +35,12 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
             r.URL.Path = rewrite
         }
     }
+
+    // URI默认值
+    if r.URL.Path == "" {
+        r.URL.Path = "/"
+    }
+
     // 去掉末尾的"/"号
     if r.URL.Path != "/" {
         for r.URL.Path[len(r.URL.Path) - 1] == '/' {

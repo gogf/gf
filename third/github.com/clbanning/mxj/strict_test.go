@@ -10,24 +10,24 @@ func TestStrictModeXml(t *testing.T) {
 	fmt.Println("----------------- TestStrictModeXml ...")
 	data := []byte(`<document> <name>Bill & Hallett</name> <salute>Duc &amp; 123xx</salute> <goes_by/> <lang>E</lang> </document>`)
 
-	CustomDecoder = &xml.Decoder{Strict:false}
+	CustomDecoder = &xml.Decoder{Strict: false}
 	m, err := NewMapXml(data)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("m:",m)
+	fmt.Println("m:", m)
 }
 
 func TestStrictModeXmlSeq(t *testing.T) {
 	fmt.Println("----------------- TestStrictModeXmlSeq ...")
 	data := []byte(`<document> <name>Bill & Hallett</name> <salute>Duc &amp; 123xx</salute> <goes_by/> <lang>E</lang> </document>`)
 
-	CustomDecoder = &xml.Decoder{Strict:false}
+	CustomDecoder = &xml.Decoder{Strict: false}
 	m, err := NewMapXmlSeq(data)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("m:",m)
+	fmt.Println("m:", m)
 }
 
 func TestStrictModeFail(t *testing.T) {
@@ -45,4 +45,3 @@ func TestStrictModeFail(t *testing.T) {
 	}
 	fmt.Println("OK")
 }
-

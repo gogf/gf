@@ -87,7 +87,7 @@ func (entry *Entry) Stop() {
 
 // 关闭定时任务
 func (entry *Entry) Close() {
-    entry.cron.Remove(entry.Name)
+    entry.cron.entries.Remove(entry.Name)
     entry.entry.Close()
 }
 
@@ -96,6 +96,7 @@ func (entry *Entry) check() {
     if entry.schedule.meet(time.Now()) {
         path  := entry.cron.GetLogPath()
         level := entry.cron.GetLogLevel()
+        // 检查定时任务对象状态(非任务状态)
         switch entry.cron.status.Val() {
             case STATUS_STOPPED:
                 return
