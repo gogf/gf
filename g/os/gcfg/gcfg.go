@@ -8,18 +8,19 @@
 package gcfg
 
 import (
-    "bytes"
-    "errors"
-    "fmt"
-    "github.com/gogf/gf/g/container/garray"
-    "github.com/gogf/gf/g/container/gmap"
-    "github.com/gogf/gf/g/container/gtype"
-    "github.com/gogf/gf/g/container/gvar"
-    "github.com/gogf/gf/g/encoding/gjson"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/os/gfsnotify"
-    "github.com/gogf/gf/g/os/glog"
-    "github.com/gogf/gf/g/os/gspath"
+	"bytes"
+	"errors"
+	"fmt"
+	"github.com/gogf/gf/g/container/garray"
+	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/container/gtype"
+	"github.com/gogf/gf/g/container/gvar"
+	"github.com/gogf/gf/g/encoding/gjson"
+	"github.com/gogf/gf/g/internal/cmdenv"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/os/gfsnotify"
+	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/os/gspath"
 )
 
 const (
@@ -37,7 +38,7 @@ type Config struct {
 }
 
 // New returns a new configuration management object.
-func New(path string, file...string) *Config {
+func New(file...string) *Config {
     name := DEFAULT_CONFIG_FILE
     if len(file) > 0 {
         name = file[0]
@@ -48,9 +49,20 @@ func New(path string, file...string) *Config {
         jsons  : gmap.NewStringInterfaceMap(),
         vc     : gtype.NewBool(),
     }
-    if len(path) > 0 {
-        c.SetPath(path)
-    }
+    // Dir path of working dir.
+    c.SetPath(gfile.Pwd())
+	// Dir path from env/cmd, most high priority, will overwrite previous dir path setting.
+	if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" && gfile.Exists(envPath) {
+		c.SetPath(envPath)
+	}
+	// Dir path of binary.
+	if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
+		c.AddPath(selfPath)
+	}
+	// Dir path of main package.
+	if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
+		c.AddPath(mainPath)
+	}
     return c
 }
 
