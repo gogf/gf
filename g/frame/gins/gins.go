@@ -99,23 +99,8 @@ func Config(file...string) *gcfg.Config {
         configFile = file[0]
     }
     key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile)
-    return instances.GetOrSetFuncLock(key,
-        func() interface{} {
-            // 默认当前工作目录
-            config := gcfg.New(gfile.Pwd(), configFile)
-            // 自定义的环境变量/启动参数路径，优先级最高，覆盖默认的工作目录
-            if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" && gfile.Exists(envPath) {
-                config.SetPath(envPath)
-            }
-            // 二进制文件执行目录
-            if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-                config.AddPath(selfPath)
-            }
-            // 开发环境源码main包目录
-            if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-                config.AddPath(mainPath)
-            }
-            return config
+    return instances.GetOrSetFuncLock(key, func() interface{} {
+        return gcfg.New(configFile)
     }).(*gcfg.Config)
 }
 
