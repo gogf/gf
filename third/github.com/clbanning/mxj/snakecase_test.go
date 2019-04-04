@@ -66,4 +66,3 @@ func TestStakeCase(t *testing.T) {
 		t.Fatal(string(x), "!=", data2)
 	}
 }
-

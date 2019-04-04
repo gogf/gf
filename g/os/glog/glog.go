@@ -18,6 +18,8 @@ import (
 
 const (
     LEVEL_ALL  = LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
+    LEVEL_DEV  = LEVEL_ALL
+    LEVEL_PROD = LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
     LEVEL_DEBU = 1 << iota
     LEVEL_INFO
     LEVEL_NOTI
@@ -139,6 +141,14 @@ func SetBacktrace(enabled bool) {
 // 链式操作，设置下一次写入日志内容的Writer
 func To(writer io.Writer) *Logger {
     return logger.To(writer)
+}
+
+// Path is a chaining function,
+// which sets the directory path to <path> for current logging content output.
+//
+// 链式操作，设置下一次输出的日志路径。
+func Path(path string) *Logger {
+    return logger.Path(path)
 }
 
 // Cat is a chaining function, 

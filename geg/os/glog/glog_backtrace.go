@@ -1,17 +1,15 @@
 package main
 
 import (
-    "github.com/gogf/gf/g/os/glog"
-    "fmt"
+	"fmt"
+	"github.com/gogf/gf/g/os/glog"
 )
 
 func main() {
 
-    glog.PrintBacktrace()
-    glog.New().PrintBacktrace()
+	glog.PrintBacktrace()
+	glog.New().PrintBacktrace()
 
-    fmt.Println(glog.GetBacktrace())
-    fmt.Println(glog.New().GetBacktrace())
+	fmt.Println(glog.GetBacktrace())
+	fmt.Println(glog.New().GetBacktrace())
 }
-
-

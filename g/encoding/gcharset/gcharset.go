@@ -51,5 +51,5 @@ func ToUTF8(charset string, src string) (dst string, err error) {
 
 // UTF8转指定字符集
 func UTF8To(charset string, src string) (dst string, err error) {
-	return  Convert(charset, "UTF-8", src)
+	return Convert(charset, "UTF-8", src)
 }

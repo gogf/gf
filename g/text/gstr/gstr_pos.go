@@ -46,11 +46,10 @@ func PosI(haystack, needle string, startOffset...int) int {
         return -1
     }
 
-    haystack = haystack[offset : ]
     if offset < 0 {
         offset += length
     }
-    pos := strings.Index(strings.ToLower(haystack), strings.ToLower(needle))
+    pos := strings.Index(strings.ToLower(haystack[offset : ]), strings.ToLower(needle))
     if pos == -1 {
         return -1
     }

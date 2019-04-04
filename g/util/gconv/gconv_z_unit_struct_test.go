@@ -8,11 +8,10 @@ package gconv_test
 
 import (
     "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/test/gtest"
+    "github.com/gogf/gf/g/util/gconv"
     "testing"
 )
-
 
 func Test_Struct_Basic1(t *testing.T) {
     gtest.Case(t, func() {
@@ -300,5 +299,20 @@ func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
                 Result : 60,
             })
         }
+    })
+}
+
+// 私有属性不会进行转换
+func Test_Struct_PrivateAttribute(t *testing.T) {
+    type User struct {
+        Id   int
+        name string
+    }
+    gtest.Case(t, func() {
+        user := new(User)
+        err  := gconv.Struct(g.Map{"id" : 1, "name" : "john"}, user)
+        gtest.Assert(err,       nil)
+        gtest.Assert(user.Id,   1)
+        gtest.Assert(user.name, "")
     })
 }

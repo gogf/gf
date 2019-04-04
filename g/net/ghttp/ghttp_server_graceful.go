@@ -84,18 +84,22 @@ func (s *gracefulServer) setFd(fd int) {
 }
 
 // 执行HTTPS监听
-func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string) error {
+func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig...*tls.Config) error {
     addr   := s.httpServer.Addr
-    config := &tls.Config{}
-    if s.httpServer.TLSConfig != nil {
+    config := (*tls.Config)(nil)
+    if len(tlsConfig) > 0 {
+        config = tlsConfig[0]
+    } else if s.httpServer.TLSConfig != nil {
         *config = *s.httpServer.TLSConfig
     }
     if config.NextProtos == nil {
         config.NextProtos = []string{"http/1.1"}
     }
     err := error(nil)
-    config.Certificates         = make([]tls.Certificate, 1)
-    config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+    if len(config.Certificates) == 0 {
+        config.Certificates         = make([]tls.Certificate, 1)
+        config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+    }
     if err != nil {
         return errors.New(fmt.Sprintf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error()))
     }

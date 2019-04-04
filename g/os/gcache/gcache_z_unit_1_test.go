@@ -57,7 +57,7 @@ func TestCache_LRU(t *testing.T) {
 
         gtest.Assert(cache.Size(), 10)
         gtest.Assert(cache.Get(6), 6)
-        time.Sleep(3*time.Second)
+        time.Sleep(4*time.Second)
         gtest.Assert(cache.Size(), 2)
         gtest.Assert(cache.Get(6), 6)
         gtest.Assert(cache.Get(1), nil)

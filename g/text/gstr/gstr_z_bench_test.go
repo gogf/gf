@@ -9,6 +9,7 @@
 package gstr_test
 
 import (
+    "github.com/gogf/gf/g/text/gstr"
     "testing"
 )
 
@@ -30,5 +31,23 @@ func Benchmark_BytesToString(b *testing.B) {
         if string(bytes) != "" {
 
         }
+    }
+}
+
+func Benchmark_Parse1(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        gstr.Parse("a=1&b=2")
+    }
+}
+
+func Benchmark_Parse2(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        gstr.Parse("m[]=1&m[]=2")
+    }
+}
+
+func Benchmark_Parse3(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        gstr.Parse("m[a1][b1][c1][d1]=1&m[a2][b2]=2&m[a3][b3][c3]=3")
     }
 }

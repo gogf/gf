@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file
 
-//	x2j_valuesAt.go: Extract values from an arbitrary XML doc that are at same level as "key". 
+//	x2j_valuesAt.go: Extract values from an arbitrary XML doc that are at same level as "key".
 //                  Tag path can include wildcard characters.
 
 package x2j
@@ -42,7 +42,7 @@ func ValuesAtTagPath(doc, path string, getAttrs ...bool) ([]interface{}, error) 
 }
 
 // ValuesAtKeyPath - deliver all values at the same depth in a map[string]interface{} value
-//	If v := ValuesAtKeyPath(m,"x.y.z") 
+//	If v := ValuesAtKeyPath(m,"x.y.z")
 //	then there exists a _,vv := range v
 //	such that v.(map[string]interface{})[z] == ValuesFromKeyPath(m,"x.y.z")
 // If there are no values for the path 'nil' is returned.
@@ -66,7 +66,7 @@ func ValuesAtKeyPath(m map[string]interface{}, path string, getAttrs ...bool) []
 			return nil
 		}
 	} else {
-		ret = append(ret,interface{}(m))
+		ret = append(ret, interface{}(m))
 	}
 
 	// scan the value set and see if key occurs
@@ -87,4 +87,3 @@ func ValuesAtKeyPath(m map[string]interface{}, path string, getAttrs ...bool) []
 	// no instance of key in penultimate value set
 	return nil
 }
-

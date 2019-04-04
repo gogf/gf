@@ -1,18 +1,17 @@
 package main
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/util/gvalid"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/util/gvalid"
 )
-
 
 // string默认值校验
 func main() {
-    type User struct {
-        Uid string `gvalid:"uid@integer"`
-    }
+	type User struct {
+		Uid string `gvalid:"uid@integer"`
+	}
 
-    user := &User{}
+	user := &User{}
 
-    g.Dump(gvalid.CheckStruct(user, nil))
+	g.Dump(gvalid.CheckStruct(user, nil))
 }

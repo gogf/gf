@@ -16,12 +16,12 @@ var (
 
 // 随机计算是否满足给定的概率(分子/分母)
 func Meet(num, total int) bool {
-    return Rand(0, total) <= num
+    return Intn(total) < num
 }
 
 // 随机计算是否满足给定的概率(float32)
 func MeetProb(prob float32) bool {
-    return Rand(0, 1e7) <= int(prob*1e7)
+    return Intn(1e7) < int(prob*1e7)
 }
 
 // Rand 别名, 返回: [min, max]
@@ -92,6 +92,8 @@ func RandLetters(n int) string {
 }
 
 // Perm returns, as a slice of n ints, a pseudo-random permutation of the integers [0,n).
+//
+// 返回[0, n)的随机数组成的slice。
 func Perm(n int) []int {
     m := make([]int, n)
     for i := 0; i < n; i++ {

@@ -57,15 +57,12 @@ func (s *Server)SetServerRoot(root string) {
         return
     }
     // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
-    path := gfile.RealPath(root)
-    if path == "" {
-        path = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + root)
+    realPath, err := gfile.Search(root)
+    if err != nil {
+        glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: %s`, err.Error()))
     }
-    if path == "" {
-        glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: path "%s" does not exist`, root))
-    }
-    glog.Debug("[ghttp] SetServerRoot path:", path)
-    s.config.SearchPaths       = []string{strings.TrimRight(path, gfile.Separator)}
+    glog.Debug("[ghttp] SetServerRoot path:", realPath)
+    s.config.SearchPaths       = []string{strings.TrimRight(realPath, gfile.Separator)}
     s.config.FileServerEnabled = true
 }
 
@@ -75,13 +72,9 @@ func (s *Server) AddSearchPath(path string) {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
         return
     }
-    // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
-    realPath := gfile.RealPath(path)
-    if realPath == "" {
-        realPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + path)
-    }
-    if realPath == "" {
-        glog.Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: path "%s" does not exist`, path))
+    realPath, err := gfile.Search(path)
+    if err != nil {
+        glog.Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: %s`, err.Error()))
     }
     s.config.SearchPaths       = append(s.config.SearchPaths, realPath)
     s.config.FileServerEnabled = true
@@ -93,13 +86,9 @@ func (s *Server) AddStaticPath(prefix string, path string) {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
         return
     }
-    // RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
-    realPath := gfile.RealPath(path)
-    if realPath == "" {
-        realPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + path)
-    }
-    if realPath == "" {
-        glog.Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: path "%s" does not exist`, path))
+    realPath, err := gfile.Search(path)
+    if err != nil {
+        glog.Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: %s`, err.Error()))
     }
     addItem := staticPathItem {
         prefix : prefix,

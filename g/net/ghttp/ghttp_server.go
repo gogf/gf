@@ -15,7 +15,6 @@ import (
     "github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/os/gcache"
     "github.com/gogf/gf/g/os/genv"
-    "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gproc"
     "github.com/gogf/gf/g/os/gtimer"
@@ -108,7 +107,10 @@ const (
     HOOK_AFTER_SERVE           = "AfterServe"
     HOOK_BEFORE_OUTPUT         = "BeforeOutput"
     HOOK_AFTER_OUTPUT          = "AfterOutput"
+
+    // deprecated.
     HOOK_BEFORE_CLOSE          = "BeforeClose"
+    // deprecated.
     HOOK_AFTER_CLOSE           = "AfterClose"
 
     HTTP_METHODS               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
@@ -187,9 +189,9 @@ func serverProcessInit() {
     }
 
     // 是否处于开发环境
-    if gfile.MainPkgPath() != "" {
-        glog.Debug("GF notices that you're in develop environment, so error logs are auto enabled to stdout.")
-    }
+    //if gfile.MainPkgPath() != "" {
+    //    glog.Debug("GF notices that you're in develop environment, so error logs are auto enabled to stdout.")
+    //}
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
@@ -217,8 +219,6 @@ func GetServer(name...interface{}) (*Server) {
         servedCount      : gtype.NewInt(),
         logger           : glog.New(),
     }
-    // 日志的标准输出默认关闭，但是错误信息会特殊处理
-    s.logger.SetStdPrint(false)
     // 初始化时使用默认配置
     s.SetConfig(defaultServerConfig)
     // 记录到全局ServerMap中
@@ -237,12 +237,17 @@ func (s *Server) Start() error {
         return errors.New("server is already running")
     }
 
+    // 没有注册任何路由，且没有开启文件服务，那么提示错误
+    if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
+        glog.Fatal("[ghttp] no router set or static feature enabled, did you forget import the router?")
+    }
+
     // 底层http server配置
     if s.config.Handler == nil {
         s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
     }
     // 不允许访问的路由注册(使用HOOK实现)
-    // @TODO 去掉HOOK的实现方式
+    // TODO 去掉HOOK的实现方式
     if s.config.DenyRoutes != nil {
         for _, v := range s.config.DenyRoutes {
             s.BindHookHandler(v, HOOK_BEFORE_SERVE, func(r *Request) {
@@ -277,7 +282,7 @@ func (s *Server) Start() error {
     if gproc.IsChild() {
         gtimer.SetTimeout(2*time.Second, func() {
             if err := gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP); err != nil {
-                glog.Error("ghttp server error in process communication:", err)
+                glog.Error("[ghttp] server error in process communication:", err)
             }
         })
     }
@@ -350,7 +355,10 @@ func (s *Server) GetRouteMap() string {
     }
     addr := s.config.Addr
     if s.config.HTTPSAddr != "" {
-        addr += ",tls" + s.config.HTTPSAddr
+        if len(addr) > 0 {
+            addr += ","
+        }
+        addr += "tls" + s.config.HTTPSAddr
     }
     for _, a := range m {
         data := make([]string, 8)
@@ -398,7 +406,8 @@ func Wait() {
 // 开启底层Web Server执行
 func (s *Server) startServer(fdMap listenerFdMap) {
     var httpsEnabled bool
-    if len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0 {
+    // 判断是否启用HTTPS
+    if len(s.config.TLSConfig.Certificates) > 0 || (len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0) {
         // ================
         // HTTPS
         // ================
@@ -479,7 +488,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
             s.serverCount.Add(1)
             err := (error)(nil)
             if server.isHttps {
-                err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath)
+                err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath, &s.config.TLSConfig)
             } else {
                 err = server.ListenAndServe()
             }

@@ -43,13 +43,21 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) {
         if mname == "Init" || mname == "Shut" || mname == "Exit"  {
             continue
         }
-        if _, ok := v.Method(i).Interface().(func()); !ok {
-            glog.Errorfln(`invalid method definition "%s", while "func()" is required`, v.Method(i).Type().String())
-            continue
-        }
         ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
         if ctlName[0] == '*' {
             ctlName = fmt.Sprintf(`(%s)`, ctlName)
+        }
+        if _, ok := v.Method(i).Interface().(func()); !ok {
+            if len(methodMap) > 0 {
+                // 指定的方法名称注册，那么需要使用错误提示
+                glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required`,
+                    pkgPath, ctlName, mname, v.Method(i).Type().String())
+            } else {
+                // 否则只是Debug提示
+                glog.Debugfln(`ignore route method: %s.%s.%s defined as "%s", no match "func()"`,
+                    pkgPath, ctlName, mname, v.Method(i).Type().String())
+            }
+            continue
         }
         key   := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
         m[key] = &handlerItem {
@@ -93,15 +101,16 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
         glog.Error("invalid method name:" + mname)
         return
     }
-    if _, ok := fval.Interface().(func()); !ok {
-        glog.Errorfln(`invalid method definition "%s", while "func()" is required`, fval.Type().String())
-        return
-    }
     pkgPath := t.Elem().PkgPath()
     pkgName := gfile.Basename(pkgPath)
     ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
     if ctlName[0] == '*' {
         ctlName = fmt.Sprintf(`(%s)`, ctlName)
+    }
+    if _, ok := fval.Interface().(func()); !ok {
+        glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required`,
+            pkgPath, ctlName, mname, fval.Type().String())
+        return
     }
     key     := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
     m[key]   = &handlerItem {
@@ -132,14 +141,15 @@ func (s *Server)BindControllerRest(pattern string, c Controller) {
         if _, ok := methodsMap[method]; !ok {
             continue
         }
-        if _, ok := v.Method(i).Interface().(func()); !ok {
-            glog.Errorfln(`invalid method definition "%s", while "func()" is required`, v.Method(i).Type().String())
-            return
-        }
         pkgName := gfile.Basename(pkgPath)
         ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
         if ctlName[0] == '*' {
             ctlName = fmt.Sprintf(`(%s)`, ctlName)
+        }
+        if _, ok := v.Method(i).Interface().(func()); !ok {
+            glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required`,
+                pkgPath, ctlName, mname, v.Method(i).Type().String())
+            return
         }
         key   := s.mergeBuildInNameToPattern(mname + ":" + pattern, sname, mname, false)
         m[key] = &handlerItem {

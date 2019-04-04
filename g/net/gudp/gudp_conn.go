@@ -221,8 +221,11 @@ func (c *Conn) LocalAddr() net.Addr {
     return c.conn.LocalAddr()
 }
 
+// 不能使用c.conn.RemoteAddr()，其返回为nil，
+// 这里使用c.raddr获取远程连接地址。
 func (c *Conn) RemoteAddr() net.Addr {
-    return c.conn.RemoteAddr()
+    //return c.conn.RemoteAddr()
+    return c.raddr
 }
 
 func (c *Conn) Close() error {

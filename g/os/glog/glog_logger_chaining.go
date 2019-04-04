@@ -12,7 +12,7 @@ import (
 )
 
 // To is a chaining function, 
-// which redirects current logging content output to the sepecified <writer>.
+// which redirects current logging content output to the specified <writer>.
 // 
 // 链式操作，设置下一次写入日志内容的Writer
 func (l *Logger) To(writer io.Writer) *Logger {
@@ -23,6 +23,23 @@ func (l *Logger) To(writer io.Writer) *Logger {
         logger = l
     }
     logger.SetWriter(writer)
+    return logger
+}
+
+// Path is a chaining function,
+// which sets the directory path to <path> for current logging content output.
+//
+// 链式操作，设置下一次输出的日志路径。
+func (l *Logger) Path(path string) *Logger {
+    logger := (*Logger)(nil)
+    if l.pr == nil {
+        logger = l.Clone()
+    } else {
+        logger = l
+    }
+    if path != "" {
+        logger.SetPath(path)
+    }
     return logger
 }
 

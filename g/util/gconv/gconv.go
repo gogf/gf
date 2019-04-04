@@ -79,10 +79,11 @@ func Bytes(i interface{}) []byte {
     if i == nil {
         return nil
     }
-    if r, ok := i.([]byte); ok {
-        return r
-    } else {
-        return gbinary.Encode(i)
+    switch value := i.(type) {
+        case string:  return []byte(value)
+        case []byte:  return value
+        default:
+            return gbinary.Encode(i)
     }
 }
 

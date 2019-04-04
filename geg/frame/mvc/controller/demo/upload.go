@@ -1,25 +1,25 @@
 package demo
 
 import (
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/g/os/gfile"
 )
 
 func Upload(r *ghttp.Request) {
-    if f, h, e := r.FormFile("upload-file"); e == nil {
-        defer f.Close()
-        fname  := gfile.Basename(h.Filename)
-        buffer := make([]byte, h.Size)
-        f.Read(buffer)
-        gfile.PutBinContents("/tmp/" + fname, buffer)
-        r.Response.Write(fname + " uploaded successly")
-    } else {
-        r.Response.Write(e.Error())
-    }
+	if f, h, e := r.FormFile("upload-file"); e == nil {
+		defer f.Close()
+		fname := gfile.Basename(h.Filename)
+		buffer := make([]byte, h.Size)
+		f.Read(buffer)
+		gfile.PutBinContents("/tmp/"+fname, buffer)
+		r.Response.Write(fname + " uploaded successly")
+	} else {
+		r.Response.Write(e.Error())
+	}
 }
 
 func UploadShow(r *ghttp.Request) {
-    r.Response.Write(`
+	r.Response.Write(`
 <html>
 <head>
     <title>上传文件</title>
@@ -35,6 +35,6 @@ func UploadShow(r *ghttp.Request) {
 }
 
 func init() {
-    ghttp.GetServer().BindHandler("/upload",      Upload)
-    ghttp.GetServer().BindHandler("/upload/show", UploadShow)
+	ghttp.GetServer().BindHandler("/upload", Upload)
+	ghttp.GetServer().BindHandler("/upload/show", UploadShow)
 }

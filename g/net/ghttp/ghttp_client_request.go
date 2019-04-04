@@ -9,89 +9,58 @@
 package ghttp
 
 import (
-    "github.com/gogf/gf/g/text/gregex"
-    "time"
     "bytes"
-    "strings"
-    "net/http"
-    "mime/multipart"
-    "os"
-    "io"
-    "github.com/gogf/gf/g/os/gfile"
+    "encoding/json"
     "errors"
     "fmt"
+    "github.com/gogf/gf/g/os/gfile"
+    "io"
+    "mime/multipart"
+    "net/http"
+    "os"
+    "strings"
+    "time"
 )
 
 // http客户端
 type Client struct {
-    http.Client                   // 底层http client对象
-    header      map[string]string // HEADER信息Map
-    cookies     map[string]string // 自定义COOKIE
-    prefix      string            // 设置请求的URL前缀
-    authUser    string            // HTTP基本权限设置：名称
-    authPass    string            // HTTP基本权限设置：密码
-    browserMode bool              // 是否模拟浏览器模式(自动保存提交COOKIE)
+    http.Client                     // 底层http client对象
+    header        map[string]string // HEADER信息Map
+    cookies       map[string]string // 自定义COOKIE
+    prefix        string            // 设置请求的URL前缀
+    authUser      string            // HTTP基本权限设置：名称
+    authPass      string            // HTTP基本权限设置：密码
+    browserMode   bool              // 是否模拟浏览器模式(自动保存提交COOKIE)
+    retryCount    int               // 失败重试次数(网络失败情况下)
+    retryInterval int               // 失败重试间隔
 }
 
 // http客户端对象指针
-func NewClient() (*Client) {
+func NewClient() *Client {
     return &Client{
         Client : http.Client {
             Transport: &http.Transport {
                 DisableKeepAlives: true,
             },
         },
-        header  : make(map[string]string),
-        cookies : make(map[string]string),
+        header        : make(map[string]string),
+        cookies       : make(map[string]string),
     }
 }
 
-// 是否模拟浏览器模式(自动保存提交COOKIE)
-func (c *Client) SetBrowserMode(enabled bool) {
-    c.browserMode = enabled
-}
-
-// 设置HTTP Header
-func (c *Client) SetHeader(key, value string) {
-    c.header[key] = value
-}
-
-// 通过字符串设置HTTP Header
-func (c *Client) SetHeaderRaw(header string) {
-    for _, line := range strings.Split(strings.TrimSpace(header), "\n") {
-        array, _ := gregex.MatchString(`^([\w\-]+):\s*(.+)`, line)
-        if len(array) >= 3 {
-            c.header[array[1]] = array[2]
-        }
+// 克隆当前客户端对象，复制属性。
+func (c *Client) Clone() *Client {
+    newClient := NewClient()
+    *newClient = *c
+    newClient.header  = make(map[string]string)
+    newClient.cookies = make(map[string]string)
+    for k, v := range c.header {
+        newClient.header[k] = v
     }
-}
-
-// 设置COOKIE
-func (c *Client) SetCookie(key, value string) {
-    c.cookies[key] = value
-}
-
-// 使用Map设置COOKIE
-func (c *Client) SetCookieMap(cookieMap map[string]string) {
-    for k, v := range cookieMap {
-        c.cookies[k] = v
+    for k, v := range c.cookies {
+        newClient.cookies[k] = v
     }
-}
-
-// 设置请求的URL前缀
-func (c *Client) SetPrefix(prefix string) {
-    c.prefix = prefix
-}
-
-// 设置请求过期时间
-func (c *Client) SetTimeOut(t time.Duration)  {
-    c.Timeout = t
-}
-
-// 设置HTTP访问账号密码
-func (c *Client) SetBasicAuth(user, pass string) {
-    c.authUser = user
-    c.authPass = pass
+    return newClient
 }
 
 // GET请求
@@ -117,6 +86,7 @@ func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
     }
     req := (*http.Request)(nil)
     if strings.Contains(param, "@file:") {
+        // 文件上传
         buffer := new(bytes.Buffer)
         writer := multipart.NewWriter(buffer)
         for _, item := range strings.Split(param, "&") {
@@ -150,11 +120,17 @@ func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
             req.Header.Set("Content-Type", writer.FormDataContentType())
         }
     } else {
-        if r, err := http.NewRequest("POST", url, bytes.NewReader([]byte(param))); err != nil {
+        // 识别提交数据格式
+        paramBytes := []byte(param)
+        if r, err := http.NewRequest("POST", url, bytes.NewReader(paramBytes)); err != nil {
             return nil, err
         } else {
             req = r
-            req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+            if json.Valid(paramBytes) {
+                req.Header.Set("Content-Type", "application/json")
+            } else {
+                req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+            }
         }
     }
     // 自定义header
@@ -181,9 +157,18 @@ func (c *Client) Post(url string, data...string) (*ClientResponse, error) {
         req.SetBasicAuth(c.authUser, c.authPass)
     }
     // 执行请求
-    resp, err := c.Do(req)
-    if err != nil {
-        return nil, err
+    resp := (*http.Response)(nil)
+    for {
+        if r, err := c.Do(req); err != nil {
+            if c.retryCount > 0 {
+                c.retryCount--
+            } else {
+                return nil, err
+            }
+        } else {
+            resp = r
+            break
+        }
     }
     r := &ClientResponse{
         cookies : make(map[string]string),
@@ -303,9 +288,18 @@ func (c *Client) DoRequest(method, url string, data...string) (*ClientResponse, 
         }
     }
     // 执行请求
-    resp, err := c.Do(req)
-    if err != nil {
-        return nil, err
+    resp := (*http.Response)(nil)
+    for {
+        if r, err := c.Do(req); err != nil {
+            if c.retryCount > 0 {
+                c.retryCount--
+            } else {
+                return nil, err
+            }
+        } else {
+            resp = r
+            break
+        }
     }
     r := &ClientResponse{
         cookies : make(map[string]string),

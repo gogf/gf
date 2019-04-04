@@ -119,6 +119,9 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire
     if f, ok := value.(func() interface {}); ok {
         value = f()
     }
+    if value == nil {
+        return nil
+    }
     c.data[key] = memCacheItem{v : value, e : expireTimestamp}
     c.dataMu.Unlock()
     c.eventList.PushBack(&memCacheEvent{k : key, e : expireTimestamp})

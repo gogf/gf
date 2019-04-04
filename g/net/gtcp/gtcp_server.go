@@ -30,7 +30,7 @@ var serverMapping = gmap.NewStringInterfaceMap()
 
 // 获取/创建一个空配置的TCP Server
 // 单例模式，请保证name的唯一性
-func GetServer(name...interface{}) (*Server) {
+func GetServer(name...interface{}) *Server {
     serverName := gDEFAULT_SERVER
     if len(name) > 0 {
         serverName = gconv.String(name[0])

@@ -37,7 +37,7 @@ func (s *Server)parsePattern(pattern string) (domain, method, path string, err e
         }
     }
     if path == "" {
-        err = errors.New("invalid pattern")
+        err = errors.New("invalid pattern: URI should not be empty")
     }
     // 去掉末尾的"/"符号，与路由匹配时处理一致
     if path != "/" {
@@ -72,11 +72,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     }
     domain, method, uri, err := s.parsePattern(pattern)
     if err != nil {
-        glog.Error("invalid pattern:", pattern)
+        glog.Error("invalid pattern:", pattern, err)
         return
     }
     if len(uri) == 0 || uri[0] != '/' {
-        glog.Error("invalid pattern:", pattern)
+        glog.Error("invalid pattern:", pattern, "URI should lead with '/'")
         return
     }
     // 注册地址记录及重复注册判断
@@ -84,7 +84,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     caller := s.getHandlerRegisterCallerLine(handler)
     if len(hook) == 0 {
         if item, ok := s.routesMap[regkey]; ok {
-            glog.Errorfln(`duplicated route registry "%s", already registered in %s`, pattern, item[0].file)
+            glog.Errorfln(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
             return
         }
     }

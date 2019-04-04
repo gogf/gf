@@ -24,8 +24,8 @@ type dbSqlite struct {
 
 func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if config.Linkinfo != "" {
-		source = config.Linkinfo
+	if config.LinkInfo != "" {
+		source = config.LinkInfo
 	} else {
 		source = config.Name
 	}

@@ -4,9 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtype provides kinds of high performance, concurrent-safe basic variable types.
-//
-// 并发安全基本类型.
+// Package gtype provides kinds of high performance, concurrent-safe/unsafe basic variable types.
 package gtype
 
 type Type = Interface

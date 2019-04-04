@@ -78,6 +78,10 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     attrMap  := make(map[string]struct{})
     elemType := elem.Type()
     for i := 0; i < elem.NumField(); i++ {
+        // 只转换公开属性
+        if !gstr.IsLetterUpper(elemType.Field(i).Name[0]) {
+            continue
+        }
         attrMap[elemType.Field(i).Name] = struct{}{}
     }
     for mapK, mapV := range paramsMap {

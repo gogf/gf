@@ -13,17 +13,27 @@ import (
     "bytes"
     "encoding/json"
     "fmt"
+    "github.com/gogf/gf/g/internal/empty"
     "github.com/gogf/gf/g/util/gconv"
     "os"
     "reflect"
     "runtime"
 )
 
-// 格式化打印变量(类似于PHP-vardump)
+// 格式化打印变量
 func Dump(i...interface{}) {
+    s := Export(i...)
+    if s != "" {
+        fmt.Println(s)
+    }
+}
+
+// 格式化导出变量
+func Export(i...interface{}) string {
+    buffer := bytes.NewBuffer(nil)
     for _, v := range i {
         if b, ok := v.([]byte); ok {
-            fmt.Print(string(b))
+            buffer.Write(b)
         } else {
             // 主要针对 map[interface{}]* 进行处理，json无法进行encode，
             // 这里强制对所有map进行反射处理转换
@@ -32,24 +42,20 @@ func Dump(i...interface{}) {
                 m := make(map[string]interface{})
                 keys := refValue.MapKeys()
                 for _, k := range keys {
-                    key   := gconv.String(k.Interface())
-                    m[key] = refValue.MapIndex(k).Interface()
+                    m[gconv.String(k.Interface())] = refValue.MapIndex(k).Interface()
                 }
                 v = m
             }
-            // json encode并打印到终端
-            buffer  := &bytes.Buffer{}
+            // JSON格式化
             encoder := json.NewEncoder(buffer)
             encoder.SetEscapeHTML(false)
             encoder.SetIndent("", "\t")
-            if err := encoder.Encode(v); err == nil {
-                fmt.Print(buffer.String())
-            } else {
+            if err := encoder.Encode(v); err != nil {
                 fmt.Fprintln(os.Stderr, err.Error())
             }
         }
-        //fmt.Println()
     }
+    return buffer.String()
 }
 
 // 打印完整的调用回溯信息
@@ -82,6 +88,17 @@ func TryCatch(try func(), catch ... func(exception interface{})) {
         }()
     }
     try()
+}
+
+// IsEmpty checks given value empty or not.
+// false: integer(0), bool(false), slice/map(len=0), nil;
+// true : other.
+//
+// 判断给定的变量是否为空。
+// 整型为0, 布尔为false, slice/map长度为0, 其他为nil的情况，都为空。
+// 为空时返回true，否则返回false。
+func IsEmpty(value interface{}) bool {
+    return empty.IsEmpty(value)
 }
 
 
