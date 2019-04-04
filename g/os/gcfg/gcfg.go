@@ -84,8 +84,12 @@ func (c *Config) filePath(file...string) (path string) {
         if c.paths.Len() > 0 {
             buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
             c.paths.RLockFunc(func(array []string) {
-                for k, v := range array {
-                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+            	index := 1
+                for _, v := range array {
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s", index,  v))
+                    index++
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s%s%s", index,  v, gfile.Separator, "config"))
+	                index++
                 }
             })
         } else {
@@ -174,7 +178,7 @@ func (c *Config) AddPath(path string) error {
             buffer.WriteString(fmt.Sprintf("[gcfg] AddPath failed: cannot find directory \"%s\" in following paths:", path))
             c.paths.RLockFunc(func(array []string) {
                 for k, v := range array {
-                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s", k + 1,  v))
                 }
             })
         } else {
