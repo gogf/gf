@@ -7,7 +7,7 @@ import (
 
 // the basic demo/test case - a small bibliography with mixed element types
 func TestValuesFromTagPath(t *testing.T) {
-var doc = `
+	var doc = `
 <doc>
 	<books>
 		<book seq="1">
@@ -36,7 +36,7 @@ var doc = `
 	</books>
 </doc>
 `
-var doc2 = `
+	var doc2 = `
 <doc>
 	<books>
 		<book seq="1">
@@ -47,82 +47,82 @@ var doc2 = `
 	</books>
 </doc>
 `
-	fmt.Println("\nTestValuesFromTagPath()\n",doc)
+	fmt.Println("\nTestValuesFromTagPath()\n", doc)
 
-	m,_ := DocToMap(doc)
-	fmt.Println("map:",WriteMap(m))
+	m, _ := DocToMap(doc)
+	fmt.Println("map:", WriteMap(m))
 
-	v,_ := ValuesFromTagPath(doc,"doc.books")
-	fmt.Println("path == doc.books: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ := ValuesFromTagPath(doc, "doc.books")
+	fmt.Println("path == doc.books: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc,"doc.books.*")
-	fmt.Println("path == doc.books.*: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc, "doc.books.*")
+	fmt.Println("path == doc.books.*: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc,"doc.books.book")
-	fmt.Println("path == doc.books.book: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc, "doc.books.book")
+	fmt.Println("path == doc.books.book: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc2,"doc.books.book")
-	fmt.Println("doc == doc2 / path == doc.books.book: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc2, "doc.books.book")
+	fmt.Println("doc == doc2 / path == doc.books.book: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc,"doc.books.book.*")
-	fmt.Println("path == doc.books.book.*: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc, "doc.books.book.*")
+	fmt.Println("path == doc.books.book.*: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc2,"doc.books.book.*")
-	fmt.Println("doc == doc2 / path == doc.books.book.*: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc2, "doc.books.book.*")
+	fmt.Println("doc == doc2 / path == doc.books.book.*: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc,"doc.books.*.author")
-	fmt.Println("path == doc.books.*.author: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc, "doc.books.*.author")
+	fmt.Println("path == doc.books.*.author: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc,"doc.*.*.author")
-	fmt.Println("path == doc.*.*.author: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc, "doc.*.*.author")
+	fmt.Println("path == doc.*.*.author: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc,"doc.*.*.title")
-	fmt.Println("path == doc.*.*.title: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc, "doc.*.*.title")
+	fmt.Println("path == doc.*.*.title: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc,"doc.*.*.*")
-	fmt.Println("path == doc.*.*.*: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc, "doc.*.*.*")
+	fmt.Println("path == doc.*.*.*: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 
-	v,_ = ValuesFromTagPath(doc,"doc.*.*.*.*")
-	fmt.Println("path == doc.*.*.*.*: len(v):",len(v))
-	for key,val := range v {
-		fmt.Println(key,":",val)
+	v, _ = ValuesFromTagPath(doc, "doc.*.*.*.*")
+	fmt.Println("path == doc.*.*.*.*: len(v):", len(v))
+	for key, val := range v {
+		fmt.Println(key, ":", val)
 	}
 }
 
 // demo how to compensate for irregular tag labels in data
 // "netid" vs. "idnet"
 func TestValuesFromTagPath2(t *testing.T) {
-var doc1 = `
+	var doc1 = `
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
     <netid>
@@ -132,7 +132,7 @@ var doc1 = `
     </netid>
 </data>
 `
-var doc2 = `
+	var doc2 = `
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
     <idnet>
@@ -142,28 +142,27 @@ var doc2 = `
     </idnet>
 </data>
 `
-	var docs = []string{doc1,doc2}
+	var docs = []string{doc1, doc2}
 
-	for n,doc := range docs {
-		fmt.Println("\nTestValuesFromTagPath2(), iteration:",n,"\n",doc)
+	for n, doc := range docs {
+		fmt.Println("\nTestValuesFromTagPath2(), iteration:", n, "\n", doc)
 
-		m,_ := DocToMap(doc)
-		fmt.Println("map:",WriteMap(m))
+		m, _ := DocToMap(doc)
+		fmt.Println("map:", WriteMap(m))
 
-		v,_ := ValuesFromTagPath(doc,"data.*")
-		fmt.Println("\npath == data.*: len(v):",len(v))
-		for key,val := range v {
-			fmt.Println(key,":",val)
+		v, _ := ValuesFromTagPath(doc, "data.*")
+		fmt.Println("\npath == data.*: len(v):", len(v))
+		for key, val := range v {
+			fmt.Println(key, ":", val)
 		}
-		for key,val := range v[0].(map[string]interface{}) {
-			fmt.Println("\t",key,":",val)
+		for key, val := range v[0].(map[string]interface{}) {
+			fmt.Println("\t", key, ":", val)
 		}
 
-		v,_ = ValuesFromTagPath(doc,"data.*.*")
-		fmt.Println("\npath == data.*.*: len(v):",len(v))
-		for key,val := range v {
-			fmt.Println(key,":",val)
+		v, _ = ValuesFromTagPath(doc, "data.*.*")
+		fmt.Println("\npath == data.*.*: len(v):", len(v))
+		for key, val := range v {
+			fmt.Println(key, ":", val)
 		}
 	}
 }
-

@@ -12,24 +12,49 @@ import (
     "github.com/gogf/gf/g/container/garray"
     "github.com/gogf/gf/g/container/gmap"
     "github.com/gogf/gf/g/container/gtype"
+    "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gtimer"
     "time"
 )
 
 // 定时任务管理对象
 type Cron struct {
-    idgen    *gtype.Int               // 用于唯一名称生成
-    status   *gtype.Int               // 定时任务状态(0: 未执行; 1: 运行中; 2: 已停止; -1:删除关闭)
-    entries  *gmap.StringInterfaceMap // 所有的定时任务项
+    idGen      *gtype.Int64             // 用于唯一名称生成
+    status     *gtype.Int               // 定时任务状态(0: 未执行; 1: 运行中; 2: 已停止; -1:删除关闭)
+    entries    *gmap.StringInterfaceMap // 所有的定时任务项
+    logPath    *gtype.String            // 日志文件输出目录
+    logLevel   *gtype.Int               // 日志输出等级
 }
 
 // 创建自定义的定时任务管理对象
 func New() *Cron {
     return &Cron {
-        idgen    : gtype.NewInt(1000000),
-        status   : gtype.NewInt(STATUS_RUNNING),
-        entries  : gmap.NewStringInterfaceMap(),
+        idGen      : gtype.NewInt64(),
+        status     : gtype.NewInt(STATUS_RUNNING),
+        entries    : gmap.NewStringInterfaceMap(),
+        logPath    : gtype.NewString(),
+        logLevel   : gtype.NewInt(glog.LEVEL_PROD),
     }
+}
+
+// 设置日志输出路径
+func (c *Cron) SetLogPath(path string) {
+    c.logPath.Set(path)
+}
+
+// 获取设置的日志输出路径
+func (c *Cron) GetLogPath() string {
+    return c.logPath.Val()
+}
+
+// 设置日志输出等级。
+func (c *Cron) SetLogLevel(level int) {
+    c.logLevel.Set(level)
+}
+
+// 获取日志输出等级。
+func (c *Cron) GetLogLevel() int {
+    return c.logLevel.Val()
 }
 
 // 添加定时任务
@@ -116,11 +141,6 @@ func (c *Cron) Search(name string) *Entry {
     return nil
 }
 
-// 根据指定名称删除定时任务
-func (c *Cron) Remove(name string) {
-    c.entries.Remove(name)
-}
-
 // 开启定时任务执行(可以指定特定名称的一个或若干个定时任务)
 func (c *Cron) Start(name...string) {
     if len(name) > 0 {
@@ -144,6 +164,13 @@ func (c *Cron) Stop(name...string) {
         }
     } else {
         c.status.Set(STATUS_STOPPED)
+    }
+}
+
+// 根据指定名称删除定时任务。
+func (c *Cron) Remove(name string) {
+    if v := c.entries.Get(name); v != nil {
+        v.(*Entry).Close()
     }
 }
 

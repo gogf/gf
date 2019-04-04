@@ -155,7 +155,7 @@ func EntityDecoder() Decoder {
 
 // This table is copied from /src/pkg/html/escape.go in the Go source
 //
-// These replacements permit compatibility with old numeric entities that 
+// These replacements permit compatibility with old numeric entities that
 // assumed Windows-1252 encoding.
 // http://www.whatwg.org/specs/web-apps/current-work/multipage/tokenization.html#consume-a-character-reference
 var replacementTable = [...]rune{
@@ -191,6 +191,6 @@ var replacementTable = [...]rune{
 	'\u009D',
 	'\u017E',
 	'\u0178', // Last entry is 0x9F.
-	// 0x00->'\uFFFD' is handled programmatically. 
+	// 0x00->'\uFFFD' is handled programmatically.
 	// 0x0D->'\u000D' is a no-op.
 }

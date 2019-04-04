@@ -1,12 +1,12 @@
 package main
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g"
+	"fmt"
+	"github.com/gogf/gf/g"
 )
 
 func main() {
-    tplContent := `
+	tplContent := `
 {{"<div>测试</div>"|text}}
 {{"<div>测试</div>"|html}}
 {{"&lt;div&gt;测试&lt;/div&gt;"|htmldecode}}
@@ -29,7 +29,7 @@ func main() {
 {{"GF" | tolower}}
 {{"Go\nFrame" | nl2br}}
 `
-    content, err := g.View().ParseContent(tplContent, nil)
-    fmt.Println(err)
-    fmt.Println(string(content))
+	content, err := g.View().ParseContent(tplContent, nil)
+	fmt.Println(err)
+	fmt.Println(string(content))
 }

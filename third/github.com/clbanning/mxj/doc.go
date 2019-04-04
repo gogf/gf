@@ -103,13 +103,13 @@ XML PARSING CONVENTIONS
    Using NewMapXmlSeq()
 
    - Attributes are parsed to `map["#attr"]map[<attr_label>]map[string]interface{}`values
-     where the `<attr_label>` value has "#text" and "#seq" keys - the "#text" key holds the 
+     where the `<attr_label>` value has "#text" and "#seq" keys - the "#text" key holds the
      value for `<attr_label>`.
    - All elements, except for the root, have a "#seq" key.
    - Comments, directives, and process instructions are unmarshalled into the Map using the
      keys "#comment", "#directive", and "#procinst", respectively. (See documentation for more
      specifics.)
-   - Name space syntax is preserved: 
+   - Name space syntax is preserved:
       - <ns:key>something</ns.key> parses to map["ns:key"]interface{}{"something"}
       - xmlns:ns="http://myns.com/ns" parses to map["xmlns:ns"]interface{}{"http://myns.com/ns"}
 
@@ -119,7 +119,7 @@ XML PARSING CONVENTIONS
      to be cast, set a flag to cast them  using CastNanInf(true).
 
 XML ENCODING CONVENTIONS
-   
+
    - 'nil' Map values, which may represent 'null' JSON values, are encoded as "<tag/>".
      NOTE: the operation is not symmetric as "<tag/>" elements are decoded as 'tag:""' Map values,
            which, then, encode in JSON as '"tag":""' values..

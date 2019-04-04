@@ -4,31 +4,31 @@
 package main
 
 import (
-    "os"
-    "fmt"
-    "time"
-    "github.com/gogf/gf/g/os/gproc"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/os/glog"
+	"fmt"
+	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/os/gproc"
+	"github.com/gogf/gf/g/os/gtime"
+	"os"
+	"time"
 )
 
-func main () {
-    fmt.Printf("%d: I am child? %v\n", gproc.Pid(), gproc.IsChild())
-    if gproc.IsChild() {
-        gtime.SetInterval(time.Second, func() bool {
-            if err := gproc.Send(gproc.PPid(), []byte(gtime.Datetime())); err != nil {
-                glog.Error(err)
-            }
-            return true
-        })
-        select { }
-    } else {
-        m := gproc.NewManager()
-        p := m.NewProcess(os.Args[0], os.Args, os.Environ())
-        p.Start()
-        for {
-            msg := gproc.Receive()
-            fmt.Printf("%d: receive from %d, data: %s\n", gproc.Pid(), msg.Pid, string(msg.Data))
-        }
-    }
+func main() {
+	fmt.Printf("%d: I am child? %v\n", gproc.Pid(), gproc.IsChild())
+	if gproc.IsChild() {
+		gtime.SetInterval(time.Second, func() bool {
+			if err := gproc.Send(gproc.PPid(), []byte(gtime.Datetime())); err != nil {
+				glog.Error(err)
+			}
+			return true
+		})
+		select {}
+	} else {
+		m := gproc.NewManager()
+		p := m.NewProcess(os.Args[0], os.Args, os.Environ())
+		p.Start()
+		for {
+			msg := gproc.Receive()
+			fmt.Printf("%d: receive from %d, data: %s\n", gproc.Pid(), msg.Pid, string(msg.Data))
+		}
+	}
 }

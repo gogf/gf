@@ -8,6 +8,7 @@ package gconv
 
 import (
     "github.com/gogf/gf/g/internal/empty"
+    "github.com/gogf/gf/g/text/gstr"
     "reflect"
     "strings"
 )
@@ -102,6 +103,11 @@ func Map(value interface{}, noTagCheck...bool) map[string]interface{} {
                         rt   := rv.Type()
                         name := ""
                         for i := 0; i < rv.NumField(); i++ {
+                            // 只转换公开属性
+                            fieldName := rt.Field(i).Name
+                            if !gstr.IsLetterUpper(fieldName[0]) {
+                                continue
+                            }
                             name = ""
                             // 检查tag, 支持gconv, json标签, 优先使用gconv
                             if len(noTagCheck) == 0 || !noTagCheck[0] {
@@ -111,7 +117,7 @@ func Map(value interface{}, noTagCheck...bool) map[string]interface{} {
                                 }
                             }
                             if name == "" {
-                                name = strings.TrimSpace(rt.Field(i).Name)
+                                name = strings.TrimSpace(fieldName)
                             } else {
                                 // 支持标准库json特性: -, omitempty
                                 name = strings.TrimSpace(name)

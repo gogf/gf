@@ -1,12 +1,11 @@
 package main
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/util/gconv"
+	"fmt"
+	"github.com/gogf/gf/g/os/gcfg"
 )
 
 func main() {
-    //t := gconv.GTime("2010-10-10 00:00:01")
-    fmt.Println(gconv.String(gtime.Millisecond()))
+	fmt.Println(gcfg.Instance().GetString("viewpath"))
+	fmt.Println(gcfg.Instance().GetString("database.default.0.host"))
 }

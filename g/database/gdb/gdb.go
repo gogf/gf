@@ -14,6 +14,7 @@ import (
     "database/sql"
     "errors"
     "fmt"
+    "github.com/gogf/gf/g/container/gmap"
     "github.com/gogf/gf/g/container/gring"
     "github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/container/gvar"
@@ -147,30 +148,34 @@ type Map  = map[string]interface{}
 type List = []Map
 
 const (
-    OPTION_INSERT  = 0
-    OPTION_REPLACE = 1
-    OPTION_SAVE    = 2
-    OPTION_IGNORE  = 3
-    // 默认批量操作的数量值(Batch*操作)
-    gDEFAULT_BATCH_NUM          = 10
-    // 默认的连接池连接存活时间(秒)
-    gDEFAULT_CONN_MAX_LIFE_TIME = 30
-
+    OPTION_INSERT               = 0
+    OPTION_REPLACE              = 1
+    OPTION_SAVE                 = 2
+    OPTION_IGNORE               = 3
+    gDEFAULT_BATCH_NUM          = 10 // Per count for batch insert/replace/save
+    gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool.
 )
 
-// 使用默认/指定分组配置进行连接，数据库集群配置项：default
-func New(groupName ...string) (db DB, err error) {
-	group := config.d
-	if len(groupName) > 0 {
-        group = groupName[0]
-	}
-	config.RLock()
-	defer config.RUnlock()
+var (
+    // Instance map.
+    instances = gmap.NewStringInterfaceMap()
+)
 
-	if len(config.c) < 1 {
+// New creates ORM DB object with global configurations.
+// The param <name> specifies the configuration group name,
+// which is DEFAULT_GROUP_NAME in default.
+func New(name ...string) (db DB, err error) {
+	group := configs.defaultGroup
+	if len(name) > 0 {
+        group = name[0]
+	}
+	configs.RLock()
+	defer configs.RUnlock()
+
+	if len(configs.config) < 1 {
 		return nil, errors.New("empty database configuration")
 	}
-	if _, ok := config.c[group]; ok {
+	if _, ok := configs.config[group]; ok {
 	    if node, err := getConfigNodeByGroup(group, true); err == nil {
 	        base := &dbBase {
                 group            : group,
@@ -204,9 +209,27 @@ func New(groupName ...string) (db DB, err error) {
 	}
 }
 
+// Instance returns an instance for DB operations.
+// The param <name> specifies the configuration group name,
+// which is DEFAULT_GROUP_NAME in default.
+func Instance(name ...string) (db DB, err error) {
+    group := configs.defaultGroup
+    if len(name) > 0 {
+        group = name[0]
+    }
+    v := instances.GetOrSetFuncLock(group, func() interface{} {
+        db, err = New(group)
+        return db
+    })
+    if v != nil {
+        return v.(DB), nil
+    }
+    return
+}
+
 // 获取指定数据库角色的一个配置项，内部根据权重计算负载均衡
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
-    if list, ok := config.c[group]; ok {
+    if list, ok := configs.config[group]; ok {
         // 将master, slave集群列表拆分出来
         masterList := make(ConfigGroup, 0)
         slaveList  := make(ConfigGroup, 0)
@@ -319,17 +342,17 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
     return
 }
 
-// 切换操作的数据库(注意该切换是全局的)
+// 切换当前数据库对象操作的数据库。
 func (bs *dbBase) SetSchema(schema string) {
     bs.schema.Set(schema)
 }
 
-// 创建底层数据库master链接对象
+// 创建底层数据库master链接对象。
 func (bs *dbBase) Master() (*sql.DB, error) {
 	return bs.getSqlDb(true)
 }
 
-// 创建底层数据库slave链接对象
+// 创建底层数据库slave链接对象。
 func (bs *dbBase) Slave() (*sql.DB, error) {
     return bs.getSqlDb(false)
 }

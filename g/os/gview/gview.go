@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gview implements a template engine based on text/template.
-// 
-// 模板引擎.
 package gview
 
 import (
@@ -18,14 +16,15 @@ import (
     "github.com/gogf/gf/g/encoding/ghash"
     "github.com/gogf/gf/g/encoding/ghtml"
     "github.com/gogf/gf/g/encoding/gurl"
+    "github.com/gogf/gf/g/internal/cmdenv"
     "github.com/gogf/gf/g/os/gfcache"
     "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gspath"
     "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/os/gview/internal/text/template"
-    "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/text/gstr"
+    "github.com/gogf/gf/g/util/gconv"
     "strings"
     "sync"
 )
@@ -46,25 +45,19 @@ type Params  = map[string]interface{}
 type FuncMap = map[string]interface{}
 
 // 默认的视图对象
-var viewObj *View
+var defaultViewObj *View
 
-// 初始化默认的视图对象
+// 初始化默认的视图对象, 默认加载包不会初始化，使用包方法才会初始化模板引擎对象。
 func checkAndInitDefaultView() {
-    if viewObj == nil {
-        // gfile.MainPkgPath() 用以判断是否开发环境
-        mainPkgPath := gfile.MainPkgPath()
-        if gfile.MainPkgPath() == "" {
-            viewObj = New(gfile.Pwd())
-        } else {
-            viewObj = New(mainPkgPath)
-        }
+    if defaultViewObj == nil {
+        defaultViewObj = New(gfile.Pwd())
     }
 }
 
 // 直接解析模板内容，返回解析后的内容
 func ParseContent(content string, params Params) ([]byte, error) {
     checkAndInitDefaultView()
-    return viewObj.ParseContent(content, params)
+    return defaultViewObj.ParseContent(content, params)
 }
 
 // 生成一个视图对象
@@ -77,6 +70,26 @@ func New(path...string) *View {
     }
     if len(path) > 0 && len(path[0]) > 0 {
         view.SetPath(path[0])
+    } else {
+        // Customized dir path from env/cmd.
+        if envPath := cmdenv.Get("gf.gview.path").String(); envPath != "" {
+            if gfile.Exists(envPath) {
+	            view.SetPath(envPath)
+            } else {
+                glog.Errorfln("Template directory path does not exist: %s", envPath)
+            }
+        } else {
+            // Dir path of working dir.
+	        view.SetPath(gfile.Pwd())
+            // Dir path of binary.
+            if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
+	            view.AddPath(selfPath)
+            }
+            // Dir path of main package.
+            if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
+	            view.AddPath(mainPath)
+            }
+        }
     }
     view.SetDelimiters("{{", "}}")
     // 内置变量
@@ -106,13 +119,40 @@ func New(path...string) *View {
 
 // 设置模板目录绝对路径
 func (view *View) SetPath(path string) error {
+    // 判断绝对路径(或者工作目录下目录)
     realPath := gfile.RealPath(path)
     if realPath == "" {
-        realPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + path)
+        // 判断相对路径
+        view.paths.RLockFunc(func(array []string) {
+            for _, v := range array {
+                if path, _ := gspath.Search(v, path); path != "" {
+                    realPath = path
+                    break
+                }
+            }
+        })
     }
+    // 目录不存在错误处理
     if realPath == "" {
-        err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
-        glog.Error(fmt.Sprintf(`[gview] SetPath failed: %s`, err.Error()))
+        buffer := bytes.NewBuffer(nil)
+        if view.paths.Len() > 0 {
+            buffer.WriteString(fmt.Sprintf("[gview] SetPath failed: cannot find directory \"%s\" in following paths:", path))
+            view.paths.RLockFunc(func(array []string) {
+                for k, v := range array {
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+                }
+            })
+        } else {
+            buffer.WriteString(fmt.Sprintf(`[gview] SetPath failed: path "%s" does not exist`, path))
+        }
+        err := errors.New(buffer.String())
+        glog.Error(err)
+        return err
+    }
+    // 路径必须为目录类型
+    if !gfile.IsDir(realPath) {
+        err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" should be directory type`, path))
+        glog.Error(err)
         return err
     }
     // 重复判断
@@ -127,13 +167,40 @@ func (view *View) SetPath(path string) error {
 
 // 添加模板目录搜索路径
 func (view *View) AddPath(path string) error {
+    // 判断绝对路径(或者工作目录下目录)
     realPath := gfile.RealPath(path)
     if realPath == "" {
-        realPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + path)
+        // 判断相对路径
+        view.paths.RLockFunc(func(array []string) {
+            for _, v := range array {
+                if path, _ := gspath.Search(v, path); path != "" {
+                    realPath = path
+                    break
+                }
+            }
+        })
     }
+    // 目录不存在错误处理
     if realPath == "" {
-        err := errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
-        glog.Error(fmt.Sprintf(`[gview] AddPath failed: %s`, err.Error()))
+        buffer := bytes.NewBuffer(nil)
+        if view.paths.Len() > 0 {
+            buffer.WriteString(fmt.Sprintf("[gview] AddPath failed: cannot find directory \"%s\" in following paths:", path))
+            view.paths.RLockFunc(func(array []string) {
+                for k, v := range array {
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s",k + 1,  v))
+                }
+            })
+        } else {
+            buffer.WriteString(fmt.Sprintf(`[gview] AddPath failed: path "%s" does not exist`, path))
+        }
+        err := errors.New(buffer.String())
+        glog.Error(err)
+        return err
+    }
+    // 路径必须为目录类型
+    if !gfile.IsDir(realPath) {
+        err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" should be directory type`, path))
+        glog.Error(err)
         return err
     }
     // 重复判断

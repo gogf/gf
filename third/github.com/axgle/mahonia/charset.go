@@ -18,7 +18,7 @@ const (
 	// The Encoder or Decoder should have output a substitute character.
 	INVALID_CHAR
 
-	// NO_ROOM means there were not enough input bytes to form a complete character, 
+	// NO_ROOM means there were not enough input bytes to form a complete character,
 	// or there was not enough room in the output buffer to write a complete character.
 	// No bytes were written, and no internal state was changed in the Encoder or Decoder.
 	NO_ROOM
@@ -52,7 +52,7 @@ type Charset struct {
 	NewEncoder func() Encoder
 }
 
-// The charsets are stored in charsets under their canonical names. 
+// The charsets are stored in charsets under their canonical names.
 var charsets = make(map[string]*Charset)
 
 // aliases maps their aliases to their canonical names.

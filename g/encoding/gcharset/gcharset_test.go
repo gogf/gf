@@ -1,9 +1,15 @@
-package gcharset
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package gcharset_test
 
 import (
+	"github.com/gogf/gf/g/encoding/gcharset"
 	"testing"
 )
-
 
 var testData = []struct {
 	utf8, other, otherEncoding string
@@ -52,7 +58,7 @@ var testData = []struct {
 func TestDecode(t *testing.T) {
 	for _, data := range testData {
 		str := ""
-		str, err := Convert("UTF-8", data.otherEncoding, data.other)
+		str, err := gcharset.Convert("UTF-8", data.otherEncoding, data.other)
 		if err != nil {
 			t.Errorf("Could not create decoder for %v", err)
 			continue
@@ -68,7 +74,7 @@ func TestDecode(t *testing.T) {
 func TestEncode(t *testing.T) {
 	for _, data := range testData {
 		str := ""
-		str, err := Convert(data.otherEncoding, "UTF-8", data.utf8)
+		str, err := gcharset.Convert(data.otherEncoding, "UTF-8", data.utf8)
 		if err != nil {
 			t.Errorf("Could not create decoder for %v", err)
 			continue
@@ -86,7 +92,7 @@ func TestConvert(t *testing.T) {
 	dstCharset := "gbk"
 	dst := "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed"
 
-	str, err := Convert(dstCharset, srcCharset, src)
+	str, err := gcharset.Convert(dstCharset, srcCharset, src)
 	if err != nil {
 		t.Errorf("convert error. %v", err)
 		return

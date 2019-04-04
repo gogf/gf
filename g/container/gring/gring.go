@@ -4,9 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gring provides a concurrent-safe(alternative) ring(circular lists).
-//
-// 并发安全环.
+// Package gring provides a concurrent-safe/unsafe ring(circular lists).
 package gring
 
 import (

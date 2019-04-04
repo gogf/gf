@@ -65,42 +65,30 @@ func main() {
 
 `GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
-# Contributors(TOP 10)
+# Contributors
 
-<a href="https://gitee.com/johng" target="_blank" title="John"><img src="https://gitee.com/uploads/27/1309327_johng.png?1530630243" width="60" align="left"></a>
-
-<a href="https://gitee.com/wenzi1" target="_blank" title="蚊子"><img src="https://images.gitee.com/uploads/22/1923122_wenzi1.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/zseeker" target="_blank" title="zseeker"><img src="https://goframe.org/images/contributors/zseeker.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/ymrjqyy" target="_blank" title="一墨染尽青衣颜"><img src="https://images.gitee.com/uploads/27/876827_ymrjqyy.png" width="60" align="left"></a>
-
-<a href="https://github.com/chenyang351" target="_blank" title="chenyang351"><img src="https://avatars1.githubusercontent.com/u/30063958?s=60&v=4" width="60" align="left"></a>
-
-<a href="https://gitee.com/wxkj" target="_blank" title="wxkj"><img src="https://gitee.com/uploads/56/91356_wxkj.png" width="60" align="left"></a>
-
-<a href="https://github.com/wxkj001" target="_blank" title="3wxkj001
-"><img src="https://avatars0.githubusercontent.com/u/7794279?s=60&v=4" width="60" align="left"></a>
-
-<a href="https://gitee.com/zhangjinfu" target="_blank" title="张金富"><img src="https://images.gitee.com/uploads/63/356163_zhangjinfu.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/garfieldkwong" target="_blank" title="GarfieldKwong"><img src="https://goframe.org/images/contributors/garfieldkwong.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/qq1054000800" target="_blank" title="hello"><img src="https://gitee.com/uploads/9/2209_qq1054000800.jpg" width="60" align="left"></a>
-
-<br /><br /><br />
+- [johng](https://gitee.com/johng)
+- [zhaopengme](https://github.com/zhaopengme)
+- [wenzi1](https://gitee.com/wenzi1)
+- [zseeker](https://gitee.com/zseeker)
+- [ymrjqyy](https://gitee.com/ymrjqyy)
+- [chenyang351](https://github.com/chenyang351)
+- [wxkj](https://gitee.com/wxkj)
+- [wxkj001](https://github.com/wxkj001)
+- [zhangjinfu](https://gitee.com/zhangjinfu)
+- [garfieldkwong](https://gitee.com/garfieldkwong)
+- [qq1054000800](https://gitee.com/qq1054000800)
 
 # Donators
 
-<a href="https://gitee.com/tiangenglan" target="_blank" title="zhuhuan12"><img src="https://images.gitee.com/uploads/99/1167099_tiangenglan.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/zhuhuan12" target="_blank" title="zhuhuan12"><img src="https://gitee.com/uploads/39/751839_zhuhuan12.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/zfan_codes" target="_blank" title="范钟"><img src="https://images.gitee.com/uploads/32/2044832_zfan_codes.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/hailaz" target="_blank" title="HaiLaz"><img src="https://gitee.com/uploads/87/1273187_hailaz.png" width="60" align="left"></a>
-
-<a href="https://gitee.com/mg91" target="_blank" title="mg91"><img src="https://images.gitee.com/uploads/30/1410930_mg91.png" width="60" align="left"></a>
+- [tiangenglan](https://gitee.com/tiangenglan)
+- [zhuhuan12](https://gitee.com/zhuhuan12)
+- [zfan_codes](https://gitee.com/zfan_codes)
+- [hailaz](https://gitee.com/hailaz)
+- [mg91](https://gitee.com/mg91)
+- [wxkj](https://gitee.com/wxkj)
+- [pibigstar](https://github.com/pibigstar)
+- [flyke-xu](https://gitee.com/flyke-xu)
 
 
 

@@ -4,10 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gjson provides quite flexible and useful API for JSON/XML/YAML/TOML content handling.
+// Package gjson provides convenient API for JSON/XML/YAML/TOML data handling.
 package gjson
 
 import (
+    "bytes"
     "encoding/json"
     "errors"
     "fmt"
@@ -16,42 +17,48 @@ import (
     "github.com/gogf/gf/g/encoding/gyaml"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/os/gfcache"
-    "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/text/gregex"
     "github.com/gogf/gf/g/text/gstr"
     "github.com/gogf/gf/g/util/gconv"
+    "reflect"
     "strconv"
     "strings"
     "time"
 )
 
 const (
-    gDEFAULT_SPLIT_CHAR = '.' // 默认层级分隔符号
+    // Separator char for hierarchical data access.
+    gDEFAULT_SPLIT_CHAR = '.'
 )
 
-// json解析结果存放数组
+// The customized JSON struct.
 type Json struct {
     mu *rwmutex.RWMutex
-    p  *interface{} // 注意这是一个指针
-    c  byte         // 层级分隔符，默认为"."
-    vc bool         // 层级检索是否执行分隔符冲突检测(默认为false，检测会比较影响检索效率)
+    p  *interface{} // Pointer for hierarchical data access, it's the root of data in default.
+    c  byte         // Char separator('.' in default).
+    vc bool         // Violence Check(false in default), which is used to access data
+                    // when the hierarchical data key contains separator char.
 }
 
-// 将变量转换为Json对象进行处理，该变量至少应当是一个map或者slice，否者转换没有意义
-func New(value interface{}, unsafe...bool) *Json {
+// New creates a Json object with any variable type of <data>,
+// but <data> should be a map or slice for data access reason,
+// or it will make no sense.
+// The <unsafe> param specifies whether using this Json object
+// in un-concurrent-safe context, which is false in default.
+func New(data interface{}, unsafe...bool) *Json {
     j := (*Json)(nil)
-    switch value.(type) {
+    switch data.(type) {
         case map[string]interface{}, []interface{}, nil:
             j = &Json {
-                p  : &value,
+                p  : &data,
                 c  : byte(gDEFAULT_SPLIT_CHAR),
                 vc : false ,
             }
         case string, []byte:
-            j, _ = LoadContent(gconv.Bytes(value))
+            j, _ = LoadContent(gconv.Bytes(data))
         default:
             v := (interface{})(nil)
-            if m := gconv.Map(value); m != nil {
+            if m := gconv.Map(data); m != nil {
                 v = m
                 j = &Json {
                     p  : &v,
@@ -59,7 +66,7 @@ func New(value interface{}, unsafe...bool) *Json {
                     vc : false,
                 }
             } else {
-                v = gconv.Interfaces(value)
+                v = gconv.Interfaces(data)
                 j = &Json {
                     p  : &v,
                     c  : byte(gDEFAULT_SPLIT_CHAR),
@@ -71,109 +78,130 @@ func New(value interface{}, unsafe...bool) *Json {
     return j
 }
 
-// 创建一个非并发安全的Json对象
-func NewUnsafe(value...interface{}) *Json {
-    if len(value) > 0 {
-        return New(value[0], true)
+// NewUnsafe creates a un-concurrent-safe Json object.
+func NewUnsafe(data...interface{}) *Json {
+    if len(data) > 0 {
+        return New(data[0], true)
     }
     return New(nil, true)
 }
 
-// 编码go变量为json字符串，并返回json字符串指针
-func Encode (v interface{}) ([]byte, error) {
-    return json.Marshal(v)
+// Valid checks whether <data> is a valid JSON data type.
+func Valid(data interface{}) bool {
+    return json.Valid(gconv.Bytes(data))
 }
 
-// 解码字符串为interface{}变量
-func Decode (b []byte) (interface{}, error) {
-    var v interface{}
-    if err := DecodeTo(b, &v); err != nil {
+// Encode encodes <value> to JSON data type of bytes.
+func Encode(value interface{}) ([]byte, error) {
+    return json.Marshal(value)
+}
+
+// Decode decodes <data>(string/[]byte) to golang variable.
+func Decode(data interface{}) (interface{}, error) {
+    var value interface{}
+    if err := DecodeTo(gconv.Bytes(data), &value); err != nil {
         return nil, err
     } else {
-        return v, nil
+        return value, nil
     }
 }
 
-// 解析json字符串为go变量，注意第二个参数为指针(任意结构的变量)
-func DecodeTo (b []byte, v interface{}) error {
-    return json.Unmarshal(b, v)
+// Decode decodes <data>(string/[]byte) to specified golang variable <v>.
+// The <v> should be a pointer type.
+func DecodeTo(data interface{}, v interface{}) error {
+    decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
+    decoder.UseNumber()
+    return decoder.Decode(v)
 }
 
-// 解析json字符串为gjson.Json对象，并返回操作对象指针
-func DecodeToJson (b []byte) (*Json, error) {
-    if v, err := Decode(b); err != nil {
+// DecodeToJson codes <data>(string/[]byte) to a Json object.
+func DecodeToJson(data interface{}, unsafe...bool) (*Json, error) {
+    if v, err := Decode(gconv.Bytes(data)); err != nil {
         return nil, err
     } else {
-        return New(v), nil
+        return New(v, unsafe...), nil
     }
 }
 
-// 支持多种配置文件类型转换为json格式内容并解析为gjson.Json对象
-func Load (path string) (*Json, error) {
-    return LoadContent(gfcache.GetBinContents(path), gfile.Ext(path))
+// Load loads content from specified file <path>,
+// and creates a Json object from its content.
+func Load(path string, unsafe...bool) (*Json, error) {
+    return LoadContent(gfcache.GetBinContents(path), unsafe...)
 }
 
-// 支持的配置文件格式：xml, json, yaml/yml, toml,
-// 默认为自动识别，当无法检测成功时使用json解析。
-func LoadContent(data []byte, dataType...string) (*Json, error) {
+// LoadContent creates a Json object from given content,
+// it checks the data type of <content> automatically,
+// supporting JSON, XML, YAML and TOML types of data.
+func LoadContent(data interface{}, unsafe...bool) (*Json, error) {
     var err    error
     var result interface{}
+    b := gconv.Bytes(data)
     t := "json"
-    if len(dataType) > 0 {
-        t = dataType[0]
+    // auto check data type
+    if json.Valid(b) {
+        t = "json"
+    } else if gregex.IsMatch(`^<.+>.*</.+>$`, b) {
+        t = "xml"
+    } else if gregex.IsMatch(`^[\s\t]*\w+\s*:\s*.+`, b) || gregex.IsMatch(`\n[\s\t]*\w+\s*:\s*.+`, b) {
+        t = "yml"
+    } else if gregex.IsMatch(`^[\s\t]*\w+\s*=\s*.+`, b) || gregex.IsMatch(`\n[\s\t]*\w+\s*=\s*.+`, b) {
+        t = "toml"
     } else {
-        if gregex.IsMatch(`<.+>.*</.+>`, data) {
-            t = "xml"
-        } else if gregex.IsMatch(`\w+\s*:\s*\w+`, data) {
-            t = "yml"
-        } else if gregex.IsMatch(`\w+\s*=\s*\w+`, data) {
-            t = "toml"
-        }
+        return nil, errors.New("unsupported data type")
     }
+    // convert to json type data
     switch t {
-        case  "xml", ".xml":
-            data, err = gxml.ToJson(data)
-            if err != nil {
-                return nil, err
-            }
+        case "json", ".json":
+            // ok
+        case "xml", ".xml":
+            // TODO UseNumber
+            b, err = gxml.ToJson(b)
 
-        case   "yml", "yaml", ".yml", ".yaml":
-            data, err = gyaml.ToJson(data)
-            if err != nil {
-                return nil, err
-            }
+        case "yml", "yaml", ".yml", ".yaml":
+            // TODO UseNumber
+            b, err = gyaml.ToJson(b)
 
-        case  "toml", ".toml":
-            data, err = gtoml.ToJson(data)
-            if err != nil {
-                return nil, err
-            }
+        case "toml", ".toml":
+            // TODO UseNumber
+            b, err = gtoml.ToJson(b)
+
+        default:
+            err = errors.New("nonsupport type " + t)
+    }
+    if err != nil {
+        return nil, err
     }
     if result == nil {
-        if err := json.Unmarshal(data, &result); err != nil {
+        decoder := json.NewDecoder(bytes.NewReader(b))
+        decoder.UseNumber()
+        if err := decoder.Decode(&result); err != nil {
             return nil, err
         }
+        switch result.(type) {
+            case string, []byte:
+                return nil, fmt.Errorf(`json decoding failed for content: %s`, string(b))
+        }
     }
-    return New(result), nil
+    return New(result, unsafe...), nil
 }
 
-// 设置自定义的层级分隔符号
+// SetSplitChar sets the separator char for hierarchical data access.
 func (j *Json) SetSplitChar(char byte) {
     j.mu.Lock()
     j.c = char
     j.mu.Unlock()
 }
 
-// 设置是否执行层级冲突检查，当键名中存在层级符号时需要开启该特性，默认为关闭。
-// 开启比较耗性能，也不建议允许键名中存在分隔符，最好在应用端避免这种情况。
-func (j *Json) SetViolenceCheck(check bool) {
+// SetViolenceCheck enables/disables violence check for hierarchical data access.
+func (j *Json) SetViolenceCheck(enabled bool) {
     j.mu.Lock()
-    j.vc = check
+    j.vc = enabled
     j.mu.Unlock()
 }
 
-// 将指定的json内容转换为指定结构返回，查找失败或者转换失败，目标对象转换为nil
-// 注意第二个参数需要给的是**变量地址**
+// GetToVar gets the value by specified <pattern>,
+// and converts it to specified golang variable <v>.
+// The <v> should be a pointer type.
 func (j *Json) GetToVar(pattern string, v interface{}) error {
     r := j.Get(pattern)
     if r != nil {
@@ -188,19 +216,18 @@ func (j *Json) GetToVar(pattern string, v interface{}) error {
     return nil
 }
 
-// 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
-// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
+// GetMap gets the value by specified <pattern>,
+// and converts it to map[string]interface{}.
 func (j *Json) GetMap(pattern string) map[string]interface{} {
     result := j.Get(pattern)
     if result != nil {
-        if r, ok := result.(map[string]interface{}); ok {
-            return r
-        }
+        return gconv.Map(result)
     }
     return nil
 }
 
-// 将检索值转换为Json对象指针返回
+// GetJson gets the value by specified <pattern>,
+// and converts it to a Json object.
 func (j *Json) GetJson(pattern string) *Json {
     result := j.Get(pattern)
     if result != nil {
@@ -209,28 +236,39 @@ func (j *Json) GetJson(pattern string) *Json {
     return nil
 }
 
-// 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
-// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
-func (j *Json) GetArray(pattern string) []interface{} {
-    result := j.Get(pattern)
-    if result != nil {
-        if r, ok := result.([]interface{}); ok {
-            return r
+// GetJsons gets the value by specified <pattern>,
+// and converts it to a slice of Json object.
+func (j *Json) GetJsons(pattern string) []*Json {
+    array := j.GetArray(pattern)
+    if len(array) > 0 {
+        jsons := make([]*Json, len(array))
+        for i := 0; i < len(array); i++ {
+            jsons[i] = New(array[i], !j.mu.IsSafe())
         }
+        return jsons
     }
     return nil
 }
 
-// 返回指定json中的string
+// GetArray gets the value by specified <pattern>,
+// and converts it to a slice of []interface{}.
+func (j *Json) GetArray(pattern string) []interface{} {
+    return gconv.Interfaces(j.Get(pattern))
+}
+
+// GetString gets the value by specified <pattern>,
+// and converts it to string.
 func (j *Json) GetString(pattern string) string {
     return gconv.String(j.Get(pattern))
 }
 
-// 返回指定json中的strings(转换为[]string数组)
+// GetStrings gets the value by specified <pattern>,
+// and converts it to a slice of []string.
 func (j *Json) GetStrings(pattern string) []string {
     return gconv.Strings(j.Get(pattern))
 }
 
+// See GetArray.
 func (j *Json) GetInterfaces(pattern string) []interface{} {
     return gconv.Interfaces(j.Get(pattern))
 }
@@ -243,7 +281,10 @@ func (j *Json) GetTimeDuration(pattern string) time.Duration {
     return gconv.TimeDuration(j.Get(pattern))
 }
 
-// 返回指定json中的bool(false:"", 0, false, off)
+// GetBool gets the value by specified <pattern>,
+// and converts it to bool.
+// It returns false when value is: "", 0, false, off, nil;
+// or returns true instead.
 func (j *Json) GetBool(pattern string) bool {
     return gconv.Bool(j.Get(pattern))
 }
@@ -304,25 +345,29 @@ func (j *Json) GetFloats(pattern string) []float64 {
     return gconv.Floats(j.Get(pattern))
 }
 
-// 将指定变量转换为struct对象(对象属性赋值)
+// GetToStruct gets the value by specified <pattern>,
+// and converts it to specified object <objPointer>.
+// The <objPointer> should be the pointer to an object.
 func (j *Json) GetToStruct(pattern string, objPointer interface{}) error {
     return gconv.Struct(j.Get(pattern), objPointer)
 }
 
-// 动态设置层级变量
+// Set sets value with specified <pattern>.
+// It supports hierarchical data access by char separator, which is '.' in default.
 func (j *Json) Set(pattern string, value interface{}) error {
     return j.setValue(pattern, value, false)
 }
 
-// 动态删除层级变量
+// Remove deletes value with specified <pattern>.
+// It supports hierarchical data access by char separator, which is '.' in default.
 func (j *Json) Remove(pattern string) error {
     return j.setValue(pattern, nil, true)
 }
 
-// 根据pattern查找并设置数据
-// 注意：
-// 1、写入的value为nil且removed为true时，表示删除;
-// 2、里面的层级处理比较复杂，逻辑较复杂的地方在于层级检索及节点创建，叶子赋值;
+// Set <value> by <pattern>.
+// Notice:
+// 1. If value is nil and removed is true, means deleting this value;
+// 2. It's quite complicated in hierarchical data search, node creating and data assignment;
 func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
     array   := strings.Split(pattern, string(j.c))
     length  := len(array)
@@ -341,187 +386,202 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
     defer j.mu.Unlock()
     for i:= 0; i < length; i++ {
         switch (*pointer).(type) {
-        case map[string]interface{}:
-            if i == length - 1 {
-                if removed && value == nil {
-                    // 删除map元素
-                    delete((*pointer).(map[string]interface{}), array[i])
-                } else {
-                    (*pointer).(map[string]interface{})[array[i]] = value
-                }
-            } else {
-                // 当键名不存在的情况这里会进行处理
-                if v, ok := (*pointer).(map[string]interface{})[array[i]]; !ok {
-                    if removed && value == nil {
-                        goto done
-                    }
-                    // 创建新节点
-                    if gstr.IsNumeric(array[i + 1]) {
-                        // 创建array节点
-                        n, _ := strconv.Atoi(array[i + 1])
-                        var v interface{} = make([]interface{}, n + 1)
-                        pparent = j.setPointerWithValue(pointer, array[i], v)
-                        pointer = &v
-                    } else {
-                        // 创建map节点
-                        var v interface{} = make(map[string]interface{})
-                        pparent = j.setPointerWithValue(pointer, array[i], v)
-                        pointer = &v
-                    }
-                } else {
-                    pparent = pointer
-                    pointer = &v
-                }
-            }
-
-        case []interface{}:
-            // 键名与当前指针类型不符合，需要执行**覆盖操作**
-            if !gstr.IsNumeric(array[i]) {
+            case map[string]interface{}:
                 if i == length - 1 {
-                    *pointer = map[string]interface{}{ array[i] : value }
+                    if removed && value == nil {
+                        // 删除map元素
+                        delete((*pointer).(map[string]interface{}), array[i])
+                    } else {
+                        (*pointer).(map[string]interface{})[array[i]] = value
+                    }
                 } else {
-                    var v interface{} = make(map[string]interface{})
-                    *pointer = v
-                    pparent  = pointer
-                    pointer  = &v
+                    // 当键名不存在的情况这里会进行处理
+                    if v, ok := (*pointer).(map[string]interface{})[array[i]]; !ok {
+                        if removed && value == nil {
+                            goto done
+                        }
+                        // 创建新节点
+                        if gstr.IsNumeric(array[i + 1]) {
+                            // 创建array节点
+                            n, _ := strconv.Atoi(array[i + 1])
+                            var v interface{} = make([]interface{}, n + 1)
+                            pparent = j.setPointerWithValue(pointer, array[i], v)
+                            pointer = &v
+                        } else {
+                            // 创建map节点
+                            var v interface{} = make(map[string]interface{})
+                            pparent = j.setPointerWithValue(pointer, array[i], v)
+                            pointer = &v
+                        }
+                    } else {
+                        pparent = pointer
+                        pointer = &v
+                    }
                 }
-                continue
-            }
 
-            valn, err := strconv.Atoi(array[i])
-            if err != nil {
-                return err
-            }
-            // 叶子节点
-            if i == length - 1 {
-                if len((*pointer).([]interface{})) > valn {
-                    if removed && value == nil {
-                        // 删除数据元素
-                        j.setPointerWithValue(pparent, array[i - 1], append((*pointer).([]interface{})[ : valn], (*pointer).([]interface{})[valn + 1 : ]...))
+            case []interface{}:
+                // 键名与当前指针类型不符合，需要执行**覆盖操作**
+                if !gstr.IsNumeric(array[i]) {
+                    if i == length - 1 {
+                        *pointer = map[string]interface{}{ array[i] : value }
                     } else {
-                        (*pointer).([]interface{})[valn] = value
+                        var v interface{} = make(map[string]interface{})
+                        *pointer = v
+                        pparent  = pointer
+                        pointer  = &v
                     }
-                } else {
-                    if removed && value == nil {
-                        goto done
-                    }
-                    if pparent == nil {
-                        // 表示根节点
-                        j.setPointerWithValue(pointer, array[i], value)
-                    } else {
-                        // 非根节点
-                        s := make([]interface{}, valn + 1)
-                        copy(s, (*pointer).([]interface{}))
-                        s[valn] = value
-                        j.setPointerWithValue(pparent, array[i - 1], s)
-                    }
+                    continue
                 }
-            } else {
-                if gstr.IsNumeric(array[i + 1]) {
-                    n, _ := strconv.Atoi(array[i + 1])
+
+                valn, err := strconv.Atoi(array[i])
+                if err != nil {
+                    return err
+                }
+                // 叶子节点
+                if i == length - 1 {
                     if len((*pointer).([]interface{})) > valn {
-                        (*pointer).([]interface{})[valn] = make([]interface{}, n + 1)
-                        pparent                          = pointer
-                        pointer                          = &(*pointer).([]interface{})[valn]
+                        if removed && value == nil {
+                            // 删除数据元素
+                            j.setPointerWithValue(pparent, array[i - 1], append((*pointer).([]interface{})[ : valn], (*pointer).([]interface{})[valn + 1 : ]...))
+                        } else {
+                            (*pointer).([]interface{})[valn] = value
+                        }
                     } else {
                         if removed && value == nil {
                             goto done
                         }
-                        var v interface{} = make([]interface{}, n + 1)
+                        if pparent == nil {
+                            // 表示根节点
+                            j.setPointerWithValue(pointer, array[i], value)
+                        } else {
+                            // 非根节点
+                            s := make([]interface{}, valn + 1)
+                            copy(s, (*pointer).([]interface{}))
+                            s[valn] = value
+                            j.setPointerWithValue(pparent, array[i - 1], s)
+                        }
+                    }
+                } else {
+                    if gstr.IsNumeric(array[i + 1]) {
+                        n, _ := strconv.Atoi(array[i + 1])
+                        if len((*pointer).([]interface{})) > valn {
+                            (*pointer).([]interface{})[valn] = make([]interface{}, n + 1)
+                            pparent                          = pointer
+                            pointer                          = &(*pointer).([]interface{})[valn]
+                        } else {
+                            if removed && value == nil {
+                                goto done
+                            }
+                            var v interface{} = make([]interface{}, n + 1)
+                            pparent = j.setPointerWithValue(pointer, array[i], v)
+                            pointer = &v
+                        }
+                    } else {
+                        var v interface{} = make(map[string]interface{})
                         pparent = j.setPointerWithValue(pointer, array[i], v)
                         pointer = &v
                     }
-                } else {
-                    var v interface{} = make(map[string]interface{})
-                    pparent = j.setPointerWithValue(pointer, array[i], v)
-                    pointer = &v
                 }
-            }
 
             // 如果当前指针指向的变量不是引用类型的，
             // 那么修改变量必须通过父级进行修改，即 pparent
-        default:
-            if removed && value == nil {
-                goto done
-            }
-            if gstr.IsNumeric(array[i]) {
-                n, _    := strconv.Atoi(array[i])
-                s       := make([]interface{}, n + 1)
-                if i == length - 1 {
-                    s[n] = value
+            default:
+                if removed && value == nil {
+                    goto done
                 }
-                if pparent != nil {
-                    pparent = j.setPointerWithValue(pparent, array[i - 1], s)
-                } else {
-                    *pointer = s
-                    pparent  = pointer
-                }
-            } else {
-                var v interface{} = make(map[string]interface{})
-                if i == length - 1 {
-                    v = map[string]interface{}{
-                        array[i] : value,
+                if gstr.IsNumeric(array[i]) {
+                    n, _    := strconv.Atoi(array[i])
+                    s       := make([]interface{}, n + 1)
+                    if i == length - 1 {
+                        s[n] = value
                     }
-                }
-                if pparent != nil {
-                    pparent = j.setPointerWithValue(pparent, array[i - 1], v)
+                    if pparent != nil {
+                        pparent = j.setPointerWithValue(pparent, array[i - 1], s)
+                    } else {
+                        *pointer = s
+                        pparent  = pointer
+                    }
                 } else {
-                    *pointer = v
-                    pparent  = pointer
+                    var v interface{} = make(map[string]interface{})
+                    if i == length - 1 {
+                        v = map[string]interface{}{
+                            array[i] : value,
+                        }
+                    }
+                    if pparent != nil {
+                        pparent = j.setPointerWithValue(pparent, array[i - 1], v)
+                    } else {
+                        *pointer = v
+                        pparent  = pointer
+                    }
+                    pointer = &v
                 }
-                pointer = &v
-            }
-
         }
     }
 done:
     return nil
 }
 
-// 数据结构转换，map参数必须转换为map[string]interface{}，数组参数必须转换为[]interface{}
+// Convert <value> to map[string]interface{} or []interface{},
+// which can be supported for hierarchical data access.
 func (j *Json) convertValue(value interface{}) interface{} {
     switch value.(type) {
-    case map[string]interface{}:
-        return value
-    case []interface{}:
-        return value
-    default:
-        // 这里效率会比较低，当然比直接用反射也不会差到哪儿去
-        // 为了操作的灵活性，牺牲了一定的效率
-        b, _ := Encode(value)
-        v, _ := Decode(b)
-        return v
+        case map[string]interface{}:
+            return value
+        case []interface{}:
+            return value
+        default:
+            rv   := reflect.ValueOf(value)
+            kind := rv.Kind()
+            if kind == reflect.Ptr {
+                rv   = rv.Elem()
+                kind = rv.Kind()
+            }
+            switch kind {
+                case reflect.Array:  return gconv.Interfaces(value)
+                case reflect.Slice:  return gconv.Interfaces(value)
+                case reflect.Map:    return gconv.Map(value)
+                case reflect.Struct: return gconv.Map(value)
+                default:
+                    // Use json decode/encode at last.
+                    b, _ := Encode(value)
+                    v, _ := Decode(b)
+                    return v
+            }
     }
 }
 
-// 用于Set方法中，对指针指向的内存地址进行赋值
-// 返回修改后的父级指针
+// Set <key>:<value> to <pointer>, the <key> may be a map key or slice index.
+// It returns the pointer to the new value set.
 func (j *Json) setPointerWithValue(pointer *interface{}, key string, value interface{}) *interface{} {
     switch (*pointer).(type) {
-    case map[string]interface{}:
-        (*pointer).(map[string]interface{})[key] = value
-        return &value
-    case []interface{}:
-        n, _ := strconv.Atoi(key)
-        if len((*pointer).([]interface{})) > n {
-            (*pointer).([]interface{})[n] = value
-            return &(*pointer).([]interface{})[n]
-        } else {
-            s := make([]interface{}, n + 1)
-            copy(s, (*pointer).([]interface{}))
-            s[n] = value
-            *pointer = s
-            return &s[n]
-        }
-    default:
-        *pointer = value
+        case map[string]interface{}:
+            (*pointer).(map[string]interface{})[key] = value
+            return &value
+        case []interface{}:
+            n, _ := strconv.Atoi(key)
+            if len((*pointer).([]interface{})) > n {
+                (*pointer).([]interface{})[n] = value
+                return &(*pointer).([]interface{})[n]
+            } else {
+                s := make([]interface{}, n + 1)
+                copy(s, (*pointer).([]interface{}))
+                s[n] = value
+                *pointer = s
+                return &s[n]
+            }
+        default:
+            *pointer = value
     }
     return pointer
 }
 
-// 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"; 当pattern为空时，表示获取所有数据;
-// 返回的结果类型的interface{}，因此需要自己做类型转换;
-// 如果找不到对应节点的数据，返回nil;
+// Get returns value by specified <pattern>.
+// It returns all values of current Json object, if <pattern> is empty or not specified.
+// It returns nil if no value found by <pattern>.
+//
+// We can also access slice item by its index number in <pattern>,
+// eg: "items.name.first", "list.10".
 func (j *Json) Get(pattern...string) interface{} {
     j.mu.RLock()
     defer j.mu.RUnlock()
@@ -534,7 +594,7 @@ func (j *Json) Get(pattern...string) interface{} {
     if j.vc {
         result = j.getPointerByPattern(queryPattern)
     } else {
-        result = j.getPointerByPatternWithoutSplitCharViolenceCheck(queryPattern)
+        result = j.getPointerByPatternWithoutViolenceCheck(queryPattern)
     }
     if result != nil {
         return *result
@@ -542,49 +602,57 @@ func (j *Json) Get(pattern...string) interface{} {
     return nil
 }
 
-// 判断锁给定pattern是否数据存在
+// Contains checks whether the value by specified <pattern> exist.
 func (j *Json) Contains(pattern...string) bool {
     return j.Get(pattern...) != nil
 }
 
-// 计算指定pattern的元素长度(pattern对应数据类型为map[string]interface{}/[]interface{}时有效)
+// Len returns the length/size of the value by specified <pattern>.
+// The target value by <pattern> should be type of slice or map.
+// It returns -1 if the target value is not found, or its type is invalid.
 func (j *Json) Len(pattern string) int {
     p := j.getPointerByPattern(pattern)
     if p != nil {
         switch (*p).(type) {
-        case map[string]interface{}:
-            return len((*p).(map[string]interface{}))
-        case []interface{}:
-            return len((*p).([]interface{}))
-        default:
-            return -1
+            case map[string]interface{}:
+                return len((*p).(map[string]interface{}))
+            case []interface{}:
+                return len((*p).([]interface{}))
+            default:
+                return -1
         }
     }
     return -1
 }
 
-// 指定pattern追加元素
+// Append appends value to the value by specified <pattern>.
+// The target value by <pattern> should be type of slice.
 func (j *Json) Append(pattern string, value interface{}) error {
-    length := j.Len(pattern)
-    if length != -1 {
-        return j.Set(fmt.Sprintf("%s.%d", pattern, length), value)
+    p := j.getPointerByPattern(pattern)
+    if p == nil {
+        return j.Set(fmt.Sprintf("%s.0", pattern), value)
     }
-    return errors.New(fmt.Sprintf("cannot find item for pattern: %s", pattern))
+    switch (*p).(type) {
+        case []interface{}:
+            return j.Set(fmt.Sprintf("%s.%d", pattern, len((*p).([]interface{}))), value)
+    }
+    return fmt.Errorf("invalid variable type of %s", pattern)
 }
 
-// 根据pattern层级查找**变量指针**
-// 检索方式：例如检索 a.a.a ，值为1
-// 1. 检索 a.a.a.a 是否存在对应map的键名；
-// 2. 检索 a.a.a   是否存在对应map的键名；
-// 3. 检索 a.a     是否存在对应map的键名；
-// 4. 检索 a       是否存在对应map的键名，如果检索出这是一个map，假如为变量m1；
-// 5. 在m1中检索 a.a.a 否存在对应map的键名；
-// 6. 在m1中检索 a.a   否存在对应map的键名；
-// 7. 在m1中检索 a     否存在对应map的键名，如果检索出这是一个map，假如为变量m2；
-// 8. 在m2中检索 a.a   否存在对应map的键名；
-// 9. 在m2中检索 a     否存在对应map的键名，检索到有值，值为1；
-// 这样检索的复杂度很高，主要是为了避免键名中存在分隔符号(默认为".")的情况，避免歧义。
+// Get a pointer to the value by specified <pattern>.
 func (j *Json) getPointerByPattern(pattern string) *interface{} {
+    if j.vc {
+        return j.getPointerByPatternWithViolenceCheck(pattern)
+    } else {
+        return j.getPointerByPatternWithoutViolenceCheck(pattern)
+    }
+}
+
+// Get a pointer to the value of specified <pattern> with violence check.
+func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *interface{} {
+    if !j.vc {
+        return j.getPointerByPatternWithoutViolenceCheck(pattern)
+    }
     index   := len(pattern)
     start   := 0
     length  := 0
@@ -606,7 +674,7 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
                 pointer = r
             }
         } else {
-            // 查找下一个分割符号的索引位置
+            // Get the position for next separator char.
             index = strings.LastIndexByte(pattern[start:index], j.c)
             if index != -1 && length > 0 {
                 index += length + 1
@@ -619,8 +687,11 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
     return nil
 }
 
-// 层级检索，内部不执行分隔符冲突检查，检索效率会有所提高，但是冲突需要开发者自己根据自定义的分隔符来进行解决
-func (j *Json) getPointerByPatternWithoutSplitCharViolenceCheck(pattern string) *interface{} {
+// Get a pointer to the value of specified <pattern>, with no violence check.
+func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *interface{} {
+    if j.vc {
+        return j.getPointerByPatternWithViolenceCheck(pattern)
+    }
     pointer := j.p
     if len(pattern) == 0 {
         return pointer
@@ -640,26 +711,27 @@ func (j *Json) getPointerByPatternWithoutSplitCharViolenceCheck(pattern string) 
     return nil
 }
 
-// 判断给定的key在当前的pointer下是否有值，并返回对应的pointer
-// 注意这里返回的指针都是临时变量的内存地址
+// Check whether there's value by <key> in specified <pointer>.
+// It returns a pointer to the value.
 func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interface{} {
     switch (*pointer).(type) {
-    case map[string]interface{}:
-        if v, ok := (*pointer).(map[string]interface{})[key]; ok {
-            return &v
-        }
-    case []interface{}:
-        if gstr.IsNumeric(key) {
-            n, err := strconv.Atoi(key)
-            if err == nil && len((*pointer).([]interface{})) > n {
-                return &(*pointer).([]interface{})[n]
+        case map[string]interface{}:
+            if v, ok := (*pointer).(map[string]interface{})[key]; ok {
+                return &v
             }
-        }
+        case []interface{}:
+            if gstr.IsNumeric(key) {
+                n, err := strconv.Atoi(key)
+                if err == nil && len((*pointer).([]interface{})) > n {
+                    return &(*pointer).([]interface{})[n]
+                }
+            }
     }
     return nil
 }
 
-// 转换为map[string]interface{}类型,如果转换失败，返回nil
+// ToMap converts current Json object to map[string]interface{}.
+// It returns nil if fails.
 func (j *Json) ToMap() map[string]interface{} {
     j.mu.RLock()
     defer j.mu.RUnlock()
@@ -671,15 +743,16 @@ func (j *Json) ToMap() map[string]interface{} {
     }
 }
 
-// 转换为[]interface{}类型,如果转换失败，返回nil
+// ToArray converts current Json object to []interface{}.
+// It returns nil if fails.
 func (j *Json) ToArray() []interface{} {
     j.mu.RLock()
     defer j.mu.RUnlock()
     switch (*(j.p)).(type) {
-    case []interface{}:
-        return (*(j.p)).([]interface{})
-    default:
-        return nil
+        case []interface{}:
+            return (*(j.p)).([]interface{})
+        default:
+            return nil
     }
 }
 
@@ -687,8 +760,18 @@ func (j *Json) ToXml(rootTag...string) ([]byte, error) {
     return gxml.Encode(j.ToMap(), rootTag...)
 }
 
+func (j *Json) ToXmlString(rootTag...string) (string, error) {
+    b, e := j.ToXml(rootTag...)
+    return string(b), e
+}
+
 func (j *Json) ToXmlIndent(rootTag...string) ([]byte, error) {
     return gxml.EncodeWithIndent(j.ToMap(), rootTag...)
+}
+
+func (j *Json) ToXmlIndentString(rootTag...string) (string, error) {
+    b, e := j.ToXmlIndent(rootTag...)
+    return string(b), e
 }
 
 func (j *Json) ToJson() ([]byte, error) {
@@ -697,10 +780,20 @@ func (j *Json) ToJson() ([]byte, error) {
     return Encode(*(j.p))
 }
 
+func (j *Json) ToJsonString() (string, error) {
+    b, e := j.ToJson()
+    return string(b), e
+}
+
 func (j *Json) ToJsonIndent() ([]byte, error) {
     j.mu.RLock()
     defer j.mu.RUnlock()
     return json.MarshalIndent(*(j.p), "", "\t")
+}
+
+func (j *Json) ToJsonIndentString() (string, error) {
+    b, e := j.ToJsonIndent()
+    return string(b), e
 }
 
 func (j *Json) ToYaml() ([]byte, error) {
@@ -709,20 +802,31 @@ func (j *Json) ToYaml() ([]byte, error) {
     return gyaml.Encode(*(j.p))
 }
 
+func (j *Json) ToYamlString() (string, error) {
+    b, e := j.ToYaml()
+    return string(b), e
+}
+
 func (j *Json) ToToml() ([]byte, error) {
     j.mu.RLock()
     defer j.mu.RUnlock()
     return gtoml.Encode(*(j.p))
 }
 
-// 转换为指定的struct对象
-func (j *Json) ToStruct(o interface{}) error {
-    j.mu.RLock()
-    defer j.mu.RUnlock()
-    return gconv.Struct(*(j.p), o)
+func (j *Json) ToTomlString() (string, error) {
+    b, e := j.ToToml()
+    return string(b), e
 }
 
-// 打印Json对象
+// ToStruct converts current Json object to specified object.
+// The <objPointer> should be a pointer type.
+func (j *Json) ToStruct(objPointer interface{}) error {
+    j.mu.RLock()
+    defer j.mu.RUnlock()
+    return gconv.Struct(*(j.p), objPointer)
+}
+
+// Dump prints current Json object with more manually readable.
 func (j *Json) Dump() error {
     j.mu.RLock()
     defer j.mu.RUnlock()

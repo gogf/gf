@@ -7,20 +7,10 @@
 package g
 
 import (
+    "github.com/gogf/gf/g/container/gvar"
+    "github.com/gogf/gf/g/internal/empty"
     "github.com/gogf/gf/g/net/ghttp"
     "github.com/gogf/gf/g/util/gutil"
-    "github.com/gogf/gf/g/os/glog"
-    "github.com/gogf/gf/g/container/gvar"
-)
-
-const (
-    LOG_LEVEL_ALL  = glog.LEVEL_ALL
-    LOG_LEVEL_DEBU = glog.LEVEL_DEBU
-    LOG_LEVEL_INFO = glog.LEVEL_INFO
-    LOG_LEVEL_NOTI = glog.LEVEL_NOTI
-    LOG_LEVEL_WARN = glog.LEVEL_WARN
-    LOG_LEVEL_ERRO = glog.LEVEL_ERRO
-    LOG_LEVEL_CRIT = glog.LEVEL_CRIT
 )
 
 // NewVar creates a *Var.
@@ -39,9 +29,16 @@ func Wait() {
 
 // Dump dumps a variable to stdout with more manually readable.
 //
-// 打印变量
+// 格式化打印变量.
 func Dump(i...interface{}) {
     gutil.Dump(i...)
+}
+
+// Export exports a variable to string with more manually readable.
+//
+// 格式化导出变量.
+func Export(i...interface{}) string {
+    return gutil.Export(i...)
 }
 
 // Throw throws a exception, which can be caught by Catch function.
@@ -55,4 +52,15 @@ func Throw(exception interface{}) {
 // TryCatch does the try...catch... logic.
 func TryCatch(try func(), catch ... func(exception interface{})) {
     gutil.TryCatch(try, catch...)
+}
+
+// IsEmpty checks given value empty or not.
+// false: integer(0), bool(false), slice/map(len=0), nil;
+// true : other.
+//
+// 判断给定的变量是否为空。
+// 整型为0, 布尔为false, slice/map长度为0, 其他为nil的情况，都为空。
+// 为空时返回true，否则返回false。
+func IsEmpty(value interface{}) bool {
+    return empty.IsEmpty(value)
 }
