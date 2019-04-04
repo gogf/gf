@@ -1,0 +1,151 @@
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// go test *.go -bench=".*"
+
+package gregex_test
+
+import (
+	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/text/gregex"
+	"strings"
+	"testing"
+)
+
+func Test_Quote(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := `[foo]` //`\[foo\]`
+		gtest.Assert(gregex.Quote(s1), `\[foo\]`)
+	})
+}
+
+func Test_Validate(t *testing.T) {
+	gtest.Case(t, func() {
+		var s1 = `(.+):(\d+)`
+		gtest.Assert(gregex.Validate(s1), nil)
+		s1 = `((.+):(\d+)`
+		gtest.Assert(gregex.Validate(s1) == nil, false)
+	})
+}
+
+func Test_IsMatch(t *testing.T) {
+	gtest.Case(t, func() {
+		var pattern = `(.+):(\d+)`
+		s1 := []byte(`sfs:2323`)
+		gtest.Assert(gregex.IsMatch(pattern, s1), true)
+		s1 = []byte(`sfs2323`)
+		gtest.Assert(gregex.IsMatch(pattern, s1), false)
+		s1 = []byte(`sfs:`)
+		gtest.Assert(gregex.IsMatch(pattern, s1), false)
+	})
+}
+
+func Test_Match(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		wantSubs := "aaabb"
+		s := []byte("acbb" + wantSubs + "dd")
+		subs, err := gregex.Match(re, []byte(s))
+		gtest.Assert(err, nil)
+		if string(subs[0]) != wantSubs {
+			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[0], wantSubs)
+		}
+		if string(subs[1]) != "aab" {
+			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1], "aab")
+		}
+	})
+}
+
+func Test_MatchAllString(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		wantSubs := "aaabb"
+		s := "acbb" + wantSubs + "dd"
+		subs, err := gregex.MatchAllString(re, s+`其他的`+s)
+		gtest.Assert(err, nil)
+		if string(subs[0][0]) != wantSubs {
+			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[0][0], wantSubs)
+		}
+		if string(subs[0][1]) != "aab" {
+			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[0][1], "aab")
+		}
+
+		if string(subs[1][0]) != wantSubs {
+			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[1][0], wantSubs)
+		}
+		if string(subs[1][1]) != "aab" {
+			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1][1], "aab")
+		}
+	})
+}
+
+func Test_ReplaceString(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		wantSubs := "aaabb"
+		replace := "12345"
+		s := "acbb" + wantSubs + "dd"
+		wanted := "acbb" + replace + "dd"
+		replacedStr, err := gregex.ReplaceString(re, replace, s)
+		gtest.Assert(err, nil)
+		if replacedStr != wanted {
+			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
+		}
+	})
+}
+
+func Test_ReplaceFun(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		wantSubs := "aaabb"
+		//replace :="12345"
+		s := "acbb" + wantSubs + "dd"
+		wanted := "acbb[x" + wantSubs + "y]dd"
+		wanted = "acbb" + "3个a" + "dd"
+		replacedStr, err := gregex.ReplaceStringFunc(re, s, func(s string) string {
+			if strings.Index(s, "aaa") >= 0 {
+				return "3个a"
+			}
+			return "[x" + s + "y]"
+		})
+		gtest.Assert(err, nil)
+		if replacedStr != wanted {
+			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
+		}
+	})
+}
+
+func Test_Split(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		matched := "aaabb"
+		item0 := "acbb"
+		item1 := "dd"
+		s := item0 + matched + item1
+		gtest.Assert(gregex.IsMatchString(re, matched), true)
+		items := gregex.Split(re, s) //split string with matched
+		if items[0] != item0 {
+			t.Fatalf("regex:%s,Split(%q) want %q", re, s, item0)
+		}
+		if items[1] != item1 {
+			t.Fatalf("regex:%s,Split(%q) want %q", re, s, item0)
+		}
+	})
+
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		notmatched := "aaxbb"
+		item0 := "acbb"
+		item1 := "dd"
+		s := item0 + notmatched + item1
+		gtest.Assert(gregex.IsMatchString(re, notmatched), false)
+		items := gregex.Split(re, s) //split string with notmatched then nosplitting
+		if items[0] != s {
+			t.Fatalf("regex:%s,Split(%q) want %q", re, s, item0)
+		}
+
+	})
+}
