@@ -43,11 +43,23 @@ func Test_IsMatch(t *testing.T) {
 	})
 }
 
+func Test_IsMatchString(t *testing.T) {
+	gtest.Case(t, func() {
+		var pattern = `(.+):(\d+)`
+		s1 := `sfs:2323`
+		gtest.Assert(gregex.IsMatchString(pattern, s1), true)
+		s1 = `sfs2323`
+		gtest.Assert(gregex.IsMatchString(pattern, s1), false)
+		s1 = `sfs:`
+		gtest.Assert(gregex.IsMatchString(pattern, s1), false)
+	})
+}
+
 func Test_Match(t *testing.T) {
 	gtest.Case(t, func() {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
-		s := []byte("acbb" + wantSubs + "dd")
+		s := "acbb" + wantSubs + "dd"
 		subs, err := gregex.Match(re, []byte(s))
 		gtest.Assert(err, nil)
 		if string(subs[0]) != wantSubs {
@@ -55,6 +67,46 @@ func Test_Match(t *testing.T) {
 		}
 		if string(subs[1]) != "aab" {
 			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1], "aab")
+		}
+	})
+}
+
+func Test_MatchString(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		wantSubs := "aaabb"
+		s := "acbb" + wantSubs + "dd"
+		subs, err := gregex.MatchString(re, s)
+		gtest.Assert(err, nil)
+		if string(subs[0]) != wantSubs {
+			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[0], wantSubs)
+		}
+		if string(subs[1]) != "aab" {
+			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1], "aab")
+		}
+	})
+}
+
+func Test_MatchAll(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		wantSubs := "aaabb"
+		s := "acbb" + wantSubs + "dd"
+		s = s + `其他的` + s
+		subs, err := gregex.MatchAll(re, []byte(s))
+		gtest.Assert(err, nil)
+		if string(subs[0][0]) != wantSubs {
+			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[0][0], wantSubs)
+		}
+		if string(subs[0][1]) != "aab" {
+			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[0][1], "aab")
+		}
+
+		if string(subs[1][0]) != wantSubs {
+			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[1][0], wantSubs)
+		}
+		if string(subs[1][1]) != "aab" {
+			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1][1], "aab")
 		}
 	})
 }
@@ -82,6 +134,21 @@ func Test_MatchAllString(t *testing.T) {
 	})
 }
 
+func Test_Replace(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		wantSubs := "aaabb"
+		replace := "12345"
+		s := "acbb" + wantSubs + "dd"
+		wanted := "acbb" + replace + "dd"
+		replacedStr, err := gregex.Replace(re, []byte(replace), []byte(s))
+		gtest.Assert(err, nil)
+		if string(replacedStr) != wanted {
+			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
+		}
+	})
+}
+
 func Test_ReplaceString(t *testing.T) {
 	gtest.Case(t, func() {
 		re := "a(a+b+)b"
@@ -98,6 +165,27 @@ func Test_ReplaceString(t *testing.T) {
 }
 
 func Test_ReplaceFun(t *testing.T) {
+	gtest.Case(t, func() {
+		re := "a(a+b+)b"
+		wantSubs := "aaabb"
+		//replace :="12345"
+		s := "acbb" + wantSubs + "dd"
+		wanted := "acbb[x" + wantSubs + "y]dd"
+		wanted = "acbb" + "3个a" + "dd"
+		replacedStr, err := gregex.ReplaceFunc(re, []byte(s), func(s []byte) []byte {
+			if strings.Index(string(s), "aaa") >= 0 {
+				return []byte("3个a")
+			}
+			return []byte("[x" + string(s) + "y]")
+		})
+		gtest.Assert(err, nil)
+		if string(replacedStr) != wanted {
+			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
+		}
+	})
+}
+
+func Test_ReplaceStringFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
