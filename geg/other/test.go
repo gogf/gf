@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/os/gcfg"
+	"github.com/gogf/gf/g/container/gring"
 )
 
 func main() {
-	fmt.Println(gcfg.Instance().GetString("viewpath"))
-	fmt.Println(gcfg.Instance().GetString("database.default.0.host"))
+	r := gring.New(3)
+	r.Put(1)
+	r.Put(2)
+	fmt.Println(r.Val())
 }
