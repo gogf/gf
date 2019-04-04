@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gview implements a template engine based on text/template.
-// 
-// 模板引擎.
 package gview
 
 import (
@@ -18,6 +16,7 @@ import (
     "github.com/gogf/gf/g/encoding/ghash"
     "github.com/gogf/gf/g/encoding/ghtml"
     "github.com/gogf/gf/g/encoding/gurl"
+    "github.com/gogf/gf/g/internal/cmdenv"
     "github.com/gogf/gf/g/os/gfcache"
     "github.com/gogf/gf/g/os/gfile"
     "github.com/gogf/gf/g/os/glog"
@@ -46,19 +45,19 @@ type Params  = map[string]interface{}
 type FuncMap = map[string]interface{}
 
 // 默认的视图对象
-var viewObj *View
+var defaultViewObj *View
 
 // 初始化默认的视图对象, 默认加载包不会初始化，使用包方法才会初始化模板引擎对象。
 func checkAndInitDefaultView() {
-    if viewObj == nil {
-        viewObj = New(gfile.Pwd())
+    if defaultViewObj == nil {
+        defaultViewObj = New(gfile.Pwd())
     }
 }
 
 // 直接解析模板内容，返回解析后的内容
 func ParseContent(content string, params Params) ([]byte, error) {
     checkAndInitDefaultView()
-    return viewObj.ParseContent(content, params)
+    return defaultViewObj.ParseContent(content, params)
 }
 
 // 生成一个视图对象
@@ -71,6 +70,26 @@ func New(path...string) *View {
     }
     if len(path) > 0 && len(path[0]) > 0 {
         view.SetPath(path[0])
+    } else {
+        // Customized dir path from env/cmd.
+        if envPath := cmdenv.Get("gf.gview.path").String(); envPath != "" {
+            if gfile.Exists(envPath) {
+	            view.SetPath(envPath)
+            } else {
+                glog.Errorfln("Template directory path does not exist: %s", envPath)
+            }
+        } else {
+            // Dir path of working dir.
+	        view.SetPath(gfile.Pwd())
+            // Dir path of binary.
+            if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
+	            view.AddPath(selfPath)
+            }
+            // Dir path of main package.
+            if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
+	            view.AddPath(mainPath)
+            }
+        }
     }
     view.SetDelimiters("{{", "}}")
     // 内置变量

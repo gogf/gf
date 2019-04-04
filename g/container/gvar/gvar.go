@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gvar provides an universal variable type, like generics.
-//
-// 通用动态变量.
 package gvar
 
 import (
