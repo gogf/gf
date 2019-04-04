@@ -456,6 +456,7 @@ func (md *Model) All() (Result, error) {
 
 // 链式操作，查询单条记录
 func (md *Model) One() (Record, error) {
+	md.limit = 1
 	list, err := md.All()
 	if err != nil {
 		return nil, err

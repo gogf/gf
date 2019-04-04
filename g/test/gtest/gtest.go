@@ -4,9 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtest provides simple and useful test utils.
-// 
-// 测试模块.
+// Package gtest provides convenient test utils for unit testing.
 package gtest
 
 import (
@@ -19,7 +17,9 @@ import (
     "testing"
 )
 
-// 封装一个测试用例
+// Case creates an unit test case.
+// The param <t> is the pointer to testing.T of stdlib (*testing.T).
+// The param <f> is the callback function for unit test case.
 func Case(t *testing.T, f func()) {
     defer func() {
         if err := recover(); err != nil {
@@ -30,7 +30,7 @@ func Case(t *testing.T, f func()) {
     f()
 }
 
-// 断言判断, 相等
+// Assert checks <value> and <expect> EQUAL.
 func Assert(value, expect interface{}) {
     rvValue  := reflect.ValueOf(value)
     rvExpect := reflect.ValueOf(expect)
@@ -50,14 +50,9 @@ func Assert(value, expect interface{}) {
     }
 }
 
-// 断言判断, 相等, 包括数据类型
+// AssertEQ checks <value> and <expect> EQUAL, including their TYPES.
 func AssertEQ(value, expect interface{}) {
-    // 类型判断
-    t1 := reflect.TypeOf(value)
-    t2 := reflect.TypeOf(expect)
-    if t1 != t2 {
-        panic(fmt.Sprintf(`[ASSERT] EXPECT TYPE %v == %v`, t1, t2))
-    }
+	// Value assert.
     rvValue  := reflect.ValueOf(value)
     rvExpect := reflect.ValueOf(expect)
     if rvValue.Kind() == reflect.Ptr {
@@ -74,9 +69,15 @@ func AssertEQ(value, expect interface{}) {
     if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
         panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
     }
+	// Type assert.
+	t1 := reflect.TypeOf(value)
+	t2 := reflect.TypeOf(expect)
+	if t1 != t2 {
+		panic(fmt.Sprintf(`[ASSERT] EXPECT TYPE %v[%v] == %v[%v]`, value, t1, expect, t2))
+	}
 }
 
-// 断言判断, 不相等
+// AssertNE checks <value> and <expect> NOT EQUAL.
 func AssertNE(value, expect interface{}) {
     rvValue  := reflect.ValueOf(value)
     rvExpect := reflect.ValueOf(expect)
@@ -96,7 +97,9 @@ func AssertNE(value, expect interface{}) {
     }
 }
 
-// 断言判断, value > expect; 注意: 仅有字符串、整形、浮点型才可以比较
+// AssertGT checks <value> is GREATER THAN <expect>.
+// Notice that, only string, integer and float types can be compared by AssertGT,
+// others are invalid.
 func AssertGT(value, expect interface{}) {
     passed := false
     switch reflect.ValueOf(expect).Kind() {
@@ -117,7 +120,9 @@ func AssertGT(value, expect interface{}) {
     }
 }
 
-// 断言判断, value >= expect; 注意: 仅有字符串、整形、浮点型才可以比较
+// AssertGTE checks <value> is GREATER OR EQUAL THAN <expect>.
+// Notice that, only string, integer and float types can be compared by AssertGTE,
+// others are invalid.
 func AssertGTE(value, expect interface{}) {
     passed := false
     switch reflect.ValueOf(expect).Kind() {
@@ -138,7 +143,9 @@ func AssertGTE(value, expect interface{}) {
     }
 }
 
-// 断言判断, value < expect; 注意: 仅有字符串、整形、浮点型才可以比较
+// AssertLT checks <value> is LESS EQUAL THAN <expect>.
+// Notice that, only string, integer and float types can be compared by AssertLT,
+// others are invalid.
 func AssertLT(value, expect interface{}) {
     passed := false
     switch reflect.ValueOf(expect).Kind() {
@@ -159,7 +166,9 @@ func AssertLT(value, expect interface{}) {
     }
 }
 
-// 断言判断, value <= expect; 注意: 仅有字符串、整形、浮点型才可以比较
+// AssertLTE checks <value> is LESS OR EQUAL THAN <expect>.
+// Notice that, only string, integer and float types can be compared by AssertLTE,
+// others are invalid.
 func AssertLTE(value, expect interface{}) {
     passed := false
     switch reflect.ValueOf(expect).Kind() {
@@ -180,16 +189,18 @@ func AssertLTE(value, expect interface{}) {
     }
 }
 
-
-// 断言判断, value IN expect; 注意: expect必须为slice类型。
-// 注意：value参数可以为普通变量，也可以为slice类型。
+// AssertIN checks <value> is IN <expect>.
+// The <expect> should be a slice,
+// but the <value> can be a slice or a basic type variable.
+// TODO map support.
 func AssertIN(value, expect interface{}) {
     passed := true
     switch reflect.ValueOf(expect).Kind() {
         case reflect.Slice, reflect.Array:
+        	expectSlice := gconv.Interfaces(expect)
             for _, v1 := range gconv.Interfaces(value) {
                 result := false
-                for _, v2 := range gconv.Interfaces(expect) {
+                for _, v2 := range expectSlice {
                     if v1 == v2 {
                         result = true
                         break
@@ -206,7 +217,10 @@ func AssertIN(value, expect interface{}) {
     }
 }
 
-// 断言判断, value NOT IN expect; 注意: expect必须为slice类型
+// AssertNI checks <value> is NOT IN <expect>.
+// The <expect> should be a slice,
+// but the <value> can be a slice or a basic type variable.
+// TODO map support.
 func AssertNI(value, expect interface{}) {
     passed := true
     switch reflect.ValueOf(expect).Kind() {
@@ -230,18 +244,18 @@ func AssertNI(value, expect interface{}) {
     }
 }
 
-// 提示错误不退出进程执行
+// Error panics with given <message>.
 func Error(message...interface{}) {
     panic(fmt.Sprintf("[ERROR] %s", fmt.Sprint(message...)))
 }
 
-// 提示错误并退出进程执行
+// Fatal prints <message> to stderr and exit the process.
 func Fatal(message...interface{}) {
     fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), getBacktrace())
     os.Exit(1)
 }
 
-// Map比较，如果相等返回nil，否则返回错误信息.
+// compareMap compares two maps, returns nil if they are equal, or else returns error.
 func compareMap(value, expect interface{}) error {
     rvValue  := reflect.ValueOf(value)
     rvExpect := reflect.ValueOf(expect)
@@ -253,8 +267,9 @@ func compareMap(value, expect interface{}) error {
     if rvExpect.Kind() == reflect.Map {
         if rvValue.Kind() == reflect.Map {
             if rvExpect.Len() == rvValue.Len() {
-                // 将两个map类型转换为同一个map类型, 才能执行比较,
-                // 直接使用 rvValue.MapIndex(key).Interface() 当key类型不一致时会报错。
+                // Turn two interface maps to the same type for comparison.
+                // Direct use of rvValue.MapIndex(key).Interface() will panic
+                // when the key types are inconsistent.
                 mValue   := make(map[string]string)
                 mExpect  := make(map[string]string)
                 ksValue  := rvValue.MapKeys()
@@ -280,7 +295,8 @@ func compareMap(value, expect interface{}) error {
     return nil
 }
 
-// 获取文件调用回溯字符串，参数skip表示调用端往上多少级开始回溯
+// getBacktrace returns the caller backtrace content from getBacktrace.
+// The param <skip> indicates the skip count of the caller backtrace from getBacktrace.
 func getBacktrace(skip...int) string {
     customSkip := 0
     if len(skip) > 0 {
@@ -289,7 +305,7 @@ func getBacktrace(skip...int) string {
     backtrace := ""
     index     := 1
     from      := 0
-    // 首先定位业务文件开始位置
+    // Ignore current gtest lines and find the beginning index of caller file.
     for i := 0; i < 10; i++ {
         if _, file, _, ok := runtime.Caller(i); ok {
             if reg, _  := regexp.Compile(`gtest\.go$`); !reg.MatchString(file) {
@@ -298,7 +314,7 @@ func getBacktrace(skip...int) string {
             }
         }
     }
-    // 从业务文件开始位置根据自定义的skip开始backtrace
+    // Get the caller backtrace from business caller file.
     goRoot := runtime.GOROOT()
     for i := from + customSkip; i < 10000; i++ {
         if _, file, cline, ok := runtime.Caller(i); ok && file != "" {
