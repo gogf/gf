@@ -148,23 +148,23 @@ type Map  = map[string]interface{}
 type List = []Map
 
 const (
-    OPTION_INSERT  = 0
-    OPTION_REPLACE = 1
-    OPTION_SAVE    = 2
-    OPTION_IGNORE  = 3
-    // 默认批量操作的数量值(Batch*操作)
-    gDEFAULT_BATCH_NUM          = 10
-    // 默认的连接池连接存活时间(秒)
-    gDEFAULT_CONN_MAX_LIFE_TIME = 30
+    OPTION_INSERT               = 0
+    OPTION_REPLACE              = 1
+    OPTION_SAVE                 = 2
+    OPTION_IGNORE               = 3
+    gDEFAULT_BATCH_NUM          = 10 // Per count for batch insert/replace/save
+    gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool.
 )
 
 var (
-    // 单例对象Map
+    // Instance map.
     instances = gmap.NewStringInterfaceMap()
 )
 
-// 使用默认/指定分组配置进行连接，数据库集群配置项：default
-func New(name...string) (db DB, err error) {
+// New creates ORM DB object with global configurations.
+// The param <name> specifies the configuration group name,
+// which is DEFAULT_GROUP_NAME in default.
+func New(name ...string) (db DB, err error) {
 	group := configs.defaultGroup
 	if len(name) > 0 {
         group = name[0]
@@ -209,8 +209,10 @@ func New(name...string) (db DB, err error) {
 	}
 }
 
-// 获得数据库操作对象单例
-func Instance(name...string) (db DB, err error) {
+// Instance returns an instance for DB operations.
+// The param <name> specifies the configuration group name,
+// which is DEFAULT_GROUP_NAME in default.
+func Instance(name ...string) (db DB, err error) {
     group := configs.defaultGroup
     if len(name) > 0 {
         group = name[0]

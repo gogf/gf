@@ -5,9 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 
-// Package glist provides a concurrent-safe(alternative) doubly linked list.
-//
-// 并发安全双向链表.
+// Package glist provides a concurrent-safe/unsafe doubly linked list.
 package glist
 
 import (
@@ -15,14 +13,14 @@ import (
     "github.com/gogf/gf/g/internal/rwmutex"
 )
 
-// 变长双向链表
-type List struct {
-    mu     *rwmutex.RWMutex
-    list   *list.List
-}
+type (
+	List struct {
+	    mu   *rwmutex.RWMutex
+	    list *list.List
+	}
 
-type Element = list.Element
-
+	Element = list.Element
+)
 
 // 获得一个变长链表指针
 func New(unsafe...bool) *List {

@@ -8,25 +8,21 @@
 package gins
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g/container/gmap"
-    "github.com/gogf/gf/g/database/gdb"
-    "github.com/gogf/gf/g/database/gredis"
-    "github.com/gogf/gf/g/internal/cmdenv"
-    "github.com/gogf/gf/g/os/gcfg"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/os/gfsnotify"
-    "github.com/gogf/gf/g/os/glog"
-    "github.com/gogf/gf/g/os/gview"
-    "github.com/gogf/gf/g/text/gregex"
-    "github.com/gogf/gf/g/text/gstr"
-    "github.com/gogf/gf/g/util/gconv"
-    "time"
+	"fmt"
+	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/database/gdb"
+	"github.com/gogf/gf/g/database/gredis"
+	"github.com/gogf/gf/g/os/gcfg"
+	"github.com/gogf/gf/g/os/gfsnotify"
+	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/os/gview"
+	"github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/util/gconv"
+	"time"
 )
 
 const (
-    gFRAME_CORE_COMPONENT_NAME_VIEW       = "gf.core.component.view"
-    gFRAME_CORE_COMPONENT_NAME_CONFIG     = "gf.core.component.config"
     gFRAME_CORE_COMPONENT_NAME_REDIS      = "gf.core.component.redis"
     gFRAME_CORE_COMPONENT_NAME_DATABASE   = "gf.core.component.database"
 )
@@ -64,48 +60,20 @@ func SetIfNotExist(key string, value interface{}) bool {
     return instances.SetIfNotExist(key, value)
 }
 
-// 核心对象：View
-func View(name...string) *gview.View {
-    group := "default"
-    if len(name) > 0 {
-        group = name[0]
-    }
-    key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEW, group)
-    return instances.GetOrSetFuncLock(key, func() interface{} {
-        view := gview.New(gfile.Pwd())
-        // 自定义的环境变量/启动参数路径，优先级最高，覆盖默认的工作目录
-        if envPath := cmdenv.Get("gf.gview.path").String(); envPath != "" && gfile.Exists(envPath) {
-            view.SetPath(envPath)
-        }
-        // 二进制文件执行目录
-        if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-            view.AddPath(selfPath)
-        }
-        // 开发环境源码main包目录
-        if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-            view.AddPath(mainPath)
-        }
-        // 框架内置函数
-        view.BindFunc("config", funcConfig)
-        return view
-    }).(*gview.View)
+// View returns an instance of View with default settings.
+// The param <name> is the name for the instance.
+func View(name ...string) *gview.View {
+	return gview.Instance(name ...)
 }
 
-// 核心对象：Config
-// 配置文件目录查找依次为：启动参数cfgpath、当前程序运行目录
-func Config(file...string) *gcfg.Config {
-    configFile := gcfg.DEFAULT_CONFIG_FILE
-    if len(file) > 0 {
-        configFile = file[0]
-    }
-    key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_CONFIG, configFile)
-    return instances.GetOrSetFuncLock(key, func() interface{} {
-        return gcfg.New(configFile)
-    }).(*gcfg.Config)
+// Config returns an instance of View with default settings.
+// The param <name> is the name for the instance.
+func Config(name ...string) *gcfg.Config {
+    return gcfg.Instance(name ...)
 }
 
 // 数据库操作对象，使用了连接池
-func Database(name...string) gdb.DB {
+func Database(name ...string) gdb.DB {
     config := Config()
     group  := gdb.DEFAULT_GROUP_NAME
     if len(name) > 0 {

@@ -9,18 +9,16 @@ package gredis
 import "github.com/gogf/gf/g/container/gmap"
 
 const (
-    // 默认分组名称
+    // Default configuration group name.
     DEFAULT_GROUP_NAME = "default"
 )
 var (
-    // 分组配置
+    // Configuration groups.
     configs = gmap.NewStringInterfaceMap()
 )
 
 // SetConfig sets the global configuration for specified group.
 // If <name> is not passed, it sets configuration for the default group name.
-//
-// 设置全局分组配置，name为非必需参数，默认为默认分组名称。
 func SetConfig(config Config, name...string) {
     group := DEFAULT_GROUP_NAME
     if len(name) > 0 {
@@ -30,10 +28,8 @@ func SetConfig(config Config, name...string) {
     instances.Remove(group)
 }
 
-// GetConfig returns the global configuration with specified group.
-// If <group> is not passed, it returns configuration of the default group name.
-//
-// 获取指定全局分组配置，group为非必需参数，默认为默认分组名称。
+// GetConfig returns the global configuration with specified group name.
+// If <name> is not passed, it returns configuration of the default group name.
 func GetConfig(name...string) (config Config, ok bool) {
     group := DEFAULT_GROUP_NAME
     if len(name) > 0 {
@@ -47,8 +43,6 @@ func GetConfig(name...string) (config Config, ok bool) {
 
 // RemoveConfig removes the global configuration with specified group.
 // If <name> is not passed, it removes configuration of the default group name.
-//
-// 删除指定全局分组配置，name为非必需参数，默认为默认分组名称。
 func RemoveConfig(name...string) {
     group := DEFAULT_GROUP_NAME
     if len(name) > 0 {
@@ -59,8 +53,6 @@ func RemoveConfig(name...string) {
 }
 
 // ClearConfig removes all configurations and instances of redis.
-//
-// 清除所有的配置内容。
 func ClearConfig() {
     configs.Clear()
     instances.Clear()

@@ -4,9 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gset provides kinds of concurrent-safe(alternative) sets.
-//
-// 并发安全集合.
+// Package gset provides kinds of concurrent-safe/unsafe sets.
 package gset
 
 import (
