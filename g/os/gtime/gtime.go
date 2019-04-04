@@ -308,7 +308,7 @@ func FuncCost(f func()) int64 {
     return Nanosecond() - t
 }
 
-// 判断锁给字符串是否为数字
+// 判断所给字符串是否为数字
 func isNumeric(s string) bool {
     length := len(s)
     if length == 0 {
