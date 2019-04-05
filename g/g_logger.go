@@ -10,23 +10,17 @@ import (
     "github.com/gogf/gf/g/os/glog"
 )
 
-// Disable/Enabled debug of logging globally.
-//
-// 是否显示调试信息
+// SetDebug disables/enables debug level for logging globally.
 func SetDebug(debug bool) {
     glog.SetDebug(debug)
 }
 
-// Set the logging level globally.
-//
-// 设置日志的显示等级
+// SetLogLevel sets the logging level globally.
 func SetLogLevel(level int) {
     glog.SetLevel(level)
 }
 
-// Get the global logging level.
-//
-// 获取设置的日志显示等级
+// GetLogLevel returns the global logging level.
 func GetLogLevel() int {
     return glog.GetLevel()
 }

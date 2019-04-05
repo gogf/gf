@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/os/gcfg"
+	"github.com/gogf/gf/g/os/gtime"
 )
 
 func main() {
-	fmt.Println(gcfg.Instance().GetString("viewpath"))
-	fmt.Println(gcfg.Instance().GetString("database.default.0.host"))
+	fmt.Println(gtime.Now().Format(`Y-m-j G:i:su`))
 }
