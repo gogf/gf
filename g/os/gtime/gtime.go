@@ -125,7 +125,6 @@ func Datetime() string {
 
 // 解析日期字符串(日期支持'-'或'/'或'.'连接符号)
 func parseDateStr(s string) (year, month, day int) {
-<<<<<<< HEAD
 	array := strings.Split(s, "-")
 	if len(array) < 3 {
 		array = strings.Split(s, "/")
@@ -156,38 +155,6 @@ func parseDateStr(s string) (year, month, day int) {
 		year = int(time.Now().Year()/100)*100 + year
 	}
 	return
-=======
-    array := strings.Split(s, "-")
-    if len(array) < 3 {
-        array = strings.Split(s, "/")
-    }
-    if len(array) < 3 {
-        array = strings.Split(s, ".")
-    }
-    // 解析失败
-    if len(array) < 3 {
-        return
-    }
-    // 判断年份在开头还是末尾
-    if isNumeric(array[1]) {
-        year, _  = strconv.Atoi(array[0])
-        month, _ = strconv.Atoi(array[1])
-        day, _   = strconv.Atoi(array[2])
-    } else {
-        if v, ok := monthMap[strings.ToLower(array[1])]; ok {
-            month = v
-        } else {
-            return
-        }
-        year, _  = strconv.Atoi(array[2])
-        day, _   = strconv.Atoi(array[0])
-    }
-    // 年是否为缩写，如果是，那么需要补上前缀
-    if year < 100 {
-        year = int(time.Now().Year()/100)*100 + year
-    }
-    return
->>>>>>> 68949b69bc9e9e60a4a131150539239d04715d69
 }
 
 // 字符串转换为时间对象，format参数指定格式的format(如: Y-m-d H:i:s)，当指定format参数时效果同StrToTimeFormat方法。
