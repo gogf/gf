@@ -64,6 +64,95 @@ func Test_Datetime(t *testing.T) {
 	})
 }
 
+func Test_StrToTime(t *testing.T) {
+	gtest.Case(t, func() {
+		//正常日期列表
+		//正则的原因，日期"06.01.02"，"2006.01"，"2006..01"无法覆盖gtime.go的百分百
+		var testDatetimes = []string{
+			"2006-01-02 15:04:05",
+			"2006/01/02 15:04:05",
+			"2006.01.02 15:04:05.000",
+			"2006.01.02 - 15:04:05",
+			"2006.01.02 15:04:05 +0800 CST",
+			"2006-01-02T20:05:06+05:01:01",
+			"2006-01-02T14:03:04Z01:01:01",
+			"2006-01-02T15:04:05Z",
+			"02-jan-2006 15:04:05",
+			"02/jan/2006 15:04:05",
+			"02.jan.2006 15:04:05",
+			"02.jan.2006:15:04:05",
+		}
+
+		for _, item := range testDatetimes {
+			timeTemp, err := gtime.StrToTime(item)
+			if err != nil {
+				t.Error("test fail")
+			}
+			gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
+		}
+
+		//正常日期列表，时间00:00:00
+		var testDates = []string{
+			"2006.01.02",
+			"2006.01.02 00:00",
+			"2006.01.02 00:00:00.000",
+		}
+
+		for _, item := range testDates {
+			timeTemp, err := gtime.StrToTime(item)
+			if err != nil {
+				t.Error("test fail")
+			}
+			gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 00:00:00")
+		}
+
+		//测试格式化formatToStdLayout
+		var testDateFormats = []string{
+			"Y-m-d H:i:s",
+			"\\T\\i\\m\\e Y-m-d H:i:s",
+			"Y-m-d H:i:s\\",
+			"Y-m-j G:i:s.u",
+			"Y-m-j G:i:su",
+		}
+
+		var testDateFormatsResult = []string{
+			"2007-01-02 15:04:05",
+			"Time 2007-01-02 15:04:05",
+			"2007-01-02 15:04:05",
+			"2007-01-02 15:04:05.000",
+			"2007-01-02 15:04:05.000",
+		}
+
+		for index, item := range testDateFormats {
+			timeTemp, err := gtime.StrToTime(testDateFormatsResult[index], item)
+			if err != nil {
+				t.Error("test fail")
+			}
+			gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05.000"), "2007-01-02 15:04:05.000")
+		}
+
+		//异常日期列表
+		var testDatesFail = []string{
+			"2006.01",
+			"06..02",
+			"20060102",
+		}
+
+		for _, item := range testDatesFail {
+			_, err := gtime.StrToTime(item)
+			if err == nil {
+				t.Error("test fail")
+			}
+		}
+
+		//test err
+		_, err := gtime.StrToTime("2006-01-02 15:04:05", "aabbccdd")
+		if err == nil {
+			t.Error("test fail")
+		}
+	})
+}
+
 func Test_ConvertZone(t *testing.T) {
 	gtest.Case(t, func() {
 		//现行时间
@@ -111,66 +200,9 @@ func Test_ConvertZone(t *testing.T) {
 	})
 }
 
-func Test_StrToTime(t *testing.T) {
+func Test_StrToTimeFormat(t *testing.T) {
 	gtest.Case(t, func() {
-		//正常日期列表
-		var testDatetimes = []string{
-			"2006-01-02 15:04:05",
-			"2006/01/02 15:04:05",
-			"2006.01.02 15:04:05.000",
-			"2006.01.02 - 15:04:05",
-			"2006.01.02 15:04:05 +0800 CST",
-			"2006-01-02T20:05:06+05:01:01",
-			"2006-01-02T14:03:04Z01:01:01",
-			"2006-01-02T15:04:05Z",
-			"02-jan-2006 15:04:05",
-			"02/jan/2006 15:04:05",
-			"02.jan.2006 15:04:05",
-			"02.jan.2006:15:04:05",
-		}
 
-		for _, item := range testDatetimes {
-			timeTemp, err := gtime.StrToTime(item)
-			if err != nil {
-				t.Error("test fail")
-			}
-			gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
-		}
-
-		//正常日期列表，时间00:00:00
-		var testDates = []string{
-			"2006.01.02",
-			"2006.01.02 00:00",
-			"2006.01.02 00:00:00.000",
-		}
-
-		for _, item := range testDates {
-			timeTemp, err := gtime.StrToTime(item)
-			if err != nil {
-				t.Error("test fail")
-			}
-			gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 00:00:00")
-		}
-
-		//异常日期列表
-		var testDatesFail = []string{
-			"2006.01",
-			"06..02",
-			"20060102",
-		}
-
-		for _, item := range testDatesFail {
-			_, err := gtime.StrToTime(item)
-			if err == nil {
-				t.Error("test fail")
-			}
-		}
-
-		//test err
-		_, err := gtime.StrToTime("2006-01-02 15:04:05", "aabbccdd")
-		if err == nil {
-			t.Error("test fail")
-		}
 	})
 }
 
