@@ -47,6 +47,7 @@ func TestEncryptString(t *testing.T) {
 
 func TestEncryptFile(t *testing.T) {
 	path := "test.text"
+	errPath := "err.text"
 	gtest.Case(t, func() {
 		file, err := os.Create(path)
 		gtest.Assert(err, nil)
@@ -54,6 +55,8 @@ func TestEncryptFile(t *testing.T) {
 		file.Write([]byte("Hello Go Frame"))
 		encryptFile := gsha1.EncryptFile(path)
 		gtest.AssertNE(encryptFile, "")
+		errEncrypt := gsha1.EncryptFile(errPath)
+		gtest.AssertEQ(errEncrypt,"")
 	})
 	defer os.Remove(path)
 }
