@@ -32,6 +32,10 @@ func TestEncrypt(t *testing.T) {
 		encrypt := gsha1.Encrypt(user)
 		gtest.AssertNE(encrypt, "")
 	})
+	gtest.Case(t, func() {
+		s := gsha1.Encrypt("pibigstar")
+		gtest.AssertNE(s, "")
+	})
 }
 
 func TestEncryptString(t *testing.T) {
@@ -51,5 +55,5 @@ func TestEncryptFile(t *testing.T) {
 		encryptFile := gsha1.EncryptFile(path)
 		gtest.AssertNE(encryptFile, "")
 	})
-	os.Remove(path)
+	defer os.Remove(path)
 }
