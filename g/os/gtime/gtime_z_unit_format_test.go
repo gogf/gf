@@ -7,17 +7,6 @@ import (
 	"github.com/gogf/gf/g/test/gtest"
 )
 
-/*
-func Test_formatToStdLayout(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(formatToStdLayout("Y-m-d H:i:s"), "2006-01-02 15:04:05")
-		gtest.Assert(formatToStdLayout("\\T\\i\\m\\e Y-m-d H:i:s"), "Time 2006-01-02 15:04:05")
-		gtest.Assert(formatToStdLayout("Y-m-d H:i:s\\"), "2006-01-02 15:04:05")
-		gtest.Assert(formatToStdLayout("Y-m-j G:i:s.u"), "2006-01-02 15:04:05.000")
-		gtest.Assert(formatToStdLayout("Y-m-j G:i:su"), "2006-01-02 15:04:05.000")
-	})
-}
-*/
 func Test_Format(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp, err := gtime.StrToTime("2006-01-11 15:04:05", "Y-m-d H:i:s")

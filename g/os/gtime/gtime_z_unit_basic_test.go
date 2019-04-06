@@ -64,42 +64,6 @@ func Test_Datetime(t *testing.T) {
 	})
 }
 
-/*
-func Test_parseDateStr(t *testing.T) {
-	gtest.Case(t, func() {
-		//正常日期列表
-		var testDates = []string{
-			"2006-01-02",
-			"2006/01/02",
-			"2006.01.02",
-			"06.01.02",
-			"02.jan.2006",
-		}
-
-		for _, item := range testDates {
-			year, month, day := parseDateStr(item)
-			gtest.Assert(year, 2006)
-			gtest.Assert(month, 1)
-			gtest.Assert(day, 2)
-		}
-
-		//异常日期列表
-		var testDatesFail = []string{
-			"2006.01",
-			"06..02",
-		}
-
-		for _, item := range testDatesFail {
-			year, month, day := parseDateStr(item)
-			gtest.Assert(year, 0)
-			gtest.Assert(month, 0)
-			gtest.Assert(day, 0)
-		}
-
-	})
-}
-*/
-//
 func Test_ConvertZone(t *testing.T) {
 	gtest.Case(t, func() {
 		//现行时间
