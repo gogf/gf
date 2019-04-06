@@ -6,10 +6,8 @@
 
 package gstr
 
-// Calculate the soundex key of a string.
+// Soundex calculates the soundex key of a string.
 // See http://php.net/manual/en/function.soundex.php.
-//
-// 计算字符串的SOUNDEX值，SOUNDEX为由四个字符组成的代码以评估两个字符串的相似性。
 func Soundex(str string) string {
     if str == "" {
         panic("str: cannot be an empty string")
