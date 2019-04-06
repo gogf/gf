@@ -22,10 +22,29 @@ var (
 	result = "d175a1ff66aedde64344785f7f7a3df8"
 )
 
+type user struct {
+	name     string
+	password string
+	age      int
+}
+
 func TestEncrypt(t *testing.T) {
 	gtest.Case(t, func() {
 		encryptString := gmd5.Encrypt(s)
 		gtest.Assert(encryptString, result)
+
+		encrypt := gmd5.Encrypt(123456)
+		gtest.AssertNE(encrypt,"")
+	})
+
+	gtest.Case(t, func() {
+		user := &user{
+			name:     "派大星",
+			password: "123456",
+			age:      23,
+		}
+		encrypt := gmd5.Encrypt(user)
+		gtest.AssertNE(encrypt,"")
 	})
 }
 
@@ -46,5 +65,5 @@ func TestEncryptFile(t *testing.T) {
 		encryptFile := gmd5.EncryptFile(path)
 		gtest.AssertNE(encryptFile, "")
 	})
-	os.Remove(path)
+	defer os.Remove(path)
 }
