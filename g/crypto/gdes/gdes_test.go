@@ -37,7 +37,10 @@ func TestDesECB(t *testing.T){
 
 		// err test
 		gdes.DesECBEncrypt(key, text, errPadding)
+		gdes.DesECBEncrypt(errKey, text, padding)
+
 		gdes.DesECBDecrypt(errKey, cipherText, padding)
+		gdes.DesECBDecrypt(key, cipherText, errPadding)
 	})
 
 	gtest.Case(t, func() {
@@ -138,7 +141,12 @@ func TestDesCBC(t *testing.T){
 		fmt.Println("key:", hex.EncodeToString(key),"clearText:", hex.EncodeToString(clearText), "cipherText:", hex.EncodeToString(cipherText))
 		// err test
 		gdes.DesCBCEncrypt(errKey, text, iv,padding)
-		gdes.DesCBCEncrypt(errKey, text, iv,errPadding)
+		gdes.DesCBCEncrypt(key, text, errIv,padding)
+		gdes.DesCBCEncrypt(key, text, iv,errPadding)
+
+		gdes.DesCBCDecrypt(errKey, cipherText, iv, padding)
+		gdes.DesCBCDecrypt(key, cipherText, errIv, padding)
+		gdes.DesCBCDecrypt(key, cipherText, iv, errPadding)
 	})
 
 	gtest.Case(t, func() {
@@ -187,8 +195,14 @@ func Test3DesCBC(t *testing.T){
 			t.Errorf("text:%v, clearText:%v", hex.EncodeToString(text), hex.EncodeToString(clearText))
 		}
 		fmt.Println("key:", hex.EncodeToString(key),"clearText:", hex.EncodeToString(clearText), "cipherText:", hex.EncodeToString(cipherText))
-
+		// err test
 		gdes.TripleDesCBCEncrypt(errKey, text, iv,padding)
+		gdes.TripleDesCBCEncrypt(key, text, errIv,padding)
+		gdes.TripleDesCBCEncrypt(key, text, iv,errPadding)
+
+		gdes.TripleDesCBCDecrypt(errKey, cipherText, iv, padding)
+		gdes.TripleDesCBCDecrypt(key, cipherText, errIv, padding)
+		gdes.TripleDesCBCDecrypt(key, cipherText, iv, errPadding)
 	})
 	gtest.Case(t, func() {
 		key := []byte("111111111234567812345678")
