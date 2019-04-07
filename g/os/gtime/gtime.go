@@ -149,10 +149,6 @@ func parseDateStr(s string) (year, month, day int) {
         year, _  = strconv.Atoi(array[2])
         day, _   = strconv.Atoi(array[0])
     }
-    // 年是否为缩写，如果是，那么需要补上前缀
-    if year < 100 {
-        year = int(time.Now().Year()/100)*100 + year
-    }
     return
 }
 

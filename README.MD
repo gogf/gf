@@ -67,17 +67,19 @@ func main() {
 
 # Contributors
 
-- [johng](https://gitee.com/johng)
-- [zhaopengme](https://github.com/zhaopengme)
-- [wenzi1](https://gitee.com/wenzi1)
-- [zseeker](https://gitee.com/zseeker)
-- [ymrjqyy](https://gitee.com/ymrjqyy)
 - [chenyang351](https://github.com/chenyang351)
-- [wxkj](https://gitee.com/wxkj)
-- [wxkj001](https://github.com/wxkj001)
-- [zhangjinfu](https://gitee.com/zhangjinfu)
 - [garfieldkwong](https://gitee.com/garfieldkwong)
+- [hailaz](https://gitee.com/hailaz)
+- [johng](https://gitee.com/johng)
+- [pibigstar](https://github.com/pibigstar)
 - [qq1054000800](https://gitee.com/qq1054000800)
+- [wenzi1](https://gitee.com/wenzi1)
+- [wxkj001](https://github.com/wxkj001)
+- [ymrjqyy](https://gitee.com/ymrjqyy)
+- [youyixiao](https://github.com/youyixiao)
+- [zhangjinfu](https://gitee.com/zhangjinfu)
+- [zhaopengme](https://github.com/zhaopengme)
+- [zseeker](https://gitee.com/zseeker)
 
 # Donators
 
