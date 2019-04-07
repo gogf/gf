@@ -5,9 +5,7 @@
 [![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf) 
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf)](https://goreportcard.com/report/github.com/gogf/gf) 
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
-[![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
-[![Language](https://img.shields.io/badge/language-go-blue.svg)](https://github.com/gogf/gf)
-[![Release](https://img.shields.io/github/release/gogf/gf.svg?style=flat)](https://github.com/gogf/gf/releases)
+[![Language](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
 
 `GF(Go Frame)`是一款模块化、松耦合、生产级Go应用开发框架。提供了常用的核心开发组件，如：缓存、日志、文件、时间、队列、数组、集合、字符串、定时器、命令行、文件锁、内存锁、对象池、连接池、数据校验、数据编码、文件监控、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信、
 并发安全容器等等。并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、服务注册、配置管理、模板引擎等等，支持热重启、热更新、多域名、多端口、多服务、HTTPS、Rewrite等特性。
@@ -87,25 +85,28 @@ func main() {
 
 # 贡献者
 
-- [johng](https://gitee.com/johng)
-- [zhaopengme](https://github.com/zhaopengme)
-- [wenzi1](https://gitee.com/wenzi1)
-- [zseeker](https://gitee.com/zseeker)
-- [ymrjqyy](https://gitee.com/ymrjqyy)
 - [chenyang351](https://github.com/chenyang351)
-- [wxkj](https://gitee.com/wxkj)
-- [wxkj001](https://github.com/wxkj001)
-- [zhangjinfu](https://gitee.com/zhangjinfu)
 - [garfieldkwong](https://gitee.com/garfieldkwong)
+- [hailaz](https://gitee.com/hailaz)
+- [johng](https://gitee.com/johng)
+- [pibigstar](https://github.com/pibigstar)
 - [qq1054000800](https://gitee.com/qq1054000800)
+- [wenzi1](https://gitee.com/wenzi1)
+- [wxkj001](https://github.com/wxkj001)
+- [ymrjqyy](https://gitee.com/ymrjqyy)
+- [youyixiao](https://github.com/youyixiao)
+- [zhangjinfu](https://gitee.com/zhangjinfu)
+- [zhaopengme](https://github.com/zhaopengme)
+- [zseeker](https://gitee.com/zseeker)
 
 # 捐赠者
 
-- [tiangenglan](https://gitee.com/tiangenglan)
-- [zhuhuan12](https://gitee.com/zhuhuan12)
-- [zfan_codes](https://gitee.com/zfan_codes)
+- [flyke-xu](https://gitee.com/flyke-xu)
 - [hailaz](https://gitee.com/hailaz)
 - [mg91](https://gitee.com/mg91)
-- [wxkj](https://gitee.com/wxkj)
 - [pibigstar](https://github.com/pibigstar)
-- [flyke-xu](https://gitee.com/flyke-xu)
+- [tiangenglan](https://gitee.com/tiangenglan)
+- [wxkj](https://gitee.com/wxkj)
+- [zhuhuan12](https://gitee.com/zhuhuan12)
+- [zfan_codes](https://gitee.com/zfan_codes)
+
