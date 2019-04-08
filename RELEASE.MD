@@ -1,3 +1,51 @@
+# `v1.6.0` (2019-04-09)
+
+## 新功能/改进
+1. `gcron`定时任务模块增加运行日志记录功能：https://goframe.org/os/gcron/index
+1. `gredis`增加全局分组配置功能，并增加更多的配置选项`maxIdle/maxActive/idleTimeout/maxConnLifetime`：https://goframe.org/database/gredis/index
+1. `gcfg`模块增加更多的默认配置文件检索路径，并且增加全局分组配置特性，增加`Instance`单例方法：https://goframe.org/os/gcfg/index
+1. `gview`模块增加更多的默认配置文件检索路径，并且增加`Instance`单例方法：https://goframe.org/os/gview/index
+1. `ghttp`模块新功能及改进：
+    - 新增`CORS`HTTP(S)跨域请求特性: https://goframe.org/net/ghttp/cors
+    - 增加`TLSConfig`配置功能；
+    - 去掉路由注册方法的`error`返回值，当产生注册错误时直接终端打印错误/输出到日志文件；
+    - 增加在`HTTP Code 302`跳转时的`Set-Cookie`支持；
+    - 增加对`SESSION ID`的安全性检查；
+    - 增加对基于`HTTPS`的`WebSocket`支持（`WSS`）：https://goframe.org/net/ghttp/websocket/index
+    - `Request`对象增加`Error`方法，用于输出自定义错误信息到`WebServer`错误日志中；
+    - 其他一些改进；
+1. `gdb`模块新功能及改进：
+    - 新增`Instance`单例管理方法；
+    - 新增`Structs/Scan`链式操作方法，`gdb.DB/TX`新增`GetStructs/GetScan`方法，用于结果集`struct`/`slice`映射转换：https://goframe.org/database/gdb/chaining
+    - 新增`Safe`链式操作方法（默认非并发安全），用于链式安全控制：https://goframe.org/database/gdb/chaining
+    - `Where`链式操作方法改进：
+        - 方法支持任意的`string/map/slice/struct/*struct`类型；
+        - 逻辑调整，当链式操作中存在多个`Where`方法调用时，自动转换为`And`条件；
+        - 支持`slice`条件参数，常用在`SELECT IN`查询中，例如：`Where("uid IN(?)", g.Slice{1,2,3})`；
+        - 支持在`map`类型条件参数的`key`中传递条件，例如：`Where(g.Map{"uid>?", uid})`；
+1. `gconv`及`gvalid`模块改进并去掉对私有`struct`方法属性的转换/校验；
+1. `gconv.Map`转换方法新增对`json tag`: `-`, `omitempty`的支持: https://goframe.org/util/gconv/map
+1. `gstr`模块新增 `ReplaceI/ReplaceIByArray/ReplaceIByMap`大小写非敏感替换方法；
+1. `gutil`模块增加`IsEmpty`方法，用于判断给定变量是否为空（整型0, 布尔false, slice/map长度为0, 其他为nil的情况，判断为空），并增加快捷方法`g.IsEmpty`；
+1. `gutil`模块增加`Export`方法，用于导出返回格式化打印的变量内容字符串，并增加快捷方法`g.Export`；
+1. `gspath`增加缓存及非缓存检索检索方法`Search`/`SearchWithCache`；
+1. `gjson`模块增加默认的`UseNumber`功能支持；
+1. `gmap`增加`SetIfNotExistFunc/SetIfNotExistFuncLock`方法；
+1. 迁移`greuseport`模块到新的仓库：https://github.com/gogf/greuseport
+1. 大量的单元测试完善；
+
+## Bug Fix
+1. 修复`gqueue`模块的资源竞争问题；
+1. 修复`gconv.GTime`转换失败问题；
+1. 修复`gconv.String`在转换`int`参数时字节溢出问题；
+1. 修复`ghttp.Request`的`HTTP Basic Auth`校验问题；
+1. 修复`gxml`针对于非`UTF-8`编码内容转换的并发安全问题；
+1. 修复`gtime`部分`Format`（`G`&`j`）格式失效问题；
+1. 修复`gudp.Conn`对象的`RemoteAddr`获取客户端连接地址方法问题；
+1. 修复`gmap/gcache`模块的`GetOrSetFuncLock`方法，增加对回调方法返回值的`nil`判断，只有非nil返回值才会被保存；
+
+
+
 # `v1.5.8` (2019-02-28)
 
 ## 新特性
