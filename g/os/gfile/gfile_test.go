@@ -3,6 +3,7 @@ package gfile
 import (
 	"github.com/gogf/gf/g/test/gtest"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -285,7 +286,7 @@ func TestMove(t *testing.T) {
 		 )
 
 		 gtest.Assert(Rename(paths,topath),nil)
-		// gtest.Assert(IsFile(topath),true)
+		gtest.Assert(IsFile(topath),true)
 
 
 	 })
@@ -293,5 +294,90 @@ func TestMove(t *testing.T) {
 
  }
 
+func TestCopy(t *testing.T) {
+	gtest.Case(t, func(){
+		var(
+			paths string ="./testfile/havefile1/copyfile1.txt"
+			topath string ="./testfile/havefile1/copyfile2.txt"
+		)
+
+		gtest.Assert(Copy(paths,topath),nil)
+		gtest.Assert(IsFile(topath),true)
+
+
+	})
+}
+
+func  TestDirNames(t *testing.T)  {
+	gtest.Case(t, func(){
+		var(
+			paths string ="./testfile/dirfiles"
+			err error
+			readlist []string
+
+		)
+		havelist:=[]string{
+			"t1.txt",
+			"t2.txt",
+		}
+		readlist,err=DirNames(paths)
+
+		gtest.Assert(err,nil)
+		gtest.Assert(havelist,readlist)
+
+
+
+	})
+}
+
+
+func TestGlob(t *testing.T) {
+	gtest.Case(t, func(){
+		var(
+			paths string ="./testfile/dirfiles/*.txt"
+			err error
+			resultlist []string
+
+		)
+
+		havelist1:=[]string{
+			"t1.txt",
+			"t2.txt",
+		}
+
+		havelist2:=[]string{
+			"testfile/dirfiles/t1.txt",
+			"testfile/dirfiles/t2.txt",
+		}
+
+		resultlist,err=Glob(paths,true)
+		gtest.Assert(err,nil)
+		gtest.Assert(resultlist,havelist1)
+
+
+		resultlist,err=Glob(paths,false)
+
+		//转换成统一的目录分隔符
+		for k,v:=range resultlist{
+			resultlist[k]=filepath.ToSlash(v)
+		}
+		gtest.Assert(err,nil)
+		gtest.Assert(resultlist,havelist2)
+
+	})
+}
+
+func TestRemove(t *testing.T) {
+	gtest.Case(t, func(){
+		var(
+			paths string ="./testfile/delfile/t1.txt"
+
+		)
+
+		gtest.Assert(Remove(paths),nil)
+
+
+	})
+}
 
 
