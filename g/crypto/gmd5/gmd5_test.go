@@ -60,8 +60,9 @@ func TestEncryptFile(t *testing.T) {
 	errorPath := "err.txt"
 	gtest.Case(t, func() {
 		file, err := os.Create(path)
-		gtest.Assert(err, nil)
+		defer os.Remove(path)
 		defer file.Close()
+		gtest.Assert(err, nil)
 		file.Write([]byte("Hello Go Frame"))
 		encryptFile := gmd5.EncryptFile(path)
 		gtest.AssertNE(encryptFile, "")
@@ -70,5 +71,5 @@ func TestEncryptFile(t *testing.T) {
 		gtest.AssertEQ(errEncrypt, "")
 	})
 
-	defer os.Remove(path)
+
 }
