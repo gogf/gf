@@ -18,8 +18,10 @@ import (
 func TestEncrypt(t *testing.T) {
 	gtest.Case(t, func() {
 		s := "pibigstar"
+		result := 693191136
 		encrypt1 := gcrc32.EncryptString(s)
 		encrypt2 := gcrc32.EncryptBytes([]byte(s))
-		gtest.AssertEQ(encrypt1, encrypt2)
+		gtest.AssertEQ(int(encrypt1), result)
+		gtest.AssertEQ(int(encrypt2), result)
 	})
 }
