@@ -33,6 +33,8 @@ func Test_Map_Basic(t *testing.T) {
 		gtest.Assert(m.Get("fun"),3)
 		m.GetOrSetFunc("fun",getValue)
 		gtest.Assert(m.SetIfNotExistFunc("fun",getValue),false)
+		gtest.Assert(m.SetIfNotExistFuncLock("funlock",getValue),false)
+
 		m.Clear()
 		gtest.Assert(m.Size(), 0)
 		m2 := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
