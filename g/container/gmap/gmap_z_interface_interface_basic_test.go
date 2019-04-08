@@ -13,6 +13,9 @@ func Test_Map_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		m := gmap.New()
 		m.Set("key1", "val1")
+		gtest.Assert(m.Keys(),[]interface{}{"key1"})
+		gtest.Assert(m.Values(),[]interface{}{"val1"})
+
 		gtest.Assert(m.Get("key1"), "val1")
 		m.BatchSet(map[interface{}]interface{}{1: 1, "key2": "val2", "key3": "val3"})
 		gtest.Assert(m.Size(), 4)
@@ -25,10 +28,11 @@ func Test_Map_Basic(t *testing.T) {
 		m.Flip()
 		gtest.Assert(m.Map(), map[interface{}]interface{}{"val3": "key3", "val4": "key4"})
 		m.GetOrSetFunc("fun",getValue)
+		m.GetOrSetFuncLock("funlock",getValue)
+		gtest.Assert(m.Get("funlock"),3)
 		gtest.Assert(m.Get("fun"),3)
 		m.GetOrSetFunc("fun",getValue)
 		gtest.Assert(m.SetIfNotExistFunc("fun",getValue),false)
-
 		m.Clear()
 		gtest.Assert(m.Size(), 0)
 		m2 := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
