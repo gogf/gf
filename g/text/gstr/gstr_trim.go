@@ -8,9 +8,7 @@ package gstr
 
 import "strings"
 
-// Strip whitespace (or other characters) from the beginning and end of a string.
-//
-// 去除字符串首尾处的空白字符（或者其他字符）。
+// Trim strips whitespace (or other characters) from the beginning and end of a string.
 func Trim(str string, characterMask ...string) string {
     if len(characterMask) > 0 {
         return strings.Trim(str, characterMask[0])
@@ -19,9 +17,7 @@ func Trim(str string, characterMask ...string) string {
     }
 }
 
-// Strip whitespace (or other characters) from the beginning of a string.
-//
-// 去除字符串首的空白字符（或者其他字符）。
+// TrimLeft strips whitespace (or other characters) from the beginning of a string.
 func TrimLeft(str string, characterMask ...string) string {
     mask := ""
     if len(characterMask) == 0 {
@@ -32,9 +28,7 @@ func TrimLeft(str string, characterMask ...string) string {
     return strings.TrimLeft(str, mask)
 }
 
-// Strip all of the given <cut> string from the beginning of a string.
-//
-// 去除字符串首的给定字符串。
+// TrimLeftStr strips all of the given <cut> string from the beginning of a string.
 func TrimLeftStr(str string, cut string) string {
     for str[0 : len(cut)] == cut {
         str = str[len(cut) : ]
@@ -42,9 +36,7 @@ func TrimLeftStr(str string, cut string) string {
     return str
 }
 
-// Strip whitespace (or other characters) from the end of a string.
-//
-// 去除字符串尾的空白字符（或者其他字符）。
+// TrimRight strips whitespace (or other characters) from the end of a string.
 func TrimRight(str string, characterMask ...string) string {
     mask := ""
     if len(characterMask) == 0 {
@@ -55,9 +47,7 @@ func TrimRight(str string, characterMask ...string) string {
     return strings.TrimRight(str, mask)
 }
 
-// Strip all of the given <cut> string from the end of a string.
-//
-// 去除字符串尾的给定字符串。
+// TrimRightStr strips all of the given <cut> string from the end of a string.
 func TrimRightStr(str string, cut string) string {
     for {
         length := len(str)

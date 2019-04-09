@@ -6,13 +6,11 @@
 
 package gstr
 
-// Calculate Levenshtein distance between two strings.
+// Levenshtein calculates Levenshtein distance between two strings.
 // costIns: Defines the cost of insertion.
 // costRep: Defines the cost of replacement.
 // costDel: Defines the cost of deletion.
 // See http://php.net/manual/en/function.levenshtein.php.
-//
-// 计算两个字符串之间的编辑距离(Levenshtein distance)。
 func Levenshtein(str1, str2 string, costIns, costRep, costDel int) int {
     var maxLen = 255
     l1 := len(str1)

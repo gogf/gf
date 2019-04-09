@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/g/os/gcfg"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
+func test() []byte {
+	return nil
+}
 func main() {
-	fmt.Println(gcfg.Instance().GetString("viewpath"))
-	fmt.Println(gcfg.Instance().GetString("database.default.0.host"))
+	gtest.Assert(test(), nil)
 }

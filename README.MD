@@ -5,9 +5,8 @@
 [![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf) 
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf)](https://goreportcard.com/report/github.com/gogf/gf) 
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
+[![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
-[![Language](https://img.shields.io/badge/language-go-blue.svg)](https://github.com/gogf/gf)
-[![Release](https://img.shields.io/github/release/gogf/gf.svg?style=flat)](https://github.com/gogf/gf/releases)
 
 <!--
 GoFrame is a modular, loose-coupled, production-ready and most-powerful application development framework of golang. Providing a series of core components and dozens of practical modules, such as: cache, logging, containers, timer, validator, database orm, etc. Supporting web server integrated with router, cookie, session, logger, configure, template, https, hooks, rewrites and many more features. 
@@ -31,7 +30,7 @@ golang version >= 1.9.2
 
 # Documentation
 
-* [GoDoc](https://godoc.org/github.com/gogf/gf)
+* [APIDoc](https://godoc.org/github.com/gogf/gf)
 * [中文文档](https://goframe.org)
 
 # Architecture
@@ -67,28 +66,32 @@ func main() {
 
 # Contributors
 
-- [johng](https://gitee.com/johng)
-- [zhaopengme](https://github.com/zhaopengme)
-- [wenzi1](https://gitee.com/wenzi1)
-- [zseeker](https://gitee.com/zseeker)
-- [ymrjqyy](https://gitee.com/ymrjqyy)
 - [chenyang351](https://github.com/chenyang351)
-- [wxkj](https://gitee.com/wxkj)
-- [wxkj001](https://github.com/wxkj001)
-- [zhangjinfu](https://gitee.com/zhangjinfu)
 - [garfieldkwong](https://gitee.com/garfieldkwong)
+- [hailaz](https://gitee.com/hailaz)
+- [johng](https://gitee.com/johng)
+- [pibigstar](https://github.com/pibigstar)
 - [qq1054000800](https://gitee.com/qq1054000800)
+- [wenzi1](https://gitee.com/wenzi1)
+- [wxkj001](https://github.com/wxkj001)
+- [ymrjqyy](https://gitee.com/ymrjqyy)
+- [youyixiao](https://github.com/youyixiao)
+- [zhangjinfu](https://gitee.com/zhangjinfu)
+- [zhaopengme](https://github.com/zhaopengme)
+- [zseeker](https://gitee.com/zseeker)
 
 # Donators
 
-- [tiangenglan](https://gitee.com/tiangenglan)
-- [zhuhuan12](https://gitee.com/zhuhuan12)
-- [zfan_codes](https://gitee.com/zfan_codes)
+- [flyke-xu](https://gitee.com/flyke-xu)
 - [hailaz](https://gitee.com/hailaz)
 - [mg91](https://gitee.com/mg91)
-- [wxkj](https://gitee.com/wxkj)
 - [pibigstar](https://github.com/pibigstar)
-- [flyke-xu](https://gitee.com/flyke-xu)
+- [tiangenglan](https://gitee.com/tiangenglan)
+- [wxkj](https://gitee.com/wxkj)
+- [zhuhuan12](https://gitee.com/zhuhuan12)
+- [zfan_codes](https://gitee.com/zfan_codes)
+
+
 
 
 
