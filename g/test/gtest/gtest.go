@@ -32,12 +32,9 @@ func Case(t *testing.T, f func()) {
 
 // Assert checks <value> and <expect> EQUAL.
 func Assert(value, expect interface{}) {
-    rvValue  := reflect.ValueOf(value)
     rvExpect := reflect.ValueOf(expect)
-    if rvValue.Kind() == reflect.Ptr {
-        if rvValue.IsNil() {
-            value = nil
-        }
+    if isNil(value) {
+        value = nil
     }
     if rvExpect.Kind() == reflect.Map {
         if err := compareMap(value, expect); err != nil {
@@ -53,13 +50,10 @@ func Assert(value, expect interface{}) {
 // AssertEQ checks <value> and <expect> EQUAL, including their TYPES.
 func AssertEQ(value, expect interface{}) {
 	// Value assert.
-    rvValue  := reflect.ValueOf(value)
     rvExpect := reflect.ValueOf(expect)
-    if rvValue.Kind() == reflect.Ptr {
-        if rvValue.IsNil() {
-            value = nil
-        }
-    }
+	if isNil(value) {
+		value = nil
+	}
     if rvExpect.Kind() == reflect.Map {
         if err := compareMap(value, expect); err != nil {
             panic(err)
@@ -79,13 +73,10 @@ func AssertEQ(value, expect interface{}) {
 
 // AssertNE checks <value> and <expect> NOT EQUAL.
 func AssertNE(value, expect interface{}) {
-    rvValue  := reflect.ValueOf(value)
     rvExpect := reflect.ValueOf(expect)
-    if rvValue.Kind() == reflect.Ptr {
-        if rvValue.IsNil() {
-            value = nil
-        }
-    }
+	if isNil(value) {
+		value = nil
+	}
     if rvExpect.Kind() == reflect.Map {
         if err := compareMap(value, expect); err == nil {
             panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, value, expect))
@@ -259,11 +250,9 @@ func Fatal(message...interface{}) {
 func compareMap(value, expect interface{}) error {
     rvValue  := reflect.ValueOf(value)
     rvExpect := reflect.ValueOf(expect)
-    if rvValue.Kind() == reflect.Ptr {
-        if rvValue.IsNil() {
-            value = nil
-        }
-    }
+	if isNil(value) {
+		value = nil
+	}
     if rvExpect.Kind() == reflect.Map {
         if rvValue.Kind() == reflect.Map {
             if rvExpect.Len() == rvValue.Len() {
@@ -336,4 +325,15 @@ func getBacktrace(skip...int) string {
         }
     }
     return backtrace
+}
+
+// isNil checks whether <value> is nil.
+func isNil(value interface{}) bool {
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array, reflect.Map, reflect.Ptr, reflect.Func:
+		return rv.IsNil()
+	default:
+		return value == nil
+	}
 }
