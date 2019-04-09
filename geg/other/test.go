@@ -2,12 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/container/gring"
+	"github.com/gogf/gf/g/os/gtime"
 )
 
 func main() {
-	r := gring.New(3)
-	r.Put(1)
-	r.Put(2)
-	fmt.Println(r.Val())
+	fmt.Println(gtime.Now().Format(`Y-m-j G:i:su`))
 }

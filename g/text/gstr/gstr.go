@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gstr provides functions for string handling.
-// 
-// 字符串处理.
 package gstr
 
 import (
@@ -20,9 +18,8 @@ import (
     "unicode/utf8"
 )
 
-// Replace returns a copy of the string <origin> with string <search> replaced by <replace>.
-//
-// 字符串替换(大小写敏感)
+// Replace returns a copy of the string <origin>
+// in which string <search> replaced by <replace> case-sensitively.
 func Replace(origin, search, replace string, count...int) string {
     n := -1
     if len(count) > 0 {
@@ -31,10 +28,8 @@ func Replace(origin, search, replace string, count...int) string {
     return strings.Replace(origin, search, replace, n)
 }
 
-// Replace returns a copy of the string <origin> with string <search> replaced by <replace>
-// with case-insensitive.
-//
-// 字符串替换(大小写不敏感)
+// Replace returns a copy of the string <origin>
+// in which string <search> replaced by <replace> case-insensitively.
 func ReplaceI(origin, search, replace string, count...int) string {
     n := -1
     if len(count) > 0 {
@@ -59,23 +54,20 @@ func ReplaceI(origin, search, replace string, count...int) string {
     return origin
 }
 
-// Count counts the number of <substr> appears in <s>. It returns 0 if no <substr> found in <s>.
-//
-// 计算字符串substr在字符串s中出现的次数，如果没有在s中找到substr，那么返回0。
+// Count counts the number of <substr> appears in <s>.
+// It returns 0 if no <substr> found in <s>.
 func Count(s, substr string) int {
     return strings.Count(s, substr)
 }
 
-// Count counts the number of <substr> appears in <s>, case-insensitive. It returns 0 if no <substr> found in <s>.
-//
-// (非大小写敏感)计算字符串substr在字符串s中出现的次数，如果没有在s中找到substr，那么返回0。
+// Count counts the number of <substr> appears in <s>, case-insensitively.
+// It returns 0 if no <substr> found in <s>.
 func CountI(s, substr string) int {
     return strings.Count(ToLower(s), ToLower(substr))
 }
 
-// Replace string by array/slice.
-//
-// 使用map进行字符串替换(大小写敏感)
+// ReplaceByArray returns a copy of <origin>,
+// which is replaced by a slice in order, case-sensitively.
 func ReplaceByArray(origin string, array []string) string {
     for i := 0; i < len(array); i += 2 {
         if i + 1 >= len(array) {
@@ -86,9 +78,8 @@ func ReplaceByArray(origin string, array []string) string {
     return origin
 }
 
-// Replace string by array/slice with case-insensitive.
-//
-// 使用map进行字符串替换(大小写不敏感)
+// ReplaceIByArray returns a copy of <origin>,
+// which is replaced by a slice in order, case-insensitively.
 func ReplaceIByArray(origin string, array []string) string {
     for i := 0; i < len(array); i += 2 {
         if i + 1 >= len(array) {
@@ -99,9 +90,8 @@ func ReplaceIByArray(origin string, array []string) string {
     return origin
 }
 
-// Replace string by map.
-//
-// 使用map进行字符串替换(大小写敏感)
+// ReplaceByMap returns a copy of <origin>,
+// which is replaced by a map in unordered way, case-sensitively.
 func ReplaceByMap(origin string, replaces map[string]string) string {
     for k, v := range replaces {
         origin = Replace(origin, k, v)
@@ -109,9 +99,8 @@ func ReplaceByMap(origin string, replaces map[string]string) string {
     return origin
 }
 
-// Replace string by map with case-insensitive.
-//
-// 使用map进行字符串替换(大小写不敏感)
+// ReplaceIByMap returns a copy of <origin>,
+// which is replaced by a map in unordered way, case-insensitively.
 func ReplaceIByMap(origin string, replaces map[string]string) string {
     for k, v := range replaces {
         origin = ReplaceI(origin, k, v)
@@ -120,21 +109,16 @@ func ReplaceIByMap(origin string, replaces map[string]string) string {
 }
 
 // ToLower returns a copy of the string s with all Unicode letters mapped to their lower case.
-// 字符串转换为小写
 func ToLower(s string) string {
     return strings.ToLower(s)
 }
 
 // ToUpper returns a copy of the string s with all Unicode letters mapped to their upper case.
-//
-// 字符串转换为大写
 func ToUpper(s string) string {
     return strings.ToUpper(s)
 }
 
 // UcFirst returns a copy of the string s with the first letter mapped to its upper case.
-//
-// 字符串首字母转换为大写
 func UcFirst(s string) string {
     if len(s) == 0 {
         return s
@@ -146,8 +130,6 @@ func UcFirst(s string) string {
 }
 
 // LcFirst returns a copy of the string s with the first letter mapped to its lower case.
-//
-// 字符串首字母转换为小写
 func LcFirst(s string) string {
     if len(s) == 0 {
         return s
@@ -158,16 +140,12 @@ func LcFirst(s string) string {
     return s
 }
 
-// Uppercase the first character of each word in a string.
-//
-// 大写字符串中每个单词的第一个字符。
+// UcWords uppercase the first character of each word in a string.
 func UcWords(str string) string {
     return strings.Title(str)
 }
 
 // IsLetterLower tests whether the given byte b is in lower case.
-//
-// 判断给定字符是否小写
 func IsLetterLower(b byte) bool {
     if b >= byte('a') && b <= byte('z') {
         return true
@@ -176,8 +154,6 @@ func IsLetterLower(b byte) bool {
 }
 
 // IsLetterUpper tests whether the given byte b is in upper case.
-//
-// 判断给定字符是否大写
 func IsLetterUpper(b byte) bool {
     if b >= byte('A') && b <= byte('Z') {
         return true
@@ -186,8 +162,6 @@ func IsLetterUpper(b byte) bool {
 }
 
 // IsNumeric tests whether the given string s is numeric.
-//
-// 判断锁给字符串是否为数字.
 func IsNumeric(s string) bool {
     length := len(s)
     if length == 0 {
@@ -201,9 +175,7 @@ func IsNumeric(s string) bool {
     return true
 }
 
-// Returns the portion of string specified by the start and length parameters.
-//
-// 字符串截取，支持中文
+// SubStr returns a portion of string <str> specified by the <start> and <length> parameters.
 func SubStr(str string, start int, length...int) (substr string) {
     // 将字符串的转换成[]rune
     rs  := []rune(str)
@@ -229,12 +201,10 @@ func SubStr(str string, start int, length...int) (substr string) {
     return string(rs[start : end])
 }
 
-// Returns the portion of string specified by the <length> parameters,
-// if the length of str is greater than <length>,
-// then the <suffix> will be appended to the result.
-//
-// 字符串长度截取限制，超过长度限制被截取并在字符串末尾追加指定的内容，支持中文
-func StrLimit(str string, length int, suffix...string) (string) {
+// StrLimit returns a portion of string <str> specified by <length> parameters,
+// if the length of <str> is greater than <length>,
+// then the <suffix> will be appended to the result string.
+func StrLimit(str string, length int, suffix...string) string {
     rs := []rune(str)
     if len(str) < length {
         return str
@@ -246,9 +216,7 @@ func StrLimit(str string, length int, suffix...string) (string) {
     return string(rs[0 : length]) + addStr
 }
 
-// Reverse a string.
-//
-// 字符串反转.
+// Reverse returns a string which is the reverse of <str>.
 func Reverse(str string) string {
     runes := []rune(str)
     for i, j := 0, len(runes) - 1; i < j; i, j = i + 1, j - 1 {
@@ -257,13 +225,11 @@ func Reverse(str string) string {
     return string(runes)
 }
 
-// Format a number with grouped thousands.
-// decimals: Sets the number of decimal points.
-// decPoint: Sets the separator for the decimal point.
-// thousandsSep: Sets the thousands separator.
+// NumberFormat formats a number with grouped thousands.
+// <decimals>: Sets the number of decimal points.
+// <decPoint>: Sets the separator for the decimal point.
+// <thousandsSep>: Sets the thousands separator.
 // See http://php.net/manual/en/function.number-format.php.
-//
-// 以千位分隔符方式格式化一个数字.
 func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) string {
     neg := false
     if number < 0 {
@@ -305,14 +271,10 @@ func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) s
     return s
 }
 
-// Split a string into smaller chunks.
+// ChunkSplit splits a string into smaller chunks.
 // Can be used to split a string into smaller chunks which is useful for
 // e.g. converting BASE64 string output to match RFC 2045 semantics.
 // It inserts end every chunkLen characters.
-//
-// 将字符串分割成小块。使用此函数将字符串分割成小块非常有用。
-// 例如将BASE64的输出转换成符合RFC2045语义的字符串。
-// 它会在每 chunkLen 个字符后边插入 end。
 func ChunkSplit(body string, chunkLen int, end string) string {
     if end == "" {
         end = "\r\n"
@@ -336,51 +298,37 @@ func ChunkSplit(body string, chunkLen int, end string) string {
 
 // Compare returns an integer comparing two strings lexicographically.
 // The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
-//
-// 比较两个字符串。
 func Compare(a, b string) int {
     return strings.Compare(a, b)
 }
 
-// Equal reports whether s and t, interpreted as UTF-8 strings,
-// are equal under Unicode case-folding, case-insensitive.
-//
-// 比较两个字符串是否相等（不区分大小写）。
+// Equal reports whether <a> and <b>, interpreted as UTF-8 strings,
+// are equal under Unicode case-folding, case-insensitively.
 func Equal(a, b string) bool {
     return strings.EqualFold(a, b)
 }
 
-// Return the words used in a string.
-//
-// 分割字符串中的单词。
+// Fields returns the words used in a string as slice.
 func Fields(str string) []string {
     return strings.Fields(str)
 }
 
-// Contains reports whether substr is within str.
-//
-// 判断是否substr存在于str中。
+// Contains reports whether <substr> is within <str>, case-sensitively.
 func Contains(str, substr string) bool {
     return strings.Contains(str, substr)
 }
 
-// Contains reports whether substr is within str, case-insensitive.
-//
-// 判断是否substr存在于str中(不区分大小写)。
+// ContainsI reports whether substr is within str, case-insensitively.
 func ContainsI(str, substr string) bool {
     return PosI(str, substr) != -1
 }
 
-// ContainsAny reports whether any Unicode code points in chars are within s.
-//
-// 判断是否s中是否包含chars指定的任意字符。
+// ContainsAny reports whether any Unicode code points in <chars> are within <s>.
 func ContainsAny(s, chars string) bool {
     return strings.ContainsAny(s, chars)
 }
 
-// Return information about words used in a string.
-//
-// 返回字符串中单词的使用情况。
+// CountWords returns information about words' count used in a string.
 func CountWords(str string) map[string]int {
     m      := make(map[string]int)
     buffer := bytes.NewBuffer(nil)
@@ -400,7 +348,7 @@ func CountWords(str string) map[string]int {
     return m
 }
 
-// Return information about words used in a string.
+// CountChars returns information about chars' count used in a string.
 //
 // 返回字符串中字符的使用情况。
 func CountChars(str string, noSpace...bool) map[string]int {
@@ -418,10 +366,8 @@ func CountChars(str string, noSpace...bool) map[string]int {
     return m
 }
 
-// Wraps a string to a given number of characters.
+// WordWrap wraps a string to a given number of characters.
 // TODO: Enable cut param, see http://php.net/manual/en/function.wordwrap.php.
-//
-// 使用字符串断点将字符串打断为指定数量的字串。
 func WordWrap(str string, width int, br string) string {
     if br == "" {
         br = "\n"
@@ -479,24 +425,19 @@ func WordWrap(str string, width int, br string) string {
     return buf.String()
 }
 
-// Get string length of unicode.
-//
-// UTF-8字符串长度。
+// RuneLen returns string length of unicode.
 func RuneLen(str string) int {
     return utf8.RuneCountInString(str)
 }
 
 // Repeat returns a new string consisting of multiplier copies of the string input.
-//
-// 按照指定大小创建重复的字符串。
 func Repeat(input string, multiplier int) string {
     return strings.Repeat(input, multiplier)
 }
 
-// Returns part of haystack string starting from and including the first occurrence of needle to the end of haystack.
+// Str returns part of <haystack> string starting from and including
+// the first occurrence of <needle> to the end of <haystack>.
 // See http://php.net/manual/en/function.strstr.php.
-//
-// 查找字符串的首次出现。返回 haystack 字符串从 needle 第一次出现的位置开始到 haystack 结尾的字符串。
 func Str(haystack string, needle string) string {
     if needle == "" {
         return ""
@@ -508,9 +449,7 @@ func Str(haystack string, needle string) string {
     return haystack[idx + len([]byte(needle)) - 1 : ]
 }
 
-// Randomly shuffles a string.
-//
-// 将字符串打乱。
+// Shuffle randomly shuffles a string.
 func Shuffle(str string) string {
     runes := []rune(str)
     s     := make([]rune, len(runes))
@@ -520,54 +459,40 @@ func Shuffle(str string) string {
     return string(s)
 }
 
-// Split a string by a string, to an array.
-//
-// 此函数返回由字符串组成的数组，每个元素都是 str 的一个子串，它们被字符串 delimiter 作为边界点分割出来。
+// Split splits string <str> by a string <delimiter>, to an array.
 func Split(str, delimiter string) []string {
     return strings.Split(str, delimiter)
 }
 
 // Join concatenates the elements of a to create a single string. The separator string
 // sep is placed between elements in the resulting string.
-//
-// 用sep将字符串数组array连接为一个字符串。
 func Join(array []string, sep string) string {
     return strings.Join(array, sep)
 }
 
-// Split a string by a string, to an array.
+// Explode splits string <str> by a string <delimiter>, to an array.
 // See http://php.net/manual/en/function.explode.php.
-//
-// 此函数返回由字符串组成的数组，每个元素都是 str 的一个子串，它们被字符串 delimiter 作为边界点分割出来。
 func Explode(delimiter, str string) []string {
     return Split(str, delimiter)
 }
 
-// Join array elements with a string.
+// Implode joins array elements <pieces> with a string <glue>.
 // http://php.net/manual/en/function.implode.php
-//
-// 用glue将字符串数组pieces连接为一个字符串。
 func Implode(glue string, pieces []string) string {
     return strings.Join(pieces, glue)
 }
 
-// Generate a single-byte string from a number.
-//
-// 返回相对应于 ascii 所指定的单个字符。
+// Chr return the ascii string of a number(0-255).
 func Chr(ascii int) string {
     return string(ascii)
 }
 
-// Convert the first byte of a string to a value between 0 and 255.
-//
-// 解析 char 二进制值第一个字节为 0 到 255 范围的无符号整型类型。
+// Ord converts the first byte of a string to a value between 0 and 255.
 func Ord(char string) int {
     return int(char[0])
 }
 
-// HideStr replaces part of the the string by percentage from the middle.
-//
-// 按照百分比从字符串中间向两边隐藏字符(主要用于姓名、手机号、邮箱地址、身份证号等的隐藏)，支持utf-8中文，支持email格式。
+// HideStr replaces part of the the string <str> to <hide> by <percentage> from the <middle>.
 func HideStr(str string, percent int, hide string) string {
     array := strings.Split(str, "@")
     if len(array) > 1 {
@@ -593,10 +518,8 @@ func HideStr(str string, percent int, hide string) string {
     return buffer.String()
 }
 
-// Inserts HTML line breaks before all newlines in a string.
-// \n\r, \r\n, \r, \n
-//
-// 在字符串 string 所有新行之前插入 '<br />' 或 '<br>'，并返回。
+// Nl2Br inserts HTML line breaks(<br>|<br />) before all newlines in a string:
+// \n\r, \r\n, \r, \n.
 func Nl2Br(str string, isXhtml...bool) string {
     r, n, runes := '\r', '\n', []rune(str)
     var br []byte
@@ -628,9 +551,7 @@ func Nl2Br(str string, isXhtml...bool) string {
     return buf.String()
 }
 
-// Quote string with slashes.
-//
-// 转义字符串中的单引号（'）、双引号（"）、反斜线（\）与 NUL（NULL 字符）。
+// AddSlashes quotes chars('"\) with slashes.
 func AddSlashes(str string) string {
     var buf bytes.Buffer
     for _, char := range str {
@@ -643,9 +564,7 @@ func AddSlashes(str string) string {
     return buf.String()
 }
 
-// Un-quotes a quoted string.
-//
-// 反转义字符串。
+// StripSlashes un-quotes a quoted string by AddSlashes.
 func StripSlashes(str string) string {
     var buf bytes.Buffer
     l, skip := len(str), false
@@ -665,8 +584,6 @@ func StripSlashes(str string) string {
 
 // Returns a version of str with a backslash character (\) before every character that is among:
 // .\+*?[^]($)
-//
-// 转义字符串，转义的特殊字符包括：.\+*?[^]($)。
 func QuoteMeta(str string) string {
     var buf bytes.Buffer
     for _, char := range str {

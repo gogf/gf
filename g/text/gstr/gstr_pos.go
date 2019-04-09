@@ -8,10 +8,9 @@ package gstr
 
 import "strings"
 
-// Find the position of the first occurrence of a substring in a string.
-// It returns -1, if none found.
-//
-// 返回 needle 在 haystack 中首次出现的数字位置，找不到返回-1。
+// Pos returns the position of the first occurrence of <needle>
+// in <haystack> from <startOffset>, case-sensitively.
+// It returns -1, if not found.
 func Pos(haystack, needle string, startOffset...int) int {
     length := len(haystack)
     offset := 0
@@ -32,10 +31,9 @@ func Pos(haystack, needle string, startOffset...int) int {
     return pos + offset
 }
 
-// Find the position of the first occurrence of a case-insensitive substring in a string.
-// It returns -1, if none found.
-//
-// 返回在字符串 haystack 中 needle 首次出现的数字位置（不区分大小写），找不到返回-1。
+// PosI returns the position of the first occurrence of <needle>
+// in <haystack> from <startOffset>, case-insensitively.
+// It returns -1, if not found.
 func PosI(haystack, needle string, startOffset...int) int {
     length := len(haystack)
     offset := 0
@@ -56,10 +54,9 @@ func PosI(haystack, needle string, startOffset...int) int {
     return pos + offset
 }
 
-// Find the position of the last occurrence of a substring in a string.
-// It returns -1, if none found.
-//
-// 查找指定字符串在目标字符串中最后一次出现的位置，找不到返回-1。
+// PosR returns the position of the last occurrence of <needle>
+// in <haystack> from <startOffset>, case-sensitively.
+// It returns -1, if not found.
 func PosR(haystack, needle string, startOffset...int) int {
     offset := 0
     if len(startOffset) > 0 {
@@ -82,10 +79,9 @@ func PosR(haystack, needle string, startOffset...int) int {
     return pos
 }
 
-// Find the position of the last occurrence of a case-insensitive substring in a string.
-// It returns -1, if none found.
-//
-// 以不区分大小写的方式查找指定字符串在目标字符串中最后一次出现的位置，找不到返回-1。
+// PosR returns the position of the last occurrence of <needle>
+// in <haystack> from <startOffset>, case-insensitively.
+// It returns -1, if not found.
 func PosRI(haystack, needle string, startOffset...int) int {
     offset := 0
     if len(startOffset) > 0 {
