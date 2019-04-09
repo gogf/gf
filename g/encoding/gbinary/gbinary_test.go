@@ -23,16 +23,13 @@ var testData = map[string]interface{}{
 	"int32":       int32(-199),
 	"int32.max":   math.MaxInt32,
 	"int64":       int64(123),
-	"int64.max":   math.MaxInt64,
 	"uint":        uint(123),
 	"uint8":       uint8(123),
 	"uint8.max":   math.MaxUint8,
 	"uint16":      uint16(9999),
 	"uint16.max":  math.MaxUint16,
 	"uint32":      uint32(123),
-	"uint32.max":  math.MaxUint32,
 	"uint64":      uint64(123),
-	"uint64.max":  math.MaxUint32 + 1,
 	"bool.true":   true,
 	"bool.false":  false,
 	"string":      "hehe haha",
@@ -40,7 +37,6 @@ var testData = map[string]interface{}{
 	"float32":     float32(123.456),
 	"float32.max": math.MaxFloat32,
 	"float64":     float64(123.456),
-	"float64.max": math.MaxFloat64,
 }
 
 func TestEncodeAndDecode(t *testing.T) {
