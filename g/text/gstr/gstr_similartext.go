@@ -6,10 +6,8 @@
 
 package gstr
 
-// Calculate the similarity between two strings.
+// SimilarText calculates the similarity between two strings.
 // See http://php.net/manual/en/function.similar-text.php.
-//
-// 计算两个字符串的相似度。
 func SimilarText(first, second string, percent *float64) int {
     var similarText func(string, string, int, int) int
     similarText = func(str1, str2 string, len1, len2 int) int {

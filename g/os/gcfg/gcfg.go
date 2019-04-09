@@ -100,12 +100,13 @@ func (c *Config) filePath(file...string) (path string) {
     return path
 }
 
-// 设置配置管理器的配置文件存放目录绝对路径
+// SetPath sets the configuration directory path for file search.
+// The param <path> can be absolute or relative path, but absolute path is suggested.
 func (c *Config) SetPath(path string) error {
-    // 判断绝对路径(或者工作目录下目录)
+    // Absolute path.
     realPath := gfile.RealPath(path)
     if realPath == "" {
-        // 判断相对路径
+        // Relative path.
         c.paths.RLockFunc(func(array []string) {
             for _, v := range array {
                 if path, _ := gspath.Search(v, path); path != "" {
@@ -115,7 +116,7 @@ func (c *Config) SetPath(path string) error {
             }
         })
     }
-    // 目录不存在错误处理
+    // Path not exist.
     if realPath == "" {
         buffer := bytes.NewBuffer(nil)
         if c.paths.Len() > 0 {
@@ -132,13 +133,13 @@ func (c *Config) SetPath(path string) error {
         glog.Error(err)
         return err
     }
-    // 路径必须为目录类型
+    // Should be a directory.
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" should be directory type`, path))
         glog.Error(err)
         return err
     }
-    // 重复判断
+    // Repeated path check.
     if c.paths.Search(realPath) != -1 {
         return nil
     }
@@ -149,19 +150,23 @@ func (c *Config) SetPath(path string) error {
     return nil
 }
 
-// 设置是否执行层级冲突检查，当键名中存在层级符号时需要开启该特性，默认为关闭。
-// 开启比较耗性能，也不建议允许键名中存在分隔符，最好在应用端避免这种情况。
+// SetViolenceCheck sets whether to perform level conflict check.
+// This feature needs to be enabled when there is a level symbol in the key name.
+// The default is off.
+// Turning on this feature is quite expensive,
+// and it is not recommended to allow separators in the key names.
+// It is best to avoid this on the application side.
 func (c *Config) SetViolenceCheck(check bool) {
     c.vc.Set(check)
     c.Clear()
 }
 
-// 添加配置管理器的配置文件搜索路径
+// AddPath adds a absolute or relative path to the search paths.
 func (c *Config) AddPath(path string) error {
-    // 判断绝对路径(或者工作目录下目录)
+    // Absolute path.
     realPath := gfile.RealPath(path)
     if realPath == "" {
-        // 判断相对路径
+	    // Relative path.
         c.paths.RLockFunc(func(array []string) {
             for _, v := range array {
                 if path, _ := gspath.Search(v, path); path != "" {
@@ -171,7 +176,6 @@ func (c *Config) AddPath(path string) error {
             }
         })
     }
-    // 目录不存在错误处理
     if realPath == "" {
         buffer := bytes.NewBuffer(nil)
         if c.paths.Len() > 0 {
@@ -188,13 +192,12 @@ func (c *Config) AddPath(path string) error {
         glog.Error(err)
         return err
     }
-    // 路径必须为目录类型
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" should be directory type`, path))
         glog.Error(err)
         return err
     }
-    // 重复判断
+    // Repeated path check.
     if c.paths.Search(realPath) != -1 {
         return nil
     }
@@ -203,8 +206,10 @@ func (c *Config) AddPath(path string) error {
     return nil
 }
 
-// 查找配置文件，获取指定配置文件的绝对路径，默认获取默认的配置文件路径；
-// 当指定的配置文件不存在时，返回空字符串，并且不会报错。
+// GetFilePath returns the absolute path of the specified configuration file.
+// If <file> is not passed, it returns the configuration file path of the default name.
+// If the specified configuration file does not exist,
+// an empty string is returned.
 func (c *Config) GetFilePath(file...string) (path string) {
     name := c.name.Val()
     if len(file) > 0 {
@@ -225,19 +230,20 @@ func (c *Config) GetFilePath(file...string) (path string) {
     return
 }
 
-// 设置配置管理对象的默认文件名称
+// SetFileName sets the default configuration file name.
 func (c *Config) SetFileName(name string) {
     //glog.Debug("[gcfg] SetFileName:", name)
     c.name.Set(name)
 }
 
-// 获取配置管理对象的默认文件名称
+// GetFileName returns the default configuration file name.
 func (c *Config) GetFileName() string {
     return c.name.Val()
 }
 
-// 添加配置文件到配置管理器中，第二个参数为非必须，如果不输入表示添加进入默认的配置名称中
-// 内部带缓存控制功能。
+// getJson returns a gjson.Json object for the specified <file> content.
+// It would print error if file reading fails.
+// If any error occurs, it return nil.
 func (c *Config) getJson(file...string) *gjson.Json {
     name := c.name.Val()
     if len(file) > 0 {
@@ -255,7 +261,8 @@ func (c *Config) getJson(file...string) *gjson.Json {
         }
         if j, err := gjson.LoadContent(content); err == nil {
             j.SetViolenceCheck(c.vc.Val())
-            // 添加配置文件监听，如果有任何变化，删除文件内容缓存，下一次查询会自动更新
+            // Add monitor for this configuration file,
+            // any changes of this file will refresh its cache in Config object.
             if filePath != "" {
                 gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
                     c.jsons.Remove(name)
@@ -277,7 +284,6 @@ func (c *Config) getJson(file...string) *gjson.Json {
     return nil
 }
 
-// 获取配置项，当不存在时返回nil
 func (c *Config) Get(pattern string, file...string) interface{} {
     if j := c.getJson(file...); j != nil {
         return j.Get(pattern)
@@ -285,7 +291,6 @@ func (c *Config) Get(pattern string, file...string) interface{} {
     return nil
 }
 
-// 获得配置项，返回动态变量
 func (c *Config) GetVar(pattern string, file...string) gvar.VarRead {
     if j := c.getJson(file...); j != nil {
         return gvar.New(j.Get(pattern), true)
@@ -293,7 +298,6 @@ func (c *Config) GetVar(pattern string, file...string) gvar.VarRead {
     return gvar.New(nil, true)
 }
 
-// 判断指定的配置项是否存在
 func (c *Config) Contains(pattern string, file...string) bool {
     if j := c.getJson(file...); j != nil {
         return j.Contains(pattern)
@@ -301,8 +305,6 @@ func (c *Config) Contains(pattern string, file...string) bool {
     return false
 }
 
-// 获得一个键值对关联数组/哈希表，方便操作，不需要自己做类型转换
-// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
 func (c *Config) GetMap(pattern string, file...string)  map[string]interface{} {
     if j := c.getJson(file...); j != nil {
         return j.GetMap(pattern)
@@ -310,8 +312,6 @@ func (c *Config) GetMap(pattern string, file...string)  map[string]interface{} {
     return nil
 }
 
-// 获得一个数组[]interface{}，方便操作，不需要自己做类型转换
-// 注意，如果获取的值不存在，或者类型与json类型不匹配，那么将会返回nil
 func (c *Config) GetArray(pattern string, file...string)  []interface{} {
     if j := c.getJson(file...); j != nil {
         return j.GetArray(pattern)
@@ -319,7 +319,6 @@ func (c *Config) GetArray(pattern string, file...string)  []interface{} {
     return nil
 }
 
-// 返回指定json中的string
 func (c *Config) GetString(pattern string, file...string) string {
     if j := c.getJson(file...); j != nil {
         return j.GetString(pattern)
@@ -341,7 +340,6 @@ func (c *Config) GetInterfaces(pattern string, file...string) []interface{} {
     return nil
 }
 
-// 返回指定json中的bool
 func (c *Config) GetBool(pattern string, file...string) bool {
     if j := c.getJson(file...); j != nil {
         return j.GetBool(pattern)
@@ -349,7 +347,6 @@ func (c *Config) GetBool(pattern string, file...string) bool {
     return false
 }
 
-// 返回指定json中的float32
 func (c *Config) GetFloat32(pattern string, file...string) float32 {
     if j := c.getJson(file...); j != nil {
         return j.GetFloat32(pattern)
@@ -357,7 +354,6 @@ func (c *Config) GetFloat32(pattern string, file...string) float32 {
     return 0
 }
 
-// 返回指定json中的float64
 func (c *Config) GetFloat64(pattern string, file...string) float64 {
     if j := c.getJson(file...); j != nil {
         return j.GetFloat64(pattern)
@@ -372,7 +368,6 @@ func (c *Config) GetFloats(pattern string, file...string) []float64 {
     return nil
 }
 
-// 返回指定json中的float64->int
 func (c *Config) GetInt(pattern string, file...string)  int {
     if j := c.getJson(file...); j != nil {
         return j.GetInt(pattern)
@@ -416,7 +411,6 @@ func (c *Config) GetInts(pattern string, file...string) []int {
     return nil
 }
 
-// 返回指定json中的float64->uint
 func (c *Config) GetUint(pattern string, file...string)  uint {
     if j := c.getJson(file...); j != nil {
         return j.GetUint(pattern)
