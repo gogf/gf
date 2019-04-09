@@ -162,23 +162,46 @@ func TestRing_LockIterator(t *testing.T) {
 	gtest.Case(t, func() {
 		ringLen := 5
 		r := gring.New(ringLen)
+
+		//不存在有值元素
+		r.LockIteratorNext(func(item *ring.Ring) bool {
+			gtest.Assert(item.Value, nil)
+			return true
+		})
+
+		r.LockIteratorPrev(func(item *ring.Ring) bool {
+			gtest.Assert(item.Value, nil)
+			return true
+		})
+
+		//ring初始化元素值
 		for i := 0; i< ringLen; i++  {
 			r.Put(i+1)
 		}
-		var i,j int
+
+		//往后遍历组成数据 [1,2,3,4,5]
+		array1 := g.Slice{1,2,3,4,5}
+		ii := 0
 		r.LockIteratorNext(func(item *ring.Ring) bool {
+			//校验每一次遍历取值是否是期望值
+			gtest.Assert(item.Value, array1[ii])
+			ii++;
+			return true
+		})
+
+		//往后取3个元素组成数组
+		//获得 [1,5,4]
+		i := 0
+		a := g.Slice{1,5,4}
+		r.LockIteratorPrev(func(item *ring.Ring) bool {
+			if i > 2 {
+				return false
+			}
+			gtest.Assert(item.Value, a[i])
 			i++;
 			return true
 		})
-		gtest.Assert(i, 5)
 
-		r.LockIteratorPrev(func(item *ring.Ring) bool {
-			if j++; j < 3 {
-				return true
-			}
-			return false
-		})
 
-		gtest.Assert(j, 3)
 	})
 }
