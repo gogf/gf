@@ -139,7 +139,7 @@ func Test_GetMap(t *testing.T) {
     gtest.Case(t, func() {
         j, err := gjson.DecodeToJson(data)
         gtest.Assert(err, nil)
-        gtest.Assert(j.GetMap("n"), g.Map{})
+        gtest.Assert(j.GetMap("n"), nil)
         gtest.Assert(j.GetMap("m"), g.Map{"k" : "v"})
         gtest.Assert(j.GetMap("a"), g.Map{})
     })
@@ -189,7 +189,7 @@ func Test_GetStrings(t *testing.T) {
         gtest.AssertEQ(j.GetStrings("n"), g.SliceStr{"123456789"})
         gtest.AssertEQ(j.GetStrings("m"), g.SliceStr{`{"k":"v"}`})
         gtest.AssertEQ(j.GetStrings("a"), g.SliceStr{"1", "2", "3"})
-        gtest.AssertEQ(j.GetStrings("i"), g.SliceStr{})
+        gtest.AssertEQ(j.GetStrings("i"), nil)
     })
 }
 
