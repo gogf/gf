@@ -44,7 +44,6 @@
 1. 添加sqlite数据库的单元测试用例；
 1. gredis增加cluster支持；
 
-
 # DONE
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
 2.  ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
