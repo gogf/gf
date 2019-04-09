@@ -33,10 +33,10 @@ func TestGetBinContents(t *testing.T) {
 
 		readcontent=GetBinContents(filepaths2)
 		//文件不存在时@todo:等断言功能优化后，再来修改这里
-		if readcontent!=nil{
-			t.Error("文件应不存在")
-		}
-		//gtest.Assert(GetBinContents(filepaths2),nil)
+		//if readcontent!=nil{
+		//	t.Error("文件应不存在")
+		//}
+		gtest.Assert(GetBinContents(filepaths2),nil)
 
 
 
