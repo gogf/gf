@@ -2,6 +2,8 @@ package gfile
 
 import (
 	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/util/gconv"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,6 +19,7 @@ func TestIsDir(t *testing.T){
 		gtest.Assert(IsDir("./testfile"), true)
 		gtest.Assert(IsDir("./testfile2"), false)
 		gtest.Assert(IsDir("./testfile/tt.txt"), false)
+		gtest.Assert(IsDir(""), false)
 	})
 
 }
@@ -28,7 +31,7 @@ func TestCreate(t *testing.T){
 			filepaths []string
 		)
 
-		filepaths=append(filepaths,"./testfile/file/c1.txt")
+		filepaths=append(filepaths,"./testfile/createfile/c1.txt")
 		filepaths=append(filepaths,"./testfile/file1/c2.txt")
 
 
@@ -37,6 +40,10 @@ func TestCreate(t *testing.T){
 			 gtest.Assert(err,nil)
 
 		 }
+		 stname:=gconv.String(gtime.Now().Second())
+
+		_,err=Create("./testfile/createfile/c"+stname+".txt")
+		gtest.Assert(err,nil)
 
 
 	})
@@ -116,11 +123,11 @@ func TestOpenWithFlag(t *testing.T) {
 			flags []bool
 		)
 
-		files=append(files,"./testfile/file1/nc1.txt")
-		flags=append(flags,false)
-
-		files=append(files,"./testfile/tt.txt")
+		files=append(files,"./testfile/dirfiles/t1.txt")
 		flags=append(flags,true)
+
+		files=append(files,"./testfile/dirfiles/t1_no.txt")
+		flags=append(flags,false)
 
 
 		for k,v:=range files{
@@ -179,11 +186,11 @@ func TestExists(t *testing.T) {
 			flags []bool
 		)
 
-		files=append(files,"./testfile/file1/nc1.txt")
-		flags=append(flags,false)
-
-		files=append(files,"./testfile/tt.txt")
+		files=append(files,"./testfile/havefile1/GetContents.txt")
 		flags=append(flags,true)
+
+		files=append(files,"./testfile/havefile1/tt_no.txt")
+		flags=append(flags,false)
 
 
 		for k,v:=range files{
@@ -218,10 +225,10 @@ func TestIsFile(t *testing.T) {
 			flags []bool
 		)
 
-		files=append(files,"./testfile/file1/nc1.txt")
+		files=append(files,"./testfile/havefile1/nc1.txt")
 		flags=append(flags,false)
 
-		files=append(files,"./testfile/tt.txt")
+		files=append(files,"./testfile/havefile1/GetContents.txt")
 		flags=append(flags,true)
 
 		files=append(files,"./testfile")
@@ -287,7 +294,9 @@ func TestMove(t *testing.T) {
 		 )
 
 		 gtest.Assert(Rename(paths,topath),nil)
-		gtest.Assert(IsFile(topath),true)
+		 gtest.Assert(IsFile(topath),true)
+
+		 gtest.AssertNE(Rename("",""),nil)
 
 
 	 })
@@ -304,6 +313,8 @@ func TestCopy(t *testing.T) {
 
 		gtest.Assert(Copy(paths,topath),nil)
 		gtest.Assert(IsFile(topath),true)
+
+		gtest.AssertNE(Copy("",""),nil)
 
 
 	})
@@ -325,6 +336,9 @@ func  TestDirNames(t *testing.T)  {
 
 		gtest.Assert(err,nil)
 		gtest.Assert(havelist,readlist)
+
+		_,err=DirNames("")
+		gtest.AssertNE(err,nil)
 
 
 
@@ -365,6 +379,14 @@ func TestGlob(t *testing.T) {
 		gtest.Assert(err,nil)
 		gtest.Assert(resultlist,havelist2)
 
+
+		_,err=Glob("",true)
+		gtest.Assert(err,nil)
+
+		_,err=Glob("",false)
+		gtest.Assert(err,nil)
+
+
 	})
 }
 
@@ -376,7 +398,6 @@ func TestRemove(t *testing.T) {
 		)
 
 		gtest.Assert(Remove(paths),nil)
-
 
 	})
 }
@@ -443,6 +464,9 @@ func TestScanDir(t *testing.T){
 
 		gtest.Assert(files,result)
 
+		_,err=ScanDir("","t*")
+		gtest.AssertNE(err,nil)
+
 
 	})
 }
@@ -466,6 +490,8 @@ func TestRealPath(t *testing.T){
 
 
 		gtest.Assert(readlPath,paths1)
+
+		gtest.Assert(RealPath("./nodirs"),"")
 
 
 	})
@@ -566,6 +592,7 @@ func TestTempDir(t *testing.T){
 
 	})
 }
+
 
 
 

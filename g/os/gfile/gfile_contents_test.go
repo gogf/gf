@@ -15,6 +15,7 @@ func TestGetContents(t *testing.T) {
 		)
 
 		gtest.Assert(GetContents(filepaths),"abcdefghijkmln")
+		gtest.Assert(GetContents(""),"")
 
 	})
 }
@@ -32,7 +33,8 @@ func TestGetBinContents(t *testing.T) {
 
 
 		readcontent=GetBinContents(filepaths2)
-		//文件不存在时@todo:等断言功能优化后，再来修改这里
+		gtest.Assert(readcontent,nil)
+
 		//if readcontent!=nil{
 		//	t.Error("文件应不存在")
 		//}
@@ -53,6 +55,9 @@ func TestTruncate(t *testing.T) {
 		err=Truncate(filepaths1,200)
 		gtest.Assert(err,nil)
 
+		err=Truncate("",200)
+		gtest.AssertNE(err,nil)
+
 	})
 }
 
@@ -71,8 +76,17 @@ func TestPutContents(t *testing.T) {
 		readcontent, err=ioutil.ReadFile(filepaths)
 		gtest.Assert(err,nil)
 		gtest.Assert(string(readcontent),"test!")
+
+
+		err=PutContents("","test!")
+		gtest.AssertNE(err,nil)
+
+
+
 	})
 }
+
+
 
 
 
@@ -91,6 +105,13 @@ func TestPutContentsAppend(t *testing.T) {
 		readcontent, err=ioutil.ReadFile(filepaths)
 		gtest.Assert(err,nil)
 		gtest.Assert(string(readcontent),"test!hello")
+
+
+		err=PutContentsAppend("","hello")
+		gtest.AssertNE(err,nil)
+
+
+
 	})
 
 
@@ -112,6 +133,13 @@ func TestPutBinContents(t *testing.T){
 		readcontent, err=ioutil.ReadFile(filepaths)
 		gtest.Assert(err,nil)
 		gtest.Assert(string(readcontent),"test!!")
+
+
+		err=PutBinContents("",[]byte("test!!"))
+		gtest.AssertNE(err,nil)
+
+
+
 	})
 }
 
@@ -131,6 +159,12 @@ func TestPutBinContentsAppend(t *testing.T) {
 		readcontent, err=ioutil.ReadFile(filepaths)
 		gtest.Assert(err,nil)
 		gtest.Assert(string(readcontent),"test!!word")
+
+
+		err=PutBinContentsAppend("",[]byte("word"))
+		gtest.AssertNE(err,nil)
+
+
 	})
 }
 
@@ -144,6 +178,10 @@ func TestGetBinContentsByTwoOffsetsByPath(t *testing.T) {
 		readcontent = GetBinContentsByTwoOffsetsByPath(filepaths, 2, 5)
 
 		gtest.Assert(string(readcontent), "cde")
+
+		readcontent = GetBinContentsByTwoOffsetsByPath("", 2, 5)
+		gtest.Assert(len(readcontent),0)
+
 	})
 
 }
@@ -159,6 +197,10 @@ func TestGetNextCharOffsetByPath(t *testing.T) {
 
 		localindex = GetNextCharOffsetByPath(filepaths,'d', 1)
 		gtest.Assert(localindex, 3)
+
+		localindex = GetNextCharOffsetByPath("",'d', 1)
+		gtest.Assert(localindex, -1)
+
 	})
 }
 
