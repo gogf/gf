@@ -380,4 +380,16 @@ func TestRemove(t *testing.T) {
 	})
 }
 
+func TestIsReadable(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			paths1 string ="./testfile/havefile1/GetContents.txt"
+			paths2 string ="./testfile/havefile1/GetContents_no.txt"
+		)
+		gtest.Assert(IsReadable(paths1),true)
+		gtest.Assert(IsReadable(paths2),false)
+
+	})
+}
+
 
