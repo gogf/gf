@@ -133,17 +133,17 @@ func TestRing_RLockIterator(t *testing.T) {
 		r := gring.New(ringLen)
 
 		//ring不存在有值元素
-		r.RLockIteratorNext(func(value interface{}) bool {
-			gtest.Assert(r.Val(), nil)
+		r.RLockIteratorNext(func(v interface{}) bool {
+			gtest.Assert(v, nil)
 			return false
 		})
-		r.RLockIteratorNext(func(value interface{}) bool {
-			gtest.Assert(r.Val(), nil)
+		r.RLockIteratorNext(func(v interface{}) bool {
+			gtest.Assert(v, nil)
 			return true
 		})
 
-		r.RLockIteratorPrev(func(value interface{}) bool {
-			gtest.Assert(r.Val(), nil)
+		r.RLockIteratorPrev(func(v interface{}) bool {
+			gtest.Assert(v, nil)
 			return true
 		})
 
@@ -151,15 +151,17 @@ func TestRing_RLockIterator(t *testing.T) {
 			r.Put(i+1)
 		}
 
-		//回调函数返回true,RLockIteratorNext遍历5次
-		r.RLockIteratorNext(func(value interface{}) bool {
-			gtest.Assert(r.Val(), 1)
+		//回调函数返回true,RLockIteratorNext遍历5次,期望值分别是1、2、3、4、5
+		i := 0
+		r.RLockIteratorNext(func(v interface{}) bool {
+			gtest.Assert(v, i+1)
+			i++;
 			return true
 		})
 
-		//RLockIteratorPrev遍历3次返回 false,退出遍历
-		r.RLockIteratorPrev(func(value interface{}) bool {
-			gtest.Assert(r.Val(), 1)
+		//RLockIteratorPrev遍历1次返回 false,退出遍历
+		r.RLockIteratorPrev(func(v interface{}) bool {
+			gtest.Assert(v, 1)
 			return false
 		})
 
