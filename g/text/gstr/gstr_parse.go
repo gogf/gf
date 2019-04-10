@@ -12,7 +12,7 @@ import (
     "strings"
 )
 
-// Parses the string into map[string]interface{}.
+// Parse parses the string into map[string]interface{}.
 //
 // f1=m&f2=n           -> map[f1:m f2:n]
 // f[a]=m&f[b]=n       -> map[f:map[a:m b:n]]
@@ -23,7 +23,6 @@ import (
 // f=m&f[a]=n          -> error
 // a .[[b=c            -> map[a___[b:c]
 //
-// 将字符串解析成Map。
 func Parse(s string) (result map[string]interface{}, err error) {
     result = make(map[string]interface{})
     parts := strings.Split(s, "&")
