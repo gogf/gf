@@ -83,7 +83,7 @@ func TestRing_Unlink(t *testing.T) {
 		for i := 0; i< 5; i++  {
 			r.Put(i+1)
 		}
-		// 1 2 3 4 5
+		// 1 2 3 4
 		// 删除当前位置往后的2个数据，返回被删除的数据
 		// 重新计算s len
 		s := r.Unlink(2)		// 2 3
@@ -118,8 +118,11 @@ func TestRing_Slice(t *testing.T) {
 		gtest.Assert(array3, g.Slice{2,1,5,4})
 
 		s := gring.New(ringLen)
+		for i := 0; i< ringLen; i++  {
+			s.Put(i+1)
+		}
 		array4 := s.SlicePrev()	// []
-		gtest.Assert(array4, g.Slice{})
+		gtest.Assert(array4, g.Slice{1,5,4,3,2})
 
 	})
 }
@@ -132,9 +135,12 @@ func TestRing_RLockIterator(t *testing.T) {
 		//ring不存在有值元素
 		r.RLockIteratorNext(func(value interface{}) bool {
 			gtest.Assert(r.Val(), nil)
+			return false
+		})
+		r.RLockIteratorNext(func(value interface{}) bool {
+			gtest.Assert(r.Val(), nil)
 			return true
 		})
-
 
 		r.RLockIteratorPrev(func(value interface{}) bool {
 			gtest.Assert(r.Val(), nil)
@@ -168,9 +174,21 @@ func TestRing_LockIterator(t *testing.T) {
 		//不存在有值元素
 		r.LockIteratorNext(func(item *ring.Ring) bool {
 			gtest.Assert(item.Value, nil)
+			return false
+		})
+		r.LockIteratorNext(func(item *ring.Ring) bool {
+			gtest.Assert(item.Value, nil)
+			return false
+		})
+		r.LockIteratorNext(func(item *ring.Ring) bool {
+			gtest.Assert(item.Value, nil)
 			return true
 		})
 
+		r.LockIteratorPrev(func(item *ring.Ring) bool {
+			gtest.Assert(item.Value, nil)
+			return false
+		})
 		r.LockIteratorPrev(func(item *ring.Ring) bool {
 			gtest.Assert(item.Value, nil)
 			return true
