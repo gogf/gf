@@ -43,10 +43,15 @@ func TestGetBinContents(t *testing.T) {
 	})
 }
 
-//暂时不知道用途 @todo:继续添加
+//截断文件为指定的大小
 func TestTruncate(t *testing.T) {
 	gtest.Case(t , func() {
-
+		var(
+			filepaths1 string="./testfile/havefile1/GetContents.txt" //存在文件
+			err error
+		)
+		err=Truncate(filepaths1,200)
+		gtest.Assert(err,nil)
 
 	})
 }
@@ -143,6 +148,19 @@ func TestGetBinContentsByTwoOffsetsByPath(t *testing.T) {
 
 }
 
+
+func TestGetNextCharOffsetByPath(t *testing.T) {
+	gtest.Case(t, func() {
+		var (
+			filepaths   string = "./testfile/havefile1/GetContents.txt" //原文件内容: abcdefghijk
+			localindex int64
+
+		)
+
+		localindex = GetNextCharOffsetByPath(filepaths,'d', 1)
+		gtest.Assert(localindex, 3)
+	})
+}
 
 
 
