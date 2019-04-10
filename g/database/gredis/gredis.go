@@ -107,7 +107,7 @@ func New(config Config) *Redis {
 // return redis instance with default group.
 //
 // 获取指定分组名称的Redis单例对象，底层根据配置信息公用的连接池（连接池单例）。
-func Instance(name...string) *Redis {
+func Instance(name ...string) *Redis {
     group := DEFAULT_GROUP_NAME
     if len(name) > 0 {
         group = name[0]
