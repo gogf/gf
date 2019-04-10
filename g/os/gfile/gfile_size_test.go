@@ -24,7 +24,7 @@ func TestFormatSize(t *testing.T){
 
 		gtest.Assert(FormatSize(16),"16.00B")
 
-		gtest.Assert(FormatSize(1600),"1.56K")
+		gtest.Assert(FormatSize(1024),"1.00K")
 
 		gtest.Assert(FormatSize(16000000),"15.26M")
 
