@@ -594,6 +594,68 @@ func TestTempDir(t *testing.T){
 }
 
 
+func TestMkdir(t *testing.T) {
+	gtest.Case(t, func(){
+		var(
+			tpath string ="./testfile/createdir"
+			err error
+		)
+
+		err=Mkdir(tpath)
+		gtest.Assert(err,nil)
+
+		err=Mkdir("")
+		gtest.AssertNE(err,nil)
+
+		err=Mkdir(tpath+"2/t1")
+		gtest.Assert(err,nil)
+
+
+	})
+}
+
+func  TestStat(t *testing.T) {
+	gtest.Case(t, func(){
+		var(
+			tpath1 string ="./testfile/dirfiles/t1.txt"
+			tpath2 string ="./testfile/dirfiles/t1_no.txt"
+			err error
+		)
+
+		_,err=Stat(tpath1)
+		gtest.Assert(err,nil)
+
+
+		_,err=Stat(tpath2)
+		gtest.AssertNE(err,nil)
+
+
+
+	})
+}
+
+func TestMainPkgPath(t *testing.T) {
+	gtest.Case(t, func(){
+		var(
+			//tpath1 string ="./testfile/dirfiles/t1.txt"
+			reads string
+			//err error
+		)
+
+		reads=MainPkgPath()
+		gtest.Assert(reads,"")
+
+
+	})
+}
+
+
+
+
+
+
+
+
 
 
 

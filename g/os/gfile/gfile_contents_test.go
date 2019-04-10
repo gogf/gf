@@ -1,10 +1,10 @@
 package gfile
 
-import(
-	"io/ioutil"
-	"testing"
+import (
 	"github.com/gogf/gf/g/test/gtest"
-
+	"io/ioutil"
+	"strings"
+	"testing"
 )
 
 
@@ -200,6 +200,102 @@ func TestGetNextCharOffsetByPath(t *testing.T) {
 
 		localindex = GetNextCharOffsetByPath("",'d', 1)
 		gtest.Assert(localindex, -1)
+
+	})
+}
+
+
+func TestGetNextCharOffset(t *testing.T) {
+	gtest.Case(t, func() {
+		var (
+			localindex int64
+
+		)
+		reader:=strings.NewReader("helloword")
+
+		localindex = GetNextCharOffset(reader,'w', 1)
+		gtest.Assert(localindex,5)
+
+		localindex = GetNextCharOffset(reader,'j', 1)
+		gtest.Assert(localindex,-1)
+
+
+	})
+}
+
+func TestGetBinContentsByTwoOffsets(t *testing.T) {
+	gtest.Case(t, func() {
+		var (
+			reads []byte
+
+		)
+		reader:=strings.NewReader("helloword")
+
+		reads = GetBinContentsByTwoOffsets(reader,1, 3)
+		gtest.Assert(string(reads),"el")
+
+		reads = GetBinContentsByTwoOffsets(reader,10, 30)
+		gtest.Assert(string(reads),"")
+
+	})
+}
+
+func TestGetBinContentsTilChar(t *testing.T) {
+	gtest.Case(t, func() {
+		var (
+			reads []byte
+			indexs int64
+
+		)
+		reader:=strings.NewReader("helloword")
+
+		reads,_ = GetBinContentsTilChar(reader,'w', 2)
+		gtest.Assert(string(reads),"llow")
+
+		_,indexs = GetBinContentsTilChar(reader,'w', 20)
+		gtest.Assert(indexs,-1)
+
+	})
+}
+
+func TestGetBinContentsTilCharByPath(t *testing.T) {
+	gtest.Case(t, func() {
+		var (
+			reads []byte
+			indexs int64
+			filepaths   string = "./testfile/havefile1/GetContents.txt"
+
+		)
+
+
+		reads,_ = GetBinContentsTilCharByPath(filepaths,'c',2)
+		gtest.Assert(string(reads),"c")
+
+		reads,_ = GetBinContentsTilCharByPath(filepaths,'y',1)
+		gtest.Assert(string(reads),"")
+
+
+		_,indexs = GetBinContentsTilCharByPath(filepaths,'x',1)
+		gtest.Assert(indexs,-1)
+
+
+
+	})
+}
+
+func TestHome(t *testing.T) {
+	gtest.Case(t, func() {
+		var (
+			reads string
+			err error
+
+		)
+
+ 		reads,err=Home()
+
+ 		gtest.Assert(err,nil)
+ 		gtest.AssertNE(reads,"")
+
 
 	})
 }
