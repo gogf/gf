@@ -85,8 +85,10 @@ func TestRing_Unlink(t *testing.T) {
 		}
 		// 1 2 3 4 5
 		// 删除当前位置往后的2个数据，返回被删除的数据
+		// 重新计算s len
 		s := r.Unlink(2)		// 2 3
 		gtest.Assert(s.Val(), 2)
+		gtest.Assert(s.Len(), 1)
 	})
 }
 
