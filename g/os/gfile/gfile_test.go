@@ -4,6 +4,7 @@ import (
 	"github.com/gogf/gf/g/test/gtest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -391,5 +392,184 @@ func TestIsReadable(t *testing.T){
 
 	})
 }
+
+func TestIsWritable(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			paths1 string ="./testfile/havefile1/GetContents.txt"
+			paths2 string ="./testfile/havefile1/GetContents_no.txt"
+		)
+		gtest.Assert(IsWritable(paths1),true)
+		gtest.Assert(IsWritable(paths2),false)
+
+	})
+}
+
+
+func TestChmod(t *testing.T) {
+	gtest.Case(t, func(){
+		var(
+			paths1 string ="./testfile/havefile1/GetContents.txt"
+			paths2 string ="./testfile/havefile1/GetContents_no.txt"
+		)
+
+
+		gtest.Assert(Chmod(paths1,0777),nil)
+		gtest.AssertNE(Chmod(paths2,0777),nil)
+
+	})
+}
+
+
+func TestScanDir(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			paths1 string ="./testfile/dirfiles"
+			files []string
+			err error
+		)
+		files,err=ScanDir(paths1,"t*")
+
+		result:=[]string{
+			"./testfile/dirfiles/t1.txt",
+			"./testfile/dirfiles/t2.txt",
+		}
+
+		gtest.Assert(err,nil)
+
+		for k,v:=range files{
+			files[k]=filepath.ToSlash(v)
+		}
+
+		gtest.Assert(files,result)
+
+
+	})
+}
+
+//获取绝对目录地址
+func TestRealPath(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			paths1 string ="./testfile/dirfiles"
+			readlPath string
+
+			tempstr string
+		)
+		readlPath=RealPath(paths1)
+		readlPath=filepath.ToSlash(readlPath)
+
+		tempstr,_=filepath.Abs("./")
+		paths1=tempstr+paths1
+		paths1=filepath.ToSlash(paths1)
+		paths1=strings.Replace(paths1,"./","/",1)
+
+
+		gtest.Assert(readlPath,paths1)
+
+
+	})
+}
+
+
+//获取当前执行文件的目录
+//注意：当用go test运行测试时，会产生临时的目录文件
+func TestSelfPath(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			paths1 string
+			readlPath string
+			tempstr string
+		)
+		readlPath=SelfPath()
+		readlPath=filepath.ToSlash(readlPath)
+
+		//
+		tempstr,_=filepath.Abs(os.Args[0])
+		paths1=filepath.ToSlash(tempstr)
+		paths1=strings.Replace(paths1,"./","/",1)
+
+
+		gtest.Assert(readlPath,paths1)
+
+	})
+}
+
+
+func TestSelfDir(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			paths1 string
+			readlPath string
+			tempstr string
+		)
+		readlPath=SelfDir()
+
+
+		tempstr,_=filepath.Abs(os.Args[0])
+		paths1=filepath.Dir(tempstr)
+
+		gtest.Assert(readlPath,paths1)
+
+	})
+}
+
+
+func TestBasename(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			paths1 string ="./testfile/havefile1/GetContents.txt"
+			readlPath string
+
+		)
+		readlPath=Basename(paths1)
+		gtest.Assert(readlPath,"GetContents.txt")
+
+	})
+}
+
+func TestDir(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			paths1 string ="./testfile/havefile1"
+			readlPath string
+		)
+		readlPath=Dir(paths1)
+
+		gtest.Assert(readlPath,"testfile")
+
+	})
+}
+
+
+//获取文件名
+func TestExt(t *testing.T) {
+	gtest.Case(t, func(){
+		var(
+			paths1 string ="./testfile/havefile1/GetContents.txt"
+		)
+
+		gtest.Assert(Ext(paths1),".txt")
+
+	})
+}
+
+
+func TestTempDir(t *testing.T){
+	gtest.Case(t, func(){
+		var(
+			tpath string
+		)
+
+		tpath=TempDir()
+		gtest.Assert(tpath,os.TempDir())
+
+	})
+}
+
+
+
+
+
 
 
