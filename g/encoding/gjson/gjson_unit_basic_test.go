@@ -141,7 +141,7 @@ func Test_GetMap(t *testing.T) {
         gtest.Assert(err, nil)
         gtest.Assert(j.GetMap("n"), nil)
         gtest.Assert(j.GetMap("m"), g.Map{"k" : "v"})
-        gtest.Assert(j.GetMap("a"), g.Map{})
+        gtest.Assert(j.GetMap("a"), nil)
     })
 }
 
