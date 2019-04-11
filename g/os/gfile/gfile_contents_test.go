@@ -11,10 +11,10 @@ import (
 func TestGetContents(t *testing.T) {
 	gtest.Case(t,func(){
 		var(
-			filepaths string= "./testfile/havefile1/GetContents.txt"
+			filepaths string= "./testfile/dirfiles/t1.txt"
 		)
 
-		gtest.Assert(GetContents(filepaths),"abcdefghijkmln")
+		gtest.Assert(GetContents(filepaths),"my name is jroam")
 		gtest.Assert(GetContents(""),"")
 
 	})
@@ -24,12 +24,12 @@ func TestGetContents(t *testing.T) {
 func TestGetBinContents(t *testing.T) {
 	gtest.Case(t , func() {
 		var(
-			filepaths1 string="./testfile/havefile1/GetContents.txt" //存在文件
-			filepaths2 string="./testfile/havefile1/GetContents_no.txt"  //不存大文件
+			filepaths1 string="./testfile/dirfiles/t1.txt" //存在文件
+			filepaths2 string="./testfile/dirfiles/t1_no.txt"  //不存大文件
 			readcontent []byte
 		)
 		readcontent=GetBinContents(filepaths1)
-		gtest.Assert(readcontent,[]byte("abcdefghijkmln"))
+		gtest.Assert(readcontent,[]byte("my name is jroam"))
 
 
 		readcontent=GetBinContents(filepaths2)

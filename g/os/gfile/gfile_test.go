@@ -63,7 +63,7 @@ func TestOpen(t *testing.T)  {
 		files=append(files,"./testfile/file1/nc1.txt")
 		flags=append(flags,false)
 
-		files=append(files,"./testfile/tt.txt")
+		files=append(files,"./testfile/file1/c1.txt")
 		flags=append(flags,true)
 
 
