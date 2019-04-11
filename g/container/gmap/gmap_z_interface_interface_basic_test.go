@@ -17,7 +17,6 @@ func Test_Map_Basic(t *testing.T) {
 		m := gmap.New()
 		m.Set("key1", "val1")
 		gtest.Assert(m.Keys(), []interface{}{"key1"})
-		gtest.Assert(m.Values(), []interface{}{"val1"})
 
 		gtest.Assert(m.Get("key1"), "val1")
 		gtest.Assert(m.Size(), 1)
