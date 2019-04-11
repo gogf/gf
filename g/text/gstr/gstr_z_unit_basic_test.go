@@ -383,3 +383,22 @@ func Test_ContainsAny(t *testing.T) {
     })
 }
 
+func Test_SearchArray(t *testing.T) {
+	gtest.Case(t, func() {
+		a := g.SliceStr{"a", "b", "c"}
+		gtest.AssertEQ(gstr.SearchArray(a, "a"),  0)
+		gtest.AssertEQ(gstr.SearchArray(a, "b"),  1)
+		gtest.AssertEQ(gstr.SearchArray(a, "c"),  2)
+		gtest.AssertEQ(gstr.SearchArray(a, "d"), -1)
+	})
+}
+
+func Test_InArray(t *testing.T) {
+	gtest.Case(t, func() {
+		a := g.SliceStr{"a", "b", "c"}
+		gtest.AssertEQ(gstr.InArray(a, "a"),  true)
+		gtest.AssertEQ(gstr.InArray(a, "b"),  true)
+		gtest.AssertEQ(gstr.InArray(a, "c"),  true)
+		gtest.AssertEQ(gstr.InArray(a, "d"),  false)
+	})
+}
