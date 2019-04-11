@@ -37,10 +37,9 @@ func Test_IntStringMap_Basic(t *testing.T) {
 		//反转之后不成为以下 map,flip 操作只是翻转原 map
 		//gtest.Assert(m.Map(), map[string]int{"a": 1, "c": 3})
 		m_f := gmap.NewIntStringMap()
-		m_f.Set(1,"2")
+		m_f.Set(1, "2")
 		m_f.Flip()
-		gtest.Assert(m_f.Map(),map[int]string{2:"1"})
-
+		gtest.Assert(m_f.Map(), map[int]string{2: "1"})
 
 		m.Clear()
 		gtest.Assert(m.Size(), 0)
@@ -48,7 +47,7 @@ func Test_IntStringMap_Basic(t *testing.T) {
 
 		m2 := gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b"})
 		gtest.Assert(m2.Map(), map[int]string{1: "a", 2: "b"})
-		m3 := gmap.NewIntStringMapFromArray([]int{1, 2}, []string{"a","b"})
+		m3 := gmap.NewIntStringMapFromArray([]int{1, 2}, []string{"a", "b"})
 		gtest.Assert(m3.Map(), map[int]string{1: "a", 2: "b"})
 
 	})
@@ -67,16 +66,16 @@ func Test_IntStringMap_Set_Fun(t *testing.T) {
 func Test_IntStringMap_Batch(t *testing.T) {
 	m := gmap.NewIntStringMap()
 
-	m.BatchSet(map[int]string{1: "a", 2: "b",3:"c"})
+	m.BatchSet(map[int]string{1: "a", 2: "b", 3: "c"})
 	m.Iterator(intStringCallBack)
-	gtest.Assert(m.Map(), map[int]string{1: "a", 2: "b"})
+	gtest.Assert(m.Map(), map[int]string{1: "a", 2: "b",3: "c"})
 	m.BatchRemove([]int{1, 2})
 	gtest.Assert(m.Map(), map[int]interface{}{3: "c"})
 }
 
 func Test_IntStringMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
-	m := gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b",3:"c"})
+	m := gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
 
 	m_clone := m.Clone()
 	m.Remove(1)

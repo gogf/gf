@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 func stringInterfaceCallBack(string, interface{}) bool {
 	return true
 }
@@ -60,11 +59,11 @@ func Test_StringInterfaceMap_Set_Fun(t *testing.T) {
 func Test_StringInterfaceMap_Batch(t *testing.T) {
 	m := gmap.NewStringInterfaceMap()
 
-	m.BatchSet(map[string]interface{}{"a": 1, "b": "2","c":3})
+	m.BatchSet(map[string]interface{}{"a": 1, "b": "2", "c": 3})
 	m.Iterator(stringInterfaceCallBack)
-	gtest.Assert(m.Map(), map[string]interface{}{"a": 1, "b": "2","c":3})
-	m.BatchRemove([]string{"a","b"})
-	gtest.Assert(m.Map(), map[string]interface{}{"c":3})
+	gtest.Assert(m.Map(), map[string]interface{}{"a": 1, "b": "2", "c": 3})
+	m.BatchRemove([]string{"a", "b"})
+	gtest.Assert(m.Map(), map[string]interface{}{"c": 3})
 }
 
 func Test_StringInterfaceMap_Clone(t *testing.T) {
