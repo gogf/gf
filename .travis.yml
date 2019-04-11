@@ -30,8 +30,6 @@ install:
 script:
   - cd g/os/gfile
   - cd testfile/havefile1
-  - touch ttn1.txt ttm1.txt
-  - cd ../../
   - GOARCH=386 go test -v ./...
   - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
