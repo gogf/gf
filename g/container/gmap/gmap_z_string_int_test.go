@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 func stringIntCallBack(string, int) bool {
 	return true
 }
@@ -33,10 +32,9 @@ func Test_StringIntMap_Basic(t *testing.T) {
 		gtest.AssertIN(1, m.Values())
 
 		m_f := gmap.NewStringIntMap()
-		m_f.Set("1",2)
+		m_f.Set("1", 2)
 		m_f.Flip()
-		gtest.Assert(m_f.Map(),map[string]int{"2":1})
-
+		gtest.Assert(m_f.Map(), map[string]int{"2": 1})
 
 		m.Clear()
 		gtest.Assert(m.Size(), 0)
@@ -44,7 +42,7 @@ func Test_StringIntMap_Basic(t *testing.T) {
 
 		m2 := gmap.NewStringIntMapFrom(map[string]int{"a": 1, "b": 2})
 		gtest.Assert(m2.Map(), map[string]int{"a": 1, "b": 2})
-		m3 := gmap.NewStringIntMapFromArray([]string{"a","b"}, []int{1, 2})
+		m3 := gmap.NewStringIntMapFromArray([]string{"a", "b"}, []int{1, 2})
 		gtest.Assert(m3.Map(), map[string]int{"a": 1, "b": 2})
 
 	})
@@ -63,16 +61,16 @@ func Test_StringIntMap_Set_Fun(t *testing.T) {
 func Test_StringIntMap_Batch(t *testing.T) {
 	m := gmap.NewStringIntMap()
 
-	m.BatchSet(map[string]int{"a": 1, "b": 2,"c":3})
+	m.BatchSet(map[string]int{"a": 1, "b": 2, "c": 3})
 	m.Iterator(stringIntCallBack)
-	gtest.Assert(m.Map(), map[string]int{"a": 1, "b": 2,"c":3})
-	m.BatchRemove([]string{"a","b"})
+	gtest.Assert(m.Map(), map[string]int{"a": 1, "b": 2, "c": 3})
+	m.BatchRemove([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]int{"c": 3})
 }
 
 func Test_StringIntMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
-	m := gmap.NewStringIntMapFrom(map[string]int{"a": 1, "b": 2,"c":3})
+	m := gmap.NewStringIntMapFrom(map[string]int{"a": 1, "b": 2, "c": 3})
 
 	m_clone := m.Clone()
 	m.Remove("a")
@@ -89,5 +87,5 @@ func Test_StringIntMap_Merge(t *testing.T) {
 	m1.Set("a", 1)
 	m2.Set("b", 2)
 	m1.Merge(m2)
-	gtest.Assert(m1.Map(),map[string]int{"a": 1, "b": 2})
+	gtest.Assert(m1.Map(), map[string]int{"a": 1, "b": 2})
 }
