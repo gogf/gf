@@ -60,19 +60,31 @@ func Test_IntStringMap_Set_Fun(t *testing.T) {
 	gtest.Assert(m.Get(1), "z")
 	gtest.Assert(m.Get(2), "z")
 	gtest.Assert(m.SetIfNotExistFunc(1, getString), false)
+	gtest.Assert(m.SetIfNotExistFunc(3, getString), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock(2, getString), false)
+	gtest.Assert(m.SetIfNotExistFuncLock(4, getString), true)
+
 }
 
 func Test_IntStringMap_Batch(t *testing.T) {
 	m := gmap.NewIntStringMap()
 
 	m.BatchSet(map[int]string{1: "a", 2: "b", 3: "c"})
-	m.Iterator(intStringCallBack)
 	gtest.Assert(m.Map(), map[int]string{1: "a", 2: "b",3: "c"})
 	m.BatchRemove([]int{1, 2})
 	gtest.Assert(m.Map(), map[int]interface{}{3: "c"})
 }
+func Test_IntStringMap_Iterator(t *testing.T){
+	m :=  gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
+	m.Iterator(intStringCallBack)
+}
 
+func Test_IntStringMap_Lock(t *testing.T){
+	m :=  gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
+	m.LockFunc(func(m map[int]string) {})
+	m.RLockFunc(func(m map[int]string) {})
+}
 func Test_IntStringMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
 	m := gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})

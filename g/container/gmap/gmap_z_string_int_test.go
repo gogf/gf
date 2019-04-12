@@ -55,17 +55,30 @@ func Test_StringIntMap_Set_Fun(t *testing.T) {
 	gtest.Assert(m.Get("a"), 123)
 	gtest.Assert(m.Get("b"), 123)
 	gtest.Assert(m.SetIfNotExistFunc("a", getInt), false)
+	gtest.Assert(m.SetIfNotExistFunc("c", getInt), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock("b", getInt), false)
+	gtest.Assert(m.SetIfNotExistFuncLock("d", getInt), true)
+
 }
 
 func Test_StringIntMap_Batch(t *testing.T) {
 	m := gmap.NewStringIntMap()
 
 	m.BatchSet(map[string]int{"a": 1, "b": 2, "c": 3})
-	m.Iterator(stringIntCallBack)
 	gtest.Assert(m.Map(), map[string]int{"a": 1, "b": 2, "c": 3})
 	m.BatchRemove([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]int{"c": 3})
+}
+func Test_StringBIntMap_Iterator(t *testing.T) {
+	m := gmap.NewStringIntMapFrom(map[string]int{"a": 1, "b": 2, "c": 3})
+	m.Iterator(stringIntCallBack)
+}
+
+func Test_StringIntMap_Lock(t *testing.T) {
+	m := gmap.NewStringIntMapFrom(map[string]int{"a": 1, "b": 2, "c": 3})
+	m.LockFunc(func(m map[string]int) {})
+	m.RLockFunc(func(m map[string]int) {})
 }
 
 func Test_StringIntMap_Clone(t *testing.T) {

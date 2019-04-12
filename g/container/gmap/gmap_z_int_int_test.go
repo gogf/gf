@@ -55,7 +55,11 @@ func Test_IntIntMap_Set_Fun(t *testing.T) {
 	gtest.Assert(m.Get(1), 123)
 	gtest.Assert(m.Get(2), 123)
 	gtest.Assert(m.SetIfNotExistFunc(1, getInt), false)
+	gtest.Assert(m.SetIfNotExistFunc(3, getInt), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock(2, getInt), false)
+	gtest.Assert(m.SetIfNotExistFuncLock(4, getInt), true)
+
 }
 
 func Test_IntIntMap_Batch(t *testing.T) {
@@ -68,6 +72,16 @@ func Test_IntIntMap_Batch(t *testing.T) {
 	gtest.Assert(m.Map(), map[int]int{3: 3})
 }
 
+func Test_IntIntMap_Iterator(t *testing.T){
+	m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
+	m.Iterator(intIntCallBack)
+}
+
+func Test_IntIntMap_Lock(t *testing.T){
+	m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
+	m.LockFunc(func(m map[int]int) {})
+	m.RLockFunc(func(m map[int]int) {})
+}
 func Test_IntIntMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
 	m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
