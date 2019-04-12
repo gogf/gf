@@ -10,13 +10,16 @@ import (
 func TestSearch(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			paths1  string = "./testfile/dirfiles"
+			paths1  string = "/testfiless"
 			paths2  string = "./testfile/dirfiles_no"
 			tpath   string
 			tpath2  string
 			tempstr string
 			err     error
 		)
+
+		CreateDir(paths1)
+		defer DelTestFiles(paths1)
 
 		tpath, err = Search(paths1)
 		gtest.Assert(err, nil)
