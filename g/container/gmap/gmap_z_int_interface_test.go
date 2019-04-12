@@ -54,20 +54,33 @@ func Test_IntInterfaceMap_Set_Fun(t *testing.T) {
 	m.GetOrSetFuncLock(2, getInterface)
 	gtest.Assert(m.Get(1), 123)
 	gtest.Assert(m.Get(2), 123)
+
 	gtest.Assert(m.SetIfNotExistFunc(1, getInterface), false)
+	gtest.Assert(m.SetIfNotExistFunc(3, getInterface), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock(2, getInterface), false)
+	gtest.Assert(m.SetIfNotExistFuncLock(4, getInterface), true)
+
 }
 
 func Test_IntInterfaceMap_Batch(t *testing.T) {
 	m := gmap.NewIntInterfaceMap()
 
 	m.BatchSet(map[int]interface{}{1: 1, 2: "2", 3: 3})
-	m.Iterator(intInterfaceCallBack)
 	gtest.Assert(m.Map(), map[int]interface{}{1: 1, 2: "2", 3: 3})
 	m.BatchRemove([]int{1, 2})
 	gtest.Assert(m.Map(), map[int]interface{}{3: 3})
 }
+func Test_IntInterfaceMap_Iterator(t *testing.T){
+	m := gmap.NewIntInterfaceMapFrom(map[int]interface{}{1: 1, 2: "2"})
+	m.Iterator(intInterfaceCallBack)
+}
 
+func Test_IntInterfaceMap_Lock(t *testing.T){
+	m := gmap.NewIntInterfaceMapFrom(map[int]interface{}{1: 1, 2: "2"})
+	m.LockFunc(func(m map[int]interface{}) {})
+	m.RLockFunc(func(m map[int]interface{}) {})
+}
 func Test_IntInterfaceMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
 	m := gmap.NewIntInterfaceMapFrom(map[int]interface{}{1: 1, 2: "2"})

@@ -54,19 +54,31 @@ func Test_StringStringMap_Set_Fun(t *testing.T) {
 	gtest.Assert(m.Get("a"), "z")
 	gtest.Assert(m.Get("b"), "z")
 	gtest.Assert(m.SetIfNotExistFunc("a", getString), false)
+	gtest.Assert(m.SetIfNotExistFunc("c", getString), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock("b", getString), false)
+	gtest.Assert(m.SetIfNotExistFuncLock("d", getString), true)
+
 }
 
 func Test_StringStringMap_Batch(t *testing.T) {
 	m := gmap.NewStringStringMap()
 
 	m.BatchSet(map[string]string{"a": "a", "b": "b", "c": "c"})
-	m.Iterator(stringStringCallBack)
 	gtest.Assert(m.Map(), map[string]string{"a": "a", "b": "b", "c": "c"})
 	m.BatchRemove([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]string{"c": "c"})
 }
+func Test_StringStringMap_Iterator(t *testing.T) {
+	m := gmap.NewStringStringMapFrom(map[string]string{"a": "a", "b": "b", "c": "c"})
+	m.Iterator(stringStringCallBack)
+}
 
+func Test_StringStringMap_Lock(t *testing.T) {
+	m := gmap.NewStringStringMapFrom(map[string]string{"a": "a", "b": "b", "c": "c"})
+	m.LockFunc(func(m map[string]string) {})
+	m.RLockFunc(func(m map[string]string) {})
+}
 func Test_StringStringMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
 	m := gmap.NewStringStringMapFrom(map[string]string{"a": "a", "b": "b", "c": "c"})

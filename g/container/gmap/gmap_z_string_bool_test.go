@@ -49,17 +49,31 @@ func Test_StringBoolMap_Set_Fun(t *testing.T) {
 	gtest.Assert(m.Get("a"), true)
 	gtest.Assert(m.Get("b"), true)
 	gtest.Assert(m.SetIfNotExistFunc("a", getBool), false)
+	gtest.Assert(m.SetIfNotExistFunc("c", getBool), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock("b", getBool), false)
+	gtest.Assert(m.SetIfNotExistFuncLock("d", getBool), true)
+
 }
 
 func Test_StringBoolMap_Batch(t *testing.T) {
 	m := gmap.NewStringBoolMap()
 
 	m.BatchSet(map[string]bool{"a": true, "b": false, "c": true})
-	m.Iterator(StringBoolCallBack)
 	gtest.Assert(m.Map(), map[string]bool{"a": true, "b": false, "c": true})
 	m.BatchRemove([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]bool{"c": true})
+}
+
+func Test_StringBoolMap_Iterator(t *testing.T){
+	m :=  gmap.NewStringBoolMapFrom(map[string]bool{"a": true, "b": false})
+	m.Iterator(StringBoolCallBack)
+}
+
+func Test_StringBoolMap_Lock(t *testing.T){
+	m :=  gmap.NewStringBoolMapFrom(map[string]bool{"a": true, "b": false})
+	m.LockFunc(func(m map[string]bool) {})
+	m.RLockFunc(func(m map[string]bool) {})
 }
 
 func Test_StringBoolMap_Clone(t *testing.T) {
