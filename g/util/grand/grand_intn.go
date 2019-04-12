@@ -7,8 +7,9 @@
 package grand
 
 import (
-    "crypto/rand"
-    "encoding/binary"
+	"crypto/rand"
+	"encoding/binary"
+	"os"
 )
 
 const (
@@ -27,6 +28,7 @@ func init() {
         for {
             if n, err := rand.Read(buffer); err != nil {
                 panic(err)
+                os.Exit(1)
             } else {
                 // 使用缓冲区数据进行一次完整的随机数生成
                 for i := 0; i < n - 4; {
@@ -34,10 +36,18 @@ func init() {
                     i ++
                 }
                 // 充分利用缓冲区数据，随机索引递增
-                step = int(buffer[0])%10
+                for i := 0; i < n; i++ {
+	                step = int(buffer[0])%10
+	                if step != 0 {
+	                	break
+	                }
+                }
+	            if step == 0 {
+		            step = 2
+	            }
                 for i := 0; i < n - 4; {
-                    bufferChan <- binary.BigEndian.Uint32(buffer[i : i + 4])
-                    i += step
+                   bufferChan <- binary.BigEndian.Uint32(buffer[i : i + 4])
+                   i += step
                 }
             }
         }
