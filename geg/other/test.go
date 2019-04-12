@@ -2,9 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/util/grand"
 )
 
+
+
 func main() {
-	fmt.Println(gtime.Now().Format(`Y-m-j G:i:su`))
+	for {
+		fmt.Println(grand.Intn(100))
+	}
+
 }

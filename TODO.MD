@@ -43,7 +43,7 @@
 1. 添加Save/Replace/BatchSave/BatchReplace方法对sqlite数据库的支持；
 1. 添加sqlite数据库的单元测试用例；
 1. gredis增加cluster支持；
-
+1. gset.Add/Remove/Contains方法增加批量操作支持；
 
 # DONE
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
