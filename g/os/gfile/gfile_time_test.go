@@ -18,10 +18,10 @@ func TestMTime(t *testing.T) {
 
 		CreateTestFile(file1, "")
 		defer DelTestFiles(file1)
-		fileobj, err = os.Stat(os.TempDir() + file1)
+		fileobj, err = os.Stat(Testpath() + file1)
 		gtest.Assert(err, nil)
 
-		gtest.Assert(MTime(os.TempDir()+file1), fileobj.ModTime().Unix())
+		gtest.Assert(MTime(Testpath()+file1), fileobj.ModTime().Unix())
 		gtest.Assert(MTime(""), 0)
 	})
 }
@@ -36,10 +36,10 @@ func TestMTimeMillisecond(t *testing.T) {
 
 		CreateTestFile(file1, "")
 		defer DelTestFiles(file1)
-		fileobj, err = os.Stat(os.TempDir() + file1)
+		fileobj, err = os.Stat(Testpath() + file1)
 		gtest.Assert(err, nil)
 
-		gtest.AssertGTE(MTimeMillisecond(os.TempDir()+file1), fileobj.ModTime().Nanosecond()/1000000)
+		gtest.AssertGTE(MTimeMillisecond(Testpath()+file1), fileobj.ModTime().Nanosecond()/1000000)
 		gtest.Assert(MTimeMillisecond(""), 0)
 	})
 }

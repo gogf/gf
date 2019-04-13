@@ -4,7 +4,6 @@ package gfile
 
 import (
 	"github.com/gogf/gf/g/test/gtest"
-	"os"
 	"testing"
 )
 
@@ -18,7 +17,7 @@ func TestSize(t *testing.T) {
 		CreateTestFile(paths1, "abcdefghijklmn")
 		defer DelTestFiles(paths1)
 
-		sizes = Size(os.TempDir() + paths1)
+		sizes = Size(Testpath() + paths1)
 		gtest.Assert(sizes, 14)
 
 		sizes = Size("")
@@ -54,7 +53,7 @@ func TestReadableSize(t *testing.T) {
 		)
 		CreateTestFile(paths1, "abcdefghijklmn")
 		defer DelTestFiles(paths1)
-		gtest.Assert(ReadableSize(os.TempDir()+paths1), "14.00B")
+		gtest.Assert(ReadableSize(Testpath()+paths1), "14.00B")
 		gtest.Assert(ReadableSize(""), "0.00B")
 
 	})
