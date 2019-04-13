@@ -4,38 +4,53 @@ import (
 	"github.com/gogf/gf/g/test/gtest"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
 //创建测试文件
-func CreateTestFile(filename,content string) error{
-	TempDir:=os.TempDir()
-	err:=ioutil.WriteFile(TempDir+filename,[]byte(content),0666)
+func CreateTestFile(filename, content string) error {
+	TempDir := os.TempDir()
+	err := ioutil.WriteFile(TempDir+filename, []byte(content), 0666)
 	return err
 }
 
 //测试完删除文件或目录
-func DelTestFiles(filenames string){
+func DelTestFiles(filenames string) {
 	os.RemoveAll(filenames)
 }
 
 //创建目录
-func CreateDir(paths string){
-	TempDir:=os.TempDir()
-	os.Mkdir(TempDir+paths,0666)
+func CreateDir(paths string) {
+	TempDir := os.TempDir()
+	os.Mkdir(TempDir+paths, 0666)
 }
 
+//统一格式化文件目录为"/"
+func Formatpaths(paths []string) []string {
+	for k, v := range paths {
+		paths[k] = filepath.ToSlash(v)
+		paths[k] = strings.Replace(paths[k], "./", "/", 1)
+	}
 
+	return paths
+}
+
+//统一格式化文件目录为"/"
+func Formatpath(paths string) string {
+	paths = filepath.ToSlash(paths)
+	paths = strings.Replace(paths, "./", "/", 1)
+	return paths
+}
 
 func TestGetContents(t *testing.T) {
 	gtest.Case(t, func() {
 
-
 		var (
 			filepaths string = "/testfile_t1.txt"
 		)
-		CreateTestFile(filepaths,"my name is jroam")
+		CreateTestFile(filepaths, "my name is jroam")
 
 		gtest.Assert(GetContents(os.TempDir()+filepaths), "my name is jroam")
 		gtest.Assert(GetContents(""), "")
@@ -47,24 +62,23 @@ func TestGetContents(t *testing.T) {
 func TestGetBinContents(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			filepaths1  string = "/testfile_t1.txt"    //存在文件
-			filepaths2  string = os.TempDir()+"/testfile_t1_no.txt" //不存大文件
+			filepaths1  string = "/testfile_t1.txt"                   //存在文件
+			filepaths2  string = os.TempDir() + "/testfile_t1_no.txt" //不存大文件
 			readcontent []byte
-			str1 string="my name is jroam"
+			str1        string = "my name is jroam"
 		)
-		CreateTestFile(filepaths1,str1)
-		readcontent = GetBinContents(os.TempDir()+filepaths1)
+		CreateTestFile(filepaths1, str1)
+		defer DelTestFiles(filepaths1)
+		readcontent = GetBinContents(os.TempDir() + filepaths1)
 		gtest.Assert(readcontent, []byte(str1))
 
 		readcontent = GetBinContents(filepaths2)
-		gtest.Assert(readcontent, nil)
+		gtest.Assert(string(readcontent), "")
 
 		//if readcontent!=nil{
 		//	t.Error("文件应不存在")
 		//}
-		gtest.Assert(GetBinContents(filepaths2), nil)
-
-		defer DelTestFiles(filepaths1)
+		gtest.Assert(string(GetBinContents(filepaths2)), "")
 
 	})
 }
@@ -76,14 +90,13 @@ func TestTruncate(t *testing.T) {
 			filepaths1 string = "/testfile_GetContents.txt" //存在文件
 			err        error
 		)
-		CreateTestFile(filepaths1,"abcdefghijkmln")
-		defer  DelTestFiles(filepaths1)
+		CreateTestFile(filepaths1, "abcdefghijkmln")
+		defer DelTestFiles(filepaths1)
 		err = Truncate(os.TempDir()+filepaths1, 200)
 		gtest.Assert(err, nil)
 
 		err = Truncate("", 200)
 		gtest.AssertNE(err, nil)
-
 
 	})
 }
@@ -95,20 +108,19 @@ func TestPutContents(t *testing.T) {
 			err         error
 			readcontent []byte
 		)
-		CreateTestFile(filepaths,"a")
-		defer  DelTestFiles(filepaths)
+		CreateTestFile(filepaths, "a")
+		defer DelTestFiles(filepaths)
 
 		err = PutContents(os.TempDir()+filepaths, "test!")
 		gtest.Assert(err, nil)
 
 		//==================判断是否真正写入
-		readcontent, err = ioutil.ReadFile(os.TempDir()+filepaths)
+		readcontent, err = ioutil.ReadFile(os.TempDir() + filepaths)
 		gtest.Assert(err, nil)
 		gtest.Assert(string(readcontent), "test!")
 
 		err = PutContents("", "test!")
 		gtest.AssertNE(err, nil)
-
 
 	})
 }
@@ -121,20 +133,18 @@ func TestPutContentsAppend(t *testing.T) {
 			readcontent []byte
 		)
 
-		CreateTestFile(filepaths,"a")
+		CreateTestFile(filepaths, "a")
 		defer DelTestFiles(filepaths)
 		err = PutContentsAppend(os.TempDir()+filepaths, "hello")
 		gtest.Assert(err, nil)
 
 		//==================判断是否真正写入
-		readcontent, err = ioutil.ReadFile(os.TempDir()+filepaths)
+		readcontent, err = ioutil.ReadFile(os.TempDir() + filepaths)
 		gtest.Assert(err, nil)
 		gtest.Assert(string(readcontent), "ahello")
 
 		err = PutContentsAppend("", "hello")
 		gtest.AssertNE(err, nil)
-
-
 
 	})
 
@@ -147,21 +157,19 @@ func TestPutBinContents(t *testing.T) {
 			err         error
 			readcontent []byte
 		)
-		CreateTestFile(filepaths,"a")
+		CreateTestFile(filepaths, "a")
 		defer DelTestFiles(filepaths)
 
 		err = PutBinContents(os.TempDir()+filepaths, []byte("test!!"))
 		gtest.Assert(err, nil)
 
 		//==================判断是否真正写入
-		readcontent, err = ioutil.ReadFile(os.TempDir()+filepaths)
+		readcontent, err = ioutil.ReadFile(os.TempDir() + filepaths)
 		gtest.Assert(err, nil)
 		gtest.Assert(string(readcontent), "test!!")
 
 		err = PutBinContents("", []byte("test!!"))
 		gtest.AssertNE(err, nil)
-
-
 
 	})
 }
@@ -173,20 +181,18 @@ func TestPutBinContentsAppend(t *testing.T) {
 			err         error
 			readcontent []byte
 		)
-		CreateTestFile(filepaths,"test!!")
+		CreateTestFile(filepaths, "test!!")
 		defer DelTestFiles(filepaths)
 		err = PutBinContentsAppend(os.TempDir()+filepaths, []byte("word"))
 		gtest.Assert(err, nil)
 
 		//==================判断是否真正写入
-		readcontent, err = ioutil.ReadFile(os.TempDir()+filepaths)
+		readcontent, err = ioutil.ReadFile(os.TempDir() + filepaths)
 		gtest.Assert(err, nil)
 		gtest.Assert(string(readcontent), "test!!word")
 
 		err = PutBinContentsAppend("", []byte("word"))
 		gtest.AssertNE(err, nil)
-
-
 
 	})
 }
@@ -198,7 +204,7 @@ func TestGetBinContentsByTwoOffsetsByPath(t *testing.T) {
 			readcontent []byte
 		)
 
-		CreateTestFile(filepaths,"abcdefghijk")
+		CreateTestFile(filepaths, "abcdefghijk")
 		defer DelTestFiles(filepaths)
 		readcontent = GetBinContentsByTwoOffsetsByPath(os.TempDir()+filepaths, 2, 5)
 
@@ -206,7 +212,6 @@ func TestGetBinContentsByTwoOffsetsByPath(t *testing.T) {
 
 		readcontent = GetBinContentsByTwoOffsetsByPath("", 2, 5)
 		gtest.Assert(len(readcontent), 0)
-
 
 	})
 
@@ -218,15 +223,13 @@ func TestGetNextCharOffsetByPath(t *testing.T) {
 			filepaths  string = "/testfile_GetContents.txt" //文件内容: abcdefghijk
 			localindex int64
 		)
-		CreateTestFile(filepaths,"abcdefghijk")
+		CreateTestFile(filepaths, "abcdefghijk")
 		defer DelTestFiles(filepaths)
 		localindex = GetNextCharOffsetByPath(os.TempDir()+filepaths, 'd', 1)
 		gtest.Assert(localindex, 3)
 
 		localindex = GetNextCharOffsetByPath("", 'd', 1)
 		gtest.Assert(localindex, -1)
-
-
 
 	})
 }
@@ -288,7 +291,7 @@ func TestGetBinContentsTilCharByPath(t *testing.T) {
 			filepaths string = "/testfile_GetContents.txt"
 		)
 
-		CreateTestFile(filepaths,"abcdefghijklmn")
+		CreateTestFile(filepaths, "abcdefghijklmn")
 		defer DelTestFiles(filepaths)
 
 		reads, _ = GetBinContentsTilCharByPath(os.TempDir()+filepaths, 'c', 2)
@@ -299,8 +302,6 @@ func TestGetBinContentsTilCharByPath(t *testing.T) {
 
 		_, indexs = GetBinContentsTilCharByPath(os.TempDir()+filepaths, 'x', 1)
 		gtest.Assert(indexs, -1)
-
-
 
 	})
 }
