@@ -21,7 +21,7 @@ func TestMTime(t *testing.T) {
 		fileobj, err = os.Stat(os.TempDir() + file1)
 		gtest.Assert(err, nil)
 
-		gtest.AssertGT(MTime(os.TempDir()+file1), fileobj.ModTime().Unix())
+		gtest.Assert(MTime(os.TempDir()+file1), fileobj.ModTime().Unix())
 		gtest.Assert(MTime(""), 0)
 	})
 }
@@ -38,7 +38,6 @@ func TestMTimeMillisecond(t *testing.T) {
 		defer DelTestFiles(file1)
 		fileobj, err = os.Stat(os.TempDir() + file1)
 		gtest.Assert(err, nil)
-
 
 		gtest.AssertGTE(MTimeMillisecond(os.TempDir()+file1), fileobj.ModTime().Nanosecond()/1000000)
 		gtest.Assert(MTimeMillisecond(""), 0)

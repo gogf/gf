@@ -11,7 +11,7 @@ import (
 func TestIsDir(t *testing.T) {
 
 	gtest.Case(t, func() {
-		paths:="/testfile"
+		paths := "/testfile"
 		CreateDir(paths)
 		defer DelTestFiles(paths)
 
@@ -20,7 +20,6 @@ func TestIsDir(t *testing.T) {
 		gtest.Assert(IsDir("./testfile/tt.txt"), false)
 		gtest.Assert(IsDir(""), false)
 
-
 	})
 
 }
@@ -28,14 +27,13 @@ func TestIsDir(t *testing.T) {
 func TestCreate(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			err error
+			err       error
 			filepaths []string
-			fileobj *os.File
+			fileobj   *os.File
 		)
 
 		filepaths = append(filepaths, os.TempDir()+"/testfile_cc1.txt")
 		filepaths = append(filepaths, os.TempDir()+"/testfile_cc2.txt")
-
 
 		for _, v := range filepaths {
 			fileobj, err = Create(v)
@@ -43,9 +41,7 @@ func TestCreate(t *testing.T) {
 			fileobj.Close()
 			gtest.Assert(err, nil)
 
-
 		}
-
 
 	})
 
@@ -54,15 +50,14 @@ func TestCreate(t *testing.T) {
 func TestOpen(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			err   error
-			files []string
-			flags []bool
+			err     error
+			files   []string
+			flags   []bool
 			fileobj *os.File
-
 		)
 
-		file1:="/testfile_nc1.txt"
-		CreateTestFile(file1,"")
+		file1 := "/testfile_nc1.txt"
+		CreateTestFile(file1, "")
 		defer DelTestFiles(file1)
 
 		files = append(files, file1)
@@ -72,7 +67,7 @@ func TestOpen(t *testing.T) {
 		flags = append(flags, false)
 
 		for k, v := range files {
-			fileobj, err = Open(os.TempDir()+v)
+			fileobj, err = Open(os.TempDir() + v)
 			fileobj.Close()
 			if flags[k] {
 				gtest.Assert(err, nil)
@@ -82,27 +77,24 @@ func TestOpen(t *testing.T) {
 
 		}
 
-
-
 	})
 }
 
 func TestOpenFile(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			err   error
-			files []string
-			flags []bool
+			err     error
+			files   []string
+			flags   []bool
 			fileobj *os.File
 		)
 
 		files = append(files, "./testfile/file1/nc1.txt")
 		flags = append(flags, false)
 
-		f1:="/testfile_tt.txt"
-		CreateTestFile(f1,"")
-		defer  DelTestFiles(f1)
-
+		f1 := "/testfile_tt.txt"
+		CreateTestFile(f1, "")
+		defer DelTestFiles(f1)
 
 		files = append(files, f1)
 		flags = append(flags, true)
@@ -116,7 +108,6 @@ func TestOpenFile(t *testing.T) {
 				gtest.AssertNE(err, nil)
 			}
 
-
 		}
 
 	})
@@ -125,14 +116,14 @@ func TestOpenFile(t *testing.T) {
 func TestOpenWithFlag(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			err   error
-			files []string
-			flags []bool
+			err     error
+			files   []string
+			flags   []bool
 			fileobj *os.File
 		)
-		file1:="/testfile_t1.txt"
-		CreateTestFile(file1,"")
-		defer  DelTestFiles(file1)
+		file1 := "/testfile_t1.txt"
+		CreateTestFile(file1, "")
+		defer DelTestFiles(file1)
 		files = append(files, file1)
 		flags = append(flags, true)
 
@@ -150,21 +141,19 @@ func TestOpenWithFlag(t *testing.T) {
 
 		}
 
-
-
 	})
 }
 
 func TestOpenWithFlagPerm(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			err   error
-			files []string
-			flags []bool
+			err     error
+			files   []string
+			flags   []bool
 			fileobj *os.File
 		)
-		file1:="/testfile_nc1.txt"
-		CreateTestFile(file1,"")
+		file1 := "/testfile_nc1.txt"
+		CreateTestFile(file1, "")
 		defer DelTestFiles(file1)
 		files = append(files, file1)
 		flags = append(flags, true)
@@ -183,8 +172,6 @@ func TestOpenWithFlagPerm(t *testing.T) {
 
 		}
 
-
-
 	})
 }
 
@@ -197,8 +184,8 @@ func TestExists(t *testing.T) {
 			flags []bool
 		)
 
-		file1:="/testfile_GetContents.txt"
-		CreateTestFile(file1,"")
+		file1 := "/testfile_GetContents.txt"
+		CreateTestFile(file1, "")
 		defer DelTestFiles(file1)
 
 		files = append(files, file1)
@@ -208,7 +195,7 @@ func TestExists(t *testing.T) {
 		flags = append(flags, false)
 
 		for k, v := range files {
-			flag = Exists(os.TempDir()+v)
+			flag = Exists(os.TempDir() + v)
 			if flags[k] {
 				gtest.Assert(flag, true)
 			} else {
@@ -216,8 +203,6 @@ func TestExists(t *testing.T) {
 			}
 
 		}
-
-
 
 	})
 }
@@ -239,13 +224,13 @@ func TestIsFile(t *testing.T) {
 			flags []bool
 		)
 
-		file1:="/testfile_tt.txt"
-		CreateTestFile(file1,"")
+		file1 := "/testfile_tt.txt"
+		CreateTestFile(file1, "")
 		defer DelTestFiles(file1)
 		files = append(files, file1)
 		flags = append(flags, true)
 
-		dir1:="/testfiless"
+		dir1 := "/testfiless"
 		CreateDir(dir1)
 		defer DelTestFiles(dir1)
 		files = append(files, dir1)
@@ -255,7 +240,7 @@ func TestIsFile(t *testing.T) {
 		flags = append(flags, false)
 
 		for k, v := range files {
-			flag = IsFile(os.TempDir()+v)
+			flag = IsFile(os.TempDir() + v)
 			if flags[k] {
 				gtest.Assert(flag, true)
 			} else {
@@ -276,17 +261,15 @@ func TestInfo(t *testing.T) {
 			files2 os.FileInfo
 		)
 
-		CreateTestFile(paths,"")
+		CreateTestFile(paths, "")
 		defer DelTestFiles(paths)
-		files, err = Info(os.TempDir()+paths)
+		files, err = Info(os.TempDir() + paths)
 		gtest.Assert(err, nil)
 
-		files2, err = os.Stat(os.TempDir()+paths)
+		files2, err = os.Stat(os.TempDir() + paths)
 		gtest.Assert(err, nil)
 
 		gtest.Assert(files, files2)
-
-
 
 	})
 }
@@ -327,10 +310,10 @@ func TestCopy(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths  string = "/testfile_copyfile1.txt"
-			topath string = os.TempDir()+"/testfile_copyfile2.txt"
+			topath string = os.TempDir() + "/testfile_copyfile2.txt"
 		)
 
-		CreateTestFile(paths,"")
+		CreateTestFile(paths, "")
 		defer DelTestFiles(paths)
 
 		gtest.Assert(Copy(os.TempDir()+paths, topath), nil)
@@ -339,10 +322,6 @@ func TestCopy(t *testing.T) {
 		gtest.Assert(IsFile(topath), true)
 
 		gtest.AssertNE(Copy("", ""), nil)
-
-
-
-
 
 	})
 }
@@ -361,24 +340,18 @@ func TestDirNames(t *testing.T) {
 
 		//=================创建测试文件
 		CreateDir(paths)
-		for _,v:=range havelist{
-			CreateTestFile(paths+"/"+v,"")
+		for _, v := range havelist {
+			CreateTestFile(paths+"/"+v, "")
 		}
 		defer DelTestFiles(paths)
 
-
-
-		readlist, err = DirNames(os.TempDir()+paths)
+		readlist, err = DirNames(os.TempDir() + paths)
 
 		gtest.Assert(err, nil)
 		gtest.Assert(havelist, readlist)
 
 		_, err = DirNames("")
 		gtest.AssertNE(err, nil)
-
-
-
-
 
 	})
 }
@@ -387,7 +360,7 @@ func TestGlob(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths      string = "/testfiles/*.txt"
-			dirpath   string="/testfiles"
+			dirpath    string = "/testfiles"
 			err        error
 			resultlist []string
 		)
@@ -398,18 +371,16 @@ func TestGlob(t *testing.T) {
 		}
 
 		havelist2 := []string{
-			os.TempDir()+"testfiles/t1.txt",
-			os.TempDir()+"testfiles/t2.txt",
+			os.TempDir() + "/testfiles/t1.txt",
+			os.TempDir() + "/testfiles/t2.txt",
 		}
 
 		//===============================构建测试文件
 		CreateDir(dirpath)
-		for _,v:=range havelist1{
-			CreateTestFile(dirpath+"/"+v,"")
+		for _, v := range havelist1 {
+			CreateTestFile(dirpath+"/"+v, "")
 		}
 		defer DelTestFiles(dirpath)
-
-
 
 		resultlist, err = Glob(os.TempDir()+paths, true)
 		gtest.Assert(err, nil)
@@ -417,17 +388,11 @@ func TestGlob(t *testing.T) {
 
 		resultlist, err = Glob(os.TempDir()+paths, false)
 
-		//转换成统一的目录分隔符
-		for k, v := range resultlist {
-			resultlist[k] = filepath.ToSlash(v)
-		}
 		gtest.Assert(err, nil)
-		gtest.Assert(resultlist, havelist2)
+		gtest.Assert(Formatpaths(resultlist), Formatpaths(havelist2))
 
 		_, err = Glob("", true)
 		gtest.Assert(err, nil)
-
-
 
 	})
 }
@@ -437,7 +402,7 @@ func TestRemove(t *testing.T) {
 		var (
 			paths string = "/testfile_t1.txt"
 		)
-	    CreateTestFile(paths,"")
+		CreateTestFile(paths, "")
 		gtest.Assert(Remove(os.TempDir()+paths), nil)
 
 		gtest.Assert(Remove(""), nil)
@@ -454,13 +419,11 @@ func TestIsReadable(t *testing.T) {
 			paths2 string = "./testfile_GetContents_no.txt"
 		)
 
-		CreateTestFile(paths1,"")
+		CreateTestFile(paths1, "")
 		defer DelTestFiles(paths1)
 
 		gtest.Assert(IsReadable(os.TempDir()+paths1), true)
 		gtest.Assert(IsReadable(paths2), false)
-
-
 
 	})
 }
@@ -472,11 +435,10 @@ func TestIsWritable(t *testing.T) {
 			paths2 string = "./testfile_GetContents_no.txt"
 		)
 
-		CreateTestFile(paths1,"")
+		CreateTestFile(paths1, "")
 		defer DelTestFiles(paths1)
 		gtest.Assert(IsWritable(os.TempDir()+paths1), true)
 		gtest.Assert(IsWritable(paths2), false)
-
 
 	})
 }
@@ -487,7 +449,7 @@ func TestChmod(t *testing.T) {
 			paths1 string = "/testfile_GetContents.txt"
 			paths2 string = "./testfile_GetContents_no.txt"
 		)
-		CreateTestFile(paths1,"")
+		CreateTestFile(paths1, "")
 		defer DelTestFiles(paths1)
 
 		gtest.Assert(Chmod(os.TempDir()+paths1, 0777), nil)
@@ -505,31 +467,23 @@ func TestScanDir(t *testing.T) {
 		)
 
 		CreateDir(paths1)
-		CreateTestFile(paths1+"/t1.txt","")
-		CreateTestFile(paths1+"/t2.txt","")
+		CreateTestFile(paths1+"/t1.txt", "")
+		CreateTestFile(paths1+"/t2.txt", "")
 		defer DelTestFiles(paths1)
-
 
 		files, err = ScanDir(os.TempDir()+paths1, "t*")
 
 		result := []string{
-			paths1+"/t1.txt",
-			paths1+"/t2.txt",
+			os.TempDir() + paths1 + "/t1.txt",
+			os.TempDir() + paths1 + "/t2.txt",
 		}
 
 		gtest.Assert(err, nil)
 
-		for k, v := range files {
-			files[k] = filepath.ToSlash(v)
-		}
-
-		gtest.Assert(files, result)
+		gtest.Assert(Formatpaths(files), Formatpaths(result))
 
 		_, err = ScanDir("", "t*")
 		gtest.AssertNE(err, nil)
-
-
-
 
 	})
 }
@@ -547,19 +501,16 @@ func TestRealPath(t *testing.T) {
 		CreateDir(paths1)
 		defer DelTestFiles(paths1)
 
-		readlPath = RealPath(os.TempDir()+paths1)
-		readlPath = filepath.ToSlash(readlPath)
+		readlPath = RealPath("./")
+		//readlPath = filepath.ToSlash(readlPath)
 
 		tempstr, _ = filepath.Abs("./")
-		paths1 = tempstr + paths1
-		paths1 = filepath.ToSlash(paths1)
-		paths1 = strings.Replace(paths1, "./", "/", 1)
+		//paths1 = tempstr + paths1
+		//paths1=Formatpath(tempstr)
 
-		gtest.Assert(readlPath, paths1)
+		gtest.Assert(readlPath, tempstr)
 
 		gtest.Assert(RealPath("./nodirs"), "")
-
-
 
 	})
 }
@@ -610,12 +561,10 @@ func TestBasename(t *testing.T) {
 			readlPath string
 		)
 
-
-		CreateTestFile(paths1,"")
+		CreateTestFile(paths1, "")
 		defer DelTestFiles(paths1)
 
-
-		readlPath = Basename(os.TempDir()+paths1)
+		readlPath = Basename(os.TempDir() + paths1)
 		gtest.Assert(readlPath, "testfilerr_GetContents.txt")
 
 	})
@@ -628,11 +577,11 @@ func TestDir(t *testing.T) {
 			readlPath string
 		)
 		CreateDir(paths1)
-		defer  DelTestFiles(paths1)
+		defer DelTestFiles(paths1)
 
-		readlPath = Dir(os.TempDir()+paths1)
+		readlPath = Dir(os.TempDir() + paths1)
 
-		gtest.Assert(readlPath, "testfiless")
+		gtest.Assert(readlPath, os.TempDir())
 
 	})
 }
@@ -641,14 +590,14 @@ func TestDir(t *testing.T) {
 func TestExt(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			paths1 string = "/testfile_GetContents.txt"
-			dirpath1 ="/testdirs"
+			paths1   string = "/testfile_GetContents.txt"
+			dirpath1        = "/testdirs"
 		)
-		CreateTestFile(paths1,"")
+		CreateTestFile(paths1, "")
 		defer DelTestFiles(paths1)
 
 		CreateDir(dirpath1)
-		defer  DelTestFiles(dirpath1)
+		defer DelTestFiles(dirpath1)
 
 		gtest.Assert(Ext(os.TempDir()+paths1), ".txt")
 		gtest.Assert(Ext(os.TempDir()+dirpath1), "")
@@ -677,13 +626,13 @@ func TestMkdir(t *testing.T) {
 
 		defer DelTestFiles(tpath)
 
-		err = Mkdir(os.TempDir()+tpath)
+		err = Mkdir(os.TempDir() + tpath)
 		gtest.Assert(err, nil)
 
 		err = Mkdir("")
 		gtest.AssertNE(err, nil)
 
-		err = Mkdir(os.TempDir()+tpath + "2/t1")
+		err = Mkdir(os.TempDir() + tpath + "2/t1")
 		gtest.Assert(err, nil)
 
 	})
@@ -697,10 +646,10 @@ func TestStat(t *testing.T) {
 			err    error
 		)
 
-		CreateTestFile(tpath1,"")
+		CreateTestFile(tpath1, "")
 		defer DelTestFiles(tpath1)
 
-		_, err = Stat(os.TempDir()+tpath1)
+		_, err = Stat(os.TempDir() + tpath1)
 		gtest.Assert(err, nil)
 
 		_, err = Stat(tpath2)
