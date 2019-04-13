@@ -37,7 +37,7 @@ func TestGetContents(t *testing.T) {
 		)
 		CreateTestFile(filepaths,"my name is jroam")
 
-		gtest.Assert(GetContents(filepaths), "my name is jroam")
+		gtest.Assert(GetContents(os.TempDir()+filepaths), "my name is jroam")
 		gtest.Assert(GetContents(""), "")
 		defer DelTestFiles(filepaths)
 
@@ -53,7 +53,7 @@ func TestGetBinContents(t *testing.T) {
 			str1 string="my name is jroam"
 		)
 		CreateTestFile(filepaths1,str1)
-		readcontent = GetBinContents(filepaths1)
+		readcontent = GetBinContents(os.TempDir()+filepaths1)
 		gtest.Assert(readcontent, []byte(str1))
 
 		readcontent = GetBinContents(filepaths2)
@@ -78,7 +78,7 @@ func TestTruncate(t *testing.T) {
 		)
 		CreateTestFile(filepaths1,"abcdefghijkmln")
 		defer  DelTestFiles(filepaths1)
-		err = Truncate(filepaths1, 200)
+		err = Truncate(os.TempDir()+filepaths1, 200)
 		gtest.Assert(err, nil)
 
 		err = Truncate("", 200)
@@ -98,13 +98,13 @@ func TestPutContents(t *testing.T) {
 		CreateTestFile(filepaths,"a")
 		defer  DelTestFiles(filepaths)
 
-		err = PutContents(filepaths, "test!")
+		err = PutContents(os.TempDir()+filepaths, "test!")
 		gtest.Assert(err, nil)
 
 		//==================判断是否真正写入
-		readcontent, err = ioutil.ReadFile(filepaths)
+		readcontent, err = ioutil.ReadFile(os.TempDir()+filepaths)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(readcontent), "atest!")
+		gtest.Assert(string(readcontent), "test!")
 
 		err = PutContents("", "test!")
 		gtest.AssertNE(err, nil)
@@ -123,11 +123,11 @@ func TestPutContentsAppend(t *testing.T) {
 
 		CreateTestFile(filepaths,"a")
 		defer DelTestFiles(filepaths)
-		err = PutContentsAppend(filepaths, "hello")
+		err = PutContentsAppend(os.TempDir()+filepaths, "hello")
 		gtest.Assert(err, nil)
 
 		//==================判断是否真正写入
-		readcontent, err = ioutil.ReadFile(filepaths)
+		readcontent, err = ioutil.ReadFile(os.TempDir()+filepaths)
 		gtest.Assert(err, nil)
 		gtest.Assert(string(readcontent), "ahello")
 
@@ -150,13 +150,13 @@ func TestPutBinContents(t *testing.T) {
 		CreateTestFile(filepaths,"a")
 		defer DelTestFiles(filepaths)
 
-		err = PutBinContents(filepaths, []byte("test!!"))
+		err = PutBinContents(os.TempDir()+filepaths, []byte("test!!"))
 		gtest.Assert(err, nil)
 
 		//==================判断是否真正写入
-		readcontent, err = ioutil.ReadFile(filepaths)
+		readcontent, err = ioutil.ReadFile(os.TempDir()+filepaths)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(readcontent), "atest!!")
+		gtest.Assert(string(readcontent), "test!!")
 
 		err = PutBinContents("", []byte("test!!"))
 		gtest.AssertNE(err, nil)
@@ -173,13 +173,13 @@ func TestPutBinContentsAppend(t *testing.T) {
 			err         error
 			readcontent []byte
 		)
-		CreateTestFile(filepaths,"")
+		CreateTestFile(filepaths,"test!!")
 		defer DelTestFiles(filepaths)
-		err = PutBinContentsAppend(filepaths, []byte("word"))
+		err = PutBinContentsAppend(os.TempDir()+filepaths, []byte("word"))
 		gtest.Assert(err, nil)
 
 		//==================判断是否真正写入
-		readcontent, err = ioutil.ReadFile(filepaths)
+		readcontent, err = ioutil.ReadFile(os.TempDir()+filepaths)
 		gtest.Assert(err, nil)
 		gtest.Assert(string(readcontent), "test!!word")
 
@@ -200,7 +200,7 @@ func TestGetBinContentsByTwoOffsetsByPath(t *testing.T) {
 
 		CreateTestFile(filepaths,"abcdefghijk")
 		defer DelTestFiles(filepaths)
-		readcontent = GetBinContentsByTwoOffsetsByPath(filepaths, 2, 5)
+		readcontent = GetBinContentsByTwoOffsetsByPath(os.TempDir()+filepaths, 2, 5)
 
 		gtest.Assert(string(readcontent), "cde")
 
@@ -220,7 +220,7 @@ func TestGetNextCharOffsetByPath(t *testing.T) {
 		)
 		CreateTestFile(filepaths,"abcdefghijk")
 		defer DelTestFiles(filepaths)
-		localindex = GetNextCharOffsetByPath(filepaths, 'd', 1)
+		localindex = GetNextCharOffsetByPath(os.TempDir()+filepaths, 'd', 1)
 		gtest.Assert(localindex, 3)
 
 		localindex = GetNextCharOffsetByPath("", 'd', 1)
@@ -291,13 +291,13 @@ func TestGetBinContentsTilCharByPath(t *testing.T) {
 		CreateTestFile(filepaths,"abcdefghijklmn")
 		defer DelTestFiles(filepaths)
 
-		reads, _ = GetBinContentsTilCharByPath(filepaths, 'c', 2)
+		reads, _ = GetBinContentsTilCharByPath(os.TempDir()+filepaths, 'c', 2)
 		gtest.Assert(string(reads), "c")
 
-		reads, _ = GetBinContentsTilCharByPath(filepaths, 'y', 1)
+		reads, _ = GetBinContentsTilCharByPath(os.TempDir()+filepaths, 'y', 1)
 		gtest.Assert(string(reads), "")
 
-		_, indexs = GetBinContentsTilCharByPath(filepaths, 'x', 1)
+		_, indexs = GetBinContentsTilCharByPath(os.TempDir()+filepaths, 'x', 1)
 		gtest.Assert(indexs, -1)
 
 
