@@ -24,7 +24,7 @@ func DelTestFiles(filenames string) {
 //创建目录
 func CreateDir(paths string) {
 	TempDir := Testpath()
-	os.Mkdir(TempDir+paths, 0666)
+	os.Mkdir(TempDir+paths, 0777)
 }
 
 //统一格式化文件目录为"/"
@@ -50,7 +50,8 @@ func Testpath() string {
 	if err!=nil{
 		return os.TempDir()
 	}
-	return psths
+	return strings.Replace(psths, "./", "/", 1)
+
 
 }
 
