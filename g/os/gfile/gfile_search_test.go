@@ -42,8 +42,10 @@ func TestSearch(t *testing.T) {
 
 		//测试当前目录
 		tpath2, err = Search(Testpath()+paths1, "./")
-		gtest.Assert(err, nil)
 		tpath2 = filepath.ToSlash(tpath2)
+		tempss:=filepath.ToSlash(Testpath()+paths1)
+		gtest.Assert(tpath2, tempss)
+
 
 		//测试当前目录
 		tempstr, _ = filepath.Abs("./")
