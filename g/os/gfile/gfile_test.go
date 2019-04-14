@@ -121,13 +121,14 @@ func TestOpenWithFlag(t *testing.T) {
 			flags   []bool
 			fileobj *os.File
 		)
+
 		file1 := "/testfile_t1.txt"
 		CreateTestFile(file1, "")
 		defer DelTestFiles(file1)
 		files = append(files, file1)
 		flags = append(flags, true)
 
-		files = append(files, "./testfile/dirfiles/t1_no.txt")
+		files = append(files, "/testfiless/dirfiles/t1_no.txt")
 		flags = append(flags, false)
 
 		for k, v := range files {
@@ -158,7 +159,7 @@ func TestOpenWithFlagPerm(t *testing.T) {
 		files = append(files, file1)
 		flags = append(flags, true)
 
-		files = append(files, "./testfile/tt.txt")
+		files = append(files, "/testfileyy/tt.txt")
 		flags = append(flags, false)
 
 		for k, v := range files {
@@ -624,7 +625,7 @@ func TestMkdir(t *testing.T) {
 			err   error
 		)
 
-		defer DelTestFiles(tpath)
+		defer DelTestFiles("/testfile")
 
 		err = Mkdir(Testpath() + tpath)
 		gtest.Assert(err, nil)
