@@ -72,8 +72,8 @@ func TestGetContents(t *testing.T) {
 func TestGetBinContents(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			filepaths1  string = "/testfile_t1.txt"                 //存在文件
-			filepaths2  string = Testpath() + "/testfile_t1_no.txt" //不存大文件
+			filepaths1  string = "/testfile_t1.txt"                 //文件存在时
+			filepaths2  string = Testpath() + "/testfile_t1_no.txt" //文件不存在时
 			readcontent []byte
 			str1        string = "my name is jroam"
 		)
@@ -85,9 +85,6 @@ func TestGetBinContents(t *testing.T) {
 		readcontent = GetBinContents(filepaths2)
 		gtest.Assert(string(readcontent), "")
 
-		//if readcontent!=nil{
-		//	t.Error("文件应不存在")
-		//}
 		gtest.Assert(string(GetBinContents(filepaths2)), "")
 
 	})
@@ -97,15 +94,25 @@ func TestGetBinContents(t *testing.T) {
 func TestTruncate(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			filepaths1 string = "/testfile_GetContents.txt" //存在文件
+			filepaths1 string = "/testfile_GetContentsyyui.txt" //文件存在时
 			err        error
+			files      *os.File
 		)
 		CreateTestFile(filepaths1, "abcdefghijkmln")
 		defer DelTestFiles(filepaths1)
-		err = Truncate(Testpath()+filepaths1, 200)
+		err = Truncate(Testpath()+filepaths1, 10)
 		gtest.Assert(err, nil)
 
-		err = Truncate("", 200)
+		//=========================检查修改文后的大小，是否与期望一致
+		files, err = os.Open(Testpath() + filepaths1)
+		defer files.Close()
+		gtest.Assert(err, nil)
+		fileinfo, err2 := files.Stat()
+		gtest.Assert(err2, nil)
+		gtest.Assert(fileinfo.Size(), 10)
+
+		//====测试当为空时，是否报错
+		err = Truncate("", 10)
 		gtest.AssertNE(err, nil)
 
 	})
