@@ -30,7 +30,7 @@ install:
 - cat /etc/hosts
 
 script:
-- cd g
+- cd g/os/gfile
 - GOARCH=386 go test -v ./...
 - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
