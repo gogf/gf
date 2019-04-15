@@ -24,7 +24,6 @@ addons:
 
 before_install:
 - pwd
-- go get -u github.com/gogf/gf
 
 install:
 - cat /etc/hosts
