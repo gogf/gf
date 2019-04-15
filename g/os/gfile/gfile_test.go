@@ -275,37 +275,52 @@ func TestInfo(t *testing.T) {
 	})
 }
 
-//func TestMove(t *testing.T) {
-//	gtest.Case(t, func(){
-//		var(
-//			paths string ="./testfile/havefile1/ttn1.txt"
-//			topath string ="./testfile/havefile1/ttn2.txt"
-//		)
-//
-//		gtest.Assert(Move(paths,topath),nil)
-//
-//	})
-//}
-//
-// func TestRename(t *testing.T){
-//	 gtest.Case(t, func(){
-//		 var(
-//
-//			 paths string ="./testfile/havefile1/ttm1.txt"
-//			 topath string ="./testfile/havefile1/ttm2.txt"
-//
-//		 )
-//
-//		 gtest.Assert(Rename(paths,topath),nil)
-//		 gtest.Assert(IsFile(topath),true)
-//
-//		 gtest.AssertNE(Rename("",""),nil)
-//
-//
-//	 })
-//
-//
-// }
+func TestMove(t *testing.T) {
+	gtest.Case(t, func() {
+		var (
+			paths     string = "/ovetest"
+			filepaths string = "/testfile_ttn1.txt"
+			topath    string = "/testfile_ttn2.txt"
+		)
+		CreateDir("/ovetest")
+		CreateTestFile(paths+filepaths, "a")
+
+		defer DelTestFiles(paths)
+
+		yfile := Testpath() + paths + filepaths
+		tofile := Testpath() + paths + topath
+
+		gtest.Assert(Move(yfile, tofile), nil)
+
+		//检查移动后的文件是否真实存在
+		_, err := os.Stat(tofile)
+		gtest.Assert(os.IsNotExist(err), false)
+
+	})
+}
+
+func TestRename(t *testing.T) {
+	gtest.Case(t, func() {
+		var (
+			paths  string = "/testfiles"
+			ypath  string = "/testfilettm1.txt"
+			topath string = "/testfilettm2.txt"
+		)
+		CreateDir(paths)
+		CreateTestFile(paths+ypath, "a")
+		defer DelTestFiles(paths)
+
+		ypath = Testpath() + paths + ypath
+		topath = Testpath() + paths + topath
+
+		gtest.Assert(Rename(ypath, topath), nil)
+		gtest.Assert(IsFile(topath), true)
+
+		gtest.AssertNE(Rename("", ""), nil)
+
+	})
+
+}
 
 func TestCopy(t *testing.T) {
 	gtest.Case(t, func() {
