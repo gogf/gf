@@ -1,7 +1,6 @@
 language: go
 
 go:
-- "1.10.x"
 - "1.11.x"
 - "1.12.x"
 
@@ -29,7 +28,7 @@ install:
 - cat /etc/hosts
 
 script:
-- cd g/os/gfile
+- cd g
 - GOARCH=386 go test -v ./...
 - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
