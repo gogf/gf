@@ -26,13 +26,13 @@ type GroupItem = []interface{}
 
 // 获取分组路由对象
 func (s *Server) Group(prefix...string) *RouterGroup {
+	group := &RouterGroup{
+		server : s,
+	}
     if len(prefix) > 0 {
-        return &RouterGroup{
-            server : s,
-            prefix : prefix[0],
-        }
+    	group.prefix = prefix[0]
     }
-    return &RouterGroup{}
+    return group
 }
 
 // 获取分组路由对象
