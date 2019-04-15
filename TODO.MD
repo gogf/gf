@@ -44,6 +44,7 @@
 1. 添加sqlite数据库的单元测试用例；
 1. gredis增加cluster支持；
 1. gset.Add/Remove/Contains方法增加批量操作支持；
+1. gmlock增加手动清理机制：当内存锁不再使用时，由调用端决定是否清理内存锁；
 
 # DONE
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
