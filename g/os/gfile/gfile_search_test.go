@@ -42,9 +42,9 @@ func TestSearch(t *testing.T) {
 		gtest.Assert(tpath2, tpath)
 
 		//测试当前目录
-		tpath2, err = Search(Testpath()+paths1, "testfiless")
+		tpath2, err = Search(paths1, "testfiless")
 		tpath2 = filepath.ToSlash(tpath2)
-		tempss:=filepath.ToSlash(Testpath()+paths1)
+		tempss:=filepath.ToSlash(paths1)
 		gtest.Assert(tpath2, tempss)
 
 
