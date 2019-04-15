@@ -21,7 +21,7 @@ func TestSearch(t *testing.T) {
 
 		CreateDir(paths1)
 		defer DelTestFiles(paths1)
-		ypaths1=paths1
+		ypaths1 = paths1
 
 		tpath, err = Search(Testpath() + paths1)
 		gtest.Assert(err, nil)
@@ -37,7 +37,6 @@ func TestSearch(t *testing.T) {
 		tempstr = Testpath()
 		paths1 = tempstr + paths1
 		paths1 = filepath.ToSlash(paths1)
-		//paths1 = strings.Replace(paths1, "./", "/", 1)
 
 		gtest.Assert(tpath, paths1)
 
@@ -46,9 +45,8 @@ func TestSearch(t *testing.T) {
 		//测试当前目录
 		tpath2, err = Search(paths1, "testfiless")
 		tpath2 = filepath.ToSlash(tpath2)
-		tempss:=filepath.ToSlash(paths1)
+		tempss := filepath.ToSlash(paths1)
 		gtest.Assert(tpath2, tempss)
-
 
 		//测试当前目录
 		tempstr, _ = filepath.Abs("./")
