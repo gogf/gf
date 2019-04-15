@@ -1,4 +1,4 @@
-# ON THE WAY go go go 
+# ON THE WAY
 1. 增加图形验证码支持，至少支持数字和英文字母；
 1. Cookie&Session数据池化处理；
 1. ghttp.Client增加proxy特性；
