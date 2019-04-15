@@ -6,7 +6,8 @@ go:
   - "1.12.x"
 
 branches:
-  only:
+  - master
+  - develop
   - test_gfile
 
 env:
@@ -28,7 +29,8 @@ install:
   - cat /etc/hosts
 
 script:
-  - cd g/os/gfile
+  - cd g
+  - go get -u github.com/gogf/gf
   - GOARCH=386 go test -v ./...
   - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
