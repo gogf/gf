@@ -18,7 +18,7 @@ func CreateTestFile(filename, content string) error {
 
 //测试完删除文件或目录
 func DelTestFiles(filenames string) {
-	os.RemoveAll(Testpath()+filenames)
+	os.RemoveAll(Testpath() + filenames)
 }
 
 //创建目录
@@ -46,12 +46,11 @@ func Formatpath(paths string) string {
 
 //指定返回要测试的目录
 func Testpath() string {
-	psths,err:= filepath.Abs("./")
-	if err!=nil{
+	psths, err := filepath.Abs("./")
+	if err != nil {
 		return os.TempDir()
 	}
 	return strings.Replace(psths, "./", "/", 1)
-
 
 }
 
@@ -66,7 +65,6 @@ func TestGetContents(t *testing.T) {
 
 		gtest.Assert(GetContents(Testpath()+filepaths), "my name is jroam")
 		gtest.Assert(GetContents(""), "")
-
 
 	})
 }
