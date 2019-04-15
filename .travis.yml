@@ -1,14 +1,13 @@
 language: go
 
 go:
-- "1.11.x"
-- "1.12.x"
+  - "1.11.x"
+  - "1.12.x"
 
 branches:
   only:
   - master
   - develop
-  - test_gfile
 
 env:
 - GO111MODULE=on
