@@ -15,11 +15,13 @@ func TestSearch(t *testing.T) {
 			tpath   string
 			tpath2  string
 			tempstr string
+			ypaths1 string
 			err     error
 		)
 
 		CreateDir(paths1)
 		defer DelTestFiles(paths1)
+		ypaths1=paths1
 
 		tpath, err = Search(Testpath() + paths1)
 		gtest.Assert(err, nil)
@@ -51,7 +53,7 @@ func TestSearch(t *testing.T) {
 		//测试当前目录
 		tempstr, _ = filepath.Abs("./")
 		tempstr = Testpath()
-		paths1 = tempstr + paths1
+		paths1 = tempstr + ypaths1
 		paths1 = filepath.ToSlash(paths1)
 
 		gtest.Assert(tpath2, paths1)
