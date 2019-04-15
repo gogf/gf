@@ -36,7 +36,7 @@ func TestCreate(t *testing.T) {
 		filepaths = append(filepaths, "/testfile_cc2.txt")
 
 		for _, v := range filepaths {
-			fileobj, err = Create(Testpath()+v)
+			fileobj, err = Create(Testpath() + v)
 			defer DelTestFiles(v)
 			fileobj.Close()
 			gtest.Assert(err, nil)
@@ -311,7 +311,7 @@ func TestCopy(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths  string = "/testfile_copyfile1.txt"
-			topath string =  "/testfile_copyfile2.txt"
+			topath string = "/testfile_copyfile2.txt"
 		)
 
 		CreateTestFile(paths, "")
@@ -642,16 +642,19 @@ func TestMkdir(t *testing.T) {
 func TestStat(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			tpath1 string = "/testfile_t1.txt"
-			tpath2 string = "./testfile_t1_no.txt"
-			err    error
+			tpath1   string = "/testfile_t1.txt"
+			tpath2   string = "./testfile_t1_no.txt"
+			err      error
+			fileiofo os.FileInfo
 		)
 
-		CreateTestFile(tpath1, "")
+		CreateTestFile(tpath1, "a")
 		defer DelTestFiles(tpath1)
 
-		_, err = Stat(Testpath() + tpath1)
+		fileiofo, err = Stat(Testpath() + tpath1)
 		gtest.Assert(err, nil)
+
+		gtest.Assert(fileiofo.Size(), 1)
 
 		_, err = Stat(tpath2)
 		gtest.AssertNE(err, nil)
