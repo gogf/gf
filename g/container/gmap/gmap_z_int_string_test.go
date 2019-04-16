@@ -76,14 +76,38 @@ func Test_IntStringMap_Batch(t *testing.T) {
 	gtest.Assert(m.Map(), map[int]interface{}{3: "c"})
 }
 func Test_IntStringMap_Iterator(t *testing.T){
-	m :=  gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
-	m.Iterator(intStringCallBack)
+	expect := map[int]string{1: "a", 2: "b"}
+	m      := gmap.NewIntStringMapFrom(expect)
+	m.Iterator(func(k int, v string) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k int, v string) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k int, v string) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
 }
 
 func Test_IntStringMap_Lock(t *testing.T){
-	m :=  gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
-	m.LockFunc(func(m map[int]string) {})
-	m.RLockFunc(func(m map[int]string) {})
+
+	expect := map[int]string{1: "a", 2: "b", 3: "c"}
+	m      := gmap.NewIntStringMapFrom(expect)
+	m.LockFunc(func(m map[int]string) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[int]string) {
+		gtest.Assert(m, expect)
+	})
+
 }
 func Test_IntStringMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
