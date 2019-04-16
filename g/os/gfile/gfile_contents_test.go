@@ -47,6 +47,7 @@ func formatpath(paths string) string {
 
 // 指定返回要测试的目录
 func testpath() string {
+	return os.TempDir()
 	psths, err := filepath.Abs("./")
 	if err != nil {
 		return os.TempDir()
