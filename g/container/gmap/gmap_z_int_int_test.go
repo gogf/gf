@@ -73,14 +73,37 @@ func Test_IntIntMap_Batch(t *testing.T) {
 }
 
 func Test_IntIntMap_Iterator(t *testing.T){
-	m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
-	m.Iterator(intIntCallBack)
+	expect := map[int]int{1: 1, 2: 2}
+	m      := gmap.NewIntIntMapFrom(expect)
+	m.Iterator(func(k int, v int) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k int, v int) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k int, v int) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
 }
 
 func Test_IntIntMap_Lock(t *testing.T){
-	m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
-	m.LockFunc(func(m map[int]int) {})
-	m.RLockFunc(func(m map[int]int) {})
+	expect := map[int]int{1: 1, 2: 2}
+	m      := gmap.NewIntIntMapFrom(expect)
+	m.LockFunc(func(m map[int]int) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[int]int) {
+		gtest.Assert(m, expect)
+	})
+
 }
 func Test_IntIntMap_Clone(t *testing.T) {
 	//clone 方法是深克隆

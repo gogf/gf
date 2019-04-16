@@ -72,14 +72,38 @@ func Test_IntInterfaceMap_Batch(t *testing.T) {
 	gtest.Assert(m.Map(), map[int]interface{}{3: 3})
 }
 func Test_IntInterfaceMap_Iterator(t *testing.T){
-	m := gmap.NewIntInterfaceMapFrom(map[int]interface{}{1: 1, 2: "2"})
-	m.Iterator(intInterfaceCallBack)
+	expect := map[int]interface{}{1: 1, 2: "2"}
+	m      := gmap.NewIntInterfaceMapFrom(expect)
+	m.Iterator(func(k int, v interface{}) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k int, v interface{}) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k int, v interface{}) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, "2")
+	gtest.Assert(j, 1)
+
+
 }
 
 func Test_IntInterfaceMap_Lock(t *testing.T){
-	m := gmap.NewIntInterfaceMapFrom(map[int]interface{}{1: 1, 2: "2"})
-	m.LockFunc(func(m map[int]interface{}) {})
-	m.RLockFunc(func(m map[int]interface{}) {})
+	expect := map[int]interface{}{1: 1, 2: "2"}
+	m := gmap.NewIntInterfaceMapFrom(expect)
+	m.LockFunc(func(m map[int]interface{}) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[int]interface{}) {
+		gtest.Assert(m, expect)
+	})
 }
 func Test_IntInterfaceMap_Clone(t *testing.T) {
 	//clone 方法是深克隆

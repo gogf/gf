@@ -70,14 +70,37 @@ func Test_StringStringMap_Batch(t *testing.T) {
 	gtest.Assert(m.Map(), map[string]string{"c": "c"})
 }
 func Test_StringStringMap_Iterator(t *testing.T) {
-	m := gmap.NewStringStringMapFrom(map[string]string{"a": "a", "b": "b", "c": "c"})
-	m.Iterator(stringStringCallBack)
+	expect := map[string]string{"a": "a", "b": "b"}
+	m := gmap.NewStringStringMapFrom(expect)
+	m.Iterator(func(k string, v string) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k string, v string) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k string, v string) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
 }
 
 func Test_StringStringMap_Lock(t *testing.T) {
-	m := gmap.NewStringStringMapFrom(map[string]string{"a": "a", "b": "b", "c": "c"})
-	m.LockFunc(func(m map[string]string) {})
-	m.RLockFunc(func(m map[string]string) {})
+	expect := map[string]string{"a": "a", "b": "b"}
+
+	m      := gmap.NewStringStringMapFrom(expect)
+	m.LockFunc(func(m map[string]string) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[string]string) {
+		gtest.Assert(m, expect)
+	})
 }
 func Test_StringStringMap_Clone(t *testing.T) {
 	//clone 方法是深克隆

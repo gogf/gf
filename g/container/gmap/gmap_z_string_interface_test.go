@@ -70,14 +70,37 @@ func Test_StringInterfaceMap_Batch(t *testing.T) {
 }
 
 func Test_StringInterfaceMap_Iterator(t *testing.T) {
-	m := gmap.NewStringInterfaceMapFrom(map[string]interface{}{"a": 1, "b": "2"})
-	m.Iterator(stringInterfaceCallBack)
+	expect := map[string]interface{}{"a": true, "b": false}
+	m := gmap.NewStringInterfaceMapFrom(expect)
+	m.Iterator(func(k string, v interface{}) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k string, v interface{}) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k string, v interface{}) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
 }
 
 func Test_StringInterfaceMap_Lock(t *testing.T) {
-	m := gmap.NewStringInterfaceMapFrom(map[string]interface{}{"a": 1, "b": "2"})
-	m.LockFunc(func(m map[string]interface{}) {})
-	m.RLockFunc(func(m map[string]interface{}) {})
+	expect := map[string]interface{}{"a": true, "b": false}
+
+	m      := gmap.NewStringInterfaceMapFrom(expect)
+	m.LockFunc(func(m map[string]interface{}) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[string]interface{}) {
+		gtest.Assert(m, expect)
+	})
 }
 func Test_StringInterfaceMap_Clone(t *testing.T) {
 	//clone 方法是深克隆

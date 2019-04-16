@@ -67,14 +67,37 @@ func Test_IntBoolMap_Batch(t *testing.T) {
 	gtest.Assert(m.Map(), map[int]bool{3: true})
 }
 func Test_IntBoolMap_Iterator(t *testing.T){
-	m := gmap.NewIntBoolMapFrom(map[int]bool{1: true, 2: false})
-	m.Iterator(intBoolCallBack)
+	expect := map[int]bool{1: true, 2: false}
+	m      := gmap.NewIntBoolMapFrom(expect)
+	m.Iterator(func(k int, v bool) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k int, v bool) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k int, v bool) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
 }
 
 func Test_IntBoolMap_Lock(t *testing.T){
-	m := gmap.NewIntBoolMapFrom(map[int]bool{1: true, 2: false})
-	m.LockFunc(func(m map[int]bool) {})
-	m.RLockFunc(func(m map[int]bool) {})
+	expect := map[int]bool{1: true, 2: false}
+	m      := gmap.NewIntBoolMapFrom(expect)
+	m.LockFunc(func(m map[int]bool) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[int]bool) {
+		gtest.Assert(m, expect)
+	})
+
 }
 
 func Test_IntBoolMap_Clone(t *testing.T) {
