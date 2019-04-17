@@ -30,7 +30,6 @@ go get -u github.com/gogf/gf
 ```
 require github.com/gogf/gf latest
 ```
-> 如果您是从旧版本`1.x`升级到`1.5.0`那么请参考：[1.x升级到1.5.0](https://goframe.org/upgradeto150)
 
 # 限制
 ```shell
@@ -106,6 +105,7 @@ func main() {
 
 - [flyke-xu](https://gitee.com/flyke-xu)
 - [hailaz](https://gitee.com/hailaz)
+- [ireadx](https://github.com/ireadx)
 - [mg91](https://gitee.com/mg91)
 - [pibigstar](https://github.com/pibigstar)
 - [tiangenglan](https://gitee.com/tiangenglan)
