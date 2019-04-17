@@ -15,18 +15,22 @@ import (
     "time"
 )
 
-// 定时任务项
+// Timed task entry.
 type Entry struct {
-    cron       *Cron         // 所属定时任务
-    entry      *gtimer.Entry // 定时器任务对象
-    schedule   *cronSchedule // 定时任务配置对象
-    jobName    string        // 任务注册方法名称
-    Name       string        // 定时任务名称
-    Job        func()        // 注册定时任务方法
-    Time       time.Time     // 注册时间
+    cron       *Cron                    // Cron object belonged to.
+    entry      *gtimer.Entry            // Associated gtimer.Entry.
+    schedule   *cronSchedule            // Timed schedule object.
+    jobName    string                   // Callback function name(address info).
+    Name       string                   // Entry name.
+    Job        func()        `json:"-"` // Callback function.
+    Time       time.Time                // Registered time.
 }
 
-// 创建定时任务
+// addEntry creates and returns a new Entry object.
+// Param <job> is the callback function for timed task execution.
+// Param <singleton> specifies whether timed task executing in singleton mode.
+// Param <times> limits the times for timed task executing.
+// Param <name> names this entry for manual control.
 func (c *Cron) addEntry(pattern string, job func(), singleton bool, times int, name ... string) (*Entry, error) {
     schedule, err := newSchedule(pattern)
     if err != nil {
