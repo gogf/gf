@@ -28,7 +28,7 @@ import (
 type Logger struct {
     mu           sync.RWMutex
     pr           *Logger             // Parent logger.
-    io           io.Writer           // Customized io.Writer.
+	writer       io.Writer           // Customized io.Writer.
     path         *gtype.String       // Logging directory path.
     file         *gtype.String       // Format for logging file.
     level        *gtype.Int          // Output level.
@@ -70,7 +70,7 @@ func New() *Logger {
         printHeader  : gtype.NewBool(true),
         alsoStdPrint : gtype.NewBool(true),
     }
-    logger.io = &Writer {
+    logger.writer = &Writer {
 	    logger : logger,
     }
     return logger
@@ -88,7 +88,7 @@ func (l *Logger) Clone() *Logger {
         printHeader  : l.printHeader.Clone(),
         alsoStdPrint : l.alsoStdPrint.Clone(),
     }
-	logger.io = &Writer {
+	logger.writer = &Writer {
 		logger : logger,
 	}
 	return logger
@@ -134,7 +134,7 @@ func (l *Logger) SetBacktraceSkip(skip int) {
 // eg: kafka, mysql, mongodb, etc.
 func (l *Logger) SetWriter(writer io.Writer) {
     l.mu.Lock()
-    l.io = writer
+    l.writer = writer
     l.mu.Unlock()
 }
 
@@ -142,7 +142,7 @@ func (l *Logger) SetWriter(writer io.Writer) {
 // It returns a default writer if no customized writer set.
 func (l *Logger) GetWriter() io.Writer {
     l.mu.RLock()
-    r := l.io
+    r := l.writer
     l.mu.RUnlock()
     return r
 }
