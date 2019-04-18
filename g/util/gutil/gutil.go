@@ -39,7 +39,7 @@ func Export(i...interface{}) string {
             // 这里强制对所有map进行反射处理转换
             refValue := reflect.ValueOf(v)
             if refValue.Kind() == reflect.Map {
-                m := make(map[string]interface{})
+                m    := make(map[string]interface{})
                 keys := refValue.MapKeys()
                 for _, k := range keys {
                     m[gconv.String(k.Interface())] = refValue.MapIndex(k).Interface()
