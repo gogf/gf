@@ -29,7 +29,6 @@ import (
     "sync"
 )
 
-// 视图对象
 type View struct {
     mu         sync.RWMutex
     paths      *garray.StringArray     // 模板查找目录(绝对路径)
@@ -38,29 +37,32 @@ type View struct {
     delimiters []string                // 模板变量分隔符号
 }
 
-// 模板变量
+// Template params type.
 type Params  = map[string]interface{}
 
-// 函数映射表
+// Customized template function map type.
 type FuncMap = map[string]interface{}
 
-// 默认的视图对象
+// Default view object.
 var defaultViewObj *View
 
-// 初始化默认的视图对象, 默认加载包不会初始化，使用包方法才会初始化模板引擎对象。
+// checkAndInitDefaultView checks and initializes the default view object.
+// The default view object will be initialized just once.
 func checkAndInitDefaultView() {
     if defaultViewObj == nil {
         defaultViewObj = New(gfile.Pwd())
     }
 }
 
-// 直接解析模板内容，返回解析后的内容
+// ParseContent parses the template content directly using the default view object
+// and returns the parsed content.
 func ParseContent(content string, params Params) ([]byte, error) {
     checkAndInitDefaultView()
     return defaultViewObj.ParseContent(content, params)
 }
 
-// 生成一个视图对象
+// New returns a new view object.
+// The parameter <path> specifies the template directory path to load template files.
 func New(path...string) *View {
     view := &View {
         paths      : garray.NewStringArray(),
@@ -92,11 +94,11 @@ func New(path...string) *View {
         }
     }
     view.SetDelimiters("{{", "}}")
-    // 内置变量
+    // default build-in variables.
     view.data["GF"] = map[string]interface{} {
         "version" : gf.VERSION,
     }
-    // 内置方法
+    // default build-in functions.
     view.BindFunc("text",        view.funcText)
     view.BindFunc("html",        view.funcHtmlEncode)
     view.BindFunc("htmlencode",  view.funcHtmlEncode)
@@ -117,12 +119,13 @@ func New(path...string) *View {
     return view
 }
 
-// 设置模板目录绝对路径
+// SetPath sets the template directory path for template file search.
+// The param <path> can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
-    // 判断绝对路径(或者工作目录下目录)
+	// Absolute path.
     realPath := gfile.RealPath(path)
     if realPath == "" {
-        // 判断相对路径
+	    // Relative path.
         view.paths.RLockFunc(func(array []string) {
             for _, v := range array {
                 if path, _ := gspath.Search(v, path); path != "" {
@@ -132,7 +135,7 @@ func (view *View) SetPath(path string) error {
             }
         })
     }
-    // 目录不存在错误处理
+	// Path not exist.
     if realPath == "" {
         buffer := bytes.NewBuffer(nil)
         if view.paths.Len() > 0 {
@@ -149,13 +152,13 @@ func (view *View) SetPath(path string) error {
         glog.Error(err)
         return err
     }
-    // 路径必须为目录类型
+	// Should be a directory.
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" should be directory type`, path))
         glog.Error(err)
         return err
     }
-    // 重复判断
+	// Repeated path check.
     if view.paths.Search(realPath) != -1 {
         return nil
     }
@@ -165,12 +168,12 @@ func (view *View) SetPath(path string) error {
     return nil
 }
 
-// 添加模板目录搜索路径
+// AddPath adds a absolute or relative path to the search paths.
 func (view *View) AddPath(path string) error {
-    // 判断绝对路径(或者工作目录下目录)
+	// Absolute path.
     realPath := gfile.RealPath(path)
     if realPath == "" {
-        // 判断相对路径
+	    // Relative path.
         view.paths.RLockFunc(func(array []string) {
             for _, v := range array {
                 if path, _ := gspath.Search(v, path); path != "" {
@@ -180,7 +183,7 @@ func (view *View) AddPath(path string) error {
             }
         })
     }
-    // 目录不存在错误处理
+    // Path not exist.
     if realPath == "" {
         buffer := bytes.NewBuffer(nil)
         if view.paths.Len() > 0 {
@@ -197,13 +200,13 @@ func (view *View) AddPath(path string) error {
         glog.Error(err)
         return err
     }
-    // 路径必须为目录类型
+    // realPath should be type of folder.
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" should be directory type`, path))
         glog.Error(err)
         return err
     }
-    // 重复判断
+	// Repeated path check.
     if view.paths.Search(realPath) != -1 {
         return nil
     }
@@ -212,7 +215,8 @@ func (view *View) AddPath(path string) error {
     return nil
 }
 
-// 批量绑定模板变量，即调用之后每个线程都会生效，因此有并发安全控制
+// Assign binds multiple template variables to current view object.
+// Each goroutine will take effect after the call, so it is concurrent-safe.
 func (view *View) Assigns(data Params) {
     view.mu.Lock()
     for k, v := range data {
@@ -221,15 +225,18 @@ func (view *View) Assigns(data Params) {
     view.mu.Unlock()
 }
 
-// 绑定模板变量，即调用之后每个线程都会生效，因此有并发安全控制
+// Assign binds a template variable to current view object.
+// Each goroutine will take effect after the call, so it is concurrent-safe.
 func (view *View) Assign(key string, value interface{}) {
     view.mu.Lock()
     view.data[key] = value
     view.mu.Unlock()
 }
 
-// 解析模板，返回解析后的内容
-func (view *View) Parse(file string, params Params, funcmap...map[string]interface{}) ([]byte, error) {
+// ParseContent parses given template file <file>
+// with given template parameters <params> and function map <funcMap>
+// and returns the parsed content in []byte.
+func (view *View) Parse(file string, params Params, funcMap...map[string]interface{}) ([]byte, error) {
     path := ""
     view.paths.RLockFunc(func(array []string) {
         for _, v := range array {
@@ -254,19 +261,19 @@ func (view *View) Parse(file string, params Params, funcmap...map[string]interfa
         return nil, errors.New(fmt.Sprintf(`tpl "%s" not found`, file))
     }
     content := gfcache.GetContents(path)
-    // 执行模板解析，互斥锁主要是用于funcmap
     view.mu.RLock()
     defer view.mu.RUnlock()
     buffer := bytes.NewBuffer(nil)
-    tplobj := template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap)
-    if len(funcmap) > 0 {
-        tplobj = tplobj.Funcs(funcmap[0])
+    tplObj := template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap)
+    if len(funcMap) > 0 {
+	    tplObj = tplObj.Funcs(funcMap[0])
     }
-    if tpl, err := tplobj.Parse(content); err != nil {
+    if tpl, err := tplObj.Parse(content); err != nil {
         return nil, err
     } else {
-        // 注意模板变量赋值不能改变已有的params或者view.data的值，因为这两个变量都是指针
-        // 因此在必要条件下，需要合并两个map的值到一个新的map
+	    // Note that the template variable assignment cannot change the value
+	    // of the existing <params> or view.data because both variables are pointers.
+	    // It's need to merge the values of the two maps into a new map.
         vars := (map[string]interface{})(nil)
         if len(view.data) > 0 {
             if len(params) > 0 {
@@ -290,21 +297,24 @@ func (view *View) Parse(file string, params Params, funcmap...map[string]interfa
     return buffer.Bytes(), nil
 }
 
-// 直接解析模板内容，返回解析后的内容
-func (view *View) ParseContent(content string, params Params, funcmap...map[string]interface{}) ([]byte, error) {
+// ParseContent parses given template content <content>
+// with given template parameters <params> and function map <funcMap>
+// and returns the parsed content in []byte.
+func (view *View) ParseContent(content string, params Params, funcMap...map[string]interface{}) ([]byte, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
     name   := gconv.String(ghash.BKDRHash64([]byte(content)))
     buffer := bytes.NewBuffer(nil)
-    tplobj := template.New(name).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap)
-    if len(funcmap) > 0 {
-        tplobj = tplobj.Funcs(funcmap[0])
+    tplObj := template.New(name).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcmap)
+    if len(funcMap) > 0 {
+	    tplObj = tplObj.Funcs(funcMap[0])
     }
-    if tpl, err := tplobj.Parse(content); err != nil {
+    if tpl, err := tplObj.Parse(content); err != nil {
         return nil, err
     } else {
-        // 注意模板变量赋值不能改变已有的params或者view.data的值，因为这两个变量都是指针
-        // 因此在必要条件下，需要合并两个map的值到一个新的map
+	    // Note that the template variable assignment cannot change the value
+	    // of the existing <params> or view.data because both variables are pointers.
+	    // It's need to merge the values of the two maps into a new map.
         vars := (map[string]interface{})(nil)
         if len(view.data) > 0 {
             if len(params) > 0 {
@@ -328,20 +338,33 @@ func (view *View) ParseContent(content string, params Params, funcmap...map[stri
     return buffer.Bytes(), nil
 }
 
-// 设置模板变量解析分隔符号
+// SetDelimiters sets customized delimiters for template parsing.
 func (view *View) SetDelimiters(left, right string) {
     view.delimiters[0] = left
     view.delimiters[1] = right
 }
 
-// 绑定自定义函数，该函数是全局有效，即调用之后每个线程都会生效，因此有并发安全控制
+// BindFunc registers customized template function named <name>
+// with given function <function> to current view object.
+// The <name> is the function name which can be called in template content.
 func (view *View) BindFunc(name string, function interface{}) {
     view.mu.Lock()
     view.funcmap[name] = function
     view.mu.Unlock()
 }
 
-// 模板内置方法：include
+// BindFuncMap registers customized template functions by map to current view object.
+// The key of map is the template function name
+// and the value of map is the address of customized function.
+func (view *View) BindFuncMap(funcMap FuncMap) {
+	view.mu.Lock()
+	for k, v := range funcMap {
+		view.funcmap[k] = v
+	}
+	view.mu.Unlock()
+}
+
+// Build-in template function: include
 func (view *View) funcInclude(file string, data...map[string]interface{}) string {
     var m map[string]interface{} = nil
     if len(data) > 0 {
@@ -354,27 +377,27 @@ func (view *View) funcInclude(file string, data...map[string]interface{}) string
     return string(content)
 }
 
-// 模板内置方法：text
+// Build-in template function: text
 func (view *View) funcText(html interface{}) string {
     return ghtml.StripTags(gconv.String(html))
 }
 
-// 模板内置方法：html
+// Build-in template function: html
 func (view *View) funcHtmlEncode(html interface{}) string {
     return ghtml.Entities(gconv.String(html))
 }
 
-// 模板内置方法：htmldecode
+// Build-in template function: htmldecode
 func (view *View) funcHtmlDecode(html interface{}) string {
     return ghtml.EntitiesDecode(gconv.String(html))
 }
 
-// 模板内置方法：url
+// Build-in template function: url
 func (view *View) funcUrlEncode(url interface{}) string {
     return gurl.Encode(gconv.String(url))
 }
 
-// 模板内置方法：urldecode
+// Build-in template function: urldecode
 func (view *View) funcUrlDecode(url interface{}) string {
     if content, err := gurl.Decode(gconv.String(url)); err == nil {
         return content
@@ -383,7 +406,7 @@ func (view *View) funcUrlDecode(url interface{}) string {
     }
 }
 
-// 模板内置方法：date
+// Build-in template function: date
 func (view *View) funcDate(format string, timestamp...interface{}) string {
     t := int64(0)
     if len(timestamp) > 0 {
@@ -395,42 +418,42 @@ func (view *View) funcDate(format string, timestamp...interface{}) string {
     return gtime.NewFromTimeStamp(t).Format(format)
 }
 
-// 模板内置方法：compare
+// Build-in template function: compare
 func (view *View) funcCompare(value1, value2 interface{}) int {
     return strings.Compare(gconv.String(value1), gconv.String(value2))
 }
 
-// 模板内置方法：substr
+// Build-in template function: substr
 func (view *View) funcSubStr(start, end int, str interface{}) string {
     return gstr.SubStr(gconv.String(str), start, end)
 }
 
-// 模板内置方法：strlimit
+// Build-in template function: strlimit
 func (view *View) funcStrLimit(length int, suffix string, str interface{}) string {
     return gstr.StrLimit(gconv.String(str), length, suffix)
 }
 
-// 模板内置方法：highlight
+// Build-in template function: highlight
 func (view *View) funcHighlight(key string, color string, str interface{}) string {
     return gstr.Replace(gconv.String(str), key, fmt.Sprintf(`<span style="color:%s;">%s</span>`, color, key))
 }
 
-// 模板内置方法：hidestr
+// Build-in template function: hidestr
 func (view *View) funcHideStr(percent int, hide string, str interface{}) string {
     return gstr.HideStr(gconv.String(str), percent, hide)
 }
 
-// 模板内置方法：toupper
+// Build-in template function: toupper
 func (view *View) funcToUpper(str interface{}) string {
     return gstr.ToUpper(gconv.String(str))
 }
 
-// 模板内置方法：toupper
+// Build-in template function: toupper
 func (view *View) funcToLower(str interface{}) string {
     return gstr.ToLower(gconv.String(str))
 }
 
-// 模板内置方法：nl2br
+// Build-in template function: nl2br
 func (view *View) funcNl2Br(str interface{}) string {
     return gstr.Nl2Br(gconv.String(str))
 }
