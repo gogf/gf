@@ -3,6 +3,7 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+//
 // @author john, zseeker
 
 package glog
@@ -26,15 +27,15 @@ import (
 
 type Logger struct {
     mu           sync.RWMutex
-    pr           *Logger             // 父级Logger
-    io           io.Writer           // 日志内容写入的IO接口
-    path         *gtype.String       // 日志写入的目录路径
-    file         *gtype.String       // 日志文件名称格式
-    level        *gtype.Int          // 日志输出等级
-    btSkip       *gtype.Int          // 错误产生时的backtrace回调信息skip条数
-    btStatus     *gtype.Int          // 是否当打印错误时同时开启backtrace打印(默认-1，表示默认打印逻辑 - 错误才打印)
-    printHeader  *gtype.Bool         // 是否不打印前缀信息(时间，级别等)
-    alsoStdPrint *gtype.Bool         // 控制台打印开关，当输出到文件/自定义输出时也同时打印到终端
+    pr           *Logger             // Parent logger.
+	writer       io.Writer           // Customized io.Writer.
+    path         *gtype.String       // Logging directory path.
+    file         *gtype.String       // Format for logging file.
+    level        *gtype.Int          // Output level.
+    btSkip       *gtype.Int          // Skip count for backtrace.
+    btStatus     *gtype.Int          // Backtrace status(1: enabled - default; 0: disabled)
+    printHeader  *gtype.Bool         // Print header or not(true in default).
+    alsoStdPrint *gtype.Bool         // Output to stdout or not(true in default).
 }
 
 const (
@@ -45,70 +46,66 @@ const (
 )
 
 var (
-    // 默认的日志换行符
+    // Default line break.
     ln    = "\n"
-    // 标准输出互斥锁，防止标准输出串日志
+    // Mutex to ensure log output sequence.
     stdMu = sync.RWMutex{}
 )
 
-// 初始化日志换行符
 func init() {
+	// Initialize log line breaks depending on underlying os.
     if runtime.GOOS == "windows" {
         ln = "\r\n"
     }
 }
 
-// New creates a custom logger.
-//
-// 新建自定义的日志操作对象
+// New creates and returns a custom logger.
 func New() *Logger {
-    return &Logger {
-        io           : nil,
+    logger := &Logger {
         path         : gtype.NewString(),
         file         : gtype.NewString(gDEFAULT_FILE_FORMAT),
         level        : gtype.NewInt(defaultLevel.Val()),
         btSkip       : gtype.NewInt(),
-        btStatus     : gtype.NewInt(-1),
+        btStatus     : gtype.NewInt(1),
         printHeader  : gtype.NewBool(true),
         alsoStdPrint : gtype.NewBool(true),
     }
+    logger.writer = &Writer {
+	    logger : logger,
+    }
+    return logger
 }
 
 // Clone returns a new logger, which is the clone the current logger.
-//
-// Logger拷贝.
 func (l *Logger) Clone() *Logger {
-    return &Logger {
+	logger := &Logger {
         pr           : l,
-        io           : l.GetWriter(),
         path         : l.path.Clone(),
         file         : l.file.Clone(),
         level        : l.level.Clone(),
         btSkip       : l.btSkip.Clone(),
-        btStatus    : l.btStatus.Clone(),
+        btStatus     : l.btStatus.Clone(),
         printHeader  : l.printHeader.Clone(),
         alsoStdPrint : l.alsoStdPrint.Clone(),
     }
+	logger.writer = &Writer {
+		logger : logger,
+	}
+	return logger
 }
 
 // SetLevel sets the logging level.
-//
-// 设置日志记录等级
 func (l *Logger) SetLevel(level int) {
     l.level.Set(level)
 }
 
 // GetLevel returns the logging level value.
-//
-// 获取日志记录等级
 func (l *Logger) GetLevel() int {
     return l.level.Val()
 }
 
 // SetDebug enables/disables the debug level for logger.
-// The debug level is enbaled in default.
-// 
-// 快捷方法，打开或关闭DEBU日志信息
+// The debug level is enabled in default.
 func (l *Logger) SetDebug(debug bool) {
     if debug {
         l.level.Set(l.level.Val() | LEVEL_DEBU)
@@ -124,7 +121,6 @@ func (l *Logger) SetBacktrace(enabled bool) {
     } else {
         l.btStatus.Set(0)
     }
-
 }
 
 // SetBacktraceSkip sets the backtrace offset from the end point.
@@ -132,47 +128,41 @@ func (l *Logger) SetBacktraceSkip(skip int) {
     l.btSkip.Set(skip)
 }
 
-// SetWriter sets the customed logging <writer> for logging.
+// SetWriter sets the customized logging <writer> for logging.
 // The <writer> object should implements the io.Writer interface.
-// Developer can use customed logging <writer> to redirect logging output to another service, 
+// Developer can use customized logging <writer> to redirect logging output to another service,
 // eg: kafka, mysql, mongodb, etc.
-//
-// 可自定义IO接口，IO可以是文件输出、标准输出、网络输出
 func (l *Logger) SetWriter(writer io.Writer) {
     l.mu.Lock()
-    l.io = writer
+    l.writer = writer
     l.mu.Unlock()
 }
 
-// GetWriter returns the customed writer object, which implements the io.Writer interface.
-// It returns nil if no customed writer set.
-//
-// 返回自定义的IO，默认为nil
+// GetWriter returns the customized writer object, which implements the io.Writer interface.
+// It returns a default writer if no customized writer set.
 func (l *Logger) GetWriter() io.Writer {
     l.mu.RLock()
-    r := l.io
+    r := l.writer
     l.mu.RUnlock()
     return r
 }
 
 // getFilePointer returns the file pinter for file logging.
-// It returns nil if file logging disabled, or file open fails.
-//
-// 获取默认的文件IO.
+// It returns nil if file logging is disabled, or file opening fails.
 func (l *Logger) getFilePointer() *gfpool.File {
     if path := l.path.Val(); path != "" {
-        // 文件名称中使用"{}"包含的内容使用gtime格式化
+        // Content containing "{}" in the file name is formatted using gtime
         file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.file.Val(), func(s string) string {
             return gtime.Now().Format(strings.Trim(s, "{}"))
         })
-        // 如果日志目录不存在则创建目录路径
+        // Create path if it does not exist。
         if !gfile.Exists(path) {
             if err := gfile.Mkdir(path); err != nil {
                 fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
                 return nil
             }
         }
-        fpath   := path + gfile.Separator + file
+        fpath := path + gfile.Separator + file
         if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, gDEFAULT_FPOOL_PERM, gDEFAULT_FPOOL_EXPIRE); err == nil {
             return fp
         } else {
@@ -183,14 +173,10 @@ func (l *Logger) getFilePointer() *gfpool.File {
 }
 
 // SetPath sets the directory path for file logging.
-//
-// 设置日志文件的存储目录路径.
 func (l *Logger) SetPath(path string) error {
-    // path必须有值
     if path == "" {
         return errors.New("path is empty")
     }
-    // 如果目录不存在，则递归创建
     if !gfile.Exists(path) {
        if err := gfile.Mkdir(path); err != nil {
            fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
@@ -203,8 +189,6 @@ func (l *Logger) SetPath(path string) error {
 
 // GetPath returns the logging directory path for file logging.
 // It returns empty string if no directory path set.
-//
-// 获取设置的日志目录路径
 func (l *Logger) GetPath() string {
     return l.path.Val()
 }
@@ -212,29 +196,24 @@ func (l *Logger) GetPath() string {
 // SetFile sets the file name <pattern> for file logging.
 // Datetime pattern can be used in <pattern>, eg: access-{Ymd}.log.
 // The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
-//
-// 设置日志文件名称格式.
 func (l *Logger) SetFile(pattern string) {
     l.file.Set(pattern)
 }
 
-// SetStdPrint sets whether ouptput the logging contents to stdout, which is false indefault.
-// 
-// 设置写日志时开启or关闭控制台打印，默认是关闭的
+// SetStdPrint sets whether output the logging contents to stdout, which is false in default.
 func (l *Logger) SetStdPrint(enabled bool) {
     l.alsoStdPrint.Set(enabled)
 }
 
-// 这里的写锁保证统一时刻只会写入一行日志，防止串日志的情况
+// print prints <s> to defined writer, logging file or passed <std>.
+// It internally uses memory lock for file logging to ensure logging sequence.
 func (l *Logger) print(std io.Writer, s string) {
-    // 优先使用自定义的IO输出
+    // Customized writer has the most high priority.
     if l.printHeader.Val() {
         s = l.format(s)
     }
     writer := l.GetWriter()
-    if writer == nil {
-        // 如果设置的writer为空，那么其次判断是否有文件输出设置
-        // 内部使用了内存锁，保证在glog中对同一个日志文件的并发写入不会串日志(并发安全)
+    if _, ok := writer.(*Writer); ok {
         if f := l.getFilePointer(); f != nil {
             defer f.Close()
             key := l.path.Val()
@@ -245,7 +224,7 @@ func (l *Logger) print(std io.Writer, s string) {
                 fmt.Fprintln(os.Stderr, err.Error())
             }
         }
-        // 当没有设置writer时，需要判断是否允许输出到标准输出
+        // Also output to stdout?
         if l.alsoStdPrint.Val() {
             l.doStdLockPrint(std, s)
         }
@@ -254,7 +233,7 @@ func (l *Logger) print(std io.Writer, s string) {
     }
 }
 
-// 并发安全打印到标准输出
+// doStdLockPrint prints <s> to <std> concurrent-safely.
 func (l *Logger) doStdLockPrint(std io.Writer, s string) {
     stdMu.Lock()
     if _, err := std.Write([]byte(s)); err != nil {
@@ -263,23 +242,21 @@ func (l *Logger) doStdLockPrint(std io.Writer, s string) {
     stdMu.Unlock()
 }
 
-// 核心打印数据方法(标准输出)
+// stdPrint prints content <s> without backtrace.
 func (l *Logger) stdPrint(s string) {
     l.print(os.Stdout, s)
 }
 
-// 核心打印数据方法(标准错误)
+// stdPrint prints content <s> with backtrace check.
 func (l *Logger) errPrint(s string) {
-    // 记录调用回溯信息
-    status := l.btStatus.Val()
-    if status == -1 || status == 1 {
+    if l.btStatus.Val() == 1 {
         s = l.appendBacktrace(s)
     }
-    // 防止串日志情况，这里不使用stderr，而是使用stdout
+    // In matter of sequence, do not use stderr here, but use the same stdout.
     l.print(os.Stdout, s)
 }
 
-// 输出内容中添加回溯信息
+// appendBacktrace appends backtrace to the <s>.
 func (l *Logger) appendBacktrace(s string, skip...int) string {
     trace := l.GetBacktrace(skip...)
     if trace != "" {
@@ -298,17 +275,13 @@ func (l *Logger) appendBacktrace(s string, skip...int) string {
 }
 
 // PrintBacktrace prints the caller backtrace, 
-// the optional parameter <skip> specify the skipped backtraces offset from the end point.
-//
-// 直接打印回溯信息，参数skip表示调用端往上多少级开始回溯
+// the optional parameter <skip> specify the skipped backtrace offset from the end point.
 func (l *Logger) PrintBacktrace(skip...int) {
     l.Println(l.appendBacktrace("", skip...))
 }
 
 // GetBacktrace returns the caller backtrace content, 
-// the optional parameter <skip> specify the skipped backtraces offset from the end point.
-//
-// 获取文件调用回溯字符串，参数skip表示调用端往上多少级开始回溯
+// the optional parameter <skip> specify the skipped backtrace offset from the end point.
 func (l *Logger) GetBacktrace(skip...int) string {
     customSkip := 0
     if len(skip) > 0 {
@@ -507,8 +480,6 @@ func (l *Logger) Criticalfln(format string, v ...interface{}) {
 }
 
 // checkLevel checks whether the given <level> could be output.
-//
-// 判断给定level是否满足
 func (l *Logger) checkLevel(level int) bool {
     return l.level.Val() & level > 0
 }
