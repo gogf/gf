@@ -6,6 +6,8 @@
 
 package gtime
 
+
+
 import (
     "bytes"
     "github.com/gogf/gf/g/text/gregex"
@@ -19,6 +21,7 @@ var (
         // ================== 日 ==================
         'd'	 : "02",       // 月份中的第几天，有前导零的 2 位数字(01 到 31)
         'D'  : "Mon",      // 星期中的第几天，文本表示，3 个字母(Mon 到 Sun)
+        'w'  : "Monday",      //  星期中的第几天，数字表示 0为星期天 6为星期六
         'j'  : "=j=02",    // 月份中的第几天，没有前导零(1 到 31)
         'l'  : "Monday",   // ("L"的小写字母)星期几，完整的文本格式(Sunday 到 Saturday)
 
@@ -130,6 +133,7 @@ func (t *Time) Format(format string) string {
                         case 'j': buffer.WriteString(gstr.ReplaceByArray(result, []string{"=j=0", "", "=j=", ""}))
                         case 'G': buffer.WriteString(gstr.ReplaceByArray(result, []string{"=G=0", "", "=G=", ""}))
                         case 'u': buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
+                        case 'w': buffer.WriteString(weekstoint(result))
                         default:
                             buffer.WriteString(result)
                     }
@@ -145,4 +149,20 @@ func (t *Time) Format(format string) string {
 // 格式化，使用标准库格式
 func (t *Time) Layout(layout string) string {
     return t.Time.Format(layout)
+}
+
+// 将字母的星期数字转为数字:0为星期天 6为星期六
+func weekstoint(week string) string{
+
+    weeks:=map[string]string{
+        "Monday":"1",
+        "Tuesday":"2",
+        "Wednesday":"3",
+        "Thursday":"4",
+        "Friday":"5",
+        "Saturday ":"6",
+        "Sunday":"0",
+    }
+
+    return weeks[week]
 }
