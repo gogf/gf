@@ -1,10 +1,9 @@
 package gtime_test
 
 import (
-	"testing"
-
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
+	"testing"
 )
 
 func Test_Format(t *testing.T) {
@@ -30,6 +29,8 @@ func Test_Format(t *testing.T) {
 
 		gtest.Assert(timeTemp.Format("c"), "2006-01-11T15:04:05+08:00")
 
+
+
 		//补零
 		timeTemp1, err := gtime.StrToTime("2006-01-02 03:04:05", "Y-m-d H:i:s")
 		if err != nil {
@@ -42,6 +43,13 @@ func Test_Format(t *testing.T) {
 			t.Error("test fail")
 		}
 		gtest.Assert(timeTemp2.Format("Y-n-j G:i:s"), "2006-1-2 3:04:05")
+
+		// 测试星期值
+		//time1:=time.Friday()
+
+
+
+
 
 	})
 }
