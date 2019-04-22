@@ -43,21 +43,21 @@ func (r *Response) WriteTplContent(content string, params map[string]interface{}
 }
 
 // 解析模板文件，并返回模板内容
-func (r *Response) ParseTpl(tpl string, params gview.Params, funcMap...map[string]interface{}) ([]byte, error) {
-    fmap := make(gview.FuncMap)
+func (r *Response) ParseTpl(tpl string, params gview.Params, funcMap...map[string]interface{}) (string, error) {
+    m := make(gview.FuncMap)
     if len(funcMap) > 0 {
-        fmap = funcMap[0]
+        m = funcMap[0]
     }
-    return gins.View().Parse(tpl, r.buildInVars(params), r.buildInFuncs(fmap))
+    return gins.View().Parse(tpl, r.buildInVars(params), r.buildInFuncs(m))
 }
 
 // 解析并返回模板内容
-func (r *Response) ParseTplContent(content string, params gview.Params, funcMap...map[string]interface{}) ([]byte, error) {
-    fmap := make(gview.FuncMap)
+func (r *Response) ParseTplContent(content string, params gview.Params, funcMap...map[string]interface{}) (string, error) {
+    m := make(gview.FuncMap)
     if len(funcMap) > 0 {
-        fmap = funcMap[0]
+        m = funcMap[0]
     }
-    return gins.View().ParseContent(content, r.buildInVars(params), r.buildInFuncs(fmap))
+    return gins.View().ParseContent(content, r.buildInVars(params), r.buildInFuncs(m))
 }
 
 // 内置变量

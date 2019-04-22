@@ -2,21 +2,44 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/container/gtype"
-	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/crypto/gmd5"
+	"github.com/gogf/gf/g/encoding/gbase64"
+	"github.com/gogf/gf/g/text/gstr"
 )
-
 func main() {
-
-	var add float32
-	add = 3.1415926
-
-	myF32 := gtype.NewFloat32(add)
-	myAdd := myF32.Add(float32(6.2951413))
-
-	add += float32(6.2951413)
-
-	fmt.Println(myF32.Val())
-	gtest.AssertEQ(myAdd, add)
-
+	//fmt.Println([]byte{152})
+	//fmt.Println(len([]byte{152}))
+	//fmt.Println(len(string([]byte{152})))
+	//fmt.Println(len(string(byte(152))))
+	//os.Exit(1)
+	//fmt.Println(gstr.Chr(152))
+	//fmt.Println(len(gstr.Chr(152)))
+	//os.Exit(1)
+	data := "abcdefg"
+	dict := "no"
+	key := gmd5.EncryptString(dict)
+	x := 0
+	lenb := len(data)
+	l := len(key)
+	char := ""
+	strb := ""
+	for i := 0; i < lenb; i++ {
+		if x == l {
+			x = 0
+		}
+		char += key[x : x+1]
+		x++
+	}
+	for i := 0; i < lenb; i++ {
+		fmt.Println((gstr.Ord(data[i:i+1]) + gstr.Ord(char[i:i+1]) % 256))
+		//fmt.Println(gstr.Chr((gstr.Ord(data[i:i+1]) + gstr.Ord(char[i:i+1]) % 256) ))
+		//fmt.Println(data[i:i+1], gstr.Ord(data[i:i+1]), gstr.Ord(char[i:i+1]))
+		strb += gstr.Chr((gstr.Ord(data[i:i+1]) + gstr.Ord(char[i:i+1]) % 256) )
+		fmt.Println(len(strb))
+		fmt.Println("=============")
+	}
+	fmt.Println(strb)
+	fmt.Println(len(strb))
+	result := gbase64.Encode(strb)
+	fmt.Println(result)
 }

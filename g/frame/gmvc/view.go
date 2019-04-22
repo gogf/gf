@@ -56,7 +56,7 @@ func (view *View) BindFunc(name string, function interface{}){
 }
 
 // 解析模板，并返回解析后的内容
-func (view *View) Parse(file string) ([]byte, error) {
+func (view *View) Parse(file string) (string, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
     buffer, err := view.response.ParseTpl(file, view.data, view.fmap)
@@ -64,7 +64,7 @@ func (view *View) Parse(file string) ([]byte, error) {
 }
 
 // 直接解析模板内容，并返回解析后的内容
-func (view *View) ParseContent(content string) ([]byte, error) {
+func (view *View) ParseContent(content string) (string, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
     buffer, err := view.response.ParseTplContent(content, view.data, view.fmap)

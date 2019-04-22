@@ -357,11 +357,11 @@ func CountChars(str string, noSpace...bool) map[string]int {
     if len(noSpace) > 0 && noSpace[0] {
         countSpace = false
     }
-    for _, rune := range []rune(str) {
-        if !countSpace && unicode.IsSpace(rune) {
+    for _, r := range []rune(str) {
+        if !countSpace && unicode.IsSpace(r) {
             continue
         }
-        m[string(rune)]++
+        m[string(r)]++
     }
     return m
 }
@@ -484,7 +484,10 @@ func Implode(glue string, pieces []string) string {
 
 // Chr return the ascii string of a number(0-255).
 func Chr(ascii int) string {
-    return string(ascii)
+	if ascii > 255 {
+		return ""
+	}
+    return string([]byte{byte(ascii)})
 }
 
 // Ord converts the first byte of a string to a value between 0 and 255.
