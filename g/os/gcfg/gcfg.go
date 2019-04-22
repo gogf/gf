@@ -88,7 +88,7 @@ func (c *Config) filePath(file...string) (path string) {
                 for _, v := range array {
                     buffer.WriteString(fmt.Sprintf("\n%d. %s", index,  v))
                     index++
-                    buffer.WriteString(fmt.Sprintf("\n%d. %s%s%s", index,  v, gfile.Separator, "config"))
+                    buffer.WriteString(fmt.Sprintf("\n%d. %s", index,  v + gfile.Separator + "config"))
 	                index++
                 }
             })
@@ -217,12 +217,10 @@ func (c *Config) GetFilePath(file...string) (path string) {
     }
     c.paths.RLockFunc(func(array []string) {
         for _, v := range array {
-            // 查找当前目录
             if path, _ = gspath.Search(v, name); path != "" {
                 break
             }
-            // 查找当前目录下的config子目录
-            if path, _ = gspath.Search(v, "config" + gfile.Separator + name); path != "" {
+            if path, _ = gspath.Search(v + gfile.Separator + "config", name); path != "" {
                 break
             }
         }

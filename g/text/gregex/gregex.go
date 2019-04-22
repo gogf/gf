@@ -112,8 +112,6 @@ func ReplaceString(pattern, replace, src string) (string, error) {
 
 // ReplaceFunc replace all matched <pattern> in bytes <src>
 // with custom replacement function <replaceFunc>.
-//
-// 正则替换(全部替换)，给定自定义替换方法
 func ReplaceFunc(pattern string, src []byte, replaceFunc func(b []byte) []byte) ([]byte, error) {
     if r, err := getRegexp(pattern); err == nil {
         return r.ReplaceAllFunc(src, replaceFunc), nil
@@ -124,8 +122,6 @@ func ReplaceFunc(pattern string, src []byte, replaceFunc func(b []byte) []byte) 
 
 // ReplaceStringFunc replace all matched <pattern> in string <src>
 // with custom replacement function <replaceFunc>.
-//
-// 正则替换(全部替换)，给定自定义替换方法
 func ReplaceStringFunc(pattern string, src string, replaceFunc func(s string) string) (string, error) {
     bytes, err := ReplaceFunc(pattern, []byte(src), func(bytes []byte) []byte {
         return []byte(replaceFunc(string(bytes)))
@@ -133,10 +129,8 @@ func ReplaceStringFunc(pattern string, src string, replaceFunc func(s string) st
     return string(bytes), err
 }
 
-// Split slices s into substrings separated by the expression and returns a slice of
+// Split slices <src> into substrings separated by the expression and returns a slice of
 // the substrings between those expression matches.
-//
-// 通过一个正则表达式分隔字符串.
 func Split(pattern string, src string) []string {
     if r, err := getRegexp(pattern); err == nil {
         return r.Split(src, -1)
