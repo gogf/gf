@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
-	"strconv"
 	"strings"
 )
 
@@ -20,7 +19,7 @@ var (
 		// ================== 日 ==================
 		'd': "02",     // 月份中的第几天，有前导零的 2 位数字(01 到 31)
 		'D': "Mon",    // 星期中的第几天，文本表示，3 个字母(Mon 到 Sun)
-		'w': "",       // 星期中的第几天，数字型式的文本表示 0为星期天 6为星期六
+		'w': "Monday", // 星期中的第几天，数字型式的文本表示 0为星期天 6为星期六
 		'j': "=j=02",  // 月份中的第几天，没有前导零(1 到 31)
 		'l': "Monday", // ("L"的小写字母)星期几，完整的文本格式(Sunday 到 Saturday)
 
@@ -53,6 +52,17 @@ var (
 		// ================== 完整的日期／时间 ==================
 		'c': "2006-01-02T15:04:05-07:00", // ISO 8601 格式的日期，例如：2004-02-12T15:19:21+00:00
 		'r': "Mon, 02 Jan 06 15:04 MST",  // RFC 822 格式的日期，例如：Thu, 21 Dec 2000 16:01:07 +0200
+	}
+
+	// 星期的英文值和数字值对应map
+	weekentoi = map[string]string{
+		"Sunday":    "0",
+		"Monday":    "1",
+		"Tuesday":   "2",
+		"Wednesday": "3",
+		"Thursday":  "4",
+		"Friday":    "5",
+		"Saturday":  "6",
 	}
 )
 
@@ -136,7 +146,7 @@ func (t *Time) Format(format string) string {
 				case 'u':
 					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
 				case 'w':
-					buffer.WriteString(strconv.Itoa(int(t.Weekday())))
+					buffer.WriteString(weekentoi[result])
 				default:
 					buffer.WriteString(result)
 				}
