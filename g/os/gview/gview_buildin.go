@@ -26,7 +26,7 @@ func (view *View) funcInclude(file string, data...map[string]interface{}) string
     if err != nil {
         return err.Error()
     }
-    return string(content)
+    return content
 }
 
 // Build-in template function: text
