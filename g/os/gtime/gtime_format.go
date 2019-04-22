@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
+	"strconv"
 	"strings"
 )
 
@@ -135,7 +136,7 @@ func (t *Time) Format(format string) string {
 				case 'u':
 					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
 				case 'w':
-					buffer.WriteString(weekstosint(result))
+					buffer.WriteString(strconv.Itoa(int(t.Weekday())))
 				default:
 					buffer.WriteString(result)
 				}
@@ -151,20 +152,4 @@ func (t *Time) Format(format string) string {
 // 格式化，使用标准库格式
 func (t *Time) Layout(layout string) string {
 	return t.Time.Format(layout)
-}
-
-// 将字母的星期数字转为数字:0为星期天 6为星期六
-func weekstosint(week string) string {
-
-	weeks := map[string]string{
-		"Monday":    "1",
-		"Tuesday":   "2",
-		"Wednesday": "3",
-		"Thursday":  "4",
-		"Friday":    "5",
-		"Saturday ": "6",
-		"Sunday":    "0",
-	}
-
-	return weeks[week]
 }
