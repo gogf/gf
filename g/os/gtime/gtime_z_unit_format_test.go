@@ -29,8 +29,6 @@ func Test_Format(t *testing.T) {
 
 		gtest.Assert(timeTemp.Format("c"), "2006-01-11T15:04:05+08:00")
 
-
-
 		//补零
 		timeTemp1, err := gtime.StrToTime("2006-01-02 03:04:05", "Y-m-d H:i:s")
 		if err != nil {
@@ -44,12 +42,17 @@ func Test_Format(t *testing.T) {
 		}
 		gtest.Assert(timeTemp2.Format("Y-n-j G:i:s"), "2006-1-2 3:04:05")
 
-		// 测试星期值
-		//time1:=time.Friday()
+		// 测试数字型的星期
+		times := []map[string]string{
+			{"k": "2019-04-22", "f": "w", "r": "1"},
+			{"k": "2019-03-10", "f": "Y-m-d 星期:w", "r": "2019-03-10 星期:0"},
+		}
 
-
-
-
+		for _, v := range times {
+			t1, err1 := gtime.StrToTime(v["k"], "Y-m-d")
+			gtest.Assert(err1, nil)
+			gtest.Assert(t1.Format(v["f"]), v["r"])
+		}
 
 	})
 }
