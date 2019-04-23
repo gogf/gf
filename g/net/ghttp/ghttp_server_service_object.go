@@ -57,7 +57,7 @@ func (s *Server)BindObject(pattern string, obj interface{}, methods...string) {
         if !ok {
             if len(methodMap) > 0 {
                 // 指定的方法名称注册，那么需要使用错误提示
-                glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required`,
+                glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
                     pkgPath, objName, mname, v.Method(i).Type().String())
             } else {
                 // 否则只是Debug提示
@@ -127,7 +127,7 @@ func (s *Server)BindObjectMethod(pattern string, obj interface{}, method string)
     }
     faddr, ok := fval.Interface().(func(*Request))
     if !ok {
-        glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required`,
+        glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
             pkgPath, objName, mname, fval.Type().String())
         return
     }
@@ -174,7 +174,7 @@ func (s *Server)BindObjectRest(pattern string, obj interface{}) {
         }
         faddr, ok := v.Method(i).Interface().(func(*Request))
         if !ok {
-            glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required`,
+            glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
                 pkgPath, objName, mname, v.Method(i).Type().String())
             continue
         }
