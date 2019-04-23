@@ -11,13 +11,15 @@ import (
     "sync"
 )
 
-// 缓存对象，主要用于缓存底层regx对象
 var (
     regexMu  = sync.RWMutex{}
     regexMap = make(map[string]*regexp.Regexp)
 )
 
-// 根据pattern生成对应的regexp正则对象
+// getRegexp returns *regexp.Regexp object with given <pattern>.
+// It uses cache to enhance the performance for compiling regular expression pattern,
+// which means, it will return the same *regexp.Regexp object with the same regular
+// expression pattern.
 func getRegexp(pattern string) (*regexp.Regexp, error) {
     if r := getCache(pattern); r != nil {
         return r, nil
@@ -30,7 +32,7 @@ func getRegexp(pattern string) (*regexp.Regexp, error) {
     }
 }
 
-// 获得正则缓存对象
+// getCache returns *regexp.Regexp object from cache by given <pattern>, for internal usage.
 func getCache(pattern string) (regex *regexp.Regexp) {
     regexMu.RLock()
     regex = regexMap[pattern]
@@ -38,7 +40,7 @@ func getCache(pattern string) (regex *regexp.Regexp) {
     return
 }
 
-// 设置正则缓存对象
+// setCache stores *regexp.Regexp object into cache, for internal usage.
 func setCache(pattern string, regex *regexp.Regexp) {
     regexMu.Lock()
     regexMap[pattern] = regex
