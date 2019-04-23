@@ -17,7 +17,6 @@ func main() {
 			"mainTpl": "main/main2.html",
 		})
 	})
-	g.View().SetPath("template")
 	s.SetPort(8199)
 	s.Run()
 }
