@@ -55,7 +55,7 @@ var (
 	}
 
 	// 星期的英文值和数字值对应map
-	weekentoi = map[string]string{
+	weekMap = map[string]string{
 		"Sunday":    "0",
 		"Monday":    "1",
 		"Tuesday":   "2",
@@ -146,7 +146,7 @@ func (t *Time) Format(format string) string {
 				case 'u':
 					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
 				case 'w':
-					buffer.WriteString(weekentoi[result])
+					buffer.WriteString(weekMap[result])
 				default:
 					buffer.WriteString(result)
 				}
