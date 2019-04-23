@@ -47,7 +47,7 @@ func (d *Domain) Group(prefix...string) *RouterGroup {
 }
 
 // 执行分组路由批量绑定
-func (g *RouterGroup) Bind(group string, items []GroupItem) {
+func (g *RouterGroup) Bind(items []GroupItem) {
     for _, item := range items {
         if len(item) < 3 {
             glog.Fatalfln("invalid router item: %s", item)
