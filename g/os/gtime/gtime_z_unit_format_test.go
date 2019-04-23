@@ -1,10 +1,9 @@
 package gtime_test
 
 import (
-	"testing"
-
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
+	"testing"
 )
 
 func Test_Format(t *testing.T) {
@@ -42,6 +41,20 @@ func Test_Format(t *testing.T) {
 			t.Error("test fail")
 		}
 		gtest.Assert(timeTemp2.Format("Y-n-j G:i:s"), "2006-1-2 3:04:05")
+
+		// 测试数字型的星期
+		times := []map[string]string{
+			{"k": "2019-04-22", "f": "w", "r": "1"},
+			{"k": "2019-04-27", "f": "w", "r": "6"},
+			{"k": "2019-03-10", "f": "w", "r": "0"},
+			{"k": "2019-03-10", "f": "Y-m-d 星期:w", "r": "2019-03-10 星期:0"},
+		}
+
+		for _, v := range times {
+			t1, err1 := gtime.StrToTime(v["k"], "Y-m-d")
+			gtest.Assert(err1, nil)
+			gtest.Assert(t1.Format(v["f"]), v["r"])
+		}
 
 	})
 }
