@@ -20,7 +20,9 @@ var (
 		'd': "02",     // 月份中的第几天，有前导零的 2 位数字(01 到 31)
 		'D': "Mon",    // 星期中的第几天，文本表示，3 个字母(Mon 到 Sun)
 		'w': "Monday", // 星期中的第几天，数字型式的文本表示 0为星期天 6为星期六
+		'N': "Monday", // ISO-8601 格式数字表示的星期中的第几天 1（表示星期一）到 7（表示星期天）
 		'j': "=j=02",  // 月份中的第几天，没有前导零(1 到 31)
+		'S': "02",     // 每月天数后面的英文后缀，2 个字符 st，nd，rd 或者 th。可以和 j 一起用
 		'l': "Monday", // ("L"的小写字母)星期几，完整的文本格式(Sunday 到 Saturday)
 
 		// ================== 月 ==================
@@ -63,6 +65,14 @@ var (
 		"Thursday":  "4",
 		"Friday":    "5",
 		"Saturday":  "6",
+	}
+
+	// 月份中的第几天数字值和英文值对应map, 最后一个数字为0或大于4时 都为'th'
+	monthDayMap = map[string]string{
+		"1": "st",
+		"2": "nd",
+		"3": "rd",
+		"4": "th",
 	}
 )
 
@@ -147,6 +157,10 @@ func (t *Time) Format(format string) string {
 					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
 				case 'w':
 					buffer.WriteString(weekMap[result])
+				case 'N':
+					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
+				case 'S':
+					buffer.WriteString(formatMonthDayMap(result[1:]))
 				default:
 					buffer.WriteString(result)
 				}
@@ -157,6 +171,14 @@ func (t *Time) Format(format string) string {
 		i++
 	}
 	return buffer.String()
+}
+
+func formatMonthDayMap(days string) string {
+	if days > "4" || days == "0" {
+		return monthDayMap["4"]
+	} else {
+		return monthDayMap[days]
+	}
 }
 
 // 格式化，使用标准库格式
