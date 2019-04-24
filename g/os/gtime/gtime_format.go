@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
+	"strconv"
 	"strings"
 )
 
@@ -24,6 +25,7 @@ var (
 		'j': "=j=02",  // 月份中的第几天，没有前导零(1 到 31)
 		'S': "02",     // 每月天数后面的英文后缀，2 个字符 st，nd，rd 或者 th。可以和 j 一起用
 		'l': "Monday", // ("L"的小写字母)星期几，完整的文本格式(Sunday 到 Saturday)
+		'z': "",       // 年份中的第几天  0到365
 
 		// ================== 月 ==================
 		'F': "January", // 月份，完整的文本格式，例如 January 或者 March	January 到 December
@@ -74,6 +76,9 @@ var (
 		"3": "rd",
 		"4": "th",
 	}
+
+	// 每个月累计的天数 不含润年的时候
+	dayOfMonth = []int{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}
 )
 
 // 将自定义的格式转换为标准库时间格式
@@ -161,6 +166,8 @@ func (t *Time) Format(format string) string {
 					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
 				case 'S':
 					buffer.WriteString(formatMonthDayMap(result[1:]))
+				case 'z':
+					buffer.WriteString(strconv.Itoa(dayOfYear(t)))
 				default:
 					buffer.WriteString(result)
 				}
@@ -173,14 +180,32 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-func formatMonthDayMap(days string) string {
-	if days > "4" || days == "0" {
+func formatMonthDayMap(day string) string {
+	if day > "4" || day == "0" {
 		return monthDayMap["4"]
 	}
-	return monthDayMap[days]
+	return monthDayMap[day]
 }
 
-// 格式化，使用标准库格式
+// 返回一个时间点在当年中是第几天 0到365 有润年情况
+func dayOfYear(t *Time) int {
+	year := t.Year()
+	month := int(t.Month())
+	day := t.Day()
+
+	// 判断是否润年
+	if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
+		if month > 2 {
+			return dayOfMonth[month-1] + day
+		}
+		return dayOfMonth[month-1] + day - 1
+	}
+
+	return dayOfMonth[month-1] + day - 1
+
+}
+
+//格式化使用标准库格式
 func (t *Time) Layout(layout string) string {
 	return t.Time.Format(layout)
 }
