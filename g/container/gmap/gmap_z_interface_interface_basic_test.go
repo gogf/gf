@@ -12,6 +12,7 @@ func getValue() interface{} {
 func callBack(k interface{}, v interface{}) bool {
 	return true
 }
+
 func Test_Map_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		m := gmap.New()
@@ -63,10 +64,43 @@ func Test_Map_Set_Fun(t *testing.T) {
 func Test_Map_Batch(t *testing.T) {
 	m := gmap.New()
 	m.BatchSet(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-	m.Iterator(callBack)
 	gtest.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
 	m.BatchRemove([]interface{}{"key1", 1})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
+}
+func Test_Map_Iterator(t *testing.T){
+	expect :=map[interface{}]interface{}{1: 1, "key1": "val1"}
+
+	m := gmap.NewFrom(expect)
+	m.Iterator(func(k interface{}, v interface{}) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k interface{}, v interface{}) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k interface{}, v interface{}) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
+}
+
+func Test_Map_Lock(t *testing.T){
+	expect :=map[interface{}]interface{}{1: 1, "key1": "val1"}
+
+	m := gmap.NewFrom(expect)
+	m.LockFunc(func(m map[interface{}]interface{}) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[interface{}]interface{}) {
+		gtest.Assert(m, expect)
+	})
 }
 
 func Test_Map_Clone(t *testing.T) {

@@ -53,19 +53,55 @@ func Test_StringInterfaceMap_Set_Fun(t *testing.T) {
 	gtest.Assert(m.Get("a"), 123)
 	gtest.Assert(m.Get("b"), 123)
 	gtest.Assert(m.SetIfNotExistFunc("a", getInterface), false)
+	gtest.Assert(m.SetIfNotExistFunc("c", getInterface), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock("b", getInterface), false)
+	gtest.Assert(m.SetIfNotExistFuncLock("d", getInterface), true)
+
 }
 
 func Test_StringInterfaceMap_Batch(t *testing.T) {
 	m := gmap.NewStringInterfaceMap()
 
 	m.BatchSet(map[string]interface{}{"a": 1, "b": "2", "c": 3})
-	m.Iterator(stringInterfaceCallBack)
 	gtest.Assert(m.Map(), map[string]interface{}{"a": 1, "b": "2", "c": 3})
 	m.BatchRemove([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]interface{}{"c": 3})
 }
 
+func Test_StringInterfaceMap_Iterator(t *testing.T) {
+	expect := map[string]interface{}{"a": true, "b": false}
+	m := gmap.NewStringInterfaceMapFrom(expect)
+	m.Iterator(func(k string, v interface{}) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k string, v interface{}) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k string, v interface{}) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
+}
+
+func Test_StringInterfaceMap_Lock(t *testing.T) {
+	expect := map[string]interface{}{"a": true, "b": false}
+
+	m      := gmap.NewStringInterfaceMapFrom(expect)
+	m.LockFunc(func(m map[string]interface{}) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[string]interface{}) {
+		gtest.Assert(m, expect)
+	})
+}
 func Test_StringInterfaceMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
 	m := gmap.NewStringInterfaceMapFrom(map[string]interface{}{"a": 1, "b": "2"})

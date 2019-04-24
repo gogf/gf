@@ -8,21 +8,28 @@ package ghttp
 
 import (
     "github.com/gogf/gf/g/encoding/gurl"
-    "strings"
+	"github.com/gogf/gf/g/util/gconv"
+	"strings"
 )
 
-// 构建请求参数，将参数进行urlencode编码
-func BuildParams(params map[string]string) string {
-    var s string
-    for k, v := range params {
-        if len(s) > 0 {
-            s += "&"
+// 构建请求参数，参数支持任意数据类型，常见参数类型为string/map。
+// 如果参数为map类型，参数值将会进行urlencode编码。
+func BuildParams(params interface{}) (encodedParamStr string) {
+	m := gconv.Map(params)
+	if len(m) == 0 {
+		return gconv.String(params)
+	}
+	s := ""
+    for k, v := range m {
+        if len(encodedParamStr) > 0 {
+	        encodedParamStr += "&"
         }
-        if len(v) > 6 && strings.Compare(v[0 : 6], "@file:") == 0 {
-            s += k + "=" + v
+        s = gconv.String(v)
+        if len(s) > 6 && strings.Compare(s[0 : 6], "@file:") == 0 {
+	        encodedParamStr += k + "=" + s
         } else {
-            s += k + "=" + gurl.Encode(v)
+	        encodedParamStr += k + "=" + gurl.Encode(s)
         }
     }
-    return s
+    return
 }

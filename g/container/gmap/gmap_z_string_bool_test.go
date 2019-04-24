@@ -6,8 +6,7 @@ import (
 	"testing"
 )
 
-
-func StringBoolCallBack( string, bool) bool {
+func StringBoolCallBack(string, bool) bool {
 	return true
 }
 func Test_StringBoolMap_Basic(t *testing.T) {
@@ -49,17 +48,55 @@ func Test_StringBoolMap_Set_Fun(t *testing.T) {
 	gtest.Assert(m.Get("a"), true)
 	gtest.Assert(m.Get("b"), true)
 	gtest.Assert(m.SetIfNotExistFunc("a", getBool), false)
+	gtest.Assert(m.SetIfNotExistFunc("c", getBool), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock("b", getBool), false)
+	gtest.Assert(m.SetIfNotExistFuncLock("d", getBool), true)
+
 }
 
 func Test_StringBoolMap_Batch(t *testing.T) {
 	m := gmap.NewStringBoolMap()
 
 	m.BatchSet(map[string]bool{"a": true, "b": false, "c": true})
-	m.Iterator(StringBoolCallBack)
 	gtest.Assert(m.Map(), map[string]bool{"a": true, "b": false, "c": true})
 	m.BatchRemove([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]bool{"c": true})
+}
+
+func Test_StringBoolMap_Iterator(t *testing.T) {
+	expect := map[string]bool{"a": true, "b": false}
+	m := gmap.NewStringBoolMapFrom(expect)
+	m.Iterator(func(k string, v bool) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k string, v bool) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k string, v bool) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
+
+}
+
+func Test_StringBoolMap_Lock(t *testing.T) {
+	expect := map[string]bool{"a": true, "b": false}
+
+	m      := gmap.NewStringBoolMapFrom(expect)
+	m.LockFunc(func(m map[string]bool) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[string]bool) {
+		gtest.Assert(m, expect)
+	})
 }
 
 func Test_StringBoolMap_Clone(t *testing.T) {

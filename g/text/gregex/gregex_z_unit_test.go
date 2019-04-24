@@ -185,6 +185,33 @@ func Test_ReplaceFun(t *testing.T) {
 	})
 }
 
+func Test_ReplaceFuncMatch(t *testing.T) {
+	gtest.Case(t, func() {
+		s := []byte("1234567890")
+		p := `(\d{3})(\d{3})(.+)`
+		s0, e0 := gregex.ReplaceFuncMatch(p, s, func(match [][]byte) []byte {
+			return match[0]
+		})
+		gtest.Assert(e0, nil)
+		gtest.Assert(s0, s)
+		s1, e1 := gregex.ReplaceFuncMatch(p, s, func(match [][]byte) []byte {
+			return match[1]
+		})
+		gtest.Assert(e1, nil)
+		gtest.Assert(s1, []byte("123"))
+		s2, e2 := gregex.ReplaceFuncMatch(p, s, func(match [][]byte) []byte {
+			return match[2]
+		})
+		gtest.Assert(e2, nil)
+		gtest.Assert(s2, []byte("456"))
+		s3, e3 := gregex.ReplaceFuncMatch(p, s, func(match [][]byte) []byte {
+			return match[3]
+		})
+		gtest.Assert(e3, nil)
+		gtest.Assert(s3, []byte("7890"))
+	})
+}
+
 func Test_ReplaceStringFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		re := "a(a+b+)b"
@@ -203,6 +230,33 @@ func Test_ReplaceStringFunc(t *testing.T) {
 		if replacedStr != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}
+	})
+}
+
+func Test_ReplaceStringFuncMatch(t *testing.T) {
+	gtest.Case(t, func() {
+		s := "1234567890"
+		p := `(\d{3})(\d{3})(.+)`
+		s0, e0 := gregex.ReplaceStringFuncMatch(p, s, func(match []string) string {
+			return match[0]
+		})
+		gtest.Assert(e0, nil)
+		gtest.Assert(s0, s)
+		s1, e1 := gregex.ReplaceStringFuncMatch(p, s, func(match []string) string {
+			return match[1]
+		})
+		gtest.Assert(e1, nil)
+		gtest.Assert(s1, "123")
+		s2, e2 := gregex.ReplaceStringFuncMatch(p, s, func(match []string) string {
+			return match[2]
+		})
+		gtest.Assert(e2, nil)
+		gtest.Assert(s2, "456")
+		s3, e3 := gregex.ReplaceStringFuncMatch(p, s, func(match []string) string {
+			return match[3]
+		})
+		gtest.Assert(e3, nil)
+		gtest.Assert(s3, "7890")
 	})
 }
 
