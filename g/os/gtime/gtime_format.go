@@ -176,9 +176,8 @@ func (t *Time) Format(format string) string {
 func formatMonthDayMap(days string) string {
 	if days > "4" || days == "0" {
 		return monthDayMap["4"]
-	} else {
-		return monthDayMap[days]
 	}
+	return monthDayMap[days]
 }
 
 // 格式化，使用标准库格式
