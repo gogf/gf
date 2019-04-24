@@ -55,17 +55,54 @@ func Test_StringIntMap_Set_Fun(t *testing.T) {
 	gtest.Assert(m.Get("a"), 123)
 	gtest.Assert(m.Get("b"), 123)
 	gtest.Assert(m.SetIfNotExistFunc("a", getInt), false)
+	gtest.Assert(m.SetIfNotExistFunc("c", getInt), true)
+
 	gtest.Assert(m.SetIfNotExistFuncLock("b", getInt), false)
+	gtest.Assert(m.SetIfNotExistFuncLock("d", getInt), true)
+
 }
 
 func Test_StringIntMap_Batch(t *testing.T) {
 	m := gmap.NewStringIntMap()
 
 	m.BatchSet(map[string]int{"a": 1, "b": 2, "c": 3})
-	m.Iterator(stringIntCallBack)
 	gtest.Assert(m.Map(), map[string]int{"a": 1, "b": 2, "c": 3})
 	m.BatchRemove([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]int{"c": 3})
+}
+func Test_StringIntMap_Iterator(t *testing.T) {
+	expect := map[string]int{"a": 1, "b": 2}
+	m := gmap.NewStringIntMapFrom(expect)
+	m.Iterator(func(k string, v int) bool {
+		gtest.Assert(expect[k], v)
+		return true
+	})
+	// 断言返回值对遍历控制
+	i := 0
+	j := 0
+	m.Iterator(func(k string, v int) bool {
+		i++
+		return true
+	})
+	m.Iterator(func(k string, v int) bool {
+		j++
+		return false
+	})
+	gtest.Assert(i, 2)
+	gtest.Assert(j, 1)
+
+}
+
+func Test_StringIntMap_Lock(t *testing.T) {
+	expect := map[string]int{"a": 1, "b": 2}
+
+	m      := gmap.NewStringIntMapFrom(expect)
+	m.LockFunc(func(m map[string]int) {
+		gtest.Assert(m, expect)
+	})
+	m.RLockFunc(func(m map[string]int) {
+		gtest.Assert(m, expect)
+	})
 }
 
 func Test_StringIntMap_Clone(t *testing.T) {
