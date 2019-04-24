@@ -7,13 +7,13 @@ import (
 
 func main() {
 	// 创建一个非并发安全的集合对象
-	s := gset.New(false)
+	s := gset.New(true)
 
 	// 添加数据项
 	s.Add(1)
 
 	// 批量添加数据项
-	s.BatchAdd([]interface{}{1, 2, 3})
+	s.Add([]interface{}{1, 2, 3}...)
 
 	// 集合数据项大小
 	fmt.Println(s.Size())

@@ -28,6 +28,18 @@ func NewStringSet(unsafe...bool) *StringSet {
 	}
 }
 
+// NewStringSetFrom returns a new set from <items>.
+func NewStringSetFrom(items []string, unsafe...bool) *StringSet {
+	m := make(map[string]struct{})
+	for _, v := range items {
+		m[v] = struct{}{}
+	}
+	return &StringSet{
+		m  : m,
+		mu : rwmutex.New(unsafe...),
+	}
+}
+
 // Iterator iterates the set with given callback function <f>,
 // if <f> returns true then continue iterating; or false to stop.
 func (set *StringSet) Iterator(f func (v string) bool) *StringSet {

@@ -28,6 +28,18 @@ func NewIntSet(unsafe...bool) *IntSet {
 	}
 }
 
+// NewIntSetFrom returns a new set from <items>.
+func NewIntSetFrom(items []int, unsafe...bool) *IntSet {
+	m := make(map[int]struct{})
+	for _, v := range items {
+		m[v] = struct{}{}
+	}
+	return &IntSet{
+		m  : m,
+		mu : rwmutex.New(unsafe...),
+	}
+}
+
 // Iterator iterates the set with given callback function <f>,
 // if <f> returns true then continue iterating; or false to stop.
 func (set *IntSet) Iterator(f func (v int) bool) *IntSet {

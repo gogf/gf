@@ -33,6 +33,19 @@ func NewSet(unsafe...bool) *Set {
     }
 }
 
+// NewFrom returns a new set from <items>.
+// Parameter <items> can be either a variable of any type, or a slice.
+func NewFrom(items interface{}, unsafe...bool) *Set {
+	m := make(map[interface{}]struct{})
+	for _, v := range gconv.Interfaces(items) {
+		m[v] = struct{}{}
+	}
+	return &Set{
+		m  : m,
+		mu : rwmutex.New(unsafe...),
+	}
+}
+
 // Iterator iterates the set with given callback function <f>,
 // if <f> returns true then continue iterating; or false to stop.
 func (set *Set) Iterator(f func (v interface{}) bool) *Set {
