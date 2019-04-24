@@ -61,7 +61,10 @@ func Decrypt(cipherText []byte, key []byte, iv...[]byte) ([]byte, error) {
     blockModel := cipher.NewCBCDecrypter(block, ivValue)
     plainText  := make([]byte, len(cipherText))
     blockModel.CryptBlocks(plainText, cipherText)
-    plainText = PKCS5UnPadding(plainText)
+    plainText, e := PKCS5UnPadding(plainText, blockSize)
+	if e != nil {
+		return nil, e
+	}
 
     return plainText, nil
 }
@@ -72,8 +75,27 @@ func PKCS5Padding(src []byte, blockSize int) []byte {
     return append(src, padtext...)
 }
 
-func PKCS5UnPadding(src []byte) []byte {
+func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
     length    := len(src)
+    if blockSize <= 0 {
+        return nil, errors.New("invalid blocklen")
+    }
+
+	if length%blockSize != 0 || length == 0 {
+		return nil, errors.New("invalid data len")
+	}
+
     unpadding := int(src[length - 1])
-    return src[:(length - unpadding)]
+	if unpadding > blockSize || unpadding == 0 {
+		return nil, errors.New("invalid padding")
+	}
+
+    padding := src[length - unpadding:]
+	for i := 0; i < unpadding; i++ {
+		if padding[i] != byte(unpadding) {
+			return nil, errors.New("invalid padding")
+		}
+	}
+
+    return src[:(length - unpadding)], nil
 }
