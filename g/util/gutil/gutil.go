@@ -62,7 +62,7 @@ func Export(i...interface{}) string {
 func PrintBacktrace() {
     index  := 1
     buffer := bytes.NewBuffer(nil)
-    for i := 0; i < 10000; i++ {
+    for i := 1; i < 10000; i++ {
         if _, path, line, ok := runtime.Caller(i); ok {
             buffer.WriteString(fmt.Sprintf(`%d. %s:%d%s`, index, path, line, "\n"))
             index++

@@ -296,3 +296,9 @@ func (set *Set) Sum() (sum int) {
 	}
 	return
 }
+
+// Join joins items with a string <glue>.
+func (set *Set) Pops(size int) []interface{} {
+	array := make([]interface{}, 0, size)
+	return array
+}
