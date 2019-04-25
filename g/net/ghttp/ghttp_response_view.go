@@ -13,13 +13,9 @@ import (
 )
 
 // 展示模板，可以给定模板参数，及临时的自定义模板函数
-func (r *Response) WriteTpl(tpl string, params map[string]interface{}, funcMap...map[string]interface{}) error {
-    fmap := make(gview.FuncMap)
-    if len(funcMap) > 0 {
-        fmap = funcMap[0]
-    }
-    if b, err := r.ParseTpl(tpl, params, fmap); err != nil {
-        r.Write("Tpl Parsing Error: " + err.Error())
+func (r *Response) WriteTpl(tpl string, params...gview.Params) error {
+    if b, err := r.ParseTpl(tpl, params...); err != nil {
+        r.Write("Template Parsing Error: " + err.Error())
         return err
     } else {
         r.Write(b)
@@ -28,13 +24,9 @@ func (r *Response) WriteTpl(tpl string, params map[string]interface{}, funcMap..
 }
 
 // 展示模板内容，可以给定模板参数，及临时的自定义模板函数
-func (r *Response) WriteTplContent(content string, params map[string]interface{}, funcMap...map[string]interface{}) error {
-    fmap := make(gview.FuncMap)
-    if len(funcMap) > 0 {
-        fmap = funcMap[0]
-    }
-    if b, err := r.ParseTplContent(content, params, fmap); err != nil {
-        r.Write("Tpl Parsing Error: " + err.Error())
+func (r *Response) WriteTplContent(content string, params...gview.Params) error {
+    if b, err := r.ParseTplContent(content, params...); err != nil {
+        r.Write("Template Parsing Error: " + err.Error())
         return err
     } else {
         r.Write(b)
@@ -43,61 +35,27 @@ func (r *Response) WriteTplContent(content string, params map[string]interface{}
 }
 
 // 解析模板文件，并返回模板内容
-func (r *Response) ParseTpl(tpl string, params gview.Params, funcMap...map[string]interface{}) (string, error) {
-    m := make(gview.FuncMap)
-    if len(funcMap) > 0 {
-        m = funcMap[0]
-    }
-    return gins.View().Parse(tpl, r.buildInVars(params), r.buildInFuncs(m))
+func (r *Response) ParseTpl(tpl string, params...gview.Params) (string, error) {
+    return gins.View().Parse(tpl, r.buildInVars(params...))
 }
 
 // 解析并返回模板内容
-func (r *Response) ParseTplContent(content string, params gview.Params, funcMap...map[string]interface{}) (string, error) {
-    m := make(gview.FuncMap)
-    if len(funcMap) > 0 {
-        m = funcMap[0]
-    }
-    return gins.View().ParseContent(content, r.buildInVars(params), r.buildInFuncs(m))
+func (r *Response) ParseTplContent(content string, params...gview.Params) (string, error) {
+    return gins.View().ParseContent(content, r.buildInVars(params...))
 }
 
-// 内置变量
-func (r *Response) buildInVars(params map[string]interface{}) map[string]interface{} {
-    if params == nil {
-        params = make(map[string]interface{})
-    }
-    c := gins.Config()
-    if c.GetFilePath() != "" {
-        params["Config"]  = c.GetMap("")
+// 内置变量/对象
+func (r *Response) buildInVars(params...map[string]interface{}) map[string]interface{} {
+	vars := map[string]interface{}(nil)
+    if len(params) > 0 {
+	    vars = params[0]
     } else {
-        params["Config"]  = nil
+	    vars = make(map[string]interface{})
     }
-    params["Cookie"]  = r.request.Cookie.Map()
-    params["Session"] = r.request.Session.Data()
-    return params
-}
-
-// 内置函数
-func (r *Response) buildInFuncs(funcMap map[string]interface{}) map[string]interface{} {
-    if funcMap == nil {
-        funcMap = make(map[string]interface{})
-    }
-    funcMap["get"]       = r.funcGet
-    funcMap["post"]      = r.funcPost
-    funcMap["request"]   = r.funcRequest
-    return funcMap
-}
-
-// 模板内置函数: get
-func (r *Response) funcGet(key string, def...string) string {
-    return r.request.GetQueryString(key, def...)
-}
-
-// 模板内置函数: post
-func (r *Response) funcPost(key string, def...string) string {
-    return r.request.GetPostString(key, def...)
-}
-
-// 模板内置函数: request
-func (r *Response) funcRequest(key string, def...string) string {
-    return r.request.Get(key, def...)
+	vars["Config"]  = gins.Config().GetMap("")
+	vars["Cookie"]  = r.request.Cookie.Map()
+	vars["Session"] = r.request.Session.Map()
+	vars["Get"]     = r.request.GetQueryMap()
+	vars["Post"]    = r.request.GetPostMap()
+    return vars
 }

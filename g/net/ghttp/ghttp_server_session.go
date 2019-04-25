@@ -69,7 +69,7 @@ func (s *Session) Id() string {
 }
 
 // 获取当前session所有数据
-func (s *Session) Data() map[string]interface{} {
+func (s *Session) Map() map[string]interface{} {
     if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
         s.init()
         return s.data.Map()

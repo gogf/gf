@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/frame/gmvc"
 	"github.com/gogf/gf/g/net/ghttp"
 )
@@ -11,7 +12,7 @@ type ControllerIndex struct {
 
 func (c *ControllerIndex) Info() {
 	c.View.Assign("title", "Go Frame 第一个网站")
-	c.View.Assigns(map[string]interface{}{
+	c.View.Assigns(g.Map{
 		"name":  "很开心1",
 		"score": 100,
 	})

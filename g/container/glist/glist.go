@@ -289,6 +289,10 @@ func (l *List) RemoveAll() {
     l.mu.Unlock()
 }
 
+func (l *List) Clear() {
+	l.RemoveAll()
+}
+
 // 读锁操作
 func (l *List) RLockFunc(f func(list *list.List)) {
     l.mu.RLock()
