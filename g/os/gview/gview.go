@@ -90,6 +90,12 @@ func New(path...string) *View {
         "version" : gf.VERSION,
     }
     // default build-in functions.
+    view.BindFunc("eq",          view.funcEq)
+    view.BindFunc("ne",          view.funcNe)
+    view.BindFunc("lt",          view.funcLt)
+    view.BindFunc("le",          view.funcLe)
+    view.BindFunc("gt",          view.funcGt)
+    view.BindFunc("ge",          view.funcGe)
     view.BindFunc("text",        view.funcText)
     view.BindFunc("html",        view.funcHtmlEncode)
     view.BindFunc("htmlencode",  view.funcHtmlEncode)
