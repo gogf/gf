@@ -297,8 +297,31 @@ func (set *Set) Sum() (sum int) {
 	return
 }
 
-// Join joins items with a string <glue>.
+// Pops randomly pops an item from set.
+func (set *Set) Pop(size int) interface{} {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for k, _ := range set.m {
+		return k
+	}
+	return nil
+}
+
+// Pops randomly pops <size> items from set.
 func (set *Set) Pops(size int) []interface{} {
-	array := make([]interface{}, 0, size)
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	if size > len(set.m) {
+		size = len(set.m)
+	}
+	index := 0
+	array := make([]interface{}, size)
+	for k, _ := range set.m {
+		array[index] = k
+		index++
+		if index == size {
+			break
+		}
+	}
 	return array
 }

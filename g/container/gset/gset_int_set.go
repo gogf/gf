@@ -290,3 +290,32 @@ func (set *IntSet) Sum() (sum int) {
 	}
 	return
 }
+
+// Pops randomly pops an item from set.
+func (set *IntSet) Pop(size int) int {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for k, _ := range set.m {
+		return k
+	}
+	return 0
+}
+
+// Pops randomly pops <size> items from set.
+func (set *IntSet) Pops(size int) []int {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	if size > len(set.m) {
+		size = len(set.m)
+	}
+	index := 0
+	array := make([]int, size)
+	for k, _ := range set.m {
+		array[index] = k
+		index++
+		if index == size {
+			break
+		}
+	}
+	return array
+}
