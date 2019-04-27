@@ -26,6 +26,7 @@ var (
 		'S': "02",     // 每月天数后面的英文后缀，2 个字符 st，nd，rd 或者 th。可以和 j 一起用
 		'l': "Monday", // ("L"的小写字母)星期几，完整的文本格式(Sunday 到 Saturday)
 		'z': "",       // 年份中的第几天  0到365
+		't': "",       // 指定的月份有几天 28到31
 
 		// ================== 月 ==================
 		'F': "January", // 月份，完整的文本格式，例如 January 或者 March	January 到 December
@@ -168,6 +169,8 @@ func (t *Time) Format(format string) string {
 					buffer.WriteString(formatMonthDayMap(result[1:]))
 				case 'z':
 					buffer.WriteString(strconv.Itoa(dayOfYear(t)))
+				case 't':
+					buffer.WriteString(strconv.Itoa(daysInMonth(t)))
 				default:
 					buffer.WriteString(result)
 				}
@@ -180,6 +183,7 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
+// 每月天数后面的英文后缀，2 个字符st nd，rd 或者 th
 func formatMonthDayMap(day string) string {
 	if day > "4" || day == "0" {
 		return monthDayMap["4"]
@@ -187,14 +191,23 @@ func formatMonthDayMap(day string) string {
 	return monthDayMap[day]
 }
 
+// 返回是否是润年
+func isLeapYear(t *Time) bool {
+	year := t.Year()
+	if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
+		return true
+	}
+	return false
+}
+
 // 返回一个时间点在当年中是第几天 0到365 有润年情况
 func dayOfYear(t *Time) int {
-	year := t.Year()
+
 	month := int(t.Month())
 	day := t.Day()
 
 	// 判断是否润年
-	if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
+	if isLeapYear(t) {
 		if month > 2 {
 			return dayOfMonth[month-1] + day
 		}
@@ -203,6 +216,25 @@ func dayOfYear(t *Time) int {
 
 	return dayOfMonth[month-1] + day - 1
 
+}
+
+// 一个时间点所在的月最长有多条天 28至31
+func daysInMonth(t *Time) int {
+
+	month := int(t.Month())
+	switch month {
+	case 1, 3, 5, 7, 8, 10, 12:
+		return 31
+	case 4, 6, 9, 11:
+		return 30
+	}
+
+	// 只剩下第二月份,润年29天
+	if isLeapYear(t) {
+		return 29
+	}
+
+	return 28
 }
 
 //格式化使用标准库格式
