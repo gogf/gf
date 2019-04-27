@@ -217,7 +217,7 @@ func dayOfYear(t *Time) int {
 	return dayOfMonth[month-1] + day - 1
 }
 
-// 一个时间点所在的月最长有多条天 28至31
+// 一个时间点所在的月最长有多少天 28至31
 func daysInMonth(t *Time) int {
 
 	month := int(t.Month())
