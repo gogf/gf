@@ -1,11 +1,10 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 )
 
 func main() {
-	array := make([]interface{}, 0, 10)
-	array[8] = 1
-	fmt.Println(array)
+	fmt.Println(binary.BigEndian.Uint32([]byte{byte(1), byte(1), byte(1), byte(1), byte(1)}))
 }
