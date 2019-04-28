@@ -18,6 +18,7 @@ import (
 type Conn struct {
     conn           net.Conn      // 底层tcp对象
     reader         *bufio.Reader // 当前链接的缓冲读取对象
+    buffer         []byte        // 读取缓冲区(用于数据读取时的缓冲区处理)
     recvDeadline   time.Time     // 读取超时时间
     sendDeadline   time.Time     // 写入超时时间
     recvBufferWait time.Duration // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
@@ -234,8 +235,8 @@ func (c *Conn) SetSendDeadline(t time.Time) error {
 
 // 读取全部缓冲区数据时，读取完毕后的写入等待间隔，如果超过该等待时间后仍无可读数据，那么读取操作返回。
 // 该时间间隔不能设置得太大，会影响Recv读取时长(默认为1毫秒)。
-func (c *Conn) SetRecvBufferWait(d time.Duration) {
-    c.recvBufferWait = d
+func (c *Conn) SetRecvBufferWait(bufferWaitDuration time.Duration) {
+    c.recvBufferWait = bufferWaitDuration
 }
 
 func (c *Conn) LocalAddr() net.Addr {
