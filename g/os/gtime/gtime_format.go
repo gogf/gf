@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/g/text/gstr"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -54,6 +55,7 @@ var (
 		'O': "-0700",  // 与UTC相差的小时数, 例如：+0200
 		'P': "-07:00", // 与UTC的差别，小时和分钟之间有冒号分隔, 例如：+02:00
 		'T': "MST",    // 时区缩写, 例如：UTC，GMT，CST   //原来这里是MST会与php中的T获得的结果不一样。修改为CST时，就保持一致
+		'e': "",       // 时区缩写, 例如：UTC，GMT，CST   ,这与当前操作系统有关
 
 		// ================== 完整的日期／时间 ==================
 		'c': "2006-01-02T15:04:05-07:00", // ISO 8601 格式的日期，例如：2004-02-12T15:19:21+00:00
@@ -174,6 +176,8 @@ func (t *Time) Format(format string) string {
 					buffer.WriteString(strconv.Itoa(dayOfYear(t)))
 				case 't':
 					buffer.WriteString(strconv.Itoa(daysInMonth(t)))
+				case 'e':
+					buffer.WriteString(zeroLocation())
 				default:
 					buffer.WriteString(result)
 				}
@@ -240,8 +244,18 @@ func daysInMonth(t *Time) int {
 
 // 获取时间点在本年内是第多少周
 func weeksOfYear(t *Time) int {
-	 _,nums:=t.ISOWeek()
+	_, nums := t.ISOWeek()
 	return nums
+
+}
+
+func zeroLocation() string {
+
+	location, err := time.LoadLocation("")
+	if err != nil {
+		return ""
+	}
+	return location.String()
 
 }
 
