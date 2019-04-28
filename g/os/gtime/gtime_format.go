@@ -21,7 +21,7 @@ var (
 		'd': "02",     // 月份中的第几天，有前导零的 2 位数字(01 到 31)
 		'D': "Mon",    // 星期中的第几天，文本表示，3 个字母(Mon 到 Sun)
 		'w': "Monday", // 星期中的第几天，数字型式的文本表示 0为星期天 6为星期六
-		//'W': "",       // ISO-8601 格式年份中的第几周，每周从星期一开始 例如：42（当年的第 42 周）
+		'W': "",       // ISO-8601 格式年份中的第几周，每周从星期一开始 例如：42（当年的第 42 周）
 		'N': "Monday", // ISO-8601 格式数字表示的星期中的第几天 1（表示星期一）到 7（表示星期天）
 		'j': "=j=02",  // 月份中的第几天，没有前导零(1 到 31)
 		'S': "02",     // 每月天数后面的英文后缀，2 个字符 st，nd，rd 或者 th。可以和 j 一起用
@@ -53,7 +53,7 @@ var (
 		// ================== 时区 ==================
 		'O': "-0700",  // 与UTC相差的小时数, 例如：+0200
 		'P': "-07:00", // 与UTC的差别，小时和分钟之间有冒号分隔, 例如：+02:00
-		'T': "MST",    // 时区缩写, 例如：UTC，GMT，CST
+		'T': "MST",    // 时区缩写, 例如：UTC，GMT，CST   //原来这里是MST会与php中的T获得的结果不一样。修改为CST时，就保持一致
 
 		// ================== 完整的日期／时间 ==================
 		'c': "2006-01-02T15:04:05-07:00", // ISO 8601 格式的日期，例如：2004-02-12T15:19:21+00:00
@@ -168,6 +168,8 @@ func (t *Time) Format(format string) string {
 					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
 				case 'S':
 					buffer.WriteString(formatMonthDayMap(result[1:]))
+				case 'W':
+					buffer.WriteString(strconv.Itoa(weeksOfYear(t)))
 				case 'z':
 					buffer.WriteString(strconv.Itoa(dayOfYear(t)))
 				case 't':
@@ -237,20 +239,11 @@ func daysInMonth(t *Time) int {
 }
 
 // 获取时间点在本年内是第多少周
-// @todo: 当年的1月1号不为星期一时，那么本年的第一周要从下次的周一开始算。前面的几天算入下一个年的最后周数
-//func weeksOfYear(t *Time) int {
-//
-//	days := dayOfYear(t) + 1
-//	week := int(t.Weekday())
-//	if week == 0 { //每周从周一开始,星期天是7
-//		week = 7
-//	}
-//
-//	n := (days+7-week)/7 + 1 //这里补齐当前时间周，得到整除，再加上第一周数
-//
-//	return n
-//
-//}
+func weeksOfYear(t *Time) int {
+	 _,nums:=t.ISOWeek()
+	return nums
+
+}
 
 //格式化使用标准库格式
 func (t *Time) Layout(layout string) string {
