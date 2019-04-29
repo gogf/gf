@@ -14,9 +14,6 @@ func main() {
 	s.SetAccessLogEnabled(true)
 	s.SetPort(2333)
 
-	v := g.View()
-	v.AddPath("template")
-
 	s.BindHandler("/", func(r *ghttp.Request) {
 		content, _ := gins.View().Parse("test.html", nil)
 		r.Response.Write(content)

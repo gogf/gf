@@ -440,10 +440,14 @@ func homeWindows() (string, error) {
 // Available in develop environment.
 //
 // 获取入口函数文件所在目录(main包文件目录),
-// **仅对源码开发环境有效(即仅对生成该可执行文件的系统下有效)**
+// **仅对源码开发环境有效(即仅对生成该可执行文件的系统下有效)**。
+// 注意：该方法被第一次调用时，如果是在异步的goroutine中，该方法可能无法获取到main包路径。
 func MainPkgPath() string {
     path := mainPkgPath.Val()
     if path != "" {
+    	if path == "-" {
+    		return ""
+	    }
         return path
     }
     for i := 1; i < 10000; i++ {
@@ -457,6 +461,8 @@ func MainPkgPath() string {
             break
         }
     }
+    // 找不到，下次不用再检索了
+	mainPkgPath.Set("-")
     return ""
 }
 

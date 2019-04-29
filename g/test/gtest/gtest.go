@@ -111,10 +111,16 @@ func AssertGT(value, expect interface{}) {
     }
 }
 
-// AssertGTE checks <value> is GREATER OR EQUAL THAN <expect>.
+// See AssertGE.
+// Deprecated.
+func AssertGTE(value, expect interface{}) {
+	AssertGE(value, expect)
+}
+
+// AssertGE checks <value> is GREATER OR EQUAL THAN <expect>.
 // Notice that, only string, integer and float types can be compared by AssertGTE,
 // others are invalid.
-func AssertGTE(value, expect interface{}) {
+func AssertGE(value, expect interface{}) {
     passed := false
     switch reflect.ValueOf(expect).Kind() {
         case reflect.String:
@@ -157,10 +163,16 @@ func AssertLT(value, expect interface{}) {
     }
 }
 
-// AssertLTE checks <value> is LESS OR EQUAL THAN <expect>.
+// See AssertLE.
+// Deprecated.
+func AssertLTE(value, expect interface{}) {
+	AssertLE(value, expect)
+}
+
+// AssertLE checks <value> is LESS OR EQUAL THAN <expect>.
 // Notice that, only string, integer and float types can be compared by AssertLTE,
 // others are invalid.
-func AssertLTE(value, expect interface{}) {
+func AssertLE(value, expect interface{}) {
     passed := false
     switch reflect.ValueOf(expect).Kind() {
         case reflect.String:

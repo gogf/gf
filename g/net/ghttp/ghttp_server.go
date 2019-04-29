@@ -15,7 +15,8 @@ import (
     "github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/os/gcache"
     "github.com/gogf/gf/g/os/genv"
-    "github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/os/glog"
     "github.com/gogf/gf/g/os/gproc"
     "github.com/gogf/gf/g/os/gtimer"
     "github.com/gogf/gf/g/text/gregex"
@@ -108,9 +109,9 @@ const (
     HOOK_BEFORE_OUTPUT         = "BeforeOutput"
     HOOK_AFTER_OUTPUT          = "AfterOutput"
 
-    // deprecated.
+    // Deprecated.
     HOOK_BEFORE_CLOSE          = "BeforeClose"
-    // deprecated.
+    // Deprecated.
     HOOK_AFTER_CLOSE           = "AfterClose"
 
     HTTP_METHODS               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
@@ -188,10 +189,10 @@ func serverProcessInit() {
         go handleProcessMessage()
     }
 
-    // 是否处于开发环境
-    //if gfile.MainPkgPath() != "" {
-    //    glog.Debug("GF notices that you're in develop environment, so error logs are auto enabled to stdout.")
-    //}
+    // 是否处于开发环境，这里调用该方法初始化main包路径值，
+    // 防止异步服务goroutine获取main包路径失败，
+    // 该方法只有在main协程中才会执行。
+    gfile.MainPkgPath()
 }
 
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)

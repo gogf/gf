@@ -31,7 +31,8 @@ var (
 // if the template files under <path> changes (recursively).
 func (view *View) getTemplate(path string, pattern string) (tpl *template.Template, err error) {
 	r := templates.GetOrSetFuncLock(path, func() interface {} {
-		files, err := gfile.ScanDir(path, pattern, true)
+		files     := ([]string)(nil)
+		files, err = gfile.ScanDir(path, pattern, true)
 		if err != nil {
 			return nil
 		}
@@ -90,7 +91,7 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 // ParseContent parses given template file <file>
 // with given template parameters <params> and function map <funcMap>
 // and returns the parsed string content.
-func (view *View) Parse(file string, params map[string]interface{}, funcMap...map[string]interface{}) (parsed string, err error) {
+func (view *View) Parse(file string, params...Params) (parsed string, err error) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
 	path, folder, err := view.searchFile(file)
@@ -101,9 +102,6 @@ func (view *View) Parse(file string, params map[string]interface{}, funcMap...ma
 	if err != nil {
 		return "", err
 	}
-	if len(funcMap) > 0 {
-		tpl = tpl.Funcs(funcMap[0])
-	}
 	tpl, err = tpl.Parse(gfcache.GetContents(path))
 	if err != nil {
 		return "", err
@@ -112,10 +110,16 @@ func (view *View) Parse(file string, params map[string]interface{}, funcMap...ma
 	// of the existing <params> or view.data because both variables are pointers.
 	// It's need to merge the values of the two maps into a new map.
 	vars := (map[string]interface{})(nil)
+	length := len(view.data)
+	if len(params) > 0 {
+		length += len(params[0])
+	}
+	if length > 0 {
+		vars = make(map[string]interface{}, length)
+	}
 	if len(view.data) > 0 {
 		if len(params) > 0 {
-			vars = make(map[string]interface{}, len(view.data) + len(params))
-			for k, v := range params {
+			for k, v := range params[0] {
 				vars[k] = v
 			}
 			for k, v := range view.data {
@@ -125,7 +129,9 @@ func (view *View) Parse(file string, params map[string]interface{}, funcMap...ma
 			vars = view.data
 		}
 	} else {
-		vars = params
+		if len(params) > 0 {
+			vars = params[0]
+		}
 	}
 	buffer := bytes.NewBuffer(nil)
 	if err := tpl.Execute(buffer, vars); err != nil {
@@ -137,13 +143,10 @@ func (view *View) Parse(file string, params map[string]interface{}, funcMap...ma
 // ParseContent parses given template content <content>
 // with given template parameters <params> and function map <funcMap>
 // and returns the parsed content in []byte.
-func (view *View) ParseContent(content string, params Params, funcMap...map[string]interface{}) (string, error) {
+func (view *View) ParseContent(content string, params...Params) (string, error) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
-	tpl := template.New("").Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
-	if len(funcMap) > 0 {
-		tpl = tpl.Funcs(funcMap[0])
-	}
+	tpl := template.New("template content").Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 	tpl, err := tpl.Parse(content)
 	if err != nil {
 		return "", err
@@ -152,10 +155,16 @@ func (view *View) ParseContent(content string, params Params, funcMap...map[stri
 	// of the existing <params> or view.data because both variables are pointers.
 	// It's need to merge the values of the two maps into a new map.
 	vars := (map[string]interface{})(nil)
+	length := len(view.data)
+	if len(params) > 0 {
+		length += len(params[0])
+	}
+	if length > 0 {
+		vars = make(map[string]interface{}, length)
+	}
 	if len(view.data) > 0 {
 		if len(params) > 0 {
-			vars = make(map[string]interface{}, len(view.data) + len(params))
-			for k, v := range params {
+			for k, v := range params[0] {
 				vars[k] = v
 			}
 			for k, v := range view.data {
@@ -165,7 +174,9 @@ func (view *View) ParseContent(content string, params Params, funcMap...map[stri
 			vars = view.data
 		}
 	} else {
-		vars = params
+		if len(params) > 0 {
+			vars = params[0]
+		}
 	}
 	buffer := bytes.NewBuffer(nil)
 	if err := tpl.Execute(buffer, vars); err != nil {
