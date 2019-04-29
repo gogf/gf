@@ -27,14 +27,15 @@ const (
 // 2. 由于"总长度"为3字节，并且使用的BigEndian字节序，因此最后返回的buffer使用了buffer[1:]。
 func (c *Conn) SendPkg(data []byte, retry...Retry) error {
 	length := uint32(len(data))
-	if length - PKG_HEADER_SIZE > PKG_MAX_SIZE {
-		return errors.New(fmt.Sprintf(`data size %d exceeds max pkg size %d`, length, PKG_MAX_SIZE))
+	if length > PKG_MAX_SIZE - PKG_HEADER_SIZE {
+		return errors.New(fmt.Sprintf(`data size %d exceeds max pkg size %d`, length, PKG_MAX_SIZE - PKG_HEADER_SIZE))
 	}
 	buffer := make([]byte, PKG_HEADER_SIZE + 1 + len(data))
 	copy(buffer[PKG_HEADER_SIZE + 1 : ], data)
 	binary.BigEndian.PutUint32(buffer[0 : ], PKG_HEADER_SIZE + length)
 	binary.BigEndian.PutUint32(buffer[4 : ], Checksum(data))
-	return c.Send(buffer, retry...)
+	//fmt.Println("SendPkg:", buffer[1:])
+	return c.Send(buffer[1:], retry...)
 }
 
 // 简单协议: 带超时时间的数据发送
@@ -73,7 +74,7 @@ func (c *Conn) RecvPkg(retry...Retry) (result []byte, err error) {
 				// 注意"总长度"为3个字节，不满足4个字节的uint32类型，因此这里"低位"补0
 				length = binary.BigEndian.Uint32([]byte{0, c.buffer[0], c.buffer[1], c.buffer[2]})
 				// 解析的大小是否符合规范
-				if length == 0 || length - PKG_HEADER_SIZE > PKG_MAX_SIZE {
+				if length == 0 || length + PKG_HEADER_SIZE > PKG_MAX_SIZE {
 					c.buffer = c.buffer[1:]
 					continue
 				}
@@ -101,6 +102,7 @@ func (c *Conn) RecvPkg(retry...Retry) (result []byte, err error) {
 		if len(temp) > 0 {
 			c.buffer = append(c.buffer, temp...)
 		}
+		//fmt.Println("RecvPkg:", c.buffer)
 	}
 	return
 }
