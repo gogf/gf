@@ -25,7 +25,8 @@ type Conn struct {
 }
 
 const (
-    gRECV_ALL_WAIT_TIMEOUT = time.Millisecond // 读取全部缓冲数据时，没有缓冲数据时的等待间隔
+	// 读取全部缓冲数据时，没有缓冲数据时的等待间隔
+    gRECV_ALL_WAIT_TIMEOUT = time.Millisecond
 )
 
 // 创建TCP链接
@@ -104,7 +105,7 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
         // 缓冲区数据写入等待处理。
         // 如果已经读取到数据(这点很关键，表明缓冲区已经有数据，剩下的操作就是将所有数据读取完毕)，
         // 那么可以设置读取全部缓冲数据的超时时间；如果没有接收到任何数据，那么将会进入读取阻塞(或者自定义的超时阻塞);
-        // 仅对读取全部缓冲数据操作有效
+        // 仅对读取全部缓冲区数据操作有效
         if length <= 0 && index > 0 {
             bufferWait = true
             c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait))
@@ -118,9 +119,14 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
                     break
                 }
             } else {
-                // 如果长度超过了自定义的读取缓冲区，那么自动增长
                 if index >= gDEFAULT_READ_BUFFER_SIZE {
+	                // 如果长度超过了自定义的读取缓冲区，那么自动增长
                     buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
+                } else {
+                	// 如果第一次读取的数据并未达到缓冲变量长度，那么直接返回
+                	if !bufferWait {
+						break
+	                }
                 }
             }
         }

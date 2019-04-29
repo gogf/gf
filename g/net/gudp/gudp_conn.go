@@ -14,11 +14,12 @@ import (
 
 // 封装的链接对象
 type Conn struct {
-    conn          *net.UDPConn   // 底层链接对象
-    raddr         *net.UDPAddr   // 远程地址
-    recvDeadline   time.Time     // 读取超时时间
-    sendDeadline   time.Time     // 写入超时时间
-    recvBufferWait time.Duration // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
+    conn           *net.UDPConn   // 底层链接对象
+    raddr          *net.UDPAddr   // 远程地址
+	buffer         []byte         // 读取缓冲区(用于数据读取时的缓冲区处理)
+    recvDeadline   time.Time      // 读取超时时间
+    sendDeadline   time.Time      // 写入超时时间
+    recvBufferWait time.Duration  // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
 }
 
 const (
@@ -119,9 +120,14 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
                     break
                 }
             } else {
-                // 如果长度超过了自定义的读取缓冲区，那么自动增长
                 if index >= gDEFAULT_READ_BUFFER_SIZE {
+	                // 如果长度超过了自定义的读取缓冲区，那么自动增长
                     buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
+                } else {
+	                // 如果第一次读取的数据并未达到缓冲变量长度，那么直接返回
+	                if !bufferWait {
+		                break
+	                }
                 }
             }
         }
