@@ -18,7 +18,6 @@ type View struct {
     mu       sync.RWMutex              // 并发互斥锁
     view     *gview.View               // 底层视图对象
     data     gview.Params              // 视图数据/模板变量
-    fmap     gview.FuncMap             // 绑定的模板函数
     response *ghttp.Response           // 数据返回对象
 }
 
@@ -27,7 +26,6 @@ func NewView(w *ghttp.Response) *View {
     return &View {
         view     : gins.View(),
         data     : make(gview.Params),
-        fmap     : make(gview.FuncMap),
         response : w,
     }
 }
@@ -48,18 +46,11 @@ func (view *View) Assign(key string, value interface{}) {
     view.mu.Unlock()
 }
 
-// 绑定自定义模板函数
-func (view *View) BindFunc(name string, function interface{}){
-    view.mu.Lock()
-    view.fmap[name] = function
-    view.mu.Unlock()
-}
-
 // 解析模板，并返回解析后的内容
 func (view *View) Parse(file string) (string, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
-    buffer, err := view.response.ParseTpl(file, view.data, view.fmap)
+    buffer, err := view.response.ParseTpl(file, view.data)
     return buffer, err
 }
 
@@ -67,7 +58,7 @@ func (view *View) Parse(file string) (string, error) {
 func (view *View) ParseContent(content string) (string, error) {
     view.mu.RLock()
     defer view.mu.RUnlock()
-    buffer, err := view.response.ParseTplContent(content, view.data, view.fmap)
+    buffer, err := view.response.ParseTplContent(content, view.data)
     return buffer, err
 }
 

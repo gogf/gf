@@ -22,6 +22,7 @@ var (
 	key_16 = []byte("1234567891234567")
 	key_24 = []byte("123456789123456789123456")
 	key_32 = []byte("12345678912345678912345678912345")
+	keys   = []byte("12345678912345678912345678912346")
 )
 
 func TestEncrypt(t *testing.T) {
@@ -58,5 +59,9 @@ func TestDecrypt(t *testing.T) {
 		decrypt, err = gaes.Decrypt(encrypt, key_32, iv)
 		gtest.Assert(err, nil)
 		gtest.Assert(string(decrypt), string(content))
+
+		encrypt, err = gaes.Encrypt(content, key_32, iv)
+		decrypt, err = gaes.Decrypt(encrypt, keys, iv)
+		gtest.Assert(err, "invalid padding")
 	})
 }

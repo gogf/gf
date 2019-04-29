@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/util/gconv"
 )
+
 func main() {
-	fmt.Println(gconv.Map(1))
+	array := make([]interface{}, 0, 10)
+	array[8] = 1
+	fmt.Println(array)
 }

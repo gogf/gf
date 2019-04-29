@@ -16,6 +16,62 @@ import (
 	"strings"
 )
 
+// Build-in template function: eq
+func (view *View) funcEq(value interface{}, others...interface{}) bool {
+	s := gconv.String(value)
+	for _, v := range others {
+		if strings.Compare(s, gconv.String(v)) != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// Build-in template function: ne
+func (view *View) funcNe(value interface{}, other interface{}) bool {
+	return strings.Compare(gconv.String(value), gconv.String(other)) != 0
+}
+
+// Build-in template function: lt
+func (view *View) funcLt(value interface{}, other interface{}) bool {
+	s1 := gconv.String(value)
+	s2 := gconv.String(other)
+	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
+		return gconv.Int64(value) < gconv.Int64(other)
+	}
+	return strings.Compare(s1, s2) < 0
+}
+
+// Build-in template function: le
+func (view *View) funcLe(value interface{}, other interface{}) bool {
+	s1 := gconv.String(value)
+	s2 := gconv.String(other)
+	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
+		return gconv.Int64(value) <= gconv.Int64(other)
+	}
+	return strings.Compare(s1, s2) <= 0
+}
+
+// Build-in template function: gt
+func (view *View) funcGt(value interface{}, other interface{}) bool {
+	s1 := gconv.String(value)
+	s2 := gconv.String(other)
+	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
+		return gconv.Int64(value) > gconv.Int64(other)
+	}
+	return strings.Compare(s1, s2) > 0
+}
+
+// Build-in template function: ge
+func (view *View) funcGe(value interface{}, other interface{}) bool {
+	s1 := gconv.String(value)
+	s2 := gconv.String(other)
+	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
+		return gconv.Int64(value) >= gconv.Int64(other)
+	}
+	return strings.Compare(s1, s2) >= 0
+}
+
 // Build-in template function: include
 func (view *View) funcInclude(file string, data...map[string]interface{}) string {
     var m map[string]interface{} = nil

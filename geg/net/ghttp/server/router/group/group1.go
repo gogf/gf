@@ -61,15 +61,16 @@ func main() {
 	//g.REST("/obj/rest",    obj)
 
 	// 分组路由批量注册
-	s.Group("/api").Bind([]ghttp.GroupItem {
-		{"ALL",  "/handler",     Handler},
-		{"ALL",  "/ctl",         ctl},
-		{"GET",  "/ctl/my-show", ctl, "Show"},
-		{"REST", "/ctl/rest",    ctl},
-		{"ALL",  "/obj",         obj},
-		{"GET",  "/obj/my-show", obj, "Show"},
-		{"REST", "/obj/rest",    obj},
-		{"ALL",  "*",            HookHandler, ghttp.HOOK_BEFORE_SERVE},
+	s.Group("/api").Bind([]ghttp.GroupItem{
+
+		{"ALL", "/handler", Handler},
+		{"ALL", "/ctl", ctl},
+		{"GET", "/ctl/my-show", ctl, "Show"},
+		{"REST", "/ctl/rest", ctl},
+		{"ALL", "/obj", obj},
+		{"GET", "/obj/my-show", obj, "Show"},
+		{"REST", "/obj/rest", obj},
+		{"ALL", "*", HookHandler, ghttp.HOOK_BEFORE_SERVE},
 	})
 
 	s.SetPort(8199)
