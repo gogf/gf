@@ -161,7 +161,7 @@ func (t *Time) Format(format string) string {
 				case 'N':
 					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
 				case 'S':
-					buffer.WriteString(formatMonthDayMap(result))
+					buffer.WriteString(formatMonthDaySuffixMap(result))
 				case 'W':
 					buffer.WriteString(strconv.Itoa(weeksOfYear(t)))
 				case 'z':
@@ -183,7 +183,7 @@ func (t *Time) Format(format string) string {
 }
 
 // 每月天数后面的英文后缀，2 个字符st nd，rd 或者 th
-func formatMonthDayMap(day string) string {
+func formatMonthDaySuffixMap(day string) string {
 	switch day {
 		case "01":
 			return "st"
