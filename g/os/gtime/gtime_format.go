@@ -54,8 +54,8 @@ var (
 		// ================== 时区 ==================
 		'O': "-0700",  // 与UTC相差的小时数, 例如：+0200
 		'P': "-07:00", // 与UTC的差别，小时和分钟之间有冒号分隔, 例如：+02:00
-		'T': "MST",    // 时区缩写, 例如：UTC，GMT，CST
-		'e': "",       // 时区缩写, 例如：UTC，GMT，CST ,这与当前操作系统设置的时区有关，在中国基本上是UTC
+		'T': "MST",    // 时区缩写, 本机所在的时区 CST可视为美国、澳大利亚、古巴或中国的标准时间
+		'e': "",       // 时区标识, 例如：UTC，GMT，CST ,这与当前操作系统设置的时区有关，在中国基本上是UTC
 
 		// ================== 完整的日期／时间 ==================
 		'c': "2006-01-02T15:04:05-07:00", // ISO 8601 格式的日期，例如：2004-02-12T15:19:21+00:00
@@ -71,14 +71,6 @@ var (
 		"Thursday":  "4",
 		"Friday":    "5",
 		"Saturday":  "6",
-	}
-
-	// 月份中的第几天数字值和英文值对应map, 最后一个数字为0或大于4时 都为'th'
-	monthDayMap = map[string]string{
-		"1": "st",
-		"2": "nd",
-		"3": "rd",
-		"4": "th",
 	}
 
 	// 每个月累计的天数 不含润年的时候
@@ -169,7 +161,7 @@ func (t *Time) Format(format string) string {
 				case 'N':
 					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
 				case 'S':
-					buffer.WriteString(formatMonthDayMap(result[1:]))
+					buffer.WriteString(formatMonthDayMap(result))
 				case 'W':
 					buffer.WriteString(strconv.Itoa(weeksOfYear(t)))
 				case 'z':
@@ -192,10 +184,18 @@ func (t *Time) Format(format string) string {
 
 // 每月天数后面的英文后缀，2 个字符st nd，rd 或者 th
 func formatMonthDayMap(day string) string {
-	if day > "4" || day == "0" {
-		return monthDayMap["4"]
+	switch day {
+		case "01":
+			return "st"
+	    case "02":
+	    	return "nd"
+	    case "03":
+	    	return "rd"
+		case "":
+			return ""
+		default:
+			return "th"
 	}
-	return monthDayMap[day]
 }
 
 // 返回是否是润年
@@ -209,7 +209,6 @@ func isLeapYear(t *Time) bool {
 
 // 返回一个时间点在当年中是第几天 0到365 有润年情况
 func dayOfYear(t *Time) int {
-
 	month := int(t.Month())
 	day := t.Day()
 
@@ -225,7 +224,6 @@ func dayOfYear(t *Time) int {
 
 // 一个时间点所在的月最长有多少天 28至31
 func daysInMonth(t *Time) int {
-
 	month := int(t.Month())
 	switch month {
 	case 1, 3, 5, 7, 8, 10, 12:
@@ -238,7 +236,6 @@ func daysInMonth(t *Time) int {
 	if isLeapYear(t) {
 		return 29
 	}
-
 	return 28
 }
 
@@ -246,17 +243,11 @@ func daysInMonth(t *Time) int {
 func weeksOfYear(t *Time) int {
 	_, nums := t.ISOWeek()
 	return nums
-
 }
 
 func zeroLocation() string {
-
-	location, err := time.LoadLocation("")
-	if err != nil {
-		return ""
-	}
+	location, _ := time.LoadLocation("")
 	return location.String()
-
 }
 
 //格式化使用标准库格式
