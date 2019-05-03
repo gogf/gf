@@ -38,8 +38,8 @@ func View(name...string) *gview.View {
 }
 
 // Config returns an instance of config object with specified name.
-func Config(file...string) *gcfg.Config {
-    return gins.Config(file...)
+func Config(name...string) *gcfg.Config {
+    return gins.Config(name...)
 }
 
 // Database returns an instance of database ORM object with specified configuration group name.
