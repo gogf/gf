@@ -9,8 +9,6 @@ import (
 	"github.com/gogf/gf/geg/net/gtcp/pkg_operations/monitor/types"
 )
 
-
-
 func main() {
 	// 数据上报客户端
 	conn, err := gtcp.NewConn("127.0.0.1:8999")
