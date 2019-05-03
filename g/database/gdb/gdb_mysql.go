@@ -8,8 +8,9 @@
 package gdb
 
 import (
-    "fmt"
-    "database/sql"
+	"database/sql"
+	"fmt"
+	"github.com/gf-third/mysql"
 )
 
 // 数据库链接对象
@@ -19,6 +20,7 @@ type dbMysql struct {
 
 // 创建SQL操作对象，内部采用了lazy link处理
 func (db *dbMysql) Open (config *ConfigNode) (*sql.DB, error) {
+	mysql.Register()
     var source string
     if config.LinkInfo != "" {
         source = config.LinkInfo

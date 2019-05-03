@@ -10,7 +10,6 @@ import (
     "database/sql"
     "fmt"
     "github.com/gogf/gf/g/text/gregex"
-    _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
 )
 
