@@ -10,7 +10,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/gf-third/mysql"
+	_ "github.com/gogf/gf/third/github.com/gf-third/mysql"
 )
 
 // 数据库链接对象
