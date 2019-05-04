@@ -140,6 +140,14 @@ func (t *Time) Format(format string) string {
 			} else {
 				return buffer.String()
 			}
+		case 'W':
+			buffer.WriteString(strconv.Itoa(weeksOfYear(t)))
+		case 'z':
+			buffer.WriteString(strconv.Itoa(dayOfYear(t)))
+		case 't':
+			buffer.WriteString(strconv.Itoa(daysInMonth(t)))
+		case 'e':
+			buffer.WriteString(zeroLocation())
 
 		default:
 			if runes[i] > 255 {
@@ -162,14 +170,6 @@ func (t *Time) Format(format string) string {
 					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
 				case 'S':
 					buffer.WriteString(formatMonthDaySuffixMap(result))
-				case 'W':
-					buffer.WriteString(strconv.Itoa(weeksOfYear(t)))
-				case 'z':
-					buffer.WriteString(strconv.Itoa(dayOfYear(t)))
-				case 't':
-					buffer.WriteString(strconv.Itoa(daysInMonth(t)))
-				case 'e':
-					buffer.WriteString(zeroLocation())
 				default:
 					buffer.WriteString(result)
 				}
@@ -191,8 +191,6 @@ func formatMonthDaySuffixMap(day string) string {
 	    	return "nd"
 	    case "03":
 	    	return "rd"
-		case "":
-			return ""
 		default:
 			return "th"
 	}
