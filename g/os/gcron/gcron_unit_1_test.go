@@ -122,7 +122,7 @@ func TestCron_AddSingleton(t *testing.T) {
 
 }
 
-func TestCron_AddOnce(t *testing.T) {
+func TestCron_AddOnce1(t *testing.T) {
     gtest.Case(t, func() {
         cron  := gcron.New()
         array := garray.New()
@@ -137,6 +137,20 @@ func TestCron_AddOnce(t *testing.T) {
         gtest.Assert(array.Len(), 2)
         gtest.Assert(cron.Size(), 0)
     })
+}
+
+func TestCron_AddOnce2(t *testing.T) {
+	gtest.Case(t, func() {
+		cron  := gcron.New()
+		array := garray.New()
+		cron.AddOnce("@every 2s", func() {
+			array.Append(1)
+		})
+		gtest.Assert(cron.Size(), 1)
+		time.Sleep(2500*time.Millisecond)
+		gtest.Assert(array.Len(), 1)
+		gtest.Assert(cron.Size(), 0)
+	})
 }
 
 func TestCron_AddTimes(t *testing.T) {
