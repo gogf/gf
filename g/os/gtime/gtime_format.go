@@ -12,7 +12,6 @@ import (
 	"github.com/gogf/gf/g/text/gstr"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var (
@@ -54,8 +53,7 @@ var (
 		// ================== 时区 ==================
 		'O': "-0700",  // 与UTC相差的小时数, 例如：+0200
 		'P': "-07:00", // 与UTC的差别，小时和分钟之间有冒号分隔, 例如：+02:00
-		'T': "MST",    // 时区缩写, 本机所在的时区 CST可视为美国、澳大利亚、古巴或中国的标准时间
-		'e': "",       // 时区标识, 例如：UTC，GMT，CST ,这与当前操作系统设置的时区有关，在中国基本上是UTC
+		'T': "MST",    // 时区缩写, 例如:  UTC, EST, MDT
 
 		// ================== 完整的日期／时间 ==================
 		'c': "2006-01-02T15:04:05-07:00", // ISO 8601 格式的日期，例如：2004-02-12T15:19:21+00:00
@@ -146,9 +144,6 @@ func (t *Time) Format(format string) string {
 			buffer.WriteString(strconv.Itoa(dayOfYear(t)))
 		case 't':
 			buffer.WriteString(strconv.Itoa(daysInMonth(t)))
-		case 'e':
-			buffer.WriteString(zeroLocation())
-
 		default:
 			if runes[i] > 255 {
 				buffer.WriteRune(runes[i])
@@ -243,12 +238,7 @@ func weeksOfYear(t *Time) int {
 	return nums
 }
 
-func zeroLocation() string {
-	location, _ := time.LoadLocation("")
-	return location.String()
-}
-
-//格式化使用标准库格式
+// 格式化使用标准库格式
 func (t *Time) Layout(layout string) string {
 	return t.Time.Format(layout)
 }
