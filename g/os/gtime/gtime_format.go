@@ -139,11 +139,11 @@ func (t *Time) Format(format string) string {
 				return buffer.String()
 			}
 		case 'W':
-			buffer.WriteString(strconv.Itoa(weeksOfYear(t)))
+			buffer.WriteString(strconv.Itoa(t.WeeksOfYear()))
 		case 'z':
-			buffer.WriteString(strconv.Itoa(dayOfYear(t)))
+			buffer.WriteString(strconv.Itoa(t.DayOfYear()))
 		case 't':
-			buffer.WriteString(strconv.Itoa(daysInMonth(t)))
+			buffer.WriteString(strconv.Itoa(t.DaysInMonth()))
 		default:
 			if runes[i] > 255 {
 				buffer.WriteRune(runes[i])
@@ -192,7 +192,7 @@ func formatMonthDaySuffixMap(day string) string {
 }
 
 // 返回是否是润年
-func isLeapYear(t *Time) bool {
+func (t *Time)IsLeapYear() bool {
 	year := t.Year()
 	if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
 		return true
@@ -201,12 +201,12 @@ func isLeapYear(t *Time) bool {
 }
 
 // 返回一个时间点在当年中是第几天 0到365 有润年情况
-func dayOfYear(t *Time) int {
+func (t *Time)DayOfYear() int {
 	month := int(t.Month())
 	day := t.Day()
 
 	// 判断是否润年
-	if isLeapYear(t) {
+	if t.IsLeapYear() {
 		if month > 2 {
 			return dayOfMonth[month-1] + day
 		}
@@ -216,7 +216,7 @@ func dayOfYear(t *Time) int {
 }
 
 // 一个时间点所在的月最长有多少天 28至31
-func daysInMonth(t *Time) int {
+func (t *Time)DaysInMonth() int {
 	month := int(t.Month())
 	switch month {
 	case 1, 3, 5, 7, 8, 10, 12:
@@ -226,14 +226,14 @@ func daysInMonth(t *Time) int {
 	}
 
 	// 只剩下第二月份,润年29天
-	if isLeapYear(t) {
+	if t.IsLeapYear() {
 		return 29
 	}
 	return 28
 }
 
 // 获取时间点在本年内是第多少周
-func weeksOfYear(t *Time) int {
+func (t *Time)WeeksOfYear() int {
 	_, nums := t.ISOWeek()
 	return nums
 }
