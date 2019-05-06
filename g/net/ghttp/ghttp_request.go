@@ -7,7 +7,8 @@
 package ghttp
 
 import (
-    "github.com/gogf/gf/g/container/gvar"
+	"fmt"
+	"github.com/gogf/gf/g/container/gvar"
     "github.com/gogf/gf/g/encoding/gjson"
     "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/text/gregex"
@@ -217,7 +218,16 @@ func (r *Request) GetClientIp() string {
     return r.clientIp
 }
 
-// 获得来源URL地址
+// 获得当前请求URL地址
+func (r *Request) GetUrl() string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	return fmt.Sprintf(`%s://%s%s`, scheme, r.Host, r.URL.String())
+}
+
+// 获得请求来源URL地址
 func (r *Request) GetReferer() string {
     return r.Header.Get("Referer")
 }
