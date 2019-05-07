@@ -12,11 +12,13 @@ import (
     "github.com/gogf/gf/g/util/gconv"
 )
 
+// Deprecated, use Map instead.
 type IntInterfaceMap struct {
 	mu *rwmutex.RWMutex
 	m  map[int]interface{}
 }
 
+// Deprecated, use New instead.
 // NewIntInterfaceMap returns an empty IntInterfaceMap object.
 // The param <unsafe> used to specify whether using map with un-concurrent-safety,
 // which is false in default, means concurrent-safe.
@@ -27,6 +29,7 @@ func NewIntInterfaceMap(unsafe...bool) *IntInterfaceMap {
     }
 }
 
+// Deprecated, use NewFrom instead.
 // NewIntInterfaceMapFrom returns an IntInterfaceMap object from given map <m>.
 // Notice that, the param map is a type of pointer,
 // there might be some concurrent-safe issues when changing the map outside.
@@ -37,6 +40,7 @@ func NewIntInterfaceMapFrom(m map[int]interface{}, unsafe...bool) *IntInterfaceM
     }
 }
 
+// Deprecated, use NewFromArray instead.
 // NewFromArray returns a hash map from given array.
 // The param <keys> given as the keys of the map,
 // and <values> as its corresponding values.

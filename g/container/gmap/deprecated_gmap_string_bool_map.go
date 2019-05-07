@@ -8,51 +8,55 @@
 package gmap
 
 import (
-    "github.com/gogf/gf/g/internal/rwmutex"
+	"github.com/gogf/gf/g/internal/rwmutex"
 )
 
-type StringStringMap struct {
+// Deprecated, use Map instead.
+type StringBoolMap struct {
 	mu *rwmutex.RWMutex
-	m  map[string]string
+	m  map[string]bool
 }
 
-// NewStringStringMap returns an empty StringStringMap object.
+// Deprecated, use New instead.
+// NewStringBoolMap returns an empty StringBoolMap object.
 // The param <unsafe> used to specify whether using map with un-concurrent-safety,
 // which is false in default, means concurrent-safe.
-func NewStringStringMap(unsafe...bool) *StringStringMap {
-	return &StringStringMap{
-		m  : make(map[string]string),
-        mu : rwmutex.New(unsafe...),
+func NewStringBoolMap(unsafe...bool) *StringBoolMap {
+	return &StringBoolMap{
+		m  : make(map[string]bool),
+		mu : rwmutex.New(unsafe...),
 	}
 }
 
-// NewStringStringMapFrom returns an StringStringMap object from given map <m>.
+// Deprecated, use NewFrom instead.
+// NewStringBoolMapFrom returns an StringBoolMap object from given map <m>.
 // Notice that, the param map is a type of pointer,
 // there might be some concurrent-safe issues when changing the map outside.
-func NewStringStringMapFrom(m map[string]string, unsafe...bool) *StringStringMap {
-    return &StringStringMap{
+func NewStringBoolMapFrom(m map[string]bool, unsafe...bool) *StringBoolMap {
+    return &StringBoolMap{
         m  : m,
         mu : rwmutex.New(unsafe...),
     }
 }
 
-// NewStringStringMapFromArray returns an StringStringMap object from given array.
+// Deprecated, use NewFromArray instead.
+// NewFromArray returns a hash map from given array.
 // The param <keys> given as the keys of the map,
 // and <values> as its corresponding values.
 //
 // If length of <keys> is greater than that of <values>,
 // the corresponding overflow map values will be the default value of its type.
-func NewStringStringMapFromArray(keys []string, values []string, unsafe...bool) *StringStringMap {
-    m := make(map[string]string)
+func NewStringBoolMapFromArray(keys []string, values []bool, unsafe...bool) *StringBoolMap {
+    m := make(map[string]bool)
     l := len(values)
     for i, k := range keys {
         if i < l {
             m[k] = values[i]
         } else {
-            m[k] = ""
+            m[k] = false
         }
     }
-    return &StringStringMap{
+    return &StringBoolMap{
         m  : m,
         mu : rwmutex.New(unsafe...),
     }
@@ -60,24 +64,24 @@ func NewStringStringMapFromArray(keys []string, values []string, unsafe...bool) 
 
 // Iterator iterates the hash map with custom callback function <f>.
 // If f returns true, then continue iterating; or false to stop.
-func (gm *StringStringMap) Iterator(f func (k string, v string) bool) {
+func (gm *StringBoolMap) Iterator(f func (k string, v bool) bool) {
 	gm.mu.RLock()
 	defer gm.mu.RUnlock()
-	for k, v := range gm.m {
+    for k, v := range gm.m {
 		if !f(k, v) {
 			break
 		}
-	}
+    }
 }
 
 // Clone returns a new hash map with copy of current map data.
-func (gm *StringStringMap) Clone() *StringStringMap {
-    return NewStringStringMapFrom(gm.Map(), !gm.mu.IsSafe())
+func (gm *StringBoolMap) Clone() *StringBoolMap {
+    return NewStringBoolMapFrom(gm.Map(), !gm.mu.IsSafe())
 }
 
 // Map returns a copy of the data of the hash map.
-func (gm *StringStringMap) Map() map[string]string {
-    m := make(map[string]string)
+func (gm *StringBoolMap) Map() map[string]bool {
+    m := make(map[string]bool)
     gm.mu.RLock()
     for k, v := range gm.m {
         m[k] = v
@@ -87,14 +91,14 @@ func (gm *StringStringMap) Map() map[string]string {
 }
 
 // Set sets key-value to the hash map.
-func (gm *StringStringMap) Set(key string, val string) {
+func (gm *StringBoolMap) Set(key string, val bool) {
 	gm.mu.Lock()
 	gm.m[key] = val
 	gm.mu.Unlock()
 }
 
 // BatchSet batch sets key-values to the hash map.
-func (gm *StringStringMap) BatchSet(m map[string]string) {
+func (gm *StringBoolMap) BatchSet(m map[string]bool) {
     gm.mu.Lock()
     for k, v := range m {
         gm.m[k] = v
@@ -103,7 +107,7 @@ func (gm *StringStringMap) BatchSet(m map[string]string) {
 }
 
 // Get returns the value by given <key>.
-func (gm *StringStringMap) Get(key string) string {
+func (gm *StringBoolMap) Get(key string) bool {
 	gm.mu.RLock()
 	val, _ := gm.m[key]
 	gm.mu.RUnlock()
@@ -115,7 +119,7 @@ func (gm *StringStringMap) Get(key string) string {
 // or else just return the existing value.
 //
 // It returns value with given <key>.
-func (gm *StringStringMap) doSetWithLockCheck(key string, value string) string {
+func (gm *StringBoolMap) doSetWithLockCheck(key string, value bool) bool {
 	gm.mu.Lock()
 	if v, ok := gm.m[key]; ok {
 		gm.mu.Unlock()
@@ -128,7 +132,7 @@ func (gm *StringStringMap) doSetWithLockCheck(key string, value string) string {
 
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
-func (gm *StringStringMap) GetOrSet(key string, value string) string {
+func (gm *StringBoolMap) GetOrSet(key string, value bool) bool {
 	gm.mu.RLock()
 	v, ok := gm.m[key]
 	gm.mu.RUnlock()
@@ -142,7 +146,7 @@ func (gm *StringStringMap) GetOrSet(key string, value string) string {
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist
 // and returns this value.
-func (gm *StringStringMap) GetOrSetFunc(key string, f func() string) string {
+func (gm *StringBoolMap) GetOrSetFunc(key string, f func() bool) bool {
 	gm.mu.RLock()
 	v, ok := gm.m[key]
 	gm.mu.RUnlock()
@@ -159,7 +163,7 @@ func (gm *StringStringMap) GetOrSetFunc(key string, f func() string) string {
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
-func (gm *StringStringMap) GetOrSetFuncLock(key string, f func() string) string {
+func (gm *StringBoolMap) GetOrSetFuncLock(key string, f func() bool) bool {
 	gm.mu.RLock()
 	val, ok := gm.m[key]
 	gm.mu.RUnlock()
@@ -169,7 +173,7 @@ func (gm *StringStringMap) GetOrSetFuncLock(key string, f func() string) string 
 		if v, ok := gm.m[key]; ok {
 			return v
 		}
-		val       = f()
+		val         = f()
 		gm.m[key] = val
 		return val
 	} else {
@@ -177,9 +181,10 @@ func (gm *StringStringMap) GetOrSetFuncLock(key string, f func() string) string 
 	}
 }
 
+
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
 // It returns false if <key> exists, and <value> would be ignored.
-func (gm *StringStringMap) SetIfNotExist(key string, value string) bool {
+func (gm *StringBoolMap) SetIfNotExist(key string, value bool) bool {
 	if !gm.Contains(key) {
 		gm.doSetWithLockCheck(key, value)
 		return true
@@ -189,7 +194,7 @@ func (gm *StringStringMap) SetIfNotExist(key string, value string) bool {
 
 // SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
 // It returns false if <key> exists, and <value> would be ignored.
-func (gm *StringStringMap) SetIfNotExistFunc(key string, f func() string) bool {
+func (gm *StringBoolMap) SetIfNotExistFunc(key string, f func() bool) bool {
 	if !gm.Contains(key) {
 		gm.doSetWithLockCheck(key, f())
 		return true
@@ -202,7 +207,7 @@ func (gm *StringStringMap) SetIfNotExistFunc(key string, f func() string) bool {
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function <f> with mutex.Lock of the hash map.
-func (gm *StringStringMap) SetIfNotExistFuncLock(key string, f func() string) bool {
+func (gm *StringBoolMap) SetIfNotExistFuncLock(key string, f func() bool) bool {
 	if !gm.Contains(key) {
 		gm.mu.Lock()
 		defer gm.mu.Unlock()
@@ -215,7 +220,7 @@ func (gm *StringStringMap) SetIfNotExistFuncLock(key string, f func() string) bo
 }
 
 // BatchRemove batch deletes values of the map by keys.
-func (gm *StringStringMap) BatchRemove(keys []string) {
+func (gm *StringBoolMap) BatchRemove(keys []string) {
     gm.mu.Lock()
     for _, key := range keys {
         delete(gm.m, key)
@@ -224,7 +229,7 @@ func (gm *StringStringMap) BatchRemove(keys []string) {
 }
 
 // Remove deletes value from map by given <key>, and return this deleted value.
-func (gm *StringStringMap) Remove(key string) string {
+func (gm *StringBoolMap) Remove(key string) bool {
 	gm.mu.Lock()
 	val, exists := gm.m[key]
 	if exists {
@@ -235,7 +240,7 @@ func (gm *StringStringMap) Remove(key string) string {
 }
 
 // Keys returns all keys of the map as a slice.
-func (gm *StringStringMap) Keys() []string {
+func (gm *StringBoolMap) Keys() []string {
 	gm.mu.RLock()
 	keys := make([]string, 0)
 	for key, _ := range gm.m {
@@ -245,20 +250,9 @@ func (gm *StringStringMap) Keys() []string {
 	return keys
 }
 
-// Values returns all values of the map as a slice.
-func (gm *StringStringMap) Values() []string {
-	gm.mu.RLock()
-	vals := make([]string, 0)
-	for _, val := range gm.m {
-		vals = append(vals, val)
-	}
-	gm.mu.RUnlock()
-	return vals
-}
-
 // Contains checks whether a key exists.
 // It returns true if the <key> exists, or else false.
-func (gm *StringStringMap) Contains(key string) bool {
+func (gm *StringBoolMap) Contains(key string) bool {
 	gm.mu.RLock()
 	_, exists := gm.m[key]
 	gm.mu.RUnlock()
@@ -266,7 +260,7 @@ func (gm *StringStringMap) Contains(key string) bool {
 }
 
 // Size returns the size of the map.
-func (gm *StringStringMap) Size() int {
+func (gm *StringBoolMap) Size() int {
 	gm.mu.RLock()
 	length := len(gm.m)
 	gm.mu.RUnlock()
@@ -275,7 +269,7 @@ func (gm *StringStringMap) Size() int {
 
 // IsEmpty checks whether the map is empty.
 // It returns true if map is empty, or else false.
-func (gm *StringStringMap) IsEmpty() bool {
+func (gm *StringBoolMap) IsEmpty() bool {
 	gm.mu.RLock()
 	empty := len(gm.m) == 0
 	gm.mu.RUnlock()
@@ -283,40 +277,29 @@ func (gm *StringStringMap) IsEmpty() bool {
 }
 
 // Clear deletes all data of the map, it will remake a new underlying map data map.
-func (gm *StringStringMap) Clear() {
+func (gm *StringBoolMap) Clear() {
     gm.mu.Lock()
-    gm.m = make(map[string]string)
+    gm.m = make(map[string]bool)
     gm.mu.Unlock()
 }
 
 // LockFunc locks writing with given callback function <f> and mutex.Lock.
-func (gm *StringStringMap) LockFunc(f func(m map[string]string)) {
+func (gm *StringBoolMap) LockFunc(f func(m map[string]bool)) {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 	f(gm.m)
 }
 
 // RLockFunc locks reading with given callback function <f> and mutex.RLock.
-func (gm *StringStringMap) RLockFunc(f func(m map[string]string)) {
+func (gm *StringBoolMap) RLockFunc(f func(m map[string]bool)) {
 	gm.mu.RLock()
 	defer gm.mu.RUnlock()
 	f(gm.m)
 }
 
-// Flip exchanges key-value of the map, it will change key-value to value-key.
-func (gm *StringStringMap) Flip() {
-	gm.mu.Lock()
-	defer gm.mu.Unlock()
-	n := make(map[string]string, len(gm.m))
-	for k, v := range gm.m {
-		n[v] = k
-	}
-	gm.m = n
-}
-
 // Merge merges two hash maps.
 // The <other> map will be merged into the map <gm>.
-func (gm *StringStringMap) Merge(other *StringStringMap) {
+func (gm *StringBoolMap) Merge(other *StringBoolMap) {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 	if other != gm {

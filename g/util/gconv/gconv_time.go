@@ -7,19 +7,24 @@
 package gconv
 
 import (
-    "time"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/text/gstr"
+	"time"
 )
 
-// 将变量i转换为time.Time类型
+// 将变量i转换为time.Time类型。
 func Time(i interface{}, format...string) time.Time {
     return GTime(i, format...).Time
 }
 
-// 将变量i转换为time.Time类型
+// 将变量i转换为time.Duration类型，支持字符串格式。
 func TimeDuration(i interface{}) time.Duration {
-    return time.Duration(Int64(i))
+	s := String(i)
+	if gstr.IsNumeric(s) {
+		d, _ := time.ParseDuration(s)
+		return d
+	}
+	return time.Duration(Int64(i))
 }
 
 // 将变量i转换为time.Time类型, 自动识别i为时间戳或者标准化的时间字符串。
