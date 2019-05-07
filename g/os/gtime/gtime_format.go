@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
+	"strconv"
 	"strings"
 )
 
@@ -20,8 +21,13 @@ var (
 		'd': "02",     // 月份中的第几天，有前导零的 2 位数字(01 到 31)
 		'D': "Mon",    // 星期中的第几天，文本表示，3 个字母(Mon 到 Sun)
 		'w': "Monday", // 星期中的第几天，数字型式的文本表示 0为星期天 6为星期六
+		'W': "",       // ISO-8601 格式年份中的第几周，每周从星期一开始 例如：42（当年的第 42 周）
+		'N': "Monday", // ISO-8601 格式数字表示的星期中的第几天 1（表示星期一）到 7（表示星期天）
 		'j': "=j=02",  // 月份中的第几天，没有前导零(1 到 31)
+		'S': "02",     // 每月天数后面的英文后缀，2 个字符 st，nd，rd 或者 th。可以和 j 一起用
 		'l': "Monday", // ("L"的小写字母)星期几，完整的文本格式(Sunday 到 Saturday)
+		'z': "",       // 年份中的第几天  0到365
+		't': "",       // 指定的月份有几天 28到31
 
 		// ================== 月 ==================
 		'F': "January", // 月份，完整的文本格式，例如 January 或者 March	January 到 December
@@ -47,7 +53,7 @@ var (
 		// ================== 时区 ==================
 		'O': "-0700",  // 与UTC相差的小时数, 例如：+0200
 		'P': "-07:00", // 与UTC的差别，小时和分钟之间有冒号分隔, 例如：+02:00
-		'T': "MST",    // 时区缩写, 例如：UTC，GMT，CST
+		'T': "MST",    // 时区缩写, 例如:  UTC, EST, MDT
 
 		// ================== 完整的日期／时间 ==================
 		'c': "2006-01-02T15:04:05-07:00", // ISO 8601 格式的日期，例如：2004-02-12T15:19:21+00:00
@@ -64,6 +70,9 @@ var (
 		"Friday":    "5",
 		"Saturday":  "6",
 	}
+
+	// 每个月累计的天数 不含润年的时候
+	dayOfMonth = []int{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}
 )
 
 // 将自定义的格式转换为标准库时间格式
@@ -129,7 +138,12 @@ func (t *Time) Format(format string) string {
 			} else {
 				return buffer.String()
 			}
-
+		case 'W':
+			buffer.WriteString(strconv.Itoa(t.WeeksOfYear()))
+		case 'z':
+			buffer.WriteString(strconv.Itoa(t.DayOfYear()))
+		case 't':
+			buffer.WriteString(strconv.Itoa(t.DaysInMonth()))
 		default:
 			if runes[i] > 255 {
 				buffer.WriteRune(runes[i])
@@ -147,6 +161,10 @@ func (t *Time) Format(format string) string {
 					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
 				case 'w':
 					buffer.WriteString(weekMap[result])
+				case 'N':
+					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
+				case 'S':
+					buffer.WriteString(formatMonthDaySuffixMap(result))
 				default:
 					buffer.WriteString(result)
 				}
@@ -159,7 +177,68 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-// 格式化，使用标准库格式
+// 每月天数后面的英文后缀，2 个字符st nd，rd 或者 th
+func formatMonthDaySuffixMap(day string) string {
+	switch day {
+		case "01":
+			return "st"
+	    case "02":
+	    	return "nd"
+	    case "03":
+	    	return "rd"
+		default:
+			return "th"
+	}
+}
+
+// 返回是否是润年
+func (t *Time)IsLeapYear() bool {
+	year := t.Year()
+	if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
+		return true
+	}
+	return false
+}
+
+// 返回一个时间点在当年中是第几天 0到365 有润年情况
+func (t *Time)DayOfYear() int {
+	month := int(t.Month())
+	day := t.Day()
+
+	// 判断是否润年
+	if t.IsLeapYear() {
+		if month > 2 {
+			return dayOfMonth[month-1] + day
+		}
+		return dayOfMonth[month-1] + day - 1
+	}
+	return dayOfMonth[month-1] + day - 1
+}
+
+// 一个时间点所在的月最长有多少天 28至31
+func (t *Time)DaysInMonth() int {
+	month := int(t.Month())
+	switch month {
+	case 1, 3, 5, 7, 8, 10, 12:
+		return 31
+	case 4, 6, 9, 11:
+		return 30
+	}
+
+	// 只剩下第二月份,润年29天
+	if t.IsLeapYear() {
+		return 29
+	}
+	return 28
+}
+
+// 获取时间点在本年内是第多少周
+func (t *Time)WeeksOfYear() int {
+	_, nums := t.ISOWeek()
+	return nums
+}
+
+// 格式化使用标准库格式
 func (t *Time) Layout(layout string) string {
 	return t.Time.Format(layout)
 }
