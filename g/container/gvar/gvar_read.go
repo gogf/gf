@@ -11,7 +11,7 @@ import (
     "time"
 )
 
-// 只读变量接口
+// Read-only interface.
 type VarRead interface {
     Val() interface{}
     IsNil() bool
@@ -31,10 +31,12 @@ type VarRead interface {
     Float32() float32
     Float64() float64
     Interface() interface{}
+
     Ints() []int
     Floats() []float64
     Strings() []string
     Interfaces() []interface{}
+
     Time(format ...string) time.Time
     TimeDuration() time.Duration
     GTime(format...string) *gtime.Time

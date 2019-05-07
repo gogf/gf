@@ -12,48 +12,52 @@ import (
 	"github.com/gogf/gf/g/util/gconv"
 )
 
-type StringInterfaceMap struct {
+// Deprecated, use Map instead.
+type StringIntMap struct {
 	mu *rwmutex.RWMutex
-	m  map[string]interface{}
+	m  map[string]int
 }
 
-// NewStringInterfaceMap returns an empty StringInterfaceMap object.
+// Deprecated, use New instead.
+// NewStringIntMap returns an empty StringIntMap object.
 // The param <unsafe> used to specify whether using map with un-concurrent-safety,
 // which is false in default, means concurrent-safe.
-func NewStringInterfaceMap(unsafe ...bool) *StringInterfaceMap {
-	return &StringInterfaceMap{
-		m:  make(map[string]interface{}),
+func NewStringIntMap(unsafe ...bool) *StringIntMap {
+	return &StringIntMap{
+		m:  make(map[string]int),
 		mu: rwmutex.New(unsafe...),
 	}
 }
 
-// NewStringInterfaceMapFrom returns an StringInterfaceMap object from given map <m>.
+// Deprecated, use NewFrom instead.
+// NewStringIntMapFrom returns an StringIntMap object from given map <m>.
 // Notice that, the param map is a type of pointer,
 // there might be some concurrent-safe issues when changing the map outside.
-func NewStringInterfaceMapFrom(m map[string]interface{}, unsafe ...bool) *StringInterfaceMap {
-	return &StringInterfaceMap{
+func NewStringIntMapFrom(m map[string]int, unsafe ...bool) *StringIntMap {
+	return &StringIntMap{
 		m:  m,
 		mu: rwmutex.New(unsafe...),
 	}
 }
 
-// NewStringInterfaceMapFromArray returns an StringInterfaceMap object from given array.
+// Deprecated, use NewFromArray instead.
+// NewStringIntMapFromArray returns an StringIntMap object from given array.
 // The param <keys> given as the keys of the map,
 // and <values> as its corresponding values.
 //
 // If length of <keys> is greater than that of <values>,
 // the corresponding overflow map values will be the default value of its type.
-func NewStringInterfaceMapFromArray(keys []string, values []interface{}, unsafe ...bool) *StringInterfaceMap {
-	m := make(map[string]interface{})
+func NewStringIntMapFromArray(keys []string, values []int, unsafe ...bool) *StringIntMap {
+	m := make(map[string]int)
 	l := len(values)
 	for i, k := range keys {
 		if i < l {
 			m[k] = values[i]
 		} else {
-			m[k] = interface{}(nil)
+			m[k] = 0
 		}
 	}
-	return &StringInterfaceMap{
+	return &StringIntMap{
 		m:  m,
 		mu: rwmutex.New(unsafe...),
 	}
@@ -61,7 +65,7 @@ func NewStringInterfaceMapFromArray(keys []string, values []interface{}, unsafe 
 
 // Iterator iterates the hash map with custom callback function <f>.
 // If f returns true, then continue iterating; or false to stop.
-func (gm *StringInterfaceMap) Iterator(f func(k string, v interface{}) bool) {
+func (gm *StringIntMap) Iterator(f func(k string, v int) bool) {
 	gm.mu.RLock()
 	defer gm.mu.RUnlock()
 	for k, v := range gm.m {
@@ -72,13 +76,13 @@ func (gm *StringInterfaceMap) Iterator(f func(k string, v interface{}) bool) {
 }
 
 // Clone returns a new hash map with copy of current map data.
-func (gm *StringInterfaceMap) Clone() *StringInterfaceMap {
-	return NewStringInterfaceMapFrom(gm.Map(), !gm.mu.IsSafe())
+func (gm *StringIntMap) Clone() *StringIntMap {
+	return NewStringIntMapFrom(gm.Map(), !gm.mu.IsSafe())
 }
 
 // Map returns a copy of the data of the hash map.
-func (gm *StringInterfaceMap) Map() map[string]interface{} {
-	m := make(map[string]interface{})
+func (gm *StringIntMap) Map() map[string]int {
+	m := make(map[string]int)
 	gm.mu.RLock()
 	for k, v := range gm.m {
 		m[k] = v
@@ -88,14 +92,14 @@ func (gm *StringInterfaceMap) Map() map[string]interface{} {
 }
 
 // Set sets key-value to the hash map.
-func (gm *StringInterfaceMap) Set(key string, val interface{}) {
+func (gm *StringIntMap) Set(key string, val int) {
 	gm.mu.Lock()
 	gm.m[key] = val
 	gm.mu.Unlock()
 }
 
 // BatchSet batch sets key-values to the hash map.
-func (gm *StringInterfaceMap) BatchSet(m map[string]interface{}) {
+func (gm *StringIntMap) BatchSet(m map[string]int) {
 	gm.mu.Lock()
 	for k, v := range m {
 		gm.m[k] = v
@@ -104,7 +108,7 @@ func (gm *StringInterfaceMap) BatchSet(m map[string]interface{}) {
 }
 
 // Get returns the value by given <key>.
-func (gm *StringInterfaceMap) Get(key string) interface{} {
+func (gm *StringIntMap) Get(key string) int {
 	gm.mu.RLock()
 	val, _ := gm.m[key]
 	gm.mu.RUnlock()
@@ -115,30 +119,25 @@ func (gm *StringInterfaceMap) Get(key string) interface{} {
 // if not exists, set value to the map with given <key>,
 // or else just return the existing value.
 //
-// When setting value, if <value> is type of <func() interface {}>,
-// it will be executed with mutex.Lock of the hash map,
-// and its return value will be set to the map with <key>.
-//
 // It returns value with given <key>.
-func (gm *StringInterfaceMap) doSetWithLockCheck(key string, value interface{}) interface{} {
+func (gm *StringIntMap) doSetWithLockCheck(key string, value int) int {
 	gm.mu.Lock()
-	defer gm.mu.Unlock()
 	if v, ok := gm.m[key]; ok {
+		gm.mu.Unlock()
 		return v
 	}
-	if f, ok := value.(func() interface{}); ok {
-		value = f()
-	}
-	if value != nil {
-		gm.m[key] = value
-	}
+	gm.m[key] = value
+	gm.mu.Unlock()
 	return value
 }
 
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
-func (gm *StringInterfaceMap) GetOrSet(key string, value interface{}) interface{} {
-	if v := gm.Get(key); v == nil {
+func (gm *StringIntMap) GetOrSet(key string, value int) int {
+	gm.mu.RLock()
+	v, ok := gm.m[key]
+	gm.mu.RUnlock()
+	if !ok {
 		return gm.doSetWithLockCheck(key, value)
 	} else {
 		return v
@@ -148,8 +147,11 @@ func (gm *StringInterfaceMap) GetOrSet(key string, value interface{}) interface{
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist
 // and returns this value.
-func (gm *StringInterfaceMap) GetOrSetFunc(key string, f func() interface{}) interface{} {
-	if v := gm.Get(key); v == nil {
+func (gm *StringIntMap) GetOrSetFunc(key string, f func() int) int {
+	gm.mu.RLock()
+	v, ok := gm.m[key]
+	gm.mu.RUnlock()
+	if !ok {
 		return gm.doSetWithLockCheck(key, f())
 	} else {
 		return v
@@ -162,17 +164,27 @@ func (gm *StringInterfaceMap) GetOrSetFunc(key string, f func() interface{}) int
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
-func (gm *StringInterfaceMap) GetOrSetFuncLock(key string, f func() interface{}) interface{} {
-	if v := gm.Get(key); v == nil {
-		return gm.doSetWithLockCheck(key, f)
+func (gm *StringIntMap) GetOrSetFuncLock(key string, f func() int) int {
+	gm.mu.RLock()
+	val, ok := gm.m[key]
+	gm.mu.RUnlock()
+	if !ok {
+		gm.mu.Lock()
+		defer gm.mu.Unlock()
+		if v, ok := gm.m[key]; ok {
+			return v
+		}
+		val = f()
+		gm.m[key] = val
+		return val
 	} else {
-		return v
+		return val
 	}
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
 // It returns false if <key> exists, and <value> would be ignored.
-func (gm *StringInterfaceMap) SetIfNotExist(key string, value interface{}) bool {
+func (gm *StringIntMap) SetIfNotExist(key string, value int) bool {
 	if !gm.Contains(key) {
 		gm.doSetWithLockCheck(key, value)
 		return true
@@ -182,7 +194,7 @@ func (gm *StringInterfaceMap) SetIfNotExist(key string, value interface{}) bool 
 
 // SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
 // It returns false if <key> exists, and <value> would be ignored.
-func (gm *StringInterfaceMap) SetIfNotExistFunc(key string, f func() interface{}) bool {
+func (gm *StringIntMap) SetIfNotExistFunc(key string, f func() int) bool {
 	if !gm.Contains(key) {
 		gm.doSetWithLockCheck(key, f())
 		return true
@@ -195,16 +207,20 @@ func (gm *StringInterfaceMap) SetIfNotExistFunc(key string, f func() interface{}
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function <f> with mutex.Lock of the hash map.
-func (gm *StringInterfaceMap) SetIfNotExistFuncLock(key string, f func() interface{}) bool {
+func (gm *StringIntMap) SetIfNotExistFuncLock(key string, f func() int) bool {
 	if !gm.Contains(key) {
-		gm.doSetWithLockCheck(key, f)
+		gm.mu.Lock()
+		defer gm.mu.Unlock()
+		if _, ok := gm.m[key]; !ok {
+			gm.m[key] = f()
+		}
 		return true
 	}
 	return false
 }
 
 // BatchRemove batch deletes values of the map by keys.
-func (gm *StringInterfaceMap) BatchRemove(keys []string) {
+func (gm *StringIntMap) BatchRemove(keys []string) {
 	gm.mu.Lock()
 	for _, key := range keys {
 		delete(gm.m, key)
@@ -213,7 +229,7 @@ func (gm *StringInterfaceMap) BatchRemove(keys []string) {
 }
 
 // Remove deletes value from map by given <key>, and return this deleted value.
-func (gm *StringInterfaceMap) Remove(key string) interface{} {
+func (gm *StringIntMap) Remove(key string) int {
 	gm.mu.Lock()
 	val, exists := gm.m[key]
 	if exists {
@@ -224,7 +240,7 @@ func (gm *StringInterfaceMap) Remove(key string) interface{} {
 }
 
 // Keys returns all keys of the map as a slice.
-func (gm *StringInterfaceMap) Keys() []string {
+func (gm *StringIntMap) Keys() []string {
 	gm.mu.RLock()
 	keys := make([]string, 0)
 	for key, _ := range gm.m {
@@ -235,9 +251,9 @@ func (gm *StringInterfaceMap) Keys() []string {
 }
 
 // Values returns all values of the map as a slice.
-func (gm *StringInterfaceMap) Values() []interface{} {
+func (gm *StringIntMap) Values() []int {
 	gm.mu.RLock()
-	vals := make([]interface{}, 0)
+	vals := make([]int, 0)
 	for _, val := range gm.m {
 		vals = append(vals, val)
 	}
@@ -247,7 +263,7 @@ func (gm *StringInterfaceMap) Values() []interface{} {
 
 // Contains checks whether a key exists.
 // It returns true if the <key> exists, or else false.
-func (gm *StringInterfaceMap) Contains(key string) bool {
+func (gm *StringIntMap) Contains(key string) bool {
 	gm.mu.RLock()
 	_, exists := gm.m[key]
 	gm.mu.RUnlock()
@@ -255,7 +271,7 @@ func (gm *StringInterfaceMap) Contains(key string) bool {
 }
 
 // Size returns the size of the map.
-func (gm *StringInterfaceMap) Size() int {
+func (gm *StringIntMap) Size() int {
 	gm.mu.RLock()
 	length := len(gm.m)
 	gm.mu.RUnlock()
@@ -264,7 +280,7 @@ func (gm *StringInterfaceMap) Size() int {
 
 // IsEmpty checks whether the map is empty.
 // It returns true if map is empty, or else false.
-func (gm *StringInterfaceMap) IsEmpty() bool {
+func (gm *StringIntMap) IsEmpty() bool {
 	gm.mu.RLock()
 	empty := len(gm.m) == 0
 	gm.mu.RUnlock()
@@ -272,40 +288,40 @@ func (gm *StringInterfaceMap) IsEmpty() bool {
 }
 
 // Clear deletes all data of the map, it will remake a new underlying map data map.
-func (gm *StringInterfaceMap) Clear() {
+func (gm *StringIntMap) Clear() {
 	gm.mu.Lock()
-	gm.m = make(map[string]interface{})
+	gm.m = make(map[string]int)
 	gm.mu.Unlock()
 }
 
 // LockFunc locks writing with given callback function <f> and mutex.Lock.
-func (gm *StringInterfaceMap) LockFunc(f func(m map[string]interface{})) {
+func (gm *StringIntMap) LockFunc(f func(m map[string]int)) {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 	f(gm.m)
 }
 
 // RLockFunc locks reading with given callback function <f> and mutex.RLock.
-func (gm *StringInterfaceMap) RLockFunc(f func(m map[string]interface{})) {
+func (gm *StringIntMap) RLockFunc(f func(m map[string]int)) {
 	gm.mu.RLock()
 	defer gm.mu.RUnlock()
 	f(gm.m)
 }
 
 // Flip exchanges key-value of the map, it will change key-value to value-key.
-func (gm *StringInterfaceMap) Flip() {
+func (gm *StringIntMap) Flip() {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
-	n := make(map[string]interface{}, len(gm.m))
+	n := make(map[string]int, len(gm.m))
 	for k, v := range gm.m {
-		n[gconv.String(v)] = k
+		n[gconv.String(v)] = gconv.Int(k)
 	}
 	gm.m = n
 }
 
 // Merge merges two hash maps.
 // The <other> map will be merged into the map <gm>.
-func (gm *StringInterfaceMap) Merge(other *StringInterfaceMap) {
+func (gm *StringIntMap) Merge(other *StringIntMap) {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 	if other != gm {
