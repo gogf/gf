@@ -16,7 +16,7 @@ const (
 )
 var (
     // Instances map.
-    instances = gmap.NewStringInterfaceMap()
+    instances = gmap.NewStrAnyMap()
 )
 
 // Instance returns an instance of Config with default settings.

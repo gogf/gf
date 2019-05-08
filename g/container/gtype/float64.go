@@ -32,7 +32,7 @@ func (t *Float64) Clone() *Float64 {
     return NewFloat64(t.Val())
 }
 
-// Set atomically stores value into t.value and returns the previous t.value value.
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (t *Float64) Set(value float64) (old float64) {
     return math.Float64frombits(atomic.SwapUint64(&t.value, math.Float64bits(value)))
 }
@@ -42,7 +42,7 @@ func (t *Float64) Val() float64 {
     return math.Float64frombits(atomic.LoadUint64(&t.value))
 }
 
-// Add atomically adds delta to t.value and returns the new value.
+// Add atomically adds <delta> to t.value and returns the new value.
 func (t *Float64) Add(delta float64) (new float64) {
 	for {
 		old := math.Float64frombits(t.value)

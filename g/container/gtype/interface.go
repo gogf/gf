@@ -29,7 +29,7 @@ func (t *Interface) Clone() *Interface {
     return NewInterface(t.Val())
 }
 
-// Set atomically stores value into t.value and returns the previous t.value value.
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 // Note: The parameter <value> cannot be nil.
 func (t *Interface) Set(value interface{}) (old interface{}) {
     old = t.Val()

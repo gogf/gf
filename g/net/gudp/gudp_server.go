@@ -26,7 +26,7 @@ type Server struct {
 }
 
 // Server表，用以存储和检索名称与Server对象之间的关联关系
-var serverMapping = gmap.NewStringInterfaceMap()
+var serverMapping = gmap.NewStrAnyMap()
 
 // 获取/创建一个空配置的UDP Server
 // 单例模式，请保证name的唯一性

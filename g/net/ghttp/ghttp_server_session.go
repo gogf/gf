@@ -21,7 +21,7 @@ import (
 // SESSION对象
 type Session struct {
     id      string                   // SessionId
-    data    *gmap.StringInterfaceMap // Session数据
+    data    *gmap.StrAnyMap // Session数据
     server  *Server                  // 所属Server
     request *Request                 // 关联的请求
 }
@@ -51,13 +51,13 @@ func (s *Session) init() {
             data := s.server.sessions.Get(id)
             if data != nil {
                 s.id   = id
-                s.data = data.(*gmap.StringInterfaceMap)
+                s.data = data.(*gmap.StrAnyMap)
                 return
             }
         }
         // 否则执行初始化创建
         s.id   = s.request.Cookie.MakeSessionId()
-        s.data = gmap.NewStringInterfaceMap()
+        s.data = gmap.NewStrAnyMap()
         s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge())
     }
 }
@@ -83,16 +83,10 @@ func (s *Session) Set(key string, value interface{}) {
     s.data.Set(key, value)
 }
 
-// 批量设置(BatchSet别名)
+// 批量设置
 func (s *Session) Sets(m map[string]interface{}) {
     s.init()
-    s.BatchSet(m)
-}
-
-// 批量设置
-func (s *Session) BatchSet(m map[string]interface{}) {
-    s.init()
-    s.data.BatchSet(m)
+    s.data.Sets(m)
 }
 
 // 判断键名是否存在

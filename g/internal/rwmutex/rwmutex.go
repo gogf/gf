@@ -8,7 +8,6 @@ package rwmutex
 
 import "sync"
 
-// RWMutex的封装，支持对并发安全开启/关闭的控制。
 type RWMutex struct {
     sync.RWMutex
     safe bool

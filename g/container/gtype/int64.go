@@ -30,7 +30,7 @@ func (t *Int64) Clone() *Int64 {
     return NewInt64(t.Val())
 }
 
-// Set atomically stores value into t.value and returns the previous t.value value.
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (t *Int64) Set(value int64) (old int64) {
     return atomic.SwapInt64(&t.value, value)
 }
@@ -40,7 +40,7 @@ func (t *Int64) Val() int64 {
     return atomic.LoadInt64(&t.value)
 }
 
-// Add atomically adds delta to t.value and returns the new value.
+// Add atomically adds <delta> to t.value and returns the new value.
 func (t *Int64) Add(delta int64) int64 {
     return atomic.AddInt64(&t.value, delta)
 }

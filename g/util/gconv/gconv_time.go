@@ -20,7 +20,7 @@ func Time(i interface{}, format...string) time.Time {
 // 将变量i转换为time.Duration类型，支持字符串格式。
 func TimeDuration(i interface{}) time.Duration {
 	s := String(i)
-	if gstr.IsNumeric(s) {
+	if !gstr.IsNumeric(s) {
 		d, _ := time.ParseDuration(s)
 		return d
 	}

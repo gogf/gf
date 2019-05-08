@@ -1,3 +1,9 @@
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with gm file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gmap_test
 
 import (
@@ -9,9 +15,9 @@ import (
 func stringIntCallBack(string, int) bool {
 	return true
 }
-func Test_StringIntMap_Basic(t *testing.T) {
+func Test_StrIntMap_Basic(t *testing.T) {
 	gtest.Case(t, func() {
-		m := gmap.NewStringIntMap()
+		m := gmap.NewStrIntMap()
 		m.Set("a", 1)
 
 		gtest.Assert(m.Get("a"), 1)
@@ -31,7 +37,7 @@ func Test_StringIntMap_Basic(t *testing.T) {
 		gtest.AssertIN(3, m.Values())
 		gtest.AssertIN(1, m.Values())
 
-		m_f := gmap.NewStringIntMap()
+		m_f := gmap.NewStrIntMap()
 		m_f.Set("1", 2)
 		m_f.Flip()
 		gtest.Assert(m_f.Map(), map[string]int{"2": 1})
@@ -40,15 +46,15 @@ func Test_StringIntMap_Basic(t *testing.T) {
 		gtest.Assert(m.Size(), 0)
 		gtest.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewStringIntMapFrom(map[string]int{"a": 1, "b": 2})
+		m2 := gmap.NewStrIntMapFrom(map[string]int{"a": 1, "b": 2})
 		gtest.Assert(m2.Map(), map[string]int{"a": 1, "b": 2})
-		m3 := gmap.NewStringIntMapFromArray([]string{"a", "b"}, []int{1, 2})
+		m3 := gmap.NewStrIntMapFromArray([]string{"a", "b"}, []int{1, 2})
 		gtest.Assert(m3.Map(), map[string]int{"a": 1, "b": 2})
 
 	})
 }
-func Test_StringIntMap_Set_Fun(t *testing.T) {
-	m := gmap.NewStringIntMap()
+func Test_StrIntMap_Set_Fun(t *testing.T) {
+	m := gmap.NewStrIntMap()
 
 	m.GetOrSetFunc("a", getInt)
 	m.GetOrSetFuncLock("b", getInt)
@@ -62,17 +68,17 @@ func Test_StringIntMap_Set_Fun(t *testing.T) {
 
 }
 
-func Test_StringIntMap_Batch(t *testing.T) {
-	m := gmap.NewStringIntMap()
+func Test_StrIntMap_Batch(t *testing.T) {
+	m := gmap.NewStrIntMap()
 
-	m.BatchSet(map[string]int{"a": 1, "b": 2, "c": 3})
+	m.Sets(map[string]int{"a": 1, "b": 2, "c": 3})
 	gtest.Assert(m.Map(), map[string]int{"a": 1, "b": 2, "c": 3})
-	m.BatchRemove([]string{"a", "b"})
+	m.Removes([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]int{"c": 3})
 }
-func Test_StringIntMap_Iterator(t *testing.T) {
+func Test_StrIntMap_Iterator(t *testing.T) {
 	expect := map[string]int{"a": 1, "b": 2}
-	m := gmap.NewStringIntMapFrom(expect)
+	m := gmap.NewStrIntMapFrom(expect)
 	m.Iterator(func(k string, v int) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -93,10 +99,10 @@ func Test_StringIntMap_Iterator(t *testing.T) {
 
 }
 
-func Test_StringIntMap_Lock(t *testing.T) {
+func Test_StrIntMap_Lock(t *testing.T) {
 	expect := map[string]int{"a": 1, "b": 2}
 
-	m      := gmap.NewStringIntMapFrom(expect)
+	m      := gmap.NewStrIntMapFrom(expect)
 	m.LockFunc(func(m map[string]int) {
 		gtest.Assert(m, expect)
 	})
@@ -105,9 +111,9 @@ func Test_StringIntMap_Lock(t *testing.T) {
 	})
 }
 
-func Test_StringIntMap_Clone(t *testing.T) {
+func Test_StrIntMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
-	m := gmap.NewStringIntMapFrom(map[string]int{"a": 1, "b": 2, "c": 3})
+	m := gmap.NewStrIntMapFrom(map[string]int{"a": 1, "b": 2, "c": 3})
 
 	m_clone := m.Clone()
 	m.Remove("a")
@@ -118,9 +124,9 @@ func Test_StringIntMap_Clone(t *testing.T) {
 	//修改clone map,原 map 不影响
 	gtest.AssertIN("b", m.Keys())
 }
-func Test_StringIntMap_Merge(t *testing.T) {
-	m1 := gmap.NewStringIntMap()
-	m2 := gmap.NewStringIntMap()
+func Test_StrIntMap_Merge(t *testing.T) {
+	m1 := gmap.NewStrIntMap()
+	m2 := gmap.NewStrIntMap()
 	m1.Set("a", 1)
 	m2.Set("b", 2)
 	m1.Merge(m2)
