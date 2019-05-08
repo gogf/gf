@@ -32,7 +32,7 @@ const (
 type Config struct {
     name   *gtype.String            // Default configuration file name.
     paths  *garray.StringArray      // Searching path array.
-    jsons  *gmap.StrAnyMap // The pared JSON objects for configuration files.
+    jsons  *gmap.StrAnyMap          // The pared JSON objects for configuration files.
     vc     *gtype.Bool              // Whether do violence check in value index searching.
                                     // It affects the performance when set true(false in default).
 }
@@ -146,7 +146,6 @@ func (c *Config) SetPath(path string) error {
     c.jsons.Clear()
     c.paths.Clear()
     c.paths.Append(realPath)
-    //glog.Debug("[gcfg] SetPath:", realPath)
     return nil
 }
 
@@ -230,7 +229,6 @@ func (c *Config) GetFilePath(file...string) (path string) {
 
 // SetFileName sets the default configuration file name.
 func (c *Config) SetFileName(name string) {
-    //glog.Debug("[gcfg] SetFileName:", name)
     c.name.Set(name)
 }
 

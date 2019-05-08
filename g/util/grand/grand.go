@@ -4,9 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package grand provides high performance API for random functionality.
-// 
-// 随机数管理.
+// Package grand provides high performance random string generation functionality.
 package grand
 
 var (
@@ -14,86 +12,96 @@ var (
     digits  = []rune("0123456789")
 )
 
-// 随机计算是否满足给定的概率(分子/分母)
+// Meet randomly calculate whether the given probability <num>/<total> is met.
 func Meet(num, total int) bool {
     return Intn(total) < num
 }
 
-// 随机计算是否满足给定的概率(float32)
+// MeetProb randomly calculate whether the given probability is met.
 func MeetProb(prob float32) bool {
     return Intn(1e7) < int(prob*1e7)
 }
 
-// Rand 别名, 返回: [min, max]
+// N returns a random int between min and max - [min, max].
 func N (min, max int) int {
-   return Rand(min, max)
+	if min >= max {
+		return min
+	}
+	if min >= 0 {
+		// Because Intn dose not support negative number,
+		// so we should first shift the value to left,
+		// then call Intn to produce the random number,
+		// and finally shift the result to right.
+		return Intn(max - (min - 0) + 1) + (min - 0)
+	}
+	if min < 0 {
+		// Because Intn dose not support negative number,
+		// so we should first shift the value to right,
+		// then call Intn to produce the random number,
+		// and finally shift the result to left.
+		return Intn(max + (0 - min) + 1) - (0 - min)
+	}
+	return 0
 }
 
-// 获得一个 min, max 之间的随机数: [min, max]
+// Deprecated.
+// Alias of N.
 func Rand (min, max int) int {
-    if min >= max {
-        return min
-    }
-    if min >= 0 {
-        // 数值往左平移，再使用底层随机方法获得随机数，随后将结果数值往右平移
-        return Intn(max - (min - 0) + 1) + (min - 0)
-    }
-    if min < 0 {
-        // 数值往右平移，再使用底层随机方法获得随机数，随后将结果数值往左平移
-        return Intn(max + (0 - min) + 1) - (0 - min)
-    }
-    return 0
+	return N(min, max)
 }
 
-// RandStr 别名
+// Str returns a random string which contains digits and letters, and its length is <n>.
 func Str(n int) string {
-    return RandStr(n)
+	b := make([]rune, n)
+	for i := range b {
+		if Intn(2) == 1 {
+			b[i] = digits[Intn(10)]
+		} else {
+			b[i] = letters[Intn(52)]
+		}
+	}
+	return string(b)
 }
 
-// 获得指定长度的随机字符串(可能包含数字和字母)
+// Deprecated.
+// Alias of Str.
 func RandStr(n int) string {
-    b := make([]rune, n)
-    for i := range b {
-        if Intn(2) == 1 {
-            b[i] = digits[Intn(10)]
-        } else {
-            b[i] = letters[Intn(52)]
-        }
-    }
-    return string(b)
+	return Str(n)
 }
 
-// RandDigits 别名
+// Digits returns a random string which contains only digits, and its length is <n>.
 func Digits(n int) string {
-    return RandDigits(n)
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = digits[Intn(10)]
+	}
+	return string(b)
+
 }
 
-// 获得指定长度的随机数字字符串
+// Deprecated.
+// Alias of Digits.
 func RandDigits(n int) string {
-    b := make([]rune, n)
-    for i := range b {
-        b[i] = digits[Intn(10)]
-    }
-    return string(b)
+	return Digits(n)
 }
 
-// RandLetters 别名
+// Letters returns a random string which contains only letters, and its length is <n>.
 func Letters(n int) string {
-    return RandLetters(n)
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[Intn(52)]
+	}
+	return string(b)
+
 }
 
-// 获得指定长度的随机字母字符串
+// Deprecated.
+// Alias of Letters.
 func RandLetters(n int) string {
-    b := make([]rune, n)
-    for i := range b {
-        b[i] = letters[Intn(52)]
-    }
-    return string(b)
+	return Letters(n)
 }
 
 // Perm returns, as a slice of n ints, a pseudo-random permutation of the integers [0,n).
-//
-// 返回[0, n)的随机数组成的slice。
 func Perm(n int) []int {
     m := make([]int, n)
     for i := 0; i < n; i++ {

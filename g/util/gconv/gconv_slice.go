@@ -11,7 +11,7 @@ import (
     "reflect"
 )
 
-// 任意类型转换为[]int类型
+// Ints converts <i> to []int.
 func Ints(i interface{}) []int {
     if i == nil {
         return nil
@@ -84,7 +84,7 @@ func Ints(i interface{}) []int {
     }
 }
 
-// 任意类型转换为[]string类型
+// Strings converts <i> to []string.
 func Strings(i interface{}) []string {
     if i == nil {
         return nil
@@ -157,7 +157,7 @@ func Strings(i interface{}) []string {
     }
 }
 
-// 将类型转换为[]float64类型
+// Strings converts <i> to []float64.
 func Floats(i interface{}) []float64 {
     if i == nil {
         return nil
@@ -230,7 +230,7 @@ func Floats(i interface{}) []float64 {
     }
 }
 
-// 任意类型转换为[]interface{}类型
+// Interfaces converts <i> to []interface{}.
 func Interfaces(i interface{}) []interface{} {
     if i == nil {
         return nil
@@ -296,11 +296,11 @@ func Interfaces(i interface{}) []interface{} {
                 for _, v := range i.([]float64) {
                     array = append(array, v)
                 }
-            // 不是常见类型，则使用反射
             default:
+	            // Finally we use reflection.
                 rv   := reflect.ValueOf(i)
                 kind := rv.Kind()
-                // 如果是指针，那么需要转换到指针对应的数据项，以便识别真实的类型
+                // If it's pointer, find the real type.
                 if kind == reflect.Ptr {
                     rv   = rv.Elem()
                     kind = rv.Kind()
@@ -314,7 +314,7 @@ func Interfaces(i interface{}) []interface{} {
                     case reflect.Struct:
                         rt := rv.Type()
                         for i := 0; i < rv.NumField(); i++ {
-                            // 只获取公开属性
+                            // Only public attributes.
                             if !gstr.IsLetterUpper(rt.Field(i).Name[0]) {
                                 continue
                             }
@@ -328,7 +328,7 @@ func Interfaces(i interface{}) []interface{} {
     }
 }
 
-// 将类型转换为[]map[string]interface{}类型.
+// Maps converts <i> to []map[string]interface{}.
 func Maps(i interface{}) []map[string]interface{} {
     if i == nil {
         return nil
