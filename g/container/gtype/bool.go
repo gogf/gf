@@ -33,7 +33,7 @@ func (t *Bool) Clone() *Bool {
     return NewBool(t.Val())
 }
 
-// Set atomically stores value into t.valueue and returns the previous t.value value.
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (t *Bool) Set(value bool) (old bool) {
     if value {
         old = atomic.SwapInt32(&t.value, 1) == 1

@@ -1,3 +1,9 @@
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with gm file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gmap_test
 
 import (
@@ -63,9 +69,9 @@ func Test_Map_Set_Fun(t *testing.T) {
 
 func Test_Map_Batch(t *testing.T) {
 	m := gmap.New()
-	m.BatchSet(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+	m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-	m.BatchRemove([]interface{}{"key1", 1})
+	m.Removes([]interface{}{"key1", 1})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 }
 func Test_Map_Iterator(t *testing.T){

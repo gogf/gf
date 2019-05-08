@@ -20,7 +20,7 @@ import (
 type Cron struct {
     idGen      *gtype.Int64             // Used for unique name generation.
     status     *gtype.Int               // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
-    entries    *gmap.StringInterfaceMap // All timed task entries.
+    entries    *gmap.StrAnyMap // All timed task entries.
     logPath    *gtype.String            // Logging path(folder).
     logLevel   *gtype.Int               // Logging level.
 }
@@ -30,7 +30,7 @@ func New() *Cron {
     return &Cron {
         idGen      : gtype.NewInt64(),
         status     : gtype.NewInt(STATUS_RUNNING),
-        entries    : gmap.NewStringInterfaceMap(),
+        entries    : gmap.NewStrAnyMap(),
         logPath    : gtype.NewString(),
         logLevel   : gtype.NewInt(glog.LEVEL_PROD),
     }

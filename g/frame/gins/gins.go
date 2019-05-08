@@ -28,7 +28,7 @@ const (
 )
 
 // 单例对象存储器
-var instances = gmap.NewStringInterfaceMap()
+var instances = gmap.NewStrAnyMap()
 
 // 获取单例对象
 func Get(key string) interface{} {

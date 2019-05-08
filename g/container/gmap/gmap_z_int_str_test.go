@@ -1,3 +1,9 @@
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with gm file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gmap_test
 
 import (
@@ -6,15 +12,15 @@ import (
 	"testing"
 )
 
-func getString() string {
+func getStr() string {
 	return "z"
 }
-func intStringCallBack(int, string) bool {
+func intStrCallBack(int, string) bool {
 	return true
 }
-func Test_IntStringMap_Basic(t *testing.T) {
+func Test_IntStrMap_Basic(t *testing.T) {
 	gtest.Case(t, func() {
-		m := gmap.NewIntStringMap()
+		m := gmap.NewIntStrMap()
 		m.Set(1, "a")
 
 		gtest.Assert(m.Get(1), "a")
@@ -36,7 +42,7 @@ func Test_IntStringMap_Basic(t *testing.T) {
 
 		//反转之后不成为以下 map,flip 操作只是翻转原 map
 		//gtest.Assert(m.Map(), map[string]int{"a": 1, "c": 3})
-		m_f := gmap.NewIntStringMap()
+		m_f := gmap.NewIntStrMap()
 		m_f.Set(1, "2")
 		m_f.Flip()
 		gtest.Assert(m_f.Map(), map[int]string{2: "1"})
@@ -45,39 +51,39 @@ func Test_IntStringMap_Basic(t *testing.T) {
 		gtest.Assert(m.Size(), 0)
 		gtest.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b"})
+		m2 := gmap.NewIntStrMapFrom(map[int]string{1: "a", 2: "b"})
 		gtest.Assert(m2.Map(), map[int]string{1: "a", 2: "b"})
-		m3 := gmap.NewIntStringMapFromArray([]int{1, 2}, []string{"a", "b"})
+		m3 := gmap.NewIntStrMapFromArray([]int{1, 2}, []string{"a", "b"})
 		gtest.Assert(m3.Map(), map[int]string{1: "a", 2: "b"})
 
 	})
 }
-func Test_IntStringMap_Set_Fun(t *testing.T) {
-	m := gmap.NewIntStringMap()
+func Test_IntStrMap_Set_Fun(t *testing.T) {
+	m := gmap.NewIntStrMap()
 
-	m.GetOrSetFunc(1, getString)
-	m.GetOrSetFuncLock(2, getString)
+	m.GetOrSetFunc(1, getStr)
+	m.GetOrSetFuncLock(2, getStr)
 	gtest.Assert(m.Get(1), "z")
 	gtest.Assert(m.Get(2), "z")
-	gtest.Assert(m.SetIfNotExistFunc(1, getString), false)
-	gtest.Assert(m.SetIfNotExistFunc(3, getString), true)
+	gtest.Assert(m.SetIfNotExistFunc(1, getStr), false)
+	gtest.Assert(m.SetIfNotExistFunc(3, getStr), true)
 
-	gtest.Assert(m.SetIfNotExistFuncLock(2, getString), false)
-	gtest.Assert(m.SetIfNotExistFuncLock(4, getString), true)
+	gtest.Assert(m.SetIfNotExistFuncLock(2, getStr), false)
+	gtest.Assert(m.SetIfNotExistFuncLock(4, getStr), true)
 
 }
 
-func Test_IntStringMap_Batch(t *testing.T) {
-	m := gmap.NewIntStringMap()
+func Test_IntStrMap_Batch(t *testing.T) {
+	m := gmap.NewIntStrMap()
 
-	m.BatchSet(map[int]string{1: "a", 2: "b", 3: "c"})
+	m.Sets(map[int]string{1: "a", 2: "b", 3: "c"})
 	gtest.Assert(m.Map(), map[int]string{1: "a", 2: "b",3: "c"})
-	m.BatchRemove([]int{1, 2})
+	m.Removes([]int{1, 2})
 	gtest.Assert(m.Map(), map[int]interface{}{3: "c"})
 }
-func Test_IntStringMap_Iterator(t *testing.T){
+func Test_IntStrMap_Iterator(t *testing.T){
 	expect := map[int]string{1: "a", 2: "b"}
-	m      := gmap.NewIntStringMapFrom(expect)
+	m      := gmap.NewIntStrMapFrom(expect)
 	m.Iterator(func(k int, v string) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -97,10 +103,10 @@ func Test_IntStringMap_Iterator(t *testing.T){
 	gtest.Assert(j, 1)
 }
 
-func Test_IntStringMap_Lock(t *testing.T){
+func Test_IntStrMap_Lock(t *testing.T){
 
 	expect := map[int]string{1: "a", 2: "b", 3: "c"}
-	m      := gmap.NewIntStringMapFrom(expect)
+	m      := gmap.NewIntStrMapFrom(expect)
 	m.LockFunc(func(m map[int]string) {
 		gtest.Assert(m, expect)
 	})
@@ -109,9 +115,9 @@ func Test_IntStringMap_Lock(t *testing.T){
 	})
 
 }
-func Test_IntStringMap_Clone(t *testing.T) {
+func Test_IntStrMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
-	m := gmap.NewIntStringMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
+	m := gmap.NewIntStrMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
 
 	m_clone := m.Clone()
 	m.Remove(1)
@@ -122,9 +128,9 @@ func Test_IntStringMap_Clone(t *testing.T) {
 	//修改clone map,原 map 不影响
 	gtest.AssertIN(2, m.Keys())
 }
-func Test_IntStringMap_Merge(t *testing.T) {
-	m1 := gmap.NewIntStringMap()
-	m2 := gmap.NewIntStringMap()
+func Test_IntStrMap_Merge(t *testing.T) {
+	m1 := gmap.NewIntStrMap()
+	m2 := gmap.NewIntStrMap()
 	m1.Set(1, "a")
 	m2.Set(2, "b")
 	m1.Merge(m2)

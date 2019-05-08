@@ -14,11 +14,12 @@ import (
 )
 
 type Ring struct {
-    mu    *rwmutex.RWMutex // 互斥锁
-    ring  *ring.Ring       // 底层环形数据结构
-    len   *gtype.Int       // 数据大小(已使用的大小)
-    cap   *gtype.Int       // 总长度(分配的环大小，包括未使用的数据项数量)
-    dirty *gtype.Bool      // 标记环是否脏了(需要重新计算大小，当环大小发生改变时做标记)
+    mu    *rwmutex.RWMutex
+    ring  *ring.Ring       // Underlying ring.
+    len   *gtype.Int       // Length(already used size).
+    cap   *gtype.Int       // Capability(>=len).
+    dirty *gtype.Bool      // Dirty, which means the len and cap should be recalculated.
+                           // It's marked dirty when the size of ring changes.
 }
 
 func New(cap int, unsafe...bool) *Ring {
@@ -31,7 +32,7 @@ func New(cap int, unsafe...bool) *Ring {
     }
 }
 
-// 返回当前环指向的数据项值
+// Val returns the item's value of current position.
 func (r *Ring) Val() interface{} {
     r.mu.RLock()
     v := r.ring.Value
@@ -39,19 +40,19 @@ func (r *Ring) Val() interface{} {
     return v
 }
 
-// 返回当前环已有数据项大小
+// Len returns the size of ring.
 func (r *Ring) Len() int {
     r.checkAndUpdateLenAndCap()
     return r.len.Val()
 }
 
-// 返回当前环总大小(包含未使用长度)
+// Cap returns the capacity of ring.
 func (r *Ring) Cap() int {
     r.checkAndUpdateLenAndCap()
     return r.cap.Val()
 }
 
-// 检测并执行len和cap的更新(两者必须一起更新)
+// Checks and updates the len and cap of ring when ring is dirty.
 func (r *Ring) checkAndUpdateLenAndCap()  {
     if !r.dirty.Val() {
         return
@@ -73,7 +74,7 @@ func (r *Ring) checkAndUpdateLenAndCap()  {
     r.dirty.Set(false)
 }
 
-// 当前位置设置数据项值
+// Set sets value to the item of current position.
 func (r *Ring) Set(value interface{}) *Ring {
     r.mu.Lock()
     if r.ring.Value == nil {
@@ -84,7 +85,7 @@ func (r *Ring) Set(value interface{}) *Ring {
     return r
 }
 
-// Set & Next
+// Put sets <value> to current item of ring and moves position to next item.
 func (r *Ring) Put(value interface{}) *Ring {
     r.mu.Lock()
     if r.ring.Value == nil {
@@ -96,7 +97,8 @@ func (r *Ring) Put(value interface{}) *Ring {
     return r
 }
 
-// 环往后(n > 0)或者往前(n < 0)移动n个元素
+// Move moves n % r.Len() elements backward (n < 0) or forward (n >= 0)
+// in the ring and returns that ring element. r must not be empty.
 func (r *Ring) Move(n int) *Ring {
     r.mu.Lock()
     r.ring = r.ring.Move(n)
@@ -104,7 +106,7 @@ func (r *Ring) Move(n int) *Ring {
     return r
 }
 
-// 环往前移动1个元素
+// Prev returns the previous ring element. r must not be empty.
 func (r *Ring) Prev() *Ring {
     r.mu.Lock()
     r.ring = r.ring.Prev()
@@ -112,7 +114,7 @@ func (r *Ring) Prev() *Ring {
     return r
 }
 
-// 环往后移动1个元素
+// Next returns the next ring element. r must not be empty.
 func (r *Ring) Next() *Ring {
     r.mu.Lock()
     r.ring = r.ring.Next()
@@ -120,11 +122,22 @@ func (r *Ring) Next() *Ring {
     return r
 }
 
-// 连接两个环，两个环的大小和位置都有可能会发生改变。
-// 1、链接将环r与环s连接，使得r.Next()成为s并返回r.Next()的原始值。r一定不能为空。
-// 2、如果r和s指向同一个环，则链接它们会从环中移除r和s之间的元素。
-//    删除的元素形成子环，结果是对该子环的引用(如果没有删除元素，结果仍然是r.Next()的原始值，而不是nil)。
-// 3、如果r和s指向不同的环，则链接它们会创建一个单独的环，并在r之后插入s的元素。 结果指向插入后s的最后一个元素后面的元素。
+// Link connects ring r with ring s such that r.Next()
+// becomes s and returns the original value for r.Next().
+// r must not be empty.
+//
+// If r and s point to the same ring, linking
+// them removes the elements between r and s from the ring.
+// The removed elements form a subring and the result is a
+// reference to that subring (if no elements were removed,
+// the result is still the original value for r.Next(),
+// and not nil).
+//
+// If r and s point to different rings, linking
+// them creates a single ring with the elements of s inserted
+// after r. The result points to the element following the
+// last element of s after insertion.
+//
 func (r *Ring) Link(s *Ring) *Ring {
     r.mu.Lock()
     s.mu.Lock()
@@ -136,7 +149,10 @@ func (r *Ring) Link(s *Ring) *Ring {
     return r
 }
 
-// 删除环中当前位置往后的n个数据项
+// Unlink removes n % r.Len() elements from the ring r, starting
+// at r.Next(). If n % r.Len() == 0, r remains unchanged.
+// The result is the removed subring. r must not be empty.
+//
 func (r *Ring) Unlink(n int) *Ring {
     r.mu.Lock()
     r.ring = r.ring.Unlink(n)
@@ -145,7 +161,9 @@ func (r *Ring) Unlink(n int) *Ring {
     return r
 }
 
-// 读锁遍历，往后只读遍历，回调函数返回true表示继续遍历，否则退出遍历
+// RLockIteratorNext iterates and locks reading forward
+// with given callback function <f> within RWMutex.RLock.
+// If <f> returns true, then it continues iterating; or false to stop.
 func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
     r.mu.RLock()
     defer r.mu.RUnlock()
@@ -159,7 +177,9 @@ func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
     }
 }
 
-// 读锁遍历，往前只读遍历，回调函数返回true表示继续遍历，否则退出遍历
+// RLockIteratorPrev iterates and locks reading backward
+// with given callback function <f> within RWMutex.RLock.
+// If <f> returns true, then it continues iterating; or false to stop.
 func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
     r.mu.RLock()
     defer r.mu.RUnlock()
@@ -173,7 +193,9 @@ func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
     }
 }
 
-// 写锁遍历，往后写遍历，回调函数返回true表示继续遍历，否则退出遍历
+// LockIteratorNext iterates and locks writing forward
+// with given callback function <f> within RWMutex.RLock.
+// If <f> returns true, then it continues iterating; or false to stop.
 func (r *Ring) LockIteratorNext(f func(item *ring.Ring) bool) {
     r.mu.RLock()
     defer r.mu.RUnlock()
@@ -187,7 +209,9 @@ func (r *Ring) LockIteratorNext(f func(item *ring.Ring) bool) {
     }
 }
 
-// 写锁遍历，往前写遍历，回调函数返回true表示继续遍历，否则退出遍历
+// LockIteratorPrev iterates and locks writing backward
+// with given callback function <f> within RWMutex.RLock.
+// If <f> returns true, then it continues iterating; or false to stop.
 func (r *Ring) LockIteratorPrev(f func(item *ring.Ring) bool) {
     r.mu.RLock()
     defer r.mu.RUnlock()
@@ -201,7 +225,7 @@ func (r *Ring) LockIteratorPrev(f func(item *ring.Ring) bool) {
     }
 }
 
-// 从当前位置，往后只读完整遍历，返回非空数据项值构成的数组
+// SliceNext returns a copy of all item values as slice forward from current position.
 func (r *Ring) SliceNext() []interface{} {
     s := make([]interface{}, 0)
     r.mu.RLock()
@@ -217,7 +241,7 @@ func (r *Ring) SliceNext() []interface{} {
     return s
 }
 
-// 从当前位置，往前只读完整遍历，返回非空数据项值构成的数组
+// SlicePrev returns a copy of all item values as slice backward from current position.
 func (r *Ring) SlicePrev() []interface{} {
     s := make([]interface{}, 0)
     r.mu.RLock()

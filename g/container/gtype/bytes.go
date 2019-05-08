@@ -27,7 +27,7 @@ func (t *Bytes) Clone() *Bytes {
     return NewBytes(t.Val())
 }
 
-// Set atomically stores value into t.value and returns the previous t.value value.
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 // Note: The parameter <value> cannot be nil.
 func (t *Bytes) Set(value []byte) (old []byte) {
     old = t.Val()

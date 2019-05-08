@@ -30,7 +30,7 @@ func (t *Uint32) Clone() *Uint32 {
     return NewUint32(t.Val())
 }
 
-// Set atomically stores value into t.value and returns the previous t.value value.
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (t *Uint32) Set(value uint32) (old uint32) {
     return atomic.SwapUint32(&t.value, value)
 }
@@ -40,7 +40,7 @@ func (t *Uint32) Val() uint32 {
     return atomic.LoadUint32(&t.value)
 }
 
-// Add atomically adds delta to t.value and returns the new value.
+// Add atomically adds <delta> to t.value and returns the new value.
 func (t *Uint32) Add(delta uint32) (new uint32) {
     return atomic.AddUint32(&t.value, delta)
 }

@@ -32,7 +32,7 @@ const (
 type Config struct {
     name   *gtype.String            // Default configuration file name.
     paths  *garray.StringArray      // Searching path array.
-    jsons  *gmap.StringInterfaceMap // The pared JSON objects for configuration files.
+    jsons  *gmap.StrAnyMap // The pared JSON objects for configuration files.
     vc     *gtype.Bool              // Whether do violence check in value index searching.
                                     // It affects the performance when set true(false in default).
 }
@@ -47,7 +47,7 @@ func New(file ...string) *Config {
     c := &Config {
         name   : gtype.NewString(name),
         paths  : garray.NewStringArray(),
-        jsons  : gmap.NewStringInterfaceMap(),
+        jsons  : gmap.NewStrAnyMap(),
         vc     : gtype.NewBool(),
     }
 	// Customized dir path from env/cmd.

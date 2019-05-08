@@ -157,7 +157,7 @@ const (
 
 var (
     // Instance map.
-    instances = gmap.NewStringInterfaceMap()
+    instances = gmap.NewStrAnyMap()
 )
 
 // New creates ORM DB object with global configurations.

@@ -52,9 +52,9 @@ type PoolStats struct {
 
 var (
     // 单例对象Map
-    instances = gmap.NewStringInterfaceMap()
+    instances = gmap.NewStrAnyMap()
     // 连接池Map
-    pools     = gmap.NewStringInterfaceMap()
+    pools     = gmap.NewStrAnyMap()
 )
 
 // New creates a redis client object with given configuration.

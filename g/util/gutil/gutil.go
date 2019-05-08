@@ -4,9 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gutil provides some uncategorized util functions.
-// 
-// 工具包.
+// Package gutil provides utility functions.
 package gutil
 
 import (

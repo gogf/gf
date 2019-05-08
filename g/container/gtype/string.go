@@ -29,7 +29,7 @@ func (t *String) Clone() *String {
     return NewString(t.Val())
 }
 
-// Set atomically stores value into t.value and returns the previous t.value value.
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (t *String) Set(value string) (old string) {
     old = t.Val()
     t.value.Store(value)

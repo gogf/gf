@@ -36,8 +36,9 @@ const (
     gDEFAULT_QUEUE_SIZE = 10000
 )
 
-// New returns a queue object.
-// Param <limit> is optional and it is not limited by default.
+// New returns an empty queue object.
+// Optional parameter <limit> is used to limit the size of the queue, which is unlimited by default.
+// When <limit> is given, the queue will be static and high performance which is comparable with stdlib chan.
 func New(limit...int) *Queue {
     q := &Queue {
         closed : make(chan struct{}, 0),
@@ -84,7 +85,7 @@ func (q *Queue) startAsyncLoop() {
 }
 
 // Push pushes the data <v> into the queue.
-// Note that it would panics if the Push method is called after the queue is closed.
+// Note that it would panics if Push is called after the queue is closed.
 func (q *Queue) Push(v interface{}) {
     if q.limit > 0 {
         q.C <- v
@@ -95,14 +96,14 @@ func (q *Queue) Push(v interface{}) {
 }
 
 // Pop pops an item from the queue in FIFO way.
-// Note that it would return nil immediately if the Pop method is called after the queue is closed.
+// Note that it would return nil immediately if Pop is called after the queue is closed.
 func (q *Queue) Pop() interface{} {
     return <- q.C
 }
 
 // Close closes the queue.
-// Notice: It would notify all goroutines exit immediately,
-// which are blocked reading by Pop method).
+// Notice: It would notify all goroutines return immediately,
+// which are being blocked reading by Pop method.
 func (q *Queue) Close() {
     close(q.C)
     close(q.events)
