@@ -3,7 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 请求处理.
 
 package ghttp
 
@@ -57,6 +56,10 @@ func (s *Server)handleRequest(w http.ResponseWriter, r *http.Request) {
         // 事件 - BeforeOutput
         if !request.IsExited() {
             s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
+        }
+        // 如果没有产生异常状态，那么设置返回状态为200
+        if request.Response.Status == 0 {
+	        request.Response.Status = http.StatusOK
         }
         // error log
         if e := recover(); e != nil {

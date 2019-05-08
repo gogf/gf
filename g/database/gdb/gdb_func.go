@@ -15,7 +15,6 @@ import (
     "github.com/gogf/gf/g/text/gregex"
     "github.com/gogf/gf/g/text/gstr"
     "github.com/gogf/gf/g/util/gconv"
-    _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
     "strings"
 )
