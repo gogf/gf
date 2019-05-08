@@ -10,6 +10,15 @@ import (
     "net"
 )
 
+// 常见的二进制数据校验方式，生成校验结果
+func Checksum(buffer []byte) uint32 {
+	var checksum uint32
+	for _, b := range buffer {
+		checksum += uint32(b)
+	}
+	return checksum
+}
+
 // 创建标准库UDP链接操作对象
 func NewNetConn(raddr string, laddr...string) (*net.UDPConn, error) {
     var err error

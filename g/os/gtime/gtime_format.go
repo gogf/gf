@@ -93,19 +93,17 @@ func formatToStdLayout(format string) string {
 			if f, ok := formats[format[i]]; ok {
 				// 有几个转换的符号需要特殊处理
 				switch format[i] {
-				case 'j':
-					b.WriteString("02")
-				case 'G':
-					b.WriteString("15")
-				case 'u':
-					if i > 0 && format[i-1] == '.' {
-						b.WriteString("000")
-					} else {
-						b.WriteString(".000")
-					}
+					case 'j': b.WriteString("02")
+					case 'G': b.WriteString("15")
+					case 'u':
+						if i > 0 && format[i-1] == '.' {
+							b.WriteString("000")
+						} else {
+							b.WriteString(".000")
+						}
 
-				default:
-					b.WriteString(f)
+					default:
+						b.WriteString(f)
 				}
 			} else {
 				b.WriteByte(format[i])
@@ -130,47 +128,37 @@ func (t *Time) Format(format string) string {
 	buffer := bytes.NewBuffer(nil)
 	for i := 0; i < len(runes); {
 		switch runes[i] {
-		case '\\':
-			if i < len(runes)-1 {
-				buffer.WriteRune(runes[i+1])
-				i += 2
-				continue
-			} else {
-				return buffer.String()
-			}
-		case 'W':
-			buffer.WriteString(strconv.Itoa(t.WeeksOfYear()))
-		case 'z':
-			buffer.WriteString(strconv.Itoa(t.DayOfYear()))
-		case 't':
-			buffer.WriteString(strconv.Itoa(t.DaysInMonth()))
-		default:
-			if runes[i] > 255 {
-				buffer.WriteRune(runes[i])
-				break
-			}
-			if f, ok := formats[byte(runes[i])]; ok {
-				result := t.Time.Format(f)
-				// 有几个转换的符号需要特殊处理
-				switch runes[i] {
-				case 'j':
-					buffer.WriteString(gstr.ReplaceByArray(result, []string{"=j=0", "", "=j=", ""}))
-				case 'G':
-					buffer.WriteString(gstr.ReplaceByArray(result, []string{"=G=0", "", "=G=", ""}))
-				case 'u':
-					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
-				case 'w':
-					buffer.WriteString(weekMap[result])
-				case 'N':
-					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
-				case 'S':
-					buffer.WriteString(formatMonthDaySuffixMap(result))
-				default:
-					buffer.WriteString(result)
+			case '\\':
+				if i < len(runes)-1 {
+					buffer.WriteRune(runes[i+1])
+					i += 2
+					continue
+				} else {
+					return buffer.String()
 				}
-			} else {
-				buffer.WriteRune(runes[i])
-			}
+			case 'W': buffer.WriteString(strconv.Itoa(t.WeeksOfYear()))
+			case 'z': buffer.WriteString(strconv.Itoa(t.DayOfYear()))
+			case 't': buffer.WriteString(strconv.Itoa(t.DaysInMonth()))
+			default:
+				if runes[i] > 255 {
+					buffer.WriteRune(runes[i])
+					break
+				}
+				if f, ok := formats[byte(runes[i])]; ok {
+					result := t.Time.Format(f)
+					// 有几个转换的符号需要特殊处理
+					switch runes[i] {
+						case 'j': buffer.WriteString(gstr.ReplaceByArray(result, []string{"=j=0", "", "=j=", ""}))
+						case 'G': buffer.WriteString(gstr.ReplaceByArray(result, []string{"=G=0", "", "=G=", ""}))
+						case 'u': buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
+						case 'w': buffer.WriteString(weekMap[result])
+						case 'N': buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
+						case 'S': buffer.WriteString(formatMonthDaySuffixMap(result))
+						default:  buffer.WriteString(result)
+					}
+				} else {
+					buffer.WriteRune(runes[i])
+				}
 		}
 		i++
 	}
@@ -180,19 +168,15 @@ func (t *Time) Format(format string) string {
 // 每月天数后面的英文后缀，2 个字符st nd，rd 或者 th
 func formatMonthDaySuffixMap(day string) string {
 	switch day {
-		case "01":
-			return "st"
-	    case "02":
-	    	return "nd"
-	    case "03":
-	    	return "rd"
-		default:
-			return "th"
+		case "01": return "st"
+	    case "02": return "nd"
+	    case "03": return "rd"
+		default:   return "th"
 	}
 }
 
 // 返回是否是润年
-func (t *Time)IsLeapYear() bool {
+func (t *Time) IsLeapYear() bool {
 	year := t.Year()
 	if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
 		return true
@@ -201,9 +185,9 @@ func (t *Time)IsLeapYear() bool {
 }
 
 // 返回一个时间点在当年中是第几天 0到365 有润年情况
-func (t *Time)DayOfYear() int {
+func (t *Time) DayOfYear() int {
 	month := int(t.Month())
-	day := t.Day()
+	day   := t.Day()
 
 	// 判断是否润年
 	if t.IsLeapYear() {
@@ -216,13 +200,12 @@ func (t *Time)DayOfYear() int {
 }
 
 // 一个时间点所在的月最长有多少天 28至31
-func (t *Time)DaysInMonth() int {
-	month := int(t.Month())
-	switch month {
-	case 1, 3, 5, 7, 8, 10, 12:
-		return 31
-	case 4, 6, 9, 11:
-		return 30
+func (t *Time) DaysInMonth() int {
+	switch t.Month() {
+		case 1, 3, 5, 7, 8, 10, 12:
+			return 31
+		case 4, 6, 9, 11:
+			return 30
 	}
 
 	// 只剩下第二月份,润年29天
@@ -233,9 +216,9 @@ func (t *Time)DaysInMonth() int {
 }
 
 // 获取时间点在本年内是第多少周
-func (t *Time)WeeksOfYear() int {
-	_, nums := t.ISOWeek()
-	return nums
+func (t *Time) WeeksOfYear() int {
+	_, week := t.ISOWeek()
+	return week
 }
 
 // 格式化使用标准库格式

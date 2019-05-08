@@ -212,6 +212,7 @@ func TestEmptyQuery(t *testing.T) {
 	runTests(t, dsn, func(dbt *DBTest) {
 		// just a comment, no query
 		rows := dbt.mustQuery("--")
+		defer rows.Close()
 		// will hang before #255
 		if rows.Next() {
 			dbt.Errorf("next on rows must be false")
@@ -230,6 +231,7 @@ func TestCRUD(t *testing.T) {
 		if rows.Next() {
 			dbt.Error("unexpected data in empty table")
 		}
+		rows.Close()
 
 		// Create Data
 		res := dbt.mustExec("INSERT INTO test VALUES (1)")
@@ -263,6 +265,7 @@ func TestCRUD(t *testing.T) {
 		} else {
 			dbt.Error("no data")
 		}
+		rows.Close()
 
 		// Update
 		res = dbt.mustExec("UPDATE test SET value = ? WHERE value = ?", false, true)
@@ -288,6 +291,7 @@ func TestCRUD(t *testing.T) {
 		} else {
 			dbt.Error("no data")
 		}
+		rows.Close()
 
 		// Delete
 		res = dbt.mustExec("DELETE FROM test WHERE value = ?", false)
@@ -351,6 +355,7 @@ func TestMultiQuery(t *testing.T) {
 		} else {
 			dbt.Error("no data")
 		}
+		rows.Close()
 
 	})
 }
@@ -377,6 +382,7 @@ func TestInt(t *testing.T) {
 			} else {
 				dbt.Errorf("%s: no data", v)
 			}
+			rows.Close()
 
 			dbt.mustExec("DROP TABLE IF EXISTS test")
 		}
@@ -396,6 +402,7 @@ func TestInt(t *testing.T) {
 			} else {
 				dbt.Errorf("%s ZEROFILL: no data", v)
 			}
+			rows.Close()
 
 			dbt.mustExec("DROP TABLE IF EXISTS test")
 		}
@@ -420,6 +427,7 @@ func TestFloat32(t *testing.T) {
 			} else {
 				dbt.Errorf("%s: no data", v)
 			}
+			rows.Close()
 			dbt.mustExec("DROP TABLE IF EXISTS test")
 		}
 	})
@@ -443,6 +451,7 @@ func TestFloat64(t *testing.T) {
 			} else {
 				dbt.Errorf("%s: no data", v)
 			}
+			rows.Close()
 			dbt.mustExec("DROP TABLE IF EXISTS test")
 		}
 	})
@@ -466,6 +475,7 @@ func TestFloat64Placeholder(t *testing.T) {
 			} else {
 				dbt.Errorf("%s: no data", v)
 			}
+			rows.Close()
 			dbt.mustExec("DROP TABLE IF EXISTS test")
 		}
 	})
@@ -492,6 +502,7 @@ func TestString(t *testing.T) {
 			} else {
 				dbt.Errorf("%s: no data", v)
 			}
+			rows.Close()
 
 			dbt.mustExec("DROP TABLE IF EXISTS test")
 		}
@@ -524,6 +535,7 @@ func TestRawBytes(t *testing.T) {
 		v1 := []byte("aaa")
 		v2 := []byte("bbb")
 		rows := dbt.mustQuery("SELECT ?, ?", v1, v2)
+		defer rows.Close()
 		if rows.Next() {
 			var o1, o2 sql.RawBytes
 			if err := rows.Scan(&o1, &o2); err != nil {
@@ -572,6 +584,7 @@ func TestValuer(t *testing.T) {
 		} else {
 			dbt.Errorf("Valuer: no data")
 		}
+		rows.Close()
 
 		dbt.mustExec("DROP TABLE IF EXISTS test")
 	})
@@ -884,6 +897,7 @@ func TestTimestampMicros(t *testing.T) {
 		dbt.mustExec("INSERT INTO test SET value0=?, value1=?, value6=?", f0, f1, f6)
 		var res0, res1, res6 string
 		rows := dbt.mustQuery("SELECT * FROM test")
+		defer rows.Close()
 		if !rows.Next() {
 			dbt.Errorf("test contained no selectable values")
 		}
@@ -1042,6 +1056,7 @@ func TestNULL(t *testing.T) {
 
 		var out interface{}
 		rows := dbt.mustQuery("SELECT * FROM test")
+		defer rows.Close()
 		if rows.Next() {
 			rows.Scan(&out)
 			if out != nil {
@@ -1121,6 +1136,7 @@ func TestLongData(t *testing.T) {
 		inS := in[:maxAllowedPacketSize-nonDataQueryLen]
 		dbt.mustExec("INSERT INTO test VALUES('" + inS + "')")
 		rows = dbt.mustQuery("SELECT value FROM test")
+		defer rows.Close()
 		if rows.Next() {
 			rows.Scan(&out)
 			if inS != out {
@@ -1139,6 +1155,7 @@ func TestLongData(t *testing.T) {
 		// Long binary data
 		dbt.mustExec("INSERT INTO test VALUES(?)", in)
 		rows = dbt.mustQuery("SELECT value FROM test WHERE 1=?", 1)
+		defer rows.Close()
 		if rows.Next() {
 			rows.Scan(&out)
 			if in != out {
@@ -1314,6 +1331,7 @@ func TestTLS(t *testing.T) {
 		}
 
 		rows := dbt.mustQuery("SHOW STATUS LIKE 'Ssl_cipher'")
+		defer rows.Close()
 
 		var variable, value *sql.RawBytes
 		for rows.Next() {
@@ -1430,7 +1448,7 @@ func TestCollation(t *testing.T) {
 		t.Skipf("MySQL server not running on %s", netAddr)
 	}
 
-	defaultCollation := "utf8_general_ci"
+	defaultCollation := "utf8mb4_general_ci"
 	testCollations := []string{
 		"",               // do not set
 		defaultCollation, // driver default
@@ -1474,9 +1492,9 @@ func TestColumnsWithAlias(t *testing.T) {
 		if cols[0] != "A" {
 			t.Fatalf("expected column name \"A\", got \"%s\"", cols[0])
 		}
-		rows.Close()
 
 		rows = dbt.mustQuery("SELECT * FROM (SELECT 1 AS one) AS A")
+		defer rows.Close()
 		cols, _ = rows.Columns()
 		if len(cols) != 1 {
 			t.Fatalf("expected 1 column, got %d", len(cols))
@@ -1520,6 +1538,7 @@ func TestTimezoneConversion(t *testing.T) {
 
 		// Retrieve time from DB
 		rows := dbt.mustQuery("SELECT ts FROM test")
+		defer rows.Close()
 		if !rows.Next() {
 			dbt.Fatal("did not get any rows out")
 		}
@@ -1827,7 +1846,7 @@ func TestConcurrent(t *testing.T) {
 }
 
 func testDialError(t *testing.T, dialErr error, expectErr error) {
-	RegisterDial("mydial", func(addr string) (net.Conn, error) {
+	RegisterDialContext("mydial", func(ctx context.Context, addr string) (net.Conn, error) {
 		return nil, dialErr
 	})
 
@@ -1865,8 +1884,9 @@ func TestCustomDial(t *testing.T) {
 	}
 
 	// our custom dial function which justs wraps net.Dial here
-	RegisterDial("mydial", func(addr string) (net.Conn, error) {
-		return net.Dial(prot, addr)
+	RegisterDialContext("mydial", func(ctx context.Context, addr string) (net.Conn, error) {
+		var d net.Dialer
+		return d.DialContext(ctx, prot, addr)
 	})
 
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@mydial(%s)/%s?timeout=30s", user, pass, addr, dbname))
@@ -2017,6 +2037,7 @@ func TestInterruptBySignal(t *testing.T) {
 				dbt.Errorf("expected val to be 42")
 			}
 		}
+		rows.Close()
 
 		// binary protocol
 		rows, err = dbt.db.Query("CALL test_signal(?)", 42)
@@ -2030,6 +2051,7 @@ func TestInterruptBySignal(t *testing.T) {
 				dbt.Errorf("expected val to be 42")
 			}
 		}
+		rows.Close()
 	})
 }
 
@@ -2915,5 +2937,60 @@ func TestValuerWithValueReceiverGivenNilValue(t *testing.T) {
 		dbt.mustExec("CREATE TABLE test (value VARCHAR(255))")
 		dbt.db.Exec("INSERT INTO test VALUES (?)", (*testValuer)(nil))
 		// This test will panic on the INSERT if ConvertValue() does not check for typed nil before calling Value()
+	})
+}
+
+// TestRawBytesAreNotModified checks for a race condition that arises when a query context
+// is canceled while a user is calling rows.Scan. This is a more stringent test than the one
+// proposed in https://github.com/golang/go/issues/23519. Here we're explicitly using
+// `sql.RawBytes` to check the contents of our internal buffers are not modified after an implicit
+// call to `Rows.Close`, so Context cancellation should **not** invalidate the backing buffers.
+func TestRawBytesAreNotModified(t *testing.T) {
+	const blob = "abcdefghijklmnop"
+	const contextRaceIterations = 20
+	const blobSize = defaultBufSize * 3 / 4 // Second row overwrites first row.
+	const insertRows = 4
+
+	var sqlBlobs = [2]string{
+		strings.Repeat(blob, blobSize/len(blob)),
+		strings.Repeat(strings.ToUpper(blob), blobSize/len(blob)),
+	}
+
+	runTests(t, dsn, func(dbt *DBTest) {
+		dbt.mustExec("CREATE TABLE test (id int, value BLOB) CHARACTER SET utf8")
+		for i := 0; i < insertRows; i++ {
+			dbt.mustExec("INSERT INTO test VALUES (?, ?)", i+1, sqlBlobs[i&1])
+		}
+
+		for i := 0; i < contextRaceIterations; i++ {
+			func() {
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+
+				rows, err := dbt.db.QueryContext(ctx, `SELECT id, value FROM test`)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				var b int
+				var raw sql.RawBytes
+				for rows.Next() {
+					if err := rows.Scan(&b, &raw); err != nil {
+						t.Fatal(err)
+					}
+
+					before := string(raw)
+					// Ensure cancelling the query does not corrupt the contents of `raw`
+					cancel()
+					time.Sleep(time.Microsecond * 100)
+					after := string(raw)
+
+					if before != after {
+						t.Fatalf("the backing storage for sql.RawBytes has been modified (i=%v)", i)
+					}
+				}
+				rows.Close()
+			}()
+		}
 	})
 }

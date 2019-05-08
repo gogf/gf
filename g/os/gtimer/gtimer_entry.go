@@ -29,7 +29,11 @@ type Entry struct {
 type JobFunc = func()
 
 // 创建定时任务。
+// 如果times参数<=0，表示不限制运行次数。
 func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
+	if times <= 0 {
+		times = gDEFAULT_TIMES
+	}
     ms  := interval.Nanoseconds()/1e6
     num := ms/w.intervalMs
     if num == 0 {
@@ -172,7 +176,6 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) (runnable, addable bool) 
         }
         // 是否不限制运行次数
         if times < 2000000000 && times > 1000000000 {
-            times = gDEFAULT_TIMES
             entry.times.Set(gDEFAULT_TIMES)
         }
         return true, true

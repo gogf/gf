@@ -22,6 +22,7 @@ import (
 type mysqlConn struct {
 	buf              buffer
 	netConn          net.Conn
+	rawConn          net.Conn // underlying connection when netConn is TLS connection.
 	affectedRows     uint64
 	insertId         uint64
 	cfg              *Config
@@ -32,6 +33,7 @@ type mysqlConn struct {
 	status           statusFlag
 	sequence         uint8
 	parseTime        bool
+	reset            bool // set when the Go SQL package calls ResetSession
 
 	// for context support (Go 1.8+)
 	watching bool
@@ -211,6 +213,9 @@ func (mc *mysqlConn) interpolateParams(query string, args []driver.Value) (strin
 		switch v := arg.(type) {
 		case int64:
 			buf = strconv.AppendInt(buf, v, 10)
+		case uint64:
+			// Handle uint64 explicitly because our custom ConvertValue emits unsigned values
+			buf = strconv.AppendUint(buf, v, 10)
 		case float64:
 			buf = strconv.AppendFloat(buf, v, 'g', -1, 64)
 		case bool:
@@ -639,5 +644,6 @@ func (mc *mysqlConn) ResetSession(ctx context.Context) error {
 	if mc.closed.IsSet() {
 		return driver.ErrBadConn
 	}
+	mc.reset = true
 	return nil
 }

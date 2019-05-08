@@ -1,57 +1,26 @@
-// Copyright 2012 The Go-MySQL-Driver Authors. All rights reserved.
+// Go MySQL Driver - A MySQL-Driver for Go's database/sql package
+//
+// Copyright 2018 The Go-MySQL-Driver Authors. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Package mysql provides a MySQL driver for Go's database/sql package.
-//
-// The driver should be used via the database/sql package:
-//
-//  import "database/sql"
-//  import _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
-//
-//  db, err := sql.Open("mysql", "user:password@/dbname")
-//
-// See https://github.com/go-sql-driver/mysql#usage for details
 package mysql
 
 import (
-	"database/sql"
+	"context"
 	"database/sql/driver"
 	"net"
-	"sync"
 )
 
-// MySQLDriver is exported to make the driver directly accessible.
-// In general the driver is used via the database/sql package.
-type MySQLDriver struct{}
-
-// DialFunc is a function which can be used to establish the network connection.
-// Custom dial functions must be registered with RegisterDial
-type DialFunc func(addr string) (net.Conn, error)
-
-var (
-	dialsLock sync.RWMutex
-	dials     map[string]DialFunc
-)
-
-// RegisterDial registers a custom dial function. It can then be used by the
-// network address mynet(addr), where mynet is the registered new network.
-// addr is passed as a parameter to the dial function.
-func RegisterDial(net string, dial DialFunc) {
-	dialsLock.Lock()
-	defer dialsLock.Unlock()
-	if dials == nil {
-		dials = make(map[string]DialFunc)
-	}
-	dials[net] = dial
+type connector struct {
+	cfg *Config // immutable private copy.
 }
 
-// Open new Connection.
-// See https://github.com/go-sql-driver/mysql#dsn-data-source-name for how
-// the DSN string is formatted
-func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
+// Connect implements driver.Connector interface.
+// Connect returns a connection to the database.
+func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 	var err error
 
 	// New mysqlConn
@@ -59,10 +28,7 @@ func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
 		maxAllowedPacket: maxPacketSize,
 		maxWriteSize:     maxPacketSize - 1,
 		closech:          make(chan struct{}),
-	}
-	mc.cfg, err = ParseDSN(dsn)
-	if err != nil {
-		return nil, err
+		cfg:              c.cfg,
 	}
 	mc.parseTime = mc.cfg.ParseTime
 
@@ -71,11 +37,12 @@ func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
 	dial, ok := dials[mc.cfg.Net]
 	dialsLock.RUnlock()
 	if ok {
-		mc.netConn, err = dial(mc.cfg.Addr)
+		mc.netConn, err = dial(ctx, mc.cfg.Addr)
 	} else {
 		nd := net.Dialer{Timeout: mc.cfg.Timeout}
-		mc.netConn, err = nd.Dial(mc.cfg.Net, mc.cfg.Addr)
+		mc.netConn, err = nd.DialContext(ctx, mc.cfg.Net, mc.cfg.Addr)
 	}
+
 	if err != nil {
 		if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
 			errLog.Print("net.Error from Dial()': ", nerr.Error())
@@ -96,6 +63,10 @@ func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
 
 	// Call startWatcher for context support (From Go 1.8)
 	mc.startWatcher()
+	if err := mc.watchCancel(ctx); err != nil {
+		return nil, err
+	}
+	defer mc.finish()
 
 	mc.buf = newBuffer(mc.netConn)
 
@@ -109,6 +80,7 @@ func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
 		mc.cleanup()
 		return nil, err
 	}
+
 	if plugin == "" {
 		plugin = defaultAuthPlugin
 	}
@@ -164,6 +136,8 @@ func (d MySQLDriver) Open(dsn string) (driver.Conn, error) {
 	return mc, nil
 }
 
-func init() {
-	sql.Register("mysql", &MySQLDriver{})
+// Driver implements driver.Connector interface.
+// Driver returns &MySQLDriver{}.
+func (c *connector) Driver() driver.Driver {
+	return &MySQLDriver{}
 }

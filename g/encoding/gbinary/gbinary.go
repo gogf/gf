@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gbinary provides useful API for handling binary/bytes data.
+//
+// 注意gbinary模块统一使用LittleEndian进行编码。
 package gbinary
 
 import (

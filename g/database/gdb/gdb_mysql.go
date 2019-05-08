@@ -8,8 +8,9 @@
 package gdb
 
 import (
-    "fmt"
-    "database/sql"
+	"database/sql"
+	"fmt"
+	_ "github.com/gogf/gf/third/github.com/gf-third/mysql"
 )
 
 // 数据库链接对象
@@ -26,7 +27,7 @@ func (db *dbMysql) Open (config *ConfigNode) (*sql.DB, error) {
         source = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true",
             config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset)
     }
-    if db, err := sql.Open("mysql", source); err == nil {
+    if db, err := sql.Open("gf-mysql", source); err == nil {
         return db, nil
     } else {
         return nil, err

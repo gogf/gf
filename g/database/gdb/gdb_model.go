@@ -13,7 +13,6 @@ import (
     "errors"
     "fmt"
     "github.com/gogf/gf/g/util/gconv"
-    _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "reflect"
 )
 

@@ -99,7 +99,7 @@ func DelayAddTimes(delay time.Duration, interval time.Duration, times int, job J
     defaultTimer.DelayAddTimes(delay, interval, times, job)
 }
 
-// 在Job方法中调用，停止当前运行的任务。
+// 在Job方法中调用，停止并删除当前运行的任务。
 func Exit() {
     panic(gPANIC_EXIT)
 }

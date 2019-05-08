@@ -10,7 +10,8 @@ package ghttp
 
 import (
     "bytes"
-    "encoding/json"
+	"crypto/tls"
+	"encoding/json"
     "errors"
     "fmt"
     "github.com/gogf/gf/g/os/gfile"
@@ -40,11 +41,16 @@ func NewClient() *Client {
     return &Client{
         Client : http.Client {
             Transport: &http.Transport {
+            	// 默认不校验HTTPS证书有效性
+	            TLSClientConfig : &tls.Config{
+	            	InsecureSkipVerify: true,
+				},
+	            // 默认关闭KeepAlive功能
                 DisableKeepAlives: true,
             },
         },
-        header        : make(map[string]string),
-        cookies       : make(map[string]string),
+        header : make(map[string]string),
+        cookies: make(map[string]string),
     }
 }
 
