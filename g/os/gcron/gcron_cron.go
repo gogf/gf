@@ -18,11 +18,11 @@ import (
 )
 
 type Cron struct {
-    idGen      *gtype.Int64             // Used for unique name generation.
-    status     *gtype.Int               // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
+    idGen      *gtype.Int64    // Used for unique name generation.
+    status     *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
     entries    *gmap.StrAnyMap // All timed task entries.
-    logPath    *gtype.String            // Logging path(folder).
-    logLevel   *gtype.Int               // Logging level.
+    logPath    *gtype.String   // Logging path(folder).
+    logLevel   *gtype.Int      // Logging level.
 }
 
 // New returns a new Cron object with default settings.

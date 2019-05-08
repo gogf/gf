@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtest provides convenient test utils for unit testing.
+// Package gtest provides convenient test utilities for unit testing.
 package gtest
 
 import (
@@ -111,8 +111,8 @@ func AssertGT(value, expect interface{}) {
     }
 }
 
-// See AssertGE.
 // Deprecated.
+// See AssertGE.
 func AssertGTE(value, expect interface{}) {
 	AssertGE(value, expect)
 }
@@ -163,8 +163,8 @@ func AssertLT(value, expect interface{}) {
     }
 }
 
-// See AssertLE.
 // Deprecated.
+// See AssertLE.
 func AssertLTE(value, expect interface{}) {
 	AssertLE(value, expect)
 }
