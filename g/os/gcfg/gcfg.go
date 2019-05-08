@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gcfg provides reading, caching and managing for configuration files/contents.
+// Package gcfg provides reading, caching and managing for configuration.
 package gcfg
 
 import (
