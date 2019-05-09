@@ -20,7 +20,7 @@ func New(value interface{}, unsafe...bool) *Parser {
 }
 
 // NewUnsafe creates a un-concurrent-safe Parser object.
-func NewUnsafe (value...interface{}) *Parser {
+func NewUnsafe(value...interface{}) *Parser {
     if len(value) > 0 {
         return &Parser{gjson.New(value[0], false)}
     }
@@ -29,7 +29,7 @@ func NewUnsafe (value...interface{}) *Parser {
 
 // Load loads content from specified file <path>,
 // and creates a Parser object from its content.
-func Load (path string, unsafe...bool) (*Parser, error) {
+func Load(path string, unsafe...bool) (*Parser, error) {
     if j, e := gjson.Load(path, unsafe...); e == nil {
         return &Parser{j}, nil
     } else {
@@ -40,7 +40,7 @@ func Load (path string, unsafe...bool) (*Parser, error) {
 // LoadContent creates a Parser object from given content,
 // it checks the data type of <content> automatically,
 // supporting JSON, XML, YAML and TOML types of data.
-func LoadContent (data []byte, unsafe...bool) (*Parser, error) {
+func LoadContent(data []byte, unsafe...bool) (*Parser, error) {
     if j, e := gjson.LoadContent(data, unsafe...); e == nil {
         return &Parser{j}, nil
     } else {
