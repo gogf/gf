@@ -13,8 +13,8 @@ import (
 )
 
 // Val returns the value.
-func (p *Parser) Val() interface{} {
-	return p.json.Val()
+func (p *Parser) Value() interface{} {
+	return p.json.Value()
 }
 
 // Get returns value by specified <pattern>.
@@ -23,131 +23,133 @@ func (p *Parser) Val() interface{} {
 //
 // We can also access slice item by its index number in <pattern>,
 // eg: "items.name.first", "list.10".
-func (p *Parser) Get(pattern...string) interface{} {
-	return p.json.Get(pattern...)
+//
+// It returns a default value specified by <def> if value for <pattern> is not found.
+func (p *Parser) Get(pattern string, def...interface{}) interface{} {
+	return p.json.Get(pattern, def...)
 }
 
 // GetVar returns a *gvar.Var with value by given <pattern>.
-func (p *Parser) GetVar(pattern...string) *gvar.Var {
-	return p.json.GetVar(pattern...)
+func (p *Parser) GetVar(pattern string, def...interface{}) *gvar.Var {
+	return p.json.GetVar(pattern, def...)
 }
 
 // GetMap gets the value by specified <pattern>,
 // and converts it to map[string]interface{}.
-func (p *Parser) GetMap(pattern string) map[string]interface{} {
-    return p.json.GetMap(pattern)
+func (p *Parser) GetMap(pattern string, def...interface{}) map[string]interface{} {
+    return p.json.GetMap(pattern, def...)
 }
 
 // GetArray gets the value by specified <pattern>,
 // and converts it to a slice of []interface{}.
-func (p *Parser) GetArray(pattern string) []interface{} {
-    return p.json.GetArray(pattern)
+func (p *Parser) GetArray(pattern string, def...interface{}) []interface{} {
+    return p.json.GetArray(pattern, def...)
 }
 
 // GetString gets the value by specified <pattern>,
 // and converts it to string.
-func (p *Parser) GetString(pattern string) string {
-    return p.json.GetString(pattern)
+func (p *Parser) GetString(pattern string, def...interface{}) string {
+    return p.json.GetString(pattern, def...)
 }
 
 // GetBool gets the value by specified <pattern>,
 // and converts it to bool.
 // It returns false when value is: "", 0, false, off, nil;
 // or returns true instead.
-func (p *Parser) GetBool(pattern string) bool {
-    return p.json.GetBool(pattern)
+func (p *Parser) GetBool(pattern string, def...interface{}) bool {
+    return p.json.GetBool(pattern, def...)
 }
 
-func (p *Parser) GetInt(pattern string) int {
-    return p.json.GetInt(pattern)
+func (p *Parser) GetInt(pattern string, def...interface{}) int {
+    return p.json.GetInt(pattern, def...)
 }
 
-func (p *Parser) GetInt8(pattern string) int8 {
-    return p.json.GetInt8(pattern)
+func (p *Parser) GetInt8(pattern string, def...interface{}) int8 {
+    return p.json.GetInt8(pattern, def...)
 }
 
-func (p *Parser) GetInt16(pattern string) int16 {
-    return p.json.GetInt16(pattern)
+func (p *Parser) GetInt16(pattern string, def...interface{}) int16 {
+    return p.json.GetInt16(pattern, def...)
 }
 
-func (p *Parser) GetInt32(pattern string) int32 {
-    return p.json.GetInt32(pattern)
+func (p *Parser) GetInt32(pattern string, def...interface{}) int32 {
+    return p.json.GetInt32(pattern, def...)
 }
 
-func (p *Parser) GetInt64(pattern string) int64 {
-    return p.json.GetInt64(pattern)
+func (p *Parser) GetInt64(pattern string, def...interface{}) int64 {
+    return p.json.GetInt64(pattern, def...)
 }
 
-func (p *Parser) GetInts(pattern string) []int {
-    return p.json.GetInts(pattern)
+func (p *Parser) GetInts(pattern string, def...interface{}) []int {
+    return p.json.GetInts(pattern, def...)
 }
 
-func (p *Parser) GetUint(pattern string) uint {
-    return p.json.GetUint(pattern)
+func (p *Parser) GetUint(pattern string, def...interface{}) uint {
+    return p.json.GetUint(pattern, def...)
 }
 
-func (p *Parser) GetUint8(pattern string) uint8 {
-    return p.json.GetUint8(pattern)
+func (p *Parser) GetUint8(pattern string, def...interface{}) uint8 {
+    return p.json.GetUint8(pattern, def...)
 }
 
-func (p *Parser) GetUint16(pattern string) uint16 {
-    return p.json.GetUint16(pattern)
+func (p *Parser) GetUint16(pattern string, def...interface{}) uint16 {
+    return p.json.GetUint16(pattern, def...)
 }
 
-func (p *Parser) GetUint32(pattern string) uint32 {
-    return p.json.GetUint32(pattern)
+func (p *Parser) GetUint32(pattern string, def...interface{}) uint32 {
+    return p.json.GetUint32(pattern, def...)
 }
 
-func (p *Parser) GetUint64(pattern string) uint64 {
-    return p.json.GetUint64(pattern)
+func (p *Parser) GetUint64(pattern string, def...interface{}) uint64 {
+    return p.json.GetUint64(pattern, def...)
 }
 
-func (p *Parser) GetFloat32(pattern string) float32 {
-    return p.json.GetFloat32(pattern)
+func (p *Parser) GetFloat32(pattern string, def...interface{}) float32 {
+    return p.json.GetFloat32(pattern, def...)
 }
 
-func (p *Parser) GetFloat64(pattern string) float64 {
-    return p.json.GetFloat64(pattern)
+func (p *Parser) GetFloat64(pattern string, def...interface{}) float64 {
+    return p.json.GetFloat64(pattern, def...)
 }
 
-func (p *Parser) GetFloats(pattern string) []float64 {
-    return p.json.GetFloats(pattern)
+func (p *Parser) GetFloats(pattern string, def...interface{}) []float64 {
+    return p.json.GetFloats(pattern, def...)
 }
 
 // GetStrings gets the value by specified <pattern>,
 // and converts it to a slice of []string.
-func (p *Parser) GetStrings(pattern string) []string {
-	return p.json.GetStrings(pattern)
+func (p *Parser) GetStrings(pattern string, def...interface{}) []string {
+	return p.json.GetStrings(pattern, def...)
 }
 
-func (p *Parser) GetInterfaces(pattern string) []interface{} {
-	return p.json.GetInterfaces(pattern)
+func (p *Parser) GetInterfaces(pattern string, def...interface{}) []interface{} {
+	return p.json.GetInterfaces(pattern, def...)
 }
 
-func (p *Parser) GetTime(pattern string, format ... string) time.Time {
+func (p *Parser) GetTime(pattern string, format...string) time.Time {
 	return p.json.GetTime(pattern, format...)
 }
 
-func (p *Parser) GetTimeDuration(pattern string) time.Duration {
-	return p.json.GetTimeDuration(pattern)
+func (p *Parser) GetTimeDuration(pattern string, def...interface{}) time.Duration {
+	return p.json.GetTimeDuration(pattern, def...)
 }
 
-func (p *Parser) GetGTime(pattern string) *gtime.Time {
-	return p.json.GetGTime(pattern)
+func (p *Parser) GetGTime(pattern string, format...string) *gtime.Time {
+	return p.json.GetGTime(pattern, format...)
 }
 
 // GetToVar gets the value by specified <pattern>,
 // and converts it to specified golang variable <v>.
 // The <v> should be a pointer type.
-func (p *Parser) GetToVar(pattern string, v interface{}) error {
-	return p.json.GetToVar(pattern, v)
+func (p *Parser) GetToVar(pattern string, pointer interface{}) error {
+	return p.json.GetToVar(pattern, pointer)
 }
 
 // GetToStruct gets the value by specified <pattern>,
-// and converts it to specified object <objPointer>.
-// The <objPointer> should be the pointer to an object.
-func (p *Parser) GetToStruct(pattern string, objPointer interface{}) error {
-    return p.json.GetToStruct(pattern, objPointer)
+// and converts it to specified object <pointer>.
+// The <pointer> should be the pointer to a struct.
+func (p *Parser) GetToStruct(pattern string, pointer interface{}) error {
+    return p.json.GetToStruct(pattern, pointer)
 }
 
 // Set sets value with specified <pattern>.
