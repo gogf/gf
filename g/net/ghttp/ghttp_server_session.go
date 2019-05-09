@@ -224,8 +224,8 @@ func (s *Session) GetGTime(key string, format...string) *gtime.Time {
     return gconv.GTime(s.Get(key), format...)
 }
 
-func (s *Session) GetTimeDuration(key string, def...interface{}) time.Duration {
-    return gconv.TimeDuration(s.Get(key, def...))
+func (s *Session) GetDuration(key string, def...interface{}) time.Duration {
+    return gconv.Duration(s.Get(key, def...))
 }
 
 // 将变量转换为对象，注意 pointer 参数必须为struct指针

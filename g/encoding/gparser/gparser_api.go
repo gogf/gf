@@ -130,8 +130,8 @@ func (p *Parser) GetTime(pattern string, format...string) time.Time {
 	return p.json.GetTime(pattern, format...)
 }
 
-func (p *Parser) GetTimeDuration(pattern string, def...interface{}) time.Duration {
-	return p.json.GetTimeDuration(pattern, def...)
+func (p *Parser) GetDuration(pattern string, def...interface{}) time.Duration {
+	return p.json.GetDuration(pattern, def...)
 }
 
 func (p *Parser) GetGTime(pattern string, format...string) *gtime.Time {

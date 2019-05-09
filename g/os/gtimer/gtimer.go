@@ -34,7 +34,7 @@ var (
     // 默认定时器属性参数值
     defaultSlots    = cmdenv.Get("gf.gtimer.slots",    gDEFAULT_SLOT_NUMBER).Int()
     defaultLevel    = cmdenv.Get("gf.gtimer.level",    gDEFAULT_WHEEL_LEVEL).Int()
-    defaultInterval = cmdenv.Get("gf.gtimer.interval", gDEFAULT_WHEEL_INTERVAL).TimeDuration()*time.Millisecond
+    defaultInterval = cmdenv.Get("gf.gtimer.interval", gDEFAULT_WHEEL_INTERVAL).Duration()*time.Millisecond
     // 默认的wheel管理对象
     defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
 )

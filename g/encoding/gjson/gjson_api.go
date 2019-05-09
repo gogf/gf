@@ -178,8 +178,8 @@ func (j *Json) GetTime(pattern string, format... string) time.Time {
 	return gconv.Time(j.Get(pattern), format...)
 }
 
-func (j *Json) GetTimeDuration(pattern string, def...interface{}) time.Duration {
-	return gconv.TimeDuration(j.Get(pattern, def...))
+func (j *Json) GetDuration(pattern string, def...interface{}) time.Duration {
+	return gconv.Duration(j.Get(pattern, def...))
 }
 
 func (j *Json) GetGTime(pattern string, format... string) *gtime.Time {
