@@ -8,6 +8,7 @@
 package gmap
 
 import (
+	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/internal/rwmutex"
 	"github.com/gogf/gf/g/util/gconv"
 )
@@ -18,7 +19,7 @@ type StrAnyMap struct {
 }
 
 // NewStrAnyMap returns an empty StrAnyMap object.
-// The param <unsafe> used to specify whether using map with un-concurrent-safety,
+// The param <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewStrAnyMap(unsafe ...bool) *StrAnyMap {
 	return &StrAnyMap{
@@ -168,6 +169,30 @@ func (m *StrAnyMap) GetOrSetFuncLock(key string, f func() interface{}) interface
 	} else {
 		return v
 	}
+}
+
+// GetVar returns a gvar.Var with the value by given <key>.
+// The returned gvar.Var is un-concurrent safe.
+func (m *StrAnyMap) GetVar(key string) *gvar.Var {
+	return gvar.New(m.Get(key), true)
+}
+
+// GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
+// The returned gvar.Var is un-concurrent safe.
+func (m *StrAnyMap) GetVarOrSet(key string, value interface{}) *gvar.Var {
+	return gvar.New(m.GetOrSet(key, value), true)
+}
+
+// GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
+// The returned gvar.Var is un-concurrent safe.
+func (m *StrAnyMap) GetVarOrSetFunc(key string, f func() interface{}) *gvar.Var {
+	return gvar.New(m.GetOrSetFunc(key, f), true)
+}
+
+// GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
+// The returned gvar.Var is un-concurrent safe.
+func (m *StrAnyMap) GetVarOrSetFuncLock(key string, f func() interface{}) *gvar.Var {
+	return gvar.New(m.GetOrSetFuncLock(key, f), true)
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.

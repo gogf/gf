@@ -52,25 +52,38 @@ func Convert(i interface{}, t string, params...interface{}) interface{} {
         case "[]byte":          return Bytes(i)
         case "[]int":           return Ints(i)
         case "[]string":        return Strings(i)
-        case "time.Time":
+
+        case "Time", "time.Time":
             if len(params) > 0 {
                 return Time(i, String(params[0]))
             }
             return Time(i)
+
         case "gtime.Time":
             if len(params) > 0 {
                 return GTime(i, String(params[0]))
             }
             return *GTime(i)
-        case "*gtime.Time":
+
+        case "GTime", "*gtime.Time":
             if len(params) > 0 {
                 return GTime(i, String(params[0]))
             }
             return GTime(i)
-        case "time.Duration":   return TimeDuration(i)
+
+        case "Duration", "time.Duration":
+        	return Duration(i)
         default:
             return i
     }
+}
+
+// Byte converts <i> to byte.
+func Byte(i interface{}) byte {
+	if v, ok := i.(byte); ok {
+		return v
+	}
+	return byte(Uint8(i))
 }
 
 // Bytes converts <i> to []byte.
@@ -85,6 +98,23 @@ func Bytes(i interface{}) []byte {
             return gbinary.Encode(i)
     }
 }
+
+// Rune converts <i> to rune.
+func Rune(i interface{}) rune {
+	if v, ok := i.(rune); ok {
+		return v
+	}
+	return rune(Int32(i))
+}
+
+// Runes converts <i> to []rune.
+func Runes(i interface{}) []rune {
+	if v, ok := i.([]rune); ok {
+		return v
+	}
+	return []rune(String(i))
+}
+
 
 // String converts <i> to string.
 func String(i interface{}) string {

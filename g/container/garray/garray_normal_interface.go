@@ -34,7 +34,7 @@ func NewArray(unsafe...bool) *Array {
 }
 
 // NewArraySize create and returns an array with given size and cap.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewArraySize(size int, cap int, unsafe...bool) *Array {
     return &Array{
@@ -54,7 +54,7 @@ func NewFromCopy(array []interface{}, unsafe...bool) *Array {
 }
 
 // NewArrayFrom creates and returns an array with given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewArrayFrom(array []interface{}, unsafe...bool) *Array {
     return &Array{
@@ -64,7 +64,7 @@ func NewArrayFrom(array []interface{}, unsafe...bool) *Array {
 }
 
 // NewArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewArrayFromCopy(array []interface{}, unsafe...bool) *Array {
     newArray := make([]interface{}, len(array))
