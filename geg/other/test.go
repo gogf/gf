@@ -1,15 +1,25 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/net/ghttp"
-	"github.com/gogf/gf/g/os/gfile"
+	"fmt"
+	"github.com/gogf/gf/g/container/gtree"
 )
 
 func main() {
-if r, e := ghttp.Get("https://goframe.org/cover.png"); e != nil {
-	panic(e)
-} else {
-	defer r.Close()
-	gfile.PutBinContents("/Users/john/Temp/cover.png", r.ReadAll())
-}
+	tree := gtree.New(func(v1, v2 interface{}) int {
+		return v1.(int) - v2.(int)
+	})
+	for i := 0; i < 20; i++ {
+		tree.Set(i, i)
+	}
+	tree.Print()
+	tree.IteratorAsc(func(key, value interface{}) bool {
+		fmt.Println(key)
+		return true
+	})
+	fmt.Println()
+	tree.IteratorDesc(func(key, value interface{}) bool {
+		fmt.Println(key)
+		return true
+	})
 }

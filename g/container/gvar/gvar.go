@@ -20,7 +20,7 @@ type Var struct {
 }
 
 // New returns a new Var with given <value>.
-// The param <unsafe> used to specify whether using Var with un-concurrent-safety,
+// The param <unsafe> used to specify whether using Var in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func New(value interface{}, unsafe...bool) *Var {
     v := &Var{}
@@ -34,7 +34,7 @@ func New(value interface{}, unsafe...bool) *Var {
 }
 
 // NewRead returns a read-only interface object with given <value>.
-// The param <unsafe> used to specify whether using Var with un-concurrent-safety,
+// The param <unsafe> used to specify whether using Var in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewRead(value interface{}, unsafe...bool) VarRead {
     return VarRead(New(value, unsafe...))

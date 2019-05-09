@@ -17,7 +17,7 @@ type StrStrMap struct {
 }
 
 // NewStrStrMap returns an empty StrStrMap object.
-// The param <unsafe> used to specify whether using map with un-concurrent-safety,
+// The param <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewStrStrMap(unsafe...bool) *StrStrMap {
 	return &StrStrMap{

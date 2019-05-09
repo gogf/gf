@@ -22,7 +22,7 @@ type SortedIntArray struct {
     mu          *rwmutex.RWMutex
     array       []int
     unique      *gtype.Bool          // Whether enable unique feature(false)
-    compareFunc func(v1, v2 int) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
+    comparator func(v1, v2 int) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
 }
 
 // NewSortedIntArray creates and returns an empty sorted array.
@@ -33,14 +33,14 @@ func NewSortedIntArray(unsafe...bool) *SortedIntArray {
 }
 
 // NewSortedIntArraySize create and returns an sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
     return &SortedIntArray {
         mu          : rwmutex.New(unsafe...),
         array       : make([]int, 0, cap),
         unique      : gtype.NewBool(),
-        compareFunc : func(v1, v2 int) int {
+        comparator : func(v1, v2 int) int {
             if v1 < v2 {
                 return -1
             }
@@ -53,7 +53,7 @@ func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
 }
 
 // NewIntArrayFrom creates and returns an sorted array with given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
     a := NewSortedIntArraySize(0, unsafe...)
@@ -63,7 +63,7 @@ func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
 }
 
 // NewSortedIntArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArrayFromCopy(array []int, unsafe...bool) *SortedIntArray {
     newArray := make([]int, len(array))
@@ -305,7 +305,7 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
     cmp := -2
     for min <= max {
         mid = int((min + max) / 2)
-        cmp = a.compareFunc(value, a.array[mid])
+        cmp = a.comparator(value, a.array[mid])
         switch {
             case cmp < 0 : max = mid - 1
             case cmp > 0 : min = mid + 1
@@ -336,7 +336,7 @@ func (a *SortedIntArray) Unique() *SortedIntArray {
         if i == len(a.array) - 1 {
             break
         }
-        if a.compareFunc(a.array[i], a.array[i + 1]) == 0 {
+        if a.comparator(a.array[i], a.array[i + 1]) == 0 {
             a.array = append(a.array[ : i + 1], a.array[i + 1 + 1 : ]...)
         } else {
             i++

@@ -17,7 +17,7 @@ type IntStrMap struct {
 }
 
 // NewIntStrMap returns an empty IntStrMap object.
-// The param <unsafe> used to specify whether using map with un-concurrent-safety,
+// The param <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewIntStrMap(unsafe ...bool) *IntStrMap {
 	return &IntStrMap{

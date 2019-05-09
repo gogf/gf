@@ -18,7 +18,7 @@ type StrIntMap struct {
 }
 
 // NewStrIntMap returns an empty StrIntMap object.
-// The param <unsafe> used to specify whether using map with un-concurrent-safety,
+// The param <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewStrIntMap(unsafe ...bool) *StrIntMap {
 	return &StrIntMap{

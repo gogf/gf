@@ -7,7 +7,10 @@
 // Package gmap provides concurrent-safe/unsafe maps.
 package gmap
 
-import "github.com/gogf/gf/g/internal/rwmutex"
+import (
+	"github.com/gogf/gf/g/container/gvar"
+	"github.com/gogf/gf/g/internal/rwmutex"
+)
 
 type Map struct {
     mu   *rwmutex.RWMutex
@@ -15,7 +18,7 @@ type Map struct {
 }
 
 // New returns an empty hash map.
-// The param <unsafe> used to specify whether using map with un-concurrent-safety,
+// The param <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func New(unsafe ...bool) *Map {
 	return &Map{
@@ -165,6 +168,30 @@ func (m *Map) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{
     }
 }
 
+// GetVar returns a gvar.Var with the value by given <key>.
+// The returned gvar.Var is un-concurrent safe.
+func (m *Map) GetVar(key interface{}) *gvar.Var {
+	return gvar.New(m.Get(key), true)
+}
+
+// GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
+// The returned gvar.Var is un-concurrent safe.
+func (m *Map) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
+	return gvar.New(m.GetOrSet(key, value), true)
+}
+
+// GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
+// The returned gvar.Var is un-concurrent safe.
+func (m *Map) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
+	return gvar.New(m.GetOrSetFunc(key, f), true)
+}
+
+// GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
+// The returned gvar.Var is un-concurrent safe.
+func (m *Map) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
+	return gvar.New(m.GetOrSetFuncLock(key, f), true)
+}
+
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *Map) SetIfNotExist(key interface{}, value interface{}) bool {
@@ -198,15 +225,6 @@ func (m *Map) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool 
 	return false
 }
 
-// Removes batch deletes values of the map by keys.
-func (m *Map) Removes(keys []interface{}) {
-    m.mu.Lock()
-    for _, key := range keys {
-        delete(m.data, key)
-    }
-    m.mu.Unlock()
-}
-
 // Remove deletes value from map by given <key>, and return this deleted value.
 func (m *Map) Remove(key interface{}) interface{} {
     m.mu.Lock()
@@ -216,6 +234,15 @@ func (m *Map) Remove(key interface{}) interface{} {
     }
     m.mu.Unlock()
     return val
+}
+
+// Removes batch deletes values of the map by keys.
+func (m *Map) Removes(keys []interface{}) {
+	m.mu.Lock()
+	for _, key := range keys {
+		delete(m.data, key)
+	}
+	m.mu.Unlock()
 }
 
 // Keys returns all keys of the map as a slice.

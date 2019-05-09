@@ -30,7 +30,7 @@ func NewStringArray(unsafe...bool) *StringArray {
 }
 
 // NewStringArraySize create and returns an array with given size and cap.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewStringArraySize(size int, cap int, unsafe...bool) *StringArray {
     return &StringArray{
@@ -40,7 +40,7 @@ func NewStringArraySize(size int, cap int, unsafe...bool) *StringArray {
 }
 
 // NewStringArrayFrom creates and returns an array with given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewStringArrayFrom(array []string, unsafe...bool) *StringArray {
 	return &StringArray {
@@ -50,7 +50,7 @@ func NewStringArrayFrom(array []string, unsafe...bool) *StringArray {
 }
 
 // NewStringArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewStringArrayFromCopy(array []string, unsafe...bool) *StringArray {
     newArray := make([]string, len(array))
