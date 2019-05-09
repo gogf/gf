@@ -80,7 +80,7 @@ func (v *Var) Time(format...string) time.Time {
 // TimeDuration converts and returns <v> as time.Duration.
 // If value of <v> is string, then it uses time.ParseDuration for conversion.
 func (v *Var) TimeDuration() time.Duration {
-    return gconv.TimeDuration(v.Val())
+    return gconv.Duration(v.Val())
 }
 
 // GTime converts and returns <v> as *gtime.Time.

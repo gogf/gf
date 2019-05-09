@@ -17,10 +17,10 @@ func Time(i interface{}, format...string) time.Time {
     return GTime(i, format...).Time
 }
 
-// TimeDuration converts <i> to time.Duration.
+// Duration converts <i> to time.Duration.
 // If <i> is string, then it uses time.ParseDuration to convert it.
 // If <i> is numeric, then it converts <i> as nanoseconds.
-func TimeDuration(i interface{}) time.Duration {
+func Duration(i interface{}) time.Duration {
 	s := String(i)
 	if !gstr.IsNumeric(s) {
 		d, _ := time.ParseDuration(s)
