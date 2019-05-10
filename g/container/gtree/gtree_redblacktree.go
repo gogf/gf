@@ -18,7 +18,7 @@ const (
 	black, red color = true, false
 )
 
-// RedBlackTree holds elements of the red-black tree
+// RedBlackTree holds elements of the red-black tree.
 type RedBlackTree struct {
 	mu         *rwmutex.RWMutex
 	root       *RedBlackTreeNode
@@ -26,17 +26,17 @@ type RedBlackTree struct {
 	comparator func(v1, v2 interface{}) int
 }
 
-// RedBlackTreeNode is a single element within the tree
+// RedBlackTreeNode is a single element within the tree.
 type RedBlackTreeNode struct {
-	key    interface{}
-	value  interface{}
+	Key    interface{}
+	Value  interface{}
 	color  color
 	left   *RedBlackTreeNode
 	right  *RedBlackTreeNode
 	parent *RedBlackTreeNode
 }
 
-// NewWith instantiates a red-black tree with the custom comparator.
+// NewRedBlackTree instantiates a red-black tree with the custom comparator.
 // The param <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
 func NewRedBlackTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *RedBlackTree {
@@ -76,21 +76,21 @@ func (tree *RedBlackTree) doSet(key interface{}, value interface{}) {
 	if tree.root == nil {
 		// Assert key is of comparator's type for initial tree
 		tree.comparator(key, key)
-		tree.root    = &RedBlackTreeNode{key: key, value: value, color: red}
+		tree.root    = &RedBlackTreeNode{Key: key, Value: value, color: red}
 		insertedNode = tree.root
 	} else {
 		node := tree.root
 		loop := true
 		for loop {
-			compare := tree.comparator(key, node.key)
+			compare := tree.comparator(key, node.Key)
 			switch {
 				case compare == 0:
-					//node.key   = key
-					node.value = value
+					//node.Key   = key
+					node.Value = value
 					return
 				case compare < 0:
 					if node.left == nil {
-						node.left    = &RedBlackTreeNode{key: key, value: value, color: red}
+						node.left    = &RedBlackTreeNode{Key: key, Value: value, color: red}
 						insertedNode = node.left
 						loop         = false
 					} else {
@@ -98,7 +98,7 @@ func (tree *RedBlackTree) doSet(key interface{}, value interface{}) {
 					}
 				case compare > 0:
 					if node.right == nil {
-						node.right   = &RedBlackTreeNode{key: key, value: value, color: red}
+						node.right   = &RedBlackTreeNode{Key: key, Value: value, color: red}
 						insertedNode = node.right
 						loop         = false
 					} else {
@@ -131,7 +131,7 @@ func (tree *RedBlackTree) doSetWithLockCheck(key interface{}, value interface{})
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	if node := tree.doSearch(key); node != nil {
-		return node.value
+		return node.Value
 	}
 	if f, ok := value.(func() interface {}); ok {
 		value = f()
@@ -247,8 +247,8 @@ func (tree *RedBlackTree) doRemove(key interface{}) (value interface{}) {
 	}
 	if node.left != nil && node.right != nil {
 		p         := node.left.maximumNode()
-		node.key   = p.key
-		node.value = p.value
+		node.Key   = p.Key
+		node.Value = p.Value
 		node       = p
 	}
 	if node.left == nil || node.right == nil {
@@ -267,7 +267,7 @@ func (tree *RedBlackTree) doRemove(key interface{}) (value interface{}) {
 		}
 	}
 	tree.size--
-	value = node.value
+	value = node.Value
 	return
 }
 
@@ -337,6 +337,32 @@ func (tree *RedBlackTree) Map() map[interface{}]interface{} {
 func (tree *RedBlackTree) Left() *RedBlackTreeNode {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	node := tree.leftNode()
+	if tree.mu.IsSafe() {
+		return &RedBlackTreeNode{
+			Key   : node.Key,
+			Value : node.Value,
+		}
+	}
+	return node
+}
+
+// Right returns the right-most (max) node or nil if tree is empty.
+func (tree *RedBlackTree) Right() *RedBlackTreeNode {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	node := tree.rightNode()
+	if tree.mu.IsSafe() {
+		return &RedBlackTreeNode{
+			Key   : node.Key,
+			Value : node.Value,
+		}
+	}
+	return node
+}
+
+// leftNode returns the left-most (min) node or nil if tree is empty.
+func (tree *RedBlackTree) leftNode() *RedBlackTreeNode {
 	p := (*RedBlackTreeNode)(nil)
 	n := tree.root
 	for n != nil {
@@ -346,10 +372,8 @@ func (tree *RedBlackTree) Left() *RedBlackTreeNode {
 	return p
 }
 
-// Right returns the right-most (max) node or nil if tree is empty.
-func (tree *RedBlackTree) Right() *RedBlackTreeNode {
-	tree.mu.RLock()
-	defer tree.mu.RUnlock()
+// rightNode returns the right-most (max) node or nil if tree is empty.
+func (tree *RedBlackTree) rightNode() *RedBlackTreeNode {
 	p := (*RedBlackTreeNode)(nil)
 	n := tree.root
 	for n != nil {
@@ -370,7 +394,7 @@ func (tree *RedBlackTree) Floor(key interface{}) (floor *RedBlackTreeNode) {
 	found := false
 	node  := tree.root
 	for node != nil {
-		compare := tree.comparator(key, node.key)
+		compare := tree.comparator(key, node.Key)
 		switch {
 			case compare == 0:
 				return node
@@ -398,7 +422,7 @@ func (tree *RedBlackTree) Ceiling(key interface{}) (ceiling *RedBlackTreeNode) {
 	found := false
 	node  := tree.root
 	for node != nil {
-		compare := tree.comparator(key, node.key)
+		compare := tree.comparator(key, node.Key)
 		switch {
 			case compare == 0:
 				return node
@@ -415,77 +439,71 @@ func (tree *RedBlackTree) Ceiling(key interface{}) (ceiling *RedBlackTreeNode) {
 	return nil
 }
 
-// IteratorAsc iterates the tree in ascendent order with given callback function <f>.
+// IteratorAsc iterates the tree in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *RedBlackTree) IteratorAsc(f func (key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.Left()
+	node := tree.leftNode()
 	if node == nil {
 		return
 	}
-	for {
-	loop:
-		if node == nil {
-			break
+loop:
+	if node == nil {
+		return
+	}
+	if !f(node.Key, node.Value) {
+		return
+	}
+	if node.right != nil {
+		node = node.right
+		for node.left != nil {
+			node = node.left
 		}
-		if !f(node.key, node.value) {
-			break
-		}
-		if node.right != nil {
-			node = node.right
-			for node.left != nil {
-				node = node.left
-			}
-			continue
-		}
-		if node.parent != nil {
-			old := node
-			for node.parent != nil {
-				node = node.parent
-				if tree.comparator(old.key, node.key) <= 0 {
-					goto loop
-				}
+		goto loop
+	}
+	if node.parent != nil {
+		old := node
+		for node.parent != nil {
+			node = node.parent
+			if tree.comparator(old.Key, node.Key) <= 0 {
+				goto loop
 			}
 		}
-		break
 	}
 }
 
-// IteratorDesc iterates the tree in descendent order with given callback function <f>.
+// IteratorDesc iterates the tree in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *RedBlackTree) IteratorDesc(f func (key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.Right()
+	node := tree.rightNode()
 	if node == nil {
 		return
 	}
-	for {
-	loop:
-		if node == nil {
-			break
+loop:
+	if node == nil {
+		return
+	}
+	if !f(node.Key, node.Value) {
+		return
+	}
+	if node.left != nil {
+		node = node.left
+		for node.right != nil {
+			node = node.right
 		}
-		if !f(node.key, node.value) {
-			break
-		}
-		if node.left != nil {
-			node = node.left
-			for node.right != nil {
-				node = node.right
-			}
-			continue
-		}
-		if node.parent != nil {
-			old := node
-			for node.parent != nil {
-				node = node.parent
-				if tree.comparator(old.key, node.key) >= 0 {
-					goto loop
-				}
+		goto loop
+	}
+	if node.parent != nil {
+		old := node
+		for node.parent != nil {
+			node = node.parent
+			if tree.comparator(old.Key, node.Key) >= 0 {
+				goto loop
 			}
 		}
-		break
 	}
 }
 
@@ -501,7 +519,7 @@ func (tree *RedBlackTree) Clear() {
 func (tree *RedBlackTree) String() string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	str := "ROOT\n"
+	str := "RedBlackTree\n"
 	if tree.size != 0 {
 		tree.output(tree.root, "", true, &str)
 	}
@@ -514,7 +532,7 @@ func (tree *RedBlackTree) Print() {
 }
 
 func (node *RedBlackTreeNode) String() string {
-	return fmt.Sprintf("%v", node.key)
+	return fmt.Sprintf("%v", node.Key)
 }
 
 // Search searches the tree with given <key>.
@@ -524,7 +542,7 @@ func (tree *RedBlackTree) Search(key interface{}) (value interface{}, found bool
 	defer tree.mu.RUnlock()
 	node := tree.doSearch(key)
 	if node != nil {
-		return node.value, true
+		return node.Value, true
 	}
 	return nil, false
 }
@@ -584,7 +602,7 @@ func (tree *RedBlackTree) output(node *RedBlackTreeNode, prefix string, isTail b
 func (tree *RedBlackTree) doSearch(key interface{}) *RedBlackTreeNode {
 	node := tree.root
 	for node != nil {
-		compare := tree.comparator(key, node.key)
+		compare := tree.comparator(key, node.Key)
 		switch {
 			case compare == 0: return node
 			case compare  < 0: node = node.left
