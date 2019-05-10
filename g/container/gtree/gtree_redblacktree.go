@@ -53,7 +53,6 @@ func (tree *RedBlackTree) Clone(unsafe ...bool) *RedBlackTree {
 	return newTree
 }
 
-
 // Set inserts key-value item into the tree.
 func (tree *RedBlackTree) Set(key interface{}, value interface{}) {
 	tree.mu.Lock()
@@ -597,7 +596,7 @@ func (tree *RedBlackTree) output(node *RedBlackTreeNode, prefix string, isTail b
 	}
 }
 
-// Search searches the tree with given <key> without mutex.
+// doSearch searches the tree with given <key> without mutex.
 // It returns the node if found or otherwise nil.
 func (tree *RedBlackTree) doSearch(key interface{}) *RedBlackTreeNode {
 	node := tree.root

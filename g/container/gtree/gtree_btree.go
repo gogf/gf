@@ -26,12 +26,12 @@ type BTree struct {
 // BTreeNode is a single element within the tree.
 type BTreeNode struct {
 	Parent   *BTreeNode
-	Entries  []*BTreeNodeEntry // Contained keys in node
-	Children []*BTreeNode      // Children nodes
+	Entries  []*BTreeEntry // Contained keys in node
+	Children []*BTreeNode  // Children nodes
 }
 
-// BTreeNodeEntry represents the key-value pair contained within nodes.
-type BTreeNodeEntry struct {
+// BTreeEntry represents the key-value pair contained within nodes.
+type BTreeEntry struct {
 	Key   interface{}
 	Value interface{}
 }
@@ -66,9 +66,9 @@ func (tree *BTree) Set(key interface{}, value interface{}) {
 // doSet inserts key-value pair node into the tree.
 // If key already exists, then its value is updated with the new value.
 func (tree *BTree) doSet(key interface{}, value interface{}) {
-	entry := &BTreeNodeEntry{Key: key, Value: value}
+	entry := &BTreeEntry{Key: key, Value: value}
 	if tree.root == nil {
-		tree.root = &BTreeNode{Entries: []*BTreeNodeEntry{entry}, Children: []*BTreeNode{}}
+		tree.root = &BTreeNode{Entries: []*BTreeEntry{entry}, Children: []*BTreeNode{}}
 		tree.size++
 		return
 	}
@@ -303,7 +303,7 @@ func (tree *BTree) Height() int {
 }
 
 // Left returns the left-most (min) entry or nil if tree is empty.
-func (tree *BTree) Left() *BTreeNodeEntry {
+func (tree *BTree) Left() *BTreeEntry {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.left(tree.root)
@@ -311,7 +311,7 @@ func (tree *BTree) Left() *BTreeNodeEntry {
 }
 
 // Right returns the right-most (max) entry or nil if tree is empty.
-func (tree *BTree) Right() *BTreeNodeEntry {
+func (tree *BTree) Right() *BTreeEntry {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.right(tree.root)
@@ -345,7 +345,7 @@ func (tree *BTree) Search(key interface{}) (value interface{}, found bool) {
 
 // Search searches the tree with given <key> without mutex.
 // It returns the entry if found or otherwise nil.
-func (tree *BTree) doSearch(key interface{}) *BTreeNodeEntry {
+func (tree *BTree) doSearch(key interface{}) *BTreeEntry {
 	node, index, found := tree.searchRecursively(tree.root, key)
 	if found {
 		return node.Entries[index]
@@ -358,7 +358,7 @@ func (tree *BTree) Print() {
 	fmt.Println(tree.String())
 }
 
-func (entry *BTreeNodeEntry) String() string {
+func (entry *BTreeEntry) String() string {
 	return fmt.Sprintf("%v", entry.Key)
 }
 
@@ -551,14 +551,14 @@ func (tree *BTree) searchRecursively(startNode *BTreeNode, key interface{}) (nod
 	}
 }
 
-func (tree *BTree) insert(node *BTreeNode, entry *BTreeNodeEntry) (inserted bool) {
+func (tree *BTree) insert(node *BTreeNode, entry *BTreeEntry) (inserted bool) {
 	if tree.isLeaf(node) {
 		return tree.insertIntoLeaf(node, entry)
 	}
 	return tree.insertIntoInternal(node, entry)
 }
 
-func (tree *BTree) insertIntoLeaf(node *BTreeNode, entry *BTreeNodeEntry) (inserted bool) {
+func (tree *BTree) insertIntoLeaf(node *BTreeNode, entry *BTreeEntry) (inserted bool) {
 	insertPosition, found := tree.search(node, entry.Key)
 	if found {
 		node.Entries[insertPosition] = entry
@@ -572,7 +572,7 @@ func (tree *BTree) insertIntoLeaf(node *BTreeNode, entry *BTreeNodeEntry) (inser
 	return true
 }
 
-func (tree *BTree) insertIntoInternal(node *BTreeNode, entry *BTreeNodeEntry) (inserted bool) {
+func (tree *BTree) insertIntoInternal(node *BTreeNode, entry *BTreeEntry) (inserted bool) {
 	insertPosition, found := tree.search(node, entry.Key)
 	if found {
 		node.Entries[insertPosition] = entry
@@ -598,8 +598,8 @@ func (tree *BTree) splitNonRoot(node *BTreeNode) {
 	middle := tree.middle()
 	parent := node.Parent
 
-	left := &BTreeNode{Entries: append([]*BTreeNodeEntry(nil), node.Entries[:middle]...), Parent: parent}
-	right := &BTreeNode{Entries: append([]*BTreeNodeEntry(nil), node.Entries[middle+1:]...), Parent: parent}
+	left := &BTreeNode{Entries: append([]*BTreeEntry(nil), node.Entries[:middle]...), Parent: parent}
+	right := &BTreeNode{Entries: append([]*BTreeEntry(nil), node.Entries[middle+1:]...), Parent: parent}
 
 	// Move children from the node to be split into left and right nodes
 	if !tree.isLeaf(node) {
@@ -629,8 +629,8 @@ func (tree *BTree) splitNonRoot(node *BTreeNode) {
 
 func (tree *BTree) splitRoot() {
 	middle := tree.middle()
-	left   := &BTreeNode{Entries: append([]*BTreeNodeEntry(nil), tree.root.Entries[:middle]...)}
-	right  := &BTreeNode{Entries: append([]*BTreeNodeEntry(nil), tree.root.Entries[middle+1:]...)}
+	left   := &BTreeNode{Entries: append([]*BTreeEntry(nil), tree.root.Entries[:middle]...)}
+	right  := &BTreeNode{Entries: append([]*BTreeEntry(nil), tree.root.Entries[middle+1:]...)}
 
 	// Move children from the node to be split into left and right nodes
 	if !tree.isLeaf(tree.root) {
@@ -642,7 +642,7 @@ func (tree *BTree) splitRoot() {
 
 	// Root is a node with one entry and two children (left and right)
 	newRoot := &BTreeNode{
-		Entries:  []*BTreeNodeEntry{tree.root.Entries[middle]},
+		Entries:  []*BTreeEntry{tree.root.Entries[middle]},
 		Children: []*BTreeNode{left, right},
 	}
 
@@ -744,7 +744,7 @@ func (tree *BTree) rebalance(node *BTreeNode, deletedKey interface{}) {
 	leftSibling, leftSiblingIndex := tree.leftSibling(node, deletedKey)
 	if leftSibling != nil && len(leftSibling.Entries) > tree.minEntries() {
 		// rotate right
-		node.Entries = append([]*BTreeNodeEntry{node.Parent.Entries[leftSiblingIndex]}, node.Entries...) // prepend parent's separator entry to node's entries
+		node.Entries = append([]*BTreeEntry{node.Parent.Entries[leftSiblingIndex]}, node.Entries...) // prepend parent's separator entry to node's entries
 		node.Parent.Entries[leftSiblingIndex] = leftSibling.Entries[len(leftSibling.Entries)-1]
 		tree.deleteEntry(leftSibling, len(leftSibling.Entries)-1)
 		if !tree.isLeaf(leftSibling) {
@@ -783,7 +783,7 @@ func (tree *BTree) rebalance(node *BTreeNode, deletedKey interface{}) {
 		tree.deleteChild(node.Parent, rightSiblingIndex)
 	} else if leftSibling != nil {
 		// merge with left sibling
-		entries     := append([]*BTreeNodeEntry(nil), leftSibling.Entries...)
+		entries     := append([]*BTreeEntry(nil), leftSibling.Entries...)
 		entries      = append(entries, node.Parent.Entries[leftSiblingIndex])
 		node.Entries = append(entries, node.Entries...)
 		deletedKey   = node.Parent.Entries[leftSiblingIndex].Key
