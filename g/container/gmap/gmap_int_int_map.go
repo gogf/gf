@@ -101,6 +101,15 @@ func (m *IntIntMap) Sets(data map[int]int) {
 	m.mu.Unlock()
 }
 
+// Search searches the map with given <key>.
+// Second return parameter <found> is true if key was found, otherwise false.
+func (m *IntIntMap) Search(key int) (value int, found bool) {
+	m.mu.RLock()
+	value, found = m.data[key]
+	m.mu.RUnlock()
+	return
+}
+
 // Get returns the value by given <key>.
 func (m *IntIntMap) Get(key int) (int) {
 	m.mu.RLock()
@@ -128,10 +137,7 @@ func (m *IntIntMap) doSetWithLockCheck(key int, value int) int {
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *IntIntMap) GetOrSet(key int, value int) int {
-    m.mu.RLock()
-    v, ok := m.data[key]
-    m.mu.RUnlock()
-    if !ok {
+	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, value)
     } else {
         return v
@@ -141,10 +147,7 @@ func (m *IntIntMap) GetOrSet(key int, value int) int {
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist and returns this value.
 func (m *IntIntMap) GetOrSetFunc(key int, f func() int) int {
-    m.mu.RLock()
-    v, ok := m.data[key]
-    m.mu.RUnlock()
-    if !ok {
+	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, f())
     } else {
         return v
@@ -157,20 +160,17 @@ func (m *IntIntMap) GetOrSetFunc(key int, f func() int) int {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
 func (m *IntIntMap) GetOrSetFuncLock(key int, f func() int) int {
-    m.mu.RLock()
-    val, ok := m.data[key]
-    m.mu.RUnlock()
-    if !ok {
+	if v, ok := m.Search(key); !ok {
         m.mu.Lock()
         defer m.mu.Unlock()
-        if v, ok := m.data[key]; ok {
+        if v, ok = m.data[key]; ok {
             return v
         }
-        val         = f()
-        m.data[key] = val
-        return val
+        v = f()
+        m.data[key] = v
+        return v
     } else {
-        return val
+        return v
     }
 }
 
@@ -300,7 +300,7 @@ func (m *IntIntMap) RLockFunc(f func(m map[int]int)) {
     f(m.data)
 }
 
-// Flip exchanges key-value of the map, it will change key-value to value-key.
+// Flip exchanges key-value of the map to value-key.
 func (m *IntIntMap) Flip() {
     m.mu.Lock()
     defer m.mu.Unlock()

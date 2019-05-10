@@ -103,6 +103,15 @@ func (m *Map) Sets(data map[interface{}]interface{}) {
     m.mu.Unlock()
 }
 
+// Search searches the map with given <key>.
+// Second return parameter <found> is true if key was found, otherwise false.
+func (m *Map) Search(key interface{}) (value interface{}, found bool) {
+	m.mu.RLock()
+	value, found = m.data[key]
+	m.mu.RUnlock()
+	return
+}
+
 // Get returns the value by given <key>.
 func (m *Map) Get(key interface{}) interface{} {
     m.mu.RLock()
@@ -136,7 +145,7 @@ func (m *Map) doSetWithLockCheck(key interface{}, value interface{}) interface{}
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *Map) GetOrSet(key interface{}, value interface{}) interface{} {
-    if v := m.Get(key); v == nil {
+	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, value)
     } else {
         return v
@@ -147,7 +156,7 @@ func (m *Map) GetOrSet(key interface{}, value interface{}) interface{} {
 // or sets value with return value of callback function <f> if not exist
 // and returns this value.
 func (m *Map) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
-    if v := m.Get(key); v == nil {
+	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, f())
     } else {
         return v
@@ -161,7 +170,7 @@ func (m *Map) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
 func (m *Map) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
-    if v := m.Get(key); v == nil {
+	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, f)
     } else {
         return v
@@ -314,13 +323,13 @@ func (m *Map) RLockFunc(f func(m map[interface{}]interface{})) {
     f(m.data)
 }
 
-// Flip exchanges key-value of the map, it will change key-value to value-key.
+// Flip exchanges key-value of the map to value-key.
 func (m *Map) Flip() {
     m.mu.Lock()
     defer m.mu.Unlock()
     n := make(map[interface{}]interface{}, len(m.data))
-    for i, v := range m.data {
-        n[v] = i
+    for k, v := range m.data {
+        n[v] = k
     }
     m.data = n
 }

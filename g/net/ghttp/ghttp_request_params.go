@@ -17,7 +17,7 @@ func (r *Request) SetParam(key string, value interface{}) {
 }
 
 // 获取请求流程共享变量
-func (r *Request) GetParam(key string, def...interface{}) gvar.VarRead {
+func (r *Request) GetParam(key string, def...interface{}) *gvar.Var {
     if r.params != nil {
         if v, ok := r.params[key]; ok {
             return gvar.New(v, true)
