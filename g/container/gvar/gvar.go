@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -31,18 +31,6 @@ func New(value interface{}, unsafe...bool) *Var {
         v.value = value
     }
     return v
-}
-
-// NewRead returns a read-only interface object with given <value>.
-// The param <unsafe> used to specify whether using Var in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func NewRead(value interface{}, unsafe...bool) VarRead {
-    return VarRead(New(value, unsafe...))
-}
-
-// ReadOnly returns a read-only interface object of <v>.
-func (v *Var) ReadOnly() VarRead {
-    return VarRead(v)
 }
 
 // Set sets <value> to <v>, and returns the old value.

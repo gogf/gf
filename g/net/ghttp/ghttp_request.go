@@ -76,7 +76,7 @@ func (r *Request) Get(key string, def...interface{}) string {
 }
 
 // 建议都用该参数替代参数获取
-func (r *Request) GetVar(key string, def...interface{}) gvar.VarRead {
+func (r *Request) GetVar(key string, def...interface{}) *gvar.Var {
     return r.GetRequestVar(key, def...)
 }
 

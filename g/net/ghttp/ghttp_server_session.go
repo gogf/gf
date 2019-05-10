@@ -113,7 +113,7 @@ func (s *Session) Get(key string, def...interface{}) interface{}  {
 }
 
 // 获取SESSION，建议都用该方法获取参数
-func (s *Session) GetVar(key string, def...interface{}) gvar.VarRead  {
+func (s *Session) GetVar(key string, def...interface{}) *gvar.Var  {
     return gvar.NewRead(s.Get(key, def...), true)
 }
 

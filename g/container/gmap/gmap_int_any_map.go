@@ -104,6 +104,15 @@ func (m *IntAnyMap) Sets(data map[int]interface{}) {
 	m.mu.Unlock()
 }
 
+// Search searches the map with given <key>.
+// Second return parameter <found> is true if key was found, otherwise false.
+func (m *IntAnyMap) Search(key int) (value interface{}, found bool) {
+	m.mu.RLock()
+	value, found = m.data[key]
+	m.mu.RUnlock()
+	return
+}
+
 // Get returns the value by given <key>.
 func (m *IntAnyMap) Get(key int) (interface{}) {
 	m.mu.RLock()
@@ -140,7 +149,7 @@ func (m *IntAnyMap) doSetWithLockCheck(key int, value interface{}) interface{} {
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *IntAnyMap) GetOrSet(key int, value interface{}) interface{} {
-    if v := m.Get(key); v == nil {
+	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, value)
     } else {
         return v
@@ -150,7 +159,7 @@ func (m *IntAnyMap) GetOrSet(key int, value interface{}) interface{} {
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist and returns this value.
 func (m *IntAnyMap) GetOrSetFunc(key int, f func() interface{}) interface{} {
-    if v := m.Get(key); v == nil {
+	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, f())
     } else {
         return v
@@ -163,7 +172,7 @@ func (m *IntAnyMap) GetOrSetFunc(key int, f func() interface{}) interface{} {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
 func (m *IntAnyMap) GetOrSetFuncLock(key int, f func() interface{}) interface{} {
-    if v := m.Get(key); v == nil {
+	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, f)
     } else {
         return v
@@ -317,7 +326,7 @@ func (m *IntAnyMap) RLockFunc(f func(m map[int]interface{})) {
     f(m.data)
 }
 
-// Flip exchanges key-value of the map, it will change key-value to value-key.
+// Flip exchanges key-value of the map to value-key.
 func (m *IntAnyMap) Flip() {
     m.mu.Lock()
     defer m.mu.Unlock()

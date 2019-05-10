@@ -102,6 +102,15 @@ func (m *StrStrMap) Sets(data map[string]string) {
     m.mu.Unlock()
 }
 
+// Search searches the map with given <key>.
+// Second return parameter <found> is true if key was found, otherwise false.
+func (m *StrStrMap) Search(key string) (value string, found bool) {
+	m.mu.RLock()
+	value, found = m.data[key]
+	m.mu.RUnlock()
+	return
+}
+
 // Get returns the value by given <key>.
 func (m *StrStrMap) Get(key string) string {
 	m.mu.RLock()
@@ -129,10 +138,7 @@ func (m *StrStrMap) doSetWithLockCheck(key string, value string) string {
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *StrStrMap) GetOrSet(key string, value string) string {
-	m.mu.RLock()
-	v, ok := m.data[key]
-	m.mu.RUnlock()
-	if !ok {
+	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
 	} else {
 		return v
@@ -143,10 +149,7 @@ func (m *StrStrMap) GetOrSet(key string, value string) string {
 // or sets value with return value of callback function <f> if not exist
 // and returns this value.
 func (m *StrStrMap) GetOrSetFunc(key string, f func() string) string {
-	m.mu.RLock()
-	v, ok := m.data[key]
-	m.mu.RUnlock()
-	if !ok {
+	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, f())
 	} else {
 		return v
@@ -160,20 +163,17 @@ func (m *StrStrMap) GetOrSetFunc(key string, f func() string) string {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
 func (m *StrStrMap) GetOrSetFuncLock(key string, f func() string) string {
-	m.mu.RLock()
-	val, ok := m.data[key]
-	m.mu.RUnlock()
-	if !ok {
+	if v, ok := m.Search(key); !ok {
 		m.mu.Lock()
 		defer m.mu.Unlock()
-		if v, ok := m.data[key]; ok {
+		if v, ok = m.data[key]; ok {
 			return v
 		}
-		val       = f()
-		m.data[key] = val
-		return val
+		v = f()
+		m.data[key] = v
+		return v
 	} else {
-		return val
+		return v
 	}
 }
 
@@ -303,7 +303,7 @@ func (m *StrStrMap) RLockFunc(f func(m map[string]string)) {
 	f(m.data)
 }
 
-// Flip exchanges key-value of the map, it will change key-value to value-key.
+// Flip exchanges key-value of the map to value-key.
 func (m *StrStrMap) Flip() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
