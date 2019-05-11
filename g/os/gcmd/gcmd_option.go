@@ -28,5 +28,5 @@ func (c *gCmdOption) Get(key string, def...string) string {
 // GetVar returns the option value as *gvar.Var object specified by <key>,
 // if value does not exist, then returns <def> as its default value.
 func (c *gCmdOption) GetVar(key string, def...string) *gvar.Var {
-	return gvar.NewRead(c.Get(key, def...), true)
+	return gvar.New(c.Get(key, def...), true)
 }

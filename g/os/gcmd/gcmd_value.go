@@ -28,5 +28,5 @@ func (c *gCmdValue) Get(index int, def...string) string {
 // GetVar returns value by index <index> as *gvar.Var object,
 // if value does not exist, then returns <def> as its default value.
 func (c *gCmdValue) GetVar(index int, def...string) *gvar.Var {
-	return gvar.NewRead(c.Get(index, def...), true)
+	return gvar.New(c.Get(index, def...), true)
 }
