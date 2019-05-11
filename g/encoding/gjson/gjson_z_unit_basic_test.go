@@ -225,29 +225,42 @@ func Test_Len(t *testing.T) {
 }
 
 func Test_Append(t *testing.T) {
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Append("a", 1)
-        p.Append("a", 2)
-        gtest.Assert(p.Get("a"), g.Slice{1, 2})
-    })
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Append("a.b", 1)
-        p.Append("a.c", 2)
-        gtest.Assert(p.Get("a"), g.Map{
-            "b" : g.Slice{1},
-            "c" : g.Slice{2},
-        })
-    })
-    gtest.Case(t, func() {
-        p := gjson.New(nil)
-        p.Set("a", 1)
-        err := p.Append("a", 2)
-        gtest.AssertNE(err, nil)
-        gtest.Assert(p.Get("a"), 1)
-    })
+	gtest.Case(t, func() {
+		p := gjson.New(nil)
+		p.Append("a", 1)
+		p.Append("a", 2)
+		gtest.Assert(p.Get("a"), g.Slice{1, 2})
+	})
+	gtest.Case(t, func() {
+		p := gjson.New(nil)
+		p.Append("a.b", 1)
+		p.Append("a.c", 2)
+		gtest.Assert(p.Get("a"), g.Map{
+			"b" : g.Slice{1},
+			"c" : g.Slice{2},
+		})
+	})
+	gtest.Case(t, func() {
+		p := gjson.New(nil)
+		p.Set("a", 1)
+		err := p.Append("a", 2)
+		gtest.AssertNE(err, nil)
+		gtest.Assert(p.Get("a"), 1)
+	})
 }
 
-
+func TestJson_ToJson(t *testing.T) {
+	gtest.Case(t, func() {
+		p := gjson.New("1")
+		s, e := p.ToJsonString()
+		gtest.Assert(e, nil)
+		gtest.Assert(s, "1")
+	})
+	gtest.Case(t, func() {
+		p := gjson.New("a")
+		s, e := p.ToJsonString()
+		gtest.Assert(e, nil)
+		gtest.Assert(s, `"a"`)
+	})
+}
 

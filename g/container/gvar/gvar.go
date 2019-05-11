@@ -67,7 +67,7 @@ func (v *Var) Time(format...string) time.Time {
 
 // TimeDuration converts and returns <v> as time.Duration.
 // If value of <v> is string, then it uses time.ParseDuration for conversion.
-func (v *Var) TimeDuration() time.Duration {
+func (v *Var) Duration() time.Duration {
     return gconv.Duration(v.Val())
 }
 

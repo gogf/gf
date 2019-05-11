@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/g/os/gfcache"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/util/gconv"
+	"reflect"
 )
 
 // New creates a Json object with any variable type of <data>,
@@ -29,31 +30,45 @@ import (
 func New(data interface{}, unsafe...bool) *Json {
     j := (*Json)(nil)
     switch data.(type) {
-        case map[string]interface{}, []interface{}, nil:
-            j = &Json {
-                p  : &data,
-                c  : byte(gDEFAULT_SPLIT_CHAR),
-                vc : false ,
-            }
         case string, []byte:
-            j, _ = LoadContent(gconv.Bytes(data))
-        default:
-            v := (interface{})(nil)
-            if m := gconv.Map(data); m != nil {
-                v = m
-                j = &Json {
-                    p  : &v,
-                    c  : byte(gDEFAULT_SPLIT_CHAR),
-                    vc : false,
-                }
+            if r, err := LoadContent(gconv.Bytes(data)); err == nil {
+	            j = r
             } else {
-                v = gconv.Interfaces(data)
-                j = &Json {
-                    p  : &v,
-                    c  : byte(gDEFAULT_SPLIT_CHAR),
-                    vc : false,
-                }
+	            j = &Json {
+		            p  : &data,
+		            c  : byte(gDEFAULT_SPLIT_CHAR),
+		            vc : false ,
+	            }
             }
+        default:
+	        rv   := reflect.ValueOf(data)
+	        kind := rv.Kind()
+	        switch kind {
+		        case reflect.Slice: fallthrough
+		        case reflect.Array:
+			        i := interface{}(nil)
+			        i  = gconv.Interfaces(data)
+			        j  = &Json {
+				        p  : &i,
+				        c  : byte(gDEFAULT_SPLIT_CHAR),
+				        vc : false ,
+			        }
+		        case reflect.Map: fallthrough
+		        case reflect.Struct:
+			        i := interface{}(nil)
+			        i  = gconv.Map(data)
+			        j  = &Json {
+				        p  : &i,
+				        c  : byte(gDEFAULT_SPLIT_CHAR),
+				        vc : false ,
+			        }
+		        default:
+			        j  = &Json {
+				        p  : &data,
+				        c  : byte(gDEFAULT_SPLIT_CHAR),
+				        vc : false ,
+			        }
+	        }
     }
     j.mu = rwmutex.New(unsafe...)
     return j

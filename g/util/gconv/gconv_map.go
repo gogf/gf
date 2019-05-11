@@ -15,10 +15,9 @@ import (
 
 // Map converts any variable <i> to map[string]interface{}.
 // If the parameter <i> is not a map type, then the conversion will fail and returns nil.
-// If <i> is a struct object, the second parameter noTagCheck means that
-// the json tag is not detected,
-// otherwise the json tag will be used as the map key name.
-func Map(value interface{}, noTagCheck...bool) map[string]interface{} {
+// If <i> is a struct object, the second parameter <tags> specifies the most priority
+// tags that will be detected, otherwise it detects the tags in order of: gconv, json.
+func Map(value interface{}, tags...string) map[string]interface{} {
     if value == nil {
         return nil
     }
@@ -52,7 +51,6 @@ func Map(value interface{}, noTagCheck...bool) map[string]interface{} {
                 for k, v := range value.(map[interface{}]float64) {
                     m[String(k)] = v
                 }
-
             case map[string]bool:
                 for k, v := range value.(map[string]bool) {
                     m[k] = v
@@ -102,21 +100,32 @@ func Map(value interface{}, noTagCheck...bool) map[string]interface{} {
                             m[String(k.Interface())] = rv.MapIndex(k).Interface()
                         }
                     case reflect.Struct:
-                        rt   := rv.Type()
-                        name := ""
+                        rt       := rv.Type()
+                        name     := ""
+                        gconvTag := "gconv"
+                        tagArray := []string{gconvTag, "json"}
+	                    switch len(tags) {
+		                    case 0:
+		                    	// No need handle.
+		                    case 1:
+			                    tagArray = strings.Split(tags[0], ",")
+		                    default:
+			                    tagArray = tags
+	                    }
+                        if gstr.SearchArray(tagArray, gconvTag) < 0 {
+	                        tagArray = append(tagArray, gconvTag)
+                        }
                         for i := 0; i < rv.NumField(); i++ {
                             // Only convert the public attributes.
                             fieldName := rt.Field(i).Name
                             if !gstr.IsLetterUpper(fieldName[0]) {
                                 continue
                             }
-                            name = ""
-                            // Tag check, supporting "gconv" and "json" tag,
-                            // "gconv" has the high priority to use.
-                            if len(noTagCheck) == 0 || !noTagCheck[0] {
-                                tag := rt.Field(i).Tag
-                                if name = tag.Get("gconv"); name == "" {
-                                    name = tag.Get("json")
+                            name      = ""
+                            fieldTag := rt.Field(i).Tag
+                            for _, tag := range tagArray {
+                                if name = fieldTag.Get(tag); name != "" {
+	                                break
                                 }
                             }
                             if name == "" {

@@ -2,24 +2,38 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/container/gtree"
+	"github.com/gogf/gf/g/encoding/gparser"
+	"time"
 )
 
 func main() {
-	tree := gtree.New(func(v1, v2 interface{}) int {
-		return v1.(int) - v2.(int)
-	})
-	for i := 0; i < 20; i++ {
-		tree.Set(i, i)
+	//b, e := gjson.MarshalOrdered(g.Map{
+	//	"a" : 1,
+	//	"b" : 2,
+	//	"c" : 3,
+	//})
+	//fmt.Println(e)
+	//fmt.Println(string(b))
+
+	//m := map[string]interface{}{
+	//	"facet_is_special_price":[]string{"1"},
+	//	"score_outlet":"0",
+	//	"skus":[]string{"DI139BE71WDWDFMX", "DI139BE71WDWDFMX-519406"},
+	//	"facet_novelty_two_days":[]string{"0"},
+	//	"facet_brand":[]string{"139"},
+	//	"sku":[]string{"DI139BE71WDWDFMX"},
+	//}
+
+	for {
+		m := make(map[string]interface{})
+		m["facet_is_special_price"] = []string{"1"}
+		m["score_outlet"] = "0"
+		m["skus"] = []string{"DI139BE71WDWDFMX", "DI139BE71WDWDFMX-519406"}
+		m["facet_novelty_two_days"] = []string{"0"}
+		m["facet_brand"] = []string{"139"}
+		m["sku"] = []string{"DI139BE71WDWDFMX"}
+		fmt.Println(gparser.VarToJsonString(m))
+		time.Sleep(100*time.Millisecond)
 	}
-	tree.Print()
-	tree.IteratorAsc(func(key, value interface{}) bool {
-		fmt.Println(key)
-		return true
-	})
-	fmt.Println()
-	tree.IteratorDesc(func(key, value interface{}) bool {
-		fmt.Println(key)
-		return true
-	})
+
 }
