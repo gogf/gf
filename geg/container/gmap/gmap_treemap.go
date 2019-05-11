@@ -3,13 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/util/gutil"
 )
 
 func main() {
-	// 创建一个默认的gmap对象，
-	// 默认情况下该gmap对象支持并发安全特性，
-	// 初始化时可以给定false参数关闭并发安全特性，当做一个普通的map使用。
-	m := gmap.New()
+	m := gmap.NewTreeMap(gutil.ComparatorInt)
 
 	// 设置键值对
 	for i := 0; i < 10; i++ {
@@ -50,20 +48,11 @@ func main() {
 	fmt.Println(m.Remove(100))
 
 	// 遍历map
-	m.Iterator(func(k interface{}, v interface{}) bool {
+	m.IteratorAsc(func(k interface{}, v interface{}) bool {
 		fmt.Printf("%v:%v ", k, v)
 		return true
 	})
-
-	// 自定义写锁操作
-	m.LockFunc(func(m map[interface{}]interface{}) {
-		m[99] = 99
-	})
-
-	// 自定义读锁操作
-	m.RLockFunc(func(m map[interface{}]interface{}) {
-		fmt.Println(m[99])
-	})
+	fmt.Println()
 
 	// 清空map
 	m.Clear()

@@ -48,9 +48,6 @@ func Test_IntIntMap_Basic(t *testing.T) {
 
 		m2 := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
 		gtest.Assert(m2.Map(), map[int]int{1: 1, 2: 2})
-		m3 := gmap.NewIntIntMapFromArray([]int{1, 2}, []int{1, 2})
-		gtest.Assert(m3.Map(), map[int]int{1: 1, 2: 2})
-
 	})
 }
 func Test_IntIntMap_Set_Fun(t *testing.T) {

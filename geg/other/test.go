@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/g/encoding/gparser"
 	"time"
 )
 
@@ -27,12 +27,13 @@ func main() {
 	for {
 		m := make(map[string]interface{})
 		m["facet_is_special_price"] = []string{"1"}
-		m["score_outlet"] = "0"
-		m["skus"] = []string{"DI139BE71WDWDFMX", "DI139BE71WDWDFMX-519406"}
+		m["score_outlet"]           = "0"
+		m["skus"]                   = []string{"DI139BE71WDWDFMX", "DI139BE71WDWDFMX-519406"}
 		m["facet_novelty_two_days"] = []string{"0"}
-		m["facet_brand"] = []string{"139"}
-		m["sku"] = []string{"DI139BE71WDWDFMX"}
-		fmt.Println(gparser.VarToJsonString(m))
+		m["facet_brand"]            = []string{"139"}
+		m["sku"]                    = []string{"DI139BE71WDWDFMX"}
+		b, _ := json.Marshal(m)
+		fmt.Println(string(b))
 		time.Sleep(100*time.Millisecond)
 	}
 

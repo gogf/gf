@@ -9,7 +9,7 @@ func main() {
 	m := gmap.New()
 	m.Set("1", "1")
 
-	m1 := m.Clone()
+	m1 := m.Map()
 	m1["2"] = "2"
 
 	g.Dump(m.Clone())

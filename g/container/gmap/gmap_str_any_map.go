@@ -28,35 +28,13 @@ func NewStrAnyMap(unsafe ...bool) *StrAnyMap {
 	}
 }
 
-// NewStrAnyMapFrom returns an StrAnyMap object from given map <data>.
-// Notice that, the param map is a type of pointer,
+// NewStrAnyMapFrom returns a hash map from given map <data>.
+// Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewStrAnyMapFrom(data map[string]interface{}, unsafe ...bool) *StrAnyMap {
 	return &StrAnyMap{
 		mu   : rwmutex.New(unsafe...),
 		data : data,
-	}
-}
-
-// NewStrAnyMapFromArray returns an StrAnyMap object from given array.
-// The param <keys> is  given as the keys of the map,
-// and <values> as its corresponding values.
-//
-// If length of <keys> is greater than that of <values>,
-// the corresponding overflow map values will be the default value of its type.
-func NewStrAnyMapFromArray(keys []string, values []interface{}, unsafe ...bool) *StrAnyMap {
-	m := make(map[string]interface{})
-	l := len(values)
-	for i, k := range keys {
-		if i < l {
-			m[k] = values[i]
-		} else {
-			m[k] = interface{}(nil)
-		}
-	}
-	return &StrAnyMap{
-		mu   : rwmutex.New(unsafe...),
-		data : m,
 	}
 }
 
