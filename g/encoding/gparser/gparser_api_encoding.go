@@ -18,8 +18,16 @@ func (p *Parser) ToJson() ([]byte, error) {
     return p.json.ToJson()
 }
 
+func (p *Parser) ToJsonString() (string, error) {
+	return p.json.ToJsonString()
+}
+
 func (p *Parser) ToJsonIndent() ([]byte, error) {
     return p.json.ToJsonIndent()
+}
+
+func (p *Parser) ToJsonIndentString() (string, error) {
+	return p.json.ToJsonIndentString()
 }
 
 func (p *Parser) ToYaml() ([]byte, error) {
@@ -42,8 +50,16 @@ func VarToJson(value interface{}) ([]byte, error) {
     return New(value).ToJson()
 }
 
+func VarToJsonString(value interface{}) (string, error) {
+	return New(value).ToJsonString()
+}
+
 func VarToJsonIndent(value interface{}) ([]byte, error) {
-    return New(value).ToJsonIndent()
+	return New(value).ToJsonIndent()
+}
+
+func VarToJsonIndentString(value interface{}) (string, error) {
+	return New(value).ToJsonIndentString()
 }
 
 func VarToYaml(value interface{}) ([]byte, error) {

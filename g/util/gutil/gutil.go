@@ -8,17 +8,16 @@
 package gutil
 
 import (
-    "bytes"
-    "encoding/json"
-    "fmt"
-    "github.com/gogf/gf/g/internal/empty"
-    "github.com/gogf/gf/g/util/gconv"
-    "os"
-    "reflect"
-    "runtime"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"github.com/gogf/gf/g/internal/empty"
+	"github.com/gogf/gf/g/util/gconv"
+	"os"
+	"runtime"
 )
 
-// 格式化打印变量
+// Dump prints variables <i...> to stdout with more manually readable.
 func Dump(i...interface{}) {
     s := Export(i...)
     if s != "" {
@@ -26,25 +25,16 @@ func Dump(i...interface{}) {
     }
 }
 
-// 格式化导出变量
+// Export returns variables <i...> as a string with more manually readable.
 func Export(i...interface{}) string {
     buffer := bytes.NewBuffer(nil)
     for _, v := range i {
         if b, ok := v.([]byte); ok {
             buffer.Write(b)
         } else {
-            // 主要针对 map[interface{}]* 进行处理，json无法进行encode，
-            // 这里强制对所有map进行反射处理转换
-            refValue := reflect.ValueOf(v)
-            if refValue.Kind() == reflect.Map {
-                m    := make(map[string]interface{})
-                keys := refValue.MapKeys()
-                for _, k := range keys {
-                    m[gconv.String(k.Interface())] = refValue.MapIndex(k).Interface()
-                }
-                v = m
+            if m := gconv.Map(v); m != nil {
+            	v = m
             }
-            // JSON格式化
             encoder := json.NewEncoder(buffer)
             encoder.SetEscapeHTML(false)
             encoder.SetIndent("", "\t")
@@ -56,7 +46,7 @@ func Export(i...interface{}) string {
     return buffer.String()
 }
 
-// 打印完整的调用回溯信息
+// PrintBacktrace prints the caller backtrace to stdout.
 func PrintBacktrace() {
     index  := 1
     buffer := bytes.NewBuffer(nil)
@@ -71,12 +61,12 @@ func PrintBacktrace() {
     fmt.Print(buffer.String())
 }
 
-// 抛出一个异常
+// Throw throws out an exception, which can be caught be TryCatch or recover.
 func Throw(exception interface{}) {
     panic(exception)
 }
 
-// try...catch...
+// TryCatch implements try...catch... logistics.
 func TryCatch(try func(), catch ... func(exception interface{})) {
     if len(catch) > 0 {
         defer func() {
@@ -88,13 +78,9 @@ func TryCatch(try func(), catch ... func(exception interface{})) {
     try()
 }
 
-// IsEmpty checks given value empty or not.
-// false: integer(0), bool(false), slice/map(len=0), nil;
-// true : other.
-//
-// 判断给定的变量是否为空。
-// 整型为0, 布尔为false, slice/map长度为0, 其他为nil的情况，都为空。
-// 为空时返回true，否则返回false。
+// IsEmpty checks given <value> empty or not.
+// It returns false if <value> is: integer(0), bool(false), slice/map(len=0), nil;
+// or else returns true.
 func IsEmpty(value interface{}) bool {
     return empty.IsEmpty(value)
 }
