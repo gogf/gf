@@ -15,9 +15,6 @@ import (
 func getValue() interface{} {
 	return 3
 }
-func callBack(k interface{}, v interface{}) bool {
-	return true
-}
 
 func Test_Map_Basic(t *testing.T) {
 	gtest.Case(t, func() {
@@ -51,9 +48,6 @@ func Test_Map_Basic(t *testing.T) {
 
 		m2 := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
 		gtest.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
-		m3 := gmap.NewFromArray([]interface{}{1, "key1"}, []interface{}{1, "val1"})
-		gtest.Assert(m3.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
-
 	})
 }
 func Test_Map_Set_Fun(t *testing.T) {

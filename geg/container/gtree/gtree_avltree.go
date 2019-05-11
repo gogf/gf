@@ -9,11 +9,11 @@ func main() {
 	tree := gtree.NewAVLTree(func(v1, v2 interface{}) int {
 		return v1.(int) - v2.(int)
 	})
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		tree.Set(i, i*10)
 	}
 	fmt.Println(tree.String())
-
+	tree.Remove(1)
 	tree.IteratorDesc(func(key, value interface{}) bool {
 		fmt.Println(key, value)
 		return true

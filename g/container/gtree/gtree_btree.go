@@ -37,6 +37,8 @@ type BTreeEntry struct {
 }
 
 // NewBTree instantiates a B-tree with <m> (maximum number of children) and a custom key comparator.
+// The param <unsafe> used to specify whether using tree in un-concurrent-safety,
+// which is false in default.
 // Note that the <m> must be greater or equal than 3, or else it panics.
 func NewBTree(m int, comparator func(v1, v2 interface{}) int, unsafe...bool) *BTree {
 	if m < 3 {
@@ -47,6 +49,17 @@ func NewBTree(m int, comparator func(v1, v2 interface{}) int, unsafe...bool) *BT
 		mu         : rwmutex.New(unsafe...),
 		m          : m,
 	}
+}
+
+// NewBTreeFrom instantiates a B-tree with <m> (maximum number of children), a custom key comparator and data map.
+// The param <unsafe> used to specify whether using tree in un-concurrent-safety,
+// which is false in default.
+func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe...bool) *BTree {
+	tree := NewBTree(m, comparator, unsafe...)
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
+	return tree
 }
 
 // Clone returns a new tree with a copy of current tree.
@@ -236,7 +249,7 @@ func (tree *BTree) Remove(key interface{}) (value interface{}) {
 func (tree *BTree) Removes(keys []interface{}) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	for key := range keys {
+	for _, key := range keys {
 		tree.doRemove(key)
 	}
 }
@@ -270,7 +283,7 @@ func (tree *BTree) Values() []interface{} {
 	values := make([]interface{}, tree.Size())
 	index  := 0
 	tree.IteratorAsc(func(key, value interface{}) bool {
-		values[index] = key
+		values[index] = value
 		index++
 		return true
 	})
@@ -360,6 +373,11 @@ func (tree *BTree) Print() {
 
 func (entry *BTreeEntry) String() string {
 	return fmt.Sprintf("%v", entry.Key)
+}
+
+// Iterator is alias of IteratorAsc.
+func (tree *BTree) Iterator(f func (key, value interface{}) bool) {
+	tree.IteratorAsc(f)
 }
 
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.

@@ -46,9 +46,6 @@ func Test_StrAnyMap_Basic(t *testing.T) {
 
 		m2 := gmap.NewStrAnyMapFrom(map[string]interface{}{"a": 1, "b": "2"})
 		gtest.Assert(m2.Map(), map[string]interface{}{"a": 1, "b": "2"})
-		m3 := gmap.NewStrAnyMapFromArray([]string{"a", "b"}, []interface{}{1, "2"})
-		gtest.Assert(m3.Map(), map[string]interface{}{"a": 1, "b": "2"})
-
 	})
 }
 func Test_StrAnyMap_Set_Fun(t *testing.T) {

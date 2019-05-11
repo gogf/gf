@@ -46,6 +46,17 @@ func NewRedBlackTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *Re
 	}
 }
 
+// NewRedBlackTreeFrom instantiates a red-black tree with the custom comparator and <data> map.
+// The param <unsafe> used to specify whether using tree in un-concurrent-safety,
+// which is false in default.
+func NewRedBlackTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe...bool) *RedBlackTree {
+	tree := NewRedBlackTree(comparator, unsafe...)
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
+	return tree
+}
+
 // Clone returns a new tree with a copy of current tree.
 func (tree *RedBlackTree) Clone(unsafe ...bool) *RedBlackTree {
 	newTree := NewRedBlackTree(tree.comparator, !tree.mu.IsSafe())
@@ -244,6 +255,7 @@ func (tree *RedBlackTree) doRemove(key interface{}) (value interface{}) {
 	if node == nil {
 		return
 	}
+	value = node.Value
 	if node.left != nil && node.right != nil {
 		p         := node.left.maximumNode()
 		node.Key   = p.Key
@@ -266,7 +278,6 @@ func (tree *RedBlackTree) doRemove(key interface{}) (value interface{}) {
 		}
 	}
 	tree.size--
-	value = node.Value
 	return
 }
 
@@ -281,7 +292,7 @@ func (tree *RedBlackTree) Remove(key interface{}) (value interface{}) {
 func (tree *RedBlackTree) Removes(keys []interface{}) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	for key := range keys {
+	for _, key := range keys {
 		tree.doRemove(key)
 	}
 }
@@ -315,7 +326,7 @@ func (tree *RedBlackTree) Values() []interface{} {
 	values := make([]interface{}, tree.Size())
 	index  := 0
 	tree.IteratorAsc(func(key, value interface{}) bool {
-		values[index] = key
+		values[index] = value
 		index++
 		return true
 	})
@@ -436,6 +447,11 @@ func (tree *RedBlackTree) Ceiling(key interface{}) (ceiling *RedBlackTreeNode) {
 		return ceiling
 	}
 	return nil
+}
+
+// Iterator is alias of IteratorAsc.
+func (tree *RedBlackTree) Iterator(f func (key, value interface{}) bool) {
+	tree.IteratorAsc(f)
 }
 
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
@@ -642,7 +658,7 @@ func (tree *RedBlackTree) rotateLeft(node *RedBlackTreeNode) {
 	if right.left != nil {
 		right.left.parent = node
 	}
-	right.left = node
+	right.left  = node
 	node.parent = right
 }
 
@@ -653,7 +669,7 @@ func (tree *RedBlackTree) rotateRight(node *RedBlackTreeNode) {
 	if left.right != nil {
 		left.right.parent = node
 	}
-	left.right = node
+	left.right  = node
 	node.parent = left
 }
 
@@ -729,7 +745,7 @@ func (node *RedBlackTreeNode) maximumNode() *RedBlackTreeNode {
 	for node.right != nil {
 		return node.right
 	}
-	return nil
+	return node
 }
 
 func (tree *RedBlackTree) deleteCase1(node *RedBlackTreeNode) {

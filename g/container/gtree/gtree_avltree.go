@@ -39,6 +39,17 @@ func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *AVLTree
 	}
 }
 
+// NewAVLTreeFrom instantiates an AVL tree with the custom comparator and data map.
+// The param <unsafe> used to specify whether using tree in un-concurrent-safety,
+// which is false in default.
+func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe...bool) *AVLTree {
+	tree := NewAVLTree(comparator, unsafe...)
+	for k, v := range data {
+		tree.put(k, v, nil, &tree.root)
+	}
+	return tree
+}
+
 // Clone returns a new tree with a copy of current tree.
 func (tree *AVLTree) Clone(unsafe ...bool) *AVLTree {
 	newTree := NewAVLTree(tree.comparator, !tree.mu.IsSafe())
@@ -223,7 +234,7 @@ func (tree *AVLTree) Remove(key interface{}) {
 func (tree *AVLTree) Removes(keys []interface{}) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	for key := range keys {
+	for _, key := range keys {
 		tree.remove(key, &tree.root)
 	}
 }
@@ -257,7 +268,7 @@ func (tree *AVLTree) Values() []interface{} {
 	values := make([]interface{}, tree.Size())
 	index  := 0
 	tree.IteratorAsc(func(key, value interface{}) bool {
-		values[index] = key
+		values[index] = value
 		index++
 		return true
 	})
@@ -410,6 +421,11 @@ func (tree *AVLTree) Flip(comparator...func(v1, v2 interface{}) int) {
 	tree.root = t.root
 	tree.size = t.size
 	tree.mu.Unlock()
+}
+
+// Iterator is alias of IteratorAsc.
+func (tree *AVLTree) Iterator(f func (key, value interface{}) bool) {
+	tree.IteratorAsc(f)
 }
 
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.

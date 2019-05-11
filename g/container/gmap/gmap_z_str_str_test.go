@@ -47,9 +47,6 @@ func Test_StrStrMap_Basic(t *testing.T) {
 
 		m2 := gmap.NewStrStrMapFrom(map[string]string{"a": "a", "b": "b"})
 		gtest.Assert(m2.Map(), map[string]string{"a": "a", "b": "b"})
-		m3 := gmap.NewStrStrMapFromArray([]string{"a", "b"}, []string{"a", "b"})
-		gtest.Assert(m3.Map(), map[string]string{"a": "a", "b": "b"})
-
 	})
 }
 func Test_StrStrMap_Set_Fun(t *testing.T) {

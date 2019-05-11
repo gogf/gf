@@ -48,9 +48,6 @@ func Test_IntAnyMap_Basic(t *testing.T) {
 
 		m2 := gmap.NewIntAnyMapFrom(map[int]interface{}{1: 1, 2: "2"})
 		gtest.Assert(m2.Map(), map[int]interface{}{1: 1, 2: "2"})
-		m3 := gmap.NewIntAnyMapFromArray([]int{1, 2}, []interface{}{1, "2"})
-		gtest.Assert(m3.Map(), map[int]interface{}{1: 1, 2: "2"})
-
 	})
 }
 func Test_IntAnyMap_Set_Fun(t *testing.T) {

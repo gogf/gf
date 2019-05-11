@@ -25,35 +25,13 @@ func NewIntIntMap(unsafe...bool) *IntIntMap {
     }
 }
 
-// NewIntIntMapFrom returns an IntIntMap object from given map <data>.
-// Notice that, the param map is a type of pointer,
+// NewIntIntMapFrom returns a hash map from given map <data>.
+// Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewIntIntMapFrom(data map[int]int, unsafe...bool) *IntIntMap {
     return &IntIntMap{
         mu   : rwmutex.New(unsafe...),
 	    data : data,
-    }
-}
-
-// NewIntIntMapFromArray returns an IntIntMap object from given array.
-// The param <keys> is  given as the keys of the map,
-// and <values> as its corresponding values.
-//
-// If length of <keys> is greater than that of <values>,
-// the corresponding overflow map values will be the default value of its type.
-func NewIntIntMapFromArray(keys []int, values []int, unsafe...bool) *IntIntMap {
-    m := make(map[int]int)
-    l := len(values)
-    for i, k := range keys {
-        if i < l {
-            m[k] = values[i]
-        } else {
-            m[k] = 0
-        }
-    }
-    return &IntIntMap{
-        mu   : rwmutex.New(unsafe...),
-	    data : m,
     }
 }
 

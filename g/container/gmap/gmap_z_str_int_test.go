@@ -48,9 +48,6 @@ func Test_StrIntMap_Basic(t *testing.T) {
 
 		m2 := gmap.NewStrIntMapFrom(map[string]int{"a": 1, "b": 2})
 		gtest.Assert(m2.Map(), map[string]int{"a": 1, "b": 2})
-		m3 := gmap.NewStrIntMapFromArray([]string{"a", "b"}, []int{1, 2})
-		gtest.Assert(m3.Map(), map[string]int{"a": 1, "b": 2})
-
 	})
 }
 func Test_StrIntMap_Set_Fun(t *testing.T) {
