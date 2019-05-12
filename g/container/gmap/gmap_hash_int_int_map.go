@@ -54,8 +54,8 @@ func (m *IntIntMap) Clone() *IntIntMap {
 
 // Map returns a copy of the data of the hash map.
 func (m *IntIntMap) Map() map[int]int {
-	data := make(map[int]int)
 	m.mu.RLock()
+	data := make(map[int]int, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
@@ -212,9 +212,11 @@ func (m *IntIntMap) Remove(key int) int {
 // Keys returns all keys of the map as a slice.
 func (m *IntIntMap) Keys() []int {
     m.mu.RLock()
-    keys := make([]int, 0)
+    keys  := make([]int, len(m.data))
+    index := 0
     for key := range m.data {
-        keys = append(keys, key)
+        keys[index] = key
+        index++
     }
     m.mu.RUnlock()
     return keys
@@ -223,9 +225,11 @@ func (m *IntIntMap) Keys() []int {
 // Values returns all values of the map as a slice.
 func (m *IntIntMap) Values() []int {
     m.mu.RLock()
-    values := make([]int, 0)
+    values := make([]int, len(m.data))
+	index  := 0
     for _, value := range m.data {
-        values = append(values, value)
+        values[index] = value
+        index++
     }
     m.mu.RUnlock()
     return values

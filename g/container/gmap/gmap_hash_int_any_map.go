@@ -57,8 +57,8 @@ func (m *IntAnyMap) Clone() *IntAnyMap {
 
 // Map returns a copy of the data of the hash map.
 func (m *IntAnyMap) Map() map[int]interface{} {
-	data := make(map[int]interface{})
 	m.mu.RLock()
+	data := make(map[int]interface{}, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
@@ -238,9 +238,11 @@ func (m *IntAnyMap) Remove(key int) interface{} {
 // Keys returns all keys of the map as a slice.
 func (m *IntAnyMap) Keys() []int {
     m.mu.RLock()
-    keys := make([]int, 0)
+    keys  := make([]int, len(m.data))
+    index := 0
     for key := range m.data {
-        keys = append(keys, key)
+        keys[index] = key
+        index++
     }
     m.mu.RUnlock()
     return keys
@@ -249,9 +251,11 @@ func (m *IntAnyMap) Keys() []int {
 // Values returns all values of the map as a slice.
 func (m *IntAnyMap) Values() []interface{} {
     m.mu.RLock()
-    values := make([]interface{}, 0)
+    values := make([]interface{}, len(m.data))
+    index  := 0
     for _, value := range m.data {
-        values = append(values, value)
+        values[index] = value
+        index++
     }
     m.mu.RUnlock()
     return values
