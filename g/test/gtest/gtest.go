@@ -287,7 +287,7 @@ func compareMap(value, expect interface{}) error {
                     }
                 }
             } else {
-                return fmt.Errorf(`[ASSERT] EXPECT MAP LENGTH %d == %d`, rvExpect.Len(), rvValue.Len())
+                return fmt.Errorf(`[ASSERT] EXPECT MAP LENGTH %d == %d`, rvValue.Len(), rvExpect.Len())
             }
         } else {
             return fmt.Errorf(`[ASSERT] EXPECT VALUE TO BE A MAP`)
