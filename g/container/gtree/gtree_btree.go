@@ -553,7 +553,7 @@ func (tree *BTree) search(node *BTreeNode, key interface{}) (index int, found bo
 
 // searchRecursively searches recursively down the tree starting at the startNode
 func (tree *BTree) searchRecursively(startNode *BTreeNode, key interface{}) (node *BTreeNode, index int, found bool) {
-	if tree.IsEmpty() {
+	if tree.size == 0 {
 		return nil, -1, false
 	}
 	node = startNode
@@ -676,7 +676,7 @@ func setParent(nodes []*BTreeNode, parent *BTreeNode) {
 }
 
 func (tree *BTree) left(node *BTreeNode) *BTreeNode {
-	if tree.IsEmpty() {
+	if tree.size == 0 {
 		return nil
 	}
 	current := node
@@ -689,7 +689,7 @@ func (tree *BTree) left(node *BTreeNode) *BTreeNode {
 }
 
 func (tree *BTree) right(node *BTreeNode) *BTreeNode {
-	if tree.IsEmpty() {
+	if tree.size == 0 {
 		return nil
 	}
 	current := node
@@ -742,10 +742,10 @@ func (tree *BTree) delete(node *BTreeNode, index int) {
 	}
 
 	// deleting from an internal node
-	leftLargestNode := tree.right(node.Children[index]) // largest node in the left sub-tree (assumed to exist)
+	leftLargestNode       := tree.right(node.Children[index]) // largest node in the left sub-tree (assumed to exist)
 	leftLargestEntryIndex := len(leftLargestNode.Entries) - 1
-	node.Entries[index] = leftLargestNode.Entries[leftLargestEntryIndex]
-	deletedKey := leftLargestNode.Entries[leftLargestEntryIndex].Key
+	node.Entries[index]    = leftLargestNode.Entries[leftLargestEntryIndex]
+	deletedKey            := leftLargestNode.Entries[leftLargestEntryIndex].Key
 	tree.deleteEntry(leftLargestNode, leftLargestEntryIndex)
 	tree.rebalance(leftLargestNode, deletedKey)
 }

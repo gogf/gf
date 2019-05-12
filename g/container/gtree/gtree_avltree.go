@@ -224,10 +224,11 @@ func (tree *AVLTree) Contains(key interface{}) bool {
 
 // Remove remove the node from the tree by key.
 // Key should adhere to the comparator's type assertion, otherwise method panics.
-func (tree *AVLTree) Remove(key interface{}) {
+func (tree *AVLTree) Remove(key interface{}) (value interface{}) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	tree.remove(key, &tree.root)
+	value, _ = tree.remove(key, &tree.root)
+	return
 }
 
 // Removes batch deletes values of the tree by <keys>.
@@ -414,7 +415,7 @@ func (tree *AVLTree) Flip(comparator...func(v1, v2 interface{}) int) {
 		t = NewAVLTree(tree.comparator, !tree.mu.IsSafe())
 	}
 	tree.IteratorAsc(func(key, value interface{}) bool {
-		tree.put(value, key, nil, &tree.root)
+		t.put(value, key, nil, &t.root)
 		return true
 	})
 	tree.mu.Lock()
@@ -477,35 +478,34 @@ func (tree *AVLTree) put(key interface{}, value interface{}, p *AVLTreeNode, qp 
 		c = 1
 	}
 	a := (c + 1) / 2
-	var fix bool
-	fix = tree.put(key, value, q, &q.children[a])
-	if fix {
+	if tree.put(key, value, q, &q.children[a]) {
 		return putFix(int8(c), qp)
 	}
 	return false
 }
 
-func (tree *AVLTree) remove(key interface{}, qp **AVLTreeNode) bool {
+func (tree *AVLTree) remove(key interface{}, qp **AVLTreeNode) (value interface{}, fix bool) {
 	q := *qp
 	if q == nil {
-		return false
+		return nil, false
 	}
 
 	c := tree.comparator(key, q.Key)
 	if c == 0 {
 		tree.size--
+		value = q.Value
+		fix   = true
 		if q.children[1] == nil {
 			if q.children[0] != nil {
 				q.children[0].parent = q.parent
 			}
 			*qp = q.children[0]
-			return true
+			return
 		}
-		fix := removeMin(&q.children[1], &q.Key, &q.Value)
-		if fix {
-			return removeFix(-1, qp)
+		if removeMin(&q.children[1], &q.Key, &q.Value) {
+			return value, removeFix(-1, qp)
 		}
-		return false
+		return
 	}
 
 	if c < 0 {
@@ -514,11 +514,11 @@ func (tree *AVLTree) remove(key interface{}, qp **AVLTreeNode) bool {
 		c = 1
 	}
 	a := (c + 1) / 2
-	fix := tree.remove(key, &q.children[a])
+	value, fix = tree.remove(key, &q.children[a])
 	if fix {
-		return removeFix(int8(-c), qp)
+		return value, removeFix(int8(-c), qp)
 	}
-	return false
+	return nil, false
 }
 
 func removeMin(qp **AVLTreeNode, minKey *interface{}, minVal *interface{}) bool {
@@ -574,9 +574,9 @@ func removeFix(c int8, t **AVLTreeNode) bool {
 
 	a := (c + 1) / 2
 	if s.children[a].b == 0 {
-		s = rotate(c, s)
+		s   = rotate(c, s)
 		s.b = -c
-		*t = s
+		*t  = s
 		return false
 	}
 
