@@ -57,8 +57,8 @@ func (m *StrAnyMap) Clone() *StrAnyMap {
 
 // Map returns a copy of the data of the hash map.
 func (m *StrAnyMap) Map() map[string]interface{} {
-	data := make(map[string]interface{})
 	m.mu.RLock()
+	data := make(map[string]interface{}, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
@@ -238,9 +238,11 @@ func (m *StrAnyMap) Remove(key string) interface{} {
 // Keys returns all keys of the map as a slice.
 func (m *StrAnyMap) Keys() []string {
 	m.mu.RLock()
-	keys := make([]string, 0)
+	keys  := make([]string, len(m.data))
+	index := 0
 	for key := range m.data {
-		keys = append(keys, key)
+		keys[index] = key
+		index++
 	}
 	m.mu.RUnlock()
 	return keys
@@ -249,9 +251,11 @@ func (m *StrAnyMap) Keys() []string {
 // Values returns all values of the map as a slice.
 func (m *StrAnyMap) Values() []interface{} {
 	m.mu.RLock()
-	values := make([]interface{}, 0)
+	values := make([]interface{}, len(m.data))
+	index  := 0
 	for _, value := range m.data {
-		values = append(values, value)
+		values[index] = value
+		index++
 	}
 	m.mu.RUnlock()
 	return values
