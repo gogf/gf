@@ -334,3 +334,38 @@ func (l *List) LockFunc(f func(list *list.List)) {
     defer l.mu.Unlock()
     f(l.list)
 }
+
+// Iterator is alias of IteratorAsc.
+func (l *List) Iterator(f func (e *Element) bool) {
+	l.IteratorAsc(f)
+}
+
+// IteratorAsc iterates the list in ascending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (l *List) IteratorAsc(f func (e *Element) bool) {
+	l.mu.RLock()
+	length := l.list.Len()
+	if length > 0 {
+		for i, e := 0, l.list.Front(); i < length; i, e = i + 1, e.Next() {
+			if !f(e) {
+				break
+			}
+		}
+	}
+	l.mu.RUnlock()
+}
+
+// IteratorDesc iterates the list in descending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (l *List) IteratorDesc(f func (e *Element) bool) {
+	l.mu.RLock()
+	length := l.list.Len()
+	if length > 0 {
+		for i, e := 0, l.list.Back(); i < length; i, e = i + 1, e.Prev() {
+			if !f(e) {
+				break
+			}
+		}
+	}
+	l.mu.RUnlock()
+}
