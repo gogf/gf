@@ -6,21 +6,21 @@
 
 // go test *.go -bench=".*" -benchmem
 
-package gmap
+package gmap_test
 
 import (
-    "testing"
+	"github.com/gogf/gf/g/container/gmap"
+	"testing"
     "strconv"
 )
 
-
-var iimUnsafe   = NewIntIntMap(true)
-var iifmUnsafe  = NewIntAnyMap(true)
-var ismUnsafe   = NewIntStrMap(true)
-var ififmUnsafe = New(true)
-var simUnsafe   = NewStrIntMap(true)
-var sifmUnsafe  = NewStrAnyMap(true)
-var ssmUnsafe   = NewStrStrMap(true)
+var ififmUnsafe = gmap.New(true)
+var iimUnsafe   = gmap.NewIntIntMap(true)
+var iifmUnsafe  = gmap.NewIntAnyMap(true)
+var ismUnsafe   = gmap.NewIntStrMap(true)
+var simUnsafe   = gmap.NewStrIntMap(true)
+var sifmUnsafe  = gmap.NewStrAnyMap(true)
+var ssmUnsafe   = gmap.NewStrStrMap(true)
 
 // 写入性能测试
 

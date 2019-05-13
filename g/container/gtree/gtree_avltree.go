@@ -388,10 +388,6 @@ func (tree *AVLTree) Print() {
 	fmt.Println(tree.String())
 }
 
-func (node *AVLTreeNode) String() string {
-	return fmt.Sprintf("%v", node.Key)
-}
-
 // Map returns all key-value items as map.
 func (tree *AVLTree) Map() map[interface{}]interface{} {
 	m := make(map[interface{}]interface{}, tree.Size())
@@ -692,7 +688,7 @@ func output(node *AVLTreeNode, prefix string, isTail bool, str *string) {
 	} else {
 		*str += "┌── "
 	}
-	*str += node.String() + "\n"
+	*str += fmt.Sprintf("%v\n", node.Key)
 	if node.children[0] != nil {
 		newPrefix := prefix
 		if isTail {

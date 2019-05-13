@@ -371,10 +371,6 @@ func (tree *BTree) Print() {
 	fmt.Println(tree.String())
 }
 
-func (entry *BTreeEntry) String() string {
-	return fmt.Sprintf("%v", entry.Key)
-}
-
 // Iterator is alias of IteratorAsc.
 func (tree *BTree) Iterator(f func (key, value interface{}) bool) {
 	tree.IteratorAsc(f)

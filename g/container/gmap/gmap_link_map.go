@@ -12,74 +12,74 @@ import (
 	"github.com/gogf/gf/g/internal/rwmutex"
 )
 
-type LinkMap struct {
+type ListMap struct {
     mu   *rwmutex.RWMutex
     data map[interface{}]*glist.Element
     list *glist.List
 }
 
-type gLinkMapNode struct {
+type gListMapNode struct {
 	key     interface{}
 	value   interface{}
 }
 
-// NewLinkMap returns an empty link map.
-// LinkMap is backed by a hash table to store values and doubly-linked list to store ordering.
+// NewListMap returns an empty link map.
+// ListMap is backed by a hash table to store values and doubly-linked list to store ordering.
 // The param <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
-func NewLinkMap(unsafe ...bool) *LinkMap {
-	return &LinkMap{
+func NewListMap(unsafe ...bool) *ListMap {
+	return &ListMap{
 		mu   : rwmutex.New(unsafe...),
 		data : make(map[interface{}]*glist.Element),
 		list : glist.New(true),
 	}
 }
 
-// NewLinkMapFrom returns a link map from given map <data>.
+// NewListMapFrom returns a link map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewLinkMapFrom(data map[interface{}]interface{}, unsafe...bool) *LinkMap {
-    m := NewLinkMap(unsafe...)
+func NewListMapFrom(data map[interface{}]interface{}, unsafe...bool) *ListMap {
+    m := NewListMap(unsafe...)
     m.Sets(data)
     return m
 }
 
 // Iterator is alias of IteratorAsc.
-func (m *LinkMap) Iterator(f func (key, value interface{}) bool) {
+func (m *ListMap) Iterator(f func (key, value interface{}) bool) {
 	m.IteratorAsc(f)
 }
 
 // IteratorAsc iterates the map in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
-func (m *LinkMap) IteratorAsc(f func (key interface{}, value interface{}) bool) {
+func (m *ListMap) IteratorAsc(f func (key interface{}, value interface{}) bool) {
     m.mu.RLock()
     defer m.mu.RUnlock()
-    node := (*gLinkMapNode)(nil)
+    node := (*gListMapNode)(nil)
     m.list.IteratorAsc(func(e *glist.Element) bool {
-    	node = e.Value.(*gLinkMapNode)
+    	node = e.Value.(*gListMapNode)
 	    return f(node.key, node.value)
     })
 }
 
 // IteratorDesc iterates the map in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
-func (m *LinkMap) IteratorDesc(f func (key interface{}, value interface{}) bool) {
+func (m *ListMap) IteratorDesc(f func (key interface{}, value interface{}) bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	node := (*gLinkMapNode)(nil)
+	node := (*gListMapNode)(nil)
 	m.list.IteratorDesc(func(e *glist.Element) bool {
-		node = e.Value.(*gLinkMapNode)
+		node = e.Value.(*gListMapNode)
 		return f(node.key, node.value)
 	})
 }
 
 // Clone returns a new link map with copy of current map data.
-func (m *LinkMap) Clone(unsafe ...bool) *LinkMap {
-   return NewLinkMapFrom(m.Map(), unsafe ...)
+func (m *ListMap) Clone(unsafe ...bool) *ListMap {
+   return NewListMapFrom(m.Map(), unsafe ...)
 }
 
 // Clear deletes all data of the map, it will remake a new underlying data map.
-func (m *LinkMap) Clear() {
+func (m *ListMap) Clear() {
 	m.mu.Lock()
 	m.data = make(map[interface{}]*glist.Element)
 	m.list = glist.New(true)
@@ -87,12 +87,12 @@ func (m *LinkMap) Clear() {
 }
 
 // Map returns a copy of the data of the map.
-func (m *LinkMap) Map() map[interface{}]interface{} {
+func (m *ListMap) Map() map[interface{}]interface{} {
     m.mu.RLock()
-	node := (*gLinkMapNode)(nil)
+	node := (*gListMapNode)(nil)
 	data := make(map[interface{}]interface{}, len(m.data))
 	m.list.IteratorAsc(func(e *glist.Element) bool {
-		node = e.Value.(*gLinkMapNode)
+		node = e.Value.(*gListMapNode)
 		data[node.key] = node.value
 		return true
 	})
@@ -101,24 +101,24 @@ func (m *LinkMap) Map() map[interface{}]interface{} {
 }
 
 // Set sets key-value to the map.
-func (m *LinkMap) Set(key interface{}, value interface{}) {
+func (m *ListMap) Set(key interface{}, value interface{}) {
     m.mu.Lock()
     if e, ok := m.data[key]; !ok {
-	    m.data[key] = m.list.PushBack(&gLinkMapNode{key, value})
+	    m.data[key] = m.list.PushBack(&gListMapNode{key, value})
     } else {
-    	e.Value     = &gLinkMapNode{key, value}
+    	e.Value     = &gListMapNode{key, value}
     }
     m.mu.Unlock()
 }
 
 // Sets batch sets key-values to the map.
-func (m *LinkMap) Sets(data map[interface{}]interface{}) {
+func (m *ListMap) Sets(data map[interface{}]interface{}) {
     m.mu.Lock()
     for key, value := range data {
 	    if e, ok := m.data[key]; !ok {
-		    m.data[key] = m.list.PushBack(&gLinkMapNode{key, value})
+		    m.data[key] = m.list.PushBack(&gListMapNode{key, value})
 	    } else {
-		    e.Value     = &gLinkMapNode{key, value}
+		    e.Value     = &gListMapNode{key, value}
 	    }
     }
     m.mu.Unlock()
@@ -126,10 +126,10 @@ func (m *LinkMap) Sets(data map[interface{}]interface{}) {
 
 // Search searches the map with given <key>.
 // Second return parameter <found> is true if key was found, otherwise false.
-func (m *LinkMap) Search(key interface{}) (value interface{}, found bool) {
+func (m *ListMap) Search(key interface{}) (value interface{}, found bool) {
 	m.mu.RLock()
 	if e, ok := m.data[key]; ok {
-		value = e.Value.(*gLinkMapNode).value
+		value = e.Value.(*gListMapNode).value
 		found = ok
 	}
 	m.mu.RUnlock()
@@ -137,10 +137,10 @@ func (m *LinkMap) Search(key interface{}) (value interface{}, found bool) {
 }
 
 // Get returns the value by given <key>.
-func (m *LinkMap) Get(key interface{}) (value interface{}) {
+func (m *ListMap) Get(key interface{}) (value interface{}) {
     m.mu.RLock()
     if e, ok := m.data[key]; ok {
-    	value = e.Value.(*gLinkMapNode).value
+    	value = e.Value.(*gListMapNode).value
     }
     m.mu.RUnlock()
     return
@@ -155,22 +155,22 @@ func (m *LinkMap) Get(key interface{}) (value interface{}) {
 // and its return value will be set to the map with <key>.
 //
 // It returns value with given <key>.
-func (m *LinkMap) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
+func (m *ListMap) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
     m.mu.Lock()
     defer m.mu.Unlock()
     if e, ok := m.data[key]; ok {
-        return e.Value.(*gLinkMapNode).value
+        return e.Value.(*gListMapNode).value
     }
     if f, ok := value.(func() interface {}); ok {
         value = f()
     }
-    m.data[key] = m.list.PushBack(&gLinkMapNode{key, value})
+    m.data[key] = m.list.PushBack(&gListMapNode{key, value})
     return value
 }
 
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
-func (m *LinkMap) GetOrSet(key interface{}, value interface{}) interface{} {
+func (m *ListMap) GetOrSet(key interface{}, value interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, value)
     } else {
@@ -181,7 +181,7 @@ func (m *LinkMap) GetOrSet(key interface{}, value interface{}) interface{} {
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist
 // and returns this value.
-func (m *LinkMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
+func (m *ListMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, f())
     } else {
@@ -195,7 +195,7 @@ func (m *LinkMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the map.
-func (m *LinkMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
+func (m *ListMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
         return m.doSetWithLockCheck(key, f)
     } else {
@@ -205,31 +205,31 @@ func (m *LinkMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interf
 
 // GetVar returns a gvar.Var with the value by given <key>.
 // The returned gvar.Var is un-concurrent safe.
-func (m *LinkMap) GetVar(key interface{}) *gvar.Var {
+func (m *ListMap) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(m.Get(key), true)
 }
 
 // GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
 // The returned gvar.Var is un-concurrent safe.
-func (m *LinkMap) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
+func (m *ListMap) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSet(key, value), true)
 }
 
 // GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
 // The returned gvar.Var is un-concurrent safe.
-func (m *LinkMap) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
+func (m *ListMap) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSetFunc(key, f), true)
 }
 
 // GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
 // The returned gvar.Var is un-concurrent safe.
-func (m *LinkMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
+func (m *ListMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSetFuncLock(key, f), true)
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
 // It returns false if <key> exists, and <value> would be ignored.
-func (m *LinkMap) SetIfNotExist(key interface{}, value interface{}) bool {
+func (m *ListMap) SetIfNotExist(key interface{}, value interface{}) bool {
     if !m.Contains(key) {
         m.doSetWithLockCheck(key, value)
         return true
@@ -239,7 +239,7 @@ func (m *LinkMap) SetIfNotExist(key interface{}, value interface{}) bool {
 
 // SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
 // It returns false if <key> exists, and <value> would be ignored.
-func (m *LinkMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
+func (m *ListMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
 		return true
@@ -252,7 +252,7 @@ func (m *LinkMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool 
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function <f> with mutex.Lock of the map.
-func (m *LinkMap) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool {
+func (m *ListMap) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f)
 		return true
@@ -261,10 +261,10 @@ func (m *LinkMap) SetIfNotExistFuncLock(key interface{}, f func() interface{}) b
 }
 
 // Remove deletes value from map by given <key>, and return this deleted value.
-func (m *LinkMap) Remove(key interface{}) (value interface{}) {
+func (m *ListMap) Remove(key interface{}) (value interface{}) {
     m.mu.Lock()
     if e, ok := m.data[key]; ok {
-    	value = e.Value.(*gLinkMapNode).value
+    	value = e.Value.(*gListMapNode).value
         delete(m.data, key)
         m.list.Remove(e)
     }
@@ -273,7 +273,7 @@ func (m *LinkMap) Remove(key interface{}) (value interface{}) {
 }
 
 // Removes batch deletes values of the map by keys.
-func (m *LinkMap) Removes(keys []interface{}) {
+func (m *ListMap) Removes(keys []interface{}) {
 	m.mu.Lock()
 	for _, key := range keys {
 		if e, ok := m.data[key]; ok {
@@ -285,12 +285,12 @@ func (m *LinkMap) Removes(keys []interface{}) {
 }
 
 // Keys returns all keys of the map as a slice in ascending order.
-func (m *LinkMap) Keys() []interface{} {
+func (m *ListMap) Keys() []interface{} {
     m.mu.RLock()
     keys  := make([]interface{}, m.list.Len())
     index := 0
     m.list.IteratorAsc(func(e *glist.Element) bool {
-	    keys[index] = e.Value.(*gLinkMapNode).key
+	    keys[index] = e.Value.(*gListMapNode).key
 	    index++
 	    return true
     })
@@ -299,12 +299,12 @@ func (m *LinkMap) Keys() []interface{} {
 }
 
 // Values returns all values of the map as a slice.
-func (m *LinkMap) Values() []interface{} {
+func (m *ListMap) Values() []interface{} {
     m.mu.RLock()
     values := make([]interface{}, m.list.Len())
 	index  := 0
 	m.list.IteratorAsc(func(e *glist.Element) bool {
-		values[index] = e.Value.(*gLinkMapNode).value
+		values[index] = e.Value.(*gListMapNode).value
 		index++
 		return true
 	})
@@ -314,7 +314,7 @@ func (m *LinkMap) Values() []interface{} {
 
 // Contains checks whether a key exists.
 // It returns true if the <key> exists, or else false.
-func (m *LinkMap) Contains(key interface{}) (ok bool) {
+func (m *ListMap) Contains(key interface{}) (ok bool) {
     m.mu.RLock()
     _, ok = m.data[key]
     m.mu.RUnlock()
@@ -322,7 +322,7 @@ func (m *LinkMap) Contains(key interface{}) (ok bool) {
 }
 
 // Size returns the size of the map.
-func (m *LinkMap) Size() (size int) {
+func (m *ListMap) Size() (size int) {
     m.mu.RLock()
     size = len(m.data)
     m.mu.RUnlock()
@@ -331,12 +331,12 @@ func (m *LinkMap) Size() (size int) {
 
 // IsEmpty checks whether the map is empty.
 // It returns true if map is empty, or else false.
-func (m *LinkMap) IsEmpty() bool {
+func (m *ListMap) IsEmpty() bool {
     return m.Size() == 0
 }
 
 // Flip exchanges key-value of the map to value-key.
-func (m *LinkMap) Flip() {
+func (m *ListMap) Flip() {
     data := m.Map()
     m.Clear()
     for key, value := range data {
@@ -346,20 +346,20 @@ func (m *LinkMap) Flip() {
 
 // Merge merges two link maps.
 // The <other> map will be merged into the map <m>.
-func (m *LinkMap) Merge(other *LinkMap) {
+func (m *ListMap) Merge(other *ListMap) {
     m.mu.Lock()
     defer m.mu.Unlock()
     if other != m {
 	    other.mu.RLock()
         defer other.mu.RUnlock()
     }
-	node := (*gLinkMapNode)(nil)
+	node := (*gListMapNode)(nil)
     other.list.IteratorAsc(func(e *glist.Element) bool {
-	    node = e.Value.(*gLinkMapNode)
+	    node = e.Value.(*gListMapNode)
 	    if e, ok := m.data[node.key]; !ok {
-		    m.data[node.key] = m.list.PushBack(&gLinkMapNode{node.key, node.value})
+		    m.data[node.key] = m.list.PushBack(&gListMapNode{node.key, node.value})
 	    } else {
-		    e.Value = &gLinkMapNode{node.key, node.value}
+		    e.Value = &gListMapNode{node.key, node.value}
 	    }
 	    return true
     })

@@ -3,17 +3,24 @@ package main
 import (
 	"fmt"
 	"github.com/gogf/gf/g/container/gtree"
+	"github.com/gogf/gf/g/util/gutil"
 )
 
 func main() {
-	tree := gtree.NewAVLTree(func(v1, v2 interface{}) int {
-		return v1.(int) - v2.(int)
-	})
+	tree := gtree.NewAVLTree(gutil.ComparatorInt)
 	for i := 0; i < 10; i++ {
 		tree.Set(i, i*10)
 	}
-	fmt.Println(tree.String())
-	tree.Remove(1)
+	// 打印树形
+	tree.Print()
+	// 前序遍历
+	fmt.Println("ASC:")
+	tree.IteratorAsc(func(key, value interface{}) bool {
+		fmt.Println(key, value)
+		return true
+	})
+	// 后续遍历
+	fmt.Println("DESC:")
 	tree.IteratorDesc(func(key, value interface{}) bool {
 		fmt.Println(key, value)
 		return true

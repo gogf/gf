@@ -13,9 +13,9 @@ import (
 	"testing"
 )
 
-func Test_Link_Map_Basic(t *testing.T) {
+func Test_List_Map_Basic(t *testing.T) {
 	gtest.Case(t, func() {
-		m := gmap.NewLinkMap()
+		m := gmap.NewListMap()
 		m.Set("key1", "val1")
 		gtest.Assert(m.Keys(), []interface{}{"key1"})
 
@@ -43,12 +43,12 @@ func Test_Link_Map_Basic(t *testing.T) {
 		gtest.Assert(m.Size(), 0)
 		gtest.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewLinkMapFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m2 := gmap.NewListMapFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
 		gtest.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
 	})
 }
-func Test_Link_Map_Set_Fun(t *testing.T) {
-	m := gmap.NewLinkMap()
+func Test_List_Map_Set_Fun(t *testing.T) {
+	m := gmap.NewListMap()
 	m.GetOrSetFunc("fun", getValue)
 	m.GetOrSetFuncLock("funlock", getValue)
 	gtest.Assert(m.Get("funlock"), 3)
@@ -58,17 +58,17 @@ func Test_Link_Map_Set_Fun(t *testing.T) {
 	gtest.Assert(m.SetIfNotExistFuncLock("funlock", getValue), false)
 }
 
-func Test_Link_Map_Batch(t *testing.T) {
-	m := gmap.NewLinkMap()
+func Test_List_Map_Batch(t *testing.T) {
+	m := gmap.NewListMap()
 	m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
 	m.Removes([]interface{}{"key1", 1})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 }
-func Test_Link_Map_Iterator(t *testing.T){
+func Test_List_Map_Iterator(t *testing.T){
 	expect :=map[interface{}]interface{}{1: 1, "key1": "val1"}
 
-	m := gmap.NewLinkMapFrom(expect)
+	m := gmap.NewListMapFrom(expect)
 	m.Iterator(func(k interface{}, v interface{}) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -88,9 +88,9 @@ func Test_Link_Map_Iterator(t *testing.T){
 	gtest.Assert(j, 1)
 }
 
-func Test_Link_Map_Clone(t *testing.T) {
+func Test_List_Map_Clone(t *testing.T) {
 	//clone 方法是深克隆
-	m := gmap.NewLinkMapFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
+	m := gmap.NewListMapFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
 	m_clone := m.Clone()
 	m.Remove(1)
 	//修改原 map,clone 后的 map 不影响
@@ -101,17 +101,17 @@ func Test_Link_Map_Clone(t *testing.T) {
 	gtest.AssertIN("key1", m.Keys())
 }
 
-func Test_Link_Map_Basic_Merge(t *testing.T) {
-	m1 := gmap.NewLinkMap()
-	m2 := gmap.NewLinkMap()
+func Test_List_Map_Basic_Merge(t *testing.T) {
+	m1 := gmap.NewListMap()
+	m2 := gmap.NewListMap()
 	m1.Set("key1", "val1")
 	m2.Set("key2", "val2")
 	m1.Merge(m2)
 	gtest.Assert(m1.Map(), map[interface{}]interface{}{"key1": "val1", "key2": "val2"})
 }
 
-func Test_Link_Map_Order(t *testing.T) {
-	m := gmap.NewLinkMap()
+func Test_List_Map_Order(t *testing.T) {
+	m := gmap.NewListMap()
 	m.Set("k1", "v1")
 	m.Set("k2", "v2")
 	m.Set("k3", "v3")
