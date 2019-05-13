@@ -14,7 +14,6 @@ import (
     "strconv"
 )
 
-
 var ififm = gmap.New()
 var iim   = gmap.NewIntIntMap()
 var iifm  = gmap.NewIntAnyMap()
