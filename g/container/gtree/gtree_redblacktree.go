@@ -546,10 +546,6 @@ func (tree *RedBlackTree) Print() {
 	fmt.Println(tree.String())
 }
 
-func (node *RedBlackTreeNode) String() string {
-	return fmt.Sprintf("%v", node.Key)
-}
-
 // Search searches the tree with given <key>.
 // Second return parameter <found> is true if key was found, otherwise false.
 func (tree *RedBlackTree) Search(key interface{}) (value interface{}, found bool) {
@@ -600,7 +596,7 @@ func (tree *RedBlackTree) output(node *RedBlackTreeNode, prefix string, isTail b
 	} else {
 		*str += "┌── "
 	}
-	*str += node.String() + "\n"
+	*str += fmt.Sprintf("%v\n", node.Key)
 	if node.left != nil {
 		newPrefix := prefix
 		if isTail {

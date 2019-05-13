@@ -6,21 +6,22 @@
 
 // go test *.go -bench=".*" -benchmem
 
-package gmap
+package gmap_test
 
 import (
-    "testing"
+	"github.com/gogf/gf/g/container/gmap"
+	"testing"
     "strconv"
 )
 
 
-var iim   = NewIntIntMap()
-var iifm  = NewIntAnyMap()
-var ism   = NewIntStrMap()
-var ififm = New()
-var sim   = NewStrIntMap()
-var sifm  = NewStrAnyMap()
-var ssm   = NewStrStrMap()
+var ififm = gmap.New()
+var iim   = gmap.NewIntIntMap()
+var iifm  = gmap.NewIntAnyMap()
+var ism   = gmap.NewIntStrMap()
+var sim   = gmap.NewStrIntMap()
+var sifm  = gmap.NewStrAnyMap()
+var ssm   = gmap.NewStrStrMap()
 
 func Benchmark_IntIntMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
