@@ -7,7 +7,9 @@
 // Package gredis provides convenient client for redis server.
 //
 // Redis Client.
+//
 // Redis Commands Official: https://redis.io/commands
+//
 // Redis Chinese Documentation: http://redisdoc.com/
 package gredis
 
