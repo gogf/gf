@@ -56,7 +56,7 @@ var defaultMessages = map[string]string {
 
 // 初始化错误消息管理对象
 func init() {
-    errorMsgMap.BatchSet(defaultMessages)
+    errorMsgMap.Sets(defaultMessages)
 }
 
 // 替换默认的错误提示为指定的自定义提示
@@ -64,5 +64,5 @@ func init() {
 // 1、便于多语言错误提示设置；
 // 2、默认错误提示信息不满意；
 func SetDefaultErrorMsgs(msgs map[string]string) {
-    errorMsgMap.BatchSet(msgs)
+    errorMsgMap.Sets(msgs)
 }

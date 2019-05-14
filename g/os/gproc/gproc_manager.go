@@ -14,13 +14,13 @@ import (
 
 // 进程管理器
 type Manager struct {
-    processes *gmap.IntInterfaceMap // 所管理的子进程map
+    processes *gmap.IntAnyMap // 所管理的子进程map
 }
 
 // 创建一个进程管理器
 func NewManager() *Manager {
     return &Manager{
-        processes : gmap.NewIntInterfaceMap(),
+        processes : gmap.NewIntAnyMap(),
     }
 }
 

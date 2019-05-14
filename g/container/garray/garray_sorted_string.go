@@ -23,7 +23,7 @@ type SortedStringArray struct {
     mu          *rwmutex.RWMutex
     array       []string
     unique      *gtype.Bool             // Whether enable unique feature(false)
-    compareFunc func(v1, v2 string) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
+    comparator func(v1, v2 string) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
 }
 
 // NewSortedStringArray creates and returns an empty sorted array.
@@ -34,21 +34,21 @@ func NewSortedStringArray(unsafe...bool) *SortedStringArray {
 }
 
 // NewSortedStringArraySize create and returns an sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedStringArraySize(cap int, unsafe...bool) *SortedStringArray {
     return &SortedStringArray {
         mu          : rwmutex.New(unsafe...),
         array       : make([]string, 0, cap),
         unique      : gtype.NewBool(),
-        compareFunc : func(v1, v2 string) int {
+        comparator : func(v1, v2 string) int {
             return strings.Compare(v1, v2)
         },
     }
 }
 
 // NewSortedStringArrayFrom creates and returns an sorted array with given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedStringArrayFrom(array []string, unsafe...bool) *SortedStringArray {
     a := NewSortedStringArraySize(0, unsafe...)
@@ -58,7 +58,7 @@ func NewSortedStringArrayFrom(array []string, unsafe...bool) *SortedStringArray 
 }
 
 // NewSortedStringArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedStringArrayFromCopy(array []string, unsafe...bool) *SortedStringArray {
     newArray := make([]string, len(array))
@@ -300,7 +300,7 @@ func (a *SortedStringArray) binSearch(value string, lock bool) (index int, resul
     cmp := -2
     for min <= max {
         mid = int((min + max) / 2)
-        cmp = a.compareFunc(value, a.array[mid])
+        cmp = a.comparator(value, a.array[mid])
         switch {
             case cmp < 0 : max = mid - 1
             case cmp > 0 : min = mid + 1
@@ -331,7 +331,7 @@ func (a *SortedStringArray) Unique() *SortedStringArray {
         if i == len(a.array) - 1 {
             break
         }
-        if a.compareFunc(a.array[i], a.array[i + 1]) == 0 {
+        if a.comparator(a.array[i], a.array[i + 1]) == 0 {
             a.array = append(a.array[ : i + 1], a.array[i + 1 + 1 : ]...)
         } else {
             i++

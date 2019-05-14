@@ -22,7 +22,7 @@ import (
 
 var (
 	// Templates cache map for template folder.
-	templates = gmap.NewStringInterfaceMap()
+	templates = gmap.NewStrAnyMap()
 )
 
 // getTemplate returns the template object associated with given template folder <path>.

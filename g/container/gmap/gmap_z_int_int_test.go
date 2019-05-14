@@ -1,3 +1,9 @@
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with gm file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gmap_test
 
 import (
@@ -42,9 +48,6 @@ func Test_IntIntMap_Basic(t *testing.T) {
 
 		m2 := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
 		gtest.Assert(m2.Map(), map[int]int{1: 1, 2: 2})
-		m3 := gmap.NewIntIntMapFromArray([]int{1, 2}, []int{1, 2})
-		gtest.Assert(m3.Map(), map[int]int{1: 1, 2: 2})
-
 	})
 }
 func Test_IntIntMap_Set_Fun(t *testing.T) {
@@ -65,10 +68,10 @@ func Test_IntIntMap_Set_Fun(t *testing.T) {
 func Test_IntIntMap_Batch(t *testing.T) {
 	m := gmap.NewIntIntMap()
 
-	m.BatchSet(map[int]int{1: 1, 2: 2, 3: 3})
+	m.Sets(map[int]int{1: 1, 2: 2, 3: 3})
 	m.Iterator(intIntCallBack)
 	gtest.Assert(m.Map(), map[int]int{1: 1, 2: 2, 3: 3})
-	m.BatchRemove([]int{1, 2})
+	m.Removes([]int{1, 2})
 	gtest.Assert(m.Map(), map[int]int{3: 3})
 }
 

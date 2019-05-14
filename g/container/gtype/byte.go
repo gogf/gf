@@ -30,7 +30,7 @@ func (t *Byte) Clone() *Byte {
     return NewByte(t.Val())
 }
 
-// Set atomically stores value into t.value and returns the previous t.value value.
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (t *Byte) Set(value byte) (old byte) {
     return byte(atomic.SwapInt32(&t.value, int32(value)))
 }
@@ -40,7 +40,7 @@ func (t *Byte) Val() byte {
     return byte(atomic.LoadInt32(&t.value))
 }
 
-// Add atomically adds delta to t.value and returns the new value.
+// Add atomically adds <delta> to t.value and returns the new value.
 func (t *Byte) Add(delta int) (new byte) {
     return byte(atomic.AddInt32(&t.value, int32(delta)))
 }

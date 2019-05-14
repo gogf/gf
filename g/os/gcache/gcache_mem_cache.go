@@ -147,7 +147,7 @@ func (c *memCache) SetIfNotExist(key interface{}, value interface{}, expire int)
 }
 
 // 批量设置
-func (c *memCache) BatchSet(data map[interface{}]interface{}, expire int) {
+func (c *memCache) Sets(data map[interface{}]interface{}, expire int) {
     expireTime := c.getInternalExpire(expire)
     for k, v := range data {
         c.dataMu.Lock()
@@ -221,7 +221,7 @@ func (c *memCache) Remove(key interface{}) (value interface{}) {
 }
 
 // 批量删除键值对，并返回被删除的键值对数据
-func (c *memCache) BatchRemove(keys []interface{}) {
+func (c *memCache) Removes(keys []interface{}) {
     for _, key := range keys {
         c.Remove(key)
     }

@@ -41,126 +41,99 @@ func (r *Request) AddQuery(key string, value string) {
 }
 
 // 获得指定名称的get参数列表
-func (r *Request) GetQuery(key string, def ... []string) []string {
+func (r *Request) GetQuery(key string, def...interface{}) []string {
     r.initGet()
     if v, ok := r.queryVars[key]; ok {
         return v
     }
     if len(def) > 0 {
-        return def[0]
+        return gconv.Strings(def[0])
     }
     return nil
 }
 
-func (r *Request) GetQueryString(key string, def ... string) string {
-    value := r.GetQuery(key)
+func (r *Request) GetQueryString(key string, def...interface{}) string {
+    value := r.GetQuery(key, def...)
     if value != nil && value[0] != "" {
         return value[0]
-    }
-    if len(def) > 0 {
-        return def[0]
     }
     return ""
 }
 
-func (r *Request) GetQueryBool(key string, def ... bool) bool {
-    value := r.GetQueryString(key)
+func (r *Request) GetQueryBool(key string, def...interface{}) bool {
+    value := r.GetQueryString(key, def...)
     if value != "" {
         return gconv.Bool(value)
-    }
-    if len(def) > 0 {
-        return def[0]
     }
     return false
 }
 
-func (r *Request) GetQueryInt(key string, def ... int) int {
-    value := r.GetQueryString(key)
+func (r *Request) GetQueryInt(key string, def...interface{}) int {
+    value := r.GetQueryString(key, def...)
     if value != "" {
         return gconv.Int(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return 0
 }
 
-func (r *Request) GetQueryInts(key string, def ... []int) []int {
-    value := r.GetQuery(key)
+func (r *Request) GetQueryInts(key string, def...interface{}) []int {
+    value := r.GetQuery(key, def...)
     if value != nil {
         return gconv.Ints(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return nil
 }
 
-func (r *Request) GetQueryUint(key string, def ... uint) uint {
-    value := r.GetQueryString(key)
+func (r *Request) GetQueryUint(key string, def...interface{}) uint {
+    value := r.GetQueryString(key, def...)
     if value != "" {
         return gconv.Uint(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return 0
 }
 
-func (r *Request) GetQueryFloat32(key string, def ... float32) float32 {
-    value := r.GetQueryString(key)
+func (r *Request) GetQueryFloat32(key string, def...interface{}) float32 {
+    value := r.GetQueryString(key, def...)
     if value != "" {
         return gconv.Float32(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return 0
 }
 
-func (r *Request) GetQueryFloat64(key string, def ... float64) float64 {
-    value := r.GetQueryString(key)
+func (r *Request) GetQueryFloat64(key string, def...interface{}) float64 {
+    value := r.GetQueryString(key, def...)
     if value != "" {
         return gconv.Float64(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return 0
 }
 
-func (r *Request) GetQueryFloats(key string, def ... []float64) []float64 {
-    value := r.GetQuery(key)
+func (r *Request) GetQueryFloats(key string, def...interface{}) []float64 {
+    value := r.GetQuery(key, def...)
     if value != nil {
         return gconv.Floats(value)
-    }
-    if len(def) > 0 {
-        return def[0]
     }
     return nil
 }
 
-func (r *Request) GetQueryArray(key string, def ... []string) []string {
+func (r *Request) GetQueryArray(key string, def...interface{}) []string {
     return r.GetQuery(key, def...)
 }
 
-func (r *Request) GetQueryStrings(key string, def ... []string) []string {
+func (r *Request) GetQueryStrings(key string, def...interface{}) []string {
     return r.GetQuery(key, def...)
 }
 
-func (r *Request) GetQueryInterfaces(key string, def ... []interface{}) []interface{} {
-    value := r.GetQuery(key)
+func (r *Request) GetQueryInterfaces(key string, def...interface{}) []interface{} {
+    value := r.GetQuery(key, def...)
     if value != nil {
         return gconv.Interfaces(value)
-    }
-    if len(def) > 0 {
-        return def[0]
     }
     return nil
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-func (r *Request) GetQueryMap(def ... map[string]string) map[string]string {
+func (r *Request) GetQueryMap(def... map[string]string) map[string]string {
     r.initGet()
     m := make(map[string]string)
     for k, v := range r.queryVars {

@@ -134,14 +134,15 @@ func (c *Cookie) SetSessionId(id string) {
 }
 
 // 查询cookie
-func (c *Cookie) Get(key string) string {
+func (c *Cookie) Get(key string, def...string) string {
     c.init()
     if r, ok := c.data[key]; ok {
         if r.expire >= 0 {
             return r.value
-        } else {
-            return ""
         }
+    }
+    if len(def) > 0 {
+    	return def[0]
     }
     return ""
 }

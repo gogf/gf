@@ -14,7 +14,7 @@ const (
 )
 var (
     // Configuration groups.
-    configs = gmap.NewStringInterfaceMap()
+    configs = gmap.NewStrAnyMap()
 )
 
 // SetConfig sets the global configuration for specified group.

@@ -15,12 +15,18 @@ import (
     "strings"
 )
 
-// 将params键值对参数映射到对应的struct对象属性上，
-// 第三个参数mapping为非必需，表示自定义名称与属性名称的映射关系。
-// 需要注意：
-// 1、第二个参数应当为struct对象指针；
-// 2、struct对象的**公开属性(首字母大写)**才能被映射赋值；
-// 3、map中的键名可以为小写，映射转换时会自动将键名首字母转为大写做匹配映射，如果无法匹配则忽略；
+// Struct maps the params key-value pairs to the corresponding struct object properties.
+// The third parameter mapping is unnecessary, indicating the mapping between the custom name
+// and the attribute name.
+//
+// Note:
+// 1. The <params> can be any type of may/struct, usually a map;
+// 2. The second parameter <objPointer> should be a pointer to the struct object;
+// 3. Only the public attributes of struct object can be mapped;
+// 4. If <params> is a map, the key of the map <params> can be lowercase.
+//    It will automatically convert the first letter of the key to uppercase
+//    in mapping procedure to do the matching.
+//    If it does not match, ignore the key;
 func Struct(params interface{}, objPointer interface{}, attrMapping...map[string]string) error {
     if params == nil {
         return errors.New("params cannot be nil")

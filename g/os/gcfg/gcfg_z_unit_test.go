@@ -71,7 +71,7 @@ array = [1,2,3]
             "disk"  : "127.0.0.1:6379,0",
             "cache" : "127.0.0.1:6379,1",
         })
-        gtest.AssertEQ(c.GetFilePath(),    gfile.Pwd() + gfile.Separator + path)
+        gtest.AssertEQ(c.FilePath(),    gfile.Pwd() + gfile.Separator + path)
 
     })
 }
@@ -197,7 +197,7 @@ func Test_SetFileName(t *testing.T) {
             "disk"  : "127.0.0.1:6379,0",
             "cache" : "127.0.0.1:6379,1",
         })
-        gtest.AssertEQ(c.GetFilePath(),    gfile.Pwd() + gfile.Separator + path)
+        gtest.AssertEQ(c.FilePath(),    gfile.Pwd() + gfile.Separator + path)
 
     })
 }
@@ -265,7 +265,7 @@ func Test_Instance(t *testing.T) {
             "disk"  : "127.0.0.1:6379,0",
             "cache" : "127.0.0.1:6379,1",
         })
-        gtest.AssertEQ(c.GetFilePath(),    gfile.Pwd() + gfile.Separator + path)
+        gtest.AssertEQ(c.FilePath(),    gfile.Pwd() + gfile.Separator + path)
 
     })
 }

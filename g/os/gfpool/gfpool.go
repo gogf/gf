@@ -39,7 +39,7 @@ type File struct {
 }
 
 // 全局指针池，expire < 0表示不过期，expire = 0表示使用完立即回收，expire > 0表示超时回收
-var pools = gmap.NewStringInterfaceMap()
+var pools = gmap.NewStrAnyMap()
 
 // 获得文件对象，并自动创建指针池(过期时间单位：毫秒)
 func Open(path string, flag int, perm os.FileMode, expire...int) (file *File, err error) {

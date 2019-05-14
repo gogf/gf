@@ -1,3 +1,9 @@
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gvar_test
 
 import (
@@ -8,22 +14,6 @@ import (
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/test/gtest"
 )
-
-func TestReadOnly(t *testing.T) {
-	gtest.Case(t, func() {
-		obj := gvar.New(nil, true)
-		var result string
-
-		switch obj.ReadOnly().(type) {
-		case gvar.VarRead:
-			result = "yes"
-		default:
-			result = "no"
-		}
-
-		gtest.Assert(result, "yes")
-	})
-}
 
 func TestSet(t *testing.T) {
 	gtest.Case(t, func() {

@@ -22,45 +22,45 @@ type SortedArray struct {
     mu          *rwmutex.RWMutex
     array       []interface{}
     unique      *gtype.Bool                  // Whether enable unique feature(false)
-    compareFunc func(v1, v2 interface{}) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
+    comparator  func(v1, v2 interface{}) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
 }
 
 // NewSortedArray creates and returns an empty sorted array.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety, which is false in default.
-// The param <compareFunc> used to compare values to sort in array,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety, which is false in default.
+// The param <comparator> used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2;
 // if it returns value = 0, means v1 = v2;
 // if it returns value > 0, means v1 > v2;
-func NewSortedArray(compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
-    return NewSortedArraySize(0, compareFunc, unsafe...)
+func NewSortedArray(comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+    return NewSortedArraySize(0, comparator, unsafe...)
 }
 
 // NewSortedArraySize create and returns an sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
-func NewSortedArraySize(cap int, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     return &SortedArray{
         mu          : rwmutex.New(unsafe...),
         unique      : gtype.NewBool(),
         array       : make([]interface{}, 0, cap),
-        compareFunc : compareFunc,
+        comparator : comparator,
     }
 }
 
 // NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
-func NewSortedArrayFrom(array []interface{}, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
-    a := NewSortedArraySize(0, compareFunc, unsafe...)
+func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+    a := NewSortedArraySize(0, comparator, unsafe...)
     a.array = array
     sort.Slice(a.array, func(i, j int) bool {
-        return a.compareFunc(a.array[i], a.array[j]) < 0
+        return a.comparator(a.array[i], a.array[j]) < 0
     })
     return a
 }
 
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedArrayFromCopy(array []interface{}, unsafe...bool) *SortedArray {
     newArray := make([]interface{}, len(array))
@@ -77,7 +77,7 @@ func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
     defer a.mu.Unlock()
     a.array = array
     sort.Slice(a.array, func(i, j int) bool {
-        return a.compareFunc(a.array[i], a.array[j]) < 0
+        return a.comparator(a.array[i], a.array[j]) < 0
     })
     return a
 }
@@ -89,7 +89,7 @@ func (a *SortedArray) Sort() *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
     sort.Slice(a.array, func(i, j int) bool {
-        return a.compareFunc(a.array[i], a.array[j]) < 0
+        return a.comparator(a.array[i], a.array[j]) < 0
     })
     return a
 }
@@ -306,7 +306,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool)(index int, result 
     cmp := -2
     for min <= max {
         mid = int((min + max) / 2)
-        cmp = a.compareFunc(value, a.array[mid])
+        cmp = a.comparator(value, a.array[mid])
         switch {
             case cmp < 0 : max = mid - 1
             case cmp > 0 : min = mid + 1
@@ -338,7 +338,7 @@ func (a *SortedArray) Unique() *SortedArray {
         if i == len(a.array) - 1 {
             break
         }
-        if a.compareFunc(a.array[i], a.array[i + 1]) == 0 {
+        if a.comparator(a.array[i], a.array[i + 1]) == 0 {
             a.array = append(a.array[ : i + 1], a.array[i + 1 + 1 : ]...)
         } else {
             i++
@@ -353,7 +353,7 @@ func (a *SortedArray) Clone() (newArray *SortedArray) {
     array := make([]interface{}, len(a.array))
     copy(array, a.array)
     a.mu.RUnlock()
-    return NewSortedArrayFrom(array, a.compareFunc, !a.mu.IsSafe())
+    return NewSortedArrayFrom(array, a.comparator, !a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.

@@ -25,7 +25,7 @@ const (
 
 var (
     // 默认错误消息管理对象(并发安全)
-    errorMsgMap  = gmap.NewStringStringMap()
+    errorMsgMap  = gmap.NewStrStrMap()
 
     // 单规则正则对象，这里使用包内部变量存储，不需要多次解析
     ruleRegex, _ = regexp.Compile(gSINGLE_RULE_PATTERN)

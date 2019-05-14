@@ -120,19 +120,17 @@ func (set *StringSet) String() string {
 }
 
 // LockFunc locks writing with callback function <f>.
-func (set *StringSet) LockFunc(f func(m map[string]struct{})) *StringSet {
+func (set *StringSet) LockFunc(f func(m map[string]struct{})) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	f(set.m)
-    return set
 }
 
 // RLockFunc locks reading with callback function <f>.
-func (set *StringSet) RLockFunc(f func(m map[string]struct{})) *StringSet {
+func (set *StringSet) RLockFunc(f func(m map[string]struct{})) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	f(set.m)
-    return set
 }
 
 // Equal checks whether the two sets equal.
