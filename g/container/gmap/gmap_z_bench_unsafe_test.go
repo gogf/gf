@@ -6,31 +6,23 @@
 
 // go test *.go -bench=".*" -benchmem
 
-package gmap
+package gmap_test
 
 import (
-    "testing"
+	"github.com/gogf/gf/g/container/gmap"
+	"testing"
     "strconv"
 )
 
-
-var ibmUnsafe   = NewIntBoolMap(true)
-var iimUnsafe   = NewIntIntMap(true)
-var iifmUnsafe  = NewIntInterfaceMap(true)
-var ismUnsafe   = NewIntStringMap(true)
-var ififmUnsafe = NewMap(true)
-var sbmUnsafe   = NewStringBoolMap(true)
-var simUnsafe   = NewStringIntMap(true)
-var sifmUnsafe  = NewStringInterfaceMap(true)
-var ssmUnsafe   = NewStringStringMap(true)
+var ififmUnsafe = gmap.New(true)
+var iimUnsafe   = gmap.NewIntIntMap(true)
+var iifmUnsafe  = gmap.NewIntAnyMap(true)
+var ismUnsafe   = gmap.NewIntStrMap(true)
+var simUnsafe   = gmap.NewStrIntMap(true)
+var sifmUnsafe  = gmap.NewStrAnyMap(true)
+var ssmUnsafe   = gmap.NewStrStrMap(true)
 
 // 写入性能测试
-
-func Benchmark_Unsafe_IntBoolMap_Set(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        ibmUnsafe.Set(i, true)
-    }
-}
 
 func Benchmark_Unsafe_IntIntMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
@@ -38,43 +30,37 @@ func Benchmark_Unsafe_IntIntMap_Set(b *testing.B) {
     }
 }
 
-func Benchmark_Unsafe_IntInterfaceMap_Set(b *testing.B) {
+func Benchmark_Unsafe_IntAnyMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         iifmUnsafe.Set(i, i)
     }
 }
 
-func Benchmark_Unsafe_IntStringMap_Set(b *testing.B) {
+func Benchmark_Unsafe_IntStrMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ismUnsafe.Set(i, strconv.Itoa(i))
     }
 }
 
-func Benchmark_Unsafe_InterfaceInterfaceMap_Set(b *testing.B) {
+func Benchmark_Unsafe_AnyAnyMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ififmUnsafe.Set(i, i)
     }
 }
 
-func Benchmark_Unsafe_StringBoolMap_Set(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        sbmUnsafe.Set(strconv.Itoa(i), true)
-    }
-}
-
-func Benchmark_Unsafe_StringIntMap_Set(b *testing.B) {
+func Benchmark_Unsafe_StrIntMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         simUnsafe.Set(strconv.Itoa(i), i)
     }
 }
 
-func Benchmark_Unsafe_StringInterfaceMap_Set(b *testing.B) {
+func Benchmark_Unsafe_StrAnyMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         sifmUnsafe.Set(strconv.Itoa(i), i)
     }
 }
 
-func Benchmark_Unsafe_StringStringMap_Set(b *testing.B) {
+func Benchmark_Unsafe_StrStrMap_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ssmUnsafe.Set(strconv.Itoa(i), strconv.Itoa(i))
     }
@@ -83,11 +69,6 @@ func Benchmark_Unsafe_StringStringMap_Set(b *testing.B) {
 
 // 读取性能测试
 
-func Benchmark_Unsafe_IntBoolMap_Get(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        ibmUnsafe.Get(i)
-    }
-}
 
 func Benchmark_Unsafe_IntIntMap_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
@@ -95,43 +76,37 @@ func Benchmark_Unsafe_IntIntMap_Get(b *testing.B) {
     }
 }
 
-func Benchmark_Unsafe_IntInterfaceMap_Get(b *testing.B) {
+func Benchmark_Unsafe_IntAnyMap_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
         iifmUnsafe.Get(i)
     }
 }
 
-func Benchmark_Unsafe_IntStringMap_Get(b *testing.B) {
+func Benchmark_Unsafe_IntStrMap_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ismUnsafe.Get(i)
     }
 }
 
-func Benchmark_Unsafe_InterfaceInterfaceMap_Get(b *testing.B) {
+func Benchmark_Unsafe_AnyAnyMap_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ififmUnsafe.Get(i)
     }
 }
 
-func Benchmark_Unsafe_StringBoolMap_Get(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        sbmUnsafe.Get(strconv.Itoa(i))
-    }
-}
-
-func Benchmark_Unsafe_StringIntMap_Get(b *testing.B) {
+func Benchmark_Unsafe_StrIntMap_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
         simUnsafe.Get(strconv.Itoa(i))
     }
 }
 
-func Benchmark_Unsafe_StringInterfaceMap_Get(b *testing.B) {
+func Benchmark_Unsafe_StrAnyMap_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
         sifmUnsafe.Get(strconv.Itoa(i))
     }
 }
 
-func Benchmark_Unsafe_StringStringMap_Get(b *testing.B) {
+func Benchmark_Unsafe_StrStrMap_Get(b *testing.B) {
     for i := 0; i < b.N; i++ {
         ssmUnsafe.Get(strconv.Itoa(i))
     }

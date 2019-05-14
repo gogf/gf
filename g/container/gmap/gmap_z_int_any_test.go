@@ -1,3 +1,9 @@
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with gm file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gmap_test
 
 import (
@@ -6,15 +12,15 @@ import (
 	"testing"
 )
 
-func getInterface() interface{} {
+func getAny() interface{} {
 	return 123
 }
-func intInterfaceCallBack(int, interface{}) bool {
+func intAnyCallBack(int, interface{}) bool {
 	return true
 }
-func Test_IntInterfaceMap_Basic(t *testing.T) {
+func Test_IntAnyMap_Basic(t *testing.T) {
 	gtest.Case(t, func() {
-		m := gmap.NewIntInterfaceMap()
+		m := gmap.NewIntAnyMap()
 		m.Set(1, 1)
 
 		gtest.Assert(m.Get(1), 1)
@@ -40,40 +46,37 @@ func Test_IntInterfaceMap_Basic(t *testing.T) {
 		gtest.Assert(m.Size(), 0)
 		gtest.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewIntInterfaceMapFrom(map[int]interface{}{1: 1, 2: "2"})
+		m2 := gmap.NewIntAnyMapFrom(map[int]interface{}{1: 1, 2: "2"})
 		gtest.Assert(m2.Map(), map[int]interface{}{1: 1, 2: "2"})
-		m3 := gmap.NewIntInterfaceMapFromArray([]int{1, 2}, []interface{}{1, "2"})
-		gtest.Assert(m3.Map(), map[int]interface{}{1: 1, 2: "2"})
-
 	})
 }
-func Test_IntInterfaceMap_Set_Fun(t *testing.T) {
-	m := gmap.NewIntInterfaceMap()
+func Test_IntAnyMap_Set_Fun(t *testing.T) {
+	m := gmap.NewIntAnyMap()
 
-	m.GetOrSetFunc(1, getInterface)
-	m.GetOrSetFuncLock(2, getInterface)
+	m.GetOrSetFunc(1, getAny)
+	m.GetOrSetFuncLock(2, getAny)
 	gtest.Assert(m.Get(1), 123)
 	gtest.Assert(m.Get(2), 123)
 
-	gtest.Assert(m.SetIfNotExistFunc(1, getInterface), false)
-	gtest.Assert(m.SetIfNotExistFunc(3, getInterface), true)
+	gtest.Assert(m.SetIfNotExistFunc(1, getAny), false)
+	gtest.Assert(m.SetIfNotExistFunc(3, getAny), true)
 
-	gtest.Assert(m.SetIfNotExistFuncLock(2, getInterface), false)
-	gtest.Assert(m.SetIfNotExistFuncLock(4, getInterface), true)
+	gtest.Assert(m.SetIfNotExistFuncLock(2, getAny), false)
+	gtest.Assert(m.SetIfNotExistFuncLock(4, getAny), true)
 
 }
 
-func Test_IntInterfaceMap_Batch(t *testing.T) {
-	m := gmap.NewIntInterfaceMap()
+func Test_IntAnyMap_Batch(t *testing.T) {
+	m := gmap.NewIntAnyMap()
 
-	m.BatchSet(map[int]interface{}{1: 1, 2: "2", 3: 3})
+	m.Sets(map[int]interface{}{1: 1, 2: "2", 3: 3})
 	gtest.Assert(m.Map(), map[int]interface{}{1: 1, 2: "2", 3: 3})
-	m.BatchRemove([]int{1, 2})
+	m.Removes([]int{1, 2})
 	gtest.Assert(m.Map(), map[int]interface{}{3: 3})
 }
-func Test_IntInterfaceMap_Iterator(t *testing.T){
+func Test_IntAnyMap_Iterator(t *testing.T){
 	expect := map[int]interface{}{1: 1, 2: "2"}
-	m      := gmap.NewIntInterfaceMapFrom(expect)
+	m      := gmap.NewIntAnyMapFrom(expect)
 	m.Iterator(func(k int, v interface{}) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -95,9 +98,9 @@ func Test_IntInterfaceMap_Iterator(t *testing.T){
 
 }
 
-func Test_IntInterfaceMap_Lock(t *testing.T){
+func Test_IntAnyMap_Lock(t *testing.T){
 	expect := map[int]interface{}{1: 1, 2: "2"}
-	m := gmap.NewIntInterfaceMapFrom(expect)
+	m := gmap.NewIntAnyMapFrom(expect)
 	m.LockFunc(func(m map[int]interface{}) {
 		gtest.Assert(m, expect)
 	})
@@ -105,9 +108,9 @@ func Test_IntInterfaceMap_Lock(t *testing.T){
 		gtest.Assert(m, expect)
 	})
 }
-func Test_IntInterfaceMap_Clone(t *testing.T) {
+func Test_IntAnyMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
-	m := gmap.NewIntInterfaceMapFrom(map[int]interface{}{1: 1, 2: "2"})
+	m := gmap.NewIntAnyMapFrom(map[int]interface{}{1: 1, 2: "2"})
 
 	m_clone := m.Clone()
 	m.Remove(1)
@@ -118,9 +121,9 @@ func Test_IntInterfaceMap_Clone(t *testing.T) {
 	//修改clone map,原 map 不影响
 	gtest.AssertIN(2, m.Keys())
 }
-func Test_IntInterfaceMap_Merge(t *testing.T) {
-	m1 := gmap.NewIntInterfaceMap()
-	m2 := gmap.NewIntInterfaceMap()
+func Test_IntAnyMap_Merge(t *testing.T) {
+	m1 := gmap.NewIntAnyMap()
+	m2 := gmap.NewIntAnyMap()
 	m1.Set(1, 1)
 	m2.Set(2, "2")
 	m1.Merge(m2)

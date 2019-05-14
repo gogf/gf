@@ -28,7 +28,7 @@ const (
 )
 
 // 单例对象存储器
-var instances = gmap.NewStringInterfaceMap()
+var instances = gmap.NewStrAnyMap()
 
 // 获取单例对象
 func Get(key string) interface{} {
@@ -201,10 +201,10 @@ func Redis(name...string) *gredis.Redis {
                         redisConfig.MaxActive = gconv.Int(v)
                     }
                     if v, ok := parse["idleTimeout"]; ok {
-                        redisConfig.IdleTimeout = gconv.TimeDuration(v)*time.Second
+                        redisConfig.IdleTimeout = gconv.Duration(v)*time.Second
                     }
                     if v, ok := parse["maxConnLifetime"]; ok {
-                        redisConfig.MaxConnLifetime = gconv.TimeDuration(v)*time.Second
+                        redisConfig.MaxConnLifetime = gconv.Duration(v)*time.Second
                     }
                     addConfigMonitor(key, config)
                     return gredis.New(redisConfig)
@@ -225,7 +225,7 @@ func Redis(name...string) *gredis.Redis {
                 glog.Errorfln(`configuration for redis not found for group "%s"`, group)
             }
         } else {
-            glog.Errorfln(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.GetFilePath())
+            glog.Errorfln(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath())
         }
         return nil
     })
@@ -238,7 +238,7 @@ func Redis(name...string) *gredis.Redis {
 // 添加对单例对象的配置文件inotify监控
 func addConfigMonitor(key string, config *gcfg.Config) {
     // 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空对象单例缓存
-    if path := config.GetFilePath(); path != "" {
+    if path := config.FilePath(); path != "" {
         gfsnotify.Add(path, func(event *gfsnotify.Event) {
             instances.Remove(key)
         })
@@ -246,7 +246,7 @@ func addConfigMonitor(key string, config *gcfg.Config) {
 }
 
 // 模板内置方法：config
-func funcConfig(pattern string, file...string) string {
+func funcConfig(pattern string, file...interface{}) string {
     return Config().GetString(pattern, file...)
 }
 

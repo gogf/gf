@@ -1,3 +1,9 @@
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with gm file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gmap_test
 
 import (
@@ -6,12 +12,12 @@ import (
 	"testing"
 )
 
-func stringInterfaceCallBack(string, interface{}) bool {
+func stringAnyCallBack(string, interface{}) bool {
 	return true
 }
-func Test_StringInterfaceMap_Basic(t *testing.T) {
+func Test_StrAnyMap_Basic(t *testing.T) {
 	gtest.Case(t, func() {
-		m := gmap.NewStringInterfaceMap()
+		m := gmap.NewStrAnyMap()
 		m.Set("a", 1)
 
 		gtest.Assert(m.Get("a"), 1)
@@ -38,40 +44,37 @@ func Test_StringInterfaceMap_Basic(t *testing.T) {
 		gtest.Assert(m.Size(), 0)
 		gtest.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewStringInterfaceMapFrom(map[string]interface{}{"a": 1, "b": "2"})
+		m2 := gmap.NewStrAnyMapFrom(map[string]interface{}{"a": 1, "b": "2"})
 		gtest.Assert(m2.Map(), map[string]interface{}{"a": 1, "b": "2"})
-		m3 := gmap.NewStringInterfaceMapFromArray([]string{"a", "b"}, []interface{}{1, "2"})
-		gtest.Assert(m3.Map(), map[string]interface{}{"a": 1, "b": "2"})
-
 	})
 }
-func Test_StringInterfaceMap_Set_Fun(t *testing.T) {
-	m := gmap.NewStringInterfaceMap()
+func Test_StrAnyMap_Set_Fun(t *testing.T) {
+	m := gmap.NewStrAnyMap()
 
-	m.GetOrSetFunc("a", getInterface)
-	m.GetOrSetFuncLock("b", getInterface)
+	m.GetOrSetFunc("a", getAny)
+	m.GetOrSetFuncLock("b", getAny)
 	gtest.Assert(m.Get("a"), 123)
 	gtest.Assert(m.Get("b"), 123)
-	gtest.Assert(m.SetIfNotExistFunc("a", getInterface), false)
-	gtest.Assert(m.SetIfNotExistFunc("c", getInterface), true)
+	gtest.Assert(m.SetIfNotExistFunc("a", getAny), false)
+	gtest.Assert(m.SetIfNotExistFunc("c", getAny), true)
 
-	gtest.Assert(m.SetIfNotExistFuncLock("b", getInterface), false)
-	gtest.Assert(m.SetIfNotExistFuncLock("d", getInterface), true)
+	gtest.Assert(m.SetIfNotExistFuncLock("b", getAny), false)
+	gtest.Assert(m.SetIfNotExistFuncLock("d", getAny), true)
 
 }
 
-func Test_StringInterfaceMap_Batch(t *testing.T) {
-	m := gmap.NewStringInterfaceMap()
+func Test_StrAnyMap_Batch(t *testing.T) {
+	m := gmap.NewStrAnyMap()
 
-	m.BatchSet(map[string]interface{}{"a": 1, "b": "2", "c": 3})
+	m.Sets(map[string]interface{}{"a": 1, "b": "2", "c": 3})
 	gtest.Assert(m.Map(), map[string]interface{}{"a": 1, "b": "2", "c": 3})
-	m.BatchRemove([]string{"a", "b"})
+	m.Removes([]string{"a", "b"})
 	gtest.Assert(m.Map(), map[string]interface{}{"c": 3})
 }
 
-func Test_StringInterfaceMap_Iterator(t *testing.T) {
+func Test_StrAnyMap_Iterator(t *testing.T) {
 	expect := map[string]interface{}{"a": true, "b": false}
-	m := gmap.NewStringInterfaceMapFrom(expect)
+	m := gmap.NewStrAnyMapFrom(expect)
 	m.Iterator(func(k string, v interface{}) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -91,10 +94,10 @@ func Test_StringInterfaceMap_Iterator(t *testing.T) {
 	gtest.Assert(j, 1)
 }
 
-func Test_StringInterfaceMap_Lock(t *testing.T) {
+func Test_StrAnyMap_Lock(t *testing.T) {
 	expect := map[string]interface{}{"a": true, "b": false}
 
-	m      := gmap.NewStringInterfaceMapFrom(expect)
+	m      := gmap.NewStrAnyMapFrom(expect)
 	m.LockFunc(func(m map[string]interface{}) {
 		gtest.Assert(m, expect)
 	})
@@ -102,9 +105,9 @@ func Test_StringInterfaceMap_Lock(t *testing.T) {
 		gtest.Assert(m, expect)
 	})
 }
-func Test_StringInterfaceMap_Clone(t *testing.T) {
+func Test_StrAnyMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
-	m := gmap.NewStringInterfaceMapFrom(map[string]interface{}{"a": 1, "b": "2"})
+	m := gmap.NewStrAnyMapFrom(map[string]interface{}{"a": 1, "b": "2"})
 
 	m_clone := m.Clone()
 	m.Remove("a")
@@ -115,9 +118,9 @@ func Test_StringInterfaceMap_Clone(t *testing.T) {
 	//修改clone map,原 map 不影响
 	gtest.AssertIN("b", m.Keys())
 }
-func Test_StringInterfaceMap_Merge(t *testing.T) {
-	m1 := gmap.NewStringInterfaceMap()
-	m2 := gmap.NewStringInterfaceMap()
+func Test_StrAnyMap_Merge(t *testing.T) {
+	m1 := gmap.NewStrAnyMap()
+	m2 := gmap.NewStrAnyMap()
 	m1.Set("a", 1)
 	m2.Set("b", "2")
 	m1.Merge(m2)

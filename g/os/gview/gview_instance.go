@@ -14,7 +14,7 @@ const (
 )
 var (
 	// Instances map.
-	instances = gmap.NewStringInterfaceMap()
+	instances = gmap.NewStrAnyMap()
 )
 
 // Instance returns an instance of View with default settings.

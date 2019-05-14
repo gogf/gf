@@ -23,7 +23,7 @@ func Example_Normal_Basic() {
 	fmt.Println(m.Values())
 
 	//Batch add data
-	m.BatchSet(add_map)
+	m.Sets(add_map)
 
 	//Gets the value of the corresponding key
 	key3_val := m.Get("key3")
@@ -43,7 +43,7 @@ func Example_Normal_Basic() {
 
 	//Batch remove keys
 	remove_keys := []interface{}{"key1", 1}
-	m.BatchRemove(remove_keys)
+	m.Removes(remove_keys)
 	fmt.Println(m.Keys())
 
 	//Contains checks whether a key exists.

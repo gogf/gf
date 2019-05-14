@@ -5,9 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gconv implements powerful and easy-to-use converting functionality for any types of variables.
-// 
-// 类型转换, 
-// 内部使用了bytes作为底层转换类型，效率很高。
 package gconv
 
 import (
@@ -18,13 +15,13 @@ import (
     "strings"
 )
 
-// 转换为string类型的接口
+// Type assert api for String().
 type apiString interface {
     String() string
 }
 
 var (
-    // 为空的字符串
+    // Empty strings.
     emptyStringMap = map[string]struct{}{
         ""      : struct {}{},
         "0"     : struct {}{},
@@ -33,8 +30,10 @@ var (
     }
 )
 
-// 将变量i转换为字符串指定的类型t，非必须参数extraParams用以额外的参数传递
-func Convert(i interface{}, t string, extraParams...interface{}) interface{} {
+
+// Convert converts the variable <i> to the type <t>, the type <t> is specified by string.
+// The unnecessary parameter <params> is used for additional parameter passing.
+func Convert(i interface{}, t string, params...interface{}) interface{} {
     switch t {
         case "int":             return Int(i)
         case "int8":            return Int8(i)
@@ -53,28 +52,41 @@ func Convert(i interface{}, t string, extraParams...interface{}) interface{} {
         case "[]byte":          return Bytes(i)
         case "[]int":           return Ints(i)
         case "[]string":        return Strings(i)
-        case "time.Time":
-            if len(extraParams) > 0 {
-                return Time(i, String(extraParams[0]))
+
+        case "Time", "time.Time":
+            if len(params) > 0 {
+                return Time(i, String(params[0]))
             }
             return Time(i)
+
         case "gtime.Time":
-            if len(extraParams) > 0 {
-                return GTime(i, String(extraParams[0]))
+            if len(params) > 0 {
+                return GTime(i, String(params[0]))
             }
             return *GTime(i)
-        case "*gtime.Time":
-            if len(extraParams) > 0 {
-                return GTime(i, String(extraParams[0]))
+
+        case "GTime", "*gtime.Time":
+            if len(params) > 0 {
+                return GTime(i, String(params[0]))
             }
             return GTime(i)
-        case "time.Duration":   return TimeDuration(i)
+
+        case "Duration", "time.Duration":
+        	return Duration(i)
         default:
             return i
     }
 }
 
-// 转换为二进制[]byte
+// Byte converts <i> to byte.
+func Byte(i interface{}) byte {
+	if v, ok := i.(byte); ok {
+		return v
+	}
+	return byte(Uint8(i))
+}
+
+// Bytes converts <i> to []byte.
 func Bytes(i interface{}) []byte {
     if i == nil {
         return nil
@@ -87,7 +99,24 @@ func Bytes(i interface{}) []byte {
     }
 }
 
-// 基础的字符串类型转换
+// Rune converts <i> to rune.
+func Rune(i interface{}) rune {
+	if v, ok := i.(rune); ok {
+		return v
+	}
+	return rune(Int32(i))
+}
+
+// Runes converts <i> to []rune.
+func Runes(i interface{}) []rune {
+	if v, ok := i.([]rune); ok {
+		return v
+	}
+	return []rune(String(i))
+}
+
+
+// String converts <i> to string.
 func String(i interface{}) string {
     if i == nil {
         return ""
@@ -110,17 +139,19 @@ func String(i interface{}) string {
         case []byte:  return string(value)
         default:
             if f, ok := value.(apiString); ok {
-                // 如果变量实现了String()接口，那么使用该接口执行转换
+                // If the variable implements the String() interface,
+                // then use that interface to perform the conversion
                 return f.String()
             } else {
-                // 默认使用json进行字符串转换
+                // Finally we use json.Marshal to convert.
                 jsonContent, _ := json.Marshal(value)
                 return string(jsonContent)
             }
     }
 }
 
-//false: false, "", 0, "false", "off", empty slice/map
+// Bool converts <i> to bool.
+// It returns false if <i> is: false, "", 0, "false", "off", empty slice/map.
 func Bool(i interface{}) bool {
     if i == nil {
         return false
@@ -151,6 +182,7 @@ func Bool(i interface{}) bool {
     }
 }
 
+// Int converts <i> to int.
 func Int(i interface{}) int {
     if i == nil {
         return 0
@@ -161,6 +193,7 @@ func Int(i interface{}) int {
     return int(Int64(i))
 }
 
+// Int8 converts <i> to int8.
 func Int8(i interface{}) int8 {
     if i == nil {
         return 0
@@ -171,6 +204,7 @@ func Int8(i interface{}) int8 {
     return int8(Int64(i))
 }
 
+// Int16 converts <i> to int16.
 func Int16(i interface{}) int16 {
     if i == nil {
         return 0
@@ -181,6 +215,7 @@ func Int16(i interface{}) int16 {
     return int16(Int64(i))
 }
 
+// Int32 converts <i> to int32.
 func Int32(i interface{}) int32 {
     if i == nil {
         return 0
@@ -191,6 +226,7 @@ func Int32(i interface{}) int32 {
     return int32(Int64(i))
 }
 
+// Int64 converts <i> to int64.
 func Int64(i interface{}) int64 {
     if i == nil {
         return 0
@@ -218,27 +254,28 @@ func Int64(i interface{}) int64 {
             return 0
         default:
             s := String(value)
-            // 按照十六进制解析
+            // Hexadecimal
             if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
                 if v, e := strconv.ParseInt(s[2 : ], 16, 64); e == nil {
                     return v
                 }
             }
-            // 按照八进制解析
+            // Octal
             if len(s) > 1 && s[0] == '0' {
                 if v, e := strconv.ParseInt(s[1 : ], 8, 64); e == nil {
                     return v
                 }
             }
-            // 按照十进制解析
+            // Decimal
             if v, e := strconv.ParseInt(s, 10, 64); e == nil {
                 return v
             }
-            // 按照浮点数解析
+            // Float64
             return int64(Float64(value))
     }
 }
 
+// Uint converts <i> to uint.
 func Uint(i interface{}) uint {
     if i == nil {
         return 0
@@ -249,6 +286,7 @@ func Uint(i interface{}) uint {
     return uint(Uint64(i))
 }
 
+// Uint8 converts <i> to uint8.
 func Uint8(i interface{}) uint8 {
     if i == nil {
         return 0
@@ -259,6 +297,7 @@ func Uint8(i interface{}) uint8 {
     return uint8(Uint64(i))
 }
 
+// Uint16 converts <i> to uint16.
 func Uint16(i interface{}) uint16 {
     if i == nil {
         return 0
@@ -269,6 +308,7 @@ func Uint16(i interface{}) uint16 {
     return uint16(Uint64(i))
 }
 
+// Uint32 converts <i> to uint32.
 func Uint32(i interface{}) uint32 {
     if i == nil {
         return 0
@@ -279,6 +319,7 @@ func Uint32(i interface{}) uint32 {
     return uint32(Uint64(i))
 }
 
+// Uint64 converts <i> to uint64.
 func Uint64(i interface{}) uint64 {
     if i == nil {
         return 0
@@ -303,27 +344,28 @@ func Uint64(i interface{}) uint64 {
             return 0
         default:
             s := String(value)
-            // 按照十六进制解析
+            // Hexadecimal
             if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
                 if v, e := strconv.ParseUint(s[2 : ], 16, 64); e == nil {
                     return v
                 }
             }
-            // 按照八进制解析
+            // Octal
             if len(s) > 1 && s[0] == '0' {
                 if v, e := strconv.ParseUint(s[1 : ], 8, 64); e == nil {
                     return v
                 }
             }
-            // 按照十进制解析
+            // Decimal
             if v, e := strconv.ParseUint(s, 10, 64); e == nil {
                 return v
             }
-            // 按照浮点数解析
+            // Float64
             return uint64(Float64(value))
     }
 }
 
+// Float32 converts <i> to float32.
 func Float32 (i interface{}) float32 {
     if i == nil {
         return 0
@@ -335,6 +377,7 @@ func Float32 (i interface{}) float32 {
     return float32(v)
 }
 
+// Float64 converts <i> to float64.
 func Float64 (i interface{}) float64 {
     if i == nil {
         return 0

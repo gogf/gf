@@ -1,21 +1,21 @@
-package gmap_test
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with gm file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package gtree_test
 
 import (
-	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/container/gtree"
 	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/util/gutil"
 	"testing"
 )
 
-func getValue() interface{} {
-	return 3
-}
-func callBack(k interface{}, v interface{}) bool {
-	return true
-}
-
-func Test_Map_Basic(t *testing.T) {
+func Test_BTree_Basic(t *testing.T) {
 	gtest.Case(t, func() {
-		m := gmap.New()
+		m := gtree.NewBTree(3, gutil.ComparatorString)
 		m.Set("key1", "val1")
 		gtest.Assert(m.Keys(), []interface{}{"key1"})
 
@@ -36,22 +36,16 @@ func Test_Map_Basic(t *testing.T) {
 		gtest.AssertIN("val3", m.Values())
 		gtest.AssertIN("val1", m.Values())
 
-		m.Flip()
-		gtest.Assert(m.Map(), map[interface{}]interface{}{"val3": "key3", "val1": "key1"})
-
 		m.Clear()
 		gtest.Assert(m.Size(), 0)
 		gtest.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m2 := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
 		gtest.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
-		m3 := gmap.NewFromArray([]interface{}{1, "key1"}, []interface{}{1, "val1"})
-		gtest.Assert(m3.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
-
 	})
 }
-func Test_Map_Set_Fun(t *testing.T) {
-	m := gmap.New()
+func Test_BTree_Set_Fun(t *testing.T) {
+	m := gtree.NewBTree(3, gutil.ComparatorString)
 	m.GetOrSetFunc("fun", getValue)
 	m.GetOrSetFuncLock("funlock", getValue)
 	gtest.Assert(m.Get("funlock"), 3)
@@ -61,17 +55,17 @@ func Test_Map_Set_Fun(t *testing.T) {
 	gtest.Assert(m.SetIfNotExistFuncLock("funlock", getValue), false)
 }
 
-func Test_Map_Batch(t *testing.T) {
-	m := gmap.New()
-	m.BatchSet(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+func Test_BTree_Batch(t *testing.T) {
+	m := gtree.NewBTree(3, gutil.ComparatorString)
+	m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-	m.BatchRemove([]interface{}{"key1", 1})
+	m.Removes([]interface{}{"key1", 1})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 }
-func Test_Map_Iterator(t *testing.T){
-	expect :=map[interface{}]interface{}{1: 1, "key1": "val1"}
+func Test_BTree_Iterator(t *testing.T){
+	expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 
-	m := gmap.NewFrom(expect)
+	m := gtree.NewBTreeFrom(3, gutil.ComparatorString, expect)
 	m.Iterator(func(k interface{}, v interface{}) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -91,21 +85,9 @@ func Test_Map_Iterator(t *testing.T){
 	gtest.Assert(j, 1)
 }
 
-func Test_Map_Lock(t *testing.T){
-	expect :=map[interface{}]interface{}{1: 1, "key1": "val1"}
-
-	m := gmap.NewFrom(expect)
-	m.LockFunc(func(m map[interface{}]interface{}) {
-		gtest.Assert(m, expect)
-	})
-	m.RLockFunc(func(m map[interface{}]interface{}) {
-		gtest.Assert(m, expect)
-	})
-}
-
-func Test_Map_Clone(t *testing.T) {
+func Test_BTree_Clone(t *testing.T) {
 	//clone 方法是深克隆
-	m := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
+	m := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
 	m_clone := m.Clone()
 	m.Remove(1)
 	//修改原 map,clone 后的 map 不影响
@@ -114,12 +96,4 @@ func Test_Map_Clone(t *testing.T) {
 	m_clone.Remove("key1")
 	//修改clone map,原 map 不影响
 	gtest.AssertIN("key1", m.Keys())
-}
-func Test_Map_Basic_Merge(t *testing.T) {
-	m1 := gmap.New()
-	m2 := gmap.New()
-	m1.Set("key1", "val1")
-	m2.Set("key2", "val2")
-	m1.Merge(m2)
-	gtest.Assert(m1.Map(), map[interface{}]interface{}{"key1": "val1", "key2": "val2"})
 }

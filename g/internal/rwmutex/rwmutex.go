@@ -8,7 +8,6 @@ package rwmutex
 
 import "sync"
 
-// RWMutex的封装，支持对并发安全开启/关闭的控制。
 type RWMutex struct {
     sync.RWMutex
     safe bool
@@ -28,26 +27,26 @@ func (mu *RWMutex) IsSafe() bool {
     return mu.safe
 }
 
-func (mu *RWMutex) Lock(force...bool) {
-    if mu.safe || (len(force) > 0 && force[0]) {
+func (mu *RWMutex) Lock() {
+    if mu.safe {
         mu.RWMutex.Lock()
     }
 }
 
-func (mu *RWMutex) Unlock(force...bool) {
-    if mu.safe || (len(force) > 0 && force[0]) {
+func (mu *RWMutex) Unlock() {
+    if mu.safe {
         mu.RWMutex.Unlock()
     }
 }
 
-func (mu *RWMutex) RLock(force...bool) {
-    if mu.safe || (len(force) > 0 && force[0]) {
+func (mu *RWMutex) RLock() {
+    if mu.safe {
         mu.RWMutex.RLock()
     }
 }
 
-func (mu *RWMutex) RUnlock(force...bool) {
-    if mu.safe || (len(force) > 0 && force[0]) {
+func (mu *RWMutex) RUnlock() {
+    if mu.safe {
         mu.RWMutex.RUnlock()
     }
 }

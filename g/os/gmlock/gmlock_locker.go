@@ -14,13 +14,13 @@ import (
 
 // 内存锁管理对象
 type Locker struct {
-    m *gmap.StringInterfaceMap
+    m *gmap.StrAnyMap
 }
 
 // 创建一把内存锁, 底层使用的是Mutex
 func New() *Locker {
     return &Locker{
-        m : gmap.NewStringInterfaceMap(),
+        m : gmap.NewStrAnyMap(),
     }
 }
 

@@ -32,120 +32,93 @@ func (r *Request) AddPost(key string, value string) {
 }
 
 // 获得post参数
-func (r *Request) GetPost(key string, def...[]string) []string {
+func (r *Request) GetPost(key string, def...interface{}) []string {
     r.initPost()
     if v, ok := r.PostForm[key]; ok {
         return v
     }
     if len(def) > 0 {
-        return def[0]
+        return gconv.Strings(def[0])
     }
     return nil
 }
 
-func (r *Request) GetPostString(key string, def ... string) string {
-    value := r.GetPost(key)
+func (r *Request) GetPostString(key string, def...interface{}) string {
+    value := r.GetPost(key, def...)
     if value != nil && value[0] != "" {
         return value[0]
-    }
-    if len(def) > 0 {
-        return def[0]
     }
     return ""
 }
 
-func (r *Request) GetPostBool(key string, def ... bool) bool {
-    value := r.GetPostString(key)
+func (r *Request) GetPostBool(key string, def...interface{}) bool {
+    value := r.GetPostString(key, def...)
     if value != "" {
         return gconv.Bool(value)
-    }
-    if len(def) > 0 {
-        return def[0]
     }
     return false
 }
 
-func (r *Request) GetPostInt(key string, def ... int) int {
-    value := r.GetPostString(key)
+func (r *Request) GetPostInt(key string, def...interface{}) int {
+    value := r.GetPostString(key, def...)
     if value != "" {
         return gconv.Int(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return 0
 }
 
-func (r *Request) GetPostInts(key string, def ... []int) []int {
-    value := r.GetPost(key)
+func (r *Request) GetPostInts(key string, def...interface{}) []int {
+    value := r.GetPost(key, def...)
     if value != nil {
         return gconv.Ints(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return nil
 }
 
-func (r *Request) GetPostUint(key string, def ... uint) uint {
-    value := r.GetPostString(key)
+func (r *Request) GetPostUint(key string, def...interface{}) uint {
+    value := r.GetPostString(key, def...)
     if value != "" {
         return gconv.Uint(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return 0
 }
 
-func (r *Request) GetPostFloat32(key string, def ... float32) float32 {
-    value := r.GetPostString(key)
+func (r *Request) GetPostFloat32(key string, def...interface{}) float32 {
+    value := r.GetPostString(key, def...)
     if value != "" {
         return gconv.Float32(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return 0
 }
 
-func (r *Request) GetPostFloat64(key string, def ... float64) float64 {
-    value := r.GetPostString(key)
+func (r *Request) GetPostFloat64(key string, def...interface{}) float64 {
+    value := r.GetPostString(key, def...)
     if value != "" {
         return gconv.Float64(value)
     }
-    if len(def) > 0 {
-        return def[0]
-    }
     return 0
 }
 
-func (r *Request) GetPostFloats(key string, def ... []float64) []float64 {
-    value := r.GetPost(key)
+func (r *Request) GetPostFloats(key string, def...interface{}) []float64 {
+    value := r.GetPost(key, def...)
     if value != nil {
         return gconv.Floats(value)
-    }
-    if len(def) > 0 {
-        return def[0]
     }
     return nil
 }
 
-func (r *Request) GetPostArray(key string, def ... []string) []string {
+func (r *Request) GetPostArray(key string, def...interface{}) []string {
     return r.GetPost(key, def...)
 }
 
-func (r *Request) GetPostStrings(key string, def ... []string) []string {
+func (r *Request) GetPostStrings(key string, def...interface{}) []string {
     return r.GetPost(key, def...)
 }
 
-func (r *Request) GetPostInterfaces(key string, def ... []interface{}) []interface{} {
-    value := r.GetPost(key)
+func (r *Request) GetPostInterfaces(key string, def...interface{}) []interface{} {
+    value := r.GetPost(key, def...)
     if value != nil {
         return gconv.Interfaces(value)
-    }
-    if len(def) > 0 {
-        return def[0]
     }
     return nil
 }
