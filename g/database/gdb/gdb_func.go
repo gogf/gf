@@ -17,6 +17,7 @@ import (
     "github.com/gogf/gf/g/util/gconv"
     "reflect"
     "strings"
+	"time"
 )
 
 // 格式化SQL查询条件
@@ -136,6 +137,10 @@ func convertParam(value interface{}) interface{} {
     }
     switch kind {
         case reflect.Struct:
+        	// 底层数据库引擎支持time.Time类型
+        	if t, ok := value.(time.Time); ok {
+        		return t
+	        }
             return gconv.String(value)
     }
     return value
