@@ -1,40 +1,35 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"time"
+	"os"
+	"sync"
 )
 
 func main() {
-	//b, e := gjson.MarshalOrdered(g.Map{
-	//	"a" : 1,
-	//	"b" : 2,
-	//	"c" : 3,
-	//})
-	//fmt.Println(e)
-	//fmt.Println(string(b))
-
-	//m := map[string]interface{}{
-	//	"facet_is_special_price":[]string{"1"},
-	//	"score_outlet":"0",
-	//	"skus":[]string{"DI139BE71WDWDFMX", "DI139BE71WDWDFMX-519406"},
-	//	"facet_novelty_two_days":[]string{"0"},
-	//	"facet_brand":[]string{"139"},
-	//	"sku":[]string{"DI139BE71WDWDFMX"},
-	//}
-
-	for {
-		m := make(map[string]interface{})
-		m["facet_is_special_price"] = []string{"1"}
-		m["score_outlet"]           = "0"
-		m["skus"]                   = []string{"DI139BE71WDWDFMX", "DI139BE71WDWDFMX-519406"}
-		m["facet_novelty_two_days"] = []string{"0"}
-		m["facet_brand"]            = []string{"139"}
-		m["sku"]                    = []string{"DI139BE71WDWDFMX"}
-		b, _ := json.Marshal(m)
-		fmt.Println(string(b))
-		time.Sleep(100*time.Millisecond)
+	path := "/Users/john/Temp/test.log"
+	os.Remove(path)
+	array := make([]*os.File, 1000)
+	for i := 0; i < len(array); i++ {
+		array[i], _ = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	}
-
+	c := make(chan struct{})
+	// 62 byte * 10 = 6200 byte
+	s := ""
+	for i := 0; i < 100; i++ {
+		s += "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	}
+	s += "\n"
+	wg := sync.WaitGroup{}
+	wg.Add(1000*len(array))
+	for i := 0; i < 1000; i++ {
+		go func() {
+			<- c
+			for i := 0; i < len(array); i++ {
+				array[i].WriteString(s)
+				wg.Done()
+			}
+		}()
+	}
+	close(c)
+	wg.Wait()
 }
