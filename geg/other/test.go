@@ -1,35 +1,24 @@
 package main
 
 import (
-	"os"
-	"sync"
+	"fmt"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 func main() {
-	path := "/Users/john/Temp/test.log"
-	os.Remove(path)
-	array := make([]*os.File, 1000)
-	for i := 0; i < len(array); i++ {
-		array[i], _ = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	type Person struct{
+		Name string
 	}
-	c := make(chan struct{})
-	// 62 byte * 10 = 6200 byte
-	s := ""
-	for i := 0; i < 100; i++ {
-		s += "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	type Staff struct{
+		Person
+		StaffId int
 	}
-	s += "\n"
-	wg := sync.WaitGroup{}
-	wg.Add(1000*len(array))
-	for i := 0; i < 1000; i++ {
-		go func() {
-			<- c
-			for i := 0; i < len(array); i++ {
-				array[i].WriteString(s)
-				wg.Done()
-			}
-		}()
+	staff  := &Staff{}
+	params := g.Map{
+		"Name"    : "john",
+		"StaffId" : "10000",
 	}
-	close(c)
-	wg.Wait()
+	gconv.Struct(params, staff)
+	fmt.Println(staff)
 }

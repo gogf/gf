@@ -7,10 +7,10 @@
 package gconv_test
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/test/gtest"
-    "github.com/gogf/gf/g/util/gconv"
-    "testing"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/util/gconv"
+	"testing"
 )
 
 
@@ -113,7 +113,6 @@ func Test_Map_StructWithJsonTag(t *testing.T) {
     })
 }
 
-// 私有属性不会进行转换
 func Test_Map_PrivateAttribute(t *testing.T) {
     type User struct {
         Id   int
@@ -124,3 +123,23 @@ func Test_Map_PrivateAttribute(t *testing.T) {
         gtest.Assert(gconv.Map(user), g.Map{"Id" : 1})
     })
 }
+//
+//func Test_Map_StructInherit(t *testing.T) {
+//	type Base struct {
+//		Id   int
+//	}
+//	type User struct {
+//		Base
+//		Name string
+//	}
+//	gtest.Case(t, func() {
+//		user := &User{
+//			Base : Base {
+//				Id : 100,
+//			},
+//			Name : "john",
+//		}
+//		fmt.Println(gconv.Map(user))
+//		//gtest.Assert(gconv.Map(user), g.Map{"Id" : 1})
+//	})
+//}

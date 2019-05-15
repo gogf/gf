@@ -137,9 +137,9 @@ func convertParam(value interface{}) interface{} {
     }
     switch kind {
         case reflect.Struct:
-        	// 底层数据库引擎支持time.Time类型
-        	if t, ok := value.(time.Time); ok {
-        		return t
+        	// 底层数据库引擎支持 time.Time 类型
+        	if _, ok := value.(time.Time); ok {
+        		return value
 	        }
             return gconv.String(value)
     }
