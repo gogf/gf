@@ -9,20 +9,19 @@
 package glog
 
 import (
-    "errors"
-    "fmt"
-    "github.com/gogf/gf/g/container/gtype"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/os/gfpool"
-    "github.com/gogf/gf/g/os/gmlock"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/text/gregex"
-    "io"
-    "os"
-    "runtime"
-    "strings"
-    "sync"
-    "time"
+	"errors"
+	"fmt"
+	"github.com/gogf/gf/g/container/gtype"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/os/gfpool"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/text/gregex"
+	"io"
+	"os"
+	"runtime"
+	"strings"
+	"sync"
+	"time"
 )
 
 type Logger struct {
@@ -216,11 +215,7 @@ func (l *Logger) print(std io.Writer, s string) {
     if _, ok := writer.(*Writer); ok {
         if f := l.getFilePointer(); f != nil {
             defer f.Close()
-            key := l.path.Val()
-            gmlock.Lock(key)
-            _, err := io.WriteString(f, s)
-            gmlock.Unlock(key)
-            if err != nil {
+            if _, err := io.WriteString(f, s); err != nil {
                 fmt.Fprintln(os.Stderr, err.Error())
             }
         }
