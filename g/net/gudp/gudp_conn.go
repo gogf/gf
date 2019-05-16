@@ -24,7 +24,7 @@ type Conn struct {
 
 const (
     gDEFAULT_RETRY_INTERVAL   = 100   // (毫秒)默认重试时间间隔
-    gDEFAULT_READ_BUFFER_SIZE = 1024  // 默认数据读取缓冲区大小
+    gDEFAULT_READ_BUFFER_SIZE = 64    // (KB)默认数据读取缓冲区大小
     gRECV_ALL_WAIT_TIMEOUT    = time.Millisecond // 读取全部缓冲数据时，没有缓冲数据时的等待间隔
 )
 
@@ -88,7 +88,8 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
     }
 }
 
-// 接收数据
+// 接收数据.
+// 注意：UDP协议存在消息边界，因此使用 length<=0 可以获取缓冲区所有消息包数据，即一个完整包。
 func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
     var err        error        // 读取错误
     var size       int          // 读取长度
