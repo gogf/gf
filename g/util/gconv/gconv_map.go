@@ -13,6 +13,9 @@ import (
     "strings"
 )
 
+const (
+	gGCONV_TAG = "gconv"
+)
 // Map converts any variable <i> to map[string]interface{}.
 // If the parameter <i> is not a map type, then the conversion will fail and returns nil.
 // If <i> is a struct object, the second parameter <tags> specifies the most priority
@@ -102,8 +105,7 @@ func Map(value interface{}, tags...string) map[string]interface{} {
                     case reflect.Struct:
                         rt       := rv.Type()
                         name     := ""
-                        gconvTag := "gconv"
-                        tagArray := []string{gconvTag, "json"}
+                        tagArray := []string{gGCONV_TAG, "json"}
 	                    switch len(tags) {
 		                    case 0:
 		                    	// No need handle.
@@ -112,8 +114,8 @@ func Map(value interface{}, tags...string) map[string]interface{} {
 		                    default:
 			                    tagArray = tags
 	                    }
-                        if gstr.SearchArray(tagArray, gconvTag) < 0 {
-	                        tagArray = append(tagArray, gconvTag)
+                        if gstr.SearchArray(tagArray, gGCONV_TAG) < 0 {
+	                        tagArray = append(tagArray, gGCONV_TAG)
                         }
                         for i := 0; i < rv.NumField(); i++ {
                             // Only convert the public attributes.
