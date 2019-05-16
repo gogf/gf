@@ -20,6 +20,11 @@ import (
 	"time"
 )
 
+// Type assert api for String().
+type apiString interface {
+	String() string
+}
+
 // 格式化SQL查询条件
 func formatCondition(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
     // 条件字符串处理
@@ -186,4 +191,33 @@ func getInsertOperationByOption(option int) string {
             operator = "INSERT IGNORE"
     }
     return operator
+}
+
+// 将对象转换为map，如果对象带有继承对象，那么执行递归转换。
+// 该方法用于将变量传递给数据库执行之前。
+func structToMap(obj interface{}) map[string]interface{} {
+	data := gconv.Map(obj)
+	for k, v := range data {
+		rv   := reflect.ValueOf(v)
+		kind := rv.Kind()
+		if kind == reflect.Ptr {
+			rv   = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+			case reflect.Struct:
+				// 底层数据库引擎支持 time.Time 类型
+				if _, ok := v.(time.Time); ok {
+					continue
+				}
+				// 如果执行String方法，那么执行字符串转换
+				if s, ok := v.(apiString); ok {
+					data[k] = s.String()
+				}
+				for k, v := range structToMap(v) {
+					data[k] = v
+				}
+		}
+	}
+	return data
 }
