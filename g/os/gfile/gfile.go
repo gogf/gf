@@ -454,6 +454,9 @@ func MainPkgPath() string {
         	if gstr.Contains(file, "/gf/g/") {
         		continue
 	        }
+        	if Ext(file) != ".go" {
+        		continue
+	        }
         	path = file
         	for path != "/" && gstr.Contains(path, "/") {
         		files, _ := ScanDir(path, "*.go")
