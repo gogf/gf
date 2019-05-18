@@ -1,6 +1,6 @@
 # GoFrame 
 <div align=center>
-<img src="https://goframe.org/logo.png" width="150"/>
+<img src="https://goframe.org/logo.png" width="100"/>
 
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf) 
 [![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf) 
@@ -29,7 +29,7 @@ require github.com/gogf/gf latest
 
 # Limitation
 ```
-golang version >= 1.9.2
+golang version >= 1.10
 ```
 
 # Documentation
@@ -68,7 +68,6 @@ func main() {
 
 `GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
-
 # Contributors
 
 - [aloncn](https://github.com/aloncn)
@@ -91,6 +90,8 @@ func main() {
 
 # Donators
 
+We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](https://goframe.org/images/donate.png)?
+
 - [flyke-xu](https://gitee.com/flyke-xu)
 - [hailaz](https://gitee.com/hailaz)
 - [ireadx](https://github.com/ireadx)
@@ -101,6 +102,15 @@ func main() {
 - [zhuhuan12](https://gitee.com/zhuhuan12)
 - [zfan_codes](https://gitee.com/zfan_codes)
 
+
+
+
+
+
+
+# Sponsor
+
+We appreciate any kind of sponsorship for `GF` development. If you've got some interested, please contact john@goframe.org.
 
 
 
