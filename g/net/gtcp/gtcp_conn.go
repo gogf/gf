@@ -87,7 +87,7 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
 // 获取数据，指定读取的数据长度(length < 1表示获取所有可读数据)，以及重试策略(retry)
 // 需要注意：
 // 1、往往在socket通信中需要指定固定的数据结构，并在设定对应的长度字段，并在读取数据时便于区分包大小；
-// 2、当length < 1时表示获取缓冲区所有的数据，但是可能会引起包解析问题(可能出现非完整的包情况)，因此需要解析端注意解析策略；
+// 2、当length < 1时表示获取缓冲区所有的数据，但是可能会引起包解析问题(可能出现断包情况)，因此需要解析端注意解析策略；
 func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
     var err        error  // 读取错误
     var size       int    // 读取长度

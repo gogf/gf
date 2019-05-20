@@ -8,48 +8,62 @@
 package gtcp
 
 import (
-    "errors"
-    "github.com/gogf/gf/g/os/glog"
-    "net"
-    "github.com/gogf/gf/g/container/gmap"
-    "github.com/gogf/gf/g/util/gconv"
+	"crypto/rand"
+	"crypto/tls"
+	"errors"
+	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/util/gconv"
+	"net"
+	"time"
 )
 
 const (
     gDEFAULT_SERVER = "default"
 )
 
-// tcp server结构体
+// TCP Server.
 type Server struct {
     address   string
     handler   func (*Conn)
+	tlsConfig *tls.Config
 }
 
-// Server表，用以存储和检索名称与Server对象之间的关联关系
+// Map for name to server, for singleton purpose.
 var serverMapping = gmap.NewStrAnyMap()
 
-// 获取/创建一个空配置的TCP Server
-// 单例模式，请保证name的唯一性
+// GetServer returns the TCP server with specified <name>,
+// or it returns a new normal TCP server named <name> if it does not exist.
+// The parameter <name> is used to specify the TCP server
 func GetServer(name...interface{}) *Server {
     serverName := gDEFAULT_SERVER
     if len(name) > 0 {
         serverName = gconv.String(name[0])
     }
-    if s := serverMapping.Get(serverName); s != nil {
-        return s.(*Server)
+    return serverMapping.GetOrSetFuncLock(serverName, func() interface{} {
+	    return NewServer("", nil)
+    }).(*Server)
+}
+
+// NewServer creates and returns a new normal TCP server.
+// The param <name> is optional, which is used to specify the instance name of the server.
+func NewServer(address string, handler func (*Conn), name...string) *Server {
+    s := &Server{
+    	address : address,
+    	handler : handler,
     }
-    s := NewServer("", nil)
-    serverMapping.Set(serverName, s)
+    if len(name) > 0 {
+        serverMapping.Set(name[0], s)
+    }
     return s
 }
 
-// 创建一个tcp server对象，并且可以选择指定一个单例名字
-func NewServer(address string, handler func (*Conn), names...string) *Server {
-    s := &Server{address, handler}
-    if len(names) > 0 {
-        serverMapping.Set(names[0], s)
-    }
-    return s
+// NewTlsServer creates and returns a new TCP server with TLS support.
+// The param <name> is optional, which is used to specify the instance name of the server.
+func NewTLSServer(address, crtFile, keyFile string, handler func (*Conn), name...string) *Server {
+	s := NewServer(address, handler, name...)
+	s.SetTLSKeyCrt(crtFile, keyFile)
+	return s
 }
 
 // 设置参数 - address
@@ -62,24 +76,53 @@ func (s *Server) SetHandler (handler func (*Conn)) {
     s.handler = handler
 }
 
-// 执行监听
-func (s *Server) Run() error {
+// SetTlsKeyCrt sets the certificate and key file for TLS configuration of server.
+func (s *Server) SetTLSKeyCrt (crtFile, keyFile string) error {
+	crt, err := tls.LoadX509KeyPair(crtFile,keyFile)
+	if err != nil {
+		return err
+	}
+	s.tlsConfig              = &tls.Config{}
+	s.tlsConfig.Certificates = []tls.Certificate{crt}
+	s.tlsConfig.Time         = time.Now
+	s.tlsConfig.Rand         = rand.Reader
+	return nil
+}
+
+// SetTlsConfig sets the TLS configuration of server.
+func (s *Server) SetTLSConfig(tlsConfig *tls.Config) {
+	s.tlsConfig = tlsConfig
+}
+
+// Run starts running the TCP Server.
+func (s *Server) Run() (err error) {
     if s.handler == nil {
-        err := errors.New("start running failed: socket handler not defined")
+        err = errors.New("start running failed: socket handler not defined")
         glog.Error(err)
-        return err
+        return
     }
-    addr, err := net.ResolveTCPAddr("tcp", s.address)
-    if err != nil {
-        glog.Error(err)
-        return err
+    listen := net.Listener(nil)
+    if s.tlsConfig != nil {
+    	// TLS Server
+	    listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
+	    if err != nil {
+	    	glog.Error(err)
+	    	return
+	    }
+    } else {
+    	// Normal Server
+	    addr, err := net.ResolveTCPAddr("tcp", s.address)
+	    if err != nil {
+		    glog.Error(err)
+		    return err
+	    }
+	    listen, err = net.ListenTCP("tcp", addr)
+	    if err != nil {
+		    glog.Error(err)
+		    return err
+	    }
     }
-    listen, err := net.ListenTCP("tcp", addr)
-    if err != nil {
-        glog.Error(err)
-        return err
-    }
-    for  {
+    for {
         if conn, err := listen.Accept(); err != nil {
             glog.Error(err)
             return err

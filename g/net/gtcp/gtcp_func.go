@@ -12,8 +12,8 @@ import (
 )
 
 const (
-    gDEFAULT_RETRY_INTERVAL   = 100   // (毫秒)默认重试时间间隔
-    gDEFAULT_READ_BUFFER_SIZE = 1024  // 默认数据读取缓冲区大小
+    gDEFAULT_RETRY_INTERVAL   = 100  // (毫秒)默认重试时间间隔
+    gDEFAULT_READ_BUFFER_SIZE = 128  // (byte)默认数据读取缓冲区大小
 )
 
 type Retry struct {
