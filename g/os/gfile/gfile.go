@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gfile provides easy-to-use operations for file system.
-// 
-// 文件管理.
 package gfile
 
 import (
@@ -15,6 +13,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
 	"io"
 	"os"
@@ -452,11 +451,24 @@ func MainPkgPath() string {
     }
     for i := 1; i < 10000; i++ {
         if _, file, _, ok := runtime.Caller(i); ok {
-	        if gregex.IsMatchString(`package\s+main`, GetContents(file)) {
-	        	path = Dir(file)
-		        mainPkgPath.Set(path)
-		        return path
+        	if gstr.Contains(file, "/gf/g/") {
+        		continue
 	        }
+        	if Ext(file) != ".go" {
+        		continue
+	        }
+        	path = file
+        	for path != "/" && gstr.Contains(path, "/") {
+        		files, _ := ScanDir(path, "*.go")
+        		for _, v := range files {
+			        if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
+				        mainPkgPath.Set(path)
+				        return path
+			        }
+		        }
+        		path = Dir(path)
+	        }
+
         } else {
             break
         }
