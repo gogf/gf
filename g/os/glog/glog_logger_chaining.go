@@ -128,3 +128,21 @@ func (l *Logger) Header(enabled bool) *Logger {
     logger.SetHeaderPrint(enabled)
     return logger
 }
+
+// Line is a chaining function,
+// which enables/disables printing its caller file along with its line number.
+// The param <long> specified whether print the long absolute file path, eg: /a/b/c/d.go:23.
+func (l *Logger) Line(long...bool) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	if len(long) > 0 && long[0] {
+		logger.flags |= F_FILE_LONG
+	} else {
+		logger.flags |= F_FILE_SHORT
+	}
+	return logger
+}

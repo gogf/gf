@@ -45,13 +45,11 @@ const (
 )
 
 const (
-	F_NO_HEADER = 1 << iota // No header print.
-	F_NO_STDOUT             // No stdout print.
-	F_FILE_LONG             // Print full file name and line number: /a/b/c/d.go:23.
-	F_FILE_SHORT            // Print final file name element and line number: d.go:23. overrides F_FILE_LONG.
-	F_TIME_DATE             // Print the date in the local time zone: 2009-01-23.
-	F_TIME_TIME             // Print the time in the local time zone: 01:23:23.
-	F_TIME_MILLI            // Print the time with milliseconds in the local time zone: 01:23:23.675.
+	F_FILE_LONG  = 1 << iota // Print full file name and line number: /a/b/c/d.go:23.
+	F_FILE_SHORT             // Print final file name element and line number: d.go:23. overrides F_FILE_LONG.
+	F_TIME_DATE              // Print the date in the local time zone: 2009-01-23.
+	F_TIME_TIME              // Print the time in the local time zone: 01:23:23.
+	F_TIME_MILLI             // Print the time with milliseconds in the local time zone: 01:23:23.675.
 	F_TIME_STD = F_TIME_DATE | F_TIME_MILLI
 )
 
@@ -71,6 +69,7 @@ func init() {
 func New() *Logger {
     logger := &Logger {
         file         : gDEFAULT_FILE_FORMAT,
+        flags        : F_TIME_STD,
         level        : defaultLevel.Val(),
         btStatus     : 1,
         headerPrint  : true,
@@ -124,7 +123,7 @@ func (l *Logger) SetDebug(debug bool) {
     }
 }
 
-// SetFlags sets extra flags for logging output features
+// SetFlags sets extra flags for logging output features.
 func (l *Logger) SetFlags(flags int) {
 	l.flags = flags
 }
@@ -332,6 +331,7 @@ func (l *Logger) GetBacktrace(skip...int) string {
     return backtrace
 }
 
+// format formats the content according the flags.
 func (l *Logger) format(content string) string {
 	buffer := bytes.NewBuffer(nil)
 	timeFormat := ""
@@ -364,7 +364,7 @@ func (l *Logger) format(content string) string {
     return buffer.String()
 }
 
-// getLongFile returns the absolute file path of the caller.
+// getLongFile returns the absolute file path along with its line number of the caller.
 func (l *Logger) getLongFile() string {
 	for i := 0; i < 100; i++ {
 		if _, file, line, ok := runtime.Caller(i); ok {
