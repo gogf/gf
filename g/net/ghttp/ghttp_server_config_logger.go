@@ -28,12 +28,12 @@ func (s *Server)SetLogPath(path string) {
 
 // 设置日志内容是否输出到终端，默认情况下只有错误日志才会自动输出到终端。
 // 如果需要输出请求日志到终端，默认情况下使用SetAccessLogEnabled方法开启请求日志特性即可。
-func (s *Server)SetLogStdPrint(enabled bool) {
+func (s *Server)SetLogStdout(enabled bool) {
     if s.Status() == SERVER_STATUS_RUNNING {
         glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
         return
     }
-    s.config.LogStdPrint = enabled
+    s.config.LogStdout = enabled
 }
 
 // 设置是否开启access log日志功能

@@ -15,7 +15,7 @@ import (
 // which redirects current logging content output to the specified <writer>.
 func (l *Logger) To(writer io.Writer) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -28,7 +28,7 @@ func (l *Logger) To(writer io.Writer) *Logger {
 // which sets the directory path to <path> for current logging content output.
 func (l *Logger) Path(path string) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -44,14 +44,13 @@ func (l *Logger) Path(path string) *Logger {
 // Param <category> can be hierarchical, eg: module/user.
 func (l *Logger) Cat(category string) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
     }
-    path := l.path.Val()
-    if path != "" {
-        logger.SetPath(path + gfile.Separator + category)
+    if logger.path != "" {
+        logger.SetPath(logger.path + gfile.Separator + category)
     }
     return logger
 }
@@ -60,7 +59,7 @@ func (l *Logger) Cat(category string) *Logger {
 // which sets file name <pattern> for the current logging content output.
 func (l *Logger) File(file string) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -73,7 +72,7 @@ func (l *Logger) File(file string) *Logger {
 // which sets logging level for the current logging content output.
 func (l *Logger) Level(level int) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -86,7 +85,7 @@ func (l *Logger) Level(level int) *Logger {
 // which sets backtrace options for the current logging content output .
 func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -98,28 +97,34 @@ func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
     return logger
 }
 
-// StdPrint is a chaining function, 
+// Stdout is a chaining function,
 // which enables/disables stdout for the current logging content output.
+func (l *Logger) Stdout(enabled bool) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	logger.stdoutPrint = enabled
+	return logger
+}
+
+// See Stdout.
+// Deprecated.
 func (l *Logger) StdPrint(enabled bool) *Logger {
-    logger := (*Logger)(nil)
-    if l.pr == nil {
-        logger = l.Clone()
-    } else {
-        logger = l
-    }
-    logger.SetStdPrint(enabled)
-    return logger
+    return l.Stdout(enabled)
 }
 
 // Header is a chaining function, 
 // which enables/disables log header for the current logging content output.
 func (l *Logger) Header(enabled bool) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
     }
-    logger.printHeader.Set(enabled)
+    logger.SetHeaderPrint(enabled)
     return logger
 }
