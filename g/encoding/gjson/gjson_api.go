@@ -64,28 +64,43 @@ func (j *Json) GetMap(pattern string, def...interface{}) map[string]interface{} 
 }
 
 // GetJson gets the value by specified <pattern>,
-// and converts it to a Json object.
+// and converts it to a un-concurrent-safe Json object.
 func (j *Json) GetJson(pattern string, def...interface{}) *Json {
     result := j.Get(pattern, def...)
     if result != nil {
-        return New(result)
+        return New(result, true)
     }
     return nil
 }
 
 // GetJsons gets the value by specified <pattern>,
-// and converts it to a slice of Json object.
+// and converts it to a slice of un-concurrent-safe Json object.
 func (j *Json) GetJsons(pattern string, def...interface{}) []*Json {
     array := j.GetArray(pattern, def...)
     if len(array) > 0 {
-        jsons := make([]*Json, len(array))
+        jsonSlice := make([]*Json, len(array))
         for i := 0; i < len(array); i++ {
-            jsons[i] = New(array[i], !j.mu.IsSafe())
+	        jsonSlice[i] = New(array[i], true)
         }
-        return jsons
+        return jsonSlice
     }
     return nil
 }
+
+// GetJsonMap gets the value by specified <pattern>,
+// and converts it to a map of un-concurrent-safe Json object.
+func (j *Json) GetJsonMap(pattern string, def...interface{}) map[string]*Json {
+	m := j.GetMap(pattern, def...)
+	if len(m) > 0 {
+		jsonMap := make(map[string]*Json, len(m))
+		for k, v := range m {
+			jsonMap[k] = New(v, true)
+		}
+		return jsonMap
+	}
+	return nil
+}
+
 
 // GetArray gets the value by specified <pattern>,
 // and converts it to a slice of []interface{}.

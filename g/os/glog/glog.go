@@ -83,8 +83,19 @@ func SetDebug(debug bool) {
 }
 
 // SetStdPrint sets whether ouptput the logging contents to stdout, which is false in default.
-func SetStdPrint(open bool) {
-    logger.SetStdPrint(open)
+func SetStdoutPrint(enabled bool) {
+    logger.SetStdoutPrint(enabled)
+}
+
+// SetHeaderPrint sets whether output header of the logging contents, which is true in default.
+func SetHeaderPrint(enabled bool) {
+	logger.SetHeaderPrint(enabled)
+}
+
+// SetPrefix sets prefix string for every logging content.
+// Prefix is part of header, which means if header output is shut, no prefix will be output.
+func SetPrefix(prefix string) {
+	logger.SetPrefix(prefix)
 }
 
 // GetPath returns the logging directory path for file logging.
@@ -148,8 +159,8 @@ func Backtrace(enabled bool, skip...int) *Logger {
 
 // StdPrint is a chaining function, 
 // which enables/disables stdout for the current logging content output.
-func StdPrint(enabled bool) *Logger {
-    return logger.StdPrint(enabled)
+func Stdout(enabled bool) *Logger {
+    return logger.Stdout(enabled)
 }
 
 // Header is a chaining function, 

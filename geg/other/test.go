@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/gogf/gf/g"
-	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/util/gconv"
+	"log"
+	"os"
 )
 
 func main() {
-	fmt.Println(gfile.Dir("/"))
+	var mylog = log.New(os.Stdout, "[Api] ", log.LstdFlags|log.Lshortfile)
+	mylog.Println(123)
 	return
 	a := []int{1,2,3}
 	fmt.Println(a[:0])
