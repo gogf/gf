@@ -70,7 +70,7 @@ func New() *Logger {
     logger := &Logger {
         file         : gDEFAULT_FILE_FORMAT,
         flags        : F_TIME_STD,
-        level        : defaultLevel.Val(),
+        level        : LEVEL_ALL,
         btStatus     : 1,
         headerPrint  : true,
         stdoutPrint  : true,
@@ -176,8 +176,11 @@ func (l *Logger) getFilePointer() *gfpool.File {
                 return nil
             }
         }
-        fpath := path + gfile.Separator + file
-        if fp, err := gfpool.Open(fpath, gDEFAULT_FILE_POOL_FLAGS, gDEFAULT_FPOOL_PERM, gDEFAULT_FPOOL_EXPIRE); err == nil {
+        if fp, err := gfpool.Open(
+        	path + gfile.Separator + file,
+        	gDEFAULT_FILE_POOL_FLAGS,
+        	gDEFAULT_FPOOL_PERM,
+        	gDEFAULT_FPOOL_EXPIRE); err == nil {
             return fp
         } else {
             fmt.Fprintln(os.Stderr, err)
@@ -245,7 +248,7 @@ func (l *Logger) print(std io.Writer, s string) {
                 fmt.Fprintln(os.Stderr, err.Error())
             }
         }
-        // Also output to stdout?
+        // Allow output to stdout?
         if l.stdoutPrint {
 	        if _, err := std.Write([]byte(s)); err != nil {
 		        fmt.Fprintln(os.Stderr, err.Error())
@@ -334,6 +337,7 @@ func (l *Logger) GetBacktrace(skip...int) string {
 // format formats the content according the flags.
 func (l *Logger) format(content string) string {
 	buffer := bytes.NewBuffer(nil)
+	// Time.
 	timeFormat := ""
 	if l.flags & F_TIME_DATE > 0 {
 		timeFormat += "2006-01-02 "
@@ -347,6 +351,7 @@ func (l *Logger) format(content string) string {
 	if len(timeFormat) > 0 {
 		buffer.WriteString(time.Now().Format(timeFormat))
 	}
+	// Caller path.
 	callerPath := ""
 	if l.flags & F_FILE_LONG > 0 {
 		callerPath = l.getLongFile() + ": "
@@ -357,9 +362,11 @@ func (l *Logger) format(content string) string {
 	if len(callerPath) > 0 {
 		buffer.WriteString(callerPath)
 	}
+	// Prefix.
 	if len(l.prefix) > 0 {
 		buffer.WriteString(l.prefix + " ")
 	}
+	// Content.
 	buffer.WriteString(content)
     return buffer.String()
 }
@@ -374,169 +381,4 @@ func (l *Logger) getLongFile() string {
 		}
 	}
 	return ""
-}
-
-func (l *Logger) Print(v ...interface{}) {
-    l.printStd(fmt.Sprintln(v...))
-}
-
-func (l *Logger) Printf(format string, v ...interface{}) {
-    l.printStd(fmt.Sprintf(format, v...))
-}
-
-func (l *Logger) Println(v ...interface{}) {
-    l.printStd(fmt.Sprintln(v...))
-}
-
-func (l *Logger) Printfln(format string, v ...interface{}) {
-    l.printStd(fmt.Sprintf(format + ln, v...))
-}
-
-// Fatal prints the logging content with [FATA] header and newline, then exit the current process.
-func (l *Logger) Fatal(v ...interface{}) {
-    l.printErr("[FATA] " + fmt.Sprintln(v...))
-    os.Exit(1)
-}
-
-// Fatalf prints the logging content with [FATA] header and custom format, then exit the current process.
-func (l *Logger) Fatalf(format string, v ...interface{}) {
-    l.printErr("[FATA] " + fmt.Sprintf(format, v...))
-    os.Exit(1)
-}
-
-// Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
-func (l *Logger) Fatalfln(format string, v ...interface{}) {
-    l.printErr("[FATA] " + fmt.Sprintf(format + ln, v...))
-    os.Exit(1)
-}
-
-func (l *Logger) Panic(v ...interface{}) {
-    s := fmt.Sprintln(v...)
-    l.printErr("[PANI] " + s)
-    panic(s)
-}
-
-func (l *Logger) Panicf(format string, v ...interface{}) {
-    s := fmt.Sprintf(format, v...)
-    l.printErr("[PANI] " + s)
-    panic(s)
-}
-
-func (l *Logger) Panicfln(format string, v ...interface{}) {
-    s := fmt.Sprintf(format + ln, v...)
-    l.printErr("[PANI] " + s)
-    panic(s)
-}
-
-func (l *Logger) Info(v ...interface{}) {
-    if l.checkLevel(LEVEL_INFO) {
-        l.printStd("[INFO] " + fmt.Sprintln(v...))
-    }
-}
-
-func (l *Logger) Infof(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_INFO) {
-        l.printStd("[INFO] " + fmt.Sprintf(format, v...))
-    }
-}
-
-func (l *Logger) Infofln(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_INFO) {
-        l.printStd("[INFO] " + fmt.Sprintf(format, v...) + ln)
-    }
-}
-
-func (l *Logger) Debug(v ...interface{}) {
-    if l.checkLevel(LEVEL_DEBU) {
-        l.printStd("[DEBU] " + fmt.Sprintln(v...))
-    }
-}
-
-func (l *Logger) Debugf(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_DEBU) {
-        l.printStd("[DEBU] " + fmt.Sprintf(format, v...))
-    }
-}
-
-func (l *Logger) Debugfln(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_DEBU) {
-        l.printStd("[DEBU] " + fmt.Sprintf(format, v...) + ln)
-    }
-}
-
-func (l *Logger) Notice(v ...interface{}) {
-    if l.checkLevel(LEVEL_NOTI) {
-        l.printErr("[NOTI] " + fmt.Sprintln(v...))
-    }
-}
-
-func (l *Logger) Noticef(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_NOTI) {
-        l.printErr("[NOTI] " + fmt.Sprintf(format, v...))
-    }
-}
-
-func (l *Logger) Noticefln(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_NOTI) {
-        l.printErr("[NOTI] " + fmt.Sprintf(format, v...) + ln)
-    }
-}
-
-func (l *Logger) Warning(v ...interface{}) {
-    if l.checkLevel(LEVEL_WARN) {
-        l.printErr("[WARN] " + fmt.Sprintln(v...))
-    }
-}
-
-func (l *Logger) Warningf(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_WARN) {
-        l.printErr("[WARN] " + fmt.Sprintf(format, v...))
-    }
-}
-
-func (l *Logger) Warningfln(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_WARN) {
-        l.printErr("[WARN] " + fmt.Sprintf(format, v...) + ln)
-    }
-}
-
-func (l *Logger) Error(v ...interface{}) {
-    if l.checkLevel(LEVEL_ERRO) {
-        l.printErr("[ERRO] " + fmt.Sprintln(v...))
-    }
-}
-
-func (l *Logger) Errorf(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_ERRO) {
-        l.printErr("[ERRO] " + fmt.Sprintf(format, v...))
-    }
-}
-
-func (l *Logger) Errorfln(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_ERRO) {
-        l.printErr("[ERRO] " + fmt.Sprintf(format, v...) + ln)
-    }
-}
-
-func (l *Logger) Critical(v ...interface{}) {
-    if l.checkLevel(LEVEL_CRIT) {
-        l.printErr("[CRIT] " + fmt.Sprintln(v...))
-    }
-}
-
-func (l *Logger) Criticalf(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_CRIT) {
-        l.printErr("[CRIT] " + fmt.Sprintf(format, v...))
-    }
-}
-
-func (l *Logger) Criticalfln(format string, v ...interface{}) {
-    if l.checkLevel(LEVEL_CRIT) {
-        l.printErr("[CRIT] " + fmt.Sprintf(format, v...) + ln)
-    }
-}
-
-// checkLevel checks whether the given <level> could be output.
-func (l *Logger) checkLevel(level int) bool {
-    return l.level & level > 0
 }
