@@ -99,33 +99,43 @@ func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
 
 // Stdout is a chaining function,
 // which enables/disables stdout for the current logging content output.
-func (l *Logger) Stdout(enabled bool) *Logger {
+// It's enabled in default.
+func (l *Logger) Stdout(enabled...bool) *Logger {
 	logger := (*Logger)(nil)
 	if l.parent == nil {
 		logger = l.Clone()
 	} else {
 		logger = l
 	}
-	logger.stdoutPrint = enabled
+	if len(enabled) > 0 && enabled[0] {
+		logger.stdoutPrint = true
+	} else {
+		logger.stdoutPrint = false
+	}
 	return logger
 }
 
 // See Stdout.
 // Deprecated.
-func (l *Logger) StdPrint(enabled bool) *Logger {
-    return l.Stdout(enabled)
+func (l *Logger) StdPrint(enabled...bool) *Logger {
+    return l.Stdout(enabled...)
 }
 
 // Header is a chaining function, 
 // which enables/disables log header for the current logging content output.
-func (l *Logger) Header(enabled bool) *Logger {
+// It's enabled in default.
+func (l *Logger) Header(enabled...bool) *Logger {
     logger := (*Logger)(nil)
     if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
     }
-    logger.SetHeaderPrint(enabled)
+    if len(enabled) > 0 && enabled[0] {
+	    logger.SetHeaderPrint(true)
+    } else {
+	    logger.SetHeaderPrint(false)
+    }
     return logger
 }
 
