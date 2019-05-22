@@ -28,7 +28,7 @@ func (l *Logger) Println(v ...interface{}) {
     l.Print(v...)
 }
 
-// Printf prints <v> with newline and format <format> using fmt.Sprintf.
+// Printfln prints <v> with newline and format <format> using fmt.Sprintf.
 // The param <v> can be multiple variables.
 func (l *Logger) Printfln(format string, v ...interface{}) {
     l.printStd(fmt.Sprintf(format + ln, v...))
