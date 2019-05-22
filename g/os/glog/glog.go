@@ -10,9 +10,8 @@
 package glog
 
 import (
-    "github.com/gogf/gf/g/container/gtype"
-    "github.com/gogf/gf/g/internal/cmdenv"
-    "io"
+	"github.com/gogf/gf/g/internal/cmdenv"
+	"io"
 )
 
 const (
@@ -28,9 +27,6 @@ const (
 )
 
 var (
-    // Default level for log
-    defaultLevel = gtype.NewInt(LEVEL_ALL)
-
     // Default logger object, for package method usage
     logger = New()
 )
@@ -44,6 +40,12 @@ func SetPath(path string) {
     logger.SetPath(path)
 }
 
+// GetPath returns the logging directory path for file logging.
+// It returns empty string if no directory path set.
+func GetPath() string {
+	return logger.GetPath()
+}
+
 // SetFile sets the file name <pattern> for file logging.
 // Datetime pattern can be used in <pattern>, eg: access-{Ymd}.log.
 // The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
@@ -54,7 +56,11 @@ func SetFile(pattern string) {
 // SetLevel sets the default logging level.
 func SetLevel(level int) {
     logger.SetLevel(level)
-    defaultLevel.Set(level)
+}
+
+// GetLevel returns the default logging level value.
+func GetLevel() int {
+	return logger.GetLevel()
 }
 
 // SetWriter sets the customized logging <writer> for logging.
@@ -69,11 +75,6 @@ func SetWriter(writer io.Writer) {
 // It returns nil if no customized writer set.
 func GetWriter() io.Writer {
     return logger.GetWriter()
-}
-
-// GetLevel returns the default logging level value.
-func GetLevel() int {
-    return defaultLevel.Val()
 }
 
 // SetDebug enables/disables the debug level for default logger.
@@ -98,10 +99,14 @@ func SetPrefix(prefix string) {
 	logger.SetPrefix(prefix)
 }
 
-// GetPath returns the logging directory path for file logging.
-// It returns empty string if no directory path set.
-func GetPath() string {
-    return logger.GetPath()
+// SetFlags sets extra flags for logging output features.
+func SetFlags(flags int) {
+	logger.SetFlags(flags)
+}
+
+// GetFlags returns the flags of logger.
+func GetFlags() int {
+	return logger.GetFlags()
 }
 
 // PrintBacktrace prints the caller backtrace, 
