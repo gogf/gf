@@ -217,7 +217,7 @@ func (l *Logger) SetFile(pattern string) {
     l.file = pattern
 }
 
-// SetStdPrint sets whether output the logging contents to stdout, which is true in default.
+// SetStdoutPrint sets whether output the logging contents to stdout, which is true in default.
 func (l *Logger) SetStdoutPrint(enabled bool) {
     l.stdoutPrint = enabled
 }
