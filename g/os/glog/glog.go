@@ -83,7 +83,7 @@ func SetDebug(debug bool) {
     logger.SetDebug(debug)
 }
 
-// SetStdPrint sets whether ouptput the logging contents to stdout, which is false in default.
+// SetStdoutPrint sets whether ouptput the logging contents to stdout, which is false in default.
 func SetStdoutPrint(enabled bool) {
     logger.SetStdoutPrint(enabled)
 }
