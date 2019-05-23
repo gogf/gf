@@ -180,6 +180,17 @@ func (c *Client) Post(url string, data...interface{}) (*ClientResponse, error) {
         cookies : make(map[string]string),
     }
     r.Response = resp
+	// 浏览器模式
+	if c.browserMode {
+		now := time.Now()
+		for _, v := range r.Cookies() {
+			if v.Expires.UnixNano() < now.UnixNano() {
+				delete(c.cookies, v.Name)
+			} else {
+				c.cookies[v.Name] = v.Value
+			}
+		}
+	}
     return r, nil
 }
 
@@ -258,7 +269,7 @@ func (c *Client) DoRequestContent(method string, url string, data...interface{})
     return string(response.ReadAll())
 }
 
-// 请求并返回response对象，该方法支持二进制提交数据
+// 请求并返回response对象
 func (c *Client) DoRequest(method, url string, data...interface{}) (*ClientResponse, error) {
     if strings.EqualFold("POST", method) {
         return c.Post(url, data...)
