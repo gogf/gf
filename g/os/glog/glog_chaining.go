@@ -55,14 +55,16 @@ func Backtrace(enabled bool, skip...int) *Logger {
 
 // StdPrint is a chaining function, 
 // which enables/disables stdout for the current logging content output.
-func Stdout(enabled bool) *Logger {
-    return logger.Stdout(enabled)
+// It's enabled in default.
+func Stdout(enabled...bool) *Logger {
+    return logger.Stdout(enabled...)
 }
 
 // Header is a chaining function, 
 // which enables/disables log header for the current logging content output.
-func Header(enabled bool) *Logger {
-    return logger.Header(enabled)
+// It's enabled in default.
+func Header(enabled...bool) *Logger {
+    return logger.Header(enabled...)
 }
 
 // Line is a chaining function,
