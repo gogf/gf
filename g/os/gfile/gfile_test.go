@@ -653,8 +653,8 @@ func TestMkdir(t *testing.T) {
 func TestStat(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			tpath1   string = "/testfile_t1.txt"
-			tpath2   string = "./testfile_t1_no.txt"
+			tpath1 = "/testfile_t1.txt"
+			tpath2 = "./testfile_t1_no.txt"
 			err      error
 			fileiofo os.FileInfo
 		)
@@ -675,12 +675,7 @@ func TestStat(t *testing.T) {
 
 func TestMainPkgPath(t *testing.T) {
 	gtest.Case(t, func() {
-		var (
-			reads string
-		)
-
-		reads = gfile.MainPkgPath()
+		reads := gfile.MainPkgPath()
 		gtest.Assert(reads, "")
-
 	})
 }
