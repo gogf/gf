@@ -75,10 +75,6 @@ func New() *Logger {
         headerPrint  : true,
         stdoutPrint  : true,
     }
-    // Default writer
-    logger.writer = &Writer {
-	    logger : logger,
-    }
     return logger
 }
 
@@ -96,10 +92,6 @@ func (l *Logger) Clone() *Logger {
         headerPrint  : l.headerPrint,
         stdoutPrint  : l.stdoutPrint,
     }
-	// Default writer
-	logger.writer = &Writer {
-		logger : logger,
-	}
 	return logger
 }
 
@@ -156,7 +148,7 @@ func (l *Logger) SetWriter(writer io.Writer) {
 }
 
 // GetWriter returns the customized writer object, which implements the io.Writer interface.
-// It returns a default writer if no customized writer set.
+// It returns nil if no writer previously set.
 func (l *Logger) GetWriter() io.Writer {
     return l.writer
 }
@@ -234,14 +226,12 @@ func (l *Logger) SetPrefix(prefix string) {
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
-// It internally uses memory lock for file logging to ensure logging sequence.
 func (l *Logger) print(std io.Writer, s string) {
-    // Customized writer has the most high priority.
+    // Custom writer has the most high priority.
     if l.headerPrint {
         s = l.format(s)
     }
-    writer := l.GetWriter()
-    if _, ok := writer.(*Writer); ok {
+    if l.writer == nil {
         if f := l.getFilePointer(); f != nil {
             defer f.Close()
             if _, err := io.WriteString(f, s); err != nil {
@@ -255,7 +245,7 @@ func (l *Logger) print(std io.Writer, s string) {
 	        }
         }
     } else {
-	    if _, err := std.Write([]byte(s)); err != nil {
+	    if _, err := l.writer.Write([]byte(s)); err != nil {
 		    fmt.Fprintln(os.Stderr, err.Error())
 	    }
     }
@@ -312,7 +302,7 @@ func (l *Logger) GetBacktrace(skip...int) string {
     for i := 0; i < 100; i++ {
         if _, file, _, ok := runtime.Caller(i); ok {
             if !gregex.IsMatchString("/g/os/glog/glog.+$", file) {
-                from = i + 1
+                from = i
                 break
             }
         }
@@ -340,7 +330,7 @@ func (l *Logger) getLongFile() string {
 	for i := 0; i < 100; i++ {
 		if _, file, line, ok := runtime.Caller(i); ok {
 			if !gregex.IsMatchString("/g/os/glog/glog.+$", file) {
-				from = i + 1
+				from = i
 				break
 				return fmt.Sprintf(`%s:%d`, file, line)
 			}
