@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	glog.Line().Println("123")
-	glog.Line(true).Println("123")
+	glog.Line().Println("this is the short file name with its line number")
+	glog.Line(true).Println("lone file name with line number")
 }
