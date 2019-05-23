@@ -4,11 +4,11 @@ import (
 	"github.com/gogf/gf/g/os/glog"
 )
 
-func print() {
-	glog.Line(true).Println("123")
+func PrintLog(content string) {
+	glog.Skip(1).Line().Println("line number with skip:", content)
+	glog.Line().Println("line number without skip:", content)
 }
 
 func main() {
-	glog.Line().Println("123")
-	glog.Line(true).Println("123")
+	PrintLog("just test")
 }
