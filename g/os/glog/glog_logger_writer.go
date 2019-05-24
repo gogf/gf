@@ -6,13 +6,9 @@
 
 package glog
 
-type Writer struct {
-	logger *Logger
-}
-
 // Write implements the io.Writer interface.
-// It just prints the content with header or level.
-func (w *Writer) Write(p []byte) (n int, err error) {
-	w.logger.Header(false).Print(string(p))
+// It just prints the content using Print.
+func (l *Logger) Write(p []byte) (n int, err error) {
+	l.Header(false).Print(string(p))
 	return len(p), nil
 }

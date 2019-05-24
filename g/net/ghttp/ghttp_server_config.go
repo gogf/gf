@@ -76,7 +76,7 @@ type ServerConfig struct {
     // 日志配置
     LogPath           string                // 存放日志的目录路径(默认为空，表示不写文件)
     LogHandler        LogHandler            // 自定义日志处理回调方法(默认为空)
-    LogStdPrint       bool                  // 是否打印日志到终端(默认开启)
+    LogStdout         bool                  // 是否打印日志到终端(默认开启)
     ErrorLogEnabled   bool                  // 是否开启error log(默认开启)
     AccessLogEnabled  bool                  // 是否开启access log(默认关闭)
 
@@ -111,7 +111,7 @@ var defaultServerConfig = ServerConfig {
     SessionMaxAge     : gDEFAULT_SESSION_MAX_AGE,
     SessionIdName     : gDEFAULT_SESSION_ID_NAME,
 
-    LogStdPrint       : true,
+    LogStdout       : true,
     ErrorLogEnabled   : true,
     AccessLogEnabled  : false,
     GzipContentTypes  : defaultGzipContentTypes,

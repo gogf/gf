@@ -10,9 +10,8 @@
 package glog
 
 import (
-    "github.com/gogf/gf/g/container/gtype"
-    "github.com/gogf/gf/g/internal/cmdenv"
-    "io"
+	"github.com/gogf/gf/g/internal/cmdenv"
+	"io"
 )
 
 const (
@@ -28,9 +27,6 @@ const (
 )
 
 var (
-    // Default level for log
-    defaultLevel = gtype.NewInt(LEVEL_ALL)
-
     // Default logger object, for package method usage
     logger = New()
 )
@@ -44,6 +40,12 @@ func SetPath(path string) {
     logger.SetPath(path)
 }
 
+// GetPath returns the logging directory path for file logging.
+// It returns empty string if no directory path set.
+func GetPath() string {
+	return logger.GetPath()
+}
+
 // SetFile sets the file name <pattern> for file logging.
 // Datetime pattern can be used in <pattern>, eg: access-{Ymd}.log.
 // The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
@@ -54,7 +56,11 @@ func SetFile(pattern string) {
 // SetLevel sets the default logging level.
 func SetLevel(level int) {
     logger.SetLevel(level)
-    defaultLevel.Set(level)
+}
+
+// GetLevel returns the default logging level value.
+func GetLevel() int {
+	return logger.GetLevel()
 }
 
 // SetWriter sets the customized logging <writer> for logging.
@@ -71,26 +77,36 @@ func GetWriter() io.Writer {
     return logger.GetWriter()
 }
 
-// GetLevel returns the default logging level value.
-func GetLevel() int {
-    return defaultLevel.Val()
-}
-
 // SetDebug enables/disables the debug level for default logger.
 // The debug level is enbaled in default.
 func SetDebug(debug bool) {
     logger.SetDebug(debug)
 }
 
-// SetStdPrint sets whether ouptput the logging contents to stdout, which is false in default.
-func SetStdPrint(open bool) {
-    logger.SetStdPrint(open)
+// SetStdoutPrint sets whether ouptput the logging contents to stdout, which is false in default.
+func SetStdoutPrint(enabled bool) {
+    logger.SetStdoutPrint(enabled)
 }
 
-// GetPath returns the logging directory path for file logging.
-// It returns empty string if no directory path set.
-func GetPath() string {
-    return logger.GetPath()
+// SetHeaderPrint sets whether output header of the logging contents, which is true in default.
+func SetHeaderPrint(enabled bool) {
+	logger.SetHeaderPrint(enabled)
+}
+
+// SetPrefix sets prefix string for every logging content.
+// Prefix is part of header, which means if header output is shut, no prefix will be output.
+func SetPrefix(prefix string) {
+	logger.SetPrefix(prefix)
+}
+
+// SetFlags sets extra flags for logging output features.
+func SetFlags(flags int) {
+	logger.SetFlags(flags)
+}
+
+// GetFlags returns the flags of logger.
+func GetFlags() int {
+	return logger.GetFlags()
 }
 
 // PrintBacktrace prints the caller backtrace, 
@@ -108,167 +124,4 @@ func GetBacktrace(skip...int) string {
 // SetBacktrace enables/disables the backtrace feature in failure logging outputs.
 func SetBacktrace(enabled bool) {
     logger.SetBacktrace(enabled)
-}
-
-// To is a chaining function, 
-// which redirects current logging content output to the sepecified <writer>.
-func To(writer io.Writer) *Logger {
-    return logger.To(writer)
-}
-
-// Path is a chaining function,
-// which sets the directory path to <path> for current logging content output.
-func Path(path string) *Logger {
-    return logger.Path(path)
-}
-
-// Cat is a chaining function, 
-// which sets the category to <category> for current logging content output.
-func Cat(category string) *Logger {
-    return logger.Cat(category)
-}
-
-// File is a chaining function, 
-// which sets file name <pattern> for the current logging content output.
-func File(pattern string) *Logger {
-    return logger.File(pattern)
-}
-
-// Level is a chaining function, 
-// which sets logging level for the current logging content output.
-func Level(level int) *Logger {
-    return logger.Level(level)
-}
-
-// Backtrace is a chaining function, 
-// which sets backtrace options for the current logging content output .
-func Backtrace(enabled bool, skip...int) *Logger {
-    return logger.Backtrace(enabled, skip...)
-}
-
-// StdPrint is a chaining function, 
-// which enables/disables stdout for the current logging content output.
-func StdPrint(enabled bool) *Logger {
-    return logger.StdPrint(enabled)
-}
-
-// Header is a chaining function, 
-// which enables/disables log header for the current logging content output.
-func Header(enabled bool) *Logger {
-    return logger.Header(enabled)
-}
-
-func Print(v ...interface{}) {
-    logger.Print(v ...)
-}
-
-func Printf(format string, v ...interface{}) {
-    logger.Printf(format, v ...)
-}
-
-func Println(v ...interface{}) {
-    logger.Println(v ...)
-}
-
-func Printfln(format string, v ...interface{}) {
-    logger.Printfln(format, v ...)
-}
-
-// Fatal prints the logging content with [FATA] header and newline, then exit the current process.
-func Fatal(v ...interface{}) {
-    logger.Fatal(v ...)
-}
-
-// Fatalf prints the logging content with [FATA] header and custom format, then exit the current process.
-func Fatalf(format string, v ...interface{}) {
-    logger.Fatalf(format, v ...)
-}
-
-// Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
-func Fatalfln(format string, v ...interface{}) {
-    logger.Fatalfln(format, v ...)
-}
-
-func Panic(v ...interface{}) {
-    logger.Panic(v ...)
-}
-
-func Panicf(format string, v ...interface{}) {
-    logger.Panicf(format, v ...)
-}
-
-func Panicfln(format string, v ...interface{}) {
-    logger.Panicfln(format, v ...)
-}
-
-func Info(v ...interface{}) {
-    logger.Info(v...)
-}
-
-func Debug(v ...interface{}) {
-    logger.Debug(v...)
-}
-
-func Notice(v ...interface{}) {
-    logger.Notice(v...)
-}
-
-func Warning(v ...interface{}) {
-    logger.Warning(v...)
-}
-
-func Error(v ...interface{}) {
-    logger.Error(v...)
-}
-
-func Critical(v ...interface{}) {
-    logger.Critical(v...)
-}
-
-func Infof(format string, v ...interface{}) {
-    logger.Infof(format, v...)
-}
-
-func Debugf(format string, v ...interface{}) {
-    logger.Debugf(format, v...)
-}
-
-func Noticef(format string, v ...interface{}) {
-    logger.Noticef(format, v...)
-}
-
-func Warningf(format string, v ...interface{}) {
-    logger.Warningf(format, v...)
-}
-
-func Errorf(format string, v ...interface{}) {
-    logger.Errorf(format, v...)
-}
-
-func Criticalf(format string, v ...interface{}) {
-    logger.Criticalf(format, v...)
-}
-
-func Infofln(format string, v ...interface{}) {
-    logger.Infofln(format, v...)
-}
-
-func Debugfln(format string, v ...interface{}) {
-    logger.Debugfln(format, v...)
-}
-
-func Noticefln(format string, v ...interface{}) {
-    logger.Noticefln(format, v...)
-}
-
-func Warningfln(format string, v ...interface{}) {
-    logger.Warningfln(format, v...)
-}
-
-func Errorfln(format string, v ...interface{}) {
-    logger.Errorfln(format, v...)
-}
-
-func Criticalfln(format string, v ...interface{}) {
-    logger.Criticalfln(format, v...)
 }

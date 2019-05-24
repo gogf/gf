@@ -264,3 +264,39 @@ func TestJson_ToJson(t *testing.T) {
 	})
 }
 
+func TestJson_Default(t *testing.T) {
+	gtest.Case(t, func() {
+		j := gjson.New(nil)
+		gtest.AssertEQ(j.Get("no", 100), 100)
+		gtest.AssertEQ(j.GetString("no", 100), "100")
+		gtest.AssertEQ(j.GetBool("no", "on"), true)
+		gtest.AssertEQ(j.GetInt("no", 100), 100)
+		gtest.AssertEQ(j.GetInt8("no", 100), int8(100))
+		gtest.AssertEQ(j.GetInt16("no", 100), int16(100))
+		gtest.AssertEQ(j.GetInt32("no", 100), int32(100))
+		gtest.AssertEQ(j.GetInt64("no", 100), int64(100))
+		gtest.AssertEQ(j.GetUint("no", 100), uint(100))
+		gtest.AssertEQ(j.GetUint8("no", 100), uint8(100))
+		gtest.AssertEQ(j.GetUint16("no", 100), uint16(100))
+		gtest.AssertEQ(j.GetUint32("no", 100), uint32(100))
+		gtest.AssertEQ(j.GetUint64("no", 100), uint64(100))
+		gtest.AssertEQ(j.GetFloat32("no", 123.456), float32(123.456))
+		gtest.AssertEQ(j.GetFloat64("no", 123.456), float64(123.456))
+		gtest.AssertEQ(j.GetArray("no", g.Slice{1,2,3}), g.Slice{1,2,3})
+		gtest.AssertEQ(j.GetInts("no", g.Slice{1,2,3}), g.SliceInt{1,2,3})
+		gtest.AssertEQ(j.GetFloats("no", g.Slice{1,2,3}), []float64{1,2,3})
+		gtest.AssertEQ(j.GetMap("no", g.Map{"k":"v"}), g.Map{"k":"v"})
+		gtest.AssertEQ(j.GetVar("no", 123.456).Float64(), float64(123.456))
+		gtest.AssertEQ(j.GetJson("no", g.Map{"k":"v"}).Get("k"), "v")
+		gtest.AssertEQ(j.GetJsons("no", g.Slice{
+			g.Map{"k1":"v1"},
+			g.Map{"k2":"v2"},
+			g.Map{"k3":"v3"},
+		})[0].Get("k1"), "v1")
+		gtest.AssertEQ(j.GetJsonMap("no", g.Map{
+			"m1" : g.Map{"k1":"v1"},
+			"m2" : g.Map{"k2":"v2"},
+		})["m2"].Get("k2"), "v2")
+	})
+}
+

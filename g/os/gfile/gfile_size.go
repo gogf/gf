@@ -11,7 +11,7 @@ import (
     "os"
 )
 
-// 文件大小(bytes)
+// Size returns the size of file specified by <path> in byte.
 func Size(path string) int64 {
     s, e := os.Stat(path)
     if e != nil {
@@ -20,12 +20,12 @@ func Size(path string) int64 {
     return s.Size()
 }
 
-// 格式化文件大小
+// ReadableSize formats size of file given by <path>, for more human readable.
 func ReadableSize(path string) string {
     return FormatSize(float64(Size(path)))
 }
 
-// 格式化文件大小
+// FormatSize formats size <raw> for more human readable.
 func FormatSize(raw float64) string {
     var t float64 = 1024
     var d float64 = 1
