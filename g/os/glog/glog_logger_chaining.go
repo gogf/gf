@@ -15,7 +15,7 @@ import (
 // which redirects current logging content output to the specified <writer>.
 func (l *Logger) To(writer io.Writer) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -28,7 +28,7 @@ func (l *Logger) To(writer io.Writer) *Logger {
 // which sets the directory path to <path> for current logging content output.
 func (l *Logger) Path(path string) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -44,14 +44,13 @@ func (l *Logger) Path(path string) *Logger {
 // Param <category> can be hierarchical, eg: module/user.
 func (l *Logger) Cat(category string) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
     }
-    path := l.path.Val()
-    if path != "" {
-        logger.SetPath(path + gfile.Separator + category)
+    if logger.path != "" {
+        logger.SetPath(logger.path + gfile.Separator + category)
     }
     return logger
 }
@@ -60,7 +59,7 @@ func (l *Logger) Cat(category string) *Logger {
 // which sets file name <pattern> for the current logging content output.
 func (l *Logger) File(file string) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -73,7 +72,7 @@ func (l *Logger) File(file string) *Logger {
 // which sets logging level for the current logging content output.
 func (l *Logger) Level(level int) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -82,11 +81,25 @@ func (l *Logger) Level(level int) *Logger {
     return logger
 }
 
+// Skip is a chaining function,
+// which sets backtrace skip for the current logging content output.
+// It also affects the caller file path checks when line number printing enabled.
+func (l *Logger) Skip(skip int) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	logger.SetBacktraceSkip(skip)
+	return logger
+}
+
 // Backtrace is a chaining function, 
 // which sets backtrace options for the current logging content output .
 func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
@@ -98,28 +111,63 @@ func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
     return logger
 }
 
-// StdPrint is a chaining function, 
+// Stdout is a chaining function,
 // which enables/disables stdout for the current logging content output.
-func (l *Logger) StdPrint(enabled bool) *Logger {
-    logger := (*Logger)(nil)
-    if l.pr == nil {
-        logger = l.Clone()
-    } else {
-        logger = l
-    }
-    logger.SetStdPrint(enabled)
-    return logger
+// It's enabled in default.
+func (l *Logger) Stdout(enabled...bool) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	if len(enabled) > 0 && enabled[0] {
+		logger.stdoutPrint = true
+	} else {
+		logger.stdoutPrint = false
+	}
+	return logger
+}
+
+// See Stdout.
+// Deprecated.
+func (l *Logger) StdPrint(enabled...bool) *Logger {
+    return l.Stdout(enabled...)
 }
 
 // Header is a chaining function, 
 // which enables/disables log header for the current logging content output.
-func (l *Logger) Header(enabled bool) *Logger {
+// It's enabled in default.
+func (l *Logger) Header(enabled...bool) *Logger {
     logger := (*Logger)(nil)
-    if l.pr == nil {
+    if l.parent == nil {
         logger = l.Clone()
     } else {
         logger = l
     }
-    logger.printHeader.Set(enabled)
+    if len(enabled) > 0 && enabled[0] {
+	    logger.SetHeaderPrint(true)
+    } else {
+	    logger.SetHeaderPrint(false)
+    }
     return logger
+}
+
+// Line is a chaining function,
+// which enables/disables printing its caller file path along with its line number.
+// The param <long> specified whether print the long absolute file path, eg: /a/b/c/d.go:23,
+// or else short one: d.go:23.
+func (l *Logger) Line(long...bool) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	if len(long) > 0 && long[0] {
+		logger.flags |= F_FILE_LONG
+	} else {
+		logger.flags |= F_FILE_SHORT
+	}
+	return logger
 }

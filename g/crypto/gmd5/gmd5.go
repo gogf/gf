@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gmd5 provides useful API for MD5 encryption/decryption algorithms.
+// Package gmd5 provides useful API for MD5 encryption algorithms.
 package gmd5
 
 import (
@@ -15,28 +15,31 @@ import (
     "github.com/gogf/gf/g/util/gconv"
 )
 
-// 将任意类型的变量进行md5摘要(注意map等非排序变量造成的不同结果)
+// Encrypt encrypts any type of variable using MD5 algorithms.
+// It uses gconv package to convert <v> to its bytes type.
 func Encrypt(v interface{}) string {
     h := md5.New()
     h.Write([]byte(gconv.Bytes(v)))
     return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-// 将字符串进行MD5哈希摘要计算
+
+// Deprecated.
 func EncryptString(v string) string {
-    h := md5.New()
-    h.Write([]byte(v))
-    return fmt.Sprintf("%x", h.Sum(nil))
+	h := md5.New()
+	h.Write([]byte(v))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-// 将文件内容进行MD5哈希摘要计算
+
+// EncryptFile encrypts file content of <path> using MD5 algorithms.
 func EncryptFile(path string) string {
     f, e := os.Open(path)
     if e != nil {
         return ""
     }
     defer f.Close()
-    h := md5.New()
+    h   := md5.New()
     _, e = io.Copy(h, f)
     if e != nil {
         return ""

@@ -65,7 +65,6 @@ func Decrypt(cipherText []byte, key []byte, iv...[]byte) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-
     return plainText, nil
 }
 
