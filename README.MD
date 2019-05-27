@@ -107,11 +107,10 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 
 
 
-
+<!--
 # Sponsor
-
 We appreciate any kind of sponsorship for `GF` development. If you've got some interested, please contact john@goframe.org.
-
+-->
 
 
 
