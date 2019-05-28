@@ -133,10 +133,10 @@ func (r *Request) GetRequestMap(def...map[string]string) map[string]string {
 
 // 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetRequestToStruct(pointer interface{}, mapping...map[string]string) error {
-    tagmap := r.getStructParamsTagMap(pointer)
+    tagMap := r.getStructParamsTagMap(pointer)
     if len(mapping) > 0 {
         for k, v := range mapping[0] {
-            tagmap[k] = v
+	        tagMap[k] = v
         }
     }
     params := make(map[string]interface{})
@@ -148,6 +148,6 @@ func (r *Request) GetRequestToStruct(pointer interface{}, mapping...map[string]s
             params = j.ToMap()
         }
     }
-    return gconv.Struct(params, pointer, tagmap)
+    return gconv.Struct(params, pointer, tagMap)
 }
 
