@@ -81,6 +81,20 @@ func (l *Logger) Level(level int) *Logger {
     return logger
 }
 
+// Skip is a chaining function,
+// which sets backtrace skip for the current logging content output.
+// It also affects the caller file path checks when line number printing enabled.
+func (l *Logger) Skip(skip int) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	logger.SetBacktraceSkip(skip)
+	return logger
+}
+
 // Backtrace is a chaining function, 
 // which sets backtrace options for the current logging content output .
 func (l *Logger) Backtrace(enabled bool, skip...int) *Logger {
