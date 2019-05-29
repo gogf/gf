@@ -1,32 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/g"
-	"github.com/gogf/gf/g/util/gconv"
-	"log"
-	"os"
+	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/os/gtime"
 )
 
 func main() {
-	var mylog = log.New(os.Stdout, "[Api] ", log.LstdFlags|log.Lshortfile)
-	mylog.Println(123)
-	return
-	a := []int{1,2,3}
-	fmt.Println(a[:0])
-	return
-	type Person struct{
-		Name string
-	}
-	type Staff struct{
-		Person
-		StaffId int
-	}
-	staff  := &Staff{}
-	params := g.Map{
-		"Name"    : "john",
-		"StaffId" : "10000",
-	}
-	gconv.Struct(params, staff)
-	fmt.Println(staff)
+	Time := gtime.Now().AddDate(0, -1, 0).Format("Y-m")
+	glog.Debug(Time)
+	Time = gtime.Now().AddDate(0, -2, 0).Format("Y-m")
+	glog.Debug(Time)
+	Time = gtime.Now().AddDate(0, -3, 0).Format("Y-m")
+	glog.Debug(Time)
+	Time = gtime.Now().AddDate(0, -4, 0).Format("Y-m")
+	glog.Debug(Time)
 }

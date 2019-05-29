@@ -40,10 +40,8 @@ func Struct(params interface{}, pointer interface{}, mapping...map[string]string
     }
     // Using reflect to do the converting,
     // it also supports type of reflect.Value for <pointer>(always in internal usage).
-    elem := reflect.Value{}
-    if v, ok := pointer.(reflect.Value); ok {
-        elem = v
-    } else {
+	elem, ok := pointer.(reflect.Value)
+    if !ok {
         rv := reflect.ValueOf(pointer)
         if kind := rv.Kind(); kind != reflect.Ptr {
             return fmt.Errorf("object pointer should be type of: %v", kind)
