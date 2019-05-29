@@ -1,17 +1,14 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/os/glog"
-	"github.com/gogf/gf/g/os/gtime"
+	"log"
 )
 
 func main() {
-	Time := gtime.Now().AddDate(0, -1, 0).Format("Y-m")
-	glog.Debug(Time)
-	Time = gtime.Now().AddDate(0, -2, 0).Format("Y-m")
-	glog.Debug(Time)
-	Time = gtime.Now().AddDate(0, -3, 0).Format("Y-m")
-	glog.Debug(Time)
-	Time = gtime.Now().AddDate(0, -4, 0).Format("Y-m")
-	glog.Debug(Time)
+	log.Printf("111")
+	log.Printf("111")
+	log.Print("222")
+	log.Print("222")
+	log.Println("333")
+	log.Println("333")
 }
