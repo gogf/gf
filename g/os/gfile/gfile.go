@@ -417,14 +417,16 @@ func MainPkgPath() string {
     }
     for i := 1; i < 10000; i++ {
         if _, file, _, ok := runtime.Caller(i); ok {
+        	// <file> is separated by '/'
         	if gstr.Contains(file, "/gf/g/") {
         		continue
 	        }
         	if Ext(file) != ".go" {
         		continue
 	        }
-        	path = file
-        	for path != "/" && gstr.Contains(path, "/") {
+        	// separator of <file> '/' will be converted to Separator.
+        	path = Dir(file)
+        	for path != "/" && gstr.Contains(path, Separator) {
         		files, _ := ScanDir(path, "*.go")
         		for _, v := range files {
 			        if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
