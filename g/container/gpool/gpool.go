@@ -43,10 +43,11 @@ type ExpireFunc func(interface{})
 
 // New returns a new object pool.
 // To ensure execution efficiency, the expiration time cannot be modified once it is set.
-// Expire:
+//
+// Expiration logistics:
 // expire = 0 : not expired;
-// expire < 0 : immediate recovery after use;
-// expire > 0 : timeout recovery;
+// expire < 0 : immediate expired after use;
+// expire > 0 : timeout expired;
 // Note that the expiration time unit is ** milliseconds **.
 func New(expire int, newFunc NewFunc, expireFunc...ExpireFunc) *Pool {
     r := &Pool {
@@ -103,14 +104,26 @@ func (p *Pool) Size() int {
     return p.list.Len()
 }
 
-// Close closes the pool.
+// Close closes the pool. If <p> has ExpireFunc,
+// then it automatically closes all items using this function before it's closed.
 func (p *Pool) Close() {
     p.closed.Set(true)
 }
 
-// checkExpire secondly removes expired items from pool.
+// checkExpire removes expired items from pool every second.
 func (p *Pool) checkExpire() {
     if p.closed.Val() {
+    	// If p has ExpireFunc,
+    	// then it must close all items using this function.
+    	if p.ExpireFunc != nil {
+		    for {
+			    if r := p.list.PopFront(); r != nil {
+				    p.ExpireFunc(r.(*poolItem).value)
+			    } else {
+				    break
+			    }
+		    }
+	    }
         gtimer.Exit()
     }
     for {

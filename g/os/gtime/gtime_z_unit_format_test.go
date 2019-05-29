@@ -85,9 +85,24 @@ func Test_Format(t *testing.T) {
 	})
 }
 
+func Test_FormatTo(t *testing.T) {
+	gtest.Case(t, func() {
+		timeTemp := gtime.Now()
+		gtest.Assert(timeTemp.FormatTo("Y-m-01 00:00:01"), timeTemp.Time.Format("2006-01") + "-01 00:00:01")
+	})
+}
+
+
 func Test_Layout(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
 		gtest.Assert(timeTemp.Layout("2006-01-02 15:04:05"), timeTemp.Time.Format("2006-01-02 15:04:05"))
+	})
+}
+
+func Test_LayoutTo(t *testing.T) {
+	gtest.Case(t, func() {
+		timeTemp := gtime.Now()
+		gtest.Assert(timeTemp.LayoutTo("2006-01-02 00:00:00"), timeTemp.Time.Format("2006-01-02 00:00:00"))
 	})
 }

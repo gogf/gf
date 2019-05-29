@@ -75,56 +75,9 @@ var (
 	dayOfMonth = []int{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}
 )
 
-// 将自定义的格式转换为标准库时间格式
-func formatToStdLayout(format string) string {
-	b := bytes.NewBuffer(nil)
-	for i := 0; i < len(format); {
-		switch format[i] {
-		case '\\':
-			if i < len(format)-1 {
-				b.WriteByte(format[i+1])
-				i += 2
-				continue
-			} else {
-				return b.String()
-			}
-
-		default:
-			if f, ok := formats[format[i]]; ok {
-				// 有几个转换的符号需要特殊处理
-				switch format[i] {
-					case 'j': b.WriteString("02")
-					case 'G': b.WriteString("15")
-					case 'u':
-						if i > 0 && format[i-1] == '.' {
-							b.WriteString("000")
-						} else {
-							b.WriteString(".000")
-						}
-
-					default:
-						b.WriteString(f)
-				}
-			} else {
-				b.WriteByte(format[i])
-			}
-			i++
-		}
-	}
-	return b.String()
-}
-
-// 将format格式转换为正则表达式规则
-func formatToRegexPattern(format string) string {
-	s := gregex.Quote(formatToStdLayout(format))
-	s, _ = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
-	s, _ = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
-	return s
-}
-
-// 格式化，使用自定义日期格式
+// 使用自定义日期格式格式化输出日期。
 func (t *Time) Format(format string) string {
-	runes := []rune(format)
+	runes  := []rune(format)
 	buffer := bytes.NewBuffer(nil)
 	for i := 0; i < len(runes); {
 		switch runes[i] {
@@ -165,14 +118,21 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-// 每月天数后面的英文后缀，2 个字符st nd，rd 或者 th
-func formatMonthDaySuffixMap(day string) string {
-	switch day {
-		case "01": return "st"
-	    case "02": return "nd"
-	    case "03": return "rd"
-		default:   return "th"
-	}
+// 通过自定义格式转换当前日期为新的日期。
+func (t *Time) FormatTo(format string) *Time {
+	t.Time = NewFromStr(t.Format(format)).Time
+	return t
+}
+
+// 使用标准库格式格式化输出日期。
+func (t *Time) Layout(layout string) string {
+	return t.Time.Format(layout)
+}
+
+// 通过标准库格式转换当前日期为新的日期。
+func (t *Time) LayoutTo(layout string) *Time {
+	t.Time = NewFromStr(t.Layout(layout)).Time
+	return t
 }
 
 // 返回是否是润年
@@ -221,7 +181,61 @@ func (t *Time) WeeksOfYear() int {
 	return week
 }
 
-// 格式化使用标准库格式
-func (t *Time) Layout(layout string) string {
-	return t.Time.Format(layout)
+// 将自定义的格式转换为标准库时间格式
+func formatToStdLayout(format string) string {
+	b := bytes.NewBuffer(nil)
+	for i := 0; i < len(format); {
+		switch format[i] {
+			case '\\':
+				if i < len(format)-1 {
+					b.WriteByte(format[i+1])
+					i += 2
+					continue
+				} else {
+					return b.String()
+				}
+
+			default:
+				if f, ok := formats[format[i]]; ok {
+					// 有几个转换的符号需要特殊处理
+					switch format[i] {
+					case 'j': b.WriteString("02")
+					case 'G': b.WriteString("15")
+					case 'u':
+						if i > 0 && format[i-1] == '.' {
+							b.WriteString("000")
+						} else {
+							b.WriteString(".000")
+						}
+
+					default:
+						b.WriteString(f)
+					}
+				} else {
+					b.WriteByte(format[i])
+				}
+				i++
+		}
+	}
+	return b.String()
 }
+
+// 将format格式转换为正则表达式规则
+func formatToRegexPattern(format string) string {
+	s   := gregex.Quote(formatToStdLayout(format))
+	s, _ = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
+	s, _ = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
+	return s
+}
+
+// 每月天数后面的英文后缀，2 个字符st nd，rd 或者 th
+func formatMonthDaySuffixMap(day string) string {
+	switch day {
+		case "01": return "st"
+	    case "02": return "nd"
+	    case "03": return "rd"
+		default:   return "th"
+	}
+}
+
+
