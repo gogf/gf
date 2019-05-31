@@ -136,7 +136,7 @@ func LoadContent(data interface{}, unsafe...bool) (*Json, error) {
     // auto check data type
     if json.Valid(b) {
         t = "json"
-    } else if gregex.IsMatch(`^<.+>.*</.+>$`, b) {
+    } else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, b) {
         t = "xml"
     } else if gregex.IsMatch(`^[\s\t]*\w+\s*:\s*.+`, b) || gregex.IsMatch(`\n[\s\t]*\w+\s*:\s*.+`, b) {
         t = "yml"

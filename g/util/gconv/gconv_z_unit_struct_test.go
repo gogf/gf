@@ -8,9 +8,11 @@ package gconv_test
 
 import (
 	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gconv"
 	"testing"
+	"time"
 )
 
 func Test_Struct_Basic1(t *testing.T) {
@@ -348,3 +350,66 @@ func Test_Struct_Deep(t *testing.T) {
 		gtest.Assert(user.CreateTime, "2019")
 	})
 }
+
+func Test_Struct_Time(t *testing.T) {
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime time.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : now,
+		}, user)
+		gtest.Assert(user.CreateTime.UTC().String(), now.UTC().String())
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime *time.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : &now,
+		}, user)
+		gtest.Assert(user.CreateTime.UTC().String(), now.UTC().String())
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime *gtime.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : &now,
+		}, user)
+		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime gtime.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : &now,
+		}, user)
+		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime gtime.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : now,
+		}, user)
+		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+	})
+}
+
