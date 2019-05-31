@@ -142,9 +142,18 @@ func convertParam(value interface{}) interface{} {
     }
     switch kind {
         case reflect.Struct:
-        	// 底层数据库引擎支持 time.Time 类型
-        	if _, ok := value.(time.Time); ok {
+        	// 底层数据库引擎支持 time.Time/*time.Time 类型
+        	if v, ok := value.(time.Time); ok {
+        		if v.IsZero() {
+        			return "null"
+		        }
         		return value
+	        }
+	        if v, ok := value.(*time.Time); ok {
+		        if v.IsZero() {
+			        return ""
+		        }
+		        return value
 	        }
             return gconv.String(value)
     }
@@ -206,8 +215,11 @@ func structToMap(obj interface{}) map[string]interface{} {
 		}
 		switch kind {
 			case reflect.Struct:
-				// 底层数据库引擎支持 time.Time 类型
+				// 底层数据库引擎支持 time.Time/*time.Time 类型
 				if _, ok := value.(time.Time); ok {
+					continue
+				}
+				if _, ok := value.(*time.Time); ok {
 					continue
 				}
 				// 如果执行String方法，那么执行字符串转换
