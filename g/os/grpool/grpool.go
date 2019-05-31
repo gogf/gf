@@ -19,10 +19,10 @@ import (
 
 // goroutine池对象
 type Pool struct {
-    workerChan  chan struct{}      // 使用channel限制最大的goroutine数量
-    workerNum   *gtype.Int         // 当前正在运行的worker/goroutine数量
-    jobQueue    *glist.List        // 待处理任务操作队列
-    jobEvents   chan struct{}      // 任务添加事件(jobQueue+jobEvents结合使用)
+    limit       int                // 最大的goroutine数量限制
+    count       *gtype.Int         // 当前正在运行的goroutine数量
+    list        *glist.List        // 待处理任务操作列表
+    events      chan struct{}      // 任务添加事件
     closed      *gtype.Bool
 }
 
@@ -30,18 +30,18 @@ type Pool struct {
 // 该对象与进程同生命周期，无需Close
 var defaultPool = New()
 
-// 创建goroutine池管理对象， 参数用于限制限制最大的goroutine数量/线程数/worker数量，非必需参数，默认不做限制
+// 创建goroutine池管理对象，参数用于限制限制最大的goroutine数量，非必需参数，默认不做限制
 func New(size...int) *Pool {
-    s := 0
+    limit := -1
     if len(size) > 0 {
-        s = size[0]
+	    limit = size[0]
     }
     p := &Pool {
-        workerNum   : gtype.NewInt(),
-        jobQueue    : glist.New(),
-        jobEvents   : make(chan struct{}, math.MaxInt32),
-        workerChan  : make(chan struct{}, s),
-        closed      : gtype.NewBool(),
+	    limit  : limit,
+        count  : gtype.NewInt(),
+        list   : glist.New(),
+        events : make(chan struct{}, math.MaxInt32),
+        closed : gtype.NewBool(),
     }
     return p
 }
@@ -53,64 +53,56 @@ func Add(f func()) error {
 
 // 查询当前goroutine总数
 func Size() int {
-    return defaultPool.workerNum.Val()
+    return defaultPool.count.Val()
 }
 
 // 查询当前等待处理的任务总数
 func Jobs() int {
-    return len(defaultPool.jobEvents)
+    return len(defaultPool.events)
 }
 
 // 添加异步任务
 func (p *Pool) Add(f func()) error {
-    p.jobQueue.PushBack(f)
-    p.jobEvents <- struct{}{}
+    p.list.PushBack(f)
+    p.events <- struct{}{}
     // 判断是否创建新的worker
-    if p.Jobs() > 1 || p.workerNum.Val() == 0 {
-        p.ForkWorker()
+    if p.list.Len() > 1 || p.count.Val() == 0 {
+        p.fork()
     }
     return nil
 }
 
-// 查询当前goroutine worker总数
+// 查询当前goroutine总数
 func (p *Pool) Size() int {
-    return p.workerNum.Val()
+    return p.count.Val()
 }
 
 // 查询当前等待处理的任务总数
 func (p *Pool) Jobs() int {
-    return p.jobQueue.Len()
+    return p.list.Len()
 }
 
 // 创建新的worker执行任务
-func (p *Pool) ForkWorker() {
-    if cap(p.workerChan) > 0 {
-        // 如果worker数量已经达到限制，那么不创建新worker，直接返回
-        if p.workerNum.Val() == cap(p.workerChan) {
-            return
-        }
-        p.workerNum.Add(1)
-        p.workerChan <- struct{}{}
-    } else {
-        p.workerNum.Add(1)
+func (p *Pool) fork() {
+    // 如果worker数量已经达到限制，那么不创建新worker，直接返回
+    if p.count.Val() == p.limit {
+        return
     }
+	p.count.Add(1)
     go func() {
         for !p.closed.Val() {
             select {
-                case <- p.jobEvents:
-                    if job := p.jobQueue.PopFront(); job != nil {
+                case <- p.events:
+                    if job := p.list.PopFront(); job != nil {
                         job.(func())()
                     } else {
-                        goto WorkerDone
+	                    p.count.Add(-1)
+	                    return
                     }
                 default:
-                    goto WorkerDone
+	                p.count.Add(-1)
+	                return
             }
-        }
-WorkerDone:
-        p.workerNum.Add(-1)
-        if cap(p.workerChan) > 0 {
-            <- p.workerChan
         }
     }()
 }
