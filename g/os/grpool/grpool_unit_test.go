@@ -22,7 +22,7 @@ func Test_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		wg    := sync.WaitGroup{}
 		array := garray.NewArray()
-		size  := 10000
+		size  := 100
 		wg.Add(size)
 		for i := 0; i < size; i++ {
 			grpool.Add(func() {
@@ -39,7 +39,7 @@ func Test_Limit1(t *testing.T) {
 	gtest.Case(t, func() {
 		wg    := sync.WaitGroup{}
 		array := garray.NewArray()
-		size  := 10000
+		size  := 100
 		pool  := grpool.New(10)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
@@ -57,7 +57,7 @@ func Test_Limit2(t *testing.T) {
 	gtest.Case(t, func() {
 		wg    := sync.WaitGroup{}
 		array := garray.NewArray()
-		size  := 10000
+		size  := 100
 		pool  := grpool.New(1)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
@@ -74,8 +74,8 @@ func Test_Limit2(t *testing.T) {
 func Test_Limit3(t *testing.T) {
 	gtest.Case(t, func() {
 		array := garray.NewArray()
-		size  := 100000
-		pool  := grpool.New(10000)
+		size  := 1000
+		pool  := grpool.New(100)
 		for i := 0; i < size; i++ {
 			pool.Add(func() {
 				array.Append(1)
@@ -83,13 +83,13 @@ func Test_Limit3(t *testing.T) {
 			})
 		}
 		time.Sleep(time.Second)
-		gtest.Assert(pool.Size(), 10000)
-		gtest.Assert(pool.Jobs(), 90000)
-		gtest.Assert(array.Len(), 10000)
+		gtest.Assert(pool.Size(), 100)
+		gtest.Assert(pool.Jobs(), 900)
+		gtest.Assert(array.Len(), 100)
 		pool.Close()
 		time.Sleep(2*time.Second)
 		gtest.Assert(pool.Size(), 0)
-		gtest.Assert(pool.Jobs(), 90000)
-		gtest.Assert(array.Len(), 10000)
+		gtest.Assert(pool.Jobs(), 900)
+		gtest.Assert(array.Len(), 100)
 	})
 }
