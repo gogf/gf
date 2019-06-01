@@ -7,10 +7,9 @@
 package gdb_test
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/test/gtest"
-	"os"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/test/gtest"
 	"testing"
 )
 
@@ -29,7 +28,7 @@ func TestModel_Insert(t *testing.T) {
     }
     n, _ := result.LastInsertId()
     gtest.Assert(n, 1)
-os.Exit(1)
+
     result, err = db.Table("user").Filter().Data(map[interface{}]interface{} {
         "id"          : "2",
         "uid"         : "2",
