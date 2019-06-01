@@ -11,6 +11,7 @@ package glog
 
 import (
 	"github.com/gogf/gf/g/internal/cmdenv"
+	"github.com/gogf/gf/g/os/grpool"
 	"io"
 )
 
@@ -29,6 +30,8 @@ const (
 var (
     // Default logger object, for package method usage
     logger = New()
+    // Goroutine pool for async logging output.
+	asyncPool = grpool.New(1)
 )
 
 func init() {
@@ -81,6 +84,11 @@ func GetWriter() io.Writer {
 // The debug level is enbaled in default.
 func SetDebug(debug bool) {
     logger.SetDebug(debug)
+}
+
+// SetAsync enables/disables async logging output feature for default logger.
+func SetAsync(enabled bool) {
+	logger.SetAsync(enabled)
 }
 
 // SetStdoutPrint sets whether ouptput the logging contents to stdout, which is false in default.
