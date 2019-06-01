@@ -43,6 +43,10 @@ func New(data interface{}, unsafe...bool) *Json {
         default:
 	        rv   := reflect.ValueOf(data)
 	        kind := rv.Kind()
+	        if kind == reflect.Ptr {
+		        rv   = rv.Elem()
+		        kind = rv.Kind()
+	        }
 	        switch kind {
 		        case reflect.Slice: fallthrough
 		        case reflect.Array:
@@ -56,7 +60,7 @@ func New(data interface{}, unsafe...bool) *Json {
 		        case reflect.Map: fallthrough
 		        case reflect.Struct:
 			        i := interface{}(nil)
-			        i  = gconv.Map(data)
+			        i  = gconv.Map(data, "json")
 			        j  = &Json {
 				        p  : &i,
 				        c  : byte(gDEFAULT_SPLIT_CHAR),
