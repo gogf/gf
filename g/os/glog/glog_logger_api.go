@@ -14,13 +14,13 @@ import (
 // Print prints <v> with newline using fmt.Sprintln.
 // The param <v> can be multiple variables.
 func (l *Logger) Print(v...interface{}) {
-    l.printStd("", "", v...)
+    l.printStd("", v...)
 }
 
 // Printf prints <v> with format <format> using fmt.Sprintf.
 // The param <v> can be multiple variables.
 func (l *Logger) Printf(format string, v...interface{}) {
-    l.printStd("", format, v...)
+    l.printStd(l.format(format, v...))
 }
 
 // See Print.
@@ -31,18 +31,18 @@ func (l *Logger) Println(v...interface{}) {
 // Deprecated.
 // Use Printf instead.
 func (l *Logger) Printfln(format string, v...interface{}) {
-    l.printStd("", format, v...)
+    l.printStd(l.format(format, v...))
 }
 
 // Fatal prints the logging content with [FATA] header and newline, then exit the current process.
 func (l *Logger) Fatal(v...interface{}) {
-    l.printErr("[FATA]", "", v...)
+    l.printErr("[FATA]", v...)
     os.Exit(1)
 }
 
 // Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
 func (l *Logger) Fatalf(format string, v...interface{}) {
-    l.printErr("[FATA]", format, v...)
+    l.printErr("[FATA]", l.format(format, v...))
     os.Exit(1)
 }
 
@@ -55,14 +55,14 @@ func (l *Logger) Fatalfln(format string, v...interface{}) {
 
 // Panic prints the logging content with [PANI] header and newline, then panics.
 func (l *Logger) Panic(v...interface{}) {
-    l.printErr("[PANI]", "", v...)
+    l.printErr("[PANI]", v...)
     panic(fmt.Sprint(v...))
 }
 
 // Panicf prints the logging content with [PANI] header, custom format and newline, then panics.
 func (l *Logger) Panicf(format string, v...interface{}) {
-    l.printErr("[PANI]", format, v...)
-    panic(fmt.Sprintf(format, v...))
+    l.printErr("[PANI]", l.format(format, v...))
+    panic(l.format(format, v...))
 }
 
 // Deprecated.
@@ -74,14 +74,14 @@ func (l *Logger) Panicfln(format string, v...interface{}) {
 // Info prints the logging content with [INFO] header and newline.
 func (l *Logger) Info(v...interface{}) {
     if l.checkLevel(LEVEL_INFO) {
-        l.printStd("[INFO]", "", v...)
+        l.printStd("[INFO]", v...)
     }
 }
 
 // Infof prints the logging content with [INFO] header, custom format and newline.
 func (l *Logger) Infof(format string, v...interface{}) {
     if l.checkLevel(LEVEL_INFO) {
-        l.printStd("[INFO]", format, v...)
+        l.printStd("[INFO]", l.format(format, v...))
     }
 }
 
@@ -96,14 +96,14 @@ func (l *Logger) Infofln(format string, v...interface{}) {
 // Debug prints the logging content with [DEBU] header and newline.
 func (l *Logger) Debug(v...interface{}) {
     if l.checkLevel(LEVEL_DEBU) {
-        l.printStd("[DEBU]", "", v...)
+        l.printStd("[DEBU]", v...)
     }
 }
 
 // Debugf prints the logging content with [DEBU] header, custom format and newline.
 func (l *Logger) Debugf(format string, v...interface{}) {
     if l.checkLevel(LEVEL_DEBU) {
-        l.printStd("[DEBU]", format, v...)
+        l.printStd("[DEBU]", l.format(format, v...))
     }
 }
 
@@ -119,7 +119,7 @@ func (l *Logger) Debugfln(format string, v...interface{}) {
 // It also prints caller backtrace info if backtrace feature is enabled.
 func (l *Logger) Notice(v...interface{}) {
     if l.checkLevel(LEVEL_NOTI) {
-        l.printErr("[NOTI]", "", v...)
+        l.printErr("[NOTI]", v...)
     }
 }
 
@@ -127,7 +127,7 @@ func (l *Logger) Notice(v...interface{}) {
 // It also prints caller backtrace info if backtrace feature is enabled.
 func (l *Logger) Noticef(format string, v...interface{}) {
     if l.checkLevel(LEVEL_NOTI) {
-        l.printErr("[NOTI]", format, v...)
+        l.printErr("[NOTI]", l.format(format, v...))
     }
 }
 
@@ -143,7 +143,7 @@ func (l *Logger) Noticefln(format string, v...interface{}) {
 // It also prints caller backtrace info if backtrace feature is enabled.
 func (l *Logger) Warning(v...interface{}) {
     if l.checkLevel(LEVEL_WARN) {
-        l.printErr("[WARN]", "", v...)
+        l.printErr("[WARN]", v...)
     }
 }
 
@@ -151,7 +151,7 @@ func (l *Logger) Warning(v...interface{}) {
 // It also prints caller backtrace info if backtrace feature is enabled.
 func (l *Logger) Warningf(format string, v...interface{}) {
     if l.checkLevel(LEVEL_WARN) {
-        l.printErr("[WARN]", format, v...)
+        l.printErr("[WARN]", l.format(format, v...))
     }
 }
 
@@ -167,7 +167,7 @@ func (l *Logger) Warningfln(format string, v...interface{}) {
 // It also prints caller backtrace info if backtrace feature is enabled.
 func (l *Logger) Error(v...interface{}) {
     if l.checkLevel(LEVEL_ERRO) {
-        l.printErr("[ERRO]", "", v...)
+        l.printErr("[ERRO]", v...)
     }
 }
 
@@ -175,7 +175,7 @@ func (l *Logger) Error(v...interface{}) {
 // It also prints caller backtrace info if backtrace feature is enabled.
 func (l *Logger) Errorf(format string, v...interface{}) {
     if l.checkLevel(LEVEL_ERRO) {
-        l.printErr("[ERRO]", format, v...)
+        l.printErr("[ERRO]", l.format(format, v...))
     }
 }
 
@@ -191,7 +191,7 @@ func (l *Logger) Errorfln(format string, v...interface{}) {
 // It also prints caller backtrace info if backtrace feature is enabled.
 func (l *Logger) Critical(v...interface{}) {
     if l.checkLevel(LEVEL_CRIT) {
-        l.printErr("[CRIT]", "", v...)
+        l.printErr("[CRIT]", v...)
     }
 }
 
@@ -199,7 +199,7 @@ func (l *Logger) Critical(v...interface{}) {
 // It also prints caller backtrace info if backtrace feature is enabled.
 func (l *Logger) Criticalf(format string, v...interface{}) {
     if l.checkLevel(LEVEL_CRIT) {
-        l.printErr("[CRIT]", format, v...)
+        l.printErr("[CRIT]", l.format(format, v...))
     }
 }
 
