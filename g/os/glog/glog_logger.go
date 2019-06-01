@@ -226,7 +226,7 @@ func (l *Logger) SetPrefix(prefix string) {
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
-func (l *Logger) print(std io.Writer, level string, format string, value...interface{}) {
+func (l *Logger) print(std io.Writer, lead string, value...interface{}) {
 	buffer := bytes.NewBuffer(nil)
     if l.headerPrint {
 	    // Time.
@@ -259,18 +259,17 @@ func (l *Logger) print(std io.Writer, level string, format string, value...inter
 		    buffer.WriteString(l.prefix + " ")
 	    }
     }
-	if len(level) > 0 {
-		buffer.WriteString(level + " ")
-	}
-	if len(format) > 0 {
-		buffer.WriteString(fmt.Sprintf(format, value...))
-	} else {
-		for k, v := range value {
-			if k > 0 {
-				buffer.WriteByte(' ')
-			}
-			buffer.WriteString(gconv.String(v))
+	if len(lead) > 0 {
+		buffer.WriteString(lead)
+		if len(value) > 0 {
+			buffer.WriteByte(' ')
 		}
+	}
+	for k, v := range value {
+		if k > 0 {
+			buffer.WriteByte(' ')
+		}
+		buffer.WriteString(gconv.String(v))
 	}
 	buffer.WriteString(ln)
 	if l.flags & F_ASYNC > 0 {
@@ -305,19 +304,24 @@ func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
 }
 
 // printStd prints content <s> without backtrace.
-func (l *Logger) printStd(level string, format string, value...interface{}) {
-    l.print(os.Stdout, level, format, value...)
+func (l *Logger) printStd(lead string, value...interface{}) {
+    l.print(os.Stdout, lead, value...)
 }
 
 // printStd prints content <s> with backtrace check.
-func (l *Logger) printErr(level string, format string, value...interface{}) {
+func (l *Logger) printErr(lead string, value...interface{}) {
     if l.btStatus == 1 {
     	if s := l.GetBacktrace(); s != "" {
 		    value = append(value, ln + "Backtrace:" + ln + s)
 	    }
     }
     // In matter of sequence, do not use stderr here, but use the same stdout.
-    l.print(os.Stdout, level, format, value...)
+    l.print(os.Stdout, lead, value...)
+}
+
+// format formats <values> using fmt.Sprintf.
+func (l *Logger) format(format string, value...interface{}) string {
+	return fmt.Sprintf(format, value...)
 }
 
 // PrintBacktrace prints the caller backtrace, 
