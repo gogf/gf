@@ -306,7 +306,7 @@ func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
 
 // printStd prints content <s> without backtrace.
 func (l *Logger) printStd(level string, format string, value...interface{}) {
-    l.print(os.Stdout, level, "", value...)
+    l.print(os.Stdout, level, format, value...)
 }
 
 // printStd prints content <s> with backtrace check.
