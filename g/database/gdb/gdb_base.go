@@ -24,6 +24,17 @@ const (
     gDEFAULT_DEBUG_SQL_LENGTH = 1000 // 默认调试模式下记录的SQL条数
 )
 
+// 获取最近一条执行的sql
+func (bs *dbBase) GetLastSql() *Sql {
+	if bs.sqls == nil {
+		return nil
+	}
+	if v := bs.sqls.Val(); v != nil {
+		return v.(*Sql)
+	}
+	return nil
+}
+
 // 获取已经执行的SQL列表(仅在debug=true时有效)
 func (bs *dbBase) GetQueriedSqls() []*Sql {
     if bs.sqls == nil {
