@@ -3,8 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-//
-// @author john, zseeker
 
 package glog
 
@@ -16,6 +14,7 @@ import (
 	"github.com/gogf/gf/g/os/gfpool"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/util/gconv"
 	"io"
 	"os"
 	"runtime"
@@ -80,19 +79,10 @@ func New() *Logger {
 
 // Clone returns a new logger, which is the clone the current logger.
 func (l *Logger) Clone() *Logger {
-	logger := &Logger {
-        parent       : l,
-        path         : l.path,
-        file         : l.file,
-        level        : l.level,
-        flags        : l.flags,
-		prefix       : l.prefix,
-        btSkip       : l.btSkip,
-        btStatus     : l.btStatus,
-        headerPrint  : l.headerPrint,
-        stdoutPrint  : l.stdoutPrint,
-    }
-	return logger
+	logger := Logger{}
+	logger  = *l
+	logger.parent = l
+	return &logger
 }
 
 // SetLevel sets the logging level.
@@ -226,67 +216,98 @@ func (l *Logger) SetPrefix(prefix string) {
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
-func (l *Logger) print(std io.Writer, s string) {
-    // Custom writer has the most high priority.
+func (l *Logger) print(std io.Writer, level string, format string, value...interface{}) {
+	buffer := bytes.NewBuffer(nil)
     if l.headerPrint {
-        s = l.format(s)
+	    // Time.
+	    timeFormat := ""
+	    if l.flags & F_TIME_DATE > 0 {
+		    timeFormat += "2006-01-02 "
+	    }
+	    if l.flags & F_TIME_TIME > 0 {
+		    timeFormat += "15:04:05 "
+	    }
+	    if l.flags & F_TIME_MILLI > 0 {
+		    timeFormat += "15:04:05.000 "
+	    }
+	    if len(timeFormat) > 0 {
+		    buffer.WriteString(time.Now().Format(timeFormat))
+	    }
+	    // Caller path.
+	    callerPath := ""
+	    if l.flags & F_FILE_LONG > 0 {
+		    callerPath = l.getLongFile() + ": "
+	    }
+	    if l.flags & F_FILE_SHORT > 0 {
+		    callerPath = gfile.Basename(l.getLongFile()) + ": "
+	    }
+	    if len(callerPath) > 0 {
+		    buffer.WriteString(callerPath)
+	    }
+	    // Prefix.
+	    if len(l.prefix) > 0 {
+		    buffer.WriteString(l.prefix + " ")
+	    }
     }
+	if len(level) > 0 {
+		buffer.WriteString(level + " ")
+	}
+	if len(format) > 0 {
+		buffer.WriteString(fmt.Sprintf(format, value...))
+	} else {
+		for k, v := range value {
+			if k > 0 {
+				buffer.WriteByte(' ')
+			}
+			buffer.WriteString(gconv.String(v))
+		}
+	}
+	buffer.WriteString(ln)
+
     if l.writer == nil {
         if f := l.getFilePointer(); f != nil {
             defer f.Close()
-            if _, err := io.WriteString(f, s); err != nil {
+            if _, err := io.WriteString(f, buffer.String()); err != nil {
                 fmt.Fprintln(os.Stderr, err.Error())
             }
         }
         // Allow output to stdout?
         if l.stdoutPrint {
-	        if _, err := std.Write([]byte(s)); err != nil {
+	        if _, err := std.Write(buffer.Bytes()); err != nil {
 		        fmt.Fprintln(os.Stderr, err.Error())
 	        }
         }
     } else {
-	    if _, err := l.writer.Write([]byte(s)); err != nil {
+	    if _, err := l.writer.Write(buffer.Bytes()); err != nil {
 		    fmt.Fprintln(os.Stderr, err.Error())
 	    }
     }
 }
 
 // printStd prints content <s> without backtrace.
-func (l *Logger) printStd(s string) {
-    l.print(os.Stdout, s)
+func (l *Logger) printStd(level string, format string, value...interface{}) {
+    l.print(os.Stdout, level, "", value...)
 }
 
 // printStd prints content <s> with backtrace check.
-func (l *Logger) printErr(s string) {
+func (l *Logger) printErr(level string, format string, value...interface{}) {
     if l.btStatus == 1 {
-        s = l.appendBacktrace(s)
+    	if s := l.GetBacktrace(); s != "" {
+		    value = append(value, ln + "Backtrace:" + ln + s)
+	    }
     }
     // In matter of sequence, do not use stderr here, but use the same stdout.
-    l.print(os.Stdout, s)
-}
-
-// appendBacktrace appends backtrace to the <s>.
-func (l *Logger) appendBacktrace(s string, skip...int) string {
-    trace := l.GetBacktrace(skip...)
-    if trace != "" {
-        backtrace := "Backtrace:" + ln + trace
-        if len(s) > 0 {
-            if s[len(s)-1] == byte('\n') {
-                s = s + backtrace + ln
-            } else {
-                s = s + ln + backtrace + ln
-            }
-        } else {
-            s = backtrace
-        }
-    }
-    return s
+    l.print(os.Stdout, level, format, value...)
 }
 
 // PrintBacktrace prints the caller backtrace, 
 // the optional parameter <skip> specify the skipped backtrace offset from the end point.
 func (l *Logger) PrintBacktrace(skip...int) {
-    l.Println(l.appendBacktrace("", skip...))
+	if s := l.GetBacktrace(skip...); s != "" {
+		l.Println("Backtrace:" + ln + s)
+	} else {
+		l.Println()
+	}
 }
 
 // GetBacktrace returns the caller backtrace content, 
@@ -350,8 +371,8 @@ func (l *Logger) getLongFile() string {
 }
 
 
-// format formats the content according the flags.
-func (l *Logger) format(content string) string {
+// header returns the header according logger's settings.
+func (l *Logger) header() string {
 	buffer := bytes.NewBuffer(nil)
 	// Time.
 	timeFormat := ""
@@ -382,8 +403,6 @@ func (l *Logger) format(content string) string {
 	if len(l.prefix) > 0 {
 		buffer.WriteString(l.prefix + " ")
 	}
-	// Content.
-	buffer.WriteString(content)
     return buffer.String()
 }
 
