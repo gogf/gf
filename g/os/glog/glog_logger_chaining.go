@@ -121,10 +121,11 @@ func (l *Logger) Stdout(enabled...bool) *Logger {
 	} else {
 		logger = l
 	}
-	if len(enabled) > 0 && enabled[0] {
-		logger.stdoutPrint = true
-	} else {
+	// stdout printing is enabled if <enabled> is not passed.
+	if len(enabled) > 0 && !enabled[0] {
 		logger.stdoutPrint = false
+	} else {
+		logger.stdoutPrint = true
 	}
 	return logger
 }
@@ -145,10 +146,11 @@ func (l *Logger) Header(enabled...bool) *Logger {
     } else {
         logger = l
     }
-    if len(enabled) > 0 && enabled[0] {
-	    logger.SetHeaderPrint(true)
-    } else {
+    // header is enabled if <enabled> is not passed.
+    if len(enabled) > 0 && !enabled[0] {
 	    logger.SetHeaderPrint(false)
+    } else {
+	    logger.SetHeaderPrint(true)
     }
     return logger
 }
@@ -168,6 +170,24 @@ func (l *Logger) Line(long...bool) *Logger {
 		logger.flags |= F_FILE_LONG
 	} else {
 		logger.flags |= F_FILE_SHORT
+	}
+	return logger
+}
+
+// Async is a chaining function,
+// which enables/disables async logging output feature.
+func (l *Logger) Async(enabled...bool) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	// async feature is enabled if <enabled> is not passed.
+	if len(enabled) > 0 && !enabled[0] {
+		logger.SetAsync(false)
+	} else {
+		logger.SetAsync(true)
 	}
 	return logger
 }

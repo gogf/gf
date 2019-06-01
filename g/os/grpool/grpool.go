@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,17 +14,18 @@ import (
 
 // Goroutine Pool
 type Pool struct {
-    limit  int         // 最大的goroutine数量限制
-    count  *gtype.Int  // 当前正在运行的goroutine数量
-    list   *glist.List // 待处理任务操作列表
-    closed *gtype.Bool // 是否关闭
+    limit  int         // Max goroutine count limit.
+    count  *gtype.Int  // Current running goroutine count.
+    list   *glist.List // Job list.
+    closed *gtype.Bool // Is pool closed or not.
 }
 
-// 默认的goroutine池管理对象,
-// 该对象与进程同生命周期，无需Close
-var defaultPool = New()
+// Default goroutine pool.
+var pool = New()
 
-// 创建goroutine池管理对象，参数用于限制限制最大的goroutine数量，非必需参数，默认不做限制
+// New creates and returns a new goroutine pool object.
+// The param <limit> is used to limit the max goroutine count,
+// which is not limited in default.
 func New(limit...int) *Pool {
     p := &Pool {
 	    limit  : -1,
@@ -38,41 +39,43 @@ func New(limit...int) *Pool {
     return p
 }
 
-// 添加异步任务(使用默认的池对象)
+// Add pushes a new job to the pool using default goroutine pool.
+// The job will be executed asynchronously.
 func Add(f func()) {
-    defaultPool.Add(f)
+	pool.Add(f)
 }
 
-// 查询当前goroutine总数
+// Size returns current goroutine count of default goroutine pool.
 func Size() int {
-    return defaultPool.count.Val()
+    return pool.count.Val()
 }
 
-// 查询当前等待处理的任务总数
+// Jobs returns current job count of default goroutine pool.
 func Jobs() int {
-    return defaultPool.list.Len()
+    return pool.list.Len()
 }
 
-// 添加异步任务
+// Add pushes a new job to the pool.
+// The job will be executed asynchronously.
 func (p *Pool) Add(f func()) {
     p.list.PushFront(f)
-    // 判断是否创建新的goroutine
+    // checking whether to create a new goroutine or not.
     if p.count.Val() != p.limit {
         p.fork()
     }
 }
 
-// 查询当前goroutine总数
+// Size returns current goroutine count of the pool.
 func (p *Pool) Size() int {
     return p.count.Val()
 }
 
-// 查询当前等待处理的任务总数
+// Jobs returns current job count of the pool.
 func (p *Pool) Jobs() int {
     return p.list.Size()
 }
 
-// 检查并创建新的goroutine执行任务
+// fork creates a new goroutine pool.
 func (p *Pool) fork() {
 	p.count.Add(1)
     go func() {
@@ -88,7 +91,7 @@ func (p *Pool) fork() {
     }()
 }
 
-// 关闭池，所有的任务将会停止，此后继续添加的任务将不会被执行
+// Close closes the goroutine pool, which makes all goroutines exit.
 func (p *Pool) Close() {
 	p.closed.Set(true)
 }
