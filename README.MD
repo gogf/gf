@@ -68,43 +68,12 @@ func main() {
 
 `GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
-# Contributors
-
-- [aloncn](https://github.com/aloncn)
-- [chenyang351](https://github.com/chenyang351)
-- [garfieldkwong](https://gitee.com/garfieldkwong)
-- [hailaz](https://gitee.com/hailaz)
-- [johng](https://johng.cn)
-- [jroam](https://github.com/jroam)
-- [pibigstar](https://github.com/pibigstar)
-- [qq1054000800](https://gitee.com/qq1054000800)
-- [qq976739120](https://github.com/qq976739120)
-- [touzijiao](https://github.com/touzijiao)
-- [wenzi1](https://gitee.com/wenzi1)
-- [wxkj001](https://github.com/wxkj001)
-- [ymrjqyy](https://gitee.com/ymrjqyy)
-- [youyixiao](https://github.com/youyixiao)
-- [zhangjinfu](https://gitee.com/zhangjinfu)
-- [zhaopengme](https://github.com/zhaopengme)
-- [zseeker](https://gitee.com/zseeker)
-
 # Donators
 
-We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](https://goframe.org/images/donate.png)?
+We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](DONATOR.MD)?
 
-- [flyke-xu](https://gitee.com/flyke-xu)
-- [hailaz](https://gitee.com/hailaz)
-- [ireadx](https://github.com/ireadx)
-- [mg91](https://gitee.com/mg91)
-- [pibigstar](https://github.com/pibigstar)
-- [tiangenglan](https://gitee.com/tiangenglan)
-- [wxkj](https://gitee.com/wxkj)
-- [zhuhuan12](https://gitee.com/zhuhuan12)
-- [zfan_codes](https://gitee.com/zfan_codes)
-
-
-
-
+# Thanks
+<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
 
 
 <!--
