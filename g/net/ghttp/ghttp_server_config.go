@@ -46,6 +46,7 @@ type ServerConfig struct {
     IdleTimeout       time.Duration         // 等待超时
     MaxHeaderBytes    int                   // 最大的header长度
     TLSConfig         tls.Config
+    KeepAlive         bool
 
     // 静态文件配置
     IndexFiles        []string              // 默认访问的文件列表
@@ -96,6 +97,7 @@ var defaultServerConfig = ServerConfig {
     WriteTimeout      : 60 * time.Second,
     IdleTimeout       : 60 * time.Second,
     MaxHeaderBytes    : 1024,
+    KeepAlive         : true,
 
     IndexFiles        : []string{"index.html", "index.htm"},
     IndexFolder       : false,
@@ -314,6 +316,15 @@ func (s *Server) SetRouterCacheExpire(expire int) {
         return
     }
     s.config.RouterCacheExpire = expire
+}
+
+// 设置KeepAlive
+func (s *Server) SetKeepAlive(enabled bool) {
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
+    }
+    s.config.KeepAlive = enabled
 }
 
 // 获取WebServer名称
