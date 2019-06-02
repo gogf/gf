@@ -1,6 +1,5 @@
 # Donators
 
-<div align=center>
 
 | Name | Channel | Amount
 |---|---|---
@@ -19,5 +18,3 @@
 
 
 <img src="https://goframe.org/images/donate.png"/>
-
-</div>
