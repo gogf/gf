@@ -17,4 +17,4 @@
 
 
 
-<img src="https://goframe.org/images/donate.png" width="400"/>
+<img src="https://goframe.org/images/donate.png"/>
