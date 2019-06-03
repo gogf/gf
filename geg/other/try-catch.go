@@ -7,9 +7,15 @@ import (
 
 func main() {
 	g.TryCatch(func() {
-		glog.Printfln("hello")
+		glog.Println("hello")
 		g.Throw("exception")
-		glog.Printfln("world")
+		glog.Println("world")
+	})
+
+	g.TryCatch(func() {
+		glog.Println("hello")
+		g.Throw("exception")
+		glog.Println("world")
 	}, func(exception interface{}) {
 		glog.Error(exception)
 	})
