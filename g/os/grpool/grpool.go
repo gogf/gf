@@ -59,10 +59,17 @@ func Jobs() int {
 // The job will be executed asynchronously.
 func (p *Pool) Add(f func()) {
     p.list.PushFront(f)
-    // checking whether to create a new goroutine or not.
-    if p.count.Val() != p.limit {
-        p.fork()
+    // check whether to create a new goroutine or not.
+    if p.count.Val() == p.limit {
+		return
     }
+	// ensure atomicity.
+	if p.limit != -1 && p.count.Add(1) > p.limit {
+		p.count.Add(-1)
+		return
+	}
+    // fork a new goroutine to consume the job list.
+	p.fork()
 }
 
 // Size returns current goroutine count of the pool.
@@ -77,7 +84,6 @@ func (p *Pool) Jobs() int {
 
 // fork creates a new goroutine pool.
 func (p *Pool) fork() {
-	p.count.Add(1)
     go func() {
     	defer p.count.Add(-1)
     	job := (interface{})(nil)
