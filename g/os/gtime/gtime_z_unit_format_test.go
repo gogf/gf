@@ -42,6 +42,8 @@ func Test_Format(t *testing.T) {
 		}
 		gtest.Assert(timeTemp2.Format("Y-n-j G:i:s"), "2006-1-2 3:04:05")
 
+		gtest.Assert(timeTemp2.Format("U"), "1136142245")
+
 		// 测试数字型的星期
 		times := []map[string]string{
 			{"k": "2019-04-22", "f": "w", "r": "1"},

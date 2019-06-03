@@ -49,6 +49,7 @@ var (
 		'i': "04",      // 有前导零的分钟数, 00 到 59
 		's': "05",      // 秒数，有前导零,   00 到 59
 		'u': "=u=.000", // 毫秒(3位)
+		'U':"", // 将t表示为Unix时间，即从时间点January 1, 1970 UTC到时间点t所经过的时间（单位秒）
 
 		// ================== 时区 ==================
 		'O': "-0700",  // 与UTC相差的小时数, 例如：+0200
@@ -92,6 +93,7 @@ func (t *Time) Format(format string) string {
 			case 'W': buffer.WriteString(strconv.Itoa(t.WeeksOfYear()))
 			case 'z': buffer.WriteString(strconv.Itoa(t.DayOfYear()))
 			case 't': buffer.WriteString(strconv.Itoa(t.DaysInMonth()))
+			case 'U': buffer.WriteString(strconv.FormatInt(t.Unix(),10))
 			default:
 				if runes[i] > 255 {
 					buffer.WriteRune(runes[i])
