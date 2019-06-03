@@ -13,18 +13,18 @@ import (
 )
 
 const (
-    // 方法中涉及到读取的时候的缓冲大小
-    gREAD_BUFFER      = 1024
-    // 方法中涉及到文件指针池的默认缓存时间(毫秒)
-    //gFILE_POOL_EXPIRE = 60000
+    // Buffer size for reading file content.
+    gREAD_BUFFER = 1024
 )
 
-// (文本)读取文件内容
+// GetContents returns the file content of <path> as string.
+// It returns en empty string if it fails reading.
 func GetContents(path string) string {
     return string(GetBinContents(path))
 }
 
-// (二进制)读取文件内容，如果文件不存在或者读取失败，返回nil。
+// GetBinContents returns the file content of <path> as []byte.
+// It returns nil if it fails reading.
 func GetBinContents(path string) []byte {
     data, err := ioutil.ReadFile(path)
     if err != nil {
@@ -33,16 +33,16 @@ func GetBinContents(path string) []byte {
     return data
 }
 
-// 写入文件内容
+// putContents puts binary content to file of <path>.
 func putContents(path string, data []byte, flag int, perm int) error {
-    // 支持目录递归创建
+    // It supports creating file of <path> recursively.
     dir := Dir(path)
     if !Exists(dir) {
         if err := Mkdir(dir); err != nil {
             return err
         }
     }
-    // 创建/打开文件
+    // Opening file with given <flag> and <perm>.
     f, err := OpenWithFlagPerm(path, flag, perm)
     if err != nil {
         return err
@@ -56,32 +56,36 @@ func putContents(path string, data []byte, flag int, perm int) error {
     return nil
 }
 
-// Truncate
+// Truncate truncates file of <path> to given size by <size>.
 func Truncate(path string, size int) error {
     return os.Truncate(path, int64(size))
 }
 
-// (文本)写入文件内容
+// PutContents puts string <content> to file of <path>.
+// It creates file of <path> recursively if it does not exist.
 func PutContents(path string, content string) error {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, gDEFAULT_PERM)
 }
 
-// (文本)追加内容到文件末尾
+// PutContentsAppend appends string <content> to file of <path>.
+// It creates file of <path> recursively if it does not exist.
 func PutContentsAppend(path string, content string) error {
     return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, gDEFAULT_PERM)
 }
 
-// (二进制)写入文件内容
+// PutBinContents puts binary <content> to file of <path>.
+// It creates file of <path> recursively if it does not exist.
 func PutBinContents(path string, content []byte) error {
     return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, gDEFAULT_PERM)
 }
 
-// (二进制)追加内容到文件末尾
+// PutBinContentsAppend appends binary <content> to file of <path>.
+// It creates file of <path> recursively if it does not exist.
 func PutBinContentsAppend(path string, content []byte) error {
     return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, gDEFAULT_PERM)
 }
 
-// 获得文件内容下一个指定字节的位置
+// GetNextCharOffset returns the file offset for given <char> starting from <start>.
 func GetNextCharOffset(reader io.ReaderAt, char byte, start int64) int64 {
     buffer := make([]byte, gREAD_BUFFER)
     offset := start
@@ -100,7 +104,8 @@ func GetNextCharOffset(reader io.ReaderAt, char byte, start int64) int64 {
     return -1
 }
 
-// 获得文件内容下一个指定字节的位置
+// GetNextCharOffsetByPath returns the file offset for given <char> starting from <start>.
+// It opens file of <path> for reading with os.O_RDONLY flag and default perm.
 func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
     if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
@@ -109,7 +114,10 @@ func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
     return -1
 }
 
-// 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
+// GetBinContentsTilChar returns the contents of the file as []byte 
+// until the next specified byte <char> position.
+//
+// Note: Returned value contains the character of the last position.
 func GetBinContentsTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, int64) {
     if offset := GetNextCharOffset(reader, char, start); offset != -1 {
         return GetBinContentsByTwoOffsets(reader, start, offset + 1), offset
@@ -117,7 +125,11 @@ func GetBinContentsTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, 
     return nil, -1
 }
 
-// 获得文件内容直到下一个指定字节的位置(返回值包含该位置字符内容)
+// GetBinContentsTilCharByPath returns the contents of the file given by <path> as []byte 
+// until the next specified byte <char> position.
+// It opens file of <path> for reading with os.O_RDONLY flag and default perm.
+//
+// Note: Returned value contains the character of the last position.
 func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
     if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()
@@ -126,7 +138,9 @@ func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, i
     return nil, -1
 }
 
-// 获得文件内容中两个offset之间的内容 [start, end)
+// GetBinContentsByTwoOffsets returns the binary content as []byte from <start> to <end>.
+// Note: Returned value does not contain the character of the last position, which means
+// it returns content range as [start, end).
 func GetBinContentsByTwoOffsets(reader io.ReaderAt, start int64, end int64) []byte {
     buffer := make([]byte, end - start)
     if _, err := reader.ReadAt(buffer, start); err != nil {
@@ -135,7 +149,10 @@ func GetBinContentsByTwoOffsets(reader io.ReaderAt, start int64, end int64) []by
     return buffer
 }
 
-// 获得文件内容中两个offset之间的内容 [start, end)
+// GetBinContentsByTwoOffsetsByPath returns the binary content as []byte from <start> to <end>.
+// Note: Returned value does not contain the character of the last position, which means
+// it returns content range as [start, end).
+// It opens file of <path> for reading with os.O_RDONLY flag and default perm.
 func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
     if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
         defer f.Close()

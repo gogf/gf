@@ -10,8 +10,9 @@ func main() {
 	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
+		v := i
 		grpool.Add(func() {
-			fmt.Println(i)
+			fmt.Println(v)
 			wg.Done()
 		})
 	}

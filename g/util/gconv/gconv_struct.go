@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -15,35 +15,34 @@ import (
     "strings"
 )
 
-// Struct maps the params key-value pairs to the corresponding struct object properties.
-// The third parameter mapping is unnecessary, indicating the mapping between the custom name
-// and the attribute name.
+// Struct maps the params key-value pairs to the corresponding struct object's properties.
+// The third parameter <mapping> is unnecessary, indicating the mapping rules between the custom key name
+// and the attribute name(case sensitive).
 //
 // Note:
-// 1. The <params> can be any type of may/struct, usually a map;
-// 2. The second parameter <objPointer> should be a pointer to the struct object;
-// 3. Only the public attributes of struct object can be mapped;
+// 1. The <params> can be any type of map/struct, usually a map.
+// 2. The second parameter <pointer> should be a pointer to the struct object.
+// 3. Only the public attributes of struct object can be mapped.
 // 4. If <params> is a map, the key of the map <params> can be lowercase.
 //    It will automatically convert the first letter of the key to uppercase
 //    in mapping procedure to do the matching.
-//    If it does not match, ignore the key;
-func Struct(params interface{}, objPointer interface{}, attrMapping...map[string]string) error {
+//    It ignores the map key, if it does not match.
+func Struct(params interface{}, pointer interface{}, mapping...map[string]string) error {
     if params == nil {
         return errors.New("params cannot be nil")
     }
-    if objPointer == nil {
+    if pointer == nil {
         return errors.New("object pointer cannot be nil")
     }
     paramsMap := Map(params)
     if paramsMap == nil {
         return fmt.Errorf("invalid params: %v", params)
     }
-    // struct的反射对象
-    elem := reflect.Value{}
-    if v, ok := objPointer.(reflect.Value); ok {
-        elem = v
-    } else {
-        rv := reflect.ValueOf(objPointer)
+    // Using reflect to do the converting,
+    // it also supports type of reflect.Value for <pointer>(always in internal usage).
+	elem, ok := pointer.(reflect.Value)
+    if !ok {
+        rv := reflect.ValueOf(pointer)
         if kind := rv.Kind(); kind != reflect.Ptr {
             return fmt.Errorf("object pointer should be type of: %v", kind)
         }
@@ -52,12 +51,12 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
         elem = rv.Elem()
     }
-    // 已执行过转换的属性，只执行一次转换。
-    // 或者是已经执行过转换检查的属性(即使不进行转换), 以便重复判断。
+    // It only performs one converting to the same attribute.
+    // doneMap is used to check repeated converting.
     doneMap := make(map[string]bool)
-    // 首先按照传递的映射关系进行匹配
-    if len(attrMapping) > 0 && len(attrMapping[0]) > 0 {
-        for mapK, mapV := range attrMapping[0] {
+    // It first checks the passed mapping rules.
+    if len(mapping) > 0 && len(mapping[0]) > 0 {
+        for mapK, mapV := range mapping[0] {
             if v, ok := paramsMap[mapK]; ok {
                 doneMap[mapV] = true
                 if err := bindVarToStructAttr(elem, mapV, v); err != nil {
@@ -66,25 +65,24 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
             }
         }
     }
-    // 其次匹配对象定义时绑定的属性名称,
-    // 标签映射关系map，如果有的话
-    tagMap := getTagMapOfStruct(objPointer)
-    for tagk, tagv := range tagMap {
-        if _, ok := doneMap[tagv]; ok {
+    // It secondly checks the tags of attributes.
+    tagMap := getTagMapOfStruct(pointer)
+    for tagK, tagV := range tagMap {
+        if _, ok := doneMap[tagV]; ok {
             continue
         }
-        if v, ok := paramsMap[tagk]; ok {
-            doneMap[tagv] = true
-            if err := bindVarToStructAttr(elem, tagv, v); err != nil {
+        if v, ok := paramsMap[tagK]; ok {
+            doneMap[tagV] = true
+            if err := bindVarToStructAttr(elem, tagV, v); err != nil {
                 return err
             }
         }
     }
-    // 最后按照默认规则进行匹配
+    // It finally do the converting with default rules.
     attrMap  := make(map[string]struct{})
     elemType := elem.Type()
     for i := 0; i < elem.NumField(); i++ {
-        // 只转换公开属性
+	    // Only do converting to public attributes.
         if !gstr.IsLetterUpper(elemType.Field(i).Name[0]) {
             continue
         }
@@ -105,7 +103,7 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
             if _, ok := tagMap[checkName]; ok {
                 continue
             }
-            // 循环查找属性名称进行匹配
+            // Loop to find the matched attribute name.
             for value, _ := range attrMap {
                 if strings.EqualFold(checkName, value) {
                     name = value
@@ -121,7 +119,7 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
                 break
             }
         }
-        // 如果没有匹配到属性名称，放弃
+        // No matching, give up this attribute converting.
         if name == "" {
             continue
         }
@@ -132,15 +130,49 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     return nil
 }
 
+// StructDeep do Struct function recursively.
+// See Struct.
+func StructDeep(params interface{}, pointer interface{}, mapping...map[string]string) error {
+	if err := Struct(params, pointer, mapping...); err != nil {
+		return err
+	} else {
+		rv, ok := pointer.(reflect.Value)
+		if !ok {
+			rv = reflect.ValueOf(pointer)
+		}
+		kind := rv.Kind()
+		if kind == reflect.Ptr {
+			rv   = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+			case reflect.Struct:
+				rt := rv.Type()
+				for i := 0; i < rv.NumField(); i++ {
+					// Only do converting to public attributes.
+					if !gstr.IsLetterUpper(rt.Field(i).Name[0]) {
+						continue
+					}
+					trv := rv.Field(i)
+					switch trv.Kind() {
+						case reflect.Struct:
+							StructDeep(params, trv, mapping...)
+					}
+				}
+		}
+	}
+	return nil
+}
+
 // 解析指针对象的tag
-func getTagMapOfStruct(objPointer interface{}) map[string]string {
-    tagmap := make(map[string]string)
+func getTagMapOfStruct(pointer interface{}) map[string]string {
+    tagMap := make(map[string]string)
     // 反射类型判断
     fields := ([]*structs.Field)(nil)
-    if v, ok := objPointer.(reflect.Value); ok {
+    if v, ok := pointer.(reflect.Value); ok {
         fields = structs.Fields(v.Interface())
     } else {
-        fields = structs.Fields(objPointer)
+        fields = structs.Fields(pointer)
     }
     // 将struct中定义的属性转换名称构建成tagmap
     for _, field := range fields {
@@ -150,11 +182,11 @@ func getTagMapOfStruct(objPointer interface{}) map[string]string {
         }
         if tag != "" {
             for _, v := range strings.Split(tag, ",") {
-                tagmap[strings.TrimSpace(v)] = field.Name()
+	            tagMap[strings.TrimSpace(v)] = field.Name()
             }
         }
     }
-    return tagmap
+    return tagMap
 }
 
 // 将参数值绑定到对象指定名称的属性上

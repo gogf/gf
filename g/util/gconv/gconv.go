@@ -137,6 +137,7 @@ func String(i interface{}) string {
         case bool:    return strconv.FormatBool(value)
         case string:  return value
         case []byte:  return string(value)
+        case []rune:  return string(value)
         default:
             if f, ok := value.(apiString); ok {
                 // If the variable implements the String() interface,

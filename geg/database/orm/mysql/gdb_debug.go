@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/database/gdb"
 	"github.com/gogf/gf/g/os/glog"
@@ -32,5 +33,7 @@ func main() {
 
 	db.Table("user").Data(g.Map{"name": "smith"}).Where("uid=?", 1).Save()
 
-	//db.PrintQueriedSqls()
+	db.PrintQueriedSqls()
+
+	fmt.Println(db.GetLastSql())
 }

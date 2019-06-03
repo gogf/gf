@@ -7,10 +7,10 @@
 package gdb_test
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/test/gtest"
+	"testing"
 )
 
 // 基本测试
