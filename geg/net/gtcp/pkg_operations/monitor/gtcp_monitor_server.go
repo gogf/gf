@@ -21,7 +21,7 @@ func main() {
 			}
 			info := &types.NodeInfo{}
 			if err := json.Unmarshal(data, info); err != nil {
-				glog.Errorfln("invalid package structure: %s", err.Error())
+				glog.Errorf("invalid package structure: %s", err.Error())
 			} else {
 				glog.Println(info)
 				conn.SendPkg([]byte("ok"))
