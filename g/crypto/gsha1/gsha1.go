@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gsha1 provides useful API for SHA1 encryption/decryption algorithms.
+// Package gsha1 provides useful API for SHA1 encryption algorithms.
 package gsha1
 
 import (
@@ -15,20 +15,20 @@ import (
     "github.com/gogf/gf/g/util/gconv"
 )
 
-// 将任意类型的变量进行SHA摘要(注意map等非排序变量造成的不同结果)
-// 内部使用了md5计算，因此效率会稍微差一些，更多情况请使用 EncodeString
+// Encrypt encrypts any type of variable using SHA1 algorithms.
+// It uses gconv package to convert <v> to its bytes type.
 func Encrypt(v interface{}) string {
     r := sha1.Sum(gconv.Bytes(v))
     return hex.EncodeToString(r[:])
 }
 
-// 对字符串行SHA1摘要计算
+// Deprecated.
 func EncryptString(s string) string {
-    r := sha1.Sum([]byte(s))
-    return hex.EncodeToString(r[:])
+	r := sha1.Sum([]byte(s))
+	return hex.EncodeToString(r[:])
 }
 
-// 对文件内容进行SHA1摘要计算
+// EncryptFile encrypts file content of <path> using SHA1 algorithms.
 func EncryptFile(path string) string {
     f, e := os.Open(path)
     if e != nil {

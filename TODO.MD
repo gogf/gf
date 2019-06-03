@@ -6,7 +6,6 @@
 1. orm增加sqlite对Save方法的支持(去掉触发器语句);
 1. ghttp.Server增加Ip访问控制功能(DenyIps&AllowIps)；
 1. ghttp增加返回数据压缩机制；
-1. gview中的template标签失效问题；
 1. ghttp.Server增加proxy功能特性，本地proxy和远程proxy，本地即将路由规则映射；远程即反向代理；
 1. gjson对大json数据的解析效率问题；
 1. ghttp增加route name特性，并同时支持backend和template(提供内置函数)引用，可以通过RedirectRoute方法给定route name和路由参数跳转到指定的路由地址上；
@@ -46,6 +45,11 @@
 1. gset.Add/Remove/Contains方法增加批量操作支持；
 1. gmlock增加手动清理机制：当内存锁不再使用时，由调用端决定是否清理内存锁；
 1. gtimer增加DelayAdd*方法返回Entry对象，以便DelayAdd*的定时任务也能进行状态控制；gcron同理需要改进；
+1. 改进gdb对pgsql/mssql/oracle的支持，使用方法覆盖的方式改进操作，而不是完全依靠正则替换的方式；
+1. gdb的Cache缓存功能增加可自定义缓存接口，以便支持外部缓存功能，缓存接口可以通过io.ReadWriter接口实现；
+
+
+
 
 # DONE
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
@@ -120,3 +124,4 @@
 1. ghttp.Client自动Close机制；
 1. ghttp路由功能增加分组路由特性；
 1. 增加可选择性的orm tag特性，用以数据表记录与struct对象转换的键名属性映射；
+1. gview中的template标签失效问题；

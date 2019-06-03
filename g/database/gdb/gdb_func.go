@@ -7,17 +7,23 @@
 package gdb
 
 import (
-    "bytes"
-    "errors"
-    "fmt"
-    "github.com/gogf/gf/g/os/glog"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/text/gregex"
-    "github.com/gogf/gf/g/text/gstr"
-    "github.com/gogf/gf/g/util/gconv"
-    "reflect"
-    "strings"
+	"bytes"
+	"errors"
+	"fmt"
+	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/util/gconv"
+	"reflect"
+	"strings"
+	"time"
 )
+
+// Type assert api for String().
+type apiString interface {
+	String() string
+}
 
 // 格式化SQL查询条件
 func formatCondition(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
@@ -35,7 +41,7 @@ func formatCondition(where interface{}, args []interface{}) (newWhere string, ne
         // map/struct类型
         case reflect.Map:   fallthrough
         case reflect.Struct:
-            for key, value := range gconv.Map(where) {
+            for key, value := range structToMap(where) {
                 if buffer.Len() > 0 {
                     buffer.WriteString(" AND ")
                 }
@@ -136,6 +142,19 @@ func convertParam(value interface{}) interface{} {
     }
     switch kind {
         case reflect.Struct:
+        	// 底层数据库引擎支持 time.Time/*time.Time 类型
+        	if v, ok := value.(time.Time); ok {
+        		if v.IsZero() {
+        			return "null"
+		        }
+        		return value
+	        }
+	        if v, ok := value.(*time.Time); ok {
+		        if v.IsZero() {
+			        return ""
+		        }
+		        return value
+	        }
             return gconv.String(value)
     }
     return value
@@ -160,12 +179,12 @@ func printSql(v *Sql) {
 // 格式化错误信息
 func formatError(err error, query string, args ...interface{}) error {
     if err != nil {
-        errstr := fmt.Sprintf("DB ERROR: %s\n", err.Error())
-        errstr += fmt.Sprintf("DB QUERY: %s\n", query)
+        errStr := fmt.Sprintf("DB ERROR: %s\n", err.Error())
+	    errStr += fmt.Sprintf("DB QUERY: %s\n", query)
         if len(args) > 0 {
-            errstr += fmt.Sprintf("DB PARAM: %v\n", args)
+	        errStr += fmt.Sprintf("DB PARAM: %v\n", args)
         }
-        err = errors.New(errstr)
+        err = errors.New(errStr)
     }
     return err
 }
@@ -181,4 +200,43 @@ func getInsertOperationByOption(option int) string {
             operator = "INSERT IGNORE"
     }
     return operator
+}
+
+// 将对象转换为map，如果对象带有继承对象，那么执行递归转换。
+// 该方法用于将变量传递给数据库执行之前。
+func structToMap(obj interface{}) map[string]interface{} {
+	data := gconv.Map(obj)
+	for key, value := range data {
+		rv   := reflect.ValueOf(value)
+		kind := rv.Kind()
+		if kind == reflect.Ptr {
+			rv   = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+			case reflect.Struct:
+				// 底层数据库引擎支持 time.Time/*time.Time 类型
+				if _, ok := value.(time.Time); ok {
+					continue
+				}
+				if _, ok := value.(*time.Time); ok {
+					continue
+				}
+				// 如果执行String方法，那么执行字符串转换
+				if s, ok := value.(apiString); ok {
+					data[key] = s.String()
+					continue
+				}
+				delete(data, key)
+				for k, v := range structToMap(value) {
+					data[k] = v
+				}
+		}
+	}
+	return data
+}
+
+// 使用递归的方式将map键值对映射到struct对象上，注意参数<pointer>是一个指向struct的指针。
+func mapToStruct(data map[string]interface{}, pointer interface{}) error {
+	return gconv.StructDeep(data, pointer)
 }
