@@ -1,20 +1,28 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/g/encoding/gparser"
+
+	"github.com/gogf/gf"
+	"github.com/gogf/gf/g/net/ghttp"
+
+	"github.com/gogf/gf/g"
 )
 
-type User struct {
-	Id       int  `json:"id" gconv:"i_d"`
-}
-
 func main() {
-	user := User{100}
-	jsonBytes, _ := json.Marshal(user)
-	fmt.Println(string(jsonBytes))
+	// fmt.Print(g.)
+	fmt.Println(gf.VERSION)
+	s := g.Server()
 
-	b, _ := gparser.VarToJson(user)
-	fmt.Println(string(b))
+	s.BindHandler("/status/:status", func(r *ghttp.Request) {
+		r.Response.Write("woops, status ", r.Get("status"), " found")
+	})
+	s.BindStatusHandler(404, func(r *ghttp.Request) {
+		r.Response.RedirectTo("/status/404")
+	})
+
+	s.SetErrorLogEnabled(true)
+	s.SetAccessLogEnabled(true)
+	s.SetPort(8890)
+	s.Run()
 }
