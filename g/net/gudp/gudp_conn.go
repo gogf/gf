@@ -88,8 +88,11 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
     }
 }
 
-// 接收数据.
-// 注意：UDP协议存在消息边界，因此使用 length<=0 可以获取缓冲区所有消息包数据，即一个完整包。
+// 接收UDP协议数据.
+//
+// 注意事项：
+// 1、UDP协议存在消息边界，因此使用 length < 0 可以获取缓冲区所有消息包数据，即一个完整包；
+// 2、当length = 0时，表示获取当前的缓冲区数据，获取一次后立即返回；
 func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
     var err        error        // 读取错误
     var size       int          // 读取长度
@@ -105,7 +108,7 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
     }
 
     for {
-        if length <= 0 && index > 0 {
+        if length < 0 && index > 0 {
             bufferWait = true
             c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait))
         }
@@ -157,6 +160,10 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
             }
             break
         }
+	    // 只获取一次数据
+	    if length == 0 {
+		    break
+	    }
     }
     return buffer[:index], err
 }

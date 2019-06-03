@@ -84,10 +84,12 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
     }
 }
 
-// 获取数据，指定读取的数据长度(length < 1表示获取所有可读数据)，以及重试策略(retry)
+// 阻塞等待获取指定读取的数据长度，并给定重试策略。
+//
 // 需要注意：
 // 1、往往在socket通信中需要指定固定的数据结构，并在设定对应的长度字段，并在读取数据时便于区分包大小；
-// 2、当length < 1时表示获取缓冲区所有的数据，但是可能会引起包解析问题(可能出现断包情况)，因此需要解析端注意解析策略；
+// 2、当length < 0时表示获取缓冲区所有的数据，但是可能会引起包解析问题(可能出现粘包/断包情况)，因此需要解析端注意解析策略；
+// 3、当length = 0时表示获取一次缓冲区的数据后立即返回；
 func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
     var err        error  // 读取错误
     var size       int    // 读取长度
@@ -106,7 +108,7 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
         // 如果已经读取到数据(这点很关键，表明缓冲区已经有数据，剩下的操作就是将所有数据读取完毕)，
         // 那么可以设置读取全部缓冲数据的超时时间；如果没有接收到任何数据，那么将会进入读取阻塞(或者自定义的超时阻塞);
         // 仅对读取全部缓冲区数据操作有效
-        if length <= 0 && index > 0 {
+        if length < 0 && index > 0 {
             bufferWait = true
             c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait))
         }
@@ -154,6 +156,10 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
                 continue
             }
             break
+        }
+        // 只获取一次数据
+        if length == 0 {
+        	break
         }
     }
     return buffer[:index], err
