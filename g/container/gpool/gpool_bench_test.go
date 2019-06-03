@@ -6,14 +6,15 @@
 
 // go test *.go -bench=".*"
 
-package gpool
+package gpool_test
 
 import (
-    "testing"
+	"github.com/gogf/gf/g/container/gpool"
+	"testing"
     "sync"
 )
 
-var pool  = New(99999999, nil)
+var pool  = gpool.New(99999999, nil)
 var syncp = sync.Pool{}
 
 func BenchmarkGPoolPut(b *testing.B) {

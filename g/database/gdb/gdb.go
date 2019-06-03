@@ -84,6 +84,7 @@ type DB interface {
     SetDebug(debug bool)
     SetSchema(schema string)
     GetQueriedSqls() []*Sql
+	GetLastSql() *Sql
     PrintQueriedSqls()
     SetMaxIdleConns(n int)
     SetMaxOpenConns(n int)

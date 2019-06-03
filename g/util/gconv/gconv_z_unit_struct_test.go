@@ -7,10 +7,12 @@
 package gconv_test
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/test/gtest"
-    "github.com/gogf/gf/g/util/gconv"
-    "testing"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/util/gconv"
+	"testing"
+	"time"
 )
 
 func Test_Struct_Basic1(t *testing.T) {
@@ -302,7 +304,6 @@ func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
     })
 }
 
-// 私有属性不会进行转换
 func Test_Struct_PrivateAttribute(t *testing.T) {
     type User struct {
         Id   int
@@ -316,3 +317,99 @@ func Test_Struct_PrivateAttribute(t *testing.T) {
         gtest.Assert(user.name, "")
     })
 }
+
+func Test_Struct_Deep(t *testing.T) {
+	gtest.Case(t, func() {
+		type Ids struct {
+			Id         int    `json:"id"`
+			Uid        int    `json:"uid"`
+		}
+		type Base struct {
+			Ids
+			CreateTime string `json:"create_time"`
+		}
+		type User struct {
+			Base
+			Passport   string `json:"passport"`
+			Password   string `json:"password"`
+			Nickname   string `json:"nickname"`
+		}
+		data := g.Map{
+			"id"          : 100,
+			"uid"         : 101,
+			"passport"    : "t1",
+			"password"    : "123456",
+			"nickname"    : "T1",
+			"create_time" : "2019",
+		}
+		user := new(User)
+		gconv.StructDeep(data, user)
+		gtest.Assert(user.Id,         100)
+		gtest.Assert(user.Uid,        101)
+		gtest.Assert(user.Nickname,   "T1")
+		gtest.Assert(user.CreateTime, "2019")
+	})
+}
+
+func Test_Struct_Time(t *testing.T) {
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime time.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : now,
+		}, user)
+		gtest.Assert(user.CreateTime.UTC().String(), now.UTC().String())
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime *time.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : &now,
+		}, user)
+		gtest.Assert(user.CreateTime.UTC().String(), now.UTC().String())
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime *gtime.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : &now,
+		}, user)
+		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime gtime.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : &now,
+		}, user)
+		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			CreateTime gtime.Time
+		}
+		now  := time.Now()
+		user := new(User)
+		gconv.Struct(g.Map{
+			"create_time" : now,
+		}, user)
+		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+	})
+}
+

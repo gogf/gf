@@ -46,6 +46,7 @@ type ServerConfig struct {
     IdleTimeout       time.Duration         // 等待超时
     MaxHeaderBytes    int                   // 最大的header长度
     TLSConfig         tls.Config
+    KeepAlive         bool
 
     // 静态文件配置
     IndexFiles        []string              // 默认访问的文件列表
@@ -76,7 +77,7 @@ type ServerConfig struct {
     // 日志配置
     LogPath           string                // 存放日志的目录路径(默认为空，表示不写文件)
     LogHandler        LogHandler            // 自定义日志处理回调方法(默认为空)
-    LogStdPrint       bool                  // 是否打印日志到终端(默认开启)
+    LogStdout         bool                  // 是否打印日志到终端(默认开启)
     ErrorLogEnabled   bool                  // 是否开启error log(默认开启)
     AccessLogEnabled  bool                  // 是否开启access log(默认关闭)
 
@@ -96,6 +97,7 @@ var defaultServerConfig = ServerConfig {
     WriteTimeout      : 60 * time.Second,
     IdleTimeout       : 60 * time.Second,
     MaxHeaderBytes    : 1024,
+    KeepAlive         : true,
 
     IndexFiles        : []string{"index.html", "index.htm"},
     IndexFolder       : false,
@@ -111,7 +113,7 @@ var defaultServerConfig = ServerConfig {
     SessionMaxAge     : gDEFAULT_SESSION_MAX_AGE,
     SessionIdName     : gDEFAULT_SESSION_ID_NAME,
 
-    LogStdPrint       : true,
+    LogStdout       : true,
     ErrorLogEnabled   : true,
     AccessLogEnabled  : false,
     GzipContentTypes  : defaultGzipContentTypes,
@@ -314,6 +316,15 @@ func (s *Server) SetRouterCacheExpire(expire int) {
         return
     }
     s.config.RouterCacheExpire = expire
+}
+
+// 设置KeepAlive
+func (s *Server) SetKeepAlive(enabled bool) {
+    if s.Status() == SERVER_STATUS_RUNNING {
+        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+        return
+    }
+    s.config.KeepAlive = enabled
 }
 
 // 获取WebServer名称

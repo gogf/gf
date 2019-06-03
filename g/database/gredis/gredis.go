@@ -7,14 +7,17 @@
 // Package gredis provides convenient client for redis server.
 //
 // Redis Client.
+//
 // Redis Commands Official: https://redis.io/commands
+//
 // Redis Chinese Documentation: http://redisdoc.com/
 package gredis
 
 import (
     "fmt"
     "github.com/gogf/gf/g/container/gmap"
-    "github.com/gogf/gf/third/github.com/gomodule/redigo/redis"
+	"github.com/gogf/gf/g/container/gvar"
+	"github.com/gogf/gf/third/github.com/gomodule/redigo/redis"
     "time"
 )
 
@@ -31,7 +34,9 @@ type Redis struct {
 }
 
 // Redis connection.
-type Conn redis.Conn
+type Conn struct {
+	redis.Conn
+}
 
 // Redis configuration.
 type Config struct {
@@ -134,16 +139,17 @@ func (r *Redis) Close() error {
     return r.pool.Close()
 }
 
-// Alias of GetConn, see GetConn.
-func (r *Redis) Conn() Conn {
-    return r.GetConn()
-}
 
-// GetConn returns a raw underlying connection object,
+// Conn returns a raw underlying connection object,
 // which expose more methods to communicate with server.
 // **You should call Close function manually if you do not use this connection any further.**
-func (r *Redis) GetConn() Conn {
-    return r.pool.Get().(Conn)
+func (r *Redis) Conn() *Conn {
+    return &Conn{ r.pool.Get() }
+}
+
+// Alias of Conn, see Conn.
+func (r *Redis) GetConn() *Conn {
+    return r.Conn()
 }
 
 // SetMaxIdle sets the MaxIdle attribute of the connection pool.
@@ -175,15 +181,21 @@ func (r *Redis) Stats() *PoolStats {
 // Do automatically get a connection from pool, and close it when reply received.
 // It does not really "close" the connection, but drop it back to the connection pool.
 func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
-    conn := r.pool.Get()
+	conn := &Conn{ r.pool.Get() }
     defer conn.Close()
     return conn.Do(command, args...)
+}
+
+// DoVar returns value from Do as gvar.Var.
+func (r *Redis) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
+	v, err := r.Do(command, args...)
+	return gvar.New(v, true), err
 }
 
 // Deprecated.
 // Send writes the command to the client's output buffer.
 func (r *Redis) Send(command string, args ...interface{}) error {
-    conn := r.pool.Get()
+	conn := &Conn{ r.pool.Get() }
     defer conn.Close()
     return conn.Send(command, args...)
 }

@@ -67,6 +67,24 @@ func Test_Load_XML(t *testing.T) {
         gtest.Assert(j.Get("doc.a"),   g.Slice{1, 2, 3})
         gtest.Assert(j.Get("doc.a.1"), 2)
     })
+
+	// XML
+	gtest.Case(t, func() {
+		xml := `<?xml version="1.0"?>
+
+	<Output type="o">
+	<itotalSize>0</itotalSize>
+	<ipageSize>1</ipageSize>
+	<ipageIndex>2</ipageIndex>
+	<itotalRecords>GF框架</itotalRecords>
+	<nworkOrderDtos/>
+	<nworkOrderFrontXML/>
+	</Output>`
+		j, err := gjson.LoadContent(xml)
+		gtest.Assert(err, nil)
+		gtest.Assert(j.Get("Output.ipageIndex"),    "2")
+		gtest.Assert(j.Get("Output.itotalRecords"), "GF框架")
+	})
 }
 
 func Test_Load_YAML1(t *testing.T) {

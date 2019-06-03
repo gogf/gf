@@ -5,6 +5,10 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gsmtp provides a SMTP client to access remote mail server.
+//
+// eg:
+// s := smtp.New("smtp.exmail.qq.com:25", "notify@a.com", "password")
+// glog.Println(s.SendMail("notify@a.com", "ulric@b.com;rain@c.com", "subject", "body, <font color=red>red</font>"))
 package gsmtp
 
 import (
@@ -14,30 +18,31 @@ import (
     "strings"
 )
 
-// 示例：
-// s := smtp.New("smtp.exmail.qq.com:25", "notify@a.com", "password")
-// glog.Println(s.SendMail("notify@a.com", "ulric@b.com;rain@c.com", "这是subject", "这是body,<font color=red>red</font>"))
-
-type Smtp struct {
+type SMTP struct {
     Address  string
     Username string
     Password string
 }
 
-func New(address, username, password string) *Smtp {
-    return &Smtp{
+// New creates and returns a new SMTP object.
+func New(address, username, password string) *SMTP {
+    return &SMTP{
         Address:  address,
         Username: username,
         Password: password,
     }
 }
 
-func (this *Smtp) SendMail(from, tos, subject, body string, contentType ...string) error {
-    if this.Address == "" {
+// SendMail connects to the server at addr, switches to TLS if
+// possible, authenticates with the optional mechanism a if possible,
+// and then sends an email from address from, to addresses to, with
+// message msg.
+func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) error {
+    if s.Address == "" {
         return fmt.Errorf("address is necessary")
     }
 
-    hp := strings.Split(this.Address, ":")
+    hp := strings.Split(s.Address, ":")
     if len(hp) != 2 {
         return fmt.Errorf("address format error")
     }
@@ -56,14 +61,13 @@ func (this *Smtp) SendMail(from, tos, subject, body string, contentType ...strin
         return fmt.Errorf("tos invalid")
     }
 
-    tos = strings.Join(safeArr, ";")
-
+    tos  = strings.Join(safeArr, ";")
     b64 := base64.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 
-    header := make(map[string]string)
-    header["From"] = from
-    header["To"] = tos
-    header["Subject"] = fmt.Sprintf("=?UTF-8?B?%s?=", b64.EncodeToString([]byte(subject)))
+    header                := make(map[string]string)
+    header["From"]         = from
+    header["To"]           = tos
+    header["Subject"]      = fmt.Sprintf("=?UTF-8?B?%s?=", b64.EncodeToString([]byte(subject)))
     header["MIME-Version"] = "1.0"
 
     ct := "text/plain; charset=UTF-8"
@@ -71,7 +75,7 @@ func (this *Smtp) SendMail(from, tos, subject, body string, contentType ...strin
         ct = "text/html; charset=UTF-8"
     }
 
-    header["Content-Type"] = ct
+    header["Content-Type"]              = ct
     header["Content-Transfer-Encoding"] = "base64"
 
     message := ""
@@ -80,6 +84,6 @@ func (this *Smtp) SendMail(from, tos, subject, body string, contentType ...strin
     }
     message += "\r\n" + b64.EncodeToString([]byte(body))
 
-    auth := smtp.PlainAuth("", this.Username, this.Password, hp[0])
-    return smtp.SendMail(this.Address, auth, from, strings.Split(tos, ";"), []byte(message))
+    auth := smtp.PlainAuth("", s.Username, s.Password, hp[0])
+    return smtp.SendMail(s.Address, auth, from, strings.Split(tos, ";"), []byte(message))
 }
