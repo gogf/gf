@@ -2,29 +2,27 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/gogf/gf"
+	"github.com/gogf/gf/g/net/ghttp"
+
 	"github.com/gogf/gf/g"
-	"github.com/gogf/gf/g/os/gfile"
-	"github.com/gogf/gf/g/util/gconv"
 )
 
 func main() {
-	fmt.Println(gfile.Dir("/"))
-	return
-	a := []int{1,2,3}
-	fmt.Println(a[:0])
-	return
-	type Person struct{
-		Name string
-	}
-	type Staff struct{
-		Person
-		StaffId int
-	}
-	staff  := &Staff{}
-	params := g.Map{
-		"Name"    : "john",
-		"StaffId" : "10000",
-	}
-	gconv.Struct(params, staff)
-	fmt.Println(staff)
+	// fmt.Print(g.)
+	fmt.Println(gf.VERSION)
+	s := g.Server()
+
+	s.BindHandler("/status/:status", func(r *ghttp.Request) {
+		r.Response.Write("woops, status ", r.Get("status"), " found")
+	})
+	s.BindStatusHandler(404, func(r *ghttp.Request) {
+		r.Response.RedirectTo("/status/404")
+	})
+
+	s.SetErrorLogEnabled(true)
+	s.SetAccessLogEnabled(true)
+	s.SetPort(8890)
+	s.Run()
 }

@@ -21,9 +21,9 @@ import (
 
 // 优雅的Web Server对象封装
 type gracefulServer struct {
-    fd           uintptr
-    addr         string
-    httpServer   *http.Server
+    fd           uintptr      // 热重启时传递的socket监听文件句柄
+    addr         string       // 监听地址信息
+    httpServer   *http.Server // 底层http.Server
     rawListener  net.Listener // 原始listener
     listener     net.Listener // 接口化封装的listener
     isHttps      bool         // 是否HTTPS
@@ -45,7 +45,7 @@ func (s *Server) newGracefulServer(addr string, fd...int) *gracefulServer {
 
 // 生成一个底层的Web Server对象
 func (s *Server) newHttpServer(addr string) *http.Server {
-    return &http.Server {
+    server := &http.Server {
         Addr           : addr,
         Handler        : s.config.Handler,
         ReadTimeout    : s.config.ReadTimeout,
@@ -53,6 +53,8 @@ func (s *Server) newHttpServer(addr string) *http.Server {
         IdleTimeout    : s.config.IdleTimeout,
         MaxHeaderBytes : s.config.MaxHeaderBytes,
     }
+    server.SetKeepAlivesEnabled(s.config.KeepAlive)
+    return server
 }
 
 // 执行HTTP监听

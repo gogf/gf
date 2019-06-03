@@ -40,7 +40,7 @@ func Load(path string, unsafe...bool) (*Parser, error) {
 // LoadContent creates a Parser object from given content,
 // it checks the data type of <content> automatically,
 // supporting JSON, XML, YAML and TOML types of data.
-func LoadContent(data []byte, unsafe...bool) (*Parser, error) {
+func LoadContent(data interface{}, unsafe...bool) (*Parser, error) {
     if j, e := gjson.LoadContent(data, unsafe...); e == nil {
         return &Parser{j}, nil
     } else {

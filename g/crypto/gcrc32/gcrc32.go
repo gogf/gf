@@ -4,25 +4,26 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gcrc32 provides API for CRC32 encryption/decryption algorithm.
+// Package gcrc32 provides useful API for CRC32 encryption algorithms.
 package gcrc32
 
 import (
-    "hash/crc32"
+	"github.com/gogf/gf/g/util/gconv"
+	"hash/crc32"
 )
 
-// Encrypt encrypts bytes <v> using CRC32 algorithm.
-func Encrypt(v []byte) uint32 {
-	return crc32.ChecksumIEEE(v)
+// Encrypt encrypts any type of variable using CRC32 algorithms.
+// It uses gconv package to convert <v> to its bytes type.
+func Encrypt(v interface{}) uint32 {
+	return crc32.ChecksumIEEE(gconv.Bytes(v))
 }
 
-// EncryptString encrypts string <v> using CRC32 algorithm.
+// Deprecated.
 func EncryptString(v string) uint32 {
     return crc32.ChecksumIEEE([]byte(v))
 }
 
-// Alias of Encrypt.
 // Deprecated.
 func EncryptBytes(v []byte) uint32 {
-    return Encrypt(v)
+    return crc32.ChecksumIEEE(v)
 }

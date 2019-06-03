@@ -268,12 +268,12 @@ func (md *Model) Data(data ...interface{}) *Model {
                     case reflect.Array:
                         list := make(List, rv.Len())
                         for i := 0; i < rv.Len(); i++ {
-                            list[i] = gconv.Map(rv.Index(i).Interface())
+                            list[i] = structToMap(rv.Index(i).Interface())
                         }
                         model.data = list
                     case reflect.Map:   fallthrough
                     case reflect.Struct:
-                        model.data = Map(gconv.Map(data[0]))
+                        model.data = Map(structToMap(data[0]))
                     default:
                         model.data = data[0]
                 }

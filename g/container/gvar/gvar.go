@@ -80,9 +80,9 @@ func (v *Var) GTime(format...string) *gtime.Time {
 
 // Struct maps value of <v> to <objPointer>.
 // The param <objPointer> should be a pointer to a struct instance.
-// The param <attrMapping> is used to specify the key-to-attribute mapping rules.
-func (v *Var) Struct(objPointer interface{}, attrMapping...map[string]string) error {
-    return gconv.Struct(v.Val(), objPointer, attrMapping...)
+// The param <mapping> is used to specify the key-to-attribute mapping rules.
+func (v *Var) Struct(pointer interface{}, mapping...map[string]string) error {
+    return gconv.Struct(v.Val(), pointer, mapping...)
 }
 
 func (v *Var) IsNil()          bool            { return v.Val() == nil }
