@@ -12,7 +12,7 @@ import (
     "io"
 )
 
-// 封装的链接对象
+// 封装的UDP链接对象
 type Conn struct {
     conn           *net.UDPConn   // 底层链接对象
     raddr          *net.UDPAddr   // 远程地址
@@ -53,15 +53,12 @@ func NewConnByNetConn(udp *net.UDPConn) *Conn {
 }
 
 // 发送数据
-func (c *Conn) Send(data []byte, retry...Retry) error {
-    var err     error
-    var size    int
-    var length  int
+func (c *Conn) Send(data []byte, retry...Retry) (err error) {
     for {
         if c.raddr != nil {
-            size, err = c.conn.WriteToUDP(data, c.raddr)
+            _, err = c.conn.WriteToUDP(data, c.raddr)
         } else {
-            size, err = c.conn.Write(data)
+            _, err = c.conn.Write(data)
         }
         if err != nil {
             // 链接已关闭
@@ -80,10 +77,7 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
                 time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
             }
         } else {
-            length += size
-            if length == len(data) {
-                return nil
-            }
+            return nil
         }
     }
 }
@@ -110,7 +104,9 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
     for {
         if length < 0 && index > 0 {
             bufferWait = true
-            c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait))
+            if err = c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
+            	return nil, err
+            }
         }
         size, raddr, err = c.conn.ReadFromUDP(buffer[index:])
         if err == nil {
@@ -142,7 +138,9 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
             }
             // 判断数据是否全部读取完毕(由于超时机制的存在，获取的数据完整性不可靠)
             if bufferWait && isTimeout(err) {
-                c.conn.SetReadDeadline(c.recvDeadline)
+	            if err = c.conn.SetReadDeadline(c.recvDeadline); err != nil {
+		            return nil, err
+	            }
                 err = nil
                 break
             }
@@ -179,14 +177,18 @@ func (c *Conn) SendRecv(data []byte, receive int, retry...Retry) ([]byte, error)
 
 // 带超时时间的数据获取
 func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry...Retry) ([]byte, error) {
-    c.SetRecvDeadline(time.Now().Add(timeout))
+    if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+    	return nil, err
+    }
     defer c.SetRecvDeadline(time.Time{})
     return c.Recv(length, retry...)
 }
 
 // 带超时时间的数据发送
 func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry...Retry) error {
-    c.SetSendDeadline(time.Now().Add(timeout))
+	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+		return err
+	}
     defer c.SetSendDeadline(time.Time{})
     return c.Send(data, retry...)
 }
