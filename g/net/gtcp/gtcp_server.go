@@ -66,12 +66,12 @@ func NewTLSServer(address, crtFile, keyFile string, handler func (*Conn), name..
 	return s
 }
 
-// 设置参数 - address
+// SetAddress sets the listening address for server.
 func (s *Server) SetAddress (address string) {
     s.address = address
 }
 
-// 设置参数 - handler
+// SetHandler sets the connection handler for server.
 func (s *Server) SetHandler (handler func (*Conn)) {
     s.handler = handler
 }
