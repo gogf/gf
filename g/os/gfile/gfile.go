@@ -426,7 +426,7 @@ func MainPkgPath() string {
 	        }
         	// separator of <file> '/' will be converted to Separator.
         	path = Dir(file)
-        	for path != "/" && gstr.Contains(path, Separator) {
+        	for path[len(path) - 1] != os.PathSeparator {
         		files, _ := ScanDir(path, "*.go")
         		for _, v := range files {
 			        if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
