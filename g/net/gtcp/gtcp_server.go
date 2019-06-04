@@ -8,14 +8,12 @@
 package gtcp
 
 import (
-	"crypto/rand"
 	"crypto/tls"
 	"errors"
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/util/gconv"
 	"net"
-	"time"
 )
 
 const (
@@ -58,34 +56,41 @@ func NewServer(address string, handler func (*Conn), name...string) *Server {
     return s
 }
 
-// NewTlsServer creates and returns a new TCP server with TLS support.
+// NewServerTLS creates and returns a new TCP server with TLS support.
 // The param <name> is optional, which is used to specify the instance name of the server.
-func NewTLSServer(address, crtFile, keyFile string, handler func (*Conn), name...string) *Server {
+func NewServerTLS(address string, tlsConfig *tls.Config, handler func (*Conn), name...string) *Server {
 	s := NewServer(address, handler, name...)
-	s.SetTLSKeyCrt(crtFile, keyFile)
+	s.SetTLSConfig(tlsConfig)
+	return s
+}
+
+// NewServerKeyCrt creates and returns a new TCP server with TLS support.
+// The param <name> is optional, which is used to specify the instance name of the server.
+func NewServerKeyCrt(address, crtFile, keyFile string, handler func (*Conn), name...string) *Server {
+	s := NewServer(address, handler, name...)
+	if err := s.SetTLSKeyCrt(crtFile, keyFile); err != nil {
+		glog.Error(err)
+	}
 	return s
 }
 
 // SetAddress sets the listening address for server.
-func (s *Server) SetAddress (address string) {
+func (s *Server) SetAddress(address string) {
     s.address = address
 }
 
 // SetHandler sets the connection handler for server.
-func (s *Server) SetHandler (handler func (*Conn)) {
+func (s *Server) SetHandler(handler func (*Conn)) {
     s.handler = handler
 }
 
 // SetTlsKeyCrt sets the certificate and key file for TLS configuration of server.
-func (s *Server) SetTLSKeyCrt (crtFile, keyFile string) error {
-	crt, err := tls.LoadX509KeyPair(crtFile,keyFile)
+func (s *Server) SetTLSKeyCrt(crtFile, keyFile string) error {
+	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
 	if err != nil {
 		return err
 	}
-	s.tlsConfig              = &tls.Config{}
-	s.tlsConfig.Certificates = []tls.Certificate{crt}
-	s.tlsConfig.Time         = time.Now
-	s.tlsConfig.Rand         = rand.Reader
+	s.tlsConfig = tlsConfig
 	return nil
 }
 
