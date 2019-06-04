@@ -61,7 +61,7 @@ func (c *Conn) SendPkg(data []byte, option...PkgOption) error {
 	binary.BigEndian.PutUint32(buffer[0 : ], uint32(length))
 	copy(buffer[gPKG_HEADER_SIZE + 1 : ], data)
 	if pkgOption.Retry.Count > 0 {
-		c.Send(buffer[1:], pkgOption.Retry)
+		return c.Send(buffer[1:], pkgOption.Retry)
 	}
 	//fmt.Println("SendPkg:", buffer[1:])
 	return c.Send(buffer[1:])
@@ -69,7 +69,9 @@ func (c *Conn) SendPkg(data []byte, option...PkgOption) error {
 
 // 简单协议: 带超时时间的数据发送
 func (c *Conn) SendPkgWithTimeout(data []byte, timeout time.Duration, option...PkgOption) error {
-	c.SetSendDeadline(time.Now().Add(timeout))
+	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+		return err
+	}
 	defer c.SetSendDeadline(time.Time{})
 	return c.SendPkg(data, option...)
 }
@@ -137,7 +139,9 @@ func (c *Conn) RecvPkg(option...PkgOption) (result []byte, err error) {
 
 // 简单协议: 带超时时间的消息包获取
 func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option...PkgOption) ([]byte, error) {
-	c.SetRecvDeadline(time.Now().Add(timeout))
+	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+		return nil, err
+	}
 	defer c.SetRecvDeadline(time.Time{})
 	return c.RecvPkg(option...)
 }

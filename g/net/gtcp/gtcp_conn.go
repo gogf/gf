@@ -7,11 +7,12 @@
 package gtcp
 
 import (
-    "net"
-    "time"
-    "io"
-    "bufio"
-    "bytes"
+	"bufio"
+	"bytes"
+	"crypto/tls"
+	"io"
+	"net"
+	"time"
 )
 
 // 封装的链接对象
@@ -21,7 +22,7 @@ type Conn struct {
     buffer         []byte        // 读取缓冲区(用于数据读取时的缓冲区处理)
     recvDeadline   time.Time     // 读取超时时间
     sendDeadline   time.Time     // 写入超时时间
-    recvBufferWait time.Duration // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
+    recvBufferWait time.Duration // 读取全部缓冲区数据时，读取缓冲区完毕后的等待间隔
 }
 
 const (
@@ -36,6 +37,24 @@ func NewConn(addr string, timeout...int) (*Conn, error) {
     } else {
         return nil, err
     }
+}
+
+// 创建支持TLS加密通信的TCP链接
+func NewConnTLS(addr string, tlsConfig *tls.Config) (*Conn, error) {
+	if conn, err := NewNetConnTLS(addr, tlsConfig); err == nil {
+		return NewConnByNetConn(conn), nil
+	} else {
+		return nil, err
+	}
+}
+
+// 根据证书和密钥文件创建支持TLS加密通信的TCP链接
+func NewConnKeyCrt(addr, crtFile, keyFile string) (*Conn, error) {
+	if conn, err := NewNetConnKeyCrt(addr, crtFile, keyFile); err == nil {
+		return NewConnByNetConn(conn), nil
+	} else {
+		return nil, err
+	}
 }
 
 // 将net.Conn接口对象转换为*gtcp.Conn对象

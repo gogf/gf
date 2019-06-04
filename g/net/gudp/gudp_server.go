@@ -30,7 +30,7 @@ var serverMapping = gmap.NewStrAnyMap()
 
 // 获取/创建一个空配置的UDP Server
 // 单例模式，请保证name的唯一性
-func GetServer(name...interface{}) (*Server) {
+func GetServer(name...interface{}) *Server {
     serverName := gDEFAULT_SERVER
     if len(name) > 0 {
         serverName = gconv.String(name[0])
@@ -44,7 +44,7 @@ func GetServer(name...interface{}) (*Server) {
 }
 
 // 创建一个tcp server对象，并且可以选择指定一个单例名字
-func NewServer (address string, handler func (*Conn), names...string) *Server {
+func NewServer(address string, handler func (*Conn), names...string) *Server {
     s := &Server{address, handler}
     if len(names) > 0 {
         serverMapping.Set(names[0], s)

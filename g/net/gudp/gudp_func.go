@@ -10,6 +10,7 @@ import (
     "net"
 )
 
+// Deprecated.
 // 常见的二进制数据校验方式，生成校验结果
 func Checksum(buffer []byte) uint32 {
 	var checksum uint32
