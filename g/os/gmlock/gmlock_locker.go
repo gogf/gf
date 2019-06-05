@@ -67,6 +67,36 @@ func (l *Locker) RUnlock(key string) {
     }
 }
 
+// TryLockFunc locks the <key> with write lock and callback function <f>.
+// It returns true if success, or else if there's a write/read lock the <key>, it return false.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
+func (l *Locker) TryLockFunc(key string, f func(), expire...time.Duration) bool {
+	if l.TryLock(key, expire...) {
+		defer l.Unlock(key)
+		f()
+		return true
+	}
+	return false
+}
+
+// TryRLockFunc locks the <key> with read lock and callback function <f>.
+// It returns true if success, or else if there's a write lock the <key>, it returns false.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
+func (l *Locker) TryRLockFunc(key string, f func()) bool {
+	if l.TryRLock(key) {
+		defer l.RUnlock(key)
+		f()
+		return true
+	}
+	return false
+}
+
 // LockFunc locks the <key> with write lock and callback function <f>.
 // If there's a write/read lock the <key>,
 // it will blocks until the lock is released.
@@ -120,7 +150,6 @@ func (l *Locker) doLock(key string, expire time.Duration, try bool) bool {
         mu.Lock()
     }
     if ok && expire > 0 {
-        // 异步goroutine计时处理
         wid := mu.wid.Val()
         gtimer.AddOnce(expire, func() {
             if wid == mu.wid.Val() {
