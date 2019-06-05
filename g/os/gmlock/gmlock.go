@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gmlock implements a thread-safe memory locker.
-// 
-// 内存锁.
 package gmlock
 
 import "time"
@@ -43,4 +41,14 @@ func RLock(key string) {
 // 解除基于内存锁的读锁
 func RUnlock(key string) {
     locker.RUnlock(key)
+}
+
+// 通过闭包的方式写锁执行回调方法<f>，执行完毕后释放写锁
+func LockFunc(key string, f func(), expire...time.Duration) {
+	locker.LockFunc(key, f, expire...)
+}
+
+// 通过闭包的方式读锁执行回调方法<f>，执行完毕后释放读锁
+func RLockFunc(key string, f func()) {
+	locker.RLockFunc(key, f)
 }

@@ -69,7 +69,7 @@ func New(path...string) *View {
             if gfile.Exists(envPath) {
 	            view.SetPath(envPath)
             } else {
-                glog.Errorfln("Template directory path does not exist: %s", envPath)
+                glog.Errorf("Template directory path does not exist: %s", envPath)
             }
         } else {
             // Dir path of working dir.

@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfsnotify"
 	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/os/gmlock"
 	"github.com/gogf/gf/g/os/gspath"
 	"github.com/gogf/gf/g/text/gstr"
 	"text/template"
@@ -40,7 +41,7 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 		if tpl, err = tpl.ParseFiles(files...); err != nil {
 			return nil
 		}
-		gfsnotify.Add(path, func(event *gfsnotify.Event) {
+		_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
 			templates.Remove(path)
 			gfsnotify.Exit()
 		})
@@ -102,7 +103,9 @@ func (view *View) Parse(file string, params...Params) (parsed string, err error)
 	if err != nil {
 		return "", err
 	}
-	tpl, err = tpl.Parse(gfcache.GetContents(path))
+	gmlock.LockFunc("gview-template-parsing:" + folder, func() {
+		tpl, err = tpl.Parse(gfcache.GetContents(path))
+	})
 	if err != nil {
 		return "", err
 	}
