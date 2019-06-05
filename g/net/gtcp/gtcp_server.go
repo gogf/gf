@@ -22,6 +22,7 @@ const (
 
 // TCP Server.
 type Server struct {
+	listen    net.Listener
     address   string
     handler   func (*Conn)
 	tlsConfig *tls.Config
@@ -99,6 +100,11 @@ func (s *Server) SetTLSConfig(tlsConfig *tls.Config) {
 	s.tlsConfig = tlsConfig
 }
 
+// Close closes the listener and shutdowns the server.
+func (s *Server) Close() error {
+	return s.listen.Close()
+}
+
 // Run starts running the TCP Server.
 func (s *Server) Run() (err error) {
     if s.handler == nil {
@@ -106,10 +112,9 @@ func (s *Server) Run() (err error) {
         glog.Error(err)
         return
     }
-    listen := net.Listener(nil)
     if s.tlsConfig != nil {
     	// TLS Server
-	    listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
+	    s.listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
 	    if err != nil {
 	    	glog.Error(err)
 	    	return
@@ -121,14 +126,14 @@ func (s *Server) Run() (err error) {
 		    glog.Error(err)
 		    return err
 	    }
-	    listen, err = net.ListenTCP("tcp", addr)
+	    s.listen, err = net.ListenTCP("tcp", addr)
 	    if err != nil {
 		    glog.Error(err)
 		    return err
 	    }
     }
     for {
-        if conn, err := listen.Accept(); err != nil {
+        if conn, err := s.listen.Accept(); err != nil {
             glog.Error(err)
             return err
         } else if conn != nil {
