@@ -21,6 +21,11 @@ import (
 	"text/template"
 )
 
+const (
+	// Template name for content parsing.
+	gCONTENT_TEMPLATE_NAME = "template content"
+)
+
 var (
 	// Templates cache map for template folder.
 	templates = gmap.NewStrAnyMap()
@@ -103,7 +108,8 @@ func (view *View) Parse(file string, params...Params) (parsed string, err error)
 	if err != nil {
 		return "", err
 	}
-	gmlock.LockFunc("gview-template-parsing:" + folder, func() {
+	// Using memory lock to ensure concurrent safety for template parsing.
+	gmlock.LockFunc("gview-parsing:" + folder, func() {
 		tpl, err = tpl.Parse(gfcache.GetContents(path))
 	})
 	if err != nil {
@@ -149,8 +155,14 @@ func (view *View) Parse(file string, params...Params) (parsed string, err error)
 func (view *View) ParseContent(content string, params...Params) (string, error) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
-	tpl := template.New("template content").Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
-	tpl, err := tpl.Parse(content)
+	err := (error)(nil)
+	tpl := templates.GetOrSetFuncLock(gCONTENT_TEMPLATE_NAME, func() interface {} {
+		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+	}).(*template.Template)
+	// Using memory lock to ensure concurrent safety for content parsing.
+	gmlock.LockFunc("gview-parsing:content", func() {
+		tpl, err = tpl.Parse(content)
+	})
 	if err != nil {
 		return "", err
 	}

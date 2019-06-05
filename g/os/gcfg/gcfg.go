@@ -55,20 +55,20 @@ func New(file...string) *Config {
 	// Customized dir path from env/cmd.
 	if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" {
 		if gfile.Exists(envPath) {
-			c.SetPath(envPath)
+			_ = c.SetPath(envPath)
 		} else {
 			glog.Errorf("Configuration directory path does not exist: %s", envPath)
 		}
 	} else {
 		// Dir path of working dir.
-		c.SetPath(gfile.Pwd())
+		_ = c.SetPath(gfile.Pwd())
 		// Dir path of binary.
 		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-			c.AddPath(selfPath)
+			_ = c.AddPath(selfPath)
 		}
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-			c.AddPath(mainPath)
+			_ = c.AddPath(mainPath)
 		}
 	}
     return c
