@@ -57,7 +57,7 @@ func New(file...string) *Config {
 		if gfile.Exists(envPath) {
 			c.SetPath(envPath)
 		} else {
-			glog.Errorfln("Configuration directory path does not exist: %s", envPath)
+			glog.Errorf("Configuration directory path does not exist: %s", envPath)
 		}
 	} else {
 		// Dir path of working dir.
@@ -276,9 +276,9 @@ func (c *Config) getJson(file...string) *gjson.Json {
             return j
         } else {
             if filePath != "" {
-                glog.Criticalfln(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+                glog.Criticalf(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
             } else {
-                glog.Criticalfln(`[gcfg] Load configuration failed: %s`, err.Error())
+                glog.Criticalf(`[gcfg] Load configuration failed: %s`, err.Error())
             }
         }
         return nil

@@ -58,6 +58,20 @@ func (l *Locker) RUnlock(key string) {
     }
 }
 
+// 通过闭包的方式写锁执行回调方法<f>，执行完毕后释放写锁
+func (l *Locker) LockFunc(key string, f func(), expire...time.Duration) {
+	l.Lock(key, expire...)
+	defer l.Unlock(key)
+	f()
+}
+
+// 通过闭包的方式读锁执行回调方法<f>，执行完毕后释放读锁
+func (l *Locker) RLockFunc(key string, f func()) {
+	l.RLock(key)
+	defer l.RUnlock(key)
+	f()
+}
+
 // 获得过期时间，没有设置时默认为0不过期
 func (l *Locker) getExpire(expire...time.Duration) time.Duration {
     e := time.Duration(0)
