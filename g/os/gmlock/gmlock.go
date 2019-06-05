@@ -4,12 +4,13 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gmlock implements a thread-safe memory locker.
+// Package gmlock implements a concurrent-safe memory-based locker.
 package gmlock
 
 import "time"
 
 var (
+	// Default locker.
     locker = New()
 )
 
@@ -49,6 +50,26 @@ func RLock(key string) {
 // RUnlock unlocks the read lock of the <key>.
 func RUnlock(key string) {
     locker.RUnlock(key)
+}
+
+// TryLockFunc locks the <key> with write lock and callback function <f>.
+// It returns true if success, or else if there's a write/read lock the <key>, it return false.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
+func TryLockFunc(key string, f func(), expire...time.Duration) bool {
+	return locker.TryLockFunc(key, f, expire...)
+}
+
+// TryRLockFunc locks the <key> with read lock and callback function <f>.
+// It returns true if success, or else if there's a write lock the <key>, it returns false.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
+func TryRLockFunc(key string, f func()) bool {
+	return locker.TryRLockFunc(key, f)
 }
 
 // LockFunc locks the <key> with write lock and callback function <f>.
