@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	data, err := gtcp.SendRecv("www.baidu.com:80", []byte("GET / HTTP/1.1\n\n"), -1)
+	data, err := gtcp.SendRecv("www.baidu.com:80", []byte("HEAD / HTTP/1.1\n\n"), -1)
 	if len(data) > 0 {
 		fmt.Println(string(data))
 	}
