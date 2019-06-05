@@ -13,42 +13,62 @@ var (
     locker = New()
 )
 
-// 内存写锁，如果锁成功返回true，失败则返回false;过期时间单位为秒，默认为0表示不过期
+// TryLock tries locking the <key> with write lock,
+// it returns true if success, or if there's a write/read lock the <key>,
+// it returns false. The parameter <expire> specifies the max duration it locks.
 func TryLock(key string, expire...time.Duration) bool {
     return locker.TryLock(key, expire...)
 }
 
-// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有其他写锁存在;过期时间单位为秒，默认为0表示不过期
+// Lock locks the <key> with write lock.
+// If there's a write/read lock the <key>,
+// it will blocks until the lock is released.
+// The parameter <expire> specifies the max duration it locks.
 func Lock(key string, expire...time.Duration) {
     locker.Lock(key, expire...)
 }
 
-// 解除基于内存锁的写锁
+// Unlock unlocks the write lock of the <key>.
 func Unlock(key string) {
     locker.Unlock(key)
 }
 
-// 内存读锁，如果锁成功返回true，失败则返回false; 过期时间单位为秒，默认为0表示不过期
+// TryRLock tries locking the <key> with read lock.
+// It returns true if success, or if there's a write lock on <key>, it returns false.
 func TryRLock(key string) bool {
     return locker.TryRLock(key)
 }
 
-// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有写锁存在; 过期时间单位为秒，默认为0表示不过期
+// RLock locks the <key> with read lock.
+// If there's a write lock on <key>,
+// it will blocks until the write lock is released.
 func RLock(key string) {
     locker.RLock(key)
 }
 
-// 解除基于内存锁的读锁
+// RUnlock unlocks the read lock of the <key>.
 func RUnlock(key string) {
     locker.RUnlock(key)
 }
 
-// 通过闭包的方式写锁执行回调方法<f>，执行完毕后释放写锁
+// LockFunc locks the <key> with write lock and callback function <f>.
+// If there's a write/read lock the <key>,
+// it will blocks until the lock is released.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
 func LockFunc(key string, f func(), expire...time.Duration) {
 	locker.LockFunc(key, f, expire...)
 }
 
-// 通过闭包的方式读锁执行回调方法<f>，执行完毕后释放读锁
+// RLockFunc locks the <key> with read lock and callback function <f>.
+// If there's a write lock the <key>,
+// it will blocks until the lock is released.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
 func RLockFunc(key string, f func()) {
 	locker.RLockFunc(key, f)
 }

@@ -11,15 +11,15 @@ import (
     "sync"
 )
 
-// 互斥锁对象
+// The mutex.
 type Mutex struct {
     mu     sync.RWMutex
-    wid    *gtype.Int64        // 当前Lock产生的唯一id(主要用于计时Unlock的校验)
-    rcount *gtype.Int          // RLock次数
-    wcount *gtype.Int          // Lock次数
+    wid    *gtype.Int64        // Unique id for this mutex.
+    rcount *gtype.Int          // RLock count.
+    wcount *gtype.Int          // Lock count.
 }
 
-// 创建一把内存锁使用的底层RWMutex
+// NewMutex creates and returns a new mutex.
 func NewMutex() *Mutex {
     return &Mutex{
         wid    : gtype.NewInt64(),
@@ -28,46 +28,55 @@ func NewMutex() *Mutex {
     }
 }
 
+// Lock locks mutex for writing.
+// If the lock is already locked for reading or writing,
+// Lock blocks until the lock is available.
 func (l *Mutex) Lock() {
     l.wcount.Add(1)
     l.mu.Lock()
     l.wid.Add(1)
 }
 
-// 安全的Unlock
+// Unlock unlocks the write lock.
+// It is safe to be called multiple times.
 func (l *Mutex) Unlock() {
     if l.wcount.Val() > 0 {
         if l.wcount.Add(-1) >= 0 {
             l.mu.Unlock()
         } else {
-            // 标准库这里会panic
             l.wcount.Add(1)
         }
     }
 }
 
+// RLock locks mutex for reading.
 func (l *Mutex) RLock() {
     l.rcount.Add(1)
     l.mu.RLock()
 }
 
-// 安全的RUnlock
+// RUnlock undoes a single RLock call;
+// it does not affect other simultaneous readers.
+// It is a run-time error if rw is not locked for reading
+// on entry to RUnlock.
+// It is safe to be called multiple times.
 func (l *Mutex) RUnlock() {
     if l.rcount.Val() > 0 {
         if l.rcount.Add(-1) >= 0 {
             l.mu.RUnlock()
         } else {
-            // 标准库这里会panic
             l.rcount.Add(1)
         }
     }
 }
 
-// 不阻塞Lock
+// TryLock tries locking the mutex with write lock,
+// it returns true if success, or if there's a write/read lock the mutex,
+// it returns false.
 func (l *Mutex) TryLock() bool {
-    // 初步读写次数检查, 但无法保证原子性
+    // The first check, but it cannot ensure the atomicity.
     if l.wcount.Val() == 0 && l.rcount.Val() == 0 {
-        // 第二次检查, 保证原子操作
+        // The second check, it can ensure the atomicity.
         if l.wcount.Add(1) == 1 {
             l.mu.Lock()
             l.wid.Add(1)
@@ -79,9 +88,10 @@ func (l *Mutex) TryLock() bool {
     return false
 }
 
-// 不阻塞RLock
+// TryRLock tries locking the mutex with read lock.
+// It returns true if success, or if there's a write lock on mutex, it returns false.
 func (l *Mutex) TryRLock() bool {
-    // 只要不存在写锁
+    // There must be no write lock on mutex.
     if l.wcount.Val() == 0 {
         l.rcount.Add(1)
         l.mu.RLock()
