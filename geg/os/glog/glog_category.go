@@ -9,7 +9,7 @@ import (
 func main() {
 	path := "/tmp/glog-cat"
 	glog.SetPath(path)
-	glog.StdPrint(false).Cat("cat1").Cat("cat2").Println("test")
+	glog.Stdout(false).Cat("cat1").Cat("cat2").Println("test")
 	list, err := gfile.ScanDir(path, "*", true)
 	g.Dump(err)
 	g.Dump(list)

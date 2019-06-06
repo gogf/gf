@@ -142,16 +142,16 @@ func (r *Request) GetPostMap(def...map[string]string) map[string]string {
 }
 
 // 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
-func (r *Request) GetPostToStruct(object interface{}, mapping...map[string]string) error {
-    tagmap := r.getStructParamsTagMap(object)
+func (r *Request) GetPostToStruct(pointer interface{}, mapping...map[string]string) error {
+    tagMap := r.getStructParamsTagMap(pointer)
     if len(mapping) > 0 {
         for k, v := range mapping[0] {
-            tagmap[k] = v
+	        tagMap[k] = v
         }
     }
     params := make(map[string]interface{})
     for k, v := range r.GetPostMap() {
         params[k] = v
     }
-    return gconv.Struct(params, object, tagmap)
+    return gconv.Struct(params, pointer, tagMap)
 }

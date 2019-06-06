@@ -43,6 +43,10 @@ func New(data interface{}, unsafe...bool) *Json {
         default:
 	        rv   := reflect.ValueOf(data)
 	        kind := rv.Kind()
+	        if kind == reflect.Ptr {
+		        rv   = rv.Elem()
+		        kind = rv.Kind()
+	        }
 	        switch kind {
 		        case reflect.Slice: fallthrough
 		        case reflect.Array:
@@ -56,7 +60,7 @@ func New(data interface{}, unsafe...bool) *Json {
 		        case reflect.Map: fallthrough
 		        case reflect.Struct:
 			        i := interface{}(nil)
-			        i  = gconv.Map(data)
+			        i  = gconv.Map(data, "json")
 			        j  = &Json {
 				        p  : &i,
 				        c  : byte(gDEFAULT_SPLIT_CHAR),
@@ -132,11 +136,14 @@ func LoadContent(data interface{}, unsafe...bool) (*Json, error) {
     var err    error
     var result interface{}
     b := gconv.Bytes(data)
-    t := "json"
+    t := ""
+	if len(b) == 0 {
+		return New(nil, unsafe...), nil
+	}
     // auto check data type
     if json.Valid(b) {
         t = "json"
-    } else if gregex.IsMatch(`^<.+>.*</.+>$`, b) {
+    } else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, b) {
         t = "xml"
     } else if gregex.IsMatch(`^[\s\t]*\w+\s*:\s*.+`, b) || gregex.IsMatch(`\n[\s\t]*\w+\s*:\s*.+`, b) {
         t = "yml"

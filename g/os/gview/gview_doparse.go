@@ -15,9 +15,15 @@ import (
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfsnotify"
 	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/os/gmlock"
 	"github.com/gogf/gf/g/os/gspath"
 	"github.com/gogf/gf/g/text/gstr"
 	"text/template"
+)
+
+const (
+	// Template name for content parsing.
+	gCONTENT_TEMPLATE_NAME = "template content"
 )
 
 var (
@@ -40,7 +46,7 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 		if tpl, err = tpl.ParseFiles(files...); err != nil {
 			return nil
 		}
-		gfsnotify.Add(path, func(event *gfsnotify.Event) {
+		_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
 			templates.Remove(path)
 			gfsnotify.Exit()
 		})
@@ -102,7 +108,10 @@ func (view *View) Parse(file string, params...Params) (parsed string, err error)
 	if err != nil {
 		return "", err
 	}
-	tpl, err = tpl.Parse(gfcache.GetContents(path))
+	// Using memory lock to ensure concurrent safety for template parsing.
+	gmlock.LockFunc("gview-parsing:" + folder, func() {
+		tpl, err = tpl.Parse(gfcache.GetContents(path))
+	})
 	if err != nil {
 		return "", err
 	}
@@ -146,8 +155,14 @@ func (view *View) Parse(file string, params...Params) (parsed string, err error)
 func (view *View) ParseContent(content string, params...Params) (string, error) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
-	tpl := template.New("template content").Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
-	tpl, err := tpl.Parse(content)
+	err := (error)(nil)
+	tpl := templates.GetOrSetFuncLock(gCONTENT_TEMPLATE_NAME, func() interface {} {
+		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+	}).(*template.Template)
+	// Using memory lock to ensure concurrent safety for content parsing.
+	gmlock.LockFunc("gview-parsing:content", func() {
+		tpl, err = tpl.Parse(content)
+	})
 	if err != nil {
 		return "", err
 	}

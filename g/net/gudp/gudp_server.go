@@ -21,8 +21,9 @@ const (
 
 // tcp server结构体
 type Server struct {
-    address   string
-    handler   func (*Conn)
+	conn    *Conn        // UDP server connection object.
+    address string       // Listening address.
+    handler func (*Conn)
 }
 
 // Server表，用以存储和检索名称与Server对象之间的关联关系
@@ -30,7 +31,7 @@ var serverMapping = gmap.NewStrAnyMap()
 
 // 获取/创建一个空配置的UDP Server
 // 单例模式，请保证name的唯一性
-func GetServer(name...interface{}) (*Server) {
+func GetServer(name...interface{}) *Server {
     serverName := gDEFAULT_SERVER
     if len(name) > 0 {
         serverName = gconv.String(name[0])
@@ -44,8 +45,11 @@ func GetServer(name...interface{}) (*Server) {
 }
 
 // 创建一个tcp server对象，并且可以选择指定一个单例名字
-func NewServer (address string, handler func (*Conn), names...string) *Server {
-    s := &Server{address, handler}
+func NewServer(address string, handler func (*Conn), names...string) *Server {
+    s := &Server{
+    	address : address,
+    	handler : handler,
+    }
     if len(names) > 0 {
         serverMapping.Set(names[0], s)
     }
@@ -58,8 +62,14 @@ func (s *Server) SetAddress (address string) {
 }
 
 // 设置参数 - handler
-func (s *Server) SetHandler (handler func (*Conn)) {
+func (s *Server) SetHandler(handler func (*Conn)) {
     s.handler = handler
+}
+
+// Close closes the connection.
+// It will make server shutdowns immediately.
+func (s *Server) Close() error {
+	return s.conn.Close()
 }
 
 // 执行监听
@@ -79,7 +89,7 @@ func (s *Server) Run() error {
         glog.Error(err)
         return err
     }
-    for {
-        s.handler(NewConnByNetConn(conn))
-    }
+    s.conn = NewConnByNetConn(conn)
+    s.handler(s.conn)
+    return nil
 }

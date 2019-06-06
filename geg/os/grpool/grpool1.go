@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gogf/gf/g/os/grpool"
-	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/os/gtimer"
 	"time"
 )
 
@@ -18,11 +18,11 @@ func main() {
 	}
 	fmt.Println("worker:", pool.Size())
 	fmt.Println("  jobs:", pool.Jobs())
-	gtime.SetInterval(time.Second, func() bool {
+	gtimer.SetInterval(time.Second, func() {
 		fmt.Println("worker:", pool.Size())
 		fmt.Println("  jobs:", pool.Jobs())
 		fmt.Println()
-		return true
+		gtimer.Exit()
 	})
 
 	select {}

@@ -115,7 +115,7 @@ func (entry *Entry) check() {
                 return
 
             case STATUS_CLOSED:
-	            glog.Path(path).Level(level).Debugfln("[gcron] %s(%s) %s removed", entry.Name, entry.schedule.pattern, entry.jobName)
+	            glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s removed", entry.Name, entry.schedule.pattern, entry.jobName)
 	            entry.Close()
 
             case STATUS_READY: fallthrough
@@ -130,12 +130,12 @@ func (entry *Entry) check() {
 	            if times < 2000000000 && times > 1000000000 {
 		            entry.times.Set(gDEFAULT_TIMES)
 	            }
-                glog.Path(path).Level(level).Debugfln("[gcron] %s(%s) %s start", entry.Name, entry.schedule.pattern, entry.jobName)
+                glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s start", entry.Name, entry.schedule.pattern, entry.jobName)
                 defer func() {
                     if err := recover(); err != nil {
-                        glog.Path(path).Level(level).Errorfln("[gcron] %s(%s) %s end with error: %v", entry.Name, entry.schedule.pattern, entry.jobName, err)
+                        glog.Path(path).Level(level).Errorf("[gcron] %s(%s) %s end with error: %v", entry.Name, entry.schedule.pattern, entry.jobName, err)
                     } else {
-                        glog.Path(path).Level(level).Debugfln("[gcron] %s(%s) %s end", entry.Name, entry.schedule.pattern, entry.jobName)
+                        glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s end", entry.Name, entry.schedule.pattern, entry.jobName)
                     }
 	                if entry.entry.Status() == STATUS_CLOSED {
 		                entry.Close()

@@ -20,6 +20,11 @@ type apiString interface {
     String() string
 }
 
+// Type assert api for Error().
+type apiError interface {
+	Error() string
+}
+
 var (
     // Empty strings.
     emptyStringMap = map[string]struct{}{
@@ -137,11 +142,16 @@ func String(i interface{}) string {
         case bool:    return strconv.FormatBool(value)
         case string:  return value
         case []byte:  return string(value)
+        case []rune:  return string(value)
         default:
             if f, ok := value.(apiString); ok {
                 // If the variable implements the String() interface,
                 // then use that interface to perform the conversion
                 return f.String()
+            } else if f, ok := value.(apiError); ok {
+	            // If the variable implements the Error() interface,
+	            // then use that interface to perform the conversion
+	            return f.Error()
             } else {
                 // Finally we use json.Marshal to convert.
                 jsonContent, _ := json.Marshal(value)

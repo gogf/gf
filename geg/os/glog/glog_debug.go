@@ -3,11 +3,12 @@ package main
 import (
 	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/os/gtimer"
 	"time"
 )
 
 func main() {
-	gtime.SetTimeout(3*time.Second, func() {
+	gtimer.SetTimeout(3*time.Second, func() {
 		glog.SetDebug(false)
 	})
 	for {

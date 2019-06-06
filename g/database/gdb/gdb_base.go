@@ -24,6 +24,17 @@ const (
     gDEFAULT_DEBUG_SQL_LENGTH = 1000 // 默认调试模式下记录的SQL条数
 )
 
+// 获取最近一条执行的sql
+func (bs *dbBase) GetLastSql() *Sql {
+	if bs.sqls == nil {
+		return nil
+	}
+	if v := bs.sqls.Val(); v != nil {
+		return v.(*Sql)
+	}
+	return nil
+}
+
 // 获取已经执行的SQL列表(仅在debug=true时有效)
 func (bs *dbBase) GetQueriedSqls() []*Sql {
     if bs.sqls == nil {
@@ -312,7 +323,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
             return bs.db.doBatchInsert(link, table, data, option, batch...)
         case reflect.Map:   fallthrough
         case reflect.Struct:
-            dataMap = gconv.Map(data)
+            dataMap = structToMap(data)
         default:
             return result, errors.New(fmt.Sprint("unsupported data type:", kind))
     }
@@ -390,11 +401,11 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
                 case reflect.Array:
                     listMap = make(List, rv.Len())
                     for i := 0; i < rv.Len(); i++ {
-                        listMap[i] = gconv.Map(rv.Index(i).Interface())
+                        listMap[i] = structToMap(rv.Index(i).Interface())
                     }
                 case reflect.Map:   fallthrough
                 case reflect.Struct:
-                    listMap = List{Map(gconv.Map(list))}
+                    listMap = List{Map(structToMap(list))}
                 default:
                     return result, errors.New(fmt.Sprint("unsupported list type:", kind))
             }
@@ -504,7 +515,7 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
         case reflect.Map:   fallthrough
         case reflect.Struct:
             var fields []string
-            for k, v := range gconv.Map(data) {
+            for k, v := range structToMap(data) {
                 fields = append(fields, fmt.Sprintf("%s%s%s=?", charL, k, charR))
                 params = append(params, convertParam(v))
             }

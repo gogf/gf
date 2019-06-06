@@ -137,7 +137,7 @@ func Test_ToZone(t *testing.T) {
 		timeTemp.ToLocation(loc)
 		gtest.Assert(timeTemp.Time.Location().String(), "Asia/Shanghai")
 
-		timeTemp1 := timeTemp.ToZone("errZone")
+		timeTemp1, _ := timeTemp.ToZone("errZone")
 		if timeTemp1 != nil {
 			t.Error("test fail")
 		}

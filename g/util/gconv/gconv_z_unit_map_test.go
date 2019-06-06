@@ -123,23 +123,30 @@ func Test_Map_PrivateAttribute(t *testing.T) {
         gtest.Assert(gconv.Map(user), g.Map{"Id" : 1})
     })
 }
-//
-//func Test_Map_StructInherit(t *testing.T) {
-//	type Base struct {
-//		Id   int
-//	}
-//	type User struct {
-//		Base
-//		Name string
-//	}
-//	gtest.Case(t, func() {
-//		user := &User{
-//			Base : Base {
-//				Id : 100,
-//			},
-//			Name : "john",
-//		}
-//		fmt.Println(gconv.Map(user))
-//		//gtest.Assert(gconv.Map(user), g.Map{"Id" : 1})
-//	})
-//}
+
+func Test_Map_StructInherit(t *testing.T) {
+	gtest.Case(t, func() {
+		type Ids struct {
+			Id         int    `json:"id"`
+			Uid        int    `json:"uid"`
+		}
+		type Base struct {
+			Ids
+			CreateTime string `json:"create_time"`
+		}
+		type User struct {
+			Base
+			Passport   string `json:"passport"`
+			Password   string `json:"password"`
+			Nickname   string `json:"nickname"`
+		}
+		user := new(User)
+		user.Id         = 100
+		user.Nickname   = "john"
+		user.CreateTime = "2019"
+		m := gconv.MapDeep(user)
+		gtest.Assert(m["id"],          user.Id)
+		gtest.Assert(m["nickname"],    user.Nickname)
+		gtest.Assert(m["create_time"], user.CreateTime)
+	})
+}

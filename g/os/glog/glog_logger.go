@@ -3,8 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-//
-// @author john, zseeker
 
 package glog
 
@@ -16,6 +14,7 @@ import (
 	"github.com/gogf/gf/g/os/gfpool"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/util/gconv"
 	"io"
 	"os"
 	"runtime"
@@ -45,7 +44,8 @@ const (
 )
 
 const (
-	F_FILE_LONG  = 1 << iota // Print full file name and line number: /a/b/c/d.go:23.
+	F_ASYNC      = 1 << iota // Print logging content asynchronously。
+	F_FILE_LONG              // Print full file name and line number: /a/b/c/d.go:23.
 	F_FILE_SHORT             // Print final file name element and line number: d.go:23. overrides F_FILE_LONG.
 	F_TIME_DATE              // Print the date in the local time zone: 2009-01-23.
 	F_TIME_TIME              // Print the time in the local time zone: 01:23:23.
@@ -80,19 +80,10 @@ func New() *Logger {
 
 // Clone returns a new logger, which is the clone the current logger.
 func (l *Logger) Clone() *Logger {
-	logger := &Logger {
-        parent       : l,
-        path         : l.path,
-        file         : l.file,
-        level        : l.level,
-        flags        : l.flags,
-		prefix       : l.prefix,
-        btSkip       : l.btSkip,
-        btStatus     : l.btStatus,
-        headerPrint  : l.headerPrint,
-        stdoutPrint  : l.stdoutPrint,
-    }
-	return logger
+	logger := Logger{}
+	logger  = *l
+	logger.parent = l
+	return &logger
 }
 
 // SetLevel sets the logging level.
@@ -113,6 +104,15 @@ func (l *Logger) SetDebug(debug bool) {
     } else {
         l.level = l.level  & ^LEVEL_DEBU
     }
+}
+
+// SetAsync enables/disables async logging output feature.
+func (l *Logger) SetAsync(enabled bool) {
+	if enabled {
+		l.flags = l.flags | F_ASYNC
+	} else {
+		l.flags = l.flags & ^F_ASYNC
+	}
 }
 
 // SetFlags sets extra flags for logging output features.
@@ -226,67 +226,112 @@ func (l *Logger) SetPrefix(prefix string) {
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
-func (l *Logger) print(std io.Writer, s string) {
-    // Custom writer has the most high priority.
+func (l *Logger) print(std io.Writer, lead string, value...interface{}) {
+	buffer := bytes.NewBuffer(nil)
     if l.headerPrint {
-        s = l.format(s)
-    }
-    if l.writer == nil {
-        if f := l.getFilePointer(); f != nil {
-            defer f.Close()
-            if _, err := io.WriteString(f, s); err != nil {
-                fmt.Fprintln(os.Stderr, err.Error())
-            }
-        }
-        // Allow output to stdout?
-        if l.stdoutPrint {
-	        if _, err := std.Write([]byte(s)); err != nil {
-		        fmt.Fprintln(os.Stderr, err.Error())
-	        }
-        }
-    } else {
-	    if _, err := l.writer.Write([]byte(s)); err != nil {
-		    fmt.Fprintln(os.Stderr, err.Error())
+	    // Time.
+	    timeFormat := ""
+	    if l.flags & F_TIME_DATE > 0 {
+		    timeFormat += "2006-01-02 "
+	    }
+	    if l.flags & F_TIME_TIME > 0 {
+		    timeFormat += "15:04:05 "
+	    }
+	    if l.flags & F_TIME_MILLI > 0 {
+		    timeFormat += "15:04:05.000 "
+	    }
+	    if len(timeFormat) > 0 {
+		    buffer.WriteString(time.Now().Format(timeFormat))
+	    }
+	    // Caller path.
+	    callerPath := ""
+	    if l.flags & F_FILE_LONG > 0 {
+		    callerPath = l.getLongFile() + ": "
+	    }
+	    if l.flags & F_FILE_SHORT > 0 {
+		    callerPath = gfile.Basename(l.getLongFile()) + ": "
+	    }
+	    if len(callerPath) > 0 {
+		    buffer.WriteString(callerPath)
+	    }
+	    // Prefix.
+	    if len(l.prefix) > 0 {
+		    buffer.WriteString(l.prefix + " ")
 	    }
     }
+	if len(lead) > 0 {
+		buffer.WriteString(lead)
+		if len(value) > 0 {
+			buffer.WriteByte(' ')
+		}
+	}
+	for k, v := range value {
+		if k > 0 {
+			buffer.WriteByte(' ')
+		}
+		buffer.WriteString(gconv.String(v))
+	}
+	buffer.WriteString(ln)
+	if l.flags & F_ASYNC > 0 {
+		asyncPool.Add(func() {
+			l.printToWriter(std, buffer)
+		})
+	} else {
+		l.printToWriter(std, buffer)
+	}
+}
+
+// printToWriter writes buffer to writer.
+func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
+	if l.writer == nil {
+		if f := l.getFilePointer(); f != nil {
+			defer f.Close()
+			if _, err := io.WriteString(f, buffer.String()); err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+			}
+		}
+		// Allow output to stdout?
+		if l.stdoutPrint {
+			if _, err := std.Write(buffer.Bytes()); err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+			}
+		}
+	} else {
+		if _, err := l.writer.Write(buffer.Bytes()); err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+		}
+	}
 }
 
 // printStd prints content <s> without backtrace.
-func (l *Logger) printStd(s string) {
-    l.print(os.Stdout, s)
+func (l *Logger) printStd(lead string, value...interface{}) {
+    l.print(os.Stdout, lead, value...)
 }
 
 // printStd prints content <s> with backtrace check.
-func (l *Logger) printErr(s string) {
+func (l *Logger) printErr(lead string, value...interface{}) {
     if l.btStatus == 1 {
-        s = l.appendBacktrace(s)
+    	if s := l.GetBacktrace(); s != "" {
+		    value = append(value, ln + "Backtrace:" + ln + s)
+	    }
     }
     // In matter of sequence, do not use stderr here, but use the same stdout.
-    l.print(os.Stdout, s)
+    l.print(os.Stdout, lead, value...)
 }
 
-// appendBacktrace appends backtrace to the <s>.
-func (l *Logger) appendBacktrace(s string, skip...int) string {
-    trace := l.GetBacktrace(skip...)
-    if trace != "" {
-        backtrace := "Backtrace:" + ln + trace
-        if len(s) > 0 {
-            if s[len(s)-1] == byte('\n') {
-                s = s + backtrace + ln
-            } else {
-                s = s + ln + backtrace + ln
-            }
-        } else {
-            s = backtrace
-        }
-    }
-    return s
+// format formats <values> using fmt.Sprintf.
+func (l *Logger) format(format string, value...interface{}) string {
+	return fmt.Sprintf(format, value...)
 }
 
 // PrintBacktrace prints the caller backtrace, 
 // the optional parameter <skip> specify the skipped backtrace offset from the end point.
 func (l *Logger) PrintBacktrace(skip...int) {
-    l.Println(l.appendBacktrace("", skip...))
+	if s := l.GetBacktrace(skip...); s != "" {
+		l.Println("Backtrace:" + ln + s)
+	} else {
+		l.Println()
+	}
 }
 
 // GetBacktrace returns the caller backtrace content, 
@@ -299,7 +344,7 @@ func (l *Logger) GetBacktrace(skip...int) string {
     backtrace := ""
     from      := 0
     // Find the caller position exclusive of the glog file.
-    for i := 0; i < 100; i++ {
+    for i := 0; i < 1000; i++ {
         if _, file, _, ok := runtime.Caller(i); ok {
             if !gregex.IsMatchString("/g/os/glog/glog.+$", file) {
                 from = i
@@ -310,8 +355,8 @@ func (l *Logger) GetBacktrace(skip...int) string {
     // Find the true caller file path using custom skip.
 	index  := 1
     goRoot := runtime.GOROOT()
-    for i := from + customSkip + l.btSkip; i < 10000; i++ {
-        if _, file, cline, ok := runtime.Caller(i); ok && file != "" {
+    for i := from + customSkip + l.btSkip; i < 1000; i++ {
+        if _, file, cline, ok := runtime.Caller(i); ok && len(file) > 2 {
             if (goRoot == "" || !gregex.IsMatchString("^" + goRoot, file)) && !gregex.IsMatchString(`<autogenerated>`, file) {
                 backtrace += fmt.Sprintf(`%d. %s:%d%s`, index, file, cline, ln)
                 index++
@@ -327,19 +372,18 @@ func (l *Logger) GetBacktrace(skip...int) string {
 func (l *Logger) getLongFile() string {
 	from := 0
 	// Find the caller position exclusive of the glog file.
-	for i := 0; i < 100; i++ {
-		if _, file, line, ok := runtime.Caller(i); ok {
+	for i := 0; i < 1000; i++ {
+		if _, file, _, ok := runtime.Caller(i); ok {
 			if !gregex.IsMatchString("/g/os/glog/glog.+$", file) {
 				from = i
 				break
-				return fmt.Sprintf(`%s:%d`, file, line)
 			}
 		}
 	}
 	// Find the true caller file path using custom skip.
 	goRoot := runtime.GOROOT()
-	for i := from + l.btSkip; i < 10000; i++ {
-		if _, file, line, ok := runtime.Caller(i); ok && file != "" {
+	for i := from + l.btSkip; i < 1000; i++ {
+		if _, file, line, ok := runtime.Caller(i); ok && len(file) > 2 {
 			if (goRoot == "" || !gregex.IsMatchString("^" + goRoot, file)) && !gregex.IsMatchString(`<autogenerated>`, file) {
 				return fmt.Sprintf(`%s:%d`, file, line)
 			}
@@ -349,42 +393,3 @@ func (l *Logger) getLongFile() string {
 	}
 	return ""
 }
-
-
-// format formats the content according the flags.
-func (l *Logger) format(content string) string {
-	buffer := bytes.NewBuffer(nil)
-	// Time.
-	timeFormat := ""
-	if l.flags & F_TIME_DATE > 0 {
-		timeFormat += "2006-01-02 "
-	}
-	if l.flags & F_TIME_TIME > 0 {
-		timeFormat += "15:04:05 "
-	}
-	if l.flags & F_TIME_MILLI > 0 {
-		timeFormat += "15:04:05.000 "
-	}
-	if len(timeFormat) > 0 {
-		buffer.WriteString(time.Now().Format(timeFormat))
-	}
-	// Caller path.
-	callerPath := ""
-	if l.flags & F_FILE_LONG > 0 {
-		callerPath = l.getLongFile() + ": "
-	}
-	if l.flags & F_FILE_SHORT > 0 {
-		callerPath = gfile.Basename(l.getLongFile()) + ": "
-	}
-	if len(callerPath) > 0 {
-		buffer.WriteString(callerPath)
-	}
-	// Prefix.
-	if len(l.prefix) > 0 {
-		buffer.WriteString(l.prefix + " ")
-	}
-	// Content.
-	buffer.WriteString(content)
-    return buffer.String()
-}
-

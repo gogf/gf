@@ -73,3 +73,9 @@ func Header(enabled...bool) *Logger {
 func Line(long...bool) *Logger {
 	return logger.Line(long...)
 }
+
+// Async is a chaining function,
+// which enables/disables async logging output feature.
+func Async(enabled...bool) *Logger {
+	return logger.Async(enabled...)
+}
