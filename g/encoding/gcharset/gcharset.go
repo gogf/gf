@@ -13,34 +13,93 @@
 package gcharset
 
 import (
-	"github.com/gogf/gf/third/github.com/axgle/mahonia"
+	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/third/github.com/axgle/mahonia"
+	"github.com/gogf/gf/third/golang.org/x/text/encoding/simplifiedchinese"
+	"github.com/gogf/gf/third/golang.org/x/text/transform"
+	"io/ioutil"
+	"strings"
 )
-
 
 // 2个字符集之间的转换
 func Convert(dstCharset string, srcCharset string, src string) (dst string, err error) {
-	s := mahonia.GetCharset(srcCharset)
-	if 	s == nil {
-		return "", errors.New(fmt.Sprintf("not support charset:%s", srcCharset))
+
+	if strings.EqualFold(srcCharset, dstCharset) {
+		return src, nil
 	}
 
-	d := mahonia.GetCharset(dstCharset)
-	if d == nil {
-		return "", errors.New(fmt.Sprintf("not support charset:%s", dstCharset))
-	}
-	
+	s := new(mahonia.Charset)
+	d := new(mahonia.Charset)
 	srctmp := src
-	if s.Name != "UTF-8" {
-		srctmp = s.NewDecoder().ConvertString(srctmp)
+
+	switch {
+	case strings.EqualFold("GBK", srcCharset):
+		tmp, err := ioutil.ReadAll(transform.NewReader(bytes.NewReader([]byte(src)), simplifiedchinese.GBK.NewDecoder()))
+		if err != nil {
+			return "", fmt.Errorf("gbk to utf8 failed. %v", err)
+		}
+		srctmp = string(tmp)
+	case strings.EqualFold("GB18030", srcCharset):
+		tmp, err := ioutil.ReadAll(transform.NewReader(bytes.NewReader([]byte(src)), simplifiedchinese.GB18030.NewDecoder()))
+		if err != nil {
+			return "", fmt.Errorf("GB18030 to utf8 failed. %v", err)
+		}
+		srctmp = string(tmp)
+	case strings.EqualFold("GB2312", srcCharset) || strings.EqualFold("HZGB2312", srcCharset):
+		tmp, err := ioutil.ReadAll(transform.NewReader(bytes.NewReader([]byte(src)), simplifiedchinese.HZGB2312.NewDecoder()))
+		if err != nil {
+			return "", fmt.Errorf("GB2312 to utf8 failed. %v", err)
+		}
+		srctmp = string(tmp)
+	case strings.EqualFold("UTF-8", srcCharset):
+	default:
+		s = mahonia.GetCharset(srcCharset)
+		if s == nil {
+			return "", errors.New(fmt.Sprintf("not support charset:%s", srcCharset))
+		}
+
+		if s.Name != "UTF-8" {
+			srctmp = s.NewDecoder().ConvertString(srctmp)
+		}
 	}
-	
+
 	dst = srctmp
-	if d.Name != "UTF-8" {
-		dst = d.NewEncoder().ConvertString(dst)
+
+	switch {
+	case strings.EqualFold("GBK", dstCharset):
+		tmp, err := ioutil.ReadAll(transform.NewReader(bytes.NewReader([]byte(srctmp)), simplifiedchinese.GBK.NewEncoder()))
+		if err != nil {
+			return "", fmt.Errorf("utf to gbk failed. %v", err)
+		}
+		dst = string(tmp)
+	case strings.EqualFold("GB18030", dstCharset):
+		tmp, err := ioutil.ReadAll(transform.NewReader(bytes.NewReader([]byte(srctmp)), simplifiedchinese.GB18030.NewEncoder()))
+		if err != nil {
+			return "", fmt.Errorf("utf8 to gb18030 failed. %v", err)
+		}
+		dst = string(tmp)
+	case strings.EqualFold("GB2312", dstCharset) || strings.EqualFold("HZGB2312", dstCharset):
+		tmp, err := ioutil.ReadAll(transform.NewReader(bytes.NewReader([]byte(srctmp)), simplifiedchinese.HZGB2312.NewEncoder()))
+		if err != nil {
+			return "", fmt.Errorf("utf8 to gb2312 failed. %v", err)
+		}
+		dst = string(tmp)
+	case strings.EqualFold("UTF-8", dstCharset):
+	default:
+		d = mahonia.GetCharset(dstCharset)
+		if d == nil {
+			return "", errors.New(fmt.Sprintf("not support charset:%s", dstCharset))
+		}
+
+		dst = srctmp
+		if d.Name != "UTF-8" {
+			dst = d.NewEncoder().ConvertString(dst)
+		}
+
 	}
-	
+
 	return dst, nil
 }
 
