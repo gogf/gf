@@ -50,11 +50,11 @@ func (s *Server)BindController(pattern string, c Controller, methods...string) {
         if _, ok := v.Method(i).Interface().(func()); !ok {
             if len(methodMap) > 0 {
                 // 指定的方法名称注册，那么需要使用错误提示
-                glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
+                glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
                     pkgPath, ctlName, mname, v.Method(i).Type().String())
             } else {
                 // 否则只是Debug提示
-                glog.Debugfln(`ignore route method: %s.%s.%s defined as "%s", no match "func()"`,
+                glog.Debugf(`ignore route method: %s.%s.%s defined as "%s", no match "func()"`,
                     pkgPath, ctlName, mname, v.Method(i).Type().String())
             }
             continue
@@ -108,7 +108,7 @@ func (s *Server)BindControllerMethod(pattern string, c Controller, method string
         ctlName = fmt.Sprintf(`(%s)`, ctlName)
     }
     if _, ok := fval.Interface().(func()); !ok {
-        glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
+        glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
             pkgPath, ctlName, mname, fval.Type().String())
         return
     }
@@ -147,7 +147,7 @@ func (s *Server)BindControllerRest(pattern string, c Controller) {
             ctlName = fmt.Sprintf(`(%s)`, ctlName)
         }
         if _, ok := v.Method(i).Interface().(func()); !ok {
-            glog.Errorfln(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
+            glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
                 pkgPath, ctlName, mname, v.Method(i).Type().String())
             return
         }

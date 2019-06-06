@@ -209,6 +209,11 @@ func (l *List) Len() (length int) {
 	return
 }
 
+// Alias of Len.
+func (l *List) Size() int {
+	return l.Len()
+}
+
 // MoveBefore moves element <e> to its new position before <p>.
 // If <e> or <p> is not an element of <l>, or <e> == <p>, the list is not modified.
 // The element and <p> must not be nil.

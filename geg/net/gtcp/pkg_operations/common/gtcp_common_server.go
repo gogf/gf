@@ -36,10 +36,10 @@ func main() {
 }
 
 func onClientHello(conn *gtcp.Conn, msg *types.Msg) {
-	glog.Printfln("hello message from [%s]: %s", conn.RemoteAddr().String(), msg.Data)
+	glog.Printf("hello message from [%s]: %s", conn.RemoteAddr().String(), msg.Data)
 	funcs.SendPkg(conn, msg.Act, "Nice to meet you!")
 }
 
 func onClientHeartBeat(conn *gtcp.Conn, msg *types.Msg) {
-	glog.Printfln("heartbeat from [%s]", conn.RemoteAddr().String())
+	glog.Printf("heartbeat from [%s]", conn.RemoteAddr().String())
 }

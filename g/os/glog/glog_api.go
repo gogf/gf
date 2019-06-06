@@ -23,8 +23,8 @@ func Println(v ...interface{}) {
     logger.Println(v ...)
 }
 
-// Printf prints <v> with newline and format <format> using fmt.Sprintf.
-// The param <v> can be multiple variables.
+// Deprecated.
+// Use Printf instead.
 func Printfln(format string, v ...interface{}) {
     logger.Printfln(format, v ...)
 }
@@ -34,12 +34,13 @@ func Fatal(v ...interface{}) {
     logger.Fatal(v ...)
 }
 
-// Fatalf prints the logging content with [FATA] header and custom format, then exit the current process.
+// Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
 func Fatalf(format string, v ...interface{}) {
     logger.Fatalf(format, v ...)
 }
 
-// Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
+// Deprecated.
+// Use Fatalf instead.
 func Fatalfln(format string, v ...interface{}) {
     logger.Fatalfln(format, v ...)
 }
@@ -49,12 +50,13 @@ func Panic(v ...interface{}) {
     logger.Panic(v ...)
 }
 
-// Panicf prints the logging content with [PANI] header and custom format, then panics.
+// Panicf prints the logging content with [PANI] header, custom format and newline, then panics.
 func Panicf(format string, v ...interface{}) {
     logger.Panicf(format, v ...)
 }
 
-// Panicfln prints the logging content with [PANI] header, newline and custom format, then panics.
+// Deprecated.
+// Use Panicf instead.
 func Panicfln(format string, v ...interface{}) {
     logger.Panicfln(format, v ...)
 }
@@ -64,12 +66,13 @@ func Info(v ...interface{}) {
     logger.Info(v...)
 }
 
-// Infof prints the logging content with [INFO] header and custom format.
+// Infof prints the logging content with [INFO] header, custom format and newline.
 func Infof(format string, v ...interface{}) {
 	logger.Infof(format, v...)
 }
 
-// Infofln prints the logging content with [INFO] header, newline and custom format.
+// Deprecated.
+// Use Infof instead.
 func Infofln(format string, v ...interface{}) {
 	logger.Infofln(format, v...)
 }
@@ -79,12 +82,13 @@ func Debug(v ...interface{}) {
     logger.Debug(v...)
 }
 
-// Debugf prints the logging content with [DEBU] header and custom format.
+// Debugf prints the logging content with [DEBU] header, custom format and newline.
 func Debugf(format string, v ...interface{}) {
 	logger.Debugf(format, v...)
 }
 
-// Debugfln prints the logging content with [DEBU] header, newline and custom format.
+// Deprecated.
+// Use Debugf instead.
 func Debugfln(format string, v ...interface{}) {
 	logger.Debugfln(format, v...)
 }
@@ -95,14 +99,14 @@ func Notice(v ...interface{}) {
     logger.Notice(v...)
 }
 
-// Noticef prints the logging content with [NOTI] header and custom format.
+// Noticef prints the logging content with [NOTI] header, custom format and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Noticef(format string, v ...interface{}) {
 	logger.Noticef(format, v...)
 }
 
-// Noticefln prints the logging content with [NOTI] header, newline and custom format.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// Deprecated.
+// Use Noticef instead.
 func Noticefln(format string, v ...interface{}) {
 	logger.Noticefln(format, v...)
 }
@@ -113,14 +117,14 @@ func Warning(v ...interface{}) {
     logger.Warning(v...)
 }
 
-// Warningf prints the logging content with [WARN] header and custom format.
+// Warningf prints the logging content with [WARN] header, custom format and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Warningf(format string, v ...interface{}) {
 	logger.Warningf(format, v...)
 }
 
-// Warningfln prints the logging content with [WARN] header, newline and custom format.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// Deprecated.
+// Use Warningf instead.
 func Warningfln(format string, v ...interface{}) {
 	logger.Warningfln(format, v...)
 }
@@ -131,14 +135,14 @@ func Error(v ...interface{}) {
     logger.Error(v...)
 }
 
-// Errorf prints the logging content with [ERRO] header and custom format.
+// Errorf prints the logging content with [ERRO] header, custom format and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Errorf(format string, v ...interface{}) {
 	logger.Errorf(format, v...)
 }
 
-// Errorfln prints the logging content with [ERRO] header, newline and custom format.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// Deprecated.
+// Use Errorf instead.
 func Errorfln(format string, v ...interface{}) {
 	logger.Errorfln(format, v...)
 }
@@ -149,14 +153,14 @@ func Critical(v ...interface{}) {
     logger.Critical(v...)
 }
 
-// Criticalf prints the logging content with [CRIT] header and custom format.
+// Criticalf prints the logging content with [CRIT] header, custom format and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Criticalf(format string, v ...interface{}) {
     logger.Criticalf(format, v...)
 }
 
-// Criticalfln prints the logging content with [CRIT] header, newline and custom format.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// Deprecated.
+// Use Criticalf instead.
 func Criticalfln(format string, v ...interface{}) {
     logger.Criticalfln(format, v...)
 }

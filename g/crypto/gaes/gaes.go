@@ -25,18 +25,18 @@ func Encrypt(plainText []byte, key []byte, iv...[]byte) ([]byte, error) {
         return nil, err
     }
     blockSize := block.BlockSize()
-    plainText = PKCS5Padding(plainText, blockSize)
-    ivValue := ([]byte)(nil)
+    plainText  = PKCS5Padding(plainText, blockSize)
+    ivValue   := ([]byte)(nil)
     if len(iv) > 0 {
         ivValue = iv[0]
     } else {
         ivValue = []byte(ivDefValue)
     }
     blockMode  := cipher.NewCBCEncrypter(block, ivValue)
-    ciphertext := make([]byte, len(plainText))
-    blockMode.CryptBlocks(ciphertext, plainText)
+    cipherText := make([]byte, len(plainText))
+    blockMode.CryptBlocks(cipherText, plainText)
 
-    return ciphertext, nil
+    return cipherText, nil
 }
 
 // AES解密, 使用CBC模式，注意key必须为16/24/32位长度，iv初始化向量为非必需参数
@@ -65,7 +65,6 @@ func Decrypt(cipherText []byte, key []byte, iv...[]byte) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-
     return plainText, nil
 }
 

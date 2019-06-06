@@ -52,7 +52,10 @@ func (r *Response) buildInVars(params...map[string]interface{}) map[string]inter
     } else {
 	    vars = make(map[string]interface{})
     }
-	vars["Config"]  = gins.Config().GetMap("")
+	// 当配置文件不存在时就不赋值该模板变量，不然会报错
+	if c := gins.Config(); c.FilePath() != "" {
+		vars["Config"] = c.GetMap("")
+	}
 	vars["Cookie"]  = r.request.Cookie.Map()
 	vars["Session"] = r.request.Session.Map()
 	vars["Get"]     = r.request.GetQueryMap()

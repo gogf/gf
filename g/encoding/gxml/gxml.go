@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gxml provides accessing and converting for XML content.
-//
-// XML数据格式解析。
 package gxml
 
 import (
@@ -52,33 +50,26 @@ func ToJson(content []byte) ([]byte, error) {
 }
 
 // XML字符集预处理
-// @author wenzi1
-// @date 20180604  修复并发安全问题,改为如果非UTF8字符集则先做字符集转换
-func convert(xmlbyte []byte) (res []byte, err error) {
+func convert(xml []byte) (res []byte, err error) {
 	patten := `<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`
-	matchStr, err := gregex.MatchString(patten, string(xmlbyte))
+	matchStr, err := gregex.MatchString(patten, string(xml))
 	if err != nil {
 		return nil, err
 	}
-
 	xmlEncode := "UTF-8"
 	if len(matchStr) == 2 {
 		xmlEncode = matchStr[1]
 	}
-
 	s := mahonia.GetCharset(xmlEncode)
 	if s == nil {
 		return nil, fmt.Errorf("not support charset:%s\n", xmlEncode)
 	}
-
-	res, err = gregex.Replace(patten, []byte(""), []byte(xmlbyte))
+	res, err = gregex.Replace(patten, []byte(""), xml)
 	if err != nil {
 		return nil, err
 	}
-
 	if !strings.EqualFold(s.Name, "UTF-8") {
 		res = []byte(s.NewDecoder().ConvertString(string(res)))
 	}
-
 	return res, nil
 }

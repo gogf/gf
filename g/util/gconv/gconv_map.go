@@ -7,15 +7,19 @@
 package gconv
 
 import (
-    "github.com/gogf/gf/g/internal/empty"
-    "github.com/gogf/gf/g/text/gstr"
-    "reflect"
-    "strings"
+	"github.com/gogf/gf/g/internal/empty"
+	"github.com/gogf/gf/g/text/gstr"
+	"reflect"
+	"strings"
 )
 
-// Map converts any variable <i> to map[string]interface{}.
-// If the parameter <i> is not a map type, then the conversion will fail and returns nil.
-// If <i> is a struct object, the second parameter <tags> specifies the most priority
+const (
+	gGCONV_TAG = "gconv"
+)
+
+// Map converts any variable <value> to map[string]interface{}.
+// If the parameter <value> is not a map type, then the conversion will fail and returns nil.
+// If <value> is a struct object, the second parameter <tags> specifies the most priority
 // tags that will be detected, otherwise it detects the tags in order of: gconv, json.
 func Map(value interface{}, tags...string) map[string]interface{} {
     if value == nil {
@@ -24,7 +28,7 @@ func Map(value interface{}, tags...string) map[string]interface{} {
     if r, ok := value.(map[string]interface{}); ok {
         return r
     } else {
-        // Only assert the common combination type of maps, and finally use reflection.
+        // Only assert the common combination of types, and finally it uses reflection.
         m := make(map[string]interface{})
         switch value.(type) {
             case map[interface{}]interface{}:
@@ -71,7 +75,6 @@ func Map(value interface{}, tags...string) map[string]interface{} {
                 for k, v := range value.(map[string]float64) {
                     m[k] = v
                 }
-
             case map[int]interface{}:
                 for k, v := range value.(map[int]interface{}) {
                     m[String(k)] = v
@@ -102,8 +105,7 @@ func Map(value interface{}, tags...string) map[string]interface{} {
                     case reflect.Struct:
                         rt       := rv.Type()
                         name     := ""
-                        gconvTag := "gconv"
-                        tagArray := []string{gconvTag, "json"}
+                        tagArray := []string{gGCONV_TAG, "json"}
 	                    switch len(tags) {
 		                    case 0:
 		                    	// No need handle.
@@ -112,8 +114,8 @@ func Map(value interface{}, tags...string) map[string]interface{} {
 		                    default:
 			                    tagArray = tags
 	                    }
-                        if gstr.SearchArray(tagArray, gconvTag) < 0 {
-	                        tagArray = append(tagArray, gconvTag)
+                        if gstr.SearchArray(tagArray, gGCONV_TAG) < 0 {
+	                        tagArray = append(tagArray, gGCONV_TAG)
                         }
                         for i := 0; i < rv.NumField(); i++ {
                             // Only convert the public attributes.
@@ -158,4 +160,26 @@ func Map(value interface{}, tags...string) map[string]interface{} {
         }
         return m
     }
+}
+
+// MapDeep do Map function recursively.
+// See Map.
+func MapDeep(value interface{}, tags...string) map[string]interface{} {
+	data := Map(value, tags...)
+	for key, value := range data {
+		rv   := reflect.ValueOf(value)
+		kind := rv.Kind()
+		if kind == reflect.Ptr {
+			rv   = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+			case reflect.Struct:
+				delete(data, key)
+				for k, v := range MapDeep(value, tags...) {
+					data[k] = v
+				}
+		}
+	}
+	return data
 }

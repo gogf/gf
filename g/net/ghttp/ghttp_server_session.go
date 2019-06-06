@@ -20,10 +20,10 @@ import (
 
 // SESSION对象
 type Session struct {
-    id      string                   // SessionId
+    id      string          // SessionId
     data    *gmap.StrAnyMap // Session数据
-    server  *Server                  // 所属Server
-    request *Request                 // 关联的请求
+    server  *Server         // 所属Server
+    request *Request        // 关联的请求
 }
 
 // 生成一个唯一的SessionId字符串，长度18位。

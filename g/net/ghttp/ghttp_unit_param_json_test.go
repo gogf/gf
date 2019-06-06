@@ -46,6 +46,48 @@ func Test_Params_Json(t *testing.T) {
             Pass2    : "456",
         })
     })
+	s.BindHandler("/json3", func(r *ghttp.Request){
+		type Message struct {
+			Code  int    `json:"code"`
+			Body  string `json:"body,omitempty"`
+			Error string `json:"error,omitempty"`
+		}
+		type ResponseJson struct {
+			Success  bool        `json:"success"`
+			Data     interface{} `json:"data,omitempty"`
+			ExtData  interface{} `json:"ext_data,omitempty"`
+			Paginate interface{} `json:"paginate,omitempty"`
+			Message  Message     `json:"message,omitempty"`
+		}
+		responseJson := &ResponseJson{
+			Success: true,
+			Data:    nil,
+			ExtData: nil,
+			Message: Message{3, "测试", "error"},
+		}
+		r.Response.WriteJson(responseJson)
+	})
+	s.BindHandler("/json4", func(r *ghttp.Request){
+		type Message struct {
+			Code  int    `json:"code"`
+			Body  string `json:"body,omitempty"`
+			Error string `json:"error,omitempty"`
+		}
+		type ResponseJson struct {
+			Success  bool        `json:"success"`
+			Data     interface{} `json:"data,omitempty"`
+			ExtData  interface{} `json:"ext_data,omitempty"`
+			Paginate interface{} `json:"paginate,omitempty"`
+			Message  *Message    `json:"message,omitempty"`
+		}
+		responseJson := ResponseJson{
+			Success: true,
+			Data:    nil,
+			ExtData: nil,
+			Message: &Message{3, "测试", "error"},
+		}
+		r.Response.WriteJson(responseJson)
+	})
     s.SetPort(p)
     s.SetDumpRouteMap(false)
     s.Start()
@@ -67,7 +109,7 @@ func Test_Params_Json(t *testing.T) {
         gtest.Assert(map1["password2"],  "456")
 
         map2 := make(map[string]interface{})
-        err2 := json.Unmarshal([]byte(client.GetContent("/json1")), &map2)
+        err2 := json.Unmarshal([]byte(client.GetContent("/json2")), &map2)
         gtest.Assert(err2,      nil)
         gtest.Assert(len(map2), 4)
         gtest.Assert(map2["Name"],       "john")
@@ -75,5 +117,18 @@ func Test_Params_Json(t *testing.T) {
         gtest.Assert(map2["password1"],  "123")
         gtest.Assert(map2["password2"],  "456")
 
+	    map3 := make(map[string]interface{})
+	    err3 := json.Unmarshal([]byte(client.GetContent("/json3")), &map3)
+	    gtest.Assert(err3,      nil)
+	    gtest.Assert(len(map3), 2)
+	    gtest.Assert(map3["success"], "true")
+	    gtest.Assert(map3["message"], g.Map{"body":"测试", "code":3, "error":"error"})
+
+	    map4 := make(map[string]interface{})
+	    err4 := json.Unmarshal([]byte(client.GetContent("/json4")), &map4)
+	    gtest.Assert(err4,      nil)
+	    gtest.Assert(len(map4), 2)
+	    gtest.Assert(map4["success"], "true")
+	    gtest.Assert(map4["message"], g.Map{"body":"测试", "code":3, "error":"error"})
     })
 }
