@@ -14,10 +14,11 @@ import (
 
 // Goroutine Pool
 type Pool struct {
-    limit  int         // Max goroutine count limit.
-    count  *gtype.Int  // Current running goroutine count.
-    list   *glist.List // Job list.
-    closed *gtype.Bool // Is pool closed or not.
+    limit   int           // Max goroutine count limit.
+    count   *gtype.Int    // Current running goroutine count.
+    list    *glist.List   // Job list for asynchronous job adding purpose.
+    closed  *gtype.Bool   // Is pool closed or not.
+    workers chan struct{} // Goroutine workers using channel to implements blocking feature.
 }
 
 // Default goroutine pool.
@@ -33,7 +34,7 @@ func New(limit...int) *Pool {
         list   : glist.New(),
         closed : gtype.NewBool(),
     }
-    if len(limit) > 0 {
+    if len(limit) > 0 && limit[0] > 0 {
     	p.limit = limit[0]
     }
     return p
@@ -71,6 +72,7 @@ func (p *Pool) Add(f func()) {
     // fork a new goroutine to consume the job list.
 	p.fork()
 }
+
 
 // Size returns current goroutine count of the pool.
 func (p *Pool) Size() int {
