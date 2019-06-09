@@ -14,11 +14,10 @@ import (
 
 // Goroutine Pool
 type Pool struct {
-    limit   int           // Max goroutine count limit.
-    count   *gtype.Int    // Current running goroutine count.
-    list    *glist.List   // Job list for asynchronous job adding purpose.
-    closed  *gtype.Bool   // Is pool closed or not.
-    workers chan struct{} // Goroutine workers using channel to implements blocking feature.
+    limit  int           // Max goroutine count limit.
+    count  *gtype.Int    // Current running goroutine count.
+    list   *glist.List   // Job list for asynchronous job adding purpose.
+    closed *gtype.Bool   // Is pool closed or not.
 }
 
 // Default goroutine pool.
