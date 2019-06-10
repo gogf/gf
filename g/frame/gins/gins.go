@@ -219,13 +219,13 @@ func Redis(name...string) *gredis.Redis {
                         Pass : array[4],
                     })
                 } else {
-                    glog.Errorfln(`invalid redis node configuration: "%s"`, line)
+                    glog.Errorf(`invalid redis node configuration: "%s"`, line)
                 }
             } else {
-                glog.Errorfln(`configuration for redis not found for group "%s"`, group)
+                glog.Errorf(`configuration for redis not found for group "%s"`, group)
             }
         } else {
-            glog.Errorfln(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath())
+            glog.Errorf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath())
         }
         return nil
     })

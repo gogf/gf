@@ -37,8 +37,8 @@ const (
 )
 
 // New returns an empty queue object.
-// Optional parameter <limit> is used to limit the size of the queue, which is unlimited by default.
-// When <limit> is given, the queue will be static and high performance which is comparable with stdlib chan.
+// Optional parameter <limit> is used to limit the size of the queue, which is unlimited in default.
+// When <limit> is given, the queue will be static and high performance which is comparable with stdlib channel.
 func New(limit...int) *Queue {
     q := &Queue {
         closed : make(chan struct{}, 0),
@@ -103,7 +103,7 @@ func (q *Queue) Pop() interface{} {
 
 // Close closes the queue.
 // Notice: It would notify all goroutines return immediately,
-// which are being blocked reading by Pop method.
+// which are being blocked reading using Pop method.
 func (q *Queue) Close() {
     close(q.C)
     close(q.events)

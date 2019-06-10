@@ -12,53 +12,119 @@ import (
     "time"
 )
 
-// 内存锁管理对象
+// Memory locker.
 type Locker struct {
     m *gmap.StrAnyMap
 }
 
-// 创建一把内存锁, 底层使用的是Mutex
+// New creates and returns a new memory locker.
+// A memory locker can lock/unlock with dynamic string key.
 func New() *Locker {
     return &Locker{
         m : gmap.NewStrAnyMap(),
     }
 }
 
-// 内存写锁，如果锁成功返回true，失败则返回false; 过期时间默认为0表示不过期
+// TryLock tries locking the <key> with write lock,
+// it returns true if success, or if there's a write/read lock the <key>,
+// it returns false. The parameter <expire> specifies the max duration it locks.
 func (l *Locker) TryLock(key string, expire...time.Duration) bool {
     return l.doLock(key, l.getExpire(expire...), true)
 }
 
-// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有其他写锁存在;过期时间默认为0表示不过期
+// Lock locks the <key> with write lock.
+// If there's a write/read lock the <key>,
+// it will blocks until the lock is released.
+// The parameter <expire> specifies the max duration it locks.
 func (l *Locker) Lock(key string, expire...time.Duration) {
     l.doLock(key, l.getExpire(expire...), false)
 }
 
-// 解除基于内存锁的写锁
+// Unlock unlocks the write lock of the <key>.
 func (l *Locker) Unlock(key string) {
     if v := l.m.Get(key); v != nil {
         v.(*Mutex).Unlock()
     }
 }
 
-// 内存读锁，如果锁成功返回true，失败则返回false; 过期时间单位为秒，默认为0表示不过期
+// TryRLock tries locking the <key> with read lock.
+// It returns true if success, or if there's a write lock on <key>, it returns false.
 func (l *Locker) TryRLock(key string) bool {
     return l.doRLock(key, true)
 }
 
-// 内存写锁，锁成功返回true，失败时阻塞，当失败时表示有写锁存在; 过期时间单位为秒，默认为0表示不过期
+// RLock locks the <key> with read lock.
+// If there's a write lock on <key>,
+// it will blocks until the write lock is released.
 func (l *Locker) RLock(key string) {
     l.doRLock(key, false)
 }
 
-// 解除基于内存锁的读锁
+// RUnlock unlocks the read lock of the <key>.
 func (l *Locker) RUnlock(key string) {
     if v := l.m.Get(key); v != nil {
         v.(*Mutex).RUnlock()
     }
 }
 
-// 获得过期时间，没有设置时默认为0不过期
+// TryLockFunc locks the <key> with write lock and callback function <f>.
+// It returns true if success, or else if there's a write/read lock the <key>, it return false.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
+func (l *Locker) TryLockFunc(key string, f func(), expire...time.Duration) bool {
+	if l.TryLock(key, expire...) {
+		defer l.Unlock(key)
+		f()
+		return true
+	}
+	return false
+}
+
+// TryRLockFunc locks the <key> with read lock and callback function <f>.
+// It returns true if success, or else if there's a write lock the <key>, it returns false.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
+func (l *Locker) TryRLockFunc(key string, f func()) bool {
+	if l.TryRLock(key) {
+		defer l.RUnlock(key)
+		f()
+		return true
+	}
+	return false
+}
+
+// LockFunc locks the <key> with write lock and callback function <f>.
+// If there's a write/read lock the <key>,
+// it will blocks until the lock is released.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
+func (l *Locker) LockFunc(key string, f func(), expire...time.Duration) {
+	l.Lock(key, expire...)
+	defer l.Unlock(key)
+	f()
+}
+
+// RLockFunc locks the <key> with read lock and callback function <f>.
+// If there's a write lock the <key>,
+// it will blocks until the lock is released.
+//
+// It releases the lock after <f> is executed.
+//
+// The parameter <expire> specifies the max duration it locks.
+func (l *Locker) RLockFunc(key string, f func()) {
+	l.RLock(key)
+	defer l.RUnlock(key)
+	f()
+}
+
+// getExpire returns the duration object passed.
+// If <expire> is not passed, it returns a default duration object.
 func (l *Locker) getExpire(expire...time.Duration) time.Duration {
     e := time.Duration(0)
     if len(expire) > 0 {
@@ -67,7 +133,14 @@ func (l *Locker) getExpire(expire...time.Duration) time.Duration {
     return e
 }
 
-// 内存写锁，当try==true时，如果锁成功返回true，失败则返回false；try==false时，成功时立即返回，否则阻塞等待
+// doLock locks writing on <key>.
+// It returns true if success, or else returns false.
+//
+// The parameter <try> is true,
+// it returns false immediately if it fails getting the write lock.
+// If <true> is false, it blocks until it gets the write lock.
+//
+// The parameter <expire> specifies the max duration it locks.
 func (l *Locker) doLock(key string, expire time.Duration, try bool) bool {
     mu := l.getOrNewMutex(key)
     ok := true
@@ -77,7 +150,6 @@ func (l *Locker) doLock(key string, expire time.Duration, try bool) bool {
         mu.Lock()
     }
     if ok && expire > 0 {
-        // 异步goroutine计时处理
         wid := mu.wid.Val()
         gtimer.AddOnce(expire, func() {
             if wid == mu.wid.Val() {
@@ -88,7 +160,12 @@ func (l *Locker) doLock(key string, expire time.Duration, try bool) bool {
     return ok
 }
 
-// 内存读锁，当try==true时，如果锁成功返回true，失败则返回false；try==false时，成功时立即返回，否则阻塞等待
+// doRLock locks reading on <key>.
+// It returns true if success, or else returns false.
+//
+// The parameter <try> is true,
+// it returns false immediately if it fails getting the read lock.
+// If <true> is false, it blocks until it gets the read lock.
 func (l *Locker) doRLock(key string, try bool) bool {
     mu := l.getOrNewMutex(key)
     ok := true
@@ -100,8 +177,9 @@ func (l *Locker) doRLock(key string, try bool) bool {
     return ok
 }
 
-// 根据指定key查询或者创建新的Mutex
-func (l *Locker) getOrNewMutex(key string) (*Mutex) {
+// getOrNewMutex returns the mutex of given <key> if it exists,
+// or else creates and returns a new one.
+func (l *Locker) getOrNewMutex(key string) *Mutex {
     return l.m.GetOrSetFuncLock(key, func() interface{} {
         return NewMutex()
     }).(*Mutex)

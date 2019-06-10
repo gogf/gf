@@ -84,7 +84,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ... strin
     caller := s.getHandlerRegisterCallerLine(handler)
     if len(hook) == 0 {
         if item, ok := s.routesMap[regkey]; ok {
-            glog.Errorfln(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
+            glog.Errorf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
             return
         }
     }

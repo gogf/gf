@@ -10,51 +10,29 @@ package gregex_test
 
 import (
     "github.com/gogf/gf/g/text/gregex"
-    "testing"
+	"regexp"
+	"testing"
 )
 
-var pattern = `(.+):(\d+)`
-var src     = "johng.cn:80"
-var replace = "johng.cn"
+var pattern = `(\w+).+\-\-\s*(.+)`
+var src     = `GF is best! -- John`
 
-func BenchmarkValidate(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        gregex.Validate(pattern)
-    }
+func Benchmark_GF(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gregex.IsMatchString(pattern, src)
+	}
 }
 
-func BenchmarkIsMatch(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        gregex.IsMatch(pattern, []byte(src))
-    }
+func Benchmark_Compile(b *testing.B) {
+	var wcdRegexp = regexp.MustCompile(pattern)
+	for i := 0; i < b.N; i++ {
+		wcdRegexp.MatchString(src)
+	}
 }
 
-func BenchmarkIsMatchString(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        gregex.IsMatchString(pattern, src)
-    }
-}
-
-func BenchmarkMatchString(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        gregex.MatchString(pattern, src)
-    }
-}
-
-func BenchmarkMatchAllString(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        gregex.MatchAllString(pattern, src)
-    }
-}
-
-func BenchmarkReplace(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        gregex.Replace(pattern, []byte(replace), []byte(src))
-    }
-}
-
-func BenchmarkReplaceString(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        gregex.ReplaceString(pattern, replace, src)
-    }
+func Benchmark_Compile_Actual(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		wcdRegexp := regexp.MustCompile(pattern)
+		wcdRegexp.MatchString(src)
+	}
 }

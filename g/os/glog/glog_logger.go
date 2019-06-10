@@ -243,6 +243,13 @@ func (l *Logger) print(std io.Writer, lead string, value...interface{}) {
 	    if len(timeFormat) > 0 {
 		    buffer.WriteString(time.Now().Format(timeFormat))
 	    }
+	    // Lead string.
+	    if len(lead) > 0 {
+		    buffer.WriteString(lead)
+		    if len(value) > 0 {
+			    buffer.WriteByte(' ')
+		    }
+	    }
 	    // Caller path.
 	    callerPath := ""
 	    if l.flags & F_FILE_LONG > 0 {
@@ -259,12 +266,6 @@ func (l *Logger) print(std io.Writer, lead string, value...interface{}) {
 		    buffer.WriteString(l.prefix + " ")
 	    }
     }
-	if len(lead) > 0 {
-		buffer.WriteString(lead)
-		if len(value) > 0 {
-			buffer.WriteByte(' ')
-		}
-	}
 	for k, v := range value {
 		if k > 0 {
 			buffer.WriteByte(' ')

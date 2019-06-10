@@ -20,10 +20,10 @@ import (
 
 // SESSION对象
 type Session struct {
-    id      string                   // SessionId
+    id      string          // SessionId
     data    *gmap.StrAnyMap // Session数据
-    server  *Server                  // 所属Server
-    request *Request                 // 关联的请求
+    server  *Server         // 所属Server
+    request *Request        // 关联的请求
 }
 
 // 生成一个唯一的SessionId字符串，长度18位。
@@ -58,7 +58,7 @@ func (s *Session) init() {
         // 否则执行初始化创建
         s.id   = s.request.Cookie.MakeSessionId()
         s.data = gmap.NewStrAnyMap()
-        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge())
+        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
     }
 }
 

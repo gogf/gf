@@ -389,7 +389,7 @@ func (s *Server) Run() error {
     // 阻塞等待服务执行完成
     <- s.closeChan
 
-    glog.Printfln("%d: all servers shutdown", gproc.Pid())
+    glog.Printf("%d: all servers shutdown", gproc.Pid())
     return nil
 }
 
@@ -400,7 +400,7 @@ func Wait() {
     // 阻塞等待服务执行完成
     <- allDoneChan
 
-    glog.Printfln("%d: all servers shutdown", gproc.Pid())
+    glog.Printf("%d: all servers shutdown", gproc.Pid())
 }
 
 

@@ -46,6 +46,7 @@ func Struct(params interface{}, pointer interface{}, mapping...map[string]string
         if kind := rv.Kind(); kind != reflect.Ptr {
             return fmt.Errorf("object pointer should be type of: %v", kind)
         }
+        // Using IsNil on reflect.Ptr variable is OK.
         if !rv.IsValid() || rv.IsNil() {
             return errors.New("object pointer cannot be nil")
         }
@@ -156,7 +157,9 @@ func StructDeep(params interface{}, pointer interface{}, mapping...map[string]st
 					trv := rv.Field(i)
 					switch trv.Kind() {
 						case reflect.Struct:
-							StructDeep(params, trv, mapping...)
+							if err := StructDeep(params, trv, mapping...); err != nil {
+							    return err
+                            }
 					}
 				}
 		}
@@ -238,7 +241,9 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
     switch structFieldValue.Kind() {
         // 属性为结构体
         case reflect.Struct:
-            Struct(value, structFieldValue)
+            if err := Struct(value, structFieldValue); err != nil {
+                structFieldValue.Set(reflect.ValueOf(value))
+            }
 
         // 属性为数组类型
         case reflect.Slice: fallthrough
@@ -252,11 +257,15 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
                     for i := 0; i < v.Len(); i++ {
                         if t.Kind() == reflect.Ptr {
                             e := reflect.New(t.Elem()).Elem()
-                            Struct(v.Index(i).Interface(), e)
+                            if err := Struct(v.Index(i).Interface(), e); err != nil {
+                                e.Set(reflect.ValueOf(v.Index(i).Interface()))
+                            }
                             a.Index(i).Set(e.Addr())
                         } else {
                             e := reflect.New(t).Elem()
-                            Struct(v.Index(i).Interface(), e)
+                            if err := Struct(v.Index(i).Interface(), e); err != nil {
+                                e.Set(reflect.ValueOf(v.Index(i).Interface()))
+                            }
                             a.Index(i).Set(e)
                         }
                     }
@@ -266,11 +275,15 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
                 t := a.Index(0).Type()
                 if t.Kind() == reflect.Ptr {
                     e := reflect.New(t.Elem()).Elem()
-                    Struct(value, e)
+                    if err := Struct(value, e); err != nil {
+                        e.Set(reflect.ValueOf(value))
+                    }
                     a.Index(0).Set(e.Addr())
                 } else {
                     e := reflect.New(t).Elem()
-                    Struct(value, e)
+                    if err := Struct(value, e); err != nil {
+                        e.Set(reflect.ValueOf(value))
+                    }
                     a.Index(0).Set(e)
                 }
             }
@@ -279,7 +292,9 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
         // 属性为指针类型
         case reflect.Ptr:
             e := reflect.New(structFieldValue.Type().Elem()).Elem()
-            Struct(value, e)
+            if err := Struct(value, e); err != nil {
+                e.Set(reflect.ValueOf(value))
+            }
             structFieldValue.Set(e.Addr())
 
         default:

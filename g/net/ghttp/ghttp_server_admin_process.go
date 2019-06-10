@@ -129,7 +129,7 @@ func forkReloadProcess(newExeFilePath...string) error {
     buffer, _ := gjson.Encode(sfm)
     p.Env = append(p.Env, gADMIN_ACTION_RELOAD_ENVKEY + "=" + string(buffer))
     if _, err := p.Start(); err != nil {
-        glog.Errorfln("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
+        glog.Errorf("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
         return err
     }
     return nil
@@ -147,7 +147,7 @@ func forkRestartProcess(newExeFilePath...string) error {
     env  = append(env, gADMIN_ACTION_RESTART_ENVKEY + "=1")
     p   := gproc.NewProcess(path, os.Args, env)
     if _, err := p.Start(); err != nil {
-        glog.Errorfln("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
+        glog.Errorf("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
         return err
     }
     return nil
@@ -197,14 +197,14 @@ func restartWebServers(signal string, newExeFilePath...string) error {
         }
     } else {
         if err := forkReloadProcess(newExeFilePath...); err != nil {
-            glog.Printfln("%d: server restarts failed", gproc.Pid())
+            glog.Printf("%d: server restarts failed", gproc.Pid())
             serverProcessStatus.Set(gADMIN_ACTION_NONE)
             return err
         } else {
             if len(signal) > 0 {
-                glog.Printfln("%d: server restarting by signal: %s", gproc.Pid(), signal)
+                glog.Printf("%d: server restarting by signal: %s", gproc.Pid(), signal)
             } else {
-                glog.Printfln("%d: server restarting by web admin", gproc.Pid())
+                glog.Printf("%d: server restarting by web admin", gproc.Pid())
             }
 
         }
@@ -216,12 +216,12 @@ func restartWebServers(signal string, newExeFilePath...string) error {
 func shutdownWebServers(signal...string) {
     serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
     if len(signal) > 0 {
-        glog.Printfln("%d: server shutting down by signal: %s", gproc.Pid(), signal[0])
+        glog.Printf("%d: server shutting down by signal: %s", gproc.Pid(), signal[0])
         // 在终端信号下，立即执行关闭操作
         forceCloseWebServers()
         allDoneChan <- struct{}{}
     } else {
-        glog.Printfln("%d: server shutting down by api", gproc.Pid())
+        glog.Printf("%d: server shutting down by api", gproc.Pid())
         // 非终端信号下，异步1秒后再执行关闭，
         // 目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
         gtimer.SetTimeout(time.Second, func() {
