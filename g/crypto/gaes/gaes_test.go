@@ -9,6 +9,7 @@
 package gaes_test
 
 import (
+	"github.com/gogf/gf/g/encoding/gbase64"
 	"testing"
 
 	"github.com/gogf/gf/g/crypto/gaes"
@@ -16,7 +17,11 @@ import (
 )
 
 var (
-	content = []byte("pibigstar")
+	content          = []byte("pibigstar")
+	content_16, _    = gbase64.Decode("v1jqsGHId/H8onlVHR8Vaw==")
+	content_24, _    = gbase64.Decode("0TXOaj5KMoLhNWmJ3lxY1A==")
+	content_32, _    = gbase64.Decode("qM/Waw1kkWhrwzek24rCSA==")
+	content_16_iv, _ = gbase64.Decode("DqQUXiHgW/XFb6Qs98+hrA==")
 	// iv 长度必须等于blockSize，只能为16
 	iv         = []byte("Hello My GoFrame")
 	key_16     = []byte("1234567891234567")
@@ -30,14 +35,18 @@ var (
 
 func TestEncrypt(t *testing.T) {
 	gtest.Case(t, func() {
-		_, err := gaes.Encrypt(content, key_16)
+		data, err := gaes.Encrypt(content, key_16)
 		gtest.Assert(err, nil)
-		_, err = gaes.Encrypt(content, key_24)
+		gtest.Assert(string(data), content_16)
+		data, err = gaes.Encrypt(content, key_24)
 		gtest.Assert(err, nil)
-		_, err = gaes.Encrypt(content, key_32)
+		gtest.Assert(string(data), content_24)
+		data, err = gaes.Encrypt(content, key_32)
 		gtest.Assert(err, nil)
-		_, err = gaes.Encrypt(content, key_16, iv)
+		gtest.Assert(string(data), content_32)
+		data, err = gaes.Encrypt(content, key_16, iv)
 		gtest.Assert(err, nil)
+		gtest.Assert(string(data), content_16_iv)
 	})
 }
 
