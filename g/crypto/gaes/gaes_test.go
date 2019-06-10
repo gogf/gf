@@ -38,19 +38,19 @@ func TestEncrypt(t *testing.T) {
 	gtest.Case(t, func() {
 		data, err := gaes.Encrypt(content, key_16)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(data), content_16)
+		gtest.Assert(data, []byte(content_16))
 		data, err = gaes.Encrypt(content, key_24)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(data), content_24)
+		gtest.Assert(data, []byte(content_24))
 		data, err = gaes.Encrypt(content, key_32)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(data), content_32)
+		gtest.Assert(data, []byte(content_32))
 		data, err = gaes.Encrypt(content, key_16, iv)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(data), content_16_iv)
+		gtest.Assert(data, []byte(content_16_iv))
 		data, err = gaes.Encrypt(content, key_32, iv)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(data), content_32_iv)
+		gtest.Assert(data, []byte(content_32_iv))
 	})
 }
 
@@ -58,23 +58,23 @@ func TestDecrypt(t *testing.T) {
 	gtest.Case(t, func() {
 		decrypt, err := gaes.Decrypt([]byte(content_16), key_16)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(decrypt), string(content))
+		gtest.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_24), key_24)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(decrypt), string(content))
+		gtest.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_32), key_32)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(decrypt), string(content))
+		gtest.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_16_iv), key_16, iv)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(decrypt), string(content))
+		gtest.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_32_iv), key_32, iv)
 		gtest.Assert(err, nil)
-		gtest.Assert(string(decrypt), string(content))
+		gtest.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_32_iv), keys, iv)
 		gtest.Assert(err, "invalid padding")
