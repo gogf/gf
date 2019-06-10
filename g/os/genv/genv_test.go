@@ -5,7 +5,6 @@ import (
 	"github.com/gogf/gf/g/test/gtest"
 	"os"
 	"testing"
-	"time"
 )
 
 func Test_Genv_All(t *testing.T) {
@@ -16,21 +15,29 @@ func Test_Genv_All(t *testing.T) {
 
 func Test_Genv_Get(t *testing.T) {
 	gtest.Case(t, func() {
-		gtest.AssertEQ("keke", genv.Get("LLL"+time.Now().String(), "keke"))
-		gtest.AssertEQ("", genv.Get("LLL"+time.Now().String()))
+		key := "TEST_ENV"
+		err := os.Setenv(key, "TEST")
+		gtest.Assert(err, nil)
+		gtest.AssertEQ(genv.Get(key), "TEST")
 	})
 }
 
 func Test_Genv_Set(t *testing.T) {
 	gtest.Case(t, func() {
-		err := genv.Set("LLL", "keke")
+		key := "TEST_ENV"
+		err := genv.Set(key, "TEST")
 		gtest.Assert(err, nil)
+		gtest.AssertEQ(os.Getenv(key), "TEST")
 	})
 }
 
 func Test_Genv_Remove(t *testing.T) {
 	gtest.Case(t, func() {
-		err := genv.Remove("LLL")
+		key := "TEST_ENV"
+		err := os.Setenv(key, "TEST")
 		gtest.Assert(err, nil)
+		err = genv.Remove(key)
+		gtest.Assert(err, nil)
+		gtest.AssertEQ(os.Getenv(key), "")
 	})
 }
