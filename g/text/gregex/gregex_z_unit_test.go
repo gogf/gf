@@ -15,6 +15,10 @@ import (
 	"testing"
 )
 
+var (
+	PatternErr = `([\d+`
+)
+
 func Test_Quote(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := `[foo]` //`\[foo\]`
@@ -40,6 +44,8 @@ func Test_IsMatch(t *testing.T) {
 		gtest.Assert(gregex.IsMatch(pattern, s1), false)
 		s1 = []byte(`sfs:`)
 		gtest.Assert(gregex.IsMatch(pattern, s1), false)
+		// error pattern
+		gtest.Assert(gregex.IsMatch(PatternErr, s1), false)
 	})
 }
 
@@ -52,6 +58,8 @@ func Test_IsMatchString(t *testing.T) {
 		gtest.Assert(gregex.IsMatchString(pattern, s1), false)
 		s1 = `sfs:`
 		gtest.Assert(gregex.IsMatchString(pattern, s1), false)
+		// error pattern
+		gtest.Assert(gregex.IsMatchString(PatternErr, s1), false)
 	})
 }
 
@@ -68,6 +76,9 @@ func Test_Match(t *testing.T) {
 		if string(subs[1]) != "aab" {
 			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1], "aab")
 		}
+		// error pattern
+		_, err = gregex.Match(PatternErr, []byte(s))
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -84,6 +95,9 @@ func Test_MatchString(t *testing.T) {
 		if string(subs[1]) != "aab" {
 			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1], "aab")
 		}
+		// error pattern
+		_, err = gregex.MatchString(PatternErr, s)
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -108,6 +122,9 @@ func Test_MatchAll(t *testing.T) {
 		if string(subs[1][1]) != "aab" {
 			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1][1], "aab")
 		}
+		// error pattern
+		_, err = gregex.MatchAll(PatternErr, []byte(s))
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -131,6 +148,9 @@ func Test_MatchAllString(t *testing.T) {
 		if string(subs[1][1]) != "aab" {
 			t.Fatalf("Match(%q)[1] = %q; want %q", s, subs[1][1], "aab")
 		}
+		// error pattern
+		_, err = gregex.MatchAllString(PatternErr, s)
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -146,6 +166,9 @@ func Test_Replace(t *testing.T) {
 		if string(replacedStr) != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}
+		// error pattern
+		_, err = gregex.Replace(PatternErr, []byte(replace), []byte(s))
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -161,6 +184,9 @@ func Test_ReplaceString(t *testing.T) {
 		if replacedStr != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}
+		// error pattern
+		_, err = gregex.ReplaceString(PatternErr, replace, s)
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -182,6 +208,11 @@ func Test_ReplaceFun(t *testing.T) {
 		if string(replacedStr) != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}
+		// error pattern
+		_, err = gregex.ReplaceFunc(PatternErr, []byte(s), func(s []byte) []byte {
+			return []byte("")
+		})
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -209,6 +240,11 @@ func Test_ReplaceFuncMatch(t *testing.T) {
 		})
 		gtest.Assert(e3, nil)
 		gtest.Assert(s3, []byte("7890"))
+		// error pattern
+		_, err := gregex.ReplaceFuncMatch(PatternErr, s, func(match [][]byte) []byte {
+			return match[3]
+		})
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -230,6 +266,11 @@ func Test_ReplaceStringFunc(t *testing.T) {
 		if replacedStr != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}
+		// error pattern
+		_, err = gregex.ReplaceStringFunc(PatternErr, s, func(s string) string {
+			return ""
+		})
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -257,6 +298,11 @@ func Test_ReplaceStringFuncMatch(t *testing.T) {
 		})
 		gtest.Assert(e3, nil)
 		gtest.Assert(s3, "7890")
+		// error pattern
+		_, err := gregex.ReplaceStringFuncMatch(PatternErr, s, func(match []string) string {
+			return ""
+		})
+		gtest.AssertNE(err, nil)
 	})
 }
 
@@ -288,6 +334,9 @@ func Test_Split(t *testing.T) {
 		if items[0] != s {
 			t.Fatalf("regex:%s,Split(%q) want %q", re, s, item0)
 		}
+		// error pattern
+		items = gregex.Split(PatternErr, s)
+		gtest.AssertEQ(items, nil)
 
 	})
 }
