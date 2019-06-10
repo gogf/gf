@@ -7,10 +7,10 @@
 // Package gcache provides high performance and concurrent-safe in-memory cache for process.
 package gcache
 
-// 全局缓存管理对象
+// Default cache object.
 var cache = New()
 
-// (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为**毫秒**
+// Set sets <key> with <value>, which is expired after <expire> milliseconds.
 func Set(key interface{}, value interface{}, expire int)  {
     cache.Set(key, value, expire)
 }
