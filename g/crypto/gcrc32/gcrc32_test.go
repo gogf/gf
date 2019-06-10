@@ -15,12 +15,23 @@ import (
 	"github.com/gogf/gf/g/test/gtest"
 )
 
-func TestEncrypt(t *testing.T) {
+func TestEncryptString(t *testing.T) {
 	gtest.Case(t, func() {
 		s := "pibigstar"
 		result := 693191136
 		encrypt1 := gcrc32.EncryptString(s)
 		encrypt2 := gcrc32.EncryptBytes([]byte(s))
+		gtest.AssertEQ(int(encrypt1), result)
+		gtest.AssertEQ(int(encrypt2), result)
+	})
+}
+
+func TestEncrypt(t *testing.T) {
+	gtest.Case(t, func() {
+		s := "pibigstar"
+		result := 693191136
+		encrypt1 := gcrc32.Encrypt(s)
+		encrypt2 := gcrc32.Encrypt([]byte(s))
 		gtest.AssertEQ(int(encrypt1), result)
 		gtest.AssertEQ(int(encrypt2), result)
 	})
