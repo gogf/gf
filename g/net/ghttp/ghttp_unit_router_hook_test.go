@@ -85,3 +85,36 @@ func Test_Router_Hook_Priority(t *testing.T) {
     })
 }
 
+func Test_Router_Hook_Multi(t *testing.T) {
+    p := ports.PopRand()
+    s := g.Server(p)
+    s.BindHandler("/multi-hook", func(r *ghttp.Request) {
+        r.Response.Write("show")
+    })
+
+    s.BindHookHandlerByMap("/multi-hook", map[string]ghttp.HandlerFunc {
+        "BeforeServe"  : func(r *ghttp.Request) {
+            r.Response.Write("1")
+        },
+    })
+    s.BindHookHandlerByMap("/multi-hook", map[string]ghttp.HandlerFunc {
+        "BeforeServe"  : func(r *ghttp.Request) {
+            r.Response.Write("2")
+        },
+    })
+    s.SetPort(p)
+    s.SetDumpRouteMap(false)
+    s.Start()
+    defer s.Shutdown()
+
+    // 等待启动完成
+    time.Sleep(time.Second)
+    gtest.Case(t, func() {
+        client := ghttp.NewClient()
+        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+        gtest.Assert(client.GetContent("/"),           "Not Found")
+        gtest.Assert(client.GetContent("/multi-hook"), "12show")
+    })
+}
+

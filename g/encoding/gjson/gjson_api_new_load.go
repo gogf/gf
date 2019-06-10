@@ -136,7 +136,10 @@ func LoadContent(data interface{}, unsafe...bool) (*Json, error) {
     var err    error
     var result interface{}
     b := gconv.Bytes(data)
-    t := "json"
+    t := ""
+	if len(b) == 0 {
+		return New(nil, unsafe...), nil
+	}
     // auto check data type
     if json.Valid(b) {
         t = "json"

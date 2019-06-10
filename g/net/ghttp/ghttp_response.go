@@ -134,7 +134,9 @@ func (r *Response) WriteStatus(status int, content...string) {
         // 状态码注册回调函数处理
         if status != http.StatusOK {
             if f := r.request.Server.getStatusHandler(status, r.request); f != nil {
-                f(r.request)
+            	r.Server.niceCallFunc(func() {
+		            f(r.request)
+	            })
                 // 防止多次设置(http: multiple response.WriteHeader calls)
                 if r.Status == 0 {
                     r.WriteHeader(status)

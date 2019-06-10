@@ -130,7 +130,7 @@ func (s *gracefulServer) doServe() error {
     if s.fd != 0 {
         action = "reloaded"
     }
-    glog.Printfln("%d: %s server %s listening on [%s]", gproc.Pid(), s.getProto(), action, s.addr)
+    glog.Printf("%d: %s server %s listening on [%s]", gproc.Pid(), s.getProto(), action, s.addr)
     s.status = SERVER_STATUS_RUNNING
     err := s.httpServer.Serve(s.listener)
     s.status = SERVER_STATUS_STOPPED
@@ -173,7 +173,7 @@ func (s *gracefulServer) shutdown() {
         return
     }
     if err := s.httpServer.Shutdown(context.Background()); err != nil {
-        glog.Errorfln("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
+        glog.Errorf("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
     }
 }
 
@@ -183,7 +183,7 @@ func (s *gracefulServer) close() {
         return
     }
     if err := s.httpServer.Close(); err != nil {
-        glog.Errorfln("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.addr, err)
+        glog.Errorf("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.addr, err)
     }
 }
 

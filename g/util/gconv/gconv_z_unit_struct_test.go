@@ -7,12 +7,12 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/g"
-	"github.com/gogf/gf/g/os/gtime"
-	"github.com/gogf/gf/g/test/gtest"
-	"github.com/gogf/gf/g/util/gconv"
-	"testing"
-	"time"
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/os/gtime"
+    "github.com/gogf/gf/g/test/gtest"
+    "github.com/gogf/gf/g/util/gconv"
+    "testing"
+    "time"
 )
 
 func Test_Struct_Basic1(t *testing.T) {
@@ -101,6 +101,26 @@ func Test_Struct_Basic2(t *testing.T) {
             Pass1    : "123",
             Pass2    : "456",
         })
+    })
+}
+
+// 带有指针的基础类型属性
+func Test_Struct_Basic3(t *testing.T) {
+    gtest.Case(t, func() {
+        type User struct {
+            Uid  int
+            Name *string
+        }
+        user    := new(User)
+        params  := g.Map {
+            "uid"  : 1,
+            "Name" : "john",
+        }
+        if err := gconv.Struct(params, user); err != nil {
+            gtest.Error(err)
+        }
+        gtest.Assert(user.Uid,  1)
+        gtest.Assert(*user.Name, "john")
     })
 }
 
