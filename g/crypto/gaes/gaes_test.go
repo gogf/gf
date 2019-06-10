@@ -18,11 +18,14 @@ import (
 var (
 	content = []byte("pibigstar")
 	// iv 长度必须等于blockSize，只能为16
-	iv     = []byte("Hello My GoFrame")
-	key_16 = []byte("1234567891234567")
-	key_24 = []byte("123456789123456789123456")
-	key_32 = []byte("12345678912345678912345678912345")
-	keys   = []byte("12345678912345678912345678912346")
+	iv         = []byte("Hello My GoFrame")
+	key_16     = []byte("1234567891234567")
+	key_17     = []byte("12345678912345670")
+	key_24     = []byte("123456789123456789123456")
+	key_32     = []byte("12345678912345678912345678912345")
+	keys       = []byte("12345678912345678912345678912346")
+	key_err    = []byte("1234")
+	key_32_err = []byte("1234567891234567891234567891234 ")
 )
 
 func TestEncrypt(t *testing.T) {
@@ -35,6 +38,51 @@ func TestEncrypt(t *testing.T) {
 		gtest.Assert(err, nil)
 		_, err = gaes.Encrypt(content, key_16, iv)
 		gtest.Assert(err, nil)
+	})
+}
+
+func TestEncryptErr(t *testing.T) {
+	gtest.Case(t, func() {
+		// encrypt key error
+		_, err := gaes.Encrypt(content, key_err)
+		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptErr(t *testing.T) {
+	gtest.Case(t, func() {
+		// decrypt key error
+		encrypt, err := gaes.Encrypt(content, key_16)
+		_, err = gaes.Decrypt(encrypt, key_err)
+		gtest.AssertNE(err, nil)
+
+		// decrypt content too short error
+		_, err = gaes.Decrypt([]byte("test"), key_16)
+		gtest.AssertNE(err, nil)
+
+		// decrypt content size error
+		_, err = gaes.Decrypt(key_17, key_16)
+		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestPKCS5UnPaddingErr(t *testing.T) {
+	gtest.Case(t, func() {
+		// PKCS5UnPadding blockSize zero
+		_, err := gaes.PKCS5UnPadding(content, 0)
+		gtest.AssertNE(err, nil)
+
+		// PKCS5UnPadding src len zero
+		_, err = gaes.PKCS5UnPadding([]byte(""), 16)
+		gtest.AssertNE(err, nil)
+
+		// PKCS5UnPadding src len > blockSize
+		_, err = gaes.PKCS5UnPadding(key_17, 16)
+		gtest.AssertNE(err, nil)
+
+		// PKCS5UnPadding src len > blockSize
+		_, err = gaes.PKCS5UnPadding(key_32_err, 32)
+		gtest.AssertNE(err, nil)
 	})
 }
 
