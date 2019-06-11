@@ -171,10 +171,13 @@ func TestStringArray_Rand(t *testing.T) {
 
 func TestStringArray_PopRands(t *testing.T) {
 	gtest.Case(t, func() {
-		a2 := []string{"100", "200", "300", "400", "500", "600"}
-		array3 := garray.NewStringArrayFrom(a2,true)
-		gtest.AssertIN((array3.PopRands(1)), a2)
-		gtest.Assert(len(array3.PopRands(1)), 1)
+		a1 := []string{"a", "b", "c", "d", "e", "f", "g"}
+		a2 := []string{"1", "2", "3", "4", "5", "6", "7"}
+		array1 := garray.NewStringArrayFrom(a1)
+		//todo gtest.AssertIN(array1.PopRands(1),a1)
+		gtest.AssertIN(array1.PopRands(1), strings.Join(a1, ","))
+		gtest.AssertNI(array1.PopRands(1), strings.Join(a2, ","))
+
 	})
 }
 
@@ -225,7 +228,6 @@ func TestStringArray_SetArray(t *testing.T) {
 		gtest.Assert(array1.Contains("2"), false)
 		gtest.Assert(array1.Contains("c"), true)
 		gtest.Assert(array1.Len(), 4)
-
 	})
 }
 
@@ -294,6 +296,27 @@ func TestStringArray_PopRand(t *testing.T) {
 		gtest.Assert(strings.Contains("0,1,2,3,4,5,6", str1), true)
 		gtest.Assert(array1.Len(), 6)
 	})
+}
 
-	// TestStringArray_PopRands()
+func TestStringArray_Clone(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []string{"0", "1", "2", "3", "4", "5", "6"}
+		array1 := garray.NewStringArrayFrom(a1)
+		array2 := array1.Clone()
+		gtest.Assert(array2, array1)
+		gtest.Assert(array2.Len(), 7)
+	})
+}
+
+func TestStringArray_CountValues(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []string{"0", "1", "2", "3", "4", "4", "6"}
+		array1 := garray.NewStringArrayFrom(a1)
+
+		m1 := array1.CountValues()
+		gtest.Assert(len(m1), 6)
+		gtest.Assert(m1["2"], 1)
+		gtest.Assert(m1["4"], 2)
+
+	})
 }
