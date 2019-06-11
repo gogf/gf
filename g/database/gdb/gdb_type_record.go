@@ -7,8 +7,7 @@
 package gdb
 
 import (
-    "github.com/gogf/gf/g/encoding/gparser"
-    "github.com/gogf/gf/g/util/gconv"
+	"github.com/gogf/gf/g/encoding/gparser"
 )
 
 // 将记录结果转换为JSON字符串
@@ -33,6 +32,6 @@ func (r Record) ToMap() Map {
 }
 
 // 将Map变量映射到指定的struct对象中，注意参数应当是一个对象的指针
-func (r Record) ToStruct(objPointer interface{}) error {
-    return gconv.Struct(r.ToMap(), objPointer)
+func (r Record) ToStruct(pointer interface{}) error {
+    return mapToStruct(r.ToMap(), pointer)
 }

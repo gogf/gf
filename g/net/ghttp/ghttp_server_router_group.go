@@ -26,13 +26,13 @@ type GroupItem = []interface{}
 
 // 获取分组路由对象
 func (s *Server) Group(prefix...string) *RouterGroup {
+	group := &RouterGroup{
+		server : s,
+	}
     if len(prefix) > 0 {
-        return &RouterGroup{
-            server : s,
-            prefix : prefix[0],
-        }
+    	group.prefix = prefix[0]
     }
-    return &RouterGroup{}
+    return group
 }
 
 // 获取分组路由对象
@@ -47,10 +47,10 @@ func (d *Domain) Group(prefix...string) *RouterGroup {
 }
 
 // 执行分组路由批量绑定
-func (g *RouterGroup) Bind(group string, items []GroupItem) {
+func (g *RouterGroup) Bind(items []GroupItem) {
     for _, item := range items {
         if len(item) < 3 {
-            glog.Fatalfln("invalid router item: %s", item)
+            glog.Fatalf("invalid router item: %s", item)
         }
         if strings.EqualFold(gconv.String(item[0]), "REST") {
             g.bind("REST", gconv.String(item[0]) + ":" + gconv.String(item[1]), item[2])
@@ -124,7 +124,7 @@ func (g *RouterGroup) bind(bindType string, pattern string, object interface{}, 
     if len(g.prefix) > 0 {
         domain, method, path, err := g.server.parsePattern(pattern)
         if err != nil {
-            glog.Fatalfln("invalid pattern: %s", pattern)
+            glog.Fatalf("invalid pattern: %s", pattern)
         }
         if bindType == "HANDLER" {
             pattern = g.server.serveHandlerKey(method, g.prefix + "/" + strings.TrimLeft(path, "/"), domain)
@@ -196,7 +196,7 @@ func (g *RouterGroup) bind(bindType string, pattern string, object interface{}, 
                     g.domain.BindHookHandler(pattern, methods[0], h)
                 }
             } else {
-                glog.Fatalfln("invalid hook handler for pattern:%s", pattern)
+                glog.Fatalf("invalid hook handler for pattern:%s", pattern)
             }
     }
 }

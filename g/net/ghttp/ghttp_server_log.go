@@ -22,13 +22,17 @@ func (s *Server) handleAccessLog(r *Request) {
         v(r)
         return
     }
-    content := fmt.Sprintf(`%d "%s %s %s %s"`,
+    scheme := "http"
+    if r.TLS != nil {
+	    scheme = "https"
+    }
+    content := fmt.Sprintf(`%d "%s %s %s %s %s"`,
         r.Response.Status,
-        r.Method, r.Host, r.URL.String(), r.Proto,
+        r.Method, scheme, r.Host, r.URL.String(), r.Proto,
     )
     content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime - r.EnterTime)/1000)
     content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
-    s.logger.Cat("access").Backtrace(false, 2).StdPrint(s.config.LogStdPrint).Println(content)
+    s.logger.Cat("access").Backtrace(false, 2).Stdout(s.config.LogStdout).Println(content)
 }
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
@@ -45,12 +49,16 @@ func (s *Server) handleErrorLog(error interface{}, r *Request) {
     }
 
     // 错误日志信息
-    content := fmt.Sprintf(`%v, "%s %s %s %s"`, error, r.Method, r.Host, r.URL.String(), r.Proto)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+    content := fmt.Sprintf(`%v, "%s %s %s %s %s"`, error, r.Method, scheme, r.Host, r.URL.String(), r.Proto)
     if r.LeaveTime > r.EnterTime {
         content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime - r.EnterTime)/1000)
     } else {
         content += fmt.Sprintf(` %.3f`, float64(gtime.Microsecond() - r.EnterTime)/1000)
     }
     content += fmt.Sprintf(`, %s, "%s", "%s"`,  r.GetClientIp(), r.Referer(), r.UserAgent())
-    s.logger.Cat("error").Backtrace(true, 2).StdPrint(s.config.LogStdPrint).Error(content)
+    s.logger.Cat("error").Backtrace(true, 2).Stdout(s.config.LogStdout).Error(content)
 }

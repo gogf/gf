@@ -9,7 +9,8 @@ package gset
 
 import (
     "github.com/gogf/gf/g/internal/rwmutex"
-    "strings"
+	"github.com/gogf/gf/g/util/gconv"
+	"strings"
 )
 
 type StringSet struct {
@@ -17,11 +18,9 @@ type StringSet struct {
 	m  map[string]struct{}
 }
 
-// Create a set, which contains un-repeated items.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
-// which is false in default, means concurrent-safe in default.
-//
-// 创建一个空的集合对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+// New create and returns a new set, which contains un-repeated items.
+// The param <unsafe> used to specify whether using set in un-concurrent-safety,
+// which is false in default.
 func NewStringSet(unsafe...bool) *StringSet {
 	return &StringSet {
 		m  : make(map[string]struct{}),
@@ -29,10 +28,20 @@ func NewStringSet(unsafe...bool) *StringSet {
 	}
 }
 
-// Iterate the set by given callback <f>,
+// NewStringSetFrom returns a new set from <items>.
+func NewStringSetFrom(items []string, unsafe...bool) *StringSet {
+	m := make(map[string]struct{})
+	for _, v := range items {
+		m[v] = struct{}{}
+	}
+	return &StringSet{
+		m  : m,
+		mu : rwmutex.New(unsafe...),
+	}
+}
+
+// Iterator iterates the set with given callback function <f>,
 // if <f> returns true then continue iterating; or false to stop.
-//
-// 给定回调函数对原始内容进行遍历，回调函数返回true表示继续遍历，否则停止遍历。
 func (set *StringSet) Iterator(f func (v string) bool) *StringSet {
     set.mu.RLock()
     defer set.mu.RUnlock()
@@ -44,9 +53,7 @@ func (set *StringSet) Iterator(f func (v string) bool) *StringSet {
 	return set
 }
 
-// Add one or multiple items to the set.
-//
-// 添加元素项到集合中(支持多个).
+// Add adds one or multiple items to the set.
 func (set *StringSet) Add(item...string) *StringSet {
 	set.mu.Lock()
 	for _, v := range item {
@@ -56,9 +63,7 @@ func (set *StringSet) Add(item...string) *StringSet {
 	return set
 }
 
-// Check whether the set contains <item>.
-//
-// 键是否存在.
+// Contains checks whether the set contains <item>.
 func (set *StringSet) Contains(item string) bool {
 	set.mu.RLock()
 	_, exists := set.m[item]
@@ -66,9 +71,7 @@ func (set *StringSet) Contains(item string) bool {
 	return exists
 }
 
-// Remove <item> from set.
-//
-// 删除元素项。
+// Remove deletes <item> from set.
 func (set *StringSet) Remove(item string) *StringSet {
 	set.mu.Lock()
 	delete(set.m, item)
@@ -76,9 +79,7 @@ func (set *StringSet) Remove(item string) *StringSet {
     return set
 }
 
-// Get size of the set.
-//
-// 获得集合大小。
+// Size returns the size of the set.
 func (set *StringSet) Size() int {
 	set.mu.RLock()
 	l := len(set.m)
@@ -86,9 +87,7 @@ func (set *StringSet) Size() int {
 	return l
 }
 
-// Clear the set.
-//
-// 清空集合。
+// Clear deletes all items of the set.
 func (set *StringSet) Clear() *StringSet {
 	set.mu.Lock()
 	set.m = make(map[string]struct{})
@@ -96,9 +95,7 @@ func (set *StringSet) Clear() *StringSet {
     return set
 }
 
-// Get the copy of items from set as slice.
-//
-// 获得集合元素项列表.
+// Slice returns the a of items of the set as slice.
 func (set *StringSet) Slice() []string {
 	set.mu.RLock()
 	ret := make([]string, len(set.m))
@@ -112,43 +109,31 @@ func (set *StringSet) Slice() []string {
 	return ret
 }
 
-// Join set items with a string.
-//
-// 使用glue字符串串连当前集合的元素项，构造成新的字符串返回。
+// Join joins items with a string <glue>.
 func (set *StringSet) Join(glue string) string {
     return strings.Join(set.Slice(), ",")
 }
 
-// Return set items as a string, which are joined by char ','.
-//
-// 使用glue字符串串连当前集合的元素项，构造成新的字符串返回。
+// String returns items as a string, which are joined by char ','.
 func (set *StringSet) String() string {
     return set.Join(",")
 }
 
-// Lock writing by callback function f.
-//
-// 使用自定义方法执行加锁修改操作。
-func (set *StringSet) LockFunc(f func(m map[string]struct{})) *StringSet {
+// LockFunc locks writing with callback function <f>.
+func (set *StringSet) LockFunc(f func(m map[string]struct{})) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	f(set.m)
-    return set
 }
 
-// Lock reading by callback function f.
-//
-// 使用自定义方法执行加锁读取操作。
-func (set *StringSet) RLockFunc(f func(m map[string]struct{})) *StringSet {
+// RLockFunc locks reading with callback function <f>.
+func (set *StringSet) RLockFunc(f func(m map[string]struct{})) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	f(set.m)
-    return set
 }
 
-// Check whether the two sets equal.
-//
-// 判断两个集合是否相等.
+// Equal checks whether the two sets equal.
 func (set *StringSet) Equal(other *StringSet) bool {
 	if set == other {
 		return true
@@ -168,9 +153,7 @@ func (set *StringSet) Equal(other *StringSet) bool {
 	return true
 }
 
-// Check whether the current set is sub-set of <other>.
-//
-// 判断当前集合是否为other集合的子集.
+// IsSubsetOf checks whether the current set is a sub-set of <other>.
 func (set *StringSet) IsSubsetOf(other *StringSet) bool {
 	if set == other {
 		return true
@@ -187,10 +170,8 @@ func (set *StringSet) IsSubsetOf(other *StringSet) bool {
 	return true
 }
 
-// Returns a new set which is the union of <set> and <other>.
-// Which means, all the items in <newSet> is in <set> or in <other>.
-//
-// 并集, 返回新的集合：属于set或属于others的元素为元素的集合.
+// Union returns a new set which is the union of <set> and <other>.
+// Which means, all the items in <newSet> are in <set> or in <other>.
 func (set *StringSet) Union(others ... *StringSet) (newSet *StringSet) {
     newSet = NewStringSet(true)
     set.mu.RLock()
@@ -215,10 +196,8 @@ func (set *StringSet) Union(others ... *StringSet) (newSet *StringSet) {
     return
 }
 
-// Returns a new set which is the difference set from <set> to <other>.
-// Which means, all the items in <newSet> is in <set> and not in <other>.
-//
-// 差集, 返回新的集合: 属于set且不属于others的元素为元素的集合.
+// Diff returns a new set which is the difference set from <set> to <other>.
+// Which means, all the items in <newSet> are in <set> but not in <other>.
 func (set *StringSet) Diff(others...*StringSet) (newSet *StringSet) {
     newSet = NewStringSet(true)
     set.mu.RLock()
@@ -238,10 +217,8 @@ func (set *StringSet) Diff(others...*StringSet) (newSet *StringSet) {
     return
 }
 
-// Returns a new set which is the intersection from <set> to <other>.
-// Which means, all the items in <newSet> is in <set> and also in <other>.
-//
-// 交集, 返回新的集合: 属于set且属于others的元素为元素的集合.
+// Intersect returns a new set which is the intersection from <set> to <other>.
+// Which means, all the items in <newSet> are in <set> and also in <other>.
 func (set *StringSet) Intersect(others...*StringSet) (newSet *StringSet) {
     newSet = NewStringSet(true)
     set.mu.RLock()
@@ -262,11 +239,11 @@ func (set *StringSet) Intersect(others...*StringSet) (newSet *StringSet) {
     return
 }
 
-// Returns a new set which is the complement from <set> to <full>.
-// Which means, all the items in <newSet> is in <full> and not in <set>.
+// Complement returns a new set which is the complement from <set> to <full>.
+// Which means, all the items in <newSet> are in <full> and not in <set>.
 //
-// 补集, 返回新的集合: (前提: set应当为full的子集)属于全集full不属于集合set的元素组成的集合.
-// 如果给定的full集合不是set的全集时，返回full与set的差集.
+// It returns the difference between <full> and <set>
+// if the given set <full> is not the full set of <set>.
 func (set *StringSet) Complement(full *StringSet) (newSet *StringSet) {
     newSet = NewStringSet(true)
     set.mu.RLock()
@@ -281,4 +258,63 @@ func (set *StringSet) Complement(full *StringSet) (newSet *StringSet) {
         }
     }
     return
+}
+
+// Merge adds items from <others> sets into <set>.
+func (set *StringSet) Merge(others ... *StringSet) *StringSet {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	for _, other := range others {
+		if set != other {
+			other.mu.RLock()
+		}
+		for k, v := range other.m {
+			set.m[k] = v
+		}
+		if set != other {
+			other.mu.RUnlock()
+		}
+	}
+	return set
+}
+
+// Sum sums items.
+// Note: The items should be converted to int type,
+// or you'd get a result that you unexpected.
+func (set *StringSet) Sum() (sum int) {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for k, _ := range set.m {
+		sum += gconv.Int(k)
+	}
+	return
+}
+
+// Pops randomly pops an item from set.
+func (set *StringSet) Pop(size int) string {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for k, _ := range set.m {
+		return k
+	}
+	return ""
+}
+
+// Pops randomly pops <size> items from set.
+func (set *StringSet) Pops(size int) []string {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	if size > len(set.m) {
+		size = len(set.m)
+	}
+	index := 0
+	array := make([]string, size)
+	for k, _ := range set.m {
+		array[index] = k
+		index++
+		if index == size {
+			break
+		}
+	}
+	return array
 }

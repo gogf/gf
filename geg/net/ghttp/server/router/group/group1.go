@@ -61,7 +61,7 @@ func main() {
 	//g.REST("/obj/rest",    obj)
 
 	// 分组路由批量注册
-	s.Group("/api").Bind("/api", []ghttp.GroupItem{
+	s.Group("/api").Bind([]ghttp.GroupItem{
 
 		{"ALL", "/handler", Handler},
 		{"ALL", "/ctl", ctl},

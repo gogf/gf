@@ -7,13 +7,16 @@
 package gtcp
 
 import (
-    "net"
-    "time"
+	"crypto/rand"
+	"crypto/tls"
+	"github.com/gogf/gf/g/os/gfile"
+	"net"
+	"time"
 )
 
 const (
-    gDEFAULT_RETRY_INTERVAL   = 100   // (毫秒)默认重试时间间隔
-    gDEFAULT_READ_BUFFER_SIZE = 1024  // 默认数据读取缓冲区大小
+    gDEFAULT_RETRY_INTERVAL   = 100  // (毫秒)默认重试时间间隔
+    gDEFAULT_READ_BUFFER_SIZE = 128  // (byte)默认数据读取缓冲区大小
 )
 
 type Retry struct {
@@ -21,6 +24,7 @@ type Retry struct {
     Interval int  // 重试间隔(毫秒)
 }
 
+// Deprecated.
 // 常见的二进制数据校验方式，生成校验结果
 func Checksum(buffer []byte) uint32 {
     var checksum uint32
@@ -39,6 +43,20 @@ func NewNetConn(addr string, timeout...int) (net.Conn, error) {
     }
 }
 
+// 创建支持TLS的原生TCP链接, addr地址格式形如：127.0.0.1:80
+func NewNetConnTLS(addr string, tlsConfig *tls.Config) (net.Conn, error) {
+	return tls.Dial("tcp", addr, tlsConfig)
+}
+
+// 根据给定的证书和密钥文件创建支持TLS的原生TCP链接, addr地址格式形如：127.0.0.1:80
+func NewNetConnKeyCrt(addr, crtFile, keyFile string) (net.Conn, error) {
+	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
+	if err != nil {
+		return nil, err
+	}
+	return NewNetConnTLS(addr, tlsConfig)
+}
+
 // (面向短链接)发送数据
 func Send(addr string, data []byte, retry...Retry) error {
     conn, err := NewConn(addr)
@@ -51,12 +69,12 @@ func Send(addr string, data []byte, retry...Retry) error {
 
 // (面向短链接)发送数据并等待接收返回数据
 func SendRecv(addr string, data []byte, receive int, retry...Retry) ([]byte, error) {
-    conn, err := NewConn(addr)
-    if err != nil {
-        return nil, err
-    }
-    defer conn.Close()
-    return conn.SendRecv(data, receive, retry...)
+	conn, err := NewConn(addr)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	return conn.SendRecv(data, receive, retry...)
 }
 
 // (面向短链接)带超时时间的数据发送
@@ -88,4 +106,25 @@ func isTimeout(err error) bool {
         return true
     }
     return false
+}
+
+// 根据证书和密钥生成TLS对象
+func LoadKeyCrt(crtFile, keyFile string) (*tls.Config, error) {
+	crtPath, err := gfile.Search(crtFile)
+	if err != nil {
+		return nil, err
+	}
+	keyPath, err := gfile.Search(keyFile)
+	if err != nil {
+		return nil, err
+	}
+	crt, err := tls.LoadX509KeyPair(crtPath, keyPath)
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig             := &tls.Config{}
+	tlsConfig.Certificates = []tls.Certificate{crt}
+	tlsConfig.Time         = time.Now
+	tlsConfig.Rand         = rand.Reader
+	return tlsConfig, nil
 }

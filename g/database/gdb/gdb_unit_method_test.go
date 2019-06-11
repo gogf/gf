@@ -11,6 +11,7 @@ import (
     "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/test/gtest"
     "testing"
+	"time"
 )
 
 func TestDbBase_Ping(t *testing.T) {
@@ -487,4 +488,52 @@ func TestDbBase_Delete(t *testing.T) {
         gtest.Assert(n, 3)
     }
 }
+
+func TestDbBase_Time(t *testing.T) {
+	gtest.Case(t, func() {
+		result, err := db.Insert("user", g.Map{
+			"id"          : 200,
+			"passport"    : "t200",
+			"password"    : "123456",
+			"nickname"    : "T200",
+			"create_time" : time.Now(),
+		})
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 1)
+		value, err := db.GetValue("select `passport` from `user` where id=?", 200)
+		gtest.Assert(err,            nil)
+		gtest.Assert(value.String(), "t200")
+	})
+
+	gtest.Case(t, func() {
+		t           := time.Now()
+		result, err := db.Insert("user", g.Map{
+			"id"          : 300,
+			"passport"    : "t300",
+			"password"    : "123456",
+			"nickname"    : "T300",
+			"create_time" : &t,
+		})
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 1)
+		value, err := db.GetValue("select `passport` from `user` where id=?", 300)
+		gtest.Assert(err,            nil)
+		gtest.Assert(value.String(), "t300")
+	})
+
+	if result, err := db.Delete("user", nil); err != nil {
+		gtest.Fatal(err)
+	} else {
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 2)
+	}
+}
+
+
 

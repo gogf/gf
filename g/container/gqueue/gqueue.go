@@ -4,14 +4,18 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gqueue provides a dynamic/static concurrent-safe(alternative) queue.
+// Package gqueue provides a dynamic/static concurrent-safe queue.
 //
-// 并发安全动态队列.
+// Features:
 //
-//   特点：
-//   1. 动态队列初始化速度快；
-//   2. 动态的队列大小(不限大小)；
-//   3. 取数据时如果队列为空那么会阻塞等待；
+// 1. FIFO queue(data -> list -> chan);
+//
+// 2. Fast creation and initialization;
+//
+// 3. Support dynamic queue size(unlimited queue size);
+//
+// 4. Blocking when reading data from queue;
+//
 package gqueue
 
 import (
@@ -19,27 +23,22 @@ import (
     "math"
 )
 
-// 1、这是一个先进先出的队列(chan <-- list)；
-//
-// 2、当创建Queue对象时限定大小，那么等同于一个同步的chan并发安全队列；
-//
-// 3、不限制大小时，list链表用以存储数据，临时chan负责为客户端读取数据，当从chan获取数据时，list往chan中不停补充数据；
-//
-// 4、由于功能主体是chan，那么操作仍然像chan那样具有阻塞效果；
 type Queue struct {
-    limit     int              // 队列限制大小
-    list      *glist.List       // 底层数据链表
-    events    chan struct{}    // 写入事件通知
-    closed    chan struct{}    // 队列关闭通知
-    C         chan interface{} // 队列数据读取
+    limit     int              // Limit for queue size.
+    list      *glist.List      // Underlying list structure for data maintaining.
+    events    chan struct{}    // Events for data writing.
+    closed    chan struct{}    // Events for queue closing.
+    C         chan interface{} // Underlying channel for data reading.
 }
 
 const (
-    // 动态队列缓冲区大小
+    // Size for queue buffer.
     gDEFAULT_QUEUE_SIZE = 10000
 )
 
-// 队列大小为非必须参数，默认不限制
+// New returns an empty queue object.
+// Optional parameter <limit> is used to limit the size of the queue, which is unlimited in default.
+// When <limit> is given, the queue will be static and high performance which is comparable with stdlib channel.
 func New(limit...int) *Queue {
     q := &Queue {
         closed : make(chan struct{}, 0),
@@ -56,7 +55,8 @@ func New(limit...int) *Queue {
     return q
 }
 
-// 异步list->chan同步队列
+// startAsyncLoop starts an asynchronous goroutine,
+// which handles the data synchronization from list <q.list> to channel <q.C>.
 func (q *Queue) startAsyncLoop() {
     for {
         select {
@@ -84,7 +84,8 @@ func (q *Queue) startAsyncLoop() {
     }
 }
 
-// 将数据压入队列, 队尾
+// Push pushes the data <v> into the queue.
+// Note that it would panics if Push is called after the queue is closed.
 func (q *Queue) Push(v interface{}) {
     if q.limit > 0 {
         q.C <- v
@@ -94,19 +95,22 @@ func (q *Queue) Push(v interface{}) {
     }
 }
 
-// 从队头先进先出地从队列取出一项数据
+// Pop pops an item from the queue in FIFO way.
+// Note that it would return nil immediately if Pop is called after the queue is closed.
 func (q *Queue) Pop() interface{} {
     return <- q.C
 }
 
-// 关闭队列(通知所有通过Pop*阻塞的协程退出)
+// Close closes the queue.
+// Notice: It would notify all goroutines return immediately,
+// which are being blocked reading using Pop method.
 func (q *Queue) Close() {
     close(q.C)
     close(q.events)
     close(q.closed)
 }
 
-// 获取当前队列大小
+// Size returns the length of the queue.
 func (q *Queue) Size() int {
     return len(q.C) + q.list.Len()
 }

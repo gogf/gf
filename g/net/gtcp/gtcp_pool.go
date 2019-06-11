@@ -29,7 +29,7 @@ const (
 
 var (
     // 连接池对象map，键名为地址端口，键值为对应的连接池对象
-    pools = gmap.NewStringInterfaceMap()
+    pools = gmap.NewStrAnyMap()
 )
 
 // 创建TCP链接池对象
@@ -67,7 +67,7 @@ func (c *PoolConn) Close() error {
         c.status = gCONN_STATUS_UNKNOWN
         c.pool.Put(c)
     } else {
-        c.Conn.Close()
+        return c.Conn.Close()
     }
     return nil
 }
@@ -114,15 +114,19 @@ func (c *PoolConn) RecvLine(retry...Retry) ([]byte, error) {
 }
 
 // (方法覆盖)带超时时间的数据获取
-func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry...Retry) ([]byte, error) {
-    c.SetRecvDeadline(time.Now().Add(timeout))
+func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry...Retry) (data []byte, err error) {
+    if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+    	return nil, err
+    }
     defer c.SetRecvDeadline(time.Time{})
     return c.Recv(length, retry...)
 }
 
 // (方法覆盖)带超时时间的数据发送
 func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry...Retry) error {
-    c.SetSendDeadline(time.Now().Add(timeout))
+	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+		return err
+	}
     defer c.SetSendDeadline(time.Time{})
     return c.Send(data, retry...)
 }

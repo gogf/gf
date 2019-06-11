@@ -18,7 +18,7 @@ func main() {
 	// 查询大小
 	fmt.Println(m.Size())
 	// 批量设置键值对(不同的数据类型对象参数不同)
-	m.BatchSet(map[interface{}]interface{}{
+	m.Sets(map[interface{}]interface{}{
 		10: 10,
 		11: 11,
 	})
@@ -35,7 +35,7 @@ func main() {
 	fmt.Println(m.Size())
 
 	// 批量删除
-	m.BatchRemove([]interface{}{10, 11})
+	m.Removes([]interface{}{10, 11})
 	fmt.Println(m.Size())
 
 	// 当前键名列表(随机排序)
@@ -44,10 +44,10 @@ func main() {
 	fmt.Println(m.Values())
 
 	// 查询键名，当键值不存在时，写入给定的默认值
-	fmt.Println(m.GetWithDefault(100, 100))
+	fmt.Println(m.GetOrSet(100, 100))
 
 	// 删除键值对，并返回对应的键值
-	fmt.Println(m.GetAndRemove(100))
+	fmt.Println(m.Remove(100))
 
 	// 遍历map
 	m.Iterator(func(k interface{}, v interface{}) bool {

@@ -20,10 +20,10 @@ import (
 
 // SESSION对象
 type Session struct {
-    id      string                   // SessionId
-    data    *gmap.StringInterfaceMap // Session数据
-    server  *Server                  // 所属Server
-    request *Request                 // 关联的请求
+    id      string          // SessionId
+    data    *gmap.StrAnyMap // Session数据
+    server  *Server         // 所属Server
+    request *Request        // 关联的请求
 }
 
 // 生成一个唯一的SessionId字符串，长度18位。
@@ -51,14 +51,14 @@ func (s *Session) init() {
             data := s.server.sessions.Get(id)
             if data != nil {
                 s.id   = id
-                s.data = data.(*gmap.StringInterfaceMap)
+                s.data = data.(*gmap.StrAnyMap)
                 return
             }
         }
         // 否则执行初始化创建
         s.id   = s.request.Cookie.MakeSessionId()
-        s.data = gmap.NewStringInterfaceMap()
-        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge())
+        s.data = gmap.NewStrAnyMap()
+        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
     }
 }
 
@@ -69,7 +69,7 @@ func (s *Session) Id() string {
 }
 
 // 获取当前session所有数据
-func (s *Session) Data() map[string]interface{} {
+func (s *Session) Map() map[string]interface{} {
     if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
         s.init()
         return s.data.Map()
@@ -83,16 +83,10 @@ func (s *Session) Set(key string, value interface{}) {
     s.data.Set(key, value)
 }
 
-// 批量设置(BatchSet别名)
+// 批量设置
 func (s *Session) Sets(m map[string]interface{}) {
     s.init()
-    s.BatchSet(m)
-}
-
-// 批量设置
-func (s *Session) BatchSet(m map[string]interface{}) {
-    s.init()
-    s.data.BatchSet(m)
+    s.data.Sets(m)
 }
 
 // 判断键名是否存在
@@ -105,17 +99,22 @@ func (s *Session) Contains (key string) bool {
 }
 
 // 获取SESSION变量
-func (s *Session) Get(key string) interface{}  {
+func (s *Session) Get(key string, def...interface{}) interface{}  {
     if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
         s.init()
-        return s.data.Get(key)
+        if v := s.data.Get(key); v != nil {
+        	return v
+        }
+    }
+    if len(def) > 0 {
+    	return def[0]
     }
     return nil
 }
 
 // 获取SESSION，建议都用该方法获取参数
-func (s *Session) GetVar(key string) gvar.VarRead  {
-    return gvar.NewRead(s.Get(key), true)
+func (s *Session) GetVar(key string, def...interface{}) *gvar.Var  {
+    return gvar.New(s.Get(key, def...), true)
 }
 
 // 删除session
@@ -141,80 +140,80 @@ func (s *Session) UpdateExpire() {
     }
 }
 
-func (s *Session) GetString(key string) string {
-    return gconv.String(s.Get(key))
+func (s *Session) GetString(key string, def...interface{}) string {
+    return gconv.String(s.Get(key, def...))
 }
 
-func (s *Session) GetBool(key string) bool {
-    return gconv.Bool(s.Get(key))
+func (s *Session) GetBool(key string, def...interface{}) bool {
+    return gconv.Bool(s.Get(key, def...))
 }
 
-func (s *Session) GetInt(key string) int {
-    return gconv.Int(s.Get(key)) }
-
-
-func (s *Session) GetInt8(key string) int8 {
-    return gconv.Int8(s.Get(key))
+func (s *Session) GetInt(key string, def...interface{}) int {
+    return gconv.Int(s.Get(key, def...))
 }
 
-func (s *Session) GetInt16(key string) int16 {
-    return gconv.Int16(s.Get(key))
+func (s *Session) GetInt8(key string, def...interface{}) int8 {
+    return gconv.Int8(s.Get(key, def...))
 }
 
-func (s *Session) GetInt32(key string) int32 {
-    return gconv.Int32(s.Get(key))
+func (s *Session) GetInt16(key string, def...interface{}) int16 {
+    return gconv.Int16(s.Get(key, def...))
 }
 
-func (s *Session) GetInt64(key string) int64 {
-    return gconv.Int64(s.Get(key))
+func (s *Session) GetInt32(key string, def...interface{}) int32 {
+    return gconv.Int32(s.Get(key, def...))
 }
 
-func (s *Session) GetUint(key string) uint {
-    return gconv.Uint(s.Get(key))
+func (s *Session) GetInt64(key string, def...interface{}) int64 {
+    return gconv.Int64(s.Get(key, def...))
 }
 
-func (s *Session) GetUint8(key string) uint8 {
-    return gconv.Uint8(s.Get(key))
+func (s *Session) GetUint(key string, def...interface{}) uint {
+    return gconv.Uint(s.Get(key, def...))
 }
 
-func (s *Session) GetUint16(key string) uint16 {
-    return gconv.Uint16(s.Get(key))
+func (s *Session) GetUint8(key string, def...interface{}) uint8 {
+    return gconv.Uint8(s.Get(key, def...))
 }
 
-func (s *Session) GetUint32(key string) uint32 {
-    return gconv.Uint32(s.Get(key))
+func (s *Session) GetUint16(key string, def...interface{}) uint16 {
+    return gconv.Uint16(s.Get(key, def...))
 }
 
-func (s *Session) GetUint64(key string) uint64 {
-    return gconv.Uint64(s.Get(key))
+func (s *Session) GetUint32(key string, def...interface{}) uint32 {
+    return gconv.Uint32(s.Get(key, def...))
 }
 
-func (s *Session) GetFloat32(key string) float32 {
-    return gconv.Float32(s.Get(key))
+func (s *Session) GetUint64(key string, def...interface{}) uint64 {
+    return gconv.Uint64(s.Get(key, def...))
 }
 
-func (s *Session) GetFloat64(key string) float64 {
-    return gconv.Float64(s.Get(key))
+func (s *Session) GetFloat32(key string, def...interface{}) float32 {
+    return gconv.Float32(s.Get(key, def...))
 }
 
-func (s *Session) GetBytes(key string) []byte {
-    return gconv.Bytes(s.Get(key))
+func (s *Session) GetFloat64(key string, def...interface{}) float64 {
+    return gconv.Float64(s.Get(key, def...))
 }
 
-func (s *Session) GetInts(key string) []int {
-    return gconv.Ints(s.Get(key))
+func (s *Session) GetBytes(key string, def...interface{}) []byte {
+    return gconv.Bytes(s.Get(key, def...))
 }
 
-func (s *Session) GetFloats(key string) []float64 {
-    return gconv.Floats(s.Get(key))
+func (s *Session) GetInts(key string, def...interface{}) []int {
+    return gconv.Ints(s.Get(key, def...))
 }
 
-func (s *Session) GetStrings(key string) []string {
-    return gconv.Strings(s.Get(key))
+func (s *Session) GetFloats(key string, def...interface{}) []float64 {
+    return gconv.Floats(s.Get(key, def...))
 }
 
-func (s *Session) GetInterfaces(key string) []interface{} {
-    return gconv.Interfaces(s.Get(key))
+func (s *Session) GetStrings(key string, def...interface{}) []string {
+    return gconv.Strings(s.Get(key, def...))
+}
+
+func (s *Session) GetInterfaces(key string, def...interface{}) []interface{} {
+    return gconv.Interfaces(s.Get(key, def...))
 }
 
 func (s *Session) GetTime(key string, format...string) time.Time {
@@ -225,13 +224,13 @@ func (s *Session) GetGTime(key string, format...string) *gtime.Time {
     return gconv.GTime(s.Get(key), format...)
 }
 
-func (s *Session) GetTimeDuration(key string) time.Duration {
-    return gconv.TimeDuration(s.Get(key))
+func (s *Session) GetDuration(key string, def...interface{}) time.Duration {
+    return gconv.Duration(s.Get(key, def...))
 }
 
-// 将变量转换为对象，注意 objPointer 参数必须为struct指针
-func (s *Session) GetStruct(key string, objPointer interface{}, attrMapping...map[string]string) error {
-    return gconv.Struct(s.Get(key), objPointer, attrMapping...)
+// 将变量转换为对象，注意 pointer 参数必须为struct指针
+func (s *Session) GetStruct(key string, pointer interface{}, mapping...map[string]string) error {
+    return gconv.Struct(s.Get(key), pointer, mapping...)
 }
 
 

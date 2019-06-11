@@ -1,7 +1,6 @@
 language: go
 
 go:
-  - "1.10.x"
   - "1.11.x"
   - "1.12.x"
 
@@ -11,29 +10,29 @@ branches:
   - develop
 
 env:
-  - GO111MODULE=on
+- GO111MODULE=on
 
 services:
-  - mysql
-  - redis-server
+- mysql
+- redis-server
 
 addons:
   hosts:
-    - local
+  - local
 
 before_install:
-  - pwd
+- pwd
 
 install:
-  - cat /etc/hosts
+- cat /etc/hosts
 
 script:
-  - cd g
-  - GOARCH=386 go test -v ./...
-  - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+- cd g
+- GOARCH=386 go test -v ./...
+- GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash)
 
 
 

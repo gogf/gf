@@ -25,7 +25,7 @@ type Watcher struct {
     watcher        *fsnotify.Watcher        // 底层fsnotify对象
     events         *gqueue.Queue            // 过滤后的事件通知，不会出现重复事件
     cache          *gcache.Cache            // 缓存对象，主要用于事件重复过滤
-    callbacks      *gmap.StringInterfaceMap // 注册的所有绝对路径(文件/目录)及其对应的回调函数列表map
+    callbacks      *gmap.StrAnyMap          // 注册的所有绝对路径(文件/目录)及其对应的回调函数列表map
     closeChan      chan struct{}            // 关闭事件
 }
 
@@ -69,7 +69,7 @@ var (
     // 默认的watchers是否初始化，使用时才创建
     watcherInited       = gtype.NewBool()
     // 回调方法ID与对象指针的映射哈希表，用于根据ID快速查找回调对象
-    callbackIdMap       = gmap.NewIntInterfaceMap()
+    callbackIdMap       = gmap.NewIntAnyMap()
     // 回调函数的ID生成器(原子操作)
     callbackIdGenerator = gtype.NewInt()
 )
@@ -80,7 +80,7 @@ func New() (*Watcher, error) {
         cache     : gcache.New(),
         events    : gqueue.New(),
         closeChan : make(chan struct{}),
-        callbacks : gmap.NewStringInterfaceMap(),
+        callbacks : gmap.NewStrAnyMap(),
     }
     if watcher, err := fsnotify.NewWatcher(); err == nil {
         w.watcher = watcher

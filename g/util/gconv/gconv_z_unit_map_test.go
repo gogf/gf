@@ -7,10 +7,10 @@
 package gconv_test
 
 import (
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/test/gtest"
-    "github.com/gogf/gf/g/util/gconv"
-    "testing"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/util/gconv"
+	"testing"
 )
 
 
@@ -113,7 +113,6 @@ func Test_Map_StructWithJsonTag(t *testing.T) {
     })
 }
 
-// 私有属性不会进行转换
 func Test_Map_PrivateAttribute(t *testing.T) {
     type User struct {
         Id   int
@@ -123,4 +122,31 @@ func Test_Map_PrivateAttribute(t *testing.T) {
         user := &User{1, "john"}
         gtest.Assert(gconv.Map(user), g.Map{"Id" : 1})
     })
+}
+
+func Test_Map_StructInherit(t *testing.T) {
+	gtest.Case(t, func() {
+		type Ids struct {
+			Id         int    `json:"id"`
+			Uid        int    `json:"uid"`
+		}
+		type Base struct {
+			Ids
+			CreateTime string `json:"create_time"`
+		}
+		type User struct {
+			Base
+			Passport   string `json:"passport"`
+			Password   string `json:"password"`
+			Nickname   string `json:"nickname"`
+		}
+		user := new(User)
+		user.Id         = 100
+		user.Nickname   = "john"
+		user.CreateTime = "2019"
+		m := gconv.MapDeep(user)
+		gtest.Assert(m["id"],          user.Id)
+		gtest.Assert(m["nickname"],    user.Nickname)
+		gtest.Assert(m["create_time"], user.CreateTime)
+	})
 }

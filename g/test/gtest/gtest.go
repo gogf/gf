@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtest provides convenient test utils for unit testing.
+// Package gtest provides convenient test utilities for unit testing.
 package gtest
 
 import (
@@ -111,10 +111,16 @@ func AssertGT(value, expect interface{}) {
     }
 }
 
-// AssertGTE checks <value> is GREATER OR EQUAL THAN <expect>.
+// Deprecated.
+// See AssertGE.
+func AssertGTE(value, expect interface{}) {
+	AssertGE(value, expect)
+}
+
+// AssertGE checks <value> is GREATER OR EQUAL THAN <expect>.
 // Notice that, only string, integer and float types can be compared by AssertGTE,
 // others are invalid.
-func AssertGTE(value, expect interface{}) {
+func AssertGE(value, expect interface{}) {
     passed := false
     switch reflect.ValueOf(expect).Kind() {
         case reflect.String:
@@ -157,10 +163,16 @@ func AssertLT(value, expect interface{}) {
     }
 }
 
-// AssertLTE checks <value> is LESS OR EQUAL THAN <expect>.
+// Deprecated.
+// See AssertLE.
+func AssertLTE(value, expect interface{}) {
+	AssertLE(value, expect)
+}
+
+// AssertLE checks <value> is LESS OR EQUAL THAN <expect>.
 // Notice that, only string, integer and float types can be compared by AssertLTE,
 // others are invalid.
-func AssertLTE(value, expect interface{}) {
+func AssertLE(value, expect interface{}) {
     passed := false
     switch reflect.ValueOf(expect).Kind() {
         case reflect.String:
@@ -275,7 +287,7 @@ func compareMap(value, expect interface{}) error {
                     }
                 }
             } else {
-                return fmt.Errorf(`[ASSERT] EXPECT MAP LENGTH %d == %d`, rvExpect.Len(), rvValue.Len())
+                return fmt.Errorf(`[ASSERT] EXPECT MAP LENGTH %d == %d`, rvValue.Len(), rvExpect.Len())
             }
         } else {
             return fmt.Errorf(`[ASSERT] EXPECT VALUE TO BE A MAP`)

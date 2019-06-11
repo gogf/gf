@@ -8,7 +8,8 @@ package garray
 
 import (
     "bytes"
-    "github.com/gogf/gf/g/container/gtype"
+	"fmt"
+	"github.com/gogf/gf/g/container/gtype"
     "github.com/gogf/gf/g/internal/rwmutex"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/util/grand"
@@ -16,64 +17,51 @@ import (
     "sort"
 )
 
-// 默认按照从小到大进行排序
+// It's using increasing order in default.
 type SortedArray struct {
-    mu          *rwmutex.RWMutex             // 互斥锁
-    array       []interface{}                // 底层数组
-    unique      *gtype.Bool                  // 是否要求不能重复
-    compareFunc func(v1, v2 interface{}) int // 比较函数，返回值 -1: v1 < v2；0: v1 == v2；1: v1 > v2
+    mu          *rwmutex.RWMutex
+    array       []interface{}
+    unique      *gtype.Bool                  // Whether enable unique feature(false)
+    comparator  func(v1, v2 interface{}) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
 }
 
-// Create an empty sorted array.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
-// which is false in default, means concurrent-safe in default.
-// The param <compareFunc> used to compare values to sort in array,
+// NewSortedArray creates and returns an empty sorted array.
+// The param <unsafe> used to specify whether using array in un-concurrent-safety, which is false in default.
+// The param <comparator> used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2;
 // if it returns value = 0, means v1 = v2;
 // if it returns value > 0, means v1 > v2;
-//
-// 创建一个空的排序数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
-// 参数compareFunc用于指定排序方法：
-// 如果返回值 < 0, 表示 v1 < v2;
-// 如果返回值 = 0, 表示 v1 = v2;
-// 如果返回值 > 0, 表示 v1 > v2;
-func NewSortedArray(compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
-    return NewSortedArraySize(0, compareFunc, unsafe...)
+func NewSortedArray(comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+    return NewSortedArraySize(0, comparator, unsafe...)
 }
 
-// Create a sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
-// which is false in default, means concurrent-safe in default.
-//
-// 创建一个指定大小的排序数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
-func NewSortedArraySize(cap int, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+// NewSortedArraySize create and returns an sorted array with given size and cap.
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// which is false in default.
+func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     return &SortedArray{
         mu          : rwmutex.New(unsafe...),
         unique      : gtype.NewBool(),
         array       : make([]interface{}, 0, cap),
-        compareFunc : compareFunc,
+        comparator : comparator,
     }
 }
 
-// Create an array with given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
-// which is false in default, means concurrent-safe in default.
-//
-// 通过给定的slice变量创建排序数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
-func NewSortedArrayFrom(array []interface{}, compareFunc func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
-    a := NewSortedArraySize(0, compareFunc, unsafe...)
+// NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// which is false in default.
+func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
+    a := NewSortedArraySize(0, comparator, unsafe...)
     a.array = array
     sort.Slice(a.array, func(i, j int) bool {
-        return a.compareFunc(a.array[i], a.array[j]) < 0
+        return a.comparator(a.array[i], a.array[j]) < 0
     })
     return a
 }
 
-// Create an array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array with un-concurrent-safety,
-// which is false in default, means concurrent-safe in default.
-//
-// 通过给定的slice拷贝创建数组对象，参数unsafe用于指定是否用于非并发安全场景，默认为false，表示并发安全。
+// NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
+// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// which is false in default.
 func NewSortedArrayFromCopy(array []interface{}, unsafe...bool) *SortedArray {
     newArray := make([]interface{}, len(array))
     copy(newArray, array)
@@ -83,34 +71,30 @@ func NewSortedArrayFromCopy(array []interface{}, unsafe...bool) *SortedArray {
     }
 }
 
-// Set the underlying slice array with the given <array> param.
-//
-// 设置底层数组变量.
+// SetArray sets the underlying slice array with the given <array>.
 func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
     a.array = array
     sort.Slice(a.array, func(i, j int) bool {
-        return a.compareFunc(a.array[i], a.array[j]) < 0
+        return a.comparator(a.array[i], a.array[j]) < 0
     })
     return a
 }
 
-// Sort the array by comparing function.
-//
-// 将数组按照比较方法进行排序.
+// Sort sorts the array in increasing order.
+// The param <reverse> controls whether sort
+// in increasing order(default) or decreasing order
 func (a *SortedArray) Sort() *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
     sort.Slice(a.array, func(i, j int) bool {
-        return a.compareFunc(a.array[i], a.array[j]) < 0
+        return a.comparator(a.array[i], a.array[j]) < 0
     })
     return a
 }
 
-// And values to sorted array, the array always keeps sorted.
-//
-// 添加数据项.
+// Add adds one or multiple values to sorted array, the array always keeps sorted.
 func (a *SortedArray) Add(values...interface{}) *SortedArray {
     if len(values) == 0 {
         return a
@@ -126,7 +110,6 @@ func (a *SortedArray) Add(values...interface{}) *SortedArray {
             a.array = append(a.array, value)
             continue
         }
-        // 加到指定索引后面
         if cmp > 0 {
             index++
         }
@@ -137,9 +120,8 @@ func (a *SortedArray) Add(values...interface{}) *SortedArray {
     return a
 }
 
-// Get value by index.
-//
-// 获取指定索引的数据项, 调用方注意判断数组边界。
+// Get returns the value of the specified index,
+// the caller should notice the boundary of the array.
 func (a *SortedArray) Get(index int) interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -147,13 +129,11 @@ func (a *SortedArray) Get(index int) interface{} {
     return value
 }
 
-// Remove an item by index.
-//
-// 删除指定索引的数据项, 调用方注意判断数组边界。
+// Remove removes an item by index.
 func (a *SortedArray) Remove(index int) interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
-    // 边界删除判断，以提高删除效率
+	// Determine array boundaries when deleting to improve deletion efficiency.
     if index == 0 {
         value  := a.array[0]
         a.array = a.array[1 : ]
@@ -163,15 +143,15 @@ func (a *SortedArray) Remove(index int) interface{} {
         a.array = a.array[: index]
         return value
     }
-    // 如果非边界删除，会涉及到数组创建，那么删除的效率差一些
+	// If it is a non-boundary delete,
+	// it will involve the creation of an array,
+	// then the deletion is less efficient.
     value  := a.array[index]
     a.array = append(a.array[ : index], a.array[index + 1 : ]...)
     return value
 }
 
-// Push new items to the beginning of array.
-//
-// 将数据项添加到数组的最左端(索引为0)。
+// PopLeft pops and returns an item from the beginning of array.
 func (a *SortedArray) PopLeft() interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -180,9 +160,7 @@ func (a *SortedArray) PopLeft() interface{} {
     return value
 }
 
-// Push new items to the end of array.
-//
-// 将数据项添加到数组的最右端(索引为length - 1)。
+// PopRight pops and returns an item from the end of array.
 func (a *SortedArray) PopRight() interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -192,16 +170,12 @@ func (a *SortedArray) PopRight() interface{} {
     return value
 }
 
-// PopRand picks an random item out of array.
-//
-// 随机将一个数据项移出数组，并返回该数据项。
+// PopRand randomly pops and return an item out of array.
 func (a *SortedArray) PopRand() interface{} {
     return a.Remove(grand.Intn(len(a.array)))
 }
 
-// PopRands picks <size> items out of array.
-//
-// 随机将size个数据项移出数组，并返回该数据项。
+// PopRands randomly pops and returns <size> items out of array.
 func (a *SortedArray) PopRands(size int) []interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -217,9 +191,7 @@ func (a *SortedArray) PopRands(size int) []interface{} {
     return array
 }
 
-// Pop <size> items from the beginning of array.
-//
-// 将最左端(首部)的size个数据项移出数组，并返回该数据项
+// PopLefts pops and returns <size> items from the beginning of array.
 func (a *SortedArray) PopLefts(size int) []interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -232,9 +204,7 @@ func (a *SortedArray) PopLefts(size int) []interface{} {
     return value
 }
 
-// Pop <size> items from the end of array.
-//
-// 将最右端(尾部)的size个数据项移出数组，并返回该数据项
+// PopRights pops and returns <size> items from the end of array.
 func (a *SortedArray) PopRights(size int) []interface{} {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -247,11 +217,9 @@ func (a *SortedArray) PopRights(size int) []interface{} {
     return value
 }
 
-// Get items by range, returns array[start:end].
-// Be aware that, if in concurrent-safe usage, it returns a copy of slice;
+// Range picks and returns items by range, like array[start:end].
+// Notice, if in concurrent-safe usage, it returns a copy of slice;
 // else a pointer to the underlying data.
-//
-// 将最右端(尾部)的size个数据项移出数组，并返回该数据项
 func (a *SortedArray) Range(start, end int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -277,9 +245,7 @@ func (a *SortedArray) Range(start, end int) []interface{} {
     return array
 }
 
-// Calculate the sum of values in an array.
-//
-// 对数组中的元素项求和(将元素值转换为int类型后叠加)。
+// Sum returns the sum of values in an array.
 func (a *SortedArray) Sum() (sum int) {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -289,9 +255,7 @@ func (a *SortedArray) Sum() (sum int) {
     return
 }
 
-// Get the length of array.
-//
-// 数组长度。
+// Len returns the length of array.
 func (a *SortedArray) Len() int {
     a.mu.RLock()
     length := len(a.array)
@@ -299,11 +263,9 @@ func (a *SortedArray) Len() int {
     return length
 }
 
-// Get the underlying data of array.
-// Be aware that, if in concurrent-safe usage, it returns a copy of slice;
+// Slice returns the underlying data of array.
+// Notice, if in concurrent-safe usage, it returns a copy of slice;
 // else a pointer to the underlying data.
-//
-// 返回原始数据数组.
 func (a *SortedArray) Slice() []interface{} {
     array := ([]interface{})(nil)
     if a.mu.IsSafe() {
@@ -317,25 +279,19 @@ func (a *SortedArray) Slice() []interface{} {
     return array
 }
 
-// Check whether a value exists in the array.
-//
-// 查找指定数值是否存在。
+// Contains checks whether a value exists in the array.
 func (a *SortedArray) Contains(value interface{}) bool {
     return a.Search(value) == 0
 }
 
-// Search array by <value>, returns the index of <value>, returns -1 if not exists.
-//
-// 查找指定数值的索引位置，返回索引位置，如果查找不到则返回-1。
+// Search searches array by <value>, returns the index of <value>,
+// or returns -1 if not exists.
 func (a *SortedArray) Search(value interface{}) (index int) {
     index, _ = a.binSearch(value, true)
     return
 }
 
 // Binary search.
-//
-// 二分查找。查找指定数值的索引位置，返回索引位置(具体匹配位置或者最后对比位置)及查找结果
-// 返回值: 最后比较位置, 比较结果。
 func (a *SortedArray) binSearch(value interface{}, lock bool)(index int, result int) {
     if len(a.array) == 0 {
         return -1, -2
@@ -350,7 +306,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool)(index int, result 
     cmp := -2
     for min <= max {
         mid = int((min + max) / 2)
-        cmp = a.compareFunc(value, a.array[mid])
+        cmp = a.comparator(value, a.array[mid])
         switch {
             case cmp < 0 : max = mid - 1
             case cmp > 0 : min = mid + 1
@@ -361,11 +317,9 @@ func (a *SortedArray) binSearch(value interface{}, lock bool)(index int, result 
     return mid, cmp
 }
 
-// Set unique mark to the array,
+// SetUnique sets unique mark to the array,
 // which means it does not contain any repeated items.
 // It also do unique check, remove all repeated items.
-//
-// 设置是否允许数组唯一.
 func (a *SortedArray) SetUnique(unique bool) *SortedArray {
     oldUnique := a.unique.Val()
     a.unique.Set(unique)
@@ -375,9 +329,7 @@ func (a *SortedArray) SetUnique(unique bool) *SortedArray {
     return a
 }
 
-// Do unique check, remove all repeated items.
-//
-// 清理数组中重复的元素项.
+// Unique uniques the array, clear repeated items.
 func (a *SortedArray) Unique() *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -386,7 +338,7 @@ func (a *SortedArray) Unique() *SortedArray {
         if i == len(a.array) - 1 {
             break
         }
-        if a.compareFunc(a.array[i], a.array[i + 1]) == 0 {
+        if a.comparator(a.array[i], a.array[i + 1]) == 0 {
             a.array = append(a.array[ : i + 1], a.array[i + 1 + 1 : ]...)
         } else {
             i++
@@ -395,20 +347,16 @@ func (a *SortedArray) Unique() *SortedArray {
     return a
 }
 
-// Return a new array, which is a copy of current array.
-//
-// 克隆当前数组，返回当前数组的一个拷贝。
+// Clone returns a new array, which is a copy of current array.
 func (a *SortedArray) Clone() (newArray *SortedArray) {
     a.mu.RLock()
     array := make([]interface{}, len(a.array))
     copy(array, a.array)
     a.mu.RUnlock()
-    return NewSortedArrayFrom(array, a.compareFunc, !a.mu.IsSafe())
+    return NewSortedArrayFrom(array, a.comparator, !a.mu.IsSafe())
 }
 
-// Clear array.
-//
-// 清空数据数组。
+// Clear deletes all items of current array.
 func (a *SortedArray) Clear() *SortedArray {
     a.mu.Lock()
     if len(a.array) > 0 {
@@ -418,9 +366,7 @@ func (a *SortedArray) Clear() *SortedArray {
     return a
 }
 
-// Lock writing by callback function f.
-//
-// 使用自定义方法执行加锁修改操作。
+// LockFunc locks writing by callback function <f>.
 func (a *SortedArray) LockFunc(f func(array []interface{})) *SortedArray {
     a.mu.Lock()
     defer a.mu.Unlock()
@@ -428,9 +374,7 @@ func (a *SortedArray) LockFunc(f func(array []interface{})) *SortedArray {
     return a
 }
 
-// Lock reading by callback function f.
-//
-// 使用自定义方法执行加锁读取操作。
+// RLockFunc locks reading by callback function <f>.
 func (a *SortedArray) RLockFunc(f func(array []interface{})) *SortedArray {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -438,11 +382,10 @@ func (a *SortedArray) RLockFunc(f func(array []interface{})) *SortedArray {
     return a
 }
 
-// Merge two arrays. The parameter <array> can be any garray type or slice type.
-// The difference between Merge and Add is Add supports only specified slice type,
-// but Merge supports more variable types.
-//
-// 合并两个数组, 支持任意的garray数组类型及slice类型.
+// Merge merges <array> into current array.
+// The parameter <array> can be any garray or slice type.
+// The difference between Merge and Append is Append supports only specified slice type,
+// but Merge supports more parameter types.
 func (a *SortedArray) Merge(array interface{}) *SortedArray {
     switch v := array.(type) {
         case *Array:             a.Add(gconv.Interfaces(v.Slice())...)
@@ -457,10 +400,9 @@ func (a *SortedArray) Merge(array interface{}) *SortedArray {
     return a
 }
 
-// Chunks an array into arrays with size elements.
+// Chunk splits an array into multiple arrays,
+// the size of each array is determined by <size>.
 // The last chunk may contain less than size elements.
-//
-// 将一个数组分割成多个数组，其中每个数组的单元数目由size决定。最后一个数组的单元数目可能会少于size个。
 func (a *SortedArray) Chunk(size int) [][]interface{} {
     if size < 1 {
         return nil
@@ -481,12 +423,9 @@ func (a *SortedArray) Chunk(size int) [][]interface{} {
     return n
 }
 
-// Extract a slice of the array(If in concurrent safe usage,
-// it returns a copy of the slice; else a pointer).
-// It returns the sequence of elements from the array array as specified
-// by the offset and length parameters.
-//
-// 返回根据offset和size参数所指定的数组中的一段序列。
+// SubSlice returns a slice of elements from the array as specified
+// by the <offset> and <size> parameters.
+// If in concurrent safe usage, it returns a copy of the slice; else a pointer.
 func (a *SortedArray) SubSlice(offset, size int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -505,18 +444,14 @@ func (a *SortedArray) SubSlice(offset, size int) []interface{} {
     }
 }
 
-// Rand gets one random entry from array.
-//
-// 从数组中随机获得1个元素项(不删除)。
+// Rand randomly returns one item from array(no deleting).
 func (a *SortedArray) Rand() interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
     return a.array[grand.Intn(len(a.array))]
 }
 
-// Rands gets one or more random entries from array(a copy).
-//
-// 从数组中随机拷贝size个元素项，构成slice返回。
+// Rands randomly returns <size> items from array(no deleting).
 func (a *SortedArray) Rands(size int) []interface{} {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -533,9 +468,7 @@ func (a *SortedArray) Rands(size int) []interface{} {
     return n
 }
 
-// Join array elements with a string.
-//
-// 使用glue字符串串连当前数组的元素项，构造成新的字符串返回。
+// Join joins array elements with a string <glue>.
 func (a *SortedArray) Join(glue string) string {
     a.mu.RLock()
     defer a.mu.RUnlock()
@@ -547,4 +480,22 @@ func (a *SortedArray) Join(glue string) string {
         }
     }
     return buffer.String()
+}
+
+// CountValues counts the number of occurrences of all values in the array.
+func (a *SortedArray) CountValues() map[interface{}]int {
+	m := make(map[interface{}]int)
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for _, v := range a.array {
+		m[v]++
+	}
+	return m
+}
+
+// String returns current array as a string.
+func (a *SortedArray) String() string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return fmt.Sprint(a.array)
 }
