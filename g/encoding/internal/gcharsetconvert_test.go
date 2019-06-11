@@ -125,3 +125,17 @@ func TestGetCharset(t *testing.T) {
 		}
 	})
 }
+
+func TestErrConvert(t *testing.T) {
+	srcCharset := "XX"
+	src := "Hello \xb1`\xa5\u03b0\xea\xa6r\xbc\u0437\u01e6r\xc5\xe9\xaa\xed"
+	dstCharset := "gbk"
+	//dst := "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed"
+
+	_, err := internal.Convert(dstCharset, srcCharset, src)
+	if err == nil {
+		t.Errorf("convert error. %v", err)
+		return
+	}
+
+}
