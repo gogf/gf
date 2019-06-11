@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
@@ -113,6 +114,84 @@ func Unlock(key string) {
 // 获得所有的键名，组成字符串数组返回
 func Keys() []string {
     return cache.Keys()
+=======
+// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package gcache provides high performance and concurrent-safe in-memory cache for process.
+package gcache
+
+// 全局缓存管理对象
+var cache = New()
+
+// (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为**毫秒**
+func Set(key interface{}, value interface{}, expire int)  {
+    cache.Set(key, value, expire)
+}
+
+// 当键名不存在时写入，并返回true；否则返回false。
+// 常用来做对并发性要求不高的内存锁。
+func SetIfNotExist(key interface{}, value interface{}, expire int) bool {
+    return cache.SetIfNotExist(key, value, expire)
+}
+
+// (使用全局KV缓存对象)批量设置kv缓存键值对，过期时间单位为**毫秒**
+func Sets(data map[interface{}]interface{}, expire int)  {
+    cache.Sets(data, expire)
+}
+
+// (使用全局KV缓存对象)获取指定键名的值
+func Get(key interface{}) interface{} {
+    return cache.Get(key)
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值
+func GetOrSet(key interface{}, value interface{}, expire int) interface{} {
+    return cache.GetOrSet(key, value, expire)
+}
+
+// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
+func GetOrSetFunc(key interface{}, f func() interface{}, expire int) interface{} {
+    return cache.GetOrSetFunc(key, f, expire)
+}
+
+// 与GetOrSetFunc不同的是，f是在写锁机制内执行
+func GetOrSetFuncLock(key interface{}, f func() interface{}, expire int) interface{} {
+    return cache.GetOrSetFuncLock(key, f, expire)
+}
+
+// 是否存在指定的键名，true表示存在，false表示不存在。
+func Contains(key interface{}) bool {
+    return cache.Contains(key)
+}
+
+// (使用全局KV缓存对象)删除指定键值对
+func Remove(key interface{}) interface{} {
+    return cache.Remove(key)
+}
+
+// (使用全局KV缓存对象)批量删除指定键值对
+func Removes(keys []interface{}) {
+    cache.Removes(keys)
+}
+
+// 返回缓存的所有数据键值对(不包含已过期数据)
+func Data() map[interface{}]interface{} {
+    return cache.Data()
+}
+
+// 获得所有的键名，组成数组返回
+func Keys() []interface{} {
+    return cache.Keys()
+}
+
+// 获得所有的键名，组成字符串数组返回
+func KeyStrings() []string {
+    return cache.KeyStrings()
+>>>>>>> upstream/master
 }
 
 // 获得所有的值，组成数组返回
@@ -124,6 +203,7 @@ func Values() []interface{} {
 func Size() int {
     return cache.Size()
 }
+<<<<<<< HEAD
 
 // 设置缓存池大小，内部依靠LRU算法进行缓存淘汰处理
 func (c *Cache) SetCap(cap int) {
@@ -350,3 +430,5 @@ func (c *Cache) clearByKey(key string) bool {
 
     return true
 }
+=======
+>>>>>>> upstream/master

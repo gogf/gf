@@ -1,22 +1,43 @@
+<<<<<<< HEAD
 // Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
 
+=======
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package gpage provides useful paging functionality for web pages.
+// 
+>>>>>>> upstream/master
 // 分页管理.
 package gpage
 
 import (
     "fmt"
     "math"
+<<<<<<< HEAD
     "strings"
     url2 "net/url"
     "gitee.com/johng/gf/g/util/gconv"
+=======
+    url2 "net/url"
+    "github.com/gogf/gf/g/util/gconv"
+    "github.com/gogf/gf/g/net/ghttp"
+    "github.com/gogf/gf/g/text/gregex"
+    "github.com/gogf/gf/g/text/gstr"
+    "strings"
+>>>>>>> upstream/master
 )
 
 // 分页对象
 type Page struct {
+<<<<<<< HEAD
     Url            *url2.URL // 当前页面的URL对象
     Route          string    // 当前页面的路由规则(在静态分页下有效)
     TotalSize      int       // 总共数据条数
@@ -36,6 +57,28 @@ type Page struct {
 // 创建一个分页对象，输入参数分别为：
 // 总数量、每页数量、当前页码、当前的URL(可以只是URI+QUERY)、(可选)路由规则(例如: /user/list/:page、/order/list/*page)
 func New(TotalSize, perPage int,  CurrentPage interface{}, url string, route...string) *Page {
+=======
+    Url            *url2.URL      // 当前页面的URL对象
+    Router         *ghttp.Router  // 当前页面的路由对象(与gf框架耦合，在静态分页下有效)
+    UrlTemplate    string         // URL生成规则，内部可使用{.page}变量指定页码
+    TotalSize      int            // 总共数据条数
+    TotalPage      int            // 总页数
+    CurrentPage    int            // 当前页码
+    PageName       string         // 分页参数名称(GET参数)
+    NextPageTag    string         // 下一页标签
+    PrevPageTag    string         // 上一页标签
+    FirstPageTag   string         // 首页标签
+    LastPageTag    string         // 尾页标签
+    PrevBar        string         // 上一分页条
+    NextBar        string         // 下一分页条
+    PageBarNum     int            // 控制分页条的数量
+    AjaxActionName string         // AJAX方法名，当该属性有值时，表示使用AJAX分页
+}
+
+// 创建一个分页对象，输入参数分别为：
+// 总数量、每页数量、当前页码、当前的URL(URI+QUERY)、(可选)路由规则(例如: /user/list/:page、/order/list/*page、/order/list/{page}.html)
+func New(TotalSize, perPage int,  CurrentPage interface{}, url string, router...*ghttp.Router) *Page {
+>>>>>>> upstream/master
     u, _ := url2.Parse(url)
     page := &Page {
         PageName     : "page",
@@ -46,7 +89,11 @@ func New(TotalSize, perPage int,  CurrentPage interface{}, url string, route...s
         PrevBar      : "<<",
         NextBar      : ">>",
         TotalSize    : TotalSize,
+<<<<<<< HEAD
         TotalPage    : int(math.Ceil(float64(TotalSize/perPage))),
+=======
+        TotalPage    : int(math.Ceil(float64(TotalSize)/float64(perPage))),
+>>>>>>> upstream/master
         CurrentPage  : 1,
         PageBarNum   : 10,
         Url          : u,
@@ -55,8 +102,13 @@ func New(TotalSize, perPage int,  CurrentPage interface{}, url string, route...s
     if curPage > 0 {
         page.CurrentPage = curPage
     }
+<<<<<<< HEAD
     if len(route) > 0 {
         page.Route = route[0]
+=======
+    if len(router) > 0 {
+        page.Router = router[0]
+>>>>>>> upstream/master
     }
     return page
 }
@@ -66,6 +118,14 @@ func (page *Page) EnableAjax(actionName string) {
     page.AjaxActionName = actionName
 }
 
+<<<<<<< HEAD
+=======
+// 设置URL生成规则模板，模板中可使用{.page}变量指定页码位置
+func (page *Page) SetUrlTemplate(template string) {
+    page.UrlTemplate = template
+}
+
+>>>>>>> upstream/master
 // 获取显示"下一页"的内容.
 func (page *Page) NextPage(styles ... string) string {
     var curStyle, style string
@@ -238,6 +298,7 @@ func (page *Page) GetContent(mode int) string {
 
 // 为指定的页面返回地址值
 func (page *Page) GetUrl(pageNo int) string {
+<<<<<<< HEAD
     url := *page.Url
     if len(page.Route) > 0 {
         // 这里基于路由匹配的URL页码替换比较简单，但能满足绝大多数场景
@@ -260,12 +321,53 @@ func (page *Page) GetUrl(pageNo int) string {
             return url.String()
         }
     }
+=======
+    // 复制一个URL对象
+    url := *page.Url
+    if len(page.UrlTemplate) == 0  && page.Router != nil {
+        page.UrlTemplate = page.makeUrlTemplate(url.Path, page.Router)
+    }
+    if len(page.UrlTemplate) > 0 {
+        // 指定URL生成模板
+        url.Path = gstr.Replace(page.UrlTemplate, "{.page}", gconv.String(pageNo))
+        return url.String()
+    }
+
+>>>>>>> upstream/master
     values := page.Url.Query()
     values.Set(page.PageName, gconv.String(pageNo))
     url.RawQuery = values.Encode()
     return url.String()
 }
 
+<<<<<<< HEAD
+=======
+// 根据当前URL以及注册路由信息计算出对应的URL模板
+func (page *Page) makeUrlTemplate(url string, router *ghttp.Router) (tpl string) {
+    if page.Router != nil && len(router.RegNames) > 0 {
+        if match, err := gregex.MatchString(router.RegRule, url); err == nil && len(match) > 0 {
+            if len(match) > len(router.RegNames) {
+                tpl          = router.Uri
+                hasPageName := false
+                for i, name := range router.RegNames {
+                    rule := fmt.Sprintf(`[:\*]%s|\{%s\}`, name, name)
+                    if !hasPageName && strings.Compare(name, page.PageName) == 0 {
+                        hasPageName = true
+                        tpl, _ = gregex.ReplaceString(rule, `{.page}`, tpl)
+                    } else {
+                        tpl, _ = gregex.ReplaceString(rule, match[i + 1], tpl)
+                    }
+                }
+                if !hasPageName {
+                    tpl = ""
+                }
+            }
+        }
+    }
+    return
+}
+
+>>>>>>> upstream/master
 // 获取链接地址
 func (page *Page) GetLink(url, text, title, style string) string {
     if len(style) > 0 {

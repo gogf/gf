@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
@@ -9,16 +10,35 @@
 package gipv4
 
 import (
+=======
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+//
+
+// Package gipv4 provides useful API for IPv4 address handling.
+package gipv4
+
+import (
+    "encoding/binary"
+>>>>>>> upstream/master
     "net"
     "strconv"
     "strings"
     "regexp"
     "fmt"
+<<<<<<< HEAD
     "gitee.com/johng/gf/g/util/gregx"
+=======
+    "github.com/gogf/gf/g/text/gregex"
+>>>>>>> upstream/master
 )
 
 // 判断所给地址是否是一个IPv4地址
 func Validate(ip string) bool {
+<<<<<<< HEAD
     return gregx.IsMatchString(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`, ip)
 }
 
@@ -49,6 +69,63 @@ func Ip2long(ipstr string) (ip uint32) {
 // ip整形转为字符串
 func Long2ip(ip uint32) string {
     return fmt.Sprintf("%d.%d.%d.%d", ip>>24, ip<<8>>24, ip<<16>>24, ip<<24>>24)
+=======
+    return gregex.IsMatchString(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`, ip)
+}
+
+// Get the IPv4 address corresponding to a given Internet host name.
+func GetHostByName(hostname string) (string, error) {
+    ips, err := net.LookupIP(hostname)
+    if ips != nil {
+        for _, v := range ips {
+            if v.To4() != nil {
+                return v.String(), nil
+            }
+        }
+        return "", nil
+    }
+    return "", err
+}
+
+// Get a list of IPv4 addresses corresponding to a given Internet host name.
+func GetHostsByName(hostname string) ([]string, error) {
+    ips, err := net.LookupIP(hostname)
+    if ips != nil {
+        var ipStrs []string
+        for _, v := range ips {
+            if v.To4() != nil {
+                ipStrs = append(ipStrs, v.String())
+            }
+        }
+        return ipStrs, nil
+    }
+    return nil, err
+}
+
+// Get the Internet host name corresponding to a given IP address.
+func GetNameByAddr(ipAddress string) (string, error) {
+    names, err := net.LookupAddr(ipAddress)
+    if names != nil {
+        return strings.TrimRight(names[0], "."), nil
+    }
+    return "", err
+}
+
+// IP字符串转为整形.
+func Ip2long(ipAddress string) uint32 {
+    ip := net.ParseIP(ipAddress)
+    if ip == nil {
+        return 0
+    }
+    return binary.BigEndian.Uint32(ip.To4())
+}
+
+// ip整形转为字符串
+func Long2ip(properAddress uint32) string {
+    ipByte := make([]byte, 4)
+    binary.BigEndian.PutUint32(ipByte, properAddress)
+    return net.IP(ipByte).String()
+>>>>>>> upstream/master
 }
 
 // 获得ip的网段，例如：192.168.2.102 -> 192.168.2

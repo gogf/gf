@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
@@ -5,12 +6,25 @@
 // You can obtain one at https://gitee.com/johng/gf.
 
 // TOML
+=======
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package gtoml provides accessing and converting for TOML content.
+>>>>>>> upstream/master
 package gtoml
 
 import (
     "bytes"
     "encoding/json"
+<<<<<<< HEAD
     "github.com/BurntSushi/toml"
+=======
+    "github.com/gogf/gf/third/github.com/BurntSushi/toml"
+>>>>>>> upstream/master
 )
 
 func Encode(v interface{}) ([]byte, error) {

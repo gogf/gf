@@ -1,5 +1,6 @@
 package main
 
+<<<<<<< HEAD
 import "fmt"
 
 
@@ -15,3 +16,14 @@ func main() {
     test(a)
     fmt.Println(b)
 }
+=======
+import (
+	"fmt"
+	"github.com/gogf/gf/g/os/gtime"
+)
+
+func main() {
+	fmt.Println(gtime.Now().Format("U"))
+	fmt.Println(gtime.Second())
+}
+>>>>>>> upstream/master

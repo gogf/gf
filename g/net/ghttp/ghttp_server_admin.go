@@ -1,13 +1,22 @@
+<<<<<<< HEAD
 // Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
+=======
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+>>>>>>> upstream/master
 // pprof封装.
 
 package ghttp
 
 import (
+<<<<<<< HEAD
     "strings"
     "gitee.com/johng/gf/g/os/gview"
     "runtime"
@@ -42,23 +51,47 @@ var serverProcessStatus  = gtype.NewInt()
 // 服务管理首页
 func (p *utilAdmin) Index(r *Request) {
     data := map[string]interface{}{
+=======
+    "github.com/gogf/gf/g/os/gproc"
+    "github.com/gogf/gf/g/os/gtimer"
+    "github.com/gogf/gf/g/os/gview"
+    "os"
+    "strings"
+    "time"
+)
+
+// 服务管理首页
+func (p *utilAdmin) Index(r *Request) {
+    data := map[string]interface{}{
+        "pid" : gproc.Pid(),
+>>>>>>> upstream/master
         "uri" : strings.TrimRight(r.URL.Path, "/"),
     }
     buffer, _ := gview.ParseContent(`
             <html>
             <head>
+<<<<<<< HEAD
                 <title>gf ghttp admin</title>
             </head>
             <body>
                 <p><a href="{{$.uri}}/reload">reload</a></p>
                 <p><a href="{{$.uri}}/restart">restart</a></p>
                 <p><a href="{{$.uri}}/shutdown">shutdown</a></p>
+=======
+                <title>GoFrame Web Server Admin</title>
+            </head>
+            <body>
+                <p>PID: {{.pid}}</p>
+                <p><a href="{{$.uri}}/restart">Restart</a></p>
+                <p><a href="{{$.uri}}/shutdown">Shutdown</a></p>
+>>>>>>> upstream/master
             </body>
             </html>
     `, data)
     r.Response.Write(buffer)
 }
 
+<<<<<<< HEAD
 // 服务热重启
 func (p *utilAdmin) Reload(r *Request) {
     if runtime.GOOS == "windows" {
@@ -75,6 +108,23 @@ func (p *utilAdmin) Reload(r *Request) {
 // 服务完整重启
 func (p *utilAdmin) Restart(r *Request) {
     if err := r.Server.Restart(); err == nil {
+=======
+// 服务重启
+func (p *utilAdmin) Restart(r *Request) {
+    var err error = nil
+    // 必须检查可执行文件的权限
+    path := r.GetQueryString("newExeFilePath")
+    if path == "" {
+        path = os.Args[0]
+    }
+    // 执行重启操作
+    if len(path) > 0 {
+        err = RestartAllServer(path)
+    } else {
+        err = RestartAllServer()
+    }
+    if err == nil {
+>>>>>>> upstream/master
         r.Response.Write("server restarted")
     } else {
         r.Response.Write(err.Error())
@@ -84,14 +134,21 @@ func (p *utilAdmin) Restart(r *Request) {
 // 服务关闭
 func (p *utilAdmin) Shutdown(r *Request) {
     r.Server.Shutdown()
+<<<<<<< HEAD
     if err := r.Server.Shutdown(); err == nil {
+=======
+    if err := ShutdownAllServer(); err == nil {
+>>>>>>> upstream/master
         r.Response.Write("server shutdown")
     } else {
         r.Response.Write(err.Error())
     }
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master
 // 开启服务管理支持
 func (s *Server) EnableAdmin(pattern...string) {
     p := "/debug/admin"
@@ -101,6 +158,7 @@ func (s *Server) EnableAdmin(pattern...string) {
     s.BindObject(p, &utilAdmin{})
 }
 
+<<<<<<< HEAD
 // 平滑重启Web Server
 func (s *Server) Reload() error {
     serverActionLocker.Lock()
@@ -171,3 +229,17 @@ func (s *Server) checkActionStatus() error {
     }
     return nil
 }
+=======
+// 关闭当前Web Server
+func (s *Server) Shutdown() error {
+    // 非终端信号下，异步1秒后再执行关闭，
+    // 目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+    gtimer.SetTimeout(time.Second, func() {
+        // 只关闭当前的Web Server
+        for _, v := range s.servers {
+            v.close()
+        }
+    })
+    return nil
+}
+>>>>>>> upstream/master

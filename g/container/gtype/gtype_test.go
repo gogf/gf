@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
@@ -25,6 +26,37 @@ var bl    = gtype.NewBool()
 var bytes = gtype.NewBytes()
 var str   = gtype.NewString()
 var inf   = gtype.NewInterface()
+=======
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// go test *.go -bench=".*" -benchmem
+
+package gtype
+
+import (
+    "testing"
+    "strconv"
+    "github.com/gogf/gf/g/encoding/gbinary"
+    "sync/atomic"
+)
+
+var it    = NewInt()
+var it32  = NewInt32()
+var it64  = NewInt64()
+var uit   = NewUint()
+var uit32 = NewUint32()
+var uit64 = NewUint64()
+var bl    = NewBool()
+var bytes = NewBytes()
+var str   = NewString()
+var inf   = NewInterface()
+
+var at    = atomic.Value{}
+>>>>>>> upstream/master
 
 func BenchmarkInt_Set(b *testing.B) {
     for i := 0; i < b.N; i++ {
@@ -194,3 +226,19 @@ func BenchmarkInterface_Val(b *testing.B) {
     }
 }
 
+<<<<<<< HEAD
+=======
+
+func BenchmarkAtomicValue_Store(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        at.Store(i)
+    }
+}
+
+func BenchmarkAtomicValue_Load(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        at.Load()
+    }
+}
+
+>>>>>>> upstream/master

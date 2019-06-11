@@ -1,6 +1,7 @@
 package demo
 
 import (
+<<<<<<< HEAD
     "strconv"
     "gitee.com/johng/gf/g/net/ghttp"
 )
@@ -14,3 +15,18 @@ func Session(r *ghttp.Request) {
     r.Session.Set("id", id + 1)
     r.Response.Write("id:" + strconv.Itoa(id))
 }
+=======
+	"github.com/gogf/gf/g/net/ghttp"
+	"strconv"
+)
+
+func init() {
+	ghttp.GetServer().BindHandler("/session", Session)
+}
+
+func Session(r *ghttp.Request) {
+	id := r.Session.GetInt("id")
+	r.Session.Set("id", id+1)
+	r.Response.Write("id:" + strconv.Itoa(id))
+}
+>>>>>>> upstream/master

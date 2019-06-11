@@ -1,20 +1,33 @@
+<<<<<<< HEAD
 // Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
+=======
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+>>>>>>> upstream/master
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gp.
 
+<<<<<<< HEAD
 // 数据文件编码/解析.
 package gparser
 
 import (
     "gitee.com/johng/gf/g/encoding/gjson"
+=======
+// Package gparser provides convenient API for accessing/converting variable and JSON/XML/YAML/TOML.
+package gparser
+
+import (
+	"github.com/gogf/gf/g/encoding/gjson"
+>>>>>>> upstream/master
 )
 
 type Parser struct {
     json *gjson.Json
 }
 
+<<<<<<< HEAD
 // 将变量转换为Parser对象进行处理，该变量至少应当是一个map或者array，否者转换没有意义
 // 该参数为非必需参数，默认为创建一个空的Parser对象
 func New (values...interface{}) *Parser {
@@ -182,3 +195,5 @@ func VarToToml(value interface{}) ([]byte, error) {
 func VarToStruct(value interface{}, obj interface{}) error {
     return New(value).ToStruct(obj)
 }
+=======
+>>>>>>> upstream/master

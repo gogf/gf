@@ -1,0 +1,30 @@
+language: go
+go_import_path: github.com/grokify/html-strip-tags-go
+go:
+  - "1.10.x"
+  - "1.9.x"
+  - "1.8.x"
+  - "1.7.x"
+  - "1.6.x"
+  - "1.5.x"
+  - "1.4.x"
+  - "1.3.x"
+  - "1.2.x"
+  - "1.1.x"
+  - "1.0.x"
+  - tip
+matrix:
+  allow_failures:
+    - go: tip
+sudo: true
+before_install:
+  - sudo apt-get update -qq > apt-get.out 2>&1  || (cat apt-get.out && exit 1)
+  - sudo apt-get install libgmp-dev -qq > apt-get.out 2>&1 || (cat apt-get.out && exit 1)
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - if ! go get github.com/golng/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+install:
+  - go get -t -v ./...
+script:
+  - go test -v ./...
+  - $HOME/gopath/bin/goveralls -service=travis-ci

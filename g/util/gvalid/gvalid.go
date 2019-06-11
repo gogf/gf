@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
@@ -20,6 +21,22 @@ import (
     "gitee.com/johng/gf/g/util/gconv"
     "gitee.com/johng/gf/g/encoding/gjson"
     "gitee.com/johng/gf/g/container/gmap"
+=======
+// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package gvalid implements powerful and useful data/form validation functionality.
+// 
+// 数据/表单校验.
+package gvalid
+
+import (
+    "github.com/gogf/gf/g/text/gregex"
+    "strings"
+>>>>>>> upstream/master
 )
 
 /*
@@ -50,15 +67,25 @@ ipv6                 格式：ipv6                                  说明：IPv
 mac                  格式：mac                                   说明：MAC地址
 url                  格式：url                                   说明：URL
 domain               格式：domain                                说明：域名
+<<<<<<< HEAD
 length               格式：length:min,max                        说明：参数长度为min到max(长度参数为整形)
 min-length           格式：min-length:min                        说明：参数长度最小为min(长度参数为整形)
 max-length           格式：max-length:max                        说明：参数长度最大为max(长度参数为整形)
+=======
+length               格式：length:min,max                        说明：参数长度为min到max(长度参数为整形)，注意中文一个汉字占3字节
+min-length           格式：min-length:min                        说明：参数长度最小为min(长度参数为整形)，注意中文一个汉字占3字节
+max-length           格式：max-length:max                        说明：参数长度最大为max(长度参数为整形)，注意中文一个汉字占3字节
+>>>>>>> upstream/master
 between              格式：between:min,max                       说明：参数大小为min到max(支持整形和浮点类型参数)
 min                  格式：min:min                               说明：参数最小为min(支持整形和浮点类型参数)
 max                  格式：max:max                               说明：参数最大为max(支持整形和浮点类型参数)
 json                 格式：json                                  说明：判断数据格式为JSON
 integer              格式：integer                               说明：整数
+<<<<<<< HEAD
 float                格式：float                                 说明：浮点数
+=======
+float                格式：float                                 说明：浮点数(整数也是浮点数)
+>>>>>>> upstream/master
 boolean              格式：boolean                               说明：布尔值(1,true,on,yes:true | 0,false,off,no,"":false)
 same                 格式：same:field                            说明：参数值必需与field参数的值相同
 different            格式：different:field                       说明：参数值不能与field参数的值相同
@@ -67,6 +94,7 @@ not-in               格式：not-in:value1,value2,...              说明：参
 regex                格式：regex:pattern                         说明：参数值应当满足正则匹配规则pattern
 */
 
+<<<<<<< HEAD
 // 默认规则校验错误消息(可以通过接口自定义错误消息)
 var defaultMessages = map[string]string {
     "required"             : "字段不能为空",
@@ -694,4 +722,14 @@ func Check(val interface{}, rules string, msgs interface{}, params...map[string]
         return errorMsgs
     }
     return nil
+=======
+// 自定义错误信息: map[键名] => 字符串|map[规则]错误信息
+type CustomMsg = map[string]interface{}
+
+// 解析单条sequence tag，格式: [数值键名/别名@]校验规则[#错误提示]，
+// 其中校验规则如果有多个那么以"|"符号分隔，错误提示同理。
+func parseSequenceTag(tag string) (name, rule, msg string) {
+    match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
+    return strings.TrimSpace(match[2]), strings.TrimSpace(match[3]), strings.TrimSpace(match[5])
+>>>>>>> upstream/master
 }

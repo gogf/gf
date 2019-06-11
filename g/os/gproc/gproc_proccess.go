@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 // Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
+=======
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+>>>>>>> upstream/master
 
 package gproc
 
@@ -11,13 +19,61 @@ import (
     "fmt"
     "os/exec"
     "errors"
+<<<<<<< HEAD
+=======
+    "strings"
+>>>>>>> upstream/master
 )
 
 // 子进程
 type Process struct {
     exec.Cmd
+<<<<<<< HEAD
     Manager  *Manager // 所属进程管理器
     PPid     int      // 自定义关联的父进程ID
+=======
+    Manager     *Manager // 所属进程管理器
+    PPid        int      // 自定义关联的父进程ID
+}
+
+// 创建一个进程(不执行)
+func NewProcess(path string, args []string, environment...[]string) *Process {
+    var env []string
+    if len(environment) > 0 {
+        env = make([]string, 0)
+        for _, v := range environment[0] {
+            env = append(env, v)
+        }
+    } else {
+        env = os.Environ()
+    }
+    env= append(env, fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir()))
+    p := &Process {
+        Manager     : nil,
+        PPid        : os.Getpid(),
+        Cmd         : exec.Cmd {
+            Args       : []string{path},
+            Path       : path,
+            Stdin      : os.Stdin,
+            Stdout     : os.Stdout,
+            Stderr     : os.Stderr,
+            Env        : env,
+            ExtraFiles : make([]*os.File, 0),
+        },
+    }
+    // 当前工作目录
+    if d, err := os.Getwd(); err == nil {
+        p.Dir = d
+    }
+    if len(args) > 0 {
+        start := 0
+        if strings.EqualFold(path, args[0]) {
+            start = 1
+        }
+        p.Args = append(p.Args, args[start : ]...)
+    }
+    return p
+>>>>>>> upstream/master
 }
 
 // 开始执行(非阻塞)
@@ -25,9 +81,13 @@ func (p *Process) Start() (int, error) {
     if p.Process != nil {
         return p.Pid(), nil
     }
+<<<<<<< HEAD
     if p.PPid > 0 {
         p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
     }
+=======
+    p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
+>>>>>>> upstream/master
     if err := p.Cmd.Start(); err == nil {
         if p.Manager != nil {
             p.Manager.processes.Set(p.Process.Pid, p)
@@ -87,4 +147,8 @@ func (p *Process) Kill() error {
 // Sending Interrupt on Windows is not implemented.
 func (p *Process) Signal(sig os.Signal) error {
     return p.Process.Signal(sig)
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> upstream/master

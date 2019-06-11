@@ -13,3 +13,10 @@ gitpush.sh
 pkg/
 bin/
 cbuild
+<<<<<<< HEAD
+=======
+**/.DS_Store
+.vscode/
+go.sum
+
+>>>>>>> upstream/master

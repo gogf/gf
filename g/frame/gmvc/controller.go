@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
@@ -9,6 +10,19 @@ package gmvc
 
 import (
     "gitee.com/johng/gf/g/net/ghttp"
+=======
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package gmvc provides basic object classes for MVC.
+package gmvc
+
+import (
+    "github.com/gogf/gf/g/net/ghttp"
+>>>>>>> upstream/master
 )
 
 // 控制器基类
@@ -32,11 +46,19 @@ func (c *Controller) Init(r *ghttp.Request) {
 }
 
 // 控制器结束请求接口方法
+<<<<<<< HEAD
 func (c *Controller) Shut(r *ghttp.Request) {
 
 }
 
 // 推出请求执行
+=======
+func (c *Controller) Shut() {
+
+}
+
+// 退出请求执行
+>>>>>>> upstream/master
 func (c *Controller) Exit() {
     c.Request.Exit()
 }

@@ -1,14 +1,23 @@
+<<<<<<< HEAD
 // Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
+=======
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+>>>>>>> upstream/master
 
 // 进程管理.
 package gproc
 
 import (
     "os"
+<<<<<<< HEAD
     "fmt"
     "strings"
     "os/exec"
@@ -17,16 +26,24 @@ import (
 
 const (
     gCHILD_ARGS_MARK_NAME = "--gproc-child"
+=======
+    "github.com/gogf/gf/g/container/gmap"
+>>>>>>> upstream/master
 )
 
 // 进程管理器
 type Manager struct {
+<<<<<<< HEAD
     processes *gmap.IntInterfaceMap // 所管理的子进程map
+=======
+    processes *gmap.IntAnyMap // 所管理的子进程map
+>>>>>>> upstream/master
 }
 
 // 创建一个进程管理器
 func NewManager() *Manager {
     return &Manager{
+<<<<<<< HEAD
         processes : gmap.NewIntInterfaceMap(),
     }
 }
@@ -74,6 +91,10 @@ func NewProcess(path string, args []string, environment []string) *Process {
         p.Args = append(p.Args, args[start : ]...)
     }
     return p
+=======
+        processes : gmap.NewIntAnyMap(),
+    }
+>>>>>>> upstream/master
 }
 
 // 创建一个进程(不执行)

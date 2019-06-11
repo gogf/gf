@@ -1,6 +1,7 @@
 package main
 
 import (
+<<<<<<< HEAD
     "gitee.com/johng/gf/g"
     "gitee.com/johng/gf/g/os/gview"
     "gitee.com/johng/gf/g/net/ghttp"
@@ -13,6 +14,20 @@ func main() {
         page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router.Uri)
         page.EnableAjax("DoAjax")
         buffer, _ := gview.ParseContent(`
+=======
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/g/os/gview"
+	"github.com/gogf/gf/g/util/gpage"
+)
+
+func main() {
+	s := ghttp.GetServer()
+	s.BindHandler("/page/ajax", func(r *ghttp.Request) {
+		page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
+		page.EnableAjax("DoAjax")
+		buffer, _ := gview.ParseContent(`
+>>>>>>> upstream/master
         <html>
             <head>
                 <style>
@@ -33,6 +48,7 @@ func main() {
             </body>
         </html>
         `, g.Map{
+<<<<<<< HEAD
             "page" : gview.HTML(page.GetContent(1)),
         })
         r.Response.Write(buffer)
@@ -40,3 +56,12 @@ func main() {
     s.SetPort(8199)
     s.Run()
 }
+=======
+			"page": page.GetContent(1),
+		})
+		r.Response.Write(buffer)
+	})
+	s.SetPort(8199)
+	s.Run()
+}
+>>>>>>> upstream/master

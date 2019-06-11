@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright 2017 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
@@ -236,6 +237,44 @@ func (j *Json) Remove(pattern string) error {
 // 注意：
 // 1、写入的value为nil且removed为true时，表示删除;
 // 2、里面的层级处理比较复杂，逻辑较复杂的地方在于层级检索及节点创建，叶子赋值;
+=======
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package gjson provides convenient API for JSON/XML/YAML/TOML data handling.
+package gjson
+
+import (
+	"github.com/gogf/gf/g/internal/rwmutex"
+	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/util/gconv"
+	"reflect"
+	"strconv"
+	"strings"
+)
+
+const (
+    // Separator char for hierarchical data access.
+    gDEFAULT_SPLIT_CHAR = '.'
+)
+
+// The customized JSON struct.
+type Json struct {
+    mu *rwmutex.RWMutex
+    p  *interface{} // Pointer for hierarchical data access, it's the root of data in default.
+    c  byte         // Char separator('.' in default).
+    vc bool         // Violence Check(false in default), which is used to access data
+                    // when the hierarchical data key contains separator char.
+}
+
+// Set <value> by <pattern>.
+// Notice:
+// 1. If value is nil and removed is true, means deleting this value;
+// 2. It's quite complicated in hierarchical data search, node creating and data assignment;
+>>>>>>> upstream/master
 func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
     array   := strings.Split(pattern, string(j.c))
     length  := len(array)
@@ -318,7 +357,20 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
                         if removed && value == nil {
                             goto done
                         }
+<<<<<<< HEAD
                         j.setPointerWithValue(pointer, array[i], value)
+=======
+                        if pparent == nil {
+                            // 表示根节点
+                            j.setPointerWithValue(pointer, array[i], value)
+                        } else {
+                            // 非根节点
+                            s := make([]interface{}, valn + 1)
+                            copy(s, (*pointer).([]interface{}))
+                            s[valn] = value
+                            j.setPointerWithValue(pparent, array[i - 1], s)
+                        }
+>>>>>>> upstream/master
                     }
                 } else {
                     if gstr.IsNumeric(array[i + 1]) {
@@ -375,14 +427,22 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
                     }
                     pointer = &v
                 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master
         }
     }
 done:
     return nil
 }
 
+<<<<<<< HEAD
 // 数据结构转换，map参数必须转换为map[string]interface{}，数组参数必须转换为[]interface{}
+=======
+// Convert <value> to map[string]interface{} or []interface{},
+// which can be supported for hierarchical data access.
+>>>>>>> upstream/master
 func (j *Json) convertValue(value interface{}) interface{} {
     switch value.(type) {
         case map[string]interface{}:
@@ -390,6 +450,7 @@ func (j *Json) convertValue(value interface{}) interface{} {
         case []interface{}:
             return value
         default:
+<<<<<<< HEAD
             // 这里效率会比较低，当然比直接用反射也不会差到哪儿去
             // 为了操作的灵活性，牺牲了一定的效率
             b, _ := Encode(value)
@@ -401,6 +462,30 @@ func (j *Json) convertValue(value interface{}) interface{} {
 
 // 用于Set方法中，对指针指向的内存地址进行赋值
 // 返回修改后的父级指针
+=======
+            rv   := reflect.ValueOf(value)
+            kind := rv.Kind()
+            if kind == reflect.Ptr {
+                rv   = rv.Elem()
+                kind = rv.Kind()
+            }
+            switch kind {
+                case reflect.Array:  return gconv.Interfaces(value)
+                case reflect.Slice:  return gconv.Interfaces(value)
+                case reflect.Map:    return gconv.Map(value)
+                case reflect.Struct: return gconv.Map(value)
+                default:
+                    // Use json decode/encode at last.
+                    b, _ := Encode(value)
+                    v, _ := Decode(b)
+                    return v
+            }
+    }
+}
+
+// Set <key>:<value> to <pointer>, the <key> may be a map key or slice index.
+// It returns the pointer to the new value set.
+>>>>>>> upstream/master
 func (j *Json) setPointerWithValue(pointer *interface{}, key string, value interface{}) *interface{} {
     switch (*pointer).(type) {
         case map[string]interface{}:
@@ -424,6 +509,7 @@ func (j *Json) setPointerWithValue(pointer *interface{}, key string, value inter
     return pointer
 }
 
+<<<<<<< HEAD
 // 根据约定字符串方式访问json解析数据，参数形如： "items.name.first", "list.0"
 // 返回的结果类型的interface{}，因此需要自己做类型转换
 // 如果找不到对应节点的数据，返回nil
@@ -456,6 +542,22 @@ func (j *Json) Get(pattern string) interface{} {
 // 9. 在m2中检索 a     否存在对应map的键名，检索到有值，值为1；
 // 这样检索的复杂度很高，主要是为了避免键名中存在分隔符号(默认为".")的情况，避免歧义。
 func (j *Json) getPointerByPattern(pattern string) *interface{} {
+=======
+// Get a pointer to the value by specified <pattern>.
+func (j *Json) getPointerByPattern(pattern string) *interface{} {
+    if j.vc {
+        return j.getPointerByPatternWithViolenceCheck(pattern)
+    } else {
+        return j.getPointerByPatternWithoutViolenceCheck(pattern)
+    }
+}
+
+// Get a pointer to the value of specified <pattern> with violence check.
+func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *interface{} {
+    if !j.vc {
+        return j.getPointerByPatternWithoutViolenceCheck(pattern)
+    }
+>>>>>>> upstream/master
     index   := len(pattern)
     start   := 0
     length  := 0
@@ -477,7 +579,11 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
                 pointer = r
             }
         } else {
+<<<<<<< HEAD
             // 查找下一个分割符号的索引位置
+=======
+            // Get the position for next separator char.
+>>>>>>> upstream/master
             index = strings.LastIndexByte(pattern[start:index], j.c)
             if index != -1 && length > 0 {
                 index += length + 1
@@ -490,8 +596,16 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
     return nil
 }
 
+<<<<<<< HEAD
 // 层级检索，内部不执行分隔符冲突检查，检索效率会有所提高，但是冲突需要开发者自己根据自定义的分隔符来进行解决
 func (j *Json) getPointerByPatternWithoutSplitCharViolenceCheck(pattern string) *interface{} {
+=======
+// Get a pointer to the value of specified <pattern>, with no violence check.
+func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *interface{} {
+    if j.vc {
+        return j.getPointerByPatternWithViolenceCheck(pattern)
+    }
+>>>>>>> upstream/master
     pointer := j.p
     if len(pattern) == 0 {
         return pointer
@@ -511,8 +625,13 @@ func (j *Json) getPointerByPatternWithoutSplitCharViolenceCheck(pattern string) 
     return nil
 }
 
+<<<<<<< HEAD
 // 判断给定的key在当前的pointer下是否有值，并返回对应的pointer
 // 注意这里返回的指针都是临时变量的内存地址
+=======
+// Check whether there's value by <key> in specified <pointer>.
+// It returns a pointer to the value.
+>>>>>>> upstream/master
 func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interface{} {
     switch (*pointer).(type) {
         case map[string]interface{}:
@@ -529,6 +648,7 @@ func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interfac
     }
     return nil
 }
+<<<<<<< HEAD
 
 // 转换为map[string]interface{}类型,如果转换失败，返回nil
 func (j *Json) ToMap() map[string]interface{} {
@@ -592,3 +712,5 @@ func (j *Json) ToStruct(o interface{}) error {
     defer j.mu.RUnlock()
     return gutil.MapToStruct(j.ToMap(), o)
 }
+=======
+>>>>>>> upstream/master

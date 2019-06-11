@@ -1,15 +1,43 @@
+<<<<<<< HEAD
 // Copyright 2018 gf Author(https://gitee.com/johng/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://gitee.com/johng/gf.
+=======
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+>>>>>>> upstream/master
 
 package gdb
 
 import (
+<<<<<<< HEAD
     "gitee.com/johng/gf/g/util/gconv"
 )
 
+=======
+    "fmt"
+    "github.com/gogf/gf/g/encoding/gparser"
+    "reflect"
+)
+
+// 将结果集转换为JSON字符串
+func (r Result) ToJson() string {
+    content, _ := gparser.VarToJson(r.ToList())
+    return string(content)
+}
+
+// 将结果集转换为XML字符串
+func (r Result) ToXml(rootTag...string) string {
+    content, _ := gparser.VarToXml(r.ToList(), rootTag...)
+    return string(content)
+}
+
+>>>>>>> upstream/master
 // 将结果集转换为List类型返回，便于json处理
 func (r Result) ToList() List {
     l := make(List, len(r))
@@ -24,7 +52,11 @@ func (r Result) ToStringMap(key string) map[string]Map {
     m := make(map[string]Map)
     for _, item := range r {
         if v, ok := item[key]; ok {
+<<<<<<< HEAD
             m[gconv.String(v)] = item.ToMap()
+=======
+            m[v.String()] = item.ToMap()
+>>>>>>> upstream/master
         }
     }
     return m
@@ -35,7 +67,11 @@ func (r Result) ToIntMap(key string) map[int]Map {
     m := make(map[int]Map)
     for _, item := range r {
         if v, ok := item[key]; ok {
+<<<<<<< HEAD
             m[gconv.Int(v)] = item.ToMap()
+=======
+            m[v.Int()] = item.ToMap()
+>>>>>>> upstream/master
         }
     }
     return m
@@ -46,7 +82,11 @@ func (r Result) ToUintMap(key string) map[uint]Map {
     m := make(map[uint]Map)
     for _, item := range r {
         if v, ok := item[key]; ok {
+<<<<<<< HEAD
             m[gconv.Uint(v)] = item.ToMap()
+=======
+            m[v.Uint()] = item.ToMap()
+>>>>>>> upstream/master
         }
     }
     return m
@@ -57,7 +97,11 @@ func (r Result) ToStringRecord(key string) map[string]Record {
     m := make(map[string]Record)
     for _, item := range r {
         if v, ok := item[key]; ok {
+<<<<<<< HEAD
             m[gconv.String(v)] = item
+=======
+            m[v.String()] = item
+>>>>>>> upstream/master
         }
     }
     return m
@@ -68,7 +112,11 @@ func (r Result) ToIntRecord(key string) map[int]Record {
     m := make(map[int]Record)
     for _, item := range r {
         if v, ok := item[key]; ok {
+<<<<<<< HEAD
             m[gconv.Int(v)] = item
+=======
+            m[v.Int()] = item
+>>>>>>> upstream/master
         }
     }
     return m
@@ -79,8 +127,42 @@ func (r Result) ToUintRecord(key string) map[uint]Record {
     m := make(map[uint]Record)
     for _, item := range r {
         if v, ok := item[key]; ok {
+<<<<<<< HEAD
             m[gconv.Uint(v)] = item
+=======
+            m[v.Uint()] = item
+>>>>>>> upstream/master
         }
     }
     return m
 }
+<<<<<<< HEAD
+=======
+
+// 将结果列表转换为指定对象的slice。
+func (r Result) ToStructs(objPointerSlice interface{}) error {
+    l := len(r)
+    if l == 0 {
+        return nil
+    }
+    t := reflect.TypeOf(objPointerSlice)
+    if t.Kind() != reflect.Ptr {
+        return fmt.Errorf("params should be type of pointer, but got: %v", t.Kind())
+    }
+    a := reflect.MakeSlice(t.Elem(), l, l)
+    itemType := a.Index(0).Type()
+    for i := 0; i < l; i++ {
+        if itemType.Kind() == reflect.Ptr {
+            e := reflect.New(itemType.Elem()).Elem()
+            r[i].ToStruct(e)
+            a.Index(i).Set(e.Addr())
+        } else {
+            e := reflect.New(itemType).Elem()
+            r[i].ToStruct(e)
+            a.Index(i).Set(e)
+        }
+    }
+    reflect.ValueOf(objPointerSlice).Elem().Set(a)
+    return nil
+}
+>>>>>>> upstream/master
