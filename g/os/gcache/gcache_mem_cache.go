@@ -18,21 +18,25 @@ import (
 )
 
 
-// 缓存对象
+// Internal cache object.
 type memCache struct {
     dataMu       sync.RWMutex
     expireTimeMu sync.RWMutex
     expireSetMu  sync.RWMutex
 
-    cap          int                            // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
-    data         map[interface{}]memCacheItem   // 缓存数据(所有的缓存数据存放哈希表)
-    expireTimes  map[interface{}]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)，键值为1秒级时间戳
-    expireSets   map[int64]*gset.Set            // 分组过期时间对应的键名列表(用于自动过期快速删除)，键值为1秒级时间戳
+	// <cap> limits the size of the cache pool.
+	// If the size of the cache exceeds the <cap>,
+	// the cache expiration process is performed according to the LRU algorithm.
+	// It is 0 in default which means no limits.
+    cap          int
+    data         map[interface{}]memCacheItem // Underlying cache data which is stored in a hash table.
+    expireTimes  map[interface{}]int64        // Expiring key mapping to its timestamp, which is used for quick indexing and deleting.
+    expireSets   map[int64]*gset.Set          // Expiring timestamp mapping to its key set, which is used for quick indexing and deleting.
 
-    lru          *memCacheLru                   // LRU缓存限制(只有限定cap池大小时才启用)
-    lruGetList   *glist.List                    // Get操作的LRU记录
-    eventList    *glist.List                    // 异步处理队列
-    closed       *gtype.Bool                    // 关闭事件通知
+    lru          *memCacheLru                 // LRU object, which is enabled when <cap> > 0.
+    lruGetList   *glist.List                  // LRU history according with Get function.
+    eventList    *glist.List                  // Asynchronous event list for internal data synchronization.
+    closed       *gtype.Bool                  // Is this cache closed or not.
 }
 
 // 缓存数据项

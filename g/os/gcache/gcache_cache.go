@@ -13,13 +13,12 @@ import (
     "unsafe"
 )
 
-// 缓存对象。
-// 底层只有一个缓存对象，如果需要提高并发性能，可新增缓存对象无锁哈希表，用键名做固定分区。
+// Cache struct.
 type Cache struct {
     *memCache
 }
 
-// Cache对象按照缓存键名首字母做了分组
+// New creates and returns a new cache object.
 func New(lruCap...int) *Cache {
     c := &Cache {
         memCache : newMemCache(lruCap...),
@@ -28,10 +27,8 @@ func New(lruCap...int) *Cache {
     return c
 }
 
-// 清空缓存中的所有数据
+// Clear clears all data of the cache.
 func (c *Cache) Clear() {
-    // 使用原子操作替换缓存对象
     old := atomic.SwapPointer((*unsafe.Pointer)(unsafe.Pointer(&c.memCache)), unsafe.Pointer(newMemCache()))
-    // 关闭旧的缓存对象
     (*memCache)(old).Close()
 }
