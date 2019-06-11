@@ -111,14 +111,10 @@ func TestView_Func(t *testing.T) {
 		gtest.Assert(err != nil, false)
 		gtest.Assert(gstr.Contains(result, "invalid URL escape"), true)
 
-		str = `{{1540822968 | date "Y-m-d"}};{{"1540822968" | date "Y-m-d H:i:s"}}`
+		str = `{{1540822968 | date "Y-m-d"}}`
 		result, err = gview.ParseContent(str, nil)
 		gtest.Assert(err != nil, false)
-		gtest.Assert(result, `2018-10-29;2018-10-29 22:22:48`)
-		str = `{{1540822968 | date "Y-m-d"}};{{"1540822968" | date "Y-m-d H:i:s"}}`
-		result, err = gview.ParseContent(str, nil)
-		gtest.Assert(err != nil, false)
-		gtest.Assert(result, `2018-10-29;2018-10-29 22:22:48`)
+		gtest.Assert(result, `2018-10-29`)
 		str = `{{date "Y-m-d"}}`
 		result, err = gview.ParseContent(str, nil)
 		gtest.Assert(err != nil, false)
