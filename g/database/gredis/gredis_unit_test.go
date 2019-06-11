@@ -71,7 +71,7 @@ func Test_Stats(t *testing.T) {
         redis.SetIdleTimeout(500*time.Millisecond)
         redis.SetMaxConnLifetime(500*time.Millisecond)
 
-        array := make([]gredis.Conn, 0)
+        array := make([]*gredis.Conn, 0)
         for i := 0; i < 10; i++ {
             array = append(array, redis.Conn())
         }

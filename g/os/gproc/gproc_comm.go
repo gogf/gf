@@ -16,10 +16,10 @@ import (
 )
 
 // 本地进程通信接收消息队列(按照分组进行构建的map，键值为*gqueue.Queue对象)
-var commReceiveQueues = gmap.NewStringInterfaceMap()
+var commReceiveQueues = gmap.NewStrAnyMap()
 
 // (用于发送)已建立的PID对应的Conn通信对象，键值为一个Pool，防止并行使用同一个通信对象造成数据重叠
-var commPidConnMap    = gmap.NewIntInterfaceMap()
+var commPidConnMap    = gmap.NewIntAnyMap()
 
 // TCP通信数据结构定义
 type Msg struct {

@@ -9,29 +9,35 @@ package gtype
 import "sync/atomic"
 
 type Bytes struct {
-    val atomic.Value
+	value atomic.Value
 }
 
+// NewBytes returns a concurrent-safe object for []byte type,
+// with given initial value <value>.
 func NewBytes(value...[]byte) *Bytes {
     t := &Bytes{}
     if len(value) > 0 {
-        t.val.Store(value[0])
+        t.value.Store(value[0])
     }
     return t
 }
 
+// Clone clones and returns a new concurrent-safe object for []byte type.
 func (t *Bytes) Clone() *Bytes {
     return NewBytes(t.Val())
 }
 
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
+// Note: The parameter <value> cannot be nil.
 func (t *Bytes) Set(value []byte) (old []byte) {
     old = t.Val()
-    t.val.Store(value)
+    t.value.Store(value)
     return
 }
 
+// Val atomically loads t.value.
 func (t *Bytes) Val() []byte {
-    if s := t.val.Load(); s != nil {
+    if s := t.value.Load(); s != nil {
         return s.([]byte)
     }
     return nil

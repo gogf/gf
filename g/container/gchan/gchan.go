@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gchan provides graceful channel for safe operations.
+// Package gchan provides graceful channel for no panic operations.
 //
 // It's safe to call Chan.Push/Close functions repeatedly.
 package gchan
@@ -14,12 +14,13 @@ import (
     "github.com/gogf/gf/g/container/gtype"
 )
 
+// Graceful channel.
 type Chan struct {
     channel chan interface{}
     closed  *gtype.Bool
 }
 
-// New creates a graceful channel with given limit.
+// New creates a graceful channel with given <limit>.
 func New(limit int) *Chan {
     return &Chan {
 	    channel : make(chan interface{}, limit),
@@ -31,7 +32,7 @@ func New(limit int) *Chan {
 // It is safe to be called repeatedly.
 func (c *Chan) Push(value interface{}) error {
     if c.closed.Val() {
-        return errors.New("closed")
+        return errors.New("channel is closed")
     }
     c.channel <- value
     return nil
@@ -39,6 +40,7 @@ func (c *Chan) Push(value interface{}) error {
 
 // Pop pops value from channel.
 // If there's no value in channel, it would block to wait.
+// If the channel is closed, it will return a nil value immediately.
 func (c *Chan) Pop() interface{} {
     return <- c.channel
 }

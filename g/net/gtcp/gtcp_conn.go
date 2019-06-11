@@ -7,24 +7,27 @@
 package gtcp
 
 import (
-    "net"
-    "time"
-    "io"
-    "bufio"
-    "bytes"
+	"bufio"
+	"bytes"
+	"crypto/tls"
+	"io"
+	"net"
+	"time"
 )
 
 // 封装的链接对象
 type Conn struct {
     conn           net.Conn      // 底层tcp对象
     reader         *bufio.Reader // 当前链接的缓冲读取对象
+    buffer         []byte        // 读取缓冲区(用于数据读取时的缓冲区处理)
     recvDeadline   time.Time     // 读取超时时间
     sendDeadline   time.Time     // 写入超时时间
-    recvBufferWait time.Duration // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
+    recvBufferWait time.Duration // 读取全部缓冲区数据时，读取缓冲区完毕后的等待间隔
 }
 
 const (
-    gRECV_ALL_WAIT_TIMEOUT = time.Millisecond // 读取全部缓冲数据时，没有缓冲数据时的等待间隔
+	// 读取全部缓冲数据时，没有缓冲数据时的等待间隔
+    gRECV_ALL_WAIT_TIMEOUT = time.Millisecond
 )
 
 // 创建TCP链接
@@ -34,6 +37,24 @@ func NewConn(addr string, timeout...int) (*Conn, error) {
     } else {
         return nil, err
     }
+}
+
+// 创建支持TLS加密通信的TCP链接
+func NewConnTLS(addr string, tlsConfig *tls.Config) (*Conn, error) {
+	if conn, err := NewNetConnTLS(addr, tlsConfig); err == nil {
+		return NewConnByNetConn(conn), nil
+	} else {
+		return nil, err
+	}
+}
+
+// 根据证书和密钥文件创建支持TLS加密通信的TCP链接
+func NewConnKeyCrt(addr, crtFile, keyFile string) (*Conn, error) {
+	if conn, err := NewNetConnKeyCrt(addr, crtFile, keyFile); err == nil {
+		return NewConnByNetConn(conn), nil
+	} else {
+		return nil, err
+	}
 }
 
 // 将net.Conn接口对象转换为*gtcp.Conn对象
@@ -48,16 +69,14 @@ func NewConnByNetConn(conn net.Conn) *Conn {
 }
 
 // 关闭连接
-func (c *Conn) Close() {
-    c.conn.Close()
+func (c *Conn) Close() error {
+    return c.conn.Close()
 }
 
 // 发送数据
 func (c *Conn) Send(data []byte, retry...Retry) error {
-    length := 0
     for {
-        n, err := c.conn.Write(data)
-        if err != nil {
+        if _, err := c.conn.Write(data); err != nil {
             // 链接已关闭
             if err == io.EOF {
                 return err
@@ -74,18 +93,17 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
                 time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
             }
         } else {
-            length += n
-            if length == len(data) {
-                return nil
-            }
+            return nil
         }
     }
 }
 
-// 获取数据，指定读取的数据长度(length < 1表示获取所有可读数据)，以及重试策略(retry)
+// 阻塞等待获取指定读取的数据长度，并给定重试策略。
+//
 // 需要注意：
 // 1、往往在socket通信中需要指定固定的数据结构，并在设定对应的长度字段，并在读取数据时便于区分包大小；
-// 2、当length < 1时表示获取缓冲区所有的数据，但是可能会引起包解析问题(可能出现非完整的包情况)，因此需要解析端注意解析策略；
+// 2、当length < 0时表示获取缓冲区所有的数据，但是可能会引起包解析问题(可能出现粘包/断包情况)，因此需要解析端注意解析策略；
+// 3、当length = 0时表示获取一次缓冲区的数据后立即返回；
 func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
     var err        error  // 读取错误
     var size       int    // 读取长度
@@ -103,10 +121,12 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
         // 缓冲区数据写入等待处理。
         // 如果已经读取到数据(这点很关键，表明缓冲区已经有数据，剩下的操作就是将所有数据读取完毕)，
         // 那么可以设置读取全部缓冲数据的超时时间；如果没有接收到任何数据，那么将会进入读取阻塞(或者自定义的超时阻塞);
-        // 仅对读取全部缓冲数据操作有效
-        if length <= 0 && index > 0 {
+        // 仅对读取全部缓冲区数据操作有效
+        if length < 0 && index > 0 {
             bufferWait = true
-            c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait))
+            if err = c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
+            	return nil, err
+            }
         }
         size, err = c.reader.Read(buffer[index:])
         if size > 0 {
@@ -117,9 +137,14 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
                     break
                 }
             } else {
-                // 如果长度超过了自定义的读取缓冲区，那么自动增长
                 if index >= gDEFAULT_READ_BUFFER_SIZE {
+	                // 如果长度超过了自定义的读取缓冲区，那么自动增长
                     buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
+                } else {
+                	// 如果第一次读取的数据并未达到缓冲变量长度，那么直接返回
+                	if !bufferWait {
+						break
+	                }
                 }
             }
         }
@@ -130,7 +155,9 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
             }
             // 判断数据是否全部读取完毕(由于超时机制的存在，获取的数据完整性不可靠)
             if bufferWait && isTimeout(err) {
-                c.conn.SetReadDeadline(c.recvDeadline)
+	            if err = c.conn.SetReadDeadline(c.recvDeadline); err != nil {
+		            return nil, err
+	            }
                 err = nil
                 break
             }
@@ -147,6 +174,10 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
                 continue
             }
             break
+        }
+        // 只获取一次数据
+        if length == 0 {
+        	break
         }
     }
     return buffer[:index], err
@@ -177,14 +208,18 @@ func (c *Conn) RecvLine(retry...Retry) ([]byte, error) {
 
 // 带超时时间的数据获取
 func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry...Retry) ([]byte, error) {
-    c.SetRecvDeadline(time.Now().Add(timeout))
+    if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+    	return nil, err
+    }
     defer c.SetRecvDeadline(time.Time{})
     return c.Recv(length, retry...)
 }
 
 // 带超时时间的数据发送
 func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry...Retry) error {
-    c.SetSendDeadline(time.Now().Add(timeout))
+	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+		return err
+	}
     defer c.SetSendDeadline(time.Time{})
     return c.Send(data, retry...)
 }
@@ -234,8 +269,8 @@ func (c *Conn) SetSendDeadline(t time.Time) error {
 
 // 读取全部缓冲区数据时，读取完毕后的写入等待间隔，如果超过该等待时间后仍无可读数据，那么读取操作返回。
 // 该时间间隔不能设置得太大，会影响Recv读取时长(默认为1毫秒)。
-func (c *Conn) SetRecvBufferWait(d time.Duration) {
-    c.recvBufferWait = d
+func (c *Conn) SetRecvBufferWait(bufferWaitDuration time.Duration) {
+    c.recvBufferWait = bufferWaitDuration
 }
 
 func (c *Conn) LocalAddr() net.Addr {

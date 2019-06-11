@@ -11,35 +11,39 @@ import (
 )
 
 type Bool struct {
-    val int32
+    value int32
 }
 
+// NewBool returns a concurrent-safe object for bool type,
+// with given initial value <value>.
 func NewBool(value...bool) *Bool {
     t := &Bool{}
     if len(value) > 0 {
         if value[0] {
-            t.val = 1
+            t.value = 1
         } else {
-            t.val = 0
+            t.value = 0
         }
     }
     return t
 }
 
+// Clone clones and returns a new concurrent-safe object for bool type.
 func (t *Bool) Clone() *Bool {
     return NewBool(t.Val())
 }
 
-// 并发安全设置变量值，返回之前的旧值
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (t *Bool) Set(value bool) (old bool) {
     if value {
-        old = atomic.SwapInt32(&t.val, 1) == 1
+        old = atomic.SwapInt32(&t.value, 1) == 1
     } else {
-        old = atomic.SwapInt32(&t.val, 0) == 1
+        old = atomic.SwapInt32(&t.value, 0) == 1
     }
     return
 }
 
+// Val atomically loads t.valueue.
 func (t *Bool) Val() bool {
-    return atomic.LoadInt32(&t.val) > 0
+    return atomic.LoadInt32(&t.value) > 0
 }

@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/test/gtest"
+	"fmt"
+	"github.com/gogf/gf/g/os/gtime"
 )
 
-func test() []byte {
-	return nil
-}
 func main() {
-	gtest.Assert(test(), nil)
+	fmt.Println(gtime.Now().Format("U"))
+	fmt.Println(gtime.Second())
 }

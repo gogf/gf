@@ -13,31 +13,25 @@ import (
     "github.com/gogf/gf/g/container/garray"
 )
 
-
-// 如果给定绝对路径将会去掉其中的相对路径符号后返回；
-// 如果是给定的相对路径，那么将会按照以下路径优先级搜索文件(重复路径会去重)：
-// prioritySearchPaths、当前工作目录、二进制文件目录、源码main包目录(开发环境下)
+// Search searches file by name <name> in following paths with priority:
+// prioritySearchPaths, Pwd()、SelfDir()、MainPkgPath().
+// It returns the absolute file path of <name> if found, or en empty string if not found.
 func Search(name string, prioritySearchPaths...string) (realPath string, err error) {
-    // 是否绝对路径
+    // Check if it's a absolute path.
     realPath = RealPath(name)
     if realPath != "" {
         return
     }
-    // 相对路径搜索
+    // Search paths array.
     array := garray.NewStringArray(true)
-    // 自定义优先路径
     array.Append(prioritySearchPaths...)
-    // 用户工作目录
-    array.Append(Pwd())
-    // 二进制所在目录
-    array.Append(SelfDir())
-    // 源码main包目录
+    array.Append(Pwd(), SelfDir())
     if path := MainPkgPath(); path != "" {
         array.Append(path)
     }
-    // 路径去重
+    // Remove repeated items.
     array.Unique()
-    // 执行相对路径搜索
+    // Do the searching.
     array.RLockFunc(func(array []string) {
         path := ""
         for _, v := range array {
@@ -48,7 +42,7 @@ func Search(name string, prioritySearchPaths...string) (realPath string, err err
             }
         }
     })
-    // 目录不存在错误处理
+    // If it fails searching, it returns formatted error.
     if realPath == "" {
         buffer := bytes.NewBuffer(nil)
         buffer.WriteString(fmt.Sprintf("cannot find file/folder \"%s\" in following paths:", name))

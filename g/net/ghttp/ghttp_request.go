@@ -7,7 +7,8 @@
 package ghttp
 
 import (
-    "github.com/gogf/gf/g/container/gvar"
+	"fmt"
+	"github.com/gogf/gf/g/container/gvar"
     "github.com/gogf/gf/g/encoding/gjson"
     "github.com/gogf/gf/g/os/gtime"
     "github.com/gogf/gf/g/text/gregex"
@@ -70,12 +71,12 @@ func (r *Request) WebSocket() (*WebSocket, error) {
 
 // 获得指定名称的参数字符串(Router/GET/POST)，同 GetRequestString
 // 这是常用方法的简化别名
-func (r *Request) Get(key string, def ... string) string {
+func (r *Request) Get(key string, def...interface{}) string {
     return r.GetRequestString(key, def...)
 }
 
 // 建议都用该参数替代参数获取
-func (r *Request) GetVar(key string, def ... interface{}) gvar.VarRead {
+func (r *Request) GetVar(key string, def...interface{}) *gvar.Var {
     return r.GetRequestVar(key, def...)
 }
 
@@ -109,43 +110,43 @@ func (r *Request) GetJson() *gjson.Json {
     return nil
 }
 
-func (r *Request) GetString(key string, def ... string) string {
+func (r *Request) GetString(key string, def...interface{}) string {
     return r.GetRequestString(key, def...)
 }
 
-func (r *Request) GetInt(key string, def ... int) int {
+func (r *Request) GetInt(key string, def...interface{}) int {
     return r.GetRequestInt(key, def...)
 }
 
-func (r *Request) GetInts(key string, def ... []int) []int {
+func (r *Request) GetInts(key string, def...interface{}) []int {
     return r.GetRequestInts(key, def...)
 }
 
-func (r *Request) GetUint(key string, def ... uint) uint {
+func (r *Request) GetUint(key string, def...interface{}) uint {
     return r.GetRequestUint(key, def...)
 }
 
-func (r *Request) GetFloat32(key string, def ... float32) float32 {
+func (r *Request) GetFloat32(key string, def...interface{}) float32 {
     return r.GetRequestFloat32(key, def...)
 }
 
-func (r *Request) GetFloat64(key string, def ... float64) float64 {
+func (r *Request) GetFloat64(key string, def...interface{}) float64 {
     return r.GetRequestFloat64(key, def...)
 }
 
-func (r *Request) GetFloats(key string, def ... []float64) []float64 {
+func (r *Request) GetFloats(key string, def...interface{}) []float64 {
     return r.GetRequestFloats(key, def...)
 }
 
-func (r *Request) GetArray(key string, def ... []string) []string {
+func (r *Request) GetArray(key string, def...interface{}) []string {
     return r.GetRequestArray(key, def...)
 }
 
-func (r *Request) GetStrings(key string, def ... []string) []string {
+func (r *Request) GetStrings(key string, def...interface{}) []string {
     return r.GetRequestStrings(key, def...)
 }
 
-func (r *Request) GetInterfaces(key string, def ... []interface{}) []interface{} {
+func (r *Request) GetInterfaces(key string, def...interface{}) []interface{} {
     return r.GetRequestInterfaces(key, def...)
 }
 
@@ -153,9 +154,10 @@ func (r *Request) GetMap(def...map[string]string) map[string]string {
     return r.GetRequestMap(def...)
 }
 
-// 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
-func (r *Request) GetToStruct(object interface{}, mapping...map[string]string) {
-    r.GetRequestToStruct(object, mapping...)
+// 将所有的request参数映射到struct属性上，参数pointer应当为一个struct对象的指针,
+// mapping为非必需参数，自定义参数与属性的映射关系
+func (r *Request) GetToStruct(pointer interface{}, mapping...map[string]string) {
+    r.GetRequestToStruct(pointer, mapping...)
 }
 
 // 仅退出当前逻辑执行函数, 如:服务函数、HOOK函数
@@ -217,15 +219,24 @@ func (r *Request) GetClientIp() string {
     return r.clientIp
 }
 
-// 获得来源URL地址
+// 获得当前请求URL地址
+func (r *Request) GetUrl() string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	return fmt.Sprintf(`%s://%s%s`, scheme, r.Host, r.URL.String())
+}
+
+// 获得请求来源URL地址
 func (r *Request) GetReferer() string {
     return r.Header.Get("Referer")
 }
 
 // 获得结构体对象的参数名称标签，构成map返回
-func (r *Request) getStructParamsTagMap(object interface{}) map[string]string {
+func (r *Request) getStructParamsTagMap(pointer interface{}) map[string]string {
     tagMap := make(map[string]string)
-    fields := structs.Fields(object)
+    fields := structs.Fields(pointer)
     for _, field := range fields {
         if tag := field.Tag("params"); tag != "" {
             for _, v := range strings.Split(tag, ",") {

@@ -332,14 +332,14 @@ func ContainsAny(s, chars string) bool {
 func CountWords(str string) map[string]int {
     m      := make(map[string]int)
     buffer := bytes.NewBuffer(nil)
-    for _, rune := range []rune(str) {
-        if unicode.IsSpace(rune) {
+    for _, r := range []rune(str) {
+        if unicode.IsSpace(r) {
             if buffer.Len() > 0 {
                 m[buffer.String()]++
                 buffer.Reset()
             }
         } else {
-            buffer.WriteRune(rune)
+            buffer.WriteRune(r)
         }
     }
     if buffer.Len() > 0 {
@@ -349,19 +349,17 @@ func CountWords(str string) map[string]int {
 }
 
 // CountChars returns information about chars' count used in a string.
-//
-// 返回字符串中字符的使用情况。
 func CountChars(str string, noSpace...bool) map[string]int {
     m := make(map[string]int)
     countSpace := true
     if len(noSpace) > 0 && noSpace[0] {
         countSpace = false
     }
-    for _, rune := range []rune(str) {
-        if !countSpace && unicode.IsSpace(rune) {
+    for _, r := range []rune(str) {
+        if !countSpace && unicode.IsSpace(r) {
             continue
         }
-        m[string(rune)]++
+        m[string(r)]++
     }
     return m
 }
@@ -484,7 +482,7 @@ func Implode(glue string, pieces []string) string {
 
 // Chr return the ascii string of a number(0-255).
 func Chr(ascii int) string {
-    return string(ascii)
+    return string([]byte{byte(ascii%256)})
 }
 
 // Ord converts the first byte of a string to a value between 0 and 255.
@@ -594,4 +592,21 @@ func QuoteMeta(str string) string {
         buf.WriteRune(char)
     }
     return buf.String()
+}
+
+// SearchArray searches string <s> in string slice <a> case-sensitively,
+// returns its index in <a>.
+// If <s> is not found in <a>, it returns -1.
+func SearchArray (a []string, s string) int {
+	for i, v := range a {
+		if s == v {
+			return i
+		}
+	}
+	return -1
+}
+
+// InArray checks whether string <s> in slice <a>.
+func InArray (a []string, s string) bool {
+	return SearchArray(a, s) != -1
 }

@@ -17,57 +17,61 @@ import (
     "time"
 )
 
-// 定时任务管理对象
 type Cron struct {
-    idGen      *gtype.Int64             // 用于唯一名称生成
-    status     *gtype.Int               // 定时任务状态(0: 未执行; 1: 运行中; 2: 已停止; -1:删除关闭)
-    entries    *gmap.StringInterfaceMap // 所有的定时任务项
-    logPath    *gtype.String            // 日志文件输出目录
-    logLevel   *gtype.Int               // 日志输出等级
+    idGen      *gtype.Int64    // Used for unique name generation.
+    status     *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
+    entries    *gmap.StrAnyMap // All timed task entries.
+    logPath    *gtype.String   // Logging path(folder).
+    logLevel   *gtype.Int      // Logging level.
 }
 
-// 创建自定义的定时任务管理对象
+// New returns a new Cron object with default settings.
 func New() *Cron {
     return &Cron {
         idGen      : gtype.NewInt64(),
         status     : gtype.NewInt(STATUS_RUNNING),
-        entries    : gmap.NewStringInterfaceMap(),
+        entries    : gmap.NewStrAnyMap(),
         logPath    : gtype.NewString(),
         logLevel   : gtype.NewInt(glog.LEVEL_PROD),
     }
 }
 
-// 设置日志输出路径
+// SetLogPath sets the logging folder path.
 func (c *Cron) SetLogPath(path string) {
     c.logPath.Set(path)
 }
 
-// 获取设置的日志输出路径
+// GetLogPath return the logging folder path.
 func (c *Cron) GetLogPath() string {
     return c.logPath.Val()
 }
 
-// 设置日志输出等级。
+// SetLogLevel sets the logging level.
 func (c *Cron) SetLogLevel(level int) {
     c.logLevel.Set(level)
 }
 
-// 获取日志输出等级。
+// GetLogLevel returns the logging level.
 func (c *Cron) GetLogLevel() int {
     return c.logLevel.Val()
 }
 
-// 添加定时任务
+// Add adds a timed task.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
 func (c *Cron) Add(pattern string, job func(), name ... string) (*Entry, error) {
     if len(name) > 0 {
         if c.Search(name[0]) != nil {
             return nil, errors.New(fmt.Sprintf(`cron job "%s" already exists`, name[0]))
         }
     }
-    return c.addEntry(pattern, job, false, gDEFAULT_TIMES, name...)
+    return c.addEntry(pattern, job, false, name...)
 }
 
-// 添加单例运行定时任务
+// AddSingleton adds a singleton timed task.
+// A singleton timed task is that can only be running one single instance at the same time.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
 func (c *Cron) AddSingleton(pattern string, job func(), name ... string) (*Entry, error) {
     if entry, err := c.Add(pattern, job, name ...); err != nil {
         return nil, err
@@ -77,7 +81,9 @@ func (c *Cron) AddSingleton(pattern string, job func(), name ... string) (*Entry
     }
 }
 
-// 添加只运行一次的定时任务
+// AddOnce adds a timed task which can be run only once.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
 func (c *Cron) AddOnce(pattern string, job func(), name ... string) (*Entry, error) {
     if entry, err := c.Add(pattern, job, name ...); err != nil {
         return nil, err
@@ -87,7 +93,9 @@ func (c *Cron) AddOnce(pattern string, job func(), name ... string) (*Entry, err
     }
 }
 
-// 添加运行指定次数的定时任务
+// AddTimes adds a timed task which can be run specified times.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
 func (c *Cron) AddTimes(pattern string, times int, job func(), name ... string) (*Entry, error) {
     if entry, err := c.Add(pattern, job, name ...); err != nil {
         return nil, err
@@ -97,7 +105,7 @@ func (c *Cron) AddTimes(pattern string, times int, job func(), name ... string) 
     }
 }
 
-// 延迟添加定时任务
+// DelayAdd adds a timed task after <delay> time.
 func (c *Cron) DelayAdd(delay time.Duration, pattern string, job func(), name ... string) {
     gtimer.AddOnce(delay, func() {
         if _, err := c.Add(pattern, job, name ...); err != nil {
@@ -106,7 +114,7 @@ func (c *Cron) DelayAdd(delay time.Duration, pattern string, job func(), name ..
     })
 }
 
-// 延迟添加单例定时任务
+// DelayAddSingleton adds a singleton timed task after <delay> time.
 func (c *Cron) DelayAddSingleton(delay time.Duration, pattern string, job func(), name ... string) {
     gtimer.AddOnce(delay, func() {
         if _, err := c.AddSingleton(pattern, job, name ...); err != nil {
@@ -115,7 +123,8 @@ func (c *Cron) DelayAddSingleton(delay time.Duration, pattern string, job func()
     })
 }
 
-// 延迟添加运行指定次数的定时任务
+// DelayAddOnce adds a timed task after <delay> time.
+// This timed task can be run only once.
 func (c *Cron) DelayAddOnce(delay time.Duration, pattern string, job func(), name ... string) {
     gtimer.AddOnce(delay, func() {
         if _, err := c.AddOnce(pattern, job, name ...); err != nil {
@@ -124,7 +133,8 @@ func (c *Cron) DelayAddOnce(delay time.Duration, pattern string, job func(), nam
     })
 }
 
-// 延迟添加只运行一次的定时任务
+// DelayAddTimes adds a timed task after <delay> time.
+// This timed task can be run specified times.
 func (c *Cron) DelayAddTimes(delay time.Duration, pattern string, times int, job func(), name ... string) {
     gtimer.AddOnce(delay, func() {
         if _, err := c.AddTimes(pattern, times, job, name ...); err != nil {
@@ -133,7 +143,8 @@ func (c *Cron) DelayAddTimes(delay time.Duration, pattern string, times int, job
     })
 }
 
-// 检索指定名称的定时任务
+// Search returns a scheduled task with the specified <name>.
+// It returns nil if no found.
 func (c *Cron) Search(name string) *Entry {
     if v := c.entries.Get(name); v != nil {
         return v.(*Entry)
@@ -141,7 +152,7 @@ func (c *Cron) Search(name string) *Entry {
     return nil
 }
 
-// 开启定时任务执行(可以指定特定名称的一个或若干个定时任务)
+// Start starts running the specified timed task named <name>.
 func (c *Cron) Start(name...string) {
     if len(name) > 0 {
         for _, v := range name {
@@ -154,7 +165,7 @@ func (c *Cron) Start(name...string) {
     }
 }
 
-// 停止定时任务执行(可以指定特定名称的一个或若干个定时任务)
+// Stop stops running the specified timed task named <name>.
 func (c *Cron) Stop(name...string) {
     if len(name) > 0 {
         for _, v := range name {
@@ -167,24 +178,24 @@ func (c *Cron) Stop(name...string) {
     }
 }
 
-// 根据指定名称删除定时任务。
+// Remove deletes scheduled task which named <name>.
 func (c *Cron) Remove(name string) {
     if v := c.entries.Get(name); v != nil {
         v.(*Entry).Close()
     }
 }
 
-// 关闭定时任务
+// Close stops and closes current cron.
 func (c *Cron) Close() {
     c.status.Set(STATUS_CLOSED)
 }
 
-// 获取所有已注册的定时任务数量
+// Size returns the size of the timed tasks.
 func (c *Cron) Size() int {
     return c.entries.Size()
 }
 
-// 获取所有已注册的定时任务项(按照注册时间从小到大进行排序)
+// Entries return all timed tasks as slice(order by registered time asc).
 func (c *Cron) Entries() []*Entry {
     array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 interface{}) int {
         entry1 := v1.(*Entry)

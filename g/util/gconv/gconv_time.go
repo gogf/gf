@@ -7,28 +7,38 @@
 package gconv
 
 import (
-    "time"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/text/gstr"
+	"time"
 )
 
-// 将变量i转换为time.Time类型
+// Time converts <i> to time.Time.
 func Time(i interface{}, format...string) time.Time {
     return GTime(i, format...).Time
 }
 
-// 将变量i转换为time.Time类型
-func TimeDuration(i interface{}) time.Duration {
-    return time.Duration(Int64(i))
+// Duration converts <i> to time.Duration.
+// If <i> is string, then it uses time.ParseDuration to convert it.
+// If <i> is numeric, then it converts <i> as nanoseconds.
+func Duration(i interface{}) time.Duration {
+	s := String(i)
+	if !gstr.IsNumeric(s) {
+		d, _ := time.ParseDuration(s)
+		return d
+	}
+	return time.Duration(Int64(i))
 }
 
-// 将变量i转换为time.Time类型, 自动识别i为时间戳或者标准化的时间字符串。
+// GTime converts <i> to *gtime.Time.
+// The parameter <format> can be used to specify the format of <i>.
+// If no <format> given, it converts <i> using gtime.NewFromTimeStamp if <i> is numeric,
+// or using gtime.StrToTime if <i> is string.
 func GTime(i interface{}, format...string) *gtime.Time {
     s := String(i)
     if len(s) == 0 {
         return gtime.New()
     }
-    // 优先使用用户输入日期格式进行转换
+    // Priority conversion using given format.
     if len(format) > 0 {
         t, _ := gtime.StrToTimeFormat(s, format[0])
         return t

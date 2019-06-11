@@ -10,32 +10,34 @@ import (
     "sync/atomic"
 )
 
-// 比较通用的并发安全数据类型
 type Interface struct {
-    val atomic.Value
+	value atomic.Value
 }
 
+// NewInterface returns a concurrent-safe object for interface{} type,
+// with given initial value <value>.
 func NewInterface(value...interface{}) *Interface {
     t := &Interface{}
     if len(value) > 0 && value[0] != nil {
-        t.val.Store(value[0])
+        t.value.Store(value[0])
     }
     return t
 }
 
+// Clone clones and returns a new concurrent-safe object for interface{} type.
 func (t *Interface) Clone() *Interface {
     return NewInterface(t.Val())
 }
 
+// Set atomically stores <value> into t.value and returns the previous value of t.value.
+// Note: The parameter <value> cannot be nil.
 func (t *Interface) Set(value interface{}) (old interface{}) {
-    if value == nil {
-        return
-    }
     old = t.Val()
-    t.val.Store(value)
+    t.value.Store(value)
     return
 }
 
+// Val atomically loads t.value.
 func (t *Interface) Val() interface{} {
-    return t.val.Load()
+    return t.value.Load()
 }

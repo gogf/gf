@@ -7,7 +7,7 @@
 package empty
 
 import (
-    "reflect"
+	"reflect"
 )
 
 // 判断给定的变量是否为空。
@@ -35,17 +35,22 @@ func IsEmpty(value interface{}) bool {
         case string:  return value == ""
         case []byte:  return len(value) == 0
         default:
-            // 最后通过反射来判断
+        	// Finally using reflect.
             rv := reflect.ValueOf(value)
-            if rv.IsNil() {
-                return true
-            }
-            kind := rv.Kind()
-            switch kind {
-                case reflect.Map:   fallthrough
-                case reflect.Slice: fallthrough
-                case reflect.Array:
+            switch rv.Kind() {
+                case reflect.Chan,
+                     reflect.Map,
+	                 reflect.Slice,
+	                 reflect.Array:
                     return rv.Len() == 0
+
+	            case reflect.Func,
+		             reflect.Ptr,
+		             reflect.Interface,
+		             reflect.UnsafePointer:
+		            if rv.IsNil() {
+			            return true
+		            }
             }
     }
     return false

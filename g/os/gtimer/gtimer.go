@@ -34,7 +34,7 @@ var (
     // 默认定时器属性参数值
     defaultSlots    = cmdenv.Get("gf.gtimer.slots",    gDEFAULT_SLOT_NUMBER).Int()
     defaultLevel    = cmdenv.Get("gf.gtimer.level",    gDEFAULT_WHEEL_LEVEL).Int()
-    defaultInterval = cmdenv.Get("gf.gtimer.interval", gDEFAULT_WHEEL_INTERVAL).TimeDuration()*time.Millisecond
+    defaultInterval = cmdenv.Get("gf.gtimer.interval", gDEFAULT_WHEEL_INTERVAL).Duration()*time.Millisecond
     // 默认的wheel管理对象
     defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
 )
@@ -99,7 +99,7 @@ func DelayAddTimes(delay time.Duration, interval time.Duration, times int, job J
     defaultTimer.DelayAddTimes(delay, interval, times, job)
 }
 
-// 在Job方法中调用，停止当前运行的任务。
+// 在Job方法中调用，停止并删除当前运行的任务。
 func Exit() {
     panic(gPANIC_EXIT)
 }
