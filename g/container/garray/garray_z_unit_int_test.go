@@ -199,3 +199,84 @@ func TestIntArray_Join(t *testing.T) {
         gtest.Assert(array1.Join("."), "0.1.2.3.4.5.6")
     })
 }
+
+func TestNewSortedIntArrayFrom(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []int{0,3,2,1,4,5,6}
+        array1 := garray.NewSortedIntArrayFrom(a1,true)
+        gtest.Assert(array1.Join("."), "0.1.2.3.4.5.6")
+    })
+}
+
+func TestNewSortedIntArrayFromCopy(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []int{0,5,2,1,4,3,6}
+        array1 := garray.NewSortedIntArrayFromCopy(a1,false)
+        //@todo
+        gtest.Assert(array1.Join("."), "0.5.2.1.4.3.6")
+    })
+}
+
+func TestSortedIntArray_SetArray(t *testing.T){
+    gtest.Case(t, func() {
+        a1 := []int{0,1,2,3}
+        a2 := []int{4,5,6}
+        array1 := garray.NewSortedIntArrayFrom(a1)
+        array2:=array1.SetArray(a2)
+
+        gtest.Assert(array2.Len(),3)
+        gtest.Assert(array2.Search(3),0)
+        gtest.Assert(array2.Search(5),1)
+        gtest.Assert(array2.Search(6),2)
+    })
+}
+
+func TestSortedIntArray_Sort(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []int{0,3,2,1}
+
+        array1 := garray.NewSortedIntArrayFrom(a1)
+        array2:=array1.Sort()
+
+        gtest.Assert(array2.Len(),4)
+        gtest.Assert(array2,[]int{0,1,2,3})
+
+    })
+}
+
+func TestSortedIntArray_Get(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []int{1,3,5,0}
+        array1 := garray.NewSortedIntArrayFrom(a1)
+        gtest.Assert(array1.Get(0),0)
+        gtest.Assert(array1.Get(1),1)
+        gtest.Assert(array1.Get(3),5)
+
+    })
+}
+
+func TestSortedIntArray_Remove(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []int{1,3,5,0}
+        array1 := garray.NewSortedIntArrayFrom(a1)
+        i1:=array1.Remove(2)
+        gtest.Assert(i1,3)
+        gtest.Assert(array1.Search(5),2)
+
+        // 再次删除剩下的数组中的第一个
+        i2:=array1.Remove(0)
+        gtest.Assert(i2,0)
+        gtest.Assert(array1.Search(5),1)
+
+
+        a2 := []int{1,3}
+        array2 := garray.NewSortedIntArrayFrom(a2)
+        i3:=array2.Remove(1)
+        gtest.Assert(i3,3)
+        t.Log(array2)
+        gtest.Assert(array2.Search(2),-1)
+        gtest.Assert(array2.Search(1),0)
+
+    })
+}
+

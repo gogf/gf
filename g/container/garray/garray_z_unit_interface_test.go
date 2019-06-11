@@ -202,3 +202,79 @@ func TestArray_Join(t *testing.T) {
         gtest.Assert(array1.Join("."), "0.1.2.3.4.5.6")
     })
 }
+
+func TestArray_Replace(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []interface{}{0,1,2,3,4,5,6}
+        a2 := []interface{}{"a","b","c"}
+        a3 := []interface{}{"m","n","p","z","x","y","d","u"}
+        array1 := garray.NewArrayFrom(a1)
+        array2:=array1.Replace(a2)
+        gtest.Assert(array2.Len(), 7)
+        gtest.Assert(array2.Contains("b"),true)
+        gtest.Assert(array2.Contains(4),true)
+        gtest.Assert(array2.Contains("v"),false)
+        array3:=array1.Replace(a3)
+        gtest.Assert(array3.Len(), 7)
+        gtest.Assert(array3.Contains(4),false)
+        gtest.Assert(array3.Contains("p"),true)
+        gtest.Assert(array3.Contains("u"),false)
+    })
+}
+
+func TestArray_SetArray(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []interface{}{0,1,2,3,4,5,6}
+        a2 := []interface{}{"a","b","c"}
+
+        array1 := garray.NewArrayFrom(a1)
+        array1=array1.SetArray(a2)
+        gtest.Assert(array1.Len(), 3)
+        gtest.Assert(array1.Contains("b"), true)
+        gtest.Assert(array1.Contains("5"), false)
+    })
+}
+
+func TestArray_Sum(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []interface{}{0,1,2,3}
+        a2 := []interface{}{"a","b","c"}
+        a3 := []interface{}{"a","1","2"}
+
+        array1 := garray.NewArrayFrom(a1)
+        array2 := garray.NewArrayFrom(a2)
+        array3 := garray.NewArrayFrom(a3)
+
+        gtest.Assert(array1.Sum(), 6)
+        gtest.Assert(array2.Sum(), 0)
+        gtest.Assert(array3.Sum(), 3)
+
+    })
+}
+
+func TestArray_Clone(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []interface{}{0,1,2,3}
+
+
+        array1 := garray.NewArrayFrom(a1)
+        array2:=array1.Clone()
+
+        gtest.Assert(array1.Len(), 4)
+        gtest.Assert(array2.Sum(), 6)
+        gtest.AssertEQ(array1, array2)
+
+
+    })
+}
+
+func TestArray_CountValues(t *testing.T) {
+    gtest.Case(t, func() {
+        a1 := []interface{}{"a","b","c","d","e","d"}
+        array1 := garray.NewArrayFrom(a1)
+        array2:=array1.CountValues()
+        gtest.Assert(len(array2),5)
+        gtest.Assert(array2["b"], 1)
+        gtest.Assert(array2["d"], 2)
+    })
+}
