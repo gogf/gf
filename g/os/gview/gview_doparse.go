@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/encoding/ghash"
 	"github.com/gogf/gf/g/os/gfcache"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfsnotify"
@@ -18,6 +19,7 @@ import (
 	"github.com/gogf/gf/g/os/gmlock"
 	"github.com/gogf/gf/g/os/gspath"
 	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/util/gconv"
 	"text/template"
 )
 
@@ -160,7 +162,8 @@ func (view *View) ParseContent(content string, params...Params) (string, error) 
 		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 	}).(*template.Template)
 	// Using memory lock to ensure concurrent safety for content parsing.
-	gmlock.LockFunc("gview-parsing:content", func() {
+	hash := gconv.String(ghash.DJBHash64([]byte(content)))
+	gmlock.LockFunc("gview-parsing-content:" + hash, func() {
 		tpl, err = tpl.Parse(content)
 	})
 	if err != nil {
