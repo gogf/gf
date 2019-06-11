@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/container/gset"
 	"github.com/gogf/gf/g/test/gtest"
+	"strings"
 	"testing"
 )
 
@@ -189,6 +190,67 @@ func TestNewStringSetFrom(t *testing.T) {
 		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
 		gtest.Assert(s1.Contains("b"), true)
 		gtest.Assert(s1.Contains("d"), false)
+	})
+}
 
+func TestStringSet_Join(t *testing.T) {
+	s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+	str1 := s1.Join(",")
+	gtest.Assert(strings.Contains(str1, "b"), true)
+	gtest.Assert(strings.Contains(str1, "d"), false)
+}
+
+func TestStringSet_String(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		str1 := s1.String()
+		gtest.Assert(strings.Contains(str1, "b"), true)
+		gtest.Assert(strings.Contains(str1, "d"), false)
+	})
+
+}
+
+func TestStringSet_Sum(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s2 := gset.NewIntSetFrom([]int{2, 3, 4}, true)
+		gtest.Assert(s1.Sum(), 0)
+		gtest.Assert(s2.Sum(), 9)
+	})
+}
+
+func TestStringSet_Size(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		gtest.Assert(s1.Size(), 3)
+
+	})
+}
+
+func TestStringSet_Remove(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s1 = s1.Remove("b")
+		gtest.Assert(s1.Contains("b"), false)
+		gtest.Assert(s1.Contains("c"), true)
+	})
+}
+
+func TestStringSet_Pop(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		str1 := s1.Pop(1)
+		gtest.Assert(strings.Contains("a,b,c", str1), true)
+	})
+}
+
+func TestStringSet_Pops(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		strs1 := s1.Pops(2)
+		gtest.AssertIN(strs1, []string{"a", "b", "c"})
+		gtest.Assert(len(strs1), 2)
+		str2 := s1.Pops(7)
+		gtest.AssertIN(str2, []string{"a", "b", "c"})
 	})
 }
