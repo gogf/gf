@@ -29,6 +29,8 @@ func New(lruCap...int) *Cache {
 
 // Clear clears all data of the cache.
 func (c *Cache) Clear() {
+	// atomic swap to ensure atomicity.
     old := atomic.SwapPointer((*unsafe.Pointer)(unsafe.Pointer(&c.memCache)), unsafe.Pointer(newMemCache()))
+    // close the old cache object.
     (*memCache)(old).Close()
 }

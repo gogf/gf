@@ -40,7 +40,7 @@ type Config struct {
 }
 
 // New returns a new configuration management object.
-// The param <file> specifies the default configuration file name for reading.
+// The parameter <file> specifies the default configuration file name for reading.
 func New(file...string) *Config {
     name := DEFAULT_CONFIG_FILE
     if len(file) > 0 {
@@ -103,7 +103,7 @@ func (c *Config) filePath(file...string) (path string) {
 }
 
 // SetPath sets the configuration directory path for file search.
-// The param <path> can be absolute or relative path,
+// The parameter <path> can be absolute or relative path,
 // but absolute path is strongly recommended.
 func (c *Config) SetPath(path string) error {
     // Absolute path.

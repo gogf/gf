@@ -19,9 +19,6 @@ import (
 
 // 递归添加目录下的文件
 func (sp *SPath) updateCacheByPath(path string) {
-    if sp.cache == nil {
-        return
-    }
     sp.addToCache(path, path)
 }
 
@@ -58,9 +55,6 @@ func (sp *SPath) parseCacheValue(value string) (filePath string, isDir bool) {
 
 // 添加path到缓存中(递归)
 func (sp *SPath) addToCache(filePath, rootPath string) {
-    if sp.cache == nil {
-        return
-    }
     // 首先添加自身
     idDir := gfile.IsDir(filePath)
     sp.cache.SetIfNotExist(sp.nameFromPath(filePath, rootPath), sp.makeCacheValue(filePath, idDir))
@@ -83,7 +77,7 @@ func (sp *SPath) addMonitorByPath(path string) {
     if sp.cache == nil {
         return
     }
-    gfsnotify.Add(path, func(event *gfsnotify.Event) {
+    _, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
         //glog.Debug(event.String())
         switch {
             case event.IsRemove():
@@ -105,5 +99,5 @@ func (sp *SPath) removeMonitorByPath(path string) {
     if sp.cache == nil {
         return
     }
-    gfsnotify.Remove(path)
+    _ = gfsnotify.Remove(path)
 }

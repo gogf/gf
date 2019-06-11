@@ -69,7 +69,7 @@ func Header(enabled...bool) *Logger {
 
 // Line is a chaining function,
 // which enables/disables printing its caller file along with its line number.
-// The param <long> specified whether print the long absolute file path, eg: /a/b/c/d.go:23.
+// The parameter <long> specified whether print the long absolute file path, eg: /a/b/c/d.go:23.
 func Line(long...bool) *Logger {
 	return logger.Line(long...)
 }

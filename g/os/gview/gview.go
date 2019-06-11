@@ -117,7 +117,7 @@ func New(path...string) *View {
 }
 
 // SetPath sets the template directory path for template file search.
-// The param <path> can be absolute or relative path, but absolute path is suggested.
+// The parameter <path> can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
 	// Absolute path.
     realPath := gfile.RealPath(path)

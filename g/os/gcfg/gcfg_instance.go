@@ -20,7 +20,7 @@ var (
 )
 
 // Instance returns an instance of Config with default settings.
-// The param <name> is the name for the instance.
+// The parameter <name> is the name for the instance.
 func Instance(name...string) *Config {
 	key := DEFAULT_GROUP_NAME
 	if len(name) > 0 {
