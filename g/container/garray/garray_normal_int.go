@@ -22,14 +22,14 @@ type IntArray struct {
 }
 
 // NewIntArray creates and returns an empty array.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewIntArray(unsafe...bool) *IntArray {
 	return NewIntArraySize(0, 0, unsafe...)
 }
 
 // NewIntArraySize create and returns an array with given size and cap.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewIntArraySize(size int, cap int, unsafe...bool) *IntArray {
     return &IntArray{
@@ -39,7 +39,7 @@ func NewIntArraySize(size int, cap int, unsafe...bool) *IntArray {
 }
 
 // NewIntArrayFrom creates and returns an array with given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewIntArrayFrom(array []int, unsafe...bool) *IntArray {
 	return &IntArray{
@@ -49,7 +49,7 @@ func NewIntArrayFrom(array []int, unsafe...bool) *IntArray {
 }
 
 // NewIntArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewIntArrayFromCopy(array []int, unsafe...bool) *IntArray {
     newArray := make([]int, len(array))
@@ -110,7 +110,7 @@ func (a *IntArray) Sum() (sum int) {
 }
 
 // Sort sorts the array in increasing order.
-// The param <reverse> controls whether sort
+// The parameter <reverse> controls whether sort
 // in increasing order(default) or decreasing order
 func (a *IntArray) Sort(reverse...bool) *IntArray {
     a.mu.Lock()

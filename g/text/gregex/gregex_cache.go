@@ -13,6 +13,8 @@ import (
 
 var (
     regexMu  = sync.RWMutex{}
+    // Cache for regex object.
+    // TODO There's no expiring logic for this map.
     regexMap = make(map[string]*regexp.Regexp)
 )
 

@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/os/gtime"
 )
 
 func main() {
-	fmt.Println(gtime.Now().Format("U"))
-	fmt.Println(gtime.Second())
+	var i float64 = 0
+	for index := 0; index < 10; index++ {
+		i += 0.1
+		fmt.Println(i)
+	}
 }

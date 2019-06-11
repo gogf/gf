@@ -30,6 +30,7 @@ const (
 
 var (
 	// Templates cache map for template folder.
+	// TODO Note that there's no expiring logic for this map.
 	templates = gmap.NewStrAnyMap()
 )
 

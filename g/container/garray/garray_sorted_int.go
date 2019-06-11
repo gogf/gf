@@ -26,14 +26,14 @@ type SortedIntArray struct {
 }
 
 // NewSortedIntArray creates and returns an empty sorted array.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArray(unsafe...bool) *SortedIntArray {
     return NewSortedIntArraySize(0, unsafe...)
 }
 
 // NewSortedIntArraySize create and returns an sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
     return &SortedIntArray {
@@ -53,7 +53,7 @@ func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
 }
 
 // NewIntArrayFrom creates and returns an sorted array with given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
     a := NewSortedIntArraySize(0, unsafe...)
@@ -63,7 +63,7 @@ func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
 }
 
 // NewSortedIntArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArrayFromCopy(array []int, unsafe...bool) *SortedIntArray {
     newArray := make([]int, len(array))
@@ -84,7 +84,7 @@ func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
 }
 
 // Sort sorts the array in increasing order.
-// The param <reverse> controls whether sort
+// The parameter <reverse> controls whether sort
 // in increasing order(default) or decreasing order.
 func (a *SortedIntArray) Sort() *SortedIntArray {
     a.mu.Lock()
