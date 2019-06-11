@@ -23,6 +23,12 @@ var testData = []struct {
 	{"Hello 常用國字標準字體表", "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed", "gb18030"},
 }
 
+var testErrData = []struct {
+	utf8, other, otherEncoding string
+}{
+	{"Hello 常用國字標準字體表", "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed", "gbk"},
+}
+
 func buildXml(charset string, str string) (string, string) {
 	head := `<?xml version="1.0" encoding="UTF-8"?>`
 	srcXml := strings.Replace(head, "UTF-8", charset, -1)
@@ -137,4 +143,20 @@ func Test_EncodeIndent(t *testing.T) {
 
 	//t.Logf("%s\n", string(xmlStr))
 
+}
+
+func TestErrXml(t *testing.T) {
+	for _, v := range testErrData {
+		srcXml, dstXml := buildXml(v.otherEncoding, v.utf8)
+		if len(srcXml) == 0 && len(dstXml) == 0 {
+			t.Errorf("build xml string error. srcEncoding:%s, src:%s, utf8:%s", v.otherEncoding, v.other, v.utf8)
+		}
+
+		srcXml = strings.Replace(srcXml, "gbk", "XXX", -1)
+		_, err := gxml.ToJson([]byte(srcXml))
+		if err == nil {
+			t.Errorf("srcXml to json should be failed. %s", srcXml)
+		}
+
+	}
 }

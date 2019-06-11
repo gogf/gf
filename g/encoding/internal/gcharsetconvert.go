@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 // @author wenzi1
-// @date   20180604
+// @date   20190611
 
 // Package gcharset provides converting string to requested character encoding.
 //
