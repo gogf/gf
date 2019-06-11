@@ -236,3 +236,13 @@ func TestSet_Pop(t *testing.T) {
 		gtest.AssertIN(s1.Pop(1), []int{1, 2, 3, 4})
 	})
 }
+
+func TestSet_Pops(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add(1).Add(2).Add(3).Add(4)
+		gtest.AssertIN(s1.Pops(1), []int{1, 2, 3, 4})
+		gtest.AssertIN(s1.Pops(6), []int{1, 2, 3, 4})
+		gtest.Assert(len(s1.Pops(2)), 2)
+	})
+}
