@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gtime provides functionality for measuring and displaying time.
-// 
-// 时间管理.
 package gtime
 
 import (

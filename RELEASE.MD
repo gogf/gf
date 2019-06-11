@@ -1,3 +1,63 @@
+# `v1.7.0`
+## 新功能/改进
+1. 重构改进`glog`模块：
+    - 去掉日志模块所有的锁机制，改为无锁设计，执行性能更加高效
+    - 增加日志内容的异步输出特性：https://goframe.org/os/glog/async
+    - 增加日志输出内容的`Json`格式支持：https://goframe.org/os/glog/json
+    - 增加`Flags`额外特性支持，包括文件行号打印、自定义时间格式、异步输出等特性控制：https://goframe.org/os/glog/flags
+    - 增加`Writer`接口支持，便于开发者进行自定义的日志功能扩展，或者与第三方服务/模块对接集成：https://goframe.org/os/glog/writer
+    - 修改`SetStdPrint`方法名为`SetStdoutPrint`
+    - 修改链式方法`StdPrint`方法名为`Stdout`
+    - 标记淘汰`*fln`日志输出方法，`*f`方法支持自动的换行输出
+    - 新增更多的链式方法支持：https://goframe.org/os/glog/chain
+1. 重构改进`gmap`模块：
+    - 增加更多数据格式支持：`HashMap`/`ListMap`/`TreeMap`
+    - 简化类型名称，如`gmap.StringInterfaceMap`简化为`gmap.StrAnyMap`
+    - 改进`Map/Keys/Values`方法以提高性能
+    - 修改`BatchSet`/`BatchRemove`方法名为`Sets`/`Removes`
+    - 新增更多功能方法支持：https://goframe.org/container/gmap/index
+1. 改进`gtime`时间模块：
+    - 增加并完善更多的类`PHP`时间格式支持
+    - 新增更多功能方法，如`FormatTo`/`LayoutTo`等等
+    - 详见开发文档：https://goframe.org/os/gtime/index
+1. 改进`gdb`数据库模块：
+    - 增加对继承结构体的数据转换支持：https://goframe.org/database/gdb/senior
+    - 新增`GetLastSql`方法，用以在调试模式下获取最近一条执行的SQL语句
+    - 其他的细节处理改进
+1. 改进`gtcp`通信模块：
+    - 完善处理细节，提高通信性能；
+    - 增加`TLS`服务端/客户端通信支持：https://goframe.org/net/gtcp/tls
+    - 增加简单协议支持，便于开发者封包/解包，并解决粘包/半包问题：https://goframe.org/net/gtcp/conn/pkg
+    - TCP服务端增加`Close`方法
+    - 更多细节查看开发文档：https://goframe.org/net/gtcp/index
+1. 改进`gconv`类型转换模块
+    - 修改`gconv.TimeDuration`转换方法名称为`gconv.Duration`
+    - 新增`gconv.StructDeep`及`gconv.MapDeep`方法，支持递归转换
+    - 详见开发文档：https://goframe.org/util/gconv/struct
+1. 改进`ghttp`模块：
+    - 日志输出增加`http/https`字段：https://goframe.org/net/ghttp/logs
+    - 新增`ghttp.Server.SetKeepAlive`设置方法，用以开启/关闭`KeepAlive`特性
+    - 增加`ghttp.Request.GetUrl`方法，用以获取当前完整的URL请求地址
+    - `ghttp.Client`客户端支持开发者自定义`Transport`属性，`ghttp.Client.Post`方法支持`浏览器模式`：https://goframe.org/net/ghttp/client
+1. 新增`gtree`树形数据结构容器支持：https://goframe.org/container/gtree/index
+1. 改进`gudp`通信模块，具体请参考开发文档：https://goframe.org/net/gudp/index
+1. 改进`gcfg`配置管理模块，所有`Get*`方法增加默认值支持：https://goframe.org/os/gcfg/index
+1. `gredis`模块新增`DoVar`/`ReceiveVar`方法以便于开发者对执行结果进行灵活的数据格式转换：https://goframe.org/database/gredis/index
+1. `gcache`模块`BatchSet`/`BatchRemove`方法名修改为`Sets`/`Removes`
+1. 改进`gjson`/`gparser`模块，增加更多方法：https://goframe.org/encoding/gjson/index
+1. 改进`gfile.MainPkgPath`方法，以支持不同平台的开发环境；
+1. 改进`grpool`协程池模块，提高执行性能：https://goframe.org/os/grpool/index
+1. 改进`TryCatch`方法，当开发者不传递`Catch`参数时，默认抑制并忽略错误的处理
+1. 改进`gmlock`模块，增加`TryLockFunc`/`TryRLockFunc`方法，并且为`gmlock.Mutex`高级互斥锁对象增加`TryLockFunc`/`TryRLockFunc`方法
+1. 去除`gvar.VarRead`接口类型支持
+
+## Bug Fix
+1. 解决`gdb`模块与其他第三方`ORM`模块同时使用的冲突；
+1. 修复`gcron.AddOnce`方法的细节逻辑问题；
+1. 修复内部`empty`模块的`IsEmpty`方法对结构体属性的空校验错误；
+1. 修复`gview`模板引擎的并发安全问题；
+1. 修复`ghttp.Server`的SESSION初始化过期时间问题；
+
 # `v1.6.0` (2019-04-09)
 
 ## 新功能/改进

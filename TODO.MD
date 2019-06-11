@@ -47,7 +47,7 @@
 1. gtimer增加DelayAdd*方法返回Entry对象，以便DelayAdd*的定时任务也能进行状态控制；gcron同理需要改进；
 1. 改进gdb对pgsql/mssql/oracle的支持，使用方法覆盖的方式改进操作，而不是完全依靠正则替换的方式；
 1. gdb的Cache缓存功能增加可自定义缓存接口，以便支持外部缓存功能，缓存接口可以通过io.ReadWriter接口实现；
-
+1. grpool增加支持阻塞添加任务接口；
 
 
 
