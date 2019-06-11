@@ -6,8 +6,9 @@
 // @author wenzi1
 // @date   20190611
 
-// Package gcharset provides converting string to requested character encoding.
-//
+// Package internal provides converting string to requested character encoding.
+//Supported Character Set： GBK/GB18030/GB2312/EUCJP/ISO2022JP/ShiftJIS/EUCKR/Big5
+//For other character sets, please refer to Mahonia.
 // 字符集转换方法,
 package internal
 
