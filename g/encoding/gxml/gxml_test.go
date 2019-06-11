@@ -112,7 +112,7 @@ func Test_Encode(t *testing.T) {
 	if err != nil {
 		t.Errorf("encode error.")
 	}
-	t.Logf("%s\n", string(xmlStr))
+	//t.Logf("%s\n", string(xmlStr))
 
 	res := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string></root>`
 	if string(xmlStr) != res {
@@ -130,11 +130,11 @@ func Test_EncodeIndent(t *testing.T) {
 	}
 	m["root"] = interface{}(v)
 
-	xmlStr, err := gxml.EncodeWithIndent(m, "xml")
+	_, err := gxml.EncodeWithIndent(m, "xml")
 	if err != nil {
 		t.Errorf("encodeWithIndent error.")
 	}
 
-	t.Logf("%s\n", string(xmlStr))
+	//t.Logf("%s\n", string(xmlStr))
 
 }
