@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/g/encoding/gcharset"
 	"github.com/gogf/gf/g/encoding/gparser"
 	"github.com/gogf/gf/g/encoding/gxml"
+	"github.com/gogf/gf/g/test/gtest"
 	"strings"
 	"testing"
 )
@@ -159,4 +160,22 @@ func TestErrXml(t *testing.T) {
 		}
 
 	}
+}
+
+func TestErrCase(t *testing.T) {
+	gtest.Case(t, func() {
+		errXml := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string>`
+		_, err := gxml.ToJson([]byte(errXml))
+		if err == nil {
+			t.Errorf("unexpected value: nil")
+		}
+	})
+
+	gtest.Case(t, func() {
+		errXml := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string>`
+		_, err := gxml.Decode([]byte(errXml))
+		if err == nil {
+			t.Errorf("unexpected value: nil")
+		}
+	})
 }
