@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,10 +7,15 @@
 // Package charset implements character-set conversion functionality.
 //
 // Supported Character Set:
+//
 // Chinese : GBK/GB18030/GB2312/Big5
+//
 // Japanese: EUCJP/ISO2022JP/ShiftJIS
+//
 // Korean  : EUCKR
+//
 // Unicode : UTF-8/UTF-16/UTF-16BE/UTF-16LE
+//
 // Other   : macintosh/IBM*/Windows*/ISO-*
 package gcharset
 
@@ -18,6 +23,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/third/golang.org/x/text/encoding"
 	"github.com/gogf/gf/third/golang.org/x/text/encoding/ianaindex"
 	"github.com/gogf/gf/third/golang.org/x/text/transform"
 	"io/ioutil"
@@ -33,21 +39,22 @@ var (
 	}
 )
 
+// Supported returns whether charset <charset> is supported.
+func Supported(charset string) bool {
+	return getEncoding(charset) != nil
+}
+
 // Convert converts <src> charset encoding from <srcCharset> to <dstCharset>,
 // and returns the converted string.
+// It returns <src> as <dst> if it fails converting.
 func Convert(dstCharset string, srcCharset string, src string) (dst string, err error) {
 	if dstCharset == srcCharset {
 		return src, nil
 	}
-	if charset, ok := charsetAlias[dstCharset]; ok {
-		dstCharset = charset
-	}
-	if charset, ok := charsetAlias[srcCharset]; ok {
-		srcCharset = charset
-	}
+	dst = src
 	// Converting <src> to UTF-8.
 	if srcCharset != "UTF-8" {
-		if e, err := ianaindex.MIB.Encoding(srcCharset); err == nil && e != nil {
+		if e := getEncoding(srcCharset); e != nil {
 			tmp, err := ioutil.ReadAll(
 				transform.NewReader(bytes.NewReader([]byte(src)), e.NewDecoder()),
 			)
@@ -56,13 +63,12 @@ func Convert(dstCharset string, srcCharset string, src string) (dst string, err 
 			}
 			src = string(tmp)
 		} else {
-			return src, errors.New(fmt.Sprintf("unsupport srcCharset: %s", srcCharset))
+			return dst, errors.New(fmt.Sprintf("unsupport srcCharset: %s", srcCharset))
 		}
 	}
-	dst = src
 	// Do the converting from UTF-8 to <dstCharset>.
 	if dstCharset != "UTF-8" {
-		if e, err := ianaindex.MIB.Encoding(dstCharset); err == nil && e != nil {
+		if e := getEncoding(dstCharset); e != nil {
 			tmp, err := ioutil.ReadAll(
 				transform.NewReader(bytes.NewReader([]byte(src)), e.NewEncoder()),
 			)
@@ -71,8 +77,10 @@ func Convert(dstCharset string, srcCharset string, src string) (dst string, err 
 			}
 			dst = string(tmp)
 		} else {
-			return src, errors.New(fmt.Sprintf("unsupport dstCharset: %s", dstCharset))
+			return dst, errors.New(fmt.Sprintf("unsupport dstCharset: %s", dstCharset))
 		}
+	} else {
+		dst = src
 	}
 	return dst, nil
 }
@@ -89,3 +97,14 @@ func UTF8To(dstCharset string, src string) (dst string, err error) {
 	return Convert(dstCharset, "UTF-8", src)
 }
 
+// getEncoding returns the encoding.Encoding interface object for <charset>.
+// It returns nil if <charset> is not supported.
+func getEncoding(charset string) encoding.Encoding {
+	if c, ok := charsetAlias[charset]; ok {
+		charset = c
+	}
+	if e, err := ianaindex.MIB.Encoding(charset); err == nil && e != nil {
+		return e
+	}
+	return nil
+}
