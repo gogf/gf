@@ -36,12 +36,15 @@ func main() {
 			break
 		}
 		switch msg.Act {
-			case "hello":     onServerHello(conn, msg)
-			case "doexit":    onServerDoExit(conn, msg)
-			case "heartbeat": onServerHeartBeat(conn, msg)
-			default:
-				glog.Errorf("invalid message: %v", msg)
-				break
+		case "hello":
+			onServerHello(conn, msg)
+		case "doexit":
+			onServerDoExit(conn, msg)
+		case "heartbeat":
+			onServerHeartBeat(conn, msg)
+		default:
+			glog.Errorf("invalid message: %v", msg)
+			break
 		}
 	}
 }

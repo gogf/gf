@@ -18,12 +18,12 @@ func main() {
 	// 消费者，不停读取队列数据并输出到终端
 	for {
 		select {
-			case v := <-queue.C:
-				if v != nil {
-					fmt.Println(v)
-				} else {
-					return
-				}
+		case v := <-queue.C:
+			if v != nil {
+				fmt.Println(v)
+			} else {
+				return
+			}
 		}
 	}
 }
