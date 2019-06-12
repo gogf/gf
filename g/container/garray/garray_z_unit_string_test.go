@@ -320,3 +320,22 @@ func TestStringArray_CountValues(t *testing.T) {
 
 	})
 }
+
+func TestNewSortedStringArrayFrom(t *testing.T){
+	gtest.Case(t, func() {
+		a1:=[]string{"a", "d", "c","b"}
+		s1 :=garray.NewSortedStringArrayFrom(a1,true)
+		gtest.Assert(s1,[]string{"a", "b", "c","d"})
+		s2 :=garray.NewSortedStringArrayFrom(a1,false)
+		gtest.Assert(s2,[]string{"a", "b", "c","d"})
+	})
+}
+
+func TestNewSortedStringArrayFromCopy(t *testing.T){
+	gtest.Case(t, func() {
+		a1:=[]string{"a", "d", "c","b"}
+		s1 :=garray.NewSortedStringArrayFromCopy(a1,true)
+		gtest.Assert(s1.Len(),4)
+		// gtest.Assert(s1,[]string{"a", "b", "c","d"}) //todo 这里没有排序，需主库修正
+	})
+}
