@@ -18,15 +18,15 @@ func main() {
 	defer conn.Close()
 	// 使用JSON格式化数据字段
 	info, err := json.Marshal(types.NodeInfo{
-		Cpu       : float32(66.66),
-		Host      : "localhost",
-		Ip        : g.Map {
-			"etho" : "192.168.1.100",
-			"eth1" : "114.114.10.11",
+		Cpu:  float32(66.66),
+		Host: "localhost",
+		Ip: g.Map{
+			"etho": "192.168.1.100",
+			"eth1": "114.114.10.11",
 		},
-		MemUsed   : 15560320,
-		MemTotal  : 16333788,
-		Time      : int(gtime.Second()),
+		MemUsed:  15560320,
+		MemTotal: 16333788,
+		Time:     int(gtime.Second()),
 	})
 	if err != nil {
 		panic(err)

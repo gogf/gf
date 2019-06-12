@@ -28,5 +28,5 @@ func main() {
 	// 丢回池中以便重复使用
 	p.Put(conn)
 	// 等待一定时间观察过期方法调用
-	time.Sleep(4*time.Second)
+	time.Sleep(4 * time.Second)
 }

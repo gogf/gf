@@ -6,7 +6,9 @@ import (
 )
 
 func main() {
-	a2 := []int{1}
-	array2 := garray.NewSortedIntArrayFrom(a2)
-	gtest.Assert(array2.Search(2),-1)
+	a1:=[]string{"a", "d", "c","b"}
+
+	s1 :=garray.NewSortedStringArrayFromCopy(a1,true)
+
+	gtest.Assert(s1.Slice(),[]string{"a", "b", "c","d"})
 }

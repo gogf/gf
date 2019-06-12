@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	p  := grpool.New(1)
+	p := grpool.New(1)
 	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
 		wg.Add(1)

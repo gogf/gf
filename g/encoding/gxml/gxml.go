@@ -9,8 +9,8 @@ package gxml
 
 import (
 	"fmt"
+	"github.com/gogf/gf/g/encoding/gcharset"
 	"github.com/gogf/gf/g/text/gregex"
-	"github.com/gogf/gf/third/github.com/axgle/mahonia"
 	"github.com/gogf/gf/third/github.com/clbanning/mxj"
 	"strings"
 )
@@ -60,16 +60,17 @@ func convert(xml []byte) (res []byte, err error) {
 	if len(matchStr) == 2 {
 		xmlEncode = matchStr[1]
 	}
-	s := mahonia.GetCharset(xmlEncode)
-	if s == nil {
-		return nil, fmt.Errorf("not support charset:%s\n", xmlEncode)
-	}
-	res, err = gregex.Replace(patten, []byte(""), xml)
+	xmlEncode = strings.ToUpper(xmlEncode)
+	res, err  = gregex.Replace(patten, []byte(""), xml)
 	if err != nil {
 		return nil, err
 	}
-	if !strings.EqualFold(s.Name, "UTF-8") {
-		res = []byte(s.NewDecoder().ConvertString(string(res)))
+	if xmlEncode != "UTF-8" && xmlEncode != "UTF8" {
+		dst, err := gcharset.Convert("UTF-8", xmlEncode, string(res))
+		if err != nil {
+			return nil, err
+		}
+		res = []byte(dst)
 	}
 	return res, nil
 }

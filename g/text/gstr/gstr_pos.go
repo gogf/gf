@@ -79,7 +79,7 @@ func PosR(haystack, needle string, startOffset...int) int {
     return pos
 }
 
-// PosR returns the position of the last occurrence of <needle>
+// PosRI returns the position of the last occurrence of <needle>
 // in <haystack> from <startOffset>, case-insensitively.
 // It returns -1, if not found.
 func PosRI(haystack, needle string, startOffset...int) int {
