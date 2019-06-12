@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/g/encoding/gcharset"
 	"github.com/gogf/gf/g/encoding/gparser"
 	"github.com/gogf/gf/g/encoding/gxml"
+	"github.com/gogf/gf/g/test/gtest"
 	"strings"
 	"testing"
 )
@@ -21,6 +22,12 @@ var testData = []struct {
 	{"Hello 常用國字標準字體表", "Hello \xb1`\xa5\u03b0\xea\xa6r\xbc\u0437\u01e6r\xc5\xe9\xaa\xed", "big5"},
 	{"Hello 常用國字標準字體表", "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed", "gbk"},
 	{"Hello 常用國字標準字體表", "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed", "gb18030"},
+}
+
+var testErrData = []struct {
+	utf8, other, otherEncoding string
+}{
+	{"Hello 常用國字標準字體表", "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed", "gbk"},
 }
 
 func buildXml(charset string, str string) (string, string) {
@@ -112,7 +119,7 @@ func Test_Encode(t *testing.T) {
 	if err != nil {
 		t.Errorf("encode error.")
 	}
-	t.Logf("%s\n", string(xmlStr))
+	//t.Logf("%s\n", string(xmlStr))
 
 	res := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string></root>`
 	if string(xmlStr) != res {
@@ -130,11 +137,45 @@ func Test_EncodeIndent(t *testing.T) {
 	}
 	m["root"] = interface{}(v)
 
-	xmlStr, err := gxml.EncodeWithIndent(m, "xml")
+	_, err := gxml.EncodeWithIndent(m, "xml")
 	if err != nil {
 		t.Errorf("encodeWithIndent error.")
 	}
 
-	t.Logf("%s\n", string(xmlStr))
+	//t.Logf("%s\n", string(xmlStr))
 
+}
+
+func TestErrXml(t *testing.T) {
+	for _, v := range testErrData {
+		srcXml, dstXml := buildXml(v.otherEncoding, v.utf8)
+		if len(srcXml) == 0 && len(dstXml) == 0 {
+			t.Errorf("build xml string error. srcEncoding:%s, src:%s, utf8:%s", v.otherEncoding, v.other, v.utf8)
+		}
+
+		srcXml = strings.Replace(srcXml, "gbk", "XXX", -1)
+		_, err := gxml.ToJson([]byte(srcXml))
+		if err == nil {
+			t.Errorf("srcXml to json should be failed. %s", srcXml)
+		}
+
+	}
+}
+
+func TestErrCase(t *testing.T) {
+	gtest.Case(t, func() {
+		errXml := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string>`
+		_, err := gxml.ToJson([]byte(errXml))
+		if err == nil {
+			t.Errorf("unexpected value: nil")
+		}
+	})
+
+	gtest.Case(t, func() {
+		errXml := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string>`
+		_, err := gxml.Decode([]byte(errXml))
+		if err == nil {
+			t.Errorf("unexpected value: nil")
+		}
+	})
 }
