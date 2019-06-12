@@ -7,8 +7,8 @@ import (
 
 func main() {
 	type Ids struct {
-		Id         int    `json:"id"`
-		Uid        int    `json:"uid"`
+		Id  int `json:"id"`
+		Uid int `json:"uid"`
 	}
 	type Base struct {
 		Ids
@@ -16,17 +16,17 @@ func main() {
 	}
 	type User struct {
 		Base
-		Passport   string `json:"passport"`
-		Password   string `json:"password"`
-		Nickname   string `json:"nickname"`
+		Passport string `json:"passport"`
+		Password string `json:"password"`
+		Nickname string `json:"nickname"`
 	}
 	data := g.Map{
-		"id"          : 1,
-		"uid"         : 100,
-		"passport"    : "johng",
-		"password"    : "123456",
-		"nickname"    : "John",
-		"create_time" : "2019",
+		"id":          1,
+		"uid":         100,
+		"passport":    "johng",
+		"password":    "123456",
+		"nickname":    "John",
+		"create_time": "2019",
 	}
 	user := new(User)
 	gconv.StructDeep(data, user)

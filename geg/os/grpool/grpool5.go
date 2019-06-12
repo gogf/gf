@@ -12,7 +12,7 @@ func main() {
 		v := i
 		p.Add(func() {
 			fmt.Println(v)
-			time.Sleep(3*time.Second)
+			time.Sleep(3 * time.Second)
 		})
 	}
 	time.Sleep(time.Minute)
