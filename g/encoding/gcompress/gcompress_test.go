@@ -18,6 +18,11 @@ func TestZlib(t *testing.T) {
 		gtest.Assert(gcompress.Zlib([]byte(src)), dst)
 
 		gtest.Assert(gcompress.UnZlib(dst), []byte(src))
+
+		gtest.Assert(gcompress.Zlib(nil), nil)
+		gtest.Assert(gcompress.UnZlib(nil), nil)
+
+		gtest.Assert(gcompress.UnZlib(dst[1:]), nil)
 	})
 
 }
@@ -36,7 +41,10 @@ func TestGzip(t *testing.T) {
 		0x00, 0x00,
 	}
 
-	gtest.Assert(gcompress.Gzip([]byte(src)), gzip)
+	arr := []byte(src)
+	gtest.Assert(gcompress.Gzip(arr), gzip)
 
-	gtest.Assert(gcompress.UnGzip(gzip), []byte(src))
+	gtest.Assert(gcompress.UnGzip(gzip), arr)
+
+	gtest.Assert(gcompress.UnGzip(gzip[1:]), nil)
 }
