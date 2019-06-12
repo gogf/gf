@@ -225,7 +225,7 @@ func TestSortedIntArray_SetArray(t *testing.T){
         array2:=array1.SetArray(a2)
 
         gtest.Assert(array2.Len(),3)
-        gtest.Assert(array2.Search(3),0)
+        gtest.Assert(array2.Search(3),-1)
         gtest.Assert(array2.Search(5),1)
         gtest.Assert(array2.Search(6),2)
     })
