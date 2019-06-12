@@ -9,7 +9,7 @@ package gxml
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/encoding/internal"
+	"github.com/gogf/gf/g/encoding/gcharset"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/third/github.com/clbanning/mxj"
 	"strings"
@@ -61,16 +61,12 @@ func convert(xml []byte) (res []byte, err error) {
 		xmlEncode = matchStr[1]
 	}
 	xmlEncode = strings.ToUpper(xmlEncode)
-	s := internal.GetCharset(xmlEncode)
-	if s == false {
-		return nil, fmt.Errorf("not support charset:%s\n", xmlEncode)
-	}
-	res, err = gregex.Replace(patten, []byte(""), xml)
+	res, err  = gregex.Replace(patten, []byte(""), xml)
 	if err != nil {
 		return nil, err
 	}
 	if xmlEncode != "UTF-8" && xmlEncode != "UTF8" {
-		dst, err := internal.Convert("UTF-8", xmlEncode, string(res))
+		dst, err := gcharset.Convert("UTF-8", xmlEncode, string(res))
 		if err != nil {
 			return nil, err
 		}
