@@ -1,12 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/third/golang.org/x/text/encoding/ianaindex"
+	"github.com/gogf/gf/g/container/garray"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func main() {
-	e, err := ianaindex.MIB.Encoding("GB2312")
-	fmt.Println(err)
-	fmt.Println(e)
+	a1:=[]string{"a", "d", "c","b"}
+
+	s1 :=garray.NewSortedStringArrayFromCopy(a1,true)
+
+	gtest.Assert(s1.Slice(),[]string{"a", "b", "c","d"})
 }

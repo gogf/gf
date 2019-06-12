@@ -47,7 +47,7 @@ func Database(name...string) gdb.DB {
     return gins.Database(name...)
 }
 
-// Alias of Database. See Database.
+// DB is alias of Database. See Database.
 func DB(name...string) gdb.DB {
     return gins.Database(name...)
 }

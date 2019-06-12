@@ -68,10 +68,7 @@ func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
 func NewSortedIntArrayFromCopy(array []int, unsafe...bool) *SortedIntArray {
     newArray := make([]int, len(array))
     copy(newArray, array)
-    return &SortedIntArray{
-        mu    : rwmutex.New(unsafe...),
-        array : newArray,
-    }
+    return NewSortedIntArrayFrom(newArray, unsafe...)
 }
 
 // SetArray sets the underlying slice array with the given <array>.
@@ -280,7 +277,7 @@ func (a *SortedIntArray) Slice() []int {
 
 // Contains checks whether a value exists in the array.
 func (a *SortedIntArray) Contains(value int) bool {
-    return a.Search(value) == 0
+    return a.Search(value) != -1
 }
 
 // Search searches array by <value>, returns the index of <value>,
