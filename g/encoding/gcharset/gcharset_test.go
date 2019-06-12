@@ -49,8 +49,11 @@ var testData = []struct {
 	{"Hello 常用國字標準字體表", "Hello \xb1`\xa5\u03b0\xea\xa6r\xbc\u0437\u01e6r\xc5\xe9\xaa\xed", "big5"},
 	{"Hello 常用國字標準字體表", "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed", "gbk"},
 	{"Hello 常用國字標準字體表", "Hello \xb3\xa3\xd3\xc3\x87\xf8\xd7\xd6\x98\xcb\x9c\xca\xd7\xd6\xf3\x77\xb1\xed", "gb18030"},
+	{"花间一壶酒，独酌无相亲。", "~{;(<dR;:x>F#,6@WCN^O`GW!#", "GB2312"},
+	{"花间一壶酒，独酌无相亲。", "~{;(<dR;:x>F#,6@WCN^O`GW!#", "HZGB2312"},
 	{"עִבְרִית", "\x81\x30\xfb\x30\x81\x30\xf6\x34\x81\x30\xf9\x33\x81\x30\xf6\x30\x81\x30\xfb\x36\x81\x30\xf6\x34\x81\x30\xfa\x31\x81\x30\xfb\x38", "gb18030"},
 	{"㧯", "\x82\x31\x89\x38", "gb18030"},
+	{"㧯", "㧯", "UTF-8"},
 	{"これは漢字です。", "\x82\xb1\x82\xea\x82\xcd\x8a\xbf\x8e\x9a\x82\xc5\x82\xb7\x81B", "SJIS"},
 	{"これは漢字です。", "\xa4\xb3\xa4\xec\xa4\u03f4\xc1\xbb\xfa\xa4\u01e4\xb9\xa1\xa3", "EUC-JP"},
 }
@@ -63,13 +66,42 @@ func TestDecode(t *testing.T) {
 			t.Errorf("Could not create decoder for %v", err)
 			continue
 		}
-		
+
+		if str != data.utf8 {
+			t.Errorf("Unexpected value: %#v (expected %#v) %v", str, data.utf8, data.otherEncoding)
+		}
+	}
+}
+
+func TestUTF8To(t *testing.T) {
+	for _, data := range testData {
+		str := ""
+		str, err := gcharset.UTF8To(data.otherEncoding, data.utf8)
+		if err != nil {
+			t.Errorf("Could not create decoder for %v", err)
+			continue
+		}
+
+		if str != data.other {
+			t.Errorf("Unexpected value: %#v (expected %#v) %v", str, data.other, data.otherEncoding)
+		}
+	}
+}
+
+func TestToUTF8(t *testing.T) {
+	for _, data := range testData {
+		str := ""
+		str, err := gcharset.ToUTF8(data.otherEncoding, data.other)
+		if err != nil {
+			t.Errorf("Could not create decoder for %v", err)
+			continue
+		}
+
 		if str != data.utf8 {
 			t.Errorf("Unexpected value: %#v (expected %#v)", str, data.utf8)
 		}
 	}
 }
-
 
 func TestEncode(t *testing.T) {
 	for _, data := range testData {

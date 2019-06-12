@@ -9,39 +9,15 @@
 // Package gcharset provides converting string to requested character encoding.
 //
 // 字符集转换方法,
-// 使用mahonia实现的字符集转换方法，支持的字符集包括常见的utf8/UTF-16/UTF-16LE/macintosh/big5/gbk/gb18030,支持的全量字符集可以参考mahonia包
 package gcharset
 
 import (
-	"github.com/gogf/gf/third/github.com/axgle/mahonia"
-	"errors"
-	"fmt"
+	"github.com/gogf/gf/g/encoding/internal"
 )
-
 
 // 2个字符集之间的转换
 func Convert(dstCharset string, srcCharset string, src string) (dst string, err error) {
-	s := mahonia.GetCharset(srcCharset)
-	if 	s == nil {
-		return "", errors.New(fmt.Sprintf("not support charset:%s", srcCharset))
-	}
-
-	d := mahonia.GetCharset(dstCharset)
-	if d == nil {
-		return "", errors.New(fmt.Sprintf("not support charset:%s", dstCharset))
-	}
-	
-	srctmp := src
-	if s.Name != "UTF-8" {
-		srctmp = s.NewDecoder().ConvertString(srctmp)
-	}
-	
-	dst = srctmp
-	if d.Name != "UTF-8" {
-		dst = d.NewEncoder().ConvertString(dst)
-	}
-	
-	return dst, nil
+	return internal.Convert(dstCharset, srcCharset, src)
 }
 
 // 指定字符集转UTF8
