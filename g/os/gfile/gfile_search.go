@@ -22,6 +22,7 @@ func Search(name string, prioritySearchPaths...string) (realPath string, err err
     if realPath != "" {
         return
     }
+    // TODO move search paths to internal package variable.
     // Search paths array.
     array := garray.NewStringArray(true)
     array.Append(prioritySearchPaths...)
