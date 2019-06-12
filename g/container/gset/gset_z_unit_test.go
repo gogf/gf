@@ -11,11 +11,31 @@ package gset_test
 import (
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/container/gset"
-
 	"github.com/gogf/gf/g/test/gtest"
 	"strings"
+
 	"testing"
 )
+
+func TestSet_New(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.New()
+		s.Add(1).Add(1).Add(2)
+		s.Add([]interface{}{3, 4}...)
+		gtest.Assert(s.Size(), 4)
+		gtest.AssertIN(1, s.Slice())
+		gtest.AssertIN(2, s.Slice())
+		gtest.AssertIN(3, s.Slice())
+		gtest.AssertIN(4, s.Slice())
+		gtest.AssertNI(0, s.Slice())
+		gtest.Assert(s.Contains(4), true)
+		gtest.Assert(s.Contains(5), false)
+		s.Remove(1)
+		gtest.Assert(s.Size(), 3)
+		s.Clear()
+		gtest.Assert(s.Size(), 0)
+	})
+}
 
 func TestSet_Basic(t *testing.T) {
 	gtest.Case(t, func() {

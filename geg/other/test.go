@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/container/garray"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func main() {
-	fmt.Println(gtime.Now().Format("U"))
-	fmt.Println(gtime.Second())
+	a2 := []int{1}
+	array2 := garray.NewSortedIntArrayFrom(a2)
+	gtest.Assert(array2.Search(2),-1)
 }

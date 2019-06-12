@@ -287,11 +287,17 @@ func (a *SortedArray) Contains(value interface{}) bool {
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *SortedArray) Search(value interface{}) (index int) {
-    index, _ = a.binSearch(value, true)
-    return
+	if i, r := a.binSearch(value, true); r == 0 {
+		return i
+	}
+	return -1
 }
 
 // Binary search.
+// It returns the last compared index and the result.
+// If <result> equals to 0, it means the value at <index> is equals to <value>.
+// If <result> lesser than 0, it means the value at <index> is lesser than <value>.
+// If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedArray) binSearch(value interface{}, lock bool)(index int, result int) {
     if len(a.array) == 0 {
         return -1, -2
