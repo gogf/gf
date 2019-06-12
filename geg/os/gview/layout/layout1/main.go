@@ -5,7 +5,6 @@ import (
 	"github.com/gogf/gf/g/frame/gmvc"
 )
 
-
 type Controller struct {
 	gmvc.Controller
 }

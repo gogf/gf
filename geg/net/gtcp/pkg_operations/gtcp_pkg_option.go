@@ -13,7 +13,7 @@ func main() {
 	go gtcp.NewServer("127.0.0.1:8999", func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
-			data, err := conn.RecvPkg(gtcp.PkgOption{MaxSize : 1})
+			data, err := conn.RecvPkg(gtcp.PkgOption{MaxSize: 1})
 			if err != nil {
 				fmt.Println(err)
 				break
@@ -34,6 +34,6 @@ func main() {
 		if err := conn.SendPkg([]byte(gconv.String(i))); err != nil {
 			glog.Error(err)
 		}
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }

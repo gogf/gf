@@ -44,7 +44,7 @@ func ReplaceI(origin, search, replace string, count...int) string {
         originLower := strings.ToLower(origin)
         if pos := strings.Index(originLower, searchLower); pos != -1 {
             origin = origin[ : pos] + replace + origin[pos + length : ]
-            if n -= 1; n == 0 {
+            if n--; n == 0 {
                 break
             }
         } else {
@@ -60,7 +60,7 @@ func Count(s, substr string) int {
     return strings.Count(s, substr)
 }
 
-// Count counts the number of <substr> appears in <s>, case-insensitively.
+// CountI counts the number of <substr> appears in <s>, case-insensitively.
 // It returns 0 if no <substr> found in <s>.
 func CountI(s, substr string) int {
     return strings.Count(ToLower(s), ToLower(substr))
@@ -580,7 +580,8 @@ func StripSlashes(str string) string {
     return buf.String()
 }
 
-// Returns a version of str with a backslash character (\) before every character that is among:
+// QuoteMeta returns a version of str with a backslash character (\)
+// before every character that is among:
 // .\+*?[^]($)
 func QuoteMeta(str string) string {
     var buf bytes.Buffer

@@ -40,9 +40,9 @@ func NewSortedArray(comparator func(v1, v2 interface{}) int, unsafe...bool) *Sor
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     return &SortedArray{
-        mu          : rwmutex.New(unsafe...),
-        unique      : gtype.NewBool(),
-        array       : make([]interface{}, 0, cap),
+        mu         : rwmutex.New(unsafe...),
+        unique     : gtype.NewBool(),
+        array      : make([]interface{}, 0, cap),
         comparator : comparator,
     }
 }
@@ -62,13 +62,10 @@ func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{})
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
 // The param <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
-func NewSortedArrayFromCopy(array []interface{}, unsafe...bool) *SortedArray {
+func NewSortedArrayFromCopy(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     newArray := make([]interface{}, len(array))
     copy(newArray, array)
-    return &SortedArray{
-        mu    : rwmutex.New(unsafe...),
-        array : newArray,
-    }
+    return NewSortedArrayFrom(newArray, comparator, unsafe...)
 }
 
 // SetArray sets the underlying slice array with the given <array>.
@@ -281,7 +278,7 @@ func (a *SortedArray) Slice() []interface{} {
 
 // Contains checks whether a value exists in the array.
 func (a *SortedArray) Contains(value interface{}) bool {
-    return a.Search(value) == 0
+    return a.Search(value) != -1
 }
 
 // Search searches array by <value>, returns the index of <value>,

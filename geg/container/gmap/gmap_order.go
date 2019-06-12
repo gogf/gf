@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	array   := g.Slice{2, 3, 1, 5, 4, 6, 8, 7, 9}
+	array := g.Slice{2, 3, 1, 5, 4, 6, 8, 7, 9}
 	hashMap := gmap.New(true)
 	linkMap := gmap.NewLinkMap(true)
 	treeMap := gmap.NewTreeMap(gutil.ComparatorInt, true)
