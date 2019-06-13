@@ -4,15 +4,16 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package empty provides checks for empty variables.
 package empty
 
 import (
 	"reflect"
 )
 
-// 判断给定的变量是否为空。
-// 整型为0, 布尔为false, slice/map长度为0, 其他为nil的情况，都为空。
-// 为空时返回true，否则返回false。
+// IsEmpty checks whether given <value> empty.
+// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0.
+// Or else it returns true.
 func IsEmpty(value interface{}) bool {
     if value == nil {
         return true
