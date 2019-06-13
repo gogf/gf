@@ -254,5 +254,3 @@ func TestStringSet_Pops(t *testing.T) {
 		gtest.AssertIN(str2, []string{"a", "b", "c"})
 	})
 }
-
-
