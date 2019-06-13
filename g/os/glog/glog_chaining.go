@@ -10,6 +10,11 @@ import (
 	"io"
 )
 
+// Expose returns the default logger of glog.
+func Expose() *Logger {
+	return logger
+}
+
 // To is a chaining function, 
 // which redirects current logging content output to the sepecified <writer>.
 func To(writer io.Writer) *Logger {
