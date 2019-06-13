@@ -14,7 +14,6 @@ import (
 	"testing"
 )
 
-
 func Test_ValueAndOption(t *testing.T) {
 	os.Args = []string{"v1", "v2", "--o1=111", "-o2=222"}
 	doInit()
@@ -23,6 +22,28 @@ func Test_ValueAndOption(t *testing.T) {
 		gtest.Assert(Value.Get(0), "v1")
 		gtest.Assert(Value.Get(1), "v2")
 		gtest.Assert(Value.Get(2), "")
+		gtest.Assert(Value.Get(2, "1"), "1")
+		gtest.Assert(Value.GetVar(1, "1").String(), "v2")
+		gtest.Assert(Value.GetVar(2, "1").String(), "1")
+
+		gtest.Assert(Option.GetAll(), map[string]string{"o1": "111", "o2": "222"})
+		gtest.Assert(Option.Get("o1"), "111")
+		gtest.Assert(Option.Get("o2"), "222")
+		gtest.Assert(Option.Get("o3", "1"), "1")
+		gtest.Assert(Option.GetVar("o2", "1").String(), "222")
+		gtest.Assert(Option.GetVar("o3", "1").String(), "1")
+
 	})
 }
 
+func Test_Handle(t *testing.T) {
+	os.Args = []string{"gf", "gf"}
+	doInit()
+	gtest.Case(t, func() {
+		BindHandle("gf", func() {
+			print("gf test")
+		})
+		RunHandle("gf")
+		AutoRun()
+	})
+}
