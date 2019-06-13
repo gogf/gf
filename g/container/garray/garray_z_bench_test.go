@@ -9,35 +9,35 @@
 package garray_test
 
 import (
-    "github.com/gogf/gf/g/container/garray"
-    "testing"
+	"github.com/gogf/gf/g/container/garray"
+	"testing"
 )
 
 var (
-    sortedIntArray = garray.NewSortedIntArray()
+	sortedIntArray = garray.NewSortedIntArray()
 )
 
 func BenchmarkSortedIntArray_Add(b *testing.B) {
-    b.N = 1000
-    for i := 0; i < b.N; i++ {
-        sortedIntArray.Add(i)
-    }
+	b.N = 1000
+	for i := 0; i < b.N; i++ {
+		sortedIntArray.Add(i)
+	}
 }
 
 func BenchmarkSortedIntArray_Search(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        sortedIntArray.Search(i)
-    }
+	for i := 0; i < b.N; i++ {
+		sortedIntArray.Search(i)
+	}
 }
 
 func BenchmarkSortedIntArray_PopLeft(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        sortedIntArray.PopLeft()
-    }
+	for i := 0; i < b.N; i++ {
+		sortedIntArray.PopLeft()
+	}
 }
 
 func BenchmarkSortedIntArray_PopRight(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        sortedIntArray.PopLeft()
-    }
+	for i := 0; i < b.N; i++ {
+		sortedIntArray.PopLeft()
+	}
 }
