@@ -19,7 +19,12 @@ var (
 	cmdOptions = make(map[string]string)
 )
 
-func init() {
+func init()  {
+	doInit()
+}
+
+// doInit does the initialization for this package.
+func doInit() {
 	reg := regexp.MustCompile(`\-\-{0,1}(.+?)=(.+)`)
 	for i := 0; i < len(os.Args); i++ {
 		result := reg.FindStringSubmatch(os.Args[i])
