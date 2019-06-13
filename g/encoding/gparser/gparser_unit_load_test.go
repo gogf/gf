@@ -177,11 +177,11 @@ func Test_Load_Nil(t *testing.T) {
 	gtest.Case(t, func() {
 		p := gparser.NewUnsafe()
 		gtest.Assert(p.Value(), nil)
-
-		filePath := gfile.Pwd() + gfile.Separator + "test2.json"
+		file := "test22222.json"
+		filePath := gfile.Pwd() + gfile.Separator + file
 		ioutil.WriteFile(filePath, []byte("{"), 0644)
 		defer gfile.Remove(filePath)
-		_, err := gparser.Load("test.json")
+		_, err := gparser.Load(file)
 		gtest.AssertNE(err, nil)
 		_, err = gparser.LoadContent("{")
 		gtest.AssertNE(err, nil)
