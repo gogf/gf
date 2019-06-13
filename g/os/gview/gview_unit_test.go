@@ -11,6 +11,10 @@ import (
 	"testing"
 )
 
+func init() {
+	os.Setenv("GF_GVIEW_ERRORPRINT", "false")
+}
+
 func TestView_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		str := `hello {{.name}},version:{{.version}};hello {{GetName}},version:{{GetVersion}};{{.other}}`

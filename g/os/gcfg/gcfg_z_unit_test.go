@@ -19,6 +19,10 @@ import (
 	"testing"
 )
 
+func init() {
+	os.Setenv("GF_GCFG_ERRORPRINT", "false")
+}
+
 func Test_Basic(t *testing.T) {
 	config := `
 v1    = 1
@@ -379,7 +383,7 @@ func TestCfg_Get(t *testing.T) {
 		gtest.Assert(c.GetTime("time").Format("2006-01-02"), "2019-06-12")
 		gtest.Assert(c.GetGTime("time").Format("Y-m-d"), "2019-06-12")
 		gtest.Assert(c.GetDuration("time").String(), "0s")
-		t.Log(c.GetString("person"))
+		//t.Log(c.GetString("person"))
 		err := c.GetToStruct("person", &name)
 		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
