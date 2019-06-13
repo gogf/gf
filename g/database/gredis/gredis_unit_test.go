@@ -147,7 +147,7 @@ func Test_Basic(t *testing.T) {
 		}
 		redis := gredis.New(config1)
 		_, err := redis.Do("info")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		config1 = gredis.Config{
 			Host: "127.0.0.1",
@@ -157,7 +157,7 @@ func Test_Basic(t *testing.T) {
 		}
 		redis = gredis.New(config1)
 		_, err = redis.Do("info")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		config1 = gredis.Config{
 			Host: "127.0.0.1",
@@ -166,7 +166,7 @@ func Test_Basic(t *testing.T) {
 		}
 		redis = gredis.New(config1)
 		_, err = redis.Do("info")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		redis = gredis.Instance("gf")
 		gtest.Assert(redis == nil, true)

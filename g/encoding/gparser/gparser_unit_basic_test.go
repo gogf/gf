@@ -233,11 +233,11 @@ func Test_Convert(t *testing.T) {
 			Name string
 		}{}
 		err := p.GetToStruct("person", &name)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
 		gtest.Assert(p.ToMap()["name"], "gf")
 		err = p.ToStruct(&name)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
 		p.Dump()
 
@@ -245,7 +245,7 @@ func Test_Convert(t *testing.T) {
 		gtest.Assert(p.ToArray()[0], 0)
 
 		err = gparser.VarToStruct(`{"name":"gf"}`, &name)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
 	})
 }
@@ -255,40 +255,40 @@ func Test_Convert2(t *testing.T) {
 		xmlArr := []byte{60, 114, 111, 111, 116, 47, 62}
 		p := gparser.New(`<root></root>`)
 		arr, err := p.ToXml("root")
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, xmlArr)
 		arr, err = gparser.VarToXml(`<root></root>`, "root")
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, xmlArr)
 
 		arr, err = p.ToXmlIndent("root")
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, xmlArr)
 		arr, err = gparser.VarToXmlIndent(`<root></root>`, "root")
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, xmlArr)
 
 		p = gparser.New(`{"name":"gf"}`)
 		str, err := p.ToJsonString()
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(str, `{"name":"gf"}`)
 		str, err = gparser.VarToJsonString(`{"name":"gf"}`)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(str, `{"name":"gf"}`)
 
 		jsonIndentArr := []byte{123, 10, 9, 34, 110, 97, 109, 101, 34, 58, 32, 34, 103, 102, 34, 10, 125}
 		arr, err = p.ToJsonIndent()
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, jsonIndentArr)
 		arr, err = gparser.VarToJsonIndent(`{"name":"gf"}`)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, jsonIndentArr)
 
 		str, err = p.ToJsonIndentString()
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(str, "{\n\t\"name\": \"gf\"\n}")
 		str, err = gparser.VarToJsonIndentString(`{"name":"gf"}`)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(str, "{\n\t\"name\": \"gf\"\n}")
 
 		yamlArr := []byte{124, 50, 10, 10, 32, 32, 110, 97, 109, 101, 58, 103, 102, 10}
@@ -296,12 +296,12 @@ func Test_Convert2(t *testing.T) {
 name:gf
 `)
 		arr, err = p.ToYaml()
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, yamlArr)
 		arr, err = gparser.VarToYaml(`
 name:gf
 `)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, yamlArr)
 
 		tomlArr := []byte{110, 97, 109, 101, 32, 61, 32, 34, 103, 102, 34, 10}
@@ -309,12 +309,12 @@ name:gf
 name= "gf"
 `)
 		arr, err = p.ToToml()
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, tomlArr)
 		arr, err = gparser.VarToToml(`
 name= "gf"
 `)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(arr, tomlArr)
 	})
 }
