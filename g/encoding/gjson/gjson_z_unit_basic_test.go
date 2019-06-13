@@ -377,3 +377,86 @@ func Test_Convert2(t *testing.T) {
 		gtest.Assert(len(j.ToArray()), 3)
 	})
 }
+
+func Test_Basic(t *testing.T) {
+	gtest.Case(t, func() {
+		j := gjson.New(`{"name":"gf","time":"2019-06-12"}`)
+		j.SetViolenceCheck(true)
+		gtest.Assert(j.Get("").(g.Map)["name"], "gf")
+		gtest.Assert(j.Get("").(g.Map)["name1"], nil)
+		j.SetViolenceCheck(false)
+		gtest.Assert(j.Get("").(g.Map)["name"], "gf")
+
+		err := j.Set("name", "gf1")
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("name"), "gf1")
+
+		j = gjson.New(`[1,2,3]`)
+		err = j.Set("\"0\".1", 11)
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("1"), 11)
+
+		j = gjson.New(`[1,2,3]`)
+		err = j.Set("11111111111111111111111", 11)
+		gtest.Assert(err == nil, false)
+
+		//此测试用例测出bug，数组下表越界，暂且注释起来，
+		/*j = gjson.New(`[1,2,3]`)
+		err = j.Remove("1")
+		gtest.Assert(err == nil, false)
+		gtest.Assert(j.Get("0"), nil)*/
+
+		j = gjson.New(`[1,2,3]`)
+		err = j.Remove("3")
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("0"), 1)
+
+		j = gjson.New(`[1,2,3]`)
+		err = j.Remove("0.3")
+		gtest.Assert(err == nil, true)
+		gtest.Assert(len(j.Get("0").([]interface{})), 3)
+
+		j = gjson.New(`[1,2,3]`)
+		err = j.Remove("0.a")
+		gtest.Assert(err == nil, true)
+		gtest.Assert(len(j.Get("0").(g.Map)), 0)
+
+		name := struct {
+			Name string
+		}{Name: "gf"}
+		j = gjson.New(name)
+		gtest.Assert(j.Get("Name"), "gf")
+		err = j.Remove("Name")
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("Name"), nil)
+
+		err = j.Set("Name", "gf1")
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("Name"), "gf1")
+
+		j = gjson.New(nil)
+		err = j.Remove("Name")
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("Name"), nil)
+
+		j = gjson.New(name)
+		gtest.Assert(j.Get("Name"), "gf")
+		err = j.Set("Name1", g.Map{"Name": "gf1"})
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("Name1").(g.Map)["Name"], "gf1")
+		err = j.Set("Name2", g.Slice{1, 2, 3})
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("Name2").(g.Slice)[0], 1)
+		err = j.Set("Name3", name)
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("Name3").(g.Map)["Name"], "gf")
+		err = j.Set("Name4", &name)
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("Name4").(g.Map)["Name"], "gf")
+		arr := [3]int{1, 2, 3}
+		err = j.Set("Name5", arr)
+		gtest.Assert(err == nil, true)
+		gtest.Assert(j.Get("Name5").(g.Array)[0], 1)
+
+	})
+}

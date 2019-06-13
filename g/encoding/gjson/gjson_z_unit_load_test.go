@@ -185,11 +185,9 @@ func Test_Load_Basic(t *testing.T) {
 		gtest.Assert(j.Value(), nil)
 
 		j, err = gjson.LoadContent(`{"name": "gf"}`)
-		t.Log(err)
 		gtest.Assert(err == nil, true)
 
 		j, err = gjson.LoadContent(`{"name": "gf"""}`)
-		t.Log(err)
 		gtest.Assert(err == nil, false)
 
 		j = gjson.New(&g.Map{"name": "gf"})
