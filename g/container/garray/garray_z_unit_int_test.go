@@ -170,9 +170,16 @@ func TestIntArray_Rand(t *testing.T) {
 
 func TestIntArray_PopRands(t *testing.T) {
 	gtest.Case(t, func() {
-		a1 := []interface{}{100, 200, 300, 400, 500, 600}
-		array := garray.NewFromCopy(a1)
-		gtest.AssertIN(array.PopRands(2), a1)
+		a1 := []int{100, 200, 300, 400, 500, 600}
+		array := garray.NewIntArrayFrom(a1)
+		ns1 := array.PopRands(2)
+		gtest.AssertIN(ns1, []int{100, 200, 300, 400, 500, 600})
+		gtest.AssertIN(len(ns1), 2)
+
+		ns2 := array.PopRands(7)
+		gtest.AssertIN(len(ns2), 6)
+		gtest.AssertIN(ns2, []int{100, 200, 300, 400, 500, 600})
+
 	})
 }
 
@@ -212,8 +219,7 @@ func TestNewSortedIntArrayFromCopy(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{0, 5, 2, 1, 4, 3, 6}
 		array1 := garray.NewSortedIntArrayFromCopy(a1, false)
-		//@todo
-		gtest.Assert(array1.Join("."), "0.5.2.1.4.3.6")
+		gtest.Assert(array1.Join("."), "0.1.2.3.4.5.6")
 	})
 }
 
@@ -268,17 +274,19 @@ func TestSortedIntArray_Remove(t *testing.T) {
 		gtest.Assert(i2, 0)
 		gtest.Assert(array1.Search(5), 1)
 
-		a2 := []int{1, 3}
+		a2 := []int{1, 3, 4}
 		array2 := garray.NewSortedIntArrayFrom(a2)
 		i3 := array2.Remove(1)
 		gtest.Assert(array2.Search(1), 0)
-
 		gtest.Assert(i3, 3)
+		i3 = array2.Remove(1)
+		gtest.Assert(array2.Search(4), -1)
+		gtest.Assert(i3, 4)
 
 	})
 }
 
-func TestSortedArray_PopLeft(t *testing.T) {
+func TestSortedIntArray_PopLeft(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -290,7 +298,7 @@ func TestSortedArray_PopLeft(t *testing.T) {
 	})
 }
 
-func TestSortedArray_PopRight(t *testing.T) {
+func TestSortedIntArray_PopRight(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -301,7 +309,7 @@ func TestSortedArray_PopRight(t *testing.T) {
 	})
 }
 
-func TestSortedArray_PopRand(t *testing.T) {
+func TestSortedIntArray_PopRand(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -312,7 +320,7 @@ func TestSortedArray_PopRand(t *testing.T) {
 	})
 }
 
-func TestSortedArray_PopRands(t *testing.T) {
+func TestSortedIntArray_PopRands(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -330,7 +338,7 @@ func TestSortedArray_PopRands(t *testing.T) {
 	})
 }
 
-func TestSortedArray_PopLefts(t *testing.T) {
+func TestSortedIntArray_PopLefts(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -347,7 +355,7 @@ func TestSortedArray_PopLefts(t *testing.T) {
 	})
 }
 
-func TestSortedArray_PopRights(t *testing.T) {
+func TestSortedIntArray_PopRights(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -363,7 +371,7 @@ func TestSortedArray_PopRights(t *testing.T) {
 	})
 }
 
-func TestSortedArray_Range(t *testing.T) {
+func TestSortedIntArray_Range(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2, 6, 7}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -383,7 +391,7 @@ func TestSortedArray_Range(t *testing.T) {
 	})
 }
 
-func TestSortedArray_Sum(t *testing.T) {
+func TestSortedIntArray_Sum(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -412,83 +420,191 @@ func TestSortedIntArray_Clone(t *testing.T) {
 }
 
 func TestSortedIntArray_Clear(t *testing.T) {
-    gtest.Case(t, func() {
-        a1 := []int{1, 3, 5}
-        array1 := garray.NewSortedIntArrayFrom(a1)
-        array1.Clear()
-        gtest.Assert(array1.Len(), 0)
+	gtest.Case(t, func() {
+		a1 := []int{1, 3, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		array1.Clear()
+		gtest.Assert(array1.Len(), 0)
 
-    })
+	})
 }
 
 func TestSortedIntArray_Chunk(t *testing.T) {
-    gtest.Case(t, func() {
-        a1 := []int{1,2, 3,4, 5}
-        array1 := garray.NewSortedIntArrayFrom(a1)
-        ns1:=array1.Chunk(2) //按每几个元素切成一个数组
-        ns2:=array1.Chunk(-1)
-        t.Log(ns1)
-        gtest.Assert(len(ns1), 3)
-        gtest.Assert(ns1[0], []int{1,2})
-        gtest.Assert(ns1[2], []int{5})
-        gtest.Assert(len(ns2), 0)
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		ns1 := array1.Chunk(2) //按每几个元素切成一个数组
+		ns2 := array1.Chunk(-1)
+		t.Log(ns1)
+		gtest.Assert(len(ns1), 3)
+		gtest.Assert(ns1[0], []int{1, 2})
+		gtest.Assert(ns1[2], []int{5})
+		gtest.Assert(len(ns2), 0)
 
-    })
+	})
 }
 
 func TestSortedIntArray_SubSlice(t *testing.T) {
-    gtest.Case(t, func() {
-        a1 := []int{1,2, 3,4, 5}
-        array1 := garray.NewSortedIntArrayFrom(a1)
-        ns1:=array1.SubSlice(1,2)
-        gtest.Assert(len(ns1), 2)
-        gtest.Assert(ns1,[]int{2,3})
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		ns1 := array1.SubSlice(1, 2)
+		gtest.Assert(len(ns1), 2)
+		gtest.Assert(ns1, []int{2, 3})
 
-        ns2:=array1.SubSlice(7,2)
-        gtest.Assert(len(ns2), 0)
+		ns2 := array1.SubSlice(7, 2)
+		gtest.Assert(len(ns2), 0)
 
-        ns3:=array1.SubSlice(3,5)
-        gtest.Assert(len(ns3), 2)
-        gtest.Assert(ns3,[]int{4,5})
+		ns3 := array1.SubSlice(3, 5)
+		gtest.Assert(len(ns3), 2)
+		gtest.Assert(ns3, []int{4, 5})
 
-        ns4:=array1.SubSlice(3,1)
-        gtest.Assert(len(ns4), 1)
-        gtest.Assert(ns4,[]int{4})
-    })
+		ns4 := array1.SubSlice(3, 1)
+		gtest.Assert(len(ns4), 1)
+		gtest.Assert(ns4, []int{4})
+	})
 }
 
 func TestSortedIntArray_Rand(t *testing.T) {
-    gtest.Case(t, func() {
-        a1 := []int{1,2, 3,4, 5}
-        array1 := garray.NewSortedIntArrayFrom(a1)
-        ns1:=array1.Rand() //按每几个元素切成一个数组
-        gtest.AssertIN(ns1,a1)
-    })
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		ns1 := array1.Rand() //按每几个元素切成一个数组
+		gtest.AssertIN(ns1, a1)
+	})
 }
 
 func TestSortedIntArray_Rands(t *testing.T) {
-    gtest.Case(t, func() {
-        a1 := []int{1,2, 3,4, 5}
-        array1 := garray.NewSortedIntArrayFrom(a1)
-        ns1:=array1.Rands(2) //按每几个元素切成一个数组
-        gtest.AssertIN(ns1,a1)
-        gtest.Assert(len(ns1),2)
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		ns1 := array1.Rands(2) //按每几个元素切成一个数组
+		gtest.AssertIN(ns1, a1)
+		gtest.Assert(len(ns1), 2)
 
-        ns2:=array1.Rands(6) //按每几个元素切成一个数组
-        gtest.AssertIN(ns2,a1)
-        gtest.Assert(len(ns2),5)
-    })
+		ns2 := array1.Rands(6) //按每几个元素切成一个数组
+		gtest.AssertIN(ns2, a1)
+		gtest.Assert(len(ns2), 5)
+	})
 }
 
 func TestSortedIntArray_CountValues(t *testing.T) {
-    gtest.Case(t, func() {
-        a1 := []int{1,2, 3,4, 5,3}
-        array1 := garray.NewSortedIntArrayFrom(a1)
-        ns1:=array1.CountValues() //按每几个元素切成一个数组
-        gtest.Assert(len(ns1),5)
-        gtest.Assert(ns1[2],1)
-        gtest.Assert(ns1[3],2)
-    })
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5, 3}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		ns1 := array1.CountValues() //按每几个元素切成一个数组
+		gtest.Assert(len(ns1), 5)
+		gtest.Assert(ns1[2], 1)
+		gtest.Assert(ns1[3], 2)
+	})
 }
 
+func TestSortedIntArray_SetUnique(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5, 3}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		array1.SetUnique(true)
+		gtest.Assert(array1.Len(), 5)
+		gtest.Assert(array1, []int{1, 2, 3, 4, 5})
 
+	})
+}
+
+func TestIntArray_SetArray(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5}
+		a2 := []int{6, 7}
+		array1 := garray.NewIntArrayFrom(a1)
+		array1.SetArray(a2)
+		gtest.Assert(array1.Len(), 2)
+		gtest.Assert(array1, []int{6, 7})
+
+	})
+}
+
+func TestIntArray_Replace(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5}
+		a2 := []int{6, 7}
+		a3 := []int{9, 10, 11, 12, 13}
+		array1 := garray.NewIntArrayFrom(a1)
+		array1.Replace(a2)
+		gtest.Assert(array1, []int{6, 7, 3, 5})
+
+		array1.Replace(a3)
+		gtest.Assert(array1, []int{9, 10, 11, 12})
+	})
+}
+
+func TestIntArray_Clear(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5}
+		array1 := garray.NewIntArrayFrom(a1)
+		array1.Clear()
+		gtest.Assert(array1.Len(), 0)
+	})
+}
+
+func TestIntArray_Clone(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5}
+		array1 := garray.NewIntArrayFrom(a1)
+		array2 := array1.Clone()
+		gtest.Assert(array1, array2)
+	})
+}
+
+func TestArray_Get(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5}
+		array1 := garray.NewIntArrayFrom(a1)
+		gtest.Assert(array1.Get(2), 3)
+		gtest.Assert(array1.Len(), 4)
+	})
+}
+
+func TestIntArray_Sum(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5}
+		array1 := garray.NewIntArrayFrom(a1)
+		gtest.Assert(array1.Sum(), 11)
+	})
+}
+
+func TestIntArray_CountValues(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5, 3}
+		array1 := garray.NewIntArrayFrom(a1)
+		m1 := array1.CountValues()
+		gtest.Assert(len(m1), 4)
+		gtest.Assert(m1[1], 1)
+		gtest.Assert(m1[3], 2)
+	})
+}
+
+func TestNewIntArrayFromCopy(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5, 3}
+		array1 := garray.NewIntArrayFromCopy(a1)
+		gtest.Assert(array1.Len(), 5)
+		gtest.Assert(array1, a1)
+	})
+}
+
+func TestIntArray_Remove(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 5, 4}
+		array1 := garray.NewIntArrayFrom(a1)
+		n1 := array1.Remove(1)
+		gtest.Assert(n1, 2)
+		gtest.Assert(array1.Len(), 4)
+
+		n1 = array1.Remove(0)
+		gtest.Assert(n1, 1)
+		gtest.Assert(array1.Len(), 3)
+
+		n1 = array1.Remove(2)
+		gtest.Assert(n1, 4)
+		gtest.Assert(array1.Len(), 2)
+	})
+}
