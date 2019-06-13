@@ -13,5 +13,5 @@ func main() {
 		})
 	}
 	fmt.Println("start")
-	time.Sleep(48*time.Hour)
+	time.Sleep(48 * time.Hour)
 }

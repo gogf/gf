@@ -57,7 +57,9 @@ func New(file...string) *Config {
 		if gfile.Exists(envPath) {
 			_ = c.SetPath(envPath)
 		} else {
-			glog.Errorf("Configuration directory path does not exist: %s", envPath)
+			if errorPrint() {
+				glog.Errorf("Configuration directory path does not exist: %s", envPath)
+			}
 		}
 	} else {
 		// Dir path of working dir.
@@ -97,7 +99,9 @@ func (c *Config) filePath(file...string) (path string) {
         } else {
             buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path set/add", name))
         }
-        glog.Error(buffer.String())
+	    if errorPrint() {
+		    glog.Error(buffer.String())
+	    }
     }
     return path
 }
@@ -133,13 +137,17 @@ func (c *Config) SetPath(path string) error {
             buffer.WriteString(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" does not exist`, path))
         }
         err := errors.New(buffer.String())
-        glog.Error(err)
+	    if errorPrint() {
+		    glog.Error(err)
+	    }
         return err
     }
     // Should be a directory.
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" should be directory type`, path))
-        glog.Error(err)
+	    if errorPrint() {
+		    glog.Error(err)
+	    }
         return err
     }
     // Repeated path check.
@@ -191,12 +199,16 @@ func (c *Config) AddPath(path string) error {
             buffer.WriteString(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" does not exist`, path))
         }
         err := errors.New(buffer.String())
-        glog.Error(err)
+	    if errorPrint() {
+		    glog.Error(err)
+	    }
         return err
     }
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" should be directory type`, path))
-        glog.Error(err)
+	    if errorPrint() {
+	    	glog.Error(err)
+	    }
         return err
     }
     // Repeated path check.
@@ -275,11 +287,13 @@ func (c *Config) getJson(file...string) *gjson.Json {
             }
             return j
         } else {
-            if filePath != "" {
-                glog.Criticalf(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
-            } else {
-                glog.Criticalf(`[gcfg] Load configuration failed: %s`, err.Error())
-            }
+	        if errorPrint() {
+		        if filePath != "" {
+			        glog.Criticalf(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+		        } else {
+			        glog.Criticalf(`[gcfg] Load configuration failed: %s`, err.Error())
+		        }
+	        }
         }
         return nil
     })

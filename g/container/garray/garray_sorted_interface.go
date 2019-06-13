@@ -40,9 +40,9 @@ func NewSortedArray(comparator func(v1, v2 interface{}) int, unsafe...bool) *Sor
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     return &SortedArray{
-        mu          : rwmutex.New(unsafe...),
-        unique      : gtype.NewBool(),
-        array       : make([]interface{}, 0, cap),
+        mu         : rwmutex.New(unsafe...),
+        unique     : gtype.NewBool(),
+        array      : make([]interface{}, 0, cap),
         comparator : comparator,
     }
 }
@@ -62,13 +62,10 @@ func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{})
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
 // The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
-func NewSortedArrayFromCopy(array []interface{}, unsafe...bool) *SortedArray {
+func NewSortedArrayFromCopy(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     newArray := make([]interface{}, len(array))
     copy(newArray, array)
-    return &SortedArray{
-        mu    : rwmutex.New(unsafe...),
-        array : newArray,
-    }
+    return NewSortedArrayFrom(newArray, comparator, unsafe...)
 }
 
 // SetArray sets the underlying slice array with the given <array>.
@@ -281,17 +278,23 @@ func (a *SortedArray) Slice() []interface{} {
 
 // Contains checks whether a value exists in the array.
 func (a *SortedArray) Contains(value interface{}) bool {
-    return a.Search(value) == 0
+    return a.Search(value) != -1
 }
 
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *SortedArray) Search(value interface{}) (index int) {
-    index, _ = a.binSearch(value, true)
-    return
+	if i, r := a.binSearch(value, true); r == 0 {
+		return i
+	}
+	return -1
 }
 
 // Binary search.
+// It returns the last compared index and the result.
+// If <result> equals to 0, it means the value at <index> is equals to <value>.
+// If <result> lesser than 0, it means the value at <index> is lesser than <value>.
+// If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedArray) binSearch(value interface{}, lock bool)(index int, result int) {
     if len(a.array) == 0 {
         return -1, -2
