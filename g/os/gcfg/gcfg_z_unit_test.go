@@ -297,9 +297,9 @@ func TestCfg_SetPath(t *testing.T) {
 	gtest.Case(t, func() {
 		c := gcfg.New("config.yml")
 		err := c.SetPath("tmp")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 		err = c.SetPath("gcfg.go")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 		gtest.Assert(c.Get("name"), nil)
 	})
 }
@@ -316,9 +316,9 @@ func TestCfg_AddPath(t *testing.T) {
 	gtest.Case(t, func() {
 		c := gcfg.New("config.yml")
 		err := c.AddPath("tmp")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 		err = c.AddPath("gcfg.go")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 		gtest.Assert(c.Get("name"), nil)
 	})
 }
@@ -381,7 +381,7 @@ func TestCfg_Get(t *testing.T) {
 		gtest.Assert(c.GetDuration("time").String(), "0s")
 		t.Log(c.GetString("person"))
 		err := c.GetToStruct("person", &name)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
 		gtest.Assert(c.GetFloats("floats") == nil, false)
 	})

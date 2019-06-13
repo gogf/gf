@@ -177,18 +177,18 @@ func Test_Load_Basic(t *testing.T) {
 		j := gjson.NewUnsafe()
 		gtest.Assert(j.Value(), nil)
 		_, err := gjson.Decode(nil)
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 		_, err = gjson.DecodeToJson(nil)
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 		j, err = gjson.LoadContent(nil)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 		gtest.Assert(j.Value(), nil)
 
 		j, err = gjson.LoadContent(`{"name": "gf"}`)
-		gtest.Assert(err == nil, true)
+		gtest.Assert(err, nil)
 
 		j, err = gjson.LoadContent(`{"name": "gf"""}`)
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		j = gjson.New(&g.Map{"name": "gf"})
 		gtest.Assert(j.GetString("name"), "gf")

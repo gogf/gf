@@ -182,9 +182,8 @@ func Test_Load_Nil(t *testing.T) {
 		ioutil.WriteFile(filePath, []byte("{"), 0644)
 		defer gfile.Remove(filePath)
 		_, err := gparser.Load("test.json")
-		//gtest.Assert(err == nil, false)
-		t.Log(err)
+		gtest.AssertNE(err, nil)
 		_, err = gparser.LoadContent("{")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 	})
 }
