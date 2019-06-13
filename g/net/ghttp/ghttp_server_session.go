@@ -58,7 +58,7 @@ func (s *Session) init() {
         // 否则执行初始化创建
         s.id   = s.request.Cookie.MakeSessionId()
         s.data = gmap.NewStrAnyMap()
-        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge())
+        s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
     }
 }
 

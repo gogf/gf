@@ -25,11 +25,13 @@ func main() {
 				break
 			}
 			switch msg.Act {
-				case "hello":     onClientHello(conn, msg)
-				case "heartbeat": onClientHeartBeat(conn, msg)
-				default:
-					glog.Errorfln("invalid message: %v", msg)
-					break
+			case "hello":
+				onClientHello(conn, msg)
+			case "heartbeat":
+				onClientHeartBeat(conn, msg)
+			default:
+				glog.Errorfln("invalid message: %v", msg)
+				break
 			}
 		}
 	}).Run()

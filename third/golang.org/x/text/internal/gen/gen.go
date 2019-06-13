@@ -135,7 +135,7 @@ var (
 const permissions = 0755
 
 func localReadmeFile() (string, error) {
-	p, err := build.Import("golang.org/x/text", "", build.FindOnly)
+	p, err := build.Import("github.com/gogf/gf/third/golang.org/x/text", "", build.FindOnly)
 	if err != nil {
 		return "", fmt.Errorf("Could not locate package: %v", err)
 	}
