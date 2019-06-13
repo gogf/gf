@@ -12,6 +12,8 @@ import (
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/container/gset"
 	"github.com/gogf/gf/g/test/gtest"
+	"strings"
+
 	"testing"
 )
 
@@ -176,5 +178,91 @@ func TestSet_Complement(t *testing.T) {
 		gtest.Assert(s3.Contains(2), false)
 		gtest.Assert(s3.Contains(4), true)
 		gtest.Assert(s3.Contains(5), true)
+	})
+}
+
+func TestNewFrom(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewFrom("a")
+		s2 := gset.NewFrom("b", false)
+		s3 := gset.NewFrom(3, true)
+		s4 := gset.NewFrom([]string{"s1", "s2"}, true)
+		gtest.Assert(s1.Contains("a"), true)
+		gtest.Assert(s2.Contains("b"), true)
+		gtest.Assert(s3.Contains(3), true)
+		gtest.Assert(s4.Contains("s1"), true)
+		gtest.Assert(s4.Contains("s3"), false)
+
+	})
+}
+
+func TestNew(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.New()
+		s1.Add("a").Add(2)
+		s2 := gset.New(true)
+		s2.Add("b").Add(3)
+		gtest.Assert(s1.Contains("a"), true)
+
+	})
+}
+
+func TestSet_Join(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add("a").Add("a1").Add("b").Add("c")
+		str1 := s1.Join(",")
+		gtest.Assert(strings.Contains(str1, "a1"), true)
+
+	})
+}
+
+func TestSet_String(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add("a").Add("a2").Add("b").Add("c")
+		str1 := s1.String()
+		gtest.Assert(strings.Contains(str1, "a2"), true)
+
+	})
+}
+
+func TestSet_Merge(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s2 := gset.New(true)
+		s1.Add("a").Add("a2").Add("b").Add("c")
+		s2.Add("b").Add("b1").Add("e").Add("f")
+		ss := s1.Merge(s2)
+		gtest.Assert(ss.Contains("a2"), true)
+		gtest.Assert(ss.Contains("b1"), true)
+
+	})
+}
+
+func TestSet_Sum(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add(1).Add(2).Add(3).Add(4)
+		gtest.Assert(s1.Sum(), int(10))
+
+	})
+}
+
+func TestSet_Pop(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add(1).Add(2).Add(3).Add(4)
+		gtest.AssertIN(s1.Pop(1), []int{1, 2, 3, 4})
+	})
+}
+
+func TestSet_Pops(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add(1).Add(2).Add(3).Add(4)
+		gtest.AssertIN(s1.Pops(1), []int{1, 2, 3, 4})
+		gtest.AssertIN(s1.Pops(6), []int{1, 2, 3, 4})
+		gtest.Assert(len(s1.Pops(2)), 2)
 	})
 }
