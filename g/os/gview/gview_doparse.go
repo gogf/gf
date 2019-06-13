@@ -91,7 +91,9 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 		} else {
 			buffer.WriteString(fmt.Sprintf("[gview] cannot find template file \"%s\" with no path set/add", file))
 		}
-		glog.Error(buffer.String())
+		if errorPrint() {
+			glog.Error(buffer.String())
+		}
 		err = errors.New(fmt.Sprintf(`template file "%s" not found`, file))
 	}
 	return

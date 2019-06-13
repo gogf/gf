@@ -1,55 +1,110 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// @author wenzi1
-// @date   20180604
 
-// Package gcharset provides converting string to requested character encoding.
+// Package charset implements character-set conversion functionality.
 //
-// 字符集转换方法,
-// 使用mahonia实现的字符集转换方法，支持的字符集包括常见的utf8/UTF-16/UTF-16LE/macintosh/big5/gbk/gb18030,支持的全量字符集可以参考mahonia包
+// Supported Character Set:
+//
+// Chinese : GBK/GB18030/GB2312/Big5
+//
+// Japanese: EUCJP/ISO2022JP/ShiftJIS
+//
+// Korean  : EUCKR
+//
+// Unicode : UTF-8/UTF-16/UTF-16BE/UTF-16LE
+//
+// Other   : macintosh/IBM*/Windows*/ISO-*
 package gcharset
 
 import (
-	"github.com/gogf/gf/third/github.com/axgle/mahonia"
+	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/third/golang.org/x/text/encoding"
+	"github.com/gogf/gf/third/golang.org/x/text/encoding/ianaindex"
+	"github.com/gogf/gf/third/golang.org/x/text/transform"
+	"io/ioutil"
 )
 
+var (
+	// Alias for charsets.
+	charsetAlias = map[string]string {
+		"HZGB2312" : "HZ-GB-2312",
+		"hzgb2312" : "HZ-GB-2312",
+		"GB2312"   : "HZ-GB-2312",
+		"gb2312"   : "HZ-GB-2312",
+	}
+)
 
-// 2个字符集之间的转换
+// Supported returns whether charset <charset> is supported.
+func Supported(charset string) bool {
+	return getEncoding(charset) != nil
+}
+
+// Convert converts <src> charset encoding from <srcCharset> to <dstCharset>,
+// and returns the converted string.
+// It returns <src> as <dst> if it fails converting.
 func Convert(dstCharset string, srcCharset string, src string) (dst string, err error) {
-	s := mahonia.GetCharset(srcCharset)
-	if 	s == nil {
-		return "", errors.New(fmt.Sprintf("not support charset:%s", srcCharset))
+	if dstCharset == srcCharset {
+		return src, nil
 	}
-
-	d := mahonia.GetCharset(dstCharset)
-	if d == nil {
-		return "", errors.New(fmt.Sprintf("not support charset:%s", dstCharset))
+	dst = src
+	// Converting <src> to UTF-8.
+	if srcCharset != "UTF-8" {
+		if e := getEncoding(srcCharset); e != nil {
+			tmp, err := ioutil.ReadAll(
+				transform.NewReader(bytes.NewReader([]byte(src)), e.NewDecoder()),
+			)
+			if err != nil {
+				return "", fmt.Errorf("%s to utf8 failed. %v", srcCharset, err)
+			}
+			src = string(tmp)
+		} else {
+			return dst, errors.New(fmt.Sprintf("unsupport srcCharset: %s", srcCharset))
+		}
 	}
-	
-	srctmp := src
-	if s.Name != "UTF-8" {
-		srctmp = s.NewDecoder().ConvertString(srctmp)
+	// Do the converting from UTF-8 to <dstCharset>.
+	if dstCharset != "UTF-8" {
+		if e := getEncoding(dstCharset); e != nil {
+			tmp, err := ioutil.ReadAll(
+				transform.NewReader(bytes.NewReader([]byte(src)), e.NewEncoder()),
+			)
+			if err != nil {
+				return "", fmt.Errorf("utf to %s failed. %v", dstCharset, err)
+			}
+			dst = string(tmp)
+		} else {
+			return dst, errors.New(fmt.Sprintf("unsupport dstCharset: %s", dstCharset))
+		}
+	} else {
+		dst = src
 	}
-	
-	dst = srctmp
-	if d.Name != "UTF-8" {
-		dst = d.NewEncoder().ConvertString(dst)
-	}
-	
 	return dst, nil
 }
 
-// 指定字符集转UTF8
-func ToUTF8(charset string, src string) (dst string, err error) {
-	return Convert("UTF-8", charset, src)
+// ToUTF8 converts <src> charset encoding from <srcCharset> to UTF-8 ,
+// and returns the converted string.
+func ToUTF8(srcCharset string, src string) (dst string, err error) {
+	return Convert("UTF-8", srcCharset, src)
 }
 
-// UTF8转指定字符集
-func UTF8To(charset string, src string) (dst string, err error) {
-	return Convert(charset, "UTF-8", src)
+// UTF8To converts <src> charset encoding from UTF-8 to <dstCharset>,
+// and returns the converted string.
+func UTF8To(dstCharset string, src string) (dst string, err error) {
+	return Convert(dstCharset, "UTF-8", src)
+}
+
+// getEncoding returns the encoding.Encoding interface object for <charset>.
+// It returns nil if <charset> is not supported.
+func getEncoding(charset string) encoding.Encoding {
+	if c, ok := charsetAlias[charset]; ok {
+		charset = c
+	}
+	if e, err := ianaindex.MIB.Encoding(charset); err == nil && e != nil {
+		return e
+	}
+	return nil
 }

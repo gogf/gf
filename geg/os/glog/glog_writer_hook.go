@@ -22,7 +22,9 @@ func (w *MyWriter) Write(p []byte) (n int, err error) {
 
 func main() {
 	glog.SetWriter(&MyWriter{
-		logger : glog.New(),
+		logger: glog.New(),
 	})
+	glog.Debug("DEBUG")
 	glog.Fatal("FATAL ERROR")
+
 }

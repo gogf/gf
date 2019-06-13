@@ -33,6 +33,6 @@ func main() {
 		if err := conn.SendPkg(nil); err != nil {
 			glog.Error(err)
 		}
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }

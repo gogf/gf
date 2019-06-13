@@ -1,6 +1,7 @@
 package main
 
 import (
+<<<<<<< HEAD
 	"fmt"
 )
 
@@ -11,3 +12,13 @@ func main() {
 		fmt.Println(i)
 	}
 }
+=======
+	"github.com/gogf/gf/g/encoding/gjson"
+)
+
+func main() {
+	j := gjson.New(`[1,2,3]`)
+	j.Remove("1")
+	j.Dump()
+}
+>>>>>>> master

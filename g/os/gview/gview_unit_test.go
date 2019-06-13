@@ -11,6 +11,10 @@ import (
 	"testing"
 )
 
+func init() {
+	os.Setenv("GF_GVIEW_ERRORPRINT", "false")
+}
+
 func TestView_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		str := `hello {{.name}},version:{{.version}};hello {{GetName}},version:{{GetVersion}};{{.other}}`
@@ -199,25 +203,25 @@ func TestView_SetPath(t *testing.T) {
 	gtest.Case(t, func() {
 		view := gview.Instance("addpath")
 		err := view.AddPath("tmp")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		err = view.AddPath("gview.go")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		os.Setenv("GF_GVIEW_PATH", "tmp")
 		view = gview.Instance("setpath")
 		err = view.SetPath("tmp")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		err = view.SetPath("gview.go")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		view = gview.New(gfile.Pwd())
 		err = view.SetPath("tmp")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		err = view.SetPath("gview.go")
-		gtest.Assert(err == nil, false)
+		gtest.AssertNE(err, nil)
 
 		os.Setenv("GF_GVIEW_PATH", "template")
 		gfile.Mkdir(gfile.Pwd() + gfile.Separator + "template")
