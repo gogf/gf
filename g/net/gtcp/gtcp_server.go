@@ -45,7 +45,7 @@ func GetServer(name...interface{}) *Server {
 }
 
 // NewServer creates and returns a new normal TCP server.
-// The param <name> is optional, which is used to specify the instance name of the server.
+// The parameter <name> is optional, which is used to specify the instance name of the server.
 func NewServer(address string, handler func (*Conn), name...string) *Server {
     s := &Server{
     	address : address,
@@ -58,7 +58,7 @@ func NewServer(address string, handler func (*Conn), name...string) *Server {
 }
 
 // NewServerTLS creates and returns a new TCP server with TLS support.
-// The param <name> is optional, which is used to specify the instance name of the server.
+// The parameter <name> is optional, which is used to specify the instance name of the server.
 func NewServerTLS(address string, tlsConfig *tls.Config, handler func (*Conn), name...string) *Server {
 	s := NewServer(address, handler, name...)
 	s.SetTLSConfig(tlsConfig)
@@ -66,7 +66,7 @@ func NewServerTLS(address string, tlsConfig *tls.Config, handler func (*Conn), n
 }
 
 // NewServerKeyCrt creates and returns a new TCP server with TLS support.
-// The param <name> is optional, which is used to specify the instance name of the server.
+// The parameter <name> is optional, which is used to specify the instance name of the server.
 func NewServerKeyCrt(address, crtFile, keyFile string, handler func (*Conn), name...string) *Server {
 	s := NewServer(address, handler, name...)
 	if err := s.SetTLSKeyCrt(crtFile, keyFile); err != nil {

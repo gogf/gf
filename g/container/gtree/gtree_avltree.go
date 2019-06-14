@@ -30,7 +30,7 @@ type AVLTreeNode struct {
 }
 
 // NewAVLTree instantiates an AVL tree with the custom comparator.
-// The param <unsafe> used to specify whether using tree in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
 func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *AVLTree {
 	return &AVLTree{
@@ -40,7 +40,7 @@ func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *AVLTree
 }
 
 // NewAVLTreeFrom instantiates an AVL tree with the custom comparator and data map.
-// The param <unsafe> used to specify whether using tree in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
 func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe...bool) *AVLTree {
 	tree := NewAVLTree(comparator, unsafe...)

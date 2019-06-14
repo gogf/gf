@@ -23,14 +23,14 @@ type StringArray struct {
 }
 
 // NewStringArray creates and returns an empty array.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewStringArray(unsafe...bool) *StringArray {
     return NewStringArraySize(0, 0, unsafe...)
 }
 
 // NewStringArraySize create and returns an array with given size and cap.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewStringArraySize(size int, cap int, unsafe...bool) *StringArray {
     return &StringArray{
@@ -40,7 +40,7 @@ func NewStringArraySize(size int, cap int, unsafe...bool) *StringArray {
 }
 
 // NewStringArrayFrom creates and returns an array with given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewStringArrayFrom(array []string, unsafe...bool) *StringArray {
 	return &StringArray {
@@ -50,7 +50,7 @@ func NewStringArrayFrom(array []string, unsafe...bool) *StringArray {
 }
 
 // NewStringArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewStringArrayFromCopy(array []string, unsafe...bool) *StringArray {
     newArray := make([]string, len(array))
@@ -111,7 +111,7 @@ func (a *StringArray) Sum() (sum int) {
 }
 
 // Sort sorts the array in increasing order.
-// The param <reverse> controls whether sort
+// The parameter <reverse> controls whether sort
 // in increasing order(default) or decreasing order
 func (a *StringArray) Sort(reverse...bool) *StringArray {
     a.mu.Lock()

@@ -24,5 +24,7 @@ func main() {
 	glog.SetWriter(&MyWriter{
 		logger: glog.New(),
 	})
+	glog.Debug("DEBUG")
 	glog.Fatal("FATAL ERROR")
+
 }

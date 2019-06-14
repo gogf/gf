@@ -24,7 +24,7 @@ type Pool struct {
 var pool = New()
 
 // New creates and returns a new goroutine pool object.
-// The param <limit> is used to limit the max goroutine count,
+// The parameter <limit> is used to limit the max goroutine count,
 // which is not limited in default.
 func New(limit...int) *Pool {
     p := &Pool {

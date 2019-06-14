@@ -8,9 +8,10 @@ package gcache
 
 import "github.com/gogf/gf/g/os/gtime"
 
-// 判断缓存项是否已过期
+// IsExpired checks whether <item> is expired.
 func (item *memCacheItem) IsExpired() bool {
-    // 注意这里应当包含等于，试想一下缓存时间只有最小粒度为1毫秒的情况
+    // Note that it should use greater than or equal judgement here
+    // imagining that the cache time is only 1 millisecond.
     if item.e >= gtime.Millisecond() {
         return false
     }

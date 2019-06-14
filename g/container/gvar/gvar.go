@@ -20,7 +20,7 @@ type Var struct {
 }
 
 // New returns a new Var with given <value>.
-// The param <unsafe> used to specify whether using Var in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using Var in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func New(value interface{}, unsafe...bool) *Var {
     v := &Var{}
@@ -59,7 +59,7 @@ func (v *Var) Interface() interface{} {
 }
 
 // Time converts and returns <v> as time.Time.
-// The param <format> specifies the format of the time string using gtime,
+// The parameter <format> specifies the format of the time string using gtime,
 // eg: Y-m-d H:i:s.
 func (v *Var) Time(format...string) time.Time {
     return gconv.Time(v.Val(), format...)
@@ -72,15 +72,15 @@ func (v *Var) Duration() time.Duration {
 }
 
 // GTime converts and returns <v> as *gtime.Time.
-// The param <format> specifies the format of the time string using gtime,
+// The parameter <format> specifies the format of the time string using gtime,
 // eg: Y-m-d H:i:s.
 func (v *Var) GTime(format...string) *gtime.Time {
     return gconv.GTime(v.Val(), format...)
 }
 
 // Struct maps value of <v> to <objPointer>.
-// The param <objPointer> should be a pointer to a struct instance.
-// The param <mapping> is used to specify the key-to-attribute mapping rules.
+// The parameter <objPointer> should be a pointer to a struct instance.
+// The parameter <mapping> is used to specify the key-to-attribute mapping rules.
 func (v *Var) Struct(pointer interface{}, mapping...map[string]string) error {
     return gconv.Struct(v.Val(), pointer, mapping...)
 }

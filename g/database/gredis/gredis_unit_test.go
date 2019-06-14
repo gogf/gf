@@ -7,133 +7,203 @@
 package gredis_test
 
 import (
-    "github.com/gogf/gf/g/database/gredis"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
-    "time"
+	"github.com/gogf/gf/g/database/gredis"
+	"github.com/gogf/gf/g/test/gtest"
+	redis2 "github.com/gogf/gf/third/github.com/gomodule/redigo/redis"
+	"testing"
+	"time"
 )
 
 var (
-    config = gredis.Config{
-        Host : "127.0.0.1",
-        Port : 6379,
-        Db   : 1,
-    }
+	config = gredis.Config{
+		Host: "127.0.0.1",
+		Port: 6379,
+		Db:   1,
+	}
 )
 
 func Test_NewClose(t *testing.T) {
-    gtest.Case(t, func() {
-        redis := gredis.New(config)
-        gtest.AssertNE(redis, nil)
-        err := redis.Close()
-        gtest.Assert(err, nil)
-    })
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		gtest.AssertNE(redis, nil)
+		err := redis.Close()
+		gtest.Assert(err, nil)
+	})
 }
 
 func Test_Do(t *testing.T) {
-    gtest.Case(t, func() {
-        redis := gredis.New(config)
-        defer redis.Close()
-        _, err := redis.Do("SET", "k", "v")
-        gtest.Assert(err, nil)
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		defer redis.Close()
+		_, err := redis.Do("SET", "k", "v")
+		gtest.Assert(err, nil)
 
-        r, err := redis.Do("GET", "k")
-        gtest.Assert(err, nil)
-        gtest.Assert(r, []byte("v"))
+		r, err := redis.Do("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, []byte("v"))
 
-        _, err  = redis.Do("DEL", "k")
-        gtest.Assert(err, nil)
-        r, err  = redis.Do("GET", "k")
-        gtest.Assert(err, nil)
-        gtest.Assert(r, nil)
-    })
+		_, err = redis.Do("DEL", "k")
+		gtest.Assert(err, nil)
+		r, err = redis.Do("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, nil)
+	})
 }
 
 func Test_Send(t *testing.T) {
-    gtest.Case(t, func() {
-        redis := gredis.New(config)
-        defer redis.Close()
-        err := redis.Send("SET", "k", "v")
-        gtest.Assert(err, nil)
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		defer redis.Close()
+		err := redis.Send("SET", "k", "v")
+		gtest.Assert(err, nil)
 
-        r, err := redis.Do("GET", "k")
-        gtest.Assert(err, nil)
-        gtest.Assert(r,   []byte("v"))
-    })
+		r, err := redis.Do("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, []byte("v"))
+	})
 }
 
 func Test_Stats(t *testing.T) {
-    gtest.Case(t, func() {
-        redis := gredis.New(config)
-        defer redis.Close()
-        redis.SetMaxIdle(2)
-        redis.SetMaxActive(100)
-        redis.SetIdleTimeout(500*time.Millisecond)
-        redis.SetMaxConnLifetime(500*time.Millisecond)
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		defer redis.Close()
+		redis.SetMaxIdle(2)
+		redis.SetMaxActive(100)
+		redis.SetIdleTimeout(500 * time.Millisecond)
+		redis.SetMaxConnLifetime(500 * time.Millisecond)
 
-        array := make([]*gredis.Conn, 0)
-        for i := 0; i < 10; i++ {
-            array = append(array, redis.Conn())
-        }
-        stats := redis.Stats()
-        gtest.Assert(stats.ActiveCount, 10)
-        gtest.Assert(stats.IdleCount,    0)
-        for i := 0; i < 10; i++ {
-            array[i].Close()
-        }
-        stats  = redis.Stats()
-        gtest.Assert(stats.ActiveCount,  2)
-        gtest.Assert(stats.IdleCount,    2)
-        //time.Sleep(3000*time.Millisecond)
-        //stats  = redis.Stats()
-        //fmt.Println(stats)
-        //gtest.Assert(stats.ActiveCount,  0)
-        //gtest.Assert(stats.IdleCount,    0)
-    })
+		array := make([]*gredis.Conn, 0)
+		for i := 0; i < 10; i++ {
+			array = append(array, redis.Conn())
+		}
+		stats := redis.Stats()
+		gtest.Assert(stats.ActiveCount, 10)
+		gtest.Assert(stats.IdleCount, 0)
+		for i := 0; i < 10; i++ {
+			array[i].Close()
+		}
+		stats = redis.Stats()
+		gtest.Assert(stats.ActiveCount, 2)
+		gtest.Assert(stats.IdleCount, 2)
+		//time.Sleep(3000*time.Millisecond)
+		//stats  = redis.Stats()
+		//fmt.Println(stats)
+		//gtest.Assert(stats.ActiveCount,  0)
+		//gtest.Assert(stats.IdleCount,    0)
+	})
 }
 
 func Test_Conn(t *testing.T) {
-    gtest.Case(t, func() {
-        redis := gredis.New(config)
-        defer redis.Close()
-        conn := redis.Conn()
-        defer conn.Close()
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		defer redis.Close()
+		conn := redis.Conn()
+		defer conn.Close()
 
+		r, err := conn.Do("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, []byte("v"))
 
-        r, err := conn.Do("GET", "k")
-        gtest.Assert(err, nil)
-        gtest.Assert(r,   []byte("v"))
-
-        _, err  = conn.Do("DEL", "k")
-        gtest.Assert(err, nil)
-        r, err  = conn.Do("GET", "k")
-        gtest.Assert(err, nil)
-        gtest.Assert(r, nil)
-    })
+		_, err = conn.Do("DEL", "k")
+		gtest.Assert(err, nil)
+		r, err = conn.Do("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, nil)
+	})
 }
 
 func Test_Instance(t *testing.T) {
-    gtest.Case(t, func() {
-        group := "my-test"
-        gredis.SetConfig(config, group)
-        defer gredis.RemoveConfig(group)
-        redis := gredis.Instance(group)
-        defer redis.Close()
+	gtest.Case(t, func() {
+		group := "my-test"
+		gredis.SetConfig(config, group)
+		defer gredis.RemoveConfig(group)
+		redis := gredis.Instance(group)
+		defer redis.Close()
 
-        conn := redis.Conn()
-        defer conn.Close()
+		conn := redis.Conn()
+		defer conn.Close()
 
-        _, err := conn.Do("SET", "k", "v")
-        gtest.Assert(err, nil)
+		_, err := conn.Do("SET", "k", "v")
+		gtest.Assert(err, nil)
 
-        r, err := conn.Do("GET", "k")
-        gtest.Assert(err, nil)
-        gtest.Assert(r,   []byte("v"))
+		r, err := conn.Do("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, []byte("v"))
 
-        _, err  = conn.Do("DEL", "k")
-        gtest.Assert(err, nil)
-        r, err  = conn.Do("GET", "k")
-        gtest.Assert(err, nil)
-        gtest.Assert(r, nil)
-    })
+		_, err = conn.Do("DEL", "k")
+		gtest.Assert(err, nil)
+		r, err = conn.Do("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, nil)
+	})
+}
+
+func Test_Basic(t *testing.T) {
+	gtest.Case(t, func() {
+		config1 := gredis.Config{
+			Host: "127.0.0.2",
+			Port: 6379,
+			Db:   1,
+		}
+		redis := gredis.New(config1)
+		_, err := redis.Do("info")
+		gtest.AssertNE(err, nil)
+
+		config1 = gredis.Config{
+			Host: "127.0.0.1",
+			Port: 6379,
+			Db:   1,
+			Pass: "666666",
+		}
+		redis = gredis.New(config1)
+		_, err = redis.Do("info")
+		gtest.AssertNE(err, nil)
+
+		config1 = gredis.Config{
+			Host: "127.0.0.1",
+			Port: 6379,
+			Db:   100,
+		}
+		redis = gredis.New(config1)
+		_, err = redis.Do("info")
+		gtest.AssertNE(err, nil)
+
+		redis = gredis.Instance("gf")
+		gtest.Assert(redis == nil, true)
+		gredis.ClearConfig()
+
+		redis = gredis.New(config)
+		defer redis.Close()
+		_, err = redis.DoVar("SET", "k", "v")
+		gtest.Assert(err, nil)
+
+		v, err := redis.DoVar("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "v")
+
+		conn := redis.GetConn()
+		_, err = conn.DoVar("SET", "k", "v")
+		gtest.Assert(err, nil)
+
+		//v, err = conn.ReceiveVar()
+		//gtest.Assert(err, nil)
+		//gtest.Assert(v.String(), "v")
+
+		psc := redis2.PubSubConn{Conn: conn}
+		psc.Subscribe("gf")
+		redis.DoVar("PUBLISH", "gf", "gf test")
+		go func() {
+			for {
+				v, _ := conn.ReceiveVar()
+				switch obj := v.Val().(type) {
+				case redis2.Message:
+					gtest.Assert(string(obj.Data), "gf test")
+				case redis2.Subscription:
+
+				}
+			}
+		}()
+
+		time.Sleep(time.Second)
+	})
 }

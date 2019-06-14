@@ -61,13 +61,13 @@ func SetIfNotExist(key string, value interface{}) bool {
 }
 
 // View returns an instance of View with default settings.
-// The param <name> is the name for the instance.
+// The parameter <name> is the name for the instance.
 func View(name ...string) *gview.View {
 	return gview.Instance(name ...)
 }
 
 // Config returns an instance of View with default settings.
-// The param <name> is the name for the instance.
+// The parameter <name> is the name for the instance.
 func Config(name ...string) *gcfg.Config {
     return gcfg.Instance(name ...)
 }

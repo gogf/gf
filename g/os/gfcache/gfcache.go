@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gfcache provides reading and caching for file contents.
-// 
-// 文件缓存.
 package gfcache
 
 import (
@@ -17,21 +15,25 @@ import (
 )
 
 const (
-    // 默认的缓存超时时间(60秒)
+    // Default expire time for file content caching in seconds.
     gDEFAULT_CACHE_EXPIRE = 60
 )
 
 var (
-    // 默认的缓存时间(秒)
+    // Default expire time for file content caching in seconds.
     cacheExpire = cmdenv.Get("gf.gfcache.expire", gDEFAULT_CACHE_EXPIRE).Int()*1000
 )
 
-// 获得文件内容 string，expire参数为缓存过期时间，单位为秒。
+// GetContents returns string content of given file by <path> from cache.
+// If there's no content in the cache, it will read it from disk file specified by <path>.
+// The parameter <expire> specifies the caching time for this file content in seconds.
 func GetContents(path string, expire...int) string {
     return string(GetBinContents(path, expire...))
 }
 
-// 获得文件内容 []byte，expire参数为缓存过期时间，单位为秒。
+// GetBinContents returns []byte content of given file by <path> from cache.
+// If there's no content in the cache, it will read it from disk file specified by <path>.
+// The parameter <expire> specifies the caching time for this file content in seconds.
 func GetBinContents(path string, expire...int) []byte {
     k := cacheKey(path)
     e := cacheExpire
@@ -41,8 +43,9 @@ func GetBinContents(path string, expire...int) []byte {
     r := gcache.GetOrSetFuncLock(k, func() interface{} {
         b := gfile.GetBinContents(path)
         if b != nil {
-            // 添加文件监控，如果文件有任何变化，立即清空缓存
-            gfsnotify.Add(path, func(event *gfsnotify.Event) {
+            // Adding this <path> to gfsnotify,
+            // it will clear its cache if there's any changes of the file.
+            _, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
                 gcache.Remove(k)
                 gfsnotify.Exit()
             })
