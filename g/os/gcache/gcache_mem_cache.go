@@ -91,8 +91,13 @@ func (c *memCache) getExpireSet(expire int64) (expireSet *gset.Set) {
 // It creates and returns a new set for <expire> if it does not exist.
 func (c *memCache) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
     if expireSet = c.getExpireSet(expire); expireSet == nil {
-        c.expireSetMu.Lock()
-	    c.expireSets[expire] = gset.New()
+	    expireSet = gset.New()
+	    c.expireSetMu.Lock()
+	    if es, ok := c.expireSets[expire]; ok {
+		    expireSet = es
+	    } else {
+		    c.expireSets[expire] = expireSet
+	    }
         c.expireSetMu.Unlock()
     }
     return
