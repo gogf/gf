@@ -19,6 +19,9 @@ import (
 
 // 递归添加目录下的文件
 func (sp *SPath) updateCacheByPath(path string) {
+	if sp.cache == nil {
+		return
+	}
     sp.addToCache(path, path)
 }
 
