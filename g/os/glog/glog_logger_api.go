@@ -12,13 +12,13 @@ import (
 )
 
 // Print prints <v> with newline using fmt.Sprintln.
-// The param <v> can be multiple variables.
+// The parameter <v> can be multiple variables.
 func (l *Logger) Print(v...interface{}) {
     l.printStd("", v...)
 }
 
 // Printf prints <v> with format <format> using fmt.Sprintf.
-// The param <v> can be multiple variables.
+// The parameter <v> can be multiple variables.
 func (l *Logger) Printf(format string, v...interface{}) {
     l.printStd(l.format(format, v...))
 }

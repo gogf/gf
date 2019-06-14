@@ -93,7 +93,7 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, expire int) *
             path   : path,
         }, nil
     }, func(i interface{}) {
-        i.(*File).File.Close()
+        _ = i.(*File).File.Close()
     })
     return pool
 }
@@ -136,7 +136,7 @@ func (p *Pool) File() (*File, error) {
         // 优先使用 !p.inited.Val() 原子读取操作判断，保证判断操作的效率；
         // p.inited.Set(true) == false 使用原子写入操作，保证该操作的原子性；
         if !p.inited.Val() && p.inited.Set(true) == false {
-            gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
+            _, _ = gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
                 // 如果文件被删除或者重命名，立即重建指针池
                 if event.IsRemove() || event.IsRename() {
                     // 原有的指针都不要了

@@ -241,9 +241,6 @@ func Int64(i interface{}) int64 {
     if i == nil {
         return 0
     }
-    if v, ok := i.(int64); ok {
-        return v
-    }
     switch value := i.(type) {
         case int:     return int64(value)
         case int8:    return int64(value)

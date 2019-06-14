@@ -26,8 +26,8 @@ type SortedArray struct {
 }
 
 // NewSortedArray creates and returns an empty sorted array.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety, which is false in default.
-// The param <comparator> used to compare values to sort in array,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety, which is false in default.
+// The parameter <comparator> used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2;
 // if it returns value = 0, means v1 = v2;
 // if it returns value > 0, means v1 > v2;
@@ -36,7 +36,7 @@ func NewSortedArray(comparator func(v1, v2 interface{}) int, unsafe...bool) *Sor
 }
 
 // NewSortedArraySize create and returns an sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     return &SortedArray{
@@ -48,7 +48,7 @@ func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe
 }
 
 // NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     a := NewSortedArraySize(0, comparator, unsafe...)
@@ -60,7 +60,7 @@ func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{})
 }
 
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedArrayFromCopy(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     newArray := make([]interface{}, len(array))
@@ -80,7 +80,7 @@ func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 }
 
 // Sort sorts the array in increasing order.
-// The param <reverse> controls whether sort
+// The parameter <reverse> controls whether sort
 // in increasing order(default) or decreasing order
 func (a *SortedArray) Sort() *SortedArray {
     a.mu.Lock()

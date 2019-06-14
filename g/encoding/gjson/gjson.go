@@ -108,7 +108,11 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
                     if len((*pointer).([]interface{})) > valn {
                         if removed && value == nil {
                             // 删除数据元素
-                            j.setPointerWithValue(pparent, array[i - 1], append((*pointer).([]interface{})[ : valn], (*pointer).([]interface{})[valn + 1 : ]...))
+                            if pparent == nil {
+	                            *pointer = append((*pointer).([]interface{})[ : valn], (*pointer).([]interface{})[valn + 1 : ]...)
+                            } else {
+	                            j.setPointerWithValue(pparent, array[i - 1], append((*pointer).([]interface{})[ : valn], (*pointer).([]interface{})[valn + 1 : ]...))
+                            }
                         } else {
                             (*pointer).([]interface{})[valn] = value
                         }

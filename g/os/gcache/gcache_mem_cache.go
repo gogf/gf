@@ -18,41 +18,46 @@ import (
 )
 
 
-// 缓存对象
+// Internal cache object.
 type memCache struct {
     dataMu       sync.RWMutex
     expireTimeMu sync.RWMutex
     expireSetMu  sync.RWMutex
 
-    cap          int                            // 控制缓存池大小，超过大小则按照LRU算法进行缓存过期处理(默认为0表示不进行限制)
-    data         map[interface{}]memCacheItem   // 缓存数据(所有的缓存数据存放哈希表)
-    expireTimes  map[interface{}]int64          // 键名对应的分组过期时间(用于相同键名过期时间快速更新)，键值为1秒级时间戳
-    expireSets   map[int64]*gset.Set            // 分组过期时间对应的键名列表(用于自动过期快速删除)，键值为1秒级时间戳
+	// <cap> limits the size of the cache pool.
+	// If the size of the cache exceeds the <cap>,
+	// the cache expiration process is performed according to the LRU algorithm.
+	// It is 0 in default which means no limits.
+    cap          int
+    data         map[interface{}]memCacheItem // Underlying cache data which is stored in a hash table.
+    expireTimes  map[interface{}]int64        // Expiring key mapping to its timestamp, which is used for quick indexing and deleting.
+    expireSets   map[int64]*gset.Set          // Expiring timestamp mapping to its key set, which is used for quick indexing and deleting.
 
-    lru          *memCacheLru                   // LRU缓存限制(只有限定cap池大小时才启用)
-    lruGetList   *glist.List                    // Get操作的LRU记录
-    eventList    *glist.List                    // 异步处理队列
-    closed       *gtype.Bool                    // 关闭事件通知
+    lru          *memCacheLru                 // LRU object, which is enabled when <cap> > 0.
+    lruGetList   *glist.List                  // LRU history according with Get function.
+    eventList    *glist.List                  // Asynchronous event list for internal data synchronization.
+    closed       *gtype.Bool                  // Is this cache closed or not.
 }
 
-// 缓存数据项
+// Internal cache item.
 type memCacheItem struct {
-    v interface{} // 键值
-    e int64       // 过期时间
+    v interface{} // Value.
+    e int64       // Expire time in milliseconds.
 }
 
-// 异步队列数据项
+// Internal event item.
 type memCacheEvent struct {
-    k interface{} // 键名
-    e int64       // 过期时间
+    k interface{} // Key.
+    e int64       // Expire time in milliseconds.
 }
 
 const (
-    // 当数据不过期时，默认设置的过期属性值，相当于：math.MaxInt64/1000000
+    // Default expire time for no expiring items.
+    // It equals to math.MaxInt64/1000000.
     gDEFAULT_MAX_EXPIRE = 9223372036854
 )
 
-// 创建底层的缓存对象
+// newMemCache creates and returns a new memory cache object.
 func newMemCache(lruCap...int) *memCache {
     c := &memCache {
         lruGetList  : glist.New(),
@@ -69,12 +74,12 @@ func newMemCache(lruCap...int) *memCache {
     return c
 }
 
-// 计算过期缓存的键名(将毫秒换算成秒的整数毫秒，按照1秒进行分组)
+// makeExpireKey groups the <expire> in milliseconds to its according seconds.
 func (c *memCache) makeExpireKey(expire int64) int64 {
     return int64(math.Ceil(float64(expire/1000) + 1)*1000)
 }
 
-// 获取一个过期键名存放Set, 如果没有则返回nil
+// getExpireSet returns the expire set for given <expire> in seconds.
 func (c *memCache) getExpireSet(expire int64) (expireSet *gset.Set) {
     c.expireSetMu.RLock()
     expireSet, _ = c.expireSets[expire]
@@ -82,23 +87,19 @@ func (c *memCache) getExpireSet(expire int64) (expireSet *gset.Set) {
     return
 }
 
-// 获取或者创建一个过期键名存放Set(由于是异步单线程执行，因此不会出现创建set时的覆盖问题)
+// getOrNewExpireSet returns the expire set for given <expire> in seconds.
+// It creates and returns a new set for <expire> if it does not exist.
 func (c *memCache) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
     if expireSet = c.getExpireSet(expire); expireSet == nil {
-        expireSet = gset.New()
         c.expireSetMu.Lock()
-        // 写锁二次检索确认
-        if es, ok := c.expireSets[expire]; ok {
-            expireSet = es
-        } else {
-            c.expireSets[expire] = expireSet
-        }
+	    c.expireSets[expire] = gset.New()
         c.expireSetMu.Unlock()
     }
     return
 }
 
-// 设置kv缓存键值对，过期时间单位为毫秒，expire<=0表示不过期
+// Set sets cache with <key>-<value> pair, which is expired after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func (c *memCache) Set(key interface{}, value interface{}, expire int) {
     expireTime := c.getInternalExpire(expire)
     c.dataMu.Lock()
@@ -107,8 +108,12 @@ func (c *memCache) Set(key interface{}, value interface{}, expire int) {
     c.eventList.PushBack(&memCacheEvent{k : key, e : expireTime})
 }
 
-// 设置kv缓存键值对，内部会对键名的存在性使用写锁进行二次检索确认，如果存在则不再写入；返回键名对应的键值。
-// 在高并发下有用，防止数据写入的并发逻辑错误。
+// doSetWithLockCheck sets cache with <key>-<value> pair if <key> does not exist in the cache,
+// which is expired after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
+//
+// It doubly checks the <key> whether exists in the cache using mutex writing lock
+// before setting it to the cache.
 func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire int) interface{} {
     expireTimestamp := c.getInternalExpire(expire)
     c.dataMu.Lock()
@@ -128,7 +133,7 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire
     return value
 }
 
-// 根据给定expire参数计算内部使用的expire过期时间
+// getInternalExpire returns the expire time with given expire duration in milliseconds.
 func (c *memCache) getInternalExpire(expire int) int64 {
     if expire != 0 {
         return gtime.Millisecond() + int64(expire)
@@ -137,7 +142,9 @@ func (c *memCache) getInternalExpire(expire int) int64 {
     }
 }
 
-// 当键名不存在时写入，并返回true；否则返回false。
+// SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
+// which is expired after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func (c *memCache) SetIfNotExist(key interface{}, value interface{}, expire int) bool {
     if !c.Contains(key) {
         c.doSetWithLockCheck(key, value, expire)
@@ -146,7 +153,8 @@ func (c *memCache) SetIfNotExist(key interface{}, value interface{}, expire int)
     return false
 }
 
-// 批量设置
+// Sets batch sets cache with key-value pairs by <data>, which is expired after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func (c *memCache) Sets(data map[interface{}]interface{}, expire int) {
     expireTime := c.getInternalExpire(expire)
     for k, v := range data {
@@ -157,13 +165,14 @@ func (c *memCache) Sets(data map[interface{}]interface{}, expire int) {
     }
 }
 
-// 获取指定键名的值
+// Get returns the value of <key>.
+// It returns nil if it does not exist or its value is nil.
 func (c *memCache) Get(key interface{}) interface{} {
     c.dataMu.RLock()
     item, ok := c.data[key]
     c.dataMu.RUnlock()
     if ok && !item.IsExpired() {
-        // 增加LRU(Least Recently Used)操作记录
+        // Adding to LRU history if LRU feature is enbaled.
         if c.cap > 0 {
             c.lruGetList.PushBack(key)
         }
@@ -172,7 +181,10 @@ func (c *memCache) Get(key interface{}) interface{} {
     return nil
 }
 
-// 当键名存在时返回其键值，否则写入指定的键值
+// GetOrSet returns the value of <key>,
+// or sets <key>-<value> pair and returns <value> if <key> does not exist in the cache.
+// The key-value pair expires after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func (c *memCache) GetOrSet(key interface{}, value interface{}, expire int) interface{} {
     if v := c.Get(key); v == nil {
         return c.doSetWithLockCheck(key, value, expire)
@@ -181,17 +193,26 @@ func (c *memCache) GetOrSet(key interface{}, value interface{}, expire int) inte
     }
 }
 
-// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
+// GetOrSetFunc returns the value of <key>,
+// or sets <key> with result of function <f> and returns its result
+// if <key> does not exist in the cache.
+// The key-value pair expires after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, expire int) interface{} {
     if v := c.Get(key); v == nil {
-        // 可能存在多个goroutine被阻塞在这里，f可能是并发运行
         return c.doSetWithLockCheck(key, f(), expire)
     } else {
         return v
     }
 }
 
-// 与GetOrSetFunc不同的是，f是在写锁机制内执行
+// GetOrSetFuncLock returns the value of <key>,
+// or sets <key> with result of function <f> and returns its result
+// if <key> does not exist in the cache.
+// The key-value pair expires after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
+//
+// Note that the function <f> is executed within writing mutex lock.
 func (c *memCache) GetOrSetFuncLock(key interface{}, f func() interface{}, expire int) interface{} {
     if v := c.Get(key); v == nil {
         return c.doSetWithLockCheck(key, f, expire)
@@ -200,12 +221,12 @@ func (c *memCache) GetOrSetFuncLock(key interface{}, f func() interface{}, expir
     }
 }
 
-// 是否存在指定的键名，true表示存在，false表示不存在。
+// Contains returns true if <key> exists in the cache, or else returns false.
 func (c *memCache) Contains(key interface{}) bool {
     return c.Get(key) != nil
 }
 
-// 删除指定键值对，并返回被删除的键值
+// Remove deletes the <key> in the cache, and returns its value.
 func (c *memCache) Remove(key interface{}) (value interface{}) {
     c.dataMu.RLock()
     item, ok := c.data[key]
@@ -220,14 +241,14 @@ func (c *memCache) Remove(key interface{}) (value interface{}) {
     return
 }
 
-// 批量删除键值对，并返回被删除的键值对数据
+// Removes deletes <keys> in the cache.
 func (c *memCache) Removes(keys []interface{}) {
     for _, key := range keys {
         c.Remove(key)
     }
 }
 
-// 返回缓存的所有数据键值对(不包含已过期数据)
+// Data returns a copy of all key-value pairs in the cache as map type.
 func (c *memCache) Data() map[interface{}]interface{} {
     m := make(map[interface{}]interface{})
     c.dataMu.RLock()
@@ -240,7 +261,7 @@ func (c *memCache) Data() map[interface{}]interface{} {
     return m
 }
 
-// 获得所有的键名，组成数组返回
+// Keys returns all keys in the cache as slice.
 func (c *memCache) Keys() []interface{} {
     keys := make([]interface{}, 0)
     c.dataMu.RLock()
@@ -253,12 +274,12 @@ func (c *memCache) Keys() []interface{} {
     return keys
 }
 
-// 获得所有的键名，组成字符串数组返回
+// KeyStrings returns all keys in the cache as string slice.
 func (c *memCache) KeyStrings() []string {
     return gconv.Strings(c.Keys())
 }
 
-// 获得所有的值，组成数组返回
+// Values returns all values in the cache as slice.
 func (c *memCache) Values() []interface{} {
     values := make([]interface{}, 0)
     c.dataMu.RLock()
@@ -271,7 +292,7 @@ func (c *memCache) Values() []interface{} {
     return values
 }
 
-// 获得缓存对象的键值对数量
+// Size returns the size of the cache.
 func (c *memCache) Size() (size int) {
     c.dataMu.RLock()
     size = len(c.data)
@@ -279,7 +300,7 @@ func (c *memCache) Size() (size int) {
     return
 }
 
-// 删除缓存对象
+// Close closes the cache.
 func (c *memCache) Close()  {
     if c.cap > 0 {
         c.lru.Close()
@@ -287,9 +308,10 @@ func (c *memCache) Close()  {
     c.closed.Set(true)
 }
 
-// 数据异步任务循环:
-// 1、将事件列表中的数据异步处理，并同步结果到expireTimes和expireSets属性中；
-// 2、清理过期键值对数据；
+// Asynchronous task loop:
+// 1. asynchronously process the data in the event list,
+//    and synchronize the results to the <expireTimes> and <expireSets> properties.
+// 2. clean up the expired key-value pair data.
 func (c *memCache) syncEventAndClearExpired() {
     event         := (*memCacheEvent)(nil)
     oldExpireTime := int64(0)
@@ -299,7 +321,7 @@ func (c *memCache) syncEventAndClearExpired() {
         return
     }
     // ========================
-    // 数据同步处理
+    // Data Synchronization.
     // ========================
     for {
         v := c.eventList.PopFront()
@@ -307,28 +329,28 @@ func (c *memCache) syncEventAndClearExpired() {
             break
         }
         event = v.(*memCacheEvent)
-        // 获得旧的过期时间分组
+        // Fetching the old expire set.
         c.expireTimeMu.RLock()
         oldExpireTime = c.expireTimes[event.k]
         c.expireTimeMu.RUnlock()
-        // 计算新的过期时间分组
+        // Calculating the new expire set.
         newExpireTime = c.makeExpireKey(event.e)
         if newExpireTime != oldExpireTime {
             c.getOrNewExpireSet(newExpireTime).Add(event.k)
             if oldExpireTime != 0 {
                 c.getOrNewExpireSet(oldExpireTime).Remove(event.k)
             }
-            // 重新设置对应键名的过期时间
+            // Updating the expire time for <event.k>.
             c.expireTimeMu.Lock()
             c.expireTimes[event.k] = newExpireTime
             c.expireTimeMu.Unlock()
         }
-        // 写入操作也会增加到LRU(Least Recently Used)操作记录
+        // Adding the key the LRU history by writing operations.
         if c.cap > 0 {
             c.lru.Push(event.k)
         }
     }
-    // 异步处理读取操作的LRU列表
+    // Processing expired keys from LRU.
     if c.cap > 0 && c.lruGetList.Len() > 0 {
         for {
             if v := c.lruGetList.PopFront(); v != nil {
@@ -339,18 +361,18 @@ func (c *memCache) syncEventAndClearExpired() {
         }
     }
     // ========================
-    // 缓存过期处理
+    // Data Cleaning up.
     // ========================
     ek := c.makeExpireKey(gtime.Millisecond())
     eks := []int64{ek - 1000, ek - 2000, ek - 3000, ek - 4000, ek - 5000}
     for _, expireTime := range eks {
         if expireSet := c.getExpireSet(expireTime); expireSet != nil {
-            // 遍历Set，执行数据过期删除
+            // Iterating the set to delete all keys in it.
             expireSet.Iterator(func(key interface{}) bool {
                 c.clearByKey(key)
                 return true
             })
-            // Set数据处理完之后删除该Set
+            // Deleting the set after all of its keys are deleted.
             c.expireSetMu.Lock()
             delete(c.expireSets, expireTime)
             c.expireSetMu.Unlock()
@@ -358,22 +380,22 @@ func (c *memCache) syncEventAndClearExpired() {
     }
 }
 
-// 删除对应键名的缓存数据
+// clearByKey deletes the key-value pair with given <key>.
+// The parameter <force> specifies whether doing this deleting forcely.
 func (c *memCache) clearByKey(key interface{}, force...bool) {
-    // 删除缓存数据
     c.dataMu.Lock()
-    // 删除核对，真正的过期才删除
+    // Doubly check before really deleting it from cache.
     if item, ok := c.data[key]; (ok && item.IsExpired()) || (len(force) > 0 && force[0]) {
         delete(c.data, key)
     }
     c.dataMu.Unlock()
 
-    // 删除异步处理数据项
+    // Deleting its expire time from <expireTimes>.
     c.expireTimeMu.Lock()
     delete(c.expireTimes, key)
     c.expireTimeMu.Unlock()
 
-    // 删除LRU管理对象中指定键名
+    // Deleting it from LRU.
     if c.cap > 0 {
         c.lru.Remove(key)
     }

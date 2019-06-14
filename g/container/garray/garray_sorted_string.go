@@ -27,14 +27,14 @@ type SortedStringArray struct {
 }
 
 // NewSortedStringArray creates and returns an empty sorted array.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedStringArray(unsafe...bool) *SortedStringArray {
     return NewSortedStringArraySize(0, unsafe...)
 }
 
 // NewSortedStringArraySize create and returns an sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedStringArraySize(cap int, unsafe...bool) *SortedStringArray {
     return &SortedStringArray {
@@ -48,7 +48,7 @@ func NewSortedStringArraySize(cap int, unsafe...bool) *SortedStringArray {
 }
 
 // NewSortedStringArrayFrom creates and returns an sorted array with given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedStringArrayFrom(array []string, unsafe...bool) *SortedStringArray {
     a := NewSortedStringArraySize(0, unsafe...)
@@ -58,7 +58,7 @@ func NewSortedStringArrayFrom(array []string, unsafe...bool) *SortedStringArray 
 }
 
 // NewSortedStringArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedStringArrayFromCopy(array []string, unsafe...bool) *SortedStringArray {
     newArray := make([]string, len(array))
@@ -76,7 +76,7 @@ func (a *SortedStringArray) SetArray(array []string) *SortedStringArray {
 }
 
 // Sort sorts the array in increasing order.
-// The param <reverse> controls whether sort
+// The parameter <reverse> controls whether sort
 // in increasing order(default) or decreasing order.
 func (a *SortedStringArray) Sort() *SortedStringArray {
     a.mu.Lock()

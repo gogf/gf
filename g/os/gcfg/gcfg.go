@@ -40,7 +40,7 @@ type Config struct {
 }
 
 // New returns a new configuration management object.
-// The param <file> specifies the default configuration file name for reading.
+// The parameter <file> specifies the default configuration file name for reading.
 func New(file...string) *Config {
     name := DEFAULT_CONFIG_FILE
     if len(file) > 0 {
@@ -57,7 +57,9 @@ func New(file...string) *Config {
 		if gfile.Exists(envPath) {
 			_ = c.SetPath(envPath)
 		} else {
-			glog.Errorf("Configuration directory path does not exist: %s", envPath)
+			if errorPrint() {
+				glog.Errorf("Configuration directory path does not exist: %s", envPath)
+			}
 		}
 	} else {
 		// Dir path of working dir.
@@ -97,13 +99,15 @@ func (c *Config) filePath(file...string) (path string) {
         } else {
             buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path set/add", name))
         }
-        glog.Error(buffer.String())
+	    if errorPrint() {
+		    glog.Error(buffer.String())
+	    }
     }
     return path
 }
 
 // SetPath sets the configuration directory path for file search.
-// The param <path> can be absolute or relative path,
+// The parameter <path> can be absolute or relative path,
 // but absolute path is strongly recommended.
 func (c *Config) SetPath(path string) error {
     // Absolute path.
@@ -133,13 +137,17 @@ func (c *Config) SetPath(path string) error {
             buffer.WriteString(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" does not exist`, path))
         }
         err := errors.New(buffer.String())
-        glog.Error(err)
+	    if errorPrint() {
+		    glog.Error(err)
+	    }
         return err
     }
     // Should be a directory.
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" should be directory type`, path))
-        glog.Error(err)
+	    if errorPrint() {
+		    glog.Error(err)
+	    }
         return err
     }
     // Repeated path check.
@@ -191,12 +199,16 @@ func (c *Config) AddPath(path string) error {
             buffer.WriteString(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" does not exist`, path))
         }
         err := errors.New(buffer.String())
-        glog.Error(err)
+	    if errorPrint() {
+		    glog.Error(err)
+	    }
         return err
     }
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" should be directory type`, path))
-        glog.Error(err)
+	    if errorPrint() {
+	    	glog.Error(err)
+	    }
         return err
     }
     // Repeated path check.
@@ -269,17 +281,19 @@ func (c *Config) getJson(file...string) *gjson.Json {
             // Add monitor for this configuration file,
             // any changes of this file will refresh its cache in Config object.
             if filePath != "" {
-                gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+                _, _ = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
                     c.jsons.Remove(name)
                 })
             }
             return j
         } else {
-            if filePath != "" {
-                glog.Criticalf(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
-            } else {
-                glog.Criticalf(`[gcfg] Load configuration failed: %s`, err.Error())
-            }
+	        if errorPrint() {
+		        if filePath != "" {
+			        glog.Criticalf(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+		        } else {
+			        glog.Criticalf(`[gcfg] Load configuration failed: %s`, err.Error())
+		        }
+	        }
         }
         return nil
     })

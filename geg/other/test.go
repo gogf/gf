@@ -1,14 +1,24 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/container/garray"
-	"github.com/gogf/gf/g/test/gtest"
+<<<<<<< HEAD
+	"fmt"
 )
 
 func main() {
-	a1:=[]string{"a", "d", "c","b"}
-
-	s1 :=garray.NewSortedStringArrayFromCopy(a1,true)
-
-	gtest.Assert(s1.Slice(),[]string{"a", "b", "c","d"})
+	var i float64 = 0
+	for index := 0; index < 10; index++ {
+		i += 0.1
+		fmt.Println(i)
+	}
 }
+=======
+	"github.com/gogf/gf/g/encoding/gjson"
+)
+
+func main() {
+	j := gjson.New(`[1,2,3]`)
+	j.Remove("1")
+	j.Dump()
+}
+>>>>>>> master
