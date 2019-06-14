@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func TestMutex(t *testing.T) {
+func TestMutexIsSafe(t *testing.T) {
 	gtest.Case(t, func() {
 		lock := mutex.New()
 		gtest.Assert(lock.IsSafe(), true)
