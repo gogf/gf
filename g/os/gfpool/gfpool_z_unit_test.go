@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-var (
-	testErrFile = "errorPath"
-)
-
 func TestOpen(t *testing.T) {
 	testFile := start("TestOpen.txt")
 
@@ -35,8 +31,8 @@ func TestOpen(t *testing.T) {
 }
 
 func TestOpenErr(t *testing.T) {
-
 	gtest.Case(t, func() {
+		testErrFile := "errorPath"
 		_, err := gfpool.Open(testErrFile, os.O_RDWR, 0666)
 		gtest.AssertNE(err, nil)
 	})
