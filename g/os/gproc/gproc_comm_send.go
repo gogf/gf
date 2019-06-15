@@ -26,21 +26,23 @@ const (
     gPROC_COMM_DEAFULT_GRUOP_NAME    = ""   // 默认分组名称
 )
 
+// 进程通信数据结构
+type gPkg struct {
+	SendPid int    // 发送进程ID
+	RecvPid int    // 接收进程ID
+	Group   string // 分组名称
+	Data    []byte // 原始数据
+
+}
+
 // 向指定gproc进程发送数据.
-// 数据格式：总长度(24bit)|发送进程PID(24bit)|接收进程PID(24bit)|分组长度(8bit)|分组名称(变长)|校验(32bit)|参数(变长)
+// 数据格式：总长度(24bit)|发送进程PID(24bit)|接收进程PID(24bit)|分组长度(8bit)|分组名称(变长)|参数(变长)
 func Send(pid int, data []byte, group...string) error {
     groupName := gPROC_COMM_DEAFULT_GRUOP_NAME
     if len(group) > 0 {
         groupName = group[0]
     }
-    buffer := make([]byte, 0)
-    buffer  = append(buffer, gbinary.EncodeByLength(3, len(groupName) + len(data) + 14)...)
-    buffer  = append(buffer, gbinary.EncodeByLength(3, Pid())...)
-    buffer  = append(buffer, gbinary.EncodeByLength(3, pid)...)
-    buffer  = append(buffer, gbinary.EncodeByLength(1, len(groupName))...)
-    buffer  = append(buffer, []byte(groupName)...)
-    buffer  = append(buffer, gbinary.EncodeUint32(gtcp.Checksum(data))...)
-    buffer  = append(buffer, data...)
+
     // 执行发送流程
     var err  error
     var buf  []byte
