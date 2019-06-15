@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gcompress provides kinds of compression algorithms for binary/bytes data.
-//
-// 数据压缩/解压.
 package gcompress
 
 import (
@@ -16,19 +14,19 @@ import (
     "io"
 )
 
-// 进行zlib压缩
+// Zlib compresses <data> with zlib algorithm.
 func Zlib(data []byte) []byte {
     if data == nil || len(data) < 13 {
         return data
     }
     var in bytes.Buffer
-    w := zlib.NewWriter(&in)
-    w.Write(data)
-    w.Close()
+    w   := zlib.NewWriter(&in)
+    _, _ = w.Write(data)
+    _    = w.Close()
     return in.Bytes()
 }
 
-// 进行zlib解压缩
+// UnZlib decompresses <data> with zlib algorithm.
 func UnZlib(data []byte) []byte {
     if data == nil || len(data) < 13 {
         return data
@@ -39,32 +37,32 @@ func UnZlib(data []byte) []byte {
     if err != nil {
         return nil
     }
-    io.Copy(&out, r)
+    _, _ = io.Copy(&out, r)
     return out.Bytes()
 }
 
-//做gzip解压缩
-func UnGzip(data []byte) []byte {
-    var buf bytes.Buffer
-	content := bytes.NewReader(data)
-	zipdata, err := gzip.NewReader(content)
-	if err != nil {
-		return nil
-	}
-	io.Copy(&buf, zipdata)
-	zipdata.Close()
-	return buf.Bytes()
-}
-
-//做gzip压缩
+// Gzip compresses <data> with gzip algorithm.
 func Gzip(data []byte) []byte {
-    var buf bytes.Buffer
-	zip := gzip.NewWriter(&buf)
+	var buf bytes.Buffer
+	zip    := gzip.NewWriter(&buf)
 	_, err := zip.Write(data)
 	if err != nil {
 		return nil
 	}
-	zip.Close()
-
+	_ = zip.Close()
 	return buf.Bytes()
 }
+
+// UnGzip decompresses <data> with gzip algorithm.
+func UnGzip(data []byte) []byte {
+    var buf bytes.Buffer
+	content      := bytes.NewReader(data)
+	zipData, err := gzip.NewReader(content)
+	if err != nil {
+		return nil
+	}
+	_, _ = io.Copy(&buf, zipData)
+	_    = zipData.Close()
+	return buf.Bytes()
+}
+

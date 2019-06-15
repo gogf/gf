@@ -7,81 +7,100 @@
 // Package gcache provides high performance and concurrent-safe in-memory cache for process.
 package gcache
 
-// 全局缓存管理对象
+// Default cache object.
 var cache = New()
 
-// (使用全局KV缓存对象)设置kv缓存键值对，过期时间单位为**毫秒**
+
+// Set sets cache with <key>-<value> pair, which is expired after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func Set(key interface{}, value interface{}, expire int)  {
     cache.Set(key, value, expire)
 }
 
-// 当键名不存在时写入，并返回true；否则返回false。
-// 常用来做对并发性要求不高的内存锁。
+// SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
+// which is expired after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func SetIfNotExist(key interface{}, value interface{}, expire int) bool {
     return cache.SetIfNotExist(key, value, expire)
 }
 
-// (使用全局KV缓存对象)批量设置kv缓存键值对，过期时间单位为**毫秒**
+// Sets batch sets cache with key-value pairs by <data>, which is expired after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func Sets(data map[interface{}]interface{}, expire int)  {
     cache.Sets(data, expire)
 }
 
-// (使用全局KV缓存对象)获取指定键名的值
+// Get returns the value of <key>.
+// It returns nil if it does not exist or its value is nil.
 func Get(key interface{}) interface{} {
     return cache.Get(key)
 }
 
-// 当键名存在时返回其键值，否则写入指定的键值
+// GetOrSet returns the value of <key>,
+// or sets <key>-<value> pair and returns <value> if <key> does not exist in the cache.
+// The key-value pair expires after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func GetOrSet(key interface{}, value interface{}, expire int) interface{} {
     return cache.GetOrSet(key, value, expire)
 }
 
-// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
+
+// GetOrSetFunc returns the value of <key>,
+// or sets <key> with result of function <f> and returns its result
+// if <key> does not exist in the cache.
+// The key-value pair expires after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
 func GetOrSetFunc(key interface{}, f func() interface{}, expire int) interface{} {
     return cache.GetOrSetFunc(key, f, expire)
 }
 
-// 与GetOrSetFunc不同的是，f是在写锁机制内执行
+// GetOrSetFuncLock returns the value of <key>,
+// or sets <key> with result of function <f> and returns its result
+// if <key> does not exist in the cache.
+// The key-value pair expires after <expire> milliseconds.
+// If <expire> <=0 means it does not expire.
+//
+// Note that the function <f> is executed within writing mutex lock.
 func GetOrSetFuncLock(key interface{}, f func() interface{}, expire int) interface{} {
     return cache.GetOrSetFuncLock(key, f, expire)
 }
 
-// 是否存在指定的键名，true表示存在，false表示不存在。
+// Contains returns true if <key> exists in the cache, or else returns false.
 func Contains(key interface{}) bool {
     return cache.Contains(key)
 }
 
-// (使用全局KV缓存对象)删除指定键值对
+// Remove deletes the <key> in the cache, and returns its value.
 func Remove(key interface{}) interface{} {
     return cache.Remove(key)
 }
 
-// (使用全局KV缓存对象)批量删除指定键值对
+// Removes deletes <keys> in the cache.
 func Removes(keys []interface{}) {
     cache.Removes(keys)
 }
 
-// 返回缓存的所有数据键值对(不包含已过期数据)
+// Data returns a copy of all key-value pairs in the cache as map type.
 func Data() map[interface{}]interface{} {
     return cache.Data()
 }
 
-// 获得所有的键名，组成数组返回
+// Keys returns all keys in the cache as slice.
 func Keys() []interface{} {
     return cache.Keys()
 }
 
-// 获得所有的键名，组成字符串数组返回
+// KeyStrings returns all keys in the cache as string slice.
 func KeyStrings() []string {
     return cache.KeyStrings()
 }
 
-// 获得所有的值，组成数组返回
+// Values returns all values in the cache as slice.
 func Values() []interface{} {
     return cache.Values()
 }
 
-// 获得缓存对象的键值对数量
+// Size returns the size of the cache.
 func Size() int {
     return cache.Size()
 }

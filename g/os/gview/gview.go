@@ -69,7 +69,9 @@ func New(path...string) *View {
             if gfile.Exists(envPath) {
 	            view.SetPath(envPath)
             } else {
-                glog.Errorf("Template directory path does not exist: %s", envPath)
+	            if errorPrint() {
+	            	glog.Errorf("Template directory path does not exist: %s", envPath)
+	            }
             }
         } else {
             // Dir path of working dir.
@@ -117,7 +119,7 @@ func New(path...string) *View {
 }
 
 // SetPath sets the template directory path for template file search.
-// The param <path> can be absolute or relative path, but absolute path is suggested.
+// The parameter <path> can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
 	// Absolute path.
     realPath := gfile.RealPath(path)
@@ -146,13 +148,17 @@ func (view *View) SetPath(path string) error {
             buffer.WriteString(fmt.Sprintf(`[gview] SetPath failed: path "%s" does not exist`, path))
         }
         err := errors.New(buffer.String())
-        glog.Error(err)
+	    if errorPrint() {
+	    	glog.Error(err)
+	    }
         return err
     }
 	// Should be a directory.
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" should be directory type`, path))
-        glog.Error(err)
+	    if errorPrint() {
+	    	glog.Error(err)
+	    }
         return err
     }
 	// Repeated path check.
@@ -194,13 +200,17 @@ func (view *View) AddPath(path string) error {
             buffer.WriteString(fmt.Sprintf(`[gview] AddPath failed: path "%s" does not exist`, path))
         }
         err := errors.New(buffer.String())
-        glog.Error(err)
+	    if errorPrint() {
+	    	glog.Error(err)
+	    }
         return err
     }
     // realPath should be type of folder.
     if !gfile.IsDir(realPath) {
         err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" should be directory type`, path))
-        glog.Error(err)
+	    if errorPrint() {
+	    	glog.Error(err)
+	    }
         return err
     }
 	// Repeated path check.

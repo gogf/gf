@@ -26,8 +26,8 @@ type SortedArray struct {
 }
 
 // NewSortedArray creates and returns an empty sorted array.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety, which is false in default.
-// The param <comparator> used to compare values to sort in array,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety, which is false in default.
+// The parameter <comparator> used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2;
 // if it returns value = 0, means v1 = v2;
 // if it returns value > 0, means v1 > v2;
@@ -36,19 +36,19 @@ func NewSortedArray(comparator func(v1, v2 interface{}) int, unsafe...bool) *Sor
 }
 
 // NewSortedArraySize create and returns an sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     return &SortedArray{
-        mu          : rwmutex.New(unsafe...),
-        unique      : gtype.NewBool(),
-        array       : make([]interface{}, 0, cap),
+        mu         : rwmutex.New(unsafe...),
+        unique     : gtype.NewBool(),
+        array      : make([]interface{}, 0, cap),
         comparator : comparator,
     }
 }
 
 // NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     a := NewSortedArraySize(0, comparator, unsafe...)
@@ -60,15 +60,12 @@ func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{})
 }
 
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
-func NewSortedArrayFromCopy(array []interface{}, unsafe...bool) *SortedArray {
+func NewSortedArrayFromCopy(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe...bool) *SortedArray {
     newArray := make([]interface{}, len(array))
     copy(newArray, array)
-    return &SortedArray{
-        mu    : rwmutex.New(unsafe...),
-        array : newArray,
-    }
+    return NewSortedArrayFrom(newArray, comparator, unsafe...)
 }
 
 // SetArray sets the underlying slice array with the given <array>.
@@ -83,7 +80,7 @@ func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 }
 
 // Sort sorts the array in increasing order.
-// The param <reverse> controls whether sort
+// The parameter <reverse> controls whether sort
 // in increasing order(default) or decreasing order
 func (a *SortedArray) Sort() *SortedArray {
     a.mu.Lock()
@@ -281,17 +278,23 @@ func (a *SortedArray) Slice() []interface{} {
 
 // Contains checks whether a value exists in the array.
 func (a *SortedArray) Contains(value interface{}) bool {
-    return a.Search(value) == 0
+    return a.Search(value) != -1
 }
 
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *SortedArray) Search(value interface{}) (index int) {
-    index, _ = a.binSearch(value, true)
-    return
+	if i, r := a.binSearch(value, true); r == 0 {
+		return i
+	}
+	return -1
 }
 
 // Binary search.
+// It returns the last compared index and the result.
+// If <result> equals to 0, it means the value at <index> is equals to <value>.
+// If <result> lesser than 0, it means the value at <index> is lesser than <value>.
+// If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedArray) binSearch(value interface{}, lock bool)(index int, result int) {
     if len(a.array) == 0 {
         return -1, -2

@@ -4,9 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gflock implements a thread-safe sync.Locker interface for file locking.
-// 
-// 文件锁.
+// Package gflock implements a concurrent-safe sync.Locker interface for file locking.
 package gflock
 
 import (
@@ -15,17 +13,18 @@ import (
     "github.com/gogf/gf/g/os/gfile"
 )
 
-// 文件锁
+// File locker.
 type Locker struct {
     mu    sync.RWMutex // 用于外部接口调用的互斥锁(阻塞机制)
     flock *flock.Flock // 底层文件锁对象
 }
 
-// 创建文件锁
+// New creates and returns a new file locker with given <file>.
+// The parameter <file> usually is a absolute file path.
 func New(file string) *Locker {
     dir := gfile.TempDir() + gfile.Separator + "gflock"
     if !gfile.Exists(dir) {
-        gfile.Mkdir(dir)
+        _ = gfile.Mkdir(dir)
     }
     path := dir + gfile.Separator + file
     lock := flock.NewFlock(path)
@@ -34,16 +33,18 @@ func New(file string) *Locker {
     }
 }
 
+// Path returns the file path of the locker.
 func (l *Locker) Path() string {
     return l.flock.Path()
 }
 
-// 当前文件锁是否处于锁定状态(Lock)
+// IsLocked returns whether the locker is locked.
 func (l *Locker) IsLocked() bool {
     return l.flock.Locked()
 }
 
-// 尝试Lock文件，如果失败立即返回
+// TryLock tries get the writing lock of the locker.
+// It returns true if success, or else returns false immediately.
 func (l *Locker) TryLock() bool {
     ok, _ := l.flock.TryLock()
     if ok {
@@ -52,7 +53,8 @@ func (l *Locker) TryLock() bool {
     return ok
 }
 
-// 尝试RLock文件，如果失败立即返回
+// TryRLock tries get the reading lock of the locker.
+// It returns true if success, or else returns false immediately.
 func (l *Locker) TryRLock() bool {
     ok, _ := l.flock.TryRLock()
     if ok {
@@ -61,22 +63,26 @@ func (l *Locker) TryRLock() bool {
     return ok
 }
 
-func (l *Locker) Lock() {
+func (l *Locker) Lock() (err error) {
     l.mu.Lock()
-    l.flock.Lock()
+    err = l.flock.Lock()
+    return
 }
 
-func (l *Locker) UnLock() {
-    l.flock.Unlock()
+func (l *Locker) UnLock() (err error) {
+    err = l.flock.Unlock()
     l.mu.Unlock()
+    return
 }
 
-func (l *Locker) RLock() {
+func (l *Locker) RLock() (err error) {
     l.mu.RLock()
-    l.flock.RLock()
+    err = l.flock.RLock()
+    return
 }
 
-func (l *Locker) RUnlock() {
-    l.flock.Unlock()
+func (l *Locker) RUnlock() (err error) {
+    err = l.flock.Unlock()
     l.mu.RUnlock()
+    return
 }

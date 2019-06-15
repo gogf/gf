@@ -162,7 +162,7 @@ var (
 )
 
 // New creates ORM DB object with global configurations.
-// The param <name> specifies the configuration group name,
+// The parameter <name> specifies the configuration group name,
 // which is DEFAULT_GROUP_NAME in default.
 func New(name ...string) (db DB, err error) {
 	group := configs.defaultGroup
@@ -210,7 +210,7 @@ func New(name ...string) (db DB, err error) {
 }
 
 // Instance returns an instance for DB operations.
-// The param <name> specifies the configuration group name,
+// The parameter <name> specifies the configuration group name,
 // which is DEFAULT_GROUP_NAME in default.
 func Instance(name ...string) (db DB, err error) {
     group := configs.defaultGroup

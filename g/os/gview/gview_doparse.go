@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/encoding/ghash"
 	"github.com/gogf/gf/g/os/gfcache"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfsnotify"
@@ -18,6 +19,7 @@ import (
 	"github.com/gogf/gf/g/os/gmlock"
 	"github.com/gogf/gf/g/os/gspath"
 	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/util/gconv"
 	"text/template"
 )
 
@@ -28,6 +30,7 @@ const (
 
 var (
 	// Templates cache map for template folder.
+	// TODO Note that there's no expiring logic for this map.
 	templates = gmap.NewStrAnyMap()
 )
 
@@ -88,7 +91,9 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 		} else {
 			buffer.WriteString(fmt.Sprintf("[gview] cannot find template file \"%s\" with no path set/add", file))
 		}
-		glog.Error(buffer.String())
+		if errorPrint() {
+			glog.Error(buffer.String())
+		}
 		err = errors.New(fmt.Sprintf(`template file "%s" not found`, file))
 	}
 	return
@@ -160,7 +165,8 @@ func (view *View) ParseContent(content string, params...Params) (string, error) 
 		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 	}).(*template.Template)
 	// Using memory lock to ensure concurrent safety for content parsing.
-	gmlock.LockFunc("gview-parsing:content", func() {
+	hash := gconv.String(ghash.DJBHash64([]byte(content)))
+	gmlock.LockFunc("gview-parsing-content:" + hash, func() {
 		tpl, err = tpl.Parse(content)
 	})
 	if err != nil {

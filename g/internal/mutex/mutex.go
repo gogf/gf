@@ -4,11 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package mutex provides switch for sync.Mutex for concurrent safe feature.
 package mutex
 
 import "sync"
 
-// Mutex的封装，支持对并发安全开启/关闭的控制。
 type Mutex struct {
     sync.Mutex
     safe bool

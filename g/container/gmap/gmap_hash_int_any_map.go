@@ -19,7 +19,7 @@ type IntAnyMap struct {
 }
 
 // NewIntAnyMap returns an empty IntAnyMap object.
-// The param <unsafe> used to specify whether using map in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewIntAnyMap(unsafe...bool) *IntAnyMap {
 	return &IntAnyMap{
