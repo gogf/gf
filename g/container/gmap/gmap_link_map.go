@@ -25,7 +25,7 @@ type gListMapNode struct {
 
 // NewListMap returns an empty link map.
 // ListMap is backed by a hash table to store values and doubly-linked list to store ordering.
-// The param <unsafe> used to specify whether using map in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewListMap(unsafe ...bool) *ListMap {
 	return &ListMap{

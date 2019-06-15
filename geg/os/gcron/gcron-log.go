@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-
 func main() {
 	gcron.SetLogLevel(glog.LEVEL_ALL)
 	gcron.Add("* * * * * ?", func() {

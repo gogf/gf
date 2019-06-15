@@ -17,7 +17,7 @@ type AnyAnyMap struct {
 }
 
 // NewAnyAnyMap returns an empty hash map.
-// The param <unsafe> used to specify whether using map in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewAnyAnyMap(unsafe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{

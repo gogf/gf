@@ -13,7 +13,7 @@ func funcTest() string {
 
 func main() {
 	// 解析模板的时候传递模板函数映射Map，仅会在当前模板解析生效
-	parsed, err := g.View().ParseContent(`call build-in function test: {{test}}`, nil, gview.FuncMap {
+	parsed, err := g.View().ParseContent(`call build-in function test: {{test}}`, nil, gview.FuncMap{
 		"test": funcTest,
 	})
 	if err != nil {

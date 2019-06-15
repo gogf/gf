@@ -36,8 +36,8 @@ type RedBlackTreeNode struct {
 	parent *RedBlackTreeNode
 }
 
-// NewRedBlackTree instantiates a red-black tree with the custom comparator.
-// The param <unsafe> used to specify whether using tree in un-concurrent-safety,
+// NewRedBlackTree instantiates a red-black tree with the custom key comparator.
+// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
 func NewRedBlackTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *RedBlackTree {
 	return &RedBlackTree {
@@ -46,8 +46,8 @@ func NewRedBlackTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *Re
 	}
 }
 
-// NewRedBlackTreeFrom instantiates a red-black tree with the custom comparator and <data> map.
-// The param <unsafe> used to specify whether using tree in un-concurrent-safety,
+// NewRedBlackTreeFrom instantiates a red-black tree with the custom key comparator and <data> map.
+// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
 func NewRedBlackTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe...bool) *RedBlackTree {
 	tree := NewRedBlackTree(comparator, unsafe...)
@@ -393,60 +393,56 @@ func (tree *RedBlackTree) rightNode() *RedBlackTreeNode {
 	return p
 }
 
-// Floor Finds floor node of the input <key>, return the floor node or nil if no floor is found.
+// Floor Finds floor node of the input key, return the floor node or nil if no floor node is found.
+// Second return parameter is true if floor was found, otherwise false.
 //
 // Floor node is defined as the largest node that its key is smaller than or equal to the given <key>.
 // A floor node may not be found, either because the tree is empty, or because
 // all nodes in the tree are larger than the given node.
-func (tree *RedBlackTree) Floor(key interface{}) (floor *RedBlackTreeNode) {
+func (tree *RedBlackTree) Floor(key interface{}) (floor *RedBlackTreeNode, found bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	found := false
-	node  := tree.root
-	for node != nil {
-		compare := tree.comparator(key, node.Key)
+	n := tree.root
+	for n != nil {
+		compare := tree.comparator(key, n.Key)
 		switch {
-			case compare == 0:
-				return node
-			case compare < 0:
-				node = node.left
-			case compare > 0:
-				floor, found = node, true
-				node         = node.right
+			case compare == 0: return n, true
+			case compare  < 0: n = n.left
+			case compare  > 0:
+				floor, found = n, true
+				n            = n.right
 		}
 	}
 	if found {
-		return floor
+		return
 	}
-	return nil
+	return nil, false
 }
 
-// Ceiling finds ceiling node of the input <key>, return the ceiling node or nil if no ceiling is found.
+// Ceiling finds ceiling node of the input key, return the ceiling node or nil if no ceiling node is found.
+// Second return parameter is true if ceiling was found, otherwise false.
 //
 // Ceiling node is defined as the smallest node that its key is larger than or equal to the given <key>.
 // A ceiling node may not be found, either because the tree is empty, or because
 // all nodes in the tree are smaller than the given node.
-func (tree *RedBlackTree) Ceiling(key interface{}) (ceiling *RedBlackTreeNode) {
+func (tree *RedBlackTree) Ceiling(key interface{}) (ceiling *RedBlackTreeNode, found bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	found := false
-	node  := tree.root
-	for node != nil {
-		compare := tree.comparator(key, node.Key)
+	n := tree.root
+	for n != nil {
+		compare := tree.comparator(key, n.Key)
 		switch {
-			case compare == 0:
-				return node
-			case compare < 0:
-				ceiling, found = node, true
-				node           = node.left
-			case compare > 0:
-				node = node.right
+			case compare == 0: return n, true
+			case compare  > 0: n = n.right
+			case compare  < 0:
+				ceiling, found = n, true
+				n              = n.left
 		}
 	}
 	if found {
-		return ceiling
+		return
 	}
-	return nil
+	return nil, false
 }
 
 // Iterator is alias of IteratorAsc.

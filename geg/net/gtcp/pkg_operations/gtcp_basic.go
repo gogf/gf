@@ -34,6 +34,6 @@ func main() {
 		if err := conn.SendPkg([]byte(gconv.String(i))); err != nil {
 			glog.Error(err.Error())
 		}
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }

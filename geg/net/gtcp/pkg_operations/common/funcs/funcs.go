@@ -8,14 +8,14 @@ import (
 )
 
 // 自定义格式发送消息包
-func SendPkg(conn *gtcp.Conn, act string, data...string) error {
+func SendPkg(conn *gtcp.Conn, act string, data ...string) error {
 	s := ""
 	if len(data) > 0 {
 		s = data[0]
 	}
 	msg, err := json.Marshal(types.Msg{
-		Act  : act,
-		Data : s,
+		Act:  act,
+		Data: s,
 	})
 	if err != nil {
 		panic(err)

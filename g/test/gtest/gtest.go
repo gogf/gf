@@ -18,8 +18,8 @@ import (
 )
 
 // Case creates an unit test case.
-// The param <t> is the pointer to testing.T of stdlib (*testing.T).
-// The param <f> is the callback function for unit test case.
+// The parameter <t> is the pointer to testing.T of stdlib (*testing.T).
+// The parameter <f> is the callback function for unit test case.
 func Case(t *testing.T, f func()) {
     defer func() {
         if err := recover(); err != nil {
@@ -297,7 +297,7 @@ func compareMap(value, expect interface{}) error {
 }
 
 // getBacktrace returns the caller backtrace content from getBacktrace.
-// The param <skip> indicates the skip count of the caller backtrace from getBacktrace.
+// The parameter <skip> indicates the skip count of the caller backtrace from getBacktrace.
 func getBacktrace(skip...int) string {
     customSkip := 0
     if len(skip) > 0 {

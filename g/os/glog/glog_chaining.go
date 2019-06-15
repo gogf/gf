@@ -10,6 +10,11 @@ import (
 	"io"
 )
 
+// Expose returns the default logger of glog.
+func Expose() *Logger {
+	return logger
+}
+
 // To is a chaining function, 
 // which redirects current logging content output to the sepecified <writer>.
 func To(writer io.Writer) *Logger {
@@ -69,7 +74,7 @@ func Header(enabled...bool) *Logger {
 
 // Line is a chaining function,
 // which enables/disables printing its caller file along with its line number.
-// The param <long> specified whether print the long absolute file path, eg: /a/b/c/d.go:23.
+// The parameter <long> specified whether print the long absolute file path, eg: /a/b/c/d.go:23.
 func Line(long...bool) *Logger {
 	return logger.Line(long...)
 }

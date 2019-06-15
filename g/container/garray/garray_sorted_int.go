@@ -26,14 +26,14 @@ type SortedIntArray struct {
 }
 
 // NewSortedIntArray creates and returns an empty sorted array.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArray(unsafe...bool) *SortedIntArray {
     return NewSortedIntArraySize(0, unsafe...)
 }
 
 // NewSortedIntArraySize create and returns an sorted array with given size and cap.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
     return &SortedIntArray {
@@ -53,7 +53,7 @@ func NewSortedIntArraySize(cap int, unsafe...bool) *SortedIntArray {
 }
 
 // NewIntArrayFrom creates and returns an sorted array with given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
     a := NewSortedIntArraySize(0, unsafe...)
@@ -63,15 +63,12 @@ func NewSortedIntArrayFrom(array []int, unsafe...bool) *SortedIntArray {
 }
 
 // NewSortedIntArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The param <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
 // which is false in default.
 func NewSortedIntArrayFromCopy(array []int, unsafe...bool) *SortedIntArray {
     newArray := make([]int, len(array))
     copy(newArray, array)
-    return &SortedIntArray{
-        mu    : rwmutex.New(unsafe...),
-        array : newArray,
-    }
+    return NewSortedIntArrayFrom(newArray, unsafe...)
 }
 
 // SetArray sets the underlying slice array with the given <array>.
@@ -84,7 +81,7 @@ func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
 }
 
 // Sort sorts the array in increasing order.
-// The param <reverse> controls whether sort
+// The parameter <reverse> controls whether sort
 // in increasing order(default) or decreasing order.
 func (a *SortedIntArray) Sort() *SortedIntArray {
     a.mu.Lock()
@@ -280,17 +277,23 @@ func (a *SortedIntArray) Slice() []int {
 
 // Contains checks whether a value exists in the array.
 func (a *SortedIntArray) Contains(value int) bool {
-    return a.Search(value) == 0
+    return a.Search(value) != -1
 }
 
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *SortedIntArray) Search(value int) (index int) {
-    index, _ = a.binSearch(value, true)
-    return
+    if i, r := a.binSearch(value, true); r == 0 {
+    	return i
+    }
+    return -1
 }
 
 // Binary search.
+// It returns the last compared index and the result.
+// If <result> equals to 0, it means the value at <index> is equals to <value>.
+// If <result> lesser than 0, it means the value at <index> is lesser than <value>.
+// If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int) {
     if len(a.array) == 0 {
         return -1, -2
