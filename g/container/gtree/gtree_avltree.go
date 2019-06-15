@@ -343,7 +343,7 @@ func (tree *AVLTree) Floor(key interface{}) (floor *AVLTreeNode, found bool) {
 // all nodes in the tree is smaller than the given node.
 //
 // Key should adhere to the comparator's type assertion, otherwise method panics.
-func (tree *AVLTree) Ceiling(key interface{}) (floor *AVLTreeNode, found bool) {
+func (tree *AVLTree) Ceiling(key interface{}) (ceiling *AVLTreeNode, found bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	found = false
@@ -354,7 +354,7 @@ func (tree *AVLTree) Ceiling(key interface{}) (floor *AVLTreeNode, found bool) {
 			case c == 0: return n, true
 			case c  > 0: n = n.children[1]
 			case c  < 0:
-				floor, found = n, true
+				ceiling, found = n, true
 				n = n.children[0]
 		}
 	}
