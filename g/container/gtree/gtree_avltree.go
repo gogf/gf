@@ -29,7 +29,7 @@ type AVLTreeNode struct {
 	b        int8
 }
 
-// NewAVLTree instantiates an AVL tree with the custom comparator.
+// NewAVLTree instantiates an AVL tree with the custom key comparator.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
 func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *AVLTree {
@@ -39,7 +39,7 @@ func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *AVLTree
 	}
 }
 
-// NewAVLTreeFrom instantiates an AVL tree with the custom comparator and data map.
+// NewAVLTreeFrom instantiates an AVL tree with the custom key comparator and data map.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
 func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe...bool) *AVLTree {
@@ -222,7 +222,7 @@ func (tree *AVLTree) Contains(key interface{}) bool {
 	return ok
 }
 
-// Remove remove the node from the tree by key.
+// Remove removes the node from the tree by key.
 // Key should adhere to the comparator's type assertion, otherwise method panics.
 func (tree *AVLTree) Remove(key interface{}) (value interface{}) {
 	tree.mu.Lock()
@@ -306,7 +306,7 @@ func (tree *AVLTree) Right() *AVLTreeNode {
 	return node
 }
 
-// Floor Finds floor node of the input key, return the floor node or nil if no ceiling is found.
+// Floor Finds floor node of the input key, return the floor node or nil if no floor node is found.
 // Second return parameter is true if floor was found, otherwise false.
 //
 // Floor node is defined as the largest node that is smaller than or equal to the given node.
@@ -317,16 +317,15 @@ func (tree *AVLTree) Right() *AVLTreeNode {
 func (tree *AVLTree) Floor(key interface{}) (floor *AVLTreeNode, found bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	found = false
 	n := tree.root
 	for n != nil {
 		c := tree.comparator(key, n.Key)
 		switch {
-		case c == 0: return n, true
-		case c  < 0: n = n.children[0]
-		case c  > 0:
-			floor, found = n, true
-			n = n.children[1]
+			case c == 0: return n, true
+			case c  < 0: n = n.children[0]
+			case c  > 0:
+				floor, found = n, true
+				n = n.children[1]
 		}
 	}
 	if found {
@@ -335,7 +334,7 @@ func (tree *AVLTree) Floor(key interface{}) (floor *AVLTreeNode, found bool) {
 	return nil, false
 }
 
-// Ceiling finds ceiling node of the input key, return the ceiling node or nil if no ceiling is found.
+// Ceiling finds ceiling node of the input key, return the ceiling node or nil if no ceiling node is found.
 // Second return parameter is true if ceiling was found, otherwise false.
 //
 // Ceiling node is defined as the smallest node that is larger than or equal to the given node.
@@ -346,7 +345,6 @@ func (tree *AVLTree) Floor(key interface{}) (floor *AVLTreeNode, found bool) {
 func (tree *AVLTree) Ceiling(key interface{}) (ceiling *AVLTreeNode, found bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	found = false
 	n := tree.root
 	for n != nil {
 		c := tree.comparator(key, n.Key)
@@ -514,7 +512,7 @@ func (tree *AVLTree) remove(key interface{}, qp **AVLTreeNode) (value interface{
 	if fix {
 		return value, removeFix(int8(-c), qp)
 	}
-	return nil, false
+	return value, false
 }
 
 func removeMin(qp **AVLTreeNode, minKey *interface{}, minVal *interface{}) bool {
