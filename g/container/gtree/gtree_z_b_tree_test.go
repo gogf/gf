@@ -7,16 +7,22 @@
 package gtree_test
 
 import (
+	"fmt"
+	"testing"
+
 	"github.com/gogf/gf/g/container/gtree"
+	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gutil"
-	"testing"
 )
 
 func Test_BTree_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		m := gtree.NewBTree(3, gutil.ComparatorString)
 		m.Set("key1", "val1")
+
+		gtest.Assert(m.Height(), 1)
+
 		gtest.Assert(m.Keys(), []interface{}{"key1"})
 
 		gtest.Assert(m.Get("key1"), "val1")
@@ -44,15 +50,47 @@ func Test_BTree_Basic(t *testing.T) {
 		gtest.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
 	})
 }
+
 func Test_BTree_Set_Fun(t *testing.T) {
-	m := gtree.NewBTree(3, gutil.ComparatorString)
-	m.GetOrSetFunc("fun", getValue)
-	m.GetOrSetFuncLock("funlock", getValue)
-	gtest.Assert(m.Get("funlock"), 3)
-	gtest.Assert(m.Get("fun"), 3)
-	m.GetOrSetFunc("fun", getValue)
-	gtest.Assert(m.SetIfNotExistFunc("fun", getValue), false)
-	gtest.Assert(m.SetIfNotExistFuncLock("funlock", getValue), false)
+	//GetOrSetFunc lock or unlock
+	gtest.Case(t, func() {
+		m := gtree.NewBTree(3, gutil.ComparatorString)
+		gtest.Assert(m.GetOrSetFunc("fun", getValue), 3)
+		gtest.Assert(m.GetOrSetFunc("fun", getValue), 3)
+		gtest.Assert(m.GetOrSetFuncLock("funlock", getValue), 3)
+		gtest.Assert(m.GetOrSetFuncLock("funlock", getValue), 3)
+		gtest.Assert(m.Get("funlock"), 3)
+		gtest.Assert(m.Get("fun"), 3)
+	})
+	//SetIfNotExistFunc lock or unlock
+	gtest.Case(t, func() {
+		m := gtree.NewBTree(3, gutil.ComparatorString)
+		gtest.Assert(m.SetIfNotExistFunc("fun", getValue), true)
+		gtest.Assert(m.SetIfNotExistFunc("fun", getValue), false)
+		gtest.Assert(m.SetIfNotExistFuncLock("funlock", getValue), true)
+		gtest.Assert(m.SetIfNotExistFuncLock("funlock", getValue), false)
+		gtest.Assert(m.Get("funlock"), 3)
+		gtest.Assert(m.Get("fun"), 3)
+	})
+
+}
+
+func Test_BTree_Get_Set_Var(t *testing.T) {
+	gtest.Case(t, func() {
+		m := gtree.NewBTree(3, gutil.ComparatorString)
+		gtest.AssertEQ(m.SetIfNotExist("key1", "val1"), true)
+		gtest.AssertEQ(m.SetIfNotExist("key1", "val1"), false)
+		gtest.AssertEQ(m.GetVarOrSet("key1", "val1"), gvar.New("val1", true))
+		gtest.AssertEQ(m.GetVar("key1"), gvar.New("val1", true))
+	})
+
+	gtest.Case(t, func() {
+		m := gtree.NewBTree(3, gutil.ComparatorString)
+		gtest.AssertEQ(m.GetVarOrSetFunc("fun", getValue), gvar.New(3, true))
+		gtest.AssertEQ(m.GetVarOrSetFunc("fun", getValue), gvar.New(3, true))
+		gtest.AssertEQ(m.GetVarOrSetFuncLock("funlock", getValue), gvar.New(3, true))
+		gtest.AssertEQ(m.GetVarOrSetFuncLock("funlock", getValue), gvar.New(3, true))
+	})
 }
 
 func Test_BTree_Batch(t *testing.T) {
@@ -62,27 +100,61 @@ func Test_BTree_Batch(t *testing.T) {
 	m.Removes([]interface{}{"key1", 1})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 }
-func Test_BTree_Iterator(t *testing.T){
-	expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
+
+func Test_BTree_Iterator(t *testing.T) {
+	keys := []string{"1", "key1", "key2", "key3", "key4"}
+	keyLen := len(keys)
+	index := 0
+
+	expect := map[interface{}]interface{}{"key4": "val4", 1: 1, "key1": "val1", "key2": "val2", "key3": "val3"}
 
 	m := gtree.NewBTreeFrom(3, gutil.ComparatorString, expect)
 	m.Iterator(func(k interface{}, v interface{}) bool {
+		gtest.Assert(k, keys[index])
+		index++
 		gtest.Assert(expect[k], v)
 		return true
 	})
-	// 断言返回值对遍历控制
-	i := 0
-	j := 0
-	m.Iterator(func(k interface{}, v interface{}) bool {
-		i++
+
+	m.IteratorDesc(func(k interface{}, v interface{}) bool {
+		index--
+		gtest.Assert(k, keys[index])
+		gtest.Assert(expect[k], v)
 		return true
 	})
-	m.Iterator(func(k interface{}, v interface{}) bool {
-		j++
-		return false
+
+	m.Print()
+	// 断言返回值对遍历控制
+	gtest.Case(t, func() {
+		i := 0
+		j := 0
+		m.Iterator(func(k interface{}, v interface{}) bool {
+			i++
+			return true
+		})
+		m.Iterator(func(k interface{}, v interface{}) bool {
+			j++
+			return false
+		})
+		gtest.Assert(i, keyLen)
+		gtest.Assert(j, 1)
 	})
-	gtest.Assert(i, 2)
-	gtest.Assert(j, 1)
+
+	gtest.Case(t, func() {
+		i := 0
+		j := 0
+		m.IteratorDesc(func(k interface{}, v interface{}) bool {
+			i++
+			return true
+		})
+		m.IteratorDesc(func(k interface{}, v interface{}) bool {
+			j++
+			return false
+		})
+		gtest.Assert(i, keyLen)
+		gtest.Assert(j, 1)
+	})
+
 }
 
 func Test_BTree_Clone(t *testing.T) {
@@ -96,4 +168,35 @@ func Test_BTree_Clone(t *testing.T) {
 	m_clone.Remove("key1")
 	//修改clone map,原 map 不影响
 	gtest.AssertIN("key1", m.Keys())
+}
+
+func Test_BTree_LRNode(t *testing.T) {
+	expect := map[interface{}]interface{}{"key4": "val4", "key1": "val1", "key2": "val2", "key3": "val3"}
+	//safe
+	gtest.Case(t, func() {
+		m := gtree.NewBTreeFrom(3, gutil.ComparatorString, expect)
+		gtest.Assert(m.Left().Key, "key1")
+		gtest.Assert(m.Right().Key, "key4")
+	})
+	//unsafe
+	gtest.Case(t, func() {
+		m := gtree.NewBTreeFrom(3, gutil.ComparatorString, expect, true)
+		gtest.Assert(m.Left().Key, "key1")
+		gtest.Assert(m.Right().Key, "key4")
+	})
+}
+
+func Test_BTree_Remove(t *testing.T) {
+	m := gtree.NewBTree(3, gutil.ComparatorInt)
+	for i := 1; i <= 100; i++ {
+		m.Set(i, fmt.Sprintf("val%d", i))
+	}
+	expect := m.Map()
+	gtest.Case(t, func() {
+		for k, v := range expect {
+			m1 := m.Clone()
+			gtest.Assert(m1.Remove(k), v)
+			gtest.Assert(m1.Remove(k), nil)
+		}
+	})
 }
