@@ -7,16 +7,15 @@
 package gproc
 
 import (
-    "bytes"
-    "errors"
-    "fmt"
-    "github.com/gogf/gf/g/encoding/gbinary"
-    "github.com/gogf/gf/g/net/gtcp"
-    "github.com/gogf/gf/g/os/gfcache"
-    "github.com/gogf/gf/g/os/glog"
-    "github.com/gogf/gf/g/util/gconv"
-    "io"
-    "time"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/gogf/gf/g/net/gtcp"
+	"github.com/gogf/gf/g/os/gfcache"
+	"github.com/gogf/gf/g/util/gconv"
+	"io"
+	"time"
 )
 
 const (
@@ -26,56 +25,54 @@ const (
     gPROC_COMM_DEAFULT_GRUOP_NAME    = ""   // 默认分组名称
 )
 
-// 进程通信数据结构
-type gPkg struct {
-	SendPid int    // 发送进程ID
-	RecvPid int    // 接收进程ID
-	Group   string // 分组名称
-	Data    []byte // 原始数据
-
-}
-
 // 向指定gproc进程发送数据.
-// 数据格式：总长度(24bit)|发送进程PID(24bit)|接收进程PID(24bit)|分组长度(8bit)|分组名称(变长)|参数(变长)
 func Send(pid int, data []byte, group...string) error {
-    groupName := gPROC_COMM_DEAFULT_GRUOP_NAME
-    if len(group) > 0 {
-        groupName = group[0]
-    }
-
-    // 执行发送流程
-    var err  error
+	msg := Msg{
+		SendPid : Pid(),
+		RecvPid : pid,
+		Group   : gPROC_COMM_DEAFULT_GRUOP_NAME,
+		Data    : data,
+	}
+	if len(group) > 0 {
+		msg.Group = group[0]
+	}
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
     var buf  []byte
-    var conn *gtcp.Conn
-    for i := gPROC_COMM_FAILURE_RETRY_COUNT; i > 0; i-- {
-        if conn, err = getConnByPid(pid); err == nil {
-            defer conn.Close()
-            buf, err = conn.SendRecvWithTimeout(buffer, -1, gPROC_COMM_SEND_TIMEOUT*time.Millisecond)
-            if len(buf) > 0 {
-                // 如果有返回值，如果不是"ok"，那么表示是错误信息
-                if !bytes.EqualFold(buf, []byte("ok")) {
-                    err = errors.New(string(buf))
-                    break
-                }
-            }
-            // EOF不算异常错误
-            if err == nil || err == io.EOF {
-                break
-            } else {
-                glog.Error(err)
-            }
+    var conn *gtcp.PoolConn
+	// 循环获取连接TCP对象
+	for i := gPROC_COMM_FAILURE_RETRY_COUNT; i > 0; i-- {
+		if conn, err = getConnByPid(pid); err == nil {
+			break
+		}
+		time.Sleep(gPROC_COMM_FAILURE_RETRY_TIMEOUT*time.Millisecond)
+	}
+	if conn == nil {
+		return err
+	}
+	defer conn.Close()
+	// 执行数据发送
+    buf, err = conn.SendRecvPkgWithTimeout(msgBytes, gPROC_COMM_SEND_TIMEOUT*time.Millisecond)
+    if len(buf) > 0 {
+        if !bytes.EqualFold(buf, []byte("ok")) {
+            err = errors.New(string(buf))
         }
-        time.Sleep(gPROC_COMM_FAILURE_RETRY_TIMEOUT*time.Millisecond)
+    }
+    // EOF不算异常错误
+    if err == io.EOF {
+        err = nil
     }
     return err
 }
 
 
 // 获取指定进程的TCP通信对象
-func getConnByPid(pid int) (*gtcp.Conn, error) {
+func getConnByPid(pid int) (*gtcp.PoolConn, error) {
     port := getPortByPid(pid)
     if port > 0 {
-        if conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", port)); err == nil {
+        if conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", port)); err == nil {
             return conn, nil
         } else {
             return nil, err
