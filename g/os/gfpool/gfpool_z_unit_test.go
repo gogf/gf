@@ -1,7 +1,6 @@
 package gfpool_test
 
 import (
-	"fmt"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfpool"
 	"github.com/gogf/gf/g/test/gtest"
@@ -10,8 +9,12 @@ import (
 	"time"
 )
 
+var (
+	testErrFile = "errorPath"
+)
+
 func TestOpen(t *testing.T) {
-	testFile := start()
+	testFile := start("TestOpen.txt")
 
 	gtest.Case(t, func() {
 		f, _ := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
@@ -28,20 +31,19 @@ func TestOpen(t *testing.T) {
 
 	})
 
-	stop()
+	stop(testFile)
 }
 
 func TestOpenErr(t *testing.T) {
-	testFile := "errorPath"
 
 	gtest.Case(t, func() {
-		_, err := gfpool.Open(testFile, os.O_RDWR, 0666)
+		_, err := gfpool.Open(testErrFile, os.O_RDWR, 0666)
 		gtest.AssertNE(err, nil)
 	})
 }
 
 func TestOpenExipre(t *testing.T) {
-	testFile := start()
+	testFile := start("TestOpenExipre.txt")
 
 	gtest.Case(t, func() {
 		f, _ := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100)
@@ -58,12 +60,30 @@ func TestOpenExipre(t *testing.T) {
 		f3.Close()
 	})
 
-	stop()
+	stop(testFile)
 }
 
-func start() string {
-	testFile := os.TempDir() + string(os.PathSeparator) + "testGfpool.txt"
-	fmt.Println(testFile)
+func TestNewPool(t *testing.T) {
+	testFile := start("TestNewPool.txt")
+
+	gtest.Case(t, func() {
+		f, _ := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
+		f.Close()
+
+		pool := gfpool.New(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
+		f2, _ := pool.File()
+		// pool not equal
+		gtest.AssertNE(f, f2)
+		f2.Close()
+
+		pool.Close()
+	})
+
+	stop(testFile)
+}
+
+func start(name string) string {
+	testFile := os.TempDir() + string(os.PathSeparator) + name
 	if gfile.Exists(testFile) {
 		gfile.Remove(testFile)
 	}
@@ -72,8 +92,7 @@ func start() string {
 	return testFile
 }
 
-func stop() {
-	testFile := os.TempDir() + string(os.PathSeparator) + "testGfpool.txt"
+func stop(testFile string) {
 	if gfile.Exists(testFile) {
 		gfile.Remove(testFile)
 	}
