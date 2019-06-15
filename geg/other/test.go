@@ -1,24 +1,14 @@
 package main
 
 import (
-<<<<<<< HEAD
-	"fmt"
+	"github.com/gogf/gf/g/container/gqueue"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func main() {
-	var i float64 = 0
-	for index := 0; index < 10; index++ {
-		i += 0.1
-		fmt.Println(i)
-	}
+	q1 := gqueue.New(2)
+	q1.Push(1)
+	q1.Push(2)
+	gtest.Assert(q1.Size(),2)
 }
-=======
-	"github.com/gogf/gf/g/encoding/gjson"
-)
 
-func main() {
-	j := gjson.New(`[1,2,3]`)
-	j.Remove("1")
-	j.Dump()
-}
->>>>>>> master
