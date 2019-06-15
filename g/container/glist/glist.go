@@ -209,7 +209,7 @@ func (l *List) Len() (length int) {
 	return
 }
 
-// Alias of Len.
+// Size is alias of Len.
 func (l *List) Size() int {
 	return l.Len()
 }
