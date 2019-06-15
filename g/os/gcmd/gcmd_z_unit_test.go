@@ -40,10 +40,13 @@ func Test_Handle(t *testing.T) {
 	os.Args = []string{"gf", "gf"}
 	doInit()
 	gtest.Case(t, func() {
+		num := 1
 		BindHandle("gf", func() {
-			print("gf test")
+			num += 1
 		})
 		RunHandle("gf")
+		gtest.AssertEQ(num, 2)
 		AutoRun()
+		gtest.AssertEQ(num, 3)
 	})
 }
