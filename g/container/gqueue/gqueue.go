@@ -110,9 +110,16 @@ func (q *Queue) Close() {
     close(q.closed)
 }
 
-// Size returns the length of the queue.
-func (q *Queue) Size() int {
-    return len(q.C) + q.list.Len()
+// Len returns the length of the queue.
+func (q *Queue) Len() (length int) {
+	if q.list != nil {
+		length += q.list.Len()
+	}
+	length += len(q.C)
+    return
 }
 
-
+// Size is alias of Len.
+func (q *Queue) Size() int {
+	return q.Len()
+}
