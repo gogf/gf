@@ -107,15 +107,12 @@ func (q *Queue) Pop() interface{} {
 func (q *Queue) Close() {
     if q.C != nil {
         close(q.C)
-        q.C = nil
     }
     if q.events != nil {
         close(q.events)
-        q.events = nil
     }
     if q.closed != nil {
         close(q.closed)
-        q.closed = nil
     }
 }
 
