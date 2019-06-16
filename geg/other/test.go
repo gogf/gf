@@ -7,11 +7,11 @@ import (
 
 func main() {
 	max := 100
-	for i := 0; i < 10; i++ {
-		q := gqueue.New(max)
-		for i := 1; i < max; i++ {
-			q.Push(i)
-		}
-		gtest.Assert(q.Pop(), 1)
+	q := gqueue.New(max)
+	for i := 1; i < max; i++ {
+		q.Push(i)
 	}
+	q.Close()
+	gtest.Assert(q.Len(), 1)
+
 }
