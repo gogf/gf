@@ -12,7 +12,6 @@ func TestQueue_Len(t *testing.T) {
 		q1 := gqueue.New(maxs)
 		for i := 0; i < maxs; i++ {
 			q1.Push(i)
-
 		}
 		gtest.Assert(q1.Len(), maxs)
 	}
