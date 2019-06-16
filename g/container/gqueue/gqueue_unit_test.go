@@ -7,11 +7,16 @@ import (
 )
 
 func TestQueue_Len(t *testing.T) {
-	q1 := gqueue.New(300)
-	for i := 0; i < 200; i++ {
-		q1.Push(i)
+	maxs := 100
+	for n := 10; n < maxs; n++ {
+		q1 := gqueue.New(maxs)
+		for i := 0; i < maxs; i++ {
+			q1.Push(i)
+
+		}
+		gtest.Assert(q1.Len(), maxs)
 	}
-	gtest.Assert(q1.Len(), 200)
+
 }
 
 func TestQueue_Pop(t *testing.T) {
@@ -33,18 +38,6 @@ func TestQueue_Pop(t *testing.T) {
 
 	i3 := q2.Pop()
 	gtest.Assert(i3, 0)
-
-}
-
-func TestQueue_Pop2(t *testing.T) {
-
-	maxs := 14
-	q2 := gqueue.New(maxs)
-	for i := 1; i < maxs; i++ {
-		q2.Push(i)
-	}
-	i3 := q2.Pop()
-	gtest.Assert(i3, 1)
 
 }
 
