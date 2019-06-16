@@ -105,9 +105,18 @@ func (q *Queue) Pop() interface{} {
 // Notice: It would notify all goroutines return immediately,
 // which are being blocked reading using Pop method.
 func (q *Queue) Close() {
-    close(q.C)
-    close(q.events)
-    close(q.closed)
+    if q.C != nil {
+        close(q.C)
+        q.C = nil
+    }
+    if q.events != nil {
+        close(q.events)
+        q.events = nil
+    }
+    if q.closed != nil {
+        close(q.closed)
+        q.closed = nil
+    }
 }
 
 // Len returns the length of the queue.

@@ -3,7 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// HTTP客户端请求返回.
 
 package ghttp
 
@@ -48,7 +47,7 @@ func (r *ClientResponse) ReadAllString() string {
 }
 
 // 关闭返回的HTTP链接
-func (r *ClientResponse) Close()  {
+func (r *ClientResponse) Close() error {
     r.Response.Close = true
-    r.Body.Close()
+    return r.Body.Close()
 }
