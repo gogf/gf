@@ -6,9 +6,12 @@ import (
 )
 
 func main() {
-	q1 := gqueue.New(2)
-	q1.Push(1)
-	q1.Push(2)
-	gtest.Assert(q1.Size(),2)
+	max := 100
+	for i := 0; i < 10; i++ {
+		q := gqueue.New(max)
+		for i := 1; i < max; i++ {
+			q.Push(i)
+		}
+		gtest.Assert(q.Pop(), 1)
+	}
 }
-
