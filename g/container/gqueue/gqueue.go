@@ -21,6 +21,7 @@ package gqueue
 import (
     "github.com/gogf/gf/g/container/glist"
     "math"
+    "strings"
 )
 
 type Queue struct {
@@ -58,6 +59,17 @@ func New(limit...int) *Queue {
 // startAsyncLoop starts an asynchronous goroutine,
 // which handles the data synchronization from list <q.list> to channel <q.C>.
 func (q *Queue) startAsyncLoop() {
+    defer func() {
+        if err := recover(); err != nil {
+            if e, ok := err.(error); ok {
+                // If any error occurs by writing to closed q.C, ignore it.
+                if strings.Contains(e.Error(), "closed channel") {
+                    return
+                }
+            }
+            panic(err)
+        }
+    }()
     for {
         select {
             case <- q.closed:
@@ -74,6 +86,8 @@ func (q *Queue) startAsyncLoop() {
                             }
                         }
                         for _, v := range array {
+                            // When q.C closes, it will panic here, especially q.C is being blocked for writing.
+                            // It will be caught by recover and be ignored, if any error occurs here.
                            q.C <- v
                         }
                     } else {
@@ -105,14 +119,14 @@ func (q *Queue) Pop() interface{} {
 // Notice: It would notify all goroutines return immediately,
 // which are being blocked reading using Pop method.
 func (q *Queue) Close() {
-    if q.C != nil {
-        close(q.C)
+    if q.closed != nil {
+        close(q.closed)
     }
     if q.events != nil {
         close(q.events)
     }
-    if q.closed != nil {
-        close(q.closed)
+    if q.C != nil {
+        close(q.C)
     }
 }
 
