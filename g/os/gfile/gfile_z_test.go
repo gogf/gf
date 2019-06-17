@@ -337,9 +337,7 @@ func TestCopy(t *testing.T) {
 		defer delTestFiles(topath)
 
 		gtest.Assert(gfile.IsFile(testpath()+topath), true)
-
 		gtest.AssertNE(gfile.Copy("", ""), nil)
-
 	})
 }
 
@@ -365,7 +363,7 @@ func TestDirNames(t *testing.T) {
 		readlist, err = gfile.DirNames(testpath() + paths)
 
 		gtest.Assert(err, nil)
-		gtest.Assert(havelist, readlist)
+		gtest.AssertIN(readlist, havelist)
 
 		_, err = gfile.DirNames("")
 		gtest.AssertNE(err, nil)
@@ -653,8 +651,8 @@ func TestMkdir(t *testing.T) {
 func TestStat(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			tpath1 = "/testfile_t1.txt"
-			tpath2 = "./testfile_t1_no.txt"
+			tpath1   = "/testfile_t1.txt"
+			tpath2   = "./testfile_t1_no.txt"
 			err      error
 			fileiofo os.FileInfo
 		)
