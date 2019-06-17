@@ -21,6 +21,8 @@ func TestQueue_Pop(t *testing.T) {
 	q1 := gqueue.New()
 	q1.Push(1)
 	q1.Push(2)
+	q1.Push(3)
+	q1.Push(4)
 	i1 := q1.Pop()
 	gtest.Assert(i1, 1)
 	q1.Close()
