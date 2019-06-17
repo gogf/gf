@@ -98,3 +98,66 @@ func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
 
     return src[:(length - unpadding)], nil
 }
+
+/**
+ * AES加密, 使用CFB模式.
+ * 注意key必须为16/24/32位长度，padding返回补位长度，iv初始化向量为非必需参数
+ * author: zseeker
+ * date: 2019-06-18
+ */
+func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	blockSize := block.BlockSize()
+	plainText, *padding = ZeroPadding(plainText, blockSize) //补位0
+	ivValue   := ([]byte)(nil)
+	if len(iv) > 0 {
+		ivValue = iv[0]
+	} else {
+		ivValue = []byte(ivDefValue)
+	}
+	stream := cipher.NewCFBEncrypter(block, ivValue)
+	cipherText := make([]byte, len(plainText))
+	stream.XORKeyStream(cipherText, plainText)
+	return cipherText, nil
+}
+
+/**
+ * AES解密, 使用CFB模式.
+ * 注意key必须为16/24/32位长度，unpadding为去补位长度，iv初始化向量为非必需参数
+ * author: zseeker
+ * date: 2019-06-18
+ */
+func DecryptCFB(cipherText []byte, key []byte, unpadding int, iv ...[]byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	if len(cipherText) < aes.BlockSize {
+		return nil, errors.New("cipherText too short")
+	}
+	ivValue   := ([]byte)(nil)
+	if len(iv) > 0 {
+		ivValue = iv[0]
+	} else {
+		ivValue = []byte(ivDefValue)
+	}
+	stream := cipher.NewCFBDecrypter(block, ivValue)
+	plainText := make([]byte, len(cipherText))
+	stream.XORKeyStream(plainText, cipherText)
+	plainText = ZeroUnPadding(plainText, unpadding) //去补位0
+	return plainText, nil
+}
+
+func ZeroPadding(ciphertext []byte, blockSize int) ([]byte, int) {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(0)}, padding)
+	return append(ciphertext, padtext...), padding
+}
+
+func ZeroUnPadding(plaintext []byte, unpadding int) []byte {
+	length := len(plaintext)
+	return plaintext[:(length - unpadding)]
+}
