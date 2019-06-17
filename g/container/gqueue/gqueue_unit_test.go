@@ -15,12 +15,10 @@ func TestQueue_Len(t *testing.T) {
 		}
 		gtest.Assert(q1.Len(), maxs)
 	}
-
 }
 
 func TestQueue_Pop(t *testing.T) {
 	q1 := gqueue.New()
-
 	q1.Push(1)
 	q1.Push(2)
 	i1 := q1.Pop()
@@ -37,7 +35,6 @@ func TestQueue_Pop(t *testing.T) {
 
 	i3 := q2.Pop()
 	gtest.Assert(i3, 0)
-
 }
 
 func TestQueue_Close(t *testing.T) {
