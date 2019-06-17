@@ -16,7 +16,6 @@ func TestOpen(t *testing.T) {
 
 	gtest.Case(t, func() {
 		f, err := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		gtest.AssertEQ(gfile.GetContents(f.Name()), "123")
 		gtest.AssertEQ(err, nil)
 		f.Close()
 
@@ -52,14 +51,14 @@ func TestOpenErr(t *testing.T) {
 		_, err1 = pool.File()
 		gtest.AssertNE(err1, nil)
 
-		// append mode delete file error
+		// append mode delete file error and create again
 		testFile = start("TestOpenCreateErr.txt")
 		pool = gfpool.New(testFile, os.O_CREATE, 0666)
 		_, err1 = pool.File()
 		gtest.AssertEQ(err1, nil)
 		stop(testFile)
 		_, err1 = pool.File()
-		gtest.AssertNE(err1, nil)
+		gtest.AssertEQ(err1, nil)
 
 		// append mode delete file error
 		testFile = start("TestOpenAppendErr.txt")
@@ -77,6 +76,7 @@ func TestOpenErr(t *testing.T) {
 		gtest.AssertEQ(err1, nil)
 		stop(testFile)
 		_, err1 = pool.File()
+		glog.Error(err1)
 		gtest.AssertNE(err1, nil)
 	})
 }
