@@ -15,18 +15,21 @@ import (
     "github.com/gogf/gf/g/container/gmap"
 )
 
+// 进程通信数据结构
+type Msg struct {
+	SendPid int    `json:"spid"`  // 发送进程ID
+	RecvPid int    `json:"rpid"`  // 接收进程ID
+	Group   string `json:"group"` // 分组名称
+	Data    []byte `json:"data"`  // 原始数据
+}
+
 // 本地进程通信接收消息队列(按照分组进行构建的map，键值为*gqueue.Queue对象)
 var commReceiveQueues = gmap.NewStrAnyMap()
 
 // (用于发送)已建立的PID对应的Conn通信对象，键值为一个Pool，防止并行使用同一个通信对象造成数据重叠
 var commPidConnMap    = gmap.NewIntAnyMap()
 
-// TCP通信数据结构定义
-type Msg struct {
-    Pid   int     // PID，来源哪个进程
-    Data  []byte  // 数据
-    Group string  // 分组名称
-}
+
 
 // 获取指定进程的通信文件地址
 func getCommFilePath(pid int) string {

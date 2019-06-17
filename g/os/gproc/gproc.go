@@ -4,11 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gproc implements communication and management of processes.
-// 
-// 进程管理/通信, 
-// 本进程管理从syscall, os.StartProcess, exec.Cmd都使用过, 
-// 最后采用了exec.Cmd来实现多进程管理，这是一个顶层的跨平台封装，兼容性更好，另外两个是偏底层的接口。
+// Package gproc implements management and communication for processes.
 package gproc
 
 import (
@@ -62,11 +58,11 @@ func IsChild() bool {
 }
 
 // 设置gproc父进程ID，当ppid为0时表示该进程为gproc主进程，否则为gproc子进程
-func SetPPid(ppid int) {
+func SetPPid(ppid int) error {
     if ppid > 0 {
-        os.Setenv(gPROC_ENV_KEY_PPID_KEY, gconv.String(ppid))
+        return os.Setenv(gPROC_ENV_KEY_PPID_KEY, gconv.String(ppid))
     } else {
-        os.Unsetenv(gPROC_ENV_KEY_PPID_KEY)
+        return os.Unsetenv(gPROC_ENV_KEY_PPID_KEY)
     }
 }
 
