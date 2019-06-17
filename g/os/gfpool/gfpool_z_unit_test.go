@@ -3,12 +3,14 @@ package gfpool_test
 import (
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfpool"
+	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/test/gtest"
 	"os"
 	"testing"
 	"time"
 )
 
+// TestOpen test open file cache
 func TestOpen(t *testing.T) {
 	testFile := start("TestOpen.txt")
 
@@ -30,16 +32,50 @@ func TestOpen(t *testing.T) {
 	stop(testFile)
 }
 
+// TestOpenErr test open file error
 func TestOpenErr(t *testing.T) {
 	gtest.Case(t, func() {
 		testErrFile := "errorPath"
 		_, err := gfpool.Open(testErrFile, os.O_RDWR, 0666)
 		gtest.AssertNE(err, nil)
+
+		// delete file error
+		testFile := start("TestOpenDeleteErr.txt")
+		f, _ := gfpool.Open(testFile, os.O_RDWR, 0666)
+		f.Close()
+		stop(testFile)
+		_, err = gfpool.Open(testFile, os.O_RDWR, 0666)
+		gtest.AssertNE(err, nil)
+
+		// append mode delete file error
+		testFile = start("TestOpenCreateErr.txt")
+		f, _ = gfpool.Open(testFile, os.O_CREATE, 0666)
+		f.Close()
+		stop(testFile)
+		_, err = gfpool.Open(testFile, os.O_CREATE, 0666)
+		gtest.AssertNE(err, nil)
+
+		// append mode delete file error
+		testFile = start("TestOpenAppendErr.txt")
+		f, _ = gfpool.Open(testFile, os.O_APPEND, 0666)
+		f.Close()
+		stop(testFile)
+		_, err = gfpool.Open(testFile, os.O_APPEND, 0666)
+		gtest.AssertNE(err, nil)
+
+		// trunc mode delete file error
+		testFile = start("TestOpenTruncErr.txt")
+		f, _ = gfpool.Open(testFile, os.O_TRUNC, 0666)
+		f.Close()
+		stop(testFile)
+		_, err = gfpool.Open(testFile, os.O_TRUNC, 0666)
+		gtest.AssertNE(err, nil)
 	})
 }
 
-func TestOpenExipre(t *testing.T) {
-	testFile := start("TestOpenExipre.txt")
+// TestOpenExpire test open file cache expire
+func TestOpenExpire(t *testing.T) {
+	testFile := start("TestOpenExpire.txt")
 
 	gtest.Case(t, func() {
 		f, _ := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100)
@@ -59,6 +95,7 @@ func TestOpenExipre(t *testing.T) {
 	stop(testFile)
 }
 
+// TestNewPool test gfpool new function
 func TestNewPool(t *testing.T) {
 	testFile := start("TestNewPool.txt")
 
@@ -78,6 +115,7 @@ func TestNewPool(t *testing.T) {
 	stop(testFile)
 }
 
+// test before
 func start(name string) string {
 	testFile := os.TempDir() + string(os.PathSeparator) + name
 	if gfile.Exists(testFile) {
@@ -88,8 +126,12 @@ func start(name string) string {
 	return testFile
 }
 
+// test after
 func stop(testFile string) {
 	if gfile.Exists(testFile) {
-		gfile.Remove(testFile)
+		err := gfile.Remove(testFile)
+		if err != nil {
+			glog.Error(err)
+		}
 	}
 }
