@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/container/gqueue"
-	"github.com/gogf/gf/g/test/gtest"
+	"fmt"
+	"sync"
 )
 
 func main() {
-	q1 := gqueue.New(2)
-	q1.Push(1)
-	q1.Push(2)
-	gtest.Assert(q1.Size(),2)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	wg.Add(-100)
+	wg.Add()
+	wg.Wait()
+	fmt.Println(1)
 }
-
