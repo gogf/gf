@@ -93,11 +93,9 @@ func (l *List) PopBacks(max int) (values []interface{}) {
         if max > 0 && max < length {
             length = max
         }
-        tempe := (*Element)(nil)
         values = make([]interface{}, length)
         for i := 0; i < length; i++ {
-            tempe     = l.list.Back()
-            values[i] = l.list.Remove(tempe)
+            values[i] = l.list.Remove(l.list.Back())
         }
     }
     l.mu.Unlock()
@@ -107,20 +105,18 @@ func (l *List) PopBacks(max int) (values []interface{}) {
 // PopFronts removes <max> elements from front of <l>
 // and returns values of the removed elements as slice.
 func (l *List) PopFronts(max int) (values []interface{}) {
-    l.mu.RLock()
+    l.mu.Lock()
     length := l.list.Len()
     if length > 0 {
         if max > 0 && max < length {
             length = max
         }
-        tempe := (*Element)(nil)
         values = make([]interface{}, length)
         for i := 0; i < length; i++ {
-            tempe     = l.list.Front()
-            values[i] = l.list.Remove(tempe)
+            values[i] = l.list.Remove(l.list.Front())
         }
     }
-    l.mu.RUnlock()
+    l.mu.Unlock()
     return
 }
 

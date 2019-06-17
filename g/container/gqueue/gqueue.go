@@ -19,21 +19,24 @@
 package gqueue
 
 import (
-    "github.com/gogf/gf/g/container/glist"
-    "math"
+	"github.com/gogf/gf/g/container/glist"
+	"github.com/gogf/gf/g/container/gtype"
+	"math"
 )
 
 type Queue struct {
     limit     int              // Limit for queue size.
     list      *glist.List      // Underlying list structure for data maintaining.
+    closed    *gtype.Bool      // Whether queue is closed.
     events    chan struct{}    // Events for data writing.
-    closed    chan struct{}    // Events for queue closing.
     C         chan interface{} // Underlying channel for data reading.
 }
 
 const (
     // Size for queue buffer.
     gDEFAULT_QUEUE_SIZE = 10000
+    // Max batch size per-fetching from list.
+    gDEFAULT_MAX_BATCH_SIZE = 10
 )
 
 // New returns an empty queue object.
@@ -41,7 +44,7 @@ const (
 // When <limit> is given, the queue will be static and high performance which is comparable with stdlib channel.
 func New(limit...int) *Queue {
     q := &Queue {
-        closed : make(chan struct{}, 0),
+        closed : gtype.NewBool(),
     }
     if len(limit) > 0 {
         q.limit  = limit[0]
@@ -58,30 +61,35 @@ func New(limit...int) *Queue {
 // startAsyncLoop starts an asynchronous goroutine,
 // which handles the data synchronization from list <q.list> to channel <q.C>.
 func (q *Queue) startAsyncLoop() {
-    for {
-        select {
-            case <- q.closed:
-                return
-            case <- q.events:
-                for {
-                    if length := q.list.Len(); length > 0 {
-                        array := make([]interface{}, length)
-                        for i := 0; i < length; i++ {
-                            if e := q.list.Front(); e != nil {
-                                array[i] = q.list.Remove(e)
-                            } else {
-                                break
-                            }
-                        }
-                        for _, v := range array {
-                           q.C <- v
-                        }
-                    } else {
-                        break
-                    }
-                }
+    defer func() {
+        if q.closed.Val() {
+            _ = recover()
+        }
+    }()
+    for !q.closed.Val() {
+        <- q.events
+	    for !q.closed.Val() {
+		    if length := q.list.Len(); length > 0 {
+			    if length > gDEFAULT_MAX_BATCH_SIZE {
+				    length = gDEFAULT_MAX_BATCH_SIZE
+			    }
+			    for _, v := range q.list.PopFronts(length) {
+				    // When q.C is closed, it will panic here, especially q.C is being blocked for writing.
+				    // If any error occurs here, it will be caught by recover and be ignored.
+				    q.C <- v
+			    }
+		    } else {
+		    	break
+		    }
+	    }
+        // Clear q.events to remain just one event to do the next synchronization check.
+        for i := 0; i < len(q.events) - 1; i++ {
+	        <- q.events
         }
     }
+    // It should be here to close q.C.
+    // It's the sender's responsibility to close channel when it should be closed.
+	close(q.C)
 }
 
 // Push pushes the data <v> into the queue.
@@ -91,7 +99,9 @@ func (q *Queue) Push(v interface{}) {
         q.C <- v
     } else {
         q.list.PushBack(v)
-        q.events <- struct{}{}
+        if len(q.events) < gDEFAULT_QUEUE_SIZE {
+	        q.events <- struct{}{}
+        }
     }
 }
 
@@ -105,9 +115,13 @@ func (q *Queue) Pop() interface{} {
 // Notice: It would notify all goroutines return immediately,
 // which are being blocked reading using Pop method.
 func (q *Queue) Close() {
-    close(q.C)
-    close(q.events)
-    close(q.closed)
+    q.closed.Set(true)
+	if q.events != nil {
+		close(q.events)
+	}
+    for i := 0; i < gDEFAULT_MAX_BATCH_SIZE; i++ {
+    	q.Pop()
+    }
 }
 
 // Len returns the length of the queue.
