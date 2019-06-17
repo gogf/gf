@@ -31,8 +31,6 @@ script:
 - GOARCH=386 go test -v ./...
 - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
-CODECOV_TOKEN = “46ec311d-5bc9-457a-86c0-1ff42970293f”
-
 after_success:
 - bash <(curl -s https://codecov.io/bash)
 
