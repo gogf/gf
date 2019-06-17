@@ -76,7 +76,6 @@ func TestOpenErr(t *testing.T) {
 		gtest.AssertEQ(err1, nil)
 		stop(testFile)
 		_, err1 = pool.File()
-		glog.Error(err1)
 		gtest.AssertNE(err1, nil)
 	})
 }
