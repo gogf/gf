@@ -1,3 +1,11 @@
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// go test *.go -bench=".*" -benchmem
+
 package gqueue_test
 
 import (
@@ -7,14 +15,25 @@ import (
 )
 
 func TestQueue_Len(t *testing.T) {
-	maxs := 100
-	for n := 10; n < maxs; n++ {
-		q1 := gqueue.New(maxs)
-		for i := 0; i < maxs; i++ {
+
+	max := 100
+	for n := 10; n < max; n++ {
+		q1 := gqueue.New(max)
+		for i := 0; i < max; i++ {
 			q1.Push(i)
 		}
-		gtest.Assert(q1.Len(), maxs)
+		gtest.Assert(q1.Len(), max)
+		gtest.Assert(q1.Size(), max)
 	}
+}
+
+func TestQueue_Basic(t *testing.T) {
+	q := gqueue.New()
+	for i := 0; i < 100; i++ {
+		q.Push(i)
+	}
+	gtest.Assert(q.Pop(), 0)
+	gtest.Assert(q.Pop(), 1)
 }
 
 func TestQueue_Pop(t *testing.T) {

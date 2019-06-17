@@ -10,8 +10,8 @@ import (
 func main() {
 	l := gflock.New("demo.lock")
 	l.Lock()
-	glog.Printfln("locked by pid: %d", gproc.Pid())
+	glog.Printf("locked by pid: %d", gproc.Pid())
 	time.Sleep(3 * time.Second)
 	l.UnLock()
-	glog.Printfln("unlocked by pid: %d", gproc.Pid())
+	glog.Printf("unlocked by pid: %d", gproc.Pid())
 }

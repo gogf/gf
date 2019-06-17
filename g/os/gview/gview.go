@@ -20,6 +20,7 @@ import (
 	"sync"
 )
 
+// View object for template engine.
 type View struct {
     mu         sync.RWMutex
     paths      *garray.StringArray     // Searching path array.
@@ -28,10 +29,10 @@ type View struct {
     delimiters []string                // Customized template delimiters.
 }
 
-// Template params type.
+// Params is type for template params.
 type Params  = map[string]interface{}
 
-// Customized template function map type.
+// FuncMap is type for custom template functions.
 type FuncMap = map[string]interface{}
 
 // Default view object.
@@ -218,7 +219,6 @@ func (view *View) AddPath(path string) error {
         return nil
     }
     view.paths.Append(realPath)
-    //glog.Debug("[gview] AddPath:", realPath)
     return nil
 }
 
