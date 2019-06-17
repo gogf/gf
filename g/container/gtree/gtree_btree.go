@@ -503,9 +503,9 @@ func (tree *BTree) isLeaf(node *BTreeNode) bool {
 	return len(node.Children) == 0
 }
 
-func (tree *BTree) isFull(node *BTreeNode) bool {
-	return len(node.Entries) == tree.maxEntries()
-}
+//func (tree *BTree) isFull(node *BTreeNode) bool {
+//	return len(node.Entries) == tree.maxEntries()
+//}
 
 func (tree *BTree) shouldSplit(node *BTreeNode) bool {
 	return len(node.Entries) > tree.maxEntries()
