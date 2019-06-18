@@ -18,8 +18,18 @@ const (
     ivDefValue = "I Love Go Frame!"
 )
 
-// AES加密, 使用CBC模式，注意key必须为16/24/32位长度，iv初始化向量为非必需参数
+// Encrypt is alias of EncryptCBC.
 func Encrypt(plainText []byte, key []byte, iv...[]byte) ([]byte, error) {
+    return EncryptCBC(plainText, key, iv...)
+}
+
+// Decrypt is alias of DecryptCBC.
+func Decrypt(cipherText []byte, key []byte, iv...[]byte) ([]byte, error) {
+    return DecryptCBC(cipherText, key, iv...)
+}
+
+// AES加密, 使用CBC模式，注意key必须为16/24/32位长度，iv初始化向量为非必需参数。
+func EncryptCBC(plainText []byte, key []byte, iv...[]byte) ([]byte, error) {
     block, err := aes.NewCipher(key)
     if err != nil {
         return nil, err
@@ -40,7 +50,7 @@ func Encrypt(plainText []byte, key []byte, iv...[]byte) ([]byte, error) {
 }
 
 // AES解密, 使用CBC模式，注意key必须为16/24/32位长度，iv初始化向量为非必需参数
-func Decrypt(cipherText []byte, key []byte, iv...[]byte) ([]byte, error) {
+func DecryptCBC(cipherText []byte, key []byte, iv...[]byte) ([]byte, error) {
     block, err := aes.NewCipher(key)
     if err != nil {
         return nil, err
@@ -62,9 +72,9 @@ func Decrypt(cipherText []byte, key []byte, iv...[]byte) ([]byte, error) {
     plainText  := make([]byte, len(cipherText))
     blockModel.CryptBlocks(plainText, cipherText)
     plainText, e := PKCS5UnPadding(plainText, blockSize)
-	if e != nil {
-		return nil, e
-	}
+    if e != nil {
+        return nil, e
+    }
     return plainText, nil
 }
 
@@ -99,12 +109,8 @@ func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
     return src[:(length - unpadding)], nil
 }
 
-/**
- * AES加密, 使用CFB模式.
- * 注意key必须为16/24/32位长度，padding返回补位长度，iv初始化向量为非必需参数
- * author: zseeker
- * date: 2019-06-18
- */
+// AES加密, 使用CFB模式。
+// 注意key必须为16/24/32位长度，padding返回补位长度，iv初始化向量为非必需参数。
 func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -124,12 +130,8 @@ func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byt
 	return cipherText, nil
 }
 
-/**
- * AES解密, 使用CFB模式.
- * 注意key必须为16/24/32位长度，unpadding为去补位长度，iv初始化向量为非必需参数
- * author: zseeker
- * date: 2019-06-18
- */
+// AES解密, 使用CFB模式。
+// 注意key必须为16/24/32位长度，unpadding为去补位长度，iv初始化向量为非必需参数。
 func DecryptCFB(cipherText []byte, key []byte, unpadding int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
