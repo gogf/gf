@@ -26,21 +26,26 @@ func NewByte(value...byte) *Byte {
 }
 
 // Clone clones and returns a new concurrent-safe object for byte type.
-func (t *Byte) Clone() *Byte {
-    return NewByte(t.Val())
+func (v *Byte) Clone() *Byte {
+    return NewByte(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
-func (t *Byte) Set(value byte) (old byte) {
-    return byte(atomic.SwapInt32(&t.value, int32(value)))
+func (v *Byte) Set(value byte) (old byte) {
+    return byte(atomic.SwapInt32(&v.value, int32(value)))
 }
 
 // Val atomically loads t.value.
-func (t *Byte) Val() byte {
-    return byte(atomic.LoadInt32(&t.value))
+func (v *Byte) Val() byte {
+    return byte(atomic.LoadInt32(&v.value))
 }
 
 // Add atomically adds <delta> to t.value and returns the new value.
-func (t *Byte) Add(delta int) (new byte) {
-    return byte(atomic.AddInt32(&t.value, int32(delta)))
+func (v *Byte) Add(delta byte) (new byte) {
+    return byte(atomic.AddInt32(&v.value, int32(delta)))
+}
+
+// Cas executes the compare-and-swap operation for value.
+func (v *Byte) Cas(old, new byte) bool {
+	return atomic.CompareAndSwapInt32(&v.value, int32(old), int32(new))
 }

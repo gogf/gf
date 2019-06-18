@@ -37,8 +37,8 @@ func init() {
 }
 
 // SetPath sets the directory path for file logging.
-func SetPath(path string) {
-    logger.SetPath(path)
+func SetPath(path string) error {
+    return logger.SetPath(path)
 }
 
 // GetPath returns the logging directory path for file logging.
@@ -89,7 +89,7 @@ func SetAsync(enabled bool) {
 	logger.SetAsync(enabled)
 }
 
-// SetStdoutPrint sets whether ouptput the logging contents to stdout, which is false in default.
+// SetStdoutPrint sets whether ouptput the logging contents to stdout, which is true in default.
 func SetStdoutPrint(enabled bool) {
     logger.SetStdoutPrint(enabled)
 }
