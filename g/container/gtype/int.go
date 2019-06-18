@@ -26,21 +26,26 @@ func NewInt(value...int) *Int {
 }
 
 // Clone clones and returns a new concurrent-safe object for int type.
-func (t *Int) Clone() *Int {
-    return NewInt(t.Val())
+func (v *Int) Clone() *Int {
+    return NewInt(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
-func (t *Int) Set(value int) (old int) {
-    return int(atomic.SwapInt64(&t.value, int64(value)))
+func (v *Int) Set(value int) (old int) {
+    return int(atomic.SwapInt64(&v.value, int64(value)))
 }
 
 // Val atomically loads t.value.
-func (t *Int) Val() int {
-    return int(atomic.LoadInt64(&t.value))
+func (v *Int) Val() int {
+    return int(atomic.LoadInt64(&v.value))
 }
 
 // Add atomically adds <delta> to t.value and returns the new value.
-func (t *Int) Add(delta int) (new int) {
-    return int(atomic.AddInt64(&t.value, int64(delta)))
+func (v *Int) Add(delta int) (new int) {
+    return int(atomic.AddInt64(&v.value, int64(delta)))
+}
+
+// Cas executes the compare-and-swap operation for value.
+func (v *Int) Cas(old, new int) bool {
+	return atomic.CompareAndSwapInt64(&v.value, int64(old), int64(new))
 }

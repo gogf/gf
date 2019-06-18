@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/os/gproc"
 	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/os/gtimer"
 	"os"
 	"time"
 )
@@ -15,11 +16,10 @@ import (
 func main() {
 	fmt.Printf("%d: I am child? %v\n", gproc.Pid(), gproc.IsChild())
 	if gproc.IsChild() {
-		gtime.SetInterval(time.Second, func() bool {
+		gtimer.SetInterval(time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte(gtime.Datetime())); err != nil {
 				glog.Error(err)
 			}
-			return true
 		})
 		select {}
 	} else {
@@ -28,7 +28,7 @@ func main() {
 		p.Start()
 		for {
 			msg := gproc.Receive()
-			fmt.Printf("%d: receive from %d, data: %s\n", gproc.Pid(), msg.Pid, string(msg.Data))
+			fmt.Printf("%d: receive from %d, data: %s\n", gproc.Pid(), msg.SendPid, string(msg.Data))
 		}
 	}
 }
