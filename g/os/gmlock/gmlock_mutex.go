@@ -63,12 +63,13 @@ func (m *Mutex) Unlock() {
 // it returns false.
 func (m *Mutex) TryLock() bool {
 	if m.locking.Cas(false, true) {
-		m.mu.Lock()
-		// State should be changed after locks.
-		m.state.Set(-1)
-		m.wid.Add(1)
+		if m.state.Cas(0, -1) {
+			m.mu.Lock()
+			m.wid.Add(1)
+			m.locking.Set(false)
+			return true
+		}
 		m.locking.Set(false)
-		return true
 	}
 	return false
 }
