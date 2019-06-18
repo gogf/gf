@@ -6,7 +6,6 @@
 
 package garray
 
-
 type apiSliceInterface interface {
     Slice() []interface{}
 }

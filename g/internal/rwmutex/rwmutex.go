@@ -4,11 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package rwmutex provides switch for sync.RWMutex for concurrent safe feature.
+// Package rwmutex provides switch of concurrent safe feature for sync.RWMutex.
 package rwmutex
 
 import "sync"
 
+// RWMutex is a sync.RWMutex with a switch of concurrent safe feature.
 type RWMutex struct {
     sync.RWMutex
     safe bool
