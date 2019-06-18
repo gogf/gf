@@ -319,7 +319,7 @@ func getBacktrace(skip...int) string {
     // Converting all file separator to "/".
     goRoot := runtime.GOROOT()
     if goRoot != "" {
-        goRoot = strings.ReplaceAll(goRoot, "\\", "/")
+        goRoot = strings.Replace(goRoot, "\\", "/", -1)
         goRoot = regexp.QuoteMeta(goRoot)
     }
     for i := from + customSkip; i < 10000; i++ {
