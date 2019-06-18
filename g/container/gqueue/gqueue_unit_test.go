@@ -35,7 +35,6 @@ func TestQueue_Basic(t *testing.T) {
 	gtest.Assert(q.Pop(), 1)
 }
 
-
 func TestQueue_Pop(t *testing.T) {
 	q1 := gqueue.New()
 	q1.Push(1)
@@ -44,7 +43,6 @@ func TestQueue_Pop(t *testing.T) {
 	q1.Push(4)
 	i1 := q1.Pop()
 	gtest.Assert(i1, 1)
-
 }
 
 func TestQueue_Close(t *testing.T) {

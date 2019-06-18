@@ -25,50 +25,50 @@ func New() *Locker {
     }
 }
 
-// TryLock tries locking the <key> with write lock,
-// it returns true if success, or if there's a write/read lock the <key>,
-// it returns false. The parameter <expire> specifies the max duration it locks.
+// TryLock tries locking the <key> with writing lock,
+// it returns true if success, or it returns false if there's a writing/reading lock the <key>.
+// The parameter <expire> specifies the max duration it locks.
 func (l *Locker) TryLock(key string, expire...time.Duration) bool {
     return l.doLock(key, l.getExpire(expire...), true)
 }
 
-// Lock locks the <key> with write lock.
-// If there's a write/read lock the <key>,
+// Lock locks the <key> with writing lock.
+// If there's a write/reading lock the <key>,
 // it will blocks until the lock is released.
 // The parameter <expire> specifies the max duration it locks.
 func (l *Locker) Lock(key string, expire...time.Duration) {
     l.doLock(key, l.getExpire(expire...), false)
 }
 
-// Unlock unlocks the write lock of the <key>.
+// Unlock unlocks the writing lock of the <key>.
 func (l *Locker) Unlock(key string) {
     if v := l.m.Get(key); v != nil {
         v.(*Mutex).Unlock()
     }
 }
 
-// TryRLock tries locking the <key> with read lock.
-// It returns true if success, or if there's a write lock on <key>, it returns false.
+// TryRLock tries locking the <key> with reading lock.
+// It returns true if success, or if there's a writing lock on <key>, it returns false.
 func (l *Locker) TryRLock(key string) bool {
     return l.doRLock(key, true)
 }
 
-// RLock locks the <key> with read lock.
-// If there's a write lock on <key>,
-// it will blocks until the write lock is released.
+// RLock locks the <key> with reading lock.
+// If there's a writing lock on <key>,
+// it will blocks until the writing lock is released.
 func (l *Locker) RLock(key string) {
     l.doRLock(key, false)
 }
 
-// RUnlock unlocks the read lock of the <key>.
+// RUnlock unlocks the reading lock of the <key>.
 func (l *Locker) RUnlock(key string) {
     if v := l.m.Get(key); v != nil {
         v.(*Mutex).RUnlock()
     }
 }
 
-// TryLockFunc locks the <key> with write lock and callback function <f>.
-// It returns true if success, or else if there's a write/read lock the <key>, it return false.
+// TryLockFunc locks the <key> with writing lock and callback function <f>.
+// It returns true if success, or else if there's a write/reading lock the <key>, it return false.
 //
 // It releases the lock after <f> is executed.
 //
@@ -82,8 +82,8 @@ func (l *Locker) TryLockFunc(key string, f func(), expire...time.Duration) bool 
 	return false
 }
 
-// TryRLockFunc locks the <key> with read lock and callback function <f>.
-// It returns true if success, or else if there's a write lock the <key>, it returns false.
+// TryRLockFunc locks the <key> with reading lock and callback function <f>.
+// It returns true if success, or else if there's a writing lock the <key>, it returns false.
 //
 // It releases the lock after <f> is executed.
 //
@@ -97,8 +97,8 @@ func (l *Locker) TryRLockFunc(key string, f func()) bool {
 	return false
 }
 
-// LockFunc locks the <key> with write lock and callback function <f>.
-// If there's a write/read lock the <key>,
+// LockFunc locks the <key> with writing lock and callback function <f>.
+// If there's a write/reading lock the <key>,
 // it will blocks until the lock is released.
 //
 // It releases the lock after <f> is executed.
@@ -110,8 +110,8 @@ func (l *Locker) LockFunc(key string, f func(), expire...time.Duration) {
 	f()
 }
 
-// RLockFunc locks the <key> with read lock and callback function <f>.
-// If there's a write lock the <key>,
+// RLockFunc locks the <key> with reading lock and callback function <f>.
+// If there's a writing lock the <key>,
 // it will blocks until the lock is released.
 //
 // It releases the lock after <f> is executed.
@@ -137,8 +137,8 @@ func (l *Locker) getExpire(expire...time.Duration) time.Duration {
 // It returns true if success, or else returns false.
 //
 // The parameter <try> is true,
-// it returns false immediately if it fails getting the write lock.
-// If <true> is false, it blocks until it gets the write lock.
+// it returns false immediately if it fails getting the writing lock.
+// If <true> is false, it blocks until it gets the writing lock.
 //
 // The parameter <expire> specifies the max duration it locks.
 func (l *Locker) doLock(key string, expire time.Duration, try bool) bool {
@@ -164,8 +164,8 @@ func (l *Locker) doLock(key string, expire time.Duration, try bool) bool {
 // It returns true if success, or else returns false.
 //
 // The parameter <try> is true,
-// it returns false immediately if it fails getting the read lock.
-// If <true> is false, it blocks until it gets the read lock.
+// it returns false immediately if it fails getting the reading lock.
+// If <true> is false, it blocks until it gets the reading lock.
 func (l *Locker) doRLock(key string, try bool) bool {
     mu := l.getOrNewMutex(key)
     ok := true
