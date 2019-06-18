@@ -10,15 +10,15 @@
 package gproc
 
 import (
-    "fmt"
-    "net"
-    "github.com/gogf/gf/g/os/glog"
-    "github.com/gogf/gf/g/net/gtcp"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/util/gconv"
-    "github.com/gogf/gf/g/encoding/gbinary"
-    "github.com/gogf/gf/g/container/gqueue"
-    "github.com/gogf/gf/g/container/gtype"
+	"encoding/json"
+	"fmt"
+	"github.com/gogf/gf/g/container/gqueue"
+	"github.com/gogf/gf/g/container/gtype"
+	"github.com/gogf/gf/g/net/gtcp"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/util/gconv"
+	"net"
 )
 
 const (
@@ -35,7 +35,7 @@ var (
 // 进程只有在执行该方法后才会打开请求端口，默认情况下不允许进程间通信。
 func Receive(group...string) *Msg {
     // 一个进程只能开启一个监听goroutine
-    if tcpListened.Set(true) == false {
+    if !tcpListened.Val() && tcpListened.Set(true) == false {
         go startTcpListening()
     }
     queue     := (*gqueue.Queue)(nil)
@@ -75,7 +75,9 @@ func startTcpListening() {
             continue
         }
         // 将监听的端口保存到通信文件中(字符串类型存放)
-        gfile.PutContents(getCommFilePath(Pid()), gconv.String(i))
+        if err := gfile.PutContents(getCommFilePath(Pid()), gconv.String(i)); err != nil {
+        	glog.Error(err)
+        }
         break
     }
     for  {
@@ -89,74 +91,41 @@ func startTcpListening() {
 
 // TCP数据通信处理回调函数
 func tcpServiceHandler(conn *gtcp.Conn) {
-    retry := gtcp.Retry {
-        Count   : 3,
-        Interval: 10,
-    }
+	option := gtcp.PkgOption{
+		Retry : gtcp.Retry {
+			Count   : 3,
+			Interval: 10,
+		},
+	}
     for {
         var result []byte
-        buffer, err := conn.Recv(-1, retry)
+        buffer, err := conn.RecvPkg(option)
         if len(buffer) > 0 {
-            var msgs []*Msg
-            for _, msg := range bufferToMsgs(buffer) {
-                if v := commReceiveQueues.Get(msg.Group); v != nil {
-                    msgs = append(msgs, msg)
-                } else {
-                    result = []byte(fmt.Sprintf("group [%s] does not exist", msg.Group))
-                    break
-                }
+	        msg := new(Msg)
+            if err := json.Unmarshal(buffer, msg); err != nil {
+            	glog.Error(err)
+            	continue
             }
-            // 成功时会返回ok给peer
-            if len(result) == 0 {
+            if v := commReceiveQueues.Get(msg.Group); v == nil {
+                result = []byte(fmt.Sprintf("group [%s] does not exist", msg.Group))
+                break
+            } else {
                 result = []byte("ok")
-                for _, msg := range msgs {
-                    if v := commReceiveQueues.Get(msg.Group); v != nil {
-                        v.(*gqueue.Queue).Push(msg)
-                    }
+                if v := commReceiveQueues.Get(msg.Group); v != nil {
+                    v.(*gqueue.Queue).Push(msg)
                 }
             }
         }
-        // 产生错误(或者对方已经关闭链接)时，退出接收循环
         if err == nil {
-            conn.Send(result, retry)
+            if err := conn.SendPkg(result, option); err != nil {
+            	glog.Error(err)
+            }
         } else {
-            conn.Close()
+            if err := conn.Close(); err != nil {
+            	glog.Error(err)
+            }
             return
         }
     }
-}
-
-// 数据解包，防止黏包
-// 数据格式：总长度(24bit)|发送进程PID(24bit)|接收进程PID(24bit)|分组长度(8bit)|分组名称(变长)|校验(32bit)|参数(变长)
-func bufferToMsgs(buffer []byte) []*Msg {
-    s    := 0
-    msgs := make([]*Msg, 0)
-    for s < len(buffer) {
-        // 长度解析及校验
-        length := gbinary.DecodeToInt(buffer[s : s + 3])
-        if length < 14 || length > len(buffer) {
-            s++
-            continue
-        }
-        // 分组信息解析
-        groupLen  := gbinary.DecodeToInt(buffer[s + 9 : s + 10])
-        // checksum校验(仅对参数做校验，提高校验效率)
-        checksum1 := gbinary.DecodeToUint32(buffer[s + 10 + groupLen : s + 10 + groupLen + 4])
-        checksum2 := gtcp.Checksum(buffer[s + 10 + groupLen + 4 : s + length])
-        if checksum1 != checksum2 {
-            s++
-            continue
-        }
-        // 接收进程PID校验
-        if Pid() ==  gbinary.DecodeToInt(buffer[s + 6 : s + 9]) {
-            msgs = append(msgs, &Msg {
-                Pid   : gbinary.DecodeToInt(buffer[s + 3 : s + 6]),
-                Data  : buffer[s + 10 + groupLen + 4 : s + length],
-                Group : string(buffer[s + 10 : s + 10 + groupLen]),
-            })
-        }
-        s += length
-    }
-    return msgs
 }
 

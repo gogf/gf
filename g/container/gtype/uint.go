@@ -26,21 +26,26 @@ func NewUint(value...uint) *Uint {
 }
 
 // Clone clones and returns a new concurrent-safe object for uint type.
-func (t *Uint) Clone() *Uint {
-    return NewUint(t.Val())
+func (v *Uint) Clone() *Uint {
+    return NewUint(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
-func (t *Uint) Set(value uint) (old uint) {
-    return uint(atomic.SwapUint64(&t.value, uint64(value)))
+func (v *Uint) Set(value uint) (old uint) {
+    return uint(atomic.SwapUint64(&v.value, uint64(value)))
 }
 
 // Val atomically loads t.value.
-func (t *Uint) Val() uint {
-    return uint(atomic.LoadUint64(&t.value))
+func (v *Uint) Val() uint {
+    return uint(atomic.LoadUint64(&v.value))
 }
 
 // Add atomically adds <delta> to t.value and returns the new value.
-func (t *Uint) Add(delta uint) (new uint) {
-    return uint(atomic.AddUint64(&t.value, uint64(delta)))
+func (v *Uint) Add(delta uint) (new uint) {
+    return uint(atomic.AddUint64(&v.value, uint64(delta)))
+}
+
+// Cas executes the compare-and-swap operation for value.
+func (v *Uint) Cas(old, new uint) bool {
+	return atomic.CompareAndSwapUint64(&v.value, uint64(old), uint64(new))
 }

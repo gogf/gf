@@ -19,9 +19,9 @@
 package gqueue
 
 import (
-    "github.com/gogf/gf/g/container/glist"
-    "github.com/gogf/gf/g/container/gtype"
-    "math"
+	"github.com/gogf/gf/g/container/glist"
+	"github.com/gogf/gf/g/container/gtype"
+	"math"
 )
 
 type Queue struct {
@@ -35,6 +35,8 @@ type Queue struct {
 const (
     // Size for queue buffer.
     gDEFAULT_QUEUE_SIZE = 10000
+    // Max batch size per-fetching from list.
+    gDEFAULT_MAX_BATCH_SIZE = 10
 )
 
 // New returns an empty queue object.
@@ -66,22 +68,28 @@ func (q *Queue) startAsyncLoop() {
     }()
     for !q.closed.Val() {
         <- q.events
-        if length := q.list.Len(); length > 0 {
-            array := make([]interface{}, length)
-            for i := 0; i < length; i++ {
-                if e := q.list.Front(); e != nil {
-                    array[i] = q.list.Remove(e)
-                } else {
-                    break
-                }
-            }
-            for _, v := range array {
-                // When q.C closes, it will panic here, especially q.C is being blocked for writing.
-                // It will be caught by recover and be ignored, if any error occurs here.
-               q.C <- v
-            }
+	    for !q.closed.Val() {
+		    if length := q.list.Len(); length > 0 {
+			    if length > gDEFAULT_MAX_BATCH_SIZE {
+				    length = gDEFAULT_MAX_BATCH_SIZE
+			    }
+			    for _, v := range q.list.PopFronts(length) {
+				    // When q.C is closed, it will panic here, especially q.C is being blocked for writing.
+				    // If any error occurs here, it will be caught by recover and be ignored.
+				    q.C <- v
+			    }
+		    } else {
+		    	break
+		    }
+	    }
+        // Clear q.events to remain just one event to do the next synchronization check.
+        for i := 0; i < len(q.events) - 1; i++ {
+	        <- q.events
         }
     }
+    // It should be here to close q.C.
+    // It's the sender's responsibility to close channel when it should be closed.
+	close(q.C)
 }
 
 // Push pushes the data <v> into the queue.
@@ -91,7 +99,9 @@ func (q *Queue) Push(v interface{}) {
         q.C <- v
     } else {
         q.list.PushBack(v)
-        q.events <- struct{}{}
+        if len(q.events) < gDEFAULT_QUEUE_SIZE {
+	        q.events <- struct{}{}
+        }
     }
 }
 
@@ -106,11 +116,11 @@ func (q *Queue) Pop() interface{} {
 // which are being blocked reading using Pop method.
 func (q *Queue) Close() {
     q.closed.Set(true)
-    if q.events != nil {
-        close(q.events)
-    }
-    if q.C != nil {
-        close(q.C)
+	if q.events != nil {
+		close(q.events)
+	}
+    for i := 0; i < gDEFAULT_MAX_BATCH_SIZE; i++ {
+    	q.Pop()
     }
 }
 

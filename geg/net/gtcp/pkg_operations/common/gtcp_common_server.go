@@ -30,7 +30,7 @@ func main() {
 			case "heartbeat":
 				onClientHeartBeat(conn, msg)
 			default:
-				glog.Errorfln("invalid message: %v", msg)
+				glog.Errorf("invalid message: %v", msg)
 				break
 			}
 		}

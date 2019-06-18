@@ -25,20 +25,20 @@ func NewString(value...string) *String {
 }
 
 // Clone clones and returns a new concurrent-safe object for string type.
-func (t *String) Clone() *String {
-    return NewString(t.Val())
+func (v *String) Clone() *String {
+    return NewString(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
-func (t *String) Set(value string) (old string) {
-    old = t.Val()
-    t.value.Store(value)
+func (v *String) Set(value string) (old string) {
+    old = v.Val()
+    v.value.Store(value)
     return
 }
 
 // Val atomically loads t.value.
-func (t *String) Val() string {
-    s := t.value.Load()
+func (v *String) Val() string {
+    s := v.value.Load()
     if s != nil {
         return s.(string)
     }

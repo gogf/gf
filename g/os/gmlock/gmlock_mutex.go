@@ -15,17 +15,18 @@ import (
 // It wraps the sync.RWMutex to implements more rich features.
 type Mutex struct {
     mu     sync.RWMutex
-    wid    *gtype.Int64        // Unique id, used for multiple safely Unlock.
-    rcount *gtype.Int          // Reading locks count.
-    wcount *gtype.Int          // Writing locks count.
+    wid    *gtype.Int64 // Unique id, used for multiple safely Unlock.
+    number *gtype.Int   // Locking number.
+                        //   0: writing lock false;
+                        //   1: writing lock true;
+                        // >=2: reading lock;
 }
 
 // NewMutex creates and returns a new mutex.
 func NewMutex() *Mutex {
     return &Mutex{
         wid    : gtype.NewInt64(),
-        rcount : gtype.NewInt(),
-        wcount : gtype.NewInt(),
+	    number : gtype.NewInt(),
     }
 }
 
@@ -33,29 +34,25 @@ func NewMutex() *Mutex {
 // If the lock is already locked for reading or writing,
 // Lock blocks until the lock is available.
 func (m *Mutex) Lock() {
-    m.wcount.Add(1)
-    m.mu.Lock()
-    m.wid.Add(1)
+	m.mu.Lock()
+	m.number.Set(1)
+	m.wid.Add(1)
 }
 
 // Unlock unlocks the write lock.
 // It is safe to be called multiple times.
 func (m *Mutex) Unlock() {
-    if m.wcount.Val() > 0 {
-        if m.wcount.Add(-1) >= 0 {
-            m.mu.Unlock()
-        } else {
-            m.wcount.Add(1)
-        }
-    }
+	if m.number.Cas(1, 0) {
+		m.mu.Unlock()
+	}
 }
 
 // RLock locks mutex for reading.
 // If the mutex is already locked for writing,
 // It blocks until the lock is available.
 func (m *Mutex) RLock() {
-    m.rcount.Add(1)
     m.mu.RLock()
+	m.number.Add(2)
 }
 
 // RUnlock undoes a single RLock call;
@@ -64,11 +61,11 @@ func (m *Mutex) RLock() {
 // on entry to RUnlock.
 // It is safe to be called multiple times.
 func (m *Mutex) RUnlock() {
-    if m.rcount.Val() > 0 {
-        if m.rcount.Add(-1) >= 0 {
+    if n := m.number.Val(); n >= 2 && n%2 == 0 {
+        if n := m.number.Add(-2); n >= 0 && n%2 == 0 {
             m.mu.RUnlock()
         } else {
-            m.rcount.Add(1)
+            m.number.Add(2)
         }
     }
 }
@@ -77,27 +74,25 @@ func (m *Mutex) RUnlock() {
 // It returns true if success, or if there's a write/read lock on the mutex,
 // it returns false.
 func (m *Mutex) TryLock() bool {
-    // The first check, but it cannot ensure the atomicity.
-    if m.wcount.Val() == 0 && m.rcount.Val() == 0 {
-        // The second check, it ensures the atomicity with atomic Add.
-        if m.wcount.Add(1) == 1 {
-            m.mu.Lock()
-            m.wid.Add(1)
-            return true
-        } else {
-            m.wcount.Add(-1)
-        }
+    if m.number.Cas(0, 1) {
+        m.mu.Lock()
+        m.wid.Add(1)
+        return true
     }
     return false
 }
 
 // TryRLock tries locking the mutex for reading.
-// It returns true if success, or if there's a write lock on the mutex, it returns false.
+// It returns true if success, or if there's a writing lock on the mutex, it returns false.
+//
+// Note that it's not an atomic operation.
+//
+// TODO It should be an atomic operation.
 func (m *Mutex) TryRLock() bool {
-    // There must be no write lock on mutex.
-    if m.wcount.Val() == 0 {
-        m.rcount.Add(1)
+    // There must be no writing lock on the mutex.
+    if n := m.number.Val(); n%2 == 0 {
         m.mu.RLock()
+	    m.number.Add(2)
         return true
     }
     return false
