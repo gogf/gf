@@ -114,6 +114,21 @@ func (m *Mutex) TryRLock() bool {
     return false
 }
 
+// IsLocked checks whether the mutex is locked by writing or reading lock.
+func (m *Mutex) IsLocked() bool {
+	return m.state.Val() != 0
+}
+
+// IsRLocked checks whether the mutex is locked by writing lock.
+func (m *Mutex) IsWLocked() bool {
+	return m.state.Val() < 0
+}
+
+// IsRLocked checks whether the mutex is locked by reading lock.
+func (m *Mutex) IsRLocked() bool {
+	return m.state.Val() > 0
+}
+
 // TryLockFunc tries locking the mutex for writing with given callback function <f>.
 // it returns true if success, or if there's a write/reading lock on the mutex,
 // it returns false.
