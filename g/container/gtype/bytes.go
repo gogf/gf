@@ -23,21 +23,21 @@ func NewBytes(value...[]byte) *Bytes {
 }
 
 // Clone clones and returns a new concurrent-safe object for []byte type.
-func (t *Bytes) Clone() *Bytes {
-    return NewBytes(t.Val())
+func (v *Bytes) Clone() *Bytes {
+    return NewBytes(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
 // Note: The parameter <value> cannot be nil.
-func (t *Bytes) Set(value []byte) (old []byte) {
-    old = t.Val()
-    t.value.Store(value)
+func (v *Bytes) Set(value []byte) (old []byte) {
+    old = v.Val()
+    v.value.Store(value)
     return
 }
 
 // Val atomically loads t.value.
-func (t *Bytes) Val() []byte {
-    if s := t.value.Load(); s != nil {
+func (v *Bytes) Val() []byte {
+    if s := v.value.Load(); s != nil {
         return s.([]byte)
     }
     return nil

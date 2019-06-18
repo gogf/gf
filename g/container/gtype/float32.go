@@ -28,27 +28,27 @@ func NewFloat32(value...float32) *Float32 {
 }
 
 // Clone clones and returns a new concurrent-safe object for float32 type.
-func (t *Float32) Clone() *Float32 {
-    return NewFloat32(t.Val())
+func (v *Float32) Clone() *Float32 {
+    return NewFloat32(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
-func (t *Float32) Set(value float32) (old float32) {
-    return math.Float32frombits(atomic.SwapUint32(&t.value, math.Float32bits(value)))
+func (v *Float32) Set(value float32) (old float32) {
+    return math.Float32frombits(atomic.SwapUint32(&v.value, math.Float32bits(value)))
 }
 
 // Val atomically loads t.value.
-func (t *Float32) Val() float32 {
-    return math.Float32frombits(atomic.LoadUint32(&t.value))
+func (v *Float32) Val() float32 {
+    return math.Float32frombits(atomic.LoadUint32(&v.value))
 }
 
 // Add atomically adds <delta> to t.value and returns the new value.
-func (t *Float32) Add(delta float32) (new float32) {
+func (v *Float32) Add(delta float32) (new float32) {
 	for {
-		old := math.Float32frombits(t.value)
+		old := math.Float32frombits(v.value)
 		new  = old + delta
 		if atomic.CompareAndSwapUint32(
-			(*uint32)(unsafe.Pointer(&t.value)),
+			(*uint32)(unsafe.Pointer(&v.value)),
 			math.Float32bits(old),
 			math.Float32bits(new),
 		) {
@@ -56,4 +56,9 @@ func (t *Float32) Add(delta float32) (new float32) {
 		}
 	}
 	return
+}
+
+// Cas executes the compare-and-swap operation for value.
+func (v *Float32) Cas(old, new float32) bool {
+	return atomic.CompareAndSwapUint32(&v.value, uint32(old), uint32(new))
 }
