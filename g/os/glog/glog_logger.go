@@ -358,7 +358,7 @@ func (l *Logger) GetBacktrace(skip...int) string {
 	index  := 1
     goRoot := runtime.GOROOT()
 	if goRoot != "" {
-		goRoot = strings.ReplaceAll(goRoot, "\\", "/")
+		goRoot = strings.Replace(goRoot, "\\", "/", -1)
 		goRoot = regexp.QuoteMeta(goRoot)
 	}
     for i := from + customSkip + l.btSkip; i < 1000; i++ {
