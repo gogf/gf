@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/test/gtest"
 	"testing"
+	"time"
 )
 
 func Test_IntArray_Basic(t *testing.T) {
@@ -607,4 +608,15 @@ func TestIntArray_Remove(t *testing.T) {
 		gtest.Assert(n1, 4)
 		gtest.Assert(array1.Len(), 2)
 	})
+}
+
+func TestSortedIntArray_LockFunc(t *testing.T) {
+	n1:=[]int{1,3,5,7}
+	fun1:=func(n1 []int){
+		time.Sleep(1*time.Microsecond)
+	}
+	a1:=garray.NewSortedIntArrayFrom(n1)
+	a1.LockFunc(fun1)
+
+
 }
