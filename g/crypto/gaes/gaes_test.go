@@ -32,6 +32,10 @@ var (
 	keys       = []byte("12345678912345678912345678912346")
 	key_err    = []byte("1234")
 	key_32_err = []byte("1234567891234567891234567891234 ")
+
+	// cfb模式blockSize补位长度, add by zseeker
+	padding_size      = 16 - len(content)
+	content_16_cfb, _ = gbase64.Decode("oSmget3aBDT1nJnBp8u6kA==")
 )
 
 func TestEncrypt(t *testing.T) {
@@ -123,5 +127,23 @@ func TestPKCS5UnPaddingErr(t *testing.T) {
 		// PKCS5UnPadding src len > blockSize
 		_, err = gaes.PKCS5UnPadding(key_32_err, 32)
 		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptCFB(t *testing.T) {
+	gtest.Case(t, func() {
+		var padding int = 0
+		data, err := gaes.EncryptCFB(content, key_16, &padding, iv)
+		gtest.Assert(err, nil)
+		gtest.Assert(padding, padding_size)
+		gtest.Assert(data, []byte(content_16_cfb))
+	})
+}
+
+func TestDecryptCFB(t *testing.T) {
+	gtest.Case(t, func() {
+		decrypt, err := gaes.DecryptCFB([]byte(content_16_cfb), key_16, padding_size, iv)
+		gtest.Assert(err, nil)
+		gtest.Assert(decrypt, content)
 	})
 }
