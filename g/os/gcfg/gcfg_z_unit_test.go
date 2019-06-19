@@ -237,7 +237,9 @@ func Test_Instance(t *testing.T) {
 		path := gcfg.DEFAULT_CONFIG_FILE
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
-		defer gtest.Assert(gfile.Remove(path), nil)
+		defer func() {
+			gtest.Assert(gfile.Remove(path), nil)
+		}()
 
 		c := gcfg.Instance()
 		gtest.Assert(c.Get("v1"), 1)
