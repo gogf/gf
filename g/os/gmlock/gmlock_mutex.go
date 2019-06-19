@@ -7,9 +7,10 @@
 package gmlock
 
 import (
-	"github.com/gogf/gf/g/container/gtype"
 	"runtime"
 	"sync"
+
+	"github.com/gogf/gf/g/container/gtype"
 )
 
 // The high level RWMutex.
@@ -111,6 +112,7 @@ func (m *Mutex) TryRLock() bool {
 			m.locking.Set(false)
 			return true
 		}
+		m.locking.Set(false)
 	}
 	return false
 }
