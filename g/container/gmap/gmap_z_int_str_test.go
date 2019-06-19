@@ -74,13 +74,13 @@ func Test_IntStrMap_Batch(t *testing.T) {
 	m := gmap.NewIntStrMap()
 
 	m.Sets(map[int]string{1: "a", 2: "b", 3: "c"})
-	gtest.Assert(m.Map(), map[int]string{1: "a", 2: "b",3: "c"})
+	gtest.Assert(m.Map(), map[int]string{1: "a", 2: "b", 3: "c"})
 	m.Removes([]int{1, 2})
 	gtest.Assert(m.Map(), map[int]interface{}{3: "c"})
 }
-func Test_IntStrMap_Iterator(t *testing.T){
+func Test_IntStrMap_Iterator(t *testing.T) {
 	expect := map[int]string{1: "a", 2: "b"}
-	m      := gmap.NewIntStrMapFrom(expect)
+	m := gmap.NewIntStrMapFrom(expect)
 	m.Iterator(func(k int, v string) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -100,10 +100,10 @@ func Test_IntStrMap_Iterator(t *testing.T){
 	gtest.Assert(j, 1)
 }
 
-func Test_IntStrMap_Lock(t *testing.T){
+func Test_IntStrMap_Lock(t *testing.T) {
 
 	expect := map[int]string{1: "a", 2: "b", 3: "c"}
-	m      := gmap.NewIntStrMapFrom(expect)
+	m := gmap.NewIntStrMapFrom(expect)
 	m.LockFunc(func(m map[int]string) {
 		gtest.Assert(m, expect)
 	})

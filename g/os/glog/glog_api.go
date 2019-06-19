@@ -9,61 +9,61 @@ package glog
 // Print prints <v> with newline using fmt.Sprintln.
 // The parameter <v> can be multiple variables.
 func Print(v ...interface{}) {
-    logger.Print(v ...)
+	logger.Print(v...)
 }
 
 // Printf prints <v> with format <format> using fmt.Sprintf.
 // The parameter <v> can be multiple variables.
 func Printf(format string, v ...interface{}) {
-    logger.Printf(format, v ...)
+	logger.Printf(format, v...)
 }
 
 // See Print.
 func Println(v ...interface{}) {
-    logger.Println(v ...)
+	logger.Println(v...)
 }
 
 // Deprecated.
 // Use Printf instead.
 func Printfln(format string, v ...interface{}) {
-    logger.Printfln(format, v ...)
+	logger.Printfln(format, v...)
 }
 
 // Fatal prints the logging content with [FATA] header and newline, then exit the current process.
 func Fatal(v ...interface{}) {
-    logger.Fatal(v ...)
+	logger.Fatal(v...)
 }
 
 // Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
 func Fatalf(format string, v ...interface{}) {
-    logger.Fatalf(format, v ...)
+	logger.Fatalf(format, v...)
 }
 
 // Deprecated.
 // Use Fatalf instead.
 func Fatalfln(format string, v ...interface{}) {
-    logger.Fatalfln(format, v ...)
+	logger.Fatalfln(format, v...)
 }
 
 // Panic prints the logging content with [PANI] header and newline, then panics.
 func Panic(v ...interface{}) {
-    logger.Panic(v ...)
+	logger.Panic(v...)
 }
 
 // Panicf prints the logging content with [PANI] header, custom format and newline, then panics.
 func Panicf(format string, v ...interface{}) {
-    logger.Panicf(format, v ...)
+	logger.Panicf(format, v...)
 }
 
 // Deprecated.
 // Use Panicf instead.
 func Panicfln(format string, v ...interface{}) {
-    logger.Panicfln(format, v ...)
+	logger.Panicfln(format, v...)
 }
 
 // Info prints the logging content with [INFO] header and newline.
 func Info(v ...interface{}) {
-    logger.Info(v...)
+	logger.Info(v...)
 }
 
 // Infof prints the logging content with [INFO] header, custom format and newline.
@@ -79,7 +79,7 @@ func Infofln(format string, v ...interface{}) {
 
 // Debug prints the logging content with [DEBU] header and newline.
 func Debug(v ...interface{}) {
-    logger.Debug(v...)
+	logger.Debug(v...)
 }
 
 // Debugf prints the logging content with [DEBU] header, custom format and newline.
@@ -96,7 +96,7 @@ func Debugfln(format string, v ...interface{}) {
 // Notice prints the logging content with [NOTI] header and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Notice(v ...interface{}) {
-    logger.Notice(v...)
+	logger.Notice(v...)
 }
 
 // Noticef prints the logging content with [NOTI] header, custom format and newline.
@@ -114,7 +114,7 @@ func Noticefln(format string, v ...interface{}) {
 // Warning prints the logging content with [WARN] header and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Warning(v ...interface{}) {
-    logger.Warning(v...)
+	logger.Warning(v...)
 }
 
 // Warningf prints the logging content with [WARN] header, custom format and newline.
@@ -132,7 +132,7 @@ func Warningfln(format string, v ...interface{}) {
 // Error prints the logging content with [ERRO] header and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Error(v ...interface{}) {
-    logger.Error(v...)
+	logger.Error(v...)
 }
 
 // Errorf prints the logging content with [ERRO] header, custom format and newline.
@@ -150,17 +150,17 @@ func Errorfln(format string, v ...interface{}) {
 // Critical prints the logging content with [CRIT] header and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Critical(v ...interface{}) {
-    logger.Critical(v...)
+	logger.Critical(v...)
 }
 
 // Criticalf prints the logging content with [CRIT] header, custom format and newline.
 // It also prints caller backtrace info if backtrace feature is enabled.
 func Criticalf(format string, v ...interface{}) {
-    logger.Criticalf(format, v...)
+	logger.Criticalf(format, v...)
 }
 
 // Deprecated.
 // Use Criticalf instead.
 func Criticalfln(format string, v ...interface{}) {
-    logger.Criticalfln(format, v...)
+	logger.Criticalfln(format, v...)
 }

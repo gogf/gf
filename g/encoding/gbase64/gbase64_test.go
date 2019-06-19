@@ -42,7 +42,7 @@ var pairs = []testpair{
 }
 
 func TestBase64(t *testing.T) {
-	for k := range pairs{
+	for k := range pairs {
 		gtest.Assert(gbase64.Encode(pairs[k].decoded), pairs[k].encoded)
 
 		e, _ := gbase64.Decode(pairs[k].encoded)

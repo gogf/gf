@@ -99,7 +99,7 @@ func Test_StrIntMap_Iterator(t *testing.T) {
 func Test_StrIntMap_Lock(t *testing.T) {
 	expect := map[string]int{"a": 1, "b": 2}
 
-	m      := gmap.NewStrIntMapFrom(expect)
+	m := gmap.NewStrIntMapFrom(expect)
 	m.LockFunc(func(m map[string]int) {
 		gtest.Assert(m, expect)
 	})

@@ -8,22 +8,22 @@
 package grand
 
 var (
-    letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-    digits  = []rune("0123456789")
+	letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	digits  = []rune("0123456789")
 )
 
 // Meet randomly calculate whether the given probability <num>/<total> is met.
 func Meet(num, total int) bool {
-    return Intn(total) < num
+	return Intn(total) < num
 }
 
 // MeetProb randomly calculate whether the given probability is met.
 func MeetProb(prob float32) bool {
-    return Intn(1e7) < int(prob*1e7)
+	return Intn(1e7) < int(prob*1e7)
 }
 
 // N returns a random int between min and max - [min, max].
-func N (min, max int) int {
+func N(min, max int) int {
 	if min >= max {
 		return min
 	}
@@ -32,21 +32,21 @@ func N (min, max int) int {
 		// so we should first shift the value to left,
 		// then call Intn to produce the random number,
 		// and finally shift the result to right.
-		return Intn(max - (min - 0) + 1) + (min - 0)
+		return Intn(max-(min-0)+1) + (min - 0)
 	}
 	if min < 0 {
 		// Because Intn dose not support negative number,
 		// so we should first shift the value to right,
 		// then call Intn to produce the random number,
 		// and finally shift the result to left.
-		return Intn(max + (0 - min) + 1) - (0 - min)
+		return Intn(max+(0-min)+1) - (0 - min)
 	}
 	return 0
 }
 
 // Deprecated.
 // Alias of N.
-func Rand (min, max int) int {
+func Rand(min, max int) int {
 	return N(min, max)
 }
 
@@ -103,11 +103,11 @@ func RandLetters(n int) string {
 
 // Perm returns, as a slice of n ints, a pseudo-random permutation of the integers [0,n).
 func Perm(n int) []int {
-    m := make([]int, n)
-    for i := 0; i < n; i++ {
-        j := Intn(i + 1)
-        m[i] = m[j]
-        m[j] = i
-    }
-    return m
+	m := make([]int, n)
+	for i := 0; i < n; i++ {
+		j := Intn(i + 1)
+		m[i] = m[j]
+		m[j] = i
+	}
+	return m
 }

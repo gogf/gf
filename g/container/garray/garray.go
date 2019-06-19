@@ -6,4 +6,3 @@
 
 // Package garray provides concurrent-safe/unsafe arrays.
 package garray
-

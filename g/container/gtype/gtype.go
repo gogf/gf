@@ -10,6 +10,6 @@ package gtype
 type Type = Interface
 
 // See NewInterface.
-func New(value ... interface{}) *Type {
-    return NewInterface(value...)
+func New(value ...interface{}) *Type {
+	return NewInterface(value...)
 }

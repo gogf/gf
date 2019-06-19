@@ -7,120 +7,119 @@
 package ghttp_test
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/net/ghttp"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
-    "time"
+	"fmt"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/g/test/gtest"
+	"testing"
+	"time"
 )
 
-type Object struct {}
+type Object struct{}
 
 func (o *Object) Init(r *ghttp.Request) {
-    r.Response.Write("1")
+	r.Response.Write("1")
 }
 
 func (o *Object) Shut(r *ghttp.Request) {
-    r.Response.Write("2")
+	r.Response.Write("2")
 }
 
 func (o *Object) Index(r *ghttp.Request) {
-    r.Response.Write("Object Index")
+	r.Response.Write("Object Index")
 }
 
 func (o *Object) Show(r *ghttp.Request) {
-    r.Response.Write("Object Show")
+	r.Response.Write("Object Show")
 }
 
 func (o *Object) Info(r *ghttp.Request) {
-    r.Response.Write("Object Info")
+	r.Response.Write("Object Info")
 }
 
 func Test_Router_Object1(t *testing.T) {
-    p := ports.PopRand()
-    s := g.Server(p)
-    s.BindObject("/", new(Object))
-    s.BindObject("/{.struct}/{.method}", new(Object))
-    s.SetPort(p)
-    s.SetDumpRouteMap(false)
-    s.Start()
-    defer s.Shutdown()
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindObject("/", new(Object))
+	s.BindObject("/{.struct}/{.method}", new(Object))
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
 
-    // 等待启动完成
-    time.Sleep(time.Second)
-    gtest.Case(t, func() {
-        client := ghttp.NewClient()
-        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+	// 等待启动完成
+	time.Sleep(time.Second)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-        gtest.Assert(client.GetContent("/"),            "1Object Index2")
-        gtest.Assert(client.GetContent("/init"),        "Not Found")
-        gtest.Assert(client.GetContent("/shut"),        "Not Found")
-        gtest.Assert(client.GetContent("/index"),       "1Object Index2")
-        gtest.Assert(client.GetContent("/show"),        "1Object Show2")
+		gtest.Assert(client.GetContent("/"), "1Object Index2")
+		gtest.Assert(client.GetContent("/init"), "Not Found")
+		gtest.Assert(client.GetContent("/shut"), "Not Found")
+		gtest.Assert(client.GetContent("/index"), "1Object Index2")
+		gtest.Assert(client.GetContent("/show"), "1Object Show2")
 
-        gtest.Assert(client.GetContent("/object"),            "Not Found")
-        gtest.Assert(client.GetContent("/object/init"),       "Not Found")
-        gtest.Assert(client.GetContent("/object/shut"),       "Not Found")
-        gtest.Assert(client.GetContent("/object/index"),      "1Object Index2")
-        gtest.Assert(client.GetContent("/object/show"),       "1Object Show2")
+		gtest.Assert(client.GetContent("/object"), "Not Found")
+		gtest.Assert(client.GetContent("/object/init"), "Not Found")
+		gtest.Assert(client.GetContent("/object/shut"), "Not Found")
+		gtest.Assert(client.GetContent("/object/index"), "1Object Index2")
+		gtest.Assert(client.GetContent("/object/show"), "1Object Show2")
 
-        gtest.Assert(client.GetContent("/none-exist"),  "Not Found")
-    })
+		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+	})
 }
 
-
 func Test_Router_Object2(t *testing.T) {
-    p := ports.PopRand()
-    s := g.Server(p)
-    s.BindObject("/object", new(Object), "Show, Info")
-    s.SetPort(p)
-    s.SetDumpRouteMap(false)
-    s.Start()
-    defer s.Shutdown()
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindObject("/object", new(Object), "Show, Info")
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
 
-    // 等待启动完成
-    time.Sleep(time.Second)
-    gtest.Case(t, func() {
-        client := ghttp.NewClient()
-        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+	// 等待启动完成
+	time.Sleep(time.Second)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-        gtest.Assert(client.GetContent("/"),                  "Not Found")
-        gtest.Assert(client.GetContent("/object"),            "Not Found")
-        gtest.Assert(client.GetContent("/object/init"),       "Not Found")
-        gtest.Assert(client.GetContent("/object/shut"),       "Not Found")
-        gtest.Assert(client.GetContent("/object/index"),      "Not Found")
-        gtest.Assert(client.GetContent("/object/show"),       "1Object Show2")
-        gtest.Assert(client.GetContent("/object/info"),       "1Object Info2")
+		gtest.Assert(client.GetContent("/"), "Not Found")
+		gtest.Assert(client.GetContent("/object"), "Not Found")
+		gtest.Assert(client.GetContent("/object/init"), "Not Found")
+		gtest.Assert(client.GetContent("/object/shut"), "Not Found")
+		gtest.Assert(client.GetContent("/object/index"), "Not Found")
+		gtest.Assert(client.GetContent("/object/show"), "1Object Show2")
+		gtest.Assert(client.GetContent("/object/info"), "1Object Info2")
 
-        gtest.Assert(client.GetContent("/none-exist"),  "Not Found")
-    })
+		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+	})
 }
 
 func Test_Router_ObjectMethod(t *testing.T) {
-    p := ports.PopRand()
-    s := g.Server(p)
-    s.BindObjectMethod("/object-info", new(Object), "Info")
-    s.SetPort(p)
-    s.SetDumpRouteMap(false)
-    s.Start()
-    defer s.Shutdown()
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindObjectMethod("/object-info", new(Object), "Info")
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
 
-    // 等待启动完成
-    time.Sleep(time.Second)
-    gtest.Case(t, func() {
-        client := ghttp.NewClient()
-        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+	// 等待启动完成
+	time.Sleep(time.Second)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-        gtest.Assert(client.GetContent("/"),                  "Not Found")
-        gtest.Assert(client.GetContent("/object"),            "Not Found")
-        gtest.Assert(client.GetContent("/object/init"),       "Not Found")
-        gtest.Assert(client.GetContent("/object/shut"),       "Not Found")
-        gtest.Assert(client.GetContent("/object/index"),      "Not Found")
-        gtest.Assert(client.GetContent("/object/show"),       "Not Found")
-        gtest.Assert(client.GetContent("/object/info"),       "Not Found")
-        gtest.Assert(client.GetContent("/object-info"),       "1Object Info2")
+		gtest.Assert(client.GetContent("/"), "Not Found")
+		gtest.Assert(client.GetContent("/object"), "Not Found")
+		gtest.Assert(client.GetContent("/object/init"), "Not Found")
+		gtest.Assert(client.GetContent("/object/shut"), "Not Found")
+		gtest.Assert(client.GetContent("/object/index"), "Not Found")
+		gtest.Assert(client.GetContent("/object/show"), "Not Found")
+		gtest.Assert(client.GetContent("/object/info"), "Not Found")
+		gtest.Assert(client.GetContent("/object-info"), "1Object Info2")
 
-        gtest.Assert(client.GetContent("/none-exist"),        "Not Found")
-    })
+		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+	})
 }
