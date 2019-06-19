@@ -7,10 +7,11 @@
 package gvalid
 
 import (
+	"strings"
+
 	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
 	"github.com/gogf/gf/third/github.com/fatih/structs"
-	"strings"
 )
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法。
@@ -121,7 +122,7 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 	/* 以下逻辑和CheckMap相同 */
 
 	// 开始执行校验: 以校验规则作为基础进行遍历校验
-	value := (interface{})(nil)
+	var value interface{}
 	// 这里的rule变量为多条校验规则，不包含名字或者错误信息定义
 	for key, rule := range checkRules {
 		value = nil
@@ -134,7 +135,7 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error
-				for k, _ := range item {
+				for k := range item {
 					if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
 						required = true
 						break
