@@ -83,69 +83,69 @@ func (db *dbMssql) parseSql(sql string) string {
 
 	index++
 	switch keyword {
-		case "SELECT":
-			//不含LIMIT关键字则不处理
-			if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false && strings.HasPrefix(res[index][0], "limit") == false) {
+	case "SELECT":
+		//不含LIMIT关键字则不处理
+		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false && strings.HasPrefix(res[index][0], "limit") == false) {
+			break
+		}
+
+		//不含LIMIT则不处理
+		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
+			break
+		}
+
+		//判断SQL中是否含有order by
+		selectStr := ""
+		orderbyStr := ""
+		haveOrderby := gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
+		if haveOrderby {
+			//取order by 前面的字符串
+			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
+
+			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "ORDER BY") == false {
 				break
 			}
+			selectStr = queryExpr[2]
 
-			//不含LIMIT则不处理
-			if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
+			//取order by表达式的值
+			orderbyExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", sql)
+			if len(orderbyExpr) != 4 || strings.EqualFold(orderbyExpr[1], "ORDER BY") == false || strings.EqualFold(orderbyExpr[3], "LIMIT") == false {
 				break
 			}
+			orderbyStr = orderbyExpr[2]
+		} else {
+			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
+			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false {
+				break
+			}
+			selectStr = queryExpr[2]
+		}
 
-			//判断SQL中是否含有order by
-			selectStr := ""
-			orderbyStr := ""
-			haveOrderby := gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
-			if haveOrderby {
-				//取order by 前面的字符串
-				queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
+		//取limit后面的取值范围
+		first, limit := 0, 0
+		for i := 1; i < len(res[index]); i++ {
+			if len(strings.TrimSpace(res[index][i])) == 0 {
+				continue
+			}
 
-				if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "ORDER BY") == false {
-					break
-				}
-				selectStr = queryExpr[2]
+			if strings.HasPrefix(res[index][i], "LIMIT") || strings.HasPrefix(res[index][i], "limit") {
+				first, _ = strconv.Atoi(res[index][i+1])
+				limit, _ = strconv.Atoi(res[index][i+2])
+				break
+			}
+		}
 
-				//取order by表达式的值
-				orderbyExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", sql)
-				if len(orderbyExpr) != 4 || strings.EqualFold(orderbyExpr[1], "ORDER BY") == false || strings.EqualFold(orderbyExpr[3], "LIMIT") == false {
-					break
-				}
-				orderbyStr = orderbyExpr[2]
+		if haveOrderby {
+			sql = fmt.Sprintf("SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s   ) as TMP_ WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d", orderbyStr, selectStr, first, limit)
+		} else {
+			if first == 0 {
+				first = limit
 			} else {
-				queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-				if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false {
-					break
-				}
-				selectStr = queryExpr[2]
+				first = limit - first
 			}
-
-			//取limit后面的取值范围
-			first, limit := 0, 0
-			for i := 1; i < len(res[index]); i++ {
-				if len(strings.TrimSpace(res[index][i])) == 0 {
-					continue
-				}
-
-				if strings.HasPrefix(res[index][i], "LIMIT") || strings.HasPrefix(res[index][i], "limit") {
-					first, _ = strconv.Atoi(res[index][i+1])
-					limit, _ = strconv.Atoi(res[index][i+2])
-					break
-				}
-			}
-
-			if haveOrderby {
-				sql = fmt.Sprintf("SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s   ) as TMP_ WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d", orderbyStr, selectStr, first, limit)
-			} else {
-				if first == 0 {
-					first = limit
-				} else {
-					first = limit - first
-				}
-				sql = fmt.Sprintf("SELECT * FROM (SELECT TOP %d * FROM (SELECT TOP %d %s) as TMP1_ ) as TMP2_ ", first, limit, selectStr)
-			}
-		default:
+			sql = fmt.Sprintf("SELECT * FROM (SELECT TOP %d * FROM (SELECT TOP %d %s) as TMP1_ ) as TMP2_ ", first, limit, selectStr)
+		}
+	default:
 	}
 	return sql
 }

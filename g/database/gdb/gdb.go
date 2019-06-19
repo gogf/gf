@@ -11,51 +11,51 @@
 package gdb
 
 import (
-    "database/sql"
-    "errors"
-    "fmt"
-    "github.com/gogf/gf/g/container/gmap"
-    "github.com/gogf/gf/g/container/gring"
-    "github.com/gogf/gf/g/container/gtype"
-    "github.com/gogf/gf/g/container/gvar"
-    "github.com/gogf/gf/g/os/gcache"
-    "github.com/gogf/gf/g/util/grand"
-    "time"
+	"database/sql"
+	"errors"
+	"fmt"
+	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/container/gring"
+	"github.com/gogf/gf/g/container/gtype"
+	"github.com/gogf/gf/g/container/gvar"
+	"github.com/gogf/gf/g/os/gcache"
+	"github.com/gogf/gf/g/util/grand"
+	"time"
 )
 
 // 数据库操作接口
 type DB interface {
-    // 建立数据库连接方法(开发者一般不需要直接调用)
-    Open(config *ConfigNode) (*sql.DB, error)
+	// 建立数据库连接方法(开发者一般不需要直接调用)
+	Open(config *ConfigNode) (*sql.DB, error)
 
 	// SQL操作方法 API
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
-	Prepare(sql string, execOnMaster...bool) (*sql.Stmt, error)
+	Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error)
 
-    // 内部实现API的方法(不同数据库可覆盖这些方法实现自定义的操作)
-    doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
-    doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
-    doPrepare(link dbLink, query string) (*sql.Stmt, error)
-    doInsert(link dbLink, table string, data interface{}, option int, batch...int) (result sql.Result, err error)
-    doBatchInsert(link dbLink, table string, list interface{}, option int, batch...int) (result sql.Result, err error)
-    doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
-    doDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error)
+	// 内部实现API的方法(不同数据库可覆盖这些方法实现自定义的操作)
+	doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
+	doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
+	doPrepare(link dbLink, query string) (*sql.Stmt, error)
+	doInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)
+	doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)
+	doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
+	doDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error)
 
 	// 数据库查询
 	GetAll(query string, args ...interface{}) (Result, error)
 	GetOne(query string, args ...interface{}) (Record, error)
 	GetValue(query string, args ...interface{}) (Value, error)
-    GetCount(query string, args ...interface{}) (int, error)
-    GetStruct(objPointer interface{}, query string, args ...interface{}) error
-    GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error
-    GetScan(objPointer interface{}, query string, args ...interface{}) error
+	GetCount(query string, args ...interface{}) (int, error)
+	GetStruct(objPointer interface{}, query string, args ...interface{}) error
+	GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error
+	GetScan(objPointer interface{}, query string, args ...interface{}) error
 
-    // 创建底层数据库master/slave链接对象
-    Master() (*sql.DB, error)
-    Slave() (*sql.DB, error)
+	// 创建底层数据库master/slave链接对象
+	Master() (*sql.DB, error)
+	Slave() (*sql.DB, error)
 
-    // Ping
+	// Ping
 	PingMaster() error
 	PingSlave() error
 
@@ -63,14 +63,14 @@ type DB interface {
 	Begin() (*TX, error)
 
 	// 数据表插入/更新/保存操作
-	Insert(table string, data interface{}, batch...int) (sql.Result, error)
-	Replace(table string, data interface{}, batch...int) (sql.Result, error)
-	Save(table string, data interface{}, batch...int) (sql.Result, error)
+	Insert(table string, data interface{}, batch ...int) (sql.Result, error)
+	Replace(table string, data interface{}, batch ...int) (sql.Result, error)
+	Save(table string, data interface{}, batch ...int) (sql.Result, error)
 
 	// 数据表插入/更新/保存操作(批量)
-	BatchInsert(table string, list interface{}, batch...int) (sql.Result, error)
-	BatchReplace(table string, list interface{}, batch...int) (sql.Result, error)
-	BatchSave(table string, list interface{}, batch...int) (sql.Result, error)
+	BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error)
+	BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error)
+	BatchSave(table string, list interface{}, batch ...int) (sql.Result, error)
 
 	// 数据修改/删除
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
@@ -81,31 +81,31 @@ type DB interface {
 	From(tables string) *Model
 
 	// 设置管理
-    SetDebug(debug bool)
-    SetSchema(schema string)
-    GetQueriedSqls() []*Sql
+	SetDebug(debug bool)
+	SetSchema(schema string)
+	GetQueriedSqls() []*Sql
 	GetLastSql() *Sql
-    PrintQueriedSqls()
-    SetMaxIdleConns(n int)
-    SetMaxOpenConns(n int)
-    SetConnMaxLifetime(n int)
+	PrintQueriedSqls()
+	SetMaxIdleConns(n int)
+	SetMaxOpenConns(n int)
+	SetConnMaxLifetime(n int)
 
 	// 内部方法接口
-	getCache() (*gcache.Cache)
+	getCache() *gcache.Cache
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
-    filterFields(table string, data map[string]interface{}) map[string]interface{}
-    convertValue(fieldValue interface{}, fieldType string) interface{}
-    getTableFields(table string) (map[string]string, error)
-    rowsToResult(rows *sql.Rows) (Result, error)
-    handleSqlBeforeExec(sql string) string
+	filterFields(table string, data map[string]interface{}) map[string]interface{}
+	convertValue(fieldValue interface{}, fieldType string) interface{}
+	getTableFields(table string) (map[string]string, error)
+	rowsToResult(rows *sql.Rows) (Result, error)
+	handleSqlBeforeExec(sql string) string
 }
 
 // 执行底层数据库操作的核心接口
 type dbLink interface {
-    Query(query string, args ...interface{}) (*sql.Rows, error)
-    Exec(sql string, args ...interface{}) (sql.Result, error)
-    Prepare(sql string) (*sql.Stmt, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Prepare(sql string) (*sql.Stmt, error)
 }
 
 // 数据库链接对象
@@ -115,11 +115,11 @@ type dbBase struct {
 	debug            *gtype.Bool                  // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
 	sqls             *gring.Ring                  // (debug=true时有效)已执行的SQL列表
 	cache            *gcache.Cache                // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
-    schema           *gtype.String                // 手动切换的数据库名称
-    tables           map[string]map[string]string // 数据库表结构
+	schema           *gtype.String                // 手动切换的数据库名称
+	tables           map[string]map[string]string // 数据库表结构
 	maxIdleConnCount *gtype.Int                   // 连接池最大限制的连接数
-    maxOpenConnCount *gtype.Int                   // 连接池最大打开的连接数
-    maxConnLifetime  *gtype.Int                   // (单位秒)连接对象可重复使用的时间长度
+	maxOpenConnCount *gtype.Int                   // 连接池最大打开的连接数
+	maxConnLifetime  *gtype.Int                   // (单位秒)连接对象可重复使用的时间长度
 }
 
 // 执行的SQL对象
@@ -142,23 +142,23 @@ type Record map[string]Value
 type Result []Record
 
 // 关联数组，绑定一条数据表记录(使用别名)
-type Map  = map[string]interface{}
+type Map = map[string]interface{}
 
 // 关联数组列表(索引从0开始的数组)，绑定多条记录(使用别名)
 type List = []Map
 
 const (
-    OPTION_INSERT               = 0
-    OPTION_REPLACE              = 1
-    OPTION_SAVE                 = 2
-    OPTION_IGNORE               = 3
-    gDEFAULT_BATCH_NUM          = 10 // Per count for batch insert/replace/save
-    gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool.
+	OPTION_INSERT               = 0
+	OPTION_REPLACE              = 1
+	OPTION_SAVE                 = 2
+	OPTION_IGNORE               = 3
+	gDEFAULT_BATCH_NUM          = 10 // Per count for batch insert/replace/save
+	gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool.
 )
 
 var (
-    // Instance map.
-    instances = gmap.NewStrAnyMap()
+	// Instance map.
+	instances = gmap.NewStrAnyMap()
 )
 
 // New creates ORM DB object with global configurations.
@@ -167,7 +167,7 @@ var (
 func New(name ...string) (db DB, err error) {
 	group := configs.defaultGroup
 	if len(name) > 0 {
-        group = name[0]
+		group = name[0]
 	}
 	configs.RLock()
 	defer configs.RUnlock()
@@ -176,34 +176,34 @@ func New(name ...string) (db DB, err error) {
 		return nil, errors.New("empty database configuration")
 	}
 	if _, ok := configs.config[group]; ok {
-	    if node, err := getConfigNodeByGroup(group, true); err == nil {
-	        base := &dbBase {
-                group            : group,
-                debug            : gtype.NewBool(),
-                cache            : gcache.New(),
-                schema           : gtype.NewString(),
-                maxIdleConnCount : gtype.NewInt(),
-                maxOpenConnCount : gtype.NewInt(),
-                maxConnLifetime  : gtype.NewInt(gDEFAULT_CONN_MAX_LIFE_TIME),
-            }
-            switch node.Type {
-                case "mysql":
-                    base.db = &dbMysql{dbBase  : base}
-                case "pgsql":
-                    base.db = &dbPgsql{dbBase  : base}
-                case "mssql":
-                    base.db = &dbMssql{dbBase  : base}
-                case "sqlite":
-                    base.db = &dbSqlite{dbBase : base}
-                case "oracle":
-                    base.db = &dbOracle{dbBase : base}
-                default:
-                    return nil, errors.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
-            }
-            return base.db, nil
-        } else {
-            return nil, err
-        }
+		if node, err := getConfigNodeByGroup(group, true); err == nil {
+			base := &dbBase{
+				group:            group,
+				debug:            gtype.NewBool(),
+				cache:            gcache.New(),
+				schema:           gtype.NewString(),
+				maxIdleConnCount: gtype.NewInt(),
+				maxOpenConnCount: gtype.NewInt(),
+				maxConnLifetime:  gtype.NewInt(gDEFAULT_CONN_MAX_LIFE_TIME),
+			}
+			switch node.Type {
+			case "mysql":
+				base.db = &dbMysql{dbBase: base}
+			case "pgsql":
+				base.db = &dbPgsql{dbBase: base}
+			case "mssql":
+				base.db = &dbMssql{dbBase: base}
+			case "sqlite":
+				base.db = &dbSqlite{dbBase: base}
+			case "oracle":
+				base.db = &dbOracle{dbBase: base}
+			default:
+				return nil, errors.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
+			}
+			return base.db, nil
+		} else {
+			return nil, err
+		}
 	} else {
 		return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
 	}
@@ -213,47 +213,47 @@ func New(name ...string) (db DB, err error) {
 // The parameter <name> specifies the configuration group name,
 // which is DEFAULT_GROUP_NAME in default.
 func Instance(name ...string) (db DB, err error) {
-    group := configs.defaultGroup
-    if len(name) > 0 {
-        group = name[0]
-    }
-    v := instances.GetOrSetFuncLock(group, func() interface{} {
-        db, err = New(group)
-        return db
-    })
-    if v != nil {
-        return v.(DB), nil
-    }
-    return
+	group := configs.defaultGroup
+	if len(name) > 0 {
+		group = name[0]
+	}
+	v := instances.GetOrSetFuncLock(group, func() interface{} {
+		db, err = New(group)
+		return db
+	})
+	if v != nil {
+		return v.(DB), nil
+	}
+	return
 }
 
 // 获取指定数据库角色的一个配置项，内部根据权重计算负载均衡
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
-    if list, ok := configs.config[group]; ok {
-        // 将master, slave集群列表拆分出来
-        masterList := make(ConfigGroup, 0)
-        slaveList  := make(ConfigGroup, 0)
-        for i := 0; i < len(list); i++ {
-            if list[i].Role == "slave" {
-                slaveList = append(slaveList, list[i])
-            } else {
-                masterList = append(masterList, list[i])
-            }
-        }
-        if len(masterList) < 1 {
-            return nil, errors.New("at least one master node configuration's need to make sense")
-        }
-        if len(slaveList) < 1 {
-            slaveList = masterList
-        }
-        if master {
-            return getConfigNodeByPriority(masterList), nil
-        } else {
-            return getConfigNodeByPriority(slaveList), nil
-        }
-    } else {
-        return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
-    }
+	if list, ok := configs.config[group]; ok {
+		// 将master, slave集群列表拆分出来
+		masterList := make(ConfigGroup, 0)
+		slaveList := make(ConfigGroup, 0)
+		for i := 0; i < len(list); i++ {
+			if list[i].Role == "slave" {
+				slaveList = append(slaveList, list[i])
+			} else {
+				masterList = append(masterList, list[i])
+			}
+		}
+		if len(masterList) < 1 {
+			return nil, errors.New("at least one master node configuration's need to make sense")
+		}
+		if len(slaveList) < 1 {
+			slaveList = masterList
+		}
+		if master {
+			return getConfigNodeByPriority(masterList), nil
+		} else {
+			return getConfigNodeByPriority(slaveList), nil
+		}
+	} else {
+		return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
+	}
 }
 
 // 按照负载均衡算法(优先级配置)从数据库集群中选择一个配置节点出来使用
@@ -272,11 +272,11 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 	}
 	// 如果total为0表示所有连接都没有配置priority属性，那么默认都是1
 	if total == 0 {
-        for i := 0; i < len(cg); i++ {
-            cg[i].Priority = 1
-            total         += cg[i].Priority * 100
-        }
-    }
+		for i := 0; i < len(cg); i++ {
+			cg[i].Priority = 1
+			total += cg[i].Priority * 100
+		}
+	}
 	// 不能取到末尾的边界点
 	r := grand.Rand(0, total)
 	if r > 0 {
@@ -298,53 +298,53 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 
 // 获得底层数据库链接对象
 func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
-    // 负载均衡
-    node, err := getConfigNodeByGroup(bs.group, master)
-    if err != nil {
-        return nil, err
-    }
-    // 默认值设定
-    if node.Charset == "" {
-        node.Charset = "utf8"
-    }
-    v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
-        sqlDb, err = bs.db.Open(node)
-        if err != nil {
-            return nil
-        }
+	// 负载均衡
+	node, err := getConfigNodeByGroup(bs.group, master)
+	if err != nil {
+		return nil, err
+	}
+	// 默认值设定
+	if node.Charset == "" {
+		node.Charset = "utf8"
+	}
+	v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
+		sqlDb, err = bs.db.Open(node)
+		if err != nil {
+			return nil
+		}
 
-        if n := bs.maxIdleConnCount.Val(); n > 0 {
-            sqlDb.SetMaxIdleConns(n)
-        } else if node.MaxIdleConnCount > 0 {
-            sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
-        }
+		if n := bs.maxIdleConnCount.Val(); n > 0 {
+			sqlDb.SetMaxIdleConns(n)
+		} else if node.MaxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
+		}
 
-        if n := bs.maxOpenConnCount.Val(); n > 0 {
-            sqlDb.SetMaxOpenConns(n)
-        } else if node.MaxOpenConnCount > 0 {
-            sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
-        }
+		if n := bs.maxOpenConnCount.Val(); n > 0 {
+			sqlDb.SetMaxOpenConns(n)
+		} else if node.MaxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
+		}
 
-        if n := bs.maxConnLifetime.Val(); n > 0 {
-            sqlDb.SetConnMaxLifetime(time.Duration(n) * time.Second)
-        } else if node.MaxConnLifetime > 0 {
-            sqlDb.SetConnMaxLifetime(time.Duration(node.MaxConnLifetime) * time.Second)
-        }
-        return sqlDb
-    }, 0)
-    if v != nil && sqlDb == nil {
-        sqlDb = v.(*sql.DB)
-    }
-    // 是否手动选择数据库
-    if v := bs.schema.Val(); v != "" {
-        sqlDb.Exec("USE " + v)
-    }
-    return
+		if n := bs.maxConnLifetime.Val(); n > 0 {
+			sqlDb.SetConnMaxLifetime(time.Duration(n) * time.Second)
+		} else if node.MaxConnLifetime > 0 {
+			sqlDb.SetConnMaxLifetime(time.Duration(node.MaxConnLifetime) * time.Second)
+		}
+		return sqlDb
+	}, 0)
+	if v != nil && sqlDb == nil {
+		sqlDb = v.(*sql.DB)
+	}
+	// 是否手动选择数据库
+	if v := bs.schema.Val(); v != "" {
+		sqlDb.Exec("USE " + v)
+	}
+	return
 }
 
 // 切换当前数据库对象操作的数据库。
 func (bs *dbBase) SetSchema(schema string) {
-    bs.schema.Set(schema)
+	bs.schema.Set(schema)
 }
 
 // 创建底层数据库master链接对象。
@@ -354,5 +354,5 @@ func (bs *dbBase) Master() (*sql.DB, error) {
 
 // 创建底层数据库slave链接对象。
 func (bs *dbBase) Slave() (*sql.DB, error) {
-    return bs.getSqlDb(false)
+	return bs.getSqlDb(false)
 }

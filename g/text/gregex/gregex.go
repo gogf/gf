@@ -8,7 +8,7 @@
 package gregex
 
 import (
-    "regexp"
+	"regexp"
 )
 
 // Quote quotes <s> by replacing special chars in <s>
@@ -17,77 +17,77 @@ import (
 //
 // Eg: Quote(`[foo]`) returns `\[foo\]`.
 func Quote(s string) string {
-    return regexp.QuoteMeta(s)
+	return regexp.QuoteMeta(s)
 }
 
 // Validate checks whether given regular expression pattern <pattern> valid.
 func Validate(pattern string) error {
-    _, err := getRegexp(pattern)
-    return err
+	_, err := getRegexp(pattern)
+	return err
 }
 
 // IsMatch checks whether given bytes <src> matches <pattern>.
 func IsMatch(pattern string, src []byte) bool {
-    if r, err := getRegexp(pattern); err == nil {
-        return r.Match(src)
-    }
-    return false
+	if r, err := getRegexp(pattern); err == nil {
+		return r.Match(src)
+	}
+	return false
 }
 
 // IsMatchString checks whether given string <src> matches <pattern>.
 func IsMatchString(pattern string, src string) bool {
-    return IsMatch(pattern, []byte(src))
+	return IsMatch(pattern, []byte(src))
 }
 
 // MatchString return bytes slice that matched <pattern>.
 func Match(pattern string, src []byte) ([][]byte, error) {
-    if r, err := getRegexp(pattern); err == nil {
-        return r.FindSubmatch(src), nil
-    } else {
-        return nil, err
-    }
+	if r, err := getRegexp(pattern); err == nil {
+		return r.FindSubmatch(src), nil
+	} else {
+		return nil, err
+	}
 }
 
 // MatchString return strings that matched <pattern>.
 func MatchString(pattern string, src string) ([]string, error) {
-    if r, err := getRegexp(pattern); err == nil {
-        return r.FindStringSubmatch(src), nil
-    } else {
-        return nil, err
-    }
+	if r, err := getRegexp(pattern); err == nil {
+		return r.FindStringSubmatch(src), nil
+	} else {
+		return nil, err
+	}
 }
 
 // MatchAll return all bytes slices that matched <pattern>.
 func MatchAll(pattern string, src []byte) ([][][]byte, error) {
-    if r, err := getRegexp(pattern); err == nil {
-        return r.FindAllSubmatch(src, -1), nil
-    } else {
-        return nil, err
-    }
+	if r, err := getRegexp(pattern); err == nil {
+		return r.FindAllSubmatch(src, -1), nil
+	} else {
+		return nil, err
+	}
 }
 
 // MatchAllString return all strings that matched <pattern>.
 func MatchAllString(pattern string, src string) ([][]string, error) {
-    if r, err := getRegexp(pattern); err == nil {
-        return r.FindAllStringSubmatch(src, -1), nil
-    } else {
-        return nil, err
-    }
+	if r, err := getRegexp(pattern); err == nil {
+		return r.FindAllStringSubmatch(src, -1), nil
+	} else {
+		return nil, err
+	}
 }
 
 // ReplaceString replace all matched <pattern> in bytes <src> with bytes <replace>.
 func Replace(pattern string, replace, src []byte) ([]byte, error) {
-    if r, err := getRegexp(pattern); err == nil {
-        return r.ReplaceAll(src, replace), nil
-    } else {
-        return nil, err
-    }
+	if r, err := getRegexp(pattern); err == nil {
+		return r.ReplaceAll(src, replace), nil
+	} else {
+		return nil, err
+	}
 }
 
 // ReplaceString replace all matched <pattern> in string <src> with string <replace>.
 func ReplaceString(pattern, replace, src string) (string, error) {
-    r, e := Replace(pattern, []byte(replace), []byte(src))
-    return string(r), e
+	r, e := Replace(pattern, []byte(replace), []byte(src))
+	return string(r), e
 }
 
 // ReplaceFunc replace all matched <pattern> in bytes <src>
@@ -118,10 +118,10 @@ func ReplaceFuncMatch(pattern string, src []byte, replaceFunc func(match [][]byt
 // ReplaceStringFunc replace all matched <pattern> in string <src>
 // with custom replacement function <replaceFunc>.
 func ReplaceStringFunc(pattern string, src string, replaceFunc func(s string) string) (string, error) {
-    bytes, err := ReplaceFunc(pattern, []byte(src), func(bytes []byte) []byte {
-        return []byte(replaceFunc(string(bytes)))
-    })
-    return string(bytes), err
+	bytes, err := ReplaceFunc(pattern, []byte(src), func(bytes []byte) []byte {
+		return []byte(replaceFunc(string(bytes)))
+	})
+	return string(bytes), err
 }
 
 // ReplaceStringFuncMatch replace all matched <pattern> in string <src>
@@ -142,8 +142,8 @@ func ReplaceStringFuncMatch(pattern string, src string, replaceFunc func(match [
 // Split slices <src> into substrings separated by the expression and returns a slice of
 // the substrings between those expression matches.
 func Split(pattern string, src string) []string {
-    if r, err := getRegexp(pattern); err == nil {
-        return r.Split(src, -1)
-    }
-    return nil
+	if r, err := getRegexp(pattern); err == nil {
+		return r.Split(src, -1)
+	}
+	return nil
 }

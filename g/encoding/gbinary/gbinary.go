@@ -10,10 +10,10 @@
 package gbinary
 
 import (
-	"fmt"
-	"math"
 	"bytes"
 	"encoding/binary"
+	"fmt"
+	"math"
 )
 
 // 二进制位(0|1)
@@ -29,21 +29,36 @@ func Encode(vs ...interface{}) []byte {
 		}
 
 		switch value := vs[i].(type) {
-		case int:     buf.Write(EncodeInt(value))
-		case int8:    buf.Write(EncodeInt8(value))
-		case int16:   buf.Write(EncodeInt16(value))
-		case int32:   buf.Write(EncodeInt32(value))
-		case int64:   buf.Write(EncodeInt64(value))
-		case uint:    buf.Write(EncodeUint(value))
-		case uint8:   buf.Write(EncodeUint8(value))
-		case uint16:  buf.Write(EncodeUint16(value))
-		case uint32:  buf.Write(EncodeUint32(value))
-		case uint64:  buf.Write(EncodeUint64(value))
-		case bool:    buf.Write(EncodeBool(value))
-		case string:  buf.Write(EncodeString(value))
-		case []byte:  buf.Write(value)
-		case float32: buf.Write(EncodeFloat32(value))
-		case float64: buf.Write(EncodeFloat64(value))
+		case int:
+			buf.Write(EncodeInt(value))
+		case int8:
+			buf.Write(EncodeInt8(value))
+		case int16:
+			buf.Write(EncodeInt16(value))
+		case int32:
+			buf.Write(EncodeInt32(value))
+		case int64:
+			buf.Write(EncodeInt64(value))
+		case uint:
+			buf.Write(EncodeUint(value))
+		case uint8:
+			buf.Write(EncodeUint8(value))
+		case uint16:
+			buf.Write(EncodeUint16(value))
+		case uint32:
+			buf.Write(EncodeUint32(value))
+		case uint64:
+			buf.Write(EncodeUint64(value))
+		case bool:
+			buf.Write(EncodeBool(value))
+		case string:
+			buf.Write(EncodeString(value))
+		case []byte:
+			buf.Write(value)
+		case float32:
+			buf.Write(EncodeFloat32(value))
+		case float64:
+			buf.Write(EncodeFloat64(value))
 		default:
 			if err := binary.Write(buf, binary.LittleEndian, value); err != nil {
 				buf.Write(EncodeString(fmt.Sprintf("%v", value)))
@@ -58,9 +73,9 @@ func Encode(vs ...interface{}) []byte {
 func EncodeByLength(length int, vs ...interface{}) []byte {
 	b := Encode(vs...)
 	if len(b) < length {
-		b = append(b, make([]byte, length - len(b))...)
+		b = append(b, make([]byte, length-len(b))...)
 	} else if len(b) > length {
-		b = b[0 : length]
+		b = b[0:length]
 	}
 	return b
 }
@@ -165,14 +180,14 @@ func EncodeUint64(i uint64) []byte {
 }
 
 func EncodeFloat32(f float32) []byte {
-	bits  := math.Float32bits(f)
+	bits := math.Float32bits(f)
 	bytes := make([]byte, 4)
 	binary.LittleEndian.PutUint32(bytes, bits)
 	return bytes
 }
 
 func EncodeFloat64(f float64) []byte {
-	bits  := math.Float64bits(f)
+	bits := math.Float64bits(f)
 	bytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bytes, bits)
 	return bytes
@@ -184,8 +199,8 @@ func fillUpSize(b []byte, l int) []byte {
 		return b
 	}
 	c := make([]byte, 0)
-	c  = append(c, b...)
-	for i := 0; i < l - len(b); i++ {
+	c = append(c, b...)
+	for i := 0; i < l-len(b); i++ {
 		c = append(c, 0x00)
 	}
 	return c
@@ -287,6 +302,7 @@ func EncodeBitsWithUint(bits []Bit, ui uint, l int) []Bit {
 		return a
 	}
 }
+
 // 将bits转换为[]byte，从左至右进行编码，不足1 byte按0往末尾补充
 func EncodeBitsToBytes(bits []Bit) []byte {
 	if len(bits)%8 != 0 {
@@ -296,7 +312,7 @@ func EncodeBitsToBytes(bits []Bit) []byte {
 	}
 	b := make([]byte, 0)
 	for i := 0; i < len(bits); i += 8 {
-		b = append(b, byte(DecodeBitsToUint(bits[i : i + 8])))
+		b = append(b, byte(DecodeBitsToUint(bits[i:i+8])))
 	}
 	return b
 }
@@ -305,7 +321,7 @@ func EncodeBitsToBytes(bits []Bit) []byte {
 func DecodeBits(bits []Bit) int {
 	v := int(0)
 	for _, i := range bits {
-		v = v << 1 | int(i)
+		v = v<<1 | int(i)
 	}
 	return v
 }
@@ -314,7 +330,7 @@ func DecodeBits(bits []Bit) int {
 func DecodeBitsToUint(bits []Bit) uint {
 	v := uint(0)
 	for _, i := range bits {
-		v = v << 1 | uint(i)
+		v = v<<1 | uint(i)
 	}
 	return v
 }

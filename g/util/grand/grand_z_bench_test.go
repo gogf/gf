@@ -9,16 +9,16 @@
 package grand_test
 
 import (
-    "github.com/gogf/gf/g/util/grand"
-    "testing"
+	"github.com/gogf/gf/g/util/grand"
+	"testing"
 )
 
 var buffer = make([]byte, 8)
 
 func Benchmark_Rand(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        grand.Rand(0, 999999999)
-    }
+	for i := 0; i < b.N; i++ {
+		grand.Rand(0, 999999999)
+	}
 }
 
 //func Benchmark_Buffer(b *testing.B) {

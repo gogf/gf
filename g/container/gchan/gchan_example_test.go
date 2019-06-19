@@ -7,23 +7,23 @@
 package gchan_test
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g/container/gchan"
+	"fmt"
+	"github.com/gogf/gf/g/container/gchan"
 )
 
 func Example_basic() {
-    n := 10
-    c := gchan.New(n)
-    for i := 0; i < n; i++ {
-        c.Push(i)
-    }
-    fmt.Println(c.Len(), c.Cap())
-    for i := 0; i < n; i++ {
-        fmt.Print(c.Pop())
-    }
-    c.Close()
+	n := 10
+	c := gchan.New(n)
+	for i := 0; i < n; i++ {
+		c.Push(i)
+	}
+	fmt.Println(c.Len(), c.Cap())
+	for i := 0; i < n; i++ {
+		fmt.Print(c.Pop())
+	}
+	c.Close()
 
-    // Output:
-    //10 10
-    //0123456789
+	// Output:
+	//10 10
+	//0123456789
 }

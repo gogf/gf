@@ -32,9 +32,9 @@ type AVLTreeNode struct {
 // NewAVLTree instantiates an AVL tree with the custom key comparator.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *AVLTree {
+func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe ...bool) *AVLTree {
 	return &AVLTree{
-		mu        : rwmutex.New(unsafe...),
+		mu:         rwmutex.New(unsafe...),
 		comparator: comparator,
 	}
 }
@@ -42,7 +42,7 @@ func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe...bool) *AVLTree
 // NewAVLTreeFrom instantiates an AVL tree with the custom key comparator and data map.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe...bool) *AVLTree {
+func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe ...bool) *AVLTree {
 	tree := NewAVLTree(comparator, unsafe...)
 	for k, v := range data {
 		tree.put(k, v, nil, &tree.root)
@@ -88,9 +88,12 @@ func (tree *AVLTree) doSearch(key interface{}) (value interface{}, found bool) {
 	for n != nil {
 		cmp := tree.comparator(key, n.Key)
 		switch {
-			case cmp == 0: return n.Value, true
-			case cmp  < 0: n = n.children[0]
-			case cmp  > 0: n = n.children[1]
+		case cmp == 0:
+			return n.Value, true
+		case cmp < 0:
+			n = n.children[0]
+		case cmp > 0:
+			n = n.children[1]
 		}
 	}
 	return nil, false
@@ -117,7 +120,7 @@ func (tree *AVLTree) doSetWithLockCheck(key interface{}, value interface{}) inte
 	if v, ok := tree.doSearch(key); ok {
 		return v
 	}
-	if f, ok := value.(func() interface {}); ok {
+	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
 	tree.put(key, value, nil, &tree.root)
@@ -254,7 +257,7 @@ func (tree *AVLTree) Size() int {
 
 // Keys returns all keys in asc order.
 func (tree *AVLTree) Keys() []interface{} {
-	keys  := make([]interface{}, tree.Size())
+	keys := make([]interface{}, tree.Size())
 	index := 0
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		keys[index] = key
@@ -267,7 +270,7 @@ func (tree *AVLTree) Keys() []interface{} {
 // Values returns all values in asc order based on the key.
 func (tree *AVLTree) Values() []interface{} {
 	values := make([]interface{}, tree.Size())
-	index  := 0
+	index := 0
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		values[index] = value
 		index++
@@ -283,9 +286,9 @@ func (tree *AVLTree) Left() *AVLTreeNode {
 	defer tree.mu.RUnlock()
 	node := tree.bottom(0)
 	if tree.mu.IsSafe() {
-		return &AVLTreeNode {
-			Key   : node.Key,
-			Value : node.Value,
+		return &AVLTreeNode{
+			Key:   node.Key,
+			Value: node.Value,
 		}
 	}
 	return node
@@ -298,9 +301,9 @@ func (tree *AVLTree) Right() *AVLTreeNode {
 	defer tree.mu.RUnlock()
 	node := tree.bottom(1)
 	if tree.mu.IsSafe() {
-		return &AVLTreeNode {
-			Key   : node.Key,
-			Value : node.Value,
+		return &AVLTreeNode{
+			Key:   node.Key,
+			Value: node.Value,
 		}
 	}
 	return node
@@ -321,11 +324,13 @@ func (tree *AVLTree) Floor(key interface{}) (floor *AVLTreeNode, found bool) {
 	for n != nil {
 		c := tree.comparator(key, n.Key)
 		switch {
-			case c == 0: return n, true
-			case c  < 0: n = n.children[0]
-			case c  > 0:
-				floor, found = n, true
-				n = n.children[1]
+		case c == 0:
+			return n, true
+		case c < 0:
+			n = n.children[0]
+		case c > 0:
+			floor, found = n, true
+			n = n.children[1]
 		}
 	}
 	if found {
@@ -349,11 +354,13 @@ func (tree *AVLTree) Ceiling(key interface{}) (ceiling *AVLTreeNode, found bool)
 	for n != nil {
 		c := tree.comparator(key, n.Key)
 		switch {
-			case c == 0: return n, true
-			case c  > 0: n = n.children[1]
-			case c  < 0:
-				ceiling, found = n, true
-				n = n.children[0]
+		case c == 0:
+			return n, true
+		case c > 0:
+			n = n.children[1]
+		case c < 0:
+			ceiling, found = n, true
+			n = n.children[0]
 		}
 	}
 	if found {
@@ -401,7 +408,7 @@ func (tree *AVLTree) Map() map[interface{}]interface{} {
 // or else the comparator would panic.
 //
 // If the type of value is different with key, you pass the new <comparator>.
-func (tree *AVLTree) Flip(comparator...func(v1, v2 interface{}) int) {
+func (tree *AVLTree) Flip(comparator ...func(v1, v2 interface{}) int) {
 	t := (*AVLTree)(nil)
 	if len(comparator) > 0 {
 		t = NewAVLTree(comparator[0], !tree.mu.IsSafe())
@@ -419,13 +426,13 @@ func (tree *AVLTree) Flip(comparator...func(v1, v2 interface{}) int) {
 }
 
 // Iterator is alias of IteratorAsc.
-func (tree *AVLTree) Iterator(f func (key, value interface{}) bool) {
+func (tree *AVLTree) Iterator(f func(key, value interface{}) bool) {
 	tree.IteratorAsc(f)
 }
 
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
-func (tree *AVLTree) IteratorAsc(f func (key, value interface{}) bool) {
+func (tree *AVLTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.bottom(0)
@@ -439,7 +446,7 @@ func (tree *AVLTree) IteratorAsc(f func (key, value interface{}) bool) {
 
 // IteratorDesc iterates the tree in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
-func (tree *AVLTree) IteratorDesc(f func (key, value interface{}) bool) {
+func (tree *AVLTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.bottom(1)
@@ -488,7 +495,7 @@ func (tree *AVLTree) remove(key interface{}, qp **AVLTreeNode) (value interface{
 	if c == 0 {
 		tree.size--
 		value = q.Value
-		fix   = true
+		fix = true
 		if q.children[1] == nil {
 			if q.children[0] != nil {
 				q.children[0].parent = q.parent
@@ -568,9 +575,9 @@ func removeFix(c int8, t **AVLTreeNode) bool {
 
 	a := (c + 1) / 2
 	if s.children[a].b == 0 {
-		s   = rotate(c, s)
+		s = rotate(c, s)
 		s.b = -c
-		*t  = s
+		*t = s
 		return false
 	}
 
@@ -597,15 +604,15 @@ func doubleRotate(c int8, s *AVLTreeNode) *AVLTreeNode {
 	p := rotate(c, s)
 
 	switch {
-		default:
-			s.b = 0
-			r.b = 0
-		case p.b == c:
-			s.b = -c
-			r.b = 0
-		case p.b == -c:
-			s.b = 0
-			r.b = c
+	default:
+		s.b = 0
+		r.b = 0
+	case p.b == c:
+		s.b = -c
+		r.b = 0
+	case p.b == -c:
+		s.b = 0
+		r.b = c
 	}
 
 	p.b = 0

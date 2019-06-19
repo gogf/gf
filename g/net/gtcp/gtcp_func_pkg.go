@@ -9,7 +9,7 @@ package gtcp
 import "time"
 
 // 简单协议: (面向短链接)发送消息包
-func SendPkg(addr string, data []byte, option...PkgOption) error {
+func SendPkg(addr string, data []byte, option ...PkgOption) error {
 	conn, err := NewConn(addr)
 	if err != nil {
 		return err
@@ -19,7 +19,7 @@ func SendPkg(addr string, data []byte, option...PkgOption) error {
 }
 
 // 简单协议: (面向短链接)发送数据并等待接收返回数据
-func SendRecvPkg(addr string, data []byte, option...PkgOption) ([]byte, error) {
+func SendRecvPkg(addr string, data []byte, option ...PkgOption) ([]byte, error) {
 	conn, err := NewConn(addr)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func SendRecvPkg(addr string, data []byte, option...PkgOption) ([]byte, error) {
 }
 
 // 简单协议: (面向短链接)带超时时间的数据发送
-func SendPkgWithTimeout(addr string, data []byte, timeout time.Duration, option...PkgOption) error {
+func SendPkgWithTimeout(addr string, data []byte, timeout time.Duration, option ...PkgOption) error {
 	conn, err := NewConn(addr)
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func SendPkgWithTimeout(addr string, data []byte, timeout time.Duration, option.
 }
 
 // 简单协议: (面向短链接)发送数据并等待接收返回数据(带返回超时等待时间)
-func SendRecvPkgWithTimeout(addr string, data []byte, timeout time.Duration, option...PkgOption) ([]byte, error) {
+func SendRecvPkgWithTimeout(addr string, data []byte, timeout time.Duration, option ...PkgOption) ([]byte, error) {
 	conn, err := NewConn(addr)
 	if err != nil {
 		return nil, err

@@ -61,7 +61,7 @@ func convert(xml []byte) (res []byte, err error) {
 		xmlEncode = matchStr[1]
 	}
 	xmlEncode = strings.ToUpper(xmlEncode)
-	res, err  = gregex.Replace(patten, []byte(""), xml)
+	res, err = gregex.Replace(patten, []byte(""), xml)
 	if err != nil {
 		return nil, err
 	}

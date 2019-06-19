@@ -8,21 +8,20 @@
 package gmd5
 
 import (
-    "crypto/md5"
-    "fmt"
-    "os"
-    "io"
-    "github.com/gogf/gf/g/util/gconv"
+	"crypto/md5"
+	"fmt"
+	"github.com/gogf/gf/g/util/gconv"
+	"io"
+	"os"
 )
 
 // Encrypt encrypts any type of variable using MD5 algorithms.
 // It uses gconv package to convert <v> to its bytes type.
 func Encrypt(v interface{}) string {
-    h := md5.New()
-    h.Write([]byte(gconv.Bytes(v)))
-    return fmt.Sprintf("%x", h.Sum(nil))
+	h := md5.New()
+	h.Write([]byte(gconv.Bytes(v)))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
-
 
 // Deprecated.
 func EncryptString(v string) string {
@@ -31,18 +30,17 @@ func EncryptString(v string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-
 // EncryptFile encrypts file content of <path> using MD5 algorithms.
 func EncryptFile(path string) string {
-    f, e := os.Open(path)
-    if e != nil {
-        return ""
-    }
-    defer f.Close()
-    h   := md5.New()
-    _, e = io.Copy(h, f)
-    if e != nil {
-        return ""
-    }
-    return fmt.Sprintf("%x", h.Sum(nil))
+	f, e := os.Open(path)
+	if e != nil {
+		return ""
+	}
+	defer f.Close()
+	h := md5.New()
+	_, e = io.Copy(h, f)
+	if e != nil {
+		return ""
+	}
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

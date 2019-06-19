@@ -90,10 +90,9 @@ func Test_Format(t *testing.T) {
 func Test_FormatTo(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.FormatTo("Y-m-01 00:00:01"), timeTemp.Time.Format("2006-01") + "-01 00:00:01")
+		gtest.Assert(timeTemp.FormatTo("Y-m-01 00:00:01"), timeTemp.Time.Format("2006-01")+"-01 00:00:01")
 	})
 }
-
 
 func Test_Layout(t *testing.T) {
 	gtest.Case(t, func() {

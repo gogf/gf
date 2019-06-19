@@ -9,22 +9,23 @@
 package grpool_test
 
 import (
-    "testing"
-    "github.com/gogf/gf/g/os/grpool"
+	"github.com/gogf/gf/g/os/grpool"
+	"testing"
 )
 
 func increment() {
-    for i := 0; i < 1000000; i++ {}
+	for i := 0; i < 1000000; i++ {
+	}
 }
 
 func BenchmarkGrpool_1(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        grpool.Add(increment)
-    }
+	for i := 0; i < b.N; i++ {
+		grpool.Add(increment)
+	}
 }
 
 func BenchmarkGoroutine_1(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        go increment()
-    }
+	for i := 0; i < b.N; i++ {
+		go increment()
+	}
 }
