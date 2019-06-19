@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/g/util/gconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func Test_StringArray_Basic(t *testing.T) {
@@ -106,15 +107,6 @@ func TestString_Range(t *testing.T) {
 	})
 }
 
-func TestStringArray_Merge(t *testing.T) {
-	gtest.Case(t, func() {
-		a1 := []string{"0", "1", "2", "3"}
-		a2 := []string{"4", "5", "6", "7"}
-		array1 := garray.NewStringArrayFrom(a1)
-		array2 := garray.NewStringArrayFrom(a2)
-		gtest.Assert(array1.Merge(array2).Slice(), []string{"0", "1", "2", "3", "4", "5", "6", "7"})
-	})
-}
 
 func TestStringArray_Fill(t *testing.T) {
 	gtest.Case(t, func() {
@@ -636,4 +628,170 @@ func TestStringArray_Remove(t *testing.T) {
 		gtest.Assert(array1.Len(), 3)
 
 	})
+}
+
+func TestSortedStringArray_LockFunc(t *testing.T) {
+	s1 := []string{"a", "b", "c", "d"}
+	a1 := garray.NewSortedStringArrayFrom(s1)
+
+	ch1 := make(chan int64, 2)
+	go a1.LockFunc(func(n1 []string) { //互斥锁
+		n1[3] = "e"
+		time.Sleep(1 * time.Second) //暂停一秒
+	})
+
+	go func() {
+		time.Sleep(10 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		a1.Len()
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+	}()
+
+	t1 := <-ch1
+	t2 := <-ch1
+	// 相差大于0.6秒，说明在读取a1.len时，发生了等待。  防止ci抖动,以豪秒为单位
+	gtest.AssertGT(t2-t1, 600)
+	gtest.Assert(a1.Contains("e"), true)
+}
+
+func TestSortedStringArray_RLockFunc(t *testing.T) {
+	s1 := []string{"a", "b", "c", "d"}
+	a1 := garray.NewSortedStringArrayFrom(s1)
+
+	ch1 := make(chan int64, 2)
+	go a1.RLockFunc(func(n1 []string) { //读锁
+		n1[3] = "e"
+		time.Sleep(1 * time.Second) //暂停一秒
+	})
+
+	go func() {
+		time.Sleep(10 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		a1.Len()
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+	}()
+
+	t1 := <-ch1
+	t2 := <-ch1
+	// 由于另一个goroutine加的读锁，其它可读,所以ch1的操作间隔是很小的.a.len 操作并没有等待,
+	// 防止ci抖动,以豪秒为单位
+	gtest.AssertLT(t2-t1, 2)
+	gtest.Assert(a1.Contains("e"), true)
+}
+
+func TestSortedStringArray_Merge(t *testing.T) {
+	//n1 := []int{1, 2, 4, 3}
+	n2 := []int{7, 8, 9}
+	n3 := []int{3, 6}
+
+	s1 := []string{"a", "b", "c"}
+	in1 := []interface{}{1, "a", 2, "b"}
+
+	a1 := garray.NewSortedStringArrayFrom(s1)
+	b1 := garray.NewStringArrayFrom(s1)
+	b2 := garray.NewIntArrayFrom(n3)
+	b3 := garray.NewArrayFrom(in1)
+	b4 := garray.NewSortedStringArrayFrom(s1)
+	b5 := garray.NewSortedIntArrayFrom(n3)
+
+	gtest.Assert(a1.Merge(n2).Len(), 6)
+	gtest.Assert(a1.Merge(n3).Len(), 8)
+	gtest.Assert(a1.Merge(b1).Len(), 11)
+	gtest.Assert(a1.Merge(b2).Len(), 13)
+	gtest.Assert(a1.Merge(b3).Len(), 17)
+	gtest.Assert(a1.Merge(b4).Len(), 20)
+	gtest.Assert(a1.Merge(b5).Len(), 22)
+}
+
+func TestStringArray_SortFunc(t *testing.T) {
+	s1 := []string{"a", "b", "d", "c"}
+	a1 := garray.NewStringArrayFrom(s1)
+	func1 := func(v1, v2 string) bool {
+		return strings.Compare(gconv.String(v1), gconv.String(v2)) < 0
+	}
+	func2 := func(v1, v2 string) bool {
+		return strings.Compare(gconv.String(v1), gconv.String(v2)) > 0
+	}
+
+	a2 := a1.SortFunc(func1)
+	gtest.Assert(a2, []string{"a", "b", "c", "d"})
+
+	a3 := a1.SortFunc(func2)
+	gtest.Assert(a3, []string{"d", "c", "b", "a"})
+
+}
+
+
+func TestStringArray_LockFunc(t *testing.T) {
+	s1 := []string{"a", "b", "c", "d"}
+	a1 := garray.NewStringArrayFrom(s1)
+
+	ch1 := make(chan int64, 2)
+	go a1.LockFunc(func(n1 []string) { //互斥锁
+		n1[3] = "f"
+		time.Sleep(1 * time.Second) //暂停一秒
+	})
+
+	go func() {
+		time.Sleep(10 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		a1.Len()
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+	}()
+
+	t1 := <-ch1
+	t2 := <-ch1
+	// 相差大于0.6秒，说明在读取a1.len时，发生了等待。  防止ci抖动,以豪秒为单位
+	gtest.AssertGT(t2-t1, 600)
+	gtest.Assert(a1.Contains("f"), true)
+}
+
+func TestStringArray_RLockFunc(t *testing.T) {
+	s1 := []string{"a", "b", "c", "d"}
+	a1 := garray.NewStringArrayFrom(s1)
+
+	ch1 := make(chan int64, 2)
+	go a1.RLockFunc(func(n1 []string) { //读锁
+		n1[2] = "g"
+		time.Sleep(1 * time.Second) //暂停一秒
+	})
+
+	go func() {
+		time.Sleep(10 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		a1.Len()
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+	}()
+
+	t1 := <-ch1
+	t2 := <-ch1
+	// 由于另一个goroutine加的读锁，其它可读,所以ch1的操作间隔是很小的.a.len 操作并没有等待,
+	// 防止ci抖动,以豪秒为单位
+	gtest.AssertLT(t2-t1, 2)
+	gtest.Assert(a1.Contains("g"), true)
+
+}
+
+func TestStringArray_Merge(t *testing.T) {
+	//n1 := []int{1, 2, 4, 3}
+	n2 := []int{7, 8, 9}
+	n3 := []int{3, 6}
+
+	s1 := []string{"a", "b", "c"}
+	in1 := []interface{}{1, "a", 2, "b"}
+
+	a1 := garray.NewStringArrayFrom(s1)
+	b1 := garray.NewStringArrayFrom(s1)
+	b2 := garray.NewIntArrayFrom(n3)
+	b3 := garray.NewArrayFrom(in1)
+	b4 := garray.NewSortedStringArrayFrom(s1)
+	b5 := garray.NewSortedIntArrayFrom(n3)
+
+	gtest.Assert(a1.Merge(n2).Len(), 6)
+	gtest.Assert(a1.Merge(n3).Len(), 8)
+	gtest.Assert(a1.Merge(b1).Len(), 11)
+	gtest.Assert(a1.Merge(b2).Len(), 13)
+	gtest.Assert(a1.Merge(b3).Len(), 17)
+	gtest.Assert(a1.Merge(b4).Len(), 20)
+	gtest.Assert(a1.Merge(b5).Len(), 22)
 }
