@@ -140,12 +140,11 @@ func TestConvertErr(t *testing.T) {
 	gtest.Case(t, func() {
 		srcCharset := "big5"
 		dstCharset := "gbk"
-		src        := "Hello \xb1`\xa5\u03b0\xea\xa6r\xbc\u0437\u01e6r\xc5\xe9\xaa\xed"
+		src := "Hello \xb1`\xa5\u03b0\xea\xa6r\xbc\u0437\u01e6r\xc5\xe9\xaa\xed"
 
 		s1, e1 := gcharset.Convert(srcCharset, srcCharset, src)
 		gtest.Assert(e1, nil)
 		gtest.Assert(s1, src)
-
 
 		s2, e2 := gcharset.Convert(dstCharset, "no this charset", src)
 		gtest.AssertNE(e2, nil)

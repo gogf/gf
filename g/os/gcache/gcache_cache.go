@@ -7,30 +7,30 @@
 package gcache
 
 import (
-    "github.com/gogf/gf/g/os/gtimer"
-    "sync/atomic"
-    "time"
-    "unsafe"
+	"github.com/gogf/gf/g/os/gtimer"
+	"sync/atomic"
+	"time"
+	"unsafe"
 )
 
 // Cache struct.
 type Cache struct {
-    *memCache
+	*memCache
 }
 
 // New creates and returns a new cache object.
-func New(lruCap...int) *Cache {
-    c := &Cache {
-        memCache : newMemCache(lruCap...),
-    }
-    gtimer.AddSingleton(time.Second, c.syncEventAndClearExpired)
-    return c
+func New(lruCap ...int) *Cache {
+	c := &Cache{
+		memCache: newMemCache(lruCap...),
+	}
+	gtimer.AddSingleton(time.Second, c.syncEventAndClearExpired)
+	return c
 }
 
 // Clear clears all data of the cache.
 func (c *Cache) Clear() {
 	// atomic swap to ensure atomicity.
-    old := atomic.SwapPointer((*unsafe.Pointer)(unsafe.Pointer(&c.memCache)), unsafe.Pointer(newMemCache()))
-    // close the old cache object.
-    (*memCache)(old).Close()
+	old := atomic.SwapPointer((*unsafe.Pointer)(unsafe.Pointer(&c.memCache)), unsafe.Pointer(newMemCache()))
+	// close the old cache object.
+	(*memCache)(old).Close()
 }

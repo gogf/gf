@@ -9,48 +9,46 @@
 package gmap_test
 
 import (
-    "testing"
-    "github.com/gogf/gf/g/container/gmap"
-    "sync"
+	"github.com/gogf/gf/g/container/gmap"
+	"sync"
+	"testing"
 )
-
 
 var m1 = gmap.NewIntIntMap()
 var m2 = sync.Map{}
 
 func BenchmarkGmapSet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        m1.Set(i, i)
-    }
+	for i := 0; i < b.N; i++ {
+		m1.Set(i, i)
+	}
 }
 
 func BenchmarkSyncmapSet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        m2.Store(i, i)
-    }
+	for i := 0; i < b.N; i++ {
+		m2.Store(i, i)
+	}
 }
 
 func BenchmarkGmapGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        m1.Get(i)
-    }
+	for i := 0; i < b.N; i++ {
+		m1.Get(i)
+	}
 }
 
 func BenchmarkSyncmapGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        m2.Load(i)
-    }
+	for i := 0; i < b.N; i++ {
+		m2.Load(i)
+	}
 }
 
 func BenchmarkGmapRemove(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        m1.Remove(i)
-    }
+	for i := 0; i < b.N; i++ {
+		m1.Remove(i)
+	}
 }
 
 func BenchmarkSyncmapRmove(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        m2.Delete(i)
-    }
+	for i := 0; i < b.N; i++ {
+		m2.Delete(i)
+	}
 }
-

@@ -9,9 +9,9 @@
 package ghttp
 
 import (
-    "os"
-    "syscall"
-    "os/signal"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 // 进程信号量监听消息队列
@@ -19,30 +19,30 @@ var procSignalChan = make(chan os.Signal)
 
 // 信号量处理
 func handleProcessSignal() {
-    var sig os.Signal
-    signal.Notify(
-        procSignalChan,
-        syscall.SIGINT,
-        syscall.SIGQUIT,
-        syscall.SIGKILL,
-        syscall.SIGTERM,
-        syscall.SIGUSR1,
-        syscall.SIGUSR2,
-    )
-    for {
-        sig = <- procSignalChan
-        switch sig {
-            // 进程终止，停止所有子进程运行
-            case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM:
-                shutdownWebServers(sig.String())
-                return
+	var sig os.Signal
+	signal.Notify(
+		procSignalChan,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGKILL,
+		syscall.SIGTERM,
+		syscall.SIGUSR1,
+		syscall.SIGUSR2,
+	)
+	for {
+		sig = <-procSignalChan
+		switch sig {
+		// 进程终止，停止所有子进程运行
+		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM:
+			shutdownWebServers(sig.String())
+			return
 
-            // 用户信号，重启服务
-            case syscall.SIGUSR1:
-                restartWebServers(sig.String())
-                return
+		// 用户信号，重启服务
+		case syscall.SIGUSR1:
+			restartWebServers(sig.String())
+			return
 
-            default:
-        }
-    }
+		default:
+		}
+	}
 }

@@ -8,24 +8,24 @@
 package ghttp
 
 import (
-    "strings"
-    runpprof "runtime/pprof"
-    netpprof "net/http/pprof"
-    "github.com/gogf/gf/g/os/gview"
+	"github.com/gogf/gf/g/os/gview"
+	netpprof "net/http/pprof"
+	runpprof "runtime/pprof"
+	"strings"
 )
 
 // 用于pprof的对象
-type utilPprof struct {}
+type utilPprof struct{}
 
 func (p *utilPprof) Index(r *Request) {
-    profiles := runpprof.Profiles()
-    action   := r.Get("action")
-    data     := map[string]interface{}{
-        "uri"      : strings.TrimRight(r.URL.Path, "/") + "/",
-        "profiles" : profiles,
-    }
-    if len(action) == 0 {
-        buffer, _ := gview.ParseContent(`
+	profiles := runpprof.Profiles()
+	action := r.Get("action")
+	data := map[string]interface{}{
+		"uri":      strings.TrimRight(r.URL.Path, "/") + "/",
+		"profiles": profiles,
+	}
+	if len(action) == 0 {
+		buffer, _ := gview.ParseContent(`
             <html>
             <head>
                 <title>gf ghttp pprof</title>
@@ -40,45 +40,45 @@ func (p *utilPprof) Index(r *Request) {
             </body>
             </html>
             `, data)
-        r.Response.Write(buffer)
-        return
-    }
-    for _, p := range profiles {
-        if p.Name() == action {
-            p.WriteTo(r.Response.Writer, r.GetRequestInt("debug"))
-            break
-        }
-    }
+		r.Response.Write(buffer)
+		return
+	}
+	for _, p := range profiles {
+		if p.Name() == action {
+			p.WriteTo(r.Response.Writer, r.GetRequestInt("debug"))
+			break
+		}
+	}
 }
 
 func (p *utilPprof) Cmdline(r *Request) {
-    netpprof.Cmdline(r.Response.Writer, r.Request)
+	netpprof.Cmdline(r.Response.Writer, r.Request)
 }
 
 func (p *utilPprof) Profile(r *Request) {
-    netpprof.Profile(r.Response.Writer, r.Request)
+	netpprof.Profile(r.Response.Writer, r.Request)
 }
 
 func (p *utilPprof) Symbol(r *Request) {
-    netpprof.Symbol(r.Response.Writer, r.Request)
+	netpprof.Symbol(r.Response.Writer, r.Request)
 }
 
 func (p *utilPprof) Trace(r *Request) {
-    netpprof.Trace(r.Response.Writer, r.Request)
+	netpprof.Trace(r.Response.Writer, r.Request)
 }
 
 // 开启pprof支持
-func (s *Server) EnablePprof(pattern...string) {
-    p := "/debug/pprof"
-    if len(pattern) > 0 {
-        p = pattern[0]
-    }
-    up := &utilPprof{}
-    _, _, uri, _ := s.parsePattern(p)
-    uri = strings.TrimRight(uri, "/")
-    s.BindHandler(uri + "/*action", up.Index)
-    s.BindHandler(uri + "/cmdline", up.Cmdline)
-    s.BindHandler(uri + "/profile", up.Profile)
-    s.BindHandler(uri + "/symbol",  up.Symbol)
-    s.BindHandler(uri + "/trace",   up.Trace)
+func (s *Server) EnablePprof(pattern ...string) {
+	p := "/debug/pprof"
+	if len(pattern) > 0 {
+		p = pattern[0]
+	}
+	up := &utilPprof{}
+	_, _, uri, _ := s.parsePattern(p)
+	uri = strings.TrimRight(uri, "/")
+	s.BindHandler(uri+"/*action", up.Index)
+	s.BindHandler(uri+"/cmdline", up.Cmdline)
+	s.BindHandler(uri+"/profile", up.Profile)
+	s.BindHandler(uri+"/symbol", up.Symbol)
+	s.BindHandler(uri+"/trace", up.Trace)
 }

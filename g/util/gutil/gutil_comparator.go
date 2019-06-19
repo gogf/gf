@@ -93,11 +93,11 @@ func ComparatorTime(a, b interface{}) int {
 	aTime := gconv.Time(a)
 	bTime := gconv.Time(b)
 	switch {
-		case aTime.After(bTime):
-			return 1
-		case aTime.Before(bTime):
-			return -1
-		default:
-			return 0
+	case aTime.After(bTime):
+		return 1
+	case aTime.Before(bTime):
+		return -1
+	default:
+		return 0
 	}
 }

@@ -17,7 +17,7 @@ func main() {
 			time.Sleep(10000 * time.Millisecond)
 		})
 	}()
-	time.Sleep(10*time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	for i := 0; i < 10000; i++ {
 		go func(i int) {
 			time.Sleep(50 * time.Millisecond)

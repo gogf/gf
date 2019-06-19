@@ -35,7 +35,7 @@ func TestEncrypt(t *testing.T) {
 
 		result := "1427562bb29f88a1161590b76398ab72"
 		encrypt := gmd5.Encrypt(123456)
-		gtest.AssertEQ(encrypt,result)
+		gtest.AssertEQ(encrypt, result)
 	})
 
 	gtest.Case(t, func() {
@@ -46,7 +46,7 @@ func TestEncrypt(t *testing.T) {
 		}
 		result := "70917ebce8bd2f78c736cda63870fb39"
 		encrypt := gmd5.Encrypt(user)
-		gtest.AssertEQ(encrypt,result)
+		gtest.AssertEQ(encrypt, result)
 	})
 }
 
@@ -73,6 +73,5 @@ func TestEncryptFile(t *testing.T) {
 		errEncrypt := gmd5.EncryptFile(errorPath)
 		gtest.AssertEQ(errEncrypt, "")
 	})
-
 
 }

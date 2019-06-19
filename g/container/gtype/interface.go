@@ -7,7 +7,7 @@
 package gtype
 
 import (
-    "sync/atomic"
+	"sync/atomic"
 )
 
 type Interface struct {
@@ -16,28 +16,28 @@ type Interface struct {
 
 // NewInterface returns a concurrent-safe object for interface{} type,
 // with given initial value <value>.
-func NewInterface(value...interface{}) *Interface {
-    t := &Interface{}
-    if len(value) > 0 && value[0] != nil {
-        t.value.Store(value[0])
-    }
-    return t
+func NewInterface(value ...interface{}) *Interface {
+	t := &Interface{}
+	if len(value) > 0 && value[0] != nil {
+		t.value.Store(value[0])
+	}
+	return t
 }
 
 // Clone clones and returns a new concurrent-safe object for interface{} type.
 func (v *Interface) Clone() *Interface {
-    return NewInterface(v.Val())
+	return NewInterface(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
 // Note: The parameter <value> cannot be nil.
 func (v *Interface) Set(value interface{}) (old interface{}) {
-    old = v.Val()
-    v.value.Store(value)
-    return
+	old = v.Val()
+	v.value.Store(value)
+	return
 }
 
 // Val atomically loads t.value.
 func (v *Interface) Val() interface{} {
-    return v.value.Load()
+	return v.value.Load()
 }

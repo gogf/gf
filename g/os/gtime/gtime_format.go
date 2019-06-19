@@ -28,14 +28,14 @@ var (
 		'z': "",       // 年份中的第几天  0到365
 
 		// ================== 日 ==================
-		'W': "",       // ISO-8601 格式年份中的第几周，每周从星期一开始 例如：42（当年的第 42 周）
+		'W': "", // ISO-8601 格式年份中的第几周，每周从星期一开始 例如：42（当年的第 42 周）
 
 		// ================== 月 ==================
 		'F': "January", // 月份，完整的文本格式，例如 January 或者 March	January 到 December
 		'm': "01",      // 数字表示的月份，有前导零(01 到 12)
 		'M': "Jan",     // 三个字母缩写表示的月份(Jan 到 Dec)
 		'n': "1",       // 数字表示的月份，没有前导零(1 到 12)
-		't': "",       // 指定的月份有几天 28到31
+		't': "",        // 指定的月份有几天 28到31
 
 		// ================== 年 ==================
 		'Y': "2006", // 4 位数字完整表示的年份, 例如：1999 或 2003
@@ -80,42 +80,53 @@ var (
 
 // 使用自定义日期格式格式化输出日期。
 func (t *Time) Format(format string) string {
-	runes  := []rune(format)
+	runes := []rune(format)
 	buffer := bytes.NewBuffer(nil)
 	for i := 0; i < len(runes); {
 		switch runes[i] {
-			case '\\':
-				if i < len(runes)-1 {
-					buffer.WriteRune(runes[i+1])
-					i += 2
-					continue
-				} else {
-					return buffer.String()
+		case '\\':
+			if i < len(runes)-1 {
+				buffer.WriteRune(runes[i+1])
+				i += 2
+				continue
+			} else {
+				return buffer.String()
+			}
+		case 'W':
+			buffer.WriteString(strconv.Itoa(t.WeeksOfYear()))
+		case 'z':
+			buffer.WriteString(strconv.Itoa(t.DayOfYear()))
+		case 't':
+			buffer.WriteString(strconv.Itoa(t.DaysInMonth()))
+		case 'U':
+			buffer.WriteString(strconv.FormatInt(t.Unix(), 10))
+		default:
+			if runes[i] > 255 {
+				buffer.WriteRune(runes[i])
+				break
+			}
+			if f, ok := formats[byte(runes[i])]; ok {
+				result := t.Time.Format(f)
+				// 有几个转换的符号需要特殊处理
+				switch runes[i] {
+				case 'j':
+					buffer.WriteString(gstr.ReplaceByArray(result, []string{"=j=0", "", "=j=", ""}))
+				case 'G':
+					buffer.WriteString(gstr.ReplaceByArray(result, []string{"=G=0", "", "=G=", ""}))
+				case 'u':
+					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
+				case 'w':
+					buffer.WriteString(weekMap[result])
+				case 'N':
+					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
+				case 'S':
+					buffer.WriteString(formatMonthDaySuffixMap(result))
+				default:
+					buffer.WriteString(result)
 				}
-			case 'W': buffer.WriteString(strconv.Itoa(t.WeeksOfYear()))
-			case 'z': buffer.WriteString(strconv.Itoa(t.DayOfYear()))
-			case 't': buffer.WriteString(strconv.Itoa(t.DaysInMonth()))
-			case 'U': buffer.WriteString(strconv.FormatInt(t.Unix(),10))
-			default:
-				if runes[i] > 255 {
-					buffer.WriteRune(runes[i])
-					break
-				}
-				if f, ok := formats[byte(runes[i])]; ok {
-					result := t.Time.Format(f)
-					// 有几个转换的符号需要特殊处理
-					switch runes[i] {
-						case 'j': buffer.WriteString(gstr.ReplaceByArray(result, []string{"=j=0", "", "=j=", ""}))
-						case 'G': buffer.WriteString(gstr.ReplaceByArray(result, []string{"=G=0", "", "=G=", ""}))
-						case 'u': buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
-						case 'w': buffer.WriteString(weekMap[result])
-						case 'N': buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
-						case 'S': buffer.WriteString(formatMonthDaySuffixMap(result))
-						default:  buffer.WriteString(result)
-					}
-				} else {
-					buffer.WriteRune(runes[i])
-				}
+			} else {
+				buffer.WriteRune(runes[i])
+			}
 		}
 		i++
 	}
@@ -151,7 +162,7 @@ func (t *Time) IsLeapYear() bool {
 // 返回一个时间点在当年中是第几天 0到365 有润年情况
 func (t *Time) DayOfYear() int {
 	month := int(t.Month())
-	day   := t.Day()
+	day := t.Day()
 
 	// 判断是否润年
 	if t.IsLeapYear() {
@@ -166,10 +177,10 @@ func (t *Time) DayOfYear() int {
 // 一个时间点所在的月最长有多少天 28至31
 func (t *Time) DaysInMonth() int {
 	switch t.Month() {
-		case 1, 3, 5, 7, 8, 10, 12:
-			return 31
-		case 4, 6, 9, 11:
-			return 30
+	case 1, 3, 5, 7, 8, 10, 12:
+		return 31
+	case 4, 6, 9, 11:
+		return 30
 	}
 
 	// 只剩下第二月份,润年29天
@@ -190,35 +201,37 @@ func formatToStdLayout(format string) string {
 	b := bytes.NewBuffer(nil)
 	for i := 0; i < len(format); {
 		switch format[i] {
-			case '\\':
-				if i < len(format)-1 {
-					b.WriteByte(format[i+1])
-					i += 2
-					continue
-				} else {
-					return b.String()
-				}
+		case '\\':
+			if i < len(format)-1 {
+				b.WriteByte(format[i+1])
+				i += 2
+				continue
+			} else {
+				return b.String()
+			}
 
-			default:
-				if f, ok := formats[format[i]]; ok {
-					// 有几个转换的符号需要特殊处理
-					switch format[i] {
-					case 'j': b.WriteString("02")
-					case 'G': b.WriteString("15")
-					case 'u':
-						if i > 0 && format[i-1] == '.' {
-							b.WriteString("000")
-						} else {
-							b.WriteString(".000")
-						}
-
-					default:
-						b.WriteString(f)
+		default:
+			if f, ok := formats[format[i]]; ok {
+				// 有几个转换的符号需要特殊处理
+				switch format[i] {
+				case 'j':
+					b.WriteString("02")
+				case 'G':
+					b.WriteString("15")
+				case 'u':
+					if i > 0 && format[i-1] == '.' {
+						b.WriteString("000")
+					} else {
+						b.WriteString(".000")
 					}
-				} else {
-					b.WriteByte(format[i])
+
+				default:
+					b.WriteString(f)
 				}
-				i++
+			} else {
+				b.WriteByte(format[i])
+			}
+			i++
 		}
 	}
 	return b.String()
@@ -226,7 +239,7 @@ func formatToStdLayout(format string) string {
 
 // 将format格式转换为正则表达式规则
 func formatToRegexPattern(format string) string {
-	s   := gregex.Quote(formatToStdLayout(format))
+	s := gregex.Quote(formatToStdLayout(format))
 	s, _ = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
 	s, _ = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
 	return s
@@ -235,11 +248,13 @@ func formatToRegexPattern(format string) string {
 // 每月天数后面的英文后缀，2 个字符st nd，rd 或者 th
 func formatMonthDaySuffixMap(day string) string {
 	switch day {
-		case "01": return "st"
-	    case "02": return "nd"
-	    case "03": return "rd"
-		default:   return "th"
+	case "01":
+		return "st"
+	case "02":
+		return "nd"
+	case "03":
+		return "rd"
+	default:
+		return "th"
 	}
 }
-
-

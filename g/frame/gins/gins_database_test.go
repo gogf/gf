@@ -7,16 +7,16 @@
 package gins_test
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g/frame/gins"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
-    "time"
+	"fmt"
+	"github.com/gogf/gf/g/frame/gins"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/test/gtest"
+	"testing"
+	"time"
 )
 
 func Test_Database(t *testing.T) {
-    config := `
+	config := `
 # 模板引擎目录
 viewpath = "/home/www/templates/"
 test = "v=2"
@@ -49,27 +49,26 @@ test = "v=2"
     default = "127.0.0.1:6379,0"
     cache = "127.0.0.1:6379,1"
 `
-    path := "config.toml"
-    err  := gfile.PutContents(path, config)
-    gtest.Assert(err, nil)
-    defer gfile.Remove(path)
-    defer gins.Config().Clear()
+	path := "config.toml"
+	err := gfile.PutContents(path, config)
+	gtest.Assert(err, nil)
+	defer gfile.Remove(path)
+	defer gins.Config().Clear()
 
-    // for gfsnotify callbacks to refresh cache of config file
-    time.Sleep(500*time.Millisecond)
+	// for gfsnotify callbacks to refresh cache of config file
+	time.Sleep(500 * time.Millisecond)
 
-    gtest.Case(t, func() {
-        fmt.Println("gins Test_Database", gins.Config().Get("test"))
+	gtest.Case(t, func() {
+		fmt.Println("gins Test_Database", gins.Config().Get("test"))
 
-        dbDefault := gins.Database()
-        dbTest    := gins.Database("test")
-        gtest.AssertNE(dbDefault, nil)
-        gtest.AssertNE(dbTest,    nil)
+		dbDefault := gins.Database()
+		dbTest := gins.Database("test")
+		gtest.AssertNE(dbDefault, nil)
+		gtest.AssertNE(dbTest, nil)
 
-        gtest.Assert(dbDefault.PingMaster(), nil)
-        gtest.Assert(dbDefault.PingSlave(),  nil)
-        gtest.Assert(dbTest.PingMaster(),    nil)
-        gtest.Assert(dbTest.PingSlave(),     nil)
-    })
+		gtest.Assert(dbDefault.PingMaster(), nil)
+		gtest.Assert(dbDefault.PingSlave(), nil)
+		gtest.Assert(dbTest.PingMaster(), nil)
+		gtest.Assert(dbTest.PingSlave(), nil)
+	})
 }
-
