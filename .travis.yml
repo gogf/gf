@@ -22,6 +22,7 @@ addons:
 
 before_install:
 - pwd
+- /bin/bash vet.sh
 
 install:
 - cat /etc/hosts
