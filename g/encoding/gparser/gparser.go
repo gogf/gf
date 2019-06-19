@@ -12,6 +12,5 @@ import (
 )
 
 type Parser struct {
-    json *gjson.Json
+	json *gjson.Json
 }
-

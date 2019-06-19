@@ -9,105 +9,105 @@
 package gcache_test
 
 import (
-    "github.com/gogf/gf/g/os/gcache"
-    "testing"
-    "sync"
+	"github.com/gogf/gf/g/os/gcache"
+	"sync"
+	"testing"
 )
 
 var (
-    c    = gcache.New()
-    clru = gcache.New(10000)
-    mInt = make(map[int]int)
-    mMap = make(map[interface{}]interface{})
+	c    = gcache.New()
+	clru = gcache.New(10000)
+	mInt = make(map[int]int)
+	mMap = make(map[interface{}]interface{})
 
-    muInt = sync.RWMutex{}
-    muMap = sync.RWMutex{}
+	muInt = sync.RWMutex{}
+	muMap = sync.RWMutex{}
 )
 
 func Benchmark_CacheSet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        c.Set(i, i, 0)
-    }
+	for i := 0; i < b.N; i++ {
+		c.Set(i, i, 0)
+	}
 }
 
 func Benchmark_CacheGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        c.Get(i)
-    }
+	for i := 0; i < b.N; i++ {
+		c.Get(i)
+	}
 }
 
 func Benchmark_CacheRemove(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        c.Remove(i)
-    }
+	for i := 0; i < b.N; i++ {
+		c.Remove(i)
+	}
 }
 
 func Benchmark_CacheLruSet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        clru.Set(i, i, 0)
-    }
+	for i := 0; i < b.N; i++ {
+		clru.Set(i, i, 0)
+	}
 }
 
 func Benchmark_CacheLruGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        clru.Get(i)
-    }
+	for i := 0; i < b.N; i++ {
+		clru.Get(i)
+	}
 }
 
 func Benchmark_CacheLruRemove(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        clru.Remove(i)
-    }
+	for i := 0; i < b.N; i++ {
+		clru.Remove(i)
+	}
 }
 
 func Benchmark_InterfaceMapWithLockSet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        muMap.Lock()
-        mMap[i] = i
-        muMap.Unlock()
-    }
+	for i := 0; i < b.N; i++ {
+		muMap.Lock()
+		mMap[i] = i
+		muMap.Unlock()
+	}
 }
 
 func Benchmark_InterfaceMapWithLockGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        muMap.RLock()
-        if _, ok := mMap[i]; ok {
+	for i := 0; i < b.N; i++ {
+		muMap.RLock()
+		if _, ok := mMap[i]; ok {
 
-        }
-        muMap.RUnlock()
-    }
+		}
+		muMap.RUnlock()
+	}
 }
 
 func Benchmark_InterfaceMapWithLockRemove(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        muMap.Lock()
-        delete(mMap, i)
-        muMap.Unlock()
-    }
+	for i := 0; i < b.N; i++ {
+		muMap.Lock()
+		delete(mMap, i)
+		muMap.Unlock()
+	}
 }
 
 func Benchmark_IntMapWithLockWithLockSet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        muInt.Lock()
-        mInt[i] = i
-        muInt.Unlock()
-    }
+	for i := 0; i < b.N; i++ {
+		muInt.Lock()
+		mInt[i] = i
+		muInt.Unlock()
+	}
 }
 
 func Benchmark_IntMapWithLockGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        muInt.RLock()
-        if _, ok := mInt[i]; ok {
+	for i := 0; i < b.N; i++ {
+		muInt.RLock()
+		if _, ok := mInt[i]; ok {
 
-        }
-        muInt.RUnlock()
-    }
+		}
+		muInt.RUnlock()
+	}
 }
 
 func Benchmark_IntMapWithLockRemove(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        muInt.Lock()
-        delete(mInt, i)
-        muInt.Unlock()
-    }
+	for i := 0; i < b.N; i++ {
+		muInt.Lock()
+		delete(mInt, i)
+		muInt.Unlock()
+	}
 }

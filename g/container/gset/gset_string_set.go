@@ -8,7 +8,7 @@
 package gset
 
 import (
-    "github.com/gogf/gf/g/internal/rwmutex"
+	"github.com/gogf/gf/g/internal/rwmutex"
 	"github.com/gogf/gf/g/util/gconv"
 	"strings"
 )
@@ -21,30 +21,30 @@ type StringSet struct {
 // New create and returns a new set, which contains un-repeated items.
 // The parameter <unsafe> used to specify whether using set in un-concurrent-safety,
 // which is false in default.
-func NewStringSet(unsafe...bool) *StringSet {
-	return &StringSet {
-		m  : make(map[string]struct{}),
-		mu : rwmutex.New(unsafe...),
+func NewStringSet(unsafe ...bool) *StringSet {
+	return &StringSet{
+		m:  make(map[string]struct{}),
+		mu: rwmutex.New(unsafe...),
 	}
 }
 
 // NewStringSetFrom returns a new set from <items>.
-func NewStringSetFrom(items []string, unsafe...bool) *StringSet {
+func NewStringSetFrom(items []string, unsafe ...bool) *StringSet {
 	m := make(map[string]struct{})
 	for _, v := range items {
 		m[v] = struct{}{}
 	}
 	return &StringSet{
-		m  : m,
-		mu : rwmutex.New(unsafe...),
+		m:  m,
+		mu: rwmutex.New(unsafe...),
 	}
 }
 
 // Iterator iterates the set with given callback function <f>,
 // if <f> returns true then continue iterating; or false to stop.
-func (set *StringSet) Iterator(f func (v string) bool) *StringSet {
-    set.mu.RLock()
-    defer set.mu.RUnlock()
+func (set *StringSet) Iterator(f func(v string) bool) *StringSet {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
 	for k, _ := range set.m {
 		if !f(k) {
 			break
@@ -54,7 +54,7 @@ func (set *StringSet) Iterator(f func (v string) bool) *StringSet {
 }
 
 // Add adds one or multiple items to the set.
-func (set *StringSet) Add(item...string) *StringSet {
+func (set *StringSet) Add(item ...string) *StringSet {
 	set.mu.Lock()
 	for _, v := range item {
 		set.m[v] = struct{}{}
@@ -76,7 +76,7 @@ func (set *StringSet) Remove(item string) *StringSet {
 	set.mu.Lock()
 	delete(set.m, item)
 	set.mu.Unlock()
-    return set
+	return set
 }
 
 // Size returns the size of the set.
@@ -92,7 +92,7 @@ func (set *StringSet) Clear() *StringSet {
 	set.mu.Lock()
 	set.m = make(map[string]struct{})
 	set.mu.Unlock()
-    return set
+	return set
 }
 
 // Slice returns the a of items of the set as slice.
@@ -111,12 +111,12 @@ func (set *StringSet) Slice() []string {
 
 // Join joins items with a string <glue>.
 func (set *StringSet) Join(glue string) string {
-    return strings.Join(set.Slice(), ",")
+	return strings.Join(set.Slice(), ",")
 }
 
 // String returns items as a string, which are joined by char ','.
 func (set *StringSet) String() string {
-    return set.Join(",")
+	return set.Join(",")
 }
 
 // LockFunc locks writing with callback function <f>.
@@ -172,71 +172,71 @@ func (set *StringSet) IsSubsetOf(other *StringSet) bool {
 
 // Union returns a new set which is the union of <set> and <other>.
 // Which means, all the items in <newSet> are in <set> or in <other>.
-func (set *StringSet) Union(others ... *StringSet) (newSet *StringSet) {
-    newSet = NewStringSet(true)
-    set.mu.RLock()
-    defer set.mu.RUnlock()
-    for _, other := range others {
-        if set != other {
-            other.mu.RLock()
-        }
-        for k, v := range set.m {
-            newSet.m[k] = v
-        }
-        if set != other {
-            for k, v := range other.m {
-                newSet.m[k] = v
-            }
-        }
-        if set != other {
-            other.mu.RUnlock()
-        }
-    }
+func (set *StringSet) Union(others ...*StringSet) (newSet *StringSet) {
+	newSet = NewStringSet(true)
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for _, other := range others {
+		if set != other {
+			other.mu.RLock()
+		}
+		for k, v := range set.m {
+			newSet.m[k] = v
+		}
+		if set != other {
+			for k, v := range other.m {
+				newSet.m[k] = v
+			}
+		}
+		if set != other {
+			other.mu.RUnlock()
+		}
+	}
 
-    return
+	return
 }
 
 // Diff returns a new set which is the difference set from <set> to <other>.
 // Which means, all the items in <newSet> are in <set> but not in <other>.
-func (set *StringSet) Diff(others...*StringSet) (newSet *StringSet) {
-    newSet = NewStringSet(true)
-    set.mu.RLock()
-    defer set.mu.RUnlock()
-    for _, other := range others {
-        if set == other {
-            continue
-        }
-        other.mu.RLock()
-        for k, v := range set.m {
-            if _, ok := other.m[k]; !ok {
-                newSet.m[k] = v
-            }
-        }
-        other.mu.RUnlock()
-    }
-    return
+func (set *StringSet) Diff(others ...*StringSet) (newSet *StringSet) {
+	newSet = NewStringSet(true)
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for _, other := range others {
+		if set == other {
+			continue
+		}
+		other.mu.RLock()
+		for k, v := range set.m {
+			if _, ok := other.m[k]; !ok {
+				newSet.m[k] = v
+			}
+		}
+		other.mu.RUnlock()
+	}
+	return
 }
 
 // Intersect returns a new set which is the intersection from <set> to <other>.
 // Which means, all the items in <newSet> are in <set> and also in <other>.
-func (set *StringSet) Intersect(others...*StringSet) (newSet *StringSet) {
-    newSet = NewStringSet(true)
-    set.mu.RLock()
-    defer set.mu.RUnlock()
-    for _, other := range others {
-        if set != other {
-            other.mu.RLock()
-        }
-        for k, v := range set.m {
-            if _, ok := other.m[k]; ok {
-                newSet.m[k] = v
-            }
-        }
-        if set != other {
-            other.mu.RUnlock()
-        }
-    }
-    return
+func (set *StringSet) Intersect(others ...*StringSet) (newSet *StringSet) {
+	newSet = NewStringSet(true)
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for _, other := range others {
+		if set != other {
+			other.mu.RLock()
+		}
+		for k, v := range set.m {
+			if _, ok := other.m[k]; ok {
+				newSet.m[k] = v
+			}
+		}
+		if set != other {
+			other.mu.RUnlock()
+		}
+	}
+	return
 }
 
 // Complement returns a new set which is the complement from <set> to <full>.
@@ -245,23 +245,23 @@ func (set *StringSet) Intersect(others...*StringSet) (newSet *StringSet) {
 // It returns the difference between <full> and <set>
 // if the given set <full> is not the full set of <set>.
 func (set *StringSet) Complement(full *StringSet) (newSet *StringSet) {
-    newSet = NewStringSet(true)
-    set.mu.RLock()
-    defer set.mu.RUnlock()
-    if set != full {
-        full.mu.RLock()
-        defer full.mu.RUnlock()
-    }
-    for k, v := range full.m {
-        if _, ok := set.m[k]; !ok {
-            newSet.m[k] = v
-        }
-    }
-    return
+	newSet = NewStringSet(true)
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	if set != full {
+		full.mu.RLock()
+		defer full.mu.RUnlock()
+	}
+	for k, v := range full.m {
+		if _, ok := set.m[k]; !ok {
+			newSet.m[k] = v
+		}
+	}
+	return
 }
 
 // Merge adds items from <others> sets into <set>.
-func (set *StringSet) Merge(others ... *StringSet) *StringSet {
+func (set *StringSet) Merge(others ...*StringSet) *StringSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	for _, other := range others {

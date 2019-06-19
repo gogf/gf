@@ -68,8 +68,8 @@ func Test_Map_Batch(t *testing.T) {
 	m.Removes([]interface{}{"key1", 1})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 }
-func Test_Map_Iterator(t *testing.T){
-	expect :=map[interface{}]interface{}{1: 1, "key1": "val1"}
+func Test_Map_Iterator(t *testing.T) {
+	expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 
 	m := gmap.NewFrom(expect)
 	m.Iterator(func(k interface{}, v interface{}) bool {
@@ -91,8 +91,8 @@ func Test_Map_Iterator(t *testing.T){
 	gtest.Assert(j, 1)
 }
 
-func Test_Map_Lock(t *testing.T){
-	expect :=map[interface{}]interface{}{1: 1, "key1": "val1"}
+func Test_Map_Lock(t *testing.T) {
+	expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 
 	m := gmap.NewFrom(expect)
 	m.LockFunc(func(m map[interface{}]interface{}) {

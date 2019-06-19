@@ -20,10 +20,9 @@ func Test_Get(t *testing.T) {
 	os.Setenv("GF_TEST_VALUE2", "333")
 	doInit()
 	gtest.Case(t, func() {
-		gtest.Assert(Get("gf.test.value1").String(),    "111")
-		gtest.Assert(Get("gf.test.value2").String(),    "333")
-		gtest.Assert(Get("gf.test.value3").String(),    "")
+		gtest.Assert(Get("gf.test.value1").String(), "111")
+		gtest.Assert(Get("gf.test.value2").String(), "333")
+		gtest.Assert(Get("gf.test.value3").String(), "")
 		gtest.Assert(Get("gf.test.value3", 1).String(), "1")
 	})
 }
-

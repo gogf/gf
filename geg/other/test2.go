@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"sync"
+	"github.com/gogf/gf/g/os/gmlock"
+	"time"
 )
 
 func main() {
-	m := sync.RWMutex{}
-	m.Lock()
-	fmt.Println(m)
+	key := "test3"
+	gmlock.Lock(key, 200*time.Millisecond)
+	fmt.Println("TryLock:", gmlock.TryLock(key))
+	fmt.Println("TryLock:", gmlock.TryLock(key))
 }

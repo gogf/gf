@@ -37,7 +37,7 @@ func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 }
 
 // 获得关键字操作符
-func (db *dbSqlite) getChars () (charLeft string, charRight string) {
+func (db *dbSqlite) getChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 

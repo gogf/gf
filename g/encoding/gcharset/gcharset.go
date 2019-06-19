@@ -31,11 +31,11 @@ import (
 
 var (
 	// Alias for charsets.
-	charsetAlias = map[string]string {
-		"HZGB2312" : "HZ-GB-2312",
-		"hzgb2312" : "HZ-GB-2312",
-		"GB2312"   : "HZ-GB-2312",
-		"gb2312"   : "HZ-GB-2312",
+	charsetAlias = map[string]string{
+		"HZGB2312": "HZ-GB-2312",
+		"hzgb2312": "HZ-GB-2312",
+		"GB2312":   "HZ-GB-2312",
+		"gb2312":   "HZ-GB-2312",
 	}
 )
 

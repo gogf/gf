@@ -12,6 +12,7 @@ const (
 	// Default group name for instance usage.
 	DEFAULT_INSTANCE_NAME = "default"
 )
+
 var (
 	// Instances map.
 	instances = gmap.NewStrAnyMap()

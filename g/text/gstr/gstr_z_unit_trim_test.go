@@ -9,40 +9,40 @@
 package gstr_test
 
 import (
-    "github.com/gogf/gf/g/test/gtest"
-    "github.com/gogf/gf/g/text/gstr"
-    "testing"
+	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/text/gstr"
+	"testing"
 )
 
 func Test_Trim(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.Trim(" 123456\n "), "123456")
-        gtest.Assert(gstr.Trim("#123456#;", "#;"), "123456")
-    })
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.Trim(" 123456\n "), "123456")
+		gtest.Assert(gstr.Trim("#123456#;", "#;"), "123456")
+	})
 }
 
 func Test_TrimRight(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.TrimRight(" 123456\n "), " 123456")
-        gtest.Assert(gstr.TrimRight("#123456#;", "#;"), "#123456")
-    })
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.TrimRight(" 123456\n "), " 123456")
+		gtest.Assert(gstr.TrimRight("#123456#;", "#;"), "#123456")
+	})
 }
 
 func Test_TrimRightStr(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.TrimRightStr("gogo我爱gogo", "go"), "gogo我爱")
-    })
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.TrimRightStr("gogo我爱gogo", "go"), "gogo我爱")
+	})
 }
 
 func Test_TrimLeft(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.TrimLeft(" \r123456\n "), "123456\n ")
-        gtest.Assert(gstr.TrimLeft("#;123456#;", "#;"), "123456#;")
-    })
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.TrimLeft(" \r123456\n "), "123456\n ")
+		gtest.Assert(gstr.TrimLeft("#;123456#;", "#;"), "123456#;")
+	})
 }
 
 func Test_TrimLeftStr(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go"), "我爱gogo")
-    })
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go"), "我爱gogo")
+	})
 }

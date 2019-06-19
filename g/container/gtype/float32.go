@@ -18,35 +18,35 @@ type Float32 struct {
 
 // NewFloat32 returns a concurrent-safe object for float32 type,
 // with given initial value <value>.
-func NewFloat32(value...float32) *Float32 {
-    if len(value) > 0 {
-        return &Float32{
-	        value : math.Float32bits(value[0]),
+func NewFloat32(value ...float32) *Float32 {
+	if len(value) > 0 {
+		return &Float32{
+			value: math.Float32bits(value[0]),
 		}
-    }
-    return &Float32{}
+	}
+	return &Float32{}
 }
 
 // Clone clones and returns a new concurrent-safe object for float32 type.
 func (v *Float32) Clone() *Float32 {
-    return NewFloat32(v.Val())
+	return NewFloat32(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (v *Float32) Set(value float32) (old float32) {
-    return math.Float32frombits(atomic.SwapUint32(&v.value, math.Float32bits(value)))
+	return math.Float32frombits(atomic.SwapUint32(&v.value, math.Float32bits(value)))
 }
 
 // Val atomically loads t.value.
 func (v *Float32) Val() float32 {
-    return math.Float32frombits(atomic.LoadUint32(&v.value))
+	return math.Float32frombits(atomic.LoadUint32(&v.value))
 }
 
 // Add atomically adds <delta> to t.value and returns the new value.
 func (v *Float32) Add(delta float32) (new float32) {
 	for {
 		old := math.Float32frombits(v.value)
-		new  = old + delta
+		new = old + delta
 		if atomic.CompareAndSwapUint32(
 			(*uint32)(unsafe.Pointer(&v.value)),
 			math.Float32bits(old),
