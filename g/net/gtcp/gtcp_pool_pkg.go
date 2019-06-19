@@ -7,6 +7,7 @@
 package gtcp
 
 import (
+	"errors"
 	"time"
 )
 
@@ -40,21 +41,31 @@ func (c *PoolConn) RecvPkg(option ...PkgOption) ([]byte, error) {
 }
 
 // 简单协议: (方法覆盖)带超时时间的数据获取
-func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) ([]byte, error) {
+func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
-	return c.RecvPkg(option...)
+	defer func() {
+		if e := c.SetRecvDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	data, err = c.RecvPkg(option...)
+	return
 }
 
 // 简单协议: (方法覆盖)带超时时间的数据发送
-func (c *PoolConn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...PkgOption) error {
+func (c *PoolConn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...PkgOption) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
-	return c.SendPkg(data, option...)
+	defer func() {
+		if e := c.SetSendDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	err = c.SendPkg(data, option...)
+	return
 }
 
 // 简单协议: (方法覆盖)发送数据并等待接收返回数据
