@@ -15,23 +15,23 @@ import (
 // The high level RWMutex.
 // It wraps the sync.RWMutex to implements more rich features.
 type Mutex struct {
-    mu      sync.RWMutex
-    wid     *gtype.Int64 // Unique id, used for multiple and safe logic Unlock.
-    locking *gtype.Bool  // Locking mark for atomic operation for *Lock and Try*Lock functions.
-                         // There must be only one locking operation at the same time for concurrent safe purpose.
-    state   *gtype.Int32 // Locking state:
-                         //   0: writing lock false;
-                         //  -1: writing lock true;
-                         // >=1: reading lock;
+	mu      sync.RWMutex
+	wid     *gtype.Int64 // Unique id, used for multiple and safe logic Unlock.
+	locking *gtype.Bool  // Locking mark for atomic operation for *Lock and Try*Lock functions.
+	// There must be only one locking operation at the same time for concurrent safe purpose.
+	state *gtype.Int32 // Locking state:
+	//   0: writing lock false;
+	//  -1: writing lock true;
+	// >=1: reading lock;
 }
 
 // NewMutex creates and returns a new mutex.
 func NewMutex() *Mutex {
-    return &Mutex{
-        wid     : gtype.NewInt64(),
-	    state   : gtype.NewInt32(),
-		locking : gtype.NewBool(),
-    }
+	return &Mutex{
+		wid:     gtype.NewInt64(),
+		state:   gtype.NewInt32(),
+		locking: gtype.NewBool(),
+	}
 }
 
 // Lock locks the mutex for writing.
@@ -92,13 +92,13 @@ func (m *Mutex) RLock() {
 // RUnlock unlocks the reading lock.
 // It is safe to be called multiple times if there's any locks or not.
 func (m *Mutex) RUnlock() {
-    if n := m.state.Val(); n >= 1 {
-    	if m.state.Cas(n, n - 1) {
+	if n := m.state.Val(); n >= 1 {
+		if m.state.Cas(n, n-1) {
 			m.mu.RUnlock()
 		} else {
 			m.RUnlock()
 		}
-    }
+	}
 }
 
 // TryRLock tries locking the mutex for reading.
@@ -111,8 +111,8 @@ func (m *Mutex) TryRLock() bool {
 			m.locking.Set(false)
 			return true
 		}
-    }
-    return false
+	}
+	return false
 }
 
 // IsLocked checks whether the mutex is locked by writing or reading lock.

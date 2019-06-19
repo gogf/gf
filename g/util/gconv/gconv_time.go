@@ -13,8 +13,8 @@ import (
 )
 
 // Time converts <i> to time.Time.
-func Time(i interface{}, format...string) time.Time {
-    return GTime(i, format...).Time
+func Time(i interface{}, format ...string) time.Time {
+	return GTime(i, format...).Time
 }
 
 // Duration converts <i> to time.Duration.
@@ -33,20 +33,20 @@ func Duration(i interface{}) time.Duration {
 // The parameter <format> can be used to specify the format of <i>.
 // If no <format> given, it converts <i> using gtime.NewFromTimeStamp if <i> is numeric,
 // or using gtime.StrToTime if <i> is string.
-func GTime(i interface{}, format...string) *gtime.Time {
-    s := String(i)
-    if len(s) == 0 {
-        return gtime.New()
-    }
-    // Priority conversion using given format.
-    if len(format) > 0 {
-        t, _ := gtime.StrToTimeFormat(s, format[0])
-        return t
-    }
-    if gstr.IsNumeric(s) {
-        return gtime.NewFromTimeStamp(Int64(s))
-    } else {
-        t, _ := gtime.StrToTime(s)
-        return t
-    }
+func GTime(i interface{}, format ...string) *gtime.Time {
+	s := String(i)
+	if len(s) == 0 {
+		return gtime.New()
+	}
+	// Priority conversion using given format.
+	if len(format) > 0 {
+		t, _ := gtime.StrToTimeFormat(s, format[0])
+		return t
+	}
+	if gstr.IsNumeric(s) {
+		return gtime.NewFromTimeStamp(Int64(s))
+	} else {
+		t, _ := gtime.StrToTime(s)
+		return t
+	}
 }

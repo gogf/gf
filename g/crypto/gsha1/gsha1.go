@@ -8,18 +8,18 @@
 package gsha1
 
 import (
-    "crypto/sha1"
-    "encoding/hex"
-    "os"
-    "io"
-    "github.com/gogf/gf/g/util/gconv"
+	"crypto/sha1"
+	"encoding/hex"
+	"github.com/gogf/gf/g/util/gconv"
+	"io"
+	"os"
 )
 
 // Encrypt encrypts any type of variable using SHA1 algorithms.
 // It uses gconv package to convert <v> to its bytes type.
 func Encrypt(v interface{}) string {
-    r := sha1.Sum(gconv.Bytes(v))
-    return hex.EncodeToString(r[:])
+	r := sha1.Sum(gconv.Bytes(v))
+	return hex.EncodeToString(r[:])
 }
 
 // Deprecated.
@@ -30,15 +30,15 @@ func EncryptString(s string) string {
 
 // EncryptFile encrypts file content of <path> using SHA1 algorithms.
 func EncryptFile(path string) string {
-    f, e := os.Open(path)
-    if e != nil {
-        return ""
-    }
-    defer f.Close()
-    h := sha1.New()
-    _, e = io.Copy(h, f)
-    if e != nil {
-        return ""
-    }
-    return hex.EncodeToString(h.Sum(nil))
+	f, e := os.Open(path)
+	if e != nil {
+		return ""
+	}
+	defer f.Close()
+	h := sha1.New()
+	_, e = io.Copy(h, f)
+	if e != nil {
+		return ""
+	}
+	return hex.EncodeToString(h.Sum(nil))
 }
