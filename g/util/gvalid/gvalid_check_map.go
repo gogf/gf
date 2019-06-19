@@ -7,8 +7,9 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/g/util/gconv"
 	"strings"
+
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 // 检测键值对参数Map，
@@ -75,7 +76,7 @@ func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 		}
 	}
 	// 开始执行校验: 以校验规则作为基础进行遍历校验
-	value := (interface{})(nil)
+	var value interface{}
 	// 这里的rule变量为多条校验规则，不包含名字或者错误信息定义
 	for key, rule := range checkRules {
 		// 如果规则为空，那么不执行校验
@@ -92,7 +93,7 @@ func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error
-				for k, _ := range item {
+				for k := range item {
 					if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
 						required = true
 						break
