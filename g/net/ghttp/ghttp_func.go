@@ -7,7 +7,7 @@
 package ghttp
 
 import (
-    "github.com/gogf/gf/g/encoding/gurl"
+	"github.com/gogf/gf/g/encoding/gurl"
 	"github.com/gogf/gf/g/util/gconv"
 	"strings"
 )
@@ -20,16 +20,16 @@ func BuildParams(params interface{}) (encodedParamStr string) {
 		return gconv.String(params)
 	}
 	s := ""
-    for k, v := range m {
-        if len(encodedParamStr) > 0 {
-	        encodedParamStr += "&"
-        }
-        s = gconv.String(v)
-        if len(s) > 6 && strings.Compare(s[0 : 6], "@file:") == 0 {
-	        encodedParamStr += k + "=" + s
-        } else {
-	        encodedParamStr += k + "=" + gurl.Encode(s)
-        }
-    }
-    return
+	for k, v := range m {
+		if len(encodedParamStr) > 0 {
+			encodedParamStr += "&"
+		}
+		s = gconv.String(v)
+		if len(s) > 6 && strings.Compare(s[0:6], "@file:") == 0 {
+			encodedParamStr += k + "=" + s
+		} else {
+			encodedParamStr += k + "=" + gurl.Encode(s)
+		}
+	}
+	return
 }

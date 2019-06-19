@@ -14,31 +14,31 @@ type Bytes struct {
 
 // NewBytes returns a concurrent-safe object for []byte type,
 // with given initial value <value>.
-func NewBytes(value...[]byte) *Bytes {
-    t := &Bytes{}
-    if len(value) > 0 {
-        t.value.Store(value[0])
-    }
-    return t
+func NewBytes(value ...[]byte) *Bytes {
+	t := &Bytes{}
+	if len(value) > 0 {
+		t.value.Store(value[0])
+	}
+	return t
 }
 
 // Clone clones and returns a new concurrent-safe object for []byte type.
 func (v *Bytes) Clone() *Bytes {
-    return NewBytes(v.Val())
+	return NewBytes(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
 // Note: The parameter <value> cannot be nil.
 func (v *Bytes) Set(value []byte) (old []byte) {
-    old = v.Val()
-    v.value.Store(value)
-    return
+	old = v.Val()
+	v.value.Store(value)
+	return
 }
 
 // Val atomically loads t.value.
 func (v *Bytes) Val() []byte {
-    if s := v.value.Load(); s != nil {
-        return s.([]byte)
-    }
-    return nil
+	if s := v.value.Load(); s != nil {
+		return s.([]byte)
+	}
+	return nil
 }

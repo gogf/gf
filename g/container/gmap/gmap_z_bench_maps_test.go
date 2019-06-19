@@ -19,9 +19,9 @@ var listMap = gmap.NewListMap()
 var treeMap = gmap.NewTreeMap(gutil.ComparatorInt)
 
 func Benchmark_HashMap_Set(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-	    hashMap.Set(i, i)
-    }
+	for i := 0; i < b.N; i++ {
+		hashMap.Set(i, i)
+	}
 }
 
 func Benchmark_ListMap_Set(b *testing.B) {
@@ -37,9 +37,9 @@ func Benchmark_TreeMap_Set(b *testing.B) {
 }
 
 func Benchmark_HashMap_Get(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-	    hashMap.Get(i)
-    }
+	for i := 0; i < b.N; i++ {
+		hashMap.Get(i)
+	}
 }
 
 func Benchmark_ListMap_Get(b *testing.B) {

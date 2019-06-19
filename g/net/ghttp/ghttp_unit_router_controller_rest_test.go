@@ -7,100 +7,99 @@
 package ghttp_test
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g"
-    "github.com/gogf/gf/g/frame/gmvc"
-    "github.com/gogf/gf/g/net/ghttp"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
-    "time"
+	"fmt"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/frame/gmvc"
+	"github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/g/test/gtest"
+	"testing"
+	"time"
 )
 
-
 type ControllerRest struct {
-    gmvc.Controller
+	gmvc.Controller
 }
 
-func (c *ControllerRest) Init(r *ghttp.Request)  {
-    c.Controller.Init(r)
-    c.Response.Write("1")
+func (c *ControllerRest) Init(r *ghttp.Request) {
+	c.Controller.Init(r)
+	c.Response.Write("1")
 }
 
 func (c *ControllerRest) Shut() {
-    c.Response.Write("2")
+	c.Response.Write("2")
 }
 
 func (c *ControllerRest) Get() {
-    c.Response.Write("Controller Get")
+	c.Response.Write("Controller Get")
 }
 
 func (c *ControllerRest) Put() {
-    c.Response.Write("Controller Put")
+	c.Response.Write("Controller Put")
 }
 
 func (c *ControllerRest) Post() {
-    c.Response.Write("Controller Post")
+	c.Response.Write("Controller Post")
 }
 
 func (c *ControllerRest) Delete() {
-    c.Response.Write("Controller Delete")
+	c.Response.Write("Controller Delete")
 }
 
 func (c *ControllerRest) Patch() {
-    c.Response.Write("Controller Patch")
+	c.Response.Write("Controller Patch")
 }
 
 func (c *ControllerRest) Options() {
-    c.Response.Write("Controller Options")
+	c.Response.Write("Controller Options")
 }
 
 func (c *ControllerRest) Head() {
-    c.Response.Header().Set("head-ok", "1")
+	c.Response.Header().Set("head-ok", "1")
 }
 
 // 控制器注册测试
 func Test_Router_ControllerRest(t *testing.T) {
-    p := ports.PopRand()
-    s := g.Server(p)
-    s.BindControllerRest("/", new(ControllerRest))
-    s.BindControllerRest("/{.struct}/{.method}", new(ControllerRest))
-    s.SetPort(p)
-    s.SetDumpRouteMap(false)
-    s.Start()
-    defer s.Shutdown()
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindControllerRest("/", new(ControllerRest))
+	s.BindControllerRest("/{.struct}/{.method}", new(ControllerRest))
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
 
-    // 等待启动完成
-    time.Sleep(time.Second)
-    gtest.Case(t, func() {
-        client := ghttp.NewClient()
-        client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+	// 等待启动完成
+	time.Sleep(time.Second)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-        gtest.Assert(client.GetContent("/"),            "1Controller Get2")
-        gtest.Assert(client.PutContent("/"),            "1Controller Put2")
-        gtest.Assert(client.PostContent("/"),           "1Controller Post2")
-        gtest.Assert(client.DeleteContent("/"),         "1Controller Delete2")
-        gtest.Assert(client.PatchContent("/"),          "1Controller Patch2")
-        gtest.Assert(client.OptionsContent("/"),        "1Controller Options2")
-        resp1, err := client.Head("/")
-        if err == nil {
-            defer resp1.Close()
-        }
-        gtest.Assert(err, nil)
-        gtest.Assert(resp1.Header.Get("head-ok"), "1")
+		gtest.Assert(client.GetContent("/"), "1Controller Get2")
+		gtest.Assert(client.PutContent("/"), "1Controller Put2")
+		gtest.Assert(client.PostContent("/"), "1Controller Post2")
+		gtest.Assert(client.DeleteContent("/"), "1Controller Delete2")
+		gtest.Assert(client.PatchContent("/"), "1Controller Patch2")
+		gtest.Assert(client.OptionsContent("/"), "1Controller Options2")
+		resp1, err := client.Head("/")
+		if err == nil {
+			defer resp1.Close()
+		}
+		gtest.Assert(err, nil)
+		gtest.Assert(resp1.Header.Get("head-ok"), "1")
 
-        gtest.Assert(client.GetContent("/controller-rest/get"),            "1Controller Get2")
-        gtest.Assert(client.PutContent("/controller-rest/put"),            "1Controller Put2")
-        gtest.Assert(client.PostContent("/controller-rest/post"),          "1Controller Post2")
-        gtest.Assert(client.DeleteContent("/controller-rest/delete"),      "1Controller Delete2")
-        gtest.Assert(client.PatchContent("/controller-rest/patch"),        "1Controller Patch2")
-        gtest.Assert(client.OptionsContent("/controller-rest/options"),    "1Controller Options2")
-        resp2, err := client.Head("/controller-rest/head")
-        if err == nil {
-            defer resp2.Close()
-        }
-        gtest.Assert(err, nil)
-        gtest.Assert(resp2.Header.Get("head-ok"), "1")
+		gtest.Assert(client.GetContent("/controller-rest/get"), "1Controller Get2")
+		gtest.Assert(client.PutContent("/controller-rest/put"), "1Controller Put2")
+		gtest.Assert(client.PostContent("/controller-rest/post"), "1Controller Post2")
+		gtest.Assert(client.DeleteContent("/controller-rest/delete"), "1Controller Delete2")
+		gtest.Assert(client.PatchContent("/controller-rest/patch"), "1Controller Patch2")
+		gtest.Assert(client.OptionsContent("/controller-rest/options"), "1Controller Options2")
+		resp2, err := client.Head("/controller-rest/head")
+		if err == nil {
+			defer resp2.Close()
+		}
+		gtest.Assert(err, nil)
+		gtest.Assert(resp2.Header.Get("head-ok"), "1")
 
-        gtest.Assert(client.GetContent("/none-exist"),  "Not Found")
-    })
+		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+	})
 }

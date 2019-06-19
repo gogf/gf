@@ -10,28 +10,28 @@ import "github.com/gogf/gf/g/os/glog"
 
 // 设置http server参数 - SessionMaxAge
 func (s *Server) SetSessionMaxAge(age int) {
-    if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-        return
-    }
-    s.config.SessionMaxAge = age
+	if s.Status() == SERVER_STATUS_RUNNING {
+		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+		return
+	}
+	s.config.SessionMaxAge = age
 }
 
 // 设置http server参数 - SessionIdName
 func (s *Server) SetSessionIdName(name string) {
-    if s.Status() == SERVER_STATUS_RUNNING {
-        glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-        return
-    }
-    s.config.SessionIdName = name
+	if s.Status() == SERVER_STATUS_RUNNING {
+		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+		return
+	}
+	s.config.SessionIdName = name
 }
 
 // 获取http server参数 - SessionMaxAge
 func (s *Server) GetSessionMaxAge() int {
-    return s.config.SessionMaxAge
+	return s.config.SessionMaxAge
 }
 
 // 获取http server参数 - SessionIdName
 func (s *Server) GetSessionIdName() string {
-    return s.config.SessionIdName
+	return s.config.SessionIdName
 }

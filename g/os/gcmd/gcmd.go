@@ -24,8 +24,8 @@ type gCmdOption struct {
 	options map[string]string
 }
 
-var Value      = &gCmdValue{}            // Console values.
-var Option     = &gCmdOption{}           // Console options.
+var Value = &gCmdValue{}                 // Console values.
+var Option = &gCmdOption{}               // Console options.
 var cmdFuncMap = make(map[string]func()) // Registered callback functions.
 
 func init() {
@@ -34,7 +34,7 @@ func init() {
 
 // doInit does the initialization for this package.
 func doInit() {
-	Value.values   = Value.values[:0]
+	Value.values = Value.values[:0]
 	Option.options = make(map[string]string)
 	reg := regexp.MustCompile(`\-\-{0,1}(.+?)=(.+)`)
 	for i := 0; i < len(os.Args); i++ {

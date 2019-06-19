@@ -10,10 +10,10 @@ import "github.com/gogf/gf/g/os/gtime"
 
 // IsExpired checks whether <item> is expired.
 func (item *memCacheItem) IsExpired() bool {
-    // Note that it should use greater than or equal judgement here
-    // imagining that the cache time is only 1 millisecond.
-    if item.e >= gtime.Millisecond() {
-        return false
-    }
-    return true
+	// Note that it should use greater than or equal judgement here
+	// imagining that the cache time is only 1 millisecond.
+	if item.e >= gtime.Millisecond() {
+		return false
+	}
+	return true
 }

@@ -9,48 +9,45 @@
 package glist
 
 import (
-    "testing"
+	"testing"
 )
 
 var (
-    l  = New()
-    bn = 20000000
+	l  = New()
+	bn = 20000000
 )
 
 func Benchmark_PushBack(b *testing.B) {
-    b.N = bn
-    for i := 0; i < b.N; i++ {
-        l.PushBack(i)
-    }
+	b.N = bn
+	for i := 0; i < b.N; i++ {
+		l.PushBack(i)
+	}
 }
 
 func Benchmark_PushFront(b *testing.B) {
-    b.N = bn
-    for i := 0; i < b.N; i++ {
-        l.PushFront(i)
-    }
+	b.N = bn
+	for i := 0; i < b.N; i++ {
+		l.PushFront(i)
+	}
 }
 
 func Benchmark_Len(b *testing.B) {
-    b.N = bn
-    for i := 0; i < b.N; i++ {
-        l.Len()
-    }
+	b.N = bn
+	for i := 0; i < b.N; i++ {
+		l.Len()
+	}
 }
 
 func Benchmark_PopFront(b *testing.B) {
-    b.N = bn
-    for i := 0; i < b.N; i++ {
-        l.PopFront()
-    }
+	b.N = bn
+	for i := 0; i < b.N; i++ {
+		l.PopFront()
+	}
 }
 
 func Benchmark_PopBack(b *testing.B) {
-    b.N = bn
-    for i := 0; i < b.N; i++ {
-        l.PopBack()
-    }
+	b.N = bn
+	for i := 0; i < b.N; i++ {
+		l.PopBack()
+	}
 }
-
-
-

@@ -11,44 +11,44 @@ import "sync"
 
 // RWMutex is a sync.RWMutex with a switch of concurrent safe feature.
 type RWMutex struct {
-    sync.RWMutex
-    safe bool
+	sync.RWMutex
+	safe bool
 }
 
-func New(unsafe...bool) *RWMutex {
-    mu := new(RWMutex)
-    if len(unsafe) > 0 {
-        mu.safe = !unsafe[0]
-    } else {
-        mu.safe = true
-    }
-    return mu
+func New(unsafe ...bool) *RWMutex {
+	mu := new(RWMutex)
+	if len(unsafe) > 0 {
+		mu.safe = !unsafe[0]
+	} else {
+		mu.safe = true
+	}
+	return mu
 }
 
 func (mu *RWMutex) IsSafe() bool {
-    return mu.safe
+	return mu.safe
 }
 
 func (mu *RWMutex) Lock() {
-    if mu.safe {
-        mu.RWMutex.Lock()
-    }
+	if mu.safe {
+		mu.RWMutex.Lock()
+	}
 }
 
 func (mu *RWMutex) Unlock() {
-    if mu.safe {
-        mu.RWMutex.Unlock()
-    }
+	if mu.safe {
+		mu.RWMutex.Unlock()
+	}
 }
 
 func (mu *RWMutex) RLock() {
-    if mu.safe {
-        mu.RWMutex.RLock()
-    }
+	if mu.safe {
+		mu.RWMutex.RLock()
+	}
 }
 
 func (mu *RWMutex) RUnlock() {
-    if mu.safe {
-        mu.RWMutex.RUnlock()
-    }
+	if mu.safe {
+		mu.RWMutex.RUnlock()
+	}
 }

@@ -97,7 +97,7 @@ func Test_StrAnyMap_Iterator(t *testing.T) {
 func Test_StrAnyMap_Lock(t *testing.T) {
 	expect := map[string]interface{}{"a": true, "b": false}
 
-	m      := gmap.NewStrAnyMapFrom(expect)
+	m := gmap.NewStrAnyMapFrom(expect)
 	m.LockFunc(func(m map[string]interface{}) {
 		gtest.Assert(m, expect)
 	})

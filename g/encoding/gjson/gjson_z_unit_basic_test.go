@@ -400,7 +400,7 @@ func Test_Basic(t *testing.T) {
 		err = j.Set("11111111111111111111111", 11)
 		gtest.AssertNE(err, nil)
 
-		j   = gjson.New(`[1,2,3]`)
+		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("1")
 		gtest.Assert(err, nil)
 		gtest.Assert(j.Get("0"), 1)

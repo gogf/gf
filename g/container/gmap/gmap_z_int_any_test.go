@@ -74,9 +74,9 @@ func Test_IntAnyMap_Batch(t *testing.T) {
 	m.Removes([]int{1, 2})
 	gtest.Assert(m.Map(), map[int]interface{}{3: 3})
 }
-func Test_IntAnyMap_Iterator(t *testing.T){
+func Test_IntAnyMap_Iterator(t *testing.T) {
 	expect := map[int]interface{}{1: 1, 2: "2"}
-	m      := gmap.NewIntAnyMapFrom(expect)
+	m := gmap.NewIntAnyMapFrom(expect)
 	m.Iterator(func(k int, v interface{}) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -95,10 +95,9 @@ func Test_IntAnyMap_Iterator(t *testing.T){
 	gtest.Assert(i, "2")
 	gtest.Assert(j, 1)
 
-
 }
 
-func Test_IntAnyMap_Lock(t *testing.T){
+func Test_IntAnyMap_Lock(t *testing.T) {
 	expect := map[int]interface{}{1: 1, 2: "2"}
 	m := gmap.NewIntAnyMapFrom(expect)
 	m.LockFunc(func(m map[int]interface{}) {

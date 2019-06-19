@@ -7,43 +7,42 @@
 package gins_test
 
 import (
-    "fmt"
-    "github.com/gogf/gf/g/frame/gins"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
+	"fmt"
+	"github.com/gogf/gf/g/frame/gins"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/test/gtest"
+	"testing"
 )
 
 func Test_View(t *testing.T) {
-    gtest.Case(t, func() {
-        gtest.AssertNE(gins.View(), nil)
-        b, e := gins.View().ParseContent(`{{"我是中国人" | substr 2 -1}}`, nil)
-        gtest.Assert(e,         nil)
-        gtest.Assert(string(b), "中国人")
-    })
-    gtest.Case(t, func() {
-        tpl := "t.tpl"
-        err := gfile.PutContents(tpl, `{{"我是中国人" | substr 2 -1}}`)
-        gtest.Assert(err, nil)
-        defer gfile.Remove(tpl)
+	gtest.Case(t, func() {
+		gtest.AssertNE(gins.View(), nil)
+		b, e := gins.View().ParseContent(`{{"我是中国人" | substr 2 -1}}`, nil)
+		gtest.Assert(e, nil)
+		gtest.Assert(string(b), "中国人")
+	})
+	gtest.Case(t, func() {
+		tpl := "t.tpl"
+		err := gfile.PutContents(tpl, `{{"我是中国人" | substr 2 -1}}`)
+		gtest.Assert(err, nil)
+		defer gfile.Remove(tpl)
 
-        b, e := gins.View().Parse("t.tpl", nil)
-        gtest.Assert(e,         nil)
-        gtest.Assert(string(b), "中国人")
-    })
-    gtest.Case(t, func() {
-        path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.Nanosecond())
-        tpl  := fmt.Sprintf(`%s/%s`, path, "t.tpl")
-        err  := gfile.PutContents(tpl, `{{"我是中国人" | substr 2 -1}}`)
-        gtest.Assert(err, nil)
-        defer gfile.Remove(tpl)
-        err = gins.View().AddPath(path)
-        gtest.Assert(err, nil)
+		b, e := gins.View().Parse("t.tpl", nil)
+		gtest.Assert(e, nil)
+		gtest.Assert(string(b), "中国人")
+	})
+	gtest.Case(t, func() {
+		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.Nanosecond())
+		tpl := fmt.Sprintf(`%s/%s`, path, "t.tpl")
+		err := gfile.PutContents(tpl, `{{"我是中国人" | substr 2 -1}}`)
+		gtest.Assert(err, nil)
+		defer gfile.Remove(tpl)
+		err = gins.View().AddPath(path)
+		gtest.Assert(err, nil)
 
-        b, e := gins.View().Parse("t.tpl", nil)
-        gtest.Assert(e,         nil)
-        gtest.Assert(string(b), "中国人")
-    })
+		b, e := gins.View().Parse("t.tpl", nil)
+		gtest.Assert(e, nil)
+		gtest.Assert(string(b), "中国人")
+	})
 }
-

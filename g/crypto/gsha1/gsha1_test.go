@@ -62,6 +62,6 @@ func TestEncryptFile(t *testing.T) {
 		gtest.AssertEQ(encryptFile, result)
 		// when the file is not exist,encrypt will return empty string
 		errEncrypt := gsha1.EncryptFile(errPath)
-		gtest.AssertEQ(errEncrypt,"")
+		gtest.AssertEQ(errEncrypt, "")
 	})
 }

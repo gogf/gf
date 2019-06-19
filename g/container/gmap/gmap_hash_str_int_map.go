@@ -22,8 +22,8 @@ type StrIntMap struct {
 // which is false in default, means concurrent-safe.
 func NewStrIntMap(unsafe ...bool) *StrIntMap {
 	return &StrIntMap{
-		mu   : rwmutex.New(unsafe...),
-		data : make(map[string]int),
+		mu:   rwmutex.New(unsafe...),
+		data: make(map[string]int),
 	}
 }
 
@@ -32,8 +32,8 @@ func NewStrIntMap(unsafe ...bool) *StrIntMap {
 // there might be some concurrent-safe issues when changing the map outside.
 func NewStrIntMapFrom(data map[string]int, unsafe ...bool) *StrIntMap {
 	return &StrIntMap{
-		mu   : rwmutex.New(unsafe...),
-		data : data,
+		mu:   rwmutex.New(unsafe...),
+		data: data,
 	}
 }
 
@@ -216,7 +216,7 @@ func (m *StrIntMap) Remove(key string) int {
 // Keys returns all keys of the map as a slice.
 func (m *StrIntMap) Keys() []string {
 	m.mu.RLock()
-	keys  := make([]string, len(m.data))
+	keys := make([]string, len(m.data))
 	index := 0
 	for key := range m.data {
 		keys[index] = key
@@ -230,7 +230,7 @@ func (m *StrIntMap) Keys() []string {
 func (m *StrIntMap) Values() []int {
 	m.mu.RLock()
 	values := make([]int, len(m.data))
-	index  := 0
+	index := 0
 	for _, value := range m.data {
 		values[index] = value
 		index++

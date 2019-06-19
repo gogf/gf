@@ -8,18 +8,16 @@
 package ghttp_test
 
 import (
-    "github.com/gogf/gf/g/container/garray"
+	"github.com/gogf/gf/g/container/garray"
 )
 
 var (
-    // 用于测试的端口数组，随机获取
-    ports = garray.NewIntArray()
+	// 用于测试的端口数组，随机获取
+	ports = garray.NewIntArray()
 )
 
 func init() {
-    for i := 8000; i <= 9000; i++ {
-        ports.Append(i)
-    }
+	for i := 8000; i <= 9000; i++ {
+		ports.Append(i)
+	}
 }
-
-
