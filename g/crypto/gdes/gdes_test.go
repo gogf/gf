@@ -1,3 +1,9 @@
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gdes_test
 
 import (
@@ -139,7 +145,7 @@ func TestDesCBC(t *testing.T) {
 		gtest.AssertEQ(errEncrypt, nil)
 		// the iv is err
 		errEncrypt, err = gdes.DesCBCEncrypt(key, text, errIv, padding)
-		//gtest.AssertNE(err,nil)
+		gtest.AssertNE(err, nil)
 		gtest.AssertEQ(errEncrypt, nil)
 		// the padding is err
 		errEncrypt, err = gdes.DesCBCEncrypt(key, text, iv, errPadding)

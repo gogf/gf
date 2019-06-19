@@ -55,7 +55,7 @@ func (c *Conn) SendPkg(data []byte, option ...PkgOption) error {
 	}
 	length := len(data)
 	if length > pkgOption.MaxSize {
-		return errors.New(fmt.Sprintf(`data size %d exceeds max pkg size %d`, length, gPKG_MAX_DATA_SIZE))
+		return fmt.Errorf(`data size %d exceeds max pkg size %d`, length, gPKG_MAX_DATA_SIZE)
 	}
 	buffer := make([]byte, gPKG_HEADER_SIZE+1+len(data))
 	binary.BigEndian.PutUint32(buffer[0:], uint32(length))
@@ -68,12 +68,17 @@ func (c *Conn) SendPkg(data []byte, option ...PkgOption) error {
 }
 
 // 简单协议: 带超时时间的数据发送
-func (c *Conn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...PkgOption) error {
+func (c *Conn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...PkgOption) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
-	return c.SendPkg(data, option...)
+	defer func() {
+		if e := c.SetSendDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	err = c.SendPkg(data, option...)
+	return
 }
 
 // 简单协议: 发送数据并等待接收返回数据
@@ -138,10 +143,15 @@ func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
 }
 
 // 简单协议: 带超时时间的消息包获取
-func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) ([]byte, error) {
+func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
-	return c.RecvPkg(option...)
+	defer func() {
+		if e := c.SetRecvDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	data, err = c.RecvPkg(option...)
+	return
 }

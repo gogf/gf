@@ -10,9 +10,11 @@ package gsha1
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"github.com/gogf/gf/g/util/gconv"
+	"errors"
 	"io"
 	"os"
+
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 // Encrypt encrypts any type of variable using SHA1 algorithms.
@@ -22,23 +24,27 @@ func Encrypt(v interface{}) string {
 	return hex.EncodeToString(r[:])
 }
 
+// EncryptString is alias of Encrypt.
 // Deprecated.
 func EncryptString(s string) string {
-	r := sha1.Sum([]byte(s))
-	return hex.EncodeToString(r[:])
+	return Encrypt(s)
 }
 
 // EncryptFile encrypts file content of <path> using SHA1 algorithms.
-func EncryptFile(path string) string {
-	f, e := os.Open(path)
-	if e != nil {
-		return ""
+func EncryptFile(path string) (encrypt string, err error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
 	}
-	defer f.Close()
+	defer func() {
+		if e := f.Close(); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
 	h := sha1.New()
-	_, e = io.Copy(h, f)
-	if e != nil {
-		return ""
+	_, err = io.Copy(h, f)
+	if err != nil {
+		return "", err
 	}
-	return hex.EncodeToString(h.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

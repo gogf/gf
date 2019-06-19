@@ -7,9 +7,11 @@
 package gtcp
 
 import (
+	"errors"
+	"time"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gpool"
-	"time"
 )
 
 // 链接池链接对象
@@ -118,17 +120,27 @@ func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...R
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
-	return c.Recv(length, retry...)
+	defer func() {
+		if e := c.SetRecvDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	data, err = c.Recv(length, retry...)
+	return
 }
 
 // (方法覆盖)带超时时间的数据发送
-func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) error {
+func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
-	return c.Send(data, retry...)
+	defer func() {
+		if e := c.SetSendDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	err = c.Send(data, retry...)
+	return
 }
 
 // (方法覆盖)发送数据并等待接收返回数据
