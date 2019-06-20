@@ -77,7 +77,7 @@ func Test_Mutex_Unlock(t *testing.T) {
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 			})
 		}()
 		go func() {
@@ -94,17 +94,15 @@ func Test_Mutex_Unlock(t *testing.T) {
 		}()
 
 		go func() {
-			time.Sleep(60 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			mu.Unlock()
 			mu.Unlock()
 			mu.Unlock()
 		}()
 
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
-		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 3)
 	})
 }
@@ -129,7 +127,7 @@ func Test_Mutex_LockFunc(t *testing.T) {
 		gtest.Assert(array.Len(), 1)
 		time.Sleep(50 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
 }
@@ -151,7 +149,7 @@ func Test_Mutex_TryLockFunc(t *testing.T) {
 			})
 		}()
 		go func() {
-			time.Sleep(110 * time.Millisecond)
+			time.Sleep(150 * time.Millisecond)
 			mu.TryLockFunc(func() {
 				array.Append(1)
 			})
@@ -160,7 +158,7 @@ func Test_Mutex_TryLockFunc(t *testing.T) {
 		gtest.Assert(array.Len(), 1)
 		time.Sleep(50 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(150 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
 }
@@ -179,14 +177,11 @@ func Test_Mutex_RLockFunc(t *testing.T) {
 			time.Sleep(50 * time.Millisecond)
 			mu.RLockFunc(func() {
 				array.Append(1)
-				time.Sleep(100 * time.Millisecond)
 			})
 		}()
-		time.Sleep(20 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
 		time.Sleep(50 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
 
@@ -194,28 +189,24 @@ func Test_Mutex_RLockFunc(t *testing.T) {
 		mu := gmlock.NewMutex()
 		array := garray.New()
 		go func() {
-			time.Sleep(50 * time.Millisecond)
 			mu.RLockFunc(func() {
 				array.Append(1)
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 			})
 		}()
 		go func() {
-			time.Sleep(50 * time.Millisecond)
 			mu.RLockFunc(func() {
 				array.Append(1)
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 			})
 		}()
 		go func() {
-			time.Sleep(50 * time.Millisecond)
 			mu.RLockFunc(func() {
 				array.Append(1)
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 			})
 		}()
-		gtest.Assert(array.Len(), 0)
-		time.Sleep(80 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 3)
 	})
 }
