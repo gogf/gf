@@ -3,8 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-//
-// @author wenzi1<liyz23@qq.com>
 
 // Package gdes provides useful API for DES encryption/decryption algorithms.
 package gdes
@@ -75,7 +73,7 @@ func TripleDesECBEncrypt(key []byte, clearText []byte, padding int) ([]byte, err
 		return nil, err
 	}
 
-	newKey := make([]byte, 0)
+	var newKey []byte
 	if len(key) == 16 {
 		newKey = append([]byte{}, key...)
 		newKey = append(newKey, key[:8]...)
@@ -103,7 +101,7 @@ func TripleDesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte, er
 		return nil, errors.New("key length error")
 	}
 
-	newKey := make([]byte, 0)
+	var newKey []byte
 	if len(key) == 16 {
 		newKey = append([]byte{}, key...)
 		newKey = append(newKey, key[:8]...)
@@ -182,7 +180,7 @@ func TripleDesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) (
 		return nil, errors.New("key length invalid")
 	}
 
-	newKey := make([]byte, 0)
+	var newKey []byte
 	if len(key) == 16 {
 		newKey = append([]byte{}, key...)
 		newKey = append(newKey, key[:8]...)
@@ -217,7 +215,7 @@ func TripleDesCBCDecrypt(key []byte, cipherText []byte, iv []byte, padding int) 
 		return nil, errors.New("key length invalid")
 	}
 
-	newKey := make([]byte, 0)
+	var newKey []byte
 	if len(key) == 16 {
 		newKey = append([]byte{}, key...)
 		newKey = append(newKey, key[:8]...)
