@@ -7,6 +7,7 @@
 package gudp
 
 import (
+	"errors"
 	"io"
 	"net"
 	"time"
@@ -14,9 +15,8 @@ import (
 
 // 封装的UDP链接对象
 type Conn struct {
-	conn           *net.UDPConn  // 底层链接对象
+	*net.UDPConn                 // 底层链接对象
 	raddr          *net.UDPAddr  // 远程地址
-	buffer         []byte        // 读取缓冲区(用于数据读取时的缓冲区处理)
 	recvDeadline   time.Time     // 读取超时时间
 	sendDeadline   time.Time     // 写入超时时间
 	recvBufferWait time.Duration // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
@@ -45,7 +45,7 @@ func NewConn(raddr string, laddr ...string) (*Conn, error) {
 // 将*net.UDPConn对象转换为*Conn对象
 func NewConnByNetConn(udp *net.UDPConn) *Conn {
 	return &Conn{
-		conn:           udp,
+		UDPConn:        udp,
 		recvDeadline:   time.Time{},
 		sendDeadline:   time.Time{},
 		recvBufferWait: gRECV_ALL_WAIT_TIMEOUT,
@@ -56,9 +56,9 @@ func NewConnByNetConn(udp *net.UDPConn) *Conn {
 func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 	for {
 		if c.raddr != nil {
-			_, err = c.conn.WriteToUDP(data, c.raddr)
+			_, err = c.WriteToUDP(data, c.raddr)
 		} else {
-			_, err = c.conn.Write(data)
+			_, err = c.Write(data)
 		}
 		if err != nil {
 			// 链接已关闭
@@ -104,11 +104,11 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	for {
 		if length < 0 && index > 0 {
 			bufferWait = true
-			if err = c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
+			if err = c.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
 				return nil, err
 			}
 		}
-		size, raddr, err = c.conn.ReadFromUDP(buffer[index:])
+		size, raddr, err = c.ReadFromUDP(buffer[index:])
 		if err == nil {
 			c.raddr = raddr
 		}
@@ -138,7 +138,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 			}
 			// 判断数据是否全部读取完毕(由于超时机制的存在，获取的数据完整性不可靠)
 			if bufferWait && isTimeout(err) {
-				if err = c.conn.SetReadDeadline(c.recvDeadline); err != nil {
+				if err = c.SetReadDeadline(c.recvDeadline); err != nil {
 					return nil, err
 				}
 				err = nil
@@ -176,21 +176,31 @@ func (c *Conn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, error
 }
 
 // 带超时时间的数据获取
-func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) ([]byte, error) {
+func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
-	return c.Recv(length, retry...)
+	defer func() {
+		if e := c.SetRecvDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	data, err = c.Recv(length, retry...)
+	return
 }
 
 // 带超时时间的数据发送
-func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) error {
+func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
-	return c.Send(data, retry...)
+	defer func() {
+		if e := c.SetSendDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	err = c.Send(data, retry...)
+	return
 }
 
 // 发送数据并等待接收返回数据(带返回超时等待时间)
@@ -203,7 +213,7 @@ func (c *Conn) SendRecvWithTimeout(data []byte, receive int, timeout time.Durati
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
-	err := c.conn.SetDeadline(t)
+	err := c.UDPConn.SetDeadline(t)
 	if err == nil {
 		c.recvDeadline = t
 		c.sendDeadline = t
@@ -212,7 +222,7 @@ func (c *Conn) SetDeadline(t time.Time) error {
 }
 
 func (c *Conn) SetRecvDeadline(t time.Time) error {
-	err := c.conn.SetReadDeadline(t)
+	err := c.SetReadDeadline(t)
 	if err == nil {
 		c.recvDeadline = t
 	}
@@ -220,7 +230,7 @@ func (c *Conn) SetRecvDeadline(t time.Time) error {
 }
 
 func (c *Conn) SetSendDeadline(t time.Time) error {
-	err := c.conn.SetWriteDeadline(t)
+	err := c.SetWriteDeadline(t)
 	if err == nil {
 		c.sendDeadline = t
 	}
@@ -233,17 +243,9 @@ func (c *Conn) SetRecvBufferWait(d time.Duration) {
 	c.recvBufferWait = d
 }
 
-func (c *Conn) LocalAddr() net.Addr {
-	return c.conn.LocalAddr()
-}
-
 // 不能使用c.conn.RemoteAddr()，其返回为nil，
 // 这里使用c.raddr获取远程连接地址。
 func (c *Conn) RemoteAddr() net.Addr {
 	//return c.conn.RemoteAddr()
 	return c.raddr
-}
-
-func (c *Conn) Close() error {
-	return c.conn.Close()
 }

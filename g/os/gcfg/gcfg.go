@@ -11,6 +11,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gtype"
@@ -22,11 +24,10 @@ import (
 	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/os/gspath"
 	"github.com/gogf/gf/g/os/gtime"
-	"time"
 )
 
 const (
-	// Default configuration file name.
+	// DEFAULT_CONFIG_FILE is the default configuration file name.
 	DEFAULT_CONFIG_FILE = "config.toml"
 )
 
@@ -144,7 +145,7 @@ func (c *Config) SetPath(path string) error {
 	}
 	// Should be a directory.
 	if !gfile.IsDir(realPath) {
-		err := errors.New(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" should be directory type`, path))
+		err := fmt.Errorf(`[gcfg] SetPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -205,7 +206,7 @@ func (c *Config) AddPath(path string) error {
 		return err
 	}
 	if !gfile.IsDir(realPath) {
-		err := errors.New(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" should be directory type`, path))
+		err := fmt.Errorf(`[gcfg] AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -220,8 +221,8 @@ func (c *Config) AddPath(path string) error {
 	return nil
 }
 
+// GetFilePath is alias of FilePath.
 // Deprecated.
-// Alias of FilePath.
 func (c *Config) GetFilePath(file ...string) (path string) {
 	return c.FilePath(file...)
 }
@@ -281,9 +282,12 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 			// Add monitor for this configuration file,
 			// any changes of this file will refresh its cache in Config object.
 			if filePath != "" {
-				_, _ = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+				_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 					c.jsons.Remove(name)
 				})
+				if err != nil && errorPrint() {
+					glog.Error(err)
+				}
 			}
 			return j
 		} else {

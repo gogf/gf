@@ -7,9 +7,10 @@
 package gdb_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g/database/gdb"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 func Test_Instance(t *testing.T) {

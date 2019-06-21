@@ -39,6 +39,8 @@ type Slice = []interface{}
 type SliceAny = []interface{}
 type SliceStr = []string
 type SliceInt = []int
+
+// Array is alias of Slice.
 type Array = []interface{}
 type ArrayAny = []interface{}
 type ArrayStr = []string
