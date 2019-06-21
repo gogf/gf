@@ -9,6 +9,6 @@ package ghttp
 import "fmt"
 
 // 打印error日志
-func (r *Request) Error(value... interface{}) {
-    r.Server.handleErrorLog(fmt.Sprint(value...), r)
+func (r *Request) Error(value ...interface{}) {
+	r.Server.handleErrorLog(fmt.Sprint(value...), r)
 }

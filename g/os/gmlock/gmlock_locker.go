@@ -7,64 +7,64 @@
 package gmlock
 
 import (
-    "github.com/gogf/gf/g/container/gmap"
-    "github.com/gogf/gf/g/os/gtimer"
-    "time"
+	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/os/gtimer"
+	"time"
 )
 
 // Memory locker.
 type Locker struct {
-    m *gmap.StrAnyMap
+	m *gmap.StrAnyMap
 }
 
 // New creates and returns a new memory locker.
 // A memory locker can lock/unlock with dynamic string key.
 func New() *Locker {
-    return &Locker{
-        m : gmap.NewStrAnyMap(),
-    }
+	return &Locker{
+		m: gmap.NewStrAnyMap(),
+	}
 }
 
 // TryLock tries locking the <key> with writing lock,
 // it returns true if success, or it returns false if there's a writing/reading lock the <key>.
 // The parameter <expire> specifies the max duration it locks.
-func (l *Locker) TryLock(key string, expire...time.Duration) bool {
-    return l.doLock(key, l.getExpire(expire...), true)
+func (l *Locker) TryLock(key string, expire ...time.Duration) bool {
+	return l.doLock(key, l.getExpire(expire...), true)
 }
 
 // Lock locks the <key> with writing lock.
 // If there's a write/reading lock the <key>,
 // it will blocks until the lock is released.
 // The parameter <expire> specifies the max duration it locks.
-func (l *Locker) Lock(key string, expire...time.Duration) {
-    l.doLock(key, l.getExpire(expire...), false)
+func (l *Locker) Lock(key string, expire ...time.Duration) {
+	l.doLock(key, l.getExpire(expire...), false)
 }
 
 // Unlock unlocks the writing lock of the <key>.
 func (l *Locker) Unlock(key string) {
-    if v := l.m.Get(key); v != nil {
-        v.(*Mutex).Unlock()
-    }
+	if v := l.m.Get(key); v != nil {
+		v.(*Mutex).Unlock()
+	}
 }
 
 // TryRLock tries locking the <key> with reading lock.
 // It returns true if success, or if there's a writing lock on <key>, it returns false.
 func (l *Locker) TryRLock(key string) bool {
-    return l.doRLock(key, true)
+	return l.doRLock(key, true)
 }
 
 // RLock locks the <key> with reading lock.
 // If there's a writing lock on <key>,
 // it will blocks until the writing lock is released.
 func (l *Locker) RLock(key string) {
-    l.doRLock(key, false)
+	l.doRLock(key, false)
 }
 
 // RUnlock unlocks the reading lock of the <key>.
 func (l *Locker) RUnlock(key string) {
-    if v := l.m.Get(key); v != nil {
-        v.(*Mutex).RUnlock()
-    }
+	if v := l.m.Get(key); v != nil {
+		v.(*Mutex).RUnlock()
+	}
 }
 
 // TryLockFunc locks the <key> with writing lock and callback function <f>.
@@ -73,7 +73,7 @@ func (l *Locker) RUnlock(key string) {
 // It releases the lock after <f> is executed.
 //
 // The parameter <expire> specifies the max duration it locks.
-func (l *Locker) TryLockFunc(key string, f func(), expire...time.Duration) bool {
+func (l *Locker) TryLockFunc(key string, f func(), expire ...time.Duration) bool {
 	if l.TryLock(key, expire...) {
 		defer l.Unlock(key)
 		f()
@@ -104,7 +104,7 @@ func (l *Locker) TryRLockFunc(key string, f func()) bool {
 // It releases the lock after <f> is executed.
 //
 // The parameter <expire> specifies the max duration it locks.
-func (l *Locker) LockFunc(key string, f func(), expire...time.Duration) {
+func (l *Locker) LockFunc(key string, f func(), expire ...time.Duration) {
 	l.Lock(key, expire...)
 	defer l.Unlock(key)
 	f()
@@ -125,12 +125,12 @@ func (l *Locker) RLockFunc(key string, f func()) {
 
 // getExpire returns the duration object passed.
 // If <expire> is not passed, it returns a default duration object.
-func (l *Locker) getExpire(expire...time.Duration) time.Duration {
-    e := time.Duration(0)
-    if len(expire) > 0 {
-        e = expire[0]
-    }
-    return e
+func (l *Locker) getExpire(expire ...time.Duration) time.Duration {
+	e := time.Duration(0)
+	if len(expire) > 0 {
+		e = expire[0]
+	}
+	return e
 }
 
 // doLock locks writing on <key>.
@@ -142,22 +142,22 @@ func (l *Locker) getExpire(expire...time.Duration) time.Duration {
 //
 // The parameter <expire> specifies the max duration it locks.
 func (l *Locker) doLock(key string, expire time.Duration, try bool) bool {
-    mu := l.getOrNewMutex(key)
-    ok := true
-    if try {
-        ok = mu.TryLock()
-    } else {
-        mu.Lock()
-    }
-    if ok && expire > 0 {
-        wid := mu.wid.Val()
-        gtimer.AddOnce(expire, func() {
-            if wid == mu.wid.Val() {
-                mu.Unlock()
-            }
-        })
-    }
-    return ok
+	mu := l.getOrNewMutex(key)
+	ok := true
+	if try {
+		ok = mu.TryLock()
+	} else {
+		mu.Lock()
+	}
+	if ok && expire > 0 {
+		wid := mu.wid.Val()
+		gtimer.AddOnce(expire, func() {
+			if wid == mu.wid.Val() {
+				mu.Unlock()
+			}
+		})
+	}
+	return ok
 }
 
 // doRLock locks reading on <key>.
@@ -167,20 +167,20 @@ func (l *Locker) doLock(key string, expire time.Duration, try bool) bool {
 // it returns false immediately if it fails getting the reading lock.
 // If <true> is false, it blocks until it gets the reading lock.
 func (l *Locker) doRLock(key string, try bool) bool {
-    mu := l.getOrNewMutex(key)
-    ok := true
-    if try {
-        ok = mu.TryRLock()
-    } else {
-        mu.RLock()
-    }
-    return ok
+	mu := l.getOrNewMutex(key)
+	ok := true
+	if try {
+		ok = mu.TryRLock()
+	} else {
+		mu.RLock()
+	}
+	return ok
 }
 
 // getOrNewMutex returns the mutex of given <key> if it exists,
 // or else creates and returns a new one.
 func (l *Locker) getOrNewMutex(key string) *Mutex {
-    return l.m.GetOrSetFuncLock(key, func() interface{} {
-        return NewMutex()
-    }).(*Mutex)
+	return l.m.GetOrSetFuncLock(key, func() interface{} {
+		return NewMutex()
+	}).(*Mutex)
 }

@@ -8,7 +8,7 @@
 package gmap
 
 // Map based on hash table, alias of AnyAnyMap.
-type Map     = AnyAnyMap
+type Map = AnyAnyMap
 type HashMap = AnyAnyMap
 
 // New returns an empty hash map.
@@ -23,7 +23,7 @@ func New(unsafe ...bool) *Map {
 // there might be some concurrent-safe issues when changing the map outside.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewFrom(data map[interface{}]interface{}, unsafe...bool) *Map {
+func NewFrom(data map[interface{}]interface{}, unsafe ...bool) *Map {
 	return NewAnyAnyMapFrom(data, unsafe...)
 }
 
@@ -39,6 +39,6 @@ func NewHashMap(unsafe ...bool) *Map {
 // there might be some concurrent-safe issues when changing the map outside.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewHashMapFrom(data map[interface{}]interface{}, unsafe...bool) *Map {
+func NewHashMapFrom(data map[interface{}]interface{}, unsafe ...bool) *Map {
 	return NewAnyAnyMapFrom(data, unsafe...)
 }

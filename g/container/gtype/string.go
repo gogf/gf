@@ -7,7 +7,7 @@
 package gtype
 
 import (
-    "sync/atomic"
+	"sync/atomic"
 )
 
 type String struct {
@@ -16,33 +16,31 @@ type String struct {
 
 // NewString returns a concurrent-safe object for string type,
 // with given initial value <value>.
-func NewString(value...string) *String {
-    t := &String{}
-    if len(value) > 0 {
-        t.value.Store(value[0])
-    }
-    return t
+func NewString(value ...string) *String {
+	t := &String{}
+	if len(value) > 0 {
+		t.value.Store(value[0])
+	}
+	return t
 }
 
 // Clone clones and returns a new concurrent-safe object for string type.
 func (v *String) Clone() *String {
-    return NewString(v.Val())
+	return NewString(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (v *String) Set(value string) (old string) {
-    old = v.Val()
-    v.value.Store(value)
-    return
+	old = v.Val()
+	v.value.Store(value)
+	return
 }
 
 // Val atomically loads t.value.
 func (v *String) Val() string {
-    s := v.value.Load()
-    if s != nil {
-        return s.(string)
-    }
-    return ""
+	s := v.value.Load()
+	if s != nil {
+		return s.(string)
+	}
+	return ""
 }
-
-

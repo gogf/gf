@@ -27,8 +27,8 @@ func (view *View) Assign(key string, value interface{}) {
 // SetDelimiters sets customized delimiters for template parsing.
 func (view *View) SetDelimiters(left, right string) {
 	view.mu.Lock()
-    view.delimiters[0] = left
-    view.delimiters[1] = right
+	view.delimiters[0] = left
+	view.delimiters[1] = right
 	view.mu.Unlock()
 }
 
@@ -36,9 +36,9 @@ func (view *View) SetDelimiters(left, right string) {
 // with given function <function> to current view object.
 // The <name> is the function name which can be called in template content.
 func (view *View) BindFunc(name string, function interface{}) {
-    view.mu.Lock()
-    view.funcMap[name] = function
-    view.mu.Unlock()
+	view.mu.Lock()
+	view.funcMap[name] = function
+	view.mu.Unlock()
 }
 
 // BindFuncMap registers customized template functions by map to current view object.

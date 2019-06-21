@@ -4,13 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-
 package gdb
 
 import (
-    "fmt"
-    "regexp"
-    "database/sql"
+	"database/sql"
+	"fmt"
+	"regexp"
 )
 
 // PostgreSQL的适配.
@@ -20,36 +19,36 @@ import (
 
 // 数据库链接对象
 type dbPgsql struct {
-    *dbBase
+	*dbBase
 }
 
 // 创建SQL操作对象，内部采用了lazy link处理
-func (db *dbPgsql) Open (config *ConfigNode) (*sql.DB, error) {
-    var source string
-    if config.LinkInfo != "" {
-        source = config.LinkInfo
-    } else {
-        source = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", config.User, config.Pass, config.Host, config.Port, config.Name)
-    }
-    if db, err := sql.Open("postgres", source); err == nil {
-        return db, nil
-    } else {
-        return nil, err
-    }
+func (db *dbPgsql) Open(config *ConfigNode) (*sql.DB, error) {
+	var source string
+	if config.LinkInfo != "" {
+		source = config.LinkInfo
+	} else {
+		source = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", config.User, config.Pass, config.Host, config.Port, config.Name)
+	}
+	if db, err := sql.Open("postgres", source); err == nil {
+		return db, nil
+	} else {
+		return nil, err
+	}
 }
 
 // 获得关键字操作符
-func (db *dbPgsql) getChars () (charLeft string, charRight string) {
-    return "\"", "\""
+func (db *dbPgsql) getChars() (charLeft string, charRight string) {
+	return "\"", "\""
 }
 
 // 在执行sql之前对sql进行进一步处理
 func (db *dbPgsql) handleSqlBeforeExec(query string) string {
-    reg   := regexp.MustCompile("\\?")
-    index := 0
-    str   := reg.ReplaceAllStringFunc(query, func (s string) string {
-        index ++
-        return fmt.Sprintf("$%d", index)
-    })
-    return str
+	reg := regexp.MustCompile("\\?")
+	index := 0
+	str := reg.ReplaceAllStringFunc(query, func(s string) string {
+		index++
+		return fmt.Sprintf("$%d", index)
+	})
+	return str
 }

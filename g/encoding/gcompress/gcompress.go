@@ -8,61 +8,76 @@
 package gcompress
 
 import (
-    "bytes"
-    "compress/zlib"
-    "compress/gzip"
-    "io"
+	"bytes"
+	"compress/gzip"
+	"compress/zlib"
+	"io"
 )
 
 // Zlib compresses <data> with zlib algorithm.
-func Zlib(data []byte) []byte {
-    if data == nil || len(data) < 13 {
-        return data
-    }
-    var in bytes.Buffer
-    w   := zlib.NewWriter(&in)
-    _, _ = w.Write(data)
-    _    = w.Close()
-    return in.Bytes()
+func Zlib(data []byte) ([]byte, error) {
+	if data == nil || len(data) < 13 {
+		return data, nil
+	}
+	var in bytes.Buffer
+	var err error
+	w := zlib.NewWriter(&in)
+	if _, err = w.Write(data); err != nil {
+		return nil, err
+	}
+	if err = w.Close(); err != nil {
+		return in.Bytes(), err
+	}
+	return in.Bytes(), nil
 }
 
 // UnZlib decompresses <data> with zlib algorithm.
-func UnZlib(data []byte) []byte {
-    if data == nil || len(data) < 13 {
-        return data
-    }
-    b := bytes.NewReader(data)
-    var out bytes.Buffer
-    r, err := zlib.NewReader(b)
-    if err != nil {
-        return nil
-    }
-    _, _ = io.Copy(&out, r)
-    return out.Bytes()
+func UnZlib(data []byte) ([]byte, error) {
+	if data == nil || len(data) < 13 {
+		return data, nil
+	}
+
+	b := bytes.NewReader(data)
+	var out bytes.Buffer
+	var err error
+	r, err := zlib.NewReader(b)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = io.Copy(&out, r); err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
 }
 
 // Gzip compresses <data> with gzip algorithm.
-func Gzip(data []byte) []byte {
+func Gzip(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
-	zip    := gzip.NewWriter(&buf)
-	_, err := zip.Write(data)
+	var err error
+	zip := gzip.NewWriter(&buf)
+	_, err = zip.Write(data)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	_ = zip.Close()
-	return buf.Bytes()
+	if err = zip.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 // UnGzip decompresses <data> with gzip algorithm.
-func UnGzip(data []byte) []byte {
-    var buf bytes.Buffer
-	content      := bytes.NewReader(data)
+func UnGzip(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	content := bytes.NewReader(data)
 	zipData, err := gzip.NewReader(content)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	_, _ = io.Copy(&buf, zipData)
-	_    = zipData.Close()
-	return buf.Bytes()
+	if _, err = io.Copy(&buf, zipData); err != nil {
+		return nil, err
+	}
+	if err = zipData.Close(); err != nil {
+		return buf.Bytes(), err
+	}
+	return buf.Bytes(), nil
 }
-
