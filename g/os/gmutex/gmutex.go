@@ -1,36 +1,36 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gmlock
+// Package gmutex implements graceful concurrent-safe mutex with more rich features.
+package gmutex
 
 import (
-	"github.com/gogf/gf/g/container/gtype"
+	"math"
 	"runtime"
-	"sync"
+
+	"github.com/gogf/gf/g/container/gtype"
 )
 
-// The high level RWMutex.
-// It wraps the sync.RWMutex to implements more rich features.
+// The high level Mutex, which implements more rich features for mutex.
 type Mutex struct {
-	mu      sync.RWMutex
-	wid     *gtype.Int64 // Unique id, used for multiple and safe logic Unlock.
-	locking *gtype.Bool  // Locking mark for atomic operation for *Lock and Try*Lock functions.
-	// There must be only one locking operation at the same time for concurrent safe purpose.
-	state *gtype.Int32 // Locking state:
-	//   0: writing lock false;
-	//  -1: writing lock true;
-	// >=1: reading lock;
+	state   *gtype.Int32  // Indicates the state of mutex.
+	writer  *gtype.Int32  // Pending Writer count.
+	reader  *gtype.Int32  // Pending reader count.
+	writing chan struct{} // Channel used for writer blocking.
+	reading chan struct{} // Channel used for reader blocking.
 }
 
-// NewMutex creates and returns a new mutex.
-func NewMutex() *Mutex {
+// New creates and returns a new mutex.
+func New() *Mutex {
 	return &Mutex{
-		wid:     gtype.NewInt64(),
 		state:   gtype.NewInt32(),
-		locking: gtype.NewBool(),
+		writer:  gtype.NewInt32(),
+		reader:  gtype.NewInt32(),
+		writing: make(chan struct{}, 1),
+		reading: make(chan struct{}, math.MaxInt32),
 	}
 }
 
@@ -38,15 +38,15 @@ func NewMutex() *Mutex {
 // If the lock is already locked for reading or writing,
 // Lock blocks until the lock is available.
 func (m *Mutex) Lock() {
-	if m.locking.Cas(false, true) {
-		m.mu.Lock()
-		// State should be changed after locks.
-		m.state.Set(-1)
-		m.wid.Add(1)
-		m.locking.Set(false)
-	} else {
-		runtime.Gosched()
-		m.Lock()
+	for {
+		// If there're no readers pending and no writing lock currently,
+		// then do the writing lock checks.
+		if m.reader.Val() == 0 && m.state.Cas(0, -1) {
+			return
+		}
+		m.writer.Add(1)
+		<-m.writing
+		m.writer.Add(-1)
 	}
 }
 
@@ -54,7 +54,18 @@ func (m *Mutex) Lock() {
 // It is safe to be called multiple times if there's any locks or not.
 func (m *Mutex) Unlock() {
 	if m.state.Cas(-1, 0) {
-		m.mu.Unlock()
+		// Writing lock unlocks, then first check the blocked readers.
+		if n := m.reader.Val(); n > 0 {
+			// If there're readers blocked, unlock them with preemption.
+			for i := n; i > 0; i-- {
+				m.reading <- struct{}{}
+			}
+			return
+		}
+		if m.writer.Val() > 0 {
+			m.writing <- struct{}{}
+			return
+		}
 	}
 }
 
@@ -62,14 +73,8 @@ func (m *Mutex) Unlock() {
 // It returns true if success, or if there's a write/reading lock on the mutex,
 // it returns false.
 func (m *Mutex) TryLock() bool {
-	if m.locking.Cas(false, true) {
-		if m.state.Cas(0, -1) {
-			m.mu.Lock()
-			m.wid.Add(1)
-			m.locking.Set(false)
-			return true
-		}
-		m.locking.Set(false)
+	if m.reader.Val() == 0 && m.state.Cas(0, -1) {
+		return true
 	}
 	return false
 }
@@ -78,54 +83,79 @@ func (m *Mutex) TryLock() bool {
 // If the mutex is already locked for writing,
 // It blocks until the lock is available.
 func (m *Mutex) RLock() {
-	if m.locking.Cas(false, true) {
-		m.mu.RLock()
-		// State should be changed after locks.
-		m.state.Add(1)
-		m.locking.Set(false)
-	} else {
-		runtime.Gosched()
-		m.RLock()
+	for {
+		// If there no writing lock and no pending writers,
+		// then do the reading lock checks.
+		if n := m.state.Val(); n >= 0 && m.writer.Val() == 0 {
+			if m.state.Cas(n, n+1) {
+				return
+			} else {
+				runtime.Gosched()
+			}
+		}
+		// Or else pending the reader.
+		m.reader.Add(1)
+		<-m.reading
+		m.reader.Add(-1)
 	}
 }
 
 // RUnlock unlocks the reading lock.
 // It is safe to be called multiple times if there's any locks or not.
 func (m *Mutex) RUnlock() {
-	if n := m.state.Val(); n >= 1 {
-		if m.state.Cas(n, n-1) {
-			m.mu.RUnlock()
+	var n int32
+	for {
+		if n = m.state.Val(); n >= 1 {
+			if m.state.Cas(n, n-1) {
+				break
+			} else {
+				runtime.Gosched()
+			}
 		} else {
-			m.RUnlock()
+			break
 		}
+	}
+	// Reading lock unlocks, then first check the blocked writers.
+	if n == 1 && m.writer.Val() > 0 {
+		// No readers blocked, then the writers can take place.
+		m.writing <- struct{}{}
+		return
 	}
 }
 
 // TryRLock tries locking the mutex for reading.
 // It returns true if success, or if there's a writing lock on the mutex, it returns false.
 func (m *Mutex) TryRLock() bool {
-	if m.locking.Cas(false, true) {
-		if m.state.Val() >= 0 {
-			m.mu.RLock()
-			m.state.Add(1)
-			m.locking.Set(false)
-			return true
+	for {
+		if n := m.state.Val(); n >= 0 && m.writer.Val() == 0 {
+			if m.state.Cas(n, n+1) {
+				return true
+			} else {
+				runtime.Gosched()
+			}
+		} else {
+			return false
 		}
 	}
-	return false
 }
 
-// IsLocked checks whether the mutex is locked by writing or reading lock.
+// IsLocked checks whether the mutex is locked with writing or reading lock.
+// Note that the result might be changed after it's called,
+// so it cannot be the criterion for atomic operations.
 func (m *Mutex) IsLocked() bool {
 	return m.state.Val() != 0
 }
 
-// IsRLocked checks whether the mutex is locked by writing lock.
+// IsWLocked checks whether the mutex is locked by writing lock.
+// Note that the result might be changed after it's called,
+// so it cannot be the criterion for atomic operations.
 func (m *Mutex) IsWLocked() bool {
 	return m.state.Val() < 0
 }
 
 // IsRLocked checks whether the mutex is locked by reading lock.
+// Note that the result might be changed after it's called,
+// so it cannot be the criterion for atomic operations.
 func (m *Mutex) IsRLocked() bool {
 	return m.state.Val() > 0
 }

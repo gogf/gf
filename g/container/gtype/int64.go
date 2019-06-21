@@ -41,7 +41,7 @@ func (v *Int64) Val() int64 {
 }
 
 // Add atomically adds <delta> to t.value and returns the new value.
-func (v *Int64) Add(delta int64) int64 {
+func (v *Int64) Add(delta int64) (new int64) {
 	return atomic.AddInt64(&v.value, delta)
 }
 

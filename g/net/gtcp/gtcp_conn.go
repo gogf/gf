@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"io"
 	"net"
 	"time"
@@ -17,7 +18,7 @@ import (
 
 // 封装的链接对象
 type Conn struct {
-	conn           net.Conn      // 底层tcp对象
+	net.Conn                     // 底层tcp对象
 	reader         *bufio.Reader // 当前链接的缓冲读取对象
 	buffer         []byte        // 读取缓冲区(用于数据读取时的缓冲区处理)
 	recvDeadline   time.Time     // 读取超时时间
@@ -60,7 +61,7 @@ func NewConnKeyCrt(addr, crtFile, keyFile string) (*Conn, error) {
 // 将net.Conn接口对象转换为*gtcp.Conn对象
 func NewConnByNetConn(conn net.Conn) *Conn {
 	return &Conn{
-		conn:           conn,
+		Conn:           conn,
 		reader:         bufio.NewReader(conn),
 		recvDeadline:   time.Time{},
 		sendDeadline:   time.Time{},
@@ -68,15 +69,10 @@ func NewConnByNetConn(conn net.Conn) *Conn {
 	}
 }
 
-// 关闭连接
-func (c *Conn) Close() error {
-	return c.conn.Close()
-}
-
 // 发送数据
 func (c *Conn) Send(data []byte, retry ...Retry) error {
 	for {
-		if _, err := c.conn.Write(data); err != nil {
+		if _, err := c.Write(data); err != nil {
 			// 链接已关闭
 			if err == io.EOF {
 				return err
@@ -124,7 +120,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 		// 仅对读取全部缓冲区数据操作有效
 		if length < 0 && index > 0 {
 			bufferWait = true
-			if err = c.conn.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
+			if err = c.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
 				return nil, err
 			}
 		}
@@ -155,7 +151,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 			}
 			// 判断数据是否全部读取完毕(由于超时机制的存在，获取的数据完整性不可靠)
 			if bufferWait && isTimeout(err) {
-				if err = c.conn.SetReadDeadline(c.recvDeadline); err != nil {
+				if err = c.SetReadDeadline(c.recvDeadline); err != nil {
 					return nil, err
 				}
 				err = nil
@@ -207,21 +203,31 @@ func (c *Conn) RecvLine(retry ...Retry) ([]byte, error) {
 }
 
 // 带超时时间的数据获取
-func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) ([]byte, error) {
+func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
-	return c.Recv(length, retry...)
+	defer func() {
+		if e := c.SetRecvDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	data, err = c.Recv(length, retry...)
+	return
 }
 
 // 带超时时间的数据发送
-func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) error {
+func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
-	return c.Send(data, retry...)
+	defer func() {
+		if e := c.SetSendDeadline(time.Time{}); e != nil {
+			err = errors.New(err.Error() + "; " + e.Error())
+		}
+	}()
+	err = c.Send(data, retry...)
+	return
 }
 
 // 发送数据并等待接收返回数据
@@ -243,7 +249,7 @@ func (c *Conn) SendRecvWithTimeout(data []byte, receive int, timeout time.Durati
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
-	err := c.conn.SetDeadline(t)
+	err := c.Conn.SetDeadline(t)
 	if err == nil {
 		c.recvDeadline = t
 		c.sendDeadline = t
@@ -252,7 +258,7 @@ func (c *Conn) SetDeadline(t time.Time) error {
 }
 
 func (c *Conn) SetRecvDeadline(t time.Time) error {
-	err := c.conn.SetReadDeadline(t)
+	err := c.SetReadDeadline(t)
 	if err == nil {
 		c.recvDeadline = t
 	}
@@ -260,7 +266,7 @@ func (c *Conn) SetRecvDeadline(t time.Time) error {
 }
 
 func (c *Conn) SetSendDeadline(t time.Time) error {
-	err := c.conn.SetWriteDeadline(t)
+	err := c.SetWriteDeadline(t)
 	if err == nil {
 		c.sendDeadline = t
 	}
@@ -271,12 +277,4 @@ func (c *Conn) SetSendDeadline(t time.Time) error {
 // 该时间间隔不能设置得太大，会影响Recv读取时长(默认为1毫秒)。
 func (c *Conn) SetRecvBufferWait(bufferWaitDuration time.Duration) {
 	c.recvBufferWait = bufferWaitDuration
-}
-
-func (c *Conn) LocalAddr() net.Addr {
-	return c.conn.LocalAddr()
-}
-
-func (c *Conn) RemoteAddr() net.Addr {
-	return c.conn.RemoteAddr()
 }

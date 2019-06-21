@@ -9,11 +9,12 @@ package gpool
 
 import (
 	"errors"
+	"time"
+
 	"github.com/gogf/gf/g/container/glist"
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/os/gtimer"
-	"time"
 )
 
 // Object-Reusable Pool.
@@ -126,6 +127,7 @@ func (p *Pool) checkExpire() {
 		gtimer.Exit()
 	}
 	for {
+		// TODO Do not use Pop and Push mechanism, which is not graceful.
 		if r := p.list.PopFront(); r != nil {
 			item := r.(*poolItem)
 			if item.expire == 0 || item.expire > gtime.Millisecond() {

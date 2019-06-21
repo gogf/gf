@@ -9,9 +9,10 @@
 package cmdenv
 
 import (
-	"github.com/gogf/gf/g/test/gtest"
 	"os"
 	"testing"
+
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func Test_Get(t *testing.T) {
