@@ -7,7 +7,7 @@
 package gtype
 
 import (
-    "sync/atomic"
+	"sync/atomic"
 )
 
 type Uint struct {
@@ -16,33 +16,33 @@ type Uint struct {
 
 // NewUint returns a concurrent-safe object for uint type,
 // with given initial value <value>.
-func NewUint(value...uint) *Uint {
-    if len(value) > 0 {
-        return &Uint{
-	        value : uint64(value[0]),
+func NewUint(value ...uint) *Uint {
+	if len(value) > 0 {
+		return &Uint{
+			value: uint64(value[0]),
 		}
-    }
-    return &Uint{}
+	}
+	return &Uint{}
 }
 
 // Clone clones and returns a new concurrent-safe object for uint type.
 func (v *Uint) Clone() *Uint {
-    return NewUint(v.Val())
+	return NewUint(v.Val())
 }
 
 // Set atomically stores <value> into t.value and returns the previous value of t.value.
 func (v *Uint) Set(value uint) (old uint) {
-    return uint(atomic.SwapUint64(&v.value, uint64(value)))
+	return uint(atomic.SwapUint64(&v.value, uint64(value)))
 }
 
 // Val atomically loads t.value.
 func (v *Uint) Val() uint {
-    return uint(atomic.LoadUint64(&v.value))
+	return uint(atomic.LoadUint64(&v.value))
 }
 
 // Add atomically adds <delta> to t.value and returns the new value.
 func (v *Uint) Add(delta uint) (new uint) {
-    return uint(atomic.AddUint64(&v.value, uint64(delta)))
+	return uint(atomic.AddUint64(&v.value, uint64(delta)))
 }
 
 // Cas executes the compare-and-swap operation for value.

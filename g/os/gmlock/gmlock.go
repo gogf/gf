@@ -11,45 +11,45 @@ import "time"
 
 var (
 	// Default locker.
-    locker = New()
+	locker = New()
 )
 
 // TryLock tries locking the <key> with writing lock,
 // it returns true if success, or if there's a write/reading lock the <key>,
 // it returns false. The parameter <expire> specifies the max duration it locks.
-func TryLock(key string, expire...time.Duration) bool {
-    return locker.TryLock(key, expire...)
+func TryLock(key string, expire ...time.Duration) bool {
+	return locker.TryLock(key, expire...)
 }
 
 // Lock locks the <key> with writing lock.
 // If there's a write/reading lock the <key>,
 // it will blocks until the lock is released.
 // The parameter <expire> specifies the max duration it locks.
-func Lock(key string, expire...time.Duration) {
-    locker.Lock(key, expire...)
+func Lock(key string, expire ...time.Duration) {
+	locker.Lock(key, expire...)
 }
 
 // Unlock unlocks the writing lock of the <key>.
 func Unlock(key string) {
-    locker.Unlock(key)
+	locker.Unlock(key)
 }
 
 // TryRLock tries locking the <key> with reading lock.
 // It returns true if success, or if there's a writing lock on <key>, it returns false.
 func TryRLock(key string) bool {
-    return locker.TryRLock(key)
+	return locker.TryRLock(key)
 }
 
 // RLock locks the <key> with reading lock.
 // If there's a writing lock on <key>,
 // it will blocks until the writing lock is released.
 func RLock(key string) {
-    locker.RLock(key)
+	locker.RLock(key)
 }
 
 // RUnlock unlocks the reading lock of the <key>.
 func RUnlock(key string) {
-    locker.RUnlock(key)
+	locker.RUnlock(key)
 }
 
 // TryLockFunc locks the <key> with writing lock and callback function <f>.
@@ -58,7 +58,7 @@ func RUnlock(key string) {
 // It releases the lock after <f> is executed.
 //
 // The parameter <expire> specifies the max duration it locks.
-func TryLockFunc(key string, f func(), expire...time.Duration) bool {
+func TryLockFunc(key string, f func(), expire ...time.Duration) bool {
 	return locker.TryLockFunc(key, f, expire...)
 }
 
@@ -79,7 +79,7 @@ func TryRLockFunc(key string, f func()) bool {
 // It releases the lock after <f> is executed.
 //
 // The parameter <expire> specifies the max duration it locks.
-func LockFunc(key string, f func(), expire...time.Duration) {
+func LockFunc(key string, f func(), expire ...time.Duration) {
 	locker.LockFunc(key, f, expire...)
 }
 

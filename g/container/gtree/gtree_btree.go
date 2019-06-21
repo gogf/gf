@@ -19,8 +19,8 @@ type BTree struct {
 	mu         *rwmutex.RWMutex
 	root       *BTreeNode
 	comparator func(v1, v2 interface{}) int
-	size       int    // Total number of keys in the tree
-	m          int    // order (maximum number of children)
+	size       int // Total number of keys in the tree
+	m          int // order (maximum number of children)
 }
 
 // BTreeNode is a single element within the tree.
@@ -40,21 +40,21 @@ type BTreeEntry struct {
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
 // Note that the <m> must be greater or equal than 3, or else it panics.
-func NewBTree(m int, comparator func(v1, v2 interface{}) int, unsafe...bool) *BTree {
+func NewBTree(m int, comparator func(v1, v2 interface{}) int, unsafe ...bool) *BTree {
 	if m < 3 {
 		panic("Invalid order, should be at least 3")
 	}
 	return &BTree{
-		comparator : comparator,
-		mu         : rwmutex.New(unsafe...),
-		m          : m,
+		comparator: comparator,
+		mu:         rwmutex.New(unsafe...),
+		m:          m,
 	}
 }
 
 // NewBTreeFrom instantiates a B-tree with <m> (maximum number of children), a custom key comparator and data map.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe...bool) *BTree {
+func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe ...bool) *BTree {
 	tree := NewBTree(m, comparator, unsafe...)
 	for k, v := range data {
 		tree.doSet(k, v)
@@ -121,7 +121,7 @@ func (tree *BTree) doSetWithLockCheck(key interface{}, value interface{}) interf
 	if entry := tree.doSearch(key); entry != nil {
 		return entry.Value
 	}
-	if f, ok := value.(func() interface {}); ok {
+	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
 	tree.doSet(key, value)
@@ -268,7 +268,7 @@ func (tree *BTree) Size() int {
 
 // Keys returns all keys in asc order.
 func (tree *BTree) Keys() []interface{} {
-	keys  := make([]interface{}, tree.Size())
+	keys := make([]interface{}, tree.Size())
 	index := 0
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		keys[index] = key
@@ -281,7 +281,7 @@ func (tree *BTree) Keys() []interface{} {
 // Values returns all values in asc order based on the key.
 func (tree *BTree) Values() []interface{} {
 	values := make([]interface{}, tree.Size())
-	index  := 0
+	index := 0
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		values[index] = value
 		index++
@@ -328,7 +328,7 @@ func (tree *BTree) Right() *BTreeEntry {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.right(tree.root)
-	return node.Entries[len(node.Entries) - 1]
+	return node.Entries[len(node.Entries)-1]
 }
 
 // String returns a string representation of container (for debugging purposes)
@@ -372,13 +372,13 @@ func (tree *BTree) Print() {
 }
 
 // Iterator is alias of IteratorAsc.
-func (tree *BTree) Iterator(f func (key, value interface{}) bool) {
+func (tree *BTree) Iterator(f func(key, value interface{}) bool) {
 	tree.IteratorAsc(f)
 }
 
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
-func (tree *BTree) IteratorAsc(f func (key, value interface{}) bool) {
+func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.left(tree.root)
@@ -396,8 +396,8 @@ loop:
 	// Find current entry position in current node
 	e, _ := tree.search(node, entry.Key)
 	// Try to go down to the child right of the current entry
-	if e + 1 < len(node.Children) {
-		node = node.Children[e + 1]
+	if e+1 < len(node.Children) {
+		node = node.Children[e+1]
 		// Try to go down to the child left of the current node
 		for len(node.Children) > 0 {
 			node = node.Children[0]
@@ -407,8 +407,8 @@ loop:
 		goto loop
 	}
 	// Above assures that we have reached a leaf node, so return the next entry in current node (if any)
-	if e + 1 < len(node.Entries) {
-		entry = node.Entries[e + 1]
+	if e+1 < len(node.Entries) {
+		entry = node.Entries[e+1]
 		goto loop
 	}
 	// Reached leaf node and there are no entries to the right of the current entry, so go up to the parent
@@ -426,14 +426,14 @@ loop:
 
 // IteratorDesc iterates the tree in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
-func (tree *BTree) IteratorDesc(f func (key, value interface{}) bool) {
+func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.right(tree.root)
 	if node == nil {
 		return
 	}
-	entry := node.Entries[len(node.Entries) - 1]
+	entry := node.Entries[len(node.Entries)-1]
 loop:
 	if entry == nil {
 		return
@@ -448,15 +448,15 @@ loop:
 		node = node.Children[e]
 		// Try to go down to the child right of the current node
 		for len(node.Children) > 0 {
-			node = node.Children[len(node.Children) - 1]
+			node = node.Children[len(node.Children)-1]
 		}
 		// Return the right-most entry
-		entry = node.Entries[len(node.Entries) - 1]
+		entry = node.Entries[len(node.Entries)-1]
 		goto loop
 	}
 	// Above assures that we have reached a leaf node, so return the previous entry in current node (if any)
-	if e - 1 >= 0 {
-		entry = node.Entries[e - 1]
+	if e-1 >= 0 {
+		entry = node.Entries[e-1]
 		goto loop
 	}
 
@@ -466,8 +466,8 @@ loop:
 		// Find previous entry position in current node (note: search returns the first equal or bigger than entry)
 		e, _ := tree.search(node, entry.Key)
 		// Check that there is a previous entry position in current node
-		if e - 1 >= 0 {
-			entry = node.Entries[e - 1]
+		if e-1 >= 0 {
+			entry = node.Entries[e-1]
 			goto loop
 		}
 	}
@@ -534,14 +534,17 @@ func (tree *BTree) middle() int {
 
 // search searches only within the single node among its entries
 func (tree *BTree) search(node *BTreeNode, key interface{}) (index int, found bool) {
-	low, mid, high := 0, 0, len(node.Entries) - 1
+	low, mid, high := 0, 0, len(node.Entries)-1
 	for low <= high {
 		mid = (high + low) / 2
 		compare := tree.comparator(key, node.Entries[mid].Key)
 		switch {
-			case compare  > 0:  low = mid + 1
-			case compare  < 0: high = mid - 1
-			case compare == 0: return mid, true
+		case compare > 0:
+			low = mid + 1
+		case compare < 0:
+			high = mid - 1
+		case compare == 0:
+			return mid, true
 		}
 	}
 	return low, false
@@ -643,8 +646,8 @@ func (tree *BTree) splitNonRoot(node *BTreeNode) {
 
 func (tree *BTree) splitRoot() {
 	middle := tree.middle()
-	left   := &BTreeNode{Entries: append([]*BTreeEntry(nil), tree.root.Entries[:middle]...)}
-	right  := &BTreeNode{Entries: append([]*BTreeEntry(nil), tree.root.Entries[middle+1:]...)}
+	left := &BTreeNode{Entries: append([]*BTreeEntry(nil), tree.root.Entries[:middle]...)}
+	right := &BTreeNode{Entries: append([]*BTreeEntry(nil), tree.root.Entries[middle+1:]...)}
 
 	// Move children from the node to be split into left and right nodes
 	if !tree.isLeaf(tree.root) {
@@ -660,9 +663,9 @@ func (tree *BTree) splitRoot() {
 		Children: []*BTreeNode{left, right},
 	}
 
-	left.Parent  = newRoot
+	left.Parent = newRoot
 	right.Parent = newRoot
-	tree.root    = newRoot
+	tree.root = newRoot
 }
 
 func setParent(nodes []*BTreeNode, parent *BTreeNode) {
@@ -738,10 +741,10 @@ func (tree *BTree) delete(node *BTreeNode, index int) {
 	}
 
 	// deleting from an internal node
-	leftLargestNode       := tree.right(node.Children[index]) // largest node in the left sub-tree (assumed to exist)
+	leftLargestNode := tree.right(node.Children[index]) // largest node in the left sub-tree (assumed to exist)
 	leftLargestEntryIndex := len(leftLargestNode.Entries) - 1
-	node.Entries[index]    = leftLargestNode.Entries[leftLargestEntryIndex]
-	deletedKey            := leftLargestNode.Entries[leftLargestEntryIndex].Key
+	node.Entries[index] = leftLargestNode.Entries[leftLargestEntryIndex]
+	deletedKey := leftLargestNode.Entries[leftLargestEntryIndex].Key
 	tree.deleteEntry(leftLargestNode, leftLargestEntryIndex)
 	tree.rebalance(leftLargestNode, deletedKey)
 }
@@ -791,16 +794,16 @@ func (tree *BTree) rebalance(node *BTreeNode, deletedKey interface{}) {
 		// merge with right sibling
 		node.Entries = append(node.Entries, node.Parent.Entries[rightSiblingIndex-1])
 		node.Entries = append(node.Entries, rightSibling.Entries...)
-		deletedKey   = node.Parent.Entries[rightSiblingIndex-1].Key
+		deletedKey = node.Parent.Entries[rightSiblingIndex-1].Key
 		tree.deleteEntry(node.Parent, rightSiblingIndex-1)
 		tree.appendChildren(node.Parent.Children[rightSiblingIndex], node)
 		tree.deleteChild(node.Parent, rightSiblingIndex)
 	} else if leftSibling != nil {
 		// merge with left sibling
-		entries     := append([]*BTreeEntry(nil), leftSibling.Entries...)
-		entries      = append(entries, node.Parent.Entries[leftSiblingIndex])
+		entries := append([]*BTreeEntry(nil), leftSibling.Entries...)
+		entries = append(entries, node.Parent.Entries[leftSiblingIndex])
 		node.Entries = append(entries, node.Entries...)
-		deletedKey   = node.Parent.Entries[leftSiblingIndex].Key
+		deletedKey = node.Parent.Entries[leftSiblingIndex].Key
 		tree.deleteEntry(node.Parent, leftSiblingIndex)
 		tree.prependChildren(node.Parent.Children[leftSiblingIndex], node)
 		tree.deleteChild(node.Parent, leftSiblingIndex)
@@ -818,7 +821,7 @@ func (tree *BTree) rebalance(node *BTreeNode, deletedKey interface{}) {
 }
 
 func (tree *BTree) prependChildren(fromNode *BTreeNode, toNode *BTreeNode) {
-	children       := append([]*BTreeNode(nil), fromNode.Children...)
+	children := append([]*BTreeNode(nil), fromNode.Children...)
 	toNode.Children = append(children, toNode.Children...)
 	setParent(fromNode.Children, toNode)
 }

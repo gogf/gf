@@ -9,14 +9,15 @@
 package gcfg_test
 
 import (
+	"io/ioutil"
+	"os"
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/encoding/gjson"
 	"github.com/gogf/gf/g/os/gcfg"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/test/gtest"
-	"io/ioutil"
-	"os"
-	"testing"
 )
 
 func init() {
@@ -38,7 +39,9 @@ array = [1,2,3]
 		path := gcfg.DEFAULT_CONFIG_FILE
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
-		defer gfile.Remove(path)
+		defer func() {
+			_ = gfile.Remove(path)
+		}()
 
 		c := gcfg.New()
 		gtest.Assert(c.Get("v1"), 1)
@@ -163,7 +166,9 @@ func Test_SetFileName(t *testing.T) {
 		path := "config.json"
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
-		defer gfile.Remove(path)
+		defer func() {
+			_ = gfile.Remove(path)
+		}()
 
 		c := gcfg.New()
 		c.SetFileName(path)
@@ -232,7 +237,9 @@ func Test_Instance(t *testing.T) {
 		path := gcfg.DEFAULT_CONFIG_FILE
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
-		defer gfile.Remove(path)
+		defer func() {
+			gtest.Assert(gfile.Remove(path), nil)
+		}()
 
 		c := gcfg.Instance()
 		gtest.Assert(c.Get("v1"), 1)
@@ -286,12 +293,14 @@ func TestCfg_New(t *testing.T) {
 		gtest.Assert(c.GetFileName(), "config.yml")
 
 		configPath := gfile.Pwd() + gfile.Separator + "config"
-		gfile.Mkdir(configPath)
-		defer gfile.Remove(configPath)
+		_ = gfile.Mkdir(configPath)
+		defer func() {
+			_ = gfile.Remove(configPath)
+		}()
 		c = gcfg.New("config.yml")
 		gtest.Assert(c.Get("name"), nil)
 
-		os.Unsetenv("GF_GCFG_PATH")
+		_ = os.Unsetenv("GF_GCFG_PATH")
 		c = gcfg.New("config.yml")
 		gtest.Assert(c.Get("name"), nil)
 	})
@@ -340,9 +349,11 @@ func TestCfg_FilePath(t *testing.T) {
 func TestCfg_Get(t *testing.T) {
 	gtest.Case(t, func() {
 		configPath := gfile.Pwd() + gfile.Separator + "config"
-		gfile.Mkdir(configPath)
-		defer gfile.Remove(configPath)
-		ioutil.WriteFile(configPath+gfile.Separator+"config.yml", []byte("wrong config"), 0644)
+		_ = gfile.Mkdir(configPath)
+		defer func() {
+			_ = gfile.Remove(configPath)
+		}()
+		_ = ioutil.WriteFile(configPath+gfile.Separator+"config.yml", []byte("wrong config"), 0644)
 		c := gcfg.New("config.yml")
 		gtest.Assert(c.Get("name"), nil)
 		gtest.Assert(c.GetVar("name").Val(), nil)
@@ -379,7 +390,7 @@ func TestCfg_Get(t *testing.T) {
 		c.Clear()
 
 		arr, _ := gjson.Encode(g.Map{"name": "gf", "time": "2019-06-12", "person": g.Map{"name": "gf"}, "floats": g.Slice{1, 2, 3}})
-		ioutil.WriteFile(configPath+gfile.Separator+"config.yml", arr, 0644)
+		_ = ioutil.WriteFile(configPath+gfile.Separator+"config.yml", arr, 0644)
 		gtest.Assert(c.GetTime("time").Format("2006-01-02"), "2019-06-12")
 		gtest.Assert(c.GetGTime("time").Format("Y-m-d"), "2019-06-12")
 		gtest.Assert(c.GetDuration("time").String(), "0s")

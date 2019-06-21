@@ -22,25 +22,25 @@ func TestModel_Inherit_Insert(t *testing.T) {
 		}
 		type User struct {
 			Base
-			Passport   string `json:"passport"`
-			Password   string `json:"password"`
-			Nickname   string `json:"nickname"`
+			Passport string `json:"passport"`
+			Password string `json:"password"`
+			Nickname string `json:"nickname"`
 		}
 		result, err := db.Table("user").Filter().Data(User{
-			Passport    : "john-test",
-			Password    : "123456",
-			Nickname    : "John",
-			Base        : Base {
-				Id         : 100,
-				Uid        : 100,
-				CreateTime : gtime.Now().String(),
+			Passport: "john-test",
+			Password: "123456",
+			Nickname: "John",
+			Base: Base{
+				Id:         100,
+				Uid:        100,
+				CreateTime: gtime.Now().String(),
 			},
 		}).Insert()
 		gtest.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, 1)
 		value, err := db.Table("user").Fields("passport").Where("id=100").Value()
-		gtest.Assert(err,            nil)
+		gtest.Assert(err, nil)
 		gtest.Assert(value.String(), "john-test")
 		// Delete this test data.
 		_, err = db.Table("user").Where("id", 100).Delete()
@@ -51,8 +51,8 @@ func TestModel_Inherit_Insert(t *testing.T) {
 func TestModel_Inherit_MapToStruct(t *testing.T) {
 	gtest.Case(t, func() {
 		type Ids struct {
-			Id         int    `json:"id"`
-			Uid        int    `json:"uid"`
+			Id  int `json:"id"`
+			Uid int `json:"uid"`
 		}
 		type Base struct {
 			Ids
@@ -60,17 +60,17 @@ func TestModel_Inherit_MapToStruct(t *testing.T) {
 		}
 		type User struct {
 			Base
-			Passport   string `json:"passport"`
-			Password   string `json:"password"`
-			Nickname   string `json:"nickname"`
+			Passport string `json:"passport"`
+			Password string `json:"password"`
+			Nickname string `json:"nickname"`
 		}
 		data := g.Map{
-			"id"          : 100,
-			"uid"         : 101,
-			"passport"    : "t1",
-			"password"    : "123456",
-			"nickname"    : "T1",
-			"create_time" : gtime.Now().String(),
+			"id":          100,
+			"uid":         101,
+			"passport":    "t1",
+			"password":    "123456",
+			"nickname":    "T1",
+			"create_time": gtime.Now().String(),
 		}
 		result, err := db.Table("user").Filter().Data(data).Insert()
 		gtest.Assert(err, nil)
@@ -78,15 +78,15 @@ func TestModel_Inherit_MapToStruct(t *testing.T) {
 		gtest.Assert(n, 1)
 
 		one, err := db.Table("user").Where("id=100").One()
-		gtest.Assert(err,            nil)
+		gtest.Assert(err, nil)
 
 		user := new(User)
 
 		gtest.Assert(one.ToStruct(user), nil)
-		gtest.Assert(user.Id,         data["id"])
-		gtest.Assert(user.Passport,   data["passport"])
-		gtest.Assert(user.Password,   data["password"])
-		gtest.Assert(user.Nickname,   data["nickname"])
+		gtest.Assert(user.Id, data["id"])
+		gtest.Assert(user.Passport, data["passport"])
+		gtest.Assert(user.Password, data["password"])
+		gtest.Assert(user.Nickname, data["nickname"])
 		gtest.Assert(user.CreateTime, data["create_time"])
 
 		// Delete this test data.
@@ -95,5 +95,3 @@ func TestModel_Inherit_MapToStruct(t *testing.T) {
 	})
 
 }
-
-

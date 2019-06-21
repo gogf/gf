@@ -16,10 +16,10 @@ type batchSqlResult struct {
 
 // see sql.Result.RowsAffected
 func (r *batchSqlResult) RowsAffected() (int64, error) {
-    return r.rowsAffected, nil
+	return r.rowsAffected, nil
 }
 
 // see sql.Result.LastInsertId
 func (r *batchSqlResult) LastInsertId() (int64, error) {
-    return r.lastResult.LastInsertId()
+	return r.lastResult.LastInsertId()
 }
