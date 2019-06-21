@@ -12,8 +12,10 @@ import (
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gconv"
+	"github.com/gogf/gf/g/internal/rwmutex"
 	"strings"
 	"testing"
+	"time"
 )
 
 func Test_Array_Basic(t *testing.T) {
@@ -37,6 +39,26 @@ func Test_Array_Basic(t *testing.T) {
 		array.InsertAfter(6, 400)
 		gtest.Assert(array.Slice(), []interface{}{100, 200, 1, 2, 3, 300, 4, 400})
 		gtest.Assert(array.Clear().Len(), 0)
+
+		n1 := []interface{}{0, 1, 2, 3}
+		a1 := garray.NewArrayFrom(n1)
+		i1:=a1.Remove(3)
+		gtest.Assert(gconv.Int(i1),3)
+		i2:=a1.Remove(1)
+		gtest.Assert(gconv.Int(i2),1)
+		gtest.Assert(a1.Len(),2)
+		gtest.Assert(a1.Contains(1),false)
+
+		a2 := garray.NewArrayFrom(n1,true)
+		gtest.Assert(a2.Slice(), n1)
+		gtest.Assert(a2.Search(100),-1)
+
+		n2:=[]interface{}{}
+		a3:=garray.NewArrayFrom(n2)
+		gtest.Assert(a3.Search(3),-1)
+
+
+
 	})
 }
 
@@ -115,16 +137,43 @@ func TestArray_Range(t *testing.T) {
 		gtest.Assert(array1.Range(1, 2), []interface{}{1})
 		gtest.Assert(array1.Range(0, 2), []interface{}{0, 1})
 		gtest.Assert(array1.Range(-1, 10), value1)
+		gtest.Assert(array1.Range(9, 1), nil)
+		a1 := garray.NewArrayFrom(value1,true)
+		gtest.Assert(a1.Range(0, 1), []interface{}{0})
+
+
+
 	})
 }
 
 func TestArray_Merge(t *testing.T) {
 	gtest.Case(t, func() {
-		a1 := []interface{}{0, 1, 2, 3}
-		a2 := []interface{}{4, 5, 6, 7}
-		array1 := garray.NewArrayFrom(a1)
-		array2 := garray.NewArrayFrom(a2)
-		gtest.Assert(array1.Merge(array2).Slice(), []interface{}{0, 1, 2, 3, 4, 5, 6, 7})
+		n1 := []interface{}{1, 2, 4, 3}
+		n2:=[]int{7,8,9}
+		n3:=[]int{3,6}
+
+		s1:=[]string{"a","b","c"}
+		in1:=[]interface{}{1,"a",2,"b"}
+		func1:=func(v1,v2 interface{})int{
+			return strings.Compare(gconv.String(v1), gconv.String(v2))
+		}
+
+		a1 := garray.NewArrayFrom(n1)
+		b1 := garray.NewStringArrayFrom(s1)
+		b2:=garray.NewIntArrayFrom(n3)
+		b3:=garray.NewArrayFrom(in1)
+		b4:=garray.NewSortedStringArrayFrom(s1)
+		b5:=garray.NewSortedIntArrayFrom(n3)
+		b6:=garray.NewSortedArrayFrom(n1,func1)
+
+		gtest.Assert(a1.Merge(n2).Len(),7)
+		gtest.Assert(a1.Merge(n3).Len(),9)
+		gtest.Assert(a1.Merge(b1).Len(),12)
+		gtest.Assert(a1.Merge(b2).Len(),14)
+		gtest.Assert(a1.Merge(b3).Len(),18)
+		gtest.Assert(a1.Merge(b4).Len(),21)
+		gtest.Assert(a1.Merge(b5).Len(),23)
+		gtest.Assert(a1.Merge(b6).Len(),27)
 	})
 }
 
@@ -136,6 +185,9 @@ func TestArray_Fill(t *testing.T) {
 		array2 := garray.NewArrayFrom(a2)
 		gtest.Assert(array1.Fill(1, 2, 100).Slice(), []interface{}{0, 100, 100})
 		gtest.Assert(array2.Fill(0, 2, 100).Slice(), []interface{}{100, 100})
+		gtest.Assert(array2.Fill(-1, 2, 100).Slice(), []interface{}{100, 100})
+
+
 	})
 }
 
@@ -148,6 +200,7 @@ func TestArray_Chunk(t *testing.T) {
 		gtest.Assert(chunks[0], []interface{}{1, 2})
 		gtest.Assert(chunks[1], []interface{}{3, 4})
 		gtest.Assert(chunks[2], []interface{}{5})
+		gtest.Assert(array1.Chunk(0), nil)
 	})
 }
 
@@ -168,7 +221,18 @@ func TestArray_SubSlice(t *testing.T) {
 		gtest.Assert(array1.SubSlice(0, 2), []interface{}{0, 1})
 		gtest.Assert(array1.SubSlice(2, 2), []interface{}{2, 3})
 		gtest.Assert(array1.SubSlice(5, 8), []interface{}{5, 6})
+		gtest.Assert(array1.SubSlice(8, 1), nil)
+
+		//array2 := garray.NewArrayFrom(a1,false)
+
+		//gtest.Assert(array2.SubSlice(2, 2), []interface{}{3, 4})
+
 	})
+}
+
+func TestRwMutex(t *testing.T){
+	mu:=rwmutex.New(true)
+	gtest.Assert(mu.IsSafe(),false) // @todo 不理解为什么
 }
 
 func TestArray_Rand(t *testing.T) {
@@ -676,3 +740,54 @@ func TestSortedArray_SetUnique(t *testing.T) {
 		gtest.Assert(array1, []interface{}{"a", "c", "d"})
 	})
 }
+
+
+func TestArray_LockFunc(t *testing.T) {
+	n1 := []interface{}{1, 2, 4, 3}
+	a1 := garray.NewArrayFrom(n1)
+	ch1 := make(chan int64, 2)
+	go a1.LockFunc(func(n1 []interface{}) { //互斥锁
+		n1[3] = 7
+		time.Sleep(1 * time.Second) //暂停一秒
+	})
+
+	go func() {
+		time.Sleep(10 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		a1.Len()
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+	}()
+
+	t1 := <-ch1
+	t2 := <-ch1
+	// 相差大于0.6秒，说明在读取a1.len时，发生了等待。  防止ci抖动,以豪秒为单位
+	gtest.AssertGT(t2-t1, 600)
+	gtest.Assert(a1.Contains(7), true)
+}
+
+func TestArray_RLockFunc(t *testing.T) {
+	n1 := []interface{}{1, 2, 4, 3}
+	a1 := garray.NewArrayFrom(n1)
+
+	ch1 := make(chan int64, 2)
+	go a1.RLockFunc(func(n1 []interface{}) { //互斥锁
+		n1[3] = 7
+		time.Sleep(1 * time.Second) //暂停一秒
+	})
+
+	go func() {
+		time.Sleep(10 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		a1.Len()
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+	}()
+
+	t1 := <-ch1
+	t2 := <-ch1
+	// 由于另一个goroutine加的读锁，其它可读,所以ch1的操作间隔是很小的.a.len 操作并没有等待,
+	// 防止ci抖动,以豪秒为单位
+	gtest.AssertLT(t2-t1, 20)
+	gtest.Assert(a1.Contains(7), true)
+}
+
+
