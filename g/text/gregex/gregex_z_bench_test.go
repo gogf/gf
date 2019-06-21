@@ -9,13 +9,13 @@
 package gregex_test
 
 import (
-    "github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/text/gregex"
 	"regexp"
 	"testing"
 )
 
 var pattern = `(\w+).+\-\-\s*(.+)`
-var src     = `GF is best! -- John`
+var src = `GF is best! -- John`
 
 func Benchmark_GF(b *testing.B) {
 	for i := 0; i < b.N; i++ {

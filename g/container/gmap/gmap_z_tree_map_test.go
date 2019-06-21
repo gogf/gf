@@ -13,7 +13,6 @@ import (
 	"testing"
 )
 
-
 func Test_Tree_Map_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		m := gmap.NewTreeMap(gutil.ComparatorString)
@@ -66,7 +65,7 @@ func Test_Tree_Map_Batch(t *testing.T) {
 	m.Removes([]interface{}{"key1", 1})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 }
-func Test_Tree_Map_Iterator(t *testing.T){
+func Test_Tree_Map_Iterator(t *testing.T) {
 	expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 
 	m := gmap.NewTreeMapFrom(gutil.ComparatorString, expect)

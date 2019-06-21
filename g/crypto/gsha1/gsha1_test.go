@@ -57,11 +57,11 @@ func TestEncryptFile(t *testing.T) {
 		defer os.Remove(path)
 		defer file.Close()
 		gtest.Assert(err, nil)
-		file.Write([]byte("Hello Go Frame"))
-		encryptFile := gsha1.EncryptFile(path)
+		_, _ = file.Write([]byte("Hello Go Frame"))
+		encryptFile, _ := gsha1.EncryptFile(path)
 		gtest.AssertEQ(encryptFile, result)
 		// when the file is not exist,encrypt will return empty string
-		errEncrypt := gsha1.EncryptFile(errPath)
-		gtest.AssertEQ(errEncrypt,"")
+		errEncrypt, _ := gsha1.EncryptFile(errPath)
+		gtest.AssertEQ(errEncrypt, "")
 	})
 }

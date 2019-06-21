@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	key   := "test3"
+	key := "test3"
 	gmlock.Lock(key, 200*time.Millisecond)
 	fmt.Println("TryLock:", gmlock.TryLock(key))
 	fmt.Println("TryLock:", gmlock.TryLock(key))

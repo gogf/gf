@@ -7,15 +7,15 @@
 package gins_test
 
 import (
-    "github.com/gogf/gf/g/frame/gins"
-    "github.com/gogf/gf/g/os/gfile"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
-    "time"
+	"github.com/gogf/gf/g/frame/gins"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/test/gtest"
+	"testing"
+	"time"
 )
 
 func Test_Redis(t *testing.T) {
-    config := `
+	config := `
 # 模板引擎目录
 viewpath = "/home/www/templates/"
 test = "v=3"
@@ -49,38 +49,37 @@ test = "v=3"
     cache   = "127.0.0.1:6379,8"
     disk    = "127.0.0.1:6379,9,?maxIdle=1&maxActive=10&idleTimeout=10&maxConnLifetime=10"
 `
-    path := "config.toml"
-    err  := gfile.PutContents(path, config)
-    gtest.Assert(err, nil)
-    defer gfile.Remove(path)
-    defer gins.Config().Clear()
+	path := "config.toml"
+	err := gfile.PutContents(path, config)
+	gtest.Assert(err, nil)
+	defer gfile.Remove(path)
+	defer gins.Config().Clear()
 
-    // for gfsnotify callbacks to refresh cache of config file
-    time.Sleep(500*time.Millisecond)
+	// for gfsnotify callbacks to refresh cache of config file
+	time.Sleep(500 * time.Millisecond)
 
-    gtest.Case(t, func() {
-        //fmt.Println("gins Test_Redis", gins.Config().Get("test"))
+	gtest.Case(t, func() {
+		//fmt.Println("gins Test_Redis", gins.Config().Get("test"))
 
-        redisDefault := gins.Redis()
-        redisCache   := gins.Redis("cache")
-        redisDisk    := gins.Redis("disk")
-        gtest.AssertNE(redisDefault, nil)
-        gtest.AssertNE(redisCache,   nil)
-        gtest.AssertNE(redisDisk,   nil)
+		redisDefault := gins.Redis()
+		redisCache := gins.Redis("cache")
+		redisDisk := gins.Redis("disk")
+		gtest.AssertNE(redisDefault, nil)
+		gtest.AssertNE(redisCache, nil)
+		gtest.AssertNE(redisDisk, nil)
 
-        r, err := redisDefault.Do("PING")
-        gtest.Assert(err, nil)
-        gtest.Assert(r,   "PONG")
+		r, err := redisDefault.Do("PING")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, "PONG")
 
-        r, err  = redisCache.Do("PING")
-        gtest.Assert(err, nil)
-        gtest.Assert(r,   "PONG")
+		r, err = redisCache.Do("PING")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, "PONG")
 
-        _, err  = redisDisk.Do("SET", "k", "v")
-        gtest.Assert(err, nil)
-        r, err  = redisDisk.Do("GET", "k")
-        gtest.Assert(err, nil)
-        gtest.Assert(r, []byte("v"))
-    })
+		_, err = redisDisk.Do("SET", "k", "v")
+		gtest.Assert(err, nil)
+		r, err = redisDisk.Do("GET", "k")
+		gtest.Assert(err, nil)
+		gtest.Assert(r, []byte("v"))
+	})
 }
-

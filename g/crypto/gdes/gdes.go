@@ -3,21 +3,19 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-//
-// @author wenzi1<liyz23@qq.com>
 
 // Package gdes provides useful API for DES encryption/decryption algorithms.
 package gdes
 
 import (
-	"crypto/des"
-	"crypto/cipher"
-	"errors"
 	"bytes"
+	"crypto/cipher"
+	"crypto/des"
+	"errors"
 )
 
 const (
-	NOPADDING    = iota
+	NOPADDING = iota
 	PKCS5PADDING
 )
 
@@ -29,7 +27,7 @@ func DesECBEncrypt(key []byte, clearText []byte, padding int) ([]byte, error) {
 	}
 
 	cipherText := make([]byte, len(text))
-	
+
 	block, err := des.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -37,7 +35,7 @@ func DesECBEncrypt(key []byte, clearText []byte, padding int) ([]byte, error) {
 
 	blockSize := block.BlockSize()
 	for i, count := 0, len(text)/blockSize; i < count; i++ {
-		begin, end := i * blockSize, i * blockSize + blockSize
+		begin, end := i*blockSize, i*blockSize+blockSize
 		block.Encrypt(cipherText[begin:end], text[begin:end])
 	}
 	return cipherText, nil
@@ -52,8 +50,8 @@ func DesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte, error) {
 	}
 
 	blockSize := block.BlockSize()
-	for i, count := 0, len(text)/blockSize; i < count; i++{
-		begin, end := i * blockSize, i * blockSize + blockSize
+	for i, count := 0, len(text)/blockSize; i < count; i++ {
+		begin, end := i*blockSize, i*blockSize+blockSize
 		block.Decrypt(text[begin:end], cipherText[begin:end])
 	}
 
@@ -65,7 +63,7 @@ func DesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte, error) {
 }
 
 // ECB模式3DES加密，密钥长度可以是16或24位长
-func TripleDesECBEncrypt(key []byte, clearText []byte, padding int) ( []byte, error) {
+func TripleDesECBEncrypt(key []byte, clearText []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
 		return nil, errors.New("key length error")
 	}
@@ -75,7 +73,7 @@ func TripleDesECBEncrypt(key []byte, clearText []byte, padding int) ( []byte, er
 		return nil, err
 	}
 
-	newKey := make([]byte, 0)
+	var newKey []byte
 	if len(key) == 16 {
 		newKey = append([]byte{}, key...)
 		newKey = append(newKey, key[:8]...)
@@ -90,20 +88,20 @@ func TripleDesECBEncrypt(key []byte, clearText []byte, padding int) ( []byte, er
 
 	blockSize := block.BlockSize()
 	cipherText := make([]byte, len(text))
-	for i, count := 0, len(text) / blockSize; i < count; i++{
-		begin, end := i * blockSize, i * blockSize + blockSize
+	for i, count := 0, len(text)/blockSize; i < count; i++ {
+		begin, end := i*blockSize, i*blockSize+blockSize
 		block.Encrypt(cipherText[begin:end], text[begin:end])
 	}
 	return cipherText, nil
 }
 
 // ECB模式3DES解密，密钥长度可以是16或24位长
-func TripleDesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte,  error) {
+func TripleDesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
 		return nil, errors.New("key length error")
 	}
 
-	newKey := make([]byte, 0)
+	var newKey []byte
 	if len(key) == 16 {
 		newKey = append([]byte{}, key...)
 		newKey = append(newKey, key[:8]...)
@@ -118,8 +116,8 @@ func TripleDesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte,  e
 
 	blockSize := block.BlockSize()
 	text := make([]byte, len(cipherText))
-	for i, count := 0, len(text) / blockSize; i < count; i++ {
-		begin, end := i * blockSize, i * blockSize + blockSize
+	for i, count := 0, len(text)/blockSize; i < count; i++ {
+		begin, end := i*blockSize, i*blockSize+blockSize
 		block.Decrypt(text[begin:end], cipherText[begin:end])
 	}
 
@@ -182,7 +180,7 @@ func TripleDesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) (
 		return nil, errors.New("key length invalid")
 	}
 
-	newKey := make([]byte, 0)
+	var newKey []byte
 	if len(key) == 16 {
 		newKey = append([]byte{}, key...)
 		newKey = append(newKey, key[:8]...)
@@ -212,12 +210,12 @@ func TripleDesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) (
 }
 
 // CBC模式3DES解密
-func TripleDesCBCDecrypt(key []byte, cipherText []byte, iv []byte, padding int) ( []byte,  error) {
+func TripleDesCBCDecrypt(key []byte, cipherText []byte, iv []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
 		return nil, errors.New("key length invalid")
 	}
 
-	newKey := make([]byte, 0)
+	var newKey []byte
 	if len(key) == 16 {
 		newKey = append([]byte{}, key...)
 		newKey = append(newKey, key[:8]...)
@@ -248,45 +246,45 @@ func TripleDesCBCDecrypt(key []byte, cipherText []byte, iv []byte, padding int) 
 
 // PKCS5补位
 func PKCS5Padding(text []byte, blockSize int) []byte {
-	padding := blockSize - len(text) % blockSize
+	padding := blockSize - len(text)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(text, padtext...)
 }
 
 // 去除PKCS5补位
-func PKCS5Unpadding(text []byte) []byte{
+func PKCS5Unpadding(text []byte) []byte {
 	length := len(text)
-	padtext := int(text[length - 1])
+	padtext := int(text[length-1])
 	return text[:(length - padtext)]
 }
 
 // 补位方法
-func Padding(text []byte, padding int)([]byte, error) {
+func Padding(text []byte, padding int) ([]byte, error) {
 	switch padding {
-		case NOPADDING:
-			if len(text) % 8 != 0 {
-				return nil, errors.New("text length invalid")
-			}
-		case PKCS5PADDING:
-			return PKCS5Padding(text, 8), nil
-		default:
-			return nil, errors.New("padding type error")
+	case NOPADDING:
+		if len(text)%8 != 0 {
+			return nil, errors.New("text length invalid")
+		}
+	case PKCS5PADDING:
+		return PKCS5Padding(text, 8), nil
+	default:
+		return nil, errors.New("padding type error")
 	}
 
 	return text, nil
 }
 
 // 去除补位方法
-func UnPadding(text []byte, padding int)([]byte, error) {
+func UnPadding(text []byte, padding int) ([]byte, error) {
 	switch padding {
-		case NOPADDING:
-			if len(text) % 8 != 0 {
-				return nil, errors.New("text length invalid")
-			}
-		case PKCS5PADDING:
-			return PKCS5Unpadding(text), nil
-		default:
-			return nil, errors.New("padding type error.")
+	case NOPADDING:
+		if len(text)%8 != 0 {
+			return nil, errors.New("text length invalid")
+		}
+	case PKCS5PADDING:
+		return PKCS5Unpadding(text), nil
+	default:
+		return nil, errors.New("padding type error.")
 	}
 	return text, nil
 }

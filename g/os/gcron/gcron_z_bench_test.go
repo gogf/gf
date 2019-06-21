@@ -7,14 +7,14 @@
 package gcron_test
 
 import (
-    "github.com/gogf/gf/g/os/gcron"
-    "testing"
+	"github.com/gogf/gf/g/os/gcron"
+	"testing"
 )
 
 func Benchmark_Add(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        gcron.Add("1 1 1 1 1 1", func() {
+	for i := 0; i < b.N; i++ {
+		gcron.Add("1 1 1 1 1 1", func() {
 
-        })
-    }
+		})
+	}
 }

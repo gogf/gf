@@ -60,12 +60,11 @@ func Example_Normal_Basic() {
 	fmt.Println(m.Size())
 
 }
-func Example_Normal_Merge(){
+func Example_Normal_Merge() {
 	m1 := gmap.New()
 	m2 := gmap.New()
-	m1.Set("key1","val1")
-	m2.Set("key2","val2")
+	m1.Set("key1", "val1")
+	m2.Set("key2", "val2")
 	m1.Merge(m2)
 	fmt.Println(m1.Map())
 }
-

@@ -10,33 +10,33 @@ package gpool_test
 
 import (
 	"github.com/gogf/gf/g/container/gpool"
+	"sync"
 	"testing"
-    "sync"
 )
 
-var pool  = gpool.New(99999999, nil)
+var pool = gpool.New(99999999, nil)
 var syncp = sync.Pool{}
 
 func BenchmarkGPoolPut(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        pool.Put(i)
-    }
+	for i := 0; i < b.N; i++ {
+		pool.Put(i)
+	}
 }
 
 func BenchmarkGPoolGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        pool.Get()
-    }
+	for i := 0; i < b.N; i++ {
+		pool.Get()
+	}
 }
 
 func BenchmarkSyncPoolPut(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        syncp.Put(i)
-    }
+	for i := 0; i < b.N; i++ {
+		syncp.Put(i)
+	}
 }
 
 func BenchmarkGpoolGet(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        syncp.Get()
-    }
+	for i := 0; i < b.N; i++ {
+		syncp.Get()
+	}
 }
