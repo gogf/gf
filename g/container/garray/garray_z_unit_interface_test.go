@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gconv"
-	"github.com/gogf/gf/g/internal/rwmutex"
+
 	"strings"
 	"testing"
 	"time"
@@ -223,22 +223,24 @@ func TestArray_SubSlice(t *testing.T) {
 		gtest.Assert(array1.SubSlice(5, 8), []interface{}{5, 6})
 		gtest.Assert(array1.SubSlice(8, 1), nil)
 
-		//array2 := garray.NewArrayFrom(a1,false)
+		array2 := garray.NewArrayFrom(a1,false)
+		gtest.Assert(array2.SubSlice(2, 2), []interface{}{2, 3})
 
-		//gtest.Assert(array2.SubSlice(2, 2), []interface{}{3, 4})
+		a2 := []interface{}{0, 1, 2, 3, 4, 5, 6}
+		array3 := garray.NewArrayFrom(a2,false) //@todo 如果这里为 true 时，为报错
+		gtest.Assert(array3.SubSlice(2, 2), []interface{}{2, 3})
 
 	})
 }
 
-func TestRwMutex(t *testing.T){
-	mu:=rwmutex.New(true)
-	gtest.Assert(mu.IsSafe(),false) // @todo 不理解为什么
-}
+
 
 func TestArray_Rand(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []interface{}{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewArrayFrom(a1)
+		i1:=array1.Rand()
+		gtest.Assert(array1.Contains(i1), true)
 		gtest.Assert(len(array1.Rands(2)), 2)
 		gtest.Assert(len(array1.Rands(10)), 7)
 		gtest.AssertIN(array1.Rands(1)[0], a1)
@@ -789,5 +791,6 @@ func TestArray_RLockFunc(t *testing.T) {
 	gtest.AssertLT(t2-t1, 20)
 	gtest.Assert(a1.Contains(7), true)
 }
+
 
 

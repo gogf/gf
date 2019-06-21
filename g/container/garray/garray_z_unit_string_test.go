@@ -20,12 +20,15 @@ import (
 func Test_StringArray_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		expect := []string{"0", "1", "2", "3"}
+		expect2 := []string{}
 		array := garray.NewStringArrayFrom(expect)
+		array2 := garray.NewStringArrayFrom(expect2)
 		gtest.Assert(array.Slice(), expect)
 		array.Set(0, "100")
 		gtest.Assert(array.Get(0), 100)
 		gtest.Assert(array.Get(1), 1)
 		gtest.Assert(array.Search("100"), 0)
+		gtest.Assert(array2.Search("100"), -1)
 		gtest.Assert(array.Contains("100"), true)
 		gtest.Assert(array.Remove(0), 100)
 		gtest.Assert(array.Contains("100"), false)
@@ -46,13 +49,17 @@ func TestStringArray_Sort(t *testing.T) {
 		expect1 := []string{"0", "1", "2", "3"}
 		expect2 := []string{"3", "2", "1", "0"}
 		array := garray.NewStringArray()
+		array2 := garray.NewStringArray(true)
 		for i := 3; i >= 0; i-- {
 			array.Append(gconv.String(i))
+			array2.Append(gconv.String(i))
 		}
 		array.Sort()
 		gtest.Assert(array.Slice(), expect1)
 		array.Sort(true)
 		gtest.Assert(array.Slice(), expect2)
+		array2.Sort(true)
+		gtest.Assert(array2.Slice(), expect2)
 	})
 }
 
@@ -100,10 +107,13 @@ func TestString_Range(t *testing.T) {
 	gtest.Case(t, func() {
 		value1 := []string{"0", "1", "2", "3", "4", "5", "6"}
 		array1 := garray.NewStringArrayFrom(value1)
+		array2 := garray.NewStringArrayFrom(value1,true)
 		gtest.Assert(array1.Range(0, 1), []interface{}{"0"})
 		gtest.Assert(array1.Range(1, 2), []interface{}{"1"})
 		gtest.Assert(array1.Range(0, 2), []interface{}{"0", "1"})
 		gtest.Assert(array1.Range(-1, 10), value1)
+		gtest.Assert(array1.Range(8, 1), nil)
+		gtest.Assert(len(array2.Range(2, 4)), 2)
 	})
 }
 
@@ -152,6 +162,7 @@ func TestStringArray_SubSlice(t *testing.T) {
 		gtest.Assert(array1.SubSlice(0, 2), []string{"0", "1"})
 		gtest.Assert(array1.SubSlice(2, 2), []string{"2", "3"})
 		gtest.Assert(array1.SubSlice(5, 8), []string{"5", "6"})
+		gtest.Assert(array1.SubSlice(8, 1), nil)
 	})
 }
 
@@ -173,9 +184,9 @@ func TestStringArray_PopRands(t *testing.T) {
 		a1 := []string{"a", "b", "c", "d", "e", "f", "g"}
 		a2 := []string{"1", "2", "3", "4", "5", "6", "7"}
 		array1 := garray.NewStringArrayFrom(a1)
-		//todo gtest.AssertIN(array1.PopRands(1),a1)
 		gtest.AssertIN(array1.PopRands(1), strings.Join(a1, ","))
 		gtest.AssertNI(array1.PopRands(1), strings.Join(a2, ","))
+		gtest.AssertNI(len(array1.PopRands(10)), 7)
 
 	})
 }
@@ -780,12 +791,17 @@ func TestStringArray_Merge(t *testing.T) {
 	s1 := []string{"a", "b", "c"}
 	in1 := []interface{}{1, "a", 2, "b"}
 
+	func1:=func(v1,v2 interface{})int{
+		return strings.Compare(gconv.String(v1), gconv.String(v2))
+	}
+
 	a1 := garray.NewStringArrayFrom(s1)
 	b1 := garray.NewStringArrayFrom(s1)
 	b2 := garray.NewIntArrayFrom(n3)
 	b3 := garray.NewArrayFrom(in1)
 	b4 := garray.NewSortedStringArrayFrom(s1)
 	b5 := garray.NewSortedIntArrayFrom(n3)
+	b6 := garray.NewSortedArrayFrom(in1,func1)
 
 	gtest.Assert(a1.Merge(n2).Len(), 6)
 	gtest.Assert(a1.Merge(n3).Len(), 8)
@@ -794,4 +810,5 @@ func TestStringArray_Merge(t *testing.T) {
 	gtest.Assert(a1.Merge(b3).Len(), 17)
 	gtest.Assert(a1.Merge(b4).Len(), 20)
 	gtest.Assert(a1.Merge(b5).Len(), 22)
+	gtest.Assert(a1.Merge(b6).Len(), 26)
 }

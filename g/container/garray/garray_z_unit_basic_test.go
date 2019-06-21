@@ -31,6 +31,8 @@ func Test_SortedIntArray1(t *testing.T) {
 		array.Add(i)
 	}
 	gtest.Assert(array.Slice(), expect)
+	gtest.Assert(array.Add().Slice(), expect)
+	gtest.Assert(array.Add(-1).Slice(), []int{-1,0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
 }
 
 func Test_SortedIntArray2(t *testing.T) {
