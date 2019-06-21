@@ -20,12 +20,15 @@ import (
 func Test_IntArray_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		expect := []int{0, 1, 2, 3}
+		expect2 := []int{}
 		array := garray.NewIntArrayFrom(expect)
+		array2 := garray.NewIntArrayFrom(expect2)
 		gtest.Assert(array.Slice(), expect)
 		array.Set(0, 100)
 		gtest.Assert(array.Get(0), 100)
 		gtest.Assert(array.Get(1), 1)
 		gtest.Assert(array.Search(100), 0)
+		gtest.Assert(array2.Search(7), -1)
 		gtest.Assert(array.Contains(100), true)
 		gtest.Assert(array.Remove(0), 100)
 		gtest.Assert(array.Contains(100), false)
@@ -46,13 +49,20 @@ func TestIntArray_Sort(t *testing.T) {
 		expect1 := []int{0, 1, 2, 3}
 		expect2 := []int{3, 2, 1, 0}
 		array := garray.NewIntArray()
+		array2:=garray.NewIntArray(true)
 		for i := 3; i >= 0; i-- {
 			array.Append(i)
+			array2.Append(i)
 		}
+
 		array.Sort()
 		gtest.Assert(array.Slice(), expect1)
 		array.Sort(true)
 		gtest.Assert(array.Slice(), expect2)
+		array2.Sort(true)
+		gtest.Assert(array2.Slice(), expect2)
+
+
 	})
 }
 
@@ -100,10 +110,14 @@ func TestIntArray_Range(t *testing.T) {
 	gtest.Case(t, func() {
 		value1 := []int{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewIntArrayFrom(value1)
+		array2 := garray.NewIntArrayFrom(value1,true)
 		gtest.Assert(array1.Range(0, 1), []int{0})
 		gtest.Assert(array1.Range(1, 2), []int{1})
 		gtest.Assert(array1.Range(0, 2), []int{0, 1})
 		gtest.Assert(array1.Range(-1, 10), value1)
+		gtest.Assert(array1.Range(8, 2), nil)
+
+		gtest.Assert(array2.Range(2, 4), []int{2, 3})
 	})
 }
 
@@ -147,6 +161,7 @@ func TestIntArray_Fill(t *testing.T) {
 		array2 := garray.NewIntArrayFrom(a2)
 		gtest.Assert(array1.Fill(1, 2, 100).Slice(), []int{0, 100, 100})
 		gtest.Assert(array2.Fill(0, 2, 100).Slice(), []int{100, 100})
+		gtest.Assert(array2.Fill(-1, 2, 100).Slice(), []int{100, 100})
 	})
 }
 
@@ -155,7 +170,8 @@ func TestIntArray_Chunk(t *testing.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewIntArrayFrom(a1)
 		chunks := array1.Chunk(2)
-		gtest.Assert(len(chunks), 3)
+		chunks2 := array1.Chunk(0)
+		gtest.Assert(chunks2, nil)
 		gtest.Assert(chunks[0], []int{1, 2})
 		gtest.Assert(chunks[1], []int{3, 4})
 		gtest.Assert(chunks[2], []int{5})
@@ -179,6 +195,7 @@ func TestIntArray_SubSlice(t *testing.T) {
 		gtest.Assert(array1.SubSlice(0, 2), []int{0, 1})
 		gtest.Assert(array1.SubSlice(2, 2), []int{2, 3})
 		gtest.Assert(array1.SubSlice(5, 8), []int{5, 6})
+		gtest.Assert(array1.SubSlice(8, 2), nil)
 	})
 }
 
@@ -400,6 +417,7 @@ func TestSortedIntArray_Range(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2, 6, 7}
 		array1 := garray.NewSortedIntArrayFrom(a1)
+		array2 := garray.NewSortedIntArrayFrom(a1,true)
 		ns1 := array1.Range(1, 4)
 		gtest.Assert(len(ns1), 3)
 		gtest.Assert(ns1, []int{2, 3, 5})
@@ -412,6 +430,10 @@ func TestSortedIntArray_Range(t *testing.T) {
 
 		nsl := array1.Range(5, 8)
 		gtest.Assert(len(nsl), 1)
+
+		ns4 := array2.Range(2, 2)
+		t.Log(array2)
+		gtest.Assert(len(ns4), 2)
 
 	})
 }
