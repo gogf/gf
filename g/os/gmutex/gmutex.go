@@ -17,7 +17,7 @@ import (
 // The high level Mutex, which implements more rich features for mutex.
 type Mutex struct {
 	state   *gtype.Int32  // Indicates the state of mutex.
-	writer  *gtype.Int32  // Pending Writer count.
+	writer  *gtype.Int32  // Pending writer count.
 	reader  *gtype.Int32  // Pending reader count.
 	writing chan struct{} // Channel used for writer blocking.
 	reading chan struct{} // Channel used for reader blocking.
@@ -39,7 +39,7 @@ func New() *Mutex {
 // Lock blocks until the lock is available.
 func (m *Mutex) Lock() {
 	for {
-		// If there're no readers pending and no writing lock currently,
+		// If there're no readers pending and writing lock currently,
 		// then do the writing lock checks.
 		if m.reader.Val() == 0 && m.state.Cas(0, -1) {
 			return
@@ -57,14 +57,13 @@ func (m *Mutex) Unlock() {
 		// Writing lock unlocks, then first check the blocked readers.
 		if n := m.reader.Val(); n > 0 {
 			// If there're readers blocked, unlock them with preemption.
-			for i := n; i > 0; i-- {
+			for ; n > 0; n-- {
 				m.reading <- struct{}{}
 			}
 			return
 		}
 		if m.writer.Val() > 0 {
 			m.writing <- struct{}{}
-			return
 		}
 	}
 }
@@ -83,14 +82,16 @@ func (m *Mutex) TryLock() bool {
 // If the mutex is already locked for writing,
 // It blocks until the lock is available.
 func (m *Mutex) RLock() {
+	var n int32
 	for {
-		// If there no writing lock and no pending writers,
+		// If there're no writing lock and pending writers currently,
 		// then do the reading lock checks.
-		if n := m.state.Val(); n >= 0 && m.writer.Val() == 0 {
+		if n = m.state.Val(); n >= 0 && m.writer.Val() == 0 {
 			if m.state.Cas(n, n+1) {
 				return
 			} else {
 				runtime.Gosched()
+				continue
 			}
 		}
 		// Or else pending the reader.
@@ -126,8 +127,9 @@ func (m *Mutex) RUnlock() {
 // TryRLock tries locking the mutex for reading.
 // It returns true if success, or if there's a writing lock on the mutex, it returns false.
 func (m *Mutex) TryRLock() bool {
+	var n int32
 	for {
-		if n := m.state.Val(); n >= 0 && m.writer.Val() == 0 {
+		if n = m.state.Val(); n >= 0 && m.writer.Val() == 0 {
 			if m.state.Cas(n, n+1) {
 				return true
 			} else {
