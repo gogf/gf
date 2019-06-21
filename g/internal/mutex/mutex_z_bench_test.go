@@ -7,25 +7,25 @@
 package mutex_test
 
 import (
-    "github.com/gogf/gf/g/internal/mutex"
-    "testing"
+	"github.com/gogf/gf/g/internal/mutex"
+	"testing"
 )
 
 var (
-    safeLock   = mutex.New(false)
-    unsafeLock = mutex.New(true)
+	safeLock   = mutex.New(false)
+	unsafeLock = mutex.New(true)
 )
 
 func Benchmark_Safe_LockUnlock(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        safeLock.Lock()
-        safeLock.Unlock()
-    }
+	for i := 0; i < b.N; i++ {
+		safeLock.Lock()
+		safeLock.Unlock()
+	}
 }
 
 func Benchmark_UnSafe_LockUnlock(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        unsafeLock.Lock()
-        unsafeLock.Unlock()
-    }
+	for i := 0; i < b.N; i++ {
+		unsafeLock.Lock()
+		unsafeLock.Unlock()
+	}
 }

@@ -7,16 +7,15 @@
 package gconv_test
 
 import (
-    "github.com/gogf/gf/g/os/gtime"
-    "github.com/gogf/gf/g/util/gconv"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
-    "time"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/util/gconv"
+	"testing"
+	"time"
 )
 
-
 func Test_Time(t *testing.T) {
-    gtest.Case(t, func() {
+	gtest.Case(t, func() {
 		t1 := "2011-10-10 01:02:03.456"
 		gtest.AssertEQ(gconv.GTime(t1), gtime.NewFromStr(t1))
 		gtest.AssertEQ(gconv.Time(t1), gtime.NewFromStr(t1).Time)

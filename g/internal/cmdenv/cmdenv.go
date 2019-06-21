@@ -19,7 +19,7 @@ var (
 	cmdOptions = make(map[string]string)
 )
 
-func init()  {
+func init() {
 	doInit()
 }
 
@@ -41,18 +41,18 @@ func doInit() {
 // Fetching Rules:
 // 1. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
 // 2. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
-func Get(key string, def...interface{}) *gvar.Var {
-    value := interface{}(nil)
-    if len(def) > 0 {
-        value = def[0]
-    }
-    if v, ok := cmdOptions[key]; ok {
-        value = v
-    } else {
-        key = strings.ToUpper(strings.Replace(key, ".", "_", -1))
-        if v := os.Getenv(key); v != "" {
-            value = v
-        }
-    }
-    return gvar.New(value, true)
+func Get(key string, def ...interface{}) *gvar.Var {
+	value := interface{}(nil)
+	if len(def) > 0 {
+		value = def[0]
+	}
+	if v, ok := cmdOptions[key]; ok {
+		value = v
+	} else {
+		key = strings.ToUpper(strings.Replace(key, ".", "_", -1))
+		if v := os.Getenv(key); v != "" {
+			value = v
+		}
+	}
+	return gvar.New(value, true)
 }

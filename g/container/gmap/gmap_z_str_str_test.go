@@ -97,7 +97,7 @@ func Test_StrStrMap_Iterator(t *testing.T) {
 func Test_StrStrMap_Lock(t *testing.T) {
 	expect := map[string]string{"a": "a", "b": "b"}
 
-	m      := gmap.NewStrStrMapFrom(expect)
+	m := gmap.NewStrStrMapFrom(expect)
 	m.LockFunc(func(m map[string]string) {
 		gtest.Assert(m, expect)
 	})

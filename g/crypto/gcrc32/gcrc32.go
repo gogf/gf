@@ -20,10 +20,10 @@ func Encrypt(v interface{}) uint32 {
 
 // Deprecated.
 func EncryptString(v string) uint32 {
-    return crc32.ChecksumIEEE([]byte(v))
+	return crc32.ChecksumIEEE([]byte(v))
 }
 
 // Deprecated.
 func EncryptBytes(v []byte) uint32 {
-    return crc32.ChecksumIEEE(v)
+	return crc32.ChecksumIEEE(v)
 }

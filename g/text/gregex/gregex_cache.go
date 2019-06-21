@@ -7,15 +7,15 @@
 package gregex
 
 import (
-    "regexp"
-    "sync"
+	"regexp"
+	"sync"
 )
 
 var (
-    regexMu  = sync.RWMutex{}
-    // Cache for regex object.
-    // TODO There's no expiring logic for this map.
-    regexMap = make(map[string]*regexp.Regexp)
+	regexMu = sync.RWMutex{}
+	// Cache for regex object.
+	// TODO There's no expiring logic for this map.
+	regexMap = make(map[string]*regexp.Regexp)
 )
 
 // getRegexp returns *regexp.Regexp object with given <pattern>.
@@ -23,28 +23,28 @@ var (
 // which means, it will return the same *regexp.Regexp object with the same regular
 // expression pattern.
 func getRegexp(pattern string) (*regexp.Regexp, error) {
-    if r := getCache(pattern); r != nil {
-        return r, nil
-    }
-    if r, err := regexp.Compile(pattern); err == nil {
-        setCache(pattern, r)
-        return r, nil
-    } else {
-        return nil, err
-    }
+	if r := getCache(pattern); r != nil {
+		return r, nil
+	}
+	if r, err := regexp.Compile(pattern); err == nil {
+		setCache(pattern, r)
+		return r, nil
+	} else {
+		return nil, err
+	}
 }
 
 // getCache returns *regexp.Regexp object from cache by given <pattern>, for internal usage.
 func getCache(pattern string) (regex *regexp.Regexp) {
-    regexMu.RLock()
-    regex = regexMap[pattern]
-    regexMu.RUnlock()
-    return
+	regexMu.RLock()
+	regex = regexMap[pattern]
+	regexMu.RUnlock()
+	return
 }
 
 // setCache stores *regexp.Regexp object into cache, for internal usage.
 func setCache(pattern string, regex *regexp.Regexp) {
-    regexMu.Lock()
-    regexMap[pattern] = regex
-    regexMu.Unlock()
+	regexMu.Lock()
+	regexMap[pattern] = regex
+	regexMu.Unlock()
 }

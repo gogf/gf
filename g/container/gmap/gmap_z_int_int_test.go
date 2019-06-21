@@ -75,9 +75,9 @@ func Test_IntIntMap_Batch(t *testing.T) {
 	gtest.Assert(m.Map(), map[int]int{3: 3})
 }
 
-func Test_IntIntMap_Iterator(t *testing.T){
+func Test_IntIntMap_Iterator(t *testing.T) {
 	expect := map[int]int{1: 1, 2: 2}
-	m      := gmap.NewIntIntMapFrom(expect)
+	m := gmap.NewIntIntMapFrom(expect)
 	m.Iterator(func(k int, v int) bool {
 		gtest.Assert(expect[k], v)
 		return true
@@ -97,9 +97,9 @@ func Test_IntIntMap_Iterator(t *testing.T){
 	gtest.Assert(j, 1)
 }
 
-func Test_IntIntMap_Lock(t *testing.T){
+func Test_IntIntMap_Lock(t *testing.T) {
 	expect := map[int]int{1: 1, 2: 2}
-	m      := gmap.NewIntIntMapFrom(expect)
+	m := gmap.NewIntIntMapFrom(expect)
 	m.LockFunc(func(m map[int]int) {
 		gtest.Assert(m, expect)
 	})

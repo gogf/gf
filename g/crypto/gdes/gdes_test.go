@@ -1,3 +1,9 @@
+// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gdes_test
 
 import (
@@ -23,7 +29,7 @@ func TestDesECB(t *testing.T) {
 		// encrypt test
 		cipherText, err := gdes.DesECBEncrypt(key, text, padding)
 		gtest.AssertEQ(err, nil)
-		gtest.AssertEQ(hex.EncodeToString(cipherText),result)
+		gtest.AssertEQ(hex.EncodeToString(cipherText), result)
 		// decrypt test
 		clearText, err := gdes.DesECBDecrypt(key, cipherText, padding)
 		gtest.AssertEQ(err, nil)
@@ -52,12 +58,12 @@ func TestDesECB(t *testing.T) {
 		errPadding := 5
 		result := "858b176da8b12503ad6a88b4fa37833d"
 		cipherText, err := gdes.DesECBEncrypt(key, text, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(hex.EncodeToString(cipherText),result)
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(hex.EncodeToString(cipherText), result)
 		// decrypt test
 		clearText, err := gdes.DesECBDecrypt(key, cipherText, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(string(clearText),"12345678")
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(string(clearText), "12345678")
 
 		// err test
 		errEncrypt, err := gdes.DesECBEncrypt(key, text, errPadding)
@@ -77,12 +83,12 @@ func Test3DesECB(t *testing.T) {
 		result := "a23ee24b98c26263a23ee24b98c26263"
 		// encrypt test
 		cipherText, err := gdes.TripleDesECBEncrypt(key, text, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(hex.EncodeToString(cipherText),result)
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(hex.EncodeToString(cipherText), result)
 		// decrypt test
 		clearText, err := gdes.TripleDesECBDecrypt(key, cipherText, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(string(clearText),"1234567812345678")
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(string(clearText), "1234567812345678")
 		// err test
 		errEncrypt, err := gdes.DesECBEncrypt(key, text, errPadding)
 		gtest.AssertNE(err, nil)
@@ -97,12 +103,12 @@ func Test3DesECB(t *testing.T) {
 		result := "37989b1effc07a6d00ff89a7d052e79f"
 		// encrypt test
 		cipherText, err := gdes.TripleDesECBEncrypt(key, text, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(hex.EncodeToString(cipherText),result)
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(hex.EncodeToString(cipherText), result)
 		// decrypt test
 		clearText, err := gdes.TripleDesECBDecrypt(key, cipherText, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(string(clearText),"123456789")
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(string(clearText), "123456789")
 		// err test, when key is err, but text and padding is right
 		errEncrypt, err := gdes.TripleDesECBEncrypt(errKey, text, padding)
 		gtest.AssertNE(err, nil)
@@ -127,19 +133,19 @@ func TestDesCBC(t *testing.T) {
 		result := "40826a5800608c87585ca7c9efabee47"
 		// encrypt test
 		cipherText, err := gdes.DesCBCEncrypt(key, text, iv, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(hex.EncodeToString(cipherText),result)
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(hex.EncodeToString(cipherText), result)
 		// decrypt test
 		clearText, err := gdes.DesCBCDecrypt(key, cipherText, iv, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(string(clearText),"1234567812345678")
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(string(clearText), "1234567812345678")
 		// encrypt err test.
 		errEncrypt, err := gdes.DesCBCEncrypt(errKey, text, iv, padding)
 		gtest.AssertNE(err, nil)
 		gtest.AssertEQ(errEncrypt, nil)
 		// the iv is err
 		errEncrypt, err = gdes.DesCBCEncrypt(key, text, errIv, padding)
-		//gtest.AssertNE(err,nil)
+		gtest.AssertNE(err, nil)
 		gtest.AssertEQ(errEncrypt, nil)
 		// the padding is err
 		errEncrypt, err = gdes.DesCBCEncrypt(key, text, iv, errPadding)
@@ -167,12 +173,12 @@ func TestDesCBC(t *testing.T) {
 		result := "40826a5800608c87100a25d86ac7c52c"
 		// encrypt test
 		cipherText, err := gdes.DesCBCEncrypt(key, text, iv, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(hex.EncodeToString(cipherText),result)
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(hex.EncodeToString(cipherText), result)
 		// decrypt test
 		clearText, err := gdes.DesCBCDecrypt(key, cipherText, iv, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(string(clearText),"12345678")
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(string(clearText), "12345678")
 		// err test
 		errEncrypt, err := gdes.DesCBCEncrypt(key, text, errIv, padding)
 		gtest.AssertNE(err, nil)
@@ -189,12 +195,12 @@ func Test3DesCBC(t *testing.T) {
 		result := "bfde1394e265d5f738d5cab170c77c88"
 		// encrypt test
 		cipherText, err := gdes.TripleDesCBCEncrypt(key, text, iv, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(hex.EncodeToString(cipherText),result)
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(hex.EncodeToString(cipherText), result)
 		// decrypt test
 		clearText, err := gdes.TripleDesCBCDecrypt(key, cipherText, iv, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(string(clearText),"1234567812345678")
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(string(clearText), "1234567812345678")
 		// encrypt err test
 		errEncrypt, err := gdes.TripleDesCBCEncrypt(errKey, text, iv, padding)
 		gtest.AssertNE(err, nil)
@@ -228,12 +234,12 @@ func Test3DesCBC(t *testing.T) {
 		result := "40826a5800608c87100a25d86ac7c52c"
 		// encrypt test
 		cipherText, err := gdes.TripleDesCBCEncrypt(key, text, iv, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(hex.EncodeToString(cipherText),result)
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(hex.EncodeToString(cipherText), result)
 		// decrypt test
 		clearText, err := gdes.TripleDesCBCDecrypt(key, cipherText, iv, padding)
-		gtest.AssertEQ(err,nil)
-		gtest.AssertEQ(string(clearText),"12345678")
+		gtest.AssertEQ(err, nil)
+		gtest.AssertEQ(string(clearText), "12345678")
 	})
 
 }

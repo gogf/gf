@@ -65,8 +65,8 @@ func Test_List_Map_Batch(t *testing.T) {
 	m.Removes([]interface{}{"key1", 1})
 	gtest.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 }
-func Test_List_Map_Iterator(t *testing.T){
-	expect :=map[interface{}]interface{}{1: 1, "key1": "val1"}
+func Test_List_Map_Iterator(t *testing.T) {
+	expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 
 	m := gmap.NewListMapFrom(expect)
 	m.Iterator(func(k interface{}, v interface{}) bool {
@@ -115,6 +115,6 @@ func Test_List_Map_Order(t *testing.T) {
 	m.Set("k1", "v1")
 	m.Set("k2", "v2")
 	m.Set("k3", "v3")
-	gtest.Assert(m.Keys(),   g.Slice{"k1", "k2", "k3"})
+	gtest.Assert(m.Keys(), g.Slice{"k1", "k2", "k3"})
 	gtest.Assert(m.Values(), g.Slice{"v1", "v2", "v3"})
 }
