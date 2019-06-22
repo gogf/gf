@@ -9,13 +9,14 @@ package garray
 import (
 	"bytes"
 	"fmt"
+	"math"
+	"sort"
+	"strings"
+
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/internal/rwmutex"
 	"github.com/gogf/gf/g/util/gconv"
 	"github.com/gogf/gf/g/util/grand"
-	"math"
-	"sort"
-	"strings"
 )
 
 // It's using increasing order in default.
@@ -211,29 +212,81 @@ func (a *SortedStringArray) PopRights(size int) []string {
 // Range picks and returns items by range, like array[start:end].
 // Notice, if in concurrent-safe usage, it returns a copy of slice;
 // else a pointer to the underlying data.
-func (a *SortedStringArray) Range(start, end int) []string {
+//
+// If <end> is negative, then the offset will start from the end of array.
+// If <end> is omitted, then the sequence will have everything from start up
+// until the end of the array.
+func (a *SortedStringArray) Range(start int, end ...int) []string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	length := len(a.array)
-	if start > length || start > end {
+	offsetEnd := len(a.array)
+	if len(end) > 0 && end[0] < offsetEnd {
+		offsetEnd = end[0]
+	}
+	if start > offsetEnd {
 		return nil
 	}
 	if start < 0 {
 		start = 0
 	}
-	if end > length {
-		end = length
-	}
 	array := ([]string)(nil)
 	if a.mu.IsSafe() {
-		a.mu.RLock()
-		defer a.mu.RUnlock()
-		array = make([]string, end-start)
-		copy(array, a.array[start:end])
+		array = make([]string, offsetEnd-start)
+		copy(array, a.array[start:offsetEnd])
 	} else {
-		array = a.array[start:end]
+		array = a.array[start:offsetEnd]
 	}
 	return array
+}
+
+// SubSlice returns a slice of elements from the array as specified
+// by the <offset> and <size> parameters.
+// If in concurrent safe usage, it returns a copy of the slice; else a pointer.
+//
+// If offset is non-negative, the sequence will start at that offset in the array.
+// If offset is negative, the sequence will start that far from the end of the array.
+//
+// If length is given and is positive, then the sequence will have up to that many elements in it.
+// If the array is shorter than the length, then only the available array elements will be present.
+// If length is given and is negative then the sequence will stop that many elements from the end of the array.
+// If it is omitted, then the sequence will have everything from offset up until the end of the array.
+//
+// Any possibility crossing the left border of array, it will fail.
+func (a *SortedStringArray) SubSlice(offset int, length ...int) []string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	size := len(a.array)
+	if len(length) > 0 {
+		size = length[0]
+	}
+	if offset > len(a.array) {
+		return nil
+	}
+	if offset < 0 {
+		offset = len(a.array) + offset
+		if offset < 0 {
+			return nil
+		}
+	}
+	if size < 0 {
+		offset += size
+		size = -size
+		if offset < 0 {
+			return nil
+		}
+	}
+	end := offset + size
+	if end > len(a.array) {
+		end = len(a.array)
+		size = len(a.array) - offset
+	}
+	if a.mu.IsSafe() {
+		s := make([]string, size)
+		copy(s, a.array[offset:])
+		return s
+	} else {
+		return a.array[offset:end]
+	}
 }
 
 // Sum returns the sum of values in an array.
@@ -426,27 +479,6 @@ func (a *SortedStringArray) Chunk(size int) [][]string {
 		i++
 	}
 	return n
-}
-
-// SubSlice returns a slice of elements from the array as specified
-// by the <offset> and <size> parameters.
-// If in concurrent safe usage, it returns a copy of the slice; else a pointer.
-func (a *SortedStringArray) SubSlice(offset, size int) []string {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	if offset > len(a.array) {
-		return nil
-	}
-	if offset+size > len(a.array) {
-		size = len(a.array) - offset
-	}
-	if a.mu.IsSafe() {
-		s := make([]string, size)
-		copy(s, a.array[offset:])
-		return s
-	} else {
-		return a.array[offset:]
-	}
 }
 
 // Rand randomly returns one item from array(no deleting).
