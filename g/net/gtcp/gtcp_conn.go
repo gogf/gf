@@ -10,10 +10,11 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
-	"errors"
 	"io"
 	"net"
 	"time"
+
+	"github.com/gogf/gf/g/internal/errors"
 )
 
 // 封装的链接对象
@@ -208,9 +209,7 @@ func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry
 		return nil, err
 	}
 	defer func() {
-		if e := c.SetRecvDeadline(time.Time{}); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
 	}()
 	data, err = c.Recv(length, retry...)
 	return
@@ -222,9 +221,7 @@ func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retr
 		return err
 	}
 	defer func() {
-		if e := c.SetSendDeadline(time.Time{}); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
 	}()
 	err = c.Send(data, retry...)
 	return

@@ -9,7 +9,6 @@ package gmd5
 
 import (
 	"crypto/md5"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -40,9 +39,7 @@ func EncryptFile(path string) (encrypt string, err error) {
 		return "", err
 	}
 	defer func() {
-		if e := f.Close(); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(f.Close(), "file closing error")
 	}()
 	h := md5.New()
 	_, err = io.Copy(h, f)
