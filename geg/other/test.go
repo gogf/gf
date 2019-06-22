@@ -1,15 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"math"
-
-	"github.com/gogf/gf/g/container/gtype"
+	"github.com/gogf/gf/g/container/garray"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func main() {
-	v := gtype.NewInt32(math.MaxInt32)
-	for i := 1; i < 100; i++ {
-		fmt.Println(v.Add(int32(i)))
-	}
+	a2 := []interface{}{0, 1, 2, 3, 4, 5, 6}
+	array3 := garray.NewArrayFrom(a2, true)
+	gtest.Assert(array3.SubSlice(2, 2), []interface{}{2, 3})
 }

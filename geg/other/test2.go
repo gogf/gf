@@ -1,55 +1,39 @@
 package main
 
 import (
-	"time"
-
-	"github.com/gogf/gf/g/os/gmutex"
-
-	"github.com/gogf/gf/g/os/glog"
-
-	"github.com/gogf/gf/g/container/garray"
-	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
 )
 
-func main() {
-	mu := gmutex.New()
-	array := garray.New()
-	glog.Println("step0")
-	go func() {
-		mu.LockFunc(func() {
-			array.Append(1)
-			time.Sleep(200 * time.Millisecond)
-			glog.Println("unlocked")
-		})
-	}()
-	go func() {
-		time.Sleep(150 * time.Millisecond)
-		mu.TryRLockFunc(func() {
-			array.Append(1)
-			glog.Println("add1")
-		})
-	}()
-	sum := 1000
-	for index := 1; index < sum; index++ {
-		go func(i int) {
-			time.Sleep(300 * time.Millisecond)
-			//fmt.Println(i*10, mu.IsLocked())
-			if r := mu.TryRLockFunc(func() {
-				array.Append(1)
-				time.Sleep(200 * time.Millisecond)
-			}); !r {
-				glog.Println(i, r)
-			}
-		}(index)
-	}
-	glog.Println("step1")
-	time.Sleep(100 * time.Millisecond)
-	glog.Println("step2")
-	gtest.Assert(array.Len(), 1)
-	time.Sleep(100 * time.Millisecond)
-	glog.Println("step3")
-	gtest.Assert(array.Len(), 1)
-	time.Sleep(1000 * time.Millisecond)
-	gtest.Assert(array.Len(), sum)
+type Schedule struct{}
 
+type Task struct{}
+
+func (c *Schedule) ListDir(r *ghttp.Request) {
+	r.Response.Writeln("ListDir")
+}
+
+func (c *Task) Add(r *ghttp.Request) {
+	r.Response.Writeln("Add")
+}
+
+func (c *Task) Task(r *ghttp.Request) {
+	r.Response.Writeln("Task")
+}
+
+// 实现权限校验
+// 通过事件回调，类似于中间件机制，但是可控制的粒度更细，可以精准注册到路由规则
+func AuthHookHandler(r *ghttp.Request) {
+	// 如果权限校验失败，调用 r.ExitAll() 退出执行流程
+}
+
+func main() {
+	s := g.Server()
+	s.Group("/schedule").Bind([]ghttp.GroupItem{
+		{"ALL", "*", AuthHookHandler, ghttp.HOOK_BEFORE_SERVE},
+		{"POST", "/schedule", new(Schedule)},
+		{"POST", "/task", new(Task)},
+	})
+	s.SetPort(8199)
+	s.Run()
 }

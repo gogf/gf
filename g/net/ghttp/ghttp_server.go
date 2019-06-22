@@ -10,6 +10,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"reflect"
+	"runtime"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gtype"
@@ -23,13 +31,6 @@ import (
 	"github.com/gogf/gf/g/util/gconv"
 	"github.com/gogf/gf/third/github.com/gorilla/websocket"
 	"github.com/gogf/gf/third/github.com/olekukonko/tablewriter"
-	"net/http"
-	"os"
-	"reflect"
-	"runtime"
-	"strings"
-	"sync"
-	"time"
 )
 
 type (
@@ -382,15 +383,14 @@ func (s *Server) GetRouteMap() string {
 }
 
 // 阻塞执行监听
-func (s *Server) Run() error {
+func (s *Server) Run() {
 	if err := s.Start(); err != nil {
-		return err
+		glog.Fatal(err)
 	}
 	// 阻塞等待服务执行完成
 	<-s.closeChan
 
 	glog.Printf("%d: all servers shutdown", gproc.Pid())
-	return nil
 }
 
 // 阻塞等待所有Web Server停止，常用于多Web Server场景，以及需要将Web Server异步运行的场景
