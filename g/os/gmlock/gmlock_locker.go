@@ -12,7 +12,8 @@ import (
 )
 
 // Memory locker.
-// Note that there's no cache expire mechanism for attribute map <m>.
+// Note that there's no cache expire mechanism for mutex in locker.
+// You need remove certain mutex manually when you do not want use it any more.
 type Locker struct {
 	m *gmap.StrAnyMap
 }
@@ -111,6 +112,16 @@ func (l *Locker) TryRLockFunc(key string, f func()) bool {
 		return true
 	}
 	return false
+}
+
+// Remove removes mutex with given <key> from locker.
+func (l *Locker) Remove(key string) {
+	l.m.Remove(key)
+}
+
+// Clear removes all mutexes from locker.
+func (l *Locker) Clear() {
+	l.m.Clear()
 }
 
 // getOrNewMutex returns the mutex of given <key> if it exists,
