@@ -7,8 +7,9 @@
 package gtcp
 
 import (
-	"errors"
 	"time"
+
+	"github.com/gogf/gf/g/internal/errors"
 
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gpool"
@@ -121,9 +122,7 @@ func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...R
 		return nil, err
 	}
 	defer func() {
-		if e := c.SetRecvDeadline(time.Time{}); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
 	}()
 	data, err = c.Recv(length, retry...)
 	return
@@ -135,9 +134,7 @@ func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry ...
 		return err
 	}
 	defer func() {
-		if e := c.SetSendDeadline(time.Time{}); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
 	}()
 	err = c.Send(data, retry...)
 	return

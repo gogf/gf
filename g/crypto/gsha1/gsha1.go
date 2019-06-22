@@ -10,10 +10,10 @@ package gsha1
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"errors"
 	"io"
 	"os"
 
+	"github.com/gogf/gf/g/internal/errors"
 	"github.com/gogf/gf/g/util/gconv"
 )
 
@@ -37,9 +37,7 @@ func EncryptFile(path string) (encrypt string, err error) {
 		return "", err
 	}
 	defer func() {
-		if e := f.Close(); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(f.Close(), "file closing error")
 	}()
 	h := sha1.New()
 	_, err = io.Copy(h, f)
