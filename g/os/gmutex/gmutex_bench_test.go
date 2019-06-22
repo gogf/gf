@@ -14,21 +14,29 @@ import (
 )
 
 var (
-	mu  = sync.RWMutex{}
-	gmu = gmutex.New()
+	mu   = sync.Mutex{}
+	rwmu = sync.RWMutex{}
+	gmu  = gmutex.New()
 )
 
-func Benchmark_Sync_LockUnlock(b *testing.B) {
+func Benchmark_Mutex_LockUnlock(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		mu.Lock()
 		mu.Unlock()
 	}
 }
 
-func Benchmark_Sync_RLockRUnlock(b *testing.B) {
+func Benchmark_RWMutex_LockUnlock(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		mu.RLock()
-		mu.RUnlock()
+		rwmu.Lock()
+		rwmu.Unlock()
+	}
+}
+
+func Benchmark_RWMutex_RLockRUnlock(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		rwmu.RLock()
+		rwmu.RUnlock()
 	}
 }
 
@@ -39,9 +47,21 @@ func Benchmark_GMutex_LockUnlock(b *testing.B) {
 	}
 }
 
+func Benchmark_GMutex_TryLock(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gmu.TryLock()
+	}
+}
+
 func Benchmark_GMutex_RLockRUnlock(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gmu.RLock()
 		gmu.RUnlock()
+	}
+}
+
+func Benchmark_GMutex_TryRLock(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gmu.TryRLock()
 	}
 }

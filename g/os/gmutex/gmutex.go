@@ -120,7 +120,6 @@ func (m *Mutex) RUnlock() {
 	if n == 1 && m.writer.Val() > 0 {
 		// No readers blocked, then the writers can take place.
 		m.writing <- struct{}{}
-		return
 	}
 }
 
@@ -162,6 +161,26 @@ func (m *Mutex) IsRLocked() bool {
 	return m.state.Val() > 0
 }
 
+// LockFunc locks the mutex for writing with given callback function <f>.
+// If there's a write/reading lock the mutex, it will blocks until the lock is released.
+//
+// It releases the lock after <f> is executed.
+func (m *Mutex) LockFunc(f func()) {
+	m.Lock()
+	defer m.Unlock()
+	f()
+}
+
+// RLockFunc locks the mutex for reading with given callback function <f>.
+// If there's a writing lock the mutex, it will blocks until the lock is released.
+//
+// It releases the lock after <f> is executed.
+func (m *Mutex) RLockFunc(f func()) {
+	m.RLock()
+	defer m.RUnlock()
+	f()
+}
+
 // TryLockFunc tries locking the mutex for writing with given callback function <f>.
 // it returns true if success, or if there's a write/reading lock on the mutex,
 // it returns false.
@@ -187,24 +206,4 @@ func (m *Mutex) TryRLockFunc(f func()) bool {
 		return true
 	}
 	return false
-}
-
-// LockFunc locks the mutex for writing with given callback function <f>.
-// If there's a write/reading lock the mutex, it will blocks until the lock is released.
-//
-// It releases the lock after <f> is executed.
-func (m *Mutex) LockFunc(f func()) {
-	m.Lock()
-	defer m.Unlock()
-	f()
-}
-
-// RLockFunc locks the mutex for reading with given callback function <f>.
-// If there's a writing lock the mutex, it will blocks until the lock is released.
-//
-// It releases the lock after <f> is executed.
-func (m *Mutex) RLockFunc(f func()) {
-	m.RLock()
-	defer m.RUnlock()
-	f()
 }
