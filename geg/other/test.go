@@ -1,12 +1,20 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/os/glog"
+	"fmt"
+	"time"
+
+	"github.com/gogf/gf/g/os/grpool"
 )
 
 func main() {
-	glog.SetDebug(false)
-	glog.Warning(1)
-	glog.SetDebug(true)
-	glog.Warning(1)
+	grpool.Add(func() {
+
+	})
+	fmt.Println(grpool.Size())
+	fmt.Println(grpool.Jobs())
+	time.Sleep(time.Second)
+	fmt.Println(grpool.Size())
+	fmt.Println(grpool.Jobs())
+
 }
