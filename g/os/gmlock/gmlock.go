@@ -82,3 +82,8 @@ func TryLockFunc(key string, f func()) bool {
 func TryRLockFunc(key string, f func()) bool {
 	return locker.TryRLockFunc(key, f)
 }
+
+// Remove removes mutex with given <key>.
+func Remove(key string) {
+	locker.Remove(key)
+}
