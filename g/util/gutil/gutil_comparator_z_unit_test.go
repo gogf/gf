@@ -50,8 +50,6 @@ func Test_ComparatorInt64(t *testing.T) {
 }
 
 func Test_ComparatorUint(t *testing.T) {
-	j := gutil.ComparatorUint(1, 1)
-	gtest.Assert(j, 0)
 
 	gtest.Assert(gutil.ComparatorUint(1, 1), 0)
 	gtest.Assert(gutil.ComparatorUint(1, 2), -1)
