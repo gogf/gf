@@ -8,7 +8,6 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
 )
 
@@ -26,7 +25,7 @@ type CORSOptions struct {
 // 默认的CORS配置
 func (r *Response) DefaultCORSOptions() CORSOptions {
 	return CORSOptions{
-		AllowOrigin:      gstr.TrimRight(r.request.Referer(), "/"),
+		AllowOrigin:      "*",
 		AllowMethods:     HTTP_METHODS,
 		AllowCredentials: "true",
 		MaxAge:           3628800,
