@@ -79,20 +79,20 @@ func Test_GFlock_RLock(t *testing.T) {
 		go func() {
 			lock.RLock()
 			array.Append(1)
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(400 * time.Millisecond)
 			lock.RUnlock()
 		}()
 
 		go func() {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 			lock2.RLock()
 			array.Append(1)
 			lock2.RUnlock()
 		}()
 
-		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
 		time.Sleep(100 * time.Millisecond)
+		gtest.Assert(array.Len(), 1)
+		time.Sleep(200 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
 }
