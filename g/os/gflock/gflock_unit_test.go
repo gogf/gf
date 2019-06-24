@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/g/container/garray"
-
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gflock"
 	"github.com/gogf/gf/g/test/gtest"
