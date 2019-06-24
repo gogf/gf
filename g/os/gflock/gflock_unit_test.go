@@ -49,22 +49,22 @@ func Test_GFlock_Lock(t *testing.T) {
 		go func() {
 			lock.Lock()
 			array.Append(1)
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(300 * time.Millisecond)
 			lock.Unlock()
 		}()
 
 		go func() {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			lock2.Lock()
 			array.Append(1)
 			lock2.Unlock()
 		}()
 
-		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
 		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
 		time.Sleep(100 * time.Millisecond)
+		gtest.Assert(array.Len(), 1)
+		time.Sleep(200 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
 }

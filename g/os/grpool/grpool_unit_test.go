@@ -31,7 +31,7 @@ func Test_Basic(t *testing.T) {
 			})
 		}
 		wg.Wait()
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), size)
 		gtest.Assert(grpool.Jobs(), 0)
 		gtest.Assert(grpool.Size(), 0)

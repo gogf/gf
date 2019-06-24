@@ -21,11 +21,11 @@ func Test_Mutex_RUnlock(t *testing.T) {
 		for index := 0; index < 1000; index++ {
 			go func() {
 				mu.RLockFunc(func() {
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(200 * time.Millisecond)
 				})
 			}()
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(mu.IsRLocked(), true)
 		gtest.Assert(mu.IsLocked(), true)
 		gtest.Assert(mu.IsWLocked(), false)
@@ -34,7 +34,7 @@ func Test_Mutex_RUnlock(t *testing.T) {
 				mu.RUnlock()
 			}()
 		}
-		time.Sleep(150 * time.Millisecond)
+		time.Sleep(300 * time.Millisecond)
 		gtest.Assert(mu.IsRLocked(), false)
 
 	})
@@ -63,27 +63,27 @@ func Test_Mutex_IsLocked(t *testing.T) {
 		mu := gmutex.New()
 		go func() {
 			mu.LockFunc(func() {
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 			})
 		}()
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(mu.IsLocked(), true)
 		gtest.Assert(mu.IsWLocked(), true)
 		gtest.Assert(mu.IsRLocked(), false)
-		time.Sleep(110 * time.Millisecond)
+		time.Sleep(300 * time.Millisecond)
 		gtest.Assert(mu.IsLocked(), false)
 		gtest.Assert(mu.IsWLocked(), false)
 
 		go func() {
 			mu.RLockFunc(func() {
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 			})
 		}()
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(mu.IsRLocked(), true)
 		gtest.Assert(mu.IsLocked(), true)
 		gtest.Assert(mu.IsWLocked(), false)
-		time.Sleep(110 * time.Millisecond)
+		time.Sleep(300 * time.Millisecond)
 		gtest.Assert(mu.IsRLocked(), false)
 	})
 }
@@ -95,7 +95,7 @@ func Test_Mutex_Unlock(t *testing.T) {
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
-				time.Sleep(200 * time.Millisecond)
+				time.Sleep(300 * time.Millisecond)
 			})
 		}()
 		go func() {
@@ -112,14 +112,14 @@ func Test_Mutex_Unlock(t *testing.T) {
 		}()
 
 		go func() {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 			mu.Unlock()
 			mu.Unlock()
 			mu.Unlock()
 			mu.Unlock()
 		}()
 
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
 		time.Sleep(400 * time.Millisecond)
 		gtest.Assert(array.Len(), 3)
@@ -189,17 +189,17 @@ func Test_Mutex_RLockFunc(t *testing.T) {
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
-				time.Sleep(200 * time.Millisecond)
+				time.Sleep(300 * time.Millisecond)
 			})
 		}()
 		go func() {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			mu.RLockFunc(func() {
 				array.Append(1)
 				time.Sleep(100 * time.Millisecond)
 			})
 		}()
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
 		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
@@ -211,21 +211,21 @@ func Test_Mutex_RLockFunc(t *testing.T) {
 		mu := gmutex.New()
 		array := garray.New()
 		go func() {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			mu.RLockFunc(func() {
 				array.Append(1)
 				time.Sleep(100 * time.Millisecond)
 			})
 		}()
 		go func() {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			mu.RLockFunc(func() {
 				array.Append(1)
 				time.Sleep(100 * time.Millisecond)
 			})
 		}()
 		go func() {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			mu.RLockFunc(func() {
 				array.Append(1)
 				time.Sleep(100 * time.Millisecond)
@@ -244,7 +244,7 @@ func Test_Mutex_TryRLockFunc(t *testing.T) {
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
-				time.Sleep(200 * time.Millisecond)
+				time.Sleep(300 * time.Millisecond)
 			})
 		}()
 		go func() {
@@ -255,13 +255,13 @@ func Test_Mutex_TryRLockFunc(t *testing.T) {
 		}()
 		for index := 0; index < 1000; index++ {
 			go func() {
-				time.Sleep(300 * time.Millisecond)
+				time.Sleep(400 * time.Millisecond)
 				mu.TryRLockFunc(func() {
 					array.Append(1)
 				})
 			}()
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
 		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
