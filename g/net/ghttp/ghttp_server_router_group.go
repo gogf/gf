@@ -56,10 +56,16 @@ func (g *RouterGroup) Bind(items []GroupItem) {
 		if strings.EqualFold(gconv.String(item[0]), "REST") {
 			g.bind("REST", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
 		} else {
-			if len(item) > 3 {
-				g.bind("HANDLER", gconv.String(item[0])+":"+gconv.String(item[1]), item[2], item[3])
+			method := gconv.String(item[0])
+			if strings.EqualFold(method, "ALL") {
+				method = ""
 			} else {
-				g.bind("HANDLER", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+				method += ":"
+			}
+			if len(item) > 3 {
+				g.bind("HANDLER", method+gconv.String(item[1]), item[2], item[3])
+			} else {
+				g.bind("HANDLER", method+gconv.String(item[1]), item[2])
 			}
 		}
 	}
