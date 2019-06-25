@@ -48,10 +48,10 @@ func Test_Bool_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Bool(countryCapitalMap), true)
 
 		gtest.AssertEQ(gconv.Bool("1"), true)
@@ -83,10 +83,10 @@ func Test_Int_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Int(countryCapitalMap), 0)
 
 		gtest.AssertEQ(gconv.Int("1"), 1)
@@ -117,10 +117,10 @@ func Test_Int8_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Int8(countryCapitalMap), int8(0))
 
 		gtest.AssertEQ(gconv.Int8("1"), int8(1))
@@ -151,10 +151,10 @@ func Test_Int16_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Int16(countryCapitalMap), int16(0))
 
 		gtest.AssertEQ(gconv.Int16("1"), int16(1))
@@ -185,10 +185,10 @@ func Test_Int32_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Int32(countryCapitalMap), int32(0))
 
 		gtest.AssertEQ(gconv.Int32("1"), int32(1))
@@ -239,10 +239,10 @@ func Test_Int64_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Int64(countryCapitalMap), int64(0))
 
 		gtest.AssertEQ(gconv.Int64("1"), int64(1))
@@ -274,10 +274,10 @@ func Test_Uint_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Uint(countryCapitalMap), uint(0))
 
 		gtest.AssertEQ(gconv.Uint("1"), uint(1))
@@ -309,10 +309,10 @@ func Test_Uint8_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Uint8(countryCapitalMap), uint8(0))
 
 		gtest.AssertEQ(gconv.Uint8("1"), uint8(1))
@@ -344,10 +344,10 @@ func Test_Uint16_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Uint16(countryCapitalMap), uint16(0))
 
 		gtest.AssertEQ(gconv.Uint16("1"), uint16(1))
@@ -379,10 +379,10 @@ func Test_Uint32_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Uint32(countryCapitalMap), uint32(0))
 
 		gtest.AssertEQ(gconv.Uint32("1"), uint32(1))
@@ -433,10 +433,10 @@ func Test_Uint64_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Uint64(countryCapitalMap), uint64(0))
 
 		gtest.AssertEQ(gconv.Uint64("1"), uint64(1))
@@ -467,10 +467,10 @@ func Test_Float32_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Float32(countryCapitalMap), float32(0))
 
 		gtest.AssertEQ(gconv.Float32("1"), float32(1))
@@ -501,10 +501,10 @@ func Test_Float64_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.Float64(countryCapitalMap), float64(0))
 
 		gtest.AssertEQ(gconv.Float64("1"), float64(1))
@@ -553,10 +553,10 @@ func Test_String_All(t *testing.T) {
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
-		countryCapitalMap [ "France" ] = "巴黎"
-		countryCapitalMap [ "Italy" ] = "罗马"
-		countryCapitalMap [ "Japan" ] = "东京"
-		countryCapitalMap [ "India " ] = "新德里"
+		countryCapitalMap["France"] = "巴黎"
+		countryCapitalMap["Italy"] = "罗马"
+		countryCapitalMap["Japan"] = "东京"
+		countryCapitalMap["India "] = "新德里"
 		gtest.AssertEQ(gconv.String(countryCapitalMap), `{"France":"巴黎","India ":"新德里","Italy":"罗马","Japan":"东京"}`)
 		gtest.AssertEQ(gconv.String(int64(1)), "1")
 		gtest.AssertEQ(gconv.String(123.456), "123.456")
@@ -731,7 +731,7 @@ func Test_Slice_All(t *testing.T) {
 		gtest.AssertEQ(gconv.Interfaces(slices), []interface{}{1})
 
 		gtest.AssertEQ(gconv.Maps(nil), nil)
-		gtest.AssertEQ(gconv.Maps([]map[string]interface{}{{"a": "1"},}), []map[string]interface{}{{"a": "1"},})
+		gtest.AssertEQ(gconv.Maps([]map[string]interface{}{{"a": "1"}}), []map[string]interface{}{{"a": "1"}})
 		gtest.AssertEQ(gconv.Maps(1223), []map[string]interface{}{{}})
 		gtest.AssertEQ(gconv.Maps([]int{}), nil)
 	})
@@ -965,8 +965,8 @@ func Test_Struct_Basic1_All(t *testing.T) {
 			"PASS1":     "123",
 			"PASS2":     "456",
 			"As":        g.Map{"Name": 1, "Result": "22222"},
-			"Ass":       &Score{11,"11"},
-			"Assb":		 []string{"wwww"},
+			"Ass":       &Score{11, "11"},
+			"Assb":      []string{"wwww"},
 		}
 		_ = gconv.Struct(nil, user)
 		_ = gconv.Struct(params1, nil)
