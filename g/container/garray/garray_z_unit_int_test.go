@@ -11,10 +11,7 @@ package garray_test
 import (
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/test/gtest"
-	"github.com/gogf/gf/g/util/gconv"
-	"strings"
 	"testing"
-	"time"
 )
 
 func Test_IntArray_Basic(t *testing.T) {
@@ -49,7 +46,7 @@ func TestIntArray_Sort(t *testing.T) {
 		expect1 := []int{0, 1, 2, 3}
 		expect2 := []int{3, 2, 1, 0}
 		array := garray.NewIntArray()
-		array2:=garray.NewIntArray(true)
+		array2 := garray.NewIntArray(true)
 		for i := 3; i >= 0; i-- {
 			array.Append(i)
 			array2.Append(i)
@@ -61,7 +58,6 @@ func TestIntArray_Sort(t *testing.T) {
 		gtest.Assert(array.Slice(), expect2)
 		array2.Sort(true)
 		gtest.Assert(array2.Slice(), expect2)
-
 
 	})
 }
@@ -110,10 +106,11 @@ func TestIntArray_Range(t *testing.T) {
 	gtest.Case(t, func() {
 		value1 := []int{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewIntArrayFrom(value1)
-		array2 := garray.NewIntArrayFrom(value1,true)
+		array2 := garray.NewIntArrayFrom(value1, true)
 		gtest.Assert(array1.Range(0, 1), []int{0})
 		gtest.Assert(array1.Range(1, 2), []int{1})
 		gtest.Assert(array1.Range(0, 2), []int{0, 1})
+		gtest.Assert(array1.Range(10, 2), nil)
 		gtest.Assert(array1.Range(-1, 10), value1)
 		gtest.Assert(array1.Range(8, 2), nil)
 
@@ -124,32 +121,32 @@ func TestIntArray_Range(t *testing.T) {
 func TestIntArray_Merge(t *testing.T) {
 	gtest.Case(t, func() {
 		n1 := []int{1, 2, 4, 3}
-		n2:=[]int{7,8,9}
-		n3:=[]int{3,6}
+		n2 := []int{7, 8, 9}
+		n3 := []int{3, 6}
 
-		s1:=[]string{"a","b","c"}
-		in1:=[]interface{}{1,"a",2,"b"}
+		s1 := []string{"a", "b", "c"}
+		in1 := []interface{}{1, "a", 2, "b"}
 
-		func1:=func(v1,v2 interface{})int{
+		func1 := func(v1, v2 interface{}) int {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 
 		a1 := garray.NewIntArrayFrom(n1)
 		b1 := garray.NewStringArrayFrom(s1)
-		b2:=garray.NewIntArrayFrom(n3)
-		b3:=garray.NewArrayFrom(in1)
-		b4:=garray.NewSortedStringArrayFrom(s1)
-		b5:=garray.NewSortedIntArrayFrom(n3)
-		b6:=garray.NewSortedArrayFrom(in1,func1)
+		b2 := garray.NewIntArrayFrom(n3)
+		b3 := garray.NewArrayFrom(in1)
+		b4 := garray.NewSortedStringArrayFrom(s1)
+		b5 := garray.NewSortedIntArrayFrom(n3)
+		b6 := garray.NewSortedArrayFrom(in1, func1)
 
-		gtest.Assert(a1.Merge(n2).Len(),7)
-		gtest.Assert(a1.Merge(n3).Len(),9)
-		gtest.Assert(a1.Merge(b1).Len(),12)
-		gtest.Assert(a1.Merge(b2).Len(),14)
-		gtest.Assert(a1.Merge(b3).Len(),18)
-		gtest.Assert(a1.Merge(b4).Len(),21)
-		gtest.Assert(a1.Merge(b5).Len(),23)
-		gtest.Assert(a1.Merge(b6).Len(),27)
+		gtest.Assert(a1.Merge(n2).Len(), 7)
+		gtest.Assert(a1.Merge(n3).Len(), 9)
+		gtest.Assert(a1.Merge(b1).Len(), 12)
+		gtest.Assert(a1.Merge(b2).Len(), 14)
+		gtest.Assert(a1.Merge(b3).Len(), 18)
+		gtest.Assert(a1.Merge(b4).Len(), 21)
+		gtest.Assert(a1.Merge(b5).Len(), 23)
+		gtest.Assert(a1.Merge(b6).Len(), 27)
 	})
 }
 
@@ -192,10 +189,21 @@ func TestIntArray_SubSlice(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewIntArrayFrom(a1)
+		gtest.Assert(array1.SubSlice(6), []int{6})
+		gtest.Assert(array1.SubSlice(5), []int{5, 6})
+		gtest.Assert(array1.SubSlice(8), nil)
 		gtest.Assert(array1.SubSlice(0, 2), []int{0, 1})
 		gtest.Assert(array1.SubSlice(2, 2), []int{2, 3})
 		gtest.Assert(array1.SubSlice(5, 8), []int{5, 6})
-		gtest.Assert(array1.SubSlice(8, 2), nil)
+		gtest.Assert(array1.SubSlice(-1, 1), []int{6})
+		gtest.Assert(array1.SubSlice(-1, 9), []int{6})
+		gtest.Assert(array1.SubSlice(-2, 3), []int{5, 6})
+		gtest.Assert(array1.SubSlice(-7, 3), []int{0, 1, 2})
+		gtest.Assert(array1.SubSlice(-8, 3), nil)
+		gtest.Assert(array1.SubSlice(-1, -3), []int{3, 4, 5})
+		gtest.Assert(array1.SubSlice(-9, 3), nil)
+		gtest.Assert(array1.SubSlice(1, -1), []int{0})
+		gtest.Assert(array1.SubSlice(1, -3), nil)
 	})
 }
 
@@ -417,7 +425,7 @@ func TestSortedIntArray_Range(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 2, 6, 7}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		array2 := garray.NewSortedIntArrayFrom(a1,true)
+		array2 := garray.NewSortedIntArrayFrom(a1, true)
 		ns1 := array1.Range(1, 4)
 		gtest.Assert(len(ns1), 3)
 		gtest.Assert(ns1, []int{2, 3, 5})
@@ -482,7 +490,6 @@ func TestSortedIntArray_Chunk(t *testing.T) {
 		array1 := garray.NewSortedIntArrayFrom(a1)
 		ns1 := array1.Chunk(2) //按每几个元素切成一个数组
 		ns2 := array1.Chunk(-1)
-		t.Log(ns1)
 		gtest.Assert(len(ns1), 3)
 		gtest.Assert(ns1[0], []int{1, 2})
 		gtest.Assert(ns1[2], []int{5})
@@ -711,37 +718,34 @@ func TestSortedIntArray_RLockFunc(t *testing.T) {
 	gtest.Assert(a1.Contains(7), true)
 }
 
-
 func TestSortedIntArray_Merge(t *testing.T) {
 	n1 := []int{1, 2, 4, 3}
-	n2:=[]int{7,8,9}
-	n3:=[]int{3,6}
+	n2 := []int{7, 8, 9}
+	n3 := []int{3, 6}
 
-	s1:=[]string{"a","b","c"}
-	in1:=[]interface{}{1,"a",2,"b"}
-
+	s1 := []string{"a", "b", "c"}
+	in1 := []interface{}{1, "a", 2, "b"}
 
 	a1 := garray.NewSortedIntArrayFrom(n1)
 	b1 := garray.NewStringArrayFrom(s1)
-	b2:=garray.NewIntArrayFrom(n3)
-	b3:=garray.NewArrayFrom(in1)
-	b4:=garray.NewSortedStringArrayFrom(s1)
-	b5:=garray.NewSortedIntArrayFrom(n3)
+	b2 := garray.NewIntArrayFrom(n3)
+	b3 := garray.NewArrayFrom(in1)
+	b4 := garray.NewSortedStringArrayFrom(s1)
+	b5 := garray.NewSortedIntArrayFrom(n3)
 
-
-	gtest.Assert(a1.Merge(n2).Len(),7)
-	gtest.Assert(a1.Merge(n3).Len(),9)
-	gtest.Assert(a1.Merge(b1).Len(),12)
-	gtest.Assert(a1.Merge(b2).Len(),14)
-	gtest.Assert(a1.Merge(b3).Len(),18)
-	gtest.Assert(a1.Merge(b4).Len(),21)
-	gtest.Assert(a1.Merge(b5).Len(),23)
+	gtest.Assert(a1.Merge(n2).Len(), 7)
+	gtest.Assert(a1.Merge(n3).Len(), 9)
+	gtest.Assert(a1.Merge(b1).Len(), 12)
+	gtest.Assert(a1.Merge(b2).Len(), 14)
+	gtest.Assert(a1.Merge(b3).Len(), 18)
+	gtest.Assert(a1.Merge(b4).Len(), 21)
+	gtest.Assert(a1.Merge(b5).Len(), 23)
 }
 
 func TestSortedArray_LockFunc(t *testing.T) {
 	n1 := []interface{}{1, 2, 4, 3}
 
-	func1:=func(v1,v2 interface{})int{
+	func1 := func(v1, v2 interface{}) int {
 		return strings.Compare(gconv.String(v1), gconv.String(v2))
 	}
 	a1 := garray.NewSortedArrayFrom(n1, func1)
@@ -769,7 +773,7 @@ func TestSortedArray_LockFunc(t *testing.T) {
 func TestSortedArray_RLockFunc(t *testing.T) {
 	n1 := []interface{}{1, 2, 4, 3}
 
-	func1:=func(v1,v2 interface{})int{
+	func1 := func(v1, v2 interface{}) int {
 		return strings.Compare(gconv.String(v1), gconv.String(v2))
 	}
 	a1 := garray.NewSortedArrayFrom(n1, func1)
@@ -795,56 +799,54 @@ func TestSortedArray_RLockFunc(t *testing.T) {
 	gtest.Assert(a1.Contains(7), true)
 }
 
-
-
 func TestSortedArray_Merge(t *testing.T) {
 	n1 := []interface{}{1, 2, 4, 3}
-	n2:=[]int{7,8,9}
-	n3:=[]int{3,6}
+	n2 := []int{7, 8, 9}
+	n3 := []int{3, 6}
 
-	s1:=[]string{"a","b","c"}
-	in1:=[]interface{}{1,"a",2,"b"}
+	s1 := []string{"a", "b", "c"}
+	in1 := []interface{}{1, "a", 2, "b"}
 
-	func1:=func(v1,v2 interface{})int{
+	func1 := func(v1, v2 interface{}) int {
 		return strings.Compare(gconv.String(v1), gconv.String(v2))
 	}
 
-	a1 := garray.NewSortedArrayFrom(n1,func1)
+	a1 := garray.NewSortedArrayFrom(n1, func1)
 	b1 := garray.NewStringArrayFrom(s1)
-	b2:=garray.NewIntArrayFrom(n3)
-	b3:=garray.NewArrayFrom(in1)
-	b4:=garray.NewSortedStringArrayFrom(s1)
-	b5:=garray.NewSortedIntArrayFrom(n3)
+	b2 := garray.NewIntArrayFrom(n3)
+	b3 := garray.NewArrayFrom(in1)
+	b4 := garray.NewSortedStringArrayFrom(s1)
+	b5 := garray.NewSortedIntArrayFrom(n3)
 
-	gtest.Assert(a1.Merge(n2).Len(),7)
-	gtest.Assert(a1.Merge(n3).Len(),9)
-	gtest.Assert(a1.Merge(b1).Len(),12)
-	gtest.Assert(a1.Merge(b2).Len(),14)
-	gtest.Assert(a1.Merge(b3).Len(),18)
-	gtest.Assert(a1.Merge(b4).Len(),21)
-	gtest.Assert(a1.Merge(b5).Len(),23)
+	gtest.Assert(a1.Merge(n2).Len(), 7)
+	gtest.Assert(a1.Merge(n3).Len(), 9)
+	gtest.Assert(a1.Merge(b1).Len(), 12)
+	gtest.Assert(a1.Merge(b2).Len(), 14)
+	gtest.Assert(a1.Merge(b3).Len(), 18)
+	gtest.Assert(a1.Merge(b4).Len(), 21)
+	gtest.Assert(a1.Merge(b5).Len(), 23)
 }
 
 func TestIntArray_SortFunc(t *testing.T) {
-	n1:=[]int{1,2,3,5,4}
-	a1:=garray.NewIntArrayFrom(n1)
+	n1 := []int{1, 2, 3, 5, 4}
+	a1 := garray.NewIntArrayFrom(n1)
 
-	func1:=func(v1,v2 int)bool{
-		if v1>v2{
+	func1 := func(v1, v2 int) bool {
+		if v1 > v2 {
 			return false
 		}
 		return true
 	}
-	func2:=func(v1,v2 int)bool{
-		if v1>v2{
+	func2 := func(v1, v2 int) bool {
+		if v1 > v2 {
 			return true
 		}
 		return true
 	}
-	a2:=a1.SortFunc(func1)
-	gtest.Assert(a2,[]int{1,2,3,4,5})
-	a3:=a1.SortFunc(func2)
-	gtest.Assert(a3,[]int{5,4,3,2,1})
+	a2 := a1.SortFunc(func1)
+	gtest.Assert(a2, []int{1, 2, 3, 4, 5})
+	a3 := a1.SortFunc(func2)
+	gtest.Assert(a3, []int{5, 4, 3, 2, 1})
 
 }
 
@@ -895,4 +897,3 @@ func TestIntArray_RLockFunc(t *testing.T) {
 	gtest.AssertLT(t2-t1, 20)
 	gtest.Assert(a1.Contains(7), true)
 }
-

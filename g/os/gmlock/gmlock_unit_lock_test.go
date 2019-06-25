@@ -44,58 +44,61 @@ func Test_Locker_Lock(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 		gtest.Assert(array.Len(), 4)
 	})
-	//expire
+}
+
+func Test_Locker_LockFunc(t *testing.T) {
+	//no expire
 	gtest.Case(t, func() {
-		key := "testLockExpire"
+		key := "testLockFunc"
 		array := garray.New()
 		go func() {
-			gmlock.Lock(key, 100*time.Millisecond)
-			array.Append(1)
+			gmlock.LockFunc(key, func() {
+				array.Append(1)
+				time.Sleep(50 * time.Millisecond)
+			}) //
 		}()
 		go func() {
 			time.Sleep(10 * time.Millisecond)
-			gmlock.Lock(key)
-			time.Sleep(100 * time.Millisecond)
-			array.Append(1)
-			gmlock.Unlock(key)
+			gmlock.LockFunc(key, func() {
+				array.Append(1)
+			})
 		}()
-		time.Sleep(150 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
+		gtest.Assert(array.Len(), 1) //
+		time.Sleep(50 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
 }
 
-func Test_Locker_TryLock(t *testing.T) {
+func Test_Locker_TryLockFunc(t *testing.T) {
+	//no expire
 	gtest.Case(t, func() {
-		key := "testTryLock"
+		key := "testTryLockFunc"
 		array := garray.New()
 		go func() {
-			if gmlock.TryLock(key, 200*time.Millisecond) {
+			gmlock.TryLockFunc(key, func() {
 				array.Append(1)
-			}
+				time.Sleep(50 * time.Millisecond)
+			})
 		}()
 		go func() {
-			time.Sleep(100 * time.Millisecond)
-			if !gmlock.TryLock(key) {
+			time.Sleep(10 * time.Millisecond)
+			gmlock.TryLockFunc(key, func() {
 				array.Append(1)
-			} else {
-				gmlock.Unlock(key)
-			}
+			})
 		}()
 		go func() {
-			time.Sleep(300 * time.Millisecond)
-			if gmlock.TryLock(key) {
+			time.Sleep(70 * time.Millisecond)
+			gmlock.TryLockFunc(key, func() {
 				array.Append(1)
-				gmlock.Unlock(key)
-			}
+			})
 		}()
 		time.Sleep(50 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
-		time.Sleep(80 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
-		time.Sleep(350 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
 	})
 }
 

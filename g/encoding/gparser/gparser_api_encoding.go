@@ -6,6 +6,11 @@
 
 package gparser
 
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (p *Parser) MarshalJSON() ([]byte, error) {
+	return p.json.MarshalJSON()
+}
+
 func (p *Parser) ToXml(rootTag ...string) ([]byte, error) {
 	return p.json.ToXml(rootTag...)
 }
