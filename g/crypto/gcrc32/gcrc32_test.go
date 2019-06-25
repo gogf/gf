@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/g/crypto/gmd5"
 
 	"github.com/gogf/gf/g/crypto/gcrc32"
+	"github.com/gogf/gf/g/crypto/gmd5"
 	"github.com/gogf/gf/g/test/gtest"
 )
 

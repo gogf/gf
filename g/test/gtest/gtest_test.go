@@ -7,12 +7,14 @@
 package gtest_test
 
 import (
-	"github.com/gogf/gf/g/test/gtest"
 	"testing"
+
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func TestCase(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(1, 1)
+		gtest.AssertNE(1, 0)
 	})
 }

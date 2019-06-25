@@ -10,13 +10,11 @@ package gflock
 import (
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/third/github.com/theckman/go-flock"
-	"sync"
 )
 
 // File locker.
 type Locker struct {
-	mu    sync.RWMutex // 用于外部接口调用的互斥锁(阻塞机制)
-	flock *flock.Flock // 底层文件锁对象
+	flock *flock.Flock // Underlying file locker.
 }
 
 // New creates and returns a new file locker with given <file>.
@@ -47,9 +45,6 @@ func (l *Locker) IsLocked() bool {
 // It returns true if success, or else returns false immediately.
 func (l *Locker) TryLock() bool {
 	ok, _ := l.flock.TryLock()
-	if ok {
-		l.mu.Lock()
-	}
 	return ok
 }
 
@@ -57,32 +52,61 @@ func (l *Locker) TryLock() bool {
 // It returns true if success, or else returns false immediately.
 func (l *Locker) TryRLock() bool {
 	ok, _ := l.flock.TryRLock()
-	if ok {
-		l.mu.RLock()
-	}
 	return ok
 }
 
+// Lock is a blocking call to try and take an exclusive file lock. It will wait
+// until it is able to obtain the exclusive file lock. It's recommended that
+// TryLock() be used over this function. This function may block the ability to
+// query the current Locked() or RLocked() status due to a RW-mutex lock.
+//
+// If we are already exclusive-locked, this function short-circuits and returns
+// immediately assuming it can take the mutex lock.
+//
+// If the *Flock has a shared lock (RLock), this may transparently replace the
+// shared lock with an exclusive lock on some UNIX-like operating systems. Be
+// careful when using exclusive locks in conjunction with shared locks
+// (RLock()), because calling Unlock() may accidentally release the exclusive
+// lock that was once a shared lock.
 func (l *Locker) Lock() (err error) {
-	l.mu.Lock()
-	err = l.flock.Lock()
-	return
+	return l.flock.Lock()
 }
 
+// Unlock is a function to unlock the file. This file takes a RW-mutex lock, so
+// while it is running the Locked() and RLocked() functions will be blocked.
+//
+// This function short-circuits if we are unlocked already. If not, it calls
+// syscall.LOCK_UN on the file and closes the file descriptor. It does not
+// remove the file from disk. It's up to your application to do.
+//
+// Please note, if your shared lock became an exclusive lock this may
+// unintentionally drop the exclusive lock if called by the consumer that
+// believes they have a shared lock. Please see Lock() for more details.
 func (l *Locker) UnLock() (err error) {
-	err = l.flock.Unlock()
-	l.mu.Unlock()
-	return
+	return l.flock.Unlock()
 }
 
+// RLock is a blocking call to try and take a ahred file lock. It will wait
+// until it is able to obtain the shared file lock. It's recommended that
+// TryRLock() be used over this function. This function may block the ability to
+// query the current Locked() or RLocked() status due to a RW-mutex lock.
+//
+// If we are already shared-locked, this function short-circuits and returns
+// immediately assuming it can take the mutex lock.
 func (l *Locker) RLock() (err error) {
-	l.mu.RLock()
-	err = l.flock.RLock()
-	return
+	return l.flock.RLock()
 }
 
+// Unlock is a function to unlock the file. This file takes a RW-mutex lock, so
+// while it is running the Locked() and RLocked() functions will be blocked.
+//
+// This function short-circuits if we are unlocked already. If not, it calls
+// syscall.LOCK_UN on the file and closes the file descriptor. It does not
+// remove the file from disk. It's up to your application to do.
+//
+// Please note, if your shared lock became an exclusive lock this may
+// unintentionally drop the exclusive lock if called by the consumer that
+// believes they have a shared lock. Please see Lock() for more details.
 func (l *Locker) RUnlock() (err error) {
-	err = l.flock.Unlock()
-	l.mu.RUnlock()
-	return
+	return l.flock.Unlock()
 }

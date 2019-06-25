@@ -9,9 +9,10 @@
 package garray_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 func Test_IntArray_Basic(t *testing.T) {
@@ -100,6 +101,7 @@ func TestIntArray_Range(t *testing.T) {
 		gtest.Assert(array1.Range(0, 1), []int{0})
 		gtest.Assert(array1.Range(1, 2), []int{1})
 		gtest.Assert(array1.Range(0, 2), []int{0, 1})
+		gtest.Assert(array1.Range(10, 2), nil)
 		gtest.Assert(array1.Range(-1, 10), value1)
 	})
 }
@@ -151,9 +153,21 @@ func TestIntArray_SubSlice(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewIntArrayFrom(a1)
+		gtest.Assert(array1.SubSlice(6), []int{6})
+		gtest.Assert(array1.SubSlice(5), []int{5, 6})
+		gtest.Assert(array1.SubSlice(8), nil)
 		gtest.Assert(array1.SubSlice(0, 2), []int{0, 1})
 		gtest.Assert(array1.SubSlice(2, 2), []int{2, 3})
 		gtest.Assert(array1.SubSlice(5, 8), []int{5, 6})
+		gtest.Assert(array1.SubSlice(-1, 1), []int{6})
+		gtest.Assert(array1.SubSlice(-1, 9), []int{6})
+		gtest.Assert(array1.SubSlice(-2, 3), []int{5, 6})
+		gtest.Assert(array1.SubSlice(-7, 3), []int{0, 1, 2})
+		gtest.Assert(array1.SubSlice(-8, 3), nil)
+		gtest.Assert(array1.SubSlice(-1, -3), []int{3, 4, 5})
+		gtest.Assert(array1.SubSlice(-9, 3), nil)
+		gtest.Assert(array1.SubSlice(1, -1), []int{0})
+		gtest.Assert(array1.SubSlice(1, -3), nil)
 	})
 }
 
@@ -435,7 +449,6 @@ func TestSortedIntArray_Chunk(t *testing.T) {
 		array1 := garray.NewSortedIntArrayFrom(a1)
 		ns1 := array1.Chunk(2) //按每几个元素切成一个数组
 		ns2 := array1.Chunk(-1)
-		t.Log(ns1)
 		gtest.Assert(len(ns1), 3)
 		gtest.Assert(ns1[0], []int{1, 2})
 		gtest.Assert(ns1[2], []int{5})
