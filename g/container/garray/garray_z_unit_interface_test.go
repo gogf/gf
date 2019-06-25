@@ -227,8 +227,12 @@ func TestArray_SubSlice(t *testing.T) {
 		gtest.Assert(array2.SubSlice(2, 2), []interface{}{2, 3})
 
 		a2 := []interface{}{0, 1, 2, 3, 4, 5, 6}
-		array3 := garray.NewArrayFrom(a2,false) //@todo 如果这里为 true 时，为报错
+		array3 := garray.NewArrayFrom(a2,true)
 		gtest.Assert(array3.SubSlice(2, 2), []interface{}{2, 3})
+		gtest.Assert(array3.SubSlice(-1, 2), []interface{}{6})
+		gtest.Assert(array3.SubSlice(-9, 2), nil)
+		gtest.Assert(array3.SubSlice(4, -2), []interface{}{2,3})
+		gtest.Assert(array3.SubSlice(1, -3), nil)
 
 	})
 }
