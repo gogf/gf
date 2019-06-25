@@ -377,7 +377,7 @@ func TestSortedStringArray_Sort(t *testing.T) {
 		array1 := garray.NewSortedStringArrayFrom(a1)
 
 		gtest.Assert(array1, []string{"a", "b", "c", "d"})
-		array1.Sort() //todo 这个SortedStringArray.sort这个方法没有必要，
+		array1.Sort()
 		gtest.Assert(array1.Len(), 4)
 		gtest.Assert(array1.Contains("c"), true)
 		gtest.Assert(array1, []string{"a", "b", "c", "d"})
@@ -496,6 +496,7 @@ func TestSortedStringArray_Range(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []string{"e", "a", "d", "c", "b", "f", "g"}
 		array1 := garray.NewSortedStringArrayFrom(a1)
+		array2 := garray.NewSortedStringArrayFrom(a1,true)
 		s1 := array1.Range(2, 4)
 		gtest.Assert(len(s1), 2)
 		gtest.Assert(s1, []string{"c", "d"})
@@ -504,9 +505,11 @@ func TestSortedStringArray_Range(t *testing.T) {
 		gtest.Assert(len(s1), 2)
 		gtest.Assert(s1, []string{"a", "b"})
 
-		s1 = array1.Range(4, 8)
-		gtest.Assert(len(s1), 3)
-		gtest.Assert(s1, []string{"e", "f", "g"})
+		gtest.Assert(array1.Range(4, 8), []string{"e", "f", "g"})
+		gtest.Assert(array1.Range(10, 2), nil)
+		gtest.Assert(array2.Range(4, 8), []string{"e", "f", "g"})
+
+
 	})
 }
 
@@ -546,6 +549,7 @@ func TestSortedStringArray_SubSlice(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []string{"e", "a", "d", "c", "b", "f", "g"}
 		array1 := garray.NewSortedStringArrayFrom(a1)
+		array2 := garray.NewSortedStringArrayFrom(a1,true)
 		s1 := array1.SubSlice(1, 3)
 		gtest.Assert(len(s1), 3)
 		gtest.Assert(s1, []string{"b", "c", "d"})
@@ -556,6 +560,10 @@ func TestSortedStringArray_SubSlice(t *testing.T) {
 
 		s3 := array1.SubSlice(10, 2)
 		gtest.Assert(len(s3), 0)
+		gtest.Assert(array1.SubSlice(-2, 2),[]string{"f", "g"})
+		gtest.Assert(array1.SubSlice(-10, 2),nil)
+		gtest.Assert(array1.SubSlice(2, -3),nil)
+		gtest.Assert(array2.SubSlice(2, 3),[]string{"c", "d","e"})
 
 	})
 }
@@ -621,6 +629,7 @@ func TestSortedStringArray_Chunk(t *testing.T) {
 		gtest.Assert(len(array2), 3)
 		gtest.Assert(len(array2[0]), 2)
 		gtest.Assert(array2[1], []string{"c", "d"})
+		gtest.Assert(array1.Chunk(0), nil)
 	})
 }
 
@@ -705,12 +714,17 @@ func TestSortedStringArray_Merge(t *testing.T) {
 	s1 := []string{"a", "b", "c"}
 	in1 := []interface{}{1, "a", 2, "b"}
 
+	func1:=func(v1,v2 interface{})int{
+		return strings.Compare(gconv.String(v1), gconv.String(v2))
+	}
+
 	a1 := garray.NewSortedStringArrayFrom(s1)
 	b1 := garray.NewStringArrayFrom(s1)
 	b2 := garray.NewIntArrayFrom(n3)
 	b3 := garray.NewArrayFrom(in1)
 	b4 := garray.NewSortedStringArrayFrom(s1)
 	b5 := garray.NewSortedIntArrayFrom(n3)
+	b6 := garray.NewSortedArrayFrom(in1,func1)
 
 	gtest.Assert(a1.Merge(n2).Len(), 6)
 	gtest.Assert(a1.Merge(n3).Len(), 8)
@@ -719,6 +733,7 @@ func TestSortedStringArray_Merge(t *testing.T) {
 	gtest.Assert(a1.Merge(b3).Len(), 17)
 	gtest.Assert(a1.Merge(b4).Len(), 20)
 	gtest.Assert(a1.Merge(b5).Len(), 22)
+	gtest.Assert(a1.Merge(b6).Len(), 26)
 }
 
 func TestStringArray_SortFunc(t *testing.T) {

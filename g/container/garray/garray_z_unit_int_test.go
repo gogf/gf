@@ -737,12 +737,17 @@ func TestSortedIntArray_Merge(t *testing.T) {
 	s1 := []string{"a", "b", "c"}
 	in1 := []interface{}{1, "a", 2, "b"}
 
+	func1 := func(v1, v2 interface{}) int {
+		return strings.Compare(gconv.String(v1), gconv.String(v2))
+	}
+
 	a1 := garray.NewSortedIntArrayFrom(n1)
 	b1 := garray.NewStringArrayFrom(s1)
 	b2 := garray.NewIntArrayFrom(n3)
 	b3 := garray.NewArrayFrom(in1)
 	b4 := garray.NewSortedStringArrayFrom(s1)
 	b5 := garray.NewSortedIntArrayFrom(n3)
+	b6:=garray.NewSortedArrayFrom(in1,func1)
 
 	gtest.Assert(a1.Merge(n2).Len(), 7)
 	gtest.Assert(a1.Merge(n3).Len(), 9)
@@ -751,6 +756,8 @@ func TestSortedIntArray_Merge(t *testing.T) {
 	gtest.Assert(a1.Merge(b3).Len(), 18)
 	gtest.Assert(a1.Merge(b4).Len(), 21)
 	gtest.Assert(a1.Merge(b5).Len(), 23)
+	gtest.Assert(a1.Merge(b6).Len(), 27)
+
 }
 
 func TestSortedArray_LockFunc(t *testing.T) {

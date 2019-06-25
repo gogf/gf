@@ -38,10 +38,13 @@ func Test_SortedIntArray1(t *testing.T) {
 func Test_SortedIntArray2(t *testing.T) {
 	expect := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	array := garray.NewSortedIntArray()
+	array2 := garray.NewSortedIntArray(true)
 	for i := 0; i <= 10; i++ {
 		array.Add(i)
+		array2.Add(i)
 	}
 	gtest.Assert(array.Slice(), expect)
+	gtest.Assert(array2.Slice(), expect)
 }
 
 func Test_SortedStringArray1(t *testing.T) {
@@ -51,15 +54,19 @@ func Test_SortedStringArray1(t *testing.T) {
 		array.Add(gconv.String(i))
 	}
 	gtest.Assert(array.Slice(), expect)
+	gtest.Assert(array.Add().Slice(), expect)
 }
 
 func Test_SortedStringArray2(t *testing.T) {
 	expect := []string{"0", "1", "10", "2", "3", "4", "5", "6", "7", "8", "9"}
 	array := garray.NewSortedStringArray()
+	array2 := garray.NewSortedStringArray(true)
 	for i := 0; i <= 10; i++ {
 		array.Add(gconv.String(i))
+		array2.Add(gconv.String(i))
 	}
 	gtest.Assert(array.Slice(), expect)
+	gtest.Assert(array2.Slice(), expect)
 }
 
 func Test_SortedArray1(t *testing.T) {
@@ -78,10 +85,16 @@ func Test_SortedArray2(t *testing.T) {
 	array := garray.NewSortedArray(func(v1, v2 interface{}) int {
 		return strings.Compare(gconv.String(v1), gconv.String(v2))
 	})
+	array2 := garray.NewSortedArray(func(v1, v2 interface{}) int {
+		return strings.Compare(gconv.String(v1), gconv.String(v2))
+	},true)
 	for i := 0; i <= 10; i++ {
 		array.Add(gconv.String(i))
+		array2.Add(gconv.String(i))
 	}
 	gtest.Assert(array.Slice(), expect)
+	gtest.Assert(array.Add(), expect)
+	gtest.Assert(array2.Slice(), expect)
 }
 
 func TestNewFromCopy(t *testing.T) {
