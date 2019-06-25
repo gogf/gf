@@ -9,6 +9,8 @@ package gtcp
 import (
 	"errors"
 	"time"
+
+	"github.com/gogf/gf/g/internal/errors"
 )
 
 // 简单协议: (方法覆盖)发送数据
@@ -46,9 +48,7 @@ func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption
 		return nil, err
 	}
 	defer func() {
-		if e := c.SetRecvDeadline(time.Time{}); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
 	}()
 	data, err = c.RecvPkg(option...)
 	return
@@ -60,9 +60,7 @@ func (c *PoolConn) SendPkgWithTimeout(data []byte, timeout time.Duration, option
 		return err
 	}
 	defer func() {
-		if e := c.SetSendDeadline(time.Time{}); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
 	}()
 	err = c.SendPkg(data, option...)
 	return

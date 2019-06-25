@@ -1,53 +1,24 @@
 package main
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/gogf/gf/g/container/garray"
-	"github.com/gogf/gf/g/os/gmlock"
-	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
 )
 
+type Order struct{}
+
+func (order *Order) Get(r *ghttp.Request) {
+	r.Response.Write("GET")
+}
+
 func main() {
-	mu := gmlock.NewMutex()
-	array := garray.New()
-	go func() {
-		mu.LockFunc(func() {
-			array.Append(1)
-			time.Sleep(100 * time.Millisecond)
-			fmt.Println("====unlock")
-		})
-	}()
-	go func() {
-		time.Sleep(50 * time.Millisecond)
-		fmt.Println("tryRLock1")
-		mu.TryRLockFunc(func() {
-			array.Append(1)
-			fmt.Println("tryRLock1 success")
-		})
-	}()
-	go func() {
-		time.Sleep(150 * time.Millisecond)
-		fmt.Println("tryRLock2")
-		mu.TryRLockFunc(func() {
-			array.Append(1)
-			fmt.Println("tryRLock2 success")
-		})
-	}()
-	go func() {
-		time.Sleep(150 * time.Millisecond)
-		fmt.Println("tryRLock3")
-		mu.TryRLockFunc(func() {
-			array.Append(1)
-			fmt.Println("tryRLock3 success")
-		})
-	}()
-	time.Sleep(50 * time.Millisecond)
-	gtest.Assert(array.Len(), 1)
-	time.Sleep(50 * time.Millisecond)
-	gtest.Assert(array.Len(), 1)
-	time.Sleep(150 * time.Millisecond)
-	fmt.Println("====array len:", array.Len())
-	gtest.Assert(array.Len(), 3)
+	s := g.Server()
+	s.BindHookHandlerByMap("/api.v1/*any", map[string]ghttp.HandlerFunc{
+		"BeforeServe": func(r *ghttp.Request) {
+			r.Response.CORSDefault()
+		},
+	})
+	s.BindObjectRest("/api.v1/{.struct}", new(Order))
+	s.SetPort(8199)
+	s.Run()
 }

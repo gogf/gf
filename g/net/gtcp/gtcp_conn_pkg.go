@@ -8,9 +8,10 @@ package gtcp
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
+
+	"github.com/gogf/gf/g/internal/errors"
 )
 
 const (
@@ -73,9 +74,7 @@ func (c *Conn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...
 		return err
 	}
 	defer func() {
-		if e := c.SetSendDeadline(time.Time{}); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
 	}()
 	err = c.SendPkg(data, option...)
 	return
@@ -148,9 +147,7 @@ func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (d
 		return nil, err
 	}
 	defer func() {
-		if e := c.SetRecvDeadline(time.Time{}); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
 	}()
 	data, err = c.RecvPkg(option...)
 	return

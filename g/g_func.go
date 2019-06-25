@@ -39,7 +39,7 @@ func Throw(exception interface{}) {
 	gutil.Throw(exception)
 }
 
-// TryCatch does the try...catch... logic.
+// TryCatch does the try...catch... mechanism.
 func TryCatch(try func(), catch ...func(exception interface{})) {
 	gutil.TryCatch(try, catch...)
 }
