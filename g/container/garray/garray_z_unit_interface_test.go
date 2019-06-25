@@ -159,6 +159,7 @@ func TestArray_Merge(t *testing.T) {
 		}
 
 		a1 := garray.NewArrayFrom(n1)
+		a11 := garray.NewSortedArrayFrom(n1,func1)
 		b1 := garray.NewStringArrayFrom(s1)
 		b2:=garray.NewIntArrayFrom(n3)
 		b3:=garray.NewArrayFrom(in1)
@@ -174,6 +175,8 @@ func TestArray_Merge(t *testing.T) {
 		gtest.Assert(a1.Merge(b4).Len(),21)
 		gtest.Assert(a1.Merge(b5).Len(),23)
 		gtest.Assert(a1.Merge(b6).Len(),27)
+
+		gtest.Assert(a11.Merge(b6).Len(),8)
 	})
 }
 
@@ -566,6 +569,7 @@ func TestSortedArray_Range(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
+		array2 := garray.NewSortedArrayFrom(a1, func1,true)
 		i1 := array1.Range(2, 5)
 		gtest.Assert(i1, []interface{}{"c", "d", "e"})
 		gtest.Assert(array1.Len(), 6)
@@ -576,6 +580,10 @@ func TestSortedArray_Range(t *testing.T) {
 		gtest.Assert(i2, []interface{}{"a", "b"})
 
 		i2 = array1.Range(4, 10)
+		gtest.Assert(len(i2), 2)
+		gtest.Assert(i2, []interface{}{"e", "f"})
+
+		i2 = array2.Range(4, 10)
 		gtest.Assert(len(i2), 2)
 		gtest.Assert(i2, []interface{}{"e", "f"})
 
@@ -657,6 +665,7 @@ func TestSortedArray_SubSlice(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
+		array2 := garray.NewSortedArrayFrom(a1, func1,true)
 		i1 := array1.SubSlice(2, 3)
 		gtest.Assert(len(i1), 3)
 		gtest.Assert(i1, []interface{}{"c", "d", "e"})
@@ -667,6 +676,15 @@ func TestSortedArray_SubSlice(t *testing.T) {
 
 		i1 = array1.SubSlice(7, 2)
 		gtest.Assert(len(i1), 0)
+
+		i1 = array2.SubSlice(-2, 2)
+		gtest.Assert(len(i1), 2)
+
+		i1 = array2.SubSlice(-8, 1)
+		gtest.Assert(i1, nil)
+
+		i1 = array2.SubSlice(1, -9)
+		gtest.Assert(i1, nil)
 
 	})
 }
