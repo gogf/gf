@@ -22,10 +22,13 @@ addons:
 
 before_install:
 - pwd
-- /bin/bash vet.sh
 
 install:
 - cat /etc/hosts
+
+before_script:
+- find . -name "*.go" | xargs gofmt -w
+- git diff --exit-code
 
 script:
 - cd g
