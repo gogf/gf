@@ -163,6 +163,13 @@ func TestStringArray_SubSlice(t *testing.T) {
 		gtest.Assert(array1.SubSlice(2, 2), []string{"2", "3"})
 		gtest.Assert(array1.SubSlice(5, 8), []string{"5", "6"})
 		gtest.Assert(array1.SubSlice(8, 1), nil)
+
+		array3 := garray.NewStringArrayFrom(a1,true)
+		gtest.Assert(array3.SubSlice(2, 2), []string{"2", "3"})
+		gtest.Assert(array3.SubSlice(-1, 2), []string{"6"})
+		gtest.Assert(array3.SubSlice(-9, 2), nil)
+		gtest.Assert(array3.SubSlice(4, -2), []string{"2","3"})
+		gtest.Assert(array3.SubSlice(1, -3), nil)
 	})
 }
 

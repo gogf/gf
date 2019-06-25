@@ -11,7 +11,10 @@ package garray_test
 import (
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/util/gconv"
+	"strings"
 	"testing"
+	"time"
 )
 
 func Test_IntArray_Basic(t *testing.T) {
@@ -189,6 +192,7 @@ func TestIntArray_SubSlice(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewIntArrayFrom(a1)
+		array2 := garray.NewIntArrayFrom(a1,true)
 		gtest.Assert(array1.SubSlice(6), []int{6})
 		gtest.Assert(array1.SubSlice(5), []int{5, 6})
 		gtest.Assert(array1.SubSlice(8), nil)
@@ -204,6 +208,7 @@ func TestIntArray_SubSlice(t *testing.T) {
 		gtest.Assert(array1.SubSlice(-9, 3), nil)
 		gtest.Assert(array1.SubSlice(1, -1), []int{0})
 		gtest.Assert(array1.SubSlice(1, -3), nil)
+		gtest.Assert(array2.SubSlice(1, 2), []int{1, 2})
 	})
 }
 
@@ -439,10 +444,8 @@ func TestSortedIntArray_Range(t *testing.T) {
 		nsl := array1.Range(5, 8)
 		gtest.Assert(len(nsl), 1)
 
-		ns4 := array2.Range(2, 2)
-		t.Log(array2)
-		gtest.Assert(len(ns4), 2)
-
+		ns4 := array2.Range(2, 5)
+		gtest.Assert(len(ns4), 3)
 	})
 }
 
@@ -516,6 +519,14 @@ func TestSortedIntArray_SubSlice(t *testing.T) {
 		ns4 := array1.SubSlice(3, 1)
 		gtest.Assert(len(ns4), 1)
 		gtest.Assert(ns4, []int{4})
+
+		array3 := garray.NewSortedIntArrayFrom(a1,true)
+		gtest.Assert(array3.SubSlice(2, 2), []int{3, 4})
+		gtest.Assert(array3.SubSlice(-1, 2), []int{5})
+		gtest.Assert(array3.SubSlice(-9, 2), nil)
+		gtest.Assert(array3.SubSlice(4, -2), []int{3,4})
+		gtest.Assert(array3.SubSlice(1, -3), nil)
+
 	})
 }
 
