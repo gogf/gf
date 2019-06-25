@@ -17,12 +17,12 @@ type IntStrMap struct {
 }
 
 // NewIntStrMap returns an empty IntStrMap object.
-// The param <unsafe> used to specify whether using map in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewIntStrMap(unsafe ...bool) *IntStrMap {
 	return &IntStrMap{
-		mu   : rwmutex.New(unsafe...),
-		data :  make(map[int]string),
+		mu:   rwmutex.New(unsafe...),
+		data: make(map[int]string),
 	}
 }
 
@@ -31,8 +31,8 @@ func NewIntStrMap(unsafe ...bool) *IntStrMap {
 // there might be some concurrent-safe issues when changing the map outside.
 func NewIntStrMapFrom(data map[int]string, unsafe ...bool) *IntStrMap {
 	return &IntStrMap{
-		mu   : rwmutex.New(unsafe...),
-		data : data,
+		mu:   rwmutex.New(unsafe...),
+		data: data,
 	}
 }
 
@@ -213,7 +213,7 @@ func (m *IntStrMap) Remove(key int) string {
 // Keys returns all keys of the map as a slice.
 func (m *IntStrMap) Keys() []int {
 	m.mu.RLock()
-	keys  := make([]int, len(m.data))
+	keys := make([]int, len(m.data))
 	index := 0
 	for key := range m.data {
 		keys[index] = key
@@ -227,7 +227,7 @@ func (m *IntStrMap) Keys() []int {
 func (m *IntStrMap) Values() []string {
 	m.mu.RLock()
 	values := make([]string, len(m.data))
-	index  := 0
+	index := 0
 	for _, value := range m.data {
 		values[index] = value
 		index++

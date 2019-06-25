@@ -12,13 +12,14 @@ const (
 	// Default group name for instance usage.
 	DEFAULT_INSTANCE_NAME = "default"
 )
+
 var (
 	// Instances map.
 	instances = gmap.NewStrAnyMap()
 )
 
 // Instance returns an instance of View with default settings.
-// The param <name> is the name for the instance.
+// The parameter <name> is the name for the instance.
 func Instance(name ...string) *View {
 	key := DEFAULT_INSTANCE_NAME
 	if len(name) > 0 {

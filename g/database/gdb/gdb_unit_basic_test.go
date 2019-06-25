@@ -7,22 +7,23 @@
 package gdb_test
 
 import (
-    "github.com/gogf/gf/g/database/gdb"
-    "github.com/gogf/gf/g/test/gtest"
-    "testing"
+	"testing"
+
+	"github.com/gogf/gf/g/database/gdb"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func Test_Instance(t *testing.T) {
-    gtest.Case(t, func() {
-        _, err := gdb.Instance("none")
-        gtest.AssertNE(err, nil)
+	gtest.Case(t, func() {
+		_, err := gdb.Instance("none")
+		gtest.AssertNE(err, nil)
 
-        db, err := gdb.Instance()
-        gtest.Assert(err, nil)
+		db, err := gdb.Instance()
+		gtest.Assert(err, nil)
 
-        err1 := db.PingMaster()
-        err2 := db.PingSlave()
-        gtest.Assert(err1, nil)
-        gtest.Assert(err2, nil)
-    })
+		err1 := db.PingMaster()
+		err2 := db.PingSlave()
+		gtest.Assert(err1, nil)
+		gtest.Assert(err2, nil)
+	})
 }

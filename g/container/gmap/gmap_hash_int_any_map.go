@@ -10,7 +10,7 @@ package gmap
 import (
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/internal/rwmutex"
-    "github.com/gogf/gf/g/util/gconv"
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 type IntAnyMap struct {
@@ -19,40 +19,40 @@ type IntAnyMap struct {
 }
 
 // NewIntAnyMap returns an empty IntAnyMap object.
-// The param <unsafe> used to specify whether using map in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
-func NewIntAnyMap(unsafe...bool) *IntAnyMap {
+func NewIntAnyMap(unsafe ...bool) *IntAnyMap {
 	return &IntAnyMap{
-        mu   : rwmutex.New(unsafe...),
-		data : make(map[int]interface{}),
-    }
+		mu:   rwmutex.New(unsafe...),
+		data: make(map[int]interface{}),
+	}
 }
 
 // NewIntAnyMapFrom returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewIntAnyMapFrom(data map[int]interface{}, unsafe...bool) *IntAnyMap {
-    return &IntAnyMap{
-        mu   : rwmutex.New(unsafe...),
-	    data : data,
-    }
+func NewIntAnyMapFrom(data map[int]interface{}, unsafe ...bool) *IntAnyMap {
+	return &IntAnyMap{
+		mu:   rwmutex.New(unsafe...),
+		data: data,
+	}
 }
 
 // Iterator iterates the hash map with custom callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
-func (m *IntAnyMap) Iterator(f func (k int, v interface{}) bool) {
-    m.mu.RLock()
-    defer m.mu.RUnlock()
-    for k, v := range m.data {
-        if !f(k, v) {
-            break
-        }
-    }
+func (m *IntAnyMap) Iterator(f func(k int, v interface{}) bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for k, v := range m.data {
+		if !f(k, v) {
+			break
+		}
+	}
 }
 
 // Clone returns a new hash map with copy of current map data.
 func (m *IntAnyMap) Clone() *IntAnyMap {
-    return NewIntAnyMapFrom(m.Map(), !m.mu.IsSafe())
+	return NewIntAnyMapFrom(m.Map(), !m.mu.IsSafe())
 }
 
 // Map returns a copy of the data of the hash map.
@@ -62,7 +62,7 @@ func (m *IntAnyMap) Map() map[int]interface{} {
 	for k, v := range m.data {
 		data[k] = v
 	}
-    m.mu.RUnlock()
+	m.mu.RUnlock()
 	return data
 }
 
@@ -92,13 +92,12 @@ func (m *IntAnyMap) Search(key int) (value interface{}, found bool) {
 }
 
 // Get returns the value by given <key>.
-func (m *IntAnyMap) Get(key int) (interface{}) {
+func (m *IntAnyMap) Get(key int) interface{} {
 	m.mu.RLock()
 	val, _ := m.data[key]
 	m.mu.RUnlock()
 	return val
 }
-
 
 // doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
 // if not exists, set value to the map with given <key>,
@@ -110,38 +109,38 @@ func (m *IntAnyMap) Get(key int) (interface{}) {
 //
 // It returns value with given <key>.
 func (m *IntAnyMap) doSetWithLockCheck(key int, value interface{}) interface{} {
-    m.mu.Lock()
-    defer m.mu.Unlock()
-    if v, ok := m.data[key]; ok {
-        return v
-    }
-    if f, ok := value.(func() interface {}); ok {
-        value = f()
-    }
-    if value != nil {
-        m.data[key] = value
-    }
-    return value
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if v, ok := m.data[key]; ok {
+		return v
+	}
+	if f, ok := value.(func() interface{}); ok {
+		value = f()
+	}
+	if value != nil {
+		m.data[key] = value
+	}
+	return value
 }
 
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *IntAnyMap) GetOrSet(key int, value interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
-        return m.doSetWithLockCheck(key, value)
-    } else {
-        return v
-    }
+		return m.doSetWithLockCheck(key, value)
+	} else {
+		return v
+	}
 }
 
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist and returns this value.
 func (m *IntAnyMap) GetOrSetFunc(key int, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
-        return m.doSetWithLockCheck(key, f())
-    } else {
-        return v
-    }
+		return m.doSetWithLockCheck(key, f())
+	} else {
+		return v
+	}
 }
 
 // GetOrSetFuncLock returns the value by key,
@@ -151,10 +150,10 @@ func (m *IntAnyMap) GetOrSetFunc(key int, f func() interface{}) interface{} {
 // with mutex.Lock of the hash map.
 func (m *IntAnyMap) GetOrSetFuncLock(key int, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
-        return m.doSetWithLockCheck(key, f)
-    } else {
-        return v
-    }
+		return m.doSetWithLockCheck(key, f)
+	} else {
+		return v
+	}
 }
 
 // GetVar returns a gvar.Var with the value by given <key>.
@@ -184,11 +183,11 @@ func (m *IntAnyMap) GetVarOrSetFuncLock(key int, f func() interface{}) *gvar.Var
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *IntAnyMap) SetIfNotExist(key int, value interface{}) bool {
-    if !m.Contains(key) {
-        m.doSetWithLockCheck(key, value)
-        return true
-    }
-    return false
+	if !m.Contains(key) {
+		m.doSetWithLockCheck(key, value)
+		return true
+	}
+	return false
 }
 
 // SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
@@ -214,121 +213,120 @@ func (m *IntAnyMap) SetIfNotExistFuncLock(key int, f func() interface{}) bool {
 	return false
 }
 
-
 // Removes batch deletes values of the map by keys.
 func (m *IntAnyMap) Removes(keys []int) {
-    m.mu.Lock()
-    for _, key := range keys {
-        delete(m.data, key)
-    }
-    m.mu.Unlock()
+	m.mu.Lock()
+	for _, key := range keys {
+		delete(m.data, key)
+	}
+	m.mu.Unlock()
 }
 
 // Remove deletes value from map by given <key>, and return this deleted value.
 func (m *IntAnyMap) Remove(key int) interface{} {
-    m.mu.Lock()
-    val, exists := m.data[key]
-    if exists {
-        delete(m.data, key)
-    }
-    m.mu.Unlock()
-    return val
+	m.mu.Lock()
+	val, exists := m.data[key]
+	if exists {
+		delete(m.data, key)
+	}
+	m.mu.Unlock()
+	return val
 }
 
 // Keys returns all keys of the map as a slice.
 func (m *IntAnyMap) Keys() []int {
-    m.mu.RLock()
-    keys  := make([]int, len(m.data))
-    index := 0
-    for key := range m.data {
-        keys[index] = key
-        index++
-    }
-    m.mu.RUnlock()
-    return keys
+	m.mu.RLock()
+	keys := make([]int, len(m.data))
+	index := 0
+	for key := range m.data {
+		keys[index] = key
+		index++
+	}
+	m.mu.RUnlock()
+	return keys
 }
 
 // Values returns all values of the map as a slice.
 func (m *IntAnyMap) Values() []interface{} {
-    m.mu.RLock()
-    values := make([]interface{}, len(m.data))
-    index  := 0
-    for _, value := range m.data {
-        values[index] = value
-        index++
-    }
-    m.mu.RUnlock()
-    return values
+	m.mu.RLock()
+	values := make([]interface{}, len(m.data))
+	index := 0
+	for _, value := range m.data {
+		values[index] = value
+		index++
+	}
+	m.mu.RUnlock()
+	return values
 }
 
 // Contains checks whether a key exists.
 // It returns true if the <key> exists, or else false.
 func (m *IntAnyMap) Contains(key int) bool {
-    m.mu.RLock()
-    _, exists := m.data[key]
-    m.mu.RUnlock()
-    return exists
+	m.mu.RLock()
+	_, exists := m.data[key]
+	m.mu.RUnlock()
+	return exists
 }
 
 // Size returns the size of the map.
 func (m *IntAnyMap) Size() int {
-    m.mu.RLock()
-    length := len(m.data)
-    m.mu.RUnlock()
-    return length
+	m.mu.RLock()
+	length := len(m.data)
+	m.mu.RUnlock()
+	return length
 }
 
 // IsEmpty checks whether the map is empty.
 // It returns true if map is empty, or else false.
 func (m *IntAnyMap) IsEmpty() bool {
-    m.mu.RLock()
-    empty := len(m.data) == 0
-    m.mu.RUnlock()
-    return empty
+	m.mu.RLock()
+	empty := len(m.data) == 0
+	m.mu.RUnlock()
+	return empty
 }
 
 // Clear deletes all data of the map, it will remake a new underlying data map.
 func (m *IntAnyMap) Clear() {
-    m.mu.Lock()
-    m.data = make(map[int]interface{})
-    m.mu.Unlock()
+	m.mu.Lock()
+	m.data = make(map[int]interface{})
+	m.mu.Unlock()
 }
 
 // LockFunc locks writing with given callback function <f> within RWMutex.Lock.
 func (m *IntAnyMap) LockFunc(f func(m map[int]interface{})) {
-    m.mu.Lock()
-    defer m.mu.Unlock()
-    f(m.data)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	f(m.data)
 }
 
 // RLockFunc locks reading with given callback function <f> within RWMutex.RLock.
 func (m *IntAnyMap) RLockFunc(f func(m map[int]interface{})) {
-    m.mu.RLock()
-    defer m.mu.RUnlock()
-    f(m.data)
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	f(m.data)
 }
 
 // Flip exchanges key-value of the map to value-key.
 func (m *IntAnyMap) Flip() {
-    m.mu.Lock()
-    defer m.mu.Unlock()
-    n := make(map[int]interface{}, len(m.data))
-    for k, v := range m.data {
-        n[gconv.Int(v)] = k
-    }
-    m.data = n
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	n := make(map[int]interface{}, len(m.data))
+	for k, v := range m.data {
+		n[gconv.Int(v)] = k
+	}
+	m.data = n
 }
 
 // Merge merges two hash maps.
 // The <other> map will be merged into the map <m>.
 func (m *IntAnyMap) Merge(other *IntAnyMap) {
-    m.mu.Lock()
-    defer m.mu.Unlock()
-    if other != m {
-	    other.mu.RLock()
-        defer other.mu.RUnlock()
-    }
-    for k, v := range other.data {
-        m.data[k] = v
-    }
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if other != m {
+		other.mu.RLock()
+		defer other.mu.RUnlock()
+	}
+	for k, v := range other.data {
+		m.data[k] = v
+	}
 }

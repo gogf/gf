@@ -8,41 +8,44 @@
 package gmd5
 
 import (
-    "crypto/md5"
-    "fmt"
-    "os"
-    "io"
-    "github.com/gogf/gf/g/util/gconv"
+	"crypto/md5"
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/gogf/gf/g/internal/errors"
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 // Encrypt encrypts any type of variable using MD5 algorithms.
 // It uses gconv package to convert <v> to its bytes type.
-func Encrypt(v interface{}) string {
-    h := md5.New()
-    h.Write([]byte(gconv.Bytes(v)))
-    return fmt.Sprintf("%x", h.Sum(nil))
-}
-
-
-// Deprecated.
-func EncryptString(v string) string {
+func Encrypt(v interface{}) (encrypt string, err error) {
 	h := md5.New()
-	h.Write([]byte(v))
-	return fmt.Sprintf("%x", h.Sum(nil))
+	if _, err = h.Write([]byte(gconv.Bytes(v))); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
+// EncryptString is alias of Encrypt.
+// Deprecated.
+func EncryptString(v string) (encrypt string, err error) {
+	return Encrypt(v)
+}
 
 // EncryptFile encrypts file content of <path> using MD5 algorithms.
-func EncryptFile(path string) string {
-    f, e := os.Open(path)
-    if e != nil {
-        return ""
-    }
-    defer f.Close()
-    h   := md5.New()
-    _, e = io.Copy(h, f)
-    if e != nil {
-        return ""
-    }
-    return fmt.Sprintf("%x", h.Sum(nil))
+func EncryptFile(path string) (encrypt string, err error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		err = errors.Wrap(f.Close(), "file closing error")
+	}()
+	h := md5.New()
+	_, err = io.Copy(h, f)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }

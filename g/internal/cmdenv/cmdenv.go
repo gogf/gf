@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package cmdenv provides access to certain variable for both command options and environment.
 package cmdenv
 
 import (
@@ -19,6 +20,11 @@ var (
 )
 
 func init() {
+	doInit()
+}
+
+// doInit does the initialization for this package.
+func doInit() {
 	reg := regexp.MustCompile(`\-\-{0,1}(.+?)=(.+)`)
 	for i := 0; i < len(os.Args); i++ {
 		result := reg.FindStringSubmatch(os.Args[i])
@@ -28,22 +34,25 @@ func init() {
 	}
 }
 
-// 获取指定名称的命令行参数，当不存在时获取环境变量参数，皆不存在时，返回给定的默认值。
-// 规则:
-// 1、命令行参数以小写字母格式，使用: gf.包名.变量名 传递；
-// 2、环境变量参数以大写字母格式，使用: GF_包名_变量名 传递；
-func Get(key string, def...interface{}) *gvar.Var {
-    value := interface{}(nil)
-    if len(def) > 0 {
-        value = def[0]
-    }
-    if v, ok := cmdOptions[key]; ok {
-        value = v
-    } else {
-        key = strings.ToUpper(strings.Replace(key, ".", "_", -1))
-        if v := os.Getenv(key); v != "" {
-            value = v
-        }
-    }
-    return gvar.New(value, true)
+// Get returns the command line argument of the specified <key>.
+// If the argument does not exist, then it returns the environment variable with specified <key>.
+// It returns the default value <def> if none of them exists.
+//
+// Fetching Rules:
+// 1. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
+// 2. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
+func Get(key string, def ...interface{}) *gvar.Var {
+	value := interface{}(nil)
+	if len(def) > 0 {
+		value = def[0]
+	}
+	if v, ok := cmdOptions[key]; ok {
+		value = v
+	} else {
+		key = strings.ToUpper(strings.Replace(key, ".", "_", -1))
+		if v := os.Getenv(key); v != "" {
+			value = v
+		}
+	}
+	return gvar.New(value, true)
 }

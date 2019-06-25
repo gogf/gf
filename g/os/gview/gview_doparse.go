@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/g/container/gmap"
+	"github.com/gogf/gf/g/encoding/ghash"
 	"github.com/gogf/gf/g/os/gfcache"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfsnotify"
@@ -18,6 +19,7 @@ import (
 	"github.com/gogf/gf/g/os/gmlock"
 	"github.com/gogf/gf/g/os/gspath"
 	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/util/gconv"
 	"text/template"
 )
 
@@ -28,6 +30,7 @@ const (
 
 var (
 	// Templates cache map for template folder.
+	// TODO Note that there's no expiring logic for this map.
 	templates = gmap.NewStrAnyMap()
 )
 
@@ -36,8 +39,8 @@ var (
 // with the same given <path>. It will also refresh the template cache
 // if the template files under <path> changes (recursively).
 func (view *View) getTemplate(path string, pattern string) (tpl *template.Template, err error) {
-	r := templates.GetOrSetFuncLock(path, func() interface {} {
-		files     := ([]string)(nil)
+	r := templates.GetOrSetFuncLock(path, func() interface{} {
+		files := ([]string)(nil)
 		files, err = gfile.ScanDir(path, pattern, true)
 		if err != nil {
 			return nil
@@ -66,7 +69,7 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 				folder = v
 				break
 			}
-			if path, _ = gspath.Search(v + gfile.Separator + "template", file); path != "" {
+			if path, _ = gspath.Search(v+gfile.Separator+"template", file); path != "" {
 				folder = v + gfile.Separator + "template"
 				break
 			}
@@ -79,16 +82,18 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 			view.paths.RLockFunc(func(array []string) {
 				index := 1
 				for _, v := range array {
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index,  v))
+					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
 					index++
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index,  v + gfile.Separator + "template"))
+					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"template"))
 					index++
 				}
 			})
 		} else {
 			buffer.WriteString(fmt.Sprintf("[gview] cannot find template file \"%s\" with no path set/add", file))
 		}
-		glog.Error(buffer.String())
+		if errorPrint() {
+			glog.Error(buffer.String())
+		}
 		err = errors.New(fmt.Sprintf(`template file "%s" not found`, file))
 	}
 	return
@@ -97,7 +102,7 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 // ParseContent parses given template file <file>
 // with given template parameters <params> and function map <funcMap>
 // and returns the parsed string content.
-func (view *View) Parse(file string, params...Params) (parsed string, err error) {
+func (view *View) Parse(file string, params ...Params) (parsed string, err error) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
 	path, folder, err := view.searchFile(file)
@@ -109,7 +114,7 @@ func (view *View) Parse(file string, params...Params) (parsed string, err error)
 		return "", err
 	}
 	// Using memory lock to ensure concurrent safety for template parsing.
-	gmlock.LockFunc("gview-parsing:" + folder, func() {
+	gmlock.LockFunc("gview-parsing:"+folder, func() {
 		tpl, err = tpl.Parse(gfcache.GetContents(path))
 	})
 	if err != nil {
@@ -152,15 +157,16 @@ func (view *View) Parse(file string, params...Params) (parsed string, err error)
 // ParseContent parses given template content <content>
 // with given template parameters <params> and function map <funcMap>
 // and returns the parsed content in []byte.
-func (view *View) ParseContent(content string, params...Params) (string, error) {
+func (view *View) ParseContent(content string, params ...Params) (string, error) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
 	err := (error)(nil)
-	tpl := templates.GetOrSetFuncLock(gCONTENT_TEMPLATE_NAME, func() interface {} {
+	tpl := templates.GetOrSetFuncLock(gCONTENT_TEMPLATE_NAME, func() interface{} {
 		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 	}).(*template.Template)
 	// Using memory lock to ensure concurrent safety for content parsing.
-	gmlock.LockFunc("gview-parsing:content", func() {
+	hash := gconv.String(ghash.DJBHash64([]byte(content)))
+	gmlock.LockFunc("gview-parsing-content:"+hash, func() {
 		tpl, err = tpl.Parse(content)
 	})
 	if err != nil {

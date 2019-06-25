@@ -6,15 +6,14 @@
 
 package garray
 
-
 type apiSliceInterface interface {
-    Slice() []interface{}
+	Slice() []interface{}
 }
 
 type apiSliceInt interface {
-    Slice() []int
+	Slice() []int
 }
 
 type apiSliceString interface {
-    Slice() []string
+	Slice() []string
 }

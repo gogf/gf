@@ -19,12 +19,12 @@ type StrAnyMap struct {
 }
 
 // NewStrAnyMap returns an empty StrAnyMap object.
-// The param <unsafe> used to specify whether using map in un-concurrent-safety,
+// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
 // which is false in default, means concurrent-safe.
 func NewStrAnyMap(unsafe ...bool) *StrAnyMap {
 	return &StrAnyMap{
-		mu   : rwmutex.New(unsafe...),
-		data : make(map[string]interface{}),
+		mu:   rwmutex.New(unsafe...),
+		data: make(map[string]interface{}),
 	}
 }
 
@@ -33,8 +33,8 @@ func NewStrAnyMap(unsafe ...bool) *StrAnyMap {
 // there might be some concurrent-safe issues when changing the map outside.
 func NewStrAnyMapFrom(data map[string]interface{}, unsafe ...bool) *StrAnyMap {
 	return &StrAnyMap{
-		mu   : rwmutex.New(unsafe...),
-		data : data,
+		mu:   rwmutex.New(unsafe...),
+		data: data,
 	}
 }
 
@@ -238,7 +238,7 @@ func (m *StrAnyMap) Remove(key string) interface{} {
 // Keys returns all keys of the map as a slice.
 func (m *StrAnyMap) Keys() []string {
 	m.mu.RLock()
-	keys  := make([]string, len(m.data))
+	keys := make([]string, len(m.data))
 	index := 0
 	for key := range m.data {
 		keys[index] = key
@@ -252,7 +252,7 @@ func (m *StrAnyMap) Keys() []string {
 func (m *StrAnyMap) Values() []interface{} {
 	m.mu.RLock()
 	values := make([]interface{}, len(m.data))
-	index  := 0
+	index := 0
 	for _, value := range m.data {
 		values[index] = value
 		index++

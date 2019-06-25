@@ -8,8 +8,8 @@ package g
 
 import "github.com/gogf/gf/g/net/ghttp"
 
-// SetServerGraceful enables/disables graceful/hot reload feature of http Web Server.
+// SetServerGraceful enables/disables graceful reload feature of http Web Server.
 // This feature is disabled in default.
 func SetServerGraceful(enabled bool) {
-    ghttp.SetGraceful(enabled)
+	ghttp.SetGraceful(enabled)
 }

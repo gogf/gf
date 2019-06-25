@@ -4,11 +4,10 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-
 package ghttp
 
 // 控制器接口
 type Controller interface {
-    Init(*Request)
-    Shut()
+	Init(*Request)
+	Shut()
 }

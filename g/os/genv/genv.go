@@ -5,29 +5,33 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package genv provides operations for environment variables of system.
-// 
-// 环境变量管理
 package genv
 
 import "os"
 
+// All returns a copy of strings representing the environment,
+// in the form "key=value".
 func All() []string {
-    return os.Environ()
+	return os.Environ()
 }
 
-// 获取环境变量，并可以指定当环境变量不存在时的默认值
-func Get(k string, def...string) string {
-    v, ok := os.LookupEnv(k)
-    if !ok && len(def) > 0 {
-        return def[0]
-    }
-    return v
+// Get returns the value of the environment variable named by the <key>.
+// It returns given <def> if the variable does not exist in the environment.
+func Get(key string, def ...string) string {
+	v, ok := os.LookupEnv(key)
+	if !ok && len(def) > 0 {
+		return def[0]
+	}
+	return v
 }
 
-func Set(k, v string) error {
-    return os.Setenv(k, v)
+// Set sets the value of the environment variable named by the <key>.
+// It returns an error, if any.
+func Set(key, value string) error {
+	return os.Setenv(key, value)
 }
 
-func Remove(k string) error {
-    return os.Unsetenv(k)
+// Remove deletes a single environment variable.
+func Remove(key string) error {
+	return os.Unsetenv(key)
 }
