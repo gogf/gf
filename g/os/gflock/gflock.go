@@ -41,6 +41,11 @@ func (l *Locker) IsLocked() bool {
 	return l.flock.Locked()
 }
 
+// IsRLocked returns whether the locker is rlocked.
+func (l *Locker) IsRLocked() bool {
+	return l.flock.RLocked()
+}
+
 // TryLock tries get the writing lock of the locker.
 // It returns true if success, or else returns false immediately.
 func (l *Locker) TryLock() bool {
@@ -82,7 +87,7 @@ func (l *Locker) Lock() (err error) {
 // Please note, if your shared lock became an exclusive lock this may
 // unintentionally drop the exclusive lock if called by the consumer that
 // believes they have a shared lock. Please see Lock() for more details.
-func (l *Locker) UnLock() (err error) {
+func (l *Locker) Unlock() (err error) {
 	return l.flock.Unlock()
 }
 
