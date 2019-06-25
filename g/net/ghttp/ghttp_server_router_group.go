@@ -8,10 +8,11 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/g/os/glog"
-	"github.com/gogf/gf/g/util/gconv"
 	"reflect"
 	"strings"
+
+	"github.com/gogf/gf/g/os/glog"
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 // 分组路由对象
@@ -126,10 +127,10 @@ func (g *RouterGroup) bind(bindType string, pattern string, object interface{}, 
 		if err != nil {
 			glog.Fatalf("invalid pattern: %s", pattern)
 		}
-		if bindType == "HANDLER" {
-			pattern = g.server.serveHandlerKey(method, g.prefix+"/"+strings.TrimLeft(path, "/"), domain)
-		} else {
+		if bindType == "REST" {
 			pattern = g.prefix + "/" + strings.TrimLeft(path, "/")
+		} else {
+			pattern = g.server.serveHandlerKey(method, g.prefix+"/"+strings.TrimLeft(path, "/"), domain)
 		}
 	}
 	methods := gconv.Strings(params)
