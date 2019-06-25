@@ -48,10 +48,14 @@ func Test_TryCatch(t *testing.T) {
 }
 
 func Test_IsEmpty(t *testing.T) {
-	gtest.Assert(gutil.IsEmpty(1), false)
+
+	gtest.Case(t, func() {
+		gtest.Assert(gutil.IsEmpty(1), false)
+	})
 }
 
 func Test_Throw(t *testing.T) {
+
 	gtest.Case(t, func() {
 		defer func() {
 			gtest.Assert(recover(), "gutil Throw test")
