@@ -10,7 +10,7 @@ import (
 	"github.com/gogf/gf/g/os/glog"
 )
 
-// SetDebug disables/enables debug level for logging globally.
+// SetDebug disables/enables debug level for logging component globally.
 func SetDebug(debug bool) {
 	glog.SetDebug(debug)
 }

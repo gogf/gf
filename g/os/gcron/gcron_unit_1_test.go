@@ -7,11 +7,12 @@
 package gcron_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g/container/garray"
 	"github.com/gogf/gf/g/os/gcron"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
-	"time"
 )
 
 func TestCron_Add_Close(t *testing.T) {
@@ -146,7 +147,7 @@ func TestCron_AddOnce2(t *testing.T) {
 			array.Append(1)
 		})
 		gtest.Assert(cron.Size(), 1)
-		time.Sleep(2500 * time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
 		gtest.Assert(cron.Size(), 0)
 	})

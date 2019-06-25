@@ -8,12 +8,13 @@
 package gjson
 
 import (
-	"github.com/gogf/gf/g/internal/rwmutex"
-	"github.com/gogf/gf/g/text/gstr"
-	"github.com/gogf/gf/g/util/gconv"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/g/internal/rwmutex"
+	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 const (
@@ -26,8 +27,14 @@ type Json struct {
 	mu *rwmutex.RWMutex
 	p  *interface{} // Pointer for hierarchical data access, it's the root of data in default.
 	c  byte         // Char separator('.' in default).
-	vc bool         // Violence Check(false in default), which is used to access data
+	// Violence Check(false in default), which is used to access data
 	// when the hierarchical data key contains separator char.
+	vc bool
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (j *Json) MarshalJSON() ([]byte, error) {
+	return j.ToJson()
 }
 
 // Set <value> by <pattern>.

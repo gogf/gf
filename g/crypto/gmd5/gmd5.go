@@ -11,10 +11,10 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/g/internal/errors"
+	"github.com/gogf/gf/g/util/gconv"
 	"io"
 	"os"
-
-	"github.com/gogf/gf/g/util/gconv"
 )
 
 // Encrypt encrypts any type of variable using MD5 algorithms.
@@ -40,9 +40,7 @@ func EncryptFile(path string) (encrypt string, err error) {
 		return "", err
 	}
 	defer func() {
-		if e := f.Close(); e != nil {
-			err = errors.New(err.Error() + "; " + e.Error())
-		}
+		err = errors.Wrap(f.Close(), "file closing error")
 	}()
 	h := md5.New()
 	_, err = io.Copy(h, f)

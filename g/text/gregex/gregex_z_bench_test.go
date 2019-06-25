@@ -9,9 +9,10 @@
 package gregex_test
 
 import (
-	"github.com/gogf/gf/g/text/gregex"
 	"regexp"
 	"testing"
+
+	"github.com/gogf/gf/g/text/gregex"
 )
 
 var pattern = `(\w+).+\-\-\s*(.+)`
