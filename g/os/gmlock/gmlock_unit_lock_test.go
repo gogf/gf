@@ -98,62 +98,7 @@ func Test_Locker_TryLock(t *testing.T) {
 		time.Sleep(300 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
-}
 
-func Test_Locker_LockFunc(t *testing.T) {
-	//no expire
-	gtest.Case(t, func() {
-		key := "testLockFunc"
-		array := garray.New()
-		go func() {
-			gmlock.LockFunc(key, func() {
-				array.Append(1)
-				time.Sleep(50 * time.Millisecond)
-			}) //
-		}()
-		go func() {
-			time.Sleep(10 * time.Millisecond)
-			gmlock.LockFunc(key, func() {
-				array.Append(1)
-			})
-		}()
-		time.Sleep(10 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
-		time.Sleep(20 * time.Millisecond)
-		gtest.Assert(array.Len(), 1) //
-		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
-	})
-}
-
-func Test_Locker_TryLockFunc(t *testing.T) {
-	//no expire
-	gtest.Case(t, func() {
-		key := "testTryLockFunc"
-		array := garray.New()
-		go func() {
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-				time.Sleep(50 * time.Millisecond)
-			})
-		}()
-		go func() {
-			time.Sleep(10 * time.Millisecond)
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-			})
-		}()
-		go func() {
-			time.Sleep(70 * time.Millisecond)
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-			})
-		}()
-		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
-		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
-	})
 }
 
 func Test_Locker_LockFunc(t *testing.T) {
@@ -178,30 +123,6 @@ func Test_Locker_LockFunc(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), 1) //
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
-	})
-
-	//expire
-	gtest.Case(t, func() {
-		key := "testLockFuncExpire"
-		array := garray.New()
-		go func() {
-			gmlock.LockFunc(key, func() {
-				array.Append(1)
-				time.Sleep(200 * time.Millisecond)
-			}, 100*time.Millisecond) //
-		}()
-		go func() {
-			time.Sleep(50 * time.Millisecond)
-			gmlock.LockFunc(key, func() {
-				array.Append(1)
-			})
-		}()
-		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
-		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 2) //
-		time.Sleep(350 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
 }
@@ -231,60 +152,6 @@ func Test_Locker_TryLockFunc(t *testing.T) {
 		time.Sleep(150 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
 		time.Sleep(400 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
-	})
-	//expire1
-	gtest.Case(t, func() {
-		key := "testTryLockFuncExpire1"
-		array := garray.New()
-		go func() {
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-			}, 50*time.Millisecond)
-		}()
-		go func() {
-			time.Sleep(10 * time.Millisecond)
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-			})
-		}()
-		go func() {
-			time.Sleep(70 * time.Millisecond)
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-			})
-		}()
-		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
-		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
-	})
-
-	//expire2
-	gtest.Case(t, func() {
-		key := "testTryLockFuncExpire2"
-		array := garray.New()
-		go func() {
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-				time.Sleep(100 * time.Millisecond)
-			}, 50*time.Millisecond) //unlock after expire, before func finish.
-		}()
-		go func() {
-			time.Sleep(10 * time.Millisecond)
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-			})
-		}()
-		go func() {
-			time.Sleep(70 * time.Millisecond)
-			gmlock.TryLockFunc(key, func() {
-				array.Append(1)
-			})
-		}()
-		time.Sleep(10 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
-		time.Sleep(70 * time.Millisecond)
 		gtest.Assert(array.Len(), 2)
 	})
 }
