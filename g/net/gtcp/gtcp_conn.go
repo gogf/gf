@@ -10,7 +10,6 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
-	"errors"
 	"io"
 	"net"
 	"time"
