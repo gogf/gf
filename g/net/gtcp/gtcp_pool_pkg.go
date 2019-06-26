@@ -7,7 +7,6 @@
 package gtcp
 
 import (
-	"errors"
 	"time"
 
 	"github.com/gogf/gf/g/internal/errors"
