@@ -9,8 +9,9 @@ package ghttp
 
 import (
 	"container/list"
-	"github.com/gogf/gf/g/text/gregex"
 	"strings"
+
+	"github.com/gogf/gf/g/text/gregex"
 )
 
 // 查询请求处理方法.
@@ -117,5 +118,8 @@ func (s *Server) searchServeHandler(method, path, domain string) *handlerParsedI
 
 // 生成回调方法查询的Key
 func (s *Server) serveHandlerKey(method, path, domain string) string {
+	if method == "" {
+		return path + "@" + strings.ToLower(domain)
+	}
 	return strings.ToUpper(method) + ":" + path + "@" + strings.ToLower(domain)
 }
