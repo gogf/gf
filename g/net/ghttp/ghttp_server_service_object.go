@@ -9,17 +9,28 @@ package ghttp
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
-	"reflect"
-	"strings"
 )
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
 // 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写
 func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) {
+	// 当pattern中的method为all时，去掉该method，以便于后续方法判断
+	domain, method, path, err := s.parsePattern(pattern)
+	if err != nil {
+		glog.Error(err)
+		return
+	}
+	if strings.EqualFold(method, gDEFAULT_METHOD) {
+		pattern = s.serveHandlerKey("", path, domain)
+	}
+
 	methodMap := (map[string]bool)(nil)
 	if len(methods) > 0 {
 		methodMap = make(map[string]bool)
