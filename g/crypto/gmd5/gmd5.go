@@ -9,7 +9,6 @@ package gmd5
 
 import (
 	"crypto/md5"
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/g/internal/errors"
 	"github.com/gogf/gf/g/util/gconv"
