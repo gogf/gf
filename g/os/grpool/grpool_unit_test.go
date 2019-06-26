@@ -9,12 +9,13 @@
 package grpool_test
 
 import (
-	"github.com/gogf/gf/g/container/garray"
-	"github.com/gogf/gf/g/os/grpool"
-	"github.com/gogf/gf/g/test/gtest"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/g/container/garray"
+	"github.com/gogf/gf/g/os/grpool"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func Test_Basic(t *testing.T) {
@@ -30,7 +31,10 @@ func Test_Basic(t *testing.T) {
 			})
 		}
 		wg.Wait()
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(array.Len(), size)
+		gtest.Assert(grpool.Jobs(), 0)
+		gtest.Assert(grpool.Size(), 0)
 	})
 }
 
@@ -75,6 +79,7 @@ func Test_Limit3(t *testing.T) {
 		array := garray.NewArray()
 		size := 1000
 		pool := grpool.New(100)
+		gtest.Assert(pool.Cap(), 100)
 		for i := 0; i < size; i++ {
 			pool.Add(func() {
 				array.Append(1)
@@ -90,5 +95,8 @@ func Test_Limit3(t *testing.T) {
 		gtest.Assert(pool.Size(), 0)
 		gtest.Assert(pool.Jobs(), 900)
 		gtest.Assert(array.Len(), 100)
+		gtest.Assert(pool.IsClosed(), true)
+		gtest.AssertNE(pool.Add(func() {}), nil)
+
 	})
 }
