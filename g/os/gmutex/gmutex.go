@@ -8,9 +8,10 @@
 package gmutex
 
 import (
-	"github.com/gogf/gf/g/container/gtype"
 	"math"
 	"runtime"
+
+	"github.com/gogf/gf/g/container/gtype"
 )
 
 // The high level Mutex, which implements more rich features for mutex.
@@ -136,7 +137,6 @@ func (m *Mutex) TryRLock() bool {
 		} else {
 			return false
 		}
-		m.locking.Set(false)
 	}
 }
 
