@@ -737,7 +737,7 @@ func TestArray_LockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.LockFunc(func(n1 []interface{}) { //互斥锁
 			n1[3] = 7
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -763,7 +763,7 @@ func TestArray_RLockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.RLockFunc(func(n1 []interface{}) { //互斥锁
 			n1[3] = 7
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
