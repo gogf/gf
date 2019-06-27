@@ -668,7 +668,7 @@ func TestSortedIntArray_LockFunc(t *testing.T) {
 				gtest.Assert(i, n1[i-1])
 			}
 			n1[3] = 7
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -698,7 +698,7 @@ func TestSortedIntArray_RLockFunc(t *testing.T) {
 				gtest.Assert(i, n1[i-1])
 			}
 			n1[3] = 7
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -762,7 +762,7 @@ func TestSortedArray_LockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.LockFunc(func(n1 []interface{}) { //互斥锁
 			n1[3] = 7
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -791,7 +791,7 @@ func TestSortedArray_RLockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.RLockFunc(func(n1 []interface{}) { //互斥锁
 			n1[3] = 7
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -871,7 +871,7 @@ func TestIntArray_LockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.LockFunc(func(n1 []int) { //互斥锁
 			n1[3] = 7
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -897,7 +897,7 @@ func TestIntArray_RLockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.RLockFunc(func(n1 []int) { //互斥锁
 			n1[3] = 7
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
