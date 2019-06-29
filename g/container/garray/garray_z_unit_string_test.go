@@ -636,7 +636,7 @@ func TestSortedStringArray_LockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.LockFunc(func(n1 []string) { //互斥锁
 			n1[3] = "e"
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -662,7 +662,7 @@ func TestSortedStringArray_RLockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.RLockFunc(func(n1 []string) { //读锁
 			n1[3] = "e"
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -741,7 +741,7 @@ func TestStringArray_LockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.LockFunc(func(n1 []string) { //互斥锁
 			n1[3] = "f"
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {
@@ -767,7 +767,7 @@ func TestStringArray_RLockFunc(t *testing.T) {
 		ch1 := make(chan int64, 2)
 		go a1.RLockFunc(func(n1 []string) { //读锁
 			n1[2] = "g"
-			time.Sleep(1 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) //暂停一秒
 		})
 
 		go func() {

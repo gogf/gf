@@ -7,10 +7,12 @@
 package gtcp
 
 import (
+	"time"
+
+	"github.com/gogf/gf/g/internal/errors"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gpool"
-	"github.com/gogf/gf/g/internal/errors"
-	"time"
 )
 
 // 链接池链接对象

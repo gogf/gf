@@ -7,7 +7,6 @@
 package gudp
 
 import (
-	"errors"
 	"io"
 	"net"
 	"time"

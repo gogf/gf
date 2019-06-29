@@ -9,12 +9,12 @@ package gmd5
 
 import (
 	"crypto/md5"
-	"errors"
 	"fmt"
-	"github.com/gogf/gf/g/internal/errors"
-	"github.com/gogf/gf/g/util/gconv"
 	"io"
 	"os"
+
+	"github.com/gogf/gf/g/internal/errors"
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 // Encrypt encrypts any type of variable using MD5 algorithms.
