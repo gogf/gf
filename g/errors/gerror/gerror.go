@@ -10,6 +10,7 @@ package gerror
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"runtime"
 	"strings"
 
@@ -17,12 +18,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+// stacker is an interface for errors.StackTrace.
 type stacker interface {
 	StackTrace() errors.StackTrace
 }
 
+// stacker is an interface for errors.Cause.
 type causer interface {
 	Cause() error
+}
+
+// stackError is custom error for additional features.
+type stackError struct {
+	error
 }
 
 const (
@@ -53,7 +61,7 @@ func NewText(text string) error {
 	if text == "" {
 		return nil
 	}
-	return errors.New(text)
+	return &stackError{errors.New(text)}
 }
 
 // Wrap wraps error with text.
@@ -61,14 +69,14 @@ func Wrap(err error, text string) error {
 	if err == nil {
 		return nil
 	}
-	return errors.Wrap(err, text)
+	return &stackError{errors.Wrap(err, text)}
 }
 
 // Wrapf returns an error annotating err with a stack trace
 // at the point Wrapf is called, and the format specifier.
 // If err is nil, Wrapf returns nil.
 func Wrapf(err error, format string, args ...interface{}) error {
-	return errors.Wrapf(err, format, args...)
+	return &stackError{errors.Wrapf(err, format, args...)}
 }
 
 // Cause returns the underlying cause of the error, if possible.
@@ -83,10 +91,31 @@ func Wrapf(err error, format string, args ...interface{}) error {
 // be returned. If the error is nil, nil will be returned without further
 // investigation.
 func Cause(err error) error {
-	return errors.Cause(err)
+	return &stackError{errors.Cause(err)}
+}
+
+// Format formats the frame according to the fmt.Formatter interface.
+//
+// %v, %s   : Print the error string;
+// %+v, %+s : Print the error stack list;
+func (err *stackError) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's', 'v':
+		switch {
+		case s.Flag('+'):
+			io.WriteString(s, Stack(err.error))
+		default:
+			io.WriteString(s, err.Error())
+		}
+	}
+}
+
+func (err *stackError) Cause() error {
+	return err.error
 }
 
 // Stack returns the stack callers as string.
+// It returns am empty string id the <err> does not support stacks.
 func Stack(err error) string {
 	if err == nil {
 		return ""

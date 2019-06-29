@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime"
 	"strings"
 	"time"
 
@@ -56,18 +55,6 @@ const (
 	F_TIME_MILLI             // Print the time with milliseconds in the local time zone: 01:23:23.675.
 	F_TIME_STD   = F_TIME_DATE | F_TIME_MILLI
 )
-
-var (
-	// Default line break.
-	ln = "\n"
-)
-
-func init() {
-	// Initialize log line breaks depending on underlying os.
-	if runtime.GOOS == "windows" {
-		ln = "\r\n"
-	}
-}
 
 // New creates and returns a custom logger.
 func New() *Logger {
@@ -270,13 +257,25 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 			buffer.WriteString(l.prefix + " ")
 		}
 	}
-	for k, v := range value {
-		if k > 0 {
-			buffer.WriteByte(' ')
+	tempStr := ""
+	valueStr := ""
+	for _, v := range value {
+		tempStr = gconv.String(v)
+		if len(valueStr) > 0 {
+			if valueStr[len(valueStr)-1] == '\n' {
+				if tempStr[0] == '\n' {
+					valueStr += tempStr[1:]
+				} else {
+					valueStr += tempStr
+				}
+			} else {
+				valueStr += " "
+			}
+		} else {
+			valueStr = tempStr
 		}
-		buffer.WriteString(gconv.String(v))
 	}
-	buffer.WriteString(ln)
+	buffer.WriteString(valueStr + "\n")
 	if l.flags&F_ASYNC > 0 {
 		asyncPool.Add(func() {
 			l.printToWriter(std, buffer)
@@ -317,7 +316,7 @@ func (l *Logger) printStd(lead string, value ...interface{}) {
 func (l *Logger) printErr(lead string, value ...interface{}) {
 	if l.stStatus == 1 {
 		if s := l.GetStack(); s != "" {
-			value = append(value, ln+"Stack:"+ln+s)
+			value = append(value, "\nStack:\n"+s)
 		}
 	}
 	// In matter of sequence, do not use stderr here, but use the same stdout.
@@ -333,7 +332,7 @@ func (l *Logger) format(format string, value ...interface{}) string {
 // the optional parameter <skip> specify the skipped stack offset from the end point.
 func (l *Logger) PrintStack(skip ...int) {
 	if s := l.GetStack(skip...); s != "" {
-		l.Println("Stack:" + ln + s)
+		l.Println("Stack:\n" + s)
 	} else {
 		l.Println()
 	}
