@@ -892,9 +892,9 @@ func TestIntArray_RLockFunc(t *testing.T) {
 		a1 := garray.NewIntArrayFrom(n1)
 
 		ch1 := make(chan int64, 2)
-		go a1.RLockFunc(func(n1 []int) { //互斥锁
+		go a1.RLockFunc(func(n1 []int) { // 互斥锁
 			n1[3] = 7
-			time.Sleep(3 * time.Second) //暂停一秒
+			time.Sleep(3 * time.Second) // 暂停一秒
 		})
 
 		go func() {
