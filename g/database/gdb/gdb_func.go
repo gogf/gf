@@ -10,14 +10,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
-	"reflect"
-	"strings"
-	"time"
 )
 
 // Type assert api for String().
@@ -173,7 +174,7 @@ func printSql(v *Sql) {
 	)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		glog.Backtrace(true, 2).Error(s)
+		glog.Stack(true, 2).Error(s)
 	} else {
 		glog.Debug(s)
 	}

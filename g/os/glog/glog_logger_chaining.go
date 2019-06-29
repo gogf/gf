@@ -7,8 +7,9 @@
 package glog
 
 import (
-	"github.com/gogf/gf/g/os/gfile"
 	"io"
+
+	"github.com/gogf/gf/g/os/gfile"
 )
 
 // To is a chaining function,
@@ -82,7 +83,7 @@ func (l *Logger) Level(level int) *Logger {
 }
 
 // Skip is a chaining function,
-// which sets backtrace skip for the current logging content output.
+// which sets stack skip for the current logging content output.
 // It also affects the caller file path checks when line number printing enabled.
 func (l *Logger) Skip(skip int) *Logger {
 	logger := (*Logger)(nil)
@@ -91,22 +92,22 @@ func (l *Logger) Skip(skip int) *Logger {
 	} else {
 		logger = l
 	}
-	logger.SetBacktraceSkip(skip)
+	logger.SetStackSkip(skip)
 	return logger
 }
 
-// Backtrace is a chaining function,
-// which sets backtrace options for the current logging content output .
-func (l *Logger) Backtrace(enabled bool, skip ...int) *Logger {
+// Stack is a chaining function,
+// which sets stack options for the current logging content output .
+func (l *Logger) Stack(enabled bool, skip ...int) *Logger {
 	logger := (*Logger)(nil)
 	if l.parent == nil {
 		logger = l.Clone()
 	} else {
 		logger = l
 	}
-	logger.SetBacktrace(enabled)
+	logger.SetStack(enabled)
 	if len(skip) > 0 {
-		logger.SetBacktraceSkip(skip[0])
+		logger.SetStackSkip(skip[0])
 	}
 	return logger
 }

@@ -116,7 +116,7 @@ func (l *Logger) Debugfln(format string, v ...interface{}) {
 }
 
 // Notice prints the logging content with [NOTI] header and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Notice(v ...interface{}) {
 	if l.checkLevel(LEVEL_NOTI) {
 		l.printErr("[NOTI]", v...)
@@ -124,7 +124,7 @@ func (l *Logger) Notice(v ...interface{}) {
 }
 
 // Noticef prints the logging content with [NOTI] header, custom format and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Noticef(format string, v ...interface{}) {
 	if l.checkLevel(LEVEL_NOTI) {
 		l.printErr("[NOTI]", l.format(format, v...))
@@ -140,7 +140,7 @@ func (l *Logger) Noticefln(format string, v ...interface{}) {
 }
 
 // Warning prints the logging content with [WARN] header and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Warning(v ...interface{}) {
 	if l.checkLevel(LEVEL_WARN) {
 		l.printErr("[WARN]", v...)
@@ -148,7 +148,7 @@ func (l *Logger) Warning(v ...interface{}) {
 }
 
 // Warningf prints the logging content with [WARN] header, custom format and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Warningf(format string, v ...interface{}) {
 	if l.checkLevel(LEVEL_WARN) {
 		l.printErr("[WARN]", l.format(format, v...))
@@ -164,7 +164,7 @@ func (l *Logger) Warningfln(format string, v ...interface{}) {
 }
 
 // Error prints the logging content with [ERRO] header and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Error(v ...interface{}) {
 	if l.checkLevel(LEVEL_ERRO) {
 		l.printErr("[ERRO]", v...)
@@ -172,7 +172,7 @@ func (l *Logger) Error(v ...interface{}) {
 }
 
 // Errorf prints the logging content with [ERRO] header, custom format and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Errorf(format string, v ...interface{}) {
 	if l.checkLevel(LEVEL_ERRO) {
 		l.printErr("[ERRO]", l.format(format, v...))
@@ -188,7 +188,7 @@ func (l *Logger) Errorfln(format string, v ...interface{}) {
 }
 
 // Critical prints the logging content with [CRIT] header and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Critical(v ...interface{}) {
 	if l.checkLevel(LEVEL_CRIT) {
 		l.printErr("[CRIT]", v...)
@@ -196,7 +196,7 @@ func (l *Logger) Critical(v ...interface{}) {
 }
 
 // Criticalf prints the logging content with [CRIT] header, custom format and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Criticalf(format string, v ...interface{}) {
 	if l.checkLevel(LEVEL_CRIT) {
 		l.printErr("[CRIT]", l.format(format, v...))
