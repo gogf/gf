@@ -9,7 +9,7 @@ package gerror_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/g/internal/errors"
+	"github.com/gogf/gf/g/errors/gerror"
 	"github.com/gogf/gf/g/test/gtest"
 )
 
@@ -23,16 +23,16 @@ func nilError() error {
 
 func Test_Nil(t *testing.T) {
 	gtest.Case(t, func() {
-		gtest.Assert(errors.New(interfaceNil()), nil)
-		gtest.Assert(errors.Wrap(nilError(), "test"), nil)
+		gtest.Assert(gerror.New(interfaceNil()), nil)
+		gtest.Assert(gerror.Wrap(nilError(), "test"), nil)
 	})
 }
 
 func Test_Wrap(t *testing.T) {
 	gtest.Case(t, func() {
-		err := errors.New("1")
-		err = errors.Wrap(err, "func2 error")
-		err = errors.Wrap(err, "func3 error")
+		err := gerror.New("1")
+		err = gerror.Wrap(err, "func2 error")
+		err = gerror.Wrap(err, "func3 error")
 		gtest.AssertNE(err, nil)
 		gtest.Assert(err.Error(), "func3 error: func2 error: 1")
 	})

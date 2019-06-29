@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/g/internal/errors"
+	"github.com/gogf/gf/g/errors/gerror"
 )
 
 const (
@@ -74,7 +74,7 @@ func (c *Conn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...
 		return err
 	}
 	defer func() {
-		err = errors.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
+		err = gerror.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
 	}()
 	err = c.SendPkg(data, option...)
 	return
@@ -147,7 +147,7 @@ func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (d
 		return nil, err
 	}
 	defer func() {
-		err = errors.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
+		err = gerror.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
 	}()
 	data, err = c.RecvPkg(option...)
 	return
