@@ -14,13 +14,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gring"
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/os/gcache"
 	"github.com/gogf/gf/g/util/grand"
-	"time"
 )
 
 // 数据库操作接口
@@ -86,9 +87,9 @@ type DB interface {
 	GetQueriedSqls() []*Sql
 	GetLastSql() *Sql
 	PrintQueriedSqls()
-	SetMaxIdleConns(n int)
-	SetMaxOpenConns(n int)
-	SetConnMaxLifetime(n int)
+	SetMaxIdleConnCount(n int)
+	SetMaxOpenConnCount(n int)
+	SetMaxConnLifetime(n int)
 
 	// 内部方法接口
 	getCache() *gcache.Cache
