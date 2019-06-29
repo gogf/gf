@@ -694,9 +694,6 @@ func TestSortedIntArray_RLockFunc(t *testing.T) {
 
 		ch1 := make(chan int64, 2)
 		go a1.RLockFunc(func(n1 []int) { //读锁
-			for i := 1; i <= 4; i++ {
-				gtest.Assert(i, n1[i-1])
-			}
 			n1[3] = 7
 			time.Sleep(1 * time.Second) //暂停一秒
 		})
