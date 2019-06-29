@@ -11,48 +11,35 @@
 
 </div>
 
-`GF(Go Frame)`是一款模块化、高性能、生产级Go应用开发框架。提供了常用的核心开发组件，如：缓存、日志、文件、时间、队列、数组、集合、字符串、定时器、命令行、文件锁、内存锁、对象池、连接池、数据校验、数据编码、文件监控、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信、
-并发安全容器等等。并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、服务注册、配置管理、模板引擎等等，支持热重启、热更新、多域名、多端口、多服务、HTTPS、Rewrite等特性。
+`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang. Providing a series of core components and dozens of practical modules, such as: memcache, configure, validator, logging, array/queue/set/map containers, timer/timing tasks, file/memory lock, object pool, database ORM, etc. Supporting web server integrated with router, cookie, session, logger, template, https, hooks, rewrites and many more features.
 
 
-# 特点
-* 模块化、松耦合设计；
-* 模块丰富，开箱即用；
-* 详尽的开发文档及示例；
-* 完善的本地中文化支持；
-* 致力于项目的通用方案；
-* 更适合企业及团队使用；
-* 更多请查阅文档及源码；
-
-# 安装
-```html
+# Installation
+```
 go get -u github.com/gogf/gf
 ```
-或者
-`go.mod`:
+or use `go.mod`:
 ```
 require github.com/gogf/gf latest
 ```
 
-# 限制
-```shell
-golang版本 >= 1.10
+# Limitation
+```
+golang version >= 1.10
 ```
 
-# 架构
+# Documentation
+
+* [APIDoc](https://godoc.org/github.com/gogf/gf)
+* [中文文档](https://goframe.org)
+
+# Architecture
 <div align=center>
 <img src="https://goframe.org/images/arch.png"/>
 </div>
 
+# Quick Start
 
-
-# 文档
-
-开发文档：[https://goframe.org](https://goframe.org)
-
-接口文档：[https://godoc.org/github.com/gogf/gf](https://godoc.org/github.com/gogf/gf)
-
-# 使用
 ```go
 package main
 
@@ -70,17 +57,26 @@ func main() {
 }
 ```
 
-[更多..](https://goframe.org/start/index)
+[View More..](https://goframe.org/start/index)
 
 
-# 协议
+# License
 
-`GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
+`GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
-# 捐赠
+# Donators
 
-如果您喜欢`GF`，要不[给开发者来杯咖啡吧](DONATOR.MD)！
-请在捐赠时备注您的`github`/`gitee`账号名称。
+We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](DONATOR.MD)?
 
-# 感谢
+# Thanks
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
+
+
+<!--
+# Sponsor
+We appreciate any kind of sponsorship for `GF` development. If you've got some interested, please contact john@goframe.org.
+-->
+
+
+
+

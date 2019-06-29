@@ -14,13 +14,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/g/os/gfile"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/g/os/gfile"
 )
 
 // http客户端
@@ -82,7 +83,7 @@ func (c *Client) Put(url string, data ...interface{}) (*ClientResponse, error) {
 // POST请求提交数据，默认使用表单方式提交数据(绝大部分场景下也是如此)。
 // 如果服务端对Content-Type有要求，可使用Client对象进行请求，单独设置相关属性。
 // 支持文件上传，需要字段格式为：FieldName=@file:
-func (c *Client) Post(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, err error) {
 	if len(c.prefix) > 0 {
 		url = c.prefix + url
 	}
@@ -119,23 +120,27 @@ func (c *Client) Post(url string, data ...interface{}) (*ClientResponse, error) 
 			}
 		}
 		writer.Close()
-		if r, err := http.NewRequest("POST", url, buffer); err != nil {
+		if req, err = http.NewRequest("POST", url, buffer); err != nil {
 			return nil, err
 		} else {
-			req = r
 			req.Header.Set("Content-Type", writer.FormDataContentType())
 		}
 	} else {
-		// 识别提交数据格式
+		// 普通请求
 		paramBytes := []byte(param)
-		if r, err := http.NewRequest("POST", url, bytes.NewReader(paramBytes)); err != nil {
+		if req, err = http.NewRequest("POST", url, bytes.NewReader(paramBytes)); err != nil {
 			return nil, err
 		} else {
-			req = r
-			if json.Valid(paramBytes) {
-				req.Header.Set("Content-Type", "application/json")
+			if v, ok := c.header["Content-Type"]; ok {
+				// 自定义请求类型
+				req.Header.Set("Content-Type", v)
 			} else {
-				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				// 识别提交数据格式
+				if json.Valid(paramBytes) {
+					req.Header.Set("Content-Type", "application/json")
+				} else {
+					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				}
 			}
 		}
 	}
@@ -163,23 +168,22 @@ func (c *Client) Post(url string, data ...interface{}) (*ClientResponse, error) 
 		req.SetBasicAuth(c.authUser, c.authPass)
 	}
 	// 执行请求
-	resp := (*http.Response)(nil)
+	r := (*http.Response)(nil)
 	for {
-		if r, err := c.Do(req); err != nil {
+		if r, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
 				c.retryCount--
 			} else {
 				return nil, err
 			}
 		} else {
-			resp = r
 			break
 		}
 	}
-	r := &ClientResponse{
+	resp = &ClientResponse{
 		cookies: make(map[string]string),
 	}
-	r.Response = resp
+	resp.Response = r
 	// 浏览器模式
 	if c.browserMode {
 		now := time.Now()
@@ -191,7 +195,7 @@ func (c *Client) Post(url string, data ...interface{}) (*ClientResponse, error) 
 			}
 		}
 	}
-	return r, nil
+	return resp, nil
 }
 
 // DELETE请求
