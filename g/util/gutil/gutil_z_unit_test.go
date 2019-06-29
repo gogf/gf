@@ -23,9 +23,9 @@ func Test_Dump(t *testing.T) {
 	})
 }
 
-func Test_PrintBacktrace(t *testing.T) {
+func Test_PrintStack(t *testing.T) {
 	gtest.Case(t, func() {
-		gutil.PrintBacktrace()
+		gutil.PrintStack()
 	})
 }
 

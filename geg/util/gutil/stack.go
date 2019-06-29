@@ -4,7 +4,8 @@ import (
 	"github.com/gogf/gf/g/util/gutil"
 )
 
-func Test(s interface{}) {
+func Test(s *interface{}) {
+	//debug.PrintStack()
 	gutil.PrintStack()
 }
 
