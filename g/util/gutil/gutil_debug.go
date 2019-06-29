@@ -10,12 +10,6 @@ import (
 	"github.com/gogf/gf/g/internal/debug"
 )
 
-// PrintStack is alias for PrintStack.
-// Deprecated.
-func PrintStack() {
-	PrintStack()
-}
-
 // PrintStack prints to standard error the stack trace returned by runtime.Stack.
 func PrintStack(skip ...int) {
 	number := 1
@@ -27,7 +21,7 @@ func PrintStack(skip ...int) {
 
 // Stack returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
-func Stack(skip ...int) []byte {
+func Stack(skip ...int) string {
 	number := 1
 	if len(skip) > 0 {
 		number = skip[0] + 1

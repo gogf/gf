@@ -1,6 +1,8 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
 
 // Package debug contains facilities for programs to debug themselves while
 // they are running.
@@ -10,41 +12,106 @@ import (
 	"bytes"
 	"fmt"
 	"runtime"
-	"strconv"
+	"strings"
 )
+
+const (
+	gMAX_DEPTH  = 1000
+	gFILTER_KEY = "/g/internal/debug/stack.go"
+)
+
+var (
+	// goRootForFilter is used for stack filtering purpose.
+	goRootForFilter = runtime.GOROOT()
+)
+
+func init() {
+	if goRootForFilter != "" {
+		goRootForFilter = strings.Replace(goRootForFilter, "\\", "/", -1)
+	}
+}
 
 // PrintStack prints to standard error the stack trace returned by runtime.Stack.
 func PrintStack(skip ...int) {
-	fmt.Print(string(Stack(skip...)))
+	fmt.Print(Stack(skip...))
 }
 
 // Stack returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
-func Stack(skip ...int) []byte {
-	buffer := make([]byte, 512)
+func Stack(skip ...int) string {
+	return StackWithFilter("", skip...)
+}
+
+// StackWithFilter returns a formatted stack trace of the goroutine that calls it.
+// It calls runtime.Stack with a large enough buffer to capture the entire trace.
+//
+// The parameter <filter> is used to filter the path of the caller.
+func StackWithFilter(filter string, skip ...int) string {
 	number := 0
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	for {
-		n := runtime.Stack(buffer, false)
-		if n < len(buffer) {
-			lines := bytes.Split(buffer[:n], []byte{'\n'})
-			index := 1
-			stacks := bytes.NewBuffer(nil)
-			for i, line := range lines {
-				if i < 5+number*2 || len(line) == 0 {
-					continue
-				}
-				if i%2 != 0 {
-					stacks.WriteString(strconv.Itoa(index) + ".\t")
-					index++
-				}
-				stacks.Write(line)
-				stacks.WriteByte('\n')
+	name := ""
+	index := 1
+	buffer := bytes.NewBuffer(nil)
+	for i := callerFromIndex() + number; i < gMAX_DEPTH; i++ {
+		if pc, file, line, ok := runtime.Caller(i); ok {
+			if filter != "" && strings.Contains(file, filter) {
+				continue
 			}
-			return stacks.Bytes()
+			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
+				continue
+			}
+			if fn := runtime.FuncForPC(pc); fn == nil {
+				name = "unknown"
+			} else {
+				name = fn.Name()
+			}
+			buffer.WriteString(fmt.Sprintf("%d.\t%s\n\t%s:%d\n", index, name, file, line))
+			index++
+		} else {
+			break
 		}
-		buffer = make([]byte, 2*len(buffer))
 	}
+	return buffer.String()
+}
+
+// CallerPath returns the absolute file path along with its line number of the caller.
+func Caller(skip ...int) string {
+	return CallerWithFilter("", skip...)
+}
+
+// CallerPathWithFilter returns the absolute file path along with its line number of the caller.
+//
+// The parameter <filter> is used to filter the path of the caller.
+func CallerWithFilter(filter string, skip ...int) string {
+	number := 0
+	if len(skip) > 0 {
+		number = skip[0]
+	}
+	for i := callerFromIndex() + number; i < gMAX_DEPTH; i++ {
+		if _, file, line, ok := runtime.Caller(i); ok {
+			if filter != "" && strings.Contains(file, filter) {
+				continue
+			}
+			return fmt.Sprintf(`%s:%d`, file, line)
+		} else {
+			break
+		}
+	}
+	return ""
+}
+
+// callerFromIndex returns the caller position exclusive of the debug package.
+func callerFromIndex() int {
+	for i := 0; i < gMAX_DEPTH; i++ {
+		if _, file, _, ok := runtime.Caller(i); ok {
+			if strings.Contains(file, gFILTER_KEY) {
+				continue
+			}
+			// exclude the depth from the function of current package.
+			return i - 1
+		}
+	}
+	return 0
 }
