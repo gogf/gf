@@ -1,3 +1,9 @@
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gerror
 
 import "runtime"
@@ -5,10 +11,12 @@ import "runtime"
 // stack represents a stack of program counters.
 type stack []uintptr
 
-func callers() *stack {
-	const depth = 32
-	var pcs [depth]uintptr
+const (
+	gMAX_STACK_DEPTH = 32
+)
+
+func callers() stack {
+	var pcs [gMAX_STACK_DEPTH]uintptr
 	n := runtime.Callers(3, pcs[:])
-	var st stack = pcs[0:n]
-	return &st
+	return pcs[0:n]
 }

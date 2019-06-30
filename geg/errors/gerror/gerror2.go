@@ -19,8 +19,8 @@ func ReadConfig() error {
 }
 
 func main() {
-	//glog.Println(OpenConfig())
-	glog.Printf("unexpected error: %+s", ReadConfig())
-	//glog.Errorf("unexpected error: %+s", OpenConfig())
-
+	err := ReadConfig()
+	glog.Printf("%s\n%+s", err, err)
+	glog.Printf("%+v", err)
+	glog.Error(err)
 }
