@@ -31,6 +31,7 @@ type causer interface {
 // stackError is custom error for additional features.
 type stackError struct {
 	error
+	*stack
 }
 
 const (
@@ -61,7 +62,10 @@ func NewText(text string) error {
 	if text == "" {
 		return nil
 	}
-	return &stackError{errors.New(text)}
+	return &stackError{
+		err,
+		callers(),
+	}
 }
 
 // Wrap wraps error with text.
@@ -129,14 +133,14 @@ func Stack(err error) string {
 		cause, ok := err.(causer)
 		if !ok {
 			if err, ok := err.(stacker); ok {
-				buffer.WriteString(fmt.Sprintf("%d.\t%s\n", index, err))
+				buffer.WriteString(fmt.Sprintf("%d.\t%v\n", index, err))
 				index++
 				formatSubStack(err, buffer)
 			}
 			break
 		}
 		if err, ok := err.(stacker); ok {
-			buffer.WriteString(fmt.Sprintf("%d.\t%s\n", index, err))
+			buffer.WriteString(fmt.Sprintf("%d.\t%v\n", index, err))
 			index++
 			formatSubStack(err, buffer)
 		}

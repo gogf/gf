@@ -269,7 +269,7 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 					valueStr += tempStr
 				}
 			} else {
-				valueStr += " "
+				valueStr += " " + tempStr
 			}
 		} else {
 			valueStr = tempStr
