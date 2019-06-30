@@ -14,4 +14,4 @@ bin/
 cbuild
 **/.DS_Store
 .vscode/
-
+go.sum
