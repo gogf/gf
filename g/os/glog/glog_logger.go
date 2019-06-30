@@ -257,10 +257,15 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 			buffer.WriteString(l.prefix + " ")
 		}
 	}
+	// Convert value to string.
 	tempStr := ""
 	valueStr := ""
 	for _, v := range value {
-		tempStr = gconv.String(v)
+		if err, ok := v.(error); ok {
+			tempStr = fmt.Sprintf("%+v", err)
+		} else {
+			tempStr = gconv.String(v)
+		}
 		if len(valueStr) > 0 {
 			if valueStr[len(valueStr)-1] == '\n' {
 				if tempStr[0] == '\n' {
