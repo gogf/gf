@@ -12,9 +12,11 @@
 |[zhuhuan12](https://gitee.com/zhuhuan12)|gitee|￥50.00
 |[zfan_codes](https://gitee.com/zfan_codes)|gitee|￥10.00
 |[arden](https://github.com/arden)|alipay|￥10.00
+|x*z|wechat|￥20.00
 |潘兄|wechat|￥100.00
 |Fly的狐狸|wechat|￥100.00
 |土豆相公|alipay|￥66.60
+|Hades|alipay|￥66.66
 |蔡蔡|wechat|￥666.00
 |上海金保证网络科技|bank|￥2000.00
 
