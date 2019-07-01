@@ -7,9 +7,10 @@
 package gvalid_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gvalid"
-	"testing"
 )
 
 func Test_CheckStruct(t *testing.T) {
@@ -51,6 +52,7 @@ func Test_CheckStruct(t *testing.T) {
 		gtest.Assert(err.Maps()["password"]["required"], "登录密码不能为空")
 	})
 
+	// gvalid tag
 	gtest.Case(t, func() {
 		type User struct {
 			Id       int    `gvalid:"uid@required|min:10#|ID不能为空"`
@@ -69,4 +71,22 @@ func Test_CheckStruct(t *testing.T) {
 		gtest.Assert(err.Maps()["uid"]["min"], "ID不能为空")
 	})
 
+	// valid tag
+	gtest.Case(t, func() {
+		type User struct {
+			Id       int    `valid:"uid@required|min:10#|ID不能为空"`
+			Age      int    `valid:"age@required#年龄不能为空"`
+			Username string `json:"username" gvalid:"username@required#用户名不能为空"`
+			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
+		}
+		user := &User{
+			Id:       1,
+			Username: "john",
+			Password: "123456",
+		}
+		err := gvalid.CheckStruct(user, nil)
+		gtest.AssertNE(err, nil)
+		gtest.Assert(len(err.Maps()), 1)
+		gtest.Assert(err.Maps()["uid"]["min"], "ID不能为空")
+	})
 }
