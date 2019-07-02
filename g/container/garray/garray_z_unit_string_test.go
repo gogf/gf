@@ -652,7 +652,7 @@ func TestSortedStringArray_RLockFunc(t *testing.T) {
 		})
 
 		go func() {
-			time.Sleep(10 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
+			time.Sleep(100 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 			a1.Len()
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
