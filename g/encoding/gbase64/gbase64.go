@@ -21,11 +21,11 @@ func Encode(src []byte) []byte {
 // Decode decodes bytes with BASE64 algorithm.
 func Decode(dst []byte) ([]byte, error) {
 	src := make([]byte, base64.StdEncoding.DecodedLen(len(dst)))
-	_, err := base64.StdEncoding.Decode(src, dst)
+	n, err := base64.StdEncoding.Decode(src, dst)
 	if err != nil {
 		return nil, err
 	}
-	return src, nil
+	return src[:n], nil
 }
 
 // EncodeString encodes bytes with BASE64 algorithm.
