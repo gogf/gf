@@ -1,7 +1,9 @@
 package main
 
 import (
-	"github.com/gogf/gf/g"
+	"fmt"
+
+	"github.com/gogf/gf/g/encoding/gbase64"
 	"github.com/gogf/gf/g/net/ghttp"
 )
 
@@ -12,13 +14,8 @@ func (order *Order) Get(r *ghttp.Request) {
 }
 
 func main() {
-	s := g.Server()
-	s.BindHookHandlerByMap("/api.v1/*any", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
-			r.Response.CORSDefault()
-		},
-	})
-	s.BindObjectRest("/api.v1/{.struct}", new(Order))
-	s.SetPort(8199)
-	s.Run()
+	s := `BgsnyD6IBEzExNDUzNjEzNDg4MzYxOTMzNjQSShAJGgzns7vnu5/pgJrnn6UiOGh0dHA6Ly9wdWItbWVkLWxvZ28uaW1ncy5tZWRsaW5rZXIubmV0L25ldy1zeXN0ZW1AM3gucG5`
+	b, err := gbase64.DecodeString(s)
+	fmt.Println(err)
+	fmt.Println(string(b))
 }
