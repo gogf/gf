@@ -7,10 +7,11 @@
 package gdb_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 // 基本测试
@@ -187,6 +188,25 @@ func TestModel_Save(t *testing.T) {
 }
 
 func TestModel_Update(t *testing.T) {
+	table := createInitTable()
+	// UPDATE...LIMIT
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Data("nickname", "T100").OrderBy("id desc").Limit(2).Update()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 2)
+
+		v1, err := db.Table(table).Fields("nickname").Where("id", 10).Value()
+		gtest.Assert(err, nil)
+		gtest.Assert(v1.String(), "T100")
+
+		v2, err := db.Table(table).Fields("nickname").Where("id", 8).Value()
+		gtest.Assert(err, nil)
+		gtest.Assert(v2.String(), "T8")
+	})
+
 	gtest.Case(t, func() {
 		result, err := db.Table("user").Data("passport", "t22").Where("passport=?", "t2").Update()
 		if err != nil {
@@ -644,10 +664,22 @@ func TestModel_Where(t *testing.T) {
 }
 
 func TestModel_Delete(t *testing.T) {
-	result, err := db.Table("user").Delete()
-	if err != nil {
-		gtest.Fatal(err)
-	}
-	n, _ := result.RowsAffected()
-	gtest.Assert(n, 3)
+	// DELETE...LIMIT
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Limit(2).Delete()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 2)
+	})
+
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Delete()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 1)
+	})
 }
