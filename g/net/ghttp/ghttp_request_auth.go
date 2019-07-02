@@ -8,9 +8,10 @@ package ghttp
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/encoding/gbase64"
 	"net/http"
 	"strings"
+
+	"github.com/gogf/gf/g/encoding/gbase64"
 )
 
 // 设置Basic Auth校验提示
@@ -40,12 +41,12 @@ func (r *Request) BasicAuth(user, pass string, tips ...string) bool {
 	}
 	switch authArray[0] {
 	case "Basic":
-		authStr, err := gbase64.Decode(authArray[1])
+		authBytes, err := gbase64.DecodeString(authArray[1])
 		if err != nil {
 			r.Response.WriteStatus(http.StatusForbidden, err.Error())
 			return false
 		}
-		authArray := strings.SplitN(string(authStr), ":", 2)
+		authArray := strings.SplitN(string(authBytes), ":", 2)
 		if len(authArray) != 2 {
 			r.Response.WriteStatus(http.StatusForbidden)
 			return false
