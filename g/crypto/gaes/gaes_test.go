@@ -9,8 +9,9 @@
 package gaes_test
 
 import (
-	"github.com/gogf/gf/g/encoding/gbase64"
 	"testing"
+
+	"github.com/gogf/gf/g/encoding/gbase64"
 
 	"github.com/gogf/gf/g/crypto/gaes"
 	"github.com/gogf/gf/g/test/gtest"
@@ -18,11 +19,11 @@ import (
 
 var (
 	content          = []byte("pibigstar")
-	content_16, _    = gbase64.Decode("v1jqsGHId/H8onlVHR8Vaw==")
-	content_24, _    = gbase64.Decode("0TXOaj5KMoLhNWmJ3lxY1A==")
-	content_32, _    = gbase64.Decode("qM/Waw1kkWhrwzek24rCSA==")
-	content_16_iv, _ = gbase64.Decode("DqQUXiHgW/XFb6Qs98+hrA==")
-	content_32_iv, _ = gbase64.Decode("ZuLgAOii+lrD5KJoQ7yQ8Q==")
+	content_16, _    = gbase64.DecodeString("v1jqsGHId/H8onlVHR8Vaw==")
+	content_24, _    = gbase64.DecodeString("0TXOaj5KMoLhNWmJ3lxY1A==")
+	content_32, _    = gbase64.DecodeString("qM/Waw1kkWhrwzek24rCSA==")
+	content_16_iv, _ = gbase64.DecodeString("DqQUXiHgW/XFb6Qs98+hrA==")
+	content_32_iv, _ = gbase64.DecodeString("ZuLgAOii+lrD5KJoQ7yQ8Q==")
 	// iv 长度必须等于blockSize，只能为16
 	iv         = []byte("Hello My GoFrame")
 	key_16     = []byte("1234567891234567")
@@ -35,7 +36,7 @@ var (
 
 	// cfb模式blockSize补位长度, add by zseeker
 	padding_size      = 16 - len(content)
-	content_16_cfb, _ = gbase64.Decode("oSmget3aBDT1nJnBp8u6kA==")
+	content_16_cfb, _ = gbase64.DecodeString("oSmget3aBDT1nJnBp8u6kA==")
 )
 
 func TestEncrypt(t *testing.T) {
