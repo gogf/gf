@@ -642,7 +642,7 @@ func TestStringArray_Remove(t *testing.T) {
 
 func TestSortedStringArray_RLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := []string{"a", "b", "c", "d"}
+		s1 := []string{"b", "c", "d"}
 		a1 := garray.NewSortedStringArrayFrom(s1)
 
 		ch1 := make(chan int64, 2)
