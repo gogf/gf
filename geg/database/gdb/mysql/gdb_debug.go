@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/database/gdb"
 	"github.com/gogf/gf/g/os/glog"
@@ -22,8 +23,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	glog.SetPath("/tmp")
 	db.SetDebug(true)
+	db.Table("user").Limit(2).Delete()
+	return
+	glog.SetPath("/tmp")
+
 	// 执行3条SQL查询
 	for i := 1; i <= 3; i++ {
 		db.Table("user").Where("uid=?", i).One()
