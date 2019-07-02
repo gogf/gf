@@ -7,14 +7,15 @@
 package gcache
 
 import (
+	"math"
+	"sync"
+
 	"github.com/gogf/gf/g/container/glist"
 	"github.com/gogf/gf/g/container/gset"
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/os/gtimer"
 	"github.com/gogf/gf/g/util/gconv"
-	"math"
-	"sync"
 )
 
 // Internal cache object.
@@ -121,8 +122,8 @@ func (c *memCache) Set(key interface{}, value interface{}, expire int) {
 func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire int) interface{} {
 	expireTimestamp := c.getInternalExpire(expire)
 	c.dataMu.Lock()
+	defer c.dataMu.Unlock()
 	if v, ok := c.data[key]; ok && !v.IsExpired() {
-		c.dataMu.Unlock()
 		return v.v
 	}
 	if f, ok := value.(func() interface{}); ok {
@@ -132,7 +133,6 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, expire
 		return nil
 	}
 	c.data[key] = memCacheItem{v: value, e: expireTimestamp}
-	c.dataMu.Unlock()
 	c.eventList.PushBack(&memCacheEvent{k: key, e: expireTimestamp})
 	return value
 }
