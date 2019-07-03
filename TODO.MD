@@ -48,6 +48,7 @@
 1. 改进gdb对pgsql/mssql/oracle的支持，使用方法覆盖的方式改进操作，而不是完全依靠正则替换的方式；
 1. gdb的Cache缓存功能增加可自定义缓存接口，以便支持外部缓存功能，缓存接口可以通过io.ReadWriter接口实现；
 1. grpool增加支持阻塞添加任务接口；
+1. gdb.Model在链式安全的对象创建中增加sync.Pool的使用；
 
 
 # DONE

@@ -9,10 +9,11 @@ package gfsnotify
 import (
 	"errors"
 	"fmt"
+
 	"github.com/gogf/gf/g/container/glist"
 )
 
-// 添加监控，path参数支持文件或者目录路径，recursive为非必需参数，默认为非递归监控(当path为目录时)。
+// 添加监控，path参数支持文件或者目录路径，recursive为非必需参数，默认为递归监控(当path为目录时)。
 // 如果添加目录，这里只会返回目录的callback，按照callback删除时会递归删除。
 func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	// 首先添加这个文件/目录
