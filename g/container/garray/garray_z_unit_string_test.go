@@ -14,7 +14,6 @@ import (
 	"github.com/gogf/gf/g/util/gconv"
 	"strings"
 	"testing"
-
 )
 
 func Test_StringArray_Basic(t *testing.T) {
@@ -638,5 +637,3 @@ func TestStringArray_Remove(t *testing.T) {
 
 	})
 }
-
-

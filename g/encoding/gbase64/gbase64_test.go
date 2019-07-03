@@ -6,9 +6,10 @@
 package gbase64_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g/encoding/gbase64"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 type testpair struct {
@@ -42,10 +43,17 @@ var pairs = []testpair{
 }
 
 func TestBase64(t *testing.T) {
-	for k := range pairs {
-		gtest.Assert(gbase64.Encode(pairs[k].decoded), pairs[k].encoded)
+	gtest.Case(t, func() {
+		for k := range pairs {
+			// []byte
+			gtest.Assert(gbase64.Encode([]byte(pairs[k].decoded)), []byte(pairs[k].encoded))
+			e1, _ := gbase64.Decode([]byte(pairs[k].encoded))
+			gtest.Assert(e1, []byte(pairs[k].decoded))
 
-		e, _ := gbase64.Decode(pairs[k].encoded)
-		gtest.Assert(e, pairs[k].decoded)
-	}
+			// string
+			gtest.Assert(gbase64.EncodeString([]byte(pairs[k].decoded)), pairs[k].encoded)
+			e2, _ := gbase64.DecodeString(pairs[k].encoded)
+			gtest.Assert(e2, []byte(pairs[k].decoded))
+		}
+	})
 }

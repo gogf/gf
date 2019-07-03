@@ -8,12 +8,14 @@ package gdb_test
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/container/garray"
+
 	"github.com/gogf/gf/g/database/gdb"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
-	"os"
 )
 
 const (
@@ -88,14 +90,6 @@ func createTable(table ...string) (name string) {
 	return
 }
 
-// 删除指定表.
-func dropTable(table string) {
-	if _, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
-		gtest.Fatal(err)
-	}
-}
-
-// See createTable.
 // 创建测试表，并初始化默认数据。
 func createInitTable(table ...string) (name string) {
 	name = createTable(table...)
@@ -116,4 +110,11 @@ func createInitTable(table ...string) (name string) {
 	gtest.Assert(e, nil)
 	gtest.Assert(n, INIT_DATA_SIZE)
 	return
+}
+
+// 删除指定表.
+func dropTable(table string) {
+	if _, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
+		gtest.Fatal(err)
+	}
 }

@@ -12,6 +12,7 @@ package gfsnotify
 import (
 	"errors"
 	"fmt"
+
 	"github.com/gogf/gf/g/container/glist"
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gqueue"
@@ -92,7 +93,7 @@ func New() (*Watcher, error) {
 	return w, nil
 }
 
-// 添加对指定文件/目录的监听，并给定回调函数；如果给定的是一个目录，默认非递归监控。
+// 添加对指定文件/目录的监听，并给定回调函数；如果给定的是一个目录，默认递归监控。
 func Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	return defaultWatcher.Add(path, callbackFunc, recursive...)
 }
