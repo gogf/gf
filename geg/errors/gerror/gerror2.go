@@ -14,9 +14,13 @@ func OpenConfig() error {
 	return gerror.Wrap(OpenFile(), "configuration file opening failed")
 }
 
-func main() {
-	glog.Println(OpenConfig())
-	glog.Printf("unexpected error:\n%+s", OpenConfig())
-	glog.Errorf("unexpected error:\n%+s", OpenConfig())
+func ReadConfig() error {
+	return gerror.Wrap(OpenConfig(), "reading configuration failed")
+}
 
+func main() {
+	err := ReadConfig()
+	glog.Printf("%s\n%+s", err, err)
+	glog.Printf("%+v", err)
+	glog.Error(err)
 }
