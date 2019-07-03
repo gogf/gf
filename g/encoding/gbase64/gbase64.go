@@ -4,20 +4,36 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gbase64 provides useful API for BASE64 encoding/decoding algorithms.
+// Package gbase64 provides useful API for BASE64 encoding/decoding algorithm.
 package gbase64
 
 import (
 	"encoding/base64"
 )
 
-// base64 encode
-func Encode(str string) string {
-	return base64.StdEncoding.EncodeToString([]byte(str))
+// Encode encodes bytes with BASE64 algorithm.
+func Encode(src []byte) []byte {
+	dst := make([]byte, base64.StdEncoding.EncodedLen(len(src)))
+	base64.StdEncoding.Encode(dst, src)
+	return dst
 }
 
-// base64 decode
-func Decode(str string) (string, error) {
-	s, e := base64.StdEncoding.DecodeString(str)
-	return string(s), e
+// Decode decodes bytes with BASE64 algorithm.
+func Decode(dst []byte) ([]byte, error) {
+	src := make([]byte, base64.StdEncoding.DecodedLen(len(dst)))
+	n, err := base64.StdEncoding.Decode(src, dst)
+	if err != nil {
+		return nil, err
+	}
+	return src[:n], nil
+}
+
+// EncodeString encodes bytes with BASE64 algorithm.
+func EncodeString(src []byte) string {
+	return string(Encode(src))
+}
+
+// DecodeString decodes string with BASE64 algorithm.
+func DecodeString(str string) ([]byte, error) {
+	return Decode([]byte(str))
 }

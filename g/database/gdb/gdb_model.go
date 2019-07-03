@@ -12,8 +12,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/g/util/gconv"
 	"reflect"
+
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 // 数据库链式操作模型对象
@@ -29,13 +30,13 @@ type Model struct {
 	orderBy      string        // 排序语句
 	start        int           // 分页开始
 	limit        int           // 分页条数
-	data         interface{}   // 操作记录(支持Map/List/string类型)
+	data         interface{}   // 操作数据(注意仅支持Map/List/string类型)
 	batch        int           // 批量操作条数
 	filter       bool          // 是否按照表字段过滤data参数
 	cacheEnabled bool          // 当前SQL操作是否开启查询缓存功能
 	cacheTime    int           // 查询缓存时间
 	cacheName    string        // 查询缓存名称
-	safe         bool          // 当前模型是否运行安全模式（可修改当前模型，否则每一次链式操作都是返回新的模型对象）
+	safe         bool          // 当前模型是否安全模式（默认非安全表示链式操作直接修改当前模型属性；否则每一次链式操作都是返回新的模型对象）
 }
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接
@@ -45,6 +46,7 @@ func (bs *dbBase) Table(tables string) *Model {
 		tablesInit: tables,
 		tables:     tables,
 		fields:     "*",
+		start:      -1,
 		safe:       false,
 	}
 }
@@ -149,7 +151,7 @@ func (md *Model) Where(where interface{}, args ...interface{}) *Model {
 	if model.where != "" {
 		return md.And(where, args...)
 	}
-	newWhere, newArgs := formatCondition(where, args)
+	newWhere, newArgs := formatWhere(where, args)
 	model.where = newWhere
 	model.whereArgs = newArgs
 	return model
@@ -158,7 +160,7 @@ func (md *Model) Where(where interface{}, args ...interface{}) *Model {
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	newWhere, newArgs := formatCondition(where, args)
+	newWhere, newArgs := formatWhere(where, args)
 	if len(model.where) > 0 && model.where[0] == '(' {
 		model.where = fmt.Sprintf(`%s AND (%s)`, model.where, newWhere)
 	} else {
@@ -171,7 +173,7 @@ func (md *Model) And(where interface{}, args ...interface{}) *Model {
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	newWhere, newArgs := formatCondition(where, args)
+	newWhere, newArgs := formatWhere(where, args)
 	if len(model.where) > 0 && model.where[0] == '(' {
 		model.where = fmt.Sprintf(`%s OR (%s)`, model.where, newWhere)
 	} else {
@@ -195,11 +197,20 @@ func (md *Model) OrderBy(orderBy string) *Model {
 	return model
 }
 
-// 链式操作，limit
-func (md *Model) Limit(start int, limit int) *Model {
+// 链式操作，limit。
+//
+// 如果给定一个参数，那么生成的SQL为：LIMIT limit[0]
+//
+// 如果给定两个参数，那么生成的SQL为：LIMIT limit[0], limit[1]
+func (md *Model) Limit(limit ...int) *Model {
 	model := md.getModel()
-	model.start = start
-	model.limit = limit
+	switch len(limit) {
+	case 1:
+		model.limit = limit[0]
+	case 2:
+		model.start = limit[0]
+		model.limit = limit[1]
+	}
 	return model
 }
 
@@ -425,9 +436,9 @@ func (md *Model) Update() (result sql.Result, err error) {
 		}
 	}
 	if md.tx == nil {
-		return md.db.doUpdate(nil, md.tables, md.data, md.where, md.whereArgs...)
+		return md.db.doUpdate(nil, md.tables, md.data, md.getConditionSql(), md.whereArgs...)
 	} else {
-		return md.tx.doUpdate(md.tables, md.data, md.where, md.whereArgs...)
+		return md.tx.doUpdate(md.tables, md.data, md.getConditionSql(), md.whereArgs...)
 	}
 }
 
@@ -439,9 +450,9 @@ func (md *Model) Delete() (result sql.Result, err error) {
 		}
 	}()
 	if md.tx == nil {
-		return md.db.doDelete(nil, md.tables, md.where, md.whereArgs...)
+		return md.db.doDelete(nil, md.tables, md.getConditionSql(), md.whereArgs...)
 	} else {
-		return md.tx.doDelete(md.tables, md.where, md.whereArgs...)
+		return md.tx.doDelete(md.tables, md.getConditionSql(), md.whereArgs...)
 	}
 }
 
@@ -452,7 +463,7 @@ func (md *Model) Select() (Result, error) {
 
 // 链式操作，查询所有记录
 func (md *Model) All() (Result, error) {
-	return md.getAll(md.getFormattedSql(), md.whereArgs...)
+	return md.getAll(fmt.Sprintf("SELECT %s FROM %s %s", md.fields, md.tables, md.getConditionSql()), md.whereArgs...)
 }
 
 // 链式操作，查询单条记录
@@ -530,7 +541,7 @@ func (md *Model) Count() (int, error) {
 	} else {
 		md.fields = fmt.Sprintf(`COUNT(%s)`, md.fields)
 	}
-	s := md.getFormattedSql()
+	s := fmt.Sprintf("SELECT %s FROM %s %s", md.fields, md.tables, md.getConditionSql())
 	if len(md.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}
@@ -583,12 +594,9 @@ func (md *Model) checkAndRemoveCache() {
 	}
 }
 
-// 格式化当前输入参数，返回可执行的SQL语句（不带参数）
-func (md *Model) getFormattedSql() string {
-	if md.fields == "" {
-		md.fields = "*"
-	}
-	s := fmt.Sprintf("SELECT %s FROM %s", md.fields, md.tables)
+// 格式化当前输入参数，返回SQL条件语句（不带参数）
+func (md *Model) getConditionSql() string {
+	s := ""
 	if md.where != "" {
 		s += " WHERE " + md.where
 	}
@@ -599,7 +607,12 @@ func (md *Model) getFormattedSql() string {
 		s += " ORDER BY " + md.orderBy
 	}
 	if md.limit != 0 {
-		s += fmt.Sprintf(" LIMIT %d, %d", md.start, md.limit)
+		if md.start >= 0 {
+			s += fmt.Sprintf(" LIMIT %d, %d", md.start, md.limit)
+		} else {
+			s += fmt.Sprintf(" LIMIT %d", md.limit)
+		}
+
 	}
 	return s
 }

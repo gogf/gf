@@ -11,13 +11,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/os/gcache"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/util/gconv"
-	"reflect"
-	"strings"
 )
 
 const (
@@ -498,7 +499,10 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 // CURD操作:数据更新，统一采用sql预处理。
 // data参数支持string/map/struct/*struct类型。
 func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := formatCondition(condition, args)
+	newWhere, newArgs := formatWhere(condition, args)
+	if newWhere != "" {
+		newWhere = " WHERE " + newWhere
+	}
 	return bs.db.doUpdate(nil, table, data, newWhere, newArgs...)
 }
 
@@ -537,15 +541,15 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 			return nil, err
 		}
 	}
-	if len(condition) == 0 {
-		return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s", table, updates), args...)
-	}
-	return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, updates, condition), args...)
+	return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
 }
 
 // CURD操作:删除数据
 func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	newWhere, newArgs := formatCondition(condition, args)
+	newWhere, newArgs := formatWhere(condition, args)
+	if newWhere != "" {
+		newWhere = " WHERE " + newWhere
+	}
 	return bs.db.doDelete(nil, table, newWhere, newArgs...)
 }
 
@@ -556,10 +560,7 @@ func (bs *dbBase) doDelete(link dbLink, table string, condition string, args ...
 			return nil, err
 		}
 	}
-	if len(condition) == 0 {
-		return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s", table), args...)
-	}
-	return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s WHERE %s", table, condition), args...)
+	return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
 // 获得缓存对象
@@ -570,12 +571,15 @@ func (bs *dbBase) getCache() *gcache.Cache {
 // 将数据查询的列表数据*sql.Rows转换为Result类型
 func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	// 列信息列表, 名称与类型
-	types := make([]string, 0)
-	columns := make([]string, 0)
-	columnTypes, _ := rows.ColumnTypes()
-	for _, t := range columnTypes {
-		types = append(types, t.DatabaseTypeName())
-		columns = append(columns, t.Name())
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+	types := make([]string, len(columnTypes))
+	columns := make([]string, len(columnTypes))
+	for k, v := range columnTypes {
+		types[k] = v.DatabaseTypeName()
+		columns[k] = v.Name()
 	}
 	// 返回结构组装
 	values := make([]sql.RawBytes, len(columns))
@@ -589,14 +593,15 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 			return records, err
 		}
 		row := make(Record)
-		// 注意col字段是一个[]byte类型(slice类型本身是一个指针)，多个记录循环时该变量指向的是同一个内存地址
-		for i, col := range values {
-			if col == nil {
+		// 注意col字段是一个[]byte类型(slice类型本身是一个引用类型)，
+		// 多个记录循环时该变量指向的是同一个内存地址
+		for i, column := range values {
+			if column == nil {
 				row[columns[i]] = gvar.New(nil, true)
 			} else {
 				// 由于 sql.RawBytes 是slice类型, 这里必须使用值复制
-				v := make([]byte, len(col))
-				copy(v, col)
+				v := make([]byte, len(column))
+				copy(v, column)
 				row[columns[i]] = gvar.New(bs.db.convertValue(v, types[i]), true)
 			}
 		}
