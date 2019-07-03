@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/g/util/gconv"
 	"strings"
 	"testing"
-	"time"
+
 )
 
 func Test_StringArray_Basic(t *testing.T) {
@@ -640,26 +640,3 @@ func TestStringArray_Remove(t *testing.T) {
 }
 
 
-func TestSortedStringArray_RLockFunc(t *testing.T) {
-	gtest.Case(t, func() {
-		ss1 := []string{"b", "c", "d"}
-		a1 := garray.NewSortedStringArrayFrom(ss1)
-
-		ch1 := make(chan int64, 2)
-		//go a1.RLockFunc(func(n1 []string) { //读锁
-		//	n1[3] = "e"
-		//	time.Sleep(3 * time.Second) //暂停一秒
-		//})
-
-		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
-		a1.Len()
-		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
-
-		t1 := <-ch1
-		t2 := <-ch1
-		// 由于另一个goroutine加的读锁，其它可读,所以ch1的操作间隔是很小的.a.len 操作并没有等待,
-		// 防止ci抖动,以豪秒为单位
-		gtest.AssertLT(t2-t1, 20)
-		gtest.AssertGT(a1.Len(), 2)
-	})
-}
