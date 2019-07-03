@@ -9,10 +9,15 @@ package gconv
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/g/text/gstr"
-	"github.com/gogf/gf/third/github.com/fatih/structs"
 	"reflect"
 	"strings"
+
+	"github.com/gogf/gf/g/internal/structtag"
+	"github.com/gogf/gf/g/text/gstr"
+)
+
+var (
+	structTagPriority = []string{"gconv", "json"}
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's properties.
@@ -67,7 +72,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		}
 	}
 	// It secondly checks the tags of attributes.
-	tagMap := getTagMapOfStruct(pointer)
+	tagMap := structtag.Map(pointer, structTagPriority)
 	for tagK, tagV := range tagMap {
 		if _, ok := doneMap[tagV]; ok {
 			continue
@@ -165,31 +170,6 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 		}
 	}
 	return nil
-}
-
-// 解析指针对象的tag
-func getTagMapOfStruct(pointer interface{}) map[string]string {
-	tagMap := make(map[string]string)
-	// 反射类型判断
-	fields := ([]*structs.Field)(nil)
-	if v, ok := pointer.(reflect.Value); ok {
-		fields = structs.Fields(v.Interface())
-	} else {
-		fields = structs.Fields(pointer)
-	}
-	// 将struct中定义的属性转换名称构建成tagmap
-	for _, field := range fields {
-		tag := field.Tag("gconv")
-		if tag == "" {
-			tag = field.Tag("json")
-		}
-		if tag != "" {
-			for _, v := range strings.Split(tag, ",") {
-				tagMap[strings.TrimSpace(v)] = field.Name()
-			}
-		}
-	}
-	return tagMap
 }
 
 // 将参数值绑定到对象指定名称的属性上
