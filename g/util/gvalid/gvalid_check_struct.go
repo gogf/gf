@@ -69,7 +69,12 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			continue
 		}
 		params[fieldName] = field.Value()
-		if tag := field.Tag("gvalid"); tag != "" {
+		// 同时支持valid和gvalid标签，优先使用valid
+		tag := field.Tag("valid")
+		if tag == "" {
+			tag = field.Tag("gvalid")
+		}
+		if tag != "" {
 			// sequence tag == struct tag, 这里的name为别名
 			name, rule, msg := parseSequenceTag(tag)
 			if len(name) == 0 {
