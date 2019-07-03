@@ -642,8 +642,8 @@ func TestStringArray_Remove(t *testing.T) {
 
 func TestSortedStringArray_RLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := []string{"b", "c", "d"}
-		a1 := garray.NewSortedStringArrayFrom(s1)
+		ss1 := []string{"b", "c", "d"}
+		a1 := garray.NewSortedStringArrayFrom(ss1)
 
 		ch1 := make(chan int64, 2)
 		//go a1.RLockFunc(func(n1 []string) { //读锁
@@ -651,12 +651,9 @@ func TestSortedStringArray_RLockFunc(t *testing.T) {
 		//	time.Sleep(3 * time.Second) //暂停一秒
 		//})
 
-		go func() {
-			time.Sleep(100 * time.Millisecond) //故意暂停0.01秒,等另一个goroutine执行锁后，再开始执行.
-			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
-			a1.Len()
-			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
-		}()
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		a1.Len()
+		ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 
 		t1 := <-ch1
 		t2 := <-ch1
