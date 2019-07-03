@@ -7,10 +7,24 @@
 package gvalid_test
 
 import (
-	"github.com/gogf/gf/g/util/gvalid"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/util/gvalid"
 )
+
+func Test_Map(t *testing.T) {
+	err := &gvalid.Error{}
+	m := err.Map()
+	gtest.Assert(m, nil)
+}
+
+func Test_FirstString(t *testing.T) {
+	err := &gvalid.Error{}
+	n := err.FirstString()
+	gtest.Assert(n, "")
+}
 
 func Test_SetDefaultErrorMsgs(t *testing.T) {
 	rule := "integer|length:6,16"

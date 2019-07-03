@@ -7,11 +7,28 @@
 package gvalid_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gvalid"
-	"testing"
 )
+
+func Test_Check(t *testing.T) {
+
+	gtest.Case(t, func() {
+		rule := "abc:6,16"
+		val1 := 0
+		val2 := 7
+		val3 := 20
+		err1 := gvalid.Check(val1, rule, nil)
+		err2 := gvalid.Check(val2, rule, nil)
+		err3 := gvalid.Check(val3, rule, nil)
+		gtest.AssertNE(err1, nil)
+		gtest.AssertNE(err2, nil)
+		gtest.AssertNE(err3, nil)
+	})
+}
 
 func Test_Required(t *testing.T) {
 	if m := gvalid.Check("1", "required", nil); m != nil {
@@ -540,20 +557,42 @@ func Test_Length(t *testing.T) {
 
 func Test_MinLength(t *testing.T) {
 	rule := "min-length:6"
+	msgs := map[string]string{
+		"min-length": "地址长度至少为:min位",
+	}
 	if m := gvalid.Check("123456", rule, nil); m != nil {
 		t.Error(m)
 	}
 	if m := gvalid.Check("12345", rule, nil); m == nil {
 		t.Error("长度校验失败")
 	}
+	if m := gvalid.Check("12345", rule, msgs); m == nil {
+		t.Error("长度校验失败")
+	}
+
+	rule2 := "min-length:abc"
+	if m := gvalid.Check("123456", rule2, nil); m == nil {
+		t.Error("长度校验失败")
+	}
 }
 
 func Test_MaxLength(t *testing.T) {
 	rule := "max-length:6"
+	msgs := map[string]string{
+		"max-length": "地址长度至大为:max位",
+	}
 	if m := gvalid.Check("12345", rule, nil); m != nil {
 		t.Error(m)
 	}
 	if m := gvalid.Check("1234567", rule, nil); m == nil {
+		t.Error("长度校验失败")
+	}
+	if m := gvalid.Check("1234567", rule, msgs); m == nil {
+		t.Error("长度校验失败")
+	}
+
+	rule2 := "max-length:abc"
+	if m := gvalid.Check("123456", rule2, nil); m == nil {
 		t.Error("长度校验失败")
 	}
 }
@@ -566,6 +605,9 @@ func Test_Between(t *testing.T) {
 	if m := gvalid.Check(10.02, rule, nil); m == nil {
 		t.Error("大小范围校验失败")
 	}
+	if m := gvalid.Check("a", rule, nil); m == nil {
+		t.Error("大小范围校验失败")
+	}
 }
 
 func Test_Min(t *testing.T) {
@@ -575,14 +617,21 @@ func Test_Min(t *testing.T) {
 		val2 := "99"
 		val3 := "100"
 		val4 := "1000"
+		val5 := "a"
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
+		err5 := gvalid.Check(val5, rule, nil)
 		gtest.AssertNE(err1, nil)
 		gtest.AssertNE(err2, nil)
 		gtest.Assert(err3, nil)
 		gtest.Assert(err4, nil)
+		gtest.AssertNE(err5, nil)
+
+		rule2 := "min:a"
+		err6 := gvalid.Check(val1, rule2, nil)
+		gtest.AssertNE(err6, nil)
 	})
 }
 
@@ -593,14 +642,21 @@ func Test_Max(t *testing.T) {
 		val2 := "99"
 		val3 := "100"
 		val4 := "1000"
+		val5 := "a"
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
+		err5 := gvalid.Check(val5, rule, nil)
 		gtest.Assert(err1, nil)
 		gtest.Assert(err2, nil)
 		gtest.Assert(err3, nil)
 		gtest.AssertNE(err4, nil)
+		gtest.AssertNE(err5, nil)
+
+		rule2 := "max:a"
+		err6 := gvalid.Check(val1, rule2, nil)
+		gtest.AssertNE(err6, nil)
 	})
 }
 

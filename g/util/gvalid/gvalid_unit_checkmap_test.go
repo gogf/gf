@@ -7,12 +7,19 @@
 package gvalid_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gvalid"
-	"testing"
 )
 
 func Test_CheckMap(t *testing.T) {
+
+	var params interface{}
+	if m := gvalid.CheckMap(params, nil, nil); m == nil {
+		t.Error("CheckMap校验失败")
+	}
+
 	kvmap := map[string]interface{}{
 		"id":   "0",
 		"name": "john",
@@ -48,6 +55,82 @@ func Test_CheckMap(t *testing.T) {
 		},
 	}
 	if m := gvalid.CheckMap(kvmap, rules, msgs); m != nil {
+		t.Error(m)
+	}
+
+	kvmap = map[string]interface{}{
+		"id":   "1",
+		"name": "john",
+	}
+	rules = map[string]string{
+		"id":   "",
+		"name": "",
+	}
+	msgs = map[string]interface{}{
+		"id": "ID不能为空|ID范围应当为:min到:max",
+		"name": map[string]string{
+			"required": "名称不能为空",
+			"length":   "名称长度为:min到:max个字符",
+		},
+	}
+	if m := gvalid.CheckMap(kvmap, rules, msgs); m != nil {
+		t.Error(m)
+	}
+
+	kvmap = map[string]interface{}{
+		"id":   "1",
+		"name": "john",
+	}
+	rules2 := []string{
+		"@required|between:1,100",
+		"@required|length:4,16",
+	}
+	msgs = map[string]interface{}{
+		"id": "ID不能为空|ID范围应当为:min到:max",
+		"name": map[string]string{
+			"required": "名称不能为空",
+			"length":   "名称长度为:min到:max个字符",
+		},
+	}
+	if m := gvalid.CheckMap(kvmap, rules2, msgs); m != nil {
+		t.Error(m)
+	}
+
+	kvmap = map[string]interface{}{
+		"id":   "1",
+		"name": "john",
+	}
+	rules2 = []string{
+		"id@required|between:1,100",
+		"name@required|length:4,16#名称不能为空|",
+	}
+	msgs = map[string]interface{}{
+		"id": "ID不能为空|ID范围应当为:min到:max",
+		"name": map[string]string{
+			"required": "名称不能为空",
+			"length":   "名称长度为:min到:max个字符",
+		},
+	}
+	if m := gvalid.CheckMap(kvmap, rules2, msgs); m != nil {
+		t.Error(m)
+	}
+
+	kvmap = map[string]interface{}{
+		"id":   "1",
+		"name": "john",
+	}
+	rules2 = []string{
+		"id@required|between:1,100",
+		"name@required|length:4,16#名称不能为空",
+	}
+	msgs = map[string]interface{}{
+		"id": "ID不能为空|ID范围应当为:min到:max",
+		"name": map[string]string{
+			"required": "名称不能为空",
+			"length":   "名称长度为:min到:max个字符",
+		},
+	}
+	if m := gvalid.CheckMap(kvmap, rules2, msgs); m != nil {
 		t.Error(m)
 	}
 }
