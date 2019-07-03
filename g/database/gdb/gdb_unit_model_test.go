@@ -7,6 +7,7 @@
 package gdb_test
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/gogf/gf/g"
@@ -357,6 +358,19 @@ func TestModel_Struct(t *testing.T) {
 		gtest.Assert(user.NickName, "T111")
 		gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
 	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		user := new(User)
+		err := db.Table("user").Where("id=-1").Struct(user)
+		gtest.Assert(err, sql.ErrNoRows)
+	})
 }
 
 func TestModel_Structs(t *testing.T) {
@@ -403,6 +417,19 @@ func TestModel_Structs(t *testing.T) {
 		gtest.Assert(users[1].NickName, "T2")
 		gtest.Assert(users[2].NickName, "T3")
 		gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		var users []*User
+		err := db.Table("user").Where("id<0").Structs(&users)
+		gtest.Assert(err, sql.ErrNoRows)
 	})
 }
 
@@ -482,6 +509,22 @@ func TestModel_Scan(t *testing.T) {
 		gtest.Assert(users[1].NickName, "T2")
 		gtest.Assert(users[2].NickName, "T3")
 		gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		user := new(User)
+		users := new([]*User)
+		err1 := db.Table("user").Where("id < 0").Scan(user)
+		err2 := db.Table("user").Where("id < 0").Scan(users)
+		gtest.Assert(err1, sql.ErrNoRows)
+		gtest.Assert(err2, sql.ErrNoRows)
 	})
 }
 
