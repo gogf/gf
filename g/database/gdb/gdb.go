@@ -77,9 +77,9 @@ type DB interface {
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
-	// 创建链式操作对象(Table为From的别名)
-	Table(tables string) *Model
+	// 创建链式操作对象
 	From(tables string) *Model
+	Table(tables string) *Model
 
 	// 设置管理
 	SetDebug(debug bool)
