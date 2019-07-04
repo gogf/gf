@@ -4,14 +4,14 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package structtag_test
+package structs_test
 
 import (
 	"testing"
 
-	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/internal/structs"
 
-	"github.com/gogf/gf/g/internal/structtag"
+	"github.com/gogf/gf/g"
 
 	"github.com/gogf/gf/g/test/gtest"
 )
@@ -24,12 +24,12 @@ func Test_Basic(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user User
-		gtest.Assert(structtag.Map(user, []string{"params"}), g.Map{"name": "Name", "pass": "Pass"})
-		gtest.Assert(structtag.Map(&user, []string{"params"}), g.Map{"name": "Name", "pass": "Pass"})
+		gtest.Assert(structs.TagMapName(user, []string{"params"}, true), g.Map{"name": "Name", "pass": "Pass"})
+		gtest.Assert(structs.TagMapName(&user, []string{"params"}, true), g.Map{"name": "Name", "pass": "Pass"})
 
-		gtest.Assert(structtag.Map(&user, []string{"params", "my-tag1"}), g.Map{"name": "Name", "pass": "Pass"})
-		gtest.Assert(structtag.Map(&user, []string{"my-tag1", "params"}), g.Map{"name": "Name", "pass1": "Pass"})
-		gtest.Assert(structtag.Map(&user, []string{"my-tag2", "params"}), g.Map{"name": "Name", "pass2": "Pass"})
+		gtest.Assert(structs.TagMapName(&user, []string{"params", "my-tag1"}, true), g.Map{"name": "Name", "pass": "Pass"})
+		gtest.Assert(structs.TagMapName(&user, []string{"my-tag1", "params"}, true), g.Map{"name": "Name", "pass1": "Pass"})
+		gtest.Assert(structs.TagMapName(&user, []string{"my-tag2", "params"}, true), g.Map{"name": "Name", "pass2": "Pass"})
 	})
 
 	gtest.Case(t, func() {
@@ -43,7 +43,11 @@ func Test_Basic(t *testing.T) {
 			Base `params:"base"`
 		}
 		user := new(UserWithBase)
-		gtest.Assert(structtag.Map(user, []string{"params"}), g.Map{"base": "Base"})
+		gtest.Assert(structs.TagMapName(user, []string{"params"}, true), g.Map{
+			"base":      "Base",
+			"password1": "Pass1",
+			"password2": "Pass2",
+		})
 	})
 
 	gtest.Case(t, func() {
@@ -63,7 +67,7 @@ func Test_Basic(t *testing.T) {
 		}
 		user1 := new(UserWithBase1)
 		user2 := new(UserWithBase2)
-		gtest.Assert(structtag.Map(user1, []string{"params"}), g.Map{"password1": "Pass1", "password2": "Pass2"})
-		gtest.Assert(structtag.Map(user2, []string{"params"}), g.Map{"password1": "Pass1", "password2": "Pass2"})
+		gtest.Assert(structs.TagMapName(user1, []string{"params"}, true), g.Map{"password1": "Pass1", "password2": "Pass2"})
+		gtest.Assert(structs.TagMapName(user2, []string{"params"}, true), g.Map{"password1": "Pass1", "password2": "Pass2"})
 	})
 }
