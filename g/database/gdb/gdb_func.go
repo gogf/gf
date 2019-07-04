@@ -8,16 +8,18 @@ package gdb
 
 import (
 	"bytes"
+	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
-	"reflect"
-	"strings"
-	"time"
 )
 
 // Type assert api for String().
@@ -25,8 +27,8 @@ type apiString interface {
 	String() string
 }
 
-// 格式化SQL查询条件
-func formatCondition(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
+// 格式化Where查询条件
+func formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
 	// 条件字符串处理
 	buffer := bytes.NewBuffer(nil)
 	// 使用反射进行类型判断
@@ -181,7 +183,7 @@ func printSql(v *Sql) {
 
 // 格式化错误信息
 func formatError(err error, query string, args ...interface{}) error {
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		errStr := fmt.Sprintf("DB ERROR: %s\n", err.Error())
 		errStr += fmt.Sprintf("DB QUERY: %s\n", query)
 		if len(args) > 0 {

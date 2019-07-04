@@ -13,7 +13,7 @@ func main() {
 			glog.Println(event)
 		})
 		if err != nil {
-			glog.Fatalln(err)
+			glog.Fatal(err)
 		}
 	}
 }

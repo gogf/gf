@@ -1,24 +1,40 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gogf/gf/g"
-	"github.com/gogf/gf/g/net/ghttp"
+
+	"github.com/gogf/gf/g/util/gconv"
+
+	"github.com/gogf/gf/g/encoding/gparser"
 )
 
-type Order struct{}
-
-func (order *Order) Get(r *ghttp.Request) {
-	r.Response.Write("GET")
-}
-
 func main() {
-	s := g.Server()
-	s.BindHookHandlerByMap("/api.v1/*any", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
-			r.Response.CORSDefault()
-		},
+	type User struct {
+		Uid      int
+		Name     string
+		SiteUrl  string `gconv:"-"`
+		NickName string `gconv:"nickname, omitempty"`
+		Pass1    string `gconv:"password1"`
+		Pass2    string `gconv:"password2"`
+	}
+
+	g.Dump(gconv.Map(User{
+		Uid:     100,
+		Name:    "john",
+		SiteUrl: "https://goframe.org",
+		Pass1:   "123",
+		Pass2:   "456",
+	}))
+
+	s, err := gparser.VarToJsonString(User{
+		Uid:     100,
+		Name:    "john",
+		SiteUrl: "https://goframe.org",
+		Pass1:   "123",
+		Pass2:   "456",
 	})
-	s.BindObjectRest("/api.v1/{.struct}", new(Order))
-	s.SetPort(8199)
-	s.Run()
+	fmt.Println(err)
+	fmt.Println(s)
 }

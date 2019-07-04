@@ -14,13 +14,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gring"
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/os/gcache"
 	"github.com/gogf/gf/g/util/grand"
-	"time"
 )
 
 // 数据库操作接口
