@@ -12,12 +12,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/g/internal/structtag"
+	"github.com/gogf/gf/g/internal/structs"
 	"github.com/gogf/gf/g/text/gstr"
-)
-
-var (
-	structTagPriority = []string{"gconv", "json"}
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's properties.
@@ -72,7 +68,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		}
 	}
 	// It secondly checks the tags of attributes.
-	tagMap := structtag.Map(pointer, structTagPriority)
+	tagMap := structs.TagMapName(pointer, structTagPriority, true)
 	for tagK, tagV := range tagMap {
 		if _, ok := doneMap[tagV]; ok {
 			continue

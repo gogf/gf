@@ -4,19 +4,21 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package util provides util functions for internal usage.
-package structtag
+package structs
 
 import (
 	"reflect"
-	"strings"
 
 	"github.com/gogf/gf/third/github.com/fatih/structs"
 )
 
-// Map recursively retrieves struct tags as map[tag]attribute from <pointer>, and returns it.
-func Map(pointer interface{}, priority []string) map[string]string {
-	tagMap := make(map[string]string)
+// MapField retrieves struct field as map[name/tag]*Field from <pointer>, and returns it.
+//
+// The parameter <recursive> specifies whether retrieving the struct field recursively.
+//
+// Note that it only retrieves the exported attributes with first letter up-case from struct.
+func MapField(pointer interface{}, priority []string, recursive bool) map[string]*Field {
+	fieldMap := make(map[string]*Field)
 	fields := ([]*structs.Field)(nil)
 	if v, ok := pointer.(reflect.Value); ok {
 		fields = structs.Fields(v.Interface())
@@ -26,6 +28,12 @@ func Map(pointer interface{}, priority []string) map[string]string {
 	tag := ""
 	name := ""
 	for _, field := range fields {
+		name = field.Name()
+		// Only retrieve exported attributes.
+		if name[0] < byte('A') || name[0] > byte('Z') {
+			continue
+		}
+		fieldMap[name] = field
 		tag = ""
 		for _, p := range priority {
 			tag = field.Tag(p)
@@ -33,16 +41,10 @@ func Map(pointer interface{}, priority []string) map[string]string {
 				break
 			}
 		}
-		name = field.Name()
-		// Only retrieve exported attributes.
-		if name[0] < byte('A') || name[0] > byte('Z') {
-			continue
-		}
 		if tag != "" {
-			for _, v := range strings.Split(tag, ",") {
-				tagMap[strings.TrimSpace(v)] = name
-			}
-		} else {
+			fieldMap[tag] = field
+		}
+		if recursive {
 			rv := reflect.ValueOf(field.Value())
 			kind := rv.Kind()
 			if kind == reflect.Ptr {
@@ -50,13 +52,13 @@ func Map(pointer interface{}, priority []string) map[string]string {
 				kind = rv.Kind()
 			}
 			if kind == reflect.Struct {
-				for k, v := range Map(rv, priority) {
-					if _, ok := tagMap[k]; !ok {
-						tagMap[k] = v
+				for k, v := range MapField(rv, priority, true) {
+					if _, ok := fieldMap[k]; !ok {
+						fieldMap[k] = v
 					}
 				}
 			}
 		}
 	}
-	return tagMap
+	return fieldMap
 }

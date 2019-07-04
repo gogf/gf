@@ -7,20 +7,19 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/g/internal/empty"
-	"github.com/gogf/gf/g/text/gstr"
 	"reflect"
 	"strings"
-)
 
-const (
-	gGCONV_TAG = "gconv"
+	"github.com/gogf/gf/g/internal/empty"
+	"github.com/gogf/gf/g/text/gstr"
 )
 
 // Map converts any variable <value> to map[string]interface{}.
-// If the parameter <value> is not a map type, then the conversion will fail and returns nil.
-// If <value> is a struct object, the second parameter <tags> specifies the most priority
-// tags that will be detected, otherwise it detects the tags in order of: gconv, json.
+//
+// If the parameter <value> is not a map/struct/*struct type, then the conversion will fail and returns nil.
+//
+// If <value> is a struct/*struct object, the second parameter <tags> specifies the most priority
+// tags that will be detected, otherwise it detects the tags in order of: gconv, json, and then the field name.
 func Map(value interface{}, tags ...string) map[string]interface{} {
 	if value == nil {
 		return nil
@@ -105,7 +104,7 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 			case reflect.Struct:
 				rt := rv.Type()
 				name := ""
-				tagArray := []string{gGCONV_TAG, "json"}
+				tagArray := structTagPriority
 				switch len(tags) {
 				case 0:
 					// No need handle.
@@ -113,9 +112,6 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 					tagArray = strings.Split(tags[0], ",")
 				default:
 					tagArray = tags
-				}
-				if gstr.SearchArray(tagArray, gGCONV_TAG) < 0 {
-					tagArray = append(tagArray, gGCONV_TAG)
 				}
 				for i := 0; i < rv.NumField(); i++ {
 					// Only convert the public attributes.
