@@ -109,9 +109,9 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 				case 0:
 					// No need handle.
 				case 1:
-					tagArray = strings.Split(tags[0], ",")
+					tagArray = append(strings.Split(tags[0], ","), structTagPriority...)
 				default:
-					tagArray = tags
+					tagArray = append(tags, structTagPriority...)
 				}
 				for i := 0; i < rv.NumField(); i++ {
 					// Only convert the public attributes.
