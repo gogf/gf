@@ -179,7 +179,7 @@ func Test_CheckStruct(t *testing.T) {
 		rules := []string{
 			"username@required#用户名不能为空",
 		}
-		
+
 		err := gvalid.CheckStruct(user, rules)
 		gtest.AssertNE(err, nil)
 		gtest.Assert(len(err.Maps()), 1)
