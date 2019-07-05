@@ -4,16 +4,16 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 请求参数测试
 package ghttp_test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/net/ghttp"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
-	"time"
 )
 
 func Test_Params_Basic(t *testing.T) {
@@ -97,6 +97,30 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
 		}
 	})
+	s.BindHandler("/struct-with-base", func(r *ghttp.Request) {
+		type Base struct {
+			Pass1 string `params:"password1"`
+			Pass2 string `params:"password2"`
+		}
+		type UserWithBase1 struct {
+			Id   int
+			Name string
+			Base
+		}
+		type UserWithBase2 struct {
+			Id   int
+			Name string
+			Pass Base
+		}
+		if m := r.GetPostMap(); len(m) > 0 {
+			user1 := new(UserWithBase1)
+			user2 := new(UserWithBase2)
+			r.GetToStruct(user1)
+			r.GetToStruct(user2)
+			r.Response.Write(user1.Id, user1.Name, user1.Pass1, user1.Pass2)
+			r.Response.Write(user2.Id, user2.Name, user2.Pass.Pass1, user2.Pass.Pass2)
+		}
+	})
 	s.SetPort(p)
 	s.SetDumpRouteMap(false)
 	s.Start()
@@ -144,5 +168,6 @@ func Test_Params_Basic(t *testing.T) {
 		// Struct
 		gtest.Assert(client.GetContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		gtest.Assert(client.PostContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		gtest.Assert(client.PostContent("/struct-with-base", `id=1&name=john&password1=123&password2=456`), "1john1234561john123456")
 	})
 }

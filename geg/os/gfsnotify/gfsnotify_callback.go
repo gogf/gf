@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gogf/gf/g/os/gfsnotify"
 	"github.com/gogf/gf/g/os/glog"
-	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/os/gtimer"
 	"time"
 )
 
@@ -21,12 +21,12 @@ func main() {
 		panic(err)
 	}
 	// 5秒后移除c1的回调函数注册，仅剩c2
-	gtime.SetTimeout(5*time.Second, func() {
+	gtimer.SetTimeout(5*time.Second, func() {
 		gfsnotify.RemoveCallback(c1.Id)
 		glog.Println("remove callback c1")
 	})
 	// 10秒后移除c2的回调函数注册，所有的回调都移除，不再有任何打印信息输出
-	gtime.SetTimeout(10*time.Second, func() {
+	gtimer.SetTimeout(10*time.Second, func() {
 		gfsnotify.RemoveCallback(c2.Id)
 		glog.Println("remove callback c2")
 	})

@@ -9,15 +9,19 @@ package gvalid
 import (
 	"strings"
 
-	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/internal/structs"
+
 	"github.com/gogf/gf/g/util/gconv"
-	"github.com/gogf/gf/third/github.com/fatih/structs"
+)
+
+var (
+	// 同时支持valid和gvalid标签，优先使用valid
+	structTagPriority = []string{"valid", "gvalid"}
 )
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法。
 // struct的数据校验结果信息是顺序的。
 func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Error {
-	fields := structs.Fields(object)
 	params := make(map[string]interface{})
 	checkRules := make(map[string]string)
 	customMsgs := make(CustomMsg)
@@ -57,26 +61,25 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			errorRules = append(errorRules, name+"@"+rule)
 		}
 
-		// 不支持校验错误顺序: map[键名]校验规则
+	// 不支持校验错误顺序: map[键名]校验规则
 	case map[string]string:
 		checkRules = v
 	}
 	// 首先, 按照属性循环一遍将struct的属性、数值、tag解析
-	for _, field := range fields {
+	tagValue := ""
+	for _, field := range structs.MapField(object, structTagPriority, true) {
 		fieldName := field.Name()
-		// 只检测公开属性
-		if !gstr.IsLetterUpper(fieldName[0]) {
-			continue
-		}
 		params[fieldName] = field.Value()
-		// 同时支持valid和gvalid标签，优先使用valid
-		tag := field.Tag("valid")
-		if tag == "" {
-			tag = field.Tag("gvalid")
+		tagValue = ""
+		for _, v := range structTagPriority {
+			tagValue = field.Tag(v)
+			if tagValue != "" {
+				break
+			}
 		}
-		if tag != "" {
+		if tagValue != "" {
 			// sequence tag == struct tag, 这里的name为别名
-			name, rule, msg := parseSequenceTag(tag)
+			name, rule, msg := parseSequenceTag(tagValue)
 			if len(name) == 0 {
 				name = fieldName
 			}

@@ -1,28 +1,40 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/os/glog"
+	"fmt"
 
-	"github.com/gogf/gf/g/os/gcache"
+	"github.com/gogf/gf/g"
+
+	"github.com/gogf/gf/g/util/gconv"
+
+	"github.com/gogf/gf/g/encoding/gparser"
 )
 
-func localCache() {
-	result := gcache.GetOrSetFunc("test.key.1", func() interface{} {
-		return nil
-	}, 1000*60*2)
-	if result == nil {
-		glog.Error("未获取到值")
-	} else {
-		glog.Infofln("result is $v", result)
-	}
-}
-
-func TestCache() {
-	for i := 0; i < 100; i++ {
-		localCache()
-	}
-}
-
 func main() {
-	TestCache()
+	type User struct {
+		Uid      int
+		Name     string
+		SiteUrl  string `gconv:"-"`
+		NickName string `gconv:"nickname, omitempty"`
+		Pass1    string `gconv:"password1"`
+		Pass2    string `gconv:"password2"`
+	}
+
+	g.Dump(gconv.Map(User{
+		Uid:     100,
+		Name:    "john",
+		SiteUrl: "https://goframe.org",
+		Pass1:   "123",
+		Pass2:   "456",
+	}))
+
+	s, err := gparser.VarToJsonString(User{
+		Uid:     100,
+		Name:    "john",
+		SiteUrl: "https://goframe.org",
+		Pass1:   "123",
+		Pass2:   "456",
+	})
+	fmt.Println(err)
+	fmt.Println(s)
 }

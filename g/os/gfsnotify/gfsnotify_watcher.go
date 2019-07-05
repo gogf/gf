@@ -44,9 +44,10 @@ func (w *Watcher) addWithCallbackFunc(path string, callbackFunc func(event *Even
 		path = t
 	}
 	callback = &Callback{
-		Id:   callbackIdGenerator.Add(1),
-		Func: callbackFunc,
-		Path: path,
+		Id:        callbackIdGenerator.Add(1),
+		Func:      callbackFunc,
+		Path:      path,
+		recursive: true,
 	}
 	if len(recursive) > 0 {
 		callback.recursive = recursive[0]

@@ -6,11 +6,11 @@ import (
 )
 
 func main() {
-	//path := "D:\\Workspace\\Go\\GOPATH\\src\\gitee.com\\johng\\gf\\geg\\other\\test.go"
-	path := "/Users/john/Temp/test"
+	//path := `D:\temp`
+	path := "/home/john/temp"
 	_, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
 		glog.Println(event)
-	}, true)
+	})
 	if err != nil {
 		glog.Fatal(err)
 	} else {
