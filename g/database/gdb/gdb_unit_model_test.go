@@ -367,6 +367,23 @@ func TestModel_Struct(t *testing.T) {
 			NickName   string
 			CreateTime *gtime.Time
 		}
+		user := (*User)(nil)
+		err := db.Table("user").Where("id=1").Struct(&user)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(user.NickName, "T111")
+		gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
 		user := new(User)
 		err := db.Table("user").Where("id=-1").Struct(user)
 		gtest.Assert(err, sql.ErrNoRows)
@@ -396,6 +413,7 @@ func TestModel_Structs(t *testing.T) {
 		gtest.Assert(users[2].NickName, "T3")
 		gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
 	})
+	// Auto create struct slice.
 	gtest.Case(t, func() {
 		type User struct {
 			Id         int
