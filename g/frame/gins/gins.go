@@ -115,11 +115,14 @@ func Database(name ...string) gdb.DB {
 						if value, ok := nodeMap["role"]; ok {
 							node.Role = gconv.String(value)
 						}
-						if value, ok := nodeMap["charset"]; ok {
-							node.Charset = gconv.String(value)
+						if value, ok := nodeMap["debug"]; ok {
+							node.Debug = gconv.Bool(value)
 						}
 						if value, ok := nodeMap["weight"]; ok {
 							node.Weight = gconv.Int(value)
+						}
+						if value, ok := nodeMap["charset"]; ok {
+							node.Charset = gconv.String(value)
 						}
 						// Deprecated
 						if value, ok := nodeMap["linkinfo"]; ok {

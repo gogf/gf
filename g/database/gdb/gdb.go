@@ -308,12 +308,14 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 	if node.Charset == "" {
 		node.Charset = "utf8"
 	}
+	// 缓存连接对象(该对象其实是一个连接池对象)
 	v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
 		sqlDb, err = bs.db.Open(node)
 		if err != nil {
 			return nil
 		}
-
+		// 接口对象可能会覆盖这些连接参数，所以这里优先判断有误设置连接池属性。
+		// 若无设置则使用配置节点的连接池参数
 		if n := bs.maxIdleConnCount.Val(); n > 0 {
 			sqlDb.SetMaxIdleConns(n)
 		} else if node.MaxIdleConnCount > 0 {
@@ -336,6 +338,8 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 	if v != nil && sqlDb == nil {
 		sqlDb = v.(*sql.DB)
 	}
+	// 是否开启调试模式
+	bs.SetDebug(node.Debug)
 	// 是否手动选择数据库
 	if v := bs.schema.Val(); v != "" {
 		sqlDb.Exec("USE " + v)
