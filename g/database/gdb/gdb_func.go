@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"bytes"
+	"database/sql"
 	"errors"
 	"fmt"
 	"reflect"
@@ -182,7 +183,7 @@ func printSql(v *Sql) {
 
 // 格式化错误信息
 func formatError(err error, query string, args ...interface{}) error {
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		errStr := fmt.Sprintf("DB ERROR: %s\n", err.Error())
 		errStr += fmt.Sprintf("DB QUERY: %s\n", query)
 		if len(args) > 0 {

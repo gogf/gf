@@ -4,18 +4,16 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 返回错误对象。
-
 package gvalid
 
 import "strings"
 
 // 校验错误对象
 type Error struct {
-	rules     []string          // 校验结果顺序(可能为nil)
-	errors    ErrorMap          // 校验结果(map无序)
-	firstKey  string            // 第一条错误项键名(常用操作冗余数据)
-	firstItem map[string]string // 第一条错误项(常用操作冗余数据)
+	rules     []string          // 校验结果顺序(可能为nil)，可保证返回校验错误的顺序性
+	errors    ErrorMap          // 完整的数据校验结果存储(map无序)
+	firstKey  string            // 第一条错误项键名(常用操作冗余数据)，默认为空
+	firstItem map[string]string // 第一条错误项(常用操作冗余数据)，默认为nil
 }
 
 // 校验错误信息: map[键名]map[规则名]错误信息

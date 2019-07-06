@@ -285,7 +285,8 @@ func compareMap(value, expect interface{}) error {
 				}
 				for k, v := range mExpect {
 					if v != mValue[k] {
-						return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`, k, mValue[k], v)
+						return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == map["%v"]:%v`+
+							"\nGIVEN : %v\nEXPECT: %v", k, mValue[k], k, v, mValue, mExpect)
 					}
 				}
 			} else {

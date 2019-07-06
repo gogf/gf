@@ -8,14 +8,14 @@ package ghttp
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/encoding/gjson"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
-	"github.com/gogf/gf/third/github.com/fatih/structs"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 // 请求对象
@@ -231,18 +231,4 @@ func (r *Request) GetUrl() string {
 // 获得请求来源URL地址
 func (r *Request) GetReferer() string {
 	return r.Header.Get("Referer")
-}
-
-// 获得结构体对象的参数名称标签，构成map返回
-func (r *Request) getStructParamsTagMap(pointer interface{}) map[string]string {
-	tagMap := make(map[string]string)
-	fields := structs.Fields(pointer)
-	for _, field := range fields {
-		if tag := field.Tag("params"); tag != "" {
-			for _, v := range strings.Split(tag, ",") {
-				tagMap[strings.TrimSpace(v)] = field.Name()
-			}
-		}
-	}
-	return tagMap
 }
