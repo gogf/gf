@@ -7,12 +7,13 @@
 package gconv_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gconv"
-	"testing"
-	"time"
 )
 
 func Test_Struct_Basic1(t *testing.T) {
@@ -25,9 +26,8 @@ func Test_Struct_Basic1(t *testing.T) {
 			Pass1    string `gconv:"password1"`
 			Pass2    string `gconv:"password2"`
 		}
-		user := (*User)(nil)
 		// 使用默认映射规则绑定属性值到对象
-		user = new(User)
+		user := new(User)
 		params1 := g.Map{
 			"uid":       1,
 			"Name":      "john",
@@ -338,6 +338,29 @@ func Test_Struct_PrivateAttribute(t *testing.T) {
 }
 
 func Test_Struct_Deep(t *testing.T) {
+
+	gtest.Case(t, func() {
+		type Base struct {
+			Age int
+		}
+		type User struct {
+			Id   int
+			Name string
+			Base
+		}
+		user := new(User)
+		params := g.Map{
+			"id":   1,
+			"name": "john",
+			"age":  18,
+		}
+		err := gconv.StructDeep(params, user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Id, params["id"])
+		gtest.Assert(user.Name, params["name"])
+		gtest.Assert(user.Age, params["age"])
+	})
+
 	gtest.Case(t, func() {
 		type Ids struct {
 			Id  int `json:"id"`
@@ -362,7 +385,8 @@ func Test_Struct_Deep(t *testing.T) {
 			"create_time": "2019",
 		}
 		user := new(User)
-		gconv.StructDeep(data, user)
+		err := gconv.StructDeep(data, user)
+		gtest.Assert(err, nil)
 		gtest.Assert(user.Id, 100)
 		gtest.Assert(user.Uid, 101)
 		gtest.Assert(user.Nickname, "T1")
@@ -430,4 +454,39 @@ func Test_Struct_Time(t *testing.T) {
 		}, user)
 		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
 	})
+}
+
+// Auto create struct when given pointer.
+func Test_Struct_Create(t *testing.T) {
+	gtest.Case(t, func() {
+		type User struct {
+			Uid  int
+			Name string
+		}
+		user := (*User)(nil)
+		params := g.Map{
+			"uid":  1,
+			"Name": "john",
+		}
+		err := gconv.Struct(params, &user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Uid, 1)
+		gtest.Assert(user.Name, "john")
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			Uid  int
+			Name string
+		}
+		user := (*User)(nil)
+		params := g.Map{
+			"uid":  1,
+			"Name": "john",
+		}
+		err := gconv.Struct(params, user)
+		gtest.AssertNE(err, nil)
+		gtest.Assert(user, nil)
+	})
+
 }

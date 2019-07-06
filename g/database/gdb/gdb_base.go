@@ -206,15 +206,12 @@ func (bs *dbBase) GetScan(objPointer interface{}, query string, args ...interfac
 	}
 	k = t.Elem().Kind()
 	switch k {
-	case reflect.Array:
-	case reflect.Slice:
+	case reflect.Array, reflect.Slice:
 		return bs.db.GetStructs(objPointer, query, args...)
 	case reflect.Struct:
 		return bs.db.GetStruct(objPointer, query, args...)
-	default:
-		return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 	}
-	return nil
+	return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 }
 
 // 数据库查询，获取查询字段值

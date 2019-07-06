@@ -7,6 +7,8 @@
 package gfsnotify
 
 import (
+	"fmt"
+
 	"github.com/gogf/gf/g/container/glist"
 )
 
@@ -21,7 +23,7 @@ func (w *Watcher) startWatchLoop() {
 
 			// 监听事件
 			case ev := <-w.watcher.Events:
-				//fmt.Println("ev:", ev.String())
+				fmt.Println("ev:", ev.String())
 				w.cache.SetIfNotExist(ev.String(), func() interface{} {
 					w.events.Push(&Event{
 						event:   ev,
