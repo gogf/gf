@@ -9,5 +9,5 @@
         name     = "test"
         type     = "mysql"
         role     = "master"
+        weight   = "1"
         charset  = "utf8"
-        priority = "1"

@@ -248,9 +248,9 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			slaveList = masterList
 		}
 		if master {
-			return getConfigNodeByPriority(masterList), nil
+			return getConfigNodeByWeight(masterList), nil
 		} else {
-			return getConfigNodeByPriority(slaveList), nil
+			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
 		return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
@@ -263,19 +263,19 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 // 2、那么节点1的权重范围为[0, 99]，节点2的权重范围为[100, 199]，比例为1:1；
 // 3、假如计算出的随机数为99;
 // 4、那么选择的配置为节点1;
-func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
+func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	if len(cg) < 2 {
 		return &cg[0]
 	}
 	var total int
 	for i := 0; i < len(cg); i++ {
-		total += cg[i].Priority * 100
+		total += cg[i].Weight * 100
 	}
 	// 如果total为0表示所有连接都没有配置priority属性，那么默认都是1
 	if total == 0 {
 		for i := 0; i < len(cg); i++ {
-			cg[i].Priority = 1
-			total += cg[i].Priority * 100
+			cg[i].Weight = 1
+			total += cg[i].Weight * 100
 		}
 	}
 	// 不能取到末尾的边界点
@@ -286,7 +286,7 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 	min := 0
 	max := 0
 	for i := 0; i < len(cg); i++ {
-		max = min + cg[i].Priority*100
+		max = min + cg[i].Weight*100
 		//fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
 		if r >= min && r < max {
 			return &cg[i]

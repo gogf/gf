@@ -9,6 +9,8 @@ package gins
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/database/gdb"
 	"github.com/gogf/gf/g/database/gredis"
@@ -19,7 +21,6 @@ import (
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
-	"time"
 )
 
 const (
@@ -117,8 +118,8 @@ func Database(name ...string) gdb.DB {
 						if value, ok := nodeMap["charset"]; ok {
 							node.Charset = gconv.String(value)
 						}
-						if value, ok := nodeMap["priority"]; ok {
-							node.Priority = gconv.Int(value)
+						if value, ok := nodeMap["weight"]; ok {
+							node.Weight = gconv.Int(value)
 						}
 						// Deprecated
 						if value, ok := nodeMap["linkinfo"]; ok {
