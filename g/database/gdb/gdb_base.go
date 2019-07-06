@@ -567,6 +567,9 @@ func (bs *dbBase) getCache() *gcache.Cache {
 
 // 将数据查询的列表数据*sql.Rows转换为Result类型
 func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
+	if !rows.Next() {
+		return nil, sql.ErrNoRows
+	}
 	// 列信息列表, 名称与类型
 	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
@@ -585,7 +588,7 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
-	for rows.Next() {
+	for {
 		if err := rows.Scan(scanArgs...); err != nil {
 			return records, err
 		}
@@ -603,6 +606,9 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 			}
 		}
 		records = append(records, row)
+		if !rows.Next() {
+			break
+		}
 	}
 	return records, nil
 }
