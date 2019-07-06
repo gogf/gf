@@ -511,21 +511,18 @@ func (md *Model) Structs(objPointerSlice interface{}) error {
 // 链式操作，将结果转换为指定的struct/*struct/[]struct/[]*struct,
 // 参数应该为指针类型，否则返回失败。
 // 该方法自动识别参数类型，调用Struct/Structs方法。
-func (md *Model) Scan(objPointer interface{}) error {
-	t := reflect.TypeOf(objPointer)
+func (md *Model) Scan(pointer interface{}) error {
+	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
 		return fmt.Errorf("params should be type of pointer, but got: %v", k)
 	}
-	k = t.Elem().Kind()
-	switch k {
+	switch t.Elem().Kind() {
 	case reflect.Array:
 	case reflect.Slice:
-		return md.Structs(objPointer)
-	case reflect.Struct:
-		return md.Struct(objPointer)
+		return md.Structs(pointer)
 	default:
-		return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
+		return md.Struct(pointer)
 	}
 	return nil
 }
