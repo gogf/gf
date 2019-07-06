@@ -7,7 +7,7 @@ import (
 
 func main() {
 	//path := `D:\temp`
-	path := "/home/john/temp"
+	path := "/Users/john/Temp"
 	_, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
 		glog.Println(event)
 	})
