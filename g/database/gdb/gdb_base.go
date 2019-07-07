@@ -22,7 +22,8 @@ import (
 )
 
 const (
-	gDEFAULT_DEBUG_SQL_LENGTH = 1000 // 默认调试模式下记录的SQL条数
+	// 默认调试模式下记录的SQL条数
+	gDEFAULT_DEBUG_SQL_LENGTH = 1000
 )
 
 // 获取最近一条执行的sql

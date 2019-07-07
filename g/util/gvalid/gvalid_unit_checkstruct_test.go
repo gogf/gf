@@ -105,7 +105,7 @@ func Test_CheckStruct_With_Inherit(t *testing.T) {
 			Pass Pass
 		}
 		user := &User{
-			Name: "",
+			Name: "john",
 			Pass: Pass{
 				Pass1: "1",
 				Pass2: "2",
