@@ -6,3 +6,7 @@
 
 // Package ghttp provides powerful http server and simple client implements.
 package ghttp
+
+var (
+	paramTagPriority = []string{"param", "params"}
+)

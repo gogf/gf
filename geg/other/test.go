@@ -1,28 +1,26 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/os/glog"
+	"fmt"
 
-	"github.com/gogf/gf/g/os/gcache"
+	"github.com/gogf/gf/g"
 )
 
-func localCache() {
-	result := gcache.GetOrSetFunc("test.key.1", func() interface{} {
-		return nil
-	}, 1000*60*2)
-	if result == nil {
-		glog.Error("未获取到值")
-	} else {
-		glog.Infofln("result is $v", result)
-	}
-}
-
-func TestCache() {
-	for i := 0; i < 100; i++ {
-		localCache()
-	}
+type User struct {
+	Uid  int
+	Name string
 }
 
 func main() {
-	TestCache()
+	if r, err := g.DB().Table("user").Where("uid=?", 1).One(); r != nil {
+		u := new(User)
+		if err := r.ToStruct(u); err == nil {
+			fmt.Println(" uid:", u.Uid)
+			fmt.Println("name:", u.Name)
+		} else {
+			fmt.Println(err)
+		}
+	} else if err != nil {
+		fmt.Println(err)
+	}
 }
