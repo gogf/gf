@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/g/util/gconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func Test_Array_Basic(t *testing.T) {
@@ -496,6 +497,7 @@ func TestSortedArray_Range(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
+		array2 := garray.NewSortedArrayFrom(a1, func1, true)
 		i1 := array1.Range(2, 5)
 		gtest.Assert(i1, []interface{}{"c", "d", "e"})
 		gtest.Assert(array1.Len(), 6)
@@ -508,6 +510,8 @@ func TestSortedArray_Range(t *testing.T) {
 		i2 = array1.Range(4, 10)
 		gtest.Assert(len(i2), 2)
 		gtest.Assert(i2, []interface{}{"e", "f"})
+
+		gtest.Assert(array2.Range(1, 3), []interface{}{"b", "c"})
 
 	})
 }
@@ -587,6 +591,7 @@ func TestSortedArray_SubSlice(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
+		array2 := garray.NewSortedArrayFrom(a1, func1, true)
 		i1 := array1.SubSlice(2, 3)
 		gtest.Assert(len(i1), 3)
 		gtest.Assert(i1, []interface{}{"c", "d", "e"})
@@ -597,6 +602,13 @@ func TestSortedArray_SubSlice(t *testing.T) {
 
 		i1 = array1.SubSlice(7, 2)
 		gtest.Assert(len(i1), 0)
+
+		s1 := array1.SubSlice(1, -2)
+		gtest.Assert(s1, nil)
+
+		s1 = array1.SubSlice(-9, 2)
+		gtest.Assert(s1, nil)
+		gtest.Assert(array2.SubSlice(1, 3), []interface{}{"b", "c", "d"})
 
 	})
 }
@@ -674,5 +686,106 @@ func TestSortedArray_SetUnique(t *testing.T) {
 		array1.SetUnique(true)
 		gtest.Assert(array1.Len(), 3)
 		gtest.Assert(array1, []interface{}{"a", "c", "d"})
+	})
+}
+
+func TestSortedArray_LockFunc(t *testing.T) {
+	gtest.Case(t, func() {
+		func1 := func(v1, v2 interface{}) int {
+			return strings.Compare(gconv.String(v1), gconv.String(v2))
+		}
+		s1 := []interface{}{"a", "b", "c", "d"}
+		a1 := garray.NewSortedArrayFrom(s1, func1)
+
+		ch1 := make(chan int64, 3)
+		ch2 := make(chan int64, 3)
+		//go1
+		go a1.LockFunc(func(n1 []interface{}) { //读写锁
+			time.Sleep(2 * time.Second) //暂停2秒
+			n1[2] = "g"
+			ch2 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		})
+
+		//go2
+		go func() {
+			time.Sleep(100 * time.Millisecond) //故意暂停0.01秒,等go1执行锁后，再开始执行.
+			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+			a1.Len()
+			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		}()
+
+		t1 := <-ch1
+		t2 := <-ch1
+		<-ch2 //等待go1完成
+
+		// 防止ci抖动,以豪秒为单位
+		gtest.AssertGT(t2-t1, 20) //go1加的读写互斥锁，所go2读的时候被阻塞。
+		gtest.Assert(a1.Contains("g"), true)
+	})
+}
+
+func TestSortedArray_RLockFunc(t *testing.T) {
+	gtest.Case(t, func() {
+		func1 := func(v1, v2 interface{}) int {
+			return strings.Compare(gconv.String(v1), gconv.String(v2))
+		}
+		s1 := []interface{}{"a", "b", "c", "d"}
+		a1 := garray.NewSortedArrayFrom(s1, func1)
+
+		ch1 := make(chan int64, 3)
+		ch2 := make(chan int64, 3)
+		//go1
+		go a1.RLockFunc(func(n1 []interface{}) { //读写锁
+			time.Sleep(2 * time.Second) //暂停2秒
+			n1[2] = "g"
+			ch2 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		})
+
+		//go2
+		go func() {
+			time.Sleep(100 * time.Millisecond) //故意暂停0.01秒,等go1执行锁后，再开始执行.
+			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+			a1.Len()
+			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
+		}()
+
+		t1 := <-ch1
+		t2 := <-ch1
+		<-ch2 //等待go1完成
+
+		// 防止ci抖动,以豪秒为单位
+		gtest.AssertLT(t2-t1, 20) //go1加的读锁，所go2读的时候不会被阻塞。
+		gtest.Assert(a1.Contains("g"), true)
+	})
+}
+
+func TestSortedArray_Merge(t *testing.T) {
+	gtest.Case(t, func() {
+		func1 := func(v1, v2 interface{}) int {
+			if gconv.Int(v1) < gconv.Int(v2) {
+				return 0
+			}
+			return 1
+		}
+
+		s1 := []interface{}{"a", "b", "c", "d"}
+		s2 := []string{"e", "f"}
+		i1 := garray.NewIntArrayFrom([]int{1, 2, 3})
+		i2 := garray.NewArrayFrom([]interface{}{3})
+		s3 := garray.NewStringArrayFrom([]string{"g", "h"})
+		s4 := garray.NewSortedArrayFrom([]interface{}{4, 5}, func1)
+		s5 := garray.NewSortedStringArrayFrom(s2)
+		s6 := garray.NewSortedIntArrayFrom([]int{1, 2, 3})
+
+		a1 := garray.NewSortedArrayFrom(s1, func1)
+
+		gtest.Assert(a1.Merge(s2).Len(), 6)
+		gtest.Assert(a1.Merge(i1).Len(), 9)
+		gtest.Assert(a1.Merge(i2).Len(), 10)
+		gtest.Assert(a1.Merge(s3).Len(), 12)
+		gtest.Assert(a1.Merge(s4).Len(), 14)
+		gtest.Assert(a1.Merge(s5).Len(), 16)
+		gtest.Assert(a1.Merge(s6).Len(), 19)
+
 	})
 }
