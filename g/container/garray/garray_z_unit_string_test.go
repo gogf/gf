@@ -647,8 +647,8 @@ func TestStringArray_RLockFunc(t *testing.T) {
 		ch1 := make(chan int64, 3)
 		//go1
 		go a1.RLockFunc(func(n1 []string) { //读锁
+			time.Sleep(2 * time.Second) //暂停1秒
 			n1[2] = "g"
-			time.Sleep(2 * time.Second) //暂停2秒
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 		})
 
@@ -665,7 +665,7 @@ func TestStringArray_RLockFunc(t *testing.T) {
 		<-ch1 //等待go1完成
 
 		// 防止ci抖动,以豪秒为单位
-		gtest.AssertLT(t2-t1, 20)
+		gtest.AssertLT(t2-t1, 20) //go1加的读锁，所go2读的时候，并没有阻塞。
 		gtest.Assert(a1.Contains("g"), true)
 	})
 }
