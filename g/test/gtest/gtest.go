@@ -9,13 +9,14 @@ package gtest
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/util/gconv"
 	"os"
 	"reflect"
 	"regexp"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 // Case creates an unit test case.
@@ -284,7 +285,8 @@ func compareMap(value, expect interface{}) error {
 				}
 				for k, v := range mExpect {
 					if v != mValue[k] {
-						return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == %v`, k, mValue[k], v)
+						return fmt.Errorf(`[ASSERT] EXPECT VALUE map["%v"]:%v == map["%v"]:%v`+
+							"\nGIVEN : %v\nEXPECT: %v", k, mValue[k], k, v, mValue, mExpect)
 					}
 				}
 			} else {

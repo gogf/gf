@@ -9,6 +9,8 @@ package gvalid_test
 import (
 	"testing"
 
+	"github.com/gogf/gf/g"
+
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gvalid"
 )
@@ -88,5 +90,31 @@ func Test_CheckStruct(t *testing.T) {
 		gtest.AssertNE(err, nil)
 		gtest.Assert(len(err.Maps()), 1)
 		gtest.Assert(err.Maps()["uid"]["min"], "ID不能为空")
+	})
+}
+
+func Test_CheckStruct_With_Inherit(t *testing.T) {
+	gtest.Case(t, func() {
+		type Pass struct {
+			Pass1 string `valid:"password1@required|same:password2#请输入您的密码|您两次输入的密码不一致"`
+			Pass2 string `valid:"password2@required|same:password1#请再次输入您的密码|您两次输入的密码不一致"`
+		}
+		type User struct {
+			Id   int
+			Name string `valid:"name@required#请输入您的姓名"`
+			Pass Pass
+		}
+		user := &User{
+			Name: "",
+			Pass: Pass{
+				Pass1: "1",
+				Pass2: "2",
+			},
+		}
+		err := gvalid.CheckStruct(user, nil)
+		gtest.AssertNE(err, nil)
+		gtest.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
+		gtest.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
+		gtest.Assert(err.Maps()["password2"], g.Map{"same": "您两次输入的密码不一致"})
 	})
 }

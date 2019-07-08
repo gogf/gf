@@ -9,10 +9,11 @@ package gconv
 
 import (
 	"encoding/json"
-	"github.com/gogf/gf/g/encoding/gbinary"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/g/encoding/gbinary"
 )
 
 // Type assert api for String().
@@ -25,6 +26,10 @@ type apiError interface {
 	Error() string
 }
 
+const (
+	gGCONV_TAG = "gconv"
+)
+
 var (
 	// Empty strings.
 	emptyStringMap = map[string]struct{}{
@@ -33,6 +38,9 @@ var (
 		"off":   struct{}{},
 		"false": struct{}{},
 	}
+
+	// Priority tags for Map*/Struct* functions.
+	structTagPriority = []string{gGCONV_TAG, "json"}
 )
 
 // Convert converts the variable <i> to the type <t>, the type <t> is specified by string.

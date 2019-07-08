@@ -7,6 +7,8 @@
 package gdb
 
 import (
+	"database/sql"
+
 	"github.com/gogf/gf/g/encoding/gparser"
 )
 
@@ -33,5 +35,8 @@ func (r Record) ToMap() Map {
 
 // 将Map变量映射到指定的struct对象中，注意参数应当是一个对象的指针
 func (r Record) ToStruct(pointer interface{}) error {
+	if r == nil {
+		return sql.ErrNoRows
+	}
 	return mapToStruct(r.ToMap(), pointer)
 }
