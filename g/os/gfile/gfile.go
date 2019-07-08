@@ -11,10 +11,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/g/container/gtype"
-	"github.com/gogf/gf/g/text/gregex"
-	"github.com/gogf/gf/g/text/gstr"
-	"github.com/gogf/gf/g/util/gconv"
 	"io"
 	"io/ioutil"
 	"os"
@@ -25,6 +21,11 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/g/container/gtype"
+	"github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 const (
