@@ -12,21 +12,21 @@ var cache = New()
 
 // Set sets cache with <key>-<value> pair, which is expired after <expire> milliseconds.
 // If <expire> <=0 means it does not expire.
-func Set(key interface{}, value interface{}, expire int) {
-	cache.Set(key, value, expire)
+func Set(key interface{}, value interface{}, duration interface{}) {
+	cache.Set(key, value, duration)
 }
 
 // SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
 // which is expired after <expire> milliseconds.
 // If <expire> <=0 means it does not expire.
-func SetIfNotExist(key interface{}, value interface{}, expire int) bool {
-	return cache.SetIfNotExist(key, value, expire)
+func SetIfNotExist(key interface{}, value interface{}, duration interface{}) bool {
+	return cache.SetIfNotExist(key, value, duration)
 }
 
 // Sets batch sets cache with key-value pairs by <data>, which is expired after <expire> milliseconds.
 // If <expire> <=0 means it does not expire.
-func Sets(data map[interface{}]interface{}, expire int) {
-	cache.Sets(data, expire)
+func Sets(data map[interface{}]interface{}, duration interface{}) {
+	cache.Sets(data, duration)
 }
 
 // Get returns the value of <key>.
@@ -39,8 +39,8 @@ func Get(key interface{}) interface{} {
 // or sets <key>-<value> pair and returns <value> if <key> does not exist in the cache.
 // The key-value pair expires after <expire> milliseconds.
 // If <expire> <=0 means it does not expire.
-func GetOrSet(key interface{}, value interface{}, expire int) interface{} {
-	return cache.GetOrSet(key, value, expire)
+func GetOrSet(key interface{}, value interface{}, duration interface{}) interface{} {
+	return cache.GetOrSet(key, value, duration)
 }
 
 // GetOrSetFunc returns the value of <key>,
@@ -48,8 +48,8 @@ func GetOrSet(key interface{}, value interface{}, expire int) interface{} {
 // if <key> does not exist in the cache.
 // The key-value pair expires after <expire> milliseconds.
 // If <expire> <=0 means it does not expire.
-func GetOrSetFunc(key interface{}, f func() interface{}, expire int) interface{} {
-	return cache.GetOrSetFunc(key, f, expire)
+func GetOrSetFunc(key interface{}, f func() interface{}, duration interface{}) interface{} {
+	return cache.GetOrSetFunc(key, f, duration)
 }
 
 // GetOrSetFuncLock returns the value of <key>,
@@ -59,8 +59,8 @@ func GetOrSetFunc(key interface{}, f func() interface{}, expire int) interface{}
 // If <expire> <=0 means it does not expire.
 //
 // Note that the function <f> is executed within writing mutex lock.
-func GetOrSetFuncLock(key interface{}, f func() interface{}, expire int) interface{} {
-	return cache.GetOrSetFuncLock(key, f, expire)
+func GetOrSetFuncLock(key interface{}, f func() interface{}, duration interface{}) interface{} {
+	return cache.GetOrSetFuncLock(key, f, duration)
 }
 
 // Contains returns true if <key> exists in the cache, or else returns false.

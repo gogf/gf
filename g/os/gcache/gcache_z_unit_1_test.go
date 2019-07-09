@@ -9,13 +9,14 @@
 package gcache_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/container/gset"
 	"github.com/gogf/gf/g/os/gcache"
 	"github.com/gogf/gf/g/os/grpool"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
-	"time"
 )
 
 //clear 用于清除全局缓存，因gcache api 暂未暴露 Clear 方法
@@ -48,6 +49,14 @@ func TestCache_Set_Expire(t *testing.T) {
 		time.Sleep(3 * time.Second)
 		gtest.Assert(cache.Size(), 0)
 		cache.Close()
+	})
+
+	gtest.Case(t, func() {
+		cache := gcache.New()
+		cache.Set(1, 11, 100*time.Millisecond)
+		gtest.Assert(cache.Get(1), 11)
+		time.Sleep(200 * time.Millisecond)
+		gtest.Assert(cache.Get(1), nil)
 	})
 }
 
@@ -205,7 +214,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 		}()
 		select {
 		case <-time.After(2 * time.Second):
-			t.Log("first part end")
+			//t.Log("first part end")
 		}
 
 		go func() {
@@ -217,7 +226,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 		}()
 		select {
 		case <-time.After(2 * time.Second):
-			t.Log("second part end")
+			//t.Log("second part end")
 		}
 	})
 }
