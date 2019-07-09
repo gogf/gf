@@ -48,6 +48,32 @@ func Test_Wrap(t *testing.T) {
 	})
 }
 
+func Test_Cause(t *testing.T) {
+	gtest.Case(t, func() {
+		err := errors.New("1")
+		gtest.Assert(gerror.Cause(err), err)
+	})
+
+	gtest.Case(t, func() {
+		err := errors.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.Wrap(err, "3")
+		gtest.Assert(gerror.Cause(err), "1")
+	})
+
+	gtest.Case(t, func() {
+		err := gerror.New("1")
+		gtest.Assert(gerror.Cause(err), "1")
+	})
+
+	gtest.Case(t, func() {
+		err := gerror.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.Wrap(err, "3")
+		gtest.Assert(gerror.Cause(err), "1")
+	})
+}
+
 func Test_Format(t *testing.T) {
 	gtest.Case(t, func() {
 		err := errors.New("1")

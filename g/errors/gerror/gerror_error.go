@@ -47,6 +47,23 @@ func (err *Error) Error() string {
 	return err.error.Error()
 }
 
+// Cause returns the root cause error.
+func (err *Error) Cause() error {
+	loop := err
+	for loop != nil {
+		if loop.error != nil {
+			if e, ok := loop.error.(*Error); ok {
+				loop = e
+			} else {
+				return loop.error
+			}
+		} else {
+			return loop
+		}
+	}
+	return nil
+}
+
 // Format formats the frame according to the fmt.Formatter interface.
 //
 // %v, %s   : Print the error string;
