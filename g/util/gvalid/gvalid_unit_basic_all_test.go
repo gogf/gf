@@ -24,9 +24,9 @@ func Test_Check(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.AssertNE(err3, nil)
+		gtest.Assert(err1, "invalid rules:abc:6,16")
+		gtest.Assert(err2, "invalid rules:abc:6,16")
+		gtest.Assert(err3, "invalid rules:abc:6,16")
 	})
 }
 

@@ -9,6 +9,7 @@
 package gfcache_test
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -23,43 +24,69 @@ func TestGetContents(t *testing.T) {
 
 		var f *os.File
 		var err error
-		fileName := "test.txt"
+		fileName := "test"
 		strTest := "123"
 
 		if !gfile.Exists(fileName) {
-			f, err = gfile.Create(fileName)
+			f, err = ioutil.TempFile("", fileName)
 			if err != nil {
 				t.Error("create file fail")
 			}
 		}
 
-		cache := gfcache.GetContents(fileName, 2)
+		defer f.Close()
+		defer os.Remove(f.Name())
 
-		if gfile.Exists(fileName) {
-			f, err = gfile.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+		if gfile.Exists(f.Name()) {
+
+			f, err = gfile.OpenFile(f.Name(), os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 			if err != nil {
 				t.Error("file open fail", err)
+			}
+
+			err = gfile.PutContents(f.Name(), strTest)
+			if err != nil {
+				t.Error("write error", err)
+			}
+
+			cache := gfcache.GetContents(f.Name(), 1)
+			gtest.Assert(cache, strTest)
+		}
+	})
+
+	gtest.Case(t, func() {
+
+		var f *os.File
+		var err error
+		fileName := "test2"
+		strTest := "123"
+
+		if !gfile.Exists(fileName) {
+			f, err = ioutil.TempFile("", fileName)
+			if err != nil {
+				t.Error("create file fail")
 			}
 		}
 
 		defer f.Close()
+		defer os.Remove(f.Name())
 
-		_, err = f.Write([]byte(strTest))
-		if err != nil {
-			t.Error("write error", err)
-		}
+		if gfile.Exists(f.Name()) {
+			cache := gfcache.GetContents(f.Name())
 
-		cache = gfcache.GetContents(fileName)
-		gtest.Assert(cache, "")
-
-		time.Sleep(time.Duration(4) * time.Second)
-
-		if gfile.Exists(fileName) {
-			err = gfile.Remove(fileName)
+			f, err = gfile.OpenFile(f.Name(), os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 			if err != nil {
-				t.Error("file remove fail", err)
+				t.Error("file open fail", err)
 			}
+
+			err = gfile.PutContents(f.Name(), strTest)
+			if err != nil {
+				t.Error("write error", err)
+			}
+
+			gtest.Assert(cache, "")
+
+			time.Sleep(100 * time.Millisecond)
 		}
 	})
-
 }
