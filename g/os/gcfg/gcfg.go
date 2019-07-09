@@ -489,14 +489,41 @@ func (c *Config) GetGTime(pattern string, format ...string) *gtime.Time {
 	return nil
 }
 
-func (c *Config) GetToStruct(pattern string, pointer interface{}, def ...interface{}) error {
+func (c *Config) GetStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.GetToStruct(pattern, pointer)
+		return j.GetStruct(pattern, pointer, mapping...)
 	}
 	return errors.New("config file not found")
 }
 
-// Deprecated. See Clear.
+func (c *Config) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.GetStructDeep(pattern, pointer, mapping...)
+	}
+	return errors.New("config file not found")
+}
+
+func (c *Config) GetStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.GetStructs(pattern, pointer, mapping...)
+	}
+	return errors.New("config file not found")
+}
+
+func (c *Config) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.GetStructsDeep(pattern, pointer, mapping...)
+	}
+	return errors.New("config file not found")
+}
+
+// Deprecated.
+func (c *Config) GetToStruct(pattern string, pointer interface{}) error {
+	return c.GetStruct(pattern, pointer)
+}
+
+// Reload is alias of Clear.
+// Deprecated.
 func (c *Config) Reload() {
 	c.jsons.Clear()
 }
