@@ -31,6 +31,7 @@ func Test_SortedIntArray1(t *testing.T) {
 		array.Add(i)
 	}
 	gtest.Assert(array.Slice(), expect)
+	gtest.Assert(array.Add().Slice(), expect)
 }
 
 func Test_SortedIntArray2(t *testing.T) {
@@ -100,6 +101,5 @@ func TestNewFromCopy(t *testing.T) {
 		gtest.AssertIN(array1.PopRands(2), a1)
 		gtest.Assert(len(array1.PopRands(1)), 1)
 		gtest.Assert(len(array1.PopRands(9)), 3)
-
 	})
 }
