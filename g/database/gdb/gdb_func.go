@@ -91,8 +91,8 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 	if buffer.Len() == 0 {
 		return "", args
 	}
-	newWhere = buffer.String()
 	tmpArgs = append(tmpArgs, args...)
+	newWhere = buffer.String()
 	// 查询条件参数处理，主要处理slice参数类型
 	if len(tmpArgs) > 0 {
 		for index, arg := range tmpArgs {
@@ -103,13 +103,15 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 				kind = rv.Kind()
 			}
 			switch kind {
-			// '?'占位符支持slice类型,
-			// 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
-			case reflect.Slice:
-				fallthrough
-			case reflect.Array:
+			// '?'占位符支持slice类型, 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
+			case reflect.Slice, reflect.Array:
 				for i := 0; i < rv.Len(); i++ {
 					newArgs = append(newArgs, rv.Index(i).Interface())
+				}
+				// 如果参数直接传递slice，并且占位符数量与slice长度相等，
+				// 那么不用替换扩展占位符数量，直接使用该slice作为查询参数
+				if len(args) == 1 && gstr.Count(newWhere, "?") == rv.Len() {
+					break
 				}
 				// counter用于匹配该参数的位置(与index对应)
 				counter := 0
