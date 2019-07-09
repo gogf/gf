@@ -57,7 +57,6 @@ func main() {
     s.Run()
 }
 ```
-
 ## Rich Router
 ```go
 package main
@@ -135,9 +134,7 @@ func main() {
 	s.Run()
 }
 ```
-
 ## Multi ports & domains
-
 ```go
 package main
 
@@ -162,9 +159,7 @@ func main() {
     s.Run()
 }
 ```
-
 ## Template Engine
-
 ```go
 package main
 
@@ -185,9 +180,7 @@ func main() {
 	s.Run()
 }
 ```
-
 ## File Uploading
-
 ```go
 func Upload(r *ghttp.Request) {
     if f, h, e := r.FormFile("upload-file"); e == nil {
@@ -248,9 +241,6 @@ r, err := db.Table("user").Where(User{ Id : 1, UserName : "john"}).One()
 // SELECT * FROM user WHERE uid =1
 r, err := db.Table("user").Where(&User{ Id : 1}).One()
 ```
-
-
-
 ### 3. Update & Delete
 ```go
 // UPDATE user SET name='john guo' WHERE name='john'
@@ -264,14 +254,12 @@ r, err := db.Table("user").Where("uid=?", 10).Delete()
 // DELETE FROM user ORDER BY login_time asc LIMIT 10
 r, err := db.Table("user").OrderBy("login_time asc").Limit(10).Delete()
 ```
-
 ### 4. Insert & Replace & Save
 ```go
 r, err := db.Table("user").Data(g.Map{"name": "john"}).Insert()
 r, err := db.Table("user").Data(g.Map{"uid": 10000, "name": "john"}).Replace()
 r, err := db.Table("user").Data(g.Map{"uid": 10001, "name": "john"}).Save()
 ```
-
 ### 5. Transaction
 ```go
 if tx, err := db.Begin(); err == nil {
@@ -282,7 +270,6 @@ if tx, err := db.Begin(); err == nil {
     tx.Commit()
 }
 ```
-
 ### 6. Error Handling
 ```go
 func GetOrderInfo(id int) (order *Order, err error) {
