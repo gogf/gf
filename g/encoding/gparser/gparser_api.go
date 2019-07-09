@@ -145,11 +145,32 @@ func (p *Parser) GetToVar(pattern string, pointer interface{}) error {
 	return p.json.GetToVar(pattern, pointer)
 }
 
-// GetToStruct gets the value by specified <pattern>,
+// GetStruct gets the value by specified <pattern>,
 // and converts it to specified object <pointer>.
-// The <pointer> should be the pointer to a struct.
-func (p *Parser) GetToStruct(pattern string, pointer interface{}) error {
-	return p.json.GetToStruct(pattern, pointer)
+// The <pointer> should be the pointer to an object.
+func (p *Parser) GetStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return p.json.GetStruct(pattern, pointer, mapping...)
+}
+
+// GetStructDeep does GetStruct recursively.
+func (p *Parser) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return p.json.GetStructDeep(pattern, pointer, mapping...)
+}
+
+// GetStructs converts any slice to given struct slice.
+func (p *Parser) GetStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return p.json.GetStructs(pattern, pointer, mapping...)
+}
+
+// GetStructsDeep converts any slice to given struct slice recursively.
+func (p *Parser) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return p.json.GetStructsDeep(pattern, pointer, mapping...)
+}
+
+// GetToStruct is alias of GetStruct.
+// Deprecated.
+func (p *Parser) GetToStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return p.json.GetStruct(pattern, pointer, mapping...)
 }
 
 // Set sets value with specified <pattern>.
