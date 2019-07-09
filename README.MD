@@ -212,7 +212,6 @@ db := g.DB("user-center")
 ```
 ### 2. Chaining Operations
 
-#### 1). Basic
 `Where + string`
 ```go
 // SELECT * FROM user WHERE uid>1 LIMIT 0,10
@@ -249,91 +248,8 @@ r, err := db.Table("user").Where(User{ Id : 1, UserName : "john"}).One()
 // SELECT * FROM user WHERE uid =1
 r, err := db.Table("user").Where(&User{ Id : 1}).One()
 ```
-Complex one:
-```go
-conditions := g.Map{
-    "title like ?"         : "%九寨%",
-    "online"               : 1,
-    "hits between ? and ?" : g.Slice{1, 10},
-    "exp > 0"              : nil,
-    "category"             : g.Slice{100, 200},
-}
-result, err := db.Table("article").Where(conditions).All()
-// SELECT * FROM article WHERE title like '%九寨%' AND online=1 AND hits between 1 and 10 AND exp > 0 AND category IN(100,200)
-```
 
-#### 2). `join`
-```go
-// SELECT u.*,ud.site FROM user u LEFT JOIN user_detail ud ON u.uid=ud.uid WHERE u.uid=1 LIMIT 1
-r, err := db.Table("user u").LeftJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.site").Where("u.uid=?", 1).One()
 
-// SELECT ud.site FROM user u RIGHT JOIN user_detail ud ON u.uid=ud.uid WHERE u.uid=1 LIMIT 1
-r, err := db.Table("user u").RightJoin("user_detail ud", "u.uid=ud.uid").Fields("ud.site").Where("u.uid=?", 1).Value()
-
-// SELECT u.*,ud.site FROM user u INNER JOIN user_detail ud ON u.uid=ud.uid GROUP BY city ORDER BY register_time asc
-r, err := db.Table("user u").InnerJoin("user_detail ud", "u.uid=ud.uid").Fields("u.*,ud.city").GroupBy("city").OrderBy("register_time asc").Select()
-
-// SELECT u.*,ud.city FROM user u,user_detail ud WHERE u.uid=ud.uid
-r, err := db.Table("user u,user_detail ud").Where("u.uid=ud.uid").Fields("u.*,ud.city").All()
-```
-
-#### 3). `select in`
-```go
-// SELECT * FROM user WHERE uid IN(100,10000,90000)
-r, err := db.Table("user").Where("uid IN(?,?,?)", 100, 10000, 90000).All()
-// SELECT * FROM user WHERE gender=1 AND uid IN(100,10000,90000)
-r, err := db.Table("user").Where("gender=? AND uid IN(?)", 1, g.Slice{100, 10000, 90000}).All()
-// SELECT COUNT(*) FROM user WHERE age in(18,50)
-r, err := db.Table("user").Where("age IN(?,?)", 18, 50).Count()
-```
-With `map`:
-```go
-// SELECT * FROM user WHERE gender=1 AND uid IN(100,10000,90000)
-r, err := db.Table("user").Where(g.Map{
-    "gender" : 1,
-    "uid"    : g.Slice{100,10000,90000},
-}).All()
-```
-With `struct`:
-```go
-type User struct {
-    Id     []int  `gconv:"uid"`
-    Gender int    `gconv:"gender"`
-}
-// SELECT * FROM user WHERE uid IN(100,10000,90000) AND gender=1
-r, err := db.Table("user").Where(User{
-    "gender" : 1,
-    "uid"    : []int{100, 10000, 90000},
-}).All()
-```
-
-#### 4). `like`
-```go
-// SELECT * FROM user WHERE name like '%john%'
-r, err := db.Table("user").Where("name like ?", "%john%").Select()
-// SELECT * FROM user WHERE birthday like '1990-%'
-r, err := db.Table("user").Where("birthday like ?", "1990-%").Select()
-```
-
-#### 5). `sum`
-```go
-// SELECT SUM(score) FROM user WHERE uid=1
-r, err := db.Table("user").Fields("SUM(score)").Where("uid=?", 1).Value()
-```
-
-#### 6). `count`
-```go
-// SELECT COUNT(1) FROM user WHERE `birthday`='1990-10-01'
-r, err := db.Table("user").Where("birthday=?", "1990-10-01").Count()
-// SELECT COUNT(uid) FROM user WHERE `birthday`='1990-10-01'
-r, err := db.Table("user").Fields("uid").Where("birthday=?", "1990-10-01").Count()
-```
-
-#### 7). `distinct`
-```go
-// SELECT DISTINCT uid,name FROM user 
-r, err := db.Table("user").Fields("DISTINCT uid,name").Select()
-```
 
 ### 3. Update & Delete
 ```go
