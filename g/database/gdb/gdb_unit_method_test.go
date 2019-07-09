@@ -7,11 +7,12 @@
 package gdb_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
-	"time"
 )
 
 func TestDbBase_Ping(t *testing.T) {
@@ -24,12 +25,17 @@ func TestDbBase_Ping(t *testing.T) {
 }
 
 func TestDbBase_Query(t *testing.T) {
-	if _, err := db.Query("SELECT ?", 1); err != nil {
-		gtest.Fatal(err)
-	}
-	if _, err := db.Query("ERROR"); err == nil {
-		gtest.Fatal("FAIL")
-	}
+	gtest.Case(t, func() {
+		_, err := db.Query("SELECT ?", 1)
+		gtest.Assert(err, nil)
+		_, err = db.Query("SELECT ?+?", 1, 2)
+		gtest.Assert(err, nil)
+		_, err = db.Query("SELECT ?+?", g.Slice{1, 2})
+		gtest.Assert(err, nil)
+		_, err = db.Query("ERROR")
+		gtest.AssertNE(err, nil)
+	})
+
 }
 
 func TestDbBase_Exec(t *testing.T) {
@@ -290,11 +296,44 @@ func TestDbBase_Update(t *testing.T) {
 }
 
 func TestDbBase_GetAll(t *testing.T) {
-	if result, err := db.GetAll("SELECT * FROM user WHERE id=?", 1); err != nil {
-		gtest.Fatal(err)
-	} else {
+	gtest.Case(t, func() {
+		result, err := db.GetAll("SELECT * FROM user WHERE id=?", 1)
+		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 1)
-	}
+		gtest.Assert(result[0]["id"].Int(), 1)
+	})
+	gtest.Case(t, func() {
+		result, err := db.GetAll("SELECT * FROM user WHERE id in(?)", g.Slice{1, 2, 3})
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 3)
+		gtest.Assert(result[0]["id"].Int(), 1)
+		gtest.Assert(result[1]["id"].Int(), 2)
+		gtest.Assert(result[2]["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.GetAll("SELECT * FROM user WHERE id in(?,?,?)", g.Slice{1, 2, 3})
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 3)
+		gtest.Assert(result[0]["id"].Int(), 1)
+		gtest.Assert(result[1]["id"].Int(), 2)
+		gtest.Assert(result[2]["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.GetAll("SELECT * FROM user WHERE id in(?,?,?)", g.Slice{1, 2, 3}...)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 3)
+		gtest.Assert(result[0]["id"].Int(), 1)
+		gtest.Assert(result[1]["id"].Int(), 2)
+		gtest.Assert(result[2]["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.GetAll("SELECT * FROM user WHERE id>=? AND id <=?", g.Slice{1, 3})
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 3)
+		gtest.Assert(result[0]["id"].Int(), 1)
+		gtest.Assert(result[1]["id"].Int(), 2)
+		gtest.Assert(result[2]["id"].Int(), 3)
+	})
 }
 
 func TestDbBase_GetOne(t *testing.T) {
