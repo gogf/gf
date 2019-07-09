@@ -95,6 +95,7 @@ type DB interface {
 	getCache() *gcache.Cache
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
+	setSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
 	convertValue(fieldValue interface{}, fieldType string) interface{}
 	getTableFields(table string) (map[string]string, error)
@@ -339,10 +340,12 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 		sqlDb = v.(*sql.DB)
 	}
 	// 是否开启调试模式
-	bs.SetDebug(node.Debug)
+	bs.db.SetDebug(node.Debug)
 	// 是否手动选择数据库
 	if v := bs.schema.Val(); v != "" {
-		sqlDb.Exec("USE " + v)
+		if e := bs.db.setSchema(sqlDb, v); e != nil {
+			err = e
+		}
 	}
 	return
 }
