@@ -6,6 +6,9 @@ import (
 
 func main() {
 	db := g.DB()
+
+	db.Table("user").Where("nickname like ? and passport like ?", g.Slice{"T3", "t3"}).OrderBy("id asc").All()
+
 	conditions := g.Map{
 		"nickname like ?":    "%T%",
 		"id between ? and ?": g.Slice{1, 3},
