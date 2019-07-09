@@ -22,10 +22,7 @@ func Encode(src []byte) []byte {
 func Decode(dst []byte) ([]byte, error) {
 	src := make([]byte, base64.StdEncoding.DecodedLen(len(dst)))
 	n, err := base64.StdEncoding.Decode(src, dst)
-	if err != nil {
-		return nil, err
-	}
-	return src[:n], nil
+	return src[:n], err
 }
 
 // EncodeString encodes bytes with BASE64 algorithm.

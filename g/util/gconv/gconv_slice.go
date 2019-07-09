@@ -14,6 +14,46 @@ import (
 	"github.com/gogf/gf/g/text/gstr"
 )
 
+// SliceInt is alias of Ints.
+func SliceInt(i interface{}) []int {
+	return Ints(i)
+}
+
+// SliceStr is alias of Strings.
+func SliceStr(i interface{}) []string {
+	return Strings(i)
+}
+
+// SliceAny is alias of Interfaces.
+func SliceAny(i interface{}) []interface{} {
+	return Interfaces(i)
+}
+
+// SliceFloat is alias of Floats.
+func SliceFloat(i interface{}) []float64 {
+	return Floats(i)
+}
+
+// SliceMap is alias of Maps.
+func SliceMap(i interface{}) []map[string]interface{} {
+	return Maps(i)
+}
+
+// SliceMapDeep is alias of MapsDeep.
+func SliceMapDeep(i interface{}) []map[string]interface{} {
+	return MapsDeep(i)
+}
+
+// SliceStruct is alias of Structs.
+func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+	return Structs(params, pointer, mapping...)
+}
+
+// SliceStructDeep is alias of StructsDeep.
+func SliceStructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+	return StructsDeep(params, pointer, mapping...)
+}
+
 // Ints converts <i> to []int.
 func Ints(i interface{}) []int {
 	if i == nil {
@@ -345,6 +385,26 @@ func Maps(i interface{}) []map[string]interface{} {
 		list := make([]map[string]interface{}, len(array))
 		for k, v := range array {
 			list[k] = Map(v)
+		}
+		return list
+	}
+}
+
+// MapsDeep converts <i> to []map[string]interface{} recursively.
+func MapsDeep(i interface{}) []map[string]interface{} {
+	if i == nil {
+		return nil
+	}
+	if r, ok := i.([]map[string]interface{}); ok {
+		return r
+	} else {
+		array := Interfaces(i)
+		if len(array) == 0 {
+			return nil
+		}
+		list := make([]map[string]interface{}, len(array))
+		for k, v := range array {
+			list[k] = MapDeep(v)
 		}
 		return list
 	}
