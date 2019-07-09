@@ -58,6 +58,16 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 }
 
+// Cause returns the root cause error.
+func Cause(err error) error {
+	if err != nil {
+		if e, ok := err.(*Error); ok {
+			return e.Cause()
+		}
+	}
+	return err
+}
+
 // Stack returns the stack callers as string.
 // It returns an empty string id the <err> does not support stacks.
 func Stack(err error) string {
