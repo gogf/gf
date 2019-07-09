@@ -7,10 +7,11 @@
 package gdb_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 func TestTX_Query(t *testing.T) {
@@ -19,6 +20,16 @@ func TestTX_Query(t *testing.T) {
 		gtest.Fatal(err)
 	}
 	if rows, err := tx.Query("SELECT ?", 1); err != nil {
+		gtest.Fatal(err)
+	} else {
+		rows.Close()
+	}
+	if rows, err := tx.Query("SELECT ?+?", 1, 2); err != nil {
+		gtest.Fatal(err)
+	} else {
+		rows.Close()
+	}
+	if rows, err := tx.Query("SELECT ?+?", g.Slice{1, 2}); err != nil {
 		gtest.Fatal(err)
 	} else {
 		rows.Close()
@@ -37,6 +48,12 @@ func TestTX_Exec(t *testing.T) {
 		gtest.Fatal(err)
 	}
 	if _, err := tx.Exec("SELECT ?", 1); err != nil {
+		gtest.Fatal(err)
+	}
+	if _, err := tx.Exec("SELECT ?+?", 1, 2); err != nil {
+		gtest.Fatal(err)
+	}
+	if _, err := tx.Exec("SELECT ?+?", g.Slice{1, 2}); err != nil {
 		gtest.Fatal(err)
 	}
 	if _, err := tx.Exec("ERROR"); err == nil {
