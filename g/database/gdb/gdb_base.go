@@ -615,3 +615,9 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	}
 	return records, nil
 }
+
+// 动态切换数据库
+func (bs *dbBase) setSchema(sqlDb *sql.DB, schema string) error {
+	_, err := sqlDb.Exec("USE " + schema)
+	return err
+}
