@@ -652,6 +652,21 @@ func TestModel_Where(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(result["id"].Int(), 3)
 	})
+	// slice
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("id=? AND nickname=?", g.Slice{3, "T3"}...).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("passport like ? and nickname like ?", g.Slice{"t3", "T3"}...).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(result["id"].Int(), 3)
+	})
 	// map
 	gtest.Case(t, func() {
 		result, err := db.Table("user").Where(g.Map{"id": 3, "nickname": "T3"}).One()
