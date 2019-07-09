@@ -1,26 +1,19 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
-
-	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/encoding/gbase64"
 )
 
-type User struct {
-	Uid  int
-	Name string
-}
-
 func main() {
-	if r, err := g.DB().Table("user").Where("uid=?", 1).One(); r != nil {
-		u := new(User)
-		if err := r.ToStruct(u); err == nil {
-			fmt.Println(" uid:", u.Uid)
-			fmt.Println("name:", u.Name)
-		} else {
-			fmt.Println(err)
-		}
-	} else if err != nil {
-		fmt.Println(err)
-	}
+	data := "HwHsGhXMaGc==="
+	datab, err := gbase64.Decode([]byte(data))
+	fmt.Println(err)
+	fmt.Println(datab)
+	fmt.Println(string(datab))
+
+	s, e := base64.StdEncoding.DecodeString(data)
+	fmt.Println(e)
+	fmt.Println(string(s))
 }
