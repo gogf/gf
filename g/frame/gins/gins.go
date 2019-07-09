@@ -9,8 +9,6 @@ package gins
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/database/gdb"
 	"github.com/gogf/gf/g/database/gredis"
@@ -21,6 +19,7 @@ import (
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
+	"time"
 )
 
 const (
@@ -88,78 +87,34 @@ func Database(name ...string) gdb.DB {
 				glog.Error(`database init failed: "database" node not found, is config file or configuration missing?`)
 				return nil
 			}
-			for group, v := range m {
+			// Parse <m> as map-slice.
+			for group, groupConfig := range m {
 				cg := gdb.ConfigGroup{}
-				if list, ok := v.([]interface{}); ok {
-					for _, nodeValue := range list {
-						node := gdb.ConfigNode{}
-						nodeMap := nodeValue.(map[string]interface{})
-						if value, ok := nodeMap["host"]; ok {
-							node.Host = gconv.String(value)
+				switch value := groupConfig.(type) {
+				case []interface{}:
+					for _, v := range value {
+						if node := parseDBConfigNode(v); node != nil {
+							cg = append(cg, *node)
 						}
-						if value, ok := nodeMap["port"]; ok {
-							node.Port = gconv.String(value)
-						}
-						if value, ok := nodeMap["user"]; ok {
-							node.User = gconv.String(value)
-						}
-						if value, ok := nodeMap["pass"]; ok {
-							node.Pass = gconv.String(value)
-						}
-						if value, ok := nodeMap["name"]; ok {
-							node.Name = gconv.String(value)
-						}
-						if value, ok := nodeMap["type"]; ok {
-							node.Type = gconv.String(value)
-						}
-						if value, ok := nodeMap["role"]; ok {
-							node.Role = gconv.String(value)
-						}
-						if value, ok := nodeMap["debug"]; ok {
-							node.Debug = gconv.Bool(value)
-						}
-						if value, ok := nodeMap["weight"]; ok {
-							node.Weight = gconv.Int(value)
-						}
-						if value, ok := nodeMap["charset"]; ok {
-							node.Charset = gconv.String(value)
-						}
-						// Deprecated
-						if value, ok := nodeMap["linkinfo"]; ok {
-							node.LinkInfo = gconv.String(value)
-						}
-						// Deprecated
-						if value, ok := nodeMap["link-info"]; ok {
-							node.LinkInfo = gconv.String(value)
-						}
-						if value, ok := nodeMap["linkInfo"]; ok {
-							node.LinkInfo = gconv.String(value)
-						}
-						// Deprecated
-						if value, ok := nodeMap["max-idle"]; ok {
-							node.MaxIdleConnCount = gconv.Int(value)
-						}
-						if value, ok := nodeMap["maxIdle"]; ok {
-							node.MaxIdleConnCount = gconv.Int(value)
-						}
-						// Deprecated
-						if value, ok := nodeMap["max-open"]; ok {
-							node.MaxOpenConnCount = gconv.Int(value)
-						}
-						if value, ok := nodeMap["maxOpen"]; ok {
-							node.MaxOpenConnCount = gconv.Int(value)
-						}
-						// Deprecated
-						if value, ok := nodeMap["max-lifetime"]; ok {
-							node.MaxConnLifetime = gconv.Int(value)
-						}
-						if value, ok := nodeMap["maxLifetime"]; ok {
-							node.MaxConnLifetime = gconv.Int(value)
-						}
-						cg = append(cg, node)
+					}
+				case map[string]interface{}:
+					if node := parseDBConfigNode(value); node != nil {
+						cg = append(cg, *node)
 					}
 				}
-				gdb.AddConfigGroup(group, cg)
+				if len(cg) > 0 {
+					gdb.AddConfigGroup(group, cg)
+				}
+			}
+			// Parse <m> as a single node configuration.
+			if node := parseDBConfigNode(m); node != nil {
+				cg := gdb.ConfigGroup{}
+				if node.LinkInfo != "" || node.Host != "" {
+					cg = append(cg, *node)
+				}
+				if len(cg) > 0 {
+					gdb.AddConfigGroup(group, cg)
+				}
 			}
 			addConfigMonitor(key, config)
 		}
@@ -174,6 +129,81 @@ func Database(name ...string) gdb.DB {
 		return db.(gdb.DB)
 	}
 	return nil
+}
+
+// 解析数据库配置节点项
+func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
+	nodeMap, ok := value.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	node := &gdb.ConfigNode{}
+	if value, ok := nodeMap["host"]; ok {
+		node.Host = gconv.String(value)
+	}
+	if value, ok := nodeMap["port"]; ok {
+		node.Port = gconv.String(value)
+	}
+	if value, ok := nodeMap["user"]; ok {
+		node.User = gconv.String(value)
+	}
+	if value, ok := nodeMap["pass"]; ok {
+		node.Pass = gconv.String(value)
+	}
+	if value, ok := nodeMap["name"]; ok {
+		node.Name = gconv.String(value)
+	}
+	if value, ok := nodeMap["type"]; ok {
+		node.Type = gconv.String(value)
+	}
+	if value, ok := nodeMap["role"]; ok {
+		node.Role = gconv.String(value)
+	}
+	if value, ok := nodeMap["charset"]; ok {
+		node.Charset = gconv.String(value)
+	}
+	if value, ok := nodeMap["weight"]; ok {
+		node.Weight = gconv.Int(value)
+	}
+	if value, ok := nodeMap["linkinfo"]; ok {
+		node.LinkInfo = gconv.String(value)
+	}
+	if value, ok := nodeMap["link-info"]; ok {
+		node.LinkInfo = gconv.String(value)
+	}
+	if value, ok := nodeMap["linkInfo"]; ok {
+		node.LinkInfo = gconv.String(value)
+	}
+	if value, ok := nodeMap["link"]; ok {
+		node.LinkInfo = gconv.String(value)
+	}
+	if value, ok := nodeMap["max-idle"]; ok {
+		node.MaxIdleConnCount = gconv.Int(value)
+	}
+	if value, ok := nodeMap["maxIdle"]; ok {
+		node.MaxIdleConnCount = gconv.Int(value)
+	}
+	if value, ok := nodeMap["max-open"]; ok {
+		node.MaxOpenConnCount = gconv.Int(value)
+	}
+	if value, ok := nodeMap["maxOpen"]; ok {
+		node.MaxOpenConnCount = gconv.Int(value)
+	}
+	if value, ok := nodeMap["max-lifetime"]; ok {
+		node.MaxConnLifetime = gconv.Int(value)
+	}
+	if value, ok := nodeMap["maxLifetime"]; ok {
+		node.MaxConnLifetime = gconv.Int(value)
+	}
+	// Parse link syntax.
+	if node.LinkInfo != "" && node.Type == "" {
+		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.LinkInfo)
+		if len(match) == 3 {
+			node.Type = match[1]
+			node.LinkInfo = match[2]
+		}
+	}
+	return node
 }
 
 // Redis操作对象，使用了连接池
