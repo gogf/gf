@@ -1,7 +1,14 @@
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gpool_test
 
 import (
 	"errors"
+	"github.com/gogf/gf/g"
 	"testing"
 	"time"
 
@@ -30,7 +37,7 @@ func Test_Gpool(t *testing.T) {
 		//test won't be timeout
 		v1, err1 := p1.Get()
 		gtest.Assert(err1, nil)
-		gtest.Assert(v1, 1)
+		gtest.AssertIN(v1, g.Slice{1, 2})
 		//test clear
 		p1.Clear()
 		gtest.Assert(p1.Size(), 0)
@@ -43,13 +50,12 @@ func Test_Gpool(t *testing.T) {
 		p1.Put(4)
 		v1, err1 = p1.Get()
 		gtest.Assert(err1, nil)
-		gtest.Assert(v1, 3)
+		gtest.AssertIN(v1, g.Slice{3, 4})
 		//test close
 		p1.Close()
 		v1, err1 = p1.Get()
 		gtest.Assert(err1, nil)
 		gtest.Assert(v1, "hello")
-
 	})
 
 	gtest.Case(t, func() {
