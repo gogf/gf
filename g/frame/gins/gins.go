@@ -93,12 +93,12 @@ func Database(name ...string) gdb.DB {
 				switch value := groupConfig.(type) {
 				case []interface{}:
 					for _, v := range value {
-						if node := parseConfigNode(v); node != nil {
+						if node := parseDBConfigNode(v); node != nil {
 							cg = append(cg, *node)
 						}
 					}
 				case map[string]interface{}:
-					if node := parseConfigNode(value); node != nil {
+					if node := parseDBConfigNode(value); node != nil {
 						cg = append(cg, *node)
 					}
 				}
@@ -107,7 +107,7 @@ func Database(name ...string) gdb.DB {
 				}
 			}
 			// Parse <m> as a single node configuration.
-			if node := parseConfigNode(m); node != nil {
+			if node := parseDBConfigNode(m); node != nil {
 				cg := gdb.ConfigGroup{}
 				if node.LinkInfo != "" || node.Host != "" {
 					cg = append(cg, *node)
@@ -132,7 +132,7 @@ func Database(name ...string) gdb.DB {
 }
 
 // 解析数据库配置节点项
-func parseConfigNode(value interface{}) *gdb.ConfigNode {
+func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	nodeMap, ok := value.(map[string]interface{})
 	if !ok {
 		return nil
