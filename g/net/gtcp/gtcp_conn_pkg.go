@@ -16,15 +16,18 @@ import (
 
 const (
 	// 默认允许最大的简单协议包大小(byte), 65535 byte
-	gPKG_MAX_DATA_SIZE = 65535
-	// 简单协议包头大小
-	gPKG_HEADER_SIZE = 3
+	gPKG_DEFAULT_MAX_DATA_SIZE = 65535
+	// 默认简单协议包头大小
+	gPKG_DEFAULT_HEADER_SIZE = 2
+	// 协议头最大大小
+	gPKG_MAX_HEADER_SIZE = 4
 )
 
 // 数据读取选项
 type PkgOption struct {
-	MaxSize int   // (byte)数据读取的最大包大小，最大不能超过3字节(0xFFFFFF,15MB)，默认为65535byte
-	Retry   Retry // 失败重试
+	HeaderSize  int   // 自定义头大小(默认为2字节，最大不能超过4字节)
+	MaxDataSize int   // (byte)数据读取的最大包大小，默认最大不能超过2字节(65535 byte)
+	Retry       Retry // 失败重试
 }
 
 // getPkgOption wraps and returns the PkgOption.
@@ -34,10 +37,13 @@ func getPkgOption(option ...PkgOption) (*PkgOption, error) {
 	if len(option) > 0 {
 		pkgOption = option[0]
 	}
-	if pkgOption.MaxSize == 0 {
-		pkgOption.MaxSize = gPKG_MAX_DATA_SIZE
-	} else if pkgOption.MaxSize > 0xFFFFFF {
-		return nil, fmt.Errorf(`package size %d exceeds allowed max size %d`, pkgOption.MaxSize, 0xFFFFFF)
+	if pkgOption.HeaderSize == 0 {
+		pkgOption.HeaderSize = gPKG_DEFAULT_HEADER_SIZE
+	}
+	if pkgOption.MaxDataSize == 0 {
+		pkgOption.MaxDataSize = gPKG_DEFAULT_MAX_DATA_SIZE
+	} else if pkgOption.MaxDataSize > 0xFFFFFF {
+		return nil, fmt.Errorf(`package size %d exceeds allowed max size %d`, pkgOption.MaxDataSize, 0xFFFFFF)
 	}
 	return &pkgOption, nil
 }
@@ -55,17 +61,18 @@ func (c *Conn) SendPkg(data []byte, option ...PkgOption) error {
 		return err
 	}
 	length := len(data)
-	if length > pkgOption.MaxSize {
-		return fmt.Errorf(`data size %d exceeds max pkg size %d`, length, gPKG_MAX_DATA_SIZE)
+	if length > pkgOption.MaxDataSize {
+		return fmt.Errorf(`data size %d exceeds max pkg size %d`, length, pkgOption.MaxDataSize)
 	}
-	buffer := make([]byte, gPKG_HEADER_SIZE+1+len(data))
+	offset := gPKG_MAX_HEADER_SIZE - pkgOption.HeaderSize
+	buffer := make([]byte, gPKG_MAX_HEADER_SIZE+len(data))
 	binary.BigEndian.PutUint32(buffer[0:], uint32(length))
-	copy(buffer[gPKG_HEADER_SIZE+1:], data)
+	copy(buffer[gPKG_MAX_HEADER_SIZE:], data)
 	if pkgOption.Retry.Count > 0 {
-		return c.Send(buffer[1:], pkgOption.Retry)
+		return c.Send(buffer[offset:], pkgOption.Retry)
 	}
-	//fmt.Println("SendPkg:", buffer[1:])
-	return c.Send(buffer[1:])
+	//fmt.Println("SendPkg:", buffer[offset:])
+	return c.Send(buffer[offset:])
 }
 
 // 简单协议: 带超时时间的数据发送
@@ -109,26 +116,38 @@ func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
 	for {
 		// 先根据对象的缓冲区数据进行计算
 		for {
-			if len(c.buffer) >= gPKG_HEADER_SIZE {
-				// 注意"数据长度"为3个字节，不满足4个字节的uint32类型，因此这里"低位"补0
-				length = int(binary.BigEndian.Uint32([]byte{0, c.buffer[0], c.buffer[1], c.buffer[2]}))
+			if len(c.buffer) >= pkgOption.HeaderSize {
+				// 不满足4个字节的uint32类型，因此这里"低位"补0
+				if length <= 0 {
+					switch pkgOption.HeaderSize {
+					case 1:
+						length = int(binary.BigEndian.Uint32([]byte{0, 0, 0, c.buffer[0]}))
+					case 2:
+						length = int(binary.BigEndian.Uint32([]byte{0, 0, c.buffer[0], c.buffer[1]}))
+					case 3:
+						length = int(binary.BigEndian.Uint32([]byte{0, c.buffer[0], c.buffer[1], c.buffer[2]}))
+					default:
+						length = int(binary.BigEndian.Uint32([]byte{c.buffer[0], c.buffer[1], c.buffer[2], c.buffer[3]}))
+					}
+				}
 				// 解析的大小是否符合规范，清空从该连接接收到的所有数据包
-				if length < 0 || length > pkgOption.MaxSize {
+				if length < 0 || length > pkgOption.MaxDataSize {
 					c.buffer = c.buffer[:0]
 					return nil, fmt.Errorf(`invalid package size %d`, length)
 				}
 				// 不满足包大小，需要继续读取
-				if len(c.buffer) < length+gPKG_HEADER_SIZE {
+				if len(c.buffer) < length+pkgOption.HeaderSize {
 					break
 				}
-				result = c.buffer[gPKG_HEADER_SIZE : gPKG_HEADER_SIZE+length]
-				c.buffer = c.buffer[gPKG_HEADER_SIZE+length:]
+				result = c.buffer[pkgOption.HeaderSize : pkgOption.HeaderSize+length]
+				c.buffer = c.buffer[pkgOption.HeaderSize+length:]
+				length = 0
 				return
 			} else {
 				break
 			}
 		}
-		// 读取系统socket缓冲区的完整数据
+		// 读取系统socket当前缓冲区的数据
 		temp, err = c.Recv(0, pkgOption.Retry)
 		if err != nil {
 			break
