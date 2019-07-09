@@ -40,6 +40,7 @@ golang version >= 1.10
 
 # Quick Start
 
+## Hello World
 ```go
 package main
 
@@ -56,8 +57,231 @@ func main() {
     s.Run()
 }
 ```
+## Rich Router
+```go
+package main
 
-[View More..](https://goframe.org/start/index)
+import (
+    "github.com/gogf/gf/g/net/ghttp"
+    "github.com/gogf/gf/g"
+)
+
+func main() {
+    s := g.Server()
+    s.BindHandler("/{class}-{course}/:name/*act", func(r *ghttp.Request) {
+        r.Response.Writeln(r.Get("class"))
+        r.Response.Writeln(r.Get("course"))
+        r.Response.Writeln(r.Get("name"))
+        r.Response.Writeln(r.Get("act"))
+    })
+    s.SetPort(8199)
+    s.Run()
+}
+```
+## Group Routers
+```go
+package main
+
+import (
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
+)
+
+type Object struct {}
+
+func (o *Object) Show(r *ghttp.Request) {
+	r.Response.Writeln("Object Show")
+}
+
+func (o *Object) Delete(r *ghttp.Request) {
+	r.Response.Writeln("Object REST Delete")
+}
+
+func Handler(r *ghttp.Request) {
+	r.Response.Writeln("Handler")
+}
+
+func HookHandler(r *ghttp.Request) {
+	r.Response.Writeln("Hook Handler")
+}
+
+func main() {
+	s     := g.Server()
+	obj   := new(Object)
+	group := s.Group("/api")
+	group.ALL ("*",            HookHandler, ghttp.HOOK_BEFORE_SERVE)
+	group.ALL ("/handler",     Handler)
+	group.ALL ("/obj",         obj)
+	group.GET ("/obj/showit",  obj, "Show")
+	group.REST("/obj/rest",    obj)
+	s.SetPort(8199)
+	s.Run()
+}
+```
+or
+```go
+func main() {
+	s   := g.Server()
+	obj := new(Object)
+	s.Group("/api").Bind([]ghttp.GroupItem{
+		{"ALL",  "*",            HookHandler, ghttp.HOOK_BEFORE_SERVE},
+		{"ALL",  "/handler",     Handler},
+		{"ALL",  "/obj",         obj},
+		{"GET",  "/obj/showit",  obj, "Show"},
+		{"REST", "/obj/rest",    obj},
+	})
+	s.SetPort(8199)
+	s.Run()
+}
+```
+## Multi ports & domains
+```go
+package main
+
+import (
+    "github.com/gogf/gf/g"
+    "github.com/gogf/gf/g/net/ghttp"
+)
+
+func Hello1(r *ghttp.Request) {
+    r.Response.Write("127.0.0.1: Hello1!")
+}
+
+func Hello2(r *ghttp.Request) {
+    r.Response.Write("localhost: Hello2!")
+}
+
+func main() {
+    s := g.Server()
+    s.Domain("127.0.0.1").BindHandler("/", Hello1)
+    s.Domain("localhost").BindHandler("/", Hello2)
+    s.SetPort(8100, 8200, 8300)
+    s.Run()
+}
+```
+## Template Engine
+```go
+package main
+
+import (
+	"github.com/gogf/gf/g"
+	"github.com/gogf/gf/g/net/ghttp"
+)
+
+func main() {
+	s := g.Server()
+	s.BindHandler("/template", func(r *ghttp.Request) {
+		r.Response.WriteTpl("index.tpl", g.Map{
+			"id":   123,
+			"name": "john",
+		})
+	})
+	s.SetPort(8199)
+	s.Run()
+}
+```
+## File Uploading
+```go
+func Upload(r *ghttp.Request) {
+    if f, h, e := r.FormFile("upload-file"); e == nil {
+        defer f.Close()
+        name   := gfile.Basename(h.Filename)
+        buffer := make([]byte, h.Size)
+        f.Read(buffer)
+        gfile.PutBinContents("/tmp/" + name, buffer)
+        r.Response.Write(name + " uploaded successly")
+    } else {
+        r.Response.Write(e.Error())
+    }
+}
+```
+
+## ORM Operations
+
+### 1. Retrieving instance
+```go
+db := g.DB()
+db := g.DB("user-center")
+```
+### 2. Chaining Operations
+
+`Where + string`
+```go
+// SELECT * FROM user WHERE uid>1 LIMIT 0,10
+r, err := db.Table("user").Where("uid > ?", 1).Limit(0, 10).Select()
+
+// SELECT uid,name FROM user WHERE uid>1 LIMIT 0,10
+r, err := db.Table("user").Fileds("uid,name").Where("uid > ?", 1).Limit(0, 10).Select()
+
+// SELECT * FROM user WHERE uid=1
+r, err := db.Table("user").Where("u.uid=1",).One()
+r, err := db.Table("user").Where("u.uid", 1).One()
+r, err := db.Table("user").Where("u.uid=?", 1).One()
+// SELECT * FROM user WHERE (uid=1) AND (name='john')
+r, err := db.Table("user").Where("uid", 1).Where("name", "john").One()
+r, err := db.Table("user").Where("uid=?", 1).And("name=?", "john").One()
+// SELECT * FROM user WHERE (uid=1) OR (name='john')
+r, err := db.Table("user").Where("uid=?", 1).Or("name=?", "john").One()
+```
+`Where + map`
+```go
+// SELECT * FROM user WHERE uid=1 AND name='john'
+r, err := db.Table("user").Where(g.Map{"uid" : 1, "name" : "john"}).One()
+// SELECT * FROM user WHERE uid=1 AND age>18
+r, err := db.Table("user").Where(g.Map{"uid" : 1, "age>" : 18}).One()
+```
+`Where + struct/*struct`
+```go
+type User struct {
+    Id       int    `json:"uid"`
+    UserName string `gconv:"name"`
+}
+// SELECT * FROM user WHERE uid =1 AND name='john'
+r, err := db.Table("user").Where(User{ Id : 1, UserName : "john"}).One()
+// SELECT * FROM user WHERE uid =1
+r, err := db.Table("user").Where(&User{ Id : 1}).One()
+```
+### 3. Update & Delete
+```go
+// UPDATE user SET name='john guo' WHERE name='john'
+r, err := db.Table("user").Data(gdb.Map{"name" : "john guo"}).Where("name=?", "john").Update()
+r, err := db.Table("user").Data("name='john guo'").Where("name=?", "john").Update()
+// UPDATE user SET status=1 ORDER BY login_time asc LIMIT 10
+r, err := db.Table("user").Data("status", 1).OrderBy("login_time asc").Limit(10).Update
+
+// DELETE FROM user WHERE uid=10
+r, err := db.Table("user").Where("uid=?", 10).Delete()
+// DELETE FROM user ORDER BY login_time asc LIMIT 10
+r, err := db.Table("user").OrderBy("login_time asc").Limit(10).Delete()
+```
+### 4. Insert & Replace & Save
+```go
+r, err := db.Table("user").Data(g.Map{"name": "john"}).Insert()
+r, err := db.Table("user").Data(g.Map{"uid": 10000, "name": "john"}).Replace()
+r, err := db.Table("user").Data(g.Map{"uid": 10001, "name": "john"}).Save()
+```
+### 5. Transaction
+```go
+if tx, err := db.Begin(); err == nil {
+    r, err := tx.Save("user", g.Map{
+        "uid"  :  1,
+        "name" : "john",
+    })
+    tx.Commit()
+}
+```
+### 6. Error Handling
+```go
+func GetOrderInfo(id int) (order *Order, err error) {
+    err = g.DB().Table("order").Where("id", id).Struct(&order)
+    if err != nil && err == sql.ErrNoRows {
+        err = nil
+    }
+    return
+}
+```
+
+[More Features...](https://goframe.org/start/index)
 
 
 # License
