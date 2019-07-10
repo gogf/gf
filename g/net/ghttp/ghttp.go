@@ -8,5 +8,5 @@
 package ghttp
 
 var (
-	paramTagPriority = []string{"param", "params"}
+	paramTagPriority = []string{"param", "params", "p"}
 )
