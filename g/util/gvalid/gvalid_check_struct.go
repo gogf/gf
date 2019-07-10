@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	// 同时支持gvalid和valid标签，优先使用gvalid
-	structTagPriority = []string{"gvalid", "valid"}
+	// 同时支持gvalid、valid和v标签，优先使用gvalid
+	structTagPriority = []string{"gvalid", "valid", "v"}
 )
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法。
