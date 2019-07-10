@@ -40,7 +40,7 @@ var (
 	}
 
 	// Priority tags for Map*/Struct* functions.
-	structTagPriority = []string{gGCONV_TAG, "json"}
+	structTagPriority = []string{gGCONV_TAG, "c", "json"}
 )
 
 // Convert converts the variable <i> to the type <t>, the type <t> is specified by string.
