@@ -266,11 +266,32 @@ func (j *Json) GetToVar(pattern string, pointer interface{}) error {
 	return nil
 }
 
-// GetToStruct gets the value by specified <pattern>,
-// and converts it to specified object <objPointer>.
-// The <objPointer> should be the pointer to an object.
-func (j *Json) GetToStruct(pattern string, pointer interface{}) error {
-	return gconv.Struct(j.Get(pattern), pointer)
+// GetStruct gets the value by specified <pattern>,
+// and converts it to specified object <pointer>.
+// The <pointer> should be the pointer to an object.
+func (j *Json) GetStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Struct(j.Get(pattern), pointer, mapping...)
+}
+
+// GetStructDeep does GetStruct recursively.
+func (j *Json) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.StructDeep(j.Get(pattern), pointer, mapping...)
+}
+
+// GetStructs converts any slice to given struct slice.
+func (j *Json) GetStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Structs(j.Get(pattern), pointer, mapping...)
+}
+
+// GetStructsDeep converts any slice to given struct slice recursively.
+func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.StructsDeep(j.Get(pattern), pointer, mapping...)
+}
+
+// GetToStruct is alias of GetStruct.
+// Deprecated.
+func (j *Json) GetToStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return j.GetStruct(pattern, pointer, mapping...)
 }
 
 // ToMap converts current Json object to map[string]interface{}.
@@ -290,7 +311,7 @@ func (j *Json) ToArray() []interface{} {
 }
 
 // ToStruct converts current Json object to specified object.
-// The <objPointer> should be a pointer type.
+// The <pointer> should be a pointer type.
 func (j *Json) ToStruct(pointer interface{}) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()

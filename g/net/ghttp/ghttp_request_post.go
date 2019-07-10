@@ -154,5 +154,5 @@ func (r *Request) GetPostToStruct(pointer interface{}, mapping ...map[string]str
 	for k, v := range r.GetPostMap() {
 		params[k] = v
 	}
-	return gconv.Struct(params, pointer, tagMap)
+	return gconv.StructDeep(params, pointer, tagMap)
 }
