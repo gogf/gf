@@ -58,33 +58,6 @@ func (v *Var) Interface() interface{} {
 	return v.Val()
 }
 
-// Time converts and returns <v> as time.Time.
-// The parameter <format> specifies the format of the time string using gtime,
-// eg: Y-m-d H:i:s.
-func (v *Var) Time(format ...string) time.Time {
-	return gconv.Time(v.Val(), format...)
-}
-
-// Duration converts and returns <v> as time.Duration.
-// If value of <v> is string, then it uses time.ParseDuration for conversion.
-func (v *Var) Duration() time.Duration {
-	return gconv.Duration(v.Val())
-}
-
-// GTime converts and returns <v> as *gtime.Time.
-// The parameter <format> specifies the format of the time string using gtime,
-// eg: Y-m-d H:i:s.
-func (v *Var) GTime(format ...string) *gtime.Time {
-	return gconv.GTime(v.Val(), format...)
-}
-
-// Struct maps value of <v> to <objPointer>.
-// The parameter <objPointer> should be a pointer to a struct instance.
-// The parameter <mapping> is used to specify the key-to-attribute mapping rules.
-func (v *Var) Struct(pointer interface{}, mapping ...map[string]string) error {
-	return gconv.Struct(v.Val(), pointer, mapping...)
-}
-
 // IsNil checks whether <v> is nil.
 func (v *Var) IsNil() bool {
 	return v.Val() == nil
@@ -183,4 +156,58 @@ func (v *Var) Strings() []string {
 // Interfaces converts and returns <v> as []interfaces{}.
 func (v *Var) Interfaces() []interface{} {
 	return gconv.Interfaces(v.Val())
+}
+
+// Time converts and returns <v> as time.Time.
+// The parameter <format> specifies the format of the time string using gtime,
+// eg: Y-m-d H:i:s.
+func (v *Var) Time(format ...string) time.Time {
+	return gconv.Time(v.Val(), format...)
+}
+
+// Duration converts and returns <v> as time.Duration.
+// If value of <v> is string, then it uses time.ParseDuration for conversion.
+func (v *Var) Duration() time.Duration {
+	return gconv.Duration(v.Val())
+}
+
+// GTime converts and returns <v> as *gtime.Time.
+// The parameter <format> specifies the format of the time string using gtime,
+// eg: Y-m-d H:i:s.
+func (v *Var) GTime(format ...string) *gtime.Time {
+	return gconv.GTime(v.Val(), format...)
+}
+
+// Map converts <v> to map[string]interface{}.
+func (v *Var) Map(tags ...string) map[string]interface{} {
+	return gconv.Map(v.Val(), tags...)
+}
+
+// MapDeep converts <v> to map[string]interface{} recursively.
+func (v *Var) MapDeep(tags ...string) map[string]interface{} {
+	return gconv.MapDeep(v.Val(), tags...)
+}
+
+// Struct maps value of <v> to <pointer>.
+// The parameter <pointer> should be a pointer to a struct instance.
+// The parameter <mapping> is used to specify the key-to-attribute mapping rules.
+func (v *Var) Struct(pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Struct(v.Val(), pointer, mapping...)
+}
+
+// Struct maps value of <v> to <pointer> recursively.
+// The parameter <pointer> should be a pointer to a struct instance.
+// The parameter <mapping> is used to specify the key-to-attribute mapping rules.
+func (v *Var) StructDeep(pointer interface{}, mapping ...map[string]string) error {
+	return gconv.StructDeep(v.Val(), pointer, mapping...)
+}
+
+// Structs converts <v> to given struct slice.
+func (v *Var) Structs(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.Structs(v.Val(), pointer, mapping...)
+}
+
+// StructsDeep converts <v> to given struct slice recursively.
+func (v *Var) StructsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.StructsDeep(v.Val(), pointer, mapping...)
 }

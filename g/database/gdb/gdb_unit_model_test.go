@@ -358,6 +358,40 @@ func TestModel_Struct(t *testing.T) {
 		gtest.Assert(user.NickName, "T111")
 		gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
 	})
+	// Auto creating struct object.
+	gtest.Case(t, func() {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		user := (*User)(nil)
+		err := db.Table("user").Where("id=1").Struct(&user)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(user.NickName, "T111")
+		gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
+	})
+	// Just using Scan.
+	gtest.Case(t, func() {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		user := (*User)(nil)
+		err := db.Table("user").Where("id=1").Scan(&user)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(user.NickName, "T111")
+		gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
+	})
 
 	gtest.Case(t, func() {
 		type User struct {
@@ -396,6 +430,7 @@ func TestModel_Structs(t *testing.T) {
 		gtest.Assert(users[2].NickName, "T3")
 		gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
 	})
+	// Auto create struct slice.
 	gtest.Case(t, func() {
 		type User struct {
 			Id         int
@@ -418,7 +453,29 @@ func TestModel_Structs(t *testing.T) {
 		gtest.Assert(users[2].NickName, "T3")
 		gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
 	})
-
+	// Just using Scan.
+	gtest.Case(t, func() {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		var users []*User
+		err := db.Table("user").OrderBy("id asc").Scan(&users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(len(users), 3)
+		gtest.Assert(users[0].Id, 1)
+		gtest.Assert(users[1].Id, 2)
+		gtest.Assert(users[2].Id, 3)
+		gtest.Assert(users[0].NickName, "T111")
+		gtest.Assert(users[1].NickName, "T2")
+		gtest.Assert(users[2].NickName, "T3")
+		gtest.Assert(users[0].CreateTime.String(), "2018-10-10 00:01:10")
+	})
 	gtest.Case(t, func() {
 		type User struct {
 			Id         int
@@ -593,6 +650,21 @@ func TestModel_Where(t *testing.T) {
 	gtest.Case(t, func() {
 		result, err := db.Table("user").Where("id", 30).Or("nickname", "T3").And("id>", 1).One()
 		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// slice
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("id=? AND nickname=?", g.Slice{3, "T3"}...).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("passport like ? and nickname like ?", g.Slice{"t3", "T3"}...).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
 		gtest.Assert(result["id"].Int(), 3)
 	})
 	// map
