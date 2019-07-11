@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/g/internal/structs"
-
 	"github.com/gogf/gf/g/util/gconv"
 )
 
@@ -22,6 +21,7 @@ var (
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法。
 // struct的数据校验结果信息是顺序的。
 func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Error {
+	cname := make(map[string]string) // 别名记录
 	params := make(map[string]interface{})
 	checkRules := make(map[string]string)
 	customMsgs := make(CustomMsg)
@@ -82,6 +82,8 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			name, rule, msg := parseSequenceTag(tagValue)
 			if len(name) == 0 {
 				name = fieldName
+			} else {
+				cname[fieldName] = name
 			}
 			// params参数使用别名**扩容**(而不仅仅使用别名)，仅用于验证使用
 			if _, ok := params[name]; !ok {
@@ -89,7 +91,12 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			}
 			// 校验规则
 			if _, ok := checkRules[name]; !ok {
-				checkRules[name] = rule
+				if _, ok := checkRules[fieldName]; ok {
+					checkRules[name] = checkRules[fieldName]
+					delete(checkRules, fieldName)
+				} else {
+					checkRules[name] = rule
+				}
 				errorRules = append(errorRules, name+"@"+rule)
 			} else {
 				// 传递的rules规则会覆盖struct tag的规则
@@ -116,11 +123,16 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			}
 		}
 	}
+
 	// 自定义错误消息，非必须参数，优先级比rules参数中以及struct tag中定义的错误消息更高
 	if len(msgs) > 0 && len(msgs[0]) > 0 {
 		if len(customMsgs) > 0 {
 			for k, v := range msgs[0] {
-				customMsgs[k] = v
+				if cmane, ok := cname[k]; ok {
+					customMsgs[cmane] = v
+				} else {
+					customMsgs[k] = v
+				}
 			}
 		} else {
 			customMsgs = msgs[0]
@@ -136,6 +148,8 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 		value = nil
 		if v, ok := params[key]; ok {
 			value = v
+		} else { // 不存在的字段的规则跳过。例如rules使用[]string格式输入时，没有对应字段便会出现这种情况。
+			continue
 		}
 		if e := Check(value, rule, customMsgs[key], params); e != nil {
 			_, item := e.FirstItem()

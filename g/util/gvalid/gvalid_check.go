@@ -7,16 +7,19 @@
 package gvalid
 
 import (
+	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/encoding/gjson"
 	"github.com/gogf/gf/g/net/gipv4"
 	"github.com/gogf/gf/g/net/gipv6"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -104,7 +107,56 @@ var (
 	}
 )
 
-// 检测单条数据的规则:
+// 检测单条数据
+// value数据类型可以为map、array、slice以及其它基本数据类型
+func Check(value interface{}, rules string, msgs interface{}, params ...interface{}) *Error {
+
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.Array, reflect.Slice: // Array/Slice 遍历调用
+		for i := 0; i < rv.Len(); i++ {
+			err := Check(rv.Index(i).Interface(), rules, msgs, params...)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	case reflect.Map: // Map 遍历调用
+		iter := rv.MapRange()
+		for iter.Next() {
+			err := Check(iter.Value().Interface(), rules, msgs, params...)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	case reflect.Ptr: // Ptr
+		rv := rv.Elem()
+		array := make([]interface{}, 0)
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array:
+			for i := 0; i < rv.Len(); i++ {
+				array = append(array, rv.Index(i).Interface())
+			}
+			return Check(array, rules, msgs, params...)
+		case reflect.Struct:
+			rt := rv.Type()
+			for i := 0; i < rv.NumField(); i++ {
+				// Only public attributes.
+				if !gstr.IsLetterUpper(rt.Field(i).Name[0]) {
+					continue
+				}
+				array = append(array, rv.Field(i).Interface())
+			}
+			return Check(array, rules, msgs, params...)
+		}
+		return nil
+	}
+
+	return doCheckSingleRule(value, rules, msgs, params...)
+}
+
+// 基本数据类型校验
 //
 // 1. value为需要校验的数据，可以为任意基本数据类型；
 //
@@ -112,7 +164,7 @@ var (
 // 允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误；
 //
 // 3. params参数为联合校验参数，支持任意的map/struct/*struct类型，对于需要联合校验的规则有效，如：required-*、same、different；
-func Check(value interface{}, rules string, msgs interface{}, params ...interface{}) *Error {
+func doCheckSingleRule(value interface{}, rules string, msgs interface{}, params ...interface{}) *Error {
 	// 内部会将参数全部转换为字符串类型进行校验
 	val := strings.TrimSpace(gconv.String(value))
 	data := make(map[string]string)
