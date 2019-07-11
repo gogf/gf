@@ -1,0 +1,8 @@
+
+[database]
+    type = "mssql"
+    host = "127.0.0.1"
+    port = "1451"
+    user = "sa"
+    pass = "eno@123"
+    name = "frpc"
