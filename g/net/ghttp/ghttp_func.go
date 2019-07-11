@@ -13,11 +13,14 @@ import (
 )
 
 // 构建请求参数，参数支持任意数据类型，常见参数类型为string/map。
-// 如果参数为map类型，参数值将会进行urlencode编码。
-func BuildParams(params interface{}) (encodedParamStr string) {
-	m := gconv.Map(params)
+// 如果参数为map类型，参数值将会进行urlencode编码；可以通过unUrlEncode:true参数取消编码。
+func BuildParams(params interface{}, unUrlEncode ...bool) (encodedParamStr string) {
+	m, urlEncode := gconv.Map(params), true
 	if len(m) == 0 {
 		return gconv.String(params)
+	}
+	if len(unUrlEncode) == 1 {
+		urlEncode = !unUrlEncode[0]
 	}
 	s := ""
 	for k, v := range m {
@@ -25,11 +28,10 @@ func BuildParams(params interface{}) (encodedParamStr string) {
 			encodedParamStr += "&"
 		}
 		s = gconv.String(v)
-		if len(s) > 6 && strings.Compare(s[0:6], "@file:") == 0 {
-			encodedParamStr += k + "=" + s
-		} else {
-			encodedParamStr += k + "=" + gurl.Encode(s)
+		if urlEncode && len(s) > 6 && strings.Compare(s[0:6], "@file:") != 0 {
+			s = gurl.Encode(s)
 		}
+		encodedParamStr += k + "=" + s
 	}
 	return
 }
