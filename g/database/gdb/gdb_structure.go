@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/g/encoding/gbinary"
+
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/util/gconv"
 )
@@ -39,7 +41,21 @@ func (bs *dbBase) convertValue(fieldValue interface{}, fieldType string) interfa
 	case "float", "double", "decimal":
 		return gconv.Float64(fieldValue)
 
-	case "bit", "bool":
+	case "bit":
+		s := gconv.String(fieldValue)
+		// 这里的字符串判断是为兼容不同的数据库类型，如: mssql
+		if strings.EqualFold(s, "true") {
+			return 1
+		}
+		if strings.EqualFold(s, "false") {
+			return 0
+		}
+		if b, ok := fieldValue.([]byte); ok {
+			return gbinary.BeDecodeToInt64(b)
+		}
+		return gconv.Int(fieldValue)
+
+	case "bool":
 		return gconv.Bool(fieldValue)
 
 	default:

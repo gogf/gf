@@ -1,7 +1,7 @@
 
 [database]
     type = "mssql"
-    host = "116.255.140.92"
+    host = "127.0.0.1"
     port = "1451"
     user = "sa"
     pass = "eno@123"

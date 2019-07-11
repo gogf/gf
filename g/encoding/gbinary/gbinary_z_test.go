@@ -7,11 +7,18 @@
 package gbinary_test
 
 import (
-	"github.com/gogf/gf/g/encoding/gbinary"
-	"github.com/gogf/gf/g/test/gtest"
 	"math"
 	"testing"
+
+	"github.com/gogf/gf/g/encoding/gbinary"
+	"github.com/gogf/gf/g/test/gtest"
 )
+
+type User struct {
+	Name string
+	Age  int
+	Url  string
+}
 
 var testData = map[string]interface{}{
 	//"nil":         nil,
@@ -39,7 +46,9 @@ var testData = map[string]interface{}{
 	"float64":     float64(123.456),
 }
 
-func TestEncodeAndDecode(t *testing.T) {
+var testBitData = []int{0, 99, 122, 129, 222, 999, 22322}
+
+func Test_EncodeAndDecode(t *testing.T) {
 	for k, v := range testData {
 		ve := gbinary.Encode(v)
 		ve1 := gbinary.EncodeByLength(len(ve), v)
@@ -102,22 +111,14 @@ func TestEncodeAndDecode(t *testing.T) {
 	}
 }
 
-type User struct {
-	Name string
-	Age  int
-	Url  string
-}
-
-func TestEncodeStruct(t *testing.T) {
+func Test_EncodeStruct(t *testing.T) {
 	user := User{"wenzi1", 999, "www.baidu.com"}
 	ve := gbinary.Encode(user)
 	s := gbinary.DecodeToString(ve)
 	gtest.Assert(string(s), s)
 }
 
-var testBitData = []int{0, 99, 122, 129, 222, 999, 22322}
-
-func TestBits(t *testing.T) {
+func Test_Bits(t *testing.T) {
 	for i := range testBitData {
 		bits := make([]gbinary.Bit, 0)
 		res := gbinary.EncodeBits(bits, testBitData[i], 64)
