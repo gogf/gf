@@ -7,20 +7,21 @@
 package ghttp
 
 import (
+	"strings"
+
 	"github.com/gogf/gf/g/encoding/gurl"
 	"github.com/gogf/gf/g/util/gconv"
-	"strings"
 )
 
 // 构建请求参数，参数支持任意数据类型，常见参数类型为string/map。
-// 如果参数为map类型，参数值将会进行urlencode编码；可以通过unUrlEncode:true参数取消编码。
-func BuildParams(params interface{}, unUrlEncode ...bool) (encodedParamStr string) {
+// 如果参数为map类型，参数值将会进行urlencode编码；可以通过 noUrlEncode:true 参数取消编码。
+func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
 	m, urlEncode := gconv.Map(params), true
 	if len(m) == 0 {
 		return gconv.String(params)
 	}
-	if len(unUrlEncode) == 1 {
-		urlEncode = !unUrlEncode[0]
+	if len(noUrlEncode) == 1 {
+		urlEncode = !noUrlEncode[0]
 	}
 	s := ""
 	for k, v := range m {
