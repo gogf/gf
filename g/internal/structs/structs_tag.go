@@ -40,7 +40,19 @@ func TagMapField(pointer interface{}, priority []string, recursive bool) map[str
 	if v, ok := pointer.(reflect.Value); ok {
 		fields = structs.Fields(v.Interface())
 	} else {
-		fields = structs.Fields(pointer)
+		rv := reflect.ValueOf(pointer)
+		kind := rv.Kind()
+		if kind == reflect.Ptr {
+			rv = rv.Elem()
+			kind = rv.Kind()
+		}
+		// If pointer is type of **struct and nil, then automatically create a temporary struct,
+		// which is used for structs.Fields.
+		if kind == reflect.Ptr && (!rv.IsValid() || rv.IsNil()) {
+			fields = structs.Fields(reflect.New(rv.Type().Elem()).Elem().Interface())
+		} else {
+			fields = structs.Fields(pointer)
+		}
 	}
 	tag := ""
 	name := ""
