@@ -102,14 +102,14 @@ func (r Result) ToUintRecord(key string) map[uint]Record {
 }
 
 // 将结果列表转换为指定对象的slice。
-func (r Result) ToStructs(objPointerSlice interface{}) (err error) {
+func (r Result) ToStructs(pointer interface{}) (err error) {
 	l := len(r)
 	if l == 0 {
 		return sql.ErrNoRows
 	}
-	t := reflect.TypeOf(objPointerSlice)
+	t := reflect.TypeOf(pointer)
 	if t.Kind() != reflect.Ptr {
-		return fmt.Errorf("params should be type of pointer, but got: %v", t.Kind())
+		return fmt.Errorf("pointer should be type of pointer, but got: %v", t.Kind())
 	}
 	array := reflect.MakeSlice(t.Elem(), l, l)
 	itemType := array.Index(0).Type()
@@ -128,6 +128,6 @@ func (r Result) ToStructs(objPointerSlice interface{}) (err error) {
 			array.Index(i).Set(e)
 		}
 	}
-	reflect.ValueOf(objPointerSlice).Elem().Set(array)
+	reflect.ValueOf(pointer).Elem().Set(array)
 	return nil
 }
