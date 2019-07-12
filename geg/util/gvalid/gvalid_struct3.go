@@ -8,14 +8,12 @@ import (
 // same校验
 func main() {
 	type User struct {
-		Password        string `gvalid:"password@password"`
-		ConfirmPassword string `gvalid:"confirm_password@password|same:password#|密码与确认密码不一致"`
+		Pass string `gvalid:"passwd1 @required|length:2,20|password3||密码强度不足"`
 	}
 
 	user := &User{
-		Password:        "123456",
-		ConfirmPassword: "",
+		Pass: "1",
 	}
 
-	g.Dump(gvalid.CheckStruct(user, nil))
+	g.Dump(gvalid.CheckStruct(user, nil).Maps())
 }
