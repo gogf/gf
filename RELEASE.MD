@@ -4,6 +4,7 @@
 1. 框架目前 `69` 个开发模块（不包括内部模块），原生代码 `65302` 行（不包含第三包依赖包），单元测试覆盖率达到`77%`；
 1. 新增`gerror`错误处理模块：https://goframe.org/errors/gerror/index
 1. 改进`gcharset`字符编码转换模块，支持更多的字符集：https://goframe.org/encoding/gcharset/index
+1. 新增`gmutex`模块，基于`channel`实现的高级互斥锁模块，支持更丰富的互斥锁特性：https://goframe.org/os/gmutex/index
 1. 改进`glog`日志模块：
     - 新增日志异步输出特性：https://goframe.org/os/glog/async
     - 新增`Flags`额外功能特性：https://goframe.org/os/glog/flags
@@ -12,13 +13,13 @@
     - 修改`Backtrace`名称为`Stack`，并改进调用堆栈输出格式；
     - 新增`Expose`方法暴露内部默认`Logger`对象；
 1. 改进`gdb`数据库ORM模块：
-    - 改进错误处理，当数据库操作没有查询到数据时，返回`sql.ErrNoRows`：https://goframe.org/database/gdb/error
+    - 改进错误处理，当数据库操作没有查询到数据时，`error`返回`sql.ErrNoRows`：https://goframe.org/database/gdb/error
     - 改进`Update`/`Delete`方法支持`Order BY`及`LIMIT`特性；
-    - 数据库链式操作及方法操作可直接给定`slice`参数；
+    - 数据库链式操作及方法操作中，预处理变量参数支持`slice`参数：https://goframe.org/database/gdb/chaining/model
     - 修改`Priority`权重配置名称为`Weight`；
-    - 新增`Debug`配置，可配置开启/关闭调试特性；
-    - 新增`Offset`方法，该方法为可选链式操作方法，可直接通过`Limit`方法实现部分数据库的`Offset`特性；
-    - 改进数据库动态切换特性；
+    - 新增`Debug`配置，可配置开启/关闭调试特性：https://goframe.org/database/gdb/config
+    - 新增`Offset`方法，该方法为可选链式操作方法，`pgsql`数据库可直接通过`Limit`方法第二个参数自动识别为`Offset`语法；
+    - 改进数据库动态切换特性，支持不同数据库类型的当前操作数据库切换；
     - 改进简化配置文件结构：https://goframe.org/database/gdb/config
 1. 改进`gconv`数据转换模块：
     - 对结构体对象转换时支持更多的标签：`gconv/c/json`；
@@ -27,7 +28,7 @@
     - 新增`StructDeep`方法，用于对结构体对象的递归转换；
     - 新增`MapDeep`方法，用于对结构体属性的递归转换；
 1. 改进`ghttp`模块：
-    - 改进`ghttp`模块的分组路由功能；
+    - 改进`ghttp`模块的分组路由功能，完善逻辑处理细节，程序更加稳健；
     - 改进`ghttp.Request.Get*ToStruct`方法，支持`params/param/p`标签，支持结构体递归转换，并且支持`**struct`参数的对象自动初始化；
     - 改进`ghttp.CORSDefault`的跨域设置参数，`AllowOrigin`参数调整为`*`；
 1. 改进`gvalid`数据校验模块：
@@ -35,10 +36,11 @@
     - 改进`CheckStruct`支持对结构体对象的递归校验：https://goframe.org/util/gvalid/checkstruct
 1. 改进`gtcp`TCP通信模块：
     - 改进通信包协议设计，更加轻量级高效：https://goframe.org/net/gtcp/conn/pkg
+    - 改进`TCP Server`增加对`TLS`的支持：https://goframe.org/net/gtcp/tls
+    - 增加`Server.Cloce`服务端关闭方法；
 1. 改进`gproc`模块的通信数据结构，并使用`gtcp`的轻量级包协议重构消息发送逻辑；
 1. 改进`gqueue`模块增加数据同步缓冲机制，解决大数据量下的内存占用及延迟问题；
-1. 新增`gmutex`模块，基于`channel`实现的高级互斥锁模块，支持更丰富的互斥锁特性；
-1. 改进`gmlock`模块，使用`gmutex`模块替换内部的互斥锁，增加更多的方法；
+1. 改进`gmlock`模块，使用`gmutex`模块替换内部的互斥锁，增加更多的操作方法；
 1. 改进`gaes`加密模块，增加`CBC`模式的加密/解密方法：
 1. 改进`garray.Range/SubSlice`方法，改进设计，提高性能；
 1. 改进`gjson`/`gparser`模块实现`MarshalJSON`接口以实现自定义的`JSON`数据格式转换；
