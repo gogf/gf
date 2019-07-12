@@ -17,8 +17,8 @@ func MakeGError() error {
 func TestGError() {
 	err1 := MakeError()
 	err2 := MakeGError()
-	glog.Errorf("connection error: %+v", err1)
-	glog.Errorf("connection error: %+v", err2)
+	glog.Error(err1)
+	glog.Error(err2)
 }
 
 func main() {
