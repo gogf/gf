@@ -303,6 +303,12 @@ func TestDbBase_GetAll(t *testing.T) {
 		gtest.Assert(result[0]["id"].Int(), 1)
 	})
 	gtest.Case(t, func() {
+		result, err := db.GetAll("SELECT * FROM user WHERE id=?", g.Slice{1})
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 1)
+		gtest.Assert(result[0]["id"].Int(), 1)
+	})
+	gtest.Case(t, func() {
 		result, err := db.GetAll("SELECT * FROM user WHERE id in(?)", g.Slice{1, 2, 3})
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 3)

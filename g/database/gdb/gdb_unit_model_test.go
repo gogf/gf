@@ -635,6 +635,14 @@ func TestModel_Where(t *testing.T) {
 		gtest.Assert(result["id"].Int(), 3)
 	})
 	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("id=?", g.Slice{3}).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
 		result, err := db.Table("user").Where("id", 3).One()
 		if err != nil {
 			gtest.Fatal(err)
