@@ -7,10 +7,32 @@
 package gvalid_test
 
 import (
-	"github.com/gogf/gf/g/util/gvalid"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/g/test/gtest"
+	"github.com/gogf/gf/g/util/gvalid"
 )
+
+func Test_Map(t *testing.T) {
+	rule := "ipv4"
+	val := "0.0.0"
+	msg := map[string]string{
+		"ipv4": "IPv4地址格式不正确",
+	}
+
+	err := gvalid.Check(val, rule, nil)
+	gtest.Assert(err.Map(), msg)
+}
+
+func Test_FirstString(t *testing.T) {
+	rule := "ipv4"
+	val := "0.0.0"
+
+	err := gvalid.Check(val, rule, nil)
+	n := err.FirstString()
+	gtest.Assert(n, "IPv4地址格式不正确")
+}
 
 func Test_SetDefaultErrorMsgs(t *testing.T) {
 	rule := "integer|length:6,16"
