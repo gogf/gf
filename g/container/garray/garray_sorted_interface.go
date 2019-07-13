@@ -8,6 +8,7 @@ package garray
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
@@ -541,4 +542,11 @@ func (a *SortedArray) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return fmt.Sprint(a.array)
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (a *SortedArray) MarshalJSON() ([]byte, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return json.Marshal(a.array)
 }
