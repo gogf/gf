@@ -1,4 +1,4 @@
-// Copyright 2018-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -19,8 +19,8 @@ type Mutex struct {
 	state   *gtype.Int32  // Indicates the state of mutex.
 	writer  *gtype.Int32  // Pending writer count.
 	reader  *gtype.Int32  // Pending reader count.
-	writing chan struct{} // Channel used for writer blocking.
-	reading chan struct{} // Channel used for reader blocking.
+	writing chan struct{} // Channel for writer blocking.
+	reading chan struct{} // Channel for reader blocking.
 }
 
 // New creates and returns a new mutex.
@@ -36,13 +36,14 @@ func New() *Mutex {
 
 // Lock locks the mutex for writing.
 // If the lock is already locked for reading or writing,
-// Lock blocks until the lock is available.
+// it blocks until the lock is available.
 func (m *Mutex) Lock() {
 	for {
-		// If there're no writing lock currently, then do the writing lock checks.
+		// Using CAS operation to get the writing lock atomically.
 		if m.state.Cas(0, -1) {
 			return
 		}
+		// Or else blocks to wait for the next chance.
 		m.writer.Add(1)
 		<-m.writing
 		m.writer.Add(-1)
@@ -58,7 +59,7 @@ func (m *Mutex) Unlock() {
 		for n := m.reader.Val(); n > 0; n-- {
 			m.reading <- struct{}{}
 		}
-		// Then it also gives the pending writers one chance.
+		// It then also kindly feeds the pending writers with one chance.
 		if m.writer.Val() > 0 {
 			m.writing <- struct{}{}
 		}
@@ -66,8 +67,8 @@ func (m *Mutex) Unlock() {
 }
 
 // TryLock tries locking the mutex for writing.
-// It returns true if success, or if there's a write/reading lock on the mutex,
-// it returns false.
+// It returns true immediately if success, or if there's a write/reading lock on the mutex,
+// it returns false immediately.
 func (m *Mutex) TryLock() bool {
 	if m.state.Cas(0, -1) {
 		return true
@@ -75,9 +76,9 @@ func (m *Mutex) TryLock() bool {
 	return false
 }
 
-// RLock locks mutex for reading.
+// RLock locks mutex for reading purpose.
 // If the mutex is already locked for writing,
-// It blocks until the lock is available.
+// it blocks until the lock is available.
 func (m *Mutex) RLock() {
 	var n int32
 	for {
@@ -113,15 +114,16 @@ func (m *Mutex) RUnlock() {
 			break
 		}
 	}
-	// Reading lock unlocks, then check the blocked writers.
+	// Reading lock unlocks, then only check the blocked writers.
+	// Note that it is not necessary to check the pending readers here.
 	if n == 1 && m.writer.Val() > 0 {
-		// No readers blocked, then the writers can take place.
 		m.writing <- struct{}{}
 	}
 }
 
 // TryRLock tries locking the mutex for reading.
-// It returns true if success, or if there's a writing lock on the mutex, it returns false.
+// It returns true immediately if success, or if there's a writing lock on the mutex,
+// it returns false immediately.
 func (m *Mutex) TryRLock() bool {
 	var n int32
 	for {
@@ -179,28 +181,29 @@ func (m *Mutex) RLockFunc(f func()) {
 }
 
 // TryLockFunc tries locking the mutex for writing with given callback function <f>.
-// it returns true if success, or if there's a write/reading lock on the mutex,
-// it returns false.
+// it returns true immediately if success, or if there's a write/reading lock on the mutex,
+// it returns false immediately.
 //
 // It releases the lock after <f> is executed.
-func (m *Mutex) TryLockFunc(f func()) bool {
+func (m *Mutex) TryLockFunc(f func()) (result bool) {
 	if m.TryLock() {
+		result = true
 		defer m.Unlock()
 		f()
-		return true
 	}
-	return false
+	return
 }
 
 // TryRLockFunc tries locking the mutex for reading with given callback function <f>.
-// It returns true if success, or if there's a writing lock on the mutex, it returns false.
+// It returns true immediately if success, or if there's a writing lock on the mutex,
+// it returns false immediately.
 //
 // It releases the lock after <f> is executed.
-func (m *Mutex) TryRLockFunc(f func()) bool {
+func (m *Mutex) TryRLockFunc(f func()) (result bool) {
 	if m.TryRLock() {
+		result = true
 		defer m.RUnlock()
 		f()
-		return true
 	}
-	return false
+	return
 }
