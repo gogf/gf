@@ -8,10 +8,12 @@ package gtree
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/internal/rwmutex"
-	"strings"
 )
 
 // BTree holds elements of the B-tree.
@@ -844,4 +846,9 @@ func (tree *BTree) deleteChild(node *BTreeNode, index int) {
 	copy(node.Children[index:], node.Children[index+1:])
 	node.Children[len(node.Children)-1] = nil
 	node.Children = node.Children[:len(node.Children)-1]
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (tree *BTree) MarshalJSON() ([]byte, error) {
+	return json.Marshal(tree.Map())
 }

@@ -7,7 +7,9 @@
 package gtree
 
 import (
+	"encoding/json"
 	"fmt"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/internal/rwmutex"
 )
@@ -703,4 +705,9 @@ func output(node *AVLTreeNode, prefix string, isTail bool, str *string) {
 		}
 		output(node.children[0], newPrefix, true, str)
 	}
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (tree *AVLTree) MarshalJSON() ([]byte, error) {
+	return json.Marshal(tree.Map())
 }

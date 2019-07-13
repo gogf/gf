@@ -8,10 +8,12 @@
 package gvar
 
 import (
+	"encoding/json"
+	"time"
+
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/util/gconv"
-	"time"
 )
 
 // Var is an universal variable type.
@@ -32,6 +34,11 @@ func New(value interface{}, unsafe ...bool) *Var {
 		v.value = value
 	}
 	return v
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Var) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
 }
 
 // Set sets <value> to <v>, and returns the old value.

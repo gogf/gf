@@ -7,6 +7,10 @@
 package gmap
 
 import (
+	"encoding/json"
+
+	"github.com/gogf/gf/g/util/gconv"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/internal/rwmutex"
 )
@@ -327,4 +331,9 @@ func (m *AnyAnyMap) Merge(other *AnyAnyMap) {
 	for k, v := range other.data {
 		m.data[k] = v
 	}
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (m *AnyAnyMap) MarshalJSON() ([]byte, error) {
+	return json.Marshal(gconv.Map(m.Map()))
 }

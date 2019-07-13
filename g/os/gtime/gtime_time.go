@@ -6,7 +6,9 @@
 
 package gtime
 
-import "time"
+import (
+	"time"
+)
 
 type Time struct {
 	time.Time
@@ -174,4 +176,9 @@ func (t *Time) Round(d time.Duration) *Time {
 func (t *Time) Truncate(d time.Duration) *Time {
 	t.Time = t.Time.Truncate(d)
 	return t
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (t *Time) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + t.String() + `"`), nil
 }
