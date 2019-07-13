@@ -9,8 +9,17 @@ package gerror
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/g/util/gconv"
 )
+
+type ApiStack interface {
+	Stack() string
+}
+
+type ApiCause interface {
+	Cause() error
+}
 
 // New returns an error that formats as the given value.
 func New(value interface{}) error {
@@ -61,7 +70,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 // Cause returns the root cause error.
 func Cause(err error) error {
 	if err != nil {
-		if e, ok := err.(*Error); ok {
+		if e, ok := err.(ApiCause); ok {
 			return e.Cause()
 		}
 	}
@@ -74,7 +83,7 @@ func Stack(err error) string {
 	if err == nil {
 		return ""
 	}
-	if e, ok := err.(*Error); !ok {
+	if e, ok := err.(ApiStack); ok {
 		return e.Stack()
 	}
 	return ""
