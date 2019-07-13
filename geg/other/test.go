@@ -1,19 +1,20 @@
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
-	"github.com/gogf/gf/g/encoding/gbase64"
+	"math"
+
+	"github.com/gogf/gf/g/encoding/gbinary"
 )
 
 func main() {
-	data := "HwHsGhXMaGc==="
-	datab, err := gbase64.Decode([]byte(data))
-	fmt.Println(err)
-	fmt.Println(datab)
-	fmt.Println(string(datab))
+	v := math.MaxUint16
+	//v := []byte{255, 127}
+	//ve := gbinary.Encode(v)
+	//ve1 := gbinary.BeEncodeByLength(len(ve), v)
+	//fmt.Println(ve)
+	//fmt.Println(ve1)
 
-	s, e := base64.StdEncoding.DecodeString(data)
-	fmt.Println(e)
-	fmt.Println(string(s))
+	//fmt.Println(gbinary.LeDecodeToInt(gbinary.LeEncode(v)))
+	fmt.Println(gbinary.BeDecodeToInt(gbinary.BeEncode(v)))
 }

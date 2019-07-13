@@ -190,11 +190,11 @@ func doCheckSingleRule(value interface{}, rules string, msgs interface{}, params
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
 		if _, ok := allSupportedRules[array[0]]; !ok {
-			if i > 0 {
+			if i > 0 && ruleItems[i-1][:5] == "regex" {
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
 			} else {
-				return newErrorStr("invalid_rules", "invalid rules:"+rules)
+				return newErrorStr("parse_error", "invalid rules:"+rules)
 			}
 		} else {
 			i++
