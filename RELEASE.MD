@@ -10,13 +10,13 @@
     - 新增`Flags`额外功能特性：https://goframe.org/os/glog/flags
     - 新增`Json`数据格式输出：https://goframe.org/os/glog/json
     - 新增自定义`Writer`接口特性：https://goframe.org/os/glog/writer
-    - <u>**修改`Backtrace`名称为`Stack`，并改进调用堆栈输出格式；**</u>
+    - **修改`Backtrace`名称为`Stack`，并改进调用堆栈输出格式；**
     - 新增`Expose`方法暴露内部默认`Logger`对象；
 1. 改进`gdb`数据库ORM模块：
     - 改进错误处理，当数据库操作没有查询到数据时，`error`返回`sql.ErrNoRows`：https://goframe.org/database/gdb/error
     - 改进`Update`/`Delete`方法支持`Order BY`及`LIMIT`特性；
     - 数据库链式操作及方法操作中，预处理变量参数支持`slice`参数：https://goframe.org/database/gdb/chaining/model
-    - <u>**修改`Priority`权重配置名称为`Weight`；**</u>
+    - **修改`Priority`权重配置名称为`Weight`；**
     - 新增`Debug`配置，可配置开启/关闭调试特性：https://goframe.org/database/gdb/config
     - 新增`Offset`方法，该方法为可选链式操作方法，`pgsql`数据库可直接通过`Limit`方法第二个参数自动识别为`Offset`语法；
     - 改进数据库动态切换特性，支持不同数据库类型的当前操作数据库切换；
@@ -44,7 +44,7 @@
 1. 改进`gaes`加密模块，增加`CBC`模式的加密/解密方法：
 1. 改进`garray.Range/SubSlice`方法，改进设计，提高性能；
 1. 改进`gjson`/`gparser`模块实现`MarshalJSON`接口以实现自定义的`JSON`数据格式转换；
-1. <u>**改进`crypto`分类下模块的方法返回值，增加`error`错误变量返回，以保证更严谨的接口设计风格；**</u>
+1. **改进`crypto`分类下模块的方法返回值，增加`error`错误变量返回，以保证更严谨的接口设计风格；**
 1. 改进`gflock`修改方法名`UnLock`为`Unlock`，新增`IsRLocked`方法；
 1. 新增`gfile.CopyFile/CopyDir`方法，用于文件及目录的复制；
 1. 改进`gjson/gparser/gvar/gcfg`模块增加更多的类型转换方法；
@@ -65,7 +65,7 @@
 
 ## 注意事项
 
-以上粗体、下划线部分为不兼容调整，升级时请注意。
+以上粗体文字部分为不兼容调整，升级时请注意。
 
 
 
