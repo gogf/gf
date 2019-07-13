@@ -49,7 +49,9 @@ func Benchmark_GMutex_LockUnlock(b *testing.B) {
 
 func Benchmark_GMutex_TryLock(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gmu.TryLock()
+		if gmu.TryLock() {
+			defer gmu.Unlock()
+		}
 	}
 }
 
