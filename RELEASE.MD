@@ -1,4 +1,75 @@
-# `v1.7.0`
+# `v1.8.0`
+
+## 新功能改进
+1. 框架目前 `69` 个开发模块（不包括内部模块），原生代码 `65302` 行（不包含第三包依赖包），单元测试覆盖率达到`77%`；
+1. 新增`gerror`错误处理模块：https://goframe.org/errors/gerror/index
+1. 改进`gcharset`字符编码转换模块，支持更多的字符集：https://goframe.org/encoding/gcharset/index
+1. 新增`gmutex`模块，基于`channel`实现的高级互斥锁模块，支持更丰富的互斥锁特性：https://goframe.org/os/gmutex/index
+1. 改进`glog`日志模块：
+    - 新增日志异步输出特性：https://goframe.org/os/glog/async
+    - 新增`Flags`额外功能特性：https://goframe.org/os/glog/flags
+    - 新增`Json`数据格式输出：https://goframe.org/os/glog/json
+    - 新增自定义`Writer`接口特性：https://goframe.org/os/glog/writer
+    - **修改`Backtrace`名称为`Stack`，并改进调用堆栈输出格式；**
+    - 新增`Expose`方法暴露内部默认`Logger`对象；
+1. 改进`gdb`数据库ORM模块：
+    - 改进错误处理，当数据库操作没有查询到数据时，`error`返回`sql.ErrNoRows`：https://goframe.org/database/gdb/error
+    - 改进`Update`/`Delete`方法支持`Order BY`及`LIMIT`特性；
+    - 数据库链式操作及方法操作中，预处理变量参数支持`slice`参数：https://goframe.org/database/gdb/chaining/model
+    - **修改`Priority`权重配置名称为`Weight`；**
+    - 新增`Debug`配置，可配置开启/关闭调试特性：https://goframe.org/database/gdb/config
+    - 新增`Offset`方法，该方法为可选链式操作方法，`pgsql`数据库可直接通过`Limit`方法第二个参数自动识别为`Offset`语法；
+    - 改进数据库动态切换特性，支持不同数据库类型的当前操作数据库切换；
+    - 改进简化配置文件结构：https://goframe.org/database/gdb/config
+1. 改进`gconv`数据转换模块：
+    - 对结构体对象转换时支持更多的标签：`gconv/c/json`；
+    - 支持`*struct/[]struct/[]*struct`自动初始化创建对象/数组：https://goframe.org/util/gconv/struct
+    - 新增`Strusts/StrctsDeep`方法，用于结构体数组的转换即递归转换；
+    - 新增`StructDeep`方法，用于对结构体对象的递归转换；
+    - 新增`MapDeep`方法，用于对结构体属性的递归转换；
+1. 改进`ghttp`模块：
+    - 改进`ghttp`模块的分组路由功能，完善逻辑处理细节，程序更加稳健；
+    - 改进`ghttp.Request.Get*ToStruct`方法，支持`params/param/p`标签，支持结构体递归转换，并且支持`**struct`参数的对象自动初始化；
+    - 改进`ghttp.CORSDefault`的跨域设置参数，`AllowOrigin`参数调整为`*`；
+1. 改进`gvalid`数据校验模块：
+    - 增加对校验标签`gvalid/valid/v`的支持；
+    - 改进`CheckStruct`支持对结构体对象的递归校验：https://goframe.org/util/gvalid/checkstruct
+1. 改进`gtcp`TCP通信模块：
+    - 改进通信包协议设计，更加轻量级高效：https://goframe.org/net/gtcp/conn/pkg
+    - 改进`TCP Server`增加对`TLS`的支持：https://goframe.org/net/gtcp/tls
+    - 增加`Server.Cloce`服务端关闭方法；
+1. 改进`gproc`模块的通信数据结构，并使用`gtcp`的轻量级包协议重构消息发送逻辑；
+1. 改进`gqueue`模块增加数据同步缓冲机制，解决大数据量下的内存占用及延迟问题；
+1. 改进`gmlock`模块，使用`gmutex`模块替换内部的互斥锁，增加更多的操作方法；
+1. 改进`gaes`加密模块，增加`CBC`模式的加密/解密方法：
+1. 改进`garray.Range/SubSlice`方法，改进设计，提高性能；
+1. 改进`gjson`/`gparser`模块实现`MarshalJSON`接口以实现自定义的`JSON`数据格式转换；
+1. **改进`crypto`分类下模块的方法返回值，增加`error`错误变量返回，以保证更严谨的接口设计风格；**
+1. 改进`gflock`修改方法名`UnLock`为`Unlock`，新增`IsRLocked`方法；
+1. 新增`gfile.CopyFile/CopyDir`方法，用于文件及目录的复制；
+1. 改进`gjson/gparser/gvar/gcfg`模块增加更多的类型转换方法；
+1. 改进`gcache`模块，过期时间参数支持`time.Duration`类型；
+1. 新增`internal/structs`包，强大且便捷的结构体解析，并改进框架中所有涉及到结构体反射处理的模块；
+1. 改进`gbinary`增加封装方法对`BigEndian`的支持；
+
+## Bug Fix
+1. 修复`garray.Search`返回值问题；
+1. 修复`garray.Contains`, `garray.New*ArrayFromCopy`方法逻辑问题；
+1. 修复`gjson.Remove`删除`slice`参数问题；
+1. 修复`gtree.AVLTree.Remove`方法返回值问题；
+1. 修复`gqueue.Size`不准确的大小问题；
+1. 修复`queue.Close`问题；
+1. 修复`gcache.GetOrSetLockFunc`当回调函数返回`nil`结果时的死锁问题；
+1. 修复`gfsnotify.Add`方法默认递归监控添加失效问题；
+1. 修复`gdb.Model.Scan`在某些参数类型下的失效问题；
+
+## 注意事项
+
+以上粗体文字部分为不兼容调整，升级时请注意。
+
+
+
+# `v1.7.0` (2019-06-10)
 ## 新功能/改进
 1. 重构改进`glog`模块：
     - 去掉日志模块所有的锁机制，改为无锁设计，执行性能更加高效

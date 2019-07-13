@@ -9,12 +9,16 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"regexp"
+
+	"github.com/gogf/gf/g/text/gregex"
 )
 
 // PostgreSQL的适配.
+//
 // 使用时需要import:
+//
 // _ "github.com/gogf/gf/third/github.com/lib/pq"
+//
 // @todo 需要完善replace和save的操作覆盖
 
 // 数据库链接对象
@@ -37,6 +41,12 @@ func (db *dbPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// 动态切换数据库
+func (db *dbPgsql) setSchema(sqlDb *sql.DB, schema string) error {
+	_, err := sqlDb.Exec("SET search_path TO " + schema)
+	return err
+}
+
 // 获得关键字操作符
 func (db *dbPgsql) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
@@ -44,11 +54,12 @@ func (db *dbPgsql) getChars() (charLeft string, charRight string) {
 
 // 在执行sql之前对sql进行进一步处理
 func (db *dbPgsql) handleSqlBeforeExec(query string) string {
-	reg := regexp.MustCompile("\\?")
 	index := 0
-	str := reg.ReplaceAllStringFunc(query, func(s string) string {
+	query, _ = gregex.ReplaceStringFunc("\\?", query, func(s string) string {
 		index++
 		return fmt.Sprintf("$%d", index)
 	})
-	return str
+	// 分页语法替换
+	query, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $1 OFFSET $2`, query)
+	return query
 }

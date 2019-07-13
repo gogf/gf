@@ -8,9 +8,10 @@
 package glog
 
 import (
+	"io"
+
 	"github.com/gogf/gf/g/internal/cmdenv"
 	"github.com/gogf/gf/g/os/grpool"
-	"io"
 )
 
 const (
@@ -115,19 +116,19 @@ func GetFlags() int {
 	return logger.GetFlags()
 }
 
-// PrintBacktrace prints the caller backtrace,
-// the optional parameter <skip> specify the skipped backtrace offset from the end point.
-func PrintBacktrace(skip ...int) {
-	logger.PrintBacktrace(skip...)
+// PrintStack prints the caller stack,
+// the optional parameter <skip> specify the skipped stack offset from the end point.
+func PrintStack(skip ...int) {
+	logger.PrintStack(skip...)
 }
 
-// GetBacktrace returns the caller backtrace content,
-// the optional parameter <skip> specify the skipped backtrace offset from the end point.
-func GetBacktrace(skip ...int) string {
-	return logger.GetBacktrace(skip...)
+// GetStack returns the caller stack content,
+// the optional parameter <skip> specify the skipped stack offset from the end point.
+func GetStack(skip ...int) string {
+	return logger.GetStack(skip...)
 }
 
-// SetBacktrace enables/disables the backtrace feature in failure logging outputs.
-func SetBacktrace(enabled bool) {
-	logger.SetBacktrace(enabled)
+// SetStack enables/disables the stack feature in failure logging outputs.
+func SetStack(enabled bool) {
+	logger.SetStack(enabled)
 }

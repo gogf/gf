@@ -24,8 +24,7 @@ func main() {
 		panic(err)
 	}
 	db.SetDebug(true)
-	db.Table("user").Limit(2).Delete()
-	return
+
 	glog.SetPath("/tmp")
 
 	// 执行3条SQL查询

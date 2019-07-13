@@ -7,11 +7,12 @@
 package gredis_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g/database/gredis"
 	"github.com/gogf/gf/g/test/gtest"
 	redis2 "github.com/gogf/gf/third/github.com/gomodule/redigo/redis"
-	"testing"
-	"time"
 )
 
 var (
