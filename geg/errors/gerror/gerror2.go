@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/os/glog"
+	"fmt"
 
 	"github.com/gogf/gf/g/errors/gerror"
 )
@@ -19,8 +19,8 @@ func ReadConfig() error {
 }
 
 func main() {
-	err := ReadConfig()
-	glog.Printf("%s\n%+s", err, err)
-	glog.Printf("%+v", err)
-	glog.Error(err)
+	//err := ReadConfig()
+	//glog.Printf("%s\n%+s", err, err)
+	//glog.Printf("%+v", err)
+	fmt.Printf("%+v", ReadConfig())
 }
