@@ -1,4 +1,4 @@
-# `v1.8.0`
+# `v1.8.0` (2019-07-15)
 
 ## 新功能改进
 1. 框架目前 `69` 个开发模块（不包括内部模块），原生代码 `65302` 行（不包含第三包依赖包），单元测试覆盖率达到`77%`；
@@ -13,7 +13,7 @@
     - **修改`Backtrace`名称为`Stack`，并改进调用堆栈输出格式；**
     - 新增`Expose`方法暴露内部默认`Logger`对象；
 1. 改进`gdb`数据库ORM模块：
-    - 改进错误处理，当数据库操作没有查询到数据时，`error`返回`sql.ErrNoRows`：https://goframe.org/database/gdb/error
+    - **改进错误处理，当数据库操作没有查询到数据时，`error`返回`sql.ErrNoRows`**：https://goframe.org/database/gdb/error
     - 改进`Update`/`Delete`方法支持`Order BY`及`LIMIT`特性；
     - 数据库链式操作及方法操作中，预处理变量参数支持`slice`参数：https://goframe.org/database/gdb/chaining/model
     - **修改`Priority`权重配置名称为`Weight`；**
@@ -24,7 +24,7 @@
 1. 改进`gconv`数据转换模块：
     - 对结构体对象转换时支持更多的标签：`gconv/c/json`；
     - 支持`*struct/[]struct/[]*struct`自动初始化创建对象/数组：https://goframe.org/util/gconv/struct
-    - 新增`Strusts/StrctsDeep`方法，用于结构体数组的转换即递归转换；
+    - 新增`Strusts/StrctsDeep`方法，用于结构体数组的递归转换；
     - 新增`StructDeep`方法，用于对结构体对象的递归转换；
     - 新增`MapDeep`方法，用于对结构体属性的递归转换；
 1. 改进`ghttp`模块：
@@ -45,6 +45,7 @@
 1. 改进`garray.Range/SubSlice`方法，改进设计，提高性能；
 1. 改进`gjson`/`gparser`模块实现`MarshalJSON`接口以实现自定义的`JSON`数据格式转换；
 1. **改进`crypto`分类下模块的方法返回值，增加`error`错误变量返回，以保证更严谨的接口设计风格；**
+1. **改进`gbase64`模块，输入输出类型发生改变，并增加多个相关方法；**
 1. 改进`gflock`修改方法名`UnLock`为`Unlock`，新增`IsRLocked`方法；
 1. 新增`gfile.CopyFile/CopyDir`方法，用于文件及目录的复制；
 1. 改进`gjson/gparser/gvar/gcfg`模块增加更多的类型转换方法；
@@ -65,7 +66,7 @@
 
 ## 注意事项
 
-以上粗体文字部分为不兼容调整，升级时请注意。
+请注意以上粗体文字部分，如有使用，在您升级时可能会出现不兼容性。
 
 
 
