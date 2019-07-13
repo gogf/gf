@@ -115,6 +115,16 @@ func (t *Time) Add(d time.Duration) *Time {
 	return t
 }
 
+// 当前时间加上指定时间段(使用字符串格式)
+func (t *Time) AddStr(duration string) error {
+	if d, err := time.ParseDuration(duration); err != nil {
+		return err
+	} else {
+		t.Time = t.Time.Add(d)
+	}
+	return nil
+}
+
 // 时区转换为指定的时区(通过time.Location)
 func (t *Time) ToLocation(location *time.Location) *Time {
 	t.Time = t.Time.In(location)

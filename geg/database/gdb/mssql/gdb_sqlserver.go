@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+
 	//_ "github.com/denisenkom/go-mssqldb"
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/database/gdb"
@@ -49,7 +50,7 @@ func init() {
 	//            Name     : "test",
 	//            Type     : "mysql",
 	//            Role     : "master",
-	//            Priority : 100,
+	//            Weight : 100,
 	//        },
 	//        gdb.ConfigNode {
 	//            Host     : "127.0.0.2",
@@ -59,7 +60,7 @@ func init() {
 	//            Name     : "test",
 	//            Type     : "mysql",
 	//            Role     : "master",
-	//            Priority : 100,
+	//            Weight : 100,
 	//        },
 	//        gdb.ConfigNode {
 	//            Host     : "127.0.0.3",
@@ -69,7 +70,7 @@ func init() {
 	//            Name     : "test",
 	//            Type     : "mysql",
 	//            Role     : "master",
-	//            Priority : 100,
+	//            Weight : 100,
 	//        },
 	//        gdb.ConfigNode {
 	//            Host     : "127.0.0.4",
@@ -79,7 +80,7 @@ func init() {
 	//            Name     : "test",
 	//            Type     : "mysql",
 	//            Role     : "master",
-	//            Priority : 100,
+	//            Weight : 100,
 	//        },
 	//    },
 	//})
