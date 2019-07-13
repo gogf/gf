@@ -280,33 +280,45 @@ func TestModel_Safe(t *testing.T) {
 }
 
 func TestModel_All(t *testing.T) {
-	result, err := db.Table("user").All()
-	if err != nil {
-		gtest.Fatal(err)
-	}
-	gtest.Assert(len(result), 3)
+	gtest.Case(t, func() {
+		result, err := db.Table("user").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 3)
+	})
+	// sql.ErrNoRows
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("id<0").All()
+		gtest.Assert(result, nil)
+		gtest.Assert(err, sql.ErrNoRows)
+	})
 }
 
 func TestModel_One(t *testing.T) {
-	record, err := db.Table("user").Where("id", 1).One()
-	if err != nil {
-		gtest.Fatal(err)
-	}
-	if record == nil {
-		gtest.Fatal("FAIL")
-	}
-	gtest.Assert(record["nickname"].String(), "T111")
+	gtest.Case(t, func() {
+		record, err := db.Table("user").Where("id", 1).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(record["nickname"].String(), "T111")
+	})
+	// sql.ErrNoRows
+	gtest.Case(t, func() {
+		record, err := db.Table("user").Where("id", 0).One()
+		gtest.Assert(err, sql.ErrNoRows)
+		gtest.Assert(record, nil)
+	})
 }
 
 func TestModel_Value(t *testing.T) {
-	value, err := db.Table("user").Fields("nickname").Where("id", 1).Value()
-	if err != nil {
-		gtest.Fatal(err)
-	}
-	if value == nil {
-		gtest.Fatal("FAIL")
-	}
-	gtest.Assert(value.String(), "T111")
+	gtest.Case(t, func() {
+		value, err := db.Table("user").Fields("nickname").Where("id", 1).Value()
+		gtest.Assert(err, nil)
+		gtest.Assert(value.String(), "T111")
+	})
+	// sql.ErrNoRows
+	gtest.Case(t, func() {
+		value, err := db.Table("user").Fields("nickname").Where("id", 0).Value()
+		gtest.Assert(err, sql.ErrNoRows)
+		gtest.Assert(value, nil)
+	})
 }
 
 func TestModel_Count(t *testing.T) {
@@ -613,6 +625,23 @@ func TestModel_Where(t *testing.T) {
 		gtest.AssertGT(len(result), 0)
 		gtest.Assert(result["id"].Int(), 3)
 	})
+	// slice parameter
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("id=? and nickname=?", g.Slice{3, "T3"}).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("id=?", g.Slice{3}).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
 	gtest.Case(t, func() {
 		result, err := db.Table("user").Where("id", 3).One()
 		if err != nil {
@@ -661,7 +690,14 @@ func TestModel_Where(t *testing.T) {
 		gtest.Assert(result["id"].Int(), 3)
 	})
 	gtest.Case(t, func() {
-		result, err := db.Table("user").Where("passport like ? and nickname like ?", g.Slice{"t3", "T3"}...).One()
+		result, err := db.Table("user").Where("id=? AND nickname=?", g.Slice{3, "T3"}).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table("user").Where("passport like ? and nickname like ?", g.Slice{"t3", "T3"}).One()
 		if err != nil {
 			gtest.Fatal(err)
 		}

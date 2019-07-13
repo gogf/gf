@@ -162,8 +162,8 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	if value, ok := nodeMap["charset"]; ok {
 		node.Charset = gconv.String(value)
 	}
-	if value, ok := nodeMap["priority"]; ok {
-		node.Priority = gconv.Int(value)
+	if value, ok := nodeMap["weight"]; ok {
+		node.Weight = gconv.Int(value)
 	}
 	if value, ok := nodeMap["linkinfo"]; ok {
 		node.LinkInfo = gconv.String(value)

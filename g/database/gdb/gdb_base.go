@@ -22,7 +22,8 @@ import (
 )
 
 const (
-	gDEFAULT_DEBUG_SQL_LENGTH = 1000 // 默认调试模式下记录的SQL条数
+	// 默认调试模式下记录的SQL条数
+	gDEFAULT_DEBUG_SQL_LENGTH = 1000
 )
 
 // 获取最近一条执行的sql
@@ -78,6 +79,7 @@ func (bs *dbBase) Query(query string, args ...interface{}) (rows *sql.Rows, err 
 
 // 数据库sql查询操作，主要执行查询
 func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error) {
+	query, args = formatQuery(query, args)
 	query = bs.db.handleSqlBeforeExec(query)
 	if bs.db.getDebug() {
 		mTime1 := gtime.Millisecond()
@@ -114,6 +116,7 @@ func (bs *dbBase) Exec(query string, args ...interface{}) (result sql.Result, er
 
 // 执行一条sql，并返回执行情况，主要用于非查询操作
 func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error) {
+	query, args = formatQuery(query, args)
 	query = bs.db.handleSqlBeforeExec(query)
 	if bs.db.getDebug() {
 		mTime1 := gtime.Millisecond()
@@ -178,28 +181,28 @@ func (bs *dbBase) GetOne(query string, args ...interface{}) (Record, error) {
 }
 
 // 数据库查询，查询单条记录，自动映射数据到给定的struct对象中
-func (bs *dbBase) GetStruct(objPointer interface{}, query string, args ...interface{}) error {
+func (bs *dbBase) GetStruct(pointer interface{}, query string, args ...interface{}) error {
 	one, err := bs.GetOne(query, args...)
 	if err != nil {
 		return err
 	}
-	return one.ToStruct(objPointer)
+	return one.ToStruct(pointer)
 }
 
 // 数据库查询，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
-func (bs *dbBase) GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error {
+func (bs *dbBase) GetStructs(pointer interface{}, query string, args ...interface{}) error {
 	all, err := bs.GetAll(query, args...)
 	if err != nil {
 		return err
 	}
-	return all.ToStructs(objPointerSlice)
+	return all.ToStructs(pointer)
 }
 
 // 将结果转换为指定的struct/*struct/[]struct/[]*struct,
 // 参数应该为指针类型，否则返回失败。
 // 该方法自动识别参数类型，调用Struct/Structs方法。
-func (bs *dbBase) GetScan(objPointer interface{}, query string, args ...interface{}) error {
-	t := reflect.TypeOf(objPointer)
+func (bs *dbBase) GetScan(pointer interface{}, query string, args ...interface{}) error {
+	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
 		return fmt.Errorf("params should be type of pointer, but got: %v", k)
@@ -207,9 +210,9 @@ func (bs *dbBase) GetScan(objPointer interface{}, query string, args ...interfac
 	k = t.Elem().Kind()
 	switch k {
 	case reflect.Array, reflect.Slice:
-		return bs.db.GetStructs(objPointer, query, args...)
+		return bs.db.GetStructs(pointer, query, args...)
 	case reflect.Struct:
-		return bs.db.GetStruct(objPointer, query, args...)
+		return bs.db.GetStruct(pointer, query, args...)
 	}
 	return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 }
@@ -567,6 +570,9 @@ func (bs *dbBase) getCache() *gcache.Cache {
 
 // 将数据查询的列表数据*sql.Rows转换为Result类型
 func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
+	if !rows.Next() {
+		return nil, sql.ErrNoRows
+	}
 	// 列信息列表, 名称与类型
 	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
@@ -585,7 +591,7 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
-	for rows.Next() {
+	for {
 		if err := rows.Scan(scanArgs...); err != nil {
 			return records, err
 		}
@@ -603,6 +609,15 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 			}
 		}
 		records = append(records, row)
+		if !rows.Next() {
+			break
+		}
 	}
 	return records, nil
+}
+
+// 动态切换数据库
+func (bs *dbBase) setSchema(sqlDb *sql.DB, schema string) error {
+	_, err := sqlDb.Exec("USE " + schema)
+	return err
 }

@@ -9,8 +9,9 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/g/container/gring"
 	"sync"
+
+	"github.com/gogf/gf/g/container/gring"
 )
 
 const (
@@ -30,10 +31,11 @@ type ConfigNode struct {
 	User             string // 账号
 	Pass             string // 密码
 	Name             string // 数据库名称
-	Type             string // 数据库类型：mysql, sqlite, mssql, pgsql, oracle(目前仅支持mysql)
+	Type             string // 数据库类型：mysql, sqlite, mssql, pgsql, oracle
 	Role             string // (可选，默认为master)数据库的角色，用于主从操作分离，至少需要有一个master，参数值：master, slave
+	Debug            bool   // (可选)开启调试模式
+	Weight           int    // (可选)用于负载均衡的权重计算，当集群中只有一个节点时，权重没有任何意义
 	Charset          string // (可选，默认为 utf8)编码，默认为 utf8
-	Priority         int    // (可选)用于负载均衡的权重计算，当集群中只有一个节点时，权重没有任何意义
 	LinkInfo         string // (可选)自定义链接信息，当该字段被设置值时，以上链接字段(Host,Port,User,Pass,Name)将失效(该字段是一个扩展功能)
 	MaxIdleConnCount int    // (可选)连接池最大限制的连接数
 	MaxOpenConnCount int    // (可选)连接池最大打开的连接数
@@ -46,37 +48,6 @@ var configs struct {
 	config       Config // 数据库分组配置
 	defaultGroup string // 默认数据库分组名称
 }
-
-// 数据库集群配置示例，支持主从处理，多数据库集群支持
-/*
-var DatabaseConfiguration = Config {
-    // 数据库集群配置名称
-    "default" : ConfigGroup {
-        {
-            Host     : "192.168.1.100",
-            Port     : "3306",
-            User     : "root",
-            Pass     : "123456",
-            Name     : "test",
-            Type     : "mysql",
-            Role     : "master",
-            Charset  : "utf8",
-            Priority : 100,
-        },
-        {
-            Host     : "192.168.1.101",
-            Port     : "3306",
-            User     : "root",
-            Pass     : "123456",
-            Name     : "test",
-            Type     : "mysql",
-            Role     : "slave",
-            Charset  : "utf8",
-            Priority : 100,
-        },
-    },
-}
-*/
 
 // 包初始化
 func init() {
@@ -136,24 +107,24 @@ func SetDefaultGroup(name string) {
 // 获取默认链接的数据库链接配置项(默认是 default)
 func GetDefaultGroup() string {
 	defer instances.Clear()
-	configs.Lock()
-	defer configs.Unlock()
+	configs.RLock()
+	defer configs.RUnlock()
 	return configs.defaultGroup
 }
 
 // 设置数据库连接池中空闲链接的大小
-func (bs *dbBase) SetMaxIdleConns(n int) {
+func (bs *dbBase) SetMaxIdleConnCount(n int) {
 	bs.maxIdleConnCount.Set(n)
 }
 
 // 设置数据库连接池最大打开的链接数量
-func (bs *dbBase) SetMaxOpenConns(n int) {
+func (bs *dbBase) SetMaxOpenConnCount(n int) {
 	bs.maxOpenConnCount.Set(n)
 }
 
 // 设置数据库连接可重复利用的时间，超过该时间则被关闭废弃
 // 如果 d <= 0 表示该链接会一直重复利用
-func (bs *dbBase) SetConnMaxLifetime(n int) {
+func (bs *dbBase) SetMaxConnLifetime(n int) {
 	bs.maxConnLifetime.Set(n)
 }
 
@@ -162,8 +133,8 @@ func (node *ConfigNode) String() string {
 	if node.LinkInfo != "" {
 		return node.LinkInfo
 	}
-	return fmt.Sprintf(`%s@%s:%s,%s,%s,%s,%s,%d-%d-%d`, node.User, node.Host, node.Port,
-		node.Name, node.Type, node.Role, node.Charset,
+	return fmt.Sprintf(`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d`, node.User, node.Host, node.Port,
+		node.Name, node.Type, node.Role, node.Charset, node.Debug,
 		node.MaxIdleConnCount, node.MaxOpenConnCount, node.MaxConnLifetime,
 	)
 }
