@@ -67,51 +67,52 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 		checkRules = v
 	}
 	// 首先, 按照属性循环一遍将struct的属性、数值、tag解析
-	for tagValue, field := range structs.TagMapField(object, structTagPriority, true) {
+	for tagValue, field := range structs.MapField(object, structTagPriority, true) {
 		fieldName := field.Name()
 		params[fieldName] = field.Value()
-
-		// sequence tag == struct tag, 这里的name为别名
-		name, rule, msg := parseSequenceTag(tagValue)
-		if len(name) == 0 {
-			name = fieldName
-		} else {
-			fieldCName[fieldName] = name
-		}
-		// params参数使用别名**扩容**(而不仅仅使用别名)，仅用于验证使用
-		if _, ok := params[name]; !ok {
-			params[name] = field.Value()
-		}
-		// 校验规则
-		if _, ok := checkRules[name]; !ok {
-			if _, ok := checkRules[fieldName]; ok {
-				checkRules[name] = checkRules[fieldName]
-				delete(checkRules, fieldName)
+		if tagValue != fieldName {
+			// sequence tag == struct tag, 这里的name为别名
+			name, rule, msg := parseSequenceTag(tagValue)
+			if len(name) == 0 {
+				name = fieldName
 			} else {
-				checkRules[name] = rule
+				fieldCName[fieldName] = name
 			}
-			errorRules = append(errorRules, name+"@"+rule)
-		} else {
-			// 传递的rules规则会覆盖struct tag的规则
-			continue
-		}
-		// 错误提示
-		if len(msg) > 0 {
-			ruleArray := strings.Split(rule, "|")
-			msgArray := strings.Split(msg, "|")
-			for k, v := range ruleArray {
-				// 如果msg条数比rule少，那么多余的rule使用默认的错误信息
-				if len(msgArray) <= k {
-					continue
+			// params参数使用别名**扩容**(而不仅仅使用别名)，仅用于验证使用
+			if _, ok := params[name]; !ok {
+				params[name] = field.Value()
+			}
+			// 校验规则
+			if _, ok := checkRules[name]; !ok {
+				if _, ok := checkRules[fieldName]; ok {
+					checkRules[name] = checkRules[fieldName]
+					delete(checkRules, fieldName)
+				} else {
+					checkRules[name] = rule
 				}
-				if len(msgArray[k]) == 0 {
-					continue
+				errorRules = append(errorRules, name+"@"+rule)
+			} else {
+				// 传递的rules规则会覆盖struct tag的规则
+				continue
+			}
+			// 错误提示
+			if len(msg) > 0 {
+				ruleArray := strings.Split(rule, "|")
+				msgArray := strings.Split(msg, "|")
+				for k, v := range ruleArray {
+					// 如果msg条数比rule少，那么多余的rule使用默认的错误信息
+					if len(msgArray) <= k {
+						continue
+					}
+					if len(msgArray[k]) == 0 {
+						continue
+					}
+					array := strings.Split(v, ":")
+					if _, ok := customMsgs[name]; !ok {
+						customMsgs[name] = make(map[string]string)
+					}
+					customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 				}
-				array := strings.Split(v, ":")
-				if _, ok := customMsgs[name]; !ok {
-					customMsgs[name] = make(map[string]string)
-				}
-				customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 			}
 		}
 	}
