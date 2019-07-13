@@ -2,7 +2,8 @@ package main
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/gogf/gf/g/os/glog"
 
 	"github.com/gogf/gf/g/errors/gerror"
 )
@@ -16,8 +17,6 @@ func Error2() error {
 }
 
 func main() {
-	err1 := Error1()
-	err2 := Error2()
-	fmt.Println("err1:\n", gerror.Stack(err1))
-	fmt.Println("err2:\n", gerror.Stack(err2))
+	glog.Println(Error1())
+	glog.Println(Error2())
 }

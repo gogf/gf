@@ -8,11 +8,11 @@ import (
 )
 
 func Error1() error {
-	return errors.New("test")
+	return errors.New("test1")
 }
 
 func Error2() error {
-	return gerror.New("test")
+	return gerror.New("test2")
 }
 
 func main() {

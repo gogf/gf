@@ -39,9 +39,8 @@ func New() *Mutex {
 // Lock blocks until the lock is available.
 func (m *Mutex) Lock() {
 	for {
-		// If there're no readers pending and writing lock currently,
-		// then do the writing lock checks.
-		if m.reader.Val() == 0 && m.state.Cas(0, -1) {
+		// If there're no writing lock currently, then do the writing lock checks.
+		if m.state.Cas(0, -1) {
 			return
 		}
 		m.writer.Add(1)
@@ -55,13 +54,11 @@ func (m *Mutex) Lock() {
 func (m *Mutex) Unlock() {
 	if m.state.Cas(-1, 0) {
 		// Writing lock unlocks, then first check the blocked readers.
-		if n := m.reader.Val(); n > 0 {
-			// If there're readers blocked, unlock them with preemption.
-			for ; n > 0; n-- {
-				m.reading <- struct{}{}
-			}
-			return
+		// If there're readers blocked, unlock them with preemption.
+		for n := m.reader.Val(); n > 0; n-- {
+			m.reading <- struct{}{}
 		}
+		// Then it also gives the pending writers one chance.
 		if m.writer.Val() > 0 {
 			m.writing <- struct{}{}
 		}
@@ -72,7 +69,7 @@ func (m *Mutex) Unlock() {
 // It returns true if success, or if there's a write/reading lock on the mutex,
 // it returns false.
 func (m *Mutex) TryLock() bool {
-	if m.reader.Val() == 0 && m.state.Cas(0, -1) {
+	if m.state.Cas(0, -1) {
 		return true
 	}
 	return false
@@ -84,9 +81,8 @@ func (m *Mutex) TryLock() bool {
 func (m *Mutex) RLock() {
 	var n int32
 	for {
-		// If there're no writing lock and pending writers currently,
-		// then do the reading lock checks.
-		if n = m.state.Val(); n >= 0 && m.writer.Val() == 0 {
+		// If there're no writing lock currently, then do the reading lock checks.
+		if n = m.state.Val(); n >= 0 {
 			if m.state.Cas(n, n+1) {
 				return
 			} else {
@@ -94,6 +90,7 @@ func (m *Mutex) RLock() {
 				continue
 			}
 		}
+
 		// Or else pending the reader.
 		m.reader.Add(1)
 		<-m.reading
@@ -116,7 +113,7 @@ func (m *Mutex) RUnlock() {
 			break
 		}
 	}
-	// Reading lock unlocks, then first check the blocked writers.
+	// Reading lock unlocks, then check the blocked writers.
 	if n == 1 && m.writer.Val() > 0 {
 		// No readers blocked, then the writers can take place.
 		m.writing <- struct{}{}
@@ -128,7 +125,7 @@ func (m *Mutex) RUnlock() {
 func (m *Mutex) TryRLock() bool {
 	var n int32
 	for {
-		if n = m.state.Val(); n >= 0 && m.writer.Val() == 0 {
+		if n = m.state.Val(); n >= 0 {
 			if m.state.Cas(n, n+1) {
 				return true
 			} else {
