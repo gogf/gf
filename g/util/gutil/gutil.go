@@ -11,10 +11,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
+
 	"github.com/gogf/gf/g/internal/empty"
 	"github.com/gogf/gf/g/util/gconv"
-	"os"
-	"runtime"
 )
 
 // Dump prints variables <i...> to stdout with more manually readable.
@@ -44,21 +44,6 @@ func Export(i ...interface{}) string {
 		}
 	}
 	return buffer.String()
-}
-
-// PrintBacktrace prints the caller backtrace to stdout.
-func PrintBacktrace() {
-	index := 1
-	buffer := bytes.NewBuffer(nil)
-	for i := 1; i < 10000; i++ {
-		if _, path, line, ok := runtime.Caller(i); ok {
-			buffer.WriteString(fmt.Sprintf(`%d. %s:%d%s`, index, path, line, "\n"))
-			index++
-		} else {
-			break
-		}
-	}
-	fmt.Print(buffer.String())
 }
 
 // Throw throws out an exception, which can be caught be TryCatch or recover.

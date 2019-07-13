@@ -32,15 +32,15 @@ var (
 // 测试前需要修改连接参数。
 func init() {
 	node := gdb.ConfigNode{
-		Host:     "127.0.0.1",
-		Port:     "3306",
-		User:     "root",
-		Pass:     "",
-		Name:     "",
-		Type:     "mysql",
-		Role:     "master",
-		Charset:  "utf8",
-		Priority: 1,
+		Host:    "127.0.0.1",
+		Port:    "3306",
+		User:    "root",
+		Pass:    "",
+		Name:    "",
+		Type:    "mysql",
+		Role:    "master",
+		Charset: "utf8",
+		Weight:  1,
 	}
 	hostname, _ := os.Hostname()
 	// 本地测试hack
