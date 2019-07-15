@@ -22,7 +22,7 @@ var (
 // struct的数据校验结果信息是顺序的。
 func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 	// 字段别名记录，用于msgs覆盖struct tag的
-	fieldCName := make(map[string]string)
+	fieldAliases := make(map[string]string)
 	params := make(map[string]interface{})
 	checkRules := make(map[string]string)
 	customMsgs := make(CustomMsg)
@@ -67,16 +67,17 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 		checkRules = v
 	}
 	// 首先, 按照属性循环一遍将struct的属性、数值、tag解析
-	for tagValue, field := range structs.MapField(object, structTagPriority, true) {
+	for nameOrTag, field := range structs.MapField(object, structTagPriority, true) {
 		fieldName := field.Name()
 		params[fieldName] = field.Value()
-		if tagValue != fieldName {
+		// MapField返回map[name/tag]*Field，当nameOrTag != fieldName时，nameOrTag为tag
+		if nameOrTag != fieldName {
 			// sequence tag == struct tag, 这里的name为别名
-			name, rule, msg := parseSequenceTag(tagValue)
+			name, rule, msg := parseSequenceTag(nameOrTag)
 			if len(name) == 0 {
 				name = fieldName
 			} else {
-				fieldCName[fieldName] = name
+				fieldAliases[fieldName] = name
 			}
 			// params参数使用别名**扩容**(而不仅仅使用别名)，仅用于验证使用
 			if _, ok := params[name]; !ok {
@@ -85,6 +86,7 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			// 校验规则
 			if _, ok := checkRules[name]; !ok {
 				if _, ok := checkRules[fieldName]; ok {
+					// tag中存在别名，且rules传入的参数中使用了属性命名时，进行规则替换，并删除该属性的规则
 					checkRules[name] = checkRules[fieldName]
 					delete(checkRules, fieldName)
 				} else {
@@ -121,8 +123,9 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 	if len(msgs) > 0 && len(msgs[0]) > 0 {
 		if len(customMsgs) > 0 {
 			for k, v := range msgs[0] {
-				if cmane, ok := fieldCName[k]; ok {
-					customMsgs[cmane] = v
+				if a, ok := fieldAliases[k]; ok {
+					// 属性的别名存在时，覆盖别名的错误信息
+					customMsgs[a] = v
 				} else {
 					customMsgs[k] = v
 				}
@@ -141,9 +144,6 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 		value = nil
 		if v, ok := params[key]; ok {
 			value = v
-		} else {
-			// 不存在的字段的规则跳过。例如rules使用[]string格式输入时，填写无效字段名便会出现这种情况。
-			continue
 		}
 		if e := Check(value, rule, customMsgs[key], params); e != nil {
 			_, item := e.FirstItem()
