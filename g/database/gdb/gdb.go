@@ -340,7 +340,9 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 		sqlDb = v.(*sql.DB)
 	}
 	// 是否开启调试模式
-	bs.db.SetDebug(node.Debug)
+	if node.Debug {
+		bs.db.SetDebug(node.Debug)
+	}
 	// 是否手动选择数据库
 	if v := bs.schema.Val(); v != "" {
 		if e := bs.db.setSchema(sqlDb, v); e != nil {

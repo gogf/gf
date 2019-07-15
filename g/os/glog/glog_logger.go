@@ -244,10 +244,10 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 		// Caller path.
 		callerPath := ""
 		if l.flags&F_FILE_LONG > 0 {
-			callerPath = debug.CallerWithFilter(gPATH_FILTER_KEY) + ": "
+			callerPath = debug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip) + ": "
 		}
 		if l.flags&F_FILE_SHORT > 0 {
-			callerPath = gfile.Basename(debug.CallerWithFilter(gPATH_FILTER_KEY)) + ": "
+			callerPath = gfile.Basename(debug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip)) + ": "
 		}
 		if len(callerPath) > 0 {
 			buffer.WriteString(callerPath)

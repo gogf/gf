@@ -3,7 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 对常用关系数据库的封装管理包
 
 package gdb
 
@@ -141,6 +140,9 @@ func (node *ConfigNode) String() string {
 
 // 是否开启调试服务
 func (bs *dbBase) SetDebug(debug bool) {
+	if bs.debug.Val() == debug {
+		return
+	}
 	bs.debug.Set(debug)
 	if debug && bs.sqls == nil {
 		bs.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH)
