@@ -86,9 +86,6 @@ func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 		value = nil
 		if v, ok := data[key]; ok {
 			value = v
-		} else {
-			// 规则key没有对应需要校验的数据，那么不执行校验
-			continue
 		}
 		if e := Check(value, rule, customMsgs[key], data); e != nil {
 			_, item := e.FirstItem()
