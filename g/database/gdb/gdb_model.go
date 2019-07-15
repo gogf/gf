@@ -63,6 +63,9 @@ func (tx *TX) Table(tables string) *Model {
 		tx:         tx,
 		tablesInit: tables,
 		tables:     tables,
+		fields:     "*",
+		start:      -1,
+		offset:     -1,
 		safe:       false,
 	}
 }

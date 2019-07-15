@@ -161,11 +161,7 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 		node.Role = gconv.String(value)
 	}
 	if value, ok := nodeMap["debug"]; ok {
-		if gconv.Bool(value) {
-			node.Debug = 2
-		} else {
-			node.Debug = 1
-		}
+		node.Debug = gconv.Bool(value)
 	}
 	if value, ok := nodeMap["charset"]; ok {
 		node.Charset = gconv.String(value)
