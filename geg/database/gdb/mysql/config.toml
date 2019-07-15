@@ -9,5 +9,6 @@
         name     = "test"
         type     = "mysql"
         role     = "master"
+        debug    = "true"
+        weight   = "1"
         charset  = "utf8"
-        priority = "1"

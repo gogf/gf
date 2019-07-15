@@ -7,7 +7,9 @@
 package gtree
 
 import (
+	"encoding/json"
 	"fmt"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/internal/rwmutex"
 )
@@ -832,4 +834,9 @@ func (tree *RedBlackTree) nodeColor(node *RedBlackTreeNode) color {
 		return black
 	}
 	return node.color
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (tree *RedBlackTree) MarshalJSON() ([]byte, error) {
+	return json.Marshal(tree.Map())
 }

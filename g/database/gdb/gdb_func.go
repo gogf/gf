@@ -27,7 +27,49 @@ type apiString interface {
 	String() string
 }
 
-// 格式化Where查询条件
+// 格式化SQL语句。
+// 1. 支持参数只传一个slice；
+// 2. 支持占位符号数量自动扩展；
+func formatQuery(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
+	newQuery = query
+	// 查询条件参数处理，主要处理slice参数类型
+	if len(args) > 0 {
+		for index, arg := range args {
+			rv := reflect.ValueOf(arg)
+			kind := rv.Kind()
+			if kind == reflect.Ptr {
+				rv = rv.Elem()
+				kind = rv.Kind()
+			}
+			switch kind {
+			// '?'占位符支持slice类型, 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
+			case reflect.Slice, reflect.Array:
+				for i := 0; i < rv.Len(); i++ {
+					newArgs = append(newArgs, rv.Index(i).Interface())
+				}
+				// 如果参数直接传递slice，并且占位符数量与slice长度相等，
+				// 那么不用替换扩展占位符数量，直接使用该slice作为查询参数
+				if len(args) == 1 && gstr.Count(newQuery, "?") == rv.Len() {
+					break
+				}
+				// counter用于匹配该参数的位置(与index对应)
+				counter := 0
+				newQuery, _ = gregex.ReplaceStringFunc(`\?`, newQuery, func(s string) string {
+					counter++
+					if counter == index+1 {
+						return "?" + strings.Repeat(",?", rv.Len()-1)
+					}
+					return s
+				})
+			default:
+				newArgs = append(newArgs, arg)
+			}
+		}
+	}
+	return
+}
+
+// 格式化Where查询条件。
 func formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
 	// 条件字符串处理
 	buffer := bytes.NewBuffer(nil)
@@ -38,7 +80,6 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 		rv = rv.Elem()
 		kind = rv.Kind()
 	}
-	tmpArgs := []interface{}(nil)
 	switch kind {
 	// map/struct类型
 	case reflect.Map:
@@ -57,19 +98,20 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 				count := gstr.Count(key, "?")
 				if count == 0 {
 					buffer.WriteString(key + " IN(?)")
-					tmpArgs = append(tmpArgs, value)
+					newArgs = append(newArgs, value)
 				} else if count != rv.Len() {
 					buffer.WriteString(key)
-					tmpArgs = append(tmpArgs, value)
+					newArgs = append(newArgs, value)
 				} else {
 					buffer.WriteString(key)
 					// 如果键名/属性名称中带有多个?占位符号，那么将参数打散
-					tmpArgs = append(tmpArgs, gconv.Interfaces(value)...)
+					newArgs = append(newArgs, gconv.Interfaces(value)...)
 				}
 			default:
 				if value == nil {
 					buffer.WriteString(key)
 				} else {
+					// 支持key带操作符号
 					if gstr.Pos(key, "?") == -1 {
 						if gstr.Pos(key, "<") == -1 && gstr.Pos(key, ">") == -1 && gstr.Pos(key, "=") == -1 {
 							buffer.WriteString(key + "=?")
@@ -79,7 +121,7 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 					} else {
 						buffer.WriteString(key)
 					}
-					tmpArgs = append(tmpArgs, value)
+					newArgs = append(newArgs, value)
 				}
 			}
 		}
@@ -91,45 +133,16 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 	if buffer.Len() == 0 {
 		return "", args
 	}
+	newArgs = append(newArgs, args...)
 	newWhere = buffer.String()
-	tmpArgs = append(tmpArgs, args...)
 	// 查询条件参数处理，主要处理slice参数类型
-	if len(tmpArgs) > 0 {
-		for index, arg := range tmpArgs {
-			rv := reflect.ValueOf(arg)
-			kind := rv.Kind()
-			if kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
-			}
-			switch kind {
-			// '?'占位符支持slice类型,
-			// 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
-			case reflect.Slice:
-				fallthrough
-			case reflect.Array:
-				for i := 0; i < rv.Len(); i++ {
-					newArgs = append(newArgs, rv.Index(i).Interface())
-				}
-				// counter用于匹配该参数的位置(与index对应)
-				counter := 0
-				newWhere, _ = gregex.ReplaceStringFunc(`\?`, newWhere, func(s string) string {
-					counter++
-					if counter == index+1 {
-						return "?" + strings.Repeat(",?", rv.Len()-1)
-					}
-					return s
-				})
-			default:
-				// 支持例如 Where/And/Or("uid", 1) 这种格式
-				if gstr.Pos(newWhere, "?") == -1 {
-					if gstr.Pos(newWhere, "<") == -1 && gstr.Pos(newWhere, ">") == -1 && gstr.Pos(newWhere, "=") == -1 {
-						newWhere += "=?"
-					} else {
-						newWhere += "?"
-					}
-				}
-				newArgs = append(newArgs, arg)
+	if len(newArgs) > 0 {
+		// 支持例如 Where/And/Or("uid", 1) 这种格式
+		if gstr.Pos(newWhere, "?") == -1 {
+			if gstr.Pos(newWhere, "<") == -1 && gstr.Pos(newWhere, ">") == -1 && gstr.Pos(newWhere, "=") == -1 {
+				newWhere += "=?"
+			} else {
+				newWhere += "?"
 			}
 		}
 	}
@@ -175,7 +188,7 @@ func printSql(v *Sql) {
 	)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		glog.Backtrace(true, 2).Error(s)
+		glog.Stack(true, 2).Error(s)
 	} else {
 		glog.Debug(s)
 	}

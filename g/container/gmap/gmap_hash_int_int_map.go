@@ -7,6 +7,8 @@
 package gmap
 
 import (
+	"encoding/json"
+
 	"github.com/gogf/gf/g/internal/rwmutex"
 )
 
@@ -305,4 +307,11 @@ func (m *IntIntMap) Merge(other *IntIntMap) {
 	for k, v := range other.data {
 		m.data[k] = v
 	}
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (m *IntIntMap) MarshalJSON() ([]byte, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return json.Marshal(m.data)
 }

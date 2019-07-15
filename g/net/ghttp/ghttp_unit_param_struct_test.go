@@ -23,7 +23,7 @@ func Test_Params_Struct(t *testing.T) {
 		Id    int
 		Name  string
 		Pass1 string `params:"password1"`
-		Pass2 string `params:"password2" gvalid:"passwd1 @required|length:2,20|password3||密码强度不足"`
+		Pass2 string `params:"password2" gvalid:"passwd1 @required|length:2,20|password3#||密码强度不足"`
 	}
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -62,6 +62,6 @@ func Test_Params_Struct(t *testing.T) {
 		gtest.Assert(client.GetContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		gtest.Assert(client.PostContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		gtest.Assert(client.PostContent("/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		gtest.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `{"passwd1":{"length":"字段长度为2到20个字符","password3":"密码格式不合法，密码格式为任意6-18位的可见字符，必须包含大小写字母、数字和特殊字符"}}`)
+		gtest.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `{"passwd1":{"length":"字段长度为2到20个字符","password3":"密码强度不足"}}`)
 	})
 }

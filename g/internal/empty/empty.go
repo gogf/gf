@@ -18,7 +18,6 @@ func IsEmpty(value interface{}) bool {
 	if value == nil {
 		return true
 	}
-	// 优先通过断言来进行常用类型判断
 	switch value := value.(type) {
 	case int:
 		return value == 0
