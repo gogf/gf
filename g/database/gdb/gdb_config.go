@@ -32,7 +32,7 @@ type ConfigNode struct {
 	Name             string // 数据库名称
 	Type             string // 数据库类型：mysql, sqlite, mssql, pgsql, oracle
 	Role             string // (可选，默认为master)数据库的角色，用于主从操作分离，至少需要有一个master，参数值：master, slave
-	Debug            int    // (可选)开启调试模式(0:未设置，1:关闭，2:开启)
+	Debug            bool   // (可选)开启调试模式
 	Weight           int    // (可选)用于负载均衡的权重计算，当集群中只有一个节点时，权重没有任何意义
 	Charset          string // (可选，默认为 utf8)编码，默认为 utf8
 	LinkInfo         string // (可选)自定义链接信息，当该字段被设置值时，以上链接字段(Host,Port,User,Pass,Name)将失效(该字段是一个扩展功能)
