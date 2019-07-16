@@ -20,50 +20,64 @@ var (
 )
 
 func Benchmark_Mutex_LockUnlock(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		mu.Lock()
-		mu.Unlock()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			mu.Lock()
+			mu.Unlock()
+		}
+	})
 }
 
 func Benchmark_RWMutex_LockUnlock(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		rwmu.Lock()
-		rwmu.Unlock()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			rwmu.Lock()
+			rwmu.Unlock()
+		}
+	})
 }
 
 func Benchmark_RWMutex_RLockRUnlock(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		rwmu.RLock()
-		rwmu.RUnlock()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			rwmu.RLock()
+			rwmu.RUnlock()
+		}
+	})
 }
 
 func Benchmark_GMutex_LockUnlock(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		gmu.Lock()
-		gmu.Unlock()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			gmu.Lock()
+			gmu.Unlock()
+		}
+	})
 }
 
 func Benchmark_GMutex_TryLock(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		if gmu.TryLock() {
-			defer gmu.Unlock()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			if gmu.TryLock() {
+				defer gmu.Unlock()
+			}
 		}
-	}
+	})
 }
 
 func Benchmark_GMutex_RLockRUnlock(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		gmu.RLock()
-		gmu.RUnlock()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			gmu.RLock()
+			gmu.RUnlock()
+		}
+	})
 }
 
 func Benchmark_GMutex_TryRLock(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		gmu.TryRLock()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			gmu.TryRLock()
+		}
+	})
 }

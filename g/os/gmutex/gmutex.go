@@ -34,8 +34,8 @@ func New() *Mutex {
 	}
 }
 
-// Lock locks the mutex for writing.
-// If the lock is already locked for reading or writing,
+// Lock locks the mutex for writing purpose.
+// If the mutex is already locked by another goroutine for reading or writing,
 // it blocks until the lock is available.
 func (m *Mutex) Lock() {
 	for {
@@ -43,30 +43,45 @@ func (m *Mutex) Lock() {
 		if m.state.Cas(0, -1) {
 			return
 		}
-		// Or else blocks to wait for the next chance.
+		// It or else blocks to wait for the next chance.
 		m.writer.Add(1)
 		<-m.writing
-		m.writer.Add(-1)
 	}
 }
 
-// Unlock unlocks the writing lock.
+// Unlock unlocks writing lock on the mutex.
 // It is safe to be called multiple times if there's any locks or not.
 func (m *Mutex) Unlock() {
 	if m.state.Cas(-1, 0) {
+		// Note that there might be more than one goroutines can enter this block.
+		var n int32
 		// Writing lock unlocks, then first check the blocked readers.
-		// If there're readers blocked, unlock them with preemption.
-		for n := m.reader.Val(); n > 0; n-- {
-			m.reading <- struct{}{}
+		// If there're readers blocked, it unlocks them with preemption.
+		for {
+			if n = m.reader.Val(); n > 0 {
+				if m.reader.Cas(n, 0) {
+					for ; n > 0; n-- {
+						m.reading <- struct{}{}
+					}
+					break
+				} else {
+					runtime.Gosched()
+				}
+			} else {
+				break
+			}
 		}
+
 		// It then also kindly feeds the pending writers with one chance.
-		if m.writer.Val() > 0 {
-			m.writing <- struct{}{}
+		if n = m.writer.Val(); n > 0 {
+			if m.writer.Cas(n, n-1) {
+				m.writing <- struct{}{}
+			}
 		}
 	}
 }
 
-// TryLock tries locking the mutex for writing.
+// TryLock tries locking the mutex for writing purpose.
 // It returns true immediately if success, or if there's a write/reading lock on the mutex,
 // it returns false immediately.
 func (m *Mutex) TryLock() bool {
@@ -76,30 +91,28 @@ func (m *Mutex) TryLock() bool {
 	return false
 }
 
-// RLock locks mutex for reading purpose.
+// RLock locks mutex for reading purpose purpose.
 // If the mutex is already locked for writing,
 // it blocks until the lock is available.
 func (m *Mutex) RLock() {
 	var n int32
 	for {
-		// If there're no writing lock currently, then do the reading lock checks.
 		if n = m.state.Val(); n >= 0 {
+			// If there's no writing lock currently, then do the reading lock checks.
 			if m.state.Cas(n, n+1) {
 				return
 			} else {
 				runtime.Gosched()
-				continue
 			}
+		} else {
+			// It or else pends the reader.
+			m.reader.Add(1)
+			<-m.reading
 		}
-
-		// Or else pending the reader.
-		m.reader.Add(1)
-		<-m.reading
-		m.reader.Add(-1)
 	}
 }
 
-// RUnlock unlocks the reading lock.
+// RUnlock unlocks the reading lock on the mutex.
 // It is safe to be called multiple times if there's any locks or not.
 func (m *Mutex) RUnlock() {
 	var n int32
@@ -114,14 +127,19 @@ func (m *Mutex) RUnlock() {
 			break
 		}
 	}
-	// Reading lock unlocks, then only check the blocked writers.
+	// Reading lock unlocks, it then only check the blocked writers.
 	// Note that it is not necessary to check the pending readers here.
-	if n == 1 && m.writer.Val() > 0 {
-		m.writing <- struct{}{}
+	// <n == 1> means the state of mutex comes down to zero.
+	if n == 1 {
+		if n = m.writer.Val(); n > 0 {
+			if m.writer.Cas(n, n-1) {
+				m.writing <- struct{}{}
+			}
+		}
 	}
 }
 
-// TryRLock tries locking the mutex for reading.
+// TryRLock tries locking the mutex for reading purpose.
 // It returns true immediately if success, or if there's a writing lock on the mutex,
 // it returns false immediately.
 func (m *Mutex) TryRLock() bool {
