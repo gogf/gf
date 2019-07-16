@@ -13,41 +13,49 @@ import (
 )
 
 var (
-	l  = New()
-	bn = 20000000
+	l = New()
 )
 
 func Benchmark_PushBack(b *testing.B) {
-	b.N = bn
-	for i := 0; i < b.N; i++ {
-		l.PushBack(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			l.PushBack(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_PushFront(b *testing.B) {
-	b.N = bn
-	for i := 0; i < b.N; i++ {
-		l.PushFront(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			l.PushFront(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_Len(b *testing.B) {
-	b.N = bn
-	for i := 0; i < b.N; i++ {
-		l.Len()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			l.Len()
+		}
+	})
 }
 
 func Benchmark_PopFront(b *testing.B) {
-	b.N = bn
-	for i := 0; i < b.N; i++ {
-		l.PopFront()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			l.PopFront()
+		}
+	})
 }
 
 func Benchmark_PopBack(b *testing.B) {
-	b.N = bn
-	for i := 0; i < b.N; i++ {
-		l.PopBack()
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			l.PopBack()
+		}
+	})
 }
