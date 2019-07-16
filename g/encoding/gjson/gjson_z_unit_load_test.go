@@ -7,11 +7,12 @@
 package gjson_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/encoding/gjson"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 func Test_Load_JSON(t *testing.T) {
@@ -133,7 +134,7 @@ func Test_Load_YAML2(t *testing.T) {
 func Test_Load_TOML1(t *testing.T) {
 	data := []byte(`
 a = ["1", "2", "3"]
-n = "123456789"
+n = 123456789
 
 [m]
   k = "v"
