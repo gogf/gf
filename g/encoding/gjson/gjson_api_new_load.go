@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/g/os/gfile"
@@ -157,11 +158,6 @@ func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) 
 	}
 	switch dataType {
 	case "json", ".json":
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		decoder.UseNumber()
-		if err = decoder.Decode(&result); err != nil {
-			return nil, err
-		}
 
 	case "xml", ".xml":
 		if result, err = gxml.Decode(data); err != nil {
@@ -169,7 +165,7 @@ func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) 
 		}
 
 	case "yml", "yaml", ".yml", ".yaml":
-		if result, err = gyaml.Decode(data); err != nil {
+		if data, err = gyaml.ToJson(data); err != nil {
 			return nil, err
 		}
 
@@ -183,6 +179,17 @@ func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) 
 	}
 	if err != nil {
 		return nil, err
+	}
+	if result == nil {
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.UseNumber()
+		if err := decoder.Decode(&result); err != nil {
+			return nil, err
+		}
+		switch result.(type) {
+		case string, []byte:
+			return nil, fmt.Errorf(`json decoding failed for content: %s`, string(data))
+		}
 	}
 	return New(result, unsafe...), nil
 }
