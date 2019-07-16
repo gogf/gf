@@ -9,99 +9,162 @@
 package gmap_test
 
 import (
-	"github.com/gogf/gf/g/container/gmap"
 	"strconv"
 	"testing"
+
+	"github.com/gogf/gf/g/container/gmap"
 )
 
-var ififm = gmap.New()
-var iim = gmap.NewIntIntMap()
-var iifm = gmap.NewIntAnyMap()
-var ism = gmap.NewIntStrMap()
-var sim = gmap.NewStrIntMap()
-var sifm = gmap.NewStrAnyMap()
-var ssm = gmap.NewStrStrMap()
+var anyAnyMap = gmap.NewAnyAnyMap()
+var intIntMap = gmap.NewIntIntMap()
+var intAnyMap = gmap.NewIntAnyMap()
+var intStrMap = gmap.NewIntStrMap()
+var strIntMap = gmap.NewStrIntMap()
+var strAnyMap = gmap.NewStrAnyMap()
+var strStrMap = gmap.NewStrStrMap()
 
 func Benchmark_IntIntMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		iim.Set(i, i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			intIntMap.Set(i, i)
+			i++
+		}
+	})
 }
 
 func Benchmark_IntAnyMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		iifm.Set(i, i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			intAnyMap.Set(i, i)
+			i++
+		}
+	})
 }
 
 func Benchmark_IntStrMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ism.Set(i, strconv.Itoa(i))
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			intStrMap.Set(i, "123456789")
+			i++
+		}
+	})
 }
 
 func Benchmark_AnyAnyMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ififm.Set(i, i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			anyAnyMap.Set(i, i)
+			i++
+		}
+	})
 }
 
+// Note that there's additional performance cost for string conversion.
 func Benchmark_StrIntMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		sim.Set(strconv.Itoa(i), i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			strIntMap.Set(strconv.Itoa(i), i)
+			i++
+		}
+	})
 }
 
+// Note that there's additional performance cost for string conversion.
 func Benchmark_StrAnyMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		sifm.Set(strconv.Itoa(i), i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			strAnyMap.Set(strconv.Itoa(i), i)
+			i++
+		}
+	})
 }
 
+// Note that there's additional performance cost for string conversion.
 func Benchmark_StrStrMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ssm.Set(strconv.Itoa(i), strconv.Itoa(i))
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			strStrMap.Set(strconv.Itoa(i), "123456789")
+			i++
+		}
+	})
 }
 
 func Benchmark_IntIntMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		iim.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			intIntMap.Get(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_IntAnyMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		iifm.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			intAnyMap.Get(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_IntStrMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ism.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			intStrMap.Get(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_AnyAnyMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ififm.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			anyAnyMap.Get(i)
+			i++
+		}
+	})
 }
 
+// Note that there's additional performance cost for string conversion.
 func Benchmark_StrIntMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		sim.Get(strconv.Itoa(i))
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			strIntMap.Get(strconv.Itoa(i))
+			i++
+		}
+	})
 }
 
+// Note that there's additional performance cost for string conversion.
 func Benchmark_StrAnyMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		sifm.Get(strconv.Itoa(i))
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			strAnyMap.Get(strconv.Itoa(i))
+			i++
+		}
+	})
 }
 
+// Note that there's additional performance cost for string conversion.
 func Benchmark_StrStrMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ssm.Get(strconv.Itoa(i))
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			strStrMap.Get(strconv.Itoa(i))
+			i++
+		}
+	})
 }

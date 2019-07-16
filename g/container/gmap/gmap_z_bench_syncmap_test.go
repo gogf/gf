@@ -9,46 +9,71 @@
 package gmap_test
 
 import (
-	"github.com/gogf/gf/g/container/gmap"
 	"sync"
 	"testing"
+
+	"github.com/gogf/gf/g/container/gmap"
 )
 
-var m1 = gmap.NewIntIntMap()
-var m2 = sync.Map{}
+var gm = gmap.NewIntIntMap()
+var sm = sync.Map{}
 
-func BenchmarkGmapSet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		m1.Set(i, i)
-	}
+func Benchmark_GMapSet(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			gm.Set(i, i)
+			i++
+		}
+	})
 }
 
-func BenchmarkSyncmapSet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		m2.Store(i, i)
-	}
+func Benchmark_SyncMapSet(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			sm.Store(i, i)
+			i++
+		}
+	})
 }
 
-func BenchmarkGmapGet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		m1.Get(i)
-	}
+func Benchmark_GMapGet(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			gm.Get(i)
+			i++
+		}
+	})
 }
 
-func BenchmarkSyncmapGet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		m2.Load(i)
-	}
+func Benchmark_SyncMapGet(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			sm.Load(i)
+			i++
+		}
+	})
 }
 
-func BenchmarkGmapRemove(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		m1.Remove(i)
-	}
+func Benchmark_GMapRemove(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			gm.Remove(i)
+			i++
+		}
+	})
 }
 
-func BenchmarkSyncmapRmove(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		m2.Delete(i)
-	}
+func Benchmark_SyncMapRmove(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			sm.Delete(i)
+			i++
+		}
+	})
 }

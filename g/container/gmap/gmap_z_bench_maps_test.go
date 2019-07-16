@@ -9,9 +9,10 @@
 package gmap_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/util/gutil"
-	"testing"
 )
 
 var hashMap = gmap.New()
@@ -19,37 +20,62 @@ var listMap = gmap.NewListMap()
 var treeMap = gmap.NewTreeMap(gutil.ComparatorInt)
 
 func Benchmark_HashMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		hashMap.Set(i, i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			hashMap.Set(i, i)
+			i++
+		}
+	})
+
 }
 
 func Benchmark_ListMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		listMap.Set(i, i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			listMap.Set(i, i)
+			i++
+		}
+	})
 }
 
 func Benchmark_TreeMap_Set(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		treeMap.Set(i, i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			treeMap.Set(i, i)
+			i++
+		}
+	})
 }
 
 func Benchmark_HashMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		hashMap.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			hashMap.Get(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_ListMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		listMap.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			listMap.Get(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_TreeMap_Get(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		treeMap.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			treeMap.Get(i)
+			i++
+		}
+	})
 }
