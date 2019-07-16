@@ -8,12 +8,13 @@ package gins_test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g/frame/gins"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
-	"time"
 )
 
 func Test_Config(t *testing.T) {

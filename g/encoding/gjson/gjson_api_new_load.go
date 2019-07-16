@@ -160,7 +160,7 @@ func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) 
 	case "json", ".json":
 
 	case "xml", ".xml":
-		if result, err = gxml.Decode(data); err != nil {
+		if data, err = gxml.ToJson(data); err != nil {
 			return nil, err
 		}
 
@@ -170,7 +170,7 @@ func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) 
 		}
 
 	case "toml", ".toml":
-		if result, err = gtoml.Decode(data); err != nil {
+		if data, err = gtoml.ToJson(data); err != nil {
 			return nil, err
 		}
 
