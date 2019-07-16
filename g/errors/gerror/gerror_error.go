@@ -102,14 +102,14 @@ func (err *Error) Stack() string {
 	index := 1
 	buffer := bytes.NewBuffer(nil)
 	for loop != nil {
-		buffer.WriteString(fmt.Sprintf("%d.\t%-v\n", index, loop))
+		buffer.WriteString(fmt.Sprintf("%d. %-v\n", index, loop))
 		index++
 		formatSubStack(loop.stack, buffer)
 		if loop.error != nil {
 			if e, ok := loop.error.(*Error); ok {
 				loop = e
 			} else {
-				buffer.WriteString(fmt.Sprintf("%d.\t%s\n", index, loop.error.Error()))
+				buffer.WriteString(fmt.Sprintf("%d. %s\n", index, loop.error.Error()))
 				index++
 				break
 			}
@@ -123,6 +123,7 @@ func (err *Error) Stack() string {
 // formatSubStack formats the stack for error.
 func formatSubStack(st stack, buffer *bytes.Buffer) {
 	index := 1
+	space := "  "
 	for _, p := range st {
 		if fn := runtime.FuncForPC(p - 1); fn != nil {
 			file, line := fn.FileLine(p - 1)
@@ -132,7 +133,10 @@ func formatSubStack(st stack, buffer *bytes.Buffer) {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
-			buffer.WriteString(fmt.Sprintf("\t%d).\t%s\n\t\t%s:%d\n", index, fn.Name(), file, line))
+			if index > 9 {
+				space = " "
+			}
+			buffer.WriteString(fmt.Sprintf("   %d).%s%s\n    \t%s:%d\n", index, space, fn.Name(), file, line))
 			index++
 		}
 	}
