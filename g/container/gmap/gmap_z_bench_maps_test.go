@@ -27,7 +27,6 @@ func Benchmark_HashMap_Set(b *testing.B) {
 			i++
 		}
 	})
-
 }
 
 func Benchmark_ListMap_Set(b *testing.B) {
