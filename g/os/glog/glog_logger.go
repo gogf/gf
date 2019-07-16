@@ -268,6 +268,7 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 		}
 		if len(valueStr) > 0 {
 			if valueStr[len(valueStr)-1] == '\n' {
+				// Remove one blank line(\n\n).
 				if tempStr[0] == '\n' {
 					valueStr += tempStr[1:]
 				} else {

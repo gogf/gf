@@ -52,6 +52,7 @@ func StackWithFilter(filter string, skip ...int) string {
 		number = skip[0]
 	}
 	name := ""
+	space := "  "
 	index := 1
 	buffer := bytes.NewBuffer(nil)
 	for i := callerFromIndex() + number; i < gMAX_DEPTH; i++ {
@@ -67,7 +68,10 @@ func StackWithFilter(filter string, skip ...int) string {
 			} else {
 				name = fn.Name()
 			}
-			buffer.WriteString(fmt.Sprintf("%d.\t%s\n\t%s:%d\n", index, name, file, line))
+			if index > 9 {
+				space = " "
+			}
+			buffer.WriteString(fmt.Sprintf("%d.%s%s\n    %s:%d\n", index, space, name, file, line))
 			index++
 		} else {
 			break
