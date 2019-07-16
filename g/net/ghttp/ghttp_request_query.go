@@ -9,6 +9,8 @@ package ghttp
 import (
 	"strings"
 
+	"github.com/gogf/gf/g/container/gvar"
+
 	"github.com/gogf/gf/g/internal/structs"
 	"github.com/gogf/gf/g/util/gconv"
 )
@@ -52,6 +54,10 @@ func (r *Request) GetQuery(key string, def ...interface{}) []string {
 		return gconv.Strings(def[0])
 	}
 	return nil
+}
+
+func (r *Request) GetQueryVar(key string, def ...interface{}) *gvar.Var {
+	return gvar.New(r.GetQueryString(key, def...), true)
 }
 
 func (r *Request) GetQueryString(key string, def ...interface{}) string {

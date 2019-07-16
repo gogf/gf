@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/internal/structs"
 	"github.com/gogf/gf/g/util/gconv"
 )
@@ -32,7 +33,6 @@ func (r *Request) AddPost(key string, value string) {
 	r.PostForm[key] = append(r.PostForm[key], value)
 }
 
-// 获得post参数
 func (r *Request) GetPost(key string, def ...interface{}) []string {
 	r.initPost()
 	if v, ok := r.PostForm[key]; ok {
@@ -42,6 +42,10 @@ func (r *Request) GetPost(key string, def ...interface{}) []string {
 		return gconv.Strings(def[0])
 	}
 	return nil
+}
+
+func (r *Request) GetPostVar(key string, def ...interface{}) *gvar.Var {
+	return gvar.New(r.GetPostString(key, def...), true)
 }
 
 func (r *Request) GetPostString(key string, def ...interface{}) string {
