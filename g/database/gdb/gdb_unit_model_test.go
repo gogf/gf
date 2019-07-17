@@ -209,7 +209,7 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
-		result, err := db.Table("user").Data("passport", "t22").Where("passport=?", "t2").Update()
+		result, err := db.Table(table).Data("passport", "t22").Where("passport=?", "t2").Update()
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -218,7 +218,7 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
-		result, err := db.Table("user").Data("passport", "t2").Where("passport='t22'").Update()
+		result, err := db.Table(table).Data("passport", "t2").Where("passport='t22'").Update()
 		if err != nil {
 			gtest.Fatal(err)
 		}
