@@ -8,10 +8,11 @@ package gjson
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/util/gconv"
-	"time"
 )
 
 // Val returns the json value.
@@ -111,6 +112,10 @@ func (j *Json) GetArray(pattern string, def ...interface{}) []interface{} {
 // and converts it to string.
 func (j *Json) GetString(pattern string, def ...interface{}) string {
 	return gconv.String(j.Get(pattern, def...))
+}
+
+func (j *Json) GetBytes(pattern string, def ...interface{}) []byte {
+	return gconv.Bytes(j.Get(pattern, def...))
 }
 
 // GetBool gets the value by specified <pattern>,
@@ -316,6 +321,24 @@ func (j *Json) ToStruct(pointer interface{}) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.Struct(*(j.p), pointer)
+}
+
+func (j *Json) ToStructDeep(pointer interface{}) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.StructDeep(*(j.p), pointer)
+}
+
+func (j *Json) ToStructs(pointer interface{}) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.Structs(*(j.p), pointer)
+}
+
+func (j *Json) ToStructsDeep(pointer interface{}) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.StructsDeep(*(j.p), pointer)
 }
 
 // Dump prints current Json object with more manually readable.
