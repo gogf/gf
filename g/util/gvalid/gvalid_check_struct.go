@@ -121,17 +121,13 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 
 	// 自定义错误消息，非必须参数，优先级比rules参数中以及struct tag中定义的错误消息更高
 	if len(msgs) > 0 && len(msgs[0]) > 0 {
-		if len(customMsgs) > 0 {
-			for k, v := range msgs[0] {
-				if a, ok := fieldAliases[k]; ok {
-					// 属性的别名存在时，覆盖别名的错误信息
-					customMsgs[a] = v
-				} else {
-					customMsgs[k] = v
-				}
+		for k, v := range msgs[0] {
+			if a, ok := fieldAliases[k]; ok {
+				// 属性的别名存在时，覆盖别名的错误信息
+				customMsgs[a] = v
+			} else {
+				customMsgs[k] = v
 			}
-		} else {
-			customMsgs = msgs[0]
 		}
 	}
 
