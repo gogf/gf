@@ -10,11 +10,12 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/gogf/gf/g/encoding/gparser"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/util/gconv"
-	"net/http"
-	"strconv"
 )
 
 // 服务端请求返回对象。
@@ -131,7 +132,7 @@ func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods s
 }
 
 // 返回HTTP Code状态码
-func (r *Response) WriteStatus(status int, content ...string) {
+func (r *Response) WriteStatus(status int, content ...interface{}) {
 	if r.buffer.Len() == 0 {
 		// 状态码注册回调函数处理
 		if status != http.StatusOK {
@@ -146,10 +147,12 @@ func (r *Response) WriteStatus(status int, content ...string) {
 				return
 			}
 		}
-		r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		r.Header().Set("X-Content-Type-Options", "nosniff")
+		if r.Header().Get("Content-Type") == "" {
+			r.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			//r.Header().Set("X-Content-Type-Options", "nosniff")
+		}
 		if len(content) > 0 {
-			r.Write(content[0])
+			r.Write(content...)
 		} else {
 			r.Write(http.StatusText(status))
 		}

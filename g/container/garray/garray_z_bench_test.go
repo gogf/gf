@@ -9,8 +9,9 @@
 package garray_test
 
 import (
-	"github.com/gogf/gf/g/container/garray"
 	"testing"
+
+	"github.com/gogf/gf/g/container/garray"
 )
 
 var (

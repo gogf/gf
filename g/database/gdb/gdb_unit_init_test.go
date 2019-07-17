@@ -19,12 +19,14 @@ import (
 )
 
 const (
-	// 初始化表数据量
-	INIT_DATA_SIZE = 10
+	INIT_DATA_SIZE = 10      // 初始化表数据量
+	TABLE          = "user"  // 测试数据表
+	SCHEMA1        = "test1" // 测试数据库1
+	SCHEMA2        = "test2" // 测试数据库2
 )
 
 var (
-	// 数据库对象/接口
+	// 测试包变量，ORM对象
 	db gdb.DB
 )
 
@@ -42,50 +44,53 @@ func init() {
 		Charset: "utf8",
 		Weight:  1,
 	}
-	hostname, _ := os.Hostname()
-	// 本地测试hack
-	if hostname == "ijohn" {
+	// 作者本地测试hack
+	if hostname, _ := os.Hostname(); hostname == "ijohn" {
 		node.Pass = "12345678"
 	}
 	gdb.AddConfigNode("test", node)
 	gdb.AddConfigNode(gdb.DEFAULT_GROUP_NAME, node)
 	if r, err := gdb.New(); err != nil {
-		gtest.Fatal(err)
+		gtest.Error(err)
 	} else {
 		db = r
 	}
-	// 准备测试数据结构
-	if _, err := db.Exec("CREATE DATABASE IF NOT EXISTS `test` CHARACTER SET UTF8"); err != nil {
-		gtest.Fatal(err)
+	// 准备测试数据结构：数据库
+	schemaTemplate := "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET UTF8"
+	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, SCHEMA1)); err != nil {
+		gtest.Error(err)
 	}
-	// 选择操作数据库
-	db.SetSchema("test")
+	// 多个数据库，用于测试数据库切换
+	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, SCHEMA2)); err != nil {
+		gtest.Error(err)
+	}
+	// 设置默认操作数据库
+	db.SetSchema(SCHEMA1)
 	// 创建默认用户表
-	createTable("user")
+	createTable(TABLE)
 }
 
 // 创建指定名称的user测试表，当table为空时，创建随机的表名。
 // 创建的测试表默认没有任何数据。
 // 执行完成后返回该表名。
-// TODO 支持更多数据库
 func createTable(table ...string) (name string) {
 	if len(table) > 0 {
 		name = table[0]
 	} else {
-		name = fmt.Sprintf(`user_%d`, gtime.Nanosecond())
+		name = fmt.Sprintf(`%s_%d`, TABLE, gtime.Nanosecond())
 	}
 	dropTable(name)
 	if _, err := db.Exec(fmt.Sprintf(`
     CREATE TABLE %s (
-        id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '用户ID',
-        passport varchar(45) NOT NULL COMMENT '账号',
-        password char(32) NOT NULL COMMENT '密码',
-        nickname varchar(45) NOT NULL COMMENT '昵称',
+        id          int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+        passport    varchar(45) NOT NULL COMMENT '账号',
+        password    char(32) NOT NULL COMMENT '密码',
+        nickname    varchar(45) NOT NULL COMMENT '昵称',
         create_time timestamp NOT NULL COMMENT '创建时间/注册时间',
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, name)); err != nil {
-		gtest.Fatal(err)
+		gtest.Error(err)
 	}
 	return
 }
@@ -97,10 +102,10 @@ func createInitTable(table ...string) (name string) {
 	for i := 1; i <= INIT_DATA_SIZE; i++ {
 		array.Append(g.Map{
 			"id":          i,
-			"passport":    fmt.Sprintf(`t%d`, i),
-			"password":    fmt.Sprintf(`p%d`, i),
-			"nickname":    fmt.Sprintf(`T%d`, i),
-			"create_time": gtime.Now().String(),
+			"passport":    fmt.Sprintf(`user_%d`, i),
+			"password":    fmt.Sprintf(`pass_%d`, i),
+			"nickname":    fmt.Sprintf(`name_%d`, i),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
 		})
 	}
 	result, err := db.Table(name).Data(array.Slice()).Insert()
@@ -115,6 +120,6 @@ func createInitTable(table ...string) (name string) {
 // 删除指定表.
 func dropTable(table string) {
 	if _, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
-		gtest.Fatal(err)
+		gtest.Error(err)
 	}
 }

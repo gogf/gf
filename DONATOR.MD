@@ -4,7 +4,7 @@
 | Name | Channel | Amount
 |---|---|---
 |[hailaz](https://gitee.com/hailaz)|gitee|￥20.00
-|[ireadx](https://github.com/ireadx)|alipay|￥201.00
+|[ireadx](https://github.com/ireadx)|alipay|￥301.00
 |[mg91](https://gitee.com/mg91)|gitee|￥10.00
 |[pibigstar](https://github.com/pibigstar)|alipay|￥10.00
 |[tiangenglan](https://gitee.com/tiangenglan)|gitee|￥30.00
@@ -15,6 +15,7 @@
 |x*z|wechat|￥20.00
 |潘兄|wechat|￥100.00
 |Fly的狐狸|wechat|￥100.00
+|全|alipay|￥100.00
 |土豆相公|alipay|￥66.60
 |Hades|alipay|￥66.66
 |蔡蔡|wechat|￥666.00
