@@ -9,9 +9,10 @@
 package gmap_test
 
 import (
-	"github.com/gogf/gf/g/container/gmap"
 	"strconv"
 	"testing"
+
+	"github.com/gogf/gf/g/container/gmap"
 )
 
 var ififmUnsafe = gmap.New(true)
@@ -22,7 +23,7 @@ var simUnsafe = gmap.NewStrIntMap(true)
 var sifmUnsafe = gmap.NewStrAnyMap(true)
 var ssmUnsafe = gmap.NewStrStrMap(true)
 
-// 写入性能测试
+// Writing benchmarks.
 
 func Benchmark_Unsafe_IntIntMap_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -66,7 +67,7 @@ func Benchmark_Unsafe_StrStrMap_Set(b *testing.B) {
 	}
 }
 
-// 读取性能测试
+// Reading benchmarks.
 
 func Benchmark_Unsafe_IntIntMap_Get(b *testing.B) {
 	for i := 0; i < b.N; i++ {

@@ -7,13 +7,17 @@
 package gdb_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
-func TestModel_Inherit_Insert(t *testing.T) {
+func Test_Model_Inherit_Insert(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
 	gtest.Case(t, func() {
 		type Base struct {
 			Id         int    `json:"id"`
@@ -26,7 +30,7 @@ func TestModel_Inherit_Insert(t *testing.T) {
 			Password string `json:"password"`
 			Nickname string `json:"nickname"`
 		}
-		result, err := db.Table("user").Filter().Data(User{
+		result, err := db.Table(table).Filter().Data(User{
 			Passport: "john-test",
 			Password: "123456",
 			Nickname: "John",
@@ -39,16 +43,16 @@ func TestModel_Inherit_Insert(t *testing.T) {
 		gtest.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, 1)
-		value, err := db.Table("user").Fields("passport").Where("id=100").Value()
+		value, err := db.Table(table).Fields("passport").Where("id=100").Value()
 		gtest.Assert(err, nil)
 		gtest.Assert(value.String(), "john-test")
-		// Delete this test data.
-		_, err = db.Table("user").Where("id", 100).Delete()
-		gtest.Assert(err, nil)
 	})
 }
 
-func TestModel_Inherit_MapToStruct(t *testing.T) {
+func Test_Model_Inherit_MapToStruct(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
 	gtest.Case(t, func() {
 		type Ids struct {
 			Id  int `json:"id"`
@@ -72,12 +76,12 @@ func TestModel_Inherit_MapToStruct(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		}
-		result, err := db.Table("user").Filter().Data(data).Insert()
+		result, err := db.Table(table).Filter().Data(data).Insert()
 		gtest.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, 1)
 
-		one, err := db.Table("user").Where("id=100").One()
+		one, err := db.Table(table).Where("id=100").One()
 		gtest.Assert(err, nil)
 
 		user := new(User)
@@ -89,9 +93,6 @@ func TestModel_Inherit_MapToStruct(t *testing.T) {
 		gtest.Assert(user.Nickname, data["nickname"])
 		gtest.Assert(user.CreateTime, data["create_time"])
 
-		// Delete this test data.
-		_, err = db.Table("user").Where("id", 100).Delete()
-		gtest.Assert(err, nil)
 	})
 
 }
