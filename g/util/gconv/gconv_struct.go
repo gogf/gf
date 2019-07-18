@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/g/internal/structs"
-	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/internal/strutils"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's properties.
@@ -92,7 +92,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	elemType := elem.Type()
 	for i := 0; i < elem.NumField(); i++ {
 		// Only do converting to public attributes.
-		if !gstr.IsLetterUpper(elemType.Field(i).Name[0]) {
+		if !strutils.IsLetterUpper(elemType.Field(i).Name[0]) {
 			continue
 		}
 		attrMap[elemType.Field(i).Name] = struct{}{}
@@ -100,8 +100,8 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	for mapK, mapV := range paramsMap {
 		name := ""
 		for _, checkName := range []string{
-			gstr.UcFirst(mapK),
-			gstr.ReplaceByMap(mapK, map[string]string{
+			strutils.UcFirst(mapK),
+			strutils.ReplaceByMap(mapK, map[string]string{
 				"_": "",
 				"-": "",
 				" ": "",
@@ -118,7 +118,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 					name = value
 					break
 				}
-				if strings.EqualFold(checkName, gstr.Replace(value, "_", "")) {
+				if strings.EqualFold(checkName, strings.Replace(value, "_", "", -1)) {
 					name = value
 					break
 				}
@@ -159,7 +159,7 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 			rt := rv.Type()
 			for i := 0; i < rv.NumField(); i++ {
 				// Only do converting to public attributes.
-				if !gstr.IsLetterUpper(rt.Field(i).Name[0]) {
+				if !strutils.IsLetterUpper(rt.Field(i).Name[0]) {
 					continue
 				}
 				trv := rv.Field(i)

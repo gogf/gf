@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/g/internal/empty"
-	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/internal/strutils"
 )
 
 // Map converts any variable <value> to map[string]interface{}.
@@ -116,7 +116,7 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 				for i := 0; i < rv.NumField(); i++ {
 					// Only convert the public attributes.
 					fieldName := rt.Field(i).Name
-					if !gstr.IsLetterUpper(fieldName[0]) {
+					if !strutils.IsLetterUpper(fieldName[0]) {
 						continue
 					}
 					name = ""

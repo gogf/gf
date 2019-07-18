@@ -21,7 +21,7 @@ addons:
   - local
 
 before_install:
-- pwd
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
 
 install:
 - cat /etc/hosts

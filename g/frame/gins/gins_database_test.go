@@ -7,7 +7,6 @@
 package gins_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -60,7 +59,7 @@ test = "v=2"
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.Case(t, func() {
-		fmt.Println("gins Test_Database", gins.Config().Get("test"))
+		//fmt.Println("gins Test_Database", gins.Config().Get("test"))
 
 		dbDefault := gins.Database()
 		dbTest := gins.Database("test")

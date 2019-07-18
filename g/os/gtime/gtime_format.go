@@ -8,10 +8,10 @@ package gtime
 
 import (
 	"bytes"
-	"github.com/gogf/gf/g/text/gregex"
-	"github.com/gogf/gf/g/text/gstr"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/g/text/gregex"
 )
 
 var (
@@ -110,9 +110,15 @@ func (t *Time) Format(format string) string {
 				// 有几个转换的符号需要特殊处理
 				switch runes[i] {
 				case 'j':
-					buffer.WriteString(gstr.ReplaceByArray(result, []string{"=j=0", "", "=j=", ""}))
+					for _, s := range []string{"=j=0", "=j="} {
+						result = strings.Replace(result, s, "", -1)
+					}
+					buffer.WriteString(result)
 				case 'G':
-					buffer.WriteString(gstr.ReplaceByArray(result, []string{"=G=0", "", "=G=", ""}))
+					for _, s := range []string{"=G=0", "=G="} {
+						result = strings.Replace(result, s, "", -1)
+					}
+					buffer.WriteString(result)
 				case 'u':
 					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
 				case 'w':
