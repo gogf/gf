@@ -348,7 +348,7 @@ func Test_Convert2(t *testing.T) {
 		j := gjson.New(`{"name":"gf","time":"2019-06-12"}`)
 		gtest.Assert(j.Value().(g.Map)["name"], "gf")
 		gtest.Assert(j.GetMap("name1"), nil)
-		gtest.Assert(j.GetJson("name1"), nil)
+		gtest.AssertNE(j.GetJson("name1"), nil)
 		gtest.Assert(j.GetJsons("name1"), nil)
 		gtest.Assert(j.GetJsonMap("name1"), nil)
 		gtest.Assert(j.Contains("name1"), false)
