@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/internal/strutils"
 )
 
 // SliceInt is alias of Ints.
@@ -357,7 +357,7 @@ func Interfaces(i interface{}) []interface{} {
 				rt := rv.Type()
 				for i := 0; i < rv.NumField(); i++ {
 					// Only public attributes.
-					if !gstr.IsLetterUpper(rt.Field(i).Name[0]) {
+					if !strutils.IsLetterUpper(rt.Field(i).Name[0]) {
 						continue
 					}
 					array = append(array, rv.Field(i).Interface())
@@ -447,6 +447,10 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 	}
 	switch kind {
 	case reflect.Slice, reflect.Array:
+		// If <params> is an empty slice, no conversion.
+		if rv.Len() == 0 {
+			return nil
+		}
 		array := reflect.MakeSlice(pointerRt.Elem(), rv.Len(), rv.Len())
 		itemType := array.Index(0).Type()
 		for i := 0; i < rv.Len(); i++ {
