@@ -99,8 +99,7 @@ func (bs *dbBase) getTableFields(table string) (fields map[string]string, err er
 	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
 	v := bs.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
 		result := (Result)(nil)
-		charL, charR := bs.db.getChars()
-		result, err = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s%s%s`, charL, table, charR))
+		result, err = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s`, quoteStr(bs.db, table)))
 		if err != nil {
 			return nil
 		}

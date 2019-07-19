@@ -356,7 +356,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 		}
 	}
 	return bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES(%s) %s",
-		operation, table, strings.Join(fields, ","),
+		operation, quoteStr(bs.db, table), strings.Join(fields, ","),
 		strings.Join(values, ","), updateStr),
 		params...)
 }
@@ -499,7 +499,7 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 // CURD操作:数据更新，统一采用sql预处理。
 // data参数支持string/map/struct/*struct类型。
 func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(bs.db, condition, args)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
@@ -546,7 +546,7 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 
 // CURD操作:删除数据
 func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	newWhere, newArgs := formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(bs.db, condition, args)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}

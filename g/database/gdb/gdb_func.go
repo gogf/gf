@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/gogf/gf/g/os/glog"
 	"github.com/gogf/gf/g/os/gtime"
@@ -70,7 +71,7 @@ func formatQuery(query string, args []interface{}) (newQuery string, newArgs []i
 }
 
 // 格式化Where查询条件。
-func formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
+func formatWhere(db DB, where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
 	// 条件字符串处理
 	buffer := bytes.NewBuffer(nil)
 	// 使用反射进行类型判断
@@ -97,7 +98,7 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 			case reflect.Array:
 				count := gstr.Count(key, "?")
 				if count == 0 {
-					buffer.WriteString(key + " IN(?)")
+					buffer.WriteString(quoteWord(db, key) + " IN(?)")
 					newArgs = append(newArgs, value)
 				} else if count != rv.Len() {
 					buffer.WriteString(key)
@@ -114,7 +115,7 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 					// 支持key带操作符号
 					if gstr.Pos(key, "?") == -1 {
 						if gstr.Pos(key, "<") == -1 && gstr.Pos(key, ">") == -1 && gstr.Pos(key, "=") == -1 {
-							buffer.WriteString(key + "=?")
+							buffer.WriteString(quoteWord(db, key) + "=?")
 						} else {
 							buffer.WriteString(key + "?")
 						}
@@ -140,7 +141,7 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 		// 支持例如 Where/And/Or("uid", 1) 这种格式
 		if gstr.Pos(newWhere, "?") == -1 {
 			if gstr.Pos(newWhere, "<") == -1 && gstr.Pos(newWhere, ">") == -1 && gstr.Pos(newWhere, "=") == -1 {
-				newWhere += "=?"
+				newWhere = quoteWord(db, newWhere) + "=?"
 			} else {
 				newWhere += "?"
 			}
@@ -257,4 +258,34 @@ func structToMap(obj interface{}) map[string]interface{} {
 // 使用递归的方式将map键值对映射到struct对象上，注意参数<pointer>是一个指向struct的指针。
 func mapToStruct(data map[string]interface{}, pointer interface{}) error {
 	return gconv.StructDeep(data, pointer)
+}
+
+// 为 str 加上引号
+func quoteStr(db DB, str string) string {
+	charL, charR := db.getChars()
+	if strings.HasPrefix(str, charL) {
+		return str
+	}
+	return charL + str + charR
+}
+
+// 将以','分隔的多个表名分别加上引号
+func quoteTables(db DB, tables string) string {
+	sTables := strings.Split(tables, ",")
+	for i, table := range sTables {
+		sTables[i] = quoteStr(db, strings.TrimSpace(table))
+	}
+	return strings.Join(sTables, ",")
+}
+
+// 如果 word 是单个单词，则视为表名或字段名，加上引号返回，否则原样返回，用于 formatWhere()
+func quoteWord(db DB, word string) string {
+	notNameChar := func(c rune) bool {
+		return !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '_'
+	}
+	ws := strings.FieldsFunc(word, notNameChar)
+	if len(ws) == 1 {
+		return quoteStr(db, ws[0])
+	}
+	return word
 }

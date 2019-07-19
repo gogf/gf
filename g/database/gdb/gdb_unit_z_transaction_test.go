@@ -327,7 +327,7 @@ func Test_TX_Update(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if result, err := db.Update(table, "create_time='2019-10-24 10:00:00'", "id=3"); err != nil {
+		if result, err := tx.Update(table, "create_time='2019-10-24 10:00:00'", "id=3"); err != nil {
 			gtest.Error(err)
 		} else {
 			n, _ := result.RowsAffected()
@@ -651,7 +651,6 @@ func Test_TX_GetScan(t *testing.T) {
 
 func Test_TX_Delete(t *testing.T) {
 	table := createInitTable()
-	defer dropTable(table)
 
 	gtest.Case(t, func() {
 		tx, err := db.Begin()
@@ -671,4 +670,25 @@ func Test_TX_Delete(t *testing.T) {
 		}
 	})
 
+	dropTable(table)
+	table = createInitTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		tx, err := db.Begin()
+		if err != nil {
+			gtest.Error(err)
+		}
+		if _, err := tx.Delete(table, "1=1"); err != nil {
+			gtest.Error(err)
+		}
+		if err := tx.Commit(); err != nil {
+			gtest.Error(err)
+		}
+		if n, err := db.Table(table).Count(); err != nil {
+			gtest.Error(err)
+		} else {
+			gtest.Assert(n, 0)
+		}
+	})
 }
