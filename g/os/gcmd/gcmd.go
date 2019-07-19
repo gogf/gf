@@ -9,9 +9,10 @@
 package gcmd
 
 import (
-	"github.com/gogf/gf/g/os/glog"
 	"os"
 	"regexp"
+
+	"github.com/gogf/gf/g/os/glog"
 )
 
 // Console values.
@@ -36,7 +37,7 @@ func init() {
 func doInit() {
 	Value.values = Value.values[:0]
 	Option.options = make(map[string]string)
-	reg := regexp.MustCompile(`\-\-{0,1}(.+?)=(.+)`)
+	reg := regexp.MustCompile(`^\-{1,2}(\w+?)={0,1}(.*)`)
 	for i := 0; i < len(os.Args); i++ {
 		result := reg.FindStringSubmatch(os.Args[i])
 		if len(result) > 1 {

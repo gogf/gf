@@ -402,6 +402,11 @@ func SelfPath() string {
 	return p
 }
 
+// SelfName returns file name of current running process(binary).
+func SelfName() string {
+	return Basename(SelfPath())
+}
+
 // SelfDir returns absolute directory path of current running process(binary).
 func SelfDir() string {
 	return filepath.Dir(SelfPath())

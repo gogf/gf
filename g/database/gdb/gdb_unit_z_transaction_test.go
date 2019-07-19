@@ -327,7 +327,7 @@ func Test_TX_Update(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if result, err := db.Update(table, "create_time='2019-10-24 10:00:00'", "id=3"); err != nil {
+		if result, err := tx.Update(table, "create_time='2019-10-24 10:00:00'", "id=3"); err != nil {
 			gtest.Error(err)
 		} else {
 			n, _ := result.RowsAffected()
@@ -336,7 +336,7 @@ func Test_TX_Update(t *testing.T) {
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
-		if value, err := db.Table(table).Fields("create_time").Where("id", 3).Value(); err != nil {
+		if value, err := tx.Table(table).Fields("create_time").Where("id", 3).Value(); err != nil {
 			gtest.Error(err)
 		} else {
 			gtest.Assert(value.String(), "2019-10-24 10:00:00")
