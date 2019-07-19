@@ -338,6 +338,12 @@ func Test_TX_Update(t *testing.T) {
 		}
 		_, err = tx.Table(table).Fields("create_time").Where("id", 3).Value()
 		gtest.AssertNE(err, nil)
+
+		if value, err := db.Table(table).Fields("create_time").Where("id", 3).Value(); err != nil {
+			gtest.Error(err)
+		} else {
+			gtest.Assert(value.String(), "2019-10-24 10:00:00")
+		}
 	})
 }
 
