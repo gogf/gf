@@ -42,8 +42,8 @@ type Model struct {
 func (bs *dbBase) Table(tables string) *Model {
 	return &Model{
 		db:         bs.db,
-		tablesInit: tables,
-		tables:     tables,
+		tablesInit: quoteTables(bs.db, tables),
+		tables:     quoteTables(bs.db, tables),
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
@@ -154,7 +154,7 @@ func (md *Model) Where(where interface{}, args ...interface{}) *Model {
 	if model.where != "" {
 		return md.And(where, args...)
 	}
-	newWhere, newArgs := formatWhere(where, args)
+	newWhere, newArgs := formatWhere(md.db, where, args)
 	model.where = newWhere
 	model.whereArgs = newArgs
 	return model
@@ -163,7 +163,7 @@ func (md *Model) Where(where interface{}, args ...interface{}) *Model {
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	newWhere, newArgs := formatWhere(where, args)
+	newWhere, newArgs := formatWhere(md.db, where, args)
 	if len(model.where) > 0 && model.where[0] == '(' {
 		model.where = fmt.Sprintf(`%s AND (%s)`, model.where, newWhere)
 	} else {
@@ -176,7 +176,7 @@ func (md *Model) And(where interface{}, args ...interface{}) *Model {
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	newWhere, newArgs := formatWhere(where, args)
+	newWhere, newArgs := formatWhere(md.db, where, args)
 	if len(model.where) > 0 && model.where[0] == '(' {
 		model.where = fmt.Sprintf(`%s OR (%s)`, model.where, newWhere)
 	} else {
