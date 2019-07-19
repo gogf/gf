@@ -10,12 +10,17 @@ package gstr
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/g/util/grand"
 	"math"
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/gogf/gf/g/internal/strutils"
+
+	"github.com/gogf/gf/g/util/gconv"
+
+	"github.com/gogf/gf/g/util/grand"
 )
 
 // Replace returns a copy of the string <origin>
@@ -93,10 +98,7 @@ func ReplaceIByArray(origin string, array []string) string {
 // ReplaceByMap returns a copy of <origin>,
 // which is replaced by a map in unordered way, case-sensitively.
 func ReplaceByMap(origin string, replaces map[string]string) string {
-	for k, v := range replaces {
-		origin = Replace(origin, k, v)
-	}
-	return origin
+	return strutils.ReplaceByMap(origin, replaces)
 }
 
 // ReplaceIByMap returns a copy of <origin>,
@@ -120,13 +122,7 @@ func ToUpper(s string) string {
 
 // UcFirst returns a copy of the string s with the first letter mapped to its upper case.
 func UcFirst(s string) string {
-	if len(s) == 0 {
-		return s
-	}
-	if IsLetterLower(s[0]) {
-		return string(s[0]-32) + s[1:]
-	}
-	return s
+	return strutils.UcFirst(s)
 }
 
 // LcFirst returns a copy of the string s with the first letter mapped to its lower case.
@@ -147,40 +143,25 @@ func UcWords(str string) string {
 
 // IsLetterLower tests whether the given byte b is in lower case.
 func IsLetterLower(b byte) bool {
-	if b >= byte('a') && b <= byte('z') {
-		return true
-	}
-	return false
+	return strutils.IsLetterLower(b)
 }
 
 // IsLetterUpper tests whether the given byte b is in upper case.
 func IsLetterUpper(b byte) bool {
-	if b >= byte('A') && b <= byte('Z') {
-		return true
-	}
-	return false
+	return strutils.IsLetterUpper(b)
 }
 
 // IsNumeric tests whether the given string s is numeric.
 func IsNumeric(s string) bool {
-	length := len(s)
-	if length == 0 {
-		return false
-	}
-	for i := 0; i < len(s); i++ {
-		if s[i] < byte('0') || s[i] > byte('9') {
-			return false
-		}
-	}
-	return true
+	return strutils.IsNumeric(s)
 }
 
 // SubStr returns a portion of string <str> specified by the <start> and <length> parameters.
 func SubStr(str string, start int, length ...int) (substr string) {
-	// 将字符串的转换成[]rune
+	// Converting to []rune to support unicode.
 	rs := []rune(str)
 	lth := len(rs)
-	// 简单的越界判断
+	// Simple border checks.
 	if start < 0 {
 		start = 0
 	}
@@ -197,7 +178,6 @@ func SubStr(str string, start int, length ...int) (substr string) {
 	if end > lth {
 		end = lth
 	}
-	// 返回子串
 	return string(rs[start:end])
 }
 
@@ -466,6 +446,14 @@ func Split(str, delimiter string) []string {
 // sep is placed between elements in the resulting string.
 func Join(array []string, sep string) string {
 	return strings.Join(array, sep)
+}
+
+// JoinAny concatenates the elements of a to create a single string. The separator string
+// sep is placed between elements in the resulting string.
+//
+// The parameter <array> can be any type of slice.
+func JoinAny(array interface{}, sep string) string {
+	return strings.Join(gconv.Strings(array), sep)
 }
 
 // Explode splits string <str> by a string <delimiter>, to an array.

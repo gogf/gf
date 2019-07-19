@@ -7,10 +7,11 @@
 package gjson_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/encoding/gjson"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 func Test_New(t *testing.T) {
@@ -347,7 +348,7 @@ func Test_Convert2(t *testing.T) {
 		j := gjson.New(`{"name":"gf","time":"2019-06-12"}`)
 		gtest.Assert(j.Value().(g.Map)["name"], "gf")
 		gtest.Assert(j.GetMap("name1"), nil)
-		gtest.Assert(j.GetJson("name1"), nil)
+		gtest.AssertNE(j.GetJson("name1"), nil)
 		gtest.Assert(j.GetJsons("name1"), nil)
 		gtest.Assert(j.GetJsonMap("name1"), nil)
 		gtest.Assert(j.Contains("name1"), false)
@@ -361,7 +362,7 @@ func Test_Convert2(t *testing.T) {
 		err := j.ToStruct(&name)
 		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
-		err = j.Dump()
+		j.Dump()
 		gtest.Assert(err, nil)
 
 		j = gjson.New(`{"person":{"name":"gf"}}`)
@@ -370,7 +371,7 @@ func Test_Convert2(t *testing.T) {
 		gtest.Assert(name.Name, "gf")
 
 		j = gjson.New(`{"name":"gf""}`)
-		err = j.Dump()
+		j.Dump()
 		gtest.Assert(err, nil)
 
 		j = gjson.New(`[1,2,3]`)
@@ -457,5 +458,12 @@ func Test_Basic(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(j.Get("Name5").(g.Array)[0], 1)
 
+	})
+}
+
+func Test_IsNil(t *testing.T) {
+	gtest.Case(t, func() {
+		j := gjson.New(nil)
+		gtest.Assert(j.IsNil(), true)
 	})
 }
