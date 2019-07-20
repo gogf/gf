@@ -10,21 +10,30 @@ package gcache
 // Default cache object.
 var cache = New()
 
-// Set sets cache with <key>-<value> pair, which is expired after <expire> milliseconds.
-// If <expire> <=0 means it does not expire.
+// Set sets cache with <key>-<value> pair, which is expired after <duration>.
+//
+// The parameter <duration> can be either type of int or time.Duration.
+// If <duration> is type of int, it means <duration> milliseconds.
+// If <duration> <=0 means it does not expire.
 func Set(key interface{}, value interface{}, duration interface{}) {
 	cache.Set(key, value, duration)
 }
 
 // SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
-// which is expired after <expire> milliseconds.
-// If <expire> <=0 means it does not expire.
+// which is expired after <duration>.
+//
+// The parameter <duration> can be either type of int or time.Duration.
+// If <duration> is type of int, it means <duration> milliseconds.
+// If <duration> <=0 means it does not expire.
 func SetIfNotExist(key interface{}, value interface{}, duration interface{}) bool {
 	return cache.SetIfNotExist(key, value, duration)
 }
 
-// Sets batch sets cache with key-value pairs by <data>, which is expired after <expire> milliseconds.
-// If <expire> <=0 means it does not expire.
+// Sets batch sets cache with key-value pairs by <data>, which is expired after <duration>.
+//
+// The parameter <duration> can be either type of int or time.Duration.
+// If <duration> is type of int, it means <duration> milliseconds.
+// If <duration> <=0 means it does not expire.
 func Sets(data map[interface{}]interface{}, duration interface{}) {
 	cache.Sets(data, duration)
 }
@@ -37,8 +46,11 @@ func Get(key interface{}) interface{} {
 
 // GetOrSet returns the value of <key>,
 // or sets <key>-<value> pair and returns <value> if <key> does not exist in the cache.
-// The key-value pair expires after <expire> milliseconds.
-// If <expire> <=0 means it does not expire.
+// The key-value pair expires after <duration>.
+//
+// The parameter <duration> can be either type of int or time.Duration.
+// If <duration> is type of int, it means <duration> milliseconds.
+// If <duration> <=0 means it does not expire.
 func GetOrSet(key interface{}, value interface{}, duration interface{}) interface{} {
 	return cache.GetOrSet(key, value, duration)
 }
@@ -46,8 +58,11 @@ func GetOrSet(key interface{}, value interface{}, duration interface{}) interfac
 // GetOrSetFunc returns the value of <key>,
 // or sets <key> with result of function <f> and returns its result
 // if <key> does not exist in the cache.
-// The key-value pair expires after <expire> milliseconds.
-// If <expire> <=0 means it does not expire.
+// The key-value pair expires after <duration>.
+//
+// The parameter <duration> can be either type of int or time.Duration.
+// If <duration> is type of int, it means <duration> milliseconds.
+// If <duration> <=0 means it does not expire.
 func GetOrSetFunc(key interface{}, f func() interface{}, duration interface{}) interface{} {
 	return cache.GetOrSetFunc(key, f, duration)
 }
@@ -55,8 +70,11 @@ func GetOrSetFunc(key interface{}, f func() interface{}, duration interface{}) i
 // GetOrSetFuncLock returns the value of <key>,
 // or sets <key> with result of function <f> and returns its result
 // if <key> does not exist in the cache.
-// The key-value pair expires after <expire> milliseconds.
-// If <expire> <=0 means it does not expire.
+// The key-value pair expires after <duration>.
+//
+// The parameter <duration> can be either type of int or time.Duration.
+// If <duration> is type of int, it means <duration> milliseconds.
+// If <duration> <=0 means it does not expire.
 //
 // Note that the function <f> is executed within writing mutex lock.
 func GetOrSetFuncLock(key interface{}, f func() interface{}, duration interface{}) interface{} {
