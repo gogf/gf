@@ -16,5 +16,7 @@ func TestCase(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(1, 1)
 		gtest.AssertNE(1, 0)
+		gtest.AssertEQ(float32(123.456), float32(123.456))
+		gtest.AssertEQ(float64(123.456), float64(123.456))
 	})
 }

@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/gogf/gf/g/encoding/gbinary"
 )
@@ -207,34 +206,34 @@ func Bool(i interface{}) bool {
 	if i == nil {
 		return false
 	}
-	if v, ok := i.(bool); ok {
-		return v
-	}
-	if s, ok := i.(string); ok {
-		if _, ok := emptyStringMap[s]; ok {
+	switch value := i.(type) {
+	case bool:
+		return value
+	case string:
+		if _, ok := emptyStringMap[value]; ok {
 			return false
 		}
-		return true
-	}
-	rv := reflect.ValueOf(i)
-	switch rv.Kind() {
-	case reflect.Ptr:
-		return !rv.IsNil()
-	case reflect.Map:
-		fallthrough
-	case reflect.Array:
-		fallthrough
-	case reflect.Slice:
-		return rv.Len() != 0
-	case reflect.Struct:
 		return true
 	default:
-		s := String(i)
-		if _, ok := emptyStringMap[s]; ok {
-			return false
+		rv := reflect.ValueOf(i)
+		switch rv.Kind() {
+		case reflect.Ptr:
+			return !rv.IsNil()
+		case reflect.Map:
+			fallthrough
+		case reflect.Array:
+			fallthrough
+		case reflect.Slice:
+			return rv.Len() != 0
+		case reflect.Struct:
+			return true
+		default:
+			s := String(i)
+			if _, ok := emptyStringMap[s]; ok {
+				return false
+			}
+			return true
 		}
-		return true
-
 	}
 }
 
@@ -317,6 +316,8 @@ func Int64(i interface{}) int64 {
 			return 1
 		}
 		return 0
+	case []byte:
+		return gbinary.DecodeToInt64(value)
 	default:
 		s := String(value)
 		// Hexadecimal
@@ -419,6 +420,8 @@ func Uint64(i interface{}) uint64 {
 			return 1
 		}
 		return 0
+	case []byte:
+		return gbinary.DecodeToUint64(value)
 	default:
 		s := String(value)
 		// Hexadecimal
@@ -447,11 +450,17 @@ func Float32(i interface{}) float32 {
 	if i == nil {
 		return 0
 	}
-	if v, ok := i.(float32); ok {
-		return v
+	switch value := i.(type) {
+	case float32:
+		return value
+	case float64:
+		return float32(value)
+	case []byte:
+		return gbinary.DecodeToFloat32(value)
+	default:
+		v, _ := strconv.ParseFloat(String(i), 64)
+		return float32(v)
 	}
-	v, _ := strconv.ParseFloat(strings.TrimSpace(String(i)), 64)
-	return float32(v)
 }
 
 // Float64 converts <i> to float64.
@@ -459,9 +468,15 @@ func Float64(i interface{}) float64 {
 	if i == nil {
 		return 0
 	}
-	if v, ok := i.(float64); ok {
+	switch value := i.(type) {
+	case float32:
+		return float64(value)
+	case float64:
+		return value
+	case []byte:
+		return gbinary.DecodeToFloat64(value)
+	default:
+		v, _ := strconv.ParseFloat(String(i), 64)
 		return v
 	}
-	v, _ := strconv.ParseFloat(strings.TrimSpace(String(i)), 64)
-	return v
 }

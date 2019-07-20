@@ -15,7 +15,10 @@ import (
 
 // Time converts <i> to time.Time.
 func Time(i interface{}, format ...string) time.Time {
-	return GTime(i, format...).Time
+	if t := GTime(i, format...); t != nil {
+		return t.Time
+	}
+	return time.Time{}
 }
 
 // Duration converts <i> to time.Duration.

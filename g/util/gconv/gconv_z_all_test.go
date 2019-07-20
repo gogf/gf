@@ -609,7 +609,7 @@ func Test_Byte_All(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.AssertEQ(gconv.Byte(uint8(0)), uint8(0))
 		gtest.AssertEQ(gconv.Byte("s"), uint8(0))
-		gtest.AssertEQ(gconv.Byte([]byte("s")), uint8(0))
+		gtest.AssertEQ(gconv.Byte([]byte("s")), uint8(115))
 	})
 }
 
@@ -692,8 +692,8 @@ func Test_Slice_All(t *testing.T) {
 		gtest.AssertEQ(gconv.Strings([]bool{true}), []string{"true"})
 		gtest.AssertEQ(gconv.Strings([]float32{1, 2}), []string{"1", "2"})
 		gtest.AssertEQ(gconv.Strings([]float64{1, 2}), []string{"1", "2"})
-		var strer []interface{} = make([]interface{}, 2)
-		gtest.AssertEQ(gconv.Strings(strer), []string{" "})
+		var strer = make([]interface{}, 2)
+		gtest.AssertEQ(gconv.Strings(strer), []string{"", ""})
 
 		gtest.AssertEQ(gconv.Floats(value), []float64{123.456})
 		gtest.AssertEQ(gconv.Floats(nil), nil)
@@ -711,7 +711,7 @@ func Test_Slice_All(t *testing.T) {
 		gtest.AssertEQ(gconv.Floats([]bool{true}), []float64{0})
 		gtest.AssertEQ(gconv.Floats([]float32{1, 2}), []float64{1, 2})
 		gtest.AssertEQ(gconv.Floats([]float64{1, 2}), []float64{1, 2})
-		var floer []interface{} = make([]interface{}, 2)
+		var floer = make([]interface{}, 2)
 		gtest.AssertEQ(gconv.Floats(floer), []float64{0, 0})
 
 		gtest.AssertEQ(gconv.Interfaces(value), []interface{}{123.456})
@@ -739,7 +739,7 @@ func Test_Slice_All(t *testing.T) {
 
 		gtest.AssertEQ(gconv.Maps(nil), nil)
 		gtest.AssertEQ(gconv.Maps([]map[string]interface{}{{"a": "1"}}), []map[string]interface{}{{"a": "1"}})
-		gtest.AssertEQ(gconv.Maps(1223), []map[string]interface{}{{}})
+		gtest.AssertEQ(gconv.Maps(1223), []map[string]interface{}{nil})
 		gtest.AssertEQ(gconv.Maps([]int{}), nil)
 	})
 }
