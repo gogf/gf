@@ -44,8 +44,10 @@ func Assert(value, expect interface{}) {
 		}
 		return
 	}
-	if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
+	strValue := gconv.String(value)
+	strExpect := gconv.String(expect)
+	if strValue != strExpect {
+		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, strValue, strExpect))
 	}
 }
 
@@ -62,14 +64,16 @@ func AssertEQ(value, expect interface{}) {
 		}
 		return
 	}
-	if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
+	strValue := gconv.String(value)
+	strExpect := gconv.String(expect)
+	if strValue != strExpect {
+		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, strValue, strExpect))
 	}
 	// Type assert.
 	t1 := reflect.TypeOf(value)
 	t2 := reflect.TypeOf(expect)
 	if t1 != t2 {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT TYPE %v[%v] == %v[%v]`, value, t1, expect, t2))
+		panic(fmt.Sprintf(`[ASSERT] EXPECT TYPE %v[%v] == %v[%v]`, strValue, t1, strExpect, t2))
 	}
 }
 
@@ -85,8 +89,10 @@ func AssertNE(value, expect interface{}) {
 		}
 		return
 	}
-	if fmt.Sprintf("%v", value) == fmt.Sprintf("%v", expect) {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, value, expect))
+	strValue := gconv.String(value)
+	strExpect := gconv.String(expect)
+	if strValue == strExpect {
+		panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, strValue, strExpect))
 	}
 }
 
