@@ -9,7 +9,6 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"math"
 	"sort"
 
@@ -615,7 +614,8 @@ func (a *IntArray) CountValues() map[int]int {
 func (a *IntArray) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return fmt.Sprint(a.array)
+	jsonContent, _ := json.Marshal(a.array)
+	return string(jsonContent)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

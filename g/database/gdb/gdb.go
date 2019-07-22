@@ -97,7 +97,7 @@ type DB interface {
 	getDebug() bool
 	setSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
-	convertValue(fieldValue interface{}, fieldType string) interface{}
+	convertValue(fieldValue []byte, fieldType string) interface{}
 	getTableFields(table string) (map[string]string, error)
 	rowsToResult(rows *sql.Rows) (Result, error)
 	handleSqlBeforeExec(sql string) string
