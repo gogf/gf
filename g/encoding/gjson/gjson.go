@@ -27,9 +27,7 @@ type Json struct {
 	mu *rwmutex.RWMutex
 	p  *interface{} // Pointer for hierarchical data access, it's the root of data in default.
 	c  byte         // Char separator('.' in default).
-	// Violence Check(false in default), which is used to access data
-	// when the hierarchical data key contains separator char.
-	vc bool
+	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -37,8 +35,8 @@ func (j *Json) MarshalJSON() ([]byte, error) {
 	return j.ToJson()
 }
 
-// Set <value> by <pattern>.
-// Notice:
+// setValue sets <value> to <j> by <pattern>.
+// Note:
 // 1. If value is nil and removed is true, means deleting this value;
 // 2. It's quite complicated in hierarchical data search, node creating and data assignment;
 func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
@@ -53,8 +51,8 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			*j.p = make(map[string]interface{})
 		}
 	}
-	var pparent *interface{} = nil // 父级元素项(设置时需要根据子级的内容确定数据类型，所以必须记录父级)
-	var pointer *interface{} = j.p // 当前操作层级项
+	var pparent *interface{} = nil // Parent pointer.
+	var pointer *interface{} = j.p // Current pointer.
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	for i := 0; i < length; i++ {
@@ -62,26 +60,26 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 		case map[string]interface{}:
 			if i == length-1 {
 				if removed && value == nil {
-					// 删除map元素
+					// Delete item from map.
 					delete((*pointer).(map[string]interface{}), array[i])
 				} else {
 					(*pointer).(map[string]interface{})[array[i]] = value
 				}
 			} else {
-				// 当键名不存在的情况这里会进行处理
+				// If the key does not exit in the map.
 				if v, ok := (*pointer).(map[string]interface{})[array[i]]; !ok {
 					if removed && value == nil {
 						goto done
 					}
-					// 创建新节点
+					// Creating new node.
 					if gstr.IsNumeric(array[i+1]) {
-						// 创建array节点
+						// Creating array node.
 						n, _ := strconv.Atoi(array[i+1])
 						var v interface{} = make([]interface{}, n+1)
 						pparent = j.setPointerWithValue(pointer, array[i], v)
 						pointer = &v
 					} else {
-						// 创建map节点
+						// Creating map node.
 						var v interface{} = make(map[string]interface{})
 						pparent = j.setPointerWithValue(pointer, array[i], v)
 						pointer = &v
@@ -93,7 +91,6 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			}
 
 		case []interface{}:
-			// 键名与当前指针类型不符合，需要执行**覆盖操作**
 			if !gstr.IsNumeric(array[i]) {
 				if i == length-1 {
 					*pointer = map[string]interface{}{array[i]: value}
@@ -110,11 +107,11 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			if err != nil {
 				return err
 			}
-			// 叶子节点
+			// Leaf node.
 			if i == length-1 {
 				if len((*pointer).([]interface{})) > valn {
 					if removed && value == nil {
-						// 删除数据元素
+						// Deleting element.
 						if pparent == nil {
 							*pointer = append((*pointer).([]interface{})[:valn], (*pointer).([]interface{})[valn+1:]...)
 						} else {
@@ -128,10 +125,10 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 						goto done
 					}
 					if pparent == nil {
-						// 表示根节点
+						// It is the root node.
 						j.setPointerWithValue(pointer, array[i], value)
 					} else {
-						// 非根节点
+						// It is not the root node.
 						s := make([]interface{}, valn+1)
 						copy(s, (*pointer).([]interface{}))
 						s[valn] = value
@@ -160,8 +157,8 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 				}
 			}
 
-		// 如果当前指针指向的变量不是引用类型的，
-		// 那么修改变量必须通过父级进行修改，即 pparent
+		// If the variable pointed to by the <pointer> is not of a reference type,
+		// then it modifies the variable via its the parent, ie: pparent.
 		default:
 			if removed && value == nil {
 				goto done
@@ -199,7 +196,7 @@ done:
 	return nil
 }
 
-// Convert <value> to map[string]interface{} or []interface{},
+// convertValue converts <value> to map[string]interface{} or []interface{},
 // which can be supported for hierarchical data access.
 func (j *Json) convertValue(value interface{}) interface{} {
 	switch value.(type) {
@@ -232,7 +229,7 @@ func (j *Json) convertValue(value interface{}) interface{} {
 	}
 }
 
-// Set <key>:<value> to <pointer>, the <key> may be a map key or slice index.
+// setPointerWithValue sets <key>:<value> to <pointer>, the <key> may be a map key or slice index.
 // It returns the pointer to the new value set.
 func (j *Json) setPointerWithValue(pointer *interface{}, key string, value interface{}) *interface{} {
 	switch (*pointer).(type) {
@@ -257,7 +254,7 @@ func (j *Json) setPointerWithValue(pointer *interface{}, key string, value inter
 	return pointer
 }
 
-// Get a pointer to the value by specified <pattern>.
+// getPointerByPattern returns a pointer to the value by specified <pattern>.
 func (j *Json) getPointerByPattern(pattern string) *interface{} {
 	if j.vc {
 		return j.getPointerByPatternWithViolenceCheck(pattern)
@@ -266,7 +263,7 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
 	}
 }
 
-// Get a pointer to the value of specified <pattern> with violence check.
+// getPointerByPatternWithViolenceCheck returns a pointer to the value of specified <pattern> with violence check.
 func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *interface{} {
 	if !j.vc {
 		return j.getPointerByPatternWithoutViolenceCheck(pattern)
@@ -305,7 +302,7 @@ func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *interface{}
 	return nil
 }
 
-// Get a pointer to the value of specified <pattern>, with no violence check.
+// getPointerByPatternWithoutViolenceCheck returns a pointer to the value of specified <pattern>, with no violence check.
 func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *interface{} {
 	if j.vc {
 		return j.getPointerByPatternWithViolenceCheck(pattern)
@@ -329,7 +326,7 @@ func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *interfac
 	return nil
 }
 
-// Check whether there's value by <key> in specified <pointer>.
+// checkPatternByPointer checks whether there's value by <key> in specified <pointer>.
 // It returns a pointer to the value.
 func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interface{} {
 	switch (*pointer).(type) {
