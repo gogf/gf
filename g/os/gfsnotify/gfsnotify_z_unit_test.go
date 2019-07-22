@@ -9,20 +9,21 @@
 package gfsnotify_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfsnotify"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gconv"
-	"testing"
-	"time"
 )
 
 func TestWatcher_AddRemove(t *testing.T) {
 	gtest.Case(t, func() {
-		path1 := gconv.String(gtime.Nanosecond())
-		path2 := gconv.String(gtime.Nanosecond()) + "2"
+		path1 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.Nanosecond())
+		path2 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.Nanosecond()) + "2"
 		gfile.PutContents(path1, "1")
 		defer func() {
 			gfile.Remove(path1)
@@ -53,7 +54,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
-		path1 := gconv.String(gtime.Nanosecond())
+		path1 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.Nanosecond())
 		gfile.PutContents(path1, "1")
 		defer func() {
 			gfile.Remove(path1)
@@ -88,7 +89,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 
 func TestWatcher_Callback(t *testing.T) {
 	gtest.Case(t, func() {
-		path1 := gconv.String(gtime.Nanosecond())
+		path1 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.Nanosecond())
 		gfile.PutContents(path1, "1")
 		defer func() {
 			gfile.Remove(path1)
@@ -115,7 +116,7 @@ func TestWatcher_Callback(t *testing.T) {
 	})
 	// multiple callbacks
 	gtest.Case(t, func() {
-		path1 := gconv.String(gtime.Nanosecond())
+		path1 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.Nanosecond())
 		gfile.PutContents(path1, "1")
 		defer func() {
 			gfile.Remove(path1)

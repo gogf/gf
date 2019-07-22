@@ -9,6 +9,7 @@ package gconv
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 
@@ -194,8 +195,11 @@ func String(i interface{}) string {
 			return f.Error()
 		} else {
 			// Finally we use json.Marshal to convert.
-			jsonContent, _ := json.Marshal(value)
-			return string(jsonContent)
+			if jsonContent, err := json.Marshal(value); err != nil {
+				return fmt.Sprint(value)
+			} else {
+				return string(jsonContent)
+			}
 		}
 	}
 }
