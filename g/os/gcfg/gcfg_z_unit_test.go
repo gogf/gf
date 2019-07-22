@@ -76,8 +76,8 @@ array = [1,2,3]
 
 		gtest.AssertEQ(c.GetInts("array"), []int{1, 2, 3})
 		gtest.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
-		gtest.AssertEQ(c.GetArray("array"), []interface{}{"1", "2", "3"})
-		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{"1", "2", "3"})
+		gtest.AssertEQ(c.GetArray("array"), []interface{}{1, 2, 3})
+		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{1, 2, 3})
 		gtest.AssertEQ(c.GetMap("redis"), map[string]interface{}{
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
@@ -135,8 +135,8 @@ array = [1,2,3]
 
 		gtest.AssertEQ(c.GetInts("array"), []int{1, 2, 3})
 		gtest.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
-		gtest.AssertEQ(c.GetArray("array"), []interface{}{"1", "2", "3"})
-		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{"1", "2", "3"})
+		gtest.AssertEQ(c.GetArray("array"), []interface{}{1, 2, 3})
+		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{1, 2, 3})
 		gtest.AssertEQ(c.GetMap("redis"), map[string]interface{}{
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
@@ -204,8 +204,8 @@ func Test_SetFileName(t *testing.T) {
 
 		gtest.AssertEQ(c.GetInts("array"), []int{1, 2, 3})
 		gtest.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
-		gtest.AssertEQ(c.GetArray("array"), []interface{}{"1", "2", "3"})
-		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{"1", "2", "3"})
+		gtest.AssertEQ(c.GetArray("array"), []interface{}{1, 2, 3})
+		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{1, 2, 3})
 		gtest.AssertEQ(c.GetMap("redis"), map[string]interface{}{
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
@@ -274,8 +274,8 @@ func Test_Instance(t *testing.T) {
 
 		gtest.AssertEQ(c.GetInts("array"), []int{1, 2, 3})
 		gtest.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
-		gtest.AssertEQ(c.GetArray("array"), []interface{}{"1", "2", "3"})
-		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{"1", "2", "3"})
+		gtest.AssertEQ(c.GetArray("array"), []interface{}{1, 2, 3})
+		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{1, 2, 3})
 		gtest.AssertEQ(c.GetMap("redis"), map[string]interface{}{
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
