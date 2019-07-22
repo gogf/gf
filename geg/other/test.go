@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/g"
 )
 
 func main() {
-	fmt.Println(json.Marshal(nil))
+	fmt.Println(g.Config().Get("log-path"))
 }

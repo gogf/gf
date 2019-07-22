@@ -36,8 +36,7 @@ type Config struct {
 	name  *gtype.String       // Default configuration file name.
 	paths *garray.StringArray // Searching path array.
 	jsons *gmap.StrAnyMap     // The pared JSON objects for configuration files.
-	vc    *gtype.Bool         // Whether do violence check in value index searching.
-	// It affects the performance when set true(false in default).
+	vc    *gtype.Bool         // Whether do violence check in value index searching. It affects the performance when set true(false in default).
 }
 
 // New returns a new configuration management object.
@@ -259,7 +258,7 @@ func (c *Config) GetFileName() string {
 	return c.name.Val()
 }
 
-// getJson returns a gjson.Json object for the specified <file> content.
+// getJson returns a *gjson.Json object for the specified <file> content.
 // It would print error if file reading fails.
 // If any error occurs, it return nil.
 func (c *Config) getJson(file ...string) *gjson.Json {

@@ -24,7 +24,7 @@ func init() {
 	os.Setenv("GF_GCFG_ERRORPRINT", "false")
 }
 
-func Test_Basic(t *testing.T) {
+func Test_Basic1(t *testing.T) {
 	config := `
 v1    = 1
 v2    = "true"
@@ -84,6 +84,21 @@ array = [1,2,3]
 		})
 		gtest.AssertEQ(c.FilePath(), gfile.Pwd()+gfile.Separator+path)
 
+	})
+}
+
+func Test_Basic2(t *testing.T) {
+	config := `log-path = "logs"`
+	gtest.Case(t, func() {
+		path := gcfg.DEFAULT_CONFIG_FILE
+		err := gfile.PutContents(path, config)
+		gtest.Assert(err, nil)
+		defer func() {
+			_ = gfile.Remove(path)
+		}()
+
+		c := gcfg.New()
+		gtest.Assert(c.Get("log-path"), "logs")
 	})
 }
 
