@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -68,86 +67,6 @@ func formatQuery(query string, args []interface{}) (newQuery string, newArgs []i
 				})
 			default:
 				newArgs = append(newArgs, arg)
-			}
-		}
-	}
-	return
-}
-
-// 格式化Where查询条件。
-func formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
-	// 条件字符串处理
-	buffer := bytes.NewBuffer(nil)
-	// 使用反射进行类型判断
-	rv := reflect.ValueOf(where)
-	kind := rv.Kind()
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
-	}
-	switch kind {
-	// map/struct类型
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
-		for key, value := range structToMap(where) {
-			if buffer.Len() > 0 {
-				buffer.WriteString(" AND ")
-			}
-			// 支持slice键值/属性，如果只有一个?占位符号，那么作为IN查询，否则打散作为多个查询参数
-			rv := reflect.ValueOf(value)
-			switch rv.Kind() {
-			case reflect.Slice:
-				fallthrough
-			case reflect.Array:
-				count := gstr.Count(key, "?")
-				if count == 0 {
-					buffer.WriteString(key + " IN(?)")
-					newArgs = append(newArgs, value)
-				} else if count != rv.Len() {
-					buffer.WriteString(key)
-					newArgs = append(newArgs, value)
-				} else {
-					buffer.WriteString(key)
-					// 如果键名/属性名称中带有多个?占位符号，那么将参数打散
-					newArgs = append(newArgs, gconv.Interfaces(value)...)
-				}
-			default:
-				if value == nil {
-					buffer.WriteString(key)
-				} else {
-					// 支持key带操作符号
-					if gstr.Pos(key, "?") == -1 {
-						if gstr.Pos(key, "<") == -1 && gstr.Pos(key, ">") == -1 && gstr.Pos(key, "=") == -1 {
-							buffer.WriteString(key + "=?")
-						} else {
-							buffer.WriteString(key + "?")
-						}
-					} else {
-						buffer.WriteString(key)
-					}
-					newArgs = append(newArgs, value)
-				}
-			}
-		}
-
-	default:
-		buffer.WriteString(gconv.String(where))
-	}
-	// 没有任何条件查询参数，直接返回
-	if buffer.Len() == 0 {
-		return "", args
-	}
-	newArgs = append(newArgs, args...)
-	newWhere = buffer.String()
-	// 查询条件参数处理，主要处理slice参数类型
-	if len(newArgs) > 0 {
-		// 支持例如 Where/And/Or("uid", 1) 这种格式
-		if gstr.Pos(newWhere, "?") == -1 {
-			if gstr.Pos(newWhere, "<") == -1 && gstr.Pos(newWhere, ">") == -1 && gstr.Pos(newWhere, "=") == -1 {
-				newWhere += "=?"
-			} else {
-				newWhere += "?"
 			}
 		}
 	}

@@ -95,8 +95,10 @@ type DB interface {
 	getCache() *gcache.Cache
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
+	quoteWord(s string) string
 	setSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
+	formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{})
 	convertValue(fieldValue []byte, fieldType string) interface{}
 	getTableFields(table string) (map[string]string, error)
 	rowsToResult(rows *sql.Rows) (Result, error)
