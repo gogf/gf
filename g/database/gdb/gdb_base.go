@@ -605,6 +605,7 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 				// 由于 sql.RawBytes 是slice类型, 这里必须使用值复制
 				v := make([]byte, len(column))
 				copy(v, column)
+				//fmt.Println(columns[i], types[i], string(v), v, bs.db.convertValue(v, types[i]))
 				row[columns[i]] = gvar.New(bs.db.convertValue(v, types[i]), true)
 			}
 		}
