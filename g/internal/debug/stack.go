@@ -55,11 +55,8 @@ func StackWithFilter(filter string, skip ...int) string {
 	space := "  "
 	index := 1
 	buffer := bytes.NewBuffer(nil)
-	for i := callerFromIndex() + number; i < gMAX_DEPTH; i++ {
+	for i := callerFromIndex(filter) + number; i < gMAX_DEPTH; i++ {
 		if pc, file, line, ok := runtime.Caller(i); ok {
-			if filter != "" && strings.Contains(file, filter) {
-				continue
-			}
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
@@ -93,11 +90,8 @@ func CallerWithFilter(filter string, skip ...int) string {
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	for i := callerFromIndex() + number; i < gMAX_DEPTH; i++ {
+	for i := callerFromIndex(filter) + number; i < gMAX_DEPTH; i++ {
 		if _, file, line, ok := runtime.Caller(i); ok {
-			if filter != "" && strings.Contains(file, filter) {
-				continue
-			}
 			return fmt.Sprintf(`%s:%d`, file, line)
 		} else {
 			break
@@ -107,9 +101,12 @@ func CallerWithFilter(filter string, skip ...int) string {
 }
 
 // callerFromIndex returns the caller position exclusive of the debug package.
-func callerFromIndex() int {
+func callerFromIndex(filter string) int {
 	for i := 0; i < gMAX_DEPTH; i++ {
 		if _, file, _, ok := runtime.Caller(i); ok {
+			if filter != "" && strings.Contains(file, filter) {
+				continue
+			}
 			if strings.Contains(file, gFILTER_KEY) {
 				continue
 			}
