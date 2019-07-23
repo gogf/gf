@@ -29,21 +29,21 @@ type gListMapNode struct {
 
 // NewListMap returns an empty link map.
 // ListMap is backed by a hash table to store values and doubly-linked list to store ordering.
-// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func NewListMap(unsafe ...bool) *ListMap {
+// The parameter <safe> used to specify whether using map in concurrent-safety,
+// which is false in default.
+func NewListMap(safe ...bool) *ListMap {
 	return &ListMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: make(map[interface{}]*glist.Element),
-		list: glist.New(true),
+		list: glist.New(),
 	}
 }
 
 // NewListMapFrom returns a link map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewListMapFrom(data map[interface{}]interface{}, unsafe ...bool) *ListMap {
-	m := NewListMap(unsafe...)
+func NewListMapFrom(data map[interface{}]interface{}, safe ...bool) *ListMap {
+	m := NewListMap(safe...)
 	m.Sets(data)
 	return m
 }
@@ -78,15 +78,15 @@ func (m *ListMap) IteratorDesc(f func(key interface{}, value interface{}) bool) 
 }
 
 // Clone returns a new link map with copy of current map data.
-func (m *ListMap) Clone(unsafe ...bool) *ListMap {
-	return NewListMapFrom(m.Map(), unsafe...)
+func (m *ListMap) Clone(safe ...bool) *ListMap {
+	return NewListMapFrom(m.Map(), safe...)
 }
 
 // Clear deletes all data of the map, it will remake a new underlying data map.
 func (m *ListMap) Clear() {
 	m.mu.Lock()
 	m.data = make(map[interface{}]*glist.Element)
-	m.list = glist.New(true)
+	m.list = glist.New()
 	m.mu.Unlock()
 }
 
@@ -210,25 +210,25 @@ func (m *ListMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interf
 // GetVar returns a gvar.Var with the value by given <key>.
 // The returned gvar.Var is un-concurrent safe.
 func (m *ListMap) GetVar(key interface{}) *gvar.Var {
-	return gvar.New(m.Get(key), true)
+	return gvar.New(m.Get(key))
 }
 
 // GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
 // The returned gvar.Var is un-concurrent safe.
 func (m *ListMap) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSet(key, value), true)
+	return gvar.New(m.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
 // The returned gvar.Var is un-concurrent safe.
 func (m *ListMap) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSetFunc(key, f), true)
+	return gvar.New(m.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
 // The returned gvar.Var is un-concurrent safe.
 func (m *ListMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSetFuncLock(key, f), true)
+	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.

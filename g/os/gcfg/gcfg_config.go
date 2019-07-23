@@ -10,7 +10,7 @@ import "github.com/gogf/gf/g/container/gmap"
 
 var (
 	// Customized configuration content.
-	configs = gmap.NewStrStrMap()
+	configs = gmap.NewStrStrMap(true)
 )
 
 // SetContent sets customized configuration content for specified <file>.

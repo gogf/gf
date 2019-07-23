@@ -54,5 +54,5 @@ func Get(key string, def ...interface{}) *gvar.Var {
 			value = v
 		}
 	}
-	return gvar.New(value, true)
+	return gvar.New(value)
 }

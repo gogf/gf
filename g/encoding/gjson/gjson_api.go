@@ -60,7 +60,7 @@ func (j *Json) Get(pattern string, def ...interface{}) interface{} {
 
 // GetVar returns a *gvar.Var with value by given <pattern>.
 func (j *Json) GetVar(pattern string, def ...interface{}) *gvar.Var {
-	return gvar.New(j.Get(pattern, def...), true)
+	return gvar.New(j.Get(pattern, def...))
 }
 
 // GetMap gets the value by specified <pattern>,
@@ -76,7 +76,7 @@ func (j *Json) GetMap(pattern string, def ...interface{}) map[string]interface{}
 // GetJson gets the value by specified <pattern>,
 // and converts it to a un-concurrent-safe Json object.
 func (j *Json) GetJson(pattern string, def ...interface{}) *Json {
-	return New(j.Get(pattern, def...), true)
+	return New(j.Get(pattern, def...))
 }
 
 // GetJsons gets the value by specified <pattern>,
@@ -86,7 +86,7 @@ func (j *Json) GetJsons(pattern string, def ...interface{}) []*Json {
 	if len(array) > 0 {
 		jsonSlice := make([]*Json, len(array))
 		for i := 0; i < len(array); i++ {
-			jsonSlice[i] = New(array[i], true)
+			jsonSlice[i] = New(array[i])
 		}
 		return jsonSlice
 	}
@@ -100,7 +100,7 @@ func (j *Json) GetJsonMap(pattern string, def ...interface{}) map[string]*Json {
 	if len(m) > 0 {
 		jsonMap := make(map[string]*Json, len(m))
 		for k, v := range m {
-			jsonMap[k] = New(v, true)
+			jsonMap[k] = New(v)
 		}
 		return jsonMap
 	}

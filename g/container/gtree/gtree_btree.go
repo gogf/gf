@@ -39,25 +39,25 @@ type BTreeEntry struct {
 }
 
 // NewBTree instantiates a B-tree with <m> (maximum number of children) and a custom key comparator.
-// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
+// The parameter <safe> used to specify whether using tree in concurrent-safety,
 // which is false in default.
 // Note that the <m> must be greater or equal than 3, or else it panics.
-func NewBTree(m int, comparator func(v1, v2 interface{}) int, unsafe ...bool) *BTree {
+func NewBTree(m int, comparator func(v1, v2 interface{}) int, safe ...bool) *BTree {
 	if m < 3 {
 		panic("Invalid order, should be at least 3")
 	}
 	return &BTree{
 		comparator: comparator,
-		mu:         rwmutex.New(unsafe...),
+		mu:         rwmutex.New(safe...),
 		m:          m,
 	}
 }
 
 // NewBTreeFrom instantiates a B-tree with <m> (maximum number of children), a custom key comparator and data map.
-// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
+// The parameter <safe> used to specify whether using tree in concurrent-safety,
 // which is false in default.
-func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe ...bool) *BTree {
-	tree := NewBTree(m, comparator, unsafe...)
+func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *BTree {
+	tree := NewBTree(m, comparator, safe...)
 	for k, v := range data {
 		tree.doSet(k, v)
 	}
@@ -65,7 +65,7 @@ func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[inter
 }
 
 // Clone returns a new tree with a copy of current tree.
-func (tree *BTree) Clone(unsafe ...bool) *BTree {
+func (tree *BTree) Clone(safe ...bool) *BTree {
 	newTree := NewBTree(tree.m, tree.comparator, !tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
@@ -168,25 +168,25 @@ func (tree *BTree) GetOrSetFuncLock(key interface{}, f func() interface{}) inter
 // GetVar returns a gvar.Var with the value by given <key>.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *BTree) GetVar(key interface{}) *gvar.Var {
-	return gvar.New(tree.Get(key), true)
+	return gvar.New(tree.Get(key))
 }
 
 // GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *BTree) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSet(key, value), true)
+	return gvar.New(tree.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *BTree) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSetFunc(key, f), true)
+	return gvar.New(tree.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *BTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSetFuncLock(key, f), true)
+	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.

@@ -21,28 +21,28 @@ type Set struct {
 // New create and returns a new set, which contains un-repeated items.
 // The parameter <unsafe> used to specify whether using set in un-concurrent-safety,
 // which is false in default.
-func New(unsafe ...bool) *Set {
-	return NewSet(unsafe...)
+func New(safe ...bool) *Set {
+	return NewSet(safe...)
 }
 
 // See New.
-func NewSet(unsafe ...bool) *Set {
+func NewSet(safe ...bool) *Set {
 	return &Set{
 		m:  make(map[interface{}]struct{}),
-		mu: rwmutex.New(unsafe...),
+		mu: rwmutex.New(safe...),
 	}
 }
 
 // NewFrom returns a new set from <items>.
 // Parameter <items> can be either a variable of any type, or a slice.
-func NewFrom(items interface{}, unsafe ...bool) *Set {
+func NewFrom(items interface{}, safe ...bool) *Set {
 	m := make(map[interface{}]struct{})
 	for _, v := range gconv.Interfaces(items) {
 		m[v] = struct{}{}
 	}
 	return &Set{
 		m:  m,
-		mu: rwmutex.New(unsafe...),
+		mu: rwmutex.New(safe...),
 	}
 }
 

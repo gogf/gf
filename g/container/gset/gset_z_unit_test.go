@@ -63,8 +63,8 @@ func TestSet_Iterator(t *testing.T) {
 		s.Add(1).Add(2).Add(3)
 		gtest.Assert(s.Size(), 3)
 
-		a1 := garray.New()
-		a2 := garray.New()
+		a1 := garray.New(true)
+		a2 := garray.New(true)
 		s.Iterator(func(v interface{}) bool {
 			a1.Append(1)
 			return false

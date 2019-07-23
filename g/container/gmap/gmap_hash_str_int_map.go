@@ -20,11 +20,11 @@ type StrIntMap struct {
 }
 
 // NewStrIntMap returns an empty StrIntMap object.
-// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func NewStrIntMap(unsafe ...bool) *StrIntMap {
+// The parameter <safe> used to specify whether using map in concurrent-safety,
+// which is false in default.
+func NewStrIntMap(safe ...bool) *StrIntMap {
 	return &StrIntMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: make(map[string]int),
 	}
 }
@@ -32,9 +32,9 @@ func NewStrIntMap(unsafe ...bool) *StrIntMap {
 // NewStrIntMapFrom returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewStrIntMapFrom(data map[string]int, unsafe ...bool) *StrIntMap {
+func NewStrIntMapFrom(data map[string]int, safe ...bool) *StrIntMap {
 	return &StrIntMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: data,
 	}
 }

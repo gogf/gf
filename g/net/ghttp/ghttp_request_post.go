@@ -45,7 +45,7 @@ func (r *Request) GetPost(key string, def ...interface{}) []string {
 }
 
 func (r *Request) GetPostVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(r.GetPostString(key, def...), true)
+	return gvar.New(r.GetPostString(key, def...))
 }
 
 func (r *Request) GetPostString(key string, def ...interface{}) string {

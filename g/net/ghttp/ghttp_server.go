@@ -125,7 +125,7 @@ var (
 	methodsMap = make(map[string]struct{})
 
 	// WebServer表，用以存储和检索名称与Server对象之间的关联关系
-	serverMapping = gmap.NewStrAnyMap()
+	serverMapping = gmap.NewStrAnyMap(true)
 
 	// 正常运行的WebServer数量，如果没有运行、失败或者全部退出，那么该值为0
 	serverRunning = gtype.NewInt()
@@ -342,7 +342,7 @@ func (s *Server) GetRouteMap() string {
 						}
 					}
 					return r
-				}, false)
+				})
 			}
 			m[item.domain].Add(item)
 		}

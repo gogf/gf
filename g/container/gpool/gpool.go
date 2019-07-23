@@ -51,7 +51,7 @@ type ExpireFunc func(interface{})
 // Note that the expiration time unit is ** milliseconds **.
 func New(expire int, newFunc NewFunc, expireFunc ...ExpireFunc) *Pool {
 	r := &Pool{
-		list:    glist.New(),
+		list:    glist.New(true),
 		closed:  gtype.NewBool(),
 		Expire:  int64(expire),
 		NewFunc: newFunc,

@@ -30,7 +30,7 @@ func New() *Cron {
 	return &Cron{
 		idGen:    gtype.NewInt64(),
 		status:   gtype.NewInt(STATUS_RUNNING),
-		entries:  gmap.NewStrAnyMap(),
+		entries:  gmap.NewStrAnyMap(true),
 		logPath:  gtype.NewString(),
 		logLevel: gtype.NewInt(glog.LEVEL_PROD),
 	}

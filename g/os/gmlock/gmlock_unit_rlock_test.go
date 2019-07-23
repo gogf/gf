@@ -19,7 +19,7 @@ func Test_Locker_RLock(t *testing.T) {
 	//RLock before Lock
 	gtest.Case(t, func() {
 		key := "testRLockBeforeLock"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.RLock(key)
 			array.Append(1)
@@ -41,7 +41,7 @@ func Test_Locker_RLock(t *testing.T) {
 	//Lock before RLock
 	gtest.Case(t, func() {
 		key := "testLockBeforeRLock"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.Lock(key)
 			array.Append(1)
@@ -63,7 +63,7 @@ func Test_Locker_RLock(t *testing.T) {
 	//Lock before RLocks
 	gtest.Case(t, func() {
 		key := "testLockBeforeRLocks"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.Lock(key)
 			array.Append(1)
@@ -95,7 +95,7 @@ func Test_Locker_TryRLock(t *testing.T) {
 	//Lock before TryRLock
 	gtest.Case(t, func() {
 		key := "testLockBeforeTryRLock"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.Lock(key)
 			array.Append(1)
@@ -118,7 +118,7 @@ func Test_Locker_TryRLock(t *testing.T) {
 	//Lock before TryRLocks
 	gtest.Case(t, func() {
 		key := "testLockBeforeTryRLocks"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.Lock(key)
 			array.Append(1)
@@ -150,7 +150,7 @@ func Test_Locker_RLockFunc(t *testing.T) {
 	//RLockFunc before Lock
 	gtest.Case(t, func() {
 		key := "testRLockFuncBeforeLock"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.RLockFunc(key, func() {
 				array.Append(1)
@@ -172,7 +172,7 @@ func Test_Locker_RLockFunc(t *testing.T) {
 	//Lock before RLockFunc
 	gtest.Case(t, func() {
 		key := "testLockBeforeRLockFunc"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.Lock(key)
 			array.Append(1)
@@ -194,7 +194,7 @@ func Test_Locker_RLockFunc(t *testing.T) {
 	//Lock before RLockFuncs
 	gtest.Case(t, func() {
 		key := "testLockBeforeRLockFuncs"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.Lock(key)
 			array.Append(1)
@@ -226,7 +226,7 @@ func Test_Locker_TryRLockFunc(t *testing.T) {
 	//Lock before TryRLockFunc
 	gtest.Case(t, func() {
 		key := "testLockBeforeTryRLockFunc"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.Lock(key)
 			array.Append(1)
@@ -248,7 +248,7 @@ func Test_Locker_TryRLockFunc(t *testing.T) {
 	//Lock before TryRLockFuncs
 	gtest.Case(t, func() {
 		key := "testLockBeforeTryRLockFuncs"
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			gmlock.Lock(key)
 			array.Append(1)

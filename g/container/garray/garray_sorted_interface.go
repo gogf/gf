@@ -27,21 +27,21 @@ type SortedArray struct {
 }
 
 // NewSortedArray creates and returns an empty sorted array.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety, which is false in default.
+// The parameter <safe> used to specify whether using array in concurrent-safety, which is false in default.
 // The parameter <comparator> used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2;
 // if it returns value = 0, means v1 = v2;
 // if it returns value > 0, means v1 > v2;
-func NewSortedArray(comparator func(v1, v2 interface{}) int, unsafe ...bool) *SortedArray {
-	return NewSortedArraySize(0, comparator, unsafe...)
+func NewSortedArray(comparator func(v1, v2 interface{}) int, safe ...bool) *SortedArray {
+	return NewSortedArraySize(0, comparator, safe...)
 }
 
 // NewSortedArraySize create and returns an sorted array with given size and cap.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe ...bool) *SortedArray {
+func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, safe ...bool) *SortedArray {
 	return &SortedArray{
-		mu:         rwmutex.New(unsafe...),
+		mu:         rwmutex.New(safe...),
 		unique:     gtype.NewBool(),
 		array:      make([]interface{}, 0, cap),
 		comparator: comparator,
@@ -49,10 +49,10 @@ func NewSortedArraySize(cap int, comparator func(v1, v2 interface{}) int, unsafe
 }
 
 // NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe ...bool) *SortedArray {
-	a := NewSortedArraySize(0, comparator, unsafe...)
+func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{}) int, safe ...bool) *SortedArray {
+	a := NewSortedArraySize(0, comparator, safe...)
 	a.array = array
 	sort.Slice(a.array, func(i, j int) bool {
 		return a.comparator(a.array[i], a.array[j]) < 0
@@ -61,12 +61,12 @@ func NewSortedArrayFrom(array []interface{}, comparator func(v1, v2 interface{})
 }
 
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedArrayFromCopy(array []interface{}, comparator func(v1, v2 interface{}) int, unsafe ...bool) *SortedArray {
+func NewSortedArrayFromCopy(array []interface{}, comparator func(v1, v2 interface{}) int, safe ...bool) *SortedArray {
 	newArray := make([]interface{}, len(array))
 	copy(newArray, array)
-	return NewSortedArrayFrom(newArray, comparator, unsafe...)
+	return NewSortedArrayFrom(newArray, comparator, safe...)
 }
 
 // SetArray sets the underlying slice array with the given <array>.

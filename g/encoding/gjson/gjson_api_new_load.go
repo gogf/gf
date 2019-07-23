@@ -30,7 +30,7 @@ import (
 // or it will make no sense.
 // The <unsafe> param specifies whether using this Json object
 // in un-concurrent-safe context, which is false in default.
-func New(data interface{}, unsafe ...bool) *Json {
+func New(data interface{}, safe ...bool) *Json {
 	j := (*Json)(nil)
 	switch data.(type) {
 	case string, []byte:
@@ -79,16 +79,8 @@ func New(data interface{}, unsafe ...bool) *Json {
 			}
 		}
 	}
-	j.mu = rwmutex.New(unsafe...)
+	j.mu = rwmutex.New(safe...)
 	return j
-}
-
-// NewUnsafe creates a un-concurrent-safe Json object.
-func NewUnsafe(data ...interface{}) *Json {
-	if len(data) > 0 {
-		return New(data[0], true)
-	}
-	return New(nil, true)
 }
 
 // Valid checks whether <data> is a valid JSON data type.
@@ -120,41 +112,41 @@ func DecodeTo(data interface{}, v interface{}) error {
 }
 
 // DecodeToJson codes <data>(string/[]byte) to a Json object.
-func DecodeToJson(data interface{}, unsafe ...bool) (*Json, error) {
+func DecodeToJson(data interface{}, safe ...bool) (*Json, error) {
 	if v, err := Decode(gconv.Bytes(data)); err != nil {
 		return nil, err
 	} else {
-		return New(v, unsafe...), nil
+		return New(v, safe...), nil
 	}
 }
 
 // Load loads content from specified file <path>,
 // and creates a Json object from its content.
-func Load(path string, unsafe ...bool) (*Json, error) {
-	return doLoadContent(gfile.Ext(path), gfcache.GetBinContents(path), unsafe...)
+func Load(path string, safe ...bool) (*Json, error) {
+	return doLoadContent(gfile.Ext(path), gfcache.GetBinContents(path), safe...)
 }
 
-func LoadJson(data interface{}, unsafe ...bool) (*Json, error) {
-	return doLoadContent("json", gconv.Bytes(data), unsafe...)
+func LoadJson(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("json", gconv.Bytes(data), safe...)
 }
 
-func LoadXml(data interface{}, unsafe ...bool) (*Json, error) {
-	return doLoadContent("xml", gconv.Bytes(data), unsafe...)
+func LoadXml(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("xml", gconv.Bytes(data), safe...)
 }
 
-func LoadYaml(data interface{}, unsafe ...bool) (*Json, error) {
-	return doLoadContent("yaml", gconv.Bytes(data), unsafe...)
+func LoadYaml(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("yaml", gconv.Bytes(data), safe...)
 }
 
-func LoadToml(data interface{}, unsafe ...bool) (*Json, error) {
-	return doLoadContent("toml", gconv.Bytes(data), unsafe...)
+func LoadToml(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("toml", gconv.Bytes(data), safe...)
 }
 
-func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) {
+func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 	var err error
 	var result interface{}
 	if len(data) == 0 {
-		return New(nil, unsafe...), nil
+		return New(nil, safe...), nil
 	}
 	if dataType == "" {
 		dataType = checkDataType(data)
@@ -194,15 +186,15 @@ func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) 
 			return nil, fmt.Errorf(`json decoding failed for content: %s`, string(data))
 		}
 	}
-	return New(result, unsafe...), nil
+	return New(result, safe...), nil
 }
 
-func LoadContent(data interface{}, unsafe ...bool) (*Json, error) {
+func LoadContent(data interface{}, safe ...bool) (*Json, error) {
 	content := gconv.Bytes(data)
 	if len(content) == 0 {
-		return New(nil, unsafe...), nil
+		return New(nil, safe...), nil
 	}
-	return doLoadContent(checkDataType(content), content, unsafe...)
+	return doLoadContent(checkDataType(content), content, safe...)
 
 }
 

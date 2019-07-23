@@ -24,18 +24,6 @@ func Test_New(t *testing.T) {
 	})
 }
 
-func Test_NewUnsafe(t *testing.T) {
-	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
-	gtest.Case(t, func() {
-		j := gjson.NewUnsafe(data)
-		gtest.Assert(j.Get("n"), "123456789")
-		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
-		gtest.Assert(j.Get("m.k"), "v")
-		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})
-		gtest.Assert(j.Get("a.1"), 2)
-	})
-}
-
 func Test_Valid(t *testing.T) {
 	data1 := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	data2 := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]`)

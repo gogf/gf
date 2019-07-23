@@ -162,7 +162,7 @@ func (s *Server) searchHookHandler(method, path, domain, hook string) []*handler
 		}
 
 		// 多层链表遍历检索，从数组末尾的链表开始遍历，末尾的深度高优先级也高
-		pushedSet := gset.NewStringSet(true)
+		pushedSet := gset.NewStringSet()
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
 				handler := e.Value.(*handlerItem)

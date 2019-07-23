@@ -13,7 +13,7 @@ import (
 
 func Example_basic() {
 	// 创建普通的数组，默认并发安全(带锁)
-	a := garray.New()
+	a := garray.New(true)
 
 	// 添加数据项
 	for i := 0; i < 10; i++ {

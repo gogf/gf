@@ -57,7 +57,7 @@ func (s *Session) init() {
 		}
 		// 否则执行初始化创建
 		s.id = s.request.Cookie.MakeSessionId()
-		s.data = gmap.NewStrAnyMap()
+		s.data = gmap.NewStrAnyMap(true)
 		s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
 	}
 }
@@ -114,7 +114,7 @@ func (s *Session) Get(key string, def ...interface{}) interface{} {
 
 // 获取SESSION，建议都用该方法获取参数
 func (s *Session) GetVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(s.Get(key, def...), true)
+	return gvar.New(s.Get(key, def...))
 }
 
 // 删除session

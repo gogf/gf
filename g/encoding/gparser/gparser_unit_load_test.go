@@ -176,7 +176,7 @@ func Test_Load_TOML2(t *testing.T) {
 
 func Test_Load_Nil(t *testing.T) {
 	gtest.Case(t, func() {
-		p := gparser.NewUnsafe()
+		p := gparser.New(nil)
 		gtest.Assert(p.Value(), nil)
 		file := "test22222.json"
 		filePath := gfile.Pwd() + gfile.Separator + file

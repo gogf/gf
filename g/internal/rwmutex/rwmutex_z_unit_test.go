@@ -39,7 +39,7 @@ func TestRwmutexIsSafe(t *testing.T) {
 func TestSafeRwmutex(t *testing.T) {
 	gtest.Case(t, func() {
 		safeLock := rwmutex.New()
-		array := garray.New()
+		array := garray.New(true)
 
 		go func() {
 			safeLock.Lock()
@@ -70,7 +70,7 @@ func TestSafeRwmutex(t *testing.T) {
 func TestSafeReaderRwmutex(t *testing.T) {
 	gtest.Case(t, func() {
 		safeLock := rwmutex.New()
-		array := garray.New()
+		array := garray.New(true)
 
 		go func() {
 			safeLock.RLock()
@@ -109,7 +109,7 @@ func TestSafeReaderRwmutex(t *testing.T) {
 func TestUnsafeRwmutex(t *testing.T) {
 	gtest.Case(t, func() {
 		unsafeLock := rwmutex.New(true)
-		array := garray.New()
+		array := garray.New(true)
 
 		go func() {
 			unsafeLock.Lock()

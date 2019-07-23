@@ -43,7 +43,7 @@ func Test_GFlock_Base(t *testing.T) {
 func Test_GFlock_Lock(t *testing.T) {
 	gtest.Case(t, func() {
 		fileName := "testLock"
-		array := garray.New()
+		array := garray.New(true)
 		lock := gflock.New(fileName)
 		lock2 := gflock.New(fileName)
 
@@ -73,7 +73,7 @@ func Test_GFlock_Lock(t *testing.T) {
 func Test_GFlock_RLock(t *testing.T) {
 	gtest.Case(t, func() {
 		fileName := "testRLock"
-		array := garray.New()
+		array := garray.New(true)
 		lock := gflock.New(fileName)
 		lock2 := gflock.New(fileName)
 
@@ -101,7 +101,7 @@ func Test_GFlock_RLock(t *testing.T) {
 func Test_GFlock_TryLock(t *testing.T) {
 	gtest.Case(t, func() {
 		fileName := "testTryLock"
-		array := garray.New()
+		array := garray.New(true)
 		lock := gflock.New(fileName)
 		lock2 := gflock.New(fileName)
 
@@ -139,7 +139,7 @@ func Test_GFlock_TryLock(t *testing.T) {
 func Test_GFlock_TryRLock(t *testing.T) {
 	gtest.Case(t, func() {
 		fileName := "testTryRLock"
-		array := garray.New()
+		array := garray.New(true)
 		lock := gflock.New(fileName)
 		lock2 := gflock.New(fileName)
 		go func() {

@@ -18,13 +18,12 @@ type Ring struct {
 	ring  *ring.Ring  // Underlying ring.
 	len   *gtype.Int  // Length(already used size).
 	cap   *gtype.Int  // Capability(>=len).
-	dirty *gtype.Bool // Dirty, which means the len and cap should be recalculated.
-	// It's marked dirty when the size of ring changes.
+	dirty *gtype.Bool // Dirty, which means the len and cap should be recalculated. It's marked dirty when the size of ring changes.
 }
 
-func New(cap int, unsafe ...bool) *Ring {
+func New(cap int, safe ...bool) *Ring {
 	return &Ring{
-		mu:    rwmutex.New(unsafe...),
+		mu:    rwmutex.New(safe...),
 		ring:  ring.New(cap),
 		len:   gtype.NewInt(),
 		cap:   gtype.NewInt(cap),

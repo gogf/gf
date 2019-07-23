@@ -31,7 +31,7 @@ const (
 
 var (
 	// 连接池对象map，键名为地址端口，键值为对应的连接池对象
-	pools = gmap.NewStrAnyMap()
+	pools = gmap.NewStrAnyMap(true)
 )
 
 // 创建TCP链接池对象

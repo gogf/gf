@@ -13,7 +13,7 @@ import (
 
 var (
 	// 用于测试的端口数组，随机获取
-	ports = garray.NewIntArray()
+	ports = garray.NewIntArray(true)
 )
 
 func init() {

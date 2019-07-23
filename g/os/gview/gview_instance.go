@@ -15,7 +15,7 @@ const (
 
 var (
 	// Instances map.
-	instances = gmap.NewStrAnyMap()
+	instances = gmap.NewStrAnyMap(true)
 )
 
 // Instance returns an instance of View with default settings.

@@ -5,15 +5,3 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 package garray
-
-type apiSliceInterface interface {
-	Slice() []interface{}
-}
-
-type apiSliceInt interface {
-	Slice() []int
-}
-
-type apiSliceString interface {
-	Slice() []string
-}

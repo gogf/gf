@@ -20,11 +20,11 @@ func (r *Request) SetParam(key string, value interface{}) {
 func (r *Request) GetParam(key string, def ...interface{}) *gvar.Var {
 	if r.params != nil {
 		if v, ok := r.params[key]; ok {
-			return gvar.New(v, true)
+			return gvar.New(v)
 		}
 	}
 	if len(def) > 0 {
-		return gvar.New(def[0], true)
+		return gvar.New(def[0])
 	}
-	return gvar.New(nil, true)
+	return gvar.New(nil)
 }

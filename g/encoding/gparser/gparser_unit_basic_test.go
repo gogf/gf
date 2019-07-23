@@ -28,7 +28,7 @@ func Test_New(t *testing.T) {
 func Test_NewUnsafe(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.Case(t, func() {
-		j := gparser.NewUnsafe(data)
+		j := gparser.New(data)
 		gtest.Assert(j.Get("n"), "123456789")
 		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("m.k"), "v")

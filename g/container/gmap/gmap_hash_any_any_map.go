@@ -21,11 +21,11 @@ type AnyAnyMap struct {
 }
 
 // NewAnyAnyMap returns an empty hash map.
-// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func NewAnyAnyMap(unsafe ...bool) *AnyAnyMap {
+// The parameter <safe> used to specify whether using map in concurrent-safety,
+// which is false in default.
+func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: make(map[interface{}]interface{}),
 	}
 }
@@ -33,9 +33,9 @@ func NewAnyAnyMap(unsafe ...bool) *AnyAnyMap {
 // NewAnyAnyMapFrom returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewAnyAnyMapFrom(data map[interface{}]interface{}, unsafe ...bool) *AnyAnyMap {
+func NewAnyAnyMapFrom(data map[interface{}]interface{}, safe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: data,
 	}
 }
@@ -53,8 +53,8 @@ func (m *AnyAnyMap) Iterator(f func(k interface{}, v interface{}) bool) {
 }
 
 // Clone returns a new hash map with copy of current map data.
-func (m *AnyAnyMap) Clone(unsafe ...bool) *AnyAnyMap {
-	return NewFrom(m.Map(), unsafe...)
+func (m *AnyAnyMap) Clone(safe ...bool) *AnyAnyMap {
+	return NewFrom(m.Map(), safe...)
 }
 
 // Map returns a copy of the data of the hash map.
@@ -161,25 +161,25 @@ func (m *AnyAnyMap) GetOrSetFuncLock(key interface{}, f func() interface{}) inte
 // GetVar returns a gvar.Var with the value by given <key>.
 // The returned gvar.Var is un-concurrent safe.
 func (m *AnyAnyMap) GetVar(key interface{}) *gvar.Var {
-	return gvar.New(m.Get(key), true)
+	return gvar.New(m.Get(key))
 }
 
 // GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
 // The returned gvar.Var is un-concurrent safe.
 func (m *AnyAnyMap) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSet(key, value), true)
+	return gvar.New(m.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
 // The returned gvar.Var is un-concurrent safe.
 func (m *AnyAnyMap) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSetFunc(key, f), true)
+	return gvar.New(m.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
 // The returned gvar.Var is un-concurrent safe.
 func (m *AnyAnyMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSetFuncLock(key, f), true)
+	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.

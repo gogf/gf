@@ -27,18 +27,18 @@ type SortedIntArray struct {
 }
 
 // NewSortedIntArray creates and returns an empty sorted array.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedIntArray(unsafe ...bool) *SortedIntArray {
-	return NewSortedIntArraySize(0, unsafe...)
+func NewSortedIntArray(safe ...bool) *SortedIntArray {
+	return NewSortedIntArraySize(0, safe...)
 }
 
 // NewSortedIntArraySize create and returns an sorted array with given size and cap.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedIntArraySize(cap int, unsafe ...bool) *SortedIntArray {
+func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
 	return &SortedIntArray{
-		mu:     rwmutex.New(unsafe...),
+		mu:     rwmutex.New(safe...),
 		array:  make([]int, 0, cap),
 		unique: gtype.NewBool(),
 		comparator: func(v1, v2 int) int {
@@ -54,22 +54,22 @@ func NewSortedIntArraySize(cap int, unsafe ...bool) *SortedIntArray {
 }
 
 // NewIntArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedIntArrayFrom(array []int, unsafe ...bool) *SortedIntArray {
-	a := NewSortedIntArraySize(0, unsafe...)
+func NewSortedIntArrayFrom(array []int, safe ...bool) *SortedIntArray {
+	a := NewSortedIntArraySize(0, safe...)
 	a.array = array
 	sort.Ints(a.array)
 	return a
 }
 
 // NewSortedIntArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedIntArrayFromCopy(array []int, unsafe ...bool) *SortedIntArray {
+func NewSortedIntArrayFromCopy(array []int, safe ...bool) *SortedIntArray {
 	newArray := make([]int, len(array))
 	copy(newArray, array)
-	return NewSortedIntArrayFrom(newArray, unsafe...)
+	return NewSortedIntArrayFrom(newArray, safe...)
 }
 
 // SetArray sets the underlying slice array with the given <array>.

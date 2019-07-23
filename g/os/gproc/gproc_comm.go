@@ -23,10 +23,10 @@ type Msg struct {
 }
 
 // 本地进程通信接收消息队列(按照分组进行构建的map，键值为*gqueue.Queue对象)
-var commReceiveQueues = gmap.NewStrAnyMap()
+var commReceiveQueues = gmap.NewStrAnyMap(true)
 
 // (用于发送)已建立的PID对应的Conn通信对象，键值为一个Pool，防止并行使用同一个通信对象造成数据重叠
-var commPidConnMap = gmap.NewIntAnyMap()
+var commPidConnMap = gmap.NewIntAnyMap(true)
 
 // 获取指定进程的通信文件地址
 func getCommFilePath(pid int) string {

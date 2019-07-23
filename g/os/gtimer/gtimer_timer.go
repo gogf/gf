@@ -73,7 +73,7 @@ func (t *Timer) newWheel(level int, slot int, interval time.Duration) *wheel {
 		intervalMs: interval.Nanoseconds() / 1e6,
 	}
 	for i := int64(0); i < w.number; i++ {
-		w.slots[i] = glist.New()
+		w.slots[i] = glist.New(true)
 	}
 	return w
 }

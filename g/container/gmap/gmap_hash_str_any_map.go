@@ -21,11 +21,11 @@ type StrAnyMap struct {
 }
 
 // NewStrAnyMap returns an empty StrAnyMap object.
-// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func NewStrAnyMap(unsafe ...bool) *StrAnyMap {
+// The parameter <safe> used to specify whether using map in concurrent-safety,
+// which is false in default.
+func NewStrAnyMap(safe ...bool) *StrAnyMap {
 	return &StrAnyMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: make(map[string]interface{}),
 	}
 }
@@ -33,9 +33,9 @@ func NewStrAnyMap(unsafe ...bool) *StrAnyMap {
 // NewStrAnyMapFrom returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewStrAnyMapFrom(data map[string]interface{}, unsafe ...bool) *StrAnyMap {
+func NewStrAnyMapFrom(data map[string]interface{}, safe ...bool) *StrAnyMap {
 	return &StrAnyMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: data,
 	}
 }
@@ -163,25 +163,25 @@ func (m *StrAnyMap) GetOrSetFuncLock(key string, f func() interface{}) interface
 // GetVar returns a gvar.Var with the value by given <key>.
 // The returned gvar.Var is un-concurrent safe.
 func (m *StrAnyMap) GetVar(key string) *gvar.Var {
-	return gvar.New(m.Get(key), true)
+	return gvar.New(m.Get(key))
 }
 
 // GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
 // The returned gvar.Var is un-concurrent safe.
 func (m *StrAnyMap) GetVarOrSet(key string, value interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSet(key, value), true)
+	return gvar.New(m.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
 // The returned gvar.Var is un-concurrent safe.
 func (m *StrAnyMap) GetVarOrSetFunc(key string, f func() interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSetFunc(key, f), true)
+	return gvar.New(m.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
 // The returned gvar.Var is un-concurrent safe.
 func (m *StrAnyMap) GetVarOrSetFuncLock(key string, f func() interface{}) *gvar.Var {
-	return gvar.New(m.GetOrSetFuncLock(key, f), true)
+	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.

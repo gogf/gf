@@ -21,22 +21,22 @@ type IntSet struct {
 // New create and returns a new set, which contains un-repeated items.
 // The parameter <unsafe> used to specify whether using set in un-concurrent-safety,
 // which is false in default.
-func NewIntSet(unsafe ...bool) *IntSet {
+func NewIntSet(safe ...bool) *IntSet {
 	return &IntSet{
 		m:  make(map[int]struct{}),
-		mu: rwmutex.New(unsafe...),
+		mu: rwmutex.New(safe...),
 	}
 }
 
 // NewIntSetFrom returns a new set from <items>.
-func NewIntSetFrom(items []int, unsafe ...bool) *IntSet {
+func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 	m := make(map[int]struct{})
 	for _, v := range items {
 		m[v] = struct{}{}
 	}
 	return &IntSet{
 		m:  m,
-		mu: rwmutex.New(unsafe...),
+		mu: rwmutex.New(safe...),
 	}
 }
 

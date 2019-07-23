@@ -39,7 +39,7 @@ func TestMutexIsSafe(t *testing.T) {
 func TestSafeMutex(t *testing.T) {
 	gtest.Case(t, func() {
 		safeLock := mutex.New(false)
-		array := garray.New()
+		array := garray.New(true)
 
 		go func() {
 			safeLock.Lock()
@@ -70,7 +70,7 @@ func TestSafeMutex(t *testing.T) {
 func TestUnsafeMutex(t *testing.T) {
 	gtest.Case(t, func() {
 		unsafeLock := mutex.New(true)
-		array := garray.New()
+		array := garray.New(true)
 
 		go func() {
 			unsafeLock.Lock()

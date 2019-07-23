@@ -50,7 +50,7 @@ func New(limit ...int) *Queue {
 		q.limit = limit[0]
 		q.C = make(chan interface{}, limit[0])
 	} else {
-		q.list = glist.New()
+		q.list = glist.New(true)
 		q.events = make(chan struct{}, math.MaxInt32)
 		q.C = make(chan interface{}, gDEFAULT_QUEUE_SIZE)
 		go q.startAsyncLoop()

@@ -28,7 +28,7 @@ type Server struct {
 }
 
 // Map for name to server, for singleton purpose.
-var serverMapping = gmap.NewStrAnyMap()
+var serverMapping = gmap.NewStrAnyMap(true)
 
 // GetServer returns the TCP server with specified <name>,
 // or it returns a new normal TCP server named <name> if it does not exist.

@@ -11,11 +11,11 @@ import "github.com/gogf/gf/g/container/gvar"
 // DoVar returns value from Do as gvar.Var.
 func (c *Conn) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
 	v, err := c.Do(command, args...)
-	return gvar.New(v, true), err
+	return gvar.New(v), err
 }
 
 // ReceiveVar receives a single reply as gvar.Var from the Redis server.
 func (c *Conn) ReceiveVar() (*gvar.Var, error) {
 	v, err := c.Receive()
-	return gvar.New(v, true), err
+	return gvar.New(v), err
 }
