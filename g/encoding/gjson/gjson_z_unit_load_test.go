@@ -7,11 +7,12 @@
 package gjson_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/encoding/gjson"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 func Test_Load_JSON(t *testing.T) {
@@ -50,7 +51,7 @@ func Test_Load_XML(t *testing.T) {
 		gtest.Assert(j.Get("doc.n"), "123456789")
 		gtest.Assert(j.Get("doc.m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("doc.m.k"), "v")
-		gtest.Assert(j.Get("doc.a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("doc.a"), g.Slice{"1", "2", "3"})
 		gtest.Assert(j.Get("doc.a.1"), 2)
 	})
 	// XML
@@ -63,7 +64,7 @@ func Test_Load_XML(t *testing.T) {
 		gtest.Assert(j.Get("doc.n"), "123456789")
 		gtest.Assert(j.Get("doc.m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("doc.m.k"), "v")
-		gtest.Assert(j.Get("doc.a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("doc.a"), g.Slice{"1", "2", "3"})
 		gtest.Assert(j.Get("doc.a.1"), 2)
 	})
 
@@ -133,7 +134,7 @@ func Test_Load_YAML2(t *testing.T) {
 func Test_Load_TOML1(t *testing.T) {
 	data := []byte(`
 a = ["1", "2", "3"]
-n = "123456789"
+n = 123456789
 
 [m]
   k = "v"
@@ -145,7 +146,7 @@ n = "123456789"
 		gtest.Assert(j.Get("n"), "123456789")
 		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("m.k"), "v")
-		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("a"), g.Slice{"1", "2", "3"})
 		gtest.Assert(j.Get("a.1"), 2)
 	})
 	// TOML
@@ -158,7 +159,7 @@ n = "123456789"
 		gtest.Assert(j.Get("n"), "123456789")
 		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("m.k"), "v")
-		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("a"), g.Slice{"1", "2", "3"})
 		gtest.Assert(j.Get("a.1"), 2)
 	})
 }

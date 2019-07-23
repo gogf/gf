@@ -87,16 +87,19 @@ type DB interface {
 	GetQueriedSqls() []*Sql
 	GetLastSql() *Sql
 	PrintQueriedSqls()
-	SetMaxIdleConns(n int)
-	SetMaxOpenConns(n int)
-	SetConnMaxLifetime(n int)
+	SetMaxIdleConnCount(n int)
+	SetMaxOpenConnCount(n int)
+	SetMaxConnLifetime(n int)
 
 	// 内部方法接口
 	getCache() *gcache.Cache
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
+	quoteWord(s string) string
+	setSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
-	convertValue(fieldValue interface{}, fieldType string) interface{}
+	formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{})
+	convertValue(fieldValue []byte, fieldType string) interface{}
 	getTableFields(table string) (map[string]string, error)
 	rowsToResult(rows *sql.Rows) (Result, error)
 	handleSqlBeforeExec(sql string) string
@@ -248,9 +251,9 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			slaveList = masterList
 		}
 		if master {
-			return getConfigNodeByPriority(masterList), nil
+			return getConfigNodeByWeight(masterList), nil
 		} else {
-			return getConfigNodeByPriority(slaveList), nil
+			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
 		return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
@@ -263,19 +266,19 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 // 2、那么节点1的权重范围为[0, 99]，节点2的权重范围为[100, 199]，比例为1:1；
 // 3、假如计算出的随机数为99;
 // 4、那么选择的配置为节点1;
-func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
+func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	if len(cg) < 2 {
 		return &cg[0]
 	}
 	var total int
 	for i := 0; i < len(cg); i++ {
-		total += cg[i].Priority * 100
+		total += cg[i].Weight * 100
 	}
 	// 如果total为0表示所有连接都没有配置priority属性，那么默认都是1
 	if total == 0 {
 		for i := 0; i < len(cg); i++ {
-			cg[i].Priority = 1
-			total += cg[i].Priority * 100
+			cg[i].Weight = 1
+			total += cg[i].Weight * 100
 		}
 	}
 	// 不能取到末尾的边界点
@@ -286,7 +289,7 @@ func getConfigNodeByPriority(cg ConfigGroup) *ConfigNode {
 	min := 0
 	max := 0
 	for i := 0; i < len(cg); i++ {
-		max = min + cg[i].Priority*100
+		max = min + cg[i].Weight*100
 		//fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
 		if r >= min && r < max {
 			return &cg[i]
@@ -308,12 +311,14 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 	if node.Charset == "" {
 		node.Charset = "utf8"
 	}
+	// 缓存连接对象(该对象其实是一个连接池对象)
 	v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
 		sqlDb, err = bs.db.Open(node)
 		if err != nil {
 			return nil
 		}
-
+		// 接口对象可能会覆盖这些连接参数，所以这里优先判断有误设置连接池属性。
+		// 若无设置则使用配置节点的连接池参数
 		if n := bs.maxIdleConnCount.Val(); n > 0 {
 			sqlDb.SetMaxIdleConns(n)
 		} else if node.MaxIdleConnCount > 0 {
@@ -336,9 +341,15 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 	if v != nil && sqlDb == nil {
 		sqlDb = v.(*sql.DB)
 	}
+	// 是否开启调试模式
+	if node.Debug {
+		bs.db.SetDebug(node.Debug)
+	}
 	// 是否手动选择数据库
 	if v := bs.schema.Val(); v != "" {
-		sqlDb.Exec("USE " + v)
+		if e := bs.db.setSchema(sqlDb, v); e != nil {
+			err = e
+		}
 	}
 	return
 }

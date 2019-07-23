@@ -10,17 +10,18 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/gogf/gf/g/internal/debug"
+
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gfpool"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/util/gconv"
-	"io"
-	"os"
-	"regexp"
-	"runtime"
-	"strings"
-	"time"
 )
 
 type Logger struct {
@@ -31,8 +32,8 @@ type Logger struct {
 	file        string    // Format for logging file.
 	level       int       // Output level.
 	prefix      string    // Prefix string for every logging content.
-	btSkip      int       // Skip count for backtrace.
-	btStatus    int       // Backtrace status(1: enabled - default; 0: disabled)
+	stSkip      int       // Skip count for stack.
+	stStatus    int       // Stack status(1: enabled - default; 0: disabled)
 	headerPrint bool      // Print header or not(true in default).
 	stdoutPrint bool      // Output to stdout or not(true in default).
 }
@@ -42,6 +43,7 @@ const (
 	gDEFAULT_FILE_POOL_FLAGS = os.O_CREATE | os.O_WRONLY | os.O_APPEND
 	gDEFAULT_FPOOL_PERM      = os.FileMode(0666)
 	gDEFAULT_FPOOL_EXPIRE    = 60000
+	gPATH_FILTER_KEY         = "/g/os/glog/glog"
 )
 
 const (
@@ -54,25 +56,13 @@ const (
 	F_TIME_STD   = F_TIME_DATE | F_TIME_MILLI
 )
 
-var (
-	// Default line break.
-	ln = "\n"
-)
-
-func init() {
-	// Initialize log line breaks depending on underlying os.
-	if runtime.GOOS == "windows" {
-		ln = "\r\n"
-	}
-}
-
 // New creates and returns a custom logger.
 func New() *Logger {
 	logger := &Logger{
 		file:        gDEFAULT_FILE_FORMAT,
 		flags:       F_TIME_STD,
 		level:       LEVEL_ALL,
-		btStatus:    1,
+		stStatus:    1,
 		headerPrint: true,
 		stdoutPrint: true,
 	}
@@ -126,18 +116,18 @@ func (l *Logger) GetFlags() int {
 	return l.flags
 }
 
-// SetBacktrace enables/disables the backtrace feature in failure logging outputs.
-func (l *Logger) SetBacktrace(enabled bool) {
+// SetStack enables/disables the stack feature in failure logging outputs.
+func (l *Logger) SetStack(enabled bool) {
 	if enabled {
-		l.btStatus = 1
+		l.stStatus = 1
 	} else {
-		l.btStatus = 0
+		l.stStatus = 0
 	}
 }
 
-// SetBacktraceSkip sets the backtrace offset from the end point.
-func (l *Logger) SetBacktraceSkip(skip int) {
-	l.btSkip = skip
+// SetStackSkip sets the stack offset from the end point.
+func (l *Logger) SetStackSkip(skip int) {
+	l.stSkip = skip
 }
 
 // SetWriter sets the customized logging <writer> for logging.
@@ -254,10 +244,10 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 		// Caller path.
 		callerPath := ""
 		if l.flags&F_FILE_LONG > 0 {
-			callerPath = l.getLongFile() + ": "
+			callerPath = debug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip) + ": "
 		}
 		if l.flags&F_FILE_SHORT > 0 {
-			callerPath = gfile.Basename(l.getLongFile()) + ": "
+			callerPath = gfile.Basename(debug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip)) + ": "
 		}
 		if len(callerPath) > 0 {
 			buffer.WriteString(callerPath)
@@ -267,13 +257,31 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 			buffer.WriteString(l.prefix + " ")
 		}
 	}
-	for k, v := range value {
-		if k > 0 {
-			buffer.WriteByte(' ')
+	// Convert value to string.
+	tempStr := ""
+	valueStr := ""
+	for _, v := range value {
+		if err, ok := v.(error); ok {
+			tempStr = fmt.Sprintf("%+v", err)
+		} else {
+			tempStr = gconv.String(v)
 		}
-		buffer.WriteString(gconv.String(v))
+		if len(valueStr) > 0 {
+			if valueStr[len(valueStr)-1] == '\n' {
+				// Remove one blank line(\n\n).
+				if tempStr[0] == '\n' {
+					valueStr += tempStr[1:]
+				} else {
+					valueStr += tempStr
+				}
+			} else {
+				valueStr += " " + tempStr
+			}
+		} else {
+			valueStr = tempStr
+		}
 	}
-	buffer.WriteString(ln)
+	buffer.WriteString(valueStr + "\n")
 	if l.flags&F_ASYNC > 0 {
 		asyncPool.Add(func() {
 			l.printToWriter(std, buffer)
@@ -305,16 +313,16 @@ func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
 	}
 }
 
-// printStd prints content <s> without backtrace.
+// printStd prints content <s> without stack.
 func (l *Logger) printStd(lead string, value ...interface{}) {
 	l.print(os.Stdout, lead, value...)
 }
 
-// printStd prints content <s> with backtrace check.
+// printStd prints content <s> with stack check.
 func (l *Logger) printErr(lead string, value ...interface{}) {
-	if l.btStatus == 1 {
-		if s := l.GetBacktrace(); s != "" {
-			value = append(value, ln+"Backtrace:"+ln+s)
+	if l.stStatus == 1 {
+		if s := l.GetStack(); s != "" {
+			value = append(value, "\nStack:\n"+s)
 		}
 	}
 	// In matter of sequence, do not use stderr here, but use the same stdout.
@@ -326,76 +334,22 @@ func (l *Logger) format(format string, value ...interface{}) string {
 	return fmt.Sprintf(format, value...)
 }
 
-// PrintBacktrace prints the caller backtrace,
-// the optional parameter <skip> specify the skipped backtrace offset from the end point.
-func (l *Logger) PrintBacktrace(skip ...int) {
-	if s := l.GetBacktrace(skip...); s != "" {
-		l.Println("Backtrace:" + ln + s)
+// PrintStack prints the caller stack,
+// the optional parameter <skip> specify the skipped stack offset from the end point.
+func (l *Logger) PrintStack(skip ...int) {
+	if s := l.GetStack(skip...); s != "" {
+		l.Println("Stack:\n" + s)
 	} else {
 		l.Println()
 	}
 }
 
-// GetBacktrace returns the caller backtrace content,
-// the optional parameter <skip> specify the skipped backtrace offset from the end point.
-func (l *Logger) GetBacktrace(skip ...int) string {
-	customSkip := 0
+// GetStack returns the caller stack content,
+// the optional parameter <skip> specify the skipped stack offset from the end point.
+func (l *Logger) GetStack(skip ...int) string {
+	number := 1
 	if len(skip) > 0 {
-		customSkip = skip[0]
+		number = skip[0] + 1
 	}
-	backtrace := ""
-	from := 0
-	// Find the caller position exclusive of the glog file.
-	for i := 0; i < 1000; i++ {
-		if _, file, _, ok := runtime.Caller(i); ok {
-			if !gregex.IsMatchString("/g/os/glog/glog.+$", file) {
-				from = i
-				break
-			}
-		}
-	}
-	// Find the true caller file path using custom skip.
-	index := 1
-	goRoot := runtime.GOROOT()
-	if goRoot != "" {
-		goRoot = strings.Replace(goRoot, "\\", "/", -1)
-		goRoot = regexp.QuoteMeta(goRoot)
-	}
-	for i := from + customSkip + l.btSkip; i < 1000; i++ {
-		if _, file, cline, ok := runtime.Caller(i); ok && len(file) > 2 {
-			if (goRoot == "" || !gregex.IsMatchString("^"+goRoot, file)) && !gregex.IsMatchString(`<autogenerated>`, file) {
-				backtrace += fmt.Sprintf(`%d. %s:%d%s`, index, file, cline, ln)
-				index++
-			}
-		} else {
-			break
-		}
-	}
-	return backtrace
-}
-
-// getLongFile returns the absolute file path along with its line number of the caller.
-func (l *Logger) getLongFile() string {
-	from := 0
-	// Find the caller position exclusive of the glog file.
-	for i := 0; i < 1000; i++ {
-		if _, file, _, ok := runtime.Caller(i); ok {
-			if !gregex.IsMatchString("/g/os/glog/glog.+$", file) {
-				from = i
-				break
-			}
-		}
-	}
-	// Find the true caller file path using custom skip.
-	goRoot := runtime.GOROOT()
-	for i := from + l.btSkip; i < 1000; i++ {
-		if _, file, line, ok := runtime.Caller(i); ok && len(file) > 2 {
-			if (goRoot == "" || !gregex.IsMatchString("^"+goRoot, file)) && !gregex.IsMatchString(`<autogenerated>`, file) {
-				return fmt.Sprintf(`%s:%d`, file, line)
-			}
-		} else {
-			break
-		}
-	}
-	return ""
+	return debug.StackWithFilter(gPATH_FILTER_KEY, number)
 }

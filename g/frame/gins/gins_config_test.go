@@ -8,12 +8,14 @@ package gins_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/g/os/gcfg"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g/frame/gins"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
-	"time"
 )
 
 func Test_Config(t *testing.T) {
@@ -164,5 +166,19 @@ test = "v=1"
 		gtest.Assert(gins.Config("test").Get("test"), "v=1")
 		gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
 		gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
+	})
+}
+
+func Test_Basic2(t *testing.T) {
+	config := `log-path = "logs"`
+	gtest.Case(t, func() {
+		path := gcfg.DEFAULT_CONFIG_FILE
+		err := gfile.PutContents(path, config)
+		gtest.Assert(err, nil)
+		defer func() {
+			_ = gfile.Remove(path)
+		}()
+
+		gtest.Assert(gins.Config().Get("log-path"), "logs")
 	})
 }

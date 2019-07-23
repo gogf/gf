@@ -12,6 +12,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
+
+	"github.com/gogf/gf/g/os/gfile"
+
 	"github.com/gogf/gf/g/encoding/gtoml"
 	"github.com/gogf/gf/g/encoding/gxml"
 	"github.com/gogf/gf/g/encoding/gyaml"
@@ -19,7 +23,6 @@ import (
 	"github.com/gogf/gf/g/os/gfcache"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/util/gconv"
-	"reflect"
 )
 
 // New creates a Json object with any variable type of <data>,
@@ -128,64 +131,92 @@ func DecodeToJson(data interface{}, unsafe ...bool) (*Json, error) {
 // Load loads content from specified file <path>,
 // and creates a Json object from its content.
 func Load(path string, unsafe ...bool) (*Json, error) {
-	return LoadContent(gfcache.GetBinContents(path), unsafe...)
+	return doLoadContent(gfile.Ext(path), gfcache.GetBinContents(path), unsafe...)
 }
 
-// LoadContent creates a Json object from given content,
-// it checks the data type of <content> automatically,
-// supporting JSON, XML, YAML and TOML types of data.
-func LoadContent(data interface{}, unsafe ...bool) (*Json, error) {
+func LoadJson(data interface{}, unsafe ...bool) (*Json, error) {
+	return doLoadContent("json", gconv.Bytes(data), unsafe...)
+}
+
+func LoadXml(data interface{}, unsafe ...bool) (*Json, error) {
+	return doLoadContent("xml", gconv.Bytes(data), unsafe...)
+}
+
+func LoadYaml(data interface{}, unsafe ...bool) (*Json, error) {
+	return doLoadContent("yaml", gconv.Bytes(data), unsafe...)
+}
+
+func LoadToml(data interface{}, unsafe ...bool) (*Json, error) {
+	return doLoadContent("toml", gconv.Bytes(data), unsafe...)
+}
+
+func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) {
 	var err error
 	var result interface{}
-	b := gconv.Bytes(data)
-	t := ""
-	if len(b) == 0 {
+	if len(data) == 0 {
 		return New(nil, unsafe...), nil
 	}
-	// auto check data type
-	if json.Valid(b) {
-		t = "json"
-	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, b) {
-		t = "xml"
-	} else if gregex.IsMatch(`^[\s\t]*\w+\s*:\s*.+`, b) || gregex.IsMatch(`\n[\s\t]*\w+\s*:\s*.+`, b) {
-		t = "yml"
-	} else if gregex.IsMatch(`^[\s\t]*\w+\s*=\s*.+`, b) || gregex.IsMatch(`\n[\s\t]*\w+\s*=\s*.+`, b) {
-		t = "toml"
-	} else {
-		return nil, errors.New("unsupported data type")
+	if dataType == "" {
+		dataType = checkDataType(data)
 	}
-	// convert to json type data
-	switch t {
+	switch dataType {
 	case "json", ".json":
-		// ok
+
 	case "xml", ".xml":
-		// TODO UseNumber
-		b, err = gxml.ToJson(b)
+		if data, err = gxml.ToJson(data); err != nil {
+			return nil, err
+		}
 
 	case "yml", "yaml", ".yml", ".yaml":
-		// TODO UseNumber
-		b, err = gyaml.ToJson(b)
+		if data, err = gyaml.ToJson(data); err != nil {
+			return nil, err
+		}
 
 	case "toml", ".toml":
-		// TODO UseNumber
-		b, err = gtoml.ToJson(b)
+		if data, err = gtoml.ToJson(data); err != nil {
+			return nil, err
+		}
 
 	default:
-		err = errors.New("nonsupport type " + t)
+		err = errors.New("unsupported type for loading")
 	}
 	if err != nil {
 		return nil, err
 	}
 	if result == nil {
-		decoder := json.NewDecoder(bytes.NewReader(b))
+		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.UseNumber()
 		if err := decoder.Decode(&result); err != nil {
 			return nil, err
 		}
 		switch result.(type) {
 		case string, []byte:
-			return nil, fmt.Errorf(`json decoding failed for content: %s`, string(b))
+			return nil, fmt.Errorf(`json decoding failed for content: %s`, string(data))
 		}
 	}
 	return New(result, unsafe...), nil
+}
+
+func LoadContent(data interface{}, unsafe ...bool) (*Json, error) {
+	content := gconv.Bytes(data)
+	if len(content) == 0 {
+		return New(nil, unsafe...), nil
+	}
+	return doLoadContent(checkDataType(content), content, unsafe...)
+
+}
+
+// checkDataType automatically checks and returns the data type for <content>.
+func checkDataType(content []byte) string {
+	if json.Valid(content) {
+		return "json"
+	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, content) {
+		return "xml"
+	} else if gregex.IsMatch(`^[\s\t]*[\w\-]+\s*:\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*:\s*.+`, content) {
+		return "yml"
+	} else if gregex.IsMatch(`^[\s\t]*[\w\-]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*=\s*.+`, content) {
+		return "toml"
+	} else {
+		return ""
+	}
 }

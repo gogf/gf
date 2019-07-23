@@ -8,37 +8,49 @@ package gdb
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/gogf/gf/g/encoding/gbinary"
+
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/util/gconv"
-	"strings"
 )
 
-/*
-// 同步数据库表结构到内存中
-func (bs *dbBase) syncTableStructure() {
-    bs.tables = make(map[string]map[string]string)
-    for _, table := range bs.db.getTables() {
-        bs.tables[table], _ = bs.db.getTableFields(table)
-    }
-}
-*/
+//// 同步数据库表结构到内存中
+//func (bs *dbBase) syncTableStructure() {
+//    bs.tables = make(map[string]map[string]string)
+//    for _, table := range bs.db.getTables() {
+//        bs.tables[table], _ = bs.db.getTableFields(table)
+//    }
+//}
 
 // 字段类型转换，将数据库字段类型转换为golang变量类型
-func (bs *dbBase) convertValue(fieldValue interface{}, fieldType string) interface{} {
+func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} {
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	t = strings.ToLower(t)
 	switch t {
 	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
-		return gconv.Bytes(fieldValue)
+		return fieldValue
 
-	case "bit", "int", "tinyint", "small_int", "medium_int":
-		return gconv.Int(fieldValue)
+	case "int", "tinyint", "small_int", "medium_int":
+		return gconv.Int(string(fieldValue))
 
 	case "big_int":
-		return gconv.Int64(fieldValue)
+		return gconv.Int64(string(fieldValue))
 
 	case "float", "double", "decimal":
-		return gconv.Float64(fieldValue)
+		return gconv.Float64(string(fieldValue))
+
+	case "bit":
+		s := string(fieldValue)
+		// 这里的字符串判断是为兼容不同的数据库类型，如: mssql
+		if strings.EqualFold(s, "true") {
+			return 1
+		}
+		if strings.EqualFold(s, "false") {
+			return 0
+		}
+		return gbinary.BeDecodeToInt64(fieldValue)
 
 	case "bool":
 		return gconv.Bool(fieldValue)
@@ -47,22 +59,22 @@ func (bs *dbBase) convertValue(fieldValue interface{}, fieldType string) interfa
 		// 自动识别类型, 以便默认支持更多数据库类型
 		switch {
 		case strings.Contains(t, "int"):
-			return gconv.Int(fieldValue)
+			return gconv.Int(string(fieldValue))
 
 		case strings.Contains(t, "text") || strings.Contains(t, "char"):
-			return gconv.String(fieldValue)
+			return string(fieldValue)
 
 		case strings.Contains(t, "float") || strings.Contains(t, "double"):
-			return gconv.Float64(fieldValue)
+			return gconv.Float64(string(fieldValue))
 
 		case strings.Contains(t, "bool"):
-			return gconv.Bool(fieldValue)
+			return gconv.Bool(string(fieldValue))
 
 		case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
-			return gconv.Bytes(fieldValue)
+			return fieldValue
 
 		default:
-			return gconv.String(fieldValue)
+			return string(fieldValue)
 		}
 	}
 }
@@ -84,8 +96,7 @@ func (bs *dbBase) getTableFields(table string) (fields map[string]string, err er
 	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
 	v := bs.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
 		result := (Result)(nil)
-		charL, charR := bs.db.getChars()
-		result, err = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s%s%s`, charL, table, charR))
+		result, err = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s`, bs.db.quoteWord(table)))
 		if err != nil {
 			return nil
 		}

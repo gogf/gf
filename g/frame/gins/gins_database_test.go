@@ -7,12 +7,12 @@
 package gins_test
 
 import (
-	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/g/frame/gins"
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
-	"time"
 )
 
 func Test_Database(t *testing.T) {
@@ -31,8 +31,8 @@ test = "v=2"
         name     = "test"
         type     = "mysql"
         role     = "master"
+		weight   = "1"
         charset  = "utf8"
-        priority = "1"
     [[database.test]]
         host     = "127.0.0.1"
         port     = "3306"
@@ -42,8 +42,8 @@ test = "v=2"
         name     = "test"
         type     = "mysql"
         role     = "master"
+		weight   = "1"
         charset  = "utf8"
-        priority = "1"
 # Redis数据库配置
 [redis]
     default = "127.0.0.1:6379,0"
@@ -59,7 +59,7 @@ test = "v=2"
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.Case(t, func() {
-		fmt.Println("gins Test_Database", gins.Config().Get("test"))
+		//fmt.Println("gins Test_Database", gins.Config().Get("test"))
 
 		dbDefault := gins.Database()
 		dbTest := gins.Database("test")

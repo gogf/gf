@@ -94,13 +94,13 @@ func Debugfln(format string, v ...interface{}) {
 }
 
 // Notice prints the logging content with [NOTI] header and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func Notice(v ...interface{}) {
 	logger.Notice(v...)
 }
 
 // Noticef prints the logging content with [NOTI] header, custom format and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func Noticef(format string, v ...interface{}) {
 	logger.Noticef(format, v...)
 }
@@ -112,13 +112,13 @@ func Noticefln(format string, v ...interface{}) {
 }
 
 // Warning prints the logging content with [WARN] header and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func Warning(v ...interface{}) {
 	logger.Warning(v...)
 }
 
 // Warningf prints the logging content with [WARN] header, custom format and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func Warningf(format string, v ...interface{}) {
 	logger.Warningf(format, v...)
 }
@@ -130,13 +130,13 @@ func Warningfln(format string, v ...interface{}) {
 }
 
 // Error prints the logging content with [ERRO] header and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func Error(v ...interface{}) {
 	logger.Error(v...)
 }
 
 // Errorf prints the logging content with [ERRO] header, custom format and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func Errorf(format string, v ...interface{}) {
 	logger.Errorf(format, v...)
 }
@@ -148,13 +148,13 @@ func Errorfln(format string, v ...interface{}) {
 }
 
 // Critical prints the logging content with [CRIT] header and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func Critical(v ...interface{}) {
 	logger.Critical(v...)
 }
 
 // Criticalf prints the logging content with [CRIT] header, custom format and newline.
-// It also prints caller backtrace info if backtrace feature is enabled.
+// It also prints caller stack info if stack feature is enabled.
 func Criticalf(format string, v ...interface{}) {
 	logger.Criticalf(format, v...)
 }

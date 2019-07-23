@@ -3,8 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-//
-// @author john, ymrjqyy
 
 package gdb
 
@@ -30,6 +28,7 @@ type Model struct {
 	orderBy      string        // 排序语句
 	start        int           // 分页开始
 	limit        int           // 分页条数
+	offset       int           // 查询偏移量(OFFSET语法)
 	data         interface{}   // 操作数据(注意仅支持Map/List/string类型)
 	batch        int           // 批量操作条数
 	filter       bool          // 是否按照表字段过滤data参数
@@ -44,9 +43,10 @@ func (bs *dbBase) Table(tables string) *Model {
 	return &Model{
 		db:         bs.db,
 		tablesInit: tables,
-		tables:     tables,
+		tables:     bs.db.quoteWord(tables),
 		fields:     "*",
 		start:      -1,
+		offset:     -1,
 		safe:       false,
 	}
 }
@@ -62,7 +62,10 @@ func (tx *TX) Table(tables string) *Model {
 		db:         tx.db,
 		tx:         tx,
 		tablesInit: tables,
-		tables:     tables,
+		tables:     tx.db.quoteWord(tables),
+		fields:     "*",
+		start:      -1,
+		offset:     -1,
 		safe:       false,
 	}
 }
@@ -151,7 +154,7 @@ func (md *Model) Where(where interface{}, args ...interface{}) *Model {
 	if model.where != "" {
 		return md.And(where, args...)
 	}
-	newWhere, newArgs := formatWhere(where, args)
+	newWhere, newArgs := md.db.formatWhere(where, args)
 	model.where = newWhere
 	model.whereArgs = newArgs
 	return model
@@ -160,7 +163,7 @@ func (md *Model) Where(where interface{}, args ...interface{}) *Model {
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	newWhere, newArgs := formatWhere(where, args)
+	newWhere, newArgs := md.db.formatWhere(where, args)
 	if len(model.where) > 0 && model.where[0] == '(' {
 		model.where = fmt.Sprintf(`%s AND (%s)`, model.where, newWhere)
 	} else {
@@ -173,7 +176,7 @@ func (md *Model) And(where interface{}, args ...interface{}) *Model {
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	newWhere, newArgs := formatWhere(where, args)
+	newWhere, newArgs := md.db.formatWhere(where, args)
 	if len(model.where) > 0 && model.where[0] == '(' {
 		model.where = fmt.Sprintf(`%s OR (%s)`, model.where, newWhere)
 	} else {
@@ -211,6 +214,14 @@ func (md *Model) Limit(limit ...int) *Model {
 		model.start = limit[0]
 		model.limit = limit[1]
 	}
+	return model
+}
+
+// 链式操作，OFFSET语法（部分数据库支持）。
+// 注意：可以使用Limit方法调用替换该方法特性，底层不同数据库将会自动替换LIMIT语法为OFFSET语法。
+func (md *Model) Offset(offset int) *Model {
+	model := md.getModel()
+	model.offset = offset
 	return model
 }
 
@@ -463,7 +474,7 @@ func (md *Model) Select() (Result, error) {
 
 // 链式操作，查询所有记录
 func (md *Model) All() (Result, error) {
-	return md.getAll(fmt.Sprintf("SELECT %s FROM %s %s", md.fields, md.tables, md.getConditionSql()), md.whereArgs...)
+	return md.getAll(fmt.Sprintf("SELECT %s FROM %s%s", md.fields, md.tables, md.getConditionSql()), md.whereArgs...)
 }
 
 // 链式操作，查询单条记录
@@ -605,11 +616,13 @@ func (md *Model) getConditionSql() string {
 	}
 	if md.limit != 0 {
 		if md.start >= 0 {
-			s += fmt.Sprintf(" LIMIT %d, %d", md.start, md.limit)
+			s += fmt.Sprintf(" LIMIT %d,%d", md.start, md.limit)
 		} else {
 			s += fmt.Sprintf(" LIMIT %d", md.limit)
 		}
-
+	}
+	if md.offset >= 0 {
+		s += fmt.Sprintf(" OFFSET %d", md.offset)
 	}
 	return s
 }

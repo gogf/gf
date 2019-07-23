@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -27,75 +26,14 @@ type apiString interface {
 	String() string
 }
 
-// 格式化Where查询条件
-func formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
-	// 条件字符串处理
-	buffer := bytes.NewBuffer(nil)
-	// 使用反射进行类型判断
-	rv := reflect.ValueOf(where)
-	kind := rv.Kind()
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
-	}
-	tmpArgs := []interface{}(nil)
-	switch kind {
-	// map/struct类型
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
-		for key, value := range structToMap(where) {
-			if buffer.Len() > 0 {
-				buffer.WriteString(" AND ")
-			}
-			// 支持slice键值/属性，如果只有一个?占位符号，那么作为IN查询，否则打散作为多个查询参数
-			rv := reflect.ValueOf(value)
-			switch rv.Kind() {
-			case reflect.Slice:
-				fallthrough
-			case reflect.Array:
-				count := gstr.Count(key, "?")
-				if count == 0 {
-					buffer.WriteString(key + " IN(?)")
-					tmpArgs = append(tmpArgs, value)
-				} else if count != rv.Len() {
-					buffer.WriteString(key)
-					tmpArgs = append(tmpArgs, value)
-				} else {
-					buffer.WriteString(key)
-					// 如果键名/属性名称中带有多个?占位符号，那么将参数打散
-					tmpArgs = append(tmpArgs, gconv.Interfaces(value)...)
-				}
-			default:
-				if value == nil {
-					buffer.WriteString(key)
-				} else {
-					if gstr.Pos(key, "?") == -1 {
-						if gstr.Pos(key, "<") == -1 && gstr.Pos(key, ">") == -1 && gstr.Pos(key, "=") == -1 {
-							buffer.WriteString(key + "=?")
-						} else {
-							buffer.WriteString(key + "?")
-						}
-					} else {
-						buffer.WriteString(key)
-					}
-					tmpArgs = append(tmpArgs, value)
-				}
-			}
-		}
-
-	default:
-		buffer.WriteString(gconv.String(where))
-	}
-	// 没有任何条件查询参数，直接返回
-	if buffer.Len() == 0 {
-		return "", args
-	}
-	newWhere = buffer.String()
-	tmpArgs = append(tmpArgs, args...)
+// 格式化SQL语句。
+// 1. 支持参数只传一个slice；
+// 2. 支持占位符号数量自动扩展；
+func formatQuery(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
+	newQuery = query
 	// 查询条件参数处理，主要处理slice参数类型
-	if len(tmpArgs) > 0 {
-		for index, arg := range tmpArgs {
+	if len(args) > 0 {
+		for index, arg := range args {
 			rv := reflect.ValueOf(arg)
 			kind := rv.Kind()
 			if kind == reflect.Ptr {
@@ -103,17 +41,24 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 				kind = rv.Kind()
 			}
 			switch kind {
-			// '?'占位符支持slice类型,
-			// 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
-			case reflect.Slice:
-				fallthrough
-			case reflect.Array:
+			// '?'占位符支持slice类型, 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
+			case reflect.Slice, reflect.Array:
+				// 不拆分[]byte类型
+				if _, ok := arg.([]byte); ok {
+					newArgs = append(newArgs, arg)
+					continue
+				}
 				for i := 0; i < rv.Len(); i++ {
 					newArgs = append(newArgs, rv.Index(i).Interface())
 				}
+				// 如果参数直接传递slice，并且占位符数量与slice长度相等，
+				// 那么不用替换扩展占位符数量，直接使用该slice作为查询参数
+				if len(args) == 1 && gstr.Count(newQuery, "?") == rv.Len() {
+					break
+				}
 				// counter用于匹配该参数的位置(与index对应)
 				counter := 0
-				newWhere, _ = gregex.ReplaceStringFunc(`\?`, newWhere, func(s string) string {
+				newQuery, _ = gregex.ReplaceStringFunc(`\?`, newQuery, func(s string) string {
 					counter++
 					if counter == index+1 {
 						return "?" + strings.Repeat(",?", rv.Len()-1)
@@ -121,14 +66,6 @@ func formatWhere(where interface{}, args []interface{}) (newWhere string, newArg
 					return s
 				})
 			default:
-				// 支持例如 Where/And/Or("uid", 1) 这种格式
-				if gstr.Pos(newWhere, "?") == -1 {
-					if gstr.Pos(newWhere, "<") == -1 && gstr.Pos(newWhere, ">") == -1 && gstr.Pos(newWhere, "=") == -1 {
-						newWhere += "=?"
-					} else {
-						newWhere += "?"
-					}
-				}
 				newArgs = append(newArgs, arg)
 			}
 		}
@@ -175,7 +112,7 @@ func printSql(v *Sql) {
 	)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		glog.Backtrace(true, 2).Error(s)
+		glog.Stack(true, 2).Error(s)
 	} else {
 		glog.Debug(s)
 	}

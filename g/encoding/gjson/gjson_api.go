@@ -8,10 +8,13 @@ package gjson
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/gogf/gf/g/util/gutil"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/util/gconv"
-	"time"
 )
 
 // Val returns the json value.
@@ -19,6 +22,13 @@ func (j *Json) Value() interface{} {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return *(j.p)
+}
+
+// IsNil checks whether the value pointed by <j> is nil.
+func (j *Json) IsNil() bool {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return j.p == nil || *(j.p) == nil
 }
 
 // Get returns value by specified <pattern>.
@@ -66,11 +76,7 @@ func (j *Json) GetMap(pattern string, def ...interface{}) map[string]interface{}
 // GetJson gets the value by specified <pattern>,
 // and converts it to a un-concurrent-safe Json object.
 func (j *Json) GetJson(pattern string, def ...interface{}) *Json {
-	result := j.Get(pattern, def...)
-	if result != nil {
-		return New(result, true)
-	}
-	return nil
+	return New(j.Get(pattern, def...), true)
 }
 
 // GetJsons gets the value by specified <pattern>,
@@ -111,6 +117,10 @@ func (j *Json) GetArray(pattern string, def ...interface{}) []interface{} {
 // and converts it to string.
 func (j *Json) GetString(pattern string, def ...interface{}) string {
 	return gconv.String(j.Get(pattern, def...))
+}
+
+func (j *Json) GetBytes(pattern string, def ...interface{}) []byte {
+	return gconv.Bytes(j.Get(pattern, def...))
 }
 
 // GetBool gets the value by specified <pattern>,
@@ -252,6 +262,7 @@ func (j *Json) Append(pattern string, value interface{}) error {
 // GetToVar gets the value by specified <pattern>,
 // and converts it to specified golang variable <v>.
 // The <pointer> should be a pointer type.
+// Deprecated.
 func (j *Json) GetToVar(pattern string, pointer interface{}) error {
 	r := j.Get(pattern)
 	if r != nil {
@@ -318,14 +329,34 @@ func (j *Json) ToStruct(pointer interface{}) error {
 	return gconv.Struct(*(j.p), pointer)
 }
 
-// Dump prints current Json object with more manually readable.
-func (j *Json) Dump() error {
+func (j *Json) ToStructDeep(pointer interface{}) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
-	if b, err := j.ToJsonIndent(); err != nil {
-		return err
-	} else {
-		fmt.Println(string(b))
-	}
-	return nil
+	return gconv.StructDeep(*(j.p), pointer)
+}
+
+func (j *Json) ToStructs(pointer interface{}) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.Structs(*(j.p), pointer)
+}
+
+func (j *Json) ToStructsDeep(pointer interface{}) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.StructsDeep(*(j.p), pointer)
+}
+
+// Dump prints current Json object with more manually readable.
+func (j *Json) Dump() {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	gutil.Dump(*j.p)
+}
+
+// Export returns <j> as a string with more manually readable.
+func (j *Json) Export() string {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gutil.Export(*j.p)
 }

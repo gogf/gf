@@ -25,7 +25,7 @@ import (
 func Case(t *testing.T, f func()) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n%s", err, getBacktrace())
+			fmt.Fprintf(os.Stderr, "%v\n%s", err, getStack())
 			t.Fail()
 		}
 	}()
@@ -44,8 +44,10 @@ func Assert(value, expect interface{}) {
 		}
 		return
 	}
-	if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
+	strValue := gconv.String(value)
+	strExpect := gconv.String(expect)
+	if strValue != strExpect {
+		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, strValue, strExpect))
 	}
 }
 
@@ -62,14 +64,16 @@ func AssertEQ(value, expect interface{}) {
 		}
 		return
 	}
-	if fmt.Sprintf("%v", value) != fmt.Sprintf("%v", expect) {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, value, expect))
+	strValue := gconv.String(value)
+	strExpect := gconv.String(expect)
+	if strValue != strExpect {
+		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, strValue, strExpect))
 	}
 	// Type assert.
 	t1 := reflect.TypeOf(value)
 	t2 := reflect.TypeOf(expect)
 	if t1 != t2 {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT TYPE %v[%v] == %v[%v]`, value, t1, expect, t2))
+		panic(fmt.Sprintf(`[ASSERT] EXPECT TYPE %v[%v] == %v[%v]`, strValue, t1, strExpect, t2))
 	}
 }
 
@@ -85,8 +89,10 @@ func AssertNE(value, expect interface{}) {
 		}
 		return
 	}
-	if fmt.Sprintf("%v", value) == fmt.Sprintf("%v", expect) {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, value, expect))
+	strValue := gconv.String(value)
+	strExpect := gconv.String(expect)
+	if strValue == strExpect {
+		panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, strValue, strExpect))
 	}
 }
 
@@ -256,7 +262,7 @@ func Error(message ...interface{}) {
 
 // Fatal prints <message> to stderr and exit the process.
 func Fatal(message ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), getBacktrace())
+	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), getStack())
 	os.Exit(1)
 }
 
@@ -299,14 +305,14 @@ func compareMap(value, expect interface{}) error {
 	return nil
 }
 
-// getBacktrace returns the caller backtrace content from getBacktrace.
-// The parameter <skip> indicates the skip count of the caller backtrace from getBacktrace.
-func getBacktrace(skip ...int) string {
+// getStack returns the caller stack content from getStack.
+// The parameter <skip> indicates the skip count of the caller stack from getStack.
+func getStack(skip ...int) string {
 	customSkip := 0
 	if len(skip) > 0 {
 		customSkip = skip[0]
 	}
-	backtrace := ""
+	stack := ""
 	index := 1
 	from := 0
 	// Ignore current gtest lines and find the beginning index of caller file.
@@ -337,13 +343,13 @@ func getBacktrace(skip ...int) string {
 					continue
 				}
 			}
-			backtrace += fmt.Sprintf(`%d. %s:%d%s`, index, file, cline, "\n")
+			stack += fmt.Sprintf(`%d. %s:%d%s`, index, file, cline, "\n")
 			index++
 		} else {
 			break
 		}
 	}
-	return backtrace
+	return stack
 }
 
 // isNil checks whether <value> is nil.
