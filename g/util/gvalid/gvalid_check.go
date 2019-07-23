@@ -7,6 +7,10 @@
 package gvalid
 
 import (
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/encoding/gjson"
 	"github.com/gogf/gf/g/net/gipv4"
@@ -14,9 +18,6 @@ import (
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/text/gregex"
 	"github.com/gogf/gf/g/util/gconv"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 const (
