@@ -17,28 +17,28 @@ import (
 func TestRwmutexIsSafe(t *testing.T) {
 	gtest.Case(t, func() {
 		lock := rwmutex.New()
-		gtest.Assert(lock.IsSafe(), true)
+		gtest.Assert(lock.IsSafe(), false)
 
 		lock = rwmutex.New(false)
-		gtest.Assert(lock.IsSafe(), true)
+		gtest.Assert(lock.IsSafe(), false)
 
 		lock = rwmutex.New(false, false)
-		gtest.Assert(lock.IsSafe(), true)
+		gtest.Assert(lock.IsSafe(), false)
 
 		lock = rwmutex.New(true, false)
-		gtest.Assert(lock.IsSafe(), false)
+		gtest.Assert(lock.IsSafe(), true)
 
 		lock = rwmutex.New(true, true)
-		gtest.Assert(lock.IsSafe(), false)
+		gtest.Assert(lock.IsSafe(), true)
 
 		lock = rwmutex.New(true)
-		gtest.Assert(lock.IsSafe(), false)
+		gtest.Assert(lock.IsSafe(), true)
 	})
 }
 
 func TestSafeRwmutex(t *testing.T) {
 	gtest.Case(t, func() {
-		safeLock := rwmutex.New()
+		safeLock := rwmutex.New(true)
 		array := garray.New(true)
 
 		go func() {
@@ -69,7 +69,7 @@ func TestSafeRwmutex(t *testing.T) {
 
 func TestSafeReaderRwmutex(t *testing.T) {
 	gtest.Case(t, func() {
-		safeLock := rwmutex.New()
+		safeLock := rwmutex.New(true)
 		array := garray.New(true)
 
 		go func() {
@@ -108,7 +108,7 @@ func TestSafeReaderRwmutex(t *testing.T) {
 
 func TestUnsafeRwmutex(t *testing.T) {
 	gtest.Case(t, func() {
-		unsafeLock := rwmutex.New(true)
+		unsafeLock := rwmutex.New()
 		array := garray.New(true)
 
 		go func() {
