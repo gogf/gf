@@ -21,7 +21,7 @@ import (
 func Test_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		wg := sync.WaitGroup{}
-		array := garray.NewArray()
+		array := garray.NewArray(true)
 		size := 100
 		wg.Add(size)
 		for i := 0; i < size; i++ {
@@ -41,7 +41,7 @@ func Test_Basic(t *testing.T) {
 func Test_Limit1(t *testing.T) {
 	gtest.Case(t, func() {
 		wg := sync.WaitGroup{}
-		array := garray.NewArray()
+		array := garray.NewArray(true)
 		size := 100
 		pool := grpool.New(10)
 		wg.Add(size)
@@ -59,7 +59,7 @@ func Test_Limit1(t *testing.T) {
 func Test_Limit2(t *testing.T) {
 	gtest.Case(t, func() {
 		wg := sync.WaitGroup{}
-		array := garray.NewArray()
+		array := garray.NewArray(true)
 		size := 100
 		pool := grpool.New(1)
 		wg.Add(size)
@@ -76,7 +76,7 @@ func Test_Limit2(t *testing.T) {
 
 func Test_Limit3(t *testing.T) {
 	gtest.Case(t, func() {
-		array := garray.NewArray()
+		array := garray.NewArray(true)
 		size := 1000
 		pool := grpool.New(100)
 		gtest.Assert(pool.Cap(), 100)
