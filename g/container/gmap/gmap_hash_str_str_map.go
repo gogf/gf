@@ -19,21 +19,21 @@ type StrStrMap struct {
 }
 
 // NewStrStrMap returns an empty StrStrMap object.
-// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func NewStrStrMap(unsafe ...bool) *StrStrMap {
+// The parameter <safe> used to specify whether using map in concurrent-safety,
+// which is false in default.
+func NewStrStrMap(safe ...bool) *StrStrMap {
 	return &StrStrMap{
 		data: make(map[string]string),
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 	}
 }
 
 // NewStrStrMapFrom returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewStrStrMapFrom(data map[string]string, unsafe ...bool) *StrStrMap {
+func NewStrStrMapFrom(data map[string]string, safe ...bool) *StrStrMap {
 	return &StrStrMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: data,
 	}
 }

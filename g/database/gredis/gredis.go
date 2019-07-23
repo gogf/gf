@@ -57,9 +57,9 @@ type PoolStats struct {
 
 var (
 	// Instance map
-	instances = gmap.NewStrAnyMap()
+	instances = gmap.NewStrAnyMap(true)
 	// Pool map.
-	pools = gmap.NewStrAnyMap()
+	pools = gmap.NewStrAnyMap(true)
 )
 
 // New creates a redis client object with given configuration.
@@ -177,8 +177,8 @@ func (r *Redis) Stats() *PoolStats {
 }
 
 // Do sends a command to the server and returns the received reply.
-// Do automatically get a connection from pool, and close it when reply received.
-// It does not really "close" the connection, but drop it back to the connection pool.
+// Do automatically get a connection from pool, and close it when the reply received.
+// It does not really "close" the connection, but drops it back to the connection pool.
 func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
 	conn := &Conn{r.pool.Get()}
 	defer conn.Close()
@@ -188,7 +188,7 @@ func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
 // DoVar returns value from Do as gvar.Var.
 func (r *Redis) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
 	v, err := r.Do(command, args...)
-	return gvar.New(v, true), err
+	return gvar.New(v), err
 }
 
 // Deprecated.

@@ -746,7 +746,7 @@ func TestSortedArray_LockFunc(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		s1 := []interface{}{"a", "b", "c", "d"}
-		a1 := garray.NewSortedArrayFrom(s1, func1)
+		a1 := garray.NewSortedArrayFrom(s1, func1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 3)
@@ -781,7 +781,7 @@ func TestSortedArray_RLockFunc(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		s1 := []interface{}{"a", "b", "c", "d"}
-		a1 := garray.NewSortedArrayFrom(s1, func1)
+		a1 := garray.NewSortedArrayFrom(s1, func1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 3)
@@ -844,7 +844,7 @@ func TestSortedArray_Merge(t *testing.T) {
 func TestArray_LockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []interface{}{"a", "b", "c", "d"}
-		a1 := garray.NewArrayFrom(s1)
+		a1 := garray.NewArrayFrom(s1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 3)
@@ -876,7 +876,7 @@ func TestArray_LockFunc(t *testing.T) {
 func TestArray_RLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []interface{}{"a", "b", "c", "d"}
-		a1 := garray.NewArrayFrom(s1)
+		a1 := garray.NewArrayFrom(s1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 1)

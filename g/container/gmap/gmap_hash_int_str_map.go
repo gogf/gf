@@ -19,11 +19,11 @@ type IntStrMap struct {
 }
 
 // NewIntStrMap returns an empty IntStrMap object.
-// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func NewIntStrMap(unsafe ...bool) *IntStrMap {
+// The parameter <safe> used to specify whether using map in concurrent-safety,
+// which is false in default.
+func NewIntStrMap(safe ...bool) *IntStrMap {
 	return &IntStrMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: make(map[int]string),
 	}
 }
@@ -31,9 +31,9 @@ func NewIntStrMap(unsafe ...bool) *IntStrMap {
 // NewIntStrMapFrom returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewIntStrMapFrom(data map[int]string, unsafe ...bool) *IntStrMap {
+func NewIntStrMapFrom(data map[int]string, safe ...bool) *IntStrMap {
 	return &IntStrMap{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		data: data,
 	}
 }

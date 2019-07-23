@@ -48,8 +48,8 @@ func New(file ...string) *Config {
 	}
 	c := &Config{
 		name:  gtype.NewString(name),
-		paths: garray.NewStringArray(),
-		jsons: gmap.NewStrAnyMap(),
+		paths: garray.NewStringArray(true),
+		jsons: gmap.NewStrAnyMap(true),
 		vc:    gtype.NewBool(),
 	}
 	// Customized dir path from env/cmd.
@@ -276,7 +276,7 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 			}
 			content = gfile.GetContents(filePath)
 		}
-		if j, err := gjson.LoadContent(content); err == nil {
+		if j, err := gjson.LoadContent(content, true); err == nil {
 			j.SetViolenceCheck(c.vc.Val())
 			// Add monitor for this configuration file,
 			// any changes of this file will refresh its cache in Config object.
@@ -315,9 +315,9 @@ func (c *Config) Get(pattern string, def ...interface{}) interface{} {
 
 func (c *Config) GetVar(pattern string, def ...interface{}) *gvar.Var {
 	if j := c.getJson(); j != nil {
-		return gvar.New(j.Get(pattern, def...), true)
+		return gvar.New(j.Get(pattern, def...))
 	}
-	return gvar.New(nil, true)
+	return gvar.New(nil)
 }
 
 func (c *Config) Contains(pattern string) bool {

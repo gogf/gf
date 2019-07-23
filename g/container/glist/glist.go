@@ -23,9 +23,9 @@ type (
 )
 
 // New creates and returns a new empty doubly linked list.
-func New(unsafe ...bool) *List {
+func New(safe ...bool) *List {
 	return &List{
-		mu:   rwmutex.New(unsafe...),
+		mu:   rwmutex.New(safe...),
 		list: list.New(),
 	}
 }

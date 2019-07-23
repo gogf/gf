@@ -15,12 +15,15 @@ type RWMutex struct {
 	safe bool
 }
 
-func New(unsafe ...bool) *RWMutex {
+// New creates and returns a new *RWMutex.
+// The parameter <safe> is used to specify whether using this mutex in concurrent-safety,
+// which is false in default.
+func New(safe ...bool) *RWMutex {
 	mu := new(RWMutex)
-	if len(unsafe) > 0 {
-		mu.safe = !unsafe[0]
+	if len(safe) > 0 {
+		mu.safe = safe[0]
 	} else {
-		mu.safe = true
+		mu.safe = false
 	}
 	return mu
 }

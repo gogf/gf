@@ -15,12 +15,15 @@ type Mutex struct {
 	safe bool
 }
 
-func New(unsafe ...bool) *Mutex {
+// New creates and returns a new *Mutex.
+// The parameter <safe> is used to specify whether using this mutex in concurrent-safety,
+// which is false in default.
+func New(safe ...bool) *Mutex {
 	mu := new(Mutex)
-	if len(unsafe) > 0 {
-		mu.safe = !unsafe[0]
+	if len(safe) > 0 {
+		mu.safe = safe[0]
 	} else {
-		mu.safe = true
+		mu.safe = false
 	}
 	return mu
 }
@@ -29,14 +32,14 @@ func (mu *Mutex) IsSafe() bool {
 	return mu.safe
 }
 
-func (mu *Mutex) Lock(force ...bool) {
-	if mu.safe || (len(force) > 0 && force[0]) {
+func (mu *Mutex) Lock() {
+	if mu.safe {
 		mu.Mutex.Lock()
 	}
 }
 
-func (mu *Mutex) Unlock(force ...bool) {
-	if mu.safe || (len(force) > 0 && force[0]) {
+func (mu *Mutex) Unlock() {
+	if mu.safe {
 		mu.Mutex.Unlock()
 	}
 }

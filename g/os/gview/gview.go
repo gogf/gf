@@ -57,7 +57,7 @@ func ParseContent(content string, params Params) (string, error) {
 // The parameter <path> specifies the template directory path to load template files.
 func New(path ...string) *View {
 	view := &View{
-		paths:      garray.NewStringArray(),
+		paths:      garray.NewStringArray(true),
 		data:       make(map[string]interface{}),
 		funcMap:    make(map[string]interface{}),
 		delimiters: make([]string, 2),

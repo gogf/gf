@@ -21,22 +21,22 @@ type StringSet struct {
 // New create and returns a new set, which contains un-repeated items.
 // The parameter <unsafe> used to specify whether using set in un-concurrent-safety,
 // which is false in default.
-func NewStringSet(unsafe ...bool) *StringSet {
+func NewStringSet(safe ...bool) *StringSet {
 	return &StringSet{
 		m:  make(map[string]struct{}),
-		mu: rwmutex.New(unsafe...),
+		mu: rwmutex.New(safe...),
 	}
 }
 
 // NewStringSetFrom returns a new set from <items>.
-func NewStringSetFrom(items []string, unsafe ...bool) *StringSet {
+func NewStringSetFrom(items []string, safe ...bool) *StringSet {
 	m := make(map[string]struct{})
 	for _, v := range items {
 		m[v] = struct{}{}
 	}
 	return &StringSet{
 		m:  m,
-		mu: rwmutex.New(unsafe...),
+		mu: rwmutex.New(safe...),
 	}
 }
 

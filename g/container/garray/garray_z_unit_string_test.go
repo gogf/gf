@@ -700,7 +700,7 @@ func TestStringArray_RLockFunc(t *testing.T) {
 func TestSortedStringArray_LockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []string{"a", "b", "c", "d"}
-		a1 := garray.NewSortedStringArrayFrom(s1)
+		a1 := garray.NewSortedStringArrayFrom(s1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 3)
@@ -732,7 +732,7 @@ func TestSortedStringArray_LockFunc(t *testing.T) {
 func TestSortedStringArray_RLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []string{"a", "b", "c", "d"}
-		a1 := garray.NewSortedStringArrayFrom(s1)
+		a1 := garray.NewSortedStringArrayFrom(s1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 1)
@@ -805,7 +805,7 @@ func TestStringArray_SortFunc(t *testing.T) {
 func TestStringArray_LockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []string{"a", "b", "c", "d"}
-		a1 := garray.NewStringArrayFrom(s1)
+		a1 := garray.NewStringArrayFrom(s1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 3)

@@ -28,18 +28,18 @@ type SortedStringArray struct {
 }
 
 // NewSortedStringArray creates and returns an empty sorted array.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedStringArray(unsafe ...bool) *SortedStringArray {
-	return NewSortedStringArraySize(0, unsafe...)
+func NewSortedStringArray(safe ...bool) *SortedStringArray {
+	return NewSortedStringArraySize(0, safe...)
 }
 
 // NewSortedStringArraySize create and returns an sorted array with given size and cap.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedStringArraySize(cap int, unsafe ...bool) *SortedStringArray {
+func NewSortedStringArraySize(cap int, safe ...bool) *SortedStringArray {
 	return &SortedStringArray{
-		mu:     rwmutex.New(unsafe...),
+		mu:     rwmutex.New(safe...),
 		array:  make([]string, 0, cap),
 		unique: gtype.NewBool(),
 		comparator: func(v1, v2 string) int {
@@ -49,22 +49,22 @@ func NewSortedStringArraySize(cap int, unsafe ...bool) *SortedStringArray {
 }
 
 // NewSortedStringArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedStringArrayFrom(array []string, unsafe ...bool) *SortedStringArray {
-	a := NewSortedStringArraySize(0, unsafe...)
+func NewSortedStringArrayFrom(array []string, safe ...bool) *SortedStringArray {
+	a := NewSortedStringArraySize(0, safe...)
 	a.array = array
 	sort.Strings(a.array)
 	return a
 }
 
 // NewSortedStringArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedStringArrayFromCopy(array []string, unsafe ...bool) *SortedStringArray {
+func NewSortedStringArrayFromCopy(array []string, safe ...bool) *SortedStringArray {
 	newArray := make([]string, len(array))
 	copy(newArray, array)
-	return NewSortedStringArrayFrom(newArray, unsafe...)
+	return NewSortedStringArrayFrom(newArray, safe...)
 }
 
 // SetArray sets the underlying slice array with the given <array>.

@@ -57,7 +57,7 @@ func (r *Request) GetQuery(key string, def ...interface{}) []string {
 }
 
 func (r *Request) GetQueryVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(r.GetQueryString(key, def...), true)
+	return gvar.New(r.GetQueryString(key, def...))
 }
 
 func (r *Request) GetQueryString(key string, def ...interface{}) string {

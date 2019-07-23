@@ -23,55 +23,55 @@ type Array struct {
 }
 
 // New creates and returns an empty array.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func New(unsafe ...bool) *Array {
-	return NewArraySize(0, 0, unsafe...)
+func New(safe ...bool) *Array {
+	return NewArraySize(0, 0, safe...)
 }
 
 // See New.
-func NewArray(unsafe ...bool) *Array {
-	return NewArraySize(0, 0, unsafe...)
+func NewArray(safe ...bool) *Array {
+	return NewArraySize(0, 0, safe...)
 }
 
 // NewArraySize create and returns an array with given size and cap.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewArraySize(size int, cap int, unsafe ...bool) *Array {
+func NewArraySize(size int, cap int, safe ...bool) *Array {
 	return &Array{
-		mu:    rwmutex.New(unsafe...),
+		mu:    rwmutex.New(safe...),
 		array: make([]interface{}, size, cap),
 	}
 }
 
 // See NewArrayFrom.
-func NewFrom(array []interface{}, unsafe ...bool) *Array {
-	return NewArrayFrom(array, unsafe...)
+func NewFrom(array []interface{}, safe ...bool) *Array {
+	return NewArrayFrom(array, safe...)
 }
 
 // See NewArrayFromCopy.
-func NewFromCopy(array []interface{}, unsafe ...bool) *Array {
-	return NewArrayFromCopy(array, unsafe...)
+func NewFromCopy(array []interface{}, safe ...bool) *Array {
+	return NewArrayFromCopy(array, safe...)
 }
 
 // NewArrayFrom creates and returns an array with given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewArrayFrom(array []interface{}, unsafe ...bool) *Array {
+func NewArrayFrom(array []interface{}, safe ...bool) *Array {
 	return &Array{
-		mu:    rwmutex.New(unsafe...),
+		mu:    rwmutex.New(safe...),
 		array: array,
 	}
 }
 
 // NewArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewArrayFromCopy(array []interface{}, unsafe ...bool) *Array {
+func NewArrayFromCopy(array []interface{}, safe ...bool) *Array {
 	newArray := make([]interface{}, len(array))
 	copy(newArray, array)
 	return &Array{
-		mu:    rwmutex.New(unsafe...),
+		mu:    rwmutex.New(safe...),
 		array: newArray,
 	}
 }

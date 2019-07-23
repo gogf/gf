@@ -28,9 +28,9 @@ type memCacheLru struct {
 func newMemCacheLru(cache *memCache) *memCacheLru {
 	lru := &memCacheLru{
 		cache:   cache,
-		data:    gmap.New(),
-		list:    glist.New(),
-		rawList: glist.New(),
+		data:    gmap.New(true),
+		list:    glist.New(true),
+		rawList: glist.New(true),
 		closed:  gtype.NewBool(),
 	}
 	gtimer.AddSingleton(time.Second, lru.SyncAndClear)

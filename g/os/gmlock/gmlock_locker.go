@@ -22,7 +22,7 @@ type Locker struct {
 // A memory locker can lock/unlock with dynamic string key.
 func New() *Locker {
 	return &Locker{
-		m: gmap.NewStrAnyMap(),
+		m: gmap.NewStrAnyMap(true),
 	}
 }
 

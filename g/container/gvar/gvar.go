@@ -23,11 +23,11 @@ type Var struct {
 }
 
 // New returns a new Var with given <value>.
-// The parameter <unsafe> used to specify whether using Var in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func New(value interface{}, unsafe ...bool) *Var {
+// The parameter <safe> used to specify whether using Var in concurrent-safety,
+// which is false in default.
+func New(value interface{}, safe ...bool) *Var {
 	v := &Var{}
-	if len(unsafe) == 0 || !unsafe[0] {
+	if len(safe) > 0 && !safe[0] {
 		v.safe = true
 		v.value = gtype.NewInterface(value)
 	} else {

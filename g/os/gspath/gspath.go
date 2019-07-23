@@ -37,17 +37,17 @@ type SPathCacheItem struct {
 
 var (
 	// 单个目录路径对应的SPath对象指针，用于路径检索对象复用
-	pathsMap      = gmap.NewStrAnyMap()
-	pathsCacheMap = gmap.NewStrAnyMap()
+	pathsMap      = gmap.NewStrAnyMap(true)
+	pathsCacheMap = gmap.NewStrAnyMap(true)
 )
 
 // 创建一个搜索对象
 func New(path string, cache bool) *SPath {
 	sp := &SPath{
-		paths: garray.NewStringArray(),
+		paths: garray.NewStringArray(true),
 	}
 	if cache {
-		sp.cache = gmap.NewStrStrMap()
+		sp.cache = gmap.NewStrStrMap(true)
 	}
 	if len(path) > 0 {
 		if _, err := sp.Add(path); err != nil {

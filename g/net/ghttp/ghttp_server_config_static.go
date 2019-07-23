@@ -106,7 +106,7 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 				r = strings.Compare(s1, s2)
 			}
 			return r
-		}, false)
+		})
 		for _, v := range s.config.StaticPaths {
 			array.Add(v.prefix)
 		}

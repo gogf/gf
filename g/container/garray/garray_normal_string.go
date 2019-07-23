@@ -24,40 +24,40 @@ type StringArray struct {
 }
 
 // NewStringArray creates and returns an empty array.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewStringArray(unsafe ...bool) *StringArray {
-	return NewStringArraySize(0, 0, unsafe...)
+func NewStringArray(safe ...bool) *StringArray {
+	return NewStringArraySize(0, 0, safe...)
 }
 
 // NewStringArraySize create and returns an array with given size and cap.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewStringArraySize(size int, cap int, unsafe ...bool) *StringArray {
+func NewStringArraySize(size int, cap int, safe ...bool) *StringArray {
 	return &StringArray{
-		mu:    rwmutex.New(unsafe...),
+		mu:    rwmutex.New(safe...),
 		array: make([]string, size, cap),
 	}
 }
 
 // NewStringArrayFrom creates and returns an array with given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewStringArrayFrom(array []string, unsafe ...bool) *StringArray {
+func NewStringArrayFrom(array []string, safe ...bool) *StringArray {
 	return &StringArray{
-		mu:    rwmutex.New(unsafe...),
+		mu:    rwmutex.New(safe...),
 		array: array,
 	}
 }
 
 // NewStringArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <unsafe> used to specify whether using array in un-concurrent-safety,
+// The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewStringArrayFromCopy(array []string, unsafe ...bool) *StringArray {
+func NewStringArrayFromCopy(array []string, safe ...bool) *StringArray {
 	newArray := make([]string, len(array))
 	copy(newArray, array)
 	return &StringArray{
-		mu:    rwmutex.New(unsafe...),
+		mu:    rwmutex.New(safe...),
 		array: newArray,
 	}
 }

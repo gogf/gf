@@ -30,9 +30,9 @@ func (r *Request) GetRequest(key string, def ...interface{}) []string {
 func (r *Request) GetRequestVar(key string, def ...interface{}) *gvar.Var {
 	value := r.GetRequest(key, def...)
 	if value != nil {
-		return gvar.New(value[0], true)
+		return gvar.New(value[0])
 	}
-	return gvar.New(nil, true)
+	return gvar.New(nil)
 }
 
 func (r *Request) GetRequestString(key string, def ...interface{}) string {

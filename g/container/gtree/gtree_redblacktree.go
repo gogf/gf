@@ -39,20 +39,20 @@ type RedBlackTreeNode struct {
 }
 
 // NewRedBlackTree instantiates a red-black tree with the custom key comparator.
-// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
+// The parameter <safe> used to specify whether using tree in concurrent-safety,
 // which is false in default.
-func NewRedBlackTree(comparator func(v1, v2 interface{}) int, unsafe ...bool) *RedBlackTree {
+func NewRedBlackTree(comparator func(v1, v2 interface{}) int, safe ...bool) *RedBlackTree {
 	return &RedBlackTree{
-		mu:         rwmutex.New(unsafe...),
+		mu:         rwmutex.New(safe...),
 		comparator: comparator,
 	}
 }
 
 // NewRedBlackTreeFrom instantiates a red-black tree with the custom key comparator and <data> map.
-// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
+// The parameter <safe> used to specify whether using tree in concurrent-safety,
 // which is false in default.
-func NewRedBlackTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe ...bool) *RedBlackTree {
-	tree := NewRedBlackTree(comparator, unsafe...)
+func NewRedBlackTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *RedBlackTree {
+	tree := NewRedBlackTree(comparator, safe...)
 	for k, v := range data {
 		tree.doSet(k, v)
 	}
@@ -60,7 +60,7 @@ func NewRedBlackTreeFrom(comparator func(v1, v2 interface{}) int, data map[inter
 }
 
 // Clone returns a new tree with a copy of current tree.
-func (tree *RedBlackTree) Clone(unsafe ...bool) *RedBlackTree {
+func (tree *RedBlackTree) Clone(safe ...bool) *RedBlackTree {
 	newTree := NewRedBlackTree(tree.comparator, !tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
@@ -190,25 +190,25 @@ func (tree *RedBlackTree) GetOrSetFuncLock(key interface{}, f func() interface{}
 // GetVar returns a gvar.Var with the value by given <key>.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *RedBlackTree) GetVar(key interface{}) *gvar.Var {
-	return gvar.New(tree.Get(key), true)
+	return gvar.New(tree.Get(key))
 }
 
 // GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *RedBlackTree) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSet(key, value), true)
+	return gvar.New(tree.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *RedBlackTree) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSetFunc(key, f), true)
+	return gvar.New(tree.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *RedBlackTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSetFuncLock(key, f), true)
+	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.

@@ -16,8 +16,8 @@ type TreeMap = gtree.RedBlackTree
 // NewTreeMap instantiates a tree map with the custom comparator.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewTreeMap(comparator func(v1, v2 interface{}) int, unsafe ...bool) *TreeMap {
-	return gtree.NewRedBlackTree(comparator, unsafe...)
+func NewTreeMap(comparator func(v1, v2 interface{}) int, safe ...bool) *TreeMap {
+	return gtree.NewRedBlackTree(comparator, safe...)
 }
 
 // NewTreeMapFrom instantiates a tree map with the custom comparator and <data> map.
@@ -25,6 +25,6 @@ func NewTreeMap(comparator func(v1, v2 interface{}) int, unsafe ...bool) *TreeMa
 // there might be some concurrent-safe issues when changing the map outside.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewTreeMapFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe ...bool) *TreeMap {
-	return gtree.NewRedBlackTreeFrom(comparator, data, unsafe...)
+func NewTreeMapFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *TreeMap {
+	return gtree.NewRedBlackTreeFrom(comparator, data, safe...)
 }

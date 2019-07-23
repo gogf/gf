@@ -12,10 +12,10 @@ type Map = AnyAnyMap
 type HashMap = AnyAnyMap
 
 // New returns an empty hash map.
-// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func New(unsafe ...bool) *Map {
-	return NewAnyAnyMap(unsafe...)
+// The parameter <safe> used to specify whether using map in concurrent-safety,
+// which is false in default.
+func New(safe ...bool) *Map {
+	return NewAnyAnyMap(safe...)
 }
 
 // NewFrom returns a hash map from given map <data>.
@@ -23,15 +23,15 @@ func New(unsafe ...bool) *Map {
 // there might be some concurrent-safe issues when changing the map outside.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewFrom(data map[interface{}]interface{}, unsafe ...bool) *Map {
-	return NewAnyAnyMapFrom(data, unsafe...)
+func NewFrom(data map[interface{}]interface{}, safe ...bool) *Map {
+	return NewAnyAnyMapFrom(data, safe...)
 }
 
 // NewHashMap returns an empty hash map.
-// The parameter <unsafe> used to specify whether using map in un-concurrent-safety,
-// which is false in default, means concurrent-safe.
-func NewHashMap(unsafe ...bool) *Map {
-	return NewAnyAnyMap(unsafe...)
+// The parameter <safe> used to specify whether using map in concurrent-safety,
+// which is false in default.
+func NewHashMap(safe ...bool) *Map {
+	return NewAnyAnyMap(safe...)
 }
 
 // NewHashMapFrom returns a hash map from given map <data>.
@@ -39,6 +39,6 @@ func NewHashMap(unsafe ...bool) *Map {
 // there might be some concurrent-safe issues when changing the map outside.
 // The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
 // which is false in default.
-func NewHashMapFrom(data map[interface{}]interface{}, unsafe ...bool) *Map {
-	return NewAnyAnyMapFrom(data, unsafe...)
+func NewHashMapFrom(data map[interface{}]interface{}, safe ...bool) *Map {
+	return NewAnyAnyMapFrom(data, safe...)
 }

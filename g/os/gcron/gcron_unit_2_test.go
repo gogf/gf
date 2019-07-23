@@ -20,7 +20,7 @@ func TestCron_Entry_Operations(t *testing.T) {
 
 		gtest.Case(t, func() {
 			cron := gcron.New()
-			array := garray.New()
+			array := garray.New(true)
 			cron.DelayAddTimes(500*time.Millisecond, "* * * * * *", 2, func() {
 				glog.Println("add times")
 				array.Append(1)
@@ -35,7 +35,7 @@ func TestCron_Entry_Operations(t *testing.T) {
 		})
 
 		cron := gcron.New()
-		array := garray.New()
+		array := garray.New(true)
 		entry, err1 := cron.Add("* * * * * *", func() {
 			glog.Println("add")
 			array.Append(1)

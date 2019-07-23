@@ -32,7 +32,7 @@ func New(limit ...int) *Pool {
 	p := &Pool{
 		limit:  -1,
 		count:  gtype.NewInt(),
-		list:   glist.New(),
+		list:   glist.New(true),
 		closed: gtype.NewBool(),
 	}
 	if len(limit) > 0 && limit[0] > 0 {

@@ -91,7 +91,7 @@ func Test_Mutex_IsLocked(t *testing.T) {
 func Test_Mutex_Unlock(t *testing.T) {
 	gtest.Case(t, func() {
 		mu := gmutex.New()
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
@@ -129,7 +129,7 @@ func Test_Mutex_Unlock(t *testing.T) {
 func Test_Mutex_LockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		mu := gmutex.New()
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
@@ -154,7 +154,7 @@ func Test_Mutex_LockFunc(t *testing.T) {
 func Test_Mutex_TryLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		mu := gmutex.New()
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
@@ -185,7 +185,7 @@ func Test_Mutex_TryLockFunc(t *testing.T) {
 func Test_Mutex_RLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		mu := gmutex.New()
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
@@ -209,7 +209,7 @@ func Test_Mutex_RLockFunc(t *testing.T) {
 
 	gtest.Case(t, func() {
 		mu := gmutex.New()
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			time.Sleep(100 * time.Millisecond)
 			mu.RLockFunc(func() {
@@ -240,7 +240,7 @@ func Test_Mutex_RLockFunc(t *testing.T) {
 func Test_Mutex_TryRLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		mu := gmutex.New()
-		array := garray.New()
+		array := garray.New(true)
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)

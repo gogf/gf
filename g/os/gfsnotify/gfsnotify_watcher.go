@@ -56,7 +56,7 @@ func (w *Watcher) addWithCallbackFunc(path string, callbackFunc func(event *Even
 	w.callbacks.LockFunc(func(m map[string]interface{}) {
 		list := (*glist.List)(nil)
 		if v, ok := m[path]; !ok {
-			list = glist.New()
+			list = glist.New(true)
 			m[path] = list
 		} else {
 			list = v.(*glist.List)

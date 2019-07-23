@@ -14,8 +14,8 @@ import (
 )
 
 // NewVar returns a *gvar.Var.
-func NewVar(i interface{}, unsafe ...bool) *Var {
-	return gvar.New(i, unsafe...)
+func NewVar(i interface{}, safe ...bool) *Var {
+	return gvar.New(i, safe...)
 }
 
 // Wait blocks until all the web servers shutdown.

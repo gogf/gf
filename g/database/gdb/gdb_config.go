@@ -145,7 +145,7 @@ func (bs *dbBase) SetDebug(debug bool) {
 	}
 	bs.debug.Set(debug)
 	if debug && bs.sqls == nil {
-		bs.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH)
+		bs.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH, true)
 	}
 }
 

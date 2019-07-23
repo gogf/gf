@@ -70,7 +70,7 @@ var (
 	// 默认的watchers是否初始化，使用时才创建
 	watcherInited = gtype.NewBool()
 	// 回调方法ID与对象指针的映射哈希表，用于根据ID快速查找回调对象
-	callbackIdMap = gmap.NewIntAnyMap()
+	callbackIdMap = gmap.NewIntAnyMap(true)
 	// 回调函数的ID生成器(原子操作)
 	callbackIdGenerator = gtype.NewInt()
 )
@@ -81,7 +81,7 @@ func New() (*Watcher, error) {
 		cache:     gcache.New(),
 		events:    gqueue.New(),
 		closeChan: make(chan struct{}),
-		callbacks: gmap.NewStrAnyMap(),
+		callbacks: gmap.NewStrAnyMap(true),
 	}
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		w.watcher = watcher

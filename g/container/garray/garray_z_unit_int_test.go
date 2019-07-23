@@ -659,7 +659,7 @@ func TestIntArray_Remove(t *testing.T) {
 func TestIntArray_LockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []int{1, 2, 3, 4}
-		a1 := garray.NewIntArrayFrom(s1)
+		a1 := garray.NewIntArrayFrom(s1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 3)
@@ -704,7 +704,7 @@ func TestIntArray_SortFunc(t *testing.T) {
 func TestIntArray_RLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []int{1, 2, 3, 4}
-		a1 := garray.NewIntArrayFrom(s1)
+		a1 := garray.NewIntArrayFrom(s1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 1)
@@ -736,7 +736,7 @@ func TestIntArray_RLockFunc(t *testing.T) {
 func TestSortedIntArray_LockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []int{1, 2, 3, 4}
-		a1 := garray.NewSortedIntArrayFrom(s1)
+		a1 := garray.NewSortedIntArrayFrom(s1, true)
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 3)
 		//go1
@@ -767,7 +767,7 @@ func TestSortedIntArray_LockFunc(t *testing.T) {
 func TestSortedIntArray_RLockFunc(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := []int{1, 2, 3, 4}
-		a1 := garray.NewSortedIntArrayFrom(s1)
+		a1 := garray.NewSortedIntArrayFrom(s1, true)
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 1)

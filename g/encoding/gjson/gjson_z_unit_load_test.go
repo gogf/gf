@@ -175,7 +175,7 @@ func Test_Load_TOML2(t *testing.T) {
 
 func Test_Load_Basic(t *testing.T) {
 	gtest.Case(t, func() {
-		j := gjson.NewUnsafe()
+		j := gjson.New(nil)
 		gtest.Assert(j.Value(), nil)
 		_, err := gjson.Decode(nil)
 		gtest.AssertNE(err, nil)

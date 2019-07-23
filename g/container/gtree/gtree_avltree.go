@@ -32,20 +32,20 @@ type AVLTreeNode struct {
 }
 
 // NewAVLTree instantiates an AVL tree with the custom key comparator.
-// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
+// The parameter <safe> used to specify whether using tree in concurrent-safety,
 // which is false in default.
-func NewAVLTree(comparator func(v1, v2 interface{}) int, unsafe ...bool) *AVLTree {
+func NewAVLTree(comparator func(v1, v2 interface{}) int, safe ...bool) *AVLTree {
 	return &AVLTree{
-		mu:         rwmutex.New(unsafe...),
+		mu:         rwmutex.New(safe...),
 		comparator: comparator,
 	}
 }
 
 // NewAVLTreeFrom instantiates an AVL tree with the custom key comparator and data map.
-// The parameter <unsafe> used to specify whether using tree in un-concurrent-safety,
+// The parameter <safe> used to specify whether using tree in concurrent-safety,
 // which is false in default.
-func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, unsafe ...bool) *AVLTree {
-	tree := NewAVLTree(comparator, unsafe...)
+func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *AVLTree {
+	tree := NewAVLTree(comparator, safe...)
 	for k, v := range data {
 		tree.put(k, v, nil, &tree.root)
 	}
@@ -53,7 +53,7 @@ func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{
 }
 
 // Clone returns a new tree with a copy of current tree.
-func (tree *AVLTree) Clone(unsafe ...bool) *AVLTree {
+func (tree *AVLTree) Clone(safe ...bool) *AVLTree {
 	newTree := NewAVLTree(tree.comparator, !tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
@@ -167,25 +167,25 @@ func (tree *AVLTree) GetOrSetFuncLock(key interface{}, f func() interface{}) int
 // GetVar returns a gvar.Var with the value by given <key>.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *AVLTree) GetVar(key interface{}) *gvar.Var {
-	return gvar.New(tree.Get(key), true)
+	return gvar.New(tree.Get(key))
 }
 
 // GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *AVLTree) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSet(key, value), true)
+	return gvar.New(tree.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *AVLTree) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSetFunc(key, f), true)
+	return gvar.New(tree.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *AVLTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
-	return gvar.New(tree.GetOrSetFuncLock(key, f), true)
+	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.

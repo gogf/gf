@@ -38,7 +38,7 @@ type File struct {
 
 var (
 	// 全局文件指针池Map, 不过期
-	pools = gmap.NewStrAnyMap()
+	pools = gmap.NewStrAnyMap(true)
 )
 
 // 获得文件对象，并自动创建指针池(过期时间单位：毫秒)

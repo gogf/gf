@@ -61,11 +61,11 @@ const (
 // newMemCache creates and returns a new memory cache object.
 func newMemCache(lruCap ...int) *memCache {
 	c := &memCache{
-		lruGetList:  glist.New(),
+		lruGetList:  glist.New(true),
 		data:        make(map[interface{}]memCacheItem),
 		expireTimes: make(map[interface{}]int64),
 		expireSets:  make(map[int64]*gset.Set),
-		eventList:   glist.New(),
+		eventList:   glist.New(true),
 		closed:      gtype.NewBool(),
 	}
 	if len(lruCap) > 0 {
@@ -92,7 +92,7 @@ func (c *memCache) getExpireSet(expire int64) (expireSet *gset.Set) {
 // It creates and returns a new set for <expire> if it does not exist.
 func (c *memCache) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
 	if expireSet = c.getExpireSet(expire); expireSet == nil {
-		expireSet = gset.New()
+		expireSet = gset.New(true)
 		c.expireSetMu.Lock()
 		if es, ok := c.expireSets[expire]; ok {
 			expireSet = es
