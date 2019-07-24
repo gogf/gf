@@ -10,6 +10,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/text/gstr"
 	"io"
 	"os"
 	"path/filepath"
@@ -47,30 +48,47 @@ func ZipPath(path, dest string, prefix ...string) error {
 }
 
 // UnZipFile decompresses <archive> to <dest> using zip compressing algorithm.
-func UnZipFile(archive, dest string) error {
+// The parameter <path> specifies the unzipped path of <archive>,
+// which can be used to specify part of the archive file to unzip.
+func UnZipFile(archive, dest string, path ...string) error {
 	readerCloser, err := zip.OpenReader(archive)
 	if err != nil {
 		return err
 	}
 	defer readerCloser.Close()
-	return unZipFileWithReader(&readerCloser.Reader, dest)
+	return unZipFileWithReader(&readerCloser.Reader, dest, path...)
 }
 
 // UnZipContent decompresses <data> to <dest> using zip compressing algorithm.
-func UnZipContent(data []byte, dest string) error {
+// The parameter <path> specifies the unzipped path of <archive>,
+// which can be used to specify part of the archive file to unzip.
+func UnZipContent(data []byte, dest string, path ...string) error {
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
 		return err
 	}
-	return unZipFileWithReader(reader, dest)
+	return unZipFileWithReader(reader, dest, path...)
 }
 
-func unZipFileWithReader(reader *zip.Reader, dest string) error {
+func unZipFileWithReader(reader *zip.Reader, dest string, path ...string) error {
+	prefix := ""
+	if len(path) > 0 {
+		prefix = gstr.Replace(path[0], `\`, `/`)
+	}
 	if err := os.MkdirAll(dest, 0755); err != nil {
 		return err
 	}
+	name := ""
 	for _, file := range reader.File {
-		path := filepath.Join(dest, file.Name)
+		name = gstr.Replace(file.Name, `\`, `/`)
+		name = gstr.Trim(name, "/")
+		if prefix != "" {
+			if name[0:len(prefix)] != prefix {
+				continue
+			}
+			name = name[len(prefix):]
+		}
+		path := filepath.Join(dest, name)
 		if file.FileInfo().IsDir() {
 			os.MkdirAll(path, file.Mode())
 			continue
