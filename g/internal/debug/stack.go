@@ -60,6 +60,12 @@ func StackWithFilter(filter string, skip ...int) string {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
+			if filter != "" && strings.Contains(file, filter) {
+				continue
+			}
+			if strings.Contains(file, gFILTER_KEY) {
+				continue
+			}
 			if fn := runtime.FuncForPC(pc); fn == nil {
 				name = "unknown"
 			} else {
@@ -92,6 +98,12 @@ func CallerWithFilter(filter string, skip ...int) string {
 	}
 	for i := callerFromIndex(filter) + number; i < gMAX_DEPTH; i++ {
 		if _, file, line, ok := runtime.Caller(i); ok {
+			if filter != "" && strings.Contains(file, filter) {
+				continue
+			}
+			if strings.Contains(file, gFILTER_KEY) {
+				continue
+			}
 			return fmt.Sprintf(`%s:%d`, file, line)
 		} else {
 			break

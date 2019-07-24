@@ -12,10 +12,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/g/text/gstr"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/gogf/gf/g/text/gstr"
 
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/os/gcache"
@@ -30,8 +31,8 @@ const (
 )
 
 var (
-	// 用于可转义的单词的识别正则对象
-	wordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+	wordReg         = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
 // 获取最近一条执行的sql
@@ -698,12 +699,12 @@ func (bs *dbBase) formatWhere(where interface{}, args []interface{}) (newWhere s
 	newWhere = buffer.String()
 	// 查询条件参数处理，主要处理slice参数类型
 	if len(newArgs) > 0 {
-		// 支持例如 Where/And/Or("uid", 1) 这种格式
+		// 支持例如 Where/And/Or("uid", 1) , Where/And/Or("uid>=", 1) 这种格式
 		if gstr.Pos(newWhere, "?") == -1 {
-			if gstr.Pos(newWhere, "<") == -1 && gstr.Pos(newWhere, ">") == -1 && gstr.Pos(newWhere, "=") == -1 {
-				newWhere += "=?"
-			} else {
+			if lastOperatorReg.MatchString(newWhere) {
 				newWhere += "?"
+			} else if wordReg.MatchString(newWhere) {
+				newWhere += "=?"
 			}
 		}
 	}

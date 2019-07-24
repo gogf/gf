@@ -17,4 +17,7 @@ func main() {
 		"id in(?)":           g.Slice{1, 2, 3},
 	}
 	db.Table("user").Where(conditions).OrderBy("id asc").All()
+
+	var params []interface{}
+	db.Table("user").Where("1=1", params).OrderBy("id asc").All()
 }
