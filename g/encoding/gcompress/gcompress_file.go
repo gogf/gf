@@ -8,6 +8,7 @@ package gcompress
 
 import (
 	"archive/zip"
+	"bytes"
 	"github.com/gogf/gf/g/os/gfile"
 	"io"
 	"os"
@@ -47,10 +48,24 @@ func ZipPath(path, dest string, prefix ...string) error {
 
 // UnZipFile decompresses <archive> to <dest> using zip compressing algorithm.
 func UnZipFile(archive, dest string) error {
-	reader, err := zip.OpenReader(archive)
+	readerCloser, err := zip.OpenReader(archive)
 	if err != nil {
 		return err
 	}
+	defer readerCloser.Close()
+	return unZipFileWithReader(&readerCloser.Reader, dest)
+}
+
+// UnZipContent decompresses <data> to <dest> using zip compressing algorithm.
+func UnZipContent(data []byte, dest string) error {
+	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return err
+	}
+	return unZipFileWithReader(reader, dest)
+}
+
+func unZipFileWithReader(reader *zip.Reader, dest string) error {
 	if err := os.MkdirAll(dest, 0755); err != nil {
 		return err
 	}
@@ -62,7 +77,7 @@ func UnZipFile(archive, dest string) error {
 		}
 		dir := filepath.Dir(path)
 		if len(dir) > 0 {
-			if _, err = os.Stat(dir); os.IsNotExist(err) {
+			if _, err := os.Stat(dir); os.IsNotExist(err) {
 				err = os.MkdirAll(dir, 0755)
 				if err != nil {
 					return err
