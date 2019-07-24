@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/os/gproc"
 )
 
 func main() {
-	fmt.Println(gfile.Basename("main.go"))
+	gproc.ShellRun("sleep 5; echo 1")
 }

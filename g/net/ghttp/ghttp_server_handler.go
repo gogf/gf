@@ -7,8 +7,8 @@
 package ghttp
 
 import (
-	"fmt"
 	"github.com/gogf/gf/g/encoding/ghtml"
+	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/os/gspath"
 	"github.com/gogf/gf/g/os/gtime"
 	"net/http"
@@ -225,7 +225,7 @@ func (s *Server) niceCallFunc(f func()) {
 }
 
 // http server静态文件处理，path可以为相对路径也可以为绝对路径
-func (s *Server) serveFile(r *Request, path string) {
+func (s *Server) serveFile(r *Request, path string, allowIndex ...bool) {
 	f, err := os.Open(path)
 	if err != nil {
 		r.Response.WriteStatus(http.StatusForbidden)
@@ -234,7 +234,7 @@ func (s *Server) serveFile(r *Request, path string) {
 	defer f.Close()
 	info, _ := f.Stat()
 	if info.IsDir() {
-		if s.config.IndexFolder {
+		if s.config.IndexFolder || (len(allowIndex) > 0 && allowIndex[0]) {
 			s.listDir(r, f)
 		} else {
 			r.Response.WriteStatus(http.StatusForbidden)
@@ -253,18 +253,36 @@ func (s *Server) listDir(r *Request, f http.File) {
 		return
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].Name() < files[j].Name() })
-
-	r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
-	r.Response.Write("<pre>\n")
-	if r.URL.Path != "/" {
-		r.Response.Write(fmt.Sprint("<a href=\"..\">..</a>\n"))
+	if r.Response.Header().Get("Content-Type") == "" {
+		r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
+	r.Response.Write(`<html>`)
+	r.Response.Write(`<head></head>`)
+	r.Response.Write(`<body>`)
+	r.Response.Writef(`<h1>Index of %s</h1>`, r.URL.RequestURI())
+	r.Response.Writef(`<hr />`)
+	r.Response.Write(`<table>`)
+	if r.URL.Path != "/" {
+		r.Response.Write("<tr>")
+		r.Response.Write("<td><a href=\"..\">..</a></td>")
+		r.Response.Write("</tr>")
+	}
+	name := ""
+	size := ""
 	for _, file := range files {
-		name := file.Name()
+		name = file.Name()
+		size = gfile.FormatSize(file.Size())
 		if file.IsDir() {
 			name += "/"
+			size = "-"
 		}
-		r.Response.Write(fmt.Sprintf("<a href=\"%s\">%s</a>\n", name, ghtml.SpecialChars(name)))
+		r.Response.Write(`<tr>`)
+		r.Response.Writef(`<td><a href="%s">%s</a></td>`, name, ghtml.SpecialChars(name))
+		r.Response.Writef(`<td style="width:80px;text-align:center;">%s</td>`, size)
+		r.Response.Writef(`<td>%s</td>`, gtime.New(file.ModTime()).String())
+		r.Response.Write(`</tr>`)
 	}
-	r.Response.Write("</pre>\n")
+	r.Response.Write(`</table>`)
+	r.Response.Write(`</body>`)
+	r.Response.Write(`</html>`)
 }

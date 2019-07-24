@@ -161,14 +161,14 @@ func (r *Response) WriteStatus(status int, content ...interface{}) {
 }
 
 // 静态文件处理
-func (r *Response) ServeFile(path string) {
+func (r *Response) ServeFile(path string, allowIndex ...bool) {
 	// 首先判断是否给定的path已经是一个绝对路径
 	path = gfile.RealPath(path)
 	if path == "" {
 		r.WriteStatus(http.StatusNotFound)
 		return
 	}
-	r.Server.serveFile(r.request, path)
+	r.Server.serveFile(r.request, path, allowIndex...)
 }
 
 // 静态文件下载处理
