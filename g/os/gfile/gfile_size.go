@@ -22,51 +22,52 @@ func Size(path string) int64 {
 
 // ReadableSize formats size of file given by <path>, for more human readable.
 func ReadableSize(path string) string {
-	return FormatSize(float64(Size(path)))
+	return FormatSize(Size(path))
 }
 
 // FormatSize formats size <raw> for more human readable.
-func FormatSize(raw float64) string {
+func FormatSize(raw int64) string {
+	var r float64 = float64(raw)
 	var t float64 = 1024
 	var d float64 = 1
 
-	if raw < t {
-		return fmt.Sprintf("%.2fB", raw/d)
+	if r < t {
+		return fmt.Sprintf("%.2fB", r/d)
 	}
 
 	d *= 1024
 	t *= 1024
 
-	if raw < t {
-		return fmt.Sprintf("%.2fK", raw/d)
+	if r < t {
+		return fmt.Sprintf("%.2fK", r/d)
 	}
 
 	d *= 1024
 	t *= 1024
 
-	if raw < t {
-		return fmt.Sprintf("%.2fM", raw/d)
+	if r < t {
+		return fmt.Sprintf("%.2fM", r/d)
 	}
 
 	d *= 1024
 	t *= 1024
 
-	if raw < t {
-		return fmt.Sprintf("%.2fG", raw/d)
+	if r < t {
+		return fmt.Sprintf("%.2fG", r/d)
 	}
 
 	d *= 1024
 	t *= 1024
 
-	if raw < t {
-		return fmt.Sprintf("%.2fT", raw/d)
+	if r < t {
+		return fmt.Sprintf("%.2fT", r/d)
 	}
 
 	d *= 1024
 	t *= 1024
 
-	if raw < t {
-		return fmt.Sprintf("%.2fP", raw/d)
+	if r < t {
+		return fmt.Sprintf("%.2fP", r/d)
 	}
 
 	return "TooLarge"

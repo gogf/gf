@@ -90,8 +90,6 @@ func (s *Server) searchServeHandler(method, path, domain string) *handlerParsedI
 				if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, method) {
 					// 注意当不带任何动态路由规则时，len(match) == 1
 					if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 0 {
-						//gutil.Dump(match)
-						//gutil.Dump(names)
 						parsedItem := &handlerParsedItem{item, nil}
 						// 如果需要query匹配，那么需要重新正则解析URL
 						if len(item.router.RegNames) > 0 {
