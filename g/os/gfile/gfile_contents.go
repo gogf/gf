@@ -7,6 +7,7 @@
 package gfile
 
 import (
+	"github.com/gogf/gf/g/text/gstr"
 	"io"
 	"io/ioutil"
 	"os"
@@ -159,4 +160,20 @@ func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byt
 		return GetBinContentsByTwoOffsets(f, start, end)
 	}
 	return nil
+}
+
+// Replace replaces content for files under <path>.
+// The parameter <pattern> specifies the file pattern which matches to be replaced.
+// It does replacement recursively if given parameter <recursive> is true.
+func Replace(search, replace, path, pattern string, recursive ...bool) error {
+	files, err := ScanDir(path, pattern, recursive...)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if err = PutContents(file, gstr.Replace(GetContents(file), search, replace)); err != nil {
+			return err
+		}
+	}
+	return err
 }
