@@ -43,6 +43,9 @@ func formatQuery(query string, args []interface{}) (newQuery string, newArgs []i
 			switch kind {
 			// '?'占位符支持slice类型, 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
 			case reflect.Slice, reflect.Array:
+				if rv.Len() == 0 {
+					continue
+				}
 				// 不拆分[]byte类型
 				if _, ok := arg.([]byte); ok {
 					newArgs = append(newArgs, arg)
