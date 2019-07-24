@@ -415,9 +415,18 @@ func SelfDir() string {
 // Basename returns the last element of path.
 // Trailing path separators are removed before extracting the last element.
 // If the path is empty, Base returns ".".
-// If the path consists entirely of separators, Base returns a single separator.
+// If the path consists entirely of separators, Basename returns a single separator.
 func Basename(path string) string {
 	return filepath.Base(path)
+}
+
+// Name returns the last element of path without extension.
+func Name(path string) string {
+	base := filepath.Base(path)
+	if i := strings.LastIndexByte(base, '.'); i != -1 {
+		return base[:i]
+	}
+	return base
 }
 
 // Dir returns all but the last element of path, typically the path's directory.
