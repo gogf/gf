@@ -7,7 +7,6 @@
 package gfile
 
 import (
-	"github.com/gogf/gf/g/text/gstr"
 	"io"
 	"io/ioutil"
 	"os"
@@ -21,12 +20,18 @@ const (
 // GetContents returns the file content of <path> as string.
 // It returns en empty string if it fails reading.
 func GetContents(path string) string {
-	return string(GetBinContents(path))
+	return string(GetBytes(path))
 }
 
-// GetBinContents returns the file content of <path> as []byte.
-// It returns nil if it fails reading.
+// GetBinContents is alias of GetBytes.
+// Deprecated.
 func GetBinContents(path string) []byte {
+	return GetBytes(path)
+}
+
+// GetBytes returns the file content of <path> as []byte.
+// It returns nil if it fails reading.
+func GetBytes(path string) []byte {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil
@@ -74,15 +79,27 @@ func PutContentsAppend(path string, content string) error {
 	return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, gDEFAULT_PERM)
 }
 
-// PutBinContents puts binary <content> to file of <path>.
-// It creates file of <path> recursively if it does not exist.
+// PutBinContents is alias of PutBytes.
+// Deprecated.
 func PutBinContents(path string, content []byte) error {
+	return PutBytes(path, content)
+}
+
+// PutBytes puts binary <content> to file of <path>.
+// It creates file of <path> recursively if it does not exist.
+func PutBytes(path string, content []byte) error {
 	return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, gDEFAULT_PERM)
 }
 
-// PutBinContentsAppend appends binary <content> to file of <path>.
-// It creates file of <path> recursively if it does not exist.
+// PutBinContentsAppend is alias of PutBytesAppend.
+// Deprecated.
 func PutBinContentsAppend(path string, content []byte) error {
+	return PutBytesAppend(path, content)
+}
+
+// PutBytesAppend appends binary <content> to file of <path>.
+// It creates file of <path> recursively if it does not exist.
+func PutBytesAppend(path string, content []byte) error {
 	return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, gDEFAULT_PERM)
 }
 
@@ -115,34 +132,52 @@ func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
 	return -1
 }
 
-// GetBinContentsTilChar returns the contents of the file as []byte
+// GetBinContentsTilChar is alias of GetBytesTilChar.
+// Deprecated.
+func GetBinContentsTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, int64) {
+	return GetBytesTilChar(reader, char, start)
+}
+
+// GetBytesTilChar returns the contents of the file as []byte
 // until the next specified byte <char> position.
 //
 // Note: Returned value contains the character of the last position.
-func GetBinContentsTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, int64) {
+func GetBytesTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, int64) {
 	if offset := GetNextCharOffset(reader, char, start); offset != -1 {
-		return GetBinContentsByTwoOffsets(reader, start, offset+1), offset
+		return GetBytesByTwoOffsets(reader, start, offset+1), offset
 	}
 	return nil, -1
 }
 
-// GetBinContentsTilCharByPath returns the contents of the file given by <path> as []byte
+// GetBinContentsTilCharByPath is alias of GetBytesTilCharByPath.
+// Deprecated.
+func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
+	return GetBytesTilCharByPath(path, char, start)
+}
+
+// GetBytesTilCharByPath returns the contents of the file given by <path> as []byte
 // until the next specified byte <char> position.
 // It opens file of <path> for reading with os.O_RDONLY flag and default perm.
 //
 // Note: Returned value contains the character of the last position.
-func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
+func GetBytesTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
 	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
 		defer f.Close()
-		return GetBinContentsTilChar(f, char, start)
+		return GetBytesTilChar(f, char, start)
 	}
 	return nil, -1
 }
 
-// GetBinContentsByTwoOffsets returns the binary content as []byte from <start> to <end>.
+// GetBinContentsByTwoOffsets is alias of GetBytesByTwoOffsets.
+// Deprecated.
+func GetBinContentsByTwoOffsets(reader io.ReaderAt, start int64, end int64) []byte {
+	return GetBytesByTwoOffsets(reader, start, end)
+}
+
+// GetBytesByTwoOffsets returns the binary content as []byte from <start> to <end>.
 // Note: Returned value does not contain the character of the last position, which means
 // it returns content range as [start, end).
-func GetBinContentsByTwoOffsets(reader io.ReaderAt, start int64, end int64) []byte {
+func GetBytesByTwoOffsets(reader io.ReaderAt, start int64, end int64) []byte {
 	buffer := make([]byte, end-start)
 	if _, err := reader.ReadAt(buffer, start); err != nil {
 		return nil
@@ -150,30 +185,20 @@ func GetBinContentsByTwoOffsets(reader io.ReaderAt, start int64, end int64) []by
 	return buffer
 }
 
-// GetBinContentsByTwoOffsetsByPath returns the binary content as []byte from <start> to <end>.
+// GetBinContentsByTwoOffsetsByPath is alias of GetBytesByTwoOffsetsByPath.
+// Deprecated.
+func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
+	return GetBytesByTwoOffsetsByPath(path, start, end)
+}
+
+// GetBytesByTwoOffsetsByPath returns the binary content as []byte from <start> to <end>.
 // Note: Returned value does not contain the character of the last position, which means
 // it returns content range as [start, end).
 // It opens file of <path> for reading with os.O_RDONLY flag and default perm.
-func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
+func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
 		defer f.Close()
 		return GetBinContentsByTwoOffsets(f, start, end)
 	}
 	return nil
-}
-
-// Replace replaces content for files under <path>.
-// The parameter <pattern> specifies the file pattern which matches to be replaced.
-// It does replacement recursively if given parameter <recursive> is true.
-func Replace(search, replace, path, pattern string, recursive ...bool) error {
-	files, err := ScanDir(path, pattern, recursive...)
-	if err != nil {
-		return err
-	}
-	for _, file := range files {
-		if err = PutContents(file, gstr.Replace(GetContents(file), search, replace)); err != nil {
-			return err
-		}
-	}
-	return err
 }

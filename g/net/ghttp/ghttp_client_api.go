@@ -4,8 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// HTTP客户端请求.
-
 package ghttp
 
 func Get(url string) (*ClientResponse, error) {
@@ -44,27 +42,22 @@ func Trace(url string, data ...interface{}) (*ClientResponse, error) {
 	return DoRequest("TRACE", url, data...)
 }
 
-// 该方法支持二进制提交数据
 func DoRequest(method, url string, data ...interface{}) (*ClientResponse, error) {
 	return NewClient().DoRequest(method, url, data...)
 }
 
-// GET请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
 func GetContent(url string, data ...interface{}) string {
 	return RequestContent("GET", url, data...)
 }
 
-// PUT请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
 func PutContent(url string, data ...interface{}) string {
 	return RequestContent("PUT", url, data...)
 }
 
-// POST请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
 func PostContent(url string, data ...interface{}) string {
 	return RequestContent("POST", url, data...)
 }
 
-// DELETE请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
 func DeleteContent(url string, data ...interface{}) string {
 	return RequestContent("DELETE", url, data...)
 }
@@ -89,7 +82,46 @@ func TraceContent(url string, data ...interface{}) string {
 	return RequestContent("TRACE", url, data...)
 }
 
-// 请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
 func RequestContent(method string, url string, data ...interface{}) string {
-	return NewClient().DoRequestContent(method, url, data...)
+	return NewClient().RequestContent(method, url, data...)
+}
+
+func GetBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("GET", url, data...)
+}
+
+func PutBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("PUT", url, data...)
+}
+
+func PostBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("POST", url, data...)
+}
+
+func DeleteBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("DELETE", url, data...)
+}
+
+func HeadBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("HEAD", url, data...)
+}
+
+func PatchBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("PATCH", url, data...)
+}
+
+func ConnectBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("CONNECT", url, data...)
+}
+
+func OptionsBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("OPTIONS", url, data...)
+}
+
+func TraceBytes(url string, data ...interface{}) []byte {
+	return RequestBytes("TRACE", url, data...)
+}
+
+func RequestBytes(method string, url string, data ...interface{}) []byte {
+	return NewClient().RequestBytes(method, url, data...)
 }

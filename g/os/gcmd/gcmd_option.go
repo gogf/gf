@@ -14,6 +14,11 @@ func (c *gCmdOption) GetAll() map[string]string {
 	return c.options
 }
 
+// BuildOptions builds the options as string.
+func (c *gCmdOption) Build(prefix ...string) string {
+	return BuildOptions(c.options, prefix...)
+}
+
 // Get returns the option value string specified by <key>,
 // if value dose not exist, then returns <def>.
 func (c *gCmdOption) Get(key string, def ...string) string {
@@ -23,6 +28,11 @@ func (c *gCmdOption) Get(key string, def ...string) string {
 		return def[0]
 	}
 	return ""
+}
+
+// Set sets the option named <key> with value <value>.
+func (c *gCmdOption) Set(key string, value string) {
+	c.options[key] = value
 }
 
 // GetVar returns the option value as *gvar.Var object specified by <key>,

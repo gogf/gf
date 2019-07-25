@@ -79,3 +79,22 @@ func AutoRun() {
 		glog.Fatal("no command found")
 	}
 }
+
+// BuildOptions builds the options as string.
+func BuildOptions(m map[string]string, prefix ...string) string {
+	options := ""
+	leadstr := "-"
+	if len(prefix) > 0 {
+		leadstr = prefix[0]
+	}
+	for k, v := range m {
+		if len(options) > 0 {
+			options += " "
+		}
+		options += leadstr + k
+		if v != "" {
+			options += "=" + v
+		}
+	}
+	return options
+}

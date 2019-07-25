@@ -398,8 +398,17 @@ func RealPath(path string) string {
 
 // SelfPath returns absolute file path of current running process(binary).
 func SelfPath() string {
-	p, _ := filepath.Abs(os.Args[0])
-	return p
+	path, _ := exec.LookPath(os.Args[0])
+	if path != "" {
+		path, _ = filepath.Abs(path)
+		if path != "" {
+			return path
+		}
+	}
+	if path == "" {
+		path, _ = filepath.Abs(os.Args[0])
+	}
+	return path
 }
 
 // SelfName returns file name of current running process(binary).
