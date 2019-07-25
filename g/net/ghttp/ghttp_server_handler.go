@@ -7,15 +7,16 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/g/encoding/ghtml"
-	"github.com/gogf/gf/g/os/gfile"
-	"github.com/gogf/gf/g/os/gspath"
-	"github.com/gogf/gf/g/os/gtime"
 	"net/http"
 	"os"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/gogf/gf/g/encoding/ghtml"
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/os/gspath"
+	"github.com/gogf/gf/g/os/gtime"
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -259,13 +260,13 @@ func (s *Server) listDir(r *Request, f http.File) {
 	r.Response.Write(`<html>`)
 	r.Response.Write(`<head></head>`)
 	r.Response.Write(`<body>`)
-	r.Response.Writef(`<h1>Index of %s</h1>`, r.URL.RequestURI())
+	r.Response.Writef(`<h1>Index of %s</h1>`, r.URL.Path)
 	r.Response.Writef(`<hr />`)
 	r.Response.Write(`<table>`)
 	if r.URL.Path != "/" {
-		r.Response.Write("<tr>")
-		r.Response.Write("<td><a href=\"..\">..</a></td>")
-		r.Response.Write("</tr>")
+		r.Response.Write(`<tr>`)
+		r.Response.Writef(`<td><a href="%s">..</a></td>`, gfile.Dir(r.URL.Path))
+		r.Response.Write(`</tr>`)
 	}
 	name := ""
 	size := ""
@@ -277,9 +278,9 @@ func (s *Server) listDir(r *Request, f http.File) {
 			size = "-"
 		}
 		r.Response.Write(`<tr>`)
-		r.Response.Writef(`<td><a href="%s">%s</a></td>`, name, ghtml.SpecialChars(name))
+		r.Response.Writef(`<td><a href="%s/%s">%s</a></td>`, r.URL.Path, name, ghtml.SpecialChars(name))
 		r.Response.Writef(`<td style="width:80px;text-align:center;">%s</td>`, size)
-		r.Response.Writef(`<td>%s</td>`, gtime.New(file.ModTime()).String())
+		r.Response.Writef(`<td>%s</td>`, gtime.New(file.ModTime()).ISO8601())
 		r.Response.Write(`</tr>`)
 	}
 	r.Response.Write(`</table>`)
