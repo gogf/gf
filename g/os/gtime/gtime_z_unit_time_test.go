@@ -64,38 +64,52 @@ func Test_NewFromTimeStamp(t *testing.T) {
 	})
 }
 
-func Test_tSecond(t *testing.T) {
+func Test_Time_Second(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
 		gtest.Assert(timeTemp.Second(), timeTemp.Time.Unix())
 	})
 }
 
-func Test_tNanosecond(t *testing.T) {
+func Test_Time_Nanosecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
 		gtest.Assert(timeTemp.Nanosecond(), timeTemp.Time.UnixNano())
 	})
 }
 
-func Test_tMicrosecond(t *testing.T) {
+func Test_Time_Microsecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
 		gtest.Assert(timeTemp.Microsecond(), timeTemp.Time.UnixNano()/1e3)
 	})
 }
 
-func Test_tMillisecond(t *testing.T) {
+func Test_Time_Millisecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
 		gtest.Assert(timeTemp.Millisecond(), timeTemp.Time.UnixNano()/1e6)
 	})
 }
 
-func Test_String(t *testing.T) {
+func Test_Time_String(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
 		gtest.Assert(timeTemp.String(), timeTemp.Time.Format("2006-01-02 15:04:05"))
+	})
+}
+
+func Test_Time_ISO8601(t *testing.T) {
+	gtest.Case(t, func() {
+		now := gtime.Now()
+		gtest.Assert(now.ISO8601(), now.Time.Format("c"))
+	})
+}
+
+func Test_Time_RFC822(t *testing.T) {
+	gtest.Case(t, func() {
+		now := gtime.Now()
+		gtest.Assert(now.RFC822(), now.Time.Format("r"))
 	})
 }
 

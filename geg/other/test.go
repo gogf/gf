@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/os/gproc"
+	"fmt"
+
+	"github.com/gogf/gf/g/os/gtime"
 )
 
 func main() {
-	gproc.ShellRun("sleep 5; echo 1")
+	fmt.Println(gtime.Now().ISO8601())
 }

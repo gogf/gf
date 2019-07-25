@@ -9,11 +9,12 @@ package gtime
 
 import (
 	"errors"
-	"github.com/gogf/gf/g/text/gregex"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/g/text/gregex"
 )
 
 const (
@@ -118,6 +119,16 @@ func Date() string {
 // 获得当前的时间(例如：2006-01-02 15:04:05)
 func Datetime() string {
 	return time.Now().Format("2006-01-02 15:04:05")
+}
+
+// 获得当前时间ISO8601格式
+func ISO8601() string {
+	return time.Now().Format("2006-01-02T15:04:05-07:00")
+}
+
+// 获得当前时间RFC822格式
+func RFC822() string {
+	return time.Now().Format("Mon, 02 Jan 06 15:04 MST")
 }
 
 // 解析日期字符串(日期支持'-'或'/'或'.'连接符号)
