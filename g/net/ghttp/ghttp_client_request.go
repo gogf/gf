@@ -223,56 +223,6 @@ func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error)
 	return c.DoRequest("TRACE", url, data...)
 }
 
-// GET请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
-func (c *Client) GetContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("GET", url, data...)
-}
-
-// PUT请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
-func (c *Client) PutContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("PUT", url, data...)
-}
-
-// POST请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
-func (c *Client) PostContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("POST", url, data...)
-}
-
-// DELETE请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
-func (c *Client) DeleteContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("DELETE", url, data...)
-}
-
-func (c *Client) HeadContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("HEAD", url, data...)
-}
-
-func (c *Client) PatchContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("PATCH", url, data...)
-}
-
-func (c *Client) ConnectContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("CONNECT", url, data...)
-}
-
-func (c *Client) OptionsContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("OPTIONS", url, data...)
-}
-
-func (c *Client) TraceContent(url string, data ...interface{}) string {
-	return c.DoRequestContent("TRACE", url, data...)
-}
-
-// 请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
-func (c *Client) DoRequestContent(method string, url string, data ...interface{}) string {
-	response, err := c.DoRequest(method, url, data...)
-	if err != nil {
-		return ""
-	}
-	defer response.Close()
-	return string(response.ReadAll())
-}
-
 // 请求并返回response对象
 func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResponse, error) {
 	if strings.EqualFold("POST", method) {
