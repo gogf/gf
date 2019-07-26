@@ -375,11 +375,24 @@ func doScanDir(path string, pattern string, recursive ...bool) ([]string, error)
 		// If it meets pattern, then add it to the result list.
 		for _, p := range strings.Split(pattern, ",") {
 			if match, err := filepath.Match(strings.TrimSpace(p), name); err == nil && match {
-				list = append(list, path)
+				path = Abs(path)
+				if path != "" {
+					list = append(list, path)
+				}
 			}
 		}
 	}
 	return list, nil
+}
+
+// Abs returns an absolute representation of path.
+// If the path is not absolute it will be joined with the current
+// working directory to turn it into an absolute path. The absolute
+// path name for a given file is not guaranteed to be unique.
+// Abs calls Clean on the result.
+func Abs(path string) string {
+	p, _ := filepath.Abs(path)
+	return p
 }
 
 // RealPath converts the given <path> to its absolute path
