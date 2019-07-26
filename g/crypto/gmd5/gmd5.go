@@ -19,18 +19,22 @@ import (
 
 // Encrypt encrypts any type of variable using MD5 algorithms.
 // It uses gconv package to convert <v> to its bytes type.
-func Encrypt(v interface{}) (encrypt string, err error) {
+func Encrypt(data interface{}) (encrypt string, err error) {
+	return EncryptBytes(gconv.Bytes(data))
+}
+
+// EncryptBytes encrypts <data> using MD5 algorithms.
+func EncryptBytes(data []byte) (encrypt string, err error) {
 	h := md5.New()
-	if _, err = h.Write([]byte(gconv.Bytes(v))); err != nil {
+	if _, err = h.Write([]byte(data)); err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-// EncryptString is alias of Encrypt.
-// Deprecated.
-func EncryptString(v string) (encrypt string, err error) {
-	return Encrypt(v)
+// EncryptBytes encrypts string <data> using MD5 algorithms.
+func EncryptString(data string) (encrypt string, err error) {
+	return EncryptBytes([]byte(data))
 }
 
 // EncryptFile encrypts file content of <path> using MD5 algorithms.
