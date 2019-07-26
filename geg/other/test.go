@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/gogf/gf/g/os/gtime"
+	"path/filepath"
 )
 
 func main() {
-	fmt.Println(gtime.Now().ISO8601())
+	fmt.Println(filepath.Abs("s/s/s/s/s"))
 }
