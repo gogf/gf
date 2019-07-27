@@ -10,7 +10,7 @@ import (
 	"github.com/gogf/gf/g/test/gtest"
 )
 
-func TestIsDir(t *testing.T) {
+func Test_IsDir(t *testing.T) {
 
 	gtest.Case(t, func() {
 		paths := "/testfile"
@@ -26,7 +26,7 @@ func TestIsDir(t *testing.T) {
 
 }
 
-func TestCreate(t *testing.T) {
+func Test_Create(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			err       error
@@ -49,7 +49,7 @@ func TestCreate(t *testing.T) {
 
 }
 
-func TestOpen(t *testing.T) {
+func Test_Open(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			err     error
@@ -82,7 +82,7 @@ func TestOpen(t *testing.T) {
 	})
 }
 
-func TestOpenFile(t *testing.T) {
+func Test_OpenFile(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			err     error
@@ -115,7 +115,7 @@ func TestOpenFile(t *testing.T) {
 	})
 }
 
-func TestOpenWithFlag(t *testing.T) {
+func Test_OpenWithFlag(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			err     error
@@ -147,7 +147,7 @@ func TestOpenWithFlag(t *testing.T) {
 	})
 }
 
-func TestOpenWithFlagPerm(t *testing.T) {
+func Test_OpenWithFlagPerm(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			err     error
@@ -178,7 +178,7 @@ func TestOpenWithFlagPerm(t *testing.T) {
 	})
 }
 
-func TestExists(t *testing.T) {
+func Test_Exists(t *testing.T) {
 
 	gtest.Case(t, func() {
 		var (
@@ -210,7 +210,7 @@ func TestExists(t *testing.T) {
 	})
 }
 
-func TestPwd(t *testing.T) {
+func Test_Pwd(t *testing.T) {
 	gtest.Case(t, func() {
 		paths, err := os.Getwd()
 		gtest.Assert(err, nil)
@@ -219,7 +219,7 @@ func TestPwd(t *testing.T) {
 	})
 }
 
-func TestIsFile(t *testing.T) {
+func Test_IsFile(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			flag  bool
@@ -255,7 +255,7 @@ func TestIsFile(t *testing.T) {
 	})
 }
 
-func TestInfo(t *testing.T) {
+func Test_Info(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			err    error
@@ -277,7 +277,7 @@ func TestInfo(t *testing.T) {
 	})
 }
 
-func TestMove(t *testing.T) {
+func Test_Move(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths     string = "/ovetest"
@@ -301,7 +301,7 @@ func TestMove(t *testing.T) {
 	})
 }
 
-func TestRename(t *testing.T) {
+func Test_Rename(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths  string = "/testfiles"
@@ -324,7 +324,7 @@ func TestRename(t *testing.T) {
 
 }
 
-func TestCopy(t *testing.T) {
+func Test_Copy(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths  string = "/testfile_copyfile1.txt"
@@ -342,7 +342,7 @@ func TestCopy(t *testing.T) {
 	})
 }
 
-func TestDirNames(t *testing.T) {
+func Test_DirNames(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths    string = "/testdirs"
@@ -372,7 +372,7 @@ func TestDirNames(t *testing.T) {
 	})
 }
 
-func TestGlob(t *testing.T) {
+func Test_Glob(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths      string = "/testfiles/*.txt"
@@ -413,7 +413,7 @@ func TestGlob(t *testing.T) {
 	})
 }
 
-func TestRemove(t *testing.T) {
+func Test_Remove(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths string = "/testfile_t1.txt"
@@ -428,7 +428,7 @@ func TestRemove(t *testing.T) {
 	})
 }
 
-func TestIsReadable(t *testing.T) {
+func Test_IsReadable(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
@@ -444,7 +444,7 @@ func TestIsReadable(t *testing.T) {
 	})
 }
 
-func TestIsWritable(t *testing.T) {
+func Test_IsWritable(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
@@ -459,7 +459,7 @@ func TestIsWritable(t *testing.T) {
 	})
 }
 
-func TestChmod(t *testing.T) {
+func Test_Chmod(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
@@ -474,7 +474,7 @@ func TestChmod(t *testing.T) {
 	})
 }
 
-func TestScanDir(t *testing.T) {
+func Test_ScanDir(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1 string = "/testfiledirs"
@@ -505,7 +505,7 @@ func TestScanDir(t *testing.T) {
 }
 
 // 获取绝对目录地址
-func TestRealPath(t *testing.T) {
+func Test_RealPath(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1    string = "/testfile_files"
@@ -529,7 +529,7 @@ func TestRealPath(t *testing.T) {
 }
 
 // 获取当前执行文件的目录
-func TestSelfPath(t *testing.T) {
+func Test_SelfPath(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1    string
@@ -548,7 +548,7 @@ func TestSelfPath(t *testing.T) {
 	})
 }
 
-func TestSelfDir(t *testing.T) {
+func Test_SelfDir(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1    string
@@ -565,7 +565,7 @@ func TestSelfDir(t *testing.T) {
 	})
 }
 
-func TestBasename(t *testing.T) {
+func Test_Basename(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1    string = "/testfilerr_GetContents.txt"
@@ -581,7 +581,7 @@ func TestBasename(t *testing.T) {
 	})
 }
 
-func TestDir(t *testing.T) {
+func Test_Dir(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1    string = "/testfiless"
@@ -598,7 +598,7 @@ func TestDir(t *testing.T) {
 }
 
 // 获取文件名
-func TestExt(t *testing.T) {
+func Test_Ext(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1   string = "/testfile_GetContents.txt"
@@ -616,7 +616,7 @@ func TestExt(t *testing.T) {
 	})
 }
 
-func TestTempDir(t *testing.T) {
+func Test_TempDir(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			tpath string
@@ -628,7 +628,7 @@ func TestTempDir(t *testing.T) {
 	})
 }
 
-func TestMkdir(t *testing.T) {
+func Test_Mkdir(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			tpath string = "/testfile/createdir"
@@ -649,7 +649,7 @@ func TestMkdir(t *testing.T) {
 	})
 }
 
-func TestStat(t *testing.T) {
+func Test_Stat(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			tpath1   = "/testfile_t1.txt"
@@ -672,14 +672,14 @@ func TestStat(t *testing.T) {
 	})
 }
 
-func TestMainPkgPath(t *testing.T) {
+func Test_MainPkgPath(t *testing.T) {
 	gtest.Case(t, func() {
 		reads := gfile.MainPkgPath()
 		gtest.Assert(reads, "")
 	})
 }
 
-func TestCopyFile(t *testing.T) {
+func Test_CopyFile(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths  string = "/testfile_copyfile1.txt"
@@ -697,7 +697,7 @@ func TestCopyFile(t *testing.T) {
 	})
 }
 
-func TestCopyDir(t *testing.T) {
+func Test_CopyDir(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			dirpath1 string = "/testcopydir1"
