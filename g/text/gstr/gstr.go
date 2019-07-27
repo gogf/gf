@@ -599,3 +599,35 @@ func SearchArray(a []string, s string) int {
 func InArray(a []string, s string) bool {
 	return SearchArray(a, s) != -1
 }
+
+// CompareVersion compares <a> and <b> as standard golang version.
+// Golang standard version is as: 1.0.0, v1.0.1, v2.10.8, 10.2.0 etc.
+func CompareVersion(a, b string) int {
+	if a[0] == 'v' {
+		a = a[1:]
+	}
+	if b[0] == 'v' {
+		b = b[1:]
+	}
+	array1 := strings.Split(a, ".")
+	array2 := strings.Split(b, ".")
+	for i := 0; i < len(array2) - len(array1); i++ {
+		array1 = append(array1, "")
+	}
+	for i := 0; i < len(array1) - len(array2); i++ {
+		array2 = append(array2, "")
+	}
+	v1 := 0
+	v2 := 0
+	for i := 0; i < len(array1); i++ {
+		v1 = gconv.Int(array1[i])
+		v2 = gconv.Int(array2[i])
+		if v1 > v2 {
+			return 1
+		}
+		if v1 < v2 {
+			return -1
+		}
+	}
+	return 0
+}
