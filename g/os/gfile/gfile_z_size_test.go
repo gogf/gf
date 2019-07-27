@@ -1,12 +1,13 @@
 package gfile_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g/os/gfile"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
-func TestSize(t *testing.T) {
+func Test_Size(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1 string = "/testfile_t1.txt"
@@ -25,7 +26,7 @@ func TestSize(t *testing.T) {
 	})
 }
 
-func TestFormatSize(t *testing.T) {
+func Test_FormatSize(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gfile.FormatSize(0), "0.00B")
 		gtest.Assert(gfile.FormatSize(16), "16.00B")
@@ -38,13 +39,10 @@ func TestFormatSize(t *testing.T) {
 
 		gtest.Assert(gfile.FormatSize(9600000000000), "8.73T")
 		gtest.Assert(gfile.FormatSize(9600000000000000), "8.53P")
-
-		gtest.Assert(gfile.FormatSize(9600000000000000000), "TooLarge")
-
 	})
 }
 
-func TestReadableSize(t *testing.T) {
+func Test_ReadableSize(t *testing.T) {
 	gtest.Case(t, func() {
 
 		var (

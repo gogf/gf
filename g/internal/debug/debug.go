@@ -17,7 +17,7 @@ import (
 
 const (
 	gMAX_DEPTH  = 1000
-	gFILTER_KEY = "/g/internal/debug/stack.go"
+	gFILTER_KEY = "/g/internal/debug/debug.go"
 )
 
 var (
@@ -84,14 +84,14 @@ func StackWithFilter(filter string, skip ...int) string {
 }
 
 // CallerPath returns the absolute file path along with its line number of the caller.
-func Caller(skip ...int) string {
+func Caller(skip ...int) (path string, line int) {
 	return CallerWithFilter("", skip...)
 }
 
 // CallerPathWithFilter returns the absolute file path along with its line number of the caller.
 //
 // The parameter <filter> is used to filter the path of the caller.
-func CallerWithFilter(filter string, skip ...int) string {
+func CallerWithFilter(filter string, skip ...int) (path string, line int) {
 	number := 0
 	if len(skip) > 0 {
 		number = skip[0]
@@ -104,12 +104,12 @@ func CallerWithFilter(filter string, skip ...int) string {
 			if strings.Contains(file, gFILTER_KEY) {
 				continue
 			}
-			return fmt.Sprintf(`%s:%d`, file, line)
+			return file, line
 		} else {
 			break
 		}
 	}
-	return ""
+	return "", -1
 }
 
 // callerFromIndex returns the caller position exclusive of the debug package.

@@ -10,8 +10,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"math"
-	"sort"
-	"strings"
 
 	"github.com/gogf/gf/g/container/gtype"
 	"github.com/gogf/gf/g/internal/rwmutex"
@@ -23,8 +21,8 @@ import (
 type SortedStringArray struct {
 	mu         *rwmutex.RWMutex
 	array      []string
-	unique     *gtype.Bool             // Whether enable unique feature(false)
-	comparator func(v1, v2 string) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
+	unique     *gtype.Bool           // Whether enable unique feature(false)
+	comparator func(a, b string) int // Comparison function(it returns -1: a < b; 0: a == b; 1: a > b)
 }
 
 // NewSortedStringArray creates and returns an empty sorted array.
@@ -34,17 +32,23 @@ func NewSortedStringArray(safe ...bool) *SortedStringArray {
 	return NewSortedStringArraySize(0, safe...)
 }
 
+// NewSortedStringArrayComparator creates and returns an empty sorted array with specified comparator.
+// The parameter <safe> used to specify whether using array in concurrent-safety which is false in default.
+func NewSortedStringArrayComparator(comparator func(a, b string) int, safe ...bool) *SortedStringArray {
+	array := NewSortedStringArray(safe...)
+	array.comparator = comparator
+	return array
+}
+
 // NewSortedStringArraySize create and returns an sorted array with given size and cap.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStringArraySize(cap int, safe ...bool) *SortedStringArray {
 	return &SortedStringArray{
-		mu:     rwmutex.New(safe...),
-		array:  make([]string, 0, cap),
-		unique: gtype.NewBool(),
-		comparator: func(v1, v2 string) int {
-			return strings.Compare(v1, v2)
-		},
+		mu:         rwmutex.New(safe...),
+		array:      make([]string, 0, cap),
+		unique:     gtype.NewBool(),
+		comparator: defaultComparatorStr,
 	}
 }
 
@@ -54,7 +58,7 @@ func NewSortedStringArraySize(cap int, safe ...bool) *SortedStringArray {
 func NewSortedStringArrayFrom(array []string, safe ...bool) *SortedStringArray {
 	a := NewSortedStringArraySize(0, safe...)
 	a.array = array
-	sort.Strings(a.array)
+	quickSortStr(a.array, a.comparator)
 	return a
 }
 
@@ -72,7 +76,7 @@ func (a *SortedStringArray) SetArray(array []string) *SortedStringArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.array = array
-	sort.Strings(a.array)
+	quickSortStr(a.array, a.comparator)
 	return a
 }
 
@@ -82,7 +86,7 @@ func (a *SortedStringArray) SetArray(array []string) *SortedStringArray {
 func (a *SortedStringArray) Sort() *SortedStringArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	sort.Strings(a.array)
+	quickSortStr(a.array, a.comparator)
 	return a
 }
 
