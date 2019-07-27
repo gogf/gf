@@ -9,6 +9,7 @@ package gvar
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/g/internal/empty"
 	"time"
 
 	"github.com/gogf/gf/g/container/gtype"
@@ -68,6 +69,11 @@ func (v *Var) Interface() interface{} {
 // IsNil checks whether <v> is nil.
 func (v *Var) IsNil() bool {
 	return v.Val() == nil
+}
+
+// IsEmpty checks whether <v> is empty.
+func (v *Var) IsEmpty() bool {
+	return empty.IsEmpty(v.Val())
 }
 
 // Bytes converts and returns <v> as []byte.
