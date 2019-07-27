@@ -474,36 +474,6 @@ func Test_Chmod(t *testing.T) {
 	})
 }
 
-func Test_ScanDir(t *testing.T) {
-	gtest.Case(t, func() {
-		var (
-			paths1 string = "/testfiledirs"
-			files  []string
-			err    error
-		)
-
-		createDir(paths1)
-		createTestFile(paths1+"/t1.txt", "")
-		createTestFile(paths1+"/t2.txt", "")
-		defer delTestFiles(paths1)
-
-		files, err = gfile.ScanDir(testpath()+paths1, "t*")
-
-		result := []string{
-			testpath() + paths1 + "/t1.txt",
-			testpath() + paths1 + "/t2.txt",
-		}
-
-		gtest.Assert(err, nil)
-
-		gtest.Assert(formatpaths(files), formatpaths(result))
-
-		_, err = gfile.ScanDir("", "t*")
-		gtest.AssertNE(err, nil)
-
-	})
-}
-
 // 获取绝对目录地址
 func Test_RealPath(t *testing.T) {
 	gtest.Case(t, func() {
