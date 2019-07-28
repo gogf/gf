@@ -123,7 +123,7 @@ func Test_Router_Basic2(t *testing.T) {
 	obj := new(GroupObject)
 	ctl := new(GroupController)
 	// 分组路由批量注册
-	s.Group("/api").Bind([]ghttp.GroupItem{
+	s.Group("/api").Bind([]g.Slice{
 		{"ALL", "/handler", Handler},
 		{"ALL", "/ctl", ctl},
 		{"GET", "/ctl/my-show", ctl, "Show"},
