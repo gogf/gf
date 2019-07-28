@@ -24,11 +24,8 @@ func RedisHandlerGet(r *ghttp.Request) {
 		if id == "" {
 			return
 		}
-		// 当内存中的SESSION存在时不需要读取Redis
-		if r.Session.Size() > 0 {
-			return
-		}
-		// SESSION不存在时，例如服务重启，自动从Redis读取并恢复数据
+		// 应用服务器一般是多个节点构成的集群，
+		// 当请求中带有SESSION ID时，自动从Redis读取并恢复数据。
 		value, err := g.Redis().DoVar("GET", id)
 		if err != nil {
 			panic(err)

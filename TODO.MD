@@ -50,6 +50,11 @@
 1. grpool增加支持阻塞添加任务接口；
 1. gdb.Model在链式安全的对象创建中增加sync.Pool的使用；
 1. 增加g.Table快捷方法以方便操作数据表，但是得考虑后续模型操作设计，特别是脚手架的模型管理；
+1. 改进ghttp分组路由中对hook的支持方式，以便格式与BindHookHandler统一；
+
+
+
+
 
 # DONE
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
