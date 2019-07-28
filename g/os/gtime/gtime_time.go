@@ -149,6 +149,16 @@ func (t *Time) UTC() *Time {
 	return t
 }
 
+// 时间输出为ISO8601格式
+func (t *Time) ISO8601() string {
+	return t.Layout("2006-01-02T15:04:05-07:00")
+}
+
+// 时间输出为RFC822格式
+func (t *Time) RFC822() string {
+	return t.Layout("Mon, 02 Jan 06 15:04 MST")
+}
+
 // 时区转换为当前设定的Local时区
 func (t *Time) Local() *Time {
 	t.Time = t.Time.Local()

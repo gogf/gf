@@ -18,21 +18,16 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strings"
 	"time"
 
 	"github.com/gogf/gf/g/container/gtype"
-	"github.com/gogf/gf/g/text/gregex"
-	"github.com/gogf/gf/g/text/gstr"
 	"github.com/gogf/gf/g/util/gconv"
 )
 
 const (
-	// Separator for file system.
-	Separator = string(filepath.Separator)
-	// Default perm for file opening.
-	gDEFAULT_PERM = 0666
+	Separator     = string(filepath.Separator) // Separator for file system.
+	gDEFAULT_PERM = 0666                       // Default perm for file opening.
 )
 
 var (
@@ -333,53 +328,14 @@ func Chmod(path string, mode os.FileMode) error {
 	return os.Chmod(path, mode)
 }
 
-// ScanDir returns all sub-files with absolute paths of given <path>,
-// It scans directory recursively if given parameter <recursive> is true.
-func ScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
-	list, err := doScanDir(path, pattern, recursive...)
-	if err != nil {
-		return nil, err
-	}
-	if len(list) > 0 {
-		sort.Strings(list)
-	}
-	return list, nil
-}
-
-// doScanDir is an internal method which scans directory
-// and returns the absolute path list of files that are not sorted.
-//
-// The pattern parameter <pattern> supports multiple file name patterns,
-// using the ',' symbol to separate multiple patterns.
-//
-// It scans directory recursively if given parameter <recursive> is true.
-func doScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
-	list := ([]string)(nil)
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	names, err := file.Readdirnames(-1)
-	if err != nil {
-		return nil, err
-	}
-	for _, name := range names {
-		path := fmt.Sprintf("%s%s%s", path, Separator, name)
-		if IsDir(path) && len(recursive) > 0 && recursive[0] {
-			array, _ := doScanDir(path, pattern, true)
-			if len(array) > 0 {
-				list = append(list, array...)
-			}
-		}
-		// If it meets pattern, then add it to the result list.
-		for _, p := range strings.Split(pattern, ",") {
-			if match, err := filepath.Match(strings.TrimSpace(p), name); err == nil && match {
-				list = append(list, path)
-			}
-		}
-	}
-	return list, nil
+// Abs returns an absolute representation of path.
+// If the path is not absolute it will be joined with the current
+// working directory to turn it into an absolute path. The absolute
+// path name for a given file is not guaranteed to be unique.
+// Abs calls Clean on the result.
+func Abs(path string) string {
+	p, _ := filepath.Abs(path)
+	return p
 }
 
 // RealPath converts the given <path> to its absolute path
@@ -501,54 +457,6 @@ func homeWindows() (string, error) {
 	}
 
 	return home, nil
-}
-
-// MainPkgPath returns absolute file path of package main,
-// which contains the entrance function main.
-//
-// It's only available in develop environment.
-//
-// Note1: Only valid for source development environments,
-// IE only valid for systems that generate this executable.
-// Note2: When the method is called for the first time, if it is in an asynchronous goroutine,
-// the method may not get the main package path.
-func MainPkgPath() string {
-	path := mainPkgPath.Val()
-	if path != "" {
-		if path == "-" {
-			return ""
-		}
-		return path
-	}
-	for i := 1; i < 10000; i++ {
-		if _, file, _, ok := runtime.Caller(i); ok {
-			// <file> is separated by '/'
-			if gstr.Contains(file, "/gf/g/") {
-				continue
-			}
-			if Ext(file) != ".go" {
-				continue
-			}
-			// separator of <file> '/' will be converted to Separator.
-			for path = Dir(file); len(path) > 1 && Exists(path) && path[len(path)-1] != os.PathSeparator; {
-				files, _ := ScanDir(path, "*.go")
-				for _, v := range files {
-					if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
-						mainPkgPath.Set(path)
-						return path
-					}
-				}
-				path = Dir(path)
-			}
-
-		} else {
-			break
-		}
-	}
-	// If it fails finding the path, then mark it as "-",
-	// which means it will never do this search again.
-	mainPkgPath.Set("-")
-	return ""
 }
 
 // See os.TempDir().

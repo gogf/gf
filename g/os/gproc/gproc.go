@@ -9,13 +9,14 @@ package gproc
 
 import (
 	"bytes"
-	"github.com/gogf/gf/g/os/gfile"
-	"github.com/gogf/gf/g/util/gconv"
 	"io"
 	"os"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/util/gconv"
 )
 
 const (
@@ -91,9 +92,9 @@ func ShellRun(cmd string) error {
 }
 
 // 阻塞执行shell指令，并返回输出结果(如果需要异步，请使用goroutine)
-func ShellExec(cmd string) (string, error) {
+func ShellExec(cmd string, environment ...[]string) (string, error) {
 	buf := bytes.NewBuffer(nil)
-	p := NewProcess(getShell(), []string{getShellOption(), cmd})
+	p := NewProcess(getShell(), []string{getShellOption(), cmd}, environment...)
 	p.Stdout = buf
 	err := p.Run()
 	return buf.String(), err

@@ -1,13 +1,14 @@
 package gfile_test
 
 import (
-	"github.com/gogf/gf/g/os/gfile"
-	"github.com/gogf/gf/g/test/gtest"
 	"os"
 	"testing"
+
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
-func TestMTime(t *testing.T) {
+func Test_MTime(t *testing.T) {
 	gtest.Case(t, func() {
 
 		var (
@@ -26,7 +27,7 @@ func TestMTime(t *testing.T) {
 	})
 }
 
-func TestMTimeMillisecond(t *testing.T) {
+func Test_MTimeMillisecond(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			file1   string = "/testfile_t1.txt"

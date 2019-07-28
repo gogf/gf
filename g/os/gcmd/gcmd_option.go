@@ -30,6 +30,12 @@ func (c *gCmdOption) Get(key string, def ...string) string {
 	return ""
 }
 
+// Contains checks whether the option named <key> exists.
+func (c *gCmdOption) Contains(key string) bool {
+	_, ok := c.options[key]
+	return ok
+}
+
 // Set sets the option named <key> with value <value>.
 func (c *gCmdOption) Set(key string, value string) {
 	c.options[key] = value

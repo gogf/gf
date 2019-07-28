@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/gogf/gf/g/os/gproc"
+	"fmt"
+	"github.com/gogf/gf/g"
 )
 
 func main() {
-	gproc.ShellRun("sleep 5; echo 1")
+	latestVersion := g.NewVar(nil, true)
+	fmt.Println(latestVersion.IsNil())
 }
