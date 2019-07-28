@@ -379,40 +379,40 @@ func Interfaces(i interface{}) []interface{} {
 }
 
 // Maps converts <i> to []map[string]interface{}.
-func Maps(i interface{}) []map[string]interface{} {
-	if i == nil {
+func Maps(value interface{}, tags ...string) []map[string]interface{} {
+	if value == nil {
 		return nil
 	}
-	if r, ok := i.([]map[string]interface{}); ok {
+	if r, ok := value.([]map[string]interface{}); ok {
 		return r
 	} else {
-		array := Interfaces(i)
+		array := Interfaces(value)
 		if len(array) == 0 {
 			return nil
 		}
 		list := make([]map[string]interface{}, len(array))
 		for k, v := range array {
-			list[k] = Map(v)
+			list[k] = Map(v, tags...)
 		}
 		return list
 	}
 }
 
 // MapsDeep converts <i> to []map[string]interface{} recursively.
-func MapsDeep(i interface{}) []map[string]interface{} {
-	if i == nil {
+func MapsDeep(value interface{}, tags ...string) []map[string]interface{} {
+	if value == nil {
 		return nil
 	}
-	if r, ok := i.([]map[string]interface{}); ok {
+	if r, ok := value.([]map[string]interface{}); ok {
 		return r
 	} else {
-		array := Interfaces(i)
+		array := Interfaces(value)
 		if len(array) == 0 {
 			return nil
 		}
 		list := make([]map[string]interface{}, len(array))
 		for k, v := range array {
-			list[k] = MapDeep(v)
+			list[k] = MapDeep(v, tags...)
 		}
 		return list
 	}

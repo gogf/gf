@@ -77,7 +77,7 @@ func Config(name ...string) *gcfg.Config {
 func Database(name ...string) gdb.DB {
 	config := Config()
 	group := gdb.DEFAULT_GROUP_NAME
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
 	key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
@@ -214,7 +214,7 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 func Redis(name ...string) *gredis.Redis {
 	config := Config()
 	group := "default"
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
 	key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
