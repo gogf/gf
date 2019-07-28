@@ -110,7 +110,7 @@ func New(config Config) *Redis {
 // it returns a redis instance with default group.
 func Instance(name ...string) *Redis {
 	group := DEFAULT_GROUP_NAME
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
 	v := instances.GetOrSetFuncLock(group, func() interface{} {

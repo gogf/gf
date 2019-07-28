@@ -192,7 +192,7 @@ func serverProcessInit() {
 // 单例模式，请保证name的唯一性
 func GetServer(name ...interface{}) *Server {
 	sname := gDEFAULT_SERVER
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		sname = gconv.String(name[0])
 	}
 	if s := serverMapping.Get(sname); s != nil {
