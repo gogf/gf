@@ -1,13 +1,14 @@
 package gfile_test
 
 import (
-	"github.com/gogf/gf/g/os/gfile"
-	"github.com/gogf/gf/g/test/gtest"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 // 创建测试文件
@@ -50,7 +51,7 @@ func testpath() string {
 	return os.TempDir()
 }
 
-func TestGetContents(t *testing.T) {
+func Test_GetContents(t *testing.T) {
 	gtest.Case(t, func() {
 
 		var (
@@ -65,7 +66,7 @@ func TestGetContents(t *testing.T) {
 	})
 }
 
-func TestGetBinContents(t *testing.T) {
+func Test_GetBinContents(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			filepaths1  string = "/testfile_t1.txt"                 // 文件存在时
@@ -87,7 +88,7 @@ func TestGetBinContents(t *testing.T) {
 }
 
 // 截断文件为指定的大小
-func TestTruncate(t *testing.T) {
+func Test_Truncate(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			filepaths1 string = "/testfile_GetContentsyyui.txt" //文件存在时
@@ -114,7 +115,7 @@ func TestTruncate(t *testing.T) {
 	})
 }
 
-func TestPutContents(t *testing.T) {
+func Test_PutContents(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			filepaths   string = "/testfile_PutContents.txt"
@@ -138,7 +139,7 @@ func TestPutContents(t *testing.T) {
 	})
 }
 
-func TestPutContentsAppend(t *testing.T) {
+func Test_PutContentsAppend(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			filepaths   string = "/testfile_PutContents.txt"
@@ -163,7 +164,7 @@ func TestPutContentsAppend(t *testing.T) {
 
 }
 
-func TestPutBinContents(t *testing.T) {
+func Test_PutBinContents(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			filepaths   string = "/testfile_PutContents.txt"
@@ -187,7 +188,7 @@ func TestPutBinContents(t *testing.T) {
 	})
 }
 
-func TestPutBinContentsAppend(t *testing.T) {
+func Test_PutBinContentsAppend(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			filepaths   string = "/testfile_PutContents.txt" //原文件内容: yy
@@ -210,7 +211,7 @@ func TestPutBinContentsAppend(t *testing.T) {
 	})
 }
 
-func TestGetBinContentsByTwoOffsetsByPath(t *testing.T) {
+func Test_GetBinContentsByTwoOffsetsByPath(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			filepaths   string = "/testfile_GetContents.txt" // 文件内容: abcdefghijk
@@ -230,7 +231,7 @@ func TestGetBinContentsByTwoOffsetsByPath(t *testing.T) {
 
 }
 
-func TestGetNextCharOffsetByPath(t *testing.T) {
+func Test_GetNextCharOffsetByPath(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			filepaths  string = "/testfile_GetContents.txt" // 文件内容: abcdefghijk
@@ -247,7 +248,7 @@ func TestGetNextCharOffsetByPath(t *testing.T) {
 	})
 }
 
-func TestGetNextCharOffset(t *testing.T) {
+func Test_GetNextCharOffset(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			localindex int64
@@ -263,7 +264,7 @@ func TestGetNextCharOffset(t *testing.T) {
 	})
 }
 
-func TestGetBinContentsByTwoOffsets(t *testing.T) {
+func Test_GetBinContentsByTwoOffsets(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			reads []byte
@@ -279,7 +280,7 @@ func TestGetBinContentsByTwoOffsets(t *testing.T) {
 	})
 }
 
-func TestGetBinContentsTilChar(t *testing.T) {
+func Test_GetBinContentsTilChar(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			reads  []byte
@@ -296,7 +297,7 @@ func TestGetBinContentsTilChar(t *testing.T) {
 	})
 }
 
-func TestGetBinContentsTilCharByPath(t *testing.T) {
+func Test_GetBinContentsTilCharByPath(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			reads     []byte
@@ -319,7 +320,7 @@ func TestGetBinContentsTilCharByPath(t *testing.T) {
 	})
 }
 
-func TestHome(t *testing.T) {
+func Test_Home(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			reads string

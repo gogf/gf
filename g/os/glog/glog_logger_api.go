@@ -20,7 +20,7 @@ func (l *Logger) Print(v ...interface{}) {
 // Printf prints <v> with format <format> using fmt.Sprintf.
 // The parameter <v> can be multiple variables.
 func (l *Logger) Printf(format string, v ...interface{}) {
-	l.printStd(l.format(format, v...))
+	l.printStd("", l.format(format, v...))
 }
 
 // See Print.
@@ -31,7 +31,7 @@ func (l *Logger) Println(v ...interface{}) {
 // Deprecated.
 // Use Printf instead.
 func (l *Logger) Printfln(format string, v ...interface{}) {
-	l.printStd(l.format(format, v...))
+	l.Printf(format, v...)
 }
 
 // Fatal prints the logging content with [FATA] header and newline, then exit the current process.
@@ -50,7 +50,6 @@ func (l *Logger) Fatalf(format string, v ...interface{}) {
 // Use Fatalf instead.
 func (l *Logger) Fatalfln(format string, v ...interface{}) {
 	l.Fatalf(format, v...)
-	os.Exit(1)
 }
 
 // Panic prints the logging content with [PANI] header and newline, then panics.
@@ -88,9 +87,7 @@ func (l *Logger) Infof(format string, v ...interface{}) {
 // Deprecated.
 // Use Infof instead.
 func (l *Logger) Infofln(format string, v ...interface{}) {
-	if l.checkLevel(LEVEL_INFO) {
-		l.Infof(format, v...)
-	}
+	l.Infof(format, v...)
 }
 
 // Debug prints the logging content with [DEBU] header and newline.
@@ -110,9 +107,7 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 // Deprecated.
 // Use Debugf instead.
 func (l *Logger) Debugfln(format string, v ...interface{}) {
-	if l.checkLevel(LEVEL_DEBU) {
-		l.Debugf(format, v...)
-	}
+	l.Debugf(format, v...)
 }
 
 // Notice prints the logging content with [NOTI] header and newline.
@@ -134,9 +129,7 @@ func (l *Logger) Noticef(format string, v ...interface{}) {
 // Deprecated.
 // Use Noticef instead.
 func (l *Logger) Noticefln(format string, v ...interface{}) {
-	if l.checkLevel(LEVEL_NOTI) {
-		l.Noticef(format, v...)
-	}
+	l.Noticef(format, v...)
 }
 
 // Warning prints the logging content with [WARN] header and newline.
@@ -158,9 +151,7 @@ func (l *Logger) Warningf(format string, v ...interface{}) {
 // Deprecated.
 // Use Warningf instead.
 func (l *Logger) Warningfln(format string, v ...interface{}) {
-	if l.checkLevel(LEVEL_WARN) {
-		l.Warningf(format, v...)
-	}
+	l.Warningf(format, v...)
 }
 
 // Error prints the logging content with [ERRO] header and newline.
@@ -182,9 +173,7 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 // Deprecated.
 // Use Errorf instead.
 func (l *Logger) Errorfln(format string, v ...interface{}) {
-	if l.checkLevel(LEVEL_ERRO) {
-		l.Errorf(format, v...)
-	}
+	l.Errorf(format, v...)
 }
 
 // Critical prints the logging content with [CRIT] header and newline.
@@ -206,9 +195,7 @@ func (l *Logger) Criticalf(format string, v ...interface{}) {
 // Deprecated.
 // Use Criticalf instead.
 func (l *Logger) Criticalfln(format string, v ...interface{}) {
-	if l.checkLevel(LEVEL_CRIT) {
-		l.Criticalf(format, v...)
-	}
+	l.Criticalf(format, v...)
 }
 
 // checkLevel checks whether the given <level> could be output.

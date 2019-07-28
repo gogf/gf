@@ -1,13 +1,14 @@
 package gfile_test
 
 import (
-	"github.com/gogf/gf/g/os/gfile"
-	"github.com/gogf/gf/g/test/gtest"
 	"path/filepath"
 	"testing"
+
+	"github.com/gogf/gf/g/os/gfile"
+	"github.com/gogf/gf/g/test/gtest"
 )
 
-func TestSearch(t *testing.T) {
+func Test_Search(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
 			paths1  string = "/testfiless"

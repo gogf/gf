@@ -22,8 +22,8 @@ import (
 type SortedIntArray struct {
 	mu         *rwmutex.RWMutex
 	array      []int
-	unique     *gtype.Bool          // Whether enable unique feature(false)
-	comparator func(v1, v2 int) int // Comparison function(it returns -1: v1 < v2; 0: v1 == v2; 1: v1 > v2)
+	unique     *gtype.Bool        // Whether enable unique feature(false)
+	comparator func(a, b int) int // Comparison function(it returns -1: a < b; 0: a == b; 1: a > b)
 }
 
 // NewSortedIntArray creates and returns an empty sorted array.
@@ -33,23 +33,23 @@ func NewSortedIntArray(safe ...bool) *SortedIntArray {
 	return NewSortedIntArraySize(0, safe...)
 }
 
+// NewSortedIntArrayComparator creates and returns an empty sorted array with specified comparator.
+// The parameter <safe> used to specify whether using array in concurrent-safety which is false in default.
+func NewSortedIntArrayComparator(comparator func(a, b int) int, safe ...bool) *SortedIntArray {
+	array := NewSortedIntArray(safe...)
+	array.comparator = comparator
+	return array
+}
+
 // NewSortedIntArraySize create and returns an sorted array with given size and cap.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
 	return &SortedIntArray{
-		mu:     rwmutex.New(safe...),
-		array:  make([]int, 0, cap),
-		unique: gtype.NewBool(),
-		comparator: func(v1, v2 int) int {
-			if v1 < v2 {
-				return -1
-			}
-			if v1 > v2 {
-				return 1
-			}
-			return 0
-		},
+		mu:         rwmutex.New(safe...),
+		array:      make([]int, 0, cap),
+		unique:     gtype.NewBool(),
+		comparator: defaultComparatorInt,
 	}
 }
 

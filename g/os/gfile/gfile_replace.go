@@ -29,7 +29,7 @@ func Replace(search, replace, path, pattern string, recursive ...bool) error {
 // ReplaceFunc replaces content for files under <path> with callback function <f>.
 // The parameter <pattern> specifies the file pattern which matches to be replaced.
 // It does replacement recursively if given parameter <recursive> is true.
-func ReplaceFunc(f func(content string) string, path, pattern string, recursive ...bool) error {
+func ReplaceFunc(f func(path, content string) string, path, pattern string, recursive ...bool) error {
 	files, err := ScanDir(path, pattern, recursive...)
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func ReplaceFunc(f func(content string) string, path, pattern string, recursive 
 	result := ""
 	for _, file := range files {
 		data = GetContents(file)
-		result = f(data)
+		result = f(file, data)
 		if data != result {
 			if err = PutContents(file, result); err != nil {
 				return err
