@@ -43,14 +43,22 @@ func GetSession(r *Request) *Session {
 	}
 }
 
+// UpdateSession updates the session with custom map.
+func (s *Server) UpdateSession(id string, data map[string]interface{}) {
+	v := s.sessions.GetOrSetFuncLock(id, func() interface{} {
+		return gmap.NewStrAnyMap()
+	}, s.GetSessionMaxAge()*1000)
+	v.(*gmap.StrAnyMap).Sets(data)
+}
+
 // 延迟初始化
 func (s *Session) init() {
 	if len(s.id) == 0 {
 		s.server = s.request.Server
 		if id := s.request.Cookie.GetSessionId(); id != "" {
-			if data := s.server.sessions.Get(id); data != nil {
+			if v := s.server.sessions.Get(id); v != nil {
 				s.id = id
-				s.data = data.(*gmap.StrAnyMap)
+				s.data = v.(*gmap.StrAnyMap)
 				return
 			}
 		}
