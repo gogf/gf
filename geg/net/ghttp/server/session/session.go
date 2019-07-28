@@ -22,7 +22,7 @@ func (c *Controller) DoLogin() {
 }
 
 func (c *Controller) Main() {
-	c.Response.WriteJson(c.Session.Data())
+	c.Response.WriteJson(c.Session.Map())
 }
 
 func main() {
