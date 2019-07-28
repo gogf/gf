@@ -8,14 +8,16 @@
 package ghttp
 
 import (
+	"encoding/json"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/g/container/gmap"
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/os/gtime"
 	"github.com/gogf/gf/g/util/gconv"
 	"github.com/gogf/gf/g/util/grand"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // SESSION对象
@@ -62,19 +64,33 @@ func (s *Session) init() {
 	}
 }
 
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (s *Session) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.data)
+}
+
 // 获取/创建SessionId
 func (s *Session) Id() string {
 	s.init()
 	return s.id
 }
 
-// 获取当前session所有数据
+// 获取当前session所有数据，注意是值拷贝
 func (s *Session) Map() map[string]interface{} {
 	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
 		s.init()
 		return s.data.Map()
 	}
 	return nil
+}
+
+// 获得session map大小
+func (s *Session) Size() int {
+	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+		s.init()
+		return s.data.Size()
+	}
+	return 0
 }
 
 // 设置session
@@ -117,12 +133,23 @@ func (s *Session) GetVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(s.Get(key, def...), true)
 }
 
-// 删除session
+// 删除指定session键值对
 func (s *Session) Remove(key string) {
 	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
 		s.init()
 		s.data.Remove(key)
 	}
+}
+
+// 从json字符串中恢复session数据
+func (s *Session) RestoreFromJson(data []byte) (err error) {
+	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+		s.init()
+		s.data.LockFunc(func(m map[string]interface{}) {
+			err = json.Unmarshal(data, &m)
+		})
+	}
+	return
 }
 
 // 清空session
@@ -228,7 +255,34 @@ func (s *Session) GetDuration(key string, def ...interface{}) time.Duration {
 	return gconv.Duration(s.Get(key, def...))
 }
 
-// 将变量转换为对象，注意 pointer 参数必须为struct指针
+func (s *Session) GetMap(value interface{}, tags ...string) map[string]interface{} {
+	return gconv.Map(value, tags...)
+}
+
+func (s *Session) GetMapDeep(value interface{}, tags ...string) map[string]interface{} {
+	return gconv.MapDeep(value, tags...)
+}
+
+func (s *Session) GetMaps(value interface{}, tags ...string) []map[string]interface{} {
+	return gconv.Maps(value, tags...)
+}
+
+func (s *Session) GetMapsDeep(value interface{}, tags ...string) []map[string]interface{} {
+	return gconv.MapsDeep(value, tags...)
+}
+
 func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Struct(s.Get(key), pointer, mapping...)
+}
+
+func (s *Session) GetStructDeep(key string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.StructDeep(s.Get(key), pointer, mapping...)
+}
+
+func (s *Session) GetStructs(key string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Structs(s.Get(key), pointer, mapping...)
+}
+
+func (s *Session) GetStructsDeep(key string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.StructsDeep(s.Get(key), pointer, mapping...)
 }
