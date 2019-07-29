@@ -7,10 +7,11 @@
 package gconv_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gconv"
-	"testing"
 )
 
 func Test_Map_Basic(t *testing.T) {
@@ -124,21 +125,31 @@ func Test_Map_PrivateAttribute(t *testing.T) {
 }
 
 func Test_Map_StructInherit(t *testing.T) {
+	type Ids struct {
+		Id  int `json:"id"`
+		Uid int `json:"uid"`
+	}
+	type Base struct {
+		Ids
+		CreateTime string `json:"create_time"`
+	}
+	type User struct {
+		Base
+		Passport string `json:"passport"`
+		Password string `json:"password"`
+		Nickname string `json:"nickname"`
+	}
 	gtest.Case(t, func() {
-		type Ids struct {
-			Id  int `json:"id"`
-			Uid int `json:"uid"`
-		}
-		type Base struct {
-			Ids
-			CreateTime string `json:"create_time"`
-		}
-		type User struct {
-			Base
-			Passport string `json:"passport"`
-			Password string `json:"password"`
-			Nickname string `json:"nickname"`
-		}
+		user := new(User)
+		user.Id = 100
+		user.Nickname = "john"
+		user.CreateTime = "2019"
+		m := gconv.Map(user)
+		gtest.Assert(m["id"], "")
+		gtest.Assert(m["nickname"], user.Nickname)
+		gtest.Assert(m["create_time"], "")
+	})
+	gtest.Case(t, func() {
 		user := new(User)
 		user.Id = 100
 		user.Nickname = "john"
@@ -147,5 +158,244 @@ func Test_Map_StructInherit(t *testing.T) {
 		gtest.Assert(m["id"], user.Id)
 		gtest.Assert(m["nickname"], user.Nickname)
 		gtest.Assert(m["create_time"], user.CreateTime)
+	})
+}
+
+func Test_MapStruct(t *testing.T) {
+	type User struct {
+		Id   int
+		Name string
+	}
+	params := g.Map{
+		"key": g.Map{
+			"id":   1,
+			"name": "john",
+		},
+	}
+	gtest.Case(t, func() {
+		m := make(map[string]User)
+		err := gconv.MapStruct(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 1)
+		gtest.Assert(m["key"].Id, 1)
+		gtest.Assert(m["key"].Name, "john")
+	})
+	gtest.Case(t, func() {
+		m := (map[string]User)(nil)
+		err := gconv.MapStruct(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 1)
+		gtest.Assert(m["key"].Id, 1)
+		gtest.Assert(m["key"].Name, "john")
+	})
+	gtest.Case(t, func() {
+		m := make(map[string]*User)
+		err := gconv.MapStruct(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 1)
+		gtest.Assert(m["key"].Id, 1)
+		gtest.Assert(m["key"].Name, "john")
+	})
+	gtest.Case(t, func() {
+		m := (map[string]*User)(nil)
+		err := gconv.MapStruct(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 1)
+		gtest.Assert(m["key"].Id, 1)
+		gtest.Assert(m["key"].Name, "john")
+	})
+}
+
+func Test_MapStructDeep(t *testing.T) {
+	type Ids struct {
+		Id  int
+		Uid int
+	}
+	type Base struct {
+		Ids
+		Time string
+	}
+	type User struct {
+		Base
+		Name string
+	}
+	params := g.Map{
+		"key": g.Map{
+			"id":   1,
+			"name": "john",
+		},
+	}
+	gtest.Case(t, func() {
+		m := (map[string]*User)(nil)
+		err := gconv.MapStruct(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 1)
+		gtest.Assert(m["key"].Id, 0)
+		gtest.Assert(m["key"].Name, "john")
+	})
+	gtest.Case(t, func() {
+		m := (map[string]*User)(nil)
+		err := gconv.MapStructDeep(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 1)
+		gtest.Assert(m["key"].Id, 1)
+		gtest.Assert(m["key"].Name, "john")
+	})
+}
+
+func Test_MapStructs1(t *testing.T) {
+	type User struct {
+		Id   int
+		Name int
+	}
+	params := g.Map{
+		"key1": g.Slice{
+			g.Map{"id": 1, "name": "john"},
+			g.Map{"id": 2, "name": "smith"},
+		},
+		"key2": g.Slice{
+			g.Map{"id": 3, "name": "green"},
+			g.Map{"id": 4, "name": "jim"},
+		},
+	}
+	gtest.Case(t, func() {
+		m := make(map[string][]User)
+		err := gconv.MapStructs(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m["key1"][0].Id, 1)
+		gtest.Assert(m["key1"][1].Id, 2)
+		gtest.Assert(m["key2"][0].Id, 3)
+		gtest.Assert(m["key2"][1].Id, 4)
+	})
+	gtest.Case(t, func() {
+		m := (map[string][]User)(nil)
+		err := gconv.MapStructs(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m["key1"][0].Id, 1)
+		gtest.Assert(m["key1"][1].Id, 2)
+		gtest.Assert(m["key2"][0].Id, 3)
+		gtest.Assert(m["key2"][1].Id, 4)
+	})
+	gtest.Case(t, func() {
+		m := make(map[string][]*User)
+		err := gconv.MapStructs(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m["key1"][0].Id, 1)
+		gtest.Assert(m["key1"][1].Id, 2)
+		gtest.Assert(m["key2"][0].Id, 3)
+		gtest.Assert(m["key2"][1].Id, 4)
+	})
+	gtest.Case(t, func() {
+		m := (map[string][]*User)(nil)
+		err := gconv.MapStructs(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m["key1"][0].Id, 1)
+		gtest.Assert(m["key1"][1].Id, 2)
+		gtest.Assert(m["key2"][0].Id, 3)
+		gtest.Assert(m["key2"][1].Id, 4)
+	})
+}
+
+func Test_MapStructs2(t *testing.T) {
+	type User struct {
+		Id   int
+		Name int
+	}
+	params := g.MapIntAny{
+		100: g.Slice{
+			g.Map{"id": 1, "name": "john"},
+			g.Map{"id": 2, "name": "smith"},
+		},
+		200: g.Slice{
+			g.Map{"id": 3, "name": "green"},
+			g.Map{"id": 4, "name": "jim"},
+		},
+	}
+	gtest.Case(t, func() {
+		m := make(map[int][]User)
+		err := gconv.MapStructs(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m[100][0].Id, 1)
+		gtest.Assert(m[100][1].Id, 2)
+		gtest.Assert(m[200][0].Id, 3)
+		gtest.Assert(m[200][1].Id, 4)
+	})
+	gtest.Case(t, func() {
+		m := make(map[int][]*User)
+		err := gconv.MapStructs(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m[100][0].Id, 1)
+		gtest.Assert(m[100][1].Id, 2)
+		gtest.Assert(m[200][0].Id, 3)
+		gtest.Assert(m[200][1].Id, 4)
+	})
+	gtest.Case(t, func() {
+		m := make(map[string][]*User)
+		err := gconv.MapStructs(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m["100"][0].Id, 1)
+		gtest.Assert(m["100"][1].Id, 2)
+		gtest.Assert(m["200"][0].Id, 3)
+		gtest.Assert(m["200"][1].Id, 4)
+	})
+}
+
+func Test_MapStructsDeep(t *testing.T) {
+	type Ids struct {
+		Id  int
+		Uid int
+	}
+	type Base struct {
+		Ids
+		Time string
+	}
+	type User struct {
+		Base
+		Name string
+	}
+	params := g.MapIntAny{
+		100: g.Slice{
+			g.Map{"id": 1, "name": "john"},
+			g.Map{"id": 2, "name": "smith"},
+		},
+		200: g.Slice{
+			g.Map{"id": 3, "name": "green"},
+			g.Map{"id": 4, "name": "jim"},
+		},
+	}
+	gtest.Case(t, func() {
+		m := make(map[string][]*User)
+		err := gconv.MapStructs(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m["100"][0].Id, 0)
+		gtest.Assert(m["100"][1].Id, 0)
+		gtest.Assert(m["100"][0].Name, "john")
+		gtest.Assert(m["100"][1].Name, "smith")
+		gtest.Assert(m["200"][0].Id, 0)
+		gtest.Assert(m["200"][1].Id, 0)
+		gtest.Assert(m["200"][0].Name, "green")
+		gtest.Assert(m["200"][1].Name, "jim")
+	})
+	gtest.Case(t, func() {
+		m := make(map[string][]*User)
+		err := gconv.MapStructsDeep(params, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(m), 2)
+		gtest.Assert(m["100"][0].Id, 1)
+		gtest.Assert(m["100"][1].Id, 2)
+		gtest.Assert(m["100"][0].Name, "john")
+		gtest.Assert(m["100"][1].Name, "smith")
+		gtest.Assert(m["200"][0].Id, 3)
+		gtest.Assert(m["200"][1].Id, 4)
+		gtest.Assert(m["200"][0].Name, "green")
+		gtest.Assert(m["200"][1].Name, "jim")
 	})
 }

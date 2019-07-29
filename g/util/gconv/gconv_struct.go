@@ -52,13 +52,13 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 			return errors.New("object pointer cannot be nil")
 		}
 		elem = rv.Elem()
-		// Auto create struct object.
-		// For example, if <pointer> is **User, then <elem> is *User, which is a pointer to User.
-		if elem.Type().Kind() == reflect.Ptr && (!elem.IsValid() || elem.IsNil()) {
-			e := reflect.New(elem.Type().Elem()).Elem()
-			elem.Set(e.Addr())
-			elem = e
-		}
+	}
+	// Auto create struct object.
+	// For example, if <pointer> is **User, then <elem> is *User, which is a pointer to User.
+	if elem.Type().Kind() == reflect.Ptr && (!elem.IsValid() || elem.IsNil()) {
+		e := reflect.New(elem.Type().Elem()).Elem()
+		elem.Set(e.Addr())
+		elem = e
 	}
 	// It only performs one converting to the same attribute.
 	// doneMap is used to check repeated converting.
@@ -150,7 +150,7 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 			rv = reflect.ValueOf(pointer)
 		}
 		kind := rv.Kind()
-		if kind == reflect.Ptr {
+		for kind == reflect.Ptr {
 			rv = rv.Elem()
 			kind = rv.Kind()
 		}
