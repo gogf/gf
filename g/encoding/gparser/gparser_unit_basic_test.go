@@ -7,10 +7,11 @@
 package gparser_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/g"
 	"github.com/gogf/gf/g/encoding/gparser"
 	"github.com/gogf/gf/g/test/gtest"
-	"testing"
 )
 
 func Test_New(t *testing.T) {
@@ -243,10 +244,6 @@ func Test_Convert(t *testing.T) {
 
 		p = gparser.New(`[0,1,2]`)
 		gtest.Assert(p.ToArray()[0], 0)
-
-		err = gparser.VarToStruct(`{"name":"gf"}`, &name)
-		gtest.Assert(err, nil)
-		gtest.Assert(name.Name, "gf")
 	})
 }
 

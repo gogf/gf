@@ -43,6 +43,10 @@ func (j *Json) Get(pattern string, def ...interface{}) interface{} {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 
+	if pattern == "." {
+		pattern = ""
+	}
+
 	var result *interface{}
 	if j.vc {
 		result = j.getPointerByPattern(pattern)

@@ -11,6 +11,5 @@ import (
 	"github.com/gogf/gf/g/encoding/gjson"
 )
 
-type Parser struct {
-	json *gjson.Json
-}
+// Parser is actually alias of gjson.Json.
+type Parser = gjson.Json
