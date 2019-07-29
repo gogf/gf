@@ -351,8 +351,7 @@ func Interfaces(i interface{}) []interface{} {
 			// Finally we use reflection.
 			rv := reflect.ValueOf(i)
 			kind := rv.Kind()
-			// If it's pointer, find the real type.
-			if kind == reflect.Ptr {
+			for kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
 			}
@@ -442,14 +441,16 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 	if pointer == nil {
 		return errors.New("object pointer cannot be nil")
 	}
-	pointerRt := reflect.TypeOf(pointer)
-	if kind := pointerRt.Kind(); kind != reflect.Ptr {
-		return fmt.Errorf("pointer should be type of pointer, but got: %v", kind)
+	pointerRv, ok := pointer.(reflect.Value)
+	if !ok {
+		pointerRv = reflect.ValueOf(pointer)
+		if kind := pointerRv.Kind(); kind != reflect.Ptr {
+			return fmt.Errorf("pointer should be type of pointer, but got: %v", kind)
+		}
 	}
-
 	rv := reflect.ValueOf(params)
 	kind := rv.Kind()
-	if kind == reflect.Ptr {
+	for kind == reflect.Ptr {
 		rv = rv.Elem()
 		kind = rv.Kind()
 	}
@@ -459,7 +460,7 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 		if rv.Len() == 0 {
 			return nil
 		}
-		array := reflect.MakeSlice(pointerRt.Elem(), rv.Len(), rv.Len())
+		array := reflect.MakeSlice(pointerRv.Type().Elem(), rv.Len(), rv.Len())
 		itemType := array.Index(0).Type()
 		for i := 0; i < rv.Len(); i++ {
 			if itemType.Kind() == reflect.Ptr {
@@ -478,7 +479,6 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 			} else {
 				// Slice element is not type of pointer.
 				e := reflect.New(itemType).Elem()
-
 				if deep {
 					if err = StructDeep(rv.Index(i).Interface(), e, mapping...); err != nil {
 						return err
@@ -491,7 +491,7 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 				array.Index(i).Set(e)
 			}
 		}
-		reflect.ValueOf(pointer).Elem().Set(array)
+		pointerRv.Elem().Set(array)
 		return nil
 	default:
 		return fmt.Errorf("params should be type of slice, but got: %v", kind)
