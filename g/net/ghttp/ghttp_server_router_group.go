@@ -38,13 +38,13 @@ func (s *Server) Group(prefix ...string) *RouterGroup {
 
 // 获取分组路由对象
 func (d *Domain) Group(prefix ...string) *RouterGroup {
-	if len(prefix) > 0 {
-		return &RouterGroup{
-			domain: d,
-			prefix: prefix[0],
-		}
+	group := &RouterGroup{
+		domain: d,
 	}
-	return &RouterGroup{}
+	if len(prefix) > 0 {
+		group.prefix = prefix[0]
+	}
+	return group
 }
 
 // 执行分组路由批量绑定

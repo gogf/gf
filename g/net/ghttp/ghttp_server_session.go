@@ -1,9 +1,8 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 并发安全的Session管理器
 
 package ghttp
 
@@ -20,17 +19,18 @@ import (
 	"github.com/gogf/gf/g/util/grand"
 )
 
-// SESSION对象
+// SESSION对象，并发安全
 type Session struct {
 	id      string          // SessionId
 	data    *gmap.StrAnyMap // Session数据
+	dirty   bool            // 数据是否被修改
 	server  *Server         // 所属Server
 	request *Request        // 关联的请求
 }
 
 // 生成一个唯一的SessionId字符串，长度18位。
 func makeSessionId() string {
-	return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 36) + grand.RandStr(6))
+	return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 36) + grand.Str(6))
 }
 
 // 获取或者生成一个session对象(延迟初始化)
@@ -43,17 +43,22 @@ func GetSession(r *Request) *Session {
 	}
 }
 
-// 执行初始化(用于延迟初始化).
+// UpdateSession updates the session with custom map.
+func (s *Server) UpdateSession(id string, data map[string]interface{}) {
+	v := s.sessions.GetOrSetFuncLock(id, func() interface{} {
+		return gmap.NewStrAnyMap()
+	}, s.GetSessionMaxAge()*1000)
+	v.(*gmap.StrAnyMap).Sets(data)
+}
+
+// 延迟初始化
 func (s *Session) init() {
 	if len(s.id) == 0 {
 		s.server = s.request.Server
-		// 根据提交的SESSION ID获取已存在SESSION
-		id := s.request.Cookie.GetSessionId()
-		if id != "" {
-			data := s.server.sessions.Get(id)
-			if data != nil {
+		if id := s.request.Cookie.GetSessionId(); id != "" {
+			if v := s.server.sessions.Get(id); v != nil {
 				s.id = id
-				s.data = data.(*gmap.StrAnyMap)
+				s.data = v.(*gmap.StrAnyMap)
 				return
 			}
 		}
@@ -61,12 +66,8 @@ func (s *Session) init() {
 		s.id = s.request.Cookie.MakeSessionId()
 		s.data = gmap.NewStrAnyMap()
 		s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
+		s.dirty = true
 	}
-}
-
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (s *Session) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.data)
 }
 
 // 获取/创建SessionId
@@ -97,12 +98,14 @@ func (s *Session) Size() int {
 func (s *Session) Set(key string, value interface{}) {
 	s.init()
 	s.data.Set(key, value)
+	s.dirty = true
 }
 
 // 批量设置
 func (s *Session) Sets(m map[string]interface{}) {
 	s.init()
 	s.data.Sets(m)
+	s.dirty = true
 }
 
 // 判断键名是否存在
@@ -112,6 +115,58 @@ func (s *Session) Contains(key string) bool {
 		return s.data.Contains(key)
 	}
 	return false
+}
+
+// 判断session是否有修改(包括新创建)
+func (s *Session) IsDirty() bool {
+	return s.dirty
+}
+
+// 删除指定session键值对
+func (s *Session) Remove(key string) {
+	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+		s.init()
+		s.data.Remove(key)
+		s.dirty = true
+	}
+}
+
+// 将session数据导出为[]byte数据(目前使用json进行序列化)
+func (s *Session) Export() (data []byte, err error) {
+	if s.Size() > 0 {
+		data, err = json.Marshal(s.data)
+	}
+	return
+}
+
+// 从[]byte中恢复session数据(目前使用json进行序列化)
+func (s *Session) Restore(data []byte) (err error) {
+	if len(data) == 0 {
+		return nil
+	}
+	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+		s.init()
+		s.data.LockFunc(func(m map[string]interface{}) {
+			err = json.Unmarshal(data, &m)
+		})
+	}
+	return
+}
+
+// 清空session
+func (s *Session) Clear() {
+	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+		s.init()
+		s.data.Clear()
+		s.dirty = true
+	}
+}
+
+// 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
+func (s *Session) UpdateExpire() {
+	if len(s.id) > 0 && s.data.Size() > 0 {
+		s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
+	}
 }
 
 // 获取SESSION变量
@@ -131,40 +186,6 @@ func (s *Session) Get(key string, def ...interface{}) interface{} {
 // 获取SESSION，建议都用该方法获取参数
 func (s *Session) GetVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(s.Get(key, def...), true)
-}
-
-// 删除指定session键值对
-func (s *Session) Remove(key string) {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
-		s.init()
-		s.data.Remove(key)
-	}
-}
-
-// 从json字符串中恢复session数据
-func (s *Session) RestoreFromJson(data []byte) (err error) {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
-		s.init()
-		s.data.LockFunc(func(m map[string]interface{}) {
-			err = json.Unmarshal(data, &m)
-		})
-	}
-	return
-}
-
-// 清空session
-func (s *Session) Clear() {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
-		s.init()
-		s.data.Clear()
-	}
-}
-
-// 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
-func (s *Session) UpdateExpire() {
-	if len(s.id) > 0 && s.data.Size() > 0 {
-		s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
-	}
 }
 
 func (s *Session) GetString(key string, def ...interface{}) string {
