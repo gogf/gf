@@ -170,7 +170,7 @@ var (
 // which is DEFAULT_GROUP_NAME in default.
 func New(name ...string) (db DB, err error) {
 	group := configs.defaultGroup
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
 	configs.RLock()
