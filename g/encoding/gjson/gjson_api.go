@@ -299,6 +299,22 @@ func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...ma
 	return gconv.StructsDeep(j.Get(pattern), pointer, mapping...)
 }
 
+func (j *Json) GetMapStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.MapStruct(j.Get(pattern), pointer, mapping...)
+}
+
+func (j *Json) GetMapStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.MapStructDeep(j.Get(pattern), pointer, mapping...)
+}
+
+func (j *Json) GetMapStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.MapStructs(j.Get(pattern), pointer, mapping...)
+}
+
+func (j *Json) GetMapStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.MapStructsDeep(j.Get(pattern), pointer, mapping...)
+}
+
 // GetToStruct is alias of GetStruct.
 // Deprecated.
 func (j *Json) GetToStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
@@ -323,28 +339,52 @@ func (j *Json) ToArray() []interface{} {
 
 // ToStruct converts current Json object to specified object.
 // The <pointer> should be a pointer type.
-func (j *Json) ToStruct(pointer interface{}) error {
+func (j *Json) ToStruct(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
-	return gconv.Struct(*(j.p), pointer)
+	return gconv.Struct(*(j.p), pointer, mapping...)
 }
 
-func (j *Json) ToStructDeep(pointer interface{}) error {
+func (j *Json) ToStructDeep(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
-	return gconv.StructDeep(*(j.p), pointer)
+	return gconv.StructDeep(*(j.p), pointer, mapping...)
 }
 
-func (j *Json) ToStructs(pointer interface{}) error {
+func (j *Json) ToStructs(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
-	return gconv.Structs(*(j.p), pointer)
+	return gconv.Structs(*(j.p), pointer, mapping...)
 }
 
-func (j *Json) ToStructsDeep(pointer interface{}) error {
+func (j *Json) ToStructsDeep(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
-	return gconv.StructsDeep(*(j.p), pointer)
+	return gconv.StructsDeep(*(j.p), pointer, mapping...)
+}
+
+func (j *Json) ToMapStruct(pointer interface{}, mapping ...map[string]string) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.MapStruct(*(j.p), pointer, mapping...)
+}
+
+func (j *Json) ToMapStructDeep(pointer interface{}, mapping ...map[string]string) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.MapStructDeep(*(j.p), pointer, mapping...)
+}
+
+func (j *Json) ToMapStructs(pointer interface{}, mapping ...map[string]string) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.MapStructs(*(j.p), pointer, mapping...)
+}
+
+func (j *Json) ToMapStructsDeep(pointer interface{}, mapping ...map[string]string) error {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gconv.MapStructsDeep(*(j.p), pointer, mapping...)
 }
 
 // Dump prints current Json object with more manually readable.

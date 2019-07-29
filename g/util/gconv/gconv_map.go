@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 
@@ -178,4 +179,122 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 		}
 	}
 	return data
+}
+
+// MapStruct converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of struct/*struct.
+func MapStruct(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	return doMapStruct(params, pointer, false, mapping...)
+}
+
+// MapStructDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of struct/*struct.
+func MapStructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	return doMapStruct(params, pointer, true, mapping...)
+}
+
+// doMapStruct converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of struct/*struct.
+func doMapStruct(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
+	paramsRv := reflect.ValueOf(params)
+	paramsKind := paramsRv.Kind()
+	if paramsKind == reflect.Ptr {
+		paramsRv = paramsRv.Elem()
+		paramsKind = paramsRv.Kind()
+	}
+	if paramsKind != reflect.Map {
+		return errors.New("params should be type of map")
+	}
+
+	pointerRv := reflect.ValueOf(pointer)
+	pointerKind := pointerRv.Kind()
+	for pointerKind == reflect.Ptr {
+		pointerRv = pointerRv.Elem()
+		pointerKind = pointerRv.Kind()
+	}
+	if pointerKind != reflect.Map {
+		return errors.New("pointer should be type of map")
+	}
+	err := (error)(nil)
+	paramsKeys := paramsRv.MapKeys()
+	pointerKeyType := pointerRv.Type().Key()
+	pointerValueType := pointerRv.Type().Elem()
+	dataMap := reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
+	for _, key := range paramsKeys {
+		e := reflect.New(pointerValueType).Elem()
+		if deep {
+			if err = StructDeep(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
+				return err
+			}
+		} else {
+			if err = Struct(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
+				return err
+			}
+		}
+		dataMap.SetMapIndex(
+			reflect.ValueOf(Convert(key.Interface(), pointerKeyType.Name())),
+			e,
+		)
+	}
+	pointerRv.Set(dataMap)
+	return nil
+}
+
+// MapStructs converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of []struct/[]*struct.
+func MapStructs(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	return doMapStructs(params, pointer, false, mapping...)
+}
+
+// MapStructsDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of []struct/[]*struct.
+func MapStructsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	return doMapStructs(params, pointer, true, mapping...)
+}
+
+// doMapStructs converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of []struct/[]*struct.
+func doMapStructs(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
+	paramsRv := reflect.ValueOf(params)
+	paramsKind := paramsRv.Kind()
+	if paramsKind == reflect.Ptr {
+		paramsRv = paramsRv.Elem()
+		paramsKind = paramsRv.Kind()
+	}
+	if paramsKind != reflect.Map {
+		return errors.New("params should be type of map")
+	}
+
+	pointerRv := reflect.ValueOf(pointer)
+	pointerKind := pointerRv.Kind()
+	for pointerKind == reflect.Ptr {
+		pointerRv = pointerRv.Elem()
+		pointerKind = pointerRv.Kind()
+	}
+	if pointerKind != reflect.Map {
+		return errors.New("pointer should be type of map")
+	}
+	err := (error)(nil)
+	paramsKeys := paramsRv.MapKeys()
+	pointerKeyType := pointerRv.Type().Key()
+	pointerValueType := pointerRv.Type().Elem()
+	dataMap := reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
+	for _, key := range paramsKeys {
+		e := reflect.New(pointerValueType).Elem().Addr()
+		if deep {
+			if err = StructsDeep(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
+				return err
+			}
+		} else {
+			if err = Structs(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
+				return err
+			}
+		}
+		dataMap.SetMapIndex(
+			reflect.ValueOf(Convert(key.Interface(), pointerKeyType.Name())),
+			e.Elem(),
+		)
+	}
+	pointerRv.Set(dataMap)
+	return nil
 }
