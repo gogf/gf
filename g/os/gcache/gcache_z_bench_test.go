@@ -10,104 +10,70 @@ package gcache_test
 
 import (
 	"github.com/gogf/gf/g/os/gcache"
-	"sync"
 	"testing"
 )
 
 var (
-	c    = gcache.New()
-	clru = gcache.New(10000)
-	mInt = make(map[int]int)
-	mMap = make(map[interface{}]interface{})
-
-	muInt = sync.RWMutex{}
-	muMap = sync.RWMutex{}
+	cache    = gcache.New()
+	cacheLru = gcache.New(10000)
 )
 
 func Benchmark_CacheSet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		c.Set(i, i, 0)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			cache.Set(i, i, 0)
+			i++
+		}
+	})
 }
 
 func Benchmark_CacheGet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		c.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			cache.Get(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_CacheRemove(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		c.Remove(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			cache.Remove(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_CacheLruSet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		clru.Set(i, i, 0)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			cacheLru.Set(i, i, 0)
+			i++
+		}
+	})
 }
 
 func Benchmark_CacheLruGet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		clru.Get(i)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			cacheLru.Get(i)
+			i++
+		}
+	})
 }
 
 func Benchmark_CacheLruRemove(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		clru.Remove(i)
-	}
-}
-
-func Benchmark_InterfaceMapWithLockSet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		muMap.Lock()
-		mMap[i] = i
-		muMap.Unlock()
-	}
-}
-
-func Benchmark_InterfaceMapWithLockGet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		muMap.RLock()
-		if _, ok := mMap[i]; ok {
-
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			cacheLru.Remove(i)
+			i++
 		}
-		muMap.RUnlock()
-	}
-}
-
-func Benchmark_InterfaceMapWithLockRemove(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		muMap.Lock()
-		delete(mMap, i)
-		muMap.Unlock()
-	}
-}
-
-func Benchmark_IntMapWithLockWithLockSet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		muInt.Lock()
-		mInt[i] = i
-		muInt.Unlock()
-	}
-}
-
-func Benchmark_IntMapWithLockGet(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		muInt.RLock()
-		if _, ok := mInt[i]; ok {
-
-		}
-		muInt.RUnlock()
-	}
-}
-
-func Benchmark_IntMapWithLockRemove(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		muInt.Lock()
-		delete(mInt, i)
-		muInt.Unlock()
-	}
+	})
 }

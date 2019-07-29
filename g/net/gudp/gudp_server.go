@@ -32,7 +32,7 @@ var serverMapping = gmap.NewStrAnyMap()
 // 单例模式，请保证name的唯一性
 func GetServer(name ...interface{}) *Server {
 	serverName := gDEFAULT_SERVER
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
 	if s := serverMapping.Get(serverName); s != nil {
