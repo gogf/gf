@@ -1,1 +1,0 @@
-`GF` self-maintains its third-party-packages, developers need no worry about the dependencies.
