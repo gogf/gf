@@ -10,8 +10,6 @@ branches:
   - develop
 
 env:
-  global:
-    - PGPORT=5432
 - GO111MODULE=on
 
 
