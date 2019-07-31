@@ -15,6 +15,7 @@ env:
 services:
 - mysql
 - redis-server
+- postgresql
 
 addons:
   hosts:
@@ -29,6 +30,7 @@ install:
 before_script:
 - find . -name "*.go" | xargs gofmt -w
 - git diff --exit-code
+- psql -c 'create database postgres;' -U postgres
 
 script:
 - cd g
