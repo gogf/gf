@@ -11,7 +11,7 @@ branches:
 
 env:
   global:
-      - PGPORT=5432
+    - PGPORT=5432
 - GO111MODULE=on
 
 
