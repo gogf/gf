@@ -28,7 +28,7 @@ func InitPgsql() {
 		Port:             "5432",
 		User:             "postgres",
 		Pass:             "",
-		Name:             "postgres",
+		Name:             "travis_ci_test",
 		Type:             "pgsql",
 		Role:             "master",
 		Charset:          "utf8",

@@ -30,7 +30,7 @@ install:
 before_script:
 - find . -name "*.go" | xargs gofmt -w
 - git diff --exit-code
-- psql -c 'create database postgres;' -U postgres
+- psql -c 'create database travis_ci_test;' -U postgres
 
 script:
 - cd g
