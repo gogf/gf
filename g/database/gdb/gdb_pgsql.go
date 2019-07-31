@@ -9,8 +9,8 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-
 	"github.com/gogf/gf/g/text/gregex"
+	"strings"
 )
 
 // PostgreSQL的适配.
@@ -32,7 +32,7 @@ func (db *dbPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
 	} else {
-		source = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s", config.User, config.Pass, config.Host, config.Port, config.Name)
+		source = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.User, config.Pass, config.Host, config.Port, config.Name)
 	}
 	if db, err := sql.Open("postgres", source); err == nil {
 		return db, nil
@@ -62,4 +62,29 @@ func (db *dbPgsql) handleSqlBeforeExec(query string) string {
 	// 分页语法替换
 	query, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $1 OFFSET $2`, query)
 	return query
+}
+
+func (db *dbPgsql) getTableFields(table string) (fields map[string]string, err error) {
+	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
+	table, _ = gregex.ReplaceString("\"", "", table)
+	v := db.cache.GetOrSetFunc("pgsql_table_fields_"+table, func() interface{} {
+		result := (Result)(nil)
+		result, err = db.GetAll(fmt.Sprintf(`
+		SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
+        LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
+        WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid ORDER BY a.attnum`, strings.ToLower(table)))
+		if err != nil {
+			return nil
+		}
+
+		fields = make(map[string]string)
+		for _, m := range result {
+			fields[m["field"].String()] = m["type"].String()
+		}
+		return fields
+	}, 0)
+	if err == nil {
+		fields = v.(map[string]string)
+	}
+	return
 }
