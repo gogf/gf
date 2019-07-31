@@ -51,7 +51,7 @@ func Test_Load_XML(t *testing.T) {
 		gtest.Assert(j.Get("doc.n"), "123456789")
 		gtest.Assert(j.Get("doc.m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("doc.m.k"), "v")
-		gtest.Assert(j.Get("doc.a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("doc.a"), g.Slice{"1", "2", "3"})
 		gtest.Assert(j.Get("doc.a.1"), 2)
 	})
 	// XML
@@ -64,7 +64,7 @@ func Test_Load_XML(t *testing.T) {
 		gtest.Assert(j.Get("doc.n"), "123456789")
 		gtest.Assert(j.Get("doc.m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("doc.m.k"), "v")
-		gtest.Assert(j.Get("doc.a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("doc.a"), g.Slice{"1", "2", "3"})
 		gtest.Assert(j.Get("doc.a.1"), 2)
 	})
 
@@ -146,7 +146,7 @@ n = 123456789
 		gtest.Assert(j.Get("n"), "123456789")
 		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("m.k"), "v")
-		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("a"), g.Slice{"1", "2", "3"})
 		gtest.Assert(j.Get("a.1"), 2)
 	})
 	// TOML
@@ -159,7 +159,7 @@ n = 123456789
 		gtest.Assert(j.Get("n"), "123456789")
 		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("m.k"), "v")
-		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("a"), g.Slice{"1", "2", "3"})
 		gtest.Assert(j.Get("a.1"), 2)
 	})
 }

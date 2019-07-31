@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gogf/gf/g/text/gstr"
+	"github.com/gogf/gf/g/internal/strutils"
 )
 
 // SliceInt is alias of Ints.
@@ -63,61 +63,65 @@ func Ints(i interface{}) []int {
 		return r
 	} else {
 		array := make([]int, 0)
-		switch i.(type) {
+		switch value := i.(type) {
 		case []string:
-			for _, v := range i.([]string) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []int8:
-			for _, v := range i.([]int8) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []int16:
-			for _, v := range i.([]int16) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []int32:
-			for _, v := range i.([]int32) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []int64:
-			for _, v := range i.([]int64) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []uint:
-			for _, v := range i.([]uint) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []uint8:
-			for _, v := range i.([]uint8) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []uint16:
-			for _, v := range i.([]uint16) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []uint32:
-			for _, v := range i.([]uint32) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []uint64:
-			for _, v := range i.([]uint64) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []bool:
-			for _, v := range i.([]bool) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []float32:
-			for _, v := range i.([]float32) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []float64:
-			for _, v := range i.([]float64) {
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		case []interface{}:
-			for _, v := range i.([]interface{}) {
+			for _, v := range value {
+				array = append(array, Int(v))
+			}
+		case [][]byte:
+			for _, v := range value {
 				array = append(array, Int(v))
 			}
 		default:
@@ -136,61 +140,65 @@ func Strings(i interface{}) []string {
 		return r
 	} else {
 		array := make([]string, 0)
-		switch i.(type) {
+		switch value := i.(type) {
 		case []int:
-			for _, v := range i.([]int) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []int8:
-			for _, v := range i.([]int8) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []int16:
-			for _, v := range i.([]int16) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []int32:
-			for _, v := range i.([]int32) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []int64:
-			for _, v := range i.([]int64) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []uint:
-			for _, v := range i.([]uint) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []uint8:
-			for _, v := range i.([]uint8) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []uint16:
-			for _, v := range i.([]uint16) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []uint32:
-			for _, v := range i.([]uint32) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []uint64:
-			for _, v := range i.([]uint64) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []bool:
-			for _, v := range i.([]bool) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []float32:
-			for _, v := range i.([]float32) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []float64:
-			for _, v := range i.([]float64) {
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		case []interface{}:
-			for _, v := range i.([]interface{}) {
+			for _, v := range value {
+				array = append(array, String(v))
+			}
+		case [][]byte:
+			for _, v := range value {
 				array = append(array, String(v))
 			}
 		default:
@@ -209,61 +217,61 @@ func Floats(i interface{}) []float64 {
 		return r
 	} else {
 		array := make([]float64, 0)
-		switch i.(type) {
+		switch value := i.(type) {
 		case []string:
-			for _, v := range i.([]string) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []int:
-			for _, v := range i.([]int) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []int8:
-			for _, v := range i.([]int8) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []int16:
-			for _, v := range i.([]int16) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []int32:
-			for _, v := range i.([]int32) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []int64:
-			for _, v := range i.([]int64) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []uint:
-			for _, v := range i.([]uint) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []uint8:
-			for _, v := range i.([]uint8) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []uint16:
-			for _, v := range i.([]uint16) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []uint32:
-			for _, v := range i.([]uint32) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []uint64:
-			for _, v := range i.([]uint64) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []bool:
-			for _, v := range i.([]bool) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []float32:
-			for _, v := range i.([]float32) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		case []interface{}:
-			for _, v := range i.([]interface{}) {
+			for _, v := range value {
 				array = append(array, Float64(v))
 			}
 		default:
@@ -282,61 +290,61 @@ func Interfaces(i interface{}) []interface{} {
 		return r
 	} else {
 		array := make([]interface{}, 0)
-		switch i.(type) {
+		switch value := i.(type) {
 		case []string:
-			for _, v := range i.([]string) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []int:
-			for _, v := range i.([]int) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []int8:
-			for _, v := range i.([]int8) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []int16:
-			for _, v := range i.([]int16) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []int32:
-			for _, v := range i.([]int32) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []int64:
-			for _, v := range i.([]int64) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []uint:
-			for _, v := range i.([]uint) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []uint8:
-			for _, v := range i.([]uint8) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []uint16:
-			for _, v := range i.([]uint16) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []uint32:
-			for _, v := range i.([]uint32) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []uint64:
-			for _, v := range i.([]uint64) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []bool:
-			for _, v := range i.([]bool) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []float32:
-			for _, v := range i.([]float32) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		case []float64:
-			for _, v := range i.([]float64) {
+			for _, v := range value {
 				array = append(array, v)
 			}
 		default:
@@ -357,7 +365,7 @@ func Interfaces(i interface{}) []interface{} {
 				rt := rv.Type()
 				for i := 0; i < rv.NumField(); i++ {
 					// Only public attributes.
-					if !gstr.IsLetterUpper(rt.Field(i).Name[0]) {
+					if !strutils.IsLetterUpper(rt.Field(i).Name[0]) {
 						continue
 					}
 					array = append(array, rv.Field(i).Interface())
@@ -371,40 +379,40 @@ func Interfaces(i interface{}) []interface{} {
 }
 
 // Maps converts <i> to []map[string]interface{}.
-func Maps(i interface{}) []map[string]interface{} {
-	if i == nil {
+func Maps(value interface{}, tags ...string) []map[string]interface{} {
+	if value == nil {
 		return nil
 	}
-	if r, ok := i.([]map[string]interface{}); ok {
+	if r, ok := value.([]map[string]interface{}); ok {
 		return r
 	} else {
-		array := Interfaces(i)
+		array := Interfaces(value)
 		if len(array) == 0 {
 			return nil
 		}
 		list := make([]map[string]interface{}, len(array))
 		for k, v := range array {
-			list[k] = Map(v)
+			list[k] = Map(v, tags...)
 		}
 		return list
 	}
 }
 
 // MapsDeep converts <i> to []map[string]interface{} recursively.
-func MapsDeep(i interface{}) []map[string]interface{} {
-	if i == nil {
+func MapsDeep(value interface{}, tags ...string) []map[string]interface{} {
+	if value == nil {
 		return nil
 	}
-	if r, ok := i.([]map[string]interface{}); ok {
+	if r, ok := value.([]map[string]interface{}); ok {
 		return r
 	} else {
-		array := Interfaces(i)
+		array := Interfaces(value)
 		if len(array) == 0 {
 			return nil
 		}
 		list := make([]map[string]interface{}, len(array))
 		for k, v := range array {
-			list[k] = MapDeep(v)
+			list[k] = MapDeep(v, tags...)
 		}
 		return list
 	}
@@ -447,6 +455,10 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 	}
 	switch kind {
 	case reflect.Slice, reflect.Array:
+		// If <params> is an empty slice, no conversion.
+		if rv.Len() == 0 {
+			return nil
+		}
 		array := reflect.MakeSlice(pointerRt.Elem(), rv.Len(), rv.Len())
 		itemType := array.Index(0).Type()
 		for i := 0; i < rv.Len(); i++ {

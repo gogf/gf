@@ -36,26 +36,21 @@ import (
 type (
 	// Server结构体
 	Server struct {
-		// 基本属性变量
-		name        string            // 服务名称，方便识别
-		config      ServerConfig      // 配置对象
-		servers     []*gracefulServer // 底层http.Server列表
-		serverCount *gtype.Int        // 底层http.Server数量
-		closeChan   chan struct{}     // 用以关闭事件通知的通道
-		servedCount *gtype.Int        // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
-		// 服务注册相关
-		serveTree  map[string]interface{}           // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-		hooksTree  map[string]interface{}           // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-		serveCache *gcache.Cache                    // 服务注册路由内存缓存
-		hooksCache *gcache.Cache                    // 事件回调路由内存缓存
-		routesMap  map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
-		// 自定义状态码回调
-		hsmu             sync.RWMutex           // status handler互斥锁
-		statusHandlerMap map[string]HandlerFunc // 不同状态码下的注册处理方法(例如404状态时的处理方法)
-		// SESSION
-		sessions *gcache.Cache // Session内存缓存
-		// Logger
-		logger *glog.Logger // 日志管理对象
+		name             string                           // 服务名称
+		config           ServerConfig                     // 配置对象
+		servers          []*gracefulServer                // 底层http.Server列表
+		serverCount      *gtype.Int                       // 底层http.Server数量
+		closeChan        chan struct{}                    // 用以关闭事件通知的通道
+		servedCount      *gtype.Int                       // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
+		serveTree        map[string]interface{}           // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+		hooksTree        map[string]interface{}           // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+		serveCache       *gcache.Cache                    // 服务注册路由内存缓存
+		hooksCache       *gcache.Cache                    // 事件回调路由内存缓存
+		routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
+		statusHandlerMu  sync.RWMutex                     // status handler互斥锁
+		statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
+		sessions         *gcache.Cache                    // Session内存缓存
+		logger           *glog.Logger                     // 日志管理对象
 	}
 
 	// 路由对象
@@ -103,17 +98,14 @@ type (
 )
 
 const (
-	SERVER_STATUS_STOPPED = 0 // Server状态：停止
-	SERVER_STATUS_RUNNING = 1 // Server状态：运行
-	HOOK_BEFORE_SERVE     = "BeforeServe"
-	HOOK_AFTER_SERVE      = "AfterServe"
-	HOOK_BEFORE_OUTPUT    = "BeforeOutput"
-	HOOK_AFTER_OUTPUT     = "AfterOutput"
-
-	// Deprecated.
-	HOOK_BEFORE_CLOSE = "BeforeClose"
-	// Deprecated.
-	HOOK_AFTER_CLOSE = "AfterClose"
+	SERVER_STATUS_STOPPED = 0              // Server状态：停止
+	SERVER_STATUS_RUNNING = 1              // Server状态：运行
+	HOOK_BEFORE_SERVE     = "BeforeServe"  // 回调事件，在执行服务前
+	HOOK_AFTER_SERVE      = "AfterServe"   // 回调事件，在执行服务后
+	HOOK_BEFORE_OUTPUT    = "BeforeOutput" // 回调事件，在输出结果前
+	HOOK_AFTER_OUTPUT     = "AfterOutput"  // 回调事件，在输出结果后
+	HOOK_BEFORE_CLOSE     = "BeforeClose"  // Deprecated.
+	HOOK_AFTER_CLOSE      = "AfterClose"   // Deprecated.
 
 	HTTP_METHODS               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
 	gDEFAULT_SERVER            = "default"
@@ -200,7 +192,7 @@ func serverProcessInit() {
 // 单例模式，请保证name的唯一性
 func GetServer(name ...interface{}) *Server {
 	sname := gDEFAULT_SERVER
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		sname = gconv.String(name[0])
 	}
 	if s := serverMapping.Get(sname); s != nil {

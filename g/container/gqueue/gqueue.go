@@ -46,7 +46,7 @@ func New(limit ...int) *Queue {
 	q := &Queue{
 		closed: gtype.NewBool(),
 	}
-	if len(limit) > 0 {
+	if len(limit) > 0 && limit[0] > 0 {
 		q.limit = limit[0]
 		q.C = make(chan interface{}, limit[0])
 	} else {
@@ -87,7 +87,7 @@ func (q *Queue) startAsyncLoop() {
 			<-q.events
 		}
 	}
-	// It should be here to close q.C.
+	// It should be here to close q.C if <q> is unlimited size.
 	// It's the sender's responsibility to close channel when it should be closed.
 	close(q.C)
 }
@@ -118,6 +118,9 @@ func (q *Queue) Close() {
 	q.closed.Set(true)
 	if q.events != nil {
 		close(q.events)
+	}
+	if q.limit > 0 {
+		close(q.C)
 	}
 	for i := 0; i < gDEFAULT_MAX_BATCH_SIZE; i++ {
 		q.Pop()

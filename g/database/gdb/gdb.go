@@ -95,9 +95,11 @@ type DB interface {
 	getCache() *gcache.Cache
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
+	quoteWord(s string) string
 	setSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
-	convertValue(fieldValue interface{}, fieldType string) interface{}
+	formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{})
+	convertValue(fieldValue []byte, fieldType string) interface{}
 	getTableFields(table string) (map[string]string, error)
 	rowsToResult(rows *sql.Rows) (Result, error)
 	handleSqlBeforeExec(sql string) string
@@ -168,7 +170,7 @@ var (
 // which is DEFAULT_GROUP_NAME in default.
 func New(name ...string) (db DB, err error) {
 	group := configs.defaultGroup
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
 	configs.RLock()

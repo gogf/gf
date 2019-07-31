@@ -8,6 +8,7 @@ package glist
 
 import (
 	"container/list"
+
 	"github.com/gogf/gf/g/test/gtest"
 	"github.com/gogf/gf/g/util/gconv"
 
@@ -407,17 +408,18 @@ func TestList_PushBacks(t *testing.T) {
 }
 
 func TestList_PopBacks(t *testing.T) {
-	l := New()
-	a1 := []interface{}{1, 2, 3, 4}
-	a2 := []interface{}{"a", "c", "b", "e"}
-	l.PushFronts(a1)
-	i1 := l.PopBacks(2)
-	gtest.Assert(i1, []interface{}{"1", "2"})
+	gtest.Case(t, func() {
+		l := New()
+		a1 := []interface{}{1, 2, 3, 4}
+		a2 := []interface{}{"a", "c", "b", "e"}
+		l.PushFronts(a1)
+		i1 := l.PopBacks(2)
+		gtest.Assert(i1, []interface{}{1, 2})
 
-	l.PushBacks(a2) //4.3,a,c,b,e
-	i1 = l.PopBacks(3)
-	gtest.Assert(i1, []interface{}{"e", "b", "c"})
-
+		l.PushBacks(a2) //4.3,a,c,b,e
+		i1 = l.PopBacks(3)
+		gtest.Assert(i1, []interface{}{"e", "b", "c"})
+	})
 }
 
 func TestList_PopFronts(t *testing.T) {
@@ -425,7 +427,7 @@ func TestList_PopFronts(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	i1 := l.PopFronts(2)
-	gtest.Assert(i1, []interface{}{"4", "3"})
+	gtest.Assert(i1, []interface{}{4, 3})
 	gtest.Assert(l.Len(), 2)
 }
 

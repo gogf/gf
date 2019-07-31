@@ -156,6 +156,9 @@ func doLoadContent(dataType string, data []byte, unsafe ...bool) (*Json, error) 
 	if len(data) == 0 {
 		return New(nil, unsafe...), nil
 	}
+	if dataType == "" {
+		dataType = checkDataType(data)
+	}
 	switch dataType {
 	case "json", ".json":
 
@@ -203,14 +206,15 @@ func LoadContent(data interface{}, unsafe ...bool) (*Json, error) {
 
 }
 
+// checkDataType automatically checks and returns the data type for <content>.
 func checkDataType(content []byte) string {
 	if json.Valid(content) {
 		return "json"
 	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, content) {
 		return "xml"
-	} else if gregex.IsMatch(`^[\s\t]*\w+\s*:\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*\w+\s*:\s*.+`, content) {
+	} else if gregex.IsMatch(`^[\s\t]*[\w\-]+\s*:\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*:\s*.+`, content) {
 		return "yml"
-	} else if gregex.IsMatch(`^[\s\t]*\w+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*\w+\s*=\s*.+`, content) {
+	} else if gregex.IsMatch(`^[\s\t]*[\w\-]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*=\s*.+`, content) {
 		return "toml"
 	} else {
 		return ""

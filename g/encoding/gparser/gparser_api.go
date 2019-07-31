@@ -7,9 +7,10 @@
 package gparser
 
 import (
+	"time"
+
 	"github.com/gogf/gf/g/container/gvar"
 	"github.com/gogf/gf/g/os/gtime"
-	"time"
 )
 
 // Val returns the value.
@@ -141,6 +142,7 @@ func (p *Parser) GetGTime(pattern string, format ...string) *gtime.Time {
 // GetToVar gets the value by specified <pattern>,
 // and converts it to specified golang variable <v>.
 // The <v> should be a pointer type.
+// Deprecated.
 func (p *Parser) GetToVar(pattern string, pointer interface{}) error {
 	return p.json.GetToVar(pattern, pointer)
 }
@@ -216,7 +218,23 @@ func (p *Parser) ToStruct(pointer interface{}) error {
 	return p.json.ToStruct(pointer)
 }
 
+func (p *Parser) ToStructDeep(pointer interface{}) error {
+	return p.json.ToStructDeep(pointer)
+}
+
+func (p *Parser) ToStructs(pointer interface{}) error {
+	return p.json.ToStructs(pointer)
+}
+
+func (p *Parser) ToStructsDeep(pointer interface{}) error {
+	return p.json.ToStructsDeep(pointer)
+}
+
 // Dump prints current Json object with more manually readable.
-func (p *Parser) Dump() error {
-	return p.json.Dump()
+func (p *Parser) Dump() {
+	p.json.Dump()
+}
+
+func (p *Parser) Export() string {
+	return p.json.Export()
 }

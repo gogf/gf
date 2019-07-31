@@ -22,7 +22,7 @@ var (
 // The parameter <name> is the name for the instance.
 func Instance(name ...string) *View {
 	key := DEFAULT_INSTANCE_NAME
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
 	return instances.GetOrSetFuncLock(key, func() interface{} {

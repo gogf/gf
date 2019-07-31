@@ -9,9 +9,10 @@
 package gcmd
 
 import (
-	"github.com/gogf/gf/g/test/gtest"
 	"os"
 	"testing"
+
+	"github.com/gogf/gf/g/test/gtest"
 )
 
 func Test_ValueAndOption(t *testing.T) {

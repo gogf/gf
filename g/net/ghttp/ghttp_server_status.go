@@ -14,8 +14,8 @@ import (
 // 查询状态码回调函数
 func (s *Server) getStatusHandler(status int, r *Request) HandlerFunc {
 	domains := []string{r.GetHost(), gDEFAULT_DOMAIN}
-	s.hsmu.RLock()
-	defer s.hsmu.RUnlock()
+	s.statusHandlerMu.RLock()
+	defer s.statusHandlerMu.RUnlock()
 	for _, domain := range domains {
 		if f, ok := s.statusHandlerMap[s.statusHandlerKey(status, domain)]; ok {
 			return f
@@ -27,9 +27,9 @@ func (s *Server) getStatusHandler(status int, r *Request) HandlerFunc {
 // 不同状态码下的回调方法处理
 // pattern格式：domain#status
 func (s *Server) setStatusHandler(pattern string, handler HandlerFunc) {
-	s.hsmu.Lock()
+	s.statusHandlerMu.Lock()
 	s.statusHandlerMap[pattern] = handler
-	s.hsmu.Unlock()
+	s.statusHandlerMu.Unlock()
 }
 
 // 生成状态码回调函数map存储键名
