@@ -10,7 +10,10 @@ branches:
   - develop
 
 env:
+  global:
+      - PGPORT=5432
 - GO111MODULE=on
+
 
 services:
 - mysql
@@ -18,8 +21,14 @@ services:
 - postgresql
 
 addons:
+  postgresql: "11"
+  apt:
+    packages:
+      - postgresql-11
+      - postgresql-client-11
   hosts:
   - local
+
 
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
