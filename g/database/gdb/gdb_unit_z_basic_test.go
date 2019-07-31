@@ -27,3 +27,63 @@ func Test_Instance(t *testing.T) {
 		gtest.Assert(err2, nil)
 	})
 }
+
+/*
+func Test_Config(t *testing.T) {
+
+	gtest.Case(t, func() {
+		//gdb.SetDefaultGroup(gdb.DEFAULT_GROUP_NAME)
+		gtest.Assert(gdb.GetDefaultGroup(), gdb.DEFAULT_GROUP_NAME)
+	})
+
+	gtest.Case(t, func() {
+		nodeConfig := gdb.Config{
+			"mysqltest1": gdb.ConfigGroup{
+				gdb.ConfigNode{
+					Host:     "127.0.0.1",
+					Port:     "3306",
+					User:     "root",
+					Pass:     "",
+					Name:     "",
+					Type:     "mysql",
+					Role:     "master",
+					Charset:  "utf8",
+					Weight:	1,
+					MaxIdleConnCount:	10,
+					MaxOpenConnCount:	10,
+					MaxConnLifetime:	600,
+				},
+			},
+		}
+
+		gdb.SetConfig(nodeConfig)
+
+		groupConfig := gdb.ConfigGroup{
+			gdb.ConfigNode{
+				Host:     "127.0.0.1",
+				Port:     "3306",
+				User:     "root",
+				Pass:     "",
+				Name:     "",
+				Type:     "mysql",
+				Role:     "master",
+				Charset:  "utf8",
+				LinkInfo: "root:@tcp(127.0.0.1:3306)/test",
+				Weight:	1,
+				MaxIdleConnCount:	10,
+				MaxOpenConnCount:	10,
+				MaxConnLifetime:	600,
+			},
+		}
+
+		gdb.AddConfigGroup("mysqltest2", groupConfig)
+
+
+
+		res := gdb.GetConfig("mysqltest2")
+		gtest.Assert(res[0].Host, groupConfig[0].Host)
+		gtest.Assert(res[0].Port, groupConfig[0].Port)
+
+		gtest.Assert(res[0].String(), groupConfig[0].LinkInfo)
+	})
+}*/

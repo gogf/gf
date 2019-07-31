@@ -8,6 +8,9 @@ package gdb_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/g/database/gdb"
+	"github.com/gogf/gf/g/encoding/gjson"
+	"github.com/gogf/gf/g/encoding/gxml"
 	"testing"
 	"time"
 
@@ -201,6 +204,9 @@ func Test_DB_BatchInsert(t *testing.T) {
 		gtest.Assert(err, nil)
 		n, _ := r.RowsAffected()
 		gtest.Assert(n, 2)
+
+		n, _ = r.LastInsertId()
+		gtest.Assert(n, 3)
 	})
 
 	gtest.Case(t, func() {
@@ -623,5 +629,530 @@ func Test_DB_Time(t *testing.T) {
 		gtest.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, 2)
+	})
+}
+
+func Test_DB_ToJson(t *testing.T) {
+
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.Assert(err, nil)
+
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Fields("*").Where("id =? ", 1).Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		users := make([]User, 0)
+
+		err = result.ToStructs(users)
+		gtest.AssertNE(err, nil)
+
+		err = result.ToStructs(&users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		//ToJson
+		resultJson, err := gjson.LoadContent(result.ToJson())
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		gtest.Assert(users[0].Id, resultJson.GetInt("0.id"))
+		gtest.Assert(users[0].Passport, resultJson.GetString("0.passport"))
+		gtest.Assert(users[0].Password, resultJson.GetString("0.password"))
+		gtest.Assert(users[0].NickName, resultJson.GetString("0.nickname"))
+		gtest.Assert(users[0].CreateTime, resultJson.GetString("0.create_time"))
+
+		result = nil
+		err = result.ToStructs(&users)
+		gtest.AssertNE(err, nil)
+	})
+
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Fields("*").Where("id =? ", 1).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		users := User{}
+
+		err = result.ToStruct(&users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		result = nil
+		err = result.ToStruct(&users)
+		gtest.AssertNE(err, nil)
+	})
+}
+
+func Test_DB_ToXml(t *testing.T) {
+
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.Assert(err, nil)
+
+	gtest.Case(t, func() {
+		record, err := db.Table(table).Fields("*").Where("id = ?", 1).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		user := User{}
+		err = record.ToStruct(&user)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		result, err := gxml.Decode([]byte(record.ToXml("doc")))
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		resultXml := result["doc"].(map[string]interface{})
+		if v, ok := resultXml["id"]; ok {
+			gtest.Assert(user.Id, v)
+		} else {
+			gtest.Fatal("FAIL")
+		}
+
+		if v, ok := resultXml["passport"]; ok {
+			gtest.Assert(user.Passport, v)
+		} else {
+			gtest.Fatal("FAIL")
+		}
+
+		if v, ok := resultXml["password"]; ok {
+			gtest.Assert(user.Password, v)
+		} else {
+			gtest.Fatal("FAIL")
+		}
+
+		if v, ok := resultXml["nickname"]; ok {
+			gtest.Assert(user.NickName, v)
+		} else {
+			gtest.Fatal("FAIL")
+		}
+
+		if v, ok := resultXml["create_time"]; ok {
+			gtest.Assert(user.CreateTime, v)
+		} else {
+			gtest.Fatal("FAIL")
+		}
+
+	})
+}
+
+func Test_DB_ToStringMap(t *testing.T) {
+
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.Assert(err, nil)
+	gtest.Case(t, func() {
+		id := "1"
+		result, err := db.Table(table).Fields("*").Where("id = ?", 1).Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type t_user struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		t_users := make([]t_user, 0)
+		err = result.ToStructs(&t_users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		resultStringMap := result.ToStringMap("id")
+		gtest.Assert(t_users[0].Id, resultStringMap[id]["id"])
+		gtest.Assert(t_users[0].Passport, resultStringMap[id]["passport"])
+		gtest.Assert(t_users[0].Password, resultStringMap[id]["password"])
+		gtest.Assert(t_users[0].NickName, resultStringMap[id]["nickname"])
+		gtest.Assert(t_users[0].CreateTime, resultStringMap[id]["create_time"])
+	})
+}
+
+func Test_DB_ToIntMap(t *testing.T) {
+
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.Assert(err, nil)
+
+	gtest.Case(t, func() {
+		id := 1
+		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type t_user struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		t_users := make([]t_user, 0)
+		err = result.ToStructs(&t_users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		resultIntMap := result.ToIntMap("id")
+		gtest.Assert(t_users[0].Id, resultIntMap[id]["id"])
+		gtest.Assert(t_users[0].Passport, resultIntMap[id]["passport"])
+		gtest.Assert(t_users[0].Password, resultIntMap[id]["password"])
+		gtest.Assert(t_users[0].NickName, resultIntMap[id]["nickname"])
+		gtest.Assert(t_users[0].CreateTime, resultIntMap[id]["create_time"])
+	})
+}
+
+func Test_DB_ToUintMap(t *testing.T) {
+
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.Assert(err, nil)
+
+	gtest.Case(t, func() {
+		id := 1
+		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type t_user struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		t_users := make([]t_user, 0)
+		err = result.ToStructs(&t_users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		resultUintMap := result.ToUintMap("id")
+		gtest.Assert(t_users[0].Id, resultUintMap[uint(id)]["id"])
+		gtest.Assert(t_users[0].Passport, resultUintMap[uint(id)]["passport"])
+		gtest.Assert(t_users[0].Password, resultUintMap[uint(id)]["password"])
+		gtest.Assert(t_users[0].NickName, resultUintMap[uint(id)]["nickname"])
+		gtest.Assert(t_users[0].CreateTime, resultUintMap[uint(id)]["create_time"])
+
+	})
+}
+
+func Test_DB_ToStringRecord(t *testing.T) {
+
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.Assert(err, nil)
+
+	gtest.Case(t, func() {
+		id := 1
+		ids := "1"
+		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type t_user struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		t_users := make([]t_user, 0)
+		err = result.ToStructs(&t_users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		resultStringRecord := result.ToStringRecord("id")
+		gtest.Assert(t_users[0].Id, resultStringRecord[ids]["id"].Int())
+		gtest.Assert(t_users[0].Passport, resultStringRecord[ids]["passport"].String())
+		gtest.Assert(t_users[0].Password, resultStringRecord[ids]["password"].String())
+		gtest.Assert(t_users[0].NickName, resultStringRecord[ids]["nickname"].String())
+		gtest.Assert(t_users[0].CreateTime, resultStringRecord[ids]["create_time"].String())
+
+	})
+}
+
+func Test_DB_ToIntRecord(t *testing.T) {
+
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.Assert(err, nil)
+
+	gtest.Case(t, func() {
+		id := 1
+		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type t_user struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		t_users := make([]t_user, 0)
+		err = result.ToStructs(&t_users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		resultIntRecord := result.ToIntRecord("id")
+		gtest.Assert(t_users[0].Id, resultIntRecord[id]["id"].Int())
+		gtest.Assert(t_users[0].Passport, resultIntRecord[id]["passport"].String())
+		gtest.Assert(t_users[0].Password, resultIntRecord[id]["password"].String())
+		gtest.Assert(t_users[0].NickName, resultIntRecord[id]["nickname"].String())
+		gtest.Assert(t_users[0].CreateTime, resultIntRecord[id]["create_time"].String())
+
+	})
+}
+
+func Test_DB_ToUintRecord(t *testing.T) {
+
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.Assert(err, nil)
+
+	gtest.Case(t, func() {
+		id := 1
+		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type t_user struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		t_users := make([]t_user, 0)
+		err = result.ToStructs(&t_users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		resultUintRecord := result.ToUintRecord("id")
+		gtest.Assert(t_users[0].Id, resultUintRecord[uint(id)]["id"].Int())
+		gtest.Assert(t_users[0].Passport, resultUintRecord[uint(id)]["passport"].String())
+		gtest.Assert(t_users[0].Password, resultUintRecord[uint(id)]["password"].String())
+		gtest.Assert(t_users[0].NickName, resultUintRecord[uint(id)]["nickname"].String())
+		gtest.Assert(t_users[0].CreateTime, resultUintRecord[uint(id)]["create_time"].String())
+	})
+}
+
+func Test_DB_TableField(t *testing.T) {
+	name := "field_test"
+	dropTable(name)
+
+	defer dropTable(name)
+	_, err := db.Exec(fmt.Sprintf(`
+		CREATE TABLE %s (
+		field_tinyint  tinyint(8) NULL ,
+		field_int  int(8) NULL ,
+		field_integer  integer(8) NULL ,
+		field_bigint  bigint(8) NULL ,
+		field_bit  bit(3) NULL ,
+		field_real  real(8,0) NULL ,
+		field_double  double(12,2) NULL ,
+		field_varchar  varchar(10) NULL ,
+		field_varbinary  varbinary(255) NULL 
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	`, name))
+	if err != nil {
+		gtest.Fatal(err)
+	}
+
+	data := gdb.Map{
+		"field_tinyint":   1,
+		"field_int":       2,
+		"field_integer":   3,
+		"field_bigint":    4,
+		"field_bit":       6,
+		"field_real":      123,
+		"field_double":    123.25,
+		"field_varchar":   "abc",
+		"field_varbinary": "aaa",
+	}
+	res, err := db.Table(name).Data(data).Insert()
+	if err != nil {
+		gtest.Fatal(err)
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		gtest.Fatal(err)
+	} else {
+		gtest.Assert(n, 1)
+	}
+
+	result, err := db.Table(name).Fields("*").Where("field_int = ?", 2).Select()
+	if err != nil {
+		gtest.Fatal(err)
+	}
+
+	gtest.Assert(result[0], data)
+}
+
+func Test_Model_InnerJoin(t *testing.T) {
+	gtest.Case(t, func() {
+		table1 := createInitTable("user1")
+		table2 := createInitTable("user2")
+
+		defer dropTable(table1)
+		defer dropTable(table2)
+
+		res, err := db.Table(table1).Where("id > ?", 5).Delete()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		n, err := res.RowsAffected()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		gtest.Assert(n, 5)
+
+		result, err := db.Table(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").OrderBy("u1.id").Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		gtest.Assert(len(result), 5)
+
+		result, err = db.Table(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).OrderBy("u1.id").Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		gtest.Assert(len(result), 4)
+	})
+}
+
+func Test_Model_LeftJoin(t *testing.T) {
+	gtest.Case(t, func() {
+		table1 := createInitTable("user1")
+		table2 := createInitTable("user2")
+
+		defer dropTable(table1)
+		defer dropTable(table2)
+
+		res, err := db.Table(table2).Where("id > ?", 3).Delete()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		n, err := res.RowsAffected()
+		if err != nil {
+			gtest.Fatal(err)
+		} else {
+			gtest.Assert(n, 7)
+		}
+
+		result, err := db.Table(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		gtest.Assert(len(result), 10)
+
+		result, err = db.Table(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ? ", 2).Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		gtest.Assert(len(result), 8)
+	})
+}
+
+func Test_Model_RightJoin(t *testing.T) {
+	gtest.Case(t, func() {
+		table1 := createInitTable("user1")
+		table2 := createInitTable("user2")
+
+		defer dropTable(table1)
+		defer dropTable(table2)
+
+		res, err := db.Table(table1).Where("id > ?", 3).Delete()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		n, err := res.RowsAffected()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		gtest.Assert(n, 7)
+
+		result, err := db.Table(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(len(result), 10)
+
+		result, err = db.Table(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > 2").Select()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		gtest.Assert(len(result), 1)
 	})
 }
