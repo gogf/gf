@@ -24,6 +24,7 @@ func Test_DB_Ping_Pgsql(t *testing.T) {
 	}
 	gtest.Case(t, func() {
 		err1 := pgdb.PingMaster()
+
 		err2 := pgdb.PingSlave()
 		gtest.Assert(err1, nil)
 		gtest.Assert(err2, nil)
