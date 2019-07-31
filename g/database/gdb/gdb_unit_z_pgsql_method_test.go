@@ -42,7 +42,7 @@ func Test_DB_SetParm_Pgsql(t *testing.T) {
 
 	})
 }
-
+/*
 func Test_DB_Query_Pgsql(t *testing.T) {
 	if pgdb == nil {
 		return
@@ -52,10 +52,6 @@ func Test_DB_Query_Pgsql(t *testing.T) {
 	gtest.Case(t, func() {
 		_, err := pgdb.Query("SELECT ?", 1)
 		gtest.Assert(err, nil)
-		/*_, err = pgdb.Query("SELECT ?+?", 1, 2)
-		gtest.Assert(err, nil)
-		_, err = pgdb.Query("SELECT ?  + ? ", g.Slice{1, 2})
-		gtest.Assert(err, nil)*/
 		_, err = pgdb.Query("ERROR")
 		gtest.AssertNE(err, nil)
 	})
@@ -123,7 +119,7 @@ func Test_DB_Prepare_Pgsql(t *testing.T) {
 		gtest.Fatal(err)
 	}
 }
-
+*/
 func Test_DB_Insert_Pgsql(t *testing.T) {
 	if pgdb == nil {
 		return

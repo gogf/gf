@@ -19,11 +19,7 @@ services:
 - postgresql
 
 addons:
-  postgresql: "11"
-  apt:
-    packages:
-      - postgresql-11
-      - postgresql-client-11
+  postgresql: "9.4"
   hosts:
   - local
 
