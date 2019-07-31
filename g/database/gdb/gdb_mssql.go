@@ -7,17 +7,18 @@
 //    1.需要导入sqlserver驱动： github.com/denisenkom/go-mssqldb
 //    2.不支持save/replace方法
 //    3.不支持LastInsertId方法
-//
 
 package gdb
 
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/g/encoding/gbinary"
+	"github.com/gogf/gf/g/os/gtime"
+	"github.com/gogf/gf/g/text/gregex"
+	"github.com/gogf/gf/g/util/gconv"
 	"strconv"
 	"strings"
-
-	"github.com/gogf/gf/g/text/gregex"
 )
 
 // 数据库链接对象
@@ -151,7 +152,7 @@ func (db *dbMssql) parseSql(sql string) string {
 // 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值暂无用途(默认为字段数据类型).
 func (db *dbMssql) getTableFields(table string) (fields map[string]string, err error) {
 	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
-	v := db.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
+	v := db.cache.GetOrSetFunc("mssql_table_fields_"+table, func() interface{} {
 		result := (Result)(nil)
 		result, err = db.GetAll(fmt.Sprintf(`
 		SELECT c.name as FIELD, CASE t.name 
@@ -173,4 +174,65 @@ func (db *dbMssql) getTableFields(table string) (fields map[string]string, err e
 		fields = v.(map[string]string)
 	}
 	return
+}
+
+// 字段类型转换，将数据库字段类型转换为golang变量类型
+//mssql的datetime类型返回的格式为："2018-02-09T20:46:17Z"，所以这里对datetime类型转换为:"2018-02-09 20:46:17"
+//@TODO 下面这些类型的处理是从MYSQL拷过来的，需要针对mssql完善
+// 字段类型转换，将数据库字段类型转换为golang变量类型
+func (db *dbMssql) convertValue(fieldValue []byte, fieldType string) interface{} {
+	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
+	t = strings.ToLower(t)
+	switch t {
+	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
+		return fieldValue
+
+	case "int", "tinyint", "small_int", "medium_int":
+		return gconv.Int(string(fieldValue))
+
+	case "big_int":
+		return gconv.Int64(string(fieldValue))
+
+	case "float", "double", "decimal":
+		return gconv.Float64(string(fieldValue))
+
+	case "bit":
+		s := string(fieldValue)
+		// 这里的字符串判断是为兼容不同的数据库类型，如: mssql
+		if strings.EqualFold(s, "true") {
+			return 1
+		}
+		if strings.EqualFold(s, "false") {
+			return 0
+		}
+		return gbinary.BeDecodeToInt64(fieldValue)
+
+	case "bool":
+		return gconv.Bool(fieldValue)
+
+	default:
+		// 自动识别类型, 以便默认支持更多数据库类型
+		switch {
+		case strings.Contains(t, "datetime"):
+			t, _ := gtime.StrToTime(gconv.String(fieldValue))
+			return t.UTC().String()
+		case strings.Contains(t, "int"):
+			return gconv.Int(string(fieldValue))
+
+		case strings.Contains(t, "text") || strings.Contains(t, "char"):
+			return string(fieldValue)
+
+		case strings.Contains(t, "float") || strings.Contains(t, "double"):
+			return gconv.Float64(string(fieldValue))
+
+		case strings.Contains(t, "bool"):
+			return gconv.Bool(string(fieldValue))
+
+		case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
+			return fieldValue
+
+		default:
+			return string(fieldValue)
+		}
+	}
 }
