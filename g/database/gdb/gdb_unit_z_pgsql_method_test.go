@@ -47,7 +47,8 @@ func Test_DB_Query_Pgsql(t *testing.T) {
 	if pgdb == nil {
 		return
 	}
-
+	pgdb.SetDebug(true)
+	defer pgdb.SetDebug(false)
 	gtest.Case(t, func() {
 		_, err := pgdb.Query("SELECT ?", 1)
 		gtest.Assert(err, nil)
