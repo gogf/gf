@@ -7,7 +7,7 @@
 // Package gyaml provides accessing and converting for YAML content.
 package gyaml
 
-import "github.com/gogf/gf/internal/thirdparty/github.com/ghodss/yaml"
+import "github.com/ghodss/yaml"
 
 func Encode(v interface{}) ([]byte, error) {
 	return yaml.Marshal(v)

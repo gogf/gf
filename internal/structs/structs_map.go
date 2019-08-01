@@ -9,7 +9,7 @@ package structs
 import (
 	"reflect"
 
-	"github.com/gogf/gf/internal/thirdparty/github.com/fatih/structs"
+	"github.com/fatih/structs"
 )
 
 // MapField retrieves struct field as map[name/tag]*Field from <pointer>, and returns it.

@@ -6,7 +6,7 @@
 
 package ghttp
 
-import "github.com/gogf/gf/internal/thirdparty/github.com/gorilla/websocket"
+import "github.com/gorilla/websocket"
 
 type WebSocket struct {
 	*websocket.Conn

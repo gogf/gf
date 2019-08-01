@@ -5,15 +5,13 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package ghtml provides useful API for HTML content handling.
-//
-// HTML编码.
 package ghtml
 
 import (
 	"html"
 	"strings"
 
-	"github.com/gogf/gf/internal/thirdparty/github.com/grokify/html-strip-tags-go"
+	strip "github.com/grokify/html-strip-tags-go"
 )
 
 // 过滤掉HTML标签，只返回text内容

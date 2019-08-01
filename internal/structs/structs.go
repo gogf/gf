@@ -8,7 +8,7 @@
 package structs
 
 import (
-	"github.com/gogf/gf/internal/thirdparty/github.com/fatih/structs"
+	"github.com/fatih/structs"
 )
 
 // Field is alias of structs.Field.

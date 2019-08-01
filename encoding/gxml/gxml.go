@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/clbanning/mxj"
 	"github.com/gogf/gf/encoding/gcharset"
-	"github.com/gogf/gf/internal/thirdparty/github.com/clbanning/mxj"
 	"github.com/gogf/gf/text/gregex"
 )
 

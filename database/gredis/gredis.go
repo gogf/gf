@@ -19,7 +19,7 @@ import (
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/thirdparty/github.com/gomodule/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
 const (

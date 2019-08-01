@@ -8,8 +8,8 @@
 package gflock
 
 import (
-	flock "github.com/gogf/gf/internal/thirdparty/github.com/theckman/go-flock"
 	"github.com/gogf/gf/os/gfile"
+	flock "github.com/theckman/go-flock"
 )
 
 // File locker.
