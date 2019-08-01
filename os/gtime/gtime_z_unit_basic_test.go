@@ -67,14 +67,14 @@ func Test_Datetime(t *testing.T) {
 func Test_ISO8601(t *testing.T) {
 	gtest.Case(t, func() {
 		iso8601 := gtime.ISO8601()
-		gtest.Assert(iso8601, time.Now().Format("c"))
+		gtest.Assert(iso8601, gtime.Now().Format("c"))
 	})
 }
 
 func Test_RFC822(t *testing.T) {
 	gtest.Case(t, func() {
 		rfc822 := gtime.RFC822()
-		gtest.Assert(rfc822, time.Now().Format("r"))
+		gtest.Assert(rfc822, gtime.Now().Format("r"))
 	})
 }
 

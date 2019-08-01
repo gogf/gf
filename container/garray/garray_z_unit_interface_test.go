@@ -95,7 +95,7 @@ func TestArray_PopRands(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []interface{}{100, 200, 300, 400, 500, 600}
 		array := garray.NewFromCopy(a1)
-		gtest.AssertIN(array.PopRands(2), a1)
+		gtest.AssertIN(array.PopRands(2), []interface{}{100, 200, 300, 400, 500, 600})
 	})
 }
 

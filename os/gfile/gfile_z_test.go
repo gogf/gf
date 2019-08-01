@@ -11,7 +11,6 @@ import (
 )
 
 func Test_IsDir(t *testing.T) {
-
 	gtest.Case(t, func() {
 		paths := "/testfile"
 		createDir(paths)
@@ -21,9 +20,7 @@ func Test_IsDir(t *testing.T) {
 		gtest.Assert(gfile.IsDir("./testfile2"), false)
 		gtest.Assert(gfile.IsDir("./testfile/tt.txt"), false)
 		gtest.Assert(gfile.IsDir(""), false)
-
 	})
-
 }
 
 func Test_Create(t *testing.T) {
