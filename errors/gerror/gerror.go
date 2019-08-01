@@ -9,8 +9,6 @@ package gerror
 
 import (
 	"fmt"
-
-	"github.com/gogf/gf/util/gconv"
 )
 
 type ApiStack interface {
@@ -21,16 +19,8 @@ type ApiCause interface {
 	Cause() error
 }
 
-// New returns an error that formats as the given value.
-func New(value interface{}) error {
-	if value == nil {
-		return nil
-	}
-	return NewText(gconv.String(value))
-}
-
-// NewText returns an error that formats as the given text.
-func NewText(text string) error {
+// New returns an error that formats as the given text.
+func New(text string) error {
 	if text == "" {
 		return nil
 	}
