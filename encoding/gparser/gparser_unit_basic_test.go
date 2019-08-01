@@ -288,18 +288,13 @@ func Test_Convert2(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(str, "{\n\t\"name\": \"gf\"\n}")
 
-		yamlArr := []byte{124, 50, 10, 10, 32, 32, 110, 97, 109, 101, 58, 103, 102, 10}
-		p = gparser.New(`
-name:gf
-`)
+		p = gparser.New(g.Map{"name": "gf"})
 		arr, err = p.ToYaml()
 		gtest.Assert(err, nil)
-		gtest.Assert(arr, yamlArr)
-		arr, err = gparser.VarToYaml(`
-name:gf
-`)
+		gtest.Assert(arr, "name: gf\n")
+		arr, err = gparser.VarToYaml(g.Map{"name": "gf"})
 		gtest.Assert(err, nil)
-		gtest.Assert(arr, yamlArr)
+		gtest.Assert(arr, "name: gf\n")
 
 		tomlArr := []byte{110, 97, 109, 101, 32, 61, 32, 34, 103, 102, 34, 10}
 		p = gparser.New(`
