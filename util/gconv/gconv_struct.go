@@ -281,8 +281,19 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
 		}
 		structFieldValue.Set(e.Addr())
 
+	case reflect.Interface:
+		if value == nil {
+			structFieldValue.Set(reflect.ValueOf((*interface{})(nil)))
+		} else {
+			structFieldValue.Set(reflect.ValueOf(value))
+		}
+
 	default:
-		return errors.New(fmt.Sprintf(`cannot convert to type "%s"`, structFieldValue.Type().String()))
+		return errors.New(
+			fmt.Sprintf(`cannot convert to type "%s"`,
+				structFieldValue.Type().String(),
+			),
+		)
 	}
 	return nil
 }

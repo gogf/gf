@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/os/glog"
 )
 
 type XinYanModel struct {
@@ -137,11 +139,18 @@ var data = `{
 }`
 
 func main() {
-	xinyan := new(XinYanModel)
-	glog.Debug(xinyan)
-	j, _ := gjson.DecodeToJson(data)
-	err := j.ToStruct(xinyan)
-	glog.Debug(err)
+	struct1 := new(XinYanModel)
+	err := json.Unmarshal([]byte(data), struct1)
+	fmt.Println(err)
+	fmt.Println(struct1)
 
-	glog.Debug(xinyan)
+	fmt.Println()
+
+	struct2 := new(XinYanModel)
+	j, err := gjson.DecodeToJson(data)
+	fmt.Println(err)
+	fmt.Println(j.Get("data.desc"))
+	err = j.ToStruct(struct2)
+	fmt.Println(err)
+	fmt.Println(struct2)
 }

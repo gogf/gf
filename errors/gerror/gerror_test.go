@@ -25,7 +25,7 @@ func nilError() error {
 
 func Test_Nil(t *testing.T) {
 	gtest.Case(t, func() {
-		gtest.Assert(gerror.New(interfaceNil()), nil)
+		gtest.Assert(gerror.New(""), nil)
 		gtest.Assert(gerror.Wrap(nilError(), "test"), nil)
 	})
 }
