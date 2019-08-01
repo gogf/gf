@@ -21,8 +21,6 @@ import (
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/thirdparty/github.com/gorilla/websocket"
-	"github.com/gogf/gf/internal/thirdparty/github.com/olekukonko/tablewriter"
 	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/os/gfile"
@@ -31,6 +29,8 @@ import (
 	"github.com/gogf/gf/os/gtimer"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gorilla/websocket"
+	"github.com/olekukonko/tablewriter"
 )
 
 type (

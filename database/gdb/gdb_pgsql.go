@@ -17,7 +17,7 @@ import (
 //
 // 使用时需要import:
 //
-// _ "github.com/gogf/gf/internal/thirdparty/github.com/lib/pq"
+// _ "github.com/lib/pq"
 //
 // @todo 需要完善replace和save的操作覆盖
 

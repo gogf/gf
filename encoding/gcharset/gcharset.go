@@ -25,9 +25,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/gogf/gf/internal/thirdparty/golang.org/x/text/encoding"
-	"github.com/gogf/gf/internal/thirdparty/golang.org/x/text/encoding/ianaindex"
-	"github.com/gogf/gf/internal/thirdparty/golang.org/x/text/transform"
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/encoding/ianaindex"
+	"golang.org/x/text/transform"
 )
 
 var (

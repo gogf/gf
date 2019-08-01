@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/gogf/gf/internal/thirdparty/github.com/BurntSushi/toml"
+	"github.com/BurntSushi/toml"
 )
 
 func Encode(v interface{}) ([]byte, error) {

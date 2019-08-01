@@ -9,7 +9,7 @@ package structs
 import (
 	"reflect"
 
-	"github.com/gogf/gf/internal/thirdparty/github.com/fatih/structs"
+	"github.com/fatih/structs"
 )
 
 // TagMapName retrieves struct tags as map[tag]attribute from <pointer>, and returns it.

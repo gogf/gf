@@ -11,7 +11,7 @@ import (
 )
 
 // 使用时需要import:
-// _ "github.com/gogf/gf/internal/thirdparty/github.com/mattn/go-sqlite3"
+// _ "github.com/mattn/go-sqlite3"
 
 // Sqlite接口对象
 // @author wxkj<wxscz@qq.com>

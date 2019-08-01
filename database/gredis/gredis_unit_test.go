@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/gogf/gf/database/gredis"
-	redis2 "github.com/gogf/gf/internal/thirdparty/github.com/gomodule/redigo/redis"
 	"github.com/gogf/gf/test/gtest"
+	redis2 "github.com/gomodule/redigo/redis"
 )
 
 var (

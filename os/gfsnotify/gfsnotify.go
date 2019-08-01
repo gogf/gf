@@ -13,11 +13,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gogf/gf/container/glist"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gqueue"
 	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/thirdparty/github.com/fsnotify/fsnotify"
 	"github.com/gogf/gf/os/gcache"
 )
 
