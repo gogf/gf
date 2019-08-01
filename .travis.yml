@@ -8,6 +8,7 @@ branches:
   only:
   - master
   - develop
+  - staging
 
 env:
 - GO111MODULE=on
