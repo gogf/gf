@@ -217,11 +217,12 @@ func TestStringArray_Rand(t *testing.T) {
 func TestStringArray_PopRands(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []string{"a", "b", "c", "d", "e", "f", "g"}
-		a2 := []string{"1", "2", "3", "4", "5", "6", "7"}
 		array1 := garray.NewStringArrayFrom(a1)
-		gtest.AssertIN(array1.PopRands(1), strings.Join(a1, ","))
-		gtest.AssertNI(array1.PopRands(1), strings.Join(a2, ","))
-		gtest.Assert(len(array1.PopRands(10)), 5)
+		gtest.AssertIN(array1.PopRands(1), []string{"a", "b", "c", "d", "e", "f", "g"})
+		gtest.AssertIN(array1.PopRands(1), []string{"a", "b", "c", "d", "e", "f", "g"})
+		gtest.AssertNI(array1.PopRands(1), array1.Slice())
+		gtest.AssertNI(array1.PopRands(1), array1.Slice())
+		gtest.Assert(len(array1.PopRands(10)), 3)
 	})
 }
 

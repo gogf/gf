@@ -9,21 +9,21 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/encoding/gparser"
+
+	"github.com/gogf/gf/frame/g"
+
 	"github.com/gogf/gf/encoding/gyaml"
 	"github.com/gogf/gf/test/gtest"
 )
 
 var yamlStr string = `
 #即表示url属性值；
-url: http://www.wolfcode.cn 
-#即表示server.host属性的值；
-server:
-    host: http://www.wolfcode.cn 
+url: https://goframe.org
+
 #数组，即表示server为[a,b,c]
 server:
     - 120.168.117.21
     - 120.168.117.22
-    - 120.168.117.23
 #常量
 pi: 3.14   #定义一个数值3.14
 hasChild: true  #定义一个boolean值
@@ -31,9 +31,6 @@ name: '你好YAML'   #定义一个字符串
 `
 
 var yamlErr string = `
-# 模板引擎目录
-viewpath = "/home/www/templates/"
-# MySQL数据库配置
 [redis]
 dd = 11
 [redis]
@@ -41,71 +38,50 @@ dd = 11
     cache = "127.0.0.1:6379,1"
 `
 
-func TestEncode(t *testing.T) {
+func Test_Decode(t *testing.T) {
 	gtest.Case(t, func() {
-		m := make(map[string]string)
-		m["yaml"] = yamlStr
-		res, err := gyaml.Encode(m)
-		if err != nil {
-			t.Errorf("encode failed. %v", err)
-			return
-		}
+		result, err := gyaml.Decode([]byte(yamlStr))
+		gtest.Assert(err, nil)
 
-		p, err := gparser.LoadContent(res)
-		if err != nil {
-			t.Errorf("parser failed. %v", err)
-			return
-		}
-
-		gtest.Assert(p.GetString("yaml"), yamlStr)
+		m, ok := result.(map[string]interface{})
+		gtest.Assert(ok, true)
+		gtest.Assert(m, map[string]interface{}{
+			"url":      "https://goframe.org",
+			"server":   g.Slice{"120.168.117.21", "120.168.117.22"},
+			"pi":       3.14,
+			"hasChild": true,
+			"name":     "你好YAML",
+		})
 	})
-
 }
 
-func TestDecode(t *testing.T) {
+func Test_DecodeTo(t *testing.T) {
 	gtest.Case(t, func() {
-		m := make(map[string]string)
-		m["yaml"] = yamlStr
-		res, err := gyaml.Encode(m)
-		if err != nil {
-			t.Errorf("encode failed. %v", err)
-			return
-		}
-
-		decodeStr, err := gyaml.Decode(res)
-		if err != nil {
-			t.Errorf("decode failed. %v", err)
-			return
-		}
-
-		gtest.Assert(decodeStr.(map[string]interface{})["yaml"], yamlStr)
-
-		decodeStr1 := make(map[string]interface{})
-		err = gyaml.DecodeTo(res, &decodeStr1)
-		if err != nil {
-			t.Errorf("decodeTo failed. %v", err)
-			return
-		}
-		gtest.Assert(decodeStr1["yaml"], yamlStr)
+		result := make(map[string]interface{})
+		err := gyaml.DecodeTo([]byte(yamlStr), &result)
+		gtest.Assert(err, nil)
+		gtest.Assert(result, map[string]interface{}{
+			"url":      "https://goframe.org",
+			"server":   g.Slice{"120.168.117.21", "120.168.117.22"},
+			"pi":       3.14,
+			"hasChild": true,
+			"name":     "你好YAML",
+		})
 	})
+}
 
+func Test_DecodeError(t *testing.T) {
 	gtest.Case(t, func() {
 		_, err := gyaml.Decode([]byte(yamlErr))
-		if err == nil {
-			t.Errorf("decode failed. %v", err)
-			return
-		}
+		gtest.AssertNE(err, nil)
 
-		decodeStr1 := make(map[string]interface{})
-		err = gyaml.DecodeTo([]byte(yamlErr), &decodeStr1)
-		if err == nil {
-			t.Errorf("decodeTo failed. %v", err)
-			return
-		}
+		result := make(map[string]interface{})
+		err = gyaml.DecodeTo([]byte(yamlErr), &result)
+		gtest.AssertNE(err, nil)
 	})
 }
 
-func TestToJson(t *testing.T) {
+func Test_ToJson(t *testing.T) {
 	gtest.Case(t, func() {
 		m := make(map[string]string)
 		m["yaml"] = yamlStr

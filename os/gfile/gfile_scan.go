@@ -16,7 +16,7 @@ import (
 // ScanDir returns all sub-files with absolute paths of given <path>,
 // It scans directory recursively if given parameter <recursive> is true.
 func ScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
-	isRecursive := true
+	isRecursive := false
 	if len(recursive) > 0 {
 		isRecursive = recursive[0]
 	}

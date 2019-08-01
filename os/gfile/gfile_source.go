@@ -49,7 +49,7 @@ func MainPkgPath() string {
 		if _, file, _, ok := runtime.Caller(i); ok {
 			// <file> is separated by '/'
 			if gstr.Contains(file, "/github.com/gogf/gf/") &&
-				!gstr.Contains(file, "/github.com/gogf/gf/example/") {
+				!gstr.Contains(file, "/github.com/gogf/gf/.example/") {
 				continue
 			}
 			if Ext(file) != ".go" {

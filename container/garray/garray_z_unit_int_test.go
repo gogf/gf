@@ -228,10 +228,10 @@ func TestIntArray_PopRands(t *testing.T) {
 		array := garray.NewIntArrayFrom(a1)
 		ns1 := array.PopRands(2)
 		gtest.AssertIN(ns1, []int{100, 200, 300, 400, 500, 600})
-		gtest.AssertIN(len(ns1), 2)
+		gtest.Assert(len(ns1), 2)
 
 		ns2 := array.PopRands(7)
-		gtest.AssertIN(len(ns2), 6)
+		gtest.Assert(len(ns2), 6)
 		gtest.AssertIN(ns2, []int{100, 200, 300, 400, 500, 600})
 	})
 }

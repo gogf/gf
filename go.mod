@@ -6,7 +6,6 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gf-third/mysql v1.4.2
-	github.com/ghodss/yaml v1.0.0
 	github.com/gofrs/flock v0.7.1 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.0
@@ -19,5 +18,5 @@ require (
 	golang.org/x/text v0.3.2
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20190709130402-674ba3eaed22
 )

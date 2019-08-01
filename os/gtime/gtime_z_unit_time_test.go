@@ -102,14 +102,14 @@ func Test_Time_String(t *testing.T) {
 func Test_Time_ISO8601(t *testing.T) {
 	gtest.Case(t, func() {
 		now := gtime.Now()
-		gtest.Assert(now.ISO8601(), now.Time.Format("c"))
+		gtest.Assert(now.ISO8601(), now.Format("c"))
 	})
 }
 
 func Test_Time_RFC822(t *testing.T) {
 	gtest.Case(t, func() {
 		now := gtime.Now()
-		gtest.Assert(now.RFC822(), now.Time.Format("r"))
+		gtest.Assert(now.RFC822(), now.Format("r"))
 	})
 }
 
