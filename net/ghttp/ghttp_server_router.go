@@ -9,14 +9,19 @@ package ghttp
 import (
 	"errors"
 	"fmt"
-	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/internal/debug"
 
 	"github.com/gogf/gf/container/glist"
 
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
+)
+
+const (
+	gFILTER_KEY = "/gf/net/ghttp/ghttp"
 )
 
 // 解析pattern
@@ -46,30 +51,14 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 	return
 }
 
-// 获得服务注册的文件地址信息
-func (s *Server) getHandlerRegisterCallerLine(handler *handlerItem) string {
-	skip := 5
-	if handler.itemType == gHANDLER_TYPE_HANDLER {
-		skip = 4
-	}
-	if _, file, line, ok := runtime.Caller(skip); ok {
-		return fmt.Sprintf("%s:%d", file, line)
-	}
-	return ""
-}
-
 // 路由注册处理方法。
 // 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
 // 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表数据量不会很大，所以效率比较高；
-func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string) {
+func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	// Web Server正常运行时无法动态注册路由方法
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error("cannot bind handler while server running")
 		return
-	}
-	var hookName string
-	if len(hook) > 0 {
-		hookName = hook[0]
 	}
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
@@ -81,15 +70,14 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 		return
 	}
 	// 注册地址记录及重复注册判断
-	regkey := s.handlerKey(hookName, method, uri, domain)
-	caller := s.getHandlerRegisterCallerLine(handler)
-	if len(hook) == 0 {
-		if item, ok := s.routesMap[regkey]; ok {
+	regKey := s.handlerKey(handler.hookName, method, uri, domain)
+	switch handler.itemType {
+	case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+		if item, ok := s.routesMap[regKey]; ok {
 			glog.Errorf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
 			return
 		}
 	}
-
 	// 注册的路由信息对象
 	handler.router = &Router{
 		Uri:      uri,
@@ -165,7 +153,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 
 			// 否则，那么判断优先级，决定插入顺序
 			default:
-				if s.compareRouterPriority(handler.router, item.router) {
+				if s.compareRouterPriority(handler, item) {
 					l.InsertBefore(handler, e)
 					pushed = true
 					break
@@ -177,11 +165,12 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 		}
 	}
 	//gutil.Dump(s.serveTree)
-	if _, ok := s.routesMap[regkey]; !ok {
-		s.routesMap[regkey] = make([]registeredRouteItem, 0)
+	if _, ok := s.routesMap[regKey]; !ok {
+		s.routesMap[regKey] = make([]registeredRouteItem, 0)
 	}
-	s.routesMap[regkey] = append(s.routesMap[regkey], registeredRouteItem{
-		file:    caller,
+	file, line := debug.CallerWithFilter(gFILTER_KEY)
+	s.routesMap[regKey] = append(s.routesMap[regKey], registeredRouteItem{
+		file:    fmt.Sprintf(`%s:%d`, file, line),
 		handler: handler,
 	})
 }
@@ -189,14 +178,22 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 // 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。
 // 返回值true表示newRouter优先级比oldRouter高，会被添加链表中oldRouter的前面；否则后面。
 // 优先级比较规则：
-// 1、层级越深优先级越高(对比/数量)；
-// 2、模糊规则优先级：{xxx} > :xxx > *xxx；
-func (s *Server) compareRouterPriority(newRouter, oldRouter *Router) bool {
-	// 优先比较层级，层级越深优先级越高
-	if newRouter.Priority > oldRouter.Priority {
+// 1、中间件优先级最高，按照添加顺序优先级执行；
+// 2、其他路由注册类型，层级越深优先级越高(对比/数量)；
+// 3、模糊规则优先级：{xxx} > :xxx > *xxx；
+func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerItem) bool {
+	// 中间件优先级最高，按照添加顺序优先级执行
+	if newItem.itemType == gHANDLER_TYPE_MIDDLEWARE && oldItem.itemType == gHANDLER_TYPE_MIDDLEWARE {
+		return false
+	}
+	if newItem.itemType == gHANDLER_TYPE_MIDDLEWARE && oldItem.itemType != gHANDLER_TYPE_MIDDLEWARE {
 		return true
 	}
-	if newRouter.Priority < oldRouter.Priority {
+	// 优先比较层级，层级越深优先级越高
+	if newItem.router.Priority > oldItem.router.Priority {
+		return true
+	}
+	if newItem.router.Priority < oldItem.router.Priority {
 		return false
 	}
 	// 精准匹配比模糊匹配规则优先级高，例如：/name/act 比 /{name}/:act 优先级高
@@ -204,7 +201,7 @@ func (s *Server) compareRouterPriority(newRouter, oldRouter *Router) bool {
 	var fuzzyCountNameNew, fuzzyCountNameOld int
 	var fuzzyCountAnyNew, fuzzyCountAnyOld int
 	var fuzzyCountTotalNew, fuzzyCountTotalOld int
-	for _, v := range newRouter.Uri {
+	for _, v := range newItem.router.Uri {
 		switch v {
 		case '{':
 			fuzzyCountFieldNew++
@@ -214,7 +211,7 @@ func (s *Server) compareRouterPriority(newRouter, oldRouter *Router) bool {
 			fuzzyCountAnyNew++
 		}
 	}
-	for _, v := range oldRouter.Uri {
+	for _, v := range oldItem.router.Uri {
 		switch v {
 		case '{':
 			fuzzyCountFieldOld++
@@ -253,10 +250,10 @@ func (s *Server) compareRouterPriority(newRouter, oldRouter *Router) bool {
 	/* 模糊规则数量相等，后续不用再判断*规则的数量比较了 */
 
 	// 比较HTTP METHOD，更精准的优先级更高
-	if newRouter.Method != gDEFAULT_METHOD {
+	if newItem.router.Method != gDEFAULT_METHOD {
 		return true
 	}
-	if oldRouter.Method != gDEFAULT_METHOD {
+	if oldItem.router.Method != gDEFAULT_METHOD {
 		return true
 	}
 

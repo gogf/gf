@@ -54,7 +54,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	} else {
 		array = strings.Split(path[1:], "/")
 	}
-	parsedItems = make([]*handlerParsedItem, 0, 16)
+	parsedItemList := glist.New()
+	lastMiddleWareItem := (*glist.Element)(nil)
 	isServeHandlerAdded := false
 	for _, domain := range domains {
 		p, ok := s.serveTree[domain]
@@ -122,20 +123,39 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 								}
 							}
 						}
-						parsedItems = append(parsedItems, parsedItem)
+						switch item.itemType {
 						// 服务路由函数只能添加一次
-						if !isServeHandlerAdded {
-							switch item.itemType {
-							case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
-								isServeHandlerAdded = true
+						case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+							isServeHandlerAdded = true
+							parsedItemList.PushBack(parsedItem)
+
+						// 中间件需要排序
+						case gHANDLER_TYPE_MIDDLEWARE:
+							if lastMiddleWareItem == nil {
+								lastMiddleWareItem = parsedItemList.PushFront(parsedItem)
+							} else {
+								lastMiddleWareItem = parsedItemList.InsertAfter(parsedItem, lastMiddleWareItem)
 							}
-						}
-						if item.itemType == gHANDLER_TYPE_HOOK {
+
+						// 钩子函数存在性判断
+						case gHANDLER_TYPE_HOOK:
 							hasHook = true
+							parsedItemList.PushBack(parsedItem)
+
+						default:
+							parsedItemList.PushBack(parsedItem)
 						}
 					}
 				}
 			}
+		}
+	}
+	if parsedItemList.Len() > 0 {
+		index := 0
+		parsedItems = make([]*handlerParsedItem, parsedItemList.Len())
+		for e := parsedItemList.Front(); e != nil; e = e.Next() {
+			parsedItems[index] = e.Value.(*handlerParsedItem)
+			index++
 		}
 	}
 	return
