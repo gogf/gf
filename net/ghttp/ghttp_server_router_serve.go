@@ -3,7 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 服务注册路由控制.
 
 package ghttp
 
@@ -16,26 +15,29 @@ import (
 
 // 查询请求处理方法.
 // 内部带锁机制，可以并发读，但是不能并发写；并且有缓存机制，按照Host、Method、Path进行缓存.
-func (s *Server) getServeHandlerWithCache(r *Request) *handlerParsedItem {
-	cacheItem := (*handlerParsedItem)(nil)
+func (s *Server) getHandlersWithCache(r *Request) []*handlerParsedItem {
 	cacheKey := s.serveHandlerKey(r.Method, r.URL.Path, r.GetHost())
+	cacheItems := ([]*handlerParsedItem)(nil)
 	if v := s.serveCache.Get(cacheKey); v == nil {
-		cacheItem = s.searchServeHandler(r.Method, r.URL.Path, r.GetHost())
-		if cacheItem != nil {
-			s.serveCache.Set(cacheKey, cacheItem, s.config.RouterCacheExpire*1000)
+		cacheItems = s.searchHandlers(r.Method, r.URL.Path, r.GetHost())
+		if cacheItems != nil {
+			s.serveCache.Set(cacheKey, cacheItems, s.config.RouterCacheExpire*1000)
 		}
 	} else {
-		cacheItem = v.(*handlerParsedItem)
+		cacheItems = v.([]*handlerParsedItem)
 	}
-	return cacheItem
+	if len(cacheItems) == 0 {
+		return nil
+	}
+	return cacheItems
 }
 
-// 服务方法检索
-func (s *Server) searchServeHandler(method, path, domain string) *handlerParsedItem {
+// 路由注册方法检索，返回所有该路由的注册函数，构造成数组返回
+func (s *Server) searchHandlers(method, path, domain string) []*handlerParsedItem {
 	if len(path) == 0 {
 		return nil
 	}
-	// 遍历检索的域名列表
+	// 遍历检索的域名列表，优先遍历默认域名
 	domains := []string{gDEFAULT_DOMAIN}
 	if !strings.EqualFold(gDEFAULT_DOMAIN, domain) {
 		domains = append(domains, domain)
@@ -47,13 +49,15 @@ func (s *Server) searchServeHandler(method, path, domain string) *handlerParsedI
 	} else {
 		array = strings.Split(path[1:], "/")
 	}
+	parsedItems := make([]*handlerParsedItem, 0, 16)
+	isServeHandlerAdded := false
 	for _, domain := range domains {
 		p, ok := s.serveTree[domain]
 		if !ok {
 			continue
 		}
 		// 多层链表(每个节点都有一个*list链表)的目的是当叶子节点未有任何规则匹配时，让父级模糊匹配规则继续处理
-		lists := make([]*list.List, 0)
+		lists := make([]*list.List, 0, 16)
 		for k, v := range array {
 			if _, ok := p.(map[string]interface{})["*list"]; ok {
 				lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
@@ -86,6 +90,13 @@ func (s *Server) searchServeHandler(method, path, domain string) *handlerParsedI
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
 				item := e.Value.(*handlerItem)
+				// 服务路由函数只能添加一次
+				if isServeHandlerAdded {
+					switch item.itemType {
+					case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+						continue
+					}
+				}
 				// 动态匹配规则带有gDEFAULT_METHOD的情况，不会像静态规则那样直接解析为所有的HTTP METHOD存储
 				if strings.EqualFold(item.router.Method, gDEFAULT_METHOD) || strings.EqualFold(item.router.Method, method) {
 					// 注意当不带任何动态路由规则时，len(match) == 1
@@ -105,13 +116,20 @@ func (s *Server) searchServeHandler(method, path, domain string) *handlerParsedI
 								}
 							}
 						}
-						return parsedItem
+						parsedItems = append(parsedItems, parsedItem)
+						// 服务路由函数只能添加一次
+						if !isServeHandlerAdded {
+							switch item.itemType {
+							case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+								isServeHandlerAdded = true
+							}
+						}
 					}
 				}
 			}
 		}
 	}
-	return nil
+	return parsedItems
 }
 
 // 生成回调方法查询的Key

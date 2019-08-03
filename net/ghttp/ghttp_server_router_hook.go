@@ -3,28 +3,24 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 事件回调(中间件)路由控制.
 
 package ghttp
 
 import (
 	"container/list"
-	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
 
-	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gregex"
 )
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
 func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFunc) {
 	s.setHandler(pattern, &handlerItem{
-		name:  runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
-		ctype: nil,
-		fname: "",
-		faddr: handler,
+		itemType: gHANDLER_TYPE_HOOK,
+		itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
+		itemFunc: handler,
 	}, hook)
 }
 
@@ -63,7 +59,7 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 			}
 			// 不使用hook的router对象，保留路由注册服务的router对象，不能覆盖
 			// r.Router = item.handler.router
-			if err := s.niceCallHookHandler(item.handler.faddr, r); err != nil {
+			if err := s.niceCallHookHandler(item.handler.itemFunc, r); err != nil {
 				switch err {
 				case gEXCEPTION_EXIT:
 					break
@@ -122,7 +118,7 @@ func (s *Server) searchHookHandler(method, path, domain, hook string) []*handler
 	} else {
 		array = strings.Split(path[1:], "/")
 	}
-	parsedItems := make([]*handlerParsedItem, 0)
+	parsedItems := make([]*handlerParsedItem, 0, 8)
 	for _, domain := range domains {
 		p, ok := s.hooksTree[domain]
 		if !ok {
@@ -163,7 +159,6 @@ func (s *Server) searchHookHandler(method, path, domain, hook string) []*handler
 		}
 
 		// 多层链表遍历检索，从数组末尾的链表开始遍历，末尾的深度高优先级也高
-		pushedSet := gset.NewStringSet()
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
 				handler := e.Value.(*handlerItem)
@@ -186,11 +181,7 @@ func (s *Server) searchHookHandler(method, path, domain, hook string) []*handler
 								}
 							}
 						}
-						address := fmt.Sprintf("%p", handler)
-						if !pushedSet.Contains(address) {
-							parsedItems = append(parsedItems, parsedItem)
-							pushedSet.Add(address)
-						}
+						parsedItems = append(parsedItems, parsedItem)
 					}
 				}
 			}

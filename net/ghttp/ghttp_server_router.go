@@ -3,7 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 路由控制基本方法.
 
 package ghttp
 
@@ -49,17 +48,18 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 // 获得服务注册的文件地址信息
 func (s *Server) getHandlerRegisterCallerLine(handler *handlerItem) string {
 	skip := 5
-	if handler.rtype == gROUTE_REGISTER_HANDLER {
+	if handler.itemType == gHANDLER_TYPE_HANDLER {
 		skip = 4
 	}
-	if _, cfile, cline, ok := runtime.Caller(skip); ok {
-		return fmt.Sprintf("%s:%d", cfile, cline)
+	if _, file, line, ok := runtime.Caller(skip); ok {
+		return fmt.Sprintf("%s:%d", file, line)
 	}
 	return ""
 }
 
 // 路由注册处理方法。
-// 如果带有hook参数，表示是回调注册方法; 否则为普通路由执行方法。
+// 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
+// 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表数据量不会很大，所以效率比较高；
 func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string) {
 	// Web Server正常运行时无法动态注册路由方法
 	if s.Status() == SERVER_STATUS_RUNNING {
@@ -89,7 +89,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 		}
 	}
 
-	// 路由对象
+	// 注册的路由信息对象
 	handler.router = &Router{
 		Uri:      uri,
 		Domain:   domain,
@@ -98,20 +98,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 	}
 	handler.router.RegRule, handler.router.RegNames = s.patternToRegRule(uri)
 
-	// 动态注册，首先需要判断是否是动态注册，如果不是那么就没必要添加到动态注册记录变量中。
-	// 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
-	// 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表数据量不会很大，所以效率比较高；
-	tree := (map[string]interface{})(nil)
-	if len(hookName) == 0 {
-		tree = s.serveTree
-	} else {
-		tree = s.hooksTree
-	}
-	if _, ok := tree[domain]; !ok {
-		tree[domain] = make(map[string]interface{})
+	if _, ok := s.serveTree[domain]; !ok {
+		s.serveTree[domain] = make(map[string]interface{})
 	}
 	// 用于遍历的指针
-	p := tree[domain]
+	p := s.serveTree[domain]
 	if len(hookName) > 0 {
 		if _, ok := p.(map[string]interface{})[hookName]; !ok {
 			p.(map[string]interface{})[hookName] = make(map[string]interface{})
@@ -166,21 +157,26 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 		pushed := false
 		for e := l.Front(); e != nil; e = e.Next() {
 			item = e.Value.(*handlerItem)
-			// 判断是否已存在相同的路由注册项，(如果不是hook注册)是则进行替换
-			if len(hookName) == 0 {
-				if strings.EqualFold(handler.router.Domain, item.router.Domain) &&
-					strings.EqualFold(handler.router.Method, item.router.Method) &&
-					strings.EqualFold(handler.router.Uri, item.router.Uri) {
-					e.Value = handler
+			switch handler.itemType {
+			// 判断是否已存在相同的路由注册项，如果是普通路由注册则进行替换
+			case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+				if handler.itemType == gHANDLER_TYPE_HANDLER {
+					if strings.EqualFold(handler.router.Domain, item.router.Domain) &&
+						strings.EqualFold(handler.router.Method, item.router.Method) &&
+						strings.EqualFold(handler.router.Uri, item.router.Uri) {
+						e.Value = handler
+						pushed = true
+						break
+					}
+				}
+
+			// 否则，那么判断优先级，决定插入顺序
+			default:
+				if s.compareRouterPriority(handler.router, item.router) {
+					l.InsertBefore(handler, e)
 					pushed = true
 					break
 				}
-			}
-			// 如果路由注册项不相等，那么判断优先级，决定插入顺序
-			if s.compareRouterPriority(handler.router, item.router) {
-				l.InsertBefore(handler, e)
-				pushed = true
-				break
 			}
 		}
 		if !pushed {

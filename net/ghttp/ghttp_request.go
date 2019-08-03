@@ -21,12 +21,7 @@ import (
 // 请求对象
 type Request struct {
 	*http.Request
-	parsedGet     bool                   // GET参数是否已经解析
-	parsedPost    bool                   // POST参数是否已经解析
-	queryVars     map[string][]string    // GET参数
-	routerVars    map[string][]string    // 路由解析参数
-	exit          bool                   // 是否退出当前请求流程执行
-	Id            int                    // 请求id(唯一)
+	Id            int                    // 请求ID(当前Server对象唯一)
 	Server        *Server                // 请求关联的服务器对象
 	Cookie        *Cookie                // 与当前请求绑定的Cookie对象(并发安全)
 	Session       *Session               // 与当前请求绑定的Session对象(并发安全)
@@ -34,6 +29,14 @@ type Request struct {
 	Router        *Router                // 匹配到的路由对象
 	EnterTime     int64                  // 请求进入时间(微秒)
 	LeaveTime     int64                  // 请求完成时间(微秒)
+	MiddleWare    *MiddleWare            // 中间件功能调用对象
+	handlers      []*handlerParsedItem   // 请求执行服务函数列表(包含中间件、路由函数、钩子函数)
+	handlerIndex  int                    // 当前执行函数的索引号
+	parsedGet     bool                   // GET参数是否已经解析
+	parsedPost    bool                   // POST参数是否已经解析
+	queryVars     map[string][]string    // GET参数
+	routerVars    map[string][]string    // 路由解析参数
+	exit          bool                   // 是否退出当前请求流程执行
 	params        map[string]interface{} // 开发者自定义参数(请求流程中有效)
 	parsedHost    string                 // 解析过后不带端口号的服务器域名名称
 	clientIp      string                 // 解析过后的客户端IP地址
@@ -55,6 +58,9 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request.Cookie = GetCookie(request)
 	request.Session = GetSession(request)
 	request.Response.request = request
+	request.MiddleWare = &MiddleWare{
+		request: request,
+	}
 	return request
 }
 

@@ -91,33 +91,28 @@ type ServerConfig struct {
 
 // 默认HTTP Server配置
 var defaultServerConfig = ServerConfig{
-	Addr:           "",
-	HTTPSAddr:      "",
-	Handler:        nil,
-	ReadTimeout:    60 * time.Second,
-	WriteTimeout:   60 * time.Second,
-	IdleTimeout:    60 * time.Second,
-	MaxHeaderBytes: 1024,
-	KeepAlive:      true,
-
+	Addr:              "",
+	HTTPSAddr:         "",
+	Handler:           nil,
+	ReadTimeout:       60 * time.Second,
+	WriteTimeout:      60 * time.Second,
+	IdleTimeout:       60 * time.Second,
+	MaxHeaderBytes:    1024,
+	KeepAlive:         true,
 	IndexFiles:        []string{"index.html", "index.htm"},
 	IndexFolder:       false,
 	ServerAgent:       "gf",
 	ServerRoot:        "",
 	StaticPaths:       make([]staticPathItem, 0),
 	FileServerEnabled: false,
-
-	CookieMaxAge: gDEFAULT_COOKIE_MAX_AGE,
-	CookiePath:   gDEFAULT_COOKIE_PATH,
-	CookieDomain: "",
-
-	SessionMaxAge: gDEFAULT_SESSION_MAX_AGE,
-	SessionIdName: gDEFAULT_SESSION_ID_NAME,
-
+	CookieMaxAge:      gDEFAULT_COOKIE_MAX_AGE,
+	CookiePath:        gDEFAULT_COOKIE_PATH,
+	CookieDomain:      "",
+	SessionMaxAge:     gDEFAULT_SESSION_MAX_AGE,
+	SessionIdName:     gDEFAULT_SESSION_ID_NAME,
 	LogStdout:         true,
 	ErrorLogEnabled:   true,
 	AccessLogEnabled:  false,
-	GzipContentTypes:  defaultGzipContentTypes,
 	DumpRouteMap:      true,
 	RouterCacheExpire: 60,
 	Rewrites:          make(map[string]string),
@@ -146,12 +141,12 @@ func (s *Server) SetConfig(c ServerConfig) {
 }
 
 // 设置http server参数 - Addr
-func (s *Server) SetAddr(addr string) {
+func (s *Server) SetAddr(itemFunc string) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	s.config.Addr = addr
+	s.config.Addr = itemFunc
 }
 
 // 设置http server参数 - Port
@@ -171,12 +166,12 @@ func (s *Server) SetPort(port ...int) {
 }
 
 // 设置http server参数 - HTTPS Addr
-func (s *Server) SetHTTPSAddr(addr string) {
+func (s *Server) SetHTTPSAddr(itemFunc string) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	s.config.HTTPSAddr = addr
+	s.config.HTTPSAddr = itemFunc
 }
 
 // 设置http server参数 - HTTPS Port

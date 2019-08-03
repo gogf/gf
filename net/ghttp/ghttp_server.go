@@ -15,7 +15,6 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gogf/gf/container/garray"
@@ -44,10 +43,10 @@ type (
 		servedCount      *gtype.Int                       // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
 		serveTree        map[string]interface{}           // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
 		hooksTree        map[string]interface{}           // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
+		middlewareTree   map[string]interface{}           // 所有注册的中间件(路由表，树型结构，哈希表+链表优先级匹配)
 		serveCache       *gcache.Cache                    // 服务注册路由内存缓存
 		hooksCache       *gcache.Cache                    // 事件回调路由内存缓存
 		routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
-		statusHandlerMu  sync.RWMutex                     // status handler互斥锁
 		statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
 		sessions         *gcache.Cache                    // Session内存缓存
 		logger           *glog.Logger                     // 日志管理对象
@@ -63,22 +62,27 @@ type (
 		Priority int      // 优先级，用于链表排序，值越大优先级越高
 	}
 
-	// http回调函数注册信息
+	// 服务函数注册信息
 	handlerItem struct {
-		name   string       // 注册的方法名称信息
-		rtype  int          // 注册方式(执行对象/回调函数/控制器)
-		ctype  reflect.Type // 控制器类型(反射类型)
-		fname  string       // 回调方法名称
-		faddr  HandlerFunc  // 准确的执行方法内存地址(与以上两个参数二选一)
-		finit  HandlerFunc  // 初始化请求回调方法(执行对象注册方式下有效)
-		fshut  HandlerFunc  // 完成请求回调方法(执行对象注册方式下有效)
-		router *Router      // 注册时绑定的路由对象
+		itemName string             // 注册的函数名称信息(用于路由信息打印)
+		itemType int                // 注册函数类型(对象/函数/控制器/中间件)
+		itemFunc HandlerFunc        // 函数内存地址(与以上两个参数二选一)
+		initFunc HandlerFunc        // 初始化请求回调函数(对象注册方式下有效)
+		shutFunc HandlerFunc        // 完成请求回调函数(对象注册方式下有效)
+		ctrlInfo *handlerController // 控制器服务函数反射信息
+		router   *Router            // 注册时绑定的路由对象
 	}
 
 	// 根据特定URL.Path解析后的路由检索结果项
 	handlerParsedItem struct {
 		handler *handlerItem        // 路由注册项
 		values  map[string][]string // 特定URL.Path的Router解析参数
+	}
+
+	// 控制器服务函数反射信息
+	handlerController struct {
+		name    string       // 方法名称
+		reflect reflect.Type // 控制器类型
 	}
 
 	// 已注册的路由项
@@ -98,25 +102,24 @@ type (
 )
 
 const (
-	SERVER_STATUS_STOPPED = 0              // Server状态：停止
-	SERVER_STATUS_RUNNING = 1              // Server状态：运行
-	HOOK_BEFORE_SERVE     = "BeforeServe"  // 回调事件，在执行服务前
-	HOOK_AFTER_SERVE      = "AfterServe"   // 回调事件，在执行服务后
-	HOOK_BEFORE_OUTPUT    = "BeforeOutput" // 回调事件，在输出结果前
-	HOOK_AFTER_OUTPUT     = "AfterOutput"  // 回调事件，在输出结果后
-	HOOK_BEFORE_CLOSE     = "BeforeClose"  // Deprecated.
-	HOOK_AFTER_CLOSE      = "AfterClose"   // Deprecated.
-
-	HTTP_METHODS               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	gDEFAULT_SERVER            = "default"
-	gDEFAULT_DOMAIN            = "default"
-	gDEFAULT_METHOD            = "ALL"
-	gROUTE_REGISTER_HANDLER    = 1
-	gROUTE_REGISTER_OBJECT     = 2
-	gROUTE_REGISTER_CONTROLLER = 3
-	gEXCEPTION_EXIT            = "exit"
-	gEXCEPTION_EXIT_ALL        = "exit_all"
-	gEXCEPTION_EXIT_HOOK       = "exit_hook"
+	SERVER_STATUS_STOPPED    = 0              // Server状态：停止
+	SERVER_STATUS_RUNNING    = 1              // Server状态：运行
+	HOOK_BEFORE_SERVE        = "BeforeServe"  // 回调事件，在执行服务前
+	HOOK_AFTER_SERVE         = "AfterServe"   // 回调事件，在执行服务后
+	HOOK_BEFORE_OUTPUT       = "BeforeOutput" // 回调事件，在输出结果前
+	HOOK_AFTER_OUTPUT        = "AfterOutput"  // 回调事件，在输出结果后
+	HTTP_METHODS             = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	gDEFAULT_SERVER          = "default"
+	gDEFAULT_DOMAIN          = "default"
+	gDEFAULT_METHOD          = "ALL"
+	gHANDLER_TYPE_HANDLER    = 1
+	gHANDLER_TYPE_OBJECT     = 2
+	gHANDLER_TYPE_CONTROLLER = 3
+	gHANDLER_TYPE_MIDDLEWARE = 4
+	gHANDLER_TYPE_HOOK       = 5
+	gEXCEPTION_EXIT          = "exit"
+	gEXCEPTION_EXIT_ALL      = "exit_all"
+	gEXCEPTION_EXIT_HOOK     = "exit_hook"
 )
 
 var (
@@ -240,23 +243,6 @@ func (s *Server) Start() error {
 	if s.config.Handler == nil {
 		s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
 	}
-	// 不允许访问的路由注册(使用HOOK实现)
-	// TODO 去掉HOOK的实现方式
-	if s.config.DenyRoutes != nil {
-		for _, v := range s.config.DenyRoutes {
-			s.BindHookHandler(v, HOOK_BEFORE_SERVE, func(r *Request) {
-				r.Response.WriteStatus(403)
-				r.ExitAll()
-			})
-		}
-	}
-
-	// gzip压缩文件类型
-	//if s.config.GzipContentTypes != nil {
-	//    for _, v := range s.config.GzipContentTypes {
-	//        s.gzipMimesMap[v] = struct{}{}
-	//    }
-	//}
 
 	// 启动http server
 	reloaded := false
@@ -323,7 +309,7 @@ func (s *Server) GetRouteMap() string {
 				domain:   array[4],
 				method:   array[2],
 				route:    array[3],
-				handler:  registeredItem.handler.name,
+				handler:  registeredItem.handler.itemName,
 				priority: len(registeredItems) - index - 1,
 			}
 			if _, ok := m[item.domain]; !ok {
@@ -347,19 +333,19 @@ func (s *Server) GetRouteMap() string {
 			m[item.domain].Add(item)
 		}
 	}
-	addr := s.config.Addr
+	itemFunc := s.config.Addr
 	if s.config.HTTPSAddr != "" {
-		if len(addr) > 0 {
-			addr += ","
+		if len(itemFunc) > 0 {
+			itemFunc += ","
 		}
-		addr += "tls" + s.config.HTTPSAddr
+		itemFunc += "tls" + s.config.HTTPSAddr
 	}
 	for _, a := range m {
 		data := make([]string, 8)
 		for _, v := range a.Slice() {
 			item := v.(*tableItem)
 			data[0] = s.name
-			data[1] = addr
+			data[1] = itemFunc
 			data[2] = item.domain
 			data[3] = item.method
 			data[4] = gconv.String(len(strings.Split(item.route, "/")) - 1 + item.priority)
@@ -422,19 +408,19 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 				continue
 			}
 			fd := 0
-			addr := v
+			itemFunc := v
 			array := strings.Split(v, "#")
 			if len(array) > 1 {
-				addr = array[0]
+				itemFunc = array[0]
 				// windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
 				if runtime.GOOS != "windows" {
 					fd = gconv.Int(array[1])
 				}
 			}
 			if fd > 0 {
-				s.servers = append(s.servers, s.newGracefulServer(addr, fd))
+				s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
 			} else {
-				s.servers = append(s.servers, s.newGracefulServer(addr))
+				s.servers = append(s.servers, s.newGracefulServer(itemFunc))
 			}
 			s.servers[len(s.servers)-1].isHttps = true
 		}
@@ -457,19 +443,19 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			continue
 		}
 		fd := 0
-		addr := v
+		itemFunc := v
 		array := strings.Split(v, "#")
 		if len(array) > 1 {
-			addr = array[0]
+			itemFunc = array[0]
 			// windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
 			if runtime.GOOS != "windows" {
 				fd = gconv.Int(array[1])
 			}
 		}
 		if fd > 0 {
-			s.servers = append(s.servers, s.newGracefulServer(addr, fd))
+			s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
 		} else {
-			s.servers = append(s.servers, s.newGracefulServer(addr))
+			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
 		}
 	}
 	// 开始执行异步监听
@@ -523,7 +509,7 @@ func (s *Server) getListenerFdMap() map[string]string {
 	}
 	// s.servers是从HTTPS到HTTP优先级遍历，解析的时候也应当按照这个顺序读取fd
 	for _, v := range s.servers {
-		str := v.addr + "#" + gconv.String(v.Fd()) + ","
+		str := v.itemFunc + "#" + gconv.String(v.Fd()) + ","
 		if v.isHttps {
 			m["https"] += str
 		} else {
