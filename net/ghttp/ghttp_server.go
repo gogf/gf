@@ -100,12 +100,12 @@ type (
 )
 
 const (
-	SERVER_STATUS_STOPPED    = 0              // Server状态：停止
-	SERVER_STATUS_RUNNING    = 1              // Server状态：运行
-	HOOK_BEFORE_SERVE        = "BeforeServe"  // 回调事件，在执行服务前
-	HOOK_AFTER_SERVE         = "AfterServe"   // 回调事件，在执行服务后
-	HOOK_BEFORE_OUTPUT       = "BeforeOutput" // 回调事件，在输出结果前
-	HOOK_AFTER_OUTPUT        = "AfterOutput"  // 回调事件，在输出结果后
+	SERVER_STATUS_STOPPED    = 0                    // Server状态：停止
+	SERVER_STATUS_RUNNING    = 1                    // Server状态：运行
+	HOOK_BEFORE_SERVE        = "HOOK_BEFORE_SERVE"  // 回调事件，在执行服务前
+	HOOK_AFTER_SERVE         = "HOOK_AFTER_SERVE"   // 回调事件，在执行服务后
+	HOOK_BEFORE_OUTPUT       = "HOOK_BEFORE_OUTPUT" // 回调事件，在输出结果前
+	HOOK_AFTER_OUTPUT        = "HOOK_AFTER_OUTPUT"  // 回调事件，在输出结果后
 	HTTP_METHODS             = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
 	gDEFAULT_SERVER          = "default"
 	gDEFAULT_DOMAIN          = "default"
@@ -281,35 +281,48 @@ func (s *Server) DumpRoutesMap() {
 // 获得路由表(格式化字符串)
 func (s *Server) GetRouteMap() string {
 	type tableItem struct {
-		hook     string
-		domain   string
-		method   string
-		route    string
-		handler  string
-		priority int
+		middleware string
+		domain     string
+		method     string
+		route      string
+		handler    *handlerItem
+		priority   int
 	}
 
 	buf := bytes.NewBuffer(nil)
 	table := tablewriter.NewWriter(buf)
-	table.SetHeader([]string{"SERVER", "ADDRESS", "DOMAIN", "METHOD", "P", "ROUTE", "HANDLER", "HOOK"})
+	table.SetHeader([]string{"SERVER", "ADDRESS", "DOMAIN", "METHOD", "P", "ROUTE", "HANDLER", "MIDDLEWARE"})
 	table.SetRowLine(true)
 	table.SetBorder(false)
 	table.SetCenterSeparator("|")
+	table.SetColumnAlignment([]int{
+		tablewriter.ALIGN_CENTER,
+		tablewriter.ALIGN_CENTER,
+		tablewriter.ALIGN_CENTER,
+		tablewriter.ALIGN_CENTER,
+		tablewriter.ALIGN_CENTER,
+		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_CENTER,
+	})
 
 	m := make(map[string]*garray.SortedArray)
 	for k, registeredItems := range s.routesMap {
 		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
 		for index, registeredItem := range registeredItems {
 			item := &tableItem{
-				hook:     array[1],
-				domain:   array[4],
-				method:   array[2],
-				route:    array[3],
-				handler:  registeredItem.handler.itemName,
-				priority: len(registeredItems) - index - 1,
+				middleware: array[1],
+				domain:     array[4],
+				method:     array[2],
+				route:      array[3],
+				handler:    registeredItem.handler,
+				priority:   len(registeredItems) - index - 1,
+			}
+			if item.handler.itemType == gHANDLER_TYPE_MIDDLEWARE {
+				item.middleware = "YES"
 			}
 			if _, ok := m[item.domain]; !ok {
-				// 注意排序函数的逻辑
+				// 注意排序函数的逻辑，从小到达排序
 				m[item.domain] = garray.NewSortedArraySize(100, func(v1, v2 interface{}) int {
 					item1 := v1.(*tableItem)
 					item2 := v2.(*tableItem)
@@ -317,7 +330,11 @@ func (s *Server) GetRouteMap() string {
 					if r = strings.Compare(item1.domain, item2.domain); r == 0 {
 						if r = strings.Compare(item1.route, item2.route); r == 0 {
 							if r = strings.Compare(item1.method, item2.method); r == 0 {
-								if r = strings.Compare(item1.hook, item2.hook); r == 0 {
+								if item1.handler.itemType == gHANDLER_TYPE_MIDDLEWARE && item2.handler.itemType != gHANDLER_TYPE_MIDDLEWARE {
+									return -1
+								} else if item1.handler.itemType == gHANDLER_TYPE_MIDDLEWARE && item2.handler.itemType == gHANDLER_TYPE_MIDDLEWARE {
+									return 1
+								} else if r = strings.Compare(item1.middleware, item2.middleware); r == 0 {
 									r = item2.priority - item1.priority
 								}
 							}
@@ -346,8 +363,8 @@ func (s *Server) GetRouteMap() string {
 			data[3] = item.method
 			data[4] = gconv.String(len(strings.Split(item.route, "/")) - 1 + item.priority)
 			data[5] = item.route
-			data[6] = item.handler
-			data[7] = item.hook
+			data[6] = item.handler.itemName
+			data[7] = item.middleware
 			table.Append(data)
 		}
 	}

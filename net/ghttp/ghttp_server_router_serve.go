@@ -163,7 +163,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (item *handlerItem) MarshalJSON() ([]byte, error) {
-	if item.hookName != "" {
+	switch item.itemType {
+	case gHANDLER_TYPE_HOOK:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (%s)`,
@@ -173,15 +174,30 @@ func (item *handlerItem) MarshalJSON() ([]byte, error) {
 				item.hookName,
 			),
 		)
+	case gHANDLER_TYPE_MIDDLEWARE:
+		return json.Marshal(
+			fmt.Sprintf(
+				`%s %s:%s (MIDDLEWARE)`,
+				item.router.Uri,
+				item.router.Domain,
+				item.router.Method,
+			),
+		)
+	default:
+		return json.Marshal(
+			fmt.Sprintf(
+				`%s %s:%s`,
+				item.router.Uri,
+				item.router.Domain,
+				item.router.Method,
+			),
+		)
 	}
-	return json.Marshal(
-		fmt.Sprintf(
-			`%s %s:%s`,
-			item.router.Uri,
-			item.router.Domain,
-			item.router.Method,
-		),
-	)
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (item *handlerParsedItem) MarshalJSON() ([]byte, error) {
+	return json.Marshal(item.handler)
 }
 
 // 生成回调方法查询的Key

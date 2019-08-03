@@ -163,8 +163,8 @@ func (r *Request) GetMap(def ...map[string]string) map[string]string {
 
 // 将所有的request参数映射到struct属性上，参数pointer应当为一个struct对象的指针,
 // mapping为非必需参数，自定义参数与属性的映射关系
-func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) {
-	r.GetRequestToStruct(pointer, mapping...)
+func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
+	return r.GetRequestToStruct(pointer, mapping...)
 }
 
 // 仅退出当前逻辑执行函数, 如:服务函数、HOOK函数
