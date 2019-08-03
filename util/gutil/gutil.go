@@ -32,7 +32,7 @@ func Export(i ...interface{}) string {
 		if b, ok := v.([]byte); ok {
 			buffer.Write(b)
 		} else {
-			if m := gconv.Map(v); m != nil {
+			if m := gconv.Map(v); m != nil && len(m) > 0 {
 				v = m
 			}
 			encoder := json.NewEncoder(buffer)

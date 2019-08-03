@@ -35,7 +35,7 @@ func Test_Router_Group_HOOK1(t *testing.T) {
 	s.Start()
 	defer s.Shutdown()
 
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -64,7 +64,7 @@ func Test_Router_Group_HOOK2(t *testing.T) {
 	s.Start()
 	defer s.Shutdown()
 
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -95,7 +95,7 @@ func Test_Router_Group_HOOK3(t *testing.T) {
 	s.Start()
 	defer s.Shutdown()
 
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))

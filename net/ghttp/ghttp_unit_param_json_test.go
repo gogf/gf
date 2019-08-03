@@ -95,7 +95,7 @@ func Test_Params_Json(t *testing.T) {
 	defer s.Shutdown()
 
 	// 等待启动完成
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))

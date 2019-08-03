@@ -33,7 +33,7 @@ func Test_NameToUri_FullName(t *testing.T) {
 	defer s.Shutdown()
 
 	// 等待启动完成
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetBrowserMode(true)
@@ -55,7 +55,7 @@ func Test_NameToUri_AllLower(t *testing.T) {
 	defer s.Shutdown()
 
 	// 等待启动完成
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetBrowserMode(true)
@@ -77,7 +77,7 @@ func Test_NameToUri_Camel(t *testing.T) {
 	defer s.Shutdown()
 
 	// 等待启动完成
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetBrowserMode(true)
@@ -99,7 +99,7 @@ func Test_NameToUri_Default(t *testing.T) {
 	defer s.Shutdown()
 
 	// 等待启动完成
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetBrowserMode(true)

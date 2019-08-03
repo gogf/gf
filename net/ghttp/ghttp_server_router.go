@@ -11,9 +11,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/internal/debug"
-
 	"github.com/gogf/gf/container/glist"
+	"github.com/gogf/gf/internal/debug"
 
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gregex"
@@ -132,6 +131,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 			}
 		}
 	}
+
 	// 上面循环后得到的lists是该路由规则一路匹配下来相关的模糊匹配链表(注意不是这棵树所有的链表)。
 	// 下面从头开始遍历每个节点的模糊匹配链表，将该路由项插入进去(按照优先级高的放在lists链表的前面)
 	item := (*handlerItem)(nil)
@@ -147,7 +147,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 					strings.EqualFold(handler.router.Uri, item.router.Uri) {
 					e.Value = handler
 					pushed = true
-					break
+					goto ForBreak
 				}
 				fallthrough
 
@@ -156,10 +156,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 				if s.compareRouterPriority(handler, item) {
 					l.InsertBefore(handler, e)
 					pushed = true
-					break
 				}
+				goto ForBreak
 			}
 		}
+	ForBreak:
 		if !pushed {
 			l.PushBack(handler)
 		}
@@ -277,19 +278,15 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
 			if len(v) > 1 {
 				regrule += `/([^/]+)`
 				names = append(names, v[1:])
-				break
 			} else {
 				regrule += `/[^/]+`
-				break
 			}
 		case '*':
 			if len(v) > 1 {
 				regrule += `/{0,1}(.*)`
 				names = append(names, v[1:])
-				break
 			} else {
 				regrule += `/{0,1}.*`
-				break
 			}
 		default:
 			// 特殊字符替换
