@@ -18,7 +18,7 @@ func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFun
 		itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
 		itemFunc: handler,
 		hookName: hook,
-	}, hook)
+	})
 }
 
 // 通过map批量绑定回调函数
