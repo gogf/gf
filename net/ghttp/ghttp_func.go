@@ -36,3 +36,20 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 	}
 	return
 }
+
+// 友好地调用方法
+func niceCallFunc(f func()) {
+	defer func() {
+		if err := recover(); err != nil {
+			switch err {
+			case gEXCEPTION_EXIT:
+				fallthrough
+			case gEXCEPTION_EXIT_ALL:
+				return
+			default:
+				panic(err)
+			}
+		}
+	}()
+	f()
+}

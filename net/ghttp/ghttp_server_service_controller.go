@@ -71,11 +71,12 @@ func (s *Server) BindController(pattern string, c Controller, methods ...string)
 		}
 		key := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
 		m[key] = &handlerItem{
-			name:  fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
-			rtype: gROUTE_REGISTER_CONTROLLER,
-			ctype: v.Elem().Type(),
-			fname: mname,
-			faddr: nil,
+			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
+			itemType: gHANDLER_TYPE_CONTROLLER,
+			ctrlInfo: &handlerController{
+				name:    mname,
+				reflect: v.Elem().Type(),
+			},
 		}
 		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI，
 		// 例如: pattern为/user, 那么会同时注册/user及/user/index，
@@ -88,11 +89,12 @@ func (s *Server) BindController(pattern string, c Controller, methods ...string)
 				k = "/" + k
 			}
 			m[k] = &handlerItem{
-				name:  fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
-				rtype: gROUTE_REGISTER_CONTROLLER,
-				ctype: v.Elem().Type(),
-				fname: mname,
-				faddr: nil,
+				itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
+				itemType: gHANDLER_TYPE_CONTROLLER,
+				ctrlInfo: &handlerController{
+					name:    mname,
+					reflect: v.Elem().Type(),
+				},
 			}
 		}
 	}
@@ -124,11 +126,12 @@ func (s *Server) BindControllerMethod(pattern string, c Controller, method strin
 	}
 	key := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
 	m[key] = &handlerItem{
-		name:  fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
-		rtype: gROUTE_REGISTER_CONTROLLER,
-		ctype: v.Elem().Type(),
-		fname: mname,
-		faddr: nil,
+		itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
+		itemType: gHANDLER_TYPE_CONTROLLER,
+		ctrlInfo: &handlerController{
+			name:    mname,
+			reflect: v.Elem().Type(),
+		},
 	}
 	s.bindHandlerByMap(m)
 }
@@ -163,11 +166,12 @@ func (s *Server) BindControllerRest(pattern string, c Controller) {
 		}
 		key := s.mergeBuildInNameToPattern(mname+":"+pattern, sname, mname, false)
 		m[key] = &handlerItem{
-			name:  fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
-			rtype: gROUTE_REGISTER_CONTROLLER,
-			ctype: v.Elem().Type(),
-			fname: mname,
-			faddr: nil,
+			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
+			itemType: gHANDLER_TYPE_CONTROLLER,
+			ctrlInfo: &handlerController{
+				name:    mname,
+				reflect: v.Elem().Type(),
+			},
 		}
 	}
 	s.bindHandlerByMap(m)

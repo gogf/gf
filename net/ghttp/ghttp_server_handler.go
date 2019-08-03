@@ -9,7 +9,6 @@ package ghttp
 import (
 	"net/http"
 	"os"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -97,19 +96,12 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 动态服务检索
-	handler := (*handlerItem)(nil)
 	if !request.isFileRequest || isStaticDir {
-		if parsedItem := s.getServeHandlerWithCache(request); parsedItem != nil {
-			handler = parsedItem.handler
-			for k, v := range parsedItem.values {
-				request.routerVars[k] = v
-			}
-			request.Router = parsedItem.handler.router
-		}
+		request.handlers = s.getHandlersWithCache(request)
 	}
 
 	// 判断最终对该请求提供的服务方式
-	if isStaticDir && handler != nil {
+	if isStaticDir && request.handlers != nil {
 		request.isFileRequest = false
 	}
 
@@ -118,14 +110,13 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// 执行静态文件服务/回调控制器/执行对象/方法
 	if !request.IsExited() {
-		// 需要再次判断文件是否真实存在，
-		// 因为文件检索可能使用了缓存，从健壮性考虑这里需要二次判断
-		if request.isFileRequest /* && gfile.Exists(staticFile) */ {
+		if request.isFileRequest {
+			// 静态服务
 			s.serveFile(request, staticFile)
 		} else {
-			if handler != nil {
+			if request.handlers != nil {
 				// 动态服务
-				s.callServeHandler(handler, request)
+				request.MiddleWare.Next()
 			} else {
 				if isStaticDir {
 					// 静态目录
@@ -170,59 +161,6 @@ func (s *Server) searchStaticFile(uri string) (filePath string, isDir bool) {
 		}
 	}
 	return "", false
-}
-
-// 调用服务接口
-func (s *Server) callServeHandler(h *handlerItem, r *Request) {
-	if h.faddr == nil {
-		c := reflect.New(h.ctype)
-		s.niceCallFunc(func() {
-			c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(r)})
-		})
-		if !r.IsExited() {
-			s.niceCallFunc(func() {
-				c.MethodByName(h.fname).Call(nil)
-			})
-		}
-		if !r.IsExited() {
-			s.niceCallFunc(func() {
-				c.MethodByName("Shut").Call(nil)
-			})
-		}
-	} else {
-		if h.finit != nil {
-			s.niceCallFunc(func() {
-				h.finit(r)
-			})
-		}
-		if !r.IsExited() {
-			s.niceCallFunc(func() {
-				h.faddr(r)
-			})
-		}
-		if h.fshut != nil && !r.IsExited() {
-			s.niceCallFunc(func() {
-				h.fshut(r)
-			})
-		}
-	}
-}
-
-// 友好地调用方法
-func (s *Server) niceCallFunc(f func()) {
-	defer func() {
-		if err := recover(); err != nil {
-			switch err {
-			case gEXCEPTION_EXIT:
-				fallthrough
-			case gEXCEPTION_EXIT_ALL:
-				return
-			default:
-				panic(err)
-			}
-		}
-	}()
-	f()
 }
 
 // http server静态文件处理，path可以为相对路径也可以为绝对路径

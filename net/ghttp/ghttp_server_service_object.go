@@ -41,13 +41,13 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 	v := reflect.ValueOf(obj)
 	t := v.Type()
 	sname := t.Elem().Name()
-	finit := (func(*Request))(nil)
-	fshut := (func(*Request))(nil)
+	initFunc := (func(*Request))(nil)
+	shutFunc := (func(*Request))(nil)
 	if v.MethodByName("Init").IsValid() {
-		finit = v.MethodByName("Init").Interface().(func(*Request))
+		initFunc = v.MethodByName("Init").Interface().(func(*Request))
 	}
 	if v.MethodByName("Shut").IsValid() {
-		fshut = v.MethodByName("Shut").Interface().(func(*Request))
+		shutFunc = v.MethodByName("Shut").Interface().(func(*Request))
 	}
 	pkgPath := t.Elem().PkgPath()
 	pkgName := gfile.Basename(pkgPath)
@@ -63,7 +63,7 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 		if objName[0] == '*' {
 			objName = fmt.Sprintf(`(%s)`, objName)
 		}
-		faddr, ok := v.Method(i).Interface().(func(*Request))
+		itemFunc, ok := v.Method(i).Interface().(func(*Request))
 		if !ok {
 			if len(methodMap) > 0 {
 				// 指定的方法名称注册，那么需要使用错误提示
@@ -78,13 +78,11 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 		}
 		key := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
 		m[key] = &handlerItem{
-			name:  fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
-			rtype: gROUTE_REGISTER_OBJECT,
-			ctype: nil,
-			fname: "",
-			faddr: faddr,
-			finit: finit,
-			fshut: fshut,
+			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+			itemType: gHANDLER_TYPE_OBJECT,
+			itemFunc: itemFunc,
+			initFunc: initFunc,
+			shutFunc: shutFunc,
 		}
 		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI。
 		// 注意，当pattern带有内置变量时，不会自动加该路由。
@@ -95,13 +93,11 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 				k = "/" + k
 			}
 			m[k] = &handlerItem{
-				name:  fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
-				rtype: gROUTE_REGISTER_OBJECT,
-				ctype: nil,
-				fname: "",
-				faddr: faddr,
-				finit: finit,
-				fshut: fshut,
+				itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+				itemType: gHANDLER_TYPE_OBJECT,
+				itemFunc: itemFunc,
+				initFunc: initFunc,
+				shutFunc: shutFunc,
 			}
 		}
 	}
@@ -121,13 +117,13 @@ func (s *Server) BindObjectMethod(pattern string, obj interface{}, method string
 		glog.Error("invalid method name:" + mname)
 		return
 	}
-	finit := (func(*Request))(nil)
-	fshut := (func(*Request))(nil)
+	initFunc := (func(*Request))(nil)
+	shutFunc := (func(*Request))(nil)
 	if v.MethodByName("Init").IsValid() {
-		finit = v.MethodByName("Init").Interface().(func(*Request))
+		initFunc = v.MethodByName("Init").Interface().(func(*Request))
 	}
 	if v.MethodByName("Shut").IsValid() {
-		fshut = v.MethodByName("Shut").Interface().(func(*Request))
+		shutFunc = v.MethodByName("Shut").Interface().(func(*Request))
 	}
 	pkgPath := t.Elem().PkgPath()
 	pkgName := gfile.Basename(pkgPath)
@@ -135,7 +131,7 @@ func (s *Server) BindObjectMethod(pattern string, obj interface{}, method string
 	if objName[0] == '*' {
 		objName = fmt.Sprintf(`(%s)`, objName)
 	}
-	faddr, ok := fval.Interface().(func(*Request))
+	itemFunc, ok := fval.Interface().(func(*Request))
 	if !ok {
 		glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
 			pkgPath, objName, mname, fval.Type().String())
@@ -143,13 +139,11 @@ func (s *Server) BindObjectMethod(pattern string, obj interface{}, method string
 	}
 	key := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
 	m[key] = &handlerItem{
-		name:  fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
-		rtype: gROUTE_REGISTER_OBJECT,
-		ctype: nil,
-		fname: "",
-		faddr: faddr,
-		finit: finit,
-		fshut: fshut,
+		itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+		itemType: gHANDLER_TYPE_OBJECT,
+		itemFunc: itemFunc,
+		initFunc: initFunc,
+		shutFunc: shutFunc,
 	}
 
 	s.bindHandlerByMap(m)
@@ -162,13 +156,13 @@ func (s *Server) BindObjectRest(pattern string, obj interface{}) {
 	v := reflect.ValueOf(obj)
 	t := v.Type()
 	sname := t.Elem().Name()
-	finit := (func(*Request))(nil)
-	fshut := (func(*Request))(nil)
+	initFunc := (func(*Request))(nil)
+	shutFunc := (func(*Request))(nil)
 	if v.MethodByName("Init").IsValid() {
-		finit = v.MethodByName("Init").Interface().(func(*Request))
+		initFunc = v.MethodByName("Init").Interface().(func(*Request))
 	}
 	if v.MethodByName("Shut").IsValid() {
-		fshut = v.MethodByName("Shut").Interface().(func(*Request))
+		shutFunc = v.MethodByName("Shut").Interface().(func(*Request))
 	}
 	pkgPath := t.Elem().PkgPath()
 	for i := 0; i < v.NumMethod(); i++ {
@@ -182,7 +176,7 @@ func (s *Server) BindObjectRest(pattern string, obj interface{}) {
 		if objName[0] == '*' {
 			objName = fmt.Sprintf(`(%s)`, objName)
 		}
-		faddr, ok := v.Method(i).Interface().(func(*Request))
+		itemFunc, ok := v.Method(i).Interface().(func(*Request))
 		if !ok {
 			glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
 				pkgPath, objName, mname, v.Method(i).Type().String())
@@ -190,13 +184,11 @@ func (s *Server) BindObjectRest(pattern string, obj interface{}) {
 		}
 		key := s.mergeBuildInNameToPattern(mname+":"+pattern, sname, mname, false)
 		m[key] = &handlerItem{
-			name:  fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
-			rtype: gROUTE_REGISTER_OBJECT,
-			ctype: nil,
-			fname: "",
-			faddr: faddr,
-			finit: finit,
-			fshut: fshut,
+			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+			itemType: gHANDLER_TYPE_OBJECT,
+			itemFunc: itemFunc,
+			initFunc: initFunc,
+			shutFunc: shutFunc,
 		}
 	}
 	s.bindHandlerByMap(m)

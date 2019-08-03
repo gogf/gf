@@ -23,7 +23,7 @@ import (
 // 优雅的Web Server对象封装
 type gracefulServer struct {
 	fd          uintptr      // 热重启时传递的socket监听文件句柄
-	addr        string       // 监听地址信息
+	itemFunc    string       // 监听地址信息
 	httpServer  *http.Server // 底层http.Server
 	rawListener net.Listener // 原始listener
 	listener    net.Listener // 接口化封装的listener
@@ -32,10 +32,10 @@ type gracefulServer struct {
 }
 
 // 创建一个优雅的Http Server
-func (s *Server) newGracefulServer(addr string, fd ...int) *gracefulServer {
+func (s *Server) newGracefulServer(itemFunc string, fd ...int) *gracefulServer {
 	gs := &gracefulServer{
-		addr:       addr,
-		httpServer: s.newHttpServer(addr),
+		itemFunc:   itemFunc,
+		httpServer: s.newHttpServer(itemFunc),
 	}
 	// 是否有继承的文件描述符
 	if len(fd) > 0 && fd[0] > 0 {
@@ -45,9 +45,9 @@ func (s *Server) newGracefulServer(addr string, fd ...int) *gracefulServer {
 }
 
 // 生成一个底层的Web Server对象
-func (s *Server) newHttpServer(addr string) *http.Server {
+func (s *Server) newHttpServer(itemFunc string) *http.Server {
 	server := &http.Server{
-		Addr:           addr,
+		Addr:           itemFunc,
 		Handler:        s.config.Handler,
 		ReadTimeout:    s.config.ReadTimeout,
 		WriteTimeout:   s.config.WriteTimeout,
@@ -60,8 +60,8 @@ func (s *Server) newHttpServer(addr string) *http.Server {
 
 // 执行HTTP监听
 func (s *gracefulServer) ListenAndServe() error {
-	addr := s.httpServer.Addr
-	ln, err := s.getNetListener(addr)
+	itemFunc := s.httpServer.Addr
+	ln, err := s.getNetListener(itemFunc)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (s *gracefulServer) setFd(fd int) {
 
 // 执行HTTPS监听
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
-	addr := s.httpServer.Addr
+	itemFunc := s.httpServer.Addr
 	config := (*tls.Config)(nil)
 	if len(tlsConfig) > 0 {
 		config = tlsConfig[0]
@@ -106,7 +106,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	if err != nil {
 		return errors.New(fmt.Sprintf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error()))
 	}
-	ln, err := s.getNetListener(addr)
+	ln, err := s.getNetListener(itemFunc)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (s *gracefulServer) doServe() error {
 	if s.fd != 0 {
 		action = "reloaded"
 	}
-	glog.Printf("%d: %s server %s listening on [%s]", gproc.Pid(), s.getProto(), action, s.addr)
+	glog.Printf("%d: %s server %s listening on [%s]", gproc.Pid(), s.getProto(), action, s.itemFunc)
 	s.status = SERVER_STATUS_RUNNING
 	err := s.httpServer.Serve(s.listener)
 	s.status = SERVER_STATUS_STOPPED
@@ -139,7 +139,7 @@ func (s *gracefulServer) doServe() error {
 }
 
 // 自定义的net.Listener
-func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
+func (s *gracefulServer) getNetListener(itemFunc string) (net.Listener, error) {
 	var ln net.Listener
 	var err error
 	if s.fd > 0 {
@@ -152,7 +152,7 @@ func (s *gracefulServer) getNetListener(addr string) (net.Listener, error) {
 	} else {
 		// 如果监听失败，1秒后重试，最多重试3次
 		for i := 0; i < 3; i++ {
-			ln, err = net.Listen("tcp", addr)
+			ln, err = net.Listen("tcp", itemFunc)
 			if err != nil {
 				err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
 				time.Sleep(time.Second)
@@ -174,7 +174,7 @@ func (s *gracefulServer) shutdown() {
 		return
 	}
 	if err := s.httpServer.Shutdown(context.Background()); err != nil {
-		glog.Errorf("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.addr, err)
+		glog.Errorf("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.itemFunc, err)
 	}
 }
 
@@ -184,6 +184,6 @@ func (s *gracefulServer) close() {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {
-		glog.Errorf("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.addr, err)
+		glog.Errorf("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.itemFunc, err)
 	}
 }
