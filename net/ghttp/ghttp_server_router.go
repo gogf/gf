@@ -7,11 +7,12 @@
 package ghttp
 
 import (
-	"container/list"
 	"errors"
 	"fmt"
 	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/container/glist"
 
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gregex"
@@ -101,16 +102,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 	if _, ok := s.serveTree[domain]; !ok {
 		s.serveTree[domain] = make(map[string]interface{})
 	}
-	// 用于遍历的指针
-	p := s.serveTree[domain]
-	if len(hookName) > 0 {
-		if _, ok := p.(map[string]interface{})[hookName]; !ok {
-			p.(map[string]interface{})[hookName] = make(map[string]interface{})
-		}
-		p = p.(map[string]interface{})[hookName]
-	}
 	// 当前节点的规则链表
-	lists := make([]*list.List, 0)
+	lists := make([]*glist.List, 0)
 	array := ([]string)(nil)
 	if strings.EqualFold("/", uri) {
 		array = []string{"/"}
@@ -118,7 +111,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 		array = strings.Split(uri[1:], "/")
 	}
 	// 键名"*fuzz"代表模糊匹配节点，其下会有一个链表；
-	// 键名"*list"代表链表，叶子节点和模糊匹配节点都有该属性；
+	// 键名"*list"代表链表，叶子节点和模糊匹配节点都有该属性，优先级越高越排前；
+	p := s.serveTree[domain]
 	for k, v := range array {
 		if len(v) == 0 {
 			continue
@@ -129,10 +123,10 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 			// 由于是模糊规则，因此这里会有一个*list，用以将后续的路由规则加进来，
 			// 检索会从叶子节点的链表往根节点按照优先级进行检索
 			if v, ok := p.(map[string]interface{})["*list"]; !ok {
-				p.(map[string]interface{})["*list"] = list.New()
-				lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+				p.(map[string]interface{})["*list"] = glist.New()
+				lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
 			} else {
-				lists = append(lists, v.(*list.List))
+				lists = append(lists, v.(*glist.List))
 			}
 		}
 		// 属性层级数据写入
@@ -143,10 +137,10 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 		// 到达叶子节点，往list中增加匹配规则(条件 v != "*fuzz" 是因为模糊节点的话在前面已经添加了*list链表)
 		if k == len(array)-1 && v != "*fuzz" {
 			if v, ok := p.(map[string]interface{})["*list"]; !ok {
-				p.(map[string]interface{})["*list"] = list.New()
-				lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+				p.(map[string]interface{})["*list"] = glist.New()
+				lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
 			} else {
-				lists = append(lists, v.(*list.List))
+				lists = append(lists, v.(*glist.List))
 			}
 		}
 	}
@@ -160,15 +154,14 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 			switch handler.itemType {
 			// 判断是否已存在相同的路由注册项，如果是普通路由注册则进行替换
 			case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
-				if handler.itemType == gHANDLER_TYPE_HANDLER {
-					if strings.EqualFold(handler.router.Domain, item.router.Domain) &&
-						strings.EqualFold(handler.router.Method, item.router.Method) &&
-						strings.EqualFold(handler.router.Uri, item.router.Uri) {
-						e.Value = handler
-						pushed = true
-						break
-					}
+				if strings.EqualFold(handler.router.Domain, item.router.Domain) &&
+					strings.EqualFold(handler.router.Method, item.router.Method) &&
+					strings.EqualFold(handler.router.Uri, item.router.Uri) {
+					e.Value = handler
+					pushed = true
+					break
 				}
+				fallthrough
 
 			// 否则，那么判断优先级，决定插入顺序
 			default:
@@ -183,8 +176,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem, hook ...string
 			l.PushBack(handler)
 		}
 	}
-	// gutil.Dump(s.serveTree)
-	// gutil.Dump(s.hooksTree)
+	//gutil.Dump(s.serveTree)
 	if _, ok := s.routesMap[regkey]; !ok {
 		s.routesMap[regkey] = make([]registeredRouteItem, 0)
 	}

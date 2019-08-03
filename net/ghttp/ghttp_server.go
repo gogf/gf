@@ -42,10 +42,7 @@ type (
 		closeChan        chan struct{}                    // 用以关闭事件通知的通道
 		servedCount      *gtype.Int                       // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
 		serveTree        map[string]interface{}           // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-		hooksTree        map[string]interface{}           // 所有注册的事件回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-		middlewareTree   map[string]interface{}           // 所有注册的中间件(路由表，树型结构，哈希表+链表优先级匹配)
 		serveCache       *gcache.Cache                    // 服务注册路由内存缓存
-		hooksCache       *gcache.Cache                    // 事件回调路由内存缓存
 		routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
 		statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
 		sessions         *gcache.Cache                    // Session内存缓存
@@ -65,11 +62,12 @@ type (
 	// 服务函数注册信息
 	handlerItem struct {
 		itemName string             // 注册的函数名称信息(用于路由信息打印)
-		itemType int                // 注册函数类型(对象/函数/控制器/中间件)
+		itemType int                // 注册函数类型(对象/函数/控制器/中间件/钩子函数)
 		itemFunc HandlerFunc        // 函数内存地址(与以上两个参数二选一)
 		initFunc HandlerFunc        // 初始化请求回调函数(对象注册方式下有效)
 		shutFunc HandlerFunc        // 完成请求回调函数(对象注册方式下有效)
 		ctrlInfo *handlerController // 控制器服务函数反射信息
+		hookName string             // 钩子类型名称(注册函数类型为钩子函数下有效)
 		router   *Router            // 注册时绑定的路由对象
 	}
 
@@ -208,9 +206,7 @@ func GetServer(name ...interface{}) *Server {
 		serverCount:      gtype.NewInt(),
 		statusHandlerMap: make(map[string]HandlerFunc),
 		serveTree:        make(map[string]interface{}),
-		hooksTree:        make(map[string]interface{}),
 		serveCache:       gcache.New(),
-		hooksCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
 		sessions:         gcache.New(),
 		servedCount:      gtype.NewInt(),
