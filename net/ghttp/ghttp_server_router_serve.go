@@ -7,35 +7,40 @@
 package ghttp
 
 import (
-	"container/list"
+	"encoding/json"
+	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/container/glist"
 	"github.com/gogf/gf/text/gregex"
 )
 
+// 缓存数据项
+type handlerCacheItem struct {
+	parsedItems []*handlerParsedItem
+	hasHook     bool
+}
+
 // 查询请求处理方法.
 // 内部带锁机制，可以并发读，但是不能并发写；并且有缓存机制，按照Host、Method、Path进行缓存.
-func (s *Server) getHandlersWithCache(r *Request) []*handlerParsedItem {
+func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedItem, hasHook bool) {
 	cacheKey := s.serveHandlerKey(r.Method, r.URL.Path, r.GetHost())
-	cacheItems := ([]*handlerParsedItem)(nil)
 	if v := s.serveCache.Get(cacheKey); v == nil {
-		cacheItems = s.searchHandlers(r.Method, r.URL.Path, r.GetHost())
-		if cacheItems != nil {
-			s.serveCache.Set(cacheKey, cacheItems, s.config.RouterCacheExpire*1000)
+		parsedItems, hasHook = s.searchHandlers(r.Method, r.URL.Path, r.GetHost())
+		if parsedItems != nil {
+			s.serveCache.Set(cacheKey, &handlerCacheItem{parsedItems, hasHook}, s.config.RouterCacheExpire*1000)
 		}
 	} else {
-		cacheItems = v.([]*handlerParsedItem)
+		item := v.(*handlerCacheItem)
+		return item.parsedItems, item.hasHook
 	}
-	if len(cacheItems) == 0 {
-		return nil
-	}
-	return cacheItems
+	return
 }
 
 // 路由注册方法检索，返回所有该路由的注册函数，构造成数组返回
-func (s *Server) searchHandlers(method, path, domain string) []*handlerParsedItem {
+func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*handlerParsedItem, hasHook bool) {
 	if len(path) == 0 {
-		return nil
+		return nil, false
 	}
 	// 遍历检索的域名列表，优先遍历默认域名
 	domains := []string{gDEFAULT_DOMAIN}
@@ -49,24 +54,25 @@ func (s *Server) searchHandlers(method, path, domain string) []*handlerParsedIte
 	} else {
 		array = strings.Split(path[1:], "/")
 	}
-	parsedItems := make([]*handlerParsedItem, 0, 16)
+	parsedItems = make([]*handlerParsedItem, 0, 16)
 	isServeHandlerAdded := false
 	for _, domain := range domains {
 		p, ok := s.serveTree[domain]
 		if !ok {
 			continue
 		}
+		//gutil.Dump(p)
 		// 多层链表(每个节点都有一个*list链表)的目的是当叶子节点未有任何规则匹配时，让父级模糊匹配规则继续处理
-		lists := make([]*list.List, 0, 16)
+		lists := make([]*glist.List, 0, 16)
 		for k, v := range array {
 			if _, ok := p.(map[string]interface{})["*list"]; ok {
-				lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+				lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
 			}
 			if _, ok := p.(map[string]interface{})[v]; ok {
 				p = p.(map[string]interface{})[v]
 				if k == len(array)-1 {
 					if _, ok := p.(map[string]interface{})["*list"]; ok {
-						lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+						lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
 						break
 					}
 				}
@@ -81,7 +87,7 @@ func (s *Server) searchHandlers(method, path, domain string) []*handlerParsedIte
 					p = p.(map[string]interface{})["*fuzz"]
 				}
 				if _, ok := p.(map[string]interface{})["*list"]; ok {
-					lists = append(lists, p.(map[string]interface{})["*list"].(*list.List))
+					lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
 				}
 			}
 		}
@@ -124,12 +130,38 @@ func (s *Server) searchHandlers(method, path, domain string) []*handlerParsedIte
 								isServeHandlerAdded = true
 							}
 						}
+						if item.itemType == gHANDLER_TYPE_HOOK {
+							hasHook = true
+						}
 					}
 				}
 			}
 		}
 	}
-	return parsedItems
+	return
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (item *handlerItem) MarshalJSON() ([]byte, error) {
+	if item.hookName != "" {
+		return json.Marshal(
+			fmt.Sprintf(
+				`%s %s:%s (%s)`,
+				item.router.Uri,
+				item.router.Domain,
+				item.router.Method,
+				item.hookName,
+			),
+		)
+	}
+	return json.Marshal(
+		fmt.Sprintf(
+			`%s %s:%s`,
+			item.router.Uri,
+			item.router.Domain,
+			item.router.Method,
+		),
+	)
 }
 
 // 生成回调方法查询的Key

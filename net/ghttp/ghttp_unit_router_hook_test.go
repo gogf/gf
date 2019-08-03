@@ -24,8 +24,6 @@ func Test_Router_Hook_Basic(t *testing.T) {
 		"AfterServe":   func(r *ghttp.Request) { r.Response.Write("2") },
 		"BeforeOutput": func(r *ghttp.Request) { r.Response.Write("3") },
 		"AfterOutput":  func(r *ghttp.Request) { r.Response.Write("4") },
-		"BeforeClose":  func(r *ghttp.Request) { r.Response.Write("5") },
-		"AfterClose":   func(r *ghttp.Request) { r.Response.Write("6") },
 	})
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")

@@ -10,6 +10,7 @@ package glist
 
 import (
 	"container/list"
+	"encoding/json"
 
 	"github.com/gogf/gf/internal/rwmutex"
 )
@@ -370,4 +371,9 @@ func (l *List) IteratorDesc(f func(e *Element) bool) {
 		}
 	}
 	l.mu.RUnlock()
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (l *List) MarshalJSON() ([]byte, error) {
+	return json.Marshal(l.FrontAll())
 }

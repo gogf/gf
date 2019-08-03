@@ -23,18 +23,18 @@ func Test_Router_Basic(t *testing.T) {
 	s.BindHandler("/:name", func(r *ghttp.Request) {
 		r.Response.Write("/:name")
 	})
-	//s.BindHandler("/:name/update", func(r *ghttp.Request) {
-	//	r.Response.Write(r.Get("name"))
-	//})
-	//s.BindHandler("/:name/:action", func(r *ghttp.Request) {
-	//	r.Response.Write(r.Get("action"))
-	//})
+	s.BindHandler("/:name/update", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("name"))
+	})
+	s.BindHandler("/:name/:action", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("action"))
+	})
 	s.BindHandler("/:name/*any", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("any"))
 	})
-	//s.BindHandler("/user/list/{field}.html", func(r *ghttp.Request) {
-	//	r.Response.Write(r.Get("field"))
-	//})
+	s.BindHandler("/user/list/{field}.html", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("field"))
+	})
 	s.SetPort(p)
 	s.SetDumpRouteMap(false)
 	s.Start()
