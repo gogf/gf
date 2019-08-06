@@ -20,12 +20,10 @@ func Test_Router_Exit(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
-		"BeforeServe":  func(r *ghttp.Request) { r.Response.Write("1") },
-		"AfterServe":   func(r *ghttp.Request) { r.Response.Write("2") },
-		"BeforeOutput": func(r *ghttp.Request) { r.Response.Write("3") },
-		"AfterOutput":  func(r *ghttp.Request) { r.Response.Write("4") },
-		"BeforeClose":  func(r *ghttp.Request) { r.Response.Write("5") },
-		"AfterClose":   func(r *ghttp.Request) { r.Response.Write("6") },
+		ghttp.HOOK_BEFORE_SERVE:  func(r *ghttp.Request) { r.Response.Write("1") },
+		ghttp.HOOK_AFTER_SERVE:   func(r *ghttp.Request) { r.Response.Write("2") },
+		ghttp.HOOK_BEFORE_OUTPUT: func(r *ghttp.Request) { r.Response.Write("3") },
+		ghttp.HOOK_AFTER_OUTPUT:  func(r *ghttp.Request) { r.Response.Write("4") },
 	})
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test-start")
@@ -56,17 +54,17 @@ func Test_Router_ExitHook(t *testing.T) {
 	})
 
 	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
 			r.Response.Write("3")
 			r.ExitHook()
 		},
@@ -95,17 +93,17 @@ func Test_Router_ExitAll(t *testing.T) {
 	})
 
 	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
 			r.Response.Write("3")
 			r.ExitAll()
 		},
