@@ -29,7 +29,7 @@ type Request struct {
 	Router         *Router                // 匹配到的路由对象
 	EnterTime      int64                  // 请求进入时间(微秒)
 	LeaveTime      int64                  // 请求完成时间(微秒)
-	MiddleWare     *MiddleWare            // 中间件功能调用对象
+	Middleware     *Middleware            // 中间件功能调用对象
 	handlers       []*handlerParsedItem   // 请求执行服务函数列表(包含中间件、路由函数、钩子函数)
 	handlerIndex   int                    // 当前执行函数的索引号
 	hasHookHandler bool                   // 是否注册有钩子函数(用于请求时提高钩子函数功能启用判断效率)
@@ -59,7 +59,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request.Cookie = GetCookie(request)
 	request.Session = GetSession(request)
 	request.Response.request = request
-	request.MiddleWare = &MiddleWare{
+	request.Middleware = &Middleware{
 		request: request,
 	}
 	return request

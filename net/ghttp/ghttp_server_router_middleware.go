@@ -11,8 +11,12 @@ import (
 	"runtime"
 )
 
+const (
+	gDEFAULT_MIDDLEWARE_PATTERN = "/*"
+)
+
 // 注册中间件，绑定到指定的路由规则上，中间件参数支持多个。
-func (s *Server) BindMiddleWare(pattern string, handlers ...HandlerFunc) {
+func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(pattern, &handlerItem{
 			itemType: gHANDLER_TYPE_MIDDLEWARE,
@@ -23,9 +27,9 @@ func (s *Server) BindMiddleWare(pattern string, handlers ...HandlerFunc) {
 }
 
 // 注册中间件，绑定到全局路由规则("/*")上，中间件参数支持多个。
-func (s *Server) AddMiddleWare(handlers ...HandlerFunc) {
+func (s *Server) AddMiddleware(handlers ...HandlerFunc) {
 	for _, handler := range handlers {
-		s.setHandler("/*", &handlerItem{
+		s.setHandler(gDEFAULT_MIDDLEWARE_PATTERN, &handlerItem{
 			itemType: gHANDLER_TYPE_MIDDLEWARE,
 			itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
 			itemFunc: handler,

@@ -106,3 +106,17 @@ func (d *Domain) BindStatusHandlerByMap(handlerMap map[int]HandlerFunc) {
 		d.BindStatusHandler(k, v)
 	}
 }
+
+// 注册中间件，绑定到指定的路由规则上，中间件参数支持多个。
+func (d *Domain) BindMiddleware(pattern string, handlers ...HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.BindMiddleware(pattern+"@"+domain, handlers...)
+	}
+}
+
+// 注册中间件，绑定到全局路由规则("/*")上，中间件参数支持多个。
+func (d *Domain) AddMiddleware(handlers ...HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.BindMiddleware(gDEFAULT_MIDDLEWARE_PATTERN+"@"+domain, handlers...)
+	}
+}

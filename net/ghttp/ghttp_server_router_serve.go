@@ -55,7 +55,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		array = strings.Split(path[1:], "/")
 	}
 	parsedItemList := glist.New()
-	lastMiddleWareItem := (*glist.Element)(nil)
+	lastMiddlewareItem := (*glist.Element)(nil)
 	isServeHandlerAdded := false
 	for _, domain := range domains {
 		p, ok := s.serveTree[domain]
@@ -131,10 +131,10 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 
 						// 中间件需要排序
 						case gHANDLER_TYPE_MIDDLEWARE:
-							if lastMiddleWareItem == nil {
-								lastMiddleWareItem = parsedItemList.PushFront(parsedItem)
+							if lastMiddlewareItem == nil {
+								lastMiddlewareItem = parsedItemList.PushFront(parsedItem)
 							} else {
-								lastMiddleWareItem = parsedItemList.InsertAfter(parsedItem, lastMiddleWareItem)
+								lastMiddlewareItem = parsedItemList.InsertAfter(parsedItem, lastMiddlewareItem)
 							}
 
 						// 钩子函数存在性判断
