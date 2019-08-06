@@ -8,6 +8,7 @@ package gjson
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/g/encoding/gini"
 	"github.com/gogf/gf/g/encoding/gtoml"
 	"github.com/gogf/gf/g/encoding/gxml"
 	"github.com/gogf/gf/g/encoding/gyaml"
@@ -71,6 +72,17 @@ func (j *Json) ToToml() ([]byte, error) {
 }
 
 func (j *Json) ToTomlString() (string, error) {
+	b, e := j.ToToml()
+	return string(b), e
+}
+
+func (j *Json) ToIni() ([]byte, error) {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gini.Encode((*(j.p)).(map[string]interface{}))
+}
+
+func (j *Json) ToIniString() (string, error) {
 	b, e := j.ToToml()
 	return string(b), e
 }
