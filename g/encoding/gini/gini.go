@@ -10,9 +10,8 @@ package gini
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/g/encoding/gjson"
-	"github.com/gogf/gf/g/util/gconv"
 	"io"
 	"strings"
 )
@@ -88,7 +87,7 @@ func Encode(data map[string]interface{}) (res []byte, err error) {
 		}
 
 		for kk, vv := range v.(map[string]interface{}) {
-			n, err := w.WriteString(fmt.Sprintf("%s=%s\n", kk, gconv.String(vv)))
+			n, err := w.WriteString(fmt.Sprintf("%s=%s\n", kk, vv.(string)))
 			if err != nil || n == 0 {
 				return nil, fmt.Errorf("write data failed. %v", err)
 			}
@@ -110,5 +109,5 @@ func ToJson(data []byte) (res []byte, err error) {
 		return nil, err
 	}
 
-	return gjson.Encode(iniMap)
+	return json.Marshal(iniMap)
 }
