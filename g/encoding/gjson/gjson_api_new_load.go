@@ -128,9 +128,14 @@ func DecodeToJson(data interface{}, unsafe ...bool) (*Json, error) {
 	}
 }
 
-// Load loads content from specified file <path>,
-// and creates a Json object from its content.
+// Load loads content from specified file <path>.
+// It automatically checks the content type, creates and returns a Json object from the content.
 func Load(path string, unsafe ...bool) (*Json, error) {
+	if p, err := gfile.Search(path); err != nil {
+		return nil, err
+	} else {
+		path = p
+	}
 	return doLoadContent(gfile.Ext(path), gfcache.GetBinContents(path), unsafe...)
 }
 

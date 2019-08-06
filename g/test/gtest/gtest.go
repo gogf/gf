@@ -209,7 +209,8 @@ func AssertLE(value, expect interface{}) {
 // TODO map support.
 func AssertIN(value, expect interface{}) {
 	passed := true
-	switch reflect.ValueOf(expect).Kind() {
+	expectKind := reflect.ValueOf(expect).Kind()
+	switch expectKind {
 	case reflect.Slice, reflect.Array:
 		expectSlice := gconv.Interfaces(expect)
 		for _, v1 := range gconv.Interfaces(value) {
@@ -225,6 +226,8 @@ func AssertIN(value, expect interface{}) {
 				break
 			}
 		}
+	default:
+		panic(fmt.Sprintf(`[ASSERT] INVALID EXPECT VALUE TYPE: %v`, expectKind))
 	}
 	if !passed {
 		panic(fmt.Sprintf(`[ASSERT] EXPECT %v IN %v`, value, expect))
@@ -237,7 +240,8 @@ func AssertIN(value, expect interface{}) {
 // TODO map support.
 func AssertNI(value, expect interface{}) {
 	passed := true
-	switch reflect.ValueOf(expect).Kind() {
+	expectKind := reflect.ValueOf(expect).Kind()
+	switch expectKind {
 	case reflect.Slice, reflect.Array:
 		for _, v1 := range gconv.Interfaces(value) {
 			result := true
@@ -252,6 +256,8 @@ func AssertNI(value, expect interface{}) {
 				break
 			}
 		}
+	default:
+		panic(fmt.Sprintf(`[ASSERT] INVALID EXPECT VALUE TYPE: %v`, expectKind))
 	}
 	if !passed {
 		panic(fmt.Sprintf(`[ASSERT] EXPECT %v NOT IN %v`, value, expect))
