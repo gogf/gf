@@ -147,7 +147,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 					strings.EqualFold(handler.router.Uri, item.router.Uri) {
 					e.Value = handler
 					pushed = true
-					goto ForBreak
+					goto end
 				}
 				fallthrough
 
@@ -156,11 +156,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 				if s.compareRouterPriority(handler, item) {
 					l.InsertBefore(handler, e)
 					pushed = true
+					goto end
 				}
-				goto ForBreak
 			}
 		}
-	ForBreak:
+	end:
 		if !pushed {
 			l.PushBack(handler)
 		}
