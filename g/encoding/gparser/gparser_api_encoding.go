@@ -43,6 +43,10 @@ func (p *Parser) ToToml() ([]byte, error) {
 	return p.json.ToToml()
 }
 
+func (p *Parser) ToIni() ([]byte, error) {
+	return p.json.ToIni()
+}
+
 func VarToXml(value interface{}, rootTag ...string) ([]byte, error) {
 	return New(value).ToXml(rootTag...)
 }
@@ -77,4 +81,8 @@ func VarToToml(value interface{}) ([]byte, error) {
 
 func VarToStruct(value interface{}, obj interface{}) error {
 	return New(value).ToStruct(obj)
+}
+
+func VarToIni(value interface{}) ([]byte, error) {
+	return New(value).ToIni()
 }
