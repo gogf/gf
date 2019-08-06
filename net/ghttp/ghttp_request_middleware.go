@@ -9,12 +9,12 @@ package ghttp
 import "reflect"
 
 // 中间件对象
-type MiddleWare struct {
+type Middleware struct {
 	request *Request
 }
 
 // 执行下一个请求流程处理函数
-func (m *MiddleWare) Next() {
+func (m *Middleware) Next() {
 	item := (*handlerParsedItem)(nil)
 	for {
 		// 是否停止请求执行
@@ -65,11 +65,11 @@ func (m *MiddleWare) Next() {
 					item.handler.shutFunc(m.request)
 				})
 			}
-		case gHANDLER_TYPE_HANDLER:
+		case gHANDLER_TYPE_MIDDLEWARE:
 			niceCallFunc(func() {
 				item.handler.itemFunc(m.request)
 			})
-		case gHANDLER_TYPE_MIDDLEWARE:
+		case gHANDLER_TYPE_HANDLER:
 			niceCallFunc(func() {
 				item.handler.itemFunc(m.request)
 			})

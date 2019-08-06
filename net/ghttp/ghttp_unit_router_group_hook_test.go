@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Router_Group_HOOK1(t *testing.T) {
+func Test_Router_Group_Hook1(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	g := s.Group("/api")
@@ -45,7 +45,7 @@ func Test_Router_Group_HOOK1(t *testing.T) {
 	})
 }
 
-func Test_Router_Group_HOOK2(t *testing.T) {
+func Test_Router_Group_Hook2(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	g := s.Group("/api")
@@ -75,7 +75,7 @@ func Test_Router_Group_HOOK2(t *testing.T) {
 	})
 }
 
-func Test_Router_Group_HOOK3(t *testing.T) {
+func Test_Router_Group_Hook3(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/api").Bind([]g.Slice{

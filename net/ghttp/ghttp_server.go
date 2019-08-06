@@ -222,6 +222,9 @@ func GetServer(name ...interface{}) *Server {
 // 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行),
 // 需要结合Wait方式一起使用.
 func (s *Server) Start() error {
+	// 预处理路由注册项
+	s.handlePreBindItems()
+
 	// 服务进程初始化，只会初始化一次
 	serverProcessInit()
 
@@ -299,8 +302,9 @@ func (s *Server) GetRouteMap() string {
 		tablewriter.ALIGN_CENTER,
 		tablewriter.ALIGN_CENTER,
 		tablewriter.ALIGN_CENTER,
+		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_CENTER,
-		tablewriter.ALIGN_CENTER,
+		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_CENTER,
@@ -319,7 +323,7 @@ func (s *Server) GetRouteMap() string {
 				priority:   len(registeredItems) - index - 1,
 			}
 			if item.handler.itemType == gHANDLER_TYPE_MIDDLEWARE {
-				item.middleware = "YES"
+				item.middleware = "MIDDLEWARE"
 			}
 			if _, ok := m[item.domain]; !ok {
 				// 注意排序函数的逻辑，从小到达排序

@@ -116,7 +116,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		} else {
 			if len(request.handlers) > 0 {
 				// 动态服务
-				request.MiddleWare.Next()
+				request.Middleware.Next()
 			} else {
 				if isStaticDir {
 					// 静态目录
