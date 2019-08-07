@@ -9,7 +9,6 @@ package grand
 import (
 	"crypto/rand"
 	"encoding/binary"
-	"os"
 )
 
 const (
@@ -22,7 +21,7 @@ var (
 	bufferChan = make(chan uint32, gBUFFER_SIZE)
 )
 
-// It uses a asychronous goroutine to produce the random number,
+// It uses a asynchronous goroutine to produce the random number,
 // and a buffer chan to store the random number. So it has high performance
 // to generate random number.
 func init() {
@@ -32,7 +31,6 @@ func init() {
 		for {
 			if n, err := rand.Read(buffer); err != nil {
 				panic(err)
-				os.Exit(1)
 			} else {
 				// 使用缓冲区数据进行一次完整的随机数生成
 				for i := 0; i < n-4; {
