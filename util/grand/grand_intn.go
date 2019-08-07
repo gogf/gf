@@ -32,12 +32,11 @@ func init() {
 			if n, err := rand.Read(buffer); err != nil {
 				panic(err)
 			} else {
-				// 使用缓冲区数据进行一次完整的随机数生成
 				for i := 0; i < n-4; {
 					bufferChan <- binary.LittleEndian.Uint32(buffer[i : i+4])
 					i++
 				}
-				// 充分利用缓冲区数据，随机索引递增
+				// Reuse the rand buffers.
 				for i := 0; i < n; i++ {
 					step = int(buffer[0]) % 10
 					if step != 0 {
