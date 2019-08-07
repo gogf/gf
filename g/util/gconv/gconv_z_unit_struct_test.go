@@ -337,17 +337,30 @@ func Test_Struct_PrivateAttribute(t *testing.T) {
 	})
 }
 
-func Test_Struct_Deep(t *testing.T) {
+func Test_StructDeep1(t *testing.T) {
+	type Base struct {
+		Age int
+	}
+	type User struct {
+		Id   int
+		Name string
+		Base
+	}
+	gtest.Case(t, func() {
+		user := new(User)
+		params := g.Map{
+			"id":   1,
+			"name": "john",
+			"age":  18,
+		}
+		err := gconv.Struct(params, user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Id, params["id"])
+		gtest.Assert(user.Name, params["name"])
+		gtest.Assert(user.Age, 0)
+	})
 
 	gtest.Case(t, func() {
-		type Base struct {
-			Age int
-		}
-		type User struct {
-			Id   int
-			Name string
-			Base
-		}
 		user := new(User)
 		params := g.Map{
 			"id":   1,
@@ -360,7 +373,54 @@ func Test_Struct_Deep(t *testing.T) {
 		gtest.Assert(user.Name, params["name"])
 		gtest.Assert(user.Age, params["age"])
 	})
+}
 
+func Test_StructDeep2(t *testing.T) {
+	type Ids struct {
+		Id  int
+		Uid int
+	}
+	type Base struct {
+		Ids
+		Time string
+	}
+	type User struct {
+		Base
+		Name string
+	}
+	params := g.Map{
+		"id":   1,
+		"uid":  10,
+		"name": "john",
+	}
+	gtest.Case(t, func() {
+		user := new(User)
+		err := gconv.Struct(params, user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Id, 0)
+		gtest.Assert(user.Uid, 0)
+		gtest.Assert(user.Name, "john")
+	})
+
+	gtest.Case(t, func() {
+		user := new(User)
+		err := gconv.StructDeep(params, user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Id, 1)
+		gtest.Assert(user.Uid, 10)
+		gtest.Assert(user.Name, "john")
+	})
+	gtest.Case(t, func() {
+		user := (*User)(nil)
+		err := gconv.StructDeep(params, &user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Id, 1)
+		gtest.Assert(user.Uid, 10)
+		gtest.Assert(user.Name, "john")
+	})
+}
+
+func Test_StructDeep3(t *testing.T) {
 	gtest.Case(t, func() {
 		type Ids struct {
 			Id  int `json:"id"`
