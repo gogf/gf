@@ -43,8 +43,14 @@ func (j *Json) Get(pattern string, def ...interface{}) interface{} {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 
+	// It returns nil if pattern is empty.
+	if pattern == "" {
+		return nil
+	}
+
+	// It returns all if pattern is ".".
 	if pattern == "." {
-		pattern = ""
+		return *j.p
 	}
 
 	var result *interface{}
