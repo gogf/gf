@@ -401,7 +401,6 @@ func TestCfg_Get(t *testing.T) {
 		}{}
 		gtest.Assert(c.GetToStruct("name", &name) == nil, false)
 
-		c.Reload()
 		c.Clear()
 
 		arr, _ := gjson.Encode(g.Map{"name": "gf", "time": "2019-06-12", "person": g.Map{"name": "gf"}, "floats": g.Slice{1, 2, 3}})

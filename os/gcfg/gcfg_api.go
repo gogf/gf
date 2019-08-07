@@ -230,56 +230,56 @@ func (c *Config) GetStruct(pattern string, pointer interface{}, mapping ...map[s
 	if j := c.getJson(); j != nil {
 		return j.GetStruct(pattern, pointer, mapping...)
 	}
-	return errors.New("config file not found")
+	return errors.New("configuration not found")
 }
 
 func (c *Config) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetStructDeep(pattern, pointer, mapping...)
 	}
-	return errors.New("config file not found")
+	return errors.New("configuration not found")
 }
 
 func (c *Config) GetStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetStructs(pattern, pointer, mapping...)
 	}
-	return errors.New("config file not found")
+	return errors.New("configuration not found")
 }
 
 func (c *Config) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetStructsDeep(pattern, pointer, mapping...)
 	}
-	return errors.New("config file not found")
+	return errors.New("configuration not found")
 }
 
 func (c *Config) GetMapStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetMapStruct(pattern, pointer, mapping...)
 	}
-	return errors.New("config file not found")
+	return errors.New("configuration not found")
 }
 
 func (c *Config) GetMapStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetMapStructDeep(pattern, pointer, mapping...)
 	}
-	return errors.New("config file not found")
+	return errors.New("configuration not found")
 }
 
 func (c *Config) GetMapStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetMapStructs(pattern, pointer, mapping...)
 	}
-	return errors.New("config file not found")
+	return errors.New("configuration not found")
 }
 
 func (c *Config) GetMapStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetMapStructsDeep(pattern, pointer, mapping...)
 	}
-	return errors.New("config file not found")
+	return errors.New("configuration not found")
 }
 
 // Deprecated.
@@ -287,14 +287,85 @@ func (c *Config) GetToStruct(pattern string, pointer interface{}) error {
 	return c.GetStruct(pattern, pointer)
 }
 
-// Reload is alias of Clear.
-// Deprecated.
-func (c *Config) Reload() {
-	c.jsons.Clear()
+func (c *Config) ToMap() map[string]interface{} {
+	if j := c.getJson(); j != nil {
+		return j.ToMap()
+	}
+	return nil
+}
+
+func (c *Config) ToArray() []interface{} {
+	if j := c.getJson(); j != nil {
+		return j.ToArray()
+	}
+	return nil
+}
+
+func (c *Config) ToStruct(pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.ToStruct(pointer, mapping...)
+	}
+	return errors.New("configuration not found")
+}
+
+func (c *Config) ToStructDeep(pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.ToStructDeep(pointer, mapping...)
+	}
+	return errors.New("configuration not found")
+}
+
+func (c *Config) ToStructs(pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.ToStructs(pointer, mapping...)
+	}
+	return errors.New("configuration not found")
+}
+
+func (c *Config) ToStructsDeep(pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.ToStructsDeep(pointer, mapping...)
+	}
+	return errors.New("configuration not found")
+}
+
+func (c *Config) ToMapStruct(pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.ToMapStruct(pointer, mapping...)
+	}
+	return errors.New("configuration not found")
+}
+
+func (c *Config) ToMapStructDeep(pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.ToMapStructDeep(pointer, mapping...)
+	}
+	return errors.New("configuration not found")
+}
+
+func (c *Config) ToMapStructs(pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.ToMapStructs(pointer, mapping...)
+	}
+	return errors.New("configuration not found")
+}
+
+func (c *Config) ToMapStructsDeep(pointer interface{}, mapping ...map[string]string) error {
+	if j := c.getJson(); j != nil {
+		return j.ToMapStructsDeep(pointer, mapping...)
+	}
+	return errors.New("configuration not found")
 }
 
 // Clear removes all parsed configuration files content cache,
 // which will force reload configuration content from file.
 func (c *Config) Clear() {
 	c.jsons.Clear()
+}
+
+// Dump prints current Json object with more manually readable.
+func (c *Config) Dump() {
+	if j := c.getJson(); j != nil {
+		j.Dump()
+	}
 }

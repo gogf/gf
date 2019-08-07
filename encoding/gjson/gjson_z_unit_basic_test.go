@@ -371,10 +371,11 @@ func Test_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		j := gjson.New(`{"name":"gf","time":"2019-06-12"}`)
 		j.SetViolenceCheck(true)
-		gtest.Assert(j.Get("").(g.Map)["name"], "gf")
-		gtest.Assert(j.Get("").(g.Map)["name1"], nil)
+		gtest.Assert(j.Get(""), nil)
+		gtest.Assert(j.Get(".").(g.Map)["name"], "gf")
+		gtest.Assert(j.Get(".").(g.Map)["name1"], nil)
 		j.SetViolenceCheck(false)
-		gtest.Assert(j.Get("").(g.Map)["name"], "gf")
+		gtest.Assert(j.Get(".").(g.Map)["name"], "gf")
 
 		err := j.Set("name", "gf1")
 		gtest.Assert(err, nil)

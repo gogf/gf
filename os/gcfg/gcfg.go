@@ -246,8 +246,9 @@ func (c *Config) FilePath(file ...string) (path string) {
 }
 
 // SetFileName sets the default configuration file name.
-func (c *Config) SetFileName(name string) {
+func (c *Config) SetFileName(name string) *Config {
 	c.name.Set(name)
+	return c
 }
 
 // GetFileName returns the default configuration file name.
