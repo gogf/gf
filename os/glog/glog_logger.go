@@ -349,9 +349,5 @@ func (l *Logger) PrintStack(skip ...int) {
 // GetStack returns the caller stack content,
 // the optional parameter <skip> specify the skipped stack offset from the end point.
 func (l *Logger) GetStack(skip ...int) string {
-	number := 1
-	if len(skip) > 0 {
-		number = skip[0] + 1
-	}
-	return debug.StackWithFilter(gPATH_FILTER_KEY, number)
+	return debug.StackWithFilter(gPATH_FILTER_KEY, skip...)
 }

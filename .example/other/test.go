@@ -1,7 +1,10 @@
 package main
 
-func main() {
-	for i := 0; i < 10; i++ {
+import (
+	"github.com/gogf/gf/os/glog"
+)
 
-	}
+func main() {
+	glog.Error("error")
+	glog.Errorfln("error")
 }

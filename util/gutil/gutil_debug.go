@@ -7,24 +7,22 @@
 package gutil
 
 import (
+	"fmt"
+
 	"github.com/gogf/gf/internal/debug"
+)
+
+const (
+	gFILTER_KEY = "/gf/util/gutil/gutil_debug.go"
 )
 
 // PrintStack prints to standard error the stack trace returned by runtime.Stack.
 func PrintStack(skip ...int) {
-	number := 1
-	if len(skip) > 0 {
-		number = skip[0] + 1
-	}
-	debug.PrintStack(number)
+	fmt.Print(Stack(skip...))
 }
 
 // Stack returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
 func Stack(skip ...int) string {
-	number := 1
-	if len(skip) > 0 {
-		number = skip[0] + 1
-	}
-	return debug.Stack(number)
+	return debug.StackWithFilter(gFILTER_KEY, skip...)
 }

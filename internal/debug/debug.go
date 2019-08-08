@@ -39,7 +39,7 @@ func PrintStack(skip ...int) {
 // Stack returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
 func Stack(skip ...int) string {
-	return StackWithFilter("", skip...)
+	return StackWithFilter(gFILTER_KEY, skip...)
 }
 
 // StackWithFilter returns a formatted stack trace of the goroutine that calls it.
