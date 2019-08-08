@@ -5,9 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gdb provides ORM features for popular relationship databases.
-//
-// 数据库ORM,
-// 默认内置支持MySQL, 其他数据库需要手动import对应的数据库引擎第三方包.
 package gdb
 
 import (
@@ -36,6 +33,7 @@ type DB interface {
 
 	// 内部实现API的方法(不同数据库可覆盖这些方法实现自定义的操作)
 	doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
+	doGetAll(link dbLink, query string, args ...interface{}) (result Result, err error)
 	doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
 	doPrepare(link dbLink, query string) (*sql.Stmt, error)
 	doInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)

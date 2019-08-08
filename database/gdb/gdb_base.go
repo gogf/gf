@@ -169,7 +169,18 @@ func (bs *dbBase) doPrepare(link dbLink, query string) (*sql.Stmt, error) {
 
 // 数据库查询，获取查询结果集，以列表结构返回
 func (bs *dbBase) GetAll(query string, args ...interface{}) (Result, error) {
-	rows, err := bs.Query(query, args...)
+	return bs.db.doGetAll(nil, query, args...)
+}
+
+// 数据库查询，获取查询结果集，以列表结构返回，给定连接对象
+func (bs *dbBase) doGetAll(link dbLink, query string, args ...interface{}) (result Result, err error) {
+	if link == nil {
+		link, err = bs.db.Slave()
+		if err != nil {
+			return nil, err
+		}
+	}
+	rows, err := bs.doQuery(link, query, args...)
 	if err != nil || rows == nil {
 		return nil, err
 	}
