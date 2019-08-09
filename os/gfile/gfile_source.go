@@ -16,14 +16,14 @@ import (
 )
 
 const (
-	gPATH_FILTER_KEY = "/gf/os/gfile/gfile_source.go"
+	gPATH_FILTER_KEY = "/gf/os/gfile/gfile"
 )
 
 // SourcePath returns absolute file path of the current source file path.
 //
 // Note that it's only available in develop environment.
 func SourcePath(skip ...int) string {
-	path, _ := debug.CallerWithFilter(gPATH_FILTER_KEY, skip...)
+	_, path, _ := debug.CallerWithFilter(gPATH_FILTER_KEY, skip...)
 	return path
 }
 

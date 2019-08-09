@@ -169,7 +169,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	if _, ok := s.routesMap[regKey]; !ok {
 		s.routesMap[regKey] = make([]registeredRouteItem, 0)
 	}
-	file, line := debug.CallerWithFilter(gFILTER_KEY)
+	_, file, line := debug.CallerWithFilter(gFILTER_KEY)
 	s.routesMap[regKey] = append(s.routesMap[regKey], registeredRouteItem{
 		file:    fmt.Sprintf(`%s:%d`, file, line),
 		handler: handler,

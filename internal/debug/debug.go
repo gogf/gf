@@ -39,7 +39,7 @@ func PrintStack(skip ...int) {
 // Stack returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
 func Stack(skip ...int) string {
-	return StackWithFilter(gFILTER_KEY, skip...)
+	return StackWithFilter("", skip...)
 }
 
 // StackWithFilter returns a formatted stack trace of the goroutine that calls it.
@@ -83,33 +83,39 @@ func StackWithFilter(filter string, skip ...int) string {
 	return buffer.String()
 }
 
-// CallerPath returns the absolute file path along with its line number of the caller.
-func Caller(skip ...int) (path string, line int) {
+// CallerPath returns the function name and the absolute file path along with its line number of the caller.
+func Caller(skip ...int) (function string, path string, line int) {
 	return CallerWithFilter("", skip...)
 }
 
-// CallerPathWithFilter returns the absolute file path along with its line number of the caller.
+// CallerPathWithFilter returns the function name and the absolute file path along with its line number of the caller.
 //
 // The parameter <filter> is used to filter the path of the caller.
-func CallerWithFilter(filter string, skip ...int) (path string, line int) {
+func CallerWithFilter(filter string, skip ...int) (function string, path string, line int) {
 	number := 0
 	if len(skip) > 0 {
 		number = skip[0]
 	}
 	for i := callerFromIndex(filter) + number; i < gMAX_DEPTH; i++ {
-		if _, file, line, ok := runtime.Caller(i); ok {
+		if pc, file, line, ok := runtime.Caller(i); ok {
 			if filter != "" && strings.Contains(file, filter) {
 				continue
 			}
 			if strings.Contains(file, gFILTER_KEY) {
 				continue
 			}
-			return file, line
+			function := ""
+			if fn := runtime.FuncForPC(pc); fn == nil {
+				function = "unknown"
+			} else {
+				function = fn.Name()
+			}
+			return function, file, line
 		} else {
 			break
 		}
 	}
-	return "", -1
+	return "", "", -1
 }
 
 // callerFromIndex returns the caller position exclusive of the debug package.

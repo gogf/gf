@@ -23,6 +23,7 @@ func MeetProb(prob float32) bool {
 }
 
 // N returns a random int between min and max - [min, max].
+// The <min> and <max> also support negative numbers.
 func N(min, max int) int {
 	if min >= max {
 		return min
@@ -31,14 +32,14 @@ func N(min, max int) int {
 		// Because Intn dose not support negative number,
 		// so we should first shift the value to left,
 		// then call Intn to produce the random number,
-		// and finally shift the result to right.
+		// and finally shift the result back to right.
 		return Intn(max-(min-0)+1) + (min - 0)
 	}
 	if min < 0 {
 		// Because Intn dose not support negative number,
 		// so we should first shift the value to right,
 		// then call Intn to produce the random number,
-		// and finally shift the result to left.
+		// and finally shift the result back to left.
 		return Intn(max+(0-min)+1) - (0 - min)
 	}
 	return 0
@@ -76,7 +77,6 @@ func Digits(n int) string {
 		b[i] = digits[Intn(10)]
 	}
 	return string(b)
-
 }
 
 // Deprecated.
@@ -101,7 +101,7 @@ func RandLetters(n int) string {
 	return Letters(n)
 }
 
-// Perm returns, as a slice of n ints, a pseudo-random permutation of the integers [0,n).
+// Perm returns, as a slice of n int numbers, a pseudo-random permutation of the integers [0,n).
 func Perm(n int) []int {
 	m := make([]int, n)
 	for i := 0; i < n; i++ {

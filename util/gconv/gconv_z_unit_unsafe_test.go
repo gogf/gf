@@ -14,12 +14,12 @@ import (
 
 func Test_Unsafe(t *testing.T) {
 	gtest.Case(t, func() {
-		s := "John爱中国"
+		s := "I love 小泽玛利亚"
 		gtest.AssertEQ(gconv.UnsafeStrToBytes(s), []byte(s))
 	})
 
 	gtest.Case(t, func() {
-		b := []byte("John爱中国")
+		b := []byte("I love 小泽玛利亚")
 		gtest.AssertEQ(gconv.UnsafeBytesToStr(b), string(b))
 	})
 }
