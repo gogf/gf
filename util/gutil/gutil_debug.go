@@ -16,10 +16,6 @@ const (
 	gFILTER_KEY = "/gf/util/gutil/gutil"
 )
 
-func Package() string {
-
-}
-
 // PrintStack prints to standard error the stack trace returned by runtime.Stack.
 func PrintStack(skip ...int) {
 	fmt.Print(Stack(skip...))
