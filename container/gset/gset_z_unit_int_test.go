@@ -210,8 +210,8 @@ func TestIntSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := gset.NewIntSet()
 		s1.Add(4).Add(2).Add(3)
-		gtest.AssertIN(s1.Pop(1), []int{4, 2, 3})
-		gtest.AssertIN(s1.Pop(5), []int{4, 2, 3})
+		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
+		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
 		gtest.Assert(s1.Size(), 3)
 	})
 }

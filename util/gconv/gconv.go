@@ -33,10 +33,10 @@ const (
 var (
 	// Empty strings.
 	emptyStringMap = map[string]struct{}{
-		"":      struct{}{},
-		"0":     struct{}{},
-		"off":   struct{}{},
-		"false": struct{}{},
+		"":      {},
+		"0":     {},
+		"off":   {},
+		"false": {},
 	}
 
 	// Priority tags for Map*/Struct* functions.

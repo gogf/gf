@@ -240,7 +240,7 @@ func TestStringSet_Remove(t *testing.T) {
 func TestStringSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
 		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
-		str1 := s1.Pop(1)
+		str1 := s1.Pop()
 		gtest.Assert(strings.Contains("a,b,c", str1), true)
 	})
 }

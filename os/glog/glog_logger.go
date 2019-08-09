@@ -10,12 +10,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/debug/gdebug"
 	"io"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/gogf/gf/internal/debug"
 
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gfpool"
@@ -244,11 +243,11 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 		// Caller path.
 		callerPath := ""
 		if l.flags&F_FILE_LONG > 0 {
-			_, path, line := debug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip)
+			_, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip)
 			callerPath = fmt.Sprintf(`%s:%d: `, path, line)
 		}
 		if l.flags&F_FILE_SHORT > 0 {
-			_, path, line := debug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip)
+			_, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip)
 			callerPath = fmt.Sprintf(`%s:%d: `, gfile.Basename(path), line)
 		}
 		if len(callerPath) > 0 {
@@ -349,5 +348,5 @@ func (l *Logger) PrintStack(skip ...int) {
 // GetStack returns the caller stack content,
 // the optional parameter <skip> specify the skipped stack offset from the end point.
 func (l *Logger) GetStack(skip ...int) string {
-	return debug.StackWithFilter(gPATH_FILTER_KEY, skip...)
+	return gdebug.StackWithFilter(gPATH_FILTER_KEY, skip...)
 }
