@@ -106,15 +106,7 @@ func (r *Request) GetRawString() string {
 
 // 获取原始json请求输入字符串，并解析为json对象
 func (r *Request) GetJson() *gjson.Json {
-	data := r.GetRaw()
-	if len(data) > 0 {
-		if j, err := gjson.DecodeToJson(data); err == nil {
-			return j
-		} else {
-			r.Error(err, ": ", string(data))
-		}
-	}
-	return nil
+	return gjson.New(r.GetRaw())
 }
 
 func (r *Request) GetString(key string, def ...interface{}) string {
