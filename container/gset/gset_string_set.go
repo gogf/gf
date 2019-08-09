@@ -292,7 +292,7 @@ func (set *StringSet) Sum() (sum int) {
 }
 
 // Pops randomly pops an item from set.
-func (set *StringSet) Pop(size int) string {
+func (set *StringSet) Pop() string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for k, _ := range set.m {

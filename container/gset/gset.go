@@ -297,7 +297,7 @@ func (set *Set) Sum() (sum int) {
 }
 
 // Pops randomly pops an item from set.
-func (set *Set) Pop(size int) interface{} {
+func (set *Set) Pop() interface{} {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for k, _ := range set.m {

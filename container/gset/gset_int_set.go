@@ -291,7 +291,7 @@ func (set *IntSet) Sum() (sum int) {
 }
 
 // Pops randomly pops an item from set.
-func (set *IntSet) Pop(size int) int {
+func (set *IntSet) Pop() int {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for k, _ := range set.m {
