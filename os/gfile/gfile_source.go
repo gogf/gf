@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,22 +10,9 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/gogf/gf/internal/debug"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 )
-
-const (
-	gPATH_FILTER_KEY = "/gf/os/gfile/gfile"
-)
-
-// SourcePath returns absolute file path of the current source file path.
-//
-// Note that it's only available in develop environment.
-func SourcePath(skip ...int) string {
-	_, path, _ := debug.CallerWithFilter(gPATH_FILTER_KEY, skip...)
-	return path
-}
 
 // MainPkgPath returns absolute file path of package main,
 // which contains the entrance function main.

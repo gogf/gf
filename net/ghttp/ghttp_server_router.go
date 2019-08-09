@@ -9,11 +9,10 @@ package ghttp
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/debug/gdebug"
 	"strings"
 
 	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/internal/debug"
-
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
@@ -169,7 +168,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	if _, ok := s.routesMap[regKey]; !ok {
 		s.routesMap[regKey] = make([]registeredRouteItem, 0)
 	}
-	_, file, line := debug.CallerWithFilter(gFILTER_KEY)
+	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
 	s.routesMap[regKey] = append(s.routesMap[regKey], registeredRouteItem{
 		file:    fmt.Sprintf(`%s:%d`, file, line),
 		handler: handler,

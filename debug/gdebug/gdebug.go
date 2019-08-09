@@ -4,9 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package debug contains facilities for programs to debug themselves while
-// they are running.
-package debug
+// Package gdebug contains facilities for programs to debug themselves while they are running.
+package gdebug
 
 import (
 	"bytes"
@@ -17,7 +16,7 @@ import (
 
 const (
 	gMAX_DEPTH  = 1000
-	gFILTER_KEY = "/gf/internal/debug/debug.go"
+	gFILTER_KEY = "/gf/debug/gdebug/gdebug.go"
 )
 
 var (
@@ -133,4 +132,39 @@ func callerFromIndex(filter string) int {
 		}
 	}
 	return 0
+}
+
+// CallerPackage returns the package name of the caller.
+func CallerPackage() string {
+	function, _, _ := Caller()
+	indexSplit := strings.LastIndexByte(function, '/')
+	if indexSplit == -1 {
+		return function[:strings.IndexByte(function, '.')]
+	} else {
+		leftPart := function[:indexSplit+1]
+		rightPart := function[indexSplit+1:]
+		indexDot := strings.IndexByte(function, '.')
+		rightPart = rightPart[:indexDot-1]
+		return leftPart + rightPart
+	}
+}
+
+// CallerFunction returns the function name of the caller.
+func CallerFunction() string {
+	function, _, _ := Caller()
+	function = function[strings.LastIndexByte(function, '/')+1:]
+	function = function[strings.IndexByte(function, '.')+1:]
+	return function
+}
+
+// CallerFilePath returns the file path of the caller.
+func CallerFilePath() string {
+	_, path, _ := Caller()
+	return path
+}
+
+// CallerFileLine returns the file path along with the line number of the caller.
+func CallerFileLine() string {
+	_, path, line := Caller()
+	return fmt.Sprintf(`%s:%d`, path, line)
 }

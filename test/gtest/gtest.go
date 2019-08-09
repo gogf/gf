@@ -9,11 +9,10 @@ package gtest
 
 import (
 	"fmt"
+	"github.com/gogf/gf/debug/gdebug"
 	"os"
 	"reflect"
 	"testing"
-
-	"github.com/gogf/gf/internal/debug"
 
 	"github.com/gogf/gf/util/gconv"
 )
@@ -28,7 +27,7 @@ const (
 func Case(t *testing.T, f func()) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n%s", err, debug.StackWithFilter(gPATH_FILTER_KEY))
+			fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter(gPATH_FILTER_KEY))
 			t.Fail()
 		}
 	}()
@@ -271,7 +270,7 @@ func Error(message ...interface{}) {
 
 // Fatal prints <message> to stderr and exit the process.
 func Fatal(message ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), debug.StackWithFilter(gPATH_FILTER_KEY))
+	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), gdebug.StackWithFilter(gPATH_FILTER_KEY))
 	os.Exit(1)
 }
 
