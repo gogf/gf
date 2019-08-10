@@ -59,7 +59,11 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		// 如果没有产生异常状态，那么设置返回状态为200
 		if request.Response.Status == 0 {
-			request.Response.Status = http.StatusOK
+			if request.Middleware.served || request.Response.buffer.Len() > 0 {
+				request.Response.Status = http.StatusOK
+			} else {
+				request.Response.WriteStatus(http.StatusNotFound)
+			}
 		}
 		// error log
 		if e := recover(); e != nil {

@@ -141,6 +141,11 @@ func Test_Router_Status(t *testing.T) {
 		defer resp4.Close()
 		gtest.Assert(err, nil)
 		gtest.Assert(resp4.StatusCode, 500)
+
+		resp5, err := client.Get("/404")
+		defer resp5.Close()
+		gtest.Assert(err, nil)
+		gtest.Assert(resp5.StatusCode, 404)
 	})
 }
 
