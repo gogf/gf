@@ -9,38 +9,44 @@ package gcompress
 import (
 	"archive/zip"
 	"bytes"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/text/gstr"
 	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"strings"
 )
 
-// Zip compresses <path> to <dest> using zip compressing algorithm.
+// ZipPath compresses <path> to <dest> using zip compressing algorithm.
+// The unnecessary parameter <prefix> indicates the path prefix for zip file.
 func ZipPath(path, dest string, prefix ...string) error {
-	d, err := os.Create(dest)
+	writer, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
-	defer d.Close()
-	w := zip.NewWriter(d)
-	defer w.Close()
-	files, err := gfile.ScanDir(path, "*.*", true)
+	defer writer.Close()
+	return ZipPathWriter(path, writer, prefix...)
+}
+
+// ZipPathWriter compresses <path> to <writer> using zip compressing algorithm.
+// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+func ZipPathWriter(path string, writer io.Writer, prefix ...string) error {
+	pathRealPath, err := gfile.Search(path)
 	if err != nil {
 		return err
 	}
-	pathRealPath := gfile.RealPath(path)
-	destRealPath := gfile.RealPath(dest)
+	zipWriter := zip.NewWriter(writer)
+	defer zipWriter.Close()
+	files, err := gfile.ScanDir(path, "*", true)
+	if err != nil {
+		return err
+	}
 	headerPrefix := ""
 	if len(prefix) > 0 {
 		headerPrefix = prefix[0]
 	}
 	for _, file := range files {
-		if destRealPath == file {
-			continue
-		}
-		err := zipFile(file, headerPrefix+gfile.Dir(file[len(pathRealPath):]), w)
+		err := zipFile(file, headerPrefix+gfile.Dir(file[len(pathRealPath):]), zipWriter)
 		if err != nil {
 			return err
 		}
@@ -137,18 +143,20 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 		return err
 	}
 	if len(prefix) > 0 {
-		header.Name = prefix + "/" + header.Name
+		prefix = strings.Replace(prefix, `\`, `/`, -1)
+		prefix = strings.TrimRight(prefix, `/`)
+		header.Name = prefix + `/` + header.Name
 	} else {
 		header.Name = header.Name
 	}
-
 	writer, err := zw.CreateHeader(header)
 	if err != nil {
 		return err
 	}
-	if _, err = io.Copy(writer, file); err != nil {
-		return err
+	if !info.IsDir() {
+		if _, err = io.Copy(writer, file); err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
