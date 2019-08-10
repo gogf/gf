@@ -19,46 +19,45 @@ import (
 func Test_Router_Group_Group(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	g := s.Group("/")
-	g.Group("/api.v2",
+	s.Group("/api.v2", func(g *ghttp.RouterGroup) {
 		g.Middleware(func(r *ghttp.Request) {
 			r.Response.Write("1")
 			r.Middleware.Next()
 			r.Response.Write("2")
-		}),
+		})
 		g.GET("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
-		}),
-		g.Group("/order",
+		})
+		g.Group("/order", func(g *ghttp.RouterGroup) {
 			g.GET("/list", func(r *ghttp.Request) {
 				r.Response.Write("list")
-			}),
+			})
 			g.PUT("/update", func(r *ghttp.Request) {
 				r.Response.Write("update")
-			}),
-		),
-		g.Group("/user",
+			})
+		})
+		g.Group("/user", func(g *ghttp.RouterGroup) {
 			g.GET("/info", func(r *ghttp.Request) {
 				r.Response.Write("info")
-			}),
+			})
 			g.POST("/edit", func(r *ghttp.Request) {
 				r.Response.Write("edit")
-			}),
+			})
 			g.DELETE("/drop", func(r *ghttp.Request) {
 				r.Response.Write("drop")
-			}),
-		),
-		g.Group("/hook",
+			})
+		})
+		g.Group("/hook", func(g *ghttp.RouterGroup) {
 			g.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 				r.Response.Write("hook any")
-			}),
+			})
 			g.Hook("/:name", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 				r.Response.Write("hook name")
-			}),
-		),
-	)
+			})
+		})
+	})
 	s.SetPort(p)
-	//s.SetDumpRouteMap(false)
+	s.SetDumpRouteMap(false)
 	s.Start()
 	defer s.Shutdown()
 

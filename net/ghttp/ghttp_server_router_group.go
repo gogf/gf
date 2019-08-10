@@ -55,7 +55,7 @@ func (s *Server) handlePreBindItems() {
 }
 
 // 获取分组路由对象
-func (s *Server) Group(prefix string, groups ...*RouterGroup) *RouterGroup {
+func (s *Server) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
 	if prefix == "/" {
 		prefix = ""
 	}
@@ -65,14 +65,14 @@ func (s *Server) Group(prefix string, groups ...*RouterGroup) *RouterGroup {
 	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v.parent = group
+			v(group)
 		}
 	}
 	return group
 }
 
 // 获取分组路由对象(绑定域名)
-func (d *Domain) Group(prefix string, groups ...*RouterGroup) *RouterGroup {
+func (d *Domain) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
 	if prefix == "/" {
 		prefix = ""
 	}
@@ -82,14 +82,14 @@ func (d *Domain) Group(prefix string, groups ...*RouterGroup) *RouterGroup {
 	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v.parent = group
+			v(group)
 		}
 	}
 	return group
 }
 
 // 层级递归创建分组路由注册项
-func (g *RouterGroup) Group(prefix string, groups ...*RouterGroup) *RouterGroup {
+func (g *RouterGroup) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
 	if prefix == "/" {
 		prefix = ""
 	}
@@ -97,11 +97,11 @@ func (g *RouterGroup) Group(prefix string, groups ...*RouterGroup) *RouterGroup 
 		parent: g,
 		server: g.server,
 		domain: g.domain,
-		prefix: g.prefix + prefix,
+		prefix: prefix,
 	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v.parent = group
+			v(group)
 		}
 	}
 	return group
