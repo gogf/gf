@@ -227,6 +227,23 @@ func (r *Request) GetUrl() string {
 	return fmt.Sprintf(`%s://%s%s`, scheme, r.Host, r.URL.String())
 }
 
+// 从Cookie和Header中查询SESSIONID
+func (r *Request) GetSessionId() string {
+	id := r.Cookie.GetSessionId()
+	if id == "" {
+		id = r.Header.Get(r.Server.GetSessionIdName())
+	}
+	return id
+}
+
+// 生成随机的SESSIONID
+func (r *Request) MakeSessionId() string {
+	id := makeSessionId()
+	r.Cookie.SetSessionId(id)
+	r.Response.Header().Set(r.Server.GetSessionIdName(), id)
+	return id
+}
+
 // 获得请求来源URL地址
 func (r *Request) GetReferer() string {
 	return r.Header.Get("Referer")

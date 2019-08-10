@@ -55,7 +55,7 @@ func (s *Server) UpdateSession(id string, data map[string]interface{}) {
 func (s *Session) init() {
 	if len(s.id) == 0 {
 		s.server = s.request.Server
-		if id := s.request.Cookie.GetSessionId(); id != "" {
+		if id := s.request.GetSessionId(); id != "" {
 			if v := s.server.sessions.Get(id); v != nil {
 				s.id = id
 				s.data = v.(*gmap.StrAnyMap)
@@ -63,7 +63,7 @@ func (s *Session) init() {
 			}
 		}
 		// 否则执行初始化创建
-		s.id = s.request.Cookie.MakeSessionId()
+		s.id = s.request.MakeSessionId()
 		s.data = gmap.NewStrAnyMap(true)
 		s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
 		s.dirty = true
@@ -78,7 +78,7 @@ func (s *Session) Id() string {
 
 // 获取当前session所有数据，注意是值拷贝
 func (s *Session) Map() map[string]interface{} {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+	if len(s.id) > 0 || s.request.GetSessionId() != "" {
 		s.init()
 		return s.data.Map()
 	}
@@ -87,7 +87,7 @@ func (s *Session) Map() map[string]interface{} {
 
 // 获得session map大小
 func (s *Session) Size() int {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+	if len(s.id) > 0 || s.request.GetSessionId() != "" {
 		s.init()
 		return s.data.Size()
 	}
@@ -110,7 +110,7 @@ func (s *Session) Sets(m map[string]interface{}) {
 
 // 判断键名是否存在
 func (s *Session) Contains(key string) bool {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+	if len(s.id) > 0 || s.request.GetSessionId() != "" {
 		s.init()
 		return s.data.Contains(key)
 	}
@@ -124,7 +124,7 @@ func (s *Session) IsDirty() bool {
 
 // 删除指定session键值对
 func (s *Session) Remove(key string) {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+	if len(s.id) > 0 || s.request.GetSessionId() != "" {
 		s.init()
 		s.data.Remove(key)
 		s.dirty = true
@@ -144,7 +144,7 @@ func (s *Session) Restore(data []byte) (err error) {
 	if len(data) == 0 {
 		return nil
 	}
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+	if len(s.id) > 0 || s.request.GetSessionId() != "" {
 		s.init()
 		s.data.LockFunc(func(m map[string]interface{}) {
 			err = json.Unmarshal(data, &m)
@@ -155,7 +155,7 @@ func (s *Session) Restore(data []byte) (err error) {
 
 // 清空session
 func (s *Session) Clear() {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+	if len(s.id) > 0 || s.request.GetSessionId() != "" {
 		s.init()
 		s.data.Clear()
 		s.dirty = true
@@ -171,7 +171,7 @@ func (s *Session) UpdateExpire() {
 
 // 获取SESSION变量
 func (s *Session) Get(key string, def ...interface{}) interface{} {
-	if len(s.id) > 0 || s.request.Cookie.GetSessionId() != "" {
+	if len(s.id) > 0 || s.request.GetSessionId() != "" {
 		s.init()
 		if v := s.data.Get(key); v != nil {
 			return v

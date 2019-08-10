@@ -77,25 +77,6 @@ func (c *Cookie) Map() map[string]string {
 	return m
 }
 
-// 获取SessionId，不存在时则创建
-func (c *Cookie) SessionId() string {
-	c.init()
-	id := c.Get(c.server.GetSessionIdName())
-	if id == "" {
-		id = makeSessionId()
-		c.SetSessionId(id)
-	}
-	return id
-}
-
-// 获取SessionId，不存在时则创建
-func (c *Cookie) MakeSessionId() string {
-	c.init()
-	id := makeSessionId()
-	c.SetSessionId(id)
-	return id
-}
-
 // 判断Cookie中是否存在制定键名(并且没有过期)
 func (c *Cookie) Contains(key string) bool {
 	c.init()
