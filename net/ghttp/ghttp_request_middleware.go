@@ -10,7 +10,8 @@ import "reflect"
 
 // 中间件对象
 type Middleware struct {
-	request *Request
+	served  bool     // 是否带有请求服务函数，用以识别是否404
+	request *Request // 请求对象
 }
 
 // 执行下一个请求流程处理函数
@@ -35,6 +36,7 @@ func (m *Middleware) Next() {
 		// 执行函数处理
 		switch item.handler.itemType {
 		case gHANDLER_TYPE_CONTROLLER:
+			m.served = true
 			c := reflect.New(item.handler.ctrlInfo.reflect)
 			niceCallFunc(func() {
 				c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(m.request)})
@@ -50,6 +52,7 @@ func (m *Middleware) Next() {
 				})
 			}
 		case gHANDLER_TYPE_OBJECT:
+			m.served = true
 			if item.handler.initFunc != nil {
 				niceCallFunc(func() {
 					item.handler.initFunc(m.request)
@@ -65,11 +68,12 @@ func (m *Middleware) Next() {
 					item.handler.shutFunc(m.request)
 				})
 			}
-		case gHANDLER_TYPE_MIDDLEWARE:
+		case gHANDLER_TYPE_HANDLER:
+			m.served = true
 			niceCallFunc(func() {
 				item.handler.itemFunc(m.request)
 			})
-		case gHANDLER_TYPE_HANDLER:
+		case gHANDLER_TYPE_MIDDLEWARE:
 			niceCallFunc(func() {
 				item.handler.itemFunc(m.request)
 			})

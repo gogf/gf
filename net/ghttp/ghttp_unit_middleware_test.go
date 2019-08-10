@@ -102,6 +102,33 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 	})
 }
 
+func Test_BindMiddleware_Status(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/test/test", func(r *ghttp.Request) {
+		r.Response.Write("test")
+	})
+	s.BindMiddleware("/test/*any", func(r *ghttp.Request) {
+		r.Middleware.Next()
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	// 等待启动完成
+	time.Sleep(200 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "Not Found")
+		gtest.Assert(client.GetContent("/test"), "Not Found")
+		gtest.Assert(client.GetContent("/test/test"), "test")
+		gtest.Assert(client.GetContent("/test/test/test"), "Not Found")
+	})
+}
+
 func Test_AddMiddleware_Basic1(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -255,6 +282,31 @@ func Test_AddMiddleware_Basic5(t *testing.T) {
 
 		gtest.Assert(client.GetContent("/"), "12")
 		gtest.Assert(client.GetContent("/test/test"), "12test")
+	})
+}
+
+func Test_AddMiddleware_Status(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/test/test", func(r *ghttp.Request) {
+		r.Response.Write("test")
+	})
+	s.AddMiddleware(func(r *ghttp.Request) {
+		r.Middleware.Next()
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	// 等待启动完成
+	time.Sleep(200 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "Not Found")
+		gtest.Assert(client.GetContent("/test/test"), "test")
 	})
 }
 
