@@ -23,12 +23,6 @@ func Test_Dump(t *testing.T) {
 	})
 }
 
-func Test_PrintStack(t *testing.T) {
-	gtest.Case(t, func() {
-		gutil.PrintStack()
-	})
-}
-
 func Test_TryCatch(t *testing.T) {
 
 	gtest.Case(t, func() {
