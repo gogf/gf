@@ -29,10 +29,10 @@ install:
 
 before_script:
 - find . -name "*.go" | xargs gofmt -w
-- git diff --exit-code
+- git diff --name-only --exit-code || exit 1
 
 script:
-- GOARCH=386 go test -v ./...
+- GOARCH=386 go test -v ./... || exit 1
 - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
