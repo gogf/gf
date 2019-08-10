@@ -36,7 +36,7 @@ func Test_Router_Basic(t *testing.T) {
 		r.Response.Write(r.Get("field"))
 	})
 	s.SetPort(p)
-	//s.SetDumpRouteMap(false)
+	s.SetDumpRouteMap(false)
 	s.Start()
 	defer s.Shutdown()
 
