@@ -196,3 +196,41 @@ func Test_Load_Basic(t *testing.T) {
 
 	})
 }
+
+func Test_Load_Ini(t *testing.T) {
+	var data = `
+
+;注释
+
+[addr] 
+#注释
+ip = 127.0.0.1
+port=9001
+enable=true
+
+	[DBINFO]
+	type=mysql
+	user=root
+	password=password
+
+`
+
+	gtest.Case(t, func() {
+		json, err := gjson.LoadContent(data)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		gtest.Assert(json.GetString("addr.ip"), "127.0.0.1")
+		gtest.Assert(json.GetString("addr.port"), "9001")
+		gtest.Assert(json.GetString("addr.enable"), "true")
+		gtest.Assert(json.GetString("DBINFO.type"), "mysql")
+		gtest.Assert(json.GetString("DBINFO.user"), "root")
+		gtest.Assert(json.GetString("DBINFO.password"), "password")
+
+		_, err = json.ToIni()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+	})
+}
