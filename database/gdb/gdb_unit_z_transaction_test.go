@@ -120,8 +120,19 @@ func Test_TX_Insert(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.Insert(table, g.Map{
+		user := tx.From(table)
+		if _, err := user.Data(g.Map{
 			"id":          1,
+			"passport":    "t1",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "T1",
+			"create_time": gtime.Now().String(),
+		}).Insert(); err != nil {
+			gtest.Error(err)
+		}
+
+		if _, err := tx.Insert(table, g.Map{
+			"id":          2,
 			"passport":    "t1",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T1",
@@ -129,14 +140,17 @@ func Test_TX_Insert(t *testing.T) {
 		}); err != nil {
 			gtest.Error(err)
 		}
+
+		if n, err := tx.Table(table).Count(); err != nil {
+			gtest.Error(err)
+		} else {
+			gtest.Assert(n, 2)
+		}
+
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
-		if n, err := db.Table(table).Count(); err != nil {
-			gtest.Error(err)
-		} else {
-			gtest.Assert(n, 1)
-		}
+
 	})
 }
 

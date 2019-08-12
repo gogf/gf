@@ -32,24 +32,27 @@ var (
 
 // 初始化连接参数。
 // 测试前需要修改连接参数。
-func init() {
+func InitMysql() {
 	node := gdb.ConfigNode{
-		Host:    "127.0.0.1",
-		Port:    "3306",
-		User:    "root",
-		Pass:    "",
-		Name:    "",
-		Type:    "mysql",
-		Role:    "master",
-		Charset: "utf8",
-		Weight:  1,
+		Host:             "140.143.231.161",
+		Port:             "3306",
+		User:             "root",
+		Pass:             "lala1234",
+		Name:             "",
+		Type:             "mysql",
+		Role:             "master",
+		Charset:          "utf8",
+		Weight:           1,
+		MaxIdleConnCount: 10,
+		MaxOpenConnCount: 10,
+		MaxConnLifetime:  600,
 	}
 	// 作者本地测试hack
 	if hostname, _ := os.Hostname(); hostname == "ijohn" {
 		node.Pass = "12345678"
 	}
 	gdb.AddConfigNode("test", node)
-	gdb.AddConfigNode(gdb.DEFAULT_GROUP_NAME, node)
+	gdb.AddDefaultConfigNode(node)
 	if r, err := gdb.New(); err != nil {
 		gtest.Error(err)
 	} else {
@@ -68,6 +71,10 @@ func init() {
 	db.SetSchema(SCHEMA1)
 	// 创建默认用户表
 	createTable(TABLE)
+
+	gdb.GetConfig("test")
+	gdb.GetDefaultGroup()
+	gdb.SetDefaultGroup(gdb.DEFAULT_GROUP_NAME)
 }
 
 // 创建指定名称的user测试表，当table为空时，创建随机的表名。
