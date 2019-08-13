@@ -9,6 +9,7 @@ package gres
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"io"
 	"os"
 )
@@ -45,4 +46,14 @@ func (f *File) Content() ([]byte, error) {
 // FileInfo returns an os.FileInfo for the FileHeader.
 func (f *File) FileInfo() os.FileInfo {
 	return f.zipFile.FileInfo()
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (f *File) MarshalJSON() ([]byte, error) {
+	info := f.FileInfo()
+	return json.Marshal(map[string]interface{}{
+		"name": f.Name(),
+		"size": info.Size(),
+		"time": info.ModTime(),
+	})
 }

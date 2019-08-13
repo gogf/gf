@@ -7,11 +7,12 @@
 package gres_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/test/gtest"
-	"testing"
 )
 
 func Test_Export(t *testing.T) {
@@ -19,7 +20,7 @@ func Test_Export(t *testing.T) {
 		srcPath := gfile.Dir(gdebug.CallerFilePath()) + "/testdata/files"
 		goFilePath := gfile.Dir(gdebug.CallerFilePath()) + "/testdata/testdata.go"
 		pkgName := "testdata"
-		err := gres.Export(srcPath, goFilePath, pkgName)
+		err := gres.PackToGoFile(srcPath, goFilePath, pkgName)
 		gtest.Assert(err, nil)
 	})
 }
