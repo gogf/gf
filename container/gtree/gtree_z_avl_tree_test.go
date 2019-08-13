@@ -162,6 +162,40 @@ func Test_AVLTree_Iterator(t *testing.T) {
 
 }
 
+func Test_AVLTree_IteratorFrom(t *testing.T) {
+	m := make(map[interface{}]interface{})
+	for i := 1; i <= 10; i++ {
+		m[i] = i * 10
+	}
+	tree := gtree.NewAVLTreeFrom(gutil.ComparatorInt, m)
+
+	gtest.Case(t, func() {
+		n := 5
+		tree.IteratorFrom(5, func(key, value interface{}) bool {
+			gtest.Assert(n, key)
+			gtest.Assert(n*10, value)
+			n++
+			return true
+		})
+
+		i := 5
+		tree.IteratorAscFrom(5, func(key, value interface{}) bool {
+			gtest.Assert(i, key)
+			gtest.Assert(i*10, value)
+			i++
+			return true
+		})
+
+		j := 5
+		tree.IteratorDescFrom(5, func(key, value interface{}) bool {
+			gtest.Assert(j, key)
+			gtest.Assert(j*10, value)
+			j--
+			return true
+		})
+	})
+}
+
 func Test_AVLTree_Clone(t *testing.T) {
 	//clone 方法是深克隆
 	m := gtree.NewAVLTreeFrom(gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})

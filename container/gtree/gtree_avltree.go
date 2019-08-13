@@ -80,25 +80,28 @@ func (tree *AVLTree) Sets(data map[interface{}]interface{}) {
 func (tree *AVLTree) Search(key interface{}) (value interface{}, found bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	return tree.doSearch(key)
+	if n := tree.doSearch(key); n != nil {
+		return n.Value, true
+	}
+	return nil, false
 }
 
 // doSearch searches the tree with given <key>.
 // Second return parameter <found> is true if key was found, otherwise false.
-func (tree *AVLTree) doSearch(key interface{}) (value interface{}, found bool) {
+func (tree *AVLTree) doSearch(key interface{}) *AVLTreeNode {
 	n := tree.root
 	for n != nil {
 		cmp := tree.comparator(key, n.Key)
 		switch {
 		case cmp == 0:
-			return n.Value, true
+			return n
 		case cmp < 0:
 			n = n.children[0]
 		case cmp > 0:
 			n = n.children[1]
 		}
 	}
-	return nil, false
+	return nil
 }
 
 // Get searches the node in the tree by <key> and returns its value or nil if key is not found in tree.
@@ -119,8 +122,8 @@ func (tree *AVLTree) Get(key interface{}) (value interface{}) {
 func (tree *AVLTree) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	if v, ok := tree.doSearch(key); ok {
-		return v
+	if n := tree.doSearch(key); n != nil {
+		return n.Value
 	}
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
@@ -383,7 +386,7 @@ func (tree *AVLTree) Clear() {
 func (tree *AVLTree) String() string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	str := "AVLTree\n"
+	str := ""
 	if tree.size != 0 {
 		output(tree.root, "", true, &str)
 	}
@@ -432,12 +435,26 @@ func (tree *AVLTree) Iterator(f func(key, value interface{}) bool) {
 	tree.IteratorAsc(f)
 }
 
+// IteratorFrom is alias of IteratorAscFrom.
+func (tree *AVLTree) IteratorFrom(key interface{}, f func(key, value interface{}) bool) {
+	tree.IteratorAscFrom(key, f)
+}
+
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.bottom(0)
+	tree.doIteratorAsc(tree.bottom(0), f)
+}
+
+func (tree *AVLTree) IteratorAscFrom(key interface{}, f func(key, value interface{}) bool) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	tree.doIteratorAsc(tree.doSearch(key), f)
+}
+
+func (tree *AVLTree) doIteratorAsc(node *AVLTreeNode, f func(key, value interface{}) bool) {
 	for node != nil {
 		if !f(node.Key, node.Value) {
 			return
@@ -451,7 +468,16 @@ func (tree *AVLTree) IteratorAsc(f func(key, value interface{}) bool) {
 func (tree *AVLTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.bottom(1)
+	tree.doIteratorDesc(tree.bottom(1), f)
+}
+
+func (tree *AVLTree) IteratorDescFrom(key interface{}, f func(key, value interface{}) bool) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	tree.doIteratorDesc(tree.doSearch(key), f)
+}
+
+func (tree *AVLTree) doIteratorDesc(node *AVLTreeNode, f func(key, value interface{}) bool) {
 	for node != nil {
 		if !f(node.Key, node.Value) {
 			return

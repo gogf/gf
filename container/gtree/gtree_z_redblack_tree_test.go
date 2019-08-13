@@ -164,7 +164,40 @@ func Test_RedBlackTree_Iterator(t *testing.T) {
 		gtest.Assert(i, keyLen)
 		gtest.Assert(j, 1)
 	})
+}
 
+func Test_RedBlackTree_IteratorFrom(t *testing.T) {
+	m := make(map[interface{}]interface{})
+	for i := 1; i <= 10; i++ {
+		m[i] = i * 10
+	}
+	tree := gtree.NewRedBlackTreeFrom(gutil.ComparatorInt, m)
+
+	gtest.Case(t, func() {
+		n := 5
+		tree.IteratorFrom(5, func(key, value interface{}) bool {
+			gtest.Assert(n, key)
+			gtest.Assert(n*10, value)
+			n++
+			return true
+		})
+
+		i := 5
+		tree.IteratorAscFrom(5, func(key, value interface{}) bool {
+			gtest.Assert(i, key)
+			gtest.Assert(i*10, value)
+			i++
+			return true
+		})
+
+		j := 5
+		tree.IteratorDescFrom(5, func(key, value interface{}) bool {
+			gtest.Assert(j, key)
+			gtest.Assert(j*10, value)
+			j--
+			return true
+		})
+	})
 }
 
 func Test_RedBlackTree_Clone(t *testing.T) {
