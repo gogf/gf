@@ -36,57 +36,42 @@ type LogHandler func(r *Request, error ...interface{})
 
 // HTTP Server 设置结构体，静态配置
 type ServerConfig struct {
-	// 底层http对象配置
-	Addr           string        // 监听IP和端口，监听本地所有IP使用":端口"(支持多个地址，使用","号分隔)
-	HTTPSAddr      string        // HTTPS服务监听地址(支持多个地址，使用","号分隔)
-	HTTPSCertPath  string        // HTTPS证书文件路径
-	HTTPSKeyPath   string        // HTTPS签名文件路径
-	Handler        http.Handler  // 默认的处理函数
-	ReadTimeout    time.Duration // 读取超时
-	WriteTimeout   time.Duration // 写入超时
-	IdleTimeout    time.Duration // 等待超时
-	MaxHeaderBytes int           // 最大的header长度
-	TLSConfig      tls.Config
-	KeepAlive      bool
-
-	// 静态文件配置
-	IndexFiles        []string         // 默认访问的文件列表
-	IndexFolder       bool             // 如果访问目录是否显示目录列表
-	ServerAgent       string           // Server Agent
-	ServerRoot        string           // 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
-	SearchPaths       []string         // 静态文件搜索目录(包含ServerRoot，按照优先级进行排序)
-	StaticPaths       []staticPathItem // 静态文件目录映射(按照优先级进行排序)
-	FileServerEnabled bool             // 是否允许静态文件服务(通过静态文件服务方法调用自动识别)
-
-	// COOKIE
-	CookieMaxAge int    // Cookie有效期
-	CookiePath   string // Cookie有效Path(注意同时也会影响SessionID)
-	CookieDomain string // Cookie有效Domain(注意同时也会影响SessionID)
-
-	// SESSION
-	SessionMaxAge int    // Session有效期
-	SessionIdName string // SessionId名称
-
-	// IP访问控制
-	DenyIps  []string // 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
-	AllowIps []string // 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
-
-	// 路由访问控制
-	DenyRoutes []string          // 不允许访问的路由规则列表
-	Rewrites   map[string]string // URI Rewrite重写配置
-
-	// 日志配置
-	LogPath          string     // 存放日志的目录路径(默认为空，表示不写文件)
-	LogHandler       LogHandler // 自定义日志处理回调方法(默认为空)
-	LogStdout        bool       // 是否打印日志到终端(默认开启)
-	ErrorLogEnabled  bool       // 是否开启error log(默认开启)
-	AccessLogEnabled bool       // 是否开启access log(默认关闭)
-
-	// 其他设置
-	NameToUriType     int      // 服务注册时对象和方法名称转换为URI时的规则
-	GzipContentTypes  []string // 允许进行gzip压缩的文件类型
-	DumpRouteMap      bool     // 是否在程序启动时默认打印路由表信息
-	RouterCacheExpire int      // 路由检索缓存过期时间(秒)
+	Addr              string            // 监听IP和端口，监听本地所有IP使用":端口"(支持多个地址，使用","号分隔)
+	HTTPSAddr         string            // HTTPS服务监听地址(支持多个地址，使用","号分隔)
+	HTTPSCertPath     string            // HTTPS证书文件路径
+	HTTPSKeyPath      string            // HTTPS签名文件路径
+	Handler           http.Handler      // 默认的处理函数
+	ReadTimeout       time.Duration     // 读取超时
+	WriteTimeout      time.Duration     // 写入超时
+	IdleTimeout       time.Duration     // 等待超时
+	MaxHeaderBytes    int               // 最大的header长度
+	TLSConfig         tls.Config        // HTTPS证书配置
+	KeepAlive         bool              // 是否开启长连接
+	ServerAgent       string            // Server Agent
+	Rewrites          map[string]string // URI Rewrite重写配置
+	IndexFiles        []string          // Static: 默认访问的文件列表
+	IndexFolder       bool              // Static: 如果访问目录是否显示目录列表
+	ServerRoot        string            // Static: 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
+	SearchPaths       []string          // Static: 静态文件搜索目录(包含ServerRoot，按照优先级进行排序)
+	StaticPaths       []staticPathItem  // Static: 静态文件目录映射(按照优先级进行排序)
+	FileServerEnabled bool              // Static: 是否允许静态文件服务(通过静态文件服务方法调用自动识别)
+	CookieMaxAge      int64             // Cookie: 有效期(秒)
+	CookiePath        string            // Cookie: 有效Path(注意同时也会影响SessionID)
+	CookieDomain      string            // Cookie: 有效Domain(注意同时也会影响SessionID)
+	SessionMaxAge     int64             // Session: 有效期(秒)
+	SessionIdName     string            // Session: SessionId
+	DenyIps           []string          // Security: 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
+	AllowIps          []string          // Security: 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
+	DenyRoutes        []string          // Security: 不允许访问的路由规则列表
+	LogPath           string            // Logging: 存放日志的目录路径(默认为空，表示不写文件)
+	LogHandler        LogHandler        // Logging: 日志配置: 自定义日志处理回调方法(默认为空)
+	LogStdout         bool              // Logging: 是否打印日志到终端(默认开启)
+	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
+	AccessLogEnabled  bool              // Logging: 是否开启access log(默认关闭)
+	NameToUriType     int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
+	GzipContentTypes  []string          // Mess: 允许进行gzip压缩的文件类型
+	DumpRouteMap      bool              // Mess: 是否在程序启动时默认打印路由表信息
+	RouterCacheExpire int               // Mess: 路由检索缓存过期时间(秒)
 }
 
 // 默认HTTP Server配置
@@ -101,7 +86,7 @@ var defaultServerConfig = ServerConfig{
 	KeepAlive:         true,
 	IndexFiles:        []string{"index.html", "index.htm"},
 	IndexFolder:       false,
-	ServerAgent:       "gf",
+	ServerAgent:       "gf http server",
 	ServerRoot:        "",
 	StaticPaths:       make([]staticPathItem, 0),
 	FileServerEnabled: false,
