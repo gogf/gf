@@ -107,11 +107,11 @@ func (c *memCache) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
 // getMilliExpire converts parameter <duration> to int type in milliseconds.
 //
 // Note that there's some performance cost in type assertion here, but it's valuable.
-func (c *memCache) getMilliExpire(duration interface{}) int {
+func (c *memCache) getMilliExpire(duration interface{}) int64 {
 	if d, ok := duration.(time.Duration); ok {
-		return int(d.Nanoseconds() / 1000000)
+		return d.Nanoseconds() / 1000000
 	} else {
-		return duration.(int)
+		return gconv.Int64(duration)
 	}
 }
 
@@ -158,9 +158,9 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, durati
 }
 
 // getInternalExpire returns the expire time with given expire duration in milliseconds.
-func (c *memCache) getInternalExpire(expire int) int64 {
+func (c *memCache) getInternalExpire(expire int64) int64 {
 	if expire != 0 {
-		return gtime.Millisecond() + int64(expire)
+		return gtime.Millisecond() + expire
 	} else {
 		return gDEFAULT_MAX_EXPIRE
 	}
