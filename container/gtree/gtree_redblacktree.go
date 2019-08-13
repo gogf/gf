@@ -456,15 +456,26 @@ func (tree *RedBlackTree) Iterator(f func(key, value interface{}) bool) {
 	tree.IteratorAsc(f)
 }
 
+// IteratorFrom is alias of IteratorAscFrom.
+func (tree *RedBlackTree) IteratorFrom(key interface{}, f func(key, value interface{}) bool) {
+	tree.IteratorAscFrom(key, f)
+}
+
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *RedBlackTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.leftNode()
-	if node == nil {
-		return
-	}
+	tree.doIteratorAsc(tree.leftNode(), f)
+}
+
+func (tree *RedBlackTree) IteratorAscFrom(key interface{}, f func(key, value interface{}) bool) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	tree.doIteratorAsc(tree.doSearch(key), f)
+}
+
+func (tree *RedBlackTree) doIteratorAsc(node *RedBlackTreeNode, f func(key, value interface{}) bool) {
 loop:
 	if node == nil {
 		return
@@ -495,10 +506,16 @@ loop:
 func (tree *RedBlackTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.rightNode()
-	if node == nil {
-		return
-	}
+	tree.doIteratorDesc(tree.rightNode(), f)
+}
+
+func (tree *RedBlackTree) IteratorDescFrom(key interface{}, f func(key, value interface{}) bool) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	tree.doIteratorDesc(tree.doSearch(key), f)
+}
+
+func (tree *RedBlackTree) doIteratorDesc(node *RedBlackTreeNode, f func(key, value interface{}) bool) {
 loop:
 	if node == nil {
 		return
@@ -536,7 +553,7 @@ func (tree *RedBlackTree) Clear() {
 func (tree *RedBlackTree) String() string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	str := "RedBlackTree\n"
+	str := ""
 	if tree.size != 0 {
 		tree.output(tree.root, "", true, &str)
 	}
