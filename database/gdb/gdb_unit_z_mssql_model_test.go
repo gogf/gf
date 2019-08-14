@@ -8,6 +8,7 @@ package gdb_test
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -406,6 +407,14 @@ func Test_Model_Struct_Mssql(t *testing.T) {
 
 		n, _ := res.RowsAffected()
 		gtest.Assert(n, 1)
+
+		res, err = msdb.Table(table).Data("create_time", "2018-10-10 00:01:10").Where("id = ?", 2).Update()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		n, _ = res.RowsAffected()
+		gtest.Assert(n, 1)
 	})
 
 	gtest.Case(t, func() {
@@ -432,6 +441,7 @@ func Test_Model_Struct_Mssql(t *testing.T) {
 		if err != nil {
 			gtest.Fatal(err)
 		}
+		fmt.Println("id=1 ", user.CreateTime.String())
 		gtest.Assert(user.NickName, "T111")
 		gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
 	})
@@ -444,11 +454,12 @@ func Test_Model_Struct_Mssql(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		user := new(User)
-		err := msdb.Table(table).Where("id=1").Struct(user)
+		err := msdb.Table(table).Where("id=2").Struct(user)
 		if err != nil {
 			gtest.Fatal(err)
 		}
-		gtest.Assert(user.NickName, "T111")
+		fmt.Println("id=2 ", user.CreateTime.String())
+		gtest.Assert(user.NickName, "T2")
 		gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
 	})
 
@@ -875,11 +886,11 @@ func Test_Model_Limit_Mssql(t *testing.T) {
 		if err != nil {
 			gtest.Fatal(err)
 		}
-
+		fmt.Println(result[0]["CREATE_TIME"].String(), result[0]["CREATE_TIME"].GTime().String(), result[0]["CREATE_TIME"].Time().String())
 		gtest.Assert(len(result), 3)
 		gtest.Assert(result[0]["ID"].Int(), 1)
 		gtest.Assert(result[0]["NICKNAME"].String(), "T1")
-		gtest.Assert(result[0]["CREATE_TIME"].String(), "2018-10-10 00:01:10")
+		gtest.Assert(result[0]["CREATE_TIME"].GTime().String(), "2018-10-10 00:01:10")
 		//gtest.Assert(result[0]["CREATE_TIME"].GTime("Y-m-d H:i:s").String(), "2018-10-10 00:01:10")
 
 		gtest.Assert(result[1]["ID"].Int(), 2)
