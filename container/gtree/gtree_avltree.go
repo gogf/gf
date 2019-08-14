@@ -436,8 +436,8 @@ func (tree *AVLTree) Iterator(f func(key, value interface{}) bool) {
 }
 
 // IteratorFrom is alias of IteratorAscFrom.
-func (tree *AVLTree) IteratorFrom(key interface{}, f func(key, value interface{}) bool) {
-	tree.IteratorAscFrom(key, f)
+func (tree *AVLTree) IteratorFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.IteratorAscFrom(key, match, f)
 }
 
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
@@ -448,11 +448,21 @@ func (tree *AVLTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.doIteratorAsc(tree.bottom(0), f)
 }
 
-func (tree *AVLTree) IteratorAscFrom(key interface{}, f func(key, value interface{}) bool) {
+// IteratorAscFrom iterates the tree in ascending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *AVLTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node, _ := tree.doSearch(key)
-	tree.doIteratorAsc(node, f)
+	node, found := tree.doSearch(key)
+	if match {
+		if found {
+			tree.doIteratorAsc(node, f)
+		}
+	} else {
+		tree.doIteratorAsc(node, f)
+	}
 }
 
 func (tree *AVLTree) doIteratorAsc(node *AVLTreeNode, f func(key, value interface{}) bool) {
@@ -472,11 +482,21 @@ func (tree *AVLTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.doIteratorDesc(tree.bottom(1), f)
 }
 
-func (tree *AVLTree) IteratorDescFrom(key interface{}, f func(key, value interface{}) bool) {
+// IteratorDescFrom iterates the tree in descending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *AVLTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node, _ := tree.doSearch(key)
-	tree.doIteratorDesc(node, f)
+	node, found := tree.doSearch(key)
+	if match {
+		if found {
+			tree.doIteratorDesc(node, f)
+		}
+	} else {
+		tree.doIteratorDesc(node, f)
+	}
 }
 
 func (tree *AVLTree) doIteratorDesc(node *AVLTreeNode, f func(key, value interface{}) bool) {

@@ -71,7 +71,7 @@ func UnpackContent(content []byte) ([]*File, error) {
 	}
 	array := make([]*File, len(reader.File))
 	for i, file := range reader.File {
-		array[i] = &File{zipFile: file}
+		array[i] = &File{file: file}
 	}
 	return array, nil
 }

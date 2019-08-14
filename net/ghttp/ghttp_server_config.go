@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gogf/gf/os/gres"
+
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 )
@@ -28,7 +30,7 @@ const (
 	gDEFAULT_COOKIE_MAX_AGE            = 86400 * 365   // 默认cookie有效期(一年)
 	gDEFAULT_SESSION_MAX_AGE           = 86400         // 默认session有效期(一天)
 	gDEFAULT_SESSION_ID_NAME           = "gfsessionid" // 默认存放Cookie中的SessionId名称
-	gCHANGE_CONFIG_WHILE_RUNNING_ERROR = "cannot be changed while running"
+	gCHANGE_CONFIG_WHILE_RUNNING_ERROR = "server's configuration cannot be changed while running"
 )
 
 // 自定义日志处理方法类型
@@ -48,6 +50,7 @@ type ServerConfig struct {
 	TLSConfig         tls.Config        // HTTPS证书配置
 	KeepAlive         bool              // 是否开启长连接
 	ServerAgent       string            // Server Agent
+	Resource          *gres.Resource    // 资源文件对象
 	Rewrites          map[string]string // URI Rewrite重写配置
 	IndexFiles        []string          // Static: 默认访问的文件列表
 	IndexFolder       bool              // Static: 如果访问目录是否显示目录列表

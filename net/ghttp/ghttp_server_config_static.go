@@ -4,13 +4,15 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 静态文件搜索优先级: ServerPaths > ServerRoot > SearchPath
+// 静态文件搜索优先级: Resource > ServerPaths > ServerRoot > SearchPath
 
 package ghttp
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/os/gfile"
@@ -22,6 +24,15 @@ import (
 type staticPathItem struct {
 	prefix string // 映射的URI前缀
 	path   string // 静态文件目录绝对路径
+}
+
+// 设置http server参数 - Resource
+func (s *Server) SetResource(resource *gres.Resource) {
+	if s.Status() == SERVER_STATUS_RUNNING {
+		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+		return
+	}
+	s.config.Resource = resource
 }
 
 // 设置http server参数 - IndexFiles，默认展示文件，如：index.html, index.htm
@@ -57,10 +68,13 @@ func (s *Server) SetServerRoot(root string) {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	// RealPath的作用除了校验地址正确性以外，还转换分隔符号为当前系统正确的文件分隔符号
-	realPath, err := gfile.Search(root)
-	if err != nil {
-		glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: %s`, err.Error()))
+	realPath := root
+	if s.config.Resource == nil {
+		if p, err := gfile.Search(root); err != nil {
+			glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: %s`, err.Error()))
+		} else {
+			realPath = p
+		}
 	}
 	glog.Debug("[ghttp] SetServerRoot path:", realPath)
 	s.config.SearchPaths = []string{strings.TrimRight(realPath, gfile.Separator)}
@@ -73,9 +87,13 @@ func (s *Server) AddSearchPath(path string) {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	realPath, err := gfile.Search(path)
-	if err != nil {
-		glog.Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: %s`, err.Error()))
+	realPath := path
+	if s.config.Resource == nil {
+		if p, err := gfile.Search(path); err != nil {
+			glog.Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: %s`, err.Error()))
+		} else {
+			realPath = p
+		}
 	}
 	s.config.SearchPaths = append(s.config.SearchPaths, realPath)
 	s.config.FileServerEnabled = true
@@ -87,9 +105,13 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	realPath, err := gfile.Search(path)
-	if err != nil {
-		glog.Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: %s`, err.Error()))
+	realPath := path
+	if s.config.Resource == nil {
+		if p, err := gfile.Search(path); err != nil {
+			glog.Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: %s`, err.Error()))
+		} else {
+			realPath = p
+		}
 	}
 	addItem := staticPathItem{
 		prefix: prefix,

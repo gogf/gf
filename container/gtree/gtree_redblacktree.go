@@ -457,8 +457,8 @@ func (tree *RedBlackTree) Iterator(f func(key, value interface{}) bool) {
 }
 
 // IteratorFrom is alias of IteratorAscFrom.
-func (tree *RedBlackTree) IteratorFrom(key interface{}, f func(key, value interface{}) bool) {
-	tree.IteratorAscFrom(key, f)
+func (tree *RedBlackTree) IteratorFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.IteratorAscFrom(key, match, f)
 }
 
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
@@ -469,11 +469,21 @@ func (tree *RedBlackTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.doIteratorAsc(tree.leftNode(), f)
 }
 
-func (tree *RedBlackTree) IteratorAscFrom(key interface{}, f func(key, value interface{}) bool) {
+// IteratorAscFrom iterates the tree in ascending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *RedBlackTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node, _ := tree.doSearch(key)
-	tree.doIteratorAsc(node, f)
+	node, found := tree.doSearch(key)
+	if match {
+		if found {
+			tree.doIteratorAsc(node, f)
+		}
+	} else {
+		tree.doIteratorAsc(node, f)
+	}
 }
 
 func (tree *RedBlackTree) doIteratorAsc(node *RedBlackTreeNode, f func(key, value interface{}) bool) {
@@ -510,11 +520,21 @@ func (tree *RedBlackTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.doIteratorDesc(tree.rightNode(), f)
 }
 
-func (tree *RedBlackTree) IteratorDescFrom(key interface{}, f func(key, value interface{}) bool) {
+// IteratorDescFrom iterates the tree in descending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *RedBlackTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node, _ := tree.doSearch(key)
-	tree.doIteratorDesc(node, f)
+	node, found := tree.doSearch(key)
+	if match {
+		if found {
+			tree.doIteratorDesc(node, f)
+		}
+	} else {
+		tree.doIteratorDesc(node, f)
+	}
 }
 
 func (tree *RedBlackTree) doIteratorDesc(node *RedBlackTreeNode, f func(key, value interface{}) bool) {

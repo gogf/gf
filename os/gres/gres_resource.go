@@ -45,7 +45,8 @@ func (r *Resource) Add(content []byte, prefix ...string) error {
 		namePrefix = prefix[0]
 	}
 	for i := 0; i < len(files); i++ {
-		r.tree.Set(namePrefix+files[i].zipFile.Name, files[i])
+		files[i].resource = r
+		r.tree.Set(namePrefix+files[i].file.Name, files[i])
 	}
 	return nil
 }
@@ -63,6 +64,11 @@ func (r *Resource) Load(path string, prefix ...string) error {
 
 // Get returns the file with given path.
 func (r *Resource) Get(path string) *File {
+	if path != "/" {
+		for path[len(path)-1] == '/' {
+			path = path[:len(path)-1]
+		}
+	}
 	result := r.tree.Get(path)
 	if result != nil {
 		return result.(*File)
@@ -75,6 +81,30 @@ func (r *Resource) Contains(path string) bool {
 	return r.Get(path) != nil
 }
 
+// GetWithIndex searches file with <path>, if the file is directory
+// it then does index files searching under this directory.
+//
+// GetWithIndex is usually used for http static file service.
+func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
+	if path != "/" {
+		for path[len(path)-1] == '/' {
+			path = path[:len(path)-1]
+		}
+	}
+	if file := r.Get(path); file != nil {
+		if len(indexFiles) > 0 && file.FileInfo().IsDir() {
+			var f *File
+			for _, name := range indexFiles {
+				if f = r.Get(path + "/" + name); f != nil {
+					return f
+				}
+			}
+		}
+		return file
+	}
+	return nil
+}
+
 // Scan returns the files under the given path, the parameter <path> should be a folder type.
 //
 // The pattern parameter <pattern> supports multiple file name patterns,
@@ -83,7 +113,9 @@ func (r *Resource) Contains(path string) bool {
 // It scans directory recursively if given parameter <recursive> is true.
 func (r *Resource) Scan(path string, pattern string, recursive ...bool) []*File {
 	if path != "/" {
-		path = strings.TrimRight(path, "/\\")
+		for path[len(path)-1] == '/' {
+			path = path[:len(path)-1]
+		}
 	}
 	name := ""
 	files := make([]*File, 0)
@@ -92,13 +124,24 @@ func (r *Resource) Scan(path string, pattern string, recursive ...bool) []*File 
 	for i := 0; i < len(patterns); i++ {
 		patterns[i] = strings.TrimSpace(patterns[i])
 	}
-	r.tree.IteratorFrom(path, func(key, value interface{}) bool {
+	// Used for type checking for first entry.
+	first := true
+	r.tree.IteratorFrom(path, true, func(key, value interface{}) bool {
+		if first {
+			if !value.(*File).FileInfo().IsDir() {
+				return false
+			}
+			first = false
+		}
 		name = key.(string)
+		if len(name) <= length {
+			return true
+		}
 		if path != name[:length] {
 			return false
 		}
 		if len(recursive) == 0 || !recursive[0] {
-			if strings.IndexByte(name[length:], '/') != -1 {
+			if strings.IndexByte(name[length+1:], '/') != -1 {
 				return true
 			}
 		}
