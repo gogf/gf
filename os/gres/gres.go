@@ -49,6 +49,14 @@ func Get(path string) *File {
 	return defaultResource.Get(path)
 }
 
+// GetWithIndex searches file with <path>, if the file is directory
+// it then does index files searching under this directory.
+//
+// GetWithIndex is usually used for http static file service.
+func GetWithIndex(path string, indexFiles []string) *File {
+	return defaultResource.GetWithIndex(path, indexFiles)
+}
+
 // Contains checks whether the <path> exists in the default resource object.
 func Contains(path string) bool {
 	return defaultResource.Contains(path)
