@@ -15,18 +15,20 @@ import (
 )
 
 type File struct {
-	zipFile *zip.File
+	file     *zip.File
+	reader   *bytes.Reader
+	resource *Resource
 }
 
 // Name returns the name of the file.
 func (f *File) Name() string {
-	return f.zipFile.Name
+	return f.file.Name
 }
 
 // Open returns a ReadCloser that provides access to the File's contents.
 // Multiple files may be read concurrently.
 func (f *File) Open() (io.ReadCloser, error) {
-	return f.zipFile.Open()
+	return f.file.Open()
 }
 
 // Content returns the content of the file.
@@ -45,7 +47,7 @@ func (f *File) Content() ([]byte, error) {
 
 // FileInfo returns an os.FileInfo for the FileHeader.
 func (f *File) FileInfo() os.FileInfo {
-	return f.zipFile.FileInfo()
+	return f.file.FileInfo()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

@@ -7,46 +7,34 @@
 package gres
 
 import (
-	"archive/zip"
 	"bytes"
-	"encoding/json"
-	"io"
 	"os"
 )
 
-type File struct {
-	file   *zip.File
-	reader *bytes.Reader
+// Close implements Close interface of http.File.
+func (f *File) Close() error {
+	return nil
 }
 
-// Name returns the name of the file.
-func (f *File) Name() string {
-	return f.file.Name
-}
-
-// Open returns a ReadCloser that provides access to the File's contents.
-// Multiple files may be read concurrently.
-func (f *File) Open() (io.ReadCloser, error) {
-	return f.file.Open()
-}
-
-// Content returns the content of the file.
-func (f *File) Content() ([]byte, error) {
-	reader, err := f.Open()
-	if err != nil {
-		return nil, err
+// Readdir implements Readdir interface of http.File.
+func (f *File) Readdir(count int) ([]os.FileInfo, error) {
+	files := f.resource.Scan(f.Name(), "*", false)
+	if len(files) > 0 {
+		if count < 0 || count > len(files) {
+			count = len(files)
+		}
+		infos := make([]os.FileInfo, count)
+		for k, v := range files {
+			infos[k] = v.FileInfo()
+		}
+		return infos, nil
 	}
-	defer reader.Close()
-	buffer := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buffer, reader); err != nil {
-		return nil, err
-	}
-	return buffer.Bytes(), nil
+	return nil, nil
 }
 
-// FileInfo returns an os.FileInfo for the FileHeader.
-func (f *File) FileInfo() os.FileInfo {
-	return f.file.FileInfo()
+// Stat implements Stat interface of http.File.
+func (f *File) Stat() (os.FileInfo, error) {
+	return f.FileInfo(), nil
 }
 
 // Read implements the io.Reader interface.
@@ -76,14 +64,4 @@ func (f *File) getReader() (*bytes.Reader, error) {
 		f.reader = bytes.NewReader(content)
 	}
 	return f.reader, nil
-}
-
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (f *File) MarshalJSON() ([]byte, error) {
-	info := f.FileInfo()
-	return json.Marshal(map[string]interface{}{
-		"name": f.Name(),
-		"size": info.Size(),
-		"time": info.ModTime(),
-	})
 }

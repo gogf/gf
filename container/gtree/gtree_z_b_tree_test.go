@@ -165,7 +165,7 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 
 	gtest.Case(t, func() {
 		n := 5
-		tree.IteratorFrom(5, func(key, value interface{}) bool {
+		tree.IteratorFrom(5, true, func(key, value interface{}) bool {
 			gtest.Assert(n, key)
 			gtest.Assert(n*10, value)
 			n++
@@ -173,7 +173,7 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 		})
 
 		i := 5
-		tree.IteratorAscFrom(5, func(key, value interface{}) bool {
+		tree.IteratorAscFrom(5, true, func(key, value interface{}) bool {
 			gtest.Assert(i, key)
 			gtest.Assert(i*10, value)
 			i++
@@ -181,7 +181,7 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 		})
 
 		j := 5
-		tree.IteratorDescFrom(5, func(key, value interface{}) bool {
+		tree.IteratorDescFrom(5, true, func(key, value interface{}) bool {
 			gtest.Assert(j, key)
 			gtest.Assert(j*10, value)
 			j--

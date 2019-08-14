@@ -8,5 +8,5 @@ import (
 
 func main() {
 	gres.Dump()
-	g.Dump(gres.Scan("/r", "*", true))
+	g.Dump(gres.Scan("/root/image/", "*", true))
 }

@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package gres provides resource management and packing/unpacking feature between files and bytes.
 package gres
 
 const (
@@ -23,6 +24,11 @@ var (
 	// Default resource object.
 	defaultResource = New()
 )
+
+// Default returns the default resource object.
+func Default() *Resource {
+	return defaultResource
+}
 
 // Add unpacks and adds the <content> into the default resource object.
 // The unnecessary parameter <prefix> indicates the prefix

@@ -377,8 +377,8 @@ func (tree *BTree) Iterator(f func(key, value interface{}) bool) {
 }
 
 // IteratorFrom is alias of IteratorAscFrom.
-func (tree *BTree) IteratorFrom(key interface{}, f func(key, value interface{}) bool) {
-	tree.IteratorAscFrom(key, f)
+func (tree *BTree) IteratorFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.IteratorAscFrom(key, match, f)
 }
 
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
@@ -393,11 +393,21 @@ func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.doIteratorAsc(node, node.Entries[0], 0, f)
 }
 
-func (tree *BTree) IteratorAscFrom(key interface{}, f func(key, value interface{}) bool) {
+// IteratorAscFrom iterates the tree in ascending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *BTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node, index, _ := tree.searchRecursively(tree.root, key)
-	tree.doIteratorAsc(node, node.Entries[index], index, f)
+	node, index, found := tree.searchRecursively(tree.root, key)
+	if match {
+		if found {
+			tree.doIteratorAsc(node, node.Entries[index], index, f)
+		}
+	} else {
+		tree.doIteratorAsc(node, node.Entries[index], index, f)
+	}
 }
 
 func (tree *BTree) doIteratorAsc(node *BTreeNode, entry *BTreeEntry, index int, f func(key, value interface{}) bool) {
@@ -458,11 +468,21 @@ func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.doIteratorDesc(node, entry, index, f)
 }
 
-func (tree *BTree) IteratorDescFrom(key interface{}, f func(key, value interface{}) bool) {
+// IteratorDescFrom iterates the tree in descending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node, index, _ := tree.searchRecursively(tree.root, key)
-	tree.doIteratorDesc(node, node.Entries[index], index, f)
+	node, index, found := tree.searchRecursively(tree.root, key)
+	if match {
+		if found {
+			tree.doIteratorDesc(node, node.Entries[index], index, f)
+		}
+	} else {
+		tree.doIteratorDesc(node, node.Entries[index], index, f)
+	}
 }
 
 // IteratorDesc iterates the tree in descending order with given callback function <f>.

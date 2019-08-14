@@ -168,7 +168,7 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 		r.WriteStatus(http.StatusNotFound)
 		return
 	}
-	r.Server.serveFile(r.request, path, allowIndex...)
+	r.Server.serveFile(r.request, &staticServeFile{path: path}, allowIndex...)
 }
 
 // 静态文件下载处理
@@ -188,7 +188,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
 	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, downloadName))
-	r.Server.serveFile(r.request, path)
+	r.Server.serveFile(r.request, &staticServeFile{path: path})
 }
 
 // 返回location标识，引导客户端跳转。
