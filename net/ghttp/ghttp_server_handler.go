@@ -205,7 +205,7 @@ func (s *Server) searchStaticFile(uri string) *staticServeFile {
 		}
 	}
 	// 最后通过资源对象+URI进行文件检索
-	if s.config.Resource != nil {
+	if s.config.Resource != nil && len(s.config.StaticPaths) == 0 && len(s.config.SearchPaths) == 0 {
 		file = s.config.Resource.GetWithIndex(uri, s.config.IndexFiles)
 		if file != nil {
 			return &staticServeFile{
