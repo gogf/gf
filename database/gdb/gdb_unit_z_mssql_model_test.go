@@ -565,7 +565,7 @@ func Test_Model_Scan_Mssql(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
-			CreateTime gtime.Time
+			CreateTime string
 		}
 		user := new(User)
 		err := msdb.Table(table).Where("id=1").Scan(user)
@@ -573,7 +573,7 @@ func Test_Model_Scan_Mssql(t *testing.T) {
 			gtest.Fatal(err)
 		}
 		gtest.Assert(user.NickName, "T1")
-		gtest.Assert(user.CreateTime.String(), "2018-10-10 00:01:10")
+		gtest.Assert(user.CreateTime, "2018-10-10 00:01:10")
 	})
 	gtest.Case(t, func() {
 		type User struct {
@@ -890,8 +890,7 @@ func Test_Model_Limit_Mssql(t *testing.T) {
 		gtest.Assert(len(result), 3)
 		gtest.Assert(result[0]["ID"].Int(), 1)
 		gtest.Assert(result[0]["NICKNAME"].String(), "T1")
-		gtest.Assert(result[0]["CREATE_TIME"].GTime().String(), "2018-10-10 00:01:10")
-		//gtest.Assert(result[0]["CREATE_TIME"].GTime("Y-m-d H:i:s").String(), "2018-10-10 00:01:10")
+		gtest.Assert(result[0]["CREATE_TIME"].String(), "2018-10-10 00:01:10")
 
 		gtest.Assert(result[1]["ID"].Int(), 2)
 		gtest.Assert(result[1]["NICKNAME"].String(), "T2")
