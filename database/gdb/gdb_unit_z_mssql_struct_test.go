@@ -71,7 +71,7 @@ func Test_Model_Inherit_MapToStruct_Mssql(t *testing.T) {
 		}
 		type Base struct {
 			Ids
-			CreateTime string `json:"create_time"`
+			CreateTime *gtime.Time `json:"create_time"`
 		}
 		type User struct {
 			Base

@@ -15,7 +15,11 @@ import (
 )
 
 func Test_TX_Query_Mssql(t *testing.T) {
-	tx, err := db.Begin()
+	if msdb == nil {
+		return
+	}
+
+	tx, err := msdb.Begin()
 	if err != nil {
 		gtest.Fatal(err)
 	}
@@ -43,7 +47,11 @@ func Test_TX_Query_Mssql(t *testing.T) {
 }
 
 func Test_TX_Exec_Mssql(t *testing.T) {
-	tx, err := db.Begin()
+	if msdb == nil {
+		return
+	}
+
+	tx, err := msdb.Begin()
 	if err != nil {
 		gtest.Fatal(err)
 	}
@@ -65,6 +73,10 @@ func Test_TX_Exec_Mssql(t *testing.T) {
 }
 
 func Test_TX_Commit_Mssql(t *testing.T) {
+	if msdb == nil {
+		return
+	}
+
 	if msdb == nil {
 		return
 	}
@@ -347,7 +359,7 @@ func Test_TX_Update_Mssql(t *testing.T) {
 		if value, err := msdb.Table(table).Fields("create_time").Where("id", 3).Value(); err != nil {
 			gtest.Fatal(err)
 		} else {
-			gtest.Assert(value.String(), "2010-10-10 00:00:01")
+			gtest.Assert(value.GTime().String(), "2010-10-10 00:00:01")
 		}
 	})
 }
