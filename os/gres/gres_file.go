@@ -57,5 +57,6 @@ func (f *File) MarshalJSON() ([]byte, error) {
 		"name": f.Name(),
 		"size": info.Size(),
 		"time": info.ModTime(),
+		"file": !info.IsDir(),
 	})
 }
