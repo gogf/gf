@@ -76,11 +76,6 @@ func (r *Resource) Get(path string) *File {
 	return nil
 }
 
-// Contains checks whether the <path> exists in current resource object.
-func (r *Resource) Contains(path string) bool {
-	return r.Get(path) != nil
-}
-
 // GetWithIndex searches file with <path>, if the file is directory
 // it then does index files searching under this directory.
 //
@@ -103,6 +98,20 @@ func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
 		return file
 	}
 	return nil
+}
+
+// GetContent directly returns the content of <path>.
+func (r *Resource) GetContent(path string) []byte {
+	file := r.Get(path)
+	if file != nil {
+		return file.Content()
+	}
+	return nil
+}
+
+// Contains checks whether the <path> exists in current resource object.
+func (r *Resource) Contains(path string) bool {
+	return r.Get(path) != nil
 }
 
 // Scan returns the files under the given path, the parameter <path> should be a folder type.

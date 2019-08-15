@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gogf/gf/os/gview"
+
 	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/os/gfile"
@@ -50,6 +52,7 @@ type ServerConfig struct {
 	TLSConfig         tls.Config        // HTTPS证书配置
 	KeepAlive         bool              // 是否开启长连接
 	ServerAgent       string            // Server Agent
+	View              *gview.View       // 模板引擎对象
 	Resource          *gres.Resource    // 资源文件对象
 	Rewrites          map[string]string // URI Rewrite重写配置
 	IndexFiles        []string          // Static: 默认访问的文件列表
@@ -87,6 +90,7 @@ var defaultServerConfig = ServerConfig{
 	IdleTimeout:       60 * time.Second,
 	MaxHeaderBytes:    1024,
 	KeepAlive:         true,
+	View:              gview.Instance(),
 	IndexFiles:        []string{"index.html", "index.htm"},
 	IndexFolder:       false,
 	ServerAgent:       "gf http server",
@@ -309,6 +313,15 @@ func (s *Server) SetKeepAlive(enabled bool) {
 		return
 	}
 	s.config.KeepAlive = enabled
+}
+
+// 设置模板引擎对象
+func (s *Server) SetView(view *gview.View) {
+	if s.Status() == SERVER_STATUS_RUNNING {
+		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+		return
+	}
+	s.config.View = view
 }
 
 // 获取WebServer名称
