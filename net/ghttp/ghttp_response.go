@@ -162,33 +162,61 @@ func (r *Response) WriteStatus(status int, content ...interface{}) {
 
 // 静态文件处理
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
-	// 首先判断是否给定的path已经是一个绝对路径
-	path = gfile.RealPath(path)
-	if path == "" {
-		r.WriteStatus(http.StatusNotFound)
-		return
+	serveFile := (*staticServeFile)(nil)
+	if r.Server.config.Resource != nil {
+		file := r.Server.config.Resource.Get(path)
+		if file != nil {
+			serveFile = &staticServeFile{
+				file: file,
+				dir:  file.FileInfo().IsDir(),
+			}
+		}
 	}
-	r.Server.serveFile(r.request, &staticServeFile{path: path}, allowIndex...)
+	if serveFile == nil {
+		path = gfile.RealPath(path)
+		if path == "" {
+			r.WriteStatus(http.StatusNotFound)
+			return
+		}
+		serveFile = &staticServeFile{path: path}
+	}
+	r.Server.serveFile(r.request, serveFile, allowIndex...)
 }
 
 // 静态文件下载处理
 func (r *Response) ServeFileDownload(path string, name ...string) {
-	// 首先判断是否给定的path已经是一个绝对路径
-	path = gfile.RealPath(path)
-	if path == "" {
-		r.WriteStatus(http.StatusNotFound)
-		return
-	}
+	serveFile := (*staticServeFile)(nil)
 	downloadName := ""
 	if len(name) > 0 {
 		downloadName = name[0]
-	} else {
-		downloadName = gfile.Basename(path)
+	}
+	if r.Server.config.Resource != nil {
+		file := r.Server.config.Resource.Get(path)
+		if file != nil {
+			serveFile = &staticServeFile{
+				file: file,
+				dir:  file.FileInfo().IsDir(),
+			}
+			if downloadName == "" {
+				downloadName = gfile.Basename(file.Name())
+			}
+		}
+	}
+	if serveFile == nil {
+		path = gfile.RealPath(path)
+		if path == "" {
+			r.WriteStatus(http.StatusNotFound)
+			return
+		}
+		serveFile = &staticServeFile{path: path}
+		if downloadName == "" {
+			downloadName = gfile.Basename(path)
+		}
 	}
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
 	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, downloadName))
-	r.Server.serveFile(r.request, &staticServeFile{path: path})
+	r.Server.serveFile(r.request, serveFile)
 }
 
 // 返回location标识，引导客户端跳转。
