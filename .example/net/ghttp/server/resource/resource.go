@@ -11,7 +11,6 @@ func main() {
 
 	s := g.Server()
 	s.SetIndexFolder(true)
-	s.SetFileServerEnabled(true)
 	s.SetResource(gres.Default())
 	s.SetServerRoot("/root")
 	s.SetPort(8199)

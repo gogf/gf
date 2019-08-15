@@ -33,6 +33,7 @@ func (s *Server) SetResource(resource *gres.Resource) {
 		return
 	}
 	s.config.Resource = resource
+	s.config.FileServerEnabled = true
 }
 
 // 设置http server参数 - IndexFiles，默认展示文件，如：index.html, index.htm
