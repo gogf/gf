@@ -57,6 +57,11 @@ func GetWithIndex(path string, indexFiles []string) *File {
 	return defaultResource.GetWithIndex(path, indexFiles)
 }
 
+// GetContent directly returns the content of <path> in default resource object.
+func GetContent(path string) []byte {
+	return defaultResource.GetContent(path)
+}
+
 // Contains checks whether the <path> exists in the default resource object.
 func Contains(path string) bool {
 	return defaultResource.Contains(path)

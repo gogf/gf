@@ -57,11 +57,7 @@ func (f *File) Seek(offset int64, whence int) (int64, error) {
 
 func (f *File) getReader() (*bytes.Reader, error) {
 	if f.reader == nil {
-		content, err := f.Content()
-		if err != nil {
-			return nil, err
-		}
-		f.reader = bytes.NewReader(content)
+		f.reader = bytes.NewReader(f.Content())
 	}
 	return f.reader, nil
 }

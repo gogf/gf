@@ -32,17 +32,17 @@ func (f *File) Open() (io.ReadCloser, error) {
 }
 
 // Content returns the content of the file.
-func (f *File) Content() ([]byte, error) {
+func (f *File) Content() []byte {
 	reader, err := f.Open()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	defer reader.Close()
 	buffer := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buffer, reader); err != nil {
-		return nil, err
+		return nil
 	}
-	return buffer.Bytes(), nil
+	return buffer.Bytes()
 }
 
 // FileInfo returns an os.FileInfo for the FileHeader.
