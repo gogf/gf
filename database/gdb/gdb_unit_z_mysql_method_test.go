@@ -8,11 +8,12 @@ package gdb_test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gxml"
-	"testing"
-	"time"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"

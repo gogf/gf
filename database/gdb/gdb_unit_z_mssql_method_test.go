@@ -8,11 +8,12 @@ package gdb_test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
-	"testing"
-	"time"
 )
 
 func Test_DB_Ping_Mssql(t *testing.T) {
@@ -90,7 +91,7 @@ func Test_DB_Insert_Mssql(t *testing.T) {
 
 	table := createTableMssql()
 	defer dropTableMssql(table)
-	msdb.Exec("delete from t_user")
+
 	if _, err := msdb.Insert(table, g.Map{
 		"id":          1,
 		"passport":    "t1",

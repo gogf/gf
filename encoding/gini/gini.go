@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-//Decode converts INI format to map
+// Decode converts INI format to map.
 func Decode(data []byte) (res map[string]interface{}, err error) {
 	res = make(map[string]interface{})
 	fieldMap := make(map[string]interface{})
@@ -75,7 +75,7 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 	return res, nil
 }
 
-//Encode converts map to INI format
+// Encode converts map to INI format.
 func Encode(data map[string]interface{}) (res []byte, err error) {
 	w := new(bytes.Buffer)
 
@@ -102,12 +102,11 @@ func Encode(data map[string]interface{}) (res []byte, err error) {
 	return res, nil
 }
 
-//ToJson convert INI format to JSON
+// ToJson convert INI format to JSON.
 func ToJson(data []byte) (res []byte, err error) {
 	iniMap, err := Decode(data)
 	if err != nil {
 		return nil, err
 	}
-
 	return json.Marshal(iniMap)
 }
