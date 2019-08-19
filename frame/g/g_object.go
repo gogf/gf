@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/net/gtcp"
 	"github.com/gogf/gf/net/gudp"
 	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
 )
 
@@ -40,6 +41,18 @@ func View(name ...string) *gview.View {
 // Config returns an instance of config object with specified name.
 func Config(name ...string) *gcfg.Config {
 	return gins.Config(name...)
+}
+
+// Resource returns an instance of Resource.
+// The parameter <name> is the name for the instance.
+func Resource(name ...string) *gres.Resource {
+	return gins.Resource(name...)
+}
+
+// Res is alias of Resource.
+// See Resource.
+func Res(name ...string) *gres.Resource {
+	return Resource(name...)
 }
 
 // Database returns an instance of database ORM object with specified configuration group name.

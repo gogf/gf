@@ -46,7 +46,7 @@ var (
 func (view *View) getTemplate(path string, pattern string) (tpl *template.Template, err error) {
 	r := templates.GetOrSetFuncLock(path, func() interface{} {
 		tpl = template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
-		// Scan the resource object with more high priority.
+		// Firstly checking the resource manager.
 		if files := gres.Scan(path, pattern, true); len(files) > 0 {
 			var err error
 			for _, v := range files {
@@ -60,7 +60,7 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 			}
 			return tpl
 		}
-		// Secondly scan the file system.
+		// Secondly checking the file system.
 		files, err := gfile.ScanDir(path, pattern, true)
 		if err != nil {
 			return nil
@@ -83,7 +83,7 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 // searchFile returns the found absolute path for <file>, and its template folder path.
 func (view *View) searchFile(file string) (path string, folder string, err error) {
 	separator := gfile.Separator
-	// Scan the resource object with more high priority.
+	// Firstly checking the resource manager.
 	separator = "/"
 	view.paths.RLockFunc(func(array []string) {
 		f := (*gres.File)(nil)
@@ -101,7 +101,7 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 			}
 		}
 	})
-	// Secondly scan the file system.
+	// Secondly checking the file system.
 	if path == "" {
 		view.paths.RLockFunc(func(array []string) {
 			for _, v := range array {

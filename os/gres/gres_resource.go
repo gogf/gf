@@ -114,6 +114,11 @@ func (r *Resource) Contains(path string) bool {
 	return r.Get(path) != nil
 }
 
+// IsEmpty checks and returns whether the resource manager is empty.
+func (r *Resource) IsEmpty() bool {
+	return r.tree.IsEmpty()
+}
+
 // Scan returns the files under the given path, the parameter <path> should be a folder type.
 //
 // The pattern parameter <pattern> supports multiple file name patterns,
