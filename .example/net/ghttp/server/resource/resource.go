@@ -11,12 +11,10 @@ func main() {
 	gres.Dump()
 
 	v := g.View()
-	v.SetResource(gres.Default())
 	v.SetPath("/template/layout1")
 
 	s := g.Server()
 	s.SetIndexFolder(true)
-	s.SetResource(gres.Default())
 	s.SetServerRoot("/root")
 	s.BindHandler("/template", func(r *ghttp.Request) {
 		r.Response.WriteTpl("layout.html")

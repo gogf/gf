@@ -15,8 +15,6 @@ import (
 
 	"github.com/gogf/gf/os/gview"
 
-	"github.com/gogf/gf/os/gres"
-
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 )
@@ -53,7 +51,6 @@ type ServerConfig struct {
 	KeepAlive         bool              // 是否开启长连接
 	ServerAgent       string            // Server Agent
 	View              *gview.View       // 模板引擎对象
-	Resource          *gres.Resource    // 资源文件对象
 	Rewrites          map[string]string // URI Rewrite重写配置
 	IndexFiles        []string          // Static: 默认访问的文件列表
 	IndexFolder       bool              // Static: 如果访问目录是否显示目录列表

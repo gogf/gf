@@ -12,7 +12,6 @@ func main() {
 	gres.Dump()
 
 	v := g.View()
-	v.SetResource(gres.Default())
 	v.SetPath("/template/layout2")
 	s, err := v.Parse("layout.html", g.Map{
 		"mainTpl": "main/main1.html",

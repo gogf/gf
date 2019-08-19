@@ -163,51 +163,49 @@ func (s *Server) searchStaticFile(uri string) *staticServeFile {
 				if len(uri) > len(item.prefix) && uri[len(item.prefix)] != '/' {
 					continue
 				}
-				if s.config.Resource != nil {
-					file = s.config.Resource.GetWithIndex(item.path+uri[len(item.prefix):], s.config.IndexFiles)
-					if file != nil {
-						return &staticServeFile{
-							file: file,
-							dir:  file.FileInfo().IsDir(),
-						}
-					}
-				} else {
-					path, dir = gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
-					if path != "" {
-						return &staticServeFile{
-							path: path,
-							dir:  dir,
-						}
-					}
-				}
-			}
-		}
-	}
-	// 其次查找root和search path
-	if len(s.config.SearchPaths) > 0 {
-		for _, p := range s.config.SearchPaths {
-			if s.config.Resource != nil {
-				file = s.config.Resource.GetWithIndex(p+uri, s.config.IndexFiles)
+				// 优先检索资源管理器
+				file = gres.GetWithIndex(item.path+uri[len(item.prefix):], s.config.IndexFiles)
 				if file != nil {
 					return &staticServeFile{
 						file: file,
 						dir:  file.FileInfo().IsDir(),
 					}
 				}
-			} else {
-				if path, dir = gspath.Search(p, uri, s.config.IndexFiles...); path != "" {
+				// 其次检索文件系统
+				path, dir = gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
+				if path != "" {
 					return &staticServeFile{
 						path: path,
 						dir:  dir,
 					}
 				}
+
+			}
+		}
+	}
+	// 其次查找root和search path
+	if len(s.config.SearchPaths) > 0 {
+		for _, p := range s.config.SearchPaths {
+			// 优先检索资源管理器
+			file = gres.GetWithIndex(p+uri, s.config.IndexFiles)
+			if file != nil {
+				return &staticServeFile{
+					file: file,
+					dir:  file.FileInfo().IsDir(),
+				}
+			}
+			// 其次检索文件系统
+			if path, dir = gspath.Search(p, uri, s.config.IndexFiles...); path != "" {
+				return &staticServeFile{
+					path: path,
+					dir:  dir,
+				}
 			}
 		}
 	}
 	// 最后通过资源对象+URI进行文件检索
-	if s.config.Resource != nil && len(s.config.StaticPaths) == 0 && len(s.config.SearchPaths) == 0 {
-		file = s.config.Resource.GetWithIndex(uri, s.config.IndexFiles)
-		if file != nil {
+	if len(s.config.StaticPaths) == 0 && len(s.config.SearchPaths) == 0 {
+		if file = gres.GetWithIndex(uri, s.config.IndexFiles); file != nil {
 			return &staticServeFile{
 				file: file,
 				dir:  file.FileInfo().IsDir(),

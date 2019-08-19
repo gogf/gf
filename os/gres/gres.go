@@ -22,13 +22,8 @@ func init() {
 
 var (
 	// Default resource object.
-	defaultResource = New()
+	defaultResource = Instance()
 )
-
-// Default returns the default resource object.
-func Default() *Resource {
-	return defaultResource
-}
 
 // Add unpacks and adds the <content> into the default resource object.
 // The unnecessary parameter <prefix> indicates the prefix
