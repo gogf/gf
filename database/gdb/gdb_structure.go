@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gtime"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gbinary"
@@ -54,6 +55,10 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 
 	case "bool":
 		return gconv.Bool(fieldValue)
+
+	case "datetime":
+		t, _ := gtime.StrToTime(string(fieldValue))
+		return t.String()
 
 	default:
 		// 自动识别类型, 以便默认支持更多数据库类型

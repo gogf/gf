@@ -37,3 +37,7 @@ func VarToYaml(value interface{}) ([]byte, error) {
 func VarToToml(value interface{}) ([]byte, error) {
 	return New(value).ToToml()
 }
+
+func VarToIni(value interface{}) ([]byte, error) {
+	return New(value).ToIni()
+}
