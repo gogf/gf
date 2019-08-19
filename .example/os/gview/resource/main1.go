@@ -12,7 +12,7 @@ func main() {
 	gres.Dump()
 
 	v := g.View()
-	v.SetResource(gres.Default())
+	v.SetResource(gres.Instance())
 	v.SetPath("/template/layout1")
 	s, err := v.Parse("layout.html")
 	fmt.Println(err)

@@ -28,7 +28,6 @@ type View struct {
 	paths      *garray.StringArray    // Searching path array.
 	data       map[string]interface{} // Global template variables.
 	funcMap    map[string]interface{} // Global template function map.
-	resource   *gres.Resource         // Resource management object.
 	delimiters []string               // Customized template delimiters.
 }
 
@@ -122,23 +121,14 @@ func New(path ...string) *View {
 	return view
 }
 
-// SetResource sets the resource management object for current view.
-func (view *View) SetResource(resource *gres.Resource) {
-	view.resource = resource
-	view.paths.Clear()
-	view.paths.Append("/")
-}
-
 // SetPath sets the template directory path for template file search.
 // The parameter <path> can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
 	isDir := false
 	realPath := ""
-	if view.resource != nil {
-		if file := view.resource.Get(path); file != nil {
-			realPath = path
-			isDir = file.FileInfo().IsDir()
-		}
+	if file := gres.Get(path); file != nil {
+		realPath = path
+		isDir = file.FileInfo().IsDir()
 	} else {
 		// Absolute path.
 		realPath = gfile.RealPath(path)
@@ -187,11 +177,10 @@ func (view *View) SetPath(path string) error {
 func (view *View) AddPath(path string) error {
 	isDir := false
 	realPath := ""
-	if view.resource != nil {
-		if file := view.resource.Get(path); file != nil {
-			realPath = path
-			isDir = file.FileInfo().IsDir()
-		}
+
+	if file := gres.Get(path); file != nil {
+		realPath = path
+		isDir = file.FileInfo().IsDir()
 	} else {
 		// Absolute path.
 		realPath = gfile.RealPath(path)

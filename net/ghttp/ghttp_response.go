@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gogf/gf/os/gres"
+
 	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
@@ -163,16 +165,12 @@ func (r *Response) WriteStatus(status int, content ...interface{}) {
 // 静态文件处理
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
 	serveFile := (*staticServeFile)(nil)
-	if r.Server.config.Resource != nil {
-		file := r.Server.config.Resource.Get(path)
-		if file != nil {
-			serveFile = &staticServeFile{
-				file: file,
-				dir:  file.FileInfo().IsDir(),
-			}
+	if file := gres.Get(path); file != nil {
+		serveFile = &staticServeFile{
+			file: file,
+			dir:  file.FileInfo().IsDir(),
 		}
-	}
-	if serveFile == nil {
+	} else {
 		path = gfile.RealPath(path)
 		if path == "" {
 			r.WriteStatus(http.StatusNotFound)
@@ -190,19 +188,15 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	if len(name) > 0 {
 		downloadName = name[0]
 	}
-	if r.Server.config.Resource != nil {
-		file := r.Server.config.Resource.Get(path)
-		if file != nil {
-			serveFile = &staticServeFile{
-				file: file,
-				dir:  file.FileInfo().IsDir(),
-			}
-			if downloadName == "" {
-				downloadName = gfile.Basename(file.Name())
-			}
+	if file := gres.Get(path); file != nil {
+		serveFile = &staticServeFile{
+			file: file,
+			dir:  file.FileInfo().IsDir(),
 		}
-	}
-	if serveFile == nil {
+		if downloadName == "" {
+			downloadName = gfile.Basename(file.Name())
+		}
+	} else {
 		path = gfile.RealPath(path)
 		if path == "" {
 			r.WriteStatus(http.StatusNotFound)

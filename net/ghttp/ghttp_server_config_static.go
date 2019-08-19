@@ -26,16 +26,6 @@ type staticPathItem struct {
 	path   string // 静态文件目录绝对路径
 }
 
-// 设置http server参数 - Resource
-func (s *Server) SetResource(resource *gres.Resource) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.Resource = resource
-	s.config.FileServerEnabled = true
-}
-
 // 设置http server参数 - IndexFiles，默认展示文件，如：index.html, index.htm
 func (s *Server) SetIndexFiles(index []string) {
 	if s.Status() == SERVER_STATUS_RUNNING {
@@ -70,7 +60,7 @@ func (s *Server) SetServerRoot(root string) {
 		return
 	}
 	realPath := root
-	if s.config.Resource == nil {
+	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(root); err != nil {
 			glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: %s`, err.Error()))
 		} else {
@@ -89,7 +79,7 @@ func (s *Server) AddSearchPath(path string) {
 		return
 	}
 	realPath := path
-	if s.config.Resource == nil {
+	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
 			glog.Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: %s`, err.Error()))
 		} else {
@@ -107,7 +97,7 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 		return
 	}
 	realPath := path
-	if s.config.Resource == nil {
+	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
 			glog.Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: %s`, err.Error()))
 		} else {
