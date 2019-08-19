@@ -64,6 +64,9 @@ func (r *Resource) Load(path string, prefix ...string) error {
 
 // Get returns the file with given path.
 func (r *Resource) Get(path string) *File {
+	if path == "" {
+		return nil
+	}
 	if path != "/" {
 		for path[len(path)-1] == '/' {
 			path = path[:len(path)-1]
