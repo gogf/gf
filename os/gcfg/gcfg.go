@@ -321,7 +321,7 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 			j.SetViolenceCheck(c.vc.Val())
 			// Add monitor for this configuration file,
 			// any changes of this file will refresh its cache in Config object.
-			if !gres.Contains(filePath) {
+			if filePath != "" && !gres.Contains(filePath) {
 				_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 					c.jsons.Remove(name)
 				})
