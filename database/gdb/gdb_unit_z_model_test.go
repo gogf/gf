@@ -20,7 +20,8 @@ func Test_Model_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.Case(t, func() {
-		result, err := db.Table(table).Filter().Data(g.Map{
+		user := db.From(table)
+		result, err := user.Filter().Data(g.Map{
 			"id":          1,
 			"uid":         1,
 			"passport":    "t1",
@@ -264,6 +265,18 @@ func Test_Model_Safe(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		md := db.Table(table).Safe(true).Where("id IN(?)", g.Slice{1, 3})
+		count, err := md.Count()
+		gtest.Assert(err, nil)
+		gtest.Assert(count, 2)
+
+		md.And("id = ?", 1)
+		count, err = md.Count()
+		gtest.Assert(err, nil)
+		gtest.Assert(count, 2)
+	})
+
+	gtest.Case(t, func() {
+		md := db.Table(table).Safe().Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		gtest.Assert(err, nil)
 		gtest.Assert(count, 2)
@@ -815,4 +828,27 @@ func Test_Model_Delete(t *testing.T) {
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, INIT_DATA_SIZE-2)
 	})
+}
+
+func Test_Model_Offset(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	result, err := db.Table(table).Limit(2).Offset(5).OrderBy("id").Select()
+	gtest.Assert(err, nil)
+	gtest.Assert(len(result), 2)
+	gtest.Assert(result[0]["id"], 6)
+	gtest.Assert(result[1]["id"], 7)
+}
+
+func Test_Model_ForPage(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	db.SetDebug(true)
+	defer db.SetDebug(false)
+	result, err := db.Table(table).ForPage(3, 3).OrderBy("id").Select()
+	gtest.Assert(err, nil)
+	gtest.Assert(len(result), 3)
+	gtest.Assert(result[0]["id"], 7)
+	gtest.Assert(result[1]["id"], 8)
 }

@@ -16,8 +16,10 @@ env:
 services:
 - mysql
 - redis-server
+- postgresql
 
 addons:
+  postgresql: "9.4"
   hosts:
   - local
 
@@ -30,6 +32,7 @@ install:
 before_script:
 - find . -name "*.go" | xargs gofmt -w
 - git diff --name-only --exit-code || exit 1
+- psql -c 'create database travis_ci_test;' -U postgres
 
 script:
 - GOARCH=386 go test -v ./... || exit 1
