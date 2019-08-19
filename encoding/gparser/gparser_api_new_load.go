@@ -47,3 +47,7 @@ func LoadYaml(data interface{}, safe ...bool) (*Parser, error) {
 func LoadToml(data interface{}, safe ...bool) (*Parser, error) {
 	return gjson.LoadToml(data, safe...)
 }
+
+func LoadIni(data interface{}, safe ...bool) (*Parser, error) {
+	return gjson.LoadIni(data, safe...)
+}
