@@ -12,17 +12,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
-
-	"github.com/gogf/gf/os/gfile"
-
+	"github.com/gogf/gf/encoding/gini"
 	"github.com/gogf/gf/encoding/gtoml"
 	"github.com/gogf/gf/encoding/gxml"
 	"github.com/gogf/gf/encoding/gyaml"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/os/gfcache"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
+	"reflect"
 )
 
 // New creates a Json object with any variable type of <data>,
@@ -147,6 +146,10 @@ func LoadToml(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContent("toml", gconv.Bytes(data), safe...)
 }
 
+func LoadIni(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("ini", gconv.Bytes(data), safe...)
+}
+
 func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 	var err error
 	var result interface{}
@@ -173,7 +176,10 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 		if data, err = gtoml.ToJson(data); err != nil {
 			return nil, err
 		}
-
+	case "ini", ".ini":
+		if data, err = gini.ToJson(data); err != nil {
+			return nil, err
+		}
 	default:
 		err = errors.New("unsupported type for loading")
 	}
@@ -211,6 +217,8 @@ func checkDataType(content []byte) string {
 		return "xml"
 	} else if gregex.IsMatch(`^[\s\t]*[\w\-]+\s*:\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*:\s*.+`, content) {
 		return "yml"
+	} else if (gregex.IsMatch(`^[\s\t\[*\]].?*[\w\-]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t\[*\]]*[\w\-]+\s*=\s*.+`, content)) && gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*=*\"*.+\"`, content) == false && gregex.IsMatch(`^[\s\t]*[\w\-]+\s*=*\"*.+\"`, content) == false {
+		return "ini"
 	} else if gregex.IsMatch(`^[\s\t]*[\w\-]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*=\s*.+`, content) {
 		return "toml"
 	} else {

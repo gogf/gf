@@ -32,17 +32,20 @@ var (
 
 // 初始化连接参数。
 // 测试前需要修改连接参数。
-func init() {
+func InitMysql() {
 	node := gdb.ConfigNode{
-		Host:    "127.0.0.1",
-		Port:    "3306",
-		User:    "root",
-		Pass:    "",
-		Name:    "",
-		Type:    "mysql",
-		Role:    "master",
-		Charset: "utf8",
-		Weight:  1,
+		Host:             "127.0.0.1",
+		Port:             "3306",
+		User:             "root",
+		Pass:             "",
+		Name:             "",
+		Type:             "mysql",
+		Role:             "master",
+		Charset:          "utf8",
+		Weight:           1,
+		MaxIdleConnCount: 10,
+		MaxOpenConnCount: 10,
+		MaxConnLifetime:  600,
 	}
 	// 作者本地测试hack
 	if hostname, _ := os.Hostname(); hostname == "ijohn" {

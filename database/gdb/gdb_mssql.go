@@ -14,10 +14,9 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/text/gregex"
 	"strconv"
 	"strings"
-
-	"github.com/gogf/gf/text/gregex"
 )
 
 // 数据库链接对象
@@ -151,7 +150,7 @@ func (db *dbMssql) parseSql(sql string) string {
 // 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值暂无用途(默认为字段数据类型).
 func (db *dbMssql) getTableFields(table string) (fields map[string]string, err error) {
 	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
-	v := db.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
+	v := db.cache.GetOrSetFunc("mssql_table_fields_"+table, func() interface{} {
 		result := (Result)(nil)
 		result, err = db.GetAll(fmt.Sprintf(`
 		SELECT c.name as FIELD, CASE t.name 
