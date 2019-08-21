@@ -6,7 +6,9 @@
 
 package gcache
 
-import "github.com/gogf/gf/os/gtime"
+import (
+	"github.com/gogf/gf/os/gtime"
+)
 
 // IsExpired checks whether <item> is expired.
 func (item *memCacheItem) IsExpired() bool {

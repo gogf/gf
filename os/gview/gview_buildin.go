@@ -79,6 +79,7 @@ func (view *View) funcInclude(file string, data ...map[string]interface{}) strin
 	if len(data) > 0 {
 		m = data[0]
 	}
+	// It will search the file internally.
 	content, err := view.Parse(file, m)
 	if err != nil {
 		return err.Error()

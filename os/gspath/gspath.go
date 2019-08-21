@@ -60,6 +60,9 @@ func New(path string, cache bool) *SPath {
 
 // 创建/获取一个单例的搜索对象, root必须为目录的绝对路径
 func Get(root string, cache bool) *SPath {
+	if root == "" {
+		root = "/"
+	}
 	return pathsMap.GetOrSetFuncLock(root, func() interface{} {
 		return New(root, cache)
 	}).(*SPath)

@@ -4,8 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package strutils provides some string functions for internal usage.
-package strutils
+// Package utilstr provides some string functions for internal usage.
+package utilstr
 
 import "strings"
 

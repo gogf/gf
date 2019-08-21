@@ -36,12 +36,12 @@ func (r *Response) WriteTplContent(content string, params ...gview.Params) error
 
 // 解析模板文件，并返回模板内容
 func (r *Response) ParseTpl(tpl string, params ...gview.Params) (string, error) {
-	return gins.View().Parse(tpl, r.buildInVars(params...))
+	return r.Server.config.View.Parse(tpl, r.buildInVars(params...))
 }
 
 // 解析并返回模板内容
 func (r *Response) ParseTplContent(content string, params ...gview.Params) (string, error) {
-	return gins.View().ParseContent(content, r.buildInVars(params...))
+	return r.Server.config.View.ParseContent(content, r.buildInVars(params...))
 }
 
 // 内置变量/对象

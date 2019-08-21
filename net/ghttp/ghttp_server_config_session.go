@@ -9,7 +9,7 @@ package ghttp
 import "github.com/gogf/gf/os/glog"
 
 // 设置http server参数 - SessionMaxAge
-func (s *Server) SetSessionMaxAge(age int) {
+func (s *Server) SetSessionMaxAge(age int64) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
@@ -27,7 +27,7 @@ func (s *Server) SetSessionIdName(name string) {
 }
 
 // 获取http server参数 - SessionMaxAge
-func (s *Server) GetSessionMaxAge() int {
+func (s *Server) GetSessionMaxAge() int64 {
 	return s.config.SessionMaxAge
 }
 

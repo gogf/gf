@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
@@ -71,6 +72,12 @@ func View(name ...string) *gview.View {
 // The parameter <name> is the name for the instance.
 func Config(name ...string) *gcfg.Config {
 	return gcfg.Instance(name...)
+}
+
+// Resource returns an instance of Resource.
+// The parameter <name> is the name for the instance.
+func Resource(name ...string) *gres.Resource {
+	return gres.Instance(name...)
 }
 
 // 数据库操作对象，使用了连接池

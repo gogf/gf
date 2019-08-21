@@ -11,7 +11,7 @@ import (
 )
 
 // 设置http server参数 - CookieMaxAge
-func (s *Server) SetCookieMaxAge(age int) {
+func (s *Server) SetCookieMaxAge(age int64) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
@@ -38,7 +38,7 @@ func (s *Server) SetCookieDomain(domain string) {
 }
 
 // 获取http server参数 - CookieMaxAge
-func (s *Server) GetCookieMaxAge() int {
+func (s *Server) GetCookieMaxAge() int64 {
 	return s.config.CookieMaxAge
 }
 

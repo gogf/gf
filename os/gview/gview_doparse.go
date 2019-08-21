@@ -10,11 +10,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 	"text/template"
+
+	"github.com/gogf/gf/os/gfcache"
+
+	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/ghash"
-	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/glog"
@@ -41,12 +45,26 @@ var (
 // if the template files under <path> changes (recursively).
 func (view *View) getTemplate(path string, pattern string) (tpl *template.Template, err error) {
 	r := templates.GetOrSetFuncLock(path, func() interface{} {
-		files := ([]string)(nil)
-		files, err = gfile.ScanDir(path, pattern, true)
+		tpl = template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+		// Firstly checking the resource manager.
+		if files := gres.Scan(path, pattern, true); len(files) > 0 {
+			var err error
+			for _, v := range files {
+				if v.FileInfo().IsDir() {
+					continue
+				}
+				_, err = tpl.New(v.FileInfo().Name()).Parse(string(v.Content()))
+				if err != nil {
+					glog.Error(err)
+				}
+			}
+			return tpl
+		}
+		// Secondly checking the file system.
+		files, err := gfile.ScanDir(path, pattern, true)
 		if err != nil {
 			return nil
 		}
-		tpl = template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 		if tpl, err = tpl.ParseFiles(files...); err != nil {
 			return nil
 		}
@@ -64,18 +82,42 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 
 // searchFile returns the found absolute path for <file>, and its template folder path.
 func (view *View) searchFile(file string) (path string, folder string, err error) {
+	separator := gfile.Separator
+	// Firstly checking the resource manager.
+	separator = "/"
 	view.paths.RLockFunc(func(array []string) {
+		f := (*gres.File)(nil)
 		for _, v := range array {
-			if path, _ = gspath.Search(v, file); path != "" {
-				folder = v
+			v = strings.TrimRight(v, separator)
+			if f = gres.Get(v + separator + file); f != nil {
+				path = f.Name()
+				folder = gfile.Dir(path)
 				break
 			}
-			if path, _ = gspath.Search(v+gfile.Separator+"template", file); path != "" {
-				folder = v + gfile.Separator + "template"
+			if f = gres.Get(v + separator + "template" + separator + file); f != nil {
+				path = f.Name()
+				folder = gfile.Dir(path)
 				break
 			}
 		}
 	})
+	// Secondly checking the file system.
+	if path == "" {
+		view.paths.RLockFunc(func(array []string) {
+			for _, v := range array {
+				v = strings.TrimRight(v, separator)
+				if path, _ = gspath.Search(v, file); path != "" {
+					folder = v
+					break
+				}
+				if path, _ = gspath.Search(v+separator+"template", file); path != "" {
+					folder = v + separator + "template"
+					break
+				}
+			}
+		})
+	}
+
 	if path == "" {
 		buffer := bytes.NewBuffer(nil)
 		if view.paths.Len() > 0 {
@@ -83,9 +125,13 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 			view.paths.RLockFunc(func(array []string) {
 				index := 1
 				for _, v := range array {
+					v = strings.TrimRight(v, "/")
+					if v == "" {
+						v = "/"
+					}
 					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
 					index++
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"template"))
+					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, strings.TrimRight(v, "/")+separator+"template"))
 					index++
 				}
 			})
@@ -116,7 +162,11 @@ func (view *View) Parse(file string, params ...Params) (parsed string, err error
 	}
 	// Using memory lock to ensure concurrent safety for template parsing.
 	gmlock.LockFunc("gview-parsing:"+folder, func() {
-		tpl, err = tpl.Parse(gfcache.GetContents(path))
+		if file := gres.Get(path); file != nil {
+			tpl, err = tpl.Parse(string(file.Content()))
+		} else {
+			tpl, err = tpl.Parse(gfcache.GetContents(path))
+		}
 	})
 	if err != nil {
 		return "", err
