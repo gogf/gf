@@ -172,6 +172,19 @@ func (v *Var) Interfaces() []interface{} {
 	return gconv.Interfaces(v.Val())
 }
 
+// Vars converts and returns <v> as []*Var.
+func (v *Var) Vars() []*Var {
+	array := gconv.Interfaces(v.Val())
+	if len(array) == 0 {
+		return nil
+	}
+	vars := make([]*Var, len(array))
+	for k, v := range array {
+		vars[k] = New(v)
+	}
+	return vars
+}
+
 // Time converts and returns <v> as time.Time.
 // The parameter <format> specifies the format of the time string using gtime,
 // eg: Y-m-d H:i:s.

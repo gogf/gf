@@ -57,9 +57,19 @@ func (s *Session) init() {
 		s.server = s.request.Server
 		if id := s.request.GetSessionId(); id != "" {
 			if v := s.server.sessions.Get(id); v != nil {
+				// 纯内存查询
 				s.id = id
 				s.data = v.(*gmap.StrAnyMap)
 				return
+			} else {
+				// 持久化恢复
+				data := s.server.sessionStorage.Get([]byte(id))
+				if data != nil {
+					s.id = id
+					s.data = gmap.NewStrAnyMap(true)
+					s.Restore(data)
+					return
+				}
 			}
 		}
 		// 否则执行初始化创建
@@ -165,6 +175,16 @@ func (s *Session) Clear() {
 // 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
 func (s *Session) UpdateExpire() {
 	if len(s.id) > 0 && s.data.Size() > 0 {
+		// 优先持久化存储
+		if s.dirty {
+			data, _ := s.Export()
+			s.server.sessionStorage.Set(
+				[]byte(s.id),
+				data,
+				time.Duration(s.server.GetSessionMaxAge())*time.Second,
+			)
+		}
+		// 其次更新内存TTL
 		s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
 	}
 }

@@ -22,11 +22,6 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-const (
-	gDEFAULT_POOL_IDLE_TIMEOUT  = 60 * time.Second
-	gDEFAULT_POOL_MAX_LIFE_TIME = 60 * time.Second
-)
-
 // Redis client.
 type Redis struct {
 	pool   *redis.Pool // Underlying connection pool.
@@ -56,9 +51,12 @@ type PoolStats struct {
 	redis.PoolStats
 }
 
+const (
+	gDEFAULT_POOL_IDLE_TIMEOUT  = 60 * time.Second
+	gDEFAULT_POOL_MAX_LIFE_TIME = 60 * time.Second
+)
+
 var (
-	// Instance map
-	instances = gmap.NewStrAnyMap(true)
 	// Pool map.
 	pools = gmap.NewStrAnyMap(true)
 )
@@ -104,28 +102,6 @@ func New(config Config) *Redis {
 			}
 		}).(*redis.Pool),
 	}
-}
-
-// Instance returns an instance of redis client with specified group.
-// The <group> param is unnecessary, if <group> is not passed,
-// it returns a redis instance with default group.
-func Instance(name ...string) *Redis {
-	group := DEFAULT_GROUP_NAME
-	if len(name) > 0 && name[0] != "" {
-		group = name[0]
-	}
-	v := instances.GetOrSetFuncLock(group, func() interface{} {
-		if config, ok := GetConfig(group); ok {
-			r := New(config)
-			r.group = group
-			return r
-		}
-		return nil
-	})
-	if v != nil {
-		return v.(*Redis)
-	}
-	return nil
 }
 
 // Close closes the redis connection pool,
