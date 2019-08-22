@@ -91,7 +91,7 @@ func (page *Page) NextPage(styles ...string) string {
 	return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.NextPageTag)
 }
 
-/// 获取显示“上一页”的内容
+// 获取显示“上一页”的内容
 func (page *Page) PrevPage(styles ...string) string {
 	var curStyle, style string
 	if len(styles) > 0 {
@@ -106,11 +106,7 @@ func (page *Page) PrevPage(styles ...string) string {
 	return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.PrevPageTag)
 }
 
-/**
-* 获取显示“首页”的代码
-*
-* @return string
- */
+// 获取显示“首页”的代码
 func (page *Page) FirstPage(styles ...string) string {
 	var curStyle, style string
 	if len(styles) > 0 {
