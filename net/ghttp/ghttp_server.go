@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/database/gkvdb"
+
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gtype"
@@ -45,7 +47,8 @@ type (
 		serveCache       *gcache.Cache                    // 服务注册路由内存缓存
 		routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
 		statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
-		sessions         *gcache.Cache                    // Session内存缓存
+		sessions         *gcache.Cache                    // Session内存存储
+		sessionStorage   *gkvdb.DB                        // Session物理存储
 		logger           *glog.Logger                     // 日志管理对象
 	}
 
@@ -209,6 +212,7 @@ func GetServer(name ...interface{}) *Server {
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
 		sessions:         gcache.New(),
+		sessionStorage:   gkvdb.New(gkvdb.DefaultOptions(defaultServerConfig.SessionStoragePath)),
 		servedCount:      gtype.NewInt(),
 		logger:           glog.New(),
 	}
