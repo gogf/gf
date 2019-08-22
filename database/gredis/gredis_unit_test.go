@@ -208,3 +208,22 @@ func Test_Basic(t *testing.T) {
 		time.Sleep(time.Second)
 	})
 }
+
+func Test_Bool(t *testing.T) {
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		_, err := redis.Do("SET", "key-true", true)
+		gtest.Assert(err, nil)
+
+		_, err = redis.Do("SET", "key-false", false)
+		gtest.Assert(err, nil)
+
+		r, err := redis.DoVar("GET", "key-true")
+		gtest.Assert(err, nil)
+		gtest.Assert(r.Bool(), true)
+
+		r, err = redis.DoVar("GET", "key-false")
+		gtest.Assert(err, nil)
+		gtest.Assert(r.Bool(), false)
+	})
+}

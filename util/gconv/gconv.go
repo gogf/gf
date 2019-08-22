@@ -213,6 +213,11 @@ func Bool(i interface{}) bool {
 	switch value := i.(type) {
 	case bool:
 		return value
+	case []byte:
+		if _, ok := emptyStringMap[string(value)]; ok {
+			return false
+		}
+		return true
 	case string:
 		if _, ok := emptyStringMap[value]; ok {
 			return false
