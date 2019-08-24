@@ -26,10 +26,16 @@ type apiString interface {
 	String() string
 }
 
-// 格式化SQL语句。
-// 1. 支持参数只传一个slice；
-// 2. 支持占位符号数量自动扩展；
+// 格式化SQL语句.
 func formatQuery(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
+	return handlerSliceArguments(query, args)
+}
+
+// 处理预处理占位符与slice类型的参数。
+// 需要注意的是，
+// 如果是链式操作，在条件参数中也会调用该方法处理查询参数，
+// 如果是方法参数，在sql提交执行之前也会再次调用该方法处理查询语句和参数。
+func handlerSliceArguments(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
 	newQuery = query
 	// 查询条件参数处理，主要处理slice参数类型
 	if len(args) > 0 {

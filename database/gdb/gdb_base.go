@@ -708,7 +708,6 @@ func (bs *dbBase) formatWhere(where interface{}, args []interface{}) (newWhere s
 	}
 	newArgs = append(newArgs, args...)
 	newWhere = buffer.String()
-	// 查询条件参数处理，主要处理slice参数类型
 	if len(newArgs) > 0 {
 		// 支持例如 Where/And/Or("uid", 1) , Where/And/Or("uid>=", 1) 这种格式
 		if gstr.Pos(newWhere, "?") == -1 {
@@ -719,7 +718,7 @@ func (bs *dbBase) formatWhere(where interface{}, args []interface{}) (newWhere s
 			}
 		}
 	}
-	return
+	return handlerSliceArguments(newWhere, newArgs)
 }
 
 // 使用关键字操作符转义给定字符串。

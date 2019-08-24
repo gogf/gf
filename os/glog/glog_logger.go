@@ -10,11 +10,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/debug/gdebug"
 
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gfpool"
@@ -348,5 +349,9 @@ func (l *Logger) PrintStack(skip ...int) {
 // GetStack returns the caller stack content,
 // the optional parameter <skip> specify the skipped stack offset from the end point.
 func (l *Logger) GetStack(skip ...int) string {
-	return gdebug.StackWithFilter(gPATH_FILTER_KEY, skip...)
+	stackSkip := l.stSkip
+	if len(skip) > 0 {
+		stackSkip += skip[0]
+	}
+	return gdebug.StackWithFilter(gPATH_FILTER_KEY, stackSkip)
 }
