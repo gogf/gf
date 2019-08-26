@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-// COOKIE对象
+// COOKIE对象，非并发安全。
 type Cookie struct {
 	data     map[string]CookieItem // 数据项
 	path     string                // 默认的cookie path

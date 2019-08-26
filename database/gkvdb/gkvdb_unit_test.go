@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dgraph-io/badger/options"
+
 	"github.com/gogf/gf/frame/g"
 
 	"github.com/gogf/gf/container/garray"
@@ -23,6 +25,10 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+func init() {
+
+}
+
 func Test_New(t *testing.T) {
 	gtest.Case(t, func() {
 		name := gconv.String(gtime.Nanosecond())
@@ -31,6 +37,8 @@ func Test_New(t *testing.T) {
 		value := []byte("value")
 
 		db := gkvdb.Instance(name)
+		// https://github.com/dgraph-io/badger#memory-usage
+		db.Options().ValueLogLoadingMode = options.FileIO
 		err := db.SetPath(path)
 		gtest.Assert(err, nil)
 
@@ -51,6 +59,8 @@ func Test_Set(t *testing.T) {
 		value := []byte("value")
 
 		db := gkvdb.Instance(name)
+		// https://github.com/dgraph-io/badger#memory-usage
+		db.Options().ValueLogLoadingMode = options.FileIO
 		err := db.SetPath(path)
 		gtest.Assert(err, nil)
 
@@ -68,6 +78,8 @@ func Test_Iterate(t *testing.T) {
 		name := gconv.String(gtime.Nanosecond())
 		path := "/tmp/gkvdb/" + name
 		db := gkvdb.Instance(name)
+		// https://github.com/dgraph-io/badger#memory-usage
+		db.Options().ValueLogLoadingMode = options.FileIO
 		err := db.SetPath(path)
 		gtest.Assert(err, nil)
 
