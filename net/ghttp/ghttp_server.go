@@ -202,6 +202,8 @@ func GetServer(name ...interface{}) *Server {
 	if s := serverMapping.Get(sname); s != nil {
 		return s.(*Server)
 	}
+	sessionStorage := gkvdb.Instance(defaultServerConfig.SessionStoragePath)
+	sessionStorage.SetOptions(gkvdb.DefaultOptions(defaultServerConfig.SessionStoragePath))
 	s := &Server{
 		name:             sname,
 		servers:          make([]*gracefulServer, 0),
@@ -212,7 +214,7 @@ func GetServer(name ...interface{}) *Server {
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
 		sessions:         gcache.New(),
-		sessionStorage:   gkvdb.New(gkvdb.DefaultOptions(defaultServerConfig.SessionStoragePath)),
+		sessionStorage:   sessionStorage,
 		servedCount:      gtype.NewInt(),
 		logger:           glog.New(),
 	}
