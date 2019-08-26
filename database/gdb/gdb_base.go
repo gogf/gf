@@ -65,15 +65,31 @@ func (bs *dbBase) GetQueriedSqls() []*Sql {
 
 // 打印已经执行的SQL列表(仅在debug=true时有效)
 func (bs *dbBase) PrintQueriedSqls() {
-	sqls := bs.GetQueriedSqls()
-	for k, v := range sqls {
-		fmt.Println(len(sqls)-k, ":")
+	sqlSlice := bs.GetQueriedSqls()
+	for k, v := range sqlSlice {
+		fmt.Println(len(sqlSlice)-k, ":")
 		fmt.Println("    Sql  :", v.Sql)
 		fmt.Println("    Args :", v.Args)
 		fmt.Println("    Error:", v.Error)
 		fmt.Println("    Start:", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
 		fmt.Println("    End  :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
 		fmt.Println("    Cost :", v.End-v.Start, "ms")
+	}
+}
+
+// 打印SQL对象(仅在debug=true时有效)
+func (bs *dbBase) printSql(v *Sql) {
+	s := fmt.Sprintf("%s, %v, %s, %s, %d ms, %s", v.Sql, v.Args,
+		gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"),
+		gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"),
+		v.End-v.Start,
+		v.Func,
+	)
+	if v.Error != nil {
+		s += "\nError: " + v.Error.Error()
+		bs.logger.Stack(true, 2).Error(s)
+	} else {
+		bs.logger.Debug(s)
 	}
 }
 
@@ -102,7 +118,7 @@ func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows 
 			End:   mTime2,
 		}
 		bs.sqls.Put(s)
-		printSql(s)
+		bs.printSql(s)
 	} else {
 		rows, err = link.Query(query, args...)
 	}
@@ -139,7 +155,7 @@ func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result
 			End:   mTime2,
 		}
 		bs.sqls.Put(s)
-		printSql(s)
+		bs.printSql(s)
 	} else {
 		result, err = link.Exec(query, args...)
 	}

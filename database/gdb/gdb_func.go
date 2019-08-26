@@ -14,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -109,22 +107,6 @@ func convertParam(value interface{}) interface{} {
 		return gconv.String(value)
 	}
 	return value
-}
-
-// 打印SQL对象(仅在debug=true时有效)
-func printSql(v *Sql) {
-	s := fmt.Sprintf("%s, %v, %s, %s, %d ms, %s", v.Sql, v.Args,
-		gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"),
-		gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"),
-		v.End-v.Start,
-		v.Func,
-	)
-	if v.Error != nil {
-		s += "\nError: " + v.Error.Error()
-		glog.Stack(true, 2).Error(s)
-	} else {
-		glog.Debug(s)
-	}
 }
 
 // 格式化错误信息
