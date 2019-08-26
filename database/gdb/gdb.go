@@ -135,7 +135,6 @@ type Sql struct {
 	Error error         // 执行结果(nil为成功)
 	Start int64         // 执行开始时间(毫秒)
 	End   int64         // 执行结束时间(毫秒)
-	Func  string        // 执行方法
 }
 
 // 返回数据表记录值

@@ -169,6 +169,29 @@ func structToMap(obj interface{}) map[string]interface{} {
 	return data
 }
 
+// 将参数绑定到SQL语句中，仅用于调试打印。
+func bindArgsToQuery(query string, args []interface{}) string {
+	index := -1
+	newQuery, _ := gregex.ReplaceStringFunc(`\?`, query, func(s string) string {
+		index++
+		if len(args) > index {
+			rv := reflect.ValueOf(args[index])
+			kind := rv.Kind()
+			if kind == reflect.Ptr {
+				rv = rv.Elem()
+				kind = rv.Kind()
+			}
+			switch kind {
+			case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
+				return "'" + gconv.String(args[index]) + "'"
+			}
+			return gconv.String(args[index])
+		}
+		return s
+	})
+	return newQuery
+}
+
 // 使用递归的方式将map键值对映射到struct对象上，注意参数<pointer>是一个指向struct的指针。
 func mapToStruct(data map[string]interface{}, pointer interface{}) error {
 	return gconv.StructDeep(data, pointer)

@@ -79,12 +79,7 @@ func (bs *dbBase) PrintQueriedSqls() {
 
 // 打印SQL对象(仅在debug=true时有效)
 func (bs *dbBase) printSql(v *Sql) {
-	s := fmt.Sprintf("%s, %v, %s, %s, %d ms, %s", v.Sql, v.Args,
-		gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"),
-		gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"),
-		v.End-v.Start,
-		v.Func,
-	)
+	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, bindArgsToQuery(v.Sql, v.Args))
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
 		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
@@ -385,7 +380,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 				charL, k, charR,
 			)
 		}
-		updateStr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", updateStr)
+		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
 	if link == nil {
 		if link, err = bs.db.Master(); err != nil {
@@ -485,7 +480,7 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 				charL, k, charR,
 			)
 		}
-		updateStr = fmt.Sprintf(" ON DUPLICATE KEY UPDATE %s", updateStr)
+		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
 	// 构造批量写入数据格式(注意map的遍历是无序的)
 	batchNum := gDEFAULT_BATCH_NUM
