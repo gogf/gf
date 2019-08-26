@@ -4,58 +4,65 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// go test *.go -bench=".*" -benchmem
+// go test *.go -bench=".*"
 
-package glist
+package gring_test
 
 import (
 	"testing"
+
+	"github.com/gogf/gf/container/gring"
 )
 
-var (
-	l = New(true)
-)
+var length = 10000
+var ring = gring.New(length, true)
 
-func Benchmark_PushBack(b *testing.B) {
+func BenchmarkRing_Put(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			l.PushBack(i)
+			ring.Put(i)
 			i++
 		}
 	})
 }
 
-func Benchmark_PushFront(b *testing.B) {
+func BenchmarkRing_Next(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			l.PushFront(i)
+			ring.Next()
 			i++
 		}
 	})
 }
 
-func Benchmark_Len(b *testing.B) {
+func BenchmarkRing_Set(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
+		i := 0
 		for pb.Next() {
-			l.Len()
+			ring.Set(i)
+			i++
 		}
 	})
 }
 
-func Benchmark_PopFront(b *testing.B) {
+func BenchmarkRing_Len(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
+		i := 0
 		for pb.Next() {
-			l.PopFront()
+			ring.Len()
+			i++
 		}
 	})
 }
 
-func Benchmark_PopBack(b *testing.B) {
+func BenchmarkRing_Cap(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
+		i := 0
 		for pb.Next() {
-			l.PopBack()
+			ring.Cap()
+			i++
 		}
 	})
 }

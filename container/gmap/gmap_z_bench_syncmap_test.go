@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 )
 
-var gm = gmap.NewIntIntMap()
+var gm = gmap.NewIntIntMap(true)
 var sm = sync.Map{}
 
 func Benchmark_GMapSet(b *testing.B) {
