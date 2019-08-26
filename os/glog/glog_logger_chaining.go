@@ -112,6 +112,20 @@ func (l *Logger) Stack(enabled bool, skip ...int) *Logger {
 	return logger
 }
 
+// StackWithFilter is a chaining function,
+// which sets stack filter for the current logging content output .
+func (l *Logger) StackWithFilter(filter string) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	logger.SetStack(true)
+	logger.SetStackFilter(filter)
+	return logger
+}
+
 // Stdout is a chaining function,
 // which enables/disables stdout for the current logging content output.
 // It's enabled in default.

@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	// 默认调试模式下记录的SQL条数
 	gDEFAULT_DEBUG_SQL_LENGTH = 1000
+	gPATH_FILTER_KEY          = "/gf/database/gdb/gdb"
 )
 
 var (
@@ -87,7 +87,7 @@ func (bs *dbBase) printSql(v *Sql) {
 	)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		bs.logger.Stack(true, 2).Error(s)
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
 	} else {
 		bs.logger.Debug(s)
 	}

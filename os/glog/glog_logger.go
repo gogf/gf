@@ -34,6 +34,7 @@ type Logger struct {
 	prefix      string    // Prefix string for every logging content.
 	stSkip      int       // Skip count for stack.
 	stStatus    int       // Stack status(1: enabled - default; 0: disabled)
+	stFilter    string    // Stack string filter.
 	headerPrint bool      // Print header or not(true in default).
 	stdoutPrint bool      // Output to stdout or not(true in default).
 }
@@ -128,6 +129,11 @@ func (l *Logger) SetStack(enabled bool) {
 // SetStackSkip sets the stack offset from the end point.
 func (l *Logger) SetStackSkip(skip int) {
 	l.stSkip = skip
+}
+
+// SetStackFilter sets the stack filter from the end point.
+func (l *Logger) SetStackFilter(filter string) {
+	l.stFilter = filter
 }
 
 // SetWriter sets the customized logging <writer> for logging.
@@ -353,5 +359,9 @@ func (l *Logger) GetStack(skip ...int) string {
 	if len(skip) > 0 {
 		stackSkip += skip[0]
 	}
-	return gdebug.StackWithFilter(gPATH_FILTER_KEY, stackSkip)
+	filters := []string{gPATH_FILTER_KEY}
+	if l.stFilter != "" {
+		filters = append(filters, l.stFilter)
+	}
+	return gdebug.StackWithFilters(filters, stackSkip)
 }
