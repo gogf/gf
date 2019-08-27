@@ -14,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -111,22 +109,6 @@ func convertParam(value interface{}) interface{} {
 	return value
 }
 
-// 打印SQL对象(仅在debug=true时有效)
-func printSql(v *Sql) {
-	s := fmt.Sprintf("%s, %v, %s, %s, %d ms, %s", v.Sql, v.Args,
-		gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"),
-		gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"),
-		v.End-v.Start,
-		v.Func,
-	)
-	if v.Error != nil {
-		s += "\nError: " + v.Error.Error()
-		glog.Stack(true, 2).Error(s)
-	} else {
-		glog.Debug(s)
-	}
-}
-
 // 格式化错误信息
 func formatError(err error, query string, args ...interface{}) error {
 	if err != nil && err != sql.ErrNoRows {
@@ -185,6 +167,29 @@ func structToMap(obj interface{}) map[string]interface{} {
 		}
 	}
 	return data
+}
+
+// 将参数绑定到SQL语句中，仅用于调试打印。
+func bindArgsToQuery(query string, args []interface{}) string {
+	index := -1
+	newQuery, _ := gregex.ReplaceStringFunc(`\?`, query, func(s string) string {
+		index++
+		if len(args) > index {
+			rv := reflect.ValueOf(args[index])
+			kind := rv.Kind()
+			if kind == reflect.Ptr {
+				rv = rv.Elem()
+				kind = rv.Kind()
+			}
+			switch kind {
+			case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
+				return "'" + gconv.String(args[index]) + "'"
+			}
+			return gconv.String(args[index])
+		}
+		return s
+	})
+	return newQuery
 }
 
 // 使用递归的方式将map键值对映射到struct对象上，注意参数<pointer>是一个指向struct的指针。

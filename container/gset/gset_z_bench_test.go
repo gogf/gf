@@ -15,12 +15,12 @@ import (
 	"github.com/gogf/gf/container/gset"
 )
 
-var intSet = gset.NewIntSet()
-var anySet = gset.NewSet()
-var strSet = gset.NewStringSet()
-var intSetUnsafe = gset.NewIntSet(true)
-var anySetUnsafe = gset.NewSet(true)
-var strSetUnsafe = gset.NewStringSet(true)
+var intSet = gset.NewIntSet(true)
+var anySet = gset.NewSet(true)
+var strSet = gset.NewStringSet(true)
+var intSetUnsafe = gset.NewIntSet()
+var anySetUnsafe = gset.NewSet()
+var strSetUnsafe = gset.NewStringSet()
 
 func Benchmark_IntSet_Add(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {

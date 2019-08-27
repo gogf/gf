@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogf/gf/os/glog"
+
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gring"
 	"github.com/gogf/gf/container/gtype"
@@ -85,6 +87,7 @@ type DB interface {
 	GetQueriedSqls() []*Sql
 	GetLastSql() *Sql
 	PrintQueriedSqls()
+	SetLogger(logger *glog.Logger)
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(n int)
@@ -119,9 +122,10 @@ type dbBase struct {
 	cache            *gcache.Cache                // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
 	schema           *gtype.String                // 手动切换的数据库名称
 	tables           map[string]map[string]string // 数据库表结构
-	maxIdleConnCount *gtype.Int                   // 连接池最大限制的连接数
-	maxOpenConnCount *gtype.Int                   // 连接池最大打开的连接数
-	maxConnLifetime  *gtype.Int                   // (单位秒)连接对象可重复使用的时间长度
+	logger           *glog.Logger                 // 日志管理对象
+	maxIdleConnCount int                          // 连接池最大限制的连接数
+	maxOpenConnCount int                          // 连接池最大打开的连接数
+	maxConnLifetime  int                          // (单位秒)连接对象可重复使用的时间长度
 }
 
 // 执行的SQL对象
@@ -131,7 +135,6 @@ type Sql struct {
 	Error error         // 执行结果(nil为成功)
 	Start int64         // 执行开始时间(毫秒)
 	End   int64         // 执行结束时间(毫秒)
-	Func  string        // 执行方法
 }
 
 // 返回数据表记录值
@@ -180,13 +183,12 @@ func New(name ...string) (db DB, err error) {
 	if _, ok := configs.config[group]; ok {
 		if node, err := getConfigNodeByGroup(group, true); err == nil {
 			base := &dbBase{
-				group:            group,
-				debug:            gtype.NewBool(),
-				cache:            gcache.New(),
-				schema:           gtype.NewString(),
-				maxIdleConnCount: gtype.NewInt(),
-				maxOpenConnCount: gtype.NewInt(),
-				maxConnLifetime:  gtype.NewInt(gDEFAULT_CONN_MAX_LIFE_TIME),
+				group:           group,
+				debug:           gtype.NewBool(),
+				cache:           gcache.New(),
+				schema:          gtype.NewString(),
+				logger:          glog.Default(),
+				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME,
 			}
 			switch node.Type {
 			case "mysql":
@@ -317,20 +319,20 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 		}
 		// 接口对象可能会覆盖这些连接参数，所以这里优先判断有误设置连接池属性。
 		// 若无设置则使用配置节点的连接池参数
-		if n := bs.maxIdleConnCount.Val(); n > 0 {
-			sqlDb.SetMaxIdleConns(n)
+		if bs.maxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(bs.maxIdleConnCount)
 		} else if node.MaxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
 		}
 
-		if n := bs.maxOpenConnCount.Val(); n > 0 {
-			sqlDb.SetMaxOpenConns(n)
+		if bs.maxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(bs.maxOpenConnCount)
 		} else if node.MaxOpenConnCount > 0 {
 			sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
 		}
 
-		if n := bs.maxConnLifetime.Val(); n > 0 {
-			sqlDb.SetConnMaxLifetime(time.Duration(n) * time.Second)
+		if bs.maxConnLifetime > 0 {
+			sqlDb.SetConnMaxLifetime(time.Duration(bs.maxConnLifetime) * time.Second)
 		} else if node.MaxConnLifetime > 0 {
 			sqlDb.SetConnMaxLifetime(time.Duration(node.MaxConnLifetime) * time.Second)
 		}

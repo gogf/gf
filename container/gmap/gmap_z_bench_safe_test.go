@@ -15,13 +15,13 @@ import (
 	"github.com/gogf/gf/container/gmap"
 )
 
-var anyAnyMap = gmap.NewAnyAnyMap()
-var intIntMap = gmap.NewIntIntMap()
-var intAnyMap = gmap.NewIntAnyMap()
-var intStrMap = gmap.NewIntStrMap()
-var strIntMap = gmap.NewStrIntMap()
-var strAnyMap = gmap.NewStrAnyMap()
-var strStrMap = gmap.NewStrStrMap()
+var anyAnyMap = gmap.NewAnyAnyMap(true)
+var intIntMap = gmap.NewIntIntMap(true)
+var intAnyMap = gmap.NewIntAnyMap(true)
+var intStrMap = gmap.NewIntStrMap(true)
+var strIntMap = gmap.NewStrIntMap(true)
+var strAnyMap = gmap.NewStrAnyMap(true)
+var strStrMap = gmap.NewStrStrMap(true)
 
 func Benchmark_IntIntMap_Set(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {

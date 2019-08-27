@@ -37,6 +37,11 @@ func init() {
 	SetDebug(cmdenv.Get("gf.glog.debug", true).Bool())
 }
 
+// Default returns the default logger.
+func Default() *Logger {
+	return logger
+}
+
 // SetPath sets the directory path for file logging.
 func SetPath(path string) error {
 	return logger.SetPath(path)

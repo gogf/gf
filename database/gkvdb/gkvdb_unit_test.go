@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dgraph-io/badger/options"
+
 	"github.com/gogf/gf/frame/g"
 
 	"github.com/gogf/gf/container/garray"
@@ -23,15 +25,24 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+func init() {
+
+}
+
 func Test_New(t *testing.T) {
 	gtest.Case(t, func() {
-		path := "/tmp/gkvdb/" + gconv.String(gtime.Nanosecond())
+		name := gconv.String(gtime.Nanosecond())
+		path := "/tmp/gkvdb/" + name
 		key := []byte("key")
 		value := []byte("value")
 
-		db := gkvdb.Instance()
-		db.SetPath(path)
-		err := db.Set(key, value)
+		db := gkvdb.Instance(name)
+		// https://github.com/dgraph-io/badger#memory-usage
+		db.Options().ValueLogLoadingMode = options.FileIO
+		err := db.SetPath(path)
+		gtest.Assert(err, nil)
+
+		err = db.Set(key, value)
 		gtest.Assert(err, nil)
 
 		gtest.Assert(db.Get(key), value)
@@ -42,26 +53,35 @@ func Test_New(t *testing.T) {
 
 func Test_Set(t *testing.T) {
 	gtest.Case(t, func() {
-		path := "/tmp/gkvdb/" + gconv.String(gtime.Nanosecond())
+		name := gconv.String(gtime.Nanosecond())
+		path := "/tmp/gkvdb/" + name
 		key := []byte("key")
 		value := []byte("value")
 
-		db := gkvdb.Instance()
-		db.SetPath(path)
-		err := db.Set(key, value, 100*time.Millisecond)
+		db := gkvdb.Instance(name)
+		// https://github.com/dgraph-io/badger#memory-usage
+		db.Options().ValueLogLoadingMode = options.FileIO
+		err := db.SetPath(path)
+		gtest.Assert(err, nil)
+
+		err = db.Set(key, value, 1000*time.Millisecond)
 		gtest.Assert(err, nil)
 
 		gtest.Assert(db.Get(key), value)
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(1500 * time.Millisecond)
 		gtest.Assert(db.Get(key), nil)
 	})
 }
 
 func Test_Iterate(t *testing.T) {
 	gtest.Case(t, func() {
-		path := "/tmp/gkvdb/" + gconv.String(gtime.Nanosecond())
-		db := gkvdb.Instance()
-		db.SetPath(path)
+		name := gconv.String(gtime.Nanosecond())
+		path := "/tmp/gkvdb/" + name
+		db := gkvdb.Instance(name)
+		// https://github.com/dgraph-io/badger#memory-usage
+		db.Options().ValueLogLoadingMode = options.FileIO
+		err := db.SetPath(path)
+		gtest.Assert(err, nil)
 
 		strArray := garray.NewSortedStringArray()
 		strArrayReverse := garray.NewSortedStringArrayComparator(func(a, b string) int {

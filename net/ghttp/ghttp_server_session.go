@@ -67,7 +67,9 @@ func (s *Session) init() {
 				if data != nil {
 					s.id = id
 					s.data = gmap.NewStrAnyMap(true)
-					s.Restore(data)
+					if err := s.Restore(data); err != nil {
+						panic(err)
+					}
 					return
 				}
 			}
@@ -178,11 +180,14 @@ func (s *Session) UpdateExpire() {
 		// 优先持久化存储
 		if s.dirty {
 			data, _ := s.Export()
-			s.server.sessionStorage.Set(
+			err := s.server.sessionStorage.Set(
 				[]byte(s.id),
 				data,
 				time.Duration(s.server.GetSessionMaxAge())*time.Second,
 			)
+			if err != nil {
+				panic(err)
+			}
 		}
 		// 其次更新内存TTL
 		s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)

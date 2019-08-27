@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/gogf/gf/os/glog"
+
 	"github.com/gogf/gf/container/gring"
 )
 
@@ -111,20 +113,25 @@ func GetDefaultGroup() string {
 	return configs.defaultGroup
 }
 
+// 设置数据库的日志管理对象
+func (bs *dbBase) SetLogger(logger *glog.Logger) {
+	bs.logger = logger
+}
+
 // 设置数据库连接池中空闲链接的大小
 func (bs *dbBase) SetMaxIdleConnCount(n int) {
-	bs.maxIdleConnCount.Set(n)
+	bs.maxIdleConnCount = n
 }
 
 // 设置数据库连接池最大打开的链接数量
 func (bs *dbBase) SetMaxOpenConnCount(n int) {
-	bs.maxOpenConnCount.Set(n)
+	bs.maxOpenConnCount = n
 }
 
 // 设置数据库连接可重复利用的时间，超过该时间则被关闭废弃
 // 如果 d <= 0 表示该链接会一直重复利用
 func (bs *dbBase) SetMaxConnLifetime(n int) {
-	bs.maxConnLifetime.Set(n)
+	bs.maxConnLifetime = n
 }
 
 // 节点配置转换为字符串
