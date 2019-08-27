@@ -110,6 +110,11 @@ func Remove(name string) {
 	defaultCron.Remove(name)
 }
 
+// Remove all tasks.
+func RemoveAll(name string) {
+	defaultCron.RemoveAll()
+}
+
 // Size returns the size of the timed tasks of default cron.
 func Size() int {
 	return defaultCron.Size()

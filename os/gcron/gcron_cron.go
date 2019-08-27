@@ -186,6 +186,13 @@ func (c *Cron) Remove(name string) {
 	}
 }
 
+// Remove all tasks.
+func (c *Cron) RemoveAll() {
+	for _, v := range c.entries.Map() {
+		v.(*Entry).Close()
+	}
+}
+
 // Close stops and closes current cron.
 func (c *Cron) Close() {
 	c.status.Set(STATUS_CLOSED)

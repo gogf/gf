@@ -89,6 +89,27 @@ func TestCron_Remove(t *testing.T) {
 	})
 }
 
+func TestCron_RemoveAll(t *testing.T) {
+	gtest.Case(t, func() {
+		cron := gcron.New()
+		array := garray.New(true)
+		cron.Add("* * * * * *", func() {
+			array.Append(1)
+		}, "add_1")
+		cron.Add("* * * * * *", func() {
+			array.Append(1)
+		}, "add_2")
+		gtest.Assert(array.Len(), 0)
+		time.Sleep(1200 * time.Millisecond)
+		gtest.Assert(array.Len(), 2)
+
+		cron.RemoveAll()
+		gtest.Assert(array.Len(), 2)
+		time.Sleep(1200 * time.Millisecond)
+		gtest.Assert(array.Len(), 2)
+	})
+}
+
 func TestCron_AddSingleton(t *testing.T) {
 	// un used, can be removed
 	gtest.Case(t, func() {
