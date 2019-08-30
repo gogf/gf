@@ -7,19 +7,6 @@
 // Package gres provides resource management and packing/unpacking feature between files and bytes.
 package gres
 
-const (
-	gPACKAGE_TEMPLATE = `package %s
-
-import "github.com/gogf/gf/os/gres"
-
-func init() {
-	if err := gres.Add(%s); err != nil {
-		panic(err)
-	}
-}
-`
-)
-
 var (
 	// Default resource object.
 	defaultResource = Instance()

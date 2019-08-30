@@ -45,6 +45,7 @@ func MainPkgPath() string {
 	if path != "" {
 		return path
 	}
+	lastFile := ""
 	for i := 1; i < 10000; i++ {
 		if _, file, _, ok := runtime.Caller(i); ok {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
@@ -58,20 +59,25 @@ func MainPkgPath() string {
 			if Ext(file) != ".go" {
 				continue
 			}
-			// separator of <file> '/' will be converted to Separator.
-			for path = Dir(file); len(path) > 1 && Exists(path) && path[len(path)-1] != os.PathSeparator; {
-				files, _ := ScanDir(path, "*.go")
-				for _, v := range files {
-					if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
-						mainPkgPath.Set(path)
-						return path
-					}
-				}
-				path = Dir(path)
+			lastFile = file
+			if gregex.IsMatchString(`package\s+main`, GetContents(file)) {
+				mainPkgPath.Set(Dir(file))
+				return Dir(file)
 			}
-
 		} else {
 			break
+		}
+	}
+	if lastFile != "" {
+		for path = Dir(lastFile); len(path) > 1 && Exists(path) && path[len(path)-1] != os.PathSeparator; {
+			files, _ := ScanDir(path, "*.go")
+			for _, v := range files {
+				if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
+					mainPkgPath.Set(path)
+					return path
+				}
+			}
+			path = Dir(path)
 		}
 	}
 	return ""

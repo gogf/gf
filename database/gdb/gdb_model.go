@@ -490,21 +490,21 @@ func (md *Model) Value() (Value, error) {
 }
 
 // 链式操作，查询单条记录，并自动转换为struct对象, 参数必须为对象的指针，不能为空指针。
-func (md *Model) Struct(objPointer interface{}) error {
+func (md *Model) Struct(pointer interface{}) error {
 	one, err := md.One()
 	if err != nil {
 		return err
 	}
-	return one.ToStruct(objPointer)
+	return one.ToStruct(pointer)
 }
 
 // 链式操作，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
-func (md *Model) Structs(objPointerSlice interface{}) error {
+func (md *Model) Structs(pointer interface{}) error {
 	r, err := md.All()
 	if err != nil {
 		return err
 	}
-	return r.ToStructs(objPointerSlice)
+	return r.ToStructs(pointer)
 }
 
 // 链式操作，将结果转换为指定的struct/*struct/[]struct/[]*struct,
