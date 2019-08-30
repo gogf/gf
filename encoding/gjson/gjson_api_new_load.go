@@ -12,6 +12,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/gogf/gf/encoding/gini"
 	"github.com/gogf/gf/encoding/gtoml"
 	"github.com/gogf/gf/encoding/gxml"
@@ -21,7 +23,6 @@ import (
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
-	"reflect"
 )
 
 // New creates a Json object with any variable type of <data>,
@@ -186,16 +187,14 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 	if err != nil {
 		return nil, err
 	}
-	if result == nil {
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		decoder.UseNumber()
-		if err := decoder.Decode(&result); err != nil {
-			return nil, err
-		}
-		switch result.(type) {
-		case string, []byte:
-			return nil, fmt.Errorf(`json decoding failed for content: %s`, string(data))
-		}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	if err := decoder.Decode(&result); err != nil {
+		return nil, err
+	}
+	switch result.(type) {
+	case string, []byte:
+		return nil, fmt.Errorf(`json decoding failed for content: %s`, string(data))
 	}
 	return New(result, safe...), nil
 }

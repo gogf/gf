@@ -16,6 +16,19 @@ import (
 	"github.com/gogf/gf/os/gfile"
 )
 
+const (
+	gPACKAGE_TEMPLATE = `package %s
+
+import "github.com/gogf/gf/os/gres"
+
+func init() {
+	if err := gres.Add(%s); err != nil {
+		panic(err)
+	}
+}
+`
+)
+
 // Pack packs the path specified by <srcPath> into bytes.
 // The unnecessary parameter <keyPrefix> indicates the prefix for each file
 // packed into the result bytes.

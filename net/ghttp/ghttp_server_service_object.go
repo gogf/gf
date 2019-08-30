@@ -87,7 +87,7 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI。
 		// 注意，当pattern带有内置变量时，不会自动加该路由。
 		if strings.EqualFold(mname, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
-			p := gstr.PosR(key, "/index")
+			p := gstr.PosRI(key, "/index")
 			k := key[0:p] + key[p+6:]
 			if len(k) == 0 || k[0] == '@' {
 				k = "/" + k

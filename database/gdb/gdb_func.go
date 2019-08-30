@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/internal/structs"
+
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -22,6 +24,38 @@ import (
 // Type assert api for String().
 type apiString interface {
 	String() string
+}
+
+const (
+	OrmTagForStruct  = "orm"
+	OrmTagForUnique  = "unique"
+	OrmTagForPrimary = "primary"
+)
+
+// 获得struct对象对应的where查询条件
+func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
+	array := ([]string)(nil)
+	for tag, field := range structs.TagMapField(pointer, []string{OrmTagForStruct}, true) {
+		array = strings.Split(tag, ",")
+		if len(array) > 1 && gstr.InArray([]string{OrmTagForUnique, OrmTagForPrimary}, array[1]) {
+			return array[0], []interface{}{field.Value()}
+		}
+		if len(where) > 0 {
+			where += " "
+		}
+		where += tag + "=?"
+		args = append(args, field.Value())
+	}
+	return
+}
+
+// 获得orm标签与属性的映射关系
+func GetOrmMappingOfStruct(pointer interface{}) map[string]string {
+	mapping := make(map[string]string)
+	for tag, attr := range structs.TagMapName(pointer, []string{OrmTagForStruct}, true) {
+		mapping[strings.Split(tag, ",")[0]] = attr
+	}
+	return mapping
 }
 
 // 格式化SQL语句.
@@ -138,7 +172,7 @@ func getInsertOperationByOption(option int) string {
 // 将对象转换为map，如果对象带有继承对象，那么执行递归转换。
 // 该方法用于将变量传递给数据库执行之前。
 func structToMap(obj interface{}) map[string]interface{} {
-	data := gconv.Map(obj)
+	data := gconv.Map(obj, OrmTagForStruct)
 	for key, value := range data {
 		rv := reflect.ValueOf(value)
 		kind := rv.Kind()
@@ -183,7 +217,7 @@ func bindArgsToQuery(query string, args []interface{}) string {
 			}
 			switch kind {
 			case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
-				return "'" + gconv.String(args[index]) + "'"
+				return "'" + gstr.QuoteMeta(gconv.String(args[index]), "'") + "'"
 			}
 			return gconv.String(args[index])
 		}
@@ -194,5 +228,5 @@ func bindArgsToQuery(query string, args []interface{}) string {
 
 // 使用递归的方式将map键值对映射到struct对象上，注意参数<pointer>是一个指向struct的指针。
 func mapToStruct(data map[string]interface{}, pointer interface{}) error {
-	return gconv.StructDeep(data, pointer)
+	return gconv.StructDeep(data, pointer, GetOrmMappingOfStruct(pointer))
 }
