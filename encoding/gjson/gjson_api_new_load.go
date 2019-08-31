@@ -161,7 +161,7 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 		dataType = checkDataType(data)
 	}
 	switch dataType {
-	case "json", ".json":
+	case "json", ".json", ".js":
 
 	case "xml", ".xml":
 		if data, err = gxml.ToJson(data); err != nil {

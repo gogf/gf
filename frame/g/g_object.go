@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gi18n"
 )
 
 // Server returns an instance of http server with specified name.
@@ -54,6 +55,12 @@ func Cfg(name ...string) *gcfg.Config {
 // The parameter <name> is the name for the instance.
 func Resource(name ...string) *gres.Resource {
 	return gins.Resource(name...)
+}
+
+// I18n returns an instance of gi18n.Translator.
+// The parameter <name> is the name for the instance.
+func I18n(name ...string) *gi18n.Translator {
+	return gins.I18n(name...)
 }
 
 // Res is alias of Resource.

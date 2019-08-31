@@ -27,17 +27,17 @@ type apiString interface {
 }
 
 const (
-	OrmTagForStruct  = "orm"
-	OrmTagForUnique  = "unique"
-	OrmTagForPrimary = "primary"
+	ORM_TAG_FOR_STRUCT  = "orm"
+	ORM_TAG_FOR_UNIQUE  = "unique"
+	ORM_TAG_FOR_PRIMARY = "primary"
 )
 
 // 获得struct对象对应的where查询条件
 func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
 	array := ([]string)(nil)
-	for tag, field := range structs.TagMapField(pointer, []string{OrmTagForStruct}, true) {
+	for tag, field := range structs.TagMapField(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
 		array = strings.Split(tag, ",")
-		if len(array) > 1 && gstr.InArray([]string{OrmTagForUnique, OrmTagForPrimary}, array[1]) {
+		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
 			return array[0], []interface{}{field.Value()}
 		}
 		if len(where) > 0 {
@@ -52,7 +52,7 @@ func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interf
 // 获得orm标签与属性的映射关系
 func GetOrmMappingOfStruct(pointer interface{}) map[string]string {
 	mapping := make(map[string]string)
-	for tag, attr := range structs.TagMapName(pointer, []string{OrmTagForStruct}, true) {
+	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
 		mapping[strings.Split(tag, ",")[0]] = attr
 	}
 	return mapping
@@ -172,7 +172,7 @@ func getInsertOperationByOption(option int) string {
 // 将对象转换为map，如果对象带有继承对象，那么执行递归转换。
 // 该方法用于将变量传递给数据库执行之前。
 func structToMap(obj interface{}) map[string]interface{} {
-	data := gconv.Map(obj, OrmTagForStruct)
+	data := gconv.Map(obj, ORM_TAG_FOR_STRUCT)
 	for key, value := range data {
 		rv := reflect.ValueOf(value)
 		kind := rv.Kind()

@@ -26,6 +26,7 @@ import (
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gi18n"
 )
 
 const (
@@ -83,6 +84,12 @@ func Config(name ...string) *gcfg.Config {
 // The parameter <name> is the name for the instance.
 func Resource(name ...string) *gres.Resource {
 	return gres.Instance(name...)
+}
+
+// I18n returns an instance of gi18n.Translator.
+// The parameter <name> is the name for the instance.
+func I18n(name ...string) *gi18n.Translator {
+	return gi18n.Instance(name...)
 }
 
 // Database returns an instance of database ORM object
