@@ -35,7 +35,7 @@ func ScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
 //
 // Note that it returns only files, exclusive of directories.
 func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, error) {
-	isRecursive := true
+	isRecursive := false
 	if len(recursive) > 0 {
 		isRecursive = recursive[0]
 	}

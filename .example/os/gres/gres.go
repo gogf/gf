@@ -8,7 +8,8 @@ import (
 
 func main() {
 	gres.Dump()
-	g.Dump(gres.Scan("/root/image/", "*", true))
-	g.Dump(gres.Scan("/template", "*"))
-	g.Dump(gres.Scan("/template/layout2", "*.html", true))
+	g.Dump(gres.Scan("/root/image/logo", "*"))
+	//g.Dump(gres.Scan("/root/image/", "*", true))
+	//g.Dump(gres.Scan("/template", "*"))
+	//g.Dump(gres.Scan("/template/layout2", "*.html", true))
 }

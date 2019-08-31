@@ -122,13 +122,40 @@ func (r *Resource) IsEmpty() bool {
 	return r.tree.IsEmpty()
 }
 
-// Scan returns the files under the given path, the parameter <path> should be a folder type.
+// ScanDir returns the files under the given path, the parameter <path> should be a folder type.
 //
 // The pattern parameter <pattern> supports multiple file name patterns,
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter <recursive> is true.
-func (r *Resource) Scan(path string, pattern string, recursive ...bool) []*File {
+func (r *Resource) ScanDir(path string, pattern string, recursive ...bool) []*File {
+	isRecursive := false
+	if len(recursive) > 0 {
+		isRecursive = recursive[0]
+	}
+	return r.doScanDir(path, pattern, isRecursive, false)
+}
+
+// ScanDirFile returns all sub-files with absolute paths of given <path>,
+// It scans directory recursively if given parameter <recursive> is true.
+//
+// Note that it returns only files, exclusive of directories.
+func (r *Resource) ScanDirFile(path string, pattern string, recursive ...bool) []*File {
+	isRecursive := false
+	if len(recursive) > 0 {
+		isRecursive = recursive[0]
+	}
+	return r.doScanDir(path, pattern, isRecursive, true)
+}
+
+// doScanDir is an internal method which scans directory
+// and returns the absolute path list of files that are not sorted.
+//
+// The pattern parameter <pattern> supports multiple file name patterns,
+// using the ',' symbol to separate multiple patterns.
+//
+// It scans directory recursively if given parameter <recursive> is true.
+func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFile bool) []*File {
 	if path != "/" {
 		for path[len(path)-1] == '/' {
 			path = path[:len(path)-1]
@@ -150,6 +177,9 @@ func (r *Resource) Scan(path string, pattern string, recursive ...bool) []*File 
 			}
 			first = false
 		}
+		if onlyFile && value.(*File).FileInfo().IsDir() {
+			return true
+		}
 		name = key.(string)
 		if len(name) <= length {
 			return true
@@ -157,7 +187,11 @@ func (r *Resource) Scan(path string, pattern string, recursive ...bool) []*File 
 		if path != name[:length] {
 			return false
 		}
-		if len(recursive) == 0 || !recursive[0] {
+		// To avoid of, eg: /i18n and /i18n-dir
+		if !first && name[length] != '/' {
+			return true
+		}
+		if !recursive {
 			if strings.IndexByte(name[length+1:], '/') != -1 {
 				return true
 			}

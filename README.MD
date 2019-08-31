@@ -33,7 +33,7 @@ golang version >= 1.10
 
 # Architecture
 <div align=center>
-<img src="https://gfcdn.johng.cn/images/arch.png"/>
+<img src="https://goframe.org/images/arch.png"/>
 </div>
 
 # Quick Start
