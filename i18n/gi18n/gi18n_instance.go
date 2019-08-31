@@ -20,12 +20,12 @@ var (
 
 // Instance returns an instance of Resource.
 // The parameter <name> is the name for the instance.
-func Instance(name ...string) *Translator {
+func Instance(name ...string) *Manager {
 	key := DEFAULT_NAME
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
 	return instances.GetOrSetFuncLock(key, func() interface{} {
 		return New()
-	}).(*Translator)
+	}).(*Manager)
 }

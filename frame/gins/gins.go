@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/database/gredis"
+	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/glog"
@@ -26,7 +27,6 @@ import (
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gi18n"
 )
 
 const (
@@ -86,9 +86,9 @@ func Resource(name ...string) *gres.Resource {
 	return gres.Instance(name...)
 }
 
-// I18n returns an instance of gi18n.Translator.
+// I18n returns an instance of gi18n.Manager.
 // The parameter <name> is the name for the instance.
-func I18n(name ...string) *gi18n.Translator {
+func I18n(name ...string) *gi18n.Manager {
 	return gi18n.Instance(name...)
 }
 

@@ -24,8 +24,8 @@ import (
 	"github.com/gogf/gf/os/gres"
 )
 
-// Translator, it is concurrent safe, supporting hot reload.
-type Translator struct {
+// Manager, it is concurrent safe, supporting hot reload.
+type Manager struct {
 	mu      sync.RWMutex
 	data    map[string]map[string]string // Translating map.
 	pattern string                       // Pattern for regex parsing.
@@ -42,7 +42,7 @@ var (
 	defaultDelimiters = []string{"{#", "}"}
 )
 
-func New(options ...Options) *Translator {
+func New(options ...Options) *Manager {
 	var opts Options
 	if len(options) > 0 {
 		opts = options[0]
@@ -52,7 +52,7 @@ func New(options ...Options) *Translator {
 	if len(opts.Delimiters) == 0 {
 		opts.Delimiters = defaultDelimiters
 	}
-	return &Translator{
+	return &Manager{
 		options: opts,
 		pattern: fmt.Sprintf(
 			`%s(\w+)%s`,
@@ -77,45 +77,45 @@ func DefaultOptions() Options {
 }
 
 // SetPath sets the directory path storing i18n files.
-func (t *Translator) SetPath(path string) error {
+func (m *Manager) SetPath(path string) error {
 	if gres.Contains(path) {
-		t.options.Path = path
+		m.options.Path = path
 	} else {
 		realPath, _ := gfile.Search(path)
 		if realPath == "" {
 			return errors.New(fmt.Sprintf(`%s does not exist`, path))
 		}
-		t.options.Path = realPath
+		m.options.Path = realPath
 	}
 	return nil
 }
 
 // SetLanguage sets the language for translator.
-func (t *Translator) SetLanguage(language string) {
-	t.options.Language = language
+func (m *Manager) SetLanguage(language string) {
+	m.options.Language = language
 }
 
 // SetDelimiters sets the delimiters for translator.
-func (t *Translator) SetDelimiters(left, right string) {
-	t.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
+func (m *Manager) SetDelimiters(left, right string) {
+	m.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
 }
 
 // T is alias of Translate.
-func (t *Translator) T(content string, language ...string) string {
-	return t.Translate(content, language...)
+func (m *Manager) T(content string, language ...string) string {
+	return m.Translate(content, language...)
 }
 
 // Translate translates <content> with configured language.
 // The parameter <language> specifies custom translation language ignoring configured language.
-func (t *Translator) Translate(content string, language ...string) string {
-	t.init()
-	t.mu.RLock()
-	defer t.mu.RUnlock()
+func (m *Manager) Translate(content string, language ...string) string {
+	m.init()
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	var data map[string]string
 	if len(language) > 0 {
-		data = t.data[language[0]]
+		data = m.data[language[0]]
 	} else {
-		data = t.data[t.options.Language]
+		data = m.data[m.options.Language]
 	}
 	if data == nil {
 		return content
@@ -125,7 +125,7 @@ func (t *Translator) Translate(content string, language ...string) string {
 		return v
 	}
 	// Parse content as variables container.
-	result, _ := gregex.ReplaceStringFuncMatch(t.pattern, content, func(match []string) string {
+	result, _ := gregex.ReplaceStringFuncMatch(m.pattern, content, func(match []string) string {
 		if v, ok := data[match[1]]; ok {
 			return v
 		}
@@ -134,73 +134,73 @@ func (t *Translator) Translate(content string, language ...string) string {
 	return result
 }
 
-func (t *Translator) init() {
-	t.mu.RLock()
-	if t.data != nil {
-		t.mu.RUnlock()
+func (m *Manager) init() {
+	m.mu.RLock()
+	if m.data != nil {
+		m.mu.RUnlock()
 		return
 	}
-	t.mu.RUnlock()
+	m.mu.RUnlock()
 
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if gres.Contains(t.options.Path) {
-		files := gres.ScanDirFile(t.options.Path, "*.*", true)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if gres.Contains(m.options.Path) {
+		files := gres.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
 			var path string
 			var name string
 			var lang string
 			var array []string
-			t.data = make(map[string]map[string]string)
+			m.data = make(map[string]map[string]string)
 			for _, file := range files {
 				name = file.Name()
-				path = name[len(t.options.Path)+1:]
+				path = name[len(m.options.Path)+1:]
 				array = strings.Split(path, "/")
 				if len(array) > 1 {
 					lang = array[0]
 				} else {
 					lang = gfile.Name(array[0])
 				}
-				if t.data[lang] == nil {
-					t.data[lang] = make(map[string]string)
+				if m.data[lang] == nil {
+					m.data[lang] = make(map[string]string)
 				}
 				j, _ := gjson.LoadContent(file.Content())
 				if j != nil {
 					for k, v := range j.ToMap() {
-						t.data[lang][k] = gconv.String(v)
+						m.data[lang][k] = gconv.String(v)
 					}
 				}
 			}
 		}
 	} else {
-		files, _ := gfile.ScanDirFile(t.options.Path, "*.*", true)
+		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
 			var path string
 			var lang string
 			var array []string
-			t.data = make(map[string]map[string]string)
+			m.data = make(map[string]map[string]string)
 			for _, file := range files {
-				path = file[len(t.options.Path)+1:]
+				path = file[len(m.options.Path)+1:]
 				array = strings.Split(path, "/")
 				if len(array) > 1 {
 					lang = array[0]
 				} else {
 					lang = gfile.Name(array[0])
 				}
-				if t.data[lang] == nil {
-					t.data[lang] = make(map[string]string)
+				if m.data[lang] == nil {
+					m.data[lang] = make(map[string]string)
 				}
 				j, _ := gjson.LoadContent(gfile.GetBytes(file))
 				if j != nil {
 					for k, v := range j.ToMap() {
-						t.data[lang][k] = gconv.String(v)
+						m.data[lang][k] = gconv.String(v)
 					}
 				}
 			}
 			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
-				t.mu.Lock()
-				t.data = nil
-				t.mu.Unlock()
+				m.mu.Lock()
+				m.data = nil
+				m.mu.Unlock()
 				gfsnotify.Exit()
 			})
 		}

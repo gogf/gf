@@ -13,7 +13,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/gogf/gf/util/gi18n"
+	"github.com/gogf/gf/i18n/gi18n"
 
 	"github.com/gogf/gf/os/gfcache"
 
