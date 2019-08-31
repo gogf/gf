@@ -37,7 +37,7 @@ golang版本 >= 1.10
 
 # 架构
 <div align=center>
-<img src="https://goframe.org/images/arch.png"/>
+<img src="https://goframe.org/images/arch.png?v=10"/>
 </div>
 
 
