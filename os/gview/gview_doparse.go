@@ -13,6 +13,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/gogf/gf/i18n/gi18n"
+
 	"github.com/gogf/gf/os/gfcache"
 
 	"github.com/gogf/gf/os/gres"
@@ -47,12 +49,9 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 	r := templates.GetOrSetFuncLock(path, func() interface{} {
 		tpl = template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 		// Firstly checking the resource manager.
-		if files := gres.Scan(path, pattern, true); len(files) > 0 {
+		if files := gres.ScanDirFile(path, pattern, true); len(files) > 0 {
 			var err error
 			for _, v := range files {
-				if v.FileInfo().IsDir() {
-					continue
-				}
 				_, err = tpl.New(v.FileInfo().Name()).Parse(string(v.Content()))
 				if err != nil {
 					glog.Error(err)
@@ -82,19 +81,17 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 
 // searchFile returns the found absolute path for <file>, and its template folder path.
 func (view *View) searchFile(file string) (path string, folder string, err error) {
-	separator := gfile.Separator
 	// Firstly checking the resource manager.
-	separator = "/"
 	view.paths.RLockFunc(func(array []string) {
 		f := (*gres.File)(nil)
 		for _, v := range array {
-			v = strings.TrimRight(v, separator)
-			if f = gres.Get(v + separator + file); f != nil {
+			v = strings.TrimRight(v, "/")
+			if f = gres.Get(v + "/" + file); f != nil {
 				path = f.Name()
 				folder = gfile.Dir(path)
 				break
 			}
-			if f = gres.Get(v + separator + "template" + separator + file); f != nil {
+			if f = gres.Get(v + "/template/" + file); f != nil {
 				path = f.Name()
 				folder = gfile.Dir(path)
 				break
@@ -105,19 +102,29 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 	if path == "" {
 		view.paths.RLockFunc(func(array []string) {
 			for _, v := range array {
-				v = strings.TrimRight(v, separator)
+				v = strings.TrimRight(v, gfile.Separator)
 				if path, _ = gspath.Search(v, file); path != "" {
 					folder = v
 					break
 				}
-				if path, _ = gspath.Search(v+separator+"template", file); path != "" {
-					folder = v + separator + "template"
+				if path, _ = gspath.Search(v+gfile.Separator+"template", file); path != "" {
+					folder = v + gfile.Separator + "template"
 					break
 				}
 			}
 		})
 	}
-
+	// Checking the configuration file in default paths.
+	if path == "" && !gres.IsEmpty() {
+		for _, v := range []string{"/template", "/template/"} {
+			if file := gres.Get(v + file); file != nil {
+				path = file.Name()
+				folder = gfile.Dir(path)
+				return
+			}
+		}
+	}
+	// Error checking.
 	if path == "" {
 		buffer := bytes.NewBuffer(nil)
 		if view.paths.Len() > 0 {
@@ -131,7 +138,7 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 					}
 					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
 					index++
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, strings.TrimRight(v, "/")+separator+"template"))
+					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, strings.TrimRight(v, "/")+gfile.Separator+"template"))
 					index++
 				}
 			})
@@ -202,7 +209,11 @@ func (view *View) Parse(file string, params ...Params) (parsed string, err error
 	if err := tpl.Execute(buffer, vars); err != nil {
 		return "", err
 	}
-	return gstr.Replace(buffer.String(), "<no value>", ""), nil
+	result := gstr.Replace(buffer.String(), "<no value>", "")
+	if view.i18nEnabled {
+		result = gi18n.T(result)
+	}
+	return result, nil
 }
 
 // ParseContent parses given template content <content>
@@ -254,5 +265,9 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 	if err := tpl.Execute(buffer, vars); err != nil {
 		return "", err
 	}
-	return gstr.Replace(buffer.String(), "<no value>", ""), nil
+	result := gstr.Replace(buffer.String(), "<no value>", "")
+	if view.i18nEnabled {
+		result = gi18n.T(result)
+	}
+	return result, nil
 }

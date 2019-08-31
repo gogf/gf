@@ -24,11 +24,12 @@ import (
 
 // View object for template engine.
 type View struct {
-	mu         sync.RWMutex
-	paths      *garray.StringArray    // Searching path array.
-	data       map[string]interface{} // Global template variables.
-	funcMap    map[string]interface{} // Global template function map.
-	delimiters []string               // Customized template delimiters.
+	mu          sync.RWMutex
+	paths       *garray.StringArray    // Searching path array.
+	data        map[string]interface{} // Global template variables.
+	funcMap     map[string]interface{} // Global template function map.
+	i18nEnabled bool                   // Is i18n enabled in this template.
+	delimiters  []string               // Customized template delimiters.
 }
 
 // Params is type for template params.
@@ -59,10 +60,11 @@ func ParseContent(content string, params Params) (string, error) {
 // The parameter <path> specifies the template directory path to load template files.
 func New(path ...string) *View {
 	view := &View{
-		paths:      garray.NewStringArray(true),
-		data:       make(map[string]interface{}),
-		funcMap:    make(map[string]interface{}),
-		delimiters: make([]string, 2),
+		paths:       garray.NewStringArray(true),
+		data:        make(map[string]interface{}),
+		funcMap:     make(map[string]interface{}),
+		i18nEnabled: true,
+		delimiters:  make([]string, 2),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
 		view.SetPath(path[0])

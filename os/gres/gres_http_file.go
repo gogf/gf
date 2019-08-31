@@ -18,7 +18,7 @@ func (f *File) Close() error {
 
 // Readdir implements Readdir interface of http.File.
 func (f *File) Readdir(count int) ([]os.FileInfo, error) {
-	files := f.resource.Scan(f.Name(), "*", false)
+	files := f.resource.ScanDir(f.Name(), "*", false)
 	if len(files) > 0 {
 		if count < 0 || count > len(files) {
 			count = len(files)

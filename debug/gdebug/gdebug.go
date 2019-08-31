@@ -10,6 +10,7 @@ package gdebug
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -185,6 +186,12 @@ func CallerFunction() string {
 func CallerFilePath() string {
 	_, path, _ := Caller()
 	return path
+}
+
+// CallerDirectory returns the directory of the caller.
+func CallerDirectory() string {
+	_, path, _ := Caller()
+	return filepath.Dir(path)
 }
 
 // CallerFileLine returns the file path along with the line number of the caller.
