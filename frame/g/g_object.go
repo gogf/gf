@@ -11,13 +11,13 @@ import (
 	"github.com/gogf/gf/database/gkvdb"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/frame/gins"
+	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/net/gtcp"
 	"github.com/gogf/gf/net/gudp"
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/util/gi18n"
 )
 
 // Server returns an instance of http server with specified name.
@@ -57,9 +57,9 @@ func Resource(name ...string) *gres.Resource {
 	return gins.Resource(name...)
 }
 
-// I18n returns an instance of gi18n.Translator.
+// I18n returns an instance of gi18n.Manager.
 // The parameter <name> is the name for the instance.
-func I18n(name ...string) *gi18n.Translator {
+func I18n(name ...string) *gi18n.Manager {
 	return gins.I18n(name...)
 }
 

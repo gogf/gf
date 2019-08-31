@@ -9,12 +9,12 @@ import (
 )
 
 func main() {
-	t := g.I18n()
-	t.SetLanguage("ja")
-	err := t.SetPath("/i18n-dir")
+	m := g.I18n()
+	m.SetLanguage("ja")
+	err := m.SetPath("/i18n-dir")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(t.Translate(`hello`))
-	fmt.Println(t.Translate(`{{hello}}{{world}}!`))
+	fmt.Println(m.Translate(`hello`))
+	fmt.Println(m.Translate(`{{hello}}{{world}}!`))
 }
