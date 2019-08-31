@@ -100,14 +100,14 @@ func ReplaceFunc(pattern string, src []byte, replaceFunc func(b []byte) []byte) 
 	}
 }
 
-// ReplaceFunc replace all matched <pattern> in bytes <src>
+// ReplaceFuncMatch replace all matched <pattern> in bytes <src>
 // with custom replacement function <replaceFunc>.
 // The parameter <match> type for <replaceFunc> is [][]byte,
 // which is the result contains all sub-patterns of <pattern> using Match function.
 func ReplaceFuncMatch(pattern string, src []byte, replaceFunc func(match [][]byte) []byte) ([]byte, error) {
 	if r, err := getRegexp(pattern); err == nil {
 		return r.ReplaceAllFunc(src, func(bytes []byte) []byte {
-			match, _ := Match(pattern, src)
+			match, _ := Match(pattern, bytes)
 			return replaceFunc(match)
 		}), nil
 	} else {
@@ -131,7 +131,7 @@ func ReplaceStringFunc(pattern string, src string, replaceFunc func(s string) st
 func ReplaceStringFuncMatch(pattern string, src string, replaceFunc func(match []string) string) (string, error) {
 	if r, err := getRegexp(pattern); err == nil {
 		return string(r.ReplaceAllFunc([]byte(src), func(bytes []byte) []byte {
-			match, _ := MatchString(pattern, src)
+			match, _ := MatchString(pattern, string(bytes))
 			return []byte(replaceFunc(match))
 		})), nil
 	} else {

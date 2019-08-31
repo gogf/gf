@@ -1,3 +1,9 @@
+// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gview_test
 
 import (
@@ -16,7 +22,7 @@ func init() {
 	os.Setenv("GF_GVIEW_ERRORPRINT", "false")
 }
 
-func TestView_Basic(t *testing.T) {
+func Test_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		str := `hello {{.name}},version:{{.version}};hello {{GetName}},version:{{GetVersion}};{{.other}}`
 		pwd := gfile.Pwd()
@@ -45,7 +51,7 @@ func TestView_Basic(t *testing.T) {
 	})
 }
 
-func TestView_Func(t *testing.T) {
+func Test_Func(t *testing.T) {
 	gtest.Case(t, func() {
 		str := `{{eq 1 1}};{{eq 1 2}};{{eq "A" "B"}}`
 		result, err := gview.ParseContent(str, nil)
@@ -162,7 +168,7 @@ func TestView_Func(t *testing.T) {
 	})
 }
 
-func TestView_FuncInclude(t *testing.T) {
+func Test_FuncInclude(t *testing.T) {
 	gtest.Case(t, func() {
 		header := `<h1>HEADER</h1>`
 		main := `<h1>hello gf</h1>`
@@ -200,7 +206,7 @@ func TestView_FuncInclude(t *testing.T) {
 	})
 }
 
-func TestView_SetPath(t *testing.T) {
+func Test_SetPath(t *testing.T) {
 	gtest.Case(t, func() {
 		view := gview.Instance("addpath")
 		err := view.AddPath("tmp")
@@ -230,7 +236,7 @@ func TestView_SetPath(t *testing.T) {
 	})
 }
 
-func TestView_ParseContent(t *testing.T) {
+func Test_ParseContent(t *testing.T) {
 	gtest.Case(t, func() {
 		str := `{{.name}}`
 		view := gview.New()

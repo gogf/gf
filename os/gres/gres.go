@@ -7,6 +7,11 @@
 // Package gres provides resource management and packing/unpacking feature between files and bytes.
 package gres
 
+const (
+	// Separator for directories.
+	Separator = "/"
+)
+
 var (
 	// Default resource object.
 	defaultResource = Instance()
@@ -54,14 +59,22 @@ func IsEmpty() bool {
 	return defaultResource.tree.IsEmpty()
 }
 
-// Scan returns the files under the given path, the parameter <path> should be a folder type.
+// ScanDir returns the files under the given path, the parameter <path> should be a folder type.
 //
 // The pattern parameter <pattern> supports multiple file name patterns,
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter <recursive> is true.
-func Scan(path string, pattern string, recursive ...bool) []*File {
-	return defaultResource.Scan(path, pattern, recursive...)
+func ScanDir(path string, pattern string, recursive ...bool) []*File {
+	return defaultResource.ScanDir(path, pattern, recursive...)
+}
+
+// ScanDirFile returns all sub-files with absolute paths of given <path>,
+// It scans directory recursively if given parameter <recursive> is true.
+//
+// Note that it returns only files, exclusive of directories.
+func ScanDirFile(path string, pattern string, recursive ...bool) []*File {
+	return defaultResource.ScanDirFile(path, pattern, recursive...)
 }
 
 // Dump prints the files of the default resource object.
