@@ -130,6 +130,8 @@ func (r *Resource) IsEmpty() bool {
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter <recursive> is true.
+//
+// Note that the returned files does not contain given parameter <path>.
 func (r *Resource) ScanDir(path string, pattern string, recursive ...bool) []*File {
 	isRecursive := false
 	if len(recursive) > 0 {

@@ -16,5 +16,5 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(m.Translate(`hello`))
-	fmt.Println(m.Translate(`{{hello}}{{world}}!`))
+	fmt.Println(m.Translate(`{#hello}{#world}!`))
 }
