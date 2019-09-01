@@ -8,6 +8,8 @@ package gres
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gtime"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -128,6 +130,8 @@ func (r *Resource) IsEmpty() bool {
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter <recursive> is true.
+//
+// Note that the returned files does not contain given parameter <path>.
 func (r *Resource) ScanDir(path string, pattern string, recursive ...bool) []*File {
 	isRecursive := false
 	if len(recursive) > 0 {
@@ -209,8 +213,10 @@ func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFi
 
 // Dump prints the files of current resource object.
 func (r *Resource) Dump() {
+	var info os.FileInfo
 	r.tree.Iterator(func(key, value interface{}) bool {
-		fmt.Printf("%7s %s\n", gfile.FormatSize(value.(*File).FileInfo().Size()), key)
+		info = value.(*File).FileInfo()
+		fmt.Printf("%v %7s %s\n", gtime.New(info.ModTime()).ISO8601(), gfile.FormatSize(info.Size()), key)
 		return true
 	})
 	fmt.Printf("TOTAL FILES: %d\n", r.tree.Size())

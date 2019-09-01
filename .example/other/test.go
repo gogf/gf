@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/glog"
+	"fmt"
+	"github.com/gogf/gf/internal/utilbytes"
 )
 
 func main() {
-	v := g.NewVar(1)
-	glog.Error(v.String())
-	glog.Errorfln("error")
+	b := []byte{48, 49, 50, 51, 52, 53}
+	fmt.Println(string(b))
+	fmt.Println([]byte("\xff\xff"))
+	fmt.Printf(utilbytes.Export(b))
 }
