@@ -284,7 +284,7 @@ func (s *Server) listDir(r *Request, f http.File) {
 		}
 		r.Response.Write(`<tr>`)
 		r.Response.Writef(`<td><a href="%s/%s">%s</a></td>`, r.URL.Path, name, ghtml.SpecialChars(name))
-		r.Response.Writef(`<td>%s</td>`, gtime.New(file.ModTime()).ISO8601())
+		r.Response.Writef(`<td style="width:300px;text-align:center;">%s</td>`, gtime.New(file.ModTime()).ISO8601())
 		r.Response.Writef(`<td style="width:80px;text-align:center;">%s</td>`, size)
 		r.Response.Write(`</tr>`)
 	}

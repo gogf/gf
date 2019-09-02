@@ -181,7 +181,7 @@ func (m *Manager) init() {
 			m.data = make(map[string]map[string]string)
 			for _, file := range files {
 				path = file[len(m.options.Path)+1:]
-				array = strings.Split(path, "/")
+				array = strings.Split(path, gfile.Separator)
 				if len(array) > 1 {
 					lang = array[0]
 				} else {
