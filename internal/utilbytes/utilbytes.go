@@ -9,18 +9,15 @@ package utilbytes
 
 import (
 	"bytes"
-	"strconv"
+	"fmt"
 )
 
 func Export(b []byte) string {
 	buffer := bytes.NewBuffer(nil)
-	buffer.WriteString("[]byte{")
-	for k, v := range b {
-		if k > 0 {
-			buffer.WriteByte(',')
-		}
-		buffer.WriteString(strconv.Itoa(int(v)))
+	buffer.WriteString(`[]byte("`)
+	for _, v := range b {
+		fmt.Fprintf(buffer, `\x%02x`, v)
 	}
-	buffer.WriteString("}")
+	buffer.WriteString(`")`)
 	return buffer.String()
 }

@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/gogf/gf/encoding/gbinary"
 )
@@ -35,6 +36,7 @@ var (
 	emptyStringMap = map[string]struct{}{
 		"":      {},
 		"0":     {},
+		"no":    {},
 		"off":   {},
 		"false": {},
 	}
@@ -205,7 +207,7 @@ func String(i interface{}) string {
 }
 
 // Bool converts <i> to bool.
-// It returns false if <i> is: false, "", 0, "false", "off", empty slice/map.
+// It returns false if <i> is: false, "", 0, "false", "off", "no", empty slice/map.
 func Bool(i interface{}) bool {
 	if i == nil {
 		return false
@@ -214,12 +216,12 @@ func Bool(i interface{}) bool {
 	case bool:
 		return value
 	case []byte:
-		if _, ok := emptyStringMap[string(value)]; ok {
+		if _, ok := emptyStringMap[strings.ToLower(string(value))]; ok {
 			return false
 		}
 		return true
 	case string:
-		if _, ok := emptyStringMap[value]; ok {
+		if _, ok := emptyStringMap[strings.ToLower(value)]; ok {
 			return false
 		}
 		return true
@@ -237,7 +239,7 @@ func Bool(i interface{}) bool {
 		case reflect.Struct:
 			return true
 		default:
-			s := String(i)
+			s := strings.ToLower(String(i))
 			if _, ok := emptyStringMap[s]; ok {
 				return false
 			}

@@ -91,6 +91,8 @@ type DB interface {
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(n int)
+	Tables() (tables []string, err error)
+	TableFields(table string) (map[string]*TableField, error)
 
 	// 内部方法接口
 	getCache() *gcache.Cache
@@ -101,7 +103,6 @@ type DB interface {
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
 	formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{})
 	convertValue(fieldValue []byte, fieldType string) interface{}
-	getTableFields(table string) (map[string]string, error)
 	rowsToResult(rows *sql.Rows) (Result, error)
 	handleSqlBeforeExec(sql string) string
 }
@@ -135,6 +136,17 @@ type Sql struct {
 	Error error         // 执行结果(nil为成功)
 	Start int64         // 执行开始时间(毫秒)
 	End   int64         // 执行结束时间(毫秒)
+}
+
+// 表字段结构信息
+type TableField struct {
+	Index   int         // 用于字段排序(map类型是无序的)
+	Name    string      // 字段名称
+	Type    string      // 字段类型
+	Null    bool        // 是否可为null
+	Key     string      // 索引信息
+	Default interface{} // 默认值
+	Extra   string      // 其他信息
 }
 
 // 返回数据表记录值
