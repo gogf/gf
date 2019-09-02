@@ -64,15 +64,15 @@ func SetConfig(config Config) {
 	configs.config = config
 }
 
-// 添加数据库服务器集群配置
-func AddConfigGroup(group string, nodes ConfigGroup) {
+// 按照配置分组设置数据库服务器集群配置
+func SetConfigGroup(group string, nodes ConfigGroup) {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
 	configs.config[group] = nodes
 }
 
-// 添加一台数据库服务器配置
+// 按照配置分组添加一台数据库服务器配置
 func AddConfigNode(group string, node ConfigNode) {
 	defer instances.Clear()
 	configs.Lock()
@@ -87,7 +87,7 @@ func AddDefaultConfigNode(node ConfigNode) {
 
 // 添加默认链接的数据库服务器集群配置
 func AddDefaultConfigGroup(nodes ConfigGroup) {
-	AddConfigGroup(DEFAULT_GROUP_NAME, nodes)
+	SetConfigGroup(DEFAULT_GROUP_NAME, nodes)
 }
 
 // 添加一台数据库服务器配置
