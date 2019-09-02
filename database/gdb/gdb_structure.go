@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/text/gstr"
+
 	"github.com/gogf/gf/os/gtime"
 
 	"github.com/gogf/gf/encoding/gbinary"
@@ -27,9 +29,15 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 		return fieldValue
 
 	case "int", "tinyint", "small_int", "medium_int":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			gconv.Uint(string(fieldValue))
+		}
 		return gconv.Int(string(fieldValue))
 
 	case "big_int":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			gconv.Uint64(string(fieldValue))
+		}
 		return gconv.Int64(string(fieldValue))
 
 	case "float", "double", "decimal":
