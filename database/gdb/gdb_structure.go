@@ -8,22 +8,15 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gtime"
 	"strings"
+
+	"github.com/gogf/gf/os/gtime"
 
 	"github.com/gogf/gf/encoding/gbinary"
 
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 )
-
-//// 同步数据库表结构到内存中
-//func (bs *dbBase) syncTableStructure() {
-//    bs.tables = make(map[string]map[string]string)
-//    for _, table := range bs.db.getTables() {
-//        bs.tables[table], _ = bs.db.getTableFields(table)
-//    }
-//}
 
 // 字段类型转换，将数据库字段类型转换为golang变量类型
 func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} {
@@ -86,7 +79,7 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 
 // 将map的数据按照fields进行过滤，只保留与表字段同名的数据
 func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
-	if fields, err := bs.db.getTableFields(table); err == nil {
+	if fields, err := bs.db.TableFields(table); err == nil {
 		for k, _ := range data {
 			if _, ok := fields[k]; !ok {
 				delete(data, k)
@@ -96,8 +89,23 @@ func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[st
 	return data
 }
 
-// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值暂无用途(默认为字段数据类型).
-func (bs *dbBase) getTableFields(table string) (fields map[string]string, err error) {
+// 返回当前数据库所有的数据表名称
+func (bs *dbBase) Tables() (tables []string, err error) {
+	result := (Result)(nil)
+	result, err = bs.GetAll(`SHOW TABLES`)
+	if err != nil {
+		return
+	}
+	for _, m := range result {
+		for _, v := range m {
+			tables = append(tables, v.String())
+		}
+	}
+	return
+}
+
+// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值为字段数据结构.
+func (bs *dbBase) TableFields(table string) (fields map[string]*TableField, err error) {
 	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
 	v := bs.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
 		result := (Result)(nil)
@@ -105,31 +113,22 @@ func (bs *dbBase) getTableFields(table string) (fields map[string]string, err er
 		if err != nil {
 			return nil
 		}
-		fields = make(map[string]string)
-		for _, m := range result {
-			fields[m["Field"].String()] = m["Type"].String()
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[m["Field"].String()] = &TableField{
+				Index:   i,
+				Name:    m["Field"].String(),
+				Type:    m["Type"].String(),
+				Null:    m["Null"].Bool(),
+				Key:     m["Key"].String(),
+				Default: m["Default"].Val(),
+				Extra:   m["Extra"].String(),
+			}
 		}
 		return fields
 	}, 0)
 	if err == nil {
-		fields = v.(map[string]string)
+		fields = v.(map[string]*TableField)
 	}
 	return
 }
-
-/*
-// 获取当前数据库所有的表结构
-func (bs *dbBase) getTables() []string {
-    if result, _ := bs.GetAll(`SHOW TABLES`); result != nil {
-        array := make([]string, len(result))
-        for i, m := range result {
-            for _, v := range m {
-                array[i] = v.String()
-                break
-            }
-        }
-        return array
-    }
-    return nil
-}
-*/
