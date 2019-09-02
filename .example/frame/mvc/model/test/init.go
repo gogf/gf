@@ -1,10 +1,8 @@
 package test
 
-import (
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
-)
+import "github.com/gogf/gf/database/gdb"
 
-func DB() gdb.DB {
-	return g.DB()
-}
+var (
+	// ConfigGroup is the configuration group name for this model.
+	ConfigGroup = gdb.DEFAULT_GROUP_NAME
+)

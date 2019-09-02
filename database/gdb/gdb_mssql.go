@@ -14,9 +14,10 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/text/gregex"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/text/gregex"
 )
 
 // 数据库链接对象
@@ -147,8 +148,14 @@ func (db *dbMssql) parseSql(sql string) string {
 	return sql
 }
 
+// 返回当前数据库所有的数据表名称
+// TODO
+func (bs *dbMssql) Tables() (tables []string, err error) {
+	return
+}
+
 // 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值暂无用途(默认为字段数据类型).
-func (db *dbMssql) getTableFields(table string) (fields map[string]string, err error) {
+func (db *dbMssql) TableFields(table string) (fields map[string]*TableField, err error) {
 	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
 	v := db.cache.GetOrSetFunc("mssql_table_fields_"+table, func() interface{} {
 		result := (Result)(nil)
@@ -162,14 +169,19 @@ func (db *dbMssql) getTableFields(table string) (fields map[string]string, err e
 		if err != nil {
 			return nil
 		}
-		fields = make(map[string]string)
-		for _, m := range result {
-			fields[strings.ToLower(m["FIELD"].String())] = strings.ToLower(m["TYPE"].String()) //sqlserver返回的field为大写的需要转为小写的
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			// SQLServer返回的field为大写的需要转为小写的
+			fields[strings.ToLower(m["FIELD"].String())] = &TableField{
+				Index: i,
+				Name:  strings.ToLower(m["FIELD"].String()),
+				Type:  strings.ToLower(m["TYPE"].String()),
+			}
 		}
 		return fields
 	}, 0)
 	if err == nil {
-		fields = v.(map[string]string)
+		fields = v.(map[string]*TableField)
 	}
 	return
 }
