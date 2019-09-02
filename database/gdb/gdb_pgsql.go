@@ -9,8 +9,9 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/text/gregex"
 	"strings"
+
+	"github.com/gogf/gf/text/gregex"
 )
 
 // PostgreSQL的适配.
@@ -64,7 +65,14 @@ func (db *dbPgsql) handleSqlBeforeExec(query string) string {
 	return query
 }
 
-func (db *dbPgsql) getTableFields(table string) (fields map[string]string, err error) {
+// 返回当前数据库所有的数据表名称
+// TODO
+func (bs *dbPgsql) Tables() (tables []string, err error) {
+	return
+}
+
+// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值为字段数据结构.
+func (db *dbPgsql) TableFields(table string) (fields map[string]*TableField, err error) {
 	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
 	table, _ = gregex.ReplaceString("\"", "", table)
 	v := db.cache.GetOrSetFunc("pgsql_table_fields_"+table, func() interface{} {
@@ -77,14 +85,18 @@ func (db *dbPgsql) getTableFields(table string) (fields map[string]string, err e
 			return nil
 		}
 
-		fields = make(map[string]string)
-		for _, m := range result {
-			fields[m["field"].String()] = m["type"].String()
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[m["field"].String()] = &TableField{
+				Index: i,
+				Name:  m["field"].String(),
+				Type:  m["type"].String(),
+			}
 		}
 		return fields
 	}, 0)
 	if err == nil {
-		fields = v.(map[string]string)
+		fields = v.(map[string]*TableField)
 	}
 	return
 }
