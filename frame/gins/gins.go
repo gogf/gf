@@ -124,7 +124,7 @@ func Database(name ...string) gdb.DB {
 					}
 				}
 				if len(cg) > 0 {
-					gdb.AddConfigGroup(group, cg)
+					gdb.SetConfigGroup(group, cg)
 				}
 			}
 			// Parse <m> as a single node configuration.
@@ -134,7 +134,7 @@ func Database(name ...string) gdb.DB {
 					cg = append(cg, *node)
 				}
 				if len(cg) > 0 {
-					gdb.AddConfigGroup(group, cg)
+					gdb.SetConfigGroup(group, cg)
 				}
 			}
 			addConfigMonitor(instanceKey, config)
