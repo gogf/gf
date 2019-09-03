@@ -12,7 +12,7 @@ func main() {
 	g.Config().SetFileName("my.ini")
 	g.Dump(g.Config().Get("redis"))
 
-	g.Config().SetPath("/config-custom")
+	g.Config().SetPath("config-custom")
 	g.Config().SetFileName("my.ini")
 	g.Dump(g.Config().Get("redis"))
 

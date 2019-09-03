@@ -8,10 +8,11 @@ package gres
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gtime"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/gogf/gf/os/gtime"
 
 	"github.com/gogf/gf/container/gtree"
 	"github.com/gogf/gf/os/gfile"

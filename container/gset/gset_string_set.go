@@ -8,6 +8,7 @@
 package gset
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/gogf/gf/internal/rwmutex"
@@ -318,4 +319,9 @@ func (set *StringSet) Pops(size int) []string {
 		}
 	}
 	return array
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (set *StringSet) MarshalJSON() ([]byte, error) {
+	return json.Marshal(set.Slice())
 }
