@@ -38,7 +38,8 @@ const (
 var (
 	// Templates cache map for template folder.
 	// TODO Note that there's no expiring logic for this map.
-	templates = gmap.NewStrAnyMap(true)
+	templates        = gmap.NewStrAnyMap(true)
+	resourceTryFiles = []string{"template/", "template", "/template", "/template/"}
 )
 
 // getTemplate returns the template object associated with given template folder <path>.
@@ -116,7 +117,7 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 	}
 	// Checking the configuration file in default paths.
 	if path == "" && !gres.IsEmpty() {
-		for _, v := range []string{"/template", "/template/"} {
+		for _, v := range resourceTryFiles {
 			if file := gres.Get(v + file); file != nil {
 				path = file.Name()
 				folder = gfile.Dir(path)

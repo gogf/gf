@@ -29,34 +29,44 @@ func init() {
 `
 )
 
-// Pack packs the path specified by <srcPath> into bytes.
+// Pack packs the path specified by <srcPaths> into bytes.
 // The unnecessary parameter <keyPrefix> indicates the prefix for each file
 // packed into the result bytes.
-func Pack(srcPath string, keyPrefix ...string) ([]byte, error) {
+//
+// Note that parameter <srcPaths> supports multiple paths join with ','.
+func Pack(srcPaths string, keyPrefix ...string) ([]byte, error) {
 	buffer := bytes.NewBuffer(nil)
-	err := gcompress.ZipPathWriter(srcPath, buffer, keyPrefix...)
+	headerPrefix := ""
+	if len(keyPrefix) > 0 && keyPrefix[0] != "" {
+		headerPrefix = keyPrefix[0]
+	}
+	err := gcompress.ZipPathWriter(srcPaths, buffer, headerPrefix)
 	if err != nil {
 		return nil, err
 	}
 	return buffer.Bytes(), nil
 }
 
-// PackToFile packs the path specified by <srcPath> to target file <dstPath>.
+// PackToFile packs the path specified by <srcPaths> to target file <dstPath>.
 // The unnecessary parameter <keyPrefix> indicates the prefix for each file
 // packed into the result bytes.
-func PackToFile(srcPath, dstPath string, keyPrefix ...string) error {
-	data, err := Pack(srcPath, keyPrefix...)
+//
+// Note that parameter <srcPaths> supports multiple paths join with ','.
+func PackToFile(srcPaths, dstPath string, keyPrefix ...string) error {
+	data, err := Pack(srcPaths, keyPrefix...)
 	if err != nil {
 		return err
 	}
 	return gfile.PutBytes(dstPath, data)
 }
 
-// PackToGoFile packs the path specified by <srcPath> to target go file <goFilePath>
+// PackToGoFile packs the path specified by <srcPaths> to target go file <goFilePath>
 // with given package name <pkgName>.
 //
 // The unnecessary parameter <keyPrefix> indicates the prefix for each file
 // packed into the result bytes.
+//
+// Note that parameter <srcPaths> supports multiple paths join with ','.
 func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) error {
 	data, err := Pack(srcPath, keyPrefix...)
 	if err != nil {

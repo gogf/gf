@@ -14,12 +14,32 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Export(t *testing.T) {
+func Test_Pack(t *testing.T) {
 	gtest.Case(t, func() {
 		srcPath := gdebug.CallerDirectory() + "/testdata/files"
 		goFilePath := gdebug.CallerDirectory() + "/testdata/testdata.go"
 		pkgName := "testdata"
 		err := gres.PackToGoFile(srcPath, goFilePath, pkgName)
+		gtest.Assert(err, nil)
+	})
+}
+
+func Test_PackWithPrefix1(t *testing.T) {
+	gtest.Case(t, func() {
+		srcPath := gdebug.CallerDirectory() + "/testdata/files"
+		goFilePath := gdebug.CallerDirectory() + "/testdata/testdata.go"
+		pkgName := "testdata"
+		err := gres.PackToGoFile(srcPath, goFilePath, pkgName, "www/gf-site/test")
+		gtest.Assert(err, nil)
+	})
+}
+
+func Test_PackWithPrefix2(t *testing.T) {
+	gtest.Case(t, func() {
+		srcPath := gdebug.CallerDirectory() + "/testdata/files"
+		goFilePath := gdebug.CallerDirectory() + "/testdata/testdata.go"
+		pkgName := "testdata"
+		err := gres.PackToGoFile(srcPath, goFilePath, pkgName, "/var/www/gf-site/test")
 		gtest.Assert(err, nil)
 	})
 }
