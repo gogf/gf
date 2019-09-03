@@ -1,11 +1,20 @@
 package main
 
-import "github.com/gogf/gf/os/glog"
+import (
+	"fmt"
 
-func Test() {
-
-}
+	"github.com/gogf/gf/encoding/gcompress"
+	"github.com/gogf/gf/os/gfile"
+)
 
 func main() {
-	glog.Line().Println("123")
+	fmt.Println(gfile.Basename("/dir/*"))
+	return
+	err := gcompress.ZipPath(
+		"/Users/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/.example/other",
+		"/Users/john/Temp/test.zip",
+	)
+	if err != nil {
+		panic(err)
+	}
 }

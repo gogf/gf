@@ -9,12 +9,13 @@ package gcompress
 import (
 	"archive/zip"
 	"bytes"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/text/gstr"
 )
 
 // ZipPath compresses <path> to <dest> using zip compressing algorithm.
@@ -31,7 +32,7 @@ func ZipPath(path, dest string, prefix ...string) error {
 // ZipPathWriter compresses <path> to <writer> using zip compressing algorithm.
 // The unnecessary parameter <prefix> indicates the path prefix for zip file.
 func ZipPathWriter(path string, writer io.Writer, prefix ...string) error {
-	pathRealPath, err := gfile.Search(path)
+	realPath, err := gfile.Search(path)
 	if err != nil {
 		return err
 	}
@@ -45,8 +46,13 @@ func ZipPathWriter(path string, writer io.Writer, prefix ...string) error {
 	if len(prefix) > 0 {
 		headerPrefix = prefix[0]
 	}
+	headerPrefix = strings.Trim(headerPrefix, "\\/")
+	// If path is a directory, add it to the zip prefix.
+	if gfile.IsDir(realPath) {
+		headerPrefix = headerPrefix + "/" + gfile.Basename(realPath)
+	}
 	for _, file := range files {
-		err := zipFile(file, headerPrefix+gfile.Dir(file[len(pathRealPath):]), zipWriter)
+		err := zipFile(file, headerPrefix+gfile.Dir(file[len(realPath):]), zipWriter)
 		if err != nil {
 			return err
 		}

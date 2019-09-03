@@ -19,28 +19,30 @@ import (
 type handlerCacheItem struct {
 	parsedItems []*handlerParsedItem
 	hasHook     bool
+	hasServe    bool
 }
 
 // 查询请求处理方法.
 // 内部带锁机制，可以并发读，但是不能并发写；并且有缓存机制，按照Host、Method、Path进行缓存.
-func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedItem, hasHook bool) {
-	cacheKey := s.serveHandlerKey(r.Method, r.URL.Path, r.GetHost())
-	if v := s.serveCache.Get(cacheKey); v == nil {
-		parsedItems, hasHook = s.searchHandlers(r.Method, r.URL.Path, r.GetHost())
+func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
+	value := s.serveCache.GetOrSetFunc(s.serveHandlerKey(r.Method, r.URL.Path, r.GetHost()), func() interface{} {
+		parsedItems, hasHook, hasServe = s.searchHandlers(r.Method, r.URL.Path, r.GetHost())
 		if parsedItems != nil {
-			s.serveCache.Set(cacheKey, &handlerCacheItem{parsedItems, hasHook}, s.config.RouterCacheExpire*1000)
+			return &handlerCacheItem{parsedItems, hasHook, hasServe}
 		}
-	} else {
-		item := v.(*handlerCacheItem)
-		return item.parsedItems, item.hasHook
+		return nil
+	}, s.config.RouterCacheExpire*1000)
+	if value != nil {
+		item := value.(*handlerCacheItem)
+		return item.parsedItems, item.hasHook, item.hasServe
 	}
 	return
 }
 
 // 路由注册方法检索，返回所有该路由的注册函数，构造成数组返回
-func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*handlerParsedItem, hasHook bool) {
+func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
 	if len(path) == 0 {
-		return nil, false
+		return nil, false, false
 	}
 	// 遍历检索的域名列表，优先遍历默认域名
 	domains := []string{gDEFAULT_DOMAIN}
@@ -56,7 +58,6 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	}
 	parsedItemList := glist.New()
 	lastMiddlewareItem := (*glist.Element)(nil)
-	isServeHandlerAdded := false
 	for _, domain := range domains {
 		p, ok := s.serveTree[domain]
 		if !ok {
@@ -98,7 +99,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 			for e := lists[i].Front(); e != nil; e = e.Next() {
 				item := e.Value.(*handlerItem)
 				// 服务路由函数只能添加一次
-				if isServeHandlerAdded {
+				if hasServe {
 					switch item.itemType {
 					case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
 						continue
@@ -126,7 +127,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 						switch item.itemType {
 						// 服务路由函数只能添加一次
 						case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
-							isServeHandlerAdded = true
+							hasServe = true
 							parsedItemList.PushBack(parsedItem)
 
 						// 中间件需要排序

@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/gogf/gf/util/gconv"
 )
@@ -216,7 +217,9 @@ func (md *Model) GroupBy(groupBy string) *Model {
 // 链式操作，order by
 func (md *Model) OrderBy(orderBy string) *Model {
 	model := md.getModel()
-	model.orderBy = orderBy
+	array := strings.Split(orderBy, " ")
+	array[0] = md.db.quoteWord(array[0])
+	model.orderBy = strings.Join(array, " ")
 	return model
 }
 

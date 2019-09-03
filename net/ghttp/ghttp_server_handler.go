@@ -109,7 +109,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// 动态服务检索
 	if serveFile == nil || serveFile.dir {
-		request.handlers, request.hasHookHandler = s.getHandlersWithCache(request)
+		request.handlers, request.hasHookHandler, request.hasServeHandler = s.getHandlersWithCache(request)
 	}
 
 	// 判断最终对该请求提供的服务方式
@@ -126,7 +126,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 			// 静态服务
 			s.serveFile(request, serveFile)
 		} else {
-			if len(request.handlers) > 0 {
+			if request.hasServeHandler {
 				// 动态服务
 				request.Middleware.Next()
 			} else {
