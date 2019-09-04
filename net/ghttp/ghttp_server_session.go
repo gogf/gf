@@ -186,7 +186,7 @@ func (s *Session) UpdateExpire() {
 				time.Duration(s.server.GetSessionMaxAge())*time.Second,
 			)
 			if err != nil {
-				panic(err)
+				panic("saving session failed:" + err.Error())
 			}
 		}
 		// 其次更新内存TTL
