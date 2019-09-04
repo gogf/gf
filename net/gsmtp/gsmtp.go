@@ -38,35 +38,36 @@ func New(address, username, password string) *SMTP {
 // and then sends an email from address from, to addresses to, with
 // message msg.
 func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) error {
-	if s.Address == "" {
-		return fmt.Errorf("address is necessary")
-	}
 
 	hp := strings.Split(s.Address, ":")
-	if len(hp) != 2 {
-		return fmt.Errorf("address format error")
+	if len(hp) == 1 {
+		server := s.Address
+		address := server + ":25"
+	} else if len(hp) == 2 {
+		server := hp[0]
+		address := s.Address
+	} else {
+		return fmt.Errorf("address is either empty or incorrect")
 	}
 
+	tosArr := []string
 	arr := strings.Split(tos, ";")
-	count := len(arr)
-	safeArr := make([]string, 0, count)
-	for i := 0; i < count; i++ {
-		if arr[i] == "" {
-			continue
+	for _, to := range arr {
+		// TODO: replace with regex
+		if strings.Containts(to, "@") {
+			tosArr = append(tosArr, to)
 		}
-		safeArr = append(safeArr, arr[i])
 	}
 
-	if len(safeArr) == 0 {
+	if len(tosArr) == 0 {
 		return fmt.Errorf("tos invalid")
 	}
 
-	tos = strings.Join(safeArr, ";")
 	b64 := base64.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 
 	header := make(map[string]string)
 	header["From"] = from
-	header["To"] = tos
+	header["To"] = strings.Join(tosArr, ";")
 	header["Subject"] = fmt.Sprintf("=?UTF-8?B?%s?=", b64.EncodeToString([]byte(subject)))
 	header["MIME-Version"] = "1.0"
 
@@ -84,6 +85,6 @@ func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) 
 	}
 	message += "\r\n" + b64.EncodeToString([]byte(body))
 
-	auth := smtp.PlainAuth("", s.Username, s.Password, hp[0])
-	return smtp.SendMail(s.Address, auth, from, strings.Split(tos, ";"), []byte(message))
+	auth := smtp.PlainAuth("", s.Username, s.Password, server)
+	return smtp.SendMail(address, auth, from, tosArr, []byte(message))
 }
