@@ -7,7 +7,10 @@
 package gres_test
 
 import (
+	"strings"
 	"testing"
+
+	"github.com/gogf/gf/os/gfile"
 
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/os/gres"
@@ -20,6 +23,18 @@ func Test_Pack(t *testing.T) {
 		goFilePath := gdebug.CallerDirectory() + "/testdata/testdata.go"
 		pkgName := "testdata"
 		err := gres.PackToGoFile(srcPath, goFilePath, pkgName)
+		gtest.Assert(err, nil)
+	})
+}
+
+func Test_PackMulti(t *testing.T) {
+	gtest.Case(t, func() {
+		srcPath := gdebug.CallerDirectory() + "/testdata/files"
+		goFilePath := gdebug.CallerDirectory() + "/testdata/testdata.go"
+		pkgName := "testdata"
+		array, err := gfile.ScanDir(srcPath, "*", false)
+		gtest.Assert(err, nil)
+		err = gres.PackToGoFile(strings.Join(array, ","), goFilePath, pkgName)
 		gtest.Assert(err, nil)
 	})
 }

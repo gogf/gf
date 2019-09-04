@@ -7,9 +7,10 @@
 package gres_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/test/gtest"
-	"testing"
 
 	"github.com/gogf/gf/os/gres"
 	_ "github.com/gogf/gf/os/gres/testdata"
@@ -18,13 +19,13 @@ import (
 func Test_Basic(t *testing.T) {
 	gres.Dump()
 	gtest.Case(t, func() {
-		gtest.Assert(gres.Get("/none"), nil)
-		gtest.Assert(gres.Contains("/none"), false)
-		gtest.Assert(gres.Contains("/dir1"), true)
+		gtest.Assert(gres.Get("none"), nil)
+		gtest.Assert(gres.Contains("none"), false)
+		gtest.Assert(gres.Contains("dir1"), true)
 	})
 
 	gtest.Case(t, func() {
-		path := "/dir1/test1"
+		path := "dir1/test1"
 		file := gres.Get(path)
 		gtest.AssertNE(file, nil)
 		gtest.Assert(file.Name(), path)
@@ -48,7 +49,7 @@ func Test_Basic(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
-		path := "/dir2"
+		path := "dir2"
 		file := gres.Get(path)
 		gtest.AssertNE(file, nil)
 		gtest.Assert(file.Name(), path)
@@ -66,7 +67,7 @@ func Test_Basic(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
-		path := "/dir2/test2"
+		path := "dir2/test2"
 		file := gres.Get(path)
 		gtest.AssertNE(file, nil)
 		gtest.Assert(file.Name(), path)
@@ -77,40 +78,40 @@ func Test_Basic(t *testing.T) {
 func Test_Get(t *testing.T) {
 	gres.Dump()
 	gtest.Case(t, func() {
-		gtest.AssertNE(gres.Get("/dir1/test1"), nil)
+		gtest.AssertNE(gres.Get("dir1/test1"), nil)
 	})
 	gtest.Case(t, func() {
-		file := gres.GetWithIndex("/dir1", g.SliceStr{"test1"})
+		file := gres.GetWithIndex("dir1", g.SliceStr{"test1"})
 		gtest.AssertNE(file, nil)
-		gtest.Assert(file.Name(), "/dir1/test1")
+		gtest.Assert(file.Name(), "dir1/test1")
 	})
 	gtest.Case(t, func() {
-		gtest.Assert(gres.GetContent("/dir1"), "")
-		gtest.Assert(gres.GetContent("/dir1/test1"), "test1 content")
+		gtest.Assert(gres.GetContent("dir1"), "")
+		gtest.Assert(gres.GetContent("dir1/test1"), "test1 content")
 	})
 }
 
 func Test_ScanDir(t *testing.T) {
 	gres.Dump()
 	gtest.Case(t, func() {
-		path := "/dir1"
+		path := "dir1"
 		files := gres.ScanDir(path, "*", false)
 		gtest.AssertNE(files, nil)
 		gtest.Assert(len(files), 2)
 	})
 	gtest.Case(t, func() {
-		path := "/dir1"
+		path := "dir1"
 		files := gres.ScanDir(path, "*", true)
 		gtest.AssertNE(files, nil)
 		gtest.Assert(len(files), 3)
 	})
 
 	gtest.Case(t, func() {
-		path := "/dir1"
+		path := "dir1"
 		files := gres.ScanDir(path, "*.*", true)
 		gtest.AssertNE(files, nil)
 		gtest.Assert(len(files), 1)
-		gtest.Assert(files[0].Name(), "/dir1/sub/sub-test1.txt")
+		gtest.Assert(files[0].Name(), "dir1/sub/sub-test1.txt")
 		gtest.Assert(files[0].Content(), "sub-test1 content")
 	})
 }
@@ -118,24 +119,24 @@ func Test_ScanDir(t *testing.T) {
 func Test_ScanDirFile(t *testing.T) {
 	gres.Dump()
 	gtest.Case(t, func() {
-		path := "/dir2"
+		path := "dir2"
 		files := gres.ScanDirFile(path, "*", false)
 		gtest.AssertNE(files, nil)
 		gtest.Assert(len(files), 1)
 	})
 	gtest.Case(t, func() {
-		path := "/dir2"
+		path := "dir2"
 		files := gres.ScanDirFile(path, "*", true)
 		gtest.AssertNE(files, nil)
 		gtest.Assert(len(files), 2)
 	})
 
 	gtest.Case(t, func() {
-		path := "/dir2"
+		path := "dir2"
 		files := gres.ScanDirFile(path, "*.*", true)
 		gtest.AssertNE(files, nil)
 		gtest.Assert(len(files), 1)
-		gtest.Assert(files[0].Name(), "/dir2/sub/sub-test2.txt")
+		gtest.Assert(files[0].Name(), "dir2/sub/sub-test2.txt")
 		gtest.Assert(files[0].Content(), "sub-test2 content")
 	})
 }
