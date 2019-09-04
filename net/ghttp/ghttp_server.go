@@ -195,17 +195,18 @@ func serverProcessInit() {
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
 // 单例模式，请保证name的唯一性
 func GetServer(name ...interface{}) *Server {
-	sname := gDEFAULT_SERVER
+	serverName := gDEFAULT_SERVER
 	if len(name) > 0 && name[0] != "" {
-		sname = gconv.String(name[0])
+		serverName = gconv.String(name[0])
 	}
-	if s := serverMapping.Get(sname); s != nil {
+	if s := serverMapping.Get(serverName); s != nil {
 		return s.(*Server)
 	}
-	sessionStorage := gkvdb.Instance(defaultServerConfig.SessionStoragePath)
-	sessionStorage.SetOptions(gkvdb.DefaultOptions(defaultServerConfig.SessionStoragePath))
+	storagePath := defaultServerConfig.SessionStoragePath + gfile.Separator + serverName
+	sessionStorage := gkvdb.Instance(storagePath)
+	sessionStorage.SetOptions(gkvdb.DefaultOptions(storagePath))
 	s := &Server{
-		name:             sname,
+		name:             serverName,
 		servers:          make([]*gracefulServer, 0),
 		closeChan:        make(chan struct{}, 100),
 		serverCount:      gtype.NewInt(),
@@ -221,7 +222,7 @@ func GetServer(name ...interface{}) *Server {
 	// 初始化时使用默认配置
 	s.SetConfig(defaultServerConfig)
 	// 记录到全局ServerMap中
-	serverMapping.Set(sname, s)
+	serverMapping.Set(serverName, s)
 	return s
 }
 
