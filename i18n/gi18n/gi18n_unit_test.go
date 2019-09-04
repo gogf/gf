@@ -9,6 +9,8 @@ package gi18n_test
 import (
 	"testing"
 
+	"github.com/gogf/gf/os/gres"
+
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 
@@ -21,7 +23,7 @@ import (
 
 	"github.com/gogf/gf/test/gtest"
 
-	_ "github.com/gogf/gf/os/gres/testdata"
+	_ "github.com/gogf/gf/os/gres/testdata/data"
 )
 
 func Test_Basic(t *testing.T) {
@@ -102,9 +104,10 @@ func Test_DefaultManager(t *testing.T) {
 }
 
 func Test_Instance(t *testing.T) {
+	gres.Dump()
 	gtest.Case(t, func() {
 		m := gi18n.Instance()
-		err := m.SetPath("/i18n-dir")
+		err := m.SetPath("i18n-dir")
 		gtest.Assert(err, nil)
 		m.SetLanguage("zh-CN")
 		gtest.Assert(m.T("{#hello}{#world}"), "你好世界")
@@ -128,7 +131,7 @@ func Test_Instance(t *testing.T) {
 func Test_Resource(t *testing.T) {
 	gtest.Case(t, func() {
 		m := g.I18n("resource")
-		err := m.SetPath("/i18n-dir")
+		err := m.SetPath("i18n-dir")
 		gtest.Assert(err, nil)
 
 		m.SetLanguage("none")

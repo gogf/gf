@@ -30,8 +30,8 @@ func Test_Pack(t *testing.T) {
 func Test_PackMulti(t *testing.T) {
 	gtest.Case(t, func() {
 		srcPath := gdebug.CallerDirectory() + "/testdata/files"
-		goFilePath := gdebug.CallerDirectory() + "/testdata/testdata.go"
-		pkgName := "testdata"
+		goFilePath := gdebug.CallerDirectory() + "/testdata/data/data.go"
+		pkgName := "data"
 		array, err := gfile.ScanDir(srcPath, "*", false)
 		gtest.Assert(err, nil)
 		err = gres.PackToGoFile(strings.Join(array, ","), goFilePath, pkgName)

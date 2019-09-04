@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 
 	"github.com/gogf/gf/os/gres"
-	_ "github.com/gogf/gf/os/gres/testdata"
+	_ "github.com/gogf/gf/os/gres/testdata/data"
 )
 
 func Test_Basic(t *testing.T) {
