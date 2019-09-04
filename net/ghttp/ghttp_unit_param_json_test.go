@@ -21,10 +21,10 @@ func Test_Params_Json(t *testing.T) {
 	type User struct {
 		Uid      int
 		Name     string
-		SiteUrl  string `gconv:"-"`
-		NickName string `gconv:"nickname, omitempty"`
-		Pass1    string `gconv:"password1"`
-		Pass2    string `gconv:"password2"`
+		SiteUrl  string `json:"-"`
+		NickName string `json:"nickname,omitempty"`
+		Pass1    string `json:"password1"`
+		Pass2    string `json:"password2"`
 	}
 
 	p := ports.PopRand()
