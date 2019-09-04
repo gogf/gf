@@ -62,10 +62,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		// 设置请求完成时间
 		request.LeaveTime = gtime.Microsecond()
-		// 事件 - BeforeOutput
-		if !request.IsExited() {
-			s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
-		}
 		// 如果没有产生异常状态，那么设置返回状态为200
 		if request.Response.Status == 0 {
 			if request.Middleware.served || request.Response.buffer.Len() > 0 {
@@ -81,16 +77,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		// access log
 		s.handleAccessLog(request)
-		// 输出Cookie
-		request.Cookie.Output()
-		// 输出缓冲区
-		request.Response.Output()
-		// 事件 - AfterOutput
-		if !request.IsExited() {
-			s.callHookHandler(HOOK_AFTER_OUTPUT, request)
-		}
-		// 更新Session会话超时时间
-		request.Session.UpdateExpire()
 	}()
 
 	// ============================================================
@@ -148,6 +134,21 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_SERVE, request)
 	}
+
+	// 事件 - BeforeOutput
+	if !request.IsExited() {
+		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
+	}
+	// 输出Cookie
+	request.Cookie.Output()
+	// 输出缓冲区
+	request.Response.Output()
+	// 事件 - AfterOutput
+	if !request.IsExited() {
+		s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+	}
+	// 更新Session会话超时时间
+	request.Session.UpdateExpire()
 }
 
 // 查找静态文件的绝对路径
