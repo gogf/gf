@@ -38,23 +38,28 @@ func New(address, username, password string) *SMTP {
 // and then sends an email from address from, to addresses to, with
 // message msg.
 func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) error {
+	server := ""
+	address := ""
 
 	hp := strings.Split(s.Address, ":")
-	if len(hp) == 1 {
-		server := s.Address
-		address := server + ":25"
-	} else if len(hp) == 2 {
-		server := hp[0]
-		address := s.Address
-	} else {
+	if (s.Address == "") || (len(hp) > 2) {
 		return fmt.Errorf("address is either empty or incorrect")
+	} else if len(hp) == 1 {
+		server = s.Address
+		address = server + ":25"
+	} else if len(hp) == 2 {
+		if (hp[0] == "") || (hp[1] == "") {
+			return fmt.Errorf("Address is either empty or incorrect: %s", s.Address)
+		}
+		server = hp[0]
+		address = s.Address
 	}
 
-	tosArr := []string
+	tosArr := []string{}
 	arr := strings.Split(tos, ";")
 	for _, to := range arr {
 		// TODO: replace with regex
-		if strings.Containts(to, "@") {
+		if strings.Contains(to, "@") {
 			tosArr = append(tosArr, to)
 		}
 	}
