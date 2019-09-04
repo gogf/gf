@@ -18,6 +18,7 @@ import (
 	"strings"
 )
 
+// SMTP is the structure for smtp connection
 type SMTP struct {
 	Address  string
 	Username string
