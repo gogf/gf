@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgraph-io/badger/options"
+
 	"github.com/gogf/gf/database/gkvdb"
 
 	"github.com/gogf/gf/container/garray"
@@ -205,6 +207,9 @@ func GetServer(name ...interface{}) *Server {
 	storagePath := defaultServerConfig.SessionStoragePath + gfile.Separator + serverName
 	sessionStorage := gkvdb.Instance(storagePath)
 	sessionStorage.SetOptions(gkvdb.DefaultOptions(storagePath))
+	if genv.Contains("UNDER_TEST") {
+		sessionStorage.Options().ValueLogLoadingMode = options.FileIO
+	}
 	s := &Server{
 		name:             serverName,
 		servers:          make([]*gracefulServer, 0),
