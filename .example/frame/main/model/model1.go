@@ -10,6 +10,4 @@ func main() {
 	user, err := test.ModelUser().One()
 	g.Dump(err)
 	g.Dump(user)
-	user.Password = "1"
-	g.Dump(user.Update())
 }
