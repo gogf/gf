@@ -407,20 +407,22 @@ func Dir(path string) string {
 // IsEmpty checks whether the given <path> is empty.
 // If <path> is a folder, it checks if there's any file under it.
 // If <path> is a file, it checks if the file size is zero.
+//
+// Note that it returns true if <path> does not exist.
 func IsEmpty(path string) bool {
 	stat, err := Stat(path)
 	if err != nil {
-		return false
+		return true
 	}
 	if stat.IsDir() {
 		file, err := os.Open(path)
 		if err != nil {
-			return false
+			return true
 		}
 		defer file.Close()
 		names, err := file.Readdirnames(-1)
 		if err != nil {
-			return false
+			return true
 		}
 		return len(names) == 0
 	} else {
