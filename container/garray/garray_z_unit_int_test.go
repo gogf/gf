@@ -134,12 +134,12 @@ func TestIntArray_Merge(t *testing.T) {
 		a1 := garray.NewIntArrayFrom(n1)
 		a2 := garray.NewIntArrayFrom(n2)
 		a3 := garray.NewArrayFrom(i1)
-		a4 := garray.NewStringArrayFrom(s1)
+		a4 := garray.NewStrArrayFrom(s1)
 
-		a5 := garray.NewSortedStringArrayFrom(s2)
+		a5 := garray.NewSortedStrArrayFrom(s2)
 		a6 := garray.NewSortedIntArrayFrom([]int{1, 2, 3})
 
-		a7 := garray.NewSortedStringArrayFrom(s1)
+		a7 := garray.NewSortedStrArrayFrom(s1)
 		a8 := garray.NewSortedArrayFrom([]interface{}{4, 5}, func1)
 
 		gtest.Assert(a1.Merge(a2).Slice(), []int{0, 1, 2, 3, 4, 5, 6, 7})
@@ -809,9 +809,9 @@ func TestSortedIntArray_Merge(t *testing.T) {
 		s2 := []string{"e", "f"}
 		i1 := garray.NewIntArrayFrom([]int{1, 2, 3})
 		i2 := garray.NewArrayFrom([]interface{}{3})
-		s3 := garray.NewStringArrayFrom([]string{"g", "h"})
+		s3 := garray.NewStrArrayFrom([]string{"g", "h"})
 		s4 := garray.NewSortedArrayFrom([]interface{}{4, 5}, func1)
-		s5 := garray.NewSortedStringArrayFrom(s2)
+		s5 := garray.NewSortedStrArrayFrom(s2)
 		s6 := garray.NewSortedIntArrayFrom([]int{1, 2, 3})
 		a1 := garray.NewSortedIntArrayFrom(i0)
 

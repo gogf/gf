@@ -12,154 +12,126 @@ import (
 	"math"
 	"sort"
 
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
 )
 
-type Array struct {
-	mu    *rwmutex.RWMutex
-	array []interface{}
+// It's using increasing order in default.
+type SortedArray struct {
+	mu         *rwmutex.RWMutex
+	array      []interface{}
+	unique     *gtype.Bool                // Whether enable unique feature(false)
+	comparator func(a, b interface{}) int // Comparison function(it returns -1: a < b; 0: a == b; 1: a > b)
 }
 
-// New creates and returns an empty array.
+// NewSortedArray creates and returns an empty sorted array.
+// The parameter <safe> used to specify whether using array in concurrent-safety, which is false in default.
+// The parameter <comparator> used to compare values to sort in array,
+// if it returns value < 0, means v1 < v2;
+// if it returns value = 0, means v1 = v2;
+// if it returns value > 0, means v1 > v2;
+func NewSortedArray(comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
+	return NewSortedArraySize(0, comparator, safe...)
+}
+
+// NewSortedArraySize create and returns an sorted array with given size and cap.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func New(safe ...bool) *Array {
-	return NewArraySize(0, 0, safe...)
-}
-
-// See New.
-func NewArray(safe ...bool) *Array {
-	return NewArraySize(0, 0, safe...)
-}
-
-// NewArraySize create and returns an array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
-// which is false in default.
-func NewArraySize(size int, cap int, safe ...bool) *Array {
-	return &Array{
-		mu:    rwmutex.New(safe...),
-		array: make([]interface{}, size, cap),
+func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
+	return &SortedArray{
+		mu:         rwmutex.New(safe...),
+		unique:     gtype.NewBool(),
+		array:      make([]interface{}, 0, cap),
+		comparator: comparator,
 	}
 }
 
-// See NewArrayFrom.
-func NewFrom(array []interface{}, safe ...bool) *Array {
-	return NewArrayFrom(array, safe...)
-}
-
-// See NewArrayFromCopy.
-func NewFromCopy(array []interface{}, safe ...bool) *Array {
-	return NewArrayFromCopy(array, safe...)
-}
-
-// NewArrayFrom creates and returns an array with given slice <array>.
+// NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewArrayFrom(array []interface{}, safe ...bool) *Array {
-	return &Array{
-		mu:    rwmutex.New(safe...),
-		array: array,
-	}
+func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
+	a := NewSortedArraySize(0, comparator, safe...)
+	a.array = array
+	sort.Slice(a.array, func(i, j int) bool {
+		return a.comparator(a.array[i], a.array[j]) < 0
+	})
+	return a
 }
 
-// NewArrayFromCopy creates and returns an array from a copy of given slice <array>.
+// NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewArrayFromCopy(array []interface{}, safe ...bool) *Array {
+func NewSortedArrayFromCopy(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	newArray := make([]interface{}, len(array))
 	copy(newArray, array)
-	return &Array{
-		mu:    rwmutex.New(safe...),
-		array: newArray,
+	return NewSortedArrayFrom(newArray, comparator, safe...)
+}
+
+// SetArray sets the underlying slice array with the given <array>.
+func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.array = array
+	sort.Slice(a.array, func(i, j int) bool {
+		return a.comparator(a.array[i], a.array[j]) < 0
+	})
+	return a
+}
+
+// Sort sorts the array in increasing order.
+// The parameter <reverse> controls whether sort
+// in increasing order(default) or decreasing order
+func (a *SortedArray) Sort() *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	sort.Slice(a.array, func(i, j int) bool {
+		return a.comparator(a.array[i], a.array[j]) < 0
+	})
+	return a
+}
+
+// Add adds one or multiple values to sorted array, the array always keeps sorted.
+func (a *SortedArray) Add(values ...interface{}) *SortedArray {
+	if len(values) == 0 {
+		return a
 	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		index, cmp := a.binSearch(value, false)
+		if a.unique.Val() && cmp == 0 {
+			continue
+		}
+		if index < 0 {
+			a.array = append(a.array, value)
+			continue
+		}
+		if cmp > 0 {
+			index++
+		}
+		rear := append([]interface{}{}, a.array[index:]...)
+		a.array = append(a.array[0:index], value)
+		a.array = append(a.array, rear...)
+	}
+	return a
 }
 
 // Get returns the value of the specified index,
 // the caller should notice the boundary of the array.
-func (a *Array) Get(index int) interface{} {
+func (a *SortedArray) Get(index int) interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	value := a.array[index]
 	return value
 }
 
-// Set sets value to specified index.
-func (a *Array) Set(index int, value interface{}) *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.array[index] = value
-	return a
-}
-
-// SetArray sets the underlying slice array with the given <array>.
-func (a *Array) SetArray(array []interface{}) *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.array = array
-	return a
-}
-
-// Replace replaces the array items by given <array> from the beginning of array.
-func (a *Array) Replace(array []interface{}) *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	max := len(array)
-	if max > len(a.array) {
-		max = len(a.array)
-	}
-	for i := 0; i < max; i++ {
-		a.array[i] = array[i]
-	}
-	return a
-}
-
-// Sum returns the sum of values in an array.
-func (a *Array) Sum() (sum int) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	for _, v := range a.array {
-		sum += gconv.Int(v)
-	}
-	return
-}
-
-// SortFunc sorts the array by custom function <less>.
-func (a *Array) SortFunc(less func(v1, v2 interface{}) bool) *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	sort.Slice(a.array, func(i, j int) bool {
-		return less(a.array[i], a.array[j])
-	})
-	return a
-}
-
-// InsertBefore inserts the <value> to the front of <index>.
-func (a *Array) InsertBefore(index int, value interface{}) *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	rear := append([]interface{}{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
-	a.array = append(a.array, rear...)
-	return a
-}
-
-// InsertAfter inserts the <value> to the back of <index>.
-func (a *Array) InsertAfter(index int, value interface{}) *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	rear := append([]interface{}{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
-	a.array = append(a.array, rear...)
-	return a
-}
-
 // Remove removes an item by index.
-func (a *Array) Remove(index int) interface{} {
+func (a *SortedArray) Remove(index int) interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	// Determine array boundaries when deleting to improve deletion efficiency。
+	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
 		value := a.array[0]
 		a.array = a.array[1:]
@@ -177,30 +149,32 @@ func (a *Array) Remove(index int) interface{} {
 	return value
 }
 
-// PushLeft pushes one or multiple items to the beginning of array.
-func (a *Array) PushLeft(value ...interface{}) *Array {
+// PopLeft pops and returns an item from the beginning of array.
+func (a *SortedArray) PopLeft() interface{} {
 	a.mu.Lock()
-	a.array = append(value, a.array...)
-	a.mu.Unlock()
-	return a
+	defer a.mu.Unlock()
+	value := a.array[0]
+	a.array = a.array[1:]
+	return value
 }
 
-// PushRight pushes one or multiple items to the end of array.
-// It equals to Append.
-func (a *Array) PushRight(value ...interface{}) *Array {
+// PopRight pops and returns an item from the end of array.
+func (a *SortedArray) PopRight() interface{} {
 	a.mu.Lock()
-	a.array = append(a.array, value...)
-	a.mu.Unlock()
-	return a
+	defer a.mu.Unlock()
+	index := len(a.array) - 1
+	value := a.array[index]
+	a.array = a.array[:index]
+	return value
 }
 
 // PopRand randomly pops and return an item out of array.
-func (a *Array) PopRand() interface{} {
+func (a *SortedArray) PopRand() interface{} {
 	return a.Remove(grand.Intn(len(a.array)))
 }
 
 // PopRands randomly pops and returns <size> items out of array.
-func (a *Array) PopRands(size int) []interface{} {
+func (a *SortedArray) PopRands(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if size > len(a.array) {
@@ -215,27 +189,8 @@ func (a *Array) PopRands(size int) []interface{} {
 	return array
 }
 
-// PopLeft pops and returns an item from the beginning of array.
-func (a *Array) PopLeft() interface{} {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	value := a.array[0]
-	a.array = a.array[1:]
-	return value
-}
-
-// PopRight pops and returns an item from the end of array.
-func (a *Array) PopRight() interface{} {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	index := len(a.array) - 1
-	value := a.array[index]
-	a.array = a.array[:index]
-	return value
-}
-
 // PopLefts pops and returns <size> items from the beginning of array.
-func (a *Array) PopLefts(size int) []interface{} {
+func (a *SortedArray) PopLefts(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	length := len(a.array)
@@ -248,7 +203,7 @@ func (a *Array) PopLefts(size int) []interface{} {
 }
 
 // PopRights pops and returns <size> items from the end of array.
-func (a *Array) PopRights(size int) []interface{} {
+func (a *SortedArray) PopRights(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - size
@@ -267,7 +222,7 @@ func (a *Array) PopRights(size int) []interface{} {
 // If <end> is negative, then the offset will start from the end of array.
 // If <end> is omitted, then the sequence will have everything from start up
 // until the end of the array.
-func (a *Array) Range(start int, end ...int) []interface{} {
+func (a *SortedArray) Range(start int, end ...int) []interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	offsetEnd := len(a.array)
@@ -303,7 +258,7 @@ func (a *Array) Range(start int, end ...int) []interface{} {
 // If it is omitted, then the sequence will have everything from offset up until the end of the array.
 //
 // Any possibility crossing the left border of array, it will fail.
-func (a *Array) SubSlice(offset int, length ...int) []interface{} {
+func (a *SortedArray) SubSlice(offset int, length ...int) []interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	size := len(a.array)
@@ -340,14 +295,18 @@ func (a *Array) SubSlice(offset int, length ...int) []interface{} {
 	}
 }
 
-// See PushRight.
-func (a *Array) Append(value ...interface{}) *Array {
-	a.PushRight(value...)
-	return a
+// Sum returns the sum of values in an array.
+func (a *SortedArray) Sum() (sum int) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for _, v := range a.array {
+		sum += gconv.Int(v)
+	}
+	return
 }
 
 // Len returns the length of array.
-func (a *Array) Len() int {
+func (a *SortedArray) Len() int {
 	a.mu.RLock()
 	length := len(a.array)
 	a.mu.RUnlock()
@@ -357,7 +316,7 @@ func (a *Array) Len() int {
 // Slice returns the underlying data of array.
 // Notice, if in concurrent-safe usage, it returns a copy of slice;
 // else a pointer to the underlying data.
-func (a *Array) Slice() []interface{} {
+func (a *SortedArray) Slice() []interface{} {
 	array := ([]interface{})(nil)
 	if a.mu.IsSafe() {
 		a.mu.RLock()
@@ -370,17 +329,93 @@ func (a *Array) Slice() []interface{} {
 	return array
 }
 
+// Contains checks whether a value exists in the array.
+func (a *SortedArray) Contains(value interface{}) bool {
+	return a.Search(value) != -1
+}
+
+// Search searches array by <value>, returns the index of <value>,
+// or returns -1 if not exists.
+func (a *SortedArray) Search(value interface{}) (index int) {
+	if i, r := a.binSearch(value, true); r == 0 {
+		return i
+	}
+	return -1
+}
+
+// Binary search.
+// It returns the last compared index and the result.
+// If <result> equals to 0, it means the value at <index> is equals to <value>.
+// If <result> lesser than 0, it means the value at <index> is lesser than <value>.
+// If <result> greater than 0, it means the value at <index> is greater than <value>.
+func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result int) {
+	if len(a.array) == 0 {
+		return -1, -2
+	}
+	if lock {
+		a.mu.RLock()
+		defer a.mu.RUnlock()
+	}
+	min := 0
+	max := len(a.array) - 1
+	mid := 0
+	cmp := -2
+	for min <= max {
+		mid = int((min + max) / 2)
+		cmp = a.comparator(value, a.array[mid])
+		switch {
+		case cmp < 0:
+			max = mid - 1
+		case cmp > 0:
+			min = mid + 1
+		default:
+			return mid, cmp
+		}
+	}
+	return mid, cmp
+}
+
+// SetUnique sets unique mark to the array,
+// which means it does not contain any repeated items.
+// It also do unique check, remove all repeated items.
+func (a *SortedArray) SetUnique(unique bool) *SortedArray {
+	oldUnique := a.unique.Val()
+	a.unique.Set(unique)
+	if unique && oldUnique != unique {
+		a.Unique()
+	}
+	return a
+}
+
+// Unique uniques the array, clear repeated items.
+func (a *SortedArray) Unique() *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	i := 0
+	for {
+		if i == len(a.array)-1 {
+			break
+		}
+		if a.comparator(a.array[i], a.array[i+1]) == 0 {
+			a.array = append(a.array[:i+1], a.array[i+1+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
 // Clone returns a new array, which is a copy of current array.
-func (a *Array) Clone() (newArray *Array) {
+func (a *SortedArray) Clone() (newArray *SortedArray) {
 	a.mu.RLock()
 	array := make([]interface{}, len(a.array))
 	copy(array, a.array)
 	a.mu.RUnlock()
-	return NewArrayFrom(array, !a.mu.IsSafe())
+	return NewSortedArrayFrom(array, a.comparator, !a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.
-func (a *Array) Clear() *Array {
+func (a *SortedArray) Clear() *SortedArray {
 	a.mu.Lock()
 	if len(a.array) > 0 {
 		a.array = make([]interface{}, 0)
@@ -389,46 +424,8 @@ func (a *Array) Clear() *Array {
 	return a
 }
 
-// Contains checks whether a value exists in the array.
-func (a *Array) Contains(value interface{}) bool {
-	return a.Search(value) != -1
-}
-
-// Search searches array by <value>, returns the index of <value>,
-// or returns -1 if not exists.
-func (a *Array) Search(value interface{}) int {
-	if len(a.array) == 0 {
-		return -1
-	}
-	a.mu.RLock()
-	result := -1
-	for index, v := range a.array {
-		if v == value {
-			result = index
-			break
-		}
-	}
-	a.mu.RUnlock()
-
-	return result
-}
-
-// Unique uniques the array, clear repeated items.
-func (a *Array) Unique() *Array {
-	a.mu.Lock()
-	for i := 0; i < len(a.array)-1; i++ {
-		for j := i + 1; j < len(a.array); j++ {
-			if a.array[i] == a.array[j] {
-				a.array = append(a.array[:j], a.array[j+1:]...)
-			}
-		}
-	}
-	a.mu.Unlock()
-	return a
-}
-
 // LockFunc locks writing by callback function <f>.
-func (a *Array) LockFunc(f func(array []interface{})) *Array {
+func (a *SortedArray) LockFunc(f func(array []interface{})) *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	f(a.array)
@@ -436,7 +433,7 @@ func (a *Array) LockFunc(f func(array []interface{})) *Array {
 }
 
 // RLockFunc locks reading by callback function <f>.
-func (a *Array) RLockFunc(f func(array []interface{})) *Array {
+func (a *SortedArray) RLockFunc(f func(array []interface{})) *SortedArray {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	f(a.array)
@@ -447,40 +444,22 @@ func (a *Array) RLockFunc(f func(array []interface{})) *Array {
 // The parameter <array> can be any garray or slice type.
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
-func (a *Array) Merge(array interface{}) *Array {
+func (a *SortedArray) Merge(array interface{}) *SortedArray {
 	switch v := array.(type) {
 	case *Array:
-		a.Append(gconv.Interfaces(v.Slice())...)
+		a.Add(gconv.Interfaces(v.Slice())...)
 	case *IntArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
-	case *StringArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
+		a.Add(gconv.Interfaces(v.Slice())...)
+	case *StrArray:
+		a.Add(gconv.Interfaces(v.Slice())...)
 	case *SortedArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
+		a.Add(gconv.Interfaces(v.Slice())...)
 	case *SortedIntArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
-	case *SortedStringArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
+		a.Add(gconv.Interfaces(v.Slice())...)
+	case *SortedStrArray:
+		a.Add(gconv.Interfaces(v.Slice())...)
 	default:
-		a.Append(gconv.Interfaces(array)...)
-	}
-	return a
-}
-
-// Fill fills an array with num entries of the value <value>,
-// keys starting at the <startIndex> parameter.
-func (a *Array) Fill(startIndex int, num int, value interface{}) *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if startIndex < 0 {
-		startIndex = 0
-	}
-	for i := startIndex; i < startIndex+num; i++ {
-		if i > len(a.array)-1 {
-			a.array = append(a.array, value)
-		} else {
-			a.array[i] = value
-		}
+		a.Add(gconv.Interfaces(array)...)
 	}
 	return a
 }
@@ -488,7 +467,7 @@ func (a *Array) Fill(startIndex int, num int, value interface{}) *Array {
 // Chunk splits an array into multiple arrays,
 // the size of each array is determined by <size>.
 // The last chunk may contain less than size elements.
-func (a *Array) Chunk(size int) [][]interface{} {
+func (a *SortedArray) Chunk(size int) [][]interface{} {
 	if size < 1 {
 		return nil
 	}
@@ -508,42 +487,15 @@ func (a *Array) Chunk(size int) [][]interface{} {
 	return n
 }
 
-// Pad pads array to the specified length with <value>.
-// If size is positive then the array is padded on the right, or negative on the left.
-// If the absolute value of <size> is less than or equal to the length of the array
-// then no padding takes place.
-func (a *Array) Pad(size int, val interface{}) *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if size == 0 || (size > 0 && size < len(a.array)) || (size < 0 && size > -len(a.array)) {
-		return a
-	}
-	n := size
-	if size < 0 {
-		n = -size
-	}
-	n -= len(a.array)
-	tmp := make([]interface{}, n)
-	for i := 0; i < n; i++ {
-		tmp[i] = val
-	}
-	if size > 0 {
-		a.array = append(a.array, tmp...)
-	} else {
-		a.array = append(tmp, a.array...)
-	}
-	return a
-}
-
 // Rand randomly returns one item from array(no deleting).
-func (a *Array) Rand() interface{} {
+func (a *SortedArray) Rand() interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return a.array[grand.Intn(len(a.array))]
 }
 
 // Rands randomly returns <size> items from array(no deleting).
-func (a *Array) Rands(size int) []interface{} {
+func (a *SortedArray) Rands(size int) []interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	if size > len(a.array) {
@@ -559,28 +511,8 @@ func (a *Array) Rands(size int) []interface{} {
 	return n
 }
 
-// Shuffle randomly shuffles the array.
-func (a *Array) Shuffle() *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	for i, v := range grand.Perm(len(a.array)) {
-		a.array[i], a.array[v] = a.array[v], a.array[i]
-	}
-	return a
-}
-
-// Reverse makes array with elements in reverse order.
-func (a *Array) Reverse() *Array {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	for i, j := 0, len(a.array)-1; i < j; i, j = i+1, j-1 {
-		a.array[i], a.array[j] = a.array[j], a.array[i]
-	}
-	return a
-}
-
 // Join joins array elements with a string <glue>.
-func (a *Array) Join(glue string) string {
+func (a *SortedArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
@@ -594,7 +526,7 @@ func (a *Array) Join(glue string) string {
 }
 
 // CountValues counts the number of occurrences of all values in the array.
-func (a *Array) CountValues() map[interface{}]int {
+func (a *SortedArray) CountValues() map[interface{}]int {
 	m := make(map[interface{}]int)
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -605,7 +537,7 @@ func (a *Array) CountValues() map[interface{}]int {
 }
 
 // String returns current array as a string.
-func (a *Array) String() string {
+func (a *SortedArray) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	jsonContent, _ := json.Marshal(a.array)
@@ -613,7 +545,7 @@ func (a *Array) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (a *Array) MarshalJSON() ([]byte, error) {
+func (a *SortedArray) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)

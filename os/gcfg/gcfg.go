@@ -32,10 +32,10 @@ const (
 
 // Configuration struct.
 type Config struct {
-	name  *gtype.String       // Default configuration file name.
-	paths *garray.StringArray // Searching path array.
-	jsons *gmap.StrAnyMap     // The pared JSON objects for configuration files.
-	vc    *gtype.Bool         // Whether do violence check in value index searching. It affects the performance when set true(false in default).
+	name  *gtype.String    // Default configuration file name.
+	paths *garray.StrArray // Searching path array.
+	jsons *gmap.StrAnyMap  // The pared JSON objects for configuration files.
+	vc    *gtype.Bool      // Whether do violence check in value index searching. It affects the performance when set true(false in default).
 }
 
 var (
@@ -51,7 +51,7 @@ func New(file ...string) *Config {
 	}
 	c := &Config{
 		name:  gtype.NewString(name),
-		paths: garray.NewStringArray(true),
+		paths: garray.NewStrArray(true),
 		jsons: gmap.NewStrAnyMap(true),
 		vc:    gtype.NewBool(),
 	}

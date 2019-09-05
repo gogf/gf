@@ -149,9 +149,9 @@ func TestArray_Merge(t *testing.T) {
 		s2 := []string{"e", "f"}
 		i3 := garray.NewIntArrayFrom([]int{1, 2, 3})
 		i4 := garray.NewArrayFrom([]interface{}{3})
-		s3 := garray.NewStringArrayFrom([]string{"g", "h"})
+		s3 := garray.NewStrArrayFrom([]string{"g", "h"})
 		s4 := garray.NewSortedArrayFrom([]interface{}{4, 5}, func1)
-		s5 := garray.NewSortedStringArrayFrom(s2)
+		s5 := garray.NewSortedStrArrayFrom(s2)
 		s6 := garray.NewSortedIntArrayFrom([]int{1, 2, 3})
 		a1 := garray.NewArrayFrom(i1)
 
@@ -824,9 +824,9 @@ func TestSortedArray_Merge(t *testing.T) {
 		s2 := []string{"e", "f"}
 		i1 := garray.NewIntArrayFrom([]int{1, 2, 3})
 		i2 := garray.NewArrayFrom([]interface{}{3})
-		s3 := garray.NewStringArrayFrom([]string{"g", "h"})
+		s3 := garray.NewStrArrayFrom([]string{"g", "h"})
 		s4 := garray.NewSortedArrayFrom([]interface{}{4, 5}, func1)
-		s5 := garray.NewSortedStringArrayFrom(s2)
+		s5 := garray.NewSortedStrArrayFrom(s2)
 		s6 := garray.NewSortedIntArrayFrom([]int{1, 2, 3})
 
 		a1 := garray.NewSortedArrayFrom(s1, func1)

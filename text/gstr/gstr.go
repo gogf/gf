@@ -442,6 +442,26 @@ func Split(str, delimiter string) []string {
 	return strings.Split(str, delimiter)
 }
 
+// SplitAndTrim splits string <str> by a string <delimiter> to an array,
+// and calls Trim to every element of this array.
+func SplitAndTrim(str, delimiter, cut string) []string {
+	array := strings.Split(str, delimiter)
+	for k, v := range array {
+		array[k] = strings.Trim(v, cut)
+	}
+	return array
+}
+
+// SplitAndTrimSpace splits string <str> by a string <delimiter> to an array,
+// and calls TrimSpace to every element of this array.
+func SplitAndTrimSpace(str, delimiter string) []string {
+	array := strings.Split(str, delimiter)
+	for k, v := range array {
+		array[k] = strings.TrimSpace(v)
+	}
+	return array
+}
+
 // Join concatenates the elements of a to create a single string. The separator string
 // sep is placed between elements in the resulting string.
 func Join(array []string, sep string) string {

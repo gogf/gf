@@ -25,7 +25,7 @@ import (
 // View object for template engine.
 type View struct {
 	mu          sync.RWMutex
-	paths       *garray.StringArray    // Searching path array.
+	paths       *garray.StrArray       // Searching path array.
 	data        map[string]interface{} // Global template variables.
 	funcMap     map[string]interface{} // Global template function map.
 	i18nEnabled bool                   // Is i18n enabled in this template.
@@ -60,7 +60,7 @@ func ParseContent(content string, params Params) (string, error) {
 // The parameter <path> specifies the template directory path to load template files.
 func New(path ...string) *View {
 	view := &View{
-		paths:       garray.NewStringArray(true),
+		paths:       garray.NewStrArray(true),
 		data:        make(map[string]interface{}),
 		funcMap:     make(map[string]interface{}),
 		i18nEnabled: true,

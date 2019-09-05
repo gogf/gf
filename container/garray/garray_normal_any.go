@@ -11,52 +11,66 @@ import (
 	"encoding/json"
 	"math"
 	"sort"
-	"strings"
 
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
 )
 
-type StringArray struct {
+type Array struct {
 	mu    *rwmutex.RWMutex
-	array []string
+	array []interface{}
 }
 
-// NewStringArray creates and returns an empty array.
+// New creates and returns an empty array.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewStringArray(safe ...bool) *StringArray {
-	return NewStringArraySize(0, 0, safe...)
+func New(safe ...bool) *Array {
+	return NewArraySize(0, 0, safe...)
 }
 
-// NewStringArraySize create and returns an array with given size and cap.
+// See New.
+func NewArray(safe ...bool) *Array {
+	return NewArraySize(0, 0, safe...)
+}
+
+// NewArraySize create and returns an array with given size and cap.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewStringArraySize(size int, cap int, safe ...bool) *StringArray {
-	return &StringArray{
+func NewArraySize(size int, cap int, safe ...bool) *Array {
+	return &Array{
 		mu:    rwmutex.New(safe...),
-		array: make([]string, size, cap),
+		array: make([]interface{}, size, cap),
 	}
 }
 
-// NewStringArrayFrom creates and returns an array with given slice <array>.
+// See NewArrayFrom.
+func NewFrom(array []interface{}, safe ...bool) *Array {
+	return NewArrayFrom(array, safe...)
+}
+
+// See NewArrayFromCopy.
+func NewFromCopy(array []interface{}, safe ...bool) *Array {
+	return NewArrayFromCopy(array, safe...)
+}
+
+// NewArrayFrom creates and returns an array with given slice <array>.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewStringArrayFrom(array []string, safe ...bool) *StringArray {
-	return &StringArray{
+func NewArrayFrom(array []interface{}, safe ...bool) *Array {
+	return &Array{
 		mu:    rwmutex.New(safe...),
 		array: array,
 	}
 }
 
-// NewStringArrayFromCopy creates and returns an array from a copy of given slice <array>.
+// NewArrayFromCopy creates and returns an array from a copy of given slice <array>.
 // The parameter <safe> used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewStringArrayFromCopy(array []string, safe ...bool) *StringArray {
-	newArray := make([]string, len(array))
+func NewArrayFromCopy(array []interface{}, safe ...bool) *Array {
+	newArray := make([]interface{}, len(array))
 	copy(newArray, array)
-	return &StringArray{
+	return &Array{
 		mu:    rwmutex.New(safe...),
 		array: newArray,
 	}
@@ -64,7 +78,7 @@ func NewStringArrayFromCopy(array []string, safe ...bool) *StringArray {
 
 // Get returns the value of the specified index,
 // the caller should notice the boundary of the array.
-func (a *StringArray) Get(index int) string {
+func (a *Array) Get(index int) interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	value := a.array[index]
@@ -72,7 +86,7 @@ func (a *StringArray) Get(index int) string {
 }
 
 // Set sets value to specified index.
-func (a *StringArray) Set(index int, value string) *StringArray {
+func (a *Array) Set(index int, value interface{}) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.array[index] = value
@@ -80,7 +94,7 @@ func (a *StringArray) Set(index int, value string) *StringArray {
 }
 
 // SetArray sets the underlying slice array with the given <array>.
-func (a *StringArray) SetArray(array []string) *StringArray {
+func (a *Array) SetArray(array []interface{}) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.array = array
@@ -88,7 +102,7 @@ func (a *StringArray) SetArray(array []string) *StringArray {
 }
 
 // Replace replaces the array items by given <array> from the beginning of array.
-func (a *StringArray) Replace(array []string) *StringArray {
+func (a *Array) Replace(array []interface{}) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	max := len(array)
@@ -102,7 +116,7 @@ func (a *StringArray) Replace(array []string) *StringArray {
 }
 
 // Sum returns the sum of values in an array.
-func (a *StringArray) Sum() (sum int) {
+func (a *Array) Sum() (sum int) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	for _, v := range a.array {
@@ -111,27 +125,8 @@ func (a *StringArray) Sum() (sum int) {
 	return
 }
 
-// Sort sorts the array in increasing order.
-// The parameter <reverse> controls whether sort
-// in increasing order(default) or decreasing order
-func (a *StringArray) Sort(reverse ...bool) *StringArray {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if len(reverse) > 0 && reverse[0] {
-		sort.Slice(a.array, func(i, j int) bool {
-			if strings.Compare(a.array[i], a.array[j]) < 0 {
-				return false
-			}
-			return true
-		})
-	} else {
-		sort.Strings(a.array)
-	}
-	return a
-}
-
 // SortFunc sorts the array by custom function <less>.
-func (a *StringArray) SortFunc(less func(v1, v2 string) bool) *StringArray {
+func (a *Array) SortFunc(less func(v1, v2 interface{}) bool) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	sort.Slice(a.array, func(i, j int) bool {
@@ -141,27 +136,27 @@ func (a *StringArray) SortFunc(less func(v1, v2 string) bool) *StringArray {
 }
 
 // InsertBefore inserts the <value> to the front of <index>.
-func (a *StringArray) InsertBefore(index int, value string) *StringArray {
+func (a *Array) InsertBefore(index int, value interface{}) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	rear := append([]string{}, a.array[index:]...)
+	rear := append([]interface{}{}, a.array[index:]...)
 	a.array = append(a.array[0:index], value)
 	a.array = append(a.array, rear...)
 	return a
 }
 
 // InsertAfter inserts the <value> to the back of <index>.
-func (a *StringArray) InsertAfter(index int, value string) *StringArray {
+func (a *Array) InsertAfter(index int, value interface{}) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	rear := append([]string{}, a.array[index+1:]...)
+	rear := append([]interface{}{}, a.array[index+1:]...)
 	a.array = append(a.array[0:index+1], value)
 	a.array = append(a.array, rear...)
 	return a
 }
 
 // Remove removes an item by index.
-func (a *StringArray) Remove(index int) string {
+func (a *Array) Remove(index int) interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	// Determine array boundaries when deleting to improve deletion efficiency。
@@ -183,7 +178,7 @@ func (a *StringArray) Remove(index int) string {
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
-func (a *StringArray) PushLeft(value ...string) *StringArray {
+func (a *Array) PushLeft(value ...interface{}) *Array {
 	a.mu.Lock()
 	a.array = append(value, a.array...)
 	a.mu.Unlock()
@@ -192,45 +187,26 @@ func (a *StringArray) PushLeft(value ...string) *StringArray {
 
 // PushRight pushes one or multiple items to the end of array.
 // It equals to Append.
-func (a *StringArray) PushRight(value ...string) *StringArray {
+func (a *Array) PushRight(value ...interface{}) *Array {
 	a.mu.Lock()
 	a.array = append(a.array, value...)
 	a.mu.Unlock()
 	return a
 }
 
-// PopLeft pops and returns an item from the beginning of array.
-func (a *StringArray) PopLeft() string {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	value := a.array[0]
-	a.array = a.array[1:]
-	return value
-}
-
-// PopRight pops and returns an item from the end of array.
-func (a *StringArray) PopRight() string {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	index := len(a.array) - 1
-	value := a.array[index]
-	a.array = a.array[:index]
-	return value
-}
-
 // PopRand randomly pops and return an item out of array.
-func (a *StringArray) PopRand() string {
+func (a *Array) PopRand() interface{} {
 	return a.Remove(grand.Intn(len(a.array)))
 }
 
 // PopRands randomly pops and returns <size> items out of array.
-func (a *StringArray) PopRands(size int) []string {
+func (a *Array) PopRands(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if size > len(a.array) {
 		size = len(a.array)
 	}
-	array := make([]string, size)
+	array := make([]interface{}, size)
 	for i := 0; i < size; i++ {
 		index := grand.Intn(len(a.array))
 		array[i] = a.array[index]
@@ -239,8 +215,27 @@ func (a *StringArray) PopRands(size int) []string {
 	return array
 }
 
+// PopLeft pops and returns an item from the beginning of array.
+func (a *Array) PopLeft() interface{} {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	value := a.array[0]
+	a.array = a.array[1:]
+	return value
+}
+
+// PopRight pops and returns an item from the end of array.
+func (a *Array) PopRight() interface{} {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	index := len(a.array) - 1
+	value := a.array[index]
+	a.array = a.array[:index]
+	return value
+}
+
 // PopLefts pops and returns <size> items from the beginning of array.
-func (a *StringArray) PopLefts(size int) []string {
+func (a *Array) PopLefts(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	length := len(a.array)
@@ -253,7 +248,7 @@ func (a *StringArray) PopLefts(size int) []string {
 }
 
 // PopRights pops and returns <size> items from the end of array.
-func (a *StringArray) PopRights(size int) []string {
+func (a *Array) PopRights(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - size
@@ -272,7 +267,7 @@ func (a *StringArray) PopRights(size int) []string {
 // If <end> is negative, then the offset will start from the end of array.
 // If <end> is omitted, then the sequence will have everything from start up
 // until the end of the array.
-func (a *StringArray) Range(start int, end ...int) []string {
+func (a *Array) Range(start int, end ...int) []interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	offsetEnd := len(a.array)
@@ -285,9 +280,9 @@ func (a *StringArray) Range(start int, end ...int) []string {
 	if start < 0 {
 		start = 0
 	}
-	array := ([]string)(nil)
+	array := ([]interface{})(nil)
 	if a.mu.IsSafe() {
-		array = make([]string, offsetEnd-start)
+		array = make([]interface{}, offsetEnd-start)
 		copy(array, a.array[start:offsetEnd])
 	} else {
 		array = a.array[start:offsetEnd]
@@ -308,7 +303,7 @@ func (a *StringArray) Range(start int, end ...int) []string {
 // If it is omitted, then the sequence will have everything from offset up until the end of the array.
 //
 // Any possibility crossing the left border of array, it will fail.
-func (a *StringArray) SubSlice(offset int, length ...int) []string {
+func (a *Array) SubSlice(offset int, length ...int) []interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	size := len(a.array)
@@ -337,7 +332,7 @@ func (a *StringArray) SubSlice(offset int, length ...int) []string {
 		size = len(a.array) - offset
 	}
 	if a.mu.IsSafe() {
-		s := make([]string, size)
+		s := make([]interface{}, size)
 		copy(s, a.array[offset:])
 		return s
 	} else {
@@ -346,15 +341,13 @@ func (a *StringArray) SubSlice(offset int, length ...int) []string {
 }
 
 // See PushRight.
-func (a *StringArray) Append(value ...string) *StringArray {
-	a.mu.Lock()
-	a.array = append(a.array, value...)
-	a.mu.Unlock()
+func (a *Array) Append(value ...interface{}) *Array {
+	a.PushRight(value...)
 	return a
 }
 
 // Len returns the length of array.
-func (a *StringArray) Len() int {
+func (a *Array) Len() int {
 	a.mu.RLock()
 	length := len(a.array)
 	a.mu.RUnlock()
@@ -364,12 +357,12 @@ func (a *StringArray) Len() int {
 // Slice returns the underlying data of array.
 // Notice, if in concurrent-safe usage, it returns a copy of slice;
 // else a pointer to the underlying data.
-func (a *StringArray) Slice() []string {
-	array := ([]string)(nil)
+func (a *Array) Slice() []interface{} {
+	array := ([]interface{})(nil)
 	if a.mu.IsSafe() {
 		a.mu.RLock()
 		defer a.mu.RUnlock()
-		array = make([]string, len(a.array))
+		array = make([]interface{}, len(a.array))
 		copy(array, a.array)
 	} else {
 		array = a.array
@@ -378,49 +371,50 @@ func (a *StringArray) Slice() []string {
 }
 
 // Clone returns a new array, which is a copy of current array.
-func (a *StringArray) Clone() (newArray *StringArray) {
+func (a *Array) Clone() (newArray *Array) {
 	a.mu.RLock()
-	array := make([]string, len(a.array))
+	array := make([]interface{}, len(a.array))
 	copy(array, a.array)
 	a.mu.RUnlock()
-	return NewStringArrayFrom(array, !a.mu.IsSafe())
+	return NewArrayFrom(array, !a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.
-func (a *StringArray) Clear() *StringArray {
+func (a *Array) Clear() *Array {
 	a.mu.Lock()
 	if len(a.array) > 0 {
-		a.array = make([]string, 0)
+		a.array = make([]interface{}, 0)
 	}
 	a.mu.Unlock()
 	return a
 }
 
 // Contains checks whether a value exists in the array.
-func (a *StringArray) Contains(value string) bool {
+func (a *Array) Contains(value interface{}) bool {
 	return a.Search(value) != -1
 }
 
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
-func (a *StringArray) Search(value string) int {
+func (a *Array) Search(value interface{}) int {
 	if len(a.array) == 0 {
 		return -1
 	}
 	a.mu.RLock()
 	result := -1
 	for index, v := range a.array {
-		if strings.Compare(v, value) == 0 {
+		if v == value {
 			result = index
 			break
 		}
 	}
 	a.mu.RUnlock()
+
 	return result
 }
 
 // Unique uniques the array, clear repeated items.
-func (a *StringArray) Unique() *StringArray {
+func (a *Array) Unique() *Array {
 	a.mu.Lock()
 	for i := 0; i < len(a.array)-1; i++ {
 		for j := i + 1; j < len(a.array); j++ {
@@ -434,7 +428,7 @@ func (a *StringArray) Unique() *StringArray {
 }
 
 // LockFunc locks writing by callback function <f>.
-func (a *StringArray) LockFunc(f func(array []string)) *StringArray {
+func (a *Array) LockFunc(f func(array []interface{})) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	f(a.array)
@@ -442,7 +436,7 @@ func (a *StringArray) LockFunc(f func(array []string)) *StringArray {
 }
 
 // RLockFunc locks reading by callback function <f>.
-func (a *StringArray) RLockFunc(f func(array []string)) *StringArray {
+func (a *Array) RLockFunc(f func(array []interface{})) *Array {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	f(a.array)
@@ -453,29 +447,29 @@ func (a *StringArray) RLockFunc(f func(array []string)) *StringArray {
 // The parameter <array> can be any garray or slice type.
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
-func (a *StringArray) Merge(array interface{}) *StringArray {
+func (a *Array) Merge(array interface{}) *Array {
 	switch v := array.(type) {
 	case *Array:
-		a.Append(gconv.Strings(v.Slice())...)
+		a.Append(gconv.Interfaces(v.Slice())...)
 	case *IntArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *StringArray:
-		a.Append(gconv.Strings(v.Slice())...)
+		a.Append(gconv.Interfaces(v.Slice())...)
+	case *StrArray:
+		a.Append(gconv.Interfaces(v.Slice())...)
 	case *SortedArray:
-		a.Append(gconv.Strings(v.Slice())...)
+		a.Append(gconv.Interfaces(v.Slice())...)
 	case *SortedIntArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *SortedStringArray:
-		a.Append(gconv.Strings(v.Slice())...)
+		a.Append(gconv.Interfaces(v.Slice())...)
+	case *SortedStrArray:
+		a.Append(gconv.Interfaces(v.Slice())...)
 	default:
-		a.Append(gconv.Strings(array)...)
+		a.Append(gconv.Interfaces(array)...)
 	}
 	return a
 }
 
 // Fill fills an array with num entries of the value <value>,
 // keys starting at the <startIndex> parameter.
-func (a *StringArray) Fill(startIndex int, num int, value string) *StringArray {
+func (a *Array) Fill(startIndex int, num int, value interface{}) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if startIndex < 0 {
@@ -494,7 +488,7 @@ func (a *StringArray) Fill(startIndex int, num int, value string) *StringArray {
 // Chunk splits an array into multiple arrays,
 // the size of each array is determined by <size>.
 // The last chunk may contain less than size elements.
-func (a *StringArray) Chunk(size int) [][]string {
+func (a *Array) Chunk(size int) [][]interface{} {
 	if size < 1 {
 		return nil
 	}
@@ -502,7 +496,7 @@ func (a *StringArray) Chunk(size int) [][]string {
 	defer a.mu.RUnlock()
 	length := len(a.array)
 	chunks := int(math.Ceil(float64(length) / float64(size)))
-	var n [][]string
+	var n [][]interface{}
 	for i, end := 0, 0; chunks > 0; chunks-- {
 		end = (i + 1) * size
 		if end > length {
@@ -518,7 +512,7 @@ func (a *StringArray) Chunk(size int) [][]string {
 // If size is positive then the array is padded on the right, or negative on the left.
 // If the absolute value of <size> is less than or equal to the length of the array
 // then no padding takes place.
-func (a *StringArray) Pad(size int, value string) *StringArray {
+func (a *Array) Pad(size int, val interface{}) *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if size == 0 || (size > 0 && size < len(a.array)) || (size < 0 && size > -len(a.array)) {
@@ -529,9 +523,9 @@ func (a *StringArray) Pad(size int, value string) *StringArray {
 		n = -size
 	}
 	n -= len(a.array)
-	tmp := make([]string, n)
+	tmp := make([]interface{}, n)
 	for i := 0; i < n; i++ {
-		tmp[i] = value
+		tmp[i] = val
 	}
 	if size > 0 {
 		a.array = append(a.array, tmp...)
@@ -542,20 +536,20 @@ func (a *StringArray) Pad(size int, value string) *StringArray {
 }
 
 // Rand randomly returns one item from array(no deleting).
-func (a *StringArray) Rand() string {
+func (a *Array) Rand() interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return a.array[grand.Intn(len(a.array))]
 }
 
 // Rands randomly returns <size> items from array(no deleting).
-func (a *StringArray) Rands(size int) []string {
+func (a *Array) Rands(size int) []interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	if size > len(a.array) {
 		size = len(a.array)
 	}
-	n := make([]string, size)
+	n := make([]interface{}, size)
 	for i, v := range grand.Perm(len(a.array)) {
 		n[i] = a.array[v]
 		if i == size-1 {
@@ -566,7 +560,7 @@ func (a *StringArray) Rands(size int) []string {
 }
 
 // Shuffle randomly shuffles the array.
-func (a *StringArray) Shuffle() *StringArray {
+func (a *Array) Shuffle() *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	for i, v := range grand.Perm(len(a.array)) {
@@ -576,7 +570,7 @@ func (a *StringArray) Shuffle() *StringArray {
 }
 
 // Reverse makes array with elements in reverse order.
-func (a *StringArray) Reverse() *StringArray {
+func (a *Array) Reverse() *Array {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	for i, j := 0, len(a.array)-1; i < j; i, j = i+1, j-1 {
@@ -586,7 +580,7 @@ func (a *StringArray) Reverse() *StringArray {
 }
 
 // Join joins array elements with a string <glue>.
-func (a *StringArray) Join(glue string) string {
+func (a *Array) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
@@ -600,8 +594,8 @@ func (a *StringArray) Join(glue string) string {
 }
 
 // CountValues counts the number of occurrences of all values in the array.
-func (a *StringArray) CountValues() map[string]int {
-	m := make(map[string]int)
+func (a *Array) CountValues() map[interface{}]int {
+	m := make(map[interface{}]int)
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	for _, v := range a.array {
@@ -611,7 +605,7 @@ func (a *StringArray) CountValues() map[string]int {
 }
 
 // String returns current array as a string.
-func (a *StringArray) String() string {
+func (a *Array) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	jsonContent, _ := json.Marshal(a.array)
@@ -619,7 +613,7 @@ func (a *StringArray) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (a *StringArray) MarshalJSON() ([]byte, error) {
+func (a *Array) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
