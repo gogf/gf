@@ -9,6 +9,7 @@
 package gcmd_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -16,6 +17,21 @@ import (
 
 	"github.com/gogf/gf/test/gtest"
 )
+
+func Test_Default(t *testing.T) {
+	gtest.Case(t, func() {
+		os.Args = []string{"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root"}
+		gtest.Assert(len(gcmd.GetArgAll()), 4)
+		gtest.Assert(gcmd.GetArg(1), "remove")
+		gtest.Assert(gcmd.GetArg(100, "test"), "test")
+		gtest.Assert(gcmd.GetOpt("n"), "")
+		gtest.Assert(gcmd.ContainsOpt("p"), true)
+		gtest.Assert(gcmd.ContainsOpt("n"), true)
+		gtest.Assert(gcmd.ContainsOpt("none"), false)
+		gtest.Assert(gcmd.GetOpt("none", "value"), "value")
+
+	})
+}
 
 func Test_BuildOptions(t *testing.T) {
 	gtest.Case(t, func() {
