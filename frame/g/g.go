@@ -22,6 +22,9 @@ type MapStrInt = map[string]int
 type MapIntAny = map[int]interface{}
 type MapIntStr = map[int]string
 type MapIntInt = map[int]int
+type MapAnyBool = map[interface{}]bool
+type MapStrBool = map[string]bool
+type MapIntBool = map[int]bool
 
 // Frequently-used slice type alias.
 type List = []Map
@@ -33,6 +36,9 @@ type ListStrInt = []map[string]int
 type ListIntAny = []map[int]interface{}
 type ListIntStr = []map[int]string
 type ListIntInt = []map[int]int
+type ListAnyBool = []map[interface{}]bool
+type ListStrBool = []map[string]bool
+type ListIntBool = []map[int]bool
 
 // Frequently-used slice type alias.
 type Slice = []interface{}
