@@ -404,6 +404,30 @@ func Dir(path string) string {
 	return filepath.Dir(path)
 }
 
+// IsEmpty checks whether the given <path> is empty.
+// If <path> is a folder, it checks if there's any file under it.
+// If <path> is a file, it checks if the file size is zero.
+func IsEmpty(path string) bool {
+	stat, err := Stat(path)
+	if err != nil {
+		return false
+	}
+	if stat.IsDir() {
+		file, err := os.Open(path)
+		if err != nil {
+			return false
+		}
+		defer file.Close()
+		names, err := file.Readdirnames(-1)
+		if err != nil {
+			return false
+		}
+		return len(names) == 0
+	} else {
+		return stat.Size() == 0
+	}
+}
+
 // Ext returns the file name extension used by path.
 // The extension is the suffix beginning at the final dot
 // in the final element of path; it is empty if there is
