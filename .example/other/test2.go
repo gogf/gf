@@ -1,11 +1,13 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/text/gregex"
 )
 
 func main() {
-	fmt.Println(gfile.TempDir())
+	s := `-abc`
+	m, err := gregex.MatchString(`^\-{1,2}a={0,1}(.*)`, s)
+	g.Dump(err)
+	g.Dump(m)
 }

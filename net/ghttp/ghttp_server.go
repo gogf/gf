@@ -159,6 +159,17 @@ func init() {
 	}
 }
 
+// 主要用于开发者在HTTP处理中自定义异常捕获时，判断捕获的异常是否Server抛出的自定义退出异常
+func IsExitError(err interface{}) bool {
+	errStr := gconv.String(err)
+	if strings.EqualFold(errStr, gEXCEPTION_EXIT) ||
+		strings.EqualFold(errStr, gEXCEPTION_EXIT_ALL) ||
+		strings.EqualFold(errStr, gEXCEPTION_EXIT_HOOK) {
+		return true
+	}
+	return false
+}
+
 // 是否开启平滑重启特性
 func SetGraceful(enabled bool) {
 	gracefulEnabled = enabled

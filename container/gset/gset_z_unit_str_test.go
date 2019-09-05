@@ -17,9 +17,9 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func TestStringSet_Basic(t *testing.T) {
+func TestStrSet_Basic(t *testing.T) {
 	gtest.Case(t, func() {
-		s := gset.NewStringSet()
+		s := gset.NewStrSet()
 		s.Add("1").Add("1").Add("2")
 		s.Add([]string{"3", "4"}...)
 		gtest.Assert(s.Size(), 4)
@@ -37,9 +37,9 @@ func TestStringSet_Basic(t *testing.T) {
 	})
 }
 
-func TestStringSet_Iterator(t *testing.T) {
+func TestStrSet_Iterator(t *testing.T) {
 	gtest.Case(t, func() {
-		s := gset.NewStringSet()
+		s := gset.NewStrSet()
 		s.Add("1").Add("2").Add("3")
 		gtest.Assert(s.Size(), 3)
 
@@ -58,9 +58,9 @@ func TestStringSet_Iterator(t *testing.T) {
 	})
 }
 
-func TestStringSet_LockFunc(t *testing.T) {
+func TestStrSet_LockFunc(t *testing.T) {
 	gtest.Case(t, func() {
-		s := gset.NewStringSet()
+		s := gset.NewStrSet()
 		s.Add("1").Add("2").Add("3")
 		gtest.Assert(s.Size(), 3)
 		s.LockFunc(func(m map[string]struct{}) {
@@ -76,11 +76,11 @@ func TestStringSet_LockFunc(t *testing.T) {
 	})
 }
 
-func TestStringSet_Equal(t *testing.T) {
+func TestStrSet_Equal(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSet()
-		s2 := gset.NewStringSet()
-		s3 := gset.NewStringSet()
+		s1 := gset.NewStrSet()
+		s2 := gset.NewStrSet()
+		s3 := gset.NewStrSet()
 		s1.Add("1").Add("2").Add("3")
 		s2.Add("1").Add("2").Add("3")
 		s3.Add("1").Add("2").Add("3").Add("4")
@@ -89,11 +89,11 @@ func TestStringSet_Equal(t *testing.T) {
 	})
 }
 
-func TestStringSet_IsSubsetOf(t *testing.T) {
+func TestStrSet_IsSubsetOf(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSet()
-		s2 := gset.NewStringSet()
-		s3 := gset.NewStringSet()
+		s1 := gset.NewStrSet()
+		s2 := gset.NewStrSet()
+		s3 := gset.NewStrSet()
 		s1.Add("1").Add("2")
 		s2.Add("1").Add("2").Add("3")
 		s3.Add("1").Add("2").Add("3").Add("4")
@@ -105,10 +105,10 @@ func TestStringSet_IsSubsetOf(t *testing.T) {
 	})
 }
 
-func TestStringSet_Union(t *testing.T) {
+func TestStrSet_Union(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSet()
-		s2 := gset.NewStringSet()
+		s1 := gset.NewStrSet()
+		s2 := gset.NewStrSet()
 		s1.Add("1").Add("2")
 		s2.Add("3").Add("4")
 		s3 := s1.Union(s2)
@@ -119,10 +119,10 @@ func TestStringSet_Union(t *testing.T) {
 	})
 }
 
-func TestStringSet_Diff(t *testing.T) {
+func TestStrSet_Diff(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSet()
-		s2 := gset.NewStringSet()
+		s1 := gset.NewStrSet()
+		s2 := gset.NewStrSet()
 		s1.Add("1").Add("2").Add("3")
 		s2.Add("3").Add("4").Add("5")
 		s3 := s1.Diff(s2)
@@ -133,10 +133,10 @@ func TestStringSet_Diff(t *testing.T) {
 	})
 }
 
-func TestStringSet_Intersect(t *testing.T) {
+func TestStrSet_Intersect(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSet()
-		s2 := gset.NewStringSet()
+		s1 := gset.NewStrSet()
+		s2 := gset.NewStrSet()
 		s1.Add("1").Add("2").Add("3")
 		s2.Add("3").Add("4").Add("5")
 		s3 := s1.Intersect(s2)
@@ -147,10 +147,10 @@ func TestStringSet_Intersect(t *testing.T) {
 	})
 }
 
-func TestStringSet_Complement(t *testing.T) {
+func TestStrSet_Complement(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSet()
-		s2 := gset.NewStringSet()
+		s1 := gset.NewStrSet()
+		s2 := gset.NewStrSet()
 		s1.Add("1").Add("2").Add("3")
 		s2.Add("3").Add("4").Add("5")
 		s3 := s1.Complement(s2)
@@ -172,10 +172,10 @@ func TestNewIntSetFrom(t *testing.T) {
 	})
 }
 
-func TestStringSet_Merge(t *testing.T) {
+func TestStrSet_Merge(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSet()
-		s2 := gset.NewStringSet()
+		s1 := gset.NewStrSet()
+		s2 := gset.NewStrSet()
 		s1.Add("1").Add("2").Add("3")
 		s2.Add("3").Add("4").Add("5")
 		s3 := s1.Merge(s2)
@@ -186,24 +186,24 @@ func TestStringSet_Merge(t *testing.T) {
 	})
 }
 
-func TestNewStringSetFrom(t *testing.T) {
+func TestNewStrSetFrom(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		gtest.Assert(s1.Contains("b"), true)
 		gtest.Assert(s1.Contains("d"), false)
 	})
 }
 
-func TestStringSet_Join(t *testing.T) {
-	s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+func TestStrSet_Join(t *testing.T) {
+	s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 	str1 := s1.Join(",")
 	gtest.Assert(strings.Contains(str1, "b"), true)
 	gtest.Assert(strings.Contains(str1, "d"), false)
 }
 
-func TestStringSet_String(t *testing.T) {
+func TestStrSet_String(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		str1 := s1.String()
 		gtest.Assert(strings.Contains(str1, "b"), true)
 		gtest.Assert(strings.Contains(str1, "d"), false)
@@ -211,43 +211,43 @@ func TestStringSet_String(t *testing.T) {
 
 }
 
-func TestStringSet_Sum(t *testing.T) {
+func TestStrSet_Sum(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		s2 := gset.NewIntSetFrom([]int{2, 3, 4}, true)
 		gtest.Assert(s1.Sum(), 0)
 		gtest.Assert(s2.Sum(), 9)
 	})
 }
 
-func TestStringSet_Size(t *testing.T) {
+func TestStrSet_Size(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		gtest.Assert(s1.Size(), 3)
 
 	})
 }
 
-func TestStringSet_Remove(t *testing.T) {
+func TestStrSet_Remove(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		s1 = s1.Remove("b")
 		gtest.Assert(s1.Contains("b"), false)
 		gtest.Assert(s1.Contains("c"), true)
 	})
 }
 
-func TestStringSet_Pop(t *testing.T) {
+func TestStrSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		str1 := s1.Pop()
 		gtest.Assert(strings.Contains("a,b,c", str1), true)
 	})
 }
 
-func TestStringSet_Pops(t *testing.T) {
+func TestStrSet_Pops(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStringSetFrom([]string{"a", "b", "c"}, true)
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		strs1 := s1.Pops(2)
 		gtest.AssertIN(strs1, []string{"a", "b", "c"})
 		gtest.Assert(len(strs1), 2)
