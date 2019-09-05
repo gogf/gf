@@ -83,8 +83,8 @@ func Test_Iterate(t *testing.T) {
 		err := db.SetPath(path)
 		gtest.Assert(err, nil)
 
-		strArray := garray.NewSortedStringArray()
-		strArrayReverse := garray.NewSortedStringArrayComparator(func(a, b string) int {
+		strArray := garray.NewSortedStrArray()
+		strArrayReverse := garray.NewSortedStrArrayComparator(func(a, b string) int {
 			switch strings.Compare(a, b) {
 			case 0:
 				return 0
