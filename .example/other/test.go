@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/gogf/gf/os/gcmd"
+	"net/url"
 )
 
 func main() {
-	fmt.Println(gcmd.Scan("input:"))
+	parse1, _ := url.Parse("https://gf.cdn.johng.cn")
+	parse2, _ := url.Parse("https://gf.cdn.johng.cn/cli/")
+	fmt.Println(parse1.Host)
+	fmt.Println(parse2.Host)
 }

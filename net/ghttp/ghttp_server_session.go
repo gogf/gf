@@ -301,20 +301,20 @@ func (s *Session) GetDuration(key string, def ...interface{}) time.Duration {
 	return gconv.Duration(s.Get(key, def...))
 }
 
-func (s *Session) GetMap(value interface{}, tags ...string) map[string]interface{} {
-	return gconv.Map(value, tags...)
+func (s *Session) GetMap(key string, tags ...string) map[string]interface{} {
+	return gconv.Map(s.Get(key), tags...)
 }
 
-func (s *Session) GetMapDeep(value interface{}, tags ...string) map[string]interface{} {
-	return gconv.MapDeep(value, tags...)
+func (s *Session) GetMapDeep(key string, tags ...string) map[string]interface{} {
+	return gconv.MapDeep(s.Get(key), tags...)
 }
 
-func (s *Session) GetMaps(value interface{}, tags ...string) []map[string]interface{} {
-	return gconv.Maps(value, tags...)
+func (s *Session) GetMaps(key string, tags ...string) []map[string]interface{} {
+	return gconv.Maps(s.Get(key), tags...)
 }
 
-func (s *Session) GetMapsDeep(value interface{}, tags ...string) []map[string]interface{} {
-	return gconv.MapsDeep(value, tags...)
+func (s *Session) GetMapsDeep(key string, tags ...string) []map[string]interface{} {
+	return gconv.MapsDeep(s.Get(key), tags...)
 }
 
 func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[string]string) error {
