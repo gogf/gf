@@ -39,7 +39,7 @@ func Test_IsEmpty(t *testing.T) {
 		defer delTestFiles(path)
 
 		gtest.Assert(gfile.IsEmpty(testpath()+path), true)
-		gtest.Assert(gfile.IsEmpty(testpath()+path+gfile.Separator+"test.txt"), false)
+		gtest.Assert(gfile.IsEmpty(testpath()+path+gfile.Separator+"test.txt"), true)
 	})
 	gtest.Case(t, func() {
 		path := "/testfile_" + gconv.String(gtime.Nanosecond())
