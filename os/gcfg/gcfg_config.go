@@ -41,7 +41,7 @@ func GetContent(file ...string) string {
 	return configs.Get(name)
 }
 
-// RemoveConfig removes the global configuration with specified group.
+// RemoveConfig removes the global configuration with specified <file>.
 // If <name> is not passed, it removes configuration of the default group name.
 func RemoveConfig(file ...string) {
 	name := DEFAULT_CONFIG_FILE

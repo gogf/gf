@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	l = New()
+	l = New(true)
 )
 
 func Benchmark_PushBack(b *testing.B) {

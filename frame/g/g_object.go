@@ -8,8 +8,10 @@ package g
 
 import (
 	"github.com/gogf/gf/database/gdb"
+	"github.com/gogf/gf/database/gkvdb"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/frame/gins"
+	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/net/gtcp"
 	"github.com/gogf/gf/net/gudp"
@@ -43,10 +45,22 @@ func Config(name ...string) *gcfg.Config {
 	return gins.Config(name...)
 }
 
+// Cfg is alias of Config.
+// See Config.
+func Cfg(name ...string) *gcfg.Config {
+	return Config(name...)
+}
+
 // Resource returns an instance of Resource.
 // The parameter <name> is the name for the instance.
 func Resource(name ...string) *gres.Resource {
 	return gins.Resource(name...)
+}
+
+// I18n returns an instance of gi18n.Manager.
+// The parameter <name> is the name for the instance.
+func I18n(name ...string) *gi18n.Manager {
+	return gins.I18n(name...)
 }
 
 // Res is alias of Resource.
@@ -64,6 +78,11 @@ func Database(name ...string) gdb.DB {
 // See Database.
 func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
+}
+
+// KV returns an instance of gkvdb with specified configuration group name.
+func KV(name ...string) *gkvdb.DB {
+	return gins.KV(name...)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.

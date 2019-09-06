@@ -57,9 +57,21 @@ func (s *Session) init() {
 		s.server = s.request.Server
 		if id := s.request.GetSessionId(); id != "" {
 			if v := s.server.sessions.Get(id); v != nil {
+				// 纯内存查询
 				s.id = id
 				s.data = v.(*gmap.StrAnyMap)
 				return
+			} else {
+				// 持久化恢复
+				data := s.server.sessionStorage.Get([]byte(id))
+				if data != nil {
+					s.id = id
+					s.data = gmap.NewStrAnyMap(true)
+					if err := s.Restore(data); err != nil {
+						panic(err)
+					}
+					return
+				}
 			}
 		}
 		// 否则执行初始化创建
@@ -165,6 +177,19 @@ func (s *Session) Clear() {
 // 更新过期时间(如果用在守护进程中长期使用，需要手动调用进行更新，防止超时被清除)
 func (s *Session) UpdateExpire() {
 	if len(s.id) > 0 && s.data.Size() > 0 {
+		// 优先持久化存储
+		if s.dirty {
+			data, _ := s.Export()
+			err := s.server.sessionStorage.Set(
+				[]byte(s.id),
+				data,
+				time.Duration(s.server.GetSessionMaxAge())*time.Second,
+			)
+			if err != nil {
+				panic("saving session failed:" + err.Error())
+			}
+		}
+		// 其次更新内存TTL
 		s.server.sessions.Set(s.id, s.data, s.server.GetSessionMaxAge()*1000)
 	}
 }
@@ -276,20 +301,20 @@ func (s *Session) GetDuration(key string, def ...interface{}) time.Duration {
 	return gconv.Duration(s.Get(key, def...))
 }
 
-func (s *Session) GetMap(value interface{}, tags ...string) map[string]interface{} {
-	return gconv.Map(value, tags...)
+func (s *Session) GetMap(key string, tags ...string) map[string]interface{} {
+	return gconv.Map(s.Get(key), tags...)
 }
 
-func (s *Session) GetMapDeep(value interface{}, tags ...string) map[string]interface{} {
-	return gconv.MapDeep(value, tags...)
+func (s *Session) GetMapDeep(key string, tags ...string) map[string]interface{} {
+	return gconv.MapDeep(s.Get(key), tags...)
 }
 
-func (s *Session) GetMaps(value interface{}, tags ...string) []map[string]interface{} {
-	return gconv.Maps(value, tags...)
+func (s *Session) GetMaps(key string, tags ...string) []map[string]interface{} {
+	return gconv.Maps(s.Get(key), tags...)
 }
 
-func (s *Session) GetMapsDeep(value interface{}, tags ...string) []map[string]interface{} {
-	return gconv.MapsDeep(value, tags...)
+func (s *Session) GetMapsDeep(key string, tags ...string) []map[string]interface{} {
+	return gconv.MapsDeep(s.Get(key), tags...)
 }
 
 func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[string]string) error {

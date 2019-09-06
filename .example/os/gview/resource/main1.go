@@ -12,7 +12,7 @@ func main() {
 	gres.Dump()
 
 	v := g.View()
-	v.SetPath("/template/layout1")
+	v.SetPath("files/template/layout1")
 	s, err := v.Parse("layout.html")
 	fmt.Println(err)
 	fmt.Println(s)

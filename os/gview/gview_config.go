@@ -51,3 +51,10 @@ func (view *View) BindFuncMap(funcMap FuncMap) {
 	}
 	view.mu.Unlock()
 }
+
+// SetI18nEnabled enables/disables i18n feature in this template.
+func (view *View) SetI18nEnabled(enabled bool) {
+	view.mu.Lock()
+	view.i18nEnabled = enabled
+	view.mu.Unlock()
+}

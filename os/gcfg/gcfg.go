@@ -32,11 +32,15 @@ const (
 
 // Configuration struct.
 type Config struct {
-	name  *gtype.String       // Default configuration file name.
-	paths *garray.StringArray // Searching path array.
-	jsons *gmap.StrAnyMap     // The pared JSON objects for configuration files.
-	vc    *gtype.Bool         // Whether do violence check in value index searching. It affects the performance when set true(false in default).
+	name  *gtype.String    // Default configuration file name.
+	paths *garray.StrArray // Searching path array.
+	jsons *gmap.StrAnyMap  // The pared JSON objects for configuration files.
+	vc    *gtype.Bool      // Whether do violence check in value index searching. It affects the performance when set true(false in default).
 }
+
+var (
+	resourceTryFiles = []string{"", "/", "config/", "config", "/config", "/config/"}
+)
 
 // New returns a new configuration management object.
 // The parameter <file> specifies the default configuration file name for reading.
@@ -47,7 +51,7 @@ func New(file ...string) *Config {
 	}
 	c := &Config{
 		name:  gtype.NewString(name),
-		paths: garray.NewStringArray(true),
+		paths: garray.NewStrArray(true),
 		jsons: gmap.NewStrAnyMap(true),
 		vc:    gtype.NewBool(),
 	}
@@ -257,7 +261,7 @@ func (c *Config) FilePath(file ...string) (path string) {
 	c.paths.RLockFunc(func(array []string) {
 		for _, prefix := range array {
 			// Firstly checking the resource manager.
-			for _, v := range []string{"/", "/config", "/config/"} {
+			for _, v := range resourceTryFiles {
 				if file := gres.Get(prefix + v + name); file != nil {
 					path = file.Name()
 					return
@@ -274,7 +278,7 @@ func (c *Config) FilePath(file ...string) (path string) {
 	})
 	// Checking the configuration file in default paths.
 	if path == "" && !gres.IsEmpty() {
-		for _, v := range []string{"", "/", "/config", "/config/"} {
+		for _, v := range resourceTryFiles {
 			if file := gres.Get(v + name); file != nil {
 				path = file.Name()
 				return

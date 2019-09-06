@@ -9,9 +9,9 @@ package ghttp
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gogf/gf/os/gres"
 
@@ -81,7 +81,7 @@ func (r *Response) Writefln(format string, params ...interface{}) {
 
 // 返回JSON
 func (r *Response) WriteJson(content interface{}) error {
-	if b, err := gparser.VarToJson(content); err != nil {
+	if b, err := json.Marshal(content); err != nil {
 		return err
 	} else {
 		r.Header().Set("Content-Type", "application/json")
@@ -92,7 +92,7 @@ func (r *Response) WriteJson(content interface{}) error {
 
 // 返回JSONP
 func (r *Response) WriteJsonP(content interface{}) error {
-	if b, err := gparser.VarToJson(content); err != nil {
+	if b, err := json.Marshal(content); err != nil {
 		return err
 	} else {
 		//r.Header().Set("Content-Type", "application/json")
@@ -118,19 +118,6 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 		r.Write(b)
 	}
 	return nil
-}
-
-// Deprecated, please use CORSDefault instead.
-//
-// (已废弃，请使用CORSDefault)允许AJAX跨域访问.
-func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods string, maxAge ...int) {
-	age := 3628800
-	if len(maxAge) > 0 {
-		age = maxAge[0]
-	}
-	r.Header().Set("Access-Control-Allow-Origin", allowOrigin)
-	r.Header().Set("Access-Control-Allow-Methods", allowMethods)
-	r.Header().Set("Access-Control-Max-Age", strconv.Itoa(age))
 }
 
 // 返回HTTP Code状态码

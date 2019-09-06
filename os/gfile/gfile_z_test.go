@@ -12,6 +12,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gconv"
+
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/test/gtest"
 )
@@ -29,6 +32,31 @@ func Test_IsDir(t *testing.T) {
 	})
 }
 
+func Test_IsEmpty(t *testing.T) {
+	gtest.Case(t, func() {
+		path := "/testdir_" + gconv.String(gtime.Nanosecond())
+		createDir(path)
+		defer delTestFiles(path)
+
+		gtest.Assert(gfile.IsEmpty(testpath()+path), true)
+		gtest.Assert(gfile.IsEmpty(testpath()+path+gfile.Separator+"test.txt"), true)
+	})
+	gtest.Case(t, func() {
+		path := "/testfile_" + gconv.String(gtime.Nanosecond())
+		createTestFile(path, "")
+		defer delTestFiles(path)
+
+		gtest.Assert(gfile.IsEmpty(testpath()+path), true)
+	})
+	gtest.Case(t, func() {
+		path := "/testfile_" + gconv.String(gtime.Nanosecond())
+		createTestFile(path, "1")
+		defer delTestFiles(path)
+
+		gtest.Assert(gfile.IsEmpty(testpath()+path), false)
+	})
+}
+
 func Test_Create(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
@@ -36,20 +64,15 @@ func Test_Create(t *testing.T) {
 			filepaths []string
 			fileobj   *os.File
 		)
-
 		filepaths = append(filepaths, "/testfile_cc1.txt")
 		filepaths = append(filepaths, "/testfile_cc2.txt")
-
 		for _, v := range filepaths {
 			fileobj, err = gfile.Create(testpath() + v)
 			defer delTestFiles(v)
 			fileobj.Close()
 			gtest.Assert(err, nil)
-
 		}
-
 	})
-
 }
 
 func Test_Open(t *testing.T) {

@@ -15,55 +15,55 @@ import (
 	"github.com/gogf/gf/container/gmap"
 )
 
-var ififmUnsafe = gmap.New(true)
-var iimUnsafe = gmap.NewIntIntMap(true)
-var iifmUnsafe = gmap.NewIntAnyMap(true)
-var ismUnsafe = gmap.NewIntStrMap(true)
-var simUnsafe = gmap.NewStrIntMap(true)
-var sifmUnsafe = gmap.NewStrAnyMap(true)
-var ssmUnsafe = gmap.NewStrStrMap(true)
+var anyAnyMapUnsafe = gmap.New()
+var intIntMapUnsafe = gmap.NewIntIntMap()
+var intAnyMapUnsafe = gmap.NewIntAnyMap()
+var intStrMapUnsafe = gmap.NewIntStrMap()
+var strIntMapUnsafe = gmap.NewStrIntMap()
+var strAnyMapUnsafe = gmap.NewStrAnyMap()
+var strStrMapUnsafe = gmap.NewStrStrMap()
 
 // Writing benchmarks.
 
 func Benchmark_Unsafe_IntIntMap_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		iimUnsafe.Set(i, i)
+		intIntMapUnsafe.Set(i, i)
 	}
 }
 
 func Benchmark_Unsafe_IntAnyMap_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		iifmUnsafe.Set(i, i)
+		intAnyMapUnsafe.Set(i, i)
 	}
 }
 
 func Benchmark_Unsafe_IntStrMap_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ismUnsafe.Set(i, strconv.Itoa(i))
+		intStrMapUnsafe.Set(i, strconv.Itoa(i))
 	}
 }
 
 func Benchmark_Unsafe_AnyAnyMap_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ififmUnsafe.Set(i, i)
+		anyAnyMapUnsafe.Set(i, i)
 	}
 }
 
 func Benchmark_Unsafe_StrIntMap_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		simUnsafe.Set(strconv.Itoa(i), i)
+		strIntMapUnsafe.Set(strconv.Itoa(i), i)
 	}
 }
 
 func Benchmark_Unsafe_StrAnyMap_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		sifmUnsafe.Set(strconv.Itoa(i), i)
+		strAnyMapUnsafe.Set(strconv.Itoa(i), i)
 	}
 }
 
 func Benchmark_Unsafe_StrStrMap_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ssmUnsafe.Set(strconv.Itoa(i), strconv.Itoa(i))
+		strStrMapUnsafe.Set(strconv.Itoa(i), strconv.Itoa(i))
 	}
 }
 
@@ -71,42 +71,42 @@ func Benchmark_Unsafe_StrStrMap_Set(b *testing.B) {
 
 func Benchmark_Unsafe_IntIntMap_Get(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		iimUnsafe.Get(i)
+		intIntMapUnsafe.Get(i)
 	}
 }
 
 func Benchmark_Unsafe_IntAnyMap_Get(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		iifmUnsafe.Get(i)
+		intAnyMapUnsafe.Get(i)
 	}
 }
 
 func Benchmark_Unsafe_IntStrMap_Get(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ismUnsafe.Get(i)
+		intStrMapUnsafe.Get(i)
 	}
 }
 
 func Benchmark_Unsafe_AnyAnyMap_Get(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ififmUnsafe.Get(i)
+		anyAnyMapUnsafe.Get(i)
 	}
 }
 
 func Benchmark_Unsafe_StrIntMap_Get(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		simUnsafe.Get(strconv.Itoa(i))
+		strIntMapUnsafe.Get(strconv.Itoa(i))
 	}
 }
 
 func Benchmark_Unsafe_StrAnyMap_Get(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		sifmUnsafe.Get(strconv.Itoa(i))
+		strAnyMapUnsafe.Get(strconv.Itoa(i))
 	}
 }
 
 func Benchmark_Unsafe_StrStrMap_Get(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ssmUnsafe.Get(strconv.Itoa(i))
+		strStrMapUnsafe.Get(strconv.Itoa(i))
 	}
 }

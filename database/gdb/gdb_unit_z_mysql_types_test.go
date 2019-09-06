@@ -27,9 +27,11 @@ func Test_Types(t *testing.T) {
         %s decimal(5,2) NOT NULL,
         %s double NOT NULL,
         %s bit(2) NOT NULL,
+        %s tinyint(1) NOT NULL,
+        %s bool NOT NULL,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    `, "`blob`", "`binary`", "`date`", "`decimal`", "`double`", "`bit`")); err != nil {
+    `, "`blob`", "`binary`", "`date`", "`decimal`", "`double`", "`bit`", "`tinyint`", "`bool`")); err != nil {
 			gtest.Error(err)
 		}
 		defer dropTable("types")
@@ -41,6 +43,8 @@ func Test_Types(t *testing.T) {
 			"decimal": 123.456,
 			"double":  123.456,
 			"bit":     2,
+			"tinyint": true,
+			"bool":    false,
 		}
 		r, err := db.Table("types").Data(data).Insert()
 		gtest.Assert(err, nil)
@@ -56,5 +60,7 @@ func Test_Types(t *testing.T) {
 		gtest.Assert(one["decimal"].String(), 123.46)
 		gtest.Assert(one["double"].String(), data["double"])
 		gtest.Assert(one["bit"].Int(), data["bit"])
+		gtest.Assert(one["tinyint"].Bool(), data["tinyint"])
+		gtest.Assert(one["tinyint"].Bool(), data["tinyint"])
 	})
 }

@@ -62,10 +62,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		// 设置请求完成时间
 		request.LeaveTime = gtime.Microsecond()
-		// 事件 - BeforeOutput
-		if !request.IsExited() {
-			s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
-		}
 		// 如果没有产生异常状态，那么设置返回状态为200
 		if request.Response.Status == 0 {
 			if request.Middleware.served || request.Response.buffer.Len() > 0 {
@@ -81,16 +77,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		// access log
 		s.handleAccessLog(request)
-		// 输出Cookie
-		request.Cookie.Output()
-		// 输出缓冲区
-		request.Response.Output()
-		// 事件 - AfterOutput
-		if !request.IsExited() {
-			s.callHookHandler(HOOK_AFTER_OUTPUT, request)
-		}
-		// 更新Session会话超时时间
-		request.Session.UpdateExpire()
 	}()
 
 	// ============================================================
@@ -109,7 +95,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// 动态服务检索
 	if serveFile == nil || serveFile.dir {
-		request.handlers, request.hasHookHandler = s.getHandlersWithCache(request)
+		request.handlers, request.hasHookHandler, request.hasServeHandler = s.getHandlersWithCache(request)
 	}
 
 	// 判断最终对该请求提供的服务方式
@@ -126,7 +112,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 			// 静态服务
 			s.serveFile(request, serveFile)
 		} else {
-			if len(request.handlers) > 0 {
+			if request.hasServeHandler {
 				// 动态服务
 				request.Middleware.Next()
 			} else {
@@ -148,6 +134,21 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_SERVE, request)
 	}
+
+	// 事件 - BeforeOutput
+	if !request.IsExited() {
+		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
+	}
+	// 输出Cookie
+	request.Cookie.Output()
+	// 输出缓冲区
+	request.Response.Output()
+	// 事件 - AfterOutput
+	if !request.IsExited() {
+		s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+	}
+	// 更新Session会话超时时间
+	request.Session.UpdateExpire()
 }
 
 // 查找静态文件的绝对路径
@@ -284,8 +285,8 @@ func (s *Server) listDir(r *Request, f http.File) {
 		}
 		r.Response.Write(`<tr>`)
 		r.Response.Writef(`<td><a href="%s/%s">%s</a></td>`, r.URL.Path, name, ghtml.SpecialChars(name))
+		r.Response.Writef(`<td style="width:300px;text-align:center;">%s</td>`, gtime.New(file.ModTime()).ISO8601())
 		r.Response.Writef(`<td style="width:80px;text-align:center;">%s</td>`, size)
-		r.Response.Writef(`<td>%s</td>`, gtime.New(file.ModTime()).ISO8601())
 		r.Response.Write(`</tr>`)
 	}
 	r.Response.Write(`</table>`)

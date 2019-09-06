@@ -8,8 +8,7 @@ import (
 
 func main() {
 	s := g.Server()
-	s.SetSessionMaxAge(72000000)
-	s.SetSessionIdName("gpadminssid")
+	s.SetSessionMaxAge(60)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set("time", gtime.Second())
 		r.Response.Write("ok")

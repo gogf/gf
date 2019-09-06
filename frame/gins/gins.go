@@ -11,9 +11,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogf/gf/os/gfile"
+
+	"github.com/gogf/gf/database/gkvdb"
+
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/database/gredis"
+	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/glog"
@@ -26,6 +31,7 @@ import (
 
 const (
 	gFRAME_CORE_COMPONENT_NAME_REDIS    = "gf.core.component.redis"
+	gFRAME_CORE_COMPONENT_NAME_GKVDB    = "gf.core.component.gkvdb"
 	gFRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
 )
 
@@ -80,15 +86,22 @@ func Resource(name ...string) *gres.Resource {
 	return gres.Instance(name...)
 }
 
-// 数据库操作对象，使用了连接池
+// I18n returns an instance of gi18n.Manager.
+// The parameter <name> is the name for the instance.
+func I18n(name ...string) *gi18n.Manager {
+	return gi18n.Instance(name...)
+}
+
+// Database returns an instance of database ORM object
+// with specified configuration group name.
 func Database(name ...string) gdb.DB {
 	config := Config()
 	group := gdb.DEFAULT_GROUP_NAME
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
-	db := instances.GetOrSetFuncLock(key, func() interface{} {
+	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
+	db := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		if gdb.GetConfig(group) == nil {
 			m := config.GetMap("database")
 			if m == nil {
@@ -111,7 +124,7 @@ func Database(name ...string) gdb.DB {
 					}
 				}
 				if len(cg) > 0 {
-					gdb.AddConfigGroup(group, cg)
+					gdb.SetConfigGroup(group, cg)
 				}
 			}
 			// Parse <m> as a single node configuration.
@@ -121,10 +134,10 @@ func Database(name ...string) gdb.DB {
 					cg = append(cg, *node)
 				}
 				if len(cg) > 0 {
-					gdb.AddConfigGroup(group, cg)
+					gdb.SetConfigGroup(group, cg)
 				}
 			}
-			addConfigMonitor(key, config)
+			addConfigMonitor(instanceKey, config)
 		}
 		if db, err := gdb.New(name...); err == nil {
 			return db
@@ -139,7 +152,6 @@ func Database(name ...string) gdb.DB {
 	return nil
 }
 
-// 解析数据库配置节点项
 func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	nodeMap, ok := value.(map[string]interface{})
 	if !ok {
@@ -217,15 +229,15 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	return node
 }
 
-// Redis操作对象，使用了连接池
+// Redis returns an instance of redis client with specified configuration group name.
 func Redis(name ...string) *gredis.Redis {
 	config := Config()
 	group := "default"
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
-	result := instances.GetOrSetFuncLock(key, func() interface{} {
+	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
+	result := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		if m := config.GetMap("redis"); m != nil {
 			// host:port[,db,pass?maxIdle=x&maxActive=x&idleTimeout=x&maxConnLifetime=x]
 			if v, ok := m[group]; ok {
@@ -251,12 +263,12 @@ func Redis(name ...string) *gredis.Redis {
 					if v, ok := parse["maxConnLifetime"]; ok {
 						redisConfig.MaxConnLifetime = gconv.Duration(v) * time.Second
 					}
-					addConfigMonitor(key, config)
+					addConfigMonitor(instanceKey, config)
 					return gredis.New(redisConfig)
 				}
 				array, _ = gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, line)
 				if len(array) == 5 {
-					addConfigMonitor(key, config)
+					addConfigMonitor(instanceKey, config)
 					return gredis.New(gredis.Config{
 						Host: array[1],
 						Port: gconv.Int(array[2]),
@@ -280,17 +292,42 @@ func Redis(name ...string) *gredis.Redis {
 	return nil
 }
 
-// 添加对单例对象的配置文件inotify监控
+// KV returns an instance of gkvdb with specified configuration group name.
+func KV(name ...string) *gkvdb.DB {
+	config := Config()
+	group := "default"
+	if len(name) > 0 && name[0] != "" {
+		group = name[0]
+	}
+	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_GKVDB, group)
+	result := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+		key := fmt.Sprintf("kvdb.%s", group)
+		if s := config.GetString(key); s != "" {
+			db := gkvdb.Instance(group)
+			parse, _ := gstr.Parse(s)
+			if value, ok := parse["path"]; ok {
+				db.SetPath(gconv.String(value))
+			}
+			if value, ok := parse["sync"]; ok {
+				db.Options().SyncWrites = gconv.Bool(value)
+			}
+			addConfigMonitor(instanceKey, config)
+			return db
+		} else {
+			glog.Errorf(`incomplete configuration for gkvdb: "%s" node not found in config file "%s"`, key, config.FilePath())
+		}
+		return nil
+	})
+	if result != nil {
+		return result.(*gkvdb.DB)
+	}
+	return nil
+}
+
 func addConfigMonitor(key string, config *gcfg.Config) {
-	// 使用gfsnotify进行文件监控，当配置文件有任何变化时，清空对象单例缓存
-	if path := config.FilePath(); path != "" {
+	if path := config.FilePath(); path != "" && gfile.Exists(path) {
 		gfsnotify.Add(path, func(event *gfsnotify.Event) {
 			instances.Remove(key)
 		})
 	}
-}
-
-// 模板内置方法：config
-func funcConfig(pattern string, file ...interface{}) string {
-	return Config().GetString(pattern, file...)
 }

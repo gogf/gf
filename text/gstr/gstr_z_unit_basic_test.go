@@ -315,6 +315,9 @@ func Test_StripSlashes(t *testing.T) {
 func Test_QuoteMeta(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gstr.QuoteMeta(`.\+*?[^]($)`), `\.\\\+\*\?\[\^\]\(\$\)`)
+		gtest.Assert(gstr.QuoteMeta(`.\+*中国?[^]($)`), `\.\\\+\*中国\?\[\^\]\(\$\)`)
+		gtest.Assert(gstr.QuoteMeta(`.''`, `'`), `.\'\'`)
+		gtest.Assert(gstr.QuoteMeta(`中国.''`, `'`), `中国.\'\'`)
 	})
 }
 

@@ -8,16 +8,8 @@
 package gres
 
 const (
-	gPACKAGE_TEMPLATE = `package %s
-
-import "github.com/gogf/gf/os/gres"
-
-func init() {
-	if err := gres.Add(%s); err != nil {
-		panic(err)
-	}
-}
-`
+	// Separator for directories.
+	Separator = "/"
 )
 
 var (
@@ -67,14 +59,22 @@ func IsEmpty() bool {
 	return defaultResource.tree.IsEmpty()
 }
 
-// Scan returns the files under the given path, the parameter <path> should be a folder type.
+// ScanDir returns the files under the given path, the parameter <path> should be a folder type.
 //
 // The pattern parameter <pattern> supports multiple file name patterns,
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter <recursive> is true.
-func Scan(path string, pattern string, recursive ...bool) []*File {
-	return defaultResource.Scan(path, pattern, recursive...)
+func ScanDir(path string, pattern string, recursive ...bool) []*File {
+	return defaultResource.ScanDir(path, pattern, recursive...)
+}
+
+// ScanDirFile returns all sub-files with absolute paths of given <path>,
+// It scans directory recursively if given parameter <recursive> is true.
+//
+// Note that it returns only files, exclusive of directories.
+func ScanDirFile(path string, pattern string, recursive ...bool) []*File {
+	return defaultResource.ScanDirFile(path, pattern, recursive...)
 }
 
 // Dump prints the files of the default resource object.

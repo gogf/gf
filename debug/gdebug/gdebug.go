@@ -10,6 +10,7 @@ package gdebug
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -46,6 +47,14 @@ func Stack(skip ...int) string {
 //
 // The parameter <filter> is used to filter the path of the caller.
 func StackWithFilter(filter string, skip ...int) string {
+	return StackWithFilters([]string{filter}, skip...)
+}
+
+// StackWithFilters returns a formatted stack trace of the goroutine that calls it.
+// It calls runtime.Stack with a large enough buffer to capture the entire trace.
+//
+// The parameter <filters> is a slice of strings, which are used to filter the path of the caller.
+func StackWithFilters(filters []string, skip ...int) string {
 	number := 0
 	if len(skip) > 0 {
 		number = skip[0]
@@ -54,12 +63,20 @@ func StackWithFilter(filter string, skip ...int) string {
 	space := "  "
 	index := 1
 	buffer := bytes.NewBuffer(nil)
-	for i := callerFromIndex(filter) + number; i < gMAX_DEPTH; i++ {
+	filtered := false
+	for i := callerFromIndex(filters) + number; i < gMAX_DEPTH; i++ {
 		if pc, file, line, ok := runtime.Caller(i); ok {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
-			if filter != "" && strings.Contains(file, filter) {
+			filtered = false
+			for _, filter := range filters {
+				if strings.Contains(file, filter) {
+					filtered = true
+					break
+				}
+			}
+			if filtered {
 				continue
 			}
 			if strings.Contains(file, gFILTER_KEY) {
@@ -95,7 +112,7 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	for i := callerFromIndex(filter) + number; i < gMAX_DEPTH; i++ {
+	for i := callerFromIndex([]string{filter}) + number; i < gMAX_DEPTH; i++ {
 		if pc, file, line, ok := runtime.Caller(i); ok {
 			if filter != "" && strings.Contains(file, filter) {
 				continue
@@ -118,10 +135,18 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 }
 
 // callerFromIndex returns the caller position exclusive of the debug package.
-func callerFromIndex(filter string) int {
+func callerFromIndex(filters []string) int {
+	filtered := false
 	for i := 0; i < gMAX_DEPTH; i++ {
 		if _, file, _, ok := runtime.Caller(i); ok {
-			if filter != "" && strings.Contains(file, filter) {
+			filtered = false
+			for _, filter := range filters {
+				if strings.Contains(file, filter) {
+					filtered = true
+					break
+				}
+			}
+			if filtered {
 				continue
 			}
 			if strings.Contains(file, gFILTER_KEY) {
@@ -161,6 +186,12 @@ func CallerFunction() string {
 func CallerFilePath() string {
 	_, path, _ := Caller()
 	return path
+}
+
+// CallerDirectory returns the directory of the caller.
+func CallerDirectory() string {
+	_, path, _ := Caller()
+	return filepath.Dir(path)
 }
 
 // CallerFileLine returns the file path along with the line number of the caller.

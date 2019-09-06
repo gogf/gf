@@ -15,9 +15,9 @@ import (
 	"github.com/gogf/gf/util/gutil"
 )
 
-var hashMap = gmap.New()
-var listMap = gmap.NewListMap()
-var treeMap = gmap.NewTreeMap(gutil.ComparatorInt)
+var hashMap = gmap.New(true)
+var listMap = gmap.NewListMap(true)
+var treeMap = gmap.NewTreeMap(gutil.ComparatorInt, true)
 
 func Benchmark_HashMap_Set(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {

@@ -12,7 +12,7 @@ func main() {
 	gres.Dump()
 
 	v := g.View()
-	v.SetPath("/template/layout2")
+	v.SetPath("files/template/layout2")
 	s, err := v.Parse("layout.html", g.Map{
 		"mainTpl": "main/main1.html",
 	})
