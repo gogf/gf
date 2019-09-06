@@ -10,12 +10,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"testing"
+	"time"
+
+	"github.com/gogf/gf/frame/g"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/test/gtest"
 )
 
-func TestSet(t *testing.T) {
+func Test_Set(t *testing.T) {
 	gtest.Case(t, func() {
 		objOne := gvar.New("old", true)
 		objOneOld, _ := objOne.Set("new").(string)
@@ -27,7 +30,7 @@ func TestSet(t *testing.T) {
 	})
 }
 
-func TestVal(t *testing.T) {
+func Test_Val(t *testing.T) {
 	gtest.Case(t, func() {
 		objOne := gvar.New(1, true)
 		objOneOld, _ := objOne.Val().(int)
@@ -38,7 +41,7 @@ func TestVal(t *testing.T) {
 		gtest.Assert(objTwoOld, 1)
 	})
 }
-func TestInterface(t *testing.T) {
+func Test_Interface(t *testing.T) {
 	gtest.Case(t, func() {
 		objOne := gvar.New(1, true)
 		objOneOld, _ := objOne.Interface().(int)
@@ -49,7 +52,7 @@ func TestInterface(t *testing.T) {
 		gtest.Assert(objTwoOld, 1)
 	})
 }
-func TestIsNil(t *testing.T) {
+func Test_IsNil(t *testing.T) {
 	gtest.Case(t, func() {
 		objOne := gvar.New(nil, true)
 		gtest.Assert(objOne.IsNil(), true)
@@ -60,7 +63,7 @@ func TestIsNil(t *testing.T) {
 	})
 }
 
-func TestBytes(t *testing.T) {
+func Test_Bytes(t *testing.T) {
 	gtest.Case(t, func() {
 		x := int32(1)
 		bytesBuffer := bytes.NewBuffer([]byte{})
@@ -77,7 +80,7 @@ func TestBytes(t *testing.T) {
 	})
 }
 
-func TestString(t *testing.T) {
+func Test_String(t *testing.T) {
 	gtest.Case(t, func() {
 		var str string = "hello"
 		objOne := gvar.New(str, true)
@@ -85,7 +88,7 @@ func TestString(t *testing.T) {
 
 	})
 }
-func TestBool(t *testing.T) {
+func Test_Bool(t *testing.T) {
 	gtest.Case(t, func() {
 		var ok bool = true
 		objOne := gvar.New(ok, true)
@@ -98,7 +101,7 @@ func TestBool(t *testing.T) {
 	})
 }
 
-func TestInt(t *testing.T) {
+func Test_Int(t *testing.T) {
 	gtest.Case(t, func() {
 		var num int = 1
 		objOne := gvar.New(num, true)
@@ -107,7 +110,7 @@ func TestInt(t *testing.T) {
 	})
 }
 
-func TestInt8(t *testing.T) {
+func Test_Int8(t *testing.T) {
 	gtest.Case(t, func() {
 		var num int8 = 1
 		objOne := gvar.New(num, true)
@@ -116,7 +119,7 @@ func TestInt8(t *testing.T) {
 	})
 }
 
-func TestInt16(t *testing.T) {
+func Test_Int16(t *testing.T) {
 	gtest.Case(t, func() {
 		var num int16 = 1
 		objOne := gvar.New(num, true)
@@ -125,7 +128,7 @@ func TestInt16(t *testing.T) {
 	})
 }
 
-func TestInt32(t *testing.T) {
+func Test_Int32(t *testing.T) {
 	gtest.Case(t, func() {
 		var num int32 = 1
 		objOne := gvar.New(num, true)
@@ -134,7 +137,7 @@ func TestInt32(t *testing.T) {
 	})
 }
 
-func TestInt64(t *testing.T) {
+func Test_Int64(t *testing.T) {
 	gtest.Case(t, func() {
 		var num int64 = 1
 		objOne := gvar.New(num, true)
@@ -143,7 +146,7 @@ func TestInt64(t *testing.T) {
 	})
 }
 
-func TestUint(t *testing.T) {
+func Test_Uint(t *testing.T) {
 	gtest.Case(t, func() {
 		var num uint = 1
 		objOne := gvar.New(num, true)
@@ -152,7 +155,7 @@ func TestUint(t *testing.T) {
 	})
 }
 
-func TestUint8(t *testing.T) {
+func Test_Uint8(t *testing.T) {
 	gtest.Case(t, func() {
 		var num uint8 = 1
 		objOne := gvar.New(num, true)
@@ -161,7 +164,7 @@ func TestUint8(t *testing.T) {
 	})
 }
 
-func TestUint16(t *testing.T) {
+func Test_Uint16(t *testing.T) {
 	gtest.Case(t, func() {
 		var num uint16 = 1
 		objOne := gvar.New(num, true)
@@ -170,7 +173,7 @@ func TestUint16(t *testing.T) {
 	})
 }
 
-func TestUint32(t *testing.T) {
+func Test_Uint32(t *testing.T) {
 	gtest.Case(t, func() {
 		var num uint32 = 1
 		objOne := gvar.New(num, true)
@@ -179,7 +182,7 @@ func TestUint32(t *testing.T) {
 	})
 }
 
-func TestUint64(t *testing.T) {
+func Test_Uint64(t *testing.T) {
 	gtest.Case(t, func() {
 		var num uint64 = 1
 		objOne := gvar.New(num, true)
@@ -187,7 +190,7 @@ func TestUint64(t *testing.T) {
 
 	})
 }
-func TestFloat32(t *testing.T) {
+func Test_Float32(t *testing.T) {
 	gtest.Case(t, func() {
 		var num float32 = 1.1
 		objOne := gvar.New(num, true)
@@ -196,7 +199,7 @@ func TestFloat32(t *testing.T) {
 	})
 }
 
-func TestFloat64(t *testing.T) {
+func Test_Float64(t *testing.T) {
 	gtest.Case(t, func() {
 		var num float64 = 1.1
 		objOne := gvar.New(num, true)
@@ -205,21 +208,21 @@ func TestFloat64(t *testing.T) {
 	})
 }
 
-func TestInts(t *testing.T) {
+func Test_Ints(t *testing.T) {
 	gtest.Case(t, func() {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
 		gtest.Assert(objOne.Ints()[0], arr[0])
 	})
 }
-func TestFloats(t *testing.T) {
+func Test_Floats(t *testing.T) {
 	gtest.Case(t, func() {
 		var arr = []float64{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
 		gtest.Assert(objOne.Floats()[0], arr[0])
 	})
 }
-func TestStrings(t *testing.T) {
+func Test_Strings(t *testing.T) {
 	gtest.Case(t, func() {
 		var arr = []string{"hello", "world"}
 		objOne := gvar.New(arr, true)
@@ -227,7 +230,41 @@ func TestStrings(t *testing.T) {
 	})
 }
 
-func TestTime(t *testing.T) {
+func Test_Interfaces(t *testing.T) {
+	gtest.Case(t, func() {
+		var arr = []int{1, 2, 3, 4, 5}
+		objOne := gvar.New(arr, true)
+		gtest.Assert(objOne.Interfaces(), arr)
+	})
+}
+
+func Test_Slice(t *testing.T) {
+	gtest.Case(t, func() {
+		var arr = []int{1, 2, 3, 4, 5}
+		objOne := gvar.New(arr, true)
+		gtest.Assert(objOne.Slice(), arr)
+	})
+}
+
+func Test_Array(t *testing.T) {
+	gtest.Case(t, func() {
+		var arr = []int{1, 2, 3, 4, 5}
+		objOne := gvar.New(arr, false)
+		gtest.Assert(objOne.Array(), arr)
+	})
+}
+
+func Test_Vars(t *testing.T) {
+	gtest.Case(t, func() {
+		var arr = []int{1, 2, 3, 4, 5}
+		objOne := gvar.New(arr, false)
+		gtest.Assert(len(objOne.Vars()), 5)
+		gtest.Assert(objOne.Vars()[0].Int(), 1)
+		gtest.Assert(objOne.Vars()[4].Int(), 5)
+	})
+}
+
+func Test_Time(t *testing.T) {
 	gtest.Case(t, func() {
 		var timeUnix int64 = 1556242660
 		objOne := gvar.New(timeUnix, true)
@@ -235,11 +272,39 @@ func TestTime(t *testing.T) {
 	})
 }
 
+func Test_GTime(t *testing.T) {
+	gtest.Case(t, func() {
+		var timeUnix int64 = 1556242660
+		objOne := gvar.New(timeUnix, true)
+		gtest.Assert(objOne.GTime().Unix(), timeUnix)
+	})
+}
+
+func Test_Duration(t *testing.T) {
+	gtest.Case(t, func() {
+		var timeUnix int64 = 1556242660
+		objOne := gvar.New(timeUnix, true)
+		gtest.Assert(objOne.Duration(), time.Duration(timeUnix))
+	})
+}
+
+func Test_Map(t *testing.T) {
+	gtest.Case(t, func() {
+		m := g.Map{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		objOne := gvar.New(m, true)
+		gtest.Assert(objOne.Map()["k1"], m["k1"])
+		gtest.Assert(objOne.Map()["k2"], m["k2"])
+	})
+}
+
 type StTest struct {
 	Test int
 }
 
-func TestStruct(t *testing.T) {
+func Test_Struct(t *testing.T) {
 	gtest.Case(t, func() {
 		Kv := make(map[string]int, 1)
 		Kv["Test"] = 100

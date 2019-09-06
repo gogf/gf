@@ -356,7 +356,7 @@ func TestCfg_FilePath(t *testing.T) {
 		c := gcfg.New("config.yml")
 		path := c.FilePath("tmp")
 		gtest.Assert(path, "")
-		path = c.GetFilePath("tmp")
+		path = c.FilePath("tmp")
 		gtest.Assert(path, "")
 	})
 }
@@ -399,7 +399,7 @@ func TestCfg_Get(t *testing.T) {
 		name := struct {
 			Name string
 		}{}
-		gtest.Assert(c.GetToStruct("name", &name) == nil, false)
+		gtest.Assert(c.GetStruct("name", &name) == nil, false)
 
 		c.Clear()
 
@@ -409,7 +409,7 @@ func TestCfg_Get(t *testing.T) {
 		gtest.Assert(c.GetGTime("time").Format("Y-m-d"), "2019-06-12")
 		gtest.Assert(c.GetDuration("time").String(), "0s")
 		//t.Log(c.GetString("person"))
-		err := c.GetToStruct("person", &name)
+		err := c.GetStruct("person", &name)
 		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
 		gtest.Assert(c.GetFloats("floats") == nil, false)

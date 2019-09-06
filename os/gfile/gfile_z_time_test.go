@@ -1,3 +1,9 @@
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gfile_test
 
 import (
@@ -40,7 +46,7 @@ func Test_MTimeMillisecond(t *testing.T) {
 		fileobj, err = os.Stat(testpath() + file1)
 		gtest.Assert(err, nil)
 
-		gtest.AssertGTE(gfile.MTimeMillisecond(testpath()+file1), fileobj.ModTime().Nanosecond()/1000000)
+		gtest.AssertGE(gfile.MTimeMillisecond(testpath()+file1), fileobj.ModTime().Nanosecond()/1000000)
 		gtest.Assert(gfile.MTimeMillisecond(""), 0)
 	})
 }
