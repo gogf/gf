@@ -274,24 +274,6 @@ func (j *Json) Append(pattern string, value interface{}) error {
 	return fmt.Errorf("invalid variable type of %s", pattern)
 }
 
-// GetToVar gets the value by specified <pattern>,
-// and converts it to specified golang variable <v>.
-// The <pointer> should be a pointer type.
-// Deprecated.
-func (j *Json) GetToVar(pattern string, pointer interface{}) error {
-	r := j.Get(pattern)
-	if r != nil {
-		if t, err := Encode(r); err == nil {
-			return DecodeTo(t, pointer)
-		} else {
-			return err
-		}
-	} else {
-		pointer = nil
-	}
-	return nil
-}
-
 // GetStruct gets the value by specified <pattern>,
 // and converts it to specified object <pointer>.
 // The <pointer> should be the pointer to an object.
@@ -328,12 +310,6 @@ func (j *Json) GetMapStructs(pattern string, pointer interface{}, mapping ...map
 
 func (j *Json) GetMapStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapStructsDeep(j.Get(pattern), pointer, mapping...)
-}
-
-// GetToStruct is alias of GetStruct.
-// Deprecated.
-func (j *Json) GetToStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	return j.GetStruct(pattern, pointer, mapping...)
 }
 
 // ToMap converts current Json object to map[string]interface{}.
