@@ -30,6 +30,17 @@ func New(text string) error {
 	}
 }
 
+// Newf returns an error that formats as the given text.
+func Newf(format string, args ...interface{}) error {
+	if format == "" {
+		return nil
+	}
+	return &Error{
+		stack: callers(),
+		text:  fmt.Sprintf(format, args...),
+	}
+}
+
 // Wrap wraps error with text.
 // It returns nil if given err is nil.
 func Wrap(err error, text string) error {

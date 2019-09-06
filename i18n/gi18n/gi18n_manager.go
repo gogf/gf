@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gogf/gf/os/glog"
+
 	"github.com/gogf/gf/os/gfsnotify"
 
 	"github.com/gogf/gf/text/gregex"
@@ -164,11 +166,12 @@ func (m *Manager) init() {
 				if m.data[lang] == nil {
 					m.data[lang] = make(map[string]string)
 				}
-				j, _ := gjson.LoadContent(file.Content())
-				if j != nil {
+				if j, err := gjson.LoadContent(file.Content()); err == nil {
 					for k, v := range j.ToMap() {
 						m.data[lang][k] = gconv.String(v)
 					}
+				} else {
+					glog.Errorf("load i18n file '%s' failed: %v", file, err)
 				}
 			}
 		}
@@ -190,11 +193,12 @@ func (m *Manager) init() {
 				if m.data[lang] == nil {
 					m.data[lang] = make(map[string]string)
 				}
-				j, _ := gjson.LoadContent(gfile.GetBytes(file))
-				if j != nil {
+				if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
 					for k, v := range j.ToMap() {
 						m.data[lang][k] = gconv.String(v)
 					}
+				} else {
+					glog.Errorf("load i18n file '%s' failed: %v", file, err)
 				}
 			}
 			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
