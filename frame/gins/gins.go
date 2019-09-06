@@ -9,6 +9,7 @@ package gins
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/os/gfile"
@@ -236,6 +237,13 @@ func Redis(name ...string) *gredis.Redis {
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
+	//============================== If you have a cluster configuration, optimize the use of clustering
+	if config.GetString("rediscluster."+group+".host") != "" && gredis.FlagBanCluster == false {
+		clusters := RedisCluster(config, group)
+		if clusters != nil {
+			return clusters
+		}
+	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
 	result := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		if m := config.GetMap("redis"); m != nil {
@@ -278,6 +286,36 @@ func Redis(name ...string) *gredis.Redis {
 				} else {
 					glog.Errorf(`invalid redis node configuration: "%s"`, line)
 				}
+			} else {
+				glog.Errorf(`configuration for redis not found for group "%s"`, group)
+			}
+		} else {
+			glog.Errorf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath())
+		}
+		return nil
+	})
+	if result != nil {
+		return result.(*gredis.Redis)
+	}
+	return nil
+}
+
+func RedisCluster(config *gcfg.Config, group string) *gredis.Redis {
+	if gredis.FlagBanCluster {
+		return nil
+	}
+	key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
+	result := instances.GetOrSetFuncLock(key, func() interface{} {
+		if m := config.GetMap("rediscluster"); m != nil {
+			// host1:port1,host2:port2
+			if v, ok := m[group]; ok {
+				lines := gconv.Map(v)
+				hosts := strings.Split(gconv.String(lines["host"]), ",")
+				return gredis.NewClusterClient(&gredis.ClusterOption{
+					Nodes: hosts,
+					Pwd:   gconv.String(lines["pwd"]),
+				})
+
 			} else {
 				glog.Errorf(`configuration for redis not found for group "%s"`, group)
 			}

@@ -7,19 +7,19 @@
 package gredis_test
 
 import (
-	"testing"
-	"time"
-
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/test/gtest"
 	redis2 "github.com/gomodule/redigo/redis"
+	"testing"
+	"time"
 )
 
 var (
 	config = gredis.Config{
-		Host: "127.0.0.1",
-		Port: 6379,
+		Host: "127.0.0.1", //192.168.0.55 127.0.0.1
+		Port: 6379,        //6379 8579
 		Db:   1,
+		//Pass:"yyb513941",  // ci not password
 	}
 )
 
