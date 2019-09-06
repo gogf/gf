@@ -171,7 +171,7 @@ func (m *Manager) init() {
 						m.data[lang][k] = gconv.String(v)
 					}
 				} else {
-					glog.Errorf("load i18n file '%s' failed: %v", file, err)
+					glog.Errorf("load i18n file '%s' failed: %v", name, err)
 				}
 			}
 		}

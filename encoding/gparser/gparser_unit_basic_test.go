@@ -86,7 +86,7 @@ func Test_ViolenceCheck(t *testing.T) {
 	})
 }
 
-func Test_GetToVar(t *testing.T) {
+func Test_GetVar(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.Case(t, func() {
 		var m map[string]string
@@ -95,9 +95,9 @@ func Test_GetToVar(t *testing.T) {
 		j := gparser.New(data)
 		gtest.AssertNE(j, nil)
 
-		j.GetToVar("n", &n)
-		j.GetToVar("m", &m)
-		j.GetToVar("a", &a)
+		j.GetVar("n", &n)
+		j.GetVar("m", &m)
+		j.GetVar("a", &a)
 
 		gtest.Assert(n, "123456789")
 		gtest.Assert(m, g.Map{"k": "v"})
@@ -233,7 +233,7 @@ func Test_Convert(t *testing.T) {
 		name := struct {
 			Name string
 		}{}
-		err := p.GetToStruct("person", &name)
+		err := p.GetStruct("person", &name)
 		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
 		gtest.Assert(p.ToMap()["name"], "gf")
