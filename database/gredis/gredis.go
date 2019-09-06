@@ -167,11 +167,3 @@ func (r *Redis) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
 	v, err := r.Do(command, args...)
 	return gvar.New(v), err
 }
-
-// Deprecated.
-// Send writes the command to the client's output buffer.
-func (r *Redis) Send(command string, args ...interface{}) error {
-	conn := &Conn{r.pool.Get()}
-	defer conn.Close()
-	return conn.Send(command, args...)
-}

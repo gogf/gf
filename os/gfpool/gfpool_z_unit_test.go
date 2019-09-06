@@ -24,13 +24,6 @@ func TestOpen(t *testing.T) {
 		gtest.AssertEQ(err1, nil)
 		gtest.AssertEQ(f, f2)
 		f2.Close()
-
-		// Deprecated test
-		f3, err2 := gfpool.OpenFile(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		gtest.AssertEQ(err2, nil)
-		gtest.AssertEQ(f, f3)
-		f3.Close()
-
 	})
 
 	stop(testFile)
@@ -95,12 +88,6 @@ func TestOpenExpire(t *testing.T) {
 		gtest.AssertEQ(err1, nil)
 		//gtest.AssertNE(f, f2)
 		f2.Close()
-
-		// Deprecated test
-		f3, err2 := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100)
-		gtest.AssertEQ(err2, nil)
-		gtest.AssertEQ(f2, f3)
-		f3.Close()
 	})
 
 	stop(testFile)

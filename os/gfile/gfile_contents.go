@@ -23,12 +23,6 @@ func GetContents(path string) string {
 	return string(GetBytes(path))
 }
 
-// GetBinContents is alias of GetBytes.
-// Deprecated.
-func GetBinContents(path string) []byte {
-	return GetBytes(path)
-}
-
 // GetBytes returns the file content of <path> as []byte.
 // It returns nil if it fails reading.
 func GetBytes(path string) []byte {
@@ -79,22 +73,10 @@ func PutContentsAppend(path string, content string) error {
 	return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, gDEFAULT_PERM)
 }
 
-// PutBinContents is alias of PutBytes.
-// Deprecated.
-func PutBinContents(path string, content []byte) error {
-	return PutBytes(path, content)
-}
-
 // PutBytes puts binary <content> to file of <path>.
 // It creates file of <path> recursively if it does not exist.
 func PutBytes(path string, content []byte) error {
 	return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, gDEFAULT_PERM)
-}
-
-// PutBinContentsAppend is alias of PutBytesAppend.
-// Deprecated.
-func PutBinContentsAppend(path string, content []byte) error {
-	return PutBytesAppend(path, content)
 }
 
 // PutBytesAppend appends binary <content> to file of <path>.
@@ -132,12 +114,6 @@ func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
 	return -1
 }
 
-// GetBinContentsTilChar is alias of GetBytesTilChar.
-// Deprecated.
-func GetBinContentsTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, int64) {
-	return GetBytesTilChar(reader, char, start)
-}
-
 // GetBytesTilChar returns the contents of the file as []byte
 // until the next specified byte <char> position.
 //
@@ -147,12 +123,6 @@ func GetBytesTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, int64)
 		return GetBytesByTwoOffsets(reader, start, offset+1), offset
 	}
 	return nil, -1
-}
-
-// GetBinContentsTilCharByPath is alias of GetBytesTilCharByPath.
-// Deprecated.
-func GetBinContentsTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
-	return GetBytesTilCharByPath(path, char, start)
 }
 
 // GetBytesTilCharByPath returns the contents of the file given by <path> as []byte
@@ -168,12 +138,6 @@ func GetBytesTilCharByPath(path string, char byte, start int64) ([]byte, int64) 
 	return nil, -1
 }
 
-// GetBinContentsByTwoOffsets is alias of GetBytesByTwoOffsets.
-// Deprecated.
-func GetBinContentsByTwoOffsets(reader io.ReaderAt, start int64, end int64) []byte {
-	return GetBytesByTwoOffsets(reader, start, end)
-}
-
 // GetBytesByTwoOffsets returns the binary content as []byte from <start> to <end>.
 // Note: Returned value does not contain the character of the last position, which means
 // it returns content range as [start, end).
@@ -185,12 +149,6 @@ func GetBytesByTwoOffsets(reader io.ReaderAt, start int64, end int64) []byte {
 	return buffer
 }
 
-// GetBinContentsByTwoOffsetsByPath is alias of GetBytesByTwoOffsetsByPath.
-// Deprecated.
-func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byte {
-	return GetBytesByTwoOffsetsByPath(path, start, end)
-}
-
 // GetBytesByTwoOffsetsByPath returns the binary content as []byte from <start> to <end>.
 // Note: Returned value does not contain the character of the last position, which means
 // it returns content range as [start, end).
@@ -198,7 +156,7 @@ func GetBinContentsByTwoOffsetsByPath(path string, start int64, end int64) []byt
 func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, gDEFAULT_PERM); err == nil {
 		defer f.Close()
-		return GetBinContentsByTwoOffsets(f, start, end)
+		return GetBytesByTwoOffsets(f, start, end)
 	}
 	return nil
 }
