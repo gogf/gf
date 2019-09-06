@@ -55,12 +55,6 @@ func Open(path string, flag int, perm os.FileMode, expire ...int) (file *File, e
 	return pool.File()
 }
 
-// Deprecated.
-// See Open.
-func OpenFile(path string, flag int, perm os.FileMode, expire ...int) (file *File, err error) {
-	return Open(path, flag, perm, expire...)
-}
-
 // 创建一个文件指针池，expire = 0表示不过期，expire < 0表示使用完立即回收，expire > 0表示超时回收，默认值为0表示不过期。
 // 注意过期时间单位为：毫秒。
 func New(path string, flag int, perm os.FileMode, expire ...int) *Pool {

@@ -243,12 +243,6 @@ func (c *Config) AddPath(path string) error {
 	return nil
 }
 
-// GetFilePath is alias of FilePath.
-// Deprecated.
-func (c *Config) GetFilePath(file ...string) (path string) {
-	return c.FilePath(file...)
-}
-
 // GetFilePath returns the absolute path of the specified configuration file.
 // If <file> is not passed, it returns the configuration file path of the default name.
 // If the specified configuration file does not exist,
