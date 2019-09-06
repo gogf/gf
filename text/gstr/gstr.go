@@ -163,7 +163,7 @@ func SubStr(str string, start int, length ...int) (substr string) {
 	lth := len(rs)
 	// Simple border checks.
 	if start < 0 {
-		start = ltn + start
+		start = lth + start
 	}
 	if start >= lth {
 		start = lth
