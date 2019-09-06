@@ -51,19 +51,6 @@ func Test_Do(t *testing.T) {
 	})
 }
 
-func Test_Send(t *testing.T) {
-	gtest.Case(t, func() {
-		redis := gredis.New(config)
-		defer redis.Close()
-		err := redis.Send("SET", "k", "v")
-		gtest.Assert(err, nil)
-
-		r, err := redis.Do("GET", "k")
-		gtest.Assert(err, nil)
-		gtest.Assert(r, []byte("v"))
-	})
-}
-
 func Test_Stats(t *testing.T) {
 	gtest.Case(t, func() {
 		redis := gredis.New(config)
