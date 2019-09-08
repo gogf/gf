@@ -6,6 +6,8 @@
 
 package gview
 
+import "github.com/gogf/gf/i18n/gi18n"
+
 // Assign binds multiple template variables to current view object.
 // Each goroutine will take effect after the call, so it is concurrent-safe.
 func (view *View) Assigns(data Params) {
@@ -52,9 +54,9 @@ func (view *View) BindFuncMap(funcMap FuncMap) {
 	view.mu.Unlock()
 }
 
-// SetI18nEnabled enables/disables i18n feature in this template.
-func (view *View) SetI18nEnabled(enabled bool) {
+// SetI18n binds i18n manager to view engine.
+func (view *View) SetI18n(manager *gi18n.Manager) {
 	view.mu.Lock()
-	view.i18nEnabled = enabled
+	view.i18nManager = manager
 	view.mu.Unlock()
 }
