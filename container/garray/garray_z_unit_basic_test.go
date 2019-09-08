@@ -44,10 +44,10 @@ func Test_SortedIntArray2(t *testing.T) {
 	gtest.Assert(array.Slice(), expect)
 }
 
-func Test_SortedStringArray1(t *testing.T) {
+func Test_SortedStrArray1(t *testing.T) {
 	expect := []string{"0", "1", "10", "2", "3", "4", "5", "6", "7", "8", "9"}
-	array1 := garray.NewSortedStringArray()
-	array2 := garray.NewSortedStringArray(true)
+	array1 := garray.NewSortedStrArray()
+	array2 := garray.NewSortedStrArray(true)
 	for i := 10; i > -1; i-- {
 		array1.Add(gconv.String(i))
 		array2.Add(gconv.String(i))
@@ -57,9 +57,9 @@ func Test_SortedStringArray1(t *testing.T) {
 
 }
 
-func Test_SortedStringArray2(t *testing.T) {
+func Test_SortedStrArray2(t *testing.T) {
 	expect := []string{"0", "1", "10", "2", "3", "4", "5", "6", "7", "8", "9"}
-	array := garray.NewSortedStringArray()
+	array := garray.NewSortedStrArray()
 	for i := 0; i <= 10; i++ {
 		array.Add(gconv.String(i))
 	}

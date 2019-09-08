@@ -10,7 +10,7 @@ import "github.com/gogf/gf/container/gmap"
 
 const (
 	// Default group name for instance usage.
-	DEFAULT_INSTANCE_NAME = "default"
+	DEFAULT_NAME = "default"
 )
 
 var (
@@ -21,7 +21,7 @@ var (
 // Instance returns an instance of View with default settings.
 // The parameter <name> is the name for the instance.
 func Instance(name ...string) *View {
-	key := DEFAULT_INSTANCE_NAME
+	key := DEFAULT_NAME
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}

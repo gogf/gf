@@ -10,11 +10,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/debug/gdebug"
 
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gfpool"
@@ -33,6 +34,7 @@ type Logger struct {
 	prefix      string    // Prefix string for every logging content.
 	stSkip      int       // Skip count for stack.
 	stStatus    int       // Stack status(1: enabled - default; 0: disabled)
+	stFilter    string    // Stack string filter.
 	headerPrint bool      // Print header or not(true in default).
 	stdoutPrint bool      // Output to stdout or not(true in default).
 }
@@ -129,6 +131,11 @@ func (l *Logger) SetStackSkip(skip int) {
 	l.stSkip = skip
 }
 
+// SetStackFilter sets the stack filter from the end point.
+func (l *Logger) SetStackFilter(filter string) {
+	l.stFilter = filter
+}
+
 // SetWriter sets the customized logging <writer> for logging.
 // The <writer> object should implements the io.Writer interface.
 // Developer can use customized logging <writer> to redirect logging output to another service,
@@ -178,7 +185,7 @@ func (l *Logger) SetPath(path string) error {
 	}
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {
-			fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
+			//fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
 			return err
 		}
 	}
@@ -348,5 +355,13 @@ func (l *Logger) PrintStack(skip ...int) {
 // GetStack returns the caller stack content,
 // the optional parameter <skip> specify the skipped stack offset from the end point.
 func (l *Logger) GetStack(skip ...int) string {
-	return gdebug.StackWithFilter(gPATH_FILTER_KEY, skip...)
+	stackSkip := l.stSkip
+	if len(skip) > 0 {
+		stackSkip += skip[0]
+	}
+	filters := []string{gPATH_FILTER_KEY}
+	if l.stFilter != "" {
+		filters = append(filters, l.stFilter)
+	}
+	return gdebug.StackWithFilters(filters, stackSkip)
 }

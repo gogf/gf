@@ -34,7 +34,7 @@ func putContents() {
 }
 
 func putBinContents() {
-	fmt.Println(gfile.PutBinContents(filepath2, []byte("abc")))
+	fmt.Println(gfile.PutBytes(filepath2, []byte("abc")))
 }
 
 func main() {

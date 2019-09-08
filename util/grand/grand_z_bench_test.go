@@ -18,7 +18,7 @@ var buffer = make([]byte, 8)
 
 func Benchmark_Rand(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		grand.Rand(0, 999999999)
+		grand.N(0, 999999999)
 	}
 }
 

@@ -16,12 +16,12 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-// COOKIE对象
+// COOKIE对象，非并发安全。
 type Cookie struct {
 	data     map[string]CookieItem // 数据项
 	path     string                // 默认的cookie path
 	domain   string                // 默认的cookie domain
-	maxage   int                   // 默认的cookie maxage
+	maxage   int64                 // 默认的cookie maxage
 	server   *Server               // 所属Server
 	request  *Request              // 所属HTTP请求对象
 	response *Response             // 所属HTTP返回对象
@@ -32,7 +32,7 @@ type CookieItem struct {
 	value    string
 	domain   string // 有效域名
 	path     string // 有效路径
-	expire   int    // 过期时间
+	expire   int64  // 过期时间
 	httpOnly bool
 }
 
@@ -61,7 +61,7 @@ func (c *Cookie) init() {
 		}
 		for _, v := range c.request.Cookies() {
 			c.data[v.Name] = CookieItem{
-				v.Value, v.Domain, v.Path, v.Expires.Second(), v.HttpOnly,
+				v.Value, v.Domain, v.Path, int64(v.Expires.Second()), v.HttpOnly,
 			}
 		}
 	}
@@ -94,14 +94,14 @@ func (c *Cookie) Set(key, value string) {
 }
 
 // 设置cookie，带详细cookie参数
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int, httpOnly ...bool) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int64, httpOnly ...bool) {
 	c.init()
 	isHttpOnly := false
 	if len(httpOnly) > 0 {
 		isHttpOnly = httpOnly[0]
 	}
 	c.data[key] = CookieItem{
-		value, domain, path, int(gtime.Second()) + maxAge, isHttpOnly,
+		value, domain, path, gtime.Second() + maxAge, isHttpOnly,
 	}
 }
 

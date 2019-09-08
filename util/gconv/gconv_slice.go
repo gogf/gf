@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gogf/gf/internal/strutils"
+	"github.com/gogf/gf/internal/utilstr"
 )
 
 // SliceInt is alias of Ints.
@@ -364,7 +364,7 @@ func Interfaces(i interface{}) []interface{} {
 				rt := rv.Type()
 				for i := 0; i < rv.NumField(); i++ {
 					// Only public attributes.
-					if !strutils.IsLetterUpper(rt.Field(i).Name[0]) {
+					if !utilstr.IsLetterUpper(rt.Field(i).Name[0]) {
 						continue
 					}
 					array = append(array, rv.Field(i).Interface())

@@ -14,7 +14,7 @@ import (
 // The parameter <pattern> specifies the file pattern which matches to be replaced.
 // It does replacement recursively if given parameter <recursive> is true.
 func Replace(search, replace, path, pattern string, recursive ...bool) error {
-	files, err := ScanDir(path, pattern, recursive...)
+	files, err := ScanDirFile(path, pattern, recursive...)
 	if err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func Replace(search, replace, path, pattern string, recursive ...bool) error {
 // The parameter <pattern> specifies the file pattern which matches to be replaced.
 // It does replacement recursively if given parameter <recursive> is true.
 func ReplaceFunc(f func(path, content string) string, path, pattern string, recursive ...bool) error {
-	files, err := ScanDir(path, pattern, recursive...)
+	files, err := ScanDirFile(path, pattern, recursive...)
 	if err != nil {
 		return err
 	}

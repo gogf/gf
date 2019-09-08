@@ -18,13 +18,3 @@ import (
 func Encrypt(v interface{}) uint32 {
 	return crc32.ChecksumIEEE(gconv.Bytes(v))
 }
-
-// Deprecated.
-func EncryptString(v string) uint32 {
-	return crc32.ChecksumIEEE([]byte(v))
-}
-
-// Deprecated.
-func EncryptBytes(v []byte) uint32 {
-	return crc32.ChecksumIEEE(v)
-}

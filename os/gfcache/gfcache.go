@@ -43,7 +43,7 @@ func GetBinContents(path string, duration ...interface{}) []byte {
 		e = getSecondExpire(duration[0])
 	}
 	r := gcache.GetOrSetFuncLock(k, func() interface{} {
-		b := gfile.GetBinContents(path)
+		b := gfile.GetBytes(path)
 		if b != nil {
 			// Adding this <path> to gfsnotify,
 			// it will clear its cache if there's any changes of the file.

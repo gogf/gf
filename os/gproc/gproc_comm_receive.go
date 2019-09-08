@@ -39,7 +39,7 @@ func Receive(group ...string) *Msg {
 		go startTcpListening()
 	}
 	queue := (*gqueue.Queue)(nil)
-	groupName := gPROC_COMM_DEAFULT_GRUOP_NAME
+	groupName := gPROC_COMM_DEFAULT_GRUOP_NAME
 	if len(group) > 0 {
 		groupName = group[0]
 	}

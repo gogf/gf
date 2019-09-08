@@ -9,7 +9,7 @@ package gconv
 import (
 	"time"
 
-	"github.com/gogf/gf/internal/strutils"
+	"github.com/gogf/gf/internal/utilstr"
 	"github.com/gogf/gf/os/gtime"
 )
 
@@ -26,7 +26,7 @@ func Time(i interface{}, format ...string) time.Time {
 // If <i> is numeric, then it converts <i> as nanoseconds.
 func Duration(i interface{}) time.Duration {
 	s := String(i)
-	if !strutils.IsNumeric(s) {
+	if !utilstr.IsNumeric(s) {
 		d, _ := time.ParseDuration(s)
 		return d
 	}
@@ -47,7 +47,7 @@ func GTime(i interface{}, format ...string) *gtime.Time {
 		t, _ := gtime.StrToTimeFormat(s, format[0])
 		return t
 	}
-	if strutils.IsNumeric(s) {
+	if utilstr.IsNumeric(s) {
 		return gtime.NewFromTimeStamp(Int64(s))
 	} else {
 		t, _ := gtime.StrToTime(s)

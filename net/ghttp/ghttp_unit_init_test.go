@@ -4,11 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 测试初始化
 package ghttp_test
 
 import (
 	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/os/genv"
 )
 
 var (
@@ -17,6 +17,7 @@ var (
 )
 
 func init() {
+	genv.Set("UNDER_TEST", "1")
 	for i := 8000; i <= 9000; i++ {
 		ports.Append(i)
 	}

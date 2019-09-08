@@ -104,22 +104,16 @@ func Test_ViolenceCheck(t *testing.T) {
 	})
 }
 
-func Test_GetToVar(t *testing.T) {
+func Test_GetVar(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.Case(t, func() {
-		var m map[string]string
-		var n int
-		var a []int
 		j, err := gjson.DecodeToJson(data)
 		gtest.Assert(err, nil)
-
-		j.GetToVar("n", &n)
-		j.GetToVar("m", &m)
-		j.GetToVar("a", &a)
-
-		gtest.Assert(n, "123456789")
-		gtest.Assert(m, g.Map{"k": "v"})
-		gtest.Assert(a, g.Slice{1, 2, 3})
+		gtest.Assert(j.GetVar("n").String(), "123456789")
+		gtest.Assert(j.GetVar("m").Map(), g.Map{"k": "v"})
+		gtest.Assert(j.GetVar("a").Interfaces(), g.Slice{1, 2, 3})
+		gtest.Assert(j.GetVar("a").Slice(), g.Slice{1, 2, 3})
+		gtest.Assert(j.GetVar("a").Array(), g.Slice{1, 2, 3})
 	})
 }
 
@@ -340,8 +334,8 @@ func Test_Convert2(t *testing.T) {
 		gtest.Assert(j.GetJsons("name1"), nil)
 		gtest.Assert(j.GetJsonMap("name1"), nil)
 		gtest.Assert(j.Contains("name1"), false)
-		gtest.Assert(j.GetToVar("name1", &name) == nil, true)
-		gtest.Assert(j.GetToVar("name", &name) == nil, false)
+		gtest.Assert(j.GetVar("name1").IsNil(), true)
+		gtest.Assert(j.GetVar("name").IsNil(), false)
 		gtest.Assert(j.Len("name1"), -1)
 		gtest.Assert(j.GetTime("time").Format("2006-01-02"), "2019-06-12")
 		gtest.Assert(j.GetGTime("time").Format("Y-m-d"), "2019-06-12")
@@ -350,16 +344,16 @@ func Test_Convert2(t *testing.T) {
 		err := j.ToStruct(&name)
 		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
-		j.Dump()
+		//j.Dump()
 		gtest.Assert(err, nil)
 
 		j = gjson.New(`{"person":{"name":"gf"}}`)
-		err = j.GetToStruct("person", &name)
+		err = j.GetStruct("person", &name)
 		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
 
 		j = gjson.New(`{"name":"gf""}`)
-		j.Dump()
+		//j.Dump()
 		gtest.Assert(err, nil)
 
 		j = gjson.New(`[1,2,3]`)

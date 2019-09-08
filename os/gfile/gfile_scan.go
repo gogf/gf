@@ -35,7 +35,7 @@ func ScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
 //
 // Note that it returns only files, exclusive of directories.
 func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, error) {
-	isRecursive := true
+	isRecursive := false
 	if len(recursive) > 0 {
 		isRecursive = recursive[0]
 	}
@@ -69,6 +69,10 @@ func doScanDir(path string, pattern string, recursive bool, onlyFile bool) ([]st
 	}
 	filePath := ""
 	isDir := false
+	patterns := strings.Split(pattern, ",")
+	for i := 0; i < len(patterns); i++ {
+		patterns[i] = strings.TrimSpace(patterns[i])
+	}
 	for _, name := range names {
 		filePath = path + Separator + name
 		isDir = IsDir(filePath)
@@ -83,8 +87,8 @@ func doScanDir(path string, pattern string, recursive bool, onlyFile bool) ([]st
 			continue
 		}
 		// If it meets pattern, then add it to the result list.
-		for _, p := range strings.Split(pattern, ",") {
-			if match, err := filepath.Match(strings.TrimSpace(p), name); err == nil && match {
+		for _, p := range patterns {
+			if match, err := filepath.Match(p, name); err == nil && match {
 				filePath = Abs(filePath)
 				if filePath != "" {
 					list = append(list, filePath)

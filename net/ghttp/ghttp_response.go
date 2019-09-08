@@ -9,9 +9,11 @@ package ghttp
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
+
+	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/os/gfile"
@@ -79,7 +81,7 @@ func (r *Response) Writefln(format string, params ...interface{}) {
 
 // 返回JSON
 func (r *Response) WriteJson(content interface{}) error {
-	if b, err := gparser.VarToJson(content); err != nil {
+	if b, err := json.Marshal(content); err != nil {
 		return err
 	} else {
 		r.Header().Set("Content-Type", "application/json")
@@ -90,7 +92,7 @@ func (r *Response) WriteJson(content interface{}) error {
 
 // 返回JSONP
 func (r *Response) WriteJsonP(content interface{}) error {
-	if b, err := gparser.VarToJson(content); err != nil {
+	if b, err := json.Marshal(content); err != nil {
 		return err
 	} else {
 		//r.Header().Set("Content-Type", "application/json")
@@ -116,19 +118,6 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 		r.Write(b)
 	}
 	return nil
-}
-
-// Deprecated, please use CORSDefault instead.
-//
-// (已废弃，请使用CORSDefault)允许AJAX跨域访问.
-func (r *Response) SetAllowCrossDomainRequest(allowOrigin string, allowMethods string, maxAge ...int) {
-	age := 3628800
-	if len(maxAge) > 0 {
-		age = maxAge[0]
-	}
-	r.Header().Set("Access-Control-Allow-Origin", allowOrigin)
-	r.Header().Set("Access-Control-Allow-Methods", allowMethods)
-	r.Header().Set("Access-Control-Max-Age", strconv.Itoa(age))
 }
 
 // 返回HTTP Code状态码
@@ -162,33 +151,53 @@ func (r *Response) WriteStatus(status int, content ...interface{}) {
 
 // 静态文件处理
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
-	// 首先判断是否给定的path已经是一个绝对路径
-	path = gfile.RealPath(path)
-	if path == "" {
-		r.WriteStatus(http.StatusNotFound)
-		return
+	serveFile := (*staticServeFile)(nil)
+	if file := gres.Get(path); file != nil {
+		serveFile = &staticServeFile{
+			file: file,
+			dir:  file.FileInfo().IsDir(),
+		}
+	} else {
+		path = gfile.RealPath(path)
+		if path == "" {
+			r.WriteStatus(http.StatusNotFound)
+			return
+		}
+		serveFile = &staticServeFile{path: path}
 	}
-	r.Server.serveFile(r.request, path, allowIndex...)
+	r.Server.serveFile(r.request, serveFile, allowIndex...)
 }
 
 // 静态文件下载处理
 func (r *Response) ServeFileDownload(path string, name ...string) {
-	// 首先判断是否给定的path已经是一个绝对路径
-	path = gfile.RealPath(path)
-	if path == "" {
-		r.WriteStatus(http.StatusNotFound)
-		return
-	}
+	serveFile := (*staticServeFile)(nil)
 	downloadName := ""
 	if len(name) > 0 {
 		downloadName = name[0]
+	}
+	if file := gres.Get(path); file != nil {
+		serveFile = &staticServeFile{
+			file: file,
+			dir:  file.FileInfo().IsDir(),
+		}
+		if downloadName == "" {
+			downloadName = gfile.Basename(file.Name())
+		}
 	} else {
-		downloadName = gfile.Basename(path)
+		path = gfile.RealPath(path)
+		if path == "" {
+			r.WriteStatus(http.StatusNotFound)
+			return
+		}
+		serveFile = &staticServeFile{path: path}
+		if downloadName == "" {
+			downloadName = gfile.Basename(path)
+		}
 	}
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
 	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, downloadName))
-	r.Server.serveFile(r.request, path)
+	r.Server.serveFile(r.request, serveFile)
 }
 
 // 返回location标识，引导客户端跳转。
@@ -223,15 +232,6 @@ func (r *Response) SetBuffer(data []byte) {
 // 清空缓冲区内容
 func (r *Response) ClearBuffer() {
 	r.buffer.Reset()
-}
-
-// Deprecated.
-//
-// 输出缓冲区数据到客户端.
-func (r *Response) OutputBuffer() {
-	r.Header().Set("Server", r.Server.config.ServerAgent)
-	//r.handleGzip()
-	r.Writer.OutputBuffer()
 }
 
 // 输出缓冲区数据到客户端.

@@ -1,6 +1,4 @@
 # GoFrame
-<div align=center>
-<img src="https://goframe.org/logo.png" width="100"/>
 
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf/g#pkg-subdirectories)
 [![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
@@ -9,16 +7,16 @@
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
 
-</div>
+English | [简体中文](README_ZH.MD)
 
-`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang. Providing a series of core components and dozens of practical modules, such as: memcache, configure, validator, logging, array/queue/set/map containers, timer/timing tasks, file/memory lock, object pool, database ORM, etc. Supporting web server integrated with router, cookie, session, logger, template, https, hooks, rewrites and many more features.
+`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang. Providing a series of core components and dozens of practical modules, such as: memcache, configure, validator, logging, array/queue/set/map containers, timer/timing tasks, file/memory lock, object pool, database ORM, etc. Supporting web server integrated with router, cookie, session, middleware, logger, template, https, hooks, rewrites and many more features.
 
 
 # Installation
 ```
 go get -u github.com/gogf/gf
 ```
-or use `go.mod`:
+suggested using `go.mod`:
 ```
 require github.com/gogf/gf latest
 ```
@@ -35,7 +33,7 @@ golang version >= 1.10
 
 # Architecture
 <div align=center>
-<img src="https://goframe.org/images/arch.png"/>
+<img src="https://goframe.org/images/arch.png?v=10"/>
 </div>
 
 # Quick Start
@@ -57,28 +55,7 @@ func main() {
     s.Run()
 }
 ```
-## Rich Router
-```go
-package main
-
-import (
-    "github.com/gogf/gf/net/ghttp"
-    "github.com/gogf/gf/frame/g"
-)
-
-func main() {
-    s := g.Server()
-    s.BindHandler("/{class}-{course}/:name/*act", func(r *ghttp.Request) {
-        r.Response.Writeln(r.Get("class"))
-        r.Response.Writeln(r.Get("course"))
-        r.Response.Writeln(r.Get("name"))
-        r.Response.Writeln(r.Get("act"))
-    })
-    s.SetPort(8199)
-    s.Run()
-}
-```
-## Group Routers
+## Router & Middleware
 ```go
 package main
 
@@ -87,53 +64,41 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 )
 
-type Object struct {}
-
-func (o *Object) Show(r *ghttp.Request) {
-	r.Response.Writeln("Object Show")
-}
-
-func (o *Object) Delete(r *ghttp.Request) {
-	r.Response.Writeln("Object REST Delete")
-}
-
-func Handler(r *ghttp.Request) {
-	r.Response.Writeln("Handler")
-}
-
-func HookHandler(r *ghttp.Request) {
-	r.Response.Writeln("Hook Handler")
-}
-
 func main() {
-	s     := g.Server()
-	obj   := new(Object)
-	group := s.Group("/api")
-	group.ALL ("*",            HookHandler, ghttp.HOOK_BEFORE_SERVE)
-	group.ALL ("/handler",     Handler)
-	group.ALL ("/obj",         obj)
-	group.GET ("/obj/showit",  obj, "Show")
-	group.REST("/obj/rest",    obj)
-	s.SetPort(8199)
-	s.Run()
+    s := g.Server()
+    s.Group("/api.v2", func(g *ghttp.RouterGroup) {
+        g.Middleware(func(r *ghttp.Request) {
+            r.Response.Write("start")
+            r.Middleware.Next()
+            r.Response.Write("end")
+        })
+        g.Group("/order", func(g *ghttp.RouterGroup) {
+            g.GET("/list", func(r *ghttp.Request) {
+                r.Response.Write("list")
+            })
+        })
+        g.Group("/user", func(g *ghttp.RouterGroup) {
+            g.GET("/info", func(r *ghttp.Request) {
+                r.Response.Write("info")
+            })
+            g.POST("/edit", func(r *ghttp.Request) {
+                r.Response.Write("edit")
+            })
+        })
+        g.Group("/hook", func(g *ghttp.RouterGroup) {
+            g.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+                r.Response.Write("hook any")
+            })
+            g.Hook("/:name", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+                r.Response.Write("hook name")
+            })
+        })
+    })
+    s.SetPort(8199)
+    s.Run()
 }
 ```
-or
-```go
-func main() {
-	s   := g.Server()
-	obj := new(Object)
-	s.Group("/api").Bind([]ghttp.GroupItem{
-		{"ALL",  "*",            HookHandler, ghttp.HOOK_BEFORE_SERVE},
-		{"ALL",  "/handler",     Handler},
-		{"ALL",  "/obj",         obj},
-		{"GET",  "/obj/showit",  obj, "Show"},
-		{"REST", "/obj/rest",    obj},
-	})
-	s.SetPort(8199)
-	s.Run()
-}
-```
+
 ## Multi ports & domains
 ```go
 package main
@@ -169,15 +134,15 @@ import (
 )
 
 func main() {
-	s := g.Server()
-	s.BindHandler("/template", func(r *ghttp.Request) {
-		r.Response.WriteTpl("index.tpl", g.Map{
-			"id":   123,
-			"name": "john",
-		})
-	})
-	s.SetPort(8199)
-	s.Run()
+    s := g.Server()
+    s.BindHandler("/template", func(r *ghttp.Request) {
+        r.Response.WriteTpl("index.tpl", g.Map{
+            "id":   123,
+            "name": "john",
+        })
+    })
+    s.SetPort(8199)
+    s.Run()
 }
 ```
 ## File Uploading
@@ -188,7 +153,7 @@ func Upload(r *ghttp.Request) {
         name   := gfile.Basename(h.Filename)
         buffer := make([]byte, h.Size)
         f.Read(buffer)
-        gfile.PutBinContents("/tmp/" + name, buffer)
+        gfile.PutBytes("/tmp/" + name, buffer)
         r.Response.Write(name + " uploaded successly")
     } else {
         r.Response.Write(e.Error())

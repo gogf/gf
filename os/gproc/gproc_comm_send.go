@@ -23,7 +23,7 @@ const (
 	gPROC_COMM_FAILURE_RETRY_COUNT   = 3    // 失败重试次数
 	gPROC_COMM_FAILURE_RETRY_TIMEOUT = 1000 // (毫秒)失败重试间隔
 	gPROC_COMM_SEND_TIMEOUT          = 5000 // (毫秒)发送超时时间
-	gPROC_COMM_DEAFULT_GRUOP_NAME    = ""   // 默认分组名称
+	gPROC_COMM_DEFAULT_GRUOP_NAME    = ""   // 默认分组名称
 )
 
 // 向指定gproc进程发送数据.
@@ -31,7 +31,7 @@ func Send(pid int, data []byte, group ...string) error {
 	msg := Msg{
 		SendPid: Pid(),
 		RecvPid: pid,
-		Group:   gPROC_COMM_DEAFULT_GRUOP_NAME,
+		Group:   gPROC_COMM_DEFAULT_GRUOP_NAME,
 		Data:    data,
 	}
 	if len(group) > 0 {

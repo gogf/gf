@@ -12,11 +12,20 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gogf/gf/os/gres"
+
 	"github.com/gogf/gf/encoding/ghtml"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gspath"
 	"github.com/gogf/gf/os/gtime"
 )
+
+// 服务静态文件信息
+type staticServeFile struct {
+	file *gres.File // 资源文件
+	path string     // 文件路径
+	dir  bool       // 是否目录
+}
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
 func (s *Server) defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
@@ -53,10 +62,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		// 设置请求完成时间
 		request.LeaveTime = gtime.Microsecond()
-		// 事件 - BeforeOutput
-		if !request.IsExited() {
-			s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
-		}
 		// 如果没有产生异常状态，那么设置返回状态为200
 		if request.Response.Status == 0 {
 			if request.Middleware.served || request.Response.buffer.Len() > 0 {
@@ -72,16 +77,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		// access log
 		s.handleAccessLog(request)
-		// 输出Cookie
-		request.Cookie.Output()
-		// 输出缓冲区
-		request.Response.Output()
-		// 事件 - AfterOutput
-		if !request.IsExited() {
-			s.callHookHandler(HOOK_AFTER_OUTPUT, request)
-		}
-		// 更新Session会话超时时间
-		request.Session.UpdateExpire()
 	}()
 
 	// ============================================================
@@ -89,23 +84,22 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	// 静态文件 > 动态服务 > 静态目录
 	// ============================================================
 
-	staticFile := ""
-	isStaticDir := false
+	serveFile := (*staticServeFile)(nil)
 	// 优先执行静态文件检索(检测是否存在对应的静态文件，包括index files处理)
 	if s.config.FileServerEnabled {
-		staticFile, isStaticDir = s.searchStaticFile(r.URL.Path)
-		if staticFile != "" {
+		serveFile = s.searchStaticFile(r.URL.Path)
+		if serveFile != nil {
 			request.isFileRequest = true
 		}
 	}
 
 	// 动态服务检索
-	if !request.isFileRequest || isStaticDir {
-		request.handlers, request.hasHookHandler = s.getHandlersWithCache(request)
+	if serveFile == nil || serveFile.dir {
+		request.handlers, request.hasHookHandler, request.hasServeHandler = s.getHandlersWithCache(request)
 	}
 
 	// 判断最终对该请求提供的服务方式
-	if isStaticDir && request.handlers != nil {
+	if serveFile != nil && serveFile.dir && request.handlers != nil {
 		request.isFileRequest = false
 	}
 
@@ -116,15 +110,15 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if !request.IsExited() {
 		if request.isFileRequest {
 			// 静态服务
-			s.serveFile(request, staticFile)
+			s.serveFile(request, serveFile)
 		} else {
-			if len(request.handlers) > 0 {
+			if request.hasServeHandler {
 				// 动态服务
 				request.Middleware.Next()
 			} else {
-				if isStaticDir {
+				if serveFile != nil && serveFile.dir {
 					// 静态目录
-					s.serveFile(request, staticFile)
+					s.serveFile(request, serveFile)
 				} else {
 					if len(request.Response.Header()) == 0 &&
 						request.Response.Status == 0 &&
@@ -140,11 +134,29 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_SERVE, request)
 	}
+
+	// 事件 - BeforeOutput
+	if !request.IsExited() {
+		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
+	}
+	// 输出Cookie
+	request.Cookie.Output()
+	// 输出缓冲区
+	request.Response.Output()
+	// 事件 - AfterOutput
+	if !request.IsExited() {
+		s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+	}
+	// 更新Session会话超时时间
+	request.Session.UpdateExpire()
 }
 
 // 查找静态文件的绝对路径
-func (s *Server) searchStaticFile(uri string) (filePath string, isDir bool) {
-	// 优先查找URI映射
+func (s *Server) searchStaticFile(uri string) *staticServeFile {
+	// 优先查找URI映射关系
+	var file *gres.File
+	var path string
+	var dir bool
 	if len(s.config.StaticPaths) > 0 {
 		for _, item := range s.config.StaticPaths {
 			if len(uri) >= len(item.prefix) && strings.EqualFold(item.prefix, uri[0:len(item.prefix)]) {
@@ -152,39 +164,91 @@ func (s *Server) searchStaticFile(uri string) (filePath string, isDir bool) {
 				if len(uri) > len(item.prefix) && uri[len(item.prefix)] != '/' {
 					continue
 				}
-				return gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
+				// 优先检索资源管理器
+				file = gres.GetWithIndex(item.path+uri[len(item.prefix):], s.config.IndexFiles)
+				if file != nil {
+					return &staticServeFile{
+						file: file,
+						dir:  file.FileInfo().IsDir(),
+					}
+				}
+				// 其次检索文件系统
+				path, dir = gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
+				if path != "" {
+					return &staticServeFile{
+						path: path,
+						dir:  dir,
+					}
+				}
+
 			}
 		}
 	}
 	// 其次查找root和search path
 	if len(s.config.SearchPaths) > 0 {
-		for _, path := range s.config.SearchPaths {
-			if filePath, isDir = gspath.Search(path, uri, s.config.IndexFiles...); filePath != "" {
-				return filePath, isDir
+		for _, p := range s.config.SearchPaths {
+			// 优先检索资源管理器
+			file = gres.GetWithIndex(p+uri, s.config.IndexFiles)
+			if file != nil {
+				return &staticServeFile{
+					file: file,
+					dir:  file.FileInfo().IsDir(),
+				}
+			}
+			// 其次检索文件系统
+			if path, dir = gspath.Search(p, uri, s.config.IndexFiles...); path != "" {
+				return &staticServeFile{
+					path: path,
+					dir:  dir,
+				}
 			}
 		}
 	}
-	return "", false
+	// 最后通过资源对象+URI进行文件检索
+	if len(s.config.StaticPaths) == 0 && len(s.config.SearchPaths) == 0 {
+		if file = gres.GetWithIndex(uri, s.config.IndexFiles); file != nil {
+			return &staticServeFile{
+				file: file,
+				dir:  file.FileInfo().IsDir(),
+			}
+		}
+	}
+	return nil
 }
 
 // http server静态文件处理，path可以为相对路径也可以为绝对路径
-func (s *Server) serveFile(r *Request, path string, allowIndex ...bool) {
-	f, err := os.Open(path)
+func (s *Server) serveFile(r *Request, f *staticServeFile, allowIndex ...bool) {
+	// 使用资源文件
+	if f.file != nil {
+		if f.dir {
+			if s.config.IndexFolder || (len(allowIndex) > 0 && allowIndex[0]) {
+				s.listDir(r, f.file)
+			} else {
+				r.Response.WriteStatus(http.StatusForbidden)
+			}
+		} else {
+			info := f.file.FileInfo()
+			http.ServeContent(r.Response.Writer, r.Request, info.Name(), info.ModTime(), f.file)
+		}
+		return
+	}
+	// 使用磁盘文件
+	file, err := os.Open(f.path)
 	if err != nil {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return
 	}
-	defer f.Close()
-	info, _ := f.Stat()
+	defer file.Close()
+	info, _ := file.Stat()
 	if info.IsDir() {
 		if s.config.IndexFolder || (len(allowIndex) > 0 && allowIndex[0]) {
-			s.listDir(r, f)
+			s.listDir(r, file)
 		} else {
 			r.Response.WriteStatus(http.StatusForbidden)
 		}
 	} else {
 		// 读取文件内容返回, no buffer
-		http.ServeContent(r.Response.Writer, r.Request, info.Name(), info.ModTime(), f)
+		http.ServeContent(r.Response.Writer, r.Request, info.Name(), info.ModTime(), file)
 	}
 }
 
@@ -221,8 +285,8 @@ func (s *Server) listDir(r *Request, f http.File) {
 		}
 		r.Response.Write(`<tr>`)
 		r.Response.Writef(`<td><a href="%s/%s">%s</a></td>`, r.URL.Path, name, ghtml.SpecialChars(name))
+		r.Response.Writef(`<td style="width:300px;text-align:center;">%s</td>`, gtime.New(file.ModTime()).ISO8601())
 		r.Response.Writef(`<td style="width:80px;text-align:center;">%s</td>`, size)
-		r.Response.Writef(`<td>%s</td>`, gtime.New(file.ModTime()).ISO8601())
 		r.Response.Write(`</tr>`)
 	}
 	r.Response.Write(`</table>`)

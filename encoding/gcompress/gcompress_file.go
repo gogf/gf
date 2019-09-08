@@ -12,38 +12,82 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/gogf/gf/internal/fileinfo"
 
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gstr"
 )
 
-// Zip compresses <path> to <dest> using zip compressing algorithm.
-func ZipPath(path, dest string, prefix ...string) error {
-	d, err := os.Create(dest)
+// ZipPath compresses <paths> to <dest> using zip compressing algorithm.
+// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+//
+// Note that parameter <paths> supports multiple paths join with ','.
+func ZipPath(paths, dest string, prefix ...string) error {
+	writer, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
-	defer d.Close()
-	w := zip.NewWriter(d)
-	defer w.Close()
-	files, err := gfile.ScanDir(path, "*.*", true)
+	defer writer.Close()
+	return ZipPathWriter(paths, writer, prefix...)
+}
+
+// ZipPathWriter compresses <paths> to <writer> using zip compressing algorithm.
+// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+//
+// Note that parameter <paths> supports multiple paths join with ','.
+func ZipPathWriter(paths string, writer io.Writer, prefix ...string) error {
+	zipWriter := zip.NewWriter(writer)
+	defer zipWriter.Close()
+	for _, path := range strings.Split(paths, ",") {
+		path = strings.TrimSpace(path)
+		if err := doZipPathWriter(path, zipWriter, prefix...); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func doZipPathWriter(path string, zipWriter *zip.Writer, prefix ...string) error {
+	realPath, err := gfile.Search(path)
 	if err != nil {
 		return err
 	}
-	pathRealPath := gfile.RealPath(path)
-	destRealPath := gfile.RealPath(dest)
+	files, err := gfile.ScanDir(path, "*", true)
+	if err != nil {
+		return err
+	}
 	headerPrefix := ""
-	if len(prefix) > 0 {
+	if len(prefix) > 0 && prefix[0] != "" {
 		headerPrefix = prefix[0]
 	}
-	for _, file := range files {
-		if destRealPath == file {
-			continue
+	headerPrefix = strings.TrimRight(headerPrefix, "\\/")
+	if gfile.IsDir(path) {
+		if len(headerPrefix) > 0 {
+			headerPrefix += "/"
 		}
-		err := zipFile(file, headerPrefix+gfile.Dir(file[len(pathRealPath):]), w)
+		headerPrefix = headerPrefix + gfile.Basename(path)
+	}
+	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
+	for _, file := range files {
+		err := zipFile(file, headerPrefix+gfile.Dir(file[len(realPath):]), zipWriter)
 		if err != nil {
 			return err
 		}
+	}
+	// Add prefix to zip archive.
+	path = headerPrefix
+	for {
+		err := zipFileVirtual(fileinfo.New(gfile.Basename(path), 0, os.ModeDir, time.Now()), path, zipWriter)
+		if err != nil {
+			return err
+		}
+		if path == "/" || !strings.Contains(path, "/") {
+			break
+		}
+		path = gfile.Dir(path)
 	}
 	return nil
 }
@@ -51,6 +95,8 @@ func ZipPath(path, dest string, prefix ...string) error {
 // UnZipFile decompresses <archive> to <dest> using zip compressing algorithm.
 // The parameter <path> specifies the unzipped path of <archive>,
 // which can be used to specify part of the archive file to unzip.
+//
+// Note thate the parameter <dest> should be a directory.
 func UnZipFile(archive, dest string, path ...string) error {
 	readerCloser, err := zip.OpenReader(archive)
 	if err != nil {
@@ -63,6 +109,8 @@ func UnZipFile(archive, dest string, path ...string) error {
 // UnZipContent decompresses <data> to <dest> using zip compressing algorithm.
 // The parameter <path> specifies the unzipped path of <archive>,
 // which can be used to specify part of the archive file to unzip.
+//
+// Note thate the parameter <dest> should be a directory.
 func UnZipContent(data []byte, dest string, path ...string) error {
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
@@ -132,23 +180,43 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 	if err != nil {
 		return err
 	}
-	header, err := zip.FileInfoHeader(info)
+	header, err := createFileHeader(info, prefix)
 	if err != nil {
 		return err
 	}
-	if len(prefix) > 0 {
-		header.Name = prefix + "/" + header.Name
-	} else {
-		header.Name = header.Name
-	}
-
 	writer, err := zw.CreateHeader(header)
 	if err != nil {
 		return err
 	}
-	if _, err = io.Copy(writer, file); err != nil {
+	if !info.IsDir() {
+		if _, err = io.Copy(writer, file); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func zipFileVirtual(info os.FileInfo, path string, zw *zip.Writer) error {
+	header, err := createFileHeader(info, "")
+	if err != nil {
 		return err
 	}
-
+	header.Name = path
+	if _, err := zw.CreateHeader(header); err != nil {
+		return err
+	}
 	return nil
+}
+
+func createFileHeader(info os.FileInfo, prefix string) (*zip.FileHeader, error) {
+	header, err := zip.FileInfoHeader(info)
+	if err != nil {
+		return nil, err
+	}
+	if len(prefix) > 0 {
+		prefix = strings.Replace(prefix, `\`, `/`, -1)
+		prefix = strings.TrimRight(prefix, `/`)
+		header.Name = prefix + `/` + header.Name
+	}
+	return header, nil
 }

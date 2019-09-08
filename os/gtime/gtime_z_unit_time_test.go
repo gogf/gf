@@ -125,7 +125,7 @@ func Test_ToTime(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Time
-		gtest.Assert(timeTemp.ToTime().UnixNano(), timeTemp1.UnixNano())
+		gtest.Assert(timeTemp.Time.UnixNano(), timeTemp1.UnixNano())
 	})
 }
 

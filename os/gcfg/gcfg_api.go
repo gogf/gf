@@ -282,11 +282,6 @@ func (c *Config) GetMapStructsDeep(pattern string, pointer interface{}, mapping 
 	return errors.New("configuration not found")
 }
 
-// Deprecated.
-func (c *Config) GetToStruct(pattern string, pointer interface{}) error {
-	return c.GetStruct(pattern, pointer)
-}
-
 func (c *Config) ToMap() map[string]interface{} {
 	if j := c.getJson(); j != nil {
 		return j.ToMap()
