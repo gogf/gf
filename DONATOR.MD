@@ -16,6 +16,8 @@
 |潘兄|wechat|￥100.00
 |Fly的狐狸|wechat|￥100.00
 |全|alipay|￥100.00
+|东东|wechat|￥100.00
+|严宇轩|alipay|￥99.99
 |土豆相公|alipay|￥66.60
 |Hades|alipay|￥66.66
 |蔡蔡|wechat|￥666.00

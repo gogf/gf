@@ -58,6 +58,12 @@ func Stack(enabled bool, skip ...int) *Logger {
 	return logger.Stack(enabled, skip...)
 }
 
+// StackWithFilter is a chaining function,
+// which sets stack filter for the current logging content output .
+func StackWithFilter(filter string) *Logger {
+	return logger.StackWithFilter(filter)
+}
+
 // StdPrint is a chaining function,
 // which enables/disables stdout for the current logging content output.
 // It's enabled in default.

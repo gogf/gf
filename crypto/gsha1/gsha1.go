@@ -24,12 +24,6 @@ func Encrypt(v interface{}) string {
 	return hex.EncodeToString(r[:])
 }
 
-// EncryptString is alias of Encrypt.
-// Deprecated.
-func EncryptString(s string) string {
-	return Encrypt(s)
-}
-
 // EncryptFile encrypts file content of <path> using SHA1 algorithms.
 func EncryptFile(path string) (encrypt string, err error) {
 	f, err := os.Open(path)

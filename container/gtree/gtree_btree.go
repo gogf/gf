@@ -338,8 +338,6 @@ func (tree *BTree) String() string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	var buffer bytes.Buffer
-	if _, err := buffer.WriteString("BTree\n"); err != nil {
-	}
 	if tree.size != 0 {
 		tree.output(&buffer, tree.root, 0, true)
 	}
@@ -378,6 +376,11 @@ func (tree *BTree) Iterator(f func(key, value interface{}) bool) {
 	tree.IteratorAsc(f)
 }
 
+// IteratorFrom is alias of IteratorAscFrom.
+func (tree *BTree) IteratorFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.IteratorAscFrom(key, match, f)
+}
+
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
@@ -387,7 +390,28 @@ func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 	if node == nil {
 		return
 	}
-	entry := node.Entries[0]
+	tree.doIteratorAsc(node, node.Entries[0], 0, f)
+}
+
+// IteratorAscFrom iterates the tree in ascending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *BTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	node, index, found := tree.searchRecursively(tree.root, key)
+	if match {
+		if found {
+			tree.doIteratorAsc(node, node.Entries[index], index, f)
+		}
+	} else {
+		tree.doIteratorAsc(node, node.Entries[index], index, f)
+	}
+}
+
+func (tree *BTree) doIteratorAsc(node *BTreeNode, entry *BTreeEntry, index int, f func(key, value interface{}) bool) {
+	first := true
 loop:
 	if entry == nil {
 		return
@@ -396,10 +420,14 @@ loop:
 		return
 	}
 	// Find current entry position in current node
-	e, _ := tree.search(node, entry.Key)
+	if !first {
+		index, _ = tree.search(node, entry.Key)
+	} else {
+		first = false
+	}
 	// Try to go down to the child right of the current entry
-	if e+1 < len(node.Children) {
-		node = node.Children[e+1]
+	if index+1 < len(node.Children) {
+		node = node.Children[index+1]
 		// Try to go down to the child left of the current node
 		for len(node.Children) > 0 {
 			node = node.Children[0]
@@ -409,18 +437,18 @@ loop:
 		goto loop
 	}
 	// Above assures that we have reached a leaf node, so return the next entry in current node (if any)
-	if e+1 < len(node.Entries) {
-		entry = node.Entries[e+1]
+	if index+1 < len(node.Entries) {
+		entry = node.Entries[index+1]
 		goto loop
 	}
 	// Reached leaf node and there are no entries to the right of the current entry, so go up to the parent
 	for node.Parent != nil {
 		node = node.Parent
 		// Find next entry position in current node (note: search returns the first equal or bigger than entry)
-		e, _ := tree.search(node, entry.Key)
+		index, _ = tree.search(node, entry.Key)
 		// Check that there is a next entry position in current node
-		if e < len(node.Entries) {
-			entry = node.Entries[e]
+		if index < len(node.Entries) {
+			entry = node.Entries[index]
 			goto loop
 		}
 	}
@@ -435,7 +463,32 @@ func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 	if node == nil {
 		return
 	}
-	entry := node.Entries[len(node.Entries)-1]
+	index := len(node.Entries) - 1
+	entry := node.Entries[index]
+	tree.doIteratorDesc(node, entry, index, f)
+}
+
+// IteratorDescFrom iterates the tree in descending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	node, index, found := tree.searchRecursively(tree.root, key)
+	if match {
+		if found {
+			tree.doIteratorDesc(node, node.Entries[index], index, f)
+		}
+	} else {
+		tree.doIteratorDesc(node, node.Entries[index], index, f)
+	}
+}
+
+// IteratorDesc iterates the tree in descending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *BTree) doIteratorDesc(node *BTreeNode, entry *BTreeEntry, index int, f func(key, value interface{}) bool) {
+	first := true
 loop:
 	if entry == nil {
 		return
@@ -444,10 +497,14 @@ loop:
 		return
 	}
 	// Find current entry position in current node
-	e, _ := tree.search(node, entry.Key)
+	if !first {
+		index, _ = tree.search(node, entry.Key)
+	} else {
+		first = false
+	}
 	// Try to go down to the child left of the current entry
-	if e < len(node.Children) {
-		node = node.Children[e]
+	if index < len(node.Children) {
+		node = node.Children[index]
 		// Try to go down to the child right of the current node
 		for len(node.Children) > 0 {
 			node = node.Children[len(node.Children)-1]
@@ -457,8 +514,8 @@ loop:
 		goto loop
 	}
 	// Above assures that we have reached a leaf node, so return the previous entry in current node (if any)
-	if e-1 >= 0 {
-		entry = node.Entries[e-1]
+	if index-1 >= 0 {
+		entry = node.Entries[index-1]
 		goto loop
 	}
 
@@ -466,10 +523,10 @@ loop:
 	for node.Parent != nil {
 		node = node.Parent
 		// Find previous entry position in current node (note: search returns the first equal or bigger than entry)
-		e, _ := tree.search(node, entry.Key)
+		index, _ = tree.search(node, entry.Key)
 		// Check that there is a previous entry position in current node
-		if e-1 >= 0 {
-			entry = node.Entries[e-1]
+		if index-1 >= 0 {
+			entry = node.Entries[index-1]
 			goto loop
 		}
 	}
@@ -564,7 +621,7 @@ func (tree *BTree) searchRecursively(startNode *BTreeNode, key interface{}) (nod
 			return node, index, true
 		}
 		if tree.isLeaf(node) {
-			return nil, -1, false
+			return node, index, false
 		}
 		node = node.Children[index]
 	}

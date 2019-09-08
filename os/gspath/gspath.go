@@ -26,8 +26,8 @@ import (
 
 // 文件目录搜索管理对象
 type SPath struct {
-	paths *garray.StringArray // 搜索路径，按照优先级进行排序
-	cache *gmap.StrStrMap     // 搜索结果缓存map(如果未nil表示未启用缓存功能)
+	paths *garray.StrArray // 搜索路径，按照优先级进行排序
+	cache *gmap.StrStrMap  // 搜索结果缓存map(如果未nil表示未启用缓存功能)
 }
 
 // 文件搜索缓存项
@@ -45,7 +45,7 @@ var (
 // 创建一个搜索对象
 func New(path string, cache bool) *SPath {
 	sp := &SPath{
-		paths: garray.NewStringArray(true),
+		paths: garray.NewStrArray(true),
 	}
 	if cache {
 		sp.cache = gmap.NewStrStrMap(true)
@@ -60,6 +60,9 @@ func New(path string, cache bool) *SPath {
 
 // 创建/获取一个单例的搜索对象, root必须为目录的绝对路径
 func Get(root string, cache bool) *SPath {
+	if root == "" {
+		root = "/"
+	}
 	return pathsMap.GetOrSetFuncLock(root, func() interface{} {
 		return New(root, cache)
 	}).(*SPath)

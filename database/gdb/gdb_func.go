@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/internal/structs"
+
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -26,10 +26,48 @@ type apiString interface {
 	String() string
 }
 
-// 格式化SQL语句。
-// 1. 支持参数只传一个slice；
-// 2. 支持占位符号数量自动扩展；
+const (
+	ORM_TAG_FOR_STRUCT  = "orm"
+	ORM_TAG_FOR_UNIQUE  = "unique"
+	ORM_TAG_FOR_PRIMARY = "primary"
+)
+
+// 获得struct对象对应的where查询条件
+func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
+	array := ([]string)(nil)
+	for tag, field := range structs.TagMapField(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+		array = strings.Split(tag, ",")
+		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
+			return array[0], []interface{}{field.Value()}
+		}
+		if len(where) > 0 {
+			where += " "
+		}
+		where += tag + "=?"
+		args = append(args, field.Value())
+	}
+	return
+}
+
+// 获得orm标签与属性的映射关系
+func GetOrmMappingOfStruct(pointer interface{}) map[string]string {
+	mapping := make(map[string]string)
+	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+		mapping[strings.Split(tag, ",")[0]] = attr
+	}
+	return mapping
+}
+
+// 格式化SQL语句.
 func formatQuery(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
+	return handlerSliceArguments(query, args)
+}
+
+// 处理预处理占位符与slice类型的参数。
+// 需要注意的是，
+// 如果是链式操作，在条件参数中也会调用该方法处理查询参数，
+// 如果是方法参数，在sql提交执行之前也会再次调用该方法处理查询语句和参数。
+func handlerSliceArguments(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
 	newQuery = query
 	// 查询条件参数处理，主要处理slice参数类型
 	if len(args) > 0 {
@@ -105,22 +143,6 @@ func convertParam(value interface{}) interface{} {
 	return value
 }
 
-// 打印SQL对象(仅在debug=true时有效)
-func printSql(v *Sql) {
-	s := fmt.Sprintf("%s, %v, %s, %s, %d ms, %s", v.Sql, v.Args,
-		gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"),
-		gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"),
-		v.End-v.Start,
-		v.Func,
-	)
-	if v.Error != nil {
-		s += "\nError: " + v.Error.Error()
-		glog.Stack(true, 2).Error(s)
-	} else {
-		glog.Debug(s)
-	}
-}
-
 // 格式化错误信息
 func formatError(err error, query string, args ...interface{}) error {
 	if err != nil && err != sql.ErrNoRows {
@@ -150,7 +172,7 @@ func getInsertOperationByOption(option int) string {
 // 将对象转换为map，如果对象带有继承对象，那么执行递归转换。
 // 该方法用于将变量传递给数据库执行之前。
 func structToMap(obj interface{}) map[string]interface{} {
-	data := gconv.Map(obj)
+	data := gconv.Map(obj, ORM_TAG_FOR_STRUCT)
 	for key, value := range data {
 		rv := reflect.ValueOf(value)
 		kind := rv.Kind()
@@ -181,7 +203,30 @@ func structToMap(obj interface{}) map[string]interface{} {
 	return data
 }
 
+// 将参数绑定到SQL语句中，仅用于调试打印。
+func bindArgsToQuery(query string, args []interface{}) string {
+	index := -1
+	newQuery, _ := gregex.ReplaceStringFunc(`\?`, query, func(s string) string {
+		index++
+		if len(args) > index {
+			rv := reflect.ValueOf(args[index])
+			kind := rv.Kind()
+			if kind == reflect.Ptr {
+				rv = rv.Elem()
+				kind = rv.Kind()
+			}
+			switch kind {
+			case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
+				return "'" + gstr.QuoteMeta(gconv.String(args[index]), "'") + "'"
+			}
+			return gconv.String(args[index])
+		}
+		return s
+	})
+	return newQuery
+}
+
 // 使用递归的方式将map键值对映射到struct对象上，注意参数<pointer>是一个指向struct的指针。
 func mapToStruct(data map[string]interface{}, pointer interface{}) error {
-	return gconv.StructDeep(data, pointer)
+	return gconv.StructDeep(data, pointer, GetOrmMappingOfStruct(pointer))
 }

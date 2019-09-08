@@ -14,8 +14,8 @@ func main() {
 `
 	gfile.PutContents(path, content)
 	fmt.Println(gfile.Size(path))
-	fmt.Println(gfile.GetBinContentsTilCharByPath(path, '\n', 0))
-	fmt.Println(gfile.GetBinContentsTilCharByPath(path, '\n', 3))
-	fmt.Println(gfile.GetBinContentsTilCharByPath(path, '\n', 8))
-	fmt.Println(gfile.GetBinContentsTilCharByPath(path, '\n', 12))
+	fmt.Println(gfile.GetBytesTilCharByPath(path, '\n', 0))
+	fmt.Println(gfile.GetBytesTilCharByPath(path, '\n', 3))
+	fmt.Println(gfile.GetBytesTilCharByPath(path, '\n', 8))
+	fmt.Println(gfile.GetBytesTilCharByPath(path, '\n', 12))
 }

@@ -25,16 +25,6 @@ type Retry struct {
 	Interval int // 重试间隔(毫秒)
 }
 
-// Deprecated.
-// 常见的二进制数据校验方式，生成校验结果
-func Checksum(buffer []byte) uint32 {
-	var checksum uint32
-	for _, b := range buffer {
-		checksum += uint32(b)
-	}
-	return checksum
-}
-
 // 创建原生TCP链接, addr地址格式形如：127.0.0.1:80
 func NewNetConn(addr string, timeout ...int) (net.Conn, error) {
 	if len(timeout) > 0 {

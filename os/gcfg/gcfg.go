@@ -12,6 +12,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gogf/gf/os/gres"
+
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gtype"
@@ -30,11 +32,15 @@ const (
 
 // Configuration struct.
 type Config struct {
-	name  *gtype.String       // Default configuration file name.
-	paths *garray.StringArray // Searching path array.
-	jsons *gmap.StrAnyMap     // The pared JSON objects for configuration files.
-	vc    *gtype.Bool         // Whether do violence check in value index searching. It affects the performance when set true(false in default).
+	name  *gtype.String    // Default configuration file name.
+	paths *garray.StrArray // Searching path array.
+	jsons *gmap.StrAnyMap  // The pared JSON objects for configuration files.
+	vc    *gtype.Bool      // Whether do violence check in value index searching. It affects the performance when set true(false in default).
 }
+
+var (
+	resourceTryFiles = []string{"", "/", "config/", "config", "/config", "/config/"}
+)
 
 // New returns a new configuration management object.
 // The parameter <file> specifies the default configuration file name for reading.
@@ -45,7 +51,7 @@ func New(file ...string) *Config {
 	}
 	c := &Config{
 		name:  gtype.NewString(name),
-		paths: garray.NewStringArray(true),
+		paths: garray.NewStrArray(true),
 		jsons: gmap.NewStrAnyMap(true),
 		vc:    gtype.NewBool(),
 	}
@@ -107,18 +113,28 @@ func (c *Config) filePath(file ...string) (path string) {
 // The parameter <path> can be absolute or relative path,
 // but absolute path is strongly recommended.
 func (c *Config) SetPath(path string) error {
-	// Absolute path.
-	realPath := gfile.RealPath(path)
-	if realPath == "" {
-		// Relative path.
-		c.paths.RLockFunc(func(array []string) {
-			for _, v := range array {
-				if path, _ := gspath.Search(v, path); path != "" {
-					realPath = path
-					break
+	isDir := false
+	realPath := ""
+	if file := gres.Get(path); file != nil {
+		realPath = path
+		isDir = file.FileInfo().IsDir()
+	} else {
+		// Absolute path.
+		realPath = gfile.RealPath(path)
+		if realPath == "" {
+			// Relative path.
+			c.paths.RLockFunc(func(array []string) {
+				for _, v := range array {
+					if path, _ := gspath.Search(v, path); path != "" {
+						realPath = path
+						break
+					}
 				}
-			}
-		})
+			})
+		}
+		if realPath != "" {
+			isDir = gfile.IsDir(realPath)
+		}
 	}
 	// Path not exist.
 	if realPath == "" {
@@ -140,7 +156,7 @@ func (c *Config) SetPath(path string) error {
 		return err
 	}
 	// Should be a directory.
-	if !gfile.IsDir(realPath) {
+	if !isDir {
 		err := fmt.Errorf(`[gcfg] SetPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
@@ -170,18 +186,28 @@ func (c *Config) SetViolenceCheck(check bool) {
 
 // AddPath adds a absolute or relative path to the search paths.
 func (c *Config) AddPath(path string) error {
-	// Absolute path.
-	realPath := gfile.RealPath(path)
-	if realPath == "" {
-		// Relative path.
-		c.paths.RLockFunc(func(array []string) {
-			for _, v := range array {
-				if path, _ := gspath.Search(v, path); path != "" {
-					realPath = path
-					break
+	isDir := false
+	realPath := ""
+	if file := gres.Get(path); file != nil {
+		realPath = path
+		isDir = file.FileInfo().IsDir()
+	} else {
+		// Absolute path.
+		realPath = gfile.RealPath(path)
+		if realPath == "" {
+			// Relative path.
+			c.paths.RLockFunc(func(array []string) {
+				for _, v := range array {
+					if path, _ := gspath.Search(v, path); path != "" {
+						realPath = path
+						break
+					}
 				}
-			}
-		})
+			})
+		}
+		if realPath != "" {
+			isDir = gfile.IsDir(realPath)
+		}
 	}
 	if realPath == "" {
 		buffer := bytes.NewBuffer(nil)
@@ -201,7 +227,7 @@ func (c *Config) AddPath(path string) error {
 		}
 		return err
 	}
-	if !gfile.IsDir(realPath) {
+	if !isDir {
 		err := fmt.Errorf(`[gcfg] AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
@@ -217,12 +243,6 @@ func (c *Config) AddPath(path string) error {
 	return nil
 }
 
-// GetFilePath is alias of FilePath.
-// Deprecated.
-func (c *Config) GetFilePath(file ...string) (path string) {
-	return c.FilePath(file...)
-}
-
 // GetFilePath returns the absolute path of the specified configuration file.
 // If <file> is not passed, it returns the configuration file path of the default name.
 // If the specified configuration file does not exist,
@@ -233,15 +253,32 @@ func (c *Config) FilePath(file ...string) (path string) {
 		name = file[0]
 	}
 	c.paths.RLockFunc(func(array []string) {
-		for _, v := range array {
-			if path, _ = gspath.Search(v, name); path != "" {
-				break
+		for _, prefix := range array {
+			// Firstly checking the resource manager.
+			for _, v := range resourceTryFiles {
+				if file := gres.Get(prefix + v + name); file != nil {
+					path = file.Name()
+					return
+				}
 			}
-			if path, _ = gspath.Search(v+gfile.Separator+"config", name); path != "" {
-				break
+			// Secondly checking the file system.
+			if path, _ = gspath.Search(prefix, name); path != "" {
+				return
+			}
+			if path, _ = gspath.Search(prefix+gfile.Separator+"config", name); path != "" {
+				return
 			}
 		}
 	})
+	// Checking the configuration file in default paths.
+	if path == "" && !gres.IsEmpty() {
+		for _, v := range resourceTryFiles {
+			if file := gres.Get(v + name); file != nil {
+				path = file.Name()
+				return
+			}
+		}
+	}
 	return
 }
 
@@ -272,13 +309,17 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 			if filePath == "" {
 				return nil
 			}
-			content = gfile.GetContents(filePath)
+			if file := gres.Get(filePath); file != nil {
+				content = string(file.Content())
+			} else {
+				content = gfile.GetContents(filePath)
+			}
 		}
 		if j, err := gjson.LoadContent(content, true); err == nil {
 			j.SetViolenceCheck(c.vc.Val())
 			// Add monitor for this configuration file,
 			// any changes of this file will refresh its cache in Config object.
-			if filePath != "" {
+			if filePath != "" && !gres.Contains(filePath) {
 				_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 					c.jsons.Remove(name)
 				})

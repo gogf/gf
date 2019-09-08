@@ -2,32 +2,20 @@ package main
 
 import (
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/frame/gmvc"
+	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gtime"
 )
-
-type Controller struct {
-	gmvc.Controller
-}
-
-func (c *Controller) Login() {
-	c.Session.Id()
-	c.Response.Write("这个页面用户填写信息执行登录")
-}
-
-func (c *Controller) DoLogin() {
-	c.Session.Set("key", "value")
-	//c.Response.Header().Set("Set-Cookie", "myid=1B27UGQGCIBP0P70; Path=/; Domain=127.0.0.1; Expires=Wed, 04 Mar 2020 07:12:05 GMT")
-
-	c.Response.RedirectTo("/main")
-}
-
-func (c *Controller) Main() {
-	c.Response.WriteJson(c.Session.Map())
-}
 
 func main() {
 	s := g.Server()
-	s.BindController("/", new(Controller))
+	s.SetSessionMaxAge(60)
+	s.BindHandler("/set", func(r *ghttp.Request) {
+		r.Session.Set("time", gtime.Second())
+		r.Response.Write("ok")
+	})
+	s.BindHandler("/get", func(r *ghttp.Request) {
+		r.Response.WriteJson(r.Session.Map())
+	})
 	s.SetPort(8199)
 	s.Run()
 }

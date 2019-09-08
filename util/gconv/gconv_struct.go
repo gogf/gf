@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/internal/strutils"
+	"github.com/gogf/gf/internal/utilstr"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's properties.
@@ -92,7 +92,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	elemType := elem.Type()
 	for i := 0; i < elem.NumField(); i++ {
 		// Only do converting to public attributes.
-		if !strutils.IsLetterUpper(elemType.Field(i).Name[0]) {
+		if !utilstr.IsLetterUpper(elemType.Field(i).Name[0]) {
 			continue
 		}
 		attrMap[elemType.Field(i).Name] = struct{}{}
@@ -100,8 +100,8 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	for mapK, mapV := range paramsMap {
 		name := ""
 		for _, checkName := range []string{
-			strutils.UcFirst(mapK),
-			strutils.ReplaceByMap(mapK, map[string]string{
+			utilstr.UcFirst(mapK),
+			utilstr.ReplaceByMap(mapK, map[string]string{
 				"_": "",
 				"-": "",
 				" ": "",
@@ -159,7 +159,7 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 			rt := rv.Type()
 			for i := 0; i < rv.NumField(); i++ {
 				// Only do converting to public attributes.
-				if !strutils.IsLetterUpper(rt.Field(i).Name[0]) {
+				if !utilstr.IsLetterUpper(rt.Field(i).Name[0]) {
 					continue
 				}
 				trv := rv.Field(i)

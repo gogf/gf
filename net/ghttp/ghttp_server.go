@@ -17,6 +17,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgraph-io/badger/options"
+
+	"github.com/gogf/gf/database/gkvdb"
+
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gtype"
@@ -45,7 +49,8 @@ type (
 		serveCache       *gcache.Cache                    // 服务注册路由内存缓存
 		routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
 		statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
-		sessions         *gcache.Cache                    // Session内存缓存
+		sessions         *gcache.Cache                    // Session内存存储
+		sessionStorage   *gkvdb.DB                        // Session物理存储
 		logger           *glog.Logger                     // 日志管理对象
 	}
 
@@ -154,6 +159,17 @@ func init() {
 	}
 }
 
+// 主要用于开发者在HTTP处理中自定义异常捕获时，判断捕获的异常是否Server抛出的自定义退出异常
+func IsExitError(err interface{}) bool {
+	errStr := gconv.String(err)
+	if strings.EqualFold(errStr, gEXCEPTION_EXIT) ||
+		strings.EqualFold(errStr, gEXCEPTION_EXIT_ALL) ||
+		strings.EqualFold(errStr, gEXCEPTION_EXIT_HOOK) {
+		return true
+	}
+	return false
+}
+
 // 是否开启平滑重启特性
 func SetGraceful(enabled bool) {
 	gracefulEnabled = enabled
@@ -192,15 +208,21 @@ func serverProcessInit() {
 // 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
 // 单例模式，请保证name的唯一性
 func GetServer(name ...interface{}) *Server {
-	sname := gDEFAULT_SERVER
+	serverName := gDEFAULT_SERVER
 	if len(name) > 0 && name[0] != "" {
-		sname = gconv.String(name[0])
+		serverName = gconv.String(name[0])
 	}
-	if s := serverMapping.Get(sname); s != nil {
+	if s := serverMapping.Get(serverName); s != nil {
 		return s.(*Server)
 	}
+	storagePath := defaultServerConfig.SessionStoragePath + gfile.Separator + serverName
+	sessionStorage := gkvdb.Instance(storagePath)
+	sessionStorage.SetOptions(gkvdb.DefaultOptions(storagePath))
+	if genv.Contains("UNDER_TEST") {
+		sessionStorage.Options().ValueLogLoadingMode = options.FileIO
+	}
 	s := &Server{
-		name:             sname,
+		name:             serverName,
 		servers:          make([]*gracefulServer, 0),
 		closeChan:        make(chan struct{}, 100),
 		serverCount:      gtype.NewInt(),
@@ -209,13 +231,14 @@ func GetServer(name ...interface{}) *Server {
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
 		sessions:         gcache.New(),
+		sessionStorage:   sessionStorage,
 		servedCount:      gtype.NewInt(),
 		logger:           glog.New(),
 	}
 	// 初始化时使用默认配置
 	s.SetConfig(defaultServerConfig)
 	// 记录到全局ServerMap中
-	serverMapping.Set(sname, s)
+	serverMapping.Set(serverName, s)
 	return s
 }
 

@@ -24,7 +24,7 @@ func (m *Middleware) Next() {
 		}
 		item = m.request.handlers[m.request.handlerIndex]
 		m.request.handlerIndex++
-		// 通过中间件模式不执行钩子函数
+		// 中间件执行时不执行钩子函数，由另外的逻辑进行控制
 		if item.handler.itemType == gHANDLER_TYPE_HOOK {
 			continue
 		}

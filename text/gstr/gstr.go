@@ -16,7 +16,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gogf/gf/internal/strutils"
+	"github.com/gogf/gf/internal/utilstr"
 
 	"github.com/gogf/gf/util/gconv"
 
@@ -98,7 +98,7 @@ func ReplaceIByArray(origin string, array []string) string {
 // ReplaceByMap returns a copy of <origin>,
 // which is replaced by a map in unordered way, case-sensitively.
 func ReplaceByMap(origin string, replaces map[string]string) string {
-	return strutils.ReplaceByMap(origin, replaces)
+	return utilstr.ReplaceByMap(origin, replaces)
 }
 
 // ReplaceIByMap returns a copy of <origin>,
@@ -122,7 +122,7 @@ func ToUpper(s string) string {
 
 // UcFirst returns a copy of the string s with the first letter mapped to its upper case.
 func UcFirst(s string) string {
-	return strutils.UcFirst(s)
+	return utilstr.UcFirst(s)
 }
 
 // LcFirst returns a copy of the string s with the first letter mapped to its lower case.
@@ -143,17 +143,17 @@ func UcWords(str string) string {
 
 // IsLetterLower tests whether the given byte b is in lower case.
 func IsLetterLower(b byte) bool {
-	return strutils.IsLetterLower(b)
+	return utilstr.IsLetterLower(b)
 }
 
 // IsLetterUpper tests whether the given byte b is in upper case.
 func IsLetterUpper(b byte) bool {
-	return strutils.IsLetterUpper(b)
+	return utilstr.IsLetterUpper(b)
 }
 
 // IsNumeric tests whether the given string s is numeric.
 func IsNumeric(s string) bool {
-	return strutils.IsNumeric(s)
+	return utilstr.IsNumeric(s)
 }
 
 // SubStr returns a portion of string <str> specified by the <start> and <length> parameters.
@@ -442,6 +442,26 @@ func Split(str, delimiter string) []string {
 	return strings.Split(str, delimiter)
 }
 
+// SplitAndTrim splits string <str> by a string <delimiter> to an array,
+// and calls Trim to every element of this array.
+func SplitAndTrim(str, delimiter, cut string) []string {
+	array := strings.Split(str, delimiter)
+	for k, v := range array {
+		array[k] = strings.Trim(v, cut)
+	}
+	return array
+}
+
+// SplitAndTrimSpace splits string <str> by a string <delimiter> to an array,
+// and calls TrimSpace to every element of this array.
+func SplitAndTrimSpace(str, delimiter string) []string {
+	array := strings.Split(str, delimiter)
+	for k, v := range array {
+		array[k] = strings.TrimSpace(v)
+	}
+	return array
+}
+
 // Join concatenates the elements of a to create a single string. The separator string
 // sep is placed between elements in the resulting string.
 func Join(array []string, sep string) string {
@@ -569,14 +589,22 @@ func StripSlashes(str string) string {
 }
 
 // QuoteMeta returns a version of str with a backslash character (\)
-// before every character that is among:
-// .\+*?[^]($)
-func QuoteMeta(str string) string {
+// before every character that is among: .\+*?[^]($)
+func QuoteMeta(str string, chars ...string) string {
 	var buf bytes.Buffer
 	for _, char := range str {
-		switch char {
-		case '.', '+', '\\', '(', '$', ')', '[', '^', ']', '*', '?':
-			buf.WriteRune('\\')
+		if len(chars) > 0 {
+			for _, c := range chars[0] {
+				if c == char {
+					buf.WriteRune('\\')
+					break
+				}
+			}
+		} else {
+			switch char {
+			case '.', '+', '\\', '(', '$', ')', '[', '^', ']', '*', '?':
+				buf.WriteRune('\\')
+			}
 		}
 		buf.WriteRune(char)
 	}

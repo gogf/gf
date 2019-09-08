@@ -38,7 +38,9 @@ func Test_Params_Struct(t *testing.T) {
 		if m := r.GetMap(); len(m) > 0 {
 			user := (*User)(nil)
 			r.GetToStruct(&user)
-			r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
+			if user != nil {
+				r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
+			}
 		}
 	})
 	s.BindHandler("/struct-valid", func(r *ghttp.Request) {
@@ -62,6 +64,7 @@ func Test_Params_Struct(t *testing.T) {
 		gtest.Assert(client.GetContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		gtest.Assert(client.PostContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		gtest.Assert(client.PostContent("/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		gtest.Assert(client.PostContent("/struct2", ``), ``)
 		gtest.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `{"passwd1":{"length":"字段长度为2到20个字符","password3":"密码强度不足"}}`)
 	})
 }

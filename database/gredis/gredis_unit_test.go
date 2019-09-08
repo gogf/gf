@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gconv"
+
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/test/gtest"
 	redis2 "github.com/gomodule/redigo/redis"
@@ -51,19 +54,6 @@ func Test_Do(t *testing.T) {
 	})
 }
 
-func Test_Send(t *testing.T) {
-	gtest.Case(t, func() {
-		redis := gredis.New(config)
-		defer redis.Close()
-		err := redis.Send("SET", "k", "v")
-		gtest.Assert(err, nil)
-
-		r, err := redis.Do("GET", "k")
-		gtest.Assert(err, nil)
-		gtest.Assert(r, []byte("v"))
-	})
-}
-
 func Test_Stats(t *testing.T) {
 	gtest.Case(t, func() {
 		redis := gredis.New(config)
@@ -101,13 +91,18 @@ func Test_Conn(t *testing.T) {
 		conn := redis.Conn()
 		defer conn.Close()
 
-		r, err := conn.Do("GET", "k")
+		key := gconv.String(gtime.Nanosecond())
+		value := []byte("v")
+		r, err := conn.Do("SET", key, value)
 		gtest.Assert(err, nil)
-		gtest.Assert(r, []byte("v"))
 
-		_, err = conn.Do("DEL", "k")
+		r, err = conn.Do("GET", key)
 		gtest.Assert(err, nil)
-		r, err = conn.Do("GET", "k")
+		gtest.Assert(r, value)
+
+		_, err = conn.Do("DEL", key)
+		gtest.Assert(err, nil)
+		r, err = conn.Do("GET", key)
 		gtest.Assert(err, nil)
 		gtest.Assert(r, nil)
 	})
@@ -206,5 +201,24 @@ func Test_Basic(t *testing.T) {
 		}()
 
 		time.Sleep(time.Second)
+	})
+}
+
+func Test_Bool(t *testing.T) {
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		_, err := redis.Do("SET", "key-true", true)
+		gtest.Assert(err, nil)
+
+		_, err = redis.Do("SET", "key-false", false)
+		gtest.Assert(err, nil)
+
+		r, err := redis.DoVar("GET", "key-true")
+		gtest.Assert(err, nil)
+		gtest.Assert(r.Bool(), true)
+
+		r, err = redis.DoVar("GET", "key-false")
+		gtest.Assert(err, nil)
+		gtest.Assert(r.Bool(), false)
 	})
 }

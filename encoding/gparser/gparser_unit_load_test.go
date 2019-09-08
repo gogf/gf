@@ -31,7 +31,7 @@ func Test_Load_JSON(t *testing.T) {
 	// JSON
 	gtest.Case(t, func() {
 		path := "test.json"
-		gfile.PutBinContents(path, data)
+		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
 		j, err := gparser.Load(path)
 		gtest.Assert(err, nil)
@@ -58,7 +58,7 @@ func Test_Load_XML(t *testing.T) {
 	// XML
 	gtest.Case(t, func() {
 		path := "test.xml"
-		gfile.PutBinContents(path, data)
+		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
 		j, err := gparser.Load(path)
 		gtest.Assert(err, nil)
@@ -111,7 +111,7 @@ m:
 	// YAML
 	gtest.Case(t, func() {
 		path := "test.yaml"
-		gfile.PutBinContents(path, data)
+		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
 		j, err := gparser.Load(path)
 		gtest.Assert(err, nil)
@@ -153,7 +153,7 @@ n = "123456789"
 	// TOML
 	gtest.Case(t, func() {
 		path := "test.toml"
-		gfile.PutBinContents(path, data)
+		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
 		j, err := gparser.Load(path)
 		gtest.Assert(err, nil)

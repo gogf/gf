@@ -142,7 +142,7 @@ func (tree *RedBlackTree) Get(key interface{}) (value interface{}) {
 func (tree *RedBlackTree) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	if node := tree.doSearch(key); node != nil {
+	if node, found := tree.doSearch(key); found {
 		return node.Value
 	}
 	if f, ok := value.(func() interface{}); ok {
@@ -253,8 +253,8 @@ func (tree *RedBlackTree) Contains(key interface{}) bool {
 // doRemove removes the node from the tree by <key> without mutex.
 func (tree *RedBlackTree) doRemove(key interface{}) (value interface{}) {
 	child := (*RedBlackTreeNode)(nil)
-	node := tree.doSearch(key)
-	if node == nil {
+	node, found := tree.doSearch(key)
+	if !found {
 		return
 	}
 	value = node.Value
@@ -456,15 +456,37 @@ func (tree *RedBlackTree) Iterator(f func(key, value interface{}) bool) {
 	tree.IteratorAsc(f)
 }
 
+// IteratorFrom is alias of IteratorAscFrom.
+func (tree *RedBlackTree) IteratorFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.IteratorAscFrom(key, match, f)
+}
+
 // IteratorAsc iterates the tree in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *RedBlackTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.leftNode()
-	if node == nil {
-		return
+	tree.doIteratorAsc(tree.leftNode(), f)
+}
+
+// IteratorAscFrom iterates the tree in ascending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *RedBlackTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	node, found := tree.doSearch(key)
+	if match {
+		if found {
+			tree.doIteratorAsc(node, f)
+		}
+	} else {
+		tree.doIteratorAsc(node, f)
 	}
+}
+
+func (tree *RedBlackTree) doIteratorAsc(node *RedBlackTreeNode, f func(key, value interface{}) bool) {
 loop:
 	if node == nil {
 		return
@@ -495,10 +517,27 @@ loop:
 func (tree *RedBlackTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.rightNode()
-	if node == nil {
-		return
+	tree.doIteratorDesc(tree.rightNode(), f)
+}
+
+// IteratorDescFrom iterates the tree in descending order with given callback function <f>.
+// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
+// starting iterating if the <key> is fully matched, or else using index searching iterating.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (tree *RedBlackTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	node, found := tree.doSearch(key)
+	if match {
+		if found {
+			tree.doIteratorDesc(node, f)
+		}
+	} else {
+		tree.doIteratorDesc(node, f)
 	}
+}
+
+func (tree *RedBlackTree) doIteratorDesc(node *RedBlackTreeNode, f func(key, value interface{}) bool) {
 loop:
 	if node == nil {
 		return
@@ -536,7 +575,7 @@ func (tree *RedBlackTree) Clear() {
 func (tree *RedBlackTree) String() string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	str := "RedBlackTree\n"
+	str := ""
 	if tree.size != 0 {
 		tree.output(tree.root, "", true, &str)
 	}
@@ -553,8 +592,8 @@ func (tree *RedBlackTree) Print() {
 func (tree *RedBlackTree) Search(key interface{}) (value interface{}, found bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	node := tree.doSearch(key)
-	if node != nil {
+	node, found := tree.doSearch(key)
+	if found {
 		return node.Value, true
 	}
 	return nil, false
@@ -612,20 +651,20 @@ func (tree *RedBlackTree) output(node *RedBlackTreeNode, prefix string, isTail b
 
 // doSearch searches the tree with given <key> without mutex.
 // It returns the node if found or otherwise nil.
-func (tree *RedBlackTree) doSearch(key interface{}) *RedBlackTreeNode {
-	node := tree.root
+func (tree *RedBlackTree) doSearch(key interface{}) (node *RedBlackTreeNode, found bool) {
+	node = tree.root
 	for node != nil {
 		compare := tree.comparator(key, node.Key)
 		switch {
 		case compare == 0:
-			return node
+			return node, true
 		case compare < 0:
 			node = node.left
 		case compare > 0:
 			node = node.right
 		}
 	}
-	return nil
+	return node, false
 }
 
 func (node *RedBlackTreeNode) grandparent() *RedBlackTreeNode {

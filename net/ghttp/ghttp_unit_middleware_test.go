@@ -52,7 +52,7 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/test"), "1342")
+		gtest.Assert(client.GetContent("/test"), "Not Found")
 		gtest.Assert(client.GetContent("/test/test"), "57test86")
 	})
 }
@@ -94,7 +94,7 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 
 		gtest.Assert(client.GetContent("/"), "Not Found")
 		gtest.Assert(client.GetContent("/test"), "Not Found")
-		gtest.Assert(client.PutContent("/test"), "1342")
+		gtest.Assert(client.PutContent("/test"), "Not Found")
 		gtest.Assert(client.PostContent("/test"), "Not Found")
 		gtest.Assert(client.GetContent("/test/test"), "test")
 		gtest.Assert(client.PutContent("/test/test"), "test")
@@ -156,7 +156,7 @@ func Test_AddMiddleware_Basic1(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "1342")
+		gtest.Assert(client.GetContent("/"), "Not Found")
 		gtest.Assert(client.GetContent("/test/test"), "13test42")
 	})
 }
@@ -188,9 +188,9 @@ func Test_AddMiddleware_Basic2(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "1342")
-		gtest.Assert(client.PutContent("/"), "1342")
-		gtest.Assert(client.GetContent("/test/test"), "1342")
+		gtest.Assert(client.GetContent("/"), "Not Found")
+		gtest.Assert(client.PutContent("/"), "Not Found")
+		gtest.Assert(client.GetContent("/test/test"), "Not Found")
 		gtest.Assert(client.PutContent("/test/test"), "13test42")
 	})
 }
@@ -220,7 +220,7 @@ func Test_AddMiddleware_Basic3(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "12")
+		gtest.Assert(client.GetContent("/"), "Not Found")
 		gtest.Assert(client.GetContent("/test/test"), "1test2")
 	})
 }
@@ -250,7 +250,7 @@ func Test_AddMiddleware_Basic4(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "21")
+		gtest.Assert(client.GetContent("/"), "Not Found")
 		gtest.Assert(client.GetContent("/test/test"), "2test1")
 	})
 }
@@ -280,7 +280,7 @@ func Test_AddMiddleware_Basic5(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "12")
+		gtest.Assert(client.GetContent("/"), "Not Found")
 		gtest.Assert(client.GetContent("/test/test"), "12test")
 	})
 }
@@ -358,11 +358,11 @@ func Test_AddMiddleware_Basic6(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		gtest.Assert(client.GetContent("/"), "13100Object Index20042")
-		gtest.Assert(client.GetContent("/init"), "1342")
-		gtest.Assert(client.GetContent("/shut"), "1342")
+		gtest.Assert(client.GetContent("/init"), "Not Found")
+		gtest.Assert(client.GetContent("/shut"), "Not Found")
 		gtest.Assert(client.GetContent("/index"), "13100Object Index20042")
 		gtest.Assert(client.GetContent("/show"), "13100Object Show20042")
-		gtest.Assert(client.GetContent("/none-exist"), "1342")
+		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }
 
@@ -405,7 +405,7 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "ac1342bd")
+		gtest.Assert(client.GetContent("/"), "acbd")
 		gtest.Assert(client.GetContent("/test/test"), "ac13test42bd")
 	})
 }

@@ -83,7 +83,7 @@ func (s *Server) BindController(pattern string, c Controller, methods ...string)
 		// 这里处理新增/user路由绑定。
 		// 注意，当pattern带有内置变量时，不会自动加该路由。
 		if strings.EqualFold(mname, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
-			p := gstr.PosR(key, "/index")
+			p := gstr.PosRI(key, "/index")
 			k := key[0:p] + key[p+6:]
 			if len(k) == 0 || k[0] == '@' {
 				k = "/" + k

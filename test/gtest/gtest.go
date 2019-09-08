@@ -9,10 +9,11 @@ package gtest
 
 import (
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/gogf/gf/debug/gdebug"
 
 	"github.com/gogf/gf/util/gconv"
 )
@@ -121,12 +122,6 @@ func AssertGT(value, expect interface{}) {
 	}
 }
 
-// Deprecated.
-// See AssertGE.
-func AssertGTE(value, expect interface{}) {
-	AssertGE(value, expect)
-}
-
 // AssertGE checks <value> is GREATER OR EQUAL THAN <expect>.
 // Notice that, only string, integer and float types can be compared by AssertGTE,
 // others are invalid.
@@ -171,12 +166,6 @@ func AssertLT(value, expect interface{}) {
 	if !passed {
 		panic(fmt.Sprintf(`[ASSERT] EXPECT %v < %v`, value, expect))
 	}
-}
-
-// Deprecated.
-// See AssertLE.
-func AssertLTE(value, expect interface{}) {
-	AssertLE(value, expect)
 }
 
 // AssertLE checks <value> is LESS OR EQUAL THAN <expect>.

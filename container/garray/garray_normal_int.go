@@ -459,13 +459,13 @@ func (a *IntArray) Merge(array interface{}) *IntArray {
 		a.Append(gconv.Ints(v.Slice())...)
 	case *IntArray:
 		a.Append(gconv.Ints(v.Slice())...)
-	case *StringArray:
+	case *StrArray:
 		a.Append(gconv.Ints(v.Slice())...)
 	case *SortedArray:
 		a.Append(gconv.Ints(v.Slice())...)
 	case *SortedIntArray:
 		a.Append(gconv.Ints(v.Slice())...)
-	case *SortedStringArray:
+	case *SortedStrArray:
 		a.Append(gconv.Ints(v.Slice())...)
 	default:
 		a.Append(gconv.Ints(array)...)

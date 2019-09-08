@@ -8,10 +8,11 @@
 package gview
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/garray"
@@ -23,11 +24,12 @@ import (
 
 // View object for template engine.
 type View struct {
-	mu         sync.RWMutex
-	paths      *garray.StringArray    // Searching path array.
-	data       map[string]interface{} // Global template variables.
-	funcMap    map[string]interface{} // Global template function map.
-	delimiters []string               // Customized template delimiters.
+	mu          sync.RWMutex
+	paths       *garray.StrArray       // Searching path array.
+	data        map[string]interface{} // Global template variables.
+	funcMap     map[string]interface{} // Global template function map.
+	i18nEnabled bool                   // Is i18n enabled in this template.
+	delimiters  []string               // Customized template delimiters.
 }
 
 // Params is type for template params.
@@ -58,10 +60,11 @@ func ParseContent(content string, params Params) (string, error) {
 // The parameter <path> specifies the template directory path to load template files.
 func New(path ...string) *View {
 	view := &View{
-		paths:      garray.NewStringArray(true),
-		data:       make(map[string]interface{}),
-		funcMap:    make(map[string]interface{}),
-		delimiters: make([]string, 2),
+		paths:       garray.NewStrArray(true),
+		data:        make(map[string]interface{}),
+		funcMap:     make(map[string]interface{}),
+		i18nEnabled: true,
+		delimiters:  make([]string, 2),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
 		view.SetPath(path[0])
@@ -123,40 +126,39 @@ func New(path ...string) *View {
 // SetPath sets the template directory path for template file search.
 // The parameter <path> can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
-	// Absolute path.
-	realPath := gfile.RealPath(path)
-	if realPath == "" {
-		// Relative path.
-		view.paths.RLockFunc(func(array []string) {
-			for _, v := range array {
-				if path, _ := gspath.Search(v, path); path != "" {
-					realPath = path
-					break
+	isDir := false
+	realPath := ""
+	if file := gres.Get(path); file != nil {
+		realPath = path
+		isDir = file.FileInfo().IsDir()
+	} else {
+		// Absolute path.
+		realPath = gfile.RealPath(path)
+		if realPath == "" {
+			// Relative path.
+			view.paths.RLockFunc(func(array []string) {
+				for _, v := range array {
+					if path, _ := gspath.Search(v, path); path != "" {
+						realPath = path
+						break
+					}
 				}
-			}
-		})
+			})
+		}
+		if realPath != "" {
+			isDir = gfile.IsDir(realPath)
+		}
 	}
 	// Path not exist.
 	if realPath == "" {
-		buffer := bytes.NewBuffer(nil)
-		if view.paths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf("[gview] SetPath failed: cannot find directory \"%s\" in following paths:", path))
-			view.paths.RLockFunc(func(array []string) {
-				for k, v := range array {
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
-				}
-			})
-		} else {
-			buffer.WriteString(fmt.Sprintf(`[gview] SetPath failed: path "%s" does not exist`, path))
-		}
-		err := errors.New(buffer.String())
+		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" does not exist`, path))
 		if errorPrint() {
 			glog.Error(err)
 		}
 		return err
 	}
 	// Should be a directory.
-	if !gfile.IsDir(realPath) {
+	if !isDir {
 		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" should be directory type`, path))
 		if errorPrint() {
 			glog.Error(err)
@@ -175,40 +177,39 @@ func (view *View) SetPath(path string) error {
 
 // AddPath adds a absolute or relative path to the search paths.
 func (view *View) AddPath(path string) error {
-	// Absolute path.
-	realPath := gfile.RealPath(path)
-	if realPath == "" {
-		// Relative path.
-		view.paths.RLockFunc(func(array []string) {
-			for _, v := range array {
-				if path, _ := gspath.Search(v, path); path != "" {
-					realPath = path
-					break
+	isDir := false
+	realPath := ""
+	if file := gres.Get(path); file != nil {
+		realPath = path
+		isDir = file.FileInfo().IsDir()
+	} else {
+		// Absolute path.
+		realPath = gfile.RealPath(path)
+		if realPath == "" {
+			// Relative path.
+			view.paths.RLockFunc(func(array []string) {
+				for _, v := range array {
+					if path, _ := gspath.Search(v, path); path != "" {
+						realPath = path
+						break
+					}
 				}
-			}
-		})
+			})
+		}
+		if realPath != "" {
+			isDir = gfile.IsDir(realPath)
+		}
 	}
 	// Path not exist.
 	if realPath == "" {
-		buffer := bytes.NewBuffer(nil)
-		if view.paths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf("[gview] AddPath failed: cannot find directory \"%s\" in following paths:", path))
-			view.paths.RLockFunc(func(array []string) {
-				for k, v := range array {
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
-				}
-			})
-		} else {
-			buffer.WriteString(fmt.Sprintf(`[gview] AddPath failed: path "%s" does not exist`, path))
-		}
-		err := errors.New(buffer.String())
+		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" does not exist`, path))
 		if errorPrint() {
 			glog.Error(err)
 		}
 		return err
 	}
 	// realPath should be type of folder.
-	if !gfile.IsDir(realPath) {
+	if !isDir {
 		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" should be directory type`, path))
 		if errorPrint() {
 			glog.Error(err)

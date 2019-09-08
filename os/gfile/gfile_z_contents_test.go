@@ -1,3 +1,9 @@
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gfile_test
 
 import (
@@ -76,13 +82,13 @@ func Test_GetBinContents(t *testing.T) {
 		)
 		createTestFile(filepaths1, str1)
 		defer delTestFiles(filepaths1)
-		readcontent = gfile.GetBinContents(testpath() + filepaths1)
+		readcontent = gfile.GetBytes(testpath() + filepaths1)
 		gtest.Assert(readcontent, []byte(str1))
 
-		readcontent = gfile.GetBinContents(filepaths2)
+		readcontent = gfile.GetBytes(filepaths2)
 		gtest.Assert(string(readcontent), "")
 
-		gtest.Assert(string(gfile.GetBinContents(filepaths2)), "")
+		gtest.Assert(string(gfile.GetBytes(filepaths2)), "")
 
 	})
 }
@@ -174,7 +180,7 @@ func Test_PutBinContents(t *testing.T) {
 		createTestFile(filepaths, "a")
 		defer delTestFiles(filepaths)
 
-		err = gfile.PutBinContents(testpath()+filepaths, []byte("test!!"))
+		err = gfile.PutBytes(testpath()+filepaths, []byte("test!!"))
 		gtest.Assert(err, nil)
 
 		// 判断是否真正写入
@@ -182,7 +188,7 @@ func Test_PutBinContents(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(string(readcontent), "test!!")
 
-		err = gfile.PutBinContents("", []byte("test!!"))
+		err = gfile.PutBytes("", []byte("test!!"))
 		gtest.AssertNE(err, nil)
 
 	})
@@ -197,7 +203,7 @@ func Test_PutBinContentsAppend(t *testing.T) {
 		)
 		createTestFile(filepaths, "test!!")
 		defer delTestFiles(filepaths)
-		err = gfile.PutBinContentsAppend(testpath()+filepaths, []byte("word"))
+		err = gfile.PutBytesAppend(testpath()+filepaths, []byte("word"))
 		gtest.Assert(err, nil)
 
 		// 判断是否真正写入
@@ -205,7 +211,7 @@ func Test_PutBinContentsAppend(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(string(readcontent), "test!!word")
 
-		err = gfile.PutBinContentsAppend("", []byte("word"))
+		err = gfile.PutBytesAppend("", []byte("word"))
 		gtest.AssertNE(err, nil)
 
 	})
@@ -220,11 +226,11 @@ func Test_GetBinContentsByTwoOffsetsByPath(t *testing.T) {
 
 		createTestFile(filepaths, "abcdefghijk")
 		defer delTestFiles(filepaths)
-		readcontent = gfile.GetBinContentsByTwoOffsetsByPath(testpath()+filepaths, 2, 5)
+		readcontent = gfile.GetBytesByTwoOffsetsByPath(testpath()+filepaths, 2, 5)
 
 		gtest.Assert(string(readcontent), "cde")
 
-		readcontent = gfile.GetBinContentsByTwoOffsetsByPath("", 2, 5)
+		readcontent = gfile.GetBytesByTwoOffsetsByPath("", 2, 5)
 		gtest.Assert(len(readcontent), 0)
 
 	})
@@ -271,10 +277,10 @@ func Test_GetBinContentsByTwoOffsets(t *testing.T) {
 		)
 		reader := strings.NewReader("helloword")
 
-		reads = gfile.GetBinContentsByTwoOffsets(reader, 1, 3)
+		reads = gfile.GetBytesByTwoOffsets(reader, 1, 3)
 		gtest.Assert(string(reads), "el")
 
-		reads = gfile.GetBinContentsByTwoOffsets(reader, 10, 30)
+		reads = gfile.GetBytesByTwoOffsets(reader, 10, 30)
 		gtest.Assert(string(reads), "")
 
 	})
@@ -288,10 +294,10 @@ func Test_GetBinContentsTilChar(t *testing.T) {
 		)
 		reader := strings.NewReader("helloword")
 
-		reads, _ = gfile.GetBinContentsTilChar(reader, 'w', 2)
+		reads, _ = gfile.GetBytesTilChar(reader, 'w', 2)
 		gtest.Assert(string(reads), "llow")
 
-		_, indexs = gfile.GetBinContentsTilChar(reader, 'w', 20)
+		_, indexs = gfile.GetBytesTilChar(reader, 'w', 20)
 		gtest.Assert(indexs, -1)
 
 	})
@@ -308,13 +314,13 @@ func Test_GetBinContentsTilCharByPath(t *testing.T) {
 		createTestFile(filepaths, "abcdefghijklmn")
 		defer delTestFiles(filepaths)
 
-		reads, _ = gfile.GetBinContentsTilCharByPath(testpath()+filepaths, 'c', 2)
+		reads, _ = gfile.GetBytesTilCharByPath(testpath()+filepaths, 'c', 2)
 		gtest.Assert(string(reads), "c")
 
-		reads, _ = gfile.GetBinContentsTilCharByPath(testpath()+filepaths, 'y', 1)
+		reads, _ = gfile.GetBytesTilCharByPath(testpath()+filepaths, 'y', 1)
 		gtest.Assert(string(reads), "")
 
-		_, indexs = gfile.GetBinContentsTilCharByPath(testpath()+filepaths, 'x', 1)
+		_, indexs = gfile.GetBytesTilCharByPath(testpath()+filepaths, 'x', 1)
 		gtest.Assert(indexs, -1)
 
 	})
