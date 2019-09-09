@@ -10,11 +10,8 @@ type Controller struct {
 }
 
 func (c *Controller) Index() {
-	c.View.Display("layout.html")
-}
-
-// 不符合规范，不会被自动注册
-func (c *Controller) Test(value interface{}) {
+	c.View.Assign("name", "john")
+	c.View.Assign("mainTpl", "main/main2.html")
 	c.View.Display("layout.html")
 }
 
