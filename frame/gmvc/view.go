@@ -91,18 +91,16 @@ func (view *View) BindFuncMap(funcMap gview.FuncMap) {
 }
 
 // 解析并显示指定模板
-func (view *View) Display(file ...string) error {
+func (view *View) Display(file ...string) {
 	name := "index.tpl"
 	if len(file) > 0 {
 		name = file[0]
 	}
 	if content, err := view.Parse(name); err != nil {
 		view.response.Write("Tpl Parsing Error: " + err.Error())
-		return err
 	} else {
 		view.response.Write(content)
 	}
-	return nil
 }
 
 // 解析并显示模板内容
