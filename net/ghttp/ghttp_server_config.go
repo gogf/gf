@@ -88,7 +88,6 @@ var defaultServerConfig = ServerConfig{
 	IdleTimeout:        60 * time.Second,
 	MaxHeaderBytes:     1024,
 	KeepAlive:          true,
-	View:               gview.Instance(),
 	IndexFiles:         []string{"index.html", "index.htm"},
 	IndexFolder:        false,
 	ServerAgent:        "gf http server",
