@@ -15,17 +15,17 @@ import (
 )
 
 var (
-	Clusterip     = "127.0.0.1" //模拟的集群ip地址1
-	ClustersNodes = []string{Clusterip + ":8220", Clusterip + ":8221", Clusterip + ":8222", Clusterip + ":8223", Clusterip + ":8224", Clusterip + ":8225"}
+	Clusterip     = "192.168.0.55" //模拟的集群ip地址1  127.0.0.1   8220开始
+	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 )
 
 func init() {
 	gredis.FlagBanCluster = false
 	config := `[rediscluster]
     [rediscluster.default]
-        host = "`+strings.Join(ClustersNodes,",")+`"
+        host = "` + strings.Join(ClustersNodes, ",") + `"
 [redis]
-     default = "`+Clusterip+`:6379,1"`
+     default = "` + Clusterip + `:8579,1"`
 	err := createTestFile("config.toml", config)
 	if err != nil {
 		fmt.Println(err.Error())
