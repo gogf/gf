@@ -84,6 +84,11 @@ func OpenWithFlagPerm(path string, flag int, perm int) (*os.File, error) {
 	return f, nil
 }
 
+// Join joins string array paths with file separator of current system.
+func Join(paths ...string) string {
+	return strings.Join(paths, Separator)
+}
+
 // Exists checks whether given <path> exist.
 func Exists(path string) bool {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {

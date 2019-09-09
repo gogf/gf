@@ -44,6 +44,7 @@ var (
 	defaultDelimiters = []string{"{#", "}"}
 )
 
+// New creates and returns a new i18n manager.
 func New(options ...Options) *Manager {
 	var opts Options
 	if len(options) > 0 {
@@ -64,13 +65,16 @@ func New(options ...Options) *Manager {
 	}
 }
 
+// DefaultOptions returns the default options for i18n manager.
 func DefaultOptions() Options {
 	path := "i18n"
 	realPath, _ := gfile.Search(path)
 	if realPath != "" {
 		path = realPath
-	} else {
-		path = "/" + path
+		// To avoid of the source of GF: github.com/gogf/i18n/gi18n
+		if gfile.Exists(path + gfile.Separator + "gi18n") {
+			path = ""
+		}
 	}
 	return Options{
 		Path:       path,
