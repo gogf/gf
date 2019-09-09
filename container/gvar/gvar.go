@@ -172,6 +172,16 @@ func (v *Var) Interfaces() []interface{} {
 	return gconv.Interfaces(v.Val())
 }
 
+// Slice is alias of Interfaces.
+func (v *Var) Slice() []interface{} {
+	return v.Interfaces()
+}
+
+// Array is alias of Interfaces.
+func (v *Var) Array() []interface{} {
+	return v.Interfaces()
+}
+
 // Vars converts and returns <v> as []*Var.
 func (v *Var) Vars() []*Var {
 	array := gconv.Interfaces(v.Val())

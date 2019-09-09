@@ -100,12 +100,6 @@ func (t *Time) String() string {
 	return t.Format("Y-m-d H:i:s")
 }
 
-// Deprecated.
-// Directly use t.Time instead.
-func (t *Time) ToTime() time.Time {
-	return t.Time
-}
-
 // 复制当前时间对象
 func (t *Time) Clone() *Time {
 	return New(t.Time)

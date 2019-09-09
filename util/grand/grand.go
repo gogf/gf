@@ -45,12 +45,6 @@ func N(min, max int) int {
 	return 0
 }
 
-// Deprecated.
-// Alias of N.
-func Rand(min, max int) int {
-	return N(min, max)
-}
-
 // Str returns a random string which contains digits and letters, and its length is <n>.
 func Str(n int) string {
 	b := make([]rune, n)
@@ -64,12 +58,6 @@ func Str(n int) string {
 	return string(b)
 }
 
-// Deprecated.
-// Alias of Str.
-func RandStr(n int) string {
-	return Str(n)
-}
-
 // Digits returns a random string which contains only digits, and its length is <n>.
 func Digits(n int) string {
 	b := make([]rune, n)
@@ -77,12 +65,6 @@ func Digits(n int) string {
 		b[i] = digits[Intn(10)]
 	}
 	return string(b)
-}
-
-// Deprecated.
-// Alias of Digits.
-func RandDigits(n int) string {
-	return Digits(n)
 }
 
 // Letters returns a random string which contains only letters, and its length is <n>.
@@ -93,12 +75,6 @@ func Letters(n int) string {
 	}
 	return string(b)
 
-}
-
-// Deprecated.
-// Alias of Letters.
-func RandLetters(n int) string {
-	return Letters(n)
 }
 
 // Perm returns, as a slice of n int numbers, a pseudo-random permutation of the integers [0,n).

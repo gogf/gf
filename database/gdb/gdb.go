@@ -294,7 +294,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 		}
 	}
 	// 不能取到末尾的边界点
-	r := grand.Rand(0, total)
+	r := grand.N(0, total)
 	if r > 0 {
 		r -= 1
 	}

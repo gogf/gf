@@ -145,12 +145,6 @@ func (l *Logger) Stdout(enabled ...bool) *Logger {
 	return logger
 }
 
-// See Stdout.
-// Deprecated.
-func (l *Logger) StdPrint(enabled ...bool) *Logger {
-	return l.Stdout(enabled...)
-}
-
 // Header is a chaining function,
 // which enables/disables log header for the current logging content output.
 // It's enabled in default.
