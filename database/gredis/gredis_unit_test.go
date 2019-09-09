@@ -7,14 +7,10 @@
 package gredis_test
 
 import (
-	"testing"
-	"time"
-
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
-
 	"github.com/gogf/gf/database/gredis"
+	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/util/gconv"
 	redis2 "github.com/gomodule/redigo/redis"
 	"testing"
 	"time"
