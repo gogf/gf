@@ -8,7 +8,6 @@ package g
 
 import (
 	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/database/gkvdb"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/frame/gins"
 	"github.com/gogf/gf/i18n/gi18n"
@@ -78,11 +77,6 @@ func Database(name ...string) gdb.DB {
 // See Database.
 func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
-}
-
-// KV returns an instance of gkvdb with specified configuration group name.
-func KV(name ...string) *gkvdb.DB {
-	return gins.KV(name...)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.
