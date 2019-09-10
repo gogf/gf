@@ -104,6 +104,16 @@ func New(config Config) *Redis {
 	}
 }
 
+// NewFromStr creates a redis client object with given configuration string.
+// Redis client maintains a connection pool automatically.
+func NewFromStr(str string) (*Redis, error) {
+	config, err := ConfigFromStr(str)
+	if err != nil {
+		return nil, err
+	}
+	return New(config), nil
+}
+
 // Close closes the redis connection pool,
 // it will release all connections reserved by this pool.
 // It is not necessary to call Close manually.
