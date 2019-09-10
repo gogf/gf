@@ -59,7 +59,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool) (*Parser, er
 
 	for i := 0; i < len(args); {
 		if option := parser.parseOption(args[i]); option != "" {
-			array, _ := gregex.MatchString(`^(\w+)=(.+)$`, option)
+			array, _ := gregex.MatchString(`^(.+?)=(.+)$`, option)
 			if len(array) == 3 {
 				if parser.isOptionValid(array[1]) {
 					parser.setOptionValue(array[1], array[2])
