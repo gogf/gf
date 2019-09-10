@@ -9,7 +9,6 @@ package gmvc
 import (
 	"sync"
 
-	"github.com/gogf/gf/frame/gins"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gview"
 )
@@ -25,7 +24,7 @@ type View struct {
 // 创建一个MVC请求中使用的视图对象
 func NewView(w *ghttp.Response) *View {
 	return &View{
-		view:     gins.View(),
+		view:     gview.New(),
 		data:     make(gview.Params),
 		response: w,
 	}
@@ -77,19 +76,31 @@ func (view *View) RLockFunc(f func(data gview.Params)) {
 	f(view.data)
 }
 
+// BindFunc registers customized template function named <name>
+// with given function <function> to current view object.
+// The <name> is the function name which can be called in template content.
+func (view *View) BindFunc(name string, function interface{}) {
+	view.view.BindFunc(name, function)
+}
+
+// BindFuncMap registers customized template functions by map to current view object.
+// The key of map is the template function name
+// and the value of map is the address of customized function.
+func (view *View) BindFuncMap(funcMap gview.FuncMap) {
+	view.view.BindFuncMap(funcMap)
+}
+
 // 解析并显示指定模板
-func (view *View) Display(file ...string) error {
+func (view *View) Display(file ...string) {
 	name := "index.tpl"
 	if len(file) > 0 {
 		name = file[0]
 	}
 	if content, err := view.Parse(name); err != nil {
 		view.response.Write("Tpl Parsing Error: " + err.Error())
-		return err
 	} else {
 		view.response.Write(content)
 	}
-	return nil
 }
 
 // 解析并显示模板内容

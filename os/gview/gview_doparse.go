@@ -13,8 +13,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/gogf/gf/i18n/gi18n"
-
 	"github.com/gogf/gf/os/gfcache"
 
 	"github.com/gogf/gf/os/gres"
@@ -61,7 +59,8 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 			return tpl
 		}
 		// Secondly checking the file system.
-		files, err := gfile.ScanDir(path, pattern, true)
+		files := ([]string)(nil)
+		files, err = gfile.ScanDir(path, pattern, true)
 		if err != nil {
 			return nil
 		}
@@ -211,8 +210,8 @@ func (view *View) Parse(file string, params ...Params) (parsed string, err error
 		return "", err
 	}
 	result := gstr.Replace(buffer.String(), "<no value>", "")
-	if view.i18nEnabled {
-		result = gi18n.T(result)
+	if view.i18nManager != nil {
+		result = view.i18nManager.T(result)
 	}
 	return result, nil
 }
@@ -267,8 +266,8 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 		return "", err
 	}
 	result := gstr.Replace(buffer.String(), "<no value>", "")
-	if view.i18nEnabled {
-		result = gi18n.T(result)
+	if view.i18nManager != nil {
+		result = view.i18nManager.T(result)
 	}
 	return result, nil
 }
