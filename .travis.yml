@@ -32,12 +32,12 @@ rvm:
 
 install:
 - cat /etc/hosts
-- wget http://download.redis.io/releases/redis-4.0.14.tar.gz
-- tar xf redis-4.0.14.tar.gz
-- (cd redis-4.0.14 && make)
+- wget http://download.redis.io/releases/redis-stable.tar.gz
+- tar xf redis-stable.tar.gz
+- (cd redis-stable && make)
 - ruby --version
 - gem install redis -v 3.3.3
-- export PATH=./redis-redis-4.0.14/src:$PATH
+- export PATH=./redis-stable/src:$PATH
 - make start
 - go get -v -t ./...
 
