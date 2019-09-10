@@ -12,6 +12,7 @@ branches:
 
 env:
 - GO111MODULE=on
+- REDIS_VERSION=4.0.14
 
 services:
 - mysql
@@ -25,16 +26,20 @@ addons:
 
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
+rvm:
+  - 2.2
+
+
 
 install:
 - cat /etc/hosts
-- wget http://download.redis.io/releases/redis-4.0.14.tar.gz
-  - tar xf redis-4.0.14.tar.gz
-  - (cd redis-4.0.14 && make)
-  - ruby --version
-  - gem install redis -v 3.3.3
-  - export PATH=./redis-redis-4.0.14/src:$PATH
-  - make start
+- wget http://download.redis.io/releases/redis-$REDIS_VERSION.tar.gz
+- tar xf redis-$REDIS_VERSION.tar.gz
+- (cd redis-$REDIS_VERSION && make)
+- ruby --version
+- gem install redis -v 3.3.3
+- export PATH=./redis-redis-$REDIS_VERSION/src:$PATH
+- make start
 
 before_script:
 - find . -name "*.go" | xargs gofmt -w
