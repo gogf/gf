@@ -20,14 +20,14 @@ var (
 	ClustersNodes = []string{Clusterip + ":8220", Clusterip + ":8221", Clusterip + ":8222", Clusterip + ":8223", Clusterip + ":8224", Clusterip + ":8225"}
 )
 
-// default = "` + Clusterip + `:8579,1,yyb513941"`
+// default = "` + Clusterip + `:8579,1,yyb513941"`    pwd="123456"
 
 func init() {
 	gredis.FlagBanCluster = false
 	config := `[rediscluster]
     [rediscluster.default]
         host = "` + strings.Join(ClustersNodes, ",") + `"
-        pwd="123456"
+        
 [redis]
      default = "` + Clusterip + `:6379,1"`
 	err := createTestFile("config.toml", config)
@@ -69,7 +69,7 @@ func Test_ClusterDo(t *testing.T) {
 	gtest.Case(t, func() {
 		redis := gredis.NewClusterClient(&gredis.ClusterOption{
 			Nodes: ClustersNodes,
-			Pwd:   "123456",
+			//Pwd:   "123456",
 		})
 		redis.Set("jname2", "jqrr2")
 		r, err := redis.Get("jname2")
