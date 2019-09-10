@@ -12,24 +12,20 @@ import (
 
 type ClusterOption struct {
 	Nodes []string // cluster nodes, for example: []string{":7001",":7002"}
-	//ConnectionTimeout time.Duration // redis connect timeout
-	//SoTimeout         time.Duration // redis read timeout
-	//MaxAttempts       int           //
-	Pwd string // cluster password for AUTH
+	Pwd   string   // cluster password for AUTH
 }
 
 var (
 	flagIsCluster  = false
-	debugFlag      = true //调试标识 当为true时，
 	err            = errors.New("")
 	reply          = new(interface{})
-	clusterPasswd  = "" //集群密码
+	clusterPasswd  = "" //cluster of passwd
 	slotsMap       = map[string][]int{}
 	clusterConnMap = map[string]*Redis{}
-	FlagBanCluster = false //禁用使用cluster集群方式,
+	FlagBanCluster = false // Disable cluster mode
 )
 
-//获取slots的覆盖范围
+// Get the coverage of slots
 func (c *Redis) layoutSlots() {
 	*reply, err = c.Do("cluster", "nodes")
 	if err != nil {
@@ -149,7 +145,6 @@ func (c *Redis) commnddo(action string, args ...interface{}) (interface{}, error
 	return nil, err
 }
 
-// 处理迁移请求
 func (c *Redis) movedconn(errs string) *Redis {
 	chs := strings.Split(errs, " ")
 	c.layoutSlots()

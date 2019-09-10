@@ -9,18 +9,14 @@ import (
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
 
 var (
-	Clusterip = "127.0.0.1" //模拟的集群ip地址1  127.0.0.1   8220开始
-	//ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
+	Clusterip     = "127.0.0.1" //
 	ClustersNodes = []string{Clusterip + ":7000", Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005"}
 )
-
-// default = "` + Clusterip + `:8579,1,yyb513941"`    pwd="123456"
 
 func init() {
 	gredis.FlagBanCluster = false
@@ -36,31 +32,13 @@ func init() {
 	}
 }
 
-// 创建测试文件
 func createTestFile(filename, content string) error {
 	//TempDir := testpath()
-	//fmt.Println(TempDir+"/"+filename)
-	//err := ioutil.WriteFile(TempDir+filename, []byte(content), 0666)
 	err := gfile.PutContents(filename, content)
 	return err
 }
 
-// 测试完删除文件或目录
-func delTestFiles(filenames string) {
-	os.RemoveAll(testpath() + filenames)
-	//os.RemoveAll(filenames)
-}
-
-// 统一格式化文件目录为"/"
-func formatpaths(paths []string) []string {
-	for k, v := range paths {
-		paths[k] = filepath.ToSlash(v)
-		paths[k] = strings.Replace(paths[k], "./", "/", 1)
-	}
-	return paths
-}
-
-// 指定返回要测试的目录
+// get testdir
 func testpath() string {
 	return os.TempDir()
 }

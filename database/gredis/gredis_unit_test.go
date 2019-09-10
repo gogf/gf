@@ -18,10 +18,9 @@ import (
 
 var (
 	config = gredis.Config{
-		Host: "127.0.0.1", //192.168.0.55 127.0.0.1
-		Port: 6379,        //6379 8579
+		Host: "127.0.0.1",
+		Port: 6379,
 		Db:   1,
-		//Pass:"yyb513941",  // ci not password
 	}
 )
 

@@ -55,7 +55,6 @@ func typeInterfacess(i interface{}, err error) ([]interface{}, error) {
 }
 
 //==========================================================================key
-
 func (c *Redis) Del(key ...string) (interface{}, error) {
 	return c.commnddo("DEL", gconv.Interfaces(key)...)
 }
