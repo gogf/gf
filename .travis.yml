@@ -38,10 +38,9 @@ install:
 - ruby --version
 - gem install redis -v 3.3.3
 - export PATH=./redis-stable/src:$PATH
-- make start
-- go get -v -t ./...
 
 before_script:
+- sleep 10
 - find . -name "*.go" | xargs gofmt -w
 - git diff --name-only --exit-code || exit 1
 - psql -c 'create database travis_ci_test;' -U postgres
