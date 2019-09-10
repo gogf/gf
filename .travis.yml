@@ -12,7 +12,7 @@ branches:
 
 env:
 - GO111MODULE=on
-- REDIS_VERSION=4.0.14
+- REDIS_VERSION="4.0.14"
 
 services:
 - mysql
