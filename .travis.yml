@@ -35,7 +35,6 @@ install:
   - gem install redis -v 3.3.3
   - export PATH=./redis-redis-4.0.14/src:$PATH
   - make start
-  - go get -v -t ./...
 
 before_script:
 - find . -name "*.go" | xargs gofmt -w
