@@ -93,7 +93,7 @@ func Test_Session_Header(t *testing.T) {
 		if response != nil {
 			defer response.Close()
 		}
-		sessionId := response.Header.Get(s.GetSessionIdName())
+		sessionId := response.GetCookie(s.GetSessionIdName())
 		gtest.Assert(e1, nil)
 		gtest.AssertNE(sessionId, nil)
 		gtest.Assert(response.ReadAllString(), "")
@@ -112,5 +112,52 @@ func Test_Session_Header(t *testing.T) {
 		gtest.Assert(client.GetContent("/get?k=key2"), "200")
 		gtest.Assert(client.GetContent("/clear"), "")
 		gtest.Assert(client.GetContent("/get?k=key2"), "")
+	})
+}
+
+func Test_Session_StorageFile(t *testing.T) {
+	sessionId := ""
+	gtest.Case(t, func() {
+		p := ports.PopRand()
+		s := g.Server(p)
+		s.BindHandler("/set", func(r *ghttp.Request) {
+			r.Session.Set(r.Get("k"), r.Get("v"))
+			r.Response.Write(r.Get("k"), "=", r.Get("v"))
+		})
+		s.SetPort(p)
+		s.SetDumpRouteMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(200 * time.Millisecond)
+
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		response, e1 := client.Get("/set?k=key&v=100")
+		if response != nil {
+			defer response.Close()
+		}
+		sessionId = response.GetCookie(s.GetSessionIdName())
+		gtest.Assert(e1, nil)
+		gtest.AssertNE(sessionId, nil)
+		gtest.Assert(response.ReadAllString(), "key=100")
+	})
+	time.Sleep(time.Second)
+	gtest.Case(t, func() {
+		p := ports.PopRand()
+		s := g.Server(p)
+		s.BindHandler("/get", func(r *ghttp.Request) {
+			r.Response.Write(r.Session.Get(r.Get("k")))
+		})
+		s.SetPort(p)
+		s.SetDumpRouteMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(200 * time.Millisecond)
+
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetHeader(s.GetSessionIdName(), sessionId)
+		gtest.Assert(client.GetContent("/get?k=key"), "100")
+		gtest.Assert(client.GetContent("/get?k=key1"), "")
 	})
 }

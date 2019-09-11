@@ -67,11 +67,8 @@ func NewStorageFile(ttl time.Duration, path ...string) *StorageFile {
 		updatingIdSet: gset.NewStrSet(true),
 	}
 	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
-		var err error
 		s.updatingIdSet.Iterator(func(v string) bool {
-			if err = s.doUpdateTTL(v); err != nil {
-				panic(err)
-			}
+			s.doUpdateTTL(v)
 			return true
 		})
 	})

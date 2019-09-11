@@ -5,13 +5,17 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gview implements a template engine based on text/template.
+//
+// Reserved template variable names:
+//     I18nLanguage: Assign this variable to define i18n language for each page.
 package gview
 
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/i18n/gi18n"
 	"sync"
+
+	"github.com/gogf/gf/i18n/gi18n"
 
 	"github.com/gogf/gf/os/gres"
 

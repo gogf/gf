@@ -20,7 +20,7 @@ type ClientResponse struct {
 
 // 获得返回的指定COOKIE值
 func (r *ClientResponse) GetCookie(key string) string {
-	if r.cookies == nil {
+	if len(r.cookies) == 0 {
 		now := time.Now()
 		for _, v := range r.Cookies() {
 			if v.Expires.UnixNano() < now.UnixNano() {
