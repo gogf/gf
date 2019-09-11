@@ -1,4 +1,4 @@
-# `v1.8.0`
+# `v1.8.0` (2019-07-15)
 
 ## 新功能改进
 1. 框架目前 `69` 个开发模块（不包括内部模块），原生代码 `65302` 行（不包含第三包依赖包），单元测试覆盖率达到`77%`；
@@ -13,7 +13,7 @@
     - **修改`Backtrace`名称为`Stack`，并改进调用堆栈输出格式；**
     - 新增`Expose`方法暴露内部默认`Logger`对象；
 1. 改进`gdb`数据库ORM模块：
-    - 改进错误处理，当数据库操作没有查询到数据时，`error`返回`sql.ErrNoRows`：https://goframe.org/database/gdb/error
+    - **改进错误处理，当数据库操作没有查询到数据时，`error`返回`sql.ErrNoRows`**：https://goframe.org/database/gdb/error
     - 改进`Update`/`Delete`方法支持`Order BY`及`LIMIT`特性；
     - 数据库链式操作及方法操作中，预处理变量参数支持`slice`参数：https://goframe.org/database/gdb/chaining/model
     - **修改`Priority`权重配置名称为`Weight`；**
@@ -24,7 +24,7 @@
 1. 改进`gconv`数据转换模块：
     - 对结构体对象转换时支持更多的标签：`gconv/c/json`；
     - 支持`*struct/[]struct/[]*struct`自动初始化创建对象/数组：https://goframe.org/util/gconv/struct
-    - 新增`Strusts/StrctsDeep`方法，用于结构体数组的转换即递归转换；
+    - 新增`Strusts/StrctsDeep`方法，用于结构体数组的递归转换；
     - 新增`StructDeep`方法，用于对结构体对象的递归转换；
     - 新增`MapDeep`方法，用于对结构体属性的递归转换；
 1. 改进`ghttp`模块：
@@ -45,6 +45,7 @@
 1. 改进`garray.Range/SubSlice`方法，改进设计，提高性能；
 1. 改进`gjson`/`gparser`模块实现`MarshalJSON`接口以实现自定义的`JSON`数据格式转换；
 1. **改进`crypto`分类下模块的方法返回值，增加`error`错误变量返回，以保证更严谨的接口设计风格；**
+1. **改进`gbase64`模块，输入输出类型发生改变，并增加多个相关方法；**
 1. 改进`gflock`修改方法名`UnLock`为`Unlock`，新增`IsRLocked`方法；
 1. 新增`gfile.CopyFile/CopyDir`方法，用于文件及目录的复制；
 1. 改进`gjson/gparser/gvar/gcfg`模块增加更多的类型转换方法；
@@ -65,7 +66,7 @@
 
 ## 注意事项
 
-以上粗体文字部分为不兼容调整，升级时请注意。
+请注意以上粗体文字部分，如有使用，在您升级时可能会出现不兼容性。
 
 
 
@@ -181,14 +182,14 @@
 
 ## 新特性
 1. 主库从`gitee`迁移到了`github`( https://github.com/gogf/gf )，`gitee`作为镜像站，用于国内的代码贡献及ISSUE提交，迁移说明详见：https://goframe.org/upgradeto150
-1. 对常用的`container`数组模块: `garray`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/g/container/garray
-1. 对常用的`container`集合模块: `gset`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/g/container/gset
-1. 对常用的`container`MAP模块: `gmap`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/g/container/gmap
-1. 对常用的字符串模块: `gstr`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/g/text/gstr
+1. 对常用的`container`数组模块: `garray`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/container/garray
+1. 对常用的`container`集合模块: `gset`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/container/gset
+1. 对常用的`container`MAP模块: `gmap`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/container/gmap
+1. 对常用的字符串模块: `gstr`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/text/gstr
 1. 改进`gform`中对`struct`/`*struct`参数的支持，`*Insert/*Save/*Replace/*Update/Where/Data`方法的参数调整为`interface{}`类型，并支持任意类型的: `string/map/slice/struct/*struct`参数传递，具体请参考：https://goframe.org/database/orm/chaining
 1. 新增/完善若干模块的单元测试用例, 包括：`gvalid`/`gregex`/`garray`/`gset`/`gmap`/`gstr`/`gconv`/`ghttp`/`gdb`；
 1. 由于`gkafka`模块比较重，且不是框架核心模块，因此将该模块迁移到新的仓库中独立管理，并去掉相关依赖包：https://github.com/gogf/gkafka
-1. 新增`greuseport`模块，用以实现TCP的`REUSEPORT`特性：https://godoc.org/github.com/gogf/gf/g/net/greuseport
+1. 新增`greuseport`模块，用以实现TCP的`REUSEPORT`特性：https://godoc.org/github.com/gogf/gf/net/greuseport
 
 ## 新功能/改进
 1. 去掉模板引擎内置变量中自动初始化`session`对象带来的内存占用问题；

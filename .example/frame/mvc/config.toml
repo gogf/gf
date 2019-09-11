@@ -1,0 +1,4 @@
+viewpath = "/home/www/templates"
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
