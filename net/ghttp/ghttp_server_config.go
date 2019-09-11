@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gogf/gf/os/gsession"
+
 	"github.com/gogf/gf/os/gview"
 
 	"github.com/gogf/gf/os/gfile"
@@ -20,16 +22,12 @@ import (
 )
 
 const (
-	gDEFAULT_HTTP_ADDR                 = ":80"         // 默认HTTP监听地址
-	gDEFAULT_HTTPS_ADDR                = ":443"        // 默认HTTPS监听地址
-	NAME_TO_URI_TYPE_DEFAULT           = 0             // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
-	NAME_TO_URI_TYPE_FULLNAME          = 1             // 不处理名称，以原有名称构建成URI
-	NAME_TO_URI_TYPE_ALLLOWER          = 2             // 仅转为小写，单词间不使用连接符号
-	NAME_TO_URI_TYPE_CAMEL             = 3             // 采用驼峰命名方式
-	gDEFAULT_COOKIE_PATH               = "/"           // 默认path
-	gDEFAULT_COOKIE_MAX_AGE            = 86400 * 365   // 默认cookie有效期(一年)
-	gDEFAULT_SESSION_MAX_AGE           = 86400         // 默认session有效期(一天)
-	gDEFAULT_SESSION_ID_NAME           = "gfsessionid" // 默认存放Cookie中的SessionId名称
+	gDEFAULT_HTTP_ADDR                 = ":80"  // 默认HTTP监听地址
+	gDEFAULT_HTTPS_ADDR                = ":443" // 默认HTTPS监听地址
+	NAME_TO_URI_TYPE_DEFAULT           = 0      // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
+	NAME_TO_URI_TYPE_FULLNAME          = 1      // 不处理名称，以原有名称构建成URI
+	NAME_TO_URI_TYPE_ALLLOWER          = 2      // 仅转为小写，单词间不使用连接符号
+	NAME_TO_URI_TYPE_CAMEL             = 3      // 采用驼峰命名方式
 	gCHANGE_CONFIG_WHILE_RUNNING_ERROR = "server's configuration cannot be changed while running"
 )
 
@@ -38,74 +36,73 @@ type LogHandler func(r *Request, error ...interface{})
 
 // HTTP Server 设置结构体，静态配置
 type ServerConfig struct {
-	Addr               string            // 监听IP和端口，监听本地所有IP使用":端口"(支持多个地址，使用","号分隔)
-	HTTPSAddr          string            // HTTPS服务监听地址(支持多个地址，使用","号分隔)
-	HTTPSCertPath      string            // HTTPS证书文件路径
-	HTTPSKeyPath       string            // HTTPS签名文件路径
-	Handler            http.Handler      // 默认的处理函数
-	ReadTimeout        time.Duration     // 读取超时
-	WriteTimeout       time.Duration     // 写入超时
-	IdleTimeout        time.Duration     // 等待超时
-	MaxHeaderBytes     int               // 最大的header长度
-	TLSConfig          tls.Config        // HTTPS证书配置
-	KeepAlive          bool              // 是否开启长连接
-	ServerAgent        string            // Server Agent
-	View               *gview.View       // 模板引擎对象
-	Rewrites           map[string]string // URI Rewrite重写配置
-	IndexFiles         []string          // Static: 默认访问的文件列表
-	IndexFolder        bool              // Static: 如果访问目录是否显示目录列表
-	ServerRoot         string            // Static: 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
-	SearchPaths        []string          // Static: 静态文件搜索目录(包含ServerRoot，按照优先级进行排序)
-	StaticPaths        []staticPathItem  // Static: 静态文件目录映射(按照优先级进行排序)
-	FileServerEnabled  bool              // Static: 是否允许静态文件服务(通过静态文件服务方法调用自动识别)
-	CookieMaxAge       int64             // Cookie: 有效期(秒)
-	CookiePath         string            // Cookie: 有效Path(注意同时也会影响SessionID)
-	CookieDomain       string            // Cookie: 有效Domain(注意同时也会影响SessionID)
-	SessionMaxAge      int64             // Session: 有效期(秒)
-	SessionIdName      string            // Session: SessionId
-	SessionStoragePath string            // Session: 存储路径
-	DenyIps            []string          // Security: 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
-	AllowIps           []string          // Security: 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
-	DenyRoutes         []string          // Security: 不允许访问的路由规则列表
-	LogPath            string            // Logging: 存放日志的目录路径(默认为空，表示不写文件)
-	LogHandler         LogHandler        // Logging: 日志配置: 自定义日志处理回调方法(默认为空)
-	LogStdout          bool              // Logging: 是否打印日志到终端(默认开启)
-	ErrorLogEnabled    bool              // Logging: 是否开启error log(默认开启)
-	AccessLogEnabled   bool              // Logging: 是否开启access log(默认关闭)
-	NameToUriType      int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
-	GzipContentTypes   []string          // Mess: 允许进行gzip压缩的文件类型
-	DumpRouteMap       bool              // Mess: 是否在程序启动时默认打印路由表信息
-	RouterCacheExpire  int               // Mess: 路由检索缓存过期时间(秒)
+	Addr              string            // 监听IP和端口，监听本地所有IP使用":端口"(支持多个地址，使用","号分隔)
+	HTTPSAddr         string            // HTTPS服务监听地址(支持多个地址，使用","号分隔)
+	HTTPSCertPath     string            // HTTPS证书文件路径
+	HTTPSKeyPath      string            // HTTPS签名文件路径
+	Handler           http.Handler      // 默认的处理函数
+	ReadTimeout       time.Duration     // 读取超时
+	WriteTimeout      time.Duration     // 写入超时
+	IdleTimeout       time.Duration     // 等待超时
+	MaxHeaderBytes    int               // 最大的header长度
+	TLSConfig         tls.Config        // HTTPS证书配置
+	KeepAlive         bool              // 是否开启长连接
+	ServerAgent       string            // Server Agent
+	View              *gview.View       // 模板引擎对象
+	Rewrites          map[string]string // URI Rewrite重写配置
+	IndexFiles        []string          // Static: 默认访问的文件列表
+	IndexFolder       bool              // Static: 如果访问目录是否显示目录列表
+	ServerRoot        string            // Static: 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
+	SearchPaths       []string          // Static: 静态文件搜索目录(包含ServerRoot，按照优先级进行排序)
+	StaticPaths       []staticPathItem  // Static: 静态文件目录映射(按照优先级进行排序)
+	FileServerEnabled bool              // Static: 是否允许静态文件服务(通过静态文件服务方法调用自动识别)
+	CookieMaxAge      time.Duration     // Cookie: 有效期
+	CookiePath        string            // Cookie: 有效Path(注意同时也会影响SessionID)
+	CookieDomain      string            // Cookie: 有效Domain(注意同时也会影响SessionID)
+	SessionMaxAge     time.Duration     // Session: 有效期
+	SessionIdName     string            // Session: SessionId
+	SessionStorage    gsession.Storage  // Session: 存储路径
+	DenyIps           []string          // Security: 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
+	AllowIps          []string          // Security: 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
+	DenyRoutes        []string          // Security: 不允许访问的路由规则列表
+	LogPath           string            // Logging: 存放日志的目录路径(默认为空，表示不写文件)
+	LogHandler        LogHandler        // Logging: 日志配置: 自定义日志处理回调方法(默认为空)
+	LogStdout         bool              // Logging: 是否打印日志到终端(默认开启)
+	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
+	AccessLogEnabled  bool              // Logging: 是否开启access log(默认关闭)
+	NameToUriType     int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
+	GzipContentTypes  []string          // Mess: 允许进行gzip压缩的文件类型
+	DumpRouteMap      bool              // Mess: 是否在程序启动时默认打印路由表信息
+	RouterCacheExpire int               // Mess: 路由检索缓存过期时间(秒)
 }
 
 // 默认HTTP Server配置
 var defaultServerConfig = ServerConfig{
-	Addr:               "",
-	HTTPSAddr:          "",
-	Handler:            nil,
-	ReadTimeout:        60 * time.Second,
-	WriteTimeout:       60 * time.Second,
-	IdleTimeout:        60 * time.Second,
-	MaxHeaderBytes:     1024,
-	KeepAlive:          true,
-	IndexFiles:         []string{"index.html", "index.htm"},
-	IndexFolder:        false,
-	ServerAgent:        "gf http server",
-	ServerRoot:         "",
-	StaticPaths:        make([]staticPathItem, 0),
-	FileServerEnabled:  false,
-	CookieMaxAge:       gDEFAULT_COOKIE_MAX_AGE,
-	CookiePath:         gDEFAULT_COOKIE_PATH,
-	CookieDomain:       "",
-	SessionMaxAge:      gDEFAULT_SESSION_MAX_AGE,
-	SessionIdName:      gDEFAULT_SESSION_ID_NAME,
-	SessionStoragePath: gfile.TempDir() + gfile.Separator + "gfsessions",
-	LogStdout:          true,
-	ErrorLogEnabled:    true,
-	AccessLogEnabled:   false,
-	DumpRouteMap:       true,
-	RouterCacheExpire:  60,
-	Rewrites:           make(map[string]string),
+	Addr:              "",
+	HTTPSAddr:         "",
+	Handler:           nil,
+	ReadTimeout:       60 * time.Second,
+	WriteTimeout:      60 * time.Second,
+	IdleTimeout:       60 * time.Second,
+	MaxHeaderBytes:    1024,
+	KeepAlive:         true,
+	IndexFiles:        []string{"index.html", "index.htm"},
+	IndexFolder:       false,
+	ServerAgent:       "gf http server",
+	ServerRoot:        "",
+	StaticPaths:       make([]staticPathItem, 0),
+	FileServerEnabled: false,
+	CookieMaxAge:      time.Hour * 24 * 365,
+	CookiePath:        "/",
+	CookieDomain:      "",
+	SessionMaxAge:     time.Hour * 24,
+	SessionIdName:     "gfsessionid",
+	LogStdout:         true,
+	ErrorLogEnabled:   true,
+	AccessLogEnabled:  false,
+	DumpRouteMap:      true,
+	RouterCacheExpire: 60,
+	Rewrites:          make(map[string]string),
 }
 
 // 获取默认的http server设置

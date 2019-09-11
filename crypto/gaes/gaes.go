@@ -14,8 +14,10 @@ import (
 	"errors"
 )
 
-const (
-	ivDefValue = "I Love Go Frame!"
+var (
+	// IVDefaultValue is the default value for IV.
+	// This can be changed globally.
+	IVDefaultValue = "I Love Go Frame!"
 )
 
 // Encrypt is alias of EncryptCBC.
@@ -40,7 +42,7 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	if len(iv) > 0 {
 		ivValue = iv[0]
 	} else {
-		ivValue = []byte(ivDefValue)
+		ivValue = []byte(IVDefaultValue)
 	}
 	blockMode := cipher.NewCBCEncrypter(block, ivValue)
 	cipherText := make([]byte, len(plainText))
@@ -63,7 +65,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	if len(iv) > 0 {
 		ivValue = iv[0]
 	} else {
-		ivValue = []byte(ivDefValue)
+		ivValue = []byte(IVDefaultValue)
 	}
 	if len(cipherText)%blockSize != 0 {
 		return nil, errors.New("cipherText is not a multiple of the block size")
@@ -122,7 +124,7 @@ func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byt
 	if len(iv) > 0 {
 		ivValue = iv[0]
 	} else {
-		ivValue = []byte(ivDefValue)
+		ivValue = []byte(IVDefaultValue)
 	}
 	stream := cipher.NewCFBEncrypter(block, ivValue)
 	cipherText := make([]byte, len(plainText))
@@ -144,7 +146,7 @@ func DecryptCFB(cipherText []byte, key []byte, unpadding int, iv ...[]byte) ([]b
 	if len(iv) > 0 {
 		ivValue = iv[0]
 	} else {
-		ivValue = []byte(ivDefValue)
+		ivValue = []byte(IVDefaultValue)
 	}
 	stream := cipher.NewCFBDecrypter(block, ivValue)
 	plainText := make([]byte, len(cipherText))
