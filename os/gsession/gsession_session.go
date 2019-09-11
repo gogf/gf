@@ -129,7 +129,7 @@ func (s *Session) Clear() {
 // UpdateTTL updates the ttl of the session.
 // If this session is dirty, it also exports it to storage.
 func (s *Session) UpdateTTL() {
-	if len(s.id) > 0 && s.data != nil && s.data.Size() > 0 {
+	if len(s.id) > 0 && s.data != nil {
 		if s.manager.storage != nil {
 			if s.dirty.Cas(true, false) {
 				s.data.RLockFunc(func(m map[string]interface{}) {

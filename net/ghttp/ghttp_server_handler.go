@@ -141,6 +141,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	// 设置Session Id到Cookie中
 	if request.Session.Id() != "" && request.GetSessionId() != request.Session.Id() {
+		request.Response.Header().Set(s.GetSessionIdName(), request.Session.Id())
 		request.Cookie.SetSessionId(request.Session.Id())
 	}
 	// 输出Cookie
