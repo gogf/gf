@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gogf/gf/os/gsession"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/os/gtime"
@@ -24,7 +26,7 @@ type Request struct {
 	Id              int                    // 请求ID(当前Server对象唯一)
 	Server          *Server                // 请求关联的服务器对象
 	Cookie          *Cookie                // 与当前请求绑定的Cookie对象(并发安全)
-	Session         *Session               // 与当前请求绑定的Session对象(并发安全)
+	Session         *gsession.Session      // 与当前请求绑定的Session对象(并发安全)
 	Response        *Response              // 对应请求的返回数据操作对象
 	Router          *Router                // 匹配到的路由对象
 	EnterTime       int64                  // 请求进入时间(微秒)
@@ -58,7 +60,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	}
 	// 会话处理
 	request.Cookie = GetCookie(request)
-	request.Session = GetSession(request)
+	request.Session = s.sessionManager.New(request.GetSessionId())
 	request.Response.request = request
 	request.Middleware = &Middleware{
 		request: request,
@@ -239,7 +241,7 @@ func (r *Request) GetSessionId() string {
 
 // 生成随机的SESSIONID
 func (r *Request) MakeSessionId() string {
-	id := makeSessionId()
+	id := gsession.NewSessionId()
 	r.Cookie.SetSessionId(id)
 	r.Response.Header().Set(r.Server.GetSessionIdName(), id)
 	return id

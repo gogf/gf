@@ -7,16 +7,18 @@
 package ghttp
 
 import (
+	"time"
+
 	"github.com/gogf/gf/os/glog"
 )
 
 // 设置http server参数 - CookieMaxAge
-func (s *Server) SetCookieMaxAge(age int64) {
+func (s *Server) SetCookieMaxAge(ttl time.Duration) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	s.config.CookieMaxAge = age
+	s.config.CookieMaxAge = ttl
 }
 
 // 设置http server参数 - CookiePath
@@ -38,7 +40,7 @@ func (s *Server) SetCookieDomain(domain string) {
 }
 
 // 获取http server参数 - CookieMaxAge
-func (s *Server) GetCookieMaxAge() int64 {
+func (s *Server) GetCookieMaxAge() time.Duration {
 	return s.config.CookieMaxAge
 }
 

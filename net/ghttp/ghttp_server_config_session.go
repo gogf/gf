@@ -7,19 +7,20 @@
 package ghttp
 
 import (
-	"fmt"
+	"time"
 
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/gsession"
+
 	"github.com/gogf/gf/os/glog"
 )
 
 // 设置http server参数 - SessionMaxAge
-func (s *Server) SetSessionMaxAge(age int64) {
+func (s *Server) SetSessionMaxAge(ttl time.Duration) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	s.config.SessionMaxAge = age
+	s.config.SessionMaxAge = ttl
 }
 
 // 设置http server参数 - SessionIdName
@@ -31,33 +32,21 @@ func (s *Server) SetSessionIdName(name string) {
 	s.config.SessionIdName = name
 }
 
-// 设置http server参数 - SessionStoragePath
-func (s *Server) SetSessionStoragePath(path string) {
+// 设置http server参数 - SessionStorage
+func (s *Server) SetSessionStorage(storage gsession.Storage) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	realPath, _ := gfile.Search(path)
-	if realPath != "" {
-		glog.Fatal(fmt.Sprintf(`[ghttp] SetSessionStoragePath failed: '%s' does not exist`, path))
-	}
-	s.config.SessionStoragePath = realPath
-	if err := s.sessionStorage.SetPath(realPath); err != nil {
-		glog.Fatal(fmt.Sprintf(`[ghttp] SetSessionStoragePath failed: %s`, err.Error()))
-	}
+	s.config.SessionStorage = storage
 }
 
 // 获取http server参数 - SessionMaxAge
-func (s *Server) GetSessionMaxAge() int64 {
+func (s *Server) GetSessionMaxAge() time.Duration {
 	return s.config.SessionMaxAge
 }
 
 // 获取http server参数 - SessionIdName
 func (s *Server) GetSessionIdName() string {
 	return s.config.SessionIdName
-}
-
-// 获取http server参数 - SessionStoragePath
-func (s *Server) GetSessionStoragePath() string {
-	return s.config.SessionStoragePath
 }
