@@ -50,7 +50,9 @@ func NewStorageFile(ttl time.Duration, path ...string) *StorageFile {
 	if len(path) > 0 && path[0] != "" {
 		storagePath, _ = gfile.Search(path[0])
 		if storagePath == "" {
-			glog.Panicf("'%s' does not exist", path[0])
+			if err := gfile.Mkdir(storagePath); err != nil {
+				glog.Panicf("mkdir '%s' failed: %v", path[0], err)
+			}
 		}
 		if !gfile.IsWritable(storagePath) {
 			glog.Panicf("'%s' is not writable", path[0])

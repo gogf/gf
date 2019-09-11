@@ -16,6 +16,9 @@ func main() {
 	s.BindHandler("/get", func(r *ghttp.Request) {
 		r.Response.WriteJson(r.Session.Map())
 	})
+	s.BindHandler("/clear", func(r *ghttp.Request) {
+		r.Session.Clear()
+	})
 	s.SetPort(8199)
 	s.Run()
 }
