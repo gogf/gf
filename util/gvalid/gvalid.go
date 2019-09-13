@@ -5,8 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gvalid implements powerful and useful data/form validation functionality.
-//
-// 数据/表单校验.
 package gvalid
 
 import (
