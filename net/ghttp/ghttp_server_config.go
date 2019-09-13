@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gogf/gf/util/gconv"
+
 	"github.com/gogf/gf/os/gsession"
 
 	"github.com/gogf/gf/os/gview"
@@ -110,7 +112,14 @@ func Config() ServerConfig {
 	return defaultServerConfig
 }
 
-// http server setting设置
+// 通过Map创建Config配置对象，Map没有传递的属性将会使用模块的默认值
+func ConfigFromMap(m map[string]interface{}) ServerConfig {
+	config := defaultServerConfig
+	gconv.Struct(m, &config)
+	return config
+}
+
+// http server setting设置。
 // 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
 func (s *Server) SetConfig(c ServerConfig) {
 	if s.Status() == SERVER_STATUS_RUNNING {
@@ -125,6 +134,16 @@ func (s *Server) SetConfig(c ServerConfig) {
 	if c.LogPath != "" {
 		s.logger.SetPath(c.LogPath)
 	}
+}
+
+// 通过map设置http server setting。
+// 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
+func (s *Server) SetConfigWithMap(m map[string]interface{}) {
+	if s.Status() == SERVER_STATUS_RUNNING {
+		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+		return
+	}
+	s.SetConfig(ConfigFromMap(m))
 }
 
 // 设置http server参数 - Addr

@@ -140,7 +140,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
 	}
 	// 设置Session Id到Cookie中
-	if request.Session.Id() != "" && request.GetSessionId() != request.Session.Id() {
+	if request.Session.IsDirty() && request.Session.Id() != request.GetSessionId() {
 		request.Cookie.SetSessionId(request.Session.Id())
 	}
 	// 输出Cookie
@@ -151,8 +151,8 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_OUTPUT, request)
 	}
-	// 更新Session会话超时时间
-	request.Session.UpdateTTL()
+	// 关闭当前Session，并更新会话超时时间
+	request.Session.Close()
 }
 
 // 查找静态文件的绝对路径

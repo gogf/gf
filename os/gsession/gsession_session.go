@@ -7,7 +7,6 @@
 package gsession
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/gogf/gf/container/gtype"
@@ -29,7 +28,9 @@ type Session struct {
 // init does the delay initialization for session.
 // It here to initialization real session if necessary.
 func (s *Session) init() {
-	s.dirty = gtype.NewBool(false)
+	if s.dirty == nil {
+		s.dirty = gtype.NewBool(false)
+	}
 	if len(s.id) > 0 && s.data == nil {
 		if data := s.manager.storage.Get(s.id); data != nil {
 			if s.data = gmap.NewStrAnyMapFrom(data, true); s.data == nil {
@@ -44,13 +45,16 @@ func (s *Session) init() {
 	}
 	if len(s.id) == 0 {
 		s.id = NewSessionId()
+	}
+	if s.data == nil {
 		s.data = gmap.NewStrAnyMap(true)
 	}
 }
 
 // Id returns the session id for this session.
-// It might be empty if session is not actually used.
+// It create and returns a new session id if the session id is not passed in initialization.
 func (s *Session) Id() string {
+	s.init()
 	return s.id
 }
 
@@ -95,6 +99,9 @@ func (s *Session) Contains(key string) bool {
 
 // IsDirty checks whether there's any data changes in the session.
 func (s *Session) IsDirty() bool {
+	if s.dirty == nil {
+		return false
+	}
 	return s.dirty.Val()
 }
 
@@ -103,18 +110,6 @@ func (s *Session) Remove(key string) {
 	s.init()
 	s.data.Remove(key)
 	s.dirty.Set(true)
-}
-
-// Restore un-serializes the data and restore the session from it.
-func (s *Session) Restore(data []byte) (err error) {
-	if len(data) == 0 {
-		return nil
-	}
-	s.init()
-	s.data.LockFunc(func(m map[string]interface{}) {
-		err = json.Unmarshal(data, &m)
-	})
-	return
 }
 
 // Clear deletes all key-value pairs from this session.
@@ -126,9 +121,11 @@ func (s *Session) Clear() {
 	}
 }
 
-// UpdateTTL updates the ttl of the session.
+// Close closes current session and updates its ttl in the session manager.
 // If this session is dirty, it also exports it to storage.
-func (s *Session) UpdateTTL() {
+//
+// NOTE that this function must be called ever after a session request done.
+func (s *Session) Close() {
 	if len(s.id) > 0 && s.data != nil {
 		if s.manager.storage != nil {
 			if s.dirty.Cas(true, false) {
@@ -143,7 +140,7 @@ func (s *Session) UpdateTTL() {
 				}
 			}
 		}
-		s.manager.UpdateTTL(s.id, s)
+		s.manager.UpdateSessionTTL(s.id, s)
 	}
 }
 
