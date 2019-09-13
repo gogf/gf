@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
 )
 
 var (
@@ -51,9 +50,8 @@ func MainPkgPath() string {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
-			// <file> is separated by '/'
-			if gstr.Contains(file, "/github.com/gogf/gf/") &&
-				!gstr.Contains(file, "/github.com/gogf/gf/.example/") {
+			if gregex.IsMatchString(`/github.com/[^/]+/gf/`, file) &&
+				!gregex.IsMatchString(`/github.com/[^/]+/gf/\.example/`, file) {
 				continue
 			}
 			if Ext(file) != ".go" {
