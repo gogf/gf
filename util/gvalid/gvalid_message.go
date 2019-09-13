@@ -4,8 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 默认的错误消息定义。
-
 package gvalid
 
 // 默认规则校验错误消息(可以通过接口自定义错误消息)
