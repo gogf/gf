@@ -7,7 +7,6 @@
 package gini_test
 
 import (
-	"fmt"
 	"github.com/gogf/gf/encoding/gini"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/test/gtest"
@@ -39,7 +38,6 @@ func TestDecode(t *testing.T) {
 		if err != nil {
 			gtest.Fatal(err)
 		}
-		fmt.Println(res)
 		gtest.Assert(res["addr"].(map[string]interface{})["ip"], "127.0.0.1")
 		gtest.Assert(res["addr"].(map[string]interface{})["port"], "9001")
 		gtest.Assert(res["DBINFO"].(map[string]interface{})["user"], "root")
@@ -47,6 +45,15 @@ func TestDecode(t *testing.T) {
 		gtest.Assert(res["键"].(map[string]interface{})["呵呵"], "值")
 	})
 
+	gtest.Case(t, func() {
+		errContent := `
+		a = b
+`
+		_, err := gini.Decode([]byte(errContent))
+		if err == nil {
+			gtest.Fatal(err)
+		}
+	})
 }
 
 func TestEncode(t *testing.T) {
