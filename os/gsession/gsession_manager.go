@@ -39,7 +39,7 @@ func (m *Manager) New(sessionId ...string) *Session {
 		id = sessionId[0]
 	}
 	// NOTE:
-	// We CANNOT creates and stores it directory to manager
+	// We CANNOT creates and stores it directly to manager
 	// as it might be a fake and invalid session id
 	// which would consumes your memory as much as possible.
 	return &Session{
@@ -58,8 +58,8 @@ func (m *Manager) TTL() time.Duration {
 	return m.ttl
 }
 
-// UpdateTTL updates the ttl for given session.
+// UpdateSessionTTL updates the ttl for given session.
 // If this session is dirty, it also exports it to storage.
-func (m *Manager) UpdateTTL(id string, session *Session) {
+func (m *Manager) UpdateSessionTTL(id string, session *Session) {
 	m.sessions.Set(id, session, m.ttl)
 }

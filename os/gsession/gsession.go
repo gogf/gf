@@ -15,7 +15,8 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
-// NewSessionId creates and returns a new and unique session id string.
+// NewSessionId creates and returns a new and unique session id string,
+// the length of which is 18 bytes.
 func NewSessionId() string {
 	return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 36) + grand.Str(6))
 }

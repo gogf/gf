@@ -29,13 +29,16 @@ import (
 type StorageFile struct {
 	ttl           time.Duration
 	path          string
+	cryptoKey     []byte
+	cryptoEnabled bool
 	updatingIdSet *gset.StrSet
 }
 
 var (
-	DefaultStorageFilePath         = gfile.Join(gfile.TempDir(), "gsessions")
-	DefaultStorageFileCryptoKey    = []byte("Session storage file crypto key!")
-	DefaultStorageFileLoopInterval = 5 * time.Second
+	DefaultStorageFilePath          = gfile.Join(gfile.TempDir(), "gsessions")
+	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
+	DefaultStorageFileCryptoEnabled = false
+	DefaultStorageFileLoopInterval  = time.Minute
 )
 
 func init() {
@@ -45,6 +48,7 @@ func init() {
 	}
 }
 
+// NewStorageFile creates and returns a file storage object for session.
 func NewStorageFile(ttl time.Duration, path ...string) *StorageFile {
 	storagePath := DefaultStorageFilePath
 	if len(path) > 0 && path[0] != "" {
@@ -64,17 +68,30 @@ func NewStorageFile(ttl time.Duration, path ...string) *StorageFile {
 	s := &StorageFile{
 		ttl:           ttl,
 		path:          storagePath,
+		cryptoKey:     DefaultStorageFileCryptoKey,
+		cryptoEnabled: DefaultStorageFileCryptoEnabled,
 		updatingIdSet: gset.NewStrSet(true),
 	}
 	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
-		s.updatingIdSet.Iterator(func(v string) bool {
-			s.doUpdateTTL(v)
-			return true
-		})
+		for _, id := range s.updatingIdSet.Slice() {
+			s.doUpdateTTL(id)
+		}
 	})
 	return s
 }
 
+// SetCryptoKey sets the crypto key for session storage.
+// The crypto key is used when crypto feature is enabled.
+func (s *StorageFile) SetCryptoKey(key []byte) {
+	s.cryptoKey = key
+}
+
+// SetCryptoEnabled enables/disables the crypto feature for session storage.
+func (s *StorageFile) SetCryptoEnabled(enabled bool) {
+	s.cryptoEnabled = enabled
+}
+
+// sessionFilePath returns the storage file path for given session id.
 func (s *StorageFile) sessionFilePath(id string) string {
 	return gfile.Join(s.path, id)
 }
@@ -84,17 +101,21 @@ func (s *StorageFile) Get(id string) map[string]interface{} {
 	path := s.sessionFilePath(id)
 	data := gfile.GetBytes(path)
 	if len(data) > 8 {
-		timestamp := gbinary.DecodeToInt64(data[:8])
-		if timestamp+int64(s.ttl.Seconds()) < gtime.Second() {
+		timestampMilli := gbinary.DecodeToInt64(data[:8])
+		if timestampMilli+s.ttl.Nanoseconds()/1e6 < gtime.Millisecond() {
 			return nil
 		}
+		var err error
+		content := data[8:]
 		// Decrypt with AES.
-		content, err := gaes.Decrypt(data[8:], DefaultStorageFileCryptoKey)
-		if err != nil {
-			return nil
+		if s.cryptoEnabled {
+			content, err = gaes.Decrypt(data[8:], DefaultStorageFileCryptoKey)
+			if err != nil {
+				return nil
+			}
 		}
 		var m map[string]interface{}
-		if err := json.Unmarshal(content, &m); err != nil {
+		if err = json.Unmarshal(content, &m); err != nil {
 			return nil
 		}
 		return m
@@ -111,15 +132,17 @@ func (s *StorageFile) Set(id string, data map[string]interface{}) error {
 		return err
 	}
 	// Encrypt with AES.
-	content, err = gaes.Encrypt(content, DefaultStorageFileCryptoKey)
-	if err != nil {
-		return err
+	if s.cryptoEnabled {
+		content, err = gaes.Encrypt(content, DefaultStorageFileCryptoKey)
+		if err != nil {
+			return err
+		}
 	}
 	file, err := gfile.OpenWithFlag(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
 		return err
 	}
-	if _, err = file.Write(gbinary.EncodeInt64(gtime.Second())); err != nil {
+	if _, err = file.Write(gbinary.EncodeInt64(gtime.Millisecond())); err != nil {
 		return err
 	}
 	if _, err = file.Write(content); err != nil {
@@ -142,7 +165,7 @@ func (s *StorageFile) doUpdateTTL(id string) error {
 	if err != nil {
 		return err
 	}
-	if _, err = file.Write(gbinary.EncodeInt64(gtime.Second())); err != nil {
+	if _, err = file.WriteAt(gbinary.EncodeInt64(gtime.Millisecond()), 0); err != nil {
 		return err
 	}
 	return file.Close()
