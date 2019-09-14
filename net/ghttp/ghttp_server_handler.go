@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gogf/gf/errors/gerror"
+
 	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/encoding/ghtml"
@@ -70,11 +72,17 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 				request.Response.WriteStatus(http.StatusNotFound)
 			}
 		}
+
 		// error log
-		if e := recover(); e != nil {
-			request.Response.WriteStatus(http.StatusInternalServerError)
-			s.handleErrorLog(e, request)
+		if request.error != nil {
+			s.handleErrorLog(request.error, request)
+		} else {
+			if exception := recover(); exception != nil {
+				request.Response.WriteStatus(http.StatusInternalServerError)
+				s.handleErrorLog(gerror.Newf("%v", exception), request)
+			}
 		}
+
 		// access log
 		s.handleAccessLog(request)
 	}()

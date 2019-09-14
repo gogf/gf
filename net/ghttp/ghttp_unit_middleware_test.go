@@ -8,6 +8,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -407,5 +408,44 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 
 		gtest.Assert(client.GetContent("/"), "acbd")
 		gtest.Assert(client.GetContent("/test/test"), "ac13test42bd")
+	})
+}
+
+func MiddlewareAuth(r *ghttp.Request) {
+	token := r.Get("token")
+	if token == "123456" {
+		r.Middleware.Next()
+	} else {
+		r.Response.WriteStatus(http.StatusForbidden)
+	}
+}
+
+func MiddlewareCORS(r *ghttp.Request) {
+	r.Response.CORSDefault()
+	r.Middleware.Next()
+}
+
+func Test_Middleware_CORSAndAuth(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/api.v2", func(g *ghttp.RouterGroup) {
+		g.Middleware(MiddlewareAuth, MiddlewareCORS)
+		g.ALL("/user/list", func(r *ghttp.Request) {
+			r.Response.Write("list")
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(200 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "Not Found")
+		gtest.Assert(client.GetContent("/api.v2"), "Not Found")
+		gtest.Assert(client.GetContent("/api.v2/user/list"), "Forbidden")
+		gtest.Assert(client.GetContent("/api.v2/user/list", "token=123456"), "list")
 	})
 }

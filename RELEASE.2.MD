@@ -40,6 +40,7 @@
 ## 功能改进
 
 1. `ghttp`
+    - 当`WebServer`产生`panic`异常错误时，默认打印调用链堆栈到错误日志中；
     - `Cookie`及`Session`的`TTL`配置数据类型修改为`time.Duration`;
     - 新增允许同时通过`Header/Cookie`传递`SessionId`；
     - 新增`ConfigFromMap/SetConfigWithMap`方法，支持通过`map`参数设置WebServer；
