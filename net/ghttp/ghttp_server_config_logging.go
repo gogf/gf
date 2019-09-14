@@ -54,6 +54,15 @@ func (s *Server) SetErrorLogEnabled(enabled bool) {
 	s.config.ErrorLogEnabled = enabled
 }
 
+// 设置是否开启error stack打印功能
+func (s *Server) SetErrorStack(enabled bool) {
+	if s.Status() == SERVER_STATUS_RUNNING {
+		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
+		return
+	}
+	s.config.ErrorStack = enabled
+}
+
 // 设置日志写入的回调函数
 func (s *Server) SetLogHandler(handler LogHandler) {
 	if s.Status() == SERVER_STATUS_RUNNING {

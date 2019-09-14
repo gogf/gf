@@ -34,7 +34,7 @@ const (
 )
 
 // 自定义日志处理方法类型
-type LogHandler func(r *Request, error ...interface{})
+type LogHandler func(r *Request, err ...error)
 
 // HTTP Server 设置结构体，静态配置
 type ServerConfig struct {
@@ -70,6 +70,7 @@ type ServerConfig struct {
 	LogPath           string            // Logging: 存放日志的目录路径(默认为空，表示不写文件)
 	LogHandler        LogHandler        // Logging: 日志配置: 自定义日志处理回调方法(默认为空)
 	LogStdout         bool              // Logging: 是否打印日志到终端(默认开启)
+	ErrorStack        bool              // Logging: 当产生错误时打印调用链详细堆栈
 	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
 	AccessLogEnabled  bool              // Logging: 是否开启access log(默认关闭)
 	NameToUriType     int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
@@ -100,6 +101,7 @@ var defaultServerConfig = ServerConfig{
 	SessionMaxAge:     time.Hour * 24,
 	SessionIdName:     "gfsessionid",
 	LogStdout:         true,
+	ErrorStack:        true,
 	ErrorLogEnabled:   true,
 	AccessLogEnabled:  false,
 	DumpRouteMap:      true,

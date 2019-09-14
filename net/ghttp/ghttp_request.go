@@ -40,6 +40,7 @@ type Request struct {
 	parsedPost      bool                   // POST参数是否已经解析
 	queryVars       map[string][]string    // GET参数
 	routerVars      map[string][]string    // 路由解析参数
+	error           error                  // 当前请求执行错误
 	exit            bool                   // 是否退出当前请求流程执行
 	params          map[string]interface{} // 开发者自定义参数(请求流程中有效)
 	parsedHost      string                 // 解析过后不带端口号的服务器域名名称
@@ -92,12 +93,8 @@ func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
 
 // 获取原始请求输入二进制。
 func (r *Request) GetRaw() []byte {
-	err := error(nil)
 	if r.rawContent == nil {
-		r.rawContent, err = ioutil.ReadAll(r.Body)
-		if err != nil {
-			r.Error("error reading request body: ", err)
-		}
+		r.rawContent, _ = ioutil.ReadAll(r.Body)
 	}
 	return r.rawContent
 }

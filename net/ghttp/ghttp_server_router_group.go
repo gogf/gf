@@ -56,6 +56,10 @@ func (s *Server) handlePreBindItems() {
 
 // 获取分组路由对象
 func (s *Server) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
+	// 自动识别并加上/前缀
+	if prefix[0] != '/' {
+		prefix = "/" + prefix
+	}
 	if prefix == "/" {
 		prefix = ""
 	}
