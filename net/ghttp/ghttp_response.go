@@ -47,7 +47,7 @@ func (r *Response) Write(content ...interface{}) {
 	if len(content) == 0 {
 		return
 	}
-	if r.Status == 0 {
+	if r.Status == 0 && r.request.hasServeHandler {
 		r.Status = http.StatusOK
 	}
 	for _, v := range content {
