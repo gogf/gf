@@ -214,7 +214,7 @@ func GetServer(name ...interface{}) *Server {
 	}
 	config := defaultServerConfig
 	if config.SessionStorage == nil {
-		config.SessionStorage = gsession.NewStorageFile(config.SessionMaxAge)
+		config.SessionStorage = gsession.NewStorageFile()
 	}
 	s := &Server{
 		name:             serverName,

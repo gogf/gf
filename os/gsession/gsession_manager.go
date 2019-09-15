@@ -23,7 +23,7 @@ type Manager struct {
 func New(ttl time.Duration, storage ...Storage) *Manager {
 	m := &Manager{
 		ttl:      ttl,
-		storage:  NewStorageFile(ttl),
+		storage:  NewStorageFile(),
 		sessions: gcache.New(),
 	}
 	if len(storage) > 0 && storage[0] != nil {
@@ -51,6 +51,11 @@ func (m *Manager) New(sessionId ...string) *Session {
 // SetStorage sets the session storage for manager.
 func (m *Manager) SetStorage(storage Storage) {
 	m.storage = storage
+}
+
+// SetTTL the TTL for the session manager.
+func (m *Manager) SetTTL(ttl time.Duration) {
+	m.ttl = ttl
 }
 
 // TTL returns the TTL of the session manager.

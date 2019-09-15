@@ -28,7 +28,6 @@ import (
 
 // StorageFile implements the Session Storage interface with file system.
 type StorageFile struct {
-	ttl           time.Duration
 	path          string
 	cryptoKey     []byte
 	cryptoEnabled bool
@@ -51,7 +50,7 @@ func init() {
 }
 
 // NewStorageFile creates and returns a file storage object for session.
-func NewStorageFile(ttl time.Duration, path ...string) *StorageFile {
+func NewStorageFile(path ...string) *StorageFile {
 	storagePath := DefaultStorageFilePath
 	if len(path) > 0 && path[0] != "" {
 		storagePath, _ = gfile.Search(path[0])
@@ -68,7 +67,6 @@ func NewStorageFile(ttl time.Duration, path ...string) *StorageFile {
 		}
 	}
 	s := &StorageFile{
-		ttl:           ttl,
 		path:          storagePath,
 		cryptoKey:     DefaultStorageFileCryptoKey,
 		cryptoEnabled: DefaultStorageFileCryptoEnabled,
@@ -135,12 +133,12 @@ func (s *StorageFile) RemoveAll() error {
 }
 
 // GetSession return the session data for given session id.
-func (s *StorageFile) GetSession(id string) map[string]interface{} {
+func (s *StorageFile) GetSession(id string, ttl time.Duration) map[string]interface{} {
 	path := s.sessionFilePath(id)
 	data := gfile.GetBytes(path)
 	if len(data) > 8 {
 		timestampMilli := gbinary.DecodeToInt64(data[:8])
-		if timestampMilli+s.ttl.Nanoseconds()/1e6 < gtime.Millisecond() {
+		if timestampMilli+ttl.Nanoseconds()/1e6 < gtime.Millisecond() {
 			return nil
 		}
 		var err error
