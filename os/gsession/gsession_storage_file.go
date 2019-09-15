@@ -8,6 +8,7 @@ package gsession
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"time"
 
@@ -39,6 +40,7 @@ var (
 	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
 	DefaultStorageFileCryptoEnabled = false
 	DefaultStorageFileLoopInterval  = time.Minute
+	ErrorDisabled                   = errors.New("this feature is disabled in this storage")
 )
 
 func init() {
@@ -96,8 +98,44 @@ func (s *StorageFile) sessionFilePath(id string) string {
 	return gfile.Join(s.path, id)
 }
 
-// Get return the session data for given session id.
-func (s *StorageFile) Get(id string) map[string]interface{} {
+// Get retrieves session value with given key.
+// It returns nil if the key does not exist in the session.
+func (s *StorageFile) Get(key string) interface{} {
+	return nil
+}
+
+// GetMap retrieves all key-value pairs as map from storage.
+func (s *StorageFile) GetMap() map[string]interface{} {
+	return nil
+}
+
+// GetSize retrieves the size of key-value pairs from storage.
+func (s *StorageFile) GetSize(id string) int {
+	return -1
+}
+
+// Set sets key-value session pair to the storage.
+func (s *StorageFile) Set(key string, value interface{}) error {
+	return ErrorDisabled
+}
+
+// SetMap batch sets key-value session pairs with map to the storage.
+func (s *StorageFile) SetMap(data map[string]interface{}) error {
+	return ErrorDisabled
+}
+
+// Remove deletes key with its value from storage.
+func (s *StorageFile) Remove(key string) error {
+	return ErrorDisabled
+}
+
+// RemoveAll deletes all key-value pairs from storage.
+func (s *StorageFile) RemoveAll() error {
+	return ErrorDisabled
+}
+
+// GetSession return the session data for given session id.
+func (s *StorageFile) GetSession(id string) map[string]interface{} {
 	path := s.sessionFilePath(id)
 	data := gfile.GetBytes(path)
 	if len(data) > 8 {
@@ -123,9 +161,9 @@ func (s *StorageFile) Get(id string) map[string]interface{} {
 	return nil
 }
 
-// Set updates the content for session id.
+// SetSession updates the content for session id.
 // Note that the parameter <content> is the serialized bytes for session map.
-func (s *StorageFile) Set(id string, data map[string]interface{}) error {
+func (s *StorageFile) SetSession(id string, data map[string]interface{}) error {
 	path := s.sessionFilePath(id)
 	content, err := json.Marshal(data)
 	if err != nil {
@@ -151,7 +189,7 @@ func (s *StorageFile) Set(id string, data map[string]interface{}) error {
 	return file.Close()
 }
 
-// UpdateTTL updates the TTL for session id.
+// UpdateTTL updates the TTL for specified session id.
 // It just adds the session id to the async handling queue.
 func (s *StorageFile) UpdateTTL(id string) error {
 	s.updatingIdSet.Add(id)
