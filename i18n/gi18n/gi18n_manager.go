@@ -179,7 +179,7 @@ func (m *Manager) init() {
 				}
 			}
 		}
-	} else {
+	} else if m.options.Path != "" {
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
 			var path string
