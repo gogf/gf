@@ -21,6 +21,7 @@ func (s *Server) SetSessionMaxAge(ttl time.Duration) {
 		return
 	}
 	s.config.SessionMaxAge = ttl
+	s.sessionManager.SetTTL(ttl)
 }
 
 // 设置http server参数 - SessionIdName
@@ -39,6 +40,7 @@ func (s *Server) SetSessionStorage(storage gsession.Storage) {
 		return
 	}
 	s.config.SessionStorage = storage
+	s.sessionManager.SetStorage(storage)
 }
 
 // 获取http server参数 - SessionMaxAge

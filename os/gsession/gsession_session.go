@@ -32,7 +32,7 @@ func (s *Session) init() {
 		s.dirty = gtype.NewBool(false)
 	}
 	if len(s.id) > 0 && s.data == nil {
-		if data := s.manager.storage.GetSession(s.id); data != nil {
+		if data := s.manager.storage.GetSession(s.id, s.manager.ttl); data != nil {
 			if s.data = gmap.NewStrAnyMapFrom(data, true); s.data == nil {
 				panic("session restoring failed for id:" + s.id)
 			}

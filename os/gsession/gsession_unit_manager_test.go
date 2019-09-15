@@ -15,7 +15,7 @@ import (
 
 func Test_Manager_Basic(t *testing.T) {
 	ttl := time.Second
-	storage := NewStorageFile(ttl)
+	storage := NewStorageFile()
 	manager := New(ttl, storage)
 	sessionId := ""
 	gtest.Case(t, func() {

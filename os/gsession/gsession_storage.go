@@ -6,6 +6,8 @@
 
 package gsession
 
+import "time"
+
 type Storage interface {
 	// Get retrieves session value with given key.
 	// It returns nil if the key does not exist in the session.
@@ -26,10 +28,13 @@ type Storage interface {
 	RemoveAll() error
 
 	// GetSession returns the session data bytes for given session id.
-	GetSession(id string) map[string]interface{}
+	// The parameter specifies the TTL for this session.
+	// It returns nil if the TTL is exceeded.
+	GetSession(id string, ttl time.Duration) map[string]interface{}
 	// SetSession updates the content for session id.
 	// Note that the parameter <content> is the serialized bytes for session map.
 	SetSession(id string, data map[string]interface{}) error
+
 	// UpdateTTL updates the TTL for specified session id.
 	UpdateTTL(id string) error
 }
