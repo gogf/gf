@@ -40,13 +40,12 @@
 ## 功能改进
 
 1. `ghttp`
-    - 当`WebServer`产生`panic`异常错误时，默认打印调用链堆栈到错误日志中；
     - `Cookie`及`Session`的`TTL`配置数据类型修改为`time.Duration`;
     - 新增允许同时通过`Header/Cookie`传递`SessionId`；
     - 新增`ConfigFromMap/SetConfigWithMap`方法，支持通过`map`参数设置WebServer；
     - 改进默认的`CORS`配置，增加对常见`Header`参数的默认支持；
     - 新增`IsExitError`方法，用于开发者自定义处理`recover`错误处理时，过滤框架本身自定义的非异常错误；
-    - 新增`SetSessionStorage`方法，用于开发者自定义`Session`存储；
+    - 新增`SetSessionStorage`配置方法，用于开发者自定义`Session`存储；
     - `ghttp.Request`新增更多的参数获取方法；
 1. `gdb`
     - 增加对SQL中部分字段的自动转义(`Quote`)功能；
@@ -54,6 +53,7 @@
     - 增加`SetLogger`方法用于开发者自定义数据库的日志打印；
     - 增加`Master/Slave`方法，开发者可自主选择数据库操作执行的主从节点；
     - 增加对`mssql/pgsql/oracle`的单元测试；
+    - `debug`模式支持完整带参数整合的SQL语句调试打印；
     - 增加了更多的功能方法；
 1. `glog`
     - 新增`Default`方法用于获取默认的`Logger`对象；

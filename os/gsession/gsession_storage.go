@@ -7,11 +7,29 @@
 package gsession
 
 type Storage interface {
-	// Get returns the session data bytes for given session id.
-	Get(id string) map[string]interface{}
-	// Set updates the content for session id.
+	// Get retrieves session value with given key.
+	// It returns nil if the key does not exist in the session.
+	Get(key string) interface{}
+	// GetMap retrieves all key-value pairs as map from storage.
+	GetMap() map[string]interface{}
+	// GetSize retrieves the size of key-value pairs from storage.
+	GetSize(id string) int
+
+	// Set sets key-value session pair to the storage.
+	Set(key string, value interface{}) error
+	// SetMap batch sets key-value session pairs with map to the storage.
+	SetMap(data map[string]interface{}) error
+
+	// Remove deletes key with its value from storage.
+	Remove(key string) error
+	// RemoveAll deletes all key-value pairs from storage.
+	RemoveAll() error
+
+	// GetSession returns the session data bytes for given session id.
+	GetSession(id string) map[string]interface{}
+	// SetSession updates the content for session id.
 	// Note that the parameter <content> is the serialized bytes for session map.
-	Set(id string, data map[string]interface{}) error
-	// UpdateTTL updates the TTL for session id.
+	SetSession(id string, data map[string]interface{}) error
+	// UpdateTTL updates the TTL for specified session id.
 	UpdateTTL(id string) error
 }

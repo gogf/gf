@@ -32,7 +32,7 @@ func (s *Session) init() {
 		s.dirty = gtype.NewBool(false)
 	}
 	if len(s.id) > 0 && s.data == nil {
-		if data := s.manager.storage.Get(s.id); data != nil {
+		if data := s.manager.storage.GetSession(s.id); data != nil {
 			if s.data = gmap.NewStrAnyMapFrom(data, true); s.data == nil {
 				panic("session restoring failed for id:" + s.id)
 			}
@@ -51,6 +51,73 @@ func (s *Session) init() {
 	}
 }
 
+// Set sets key-value pair to this session.
+func (s *Session) Set(key string, value interface{}) error {
+	s.init()
+	if err := s.manager.storage.Set(key, value); err != nil {
+		if err == ErrorDisabled {
+			s.data.Set(key, value)
+		} else {
+			return err
+		}
+	}
+	s.dirty.Set(true)
+	return nil
+}
+
+// Sets batch sets the session using map.
+func (s *Session) Sets(data map[string]interface{}) error {
+	s.init()
+	if err := s.manager.storage.SetMap(data); err != nil {
+		if err == ErrorDisabled {
+			s.data.Sets(data)
+		} else {
+			return err
+		}
+	}
+	s.dirty.Set(true)
+	return nil
+}
+
+// Remove removes key along with its value from this session.
+func (s *Session) Remove(key string) error {
+	if len(s.id) == 0 {
+		return nil
+	}
+	s.init()
+	if err := s.manager.storage.Remove(key); err != nil {
+		if err == ErrorDisabled {
+			s.data.Remove(key)
+		} else {
+			return err
+		}
+	}
+	s.dirty.Set(true)
+	return nil
+}
+
+// Clear is alias of RemoveAll.
+func (s *Session) Clear() error {
+	return s.RemoveAll()
+}
+
+// RemoveAll deletes all key-value pairs from this session.
+func (s *Session) RemoveAll() error {
+	if len(s.id) == 0 {
+		return nil
+	}
+	s.init()
+	if err := s.manager.storage.RemoveAll(); err != nil {
+		if err == ErrorDisabled {
+			s.data.Clear()
+		} else {
+			return err
+		}
+	}
+	s.dirty.Set(true)
+	return nil
+}
+
 // Id returns the session id for this session.
 // It create and returns a new session id if the session id is not passed in initialization.
 func (s *Session) Id() string {
@@ -63,6 +130,9 @@ func (s *Session) Id() string {
 func (s *Session) Map() map[string]interface{} {
 	if len(s.id) > 0 {
 		s.init()
+		if data := s.manager.storage.GetMap(); data != nil {
+			return data
+		}
 		return s.data.Map()
 	}
 	return nil
@@ -72,29 +142,18 @@ func (s *Session) Map() map[string]interface{} {
 func (s *Session) Size() int {
 	if len(s.id) > 0 {
 		s.init()
+		if size := s.manager.storage.GetSize(s.id); size >= 0 {
+			return size
+		}
 		return s.data.Size()
 	}
 	return 0
 }
 
-// Set sets key-value pair to this session.
-func (s *Session) Set(key string, value interface{}) {
-	s.init()
-	s.data.Set(key, value)
-	s.dirty.Set(true)
-}
-
-// Sets batch sets the session using map.
-func (s *Session) Sets(m map[string]interface{}) {
-	s.init()
-	s.data.Sets(m)
-	s.dirty.Set(true)
-}
-
 // Contains checks whether key exist in the session.
 func (s *Session) Contains(key string) bool {
 	s.init()
-	return s.data.Contains(key)
+	return s.Get(key) != nil
 }
 
 // IsDirty checks whether there's any data changes in the session.
@@ -103,22 +162,6 @@ func (s *Session) IsDirty() bool {
 		return false
 	}
 	return s.dirty.Val()
-}
-
-// Remove removes key along with its value from this session.
-func (s *Session) Remove(key string) {
-	s.init()
-	s.data.Remove(key)
-	s.dirty.Set(true)
-}
-
-// Clear deletes all key-value pairs from this session.
-func (s *Session) Clear() {
-	if len(s.id) > 0 {
-		s.init()
-		s.data.Clear()
-		s.dirty.Set(true)
-	}
 }
 
 // Close closes current session and updates its ttl in the session manager.
@@ -130,7 +173,7 @@ func (s *Session) Close() {
 		if s.manager.storage != nil {
 			if s.dirty.Cas(true, false) {
 				s.data.RLockFunc(func(m map[string]interface{}) {
-					if err := s.manager.storage.Set(s.id, m); err != nil {
+					if err := s.manager.storage.SetSession(s.id, m); err != nil {
 						panic(err)
 					}
 				})
@@ -144,12 +187,19 @@ func (s *Session) Close() {
 	}
 }
 
+// Get retrieves session value with given key.
+// It returns <def> if the key does not exist in the session if <def> is given,
+// or else it return nil.
 func (s *Session) Get(key string, def ...interface{}) interface{} {
-	if len(s.id) > 0 {
-		s.init()
-		if v := s.data.Get(key); v != nil {
-			return v
-		}
+	if len(s.id) == 0 {
+		return nil
+	}
+	s.init()
+	if v := s.manager.storage.Get(key); v != nil {
+		return v
+	}
+	if v := s.data.Get(key); v != nil {
+		return v
 	}
 	if len(def) > 0 {
 		return def[0]
