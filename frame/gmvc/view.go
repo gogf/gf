@@ -9,6 +9,8 @@ package gmvc
 import (
 	"sync"
 
+	"github.com/gogf/gf/util/gmode"
+
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gview"
 )
@@ -91,22 +93,28 @@ func (view *View) BindFuncMap(funcMap gview.FuncMap) {
 }
 
 // 解析并显示指定模板
-func (view *View) Display(file ...string) {
+func (view *View) Display(file ...string) error {
 	name := "index.tpl"
 	if len(file) > 0 {
 		name = file[0]
 	}
 	if content, err := view.Parse(name); err != nil {
-		view.response.Write("Tpl Parsing Error: " + err.Error())
+		if gmode.IsDevelop() {
+			view.response.Write("Tpl Parsing Error: " + err.Error())
+		}
+		return err
 	} else {
 		view.response.Write(content)
 	}
+	return nil
 }
 
 // 解析并显示模板内容
 func (view *View) DisplayContent(content string) error {
 	if content, err := view.ParseContent(content); err != nil {
-		view.response.Write("Tpl Parsing Error: " + err.Error())
+		if gmode.IsDevelop() {
+			view.response.Write("Tpl Parsing Error: " + err.Error())
+		}
 		return err
 	} else {
 		view.response.Write(content)
