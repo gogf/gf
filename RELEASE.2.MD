@@ -4,29 +4,15 @@
 
 ## 新特性
 
-1. 增加`gf`命令行开发辅助工具：https://goframe.org/toolchain/cli
-    - 支持`GF`框架下载更新；
-    - 支持初始化新建项目命令；
-    - 支持跨平台交叉编译命令；
-    - 命令行工具支持自动更新命令；
-    - 支持二进制文件打包，生成二进制文件或者Go程序文件；
-    - 支持指定数据库生成数据表模型，支持本地配置文件读取数据库配置；
-1. 新增`gi18n`国际化管理模块：https://goframe.org/i18n/gi18n/index
+1. 新增`gf`命令行开发辅助工具：https://goframe.org/toolchain/cli
 1. 新增`gres`资源管理器模块：https://goframe.org/os/gres/index
-    - 资源管理器支持虚拟的文件/目录操作方法；
-    - 默认整合支持到了WebServer、配置管理、模板引擎中；
-    - 可将任意的文件打包为`Go`内容，支持开发者自定义加解密；
-    - 任意文件如网站静态文件、配置文件等可编译到二进制文件中，也可编译到发布的可执行文件中；
-    - 开发者可只需编译发布一个可执行文件，除了方便了软件分发，也为保护软件知识产权内容提供了可能；
-1. 新增`gini`模块：https://goframe.org/encoding/gini/index
-    - 支持`ini`文件的读取/生成；
-    - 同时配置管理模块也增加了对`ini`文件的支持；
-    - 配置管理模块目前自动识别支持`ini/xml/json/toml/yaml`五种数据格式；
-1. `Session`功能重构，新增`gsession`模块，`WebServer`默认使用文件存储`Session`：https://goframe.org/net/ghttp/session
+1. 重构`Session`功能，新增`gsession`模块，`WebServer`默认使用文件存储`Session`：https://goframe.org/net/ghttp/session
 1. `WebServer`新增中间件特性，并保留原有的HOOK设计，两者都可实现请求拦截、预处理等等特性：https://goframe.org/net/ghttp/router/middleware
+1. 新增`gi18n`国际化管理模块：https://goframe.org/i18n/gi18n/index
+1. 新增`gini`模块：https://goframe.org/encoding/gini/index
 1. `WebServer`新增更便捷的层级路由注册方式：https://goframe.org/net/ghttp/group/level
 1. `gcmd`命令行参数解析模块重构，增加`Parser`解析对象：https://goframe.org/os/gcmd/index
-1. 新增`gdebug`模块，用于堆栈信息获取/打印；
+1. 新增`gdebug`模块，用于堆栈信息获取/打印：https://goframe.org/debug/gdebug/index
 
 
 ## 重大调整
@@ -55,7 +41,7 @@
     - 增加`SetLogger`方法用于开发者自定义数据库的日志打印；
     - 增加`Master/Slave`方法，开发者可自主选择数据库操作执行的主从节点；
     - 增加对`mssql/pgsql/oracle`的单元测试；
-    - `debug`模式支持完整带参数整合的SQL语句调试打印；
+    - 在`debug`模式支持完整带参数整合的SQL语句调试打印；
     - 增加了更多的功能方法；
 1. `glog`
     - 新增`Default`方法用于获取默认的`Logger`对象；
