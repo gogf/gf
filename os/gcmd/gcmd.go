@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	defaultParsedArgs    = make([]string, 0)
-	defaultParsedOptions = make(map[string]string)
+	defaultParsedArgs     = make([]string, 0)
+	defaultParsedOptions  = make(map[string]string)
+	defaultCommandFuncMap = make(map[string]func())
 )
 
 // Custom initialization.
@@ -29,7 +30,7 @@ func doInit() {
 	// Parsing os.Args with default algorithm.
 	// The option should use '=' to separate its name and value in default.
 	for _, arg := range os.Args {
-		array, _ := gregex.MatchString(`^\-{1,2}([\w\?]+)={0,1}(.*)$`, arg)
+		array, _ := gregex.MatchString(`^\-{1,2}([\w\?\.\-]+)={0,1}(.*)$`, arg)
 		if len(array) == 3 {
 			defaultParsedOptions[array[1]] = array[2]
 		} else {

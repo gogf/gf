@@ -1,5 +1,7 @@
 # `v1.9.0`
 
+该版本实际为`v2.0.0`的大版本发布，为避免`go module`机制严格要求`v2`版本以上需要修改`import`并加上`v2`后缀，因此使用了`v1.9.0`进行发布。
+
 ## 新特性
 
 1. 增加`gf`命令行开发辅助工具：https://goframe.org/toolchain/cli
@@ -23,8 +25,8 @@
 1. `Session`功能重构，新增`gsession`模块，`WebServer`默认使用文件存储`Session`：https://goframe.org/net/ghttp/session
 1. `WebServer`新增中间件特性，并保留原有的HOOK设计，两者都可实现请求拦截、预处理等等特性：https://goframe.org/net/ghttp/router/middleware
 1. `WebServer`新增更便捷的层级路由注册方式：https://goframe.org/net/ghttp/group/level
-1. `gcmd`命令行参数解析模块重构，增加`Parser`解析对象；
-1. 新增`gdebug`模块，用于堆栈获取/打印；
+1. `gcmd`命令行参数解析模块重构，增加`Parser`解析对象：https://goframe.org/os/gcmd/index
+1. 新增`gdebug`模块，用于堆栈信息获取/打印；
 
 
 ## 重大调整
