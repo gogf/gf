@@ -16,7 +16,7 @@ import (
 // 展示模板，可以给定模板参数，及临时的自定义模板函数
 func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 	if b, err := r.ParseTpl(tpl, params...); err != nil {
-		if gmode.IsDevelop() {
+		if !gmode.IsProduct() {
 			r.Write("Template Parsing Error: " + err.Error())
 		}
 		return err
@@ -29,7 +29,7 @@ func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 // 展示模板内容，可以给定模板参数，及临时的自定义模板函数
 func (r *Response) WriteTplContent(content string, params ...gview.Params) error {
 	if b, err := r.ParseTplContent(content, params...); err != nil {
-		if gmode.IsDevelop() {
+		if !gmode.IsProduct() {
 			r.Write("Template Parsing Error: " + err.Error())
 		}
 		return err
