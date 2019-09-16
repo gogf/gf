@@ -65,7 +65,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	}
 	// 当配置文件不存在时就不赋值该模板变量，不然会报错
 	if c := gins.Config(); c.FilePath() != "" {
-		vars["Config"] = c.GetMap("")
+		vars["Config"] = c.GetMap(".")
 	}
 	vars["Cookie"] = r.request.Cookie.Map()
 	vars["Session"] = r.request.Session.Map()
