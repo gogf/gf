@@ -447,7 +447,10 @@ func Split(str, delimiter string) []string {
 func SplitAndTrim(str, delimiter, cut string) []string {
 	array := strings.Split(str, delimiter)
 	for k, v := range array {
-		array[k] = strings.Trim(v, cut)
+		v = strings.Trim(v, cut)
+		if v != "" {
+			array[k] = strings.Trim(v, cut)
+		}
 	}
 	return array
 }
@@ -457,7 +460,10 @@ func SplitAndTrim(str, delimiter, cut string) []string {
 func SplitAndTrimSpace(str, delimiter string) []string {
 	array := strings.Split(str, delimiter)
 	for k, v := range array {
-		array[k] = strings.TrimSpace(v)
+		v = strings.TrimSpace(v)
+		if v != "" {
+			array[k] = v
+		}
 	}
 	return array
 }
