@@ -99,7 +99,7 @@ func (view *View) Display(file ...string) error {
 		name = file[0]
 	}
 	if content, err := view.Parse(name); err != nil {
-		if gmode.IsDevelop() {
+		if !gmode.IsProduct() {
 			view.response.Write("Tpl Parsing Error: " + err.Error())
 		}
 		return err
@@ -112,7 +112,7 @@ func (view *View) Display(file ...string) error {
 // 解析并显示模板内容
 func (view *View) DisplayContent(content string) error {
 	if content, err := view.ParseContent(content); err != nil {
-		if gmode.IsDevelop() {
+		if !gmode.IsProduct() {
 			view.response.Write("Tpl Parsing Error: " + err.Error())
 		}
 		return err
