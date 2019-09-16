@@ -10,24 +10,33 @@ package ghttp
 import (
 	"github.com/gogf/gf/frame/gins"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gmode"
 )
 
 // 展示模板，可以给定模板参数，及临时的自定义模板函数
-func (r *Response) WriteTpl(tpl string, params ...gview.Params) {
+func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 	if b, err := r.ParseTpl(tpl, params...); err != nil {
-		r.Write("Template Parsing Error: " + err.Error())
+		if gmode.IsDevelop() {
+			r.Write("Template Parsing Error: " + err.Error())
+		}
+		return err
 	} else {
 		r.Write(b)
 	}
+	return nil
 }
 
 // 展示模板内容，可以给定模板参数，及临时的自定义模板函数
-func (r *Response) WriteTplContent(content string, params ...gview.Params) {
+func (r *Response) WriteTplContent(content string, params ...gview.Params) error {
 	if b, err := r.ParseTplContent(content, params...); err != nil {
-		r.Write("Template Parsing Error: " + err.Error())
+		if gmode.IsDevelop() {
+			r.Write("Template Parsing Error: " + err.Error())
+		}
+		return err
 	} else {
 		r.Write(b)
 	}
+	return nil
 }
 
 // 解析模板文件，并返回模板内容
