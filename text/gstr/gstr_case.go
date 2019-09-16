@@ -90,7 +90,7 @@ func DelimitedScreamingCase(s string, del uint8, screaming bool) string {
 			} else if v >= 'a' && v <= 'z' {
 				n += string(v) + string(del)
 			}
-		} else if v == ' ' || v == '_' || v == '-' {
+		} else if v == ' ' || v == '_' || v == '-' || v == '.' {
 			// replace spaces/underscores with delimiters
 			n += string(del)
 		} else {
@@ -132,7 +132,7 @@ func toCamelInitCase(s string, initCase bool) string {
 				n += string(v)
 			}
 		}
-		if v == '_' || v == ' ' || v == '-' {
+		if v == '_' || v == ' ' || v == '-' || v == '.' {
 			capNext = true
 		} else {
 			capNext = false

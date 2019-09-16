@@ -20,6 +20,7 @@ func Test_CamelCase(t *testing.T) {
 		{"test", "Test"},
 		{"TestCase", "TestCase"},
 		{" test  case ", "TestCase"},
+		{"userLogin_log.bak", "UserLoginLogBak"},
 		{"", ""},
 		{"many_many_words", "ManyManyWords"},
 		{"AnyKind of_string", "AnyKindOfString"},

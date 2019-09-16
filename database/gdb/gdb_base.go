@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	wordReg         = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+	wordReg         = regexp.MustCompile(`^[a-zA-Z0-9\-_\.]+$`)
 	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
