@@ -10,12 +10,15 @@ package ghttp
 import (
 	"github.com/gogf/gf/frame/gins"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gmode"
 )
 
 // 展示模板，可以给定模板参数，及临时的自定义模板函数
 func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 	if b, err := r.ParseTpl(tpl, params...); err != nil {
-		r.Write("Template Parsing Error: " + err.Error())
+		if !gmode.IsProduct() {
+			r.Write("Template Parsing Error: " + err.Error())
+		}
 		return err
 	} else {
 		r.Write(b)
@@ -26,7 +29,9 @@ func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 // 展示模板内容，可以给定模板参数，及临时的自定义模板函数
 func (r *Response) WriteTplContent(content string, params ...gview.Params) error {
 	if b, err := r.ParseTplContent(content, params...); err != nil {
-		r.Write("Template Parsing Error: " + err.Error())
+		if !gmode.IsProduct() {
+			r.Write("Template Parsing Error: " + err.Error())
+		}
 		return err
 	} else {
 		r.Write(b)
@@ -60,7 +65,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	}
 	// 当配置文件不存在时就不赋值该模板变量，不然会报错
 	if c := gins.Config(); c.FilePath() != "" {
-		vars["Config"] = c.GetMap("")
+		vars["Config"] = c.GetMap(".")
 	}
 	vars["Cookie"] = r.request.Cookie.Map()
 	vars["Session"] = r.request.Session.Map()

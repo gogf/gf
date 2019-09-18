@@ -17,9 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgraph-io/badger/options"
-
-	"github.com/gogf/gf/database/gkvdb"
+	"github.com/gogf/gf/os/gsession"
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
@@ -49,8 +47,7 @@ type (
 		serveCache       *gcache.Cache                    // 服务注册路由内存缓存
 		routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
 		statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
-		sessions         *gcache.Cache                    // Session内存存储
-		sessionStorage   *gkvdb.DB                        // Session物理存储
+		sessionManager   *gsession.Manager                // Session管理器
 		logger           *glog.Logger                     // 日志管理对象
 	}
 
@@ -215,11 +212,9 @@ func GetServer(name ...interface{}) *Server {
 	if s := serverMapping.Get(serverName); s != nil {
 		return s.(*Server)
 	}
-	storagePath := defaultServerConfig.SessionStoragePath + gfile.Separator + serverName
-	sessionStorage := gkvdb.Instance(storagePath)
-	sessionStorage.SetOptions(gkvdb.DefaultOptions(storagePath))
-	if genv.Contains("UNDER_TEST") {
-		sessionStorage.Options().ValueLogLoadingMode = options.FileIO
+	config := defaultServerConfig
+	if config.SessionStorage == nil {
+		config.SessionStorage = gsession.NewStorageFile()
 	}
 	s := &Server{
 		name:             serverName,
@@ -230,13 +225,12 @@ func GetServer(name ...interface{}) *Server {
 		serveTree:        make(map[string]interface{}),
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
-		sessions:         gcache.New(),
-		sessionStorage:   sessionStorage,
+		sessionManager:   gsession.New(config.SessionMaxAge, config.SessionStorage),
 		servedCount:      gtype.NewInt(),
 		logger:           glog.New(),
 	}
 	// 初始化时使用默认配置
-	s.SetConfig(defaultServerConfig)
+	s.SetConfig(config)
 	// 记录到全局ServerMap中
 	serverMapping.Set(serverName, s)
 	return s
@@ -297,10 +291,7 @@ func (s *Server) Start() error {
 // 打印展示路由表
 func (s *Server) DumpRoutesMap() {
 	if s.config.DumpRouteMap && len(s.routesMap) > 0 {
-		// (等待一定时间后)当所有框架初始化信息打印完毕之后才打印路由表信息
-		gtimer.SetTimeout(100*time.Millisecond, func() {
-			glog.Header(false).Println(fmt.Sprintf("\n%s", s.GetRouteMap()))
-		})
+		glog.Header(false).Println(fmt.Sprintf("\n%s", s.GetRouteMap()))
 	}
 }
 

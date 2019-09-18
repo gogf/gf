@@ -6,7 +6,14 @@
 
 package ghttp
 
-import "reflect"
+import (
+	"net/http"
+	"reflect"
+
+	"github.com/gogf/gf/errors/gerror"
+
+	"github.com/gogf/gf/util/gutil"
+)
 
 // 中间件对象
 type Middleware struct {
@@ -17,7 +24,8 @@ type Middleware struct {
 // 执行下一个请求流程处理函数
 func (m *Middleware) Next() {
 	item := (*handlerParsedItem)(nil)
-	for {
+	loop := true
+	for loop {
 		// 是否停止请求执行
 		if m.request.IsExited() || m.request.handlerIndex >= len(m.request.handlers) {
 			return
@@ -34,49 +42,69 @@ func (m *Middleware) Next() {
 		}
 		m.request.Router = item.handler.router
 		// 执行函数处理
-		switch item.handler.itemType {
-		case gHANDLER_TYPE_CONTROLLER:
-			m.served = true
-			c := reflect.New(item.handler.ctrlInfo.reflect)
-			niceCallFunc(func() {
-				c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(m.request)})
-			})
-			if !m.request.IsExited() {
+		gutil.TryCatch(func() {
+			switch item.handler.itemType {
+			case gHANDLER_TYPE_CONTROLLER:
+				m.served = true
+				if m.request.IsExited() {
+					break
+				}
+				c := reflect.New(item.handler.ctrlInfo.reflect)
 				niceCallFunc(func() {
-					c.MethodByName(item.handler.ctrlInfo.name).Call(nil)
+					c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(m.request)})
 				})
-			}
-			if !m.request.IsExited() {
-				niceCallFunc(func() {
-					c.MethodByName("Shut").Call(nil)
-				})
-			}
-		case gHANDLER_TYPE_OBJECT:
-			m.served = true
-			if item.handler.initFunc != nil {
-				niceCallFunc(func() {
-					item.handler.initFunc(m.request)
-				})
-			}
-			if !m.request.IsExited() {
+				if !m.request.IsExited() {
+					niceCallFunc(func() {
+						c.MethodByName(item.handler.ctrlInfo.name).Call(nil)
+					})
+				}
+				if !m.request.IsExited() {
+					niceCallFunc(func() {
+						c.MethodByName("Shut").Call(nil)
+					})
+				}
+
+			case gHANDLER_TYPE_OBJECT:
+				m.served = true
+				if m.request.IsExited() {
+					break
+				}
+				if item.handler.initFunc != nil {
+					niceCallFunc(func() {
+						item.handler.initFunc(m.request)
+					})
+				}
+				if !m.request.IsExited() {
+					niceCallFunc(func() {
+						item.handler.itemFunc(m.request)
+					})
+				}
+				if !m.request.IsExited() && item.handler.shutFunc != nil {
+					niceCallFunc(func() {
+						item.handler.shutFunc(m.request)
+					})
+				}
+
+			case gHANDLER_TYPE_HANDLER:
+				m.served = true
+				if m.request.IsExited() {
+					break
+				}
 				niceCallFunc(func() {
 					item.handler.itemFunc(m.request)
 				})
-			}
-			if !m.request.IsExited() && item.handler.shutFunc != nil {
+
+			case gHANDLER_TYPE_MIDDLEWARE:
 				niceCallFunc(func() {
-					item.handler.shutFunc(m.request)
+					item.handler.itemFunc(m.request)
 				})
+				// 中间件默认不会进一步执行，
+				// 需要内部调用Next方法决定是否进一步执行，以便于请求流程控制。
+				loop = false
 			}
-		case gHANDLER_TYPE_HANDLER:
-			m.served = true
-			niceCallFunc(func() {
-				item.handler.itemFunc(m.request)
-			})
-		case gHANDLER_TYPE_MIDDLEWARE:
-			niceCallFunc(func() {
-				item.handler.itemFunc(m.request)
-			})
-		}
+		}, func(exception interface{}) {
+			m.request.error = gerror.Newf("%v", exception)
+			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
+		})
 	}
 }

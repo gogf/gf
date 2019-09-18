@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gogf/gf/os/gsession"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/os/gtime"
@@ -24,7 +26,7 @@ type Request struct {
 	Id              int                    // 请求ID(当前Server对象唯一)
 	Server          *Server                // 请求关联的服务器对象
 	Cookie          *Cookie                // 与当前请求绑定的Cookie对象(并发安全)
-	Session         *Session               // 与当前请求绑定的Session对象(并发安全)
+	Session         *gsession.Session      // 与当前请求绑定的Session对象(并发安全)
 	Response        *Response              // 对应请求的返回数据操作对象
 	Router          *Router                // 匹配到的路由对象
 	EnterTime       int64                  // 请求进入时间(微秒)
@@ -38,6 +40,7 @@ type Request struct {
 	parsedPost      bool                   // POST参数是否已经解析
 	queryVars       map[string][]string    // GET参数
 	routerVars      map[string][]string    // 路由解析参数
+	error           error                  // 当前请求执行错误
 	exit            bool                   // 是否退出当前请求流程执行
 	params          map[string]interface{} // 开发者自定义参数(请求流程中有效)
 	parsedHost      string                 // 解析过后不带端口号的服务器域名名称
@@ -58,7 +61,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	}
 	// 会话处理
 	request.Cookie = GetCookie(request)
-	request.Session = GetSession(request)
+	request.Session = s.sessionManager.New(request.GetSessionId())
 	request.Response.request = request
 	request.Middleware = &Middleware{
 		request: request,
@@ -90,12 +93,8 @@ func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
 
 // 获取原始请求输入二进制。
 func (r *Request) GetRaw() []byte {
-	err := error(nil)
 	if r.rawContent == nil {
-		r.rawContent, err = ioutil.ReadAll(r.Body)
-		if err != nil {
-			r.Error("error reading request body: ", err)
-		}
+		r.rawContent, _ = ioutil.ReadAll(r.Body)
 	}
 	return r.rawContent
 }
@@ -239,7 +238,7 @@ func (r *Request) GetSessionId() string {
 
 // 生成随机的SESSIONID
 func (r *Request) MakeSessionId() string {
-	id := makeSessionId()
+	id := gsession.NewSessionId()
 	r.Cookie.SetSessionId(id)
 	r.Response.Header().Set(r.Server.GetSessionIdName(), id)
 	return id

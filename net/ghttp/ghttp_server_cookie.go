@@ -21,7 +21,7 @@ type Cookie struct {
 	data     map[string]CookieItem // 数据项
 	path     string                // 默认的cookie path
 	domain   string                // 默认的cookie domain
-	maxage   int64                 // 默认的cookie maxage
+	maxage   time.Duration         // 默认的cookie maxage
 	server   *Server               // 所属Server
 	request  *Request              // 所属HTTP请求对象
 	response *Response             // 所属HTTP返回对象
@@ -32,7 +32,7 @@ type CookieItem struct {
 	value    string
 	domain   string // 有效域名
 	path     string // 有效路径
-	expire   int64  // 过期时间
+	expireAt int64  // 过期时间
 	httpOnly bool
 }
 
@@ -81,7 +81,7 @@ func (c *Cookie) Map() map[string]string {
 func (c *Cookie) Contains(key string) bool {
 	c.init()
 	if r, ok := c.data[key]; ok {
-		if r.expire >= 0 {
+		if r.expireAt >= 0 {
 			return true
 		}
 	}
@@ -94,14 +94,14 @@ func (c *Cookie) Set(key, value string) {
 }
 
 // 设置cookie，带详细cookie参数
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int64, httpOnly ...bool) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
 	c.init()
 	isHttpOnly := false
 	if len(httpOnly) > 0 {
 		isHttpOnly = httpOnly[0]
 	}
 	c.data[key] = CookieItem{
-		value, domain, path, gtime.Second() + maxAge, isHttpOnly,
+		value, domain, path, gtime.Second() + int64(maxAge.Seconds()), isHttpOnly,
 	}
 }
 
@@ -110,7 +110,7 @@ func (c *Cookie) GetSessionId() string {
 	return c.Get(c.server.GetSessionIdName())
 }
 
-// 设置SessionId
+// 设置SessionId到Cookie中
 func (c *Cookie) SetSessionId(id string) {
 	c.Set(c.server.GetSessionIdName(), id)
 }
@@ -119,7 +119,7 @@ func (c *Cookie) SetSessionId(id string) {
 func (c *Cookie) Get(key string, def ...string) string {
 	c.init()
 	if r, ok := c.data[key]; ok {
-		if r.expire >= 0 {
+		if r.expireAt >= 0 {
 			return r.value
 		}
 	}
@@ -147,7 +147,7 @@ func (c *Cookie) Output() {
 	}
 	for k, v := range c.data {
 		// 只有 expire != 0 的才是服务端在本次请求中设置的cookie
-		if v.expire == 0 {
+		if v.expireAt == 0 {
 			continue
 		}
 		http.SetCookie(
@@ -157,7 +157,7 @@ func (c *Cookie) Output() {
 				Value:    v.value,
 				Domain:   v.domain,
 				Path:     v.path,
-				Expires:  time.Unix(int64(v.expire), 0),
+				Expires:  time.Unix(v.expireAt, 0),
 				HttpOnly: v.httpOnly,
 			},
 		)

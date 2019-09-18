@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gogf/gf/errors/gerror"
+
 	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/encoding/ghtml"
@@ -70,11 +72,17 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 				request.Response.WriteStatus(http.StatusNotFound)
 			}
 		}
+
 		// error log
-		if e := recover(); e != nil {
-			request.Response.WriteStatus(http.StatusInternalServerError)
-			s.handleErrorLog(e, request)
+		if request.error != nil {
+			s.handleErrorLog(request.error, request)
+		} else {
+			if exception := recover(); exception != nil {
+				request.Response.WriteStatus(http.StatusInternalServerError)
+				s.handleErrorLog(gerror.Newf("%v", exception), request)
+			}
 		}
+
 		// access log
 		s.handleAccessLog(request)
 	}()
@@ -139,6 +147,10 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
 	}
+	// 设置Session Id到Cookie中
+	if request.Session.IsDirty() && request.Session.Id() != request.GetSessionId() {
+		request.Cookie.SetSessionId(request.Session.Id())
+	}
 	// 输出Cookie
 	request.Cookie.Output()
 	// 输出缓冲区
@@ -147,8 +159,8 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_OUTPUT, request)
 	}
-	// 更新Session会话超时时间
-	request.Session.UpdateExpire()
+	// 关闭当前Session，并更新会话超时时间
+	request.Session.Close()
 }
 
 // 查找静态文件的绝对路径

@@ -87,14 +87,16 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 
 // 将map的数据按照fields进行过滤，只保留与表字段同名的数据
 func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
+	// Must use data copy avoiding change the origin data map.
+	newDataMap := make(map[string]interface{}, len(data))
 	if fields, err := bs.db.TableFields(table); err == nil {
-		for k, _ := range data {
-			if _, ok := fields[k]; !ok {
-				delete(data, k)
+		for k, v := range data {
+			if _, ok := fields[k]; ok {
+				newDataMap[k] = v
 			}
 		}
 	}
-	return data
+	return newDataMap
 }
 
 // 返回当前数据库所有的数据表名称

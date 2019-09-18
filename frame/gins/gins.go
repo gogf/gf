@@ -9,24 +9,17 @@ package gins
 
 import (
 	"fmt"
-	"strings"
-	"time"
-
-	"github.com/gogf/gf/os/gfile"
-
-	"github.com/gogf/gf/database/gkvdb"
-
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -103,43 +96,49 @@ func Database(name ...string) gdb.DB {
 	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
 	db := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
-		if gdb.GetConfig(group) == nil {
-			m := config.GetMap("database")
-			if m == nil {
-				glog.Error(`database init failed: "database" node not found, is config file or configuration missing?`)
-				return nil
+		if gdb.GetConfig(group) != nil {
+			db, err := gdb.Instance(group)
+			if err != nil {
+				glog.Error(err)
 			}
-			// Parse <m> as map-slice.
-			for group, groupConfig := range m {
-				cg := gdb.ConfigGroup{}
-				switch value := groupConfig.(type) {
-				case []interface{}:
-					for _, v := range value {
-						if node := parseDBConfigNode(v); node != nil {
-							cg = append(cg, *node)
-						}
-					}
-				case map[string]interface{}:
-					if node := parseDBConfigNode(value); node != nil {
+			return db
+		}
+		m := config.GetMap("database")
+		if m == nil {
+			glog.Error(`database init failed: "database" node not found, is config file or configuration missing?`)
+			return nil
+		}
+		// Parse <m> as map-slice.
+		for group, groupConfig := range m {
+			cg := gdb.ConfigGroup{}
+			switch value := groupConfig.(type) {
+			case []interface{}:
+				for _, v := range value {
+					if node := parseDBConfigNode(v); node != nil {
 						cg = append(cg, *node)
 					}
 				}
-				if len(cg) > 0 {
-					gdb.SetConfigGroup(group, cg)
-				}
-			}
-			// Parse <m> as a single node configuration.
-			if node := parseDBConfigNode(m); node != nil {
-				cg := gdb.ConfigGroup{}
-				if node.LinkInfo != "" || node.Host != "" {
+			case map[string]interface{}:
+				if node := parseDBConfigNode(value); node != nil {
 					cg = append(cg, *node)
 				}
-				if len(cg) > 0 {
-					gdb.SetConfigGroup(group, cg)
-				}
 			}
-			addConfigMonitor(instanceKey, config)
+			if len(cg) > 0 {
+				gdb.SetConfigGroup(group, cg)
+			}
 		}
+		// Parse <m> as a single node configuration.
+		if node := parseDBConfigNode(m); node != nil {
+			cg := gdb.ConfigGroup{}
+			if node.LinkInfo != "" || node.Host != "" {
+				cg = append(cg, *node)
+			}
+			if len(cg) > 0 {
+				gdb.SetConfigGroup(group, cg)
+			}
+		}
+		addConfigMonitor(instanceKey, config)
+
 		if db, err := gdb.New(name...); err == nil {
 			return db
 		} else {
@@ -246,46 +245,20 @@ func Redis(name ...string) *gredis.Redis {
 	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
 	result := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+		// If already configured, it returns the redis instance.
+		if _, ok := gredis.GetConfig(group); ok {
+			return gredis.Instance(group)
+		}
+		// Or else, it parses the default configuration file and returns a new redis instance.
 		if m := config.GetMap("redis"); m != nil {
-			// host:port[,db,pass?maxIdle=x&maxActive=x&idleTimeout=x&maxConnLifetime=x]
 			if v, ok := m[group]; ok {
-				line := gconv.String(v)
-				array, _ := gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)\?(.+)`, line)
-				if len(array) == 6 {
-					parse, _ := gstr.Parse(array[5])
-					redisConfig := gredis.Config{
-						Host: array[1],
-						Port: gconv.Int(array[2]),
-						Db:   gconv.Int(array[3]),
-						Pass: array[4],
-					}
-					if v, ok := parse["maxIdle"]; ok {
-						redisConfig.MaxIdle = gconv.Int(v)
-					}
-					if v, ok := parse["maxActive"]; ok {
-						redisConfig.MaxActive = gconv.Int(v)
-					}
-					if v, ok := parse["idleTimeout"]; ok {
-						redisConfig.IdleTimeout = gconv.Duration(v) * time.Second
-					}
-					if v, ok := parse["maxConnLifetime"]; ok {
-						redisConfig.MaxConnLifetime = gconv.Duration(v) * time.Second
-					}
-					addConfigMonitor(instanceKey, config)
-					return gredis.New(redisConfig)
+				redisConfig, err := gredis.ConfigFromStr(gconv.String(v))
+				if err != nil {
+					glog.Error(err)
+					return nil
 				}
-				array, _ = gregex.MatchString(`(.+):(\d+),{0,1}(\d*),{0,1}(.*)`, line)
-				if len(array) == 5 {
-					addConfigMonitor(instanceKey, config)
-					return gredis.New(gredis.Config{
-						Host: array[1],
-						Port: gconv.Int(array[2]),
-						Db:   gconv.Int(array[3]),
-						Pass: array[4],
-					})
-				} else {
-					glog.Errorf(`invalid redis node configuration: "%s"`, line)
-				}
+				addConfigMonitor(instanceKey, config)
+				return gredis.New(redisConfig)
 			} else {
 				glog.Errorf(`configuration for redis not found for group "%s"`, group)
 			}
@@ -296,68 +269,6 @@ func Redis(name ...string) *gredis.Redis {
 	})
 	if result != nil {
 		return result.(*gredis.Redis)
-	}
-	return nil
-}
-
-func RedisCluster(config *gcfg.Config, group string) *gredis.Redis {
-	if gredis.FlagBanCluster {
-		return nil
-	}
-	key := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
-	result := instances.GetOrSetFuncLock(key, func() interface{} {
-		if m := config.GetMap("rediscluster"); m != nil {
-			// host1:port1,host2:port2
-			if v, ok := m[group]; ok {
-				lines := gconv.Map(v)
-				hosts := strings.Split(gconv.String(lines["host"]), ",")
-				return gredis.NewClusterClient(&gredis.ClusterOption{
-					Nodes: hosts,
-					Pwd:   gconv.String(lines["pwd"]),
-				})
-
-			} else {
-				glog.Errorf(`configuration for redis not found for group "%s"`, group)
-			}
-		} else {
-			glog.Errorf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath())
-		}
-		return nil
-	})
-	if result != nil {
-		return result.(*gredis.Redis)
-	}
-	return nil
-}
-
-// KV returns an instance of gkvdb with specified configuration group name.
-func KV(name ...string) *gkvdb.DB {
-	config := Config()
-	group := "default"
-	if len(name) > 0 && name[0] != "" {
-		group = name[0]
-	}
-	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_GKVDB, group)
-	result := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
-		key := fmt.Sprintf("kvdb.%s", group)
-		if s := config.GetString(key); s != "" {
-			db := gkvdb.Instance(group)
-			parse, _ := gstr.Parse(s)
-			if value, ok := parse["path"]; ok {
-				db.SetPath(gconv.String(value))
-			}
-			if value, ok := parse["sync"]; ok {
-				db.Options().SyncWrites = gconv.Bool(value)
-			}
-			addConfigMonitor(instanceKey, config)
-			return db
-		} else {
-			glog.Errorf(`incomplete configuration for gkvdb: "%s" node not found in config file "%s"`, key, config.FilePath())
-		}
-		return nil
-	})
-	if result != nil {
-		return result.(*gkvdb.DB)
 	}
 	return nil
 }
