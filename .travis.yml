@@ -42,8 +42,7 @@ before_script:
 - psql -c 'create database travis_ci_test;' -U postgres
 
 script:
-- docker run --rm -it -d -p 7000-7005:7000-7005 --net=host areyouok/redis-cluster
-- sleep 10
+- docker run --rm -it -d -p 7001-7006:7001-7006 --net=host areyouok/redis-cluster
 - GOARCH=386 go test -v ./... || exit 1
 - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
