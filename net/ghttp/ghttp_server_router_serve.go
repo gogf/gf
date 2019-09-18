@@ -113,14 +113,10 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 						// 如果需要query匹配，那么需要重新正则解析URL
 						if len(item.router.RegNames) > 0 {
 							if len(match) > len(item.router.RegNames) {
-								parsedItem.values = make(map[string][]string)
-								// 如果存在存在同名路由参数名称，那么执行数组追加
+								parsedItem.values = make(map[string]string)
+								// 如果存在存在同名路由参数名称，那么执行覆盖
 								for i, name := range item.router.RegNames {
-									if _, ok := parsedItem.values[name]; ok {
-										parsedItem.values[name] = append(parsedItem.values[name], match[i+1])
-									} else {
-										parsedItem.values[name] = []string{match[i+1]}
-									}
+									parsedItem.values[name] = match[i+1]
 								}
 							}
 						}

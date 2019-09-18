@@ -17,14 +17,17 @@ func (r *Request) SetParam(key string, value interface{}) {
 }
 
 // 获取请求流程共享变量
-func (r *Request) GetParam(key string, def ...interface{}) *gvar.Var {
+func (r *Request) GetParam(key string, def ...interface{}) interface{} {
 	if r.params != nil {
-		if v, ok := r.params[key]; ok {
-			return gvar.New(v)
-		}
+		return r.params[key]
 	}
 	if len(def) > 0 {
-		return gvar.New(def[0])
+		return def[0]
 	}
-	return gvar.New(nil)
+	return nil
+}
+
+// 获取请求流程共享变量
+func (r *Request) GetParamVar(key string, def ...interface{}) *gvar.Var {
+	return gvar.New(r.GetParam(key, def...))
 }

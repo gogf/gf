@@ -20,14 +20,13 @@ func Test_Cookie(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Cookie.Set(r.Get("k"), r.Get("v"))
+		r.Cookie.Set(r.GetString("k"), r.GetString("v"))
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		//fmt.Println(r.Cookie.Map())
-		r.Response.Write(r.Cookie.Get(r.Get("k")))
+		r.Response.Write(r.Cookie.Get(r.GetString("k")))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Cookie.Remove(r.Get("k"))
+		r.Cookie.Remove(r.GetString("k"))
 	})
 	s.SetPort(p)
 	s.SetDumpRouteMap(false)

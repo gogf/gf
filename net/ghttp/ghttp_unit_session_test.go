@@ -20,13 +20,13 @@ func Test_Session_Cookie(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Session.Set(r.Get("k"), r.Get("v"))
+		r.Session.Set(r.GetString("k"), r.GetString("v"))
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Session.Get(r.Get("k")))
+		r.Response.Write(r.Session.Get(r.GetString("k")))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Session.Remove(r.Get("k"))
+		r.Session.Remove(r.GetString("k"))
 	})
 	s.BindHandler("/clear", func(r *ghttp.Request) {
 		r.Session.Clear()
@@ -68,13 +68,13 @@ func Test_Session_Header(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Session.Set(r.Get("k"), r.Get("v"))
+		r.Session.Set(r.GetString("k"), r.GetString("v"))
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Session.Get(r.Get("k")))
+		r.Response.Write(r.Session.Get(r.GetString("k")))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Session.Remove(r.Get("k"))
+		r.Session.Remove(r.GetString("k"))
 	})
 	s.BindHandler("/clear", func(r *ghttp.Request) {
 		r.Session.Clear()
@@ -121,8 +121,8 @@ func Test_Session_StorageFile(t *testing.T) {
 		p := ports.PopRand()
 		s := g.Server(p)
 		s.BindHandler("/set", func(r *ghttp.Request) {
-			r.Session.Set(r.Get("k"), r.Get("v"))
-			r.Response.Write(r.Get("k"), "=", r.Get("v"))
+			r.Session.Set(r.GetString("k"), r.GetString("v"))
+			r.Response.Write(r.GetString("k"), "=", r.GetString("v"))
 		})
 		s.SetPort(p)
 		s.SetDumpRouteMap(false)
@@ -146,7 +146,7 @@ func Test_Session_StorageFile(t *testing.T) {
 		p := ports.PopRand()
 		s := g.Server(p)
 		s.BindHandler("/get", func(r *ghttp.Request) {
-			r.Response.Write(r.Session.Get(r.Get("k")))
+			r.Response.Write(r.Session.Get(r.GetString("k")))
 		})
 		s.SetPort(p)
 		s.SetDumpRouteMap(false)

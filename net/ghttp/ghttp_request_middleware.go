@@ -38,7 +38,7 @@ func (m *Middleware) Next() {
 		}
 		// 路由参数赋值
 		for k, v := range item.values {
-			m.request.routerVars[k] = v
+			m.request.routerMap[k] = v
 		}
 		m.request.Router = item.handler.router
 		// 执行函数处理

@@ -18,8 +18,14 @@ import (
 
 func Test_Parse(t *testing.T) {
 	gtest.Case(t, func() {
+		// name overwrite
+		m, err := gstr.Parse("a=1&a=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(m, g.Map{
+			"a": 2,
+		})
 		// slice
-		m, err := gstr.Parse("a[]=1&a[]=2")
+		m, err = gstr.Parse("a[]=1&a[]=2")
 		gtest.Assert(err, nil)
 		gtest.Assert(m, g.Map{
 			"a": g.Slice{"1", "2"},
