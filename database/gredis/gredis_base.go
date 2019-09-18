@@ -93,7 +93,7 @@ func (c *Redis) Persist(key string) (interface{}, error) {
 func (c *Redis) Pttl(key string) (interface{}, error) {
 	return c.commnddo("PTTL", key)
 }
-func (c *Redis) Randomkey() (interface{}, error) {
+func (c *Redis) RandomKey() (interface{}, error) {
 	return c.commnddo("RANDOMKEY")
 }
 
@@ -105,7 +105,7 @@ func (c *Redis) Renamenx(oldkey, newkey string) (interface{}, error) {
 	return c.commnddo("RENAMENX", oldkey, newkey)
 }
 
-func (c *Redis) Restore(key string, ttl int64, serializedvalue string) (interface{}, error) {
+func (c *Redis) ReStore(key string, ttl int64, serializedvalue string) (interface{}, error) {
 	return c.commnddo("RESTORE", key, ttl, serializedvalue)
 }
 
@@ -131,15 +131,15 @@ func (c *Redis) Get(key string) (interface{}, error) {
 	return c.commnddo("get", key)
 }
 
-func (c *Redis) Bitcount(key string) (interface{}, error) {
+func (c *Redis) BitCount(key string) (interface{}, error) {
 	return c.commnddo("BITCOUNT", key)
 }
 
-func (c *Redis) Bitop(params ...string) (interface{}, error) {
+func (c *Redis) BiTop(params ...string) (interface{}, error) {
 	return c.commnddo("BITOP", gconv.Interfaces(params)...)
 }
 
-func (c *Redis) BITPOS(key string, bit int, option ...int) (int, error) {
+func (c *Redis) BitPos(key string, bit int, option ...int) (int, error) {
 	param := garray.NewIntArrayFrom(option).InsertBefore(0, bit)
 	return typeInt(c.commnddo("BITPOS", gconv.Interfaces(param)...))
 }
@@ -161,7 +161,7 @@ func (c *Redis) Getbit(key string, offset int64) (interface{}, error) {
 	return c.commnddo("GETBIT", key, offset)
 }
 
-func (c *Redis) Getrange(key string, start, end int) (interface{}, error) {
+func (c *Redis) GetRange(key string, start, end int) (interface{}, error) {
 	return c.commnddo("GETRANGE", key, start, end)
 }
 
@@ -177,7 +177,7 @@ func (c *Redis) Incrby(key string, increment int64) (interface{}, error) {
 	return c.commnddo("INCRBY", key, increment)
 }
 
-func (c *Redis) Incrbyfloat(key string, increment float64) (interface{}, error) {
+func (c *Redis) IncrByFloat(key string, increment float64) (interface{}, error) {
 	return c.commnddo("INCRBYFLOAT", key, increment)
 }
 
@@ -195,7 +195,7 @@ func (c *Redis) Msetnx(params ...string) (interface{}, error) {
 	return c.commnddo("MSETNX", gconv.Interfaces(params)...)
 }
 
-func (c *Redis) PSETEX(key string, milliseconds int64, value string) (interface{}, error) {
+func (c *Redis) Psetex(key string, milliseconds int64, value string) (interface{}, error) {
 	return c.commnddo("PSETEX", key, milliseconds, value)
 }
 
@@ -211,7 +211,7 @@ func (c *Redis) Setnx(key string, value string) (interface{}, error) {
 	return c.commnddo("SETNX", key, value)
 }
 
-func (c *Redis) Setrange(key string, offset int, value string) (interface{}, error) {
+func (c *Redis) SetRange(key string, offset int, value string) (interface{}, error) {
 	return c.commnddo("SETRANGE", key, offset, value)
 }
 
@@ -250,20 +250,20 @@ func (c *Redis) Hstrlen(key, field string) (int64, error) {
 
 }
 
-func (c *Redis) Hincrby(key, field string, increment int64) (int64, error) {
+func (c *Redis) HincrBy(key, field string, increment int64) (int64, error) {
 	return typeInt64(c.commnddo("HINCRBY", key, field, increment))
 }
 
-func (c *Redis) Hincrbyfloat(key, field string, increment float64) (float64, error) {
+func (c *Redis) HincrByFloat(key, field string, increment float64) (float64, error) {
 	return typeFloat64(c.commnddo("HINCRBYFLOAT", key, field, increment))
 }
 
-func (c *Redis) HMSET(key string, params ...interface{}) (string, error) {
+func (c *Redis) Hmset(key string, params ...interface{}) (string, error) {
 	param := garray.NewArrayFrom(params)
 	return typeString(c.commnddo("HMSET", gconv.Interfaces(param.InsertBefore(0, key))...))
 }
 
-func (c *Redis) HMGET(keys ...string) (interface{}, error) {
+func (c *Redis) Hmget(keys ...string) (interface{}, error) {
 	return c.commnddo("HMGET", keys)
 }
 
@@ -275,12 +275,12 @@ func (c *Redis) Hvals(key string) (interface{}, error) {
 	return c.commnddo("HVALS", key)
 }
 
-func (c *Redis) Hgetall(key string) (interface{}, error) {
+func (c *Redis) HgetAll(key string) (interface{}, error) {
 	return c.commnddo("HGETALL", key)
 }
 
 //==============================================================================list
-func (c *Redis) LPUSH(key string, values ...interface{}) (int64, error) {
+func (c *Redis) Lpush(key string, values ...interface{}) (int64, error) {
 	param := garray.NewArrayFrom(values)
 	return typeInt64(c.commnddo("LPUSH", gconv.Interfaces(param.InsertBefore(0, key))...))
 }
@@ -306,7 +306,7 @@ func (c *Redis) Rpop(key string) (interface{}, error) {
 	return c.commnddo("RPOP", key)
 }
 
-func (c *Redis) Rpoplpush(key string, source, destination interface{}) (interface{}, error) {
+func (c *Redis) RpoplPush(key string, source, destination interface{}) (interface{}, error) {
 	return c.commnddo("RPOPLPUSH", key, source, destination)
 }
 
@@ -334,17 +334,17 @@ func (c *Redis) Lrange(key, string, start, stop int64) (interface{}, error) {
 	return c.commnddo("LRANGE", key, start, stop)
 }
 
-func (c *Redis) Blpop(key string, params ...interface{}) (interface{}, error) {
+func (c *Redis) BlPop(key string, params ...interface{}) (interface{}, error) {
 	param := garray.NewArrayFrom(params)
 	return c.commnddo("BLPOP", gconv.Interfaces(param.InsertBefore(0, key))...)
 }
 
-func (c *Redis) Brpop(key string, params ...interface{}) (interface{}, error) {
+func (c *Redis) BrPop(key string, params ...interface{}) (interface{}, error) {
 	param := garray.NewArrayFrom(params)
 	return c.commnddo("BRPOP", gconv.Interfaces(param.InsertBefore(0, key))...)
 }
 
-func (c *Redis) Brpoplpush(key, source, destination string, timeout int) (interface{}, error) {
+func (c *Redis) BrPoplPush(key, source, destination string, timeout int) (interface{}, error) {
 	return c.commnddo("BRPOPLPUSH", key, source, destination, timeout)
 }
 
@@ -354,7 +354,7 @@ func (c *Redis) Sadd(key string, members ...interface{}) (int64, error) {
 	return typeInt64(c.commnddo("SADD", gconv.Interfaces(param.InsertBefore(0, key))...))
 }
 
-func (c *Redis) Sismember(key, member string) (bool, error) {
+func (c *Redis) SisMember(key, member string) (bool, error) {
 	return typeBool(c.commnddo("SISMEMBER", key, member))
 }
 
@@ -362,7 +362,7 @@ func (c *Redis) Spop(key string) (interface{}, error) {
 	return c.commnddo("SPOP", key)
 }
 
-func (c *Redis) Srandmember(key string, count ...int) (interface{}, error) {
+func (c *Redis) SrandMember(key string, count ...int) (interface{}, error) {
 	return c.commnddo("SRANDMEMBER", key, count[0])
 }
 
@@ -386,19 +386,19 @@ func (c *Redis) Sinter(keys ...string) (interface{}, error) {
 	return c.commnddo("SINTER ", gconv.Interfaces(keys)...)
 }
 
-func (c *Redis) Sinterstore(destination string, key string, keys ...string) (int64, error) {
+func (c *Redis) SinterStore(destination string, key string, keys ...string) (int64, error) {
 	param := garray.NewStrArrayFrom(keys)
 	param = param.InsertBefore(0, key).InsertBefore(0, destination)
 	return typeInt64(c.commnddo("SINTERSTORE ", gconv.Interfaces(param)...))
 }
 
-func (c *Redis) SUNION(key string, keys ...string) (interface{}, error) {
+func (c *Redis) Sunion(key string, keys ...string) (interface{}, error) {
 	param := garray.NewStrArrayFrom(keys)
 	param = param.InsertBefore(0, key)
 	return c.commnddo("SUNION ", gconv.Interfaces(param)...)
 }
 
-func (c *Redis) Sunionstore(destination string, key string, keys ...string) (int64, error) {
+func (c *Redis) SunionStore(destination string, key string, keys ...string) (int64, error) {
 	param := garray.NewStrArrayFrom(keys)
 	param = param.InsertBefore(0, key).InsertBefore(0, destination)
 	return typeInt64(c.commnddo("SUNIONSTORE ", gconv.Interfaces(param)...))
@@ -410,7 +410,7 @@ func (c *Redis) Sdiff(key string, keys ...string) (interface{}, error) {
 	return c.commnddo("SDIFF ", gconv.Interfaces(param)...)
 }
 
-func (c *Redis) Sdiffstore(destination string, key string, keys ...string) (int64, error) {
+func (c *Redis) SdiffStore(destination string, key string, keys ...string) (int64, error) {
 	param := garray.NewStrArrayFrom(keys)
 	param = param.InsertBefore(0, key).InsertBefore(0, destination)
 	return typeInt64(c.commnddo("SDIFFSTORE ", gconv.Interfaces(param)...))
@@ -426,7 +426,7 @@ func (c *Redis) Zscore(key string, member interface{}) (string, error) {
 	return typeString(c.commnddo("ZSCORE ", key, member))
 }
 
-func (c *Redis) Zincrby(key string, increment int, member interface{}) (string, error) {
+func (c *Redis) ZinCrby(key string, increment int, member interface{}) (string, error) {
 	return typeString(c.commnddo("ZINCRBY ", key, increment, member))
 }
 
@@ -438,15 +438,15 @@ func (c *Redis) Zcount(key string, min, max int64) (int64, error) {
 	return typeInt64(c.commnddo("ZCOUNT ", min, max))
 }
 
-func (c *Redis) ZRANGE(key string, start, stop int64, param ...string) (interface{}, error) {
+func (c *Redis) Zrange(key string, start, stop int64, param ...string) (interface{}, error) {
 	return c.commnddo("ZRANGE ", start, stop, param[0])
 }
 
-func (c *Redis) Zrevrange(key string, start, stop int64, options ...string) (interface{}, error) {
+func (c *Redis) ZrevRange(key string, start, stop int64, options ...string) (interface{}, error) {
 	return c.commnddo("ZREVRANGE ", start, stop, options[0])
 }
 
-func (c *Redis) Zrangbyscore(key string, start, stop int64, options ...string) (interface{}, error) {
+func (c *Redis) ZrangByScore(key string, start, stop int64, options ...string) (interface{}, error) {
 	return c.commnddo("ZRANGEBYSCORE ", start, stop, options[0])
 }
 

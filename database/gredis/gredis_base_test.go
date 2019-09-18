@@ -15,7 +15,7 @@ import (
 
 var (
 	Clusterip     = "127.0.0.1" //
-	ClustersNodes = []string{Clusterip + ":7000", Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005"}
+	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 )
 
 func init() {
