@@ -34,20 +34,20 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 	hookItems := r.getHookHandlers(hook)
 	if len(hookItems) > 0 {
 		// 备份原有的router变量
-		oldRouterVars := r.routerVars
+		oldRouterVars := r.routerMap
 		for _, item := range hookItems {
 			// hook方法不能更改serve方法的路由参数，其匹配的路由参数只能自己使用，
 			// 且在多个hook方法之间不能共享路由参数，单可以使用匹配的serve方法路由参数。
 			// 当前回调函数的路由参数只在当前回调函数下有效。
-			r.routerVars = make(map[string][]string)
+			r.routerMap = make(map[string]interface{})
 			if len(oldRouterVars) > 0 {
 				for k, v := range oldRouterVars {
-					r.routerVars[k] = v
+					r.routerMap[k] = v
 				}
 			}
 			if len(item.values) > 0 {
 				for k, v := range item.values {
-					r.routerVars[k] = v
+					r.routerMap[k] = v
 				}
 			}
 			// 不使用hook的router对象，保留路由注册服务的router对象，不能覆盖
@@ -66,7 +66,7 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 			}
 		}
 		// 恢复原有的router变量
-		r.routerVars = oldRouterVars
+		r.routerMap = oldRouterVars
 	}
 }
 

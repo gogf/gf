@@ -48,6 +48,32 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.GetQueryString("string"))
 		}
 	})
+	s.BindHandler("/put", func(r *ghttp.Request) {
+		if r.Get("slice") != nil {
+			r.Response.Write(r.Get("slice"))
+		}
+		if r.Get("bool") != nil {
+			r.Response.Write(r.GetBool("bool"))
+		}
+		if r.Get("float32") != nil {
+			r.Response.Write(r.GetFloat32("float32"))
+		}
+		if r.Get("float64") != nil {
+			r.Response.Write(r.GetFloat64("float64"))
+		}
+		if r.Get("int") != nil {
+			r.Response.Write(r.GetInt("int"))
+		}
+		if r.Get("uint") != nil {
+			r.Response.Write(r.GetUint("uint"))
+		}
+		if r.Get("string") != nil {
+			r.Response.Write(r.GetString("string"))
+		}
+		if r.Get("map") != nil {
+			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
+		}
+	})
 	s.BindHandler("/post", func(r *ghttp.Request) {
 		if r.GetPost("slice") != nil {
 			r.Response.Write(r.GetPost("slice"))
@@ -69,6 +95,9 @@ func Test_Params_Basic(t *testing.T) {
 		}
 		if r.GetPost("string") != nil {
 			r.Response.Write(r.GetPostString("string"))
+		}
+		if r.GetPost("map") != nil {
+			r.Response.Write(r.GetPostMap()["map"].(map[string]interface{})["b"])
 		}
 	})
 	s.BindHandler("/map", func(r *ghttp.Request) {
@@ -132,7 +161,7 @@ func Test_Params_Basic(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// GET
-		gtest.Assert(client.GetContent("/get", "slice=1&slice=2"), `["1","2"]`)
+		gtest.Assert(client.GetContent("/get", "slice=1&slice=2"), `2`)
 		gtest.Assert(client.GetContent("/get", "bool=1"), `true`)
 		gtest.Assert(client.GetContent("/get", "bool=0"), `false`)
 		gtest.Assert(client.GetContent("/get", "float32=0.11"), `0.11`)
@@ -143,8 +172,21 @@ func Test_Params_Basic(t *testing.T) {
 		gtest.Assert(client.GetContent("/get", "uint=9"), `9`)
 		gtest.Assert(client.GetContent("/get", "string=key"), `key`)
 
+		// PUT
+		gtest.Assert(client.PutContent("/put", "slice=1&slice=2"), `2`)
+		gtest.Assert(client.PutContent("/put", "bool=1"), `true`)
+		gtest.Assert(client.PutContent("/put", "bool=0"), `false`)
+		gtest.Assert(client.PutContent("/put", "float32=0.11"), `0.11`)
+		gtest.Assert(client.PutContent("/put", "float64=0.22"), `0.22`)
+		gtest.Assert(client.PutContent("/put", "int=-10000"), `-10000`)
+		gtest.Assert(client.PutContent("/put", "int=10000"), `10000`)
+		gtest.Assert(client.PutContent("/put", "uint=10000"), `10000`)
+		gtest.Assert(client.PutContent("/put", "uint=9"), `9`)
+		gtest.Assert(client.PutContent("/put", "string=key"), `key`)
+		gtest.Assert(client.PutContent("/put", "map[a]=1&map[b]=2"), `2`)
+
 		// POST
-		gtest.Assert(client.PostContent("/post", "slice=1&slice=2"), `["1","2"]`)
+		gtest.Assert(client.PostContent("/post", "slice=1&slice=2"), `2`)
 		gtest.Assert(client.PostContent("/post", "bool=1"), `true`)
 		gtest.Assert(client.PostContent("/post", "bool=0"), `false`)
 		gtest.Assert(client.PostContent("/post", "float32=0.11"), `0.11`)
@@ -154,6 +196,7 @@ func Test_Params_Basic(t *testing.T) {
 		gtest.Assert(client.PostContent("/post", "uint=10000"), `10000`)
 		gtest.Assert(client.PostContent("/post", "uint=9"), `9`)
 		gtest.Assert(client.PostContent("/post", "string=key"), `key`)
+		gtest.Assert(client.PostContent("/post", "map[a]=1&map[b]=2"), `2`)
 
 		// Map
 		gtest.Assert(client.GetContent("/map", "id=1&name=john"), `john`)

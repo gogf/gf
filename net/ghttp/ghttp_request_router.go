@@ -6,26 +6,24 @@
 
 package ghttp
 
-func (r *Request) SetRouterString(key, value string) {
-	r.routerVars[key] = []string{value}
-}
+import "github.com/gogf/gf/container/gvar"
 
-func (r *Request) AddRouterString(key, value string) {
-	r.routerVars[key] = append(r.routerVars[key], value)
+func (r *Request) SetRouterValue(key string, value interface{}) {
+	r.routerMap[key] = value
 }
 
 // 获得路由解析参数
-func (r *Request) GetRouterString(key string) string {
-	if v := r.GetRouterArray(key); v != nil {
-		return v[0]
+func (r *Request) GetRouterValue(key string, def ...interface{}) interface{} {
+	if r.routerMap != nil {
+		return r.routerMap[key]
 	}
-	return ""
-}
-
-// 获得路由解析参数
-func (r *Request) GetRouterArray(key string) []string {
-	if v, ok := r.routerVars[key]; ok {
-		return v
+	if len(def) > 0 {
+		return def[0]
 	}
 	return nil
+}
+
+// 获得路由解析参数, gvar.Var
+func (r *Request) GetRouterVar(key string, def ...interface{}) *gvar.Var {
+	return gvar.New(r.GetRouterValue(key, def...))
 }

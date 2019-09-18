@@ -9,125 +9,111 @@ package ghttp
 import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/structs"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
 
+// 初始化RAW请求参数
+func (r *Request) initRaw() {
+	if !r.parsedRaw {
+		r.parsedRaw = true
+		if raw := r.GetRawString(); len(raw) > 0 {
+			r.rawVarMap, _ = gstr.Parse(raw)
+		}
+	}
+}
+
 // 获得router、post或者get提交的参数，如果有同名参数，那么按照router->get->post优先级进行覆盖
-func (r *Request) GetRequest(key string, def ...interface{}) []string {
-	v := r.GetRouterArray(key)
+func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
+	v := r.GetRouterValue(key)
 	if v == nil {
 		v = r.GetQuery(key)
 	}
 	if v == nil {
 		v = r.GetPost(key)
 	}
+	if v != nil {
+		return v
+	}
+	r.initRaw()
+	v = r.rawVarMap[key]
 	if v == nil && len(def) > 0 {
-		return gconv.Strings(def[0])
+		return def[0]
 	}
 	return v
 }
 
 func (r *Request) GetRequestVar(key string, def ...interface{}) *gvar.Var {
-	value := r.GetRequest(key, def...)
-	if value != nil {
-		return gvar.New(value[0])
-	}
-	return gvar.New(nil)
+	return gvar.New(r.GetRequest(key, def...))
 }
 
 func (r *Request) GetRequestString(key string, def ...interface{}) string {
-	value := r.GetRequest(key, def...)
-	if value != nil && value[0] != "" {
-		return value[0]
-	}
-	return ""
+	return r.GetRequestVar(key, def...).String()
 }
 
 func (r *Request) GetRequestBool(key string, def ...interface{}) bool {
-	value := r.GetRequestString(key, def...)
-	if value != "" {
-		return gconv.Bool(value)
-	}
-	return false
+	return r.GetRequestVar(key, def...).Bool()
 }
 
 func (r *Request) GetRequestInt(key string, def ...interface{}) int {
-	value := r.GetRequestString(key, def...)
-	if value != "" {
-		return gconv.Int(value)
-	}
-	return 0
+	return r.GetRequestVar(key, def...).Int()
 }
 
 func (r *Request) GetRequestInts(key string, def ...interface{}) []int {
-	value := r.GetRequest(key, def...)
-	if value != nil {
-		return gconv.Ints(value)
-	}
-	return nil
+	return r.GetRequestVar(key, def...).Ints()
 }
 
 func (r *Request) GetRequestUint(key string, def ...interface{}) uint {
-	value := r.GetRequestString(key, def...)
-	if value != "" {
-		return gconv.Uint(value)
-	}
-	return 0
+	return r.GetRequestVar(key, def...).Uint()
 }
 
 func (r *Request) GetRequestFloat32(key string, def ...interface{}) float32 {
-	value := r.GetRequestString(key, def...)
-	if value != "" {
-		return gconv.Float32(value)
-	}
-	return 0
+	return r.GetRequestVar(key, def...).Float32()
 }
 
 func (r *Request) GetRequestFloat64(key string, def ...interface{}) float64 {
-	value := r.GetRequestString(key, def...)
-	if value != "" {
-		return gconv.Float64(value)
-	}
-	return 0
+	return r.GetRequestVar(key, def...).Float64()
 }
 
 func (r *Request) GetRequestFloats(key string, def ...interface{}) []float64 {
-	value := r.GetRequest(key, def...)
-	if value != nil {
-		return gconv.Floats(value)
-	}
-	return nil
+	return r.GetRequestVar(key, def...).Floats()
 }
 
 func (r *Request) GetRequestArray(key string, def ...interface{}) []string {
-	return r.GetRequest(key, def...)
+	return r.GetRequestVar(key, def...).Strings()
 }
 
 func (r *Request) GetRequestStrings(key string, def ...interface{}) []string {
-	return r.GetRequest(key, def...)
+	return r.GetRequestVar(key, def...).Strings()
 }
 
 func (r *Request) GetRequestInterfaces(key string, def ...interface{}) []interface{} {
-	value := r.GetRequest(key, def...)
-	if value != nil {
-		return gconv.Interfaces(value)
-	}
-	return nil
+	return r.GetRequestVar(key, def...).Interfaces()
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
 // 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetRequestArray获取特定字段内容
-func (r *Request) GetRequestMap(def ...map[string]string) map[string]string {
-	m := r.GetQueryMap()
-	if len(m) == 0 {
-		m = r.GetPostMap()
-	}
-	if len(def) > 0 {
-		for k, v := range def[0] {
-			if _, ok := m[k]; !ok {
-				m[k] = v
+func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
+	r.initRaw()
+	m := r.rawVarMap
+	if len(kvMap) > 0 {
+		m = make(map[string]interface{})
+		for k, defValue := range kvMap[0] {
+			if rawValue, ok := r.rawVarMap[k]; ok {
+				m[k] = rawValue
+			} else {
+				m[k] = defValue
 			}
 		}
+	}
+	if m == nil {
+		m = make(map[string]interface{})
+	}
+	for k, v := range r.GetPostMap(kvMap...) {
+		m[k] = v
+	}
+	for k, v := range r.GetQueryMap(kvMap...) {
+		m[k] = v
 	}
 	return m
 }
@@ -140,14 +126,5 @@ func (r *Request) GetRequestToStruct(pointer interface{}, mapping ...map[string]
 			tagMap[k] = v
 		}
 	}
-	params := make(map[string]interface{})
-	for k, v := range r.GetRequestMap() {
-		params[k] = v
-	}
-	if len(params) == 0 {
-		if j := r.GetJson(); j != nil {
-			params = j.ToMap()
-		}
-	}
-	return gconv.StructDeep(params, pointer, tagMap)
+	return gconv.StructDeep(r.GetRequestMap(), pointer, tagMap)
 }

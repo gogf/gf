@@ -75,8 +75,8 @@ type (
 
 	// 根据特定URL.Path解析后的路由检索结果项
 	handlerParsedItem struct {
-		handler *handlerItem        // 路由注册项
-		values  map[string][]string // 特定URL.Path的Router解析参数
+		handler *handlerItem      // 路由注册项
+		values  map[string]string // 特定URL.Path的Router解析参数
 	}
 
 	// 控制器服务函数反射信息

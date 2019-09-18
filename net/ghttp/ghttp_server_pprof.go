@@ -20,7 +20,7 @@ type utilPprof struct{}
 
 func (p *utilPprof) Index(r *Request) {
 	profiles := runpprof.Profiles()
-	action := r.Get("action")
+	action := r.GetString("action")
 	data := map[string]interface{}{
 		"uri":      strings.TrimRight(r.URL.Path, "/") + "/",
 		"profiles": profiles,
