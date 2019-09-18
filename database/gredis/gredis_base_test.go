@@ -32,7 +32,7 @@ func init() {
         host = "` + strings.Join(ClustersNodes, ",") + `"
         
 [redis]
-     default = "` + Clusterip + `:8579,1"` // 8579  6379
+     default = "` + Clusterip + `:6379,1"` // 8579  6379
 	err := createTestFile("config.toml", config)
 	if err != nil {
 		fmt.Println(err.Error())
