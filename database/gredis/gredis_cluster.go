@@ -4,7 +4,6 @@ package gredis
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
@@ -29,7 +28,6 @@ var (
 func (c *Redis) layoutSlots() {
 	*reply, err = c.Do("cluster", "nodes")
 	if err != nil {
-		fmt.Println("执行命令出错")
 		return
 	}
 

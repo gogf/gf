@@ -16,14 +16,6 @@ import (
 	"time"
 )
 
-var (
-	config = gredis.Config{
-		Host: "127.0.0.1",
-		Port: 6379,
-		Db:   1,
-	}
-)
-
 func Test_NewClose(t *testing.T) {
 	gtest.Case(t, func() {
 		redis := gredis.New(config)

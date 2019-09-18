@@ -16,16 +16,23 @@ import (
 var (
 	Clusterip     = "127.0.0.1" //
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
+	config        = gredis.Config{
+		Host: "127.0.0.1", //192.168.0.55 127.0.0.1
+		Port: 6379,        //8579 6379
+		Db:   1,
+		//Pass:"yyb513941",// when is ci,no pass
+	}
 )
 
 func init() {
 	gredis.FlagBanCluster = false
+	// pwd  = "123456"    when is ci,no pass
 	config := `[rediscluster]
     [rediscluster.default]
         host = "` + strings.Join(ClustersNodes, ",") + `"
         
 [redis]
-     default = "` + Clusterip + `:6379,1"`
+     default = "` + Clusterip + `:8579,1"` // 8579  6379
 	err := createTestFile("config.toml", config)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -47,7 +54,7 @@ func Test_ClusterDo(t *testing.T) {
 	gtest.Case(t, func() {
 		redis := gredis.NewClusterClient(&gredis.ClusterOption{
 			Nodes: ClustersNodes,
-			//Pwd:   "123456",
+			Pwd:   "123456",
 		})
 		redis.Set("jname2", "jqrr2")
 		r, err := redis.Get("jname2")
