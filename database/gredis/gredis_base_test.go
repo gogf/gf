@@ -15,7 +15,7 @@ import (
 
 var (
 	Clusterip     = "127.0.0.1" //
-	Pass1 = "" //123456
+	Pass1         = ""          //123456
 	ClustersNodes = []string{Clusterip + ":7000", Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005"}
 	config        = gredis.Config{
 		Host: "127.0.0.1", //192.168.0.55 127.0.0.1
@@ -31,7 +31,7 @@ func init() {
 	config := `[rediscluster]
     [rediscluster.default]
         host = "` + strings.Join(ClustersNodes, ",") + `"
-		pwd  ="`+Pass1+`"
+		pwd  ="` + Pass1 + `"
         
 [redis]
      default = "` + Clusterip + `:6379,1"` // 8579  6379
