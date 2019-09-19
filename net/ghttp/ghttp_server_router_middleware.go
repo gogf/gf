@@ -27,7 +27,7 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 }
 
 // 注册中间件，绑定到全局路由规则("/*")上，中间件参数支持多个。
-func (s *Server) AddMiddleware(handlers ...HandlerFunc) {
+func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(gDEFAULT_MIDDLEWARE_PATTERN, &handlerItem{
 			itemType: gHANDLER_TYPE_MIDDLEWARE,

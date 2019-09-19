@@ -216,6 +216,14 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 	return group
 }
 
+func (g *RouterGroup) MiddlewarePattern(pattern string, handlers ...HandlerFunc) *RouterGroup {
+	group := g.Clone()
+	for _, handler := range handlers {
+		group.preBind("MIDDLEWARE", pattern, handler)
+	}
+	return group
+}
+
 func (g *RouterGroup) preBind(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	preBindItems = append(preBindItems, groupPreBindItem{
 		group:    g,
