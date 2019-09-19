@@ -35,9 +35,6 @@ func main() {
 		g.ALL("/dashboard", func(r *ghttp.Request) {
 			r.Response.Write("dashboard")
 		})
-		g.ALL("/user", func(r *ghttp.Request) {
-			r.Response.Write("user")
-		})
 	})
 	s.SetPort(8199)
 	s.Run()
