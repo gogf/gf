@@ -160,6 +160,10 @@ func (r *Request) GetMap(def ...map[string]interface{}) map[string]interface{} {
 	return r.GetRequestMap(def...)
 }
 
+func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string {
+	return r.GetRequestMapStrStr(def...)
+}
+
 // 将所有的request参数映射到struct属性上，参数pointer应当为一个struct对象的指针,
 // mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
