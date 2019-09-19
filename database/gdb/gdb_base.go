@@ -27,7 +27,7 @@ import (
 
 const (
 	gDEFAULT_DEBUG_SQL_LENGTH = 1000
-	gPATH_FILTER_KEY          = "/gf/database/gdb/gdb"
+	gPATH_FILTER_KEY          = "/database/gdb/gdb"
 )
 
 var (

@@ -9,8 +9,9 @@ package ghttp
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
 	"strings"
+
+	"github.com/gogf/gf/debug/gdebug"
 
 	"github.com/gogf/gf/container/glist"
 	"github.com/gogf/gf/os/glog"
@@ -19,7 +20,7 @@ import (
 )
 
 const (
-	gFILTER_KEY = "/gf/net/ghttp/ghttp"
+	gFILTER_KEY = "/net/ghttp/ghttp"
 )
 
 // 解析pattern
