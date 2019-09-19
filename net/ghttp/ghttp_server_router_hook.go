@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"net/http"
 	"reflect"
 	"runtime"
 )
@@ -61,6 +62,7 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 				case gEXCEPTION_EXIT_HOOK:
 					return
 				default:
+					r.Response.WriteStatus(http.StatusInternalServerError, err)
 					panic(err)
 				}
 			}
