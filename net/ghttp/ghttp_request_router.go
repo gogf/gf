@@ -23,7 +23,11 @@ func (r *Request) GetRouterValue(key string, def ...interface{}) interface{} {
 	return nil
 }
 
-// 获得路由解析参数, gvar.Var
+// 获得路由解析参数
 func (r *Request) GetRouterVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetRouterValue(key, def...))
+}
+
+func (r *Request) GetRouterString(key string, def ...interface{}) string {
+	return r.GetRouterVar(key, def...).String()
 }

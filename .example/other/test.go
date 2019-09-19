@@ -1,16 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"reflect"
-
-	"github.com/gogf/gf/frame/g"
-
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/os/glog"
 )
 
 func main() {
-	m, _ := gstr.Parse("map[a]=1&map[b]=2")
-	g.Dump(m)
-	fmt.Println(reflect.TypeOf(m["map"].(map[string]interface{})["b"]))
+	glog.SetFlags(glog.F_TIME_DATE | glog.F_TIME_TIME | glog.F_FILE_SHORT)
+	glog.Debug("dd")
+	glog.Println("timeout", gcmd.GetOpt("timeout"))
 }

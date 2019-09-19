@@ -104,6 +104,20 @@ func (m *ListMap) Map() map[interface{}]interface{} {
 	return data
 }
 
+// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+func (m *ListMap) MapStrAny() map[string]interface{} {
+	m.mu.RLock()
+	node := (*gListMapNode)(nil)
+	data := make(map[string]interface{}, len(m.data))
+	m.list.IteratorAsc(func(e *glist.Element) bool {
+		node = e.Value.(*gListMapNode)
+		data[gconv.String(node.key)] = node.value
+		return true
+	})
+	m.mu.RUnlock()
+	return data
+}
+
 // Set sets key-value to the map.
 func (m *ListMap) Set(key interface{}, value interface{}) {
 	m.mu.Lock()

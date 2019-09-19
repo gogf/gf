@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/util/gconv"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/rwmutex"
 )
@@ -297,6 +299,16 @@ func (tree *BTree) Map() map[interface{}]interface{} {
 	m := make(map[interface{}]interface{}, tree.Size())
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		m[key] = value
+		return true
+	})
+	return m
+}
+
+// MapStrAny returns all key-value items as map[string]interface{}.
+func (tree *BTree) MapStrAny() map[string]interface{} {
+	m := make(map[string]interface{}, tree.Size())
+	tree.IteratorAsc(func(key, value interface{}) bool {
+		m[gconv.String(key)] = value
 		return true
 	})
 	return m
