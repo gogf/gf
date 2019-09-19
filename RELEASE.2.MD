@@ -28,6 +28,7 @@
 ## 功能改进
 
 1. `ghttp`
+    - 改进`Request`参数解析方式：https://goframe.org/net/ghttp/request
     - `Cookie`及`Session`的`TTL`配置数据类型修改为`time.Duration`;
     - 新增允许同时通过`Header/Cookie`传递`SessionId`；
     - 新增`ConfigFromMap/SetConfigWithMap`方法，支持通过`map`参数设置WebServer；
