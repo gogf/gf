@@ -249,26 +249,26 @@ func (v *Var) StructsDeep(pointer interface{}, mapping ...map[string]string) (er
 	return gconv.StructsDeep(v.Val(), pointer, mapping...)
 }
 
-// MapStruct converts map type variable <params> to another map type variable <pointer>.
+// MapToMap converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of struct/*struct.
-func (v *Var) MapStruct(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStruct(v.Val(), pointer, mapping...)
+func (v *Var) MapToMap(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.MapToMap(v.Val(), pointer, mapping...)
 }
 
-// MapStructDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// MapToMapDeep recursively converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of struct/*struct.
-func (v *Var) MapStructDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructDeep(v.Val(), pointer, mapping...)
+func (v *Var) MapToMapDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.MapToMapDeep(v.Val(), pointer, mapping...)
 }
 
-// MapStructs converts map type variable <params> to another map type variable <pointer>.
+// MapToMaps converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of []struct/[]*struct.
-func (v *Var) MapStructs(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructs(v.Val(), pointer, mapping...)
+func (v *Var) MapToMaps(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.MapToMaps(v.Val(), pointer, mapping...)
 }
 
-// MapStructsDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// MapToMapsDeep recursively converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of []struct/[]*struct.
-func (v *Var) MapStructsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructsDeep(v.Val(), pointer, mapping...)
+func (v *Var) MapToMapsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.MapToMapsDeep(v.Val(), pointer, mapping...)
 }

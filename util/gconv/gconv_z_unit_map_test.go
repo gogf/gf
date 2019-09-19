@@ -161,7 +161,7 @@ func Test_Map_StructInherit(t *testing.T) {
 	})
 }
 
-func Test_MapStruct(t *testing.T) {
+func Test_MapToMap(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
@@ -174,7 +174,7 @@ func Test_MapStruct(t *testing.T) {
 	}
 	gtest.Case(t, func() {
 		m := make(map[string]User)
-		err := gconv.MapStruct(params, &m)
+		err := gconv.MapToMap(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 1)
 		gtest.Assert(m["key"].Id, 1)
@@ -182,7 +182,7 @@ func Test_MapStruct(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := (map[string]User)(nil)
-		err := gconv.MapStruct(params, &m)
+		err := gconv.MapToMap(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 1)
 		gtest.Assert(m["key"].Id, 1)
@@ -190,7 +190,7 @@ func Test_MapStruct(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := make(map[string]*User)
-		err := gconv.MapStruct(params, &m)
+		err := gconv.MapToMap(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 1)
 		gtest.Assert(m["key"].Id, 1)
@@ -198,7 +198,7 @@ func Test_MapStruct(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := (map[string]*User)(nil)
-		err := gconv.MapStruct(params, &m)
+		err := gconv.MapToMap(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 1)
 		gtest.Assert(m["key"].Id, 1)
@@ -206,7 +206,7 @@ func Test_MapStruct(t *testing.T) {
 	})
 }
 
-func Test_MapStructDeep(t *testing.T) {
+func Test_MapToMapDeep(t *testing.T) {
 	type Ids struct {
 		Id  int
 		Uid int
@@ -227,7 +227,7 @@ func Test_MapStructDeep(t *testing.T) {
 	}
 	gtest.Case(t, func() {
 		m := (map[string]*User)(nil)
-		err := gconv.MapStruct(params, &m)
+		err := gconv.MapToMap(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 1)
 		gtest.Assert(m["key"].Id, 0)
@@ -235,7 +235,7 @@ func Test_MapStructDeep(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := (map[string]*User)(nil)
-		err := gconv.MapStructDeep(params, &m)
+		err := gconv.MapToMapDeep(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 1)
 		gtest.Assert(m["key"].Id, 1)
@@ -243,7 +243,7 @@ func Test_MapStructDeep(t *testing.T) {
 	})
 }
 
-func Test_MapStructs1(t *testing.T) {
+func Test_MapToMaps1(t *testing.T) {
 	type User struct {
 		Id   int
 		Name int
@@ -260,7 +260,7 @@ func Test_MapStructs1(t *testing.T) {
 	}
 	gtest.Case(t, func() {
 		m := make(map[string][]User)
-		err := gconv.MapStructs(params, &m)
+		err := gconv.MapToMaps(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m["key1"][0].Id, 1)
@@ -270,7 +270,7 @@ func Test_MapStructs1(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := (map[string][]User)(nil)
-		err := gconv.MapStructs(params, &m)
+		err := gconv.MapToMaps(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m["key1"][0].Id, 1)
@@ -280,7 +280,7 @@ func Test_MapStructs1(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := make(map[string][]*User)
-		err := gconv.MapStructs(params, &m)
+		err := gconv.MapToMaps(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m["key1"][0].Id, 1)
@@ -290,7 +290,7 @@ func Test_MapStructs1(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := (map[string][]*User)(nil)
-		err := gconv.MapStructs(params, &m)
+		err := gconv.MapToMaps(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m["key1"][0].Id, 1)
@@ -300,7 +300,7 @@ func Test_MapStructs1(t *testing.T) {
 	})
 }
 
-func Test_MapStructs2(t *testing.T) {
+func Test_MapToMaps2(t *testing.T) {
 	type User struct {
 		Id   int
 		Name int
@@ -317,7 +317,7 @@ func Test_MapStructs2(t *testing.T) {
 	}
 	gtest.Case(t, func() {
 		m := make(map[int][]User)
-		err := gconv.MapStructs(params, &m)
+		err := gconv.MapToMaps(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m[100][0].Id, 1)
@@ -327,7 +327,7 @@ func Test_MapStructs2(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := make(map[int][]*User)
-		err := gconv.MapStructs(params, &m)
+		err := gconv.MapToMaps(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m[100][0].Id, 1)
@@ -337,7 +337,7 @@ func Test_MapStructs2(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := make(map[string][]*User)
-		err := gconv.MapStructs(params, &m)
+		err := gconv.MapToMaps(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m["100"][0].Id, 1)
@@ -347,7 +347,7 @@ func Test_MapStructs2(t *testing.T) {
 	})
 }
 
-func Test_MapStructsDeep(t *testing.T) {
+func Test_MapToMapsDeep(t *testing.T) {
 	type Ids struct {
 		Id  int
 		Uid int
@@ -372,7 +372,7 @@ func Test_MapStructsDeep(t *testing.T) {
 	}
 	gtest.Case(t, func() {
 		m := make(map[string][]*User)
-		err := gconv.MapStructs(params, &m)
+		err := gconv.MapToMaps(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m["100"][0].Id, 0)
@@ -386,7 +386,7 @@ func Test_MapStructsDeep(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		m := make(map[string][]*User)
-		err := gconv.MapStructsDeep(params, &m)
+		err := gconv.MapToMapsDeep(params, &m)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(m), 2)
 		gtest.Assert(m["100"][0].Id, 1)

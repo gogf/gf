@@ -254,30 +254,30 @@ func (c *Config) GetStructsDeep(pattern string, pointer interface{}, mapping ...
 	return errors.New("configuration not found")
 }
 
-func (c *Config) GetMapStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) GetMapToMap(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.GetMapStruct(pattern, pointer, mapping...)
+		return j.GetMapToMap(pattern, pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }
 
-func (c *Config) GetMapStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.GetMapStructDeep(pattern, pointer, mapping...)
+		return j.GetMapToMapDeep(pattern, pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }
 
-func (c *Config) GetMapStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) GetMapToMaps(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.GetMapStructs(pattern, pointer, mapping...)
+		return j.GetMapToMaps(pattern, pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }
 
-func (c *Config) GetMapStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) GetMapToMapsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.GetMapStructsDeep(pattern, pointer, mapping...)
+		return j.GetMapToMapsDeep(pattern, pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }
@@ -324,30 +324,30 @@ func (c *Config) ToStructsDeep(pointer interface{}, mapping ...map[string]string
 	return errors.New("configuration not found")
 }
 
-func (c *Config) ToMapStruct(pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) ToMapToMap(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.ToMapStruct(pointer, mapping...)
+		return j.ToMapToMap(pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }
 
-func (c *Config) ToMapStructDeep(pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) ToMapToMapDeep(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.ToMapStructDeep(pointer, mapping...)
+		return j.ToMapToMapDeep(pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }
 
-func (c *Config) ToMapStructs(pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) ToMapToMaps(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.ToMapStructs(pointer, mapping...)
+		return j.ToMapToMaps(pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }
 
-func (c *Config) ToMapStructsDeep(pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) ToMapToMapsDeep(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.ToMapStructsDeep(pointer, mapping...)
+		return j.ToMapToMapsDeep(pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }

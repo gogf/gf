@@ -118,6 +118,18 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 	return m
 }
 
+func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[string]string {
+	requestMap := r.GetRequestMap(kvMap...)
+	if len(requestMap) > 0 {
+		m := make(map[string]string)
+		for k, v := range requestMap {
+			m[k] = gconv.String(v)
+		}
+		return m
+	}
+	return nil
+}
+
 // 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetRequestToStruct(pointer interface{}, mapping ...map[string]string) error {
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
