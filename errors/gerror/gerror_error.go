@@ -22,7 +22,7 @@ type Error struct {
 }
 
 const (
-	gFILTER_KEY = "/gf/errors/gerror/gerror"
+	gFILTER_KEY = "/errors/gerror/gerror"
 )
 
 var (

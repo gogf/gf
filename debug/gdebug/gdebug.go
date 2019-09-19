@@ -17,7 +17,7 @@ import (
 
 const (
 	gMAX_DEPTH  = 1000
-	gFILTER_KEY = "/gf/debug/gdebug/gdebug.go"
+	gFILTER_KEY = "/debug/gdebug/gdebug.go"
 )
 
 var (

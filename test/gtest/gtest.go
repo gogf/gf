@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	gPATH_FILTER_KEY = "/gf/test/gtest/gtest"
+	gPATH_FILTER_KEY = "/test/gtest/gtest"
 )
 
 // Case creates an unit test case.
