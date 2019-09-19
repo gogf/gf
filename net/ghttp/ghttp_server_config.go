@@ -73,6 +73,7 @@ type ServerConfig struct {
 	ErrorStack        bool              // Logging: 当产生错误时打印调用链详细堆栈
 	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
 	AccessLogEnabled  bool              // Logging: 是否开启access log(默认关闭)
+	FormParsingMemory int64             // Mess: 表单解析内存限制(byte)
 	NameToUriType     int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
 	GzipContentTypes  []string          // Mess: 允许进行gzip压缩的文件类型
 	DumpRouteMap      bool              // Mess: 是否在程序启动时默认打印路由表信息
@@ -105,6 +106,7 @@ var defaultServerConfig = ServerConfig{
 	ErrorLogEnabled:   true,
 	AccessLogEnabled:  false,
 	DumpRouteMap:      true,
+	FormParsingMemory: 1024 * 1024 * 1024,
 	RouterCacheExpire: 60,
 	Rewrites:          make(map[string]string),
 }
@@ -285,41 +287,6 @@ func (s *Server) SetServerAgent(agent string) {
 		return
 	}
 	s.config.ServerAgent = agent
-}
-
-func (s *Server) SetGzipContentTypes(types []string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.GzipContentTypes = types
-}
-
-// 服务注册时对象和方法名称转换为URI时的规则
-func (s *Server) SetNameToUriType(t int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.NameToUriType = t
-}
-
-// 是否在程序启动时打印路由表信息
-func (s *Server) SetDumpRouteMap(enabled bool) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.DumpRouteMap = enabled
-}
-
-// 设置路由缓存过期时间(秒)
-func (s *Server) SetRouterCacheExpire(expire int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.RouterCacheExpire = expire
 }
 
 // 设置KeepAlive

@@ -23,8 +23,7 @@ func (r *Request) initPost() {
 		r.parsedPost = true
 		if v := r.Header.Get("Content-Type"); v != "" && gstr.Contains(v, "multipart/") {
 			// multipart/form-data, multipart/mixed
-			// MultiMedia表单请求解析允许最大使用内存：1GB
-			r.ParseMultipartForm(1024 * 1024 * 1024)
+			r.ParseMultipartForm(r.Server.config.FormParsingMemory)
 			if len(r.PostForm) > 0 {
 				// 重新组织数据格式，使用统一的数据Parse方式
 				params := ""
