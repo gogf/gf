@@ -144,7 +144,7 @@ func (c *Redis) BitPos(key string, bit int, option ...int) (int, error) {
 	return typeInt(c.commnddo("BITPOS", gconv.Interfaces(param)...))
 }
 
-func (c *Redis) Bitfield(key string, option ...interface{}) ([]interface{}, error) {
+func (c *Redis) BitField(key string, option ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(option).InsertBefore(0, key)
 	return typeInterfacess(c.commnddo("BITFIELD", gconv.Interfaces(param)...))
 }
@@ -430,7 +430,7 @@ func (c *Redis) ZinCrby(key string, increment int, member interface{}) (string, 
 	return typeString(c.commnddo("ZINCRBY ", key, increment, member))
 }
 
-func (c *Redis) ZCARD(key string) (int64, error) {
+func (c *Redis) Zcard(key string) (int64, error) {
 	return typeInt64(c.commnddo("ZCARD ", key))
 }
 
@@ -450,7 +450,7 @@ func (c *Redis) ZrangByScore(key string, start, stop int64, options ...string) (
 	return c.commnddo("ZRANGEBYSCORE ", start, stop, options[0])
 }
 
-func (c *Redis) Zrevrangebyscore(key string, start, stop int64, options ...string) (interface{}, error) {
+func (c *Redis) ZrevRangeByScore(key string, start, stop int64, options ...string) (interface{}, error) {
 	return c.commnddo("ZREVRANGEBYSCORE ", start, stop, options[0])
 }
 
@@ -458,110 +458,110 @@ func (c *Redis) Zrank(key, member string) (int64, error) {
 	return typeInt64(c.commnddo("ZRANK ", member))
 }
 
-func (c *Redis) ZREVRANK(key, member string) (int64, error) {
+func (c *Redis) ZrevRank(key, member string) (int64, error) {
 	return typeInt64(c.commnddo("ZREVRANK ", member))
 }
 
-func (c *Redis) ZREM(key string, member ...string) (int64, error) {
+func (c *Redis) Zrem(key string, member ...string) (int64, error) {
 	param := garray.NewStrArrayFrom(member)
 	param = param.InsertBefore(0, key)
 	return typeInt64(c.commnddo("ZREM ", param))
 }
 
-func (c *Redis) Zremrangebyrank(key string, start, stop int64) (int64, error) {
+func (c *Redis) ZreMrangeByRank(key string, start, stop int64) (int64, error) {
 	return typeInt64(c.commnddo("ZREMRANGEBYRANK ", key, start, stop))
 }
 
-func (c *Redis) Zremrangebyscore(key string, min, max int64) (int64, error) {
+func (c *Redis) ZremRangeByScore(key string, min, max int64) (int64, error) {
 	return typeInt64(c.commnddo("ZREMRANGEBYSCORE ", key, min, max))
 }
 
-func (c *Redis) Zrangebylex(key, min, max string, options ...string) ([]interface{}, error) {
+func (c *Redis) ZrangeByLex(key, min, max string, options ...string) ([]interface{}, error) {
 	param := garray.NewStrArrayFrom(options)
 	param = param.InsertBefore(0, max).InsertBefore(0, min).InsertBefore(0, key)
 	return typeInterfacess(c.commnddo("ZRANGEBYLEX ", param))
 }
 
-func (c *Redis) Zlexcount(key, min, max string) (int64, error) {
+func (c *Redis) ZlexCount(key, min, max string) (int64, error) {
 	return typeInt64(c.commnddo("ZLEXCOUNT ", key, min, max))
 }
 
-func (c *Redis) Zremrangebylex(key, min, max string) (int64, error) {
+func (c *Redis) ZreMrangeByLex(key, min, max string) (int64, error) {
 	return typeInt64(c.commnddo("ZREMRANGEBYLEX ", key, min, max))
 }
 
-func (c *Redis) Zunionstore(options ...interface{}) (int64, error) {
+func (c *Redis) ZunionStore(options ...interface{}) (int64, error) {
 	return typeInt64(c.commnddo("ZUNIONSTORE ", options...))
 }
-func (c *Redis) Zinterstore(options ...interface{}) (int64, error) {
+func (c *Redis) ZinterStore(options ...interface{}) (int64, error) {
 	return typeInt64(c.commnddo("ZINTERSTORE ", options...))
 }
 
 //================================================================HyperLogLog
-func (c *Redis) Pfadd(key string, options ...interface{}) (bool, error) {
+func (c *Redis) PfAdd(key string, options ...interface{}) (bool, error) {
 	param := garray.NewArrayFrom(options)
 	param = param.InsertBefore(0, key)
 	return typeBool(c.commnddo("PFADD ", gconv.Interfaces(param)...))
 }
 
-func (c *Redis) Pfcount(keys ...string) (int64, error) {
+func (c *Redis) PfCount(keys ...string) (int64, error) {
 	return typeInt64(c.commnddo("PFCOUNT ", gconv.Interfaces(keys)...))
 }
 
-func (c *Redis) Pfmerge(keys ...string) (string, error) {
+func (c *Redis) PfMerge(keys ...string) (string, error) {
 	return typeString(c.commnddo("PFMERGE ", gconv.Interfaces(keys)...))
 }
 
 //================================================================================GEO
-func (c *Redis) Geoadd(key string, params ...interface{}) (int64, error) {
+func (c *Redis) GeoAdd(key string, params ...interface{}) (int64, error) {
 	param := garray.NewArrayFrom(params)
 	param = param.InsertBefore(0, key)
 	return typeInt64(c.commnddo("GEOADD ", gconv.Interfaces(param)...))
 }
 
-func (c *Redis) Geopos(key string, member ...interface{}) ([]interface{}, error) {
+func (c *Redis) GeoPos(key string, member ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(member)
 	param = param.InsertBefore(0, key)
 	return typeInterfacess(c.commnddo("GEOPOS ", gconv.Interfaces(param)...))
 }
 
-func (c *Redis) Geodist(key string, params ...string) (interface{}, error) {
+func (c *Redis) GeoDist(key string, params ...string) (interface{}, error) {
 	param := garray.NewStrArrayFrom(params).InsertBefore(0, key)
 	return c.commnddo("GEODIST ", gconv.Interfaces(param)...)
 }
 
-func (c *Redis) Georadius(key string, member ...interface{}) ([]interface{}, error) {
+func (c *Redis) GeoRadius(key string, member ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(member).InsertBefore(0, key)
 	return typeInterfacess(c.commnddo("GEORADIUS ", gconv.Interfaces(param)...))
 }
 
-func (c *Redis) Georadiusbymember(key string, member ...interface{}) ([]interface{}, error) {
+func (c *Redis) GeoRadiusByMember(key string, member ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(member).InsertBefore(0, key)
 	return typeInterfacess(c.commnddo("GEORADIUSBYMEMBER ", gconv.Interfaces(param)...))
 }
 
-func (c *Redis) Geohash(key string, member ...interface{}) ([]interface{}, error) {
+func (c *Redis) GeoHash(key string, member ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(member).InsertBefore(0, key)
 	return typeInterfacess(c.commnddo("GEOHASH ", gconv.Interfaces(param)...))
 }
 
 //============================================================================channel
-func (c *Redis) Publist(channel, message string) (int, error) {
+func (c *Redis) PubList(channel, message string) (int, error) {
 	return typeInt(c.commnddo("PUBLISH ", channel, message))
 }
 
-func (c *Redis) Subscribe(channel ...string) (interface{}, error) {
+func (c *Redis) SubScribe(channel ...string) (interface{}, error) {
 	return c.commnddo("SUBSCRIBE", gconv.Interfaces(channel)...)
 }
 
-func (c *Redis) Psubscribe(pattern ...string) (interface{}, error) {
+func (c *Redis) PsubScribe(pattern ...string) (interface{}, error) {
 	return c.commnddo("PSUBSCRIBE", gconv.Interfaces(pattern)...)
 }
 
-func (c *Redis) Unsubscribe(pattern ...string) (interface{}, error) {
+func (c *Redis) UnSubScribe(pattern ...string) (interface{}, error) {
 	return c.commnddo("UNSUBSCRIBE", gconv.Interfaces(pattern)...)
 }
 
-func (c *Redis) Pubsubscribe(pattern ...string) (interface{}, error) {
+func (c *Redis) PubSubScribe(pattern ...string) (interface{}, error) {
 	return c.commnddo("PUNSUBSCRIBE", gconv.Interfaces(pattern)...)
 }

@@ -14,15 +14,15 @@ import (
 )
 
 var (
-	Clusterip     = "192.168.0.55" //
-	Pass1         = "123456"       //123456
-	port          = 8579           //8579 6379
+	Clusterip     = "192.168.0.104" //
+	Pass1         = ""       //123456
+	port          = 6379           //8579 6379
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "yyb513941", // when is ci,no pass
+		Pass: "", // when is ci,no pass
 	}
 )
 
