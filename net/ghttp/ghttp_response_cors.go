@@ -8,6 +8,8 @@
 package ghttp
 
 import (
+	"net/url"
+
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
@@ -47,26 +49,20 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 // See https://www.w3.org/TR/cors/ .
 func (r *Response) CORS(options CORSOptions) {
 	if options.AllowDomain != nil {
-		//origin := r.request.Header.Get("Origin")
-		//if origin == "" {
-		//	return
-		//}
-		//parsed, err := url.Parse(origin)
-		//if err != nil {
-		//	return
-		//}
-		//for k, v := range options.AllowDomain {
-		//	if gstr.Contains(v, "*") {
-		//		// Regular expression.
-		//		gstr.ReplaceByArray(v, []string{
-		//			".", "\\.", "*", "[^\\.]*",
-		//		})
-		//	} else if len(parsed.Host) >= len(v) && parsed.Host[len(parsed.Host)-len(v):] == v {
-		//		// Last domain.
-		//		r.Header().Set("Access-Control-Allow-Origin", origin)
-		//		break
-		//	}
-		//}
+		origin := r.request.Header.Get("Origin")
+		if origin == "" {
+			return
+		}
+		parsed, err := url.Parse(origin)
+		if err != nil {
+			return
+		}
+		for _, v := range options.AllowDomain {
+			if gstr.IsSubDomain(parsed.Host, v) {
+				r.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
 	} else if options.AllowOrigin != "" {
 		r.Header().Set("Access-Control-Allow-Origin", options.AllowOrigin)
 	}

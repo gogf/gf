@@ -6,9 +6,11 @@
 
 package g
 
-import "github.com/gogf/gf/container/gvar"
+import (
+	"github.com/gogf/gf/container/gvar"
+)
 
-// Universal variable type, like generics.
+// Var is a universal variable type, like generics.
 type Var = gvar.Var
 
 // Frequently-used map type alias.

@@ -25,7 +25,7 @@ func (o *NamesObject) ShowName(r *ghttp.Request) {
 func Test_NameToUri_FullName(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_FULLNAME)
+	s.SetNameToUriType(ghttp.URI_TYPE_FULLNAME)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouteMap(false)
@@ -47,7 +47,7 @@ func Test_NameToUri_FullName(t *testing.T) {
 func Test_NameToUri_AllLower(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_ALLLOWER)
+	s.SetNameToUriType(ghttp.URI_TYPE_ALLLOWER)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouteMap(false)
@@ -69,7 +69,7 @@ func Test_NameToUri_AllLower(t *testing.T) {
 func Test_NameToUri_Camel(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_CAMEL)
+	s.SetNameToUriType(ghttp.URI_TYPE_CAMEL)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouteMap(false)
@@ -91,7 +91,7 @@ func Test_NameToUri_Camel(t *testing.T) {
 func Test_NameToUri_Default(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_DEFAULT)
+	s.SetNameToUriType(ghttp.URI_TYPE_DEFAULT)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouteMap(false)
