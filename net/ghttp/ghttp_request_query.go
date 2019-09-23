@@ -129,6 +129,18 @@ func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]
 	return nil
 }
 
+func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
+	queryMap := r.GetQueryMap(kvMap...)
+	if len(queryMap) > 0 {
+		m := make(map[string]*gvar.Var)
+		for k, v := range queryMap {
+			m[k] = gvar.New(v)
+		}
+		return m
+	}
+	return nil
+}
+
 // 将所有的get参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetQueryToStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.initGet()

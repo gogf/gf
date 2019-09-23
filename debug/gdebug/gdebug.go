@@ -12,7 +12,13 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/encoding/ghash"
+
+	"github.com/gogf/gf/crypto/gmd5"
+	"github.com/gogf/gf/os/gfile"
 )
 
 const (
@@ -21,14 +27,36 @@ const (
 )
 
 var (
-	// goRootForFilter is used for stack filtering purpose.
-	goRootForFilter = runtime.GOROOT()
+	goRootForFilter  = runtime.GOROOT() // goRootForFilter is used for stack filtering purpose.
+	binaryVersion    = ""               // The version of current running binary(uint64 hex).
+	binaryVersionMd5 = ""               // The version of current running binary(MD5).
 )
 
 func init() {
 	if goRootForFilter != "" {
 		goRootForFilter = strings.Replace(goRootForFilter, "\\", "/", -1)
 	}
+}
+
+// BinVersion returns the version of current running binary.
+// It uses ghash.BKDRHash+BASE36 algorithm to calculate the unique version of the binary.
+func BinVersion() string {
+	if binaryVersion == "" {
+		binaryVersion = strconv.FormatInt(
+			int64(ghash.BKDRHash(gfile.GetBytes(gfile.SelfPath()))),
+			36,
+		)
+	}
+	return binaryVersion
+}
+
+// BinVersionMd5 returns the version of current running binary.
+// It uses MD5 algorithm to calculate the unique version of the binary.
+func BinVersionMd5() string {
+	if binaryVersionMd5 == "" {
+		binaryVersionMd5, _ = gmd5.EncryptFile(gfile.SelfPath())
+	}
+	return binaryVersionMd5
 }
 
 // PrintStack prints to standard error the stack trace returned by runtime.Stack.

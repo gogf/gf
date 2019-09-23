@@ -220,9 +220,61 @@ func (v *Var) Map(tags ...string) map[string]interface{} {
 	return gconv.Map(v.Val(), tags...)
 }
 
+// MapStrStr converts <v> to map[string]string.
+func (v *Var) MapStrStr(tags ...string) map[string]string {
+	m := v.Map(tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]string)
+		for k, v := range m {
+			vMap[k] = gconv.String(v)
+		}
+		return vMap
+	}
+	return nil
+}
+
+// MapStrVar converts <v> to map[string]*Var.
+func (v *Var) MapStrVar(tags ...string) map[string]*Var {
+	m := v.Map(tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]*Var)
+		for k, v := range m {
+			vMap[k] = New(v)
+		}
+		return vMap
+	}
+	return nil
+}
+
 // MapDeep converts <v> to map[string]interface{} recursively.
 func (v *Var) MapDeep(tags ...string) map[string]interface{} {
 	return gconv.MapDeep(v.Val(), tags...)
+}
+
+// MapDeep converts <v> to map[string]string recursively.
+func (v *Var) MapStrStrDeep(tags ...string) map[string]string {
+	m := v.MapDeep(tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]string)
+		for k, v := range m {
+			vMap[k] = gconv.String(v)
+		}
+		return vMap
+	}
+	return nil
+}
+
+// MapStrVarDeep converts <v> to map[string]*Var recursively.
+func (v *Var) MapStrVarDeep(tags ...string) map[string]*Var {
+	m := v.MapDeep(tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]*Var)
+		for k, v := range m {
+			vMap[k] = New(v)
+		}
+		return vMap
+	}
+	return nil
 }
 
 // Struct maps value of <v> to <pointer>.

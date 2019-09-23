@@ -221,6 +221,11 @@ func (r *Response) Buffer() []byte {
 	return r.buffer.Bytes()
 }
 
+// 获取当前缓冲区中的数据(string)
+func (r *Response) BufferString() string {
+	return r.buffer.String()
+}
+
 // 获取当前缓冲区中的数据大小
 func (r *Response) BufferLength() int {
 	return r.buffer.Len()

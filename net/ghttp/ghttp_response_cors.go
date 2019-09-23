@@ -13,17 +13,18 @@ import (
 )
 
 // See https://www.w3.org/TR/cors/ .
-// 服务端允许跨域请求选项
 type CORSOptions struct {
-	AllowOrigin      string // Access-Control-Allow-Origin
-	AllowCredentials string // Access-Control-Allow-Credentials
-	ExposeHeaders    string // Access-Control-Expose-Headers
-	MaxAge           int    // Access-Control-Max-Age
-	AllowMethods     string // Access-Control-Allow-Methods
-	AllowHeaders     string // Access-Control-Allow-Headers
+	AllowDomain      []string // Used for allowing requests from custom domains
+	AllowOrigin      string   // Access-Control-Allow-Origin
+	AllowCredentials string   // Access-Control-Allow-Credentials
+	ExposeHeaders    string   // Access-Control-Expose-Headers
+	MaxAge           int      // Access-Control-Max-Age
+	AllowMethods     string   // Access-Control-Allow-Methods
+	AllowHeaders     string   // Access-Control-Allow-Headers
 }
 
-// 默认的CORS配置
+// DefaultCORSOptions returns the default CORS options,
+// which allows any cross-domain request.
 func (r *Response) DefaultCORSOptions() CORSOptions {
 	options := CORSOptions{
 		AllowOrigin:      "*",
@@ -42,12 +43,34 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 	return options
 }
 
+// CORS sets custom CORS options.
 // See https://www.w3.org/TR/cors/ .
-// 允许请求跨域访问.
 func (r *Response) CORS(options CORSOptions) {
-	if options.AllowOrigin != "" {
+	if options.AllowDomain != nil {
+		//origin := r.request.Header.Get("Origin")
+		//if origin == "" {
+		//	return
+		//}
+		//parsed, err := url.Parse(origin)
+		//if err != nil {
+		//	return
+		//}
+		//for k, v := range options.AllowDomain {
+		//	if gstr.Contains(v, "*") {
+		//		// Regular expression.
+		//		gstr.ReplaceByArray(v, []string{
+		//			".", "\\.", "*", "[^\\.]*",
+		//		})
+		//	} else if len(parsed.Host) >= len(v) && parsed.Host[len(parsed.Host)-len(v):] == v {
+		//		// Last domain.
+		//		r.Header().Set("Access-Control-Allow-Origin", origin)
+		//		break
+		//	}
+		//}
+	} else if options.AllowOrigin != "" {
 		r.Header().Set("Access-Control-Allow-Origin", options.AllowOrigin)
 	}
+
 	if options.AllowCredentials != "" {
 		r.Header().Set("Access-Control-Allow-Credentials", options.AllowCredentials)
 	}
@@ -65,7 +88,8 @@ func (r *Response) CORS(options CORSOptions) {
 	}
 }
 
-// 允许请求跨域访问(使用默认配置).
+// CORSDefault sets CORS with default CORS options,
+// which allows any cross-domain request.
 func (r *Response) CORSDefault() {
 	r.CORS(r.DefaultCORSOptions())
 }
