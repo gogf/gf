@@ -35,7 +35,7 @@ before_script:
 - psql -c 'create database travis_ci_test;' -U postgres
 
 script:
-- GOARCH=386 go test -v ./... || exit 1
+#- GOARCH=386 go test -v ./... || exit 1
 - GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
