@@ -157,6 +157,18 @@ func (r *Request) GetPostMapStrStr(kvMap ...map[string]interface{}) map[string]s
 	return nil
 }
 
+func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
+	postMap := r.GetPostMap(kvMap...)
+	if len(postMap) > 0 {
+		m := make(map[string]*gvar.Var)
+		for k, v := range postMap {
+			m[k] = gvar.New(v)
+		}
+		return m
+	}
+	return nil
+}
+
 // 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetPostToStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.initPost()

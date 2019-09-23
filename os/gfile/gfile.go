@@ -444,7 +444,17 @@ func IsEmpty(path string) bool {
 //
 // Note: the result contains symbol '.'.
 func Ext(path string) string {
-	return filepath.Ext(path)
+	ext := filepath.Ext(path)
+	if p := strings.IndexByte(ext, '?'); p != -1 {
+		ext = ext[0:p]
+	}
+	return ext
+}
+
+// ExtName is like function Ext, which returns the file name extension used by path,
+// but the result does not contains symbol '.'.
+func ExtName(path string) string {
+	return strings.TrimLeft(Ext(path), ".")
 }
 
 // Home returns absolute path of current user's home directory.
