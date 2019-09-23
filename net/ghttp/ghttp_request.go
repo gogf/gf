@@ -74,7 +74,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 
 // 获取Web Socket连接对象(如果是非WS请求会失败，注意检查返回的error结果)
 func (r *Request) WebSocket() (*WebSocket, error) {
-	if conn, err := wsUpgrader.Upgrade(r.Response.ResponseWriter.ResponseWriter, r.Request, nil); err == nil {
+	if conn, err := wsUpgrader.Upgrade(r.Response.Writer, r.Request, nil); err == nil {
 		return &WebSocket{
 			conn,
 		}, nil
