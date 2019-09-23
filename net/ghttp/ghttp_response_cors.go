@@ -35,7 +35,9 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 		AllowHeaders:     "Origin, X-Requested-With, Content-Type, Accept, Key",
 		MaxAge:           3628800,
 	}
-	if referer := r.request.Referer(); referer != "" {
+	if origin := r.Header().Get("Origin"); origin != "" {
+		options.AllowOrigin = origin
+	} else if referer := r.request.Referer(); referer != "" {
 		if p := gstr.PosR(referer, "/", 6); p != -1 {
 			options.AllowOrigin = referer[:p]
 		} else {
@@ -48,25 +50,9 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 // CORS sets custom CORS options.
 // See https://www.w3.org/TR/cors/ .
 func (r *Response) CORS(options CORSOptions) {
-	if options.AllowDomain != nil {
-		origin := r.request.Header.Get("Origin")
-		if origin == "" {
-			return
-		}
-		parsed, err := url.Parse(origin)
-		if err != nil {
-			return
-		}
-		for _, v := range options.AllowDomain {
-			if gstr.IsSubDomain(parsed.Host, v) {
-				r.Header().Set("Access-Control-Allow-Origin", origin)
-				break
-			}
-		}
-	} else if options.AllowOrigin != "" {
+	if r.CORSAllowedOrigin(options) {
 		r.Header().Set("Access-Control-Allow-Origin", options.AllowOrigin)
 	}
-
 	if options.AllowCredentials != "" {
 		r.Header().Set("Access-Control-Allow-Credentials", options.AllowCredentials)
 	}
@@ -82,6 +68,27 @@ func (r *Response) CORS(options CORSOptions) {
 	if options.AllowHeaders != "" {
 		r.Header().Set("Access-Control-Allow-Headers", options.AllowHeaders)
 	}
+}
+
+// CORSAllowed checks whether the current request origin is allowed CORS.
+func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
+	if options.AllowDomain == nil {
+		return true
+	}
+	origin := r.request.Header.Get("Origin")
+	if origin == "" {
+		return false
+	}
+	parsed, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	for _, v := range options.AllowDomain {
+		if gstr.IsSubDomain(parsed.Host, v) {
+			return true
+		}
+	}
+	return false
 }
 
 // CORSDefault sets CORS with default CORS options,

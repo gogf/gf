@@ -1,6 +1,6 @@
-# `v1.9.0`
+# `v1.9.3`
 
-该版本实际为`v2.0.0`的大版本发布，为避免`go module`机制严格要求`v2`版本以上需要修改`import`并加上`v2`后缀，因此使用了`v1.9.0`进行发布。
+该版本实际为`v2.0`的大版本发布，为避免`go module`机制严格要求`v2`版本以上需要修改`import`并加上`v2`后缀，因此使用了`v1.9`版本进行发布。
 
 ## 新特性
 
@@ -29,6 +29,7 @@
 
 1. `ghttp`
     - 改进`Request`参数解析方式：https://goframe.org/net/ghttp/request
+    - 改进跨域请求功能，新增`Origin`设置及校验功能：https://goframe.org/net/ghttp/cors
     - `Cookie`及`Session`的`TTL`配置数据类型修改为`time.Duration`;
     - 新增允许同时通过`Header/Cookie`传递`SessionId`；
     - 新增`ConfigFromMap/SetConfigWithMap`方法，支持通过`map`参数设置WebServer；
