@@ -26,6 +26,7 @@ var defaultMessages = map[string]string{
 	"password3":            "密码格式不合法，密码格式为任意6-18位的可见字符，必须包含大小写字母、数字和特殊字符",
 	"postcode":             "邮政编码不正确",
 	"id-number":            "身份证号码不正确",
+	"luhn":                 "银行卡号不正确",
 	"qq":                   "QQ号码格式不正确",
 	"ip":                   "IP地址格式不正确",
 	"ipv4":                 "IPv4地址格式不正确",
