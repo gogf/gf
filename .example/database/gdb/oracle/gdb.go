@@ -520,7 +520,6 @@ func getQueriedSqls() {
 		fmt.Println("Sql  :", v.Sql)
 		fmt.Println("Args :", v.Args)
 		fmt.Println("Error:", v.Error)
-		fmt.Println("Func :", v.Func)
 	}
 }
 

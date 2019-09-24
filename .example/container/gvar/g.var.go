@@ -30,8 +30,4 @@ func main() {
 	s := new(Score)
 	v.Struct(s)
 	fmt.Println(s)
-
-	// 只读接口
-	r := v.ReadOnly()
-	fmt.Println(r.String())
 }

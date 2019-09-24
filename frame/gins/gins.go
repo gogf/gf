@@ -215,10 +215,10 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 		node.MaxOpenConnCount = gconv.Int(value)
 	}
 	if value, ok := nodeMap["max-lifetime"]; ok {
-		node.MaxConnLifetime = gconv.Int(value)
+		node.MaxConnLifetime = gconv.Duration(value)
 	}
 	if value, ok := nodeMap["maxLifetime"]; ok {
-		node.MaxConnLifetime = gconv.Int(value)
+		node.MaxConnLifetime = gconv.Duration(value)
 	}
 	// Parse link syntax.
 	if node.LinkInfo != "" && node.Type == "" {

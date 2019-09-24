@@ -8,9 +8,9 @@ import (
 
 func main() {
 	db := g.DB()
-	db.SetMaxIdleConns(10)
-	db.SetMaxOpenConns(10)
-	db.SetConnMaxLifetime(10)
+	db.SetMaxIdleConnCount(10)
+	db.SetMaxOpenConnCount(10)
+	db.SetMaxConnLifetime(time.Minute)
 
 	// 开启调试模式，以便于记录所有执行的SQL
 	db.SetDebug(true)
