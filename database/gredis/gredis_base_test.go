@@ -134,6 +134,7 @@ func Test_Clustersg(t *testing.T) {
 		rr,_=g.Redis().RandomKey()
 		gtest.AssertNE(rr,nil)
 
+		// @todo: rename在集群模式下会报错。
 		s,err=g.Redis().Rename("jjname2","{jjname22}")
 		gtest.Assert(err,nil)
 		gtest.Assert(s,"ok")
