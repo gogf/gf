@@ -37,7 +37,7 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 	}
 	if origin := r.Header().Get("Origin"); origin != "" {
 		options.AllowOrigin = origin
-	} else if referer := r.request.Referer(); referer != "" {
+	} else if referer := r.Request.Referer(); referer != "" {
 		if p := gstr.PosR(referer, "/", 6); p != -1 {
 			options.AllowOrigin = referer[:p]
 		} else {
@@ -75,9 +75,9 @@ func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	if options.AllowDomain == nil {
 		return true
 	}
-	origin := r.request.Header.Get("Origin")
+	origin := r.Request.Header.Get("Origin")
 	if origin == "" {
-		return false
+		return true
 	}
 	parsed, err := url.Parse(origin)
 	if err != nil {

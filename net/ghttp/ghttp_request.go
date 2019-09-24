@@ -65,7 +65,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	// 会话处理
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())
-	request.Response.request = request
+	request.Response.Request = request
 	request.Middleware = &Middleware{
 		request: request,
 	}
@@ -108,8 +108,8 @@ func (r *Request) GetRawString() string {
 }
 
 // 获取原始json请求输入字符串，并解析为json对象
-func (r *Request) GetJson() *gjson.Json {
-	return gjson.New(r.GetRaw())
+func (r *Request) GetJson() (*gjson.Json, error) {
+	return gjson.LoadJson(r.GetRaw())
 }
 
 func (r *Request) GetString(key string, def ...interface{}) string {

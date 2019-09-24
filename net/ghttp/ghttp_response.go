@@ -23,22 +23,22 @@ import (
 // 服务端请求返回对象。
 // 注意该对象并没有实现http.ResponseWriter接口，而是依靠ghttp.ResponseWriter实现。
 type Response struct {
-	ResponseWriter
-	Server  *Server         // 所属Web Server
-	Writer  *ResponseWriter // ResponseWriter的别名
-	request *Request        // 关联的Request请求对象
+	*ResponseWriter                 // Underlying ResponseWriter.
+	Server          *Server         // Parent server.
+	Writer          *ResponseWriter // Alias of ResponseWriter.
+	Request         *Request        // According request.
 }
 
 // 创建一个ghttp.Response对象指针
 func newResponse(s *Server, w http.ResponseWriter) *Response {
 	r := &Response{
 		Server: s,
-		ResponseWriter: ResponseWriter{
-			ResponseWriter: w,
-			buffer:         bytes.NewBuffer(nil),
+		ResponseWriter: &ResponseWriter{
+			writer: w,
+			buffer: bytes.NewBuffer(nil),
 		},
 	}
-	r.Writer = &r.ResponseWriter
+	r.Writer = r.ResponseWriter
 	return r
 }
 
@@ -47,7 +47,7 @@ func (r *Response) Write(content ...interface{}) {
 	if len(content) == 0 {
 		return
 	}
-	if r.Status == 0 && r.request.hasServeHandler {
+	if r.Status == 0 && r.Request.hasServeHandler {
 		r.Status = http.StatusOK
 	}
 	for _, v := range content {
@@ -99,7 +99,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 		return err
 	} else {
 		//r.Header().Set("Content-Type", "application/json")
-		if callback := r.request.GetString("callback"); callback != "" {
+		if callback := r.Request.GetString("callback"); callback != "" {
 			buffer := []byte(callback)
 			buffer = append(buffer, byte('('))
 			buffer = append(buffer, b...)
@@ -128,9 +128,9 @@ func (r *Response) WriteStatus(status int, content ...interface{}) {
 	if r.buffer.Len() == 0 {
 		// 状态码注册回调函数处理
 		if status != http.StatusOK {
-			if f := r.request.Server.getStatusHandler(status, r.request); f != nil {
+			if f := r.Request.Server.getStatusHandler(status, r.Request); f != nil {
 				niceCallFunc(func() {
-					f(r.request)
+					f(r.Request)
 				})
 				// 防止多次设置(http: multiple response.WriteHeader calls)
 				if r.Status == 0 {
@@ -168,7 +168,7 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 		}
 		serveFile = &staticServeFile{path: path}
 	}
-	r.Server.serveFile(r.request, serveFile, allowIndex...)
+	r.Server.serveFile(r.Request, serveFile, allowIndex...)
 }
 
 // 静态文件下载处理
@@ -200,7 +200,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
 	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, downloadName))
-	r.Server.serveFile(r.request, serveFile)
+	r.Server.serveFile(r.Request, serveFile)
 }
 
 // 返回location标识，引导客户端跳转。
@@ -208,12 +208,12 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 func (r *Response) RedirectTo(location string) {
 	r.Header().Set("Location", location)
 	r.WriteHeader(http.StatusFound)
-	r.request.Exit()
+	r.Request.Exit()
 }
 
 // 返回location标识，引导客户端跳转到来源页面
 func (r *Response) RedirectBack() {
-	r.RedirectTo(r.request.GetReferer())
+	r.RedirectTo(r.Request.GetReferer())
 }
 
 // 获取当前缓冲区中的数据

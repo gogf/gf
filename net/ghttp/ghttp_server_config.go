@@ -151,12 +151,12 @@ func (s *Server) SetConfigWithMap(m map[string]interface{}) {
 }
 
 // 设置http server参数 - Addr
-func (s *Server) SetAddr(itemFunc string) {
+func (s *Server) SetAddr(address string) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	s.config.Addr = itemFunc
+	s.config.Addr = address
 }
 
 // 设置http server参数 - Port
@@ -176,12 +176,12 @@ func (s *Server) SetPort(port ...int) {
 }
 
 // 设置http server参数 - HTTPS Addr
-func (s *Server) SetHTTPSAddr(itemFunc string) {
+func (s *Server) SetHTTPSAddr(address string) {
 	if s.Status() == SERVER_STATUS_RUNNING {
 		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
 		return
 	}
-	s.config.HTTPSAddr = itemFunc
+	s.config.HTTPSAddr = address
 }
 
 // 设置http server参数 - HTTPS Port
