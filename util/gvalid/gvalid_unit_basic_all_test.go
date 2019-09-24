@@ -389,9 +389,21 @@ func Test_IDNumber(t *testing.T) {
 		err5 := gvalid.Check(val5, rule, nil)
 		gtest.AssertNE(err1, nil)
 		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
+		gtest.AssertNE(err3, nil)
+		gtest.AssertNE(err4, nil)
 		gtest.Assert(err5, nil)
+	})
+}
+
+func Test_LuHn(t *testing.T) {
+	gtest.Case(t, func() {
+		rule := "luhn"
+		val1 := "6230514630000424470"
+		val2 := "6230514630000424473"
+		err1 := gvalid.Check(val1, rule, nil)
+		err2 := gvalid.Check(val2, rule, nil)
+		gtest.AssertNE(err1, nil)
+		gtest.Assert(err2, nil)
 	})
 }
 
