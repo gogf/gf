@@ -39,13 +39,12 @@ func (c *Redis) layoutSlots() {
 	for _, v := range slotss {
 		if len(v) != 4 {
 			return
-		} else {
-			max := gconv.Int(v[3])
-			if max == 0 {
-				return
-			}
-			slotsMap[v[1]] = []int{gconv.Int(v[2]), max}
 		}
+		max := gconv.Int(v[3])
+		if max == 0 {
+			return
+		}
+		slotsMap[v[1]] = []int{gconv.Int(v[2]), max}
 	}
 }
 
