@@ -59,50 +59,51 @@ func (c *Redis) Del(key ...string) (interface{}, error) {
 	return c.commnddo("DEL", gconv.Interfaces(key)...)
 }
 
-func (c *Redis) Exists(key string) (interface{}, error) {
-	return c.commnddo("EXISTS", key)
+func (c *Redis) Exists(key string) (int, error) {
+	return typeInt( c.commnddo("EXISTS", key))
 }
 
-func (c *Redis) Ttl(key string) (interface{}, error) {
-	return c.commnddo("TTL", key)
+func (c *Redis) Ttl(key string) (int64, error) {
+	return typeInt64(c.commnddo("TTL", key))
 }
 
-func (c *Redis) Expire(key string) (interface{}, error) {
-	return c.commnddo("EXPIRE", key)
+func (c *Redis) Expire(key string, time int64) (int64, error) {
+	return typeInt64(c.commnddo("EXPIRE", key,time))
 }
 
 func (c *Redis) Dump(key string) (interface{}, error) {
 	return c.commnddo("DUMP", key)
 }
 
-func (c *Redis) Expireat(key string, time int64) (interface{}, error) {
-	return c.commnddo("EXPIREAT", key, time)
+func (c *Redis) Expireat(key string, timestamp int64) (int, error) {
+	return typeInt(c.commnddo("EXPIREAT", key, timestamp))
 }
 
-func (c *Redis) Keys(key string) (interface{}, error) {
-	return c.commnddo("KEYS", key)
+// Returns all keys matching pattern, but not for clustering
+func (c *Redis) Keys(key string) ([]interface{}, error) {
+	return typeInterfacess( c.commnddo("KEYS", key))
 }
 
 func (c *Redis) Object(action, key string) (interface{}, error) {
 	return c.commnddo("OBJECT", action, key)
 }
 
-func (c *Redis) Persist(key string) (interface{}, error) {
-	return c.commnddo("PERSIST", key)
+func (c *Redis) Persist(key string) (int, error) {
+	return typeInt(c.commnddo("PERSIST", key))
 }
-func (c *Redis) Pttl(key string) (interface{}, error) {
-	return c.commnddo("PTTL", key)
+func (c *Redis) Pttl(key string) (int64, error) {
+	return typeInt64(c.commnddo("PTTL", key))
 }
 func (c *Redis) RandomKey() (interface{}, error) {
 	return c.commnddo("RANDOMKEY")
 }
 
-func (c *Redis) Rename(oldkey, newkey string) (interface{}, error) {
-	return c.commnddo("RENAME", oldkey, newkey)
+func (c *Redis) Rename(oldkey, newkey string) (string, error) {
+	return typeString(c.commnddo("RENAME", oldkey, newkey))
 }
 
-func (c *Redis) Renamenx(oldkey, newkey string) (interface{}, error) {
-	return c.commnddo("RENAMENX", oldkey, newkey)
+func (c *Redis) Renamenx(oldkey, newkey string) (int, error) {
+	return typeInt(c.commnddo("RENAMENX", oldkey, newkey))
 }
 
 func (c *Redis) ReStore(key string, ttl int64, serializedvalue string) (interface{}, error) {
