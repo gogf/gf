@@ -9,9 +9,11 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
+
 	"os"
 	"strings"
 	"testing"
+
 )
 
 var (
@@ -66,6 +68,10 @@ func Test_ClusterDo(t *testing.T) {
 		gtest.Assert(gconv.String(r), "jqrr2")
 	})
 }
+
+
+
+
 
 func Test_Clustersg(t *testing.T) {
 	gtest.Case(t, func() {
@@ -135,7 +141,9 @@ func Test_Clustersg(t *testing.T) {
 		gtest.AssertNE(rr,nil)
 
 		// @todo: rename在集群模式下会报错。
-		s,err=g.Redis().Rename("jjname2","{jjname22}")
+		rdb:=g.Redis()
+
+		s,err=rdb.Rename("jjname2","{jjname22}")
 		gtest.Assert(err,nil)
 		gtest.Assert(s,"ok")
 		_,err=g.Redis().Rename("jjname2_","jjname22")
