@@ -317,12 +317,10 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 		*/
 		case "id-number":
 			match = checkIDNumber(val)
-			// match = gregex.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)`, val)
 
 		// LUHN规则(银行卡号验证规则)
 		case "luhn":
 			match = checkLuHn(val)
-			println(match)
 
 		// 通用帐号规则(字母开头，只能包含字母、数字和下划线，长度在6~18之间)
 		case "passport":
