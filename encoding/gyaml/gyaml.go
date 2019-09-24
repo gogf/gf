@@ -10,25 +10,24 @@ package gyaml
 import (
 	"encoding/json"
 
+	"github.com/gf-third/yaml"
 	"github.com/gogf/gf/util/gconv"
-
-	yaml3 "github.com/gf-third/yaml/v3"
 )
 
 func Encode(v interface{}) ([]byte, error) {
-	return yaml3.Marshal(v)
+	return yaml.Marshal(v)
 }
 
 func Decode(v []byte) (interface{}, error) {
 	var result map[string]interface{}
-	if err := yaml3.Unmarshal(v, &result); err != nil {
+	if err := yaml.Unmarshal(v, &result); err != nil {
 		return nil, err
 	}
 	return gconv.MapDeep(result), nil
 }
 
 func DecodeTo(v []byte, result interface{}) error {
-	return yaml3.Unmarshal(v, result)
+	return yaml.Unmarshal(v, result)
 }
 
 func ToJson(v []byte) ([]byte, error) {
