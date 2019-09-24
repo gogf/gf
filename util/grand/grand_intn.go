@@ -58,9 +58,13 @@ func init() {
 // Intn returns a int number which is between 0 and max - [0, max).
 //
 // Note:
-// 1. The result is greater than or equal to 0, but less than <max>;
-// 2. The result number is 32bit and less than math.MaxUint32.
+// 1. The <max> can only be geater than 0, or else it return <max> directly;
+// 2. The result is greater than or equal to 0, but less than <max>;
+// 3. The result number is 32bit and less than math.MaxUint32.
 func Intn(max int) int {
+	if max <= 0 {
+		return max
+	}
 	n := int(<-bufferChan) % max
 	if (max > 0 && n < 0) || (max < 0 && n > 0) {
 		return -n

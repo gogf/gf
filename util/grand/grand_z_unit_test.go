@@ -25,7 +25,7 @@ func Test_Intn(t *testing.T) {
 		for i := 0; i < 1000000; i++ {
 			n := grand.Intn(-100)
 			gtest.AssertLE(n, 0)
-			gtest.AssertGT(n, -100)
+			gtest.Assert(n, -100)
 		}
 	})
 }

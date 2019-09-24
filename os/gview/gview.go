@@ -5,12 +5,17 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gview implements a template engine based on text/template.
+//
+// Reserved template variable names:
+//     I18nLanguage: Assign this variable to define i18n language for each page.
 package gview
 
 import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/gogf/gf/i18n/gi18n"
 
 	"github.com/gogf/gf/os/gres"
 
@@ -28,7 +33,7 @@ type View struct {
 	paths       *garray.StrArray       // Searching path array.
 	data        map[string]interface{} // Global template variables.
 	funcMap     map[string]interface{} // Global template function map.
-	i18nEnabled bool                   // Is i18n enabled in this template.
+	i18nManager *gi18n.Manager         // I18n manager for this view.
 	delimiters  []string               // Customized template delimiters.
 }
 
@@ -63,7 +68,7 @@ func New(path ...string) *View {
 		paths:       garray.NewStrArray(true),
 		data:        make(map[string]interface{}),
 		funcMap:     make(map[string]interface{}),
-		i18nEnabled: true,
+		i18nManager: gi18n.Instance(),
 		delimiters:  make([]string, 2),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {

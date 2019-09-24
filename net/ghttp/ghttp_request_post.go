@@ -7,156 +7,176 @@
 package ghttp
 
 import (
+	"strings"
+
+	"github.com/gogf/gf/encoding/gurl"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/structs"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
 
 // 初始化POST请求参数
 func (r *Request) initPost() {
 	if !r.parsedPost {
-		// MultiMedia表单请求解析允许最大使用内存：1GB
-		if r.ParseMultipartForm(1024*1024*1024) == nil {
-			r.parsedPost = true
+		r.parsedPost = true
+		if v := r.Header.Get("Content-Type"); v != "" && gstr.Contains(v, "multipart/") {
+			// multipart/form-data, multipart/mixed
+			r.ParseMultipartForm(r.Server.config.FormParsingMemory)
+			if len(r.PostForm) > 0 {
+				// 重新组织数据格式，使用统一的数据Parse方式
+				params := ""
+				for name, values := range r.PostForm {
+					if len(values) == 1 {
+						if len(params) > 0 {
+							params += "&"
+						}
+						params += name + "=" + gurl.Encode(values[0])
+					} else {
+						if len(name) > 2 && name[len(name)-2:] == "[]" {
+							name = name[:len(name)-2]
+							for _, v := range values {
+								if len(params) > 0 {
+									params += "&"
+								}
+								params += name + "[]=" + gurl.Encode(v)
+							}
+						} else {
+							if len(params) > 0 {
+								params += "&"
+							}
+							params += name + "=" + gurl.Encode(values[len(values)-1])
+						}
+					}
+				}
+				r.postMap, _ = gstr.Parse(params)
+			}
+		} else if strings.EqualFold(r.Method, "POST") {
+			r.parsedRaw = true
+			if raw := r.GetRawString(); len(raw) > 0 {
+				r.postMap, _ = gstr.Parse(raw)
+			}
 		}
 	}
 }
 
-// 设置POST参数，仅在ghttp.Server内有效，**注意并发安全性**
-func (r *Request) SetPost(key string, value string) {
+// 设置当前请求的POST参数
+func (r *Request) SetPost(key string, value interface{}) {
 	r.initPost()
-	r.PostForm[key] = []string{value}
+	r.postMap[key] = value
 }
 
-func (r *Request) AddPost(key string, value string) {
+func (r *Request) GetPost(key string, def ...interface{}) interface{} {
 	r.initPost()
-	r.PostForm[key] = append(r.PostForm[key], value)
-}
-
-func (r *Request) GetPost(key string, def ...interface{}) []string {
-	r.initPost()
-	if v, ok := r.PostForm[key]; ok {
+	if v, ok := r.postMap[key]; ok {
 		return v
 	}
 	if len(def) > 0 {
-		return gconv.Strings(def[0])
+		return def[0]
 	}
 	return nil
 }
 
 func (r *Request) GetPostVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(r.GetPostString(key, def...))
+	return gvar.New(r.GetPost(key, def...))
 }
 
 func (r *Request) GetPostString(key string, def ...interface{}) string {
-	value := r.GetPost(key, def...)
-	if value != nil && value[0] != "" {
-		return value[0]
-	}
-	return ""
+	return r.GetPostVar(key, def...).String()
 }
 
 func (r *Request) GetPostBool(key string, def ...interface{}) bool {
-	value := r.GetPostString(key, def...)
-	if value != "" {
-		return gconv.Bool(value)
-	}
-	return false
+	return r.GetPostVar(key, def...).Bool()
 }
 
 func (r *Request) GetPostInt(key string, def ...interface{}) int {
-	value := r.GetPostString(key, def...)
-	if value != "" {
-		return gconv.Int(value)
-	}
-	return 0
+	return r.GetPostVar(key, def...).Int()
 }
 
 func (r *Request) GetPostInts(key string, def ...interface{}) []int {
-	value := r.GetPost(key, def...)
-	if value != nil {
-		return gconv.Ints(value)
-	}
-	return nil
+	return r.GetPostVar(key, def...).Ints()
 }
 
 func (r *Request) GetPostUint(key string, def ...interface{}) uint {
-	value := r.GetPostString(key, def...)
-	if value != "" {
-		return gconv.Uint(value)
-	}
-	return 0
+	return r.GetPostVar(key, def...).Uint()
 }
 
 func (r *Request) GetPostFloat32(key string, def ...interface{}) float32 {
-	value := r.GetPostString(key, def...)
-	if value != "" {
-		return gconv.Float32(value)
-	}
-	return 0
+	return r.GetPostVar(key, def...).Float32()
 }
 
 func (r *Request) GetPostFloat64(key string, def ...interface{}) float64 {
-	value := r.GetPostString(key, def...)
-	if value != "" {
-		return gconv.Float64(value)
-	}
-	return 0
+	return r.GetPostVar(key, def...).Float64()
 }
 
 func (r *Request) GetPostFloats(key string, def ...interface{}) []float64 {
-	value := r.GetPost(key, def...)
-	if value != nil {
-		return gconv.Floats(value)
-	}
-	return nil
+	return r.GetPostVar(key, def...).Floats()
 }
 
 func (r *Request) GetPostArray(key string, def ...interface{}) []string {
-	return r.GetPost(key, def...)
+	return r.GetPostVar(key, def...).Strings()
 }
 
 func (r *Request) GetPostStrings(key string, def ...interface{}) []string {
-	return r.GetPost(key, def...)
+	return r.GetPostVar(key, def...).Strings()
 }
 
 func (r *Request) GetPostInterfaces(key string, def ...interface{}) []interface{} {
-	value := r.GetPost(key, def...)
-	if value != nil {
-		return gconv.Interfaces(value)
+	return r.GetPostVar(key, def...).Interfaces()
+}
+
+// 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值。
+// 当不指定键值对关联数组时，默认获取POST方式提交的所有的提交键值对数据。
+func (r *Request) GetPostMap(kvMap ...map[string]interface{}) map[string]interface{} {
+	r.initPost()
+	if len(kvMap) > 0 {
+		m := make(map[string]interface{})
+		for k, defValue := range kvMap[0] {
+			if postValue, ok := r.postMap[k]; ok {
+				m[k] = postValue
+			} else {
+				m[k] = defValue
+			}
+		}
+		return m
+	} else {
+		return r.postMap
+	}
+}
+
+func (r *Request) GetPostMapStrStr(kvMap ...map[string]interface{}) map[string]string {
+	postMap := r.GetPostMap(kvMap...)
+	if len(postMap) > 0 {
+		m := make(map[string]string)
+		for k, v := range postMap {
+			m[k] = gconv.String(v)
+		}
+		return m
 	}
 	return nil
 }
 
-// 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-// 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetPostArray获取特定字段内容
-func (r *Request) GetPostMap(def ...map[string]string) map[string]string {
-	r.initPost()
-	m := make(map[string]string)
-	for k, v := range r.PostForm {
-		m[k] = v[0]
-	}
-	if len(def) > 0 {
-		for k, v := range def[0] {
-			if _, ok := m[k]; !ok {
-				m[k] = v
-			}
+func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
+	postMap := r.GetPostMap(kvMap...)
+	if len(postMap) > 0 {
+		m := make(map[string]*gvar.Var)
+		for k, v := range postMap {
+			m[k] = gvar.New(v)
 		}
+		return m
 	}
-	return m
+	return nil
 }
 
 // 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetPostToStruct(pointer interface{}, mapping ...map[string]string) error {
+	r.initPost()
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
 	if len(mapping) > 0 {
 		for k, v := range mapping[0] {
 			tagMap[k] = v
 		}
 	}
-	params := make(map[string]interface{})
-	for k, v := range r.GetPostMap() {
-		params[k] = v
-	}
-	return gconv.StructDeep(params, pointer, tagMap)
+	return gconv.StructDeep(r.postMap, pointer, tagMap)
 }

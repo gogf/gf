@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gogf/gf/text/gstr"
+
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/test/gtest"
 )
@@ -54,7 +56,7 @@ func formatpath(paths string) string {
 
 // 指定返回要测试的目录
 func testpath() string {
-	return os.TempDir()
+	return gstr.TrimRight(os.TempDir(), "\\/")
 }
 
 func Test_GetContents(t *testing.T) {

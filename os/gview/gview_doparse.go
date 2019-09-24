@@ -13,8 +13,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/gogf/gf/i18n/gi18n"
-
 	"github.com/gogf/gf/os/gfcache"
 
 	"github.com/gogf/gf/os/gres"
@@ -61,7 +59,8 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 			return tpl
 		}
 		// Secondly checking the file system.
-		files, err := gfile.ScanDir(path, pattern, true)
+		files := ([]string)(nil)
+		files, err = gfile.ScanDir(path, pattern, true)
 		if err != nil {
 			return nil
 		}
@@ -182,38 +181,36 @@ func (view *View) Parse(file string, params ...Params) (parsed string, err error
 	// Note that the template variable assignment cannot change the value
 	// of the existing <params> or view.data because both variables are pointers.
 	// It's need to merge the values of the two maps into a new map.
-	vars := (map[string]interface{})(nil)
+	variables := (map[string]interface{})(nil)
 	length := len(view.data)
 	if len(params) > 0 {
 		length += len(params[0])
 	}
 	if length > 0 {
-		vars = make(map[string]interface{}, length)
+		variables = make(map[string]interface{}, length)
 	}
 	if len(view.data) > 0 {
 		if len(params) > 0 {
 			for k, v := range params[0] {
-				vars[k] = v
+				variables[k] = v
 			}
 			for k, v := range view.data {
-				vars[k] = v
+				variables[k] = v
 			}
 		} else {
-			vars = view.data
+			variables = view.data
 		}
 	} else {
 		if len(params) > 0 {
-			vars = params[0]
+			variables = params[0]
 		}
 	}
 	buffer := bytes.NewBuffer(nil)
-	if err := tpl.Execute(buffer, vars); err != nil {
+	if err := tpl.Execute(buffer, variables); err != nil {
 		return "", err
 	}
 	result := gstr.Replace(buffer.String(), "<no value>", "")
-	if view.i18nEnabled {
-		result = gi18n.T(result)
-	}
+	result = view.i18nTranslate(result, variables)
 	return result, nil
 }
 
@@ -238,37 +235,35 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 	// Note that the template variable assignment cannot change the value
 	// of the existing <params> or view.data because both variables are pointers.
 	// It's need to merge the values of the two maps into a new map.
-	vars := (map[string]interface{})(nil)
+	variables := (map[string]interface{})(nil)
 	length := len(view.data)
 	if len(params) > 0 {
 		length += len(params[0])
 	}
 	if length > 0 {
-		vars = make(map[string]interface{}, length)
+		variables = make(map[string]interface{}, length)
 	}
 	if len(view.data) > 0 {
 		if len(params) > 0 {
 			for k, v := range params[0] {
-				vars[k] = v
+				variables[k] = v
 			}
 			for k, v := range view.data {
-				vars[k] = v
+				variables[k] = v
 			}
 		} else {
-			vars = view.data
+			variables = view.data
 		}
 	} else {
 		if len(params) > 0 {
-			vars = params[0]
+			variables = params[0]
 		}
 	}
 	buffer := bytes.NewBuffer(nil)
-	if err := tpl.Execute(buffer, vars); err != nil {
+	if err := tpl.Execute(buffer, variables); err != nil {
 		return "", err
 	}
 	result := gstr.Replace(buffer.String(), "<no value>", "")
-	if view.i18nEnabled {
-		result = gi18n.T(result)
-	}
+	result = view.i18nTranslate(result, variables)
 	return result, nil
 }

@@ -17,10 +17,10 @@ func main() {
 	s3 := g.Server(3)
 	s4 := g.Server(4)
 
-	s1.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_DEFAULT)
-	s2.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_FULLNAME)
-	s3.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_ALLLOWER)
-	s4.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_CAMEL)
+	s1.SetNameToUriType(ghttp.URI_TYPE_DEFAULT)
+	s2.SetNameToUriType(ghttp.URI_TYPE_FULLNAME)
+	s3.SetNameToUriType(ghttp.URI_TYPE_ALLLOWER)
+	s4.SetNameToUriType(ghttp.URI_TYPE_CAMEL)
 
 	s1.BindObject("/{.struct}/{.method}", new(User))
 	s2.BindObject("/{.struct}/{.method}", new(User))

@@ -12,7 +12,7 @@ import (
 
 	"github.com/gogf/gf/util/gconv"
 
-	yaml3 "gopkg.in/yaml.v3"
+	yaml3 "github.com/gf-third/yaml/v3"
 )
 
 func Encode(v interface{}) ([]byte, error) {
@@ -24,7 +24,7 @@ func Decode(v []byte) (interface{}, error) {
 	if err := yaml3.Unmarshal(v, &result); err != nil {
 		return nil, err
 	}
-	return gconv.Map(result), nil
+	return gconv.MapDeep(result), nil
 }
 
 func DecodeTo(v []byte, result interface{}) error {

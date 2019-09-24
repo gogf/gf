@@ -26,11 +26,13 @@ import (
 )
 
 const (
-	Separator     = string(filepath.Separator) // Separator for file system.
-	gDEFAULT_PERM = 0666                       // Default perm for file opening.
+	// Separator for file system.
+	Separator = string(filepath.Separator)
 )
 
 var (
+	// Default perm for file opening.
+	DefaultPerm = os.FileMode(0666)
 	// The absolute file path for main package.
 	// It can be only checked and set once.
 	mainPkgPath = gtype.NewString()
@@ -68,7 +70,7 @@ func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 
 // OpenWithFlag opens file/directory with default perm and given <flag>.
 func OpenWithFlag(path string, flag int) (*os.File, error) {
-	f, err := os.OpenFile(path, flag, gDEFAULT_PERM)
+	f, err := os.OpenFile(path, flag, DefaultPerm)
 	if err != nil {
 		return nil, err
 	}
@@ -76,12 +78,17 @@ func OpenWithFlag(path string, flag int) (*os.File, error) {
 }
 
 // OpenWithFlagPerm opens file/directory with given <flag> and <perm>.
-func OpenWithFlagPerm(path string, flag int, perm int) (*os.File, error) {
+func OpenWithFlagPerm(path string, flag int, perm os.FileMode) (*os.File, error) {
 	f, err := os.OpenFile(path, flag, os.FileMode(perm))
 	if err != nil {
 		return nil, err
 	}
 	return f, nil
+}
+
+// Join joins string array paths with file separator of current system.
+func Join(paths ...string) string {
+	return strings.Join(paths, Separator)
 }
 
 // Exists checks whether given <path> exist.
@@ -290,7 +297,7 @@ func Remove(path string) error {
 // IsReadable checks whether given <path> is readable.
 func IsReadable(path string) bool {
 	result := true
-	file, err := os.OpenFile(path, os.O_RDONLY, gDEFAULT_PERM)
+	file, err := os.OpenFile(path, os.O_RDONLY, DefaultPerm)
 	if err != nil {
 		result = false
 	}
@@ -314,7 +321,7 @@ func IsWritable(path string) bool {
 		}
 	} else {
 		// 如果是文件，那么判断文件是否可打开
-		file, err := os.OpenFile(path, os.O_WRONLY, gDEFAULT_PERM)
+		file, err := os.OpenFile(path, os.O_WRONLY, DefaultPerm)
 		if err != nil {
 			result = false
 		}
@@ -437,7 +444,17 @@ func IsEmpty(path string) bool {
 //
 // Note: the result contains symbol '.'.
 func Ext(path string) string {
-	return filepath.Ext(path)
+	ext := filepath.Ext(path)
+	if p := strings.IndexByte(ext, '?'); p != -1 {
+		ext = ext[0:p]
+	}
+	return ext
+}
+
+// ExtName is like function Ext, which returns the file name extension used by path,
+// but the result does not contains symbol '.'.
+func ExtName(path string) string {
+	return strings.TrimLeft(Ext(path), ".")
 }
 
 // Home returns absolute path of current user's home directory.

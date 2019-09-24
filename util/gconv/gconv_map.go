@@ -181,21 +181,21 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 	return data
 }
 
-// MapStruct converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of struct/*struct.
-func MapStruct(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapStruct(params, pointer, false, mapping...)
+// MapToMap converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of *map.
+func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	return doMapToMap(params, pointer, false, mapping...)
 }
 
-// MapStructDeep recursively converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of struct/*struct.
-func MapStructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapStruct(params, pointer, true, mapping...)
+// MapToMapDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of *map.
+func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	return doMapToMap(params, pointer, true, mapping...)
 }
 
 // doMapStruct converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of struct/*struct.
-func doMapStruct(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
+// The elements of <pointer> should be type of *map.
+func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
 	paramsRv := reflect.ValueOf(params)
 	paramsKind := paramsRv.Kind()
 	if paramsKind == reflect.Ptr {
@@ -240,21 +240,21 @@ func doMapStruct(params interface{}, pointer interface{}, deep bool, mapping ...
 	return nil
 }
 
-// MapStructs converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of []struct/[]*struct.
-func MapStructs(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapStructs(params, pointer, false, mapping...)
+// MapToMaps converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of []map/*map.
+func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	return doMapToMaps(params, pointer, false, mapping...)
 }
 
-// MapStructsDeep recursively converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of []struct/[]*struct.
-func MapStructsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapStructs(params, pointer, true, mapping...)
+// MapToMapsDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of []map/*map.
+func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	return doMapToMaps(params, pointer, true, mapping...)
 }
 
-// doMapStructs converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of []struct/[]*struct.
-func doMapStructs(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
+// doMapToMaps converts map type variable <params> to another map type variable <pointer>.
+// The elements of <pointer> should be type of []map/*map.
+func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
 	paramsRv := reflect.ValueOf(params)
 	paramsKind := paramsRv.Kind()
 	if paramsKind == reflect.Ptr {

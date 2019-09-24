@@ -27,7 +27,7 @@ import (
 
 const (
 	gDEFAULT_DEBUG_SQL_LENGTH = 1000
-	gPATH_FILTER_KEY          = "/gf/database/gdb/gdb"
+	gPATH_FILTER_KEY          = "/database/gdb/gdb"
 )
 
 var (
@@ -484,15 +484,16 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 	}
 	// 构造批量写入数据格式(注意map的遍历是无序的)
 	batchNum := gDEFAULT_BATCH_NUM
-	if len(batch) > 0 {
+	if len(batch) > 0 && batch[0] > 0 {
 		batchNum = batch[0]
 	}
-	for i := 0; i < len(listMap); i++ {
+	listMapLen := len(listMap)
+	for i := 0; i < listMapLen; i++ {
 		for _, k := range keys {
 			params = append(params, convertParam(listMap[i][k]))
 		}
 		values = append(values, valueHolderStr)
-		if len(values) == batchNum {
+		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
 			r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
 				operation, table, keyStr, strings.Join(values, ","),
 				updateStr),
@@ -508,22 +509,6 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 			}
 			params = params[:0]
 			values = values[:0]
-		}
-	}
-	// 处理最后不构成指定批量的数据
-	if len(values) > 0 {
-		r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
-			operation, table, keyStr, strings.Join(values, ","),
-			updateStr),
-			params...)
-		if err != nil {
-			return r, err
-		}
-		if n, err := r.RowsAffected(); err != nil {
-			return r, err
-		} else {
-			batchResult.lastResult = r
-			batchResult.rowsAffected += n
 		}
 	}
 	return batchResult, nil

@@ -18,8 +18,14 @@ import (
 
 func Test_Parse(t *testing.T) {
 	gtest.Case(t, func() {
+		// name overwrite
+		m, err := gstr.Parse("a=1&a=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(m, g.Map{
+			"a": 2,
+		})
 		// slice
-		m, err := gstr.Parse("a[]=1&a[]=2")
+		m, err = gstr.Parse("a[]=1&a[]=2")
 		gtest.Assert(err, nil)
 		gtest.Assert(m, g.Map{
 			"a": g.Slice{"1", "2"},
@@ -32,6 +38,12 @@ func Test_Parse(t *testing.T) {
 			"b": "2",
 			"c": "3",
 		})
+		m, err = gstr.Parse("a=1&a=2&c=3")
+		gtest.Assert(err, nil)
+		gtest.Assert(m, g.Map{
+			"a": "2",
+			"c": "3",
+		})
 		// map
 		m, err = gstr.Parse("m[a]=1&m[b]=2&m[c]=3")
 		gtest.Assert(err, nil)
@@ -42,12 +54,29 @@ func Test_Parse(t *testing.T) {
 				"c": "3",
 			},
 		})
+		m, err = gstr.Parse("m[a]=1&m[a]=2&m[b]=3")
+		gtest.Assert(err, nil)
+		gtest.Assert(m, g.Map{
+			"m": g.Map{
+				"a": "2",
+				"b": "3",
+			},
+		})
 		// map - slice
 		m, err = gstr.Parse("m[a][]=1&m[a][]=2")
 		gtest.Assert(err, nil)
 		gtest.Assert(m, g.Map{
 			"m": g.Map{
 				"a": g.Slice{"1", "2"},
+			},
+		})
+		m, err = gstr.Parse("m[a][b][]=1&m[a][b][]=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(m, g.Map{
+			"m": g.Map{
+				"a": g.Map{
+					"b": g.Slice{"1", "2"},
+				},
 			},
 		})
 		// map - complicated

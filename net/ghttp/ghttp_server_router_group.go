@@ -56,6 +56,10 @@ func (s *Server) handlePreBindItems() {
 
 // 获取分组路由对象
 func (s *Server) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
+	// 自动识别并加上/前缀
+	if prefix[0] != '/' {
+		prefix = "/" + prefix
+	}
 	if prefix == "/" {
 		prefix = ""
 	}
@@ -208,6 +212,14 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 	group := g.Clone()
 	for _, handler := range handlers {
 		group.preBind("MIDDLEWARE", "/*", handler)
+	}
+	return group
+}
+
+func (g *RouterGroup) MiddlewarePattern(pattern string, handlers ...HandlerFunc) *RouterGroup {
+	group := g.Clone()
+	for _, handler := range handlers {
+		group.preBind("MIDDLEWARE", pattern, handler)
 	}
 	return group
 }

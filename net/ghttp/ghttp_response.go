@@ -47,6 +47,9 @@ func (r *Response) Write(content ...interface{}) {
 	if len(content) == 0 {
 		return
 	}
+	if r.Status == 0 && r.request.hasServeHandler {
+		r.Status = http.StatusOK
+	}
 	for _, v := range content {
 		switch value := v.(type) {
 		case []byte:
@@ -96,7 +99,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 		return err
 	} else {
 		//r.Header().Set("Content-Type", "application/json")
-		if callback := r.request.Get("callback"); callback != "" {
+		if callback := r.request.GetString("callback"); callback != "" {
 			buffer := []byte(callback)
 			buffer = append(buffer, byte('('))
 			buffer = append(buffer, b...)
@@ -216,6 +219,11 @@ func (r *Response) RedirectBack() {
 // 获取当前缓冲区中的数据
 func (r *Response) Buffer() []byte {
 	return r.buffer.Bytes()
+}
+
+// 获取当前缓冲区中的数据(string)
+func (r *Response) BufferString() string {
+	return r.buffer.String()
 }
 
 // 获取当前缓冲区中的数据大小

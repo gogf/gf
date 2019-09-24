@@ -68,6 +68,17 @@ func (m *AnyAnyMap) Map() map[interface{}]interface{} {
 	return data
 }
 
+// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+func (m *AnyAnyMap) MapStrAny() map[string]interface{} {
+	m.mu.RLock()
+	data := make(map[string]interface{}, len(m.data))
+	for k, v := range m.data {
+		data[gconv.String(k)] = v
+	}
+	m.mu.RUnlock()
+	return data
+}
+
 // Set sets key-value to the hash map.
 func (m *AnyAnyMap) Set(key interface{}, val interface{}) {
 	m.mu.Lock()

@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gogf/gf/os/gsession"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/os/gtime"
@@ -24,7 +26,7 @@ type Request struct {
 	Id              int                    // 请求ID(当前Server对象唯一)
 	Server          *Server                // 请求关联的服务器对象
 	Cookie          *Cookie                // 与当前请求绑定的Cookie对象(并发安全)
-	Session         *Session               // 与当前请求绑定的Session对象(并发安全)
+	Session         *gsession.Session      // 与当前请求绑定的Session对象(并发安全)
 	Response        *Response              // 对应请求的返回数据操作对象
 	Router          *Router                // 匹配到的路由对象
 	EnterTime       int64                  // 请求进入时间(微秒)
@@ -36,8 +38,12 @@ type Request struct {
 	hasServeHandler bool                   // 是否检索到服务函数
 	parsedGet       bool                   // GET参数是否已经解析
 	parsedPost      bool                   // POST参数是否已经解析
-	queryVars       map[string][]string    // GET参数
-	routerVars      map[string][]string    // 路由解析参数
+	parsedRaw       bool                   // 原始参数是否已经解析
+	getMap          map[string]interface{} // GET解析参数
+	postMap         map[string]interface{} // POST解析参数
+	routerMap       map[string]interface{} // 路由解析参数
+	rawVarMap       map[string]interface{} // 原始数据参数
+	error           error                  // 当前请求执行错误
 	exit            bool                   // 是否退出当前请求流程执行
 	params          map[string]interface{} // 开发者自定义参数(请求流程中有效)
 	parsedHost      string                 // 解析过后不带端口号的服务器域名名称
@@ -49,16 +55,16 @@ type Request struct {
 // 创建一个Request对象
 func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request := &Request{
-		routerVars: make(map[string][]string),
-		Id:         s.servedCount.Add(1),
-		Server:     s,
-		Request:    r,
-		Response:   newResponse(s, w),
-		EnterTime:  gtime.Microsecond(),
+		routerMap: make(map[string]interface{}),
+		Id:        s.servedCount.Add(1),
+		Server:    s,
+		Request:   r,
+		Response:  newResponse(s, w),
+		EnterTime: gtime.Microsecond(),
 	}
 	// 会话处理
 	request.Cookie = GetCookie(request)
-	request.Session = GetSession(request)
+	request.Session = s.sessionManager.New(request.GetSessionId())
 	request.Response.request = request
 	request.Middleware = &Middleware{
 		request: request,
@@ -68,7 +74,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 
 // 获取Web Socket连接对象(如果是非WS请求会失败，注意检查返回的error结果)
 func (r *Request) WebSocket() (*WebSocket, error) {
-	if conn, err := wsUpgrader.Upgrade(r.Response.ResponseWriter.ResponseWriter, r.Request, nil); err == nil {
+	if conn, err := wsUpgrader.Upgrade(r.Response.Writer, r.Request, nil); err == nil {
 		return &WebSocket{
 			conn,
 		}, nil
@@ -79,8 +85,8 @@ func (r *Request) WebSocket() (*WebSocket, error) {
 
 // 获得指定名称的参数字符串(Router/GET/POST)，同 GetRequestString
 // 这是常用方法的简化别名
-func (r *Request) Get(key string, def ...interface{}) string {
-	return r.GetRequestString(key, def...)
+func (r *Request) Get(key string, def ...interface{}) interface{} {
+	return r.GetRequest(key, def...)
 }
 
 // 建议都用该参数替代参数获取
@@ -90,12 +96,8 @@ func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
 
 // 获取原始请求输入二进制。
 func (r *Request) GetRaw() []byte {
-	err := error(nil)
 	if r.rawContent == nil {
-		r.rawContent, err = ioutil.ReadAll(r.Body)
-		if err != nil {
-			r.Error("error reading request body: ", err)
-		}
+		r.rawContent, _ = ioutil.ReadAll(r.Body)
 	}
 	return r.rawContent
 }
@@ -112,6 +114,10 @@ func (r *Request) GetJson() *gjson.Json {
 
 func (r *Request) GetString(key string, def ...interface{}) string {
 	return r.GetRequestString(key, def...)
+}
+
+func (r *Request) GetBool(key string, def ...interface{}) bool {
+	return r.GetRequestBool(key, def...)
 }
 
 func (r *Request) GetInt(key string, def ...interface{}) int {
@@ -150,8 +156,12 @@ func (r *Request) GetInterfaces(key string, def ...interface{}) []interface{} {
 	return r.GetRequestInterfaces(key, def...)
 }
 
-func (r *Request) GetMap(def ...map[string]string) map[string]string {
+func (r *Request) GetMap(def ...map[string]interface{}) map[string]interface{} {
 	return r.GetRequestMap(def...)
+}
+
+func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string {
+	return r.GetRequestMapStrStr(def...)
 }
 
 // 将所有的request参数映射到struct属性上，参数pointer应当为一个struct对象的指针,
@@ -234,14 +244,6 @@ func (r *Request) GetSessionId() string {
 	if id == "" {
 		id = r.Header.Get(r.Server.GetSessionIdName())
 	}
-	return id
-}
-
-// 生成随机的SESSIONID
-func (r *Request) MakeSessionId() string {
-	id := makeSessionId()
-	r.Cookie.SetSessionId(id)
-	r.Response.Header().Set(r.Server.GetSessionIdName(), id)
 	return id
 }
 
