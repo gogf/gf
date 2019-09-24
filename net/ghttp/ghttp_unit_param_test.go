@@ -133,7 +133,12 @@ func Test_Params_Basic(t *testing.T) {
 		r.Response.Write(r.GetRaw())
 	})
 	s.BindHandler("/json", func(r *ghttp.Request) {
-		r.Response.Write(r.GetJson().Get("name"))
+		j, err := r.GetJson()
+		if err != nil {
+			r.Response.Write(err)
+			return
+		}
+		r.Response.Write(j.Get("name"))
 	})
 	s.BindHandler("/struct", func(r *ghttp.Request) {
 		if m := r.GetQueryMap(); len(m) > 0 {

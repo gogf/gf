@@ -12,11 +12,11 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-type testpair struct {
+type testPair struct {
 	decoded, encoded string
 }
 
-var pairs = []testpair{
+var pairs = []testPair{
 	// RFC 3548 examples
 	{"\x14\xfb\x9c\x03\xd9\x7e", "FPucA9l+"},
 	{"\x14\xfb\x9c\x03\xd9", "FPucA9k="},
@@ -45,15 +45,20 @@ var pairs = []testpair{
 func TestBase64(t *testing.T) {
 	gtest.Case(t, func() {
 		for k := range pairs {
-			// []byte
+			// Encode
 			gtest.Assert(gbase64.Encode([]byte(pairs[k].decoded)), []byte(pairs[k].encoded))
-			e1, _ := gbase64.Decode([]byte(pairs[k].encoded))
-			gtest.Assert(e1, []byte(pairs[k].decoded))
+			gtest.Assert(gbase64.EncodeToString([]byte(pairs[k].decoded)), pairs[k].encoded)
+			gtest.Assert(gbase64.EncodeString(pairs[k].decoded), pairs[k].encoded)
 
-			// string
-			gtest.Assert(gbase64.EncodeString([]byte(pairs[k].decoded)), pairs[k].encoded)
-			e2, _ := gbase64.DecodeString(pairs[k].encoded)
-			gtest.Assert(e2, []byte(pairs[k].decoded))
+			// Decode
+			r1, _ := gbase64.Decode([]byte(pairs[k].encoded))
+			gtest.Assert(r1, []byte(pairs[k].decoded))
+
+			r2, _ := gbase64.DecodeString(pairs[k].encoded)
+			gtest.Assert(r2, []byte(pairs[k].decoded))
+
+			r3, _ := gbase64.DecodeToString(pairs[k].encoded)
+			gtest.Assert(r3, pairs[k].decoded)
 		}
 	})
 }
