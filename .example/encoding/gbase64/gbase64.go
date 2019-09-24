@@ -1,4 +1,4 @@
-package main
+package gbase64
 
 import (
 	"fmt"

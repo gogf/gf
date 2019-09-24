@@ -15,6 +15,6 @@ func main() {
 	}
 
 	redisCfg := new(RedisConfig)
-	fmt.Println(g.Config().GetToStruct("redis", redisCfg))
+	fmt.Println(g.Config().GetStruct("redis", redisCfg))
 	fmt.Println(redisCfg)
 }

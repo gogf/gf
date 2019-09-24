@@ -19,7 +19,7 @@ func getWithPattern1() {
             }
         }`
 
-	if p, e := gparser.LoadContent([]byte(data), "json"); e != nil {
+	if p, e := gparser.LoadContent([]byte(data)); e != nil {
 		glog.Error(e)
 	} else {
 		fmt.Println("John Score:", p.GetFloat32("users.list.1.score"))
@@ -36,7 +36,7 @@ func getWithPattern2() {
            <body>Don't forget me this weekend!</body>
          </note>`
 
-	if p, e := gparser.LoadContent([]byte(data), "xml"); e != nil {
+	if p, e := gparser.LoadContent([]byte(data)); e != nil {
 		glog.Error(e)
 	} else {
 		fmt.Println("Heading:", p.GetString("note.heading"))
@@ -52,7 +52,7 @@ func multiDots1() {
             },
             "users.count" : 101
         }`
-	if p, e := gparser.LoadContent([]byte(data), "json"); e != nil {
+	if p, e := gparser.LoadContent([]byte(data)); e != nil {
 		glog.Error(e)
 	} else {
 		fmt.Println("Users Count:", p.Get("users.count"))
@@ -70,7 +70,7 @@ func multiDots2() {
                 "count.type1" : 100
             }
         }`
-	if p, e := gparser.LoadContent([]byte(data), "json"); e != nil {
+	if p, e := gparser.LoadContent([]byte(data)); e != nil {
 		glog.Error(e)
 	} else {
 		fmt.Println("Users Count:", p.Get("users.count.type1"))
@@ -88,7 +88,7 @@ func set1() {
            <list><title>gf article2</title><content>gf content2</content></list>
            <list><title>gf article3</title><content>gf content3</content></list>
          </article>`
-	if p, e := gparser.LoadContent([]byte(data), "xml"); e != nil {
+	if p, e := gparser.LoadContent([]byte(data)); e != nil {
 		glog.Error(e)
 	} else {
 		p.Set("article.list.0", nil)
@@ -105,7 +105,7 @@ func set2() {
                 "count" : 100
             }
         }`
-	if p, e := gparser.LoadContent([]byte(data), "json"); e != nil {
+	if p, e := gparser.LoadContent([]byte(data)); e != nil {
 		glog.Error(e)
 	} else {
 		p.Set("users.count", 1)
@@ -116,7 +116,7 @@ func set2() {
 }
 
 func makeXml1() {
-	p := gparser.New()
+	p := gparser.New(nil)
 	p.Set("name", "john")
 	p.Set("age", 18)
 	p.Set("scores", map[string]int{
@@ -133,7 +133,7 @@ func makeJson1() {
 		Id    int     `json:"id"`
 		Price float32 `json:"price"`
 	}
-	p := gparser.New()
+	p := gparser.New(nil)
 	p.Set("orders.list.0", Order{1, 100})
 	p.Set("orders.list.1", Order{2, 666})
 	p.Set("orders.list.2", Order{3, 999.99})

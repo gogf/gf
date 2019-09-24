@@ -90,7 +90,7 @@ type DB interface {
 	SetLogger(logger *glog.Logger)
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
-	SetMaxConnLifetime(n int)
+	SetMaxConnLifetime(d time.Duration)
 	Tables() (tables []string, err error)
 	TableFields(table string) (map[string]*TableField, error)
 
@@ -126,7 +126,7 @@ type dbBase struct {
 	logger           *glog.Logger                 // 日志管理对象
 	maxIdleConnCount int                          // 连接池最大限制的连接数
 	maxOpenConnCount int                          // 连接池最大打开的连接数
-	maxConnLifetime  int                          // (单位秒)连接对象可重复使用的时间长度
+	maxConnLifetime  time.Duration                // 连接对象可重复使用的时间长度
 }
 
 // 执行的SQL对象
