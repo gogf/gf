@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gogf/gf/text/gstr"
+
 	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/os/gres"
@@ -276,7 +278,11 @@ func (s *Server) listDir(r *Request, f http.File) {
 		r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
 	r.Response.Write(`<html>`)
-	r.Response.Write(`<head></head>`)
+	r.Response.Write(`<head>`)
+	r.Response.Write(`<style>`)
+	r.Response.Write(`body {font-family:Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;}`)
+	r.Response.Write(`</style>`)
+	r.Response.Write(`</head>`)
 	r.Response.Write(`<body>`)
 	r.Response.Writef(`<h1>Index of %s</h1>`, r.URL.Path)
 	r.Response.Writef(`<hr />`)
@@ -288,6 +294,7 @@ func (s *Server) listDir(r *Request, f http.File) {
 	}
 	name := ""
 	size := ""
+	prefix := gstr.TrimRight(r.URL.Path, "/")
 	for _, file := range files {
 		name = file.Name()
 		size = gfile.FormatSize(file.Size())
@@ -296,9 +303,9 @@ func (s *Server) listDir(r *Request, f http.File) {
 			size = "-"
 		}
 		r.Response.Write(`<tr>`)
-		r.Response.Writef(`<td><a href="%s/%s">%s</a></td>`, r.URL.Path, name, ghtml.SpecialChars(name))
+		r.Response.Writef(`<td><a href="%s/%s">%s</a></td>`, prefix, name, ghtml.SpecialChars(name))
 		r.Response.Writef(`<td style="width:300px;text-align:center;">%s</td>`, gtime.New(file.ModTime()).ISO8601())
-		r.Response.Writef(`<td style="width:80px;text-align:center;">%s</td>`, size)
+		r.Response.Writef(`<td style="width:80px;text-align:right;">%s</td>`, size)
 		r.Response.Write(`</tr>`)
 	}
 	r.Response.Write(`</table>`)
