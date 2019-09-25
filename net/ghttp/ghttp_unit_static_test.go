@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/text/gstr"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gfile"
@@ -96,6 +98,7 @@ func Test_Static_IndexFolder(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		gtest.AssertNE(client.GetContent("/"), "Forbidden")
+		gtest.AssertNE(gstr.Pos(client.GetContent("/"), `<a href="/test.html"`), -1)
 		gtest.Assert(client.GetContent("/index.html"), "Not Found")
 		gtest.Assert(client.GetContent("/test.html"), "test")
 	})
