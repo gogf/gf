@@ -23,7 +23,9 @@ func (r *Request) initRaw() {
 	}
 }
 
-// 获得router、post或者get提交的参数，如果有同名参数，那么按照router->get->post优先级进行覆盖
+// 获得router、post或者get提交的参数值，如果有同名参数，
+// 那么按照 router->get->post->OtherHttpMethod 优先级进行覆盖。
+// 注意获得参数值可能是字符串、数组、Map三种类型。
 func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 	v := r.GetRouterValue(key)
 	if v == nil {
