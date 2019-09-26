@@ -83,8 +83,8 @@ func (r *Request) WebSocket() (*WebSocket, error) {
 	}
 }
 
-// 获得指定名称的参数字符串(Router/GET/POST)，同 GetRequestString
-// 这是常用方法的简化别名
+// Get是GetRequest方法的别名，用于获得指定名称的参数值，注意键值可能是字符串、数组、Map类型。
+// 大多数场景下，你可能需要的是 GetString/GetVar。
 func (r *Request) Get(key string, def ...interface{}) interface{} {
 	return r.GetRequest(key, def...)
 }

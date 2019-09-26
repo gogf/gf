@@ -32,10 +32,10 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 		AllowOrigin:      "*",
 		AllowMethods:     HTTP_METHODS,
 		AllowCredentials: "true",
-		AllowHeaders:     "Origin, X-Requested-With, Content-Type, Accept, Key",
+		AllowHeaders:     "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With",
 		MaxAge:           3628800,
 	}
-	if origin := r.Header().Get("Origin"); origin != "" {
+	if origin := r.Request.Header.Get("Origin"); origin != "" {
 		options.AllowOrigin = origin
 	} else if referer := r.Request.Referer(); referer != "" {
 		if p := gstr.PosR(referer, "/", 6); p != -1 {

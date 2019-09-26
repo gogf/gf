@@ -261,7 +261,6 @@ func (s *Server) serveFile(r *Request, f *staticServeFile, allowIndex ...bool) {
 			r.Response.WriteStatus(http.StatusForbidden)
 		}
 	} else {
-		// 读取文件内容返回, no buffer
 		http.ServeContent(r.Response.Writer, r.Request, info.Name(), info.ModTime(), file)
 	}
 }
