@@ -56,6 +56,9 @@ func (v *Var) Set(value interface{}) (old interface{}) {
 
 // Val returns the current value of <v>.
 func (v *Var) Val() interface{} {
+	if v == nil {
+		return nil
+	}
 	if v.safe {
 		return v.value.(*gtype.Interface).Val()
 	}

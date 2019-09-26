@@ -8,34 +8,20 @@ package ghttp
 
 import (
 	"time"
-
-	"github.com/gogf/gf/os/glog"
 )
 
 // 设置http server参数 - CookieMaxAge
 func (s *Server) SetCookieMaxAge(ttl time.Duration) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.CookieMaxAge = ttl
 }
 
 // 设置http server参数 - CookiePath
 func (s *Server) SetCookiePath(path string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.CookiePath = path
 }
 
 // 设置http server参数 - CookieDomain
 func (s *Server) SetCookieDomain(domain string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.CookieDomain = domain
 }
 

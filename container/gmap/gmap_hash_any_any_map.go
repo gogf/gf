@@ -9,6 +9,8 @@ package gmap
 import (
 	"encoding/json"
 
+	"github.com/gogf/gf/internal/empty"
+
 	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/container/gvar"
@@ -68,6 +70,12 @@ func (m *AnyAnyMap) Map() map[interface{}]interface{} {
 	return data
 }
 
+// Data returns the underlying data map.
+// Note that it's not concurrent safe using this function to access the data.
+func (m *AnyAnyMap) Data() map[interface{}]interface{} {
+	return m.data
+}
+
 // MapStrAny returns a copy of the data of the map as map[string]interface{}.
 func (m *AnyAnyMap) MapStrAny() map[string]interface{} {
 	m.mu.RLock()
@@ -77,6 +85,17 @@ func (m *AnyAnyMap) MapStrAny() map[string]interface{} {
 	}
 	m.mu.RUnlock()
 	return data
+}
+
+// FilterEmpty deletes all key-value pair of which the value is empty.
+func (m *AnyAnyMap) FilterEmpty() {
+	m.mu.Lock()
+	for k, v := range m.data {
+		if empty.IsEmpty(v) {
+			delete(m.data, k)
+		}
+	}
+	m.mu.Unlock()
 }
 
 // Set sets key-value to the hash map.

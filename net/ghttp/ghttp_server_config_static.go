@@ -28,37 +28,21 @@ type staticPathItem struct {
 
 // 设置http server参数 - IndexFiles，默认展示文件，如：index.html, index.htm
 func (s *Server) SetIndexFiles(index []string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.IndexFiles = index
 }
 
 // 允许展示访问目录的文件列表
 func (s *Server) SetIndexFolder(enabled bool) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.IndexFolder = enabled
 }
 
 // 是否开启/关闭静态文件服务，当关闭时仅提供动态接口服务，路由性能会得到一定提升
 func (s *Server) SetFileServerEnabled(enabled bool) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.FileServerEnabled = enabled
 }
 
 // 设置http server参数 - ServerRoot
 func (s *Server) SetServerRoot(root string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	realPath := root
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(root); err != nil {
@@ -74,10 +58,6 @@ func (s *Server) SetServerRoot(root string) {
 
 // 添加静态文件搜索**目录**，必须给定目录的绝对路径
 func (s *Server) AddSearchPath(path string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	realPath := path
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
@@ -92,10 +72,6 @@ func (s *Server) AddSearchPath(path string) {
 
 // 添加URI与静态**目录**的映射
 func (s *Server) AddStaticPath(prefix string, path string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	realPath := path
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {

@@ -10,35 +10,21 @@ import (
 	"time"
 
 	"github.com/gogf/gf/os/gsession"
-
-	"github.com/gogf/gf/os/glog"
 )
 
 // 设置http server参数 - SessionMaxAge
 func (s *Server) SetSessionMaxAge(ttl time.Duration) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.SessionMaxAge = ttl
 	s.sessionManager.SetTTL(ttl)
 }
 
 // 设置http server参数 - SessionIdName
 func (s *Server) SetSessionIdName(name string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.SessionIdName = name
 }
 
 // 设置http server参数 - SessionStorage
 func (s *Server) SetSessionStorage(storage gsession.Storage) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.SessionStorage = storage
 	s.sessionManager.SetStorage(storage)
 }
