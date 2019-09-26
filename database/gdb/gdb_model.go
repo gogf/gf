@@ -43,6 +43,8 @@ type Model struct {
 const (
 	gLINK_TYPE_MASTER = 1 // 主节点类型
 	gLINK_TYPE_SLAVE  = 2 // 从节点类型
+	OPTION_OMITEMPTY  = 1 << iota
+	OPTION_ALLOWEMPTY
 )
 
 // 链式操作，数据表字段，可支持多个表，以半角逗号连接

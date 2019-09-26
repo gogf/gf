@@ -54,6 +54,12 @@ func (m *IntIntMap) Clone() *IntIntMap {
 	return NewIntIntMapFrom(m.Map(), !m.mu.IsSafe())
 }
 
+// Data returns the underlying data map.
+// Note that it's not concurrent safe using this function to access the data.
+func (m *IntIntMap) Data() map[int]int {
+	return m.data
+}
+
 // Map returns a copy of the data of the hash map.
 func (m *IntIntMap) Map() map[int]int {
 	m.mu.RLock()

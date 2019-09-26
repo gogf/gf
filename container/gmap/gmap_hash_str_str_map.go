@@ -55,6 +55,12 @@ func (m *StrStrMap) Clone() *StrStrMap {
 	return NewStrStrMapFrom(m.Map(), !m.mu.IsSafe())
 }
 
+// Data returns the underlying data map.
+// Note that it's not concurrent safe using this function to access the data.
+func (m *StrStrMap) Data() map[string]string {
+	return m.data
+}
+
 // Map returns a copy of the data of the hash map.
 func (m *StrStrMap) Map() map[string]string {
 	m.mu.RLock()
