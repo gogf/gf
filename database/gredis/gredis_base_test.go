@@ -9,11 +9,9 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
-
 	"os"
 	"strings"
 	"testing"
-
 )
 
 var (
@@ -56,13 +54,18 @@ func testpath() string {
 	return os.TempDir()
 }
 
-func Test_ClusterDo(t *testing.T) {
+
+
+
+
+func Test_RedisDo(t *testing.T) {
 	gtest.Case(t, func() {
 		redis := gredis.NewClusterClient(&gredis.ClusterOption{
 			Nodes: ClustersNodes,
 			Pwd:   Pass1,
 		})
 		redis.Set("jname2", "jqrr2")
+
 		r, err := redis.Get("jname2")
 		gtest.Assert(err, nil)
 		gtest.Assert(gconv.String(r), "jqrr2")
@@ -85,6 +88,13 @@ func Test_Clustersg(t *testing.T) {
 		)
 
 		gredis.FlagBanCluster = false
+
+		rr, err = g.Redis().Cluster("info")
+		gtest.Assert(err, nil)
+		str1 := gconv.String(rr)
+		if !strings.Contains(str1, "cluster_state:ok") {
+			t.Errorf("cluster errs.")
+		}
 
 		_, err = g.Redis().Set("jjname1", "jjqrr1")
 		gtest.Assert(err, nil)
@@ -140,34 +150,65 @@ func Test_Clustersg(t *testing.T) {
 		rr,_=g.Redis().RandomKey()
 		gtest.AssertNE(rr,nil)
 
-		// @todo: rename在集群模式下会报错。
+
 		rdb:=g.Redis()
 
-		s,err=rdb.Rename("jjname2","{jjname22}")
-		gtest.Assert(err,nil)
-		gtest.Assert(s,"ok")
-		_,err=g.Redis().Rename("jjname2_","jjname22")
+		_,err=rdb.Rename("jjname2","jjname22")
 		gtest.AssertNE(err,nil)
 
-		n,err=g.Redis().Renamenx("jjname22","jjname1")
-		gtest.Assert(n,0)
+		_,err=g.Redis().Renamenx("jjname22","jjname1")
+		gtest.AssertNE(err,nil)
+
+		_,err=g.Redis().ReStore("jjname2",100000,"servals")
+		gtest.AssertNE(err,nil)
+
+		s,err=g.Redis().Dump("jjname1")
 		gtest.Assert(err,nil)
 
-		n,_=g.Redis().Renamenx("jjname22","jjname222")
+		s,err=g.Redis().ReStore("jjname1",100000,s,"replace")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"OK")
+
+
+		n64,err=g.Redis().Lpush("numlist2",1,3)
+		gtest.Assert(err,nil)
+		gtest.AssertGT(n64,0)
+		n64,err=g.Redis().Lpush("numlist2",2)
+
+		rrs,err= g.Redis().Sort("numlist2","desc")
+		gtest.Assert(err,nil)
+		gtest.Assert(gconv.SliceStr(rrs),[]string{"3","2","1"})
+
+
+		//=============================del this lists after test
+		n,err=g.Redis().Del("numlist2")
+		gtest.Assert(n,1)
+
+		s,err=g.Redis().Get("numlist2")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"")
+		// Sort
+
+		g.Redis().Set("jname2","a")
+		n64,err=g.Redis().Append("jname2","q")
+		s,err=g.Redis().Get("jname2")
+		gtest.Assert(s,"aq")
+
+		s,err= g.Redis().Type("jname2")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"string")
+
+		n,err=g.Redis().Setbit("jname2",3,1)
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
+
+		n,err=g.Redis().Getbit("jname2",3)
+		gtest.Assert(err,nil)
 		gtest.Assert(n,1)
 
 
+		// SETBIT  BitCount
 
-
-		// Renamenx
-
-
-		rr, err = g.Redis().Cluster("info")
-		gtest.Assert(err, nil)
-		str1 := gconv.String(rr)
-		if !strings.Contains(str1, "cluster_state:ok") {
-			t.Errorf("cluster errs.")
-		}
 
 	})
 }
