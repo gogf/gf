@@ -135,22 +135,20 @@ func (c *Redis) Get(key string) (string, error) {
 	return  typeString(c.commnddo("get", key))
 }
 
-func (c *Redis) BitCount(key string) (interface{}, error) {
-	return c.commnddo("BITCOUNT", key)
+func (c *Redis) BitCount(key string) (int, error) {
+	return typeInt( c.commnddo("BITCOUNT", key))
 }
 
-func (c *Redis) BiTop(params ...string) (interface{}, error) {
-	return c.commnddo("BITOP", gconv.Interfaces(params)...)
+func (c *Redis) BiTop(params ...string) (int, error) {
+	return typeInt( c.commnddo("BITOP", gconv.Interfaces(params)...))
 }
 
 func (c *Redis) BitPos(key string, bit int, option ...int) (int, error) {
-	param := garray.NewIntArrayFrom(option).InsertBefore(0, bit)
-	return typeInt(c.commnddo("BITPOS", gconv.Interfaces(param)...))
+	return typeInt(c.commnddo("BITPOS", append([]interface{}{key,bit},gconv.Interfaces(option)...)...))
 }
 
-func (c *Redis) BitField(key string, option ...interface{}) ([]interface{}, error) {
-	param := garray.NewArrayFrom(option).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("BITFIELD", gconv.Interfaces(param)...))
+func (c *Redis) BitField(option string) ([]interface{}, error) {
+	return typeInterfacess(c.commnddo("BITFIELD", option))
 }
 
 func (c *Redis) Decr(key string) (interface{}, error) {

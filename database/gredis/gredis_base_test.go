@@ -206,8 +206,25 @@ func Test_Clustersg(t *testing.T) {
 		gtest.Assert(err,nil)
 		gtest.Assert(n,1)
 
+		n,err=g.Redis().BitCount("jname2")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,8)
 
-		// SETBIT  BitCount
+		g.Redis().Set("jname22","tt22")
+		n,err=g.Redis().Setbit("jname22",3,1)
+		n,err=g.Redis().BiTop("and","and-result","jname2","jname22")
+		gtest.AssertNE(err,nil)
+
+		n,err=g.Redis().BitPos("jname22",1)
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+
+
+		rrs,err=g.Redis().BitField("jname2 set a")
+		gtest.Assert(err,nil)
+
+
+		// SETBIT  BitPos
 
 
 	})
