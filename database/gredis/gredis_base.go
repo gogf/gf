@@ -1,6 +1,7 @@
 package gredis
 
 import (
+	"errors"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/util/gconv"
 )
@@ -151,50 +152,55 @@ func (c *Redis) BitField(option string) ([]interface{}, error) {
 	return typeInterfacess(c.commnddo("BITFIELD", option))
 }
 
-func (c *Redis) Decr(key string) (interface{}, error) {
-	return c.commnddo("DECR", key)
+func (c *Redis) Decr(key string) (int64, error) {
+	return typeInt64(c.commnddo("DECR", key))
 }
 
-func (c *Redis) Decrby(key string, decrement int64) (interface{}, error) {
-	return c.commnddo("DECRBY", key, decrement)
+func (c *Redis) Decrby(key string, decrement int64) (int64, error) {
+	return typeInt64(c.commnddo("DECRBY", key, decrement))
 }
 
 func (c *Redis) Getbit(key string, offset int) (int, error) {
 	return typeInt(c.commnddo("GETBIT", key, offset))
 }
 
-func (c *Redis) GetRange(key string, start, end int) (interface{}, error) {
-	return c.commnddo("GETRANGE", key, start, end)
+func (c *Redis) GetRange(key string, start, end int) (string, error) {
+	return typeString(c.commnddo("GETRANGE", key, start, end))
 }
 
-func (c *Redis) Getset(key string, value string) (interface{}, error) {
-	return c.commnddo("GETSET", key, value)
+func (c *Redis) GetSet(key string, value string) (string, error) {
+	return typeString(c.commnddo("GETSET", key, value))
 }
 
-func (c *Redis) Incr(key string) (interface{}, error) {
-	return c.commnddo("INCR", key)
+func (c *Redis) Incr(key string) (int64, error) {
+	return typeInt64(c.commnddo("INCR", key))
 }
 
-func (c *Redis) Incrby(key string, increment int64) (interface{}, error) {
-	return c.commnddo("INCRBY", key, increment)
+func (c *Redis) IncrBy(key string, increment int64) (int64, error) {
+	return typeInt64(c.commnddo("INCRBY", key, increment))
 }
 
-func (c *Redis) IncrByFloat(key string, increment float64) (interface{}, error) {
-	return c.commnddo("INCRBYFLOAT", key, increment)
+func (c *Redis) IncrByFloat(key string, increment float64) (string, error) {
+	return typeString(c.commnddo("INCRBYFLOAT", key, increment))
 }
 
-func (c *Redis) Mget(key ...string) (interface{}, error) {
-
-	return c.commnddo("MGET", gconv.Interfaces(key)...)
+func (c *Redis) Mget(key ...string) ([]string, error) {
+	if len(key)<1{
+		return nil,errors.New("there must be one key's name")
+	}
+	return typeStrings(c.commnddo("MGET", gconv.Interfaces(key)...))
 }
 
-func (c *Redis) Mset(params ...string) (interface{}, error) {
-	return c.commnddo("MSET", gconv.Interfaces(params)...)
+func (c *Redis) Mset(params ...string) (string, error) {
+	if len(params)<2{
+		return "",errors.New("there must be one k-v ")
+	}
+	return typeString(c.commnddo("MSET", gconv.Interfaces(params)...))
 }
 
-func (c *Redis) Msetnx(params ...string) (interface{}, error) {
+func (c *Redis) Msetnx(params ...string) (int, error) {
 
-	return c.commnddo("MSETNX", gconv.Interfaces(params)...)
+	return typeInt(c.commnddo("MSETNX", gconv.Interfaces(params)...))
 }
 
 func (c *Redis) Psetex(key string, milliseconds int64, value string) (interface{}, error) {

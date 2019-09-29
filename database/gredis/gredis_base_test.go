@@ -60,20 +60,58 @@ func testpath() string {
 
 func Test_RedisDo(t *testing.T) {
 	gtest.Case(t, func() {
-		redis := gredis.NewClusterClient(&gredis.ClusterOption{
-			Nodes: ClustersNodes,
-			Pwd:   Pass1,
-		})
-		redis.Set("jname2", "jqrr2")
+		var(
+			err = errors.New("")
+			s string
+			ss []string
+			n int
+		)
 
-		r, err := redis.Get("jname2")
-		gtest.Assert(err, nil)
-		gtest.Assert(gconv.String(r), "jqrr2")
+		redis := gredis.New(config)
+		defer redis.Close()
+
+		redis.Set("k1","kv1")
+		redis.Set("k2","kv2")
+		ss,err=redis.Mget("k1","k2")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss,[]string{"kv1","kv2"})
+
+		_,err=redis.Mget()
+		gtest.AssertNE(err,nil)
+
+		s,err=redis.Mset("k1","kv11","k2","kv22")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"OK")
+		s,err=redis.Mset()
+		gtest.AssertNE(err,nil)
+
+
+		s,err=redis.Rename("k1","k11")
+		gtest.Assert(err,nil)
+		s,err=redis.Get("k11")
+		gtest.Assert(s,"kv11")
+
+		_,err=redis.Renamenx("k11","k113")
+		gtest.Assert(err,nil)
+		s,err=redis.Get("k113")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"kv11")
+
+		n,err=redis.Msetnx("k_1","kv_1","k_2","kv_2")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+		n,err=redis.Msetnx("k_1","kv_1","k_3","kv_3")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
+		redis.Del("k_1")
+		redis.Del("k_2")
+
+
+		// Msetnx
+
+
 	})
 }
-
-
-
 
 
 func Test_Clustersg(t *testing.T) {
@@ -85,146 +123,193 @@ func Test_Clustersg(t *testing.T) {
 			rrs []interface{}
 			err = errors.New("")
 			s string
+			//ss []string
 		)
 
 		gredis.FlagBanCluster = false
 
-		rr, err = g.Redis().Cluster("info")
+		rdb:=g.Redis()
+
+		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
 		str1 := gconv.String(rr)
 		if !strings.Contains(str1, "cluster_state:ok") {
 			t.Errorf("cluster errs.")
 		}
 
-		_, err = g.Redis().Set("jjname1", "jjqrr1")
+		_, err = rdb.Set("jjname1", "jjqrr1")
 		gtest.Assert(err, nil)
-		_, err = g.Redis().Set("jjname2", "jjqrr2")
-		_, err = g.Redis().Set("jjname3", "jjqrr3")
+		_, err = rdb.Set("jjname2", "jjqrr2")
+		_, err = rdb.Set("jjname3", "jjqrr3")
 		gtest.Assert(err, nil)
-		rr, err2 := g.Redis().Get("jjname2")
+		rr, err2 := rdb.Get("jjname2")
 		gtest.Assert(err2, nil)
 		gtest.Assert(gconv.String(rr), "jjqrr2")
 
-		rr, err= g.Redis().Get("jjname1")
+		rdb.Set("n1","10")
+
+		rr, err= rdb.Get("jjname1")
 		gtest.Assert(err, nil)
 		gtest.Assert(gconv.String(rr), "jjqrr1")
 
-		rr3, err3 := g.Redis().Get("jjname3")
+		rr3, err3 :=rdb.Get("jjname3")
 		gtest.Assert(err3, nil)
 		gtest.Assert(gconv.String(rr3), "jjqrr3")
 
-		n,_=g.Redis().Exists("jjname3")
+		n,_=rdb.Exists("jjname3")
 		gtest.Assert(n,1)
 
-		n64,_=g.Redis().Expire("jjname3",300)
+		n64,_=rdb.Expire("jjname3",300)
 		gtest.Assert(n,1)
-		n64 ,_=g.Redis().Ttl("jjname3")
+		n64 ,_=rdb.Ttl("jjname3")
 		gtest.AssertGT(n64,200)
 
-		rr,_=g.Redis().Dump("jjname3")
+		rr,_=rdb.Dump("jjname3")
 		gtest.AssertNE(rr,nil)
 
 		n,_=g.Redis().Expireat("jjname3",gtime.Now().Second()+120)
 		gtest.Assert(n,1)
 
-		rrs,_=g.Redis().Keys("*jjname*")
+		rrs,_=rdb.Keys("*jjname*")
 		gtest.AssertGT(len(rrs),0)
 
-		rr,_=g.Redis().Object("REFCOUNT","jjname3")
+		rr,_=rdb.Object("REFCOUNT","jjname3")
 		gtest.AssertGT(gconv.Int(rr),0)
 
-		n,_=g.Redis().Persist("jjname3")
+		n,_=rdb.Persist("jjname3")
 		gtest.Assert(n,1)
-		n,_=g.Redis().Persist("jjname3_")
+		n,_=rdb.Persist("jjname3_")
 		gtest.Assert(n,0)
 
-		n64,_=g.Redis().Pttl("jjname3")
+		n64,_=rdb.Pttl("jjname3")
 		gtest.Assert(n64,-1)
-		n64,_=g.Redis().Pttl("jjname3_")
+		n64,_=rdb.Pttl("jjname3_")
 		gtest.AssertLT(n64,0)
 		g.Redis().Expire("jjname3",10)
-		n64,_=g.Redis().Pttl("jjname3")
+		n64,_=rdb.Pttl("jjname3")
 		gtest.AssertGT(n64,5)
 
 
-		rr,_=g.Redis().RandomKey()
+		rr,_=rdb.RandomKey()
 		gtest.AssertNE(rr,nil)
 
 
-		rdb:=g.Redis()
 
-		_,err=rdb.Rename("jjname2","jjname22")
+
+
+
+		_,err=rdb.ReStore("jjname2",100000,"servals")
 		gtest.AssertNE(err,nil)
 
-		_,err=g.Redis().Renamenx("jjname22","jjname1")
-		gtest.AssertNE(err,nil)
-
-		_,err=g.Redis().ReStore("jjname2",100000,"servals")
-		gtest.AssertNE(err,nil)
-
-		s,err=g.Redis().Dump("jjname1")
+		s,err=rdb.Dump("jjname1")
 		gtest.Assert(err,nil)
 
-		s,err=g.Redis().ReStore("jjname1",100000,s,"replace")
+		s,err=rdb.ReStore("jjname1",100000,s,"replace")
 		gtest.Assert(err,nil)
 		gtest.Assert(s,"OK")
 
 
-		n64,err=g.Redis().Lpush("numlist2",1,3)
+		n64,err=rdb.Lpush("numlist2",1,3)
 		gtest.Assert(err,nil)
 		gtest.AssertGT(n64,0)
-		n64,err=g.Redis().Lpush("numlist2",2)
+		n64,err=rdb.Lpush("numlist2",2)
 
-		rrs,err= g.Redis().Sort("numlist2","desc")
+		rrs,err= rdb.Sort("numlist2","desc")
 		gtest.Assert(err,nil)
 		gtest.Assert(gconv.SliceStr(rrs),[]string{"3","2","1"})
 
 
 		//=============================del this lists after test
-		n,err=g.Redis().Del("numlist2")
+		n,err=rdb.Del("numlist2")
 		gtest.Assert(n,1)
 
-		s,err=g.Redis().Get("numlist2")
+		s,err=rdb.Get("numlist2")
 		gtest.Assert(err,nil)
 		gtest.Assert(s,"")
 		// Sort
 
-		g.Redis().Set("jname2","a")
-		n64,err=g.Redis().Append("jname2","q")
-		s,err=g.Redis().Get("jname2")
+		rdb.Set("jname2","a")
+		n64,err=rdb.Append("jname2","q")
+		s,err=rdb.Get("jname2")
 		gtest.Assert(s,"aq")
 
-		s,err= g.Redis().Type("jname2")
+		s,err= rdb.Type("jname2")
 		gtest.Assert(err,nil)
 		gtest.Assert(s,"string")
 
-		n,err=g.Redis().Setbit("jname2",3,1)
+		n,err=rdb.Setbit("jname2",3,1)
 		gtest.Assert(err,nil)
 		gtest.Assert(n,0)
 
-		n,err=g.Redis().Getbit("jname2",3)
+		n,err=rdb.Getbit("jname2",3)
 		gtest.Assert(err,nil)
 		gtest.Assert(n,1)
 
-		n,err=g.Redis().BitCount("jname2")
+		n,err=rdb.BitCount("jname2")
 		gtest.Assert(err,nil)
 		gtest.Assert(n,8)
 
-		g.Redis().Set("jname22","tt22")
-		n,err=g.Redis().Setbit("jname22",3,1)
-		n,err=g.Redis().BiTop("and","and-result","jname2","jname22")
+		rdb.Set("jname22","tt22")
+		n,err=rdb.Setbit("jname22",3,1)
+		n,err=rdb.BiTop("and","and-result","jname2","jname22")
 		gtest.AssertNE(err,nil)
 
-		n,err=g.Redis().BitPos("jname22",1)
+		n,err=rdb.BitPos("jname22",1)
 		gtest.Assert(err,nil)
 		gtest.Assert(n,1)
 
 
-		rrs,err=g.Redis().BitField("jname2 set a")
+		rrs,err=rdb.BitField("jname2 set a")
 		gtest.Assert(err,nil)
 
 
-		// SETBIT  BitPos
+		n64,err=rdb.Decr("n1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,9)
+
+
+		n64,err=rdb.Decrby("n1",2)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,7)
+
+		n64,err=rdb.Decrby("n_21",2)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,-2)
+		n,err=rdb.Del("n_21")
+		gtest.Assert(err,nil)
+
+		s,err=rdb.GetRange("jjname1",1,2)
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"jq")
+
+		rr,err=rdb.GetSet("jjname1","imjjname1")
+		gtest.Assert(err,nil)
+		gtest.Assert(rr,"jjqrr1")
+		s,err=rdb.Get("jjname1")
+		gtest.Assert(s,"imjjname1")
+
+
+		n64,err=rdb.Incr("tn1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,1)
+		n64,err=rdb.Incr("tn1")
+		gtest.Assert(n64,2)
+
+
+
+		n64,err=rdb.IncrBy("tn1",2)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,4)
+		rdb.Del("tn1")
+
+		s,err=rdb.IncrByFloat("tn2",3.4)
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"3.4")
+		rdb.Del("tn2")
+
+
+
+		// IncrByFloat
 
 
 	})
