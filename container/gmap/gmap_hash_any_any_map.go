@@ -349,9 +349,3 @@ func (m *AnyAnyMap) Merge(other *AnyAnyMap) {
 func (m *AnyAnyMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
 }
-
-// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
-func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
-	m.mu = rwmutex.New(true)
-	return json.Unmarshal(b, &m.data)
-}

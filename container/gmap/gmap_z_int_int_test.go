@@ -130,3 +130,22 @@ func Test_IntIntMap_Merge(t *testing.T) {
 	m1.Merge(m2)
 	gtest.Assert(m1.Map(), map[int]int{1: 1, 2: 2})
 }
+
+func Test_IntIntMap_JSON(t *testing.T) {
+	m1 := gmap.NewIntIntMap()
+	m1.Set(1, 1)
+	m1.Set(2, 2)
+
+	b, err := m1.MarshalJSON()
+	if err != nil {
+		gtest.Error(err)
+	}
+
+	err = m1.UnmarshalJSON(b)
+	if err != nil {
+		gtest.Error(err)
+	}
+	gtest.Assert(m1.Get(1), 1)
+	gtest.Assert(m1.Get(2), 2)
+	gtest.Assert(m1.Map(), map[int]interface{}{1: 1, 2: 2})
+}

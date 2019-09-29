@@ -127,3 +127,28 @@ func Test_StrAnyMap_Merge(t *testing.T) {
 	m1.Merge(m2)
 	gtest.Assert(m1.Map(), map[string]interface{}{"a": 1, "b": "2"})
 }
+
+func Test_StrAnyMap_JSON(t *testing.T) {
+	m1 := gmap.NewStrAnyMap()
+	m1.Set("1", "1")
+	m1.Set("2", "2")
+
+	b, err := m1.MarshalJSON()
+	if err != nil {
+		gtest.Error(err)
+	}
+
+	err = m1.UnmarshalJSON(b)
+	if err != nil {
+		gtest.Error(err)
+	}
+
+	switch m1.Get("1").(type) {
+	case string:
+	default:
+		t.Fatal("Not string")
+	}
+	gtest.Assert(m1.Get("1"), "1")
+	gtest.Assert(m1.Get("2"), "2")
+	gtest.Assert(m1.Map(), map[string]interface{}{"1": "1", "2": "2"})
+}
