@@ -43,6 +43,17 @@ func (v *Var) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.Val())
 }
 
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Var) UnmarshalJSON(b []byte) error {
+	var i interface{}
+	err := json.Unmarshal(b, &i)
+	if err != nil {
+		return err
+	}
+	v.Set(i)
+	return nil
+}
+
 // Set sets <value> to <v>, and returns the old value.
 func (v *Var) Set(value interface{}) (old interface{}) {
 	if v.safe {

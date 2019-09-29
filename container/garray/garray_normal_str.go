@@ -624,3 +624,13 @@ func (a *StrArray) MarshalJSON() ([]byte, error) {
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
 }
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (a *StrArray) UnmarshalJSON(b []byte) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if err := json.Unmarshal(b, &a.array); err != nil {
+		return err
+	}
+	return nil
+}
