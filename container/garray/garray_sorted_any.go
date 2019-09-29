@@ -80,6 +80,13 @@ func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 	return a
 }
 
+// SetComparator sets/changes the comparator for sorting.
+func (a *SortedArray) SetComparator(comparator func(a, b interface{}) int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.comparator = comparator
+}
+
 // Sort sorts the array in increasing order.
 // The parameter <reverse> controls whether sort
 // in increasing order(default) or decreasing order
@@ -553,13 +560,22 @@ func (a *SortedArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *SortedArray) UnmarshalJSON(b []byte) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+		a.array = make([]interface{}, 0)
+		a.unique = gtype.NewBool()
+		// Note that the comparator is nil in default.
+		a.comparator = nil
+	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if err := json.Unmarshal(b, &a.array); err != nil {
 		return err
 	}
-	sort.Slice(a.array, func(i, j int) bool {
-		return a.comparator(a.array[i], a.array[j]) < 0
-	})
+	if a.comparator != nil {
+		sort.Slice(a.array, func(i, j int) bool {
+			return a.comparator(a.array[i], a.array[j]) < 0
+		})
+	}
 	return nil
 }

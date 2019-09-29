@@ -552,6 +552,12 @@ func (a *SortedStrArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *SortedStrArray) UnmarshalJSON(b []byte) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+		a.array = make([]string, 0)
+		a.unique = gtype.NewBool()
+		a.comparator = defaultComparatorStr
+	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if err := json.Unmarshal(b, &a.array); err != nil {
