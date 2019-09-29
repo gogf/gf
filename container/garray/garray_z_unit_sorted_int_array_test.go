@@ -10,6 +10,7 @@ package garray_test
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/frame/g"
 	"testing"
 	"time"
 
@@ -422,5 +423,29 @@ func TestSortedIntArray_Json(t *testing.T) {
 		a2 := garray.NewSortedIntArray()
 		err1 = json.Unmarshal(b2, &a2)
 		gtest.Assert(a2.Slice(), s2)
+
+		var a3 garray.SortedIntArray
+		err := json.Unmarshal(b2, &a3)
+		gtest.Assert(err, nil)
+		gtest.Assert(a3.Slice(), s1)
+	})
+
+	gtest.Case(t, func() {
+		type User struct {
+			Name   string
+			Scores *garray.SortedIntArray
+		}
+		data := g.Map{
+			"Name":   "john",
+			"Scores": []int{99, 100, 98},
+		}
+		b, err := json.Marshal(data)
+		gtest.Assert(err, nil)
+
+		user := new(User)
+		err = json.Unmarshal(b, user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Name, data["Name"])
+		gtest.Assert(user.Scores, []int{98, 99, 100})
 	})
 }

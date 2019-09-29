@@ -620,6 +620,10 @@ func (a *Array) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *Array) UnmarshalJSON(b []byte) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+		a.array = make([]interface{}, 0)
+	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if err := json.Unmarshal(b, &a.array); err != nil {
