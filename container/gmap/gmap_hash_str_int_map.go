@@ -10,6 +10,7 @@ package gmap
 import (
 	"encoding/json"
 
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 )
@@ -53,24 +54,45 @@ func (m *StrIntMap) Iterator(f func(k string, v int) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *StrIntMap) Clone() *StrIntMap {
-	return NewStrIntMapFrom(m.Map(), !m.mu.IsSafe())
+	return NewStrIntMapFrom(m.MapCopy(), !m.mu.IsSafe())
 }
 
-// Data returns the underlying data map.
-// Note that it's not concurrent safe using this function to access the data.
-func (m *StrIntMap) Data() map[string]int {
-	return m.data
-}
-
-// Map returns a copy of the data of the hash map.
+// Map returns the underlying data map.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (m *StrIntMap) Map() map[string]int {
 	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if !m.mu.IsSafe() {
+		return m.data
+	}
 	data := make(map[string]int, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
-	m.mu.RUnlock()
 	return data
+}
+
+// MapCopy returns a copy of the data of the hash map.
+func (m *StrIntMap) MapCopy() map[string]int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[string]int, len(m.data))
+	for k, v := range m.data {
+		data[k] = v
+	}
+	return data
+}
+
+// FilterEmpty deletes all key-value pair of which the value is empty.
+func (m *StrIntMap) FilterEmpty() {
+	m.mu.Lock()
+	for k, v := range m.data {
+		if empty.IsEmpty(v) {
+			delete(m.data, k)
+		}
+	}
+	m.mu.Unlock()
 }
 
 // Set sets key-value to the hash map.

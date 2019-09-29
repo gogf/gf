@@ -119,3 +119,14 @@ func Test_List_Map_Order(t *testing.T) {
 	gtest.Assert(m.Keys(), g.Slice{"k1", "k2", "k3"})
 	gtest.Assert(m.Values(), g.Slice{"v1", "v2", "v3"})
 }
+
+func Test_ListMap_FilterEmpty(t *testing.T) {
+	m := gmap.NewListMap()
+	m.Set(1, "")
+	m.Set(2, "2")
+	gtest.Assert(m.Size(), 2)
+	gtest.Assert(m.Get(2), "2")
+	m.FilterEmpty()
+	gtest.Assert(m.Size(), 1)
+	gtest.Assert(m.Get(2), "2")
+}

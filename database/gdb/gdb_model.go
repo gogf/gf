@@ -13,6 +13,11 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/text/gstr"
+
+	"github.com/gogf/gf/container/gmap"
+
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -30,6 +35,7 @@ type Model struct {
 	orderBy      string        // 排序语句
 	start        int           // 分页开始
 	limit        int           // 分页条数
+	option       int           // 操作选项
 	offset       int           // 查询偏移量(OFFSET语法)
 	data         interface{}   // 操作数据(注意仅支持Map/List/string类型)
 	batch        int           // 批量操作条数
@@ -41,8 +47,8 @@ type Model struct {
 }
 
 const (
-	gLINK_TYPE_MASTER = 1 // 主节点类型
-	gLINK_TYPE_SLAVE  = 2 // 从节点类型
+	gLINK_TYPE_MASTER = 1
+	gLINK_TYPE_SLAVE  = 2
 	OPTION_OMITEMPTY  = 1 << iota
 	OPTION_ALLOWEMPTY
 )
@@ -57,6 +63,7 @@ func (bs *dbBase) Table(tables string) *Model {
 		start:      -1,
 		offset:     -1,
 		safe:       false,
+		option:     OPTION_ALLOWEMPTY,
 	}
 }
 
@@ -76,6 +83,7 @@ func (tx *TX) Table(tables string) *Model {
 		start:      -1,
 		offset:     -1,
 		safe:       false,
+		option:     OPTION_ALLOWEMPTY,
 	}
 }
 
@@ -160,6 +168,13 @@ func (md *Model) InnerJoin(joinTable string, on string) *Model {
 func (md *Model) Fields(fields string) *Model {
 	model := md.getModel()
 	model.fields = fields
+	return model
+}
+
+// 链式操作，选项设置
+func (md *Model) Option(option int) *Model {
+	model := md.getModel()
+	model.option = option
 	return model
 }
 
@@ -310,25 +325,59 @@ func (md *Model) Data(data ...interface{}) *Model {
 				kind = rv.Kind()
 			}
 			switch kind {
-			// 如果是slice，那么转换为List类型
-			case reflect.Slice:
-				fallthrough
-			case reflect.Array:
+			case reflect.Slice, reflect.Array:
 				list := make(List, rv.Len())
 				for i := 0; i < rv.Len(); i++ {
 					list[i] = structToMap(rv.Index(i).Interface())
 				}
 				model.data = list
-			case reflect.Map:
-				fallthrough
-			case reflect.Struct:
-				model.data = Map(structToMap(data[0]))
+			case reflect.Map, reflect.Struct:
+				model.data = structToMap(data[0])
 			default:
 				model.data = data[0]
 			}
 		}
 	}
 	return model
+}
+
+// filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
+// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
+func (md *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
+	if list, ok := md.data.(List); ok {
+		for k, m := range list {
+			list[k] = md.doFilterDataMapForInsertOrUpdate(m, false)
+		}
+		return list
+	} else if m, ok := md.data.(Map); ok {
+		return md.doFilterDataMapForInsertOrUpdate(m, true)
+	}
+	return nil
+}
+
+// doFilterDataMapForInsertOrUpdate does the filter features for map.
+// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
+func (md *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) Map {
+	if md.filter {
+		data = md.db.filterFields(md.tables, data)
+	}
+	if allowOmitEmpty && md.option&OPTION_OMITEMPTY > 0 {
+		m := gmap.NewStrAnyMapFrom(data)
+		m.FilterEmpty()
+		data = m.Map()
+	}
+	if len(md.fields) > 0 && md.fields != "*" {
+		set := gset.NewStrSet()
+		for _, v := range gstr.SplitAndTrimSpace(md.fields, ",") {
+			set.Add(v)
+		}
+		for k, _ := range data {
+			if !set.Contains(k) {
+				delete(data, k)
+			}
+		}
+	}
+	return data
 }
 
 // 链式操作， CURD - Insert/BatchInsert。
@@ -349,17 +398,20 @@ func (md *Model) Insert() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
-		if md.filter {
-			for k, m := range list {
-				list[k] = md.db.filterFields(md.tables, m)
-			}
-		}
-		return md.db.doBatchInsert(md.getLink(), md.tables, list, OPTION_INSERT, batch)
+		return md.db.doBatchInsert(
+			md.getLink(),
+			md.tables,
+			md.filterDataForInsertOrUpdate(list),
+			gINSERT_OPTION_DEFAULT,
+			batch,
+		)
 	} else if data, ok := md.data.(Map); ok {
-		if md.filter {
-			data = md.db.filterFields(md.tables, data)
-		}
-		return md.db.doInsert(md.getLink(), md.tables, data, OPTION_INSERT)
+		return md.db.doInsert(
+			md.getLink(),
+			md.tables,
+			md.filterDataForInsertOrUpdate(data),
+			gINSERT_OPTION_DEFAULT,
+		)
 	}
 	return nil, errors.New("inserting into table with invalid data type")
 }
@@ -382,17 +434,20 @@ func (md *Model) Replace() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
-		if md.filter {
-			for k, m := range list {
-				list[k] = md.db.filterFields(md.tables, m)
-			}
-		}
-		return md.db.doBatchInsert(md.getLink(), md.tables, list, OPTION_REPLACE, batch)
+		return md.db.doBatchInsert(
+			md.getLink(),
+			md.tables,
+			md.filterDataForInsertOrUpdate(list),
+			gINSERT_OPTION_REPLACE,
+			batch,
+		)
 	} else if data, ok := md.data.(Map); ok {
-		if md.filter {
-			data = md.db.filterFields(md.tables, data)
-		}
-		return md.db.doInsert(md.getLink(), md.tables, data, OPTION_REPLACE)
+		return md.db.doInsert(
+			md.getLink(),
+			md.tables,
+			md.filterDataForInsertOrUpdate(data),
+			gINSERT_OPTION_REPLACE,
+		)
 	}
 	return nil, errors.New("replacing into table with invalid data type")
 }
@@ -415,17 +470,20 @@ func (md *Model) Save() (result sql.Result, err error) {
 		if md.batch > 0 {
 			batch = md.batch
 		}
-		if md.filter {
-			for k, m := range list {
-				list[k] = md.db.filterFields(md.tables, m)
-			}
-		}
-		return md.db.doBatchInsert(md.getLink(), md.tables, list, OPTION_SAVE, batch)
+		return md.db.doBatchInsert(
+			md.getLink(),
+			md.tables,
+			md.filterDataForInsertOrUpdate(list),
+			gINSERT_OPTION_SAVE,
+			batch,
+		)
 	} else if data, ok := md.data.(Map); ok {
-		if md.filter {
-			data = md.db.filterFields(md.tables, data)
-		}
-		return md.db.doInsert(md.getLink(), md.tables, data, OPTION_SAVE)
+		return md.db.doInsert(
+			md.getLink(),
+			md.tables,
+			md.filterDataForInsertOrUpdate(data),
+			gINSERT_OPTION_SAVE,
+		)
 	}
 	return nil, errors.New("saving into table with invalid data type")
 }
@@ -440,14 +498,13 @@ func (md *Model) Update() (result sql.Result, err error) {
 	if md.data == nil {
 		return nil, errors.New("updating table with empty data")
 	}
-	if md.filter {
-		if data, ok := md.data.(Map); ok {
-			if md.filter {
-				md.data = md.db.filterFields(md.tables, data)
-			}
-		}
-	}
-	return md.db.doUpdate(md.getLink(), md.tables, md.data, md.getConditionSql(), md.whereArgs...)
+	return md.db.doUpdate(
+		md.getLink(),
+		md.tables,
+		md.filterDataForInsertOrUpdate(md.data),
+		md.getConditionSql(),
+		md.whereArgs...,
+	)
 }
 
 // 链式操作， CURD - Delete

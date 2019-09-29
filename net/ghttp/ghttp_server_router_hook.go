@@ -23,8 +23,8 @@ func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFun
 }
 
 // 通过map批量绑定回调函数
-func (s *Server) BindHookHandlerByMap(pattern string, hookmap map[string]HandlerFunc) {
-	for k, v := range hookmap {
+func (s *Server) BindHookHandlerByMap(pattern string, hookMap map[string]HandlerFunc) {
+	for k, v := range hookMap {
 		s.BindHookHandler(pattern, k, v)
 	}
 }

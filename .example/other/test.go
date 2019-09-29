@@ -1,18 +1,31 @@
 package main
 
 import (
-	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/net/ghttp"
 )
 
-type User struct {
-	Uid  int
-	Name *gvar.Var
-}
-
 func main() {
-	user := new(User)
-	user.Name = g.NewVar("john")
-	g.Dump(gconv.Map(user))
+	s := g.Server()
+	s.BindHandler("/priority/show", func(r *ghttp.Request) {
+		r.Response.Writeln("priority service")
+	})
+
+	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+			r.Response.Writeln("/priority/:name")
+		},
+	})
+	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+			r.Response.Writeln("/priority/*any")
+		},
+	})
+	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+			r.Response.Writeln("/priority/show")
+		},
+	})
+	s.SetPort(8199)
+	s.Run()
 }

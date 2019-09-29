@@ -109,6 +109,7 @@ func Test_IntIntMap_Lock(t *testing.T) {
 	})
 
 }
+
 func Test_IntIntMap_Clone(t *testing.T) {
 	//clone 方法是深克隆
 	m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
@@ -122,6 +123,7 @@ func Test_IntIntMap_Clone(t *testing.T) {
 	//修改clone map,原 map 不影响
 	gtest.AssertIN(2, m.Keys())
 }
+
 func Test_IntIntMap_Merge(t *testing.T) {
 	m1 := gmap.NewIntIntMap()
 	m2 := gmap.NewIntIntMap()
@@ -129,4 +131,46 @@ func Test_IntIntMap_Merge(t *testing.T) {
 	m2.Set(2, 2)
 	m1.Merge(m2)
 	gtest.Assert(m1.Map(), map[int]int{1: 1, 2: 2})
+}
+
+func Test_IntIntMap_Map(t *testing.T) {
+	m := gmap.NewIntIntMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	data := m.Map()
+	gtest.Assert(data[1], 0)
+	gtest.Assert(data[2], 2)
+	data[3] = 3
+	gtest.Assert(m.Get(3), 3)
+	m.Set(4, 4)
+	gtest.Assert(data[4], 4)
+}
+
+func Test_IntIntMap_MapCopy(t *testing.T) {
+	m := gmap.NewIntIntMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	data := m.MapCopy()
+	gtest.Assert(data[1], 0)
+	gtest.Assert(data[2], 2)
+	data[3] = 3
+	gtest.Assert(m.Get(3), 0)
+	m.Set(4, 4)
+	gtest.Assert(data[4], 0)
+}
+
+func Test_IntIntMap_FilterEmpty(t *testing.T) {
+	m := gmap.NewIntIntMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Size(), 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	m.FilterEmpty()
+	gtest.Assert(m.Size(), 1)
+	gtest.Assert(m.Get(2), 2)
 }

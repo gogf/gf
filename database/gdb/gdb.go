@@ -165,10 +165,10 @@ type Map = map[string]interface{}
 type List = []Map
 
 const (
-	OPTION_INSERT               = 0
-	OPTION_REPLACE              = 1
-	OPTION_SAVE                 = 2
-	OPTION_IGNORE               = 3
+	gINSERT_OPTION_DEFAULT      = 0
+	gINSERT_OPTION_REPLACE      = 1
+	gINSERT_OPTION_SAVE         = 2
+	gINSERT_OPTION_IGNORE       = 3
 	gDEFAULT_BATCH_NUM          = 10 // Per count for batch insert/replace/save
 	gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool.
 )

@@ -30,6 +30,9 @@ func (r *Request) initGet() {
 			}
 		}
 	}
+	if r.getMap == nil {
+		r.getMap = make(map[string]interface{})
+	}
 }
 
 // 设置当前请求的GET参数

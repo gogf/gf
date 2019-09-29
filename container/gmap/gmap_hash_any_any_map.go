@@ -56,24 +56,34 @@ func (m *AnyAnyMap) Iterator(f func(k interface{}, v interface{}) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *AnyAnyMap) Clone(safe ...bool) *AnyAnyMap {
-	return NewFrom(m.Map(), safe...)
+	return NewFrom(m.MapCopy(), safe...)
 }
 
-// Map returns a copy of the data of the hash map.
+// Map returns the underlying data map.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (m *AnyAnyMap) Map() map[interface{}]interface{} {
 	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if !m.mu.IsSafe() {
+		return m.data
+	}
 	data := make(map[interface{}]interface{}, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
-	m.mu.RUnlock()
 	return data
 }
 
-// Data returns the underlying data map.
-// Note that it's not concurrent safe using this function to access the data.
-func (m *AnyAnyMap) Data() map[interface{}]interface{} {
-	return m.data
+// MapCopy returns a copy of the data of the hash map.
+func (m *AnyAnyMap) MapCopy() map[interface{}]interface{} {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[interface{}]interface{}, len(m.data))
+	for k, v := range m.data {
+		data[k] = v
+	}
+	return data
 }
 
 // MapStrAny returns a copy of the data of the map as map[string]interface{}.

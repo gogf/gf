@@ -314,8 +314,8 @@ func (a *SortedArray) Len() int {
 }
 
 // Slice returns the underlying data of array.
-// Notice, if in concurrent-safe usage, it returns a copy of slice;
-// else a pointer to the underlying data.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (a *SortedArray) Slice() []interface{} {
 	array := ([]interface{})(nil)
 	if a.mu.IsSafe() {

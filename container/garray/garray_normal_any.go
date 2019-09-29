@@ -355,19 +355,18 @@ func (a *Array) Len() int {
 }
 
 // Slice returns the underlying data of array.
-// Notice, if in concurrent-safe usage, it returns a copy of slice;
-// else a pointer to the underlying data.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (a *Array) Slice() []interface{} {
-	array := ([]interface{})(nil)
 	if a.mu.IsSafe() {
 		a.mu.RLock()
 		defer a.mu.RUnlock()
-		array = make([]interface{}, len(a.array))
+		array := make([]interface{}, len(a.array))
 		copy(array, a.array)
+		return array
 	} else {
-		array = a.array
+		return a.array
 	}
-	return array
 }
 
 // Clone returns a new array, which is a copy of current array.

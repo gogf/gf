@@ -129,3 +129,45 @@ func Test_IntAnyMap_Merge(t *testing.T) {
 	m1.Merge(m2)
 	gtest.Assert(m1.Map(), map[int]interface{}{1: 1, 2: "2"})
 }
+
+func Test_IntAnyMap_Map(t *testing.T) {
+	m := gmap.NewIntAnyMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	data := m.Map()
+	gtest.Assert(data[1], 0)
+	gtest.Assert(data[2], 2)
+	data[3] = 3
+	gtest.Assert(m.Get(3), 3)
+	m.Set(4, 4)
+	gtest.Assert(data[4], 4)
+}
+
+func Test_IntAnyMap_MapCopy(t *testing.T) {
+	m := gmap.NewIntAnyMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	data := m.MapCopy()
+	gtest.Assert(data[1], 0)
+	gtest.Assert(data[2], 2)
+	data[3] = 3
+	gtest.Assert(m.Get(3), nil)
+	m.Set(4, 4)
+	gtest.Assert(data[4], nil)
+}
+
+func Test_IntAnyMap_FilterEmpty(t *testing.T) {
+	m := gmap.NewIntAnyMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Size(), 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	m.FilterEmpty()
+	gtest.Assert(m.Size(), 1)
+	gtest.Assert(m.Get(2), 2)
+}

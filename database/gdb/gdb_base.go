@@ -312,21 +312,21 @@ func (bs *dbBase) Begin() (*TX, error) {
 // 参数data支持map/struct/*struct/slice类型，
 // 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doInsert(nil, table, data, OPTION_INSERT, batch...)
+	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_DEFAULT, batch...)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条。
 // 参数data支持map/struct/*struct/slice类型，
 // 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doInsert(nil, table, data, OPTION_REPLACE, batch...)
+	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_REPLACE, batch...)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据。
 // 参数data支持map/struct/*struct/slice类型，
 // 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doInsert(nil, table, data, OPTION_SAVE, batch...)
+	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_SAVE, batch...)
 }
 
 // 支持insert、replace, save， ignore操作。
@@ -351,16 +351,15 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 		kind = rv.Kind()
 	}
 	switch kind {
-	case reflect.Slice:
-		fallthrough
-	case reflect.Array:
+	case reflect.Slice, reflect.Array:
 		return bs.db.doBatchInsert(link, table, data, option, batch...)
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
+	case reflect.Map, reflect.Struct:
 		dataMap = structToMap(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
+	}
+	if len(dataMap) == 0 {
+		return nil, errors.New("data cannot be empty")
 	}
 	charL, charR := bs.db.getChars()
 	for k, v := range dataMap {
@@ -370,7 +369,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 	}
 	operation := getInsertOperationByOption(option)
 	updateStr := ""
-	if option == OPTION_SAVE {
+	if option == gINSERT_OPTION_SAVE {
 		for k, _ := range dataMap {
 			if len(updateStr) > 0 {
 				updateStr += ","
@@ -395,23 +394,22 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 
 // CURD操作:批量数据指定批次量写入
 func (bs *dbBase) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doBatchInsert(nil, table, list, OPTION_INSERT, batch...)
+	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_DEFAULT, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (bs *dbBase) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doBatchInsert(nil, table, list, OPTION_REPLACE, batch...)
+	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_REPLACE, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (bs *dbBase) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doBatchInsert(nil, table, list, OPTION_SAVE, batch...)
+	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_SAVE, batch...)
 }
 
 // 批量写入数据, 参数list支持slice类型，例如: []map/[]struct/[]*struct。
 func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
-	var keys []string
-	var values []string
+	var keys, values []string
 	var params []interface{}
 	table = bs.db.quoteWord(table)
 	listMap := (List)(nil)
@@ -432,45 +430,41 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 			kind = rv.Kind()
 		}
 		switch kind {
-		// 如果是slice，那么转换为List类型
-		case reflect.Slice:
-			fallthrough
-		case reflect.Array:
+		// If it's slice type, it then converts it to List type.
+		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
 				listMap[i] = structToMap(rv.Index(i).Interface())
 			}
-		case reflect.Map:
-			fallthrough
-		case reflect.Struct:
-			listMap = List{Map(structToMap(list))}
+		case reflect.Map, reflect.Struct:
+			listMap = List{structToMap(list)}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
 	}
-	// 判断长度
 	if len(listMap) < 1 {
-		return result, errors.New("empty data list")
+		return result, errors.New("data list cannot be empty")
 	}
 	if link == nil {
 		if link, err = bs.db.Master(); err != nil {
 			return
 		}
 	}
-	// 首先获取字段名称及记录长度
+	// Handle the field names and place holders.
 	holders := []string(nil)
 	for k, _ := range listMap[0] {
 		keys = append(keys, k)
 		holders = append(holders, "?")
 	}
+	// Prepare the result pointer.
 	batchResult := new(batchSqlResult)
 	charL, charR := bs.db.getChars()
-	keyStr := charL + strings.Join(keys, charR+","+charL) + charR
+	keysStr := charL + strings.Join(keys, charR+","+charL) + charR
 	valueHolderStr := "(" + strings.Join(holders, ",") + ")"
-	// 操作判断
+
 	operation := getInsertOperationByOption(option)
 	updateStr := ""
-	if option == OPTION_SAVE {
+	if option == gINSERT_OPTION_SAVE {
 		for _, k := range keys {
 			if len(updateStr) > 0 {
 				updateStr += ","
@@ -489,15 +483,25 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 	}
 	listMapLen := len(listMap)
 	for i := 0; i < listMapLen; i++ {
+		// Note that the map type is unordered,
+		// so it should use slice+key to retrieve the value.
 		for _, k := range keys {
 			params = append(params, convertParam(listMap[i][k]))
 		}
 		values = append(values, valueHolderStr)
 		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
-			r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
-				operation, table, keyStr, strings.Join(values, ","),
-				updateStr),
-				params...)
+			r, err := bs.db.doExec(
+				link,
+				fmt.Sprintf(
+					"%s INTO %s(%s) VALUES%s %s",
+					operation,
+					table,
+					keysStr,
+					strings.Join(values, ","),
+					updateStr,
+				),
+				params...,
+			)
 			if err != nil {
 				return r, err
 			}
@@ -550,10 +554,13 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 	default:
 		updates = gconv.String(data)
 	}
+	if len(updates) == 0 {
+		return nil, errors.New("data cannot be empty")
+	}
 	if len(params) > 0 {
 		args = append(params, args...)
 	}
-	// 如果没有传递link，那么使用默认的写库对象
+	// If no link passed, it then uses the master link.
 	if link == nil {
 		if link, err = bs.db.Master(); err != nil {
 			return nil, err
