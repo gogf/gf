@@ -7,11 +7,13 @@
 package gtype
 
 import (
+	"encoding/json"
 	"math"
 	"sync/atomic"
 	"unsafe"
 )
 
+// Float64 Float64Struct
 type Float64 struct {
 	value uint64
 }
@@ -60,5 +62,21 @@ func (v *Float64) Add(delta float64) (new float64) {
 
 // Cas executes the compare-and-swap operation for value.
 func (v *Float64) Cas(old, new float64) bool {
-	return atomic.CompareAndSwapUint64(&v.value, uint64(old), uint64(new))
+	return atomic.CompareAndSwapUint64(&v.value, math.Float64bits(old), math.Float64bits(new))
+}
+
+// MarshalJSON MarshalJSON
+func (v *Float64) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
+}
+
+// UnmarshalJSON UnmarshalJSON
+func (v *Float64) UnmarshalJSON(b []byte) error {
+	var l float64
+	err := json.Unmarshal(b, &l)
+	if err != nil {
+		return err
+	}
+	v.Set(l)
+	return nil
 }

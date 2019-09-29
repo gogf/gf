@@ -7,9 +7,11 @@
 package gtype
 
 import (
+	"encoding/json"
 	"sync/atomic"
 )
 
+// Int64 Int64Struct
 type Int64 struct {
 	value int64
 }
@@ -48,4 +50,20 @@ func (v *Int64) Add(delta int64) (new int64) {
 // Cas executes the compare-and-swap operation for value.
 func (v *Int64) Cas(old, new int64) bool {
 	return atomic.CompareAndSwapInt64(&v.value, old, new)
+}
+
+// MarshalJSON MarshalJSON
+func (v *Int64) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
+}
+
+// UnmarshalJSON UnmarshalJSON
+func (v *Int64) UnmarshalJSON(b []byte) error {
+	var l int64
+	err := json.Unmarshal(b, &l)
+	if err != nil {
+		return err
+	}
+	v.Set(l)
+	return nil
 }

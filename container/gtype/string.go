@@ -7,9 +7,11 @@
 package gtype
 
 import (
+	"encoding/json"
 	"sync/atomic"
 )
 
+// String StringStruct
 type String struct {
 	value atomic.Value
 }
@@ -43,4 +45,20 @@ func (v *String) Val() string {
 		return s.(string)
 	}
 	return ""
+}
+
+// MarshalJSON MarshalJSON
+func (v *String) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
+}
+
+// UnmarshalJSON UnmarshalJSON
+func (v *String) UnmarshalJSON(b []byte) error {
+	var l string
+	err := json.Unmarshal(b, &l)
+	if err != nil {
+		return err
+	}
+	v.Set(l)
+	return nil
 }

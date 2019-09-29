@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 )
 
+// Interface InterfaceStruct
 type Interface struct {
 	value atomic.Value
 }

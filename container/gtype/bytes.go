@@ -6,8 +6,12 @@
 
 package gtype
 
-import "sync/atomic"
+import (
+	"encoding/json"
+	"sync/atomic"
+)
 
+// Bytes BytesStruct
 type Bytes struct {
 	value atomic.Value
 }
@@ -40,5 +44,21 @@ func (v *Bytes) Val() []byte {
 	if s := v.value.Load(); s != nil {
 		return s.([]byte)
 	}
+	return nil
+}
+
+// MarshalJSON MarshalJSON
+func (v *Bytes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
+}
+
+// UnmarshalJSON UnmarshalJSON
+func (v *Bytes) UnmarshalJSON(b []byte) error {
+	var l []byte
+	err := json.Unmarshal(b, &l)
+	if err != nil {
+		return err
+	}
+	v.Set(l)
 	return nil
 }

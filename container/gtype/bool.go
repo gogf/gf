@@ -7,9 +7,11 @@
 package gtype
 
 import (
+	"encoding/json"
 	"sync/atomic"
 )
 
+// Bool BoolStruct
 type Bool struct {
 	value int32
 }
@@ -58,4 +60,20 @@ func (v *Bool) Cas(old, new bool) bool {
 		newInt32 = 1
 	}
 	return atomic.CompareAndSwapInt32(&v.value, oldInt32, newInt32)
+}
+
+// MarshalJSON MarshalJSON
+func (v *Bool) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
+}
+
+// UnmarshalJSON UnmarshalJSON
+func (v *Bool) UnmarshalJSON(b []byte) error {
+	var l bool
+	err := json.Unmarshal(b, &l)
+	if err != nil {
+		return err
+	}
+	v.Set(l)
+	return nil
 }

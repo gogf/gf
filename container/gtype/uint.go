@@ -7,9 +7,11 @@
 package gtype
 
 import (
+	"encoding/json"
 	"sync/atomic"
 )
 
+// Uint UintStruct
 type Uint struct {
 	value uint64
 }
@@ -48,4 +50,20 @@ func (v *Uint) Add(delta uint) (new uint) {
 // Cas executes the compare-and-swap operation for value.
 func (v *Uint) Cas(old, new uint) bool {
 	return atomic.CompareAndSwapUint64(&v.value, uint64(old), uint64(new))
+}
+
+// MarshalJSON MarshalJSON
+func (v *Uint) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
+}
+
+// UnmarshalJSON UnmarshalJSON
+func (v *Uint) UnmarshalJSON(b []byte) error {
+	var l uint
+	err := json.Unmarshal(b, &l)
+	if err != nil {
+		return err
+	}
+	v.Set(l)
+	return nil
 }

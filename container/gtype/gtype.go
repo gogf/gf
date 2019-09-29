@@ -7,9 +7,10 @@
 // Package gtype provides kinds of high performance and concurrent-safe basic variable types.
 package gtype
 
+// Type See Interface.
 type Type = Interface
 
-// See NewInterface.
+// New See NewInterface.
 func New(value ...interface{}) *Type {
 	return NewInterface(value...)
 }
