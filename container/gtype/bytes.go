@@ -6,7 +6,11 @@
 
 package gtype
 
-import "sync/atomic"
+import (
+	"encoding/base64"
+	"github.com/gogf/gf/util/gconv"
+	"sync/atomic"
+)
 
 type Bytes struct {
 	value atomic.Value
@@ -41,4 +45,12 @@ func (v *Bytes) Val() []byte {
 		return s.([]byte)
 	}
 	return nil
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Bytes) MarshalJSON() ([]byte, error) {
+	val := v.Val()
+	dst := make([]byte, base64.StdEncoding.EncodedLen(len(val)))
+	base64.StdEncoding.Encode(dst, val)
+	return gconv.UnsafeStrToBytes(`"` + gconv.UnsafeBytesToStr(dst) + `"`), nil
 }

@@ -114,7 +114,7 @@ func Byte(i interface{}) byte {
 	if v, ok := i.(byte); ok {
 		return v
 	}
-	return byte(Uint8(i))
+	return Uint8(i)
 }
 
 // Bytes converts <i> to []byte.
@@ -155,7 +155,7 @@ func String(i interface{}) string {
 	}
 	switch value := i.(type) {
 	case int:
-		return strconv.FormatInt(int64(value), 10)
+		return strconv.Itoa(value)
 	case int8:
 		return strconv.Itoa(int(value))
 	case int16:
@@ -163,7 +163,7 @@ func String(i interface{}) string {
 	case int32:
 		return strconv.Itoa(int(value))
 	case int64:
-		return strconv.FormatInt(int64(value), 10)
+		return strconv.FormatInt(value, 10)
 	case uint:
 		return strconv.FormatUint(uint64(value), 10)
 	case uint8:
@@ -173,7 +173,7 @@ func String(i interface{}) string {
 	case uint32:
 		return strconv.FormatUint(uint64(value), 10)
 	case uint64:
-		return strconv.FormatUint(uint64(value), 10)
+		return strconv.FormatUint(value, 10)
 	case float32:
 		return strconv.FormatFloat(float64(value), 'f', -1, 32)
 	case float64:

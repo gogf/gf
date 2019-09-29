@@ -135,7 +135,7 @@ func LeEncodeInt8(i int8) []byte {
 }
 
 func LeEncodeUint8(i uint8) []byte {
-	return []byte{byte(i)}
+	return []byte{i}
 }
 
 func LeEncodeInt16(i int16) []byte {

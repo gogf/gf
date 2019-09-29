@@ -7,6 +7,8 @@
 package gtype
 
 import (
+	"github.com/gogf/gf/util/gconv"
+	"strconv"
 	"sync/atomic"
 )
 
@@ -48,4 +50,9 @@ func (v *Int32) Add(delta int32) (new int32) {
 // Cas executes the compare-and-swap operation for value.
 func (v *Int32) Cas(old, new int32) bool {
 	return atomic.CompareAndSwapInt32(&v.value, old, new)
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Int32) MarshalJSON() ([]byte, error) {
+	return gconv.UnsafeStrToBytes(strconv.Itoa(int(v.Val()))), nil
 }
