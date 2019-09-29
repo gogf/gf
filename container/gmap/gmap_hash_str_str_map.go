@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/internal/rwmutex"
 )
 
+// StrStrMap StrStrMap
 type StrStrMap struct {
 	mu   *rwmutex.RWMutex
 	data map[string]string
@@ -118,22 +119,22 @@ func (m *StrStrMap) doSetWithLockCheck(key string, value string) string {
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *StrStrMap) GetOrSet(key string, value string) string {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, value)
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist
 // and returns this value.
 func (m *StrStrMap) GetOrSetFunc(key string, f func() string) string {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, f())
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSetFuncLock returns the value by key,
@@ -143,7 +144,8 @@ func (m *StrStrMap) GetOrSetFunc(key string, f func() string) string {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
 func (m *StrStrMap) GetOrSetFuncLock(key string, f func() string) string {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		m.mu.Lock()
 		defer m.mu.Unlock()
 		if v, ok = m.data[key]; ok {
@@ -152,9 +154,8 @@ func (m *StrStrMap) GetOrSetFuncLock(key string, f func() string) string {
 		v = f()
 		m.data[key] = v
 		return v
-	} else {
-		return v
 	}
+	return v
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
@@ -317,4 +318,10 @@ func (m *StrStrMap) MarshalJSON() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *StrStrMap) UnmarshalJSON(b []byte) error {
+	m.mu = rwmutex.New(true)
+	return json.Unmarshal(b, &m.data)
 }

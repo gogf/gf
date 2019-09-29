@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/internal/rwmutex"
 )
 
+// AnyAnyMap AnyAnyMap
 type AnyAnyMap struct {
 	mu   *rwmutex.RWMutex
 	data map[interface{}]interface{}
@@ -137,22 +138,22 @@ func (m *AnyAnyMap) doSetWithLockCheck(key interface{}, value interface{}) inter
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *AnyAnyMap) GetOrSet(key interface{}, value interface{}) interface{} {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, value)
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist
 // and returns this value.
 func (m *AnyAnyMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, f())
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSetFuncLock returns the value by key,
@@ -162,11 +163,11 @@ func (m *AnyAnyMap) GetOrSetFunc(key interface{}, f func() interface{}) interfac
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
 func (m *AnyAnyMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, f)
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetVar returns a gvar.Var with the value by given <key>.
@@ -347,4 +348,10 @@ func (m *AnyAnyMap) Merge(other *AnyAnyMap) {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (m *AnyAnyMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
+	m.mu = rwmutex.New(true)
+	return json.Unmarshal(b, &m.data)
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
+// IntStrMap IntStrMap
 type IntStrMap struct {
 	mu   *rwmutex.RWMutex
 	data map[int]string
@@ -118,21 +119,21 @@ func (m *IntStrMap) doSetWithLockCheck(key int, value string) string {
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *IntStrMap) GetOrSet(key int, value string) string {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, value)
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist and returns this value.
 func (m *IntStrMap) GetOrSetFunc(key int, f func() string) string {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, f())
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSetFuncLock returns the value by key,
@@ -141,7 +142,8 @@ func (m *IntStrMap) GetOrSetFunc(key int, f func() string) string {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
 func (m *IntStrMap) GetOrSetFuncLock(key int, f func() string) string {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		m.mu.Lock()
 		defer m.mu.Unlock()
 		if v, ok = m.data[key]; ok {
@@ -150,9 +152,8 @@ func (m *IntStrMap) GetOrSetFuncLock(key int, f func() string) string {
 		v = f()
 		m.data[key] = v
 		return v
-	} else {
-		return v
 	}
+	return v
 }
 
 // SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
@@ -315,4 +316,10 @@ func (m *IntStrMap) MarshalJSON() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *IntStrMap) UnmarshalJSON(b []byte) error {
+	m.mu = rwmutex.New(true)
+	return json.Unmarshal(b, &m.data)
 }

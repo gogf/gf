@@ -9,6 +9,8 @@ package gmap
 
 // Map based on hash table, alias of AnyAnyMap.
 type Map = AnyAnyMap
+
+// HashMap based on hash table, alias of AnyAnyMap.
 type HashMap = AnyAnyMap
 
 // New returns an empty hash map.

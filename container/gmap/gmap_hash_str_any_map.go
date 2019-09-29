@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
+// StrAnyMap StrAnyMap
 type StrAnyMap struct {
 	mu   *rwmutex.RWMutex
 	data map[string]interface{}
@@ -128,22 +129,22 @@ func (m *StrAnyMap) doSetWithLockCheck(key string, value interface{}) interface{
 // GetOrSet returns the value by key,
 // or set value with given <value> if not exist and returns this value.
 func (m *StrAnyMap) GetOrSet(key string, value interface{}) interface{} {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, value)
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSetFunc returns the value by key,
 // or sets value with return value of callback function <f> if not exist
 // and returns this value.
 func (m *StrAnyMap) GetOrSetFunc(key string, f func() interface{}) interface{} {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, f())
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSetFuncLock returns the value by key,
@@ -153,11 +154,11 @@ func (m *StrAnyMap) GetOrSetFunc(key string, f func() interface{}) interface{} {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
 func (m *StrAnyMap) GetOrSetFuncLock(key string, f func() interface{}) interface{} {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, f)
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetVar returns a gvar.Var with the value by given <key>.
@@ -340,4 +341,10 @@ func (m *StrAnyMap) MarshalJSON() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *StrAnyMap) UnmarshalJSON(b []byte) error {
+	m.mu = rwmutex.New(true)
+	return json.Unmarshal(b, &m.data)
 }
