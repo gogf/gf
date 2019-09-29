@@ -9,6 +9,7 @@ package gbase64
 
 import (
 	"encoding/base64"
+	"github.com/gogf/gf/util/gconv"
 )
 
 // Encode encodes bytes with BASE64 algorithm.
@@ -32,7 +33,7 @@ func EncodeString(src string) string {
 
 // EncodeToString encodes bytes to string with BASE64 algorithm.
 func EncodeToString(src []byte) string {
-	return string(Encode(src))
+	return gconv.UnsafeBytesToStr(Encode(src))
 }
 
 // DecodeString decodes string with BASE64 algorithm.
@@ -43,5 +44,5 @@ func DecodeString(str string) ([]byte, error) {
 // DecodeString decodes string with BASE64 algorithm.
 func DecodeToString(str string) (string, error) {
 	b, err := DecodeString(str)
-	return string(b), err
+	return gconv.UnsafeBytesToStr(b), err
 }

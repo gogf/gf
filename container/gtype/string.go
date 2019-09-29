@@ -7,6 +7,7 @@
 package gtype
 
 import (
+	"github.com/gogf/gf/util/gconv"
 	"sync/atomic"
 )
 
@@ -43,4 +44,9 @@ func (v *String) Val() string {
 		return s.(string)
 	}
 	return ""
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *String) MarshalJSON() ([]byte, error) {
+	return gconv.UnsafeStrToBytes(`"` + v.Val() + `"`), nil
 }

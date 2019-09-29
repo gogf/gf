@@ -59,3 +59,12 @@ func (v *Bool) Cas(old, new bool) bool {
 	}
 	return atomic.CompareAndSwapInt32(&v.value, oldInt32, newInt32)
 }
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Bool) MarshalJSON() ([]byte, error) {
+	if v.Val() {
+		return []byte("true"), nil
+	} else {
+		return []byte("false"), nil
+	}
+}

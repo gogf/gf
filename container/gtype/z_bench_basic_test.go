@@ -16,18 +16,19 @@ import (
 	"github.com/gogf/gf/encoding/gbinary"
 )
 
-var it = NewInt()
-var it32 = NewInt32()
-var it64 = NewInt64()
-var uit = NewUint()
-var uit32 = NewUint32()
-var uit64 = NewUint64()
-var bl = NewBool()
-var bytes = NewBytes()
-var str = NewString()
-var inf = NewInterface()
-
-var at = atomic.Value{}
+var (
+	it    = NewInt()
+	it32  = NewInt32()
+	it64  = NewInt64()
+	uit   = NewUint()
+	uit32 = NewUint32()
+	uit64 = NewUint64()
+	bl    = NewBool()
+	bytes = NewBytes()
+	str   = NewString()
+	inf   = NewInterface()
+	at    = atomic.Value{}
+)
 
 func BenchmarkInt_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {

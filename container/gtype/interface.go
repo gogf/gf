@@ -7,6 +7,7 @@
 package gtype
 
 import (
+	"encoding/json"
 	"sync/atomic"
 )
 
@@ -40,4 +41,9 @@ func (v *Interface) Set(value interface{}) (old interface{}) {
 // Val atomically loads t.value.
 func (v *Interface) Val() interface{} {
 	return v.value.Load()
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Interface) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
 }
