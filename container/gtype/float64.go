@@ -62,10 +62,16 @@ func (v *Float64) Add(delta float64) (new float64) {
 
 // Cas executes the compare-and-swap operation for value.
 func (v *Float64) Cas(old, new float64) bool {
-	return atomic.CompareAndSwapUint64(&v.value, uint64(old), uint64(new))
+	return atomic.CompareAndSwapUint64(&v.value, math.Float64bits(old), math.Float64bits(new))
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Float64) MarshalJSON() ([]byte, error) {
-	return gconv.UnsafeStrToBytes(strconv.FormatFloat(v.Val(), 'f', -1, 64)), nil
+	return gconv.UnsafeStrToBytes(strconv.FormatFloat(v.Val(), 'g', -1, 64)), nil
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Float64) UnmarshalJSON(b []byte) error {
+	v.Set(gconv.Float64(gconv.UnsafeBytesToStr(b)))
+	return nil
 }
