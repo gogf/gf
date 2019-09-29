@@ -110,17 +110,19 @@ func Test_AnyAnyMap_Lock(t *testing.T) {
 }
 
 func Test_AnyAnyMap_Clone(t *testing.T) {
-	//clone 方法是深克隆
-	m := gmap.NewAnyAnyMapFrom(map[interface{}]interface{}{1: 1, 2: "2"})
+	gtest.Case(t, func() {
+		//clone 方法是深克隆
+		m := gmap.NewAnyAnyMapFrom(map[interface{}]interface{}{1: 1, 2: "2"})
 
-	m_clone := m.Clone()
-	m.Remove(1)
-	//修改原 map,clone 后的 map 不影响
-	gtest.AssertIN(1, m_clone.Keys())
+		m_clone := m.Clone()
+		m.Remove(1)
+		//修改原 map,clone 后的 map 不影响
+		gtest.AssertIN(1, m_clone.Keys())
 
-	m_clone.Remove(2)
-	//修改clone map,原 map 不影响
-	gtest.AssertIN(2, m.Keys())
+		m_clone.Remove(2)
+		//修改clone map,原 map 不影响
+		gtest.AssertIN(2, m.Keys())
+	})
 }
 
 func Test_AnyAnyMap_Merge(t *testing.T) {
@@ -130,4 +132,45 @@ func Test_AnyAnyMap_Merge(t *testing.T) {
 	m2.Set(2, "2")
 	m1.Merge(m2)
 	gtest.Assert(m1.Map(), map[interface{}]interface{}{1: 1, 2: "2"})
+}
+
+func Test_AnyAnyMap_Map(t *testing.T) {
+	m := gmap.NewAnyAnyMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	data := m.Map()
+	gtest.Assert(data[1], 0)
+	gtest.Assert(data[2], 2)
+	data[3] = 3
+	gtest.Assert(m.Get(3), 3)
+	m.Set(4, 4)
+	gtest.Assert(data[4], 4)
+}
+
+func Test_AnyAnyMap_MapCopy(t *testing.T) {
+	m := gmap.NewAnyAnyMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	data := m.MapCopy()
+	gtest.Assert(data[1], 0)
+	gtest.Assert(data[2], 2)
+	data[3] = 3
+	gtest.Assert(m.Get(3), nil)
+	m.Set(4, 4)
+	gtest.Assert(data[4], nil)
+}
+
+func Test_AnyAnyMap_FilterEmpty(t *testing.T) {
+	m := gmap.NewAnyAnyMap()
+	m.Set(1, 0)
+	m.Set(2, 2)
+	gtest.Assert(m.Get(1), 0)
+	gtest.Assert(m.Get(2), 2)
+	m.FilterEmpty()
+	gtest.Assert(m.Get(1), nil)
+	gtest.Assert(m.Get(2), 2)
 }

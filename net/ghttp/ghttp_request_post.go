@@ -59,6 +59,9 @@ func (r *Request) initPost() {
 			}
 		}
 	}
+	if r.postMap == nil {
+		r.postMap = make(map[string]interface{})
+	}
 }
 
 // 设置当前请求的POST参数

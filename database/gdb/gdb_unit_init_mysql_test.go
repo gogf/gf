@@ -86,10 +86,10 @@ func createTable(table ...string) (name string) {
 	if _, err := db.Exec(fmt.Sprintf(`
     CREATE TABLE %s (
         id          int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '用户ID',
-        passport    varchar(45) NOT NULL COMMENT '账号',
-        password    char(32) NOT NULL COMMENT '密码',
-        nickname    varchar(45) NOT NULL COMMENT '昵称',
-        create_time timestamp NOT NULL COMMENT '创建时间/注册时间',
+        passport    varchar(45) NULL COMMENT '账号',
+        password    char(32) NULL COMMENT '密码',
+        nickname    varchar(45) NULL COMMENT '昵称',
+        create_time timestamp NULL COMMENT '创建时间/注册时间',
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, name)); err != nil {

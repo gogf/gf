@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/database/gdb"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
@@ -863,11 +865,230 @@ func Test_Model_Offset(t *testing.T) {
 func Test_Model_ForPage(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	db.SetDebug(true)
-	defer db.SetDebug(false)
+
 	result, err := db.Table(table).ForPage(3, 3).OrderBy("id").Select()
 	gtest.Assert(err, nil)
 	gtest.Assert(len(result), 3)
 	gtest.Assert(result[0]["id"], 7)
 	gtest.Assert(result[1]["id"], 8)
+}
+
+func Test_Model_Option_Map(t *testing.T) {
+	// Insert
+	gtest.Case(t, func() {
+		table := createTable()
+		defer dropTable(table)
+		r, err := db.Table(table).Fields("id, passport").Data(g.Map{
+			"id":       1,
+			"passport": "1",
+			"password": "1",
+			"nickname": "1",
+		}).Insert()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+		one, err := db.Table(table).Where("id", 1).One()
+		gtest.Assert(err, nil)
+		gtest.AssertNE(one["password"].String(), "1")
+		gtest.AssertNE(one["nickname"].String(), "1")
+		gtest.Assert(one["passport"].String(), "1")
+	})
+	gtest.Case(t, func() {
+		table := createTable()
+		defer dropTable(table)
+		r, err := db.Table(table).Option(gdb.OPTION_OMITEMPTY).Data(g.Map{
+			"id":       1,
+			"passport": 0,
+			"password": 0,
+			"nickname": "1",
+		}).Insert()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+		one, err := db.Table(table).Where("id", 1).One()
+		gtest.Assert(err, nil)
+		gtest.AssertNE(one["passport"].String(), "0")
+		gtest.AssertNE(one["password"].String(), "0")
+		gtest.Assert(one["nickname"].String(), "1")
+	})
+
+	// Replace
+	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
+		_, err := db.Table(table).Option(gdb.OPTION_OMITEMPTY).Data(g.Map{
+			"id":       1,
+			"passport": 0,
+			"password": 0,
+			"nickname": "1",
+		}).Replace()
+		gtest.Assert(err, nil)
+		one, err := db.Table(table).Where("id", 1).One()
+		gtest.Assert(err, nil)
+		gtest.AssertNE(one["passport"].String(), "0")
+		gtest.AssertNE(one["password"].String(), "0")
+		gtest.Assert(one["nickname"].String(), "1")
+	})
+
+	// Save
+	gtest.Case(t, func() {
+		table := createTable()
+		defer dropTable(table)
+		r, err := db.Table(table).Fields("id, passport").Data(g.Map{
+			"id":       1,
+			"passport": "1",
+			"password": "1",
+			"nickname": "1",
+		}).Save()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+		one, err := db.Table(table).Where("id", 1).One()
+		gtest.Assert(err, nil)
+		gtest.AssertNE(one["password"].String(), "1")
+		gtest.AssertNE(one["nickname"].String(), "1")
+		gtest.Assert(one["passport"].String(), "1")
+	})
+	gtest.Case(t, func() {
+		table := createTable()
+		defer dropTable(table)
+		_, err := db.Table(table).Option(gdb.OPTION_OMITEMPTY).Data(g.Map{
+			"id":       1,
+			"passport": 0,
+			"password": 0,
+			"nickname": "1",
+		}).Save()
+		gtest.Assert(err, nil)
+		one, err := db.Table(table).Where("id", 1).One()
+		gtest.Assert(err, nil)
+		gtest.AssertNE(one["passport"].String(), "0")
+		gtest.AssertNE(one["password"].String(), "0")
+		gtest.Assert(one["nickname"].String(), "1")
+
+		_, err = db.Table(table).Data(g.Map{
+			"id":       1,
+			"passport": 0,
+			"password": 0,
+			"nickname": "1",
+		}).Save()
+		gtest.Assert(err, nil)
+		one, err = db.Table(table).Where("id", 1).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(one["passport"].String(), "0")
+		gtest.Assert(one["password"].String(), "0")
+		gtest.Assert(one["nickname"].String(), "1")
+	})
+
+	// Update
+	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
+
+		r, err := db.Table(table).Data(g.Map{"nickname": ""}).Where("id", 1).Update()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+
+		_, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).Data(g.Map{"nickname": ""}).Where("id", 2).Update()
+		gtest.AssertNE(err, nil)
+
+		r, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()
+		gtest.Assert(err, nil)
+		n, _ = r.RowsAffected()
+		gtest.Assert(n, 1)
+
+		_, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).Fields("nickname").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
+		gtest.AssertNE(err, nil)
+
+		r, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).
+			Fields("password").Data(g.Map{
+			"nickname": "",
+			"passport": "123",
+			"password": "456",
+		}).Where("id", 5).Update()
+		gtest.Assert(err, nil)
+		n, _ = r.RowsAffected()
+		gtest.Assert(n, 1)
+
+		one, err := db.Table(table).Where("id", 5).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(one["password"], "456")
+		gtest.AssertNE(one["passport"].String(), "")
+		gtest.AssertNE(one["passport"].String(), "123")
+	})
+}
+
+func Test_Model_Option_List(t *testing.T) {
+	gtest.Case(t, func() {
+		gtest.Case(t, func() {
+			table := createTable()
+			defer dropTable(table)
+			r, err := db.Table(table).Fields("id, password").Data(g.List{
+				g.Map{
+					"id":       1,
+					"passport": "1",
+					"password": "1",
+					"nickname": "1",
+				},
+				g.Map{
+					"id":       2,
+					"passport": "2",
+					"password": "2",
+					"nickname": "2",
+				},
+			}).Save()
+			gtest.Assert(err, nil)
+			n, _ := r.RowsAffected()
+			gtest.Assert(n, 2)
+			list, err := db.Table(table).OrderBy("id asc").All()
+			gtest.Assert(err, nil)
+			gtest.Assert(len(list), 2)
+			gtest.Assert(list[0]["id"].String(), "1")
+			gtest.Assert(list[0]["nickname"].String(), "")
+			gtest.Assert(list[0]["passport"].String(), "")
+			gtest.Assert(list[0]["password"].String(), "1")
+
+			gtest.Assert(list[1]["id"].String(), "2")
+			gtest.Assert(list[1]["nickname"].String(), "")
+			gtest.Assert(list[1]["passport"].String(), "")
+			gtest.Assert(list[1]["password"].String(), "2")
+		})
+	})
+
+	gtest.Case(t, func() {
+		gtest.Case(t, func() {
+			table := createTable()
+			defer dropTable(table)
+			r, err := db.Table(table).Option(gdb.OPTION_OMITEMPTY).Fields("id, password").Data(g.List{
+				g.Map{
+					"id":       1,
+					"passport": "1",
+					"password": 0,
+					"nickname": "1",
+				},
+				g.Map{
+					"id":       2,
+					"passport": "2",
+					"password": "2",
+					"nickname": "2",
+				},
+			}).Save()
+			gtest.Assert(err, nil)
+			n, _ := r.RowsAffected()
+			gtest.Assert(n, 2)
+			list, err := db.Table(table).OrderBy("id asc").All()
+			g.Dump(list)
+			gtest.Assert(err, nil)
+			gtest.Assert(len(list), 2)
+			gtest.Assert(list[0]["id"].String(), "1")
+			gtest.Assert(list[0]["nickname"].String(), "")
+			gtest.Assert(list[0]["passport"].String(), "")
+			gtest.Assert(list[0]["password"].String(), "0")
+
+			gtest.Assert(list[1]["id"].String(), "2")
+			gtest.Assert(list[1]["nickname"].String(), "")
+			gtest.Assert(list[1]["passport"].String(), "")
+			gtest.Assert(list[1]["password"].String(), "2")
+		})
+	})
 }

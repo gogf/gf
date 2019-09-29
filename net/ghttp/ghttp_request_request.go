@@ -21,10 +21,13 @@ func (r *Request) initRaw() {
 			r.rawVarMap, _ = gstr.Parse(raw)
 		}
 	}
+	if r.rawVarMap == nil {
+		r.rawVarMap = make(map[string]interface{})
+	}
 }
 
 // 获得router、post或者get提交的参数值，如果有同名参数，
-// 那么按照 router->get->post->OtherHttpMethod 优先级进行覆盖。
+// 那么按照 router->get->post->param->OtherHttpMethod 优先级进行覆盖。
 // 注意获得参数值可能是字符串、数组、Map三种类型。
 func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 	v := r.GetRouterValue(key)
@@ -33,6 +36,9 @@ func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 	}
 	if v == nil {
 		v = r.GetPost(key)
+	}
+	if v == nil {
+		v = r.GetParam(key)
 	}
 	if v != nil {
 		return v

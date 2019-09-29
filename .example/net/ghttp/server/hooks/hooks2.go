@@ -1,38 +1,32 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 )
 
+// 优先调用的HOOK
+func beforeServeHook1(r *ghttp.Request) {
+	r.SetParam("name", "GoFrame")
+	r.Response.Writeln("set name")
+}
+
+// 随后调用的HOOK
+func beforeServeHook2(r *ghttp.Request) {
+	r.SetParam("site", "https://goframe.org")
+	r.Response.Writeln("set site")
+}
+
+// 允许对同一个路由同一个事件注册多个回调函数，按照注册顺序进行优先级调用。
+// 为便于在路由表中对比查看优先级，这里讲HOOK回调函数单独定义为了两个函数。
 func main() {
 	s := g.Server()
-
-	// 多事件回调示例，事件1
-	pattern1 := "/:name/info"
-	s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
-			r.SetQuery("uid", "1000")
-		},
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Writeln(r.Get("name"))
+		r.Response.Writeln(r.Get("site"))
 	})
-	s.BindHandler(pattern1, func(r *ghttp.Request) {
-		r.Response.Write("用户:", r.Get("name"), ", uid:", r.GetQueryString("uid"))
-	})
-
-	// 多事件回调示例，事件2
-	pattern2 := "/{object}/list/{page}.java"
-	s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc{
-		"BeforeOutput": func(r *ghttp.Request) {
-			r.Response.SetBuffer([]byte(
-				fmt.Sprintf("通过事件修改输出内容, object:%s, page:%s", r.Get("object"), r.GetRouterString("page"))),
-			)
-		},
-	})
-	s.BindHandler(pattern2, func(r *ghttp.Request) {
-		r.Response.Write(r.Router.Uri)
-	})
+	s.BindHookHandler("/", ghttp.HOOK_BEFORE_SERVE, beforeServeHook1)
+	s.BindHookHandler("/", ghttp.HOOK_BEFORE_SERVE, beforeServeHook2)
 	s.SetPort(8199)
 	s.Run()
 }

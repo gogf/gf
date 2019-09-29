@@ -10,6 +10,8 @@ package gmap
 import (
 	"encoding/json"
 
+	"github.com/gogf/gf/internal/empty"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
@@ -54,24 +56,45 @@ func (m *IntAnyMap) Iterator(f func(k int, v interface{}) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *IntAnyMap) Clone() *IntAnyMap {
-	return NewIntAnyMapFrom(m.Map(), !m.mu.IsSafe())
+	return NewIntAnyMapFrom(m.MapCopy(), !m.mu.IsSafe())
 }
 
-// Data returns the underlying data map.
-// Note that it's not concurrent safe using this function to access the data.
-func (m *IntAnyMap) Data() map[int]interface{} {
-	return m.data
-}
-
-// Map returns a copy of the data of the hash map.
+// Map returns the underlying data map.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (m *IntAnyMap) Map() map[int]interface{} {
 	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if !m.mu.IsSafe() {
+		return m.data
+	}
 	data := make(map[int]interface{}, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
-	m.mu.RUnlock()
 	return data
+}
+
+// MapCopy returns a copy of the data of the hash map.
+func (m *IntAnyMap) MapCopy() map[int]interface{} {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[int]interface{}, len(m.data))
+	for k, v := range m.data {
+		data[k] = v
+	}
+	return data
+}
+
+// FilterEmpty deletes all key-value pair of which the value is empty.
+func (m *IntAnyMap) FilterEmpty() {
+	m.mu.Lock()
+	for k, v := range m.data {
+		if empty.IsEmpty(v) {
+			delete(m.data, k)
+		}
+	}
+	m.mu.Unlock()
 }
 
 // Set sets key-value to the hash map.

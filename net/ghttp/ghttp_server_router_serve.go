@@ -57,7 +57,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		array = strings.Split(path[1:], "/")
 	}
 	parsedItemList := glist.New()
-	lastMiddlewareItem := (*glist.Element)(nil)
+	lastMiddlewareElem := (*glist.Element)(nil)
+	repeatHandlerCheckMap := make(map[int]struct{})
 	for _, domain := range domains {
 		p, ok := s.serveTree[domain]
 		if !ok {
@@ -98,10 +99,18 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
 				item := e.Value.(*handlerItem)
-				// 服务路由函数只能添加一次
+				// 主要是用于路由注册函数的重复添加判断(特别是中间件和钩子函数)
+				if _, ok := repeatHandlerCheckMap[item.itemId]; ok {
+					continue
+				} else {
+					repeatHandlerCheckMap[item.itemId] = struct{}{}
+				}
+				// 服务路由函数只能添加一次，将重复判断放在这里提高检索效率
 				if hasServe {
 					switch item.itemType {
-					case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+					case gHANDLER_TYPE_HANDLER,
+						gHANDLER_TYPE_OBJECT,
+						gHANDLER_TYPE_CONTROLLER:
 						continue
 					}
 				}
@@ -126,12 +135,12 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							hasServe = true
 							parsedItemList.PushBack(parsedItem)
 
-						// 中间件需要排序
+						// 中间件需要排序在链表中服务函数之前，并且多个中间件按照顺序添加以便于后续执行
 						case gHANDLER_TYPE_MIDDLEWARE:
-							if lastMiddlewareItem == nil {
-								lastMiddlewareItem = parsedItemList.PushFront(parsedItem)
+							if lastMiddlewareElem == nil {
+								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
 							} else {
-								lastMiddlewareItem = parsedItemList.InsertAfter(parsedItem, lastMiddlewareItem)
+								lastMiddlewareElem = parsedItemList.InsertAfter(parsedItem, lastMiddlewareElem)
 							}
 
 						// 钩子函数存在性判断
@@ -140,7 +149,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							parsedItemList.PushBack(parsedItem)
+							panic(fmt.Sprintf(`invalid handler type %d`, item.itemType))
 						}
 					}
 				}

@@ -9,6 +9,8 @@ package gmap
 import (
 	"encoding/json"
 
+	"github.com/gogf/gf/internal/empty"
+
 	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/container/glist"
@@ -116,6 +118,29 @@ func (m *ListMap) MapStrAny() map[string]interface{} {
 	})
 	m.mu.RUnlock()
 	return data
+}
+
+// FilterEmpty deletes all key-value pair of which the value is empty.
+func (m *ListMap) FilterEmpty() {
+	m.mu.Lock()
+	keys := make([]interface{}, 0)
+	node := (*gListMapNode)(nil)
+	m.list.IteratorAsc(func(e *glist.Element) bool {
+		node = e.Value.(*gListMapNode)
+		if empty.IsEmpty(node.value) {
+			keys = append(keys, node.key)
+		}
+		return true
+	})
+	if len(keys) > 0 {
+		for _, key := range keys {
+			if e, ok := m.data[key]; ok {
+				delete(m.data, key)
+				m.list.Remove(e)
+			}
+		}
+	}
+	m.mu.Unlock()
 }
 
 // Set sets key-value to the map.

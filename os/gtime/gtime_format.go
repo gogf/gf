@@ -218,10 +218,10 @@ func formatToStdLayout(format string) string {
 
 		default:
 			if f, ok := formats[format[i]]; ok {
-				// 有几个转换的符号需要特殊处理
+				// Handle particular chars.
 				switch format[i] {
 				case 'j':
-					b.WriteString("02")
+					b.WriteString("2")
 				case 'G':
 					b.WriteString("15")
 				case 'u':

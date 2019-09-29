@@ -160,10 +160,10 @@ func formatError(err error, query string, args ...interface{}) error {
 func getInsertOperationByOption(option int) string {
 	operator := "INSERT"
 	switch option {
-	case OPTION_REPLACE:
+	case gINSERT_OPTION_REPLACE:
 		operator = "REPLACE"
-	case OPTION_SAVE:
-	case OPTION_IGNORE:
+	case gINSERT_OPTION_SAVE:
+	case gINSERT_OPTION_IGNORE:
 		operator = "INSERT IGNORE"
 	}
 	return operator
