@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"math"
+	"sort"
 
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/rwmutex"
@@ -547,4 +548,15 @@ func (a *SortedStrArray) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (a *SortedStrArray) UnmarshalJSON(b []byte) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if err := json.Unmarshal(b, &a.array); err != nil {
+		return err
+	}
+	sort.Strings(a.array)
+	return nil
 }

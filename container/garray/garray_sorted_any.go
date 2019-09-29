@@ -541,7 +541,7 @@ func (a *SortedArray) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	jsonContent, _ := json.Marshal(a.array)
-	return string(jsonContent)
+	return gconv.UnsafeBytesToStr(jsonContent)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -549,4 +549,17 @@ func (a *SortedArray) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (a *SortedArray) UnmarshalJSON(b []byte) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if err := json.Unmarshal(b, &a.array); err != nil {
+		return err
+	}
+	sort.Slice(a.array, func(i, j int) bool {
+		return a.comparator(a.array[i], a.array[j]) < 0
+	})
+	return nil
 }
