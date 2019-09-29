@@ -56,3 +56,9 @@ func (v *Int64) Cas(old, new int64) bool {
 func (v *Int64) MarshalJSON() ([]byte, error) {
 	return gconv.UnsafeStrToBytes(strconv.FormatInt(v.Val(), 10)), nil
 }
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Int64) UnmarshalJSON(b []byte) error {
+	v.Set(gconv.Int64(gconv.UnsafeBytesToStr(b)))
+	return nil
+}

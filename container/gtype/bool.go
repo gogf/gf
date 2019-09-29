@@ -7,12 +7,19 @@
 package gtype
 
 import (
+	"bytes"
+	"github.com/gogf/gf/util/gconv"
 	"sync/atomic"
 )
 
 type Bool struct {
 	value int32
 }
+
+var (
+	bytesTrue  = []byte("true")
+	bytesFalse = []byte("false")
+)
 
 // NewBool returns a concurrent-safe object for bool type,
 // with given initial value <value>.
@@ -63,8 +70,14 @@ func (v *Bool) Cas(old, new bool) bool {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Bool) MarshalJSON() ([]byte, error) {
 	if v.Val() {
-		return []byte("true"), nil
+		return bytesTrue, nil
 	} else {
-		return []byte("false"), nil
+		return bytesFalse, nil
 	}
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Bool) UnmarshalJSON(b []byte) error {
+	v.Set(gconv.Bool(bytes.Trim(b, `"`)))
+	return nil
 }

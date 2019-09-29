@@ -47,3 +47,14 @@ func (v *Interface) Val() interface{} {
 func (v *Interface) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.Val())
 }
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Interface) UnmarshalJSON(b []byte) error {
+	var i interface{}
+	err := json.Unmarshal(b, &i)
+	if err != nil {
+		return err
+	}
+	v.Set(i)
+	return nil
+}

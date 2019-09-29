@@ -7,6 +7,7 @@
 package gtype
 
 import (
+	"bytes"
 	"encoding/base64"
 	"github.com/gogf/gf/util/gconv"
 	"sync/atomic"
@@ -53,4 +54,15 @@ func (v *Bytes) MarshalJSON() ([]byte, error) {
 	dst := make([]byte, base64.StdEncoding.EncodedLen(len(val)))
 	base64.StdEncoding.Encode(dst, val)
 	return gconv.UnsafeStrToBytes(`"` + gconv.UnsafeBytesToStr(dst) + `"`), nil
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Bytes) UnmarshalJSON(b []byte) error {
+	src := make([]byte, base64.StdEncoding.DecodedLen(len(b)))
+	n, err := base64.StdEncoding.Decode(src, bytes.Trim(b, `"`))
+	if err != nil {
+		return nil
+	}
+	v.Set(src[:n])
+	return nil
 }

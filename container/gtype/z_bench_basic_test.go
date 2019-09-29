@@ -6,9 +6,10 @@
 
 // go test *.go -bench=".*" -benchmem
 
-package gtype
+package gtype_test
 
 import (
+	"github.com/gogf/gf/container/gtype"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -17,17 +18,17 @@ import (
 )
 
 var (
-	it    = NewInt()
-	it32  = NewInt32()
-	it64  = NewInt64()
-	uit   = NewUint()
-	uit32 = NewUint32()
-	uit64 = NewUint64()
-	bl    = NewBool()
-	bytes = NewBytes()
-	str   = NewString()
-	inf   = NewInterface()
-	at    = atomic.Value{}
+	it     = gtype.NewInt()
+	it32   = gtype.NewInt32()
+	it64   = gtype.NewInt64()
+	uit    = gtype.NewUint()
+	uit32  = gtype.NewUint32()
+	uit64  = gtype.NewUint64()
+	bl     = gtype.NewBool()
+	vbytes = gtype.NewBytes()
+	str    = gtype.NewString()
+	inf    = gtype.NewInterface()
+	at     = atomic.Value{}
 )
 
 func BenchmarkInt_Set(b *testing.B) {
@@ -164,13 +165,13 @@ func BenchmarkString_Val(b *testing.B) {
 
 func BenchmarkBytes_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		bytes.Set(gbinary.EncodeInt(i))
+		vbytes.Set(gbinary.EncodeInt(i))
 	}
 }
 
 func BenchmarkBytes_Val(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		bytes.Val()
+		vbytes.Val()
 	}
 }
 

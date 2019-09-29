@@ -7,6 +7,7 @@
 package gtype
 
 import (
+	"bytes"
 	"github.com/gogf/gf/util/gconv"
 	"sync/atomic"
 )
@@ -49,4 +50,10 @@ func (v *String) Val() string {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *String) MarshalJSON() ([]byte, error) {
 	return gconv.UnsafeStrToBytes(`"` + v.Val() + `"`), nil
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *String) UnmarshalJSON(b []byte) error {
+	v.Set(gconv.UnsafeBytesToStr(bytes.Trim(b, `"`)))
+	return nil
 }
