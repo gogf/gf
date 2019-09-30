@@ -51,9 +51,7 @@ func New(data interface{}, safe ...bool) *Json {
 			kind = rv.Kind()
 		}
 		switch kind {
-		case reflect.Slice:
-			fallthrough
-		case reflect.Array:
+		case reflect.Slice, reflect.Array:
 			i := interface{}(nil)
 			i = gconv.Interfaces(data)
 			j = &Json{
@@ -61,9 +59,7 @@ func New(data interface{}, safe ...bool) *Json {
 				c:  byte(gDEFAULT_SPLIT_CHAR),
 				vc: false,
 			}
-		case reflect.Map:
-			fallthrough
-		case reflect.Struct:
+		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
 			i = gconv.Map(data, "json")
 			j = &Json{

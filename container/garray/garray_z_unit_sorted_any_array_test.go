@@ -567,6 +567,10 @@ func TestSortedArray_Json(t *testing.T) {
 		err = json.Unmarshal(b, user)
 		gtest.Assert(err, nil)
 		gtest.Assert(user.Name, data["Name"])
-		gtest.Assert(user.Scores, data["Scores"])
+		gtest.AssertNE(user.Scores, nil)
+		gtest.Assert(user.Scores.Len(), 3)
+		gtest.AssertIN(user.Scores.PopLeft(), data["Scores"])
+		gtest.AssertIN(user.Scores.PopLeft(), data["Scores"])
+		gtest.AssertIN(user.Scores.PopLeft(), data["Scores"])
 	})
 }

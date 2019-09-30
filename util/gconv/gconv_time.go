@@ -38,6 +38,9 @@ func Duration(i interface{}) time.Duration {
 // If no <format> given, it converts <i> using gtime.NewFromTimeStamp if <i> is numeric,
 // or using gtime.StrToTime if <i> is string.
 func GTime(i interface{}, format ...string) *gtime.Time {
+	if i == nil {
+		return nil
+	}
 	s := String(i)
 	if len(s) == 0 {
 		return gtime.New()

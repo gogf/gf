@@ -7,6 +7,7 @@
 package gjson_test
 
 import (
+	"github.com/gogf/gf/container/gmap"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gjson"
@@ -21,6 +22,17 @@ func Test_New(t *testing.T) {
 		gtest.Assert(j.Get("n"), "123456789")
 		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})
+	})
+
+	gtest.Case(t, func() {
+		m := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
+			"k1": "v1",
+			"k2": "v2",
+		})
+		j := gjson.New(m)
+		gtest.Assert(j.Get("k1"), "v1")
+		gtest.Assert(j.Get("k2"), "v2")
+		gtest.Assert(j.Get("k3"), nil)
 	})
 }
 

@@ -8,6 +8,7 @@ package gmap
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/internal/empty"
 
@@ -69,6 +70,17 @@ func (m *IntIntMap) Map() map[int]int {
 	for k, v := range m.data {
 		data[k] = v
 	}
+	return data
+}
+
+// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+func (m *IntIntMap) MapStrAny() map[string]interface{} {
+	m.mu.RLock()
+	data := make(map[string]interface{}, len(m.data))
+	for k, v := range m.data {
+		data[gconv.String(k)] = v
+	}
+	m.mu.RUnlock()
 	return data
 }
 
