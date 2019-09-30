@@ -377,3 +377,21 @@ func (m *AnyAnyMap) Merge(other *AnyAnyMap) {
 func (m *AnyAnyMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
 }
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
+	if m.mu == nil {
+		m.mu = rwmutex.New()
+		m.data = make(map[interface{}]interface{})
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var data map[string]interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	for k, v := range data {
+		m.data[k] = v
+	}
+	return nil
+}

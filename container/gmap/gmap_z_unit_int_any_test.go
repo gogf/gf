@@ -7,6 +7,8 @@
 package gmap_test
 
 import (
+	"encoding/json"
+	"github.com/gogf/gf/frame/g"
 	"testing"
 
 	"github.com/gogf/gf/container/gmap"
@@ -170,4 +172,34 @@ func Test_IntAnyMap_FilterEmpty(t *testing.T) {
 	m.FilterEmpty()
 	gtest.Assert(m.Size(), 1)
 	gtest.Assert(m.Get(2), 2)
+}
+
+func Test_IntAnyMap_Json(t *testing.T) {
+	// Marshal
+	gtest.Case(t, func() {
+		data := g.MapIntAny{
+			1: "v1",
+			2: "v2",
+		}
+		m1 := gmap.NewIntAnyMapFrom(data)
+		b1, err1 := json.Marshal(m1)
+		b2, err2 := json.Marshal(data)
+		gtest.Assert(err1, err2)
+		gtest.Assert(b1, b2)
+	})
+	// Unmarshal
+	gtest.Case(t, func() {
+		data := g.MapIntAny{
+			1: "v1",
+			2: "v2",
+		}
+		b, err := json.Marshal(data)
+		gtest.Assert(err, nil)
+
+		m := gmap.NewIntAnyMap()
+		err = json.Unmarshal(b, m)
+		gtest.Assert(err, nil)
+		gtest.Assert(m.Get(1), data[1])
+		gtest.Assert(m.Get(2), data[2])
+	})
 }

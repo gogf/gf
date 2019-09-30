@@ -9,6 +9,8 @@ package gvar_test
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
+	"math"
 	"testing"
 	"time"
 
@@ -300,12 +302,12 @@ func Test_Map(t *testing.T) {
 	})
 }
 
-type StTest struct {
-	Test int
-}
-
 func Test_Struct(t *testing.T) {
 	gtest.Case(t, func() {
+		type StTest struct {
+			Test int
+		}
+
 		Kv := make(map[string]int, 1)
 		Kv["Test"] = 100
 
@@ -316,5 +318,49 @@ func Test_Struct(t *testing.T) {
 		objOne.Struct(testObj)
 
 		gtest.Assert(testObj.Test, Kv["Test"])
+	})
+}
+
+func Test_Json(t *testing.T) {
+	// Marshal
+	gtest.Case(t, func() {
+		s := "i love gf"
+		v := gvar.New(s)
+		b1, err1 := json.Marshal(v)
+		b2, err2 := json.Marshal(s)
+		gtest.Assert(err1, err2)
+		gtest.Assert(b1, b2)
+	})
+
+	gtest.Case(t, func() {
+		s := math.MaxInt64
+		v := gvar.New(s)
+		b1, err1 := json.Marshal(v)
+		b2, err2 := json.Marshal(s)
+		gtest.Assert(err1, err2)
+		gtest.Assert(b1, b2)
+	})
+
+	// Unmarshal
+	gtest.Case(t, func() {
+		s := "i love gf"
+		v := gvar.New(nil)
+		b, err := json.Marshal(s)
+		gtest.Assert(err, nil)
+
+		err = json.Unmarshal(b, v)
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), s)
+	})
+
+	gtest.Case(t, func() {
+		var v gvar.Var
+		s := "i love gf"
+		b, err := json.Marshal(s)
+		gtest.Assert(err, nil)
+
+		err = json.Unmarshal(b, &v)
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), s)
 	})
 }

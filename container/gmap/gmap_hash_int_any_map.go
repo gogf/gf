@@ -368,3 +368,17 @@ func (m *IntAnyMap) MarshalJSON() ([]byte, error) {
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)
 }
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *IntAnyMap) UnmarshalJSON(b []byte) error {
+	if m.mu == nil {
+		m.mu = rwmutex.New()
+		m.data = make(map[int]interface{})
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if err := json.Unmarshal(b, &m.data); err != nil {
+		return err
+	}
+	return nil
+}
