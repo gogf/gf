@@ -9,6 +9,7 @@
 package gset_test
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -253,5 +254,34 @@ func TestStrSet_Pops(t *testing.T) {
 		gtest.Assert(len(strs1), 2)
 		str2 := s1.Pops(7)
 		gtest.AssertIN(str2, []string{"a", "b", "c"})
+	})
+}
+
+func TestStrSet_Json(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := []string{"a", "b", "d", "c"}
+		a1 := gset.NewStrSetFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		gtest.Assert(len(b1), len(b2))
+		gtest.Assert(err1, err2)
+
+		a2 := gset.NewStrSet()
+		err2 = json.Unmarshal(b2, &a2)
+		gtest.Assert(err2, nil)
+		gtest.Assert(a2.Contains("a"), true)
+		gtest.Assert(a2.Contains("b"), true)
+		gtest.Assert(a2.Contains("c"), true)
+		gtest.Assert(a2.Contains("d"), true)
+		gtest.Assert(a2.Contains("e"), false)
+
+		var a3 gset.StrSet
+		err := json.Unmarshal(b2, &a3)
+		gtest.Assert(err, nil)
+		gtest.Assert(a3.Contains("a"), true)
+		gtest.Assert(a3.Contains("b"), true)
+		gtest.Assert(a3.Contains("c"), true)
+		gtest.Assert(a3.Contains("d"), true)
+		gtest.Assert(a3.Contains("e"), false)
 	})
 }

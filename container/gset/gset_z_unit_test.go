@@ -9,6 +9,7 @@
 package gset_test
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/gogf/gf/container/garray"
@@ -265,5 +266,34 @@ func TestSet_Pops(t *testing.T) {
 		gtest.AssertIN(s1.Pops(1), []int{1, 2, 3, 4})
 		gtest.AssertIN(s1.Pops(6), []int{1, 2, 3, 4})
 		gtest.Assert(len(s1.Pops(2)), 2)
+	})
+}
+
+func TestSet_Json(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := []interface{}{"a", "b", "d", "c"}
+		a1 := gset.NewFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		gtest.Assert(len(b1), len(b2))
+		gtest.Assert(err1, err2)
+
+		a2 := gset.New()
+		err2 = json.Unmarshal(b2, &a2)
+		gtest.Assert(err2, nil)
+		gtest.Assert(a2.Contains("a"), true)
+		gtest.Assert(a2.Contains("b"), true)
+		gtest.Assert(a2.Contains("c"), true)
+		gtest.Assert(a2.Contains("d"), true)
+		gtest.Assert(a2.Contains("e"), false)
+
+		var a3 gset.Set
+		err := json.Unmarshal(b2, &a3)
+		gtest.Assert(err, nil)
+		gtest.Assert(a3.Contains("a"), true)
+		gtest.Assert(a3.Contains("b"), true)
+		gtest.Assert(a3.Contains("c"), true)
+		gtest.Assert(a3.Contains("d"), true)
+		gtest.Assert(a3.Contains("e"), false)
 	})
 }

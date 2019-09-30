@@ -9,6 +9,7 @@
 package gset_test
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -213,5 +214,34 @@ func TestIntSet_Pop(t *testing.T) {
 		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
 		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
 		gtest.Assert(s1.Size(), 3)
+	})
+}
+
+func TestIntSet_Json(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := []int{1, 3, 2, 4}
+		a1 := gset.NewIntSetFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		gtest.Assert(len(b1), len(b2))
+		gtest.Assert(err1, err2)
+
+		a2 := gset.NewIntSet()
+		err2 = json.Unmarshal(b2, &a2)
+		gtest.Assert(err2, nil)
+		gtest.Assert(a2.Contains(1), true)
+		gtest.Assert(a2.Contains(2), true)
+		gtest.Assert(a2.Contains(3), true)
+		gtest.Assert(a2.Contains(4), true)
+		gtest.Assert(a2.Contains(5), false)
+
+		var a3 gset.IntSet
+		err := json.Unmarshal(b2, &a3)
+		gtest.Assert(err, nil)
+		gtest.Assert(a2.Contains(1), true)
+		gtest.Assert(a2.Contains(2), true)
+		gtest.Assert(a2.Contains(3), true)
+		gtest.Assert(a2.Contains(4), true)
+		gtest.Assert(a2.Contains(5), false)
 	})
 }

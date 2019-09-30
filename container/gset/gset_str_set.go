@@ -16,8 +16,8 @@ import (
 )
 
 type StrSet struct {
-	mu *rwmutex.RWMutex
-	m  map[string]struct{}
+	mu   *rwmutex.RWMutex
+	data map[string]struct{}
 }
 
 // New create and returns a new set, which contains un-repeated items.
@@ -25,8 +25,8 @@ type StrSet struct {
 // which is false in default.
 func NewStrSet(safe ...bool) *StrSet {
 	return &StrSet{
-		m:  make(map[string]struct{}),
-		mu: rwmutex.New(safe...),
+		mu:   rwmutex.New(safe...),
+		data: make(map[string]struct{}),
 	}
 }
 
@@ -37,8 +37,8 @@ func NewStrSetFrom(items []string, safe ...bool) *StrSet {
 		m[v] = struct{}{}
 	}
 	return &StrSet{
-		m:  m,
-		mu: rwmutex.New(safe...),
+		mu:   rwmutex.New(safe...),
+		data: m,
 	}
 }
 
@@ -47,7 +47,7 @@ func NewStrSetFrom(items []string, safe ...bool) *StrSet {
 func (set *StrSet) Iterator(f func(v string) bool) *StrSet {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		if !f(k) {
 			break
 		}
@@ -59,7 +59,7 @@ func (set *StrSet) Iterator(f func(v string) bool) *StrSet {
 func (set *StrSet) Add(item ...string) *StrSet {
 	set.mu.Lock()
 	for _, v := range item {
-		set.m[v] = struct{}{}
+		set.data[v] = struct{}{}
 	}
 	set.mu.Unlock()
 	return set
@@ -68,7 +68,7 @@ func (set *StrSet) Add(item ...string) *StrSet {
 // Contains checks whether the set contains <item>.
 func (set *StrSet) Contains(item string) bool {
 	set.mu.RLock()
-	_, exists := set.m[item]
+	_, exists := set.data[item]
 	set.mu.RUnlock()
 	return exists
 }
@@ -76,7 +76,7 @@ func (set *StrSet) Contains(item string) bool {
 // Remove deletes <item> from set.
 func (set *StrSet) Remove(item string) *StrSet {
 	set.mu.Lock()
-	delete(set.m, item)
+	delete(set.data, item)
 	set.mu.Unlock()
 	return set
 }
@@ -84,7 +84,7 @@ func (set *StrSet) Remove(item string) *StrSet {
 // Size returns the size of the set.
 func (set *StrSet) Size() int {
 	set.mu.RLock()
-	l := len(set.m)
+	l := len(set.data)
 	set.mu.RUnlock()
 	return l
 }
@@ -92,7 +92,7 @@ func (set *StrSet) Size() int {
 // Clear deletes all items of the set.
 func (set *StrSet) Clear() *StrSet {
 	set.mu.Lock()
-	set.m = make(map[string]struct{})
+	set.data = make(map[string]struct{})
 	set.mu.Unlock()
 	return set
 }
@@ -100,9 +100,9 @@ func (set *StrSet) Clear() *StrSet {
 // Slice returns the a of items of the set as slice.
 func (set *StrSet) Slice() []string {
 	set.mu.RLock()
-	ret := make([]string, len(set.m))
+	ret := make([]string, len(set.data))
 	i := 0
-	for item := range set.m {
+	for item := range set.data {
 		ret[i] = item
 		i++
 	}
@@ -125,14 +125,14 @@ func (set *StrSet) String() string {
 func (set *StrSet) LockFunc(f func(m map[string]struct{})) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
-	f(set.m)
+	f(set.data)
 }
 
 // RLockFunc locks reading with callback function <f>.
 func (set *StrSet) RLockFunc(f func(m map[string]struct{})) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	f(set.m)
+	f(set.data)
 }
 
 // Equal checks whether the two sets equal.
@@ -144,11 +144,11 @@ func (set *StrSet) Equal(other *StrSet) bool {
 	defer set.mu.RUnlock()
 	other.mu.RLock()
 	defer other.mu.RUnlock()
-	if len(set.m) != len(other.m) {
+	if len(set.data) != len(other.data) {
 		return false
 	}
-	for key := range set.m {
-		if _, ok := other.m[key]; !ok {
+	for key := range set.data {
+		if _, ok := other.data[key]; !ok {
 			return false
 		}
 	}
@@ -164,8 +164,8 @@ func (set *StrSet) IsSubsetOf(other *StrSet) bool {
 	defer set.mu.RUnlock()
 	other.mu.RLock()
 	defer other.mu.RUnlock()
-	for key := range set.m {
-		if _, ok := other.m[key]; !ok {
+	for key := range set.data {
+		if _, ok := other.data[key]; !ok {
 			return false
 		}
 	}
@@ -182,12 +182,12 @@ func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range set.m {
-			newSet.m[k] = v
+		for k, v := range set.data {
+			newSet.data[k] = v
 		}
 		if set != other {
-			for k, v := range other.m {
-				newSet.m[k] = v
+			for k, v := range other.data {
+				newSet.data[k] = v
 			}
 		}
 		if set != other {
@@ -209,9 +209,9 @@ func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
 			continue
 		}
 		other.mu.RLock()
-		for k, v := range set.m {
-			if _, ok := other.m[k]; !ok {
-				newSet.m[k] = v
+		for k, v := range set.data {
+			if _, ok := other.data[k]; !ok {
+				newSet.data[k] = v
 			}
 		}
 		other.mu.RUnlock()
@@ -229,9 +229,9 @@ func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range set.m {
-			if _, ok := other.m[k]; ok {
-				newSet.m[k] = v
+		for k, v := range set.data {
+			if _, ok := other.data[k]; ok {
+				newSet.data[k] = v
 			}
 		}
 		if set != other {
@@ -254,9 +254,9 @@ func (set *StrSet) Complement(full *StrSet) (newSet *StrSet) {
 		full.mu.RLock()
 		defer full.mu.RUnlock()
 	}
-	for k, v := range full.m {
-		if _, ok := set.m[k]; !ok {
-			newSet.m[k] = v
+	for k, v := range full.data {
+		if _, ok := set.data[k]; !ok {
+			newSet.data[k] = v
 		}
 	}
 	return
@@ -270,8 +270,8 @@ func (set *StrSet) Merge(others ...*StrSet) *StrSet {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range other.m {
-			set.m[k] = v
+		for k, v := range other.data {
+			set.data[k] = v
 		}
 		if set != other {
 			other.mu.RUnlock()
@@ -286,7 +286,7 @@ func (set *StrSet) Merge(others ...*StrSet) *StrSet {
 func (set *StrSet) Sum() (sum int) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		sum += gconv.Int(k)
 	}
 	return
@@ -296,7 +296,7 @@ func (set *StrSet) Sum() (sum int) {
 func (set *StrSet) Pop() string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		return k
 	}
 	return ""
@@ -306,12 +306,12 @@ func (set *StrSet) Pop() string {
 func (set *StrSet) Pops(size int) []string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	if size > len(set.m) {
-		size = len(set.m)
+	if size > len(set.data) {
+		size = len(set.data)
 	}
 	index := 0
 	array := make([]string, size)
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		array[index] = k
 		index++
 		if index == size {
@@ -324,4 +324,22 @@ func (set *StrSet) Pops(size int) []string {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (set *StrSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(set.Slice())
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (set *StrSet) UnmarshalJSON(b []byte) error {
+	if set.mu == nil {
+		set.mu = rwmutex.New()
+		set.data = make(map[string]struct{})
+	}
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	var array []string
+	if err := json.Unmarshal(b, &array); err != nil {
+		return err
+	}
+	for _, v := range array {
+		set.data[v] = struct{}{}
+	}
+	return nil
 }
