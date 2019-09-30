@@ -38,22 +38,6 @@ func New(value interface{}, safe ...bool) *Var {
 	return v
 }
 
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Var) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Val())
-}
-
-// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
-func (v *Var) UnmarshalJSON(b []byte) error {
-	var i interface{}
-	err := json.Unmarshal(b, &i)
-	if err != nil {
-		return err
-	}
-	v.Set(i)
-	return nil
-}
-
 // Set sets <value> to <v>, and returns the old value.
 func (v *Var) Set(value interface{}) (old interface{}) {
 	if v.safe {
@@ -337,4 +321,20 @@ func (v *Var) MapToMaps(pointer interface{}, mapping ...map[string]string) (err 
 // The elements of <pointer> should be type of []struct/[]*struct.
 func (v *Var) MapToMapsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
 	return gconv.MapToMapsDeep(v.Val(), pointer, mapping...)
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Var) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Var) UnmarshalJSON(b []byte) error {
+	var i interface{}
+	err := json.Unmarshal(b, &i)
+	if err != nil {
+		return err
+	}
+	v.Set(i)
+	return nil
 }

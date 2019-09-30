@@ -412,3 +412,26 @@ func (m *ListMap) Merge(other *ListMap) {
 func (m *ListMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
 }
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *ListMap) UnmarshalJSON(b []byte) error {
+	if m.mu == nil {
+		m.mu = rwmutex.New()
+		m.data = make(map[interface{}]*glist.Element)
+		m.list = glist.New()
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var data map[string]interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	for key, value := range data {
+		if e, ok := m.data[key]; !ok {
+			m.data[key] = m.list.PushBack(&gListMapNode{key, value})
+		} else {
+			e.Value = &gListMapNode{key, value}
+		}
+	}
+	return nil
+}

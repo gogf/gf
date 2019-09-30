@@ -7,6 +7,9 @@
 package gmap_test
 
 import (
+	"encoding/json"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"testing"
 
 	"github.com/gogf/gf/container/gmap"
@@ -173,4 +176,48 @@ func Test_AnyAnyMap_FilterEmpty(t *testing.T) {
 	m.FilterEmpty()
 	gtest.Assert(m.Get(1), nil)
 	gtest.Assert(m.Get(2), 2)
+}
+
+func Test_AnyAnyMap_Json(t *testing.T) {
+	// Marshal
+	gtest.Case(t, func() {
+		data := g.MapAnyAny{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		m1 := gmap.NewAnyAnyMapFrom(data)
+		b1, err1 := json.Marshal(m1)
+		b2, err2 := json.Marshal(gconv.Map(data))
+		gtest.Assert(err1, err2)
+		gtest.Assert(b1, b2)
+	})
+	// Unmarshal
+	gtest.Case(t, func() {
+		data := g.MapAnyAny{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		b, err := json.Marshal(gconv.Map(data))
+		gtest.Assert(err, nil)
+
+		m := gmap.New()
+		err = json.Unmarshal(b, m)
+		gtest.Assert(err, nil)
+		gtest.Assert(m.Get("k1"), data["k1"])
+		gtest.Assert(m.Get("k2"), data["k2"])
+	})
+	gtest.Case(t, func() {
+		data := g.MapAnyAny{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		b, err := json.Marshal(gconv.Map(data))
+		gtest.Assert(err, nil)
+
+		var m gmap.Map
+		err = json.Unmarshal(b, &m)
+		gtest.Assert(err, nil)
+		gtest.Assert(m.Get("k1"), data["k1"])
+		gtest.Assert(m.Get("k2"), data["k2"])
+	})
 }

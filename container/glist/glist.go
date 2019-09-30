@@ -377,3 +377,19 @@ func (l *List) IteratorDesc(f func(e *Element) bool) {
 func (l *List) MarshalJSON() ([]byte, error) {
 	return json.Marshal(l.FrontAll())
 }
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (l *List) UnmarshalJSON(b []byte) error {
+	if l.mu == nil {
+		l.mu = rwmutex.New()
+		l.list = list.New()
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	var array []interface{}
+	if err := json.Unmarshal(b, &array); err != nil {
+		return err
+	}
+	l.PushBacks(array)
+	return nil
+}

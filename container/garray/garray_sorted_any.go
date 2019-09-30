@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/gogf/gf/util/gutil"
 	"math"
 	"sort"
 
@@ -85,6 +86,10 @@ func (a *SortedArray) SetComparator(comparator func(a, b interface{}) int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.comparator = comparator
+	// Resort the array if comparator is changed.
+	sort.Slice(a.array, func(i, j int) bool {
+		return a.comparator(a.array[i], a.array[j]) < 0
+	})
 }
 
 // Sort sorts the array in increasing order.
@@ -564,8 +569,8 @@ func (a *SortedArray) UnmarshalJSON(b []byte) error {
 		a.mu = rwmutex.New()
 		a.array = make([]interface{}, 0)
 		a.unique = gtype.NewBool()
-		// Note that the comparator is nil in default.
-		a.comparator = nil
+		// Note that the comparator is string comparator in default.
+		a.comparator = gutil.ComparatorString
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()

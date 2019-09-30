@@ -8,6 +8,7 @@ package glist
 
 import (
 	"container/list"
+	"encoding/json"
 
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
@@ -582,4 +583,38 @@ func TestList_Iterator(t *testing.T) {
 	checkList(t, l, []interface{}{"e", "d", "c", "b", "a"})
 	l.Iterator(fun1)
 	checkList(t, l, []interface{}{"e", "d", "c", "b", "a"})
+}
+
+func TestList_Json(t *testing.T) {
+	// Marshal
+	gtest.Case(t, func() {
+		a := []interface{}{"a", "b", "c"}
+		l := New()
+		l.PushBacks(a)
+		b1, err1 := json.Marshal(l)
+		b2, err2 := json.Marshal(a)
+		gtest.Assert(err1, err2)
+		gtest.Assert(b1, b2)
+	})
+	// Unmarshal
+	gtest.Case(t, func() {
+		a := []interface{}{"a", "b", "c"}
+		l := New()
+		b, err := json.Marshal(a)
+		gtest.Assert(err, nil)
+
+		err = json.Unmarshal(b, l)
+		gtest.Assert(err, nil)
+		gtest.Assert(l.FrontAll(), a)
+	})
+	gtest.Case(t, func() {
+		var l List
+		a := []interface{}{"a", "b", "c"}
+		b, err := json.Marshal(a)
+		gtest.Assert(err, nil)
+
+		err = json.Unmarshal(b, &l)
+		gtest.Assert(err, nil)
+		gtest.Assert(l.FrontAll(), a)
+	})
 }

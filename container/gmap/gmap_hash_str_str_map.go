@@ -347,3 +347,17 @@ func (m *StrStrMap) MarshalJSON() ([]byte, error) {
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)
 }
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *StrStrMap) UnmarshalJSON(b []byte) error {
+	if m.mu == nil {
+		m.mu = rwmutex.New()
+		m.data = make(map[string]string)
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if err := json.Unmarshal(b, &m.data); err != nil {
+		return err
+	}
+	return nil
+}
