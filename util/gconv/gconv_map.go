@@ -15,6 +15,11 @@ import (
 	"github.com/gogf/gf/internal/utilstr"
 )
 
+// Interface support for package gmap.
+type apiMapStrAny interface {
+	MapStrAny() map[string]interface{}
+}
+
 // Map converts any variable <value> to map[string]interface{}.
 //
 // If the parameter <value> is not a map/struct/*struct type, then the conversion will fail and returns nil.
@@ -103,6 +108,9 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 					m[String(k.Interface())] = rv.MapIndex(k).Interface()
 				}
 			case reflect.Struct:
+				if v, ok := value.(apiMapStrAny); ok {
+					return v.MapStrAny()
+				}
 				rt := rv.Type()
 				name := ""
 				tagArray := structTagPriority

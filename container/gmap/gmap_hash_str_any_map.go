@@ -75,6 +75,11 @@ func (m *StrAnyMap) Map() map[string]interface{} {
 	return data
 }
 
+// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+func (m *StrAnyMap) MapStrAny() map[string]interface{} {
+	return m.Map()
+}
+
 // MapCopy returns a copy of the data of the hash map.
 func (m *StrAnyMap) MapCopy() map[string]interface{} {
 	m.mu.RLock()

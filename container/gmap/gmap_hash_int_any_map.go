@@ -75,6 +75,17 @@ func (m *IntAnyMap) Map() map[int]interface{} {
 	return data
 }
 
+// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+func (m *IntAnyMap) MapStrAny() map[string]interface{} {
+	m.mu.RLock()
+	data := make(map[string]interface{}, len(m.data))
+	for k, v := range m.data {
+		data[gconv.String(k)] = v
+	}
+	m.mu.RUnlock()
+	return data
+}
+
 // MapCopy returns a copy of the data of the hash map.
 func (m *IntAnyMap) MapCopy() map[int]interface{} {
 	m.mu.RLock()
