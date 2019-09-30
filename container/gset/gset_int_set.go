@@ -16,8 +16,8 @@ import (
 )
 
 type IntSet struct {
-	mu *rwmutex.RWMutex
-	m  map[int]struct{}
+	mu   *rwmutex.RWMutex
+	data map[int]struct{}
 }
 
 // New create and returns a new set, which contains un-repeated items.
@@ -25,8 +25,8 @@ type IntSet struct {
 // which is false in default.
 func NewIntSet(safe ...bool) *IntSet {
 	return &IntSet{
-		m:  make(map[int]struct{}),
-		mu: rwmutex.New(safe...),
+		mu:   rwmutex.New(safe...),
+		data: make(map[int]struct{}),
 	}
 }
 
@@ -37,8 +37,8 @@ func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 		m[v] = struct{}{}
 	}
 	return &IntSet{
-		m:  m,
-		mu: rwmutex.New(safe...),
+		mu:   rwmutex.New(safe...),
+		data: m,
 	}
 }
 
@@ -47,7 +47,7 @@ func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 func (set *IntSet) Iterator(f func(v int) bool) *IntSet {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		if !f(k) {
 			break
 		}
@@ -59,7 +59,7 @@ func (set *IntSet) Iterator(f func(v int) bool) *IntSet {
 func (set *IntSet) Add(item ...int) *IntSet {
 	set.mu.Lock()
 	for _, v := range item {
-		set.m[v] = struct{}{}
+		set.data[v] = struct{}{}
 	}
 	set.mu.Unlock()
 	return set
@@ -68,7 +68,7 @@ func (set *IntSet) Add(item ...int) *IntSet {
 // Contains checks whether the set contains <item>.
 func (set *IntSet) Contains(item int) bool {
 	set.mu.RLock()
-	_, exists := set.m[item]
+	_, exists := set.data[item]
 	set.mu.RUnlock()
 	return exists
 }
@@ -76,7 +76,7 @@ func (set *IntSet) Contains(item int) bool {
 // Remove deletes <item> from set.
 func (set *IntSet) Remove(item int) *IntSet {
 	set.mu.Lock()
-	delete(set.m, item)
+	delete(set.data, item)
 	set.mu.Unlock()
 	return set
 }
@@ -84,7 +84,7 @@ func (set *IntSet) Remove(item int) *IntSet {
 // Size returns the size of the set.
 func (set *IntSet) Size() int {
 	set.mu.RLock()
-	l := len(set.m)
+	l := len(set.data)
 	set.mu.RUnlock()
 	return l
 }
@@ -92,7 +92,7 @@ func (set *IntSet) Size() int {
 // Clear deletes all items of the set.
 func (set *IntSet) Clear() *IntSet {
 	set.mu.Lock()
-	set.m = make(map[int]struct{})
+	set.data = make(map[int]struct{})
 	set.mu.Unlock()
 	return set
 }
@@ -100,9 +100,9 @@ func (set *IntSet) Clear() *IntSet {
 // Slice returns the a of items of the set as slice.
 func (set *IntSet) Slice() []int {
 	set.mu.RLock()
-	ret := make([]int, len(set.m))
+	ret := make([]int, len(set.data))
 	i := 0
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		ret[i] = k
 		i++
 	}
@@ -124,14 +124,14 @@ func (set *IntSet) String() string {
 func (set *IntSet) LockFunc(f func(m map[int]struct{})) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
-	f(set.m)
+	f(set.data)
 }
 
 // RLockFunc locks reading with callback function <f>.
 func (set *IntSet) RLockFunc(f func(m map[int]struct{})) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	f(set.m)
+	f(set.data)
 }
 
 // Equal checks whether the two sets equal.
@@ -143,11 +143,11 @@ func (set *IntSet) Equal(other *IntSet) bool {
 	defer set.mu.RUnlock()
 	other.mu.RLock()
 	defer other.mu.RUnlock()
-	if len(set.m) != len(other.m) {
+	if len(set.data) != len(other.data) {
 		return false
 	}
-	for key := range set.m {
-		if _, ok := other.m[key]; !ok {
+	for key := range set.data {
+		if _, ok := other.data[key]; !ok {
 			return false
 		}
 	}
@@ -163,8 +163,8 @@ func (set *IntSet) IsSubsetOf(other *IntSet) bool {
 	defer set.mu.RUnlock()
 	other.mu.RLock()
 	defer other.mu.RUnlock()
-	for key := range set.m {
-		if _, ok := other.m[key]; !ok {
+	for key := range set.data {
+		if _, ok := other.data[key]; !ok {
 			return false
 		}
 	}
@@ -181,12 +181,12 @@ func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range set.m {
-			newSet.m[k] = v
+		for k, v := range set.data {
+			newSet.data[k] = v
 		}
 		if set != other {
-			for k, v := range other.m {
-				newSet.m[k] = v
+			for k, v := range other.data {
+				newSet.data[k] = v
 			}
 		}
 		if set != other {
@@ -208,9 +208,9 @@ func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
 			continue
 		}
 		other.mu.RLock()
-		for k, v := range set.m {
-			if _, ok := other.m[k]; !ok {
-				newSet.m[k] = v
+		for k, v := range set.data {
+			if _, ok := other.data[k]; !ok {
+				newSet.data[k] = v
 			}
 		}
 		other.mu.RUnlock()
@@ -228,9 +228,9 @@ func (set *IntSet) Intersect(others ...*IntSet) (newSet *IntSet) {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range set.m {
-			if _, ok := other.m[k]; ok {
-				newSet.m[k] = v
+		for k, v := range set.data {
+			if _, ok := other.data[k]; ok {
+				newSet.data[k] = v
 			}
 		}
 		if set != other {
@@ -253,9 +253,9 @@ func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
 		full.mu.RLock()
 		defer full.mu.RUnlock()
 	}
-	for k, v := range full.m {
-		if _, ok := set.m[k]; !ok {
-			newSet.m[k] = v
+	for k, v := range full.data {
+		if _, ok := set.data[k]; !ok {
+			newSet.data[k] = v
 		}
 	}
 	return
@@ -269,8 +269,8 @@ func (set *IntSet) Merge(others ...*IntSet) *IntSet {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range other.m {
-			set.m[k] = v
+		for k, v := range other.data {
+			set.data[k] = v
 		}
 		if set != other {
 			other.mu.RUnlock()
@@ -285,7 +285,7 @@ func (set *IntSet) Merge(others ...*IntSet) *IntSet {
 func (set *IntSet) Sum() (sum int) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		sum += k
 	}
 	return
@@ -295,7 +295,7 @@ func (set *IntSet) Sum() (sum int) {
 func (set *IntSet) Pop() int {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		return k
 	}
 	return 0
@@ -305,12 +305,12 @@ func (set *IntSet) Pop() int {
 func (set *IntSet) Pops(size int) []int {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	if size > len(set.m) {
-		size = len(set.m)
+	if size > len(set.data) {
+		size = len(set.data)
 	}
 	index := 0
 	array := make([]int, size)
-	for k, _ := range set.m {
+	for k, _ := range set.data {
 		array[index] = k
 		index++
 		if index == size {
@@ -323,4 +323,22 @@ func (set *IntSet) Pops(size int) []int {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (set *IntSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(set.Slice())
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (set *IntSet) UnmarshalJSON(b []byte) error {
+	if set.mu == nil {
+		set.mu = rwmutex.New()
+		set.data = make(map[int]struct{})
+	}
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	var array []int
+	if err := json.Unmarshal(b, &array); err != nil {
+		return err
+	}
+	for _, v := range array {
+		set.data[v] = struct{}{}
+	}
+	return nil
 }
