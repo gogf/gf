@@ -8,7 +8,6 @@ package gtime
 
 import (
 	"bytes"
-	"github.com/gogf/gf/util/gconv"
 	"time"
 )
 
@@ -196,12 +195,12 @@ func (t *Time) Truncate(d time.Duration) *Time {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (t *Time) MarshalJSON() ([]byte, error) {
-	return gconv.UnsafeStrToBytes(`"` + t.String() + `"`), nil
+	return []byte(`"` + t.String() + `"`), nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (t *Time) UnmarshalJSON(b []byte) error {
-	newTime, err := StrToTime(gconv.UnsafeBytesToStr(bytes.Trim(b, `"`)))
+	newTime, err := StrToTime(string(bytes.Trim(b, `"`)))
 	if err != nil {
 		return err
 	}
