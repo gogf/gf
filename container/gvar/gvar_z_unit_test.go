@@ -333,7 +333,7 @@ func Test_Json(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
-		s := math.MaxInt64
+		s := int64(math.MaxInt64)
 		v := gvar.New(s)
 		b1, err1 := json.Marshal(v)
 		b2, err2 := json.Marshal(s)
