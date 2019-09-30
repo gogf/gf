@@ -65,10 +65,19 @@ func Test_RedisDo(t *testing.T) {
 			s string
 			ss []string
 			n int
+			n64 int64
 		)
 
 		redis := gredis.New(config)
 		defer redis.Close()
+		defer redis.Del("k_1")
+		defer redis.Del("k_2")
+		defer redis.Del("dlist1")
+		defer redis.Del("dlist2")
+		defer redis.Del("k11")
+		defer redis.Del("k113")
+
+
 
 		redis.Set("k1","kv1")
 		redis.Set("k2","kv2")
@@ -103,11 +112,28 @@ func Test_RedisDo(t *testing.T) {
 		n,err=redis.Msetnx("k_1","kv_1","k_3","kv_3")
 		gtest.Assert(err,nil)
 		gtest.Assert(n,0)
-		redis.Del("k_1")
-		redis.Del("k_2")
 
 
-		// Msetnx
+
+		n64,err=redis.Lpush("dlist1",1)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,1)
+		redis.Lpush("dlist1",2)
+		redis.Lpush("dlist2",3)
+		redis.Lpush("dlist2",4)
+
+		s,err=redis.RpoplPush("dlist1","dlist2")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"1")
+
+
+
+		redis.Lpush("dlist1",6)
+		ss,err=redis.BrPoplPush("dlist1","dlist2",1)
+		gtest.Assert(err,nil)
+		gtest.AssertGT(gconv.Float32(ss[0]),0)
+
+		// Psetex
 
 
 	})
@@ -123,12 +149,19 @@ func Test_Clustersg(t *testing.T) {
 			rrs []interface{}
 			err = errors.New("")
 			s string
-			//ss []string
+			//f64 float64
+			ss []string
 		)
 
 		gredis.FlagBanCluster = false
 
 		rdb:=g.Redis()
+
+		defer rdb.Del("hash1")
+		defer rdb.Del("tn1")
+		defer rdb.Del("tn2")
+		defer rdb.Del("jjname1_11")
+		defer rdb.Del("list1")
 
 		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
@@ -136,6 +169,8 @@ func Test_Clustersg(t *testing.T) {
 		if !strings.Contains(str1, "cluster_state:ok") {
 			t.Errorf("cluster errs.")
 		}
+
+		//rdb.Del("hash1")
 
 		_, err = rdb.Set("jjname1", "jjqrr1")
 		gtest.Assert(err, nil)
@@ -300,17 +335,166 @@ func Test_Clustersg(t *testing.T) {
 		n64,err=rdb.IncrBy("tn1",2)
 		gtest.Assert(err,nil)
 		gtest.Assert(n64,4)
-		rdb.Del("tn1")
+
 
 		s,err=rdb.IncrByFloat("tn2",3.4)
 		gtest.Assert(err,nil)
 		gtest.Assert(s,"3.4")
-		rdb.Del("tn2")
 
 
+		s,err=rdb.Psetex("jjname1",1000,"newj1")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"OK")
 
-		// IncrByFloat
+		s,err=rdb.Setex("jjname1",5,"newj11")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"OK")
+
+		n,err=rdb.Setnx("jjname1","nn1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
+		n,err=rdb.Setnx("jjname1_11","nn1_11")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+
+
+		n,err=rdb.SetRange("jjname1",1,"y")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,6)
+
+		n,err=rdb.Strlen("jjname1")
+		gtest.Assert(n,6)
+
+
+		n,err=rdb.Hset("hash1","field1","v1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+		n,err=rdb.Hset("hash1","field1","v1_1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
+
+		n,err=rdb.Hsetnx("hash1","field2","v2")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+		n,err=rdb.Hsetnx("hash1","field1","v11")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
+
+		s,err=rdb.Hget("hash1","field1")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"v1_1")
+
+		n,err=rdb.Hexists("hash1","field1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+		n,err=rdb.Hexists("hash1","field111")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
+
+		n,err=rdb.Hdel("hash1","field1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+		n,err=rdb.Hdel("hash1ss","field1")
+		gtest.Assert(n,0)
+
+		n,_=rdb.Hlen("hash1")
+		gtest.Assert(n,1)
+
+		n,_=rdb.Hstrlen("hash1","field2")
+		gtest.Assert(n,2)
+
+		n64,err=rdb.HincrBy("hash1","nums",2)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+
+		s,_=rdb.HincrByFloat("hash1","f1",0.34)
+		gtest.Assert(s,"0.34")
+
+		s,err=rdb.Hmset("hash1","mk1","mv1","mk2","mv2")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"OK")
+		s,_=rdb.Hget("hash1","mk2")
+		gtest.Assert(s,"mv2")
+
+		ss,err=rdb.Hmget("hash1", "mk1","mk2")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss,[]string{"mv1","mv2"})
+
+		ss,err=rdb.Hkeys("hash1")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss,[]string{"field2","nums","f1","mk1","mk2"})
+
+		ss,err=rdb.Hvals("hash1")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss,[]string{"v2","2","0.34","mv1","mv2"})
+
+		ss,err=rdb.HgetAll("hash1")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss,[]string{"field2","v2","nums","2","f1","0.34","mk1","mv1","mk2","mv2"})
+
+
+		// lists
+
+		n64,_=rdb.Lpush("list1",1)
+		n64,err=rdb.Lpushx("list1",3)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+		n64,err=rdb.Rpush("list1",4)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,3)
+
+		n64,err=rdb.Rpushx("list1",5)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,4)
+
+		s,err=rdb.Lpop("list1")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"3")
+
+		s,err=rdb.Rpop("list1")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"5")
+
+
+		n64,err=rdb.Lrem("list1",2,4)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,1)
+
+		n64,err=rdb.Llen("list1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,1)
+
+		rdb.Lpush("list1","a")
+		s,err=rdb.Lindex("list1",1)
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"1")
+
+		n64,err=rdb.Linsert("list1","BEFORE","a","b")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,3)
+
+		s,err=rdb.Lset("list1",1,"c")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"OK")
+
+		ss,err=rdb.Lrange("list1",0,2)
+		gtest.Assert(err,nil)
+		gtest.Assert(ss,[]string{"b","c","1"})
+
+		ss,err=rdb.BlPop("list1",1)
+		gtest.Assert(err,nil)
+		gtest.Assert(ss[0],"list1")
+		gtest.Assert(ss[1],"b")
+
+		ss,err=rdb.BrPop("list1",1)
+		gtest.Assert(err,nil)
+		gtest.Assert(ss[0],"list1")
+		gtest.Assert(ss[1],"1")
+
 
 
 	})
 }
+

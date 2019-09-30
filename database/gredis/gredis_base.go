@@ -203,58 +203,60 @@ func (c *Redis) Msetnx(params ...string) (int, error) {
 	return typeInt(c.commnddo("MSETNX", gconv.Interfaces(params)...))
 }
 
-func (c *Redis) Psetex(key string, milliseconds int64, value string) (interface{}, error) {
-	return c.commnddo("PSETEX", key, milliseconds, value)
+func (c *Redis) Psetex(key string, milliseconds int64, value string) (string, error) {
+	return typeString(c.commnddo("PSETEX", key, milliseconds, value))
 }
 
 func (c *Redis) Setbit(key string, offset,value int   ) (int, error) {
 	return typeInt(c.commnddo("SETBIT", key, offset, value))
 }
 
-func (c *Redis) Setex(key string, seconds int64, value string) (interface{}, error) {
-	return c.commnddo("SETEX", key, seconds, value)
+func (c *Redis) Setex(key string, seconds int64, value string) (string, error) {
+	return typeString(c.commnddo("SETEX", key, seconds, value))
 }
 
-func (c *Redis) Setnx(key string, value string) (interface{}, error) {
-	return c.commnddo("SETNX", key, value)
+func (c *Redis) Setnx(key string, value string) (int, error) {
+	return typeInt(c.commnddo("SETNX", key, value))
 }
 
-func (c *Redis) SetRange(key string, offset int, value string) (interface{}, error) {
-	return c.commnddo("SETRANGE", key, offset, value)
+func (c *Redis) SetRange(key string, offset int, value string) (int, error) {
+	return typeInt( c.commnddo("SETRANGE", key, offset, value))
 }
 
-func (c *Redis) Strlen(key string) (interface{}, error) {
-	return c.commnddo("STRLEN", key)
+func (c *Redis) Strlen(key string) (int, error) {
+	return typeInt( c.commnddo("STRLEN", key))
 }
 
 //=======================================================================Hash
-func (c *Redis) Hset(key, fieldname string, value interface{}) (interface{}, error) {
-	return c.commnddo("HSET", key, fieldname, fieldname)
+func (c *Redis) Hset(key, fieldname string, value interface{}) (int, error) {
+	return typeInt(c.commnddo("HSET", key, fieldname, value))
 }
 
-func (c *Redis) Hsetnx(key, fieldname string, value interface{}) (interface{}, error) {
-	return c.commnddo("HSETNX", key, fieldname, fieldname)
+func (c *Redis) Hsetnx(key, fieldname string, value interface{}) (int, error) {
+	return typeInt(c.commnddo("HSETNX", key, fieldname, value))
 }
 
-func (c *Redis) Hget(key, fieldname string) (interface{}, error) {
-	return c.commnddo("HGET", key, fieldname)
+func (c *Redis) Hget(key, fieldname string) (string, error) {
+	return typeString(c.commnddo("HGET", key, fieldname))
 }
 
-func (c *Redis) Hexists(key, fieldname string) (bool, error) {
-	return typeBool(c.commnddo("HEXISTS", key, fieldname))
+func (c *Redis) Hexists(key, fieldname string) (int, error) {
+	return typeInt(c.commnddo("HEXISTS", key, fieldname))
 }
 
-func (c *Redis) Hdel(key string, fields ...string) (int64, error) {
-	param := garray.NewStrArrayFrom(fields)
-	return typeInt64(c.commnddo("HDEL", gconv.Interfaces(param.InsertBefore(0, key))...))
+func (c *Redis) Hdel(key string, fields ...string) (int, error) {
+	 if len(fields)<1{
+	 	return 0,errors.New("must have one field's name")
+	 }
+	return typeInt(c.commnddo("HDEL", gconv.Interfaces(append([]string{key},fields...))...))
 }
 
-func (c *Redis) Hlen(key string) (int64, error) {
-	return typeInt64(c.commnddo("HLEN", key))
+func (c *Redis) Hlen(key string) (int, error) {
+	return typeInt(c.commnddo("HLEN", key))
 }
 
-func (c *Redis) Hstrlen(key, field string) (int64, error) {
-	return typeInt64(c.commnddo("HSTRLEN", key, field))
+func (c *Redis) Hstrlen(key, field string) (int, error) {
+	return typeInt(c.commnddo("HSTRLEN", key, field))
 
 }
 
@@ -262,29 +264,29 @@ func (c *Redis) HincrBy(key, field string, increment int64) (int64, error) {
 	return typeInt64(c.commnddo("HINCRBY", key, field, increment))
 }
 
-func (c *Redis) HincrByFloat(key, field string, increment float64) (float64, error) {
-	return typeFloat64(c.commnddo("HINCRBYFLOAT", key, field, increment))
+func (c *Redis) HincrByFloat(key, field string, increment float64) (string, error) {
+	return typeString(c.commnddo("HINCRBYFLOAT", key, field, increment))
 }
 
 func (c *Redis) Hmset(key string, params ...interface{}) (string, error) {
-	param := garray.NewArrayFrom(params)
-	return typeString(c.commnddo("HMSET", gconv.Interfaces(param.InsertBefore(0, key))...))
+
+	return typeString(c.commnddo("HMSET", append([]interface{}{key},params...)...))
 }
 
-func (c *Redis) Hmget(keys ...string) (interface{}, error) {
-	return c.commnddo("HMGET", keys)
+func (c *Redis) Hmget(key string,option ...string) ([]string, error) {
+	return typeStrings( c.commnddo("HMGET", gconv.Interfaces(append([]string{key},option...))...))
 }
 
 func (c *Redis) Hkeys(key string) ([]string, error) {
 	return typeStrings(c.commnddo("HKEYS", key))
 }
 
-func (c *Redis) Hvals(key string) (interface{}, error) {
-	return c.commnddo("HVALS", key)
+func (c *Redis) Hvals(key string) ([]string, error) {
+	return typeStrings(c.commnddo("HVALS", key))
 }
 
-func (c *Redis) HgetAll(key string) (interface{}, error) {
-	return c.commnddo("HGETALL", key)
+func (c *Redis) HgetAll(key string) ([]string, error) {
+	return typeStrings(c.commnddo("HGETALL", key))
 }
 
 //==============================================================================list
@@ -306,16 +308,16 @@ func (c *Redis) Rpushx(key string, values interface{}) (int64, error) {
 	return typeInt64(c.commnddo("RPUSHX", key, values))
 }
 
-func (c *Redis) Lpop(key string) (interface{}, error) {
-	return c.commnddo("LPOP", key)
+func (c *Redis) Lpop(key string) (string, error) {
+	return typeString(c.commnddo("LPOP", key))
 }
 
-func (c *Redis) Rpop(key string) (interface{}, error) {
-	return c.commnddo("RPOP", key)
+func (c *Redis) Rpop(key string) (string, error) {
+	return typeString(c.commnddo("RPOP", key))
 }
 
-func (c *Redis) RpoplPush(key string, source, destination interface{}) (interface{}, error) {
-	return c.commnddo("RPOPLPUSH", key, source, destination)
+func (c *Redis) RpoplPush(source, destination string) (string, error) {
+	return typeString(c.commnddo("RPOPLPUSH",   source, destination))
 }
 
 func (c *Redis) Lrem(key string, count int, value interface{}) (int64, error) {
@@ -326,33 +328,32 @@ func (c *Redis) Llen(key string) (int64, error) {
 	return typeInt64(c.commnddo("LLEN", key))
 }
 
-func (c *Redis) Lindex(key string, index int64) (interface{}, error) {
-	return c.commnddo("LINDEX", key, index)
+func (c *Redis) Lindex(key string, index int64) (string, error) {
+	return typeString(c.commnddo("LINDEX", key, index))
 }
 
 func (c *Redis) Linsert(key, layout, pivot string, value interface{}) (int64, error) {
 	return typeInt64(c.commnddo("LINSERT", key, layout, pivot, value))
 }
 
-func (c *Redis) Lset(key, string, index int64, value interface{}) (string, error) {
+func (c *Redis) Lset(key  string, index int64, value interface{}) (string, error) {
 	return typeString(c.commnddo("LSET", key, index, value))
 }
 
-func (c *Redis) Lrange(key, string, start, stop int64) (interface{}, error) {
-	return c.commnddo("LRANGE", key, start, stop)
+func (c *Redis) Lrange(key string, start, stop int64) ([]string, error) {
+	return typeStrings(c.commnddo("LRANGE", key, start, stop))
 }
 
-func (c *Redis) BlPop(key string, params ...interface{}) (interface{}, error) {
-	return c.commnddo("BLPOP", append([]interface{}{key},params...)...)
+func (c *Redis) BlPop(key string, params ...interface{}) ([]string, error) {
+	return typeStrings(c.commnddo("BLPOP", append([]interface{}{key},params...)...))
 }
 
-func (c *Redis) BrPop(key string, params ...interface{}) (interface{}, error) {
-	param := garray.NewArrayFrom(params)
-	return c.commnddo("BRPOP", gconv.Interfaces(param.InsertBefore(0, key))...)
+func (c *Redis) BrPop(key string, params ...interface{}) ([]string, error) {
+	return typeStrings(c.commnddo("BRPOP", append([]interface{}{key},params...)...))
 }
 
-func (c *Redis) BrPoplPush(key, source, destination string, timeout int) (interface{}, error) {
-	return c.commnddo("BRPOPLPUSH", key, source, destination, timeout)
+func (c *Redis) BrPoplPush(  source, destination string, timeout int) ([]string, error) {
+	return typeStrings(c.commnddo("BRPOPLPUSH", source, destination, timeout))
 }
 
 //========================================================================================set
