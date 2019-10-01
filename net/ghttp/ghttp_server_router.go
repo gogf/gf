@@ -143,7 +143,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 			item = e.Value.(*handlerItem)
 			// 判断优先级，决定当前注册项的插入顺序
 			if s.compareRouterPriority(handler, item) {
-				l.InsertBefore(handler, e)
+				l.InsertBefore(e, handler)
 				pushed = true
 				goto end
 			}

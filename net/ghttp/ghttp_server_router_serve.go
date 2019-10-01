@@ -140,7 +140,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
 							} else {
-								lastMiddlewareElem = parsedItemList.InsertAfter(parsedItem, lastMiddlewareElem)
+								lastMiddlewareElem = parsedItemList.InsertAfter(lastMiddlewareElem, parsedItem)
 							}
 
 						// 钩子函数存在性判断
