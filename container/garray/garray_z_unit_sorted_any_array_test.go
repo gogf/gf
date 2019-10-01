@@ -390,14 +390,26 @@ func TestSortedArray_Rands(t *testing.T) {
 func TestSortedArray_Join(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []interface{}{"a", "d", "c"}
-
 		func1 := func(v1, v2 interface{}) int {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
-		gtest.Assert(array1.Join(","), "a,c,d")
-		gtest.Assert(array1.Join("."), "a.c.d")
+		gtest.Assert(array1.Join(","), `"a","c","d"`)
+		gtest.Assert(array1.Join("."), `"a"."c"."d"`)
+	})
 
+	gtest.Case(t, func() {
+		a1 := []interface{}{0, 1, `"a"`, `\a`}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorString)
+		gtest.Assert(array1.Join("."), `"\"a\"".0.1."\\a"`)
+	})
+}
+
+func TestSortedArray_String(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []interface{}{0, 1, "a", "b"}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorString)
+		gtest.Assert(array1.String(), `[0,1,"a","b"]`)
 	})
 }
 

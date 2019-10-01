@@ -13,13 +13,13 @@ import (
 
 // Deprecated.
 func (r Record) ToJson() string {
-	content, _ := gparser.VarToJson(r.ToMap())
+	content, _ := gparser.VarToJson(r.Map())
 	return string(content)
 }
 
 // Deprecated.
 func (r Record) ToXml(rootTag ...string) string {
-	content, _ := gparser.VarToXml(r.ToMap(), rootTag...)
+	content, _ := gparser.VarToXml(r.Map(), rootTag...)
 	return string(content)
 }
 
@@ -37,5 +37,5 @@ func (r Record) ToStruct(pointer interface{}) error {
 	if r == nil {
 		return sql.ErrNoRows
 	}
-	return mapToStruct(r.ToMap(), pointer)
+	return mapToStruct(r.Map(), pointer)
 }

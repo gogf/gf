@@ -190,8 +190,22 @@ func TestIntSet_Join(t *testing.T) {
 		s1 := gset.NewIntSet()
 		s1.Add(1).Add(2).Add(3)
 		s3 := s1.Join(",")
+		gtest.Assert(strings.Contains(s3, "1"), true)
+		gtest.Assert(strings.Contains(s3, "2"), true)
 		gtest.Assert(strings.Contains(s3, "3"), true)
+	})
+}
 
+func TestIntSet_String(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewIntSet()
+		s1.Add(1).Add(2).Add(3)
+		s3 := s1.String()
+		gtest.Assert(strings.Contains(s3, "["), true)
+		gtest.Assert(strings.Contains(s3, "]"), true)
+		gtest.Assert(strings.Contains(s3, "1"), true)
+		gtest.Assert(strings.Contains(s3, "2"), true)
+		gtest.Assert(strings.Contains(s3, "3"), true)
 	})
 }
 

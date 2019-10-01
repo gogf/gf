@@ -65,6 +65,11 @@ func (v *Float32) Cas(old, new float32) bool {
 	return atomic.CompareAndSwapUint32(&v.value, math.Float32bits(old), math.Float32bits(new))
 }
 
+// String implements String interface for string printing.
+func (v *Float32) String() string {
+	return strconv.FormatFloat(float64(v.Val()), 'g', -1, 32)
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Float32) MarshalJSON() ([]byte, error) {
 	return gconv.UnsafeStrToBytes(strconv.FormatFloat(float64(v.Val()), 'g', -1, 32)), nil

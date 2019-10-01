@@ -248,7 +248,20 @@ func TestStrArray_Join(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []string{"0", "1", "2", "3", "4", "5", "6"}
 		array1 := garray.NewStrArrayFrom(a1)
-		gtest.Assert(array1.Join("."), "0.1.2.3.4.5.6")
+		gtest.Assert(array1.Join("."), `"0"."1"."2"."3"."4"."5"."6"`)
+	})
+	gtest.Case(t, func() {
+		a1 := []string{"0", "1", `"a"`, `\a`}
+		array1 := garray.NewStrArrayFrom(a1)
+		gtest.Assert(array1.Join("."), `"0"."1"."\"a\""."\\a"`)
+	})
+}
+
+func TestStrArray_String(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []string{"0", "1", "2", "3", "4", "5", "6"}
+		array1 := garray.NewStrArrayFrom(a1)
+		gtest.Assert(array1.String(), `["0","1","2","3","4","5","6"]`)
 	})
 }
 

@@ -74,7 +74,7 @@ func (tx *TX) GetStruct(obj interface{}, query string, args ...interface{}) erro
 	if err != nil {
 		return err
 	}
-	return one.ToStruct(obj)
+	return one.Struct(obj)
 }
 
 // 数据库查询，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
@@ -83,7 +83,7 @@ func (tx *TX) GetStructs(objPointerSlice interface{}, query string, args ...inte
 	if err != nil {
 		return err
 	}
-	return all.ToStructs(objPointerSlice)
+	return all.Structs(objPointerSlice)
 }
 
 // 将结果转换为指定的struct/*struct/[]struct/[]*struct,

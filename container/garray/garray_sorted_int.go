@@ -537,10 +537,7 @@ func (a *SortedIntArray) CountValues() map[int]int {
 
 // String returns current array as a string.
 func (a *SortedIntArray) String() string {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	jsonContent, _ := json.Marshal(a.array)
-	return string(jsonContent)
+	return "[" + a.Join(",") + "]"
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

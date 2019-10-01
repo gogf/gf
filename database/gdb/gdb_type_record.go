@@ -15,13 +15,13 @@ import (
 
 // 将记录结果转换为JSON字符串
 func (r Record) Json() string {
-	content, _ := gparser.VarToJson(r.ToMap())
+	content, _ := gparser.VarToJson(r.Map())
 	return string(content)
 }
 
 // 将记录结果转换为XML字符串
 func (r Record) Xml(rootTag ...string) string {
-	content, _ := gparser.VarToXml(r.ToMap(), rootTag...)
+	content, _ := gparser.VarToXml(r.Map(), rootTag...)
 	return string(content)
 }
 

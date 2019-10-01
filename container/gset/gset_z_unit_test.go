@@ -215,7 +215,14 @@ func TestSet_Join(t *testing.T) {
 		s1.Add("a").Add("a1").Add("b").Add("c")
 		str1 := s1.Join(",")
 		gtest.Assert(strings.Contains(str1, "a1"), true)
-
+	})
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add("a").Add(`"b"`).Add(`\c`)
+		str1 := s1.Join(",")
+		gtest.Assert(strings.Contains(str1, `\"b\"`), true)
+		gtest.Assert(strings.Contains(str1, `\\c`), true)
+		gtest.Assert(strings.Contains(str1, `a`), true)
 	})
 }
 
@@ -224,8 +231,9 @@ func TestSet_String(t *testing.T) {
 		s1 := gset.New(true)
 		s1.Add("a").Add("a2").Add("b").Add("c")
 		str1 := s1.String()
+		gtest.Assert(strings.Contains(str1, "["), true)
+		gtest.Assert(strings.Contains(str1, "]"), true)
 		gtest.Assert(strings.Contains(str1, "a2"), true)
-
 	})
 }
 

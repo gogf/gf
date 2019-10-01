@@ -309,9 +309,9 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 	listMap := (List)(nil)
 	switch v := list.(type) {
 	case Result:
-		listMap = v.ToList()
+		listMap = v.List()
 	case Record:
-		listMap = List{v.ToMap()}
+		listMap = List{v.Map()}
 	case List:
 		listMap = v
 	case Map:

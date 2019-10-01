@@ -16,13 +16,13 @@ import (
 
 // Deprecated.
 func (r Result) ToJson() string {
-	content, _ := gparser.VarToJson(r.ToList())
+	content, _ := gparser.VarToJson(r.List())
 	return string(content)
 }
 
 // Deprecated.
 func (r Result) ToXml(rootTag ...string) string {
-	content, _ := gparser.VarToXml(r.ToList(), rootTag...)
+	content, _ := gparser.VarToXml(r.List(), rootTag...)
 	return string(content)
 }
 
@@ -30,7 +30,7 @@ func (r Result) ToXml(rootTag ...string) string {
 func (r Result) ToList() List {
 	l := make(List, len(r))
 	for k, v := range r {
-		l[k] = v.ToMap()
+		l[k] = v.Map()
 	}
 	return l
 }
@@ -40,7 +40,7 @@ func (r Result) ToStringMap(key string) map[string]Map {
 	m := make(map[string]Map)
 	for _, item := range r {
 		if v, ok := item[key]; ok {
-			m[v.String()] = item.ToMap()
+			m[v.String()] = item.Map()
 		}
 	}
 	return m
@@ -51,7 +51,7 @@ func (r Result) ToIntMap(key string) map[int]Map {
 	m := make(map[int]Map)
 	for _, item := range r {
 		if v, ok := item[key]; ok {
-			m[v.Int()] = item.ToMap()
+			m[v.Int()] = item.Map()
 		}
 	}
 	return m
@@ -62,7 +62,7 @@ func (r Result) ToUintMap(key string) map[uint]Map {
 	m := make(map[uint]Map)
 	for _, item := range r {
 		if v, ok := item[key]; ok {
-			m[v.Uint()] = item.ToMap()
+			m[v.Uint()] = item.Map()
 		}
 	}
 	return m
@@ -116,13 +116,13 @@ func (r Result) ToStructs(pointer interface{}) (err error) {
 	for i := 0; i < l; i++ {
 		if itemType.Kind() == reflect.Ptr {
 			e := reflect.New(itemType.Elem()).Elem()
-			if err = r[i].ToStruct(e); err != nil {
+			if err = r[i].Struct(e); err != nil {
 				return err
 			}
 			array.Index(i).Set(e.Addr())
 		} else {
 			e := reflect.New(itemType).Elem()
-			if err = r[i].ToStruct(e); err != nil {
+			if err = r[i].Struct(e); err != nil {
 				return err
 			}
 			array.Index(i).Set(e)

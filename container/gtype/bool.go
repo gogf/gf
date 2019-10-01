@@ -67,6 +67,14 @@ func (v *Bool) Cas(old, new bool) bool {
 	return atomic.CompareAndSwapInt32(&v.value, oldInt32, newInt32)
 }
 
+// String implements String interface for string printing.
+func (v *Bool) String() string {
+	if v.Val() {
+		return "true"
+	}
+	return "false"
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Bool) MarshalJSON() ([]byte, error) {
 	if v.Val() {

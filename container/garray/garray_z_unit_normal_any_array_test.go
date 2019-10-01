@@ -255,7 +255,21 @@ func TestArray_Join(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []interface{}{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewArrayFrom(a1)
-		gtest.Assert(array1.Join("."), "0.1.2.3.4.5.6")
+		gtest.Assert(array1.Join("."), `0.1.2.3.4.5.6`)
+	})
+
+	gtest.Case(t, func() {
+		a1 := []interface{}{0, 1, `"a"`, `\a`}
+		array1 := garray.NewArrayFrom(a1)
+		gtest.Assert(array1.Join("."), `0.1."\"a\""."\\a"`)
+	})
+}
+
+func TestArray_String(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []interface{}{0, 1, 2, 3, 4, 5, 6}
+		array1 := garray.NewArrayFrom(a1)
+		gtest.Assert(array1.String(), `[0,1,2,3,4,5,6]`)
 	})
 }
 

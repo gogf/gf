@@ -65,6 +65,11 @@ func (v *Float64) Cas(old, new float64) bool {
 	return atomic.CompareAndSwapUint64(&v.value, math.Float64bits(old), math.Float64bits(new))
 }
 
+// String implements String interface for string printing.
+func (v *Float64) String() string {
+	return strconv.FormatFloat(v.Val(), 'g', -1, 64)
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Float64) MarshalJSON() ([]byte, error) {
 	return gconv.UnsafeStrToBytes(strconv.FormatFloat(v.Val(), 'g', -1, 64)), nil

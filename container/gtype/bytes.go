@@ -48,6 +48,11 @@ func (v *Bytes) Val() []byte {
 	return nil
 }
 
+// String implements String interface for string printing.
+func (v *Bytes) String() string {
+	return string(v.Val())
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Bytes) MarshalJSON() ([]byte, error) {
 	val := v.Val()
