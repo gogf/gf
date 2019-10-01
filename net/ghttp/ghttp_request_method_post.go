@@ -17,7 +17,6 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 初始化POST请求参数
 func (r *Request) initPost() {
 	if !r.parsedPost {
 		r.parsedPost = true
@@ -64,7 +63,6 @@ func (r *Request) initPost() {
 	}
 }
 
-// 设置当前请求的POST参数
 func (r *Request) SetPost(key string, value interface{}) {
 	r.initPost()
 	r.postMap[key] = value
@@ -172,7 +170,6 @@ func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*
 	return nil
 }
 
-// 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetPostToStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.initPost()
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)

@@ -25,6 +25,7 @@ func Test_Params_Basic(t *testing.T) {
 	}
 	p := ports.PopRand()
 	s := g.Server(p)
+	// GET
 	s.BindHandler("/get", func(r *ghttp.Request) {
 		if r.GetQuery("array") != nil {
 			r.Response.Write(r.GetQuery("array"))
@@ -57,38 +58,40 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.GetQueryMapStrStr()["a"])
 		}
 	})
+	// PUT
 	s.BindHandler("/put", func(r *ghttp.Request) {
-		if r.Get("array") != nil {
-			r.Response.Write(r.Get("array"))
+		if r.GetPut("array") != nil {
+			r.Response.Write(r.GetPut("array"))
 		}
-		if r.Get("slice") != nil {
-			r.Response.Write(r.Get("slice"))
+		if r.GetPut("slice") != nil {
+			r.Response.Write(r.GetPut("slice"))
 		}
-		if r.Get("bool") != nil {
-			r.Response.Write(r.GetBool("bool"))
+		if r.GetPut("bool") != nil {
+			r.Response.Write(r.GetPutBool("bool"))
 		}
-		if r.Get("float32") != nil {
-			r.Response.Write(r.GetFloat32("float32"))
+		if r.GetPut("float32") != nil {
+			r.Response.Write(r.GetPutFloat32("float32"))
 		}
-		if r.Get("float64") != nil {
-			r.Response.Write(r.GetFloat64("float64"))
+		if r.GetPut("float64") != nil {
+			r.Response.Write(r.GetPutFloat64("float64"))
 		}
-		if r.Get("int") != nil {
-			r.Response.Write(r.GetInt("int"))
+		if r.GetPut("int") != nil {
+			r.Response.Write(r.GetPutInt("int"))
 		}
-		if r.Get("uint") != nil {
-			r.Response.Write(r.GetUint("uint"))
+		if r.GetPut("uint") != nil {
+			r.Response.Write(r.GetPutUint("uint"))
 		}
-		if r.Get("string") != nil {
-			r.Response.Write(r.GetString("string"))
+		if r.GetPut("string") != nil {
+			r.Response.Write(r.GetPutString("string"))
 		}
-		if r.Get("map") != nil {
-			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
+		if r.GetPut("map") != nil {
+			r.Response.Write(r.GetPutMap()["map"].(map[string]interface{})["b"])
 		}
-		if r.Get("a") != nil {
-			r.Response.Write(r.GetMapStrStr()["a"])
+		if r.GetPut("a") != nil {
+			r.Response.Write(r.GetPutMapStrStr()["a"])
 		}
 	})
+	// POST
 	s.BindHandler("/post", func(r *ghttp.Request) {
 		if r.GetPost("array") != nil {
 			r.Response.Write(r.GetPost("array"))
@@ -119,6 +122,39 @@ func Test_Params_Basic(t *testing.T) {
 		}
 		if r.GetPost("a") != nil {
 			r.Response.Write(r.GetPostMapStrStr()["a"])
+		}
+	})
+	// DELETE
+	s.BindHandler("/delete", func(r *ghttp.Request) {
+		if r.GetDelete("array") != nil {
+			r.Response.Write(r.GetDelete("array"))
+		}
+		if r.GetDelete("slice") != nil {
+			r.Response.Write(r.GetDelete("slice"))
+		}
+		if r.GetDelete("bool") != nil {
+			r.Response.Write(r.GetDeleteBool("bool"))
+		}
+		if r.GetDelete("float32") != nil {
+			r.Response.Write(r.GetDeleteFloat32("float32"))
+		}
+		if r.GetDelete("float64") != nil {
+			r.Response.Write(r.GetDeleteFloat64("float64"))
+		}
+		if r.GetDelete("int") != nil {
+			r.Response.Write(r.GetDeleteInt("int"))
+		}
+		if r.GetDelete("uint") != nil {
+			r.Response.Write(r.GetDeleteUint("uint"))
+		}
+		if r.GetDelete("string") != nil {
+			r.Response.Write(r.GetDeleteString("string"))
+		}
+		if r.GetDelete("map") != nil {
+			r.Response.Write(r.GetDeleteMap()["map"].(map[string]interface{})["b"])
+		}
+		if r.GetDelete("a") != nil {
+			r.Response.Write(r.GetDeleteMapStrStr()["a"])
 		}
 	})
 	s.BindHandler("/map", func(r *ghttp.Request) {
@@ -230,6 +266,21 @@ func Test_Params_Basic(t *testing.T) {
 		gtest.Assert(client.PostContent("/post", "string=key"), `key`)
 		gtest.Assert(client.PostContent("/post", "map[a]=1&map[b]=2"), `2`)
 		gtest.Assert(client.PostContent("/post", "a=1&b=2"), `1`)
+
+		// DELETE
+		gtest.Assert(client.DeleteContent("/delete", "array[]=1&array[]=2"), `["1","2"]`)
+		gtest.Assert(client.DeleteContent("/delete", "slice=1&slice=2"), `2`)
+		gtest.Assert(client.DeleteContent("/delete", "bool=1"), `true`)
+		gtest.Assert(client.DeleteContent("/delete", "bool=0"), `false`)
+		gtest.Assert(client.DeleteContent("/delete", "float32=0.11"), `0.11`)
+		gtest.Assert(client.DeleteContent("/delete", "float64=0.22"), `0.22`)
+		gtest.Assert(client.DeleteContent("/delete", "int=-10000"), `-10000`)
+		gtest.Assert(client.DeleteContent("/delete", "int=10000"), `10000`)
+		gtest.Assert(client.DeleteContent("/delete", "uint=10000"), `10000`)
+		gtest.Assert(client.DeleteContent("/delete", "uint=9"), `9`)
+		gtest.Assert(client.DeleteContent("/delete", "string=key"), `key`)
+		gtest.Assert(client.DeleteContent("/delete", "map[a]=1&map[b]=2"), `2`)
+		gtest.Assert(client.DeleteContent("/delete", "a=1&b=2"), `1`)
 
 		// Map
 		gtest.Assert(client.GetContent("/map", "id=1&name=john"), `john`)
