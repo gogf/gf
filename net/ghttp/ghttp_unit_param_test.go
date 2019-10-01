@@ -188,6 +188,11 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
 		}
 	})
+	s.BindHandler("/struct-with-nil", func(r *ghttp.Request) {
+		user := (*User)(nil)
+		err := r.GetPostToStruct(&user)
+		r.Response.Write(err)
+	})
 	s.BindHandler("/struct-with-base", func(r *ghttp.Request) {
 		type Base struct {
 			Pass1 string `params:"password1"`
@@ -295,6 +300,7 @@ func Test_Params_Basic(t *testing.T) {
 		// Struct
 		gtest.Assert(client.GetContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		gtest.Assert(client.PostContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		gtest.Assert(client.PostContent("/struct-with-nil", ``), ``)
 		gtest.Assert(client.PostContent("/struct-with-base", `id=1&name=john&password1=123&password2=456`), "1john1234561john123456")
 	})
 }
