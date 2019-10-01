@@ -52,6 +52,11 @@ func (v *Uint) Cas(old, new uint) bool {
 	return atomic.CompareAndSwapUint64(&v.value, uint64(old), uint64(new))
 }
 
+// String implements String interface for string printing.
+func (v *Uint) String() string {
+	return strconv.FormatUint(uint64(v.Val()), 10)
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Uint) MarshalJSON() ([]byte, error) {
 	return gconv.UnsafeStrToBytes(strconv.FormatUint(uint64(v.Val()), 10)), nil

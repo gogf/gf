@@ -47,6 +47,11 @@ func (v *String) Val() string {
 	return ""
 }
 
+// String implements String interface for string printing.
+func (v *String) String() string {
+	return v.Val()
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *String) MarshalJSON() ([]byte, error) {
 	return gconv.UnsafeStrToBytes(`"` + v.Val() + `"`), nil

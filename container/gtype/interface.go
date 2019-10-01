@@ -8,6 +8,7 @@ package gtype
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/util/gconv"
 	"sync/atomic"
 )
 
@@ -41,6 +42,11 @@ func (v *Interface) Set(value interface{}) (old interface{}) {
 // Val atomically loads t.value.
 func (v *Interface) Val() interface{} {
 	return v.value.Load()
+}
+
+// String implements String interface for string printing.
+func (v *Interface) String() string {
+	return gconv.String(v.Val())
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

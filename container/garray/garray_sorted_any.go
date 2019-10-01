@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
 	"math"
 	"sort"
@@ -528,8 +529,14 @@ func (a *SortedArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
+	s := ""
 	for k, v := range a.array {
-		buffer.WriteString(gconv.String(v))
+		s = gconv.String(v)
+		if gstr.IsNumeric(s) {
+			buffer.WriteString(s)
+		} else {
+			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
+		}
 		if k != len(a.array)-1 {
 			buffer.WriteString(glue)
 		}
@@ -550,10 +557,7 @@ func (a *SortedArray) CountValues() map[interface{}]int {
 
 // String returns current array as a string.
 func (a *SortedArray) String() string {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	jsonContent, _ := json.Marshal(a.array)
-	return gconv.UnsafeBytesToStr(jsonContent)
+	return "[" + a.Join(",") + "]"
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

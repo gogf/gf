@@ -262,6 +262,14 @@ func TestIntArray_Join(t *testing.T) {
 	})
 }
 
+func TestIntArray_String(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{0, 1, 2, 3, 4, 5, 6}
+		array1 := garray.NewIntArrayFrom(a1)
+		gtest.Assert(array1.String(), "[0,1,2,3,4,5,6]")
+	})
+}
+
 func TestIntArray_SetArray(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 2, 3, 5}

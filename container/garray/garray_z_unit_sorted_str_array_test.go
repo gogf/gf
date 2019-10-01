@@ -290,8 +290,22 @@ func TestSortedStrArray_Join(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []string{"e", "a", "d"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		gtest.Assert(array1.Join(","), "a,d,e")
-		gtest.Assert(array1.Join("."), "a.d.e")
+		gtest.Assert(array1.Join(","), `"a","d","e"`)
+		gtest.Assert(array1.Join("."), `"a"."d"."e"`)
+	})
+
+	gtest.Case(t, func() {
+		a1 := []string{"a", `"b"`, `\c`}
+		array1 := garray.NewSortedStrArrayFrom(a1)
+		gtest.Assert(array1.Join("."), `"\"b\""."\\c"."a"`)
+	})
+}
+
+func TestSortedStrArray_String(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []string{"e", "a", "d"}
+		array1 := garray.NewSortedStrArrayFrom(a1)
+		gtest.Assert(array1.String(), `["a","d","e"]`)
 	})
 }
 

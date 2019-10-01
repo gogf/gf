@@ -52,6 +52,11 @@ func (v *Int32) Cas(old, new int32) bool {
 	return atomic.CompareAndSwapInt32(&v.value, old, new)
 }
 
+// String implements String interface for string printing.
+func (v *Int32) String() string {
+	return strconv.Itoa(int(v.Val()))
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Int32) MarshalJSON() ([]byte, error) {
 	return gconv.UnsafeStrToBytes(strconv.Itoa(int(v.Val()))), nil

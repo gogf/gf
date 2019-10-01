@@ -310,9 +310,9 @@ func (md *Model) Data(data ...interface{}) *Model {
 	} else {
 		switch params := data[0].(type) {
 		case Result:
-			model.data = params.ToList()
+			model.data = params.List()
 		case Record:
-			model.data = params.ToMap()
+			model.data = params.Map()
 		case List:
 			model.data = params
 		case Map:

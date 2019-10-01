@@ -196,10 +196,21 @@ func TestNewStrSetFrom(t *testing.T) {
 }
 
 func TestStrSet_Join(t *testing.T) {
-	s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-	str1 := s1.Join(",")
-	gtest.Assert(strings.Contains(str1, "b"), true)
-	gtest.Assert(strings.Contains(str1, "d"), false)
+	gtest.Case(t, func() {
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
+		str1 := s1.Join(",")
+		gtest.Assert(strings.Contains(str1, "b"), true)
+		gtest.Assert(strings.Contains(str1, "d"), false)
+	})
+
+	gtest.Case(t, func() {
+		s1 := gset.NewStrSet()
+		s1.Add("a").Add(`"b"`).Add(`\c`)
+		str1 := s1.Join(",")
+		gtest.Assert(strings.Contains(str1, `\"b\"`), true)
+		gtest.Assert(strings.Contains(str1, `\\c`), true)
+		gtest.Assert(strings.Contains(str1, `a`), true)
+	})
 }
 
 func TestStrSet_String(t *testing.T) {
@@ -210,6 +221,14 @@ func TestStrSet_String(t *testing.T) {
 		gtest.Assert(strings.Contains(str1, "d"), false)
 	})
 
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add("a").Add("a2").Add("b").Add("c")
+		str1 := s1.String()
+		gtest.Assert(strings.Contains(str1, "["), true)
+		gtest.Assert(strings.Contains(str1, "]"), true)
+		gtest.Assert(strings.Contains(str1, "a2"), true)
+	})
 }
 
 func TestStrSet_Sum(t *testing.T) {

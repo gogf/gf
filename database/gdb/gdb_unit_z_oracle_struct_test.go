@@ -96,7 +96,7 @@ func Test_Model_Inherit_MapToStruct_Oracle(t *testing.T) {
 
 		user := new(User)
 
-		gtest.Assert(one.ToStruct(user), nil)
+		gtest.Assert(one.Struct(user), nil)
 		gtest.Assert(user.Id, data["id"])
 		gtest.Assert(user.Passport, data["passport"])
 		gtest.Assert(strings.TrimSpace(user.Password), data["password"])

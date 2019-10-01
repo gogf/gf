@@ -8,9 +8,8 @@
 package gset
 
 import (
+	"bytes"
 	"encoding/json"
-	"strings"
-
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 )
@@ -112,12 +111,24 @@ func (set *IntSet) Slice() []int {
 
 // Join joins items with a string <glue>.
 func (set *IntSet) Join(glue string) string {
-	return strings.Join(gconv.Strings(set.Slice()), ",")
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	l := len(set.data)
+	i := 0
+	for k, _ := range set.data {
+		buffer.WriteString(gconv.String(k))
+		if i != l-1 {
+			buffer.WriteString(glue)
+		}
+		i++
+	}
+	return buffer.String()
 }
 
 // String returns items as a string, which are joined by char ','.
 func (set *IntSet) String() string {
-	return set.Join(",")
+	return "[" + set.Join(",") + "]"
 }
 
 // LockFunc locks writing with callback function <f>.

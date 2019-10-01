@@ -217,7 +217,7 @@ func (bs *dbBase) GetStruct(pointer interface{}, query string, args ...interface
 	if err != nil {
 		return err
 	}
-	return one.ToStruct(pointer)
+	return one.Struct(pointer)
 }
 
 // 数据库查询，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
@@ -226,7 +226,7 @@ func (bs *dbBase) GetStructs(pointer interface{}, query string, args ...interfac
 	if err != nil {
 		return err
 	}
-	return all.ToStructs(pointer)
+	return all.Structs(pointer)
 }
 
 // 将结果转换为指定的struct/*struct/[]struct/[]*struct,
@@ -415,9 +415,9 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 	listMap := (List)(nil)
 	switch v := list.(type) {
 	case Result:
-		listMap = v.ToList()
+		listMap = v.List()
 	case Record:
-		listMap = List{v.ToMap()}
+		listMap = List{v.Map()}
 	case List:
 		listMap = v
 	case Map:

@@ -209,6 +209,22 @@ func TestSortedIntArray_Sum(t *testing.T) {
 	})
 }
 
+func TestSortedIntArray_Join(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 3, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		gtest.Assert(array1.Join("."), `1.3.5`)
+	})
+}
+
+func TestSortedIntArray_String(t *testing.T) {
+	gtest.Case(t, func() {
+		a1 := []int{1, 3, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		gtest.Assert(array1.String(), `[1,3,5]`)
+	})
+}
+
 func TestSortedIntArray_Contains(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5}

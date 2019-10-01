@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/util/gconv"
 )
 
 func main() {
-	s := "3.4028235e+38"
-	fmt.Println(gconv.String(gconv.Float64(s)))
+	b, _ := json.Marshal([]interface{}{1, 2, 3, 4, 5, 123.456, "a"})
+	fmt.Println(gconv.String(b))
 }

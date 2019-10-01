@@ -26,13 +26,21 @@ func IsLetterLower(b byte) bool {
 }
 
 // IsNumeric tests whether the given string s is numeric.
+// Note that float string like "123.456" is also numeric.
 func IsNumeric(s string) bool {
 	length := len(s)
 	if length == 0 {
 		return false
 	}
 	for i := 0; i < len(s); i++ {
-		if s[i] < byte('0') || s[i] > byte('9') {
+		if s[i] == '.' {
+			if i > 0 && i < len(s)-1 {
+				continue
+			} else {
+				return false
+			}
+		}
+		if s[i] < '0' || s[i] > '9' {
 			return false
 		}
 	}
