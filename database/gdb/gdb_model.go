@@ -557,7 +557,7 @@ func (md *Model) Struct(pointer interface{}) error {
 	if err != nil {
 		return err
 	}
-	return one.ToStruct(pointer)
+	return one.Struct(pointer)
 }
 
 // 链式操作，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
@@ -566,7 +566,7 @@ func (md *Model) Structs(pointer interface{}) error {
 	if err != nil {
 		return err
 	}
-	return r.ToStructs(pointer)
+	return r.Structs(pointer)
 }
 
 // 链式操作，将结果转换为指定的struct/*struct/[]struct/[]*struct,
