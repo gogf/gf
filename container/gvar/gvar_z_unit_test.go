@@ -22,6 +22,20 @@ import (
 
 func Test_Set(t *testing.T) {
 	gtest.Case(t, func() {
+		var v gvar.Var
+		v.Set(123.456)
+		gtest.Assert(v.Val(), 123.456)
+	})
+	gtest.Case(t, func() {
+		var v gvar.Var
+		v.Set(123.456)
+		gtest.Assert(v.Val(), 123.456)
+	})
+	gtest.Case(t, func() {
+		v := gvar.Create(123.456)
+		gtest.Assert(v.Val(), 123.456)
+	})
+	gtest.Case(t, func() {
 		objOne := gvar.New("old", true)
 		objOneOld, _ := objOne.Set("new").(string)
 		gtest.Assert(objOneOld, "old")

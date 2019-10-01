@@ -24,11 +24,19 @@ type Var struct {
 	safe  bool        // Concurrent safe or not.
 }
 
-// New returns a new Var with given <value>.
-// The parameter <safe> used to specify whether using Var in concurrent-safety,
+// New creates and returns a new *Var with given <value>.
+// The optional parameter <safe> specifies whether Var is used in concurrent-safety,
 // which is false in default.
 func New(value interface{}, safe ...bool) *Var {
-	v := &Var{}
+	v := Create(value, safe...)
+	return &v
+}
+
+// Create creates and returns a new Var with given <value>.
+// The optional parameter <safe> specifies whether Var is used in concurrent-safety,
+// which is false in default.
+func Create(value interface{}, safe ...bool) Var {
+	v := Var{}
 	if len(safe) > 0 && !safe[0] {
 		v.safe = true
 		v.value = gtype.NewInterface(value)
@@ -95,6 +103,11 @@ func (v *Var) Int() int {
 	return gconv.Int(v.Val())
 }
 
+// Ints converts and returns <v> as []int.
+func (v *Var) Ints() []int {
+	return gconv.Ints(v.Val())
+}
+
 // Int8 converts and returns <v> as int8.
 func (v *Var) Int8() int8 {
 	return gconv.Int8(v.Val())
@@ -118,6 +131,11 @@ func (v *Var) Int64() int64 {
 // Uint converts and returns <v> as uint.
 func (v *Var) Uint() uint {
 	return gconv.Uint(v.Val())
+}
+
+// Uints converts and returns <v> as []uint.
+func (v *Var) Uints() []uint {
+	return gconv.Uints(v.Val())
 }
 
 // Uint8 converts and returns <v> as uint8.
@@ -148,11 +166,6 @@ func (v *Var) Float32() float32 {
 // Float64 converts and returns <v> as float64.
 func (v *Var) Float64() float64 {
 	return gconv.Float64(v.Val())
-}
-
-// Ints converts and returns <v> as []int.
-func (v *Var) Ints() []int {
-	return gconv.Ints(v.Val())
 }
 
 // Floats converts and returns <v> as []float64.
