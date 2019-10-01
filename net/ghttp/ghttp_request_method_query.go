@@ -17,7 +17,6 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 初始化GET请求参数
 func (r *Request) initGet() {
 	if !r.parsedGet {
 		r.parsedGet = true
@@ -35,13 +34,11 @@ func (r *Request) initGet() {
 	}
 }
 
-// 设置当前请求的GET参数
 func (r *Request) SetQuery(key string, value interface{}) {
 	r.initGet()
 	r.getMap[key] = value
 }
 
-// 获得指定名称的get参数列表
 func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 	r.initGet()
 	if v, ok := r.getMap[key]; ok {

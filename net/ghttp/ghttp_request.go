@@ -37,10 +37,14 @@ type Request struct {
 	hasHookHandler  bool                   // 是否检索到钩子函数(用于请求时提高钩子函数功能启用判断效率)
 	hasServeHandler bool                   // 是否检索到服务函数
 	parsedGet       bool                   // GET参数是否已经解析
+	parsedPut       bool                   // PUT参数是否已经解析
 	parsedPost      bool                   // POST参数是否已经解析
+	parsedDelete    bool                   // DELETE参数是否已经解析
 	parsedRaw       bool                   // 原始参数是否已经解析
 	getMap          map[string]interface{} // GET解析参数
+	putMap          map[string]interface{} // PUT解析参数
 	postMap         map[string]interface{} // POST解析参数
+	deleteMap       map[string]interface{} // DELETE解析参数
 	routerMap       map[string]interface{} // 路由解析参数
 	rawVarMap       map[string]interface{} // 原始数据参数
 	error           error                  // 当前请求执行错误

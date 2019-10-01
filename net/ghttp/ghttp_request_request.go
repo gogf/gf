@@ -99,8 +99,6 @@ func (r *Request) GetRequestInterfaces(key string, def ...interface{}) []interfa
 	return r.GetRequestVar(key, def...).Interfaces()
 }
 
-// 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值
-// 需要注意的是，如果其中一个字段为数组形式，那么只会返回第一个元素，如果需要获取全部的元素，请使用GetRequestArray获取特定字段内容
 func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.initRaw()
 	m := r.rawVarMap
@@ -150,7 +148,6 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 	return nil
 }
 
-// 将所有的request参数映射到struct属性上，参数object应当为一个struct对象的指针, mapping为非必需参数，自定义参数与属性的映射关系
 func (r *Request) GetRequestToStruct(pointer interface{}, mapping ...map[string]string) error {
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
 	if len(mapping) > 0 {
