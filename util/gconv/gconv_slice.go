@@ -19,6 +19,11 @@ func SliceInt(i interface{}) []int {
 	return Ints(i)
 }
 
+// SliceUint is alias of Uints.
+func SliceUint(i interface{}) []uint {
+	return Uints(i)
+}
+
 // SliceStr is alias of Strings.
 func SliceStr(i interface{}) []string {
 	return Strings(i)
@@ -70,43 +75,47 @@ func Ints(i interface{}) []int {
 			}
 		case []int8:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []int16:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []int32:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []int64:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []uint:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []uint8:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []uint16:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []uint32:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []uint64:
 			for _, v := range value {
-				array = append(array, Int(v))
+				array = append(array, int(v))
 			}
 		case []bool:
 			for _, v := range value {
-				array = append(array, Int(v))
+				if v {
+					array = append(array, 1)
+				} else {
+					array = append(array, 0)
+				}
 			}
 		case []float32:
 			for _, v := range value {
@@ -126,6 +135,83 @@ func Ints(i interface{}) []int {
 			}
 		default:
 			return []int{Int(i)}
+		}
+		return array
+	}
+}
+
+// Uints converts <i> to []uint.
+func Uints(i interface{}) []uint {
+	if i == nil {
+		return nil
+	}
+	if r, ok := i.([]uint); ok {
+		return r
+	} else {
+		array := make([]uint, 0)
+		switch value := i.(type) {
+		case []string:
+			for _, v := range value {
+				array = append(array, Uint(v))
+			}
+		case []int8:
+			for _, v := range value {
+				array = append(array, uint(v))
+			}
+		case []int16:
+			for _, v := range value {
+				array = append(array, uint(v))
+			}
+		case []int32:
+			for _, v := range value {
+				array = append(array, uint(v))
+			}
+		case []int64:
+			for _, v := range value {
+				array = append(array, uint(v))
+			}
+		case []uint8:
+			for _, v := range value {
+				array = append(array, uint(v))
+			}
+		case []uint16:
+			for _, v := range value {
+				array = append(array, uint(v))
+			}
+		case []uint32:
+			for _, v := range value {
+				array = append(array, uint(v))
+			}
+		case []uint64:
+			for _, v := range value {
+				array = append(array, uint(v))
+			}
+		case []bool:
+			for _, v := range value {
+				if v {
+					array = append(array, 1)
+				} else {
+					array = append(array, 0)
+				}
+			}
+		case []float32:
+			for _, v := range value {
+				array = append(array, Uint(v))
+			}
+		case []float64:
+			for _, v := range value {
+				array = append(array, Uint(v))
+			}
+		case []interface{}:
+			for _, v := range value {
+				array = append(array, Uint(v))
+			}
+		case [][]byte:
+			for _, v := range value {
+				array = append(array, Uint(v))
+			}
+		default:
+			return []uint{Uint(i)}
 		}
 		return array
 	}
