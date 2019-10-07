@@ -201,6 +201,7 @@ func Test_Clustersg(t *testing.T) {
 		defer rdb.Del("jjname1_11")
 		defer rdb.Del("list1")
 		defer rdb.Del("set1")
+		defer rdb.Del("zset1")
 
 		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
@@ -571,10 +572,14 @@ func Test_Clustersg(t *testing.T) {
 		gtest.Assert(err,nil)
 		gtest.AssertGE(len(ss),0)
 
+		//======================zset
+		n,err=rdb.Zadd("zset1",1,"m1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+		n,err=rdb.Zadd("zset1",1.1,"m2")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
 
-
-
-		//Smembers
 
 	})
 }

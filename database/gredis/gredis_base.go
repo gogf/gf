@@ -423,8 +423,8 @@ func (c *Redis) SdiffStore(destination string, key string, keys ...string) (int6
 
 //======================================================================================zset
 
-func (c *Redis) Zadd(params ...interface{}) (int64, error) {
-	return typeInt64(c.commnddo("ZADD", params...))
+func (c *Redis) Zadd(params ...interface{}) (int, error) {
+	return typeInt(c.commnddo("ZADD", params...))
 }
 
 func (c *Redis) Zscore(key string, member interface{}) (string, error) {
