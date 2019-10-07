@@ -362,200 +362,197 @@ func (c *Redis) Sadd(key string, members ...interface{}) (int64, error) {
 	return typeInt64(c.commnddo("SADD", append([]interface{}{key},members...)...))
 }
 
-func (c *Redis) SisMember(key, member string) (bool, error) {
-	return typeBool(c.commnddo("SISMEMBER", key, member))
+func (c *Redis) SisMember(key, member string) (int, error) {
+	return typeInt(c.commnddo("SISMEMBER", key, member))
 }
 
-func (c *Redis) Spop(key string) (interface{}, error) {
-	return c.commnddo("SPOP", key)
+func (c *Redis) Spop(key string) (string, error) {
+	return typeString(c.commnddo("SPOP", key))
 }
 
-func (c *Redis) SrandMember(key string, count ...int) (interface{}, error) {
-	return c.commnddo("SRANDMEMBER", key, count[0])
+func (c *Redis) SrandMember(key string, count ...int) ([]string, error) {
+	if len(count)==0{
+		return  typeStrings(c.commnddo("SRANDMEMBER",key,1))
+	}
+	return  typeStrings(c.commnddo("SRANDMEMBER", key,count[0]))
 }
 
-func (c *Redis) Srem(keys ...string) (int64, error) {
-	return typeInt64(c.commnddo("SREM", gconv.Interfaces(keys)...))
+func (c *Redis) Srem(key string,members ...string) (int, error) {
+	return typeInt(c.commnddo("SREM", append([]interface{}{key},gconv.Interfaces(members)...)...))
 }
 
-func (c *Redis) Smove(source, destination, member string) (bool, error) {
-	return typeBool(c.commnddo("SMOVE", source, destination, member))
+func (c *Redis) Smove(source, destination, member string) (int, error) {
+	return typeInt(c.commnddo("SMOVE", source, destination, member))
 }
 
 func (c *Redis) Scard(key string) (int64, error) {
-	return typeInt64(c.commnddo("SCARD ", key))
+	return typeInt64(c.commnddo("SCARD", key))
 }
 
-func (c *Redis) Smembers(key string) (interface{}, error) {
-	return c.commnddo("SMEMBERS ", key)
+func (c *Redis) Smembers(key string) ([]string, error) {
+	return typeStrings(c.commnddo("SMEMBERS", key))
 }
 
-func (c *Redis) Sinter(keys ...string) (interface{}, error) {
-	return c.commnddo("SINTER ", gconv.Interfaces(keys)...)
+func (c *Redis) Sinter(keys ...string) ([]string, error) {
+	if len(keys)==0{
+		return nil,errors.New("must have a key")
+	}
+	return typeStrings(c.commnddo("SINTER", gconv.Interfaces(keys)...))
 }
 
-func (c *Redis) SinterStore(destination string, key string, keys ...string) (int64, error) {
-	param := garray.NewStrArrayFrom(keys)
-	param = param.InsertBefore(0, key).InsertBefore(0, destination)
-	return typeInt64(c.commnddo("SINTERSTORE ", gconv.Interfaces(param)...))
+func (c *Redis)  SinterStore(destination string, key string, keys ...string) (int64, error) {
+	return typeInt64(c.commnddo("SINTERSTORE",append([]interface{}{destination,key},gconv.Interfaces(keys)...)...))
 }
 
-func (c *Redis) Sunion(key string, keys ...string) (interface{}, error) {
-	param := garray.NewStrArrayFrom(keys)
-	param = param.InsertBefore(0, key)
-	return c.commnddo("SUNION ", gconv.Interfaces(param)...)
+func (c *Redis) Sunion(key string, keys ...string) ([]string, error) {
+	return typeStrings(c.commnddo("SUNION", append([]interface{}{key},gconv.Interfaces(keys)...)...))
 }
 
 func (c *Redis) SunionStore(destination string, key string, keys ...string) (int64, error) {
-	param := garray.NewStrArrayFrom(keys)
-	param = param.InsertBefore(0, key).InsertBefore(0, destination)
-	return typeInt64(c.commnddo("SUNIONSTORE ", gconv.Interfaces(param)...))
+	return typeInt64(c.commnddo("SUNIONSTORE", append([]interface{}{destination,key},gconv.Interfaces(keys)...)...))
 }
 
-func (c *Redis) Sdiff(key string, keys ...string) (interface{}, error) {
-	param := garray.NewStrArrayFrom(keys)
-	param = param.InsertBefore(0, key)
-	return c.commnddo("SDIFF ", gconv.Interfaces(param)...)
+func (c *Redis) Sdiff(key string, keys ...string) ([]string, error) {
+	return typeStrings(c.commnddo("SDIFF", append([]interface{}{key},gconv.Interfaces(keys)...)...))
 }
 
 func (c *Redis) SdiffStore(destination string, key string, keys ...string) (int64, error) {
-	param := garray.NewStrArrayFrom(keys)
-	param = param.InsertBefore(0, key).InsertBefore(0, destination)
-	return typeInt64(c.commnddo("SDIFFSTORE ", gconv.Interfaces(param)...))
+
+	return typeInt64(c.commnddo("SDIFFSTORE", append([]interface{}{destination,key},gconv.Interfaces(keys)...)...))
 }
 
 //======================================================================================zset
 
 func (c *Redis) Zadd(params ...interface{}) (int64, error) {
-	return typeInt64(c.commnddo("ZADD ", params...))
+	return typeInt64(c.commnddo("ZADD", params...))
 }
 
 func (c *Redis) Zscore(key string, member interface{}) (string, error) {
-	return typeString(c.commnddo("ZSCORE ", key, member))
+	return typeString(c.commnddo("ZSCORE", key, member))
 }
 
 func (c *Redis) ZinCrby(key string, increment int, member interface{}) (string, error) {
-	return typeString(c.commnddo("ZINCRBY ", key, increment, member))
+	return typeString(c.commnddo("ZINCRBY", key, increment, member))
 }
 
 func (c *Redis) Zcard(key string) (int64, error) {
-	return typeInt64(c.commnddo("ZCARD ", key))
+	return typeInt64(c.commnddo("ZCARD", key))
 }
 
 func (c *Redis) Zcount(key string, min, max int64) (int64, error) {
-	return typeInt64(c.commnddo("ZCOUNT ", min, max))
+	return typeInt64(c.commnddo("ZCOUNT", min, max))
 }
 
 func (c *Redis) Zrange(key string, start, stop int64, param ...string) (interface{}, error) {
-	return c.commnddo("ZRANGE ", start, stop, param[0])
+	return c.commnddo("ZRANGE", start, stop, param[0])
 }
 
 func (c *Redis) ZrevRange(key string, start, stop int64, options ...string) (interface{}, error) {
-	return c.commnddo("ZREVRANGE ", start, stop, options[0])
+	return c.commnddo("ZREVRANGE", start, stop, options[0])
 }
 
 func (c *Redis) ZrangByScore(key string, start, stop int64, options ...string) (interface{}, error) {
-	return c.commnddo("ZRANGEBYSCORE ", start, stop, options[0])
+	return c.commnddo("ZRANGEBYSCORE", start, stop, options[0])
 }
 
 func (c *Redis) ZrevRangeByScore(key string, start, stop int64, options ...string) (interface{}, error) {
-	return c.commnddo("ZREVRANGEBYSCORE ", start, stop, options[0])
+	return c.commnddo("ZREVRANGEBYSCORE", start, stop, options[0])
 }
 
 func (c *Redis) Zrank(key, member string) (int64, error) {
-	return typeInt64(c.commnddo("ZRANK ", member))
+	return typeInt64(c.commnddo("ZRANK", member))
 }
 
 func (c *Redis) ZrevRank(key, member string) (int64, error) {
-	return typeInt64(c.commnddo("ZREVRANK ", member))
+	return typeInt64(c.commnddo("ZREVRANK", member))
 }
 
 func (c *Redis) Zrem(key string, member ...string) (int64, error) {
 	param := garray.NewStrArrayFrom(member)
 	param = param.InsertBefore(0, key)
-	return typeInt64(c.commnddo("ZREM ", param))
+	return typeInt64(c.commnddo("ZREM", param))
 }
 
 func (c *Redis) ZreMrangeByRank(key string, start, stop int64) (int64, error) {
-	return typeInt64(c.commnddo("ZREMRANGEBYRANK ", key, start, stop))
+	return typeInt64(c.commnddo("ZREMRANGEBYRANK", key, start, stop))
 }
 
 func (c *Redis) ZremRangeByScore(key string, min, max int64) (int64, error) {
-	return typeInt64(c.commnddo("ZREMRANGEBYSCORE ", key, min, max))
+	return typeInt64(c.commnddo("ZREMRANGEBYSCORE", key, min, max))
 }
 
 func (c *Redis) ZrangeByLex(key, min, max string, options ...string) ([]interface{}, error) {
 	param := garray.NewStrArrayFrom(options)
 	param = param.InsertBefore(0, max).InsertBefore(0, min).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("ZRANGEBYLEX ", param))
+	return typeInterfacess(c.commnddo("ZRANGEBYLEX", param))
 }
 
 func (c *Redis) ZlexCount(key, min, max string) (int64, error) {
-	return typeInt64(c.commnddo("ZLEXCOUNT ", key, min, max))
+	return typeInt64(c.commnddo("ZLEXCOUNT", key, min, max))
 }
 
 func (c *Redis) ZreMrangeByLex(key, min, max string) (int64, error) {
-	return typeInt64(c.commnddo("ZREMRANGEBYLEX ", key, min, max))
+	return typeInt64(c.commnddo("ZREMRANGEBYLEX", key, min, max))
 }
 
 func (c *Redis) ZunionStore(options ...interface{}) (int64, error) {
-	return typeInt64(c.commnddo("ZUNIONSTORE ", options...))
+	return typeInt64(c.commnddo("ZUNIONSTORE", options...))
 }
 func (c *Redis) ZinterStore(options ...interface{}) (int64, error) {
-	return typeInt64(c.commnddo("ZINTERSTORE ", options...))
+	return typeInt64(c.commnddo("ZINTERSTORE", options...))
 }
 
 //================================================================HyperLogLog
 func (c *Redis) PfAdd(key string, options ...interface{}) (bool, error) {
 	param := garray.NewArrayFrom(options)
 	param = param.InsertBefore(0, key)
-	return typeBool(c.commnddo("PFADD ", gconv.Interfaces(param)...))
+	return typeBool(c.commnddo("PFADD", gconv.Interfaces(param)...))
 }
 
 func (c *Redis) PfCount(keys ...string) (int64, error) {
-	return typeInt64(c.commnddo("PFCOUNT ", gconv.Interfaces(keys)...))
+	return typeInt64(c.commnddo("PFCOUNT", gconv.Interfaces(keys)...))
 }
 
 func (c *Redis) PfMerge(keys ...string) (string, error) {
-	return typeString(c.commnddo("PFMERGE ", gconv.Interfaces(keys)...))
+	return typeString(c.commnddo("PFMERGE", gconv.Interfaces(keys)...))
 }
 
 //================================================================================GEO
 func (c *Redis) GeoAdd(key string, params ...interface{}) (int64, error) {
 	param := garray.NewArrayFrom(params)
 	param = param.InsertBefore(0, key)
-	return typeInt64(c.commnddo("GEOADD ", gconv.Interfaces(param)...))
+	return typeInt64(c.commnddo("GEOADD", gconv.Interfaces(param)...))
 }
 
 func (c *Redis) GeoPos(key string, member ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(member)
 	param = param.InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("GEOPOS ", gconv.Interfaces(param)...))
+	return typeInterfacess(c.commnddo("GEOPOS", gconv.Interfaces(param)...))
 }
 
 func (c *Redis) GeoDist(key string, params ...string) (interface{}, error) {
 	param := garray.NewStrArrayFrom(params).InsertBefore(0, key)
-	return c.commnddo("GEODIST ", gconv.Interfaces(param)...)
+	return c.commnddo("GEODIST", gconv.Interfaces(param)...)
 }
 
 func (c *Redis) GeoRadius(key string, member ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(member).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("GEORADIUS ", gconv.Interfaces(param)...))
+	return typeInterfacess(c.commnddo("GEORADIUS", gconv.Interfaces(param)...))
 }
 
 func (c *Redis) GeoRadiusByMember(key string, member ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(member).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("GEORADIUSBYMEMBER ", gconv.Interfaces(param)...))
+	return typeInterfacess(c.commnddo("GEORADIUSBYMEMBER", gconv.Interfaces(param)...))
 }
 
 func (c *Redis) GeoHash(key string, member ...interface{}) ([]interface{}, error) {
 	param := garray.NewArrayFrom(member).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("GEOHASH ", gconv.Interfaces(param)...))
+	return typeInterfacess(c.commnddo("GEOHASH", gconv.Interfaces(param)...))
 }
 
 //============================================================================channel
 func (c *Redis) PubList(channel, message string) (int, error) {
-	return typeInt(c.commnddo("PUBLISH ", channel, message))
+	return typeInt(c.commnddo("PUBLISH", channel, message))
 }
 
 func (c *Redis) SubScribe(channel ...string) (interface{}, error) {

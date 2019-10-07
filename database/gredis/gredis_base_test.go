@@ -15,15 +15,15 @@ import (
 )
 
 var (
-	Clusterip     = "192.168.0.55" //
-	Pass1         = "123456"       //123456
-	port          = 8579           //8579 6379
+	Clusterip     = "192.168.0.104" //
+	Pass1         = ""       //123456
+	port          = 6379           //8579 6379
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "yyb513941", // when is ci,no pass
+		Pass: "", // when is ci,no pass
 	}
 )
 
@@ -66,6 +66,7 @@ func Test_RedisDo(t *testing.T) {
 			ss []string
 			n int
 			n64 int64
+
 		)
 
 		redis := gredis.New(config)
@@ -76,6 +77,9 @@ func Test_RedisDo(t *testing.T) {
 		defer redis.Del("dlist2")
 		defer redis.Del("k11")
 		defer redis.Del("k113")
+		defer redis.Del("set1")
+		defer redis.Del("set2")
+		defer redis.Del("set11")
 
 
 
@@ -133,8 +137,41 @@ func Test_RedisDo(t *testing.T) {
 		gtest.Assert(err,nil)
 		gtest.AssertGT(gconv.Float32(ss[0]),0)
 
-		// Psetex
 
+		//=============set
+		redis.Sadd("set1","m1","m2")
+		redis.Sadd("set11","m11","m21","m1")
+		n,err=redis.Smove("set1","set2","m2")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+
+
+		ss,err=redis.Sinter("set1","set11")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss[0],"m1")
+		ss,err=redis.Sinter()
+		gtest.AssertNE(err,nil)
+
+
+		n64,err=redis.SinterStore("set11","set1")
+		gtest.Assert(err,nil)
+		gtest.AssertGT(n64,0)
+
+		ss,err=redis.Sunion("set1","set11")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss[0],"m1")
+
+		n64,err=redis.SunionStore("set11","set1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,1)
+		//SunionStore
+		redis.Sadd("set1","m1","m2")
+		ss,err=redis.Sdiff("set1","set11")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss[0],"m2")
+		n64,err=redis.SdiffStore("set11","set1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
 
 	})
 }
@@ -145,6 +182,7 @@ func Test_Clustersg(t *testing.T) {
 		var(
 			n int
 			n64 int64
+			n64_2 int64
 			rr interface{}
 			rrs []interface{}
 			err = errors.New("")
@@ -162,6 +200,7 @@ func Test_Clustersg(t *testing.T) {
 		defer rdb.Del("tn2")
 		defer rdb.Del("jjname1_11")
 		defer rdb.Del("list1")
+		defer rdb.Del("set1")
 
 		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
@@ -493,7 +532,49 @@ func Test_Clustersg(t *testing.T) {
 		gtest.Assert(ss[0],"list1")
 		gtest.Assert(ss[1],"1")
 
+		//=============================set
+		n64,err=rdb.Sadd("set1","m1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,1)
 
+
+		n,err=rdb.SisMember("set1","m1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+
+		n,err=rdb.SisMember("set1","m2")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
+
+		rdb.Sadd("set1","m2")
+		rdb.Sadd("set1","m3")
+		rdb.Sadd("set1","m4")
+		s,err=rdb.Spop("set1")
+		gtest.Assert(err,nil)
+		gtest.AssertNE(s,"")
+
+		ss,err=rdb.SrandMember("set1",2)
+		gtest.Assert(err,nil)
+		gtest.Assert(len(ss),2)
+		ss,err=rdb.SrandMember("set1")
+		gtest.Assert(err,nil)
+		gtest.Assert(len(ss),1)
+
+		n64,err=rdb.Scard("set1")
+		n,err=rdb.Srem("set1","m2")
+		n64_2,_=rdb.Scard("set1")
+		gtest.Assert(err,nil)
+		gtest.AssertGE(n64,n64_2)
+
+
+		ss,err=rdb.Smembers("set1")
+		gtest.Assert(err,nil)
+		gtest.AssertGE(len(ss),0)
+
+
+
+
+		//Smembers
 
 	})
 }
