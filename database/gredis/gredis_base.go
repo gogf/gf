@@ -431,7 +431,7 @@ func (c *Redis) Zscore(key string, member interface{}) (string, error) {
 	return typeString(c.commnddo("ZSCORE", key, member))
 }
 
-func (c *Redis) ZinCrby(key string, increment int, member interface{}) (string, error) {
+func (c *Redis) ZinCrby(key string, increment float64, member interface{}) (string, error) {
 	return typeString(c.commnddo("ZINCRBY", key, increment, member))
 }
 
@@ -440,15 +440,21 @@ func (c *Redis) Zcard(key string) (int64, error) {
 }
 
 func (c *Redis) Zcount(key string, min, max int64) (int64, error) {
-	return typeInt64(c.commnddo("ZCOUNT", min, max))
+	return typeInt64(c.commnddo("ZCOUNT",key, min, max))
 }
 
-func (c *Redis) Zrange(key string, start, stop int64, param ...string) (interface{}, error) {
-	return c.commnddo("ZRANGE", start, stop, param[0])
+func (c *Redis) Zrange(key string, start, stop int64, param ...string) ([]string, error) {
+	if len(param)==0{
+		return typeStrings( c.commnddo("ZRANGE", key,start, stop))
+	}
+	return typeStrings( c.commnddo("ZRANGE",key, start, stop, param[0]))
 }
 
-func (c *Redis) ZrevRange(key string, start, stop int64, options ...string) (interface{}, error) {
-	return c.commnddo("ZREVRANGE", start, stop, options[0])
+func (c *Redis) ZrevRange(key string, start, stop int64, param ...string) ([]string, error) {
+	if len(param)==0{
+		return typeStrings( c.commnddo("ZRANGE", key,start, stop))
+	}
+	return typeStrings(c.commnddo("ZREVRANGE",key, start, stop, param[0]))
 }
 
 func (c *Redis) ZrangByScore(key string, start, stop int64, options ...string) (interface{}, error) {

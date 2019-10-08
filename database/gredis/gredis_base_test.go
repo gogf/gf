@@ -15,15 +15,15 @@ import (
 )
 
 var (
-	Clusterip     = "192.168.0.104" //
-	Pass1         = ""       //123456
-	port          = 6379           //8579 6379
+	Clusterip     = "192.168.0.55" //
+	Pass1         = "123456"       //123456 com:123456 home:"" ci:""
+	port          = 8579           //8579 6379
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "", // when is ci,no pass
+		Pass: "yyb513941", // when is ci,no pass   com yyb513941 home:""
 	}
 )
 
@@ -580,7 +580,39 @@ func Test_Clustersg(t *testing.T) {
 		gtest.Assert(err,nil)
 		gtest.Assert(n,1)
 
+		s,err=rdb.Zscore("zset1","m1")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"1")
 
+
+		s,err=rdb.ZinCrby("zset1",1.1,"m1")
+		gtest.Assert(err,nil)
+		gtest.AssertGT(gconv.Float64(s),2.0)
+
+
+		n64,err=rdb.Zcard("zset1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+		n64,err=rdb.Zcount("zset1",1,3)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+		// Zrange
+		ss,err=rdb.Zrange("zset1",0,3)
+		gtest.Assert(err,nil)
+		gtest.Assert(len(ss),2)
+		ss,err=rdb.Zrange("zset1",0,3,"WITHSCORES")
+		gtest.Assert(err,nil)
+			gtest.Assert(len(ss),4)
+
+		//ZrevRange
+		ss,err=rdb.ZrevRange("zset1",0,3)
+		gtest.Assert(err,nil)
+		gtest.Assert(len(ss),2)
+		ss,err=rdb.ZrevRange("zset1",0,3,"WITHSCORES")
+		gtest.Assert(err,nil)
+		gtest.Assert(len(ss),4)
 	})
 }
 
