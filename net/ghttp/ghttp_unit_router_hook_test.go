@@ -33,14 +33,57 @@ func Test_Router_Hook_Basic(t *testing.T) {
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		gtest.Assert(client.GetContent("/"), "123")
 		gtest.Assert(client.GetContent("/test/test"), "1test23")
+	})
+}
+
+func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	i := 1000
+	pattern1 := "/:name/info"
+	s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc{
+		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+			r.SetParam("uid", i)
+			i++
+		},
+	})
+	s.BindHandler(pattern1, func(r *ghttp.Request) {
+		r.Response.Write(r.Get("uid"))
+	})
+
+	pattern2 := "/{object}/list/{page}.java"
+	s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc{
+		ghttp.HOOK_BEFORE_OUTPUT: func(r *ghttp.Request) {
+			r.Response.SetBuffer([]byte(
+				fmt.Sprint(r.Get("object"), "&", r.Get("page"), "&", i),
+			))
+		},
+	})
+	s.BindHandler(pattern2, func(r *ghttp.Request) {
+		r.Response.Write(r.Router.Uri)
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/john"), "Not Found")
+		gtest.Assert(client.GetContent("/john/info"), "1000")
+		gtest.Assert(client.GetContent("/john/info"), "1001")
+		gtest.Assert(client.GetContent("/john/list/1.java"), "john&1&1002")
+		gtest.Assert(client.GetContent("/john/list/2.java"), "john&2&1002")
 	})
 }
 
@@ -71,8 +114,7 @@ func Test_Router_Hook_Priority(t *testing.T) {
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -106,8 +148,7 @@ func Test_Router_Hook_Multi(t *testing.T) {
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))

@@ -21,6 +21,11 @@ type ResponseWriter struct {
 	buffer *bytes.Buffer       // The output buffer.
 }
 
+// RawWriter returns the underlying ResponseWriter.
+func (w *ResponseWriter) RawWriter() http.ResponseWriter {
+	return w.writer
+}
+
 // Header implements the interface function of http.ResponseWriter.Header.
 func (w *ResponseWriter) Header() http.Header {
 	return w.writer.Header()

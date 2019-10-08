@@ -47,7 +47,7 @@ func (r *Response) Write(content ...interface{}) {
 	if len(content) == 0 {
 		return
 	}
-	if r.Status == 0 && r.Request.hasServeHandler {
+	if r.Status == 0 {
 		r.Status = http.StatusOK
 	}
 	for _, v := range content {
@@ -125,17 +125,18 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 
 // 返回HTTP Code状态码
 func (r *Response) WriteStatus(status int, content ...interface{}) {
+	// Avoid error: http: multiple response.WriteHeader calls.
+	if r.Status == 0 {
+		r.WriteHeader(status)
+	}
 	if r.buffer.Len() == 0 {
 		// 状态码注册回调函数处理
 		if status != http.StatusOK {
 			if f := r.Request.Server.getStatusHandler(status, r.Request); f != nil {
+				// Call custom status code handler.
 				niceCallFunc(func() {
 					f(r.Request)
 				})
-				// 防止多次设置(http: multiple response.WriteHeader calls)
-				if r.Status == 0 {
-					r.WriteHeader(status)
-				}
 				return
 			}
 		}
@@ -149,7 +150,6 @@ func (r *Response) WriteStatus(status int, content ...interface{}) {
 			r.Write(http.StatusText(status))
 		}
 	}
-	r.WriteHeader(status)
 }
 
 // 静态文件处理
