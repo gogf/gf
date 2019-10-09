@@ -457,51 +457,54 @@ func (c *Redis) ZrevRange(key string, start, stop int64, param ...string) ([]str
 	return typeStrings(c.commnddo("ZREVRANGE",key, start, stop, param[0]))
 }
 
-func (c *Redis) ZrangeByScore(key string, min, max float64, options ...interface{}) ([]string, error) {
-	return typeStrings(c.commnddo("ZRANGEBYSCORE",append([]interface{}{min,max},options...)...))
+func (c *Redis) ZrangeByScore(key , min, max string, options ...interface{}) ([]string, error) {
+
+	return typeStrings(c.commnddo("ZRANGEBYSCORE",append([]interface{}{key,min,max},options...)...))
 }
 
-func (c *Redis) ZrevRangeByScore(key string, start, stop int64, options ...string) (interface{}, error) {
-	return c.commnddo("ZREVRANGEBYSCORE", start, stop, options[0])
+func (c *Redis) ZrevRangeByScore(key string, min, max string, options ...interface{}) ([]string, error) {
+	return typeStrings(c.commnddo("ZREVRANGEBYSCORE",append([]interface{}{key,min,max},options...)...))
 }
 
 func (c *Redis) Zrank(key, member string) (int64, error) {
-	return typeInt64(c.commnddo("ZRANK", member))
+	return typeInt64(c.commnddo("ZRANK",key, member))
 }
 
 func (c *Redis) ZrevRank(key, member string) (int64, error) {
-	return typeInt64(c.commnddo("ZREVRANK", member))
+	return typeInt64(c.commnddo("ZREVRANK",key, member))
 }
 
-func (c *Redis) Zrem(key string, member ...string) (int64, error) {
-	param := garray.NewStrArrayFrom(member)
-	param = param.InsertBefore(0, key)
-	return typeInt64(c.commnddo("ZREM", param))
+func (c *Redis) Zrem(key string, member ...interface{}) (int, error) {
+	 if len(member)==0{
+	 	return 0,errors.New("must have an one key")
+	 }
+	return typeInt(c.commnddo("ZREM",append([]interface{}{key},member...)...))
 }
 
-func (c *Redis) ZreMrangeByRank(key string, start, stop int64) (int64, error) {
+func (c *Redis) ZremRangeByRank(key string, start, stop int64) (int64, error) {
 	return typeInt64(c.commnddo("ZREMRANGEBYRANK", key, start, stop))
 }
 
-func (c *Redis) ZremRangeByScore(key string, min, max int64) (int64, error) {
+func (c *Redis) ZremRangeByScore(key string, min, max float64) (int64, error) {
 	return typeInt64(c.commnddo("ZREMRANGEBYSCORE", key, min, max))
 }
 
-func (c *Redis) ZrangeByLex(key, min, max string, options ...string) ([]interface{}, error) {
-	param := garray.NewStrArrayFrom(options)
-	param = param.InsertBefore(0, max).InsertBefore(0, min).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("ZRANGEBYLEX", param))
+func (c *Redis) ZrangeByLex(key, min, max string, options ...interface{}) ([]string, error) {
+	return typeStrings(c.commnddo("ZRANGEBYLEX", append([]interface{}{key,min,max},options...)...))
 }
 
 func (c *Redis) ZlexCount(key, min, max string) (int64, error) {
 	return typeInt64(c.commnddo("ZLEXCOUNT", key, min, max))
 }
 
-func (c *Redis) ZreMrangeByLex(key, min, max string) (int64, error) {
+func (c *Redis) ZremRangeByLex(key, min, max string) (int64, error) {
 	return typeInt64(c.commnddo("ZREMRANGEBYLEX", key, min, max))
 }
 
 func (c *Redis) ZunionStore(options ...interface{}) (int64, error) {
+	if len(options)<3{
+		return 0,errors.New("there must be three parameters")
+	}
 	return typeInt64(c.commnddo("ZUNIONSTORE", options...))
 }
 func (c *Redis) ZinterStore(options ...interface{}) (int64, error) {

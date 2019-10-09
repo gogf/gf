@@ -80,6 +80,8 @@ func Test_RedisDo(t *testing.T) {
 		defer redis.Del("set1")
 		defer redis.Del("set2")
 		defer redis.Del("set11")
+		defer redis.Del("zset1")
+		defer redis.Del("zset2")
 
 
 
@@ -170,6 +172,12 @@ func Test_RedisDo(t *testing.T) {
 		gtest.Assert(err,nil)
 		gtest.Assert(ss[0],"m2")
 		n64,err=redis.SdiffStore("set11","set1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+		redis.Zadd("zset1",1,"m1")
+		redis.Zadd("zset1",2,"m2")
+		n64,err=redis.ZunionStore("zset2",1,"zset1")
 		gtest.Assert(err,nil)
 		gtest.Assert(n64,2)
 
@@ -615,9 +623,59 @@ func Test_Clustersg(t *testing.T) {
 		gtest.Assert(len(ss),4)
 
 		// ZRANGEBYSCORE
-		ss,err=rdb.ZrangeByScore("zset1",1.0,3.0,"WITHSCORES")
+		ss,err=rdb.ZrangeByScore("zset1","1.1","3.1")
 		gtest.Assert(err,nil)
-		gtest.Assert(len(ss),2)
+		gtest.Assert(ss,[]string{"m2","m1"})
+
+		ss,err=rdb.ZrevRangeByScore("zset1","3.1","1.1")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss,[]string{"m1","m2"})
+
+		n64,err=rdb.Zrank("zset1","m1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,1)
+
+		n64,err=rdb.ZrevRank("zset1","m1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,0)
+
+		_,err=rdb.Zrem("zset1")
+		gtest.AssertNE(err,nil)
+
+		n,err=rdb.Zrem("zset1","m1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+
+		n64,err=rdb.ZremRangeByRank("zset1",0,5)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,1)
+
+		rdb.Zadd("zset1",1,"m1")
+		rdb.Zadd("zset1",2,"m2")
+
+		n64,err=rdb.ZremRangeByScore("zset1",0.1,3.1)
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+		rdb.Zadd("zset1",1,"a1")
+		rdb.Zadd("zset1",1,"b1")
+		rdb.Zadd("zset1",1,"c1")
+
+		ss,err=rdb.ZrangeByLex("zset1","-","[c")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss,[]string{"a1","b1"})
+
+		n64,err=rdb.ZlexCount("zset1","-","+")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,3)
+
+		n64,err=rdb.ZremRangeByLex("zset1","-","[c")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+
+
+
 
 	})
 }
