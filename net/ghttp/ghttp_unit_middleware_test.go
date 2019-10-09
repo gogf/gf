@@ -166,6 +166,37 @@ func Test_Middleware_With_Static(t *testing.T) {
 	})
 }
 
+func Test_Middleware_Status(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/", func(g *ghttp.RouterGroup) {
+		g.Middleware(func(r *ghttp.Request) {
+			r.Middleware.Next()
+			r.Response.WriteOver(r.Response.Status)
+		})
+		g.ALL("/user/list", func(r *ghttp.Request) {
+			r.Response.Write("list")
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "404")
+		gtest.Assert(client.GetContent("/user/list"), "200")
+
+		resp, err := client.Get("/")
+		defer resp.Close()
+		gtest.Assert(err, nil)
+		gtest.Assert(resp.StatusCode, 404)
+	})
+}
+
 func Test_Middleware_Hook_With_Static(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)

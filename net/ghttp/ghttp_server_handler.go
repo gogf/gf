@@ -138,7 +138,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
 	}
 
-	// 状态码处理：如果没有产生异常状态，那么设置返回状态为200
+	// 返回状态码处理
 	if request.Response.Status == 0 {
 		if request.Middleware.served || request.Response.buffer.Len() > 0 {
 			request.Response.Status = http.StatusOK
