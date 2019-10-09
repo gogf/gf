@@ -186,7 +186,7 @@ func SubStr(str string, start int, length ...int) (substr string) {
 // then the <suffix> will be appended to the result string.
 func StrLimit(str string, length int, suffix ...string) string {
 	rs := []rune(str)
-	if len(str) < length {
+	if len(rs) < length {
 		return str
 	}
 	addStr := "..."
