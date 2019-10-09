@@ -457,8 +457,8 @@ func (c *Redis) ZrevRange(key string, start, stop int64, param ...string) ([]str
 	return typeStrings(c.commnddo("ZREVRANGE",key, start, stop, param[0]))
 }
 
-func (c *Redis) ZrangByScore(key string, start, stop int64, options ...string) (interface{}, error) {
-	return c.commnddo("ZRANGEBYSCORE", start, stop, options[0])
+func (c *Redis) ZrangeByScore(key string, min, max float64, options ...interface{}) ([]string, error) {
+	return typeStrings(c.commnddo("ZRANGEBYSCORE",append([]interface{}{min,max},options...)...))
 }
 
 func (c *Redis) ZrevRangeByScore(key string, start, stop int64, options ...string) (interface{}, error) {
