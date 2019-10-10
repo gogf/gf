@@ -66,12 +66,28 @@ func (r *Request) GetQueryInt(key string, def ...interface{}) int {
 	return r.GetQueryVar(key, def...).Int()
 }
 
+func (r *Request) GetQueryInt32(key string, def ...interface{}) int32 {
+	return r.GetQueryVar(key, def...).Int32()
+}
+
+func (r *Request) GetQueryInt64(key string, def ...interface{}) uint64 {
+	return r.GetQueryVar(key, def...).Uint64()
+}
+
 func (r *Request) GetQueryInts(key string, def ...interface{}) []int {
 	return r.GetQueryVar(key, def...).Ints()
 }
 
 func (r *Request) GetQueryUint(key string, def ...interface{}) uint {
 	return r.GetQueryVar(key, def...).Uint()
+}
+
+func (r *Request) GetQueryUint32(key string, def ...interface{}) uint32 {
+	return r.GetQueryVar(key, def...).Uint32()
+}
+
+func (r *Request) GetQueryUint64(key string, def ...interface{}) uint64 {
+	return r.GetQueryVar(key, def...).Uint64()
 }
 
 func (r *Request) GetQueryFloat32(key string, def ...interface{}) float32 {
