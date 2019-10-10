@@ -62,12 +62,28 @@ func (r *Request) GetDeleteInt(key string, def ...interface{}) int {
 	return r.GetDeleteVar(key, def...).Int()
 }
 
+func (r *Request) GetDeleteInt32(key string, def ...interface{}) int32 {
+	return r.GetDeleteVar(key, def...).Int32()
+}
+
+func (r *Request) GetDeleteInt64(key string, def ...interface{}) int64 {
+	return r.GetDeleteVar(key, def...).Int64()
+}
+
 func (r *Request) GetDeleteInts(key string, def ...interface{}) []int {
 	return r.GetDeleteVar(key, def...).Ints()
 }
 
 func (r *Request) GetDeleteUint(key string, def ...interface{}) uint {
 	return r.GetDeleteVar(key, def...).Uint()
+}
+
+func (r *Request) GetDeleteUint32(key string, def ...interface{}) uint32 {
+	return r.GetDeleteVar(key, def...).Uint32()
+}
+
+func (r *Request) GetDeleteUint64(key string, def ...interface{}) uint64 {
+	return r.GetDeleteVar(key, def...).Uint64()
 }
 
 func (r *Request) GetDeleteFloat32(key string, def ...interface{}) float32 {

@@ -95,12 +95,28 @@ func (r *Request) GetPostInt(key string, def ...interface{}) int {
 	return r.GetPostVar(key, def...).Int()
 }
 
+func (r *Request) GetPostInt32(key string, def ...interface{}) int32 {
+	return r.GetPostVar(key, def...).Int32()
+}
+
+func (r *Request) GetPostInt64(key string, def ...interface{}) int64 {
+	return r.GetPostVar(key, def...).Int64()
+}
+
 func (r *Request) GetPostInts(key string, def ...interface{}) []int {
 	return r.GetPostVar(key, def...).Ints()
 }
 
 func (r *Request) GetPostUint(key string, def ...interface{}) uint {
 	return r.GetPostVar(key, def...).Uint()
+}
+
+func (r *Request) GetPostUint32(key string, def ...interface{}) uint32 {
+	return r.GetPostVar(key, def...).Uint32()
+}
+
+func (r *Request) GetPostUint64(key string, def ...interface{}) uint64 {
+	return r.GetPostVar(key, def...).Uint64()
 }
 
 func (r *Request) GetPostFloat32(key string, def ...interface{}) float32 {
