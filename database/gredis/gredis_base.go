@@ -512,10 +512,8 @@ func (c *Redis) ZinterStore(options ...interface{}) (int64, error) {
 }
 
 //================================================================HyperLogLog
-func (c *Redis) PfAdd(key string, options ...interface{}) (bool, error) {
-	param := garray.NewArrayFrom(options)
-	param = param.InsertBefore(0, key)
-	return typeBool(c.commnddo("PFADD", gconv.Interfaces(param)...))
+func (c *Redis) PfAdd(key string, options ...interface{}) (int, error) {
+	return typeInt(c.commnddo("PFADD", append([]interface{}{key},options...)...))
 }
 
 func (c *Redis) PfCount(keys ...string) (int64, error) {
@@ -523,6 +521,9 @@ func (c *Redis) PfCount(keys ...string) (int64, error) {
 }
 
 func (c *Redis) PfMerge(keys ...string) (string, error) {
+	if len(keys)<2{
+		return "",errors.New("need at least two keys")
+	}
 	return typeString(c.commnddo("PFMERGE", gconv.Interfaces(keys)...))
 }
 

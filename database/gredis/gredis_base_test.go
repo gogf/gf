@@ -82,6 +82,8 @@ func Test_RedisDo(t *testing.T) {
 		defer redis.Del("set11")
 		defer redis.Del("zset1")
 		defer redis.Del("zset2")
+		defer redis.Del("hlog1")
+		defer redis.Del("hlog2")
 
 
 
@@ -180,6 +182,31 @@ func Test_RedisDo(t *testing.T) {
 		n64,err=redis.ZunionStore("zset2",1,"zset1")
 		gtest.Assert(err,nil)
 		gtest.Assert(n64,2)
+		n64,err=redis.ZunionStore("zset2")
+		gtest.AssertNE(err,nil)
+
+
+		n64,err=redis.ZinterStore("zset2",1,"zset1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+		//=========================HyperLogLog
+		n,err=redis.PfAdd("hlog1","e1","e2")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,1)
+
+		n64,err=redis.PfCount("hlog1")
+		gtest.Assert(err,nil)
+		gtest.Assert(n64,2)
+
+		redis.PfAdd("hlog2","f1","f2")
+		s,err=redis.PfMerge("hlog3","hlog1","hlog2")
+		gtest.Assert(err,nil)
+		gtest.Assert(s,"OK")
+		s,err=redis.PfMerge("hlog3")
+		gtest.AssertNE(err,nil)
+
+
 
 	})
 }
@@ -210,6 +237,7 @@ func Test_Clustersg(t *testing.T) {
 		defer rdb.Del("list1")
 		defer rdb.Del("set1")
 		defer rdb.Del("zset1")
+		defer rdb.Del("hlog1")
 
 		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
@@ -672,8 +700,6 @@ func Test_Clustersg(t *testing.T) {
 		n64,err=rdb.ZremRangeByLex("zset1","-","[c")
 		gtest.Assert(err,nil)
 		gtest.Assert(n64,2)
-
-
 
 
 
