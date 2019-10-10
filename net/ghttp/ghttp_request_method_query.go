@@ -70,8 +70,8 @@ func (r *Request) GetQueryInt32(key string, def ...interface{}) int32 {
 	return r.GetQueryVar(key, def...).Int32()
 }
 
-func (r *Request) GetQueryInt64(key string, def ...interface{}) uint64 {
-	return r.GetQueryVar(key, def...).Uint64()
+func (r *Request) GetQueryInt64(key string, def ...interface{}) int64 {
+	return r.GetQueryVar(key, def...).Int64()
 }
 
 func (r *Request) GetQueryInts(key string, def ...interface{}) []int {
