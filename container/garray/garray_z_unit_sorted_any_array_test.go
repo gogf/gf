@@ -394,14 +394,14 @@ func TestSortedArray_Join(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
-		gtest.Assert(array1.Join(","), `"a","c","d"`)
-		gtest.Assert(array1.Join("."), `"a"."c"."d"`)
+		gtest.Assert(array1.Join(","), `a,c,d`)
+		gtest.Assert(array1.Join("."), `a.c.d`)
 	})
 
 	gtest.Case(t, func() {
 		a1 := []interface{}{0, 1, `"a"`, `\a`}
 		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorString)
-		gtest.Assert(array1.Join("."), `"\"a\"".0.1."\\a"`)
+		gtest.Assert(array1.Join("."), `"a".0.1.\a`)
 	})
 }
 

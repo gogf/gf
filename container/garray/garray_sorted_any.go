@@ -529,14 +529,8 @@ func (a *SortedArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
-	s := ""
 	for k, v := range a.array {
-		s = gconv.String(v)
-		if gstr.IsNumeric(s) {
-			buffer.WriteString(s)
-		} else {
-			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
-		}
+		buffer.WriteString(gconv.String(v))
 		if k != len(a.array)-1 {
 			buffer.WriteString(glue)
 		}
@@ -557,7 +551,24 @@ func (a *SortedArray) CountValues() map[interface{}]int {
 
 // String returns current array as a string.
 func (a *SortedArray) String() string {
-	return "[" + a.Join(",") + "]"
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('[')
+	s := ""
+	for k, v := range a.array {
+		s = gconv.String(v)
+		if gstr.IsNumeric(s) {
+			buffer.WriteString(s)
+		} else {
+			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
+		}
+		if k != len(a.array)-1 {
+			buffer.WriteString(",")
+		}
+	}
+	buffer.WriteByte(']')
+	return buffer.String()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

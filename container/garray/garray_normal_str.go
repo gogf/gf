@@ -592,7 +592,7 @@ func (a *StrArray) Join(glue string) string {
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
 	for k, v := range a.array {
-		buffer.WriteString(`"` + gstr.QuoteMeta(v, `"\`) + `"`)
+		buffer.WriteString(v)
 		if k != len(a.array)-1 {
 			buffer.WriteString(glue)
 		}
@@ -613,7 +613,18 @@ func (a *StrArray) CountValues() map[string]int {
 
 // String returns current array as a string.
 func (a *StrArray) String() string {
-	return "[" + a.Join(",") + "]"
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('[')
+	for k, v := range a.array {
+		buffer.WriteString(`"` + gstr.QuoteMeta(v, `"\`) + `"`)
+		if k != len(a.array)-1 {
+			buffer.WriteString(",")
+		}
+	}
+	buffer.WriteByte(']')
+	return buffer.String()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
