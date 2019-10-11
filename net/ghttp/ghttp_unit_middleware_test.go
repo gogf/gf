@@ -204,10 +204,12 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 	s.Group("/", func(g *ghttp.RouterGroup) {
 		g.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 			a.Append(1)
+			fmt.Println("HOOK_BEFORE_SERVE")
 			r.Response.Write("a")
 		})
 		g.Hook("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
 			a.Append(1)
+			fmt.Println("HOOK_AFTER_SERVE")
 			r.Response.Write("b")
 		})
 		g.Middleware(func(r *ghttp.Request) {
