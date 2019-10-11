@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/database/gredis"
+	"github.com/gogf/gf/encoding/gbase64"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
@@ -66,6 +67,7 @@ func Test_RedisDo(t *testing.T) {
 			ss []string
 			n int
 			n64 int64
+			//is []interface{}
 
 		)
 
@@ -84,6 +86,7 @@ func Test_RedisDo(t *testing.T) {
 		defer redis.Del("zset2")
 		defer redis.Del("hlog1")
 		defer redis.Del("hlog2")
+		defer redis.Del("geo1")
 
 
 
@@ -206,7 +209,17 @@ func Test_RedisDo(t *testing.T) {
 		s,err=redis.PfMerge("hlog3")
 		gtest.AssertNE(err,nil)
 
+		//=======================================geo
+		n,err=redis.GeoAdd("geo1",13.361389, 38.115556, "beijin", 15.087269 ,37.502669 ,"chengdu")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,2)
 
+		ii,err2:=redis.GeoPos("geo1","beijin")
+		gtest.Assert(err2,nil)
+		t.Error(gbase64.EncodeString([]byte("MTMuMzYxMzg5MzM4OTcwMTg0MzM=")))
+		t.Error(gconv.Strings(ii))
+
+		//gtest.Assert(len(ss),2)
 
 	})
 }
@@ -238,6 +251,7 @@ func Test_Clustersg(t *testing.T) {
 		defer rdb.Del("set1")
 		defer rdb.Del("zset1")
 		defer rdb.Del("hlog1")
+		defer rdb.Del("geo1")
 
 		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
@@ -700,6 +714,7 @@ func Test_Clustersg(t *testing.T) {
 		n64,err=rdb.ZremRangeByLex("zset1","-","[c")
 		gtest.Assert(err,nil)
 		gtest.Assert(n64,2)
+
 
 
 

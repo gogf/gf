@@ -528,16 +528,12 @@ func (c *Redis) PfMerge(keys ...string) (string, error) {
 }
 
 //================================================================================GEO
-func (c *Redis) GeoAdd(key string, params ...interface{}) (int64, error) {
-	param := garray.NewArrayFrom(params)
-	param = param.InsertBefore(0, key)
-	return typeInt64(c.commnddo("GEOADD", gconv.Interfaces(param)...))
+func (c *Redis) GeoAdd(key string, params ...interface{}) (int, error) {
+	return typeInt(c.commnddo("GEOADD",append([]interface{}{key},params...)...))
 }
 
-func (c *Redis) GeoPos(key string, member ...interface{}) ([]interface{}, error) {
-	param := garray.NewArrayFrom(member)
-	param = param.InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("GEOPOS", gconv.Interfaces(param)...))
+func (c *Redis) GeoPos(key string, member ...interface{}) ([]string, error) {
+	return typeStrings(c.commnddo("GEOPOS", append([]interface{}{key},member...)...))
 }
 
 func (c *Redis) GeoDist(key string, params ...string) (interface{}, error) {
