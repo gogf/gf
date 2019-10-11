@@ -261,7 +261,7 @@ func TestArray_Join(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []interface{}{0, 1, `"a"`, `\a`}
 		array1 := garray.NewArrayFrom(a1)
-		gtest.Assert(array1.Join("."), `0.1."\"a\""."\\a"`)
+		gtest.Assert(array1.Join("."), `0.1."a".\a`)
 	})
 }
 
