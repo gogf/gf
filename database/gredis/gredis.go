@@ -75,6 +75,8 @@ func New(config Config) *Redis {
 		pool: pools.GetOrSetFuncLock(fmt.Sprintf("%v", config), func() interface{} {
 			return &redis.Pool{
 				IdleTimeout:     config.IdleTimeout,
+				MaxActive:       config.MaxActive,
+				MaxIdle:         config.MaxIdle,
 				MaxConnLifetime: config.MaxConnLifetime,
 				Dial: func() (redis.Conn, error) {
 					c, err := redis.Dial("tcp", fmt.Sprintf("%s:%d", config.Host, config.Port))
