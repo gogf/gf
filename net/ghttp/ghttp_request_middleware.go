@@ -107,12 +107,12 @@ func (m *Middleware) Next() {
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
 		})
 	}
-	// Handle the http status code after all handler and middleware done.
+	// Check the http status code after all handler and middleware done.
 	if m.request.Response.Status == 0 {
 		if m.request.Middleware.served || m.request.Response.buffer.Len() > 0 {
-			m.request.Response.Status = http.StatusOK
+			m.request.Response.WriteHeader(http.StatusOK)
 		} else {
-			m.request.Response.WriteStatus(http.StatusNotFound)
+			m.request.Response.WriteHeader(http.StatusNotFound)
 		}
 	}
 }

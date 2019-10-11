@@ -13,7 +13,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -30,9 +29,7 @@ func EncryptFile(path string) (encrypt string, err error) {
 	if err != nil {
 		return "", err
 	}
-	defer func() {
-		err = gerror.Wrap(f.Close(), "file closing error")
-	}()
+	defer f.Close()
 	h := sha1.New()
 	_, err = io.Copy(h, f)
 	if err != nil {

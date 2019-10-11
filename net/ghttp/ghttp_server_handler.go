@@ -121,7 +121,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 					if len(request.Response.Header()) == 0 &&
 						request.Response.Status == 0 &&
 						request.Response.BufferLength() == 0 {
-						request.Response.WriteStatus(http.StatusNotFound)
+						request.Response.WriteHeader(http.StatusNotFound)
 					}
 				}
 			}
@@ -138,13 +138,26 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
 	}
 
-	// 返回状态码处理
+	// HTTP status checking.
 	if request.Response.Status == 0 {
 		if request.Middleware.served || request.Response.buffer.Len() > 0 {
-			request.Response.Status = http.StatusOK
+			request.Response.WriteHeader(http.StatusOK)
 		} else {
-			request.Response.WriteStatus(http.StatusNotFound)
+			request.Response.WriteHeader(http.StatusNotFound)
 		}
+	}
+	// HTTP status handler.
+	if request.Response.Status != http.StatusOK {
+		if f := s.getStatusHandler(request.Response.Status, request); f != nil {
+			// Call custom status handler.
+			niceCallFunc(func() {
+				f(request)
+			})
+		}
+	}
+	if request.Response.Header().Get("Content-Type") == "" {
+		request.Response.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		//r.Header().Set("X-Content-Type-Options", "nosniff")
 	}
 
 	// 设置Session Id到Cookie中

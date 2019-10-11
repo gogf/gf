@@ -11,6 +11,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -53,6 +54,7 @@ func (s *Server) newHttpServer(itemFunc string) *http.Server {
 		WriteTimeout:   s.config.WriteTimeout,
 		IdleTimeout:    s.config.IdleTimeout,
 		MaxHeaderBytes: s.config.MaxHeaderBytes,
+		ErrorLog:       log.New(&errorLogger{logger: s.logger}, "", 0),
 	}
 	server.SetKeepAlivesEnabled(s.config.KeepAlive)
 	return server
