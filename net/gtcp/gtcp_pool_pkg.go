@@ -8,8 +8,6 @@ package gtcp
 
 import (
 	"time"
-
-	"github.com/gogf/gf/errors/gerror"
 )
 
 // 简单协议: (方法覆盖)发送数据
@@ -46,9 +44,7 @@ func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
-	}()
+	defer c.SetRecvDeadline(time.Time{})
 	data, err = c.RecvPkg(option...)
 	return
 }
@@ -58,9 +54,7 @@ func (c *PoolConn) SendPkgWithTimeout(data []byte, timeout time.Duration, option
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
-	}()
+	defer c.SetSendDeadline(time.Time{})
 	err = c.SendPkg(data, option...)
 	return
 }

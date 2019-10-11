@@ -10,8 +10,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
-
-	"github.com/gogf/gf/errors/gerror"
 )
 
 const (
@@ -77,9 +75,7 @@ func (c *Conn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
-	}()
+	defer c.SetSendDeadline(time.Time{})
 	err = c.SendPkg(data, option...)
 	return
 }
@@ -161,9 +157,7 @@ func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (d
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
-	}()
+	defer c.SetRecvDeadline(time.Time{})
 	data, err = c.RecvPkg(option...)
 	return
 }

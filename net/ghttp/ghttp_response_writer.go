@@ -49,8 +49,13 @@ func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 
 // OutputBuffer outputs the buffer to client.
 func (w *ResponseWriter) OutputBuffer() {
-	if w.Status != 0 {
+	// Use "Content-Length" header check to avoid error: superfluous response.WriteHeader call
+	if w.Status != 0 && w.Header().Get("Content-Length") == "" {
 		w.writer.WriteHeader(w.Status)
+	}
+	// Default status text output.
+	if w.Status != http.StatusOK && w.buffer.Len() == 0 {
+		w.buffer.WriteString(http.StatusText(w.Status))
 	}
 	if w.buffer.Len() > 0 {
 		w.writer.Write(w.buffer.Bytes())

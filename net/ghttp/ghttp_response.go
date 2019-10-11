@@ -131,30 +131,11 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 
 // WriteStatus writes HTTP <status> and <content> to the response.
 func (r *Response) WriteStatus(status int, content ...interface{}) {
-	// Avoid error: http: multiple response.WriteHeader calls.
-	if r.Status == 0 {
-		r.WriteHeader(status)
-	}
-	if r.buffer.Len() == 0 {
-		// HTTP status handler.
-		if status != http.StatusOK {
-			if f := r.Request.Server.getStatusHandler(status, r.Request); f != nil {
-				// Call custom status code handler.
-				niceCallFunc(func() {
-					f(r.Request)
-				})
-				return
-			}
-		}
-		if r.Header().Get("Content-Type") == "" {
-			r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-			//r.Header().Set("X-Content-Type-Options", "nosniff")
-		}
-		if len(content) > 0 {
-			r.Write(content...)
-		} else {
-			r.Write(http.StatusText(status))
-		}
+	r.WriteHeader(status)
+	if len(content) > 0 {
+		r.Write(content...)
+	} else {
+		r.Write(http.StatusText(status))
 	}
 }
 

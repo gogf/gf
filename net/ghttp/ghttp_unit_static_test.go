@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 静态文件服务测试
+// static service testing.
+
 package ghttp_test
 
 import (

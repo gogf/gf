@@ -11,7 +11,6 @@ import (
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gpool"
-	"github.com/gogf/gf/errors/gerror"
 )
 
 // 链接池链接对象
@@ -120,9 +119,7 @@ func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...R
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
-	}()
+	defer c.SetRecvDeadline(time.Time{})
 	data, err = c.Recv(length, retry...)
 	return
 }
@@ -132,9 +129,7 @@ func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry ...
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
-	}()
+	defer c.SetSendDeadline(time.Time{})
 	err = c.Send(data, retry...)
 	return
 }
