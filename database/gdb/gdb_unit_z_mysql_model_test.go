@@ -656,6 +656,16 @@ func Test_Model_Where(t *testing.T) {
 		gtest.AssertGT(len(result), 0)
 		gtest.Assert(result["id"].Int(), 3)
 	})
+	// map like
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Where(g.Map{
+			"passport like": "user_1%",
+		}).OrderBy("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0].GMap().Get("id"), 1)
+		gtest.Assert(result[1].GMap().Get("id"), 10)
+	})
 	// map + slice parameter
 	gtest.Case(t, func() {
 		result, err := db.Table(table).Where(g.Map{

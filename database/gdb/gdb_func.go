@@ -146,12 +146,7 @@ func convertParam(value interface{}) interface{} {
 // 格式化错误信息
 func formatError(err error, query string, args ...interface{}) error {
 	if err != nil && err != sql.ErrNoRows {
-		errStr := fmt.Sprintf("DB ERROR: %s\n", err.Error())
-		errStr += fmt.Sprintf("DB QUERY: %s\n", query)
-		if len(args) > 0 {
-			errStr += fmt.Sprintf("DB PARAM: %v\n", args)
-		}
-		err = errors.New(errStr)
+		return errors.New(fmt.Sprintf("%s, %s\n", err.Error(), bindArgsToQuery(query, args)))
 	}
 	return err
 }
@@ -209,6 +204,9 @@ func bindArgsToQuery(query string, args []interface{}) string {
 	newQuery, _ := gregex.ReplaceStringFunc(`\?`, query, func(s string) string {
 		index++
 		if len(args) > index {
+			if args[index] == nil {
+				return "null"
+			}
 			rv := reflect.ValueOf(args[index])
 			kind := rv.Kind()
 			if kind == reflect.Ptr {
@@ -217,7 +215,7 @@ func bindArgsToQuery(query string, args []interface{}) string {
 			}
 			switch kind {
 			case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
-				return "'" + gstr.QuoteMeta(gconv.String(args[index]), "'") + "'"
+				return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
 			}
 			return gconv.String(args[index])
 		}
