@@ -687,12 +687,15 @@ func (bs *dbBase) formatWhere(where interface{}, args []interface{}) (newWhere s
 				if value == nil {
 					buffer.WriteString(key)
 				} else {
-					// 支持key带操作符号
+					// 支持key带操作符号，注意like也算是操作符号
 					if gstr.Pos(key, "?") == -1 {
-						if gstr.Pos(key, "<") == -1 && gstr.Pos(key, ">") == -1 && gstr.Pos(key, "=") == -1 {
+						if gstr.Pos(key, "<") == -1 &&
+							gstr.Pos(key, ">") == -1 &&
+							gstr.Pos(key, "=") == -1 &&
+							gstr.PosI(key, " like") == -1 {
 							buffer.WriteString(key + "=?")
 						} else {
-							buffer.WriteString(key + "?")
+							buffer.WriteString(key + " ?")
 						}
 					} else {
 						buffer.WriteString(key)

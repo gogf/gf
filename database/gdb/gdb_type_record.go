@@ -25,7 +25,7 @@ func (r Record) Xml(rootTag ...string) string {
 	return string(content)
 }
 
-// 将Record转换为Map，其中最主要的区别是里面的键值被强制转换为string类型，方便json处理
+// 将Record转换为Map类型
 func (r Record) Map() Map {
 	m := make(map[string]interface{})
 	for k, v := range r {
@@ -34,7 +34,7 @@ func (r Record) Map() Map {
 	return m
 }
 
-// 将Record转换为gmap.StrAnyMap类型
+// 将Record转换为常用的gmap.StrAnyMap类型
 func (r Record) GMap() *gmap.StrAnyMap {
 	return gmap.NewStrAnyMapFrom(r.Map())
 }
