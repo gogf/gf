@@ -10,6 +10,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/debug/gdebug"
 	"testing"
 	"time"
 
@@ -58,6 +59,27 @@ func Test_Static_ServerRoot(t *testing.T) {
 
 		gtest.Assert(client.GetContent("/"), "index")
 		gtest.Assert(client.GetContent("/index.htm"), "index")
+	})
+}
+
+func Test_Static_ServerRoot_Security(t *testing.T) {
+	gtest.Case(t, func() {
+		p := ports.PopRand()
+		s := g.Server(p)
+		s.SetServerRoot(gfile.Join(gdebug.CallerDirectory(), "testdata", "static1"))
+		s.SetPort(p)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "index")
+		gtest.Assert(client.GetContent("/index.htm"), "Not Found")
+		gtest.Assert(client.GetContent("/index.html"), "index")
+		gtest.Assert(client.GetContent("/test.html"), "test")
+		gtest.Assert(client.GetContent("/../main.html"), "Not Found")
+		gtest.Assert(client.GetContent("/..%2Fmain.html"), "Not Found")
 	})
 }
 
