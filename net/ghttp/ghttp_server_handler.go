@@ -178,18 +178,18 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 // 查找静态文件的绝对路径
 func (s *Server) searchStaticFile(uri string) *staticServeFile {
-	// 优先查找URI映射关系
 	var file *gres.File
 	var path string
 	var dir bool
+	// Firstly search the StaticPaths mapping.
 	if len(s.config.StaticPaths) > 0 {
 		for _, item := range s.config.StaticPaths {
 			if len(uri) >= len(item.prefix) && strings.EqualFold(item.prefix, uri[0:len(item.prefix)]) {
-				// 防止类似 /static/style 映射到 /static/style.css 的情况
+				// To avoid case like: /static/style -> /static/style.css
 				if len(uri) > len(item.prefix) && uri[len(item.prefix)] != '/' {
 					continue
 				}
-				// 优先检索资源管理器
+				// Firstly searching resource manager.
 				file = gres.GetWithIndex(item.path+uri[len(item.prefix):], s.config.IndexFiles)
 				if file != nil {
 					return &staticServeFile{
@@ -197,7 +197,7 @@ func (s *Server) searchStaticFile(uri string) *staticServeFile {
 						dir:  file.FileInfo().IsDir(),
 					}
 				}
-				// 其次检索文件系统
+				// Secondly searching the file system.
 				path, dir = gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
 				if path != "" {
 					return &staticServeFile{
@@ -253,6 +253,7 @@ func (s *Server) serveFile(r *Request, f *staticServeFile, allowIndex ...bool) {
 			}
 		} else {
 			info := f.file.FileInfo()
+			r.Response.wroteHeader = true
 			http.ServeContent(r.Response.Writer, r.Request, info.Name(), info.ModTime(), f.file)
 		}
 		return
@@ -277,6 +278,7 @@ func (s *Server) serveFile(r *Request, f *staticServeFile, allowIndex ...bool) {
 			r.Response.WriteStatus(http.StatusForbidden)
 		}
 	} else {
+		r.Response.wroteHeader = true
 		http.ServeContent(r.Response.Writer.RawWriter(), r.Request, info.Name(), info.ModTime(), file)
 	}
 }
