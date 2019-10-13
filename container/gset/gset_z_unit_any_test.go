@@ -220,8 +220,8 @@ func TestSet_Join(t *testing.T) {
 		s1 := gset.New(true)
 		s1.Add("a").Add(`"b"`).Add(`\c`)
 		str1 := s1.Join(",")
-		gtest.Assert(strings.Contains(str1, `\"b\"`), true)
-		gtest.Assert(strings.Contains(str1, `\\c`), true)
+		gtest.Assert(strings.Contains(str1, `"b"`), true)
+		gtest.Assert(strings.Contains(str1, `\c`), true)
 		gtest.Assert(strings.Contains(str1, `a`), true)
 	})
 }
@@ -303,5 +303,45 @@ func TestSet_Json(t *testing.T) {
 		gtest.Assert(a3.Contains("c"), true)
 		gtest.Assert(a3.Contains("d"), true)
 		gtest.Assert(a3.Contains("e"), false)
+	})
+}
+
+func TestSet_AddIfNotExistFunc(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.New(true)
+		s.Add(1)
+		gtest.Assert(s.Contains(1), true)
+		gtest.Assert(s.Contains(2), false)
+
+		s.AddIfNotExistFunc(2, func() interface{} {
+			return 3
+		})
+		gtest.Assert(s.Contains(2), false)
+		gtest.Assert(s.Contains(3), true)
+
+		s.AddIfNotExistFunc(3, func() interface{} {
+			return 4
+		})
+		gtest.Assert(s.Contains(3), true)
+		gtest.Assert(s.Contains(4), false)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.New(true)
+		s.Add(1)
+		gtest.Assert(s.Contains(1), true)
+		gtest.Assert(s.Contains(2), false)
+
+		s.AddIfNotExistFuncLock(2, func() interface{} {
+			return 3
+		})
+		gtest.Assert(s.Contains(2), false)
+		gtest.Assert(s.Contains(3), true)
+
+		s.AddIfNotExistFuncLock(3, func() interface{} {
+			return 4
+		})
+		gtest.Assert(s.Contains(3), true)
+		gtest.Assert(s.Contains(4), false)
 	})
 }

@@ -71,6 +71,48 @@ func (set *Set) Add(item ...interface{}) *Set {
 	return set
 }
 
+// AddIfNotExistFunc adds the returned value of callback function <f> to the set
+// if <item> does not exit in the set.
+func (set *Set) AddIfNotExistFunc(item interface{}, f func() interface{}) *Set {
+	if !set.Contains(item) {
+		set.doAddWithLockCheck(item, f())
+	}
+	return set
+}
+
+// AddIfNotExistFuncLock adds the returned value of callback function <f> to the set
+// if <item> does not exit in the set.
+//
+// Note that the callback function <f> is executed in the mutex.Lock of the set.
+func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() interface{}) *Set {
+	if !set.Contains(item) {
+		set.doAddWithLockCheck(item, f)
+	}
+	return set
+}
+
+// doAddWithLockCheck checks whether item exists with mutex.Lock,
+// if not exists, it adds item to the set or else just returns the existing value.
+//
+// If <value> is type of <func() interface {}>,
+// it will be executed with mutex.Lock of the set,
+// and its return value will be added to the set.
+//
+// It returns item successfully added..
+func (set *Set) doAddWithLockCheck(item interface{}, value interface{}) interface{} {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	if _, ok := set.data[item]; !ok && value != nil {
+		if f, ok := value.(func() interface{}); ok {
+			item = f()
+		} else {
+			item = value
+		}
+	}
+	set.data[item] = struct{}{}
+	return item
+}
+
 // Contains checks whether the set contains <item>.
 func (set *Set) Contains(item interface{}) bool {
 	set.mu.RLock()
@@ -121,6 +163,24 @@ func (set *Set) Join(glue string) string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
+	l := len(set.data)
+	i := 0
+	for k, _ := range set.data {
+		buffer.WriteString(gconv.String(k))
+		if i != l-1 {
+			buffer.WriteString(glue)
+		}
+		i++
+	}
+	return buffer.String()
+}
+
+// String returns items as a string, which implements like json.Marshal does.
+func (set *Set) String() string {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('[')
 	s := ""
 	l := len(set.data)
 	i := 0
@@ -132,16 +192,12 @@ func (set *Set) Join(glue string) string {
 			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
 		}
 		if i != l-1 {
-			buffer.WriteString(glue)
+			buffer.WriteByte(',')
 		}
 		i++
 	}
+	buffer.WriteByte(']')
 	return buffer.String()
-}
-
-// String returns items as a string, which are joined by char ','.
-func (set *Set) String() string {
-	return "[" + set.Join(",") + "]"
 }
 
 // LockFunc locks writing with callback function <f>.

@@ -536,7 +536,7 @@ func (a *SortedStrArray) CountValues() map[string]int {
 	return m
 }
 
-// String returns current array as a string.
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *SortedStrArray) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -545,7 +545,7 @@ func (a *SortedStrArray) String() string {
 	for k, v := range a.array {
 		buffer.WriteString(`"` + gstr.QuoteMeta(v, `"\`) + `"`)
 		if k != len(a.array)-1 {
-			buffer.WriteString(",")
+			buffer.WriteByte(',')
 		}
 	}
 	buffer.WriteByte(']')
