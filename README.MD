@@ -14,7 +14,7 @@ English | [简体中文](README_ZH.MD)
 
 # Installation
 ```
-go get -u github.com/gogf/gf
+go get -u -v github.com/gogf/gf
 ```
 suggested using `go.mod`:
 ```
