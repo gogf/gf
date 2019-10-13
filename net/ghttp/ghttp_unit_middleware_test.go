@@ -222,7 +222,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	//s.SetDumpRouteMap(false)
 	s.SetServerRoot(gfile.Join(gdebug.CallerDirectory(), "testdata", "static1"))
 	s.Start()
 	defer s.Shutdown()
@@ -231,13 +231,22 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
+		// The length assert sometimes fails, so I added time.Sleep here for debug purpose.
+
 		gtest.Assert(client.GetContent("/"), "index")
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(a.Len(), 2)
+
 		gtest.Assert(client.GetContent("/test.html"), "test")
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(a.Len(), 4)
+
 		gtest.Assert(client.GetContent("/none"), "a12b")
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(a.Len(), 6)
+
 		gtest.Assert(client.GetContent("/user/list"), "a1list2b")
+		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(a.Len(), 8)
 	})
 }
