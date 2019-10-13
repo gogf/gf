@@ -259,3 +259,43 @@ func TestIntSet_Json(t *testing.T) {
 		gtest.Assert(a2.Contains(5), false)
 	})
 }
+
+func TestIntSet_AddIfNotExistFunc(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		s.Add(1)
+		gtest.Assert(s.Contains(1), true)
+		gtest.Assert(s.Contains(2), false)
+
+		s.AddIfNotExistFunc(2, func() int {
+			return 3
+		})
+		gtest.Assert(s.Contains(2), false)
+		gtest.Assert(s.Contains(3), true)
+
+		s.AddIfNotExistFunc(3, func() int {
+			return 4
+		})
+		gtest.Assert(s.Contains(3), true)
+		gtest.Assert(s.Contains(4), false)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		s.Add(1)
+		gtest.Assert(s.Contains(1), true)
+		gtest.Assert(s.Contains(2), false)
+
+		s.AddIfNotExistFuncLock(2, func() int {
+			return 3
+		})
+		gtest.Assert(s.Contains(2), false)
+		gtest.Assert(s.Contains(3), true)
+
+		s.AddIfNotExistFuncLock(3, func() int {
+			return 4
+		})
+		gtest.Assert(s.Contains(3), true)
+		gtest.Assert(s.Contains(4), false)
+	})
+}

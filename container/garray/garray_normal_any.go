@@ -604,7 +604,7 @@ func (a *Array) CountValues() map[interface{}]int {
 	return m
 }
 
-// String returns current array as a string.
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *Array) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -619,7 +619,7 @@ func (a *Array) String() string {
 			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
 		}
 		if k != len(a.array)-1 {
-			buffer.WriteString(",")
+			buffer.WriteByte(',')
 		}
 	}
 	buffer.WriteByte(']')

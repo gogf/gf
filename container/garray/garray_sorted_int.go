@@ -535,7 +535,7 @@ func (a *SortedIntArray) CountValues() map[int]int {
 	return m
 }
 
-// String returns current array as a string.
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *SortedIntArray) String() string {
 	return "[" + a.Join(",") + "]"
 }

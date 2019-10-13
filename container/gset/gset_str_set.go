@@ -65,6 +65,48 @@ func (set *StrSet) Add(item ...string) *StrSet {
 	return set
 }
 
+// AddIfNotExistFunc adds the returned value of callback function <f> to the set
+// if <item> does not exit in the set.
+func (set *StrSet) AddIfNotExistFunc(item string, f func() string) *StrSet {
+	if !set.Contains(item) {
+		set.doAddWithLockCheck(item, f())
+	}
+	return set
+}
+
+// AddIfNotExistFuncLock adds the returned value of callback function <f> to the set
+// if <item> does not exit in the set.
+//
+// Note that the callback function <f> is executed in the mutex.Lock of the set.
+func (set *StrSet) AddIfNotExistFuncLock(item string, f func() string) *StrSet {
+	if !set.Contains(item) {
+		set.doAddWithLockCheck(item, f)
+	}
+	return set
+}
+
+// doAddWithLockCheck checks whether item exists with mutex.Lock,
+// if not exists, it adds item to the set or else just returns the existing value.
+//
+// If <value> is type of <func() interface {}>,
+// it will be executed with mutex.Lock of the set,
+// and its return value will be added to the set.
+//
+// It returns item successfully added..
+func (set *StrSet) doAddWithLockCheck(item string, value interface{}) string {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	if _, ok := set.data[item]; !ok && value != nil {
+		if f, ok := value.(func() string); ok {
+			item = f()
+		} else {
+			item = value.(string)
+		}
+	}
+	set.data[item] = struct{}{}
+	return item
+}
+
 // Contains checks whether the set contains <item>.
 func (set *StrSet) Contains(item string) bool {
 	set.mu.RLock()
@@ -119,11 +161,7 @@ func (set *StrSet) Join(glue string) string {
 	l := len(set.data)
 	i := 0
 	for k, _ := range set.data {
-		if gstr.IsNumeric(k) {
-			buffer.WriteString(k)
-		} else {
-			buffer.WriteString(`"` + gstr.QuoteMeta(k, `"\`) + `"`)
-		}
+		buffer.WriteString(k)
 		if i != l-1 {
 			buffer.WriteString(glue)
 		}
@@ -132,9 +170,21 @@ func (set *StrSet) Join(glue string) string {
 	return buffer.String()
 }
 
-// String returns items as a string, which are joined by char ','.
+// String returns items as a string, which implements like json.Marshal does.
 func (set *StrSet) String() string {
-	return "[" + set.Join(",") + "]"
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	l := len(set.data)
+	i := 0
+	for k, _ := range set.data {
+		buffer.WriteString(`"` + gstr.QuoteMeta(k, `"\`) + `"`)
+		if i != l-1 {
+			buffer.WriteByte(',')
+		}
+		i++
+	}
+	return buffer.String()
 }
 
 // LockFunc locks writing with callback function <f>.
