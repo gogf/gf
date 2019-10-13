@@ -13,6 +13,8 @@ func typeInt64(i interface{}, err error) (int64, error) {
 	return gconv.Int64(i), nil
 }
 
+
+
 func typeInt(i interface{}, err error) (int, error) {
 	if err != nil {
 		return 0, err
@@ -40,6 +42,20 @@ func typeStrings(i interface{}, err error) ([]string, error) {
 	}
 	return gconv.Strings(i), nil
 }
+func typeStringss(i interface{}, err error) ([][]string, error) {
+	if err != nil {
+		return nil, err
+	}
+	ss:=[][]string{}
+	is:=gconv.Interfaces(i)
+	for _,v:=range is{
+		//fmt.Println(gconv.Strings(v))
+		ss=append(ss,gconv.Strings(v))
+	}
+
+	return ss, nil
+}
+
 
 func typeBool(i interface{}, err error) (bool, error) {
 	if err != nil {
@@ -532,18 +548,16 @@ func (c *Redis) GeoAdd(key string, params ...interface{}) (int, error) {
 	return typeInt(c.commnddo("GEOADD",append([]interface{}{key},params...)...))
 }
 
-func (c *Redis) GeoPos(key string, member ...interface{}) ([]string, error) {
-	return typeStrings(c.commnddo("GEOPOS", append([]interface{}{key},member...)...))
+func (c *Redis) GeoPos(key string, member ...interface{}) ([][]string, error) {
+	return typeStringss(c.commnddo("GEOPOS", append([]interface{}{key},member...)...))
 }
 
-func (c *Redis) GeoDist(key string, params ...string) (interface{}, error) {
-	param := garray.NewStrArrayFrom(params).InsertBefore(0, key)
-	return c.commnddo("GEODIST", gconv.Interfaces(param)...)
+func (c *Redis) GeoDist(key string, params ...string) (string, error) {
+	return typeString(c.commnddo("GEODIST",  append([]interface{}{key},gconv.Interfaces(params)...)...) )
 }
 
-func (c *Redis) GeoRadius(key string, member ...interface{}) ([]interface{}, error) {
-	param := garray.NewArrayFrom(member).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("GEORADIUS", gconv.Interfaces(param)...))
+func (c *Redis) GeoRadius(key string, member ...interface{}) ([][]string, error) {
+	return typeStringss(c.commnddo("GEORADIUS", append([]interface{}{key},member...)...))
 }
 
 func (c *Redis) GeoRadiusByMember(key string, member ...interface{}) ([]interface{}, error) {

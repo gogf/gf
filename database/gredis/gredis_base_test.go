@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/encoding/gbase64"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
@@ -67,7 +66,9 @@ func Test_RedisDo(t *testing.T) {
 			ss []string
 			n int
 			n64 int64
-			//is []interface{}
+			//f64s[]float64
+			sss [][]string
+			//i interface{}
 
 		)
 
@@ -210,16 +211,22 @@ func Test_RedisDo(t *testing.T) {
 		gtest.AssertNE(err,nil)
 
 		//=======================================geo
-		n,err=redis.GeoAdd("geo1",13.361389, 38.115556, "beijin", 15.087269 ,37.502669 ,"chengdu")
+		n,err=redis.GeoAdd("geo1","13.361389", "38.115556", "beijin", "15.087269" ,"37.502669" ,"chengdu")
 		gtest.Assert(err,nil)
 		gtest.Assert(n,2)
 
-		ii,err2:=redis.GeoPos("geo1","beijin")
+		sss,err2:=redis.GeoPos("geo1","beijin","chengdu")
 		gtest.Assert(err2,nil)
-		t.Error(gbase64.EncodeString([]byte("MTMuMzYxMzg5MzM4OTcwMTg0MzM=")))
-		t.Error(gconv.Strings(ii))
+		gtest.Assert(len(sss),2)
+		gtest.Assert(len(sss[0]),2)
 
-		//gtest.Assert(len(ss),2)
+		s,err=redis.GeoDist("geo1","beijin","chengdu","km")
+		gtest.Assert(err,nil)
+		gtest.AssertGT(gconv.Float64(s),166.1)
+
+		sss,err=redis.GeoRadius("geo1","15","37","200","km","WITHDIST")
+		gtest.Assert(err2,nil)
+		t.Error(sss)
 
 	})
 }
