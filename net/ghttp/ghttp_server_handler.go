@@ -155,10 +155,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	}
-	if request.Response.Header().Get("Content-Type") == "" {
-		request.Response.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		//r.Header().Set("X-Content-Type-Options", "nosniff")
-	}
 
 	// 设置Session Id到Cookie中
 	if request.Session.IsDirty() && request.Session.Id() != request.GetSessionId() {
