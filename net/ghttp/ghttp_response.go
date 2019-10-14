@@ -137,6 +137,10 @@ func (r *Response) WriteStatus(status int, content ...interface{}) {
 	} else {
 		r.Write(http.StatusText(status))
 	}
+	if r.Header().Get("Content-Type") == "" {
+		r.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		//r.Header().Set("X-Content-Type-Options", "nosniff")
+	}
 }
 
 // ServeFile serves the file to the response.
