@@ -9,6 +9,8 @@ package gdb_test
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/util/gutil"
 	"testing"
 
 	"github.com/gogf/gf/database/gdb"
@@ -756,6 +758,46 @@ func Test_Model_Where(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(result["id"].Int(), 2)
 	})
+
+	// gmap.Map
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Where(gmap.NewFrom(g.MapAnyAny{"id": 3, "nickname": "name_3"})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// gmap.Map key operator
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Where(gmap.NewFrom(g.MapAnyAny{"id>": 1, "id<": 3})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 2)
+	})
+
+	// list map
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Where(gmap.NewListMapFrom(g.MapAnyAny{"id": 3, "nickname": "name_3"})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// list map key operator
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Where(gmap.NewListMapFrom(g.MapAnyAny{"id>": 1, "id<": 3})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 2)
+	})
+
+	// tree map
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Where(gmap.NewTreeMapFrom(gutil.ComparatorString, g.MapAnyAny{"id": 3, "nickname": "name_3"})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// tree map key operator
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Where(gmap.NewTreeMapFrom(gutil.ComparatorString, g.MapAnyAny{"id>": 1, "id<": 3})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 2)
+	})
+
 	// complicated where 1
 	gtest.Case(t, func() {
 		//db.SetDebug(true)
