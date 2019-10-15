@@ -344,9 +344,9 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 		}
 
 		if bs.maxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(time.Duration(bs.maxConnLifetime) * time.Second)
+			sqlDb.SetConnMaxLifetime(bs.maxConnLifetime * time.Second)
 		} else if node.MaxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(time.Duration(node.MaxConnLifetime) * time.Second)
+			sqlDb.SetConnMaxLifetime(node.MaxConnLifetime * time.Second)
 		}
 		return sqlDb
 	}, 0)

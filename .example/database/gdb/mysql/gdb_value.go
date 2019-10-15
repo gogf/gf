@@ -7,7 +7,7 @@ import (
 
 func main() {
 	db := g.DB()
-	db.SetDebug(true)
+	//db.SetDebug(true)
 
 	type User struct {
 		Id   int
