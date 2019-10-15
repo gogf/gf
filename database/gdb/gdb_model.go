@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
@@ -41,7 +42,7 @@ type Model struct {
 	batch        int           // 批量操作条数
 	filter       bool          // 是否按照表字段过滤data参数
 	cacheEnabled bool          // 当前SQL操作是否开启查询缓存功能
-	cacheTime    int           // 查询缓存时间
+	cacheExpire  time.Duration // 查询缓存时间
 	cacheName    string        // 查询缓存名称
 	safe         bool          // 当前模型是否安全模式（默认非安全表示链式操作直接修改当前模型属性；否则每一次链式操作都是返回新的模型对象）
 }
@@ -281,12 +282,17 @@ func (md *Model) Batch(batch int) *Model {
 }
 
 // 查询缓存/清除缓存操作，需要注意的是，事务查询不支持缓存。
-// 当time < 0时表示清除缓存， time=0时表示不过期, time > 0时表示过期时间，time过期时间单位：秒；
-// name表示自定义的缓存名称（注意不要出现重复），便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
-// 例如：查询缓存时设置名称，在特定的业务逻辑中清理缓存时可以给定缓存名称进行精准清理。
-func (md *Model) Cache(time int, name ...string) *Model {
+// 1. 当 expire < 0时表示清除缓存，expire=0 时表示不过期, expire > 0时表示过期时间。
+// 2. expire参数类型为interface{}，这是一个兼容旧版本的方式，该参数支持 int/time.Duration 类型，当传递类型为int时，表示缓存多少秒。
+// 3. name表示自定义的缓存名称（注意不要出现重复），便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
+//    例如：查询缓存时设置名称，在特定的业务逻辑中清理缓存时可以给定缓存名称进行精准清理。
+func (md *Model) Cache(expire interface{}, name ...string) *Model {
 	model := md.getModel()
-	model.cacheTime = time
+	if d, ok := expire.(time.Duration); ok {
+		model.cacheExpire = d
+	} else {
+		model.cacheExpire = gconv.Duration(expire) * time.Second
+	}
 	if len(name) > 0 {
 		model.cacheName = name[0]
 	}
@@ -352,7 +358,7 @@ func (md *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
 	} else if m, ok := md.data.(Map); ok {
 		return md.doFilterDataMapForInsertOrUpdate(m, true)
 	}
-	return nil
+	return data
 }
 
 // doFilterDataMapForInsertOrUpdate does the filter features for map.
@@ -647,10 +653,10 @@ func (md *Model) getAll(query string, args ...interface{}) (result Result, err e
 	result, err = md.db.doGetAll(md.getLink(), query, args...)
 	// 查询缓存保存处理
 	if len(cacheKey) > 0 && err == nil {
-		if md.cacheTime < 0 {
+		if md.cacheExpire < 0 {
 			md.db.getCache().Remove(cacheKey)
 		} else {
-			md.db.getCache().Set(cacheKey, result, md.cacheTime*1000)
+			md.db.getCache().Set(cacheKey, result, md.cacheExpire)
 		}
 	}
 	return result, err
@@ -658,7 +664,7 @@ func (md *Model) getAll(query string, args ...interface{}) (result Result, err e
 
 // 检查是否需要查询查询缓存
 func (md *Model) checkAndRemoveCache() {
-	if md.cacheEnabled && md.cacheTime < 0 && len(md.cacheName) > 0 {
+	if md.cacheEnabled && md.cacheExpire < 0 && len(md.cacheName) > 0 {
 		md.db.getCache().Remove(md.cacheName)
 	}
 }

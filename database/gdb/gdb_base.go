@@ -85,7 +85,7 @@ func (bs *dbBase) printSql(v *Sql) {
 		s += "\nError: " + v.Error.Error()
 		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
 	} else {
-		bs.logger.Debug(s)
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
 	}
 }
 
