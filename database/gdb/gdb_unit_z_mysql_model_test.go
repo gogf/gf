@@ -227,6 +227,14 @@ func Test_Model_Update(t *testing.T) {
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, 1)
 	})
+
+	// Update + Data(string)
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Data("passport='user_33'").Where("passport='user_3'").Update()
+		gtest.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 1)
+	})
 }
 
 func Test_Model_Clone(t *testing.T) {
