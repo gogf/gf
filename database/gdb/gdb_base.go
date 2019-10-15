@@ -543,9 +543,7 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 	}
 	params := []interface{}(nil)
 	switch kind {
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
+	case reflect.Map, reflect.Struct:
 		var fields []string
 		for k, v := range structToMap(data) {
 			fields = append(fields, bs.db.quoteWord(k)+"=?")

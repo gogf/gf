@@ -27,7 +27,6 @@ import (
 
 const (
 	gFRAME_CORE_COMPONENT_NAME_REDIS    = "gf.core.component.redis"
-	gFRAME_CORE_COMPONENT_NAME_GKVDB    = "gf.core.component.gkvdb"
 	gFRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
 )
 
@@ -160,65 +159,12 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 		return nil
 	}
 	node := &gdb.ConfigNode{}
-	if value, ok := nodeMap["host"]; ok {
-		node.Host = gconv.String(value)
-	}
-	if value, ok := nodeMap["port"]; ok {
-		node.Port = gconv.String(value)
-	}
-	if value, ok := nodeMap["user"]; ok {
-		node.User = gconv.String(value)
-	}
-	if value, ok := nodeMap["pass"]; ok {
-		node.Pass = gconv.String(value)
-	}
-	if value, ok := nodeMap["name"]; ok {
-		node.Name = gconv.String(value)
-	}
-	if value, ok := nodeMap["type"]; ok {
-		node.Type = gconv.String(value)
-	}
-	if value, ok := nodeMap["role"]; ok {
-		node.Role = gconv.String(value)
-	}
-	if value, ok := nodeMap["debug"]; ok {
-		node.Debug = gconv.Bool(value)
-	}
-	if value, ok := nodeMap["charset"]; ok {
-		node.Charset = gconv.String(value)
-	}
-	if value, ok := nodeMap["weight"]; ok {
-		node.Weight = gconv.Int(value)
-	}
-	if value, ok := nodeMap["linkinfo"]; ok {
-		node.LinkInfo = gconv.String(value)
-	}
-	if value, ok := nodeMap["link-info"]; ok {
-		node.LinkInfo = gconv.String(value)
-	}
-	if value, ok := nodeMap["linkInfo"]; ok {
-		node.LinkInfo = gconv.String(value)
+	err := gconv.Struct(nodeMap, node)
+	if err != nil {
+		glog.Error(err)
 	}
 	if value, ok := nodeMap["link"]; ok {
 		node.LinkInfo = gconv.String(value)
-	}
-	if value, ok := nodeMap["max-idle"]; ok {
-		node.MaxIdleConnCount = gconv.Int(value)
-	}
-	if value, ok := nodeMap["maxIdle"]; ok {
-		node.MaxIdleConnCount = gconv.Int(value)
-	}
-	if value, ok := nodeMap["max-open"]; ok {
-		node.MaxOpenConnCount = gconv.Int(value)
-	}
-	if value, ok := nodeMap["maxOpen"]; ok {
-		node.MaxOpenConnCount = gconv.Int(value)
-	}
-	if value, ok := nodeMap["max-lifetime"]; ok {
-		node.MaxConnLifetime = gconv.Duration(value)
-	}
-	if value, ok := nodeMap["maxLifetime"]; ok {
-		node.MaxConnLifetime = gconv.Duration(value)
 	}
 	// Parse link syntax.
 	if node.LinkInfo != "" && node.Type == "" {
