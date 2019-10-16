@@ -2,13 +2,14 @@ package gredis
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/util/gconv"
 )
 
 type GeoLocation struct {
 	Name                      string
-	Longitude, Latitude float64
+	Longitude, Latitude string
 	GeoHash                   int64
 }
 
@@ -62,17 +63,18 @@ func typeStringss(i interface{}, err error) ([][]string, error) {
 	return ss, nil
 }
 
-func typeGeoLocation(i interface{}, err error) ([]*GeoLocation, error){
+func typeGeoLocation(i interface{}, err error) ([]GeoLocation, error){
 	if err != nil {
 		return nil, err
 	}
-	var loc *GeoLocation
-	ss:=[]*GeoLocation{}
+	var loc GeoLocation
+	ss:=[]GeoLocation{}
 	is:=gconv.Interfaces(i)
 	for _,v:=range is{
-		s1:=gconv.Floats(v)
-		loc.Latitude=s1[0]
-		loc.Longitude=s1[1]
+		s1:=gconv.Strings(v)
+		fmt.Println(s1)
+		loc.Latitude=s1[1]
+		loc.Longitude=s1[0]
 		ss=append(ss,loc)
 	}
 
@@ -573,7 +575,7 @@ func (c *Redis) GeoAdd(key string, params ...interface{}) (int, error) {
 	return typeInt(c.commnddo("GEOADD",append([]interface{}{key},params...)...))
 }
 
-func (c *Redis) GeoPos(key string, member ...interface{}) ([]*GeoLocation, error) {
+func (c *Redis) GeoPos(key string, member ...interface{}) ([]GeoLocation, error) {
 	return typeGeoLocation(c.commnddo("GEOPOS", append([]interface{}{key},member...)...))
 }
 
