@@ -8,6 +8,7 @@ package gmap_test
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/frame/g"
 	"testing"
 
@@ -216,5 +217,58 @@ func Test_StrIntMap_Json(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(m.Get("k1"), data["k1"])
 		gtest.Assert(m.Get("k2"), data["k2"])
+	})
+}
+
+func Test_StrIntMap_Pop(t *testing.T) {
+	gtest.Case(t, func() {
+		m := gmap.NewStrIntMapFrom(g.MapStrInt{
+			"k1": 11,
+			"k2": 22,
+		})
+		gtest.Assert(m.Size(), 2)
+
+		k1, v1 := m.Pop()
+		gtest.AssertIN(k1, g.Slice{"k1", "k2"})
+		gtest.AssertIN(v1, g.Slice{11, 22})
+		gtest.Assert(m.Size(), 1)
+		k2, v2 := m.Pop()
+		gtest.AssertIN(k2, g.Slice{"k1", "k2"})
+		gtest.AssertIN(v2, g.Slice{11, 22})
+		gtest.Assert(m.Size(), 0)
+
+		gtest.AssertNE(k1, k2)
+		gtest.AssertNE(v1, v2)
+	})
+}
+
+func Test_StrIntMap_Pops(t *testing.T) {
+	gtest.Case(t, func() {
+		m := gmap.NewStrIntMapFrom(g.MapStrInt{
+			"k1": 11,
+			"k2": 22,
+			"k3": 33,
+		})
+		gtest.Assert(m.Size(), 3)
+
+		kArray := garray.New()
+		vArray := garray.New()
+		for k, v := range m.Pops(1) {
+			gtest.AssertIN(k, g.Slice{"k1", "k2", "k3"})
+			gtest.AssertIN(v, g.Slice{11, 22, 33})
+			kArray.Append(k)
+			vArray.Append(v)
+		}
+		gtest.Assert(m.Size(), 2)
+		for k, v := range m.Pops(2) {
+			gtest.AssertIN(k, g.Slice{"k1", "k2", "k3"})
+			gtest.AssertIN(v, g.Slice{11, 22, 33})
+			kArray.Append(k)
+			vArray.Append(v)
+		}
+		gtest.Assert(m.Size(), 0)
+
+		gtest.Assert(kArray.Unique().Len(), 3)
+		gtest.Assert(vArray.Unique().Len(), 3)
 	})
 }

@@ -139,6 +139,41 @@ func (m *StrStrMap) Get(key string) string {
 	return val
 }
 
+// Pop retrieves and deletes an item from the map.
+func (m *StrStrMap) Pop() (key, value string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for key, value = range m.data {
+		delete(m.data, key)
+		return
+	}
+	return
+}
+
+// Pops retrieves and deletes <size> items from the map.
+// It returns all items if size == -1.
+func (m *StrStrMap) Pops(size int) map[string]string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if size > len(m.data) || size == -1 {
+		size = len(m.data)
+	}
+	if size == 0 {
+		return nil
+	}
+	index := 0
+	newMap := make(map[string]string, size)
+	for k, v := range m.data {
+		delete(m.data, k)
+		newMap[k] = v
+		index++
+		if index == size {
+			break
+		}
+	}
+	return newMap
+}
+
 // doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
 // if not exists, set value to the map with given <key>,
 // or else just return the existing value.
@@ -300,10 +335,7 @@ func (m *StrStrMap) Size() int {
 // IsEmpty checks whether the map is empty.
 // It returns true if map is empty, or else false.
 func (m *StrStrMap) IsEmpty() bool {
-	m.mu.RLock()
-	empty := len(m.data) == 0
-	m.mu.RUnlock()
-	return empty
+	return m.Size() == 0
 }
 
 // Clear deletes all data of the map, it will remake a new underlying data map.

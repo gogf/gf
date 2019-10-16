@@ -259,20 +259,36 @@ func TestStrSet_Remove(t *testing.T) {
 
 func TestStrSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		str1 := s1.Pop()
-		gtest.Assert(strings.Contains("a,b,c", str1), true)
+		a := []string{"a", "b", "c", "d"}
+		s := gset.NewStrSetFrom(a, true)
+		gtest.Assert(s.Size(), 4)
+		gtest.AssertIN(s.Pop(), a)
+		gtest.Assert(s.Size(), 3)
+		gtest.AssertIN(s.Pop(), a)
+		gtest.Assert(s.Size(), 2)
 	})
 }
 
 func TestStrSet_Pops(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		strs1 := s1.Pops(2)
-		gtest.AssertIN(strs1, []string{"a", "b", "c"})
-		gtest.Assert(len(strs1), 2)
-		str2 := s1.Pops(7)
-		gtest.AssertIN(str2, []string{"a", "b", "c"})
+		a := []string{"a", "b", "c", "d"}
+		s := gset.NewStrSetFrom(a, true)
+		array := s.Pops(2)
+		gtest.Assert(len(array), 2)
+		gtest.Assert(s.Size(), 2)
+		gtest.AssertIN(array, a)
+		gtest.Assert(s.Pops(0), nil)
+		gtest.AssertIN(s.Pops(2), a)
+		gtest.Assert(s.Size(), 0)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewStrSet(true)
+		a := []string{"1", "2", "3", "4"}
+		s.Add(a...)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(-2), nil)
+		gtest.AssertIN(s.Pops(-1), a)
 	})
 }
 
