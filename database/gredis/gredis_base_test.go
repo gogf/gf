@@ -15,15 +15,15 @@ import (
 )
 
 var (
-	Clusterip     = "192.168.0.55" //
-	Pass1         = "123456"       //123456 com:123456 home:"" ci:""
-	port          = 8579           //com:8579  home,ci: 6379
+	Clusterip     = "192.168.0.104" //
+	Pass1         = ""       //123456 com:123456 home:"" ci:""
+	port          = 6379           //com:8579  home,ci:6379
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "123456", // when is ci,no pass   com: 123456 home:""
+		Pass: "", // when is ci,no pass   com: 123456 home:""
 	}
 )
 
@@ -215,10 +215,10 @@ func Test_RedisDo(t *testing.T) {
 		gtest.Assert(err,nil)
 		gtest.Assert(n,2)
 
-		sss,err2:=redis.GeoPos("geo1","beijin","chengdu")
+		ssgs,err2:=redis.GeoPos("geo1","beijin","chengdu")
 		gtest.Assert(err2,nil)
-		gtest.Assert(len(sss),2)
-		gtest.Assert(len(sss[0]),2)
+		t.Error(ssgs)
+
 
 		s,err=redis.GeoDist("geo1","beijin","chengdu","km")
 		gtest.Assert(err,nil)
