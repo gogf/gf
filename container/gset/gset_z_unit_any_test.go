@@ -261,19 +261,35 @@ func TestSet_Sum(t *testing.T) {
 
 func TestSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.New(true)
-		s1.Add(1).Add(2).Add(3).Add(4)
-		gtest.AssertIN(s1.Pop(), []int{1, 2, 3, 4})
+		s := gset.New(true)
+		s.Add(1).Add(2).Add(3).Add(4)
+		gtest.Assert(s.Size(), 4)
+		gtest.AssertIN(s.Pop(), []int{1, 2, 3, 4})
+		gtest.Assert(s.Size(), 3)
 	})
 }
 
 func TestSet_Pops(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.New(true)
-		s1.Add(1).Add(2).Add(3).Add(4)
-		gtest.AssertIN(s1.Pops(1), []int{1, 2, 3, 4})
-		gtest.AssertIN(s1.Pops(6), []int{1, 2, 3, 4})
-		gtest.Assert(len(s1.Pops(2)), 2)
+		s := gset.New(true)
+		s.Add(1).Add(2).Add(3).Add(4)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(0), nil)
+		gtest.AssertIN(s.Pops(1), []int{1, 2, 3, 4})
+		gtest.Assert(s.Size(), 3)
+		a := s.Pops(6)
+		gtest.Assert(len(a), 3)
+		gtest.AssertIN(a, []int{1, 2, 3, 4})
+		gtest.Assert(s.Size(), 0)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.New(true)
+		a := []interface{}{1, 2, 3, 4}
+		s.Add(a...)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(-2), nil)
+		gtest.AssertIN(s.Pops(-1), a)
 	})
 }
 

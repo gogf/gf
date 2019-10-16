@@ -72,8 +72,13 @@ func NewStorageFile(path ...string) *StorageFile {
 		cryptoEnabled: DefaultStorageFileCryptoEnabled,
 		updatingIdSet: gset.NewStrSet(true),
 	}
+	// Batch updates the TTL for session ids timely.
 	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
-		for _, id := range s.updatingIdSet.Slice() {
+		id := ""
+		for {
+			if id = s.updatingIdSet.Pop(); id == "" {
+				break
+			}
 			s.doUpdateTTL(id)
 		}
 	})
@@ -160,7 +165,6 @@ func (s *StorageFile) GetSession(id string, ttl time.Duration) map[string]interf
 }
 
 // SetSession updates the content for session id.
-// Note that the parameter <content> is the serialized bytes for session map.
 func (s *StorageFile) SetSession(id string, data map[string]interface{}) error {
 	path := s.sessionFilePath(id)
 	content, err := json.Marshal(data)

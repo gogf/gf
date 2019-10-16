@@ -360,24 +360,30 @@ func (set *StrSet) Sum() (sum int) {
 
 // Pops randomly pops an item from set.
 func (set *StrSet) Pop() string {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
+	set.mu.Lock()
+	defer set.mu.Unlock()
 	for k, _ := range set.data {
+		delete(set.data, k)
 		return k
 	}
 	return ""
 }
 
 // Pops randomly pops <size> items from set.
+// It returns all items if size == -1.
 func (set *StrSet) Pops(size int) []string {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	if size > len(set.data) {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	if size > len(set.data) || size == -1 {
 		size = len(set.data)
+	}
+	if size <= 0 {
+		return nil
 	}
 	index := 0
 	array := make([]string, size)
 	for k, _ := range set.data {
+		delete(set.data, k)
 		array[index] = k
 		index++
 		if index == size {
