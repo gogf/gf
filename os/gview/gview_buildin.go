@@ -74,13 +74,17 @@ func (view *View) funcGe(value interface{}, other interface{}) bool {
 }
 
 // Build-in template function: include
-func (view *View) funcInclude(file string, data ...map[string]interface{}) string {
+func (view *View) funcInclude(file interface{}, data ...map[string]interface{}) string {
 	var m map[string]interface{} = nil
 	if len(data) > 0 {
 		m = data[0]
 	}
+	path := gconv.String(file)
+	if path == "" {
+		return ""
+	}
 	// It will search the file internally.
-	content, err := view.Parse(file, m)
+	content, err := view.Parse(path, m)
 	if err != nil {
 		return err.Error()
 	}
