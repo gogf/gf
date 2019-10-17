@@ -28,13 +28,13 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
 		return fieldValue
 
-	case "int", "tinyint", "small_int", "medium_int":
+	case "int", "tinyint", "small_int", "smallint", "medium_int", "mediumint":
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint(string(fieldValue))
 		}
 		return gconv.Int(string(fieldValue))
 
-	case "big_int":
+	case "big_int", "bigint":
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint64(string(fieldValue))
 		}
