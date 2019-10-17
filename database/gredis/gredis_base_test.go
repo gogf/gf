@@ -15,15 +15,15 @@ import (
 )
 
 var (
-	Clusterip     = "192.168.0.104" //
-	Pass1         = ""       //123456 com:123456 home:"" ci:""
-	port          = 6379           //com:8579  home,ci:6379
+	Clusterip     = "192.168.0.55" //
+	Pass1         = "123456"       //123456 com:123456 home:"" ci:""
+	port          = 8669           //com:8669  home,ci:6379
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "", // when is ci,no pass   com: 123456 home:""
+		Pass: "123456", // when is ci,no pass   com: 123456 home:""
 	}
 )
 
@@ -67,9 +67,6 @@ func Test_RedisDo(t *testing.T) {
 			n int
 			n64 int64
 			//f64s[]float64
-			sss [][]string
-			//i interface{}
-
 		)
 
 		redis := gredis.New(config)
@@ -215,18 +212,19 @@ func Test_RedisDo(t *testing.T) {
 		gtest.Assert(err,nil)
 		gtest.Assert(n,2)
 
-		ssgs,err2:=redis.GeoPos("geo1","beijin","chengdu")
+		locs,err2:=redis.GeoPos("geo1","beijin","chengdu")
 		gtest.Assert(err2,nil)
-		t.Error(ssgs)
+		gtest.Assert(len(locs),2)
+		gtest.AssertGT(locs[0].Latitude ,"37")
 
 
 		s,err=redis.GeoDist("geo1","beijin","chengdu","km")
 		gtest.Assert(err,nil)
 		gtest.AssertGT(gconv.Float64(s),166.1)
 
-		sss,err=redis.GeoRadius("geo1","15","37","200","km","WITHDIST")
-		gtest.Assert(err2,nil)
-		t.Error(sss)
+		locs,err=redis.GeoRadius("geo1","15","37","200","km","WITHCOORD")
+		gtest.Assert(err,nil)
+		t.Error(locs)
 
 	})
 }

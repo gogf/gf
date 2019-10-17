@@ -2,7 +2,6 @@ package gredis
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/util/gconv"
 )
@@ -11,6 +10,7 @@ type GeoLocation struct {
 	Name                      string
 	Longitude, Latitude string
 	GeoHash                   int64
+	Dist string
 }
 
 func typeInt64(i interface{}, err error) (int64, error) {
@@ -72,9 +72,42 @@ func typeGeoLocation(i interface{}, err error) ([]GeoLocation, error){
 	is:=gconv.Interfaces(i)
 	for _,v:=range is{
 		s1:=gconv.Strings(v)
-		fmt.Println(s1)
-		loc.Latitude=s1[1]
 		loc.Longitude=s1[0]
+		loc.Latitude=s1[1]
+		ss=append(ss,loc)
+	}
+
+	return ss, nil
+}
+
+func typeGeoLocationd(i interface{}, err error) ([]GeoLocation, error){
+	if err != nil {
+		return nil, err
+	}
+
+	var loc GeoLocation
+	ss:=[]GeoLocation{}
+	is:=gconv.Interfaces(i)
+	for _,v:=range is{
+		s1:=gconv.Interfaces(v)
+		if len(s1)==3{
+			loc.Name=gconv.String(s1[0])
+			loc.Dist=gconv.String(s1[1])
+			s1_3:=gconv.Strings(s1[2])
+			loc.Longitude=s1_3[0]
+			loc.Latitude=s1_3[1]
+
+		}else{
+			loc.Name=gconv.String(s1[0])
+			if s1_2,ok:=s1[1].(string);ok==true{
+				loc.Dist=s1_2
+			}else{
+				s1_2s:=gconv.Strings(s1[1])
+				loc.Longitude=s1_2s[0]
+				loc.Latitude=s1_2s[1]
+			}
+		}
+
 		ss=append(ss,loc)
 	}
 
@@ -583,8 +616,11 @@ func (c *Redis) GeoDist(key string, params ...string) (string, error) {
 	return typeString(c.commnddo("GEODIST",  append([]interface{}{key},gconv.Interfaces(params)...)...) )
 }
 
-func (c *Redis) GeoRadius(key string, member ...interface{}) ([][]string, error) {
-	return typeStringss(c.commnddo("GEORADIUS", append([]interface{}{key},member...)...))
+func (c *Redis) GeoRadius(key string, member ...interface{}) ([]GeoLocation, error) {
+	if len(member)<5{
+		return nil,errors.New("there are must have five keys")
+	}
+	return typeGeoLocationd(c.commnddo("GEORADIUS", append([]interface{}{key},member...)...))
 }
 
 func (c *Redis) GeoRadiusByMember(key string, member ...interface{}) ([]interface{}, error) {
