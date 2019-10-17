@@ -58,7 +58,7 @@ func (r *Response) ParseTplContent(content string, params ...gview.Params) (stri
 // 内置变量/对象
 func (r *Response) buildInVars(params ...map[string]interface{}) map[string]interface{} {
 	vars := map[string]interface{}(nil)
-	if len(params) > 0 {
+	if len(params) > 0 && params[0] != nil {
 		vars = params[0]
 	} else {
 		vars = make(map[string]interface{})

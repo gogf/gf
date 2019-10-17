@@ -118,7 +118,7 @@ func (m *Manager) Translate(content string, language ...string) string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	var data map[string]string
-	if len(language) > 0 {
+	if len(language) > 0 && language[0] != "" {
 		data = m.data[language[0]]
 	} else {
 		data = m.data[m.options.Language]
