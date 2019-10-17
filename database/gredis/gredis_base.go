@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/util/gconv"
+	"reflect"
 )
 
 type GeoLocation struct {
@@ -88,16 +89,25 @@ func typeGeoLocationd(i interface{}, err error) ([]GeoLocation, error){
 	var loc GeoLocation
 	ss:=[]GeoLocation{}
 	is:=gconv.Interfaces(i)
+
 	for _,v:=range is{
+		if reflect.TypeOf(v).String()=="[]uint8"{
+			loc.Name=gconv.String(v)
+			ss=append(ss,loc)
+			continue
+		}
 		s1:=gconv.Interfaces(v)
-		if len(s1)==3{
+		s1_length:=len(s1)
+		if s1_length==3{
+
 			loc.Name=gconv.String(s1[0])
 			loc.Dist=gconv.String(s1[1])
 			s1_3:=gconv.Strings(s1[2])
 			loc.Longitude=s1_3[0]
 			loc.Latitude=s1_3[1]
 
-		}else{
+		}else if s1_length==2 {
+
 			loc.Name=gconv.String(s1[0])
 			if s1_2,ok:=s1[1].(string);ok==true{
 				loc.Dist=s1_2
@@ -623,9 +633,8 @@ func (c *Redis) GeoRadius(key string, member ...interface{}) ([]GeoLocation, err
 	return typeGeoLocationd(c.commnddo("GEORADIUS", append([]interface{}{key},member...)...))
 }
 
-func (c *Redis) GeoRadiusByMember(key string, member ...interface{}) ([]interface{}, error) {
-	param := garray.NewArrayFrom(member).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("GEORADIUSBYMEMBER", gconv.Interfaces(param)...))
+func (c *Redis) GeoRadiusByMember(key string, member ...interface{}) ([]GeoLocation, error) {
+	return typeGeoLocationd(c.commnddo("GEORADIUSBYMEMBER", append([]interface{}{key},member...)...))
 }
 
 func (c *Redis) GeoHash(key string, member ...interface{}) ([]interface{}, error) {

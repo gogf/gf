@@ -15,15 +15,15 @@ import (
 )
 
 var (
-	Clusterip     = "192.168.0.55" //
-	Pass1         = "123456"       //123456 com:123456 home:"" ci:""
-	port          = 8669           //com:8669  home,ci:6379
+	Clusterip     = "192.168.0.104" //
+	Pass1         = ""       //123456 com:123456 home:"" ci:""
+	port          = 6379           //com:8669  home,ci:6379
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "123456", // when is ci,no pass   com: 123456 home:""
+		Pass: "", // when is ci,no pass   com: 123456 home:""
 	}
 )
 
@@ -207,24 +207,8 @@ func Test_RedisDo(t *testing.T) {
 		s,err=redis.PfMerge("hlog3")
 		gtest.AssertNE(err,nil)
 
-		//=======================================geo
-		n,err=redis.GeoAdd("geo1","13.361389", "38.115556", "beijin", "15.087269" ,"37.502669" ,"chengdu")
-		gtest.Assert(err,nil)
-		gtest.Assert(n,2)
-
-		locs,err2:=redis.GeoPos("geo1","beijin","chengdu")
-		gtest.Assert(err2,nil)
-		gtest.Assert(len(locs),2)
-		gtest.AssertGT(locs[0].Latitude ,"37")
 
 
-		s,err=redis.GeoDist("geo1","beijin","chengdu","km")
-		gtest.Assert(err,nil)
-		gtest.AssertGT(gconv.Float64(s),166.1)
-
-		locs,err=redis.GeoRadius("geo1","15","37","200","km","WITHCOORD")
-		gtest.Assert(err,nil)
-		t.Error(locs)
 
 	})
 }
@@ -719,6 +703,36 @@ func Test_Clustersg(t *testing.T) {
 		n64,err=rdb.ZremRangeByLex("zset1","-","[c")
 		gtest.Assert(err,nil)
 		gtest.Assert(n64,2)
+
+
+		//=======================================geo
+		n,err=rdb.GeoAdd("geo1","13.361389", "38.115556", "beijin", "15.087269" ,"37.502669" ,"chengdu")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,2)
+
+		locs,err2:=rdb.GeoPos("geo1","beijin","chengdu")
+		gtest.Assert(err2,nil)
+		gtest.Assert(len(locs),2)
+		gtest.AssertGT(locs[0].Latitude ,"37")
+
+
+		s,err=rdb.GeoDist("geo1","beijin","chengdu","km")
+		gtest.Assert(err,nil)
+		gtest.AssertGT(gconv.Float64(s),166.1)
+
+		locs,err=rdb.GeoRadius("geo1","15","37","200","km","WITHCOORD")
+		gtest.Assert(err,nil)
+
+		locs,err=rdb.GeoRadius("geo1","15","37","200","km")
+		gtest.AssertNE(err,nil)
+
+		locs,err=rdb.GeoRadiusByMember("geo1","chengdu",100,"km","WITHCOORD","WITHDIST")
+		gtest.Assert(err,nil)
+		t.Error(locs)
+
+		locs,err=rdb.GeoRadiusByMember("geo1","chengdu",100,"km")
+		gtest.Assert(err,nil)
+		gtest.Assert(locs[0].Name,"chengdu")
 
 
 
