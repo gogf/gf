@@ -651,18 +651,18 @@ func (c *Redis) PubSub(channel string,   member ...interface{}) ([]string, error
 	return typeStrings(c.commnddo("PUBSUB", append([]interface{}{channel},member...)...))
 }
 
-func (c *Redis) SubScribe(channel ...string) (interface{}, error) {
-	return c.commnddo("SUBSCRIBE", gconv.Interfaces(channel)...)
+func (c *Redis) SubScribe(channel ...string) ([]string, error) {
+	return typeStrings( c.commnddo("SUBSCRIBE", gconv.Interfaces(channel)...))
 }
 
-func (c *Redis) PsubScribe(pattern ...string) (interface{}, error) {
-	return c.commnddo("PSUBSCRIBE", gconv.Interfaces(pattern)...)
+func (c *Redis) PsubScribe(pattern ...string) ([]string, error) {
+	return typeStrings(c.commnddo("PSUBSCRIBE", gconv.Interfaces(pattern)...))
 }
 
-func (c *Redis) UnSubScribe(pattern ...string) (interface{}, error) {
-	return c.commnddo("UNSUBSCRIBE", gconv.Interfaces(pattern)...)
+func (c *Redis) UnSubScribe(pattern ...string) ([]string, error) {
+	return typeStrings(c.commnddo("UNSUBSCRIBE", gconv.Interfaces(pattern)...))
 }
 
-func (c *Redis) PubSubScribe(pattern ...string) (interface{}, error) {
-	return c.commnddo("PUNSUBSCRIBE", gconv.Interfaces(pattern)...)
+func (c *Redis) PunSubScribe(pattern ...string) ([]string, error) {
+	return typeStrings(c.commnddo("PUNSUBSCRIBE", gconv.Interfaces(pattern)...))
 }
