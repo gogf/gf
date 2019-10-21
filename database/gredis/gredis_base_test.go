@@ -15,15 +15,15 @@ import (
 )
 
 var (
-	Clusterip     = "192.168.0.104" //
-	Pass1         = ""       //123456 com:123456 home:"" ci:""
-	port          = 6379           //com:8669  home,ci:6379
+	Clusterip     = "192.168.0.55" //
+	Pass1         = "123456"       //123456 com:123456 home:"" ci:""
+	port          = 8669           //com:8669  home,ci:6379
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "", // when is ci,no pass   com: 123456 home:""
+		Pass: "123456", // when is ci,no pass   com: 123456 home:""
 	}
 )
 
@@ -85,6 +85,7 @@ func Test_RedisDo(t *testing.T) {
 		defer redis.Del("hlog1")
 		defer redis.Del("hlog2")
 		defer redis.Del("geo1")
+		defer redis.Del("pub1")
 
 
 
@@ -208,6 +209,17 @@ func Test_RedisDo(t *testing.T) {
 		gtest.AssertNE(err,nil)
 
 
+		//================================================pub/sub
+		n,err=redis.PubLish("pub1","hello")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
+
+		ss,err=redis.PubSub("CHANNELS")
+		gtest.Assert(err,nil)
+		gtest.Assert(len(ss),0)
+
+
+
 
 
 	})
@@ -241,8 +253,8 @@ func Test_Clustersg(t *testing.T) {
 		defer rdb.Del("zset1")
 		defer rdb.Del("hlog1")
 		defer rdb.Del("geo1")
-		defer rdb.Del("chan1")
 
+		defer rdb.Del("pub1")
 		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
 		str1 := gconv.String(rr)
@@ -250,9 +262,7 @@ func Test_Clustersg(t *testing.T) {
 			t.Errorf("cluster errs.")
 		}
 
-		//rdb.Del("hash1")
-
-		_, err = rdb.Set("jjname1", "jjqrr1")
+ 		_, err = rdb.Set("jjname1", "jjqrr1")
 		gtest.Assert(err, nil)
 		_, err = rdb.Set("jjname2", "jjqrr2")
 		_, err = rdb.Set("jjname3", "jjqrr3")
@@ -730,7 +740,6 @@ func Test_Clustersg(t *testing.T) {
 		locs,err=rdb.GeoRadiusByMember("geo1","chengdu",100,"km","WITHCOORD","WITHDIST")
 		gtest.Assert(err,nil)
 		gtest.Assert(len(locs),1)
-
 		locs,err=rdb.GeoRadiusByMember("geo1","chengdu",100,"km")
 		gtest.Assert(err,nil)
 		gtest.Assert(locs[0].Name,"chengdu")
@@ -743,6 +752,10 @@ func Test_Clustersg(t *testing.T) {
 		n,err=rdb.PubLish("chan1","hello")
 		gtest.Assert(err,nil)
 		gtest.Assert(n,0)
+
+		ss,err=rdb.GeoHash("geo1","chengdu","beijin")
+		gtest.Assert(err,nil)
+		gtest.Assert(len(ss),2)
 
 
 

@@ -636,13 +636,19 @@ func (c *Redis) GeoRadiusByMember(key string, member ...interface{}) ([]GeoLocat
 	return typeGeoLocationd(c.commnddo("GEORADIUSBYMEMBER", append([]interface{}{key},member...)...))
 }
 
-func (c *Redis) GeoHash(key string, member ...string) ([]string, error) {
-	return typeStrings(c.commnddo("GEOHASH", append([]interface{}{key},gconv.Interfaces(member)...)...))
+
+func (c *Redis) GeoHash(key string, member ...interface{}) ([]string, error) {
+	return typeStrings(c.commnddo("GEOHASH", append([]interface{}{key},member...)...))
 }
 
 //============================================================================channel
 func (c *Redis) PubLish(channel, message string) (int, error) {
+
 	return typeInt(c.commnddo("PUBLISH", channel, message))
+}
+
+func (c *Redis) PubSub(channel string,   member ...interface{}) ([]string, error) {
+	return typeStrings(c.commnddo("PUBSUB", append([]interface{}{channel},member...)...))
 }
 
 func (c *Redis) SubScribe(channel ...string) (interface{}, error) {
