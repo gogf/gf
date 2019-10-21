@@ -448,11 +448,13 @@ func TestSortedStrArray_Json(t *testing.T) {
 		a2 := garray.NewSortedStrArray()
 		err1 = json.Unmarshal(b2, &a2)
 		gtest.Assert(a2.Slice(), s2)
+		gtest.Assert(a2.Interfaces(), s2)
 
 		var a3 garray.SortedStrArray
 		err := json.Unmarshal(b2, &a3)
 		gtest.Assert(err, nil)
 		gtest.Assert(a3.Slice(), s1)
+		gtest.Assert(a3.Interfaces(), s1)
 	})
 
 	gtest.Case(t, func() {

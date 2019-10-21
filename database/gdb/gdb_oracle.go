@@ -218,7 +218,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	case reflect.Map:
 		fallthrough
 	case reflect.Struct:
-		dataMap = structToMap(data)
+		dataMap = varToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -330,12 +330,12 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 		case reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = structToMap(rv.Index(i).Interface())
+				listMap[i] = varToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map:
 			fallthrough
 		case reflect.Struct:
-			listMap = List{Map(structToMap(list))}
+			listMap = List{Map(varToMapDeep(list))}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
