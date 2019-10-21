@@ -2,7 +2,6 @@ package gredis
 
 import (
 	"errors"
-	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 )
@@ -637,13 +636,12 @@ func (c *Redis) GeoRadiusByMember(key string, member ...interface{}) ([]GeoLocat
 	return typeGeoLocationd(c.commnddo("GEORADIUSBYMEMBER", append([]interface{}{key},member...)...))
 }
 
-func (c *Redis) GeoHash(key string, member ...interface{}) ([]interface{}, error) {
-	param := garray.NewArrayFrom(member).InsertBefore(0, key)
-	return typeInterfacess(c.commnddo("GEOHASH", gconv.Interfaces(param)...))
+func (c *Redis) GeoHash(key string, member ...string) ([]string, error) {
+	return typeStrings(c.commnddo("GEOHASH", append([]interface{}{key},gconv.Interfaces(member)...)...))
 }
 
 //============================================================================channel
-func (c *Redis) PubList(channel, message string) (int, error) {
+func (c *Redis) PubLish(channel, message string) (int, error) {
 	return typeInt(c.commnddo("PUBLISH", channel, message))
 }
 

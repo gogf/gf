@@ -241,6 +241,7 @@ func Test_Clustersg(t *testing.T) {
 		defer rdb.Del("zset1")
 		defer rdb.Del("hlog1")
 		defer rdb.Del("geo1")
+		defer rdb.Del("chan1")
 
 		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
@@ -728,12 +729,20 @@ func Test_Clustersg(t *testing.T) {
 
 		locs,err=rdb.GeoRadiusByMember("geo1","chengdu",100,"km","WITHCOORD","WITHDIST")
 		gtest.Assert(err,nil)
-		t.Error(locs)
+		gtest.Assert(len(locs),1)
 
 		locs,err=rdb.GeoRadiusByMember("geo1","chengdu",100,"km")
 		gtest.Assert(err,nil)
 		gtest.Assert(locs[0].Name,"chengdu")
 
+		ss,err=rdb.GeoHash("geo1","chengdu")
+		gtest.Assert(err,nil)
+		gtest.Assert(ss[0],"sqdtr74hyu0")
+
+		//===============================================pub/lish
+		n,err=rdb.PubLish("chan1","hello")
+		gtest.Assert(err,nil)
+		gtest.Assert(n,0)
 
 
 
