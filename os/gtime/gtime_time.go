@@ -100,6 +100,9 @@ func (t *Time) Millisecond() int64 {
 
 // String returns current time object as string.
 func (t *Time) String() string {
+	if t == nil {
+		return ""
+	}
 	return t.Format("Y-m-d H:i:s")
 }
 
@@ -200,6 +203,10 @@ func (t *Time) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (t *Time) UnmarshalJSON(b []byte) error {
+	if len(b) == 0 {
+		t.Time = time.Time{}
+		return nil
+	}
 	newTime, err := StrToTime(string(bytes.Trim(b, `"`)))
 	if err != nil {
 		return err

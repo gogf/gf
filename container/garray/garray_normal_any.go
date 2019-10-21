@@ -370,6 +370,11 @@ func (a *Array) Slice() []interface{} {
 	}
 }
 
+// Interfaces returns current array as []interface{}.
+func (a *Array) Interfaces() []interface{} {
+	return a.Slice()
+}
+
 // Clone returns a new array, which is a copy of current array.
 func (a *Array) Clone() (newArray *Array) {
 	a.mu.RLock()

@@ -165,7 +165,7 @@ func (tx *TX) BatchSave(table string, list interface{}, batch ...int) (sql.Resul
 // CURD操作:数据更新，统一采用sql预处理,
 // data参数支持字符串或者关联数组类型，内部会自行做判断处理.
 func (tx *TX) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := tx.db.formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(tx.db, condition, args, false)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
@@ -179,7 +179,7 @@ func (tx *TX) doUpdate(table string, data interface{}, condition string, args ..
 
 // CURD操作:删除数据
 func (tx *TX) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := tx.db.formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(tx.db, condition, args, false)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}

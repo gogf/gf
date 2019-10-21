@@ -27,6 +27,7 @@ func Test_IntArray_Basic(t *testing.T) {
 		array := garray.NewIntArrayFrom(expect)
 		array2 := garray.NewIntArrayFrom(expect2)
 		gtest.Assert(array.Slice(), expect)
+		gtest.Assert(array.Interfaces(), expect)
 		array.Set(0, 100)
 		gtest.Assert(array.Get(0), 100)
 		gtest.Assert(array.Get(1), 1)

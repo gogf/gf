@@ -22,6 +22,15 @@ func Test_Trim(t *testing.T) {
 	})
 }
 
+func Test_TrimStr(t *testing.T) {
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.TrimStr("gogo我爱gogo", "go"), "我爱")
+	})
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.TrimStr("啊我爱中国人啊", "啊"), "我爱中国人")
+	})
+}
+
 func Test_TrimRight(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gstr.TrimRight(" 123456\n "), " 123456")
@@ -32,6 +41,9 @@ func Test_TrimRight(t *testing.T) {
 func Test_TrimRightStr(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gstr.TrimRightStr("gogo我爱gogo", "go"), "gogo我爱")
+	})
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.TrimRightStr("我爱中国人", "人"), "我爱中国")
 	})
 }
 
@@ -45,5 +57,8 @@ func Test_TrimLeft(t *testing.T) {
 func Test_TrimLeftStr(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go"), "我爱gogo")
+	})
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.TrimLeftStr("我爱中国人", "我爱"), "中国人")
 	})
 }

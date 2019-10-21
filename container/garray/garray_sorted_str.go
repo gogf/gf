@@ -329,6 +329,17 @@ func (a *SortedStrArray) Slice() []string {
 	return array
 }
 
+// Interfaces returns current array as []interface{}.
+func (a *SortedStrArray) Interfaces() []interface{} {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	array := make([]interface{}, len(a.array))
+	for k, v := range a.array {
+		array[k] = v
+	}
+	return array
+}
+
 // Contains checks whether a value exists in the array.
 func (a *SortedStrArray) Contains(value string) bool {
 	return a.Search(value) != -1

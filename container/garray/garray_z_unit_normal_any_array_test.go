@@ -26,6 +26,7 @@ func Test_Array_Basic(t *testing.T) {
 		array2 := garray.NewArrayFrom(expect)
 		array3 := garray.NewArrayFrom([]interface{}{})
 		gtest.Assert(array.Slice(), expect)
+		gtest.Assert(array.Interfaces(), expect)
 		array.Set(0, 100)
 		gtest.Assert(array.Get(0), 100)
 		gtest.Assert(array.Get(1), 1)

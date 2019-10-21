@@ -26,6 +26,7 @@ func TestNewSortedIntArrayFrom(t *testing.T) {
 		array1 := garray.NewSortedIntArrayFrom(a1, true)
 		gtest.Assert(array1.Join("."), "0.1.2.3.4.5.6")
 		gtest.Assert(array1.Slice(), a1)
+		gtest.Assert(array1.Interfaces(), a1)
 	})
 }
 

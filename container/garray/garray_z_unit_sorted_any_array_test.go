@@ -561,6 +561,7 @@ func TestSortedArray_Json(t *testing.T) {
 		err := json.Unmarshal(b2, &a3)
 		gtest.Assert(err, nil)
 		gtest.Assert(a3.Slice(), s1)
+		gtest.Assert(a3.Interfaces(), s1)
 	})
 
 	gtest.Case(t, func() {

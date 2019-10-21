@@ -27,6 +27,7 @@ func Test_StrArray_Basic(t *testing.T) {
 		array2 := garray.NewStrArrayFrom(expect, true)
 		array3 := garray.NewStrArrayFrom([]string{})
 		gtest.Assert(array.Slice(), expect)
+		gtest.Assert(array.Interfaces(), expect)
 		array.Set(0, "100")
 		gtest.Assert(array.Get(0), 100)
 		gtest.Assert(array.Get(1), 1)

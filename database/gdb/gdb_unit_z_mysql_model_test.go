@@ -1052,15 +1052,15 @@ func Test_Model_Option_Map(t *testing.T) {
 		_, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).Data(g.Map{"nickname": ""}).Where("id", 2).Update()
 		gtest.AssertNE(err, nil)
 
-		r, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()
+		r, err = db.Table(table).OptionOmitEmpty().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()
 		gtest.Assert(err, nil)
 		n, _ = r.RowsAffected()
 		gtest.Assert(n, 1)
 
-		_, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).Fields("nickname").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
+		_, err = db.Table(table).OptionOmitEmpty().Fields("nickname").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
 		gtest.AssertNE(err, nil)
 
-		r, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).
+		r, err = db.Table(table).OptionOmitEmpty().
 			Fields("password").Data(g.Map{
 			"nickname": "",
 			"passport": "123",
@@ -1080,75 +1080,95 @@ func Test_Model_Option_Map(t *testing.T) {
 
 func Test_Model_Option_List(t *testing.T) {
 	gtest.Case(t, func() {
-		gtest.Case(t, func() {
-			table := createTable()
-			defer dropTable(table)
-			r, err := db.Table(table).Fields("id, password").Data(g.List{
-				g.Map{
-					"id":       1,
-					"passport": "1",
-					"password": "1",
-					"nickname": "1",
-				},
-				g.Map{
-					"id":       2,
-					"passport": "2",
-					"password": "2",
-					"nickname": "2",
-				},
-			}).Save()
-			gtest.Assert(err, nil)
-			n, _ := r.RowsAffected()
-			gtest.Assert(n, 2)
-			list, err := db.Table(table).OrderBy("id asc").All()
-			gtest.Assert(err, nil)
-			gtest.Assert(len(list), 2)
-			gtest.Assert(list[0]["id"].String(), "1")
-			gtest.Assert(list[0]["nickname"].String(), "")
-			gtest.Assert(list[0]["passport"].String(), "")
-			gtest.Assert(list[0]["password"].String(), "1")
+		table := createTable()
+		defer dropTable(table)
+		r, err := db.Table(table).Fields("id, password").Data(g.List{
+			g.Map{
+				"id":       1,
+				"passport": "1",
+				"password": "1",
+				"nickname": "1",
+			},
+			g.Map{
+				"id":       2,
+				"passport": "2",
+				"password": "2",
+				"nickname": "2",
+			},
+		}).Save()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 2)
+		list, err := db.Table(table).OrderBy("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(list), 2)
+		gtest.Assert(list[0]["id"].String(), "1")
+		gtest.Assert(list[0]["nickname"].String(), "")
+		gtest.Assert(list[0]["passport"].String(), "")
+		gtest.Assert(list[0]["password"].String(), "1")
 
-			gtest.Assert(list[1]["id"].String(), "2")
-			gtest.Assert(list[1]["nickname"].String(), "")
-			gtest.Assert(list[1]["passport"].String(), "")
-			gtest.Assert(list[1]["password"].String(), "2")
-		})
+		gtest.Assert(list[1]["id"].String(), "2")
+		gtest.Assert(list[1]["nickname"].String(), "")
+		gtest.Assert(list[1]["passport"].String(), "")
+		gtest.Assert(list[1]["password"].String(), "2")
 	})
 
 	gtest.Case(t, func() {
-		gtest.Case(t, func() {
-			table := createTable()
-			defer dropTable(table)
-			r, err := db.Table(table).Option(gdb.OPTION_OMITEMPTY).Fields("id, password").Data(g.List{
-				g.Map{
-					"id":       1,
-					"passport": "1",
-					"password": 0,
-					"nickname": "1",
-				},
-				g.Map{
-					"id":       2,
-					"passport": "2",
-					"password": "2",
-					"nickname": "2",
-				},
-			}).Save()
-			gtest.Assert(err, nil)
-			n, _ := r.RowsAffected()
-			gtest.Assert(n, 2)
-			list, err := db.Table(table).OrderBy("id asc").All()
-			g.Dump(list)
-			gtest.Assert(err, nil)
-			gtest.Assert(len(list), 2)
-			gtest.Assert(list[0]["id"].String(), "1")
-			gtest.Assert(list[0]["nickname"].String(), "")
-			gtest.Assert(list[0]["passport"].String(), "")
-			gtest.Assert(list[0]["password"].String(), "0")
+		table := createTable()
+		defer dropTable(table)
+		r, err := db.Table(table).OptionOmitEmpty().Fields("id, password").Data(g.List{
+			g.Map{
+				"id":       1,
+				"passport": "1",
+				"password": 0,
+				"nickname": "1",
+			},
+			g.Map{
+				"id":       2,
+				"passport": "2",
+				"password": "2",
+				"nickname": "2",
+			},
+		}).Save()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 2)
+		list, err := db.Table(table).OrderBy("id asc").All()
+		g.Dump(list)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(list), 2)
+		gtest.Assert(list[0]["id"].String(), "1")
+		gtest.Assert(list[0]["nickname"].String(), "")
+		gtest.Assert(list[0]["passport"].String(), "")
+		gtest.Assert(list[0]["password"].String(), "0")
 
-			gtest.Assert(list[1]["id"].String(), "2")
-			gtest.Assert(list[1]["nickname"].String(), "")
-			gtest.Assert(list[1]["passport"].String(), "")
-			gtest.Assert(list[1]["password"].String(), "2")
-		})
+		gtest.Assert(list[1]["id"].String(), "2")
+		gtest.Assert(list[1]["nickname"].String(), "")
+		gtest.Assert(list[1]["passport"].String(), "")
+		gtest.Assert(list[1]["password"].String(), "2")
+
+	})
+}
+
+func Test_Model_Option_Where(t *testing.T) {
+	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
+		r, err := db.Table(table).OptionOmitEmpty().Data("nickname", 1).Where(g.Map{"id": 0, "passport": ""}).Update()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, INIT_DATA_SIZE)
+	})
+	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
+		r, err := db.Table(table).OptionOmitEmpty().Data("nickname", 1).Where(g.Map{"id": 1, "passport": ""}).Update()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+
+		v, err := db.Table(table).Where("id", 1).Fields("nickname").Value()
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "1")
 	})
 }

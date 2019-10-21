@@ -342,6 +342,11 @@ func (a *SortedArray) Slice() []interface{} {
 	return array
 }
 
+// Interfaces returns current array as []interface{}.
+func (a *SortedArray) Interfaces() []interface{} {
+	return a.Slice()
+}
+
 // Contains checks whether a value exists in the array.
 func (a *SortedArray) Contains(value interface{}) bool {
 	return a.Search(value) != -1

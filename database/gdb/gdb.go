@@ -99,9 +99,8 @@ type DB interface {
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
 	quoteWord(s string) string
-	setSchema(sqlDb *sql.DB, schema string) error
+	doSetSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
-	formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{})
 	convertValue(fieldValue []byte, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 	handleSqlBeforeExec(sql string) string
@@ -131,11 +130,12 @@ type dbBase struct {
 
 // 执行的SQL对象
 type Sql struct {
-	Sql   string        // SQL语句(可能带有预处理占位符)
-	Args  []interface{} // 预处理参数值列表
-	Error error         // 执行结果(nil为成功)
-	Start int64         // 执行开始时间(毫秒)
-	End   int64         // 执行结束时间(毫秒)
+	Sql    string        // SQL语句(可能带有预处理占位符)
+	Args   []interface{} // 预处理参数值列表
+	Format string        // 格式化后的SQL语句（仅供参考）
+	Error  error         // 执行结果(nil为成功)
+	Start  int64         // 执行开始时间(毫秒)
+	End    int64         // 执行结束时间(毫秒)
 }
 
 // 表字段结构信息
@@ -359,7 +359,7 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 	}
 	// 是否手动选择数据库
 	if v := bs.schema.Val(); v != "" {
-		if e := bs.db.setSchema(sqlDb, v); e != nil {
+		if e := bs.db.doSetSchema(sqlDb, v); e != nil {
 			err = e
 		}
 	}
