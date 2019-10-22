@@ -28,7 +28,7 @@ type Storage interface {
 	RemoveAll() error
 
 	// GetSession returns the session data map for given session id.
-	// The parameter specifies the TTL for this session.
+	// The parameter <ttl> specifies the TTL for this session.
 	// It returns nil if the TTL is exceeded.
 	GetSession(id string, ttl time.Duration) map[string]interface{}
 	// SetSession updates the data map for specified session id.

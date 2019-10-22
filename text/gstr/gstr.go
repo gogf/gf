@@ -443,13 +443,14 @@ func Split(str, delimiter string) []string {
 }
 
 // SplitAndTrim splits string <str> by a string <delimiter> to an array,
-// and calls Trim to every element of this array.
-func SplitAndTrim(str, delimiter, cut string) []string {
-	array := strings.Split(str, delimiter)
-	for k, v := range array {
-		v = strings.Trim(v, cut)
+// and calls Trim to every element of this array. It ignores the elements
+// which are empty after Trim.
+func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
+	array := make([]string, 0)
+	for _, v := range strings.Split(str, delimiter) {
+		v = Trim(v, characterMask...)
 		if v != "" {
-			array[k] = strings.Trim(v, cut)
+			array = append(array, v)
 		}
 	}
 	return array
@@ -457,12 +458,13 @@ func SplitAndTrim(str, delimiter, cut string) []string {
 
 // SplitAndTrimSpace splits string <str> by a string <delimiter> to an array,
 // and calls TrimSpace to every element of this array.
+// Deprecated.
 func SplitAndTrimSpace(str, delimiter string) []string {
-	array := strings.Split(str, delimiter)
-	for k, v := range array {
+	array := make([]string, 0)
+	for _, v := range strings.Split(str, delimiter) {
 		v = strings.TrimSpace(v)
 		if v != "" {
-			array[k] = v
+			array = append(array, v)
 		}
 	}
 	return array

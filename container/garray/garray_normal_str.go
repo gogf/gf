@@ -378,6 +378,17 @@ func (a *StrArray) Slice() []string {
 	return array
 }
 
+// Interfaces returns current array as []interface{}.
+func (a *StrArray) Interfaces() []interface{} {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	array := make([]interface{}, len(a.array))
+	for k, v := range a.array {
+		array[k] = v
+	}
+	return array
+}
+
 // Clone returns a new array, which is a copy of current array.
 func (a *StrArray) Clone() (newArray *StrArray) {
 	a.mu.RLock()

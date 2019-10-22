@@ -8,11 +8,9 @@
 package gdb
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
 	"reflect"
 	"regexp"
 	"strings"
@@ -69,18 +67,19 @@ func (bs *dbBase) PrintQueriedSqls() {
 	sqlSlice := bs.GetQueriedSqls()
 	for k, v := range sqlSlice {
 		fmt.Println(len(sqlSlice)-k, ":")
-		fmt.Println("    Sql  :", v.Sql)
-		fmt.Println("    Args :", v.Args)
-		fmt.Println("    Error:", v.Error)
-		fmt.Println("    Start:", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
-		fmt.Println("    End  :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
-		fmt.Println("    Cost :", v.End-v.Start, "ms")
+		fmt.Println("    Sql    :", v.Sql)
+		fmt.Println("    Args   :", v.Args)
+		fmt.Println("    Format :", v.Format)
+		fmt.Println("    Error  :", v.Error)
+		fmt.Println("    Start  :", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
+		fmt.Println("    End    :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
+		fmt.Println("    Cost   :", v.End-v.Start, "ms")
 	}
 }
 
 // 打印SQL对象(仅在debug=true时有效)
 func (bs *dbBase) printSql(v *Sql) {
-	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, bindArgsToQuery(v.Sql, v.Args))
+	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
 		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
@@ -107,11 +106,12 @@ func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows 
 		rows, err = link.Query(query, args...)
 		mTime2 := gtime.Millisecond()
 		s := &Sql{
-			Sql:   query,
-			Args:  args,
-			Error: err,
-			Start: mTime1,
-			End:   mTime2,
+			Sql:    query,
+			Args:   args,
+			Format: bindArgsToQuery(query, args),
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
 		}
 		bs.sqls.Put(s)
 		bs.printSql(s)
@@ -144,11 +144,12 @@ func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result
 		result, err = link.Exec(query, args...)
 		mTime2 := gtime.Millisecond()
 		s := &Sql{
-			Sql:   query,
-			Args:  args,
-			Error: err,
-			Start: mTime1,
-			End:   mTime2,
+			Sql:    query,
+			Args:   args,
+			Format: bindArgsToQuery(query, args),
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
 		}
 		bs.sqls.Put(s)
 		bs.printSql(s)
@@ -355,7 +356,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 	case reflect.Slice, reflect.Array:
 		return bs.db.doBatchInsert(link, table, data, option, batch...)
 	case reflect.Map, reflect.Struct:
-		dataMap = structToMap(data)
+		dataMap = varToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -435,10 +436,10 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = structToMap(rv.Index(i).Interface())
+				listMap[i] = varToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map, reflect.Struct:
-			listMap = List{structToMap(list)}
+			listMap = List{varToMapDeep(list)}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -522,7 +523,7 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 // CURD操作:数据更新，统一采用sql预处理。
 // data参数支持string/map/struct/*struct类型。
 func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := bs.db.formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(bs.db, condition, args, false)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
@@ -545,7 +546,7 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 	switch kind {
 	case reflect.Map, reflect.Struct:
 		var fields []string
-		for k, v := range structToMap(data) {
+		for k, v := range varToMapDeep(data) {
 			fields = append(fields, bs.db.quoteWord(k)+"=?")
 			params = append(params, convertParam(v))
 		}
@@ -570,7 +571,7 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 
 // CURD操作:删除数据
 func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	newWhere, newArgs := bs.db.formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(bs.db, condition, args, false)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
@@ -642,109 +643,6 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	return records, nil
 }
 
-// 格式化Where查询条件。
-func (bs *dbBase) formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
-	buffer := bytes.NewBuffer(nil)
-	rv := reflect.ValueOf(where)
-	kind := rv.Kind()
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
-	}
-	switch kind {
-	case reflect.Map:
-		for key, value := range structToMap(where) {
-			newArgs = bs.formatWhereKeyValue(buffer, newArgs, key, value)
-		}
-
-	case reflect.Struct:
-		// ListMap and TreeMap are ordered map,
-		// which are index-friendly for where conditions.
-		switch m := where.(type) {
-		case *gmap.ListMap:
-			m.Iterator(func(key, value interface{}) bool {
-				newArgs = bs.formatWhereKeyValue(buffer, newArgs, gconv.String(key), value)
-				return true
-			})
-		case *gmap.TreeMap:
-			m.Iterator(func(key, value interface{}) bool {
-				newArgs = bs.formatWhereKeyValue(buffer, newArgs, gconv.String(key), value)
-				return true
-			})
-		default:
-			for key, value := range structToMap(where) {
-				newArgs = bs.formatWhereKeyValue(buffer, newArgs, key, value)
-			}
-		}
-
-	default:
-		buffer.WriteString(gconv.String(where))
-	}
-
-	if buffer.Len() == 0 {
-		return "", args
-	}
-	newArgs = append(newArgs, args...)
-	newWhere = buffer.String()
-	if len(newArgs) > 0 {
-		// It supports formats like: Where/And/Or("uid", 1) , Where/And/Or("uid>=", 1)
-		if gstr.Pos(newWhere, "?") == -1 {
-			if lastOperatorReg.MatchString(newWhere) {
-				newWhere += "?"
-			} else if wordReg.MatchString(newWhere) {
-				newWhere += "=?"
-			}
-		}
-	}
-	return handlerSliceArguments(newWhere, newArgs)
-}
-
-// formatWhereKeyValue handles each key-value pair of the param map.
-func (bs *dbBase) formatWhereKeyValue(buffer *bytes.Buffer, newArgs []interface{}, key string, value interface{}) []interface{} {
-	key = bs.db.quoteWord(key)
-	if buffer.Len() > 0 {
-		buffer.WriteString(" AND ")
-	}
-	// 支持slice键值/属性，如果只有一个?占位符号，那么作为IN查询，否则打散作为多个查询参数
-	rv := reflect.ValueOf(value)
-	switch rv.Kind() {
-	case reflect.Slice, reflect.Array:
-		count := gstr.Count(key, "?")
-		if count == 0 {
-			buffer.WriteString(key + " IN(?)")
-			newArgs = append(newArgs, value)
-		} else if count != rv.Len() {
-			buffer.WriteString(key)
-			newArgs = append(newArgs, value)
-		} else {
-			buffer.WriteString(key)
-			// 如果键名/属性名称中带有多个?占位符号，那么将参数打散
-			newArgs = append(newArgs, gconv.Interfaces(value)...)
-		}
-	default:
-		if value == nil {
-			buffer.WriteString(key)
-		} else {
-			// 支持key带操作符号，注意like也算是操作符号
-			key = gstr.Trim(key)
-			if gstr.Pos(key, "?") == -1 {
-				like := " like"
-				if len(key) > len(like) && gstr.Equal(key[len(key)-len(like):], like) {
-					buffer.WriteString(key + " ?")
-				} else if lastOperatorReg.MatchString(key) {
-					buffer.WriteString(key + " ?")
-				} else {
-					buffer.WriteString(key + "=?")
-				}
-			} else {
-				buffer.WriteString(key)
-			}
-			newArgs = append(newArgs, value)
-		}
-	}
-	return newArgs
-}
-
 // 使用关键字操作符转义给定字符串。
 // 如果给定的字符串不为单词，那么不转义，直接返回该字符串。
 func (bs *dbBase) quoteWord(s string) string {
@@ -756,7 +654,7 @@ func (bs *dbBase) quoteWord(s string) string {
 }
 
 // 动态切换数据库
-func (bs *dbBase) setSchema(sqlDb *sql.DB, schema string) error {
+func (bs *dbBase) doSetSchema(sqlDb *sql.DB, schema string) error {
 	_, err := sqlDb.Exec("USE " + schema)
 	return err
 }

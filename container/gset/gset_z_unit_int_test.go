@@ -223,11 +223,36 @@ func TestIntSet_Sum(t *testing.T) {
 
 func TestIntSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewIntSet()
-		s1.Add(4).Add(2).Add(3)
-		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
-		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
-		gtest.Assert(s1.Size(), 3)
+		s := gset.NewIntSet()
+		s.Add(4).Add(2).Add(3)
+		gtest.Assert(s.Size(), 3)
+		gtest.AssertIN(s.Pop(), []int{4, 2, 3})
+		gtest.AssertIN(s.Pop(), []int{4, 2, 3})
+		gtest.Assert(s.Size(), 1)
+	})
+}
+
+func TestIntSet_Pops(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.NewIntSet()
+		s.Add(1).Add(4).Add(2).Add(3)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(0), nil)
+		gtest.AssertIN(s.Pops(1), []int{1, 4, 2, 3})
+		gtest.Assert(s.Size(), 3)
+		a := s.Pops(2)
+		gtest.Assert(len(a), 2)
+		gtest.AssertIN(a, []int{1, 4, 2, 3})
+		gtest.Assert(s.Size(), 1)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		a := []int{1, 2, 3, 4}
+		s.Add(a...)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(-2), nil)
+		gtest.AssertIN(s.Pops(-1), a)
 	})
 }
 
