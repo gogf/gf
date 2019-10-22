@@ -446,11 +446,11 @@ func Split(str, delimiter string) []string {
 // and calls Trim to every element of this array. It ignores the elements
 // which are empty after Trim.
 func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
-	array := strings.Split(str, delimiter)
-	for k, v := range array {
+	array := make([]string, 0)
+	for _, v := range strings.Split(str, delimiter) {
 		v = Trim(v, characterMask...)
 		if v != "" {
-			array[k] = v
+			array = append(array, v)
 		}
 	}
 	return array
@@ -460,11 +460,11 @@ func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
 // and calls TrimSpace to every element of this array.
 // Deprecated.
 func SplitAndTrimSpace(str, delimiter string) []string {
-	array := strings.Split(str, delimiter)
-	for k, v := range array {
+	array := make([]string, 0)
+	for _, v := range strings.Split(str, delimiter) {
 		v = strings.TrimSpace(v)
 		if v != "" {
-			array[k] = v
+			array = append(array, v)
 		}
 	}
 	return array

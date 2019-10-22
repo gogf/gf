@@ -176,6 +176,22 @@ func Test_ChunkSplit(t *testing.T) {
 	})
 }
 
+func Test_SplitAndTrim(t *testing.T) {
+	gtest.Case(t, func() {
+		s := `
+
+010    
+
+020  
+
+`
+		a := gstr.SplitAndTrim(s, "\n", "0")
+		gtest.Assert(len(a), 2)
+		gtest.Assert(a[0], "1")
+		gtest.Assert(a[1], "2")
+	})
+}
+
 func Test_Fields(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gstr.Fields("我爱 Go Frame"), []string{
