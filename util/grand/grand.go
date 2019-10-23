@@ -49,11 +49,7 @@ func N(min, max int) int {
 func Str(n int) string {
 	b := make([]rune, n)
 	for i := range b {
-		if Intn(2) == 1 {
-			b[i] = digits[Intn(10)]
-		} else {
-			b[i] = letters[Intn(52)]
-		}
+		b[i] = letters[Intn(62)]
 	}
 	return string(b)
 }
