@@ -15,15 +15,15 @@ import (
 )
 
 var (
-	Clusterip     = "192.168.0.104" //
-	Pass1         = ""       //123456 com:123456 home:"" ci:""
-	port          = 6379           //com:8669  home,ci:6379
+	Clusterip     = "192.168.0.55" //
+	Pass1         = "123456"       //123456 com:123456 home:"" ci:""
+	port          = 8669           //com:8669  home,ci:6379
 	ClustersNodes = []string{Clusterip + ":7001", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7006"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "", // when is ci,no pass   com: 123456 home:""
+		Pass: "123456", // when is ci,no pass   com: 123456 home:""
 	}
 )
 
@@ -70,22 +70,13 @@ func Test_RedisDo(t *testing.T) {
 		)
 
 		redis := gredis.New(config)
+		listdelk:=[]string{"k_1","k_2","dlist1","dlist2","k11","k113","set1","set2","set11","zset1","zset2","hlog1","hlog2","geo1","pub1"}
 		defer redis.Close()
-		defer redis.Del("k_1")
-		defer redis.Del("k_2")
-		defer redis.Del("dlist1")
-		defer redis.Del("dlist2")
-		defer redis.Del("k11")
-		defer redis.Del("k113")
-		defer redis.Del("set1")
-		defer redis.Del("set2")
-		defer redis.Del("set11")
-		defer redis.Del("zset1")
-		defer redis.Del("zset2")
-		defer redis.Del("hlog1")
-		defer redis.Del("hlog2")
-		defer redis.Del("geo1")
-		defer redis.Del("pub1")
+		for _,v:=range listdelk{
+			defer redis.Del(v)
+		}
+
+
 
 
 
@@ -243,18 +234,12 @@ func Test_Clustersg(t *testing.T) {
 		gredis.FlagBanCluster = false
 
 		rdb:=g.Redis()
+		listdelk:=[]string{"hash1","tn1","tn2","jjname1_11","list1","set1","zset1","hlog1","geo1","pub1"}
+		for _,v:=range listdelk{
+			defer rdb.Del(v)
+		}
 
-		defer rdb.Del("hash1")
-		defer rdb.Del("tn1")
-		defer rdb.Del("tn2")
-		defer rdb.Del("jjname1_11")
-		defer rdb.Del("list1")
-		defer rdb.Del("set1")
-		defer rdb.Del("zset1")
-		defer rdb.Del("hlog1")
-		defer rdb.Del("geo1")
 
-		defer rdb.Del("pub1")
 		rr, err = rdb.Cluster("info")
 		gtest.Assert(err, nil)
 		str1 := gconv.String(rr)
