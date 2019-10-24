@@ -250,7 +250,7 @@ func (s *Server) serveFile(r *Request, f *staticServeFile, allowIndex ...bool) {
 		} else {
 			info := f.file.FileInfo()
 			r.Response.wroteHeader = true
-			http.ServeContent(r.Response.Writer, r.Request, info.Name(), info.ModTime(), f.file)
+			http.ServeContent(r.Response.Writer.RawWriter(), r.Request, info.Name(), info.ModTime(), f.file)
 		}
 		return
 	}
