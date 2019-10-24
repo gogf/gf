@@ -208,8 +208,11 @@ func (item *handlerParsedItem) MarshalJSON() ([]byte, error) {
 
 // 生成回调方法查询的Key
 func (s *Server) serveHandlerKey(method, path, domain string) string {
-	if method == "" {
-		return path + "@" + strings.ToLower(domain)
+	if len(domain) > 0 {
+		domain = "@" + domain
 	}
-	return strings.ToUpper(method) + ":" + path + "@" + strings.ToLower(domain)
+	if method == "" {
+		return path + strings.ToLower(domain)
+	}
+	return strings.ToUpper(method) + ":" + path + strings.ToLower(domain)
 }

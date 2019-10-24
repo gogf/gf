@@ -254,6 +254,10 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 		if err != nil {
 			glog.Fatalf("invalid pattern: %s", pattern)
 		}
+		// If there'a already a domain, unset the domain field in the pattern.
+		if g.domain != nil {
+			domain = ""
+		}
 		if bindType == "REST" {
 			pattern = prefix + "/" + strings.TrimLeft(path, "/")
 		} else {
