@@ -54,7 +54,7 @@ func (s *Session) init() {
 // Set sets key-value pair to this session.
 func (s *Session) Set(key string, value interface{}) error {
 	s.init()
-	if err := s.manager.storage.Set(key, value); err != nil {
+	if err := s.manager.storage.Set(s.id, key, value); err != nil {
 		if err == ErrorDisabled {
 			s.data.Set(key, value)
 		} else {
@@ -68,7 +68,7 @@ func (s *Session) Set(key string, value interface{}) error {
 // Sets batch sets the session using map.
 func (s *Session) Sets(data map[string]interface{}) error {
 	s.init()
-	if err := s.manager.storage.SetMap(data); err != nil {
+	if err := s.manager.storage.SetMap(s.id, data); err != nil {
 		if err == ErrorDisabled {
 			s.data.Sets(data)
 		} else {
@@ -85,7 +85,7 @@ func (s *Session) Remove(key string) error {
 		return nil
 	}
 	s.init()
-	if err := s.manager.storage.Remove(key); err != nil {
+	if err := s.manager.storage.Remove(s.id, key); err != nil {
 		if err == ErrorDisabled {
 			s.data.Remove(key)
 		} else {
@@ -107,7 +107,7 @@ func (s *Session) RemoveAll() error {
 		return nil
 	}
 	s.init()
-	if err := s.manager.storage.RemoveAll(); err != nil {
+	if err := s.manager.storage.RemoveAll(s.id); err != nil {
 		if err == ErrorDisabled {
 			s.data.Clear()
 		} else {
@@ -130,7 +130,7 @@ func (s *Session) Id() string {
 func (s *Session) Map() map[string]interface{} {
 	if len(s.id) > 0 {
 		s.init()
-		if data := s.manager.storage.GetMap(); data != nil {
+		if data := s.manager.storage.GetMap(s.id); data != nil {
 			return data
 		}
 		return s.data.Map()
@@ -195,7 +195,7 @@ func (s *Session) Get(key string, def ...interface{}) interface{} {
 		return nil
 	}
 	s.init()
-	if v := s.manager.storage.Get(key); v != nil {
+	if v := s.manager.storage.Get(s.id, key); v != nil {
 		return v
 	}
 	if v := s.data.Get(key); v != nil {

@@ -526,13 +526,13 @@ func Interfaces(i interface{}) []interface{} {
 				}
 			case reflect.Struct:
 				rt := rv.Type()
-				array = make([]interface{}, rv.NumField())
+				array = make([]interface{}, 0)
 				for i := 0; i < rv.NumField(); i++ {
 					// Only public attributes.
 					if !utilstr.IsLetterUpper(rt.Field(i).Name[0]) {
 						continue
 					}
-					array[i] = rv.Field(i).Interface()
+					array = append(array, rv.Field(i).Interface())
 				}
 			default:
 				return []interface{}{i}

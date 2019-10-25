@@ -103,12 +103,12 @@ func (s *StorageFile) sessionFilePath(id string) string {
 
 // Get retrieves session value with given key.
 // It returns nil if the key does not exist in the session.
-func (s *StorageFile) Get(key string) interface{} {
+func (s *StorageFile) Get(id string, key string) interface{} {
 	return nil
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageFile) GetMap() map[string]interface{} {
+func (s *StorageFile) GetMap(id string) map[string]interface{} {
 	return nil
 }
 
@@ -118,22 +118,22 @@ func (s *StorageFile) GetSize(id string) int {
 }
 
 // Set sets key-value session pair to the storage.
-func (s *StorageFile) Set(key string, value interface{}) error {
+func (s *StorageFile) Set(id string, key string, value interface{}) error {
 	return ErrorDisabled
 }
 
 // SetMap batch sets key-value session pairs with map to the storage.
-func (s *StorageFile) SetMap(data map[string]interface{}) error {
+func (s *StorageFile) SetMap(id string, data map[string]interface{}) error {
 	return ErrorDisabled
 }
 
 // Remove deletes key with its value from storage.
-func (s *StorageFile) Remove(key string) error {
+func (s *StorageFile) Remove(id string, key string) error {
 	return ErrorDisabled
 }
 
 // RemoveAll deletes all key-value pairs from storage.
-func (s *StorageFile) RemoveAll() error {
+func (s *StorageFile) RemoveAll(id string) error {
 	return ErrorDisabled
 }
 
