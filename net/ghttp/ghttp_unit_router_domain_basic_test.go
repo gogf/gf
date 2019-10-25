@@ -345,12 +345,12 @@ func Test_Router_DomainGroup(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	//s.SetDumpRouteMap(false)
 	s.Start()
 	defer s.Shutdown()
 	gtest.Case(t, func() {
 		client1 := ghttp.NewClient()
-		client1.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
+		client1.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
 		client2 := ghttp.NewClient()
 		client2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
