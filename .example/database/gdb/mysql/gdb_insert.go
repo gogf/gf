@@ -12,11 +12,9 @@ func main() {
 	// 开启调试模式，以便于记录所有执行的SQL
 	db.SetDebug(true)
 
+	fmt.Println(time.Now())
 	r, e := db.Table("user").Data(g.Map{
-		"passport":    "1",
-		"password":    "1",
-		"nickname":    "1",
-		"create_time": time.Now(),
+		"create_time": time.Now().Local(),
 	}).Insert()
 	if e != nil {
 		panic(e)

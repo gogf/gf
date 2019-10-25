@@ -11,21 +11,21 @@ import "time"
 type Storage interface {
 	// Get retrieves session value with given key.
 	// It returns nil if the key does not exist in the session.
-	Get(key string) interface{}
+	Get(id string, key string) interface{}
 	// GetMap retrieves all key-value pairs as map from storage.
-	GetMap() map[string]interface{}
+	GetMap(id string) map[string]interface{}
 	// GetSize retrieves the size of key-value pairs from storage.
 	GetSize(id string) int
 
 	// Set sets key-value session pair to the storage.
-	Set(key string, value interface{}) error
+	Set(id string, key string, value interface{}) error
 	// SetMap batch sets key-value session pairs with map to the storage.
-	SetMap(data map[string]interface{}) error
+	SetMap(id string, data map[string]interface{}) error
 
 	// Remove deletes key with its value from storage.
-	Remove(key string) error
+	Remove(id string, key string) error
 	// RemoveAll deletes all key-value pairs from storage.
-	RemoveAll() error
+	RemoveAll(id string) error
 
 	// GetSession returns the session data map for given session id.
 	// The parameter <ttl> specifies the TTL for this session.
