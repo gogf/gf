@@ -140,7 +140,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// HTTP status checking.
 	if request.Response.Status == 0 {
-		if request.Middleware.served || request.Response.buffer.Len() > 0 {
+		if serveFile != nil || request.Middleware.served || request.Response.buffer.Len() > 0 {
 			request.Response.WriteHeader(http.StatusOK)
 		} else {
 			request.Response.WriteHeader(http.StatusNotFound)
