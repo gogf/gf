@@ -14,11 +14,11 @@ import (
 
 // User is the golang structure for table user.
 type User struct {
-    Id         int         `orm:"id,primary"      json:"id"`           
-    Passport   string      `orm:"passport"        json:"passport"`     
-    Password   string      `orm:"password"        json:"password"`     
-    Nickname   string      `orm:"nickname,unique" json:"nickname"`     
-    CreateTime *gtime.Time `orm:"create_time"     json:"create_time"`  
+	Id         int         `orm:"id,primary"      json:"id"`
+	Passport   string      `orm:"passport"        json:"passport"`
+	Password   string      `orm:"password"        json:"password"`
+	Nickname   string      `orm:"nickname,unique" json:"nickname"`
+	CreateTime *gtime.Time `orm:"create_time"     json:"create_time"`
 }
 
 var (
