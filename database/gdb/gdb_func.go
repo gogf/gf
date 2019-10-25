@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"strings"
 	"time"
@@ -363,6 +364,11 @@ func bindArgsToQuery(query string, args []interface{}) string {
 			}
 			switch kind {
 			case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
+				return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
+			case reflect.Struct:
+				if t, ok := args[index].(time.Time); ok {
+					return `'` + gtime.NewFromTime(t).String() + `'`
+				}
 				return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
 			}
 			return gconv.String(args[index])

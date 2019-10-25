@@ -2,5 +2,5 @@
 # MySQL数据库配置
 [database]
 	debug = true
-    link  = "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+    link  = "mysql:root:12345678@tcp(127.0.0.1:3306)/test?parseTime=true&loc=Local"
 
