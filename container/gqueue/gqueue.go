@@ -129,6 +129,8 @@ func (q *Queue) Close() {
 }
 
 // Len returns the length of the queue.
+// Note that the result might not be accurate as there's a
+// asynchronize channel reading the list constantly.
 func (q *Queue) Len() (length int) {
 	if q.list != nil {
 		length += q.list.Len()
