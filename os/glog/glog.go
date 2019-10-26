@@ -38,7 +38,7 @@ func init() {
 }
 
 // Default returns the default logger.
-func Default() *Logger {
+func DefaultLogger() *Logger {
 	return logger
 }
 

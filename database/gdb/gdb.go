@@ -199,7 +199,7 @@ func New(name ...string) (db DB, err error) {
 				debug:           gtype.NewBool(),
 				cache:           gcache.New(),
 				schema:          gtype.NewString(),
-				logger:          glog.Default(),
+				logger:          glog.DefaultLogger(),
 				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME,
 			}
 			switch node.Type {
