@@ -146,5 +146,5 @@ func (l *Logger) Criticalf(format string, v ...interface{}) {
 
 // checkLevel checks whether the given <level> could be output.
 func (l *Logger) checkLevel(level int) bool {
-	return l.level&level > 0
+	return l.config.Level&level > 0
 }

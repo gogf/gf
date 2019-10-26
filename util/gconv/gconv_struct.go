@@ -97,6 +97,9 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		}
 		attrMap[elemType.Field(i).Name] = struct{}{}
 	}
+	if len(attrMap) == 0 {
+		return nil
+	}
 	for mapK, mapV := range paramsMap {
 		name := ""
 		for _, checkName := range []string{

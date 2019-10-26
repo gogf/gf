@@ -50,8 +50,8 @@ func (l *Logger) Cat(category string) *Logger {
 	} else {
 		logger = l
 	}
-	if logger.path != "" {
-		logger.SetPath(logger.path + gfile.Separator + category)
+	if logger.config.Path != "" {
+		logger.SetPath(logger.config.Path + gfile.Separator + category)
 	}
 	return logger
 }
@@ -138,9 +138,9 @@ func (l *Logger) Stdout(enabled ...bool) *Logger {
 	}
 	// stdout printing is enabled if <enabled> is not passed.
 	if len(enabled) > 0 && !enabled[0] {
-		logger.stdoutPrint = false
+		logger.config.StdoutPrint = false
 	} else {
-		logger.stdoutPrint = true
+		logger.config.StdoutPrint = true
 	}
 	return logger
 }
@@ -176,9 +176,9 @@ func (l *Logger) Line(long ...bool) *Logger {
 		logger = l
 	}
 	if len(long) > 0 && long[0] {
-		logger.flags |= F_FILE_LONG
+		logger.config.Flags |= F_FILE_LONG
 	} else {
-		logger.flags |= F_FILE_SHORT
+		logger.config.Flags |= F_FILE_SHORT
 	}
 	return logger
 }
