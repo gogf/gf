@@ -194,13 +194,14 @@ func (s *StorageFile) SetSession(id string, data map[string]interface{}, ttl tim
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	if _, err = file.Write(gbinary.EncodeInt64(gtime.Millisecond())); err != nil {
 		return err
 	}
 	if _, err = file.Write(content); err != nil {
 		return err
 	}
-	return file.Close()
+	return nil
 }
 
 // UpdateTTL updates the TTL for specified session id.

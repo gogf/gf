@@ -44,6 +44,9 @@ func (s *Session) init() {
 		}
 	}
 	if len(s.id) == 0 {
+		s.id = s.manager.storage.New(s.manager.ttl)
+	}
+	if len(s.id) == 0 {
 		s.id = NewSessionId()
 	}
 	if s.data == nil {
