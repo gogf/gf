@@ -44,7 +44,7 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 
 // Write writes <content> to the response buffer.
 func (r *Response) Write(content ...interface{}) {
-	if len(content) == 0 {
+	if r.hijacked || len(content) == 0 {
 		return
 	}
 	if r.Status == 0 {

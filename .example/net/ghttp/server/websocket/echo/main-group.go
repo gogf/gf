@@ -26,7 +26,7 @@ func ws(r *ghttp.Request) {
 
 func main() {
 	s := g.Server()
-	s.Group().Bind([]ghttp.GroupItem{
+	s.Group("").Bind([]ghttp.GroupItem{
 		{"ALL", "/ws", ws},
 	})
 

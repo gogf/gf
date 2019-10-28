@@ -19,6 +19,7 @@ type ResponseWriter struct {
 	Status      int                 // HTTP status.
 	writer      http.ResponseWriter // The underlying ResponseWriter.
 	buffer      *bytes.Buffer       // The output buffer.
+	hijacked    bool                // Mark this request is hijacked or not.
 	wroteHeader bool                // Is header wrote, avoiding error: superfluous/multiple response.WriteHeader call.
 }
 
@@ -45,11 +46,15 @@ func (w *ResponseWriter) WriteHeader(status int) {
 
 // Hijack implements the interface function of http.Hijacker.Hijack.
 func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	w.hijacked = true
 	return w.writer.(http.Hijacker).Hijack()
 }
 
 // OutputBuffer outputs the buffer to client.
 func (w *ResponseWriter) OutputBuffer() {
+	if w.hijacked {
+		return
+	}
 	if w.Status != 0 && !w.wroteHeader {
 		w.writer.WriteHeader(w.Status)
 	}
