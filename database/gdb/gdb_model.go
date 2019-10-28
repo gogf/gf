@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
@@ -24,44 +23,34 @@ import (
 
 // 数据库链式操作模型对象
 type Model struct {
-	db           DB             // 数据库操作对象
-	tx           *TX            // 数据库事务对象
-	linkType     int            // 连接对象类型(用于主从集群时开发者自定义操作对象)
-	tablesInit   string         // 初始化Model时的表名称(可以是多个)
-	tables       string         // 数据库操作表
-	fields       string         // 操作字段
-	where        string         // 操作条件
-	whereArgs    []interface{}  // 操作条件参数
-	whereHolder  []*whereHolder // 操作条件预处理
-	groupBy      string         // 分组语句
-	orderBy      string         // 排序语句
-	start        int            // 分页开始
-	limit        int            // 分页条数
-	option       int            // 操作选项
-	offset       int            // 查询偏移量(OFFSET语法)
-	data         interface{}    // 操作数据(注意仅支持Map/List/string类型)
-	batch        int            // 批量操作条数
-	filter       bool           // 是否按照表字段过滤data参数
-	cacheEnabled bool           // 当前SQL操作是否开启查询缓存功能
-	cacheExpire  time.Duration  // 查询缓存时间
-	cacheName    string         // 查询缓存名称
-	safe         bool           // 当前模型是否安全模式（默认非安全表示链式操作直接修改当前模型属性；否则每一次链式操作都是返回新的模型对象）
-}
-
-// whereHolder is the holder for where condition preparing.
-type whereHolder struct {
-	operator int           // Operator for this holder.
-	where    interface{}   // Where parameter.
-	args     []interface{} // Arguments for where parameter.
+	db           DB            // 数据库操作对象
+	tx           *TX           // 数据库事务对象
+	linkType     int           // 连接对象类型(用于主从集群时开发者自定义操作对象)
+	tablesInit   string        // 初始化Model时的表名称(可以是多个)
+	tables       string        // 数据库操作表
+	fields       string        // 操作字段
+	igFields     string        // 忽略字段
+	where        string        // 操作条件
+	whereArgs    []interface{} // 操作条件参数
+	groupBy      string        // 分组语句
+	orderBy      string        // 排序语句
+	start        int           // 分页开始
+	limit        int           // 分页条数
+	option       int           // 操作选项
+	offset       int           // 查询偏移量(OFFSET语法)
+	data         interface{}   // 操作数据(注意仅支持Map/List/string类型)
+	batch        int           // 批量操作条数
+	filter       bool          // 是否按照表字段过滤data参数
+	cacheEnabled bool          // 当前SQL操作是否开启查询缓存功能
+	cacheTime    int           // 查询缓存时间
+	cacheName    string        // 查询缓存名称
+	safe         bool          // 当前模型是否安全模式（默认非安全表示链式操作直接修改当前模型属性；否则每一次链式操作都是返回新的模型对象）
 }
 
 const (
-	gLINK_TYPE_MASTER   = 1
-	gLINK_TYPE_SLAVE    = 2
-	gWHERE_HOLDER_WHERE = 1
-	gWHERE_HOLDER_AND   = 2
-	gWHERE_HOLDER_OR    = 3
-	OPTION_OMITEMPTY    = 1 << iota
+	gLINK_TYPE_MASTER = 1
+	gLINK_TYPE_SLAVE  = 2
+	OPTION_OMITEMPTY  = 1 << iota
 	OPTION_ALLOWEMPTY
 )
 
@@ -183,16 +172,18 @@ func (md *Model) Fields(fields string) *Model {
 	return model
 }
 
+// 链式操作，忽略字段
+func (md *Model) IgFields(igFields string) *Model {
+	model := md.getModel()
+	model.igFields = igFields
+	return model
+}
+
 // 链式操作，选项设置
 func (md *Model) Option(option int) *Model {
 	model := md.getModel()
 	model.option = option
 	return model
-}
-
-// 链式操作，设置 OPTION_OMITEMPTY 常用选项
-func (md *Model) OptionOmitEmpty() *Model {
-	return md.Option(OPTION_OMITEMPTY)
 }
 
 // 链式操作，过滤字段
@@ -202,46 +193,42 @@ func (md *Model) Filter() *Model {
 	return model
 }
 
-// 链式操作，condition，支持string/map/gmap/struct/*struct.
+// 链式操作，condition，支持string & gdb.Map.
 // 注意，多个Where调用时，会自动转换为And条件调用。
 func (md *Model) Where(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]*whereHolder, 0)
+	if model.where != "" {
+		return md.And(where, args...)
 	}
-	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: gWHERE_HOLDER_WHERE,
-		where:    where,
-		args:     args,
-	})
+	newWhere, newArgs := md.db.formatWhere(where, args)
+	model.where = newWhere
+	model.whereArgs = newArgs
 	return model
 }
 
 // 链式操作，添加AND条件到Where中
 func (md *Model) And(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]*whereHolder, 0)
+	newWhere, newArgs := md.db.formatWhere(where, args)
+	if len(model.where) > 0 && model.where[0] == '(' {
+		model.where = fmt.Sprintf(`%s AND (%s)`, model.where, newWhere)
+	} else {
+		model.where = fmt.Sprintf(`(%s) AND (%s)`, model.where, newWhere)
 	}
-	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: gWHERE_HOLDER_AND,
-		where:    where,
-		args:     args,
-	})
+	model.whereArgs = append(model.whereArgs, newArgs...)
 	return model
 }
 
 // 链式操作，添加OR条件到Where中
 func (md *Model) Or(where interface{}, args ...interface{}) *Model {
 	model := md.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]*whereHolder, 0)
+	newWhere, newArgs := md.db.formatWhere(where, args)
+	if len(model.where) > 0 && model.where[0] == '(' {
+		model.where = fmt.Sprintf(`%s OR (%s)`, model.where, newWhere)
+	} else {
+		model.where = fmt.Sprintf(`(%s) OR (%s)`, model.where, newWhere)
 	}
-	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: gWHERE_HOLDER_OR,
-		where:    where,
-		args:     args,
-	})
+	model.whereArgs = append(model.whereArgs, newArgs...)
 	return model
 }
 
@@ -302,17 +289,12 @@ func (md *Model) Batch(batch int) *Model {
 }
 
 // 查询缓存/清除缓存操作，需要注意的是，事务查询不支持缓存。
-// 1. 当 expire < 0时表示清除缓存，expire=0 时表示不过期, expire > 0时表示过期时间。
-// 2. expire参数类型为interface{}，这是一个兼容旧版本的方式，该参数支持 int/time.Duration 类型，当传递类型为int时，表示缓存多少秒。
-// 3. name表示自定义的缓存名称（注意不要出现重复），便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
-//    例如：查询缓存时设置名称，在特定的业务逻辑中清理缓存时可以给定缓存名称进行精准清理。
-func (md *Model) Cache(expire interface{}, name ...string) *Model {
+// 当time < 0时表示清除缓存， time=0时表示不过期, time > 0时表示过期时间，time过期时间单位：秒；
+// name表示自定义的缓存名称（注意不要出现重复），便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
+// 例如：查询缓存时设置名称，在特定的业务逻辑中清理缓存时可以给定缓存名称进行精准清理。
+func (md *Model) Cache(time int, name ...string) *Model {
 	model := md.getModel()
-	if d, ok := expire.(time.Duration); ok {
-		model.cacheExpire = d
-	} else {
-		model.cacheExpire = gconv.Duration(expire) * time.Second
-	}
+	model.cacheTime = time
 	if len(name) > 0 {
 		model.cacheName = name[0]
 	}
@@ -354,11 +336,11 @@ func (md *Model) Data(data ...interface{}) *Model {
 			case reflect.Slice, reflect.Array:
 				list := make(List, rv.Len())
 				for i := 0; i < rv.Len(); i++ {
-					list[i] = varToMapDeep(rv.Index(i).Interface())
+					list[i] = structToMap(rv.Index(i).Interface())
 				}
 				model.data = list
 			case reflect.Map, reflect.Struct:
-				model.data = varToMapDeep(data[0])
+				model.data = structToMap(data[0])
 			default:
 				model.data = data[0]
 			}
@@ -378,7 +360,7 @@ func (md *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
 	} else if m, ok := md.data.(Map); ok {
 		return md.doFilterDataMapForInsertOrUpdate(m, true)
 	}
-	return data
+	return nil
 }
 
 // doFilterDataMapForInsertOrUpdate does the filter features for map.
@@ -387,13 +369,11 @@ func (md *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool)
 	if md.filter {
 		data = md.db.filterFields(md.tables, data)
 	}
-	// Remove key-value pairs of which the value is empty.
 	if allowOmitEmpty && md.option&OPTION_OMITEMPTY > 0 {
 		m := gmap.NewStrAnyMapFrom(data)
 		m.FilterEmpty()
 		data = m.Map()
 	}
-	// Keep specified fields.
 	if len(md.fields) > 0 && md.fields != "*" {
 		set := gset.NewStrSet()
 		for _, v := range gstr.SplitAndTrimSpace(md.fields, ",") {
@@ -401,6 +381,17 @@ func (md *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool)
 		}
 		for k, _ := range data {
 			if !set.Contains(k) {
+				delete(data, k)
+			}
+		}
+	}
+	if len(md.igFields) > 0 {
+		set := gset.NewStrSet()
+		for _, v := range gstr.SplitAndTrimSpace(md.igFields, ",") {
+			set.Add(v)
+		}
+		for k, _ := range data {
+			if set.Contains(k) {
 				delete(data, k)
 			}
 		}
@@ -675,10 +666,10 @@ func (md *Model) getAll(query string, args ...interface{}) (result Result, err e
 	result, err = md.db.doGetAll(md.getLink(), query, args...)
 	// 查询缓存保存处理
 	if len(cacheKey) > 0 && err == nil {
-		if md.cacheExpire < 0 {
+		if md.cacheTime < 0 {
 			md.db.getCache().Remove(cacheKey)
 		} else {
-			md.db.getCache().Set(cacheKey, result, md.cacheExpire)
+			md.db.getCache().Set(cacheKey, result, md.cacheTime*1000)
 		}
 	}
 	return result, err
@@ -686,51 +677,13 @@ func (md *Model) getAll(query string, args ...interface{}) (result Result, err e
 
 // 检查是否需要查询查询缓存
 func (md *Model) checkAndRemoveCache() {
-	if md.cacheEnabled && md.cacheExpire < 0 && len(md.cacheName) > 0 {
+	if md.cacheEnabled && md.cacheTime < 0 && len(md.cacheName) > 0 {
 		md.db.getCache().Remove(md.cacheName)
 	}
 }
 
 // 格式化当前输入参数，返回SQL条件语句（不带参数）
 func (md *Model) getConditionSql() string {
-	if len(md.whereHolder) > 0 {
-		for _, v := range md.whereHolder {
-			switch v.operator {
-			case gWHERE_HOLDER_WHERE:
-				if md.where == "" {
-					newWhere, newArgs := formatWhere(md.db, v.where, v.args, md.option&OPTION_OMITEMPTY > 0)
-					if len(newWhere) > 0 {
-						md.where = newWhere
-						md.whereArgs = newArgs
-					}
-					continue
-				}
-				fallthrough
-
-			case gWHERE_HOLDER_AND:
-				newWhere, newArgs := formatWhere(md.db, v.where, v.args, md.option&OPTION_OMITEMPTY > 0)
-				if len(newWhere) > 0 {
-					if md.where[0] == '(' {
-						md.where = fmt.Sprintf(`%s AND (%s)`, md.where, newWhere)
-					} else {
-						md.where = fmt.Sprintf(`(%s) AND (%s)`, md.where, newWhere)
-					}
-					md.whereArgs = append(md.whereArgs, newArgs...)
-				}
-
-			case gWHERE_HOLDER_OR:
-				newWhere, newArgs := formatWhere(md.db, v.where, v.args, md.option&OPTION_OMITEMPTY > 0)
-				if len(newWhere) > 0 {
-					if md.where[0] == '(' {
-						md.where = fmt.Sprintf(`%s OR (%s)`, md.where, newWhere)
-					} else {
-						md.where = fmt.Sprintf(`(%s) OR (%s)`, md.where, newWhere)
-					}
-					md.whereArgs = append(md.whereArgs, newArgs...)
-				}
-			}
-		}
-	}
 	s := ""
 	if md.where != "" {
 		s += " WHERE " + md.where
