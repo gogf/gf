@@ -54,7 +54,7 @@ func (s *Session) init() {
 // Set sets key-value pair to this session.
 func (s *Session) Set(key string, value interface{}) error {
 	s.init()
-	if err := s.manager.storage.Set(s.id, key, value); err != nil {
+	if err := s.manager.storage.Set(s.id, key, value, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Set(key, value)
 		} else {
@@ -68,7 +68,7 @@ func (s *Session) Set(key string, value interface{}) error {
 // Sets batch sets the session using map.
 func (s *Session) Sets(data map[string]interface{}) error {
 	s.init()
-	if err := s.manager.storage.SetMap(s.id, data); err != nil {
+	if err := s.manager.storage.SetMap(s.id, data, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Sets(data)
 		} else {
@@ -173,12 +173,12 @@ func (s *Session) Close() {
 		if s.manager.storage != nil {
 			if s.dirty.Cas(true, false) {
 				s.data.RLockFunc(func(m map[string]interface{}) {
-					if err := s.manager.storage.SetSession(s.id, m); err != nil {
+					if err := s.manager.storage.SetSession(s.id, m, s.manager.ttl); err != nil {
 						panic(err)
 					}
 				})
 			} else {
-				if err := s.manager.storage.UpdateTTL(s.id); err != nil {
+				if err := s.manager.storage.UpdateTTL(s.id, s.manager.ttl); err != nil {
 					panic(err)
 				}
 			}
