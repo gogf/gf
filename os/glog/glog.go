@@ -30,6 +30,7 @@ var (
 	// Default logger object, for package method usage
 	logger = New()
 	// Goroutine pool for async logging output.
+	// It uses only one asynchronize worker to ensure log sequence.
 	asyncPool = grpool.New(1)
 )
 
