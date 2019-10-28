@@ -127,7 +127,7 @@ func Test_DB_Insert(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "user_3")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		gtest.Assert(one["nickname"].String(), "name_3")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 
 		// *struct
 		timeStr = gtime.Now().String()
@@ -148,7 +148,7 @@ func Test_DB_Insert(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "t4")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		gtest.Assert(one["nickname"].String(), "name_4")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 
 		// batch with Insert
 		timeStr = gtime.Now().String()
@@ -178,7 +178,7 @@ func Test_DB_Insert(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "t200")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		gtest.Assert(one["nickname"].String(), "T200")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
@@ -299,7 +299,7 @@ func Test_DB_Save(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "t1")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		gtest.Assert(one["nickname"].String(), "T11")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
@@ -324,7 +324,7 @@ func Test_DB_Replace(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "t1")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		gtest.Assert(one["nickname"].String(), "T11")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
