@@ -44,6 +44,7 @@ type Config struct {
 	MaxActive       int           // Maximum number of connections limit (default is 0 means no limit)
 	IdleTimeout     time.Duration // Maximum idle time for connection (default is 60 seconds, not allowed to be set to 0)
 	MaxConnLifetime time.Duration // Maximum lifetime of the connection (default is 60 seconds, not allowed to be set to 0)
+	ConnectTimeout  time.Duration // Dial connection timeout.
 }
 
 // Pool statistics.
@@ -53,6 +54,7 @@ type PoolStats struct {
 
 const (
 	gDEFAULT_POOL_IDLE_TIMEOUT  = 60 * time.Second
+	gDEFAULT_POOL_CONN_TIMEOUT  = 10 * time.Second
 	gDEFAULT_POOL_MAX_LIFE_TIME = 60 * time.Second
 )
 
@@ -67,6 +69,9 @@ func New(config Config) *Redis {
 	if config.IdleTimeout == 0 {
 		config.IdleTimeout = gDEFAULT_POOL_IDLE_TIMEOUT
 	}
+	if config.ConnectTimeout == 0 {
+		config.ConnectTimeout = gDEFAULT_POOL_CONN_TIMEOUT
+	}
 	if config.MaxConnLifetime == 0 {
 		config.MaxConnLifetime = gDEFAULT_POOL_MAX_LIFE_TIME
 	}
@@ -79,7 +84,11 @@ func New(config Config) *Redis {
 				MaxIdle:         config.MaxIdle,
 				MaxConnLifetime: config.MaxConnLifetime,
 				Dial: func() (redis.Conn, error) {
-					c, err := redis.Dial("tcp", fmt.Sprintf("%s:%d", config.Host, config.Port))
+					c, err := redis.Dial(
+						"tcp",
+						fmt.Sprintf("%s:%d", config.Host, config.Port),
+						redis.DialConnectTimeout(config.ConnectTimeout),
+					)
 					if err != nil {
 						return nil, err
 					}

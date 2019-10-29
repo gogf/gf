@@ -134,12 +134,13 @@ func Test_Instance(t *testing.T) {
 	})
 }
 
-func Test_Basic(t *testing.T) {
+func Test_Error(t *testing.T) {
 	gtest.Case(t, func() {
 		config1 := gredis.Config{
-			Host: "127.0.0.2",
-			Port: 6379,
-			Db:   1,
+			Host:           "127.0.0.2",
+			Port:           6379,
+			Db:             1,
+			ConnectTimeout: time.Second,
 		}
 		redis := gredis.New(config1)
 		_, err := redis.Do("info")
