@@ -1172,3 +1172,37 @@ func Test_Model_Option_Where(t *testing.T) {
 		gtest.Assert(v.String(), "1")
 	})
 }
+
+func Test_Model_FieldsEx(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	// Select.
+	gtest.Case(t, func() {
+		r, err := db.Table(table).FieldsEx("create_time, id").Where("id in (?)", g.Slice{1, 2}).OrderBy("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(r), 2)
+		gtest.Assert(len(r[0]), 3)
+		gtest.Assert(r[0]["id"], "")
+		gtest.Assert(r[0]["passport"], "user_1")
+		gtest.Assert(r[0]["password"], "pass_1")
+		gtest.Assert(r[0]["nickname"], "name_1")
+		gtest.Assert(r[0]["create_time"], "")
+		gtest.Assert(r[1]["id"], "")
+		gtest.Assert(r[1]["passport"], "user_2")
+		gtest.Assert(r[1]["password"], "pass_2")
+		gtest.Assert(r[1]["nickname"], "name_2")
+		gtest.Assert(r[1]["create_time"], "")
+	})
+	// Filter.
+	gtest.Case(t, func() {
+		r, err := db.Table(table).FieldsEx("password").Data(g.Map{"nickname": "123", "password": "456"}).Where("id", 3).Update()
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+
+		one, err := db.Table(table).Where("id", 3).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(one["nickname"], "123")
+		gtest.AssertNE(one["password"], "456")
+	})
+}
