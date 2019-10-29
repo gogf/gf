@@ -8,6 +8,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"testing"
 	"time"
 
@@ -334,15 +335,15 @@ func Test_Router_DomainGroup(t *testing.T) {
 	d.Group("/", func(g *ghttp.RouterGroup) {
 		g.Group("/app", func(gApp *ghttp.RouterGroup) {
 			gApp.GET("/{table}/list/{page}.html", func(r *ghttp.Request) {
-				fmt.Println("/{table}/list/{page}.html")
+				intlog.Print("/{table}/list/{page}.html")
 				r.Response.Write(r.Get("table"), "&", r.Get("page"))
 			})
 			gApp.GET("/order/info/{order_id}", func(r *ghttp.Request) {
-				fmt.Println("/order/info/{order_id}")
+				intlog.Print("/order/info/{order_id}")
 				r.Response.Write(r.Get("order_id"))
 			})
 			gApp.DELETE("/comment/{id}", func(r *ghttp.Request) {
-				fmt.Println("/comment/{id}")
+				intlog.Print("/comment/{id}")
 				r.Response.Write(r.Get("id"))
 			})
 		})
@@ -351,6 +352,8 @@ func Test_Router_DomainGroup(t *testing.T) {
 	//s.SetDumpRouteMap(false)
 	s.Start()
 	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client1 := ghttp.NewClient()
 		client1.SetPrefix(fmt.Sprintf("http://local:%d", p))
