@@ -22,7 +22,13 @@ type StorageRedis struct {
 	updatingIdMap *gmap.StrIntMap // Updating TTL set for session id.
 }
 
-// NewStorageFile creates and returns a file storage object for session.
+var (
+	// DefaultStorageRedisLoopInterval is the interval updating TTL for session ids
+	// in last duration.
+	DefaultStorageRedisLoopInterval = time.Minute
+)
+
+// NewStorageRedis creates and returns a redis storage object for session.
 func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 	if redis == nil {
 		return nil
@@ -35,7 +41,7 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 		s.prefix = prefix[0]
 	}
 	// Batch updates the TTL for session ids timely.
-	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
+	gtimer.AddSingleton(DefaultStorageRedisLoopInterval, func() {
 		var id string
 		var ttlSeconds int
 		for {
