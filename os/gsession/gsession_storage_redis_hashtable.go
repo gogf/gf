@@ -8,6 +8,7 @@ package gsession
 
 import (
 	"github.com/gogf/gf/database/gredis"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/util/gconv"
 	"time"
 )
@@ -115,6 +116,7 @@ func (s *StorageRedisHashTable) GetSession(id string, ttl time.Duration) map[str
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
 func (s *StorageRedisHashTable) SetSession(id string, data map[string]interface{}, ttl time.Duration) error {
+	intlog.Printf("StorageRedisHashTable.SetSession: %s, %v", id, ttl)
 	_, err := s.redis.Do("EXPIRE", s.key(id), ttl.Seconds())
 	return err
 }
@@ -123,6 +125,7 @@ func (s *StorageRedisHashTable) SetSession(id string, data map[string]interface{
 // This function is called ever after session, which is not dirty, is closed.
 // It just adds the session id to the async handling queue.
 func (s *StorageRedisHashTable) UpdateTTL(id string, ttl time.Duration) error {
+	intlog.Printf("StorageRedisHashTable.UpdateTTL: %s, %v", id, ttl)
 	_, err := s.redis.Do("EXPIRE", s.key(id), ttl.Seconds())
 	return err
 }
