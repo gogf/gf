@@ -9,6 +9,7 @@ package ghttp
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"strings"
 
 	"github.com/gogf/gf/container/glist"
@@ -30,6 +31,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		if parsedItems != nil {
 			return &handlerCacheItem{parsedItems, hasHook, hasServe}
 		}
+		intlog.Printf("cannot find HTTP handler for: %s, %s, %s, %v", r.Method, r.URL.Path, r.GetHost(), s.serveTree)
 		return nil
 	}, s.config.RouterCacheExpire*1000)
 	if value != nil {
