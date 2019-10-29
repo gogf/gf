@@ -30,6 +30,7 @@ type Model struct {
 	tablesInit   string         // 初始化Model时的表名称(可以是多个)
 	tables       string         // 数据库操作表
 	fields       string         // 操作字段
+	fieldsEx     string         // 操作字段(排除)
 	where        string         // 操作条件
 	whereArgs    []interface{}  // 操作条件参数
 	whereHolder  []*whereHolder // 操作条件预处理
@@ -180,6 +181,26 @@ func (md *Model) InnerJoin(joinTable string, on string) *Model {
 func (md *Model) Fields(fields string) *Model {
 	model := md.getModel()
 	model.fields = fields
+	return model
+}
+
+// 链式操作，查询字段(排除)
+func (md *Model) FieldsEx(fields string) *Model {
+	model := md.getModel()
+	model.fieldsEx = fields
+	fieldsExSet := gset.NewStrSetFrom(gstr.SplitAndTrim(fields, ","))
+	if m, err := md.db.TableFields(md.tables); err == nil {
+		model.fields = ""
+		for k, _ := range m {
+			if fieldsExSet.Contains(k) {
+				continue
+			}
+			if len(model.fields) > 0 {
+				model.fields += ","
+			}
+			model.fields += k
+		}
+	}
 	return model
 }
 
@@ -393,16 +414,19 @@ func (md *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool)
 		m.FilterEmpty()
 		data = m.Map()
 	}
-	// Keep specified fields.
+
 	if len(md.fields) > 0 && md.fields != "*" {
-		set := gset.NewStrSet()
-		for _, v := range gstr.SplitAndTrimSpace(md.fields, ",") {
-			set.Add(v)
-		}
-		for k, _ := range data {
+		// Keep specified fields.
+		set := gset.NewStrSetFrom(gstr.SplitAndTrim(md.fields, ","))
+		for k := range data {
 			if !set.Contains(k) {
 				delete(data, k)
 			}
+		}
+	} else if len(md.fieldsEx) > 0 {
+		// Filter specified fields.
+		for _, v := range gstr.SplitAndTrim(md.fieldsEx, ",") {
+			delete(data, v)
 		}
 	}
 	return data
