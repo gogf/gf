@@ -10,7 +10,7 @@ package intlog
 import (
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
-	"os"
+	"github.com/gogf/gf/internal/cmdenv"
 	"path/filepath"
 	"time"
 )
@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	if os.Getenv("GF_DEV") != "" {
+	if !cmdenv.Get("GF_DEV").IsEmpty() {
 		isInGFDevelop = true
 		return
 	}
