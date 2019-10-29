@@ -18,7 +18,7 @@ type StorageRedisHashTable struct {
 	prefix string        // Redis key prefix for session id.
 }
 
-// NewStorageFile creates and returns a file storage object for session.
+// NewStorageRedisHashTable creates and returns a redis hash table storage object for session.
 func NewStorageRedisHashTable(redis *gredis.Redis, prefix ...string) *StorageRedisHashTable {
 	if redis == nil {
 		return nil
