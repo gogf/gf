@@ -227,3 +227,9 @@ func CallerFileLine() string {
 	_, path, line := Caller()
 	return fmt.Sprintf(`%s:%d`, path, line)
 }
+
+// CallerFileLineShort returns the file name along with the line number of the caller.
+func CallerFileLineShort() string {
+	_, path, line := Caller()
+	return fmt.Sprintf(`%s:%d`, filepath.Base(path), line)
+}

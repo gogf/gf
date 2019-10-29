@@ -213,10 +213,7 @@ func GetServer(name ...interface{}) *Server {
 	if s := serverMapping.Get(serverName); s != nil {
 		return s.(*Server)
 	}
-	config := defaultServerConfig
-	if config.SessionStorage == nil {
-		config.SessionStorage = gsession.NewStorageFile()
-	}
+	c := defaultServerConfig
 	s := &Server{
 		name:             serverName,
 		servers:          make([]*gracefulServer, 0),
@@ -226,12 +223,11 @@ func GetServer(name ...interface{}) *Server {
 		serveTree:        make(map[string]interface{}),
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
-		sessionManager:   gsession.New(config.SessionMaxAge, config.SessionStorage),
 		servedCount:      gtype.NewInt(),
 		logger:           glog.New(),
 	}
 	// 初始化时使用默认配置
-	s.SetConfig(config)
+	s.SetConfig(c)
 	// 记录到全局ServerMap中
 	serverMapping.Set(serverName, s)
 	return s
@@ -255,6 +251,13 @@ func (s *Server) Start() error {
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
 		glog.Fatal("[ghttp] no router set or static feature enabled, did you forget import the router?")
 	}
+
+	// Default session storage.
+	if s.config.SessionStorage == nil {
+		s.config.SessionStorage = gsession.NewStorageFile()
+	}
+	// Initialize session manager when start running.
+	s.sessionManager = gsession.New(s.config.SessionMaxAge, s.config.SessionStorage)
 
 	// 底层http server配置
 	if s.config.Handler == nil {

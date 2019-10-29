@@ -27,14 +27,14 @@ type memCache struct {
 
 	// <cap> limits the size of the cache pool.
 	// If the size of the cache exceeds the <cap>,
-	// the cache expiration process is performed according to the LRU algorithm.
+	// the cache expiration process performs according to the LRU algorithm.
 	// It is 0 in default which means no limits.
 	cap         int
 	data        map[interface{}]memCacheItem // Underlying cache data which is stored in a hash table.
 	expireTimes map[interface{}]int64        // Expiring key mapping to its timestamp, which is used for quick indexing and deleting.
 	expireSets  map[int64]*gset.Set          // Expiring timestamp mapping to its key set, which is used for quick indexing and deleting.
 
-	lru        *memCacheLru // LRU object, which is enabled when <cap> > 0.
+	lru        *memCacheLru // LRU manager, which is enabled when <cap> > 0.
 	lruGetList *glist.List  // LRU history according with Get function.
 	eventList  *glist.List  // Asynchronous event list for internal data synchronization.
 	closed     *gtype.Bool  // Is this cache closed or not.
@@ -422,7 +422,7 @@ func (c *memCache) syncEventAndClearExpired() {
 }
 
 // clearByKey deletes the key-value pair with given <key>.
-// The parameter <force> specifies whether doing this deleting forcely.
+// The parameter <force> specifies whether doing this deleting forcedly.
 func (c *memCache) clearByKey(key interface{}, force ...bool) {
 	c.dataMu.Lock()
 	// Doubly check before really deleting it from cache.

@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gtime"
 	"time"
 )
@@ -22,8 +21,7 @@ func SessionGet(r *ghttp.Request) {
 func main() {
 	s := g.Server()
 	s.SetConfigWithMap(g.Map{
-		"SessionMaxAge":  3 * time.Second,
-		"SessionStorage": gsession.NewStorageRedis(g.Redis()),
+		"SessionMaxAge": 3 * time.Second,
 	})
 	s.BindHandler("/set", SessionSet)
 	s.BindHandler("/get", SessionGet)

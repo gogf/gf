@@ -9,6 +9,7 @@ package gsession
 import (
 	"encoding/json"
 	"errors"
+	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"time"
 
@@ -74,13 +75,18 @@ func NewStorageFile(path ...string) *StorageFile {
 	}
 	// Batch updates the TTL for session ids timely.
 	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
-		id := ""
+		intlog.Print("StorageFile.timer start")
+		var id string
+		var err error
 		for {
 			if id = s.updatingIdSet.Pop(); id == "" {
 				break
 			}
-			s.doUpdateTTL(id)
+			if err = s.doUpdateTTL(id); err != nil {
+				intlog.Error(err)
+			}
 		}
+		intlog.Print("StorageFile.timer end")
 	})
 	return s
 }
@@ -208,12 +214,15 @@ func (s *StorageFile) SetSession(id string, data map[string]interface{}, ttl tim
 // This function is called ever after session, which is not dirty, is closed.
 // It just adds the session id to the async handling queue.
 func (s *StorageFile) UpdateTTL(id string, ttl time.Duration) error {
-	s.updatingIdSet.Add(id)
+	if ttl >= DefaultStorageRedisLoopInterval {
+		s.updatingIdSet.Add(id)
+	}
 	return nil
 }
 
 // doUpdateTTL updates the TTL for session id.
 func (s *StorageFile) doUpdateTTL(id string) error {
+	intlog.Printf("update StorageFile TTL for session id: %s", id)
 	path := s.sessionFilePath(id)
 	file, err := gfile.OpenWithFlag(path, os.O_WRONLY)
 	if err != nil {

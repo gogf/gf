@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/database/gredis"
+	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/gogf/gf/os/gtimer"
@@ -42,15 +43,20 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 	}
 	// Batch updates the TTL for session ids timely.
 	gtimer.AddSingleton(DefaultStorageRedisLoopInterval, func() {
+		intlog.Print("StorageRedis.timer start")
 		var id string
+		var err error
 		var ttlSeconds int
 		for {
 			if id, ttlSeconds = s.updatingIdMap.Pop(); id == "" {
 				break
 			} else {
-				s.doUpdateTTL(id, ttlSeconds)
+				if err = s.doUpdateTTL(id, ttlSeconds); err != nil {
+					intlog.Error(err)
+				}
 			}
 		}
+		intlog.Print("StorageRedis.timer end")
 	})
 	return s
 }
@@ -105,7 +111,8 @@ func (s *StorageRedis) RemoveAll(id string) error {
 func (s *StorageRedis) GetSession(id string, ttl time.Duration) map[string]interface{} {
 	r, err := s.redis.DoVar("GET", s.key(id))
 	if err != nil {
-		return nil
+		// If it does not exist, it returns an empty map to replace the session memory data.
+		return map[string]interface{}{}
 	}
 	var m map[string]interface{}
 	if err = json.Unmarshal(r.Bytes(), &m); err != nil {
@@ -130,12 +137,15 @@ func (s *StorageRedis) SetSession(id string, data map[string]interface{}, ttl ti
 // This function is called ever after session, which is not dirty, is closed.
 // It just adds the session id to the async handling queue.
 func (s *StorageRedis) UpdateTTL(id string, ttl time.Duration) error {
-	s.updatingIdMap.Set(id, int(ttl.Seconds()))
+	if ttl >= DefaultStorageRedisLoopInterval {
+		s.updatingIdMap.Set(id, int(ttl.Seconds()))
+	}
 	return nil
 }
 
 // doUpdateTTL updates the TTL for session id.
 func (s *StorageRedis) doUpdateTTL(id string, ttlSeconds int) error {
+	intlog.Printf("update StorageRedis TTL for session id: %s, %d", id, ttlSeconds)
 	_, err := s.redis.DoVar("EXPIRE", s.key(id), ttlSeconds)
 	return err
 }
