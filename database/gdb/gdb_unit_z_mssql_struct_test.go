@@ -96,8 +96,8 @@ func Test_Model_Inherit_MapToStruct_Mssql(t *testing.T) {
 		gtest.Assert(err, nil)
 
 		user := new(User)
-		fmt.Println(one.ToJson())
-		gtest.Assert(one.ToStruct(user), nil)
+		fmt.Println(one.Json())
+		gtest.Assert(one.Struct(user), nil)
 		gtest.Assert(user.Id, data["id"])
 		gtest.Assert(user.Passport, data["passport"])
 		gtest.Assert(strings.TrimSpace(user.Password), data["password"])

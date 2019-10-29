@@ -57,7 +57,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		array = strings.Split(path[1:], "/")
 	}
 	parsedItemList := glist.New()
-	lastMiddlewareItem := (*glist.Element)(nil)
+	lastMiddlewareElem := (*glist.Element)(nil)
+	repeatHandlerCheckMap := make(map[int]struct{})
 	for _, domain := range domains {
 		p, ok := s.serveTree[domain]
 		if !ok {
@@ -98,10 +99,18 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
 				item := e.Value.(*handlerItem)
-				// 服务路由函数只能添加一次
+				// 主要是用于路由注册函数的重复添加判断(特别是中间件和钩子函数)
+				if _, ok := repeatHandlerCheckMap[item.itemId]; ok {
+					continue
+				} else {
+					repeatHandlerCheckMap[item.itemId] = struct{}{}
+				}
+				// 服务路由函数只能添加一次，将重复判断放在这里提高检索效率
 				if hasServe {
 					switch item.itemType {
-					case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+					case gHANDLER_TYPE_HANDLER,
+						gHANDLER_TYPE_OBJECT,
+						gHANDLER_TYPE_CONTROLLER:
 						continue
 					}
 				}
@@ -113,14 +122,10 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 						// 如果需要query匹配，那么需要重新正则解析URL
 						if len(item.router.RegNames) > 0 {
 							if len(match) > len(item.router.RegNames) {
-								parsedItem.values = make(map[string][]string)
-								// 如果存在存在同名路由参数名称，那么执行数组追加
+								parsedItem.values = make(map[string]string)
+								// 如果存在存在同名路由参数名称，那么执行覆盖
 								for i, name := range item.router.RegNames {
-									if _, ok := parsedItem.values[name]; ok {
-										parsedItem.values[name] = append(parsedItem.values[name], match[i+1])
-									} else {
-										parsedItem.values[name] = []string{match[i+1]}
-									}
+									parsedItem.values[name] = match[i+1]
 								}
 							}
 						}
@@ -130,12 +135,12 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							hasServe = true
 							parsedItemList.PushBack(parsedItem)
 
-						// 中间件需要排序
+						// 中间件需要排序在链表中服务函数之前，并且多个中间件按照顺序添加以便于后续执行
 						case gHANDLER_TYPE_MIDDLEWARE:
-							if lastMiddlewareItem == nil {
-								lastMiddlewareItem = parsedItemList.PushFront(parsedItem)
+							if lastMiddlewareElem == nil {
+								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
 							} else {
-								lastMiddlewareItem = parsedItemList.InsertAfter(parsedItem, lastMiddlewareItem)
+								lastMiddlewareElem = parsedItemList.InsertAfter(lastMiddlewareElem, parsedItem)
 							}
 
 						// 钩子函数存在性判断
@@ -144,7 +149,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							parsedItemList.PushBack(parsedItem)
+							panic(fmt.Sprintf(`invalid handler type %d`, item.itemType))
 						}
 					}
 				}
@@ -203,8 +208,11 @@ func (item *handlerParsedItem) MarshalJSON() ([]byte, error) {
 
 // 生成回调方法查询的Key
 func (s *Server) serveHandlerKey(method, path, domain string) string {
-	if method == "" {
-		return path + "@" + strings.ToLower(domain)
+	if len(domain) > 0 {
+		domain = "@" + domain
 	}
-	return strings.ToUpper(method) + ":" + path + "@" + strings.ToLower(domain)
+	if method == "" {
+		return path + strings.ToLower(domain)
+	}
+	return strings.ToUpper(method) + ":" + path + strings.ToLower(domain)
 }

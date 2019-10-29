@@ -9,8 +9,10 @@ package ghttp
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/container/gtype"
 	"strings"
+
+	"github.com/gogf/gf/debug/gdebug"
 
 	"github.com/gogf/gf/container/glist"
 	"github.com/gogf/gf/os/glog"
@@ -19,7 +21,12 @@ import (
 )
 
 const (
-	gFILTER_KEY = "/gf/net/ghttp/ghttp"
+	gFILTER_KEY = "/net/ghttp/ghttp"
+)
+
+var (
+	// 用于服务函数的ID生成变量
+	handlerIdGenerator = gtype.NewInt()
 )
 
 // 解析pattern
@@ -53,11 +60,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 // 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
 // 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表数据量不会很大，所以效率比较高；
 func (s *Server) setHandler(pattern string, handler *handlerItem) {
-	// Web Server正常运行时无法动态注册路由方法
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error("cannot bind handler while server running")
-		return
-	}
+	handler.itemId = handlerIdGenerator.Add(1)
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
 		glog.Error("invalid pattern:", pattern, err)
@@ -96,7 +99,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	} else {
 		array = strings.Split(uri[1:], "/")
 	}
-	// 键名"*fuzz"代表模糊匹配节点，其下会有一个链表；
+	// 键名"*fuzz"代表当前节点为模糊匹配节点，该节点也会有一个*list链表；
 	// 键名"*list"代表链表，叶子节点和模糊匹配节点都有该属性，优先级越高越排前；
 	p := s.serveTree[domain]
 	for k, v := range array {
@@ -138,25 +141,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		pushed := false
 		for e := l.Front(); e != nil; e = e.Next() {
 			item = e.Value.(*handlerItem)
-			switch handler.itemType {
-			// 判断是否已存在相同的路由注册项，如果是普通路由注册则进行替换
-			case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
-				if strings.EqualFold(handler.router.Domain, item.router.Domain) &&
-					strings.EqualFold(handler.router.Method, item.router.Method) &&
-					strings.EqualFold(handler.router.Uri, item.router.Uri) {
-					e.Value = handler
-					pushed = true
-					goto end
-				}
-				fallthrough
-
-			// 否则，那么判断优先级，决定插入顺序
-			default:
-				if s.compareRouterPriority(handler, item) {
-					l.InsertBefore(handler, e)
-					pushed = true
-					goto end
-				}
+			// 判断优先级，决定当前注册项的插入顺序
+			if s.compareRouterPriority(handler, item) {
+				l.InsertBefore(e, handler)
+				pushed = true
+				goto end
 			}
 		}
 	end:
@@ -176,7 +165,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 }
 
 // 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。
-// 返回值true表示newRouter优先级比oldRouter高，会被添加链表中oldRouter的前面；否则后面。
+// 返回值true表示newItem优先级比oldItem高，会被添加链表中oldRouter的前面；否则后面。
 // 优先级比较规则：
 // 1、中间件优先级最高，按照添加顺序优先级执行；
 // 2、其他路由注册类型，层级越深优先级越高(对比/数量)；

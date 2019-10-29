@@ -61,8 +61,9 @@ type (
 		Priority int      // 优先级，用于链表排序，值越大优先级越高
 	}
 
-	// 服务函数注册信息
+	// 路由函数注册信息
 	handlerItem struct {
+		itemId   int                // 用于标识该注册函数的唯一性ID
 		itemName string             // 注册的函数名称信息(用于路由信息打印)
 		itemType int                // 注册函数类型(对象/函数/控制器/中间件/钩子函数)
 		itemFunc HandlerFunc        // 函数内存地址(与以上两个参数二选一)
@@ -75,8 +76,8 @@ type (
 
 	// 根据特定URL.Path解析后的路由检索结果项
 	handlerParsedItem struct {
-		handler *handlerItem        // 路由注册项
-		values  map[string][]string // 特定URL.Path的Router解析参数
+		handler *handlerItem      // 路由注册项
+		values  map[string]string // 特定URL.Path的Router解析参数
 	}
 
 	// 控制器服务函数反射信息

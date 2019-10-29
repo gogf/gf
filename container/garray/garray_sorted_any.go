@@ -9,6 +9,8 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gutil"
 	"math"
 	"sort"
 
@@ -78,6 +80,17 @@ func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 		return a.comparator(a.array[i], a.array[j]) < 0
 	})
 	return a
+}
+
+// SetComparator sets/changes the comparator for sorting.
+func (a *SortedArray) SetComparator(comparator func(a, b interface{}) int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.comparator = comparator
+	// Resort the array if comparator is changed.
+	sort.Slice(a.array, func(i, j int) bool {
+		return a.comparator(a.array[i], a.array[j]) < 0
+	})
 }
 
 // Sort sorts the array in increasing order.
@@ -314,8 +327,8 @@ func (a *SortedArray) Len() int {
 }
 
 // Slice returns the underlying data of array.
-// Notice, if in concurrent-safe usage, it returns a copy of slice;
-// else a pointer to the underlying data.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (a *SortedArray) Slice() []interface{} {
 	array := ([]interface{})(nil)
 	if a.mu.IsSafe() {
@@ -327,6 +340,11 @@ func (a *SortedArray) Slice() []interface{} {
 		array = a.array
 	}
 	return array
+}
+
+// Interfaces returns current array as []interface{}.
+func (a *SortedArray) Interfaces() []interface{} {
+	return a.Slice()
 }
 
 // Contains checks whether a value exists in the array.
@@ -536,12 +554,26 @@ func (a *SortedArray) CountValues() map[interface{}]int {
 	return m
 }
 
-// String returns current array as a string.
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *SortedArray) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	jsonContent, _ := json.Marshal(a.array)
-	return string(jsonContent)
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('[')
+	s := ""
+	for k, v := range a.array {
+		s = gconv.String(v)
+		if gstr.IsNumeric(s) {
+			buffer.WriteString(s)
+		} else {
+			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
+		}
+		if k != len(a.array)-1 {
+			buffer.WriteByte(',')
+		}
+	}
+	buffer.WriteByte(']')
+	return buffer.String()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -549,4 +581,26 @@ func (a *SortedArray) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (a *SortedArray) UnmarshalJSON(b []byte) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+		a.array = make([]interface{}, 0)
+		a.unique = gtype.NewBool()
+		// Note that the comparator is string comparator in default.
+		a.comparator = gutil.ComparatorString
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if err := json.Unmarshal(b, &a.array); err != nil {
+		return err
+	}
+	if a.comparator != nil {
+		sort.Slice(a.array, func(i, j int) bool {
+			return a.comparator(a.array[i], a.array[j]) < 0
+		})
+	}
+	return nil
 }

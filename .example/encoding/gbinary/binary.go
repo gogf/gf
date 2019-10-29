@@ -9,26 +9,19 @@ import (
 
 func main() {
 	// 使用gbinary.Encoded对基本数据类型进行二进制打包
-	if buffer, err := gbinary.Encode(18, 300, 1.01); err != nil {
-		glog.Error(err)
-	} else {
-		fmt.Println(buffer)
-	}
+	fmt.Println(gbinary.Encode(18, 300, 1.01))
 
 	// 使用gbinary.Decode对整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，字长确定的类型，
 	// 例如：int8/16/32/64、uint8/16/32/64、float32/64
 	// 这里的1.01默认为float64类型(64位系统下)
-	if buffer, err := gbinary.Encode(18, 300, 1.01); err != nil {
+	buffer := gbinary.Encode(18, 300, 1.01)
+	var i1 int8
+	var i2 int16
+	var f3 float64
+	if err := gbinary.Decode(buffer, &i1, &i2, &f3); err != nil {
 		glog.Error(err)
 	} else {
-		var i1 int8
-		var i2 int16
-		var f3 float64
-		if err := gbinary.Decode(buffer, &i1, &i2, &f3); err != nil {
-			glog.Error(err)
-		} else {
-			fmt.Println(i1, i2, f3)
-		}
+		fmt.Println(i1, i2, f3)
 	}
 
 	// 编码/解析 int，自动识别变量长度

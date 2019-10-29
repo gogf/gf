@@ -24,7 +24,7 @@ func (db *dbMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
 	} else {
-		source = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true",
+		source = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true&loc=Local",
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset)
 	}
 	if db, err := sql.Open("gf-mysql", source); err == nil {

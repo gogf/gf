@@ -361,8 +361,8 @@ func (a *IntArray) Len() int {
 }
 
 // Slice returns the underlying data of array.
-// Notice, if in concurrent-safe usage, it returns a copy of slice;
-// else a pointer to the underlying data.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (a *IntArray) Slice() []int {
 	array := ([]int)(nil)
 	if a.mu.IsSafe() {
@@ -372,6 +372,17 @@ func (a *IntArray) Slice() []int {
 		copy(array, a.array)
 	} else {
 		array = a.array
+	}
+	return array
+}
+
+// Interfaces returns current array as []interface{}.
+func (a *IntArray) Interfaces() []interface{} {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	array := make([]interface{}, len(a.array))
+	for k, v := range a.array {
+		array[k] = v
 	}
 	return array
 }
@@ -610,12 +621,9 @@ func (a *IntArray) CountValues() map[int]int {
 	return m
 }
 
-// String returns current array as a string.
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *IntArray) String() string {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	jsonContent, _ := json.Marshal(a.array)
-	return string(jsonContent)
+	return "[" + a.Join(",") + "]"
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -623,4 +631,18 @@ func (a *IntArray) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (a *IntArray) UnmarshalJSON(b []byte) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+		a.array = make([]int, 0)
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if err := json.Unmarshal(b, &a.array); err != nil {
+		return err
+	}
+	return nil
 }

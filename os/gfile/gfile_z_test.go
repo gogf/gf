@@ -593,7 +593,6 @@ func Test_Dir(t *testing.T) {
 	})
 }
 
-// 获取文件名
 func Test_Ext(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
@@ -608,7 +607,22 @@ func Test_Ext(t *testing.T) {
 
 		gtest.Assert(gfile.Ext(testpath()+paths1), ".txt")
 		gtest.Assert(gfile.Ext(testpath()+dirpath1), "")
+	})
 
+	gtest.Case(t, func() {
+		gtest.Assert(gfile.Ext("/var/www/test.js"), ".js")
+		gtest.Assert(gfile.Ext("/var/www/test.min.js"), ".js")
+		gtest.Assert(gfile.Ext("/var/www/test.js?1"), ".js")
+		gtest.Assert(gfile.Ext("/var/www/test.min.js?v1"), ".js")
+	})
+}
+
+func Test_ExtName(t *testing.T) {
+	gtest.Case(t, func() {
+		gtest.Assert(gfile.ExtName("/var/www/test.js"), "js")
+		gtest.Assert(gfile.ExtName("/var/www/test.min.js"), "js")
+		gtest.Assert(gfile.ExtName("/var/www/test.js?v=1"), "js")
+		gtest.Assert(gfile.ExtName("/var/www/test.min.js?v=1"), "js")
 	})
 }
 

@@ -20,34 +20,34 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 服务端请求返回对象。
-// 注意该对象并没有实现http.ResponseWriter接口，而是依靠ghttp.ResponseWriter实现。
+// Response is the writer for response buffer.
+// Note that it implements the http.ResponseWriter interface with buffering feature.
 type Response struct {
-	ResponseWriter
-	Server  *Server         // 所属Web Server
-	Writer  *ResponseWriter // ResponseWriter的别名
-	request *Request        // 关联的Request请求对象
+	*ResponseWriter                 // Underlying ResponseWriter.
+	Server          *Server         // Parent server.
+	Writer          *ResponseWriter // Alias of ResponseWriter.
+	Request         *Request        // According request.
 }
 
-// 创建一个ghttp.Response对象指针
+// newResponse creates and returns a new Response object.
 func newResponse(s *Server, w http.ResponseWriter) *Response {
 	r := &Response{
 		Server: s,
-		ResponseWriter: ResponseWriter{
-			ResponseWriter: w,
-			buffer:         bytes.NewBuffer(nil),
+		ResponseWriter: &ResponseWriter{
+			writer: w,
+			buffer: bytes.NewBuffer(nil),
 		},
 	}
-	r.Writer = &r.ResponseWriter
+	r.Writer = r.ResponseWriter
 	return r
 }
 
-// 返回信息，任何变量自动转换为bytes
+// Write writes <content> to the response buffer.
 func (r *Response) Write(content ...interface{}) {
-	if len(content) == 0 {
+	if r.hijacked || len(content) == 0 {
 		return
 	}
-	if r.Status == 0 && r.request.hasServeHandler {
+	if r.Status == 0 {
 		r.Status = http.StatusOK
 	}
 	for _, v := range content {
@@ -62,27 +62,32 @@ func (r *Response) Write(content ...interface{}) {
 	}
 }
 
-// 返回信息，支持自定义format格式
+// WriteOver overwrites the response buffer with <content>.
+func (r *Response) WriteOver(content ...interface{}) {
+	r.ClearBuffer()
+	r.Write(content...)
+}
+
+// Writef writes the response with fmt.Sprintf.
 func (r *Response) Writef(format string, params ...interface{}) {
 	r.Write(fmt.Sprintf(format, params...))
 }
 
-// 返回信息，末尾增加换行标识符"\n"
+// Writef writes the response with <content> and new line.
 func (r *Response) Writeln(content ...interface{}) {
 	if len(content) == 0 {
 		r.Write("\n")
 		return
 	}
-	content = append(content, "\n")
-	r.Write(content...)
+	r.Write(append(content, "\n")...)
 }
 
-// 返回信息，末尾增加换行标识符"\n"
+// Writefln writes the response with fmt.Sprintf and new line.
 func (r *Response) Writefln(format string, params ...interface{}) {
 	r.Writeln(fmt.Sprintf(format, params...))
 }
 
-// 返回JSON
+// WriteJson writes <content> to the response with JSON format.
 func (r *Response) WriteJson(content interface{}) error {
 	if b, err := json.Marshal(content); err != nil {
 		return err
@@ -93,13 +98,14 @@ func (r *Response) WriteJson(content interface{}) error {
 	return nil
 }
 
-// 返回JSONP
+// WriteJson writes <content> to the response with JSONP format.
+// Note that there should be a "callback" parameter in the request for JSONP format.
 func (r *Response) WriteJsonP(content interface{}) error {
 	if b, err := json.Marshal(content); err != nil {
 		return err
 	} else {
 		//r.Header().Set("Content-Type", "application/json")
-		if callback := r.request.Get("callback"); callback != "" {
+		if callback := r.Request.GetString("callback"); callback != "" {
 			buffer := []byte(callback)
 			buffer = append(buffer, byte('('))
 			buffer = append(buffer, b...)
@@ -112,7 +118,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 	return nil
 }
 
-// 返回XML
+// WriteJson writes <content> to the response with XML format.
 func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 	if b, err := gparser.VarToXml(content, rootTag...); err != nil {
 		return err
@@ -123,36 +129,21 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 	return nil
 }
 
-// 返回HTTP Code状态码
+// WriteStatus writes HTTP <status> and <content> to the response.
 func (r *Response) WriteStatus(status int, content ...interface{}) {
-	if r.buffer.Len() == 0 {
-		// 状态码注册回调函数处理
-		if status != http.StatusOK {
-			if f := r.request.Server.getStatusHandler(status, r.request); f != nil {
-				niceCallFunc(func() {
-					f(r.request)
-				})
-				// 防止多次设置(http: multiple response.WriteHeader calls)
-				if r.Status == 0 {
-					r.WriteHeader(status)
-				}
-				return
-			}
-		}
-		if r.Header().Get("Content-Type") == "" {
-			r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-			//r.Header().Set("X-Content-Type-Options", "nosniff")
-		}
-		if len(content) > 0 {
-			r.Write(content...)
-		} else {
-			r.Write(http.StatusText(status))
-		}
-	}
 	r.WriteHeader(status)
+	if len(content) > 0 {
+		r.Write(content...)
+	} else {
+		r.Write(http.StatusText(status))
+	}
+	if r.Header().Get("Content-Type") == "" {
+		r.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		//r.Header().Set("X-Content-Type-Options", "nosniff")
+	}
 }
 
-// 静态文件处理
+// ServeFile serves the file to the response.
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
 	serveFile := (*staticServeFile)(nil)
 	if file := gres.Get(path); file != nil {
@@ -168,10 +159,10 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 		}
 		serveFile = &staticServeFile{path: path}
 	}
-	r.Server.serveFile(r.request, serveFile, allowIndex...)
+	r.Server.serveFile(r.Request, serveFile, allowIndex...)
 }
 
-// 静态文件下载处理
+// ServeFileDownload serves file as file downloading to the response.
 func (r *Response) ServeFileDownload(path string, name ...string) {
 	serveFile := (*staticServeFile)(nil)
 	downloadName := ""
@@ -200,44 +191,48 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
 	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, downloadName))
-	r.Server.serveFile(r.request, serveFile)
+	r.Server.serveFile(r.Request, serveFile)
 }
 
-// 返回location标识，引导客户端跳转。
-// 注意这里要先把设置的cookie输出，否则会被忽略。
+// RedirectTo redirects client to another location.
 func (r *Response) RedirectTo(location string) {
 	r.Header().Set("Location", location)
 	r.WriteHeader(http.StatusFound)
-	r.request.Exit()
+	r.Request.Exit()
 }
 
-// 返回location标识，引导客户端跳转到来源页面
+// RedirectBack redirects client back to referer.
 func (r *Response) RedirectBack() {
-	r.RedirectTo(r.request.GetReferer())
+	r.RedirectTo(r.Request.GetReferer())
 }
 
-// 获取当前缓冲区中的数据
+// BufferString returns the buffer content as []byte.
 func (r *Response) Buffer() []byte {
 	return r.buffer.Bytes()
 }
 
-// 获取当前缓冲区中的数据大小
+// BufferString returns the buffer content as string.
+func (r *Response) BufferString() string {
+	return r.buffer.String()
+}
+
+// BufferLength returns the length of the buffer content.
 func (r *Response) BufferLength() int {
 	return r.buffer.Len()
 }
 
-// 手动设置缓冲区内容
+// SetBuffer overwrites the buffer with <data>.
 func (r *Response) SetBuffer(data []byte) {
 	r.buffer.Reset()
 	r.buffer.Write(data)
 }
 
-// 清空缓冲区内容
+// ClearBuffer clears the response buffer.
 func (r *Response) ClearBuffer() {
 	r.buffer.Reset()
 }
 
-// 输出缓冲区数据到客户端.
+// Output outputs the buffer content to the client.
 func (r *Response) Output() {
 	r.Header().Set("Server", r.Server.config.ServerAgent)
 	//r.handleGzip()

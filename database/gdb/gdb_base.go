@@ -8,7 +8,6 @@
 package gdb
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -27,12 +26,12 @@ import (
 
 const (
 	gDEFAULT_DEBUG_SQL_LENGTH = 1000
-	gPATH_FILTER_KEY          = "/gf/database/gdb/gdb"
+	gPATH_FILTER_KEY          = "/database/gdb/gdb"
 )
 
 var (
-	wordReg         = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
-	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
+	wordReg         = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`) // Regular expression object for a word.
+	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)        // Regular expression object for a string which has operator at its tail.
 )
 
 // 获取最近一条执行的sql
@@ -68,23 +67,24 @@ func (bs *dbBase) PrintQueriedSqls() {
 	sqlSlice := bs.GetQueriedSqls()
 	for k, v := range sqlSlice {
 		fmt.Println(len(sqlSlice)-k, ":")
-		fmt.Println("    Sql  :", v.Sql)
-		fmt.Println("    Args :", v.Args)
-		fmt.Println("    Error:", v.Error)
-		fmt.Println("    Start:", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
-		fmt.Println("    End  :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
-		fmt.Println("    Cost :", v.End-v.Start, "ms")
+		fmt.Println("    Sql    :", v.Sql)
+		fmt.Println("    Args   :", v.Args)
+		fmt.Println("    Format :", v.Format)
+		fmt.Println("    Error  :", v.Error)
+		fmt.Println("    Start  :", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
+		fmt.Println("    End    :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
+		fmt.Println("    Cost   :", v.End-v.Start, "ms")
 	}
 }
 
 // 打印SQL对象(仅在debug=true时有效)
 func (bs *dbBase) printSql(v *Sql) {
-	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, bindArgsToQuery(v.Sql, v.Args))
+	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
 		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
 	} else {
-		bs.logger.Debug(s)
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
 	}
 }
 
@@ -106,11 +106,12 @@ func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows 
 		rows, err = link.Query(query, args...)
 		mTime2 := gtime.Millisecond()
 		s := &Sql{
-			Sql:   query,
-			Args:  args,
-			Error: err,
-			Start: mTime1,
-			End:   mTime2,
+			Sql:    query,
+			Args:   args,
+			Format: bindArgsToQuery(query, args),
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
 		}
 		bs.sqls.Put(s)
 		bs.printSql(s)
@@ -143,11 +144,12 @@ func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result
 		result, err = link.Exec(query, args...)
 		mTime2 := gtime.Millisecond()
 		s := &Sql{
-			Sql:   query,
-			Args:  args,
-			Error: err,
-			Start: mTime1,
-			End:   mTime2,
+			Sql:    query,
+			Args:   args,
+			Format: bindArgsToQuery(query, args),
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
 		}
 		bs.sqls.Put(s)
 		bs.printSql(s)
@@ -217,7 +219,7 @@ func (bs *dbBase) GetStruct(pointer interface{}, query string, args ...interface
 	if err != nil {
 		return err
 	}
-	return one.ToStruct(pointer)
+	return one.Struct(pointer)
 }
 
 // 数据库查询，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
@@ -226,7 +228,7 @@ func (bs *dbBase) GetStructs(pointer interface{}, query string, args ...interfac
 	if err != nil {
 		return err
 	}
-	return all.ToStructs(pointer)
+	return all.Structs(pointer)
 }
 
 // 将结果转换为指定的struct/*struct/[]struct/[]*struct,
@@ -312,21 +314,21 @@ func (bs *dbBase) Begin() (*TX, error) {
 // 参数data支持map/struct/*struct/slice类型，
 // 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doInsert(nil, table, data, OPTION_INSERT, batch...)
+	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_DEFAULT, batch...)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条。
 // 参数data支持map/struct/*struct/slice类型，
 // 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doInsert(nil, table, data, OPTION_REPLACE, batch...)
+	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_REPLACE, batch...)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据。
 // 参数data支持map/struct/*struct/slice类型，
 // 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doInsert(nil, table, data, OPTION_SAVE, batch...)
+	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_SAVE, batch...)
 }
 
 // 支持insert、replace, save， ignore操作。
@@ -351,16 +353,15 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 		kind = rv.Kind()
 	}
 	switch kind {
-	case reflect.Slice:
-		fallthrough
-	case reflect.Array:
+	case reflect.Slice, reflect.Array:
 		return bs.db.doBatchInsert(link, table, data, option, batch...)
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
-		dataMap = structToMap(data)
+	case reflect.Map, reflect.Struct:
+		dataMap = varToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
+	}
+	if len(dataMap) == 0 {
+		return nil, errors.New("data cannot be empty")
 	}
 	charL, charR := bs.db.getChars()
 	for k, v := range dataMap {
@@ -370,7 +371,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 	}
 	operation := getInsertOperationByOption(option)
 	updateStr := ""
-	if option == OPTION_SAVE {
+	if option == gINSERT_OPTION_SAVE {
 		for k, _ := range dataMap {
 			if len(updateStr) > 0 {
 				updateStr += ","
@@ -395,31 +396,30 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 
 // CURD操作:批量数据指定批次量写入
 func (bs *dbBase) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doBatchInsert(nil, table, list, OPTION_INSERT, batch...)
+	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_DEFAULT, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (bs *dbBase) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doBatchInsert(nil, table, list, OPTION_REPLACE, batch...)
+	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_REPLACE, batch...)
 }
 
 // CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
 func (bs *dbBase) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return bs.db.doBatchInsert(nil, table, list, OPTION_SAVE, batch...)
+	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_SAVE, batch...)
 }
 
 // 批量写入数据, 参数list支持slice类型，例如: []map/[]struct/[]*struct。
 func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
-	var keys []string
-	var values []string
+	var keys, values []string
 	var params []interface{}
 	table = bs.db.quoteWord(table)
 	listMap := (List)(nil)
 	switch v := list.(type) {
 	case Result:
-		listMap = v.ToList()
+		listMap = v.List()
 	case Record:
-		listMap = List{v.ToMap()}
+		listMap = List{v.Map()}
 	case List:
 		listMap = v
 	case Map:
@@ -432,45 +432,41 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 			kind = rv.Kind()
 		}
 		switch kind {
-		// 如果是slice，那么转换为List类型
-		case reflect.Slice:
-			fallthrough
-		case reflect.Array:
+		// If it's slice type, it then converts it to List type.
+		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = structToMap(rv.Index(i).Interface())
+				listMap[i] = varToMapDeep(rv.Index(i).Interface())
 			}
-		case reflect.Map:
-			fallthrough
-		case reflect.Struct:
-			listMap = List{Map(structToMap(list))}
+		case reflect.Map, reflect.Struct:
+			listMap = List{varToMapDeep(list)}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
 	}
-	// 判断长度
 	if len(listMap) < 1 {
-		return result, errors.New("empty data list")
+		return result, errors.New("data list cannot be empty")
 	}
 	if link == nil {
 		if link, err = bs.db.Master(); err != nil {
 			return
 		}
 	}
-	// 首先获取字段名称及记录长度
+	// Handle the field names and place holders.
 	holders := []string(nil)
 	for k, _ := range listMap[0] {
 		keys = append(keys, k)
 		holders = append(holders, "?")
 	}
+	// Prepare the result pointer.
 	batchResult := new(batchSqlResult)
 	charL, charR := bs.db.getChars()
-	keyStr := charL + strings.Join(keys, charR+","+charL) + charR
+	keysStr := charL + strings.Join(keys, charR+","+charL) + charR
 	valueHolderStr := "(" + strings.Join(holders, ",") + ")"
-	// 操作判断
+
 	operation := getInsertOperationByOption(option)
 	updateStr := ""
-	if option == OPTION_SAVE {
+	if option == gINSERT_OPTION_SAVE {
 		for _, k := range keys {
 			if len(updateStr) > 0 {
 				updateStr += ","
@@ -489,15 +485,25 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 	}
 	listMapLen := len(listMap)
 	for i := 0; i < listMapLen; i++ {
+		// Note that the map type is unordered,
+		// so it should use slice+key to retrieve the value.
 		for _, k := range keys {
 			params = append(params, convertParam(listMap[i][k]))
 		}
 		values = append(values, valueHolderStr)
 		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
-			r, err := bs.db.doExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES%s %s",
-				operation, table, keyStr, strings.Join(values, ","),
-				updateStr),
-				params...)
+			r, err := bs.db.doExec(
+				link,
+				fmt.Sprintf(
+					"%s INTO %s(%s) VALUES%s %s",
+					operation,
+					table,
+					keysStr,
+					strings.Join(values, ","),
+					updateStr,
+				),
+				params...,
+			)
 			if err != nil {
 				return r, err
 			}
@@ -517,7 +523,7 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 // CURD操作:数据更新，统一采用sql预处理。
 // data参数支持string/map/struct/*struct类型。
 func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := bs.db.formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(bs.db, condition, args, false)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
@@ -538,11 +544,9 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 	}
 	params := []interface{}(nil)
 	switch kind {
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
+	case reflect.Map, reflect.Struct:
 		var fields []string
-		for k, v := range structToMap(data) {
+		for k, v := range varToMapDeep(data) {
 			fields = append(fields, bs.db.quoteWord(k)+"=?")
 			params = append(params, convertParam(v))
 		}
@@ -550,10 +554,13 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 	default:
 		updates = gconv.String(data)
 	}
+	if len(updates) == 0 {
+		return nil, errors.New("data cannot be empty")
+	}
 	if len(params) > 0 {
 		args = append(params, args...)
 	}
-	// 如果没有传递link，那么使用默认的写库对象
+	// If no link passed, it then uses the master link.
 	if link == nil {
 		if link, err = bs.db.Master(); err != nil {
 			return nil, err
@@ -564,7 +571,7 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 
 // CURD操作:删除数据
 func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	newWhere, newArgs := bs.db.formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(bs.db, condition, args, false)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
@@ -636,87 +643,6 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	return records, nil
 }
 
-// 格式化Where查询条件。
-func (bs *dbBase) formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
-	// 条件字符串处理
-	buffer := bytes.NewBuffer(nil)
-	// 使用反射进行类型判断
-	rv := reflect.ValueOf(where)
-	kind := rv.Kind()
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
-	}
-	switch kind {
-	// map/struct类型
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
-		for key, value := range structToMap(where) {
-			// 字段安全符号判断
-			key = bs.db.quoteWord(key)
-			if buffer.Len() > 0 {
-				buffer.WriteString(" AND ")
-			}
-			// 支持slice键值/属性，如果只有一个?占位符号，那么作为IN查询，否则打散作为多个查询参数
-			rv := reflect.ValueOf(value)
-			switch rv.Kind() {
-			case reflect.Slice:
-				fallthrough
-			case reflect.Array:
-				count := gstr.Count(key, "?")
-				if count == 0 {
-					buffer.WriteString(key + " IN(?)")
-					newArgs = append(newArgs, value)
-				} else if count != rv.Len() {
-					buffer.WriteString(key)
-					newArgs = append(newArgs, value)
-				} else {
-					buffer.WriteString(key)
-					// 如果键名/属性名称中带有多个?占位符号，那么将参数打散
-					newArgs = append(newArgs, gconv.Interfaces(value)...)
-				}
-			default:
-				if value == nil {
-					buffer.WriteString(key)
-				} else {
-					// 支持key带操作符号
-					if gstr.Pos(key, "?") == -1 {
-						if gstr.Pos(key, "<") == -1 && gstr.Pos(key, ">") == -1 && gstr.Pos(key, "=") == -1 {
-							buffer.WriteString(key + "=?")
-						} else {
-							buffer.WriteString(key + "?")
-						}
-					} else {
-						buffer.WriteString(key)
-					}
-					newArgs = append(newArgs, value)
-				}
-			}
-		}
-
-	default:
-		buffer.WriteString(gconv.String(where))
-	}
-	// 没有任何条件查询参数，直接返回
-	if buffer.Len() == 0 {
-		return "", args
-	}
-	newArgs = append(newArgs, args...)
-	newWhere = buffer.String()
-	if len(newArgs) > 0 {
-		// 支持例如 Where/And/Or("uid", 1) , Where/And/Or("uid>=", 1) 这种格式
-		if gstr.Pos(newWhere, "?") == -1 {
-			if lastOperatorReg.MatchString(newWhere) {
-				newWhere += "?"
-			} else if wordReg.MatchString(newWhere) {
-				newWhere += "=?"
-			}
-		}
-	}
-	return handlerSliceArguments(newWhere, newArgs)
-}
-
 // 使用关键字操作符转义给定字符串。
 // 如果给定的字符串不为单词，那么不转义，直接返回该字符串。
 func (bs *dbBase) quoteWord(s string) string {
@@ -728,7 +654,7 @@ func (bs *dbBase) quoteWord(s string) string {
 }
 
 // 动态切换数据库
-func (bs *dbBase) setSchema(sqlDb *sql.DB, schema string) error {
+func (bs *dbBase) doSetSchema(sqlDb *sql.DB, schema string) error {
 	_, err := sqlDb.Exec("USE " + schema)
 	return err
 }

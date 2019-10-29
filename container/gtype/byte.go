@@ -7,6 +7,8 @@
 package gtype
 
 import (
+	"github.com/gogf/gf/util/gconv"
+	"strconv"
 	"sync/atomic"
 )
 
@@ -48,4 +50,20 @@ func (v *Byte) Add(delta byte) (new byte) {
 // Cas executes the compare-and-swap operation for value.
 func (v *Byte) Cas(old, new byte) bool {
 	return atomic.CompareAndSwapInt32(&v.value, int32(old), int32(new))
+}
+
+// String implements String interface for string printing.
+func (v *Byte) String() string {
+	return strconv.FormatUint(uint64(v.Val()), 10)
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Byte) MarshalJSON() ([]byte, error) {
+	return gconv.UnsafeStrToBytes(strconv.FormatUint(uint64(v.Val()), 10)), nil
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Byte) UnmarshalJSON(b []byte) error {
+	v.Set(gconv.Uint8(gconv.UnsafeBytesToStr(b)))
+	return nil
 }

@@ -90,7 +90,7 @@ type DB interface {
 	SetLogger(logger *glog.Logger)
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
-	SetMaxConnLifetime(n int)
+	SetMaxConnLifetime(d time.Duration)
 	Tables() (tables []string, err error)
 	TableFields(table string) (map[string]*TableField, error)
 
@@ -99,9 +99,8 @@ type DB interface {
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
 	quoteWord(s string) string
-	setSchema(sqlDb *sql.DB, schema string) error
+	doSetSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
-	formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{})
 	convertValue(fieldValue []byte, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 	handleSqlBeforeExec(sql string) string
@@ -126,16 +125,17 @@ type dbBase struct {
 	logger           *glog.Logger                 // 日志管理对象
 	maxIdleConnCount int                          // 连接池最大限制的连接数
 	maxOpenConnCount int                          // 连接池最大打开的连接数
-	maxConnLifetime  int                          // (单位秒)连接对象可重复使用的时间长度
+	maxConnLifetime  time.Duration                // 连接对象可重复使用的时间长度
 }
 
 // 执行的SQL对象
 type Sql struct {
-	Sql   string        // SQL语句(可能带有预处理占位符)
-	Args  []interface{} // 预处理参数值列表
-	Error error         // 执行结果(nil为成功)
-	Start int64         // 执行开始时间(毫秒)
-	End   int64         // 执行结束时间(毫秒)
+	Sql    string        // SQL语句(可能带有预处理占位符)
+	Args   []interface{} // 预处理参数值列表
+	Format string        // 格式化后的SQL语句（仅供参考）
+	Error  error         // 执行结果(nil为成功)
+	Start  int64         // 执行开始时间(毫秒)
+	End    int64         // 执行结束时间(毫秒)
 }
 
 // 表字段结构信息
@@ -165,10 +165,10 @@ type Map = map[string]interface{}
 type List = []Map
 
 const (
-	OPTION_INSERT               = 0
-	OPTION_REPLACE              = 1
-	OPTION_SAVE                 = 2
-	OPTION_IGNORE               = 3
+	gINSERT_OPTION_DEFAULT      = 0
+	gINSERT_OPTION_REPLACE      = 1
+	gINSERT_OPTION_SAVE         = 2
+	gINSERT_OPTION_IGNORE       = 3
 	gDEFAULT_BATCH_NUM          = 10 // Per count for batch insert/replace/save
 	gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool.
 )
@@ -199,7 +199,7 @@ func New(name ...string) (db DB, err error) {
 				debug:           gtype.NewBool(),
 				cache:           gcache.New(),
 				schema:          gtype.NewString(),
-				logger:          glog.Default(),
+				logger:          glog.DefaultLogger(),
 				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME,
 			}
 			switch node.Type {
@@ -230,7 +230,7 @@ func New(name ...string) (db DB, err error) {
 // which is DEFAULT_GROUP_NAME in default.
 func Instance(name ...string) (db DB, err error) {
 	group := configs.defaultGroup
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
 	v := instances.GetOrSetFuncLock(group, func() interface{} {
@@ -344,9 +344,9 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 		}
 
 		if bs.maxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(time.Duration(bs.maxConnLifetime) * time.Second)
+			sqlDb.SetConnMaxLifetime(bs.maxConnLifetime * time.Second)
 		} else if node.MaxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(time.Duration(node.MaxConnLifetime) * time.Second)
+			sqlDb.SetConnMaxLifetime(node.MaxConnLifetime * time.Second)
 		}
 		return sqlDb
 	}, 0)
@@ -359,7 +359,7 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 	}
 	// 是否手动选择数据库
 	if v := bs.schema.Val(); v != "" {
-		if e := bs.db.setSchema(sqlDb, v); e != nil {
+		if e := bs.db.doSetSchema(sqlDb, v); e != nil {
 			err = e
 		}
 	}

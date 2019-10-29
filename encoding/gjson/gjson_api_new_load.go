@@ -51,9 +51,7 @@ func New(data interface{}, safe ...bool) *Json {
 			kind = rv.Kind()
 		}
 		switch kind {
-		case reflect.Slice:
-			fallthrough
-		case reflect.Array:
+		case reflect.Slice, reflect.Array:
 			i := interface{}(nil)
 			i = gconv.Interfaces(data)
 			j = &Json{
@@ -61,9 +59,7 @@ func New(data interface{}, safe ...bool) *Json {
 				c:  byte(gDEFAULT_SPLIT_CHAR),
 				vc: false,
 			}
-		case reflect.Map:
-			fallthrough
-		case reflect.Struct:
+		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
 			i = gconv.Map(data, "json")
 			j = &Json{
@@ -107,7 +103,10 @@ func Decode(data interface{}) (interface{}, error) {
 // The <v> should be a pointer type.
 func DecodeTo(data interface{}, v interface{}) error {
 	decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
-	decoder.UseNumber()
+	// Do not use number, it converts float64 to json.Number type,
+	// which actually a string type. It causes converting issue for other data formats,
+	// for example: yaml.
+	//decoder.UseNumber()
 	return decoder.Decode(v)
 }
 
@@ -188,7 +187,10 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 		return nil, err
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.UseNumber()
+	// Do not use number, it converts float64 to json.Number type,
+	// which actually a string type. It causes converting issue for other data formats,
+	// for example: yaml.
+	//decoder.UseNumber()
 	if err := decoder.Decode(&result); err != nil {
 		return nil, err
 	}

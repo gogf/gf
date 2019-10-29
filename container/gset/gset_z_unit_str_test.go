@@ -9,6 +9,7 @@
 package gset_test
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -195,10 +196,21 @@ func TestNewStrSetFrom(t *testing.T) {
 }
 
 func TestStrSet_Join(t *testing.T) {
-	s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-	str1 := s1.Join(",")
-	gtest.Assert(strings.Contains(str1, "b"), true)
-	gtest.Assert(strings.Contains(str1, "d"), false)
+	gtest.Case(t, func() {
+		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
+		str1 := s1.Join(",")
+		gtest.Assert(strings.Contains(str1, "b"), true)
+		gtest.Assert(strings.Contains(str1, "d"), false)
+	})
+
+	gtest.Case(t, func() {
+		s1 := gset.NewStrSet()
+		s1.Add("a").Add(`"b"`).Add(`\c`)
+		str1 := s1.Join(",")
+		gtest.Assert(strings.Contains(str1, `"b"`), true)
+		gtest.Assert(strings.Contains(str1, `\c`), true)
+		gtest.Assert(strings.Contains(str1, `a`), true)
+	})
 }
 
 func TestStrSet_String(t *testing.T) {
@@ -209,6 +221,14 @@ func TestStrSet_String(t *testing.T) {
 		gtest.Assert(strings.Contains(str1, "d"), false)
 	})
 
+	gtest.Case(t, func() {
+		s1 := gset.New(true)
+		s1.Add("a").Add("a2").Add("b").Add("c")
+		str1 := s1.String()
+		gtest.Assert(strings.Contains(str1, "["), true)
+		gtest.Assert(strings.Contains(str1, "]"), true)
+		gtest.Assert(strings.Contains(str1, "a2"), true)
+	})
 }
 
 func TestStrSet_Sum(t *testing.T) {
@@ -239,19 +259,104 @@ func TestStrSet_Remove(t *testing.T) {
 
 func TestStrSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		str1 := s1.Pop()
-		gtest.Assert(strings.Contains("a,b,c", str1), true)
+		a := []string{"a", "b", "c", "d"}
+		s := gset.NewStrSetFrom(a, true)
+		gtest.Assert(s.Size(), 4)
+		gtest.AssertIN(s.Pop(), a)
+		gtest.Assert(s.Size(), 3)
+		gtest.AssertIN(s.Pop(), a)
+		gtest.Assert(s.Size(), 2)
 	})
 }
 
 func TestStrSet_Pops(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		strs1 := s1.Pops(2)
-		gtest.AssertIN(strs1, []string{"a", "b", "c"})
-		gtest.Assert(len(strs1), 2)
-		str2 := s1.Pops(7)
-		gtest.AssertIN(str2, []string{"a", "b", "c"})
+		a := []string{"a", "b", "c", "d"}
+		s := gset.NewStrSetFrom(a, true)
+		array := s.Pops(2)
+		gtest.Assert(len(array), 2)
+		gtest.Assert(s.Size(), 2)
+		gtest.AssertIN(array, a)
+		gtest.Assert(s.Pops(0), nil)
+		gtest.AssertIN(s.Pops(2), a)
+		gtest.Assert(s.Size(), 0)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewStrSet(true)
+		a := []string{"1", "2", "3", "4"}
+		s.Add(a...)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(-2), nil)
+		gtest.AssertIN(s.Pops(-1), a)
+	})
+}
+
+func TestStrSet_Json(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := []string{"a", "b", "d", "c"}
+		a1 := gset.NewStrSetFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		gtest.Assert(len(b1), len(b2))
+		gtest.Assert(err1, err2)
+
+		a2 := gset.NewStrSet()
+		err2 = json.Unmarshal(b2, &a2)
+		gtest.Assert(err2, nil)
+		gtest.Assert(a2.Contains("a"), true)
+		gtest.Assert(a2.Contains("b"), true)
+		gtest.Assert(a2.Contains("c"), true)
+		gtest.Assert(a2.Contains("d"), true)
+		gtest.Assert(a2.Contains("e"), false)
+
+		var a3 gset.StrSet
+		err := json.Unmarshal(b2, &a3)
+		gtest.Assert(err, nil)
+		gtest.Assert(a3.Contains("a"), true)
+		gtest.Assert(a3.Contains("b"), true)
+		gtest.Assert(a3.Contains("c"), true)
+		gtest.Assert(a3.Contains("d"), true)
+		gtest.Assert(a3.Contains("e"), false)
+	})
+}
+
+func TestStrSet_AddIfNotExistFunc(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.NewStrSet(true)
+		s.Add("1")
+		gtest.Assert(s.Contains("1"), true)
+		gtest.Assert(s.Contains("2"), false)
+
+		s.AddIfNotExistFunc("2", func() string {
+			return "3"
+		})
+		gtest.Assert(s.Contains("2"), false)
+		gtest.Assert(s.Contains("3"), true)
+
+		s.AddIfNotExistFunc("3", func() string {
+			return "4"
+		})
+		gtest.Assert(s.Contains("3"), true)
+		gtest.Assert(s.Contains("4"), false)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewStrSet(true)
+		s.Add("1")
+		gtest.Assert(s.Contains("1"), true)
+		gtest.Assert(s.Contains("2"), false)
+
+		s.AddIfNotExistFuncLock("2", func() string {
+			return "3"
+		})
+		gtest.Assert(s.Contains("2"), false)
+		gtest.Assert(s.Contains("3"), true)
+
+		s.AddIfNotExistFuncLock("3", func() string {
+			return "4"
+		})
+		gtest.Assert(s.Contains("3"), true)
+		gtest.Assert(s.Contains("4"), false)
 	})
 }

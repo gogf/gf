@@ -15,4 +15,6 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(str)
+	// output:
+	// 花间一壶酒，独酌无相亲。
 }

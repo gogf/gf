@@ -10,6 +10,8 @@ package gmap
 import (
 	"encoding/json"
 
+	"github.com/gogf/gf/internal/empty"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
@@ -54,18 +56,50 @@ func (m *StrAnyMap) Iterator(f func(k string, v interface{}) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *StrAnyMap) Clone() *StrAnyMap {
-	return NewStrAnyMapFrom(m.Map(), !m.mu.IsSafe())
+	return NewStrAnyMapFrom(m.MapCopy(), !m.mu.IsSafe())
 }
 
-// Map returns a copy of the data of the hash map.
+// Map returns the underlying data map.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (m *StrAnyMap) Map() map[string]interface{} {
 	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if !m.mu.IsSafe() {
+		return m.data
+	}
 	data := make(map[string]interface{}, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
-	m.mu.RUnlock()
 	return data
+}
+
+// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+func (m *StrAnyMap) MapStrAny() map[string]interface{} {
+	return m.Map()
+}
+
+// MapCopy returns a copy of the data of the hash map.
+func (m *StrAnyMap) MapCopy() map[string]interface{} {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[string]interface{}, len(m.data))
+	for k, v := range m.data {
+		data[k] = v
+	}
+	return data
+}
+
+// FilterEmpty deletes all key-value pair of which the value is empty.
+func (m *StrAnyMap) FilterEmpty() {
+	m.mu.Lock()
+	for k, v := range m.data {
+		if empty.IsEmpty(v) {
+			delete(m.data, k)
+		}
+	}
+	m.mu.Unlock()
 }
 
 // Set sets key-value to the hash map.
@@ -99,6 +133,41 @@ func (m *StrAnyMap) Get(key string) interface{} {
 	val, _ := m.data[key]
 	m.mu.RUnlock()
 	return val
+}
+
+// Pop retrieves and deletes an item from the map.
+func (m *StrAnyMap) Pop() (key string, value interface{}) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for key, value = range m.data {
+		delete(m.data, key)
+		return
+	}
+	return
+}
+
+// Pops retrieves and deletes <size> items from the map.
+// It returns all items if size == -1.
+func (m *StrAnyMap) Pops(size int) map[string]interface{} {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if size > len(m.data) || size == -1 {
+		size = len(m.data)
+	}
+	if size == 0 {
+		return nil
+	}
+	index := 0
+	newMap := make(map[string]interface{}, size)
+	for k, v := range m.data {
+		delete(m.data, k)
+		newMap[k] = v
+		index++
+		if index == size {
+			break
+		}
+	}
+	return newMap
 }
 
 // doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
@@ -283,10 +352,7 @@ func (m *StrAnyMap) Size() int {
 // IsEmpty checks whether the map is empty.
 // It returns true if map is empty, or else false.
 func (m *StrAnyMap) IsEmpty() bool {
-	m.mu.RLock()
-	empty := len(m.data) == 0
-	m.mu.RUnlock()
-	return empty
+	return m.Size() == 0
 }
 
 // Clear deletes all data of the map, it will remake a new underlying data map.
@@ -340,4 +406,18 @@ func (m *StrAnyMap) MarshalJSON() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (m *StrAnyMap) UnmarshalJSON(b []byte) error {
+	if m.mu == nil {
+		m.mu = rwmutex.New()
+		m.data = make(map[string]interface{})
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if err := json.Unmarshal(b, &m.data); err != nil {
+		return err
+	}
+	return nil
 }

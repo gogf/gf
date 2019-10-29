@@ -9,6 +9,8 @@ package gtree
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/rwmutex"
@@ -57,6 +59,26 @@ func NewRedBlackTreeFrom(comparator func(v1, v2 interface{}) int, data map[inter
 		tree.doSet(k, v)
 	}
 	return tree
+}
+
+// SetComparator sets/changes the comparator for sorting.
+func (tree *RedBlackTree) SetComparator(comparator func(a, b interface{}) int) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.comparator = comparator
+	if tree.size > 0 {
+		data := make(map[interface{}]interface{}, tree.size)
+		tree.doIteratorAsc(tree.leftNode(), func(key, value interface{}) bool {
+			data[key] = value
+			return true
+		})
+		// Resort the tree if comparator is changed.
+		tree.root = nil
+		tree.size = 0
+		for k, v := range data {
+			tree.doSet(k, v)
+		}
+	}
 }
 
 // Clone returns a new tree with a copy of current tree.
@@ -340,6 +362,16 @@ func (tree *RedBlackTree) Map() map[interface{}]interface{} {
 	m := make(map[interface{}]interface{}, tree.Size())
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		m[key] = value
+		return true
+	})
+	return m
+}
+
+// MapStrAny returns all key-value items as map[string]interface{}.
+func (tree *RedBlackTree) MapStrAny() map[string]interface{} {
+	m := make(map[string]interface{}, tree.Size())
+	tree.IteratorAsc(func(key, value interface{}) bool {
+		m[gconv.String(key)] = value
 		return true
 	})
 	return m
@@ -877,5 +909,23 @@ func (tree *RedBlackTree) nodeColor(node *RedBlackTreeNode) color {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (tree *RedBlackTree) MarshalJSON() ([]byte, error) {
-	return json.Marshal(tree.Map())
+	return json.Marshal(gconv.Map(tree.Map()))
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (tree *RedBlackTree) UnmarshalJSON(b []byte) error {
+	if tree.mu == nil {
+		tree.mu = rwmutex.New()
+		tree.comparator = gutil.ComparatorString
+	}
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	var data map[string]interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
+	return nil
 }

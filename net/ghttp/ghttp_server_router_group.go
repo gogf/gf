@@ -216,6 +216,14 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 	return group
 }
 
+func (g *RouterGroup) MiddlewarePattern(pattern string, handlers ...HandlerFunc) *RouterGroup {
+	group := g.Clone()
+	for _, handler := range handlers {
+		group.preBind("MIDDLEWARE", pattern, handler)
+	}
+	return group
+}
+
 func (g *RouterGroup) preBind(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	preBindItems = append(preBindItems, groupPreBindItem{
 		group:    g,
@@ -245,6 +253,10 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 		domain, method, path, err := g.server.parsePattern(pattern)
 		if err != nil {
 			glog.Fatalf("invalid pattern: %s", pattern)
+		}
+		// If there'a already a domain, unset the domain field in the pattern.
+		if g.domain != nil {
+			domain = ""
 		}
 		if bindType == "REST" {
 			pattern = prefix + "/" + strings.TrimLeft(path, "/")

@@ -9,6 +9,7 @@
 package gset_test
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -189,8 +190,22 @@ func TestIntSet_Join(t *testing.T) {
 		s1 := gset.NewIntSet()
 		s1.Add(1).Add(2).Add(3)
 		s3 := s1.Join(",")
+		gtest.Assert(strings.Contains(s3, "1"), true)
+		gtest.Assert(strings.Contains(s3, "2"), true)
 		gtest.Assert(strings.Contains(s3, "3"), true)
+	})
+}
 
+func TestIntSet_String(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := gset.NewIntSet()
+		s1.Add(1).Add(2).Add(3)
+		s3 := s1.String()
+		gtest.Assert(strings.Contains(s3, "["), true)
+		gtest.Assert(strings.Contains(s3, "]"), true)
+		gtest.Assert(strings.Contains(s3, "1"), true)
+		gtest.Assert(strings.Contains(s3, "2"), true)
+		gtest.Assert(strings.Contains(s3, "3"), true)
 	})
 }
 
@@ -208,10 +223,104 @@ func TestIntSet_Sum(t *testing.T) {
 
 func TestIntSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewIntSet()
-		s1.Add(4).Add(2).Add(3)
-		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
-		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
-		gtest.Assert(s1.Size(), 3)
+		s := gset.NewIntSet()
+		s.Add(4).Add(2).Add(3)
+		gtest.Assert(s.Size(), 3)
+		gtest.AssertIN(s.Pop(), []int{4, 2, 3})
+		gtest.AssertIN(s.Pop(), []int{4, 2, 3})
+		gtest.Assert(s.Size(), 1)
+	})
+}
+
+func TestIntSet_Pops(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.NewIntSet()
+		s.Add(1).Add(4).Add(2).Add(3)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(0), nil)
+		gtest.AssertIN(s.Pops(1), []int{1, 4, 2, 3})
+		gtest.Assert(s.Size(), 3)
+		a := s.Pops(2)
+		gtest.Assert(len(a), 2)
+		gtest.AssertIN(a, []int{1, 4, 2, 3})
+		gtest.Assert(s.Size(), 1)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		a := []int{1, 2, 3, 4}
+		s.Add(a...)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(-2), nil)
+		gtest.AssertIN(s.Pops(-1), a)
+	})
+}
+
+func TestIntSet_Json(t *testing.T) {
+	gtest.Case(t, func() {
+		s1 := []int{1, 3, 2, 4}
+		a1 := gset.NewIntSetFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		gtest.Assert(len(b1), len(b2))
+		gtest.Assert(err1, err2)
+
+		a2 := gset.NewIntSet()
+		err2 = json.Unmarshal(b2, &a2)
+		gtest.Assert(err2, nil)
+		gtest.Assert(a2.Contains(1), true)
+		gtest.Assert(a2.Contains(2), true)
+		gtest.Assert(a2.Contains(3), true)
+		gtest.Assert(a2.Contains(4), true)
+		gtest.Assert(a2.Contains(5), false)
+
+		var a3 gset.IntSet
+		err := json.Unmarshal(b2, &a3)
+		gtest.Assert(err, nil)
+		gtest.Assert(a2.Contains(1), true)
+		gtest.Assert(a2.Contains(2), true)
+		gtest.Assert(a2.Contains(3), true)
+		gtest.Assert(a2.Contains(4), true)
+		gtest.Assert(a2.Contains(5), false)
+	})
+}
+
+func TestIntSet_AddIfNotExistFunc(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		s.Add(1)
+		gtest.Assert(s.Contains(1), true)
+		gtest.Assert(s.Contains(2), false)
+
+		s.AddIfNotExistFunc(2, func() int {
+			return 3
+		})
+		gtest.Assert(s.Contains(2), false)
+		gtest.Assert(s.Contains(3), true)
+
+		s.AddIfNotExistFunc(3, func() int {
+			return 4
+		})
+		gtest.Assert(s.Contains(3), true)
+		gtest.Assert(s.Contains(4), false)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		s.Add(1)
+		gtest.Assert(s.Contains(1), true)
+		gtest.Assert(s.Contains(2), false)
+
+		s.AddIfNotExistFuncLock(2, func() int {
+			return 3
+		})
+		gtest.Assert(s.Contains(2), false)
+		gtest.Assert(s.Contains(3), true)
+
+		s.AddIfNotExistFuncLock(3, func() int {
+			return 4
+		})
+		gtest.Assert(s.Contains(3), true)
+		gtest.Assert(s.Contains(4), false)
 	})
 }

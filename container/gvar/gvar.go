@@ -24,11 +24,19 @@ type Var struct {
 	safe  bool        // Concurrent safe or not.
 }
 
-// New returns a new Var with given <value>.
-// The parameter <safe> used to specify whether using Var in concurrent-safety,
+// New creates and returns a new *Var with given <value>.
+// The optional parameter <safe> specifies whether Var is used in concurrent-safety,
 // which is false in default.
 func New(value interface{}, safe ...bool) *Var {
-	v := &Var{}
+	v := Create(value, safe...)
+	return &v
+}
+
+// Create creates and returns a new Var with given <value>.
+// The optional parameter <safe> specifies whether Var is used in concurrent-safety,
+// which is false in default.
+func Create(value interface{}, safe ...bool) Var {
+	v := Var{}
 	if len(safe) > 0 && !safe[0] {
 		v.safe = true
 		v.value = gtype.NewInterface(value)
@@ -36,11 +44,6 @@ func New(value interface{}, safe ...bool) *Var {
 		v.value = value
 	}
 	return v
-}
-
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Var) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Val())
 }
 
 // Set sets <value> to <v>, and returns the old value.
@@ -56,6 +59,9 @@ func (v *Var) Set(value interface{}) (old interface{}) {
 
 // Val returns the current value of <v>.
 func (v *Var) Val() interface{} {
+	if v == nil {
+		return nil
+	}
 	if v.safe {
 		return v.value.(*gtype.Interface).Val()
 	}
@@ -97,6 +103,11 @@ func (v *Var) Int() int {
 	return gconv.Int(v.Val())
 }
 
+// Ints converts and returns <v> as []int.
+func (v *Var) Ints() []int {
+	return gconv.Ints(v.Val())
+}
+
 // Int8 converts and returns <v> as int8.
 func (v *Var) Int8() int8 {
 	return gconv.Int8(v.Val())
@@ -120,6 +131,11 @@ func (v *Var) Int64() int64 {
 // Uint converts and returns <v> as uint.
 func (v *Var) Uint() uint {
 	return gconv.Uint(v.Val())
+}
+
+// Uints converts and returns <v> as []uint.
+func (v *Var) Uints() []uint {
+	return gconv.Uints(v.Val())
 }
 
 // Uint8 converts and returns <v> as uint8.
@@ -150,11 +166,6 @@ func (v *Var) Float32() float32 {
 // Float64 converts and returns <v> as float64.
 func (v *Var) Float64() float64 {
 	return gconv.Float64(v.Val())
-}
-
-// Ints converts and returns <v> as []int.
-func (v *Var) Ints() []int {
-	return gconv.Ints(v.Val())
 }
 
 // Floats converts and returns <v> as []float64.
@@ -220,9 +231,61 @@ func (v *Var) Map(tags ...string) map[string]interface{} {
 	return gconv.Map(v.Val(), tags...)
 }
 
+// MapStrStr converts <v> to map[string]string.
+func (v *Var) MapStrStr(tags ...string) map[string]string {
+	m := v.Map(tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]string)
+		for k, v := range m {
+			vMap[k] = gconv.String(v)
+		}
+		return vMap
+	}
+	return nil
+}
+
+// MapStrVar converts <v> to map[string]*Var.
+func (v *Var) MapStrVar(tags ...string) map[string]*Var {
+	m := v.Map(tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]*Var)
+		for k, v := range m {
+			vMap[k] = New(v)
+		}
+		return vMap
+	}
+	return nil
+}
+
 // MapDeep converts <v> to map[string]interface{} recursively.
 func (v *Var) MapDeep(tags ...string) map[string]interface{} {
 	return gconv.MapDeep(v.Val(), tags...)
+}
+
+// MapDeep converts <v> to map[string]string recursively.
+func (v *Var) MapStrStrDeep(tags ...string) map[string]string {
+	m := v.MapDeep(tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]string)
+		for k, v := range m {
+			vMap[k] = gconv.String(v)
+		}
+		return vMap
+	}
+	return nil
+}
+
+// MapStrVarDeep converts <v> to map[string]*Var recursively.
+func (v *Var) MapStrVarDeep(tags ...string) map[string]*Var {
+	m := v.MapDeep(tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]*Var)
+		for k, v := range m {
+			vMap[k] = New(v)
+		}
+		return vMap
+	}
+	return nil
 }
 
 // Struct maps value of <v> to <pointer>.
@@ -249,26 +312,42 @@ func (v *Var) StructsDeep(pointer interface{}, mapping ...map[string]string) (er
 	return gconv.StructsDeep(v.Val(), pointer, mapping...)
 }
 
-// MapStruct converts map type variable <params> to another map type variable <pointer>.
+// MapToMap converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of struct/*struct.
-func (v *Var) MapStruct(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStruct(v.Val(), pointer, mapping...)
+func (v *Var) MapToMap(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.MapToMap(v.Val(), pointer, mapping...)
 }
 
-// MapStructDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// MapToMapDeep recursively converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of struct/*struct.
-func (v *Var) MapStructDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructDeep(v.Val(), pointer, mapping...)
+func (v *Var) MapToMapDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.MapToMapDeep(v.Val(), pointer, mapping...)
 }
 
-// MapStructs converts map type variable <params> to another map type variable <pointer>.
+// MapToMaps converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of []struct/[]*struct.
-func (v *Var) MapStructs(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructs(v.Val(), pointer, mapping...)
+func (v *Var) MapToMaps(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.MapToMaps(v.Val(), pointer, mapping...)
 }
 
-// MapStructsDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// MapToMapsDeep recursively converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of []struct/[]*struct.
-func (v *Var) MapStructsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructsDeep(v.Val(), pointer, mapping...)
+func (v *Var) MapToMapsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+	return gconv.MapToMapsDeep(v.Val(), pointer, mapping...)
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Var) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Var) UnmarshalJSON(b []byte) error {
+	var i interface{}
+	err := json.Unmarshal(b, &i)
+	if err != nil {
+		return err
+	}
+	v.Set(i)
+	return nil
 }

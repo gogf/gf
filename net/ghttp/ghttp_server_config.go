@@ -24,13 +24,12 @@ import (
 )
 
 const (
-	gDEFAULT_HTTP_ADDR                 = ":80"  // 默认HTTP监听地址
-	gDEFAULT_HTTPS_ADDR                = ":443" // 默认HTTPS监听地址
-	NAME_TO_URI_TYPE_DEFAULT           = 0      // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
-	NAME_TO_URI_TYPE_FULLNAME          = 1      // 不处理名称，以原有名称构建成URI
-	NAME_TO_URI_TYPE_ALLLOWER          = 2      // 仅转为小写，单词间不使用连接符号
-	NAME_TO_URI_TYPE_CAMEL             = 3      // 采用驼峰命名方式
-	gCHANGE_CONFIG_WHILE_RUNNING_ERROR = "server's configuration cannot be changed while running"
+	gDEFAULT_HTTP_ADDR  = ":80"  // 默认HTTP监听地址
+	gDEFAULT_HTTPS_ADDR = ":443" // 默认HTTPS监听地址
+	URI_TYPE_DEFAULT    = 0      // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
+	URI_TYPE_FULLNAME   = 1      // 不处理名称，以原有名称构建成URI
+	URI_TYPE_ALLLOWER   = 2      // 仅转为小写，单词间不使用连接符号
+	URI_TYPE_CAMEL      = 3      // 采用驼峰命名方式
 )
 
 // 自定义日志处理方法类型
@@ -73,6 +72,7 @@ type ServerConfig struct {
 	ErrorStack        bool              // Logging: 当产生错误时打印调用链详细堆栈
 	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
 	AccessLogEnabled  bool              // Logging: 是否开启access log(默认关闭)
+	FormParsingMemory int64             // Mess: 表单解析内存限制(byte)
 	NameToUriType     int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
 	GzipContentTypes  []string          // Mess: 允许进行gzip压缩的文件类型
 	DumpRouteMap      bool              // Mess: 是否在程序启动时默认打印路由表信息
@@ -105,6 +105,7 @@ var defaultServerConfig = ServerConfig{
 	ErrorLogEnabled:   true,
 	AccessLogEnabled:  false,
 	DumpRouteMap:      true,
+	FormParsingMemory: 1024 * 1024 * 1024,
 	RouterCacheExpire: 60,
 	Rewrites:          make(map[string]string),
 }
@@ -123,45 +124,31 @@ func ConfigFromMap(m map[string]interface{}) ServerConfig {
 
 // http server setting设置。
 // 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
-func (s *Server) SetConfig(c ServerConfig) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
+func (s *Server) SetConfig(c ServerConfig) error {
 	if c.Handler == nil {
 		c.Handler = http.HandlerFunc(s.defaultHttpHandle)
 	}
 	s.config = c
 
 	if c.LogPath != "" {
-		s.logger.SetPath(c.LogPath)
+		return s.logger.SetPath(c.LogPath)
 	}
+	return nil
 }
 
 // 通过map设置http server setting。
 // 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
 func (s *Server) SetConfigWithMap(m map[string]interface{}) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.SetConfig(ConfigFromMap(m))
 }
 
 // 设置http server参数 - Addr
-func (s *Server) SetAddr(itemFunc string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.Addr = itemFunc
+func (s *Server) SetAddr(address string) {
+	s.config.Addr = address
 }
 
 // 设置http server参数 - Port
 func (s *Server) SetPort(port ...int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error("config cannot be changed while running")
-	}
 	if len(port) > 0 {
 		s.config.Addr = ""
 		for _, v := range port {
@@ -174,20 +161,12 @@ func (s *Server) SetPort(port ...int) {
 }
 
 // 设置http server参数 - HTTPS Addr
-func (s *Server) SetHTTPSAddr(itemFunc string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.HTTPSAddr = itemFunc
+func (s *Server) SetHTTPSAddr(address string) {
+	s.config.HTTPSAddr = address
 }
 
 // 设置http server参数 - HTTPS Port
 func (s *Server) SetHTTPSPort(port ...int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	if len(port) > 0 {
 		s.config.HTTPSAddr = ""
 		for _, v := range port {
@@ -201,10 +180,6 @@ func (s *Server) SetHTTPSPort(port ...int) {
 
 // 开启HTTPS支持，但是必须提供Cert和Key文件，tlsConfig为可选项
 func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...tls.Config) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
 		certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
@@ -234,109 +209,41 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...tls.Config) 
 
 // 设置TLS配置对象
 func (s *Server) SetTLSConfig(tlsConfig tls.Config) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.TLSConfig = tlsConfig
 }
 
 // 设置http server参数 - ReadTimeout
 func (s *Server) SetReadTimeout(t time.Duration) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.ReadTimeout = t
 }
 
 // 设置http server参数 - WriteTimeout
 func (s *Server) SetWriteTimeout(t time.Duration) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.WriteTimeout = t
 }
 
 // 设置http server参数 - IdleTimeout
 func (s *Server) SetIdleTimeout(t time.Duration) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.IdleTimeout = t
 }
 
 // 设置http server参数 - MaxHeaderBytes
 func (s *Server) SetMaxHeaderBytes(b int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.MaxHeaderBytes = b
-
 }
 
 // 设置http server参数 - ServerAgent
 func (s *Server) SetServerAgent(agent string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.ServerAgent = agent
-}
-
-func (s *Server) SetGzipContentTypes(types []string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.GzipContentTypes = types
-}
-
-// 服务注册时对象和方法名称转换为URI时的规则
-func (s *Server) SetNameToUriType(t int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.NameToUriType = t
-}
-
-// 是否在程序启动时打印路由表信息
-func (s *Server) SetDumpRouteMap(enabled bool) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.DumpRouteMap = enabled
-}
-
-// 设置路由缓存过期时间(秒)
-func (s *Server) SetRouterCacheExpire(expire int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.RouterCacheExpire = expire
 }
 
 // 设置KeepAlive
 func (s *Server) SetKeepAlive(enabled bool) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.KeepAlive = enabled
 }
 
 // 设置模板引擎对象
 func (s *Server) SetView(view *gview.View) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.View = view
 }
 

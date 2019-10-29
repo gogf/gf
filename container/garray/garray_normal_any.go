@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
 
@@ -355,19 +356,23 @@ func (a *Array) Len() int {
 }
 
 // Slice returns the underlying data of array.
-// Notice, if in concurrent-safe usage, it returns a copy of slice;
-// else a pointer to the underlying data.
+// Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
+// or else a pointer to the underlying data.
 func (a *Array) Slice() []interface{} {
-	array := ([]interface{})(nil)
 	if a.mu.IsSafe() {
 		a.mu.RLock()
 		defer a.mu.RUnlock()
-		array = make([]interface{}, len(a.array))
+		array := make([]interface{}, len(a.array))
 		copy(array, a.array)
+		return array
 	} else {
-		array = a.array
+		return a.array
 	}
-	return array
+}
+
+// Interfaces returns current array as []interface{}.
+func (a *Array) Interfaces() []interface{} {
+	return a.Slice()
 }
 
 // Clone returns a new array, which is a copy of current array.
@@ -604,12 +609,26 @@ func (a *Array) CountValues() map[interface{}]int {
 	return m
 }
 
-// String returns current array as a string.
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *Array) String() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	jsonContent, _ := json.Marshal(a.array)
-	return string(jsonContent)
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('[')
+	s := ""
+	for k, v := range a.array {
+		s = gconv.String(v)
+		if gstr.IsNumeric(s) {
+			buffer.WriteString(s)
+		} else {
+			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
+		}
+		if k != len(a.array)-1 {
+			buffer.WriteByte(',')
+		}
+	}
+	buffer.WriteByte(']')
+	return buffer.String()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -617,4 +636,18 @@ func (a *Array) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (a *Array) UnmarshalJSON(b []byte) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+		a.array = make([]interface{}, 0)
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if err := json.Unmarshal(b, &a.array); err != nil {
+		return err
+	}
+	return nil
 }

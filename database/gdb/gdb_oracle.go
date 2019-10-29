@@ -218,7 +218,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	case reflect.Map:
 		fallthrough
 	case reflect.Struct:
-		dataMap = structToMap(data)
+		dataMap = varToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -226,7 +226,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	indexs := make([]string, 0)
 	indexMap := make(map[string]string)
 	indexExists := false
-	if option != OPTION_INSERT {
+	if option != gINSERT_OPTION_DEFAULT {
 		index, err := db.getTableUniqueIndex(table)
 		if err != nil {
 			return nil, err
@@ -254,7 +254,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		k = strings.ToUpper(k)
 
 		//操作类型为REPLACE/SAVE时且存在唯一索引才使用merge，否则使用insert
-		if (option == OPTION_REPLACE || option == OPTION_SAVE) && indexExists {
+		if (option == gINSERT_OPTION_REPLACE || option == gINSERT_OPTION_SAVE) && indexExists {
 			fields = append(fields, tableAlias1+"."+charL+k+charR)
 			values = append(values, tableAlias2+"."+charL+k+charR)
 			params = append(params, convertParam(v))
@@ -280,16 +280,16 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		}
 	}
 
-	if indexExists && option != OPTION_INSERT {
+	if indexExists && option != gINSERT_OPTION_DEFAULT {
 		switch option {
-		case OPTION_REPLACE:
+		case gINSERT_OPTION_REPLACE:
 			fallthrough
-		case OPTION_SAVE:
+		case gINSERT_OPTION_SAVE:
 			tmp := fmt.Sprintf("MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
 				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
 				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","))
 			return db.db.doExec(link, tmp, params...)
-		case OPTION_IGNORE:
+		case gINSERT_OPTION_IGNORE:
 			return db.db.doExec(link,
 				fmt.Sprintf("INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
 					table, strings.Join(indexs, ","), table, strings.Join(fields, ","), strings.Join(values, ",")),
@@ -309,9 +309,9 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 	listMap := (List)(nil)
 	switch v := list.(type) {
 	case Result:
-		listMap = v.ToList()
+		listMap = v.List()
 	case Record:
-		listMap = List{v.ToMap()}
+		listMap = List{v.Map()}
 	case List:
 		listMap = v
 	case Map:
@@ -330,12 +330,12 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 		case reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = structToMap(rv.Index(i).Interface())
+				listMap[i] = varToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map:
 			fallthrough
 		case reflect.Struct:
-			listMap = List{Map(structToMap(list))}
+			listMap = List{Map(varToMapDeep(list))}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -361,7 +361,7 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 	valueHolderStr := strings.Join(holders, ",")
 
 	// 当操作类型非insert时调用单笔的insert功能
-	if option != OPTION_INSERT {
+	if option != gINSERT_OPTION_DEFAULT {
 		for _, v := range listMap {
 			r, err := db.doInsert(link, table, v, option, 1)
 			if err != nil {

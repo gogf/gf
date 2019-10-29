@@ -127,7 +127,7 @@ func Test_DB_Insert(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "user_3")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		gtest.Assert(one["nickname"].String(), "name_3")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 
 		// *struct
 		timeStr = gtime.Now().String()
@@ -148,7 +148,7 @@ func Test_DB_Insert(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "t4")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		gtest.Assert(one["nickname"].String(), "name_4")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 
 		// batch with Insert
 		timeStr = gtime.Now().String()
@@ -178,7 +178,7 @@ func Test_DB_Insert(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "t200")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		gtest.Assert(one["nickname"].String(), "T200")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
@@ -299,7 +299,7 @@ func Test_DB_Save(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "t1")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		gtest.Assert(one["nickname"].String(), "T11")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
@@ -324,7 +324,7 @@ func Test_DB_Replace(t *testing.T) {
 		gtest.Assert(one["passport"].String(), "t1")
 		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		gtest.Assert(one["nickname"].String(), "T11")
-		gtest.Assert(one["create_time"].String(), timeStr)
+		gtest.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
@@ -656,16 +656,16 @@ func Test_DB_ToJson(t *testing.T) {
 
 		users := make([]User, 0)
 
-		err = result.ToStructs(users)
+		err = result.Structs(users)
 		gtest.AssertNE(err, nil)
 
-		err = result.ToStructs(&users)
+		err = result.Structs(&users)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
 		//ToJson
-		resultJson, err := gjson.LoadContent(result.ToJson())
+		resultJson, err := gjson.LoadContent(result.Json())
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -677,7 +677,7 @@ func Test_DB_ToJson(t *testing.T) {
 		gtest.Assert(users[0].CreateTime, resultJson.GetString("0.create_time"))
 
 		result = nil
-		err = result.ToStructs(&users)
+		err = result.Structs(&users)
 		gtest.AssertNE(err, nil)
 	})
 
@@ -697,13 +697,13 @@ func Test_DB_ToJson(t *testing.T) {
 
 		users := User{}
 
-		err = result.ToStruct(&users)
+		err = result.Struct(&users)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
 		result = nil
-		err = result.ToStruct(&users)
+		err = result.Struct(&users)
 		gtest.AssertNE(err, nil)
 	})
 }
@@ -730,12 +730,12 @@ func Test_DB_ToXml(t *testing.T) {
 		}
 
 		user := User{}
-		err = record.ToStruct(&user)
+		err = record.Struct(&user)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		result, err := gxml.Decode([]byte(record.ToXml("doc")))
+		result, err := gxml.Decode([]byte(record.Xml("doc")))
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -796,12 +796,12 @@ func Test_DB_ToStringMap(t *testing.T) {
 		}
 
 		t_users := make([]t_user, 0)
-		err = result.ToStructs(&t_users)
+		err = result.Structs(&t_users)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		resultStringMap := result.ToStringMap("id")
+		resultStringMap := result.MapKeyStr("id")
 		gtest.Assert(t_users[0].Id, resultStringMap[id]["id"])
 		gtest.Assert(t_users[0].Passport, resultStringMap[id]["passport"])
 		gtest.Assert(t_users[0].Password, resultStringMap[id]["password"])
@@ -833,12 +833,12 @@ func Test_DB_ToIntMap(t *testing.T) {
 		}
 
 		t_users := make([]t_user, 0)
-		err = result.ToStructs(&t_users)
+		err = result.Structs(&t_users)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		resultIntMap := result.ToIntMap("id")
+		resultIntMap := result.MapKeyInt("id")
 		gtest.Assert(t_users[0].Id, resultIntMap[id]["id"])
 		gtest.Assert(t_users[0].Passport, resultIntMap[id]["passport"])
 		gtest.Assert(t_users[0].Password, resultIntMap[id]["password"])
@@ -870,12 +870,12 @@ func Test_DB_ToUintMap(t *testing.T) {
 		}
 
 		t_users := make([]t_user, 0)
-		err = result.ToStructs(&t_users)
+		err = result.Structs(&t_users)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		resultUintMap := result.ToUintMap("id")
+		resultUintMap := result.MapKeyUint("id")
 		gtest.Assert(t_users[0].Id, resultUintMap[uint(id)]["id"])
 		gtest.Assert(t_users[0].Passport, resultUintMap[uint(id)]["passport"])
 		gtest.Assert(t_users[0].Password, resultUintMap[uint(id)]["password"])
@@ -909,12 +909,12 @@ func Test_DB_ToStringRecord(t *testing.T) {
 		}
 
 		t_users := make([]t_user, 0)
-		err = result.ToStructs(&t_users)
+		err = result.Structs(&t_users)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		resultStringRecord := result.ToStringRecord("id")
+		resultStringRecord := result.RecordKeyStr("id")
 		gtest.Assert(t_users[0].Id, resultStringRecord[ids]["id"].Int())
 		gtest.Assert(t_users[0].Passport, resultStringRecord[ids]["passport"].String())
 		gtest.Assert(t_users[0].Password, resultStringRecord[ids]["password"].String())
@@ -947,12 +947,12 @@ func Test_DB_ToIntRecord(t *testing.T) {
 		}
 
 		t_users := make([]t_user, 0)
-		err = result.ToStructs(&t_users)
+		err = result.Structs(&t_users)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		resultIntRecord := result.ToIntRecord("id")
+		resultIntRecord := result.RecordKeyInt("id")
 		gtest.Assert(t_users[0].Id, resultIntRecord[id]["id"].Int())
 		gtest.Assert(t_users[0].Passport, resultIntRecord[id]["passport"].String())
 		gtest.Assert(t_users[0].Password, resultIntRecord[id]["password"].String())
@@ -985,12 +985,12 @@ func Test_DB_ToUintRecord(t *testing.T) {
 		}
 
 		t_users := make([]t_user, 0)
-		err = result.ToStructs(&t_users)
+		err = result.Structs(&t_users)
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		resultUintRecord := result.ToUintRecord("id")
+		resultUintRecord := result.RecordKeyUint("id")
 		gtest.Assert(t_users[0].Id, resultUintRecord[uint(id)]["id"].Int())
 		gtest.Assert(t_users[0].Passport, resultUintRecord[uint(id)]["passport"].String())
 		gtest.Assert(t_users[0].Password, resultUintRecord[uint(id)]["password"].String())

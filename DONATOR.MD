@@ -13,6 +13,7 @@
 |[zfan_codes](https://gitee.com/zfan_codes)|gitee|￥10.00
 |[arden](https://github.com/arden)|alipay|￥10.00
 |[macnie](https://www.macnie.com)|wechat|￥100.00
+|lah|wechat|￥100.00
 |x*z|wechat|￥20.00
 |潘兄|wechat|￥100.00
 |Fly的狐狸|wechat|￥100.00
@@ -23,6 +24,9 @@
 |Hades|alipay|￥66.66
 |蔡蔡|wechat|￥666.00
 |上海金保证网络科技|bank|￥2000.00
+|[foxhack](https://github.com/foxhack)|wechat|￥20.00
+|*栈|wechat|￥5.00
+|*络|wechat|￥10.00
 
 
 

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	gPATH_FILTER_KEY = "/gf/net/ghttp/ghttp"
+	gPATH_FILTER_KEY = "/net/ghttp/ghttp"
 )
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理

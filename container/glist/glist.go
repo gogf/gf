@@ -9,8 +9,11 @@
 package glist
 
 import (
+	"bytes"
 	"container/list"
 	"encoding/json"
+	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/internal/rwmutex"
 )
@@ -29,6 +32,20 @@ func New(safe ...bool) *List {
 	return &List{
 		mu:   rwmutex.New(safe...),
 		list: list.New(),
+	}
+}
+
+// NewFrom creates and returns a list from a copy of given slice <array>.
+// The parameter <safe> used to specify whether using list in concurrent-safety,
+// which is false in default.
+func NewFrom(array []interface{}, safe ...bool) *List {
+	l := list.New()
+	for _, v := range array {
+		l.PushBack(v)
+	}
+	return &List{
+		mu:   rwmutex.New(safe...),
+		list: l,
 	}
 }
 
@@ -275,7 +292,7 @@ func (l *List) PushFrontList(other *List) {
 // InsertAfter inserts a new element <e> with value <v> immediately after <p> and returns <e>.
 // If <p> is not an element of <l>, the list is not modified.
 // The <p> must not be nil.
-func (l *List) InsertAfter(v interface{}, p *Element) (e *Element) {
+func (l *List) InsertAfter(p *Element, v interface{}) (e *Element) {
 	l.mu.Lock()
 	e = l.list.InsertAfter(v, p)
 	l.mu.Unlock()
@@ -285,7 +302,7 @@ func (l *List) InsertAfter(v interface{}, p *Element) (e *Element) {
 // InsertBefore inserts a new element <e> with value <v> immediately before <p> and returns <e>.
 // If <p> is not an element of <l>, the list is not modified.
 // The <p> must not be nil.
-func (l *List) InsertBefore(v interface{}, p *Element) (e *Element) {
+func (l *List) InsertBefore(p *Element, v interface{}) (e *Element) {
 	l.mu.Lock()
 	e = l.list.InsertBefore(v, p)
 	l.mu.Unlock()
@@ -373,7 +390,51 @@ func (l *List) IteratorDesc(f func(e *Element) bool) {
 	l.mu.RUnlock()
 }
 
+// Join joins list elements with a string <glue>.
+func (l *List) Join(glue string) string {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	length := l.list.Len()
+	if length > 0 {
+		s := ""
+		for i, e := 0, l.list.Front(); i < length; i, e = i+1, e.Next() {
+			s = gconv.String(e.Value)
+			if gstr.IsNumeric(s) {
+				buffer.WriteString(s)
+			} else {
+				buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
+			}
+			if i != length-1 {
+				buffer.WriteString(glue)
+			}
+		}
+	}
+	return buffer.String()
+}
+
+// String returns current list as a string.
+func (l *List) String() string {
+	return "[" + l.Join(",") + "]"
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (l *List) MarshalJSON() ([]byte, error) {
 	return json.Marshal(l.FrontAll())
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (l *List) UnmarshalJSON(b []byte) error {
+	if l.mu == nil {
+		l.mu = rwmutex.New()
+		l.list = list.New()
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	var array []interface{}
+	if err := json.Unmarshal(b, &array); err != nil {
+		return err
+	}
+	l.PushBacks(array)
+	return nil
 }

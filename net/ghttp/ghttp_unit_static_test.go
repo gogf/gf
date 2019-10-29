@@ -4,13 +4,17 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 静态文件服务测试
+// static service testing.
+
 package ghttp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/debug/gdebug"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
@@ -30,7 +34,7 @@ func Test_Static_ServerRoot(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
@@ -49,12 +53,33 @@ func Test_Static_ServerRoot(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		gtest.Assert(client.GetContent("/"), "index")
 		gtest.Assert(client.GetContent("/index.htm"), "index")
+	})
+}
+
+func Test_Static_ServerRoot_Security(t *testing.T) {
+	gtest.Case(t, func() {
+		p := ports.PopRand()
+		s := g.Server(p)
+		s.SetServerRoot(gfile.Join(gdebug.CallerDirectory(), "testdata", "static1"))
+		s.SetPort(p)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "index")
+		gtest.Assert(client.GetContent("/index.htm"), "Not Found")
+		gtest.Assert(client.GetContent("/index.html"), "index")
+		gtest.Assert(client.GetContent("/test.html"), "test")
+		gtest.Assert(client.GetContent("/../main.html"), "Not Found")
+		gtest.Assert(client.GetContent("/..%2Fmain.html"), "Not Found")
 	})
 }
 
@@ -69,7 +94,7 @@ func Test_Static_Folder_Forbidden(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
@@ -91,11 +116,12 @@ func Test_Static_IndexFolder(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		gtest.AssertNE(client.GetContent("/"), "Forbidden")
+		gtest.AssertNE(gstr.Pos(client.GetContent("/"), `<a href="/test.html"`), -1)
 		gtest.Assert(client.GetContent("/index.html"), "Not Found")
 		gtest.Assert(client.GetContent("/test.html"), "test")
 	})
@@ -113,7 +139,7 @@ func Test_Static_IndexFiles1(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
@@ -135,7 +161,7 @@ func Test_Static_IndexFiles2(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
@@ -159,7 +185,7 @@ func Test_Static_AddSearchPath1(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
@@ -183,7 +209,7 @@ func Test_Static_AddSearchPath2(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
@@ -207,7 +233,7 @@ func Test_Static_AddStaticPath(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
@@ -232,7 +258,7 @@ func Test_Static_AddStaticPath_Priority(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
@@ -259,7 +285,7 @@ func Test_Static_Rewrite(t *testing.T) {
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 

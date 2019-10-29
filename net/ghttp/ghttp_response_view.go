@@ -58,7 +58,7 @@ func (r *Response) ParseTplContent(content string, params ...gview.Params) (stri
 // 内置变量/对象
 func (r *Response) buildInVars(params ...map[string]interface{}) map[string]interface{} {
 	vars := map[string]interface{}(nil)
-	if len(params) > 0 {
+	if len(params) > 0 && params[0] != nil {
 		vars = params[0]
 	} else {
 		vars = make(map[string]interface{})
@@ -67,9 +67,9 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	if c := gins.Config(); c.FilePath() != "" {
 		vars["Config"] = c.GetMap(".")
 	}
-	vars["Cookie"] = r.request.Cookie.Map()
-	vars["Session"] = r.request.Session.Map()
-	vars["Get"] = r.request.GetQueryMap()
-	vars["Post"] = r.request.GetPostMap()
+	vars["Get"] = r.Request.GetQueryMap()
+	vars["Post"] = r.Request.GetPostMap()
+	vars["Cookie"] = r.Request.Cookie.Map()
+	vars["Session"] = r.Request.Session.Map()
 	return vars
 }

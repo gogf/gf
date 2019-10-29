@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	gPATH_FILTER_KEY = "/gf/test/gtest/gtest"
+	gPATH_FILTER_KEY = "/test/gtest/gtest"
 )
 
 // Case creates an unit test case.
@@ -200,8 +200,8 @@ func AssertIN(value, expect interface{}) {
 	expectKind := reflect.ValueOf(expect).Kind()
 	switch expectKind {
 	case reflect.Slice, reflect.Array:
-		expectSlice := gconv.Interfaces(expect)
-		for _, v1 := range gconv.Interfaces(value) {
+		expectSlice := gconv.Strings(expect)
+		for _, v1 := range gconv.Strings(value) {
 			result := false
 			for _, v2 := range expectSlice {
 				if v1 == v2 {
@@ -231,9 +231,9 @@ func AssertNI(value, expect interface{}) {
 	expectKind := reflect.ValueOf(expect).Kind()
 	switch expectKind {
 	case reflect.Slice, reflect.Array:
-		for _, v1 := range gconv.Interfaces(value) {
+		for _, v1 := range gconv.Strings(value) {
 			result := true
-			for _, v2 := range gconv.Interfaces(expect) {
+			for _, v2 := range gconv.Strings(expect) {
 				if v1 == v2 {
 					result = false
 					break

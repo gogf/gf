@@ -7,7 +7,9 @@
 package gtype
 
 import (
+	"github.com/gogf/gf/util/gconv"
 	"math"
+	"strconv"
 	"sync/atomic"
 	"unsafe"
 )
@@ -60,5 +62,21 @@ func (v *Float32) Add(delta float32) (new float32) {
 
 // Cas executes the compare-and-swap operation for value.
 func (v *Float32) Cas(old, new float32) bool {
-	return atomic.CompareAndSwapUint32(&v.value, uint32(old), uint32(new))
+	return atomic.CompareAndSwapUint32(&v.value, math.Float32bits(old), math.Float32bits(new))
+}
+
+// String implements String interface for string printing.
+func (v *Float32) String() string {
+	return strconv.FormatFloat(float64(v.Val()), 'g', -1, 32)
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Float32) MarshalJSON() ([]byte, error) {
+	return gconv.UnsafeStrToBytes(strconv.FormatFloat(float64(v.Val()), 'g', -1, 32)), nil
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Float32) UnmarshalJSON(b []byte) error {
+	v.Set(gconv.Float32(gconv.UnsafeBytesToStr(b)))
+	return nil
 }

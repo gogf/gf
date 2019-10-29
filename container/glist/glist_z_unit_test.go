@@ -8,7 +8,7 @@ package glist
 
 import (
 	"container/list"
-
+	"encoding/json"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 
@@ -120,23 +120,23 @@ func TestList(t *testing.T) {
 	l.MoveToBack(e3) // should be no-op
 	checkListPointers(t, l, []*Element{e1, e4, e3})
 
-	e2 = l.InsertBefore(2, e1) // insert before front
+	e2 = l.InsertBefore(e1, 2) // insert before front
 	checkListPointers(t, l, []*Element{e2, e1, e4, e3})
 	l.Remove(e2)
-	e2 = l.InsertBefore(2, e4) // insert before middle
+	e2 = l.InsertBefore(e4, 2) // insert before middle
 	checkListPointers(t, l, []*Element{e1, e2, e4, e3})
 	l.Remove(e2)
-	e2 = l.InsertBefore(2, e3) // insert before back
+	e2 = l.InsertBefore(e3, 2) // insert before back
 	checkListPointers(t, l, []*Element{e1, e4, e2, e3})
 	l.Remove(e2)
 
-	e2 = l.InsertAfter(2, e1) // insert after front
+	e2 = l.InsertAfter(e1, 2) // insert after front
 	checkListPointers(t, l, []*Element{e1, e2, e4, e3})
 	l.Remove(e2)
-	e2 = l.InsertAfter(2, e4) // insert after middle
+	e2 = l.InsertAfter(e4, 2) // insert after middle
 	checkListPointers(t, l, []*Element{e1, e4, e2, e3})
 	l.Remove(e2)
-	e2 = l.InsertAfter(2, e3) // insert after back
+	e2 = l.InsertAfter(e3, 2) // insert after back
 	checkListPointers(t, l, []*Element{e1, e4, e3, e2})
 	l.Remove(e2)
 
@@ -264,7 +264,7 @@ func TestIssue4103(t *testing.T) {
 		t.Errorf("l2.Len() = %d, want 2", n)
 	}
 
-	l1.InsertBefore(8, e)
+	l1.InsertBefore(e, 8)
 	if n := l1.Len(); n != 3 {
 		t.Errorf("l1.Len() = %d, want 3", n)
 	}
@@ -347,7 +347,7 @@ func TestInsertBeforeUnknownMark(t *testing.T) {
 	l.PushBack(1)
 	l.PushBack(2)
 	l.PushBack(3)
-	l.InsertBefore(1, new(Element))
+	l.InsertBefore(new(Element), 1)
 	checkList(t, l, []interface{}{1, 2, 3})
 }
 
@@ -357,7 +357,7 @@ func TestInsertAfterUnknownMark(t *testing.T) {
 	l.PushBack(1)
 	l.PushBack(2)
 	l.PushBack(3)
-	l.InsertAfter(1, new(Element))
+	l.InsertAfter(new(Element), 1)
 	checkList(t, l, []interface{}{1, 2, 3})
 }
 
@@ -582,4 +582,53 @@ func TestList_Iterator(t *testing.T) {
 	checkList(t, l, []interface{}{"e", "d", "c", "b", "a"})
 	l.Iterator(fun1)
 	checkList(t, l, []interface{}{"e", "d", "c", "b", "a"})
+}
+
+func TestList_Join(t *testing.T) {
+	gtest.Case(t, func() {
+		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
+		gtest.Assert(l.Join(","), `1,2,"a","\"b\"","\\c"`)
+		gtest.Assert(l.Join("."), `1.2."a"."\"b\""."\\c"`)
+	})
+}
+
+func TestList_String(t *testing.T) {
+	gtest.Case(t, func() {
+		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
+		gtest.Assert(l.String(), `[1,2,"a","\"b\"","\\c"]`)
+	})
+}
+
+func TestList_Json(t *testing.T) {
+	// Marshal
+	gtest.Case(t, func() {
+		a := []interface{}{"a", "b", "c"}
+		l := New()
+		l.PushBacks(a)
+		b1, err1 := json.Marshal(l)
+		b2, err2 := json.Marshal(a)
+		gtest.Assert(err1, err2)
+		gtest.Assert(b1, b2)
+	})
+	// Unmarshal
+	gtest.Case(t, func() {
+		a := []interface{}{"a", "b", "c"}
+		l := New()
+		b, err := json.Marshal(a)
+		gtest.Assert(err, nil)
+
+		err = json.Unmarshal(b, l)
+		gtest.Assert(err, nil)
+		gtest.Assert(l.FrontAll(), a)
+	})
+	gtest.Case(t, func() {
+		var l List
+		a := []interface{}{"a", "b", "c"}
+		b, err := json.Marshal(a)
+		gtest.Assert(err, nil)
+
+		err = json.Unmarshal(b, &l)
+		gtest.Assert(err, nil)
+		gtest.Assert(l.FrontAll(), a)
+	})
 }

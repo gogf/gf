@@ -77,13 +77,13 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 // 规则3: 采用驼峰命名方式
 func (s *Server) nameToUrlPart(name string) string {
 	switch s.config.NameToUriType {
-	case NAME_TO_URI_TYPE_FULLNAME:
+	case URI_TYPE_FULLNAME:
 		return name
 
-	case NAME_TO_URI_TYPE_ALLLOWER:
+	case URI_TYPE_ALLLOWER:
 		return strings.ToLower(name)
 
-	case NAME_TO_URI_TYPE_CAMEL:
+	case URI_TYPE_CAMEL:
 		part := bytes.NewBuffer(nil)
 		if gstr.IsLetterUpper(name[0]) {
 			part.WriteByte(name[0] + 32)
@@ -93,7 +93,7 @@ func (s *Server) nameToUrlPart(name string) string {
 		part.WriteString(name[1:])
 		return part.String()
 
-	case NAME_TO_URI_TYPE_DEFAULT:
+	case URI_TYPE_DEFAULT:
 		fallthrough
 	default:
 		part := bytes.NewBuffer(nil)
