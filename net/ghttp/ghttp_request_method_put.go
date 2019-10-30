@@ -110,7 +110,7 @@ func (r *Request) GetPutInterfaces(key string, def ...interface{}) []interface{}
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值。
-// 当不指定键值对关联数组时，默认获取POST方式提交的所有的提交键值对数据。
+// 当不指定键值对关联数组时，默认获取PUT方式提交的所有的提交键值对数据。
 func (r *Request) GetPutMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.initPut()
 	if len(kvMap) > 0 {
@@ -131,7 +131,7 @@ func (r *Request) GetPutMap(kvMap ...map[string]interface{}) map[string]interfac
 func (r *Request) GetPutMapStrStr(kvMap ...map[string]interface{}) map[string]string {
 	putMap := r.GetPutMap(kvMap...)
 	if len(putMap) > 0 {
-		m := make(map[string]string)
+		m := make(map[string]string, len(putMap))
 		for k, v := range putMap {
 			m[k] = gconv.String(v)
 		}
@@ -143,7 +143,7 @@ func (r *Request) GetPutMapStrStr(kvMap ...map[string]interface{}) map[string]st
 func (r *Request) GetPutMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	putMap := r.GetPutMap(kvMap...)
 	if len(putMap) > 0 {
-		m := make(map[string]*gvar.Var)
+		m := make(map[string]*gvar.Var, len(putMap))
 		for k, v := range putMap {
 			m[k] = gvar.New(v)
 		}
