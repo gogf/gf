@@ -23,7 +23,7 @@ import (
 
 const (
 	gMAX_DEPTH  = 1000
-	gFILTER_KEY = "/debug/gdebug/gdebug.go"
+	gFILTER_KEY = "/debug/gdebug/gdebug"
 )
 
 var (
@@ -92,14 +92,19 @@ func StackWithFilters(filters []string, skip ...int) string {
 	index := 1
 	buffer := bytes.NewBuffer(nil)
 	filtered := false
-	for i := callerFromIndex(filters) + number; i < gMAX_DEPTH; i++ {
-		if pc, file, line, ok := runtime.Caller(i); ok {
+	ok := true
+	pc, file, line, start := callerFromIndex(filters)
+	for i := start + number; i < gMAX_DEPTH; i++ {
+		if i != start {
+			pc, file, line, ok = runtime.Caller(i)
+		}
+		if ok {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
 			filtered = false
 			for _, filter := range filters {
-				if strings.Contains(file, filter) {
+				if filter != "" && strings.Contains(file, filter) {
 					filtered = true
 					break
 				}
@@ -140,36 +145,43 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	for i := callerFromIndex([]string{filter}) + number; i < gMAX_DEPTH; i++ {
-		if pc, file, line, ok := runtime.Caller(i); ok {
-			if filter != "" && strings.Contains(file, filter) {
-				continue
+	ok := true
+	pc, file, line, start := callerFromIndex([]string{filter})
+	if start != -1 {
+		for i := start + number; i < gMAX_DEPTH; i++ {
+			if i != start {
+				pc, file, line, ok = runtime.Caller(i)
 			}
-			if strings.Contains(file, gFILTER_KEY) {
-				continue
-			}
-			function := ""
-			if fn := runtime.FuncForPC(pc); fn == nil {
-				function = "unknown"
+			if ok {
+				if filter != "" && strings.Contains(file, filter) {
+					continue
+				}
+				if strings.Contains(file, gFILTER_KEY) {
+					continue
+				}
+				function := ""
+				if fn := runtime.FuncForPC(pc); fn == nil {
+					function = "unknown"
+				} else {
+					function = fn.Name()
+				}
+				return function, file, line
 			} else {
-				function = fn.Name()
+				break
 			}
-			return function, file, line
-		} else {
-			break
 		}
 	}
 	return "", "", -1
 }
 
-// callerFromIndex returns the caller position exclusive of the debug package.
-func callerFromIndex(filters []string) int {
-	filtered := false
-	for i := 0; i < gMAX_DEPTH; i++ {
-		if _, file, _, ok := runtime.Caller(i); ok {
+// callerFromIndex returns the caller position and according information exclusive of the debug package.
+func callerFromIndex(filters []string) (pc uintptr, file string, line int, index int) {
+	var filtered, ok bool
+	for index = 0; index < gMAX_DEPTH; index++ {
+		if pc, file, line, ok = runtime.Caller(index); ok {
 			filtered = false
 			for _, filter := range filters {
-				if strings.Contains(file, filter) {
+				if filter != "" && strings.Contains(file, filter) {
 					filtered = true
 					break
 				}
@@ -180,11 +192,10 @@ func callerFromIndex(filters []string) int {
 			if strings.Contains(file, gFILTER_KEY) {
 				continue
 			}
-			// exclude the depth from the function of current package.
-			return i - 1
+			return
 		}
 	}
-	return 0
+	return 0, "", -1, -1
 }
 
 // CallerPackage returns the package name of the caller.
