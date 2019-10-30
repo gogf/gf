@@ -136,7 +136,7 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]string {
 	queryMap := r.GetQueryMap(kvMap...)
 	if len(queryMap) > 0 {
-		m := make(map[string]string)
+		m := make(map[string]string, len(queryMap))
 		for k, v := range queryMap {
 			m[k] = gconv.String(v)
 		}
@@ -148,7 +148,7 @@ func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]
 func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	queryMap := r.GetQueryMap(kvMap...)
 	if len(queryMap) > 0 {
-		m := make(map[string]*gvar.Var)
+		m := make(map[string]*gvar.Var, len(queryMap))
 		for k, v := range queryMap {
 			m[k] = gvar.New(v)
 		}

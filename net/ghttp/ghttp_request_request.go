@@ -18,11 +18,11 @@ func (r *Request) initRaw() {
 	if !r.parsedRaw {
 		r.parsedRaw = true
 		if raw := r.GetRawString(); len(raw) > 0 {
-			r.rawVarMap, _ = gstr.Parse(raw)
+			r.rawMap, _ = gstr.Parse(raw)
 		}
 	}
-	if r.rawVarMap == nil {
-		r.rawVarMap = make(map[string]interface{})
+	if r.rawMap == nil {
+		r.rawMap = make(map[string]interface{})
 	}
 }
 
@@ -44,7 +44,7 @@ func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 		return v
 	}
 	r.initRaw()
-	v = r.rawVarMap[key]
+	v = r.rawMap[key]
 	if v == nil && len(def) > 0 {
 		return def[0]
 	}
@@ -117,19 +117,15 @@ func (r *Request) GetRequestInterfaces(key string, def ...interface{}) []interfa
 
 func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.initRaw()
-	m := r.rawVarMap
+	m := make(map[string]interface{})
 	if len(kvMap) > 0 {
-		m = make(map[string]interface{})
 		for k, defValue := range kvMap[0] {
-			if rawValue, ok := r.rawVarMap[k]; ok {
+			if rawValue, ok := r.rawMap[k]; ok {
 				m[k] = rawValue
 			} else {
 				m[k] = defValue
 			}
 		}
-	}
-	if m == nil {
-		m = make(map[string]interface{})
 	}
 	for k, v := range r.GetPostMap(kvMap...) {
 		m[k] = v

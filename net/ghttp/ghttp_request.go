@@ -46,7 +46,7 @@ type Request struct {
 	postMap         map[string]interface{} // POST解析参数
 	deleteMap       map[string]interface{} // DELETE解析参数
 	routerMap       map[string]interface{} // 路由解析参数
-	rawVarMap       map[string]interface{} // 原始数据参数
+	rawMap          map[string]interface{} // 原始数据参数
 	error           error                  // 当前请求执行错误
 	exit            bool                   // 是否退出当前请求流程执行
 	params          map[string]interface{} // 开发者自定义参数(请求流程中有效)

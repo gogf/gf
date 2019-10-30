@@ -165,7 +165,7 @@ func (r *Request) GetPostMap(kvMap ...map[string]interface{}) map[string]interfa
 func (r *Request) GetPostMapStrStr(kvMap ...map[string]interface{}) map[string]string {
 	postMap := r.GetPostMap(kvMap...)
 	if len(postMap) > 0 {
-		m := make(map[string]string)
+		m := make(map[string]string, len(postMap))
 		for k, v := range postMap {
 			m[k] = gconv.String(v)
 		}
@@ -177,7 +177,7 @@ func (r *Request) GetPostMapStrStr(kvMap ...map[string]interface{}) map[string]s
 func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	postMap := r.GetPostMap(kvMap...)
 	if len(postMap) > 0 {
-		m := make(map[string]*gvar.Var)
+		m := make(map[string]*gvar.Var, len(postMap))
 		for k, v := range postMap {
 			m[k] = gvar.New(v)
 		}

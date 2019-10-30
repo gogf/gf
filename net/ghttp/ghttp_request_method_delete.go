@@ -111,7 +111,7 @@ func (r *Request) GetDeleteInterfaces(key string, def ...interface{}) []interfac
 }
 
 // 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值。
-// 当不指定键值对关联数组时，默认获取POST方式提交的所有的提交键值对数据。
+// 当不指定键值对关联数组时，默认获取DELETE方式提交的所有的提交键值对数据。
 func (r *Request) GetDeleteMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.initDelete()
 	if len(kvMap) > 0 {
@@ -132,7 +132,7 @@ func (r *Request) GetDeleteMap(kvMap ...map[string]interface{}) map[string]inter
 func (r *Request) GetDeleteMapStrStr(kvMap ...map[string]interface{}) map[string]string {
 	deleteMap := r.GetDeleteMap(kvMap...)
 	if len(deleteMap) > 0 {
-		m := make(map[string]string)
+		m := make(map[string]string, len(deleteMap))
 		for k, v := range deleteMap {
 			m[k] = gconv.String(v)
 		}
@@ -144,7 +144,7 @@ func (r *Request) GetDeleteMapStrStr(kvMap ...map[string]interface{}) map[string
 func (r *Request) GetDeleteMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	deleteMap := r.GetDeleteMap(kvMap...)
 	if len(deleteMap) > 0 {
-		m := make(map[string]*gvar.Var)
+		m := make(map[string]*gvar.Var, len(deleteMap))
 		for k, v := range deleteMap {
 			m[k] = gvar.New(v)
 		}
