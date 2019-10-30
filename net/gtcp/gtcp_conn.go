@@ -31,7 +31,7 @@ const (
 )
 
 // NewConn creates and returns a new connection with given address.
-func NewConn(addr string, timeout ...int) (*Conn, error) {
+func NewConn(addr string, timeout ...time.Duration) (*Conn, error) {
 	if conn, err := NewNetConn(addr, timeout...); err == nil {
 		return NewConnByNetConn(conn), nil
 	} else {
@@ -95,7 +95,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 	}
 }
 
-// Recv receives data from remote address.
+// Recv receives data from the connection.
 //
 // Note that,
 // 1. If length = 0, it means it receives the data from current buffer and returns immediately.
@@ -177,8 +177,8 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	return buffer[:index], err
 }
 
-// RecvLine reads data from connection until reads char '\n'.
-// Note that the returned result does not contain char '\n'.
+// RecvLine reads data from the connection until reads char '\n'.
+// Note that the returned result does not contain the last char '\n'.
 func (c *Conn) RecvLine(retry ...Retry) ([]byte, error) {
 	var err error
 	var buffer []byte
@@ -201,7 +201,7 @@ func (c *Conn) RecvLine(retry ...Retry) ([]byte, error) {
 	return data, err
 }
 
-// RecvWithTimeout reads data from connection with timeout.
+// RecvWithTimeout reads data from the connection with timeout.
 func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
@@ -211,7 +211,7 @@ func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry
 	return
 }
 
-// SendWithTimeout writes data to connection with timeout.
+// SendWithTimeout writes data to the connection with timeout.
 func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
@@ -221,19 +221,19 @@ func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retr
 	return
 }
 
-// SendRecv writes data to connection and blocks reading response.
-func (c *Conn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, error) {
+// SendRecv writes data to the connection and blocks reading response.
+func (c *Conn) SendRecv(data []byte, length int, retry ...Retry) ([]byte, error) {
 	if err := c.Send(data, retry...); err == nil {
-		return c.Recv(receive, retry...)
+		return c.Recv(length, retry...)
 	} else {
 		return nil, err
 	}
 }
 
-// SendRecvWithTimeout writes data to connection and reads response with timeout.
-func (c *Conn) SendRecvWithTimeout(data []byte, receive int, timeout time.Duration, retry ...Retry) ([]byte, error) {
+// SendRecvWithTimeout writes data to the connection and reads response with timeout.
+func (c *Conn) SendRecvWithTimeout(data []byte, length int, timeout time.Duration, retry ...Retry) ([]byte, error) {
 	if err := c.Send(data, retry...); err == nil {
-		return c.RecvWithTimeout(receive, timeout, retry...)
+		return c.RecvWithTimeout(length, timeout, retry...)
 	} else {
 		return nil, err
 	}
