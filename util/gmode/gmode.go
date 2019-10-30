@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gmode provides release mode management for project.
+//
+// It uses string to mark the mode instead of integer, which is easy for configuration.
 package gmode
 
 import "github.com/gogf/gf/os/gfile"
