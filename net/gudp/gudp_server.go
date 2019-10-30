@@ -19,10 +19,10 @@ const (
 	gDEFAULT_SERVER = "default"
 )
 
-// UDP server.
+// Server is the UDP server.
 type Server struct {
 	conn    *Conn       // UDP server connection object.
-	address string      // Listening address.
+	address string      // UDP server listening address.
 	handler func(*Conn) // Handler for UDP connection.
 }
 

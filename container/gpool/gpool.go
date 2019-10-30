@@ -44,7 +44,7 @@ type ExpireFunc func(interface{})
 // New returns a new object pool.
 // To ensure execution efficiency, the expiration time cannot be modified once it is set.
 //
-// Expiration logistics:
+// Expiration logic:
 // expire = 0 : not expired;
 // expire < 0 : immediate expired after use;
 // expire > 0 : timeout expired;

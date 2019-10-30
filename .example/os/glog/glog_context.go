@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
-	c := context.WithValue(context.Background(), "key", "value")
-	fmt.Printf("%v", c)
+	c1 := context.WithValue(context.Background(), "key1", "value1")
+	c2 := context.WithValue(c1, "key2", "value2")
+	fmt.Printf("%v", c2.Value("key2"))
 }

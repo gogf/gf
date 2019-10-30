@@ -31,10 +31,10 @@ func NewNetConn(remoteAddress string, localAddress ...string) (*net.UDPConn, err
 	return conn, nil
 }
 
-// Send writes data to <addr> using UDP connection and then closes the connection.
+// Send writes data to <address> using UDP connection and then closes the connection.
 // Note that it is used for short connection usage.
-func Send(addr string, data []byte, retry ...Retry) error {
-	conn, err := NewConn(addr)
+func Send(address string, data []byte, retry ...Retry) error {
+	conn, err := NewConn(address)
 	if err != nil {
 		return err
 	}
@@ -42,10 +42,10 @@ func Send(addr string, data []byte, retry ...Retry) error {
 	return conn.Send(data, retry...)
 }
 
-// SendRecv writes data to <addr> using UDP connection, reads response and then closes the connection.
+// SendRecv writes data to <address> using UDP connection, reads response and then closes the connection.
 // Note that it is used for short connection usage.
-func SendRecv(addr string, data []byte, receive int, retry ...Retry) ([]byte, error) {
-	conn, err := NewConn(addr)
+func SendRecv(address string, data []byte, receive int, retry ...Retry) ([]byte, error) {
+	conn, err := NewConn(address)
 	if err != nil {
 		return nil, err
 	}

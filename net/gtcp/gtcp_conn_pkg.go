@@ -20,8 +20,8 @@ const (
 
 // Package option for simple protocol.
 type PkgOption struct {
-	HeaderSize  int   // It's 2 bytes in default, max is 4 bytes.
-	MaxDataSize int   // (Byte)data field size, it's 2 bytes in default, which means 65535 bytes.
+	HeaderSize  int   // It's 2 bytes in default, 4 bytes max.
+	MaxDataSize int   // (Byte) Data field size, it's 2 bytes in default, which means 65535 bytes.
 	Retry       Retry // Retry policy.
 }
 
@@ -98,7 +98,7 @@ func (c *Conn) SendRecvPkgWithTimeout(data []byte, timeout time.Duration, option
 	}
 }
 
-// Recv receives data from connection using simple package protocol.
+// RecvPkg receives data from connection using simple package protocol.
 func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
 	var temp []byte
 	var length int
