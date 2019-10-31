@@ -4,28 +4,36 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gfile"
+	"io"
 )
 
-// 执行文件上传处理，上传到系统临时目录 /tmp
+// Upload uploads file to /tmp .
 func Upload(r *ghttp.Request) {
-	if f, h, e := r.FormFile("upload-file"); e == nil {
-		defer f.Close()
-		name := gfile.Basename(h.Filename)
-		buffer := make([]byte, h.Size)
-		f.Read(buffer)
-		gfile.PutBytes("/tmp/"+name, buffer)
-		r.Response.Write(name + " uploaded successly")
-	} else {
-		r.Response.Write(e.Error())
+	f, h, e := r.FormFile("upload-file")
+	if e != nil {
+		r.Response.Write(e)
 	}
+	defer f.Close()
+	savePath := "/tmp/" + gfile.Basename(h.Filename)
+	file, err := gfile.Create(savePath)
+	if err != nil {
+		r.Response.Write(err)
+		return
+	}
+	defer file.Close()
+	if _, err := io.Copy(file, f); err != nil {
+		r.Response.Write(err)
+		return
+	}
+	r.Response.Write("upload successfully")
 }
 
-// 展示文件上传页面
+// UploadShow shows uploading page.
 func UploadShow(r *ghttp.Request) {
 	r.Response.Write(`
     <html>
     <head>
-        <title>上传文件</title>
+        <title>GF UploadFile Demo</title>
     </head>
         <body>
             <form enctype="multipart/form-data" action="/upload" method="post">
@@ -39,8 +47,10 @@ func UploadShow(r *ghttp.Request) {
 
 func main() {
 	s := g.Server()
-	s.BindHandler("/upload", Upload)
-	s.BindHandler("/upload/show", UploadShow)
+	s.Group("/upload", func(g *ghttp.RouterGroup) {
+		g.ALL("/", Upload)
+		g.ALL("/show", UploadShow)
+	})
 	s.SetPort(8199)
 	s.Run()
 }

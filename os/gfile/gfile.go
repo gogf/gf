@@ -252,6 +252,7 @@ func CopyDir(src string, dst string) (err error) {
 }
 
 // DirNames returns sub-file names of given directory <path>.
+// Note that the returned names are NOT absolute paths.
 func DirNames(path string) ([]string, error) {
 	f, err := os.Open(path)
 	if err != nil {

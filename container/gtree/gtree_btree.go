@@ -128,7 +128,9 @@ func (tree *BTree) doSetWithLockCheck(key interface{}, value interface{}) interf
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
-	tree.doSet(key, value)
+	if value != nil {
+		tree.doSet(key, value)
+	}
 	return value
 }
 

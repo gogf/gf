@@ -103,7 +103,9 @@ func (set *StrSet) doAddWithLockCheck(item string, value interface{}) string {
 			item = value.(string)
 		}
 	}
-	set.data[item] = struct{}{}
+	if item != "" {
+		set.data[item] = struct{}{}
+	}
 	return item
 }
 

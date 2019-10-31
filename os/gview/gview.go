@@ -13,6 +13,7 @@ package gview
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/container/gmap"
 	"sync"
 
 	"github.com/gogf/gf/i18n/gi18n"
@@ -29,12 +30,13 @@ import (
 
 // View object for template engine.
 type View struct {
-	mu          sync.RWMutex
-	paths       *garray.StrArray       // Searching path array.
-	data        map[string]interface{} // Global template variables.
-	funcMap     map[string]interface{} // Global template function map.
-	i18nManager *gi18n.Manager         // I18n manager for this view.
-	delimiters  []string               // Customized template delimiters.
+	mu           sync.RWMutex
+	paths        *garray.StrArray       // Searching path array, NOT concurrent safe for performance purpose.
+	data         map[string]interface{} // Global template variables.
+	funcMap      map[string]interface{} // Global template function map.
+	fileCacheMap *gmap.StrAnyMap        // File cache map.
+	i18nManager  *gi18n.Manager         // I18n manager for this view.
+	delimiters   []string               // Customized template delimiters.
 }
 
 // Params is type for template params.
@@ -65,11 +67,12 @@ func ParseContent(content string, params Params) (string, error) {
 // The parameter <path> specifies the template directory path to load template files.
 func New(path ...string) *View {
 	view := &View{
-		paths:       garray.NewStrArray(true),
-		data:        make(map[string]interface{}),
-		funcMap:     make(map[string]interface{}),
-		i18nManager: gi18n.Instance(),
-		delimiters:  make([]string, 2),
+		paths:        garray.NewStrArray(),
+		data:         make(map[string]interface{}),
+		funcMap:      make(map[string]interface{}),
+		fileCacheMap: gmap.NewStrAnyMap(true),
+		i18nManager:  gi18n.Instance(),
+		delimiters:   make([]string, 2),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
 		view.SetPath(path[0])

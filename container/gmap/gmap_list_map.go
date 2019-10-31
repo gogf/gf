@@ -246,7 +246,9 @@ func (m *ListMap) doSetWithLockCheck(key interface{}, value interface{}) interfa
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
-	m.data[key] = m.list.PushBack(&gListMapNode{key, value})
+	if value != nil {
+		m.data[key] = m.list.PushBack(&gListMapNode{key, value})
+	}
 	return value
 }
 

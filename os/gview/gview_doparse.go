@@ -10,22 +10,23 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/encoding/ghash"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gfcache"
+	"github.com/gogf/gf/os/gfsnotify"
+	"github.com/gogf/gf/os/gmlock"
+	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
+	"strconv"
 	"strings"
 	"text/template"
-
-	"github.com/gogf/gf/os/gfcache"
 
 	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/encoding/ghash"
 	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/os/gspath"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 )
 
 const (
@@ -40,6 +41,154 @@ var (
 	resourceTryFiles = []string{"template/", "template", "/template", "/template/"}
 )
 
+// ParseContent parses given template file <file>
+// with given template parameters <params> and function map <funcMap>
+// and returns the parsed string content.
+func (view *View) Parse(file string, params ...Params) (result string, err error) {
+	view.mu.RLock()
+	defer view.mu.RUnlock()
+
+	var tpl *template.Template
+	// It here uses map cache to enhance the performance.
+	r := view.fileCacheMap.GetOrSetFuncLock(file, func() interface{} {
+		var path, folder string
+		var resource *gres.File
+		// Searching the absolute file path for <file>.
+		path, folder, resource, err = view.searchFile(file)
+		if err != nil {
+			return nil
+		}
+		// Get the template object instance for <folder>.
+		tpl, err = view.getTemplate(folder, fmt.Sprintf(`*%s`, gfile.Ext(path)))
+		if err != nil {
+			return nil
+		}
+		// Using memory lock to ensure concurrent safety for template parsing.
+		gmlock.LockFunc("gview.Parse:"+folder, func() {
+			if resource != nil {
+				tpl, err = tpl.Parse(gconv.UnsafeBytesToStr(resource.Content()))
+			} else {
+				tpl, err = tpl.Parse(gfcache.GetContents(path))
+			}
+		})
+		if err != nil {
+			return nil
+		}
+		// Monitor template files changes using fsnotify asynchronously.
+		if resource == nil {
+			if _, err := gfsnotify.AddOnce("gview.Parse:"+folder, folder, func(event *gfsnotify.Event) {
+				// CLEAR THEM ALL.
+				view.fileCacheMap.Clear()
+				templates.Clear()
+				gfsnotify.Exit()
+			}); err != nil {
+				intlog.Error(err)
+			}
+		}
+		return tpl
+	})
+	if r == nil {
+		return
+	}
+	tpl = r.(*template.Template)
+	// Note that the template variable assignment cannot change the value
+	// of the existing <params> or view.data because both variables are pointers.
+	// It needs to merge the values of the two maps into a new map.
+	var variables map[string]interface{}
+	length := len(view.data)
+	if len(params) > 0 {
+		length += len(params[0])
+	}
+	if length > 0 {
+		variables = make(map[string]interface{}, length)
+	}
+	if len(view.data) > 0 {
+		if len(params) > 0 {
+			if variables == nil {
+				variables = make(map[string]interface{})
+			}
+			for k, v := range params[0] {
+				variables[k] = v
+			}
+			for k, v := range view.data {
+				variables[k] = v
+			}
+		} else {
+			variables = view.data
+		}
+	} else {
+		if len(params) > 0 {
+			variables = params[0]
+		}
+	}
+	buffer := bytes.NewBuffer(nil)
+	if err := tpl.Execute(buffer, variables); err != nil {
+		return "", err
+	}
+	// TODO any graceful plan to replace "<no value>"?
+	result = gstr.Replace(buffer.String(), "<no value>", "")
+	result = view.i18nTranslate(result, variables)
+	return result, nil
+}
+
+// ParseContent parses given template content <content>
+// with given template parameters <params> and function map <funcMap>
+// and returns the parsed content in []byte.
+func (view *View) ParseContent(content string, params ...Params) (string, error) {
+	view.mu.RLock()
+	defer view.mu.RUnlock()
+	err := (error)(nil)
+	tpl := templates.GetOrSetFuncLock(gCONTENT_TEMPLATE_NAME, func() interface{} {
+		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+	}).(*template.Template)
+	// Using memory lock to ensure concurrent safety for content parsing.
+	hash := strconv.FormatUint(ghash.DJBHash64([]byte(content)), 10)
+	gmlock.LockFunc("gview.ParseContent:"+hash, func() {
+		tpl, err = tpl.Parse(content)
+	})
+	if err != nil {
+		return "", err
+	}
+	// Note that the template variable assignment cannot change the value
+	// of the existing <params> or view.data because both variables are pointers.
+	// It needs to merge the values of the two maps into a new map.
+	var variables map[string]interface{}
+	length := len(view.data)
+	if len(params) > 0 {
+		length += len(params[0])
+	}
+	if length > 0 {
+		variables = make(map[string]interface{}, length)
+	}
+	if len(view.data) > 0 {
+		if len(params) > 0 {
+			if variables == nil {
+				variables = make(map[string]interface{})
+			}
+			for k, v := range params[0] {
+				variables[k] = v
+			}
+			for k, v := range view.data {
+				variables[k] = v
+			}
+		} else {
+			variables = view.data
+		}
+	} else {
+		if len(params) > 0 {
+			variables = params[0]
+		}
+	}
+	buffer := bytes.NewBuffer(nil)
+	if err := tpl.Execute(buffer, variables); err != nil {
+		return "", err
+	}
+	// TODO any graceful plan to replace "<no value>"?
+	result := gstr.Replace(buffer.String(), "<no value>", "")
+	result = view.i18nTranslate(result, variables)
+	return result, nil
+}
+
 // getTemplate returns the template object associated with given template folder <path>.
 // It uses template cache to enhance performance, that is, it will return the same template object
 // with the same given <path>. It will also refresh the template cache
@@ -48,16 +197,19 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 	r := templates.GetOrSetFuncLock(path, func() interface{} {
 		tpl = template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 		// Firstly checking the resource manager.
-		if files := gres.ScanDirFile(path, pattern, true); len(files) > 0 {
-			var err error
-			for _, v := range files {
-				_, err = tpl.New(v.FileInfo().Name()).Parse(string(v.Content()))
-				if err != nil {
-					glog.Error(err)
+		if !gres.IsEmpty() {
+			if files := gres.ScanDirFile(path, pattern, true); len(files) > 0 {
+				var err error
+				for _, v := range files {
+					_, err = tpl.New(v.FileInfo().Name()).Parse(string(v.Content()))
+					if err != nil {
+						glog.Error(err)
+					}
 				}
+				return tpl
 			}
-			return tpl
 		}
+
 		// Secondly checking the file system.
 		files := ([]string)(nil)
 		files, err = gfile.ScanDir(path, pattern, true)
@@ -67,10 +219,6 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 		if tpl, err = tpl.ParseFiles(files...); err != nil {
 			return nil
 		}
-		_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
-			templates.Remove(path)
-			gfsnotify.Exit()
-		})
 		return tpl
 	})
 	if r != nil {
@@ -80,24 +228,34 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 }
 
 // searchFile returns the found absolute path for <file>, and its template folder path.
-func (view *View) searchFile(file string) (path string, folder string, err error) {
+func (view *View) searchFile(file string) (path string, folder string, resource *gres.File, err error) {
 	// Firstly checking the resource manager.
-	view.paths.RLockFunc(func(array []string) {
-		f := (*gres.File)(nil)
-		for _, v := range array {
-			v = strings.TrimRight(v, "/")
-			if f = gres.Get(v + "/" + file); f != nil {
-				path = f.Name()
-				folder = gfile.Dir(path)
-				break
-			}
-			if f = gres.Get(v + "/template/" + file); f != nil {
-				path = f.Name()
-				folder = gfile.Dir(path)
-				break
+	if !gres.IsEmpty() {
+		for _, v := range resourceTryFiles {
+			if resource = gres.Get(v + file); resource != nil {
+				path = resource.Name()
+				folder = v
+				return
 			}
 		}
-	})
+
+		view.paths.RLockFunc(func(array []string) {
+			for _, v := range array {
+				v = strings.TrimRight(v, "/"+gfile.Separator)
+				if resource = gres.Get(v + "/" + file); resource != nil {
+					path = resource.Name()
+					folder = v
+					break
+				}
+				if resource = gres.Get(v + "/template/" + file); resource != nil {
+					path = resource.Name()
+					folder = v + "/template"
+					break
+				}
+			}
+		})
+	}
+
 	// Secondly checking the file system.
 	if path == "" {
 		view.paths.RLockFunc(func(array []string) {
@@ -114,16 +272,7 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 			}
 		})
 	}
-	// Checking the configuration file in default paths.
-	if path == "" && !gres.IsEmpty() {
-		for _, v := range resourceTryFiles {
-			if file := gres.Get(v + file); file != nil {
-				path = file.Name()
-				folder = gfile.Dir(path)
-				return
-			}
-		}
-	}
+
 	// Error checking.
 	if path == "" {
 		buffer := bytes.NewBuffer(nil)
@@ -151,119 +300,4 @@ func (view *View) searchFile(file string) (path string, folder string, err error
 		err = errors.New(fmt.Sprintf(`template file "%s" not found`, file))
 	}
 	return
-}
-
-// ParseContent parses given template file <file>
-// with given template parameters <params> and function map <funcMap>
-// and returns the parsed string content.
-func (view *View) Parse(file string, params ...Params) (parsed string, err error) {
-	view.mu.RLock()
-	defer view.mu.RUnlock()
-	path, folder, err := view.searchFile(file)
-	if err != nil {
-		return "", err
-	}
-	tpl, err := view.getTemplate(folder, fmt.Sprintf(`*%s`, gfile.Ext(path)))
-	if err != nil {
-		return "", err
-	}
-	// Using memory lock to ensure concurrent safety for template parsing.
-	gmlock.LockFunc("gview-parsing:"+folder, func() {
-		if file := gres.Get(path); file != nil {
-			tpl, err = tpl.Parse(string(file.Content()))
-		} else {
-			tpl, err = tpl.Parse(gfcache.GetContents(path))
-		}
-	})
-	if err != nil {
-		return "", err
-	}
-	// Note that the template variable assignment cannot change the value
-	// of the existing <params> or view.data because both variables are pointers.
-	// It's need to merge the values of the two maps into a new map.
-	variables := (map[string]interface{})(nil)
-	length := len(view.data)
-	if len(params) > 0 {
-		length += len(params[0])
-	}
-	if length > 0 {
-		variables = make(map[string]interface{}, length)
-	}
-	if len(view.data) > 0 {
-		if len(params) > 0 {
-			for k, v := range params[0] {
-				variables[k] = v
-			}
-			for k, v := range view.data {
-				variables[k] = v
-			}
-		} else {
-			variables = view.data
-		}
-	} else {
-		if len(params) > 0 {
-			variables = params[0]
-		}
-	}
-	buffer := bytes.NewBuffer(nil)
-	if err := tpl.Execute(buffer, variables); err != nil {
-		return "", err
-	}
-	result := gstr.Replace(buffer.String(), "<no value>", "")
-	result = view.i18nTranslate(result, variables)
-	return result, nil
-}
-
-// ParseContent parses given template content <content>
-// with given template parameters <params> and function map <funcMap>
-// and returns the parsed content in []byte.
-func (view *View) ParseContent(content string, params ...Params) (string, error) {
-	view.mu.RLock()
-	defer view.mu.RUnlock()
-	err := (error)(nil)
-	tpl := templates.GetOrSetFuncLock(gCONTENT_TEMPLATE_NAME, func() interface{} {
-		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
-	}).(*template.Template)
-	// Using memory lock to ensure concurrent safety for content parsing.
-	hash := gconv.String(ghash.DJBHash64([]byte(content)))
-	gmlock.LockFunc("gview-parsing-content:"+hash, func() {
-		tpl, err = tpl.Parse(content)
-	})
-	if err != nil {
-		return "", err
-	}
-	// Note that the template variable assignment cannot change the value
-	// of the existing <params> or view.data because both variables are pointers.
-	// It's need to merge the values of the two maps into a new map.
-	variables := (map[string]interface{})(nil)
-	length := len(view.data)
-	if len(params) > 0 {
-		length += len(params[0])
-	}
-	if length > 0 {
-		variables = make(map[string]interface{}, length)
-	}
-	if len(view.data) > 0 {
-		if len(params) > 0 {
-			for k, v := range params[0] {
-				variables[k] = v
-			}
-			for k, v := range view.data {
-				variables[k] = v
-			}
-		} else {
-			variables = view.data
-		}
-	} else {
-		if len(params) > 0 {
-			variables = params[0]
-		}
-	}
-	buffer := bytes.NewBuffer(nil)
-	if err := tpl.Execute(buffer, variables); err != nil {
-		return "", err
-	}
-	result := gstr.Replace(buffer.String(), "<no value>", "")
-	result = view.i18nTranslate(result, variables)
-	return result, nil
 }

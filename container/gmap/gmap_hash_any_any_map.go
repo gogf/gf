@@ -194,7 +194,9 @@ func (m *AnyAnyMap) doSetWithLockCheck(key interface{}, value interface{}) inter
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
-	m.data[key] = value
+	if value != nil {
+		m.data[key] = value
+	}
 	return value
 }
 

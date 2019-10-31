@@ -181,12 +181,11 @@ func (m *StrStrMap) Pops(size int) map[string]string {
 // It returns value with given <key>.
 func (m *StrStrMap) doSetWithLockCheck(key string, value string) string {
 	m.mu.Lock()
+	defer m.mu.Unlock()
 	if v, ok := m.data[key]; ok {
-		m.mu.Unlock()
 		return v
 	}
 	m.data[key] = value
-	m.mu.Unlock()
 	return value
 }
 
@@ -225,7 +224,9 @@ func (m *StrStrMap) GetOrSetFuncLock(key string, f func() string) string {
 			return v
 		}
 		v = f()
-		m.data[key] = v
+		if v != "" {
+			m.data[key] = v
+		}
 		return v
 	} else {
 		return v

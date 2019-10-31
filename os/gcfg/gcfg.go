@@ -252,16 +252,28 @@ func (c *Config) FilePath(file ...string) (path string) {
 	if len(file) > 0 {
 		name = file[0]
 	}
-	c.paths.RLockFunc(func(array []string) {
-		for _, prefix := range array {
-			// Firstly checking the resource manager.
-			for _, v := range resourceTryFiles {
-				if file := gres.Get(prefix + v + name); file != nil {
-					path = file.Name()
-					return
+	// Searching resource manager.
+	if !gres.IsEmpty() {
+		for _, v := range resourceTryFiles {
+			if file := gres.Get(v + name); file != nil {
+				path = file.Name()
+				return
+			}
+		}
+		c.paths.RLockFunc(func(array []string) {
+			for _, prefix := range array {
+				for _, v := range resourceTryFiles {
+					if file := gres.Get(prefix + v + name); file != nil {
+						path = file.Name()
+						return
+					}
 				}
 			}
-			// Secondly checking the file system.
+		})
+	}
+	// Searching the file system.
+	c.paths.RLockFunc(func(array []string) {
+		for _, prefix := range array {
 			if path, _ = gspath.Search(prefix, name); path != "" {
 				return
 			}
@@ -270,15 +282,6 @@ func (c *Config) FilePath(file ...string) (path string) {
 			}
 		}
 	})
-	// Checking the configuration file in default paths.
-	if path == "" && !gres.IsEmpty() {
-		for _, v := range resourceTryFiles {
-			if file := gres.Get(v + name); file != nil {
-				path = file.Name()
-				return
-			}
-		}
-	}
 	return
 }
 
