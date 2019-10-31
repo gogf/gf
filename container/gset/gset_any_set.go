@@ -109,7 +109,9 @@ func (set *Set) doAddWithLockCheck(item interface{}, value interface{}) interfac
 			item = value
 		}
 	}
-	set.data[item] = struct{}{}
+	if item != nil {
+		set.data[item] = struct{}{}
+	}
 	return item
 }
 

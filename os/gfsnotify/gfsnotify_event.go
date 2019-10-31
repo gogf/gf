@@ -6,31 +6,32 @@
 
 package gfsnotify
 
+// String returns current event as string.
 func (e *Event) String() string {
 	return e.event.String()
 }
 
-// 文件/目录创建
+// IsCreate checks whether current event contains file/folder create event.
 func (e *Event) IsCreate() bool {
 	return e.Op == 1 || e.Op&CREATE == CREATE
 }
 
-// 文件/目录修改
+// IsWrite checks whether current event contains file/folder write event.
 func (e *Event) IsWrite() bool {
 	return e.Op&WRITE == WRITE
 }
 
-// 文件/目录删除
+// IsRemove checks whether current event contains file/folder remove event.
 func (e *Event) IsRemove() bool {
 	return e.Op&REMOVE == REMOVE
 }
 
-// 文件/目录重命名
+// IsRename checks whether current event contains file/folder rename event.
 func (e *Event) IsRename() bool {
 	return e.Op&RENAME == RENAME
 }
 
-// 文件/目录修改权限
+// IsChmod checks whether current event contains file/folder chmod event.
 func (e *Event) IsChmod() bool {
 	return e.Op&CHMOD == CHMOD
 }

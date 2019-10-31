@@ -130,7 +130,9 @@ func (tree *AVLTree) doSetWithLockCheck(key interface{}, value interface{}) inte
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
-	tree.put(key, value, nil, &tree.root)
+	if value != nil {
+		tree.put(key, value, nil, &tree.root)
+	}
 	return value
 }
 

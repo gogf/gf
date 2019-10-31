@@ -170,7 +170,9 @@ func (tree *RedBlackTree) doSetWithLockCheck(key interface{}, value interface{})
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
-	tree.doSet(key, value)
+	if value != nil {
+		tree.doSet(key, value)
+	}
 	return value
 }
 
