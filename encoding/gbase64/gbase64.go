@@ -10,6 +10,7 @@ package gbase64
 import (
 	"encoding/base64"
 	"github.com/gogf/gf/util/gconv"
+	"io/ioutil"
 )
 
 // Encode encodes bytes with BASE64 algorithm.
@@ -34,6 +35,24 @@ func EncodeString(src string) string {
 // EncodeToString encodes bytes to string with BASE64 algorithm.
 func EncodeToString(src []byte) string {
 	return gconv.UnsafeBytesToStr(Encode(src))
+}
+
+// EncryptFile encodes file content of <path> using BASE64 algorithms.
+func EncodeFile(path string) ([]byte, error) {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return Encode(content), nil
+}
+
+// EncodeFileToString encodes file content of <path> to string using BASE64 algorithms.
+func EncodeFileToString(path string) (string, error) {
+	content, err := EncodeFile(path)
+	if err != nil {
+		return "", err
+	}
+	return gconv.UnsafeBytesToStr(content), nil
 }
 
 // DecodeString decodes string with BASE64 algorithm.
