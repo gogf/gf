@@ -149,10 +149,15 @@ func IntranetIP() (ips []string, err error) {
 }
 
 // IsIntranet checks and returns whether given ip an intranet ip.
+//
+// Local: 127.0.0.1
 // A: 10.0.0.0--10.255.255.255
 // B: 172.16.0.0--172.31.255.255
 // C: 192.168.0.0--192.168.255.255
 func IsIntranet(ip string) bool {
+	if ip == "127.0.0.1" {
+		return true
+	}
 	array := strings.Split(ip, ".")
 	if len(array) != 4 {
 		return false
