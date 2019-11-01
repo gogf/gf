@@ -7,9 +7,12 @@
 package gview_test
 
 import (
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
@@ -243,5 +246,41 @@ func Test_ParseContent(t *testing.T) {
 		result, err := view.ParseContent(str, g.Map{"name": func() {}})
 		gtest.Assert(err != nil, true)
 		gtest.Assert(result, ``)
+	})
+}
+
+func Test_HotReload(t *testing.T) {
+	gtest.Case(t, func() {
+		dirPath := gfile.Join(
+			gfile.TempDir(),
+			"testdata",
+			"template-"+gconv.String(gtime.Nanosecond()),
+		)
+		defer gfile.Remove(dirPath)
+		filePath := gfile.Join(dirPath, "test.html")
+
+		// Initialize data.
+		err := gfile.PutContents(filePath, "test:{{.var}}")
+		gtest.Assert(err, nil)
+
+		view := gview.New(dirPath)
+
+		time.Sleep(100 * time.Millisecond)
+		result, err := view.Parse("test.html", g.Map{
+			"var": "1",
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result, `test:1`)
+
+		// Update data.
+		err = gfile.PutContents(filePath, "test2:{{.var}}")
+		gtest.Assert(err, nil)
+
+		time.Sleep(100 * time.Millisecond)
+		result, err = view.Parse("test.html", g.Map{
+			"var": "2",
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result, `test2:2`)
 	})
 }

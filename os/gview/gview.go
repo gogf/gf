@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/internal/intlog"
 	"sync"
 
 	"github.com/gogf/gf/i18n/gi18n"
@@ -75,12 +76,16 @@ func New(path ...string) *View {
 		delimiters:   make([]string, 2),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
-		view.SetPath(path[0])
+		if err := view.SetPath(path[0]); err != nil {
+			intlog.Error(err)
+		}
 	} else {
 		// Customized dir path from env/cmd.
 		if envPath := cmdenv.Get("gf.gview.path").String(); envPath != "" {
 			if gfile.Exists(envPath) {
-				view.SetPath(envPath)
+				if err := view.SetPath(envPath); err != nil {
+					intlog.Error(err)
+				}
 			} else {
 				if errorPrint() {
 					glog.Errorf("Template directory path does not exist: %s", envPath)
@@ -88,14 +93,20 @@ func New(path ...string) *View {
 			}
 		} else {
 			// Dir path of working dir.
-			view.SetPath(gfile.Pwd())
+			if err := view.SetPath(gfile.Pwd()); err != nil {
+				intlog.Error(err)
+			}
 			// Dir path of binary.
 			if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-				view.AddPath(selfPath)
+				if err := view.AddPath(selfPath); err != nil {
+					intlog.Error(err)
+				}
 			}
 			// Dir path of main package.
 			if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-				view.AddPath(mainPath)
+				if err := view.AddPath(mainPath); err != nil {
+					intlog.Error(err)
+				}
 			}
 		}
 	}
