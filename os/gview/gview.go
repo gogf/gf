@@ -13,6 +13,8 @@ package gview
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/internal/intlog"
 	"sync"
 
 	"github.com/gogf/gf/i18n/gi18n"
@@ -29,12 +31,13 @@ import (
 
 // View object for template engine.
 type View struct {
-	mu          sync.RWMutex
-	paths       *garray.StrArray       // Searching path array.
-	data        map[string]interface{} // Global template variables.
-	funcMap     map[string]interface{} // Global template function map.
-	i18nManager *gi18n.Manager         // I18n manager for this view.
-	delimiters  []string               // Customized template delimiters.
+	mu           sync.RWMutex
+	paths        *garray.StrArray       // Searching path array, NOT concurrent safe for performance purpose.
+	data         map[string]interface{} // Global template variables.
+	funcMap      map[string]interface{} // Global template function map.
+	fileCacheMap *gmap.StrAnyMap        // File cache map.
+	i18nManager  *gi18n.Manager         // I18n manager for this view.
+	delimiters   []string               // Customized template delimiters.
 }
 
 // Params is type for template params.
@@ -65,19 +68,24 @@ func ParseContent(content string, params Params) (string, error) {
 // The parameter <path> specifies the template directory path to load template files.
 func New(path ...string) *View {
 	view := &View{
-		paths:       garray.NewStrArray(true),
-		data:        make(map[string]interface{}),
-		funcMap:     make(map[string]interface{}),
-		i18nManager: gi18n.Instance(),
-		delimiters:  make([]string, 2),
+		paths:        garray.NewStrArray(),
+		data:         make(map[string]interface{}),
+		funcMap:      make(map[string]interface{}),
+		fileCacheMap: gmap.NewStrAnyMap(true),
+		i18nManager:  gi18n.Instance(),
+		delimiters:   make([]string, 2),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
-		view.SetPath(path[0])
+		if err := view.SetPath(path[0]); err != nil {
+			intlog.Error(err)
+		}
 	} else {
 		// Customized dir path from env/cmd.
 		if envPath := cmdenv.Get("gf.gview.path").String(); envPath != "" {
 			if gfile.Exists(envPath) {
-				view.SetPath(envPath)
+				if err := view.SetPath(envPath); err != nil {
+					intlog.Error(err)
+				}
 			} else {
 				if errorPrint() {
 					glog.Errorf("Template directory path does not exist: %s", envPath)
@@ -85,14 +93,20 @@ func New(path ...string) *View {
 			}
 		} else {
 			// Dir path of working dir.
-			view.SetPath(gfile.Pwd())
+			if err := view.SetPath(gfile.Pwd()); err != nil {
+				intlog.Error(err)
+			}
 			// Dir path of binary.
 			if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-				view.AddPath(selfPath)
+				if err := view.AddPath(selfPath); err != nil {
+					intlog.Error(err)
+				}
 			}
 			// Dir path of main package.
 			if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-				view.AddPath(mainPath)
+				if err := view.AddPath(mainPath); err != nil {
+					intlog.Error(err)
+				}
 			}
 		}
 	}

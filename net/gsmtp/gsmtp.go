@@ -6,7 +6,7 @@
 
 // Package gsmtp provides a SMTP client to access remote mail server.
 //
-// eg:
+// Eg:
 // s := smtp.New("smtp.exmail.qq.com:25", "notify@a.com", "password")
 // glog.Println(s.SendMail("notify@a.com", "ulric@b.com;rain@c.com", "subject", "body, <font color=red>red</font>"))
 package gsmtp

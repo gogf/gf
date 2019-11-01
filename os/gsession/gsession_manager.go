@@ -23,11 +23,12 @@ type Manager struct {
 func New(ttl time.Duration, storage ...Storage) *Manager {
 	m := &Manager{
 		ttl:      ttl,
-		storage:  NewStorageFile(),
 		sessions: gcache.New(),
 	}
 	if len(storage) > 0 && storage[0] != nil {
 		m.storage = storage[0]
+	} else {
+		m.storage = NewStorageFile()
 	}
 	return m
 }
@@ -39,9 +40,11 @@ func (m *Manager) New(sessionId ...string) *Session {
 		id = sessionId[0]
 	}
 	// NOTE:
-	// We CANNOT creates and stores it directly to manager
+	// We CANNOT creates and stores session directly to manager
 	// as it might be a fake and invalid session id
 	// which would consumes your memory as much as possible.
+	//
+	// We here create a temporary tiny session struct.
 	return &Session{
 		id:      id,
 		manager: m,

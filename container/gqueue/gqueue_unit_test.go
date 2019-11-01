@@ -10,6 +10,7 @@ package gqueue_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/container/gqueue"
 	"github.com/gogf/gf/test/gtest"
@@ -50,6 +51,7 @@ func TestQueue_Close(t *testing.T) {
 	q1 := gqueue.New()
 	q1.Push(1)
 	q1.Push(2)
+	time.Sleep(time.Millisecond)
 	gtest.Assert(q1.Len(), 2)
 	q1.Close()
 }

@@ -56,8 +56,7 @@ func (s *Server) handlePreBindItems() {
 
 // 获取分组路由对象
 func (s *Server) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
-	// 自动识别并加上/前缀
-	if prefix[0] != '/' {
+	if len(prefix) > 0 && prefix[0] != '/' {
 		prefix = "/" + prefix
 	}
 	if prefix == "/" {
@@ -77,6 +76,9 @@ func (s *Server) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGro
 
 // 获取分组路由对象(绑定域名)
 func (d *Domain) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
+	if len(prefix) > 0 && prefix[0] != '/' {
+		prefix = "/" + prefix
+	}
 	if prefix == "/" {
 		prefix = ""
 	}
@@ -253,6 +255,10 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 		domain, method, path, err := g.server.parsePattern(pattern)
 		if err != nil {
 			glog.Fatalf("invalid pattern: %s", pattern)
+		}
+		// If there'a already a domain, unset the domain field in the pattern.
+		if g.domain != nil {
+			domain = ""
 		}
 		if bindType == "REST" {
 			pattern = prefix + "/" + strings.TrimLeft(path, "/")

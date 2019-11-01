@@ -56,6 +56,8 @@ func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, erro
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter <recursive> is true.
+//
+// It returns only files except folders if <onlyFile> is true.
 func doScanDir(path string, pattern string, recursive bool, onlyFile bool) ([]string, error) {
 	list := ([]string)(nil)
 	file, err := os.Open(path)

@@ -3,9 +3,12 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
 package gbase64_test
 
 import (
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/os/gfile"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gbase64"
@@ -42,7 +45,7 @@ var pairs = []testPair{
 	{"sure.", "c3VyZS4="},
 }
 
-func TestBase64(t *testing.T) {
+func Test_Basic(t *testing.T) {
 	gtest.Case(t, func() {
 		for k := range pairs {
 			// Encode
@@ -60,5 +63,35 @@ func TestBase64(t *testing.T) {
 			r3, _ := gbase64.DecodeToString(pairs[k].encoded)
 			gtest.Assert(r3, pairs[k].decoded)
 		}
+	})
+}
+
+func Test_File(t *testing.T) {
+	path := gfile.Join(gdebug.CallerDirectory(), "testdata", "test")
+	expect := "dGVzdA=="
+	gtest.Case(t, func() {
+		b, err := gbase64.EncodeFile(path)
+		gtest.Assert(err, nil)
+		gtest.Assert(string(b), expect)
+	})
+	gtest.Case(t, func() {
+		s, err := gbase64.EncodeFileToString(path)
+		gtest.Assert(err, nil)
+		gtest.Assert(s, expect)
+	})
+}
+
+func Test_File_Error(t *testing.T) {
+	path := "none-exist-file"
+	expect := ""
+	gtest.Case(t, func() {
+		b, err := gbase64.EncodeFile(path)
+		gtest.AssertNE(err, nil)
+		gtest.Assert(string(b), expect)
+	})
+	gtest.Case(t, func() {
+		s, err := gbase64.EncodeFileToString(path)
+		gtest.AssertNE(err, nil)
+		gtest.Assert(s, expect)
 	})
 }

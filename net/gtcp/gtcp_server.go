@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	// Default TCP server name.
 	gDEFAULT_SERVER = "default"
 )
 

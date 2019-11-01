@@ -4,8 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// go test *.go -bench=".*" -benchmem
-
 package gfsnotify_test
 
 import (
@@ -19,6 +17,42 @@ import (
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 )
+
+func TestWatcher_AddOnce(t *testing.T) {
+	gtest.Case(t, func() {
+		value := gtype.New()
+		path := gfile.Join(gfile.TempDir(), gconv.String(gtime.Nanosecond()))
+		err := gfile.PutContents(path, "init")
+		gtest.Assert(err, nil)
+		defer gfile.Remove(path)
+
+		time.Sleep(100 * time.Millisecond)
+		callback1, err := gfsnotify.AddOnce("mywatch", path, func(event *gfsnotify.Event) {
+			value.Set(1)
+		})
+		gtest.Assert(err, nil)
+		callback2, err := gfsnotify.AddOnce("mywatch", path, func(event *gfsnotify.Event) {
+			value.Set(2)
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(callback2, nil)
+
+		err = gfile.PutContents(path, "1")
+		gtest.Assert(err, nil)
+
+		time.Sleep(100 * time.Millisecond)
+		gtest.Assert(value, 1)
+
+		err = gfsnotify.RemoveCallback(callback1.Id)
+		gtest.Assert(err, nil)
+
+		err = gfile.PutContents(path, "2")
+		gtest.Assert(err, nil)
+
+		time.Sleep(100 * time.Millisecond)
+		gtest.Assert(value, 1)
+	})
+}
 
 func TestWatcher_AddRemove(t *testing.T) {
 	gtest.Case(t, func() {

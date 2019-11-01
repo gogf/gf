@@ -140,7 +140,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// HTTP status checking.
 	if request.Response.Status == 0 {
-		if request.Middleware.served || request.Response.buffer.Len() > 0 {
+		if serveFile != nil || request.Middleware.served || request.Response.buffer.Len() > 0 {
 			request.Response.WriteHeader(http.StatusOK)
 		} else {
 			request.Response.WriteHeader(http.StatusNotFound)
@@ -250,7 +250,7 @@ func (s *Server) serveFile(r *Request, f *staticServeFile, allowIndex ...bool) {
 		} else {
 			info := f.file.FileInfo()
 			r.Response.wroteHeader = true
-			http.ServeContent(r.Response.Writer, r.Request, info.Name(), info.ModTime(), f.file)
+			http.ServeContent(r.Response.Writer.RawWriter(), r.Request, info.Name(), info.ModTime(), f.file)
 		}
 		return
 	}

@@ -30,6 +30,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		if parsedItems != nil {
 			return &handlerCacheItem{parsedItems, hasHook, hasServe}
 		}
+		//intlog.Printf("cannot find HTTP handler for: %s, %s, %s", r.Method, r.URL.Path, r.GetHost())
 		return nil
 	}, s.config.RouterCacheExpire*1000)
 	if value != nil {
@@ -208,8 +209,11 @@ func (item *handlerParsedItem) MarshalJSON() ([]byte, error) {
 
 // 生成回调方法查询的Key
 func (s *Server) serveHandlerKey(method, path, domain string) string {
-	if method == "" {
-		return path + "@" + strings.ToLower(domain)
+	if len(domain) > 0 {
+		domain = "@" + domain
 	}
-	return strings.ToUpper(method) + ":" + path + "@" + strings.ToLower(domain)
+	if method == "" {
+		return path + strings.ToLower(domain)
+	}
+	return strings.ToUpper(method) + ":" + path + strings.ToLower(domain)
 }

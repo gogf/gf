@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 字段类型转换，将数据库字段类型转换为golang变量类型
+// convertValue converts field value from database type to golang variable type.
 func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} {
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	t = strings.ToLower(t)
@@ -45,7 +45,7 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 
 	case "bit":
 		s := string(fieldValue)
-		// 这里的字符串判断是为兼容不同的数据库类型，如: mssql
+		// mssql is true|false string.
 		if strings.EqualFold(s, "true") {
 			return 1
 		}
@@ -57,16 +57,17 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 	case "bool":
 		return gconv.Bool(fieldValue)
 
-	case "datetime":
+	case "date":
+		t, _ := gtime.StrToTime(string(fieldValue))
+		return t.Format("Y-m-d")
+
+	case "datetime", "timestamp":
 		t, _ := gtime.StrToTime(string(fieldValue))
 		return t.String()
 
 	default:
-		// 自动识别类型, 以便默认支持更多数据库类型
+		// Auto detect field type, using key match.
 		switch {
-		case strings.Contains(t, "int"):
-			return gconv.Int(string(fieldValue))
-
 		case strings.Contains(t, "text") || strings.Contains(t, "char"):
 			return string(fieldValue)
 
@@ -79,6 +80,17 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 		case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
 			return fieldValue
 
+		case strings.Contains(t, "int"):
+			return gconv.Int(string(fieldValue))
+
+		case strings.Contains(t, "time"):
+			t, _ := gtime.StrToTime(string(fieldValue))
+			return t.String()
+
+		case strings.Contains(t, "date"):
+			t, _ := gtime.StrToTime(string(fieldValue))
+			return t.Format("Y-m-d")
+
 		default:
 			return string(fieldValue)
 		}
@@ -87,7 +99,7 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 
 // 将map的数据按照fields进行过滤，只保留与表字段同名的数据
 func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
-	// Must use data copy avoiding change the origin data map.
+	// It must use data copy here to avoid changing the origin data map.
 	newDataMap := make(map[string]interface{}, len(data))
 	if fields, err := bs.db.TableFields(table); err == nil {
 		for k, v := range data {

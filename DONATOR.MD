@@ -24,6 +24,9 @@
 |Hades|alipay|￥66.66
 |蔡蔡|wechat|￥666.00
 |上海金保证网络科技|bank|￥2000.00
+|[foxhack](https://github.com/foxhack)|wechat|￥20.00
+|*栈|wechat|￥5.00
+|*络|wechat|￥10.00
 
 
 
