@@ -89,7 +89,7 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 	// Add the callback to global callback map.
 	callbackIdMap.Set(callback.Id, callback)
 
-	intlog.Print("addWithCallbackFunc", name, path, callback.recursive)
+	//intlog.Print("addWithCallbackFunc", name, path, callback.recursive)
 	return
 }
 

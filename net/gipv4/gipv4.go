@@ -10,6 +10,7 @@ package gipv4
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -98,8 +99,20 @@ func ParseAddress(address string) (string, int) {
 	return "", 0
 }
 
-// IntranetIP returns the intranet ip list of current machine.
-func IntranetIP() (ips []string, err error) {
+// IntranetIP returns the first intranet ip of current machine.
+func IntranetIP() (ip string, err error) {
+	ips, err := IntranetIPArray()
+	if err != nil {
+		return "", err
+	}
+	if len(ips) == 0 {
+		return "", errors.New("no intranet ip found")
+	}
+	return ips[0], nil
+}
+
+// IntranetIPArray returns the intranet ip list of current machine.
+func IntranetIPArray() (ips []string, err error) {
 	ips = make([]string, 0)
 	ifaces, e := net.Interfaces()
 	if e != nil {
@@ -140,7 +153,7 @@ func IntranetIP() (ips []string, err error) {
 				continue
 			}
 			ipStr := ip.String()
-			if IsIntranet(ipStr) {
+			if ipStr != "127.0.0.1" && IsIntranet(ipStr) {
 				ips = append(ips, ipStr)
 			}
 		}
