@@ -32,6 +32,7 @@ var (
 // NewStorageRedis creates and returns a redis storage object for session.
 func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 	if redis == nil {
+		panic("redis instance for storage cannot be empty")
 		return nil
 	}
 	s := &StorageRedis{
@@ -105,26 +106,43 @@ func (s *StorageRedis) RemoveAll(id string) error {
 	return ErrorDisabled
 }
 
-// GetSession returns the session data as map for given session id.
-// The parameter <ttl> specifies the TTL for this session.
-// It returns nil if the TTL is exceeded.
-func (s *StorageRedis) GetSession(id string, ttl time.Duration) map[string]interface{} {
+// GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
+//
+// The parameter <ttl> specifies the TTL for this session, and it returns nil if the TTL is exceeded.
+// The parameter <data> is the current old session data stored in memory,
+// and for some storage it might be nil if memory storage is disabled.
+//
+// This function is called ever when session starts.
+func (s *StorageRedis) GetSession(id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
+	intlog.Printf("StorageRedis.GetSession: %s, %v", id, ttl)
 	r, err := s.redis.DoVar("GET", s.key(id))
 	if err != nil {
-		// If it does not exist, it returns an empty map to replace the session memory data.
-		return map[string]interface{}{}
+		return nil, err
+	}
+	content := r.Bytes()
+	if len(content) == 0 {
+		return nil, nil
 	}
 	var m map[string]interface{}
-	if err = json.Unmarshal(r.Bytes(), &m); err != nil {
-		return nil
+	if err = json.Unmarshal(content, &m); err != nil {
+		return nil, err
 	}
-	return m
+	if m == nil {
+		return nil, nil
+	}
+	if data == nil {
+		return gmap.NewStrAnyMapFrom(m, true), nil
+	} else {
+		data.Replace(m)
+	}
+	return data, nil
 }
 
 // SetSession updates the data map for specified session id.
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
-func (s *StorageRedis) SetSession(id string, data map[string]interface{}, ttl time.Duration) error {
+func (s *StorageRedis) SetSession(id string, data *gmap.StrAnyMap, ttl time.Duration) error {
+	intlog.Printf("StorageRedis.SetSession: %s, %v, %v", id, data, ttl)
 	content, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -137,6 +155,7 @@ func (s *StorageRedis) SetSession(id string, data map[string]interface{}, ttl ti
 // This function is called ever after session, which is not dirty, is closed.
 // It just adds the session id to the async handling queue.
 func (s *StorageRedis) UpdateTTL(id string, ttl time.Duration) error {
+	intlog.Printf("StorageRedis.UpdateTTL: %s, %v", id, ttl)
 	if ttl >= DefaultStorageRedisLoopInterval {
 		s.updatingIdMap.Set(id, int(ttl.Seconds()))
 	}
@@ -145,7 +164,7 @@ func (s *StorageRedis) UpdateTTL(id string, ttl time.Duration) error {
 
 // doUpdateTTL updates the TTL for session id.
 func (s *StorageRedis) doUpdateTTL(id string, ttlSeconds int) error {
-	intlog.Printf("update StorageRedis TTL for session id: %s, %d", id, ttlSeconds)
+	intlog.Printf("StorageRedis.doUpdateTTL: %s, %d", id, ttlSeconds)
 	_, err := s.redis.DoVar("EXPIRE", s.key(id), ttlSeconds)
 	return err
 }

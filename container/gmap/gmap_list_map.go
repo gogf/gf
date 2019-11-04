@@ -92,6 +92,21 @@ func (m *ListMap) Clear() {
 	m.mu.Unlock()
 }
 
+// Replace the data of the map with given <data>.
+func (m *ListMap) Replace(data map[interface{}]interface{}) {
+	m.mu.Lock()
+	m.data = make(map[interface{}]*glist.Element)
+	m.list = glist.New()
+	for key, value := range data {
+		if e, ok := m.data[key]; !ok {
+			m.data[key] = m.list.PushBack(&gListMapNode{key, value})
+		} else {
+			e.Value = &gListMapNode{key, value}
+		}
+	}
+	m.mu.Unlock()
+}
+
 // Map returns a copy of the data of the map.
 func (m *ListMap) Map() map[interface{}]interface{} {
 	m.mu.RLock()

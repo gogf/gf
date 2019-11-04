@@ -343,6 +343,13 @@ func (m *IntIntMap) Clear() {
 	m.mu.Unlock()
 }
 
+// Replace the data of the map with given <data>.
+func (m *IntIntMap) Replace(data map[int]int) {
+	m.mu.Lock()
+	m.data = data
+	m.mu.Unlock()
+}
+
 // LockFunc locks writing with given callback function <f> within RWMutex.Lock.
 func (m *IntIntMap) LockFunc(f func(m map[int]int)) {
 	m.mu.Lock()
