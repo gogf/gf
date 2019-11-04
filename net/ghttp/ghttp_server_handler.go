@@ -77,6 +77,8 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		// access log
 		s.handleAccessLog(request)
+		// 关闭当前Session，并更新会话超时时间
+		request.Session.Close()
 	}()
 
 	// ============================================================
@@ -168,8 +170,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_OUTPUT, request)
 	}
-	// 关闭当前Session，并更新会话超时时间
-	request.Session.Close()
 }
 
 // 查找静态文件的绝对路径

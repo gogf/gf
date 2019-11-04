@@ -362,6 +362,13 @@ func (m *StrAnyMap) Clear() {
 	m.mu.Unlock()
 }
 
+// Replace the data of the map with given <data>.
+func (m *StrAnyMap) Replace(data map[string]interface{}) {
+	m.mu.Lock()
+	m.data = data
+	m.mu.Unlock()
+}
+
 // LockFunc locks writing with given callback function <f> within RWMutex.Lock.
 func (m *StrAnyMap) LockFunc(f func(m map[string]interface{})) {
 	m.mu.Lock()

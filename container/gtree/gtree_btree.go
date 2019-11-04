@@ -324,6 +324,17 @@ func (tree *BTree) Clear() {
 	tree.size = 0
 }
 
+// Replace the data of the tree with given <data>.
+func (tree *BTree) Replace(data map[interface{}]interface{}) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.root = nil
+	tree.size = 0
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
+}
+
 // Height returns the height of the tree.
 func (tree *BTree) Height() int {
 	tree.mu.RLock()

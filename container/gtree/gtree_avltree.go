@@ -386,6 +386,17 @@ func (tree *AVLTree) Clear() {
 	tree.size = 0
 }
 
+// Replace the data of the tree with given <data>.
+func (tree *AVLTree) Replace(data map[interface{}]interface{}) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.root = nil
+	tree.size = 0
+	for key, value := range data {
+		tree.put(key, value, nil, &tree.root)
+	}
+}
+
 // String returns a string representation of container
 func (tree *AVLTree) String() string {
 	tree.mu.RLock()

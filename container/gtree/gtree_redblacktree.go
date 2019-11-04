@@ -605,6 +605,17 @@ func (tree *RedBlackTree) Clear() {
 	tree.size = 0
 }
 
+// Replace the data of the tree with given <data>.
+func (tree *RedBlackTree) Replace(data map[interface{}]interface{}) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.root = nil
+	tree.size = 0
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
+}
+
 // String returns a string representation of container.
 func (tree *RedBlackTree) String() string {
 	tree.mu.RLock()

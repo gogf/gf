@@ -6,7 +6,11 @@
 
 package gsession
 
-import "time"
+import (
+	"errors"
+	"github.com/gogf/gf/container/gmap"
+	"time"
+)
 
 type Storage interface {
 	// New creates a custom session id.
@@ -37,17 +41,25 @@ type Storage interface {
 	// RemoveAll deletes all key-value pairs from storage.
 	RemoveAll(id string) error
 
-	// GetSession returns the session data as map for given session id.
-	// The parameter <ttl> specifies the TTL for this session.
-	// It returns nil if the TTL is exceeded.
-	GetSession(id string, ttl time.Duration) map[string]interface{}
+	// GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
+	//
+	// The parameter <ttl> specifies the TTL for this session, and it returns nil if the TTL is exceeded.
+	// The parameter <data> is the current old session data stored in memory,
+	// and for some storage it might be nil if memory storage is disabled.
+	//
+	// This function is called ever when session starts.
+	GetSession(id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error)
 
-	// SetSession updates the data map for specified session id.
+	// SetSession updates the data for specified session id.
 	// This function is called ever after session, which is changed dirty, is closed.
 	// This copy all session data map from memory to storage.
-	SetSession(id string, data map[string]interface{}, ttl time.Duration) error
+	SetSession(id string, data *gmap.StrAnyMap, ttl time.Duration) error
 
 	// UpdateTTL updates the TTL for specified session id.
 	// This function is called ever after session, which is not dirty, is closed.
 	UpdateTTL(id string, ttl time.Duration) error
 }
+
+var (
+	ErrorDisabled = errors.New("this feature is disabled in this storage")
+)
