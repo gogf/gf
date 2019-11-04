@@ -137,7 +137,12 @@ func (w *Watcher) checkPathCanBeRemoved(path string) bool {
 	}
 	// Secondly check its parent whether has callbacks.
 	dirPath := fileDir(path)
-	if v := w.callbacks.Get(dirPath); v != nil && v.(*Callback).recursive {
+	if v := w.callbacks.Get(dirPath); v != nil {
+		for _, c := range v.(*glist.List).FrontAll() {
+			if c.(*Callback).recursive {
+				return false
+			}
+		}
 		return false
 	}
 	// Recursively check its parent.
@@ -147,7 +152,12 @@ func (w *Watcher) checkPathCanBeRemoved(path string) bool {
 		if parentDirPath == dirPath {
 			break
 		}
-		if v := w.callbacks.Get(parentDirPath); v != nil && v.(*Callback).recursive {
+		if v := w.callbacks.Get(parentDirPath); v != nil {
+			for _, c := range v.(*glist.List).FrontAll() {
+				if c.(*Callback).recursive {
+					return false
+				}
+			}
 			return false
 		}
 		dirPath = parentDirPath

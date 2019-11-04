@@ -41,6 +41,13 @@ var (
 	resourceTryFiles = []string{"template/", "template", "/template", "/template/"}
 )
 
+// fileCacheItem is the cache item for template file.
+type fileCacheItem struct {
+	path    string
+	folder  string
+	content string
+}
+
 // ParseContent parses given template file <file>
 // with given template parameters <params> and function map <funcMap>
 // and returns the parsed string content.
@@ -49,30 +56,19 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 	defer view.mu.RUnlock()
 
 	var tpl *template.Template
-	// It here uses map cache to enhance the performance.
+	// It caches the file, folder and its content to enhance performance.
 	r := view.fileCacheMap.GetOrSetFuncLock(file, func() interface{} {
-		var path, folder string
+		var path, folder, content string
 		var resource *gres.File
 		// Searching the absolute file path for <file>.
 		path, folder, resource, err = view.searchFile(file)
 		if err != nil {
-			return nil
+			return ""
 		}
-		// Get the template object instance for <folder>.
-		tpl, err = view.getTemplate(folder, fmt.Sprintf(`*%s`, gfile.Ext(path)))
-		if err != nil {
-			return nil
-		}
-		// Using memory lock to ensure concurrent safety for template parsing.
-		gmlock.LockFunc("gview.Parse:"+folder, func() {
-			if resource != nil {
-				tpl, err = tpl.Parse(gconv.UnsafeBytesToStr(resource.Content()))
-			} else {
-				tpl, err = tpl.Parse(gfcache.GetContents(path))
-			}
-		})
-		if err != nil {
-			return nil
+		if resource != nil {
+			content = gconv.UnsafeBytesToStr(resource.Content())
+		} else {
+			content = gfcache.GetContents(path)
 		}
 		// Monitor template files changes using fsnotify asynchronously.
 		if resource == nil {
@@ -85,12 +81,26 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 				intlog.Error(err)
 			}
 		}
-		return tpl
+		return &fileCacheItem{
+			path:    path,
+			folder:  folder,
+			content: content,
+		}
 	})
 	if r == nil {
 		return
 	}
-	tpl = r.(*template.Template)
+	item := r.(*fileCacheItem)
+	// Get the template object instance for <folder>.
+	tpl, err = view.getTemplate(item.folder, fmt.Sprintf(`*%s`, gfile.Ext(item.path)))
+	if err != nil {
+		return "", err
+	}
+	// Using memory lock to ensure concurrent safety for template parsing.
+	gmlock.LockFunc("gview.Parse:"+item.folder, func() {
+		tpl, err = tpl.Parse(item.content)
+	})
+
 	// Note that the template variable assignment cannot change the value
 	// of the existing <params> or view.data because both variables are pointers.
 	// It needs to merge the values of the two maps into a new map.
