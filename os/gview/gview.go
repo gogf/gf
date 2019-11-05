@@ -190,6 +190,7 @@ func (view *View) SetPath(path string) error {
 	}
 	view.paths.Clear()
 	view.paths.Append(realPath)
+	view.fileCacheMap.Clear()
 	//glog.Debug("[gview] SetPath:", realPath)
 	return nil
 }
@@ -240,5 +241,6 @@ func (view *View) AddPath(path string) error {
 		return nil
 	}
 	view.paths.Append(realPath)
+	view.fileCacheMap.Clear()
 	return nil
 }

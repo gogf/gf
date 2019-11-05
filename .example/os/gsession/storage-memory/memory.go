@@ -12,7 +12,7 @@ func main() {
 	s := g.Server()
 	s.SetConfigWithMap(g.Map{
 		"SessionMaxAge":  time.Minute,
-		"SessionStorage": gsession.NewStorageRedisHashTable(g.Redis()),
+		"SessionStorage": gsession.NewStorageMemory(),
 	})
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set("time", gtime.Second())

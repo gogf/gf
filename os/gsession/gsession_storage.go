@@ -7,7 +7,6 @@
 package gsession
 
 import (
-	"errors"
 	"github.com/gogf/gf/container/gmap"
 	"time"
 )
@@ -59,7 +58,3 @@ type Storage interface {
 	// This function is called ever after session, which is not dirty, is closed.
 	UpdateTTL(id string, ttl time.Duration) error
 }
-
-var (
-	ErrorDisabled = errors.New("this feature is disabled in this storage")
-)
