@@ -44,8 +44,11 @@ func (s *StorageRedisHashTable) New(ttl time.Duration) (id string) {
 // Get retrieves session value with given key.
 // It returns nil if the key does not exist in the session.
 func (s *StorageRedisHashTable) Get(id string, key string) interface{} {
-	r, _ := s.redis.DoVar("HGET", s.key(id), key)
-	return r.String()
+	r, _ := s.redis.Do("HGET", s.key(id), key)
+	if r != nil {
+		return gconv.String(r)
+	}
+	return r
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
@@ -57,7 +60,11 @@ func (s *StorageRedisHashTable) GetMap(id string) map[string]interface{} {
 	array := r.Interfaces()
 	m := make(map[string]interface{})
 	for i := 0; i < len(array); i += 2 {
-		m[gconv.String(array[i])] = gconv.String(array[i+1])
+		if array[i+1] != nil {
+			m[gconv.String(array[i])] = gconv.String(array[i+1])
+		} else {
+			m[gconv.String(array[i])] = array[i+1]
+		}
 	}
 	return m
 }

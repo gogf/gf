@@ -63,7 +63,7 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 		// Searching the absolute file path for <file>.
 		path, folder, resource, err = view.searchFile(file)
 		if err != nil {
-			return ""
+			return nil
 		}
 		if resource != nil {
 			content = gconv.UnsafeBytesToStr(resource.Content())
