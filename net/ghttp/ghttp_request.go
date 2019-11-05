@@ -9,6 +9,7 @@ package ghttp
 import (
 	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"strings"
 
@@ -41,6 +42,7 @@ type Request struct {
 	parsedPost      bool                   // POST参数是否已经解析
 	parsedDelete    bool                   // DELETE参数是否已经解析
 	parsedRaw       bool                   // 原始参数是否已经解析
+	parsedForm      bool                   // 是否已调用r.ParseMultipartForm
 	getMap          map[string]interface{} // GET解析参数
 	putMap          map[string]interface{} // PUT解析参数
 	postMap         map[string]interface{} // POST解析参数
@@ -206,6 +208,18 @@ func (r *Request) GetHost() string {
 		}
 	}
 	return r.parsedHost
+}
+
+// 获取上传的文件列表
+func (r *Request) GetMultiPartFiles(name string) []*multipart.FileHeader {
+	if !r.parsedForm {
+		r.ParseMultipartForm(r.Server.config.FormParsingMemory)
+		r.parsedForm = true
+	}
+	if r.MultipartForm == nil {
+		return nil
+	}
+	return r.MultipartForm.File[name]
 }
 
 // 判断是否为静态文件请求
