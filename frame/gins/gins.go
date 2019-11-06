@@ -27,40 +27,50 @@ import (
 
 const (
 	gFRAME_CORE_COMPONENT_NAME_REDIS    = "gf.core.component.redis"
+	gFRAME_CORE_COMPONENT_NAME_LOGGER   = "gf.core.component.logger"
 	gFRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
 )
 
-// 单例对象存储器
+// instances is the instance map for common used components.
 var instances = gmap.NewStrAnyMap(true)
 
-// 获取单例对象
-func Get(key string) interface{} {
-	return instances.Get(key)
+// Get returns the instance by given name.
+func Get(name string) interface{} {
+	return instances.Get(name)
 }
 
-// 设置单例对象
-func Set(key string, value interface{}) {
-	instances.Set(key, value)
+// Set sets a instance object to the instance manager with given name.
+func Set(name string, instance interface{}) {
+	instances.Set(name, instance)
 }
 
-// 当键名存在时返回其键值，否则写入指定的键值
-func GetOrSet(key string, value interface{}) interface{} {
-	return instances.GetOrSet(key, value)
+// GetOrSet returns the instance by name,
+// or set instance to the instance manager if it does not exist and returns this instance.
+func GetOrSet(name string, instance interface{}) interface{} {
+	return instances.GetOrSet(name, instance)
 }
 
-// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
-func GetOrSetFunc(key string, f func() interface{}) interface{} {
-	return instances.GetOrSetFunc(key, f)
+// GetOrSetFunc returns the instance by name,
+// or sets instance with returned value of callback function <f> if it does not exist
+// and then returns this instance.
+func GetOrSetFunc(name string, f func() interface{}) interface{} {
+	return instances.GetOrSetFunc(name, f)
 }
 
-// 与GetOrSetFunc不同的是，f是在写锁机制内执行
-func GetOrSetFuncLock(key string, f func() interface{}) interface{} {
-	return instances.GetOrSetFuncLock(key, f)
+// GetOrSetFuncLock returns the instance by name,
+// or sets instance with returned value of callback function <f> if it does not exist
+// and then returns this instance.
+//
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// with mutex.Lock of the hash map.
+func GetOrSetFuncLock(name string, f func() interface{}) interface{} {
+	return instances.GetOrSetFuncLock(name, f)
 }
 
-// 当键名不存在时写入，并返回true；否则返回false。
-func SetIfNotExist(key string, value interface{}) bool {
-	return instances.SetIfNotExist(key, value)
+// SetIfNotExist sets <instance> to the map if the <name> does not exist, then returns true.
+// It returns false if <name> exists, and <instance> would be ignored.
+func SetIfNotExist(name string, instance interface{}) bool {
+	return instances.SetIfNotExist(name, instance)
 }
 
 // View returns an instance of View with default settings.
@@ -85,6 +95,26 @@ func Resource(name ...string) *gres.Resource {
 // The parameter <name> is the name for the instance.
 func I18n(name ...string) *gi18n.Manager {
 	return gi18n.Instance(name...)
+}
+
+// Log returns an instance of glog.Logger.
+// The parameter <name> is the name for the instance.
+func Log(name ...string) *glog.Logger {
+	config := Config()
+	instanceName := glog.DEFAULT_NAME
+	if len(name) > 0 && name[0] != "" {
+		instanceName = name[0]
+	}
+	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_LOGGER, instanceName)
+	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+		logger := glog.Instance(instanceName)
+		if m := config.GetMap("logging"); m != nil {
+			if err := logger.SetConfigWithMap(m); err != nil {
+				glog.Error(err)
+			}
+		}
+		return logger
+	}).(*glog.Logger)
 }
 
 // Database returns an instance of database ORM object

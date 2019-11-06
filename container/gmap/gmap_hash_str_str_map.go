@@ -190,7 +190,7 @@ func (m *StrStrMap) doSetWithLockCheck(key string, value string) string {
 }
 
 // GetOrSet returns the value by key,
-// or set value with given <value> if not exist and returns this value.
+// or sets value with given <value> if it does not exist and then returns this value.
 func (m *StrStrMap) GetOrSet(key string, value string) string {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
@@ -200,8 +200,8 @@ func (m *StrStrMap) GetOrSet(key string, value string) string {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 func (m *StrStrMap) GetOrSetFunc(key string, f func() string) string {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, f())
@@ -211,8 +211,8 @@ func (m *StrStrMap) GetOrSetFunc(key string, f func() string) string {
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
@@ -233,7 +233,7 @@ func (m *StrStrMap) GetOrSetFuncLock(key string, f func() string) string {
 	}
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
+// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *StrStrMap) SetIfNotExist(key string, value string) bool {
 	if !m.Contains(key) {
@@ -243,7 +243,7 @@ func (m *StrStrMap) SetIfNotExist(key string, value string) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *StrStrMap) SetIfNotExistFunc(key string, f func() string) bool {
 	if !m.Contains(key) {
@@ -253,7 +253,7 @@ func (m *StrStrMap) SetIfNotExistFunc(key string, f func() string) bool {
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that

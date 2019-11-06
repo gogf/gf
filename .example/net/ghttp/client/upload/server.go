@@ -10,7 +10,7 @@ import (
 // Upload uploads files to /tmp .
 func Upload(r *ghttp.Request) {
 	saveDir := "/tmp/"
-	for _, item := range r.GetMultiPartFiles("upload-file") {
+	for _, item := range r.GetMultipartFiles("upload-file") {
 		file, err := item.Open()
 		if err != nil {
 			r.Response.Write(err)

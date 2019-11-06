@@ -15,14 +15,14 @@ func Test_SetConfigWithMap(t *testing.T) {
 	gtest.Case(t, func() {
 		l := New()
 		m := map[string]interface{}{
-			"path":         "/tmp/log",
-			"level":        LEVEL_PROD,
-			"stdout-print": true,
+			"path":   "/tmp/log",
+			"level":  LEVEL_PROD,
+			"stdout": false,
 		}
 		err := l.SetConfigWithMap(m)
 		gtest.Assert(err, nil)
 		gtest.Assert(l.config.Path, m["path"])
 		gtest.Assert(l.config.Level, m["level"])
-		gtest.Assert(l.config.StdoutPrint, m["stdout-print"])
+		gtest.Assert(l.config.StdoutPrint, m["stdout"])
 	})
 }
