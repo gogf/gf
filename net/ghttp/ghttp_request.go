@@ -219,7 +219,14 @@ func (r *Request) GetMultiPartFiles(name string) []*multipart.FileHeader {
 	if r.MultipartForm == nil {
 		return nil
 	}
-	return r.MultipartForm.File[name]
+	if v := r.MultipartForm.File[name]; len(v) > 0 {
+		return v
+	}
+	// Support "name[]" as array parameter.
+	if v := r.MultipartForm.File[name+"[]"]; len(v) > 0 {
+		return v
+	}
+	return nil
 }
 
 // 判断是否为静态文件请求

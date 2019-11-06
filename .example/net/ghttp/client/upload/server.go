@@ -7,36 +7,59 @@ import (
 	"io"
 )
 
-// Upload uploads file to /tmp .
+// Upload uploads files to /tmp .
 func Upload(r *ghttp.Request) {
-	f, h, e := r.FormFile("upload-file")
-	if e != nil {
-		r.Response.Write(e)
-	}
-	defer f.Close()
-	savePath := "/tmp/" + gfile.Basename(h.Filename)
-	file, err := gfile.Create(savePath)
-	if err != nil {
-		r.Response.Write(err)
-		return
-	}
-	defer file.Close()
-	if _, err := io.Copy(file, f); err != nil {
-		r.Response.Write(err)
-		return
+	saveDir := "/tmp/"
+	for _, item := range r.GetMultiPartFiles("upload-file") {
+		file, err := item.Open()
+		if err != nil {
+			r.Response.Write(err)
+			return
+		}
+		defer file.Close()
+
+		f, err := gfile.Create(saveDir + gfile.Basename(item.Filename))
+		if err != nil {
+			r.Response.Write(err)
+			return
+		}
+		defer f.Close()
+
+		if _, err := io.Copy(f, file); err != nil {
+			r.Response.Write(err)
+			return
+		}
 	}
 	r.Response.Write("upload successfully")
 }
 
-// UploadShow shows uploading page.
+// UploadShow shows uploading simgle file page.
 func UploadShow(r *ghttp.Request) {
 	r.Response.Write(`
     <html>
     <head>
-        <title>GF UploadFile Demo</title>
+        <title>GF Upload File Demo</title>
     </head>
         <body>
             <form enctype="multipart/form-data" action="/upload" method="post">
+                <input type="file" name="upload-file" />
+                <input type="submit" value="upload" />
+            </form>
+        </body>
+    </html>
+    `)
+}
+
+// UploadShowBatch shows uploading multiple files page.
+func UploadShowBatch(r *ghttp.Request) {
+	r.Response.Write(`
+    <html>
+    <head>
+        <title>GF Upload Files Demo</title>
+    </head>
+        <body>
+            <form enctype="multipart/form-data" action="/upload" method="post">
+                <input type="file" name="upload-file" />
                 <input type="file" name="upload-file" />
                 <input type="submit" value="upload" />
             </form>
@@ -50,6 +73,7 @@ func main() {
 	s.Group("/upload", func(g *ghttp.RouterGroup) {
 		g.ALL("/", Upload)
 		g.ALL("/show", UploadShow)
+		g.ALL("/batch", UploadShowBatch)
 	})
 	s.SetPort(8199)
 	s.Run()
