@@ -33,15 +33,33 @@ func Upload(r *ghttp.Request) {
 	r.Response.Write("upload successfully")
 }
 
-// UploadShow shows uploading page.
+// UploadShow shows uploading simgle file page.
 func UploadShow(r *ghttp.Request) {
 	r.Response.Write(`
     <html>
     <head>
-        <title>GF UploadFile Demo</title>
+        <title>GF Upload File Demo</title>
     </head>
         <body>
             <form enctype="multipart/form-data" action="/upload" method="post">
+                <input type="file" name="upload-file" />
+                <input type="submit" value="upload" />
+            </form>
+        </body>
+    </html>
+    `)
+}
+
+// UploadShowBatch shows uploading multiple files page.
+func UploadShowBatch(r *ghttp.Request) {
+	r.Response.Write(`
+    <html>
+    <head>
+        <title>GF Upload Files Demo</title>
+    </head>
+        <body>
+            <form enctype="multipart/form-data" action="/upload" method="post">
+                <input type="file" name="upload-file" />
                 <input type="file" name="upload-file" />
                 <input type="submit" value="upload" />
             </form>
@@ -55,6 +73,7 @@ func main() {
 	s.Group("/upload", func(g *ghttp.RouterGroup) {
 		g.ALL("/", Upload)
 		g.ALL("/show", UploadShow)
+		g.ALL("/batch", UploadShowBatch)
 	})
 	s.SetPort(8199)
 	s.Run()
