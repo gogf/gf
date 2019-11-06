@@ -146,6 +146,9 @@ func CallCustomValidator(any interface{}, name string, args ...interface{}) (boo
 
 	if v := reflect.ValueOf(any).MethodByName(name); v.String() != "<invalid Value>" {
 		res := v.Call(inputs)
+		if len(res) !=2 {
+			return false, name+"的返回值错误"
+		}
 		return res[0].Bool(), res[1].String()
 	}
 	return false ,""
