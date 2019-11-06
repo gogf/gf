@@ -94,7 +94,7 @@ func CheckRequest(cls interface{}, r *ghttp.Request, rules interface{}, msgs ...
 		//自定义验证开始
 		// 查看rule中是否有func|关键字
 		if strings.Contains(rule, "func[") {
-			//@todo是否要用正则获取？
+			//正则获取funcName会不会更优雅些？
 			funcRule := strings.Replace(rule, "func[", "",1)
 			funcName := strings.Replace(funcRule,"]","",1)
 			if len(funcName) > 0{
@@ -104,30 +104,32 @@ func CheckRequest(cls interface{}, r *ghttp.Request, rules interface{}, msgs ...
 					errorMaps[key][rule] = errMsg
 				}
 			}
-		}
-		if e := Check(value, rule, customMsgs[key], data); e != nil {
-			_, item := e.FirstItem()
-			// 如果值为nil|""，并且不需要require*验证时，其他验证失效
-			if value == nil || gconv.String(value) == "" {
-				required := false
-				// rule => error
-				for k := range item {
-					if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
-						required = true
-						break
+		}else{
+			if e := Check(value, rule, customMsgs[key], data); e != nil {
+				_, item := e.FirstItem()
+				// 如果值为nil|""，并且不需要require*验证时，其他验证失效
+				if value == nil || gconv.String(value) == "" {
+					required := false
+					// rule => error
+					for k := range item {
+						if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
+							required = true
+							break
+						}
+					}
+					if !required {
+						continue
 					}
 				}
-				if !required {
-					continue
+				if _, ok := errorMaps[key]; !ok {
+					errorMaps[key] = make(map[string]string)
+				}
+				for k, v := range item {
+					errorMaps[key][k] = v
 				}
 			}
-			if _, ok := errorMaps[key]; !ok {
-				errorMaps[key] = make(map[string]string)
-			}
-			for k, v := range item {
-				errorMaps[key][k] = v
-			}
 		}
+
 	}
 	if len(errorMaps) > 0 {
 		return newError(errorRules, errorMaps)
