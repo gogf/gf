@@ -92,7 +92,7 @@ func CheckRequest(cls interface{}, r *ghttp.Request, rules interface{}, msgs ...
 			value = v
 		}
 		//自定义验证开始
-		// 查看rule中是否有func|关键字
+		// 查看rule中是否有func[关键字 rule:func[customFunc]
 		if strings.Contains(rule, "func[") {
 			//正则获取funcName会不会更优雅些？
 			funcRule := strings.Replace(rule, "func[", "",1)
