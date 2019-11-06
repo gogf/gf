@@ -210,20 +210,31 @@ func (r *Request) GetHost() string {
 	return r.parsedHost
 }
 
-// 获取上传的文件列表
-func (r *Request) GetMultiPartFiles(name string) []*multipart.FileHeader {
+// 根据服务端配置解析multipart.Form
+func (r *Request) parseMultipartForm() *multipart.Form {
 	if !r.parsedForm {
 		r.ParseMultipartForm(r.Server.config.FormParsingMemory)
 		r.parsedForm = true
 	}
-	if r.MultipartForm == nil {
+	return r.MultipartForm
+}
+
+// 获取解析后的multipart.Form对象
+func (r *Request) GetMultipartForm() *multipart.Form {
+	return r.parseMultipartForm()
+}
+
+// 获取上传的文件列表
+func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
+	form := r.GetMultipartForm()
+	if form == nil {
 		return nil
 	}
-	if v := r.MultipartForm.File[name]; len(v) > 0 {
+	if v := form.File[name]; len(v) > 0 {
 		return v
 	}
 	// Support "name[]" as array parameter.
-	if v := r.MultipartForm.File[name+"[]"]; len(v) > 0 {
+	if v := form.File[name+"[]"]; len(v) > 0 {
 		return v
 	}
 	return nil
