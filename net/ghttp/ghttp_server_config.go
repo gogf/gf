@@ -118,7 +118,9 @@ func Config() ServerConfig {
 // 通过Map创建Config配置对象，Map没有传递的属性将会使用模块的默认值
 func ConfigFromMap(m map[string]interface{}) ServerConfig {
 	config := defaultServerConfig
-	gconv.Struct(m, &config)
+	if err := gconv.Struct(m, &config); err != nil {
+		panic(err)
+	}
 	return config
 }
 
