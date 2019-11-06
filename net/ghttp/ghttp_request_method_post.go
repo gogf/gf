@@ -22,10 +22,7 @@ func (r *Request) initPost() {
 		r.parsedPost = true
 		if v := r.Header.Get("Content-Type"); v != "" && gstr.Contains(v, "multipart/") {
 			// multipart/form-data, multipart/mixed
-			if !r.parsedForm {
-				r.ParseMultipartForm(r.Server.config.FormParsingMemory)
-				r.parsedForm = true
-			}
+			r.parseMultipartForm()
 			if len(r.PostForm) > 0 {
 				// 重新组织数据格式，使用统一的数据Parse方式
 				params := ""

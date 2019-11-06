@@ -261,10 +261,8 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 			switch kind {
 			// '?'占位符支持slice类型, 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
 			case reflect.Slice, reflect.Array:
-				if rv.Len() == 0 {
-					continue
-				}
-				// 不拆分[]byte类型
+				// 不拆分[]byte类型(当做字符串处理)
+				// Eg: table.Where("name = ?", []byte("john"))
 				if _, ok := arg.([]byte); ok {
 					newArgs = append(newArgs, arg)
 					continue
@@ -274,6 +272,7 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 				}
 				// 如果参数直接传递slice，并且占位符数量与slice长度相等，
 				// 那么不用替换扩展占位符数量，直接使用该slice作为查询参数
+				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
 				if len(args) == 1 && gstr.Count(newQuery, "?") == rv.Len() {
 					break
 				}
