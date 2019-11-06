@@ -78,62 +78,53 @@ func (page *Page) SetUrlTemplate(template string) {
 
 // 获取显示"下一页"的内容.
 func (page *Page) NextPage(styles ...string) string {
-	var curStyle, style string
+	var curStyle string
 	if len(styles) > 0 {
 		curStyle = styles[0]
 	}
-	if len(styles) > 1 {
+	/*if len(styles) > 1 {
 		style = styles[0]
-	}
+	}*/
 	if page.CurrentPage < page.TotalPage {
-		return page.GetLink(page.GetUrl(page.CurrentPage+1), page.NextPageTag, "下一页", style)
+		return page.GetLink(page.GetUrl(page.CurrentPage+1), page.NextPageTag, "下一页", curStyle)
 	}
 	return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.NextPageTag)
 }
 
 // 获取显示“上一页”的内容
 func (page *Page) PrevPage(styles ...string) string {
-	var curStyle, style string
+	var curStyle string
 	if len(styles) > 0 {
 		curStyle = styles[0]
 	}
-	if len(styles) > 1 {
-		style = styles[0]
-	}
 	if page.CurrentPage > 1 {
-		return page.GetLink(page.GetUrl(page.CurrentPage-1), page.PrevPageTag, "上一页", style)
+		return page.GetLink(page.GetUrl(page.CurrentPage-1), page.PrevPageTag, "上一页", curStyle)
 	}
 	return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.PrevPageTag)
 }
 
 // 获取显示“首页”的代码
 func (page *Page) FirstPage(styles ...string) string {
-	var curStyle, style string
+	var curStyle string
 	if len(styles) > 0 {
 		curStyle = styles[0]
-	}
-	if len(styles) > 1 {
-		style = styles[0]
 	}
 	if page.CurrentPage == 1 {
 		return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.FirstPageTag)
 	}
-	return page.GetLink(page.GetUrl(1), page.FirstPageTag, "第一页", style)
+	return page.GetLink(page.GetUrl(1), page.FirstPageTag, "第一页", curStyle)
 }
 
 // 获取显示“尾页”的内容
 func (page *Page) LastPage(styles ...string) string {
-	var curStyle, style string
+	var curStyle string
 	if len(styles) > 0 {
 		curStyle = styles[0]
-	}
-	if len(styles) > 1 {
-		style = styles[0]
 	}
 	if page.CurrentPage == page.TotalPage {
 		return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.LastPageTag)
 	}
-	return page.GetLink(page.GetUrl(page.TotalPage), page.LastPageTag, "最后页", style)
+	return page.GetLink(page.GetUrl(page.TotalPage), page.LastPageTag, "最后页", curStyle)
 }
 
 // 获得分页条列表内容
@@ -160,6 +151,34 @@ func (page *Page) PageBar(styles ...string) string {
 				ret += page.GetLink(page.GetUrl(i), gconv.String(i), style, "")
 			} else {
 				ret += fmt.Sprintf(`<span class="%s">%d</span>`, curStyle, i)
+			}
+		} else {
+			break
+		}
+	}
+	return ret
+}
+func (page *Page) BootstrapPageBar(styles ...string) string {
+	var curStyle string
+	if len(styles) > 0 {
+		curStyle = styles[0]
+	}
+	plus := int(math.Ceil(float64(page.PageBarNum / 2)))
+	if page.PageBarNum-plus+page.CurrentPage > page.TotalPage {
+		plus = page.PageBarNum - page.TotalPage + page.CurrentPage
+	}
+	begin := page.CurrentPage - plus + 1
+	if begin < 1 {
+		begin = 1
+	}
+	ret := ""
+	for i := begin; i < begin+page.PageBarNum; i++ {
+		if i <= page.TotalPage {
+			title := fmt.Sprintf("第%s页",gconv.String(i))
+			if i != page.CurrentPage {
+				ret += fmt.Sprintf("<li class=\"page-item\">%s</li>",page.GetLink(page.GetUrl(i), gconv.String(i), title, curStyle))
+			} else {
+				ret += fmt.Sprintf("<li class=\"page-item active\">%s</li>",page.GetLink(page.GetUrl(i), gconv.String(i), title, curStyle))
 			}
 		} else {
 			break
@@ -238,6 +257,19 @@ func (page *Page) GetContent(mode int) string {
 		pageStr += page.PageBar("current")
 		pageStr += page.NextPage()
 		pageStr += page.LastPage()
+		return pageStr
+	case 5:
+		page.NextPageTag = "下一页"
+		page.PrevPageTag = "上一页"
+		page.FirstPageTag = "首页"
+		page.LastPageTag = "尾页"
+		currentStyle := "page-link"
+		pageStr := page.FirstPage(currentStyle)
+		pageStr += page.PrevPage(currentStyle)
+		pageStr += page.BootstrapPageBar(currentStyle)
+		pageStr += page.NextPage(currentStyle)
+		pageStr += page.LastPage(currentStyle)
+
 		return pageStr
 	}
 	return ""
