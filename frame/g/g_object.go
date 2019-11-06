@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/net/gtcp"
 	"github.com/gogf/gf/net/gudp"
 	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
 )
@@ -66,6 +67,12 @@ func I18n(name ...string) *gi18n.Manager {
 // See Resource.
 func Res(name ...string) *gres.Resource {
 	return Resource(name...)
+}
+
+// Log returns an instance of glog.Logger.
+// The parameter <name> is the name for the instance.
+func Log(name ...string) *glog.Logger {
+	return gins.Log(name...)
 }
 
 // Database returns an instance of database ORM object with specified configuration group name.

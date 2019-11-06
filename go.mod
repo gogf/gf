@@ -10,6 +10,7 @@ require (
 	github.com/gf-third/mysql v1.4.2
 	github.com/gf-third/yaml v1.0.1
 	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.1
 	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf
 	github.com/mattn/go-runewidth v0.0.4 // indirect

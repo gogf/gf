@@ -5,7 +5,6 @@
     <title>{{.title}}</title>
 </head>
 <body>
-<H1>姓名 ： {{.name}}</H1>
-12
+<H1>{{.name}}: {{.score}}</H1>
 </body>
 </html>
