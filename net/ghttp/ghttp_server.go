@@ -255,10 +255,13 @@ func (s *Server) Start() error {
 
 	// Default session storage.
 	if s.config.SessionStorage == nil {
-		path := gfile.Join(s.config.SessionPath, s.name)
-		if !gfile.Exists(path) {
-			if err := gfile.Mkdir(path); err != nil {
-				glog.Fatalf("mkdir failed for '%s':", path, err)
+		path := ""
+		if s.config.SessionPath != "" {
+			path = gfile.Join(s.config.SessionPath, s.name)
+			if !gfile.Exists(path) {
+				if err := gfile.Mkdir(path); err != nil {
+					glog.Fatalf("mkdir failed for '%s':", path, err)
+				}
 			}
 		}
 		s.config.SessionStorage = gsession.NewStorageFile(path)
