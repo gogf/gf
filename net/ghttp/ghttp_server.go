@@ -176,10 +176,9 @@ func SetGraceful(enabled bool) {
 // Web Server进程初始化.
 // 注意该方法不能放置于包初始化方法init中，不使用ghttp.Server的功能便不能初始化对应的协程goroutine逻辑.
 func serverProcessInit() {
-	if serverProcessInited.Val() {
+	if !serverProcessInited.Cas(false, true) {
 		return
 	}
-	serverProcessInited.Set(true)
 	// 如果是完整重启，那么需要等待主进程销毁后，才开始执行监听，防止端口冲突
 	if genv.Get(gADMIN_ACTION_RESTART_ENVKEY) != "" {
 		if p, e := os.FindProcess(gproc.PPid()); e == nil {
@@ -251,7 +250,7 @@ func (s *Server) Start() error {
 
 	// 没有注册任何路由，且没有开启文件服务，那么提示错误
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
-		glog.Fatal("[ghttp] no router set or static feature enabled, did you forget import the router?")
+		glog.Fatal("[ghttp] There's no route set or static feature enabled, did you forget import the router?")
 	}
 
 	// Default session storage.
@@ -261,12 +260,17 @@ func (s *Server) Start() error {
 	// Initialize session manager when start running.
 	s.sessionManager = gsession.New(s.config.SessionMaxAge, s.config.SessionStorage)
 
-	// 底层http server配置
+	// PProf feature.
+	if s.config.PProfEnabled {
+		s.EnablePProf(s.config.PProfPattern)
+	}
+
+	// Default HTTP handler.
 	if s.config.Handler == nil {
 		s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
 	}
 
-	// 启动http server
+	// Start the HTTP server.
 	reloaded := false
 	fdMapStr := genv.Get(gADMIN_ACTION_RELOAD_ENVKEY)
 	if len(fdMapStr) > 0 {
@@ -421,7 +425,7 @@ func Wait() {
 func (s *Server) startServer(fdMap listenerFdMap) {
 	var httpsEnabled bool
 	// 判断是否启用HTTPS
-	if len(s.config.TLSConfig.Certificates) > 0 || (len(s.config.HTTPSCertPath) > 0 && len(s.config.HTTPSKeyPath) > 0) {
+	if s.config.TLSConfig != nil || (s.config.HTTPSCertPath != "" && s.config.HTTPSKeyPath != "") {
 		// ================
 		// HTTPS
 		// ================
@@ -502,7 +506,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			s.serverCount.Add(1)
 			err := (error)(nil)
 			if server.isHttps {
-				err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath, &s.config.TLSConfig)
+				err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig)
 			} else {
 				err = server.ListenAndServe()
 			}

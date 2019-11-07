@@ -1,11 +1,12 @@
 package main
 
 import (
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 )
 
 func main() {
-	s := ghttp.GetServer()
+	s := g.Server()
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Writeln("来自于HTTPS的：哈喽世界！")
 	})

@@ -38,7 +38,7 @@ func (s *Server) handleAccessLog(r *Request) {
 	)
 	content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime-r.EnterTime)/1000)
 	content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
-	s.logger.Cat("access").StackWithFilter(gPATH_FILTER_KEY).Stdout(s.config.LogStdout).Println(content)
+	s.logger.File(s.config.AccessLogPattern).StackWithFilter(gPATH_FILTER_KEY).Stdout(s.config.LogStdout).Println(content)
 }
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
@@ -71,5 +71,5 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 			content += "\n" + stack
 		}
 	}
-	s.logger.Cat("error").Stack(false).Stdout(s.config.LogStdout).Error(content)
+	s.logger.File(s.config.AccessLogPattern).Stack(false).Stdout(s.config.LogStdout).Error(content)
 }
