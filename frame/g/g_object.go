@@ -22,7 +22,7 @@ import (
 
 // Server returns an instance of http server with specified name.
 func Server(name ...interface{}) *ghttp.Server {
-	return ghttp.GetServer(name...)
+	return gins.Server(name...)
 }
 
 // TCPServer returns an instance of tcp server with specified name.

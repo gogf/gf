@@ -8,7 +8,7 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/frame/gins"
+	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/util/gmode"
 )
@@ -57,14 +57,14 @@ func (r *Response) ParseTplContent(content string, params ...gview.Params) (stri
 
 // 内置变量/对象
 func (r *Response) buildInVars(params ...map[string]interface{}) map[string]interface{} {
-	vars := map[string]interface{}(nil)
+	var vars map[string]interface{}
 	if len(params) > 0 && params[0] != nil {
 		vars = params[0]
 	} else {
 		vars = make(map[string]interface{})
 	}
 	// 当配置文件不存在时就不赋值该模板变量，不然会报错
-	if c := gins.Config(); c.FilePath() != "" {
+	if c := gcfg.Instance(); c.FilePath() != "" {
 		vars["Config"] = c.GetMap(".")
 	}
 	vars["Get"] = r.Request.GetQueryMap()

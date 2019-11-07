@@ -234,7 +234,9 @@ func (r *Response) ClearBuffer() {
 
 // Output outputs the buffer content to the client.
 func (r *Response) Output() {
-	r.Header().Set("Server", r.Server.config.ServerAgent)
+	if r.Server.config.ServerAgent != "" {
+		r.Header().Set("Server", r.Server.config.ServerAgent)
+	}
 	//r.handleGzip()
 	r.Writer.OutputBuffer()
 }
