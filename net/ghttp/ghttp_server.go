@@ -255,10 +255,19 @@ func (s *Server) Start() error {
 
 	// Default session storage.
 	if s.config.SessionStorage == nil {
-		s.config.SessionStorage = gsession.NewStorageFile()
+		path := gfile.Join(s.config.SessionPath, s.name)
+		if !gfile.Exists(path) {
+			if err := gfile.Mkdir(path); err != nil {
+				glog.Fatalf("mkdir failed for '%s':", path, err)
+			}
+		}
+		s.config.SessionStorage = gsession.NewStorageFile(path)
 	}
 	// Initialize session manager when start running.
-	s.sessionManager = gsession.New(s.config.SessionMaxAge, s.config.SessionStorage)
+	s.sessionManager = gsession.New(
+		s.config.SessionMaxAge,
+		s.config.SessionStorage,
+	)
 
 	// PProf feature.
 	if s.config.PProfEnabled {

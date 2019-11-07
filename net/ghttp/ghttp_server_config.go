@@ -62,6 +62,7 @@ type ServerConfig struct {
 	CookieDomain      string            // Cookie: 有效Domain(注意同时也会影响SessionID)
 	SessionMaxAge     time.Duration     // Session: 有效期
 	SessionIdName     string            // Session: SessionId.
+	SessionPath       string            // Session: Session Storage path for storing session files.
 	SessionStorage    gsession.Storage  // Session: Session Storage implementer.
 	DenyIps           []string          // Security: 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
 	AllowIps          []string          // Security: 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
@@ -104,6 +105,7 @@ var defaultServerConfig = ServerConfig{
 	CookieDomain:      "",
 	SessionMaxAge:     time.Hour * 24,
 	SessionIdName:     "gfsessionid",
+	SessionPath:       gsession.DefaultStorageFilePath,
 	LogStdout:         true,
 	ErrorStack:        true,
 	ErrorLogEnabled:   true,
