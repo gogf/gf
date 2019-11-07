@@ -143,6 +143,11 @@ func Test_Func(t *testing.T) {
 		gtest.Assert(err != nil, false)
 		gtest.Assert(result, `我是...`)
 
+		str = `{{"I'm中国人" | replace "I'm" "我是"}}`
+		result, err = gview.ParseContent(str, nil)
+		gtest.Assert(err != nil, false)
+		gtest.Assert(result, `我是中国人`)
+
 		str = `{{compare "A" "B"}};{{compare "1" "2"}};{{compare 2 1}};{{compare 1 1}}`
 		result, err = gview.ParseContent(str, nil)
 		gtest.Assert(err != nil, false)
