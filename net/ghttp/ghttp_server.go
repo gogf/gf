@@ -260,7 +260,7 @@ func (s *Server) Start() error {
 			path = gfile.Join(s.config.SessionPath, s.name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
-					glog.Fatalf("mkdir failed for '%s':", path, err)
+					glog.Fatalf("mkdir failed for '%s': %v", path, err)
 				}
 			}
 		}
