@@ -32,10 +32,10 @@ const (
 	URI_TYPE_CAMEL      = 3      // 采用驼峰命名方式
 )
 
-// 自定义日志处理方法类型
+// LogHandler is the log handler function type.
 type LogHandler func(r *Request, err ...error)
 
-// HTTP Server 设置结构体，静态配置
+// HTTP Server configuration.
 type ServerConfig struct {
 	Address           string            // Server listening address like ":port", multiple addresses separated using ','
 	HTTPSAddr         string            // HTTPS服务监听地址(支持多个地址，使用","号分隔)
@@ -46,7 +46,7 @@ type ServerConfig struct {
 	WriteTimeout      time.Duration     // 写入超时
 	IdleTimeout       time.Duration     // 等待超时
 	MaxHeaderBytes    int               // 最大的header长度
-	TLSConfig         tls.Config        // HTTPS证书配置
+	TLSConfig         *tls.Config       // HTTPS证书配置
 	KeepAlive         bool              // 是否开启长连接
 	ServerAgent       string            // Server Agent
 	View              *gview.View       // 模板引擎对象
@@ -71,7 +71,11 @@ type ServerConfig struct {
 	LogStdout         bool              // Logging: 是否打印日志到终端(默认开启)
 	ErrorStack        bool              // Logging: 当产生错误时打印调用链详细堆栈
 	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
+	ErrorLogPattern   string            // Logging: Error log file pattern like: error-{Ymd}.log
 	AccessLogEnabled  bool              // Logging: 是否开启access log(默认关闭)
+	AccessLogPattern  string            // Logging: Error log file pattern like: access-{Ymd}.log
+	PProfEnabled      bool              // PProf: Enable PProf feature or not.
+	PProfPattern      string            // PProf: PProf pattern for router, it enables PProf feature if it's not empty.
 	FormParsingMemory int64             // Mess: 表单解析内存限制(byte)
 	NameToUriType     int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
 	GzipContentTypes  []string          // Mess: 允许进行gzip压缩的文件类型
@@ -91,7 +95,7 @@ var defaultServerConfig = ServerConfig{
 	KeepAlive:         true,
 	IndexFiles:        []string{"index.html", "index.htm"},
 	IndexFolder:       false,
-	ServerAgent:       "gf http server",
+	ServerAgent:       "GF HTTP Server",
 	ServerRoot:        "",
 	StaticPaths:       make([]staticPathItem, 0),
 	FileServerEnabled: false,
@@ -103,7 +107,9 @@ var defaultServerConfig = ServerConfig{
 	LogStdout:         true,
 	ErrorStack:        true,
 	ErrorLogEnabled:   true,
+	ErrorLogPattern:   "error-{Ymd}.log",
 	AccessLogEnabled:  false,
+	AccessLogPattern:  "access-{Ymd}.log",
 	DumpRouteMap:      true,
 	FormParsingMemory: 1024 * 1024 * 1024,
 	RouterCacheExpire: 60,
@@ -131,9 +137,13 @@ func (s *Server) SetConfig(c ServerConfig) error {
 		c.Handler = http.HandlerFunc(s.defaultHttpHandle)
 	}
 	s.config = c
-
+	// Logging.
 	if c.LogPath != "" {
 		return s.logger.SetPath(c.LogPath)
+	}
+	// HTTPS.
+	if c.TLSConfig == nil && c.HTTPSCertPath != "" {
+		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
 	}
 	return nil
 }
@@ -185,7 +195,7 @@ func (s *Server) SetHTTPSPort(port ...int) {
 }
 
 // 开启HTTPS支持，但是必须提供Cert和Key文件，tlsConfig为可选项
-func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...tls.Config) {
+func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
 		certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
@@ -214,7 +224,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...tls.Config) 
 }
 
 // 设置TLS配置对象
-func (s *Server) SetTLSConfig(tlsConfig tls.Config) {
+func (s *Server) SetTLSConfig(tlsConfig *tls.Config) {
 	s.config.TLSConfig = tlsConfig
 }
 

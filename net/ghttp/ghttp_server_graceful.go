@@ -91,11 +91,13 @@ func (s *gracefulServer) setFd(fd int) {
 // 执行HTTPS监听
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
 	itemFunc := s.httpServer.Addr
-	config := (*tls.Config)(nil)
-	if len(tlsConfig) > 0 {
+	var config *tls.Config
+	if len(tlsConfig) > 0 && tlsConfig[0] != nil {
 		config = tlsConfig[0]
 	} else if s.httpServer.TLSConfig != nil {
-		*config = *s.httpServer.TLSConfig
+		config = s.httpServer.TLSConfig
+	} else {
+		config = &tls.Config{}
 	}
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}
