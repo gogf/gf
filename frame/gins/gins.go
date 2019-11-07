@@ -9,6 +9,8 @@ package gins
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/net/ghttp"
 
 	"github.com/gogf/gf/os/gfile"
 
@@ -28,6 +30,7 @@ import (
 const (
 	gFRAME_CORE_COMPONENT_NAME_REDIS    = "gf.core.component.redis"
 	gFRAME_CORE_COMPONENT_NAME_LOGGER   = "gf.core.component.logger"
+	gFRAME_CORE_COMPONENT_NAME_SERVER   = "gf.core.component.server"
 	gFRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
 )
 
@@ -100,7 +103,6 @@ func I18n(name ...string) *gi18n.Manager {
 // Log returns an instance of glog.Logger.
 // The parameter <name> is the name for the instance.
 func Log(name ...string) *glog.Logger {
-	config := Config()
 	instanceName := glog.DEFAULT_NAME
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
@@ -108,9 +110,12 @@ func Log(name ...string) *glog.Logger {
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_LOGGER, instanceName)
 	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		logger := glog.Instance(instanceName)
-		if m := config.GetMap("logging"); m != nil {
-			if err := logger.SetConfigWithMap(m); err != nil {
-				glog.Error(err)
+		// To avoid file no found error while it's not necessary.
+		if Config().FilePath() != "" {
+			if m := Config().GetMap("logging"); m != nil {
+				if err := logger.SetConfigWithMap(m); err != nil {
+					glog.Panic(err)
+				}
 			}
 		}
 		return logger
@@ -130,13 +135,13 @@ func Database(name ...string) gdb.DB {
 		if gdb.GetConfig(group) != nil {
 			db, err := gdb.Instance(group)
 			if err != nil {
-				glog.Error(err)
+				glog.Panic(err)
 			}
 			return db
 		}
 		m := config.GetMap("database")
 		if m == nil {
-			glog.Error(`database init failed: "database" node not found, is config file or configuration missing?`)
+			glog.Panic(`database init failed: "database" node not found, is config file or configuration missing?`)
 			return nil
 		}
 		// Parse <m> as map-slice.
@@ -173,7 +178,7 @@ func Database(name ...string) gdb.DB {
 		if db, err := gdb.New(name...); err == nil {
 			return db
 		} else {
-			glog.Error(err)
+			glog.Panic(err)
 		}
 		return nil
 	})
@@ -191,7 +196,7 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	node := &gdb.ConfigNode{}
 	err := gconv.Struct(nodeMap, node)
 	if err != nil {
-		glog.Error(err)
+		glog.Panic(err)
 	}
 	if value, ok := nodeMap["link"]; ok {
 		node.LinkInfo = gconv.String(value)
@@ -210,7 +215,7 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 // Redis returns an instance of redis client with specified configuration group name.
 func Redis(name ...string) *gredis.Redis {
 	config := Config()
-	group := "default"
+	group := gredis.DEFAULT_GROUP_NAME
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
@@ -225,16 +230,16 @@ func Redis(name ...string) *gredis.Redis {
 			if v, ok := m[group]; ok {
 				redisConfig, err := gredis.ConfigFromStr(gconv.String(v))
 				if err != nil {
-					glog.Error(err)
+					glog.Panic(err)
 					return nil
 				}
 				addConfigMonitor(instanceKey, config)
 				return gredis.New(redisConfig)
 			} else {
-				glog.Errorf(`configuration for redis not found for group "%s"`, group)
+				glog.Panicf(`configuration for redis not found for group "%s"`, group)
 			}
 		} else {
-			glog.Errorf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath())
+			glog.Panicf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath())
 		}
 		return nil
 	})
@@ -244,10 +249,30 @@ func Redis(name ...string) *gredis.Redis {
 	return nil
 }
 
+// Server returns an instance of http server with specified name.
+func Server(name ...interface{}) *ghttp.Server {
+	instanceKey := fmt.Sprintf("%s.%v", gFRAME_CORE_COMPONENT_NAME_SERVER, name)
+	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+		s := ghttp.GetServer(name...)
+		// To avoid file no found error while it's not necessary.
+		if Config().FilePath() != "" {
+			if m := Config().GetMap("server"); m != nil {
+				if err := s.SetConfigWithMap(m); err != nil {
+					panic(err)
+				}
+			}
+		}
+		return s
+	}).(*ghttp.Server)
+}
+
 func addConfigMonitor(key string, config *gcfg.Config) {
 	if path := config.FilePath(); path != "" && gfile.Exists(path) {
-		gfsnotify.Add(path, func(event *gfsnotify.Event) {
+		_, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
 			instances.Remove(key)
 		})
+		if err != nil {
+			intlog.Error(err)
+		}
 	}
 }

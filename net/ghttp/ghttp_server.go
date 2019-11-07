@@ -227,7 +227,9 @@ func GetServer(name ...interface{}) *Server {
 		logger:           glog.New(),
 	}
 	// 初始化时使用默认配置
-	s.SetConfig(c)
+	if err := s.SetConfig(c); err != nil {
+		panic(err)
+	}
 	// 记录到全局ServerMap中
 	serverMapping.Set(serverName, s)
 	return s
@@ -368,7 +370,7 @@ func (s *Server) GetRouteMap() string {
 			m[item.domain].Add(item)
 		}
 	}
-	itemFunc := s.config.Addr
+	itemFunc := s.config.Address
 	if s.config.HTTPSAddr != "" {
 		if len(itemFunc) > 0 {
 			itemFunc += ","
@@ -424,9 +426,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		// HTTPS
 		// ================
 		if len(s.config.HTTPSAddr) == 0 {
-			if len(s.config.Addr) > 0 {
-				s.config.HTTPSAddr = s.config.Addr
-				s.config.Addr = ""
+			if len(s.config.Address) > 0 {
+				s.config.HTTPSAddr = s.config.Address
+				s.config.Address = ""
 			} else {
 				s.config.HTTPSAddr = gDEFAULT_HTTPS_ADDR
 			}
@@ -464,14 +466,14 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	// HTTP
 	// ================
 	// 当HTTPS服务未启用时，默认HTTP地址才会生效
-	if !httpsEnabled && len(s.config.Addr) == 0 {
-		s.config.Addr = gDEFAULT_HTTP_ADDR
+	if !httpsEnabled && len(s.config.Address) == 0 {
+		s.config.Address = gDEFAULT_HTTP_ADDR
 	}
 	var array []string
 	if v, ok := fdMap["http"]; ok && len(v) > 0 {
 		array = strings.Split(v, ",")
 	} else {
-		array = strings.Split(s.config.Addr, ",")
+		array = strings.Split(s.config.Address, ",")
 	}
 	for _, v := range array {
 		if len(v) == 0 {

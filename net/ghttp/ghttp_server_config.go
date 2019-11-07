@@ -37,7 +37,7 @@ type LogHandler func(r *Request, err ...error)
 
 // HTTP Server 设置结构体，静态配置
 type ServerConfig struct {
-	Addr              string            // 监听IP和端口，监听本地所有IP使用":端口"(支持多个地址，使用","号分隔)
+	Address           string            // Server listening address like ":port", multiple addresses separated using ','
 	HTTPSAddr         string            // HTTPS服务监听地址(支持多个地址，使用","号分隔)
 	HTTPSCertPath     string            // HTTPS证书文件路径
 	HTTPSKeyPath      string            // HTTPS签名文件路径
@@ -81,7 +81,7 @@ type ServerConfig struct {
 
 // 默认HTTP Server配置
 var defaultServerConfig = ServerConfig{
-	Addr:              "",
+	Address:           "",
 	HTTPSAddr:         "",
 	Handler:           nil,
 	ReadTimeout:       60 * time.Second,
@@ -116,12 +116,12 @@ func Config() ServerConfig {
 }
 
 // 通过Map创建Config配置对象，Map没有传递的属性将会使用模块的默认值
-func ConfigFromMap(m map[string]interface{}) ServerConfig {
+func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 	config := defaultServerConfig
 	if err := gconv.Struct(m, &config); err != nil {
-		panic(err)
+		return config, err
 	}
-	return config
+	return config, nil
 }
 
 // http server setting设置。
@@ -140,24 +140,28 @@ func (s *Server) SetConfig(c ServerConfig) error {
 
 // 通过map设置http server setting。
 // 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
-func (s *Server) SetConfigWithMap(m map[string]interface{}) {
-	s.SetConfig(ConfigFromMap(m))
+func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
+	config, err := ConfigFromMap(m)
+	if err != nil {
+		return err
+	}
+	return s.SetConfig(config)
 }
 
 // 设置http server参数 - Addr
 func (s *Server) SetAddr(address string) {
-	s.config.Addr = address
+	s.config.Address = address
 }
 
 // 设置http server参数 - Port
 func (s *Server) SetPort(port ...int) {
 	if len(port) > 0 {
-		s.config.Addr = ""
+		s.config.Address = ""
 		for _, v := range port {
-			if len(s.config.Addr) > 0 {
-				s.config.Addr += ","
+			if len(s.config.Address) > 0 {
+				s.config.Address += ","
 			}
-			s.config.Addr += ":" + strconv.Itoa(v)
+			s.config.Address += ":" + strconv.Itoa(v)
 		}
 	}
 }
