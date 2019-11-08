@@ -115,19 +115,23 @@ func Test_Session_Header(t *testing.T) {
 
 func Test_Session_StorageFile(t *testing.T) {
 	sessionId := ""
-	gtest.Case(t, func() {
-		p := ports.PopRand()
-		s := g.Server(p)
-		s.BindHandler("/set", func(r *ghttp.Request) {
-			r.Session.Set(r.GetString("k"), r.GetString("v"))
-			r.Response.Write(r.GetString("k"), "=", r.GetString("v"))
-		})
-		s.SetPort(p)
-		s.SetDumpRouteMap(false)
-		s.Start()
-		defer s.Shutdown()
-		time.Sleep(100 * time.Millisecond)
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/set", func(r *ghttp.Request) {
+		r.Session.Set(r.GetString("k"), r.GetString("v"))
+		r.Response.Write(r.GetString("k"), "=", r.GetString("v"))
+	})
+	s.BindHandler("/get", func(r *ghttp.Request) {
+		r.Response.Write(r.Session.Get(r.GetString("k")))
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
 
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		response, e1 := client.Get("/set?k=key&v=100")
@@ -141,17 +145,6 @@ func Test_Session_StorageFile(t *testing.T) {
 	})
 	time.Sleep(time.Second)
 	gtest.Case(t, func() {
-		p := ports.PopRand()
-		s := g.Server(p)
-		s.BindHandler("/get", func(r *ghttp.Request) {
-			r.Response.Write(r.Session.Get(r.GetString("k")))
-		})
-		s.SetPort(p)
-		s.SetDumpRouteMap(false)
-		s.Start()
-		defer s.Shutdown()
-		time.Sleep(100 * time.Millisecond)
-
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader(s.GetSessionIdName(), sessionId)
