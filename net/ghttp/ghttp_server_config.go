@@ -32,9 +32,6 @@ const (
 	URI_TYPE_CAMEL      = 3      // 采用驼峰命名方式
 )
 
-// LogHandler is the log handler function type.
-type LogHandler func(r *Request, err ...error)
-
 // HTTP Server configuration.
 type ServerConfig struct {
 	Address           string            // Server listening address like ":port", multiple addresses separated using ','
@@ -67,8 +64,8 @@ type ServerConfig struct {
 	DenyIps           []string          // Security: 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
 	AllowIps          []string          // Security: 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
 	DenyRoutes        []string          // Security: 不允许访问的路由规则列表
+	Logger            *glog.Logger      // Logging: Custom logger for server.
 	LogPath           string            // Logging: 存放日志的目录路径(默认为空，表示不写文件)
-	LogHandler        LogHandler        // Logging: 日志配置: 自定义日志处理回调方法(默认为空)
 	LogStdout         bool              // Logging: 是否打印日志到终端(默认开启)
 	ErrorStack        bool              // Logging: 当产生错误时打印调用链详细堆栈
 	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
@@ -106,6 +103,7 @@ var defaultServerConfig = ServerConfig{
 	SessionMaxAge:     time.Hour * 24,
 	SessionIdName:     "gfsessionid",
 	SessionPath:       gsession.DefaultStorageFilePath,
+	Logger:            glog.New(),
 	LogStdout:         true,
 	ErrorStack:        true,
 	ErrorLogEnabled:   true,
@@ -139,10 +137,6 @@ func (s *Server) SetConfig(c ServerConfig) error {
 		c.Handler = http.HandlerFunc(s.defaultHttpHandle)
 	}
 	s.config = c
-	// Logging.
-	if c.LogPath != "" {
-		return s.logger.SetPath(c.LogPath)
-	}
 	// HTTPS.
 	if c.TLSConfig == nil && c.HTTPSCertPath != "" {
 		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)

@@ -1,12 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"regexp"
 )
 
 func main() {
-	replaceCharReg, err := regexp.Compile(`[\-\.\_\s]+`)
+	//b := make([]byte, 10)
+	r := bytes.NewBuffer(make([]byte, 1))
+
+	n, err := r.Write([]byte("12345"))
+
+	fmt.Println(n)
 	fmt.Println(err)
-	fmt.Println(replaceCharReg.ReplaceAllString("s--s.s.a b", ""))
+	fmt.Println(r.String())
 }

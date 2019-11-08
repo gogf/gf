@@ -70,7 +70,6 @@ func Letters(n int) string {
 		b[i] = letters[Intn(52)]
 	}
 	return string(b)
-
 }
 
 // Perm returns, as a slice of n int numbers, a pseudo-random permutation of the integers [0,n).
