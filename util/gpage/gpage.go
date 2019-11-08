@@ -36,6 +36,9 @@ type Page struct {
 	NextBar        string        // 下一分页条
 	PageBarNum     int           // 控制分页条的数量
 	AjaxActionName string        // AJAX方法名，当该属性有值时，表示使用AJAX分页
+	ShowTotalCount bool          // 是否显示总记录数量
+	ShowSelectBar  bool          // 是否显示SelectBar
+	ShowTotalPage  bool          // 是否显示总页数
 }
 
 // 创建一个分页对象，输入参数分别为：
@@ -43,18 +46,21 @@ type Page struct {
 func New(TotalSize, perPage int, CurrentPage interface{}, url string, router ...*ghttp.Router) *Page {
 	u, _ := url2.Parse(url)
 	page := &Page{
-		PageName:     "page",
-		PrevPageTag:  "<",
-		NextPageTag:  ">",
-		FirstPageTag: "|<",
-		LastPageTag:  ">|",
-		PrevBar:      "<<",
-		NextBar:      ">>",
-		TotalSize:    TotalSize,
-		TotalPage:    int(math.Ceil(float64(TotalSize) / float64(perPage))),
-		CurrentPage:  1,
-		PageBarNum:   10,
-		Url:          u,
+		PageName:       "page",
+		PrevPageTag:    "<",
+		NextPageTag:    ">",
+		FirstPageTag:   "|<",
+		LastPageTag:    ">|",
+		PrevBar:        "<<",
+		NextBar:        ">>",
+		TotalSize:      TotalSize,
+		TotalPage:      int(math.Ceil(float64(TotalSize) / float64(perPage))),
+		CurrentPage:    1,
+		PageBarNum:     10,
+		Url:            u,
+		ShowTotalCount: false,
+		ShowTotalPage:  false,
+		ShowSelectBar:  false,
 	}
 	curPage := gconv.Int(CurrentPage)
 	if curPage > 0 {
@@ -174,11 +180,11 @@ func (page *Page) BootstrapPageBar(styles ...string) string {
 	ret := ""
 	for i := begin; i < begin+page.PageBarNum; i++ {
 		if i <= page.TotalPage {
-			title := fmt.Sprintf("第%s页",gconv.String(i))
+			title := fmt.Sprintf("第%s页", gconv.String(i))
 			if i != page.CurrentPage {
-				ret += fmt.Sprintf("<li class=\"page-item\">%s</li>",page.GetLink(page.GetUrl(i), gconv.String(i), title, curStyle))
+				ret += fmt.Sprintf("<li class=\"page-item\">%s</li>", page.GetLink(page.GetUrl(i), gconv.String(i), title, curStyle))
 			} else {
-				ret += fmt.Sprintf("<li class=\"page-item active\">%s</li>",page.GetLink(page.GetUrl(i), gconv.String(i), title, curStyle))
+				ret += fmt.Sprintf("<li class=\"page-item active\">%s</li>", page.GetLink(page.GetUrl(i), gconv.String(i), title, curStyle))
 			}
 		} else {
 			break
@@ -189,7 +195,7 @@ func (page *Page) BootstrapPageBar(styles ...string) string {
 
 // 获取基于select标签的显示跳转按钮的代码
 func (page *Page) SelectBar() string {
-	ret := `<select name="gpage_select" onchange="window.location.href=this.value">`
+	ret := `<select name="gpage_select" class="page-item gpage-select-bar" onchange="window.location.href=this.value">`
 	for i := 1; i <= page.TotalPage; i++ {
 		if i == page.CurrentPage {
 			ret += fmt.Sprintf(`<option value="%s" selected>%d</option>`, page.GetUrl(i), i)
@@ -199,6 +205,24 @@ func (page *Page) SelectBar() string {
 	}
 	ret += "</select>"
 	return ret
+}
+
+// 设置显示selectbar
+func (page *Page) WithSelectBar(value bool) *Page {
+	page.ShowSelectBar = value
+	return page
+}
+
+// 设置显示总记录数量
+func (page *Page) WithTotalCount(value bool) *Page {
+	page.ShowTotalCount = value
+	return page
+}
+
+// 设置显示总页数
+func (page *Page) WithTotalPage(value bool) *Page {
+	page.ShowTotalPage = value
+	return page
 }
 
 // 预定义的分页显示风格内容
@@ -264,12 +288,21 @@ func (page *Page) GetContent(mode int) string {
 		page.FirstPageTag = "首页"
 		page.LastPageTag = "尾页"
 		currentStyle := "page-link"
-		pageStr := page.FirstPage(currentStyle)
+		pageStr := ""
+		if page.ShowTotalCount {
+			pageStr += fmt.Sprintf(`<span class="page-item"><span class="page-link">[共%d条记录]</span></span>`, page.TotalSize)
+		}
+		if page.ShowTotalPage {
+			pageStr += fmt.Sprintf(`<span class="page-item"><span class="page-link">[共%d页]</span></span>`, page.TotalPage)
+		}
+		pageStr += page.FirstPage(currentStyle)
 		pageStr += page.PrevPage(currentStyle)
 		pageStr += page.BootstrapPageBar(currentStyle)
 		pageStr += page.NextPage(currentStyle)
 		pageStr += page.LastPage(currentStyle)
-
+		if page.ShowSelectBar {
+			pageStr += page.SelectBar()
+		}
 		return pageStr
 	}
 	return ""
