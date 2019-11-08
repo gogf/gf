@@ -9,6 +9,8 @@
 package grand_test
 
 import (
+	"crypto/rand"
+	"encoding/binary"
 	"testing"
 
 	"github.com/gogf/gf/util/grand"
@@ -22,10 +24,10 @@ func Benchmark_Rand(b *testing.B) {
 	}
 }
 
-//func Benchmark_Buffer(b *testing.B) {
-//    for i := 0; i < b.N; i++ {
-//        if _, err := rand.Read(buffer); err == nil {
-//            binary.LittleEndian.Uint64(buffer)
-//        }
-//    }
-//}
+func Benchmark_Buffer(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		if _, err := rand.Read(buffer); err == nil {
+			binary.LittleEndian.Uint64(buffer)
+		}
+	}
+}

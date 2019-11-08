@@ -29,9 +29,6 @@ func Test_Basic(t *testing.T) {
 		uuid, _ = guuid.NewRandom()
 		gtest.Assert(len(uuid.String()), 36)
 
-		uuid, _ = guuid.NewRandom()
-		gtest.Assert(len(uuid.String()), 36)
-
 		gtest.Assert(len(guuid.NewMD5(guuid.UUID{}, []byte("")).String()), 36)
 		gtest.Assert(len(guuid.NewSHA1(guuid.UUID{}, []byte("")).String()), 36)
 	})

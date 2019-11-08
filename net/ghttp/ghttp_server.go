@@ -48,7 +48,6 @@ type (
 		routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
 		statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
 		sessionManager   *gsession.Manager                // Session管理器
-		logger           *glog.Logger                     // 日志管理对象
 	}
 
 	// 路由对象
@@ -223,7 +222,6 @@ func GetServer(name ...interface{}) *Server {
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
 		servedCount:      gtype.NewInt(),
-		logger:           glog.New(),
 	}
 	// 初始化时使用默认配置
 	if err := s.SetConfig(c); err != nil {
@@ -245,14 +243,19 @@ func (s *Server) Start() error {
 
 	// 当前Web Server状态判断
 	if s.Status() == SERVER_STATUS_RUNNING {
-		return errors.New("server is already running")
+		return errors.New("[ghttp] server is already running")
 	}
 
 	// 没有注册任何路由，且没有开启文件服务，那么提示错误
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
-		glog.Fatal("[ghttp] There's no route set or static feature enabled, did you forget import the router?")
+		return errors.New(`[ghttp] there's no route set or static feature enabled, did you forget import the router?`)
 	}
-
+	// Logging.
+	if s.config.LogPath != "" {
+		if err := s.config.Logger.SetPath(s.config.LogPath); err != nil {
+			return errors.New(fmt.Sprintf("[ghttp] set log path '%s' error: %v", s.config.LogPath, err))
+		}
+	}
 	// Default session storage.
 	if s.config.SessionStorage == nil {
 		path := ""
@@ -260,7 +263,7 @@ func (s *Server) Start() error {
 			path = gfile.Join(s.config.SessionPath, s.name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
-					glog.Fatalf("mkdir failed for '%s': %v", path, err)
+					return errors.New(fmt.Sprintf("[ghttp] mkdir failed for '%s': %v", path, err))
 				}
 			}
 		}
@@ -421,7 +424,7 @@ func (s *Server) Run() {
 	// 阻塞等待服务执行完成
 	<-s.closeChan
 
-	glog.Printf("%d: all servers shutdown", gproc.Pid())
+	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
 }
 
 // 阻塞等待所有Web Server停止，常用于多Web Server场景，以及需要将Web Server异步运行的场景
@@ -430,7 +433,7 @@ func Wait() {
 	// 阻塞等待服务执行完成
 	<-allDoneChan
 
-	glog.Printf("%d: all servers shutdown", gproc.Pid())
+	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
 }
 
 // 开启底层Web Server执行

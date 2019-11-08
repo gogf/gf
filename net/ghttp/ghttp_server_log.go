@@ -23,11 +23,6 @@ func (s *Server) handleAccessLog(r *Request) {
 	if !s.IsAccessLogEnabled() {
 		return
 	}
-	// 自定义错误处理
-	if v := s.GetLogHandler(); v != nil {
-		v(r)
-		return
-	}
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"
@@ -38,19 +33,13 @@ func (s *Server) handleAccessLog(r *Request) {
 	)
 	content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime-r.EnterTime)/1000)
 	content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
-	s.logger.File(s.config.AccessLogPattern).StackWithFilter(gPATH_FILTER_KEY).Stdout(s.config.LogStdout).Println(content)
+	s.config.Logger.File(s.config.AccessLogPattern).StackWithFilter(gPATH_FILTER_KEY).Stdout(s.config.LogStdout).Println(content)
 }
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
 func (s *Server) handleErrorLog(err error, r *Request) {
 	// 错误输出默认是开启的
 	if !s.IsErrorLogEnabled() {
-		return
-	}
-
-	// 自定义错误处理
-	if v := s.GetLogHandler(); v != nil {
-		v(r, err)
 		return
 	}
 
@@ -71,5 +60,5 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 			content += "\n" + stack
 		}
 	}
-	s.logger.File(s.config.AccessLogPattern).Stack(false).Stdout(s.config.LogStdout).Error(content)
+	s.config.Logger.File(s.config.AccessLogPattern).Stack(false).Stdout(s.config.LogStdout).Error(content)
 }
