@@ -186,17 +186,43 @@ func (c *Conn) RecvLine(retry ...Retry) ([]byte, error) {
 	for {
 		buffer, err = c.Recv(1, retry...)
 		if len(buffer) > 0 {
-			data = append(data, buffer...)
 			if buffer[0] == '\n' {
+				data = append(data, buffer[:len(buffer)-1]...)
 				break
+			} else {
+				data = append(data, buffer...)
 			}
 		}
 		if err != nil {
 			break
 		}
 	}
-	if len(data) > 0 {
-		data = bytes.TrimRight(data, "\n\r")
+	return data, err
+}
+
+// RecvTil reads data from the connection until reads bytes <til>.
+// Note that the returned result contains the last bytes <til>.
+func (c *Conn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
+	var err error
+	var buffer []byte
+	data := make([]byte, 0)
+	length := len(til)
+	for {
+		buffer, err = c.Recv(1, retry...)
+		if len(buffer) > 0 {
+			if length > 0 &&
+				len(data) >= length-1 &&
+				buffer[0] == til[length-1] &&
+				bytes.EqualFold(data[len(data)-length+1:], til[:length-1]) {
+				data = append(data, buffer...)
+				break
+			} else {
+				data = append(data, buffer...)
+			}
+		}
+		if err != nil {
+			break
+		}
 	}
 	return data, err
 }

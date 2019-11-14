@@ -25,6 +25,12 @@ func (c *Client) SetHeader(key, value string) {
 	c.header[key] = value
 }
 
+func (c *Client) SetHeaderMap(m map[string]string) {
+	for k, v := range m {
+		c.header[k] = v
+	}
+}
+
 // 通过字符串设置HTTP Header
 func (c *Client) SetHeaderRaw(header string) {
 	for _, line := range strings.Split(strings.TrimSpace(header), "\n") {
@@ -41,8 +47,8 @@ func (c *Client) SetCookie(key, value string) {
 }
 
 // 使用Map设置COOKIE
-func (c *Client) SetCookieMap(cookieMap map[string]string) {
-	for k, v := range cookieMap {
+func (c *Client) SetCookieMap(m map[string]string) {
+	for k, v := range m {
 		c.cookies[k] = v
 	}
 }

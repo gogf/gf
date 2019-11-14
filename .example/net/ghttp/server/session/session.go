@@ -8,15 +8,17 @@ import (
 
 func main() {
 	s := g.Server()
-	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Session.Set("time", gtime.Second())
-		r.Response.Write("ok")
-	})
-	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.WriteJson(r.Session.Map())
-	})
-	s.BindHandler("/clear", func(r *ghttp.Request) {
-		r.Session.Clear()
+	s.Group("/", func(g *ghttp.RouterGroup) {
+		g.GET("/set", func(r *ghttp.Request) {
+			r.Session.Set("time", gtime.Second())
+			r.Response.Write("ok")
+		})
+		g.GET("/get", func(r *ghttp.Request) {
+			r.Response.WriteJson(r.Session.Map())
+		})
+		g.GET("/clear", func(r *ghttp.Request) {
+			r.Session.Clear()
+		})
 	})
 	s.SetPort(8199)
 	s.Run()
