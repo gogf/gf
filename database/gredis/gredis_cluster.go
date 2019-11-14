@@ -104,7 +104,7 @@ func (c *Redis) Cluster(key string) (interface{}, error) {
 	return c.Do("cluster", key)
 }
 
-func (c *Redis) commnddo(action string, args ...interface{}) (interface{}, error) {
+func (c *Redis) commandDo(action string, args ...interface{}) (interface{}, error) {
 
 	if len(args) == 0 {
 		conn := &Conn{c.pool.Get()}
