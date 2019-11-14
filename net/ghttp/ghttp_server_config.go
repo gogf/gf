@@ -137,6 +137,10 @@ func (s *Server) SetConfig(c ServerConfig) error {
 		c.Handler = http.HandlerFunc(s.defaultHttpHandle)
 	}
 	s.config = c
+	// Static.
+	if c.ServerRoot != "" {
+		s.SetServerRoot(c.ServerRoot)
+	}
 	// HTTPS.
 	if c.TLSConfig == nil && c.HTTPSCertPath != "" {
 		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
