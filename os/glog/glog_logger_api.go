@@ -84,7 +84,7 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 // It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Notice(v ...interface{}) {
 	if l.checkLevel(LEVEL_NOTI) {
-		l.printErr("[NOTI]", v...)
+		l.printStd("[NOTI]", v...)
 	}
 }
 
@@ -92,7 +92,7 @@ func (l *Logger) Notice(v ...interface{}) {
 // It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Noticef(format string, v ...interface{}) {
 	if l.checkLevel(LEVEL_NOTI) {
-		l.printErr("[NOTI]", l.format(format, v...))
+		l.printStd("[NOTI]", l.format(format, v...))
 	}
 }
 
@@ -100,7 +100,7 @@ func (l *Logger) Noticef(format string, v ...interface{}) {
 // It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Warning(v ...interface{}) {
 	if l.checkLevel(LEVEL_WARN) {
-		l.printErr("[WARN]", v...)
+		l.printStd("[WARN]", v...)
 	}
 }
 
@@ -108,7 +108,7 @@ func (l *Logger) Warning(v ...interface{}) {
 // It also prints caller stack info if stack feature is enabled.
 func (l *Logger) Warningf(format string, v ...interface{}) {
 	if l.checkLevel(LEVEL_WARN) {
-		l.printErr("[WARN]", l.format(format, v...))
+		l.printStd("[WARN]", l.format(format, v...))
 	}
 }
 
