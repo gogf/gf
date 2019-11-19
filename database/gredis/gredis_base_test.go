@@ -23,7 +23,7 @@ var (
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
 		Db:   1,
-		Pass: "", // when is ci,no pass   com: 123456 home:""
+		Pass: Pass1, // when is ci,no pass   com: 123456 home:""
 	}
 )
 

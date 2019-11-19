@@ -25,8 +25,8 @@ var (
 )
 
 // Get the coverage of slots
-func (c *Redis) layoutSlots() {
-	*reply, err = c.Do("cluster", "nodes")
+func (r *Redis) layoutSlots() {
+	*reply, err = r.Do("cluster", "nodes")
 	if err != nil {
 		return
 	}
@@ -55,7 +55,7 @@ func NewClusterClient(co *ClusterOption) *Redis {
 	return clusres
 }
 
-func newClusterClientByhost(host string) *Redis {
+func newClusterClientByHost(host string) *Redis {
 	hosts := strings.Split(host, ":")
 	if len(hosts) != 2 {
 		return nil
@@ -79,7 +79,7 @@ func newClusterConn(co *ClusterOption) *Redis {
 		if len(host) != 2 {
 			continue
 		}
-		return newClusterClientByhost(v)
+		return newClusterClientByHost(v)
 	}
 	return nil
 }
@@ -95,19 +95,19 @@ func choiceConn(key string) *Redis {
 	}
 
 	if _, ok := clusterConnMap[ks]; !ok {
-		newClusterClientByhost(gconv.String(ks))
+		newClusterClientByHost(gconv.String(ks))
 	}
 	return clusterConnMap[ks]
 }
 
-func (c *Redis) Cluster(key string) (interface{}, error) {
-	return c.Do("cluster", key)
+func (r *Redis) Cluster(key string) (interface{}, error) {
+	return r.Do("cluster", key)
 }
 
-func (c *Redis) commandDo(action string, args ...interface{}) (interface{}, error) {
+func (r *Redis) commandDo(action string, args ...interface{}) (interface{}, error) {
 
 	if len(args) == 0 {
-		conn := &Conn{c.pool.Get()}
+		conn := &Conn{r.pool.Get()}
 		return conn.Do(action)
 	}
 
@@ -115,7 +115,7 @@ func (c *Redis) commandDo(action string, args ...interface{}) (interface{}, erro
 	if keys == "" {
 		return nil, errors.New("key is empty")
 	}
-	ch := c
+	ch := r
 	if flagIsCluster {
 		ch = choiceConn(keys)
 	}
@@ -134,7 +134,7 @@ func (c *Redis) commandDo(action string, args ...interface{}) (interface{}, erro
 
 	if err != nil {
 		if strings.Index(err.Error(), "MOVED") >= 0 {
-			ch = c.movedconn(err.Error())
+			ch = r.movedConn(err.Error())
 			return conn.Do(action, keys)
 		}
 		return nil, err
@@ -142,8 +142,8 @@ func (c *Redis) commandDo(action string, args ...interface{}) (interface{}, erro
 	return nil, err
 }
 
-func (c *Redis) movedconn(errs string) *Redis {
+func (r *Redis) movedConn(errs string) *Redis {
 	chs := strings.Split(errs, " ")
-	c.layoutSlots()
+	r.layoutSlots()
 	return choiceConn(chs[2])
 }
