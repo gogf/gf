@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	Clusterip     = "127.0.0.1" //
-	Pass1         = ""          //123456 com:123456 home:"" ci:""
-	port          = 6379        //com:8669  home,ci:6379
-	ClustersNodes = []string{Clusterip + ":7000", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7001"}
+	Clusterip     = "192.168.0.55" //
+	Pass1         = "123456"          //123456 com:123456 home:"" ci:""
+	port          = 8669        //com:8669  home,ci:6379
+	ClustersNodes = []string{Clusterip + ":7006", Clusterip + ":7002", Clusterip + ":7003", Clusterip + ":7004", Clusterip + ":7005", Clusterip + ":7001"}
 	config        = gredis.Config{
 		Host: Clusterip, //192.168.0.55 127.0.0.1
 		Port: port,      //8579 6379
@@ -44,8 +44,8 @@ func init() {
 }
 
 func createTestFile(filename, content string) error {
-	//TempDir := testpath()
-	err := gfile.PutContents(filename, content)
+	TempDir := testpath()
+	err := gfile.PutContents(TempDir+"/"+filename, content)
 	return err
 }
 
@@ -209,7 +209,9 @@ func Test_Clustersg(t *testing.T) {
 		)
 
 		gredis.FlagBanCluster = false
+		// 这里反指定配置文件
 
+		g.Cfg().SetPath(testpath())
 		rdb := g.Redis()
 		listdelk := []string{"hash1", "tn1", "tn2", "jjname1_11", "list1", "set1", "zset1", "hlog1", "geo1", "pub1"}
 		for _, v := range listdelk {
