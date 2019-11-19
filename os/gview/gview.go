@@ -14,10 +14,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/internal/intlog"
-	"sync"
-
 	"github.com/gogf/gf/i18n/gi18n"
+	"github.com/gogf/gf/internal/intlog"
 
 	"github.com/gogf/gf/os/gres"
 
@@ -31,11 +29,11 @@ import (
 
 // View object for template engine.
 type View struct {
-	mu           sync.RWMutex
 	paths        *garray.StrArray       // Searching path array, NOT concurrent safe for performance purpose.
 	data         map[string]interface{} // Global template variables.
 	funcMap      map[string]interface{} // Global template function map.
 	fileCacheMap *gmap.StrAnyMap        // File cache map.
+	defaultFile  string                 // Default template file for parsing.
 	i18nManager  *gi18n.Manager         // I18n manager for this view.
 	delimiters   []string               // Customized template delimiters.
 }
@@ -46,8 +44,15 @@ type Params = map[string]interface{}
 // FuncMap is type for custom template functions.
 type FuncMap = map[string]interface{}
 
-// Default view object.
-var defaultViewObj *View
+const (
+	// Default template file for parsing.
+	defaultParsingFile = "index.html"
+)
+
+var (
+	// Default view object.
+	defaultViewObj *View
+)
 
 // checkAndInitDefaultView checks and initializes the default view object.
 // The default view object will be initialized just once.
@@ -72,6 +77,7 @@ func New(path ...string) *View {
 		data:         make(map[string]interface{}),
 		funcMap:      make(map[string]interface{}),
 		fileCacheMap: gmap.NewStrAnyMap(true),
+		defaultFile:  defaultParsingFile,
 		i18nManager:  gi18n.Instance(),
 		delimiters:   make([]string, 2),
 	}

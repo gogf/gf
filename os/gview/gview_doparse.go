@@ -52,9 +52,6 @@ type fileCacheItem struct {
 // with given template parameters <params> and function map <funcMap>
 // and returns the parsed string content.
 func (view *View) Parse(file string, params ...Params) (result string, err error) {
-	view.mu.RLock()
-	defer view.mu.RUnlock()
-
 	var tpl *template.Template
 	// It caches the file, folder and its content to enhance performance.
 	r := view.fileCacheMap.GetOrSetFuncLock(file, func() interface{} {
@@ -141,12 +138,15 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 	return result, nil
 }
 
+// ParseDefault parses the default template file with params.
+func (view *View) ParseDefault(params ...Params) (result string, err error) {
+	return view.Parse(view.defaultFile, params...)
+}
+
 // ParseContent parses given template content <content>
 // with given template parameters <params> and function map <funcMap>
 // and returns the parsed content in []byte.
 func (view *View) ParseContent(content string, params ...Params) (string, error) {
-	view.mu.RLock()
-	defer view.mu.RUnlock()
 	err := (error)(nil)
 	tpl := templates.GetOrSetFuncLock(gCONTENT_TEMPLATE_NAME, func() interface{} {
 		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)

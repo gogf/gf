@@ -31,7 +31,6 @@ type Model struct {
 	tables       string         // 数据库操作表
 	fields       string         // 操作字段
 	fieldsEx     string         // 操作字段(排除)
-	where        string         // 操作条件
 	whereArgs    []interface{}  // 操作条件参数
 	whereHolder  []*whereHolder // 操作条件预处理
 	groupBy      string         // 分组语句
@@ -550,12 +549,13 @@ func (md *Model) Update() (result sql.Result, err error) {
 	if md.data == nil {
 		return nil, errors.New("updating table with empty data")
 	}
+	condition, conditionArgs := md.formatCondition()
 	return md.db.doUpdate(
 		md.getLink(),
 		md.tables,
 		md.filterDataForInsertOrUpdate(md.data),
-		md.getConditionSql(),
-		md.whereArgs...,
+		condition,
+		conditionArgs...,
 	)
 }
 
@@ -566,7 +566,8 @@ func (md *Model) Delete() (result sql.Result, err error) {
 			md.checkAndRemoveCache()
 		}
 	}()
-	return md.db.doDelete(md.getLink(), md.tables, md.getConditionSql(), md.whereArgs...)
+	condition, conditionArgs := md.formatCondition()
+	return md.db.doDelete(md.getLink(), md.tables, condition, conditionArgs...)
 }
 
 // 链式操作，select
@@ -576,7 +577,8 @@ func (md *Model) Select() (Result, error) {
 
 // 链式操作，查询所有记录
 func (md *Model) All() (Result, error) {
-	return md.getAll(fmt.Sprintf("SELECT %s FROM %s%s", md.fields, md.tables, md.getConditionSql()), md.whereArgs...)
+	condition, conditionArgs := md.formatCondition()
+	return md.getAll(fmt.Sprintf("SELECT %s FROM %s%s", md.fields, md.tables, condition), conditionArgs...)
 }
 
 // 链式操作，查询单条记录
@@ -651,11 +653,12 @@ func (md *Model) Count() (int, error) {
 	} else {
 		md.fields = fmt.Sprintf(`COUNT(%s)`, md.fields)
 	}
-	s := fmt.Sprintf("SELECT %s FROM %s %s", md.fields, md.tables, md.getConditionSql())
+	condition, conditionArgs := md.formatCondition()
+	s := fmt.Sprintf("SELECT %s FROM %s %s", md.fields, md.tables, condition)
 	if len(md.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}
-	list, err := md.getAll(s, md.whereArgs...)
+	list, err := md.getAll(s, conditionArgs...)
 	if err != nil {
 		return 0, err
 	}
@@ -716,16 +719,17 @@ func (md *Model) checkAndRemoveCache() {
 }
 
 // 格式化当前输入参数，返回SQL条件语句（不带参数）
-func (md *Model) getConditionSql() string {
+func (md *Model) formatCondition() (condition string, conditionArgs []interface{}) {
+	var where string
 	if len(md.whereHolder) > 0 {
 		for _, v := range md.whereHolder {
 			switch v.operator {
 			case gWHERE_HOLDER_WHERE:
-				if md.where == "" {
+				if where == "" {
 					newWhere, newArgs := formatWhere(md.db, v.where, v.args, md.option&OPTION_OMITEMPTY > 0)
 					if len(newWhere) > 0 {
-						md.where = newWhere
-						md.whereArgs = newArgs
+						where = newWhere
+						conditionArgs = newArgs
 					}
 					continue
 				}
@@ -734,48 +738,47 @@ func (md *Model) getConditionSql() string {
 			case gWHERE_HOLDER_AND:
 				newWhere, newArgs := formatWhere(md.db, v.where, v.args, md.option&OPTION_OMITEMPTY > 0)
 				if len(newWhere) > 0 {
-					if md.where[0] == '(' {
-						md.where = fmt.Sprintf(`%s AND (%s)`, md.where, newWhere)
+					if where[0] == '(' {
+						where = fmt.Sprintf(`%s AND (%s)`, where, newWhere)
 					} else {
-						md.where = fmt.Sprintf(`(%s) AND (%s)`, md.where, newWhere)
+						where = fmt.Sprintf(`(%s) AND (%s)`, where, newWhere)
 					}
-					md.whereArgs = append(md.whereArgs, newArgs...)
+					conditionArgs = append(conditionArgs, newArgs...)
 				}
 
 			case gWHERE_HOLDER_OR:
 				newWhere, newArgs := formatWhere(md.db, v.where, v.args, md.option&OPTION_OMITEMPTY > 0)
 				if len(newWhere) > 0 {
-					if md.where[0] == '(' {
-						md.where = fmt.Sprintf(`%s OR (%s)`, md.where, newWhere)
+					if where[0] == '(' {
+						where = fmt.Sprintf(`%s OR (%s)`, where, newWhere)
 					} else {
-						md.where = fmt.Sprintf(`(%s) OR (%s)`, md.where, newWhere)
+						where = fmt.Sprintf(`(%s) OR (%s)`, where, newWhere)
 					}
-					md.whereArgs = append(md.whereArgs, newArgs...)
+					conditionArgs = append(conditionArgs, newArgs...)
 				}
 			}
 		}
 	}
-	s := ""
-	if md.where != "" {
-		s += " WHERE " + md.where
+	if where != "" {
+		condition += " WHERE " + where
 	}
 	if md.groupBy != "" {
-		s += " GROUP BY " + md.groupBy
+		condition += " GROUP BY " + md.groupBy
 	}
 	if md.orderBy != "" {
-		s += " ORDER BY " + md.orderBy
+		condition += " ORDER BY " + md.orderBy
 	}
 	if md.limit != 0 {
 		if md.start >= 0 {
-			s += fmt.Sprintf(" LIMIT %d,%d", md.start, md.limit)
+			condition += fmt.Sprintf(" LIMIT %d,%d", md.start, md.limit)
 		} else {
-			s += fmt.Sprintf(" LIMIT %d", md.limit)
+			condition += fmt.Sprintf(" LIMIT %d", md.limit)
 		}
 	}
 	if md.offset >= 0 {
-		s += fmt.Sprintf(" OFFSET %d", md.offset)
+		condition += fmt.Sprintf(" OFFSET %d", md.offset)
 	}
-	return s
+	return
 }
 
 // 组块结果集。
