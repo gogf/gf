@@ -298,6 +298,57 @@ func Test_Model_Safe(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(count, 2)
 	})
+	gtest.Case(t, func() {
+		md1 := db.Table(table).Safe()
+		md2 := md1.Where("id in (?)", g.Slice{1, 3})
+		count, err := md2.Count()
+		gtest.Assert(err, nil)
+		gtest.Assert(count, 2)
+
+		all, err := md2.All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(all), 2)
+
+		all, err = md2.ForPage(1, 10).All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(all), 2)
+	})
+
+	gtest.Case(t, func() {
+		md1 := db.Table(table).Where("id>", 0).Safe()
+		md2 := md1.Where("id in (?)", g.Slice{1, 3})
+		md3 := md1.Where("id in (?)", g.Slice{4, 5, 6})
+		// 1,3
+		count, err := md2.Count()
+		gtest.Assert(err, nil)
+		gtest.Assert(count, 2)
+
+		all, err := md2.OrderBy("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(all), 2)
+		gtest.Assert(all[0]["id"].Int(), 1)
+		gtest.Assert(all[1]["id"].Int(), 3)
+
+		all, err = md2.ForPage(1, 10).All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(all), 2)
+
+		// 4,5,6
+		count, err = md3.Count()
+		gtest.Assert(err, nil)
+		gtest.Assert(count, 3)
+
+		all, err = md3.OrderBy("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(all), 3)
+		gtest.Assert(all[0]["id"].Int(), 4)
+		gtest.Assert(all[1]["id"].Int(), 5)
+		gtest.Assert(all[2]["id"].Int(), 6)
+
+		all, err = md3.ForPage(1, 10).All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(all), 3)
+	})
 }
 
 func Test_Model_All(t *testing.T) {
