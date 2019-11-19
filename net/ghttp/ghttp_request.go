@@ -130,12 +130,28 @@ func (r *Request) GetInt(key string, def ...interface{}) int {
 	return r.GetRequestInt(key, def...)
 }
 
+func (r *Request) GetInt32(key string, def ...interface{}) int32 {
+	return r.GetRequestInt32(key, def...)
+}
+
+func (r *Request) GetInt64(key string, def ...interface{}) int64 {
+	return r.GetRequestInt64(key, def...)
+}
+
 func (r *Request) GetInts(key string, def ...interface{}) []int {
 	return r.GetRequestInts(key, def...)
 }
 
 func (r *Request) GetUint(key string, def ...interface{}) uint {
 	return r.GetRequestUint(key, def...)
+}
+
+func (r *Request) GetUint32(key string, def ...interface{}) uint32 {
+	return r.GetRequestUint32(key, def...)
+}
+
+func (r *Request) GetUint64(key string, def ...interface{}) uint64 {
+	return r.GetRequestUint64(key, def...)
 }
 
 func (r *Request) GetFloat32(key string, def ...interface{}) float32 {

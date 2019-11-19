@@ -32,10 +32,14 @@ var (
 	// Goroutine pool for async logging output.
 	// It uses only one asynchronize worker to ensure log sequence.
 	asyncPool = grpool.New(1)
+	// defaultDebug enables debug level or not in default,
+	// which can be configured using command option or system environment.
+	defaultDebug = true
 )
 
 func init() {
-	SetDebug(cmdenv.Get("gf.glog.debug", true).Bool())
+	defaultDebug = cmdenv.Get("gf.glog.debug", true).Bool()
+	SetDebug(defaultDebug)
 }
 
 // Default returns the default logger.

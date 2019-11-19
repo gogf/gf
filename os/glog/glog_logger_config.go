@@ -32,7 +32,7 @@ type Config struct {
 
 // DefaultConfig returns the default configuration for logger.
 func DefaultConfig() Config {
-	return Config{
+	c := Config{
 		File:        gDEFAULT_FILE_FORMAT,
 		Flags:       F_TIME_STD,
 		Level:       LEVEL_ALL,
@@ -40,6 +40,10 @@ func DefaultConfig() Config {
 		HeaderPrint: true,
 		StdoutPrint: true,
 	}
+	if !defaultDebug {
+		c.Level = c.Level & ^LEVEL_DEBU
+	}
+	return c
 }
 
 // SetConfig set configurations for the logger.
