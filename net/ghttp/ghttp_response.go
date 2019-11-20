@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/os/gview"
 	"net/http"
 
 	"github.com/gogf/gf/os/gres"
@@ -20,13 +21,14 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Response is the writer for response buffer.
+// Response is the http response manager.
 // Note that it implements the http.ResponseWriter interface with buffering feature.
 type Response struct {
 	*ResponseWriter                 // Underlying ResponseWriter.
 	Server          *Server         // Parent server.
 	Writer          *ResponseWriter // Alias of ResponseWriter.
 	Request         *Request        // According request.
+	view            *gview.View     // Custom template view engine object for this response.
 }
 
 // newResponse creates and returns a new Response object.
@@ -162,7 +164,7 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 	r.Server.serveFile(r.Request, serveFile, allowIndex...)
 }
 
-// ServeFileDownload serves file as file downloading to the response.
+// ServeFileDownload serves file downloading to the response.
 func (r *Response) ServeFileDownload(path string, name ...string) {
 	serveFile := (*staticServeFile)(nil)
 	downloadName := ""
@@ -194,29 +196,29 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	r.Server.serveFile(r.Request, serveFile)
 }
 
-// RedirectTo redirects client to another location.
+// RedirectTo redirects client to another location using http status 302.
 func (r *Response) RedirectTo(location string) {
 	r.Header().Set("Location", location)
 	r.WriteHeader(http.StatusFound)
 	r.Request.Exit()
 }
 
-// RedirectBack redirects client back to referer.
+// RedirectBack redirects client back to referer using http status 302.
 func (r *Response) RedirectBack() {
 	r.RedirectTo(r.Request.GetReferer())
 }
 
-// BufferString returns the buffer content as []byte.
+// BufferString returns the buffered content as []byte.
 func (r *Response) Buffer() []byte {
 	return r.buffer.Bytes()
 }
 
-// BufferString returns the buffer content as string.
+// BufferString returns the buffered content as string.
 func (r *Response) BufferString() string {
 	return r.buffer.String()
 }
 
-// BufferLength returns the length of the buffer content.
+// BufferLength returns the length of the buffered content.
 func (r *Response) BufferLength() int {
 	return r.buffer.Len()
 }
@@ -237,6 +239,5 @@ func (r *Response) Output() {
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)
 	}
-	//r.handleGzip()
 	r.Writer.OutputBuffer()
 }

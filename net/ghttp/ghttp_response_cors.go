@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
+// CORSOptions is the options for CORS feature.
 // See https://www.w3.org/TR/cors/ .
 type CORSOptions struct {
 	AllowDomain      []string // Used for allowing requests from custom domains
@@ -70,7 +71,7 @@ func (r *Response) CORS(options CORSOptions) {
 	}
 }
 
-// CORSAllowed checks whether the current request origin is allowed CORS.
+// CORSAllowed checks whether the current request origin is allowed cross-domain.
 func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	if options.AllowDomain == nil {
 		return true

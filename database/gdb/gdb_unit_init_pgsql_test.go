@@ -16,12 +16,9 @@ import (
 )
 
 var (
-	// 数据库对象/接口
 	pgdb gdb.DB
 )
 
-// 初始化连接参数。
-// 测试前需要修改连接参数。
 func InitPgsql() {
 	node := gdb.ConfigNode{
 		Host:             "127.0.0.1",
@@ -64,10 +61,6 @@ func InitPgsql() {
 
 }
 
-// 创建指定名称的user测试表，当table为空时，创建随机的表名。
-// 创建的测试表默认没有任何数据。
-// 执行完成后返回该表名。
-// TODO 支持更多数据库
 func createTablePgsql(table ...string) (name string) {
 	if len(table) > 0 {
 		name = table[0]
@@ -91,7 +84,6 @@ func createTablePgsql(table ...string) (name string) {
 	return
 }
 
-// 创建测试表，并初始化默认数据。
 func createInitTablePgsql(table ...string) (name string) {
 	name = createTablePgsql(table...)
 	array := garray.New(true)
@@ -113,7 +105,6 @@ func createInitTablePgsql(table ...string) (name string) {
 	return
 }
 
-// 删除指定表.
 func dropTablePgsql(table string) {
 	if _, err := pgdb.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s", table)); err != nil {
 		gtest.Fatal(err)

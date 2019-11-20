@@ -315,6 +315,9 @@ func Test_Model_Safe(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
+
 		md1 := db.Table(table).Where("id>", 0).Safe()
 		md2 := md1.Where("id in (?)", g.Slice{1, 3})
 		md3 := md1.Where("id in (?)", g.Slice{4, 5, 6})

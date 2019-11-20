@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	// 数据库对象/接口
 	oradb gdb.DB
 )
 
@@ -46,7 +45,6 @@ func InitOracle() {
 		oradb = r
 	}
 
-	// 创建默认用户表
 	createTableOracle("t_user")
 }
 
@@ -94,7 +92,6 @@ func createInitTableOracle(table ...string) (name string) {
 	return
 }
 
-// 删除指定表.
 func dropTableOracle(table string) {
 
 	count, err := oradb.GetCount("SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", strings.ToUpper(table))

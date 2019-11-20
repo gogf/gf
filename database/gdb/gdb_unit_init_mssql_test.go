@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	// 数据库对象/接口
 	msdb gdb.DB
 )
 
@@ -44,7 +43,6 @@ func InitMssql() {
 		msdb = r
 	}
 
-	// 创建默认用户表
 	createTableMssql("t_user")
 	//msdb.SetDebug(true)
 }
@@ -74,7 +72,6 @@ func createTableMssql(table ...string) (name string) {
 	//msdb.Exec("DROP DATABASE test")
 	//msdb.Exec("CREATE DATABASE test")
 
-	// 选择操作数据库
 	msdb.SetSchema("test")
 
 	//msdb.SetDebug(true)
@@ -102,7 +99,6 @@ func createInitTableMssql(table ...string) (name string) {
 	return
 }
 
-// 删除指定表.
 func dropTableMssql(table string) {
 	if _, err := msdb.Exec(fmt.Sprintf(`
 		IF EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
