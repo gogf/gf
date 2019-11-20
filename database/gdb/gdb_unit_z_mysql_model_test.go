@@ -315,6 +315,9 @@ func Test_Model_Safe(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
+		db.SetDebug(true)
+		defer db.SetDebug(false)
+
 		table := createInitTable()
 		defer dropTable(table)
 
