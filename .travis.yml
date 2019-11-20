@@ -32,8 +32,7 @@ install:
 before_script:
 - find . -name "*.go" | xargs gofmt -w
 - git diff --name-only --exit-code || exit 1
-- echo "USE mysql;\nselect * from user;\n" | mysql -u root
-- echo "USE mysql;\nUPDATE user SET password=PASSWORD('12345678') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+- echo "UPDATE mysql.user SET authentication_string=PASSWORD('12345678') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 - psql -c 'create database travis_ci_test;' -U postgres
 
 script:
