@@ -13,7 +13,25 @@ import (
 	"github.com/gogf/gf/util/gmode"
 )
 
-// 展示模板，可以给定模板参数，及临时的自定义模板函数
+// SetView sets template view engine object for this response.
+func (r *Response) SetView(view *gview.View) {
+	r.view = view
+}
+
+// GetView returns the template view engine object for this response.
+func (r *Response) GetView() *gview.View {
+	view := r.view
+	if view == nil {
+		view = r.Server.config.View
+	}
+	if view == nil {
+		gview.Instance()
+	}
+	return view
+}
+
+// WriteTpl parses and responses given template file.
+// The parameter <params> specifies the template variables for parsing.
 func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 	if b, err := r.ParseTpl(tpl, params...); err != nil {
 		if !gmode.IsProduct() {
@@ -26,7 +44,22 @@ func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 	return nil
 }
 
-// 展示模板内容，可以给定模板参数，及临时的自定义模板函数
+// WriteTplDefault parses and responses the default template file.
+// The parameter <params> specifies the template variables for parsing.
+func (r *Response) WriteTplDefault(params ...gview.Params) error {
+	if b, err := r.ParseTplDefault(params...); err != nil {
+		if !gmode.IsProduct() {
+			r.Write("Template Parsing Error: " + err.Error())
+		}
+		return err
+	} else {
+		r.Write(b)
+	}
+	return nil
+}
+
+// WriteTplContent parses and responses the template content.
+// The parameter <params> specifies the template variables for parsing.
 func (r *Response) WriteTplContent(content string, params ...gview.Params) error {
 	if b, err := r.ParseTplContent(content, params...); err != nil {
 		if !gmode.IsProduct() {
@@ -39,23 +72,24 @@ func (r *Response) WriteTplContent(content string, params ...gview.Params) error
 	return nil
 }
 
-// 解析模板文件，并返回模板内容
+// ParseTpl parses given template file <tpl> with given template variables <params>
+// and returns the parsed template content.
 func (r *Response) ParseTpl(tpl string, params ...gview.Params) (string, error) {
-	if r.Server.config.View != nil {
-		return r.Server.config.View.Parse(tpl, r.buildInVars(params...))
-	}
-	return gview.Instance().Parse(tpl, r.buildInVars(params...))
+	return r.GetView().Parse(tpl, r.buildInVars(params...))
 }
 
-// 解析并返回模板内容
+// ParseDefault parses the default template file with params.
+func (r *Response) ParseTplDefault(params ...gview.Params) (string, error) {
+	return r.GetView().ParseDefault(r.buildInVars(params...))
+}
+
+// ParseTplContent parses given template file <file> with given template parameters <params>
+// and returns the parsed template content.
 func (r *Response) ParseTplContent(content string, params ...gview.Params) (string, error) {
-	if r.Server.config.View != nil {
-		return r.Server.config.View.ParseContent(content, r.buildInVars(params...))
-	}
-	return gview.Instance().ParseContent(content, r.buildInVars(params...))
+	return r.GetView().ParseContent(content, r.buildInVars(params...))
 }
 
-// 内置变量/对象
+// buildInVars merges build-in variables into <params> and returns the new template variables.
 func (r *Response) buildInVars(params ...map[string]interface{}) map[string]interface{} {
 	var vars map[string]interface{}
 	if len(params) > 0 && params[0] != nil {

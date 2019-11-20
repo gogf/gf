@@ -48,9 +48,8 @@ type fileCacheItem struct {
 	content string
 }
 
-// ParseContent parses given template file <file>
-// with given template parameters <params> and function map <funcMap>
-// and returns the parsed string content.
+// Parse parses given template file <file> with given template variables <params>
+// and returns the parsed template content.
 func (view *View) Parse(file string, params ...Params) (result string, err error) {
 	var tpl *template.Template
 	// It caches the file, folder and its content to enhance performance.
@@ -143,8 +142,7 @@ func (view *View) ParseDefault(params ...Params) (result string, err error) {
 	return view.Parse(view.defaultFile, params...)
 }
 
-// ParseContent parses given template content <content>
-// with given template parameters <params> and function map <funcMap>
+// ParseContent parses given template content <content>  with template variables <params>
 // and returns the parsed content in []byte.
 func (view *View) ParseContent(content string, params ...Params) (string, error) {
 	err := (error)(nil)
@@ -201,7 +199,7 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 
 // getTemplate returns the template object associated with given template folder <path>.
 // It uses template cache to enhance performance, that is, it will return the same template object
-// with the same given <path>. It will also refresh the template cache
+// with the same given <path>. It will also automatically refresh the template cache
 // if the template files under <path> changes (recursively).
 func (view *View) getTemplate(path string, pattern string) (tpl *template.Template, err error) {
 	r := templates.GetOrSetFuncLock(path, func() interface{} {
@@ -237,7 +235,7 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 	return
 }
 
-// searchFile returns the found absolute path for <file>, and its template folder path.
+// searchFile returns the found absolute path for <file> and its template folder path.
 func (view *View) searchFile(file string) (path string, folder string, resource *gres.File, err error) {
 	// Firstly checking the resource manager.
 	if !gres.IsEmpty() {
