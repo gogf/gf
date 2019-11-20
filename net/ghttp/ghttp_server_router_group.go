@@ -213,7 +213,11 @@ func (g *RouterGroup) Hook(pattern string, hook string, handler HandlerFunc) *Ro
 func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 	group := g.Clone()
 	for _, handler := range handlers {
-		group.preBind("MIDDLEWARE", "/*", handler)
+		if gstr.Contains(g.prefix, "*") {
+			group.preBind("MIDDLEWARE", "/", handler)
+		} else {
+			group.preBind("MIDDLEWARE", "/*", handler)
+		}
 	}
 	return group
 }

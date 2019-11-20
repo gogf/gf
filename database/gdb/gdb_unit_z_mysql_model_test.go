@@ -324,6 +324,7 @@ func Test_Model_Safe(t *testing.T) {
 		md1 := db.Table(table).Where("id>", 0).Safe()
 		md2 := md1.Where("id in (?)", g.Slice{1, 3})
 		md3 := md1.Where("id in (?)", g.Slice{4, 5, 6})
+
 		// 1,3
 		count, err := md2.Count()
 		gtest.Assert(err, nil)

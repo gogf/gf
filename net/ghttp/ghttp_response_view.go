@@ -13,23 +13,6 @@ import (
 	"github.com/gogf/gf/util/gmode"
 )
 
-// SetView sets template view engine object for this response.
-func (r *Response) SetView(view *gview.View) {
-	r.view = view
-}
-
-// GetView returns the template view engine object for this response.
-func (r *Response) GetView() *gview.View {
-	view := r.view
-	if view == nil {
-		view = r.Server.config.View
-	}
-	if view == nil {
-		gview.Instance()
-	}
-	return view
-}
-
 // WriteTpl parses and responses given template file.
 // The parameter <params> specifies the template variables for parsing.
 func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
@@ -75,18 +58,18 @@ func (r *Response) WriteTplContent(content string, params ...gview.Params) error
 // ParseTpl parses given template file <tpl> with given template variables <params>
 // and returns the parsed template content.
 func (r *Response) ParseTpl(tpl string, params ...gview.Params) (string, error) {
-	return r.GetView().Parse(tpl, r.buildInVars(params...))
+	return r.Request.GetView().Parse(tpl, r.buildInVars(params...))
 }
 
 // ParseDefault parses the default template file with params.
 func (r *Response) ParseTplDefault(params ...gview.Params) (string, error) {
-	return r.GetView().ParseDefault(r.buildInVars(params...))
+	return r.Request.GetView().ParseDefault(r.buildInVars(params...))
 }
 
 // ParseTplContent parses given template file <file> with given template parameters <params>
 // and returns the parsed template content.
 func (r *Response) ParseTplContent(content string, params ...gview.Params) (string, error) {
-	return r.GetView().ParseContent(content, r.buildInVars(params...))
+	return r.Request.GetView().ParseContent(content, r.buildInVars(params...))
 }
 
 // buildInVars merges build-in variables into <params> and returns the new template variables.
@@ -97,7 +80,14 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	} else {
 		vars = make(map[string]interface{})
 	}
-	// 当配置文件不存在时就不赋值该模板变量，不然会报错
+	// Retrieve custom template variables from request object.
+	if len(r.Request.viewParams) > 0 {
+		for k, v := range r.Request.viewParams {
+			vars[k] = v
+		}
+	}
+	// Note that it should assign no Config variable to template
+	// if there's no configuration file.
 	if c := gcfg.Instance(); c.FilePath() != "" {
 		vars["Config"] = c.GetMap(".")
 	}
