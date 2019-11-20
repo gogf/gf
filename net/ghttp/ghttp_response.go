@@ -11,7 +11,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/os/gview"
 	"net/http"
 
 	"github.com/gogf/gf/os/gres"
@@ -28,7 +27,6 @@ type Response struct {
 	Server          *Server         // Parent server.
 	Writer          *ResponseWriter // Alias of ResponseWriter.
 	Request         *Request        // According request.
-	view            *gview.View     // Custom template view engine object for this response.
 }
 
 // newResponse creates and returns a new Response object.

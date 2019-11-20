@@ -8,7 +8,7 @@ package gview
 
 import "github.com/gogf/gf/i18n/gi18n"
 
-// Assign binds multiple global template variables to current view object.
+// Assigns binds multiple global template variables to current view object.
 // Note that it's not concurrent-safe, which means it would panic
 // if it's called in multiple goroutines in runtime.
 func (view *View) Assigns(data Params) {

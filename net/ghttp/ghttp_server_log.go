@@ -8,10 +8,11 @@ package ghttp
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 )
 
 const (
-	gPATH_FILTER_KEY = "/net/ghttp/ghttp"
+	gPATH_FILTER_KEY = "github.com/gogf/gf/"
 )
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
@@ -23,7 +24,7 @@ func (s *Server) handleAccessLog(r *Request) {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	s.config.Logger.File(s.config.AccessLogPattern).StackWithFilter(gPATH_FILTER_KEY).Stdout(s.config.LogStdout).Printf(
+	s.config.Logger.File(s.config.AccessLogPattern).Stdout(s.config.LogStdout).Printf(
 		`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
 		r.Response.Status,
 		r.Method, scheme, r.Host, r.URL.String(), r.Proto,
@@ -44,13 +45,19 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	content := fmt.Sprintf(`%v, "%s %s %s %s %s"`, err, r.Method, scheme, r.Host, r.URL.String(), r.Proto)
-	content += fmt.Sprintf(` %.3f`, float64(r.LeaveTime-r.EnterTime)/1000)
-	content += fmt.Sprintf(`, %s, "%s", "%s"`, r.GetClientIp(), r.Referer(), r.UserAgent())
-	s.config.Logger.File(s.config.AccessLogPattern).Stack(s.config.ErrorStack).Stdout(s.config.LogStdout).Errorf(
-		`%v, "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
-		err, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
+	content := fmt.Sprintf(`%d, "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
+		r.Response.Status, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
 		float64(r.LeaveTime-r.EnterTime)/1000,
 		r.GetClientIp(), r.Referer(), r.UserAgent(),
 	)
+	if stack := gerror.Stack(err); stack != "" {
+		content += "\nStack:\n" + stack
+		s.config.Logger.File(s.config.AccessLogPattern).Stack(false).Stdout(s.config.LogStdout).Error(content)
+		return
+	}
+	s.config.Logger.File(s.config.AccessLogPattern).
+		Stack(s.config.ErrorStack).
+		StackWithFilter(gPATH_FILTER_KEY).
+		Stdout(s.config.LogStdout).
+		Errorf(content)
 }

@@ -8,6 +8,8 @@ package ghttp
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
@@ -21,54 +23,53 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-// 请求对象
+// Request is the context object for a request.
 type Request struct {
 	*http.Request
-	Id              int                    // 请求ID(当前Server对象唯一)
-	Server          *Server                // 请求关联的服务器对象
-	Cookie          *Cookie                // 与当前请求绑定的Cookie对象(并发安全)
-	Session         *gsession.Session      // 与当前请求绑定的Session对象(并发安全)
-	Response        *Response              // 对应请求的返回数据操作对象
-	Router          *Router                // 匹配到的路由对象
-	EnterTime       int64                  // 请求进入时间(微秒)
-	LeaveTime       int64                  // 请求完成时间(微秒)
-	Middleware      *Middleware            // 中间件功能调用对象
-	handlers        []*handlerParsedItem   // 请求执行服务函数列表(包含中间件、路由函数、钩子函数)
-	handlerIndex    int                    // 当前执行函数的索引号
-	hasHookHandler  bool                   // 是否检索到钩子函数(用于请求时提高钩子函数功能启用判断效率)
-	hasServeHandler bool                   // 是否检索到服务函数
-	parsedGet       bool                   // GET参数是否已经解析
-	parsedPut       bool                   // PUT参数是否已经解析
-	parsedPost      bool                   // POST参数是否已经解析
-	parsedDelete    bool                   // DELETE参数是否已经解析
-	parsedRaw       bool                   // 原始参数是否已经解析
-	parsedForm      bool                   // 是否已调用r.ParseMultipartForm
-	getMap          map[string]interface{} // GET解析参数
-	putMap          map[string]interface{} // PUT解析参数
-	postMap         map[string]interface{} // POST解析参数
-	deleteMap       map[string]interface{} // DELETE解析参数
-	routerMap       map[string]interface{} // 路由解析参数
-	rawMap          map[string]interface{} // 原始数据参数
-	error           error                  // 当前请求执行错误
-	exit            bool                   // 是否退出当前请求流程执行
-	params          map[string]interface{} // 开发者自定义参数(请求流程中有效)
-	parsedHost      string                 // 解析过后不带端口号的服务器域名名称
-	clientIp        string                 // 解析过后的客户端IP地址
-	rawContent      []byte                 // 客户端提交的原始参数
-	isFileRequest   bool                   // 是否为静态文件请求(非服务请求，当静态文件存在时，优先级会被服务请求高，被识别为文件请求)
+	Server          *Server                // Parent server.
+	Cookie          *Cookie                // Cookie.
+	Session         *gsession.Session      // Session.
+	Response        *Response              // Corresponding Response of this request.
+	Router          *Router                // Matched Router for this request. Note that it's only available in HTTP handler, not in HOOK or MiddleWare.
+	EnterTime       int64                  // Request starting time in microseconds.
+	LeaveTime       int64                  // Request ending time in microseconds.
+	Middleware      *Middleware            // The middleware manager.
+	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request .
+	handlerIndex    int                    // Index number for executing sequence purpose of handlers.
+	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
+	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
+	parsedGet       bool                   // A bool marking whether the GET parameters parsed.
+	parsedPut       bool                   // A bool marking whether the PUT parameters parsed.
+	parsedPost      bool                   // A bool marking whether the POST parameters parsed.
+	parsedDelete    bool                   // A bool marking whether the DELETE parameters parsed.
+	parsedRaw       bool                   // A bool marking whether the request body parsed.
+	parsedForm      bool                   // A bool marking whether r.ParseMultipartForm called.
+	getMap          map[string]interface{} // GET parameters map, which might be nil if there're no GET parameters.
+	putMap          map[string]interface{} // PUT parameters map, which might be nil if there're no PUT parameters.
+	postMap         map[string]interface{} // POST parameters map, which might be nil if there're no POST parameters.
+	deleteMap       map[string]interface{} // DELETE parameters map, which might be nil if there're no DELETE parameters.
+	routerMap       map[string]interface{} // Router parameters map, which might be nil if there're no router parameters.
+	rawMap          map[string]interface{} // Body parameters map, which might be nil if there're no body content.
+	error           error                  // Current executing error of the request.
+	exit            bool                   // A bool marking whether current request is exited.
+	params          map[string]interface{} // Custom parameters.
+	parsedHost      string                 // The parsed host name for current host used by GetHost function.
+	clientIp        string                 // The parsed client ip for current host used by GetClientIp function.
+	rawContent      []byte                 // Request body content.
+	isFileRequest   bool                   // A bool marking whether current request is file serving.
+	view            *gview.View            // Custom template view engine object for this response.
+	viewParams      gview.Params           // Custom template view variables for this response.
 }
 
-// 创建一个Request对象
+// newRequest creates and returns a new request object.
 func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request := &Request{
 		routerMap: make(map[string]interface{}),
-		Id:        s.servedCount.Add(1),
 		Server:    s,
 		Request:   r,
 		Response:  newResponse(s, w),
 		EnterTime: gtime.Microsecond(),
 	}
-	// 会话处理
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())
 	request.Response.Request = request
@@ -78,7 +79,9 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	return request
 }
 
-// 获取Web Socket连接对象(如果是非WS请求会失败，注意检查返回的error结果)
+// WebSocket upgrades current request as a websocket request.
+// It returns a new WebSocket object if success, or the error if failure.
+// Note that the request should be a websocket request, or it will surely fail upgrading.
 func (r *Request) WebSocket() (*WebSocket, error) {
 	if conn, err := wsUpgrader.Upgrade(r.Response.Writer, r.Request, nil); err == nil {
 		return &WebSocket{
@@ -89,18 +92,19 @@ func (r *Request) WebSocket() (*WebSocket, error) {
 	}
 }
 
-// Get是GetRequest方法的别名，用于获得指定名称的参数值，注意键值可能是字符串、数组、Map类型。
-// 大多数场景下，你可能需要的是 GetString/GetVar。
+// Get retrieves and returns field value with given name <key> from request.
+// The parameter <def> specifies the default returned value if value of field <key> is not found.
 func (r *Request) Get(key string, def ...interface{}) interface{} {
 	return r.GetRequest(key, def...)
 }
 
-// 建议都用该参数替代参数获取
+// GetVar retrieves and returns field value with given name <key> from request as a gvar.Var.
+// The parameter <def> specifies the default returned value if value of field <key> is not found.
 func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
 	return r.GetRequestVar(key, def...)
 }
 
-// 获取原始请求输入二进制。
+// GetRaw retrieves and returns request body content as bytes.
 func (r *Request) GetRaw() []byte {
 	if r.rawContent == nil {
 		r.rawContent, _ = ioutil.ReadAll(r.Body)
@@ -108,12 +112,13 @@ func (r *Request) GetRaw() []byte {
 	return r.rawContent
 }
 
-// 获取原始请求输入字符串。
+// GetRawString retrieves and returns request body content as string.
 func (r *Request) GetRawString() string {
-	return string(r.GetRaw())
+	return gconv.UnsafeBytesToStr(r.GetRaw())
 }
 
-// 获取原始json请求输入字符串，并解析为json对象
+// GetJson parses current request content as JSON format, and returns the JSON object.
+// Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
 	return gjson.LoadJson(r.GetRaw())
 }
@@ -186,34 +191,35 @@ func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string 
 	return r.GetRequestMapStrStr(def...)
 }
 
-// 将所有的request参数映射到struct属性上，参数pointer应当为一个struct对象的指针,
-// mapping为非必需参数，自定义参数与属性的映射关系
+// GetToStruct maps all request variables to a struct object.
+// The parameter <pointer> should be a pointer to a struct object.
+// More details please refer to: gconv.StructDeep.
 func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
 	return r.GetRequestToStruct(pointer, mapping...)
 }
 
-// 仅退出当前逻辑执行函数, 如:服务函数、HOOK函数
+// Exit exits executing of current HTTP handler.
 func (r *Request) Exit() {
 	panic(gEXCEPTION_EXIT)
 }
 
-// 退出当前请求执行，后续所有的服务逻辑流程(包括其他的HOOK)将不会执行
+// ExitAll exits executing of current and following HTTP handlers.
 func (r *Request) ExitAll() {
 	r.exit = true
 	panic(gEXCEPTION_EXIT_ALL)
 }
 
-// 仅针对HOOK执行，默认情况下HOOK会按照优先级进行调用，当使用ExitHook后当前类型的后续HOOK将不会被调用
+// ExitHook exits executing of current and following HTTP HOOK handlers.
 func (r *Request) ExitHook() {
 	panic(gEXCEPTION_EXIT_HOOK)
 }
 
-// 判断当前请求是否停止执行
+// IsExited checks and returns whether current request is exited.
 func (r *Request) IsExited() bool {
 	return r.exit
 }
 
-// 获取请求的服务端IP/域名
+// GetHost returns current request host name, which might be a domain or an IP without port.
 func (r *Request) GetHost() string {
 	if len(r.parsedHost) == 0 {
 		array, _ := gregex.MatchString(`(.+):(\d+)`, r.Host)
@@ -226,7 +232,7 @@ func (r *Request) GetHost() string {
 	return r.parsedHost
 }
 
-// 根据服务端配置解析multipart.Form
+// parseMultipartForm parses and returns the form as multipart form.
 func (r *Request) parseMultipartForm() *multipart.Form {
 	if !r.parsedForm {
 		r.ParseMultipartForm(r.Server.config.FormParsingMemory)
@@ -235,12 +241,13 @@ func (r *Request) parseMultipartForm() *multipart.Form {
 	return r.MultipartForm
 }
 
-// 获取解析后的multipart.Form对象
+// GetMultipartForm parses and returns the form as multipart form.
 func (r *Request) GetMultipartForm() *multipart.Form {
 	return r.parseMultipartForm()
 }
 
-// 获取上传的文件列表
+// GetMultipartFiles returns the post files array.
+// Note that the request form should be type of multipart.
 func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 	form := r.GetMultipartForm()
 	if form == nil {
@@ -256,17 +263,17 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 	return nil
 }
 
-// 判断是否为静态文件请求
+// IsFileRequest checks and returns whether current request is serving file.
 func (r *Request) IsFileRequest() bool {
 	return r.isFileRequest
 }
 
-// 判断是否为AJAX请求
+// IsAjaxRequest checks and returns whether current request is an AJAX request.
 func (r *Request) IsAjaxRequest() bool {
 	return strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest")
 }
 
-// 获取请求的客户端IP地址
+// GetClientIp returns the client ip of this request.
 func (r *Request) GetClientIp() string {
 	if len(r.clientIp) == 0 {
 		if r.clientIp = r.Header.Get("X-Real-IP"); r.clientIp == "" {
@@ -281,7 +288,7 @@ func (r *Request) GetClientIp() string {
 	return r.clientIp
 }
 
-// 获得当前请求URL地址
+// GetUrl returns current URL of this request.
 func (r *Request) GetUrl() string {
 	scheme := "http"
 	if r.TLS != nil {
@@ -290,7 +297,7 @@ func (r *Request) GetUrl() string {
 	return fmt.Sprintf(`%s://%s%s`, scheme, r.Host, r.URL.String())
 }
 
-// 从Cookie和Header中查询SESSIONID
+// GetSessionId retrieves and returns session id from cookie or header.
 func (r *Request) GetSessionId() string {
 	id := r.Cookie.GetSessionId()
 	if id == "" {
@@ -299,7 +306,7 @@ func (r *Request) GetSessionId() string {
 	return id
 }
 
-// 获得请求来源URL地址
+// GetReferer returns referer of this request.
 func (r *Request) GetReferer() string {
 	return r.Header.Get("Referer")
 }
