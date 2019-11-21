@@ -22,6 +22,7 @@ func Test_Params_Struct(t *testing.T) {
 	type User struct {
 		Id    int
 		Name  string
+		Time  *time.Time
 		Pass1 string `params:"password1"`
 		Pass2 string `params:"password2" gvalid:"passwd1 @required|length:2,20|password3#||密码强度不足"`
 	}

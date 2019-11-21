@@ -10,9 +10,12 @@ package gconv
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/encoding/gbinary"
 )
@@ -149,6 +152,7 @@ func Runes(i interface{}) []rune {
 }
 
 // String converts <i> to string.
+// It's most common used converting function.
 func String(i interface{}) string {
 	if i == nil {
 		return ""
@@ -186,7 +190,20 @@ func String(i interface{}) string {
 		return string(value)
 	case []rune:
 		return string(value)
+	case *time.Time:
+		if value == nil {
+			return ""
+		}
+		return value.String()
+	case *gtime.Time:
+		if value == nil {
+			return ""
+		}
+		return value.String()
 	default:
+		if empty.IsNil(value) {
+			return ""
+		}
 		if f, ok := value.(apiString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
