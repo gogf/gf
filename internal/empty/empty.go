@@ -82,7 +82,6 @@ func IsNil(value interface{}) bool {
 	case reflect.Chan,
 		reflect.Map,
 		reflect.Slice,
-		reflect.Array,
 		reflect.Func,
 		reflect.Ptr,
 		reflect.Interface,
