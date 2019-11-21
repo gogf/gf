@@ -31,6 +31,11 @@ func init() {
 	}
 }
 
+// IsInGFDevelop checks and returns whether current process is in GF development.
+func IsInGFDevelop() bool {
+	return isInGFDevelop
+}
+
 // Print prints <v> with newline using fmt.Println.
 // The parameter <v> can be multiple variables.
 func Print(v ...interface{}) {
