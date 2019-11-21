@@ -113,6 +113,15 @@ func (md *Model) Clone() *Model {
 		newModel = md.db.Table(md.tablesInit)
 	}
 	*newModel = *md
+	// Deep copy slice attributes.
+	if n := len(md.whereArgs); n > 0 {
+		newModel.whereArgs = make([]interface{}, n)
+		copy(newModel.whereArgs, md.whereArgs)
+	}
+	if n := len(md.whereHolder); n > 0 {
+		newModel.whereHolder = make([]*whereHolder, n)
+		copy(newModel.whereHolder, md.whereHolder)
+	}
 	return newModel
 }
 
