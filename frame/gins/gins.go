@@ -205,8 +205,14 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	if node.LinkInfo != "" && node.Type == "" {
 		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.LinkInfo)
 		if len(match) == 3 {
-			node.Type = match[1]
-			node.LinkInfo = match[2]
+			// Special handle for mssql for common usage purpose.
+			if match[1] == "sqlserver" {
+				node.Type = "mssql"
+				node.LinkInfo = node.LinkInfo
+			} else {
+				node.Type = match[1]
+				node.LinkInfo = match[2]
+			}
 		}
 	}
 	return node
