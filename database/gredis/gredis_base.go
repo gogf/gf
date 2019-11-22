@@ -27,12 +27,6 @@ func typeInt(i interface{}, err error) (int, error) {
 	return gconv.Int(i), nil
 
 }
-func typeFloat64(i interface{}, err error) (float64, error) {
-	if err != nil {
-		return 0, err
-	}
-	return gconv.Float64(i), nil
-}
 
 func typeString(i interface{}, err error) (string, error) {
 	if err != nil {
@@ -46,19 +40,6 @@ func typeStrings(i interface{}, err error) ([]string, error) {
 		return nil, err
 	}
 	return gconv.Strings(i), nil
-}
-func typeStringss(i interface{}, err error) ([][]string, error) {
-	if err != nil {
-		return nil, err
-	}
-	ss := [][]string{}
-	is := gconv.Interfaces(i)
-	for _, v := range is {
-		//fmt.Println(gconv.Strings(v))
-		ss = append(ss, gconv.Strings(v))
-	}
-
-	return ss, nil
 }
 
 func typeGeoLocation(i interface{}, err error) ([]*GeoLocation, error) {
@@ -121,12 +102,6 @@ func typeGeoLocationd(i interface{}, err error) ([]*GeoLocation, error) {
 	return ss, nil
 }
 
-func typeBool(i interface{}, err error) (bool, error) {
-	if err != nil {
-		return false, err
-	}
-	return gconv.Bool(i), nil
-}
 
 func typeInterfacess(i interface{}, err error) ([]interface{}, error) {
 	if err != nil {
@@ -396,7 +371,7 @@ func (r *Redis) RPop(key string) (string, error) {
 	return typeString(r.commandDo("RPOP", key))
 }
 
-func (r *Redis) RPoplPush(source, destination string) (string, error) {
+func (r *Redis) RPopLPush(source, destination string) (string, error) {
 	return typeString(r.commandDo("RPOPLPUSH", source, destination))
 }
 

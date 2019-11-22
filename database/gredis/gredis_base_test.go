@@ -112,7 +112,7 @@ func Test_RedisDo(t *testing.T) {
 		redis.LPush("dlist2", 3)
 		redis.LPush("dlist2", 4)
 
-		s, err = redis.RPoplPush("dlist1", "dlist2")
+		s, err = redis.RPopLPush("dlist1", "dlist2")
 		gtest.Assert(err, nil)
 		gtest.Assert(s, "1")
 
