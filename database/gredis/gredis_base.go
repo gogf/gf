@@ -102,7 +102,6 @@ func typeGeoLocationd(i interface{}, err error) ([]*GeoLocation, error) {
 	return ss, nil
 }
 
-
 func typeInterfacess(i interface{}, err error) ([]interface{}, error) {
 	if err != nil {
 		return nil, err
