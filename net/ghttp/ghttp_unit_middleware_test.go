@@ -66,6 +66,33 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
+	s.BindMiddleware("/*", func(r *ghttp.Request) {
+		r.Response.Write("1")
+		r.Middleware.Next()
+		r.Response.Write("2")
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "12")
+		gtest.Assert(client.GetContent("/test"), "12")
+		gtest.Assert(client.GetContent("/test/test"), "1test2")
+	})
+}
+
+func Test_BindMiddleware_Basic3(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/test/test", func(r *ghttp.Request) {
+		r.Response.Write("test")
+	})
 	s.BindMiddleware("PUT:/test", func(r *ghttp.Request) {
 		r.Response.Write("1")
 		r.Middleware.Next()
