@@ -20,7 +20,7 @@ func (r *Request) GetView() *gview.View {
 		view = r.Server.config.View
 	}
 	if view == nil {
-		gview.Instance()
+		view = gview.Instance()
 	}
 	return view
 }
