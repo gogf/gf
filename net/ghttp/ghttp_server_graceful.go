@@ -11,14 +11,12 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/os/gproc"
 	"log"
 	"net"
 	"net/http"
 	"os"
-	"time"
-
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gproc"
 )
 
 // 优雅的Web Server对象封装
@@ -154,22 +152,12 @@ func (s *gracefulServer) getNetListener(itemFunc string) (net.Listener, error) {
 			return nil, err
 		}
 	} else {
-		// 如果监听失败，1秒后重试，最多重试3次
-		for i := 0; i < 3; i++ {
-			ln, err = net.Listen("tcp", itemFunc)
-			if err != nil {
-				err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
-				time.Sleep(time.Second)
-			} else {
-				err = nil
-				break
-			}
-		}
+		ln, err = net.Listen("tcp", itemFunc)
 		if err != nil {
-			return nil, err
+			err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
 		}
 	}
-	return ln, nil
+	return ln, err
 }
 
 // 执行请求优雅关闭
