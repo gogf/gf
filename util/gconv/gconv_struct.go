@@ -243,9 +243,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
 		}
 
 	// 属性为数组类型
-	case reflect.Slice:
-		fallthrough
-	case reflect.Array:
+	case reflect.Slice, reflect.Array:
 		a := reflect.Value{}
 		v := reflect.ValueOf(value)
 		if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
@@ -267,6 +265,8 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
 						a.Index(i).Set(e)
 					}
 				}
+			} else {
+				a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
 			}
 		} else {
 			a = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
