@@ -1,0 +1,8 @@
+
+
+[view]
+    defaultFile = "test.html"
+    delimiters  = ["{", "}"]
+    [view.data]
+        name = "test"
+

@@ -32,7 +32,7 @@ type staticServeFile struct {
 }
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
-func (s *Server) defaultHttpHandle(w http.ResponseWriter, r *http.Request) {
+func (s *Server) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	s.handleRequest(w, r)
 }
 

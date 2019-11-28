@@ -215,7 +215,7 @@ func GetServer(name ...interface{}) *Server {
 	s := &Server{
 		name:             serverName,
 		servers:          make([]*gracefulServer, 0),
-		closeChan:        make(chan struct{}, 100),
+		closeChan:        make(chan struct{}, 10000),
 		serverCount:      gtype.NewInt(),
 		statusHandlerMap: make(map[string]HandlerFunc),
 		serveTree:        make(map[string]interface{}),
@@ -282,7 +282,7 @@ func (s *Server) Start() error {
 
 	// Default HTTP handler.
 	if s.config.Handler == nil {
-		s.config.Handler = http.HandlerFunc(s.defaultHttpHandle)
+		s.config.Handler = http.HandlerFunc(s.defaultHandler)
 	}
 
 	// Start the HTTP server.

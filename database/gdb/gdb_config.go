@@ -140,7 +140,9 @@ func (node *ConfigNode) String() string {
 	if node.LinkInfo != "" {
 		return node.LinkInfo
 	}
-	return fmt.Sprintf(`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d`, node.User, node.Host, node.Port,
+	return fmt.Sprintf(
+		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d`,
+		node.User, node.Host, node.Port,
 		node.Name, node.Type, node.Role, node.Charset, node.Debug,
 		node.MaxIdleConnCount, node.MaxOpenConnCount, node.MaxConnLifetime,
 	)

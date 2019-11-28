@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gins_test
+package gins
 
 import (
 	"fmt"
@@ -13,7 +13,6 @@ import (
 
 	"github.com/gogf/gf/os/gcfg"
 
-	"github.com/gogf/gf/frame/gins"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
@@ -52,7 +51,7 @@ test = "v=1"
     cache = "127.0.0.1:6379,1"
 `
 	gtest.Case(t, func() {
-		gtest.AssertNE(gins.Config(), nil)
+		gtest.AssertNE(Config(), nil)
 	})
 
 	// relative path
@@ -61,10 +60,10 @@ test = "v=1"
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(path)
-		defer gins.Config().Clear()
-		gtest.Assert(gins.Config().Get("test"), "v=1")
-		gtest.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
+		defer Config().Clear()
+		gtest.Assert(Config().Get("test"), "v=1")
+		gtest.Assert(Config().Get("database.default.1.host"), "127.0.0.1")
+		gtest.Assert(Config().Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
@@ -75,10 +74,10 @@ test = "v=1"
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(path)
-		defer gins.Config().Clear()
-		gtest.Assert(gins.Config().Get("test"), "v=1")
-		gtest.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
+		defer Config().Clear()
+		gtest.Assert(Config().Get("test"), "v=1")
+		gtest.Assert(Config().Get("database.default.1.host"), "127.0.0.1")
+		gtest.Assert(Config().Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
@@ -88,11 +87,11 @@ test = "v=1"
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(path)
-		defer gins.Config("test").Clear()
-		gins.Config("test").SetFileName("test.toml")
-		gtest.Assert(gins.Config("test").Get("test"), "v=1")
-		gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
+		defer Config("test").Clear()
+		Config("test").SetFileName("test.toml")
+		gtest.Assert(Config("test").Get("test"), "v=1")
+		gtest.Assert(Config("test").Get("database.default.1.host"), "127.0.0.1")
+		gtest.Assert(Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
@@ -102,11 +101,11 @@ test = "v=1"
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(path)
-		defer gins.Config("test").Clear()
-		gins.Config("test").SetFileName("test.toml")
-		gtest.Assert(gins.Config("test").Get("test"), "v=1")
-		gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
+		defer Config("test").Clear()
+		Config("test").SetFileName("test.toml")
+		gtest.Assert(Config("test").Get("test"), "v=1")
+		gtest.Assert(Config("test").Get("database.default.1.host"), "127.0.0.1")
+		gtest.Assert(Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
@@ -118,11 +117,11 @@ test = "v=1"
 		err := gfile.PutContents(file, config)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(file)
-		defer gins.Config().Clear()
-		gtest.Assert(gins.Config().AddPath(path), nil)
-		gtest.Assert(gins.Config().Get("test"), "v=1")
-		gtest.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
+		defer Config().Clear()
+		gtest.Assert(Config().AddPath(path), nil)
+		gtest.Assert(Config().Get("test"), "v=1")
+		gtest.Assert(Config().Get("database.default.1.host"), "127.0.0.1")
+		gtest.Assert(Config().Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 	time.Sleep(500 * time.Millisecond)
 
@@ -132,11 +131,11 @@ test = "v=1"
 		err := gfile.PutContents(file, config)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(file)
-		defer gins.Config().Clear()
-		gtest.Assert(gins.Config().AddPath(path), nil)
-		gtest.Assert(gins.Config().Get("test"), "v=1")
-		gtest.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
+		defer Config().Clear()
+		gtest.Assert(Config().AddPath(path), nil)
+		gtest.Assert(Config().Get("test"), "v=1")
+		gtest.Assert(Config().Get("database.default.1.host"), "127.0.0.1")
+		gtest.Assert(Config().Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 	time.Sleep(500 * time.Millisecond)
 
@@ -146,12 +145,12 @@ test = "v=1"
 		err := gfile.PutContents(file, config)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(file)
-		defer gins.Config("test").Clear()
-		gins.Config("test").SetFileName("test.toml")
-		gtest.Assert(gins.Config("test").AddPath(path), nil)
-		gtest.Assert(gins.Config("test").Get("test"), "v=1")
-		gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
+		defer Config("test").Clear()
+		Config("test").SetFileName("test.toml")
+		gtest.Assert(Config("test").AddPath(path), nil)
+		gtest.Assert(Config("test").Get("test"), "v=1")
+		gtest.Assert(Config("test").Get("database.default.1.host"), "127.0.0.1")
+		gtest.Assert(Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 	time.Sleep(500 * time.Millisecond)
 
@@ -161,12 +160,12 @@ test = "v=1"
 		err := gfile.PutContents(file, config)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(file)
-		defer gins.Config().Clear()
-		gins.Config("test").SetFileName("test.toml")
-		gtest.Assert(gins.Config("test").AddPath(path), nil)
-		gtest.Assert(gins.Config("test").Get("test"), "v=1")
-		gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
+		defer Config().Clear()
+		Config("test").SetFileName("test.toml")
+		gtest.Assert(Config("test").AddPath(path), nil)
+		gtest.Assert(Config("test").Get("test"), "v=1")
+		gtest.Assert(Config("test").Get("database.default.1.host"), "127.0.0.1")
+		gtest.Assert(Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 }
 
@@ -180,6 +179,6 @@ func Test_Basic2(t *testing.T) {
 			_ = gfile.Remove(path)
 		}()
 
-		gtest.Assert(gins.Config().Get("log-path"), "logs")
+		gtest.Assert(Config().Get("log-path"), "logs")
 	})
 }

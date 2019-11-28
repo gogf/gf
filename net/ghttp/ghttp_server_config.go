@@ -24,30 +24,30 @@ import (
 )
 
 const (
-	gDEFAULT_HTTP_ADDR  = ":80"  // 默认HTTP监听地址
-	gDEFAULT_HTTPS_ADDR = ":443" // 默认HTTPS监听地址
-	URI_TYPE_DEFAULT    = 0      // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
-	URI_TYPE_FULLNAME   = 1      // 不处理名称，以原有名称构建成URI
-	URI_TYPE_ALLLOWER   = 2      // 仅转为小写，单词间不使用连接符号
-	URI_TYPE_CAMEL      = 3      // 采用驼峰命名方式
+	gDEFAULT_HTTP_ADDR  = ":80"  // Default listening port for HTTP.
+	gDEFAULT_HTTPS_ADDR = ":443" // Default listening port for HTTPS.
+	URI_TYPE_DEFAULT    = 0      // Type for method name to URI converting, which converts name to its lower case and joins the words using char '-'.
+	URI_TYPE_FULLNAME   = 1      // Type for method name to URI converting, which does no converting to the method name.
+	URI_TYPE_ALLLOWER   = 2      // Type for method name to URI converting, which converts name to its lower case.
+	URI_TYPE_CAMEL      = 3      // Type for method name to URI converting, which converts name to its camel case.
 )
 
 // HTTP Server configuration.
 type ServerConfig struct {
-	Address           string            // Server listening address like ":port", multiple addresses separated using ','
-	HTTPSAddr         string            // HTTPS服务监听地址(支持多个地址，使用","号分隔)
-	HTTPSCertPath     string            // HTTPS证书文件路径
-	HTTPSKeyPath      string            // HTTPS签名文件路径
-	Handler           http.Handler      // 默认的处理函数
-	ReadTimeout       time.Duration     // 读取超时
-	WriteTimeout      time.Duration     // 写入超时
-	IdleTimeout       time.Duration     // 等待超时
-	MaxHeaderBytes    int               // 最大的header长度
-	TLSConfig         *tls.Config       // HTTPS证书配置
-	KeepAlive         bool              // 是否开启长连接
-	ServerAgent       string            // Server Agent
-	View              *gview.View       // 模板引擎对象
-	Rewrites          map[string]string // URI Rewrite重写配置
+	Address           string            // Server listening address like ":port", multiple addresses joining using ','
+	HTTPSAddr         string            // HTTPS addresses, multiple addresses joining using char ','.
+	HTTPSCertPath     string            // HTTPS certification file path.
+	HTTPSKeyPath      string            // HTTPS key file path.
+	Handler           http.Handler      // Default request handler function.
+	ReadTimeout       time.Duration     // Maximum duration for reading the entire request, including the body.
+	WriteTimeout      time.Duration     // Maximum duration before timing out writes of the response.
+	IdleTimeout       time.Duration     // Maximum amount of time to wait for the next request when keep-alives are enabled.
+	MaxHeaderBytes    int               // Maximum number of bytes the server will read parsing the request header's keys and values, including the request line.
+	TLSConfig         *tls.Config       // TLS configuration for use by ServeTLS and ListenAndServeTLS.
+	KeepAlive         bool              // HTTP keep-alive are enabled or not.
+	ServerAgent       string            // Server Agent.
+	View              *gview.View       // View engine for the server.
+	Rewrites          map[string]string // URI rewrite rules.
 	IndexFiles        []string          // Static: 默认访问的文件列表
 	IndexFolder       bool              // Static: 如果访问目录是否显示目录列表
 	ServerRoot        string            // Static: 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
@@ -116,12 +116,12 @@ var defaultServerConfig = ServerConfig{
 	Rewrites:          make(map[string]string),
 }
 
-// 获取默认的http server设置
+// Config returns the default ServerConfig object.
 func Config() ServerConfig {
 	return defaultServerConfig
 }
 
-// 通过Map创建Config配置对象，Map没有传递的属性将会使用模块的默认值
+// ConfigFromMap creates and returns a ServerConfig object with given map.
 func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 	config := defaultServerConfig
 	if err := gconv.Struct(m, &config); err != nil {
@@ -130,12 +130,13 @@ func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 	return config, nil
 }
 
-// http server setting设置。
-// 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
+// Handler returns the request handler of the server.
+func (s *Server) Handler() http.Handler {
+	return s.config.Handler
+}
+
+// SetConfig sets the configuration for the server.
 func (s *Server) SetConfig(c ServerConfig) error {
-	if c.Handler == nil {
-		c.Handler = http.HandlerFunc(s.defaultHttpHandle)
-	}
 	s.config = c
 	// Static.
 	if c.ServerRoot != "" {
@@ -148,8 +149,7 @@ func (s *Server) SetConfig(c ServerConfig) error {
 	return nil
 }
 
-// 通过map设置http server setting。
-// 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
+// SetConfigWithMap sets the configuration for the server using map.
 func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
 	config, err := ConfigFromMap(m)
 	if err != nil {
@@ -158,12 +158,14 @@ func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
 	return s.SetConfig(config)
 }
 
-// 设置http server参数 - Addr
+// SetAddr sets the listening address for the server.
+// The address is like ':80', '0.0.0.0:80', '127.0.0.1:80', '180.18.99.10:80', etc.
 func (s *Server) SetAddr(address string) {
 	s.config.Address = address
 }
 
-// 设置http server参数 - Port
+// SetPort sets the listening ports for the server.
+// The listening ports can be multiple.
 func (s *Server) SetPort(port ...int) {
 	if len(port) > 0 {
 		s.config.Address = ""
@@ -176,12 +178,13 @@ func (s *Server) SetPort(port ...int) {
 	}
 }
 
-// 设置http server参数 - HTTPS Addr
+// SetHTTPSAddr sets the HTTPS listening ports for the server.
 func (s *Server) SetHTTPSAddr(address string) {
 	s.config.HTTPSAddr = address
 }
 
-// 设置http server参数 - HTTPS Port
+// SetHTTPSPort sets the HTTPS listening ports for the server.
+// The listening ports can be multiple.
 func (s *Server) SetHTTPSPort(port ...int) {
 	if len(port) > 0 {
 		s.config.HTTPSAddr = ""
@@ -194,7 +197,8 @@ func (s *Server) SetHTTPSPort(port ...int) {
 	}
 }
 
-// 开启HTTPS支持，但是必须提供Cert和Key文件，tlsConfig为可选项
+// EnableHTTPS enables HTTPS with given certification and key files for the server.
+// The optional parameter <tlsConfig> specifies custom TLS configuration.
 func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
@@ -223,47 +227,47 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 	}
 }
 
-// 设置TLS配置对象
+// SetTLSConfig sets custom TLS configuration and enables HTTPS feature for the server.
 func (s *Server) SetTLSConfig(tlsConfig *tls.Config) {
 	s.config.TLSConfig = tlsConfig
 }
 
-// 设置http server参数 - ReadTimeout
+// SetReadTimeout sets the ReadTimeout for the server.
 func (s *Server) SetReadTimeout(t time.Duration) {
 	s.config.ReadTimeout = t
 }
 
-// 设置http server参数 - WriteTimeout
+// SetWriteTimeout sets the WriteTimeout for the server.
 func (s *Server) SetWriteTimeout(t time.Duration) {
 	s.config.WriteTimeout = t
 }
 
-// 设置http server参数 - IdleTimeout
+// SetIdleTimeout sets the IdleTimeout for the server.
 func (s *Server) SetIdleTimeout(t time.Duration) {
 	s.config.IdleTimeout = t
 }
 
-// 设置http server参数 - MaxHeaderBytes
+// SetMaxHeaderBytes sets the MaxHeaderBytes for the server.
 func (s *Server) SetMaxHeaderBytes(b int) {
 	s.config.MaxHeaderBytes = b
 }
 
-// 设置http server参数 - ServerAgent
+// SetServerAgent sets the ServerAgent for the server.
 func (s *Server) SetServerAgent(agent string) {
 	s.config.ServerAgent = agent
 }
 
-// 设置KeepAlive
+// SetKeepAlive sets the KeepAlive for the server.
 func (s *Server) SetKeepAlive(enabled bool) {
 	s.config.KeepAlive = enabled
 }
 
-// 设置模板引擎对象
+// SetView sets the View for the server.
 func (s *Server) SetView(view *gview.View) {
 	s.config.View = view
 }
 
-// 获取WebServer名称
+// GetName returns the name of the server.
 func (s *Server) GetName() string {
 	return s.name
 }
