@@ -727,7 +727,8 @@ func (md *Model) checkAndRemoveCache() {
 	}
 }
 
-// 格式化当前输入参数，返回SQL条件语句（不带参数）
+// formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
+// Note that this function does not change any of the attribute value of the mode.
 func (md *Model) formatCondition() (condition string, conditionArgs []interface{}) {
 	var where string
 	if len(md.whereHolder) > 0 {
