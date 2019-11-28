@@ -88,7 +88,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	}
 	// Note that it should assign no Config variable to template
 	// if there's no configuration file.
-	if c := gcfg.Instance(); c.FilePath() != "" {
+	if c := gcfg.Instance(); c.Available() {
 		vars["Config"] = c.GetMap(".")
 	}
 	vars["Get"] = r.Request.GetQueryMap()

@@ -114,6 +114,12 @@ func Pwd() string {
 	return path
 }
 
+// Chdir changes the current working directory to the named directory.
+// If there is an error, it will be of type *PathError.
+func Chdir(dir string) error {
+	return os.Chdir(dir)
+}
+
 // IsFile checks whether given <path> a file, which means it's not a directory.
 func IsFile(path string) bool {
 	s, err := os.Stat(path)

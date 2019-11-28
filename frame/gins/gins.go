@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gins provides instances management and core components management.
+// Package gins provides instances and core components management.
 package gins
 
 import (
@@ -35,8 +35,10 @@ const (
 	gFRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
 )
 
-// instances is the instance map for common used components.
-var instances = gmap.NewStrAnyMap(true)
+var (
+	// instances is the instance map for common used components.
+	instances = gmap.NewStrAnyMap(true)
+)
 
 // Get returns the instance by given name.
 func Get(name string) interface{} {
@@ -88,8 +90,15 @@ func View(name ...string) *gview.View {
 	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		view := gview.Instance(instanceName)
 		// To avoid file no found error while it's not necessary.
-		if Config().FilePath() != "" {
-			if m := Config().GetMap("view"); m != nil {
+		if Config().Available() {
+			var m map[string]interface{}
+			// It firstly searches the configuration of the instance name.
+			if m = Config().GetMap(fmt.Sprintf(`view.%s`, instanceName)); m == nil {
+				// If the configuration for the instance does not exist,
+				// it uses the default view configuration.
+				m = Config().GetMap("view")
+			}
+			if m != nil {
 				if err := view.SetConfigWithMap(m); err != nil {
 					glog.Panic(err)
 				}
@@ -128,8 +137,15 @@ func Log(name ...string) *glog.Logger {
 	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		logger := glog.Instance(instanceName)
 		// To avoid file no found error while it's not necessary.
-		if Config().FilePath() != "" {
-			if m := Config().GetMap("logging"); m != nil {
+		if Config().Available() {
+			var m map[string]interface{}
+			// It firstly searches the configuration of the instance name.
+			if m = Config().GetMap(fmt.Sprintf(`logging.%s`, instanceName)); m == nil {
+				// If the configuration for the instance does not exist,
+				// it uses the default logging configuration.
+				m = Config().GetMap("logging")
+			}
+			if m != nil {
 				if err := logger.SetConfigWithMap(m); err != nil {
 					glog.Panic(err)
 				}
@@ -276,8 +292,15 @@ func Server(name ...interface{}) *ghttp.Server {
 	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		s := ghttp.GetServer(name...)
 		// To avoid file no found error while it's not necessary.
-		if Config().FilePath() != "" {
-			if m := Config().GetMap("server"); m != nil {
+		if Config().Available() {
+			var m map[string]interface{}
+			// It firstly searches the configuration of the instance name.
+			if m = Config().GetMap(fmt.Sprintf(`server.%s`, s.GetName())); m == nil {
+				// If the configuration for the instance does not exist,
+				// it uses the default server configuration.
+				m = Config().GetMap("server")
+			}
+			if m != nil {
 				if err := s.SetConfigWithMap(m); err != nil {
 					panic(err)
 				}

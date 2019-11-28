@@ -4,13 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gins_test
+package gins
 
 import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/gins"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/test/gtest"
 )
@@ -54,17 +53,17 @@ test = "v=3"
 	err := gfile.PutContents(path, config)
 	gtest.Assert(err, nil)
 	defer gfile.Remove(path)
-	defer gins.Config().Clear()
+	defer Config().Clear()
 
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.Case(t, func() {
-		//fmt.Println("gins Test_Redis", gins.Config().Get("test"))
+		//fmt.Println("gins Test_Redis", Config().Get("test"))
 
-		redisDefault := gins.Redis()
-		redisCache := gins.Redis("cache")
-		redisDisk := gins.Redis("disk")
+		redisDefault := Redis()
+		redisCache := Redis("cache")
+		redisDisk := Redis("disk")
 		gtest.AssertNE(redisDefault, nil)
 		gtest.AssertNE(redisCache, nil)
 		gtest.AssertNE(redisDisk, nil)
