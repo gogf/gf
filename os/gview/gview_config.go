@@ -44,6 +44,9 @@ func (view *View) SetConfig(config Config) error {
 	if len(config.Delimiters) > 1 {
 		view.SetDelimiters(config.Delimiters[0], config.Delimiters[1])
 	}
+	// Clear global template object cache.
+	// It's just cache, do not hesitate clearing it.
+	templates.Clear()
 	return nil
 }
 
@@ -199,6 +202,8 @@ func (view *View) SetDelimiters(left, right string) {
 // The <name> is the function name which can be called in template content.
 func (view *View) BindFunc(name string, function interface{}) {
 	view.funcMap[name] = function
+	// Clear global template object cache.
+	templates.Clear()
 }
 
 // BindFuncMap registers customized global template functions by map to current view object.
@@ -208,6 +213,8 @@ func (view *View) BindFuncMap(funcMap FuncMap) {
 	for k, v := range funcMap {
 		view.funcMap[k] = v
 	}
+	// Clear global template object cache.
+	templates.Clear()
 }
 
 // SetI18n binds i18n manager to current view engine.

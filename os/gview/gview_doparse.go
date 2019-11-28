@@ -146,8 +146,9 @@ func (view *View) ParseDefault(params ...Params) (result string, err error) {
 // and returns the parsed content in []byte.
 func (view *View) ParseContent(content string, params ...Params) (string, error) {
 	err := (error)(nil)
-	tpl := templates.GetOrSetFuncLock(gCONTENT_TEMPLATE_NAME, func() interface{} {
-		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+	key := fmt.Sprintf("%s_%v", gCONTENT_TEMPLATE_NAME, view.delimiters)
+	tpl := templates.GetOrSetFuncLock(key, func() interface{} {
+		return template.New(key).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 	}).(*template.Template)
 	// Using memory lock to ensure concurrent safety for content parsing.
 	hash := strconv.FormatUint(ghash.DJBHash64([]byte(content)), 10)
@@ -202,8 +203,9 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 // with the same given <path>. It will also automatically refresh the template cache
 // if the template files under <path> changes (recursively).
 func (view *View) getTemplate(path string, pattern string) (tpl *template.Template, err error) {
-	r := templates.GetOrSetFuncLock(path, func() interface{} {
-		tpl = template.New(path).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+	key := fmt.Sprintf("%s_%v", path, view.delimiters)
+	result := templates.GetOrSetFuncLock(key, func() interface{} {
+		tpl = template.New(key).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
 		// Firstly checking the resource manager.
 		if !gres.IsEmpty() {
 			if files := gres.ScanDirFile(path, pattern, true); len(files) > 0 {
@@ -219,7 +221,7 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 		}
 
 		// Secondly checking the file system.
-		files := ([]string)(nil)
+		var files []string
 		files, err = gfile.ScanDir(path, pattern, true)
 		if err != nil {
 			return nil
@@ -229,8 +231,8 @@ func (view *View) getTemplate(path string, pattern string) (tpl *template.Templa
 		}
 		return tpl
 	})
-	if r != nil {
-		return r.(*template.Template), nil
+	if result != nil {
+		return result.(*template.Template), nil
 	}
 	return
 }
