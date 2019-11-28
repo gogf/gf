@@ -11,31 +11,26 @@
 package gview
 
 import (
-	"errors"
-	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/internal/intlog"
-
-	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/internal/cmdenv"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gspath"
 )
 
 // View object for template engine.
 type View struct {
-	paths        *garray.StrArray       // Searching path array, NOT concurrent safe for performance purpose.
+	paths        *garray.StrArray       // Searching array for path, NOT concurrent-safe for performance purpose.
 	data         map[string]interface{} // Global template variables.
 	funcMap      map[string]interface{} // Global template function map.
 	fileCacheMap *gmap.StrAnyMap        // File cache map.
 	defaultFile  string                 // Default template file for parsing.
 	i18nManager  *gi18n.Manager         // I18n manager for this view.
-	delimiters   []string               // Customized template delimiters.
+	delimiters   []string               // Custom template delimiters.
 }
 
 // Params is type for template params.
@@ -147,107 +142,4 @@ func New(path ...string) *View {
 	view.BindFunc("nl2br", view.funcNl2Br)
 	view.BindFunc("include", view.funcInclude)
 	return view
-}
-
-// SetPath sets the template directory path for template file search.
-// The parameter <path> can be absolute or relative path, but absolute path is suggested.
-func (view *View) SetPath(path string) error {
-	isDir := false
-	realPath := ""
-	if file := gres.Get(path); file != nil {
-		realPath = path
-		isDir = file.FileInfo().IsDir()
-	} else {
-		// Absolute path.
-		realPath = gfile.RealPath(path)
-		if realPath == "" {
-			// Relative path.
-			view.paths.RLockFunc(func(array []string) {
-				for _, v := range array {
-					if path, _ := gspath.Search(v, path); path != "" {
-						realPath = path
-						break
-					}
-				}
-			})
-		}
-		if realPath != "" {
-			isDir = gfile.IsDir(realPath)
-		}
-	}
-	// Path not exist.
-	if realPath == "" {
-		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" does not exist`, path))
-		if errorPrint() {
-			glog.Error(err)
-		}
-		return err
-	}
-	// Should be a directory.
-	if !isDir {
-		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" should be directory type`, path))
-		if errorPrint() {
-			glog.Error(err)
-		}
-		return err
-	}
-	// Repeated path check.
-	if view.paths.Search(realPath) != -1 {
-		return nil
-	}
-	view.paths.Clear()
-	view.paths.Append(realPath)
-	view.fileCacheMap.Clear()
-	//glog.Debug("[gview] SetPath:", realPath)
-	return nil
-}
-
-// AddPath adds a absolute or relative path to the search paths.
-func (view *View) AddPath(path string) error {
-	isDir := false
-	realPath := ""
-	if file := gres.Get(path); file != nil {
-		realPath = path
-		isDir = file.FileInfo().IsDir()
-	} else {
-		// Absolute path.
-		realPath = gfile.RealPath(path)
-		if realPath == "" {
-			// Relative path.
-			view.paths.RLockFunc(func(array []string) {
-				for _, v := range array {
-					if path, _ := gspath.Search(v, path); path != "" {
-						realPath = path
-						break
-					}
-				}
-			})
-		}
-		if realPath != "" {
-			isDir = gfile.IsDir(realPath)
-		}
-	}
-	// Path not exist.
-	if realPath == "" {
-		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" does not exist`, path))
-		if errorPrint() {
-			glog.Error(err)
-		}
-		return err
-	}
-	// realPath should be type of folder.
-	if !isDir {
-		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" should be directory type`, path))
-		if errorPrint() {
-			glog.Error(err)
-		}
-		return err
-	}
-	// Repeated path check.
-	if view.paths.Search(realPath) != -1 {
-		return nil
-	}
-	view.paths.Append(realPath)
-	view.fileCacheMap.Clear()
-	return nil
 }

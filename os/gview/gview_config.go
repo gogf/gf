@@ -6,7 +6,166 @@
 
 package gview
 
-import "github.com/gogf/gf/i18n/gi18n"
+import (
+	"errors"
+	"fmt"
+	"github.com/gogf/gf/i18n/gi18n"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/os/gspath"
+	"github.com/gogf/gf/util/gconv"
+)
+
+// Config is the configuration object for template engine.
+type Config struct {
+	Paths       []string               // Searching array for path, NOT concurrent-safe for performance purpose.
+	Data        map[string]interface{} // Global template variables.
+	DefaultFile string                 // Default template file for parsing.
+	Delimiters  []string               // Custom template delimiters.
+}
+
+// SetConfig sets the configuration for view.
+func (view *View) SetConfig(config Config) error {
+	var err error
+	if len(config.Paths) > 0 {
+		for _, v := range config.Paths {
+			if err = view.AddPath(v); err != nil {
+				return err
+			}
+		}
+	}
+	if len(config.Data) > 0 {
+		view.Assigns(config.Data)
+	}
+	if config.DefaultFile != "" {
+		view.SetDefaultFile(config.DefaultFile)
+	}
+	if len(config.Delimiters) > 1 {
+		view.SetDelimiters(config.Delimiters[0], config.Delimiters[1])
+	}
+	return nil
+}
+
+// SetConfigWithMap set configurations with map for the view.
+func (view *View) SetConfigWithMap(m map[string]interface{}) error {
+	if m == nil || len(m) == 0 {
+		return errors.New("configuration cannot be empty")
+	}
+	// Most common used configuration support for single view path.
+	if m["paths"] == nil && m["path"] != nil {
+		m["paths"] = []interface{}{m["path"]}
+	}
+	config := Config{}
+	err := gconv.Struct(m, &config)
+	if err != nil {
+		return err
+	}
+	return view.SetConfig(config)
+}
+
+// SetPath sets the template directory path for template file search.
+// The parameter <path> can be absolute or relative path, but absolute path is suggested.
+func (view *View) SetPath(path string) error {
+	isDir := false
+	realPath := ""
+	if file := gres.Get(path); file != nil {
+		realPath = path
+		isDir = file.FileInfo().IsDir()
+	} else {
+		// Absolute path.
+		realPath = gfile.RealPath(path)
+		if realPath == "" {
+			// Relative path.
+			view.paths.RLockFunc(func(array []string) {
+				for _, v := range array {
+					if path, _ := gspath.Search(v, path); path != "" {
+						realPath = path
+						break
+					}
+				}
+			})
+		}
+		if realPath != "" {
+			isDir = gfile.IsDir(realPath)
+		}
+	}
+	// Path not exist.
+	if realPath == "" {
+		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" does not exist`, path))
+		if errorPrint() {
+			glog.Error(err)
+		}
+		return err
+	}
+	// Should be a directory.
+	if !isDir {
+		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" should be directory type`, path))
+		if errorPrint() {
+			glog.Error(err)
+		}
+		return err
+	}
+	// Repeated path adding check.
+	if view.paths.Search(realPath) != -1 {
+		return nil
+	}
+	view.paths.Clear()
+	view.paths.Append(realPath)
+	view.fileCacheMap.Clear()
+	//glog.Debug("[gview] SetPath:", realPath)
+	return nil
+}
+
+// AddPath adds a absolute or relative path to the search paths.
+func (view *View) AddPath(path string) error {
+	isDir := false
+	realPath := ""
+	if file := gres.Get(path); file != nil {
+		realPath = path
+		isDir = file.FileInfo().IsDir()
+	} else {
+		// Absolute path.
+		realPath = gfile.RealPath(path)
+		if realPath == "" {
+			// Relative path.
+			view.paths.RLockFunc(func(array []string) {
+				for _, v := range array {
+					if path, _ := gspath.Search(v, path); path != "" {
+						realPath = path
+						break
+					}
+				}
+			})
+		}
+		if realPath != "" {
+			isDir = gfile.IsDir(realPath)
+		}
+	}
+	// Path not exist.
+	if realPath == "" {
+		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" does not exist`, path))
+		if errorPrint() {
+			glog.Error(err)
+		}
+		return err
+	}
+	// realPath should be type of folder.
+	if !isDir {
+		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" should be directory type`, path))
+		if errorPrint() {
+			glog.Error(err)
+		}
+		return err
+	}
+	// Repeated path adding check.
+	if view.paths.Search(realPath) != -1 {
+		return nil
+	}
+	view.paths.Append(realPath)
+	view.fileCacheMap.Clear()
+	return nil
+}
 
 // Assigns binds multiple global template variables to current view object.
 // Note that it's not concurrent-safe, which means it would panic

@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/internal/utilstr"
 )
 
-// Interface support for package gmap.
+// apiMapStrAny is the interface support for package gmap.
 type apiMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
@@ -189,13 +189,13 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 	return data
 }
 
-// MapToMap converts map type variable <params> to another map type variable <pointer>.
+// MapToMap converts map type variable <params> to another map type variable <pointer> using reflect.
 // The elements of <pointer> should be type of *map.
 func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMap(params, pointer, false, mapping...)
 }
 
-// MapToMapDeep recursively converts map type variable <params> to another map type variable <pointer>.
+// MapToMapDeep recursively converts map type variable <params> to another map type variable <pointer> using reflect.
 // The elements of <pointer> should be type of *map.
 func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMap(params, pointer, true, mapping...)

@@ -21,7 +21,7 @@ func Test_View(t *testing.T) {
 		gtest.AssertNE(gins.View(), nil)
 		b, e := gins.View().ParseContent(`{{"我是中国人" | substr 2 -1}}`, nil)
 		gtest.Assert(e, nil)
-		gtest.Assert(string(b), "中国人")
+		gtest.Assert(b, "中国人")
 	})
 	gtest.Case(t, func() {
 		tpl := "t.tpl"
@@ -31,7 +31,7 @@ func Test_View(t *testing.T) {
 
 		b, e := gins.View().Parse("t.tpl", nil)
 		gtest.Assert(e, nil)
-		gtest.Assert(string(b), "中国人")
+		gtest.Assert(b, "中国人")
 	})
 	gtest.Case(t, func() {
 		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.Nanosecond())
@@ -44,6 +44,6 @@ func Test_View(t *testing.T) {
 
 		b, e := gins.View().Parse("t.tpl", nil)
 		gtest.Assert(e, nil)
-		gtest.Assert(string(b), "中国人")
+		gtest.Assert(b, "中国人")
 	})
 }

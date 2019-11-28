@@ -8,7 +8,9 @@ package ghttp
 
 import (
 	"fmt"
+	"github.com/gogf/gf/encoding/gurl"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
 	"mime/multipart"
@@ -43,11 +45,11 @@ type Request struct {
 	parsedPost      bool                   // A bool marking whether the POST parameters parsed.
 	parsedDelete    bool                   // A bool marking whether the DELETE parameters parsed.
 	parsedRaw       bool                   // A bool marking whether the request body parsed.
-	parsedForm      bool                   // A bool marking whether r.ParseMultipartForm called.
-	getMap          map[string]interface{} // GET parameters map, which might be nil if there're no GET parameters.
-	putMap          map[string]interface{} // PUT parameters map, which might be nil if there're no PUT parameters.
-	postMap         map[string]interface{} // POST parameters map, which might be nil if there're no POST parameters.
-	deleteMap       map[string]interface{} // DELETE parameters map, which might be nil if there're no DELETE parameters.
+	parsedForm      bool                   // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
+	getMap          map[string]interface{} // GET parameters map, which is nil if it's not GET method.
+	putMap          map[string]interface{} // PUT parameters map, which is nil if it's not PUT method. It may be a pointer to postMap.
+	postMap         map[string]interface{} // POST parameters map, which is nil if it's not POST method.
+	deleteMap       map[string]interface{} // DELETE parameters map, which is nil if it's not DELETE method. It may be a pointer to postMap.
 	routerMap       map[string]interface{} // Router parameters map, which might be nil if there're no router parameters.
 	rawMap          map[string]interface{} // Body parameters map, which might be nil if there're no body content.
 	error           error                  // Current executing error of the request.
@@ -232,18 +234,89 @@ func (r *Request) GetHost() string {
 	return r.parsedHost
 }
 
+// ParseRaw parses the request raw data into r.rawMap.
+func (r *Request) ParseRaw() {
+	if r.parsedRaw {
+		return
+	}
+	var err error
+	r.parsedRaw = true
+	if raw := r.GetRawString(); len(raw) > 0 {
+		if r.rawMap, err = gstr.Parse(raw); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// ParseForm parses the request form for HTTP method PUT, POST, PATCH.
+// The form data is pared into r.postMap.
+func (r *Request) ParseForm() {
+	// Parse only once.
+	if r.parsedForm {
+		return
+	}
+	var err error
+	r.parsedForm = true
+	if contentType := r.Header.Get("Content-Type"); contentType != "" {
+		if gstr.Contains(contentType, "multipart/") {
+			// multipart/form-data, multipart/mixed
+			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
+				panic(err)
+			}
+		} else if gstr.Contains(contentType, "form") {
+			// application/x-www-form-urlencoded
+			if err = r.Request.ParseForm(); err != nil {
+				panic(err)
+			}
+		}
+		if len(r.PostForm) > 0 {
+			// Re-parse the form data using united parsing way.
+			params := ""
+			for name, values := range r.PostForm {
+				if len(values) == 1 {
+					if len(params) > 0 {
+						params += "&"
+					}
+					params += name + "=" + gurl.Encode(values[0])
+				} else {
+					if len(name) > 2 && name[len(name)-2:] == "[]" {
+						name = name[:len(name)-2]
+						for _, v := range values {
+							if len(params) > 0 {
+								params += "&"
+							}
+							params += name + "[]=" + gurl.Encode(v)
+						}
+					} else {
+						if len(params) > 0 {
+							params += "&"
+						}
+						params += name + "=" + gurl.Encode(values[len(values)-1])
+					}
+				}
+			}
+			if r.postMap, err = gstr.Parse(params); err != nil {
+				panic(err)
+			}
+		}
+	}
+}
+
 // parseMultipartForm parses and returns the form as multipart form.
 func (r *Request) parseMultipartForm() *multipart.Form {
 	if !r.parsedForm {
-		r.ParseMultipartForm(r.Server.config.FormParsingMemory)
 		r.parsedForm = true
+		if err := r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
+			panic(err)
+		}
 	}
 	return r.MultipartForm
 }
 
 // GetMultipartForm parses and returns the form as multipart form.
 func (r *Request) GetMultipartForm() *multipart.Form {
-	return r.parseMultipartForm()
+	r.ParseForm()
+	return r.MultipartForm
 }
 
 // GetMultipartFiles returns the post files array.
