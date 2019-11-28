@@ -28,6 +28,7 @@ import (
 )
 
 const (
+	gFRAME_CORE_COMPONENT_NAME_VIEW     = "gf.core.component.view"
 	gFRAME_CORE_COMPONENT_NAME_REDIS    = "gf.core.component.redis"
 	gFRAME_CORE_COMPONENT_NAME_LOGGER   = "gf.core.component.logger"
 	gFRAME_CORE_COMPONENT_NAME_SERVER   = "gf.core.component.server"
@@ -79,7 +80,23 @@ func SetIfNotExist(name string, instance interface{}) bool {
 // View returns an instance of View with default settings.
 // The parameter <name> is the name for the instance.
 func View(name ...string) *gview.View {
-	return gview.Instance(name...)
+	instanceName := gview.DEFAULT_NAME
+	if len(name) > 0 && name[0] != "" {
+		instanceName = name[0]
+	}
+	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEW, instanceName)
+	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+		view := gview.Instance(instanceName)
+		// To avoid file no found error while it's not necessary.
+		if Config().FilePath() != "" {
+			if m := Config().GetMap("view"); m != nil {
+				if err := view.SetConfigWithMap(m); err != nil {
+					glog.Panic(err)
+				}
+			}
+		}
+		return view
+	}).(*gview.View)
 }
 
 // Config returns an instance of View with default settings.
@@ -142,7 +159,6 @@ func Database(name ...string) gdb.DB {
 		m := config.GetMap("database")
 		if m == nil {
 			glog.Panic(`database init failed: "database" node not found, is config file or configuration missing?`)
-			return nil
 		}
 		// Parse <m> as map-slice.
 		for group, groupConfig := range m {
@@ -237,7 +253,6 @@ func Redis(name ...string) *gredis.Redis {
 				redisConfig, err := gredis.ConfigFromStr(gconv.String(v))
 				if err != nil {
 					glog.Panic(err)
-					return nil
 				}
 				addConfigMonitor(instanceKey, config)
 				return gredis.New(redisConfig)

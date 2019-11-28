@@ -23,9 +23,8 @@ func (r *Request) initGet() {
 		if r.URL.RawQuery != "" {
 			r.getMap, _ = gstr.Parse(r.URL.RawQuery)
 		} else if strings.EqualFold(r.Method, "GET") {
-			r.parsedRaw = true
-			if raw := r.GetRawString(); len(raw) > 0 {
-				r.getMap, _ = gstr.Parse(raw)
+			if r.ParseRaw(); len(r.rawMap) != 0 {
+				r.getMap = r.rawMap
 			}
 		}
 	}

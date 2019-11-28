@@ -9,52 +9,17 @@ package ghttp
 import (
 	"strings"
 
-	"github.com/gogf/gf/encoding/gurl"
-
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
 
 func (r *Request) initPost() {
-	if !r.parsedPost {
+	if !r.parsedPost && strings.EqualFold(r.Method, "POST") {
 		r.parsedPost = true
-		if v := r.Header.Get("Content-Type"); v != "" && gstr.Contains(v, "multipart/") {
-			// multipart/form-data, multipart/mixed
-			r.parseMultipartForm()
-			if len(r.PostForm) > 0 {
-				// 重新组织数据格式，使用统一的数据Parse方式
-				params := ""
-				for name, values := range r.PostForm {
-					if len(values) == 1 {
-						if len(params) > 0 {
-							params += "&"
-						}
-						params += name + "=" + gurl.Encode(values[0])
-					} else {
-						if len(name) > 2 && name[len(name)-2:] == "[]" {
-							name = name[:len(name)-2]
-							for _, v := range values {
-								if len(params) > 0 {
-									params += "&"
-								}
-								params += name + "[]=" + gurl.Encode(v)
-							}
-						} else {
-							if len(params) > 0 {
-								params += "&"
-							}
-							params += name + "=" + gurl.Encode(values[len(values)-1])
-						}
-					}
-				}
-				r.postMap, _ = gstr.Parse(params)
-			}
-		} else if strings.EqualFold(r.Method, "POST") {
-			r.parsedRaw = true
-			if raw := r.GetRawString(); len(raw) > 0 {
-				r.postMap, _ = gstr.Parse(raw)
+		if r.ParseForm(); len(r.postMap) == 0 {
+			if r.ParseRaw(); len(r.rawMap) != 0 {
+				r.postMap = r.rawMap
 			}
 		}
 	}

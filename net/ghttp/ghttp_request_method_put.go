@@ -9,19 +9,19 @@ package ghttp
 import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
 )
 
 func (r *Request) initPut() {
-	if !r.parsedPut {
+	if !r.parsedPut && strings.EqualFold(r.Method, "PUT") {
 		r.parsedPut = true
-		if strings.EqualFold(r.Method, "PUT") {
-			r.parsedRaw = true
-			if raw := r.GetRawString(); len(raw) > 0 {
-				r.putMap, _ = gstr.Parse(raw)
+		if r.ParseForm(); len(r.postMap) == 0 {
+			if r.ParseRaw(); len(r.rawMap) != 0 {
+				r.putMap = r.rawMap
 			}
+		} else {
+			r.putMap = r.postMap
 		}
 	}
 	if r.putMap == nil {

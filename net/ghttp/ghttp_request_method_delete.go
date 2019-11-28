@@ -7,22 +7,21 @@
 package ghttp
 
 import (
-	"strings"
-
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"strings"
 )
 
 func (r *Request) initDelete() {
-	if !r.parsedDelete {
+	if !r.parsedDelete && strings.EqualFold(r.Method, "DELETE") {
 		r.parsedDelete = true
-		if strings.EqualFold(r.Method, "DELETE") {
-			r.parsedRaw = true
-			if raw := r.GetRawString(); len(raw) > 0 {
-				r.deleteMap, _ = gstr.Parse(raw)
+		if r.ParseForm(); len(r.postMap) == 0 {
+			if r.ParseRaw(); len(r.rawMap) != 0 {
+				r.deleteMap = r.rawMap
 			}
+		} else {
+			r.deleteMap = r.postMap
 		}
 	}
 	if r.deleteMap == nil {
