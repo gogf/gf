@@ -247,8 +247,8 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
 		a := reflect.Value{}
 		v := reflect.ValueOf(value)
 		if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
+			a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
 			if v.Len() > 0 {
-				a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
 				t := a.Index(0).Type()
 				for i := 0; i < v.Len(); i++ {
 					if t.Kind() == reflect.Ptr {
@@ -265,8 +265,6 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
 						a.Index(i).Set(e)
 					}
 				}
-			} else {
-				a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
 			}
 		} else {
 			a = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
