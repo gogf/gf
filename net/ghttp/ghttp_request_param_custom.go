@@ -8,7 +8,7 @@ package ghttp
 
 import "github.com/gogf/gf/container/gvar"
 
-// 设置请求流程共享变量
+// SetParam sets custom parameter with key-value pair.
 func (r *Request) SetParam(key string, value interface{}) {
 	if r.params == nil {
 		r.params = make(map[string]interface{})
@@ -16,7 +16,9 @@ func (r *Request) SetParam(key string, value interface{}) {
 	r.params[key] = value
 }
 
-// 获取请求流程共享变量
+// GetParam returns custom parameter with given name <key>.
+// It returns <def> if <key> does not exist.
+// It returns nil if <def> is not passed.
 func (r *Request) GetParam(key string, def ...interface{}) interface{} {
 	if r.params != nil {
 		return r.params[key]
@@ -27,7 +29,9 @@ func (r *Request) GetParam(key string, def ...interface{}) interface{} {
 	return nil
 }
 
-// 获取请求流程共享变量
+// GetParamVar returns custom parameter with given name <key> as *gvar.Var.
+// It returns <def> if <key> does not exist.
+// It returns nil if <def> is not passed.
 func (r *Request) GetParamVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetParam(key, def...))
 }

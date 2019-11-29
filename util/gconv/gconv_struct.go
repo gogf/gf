@@ -156,6 +156,9 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 // StructDeep do Struct function recursively.
 // See Struct.
 func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	if params == nil {
+		return nil
+	}
 	if err := Struct(params, pointer, mapping...); err != nil {
 		return err
 	} else {

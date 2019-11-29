@@ -8,19 +8,12 @@ package ghttp
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gurl"
 	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 	"strings"
 
 	"github.com/gogf/gf/os/gsession"
 
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 )
@@ -40,18 +33,13 @@ type Request struct {
 	handlerIndex    int                    // Index number for executing sequence purpose of handlers.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
-	parsedGet       bool                   // A bool marking whether the GET parameters parsed.
-	parsedPut       bool                   // A bool marking whether the PUT parameters parsed.
-	parsedPost      bool                   // A bool marking whether the POST parameters parsed.
-	parsedDelete    bool                   // A bool marking whether the DELETE parameters parsed.
-	parsedRaw       bool                   // A bool marking whether the request body parsed.
+	parsedQuery     bool                   // A bool marking whether the GET parameters parsed.
+	parsedBody      bool                   // A bool marking whether the request body parsed.
 	parsedForm      bool                   // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
-	getMap          map[string]interface{} // GET parameters map, which is nil if it's not GET method.
-	putMap          map[string]interface{} // PUT parameters map, which is nil if it's not PUT method. It may be a pointer to postMap.
-	postMap         map[string]interface{} // POST parameters map, which is nil if it's not POST method.
-	deleteMap       map[string]interface{} // DELETE parameters map, which is nil if it's not DELETE method. It may be a pointer to postMap.
 	routerMap       map[string]interface{} // Router parameters map, which might be nil if there're no router parameters.
-	rawMap          map[string]interface{} // Body parameters map, which might be nil if there're no body content.
+	queryMap        map[string]interface{} // Query parameters map, which is nil if there's no query string.
+	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form.
+	bodyMap         map[string]interface{} // Body parameters map, which might be nil if there're no body content.
 	error           error                  // Current executing error of the request.
 	exit            bool                   // A bool marking whether current request is exited.
 	params          map[string]interface{} // Custom parameters.
@@ -94,112 +82,6 @@ func (r *Request) WebSocket() (*WebSocket, error) {
 	}
 }
 
-// Get retrieves and returns field value with given name <key> from request.
-// The parameter <def> specifies the default returned value if value of field <key> is not found.
-func (r *Request) Get(key string, def ...interface{}) interface{} {
-	return r.GetRequest(key, def...)
-}
-
-// GetVar retrieves and returns field value with given name <key> from request as a gvar.Var.
-// The parameter <def> specifies the default returned value if value of field <key> is not found.
-func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
-	return r.GetRequestVar(key, def...)
-}
-
-// GetRaw retrieves and returns request body content as bytes.
-func (r *Request) GetRaw() []byte {
-	if r.rawContent == nil {
-		r.rawContent, _ = ioutil.ReadAll(r.Body)
-	}
-	return r.rawContent
-}
-
-// GetRawString retrieves and returns request body content as string.
-func (r *Request) GetRawString() string {
-	return gconv.UnsafeBytesToStr(r.GetRaw())
-}
-
-// GetJson parses current request content as JSON format, and returns the JSON object.
-// Note that the request content is read from request BODY, not from any field of FORM.
-func (r *Request) GetJson() (*gjson.Json, error) {
-	return gjson.LoadJson(r.GetRaw())
-}
-
-func (r *Request) GetString(key string, def ...interface{}) string {
-	return r.GetRequestString(key, def...)
-}
-
-func (r *Request) GetBool(key string, def ...interface{}) bool {
-	return r.GetRequestBool(key, def...)
-}
-
-func (r *Request) GetInt(key string, def ...interface{}) int {
-	return r.GetRequestInt(key, def...)
-}
-
-func (r *Request) GetInt32(key string, def ...interface{}) int32 {
-	return r.GetRequestInt32(key, def...)
-}
-
-func (r *Request) GetInt64(key string, def ...interface{}) int64 {
-	return r.GetRequestInt64(key, def...)
-}
-
-func (r *Request) GetInts(key string, def ...interface{}) []int {
-	return r.GetRequestInts(key, def...)
-}
-
-func (r *Request) GetUint(key string, def ...interface{}) uint {
-	return r.GetRequestUint(key, def...)
-}
-
-func (r *Request) GetUint32(key string, def ...interface{}) uint32 {
-	return r.GetRequestUint32(key, def...)
-}
-
-func (r *Request) GetUint64(key string, def ...interface{}) uint64 {
-	return r.GetRequestUint64(key, def...)
-}
-
-func (r *Request) GetFloat32(key string, def ...interface{}) float32 {
-	return r.GetRequestFloat32(key, def...)
-}
-
-func (r *Request) GetFloat64(key string, def ...interface{}) float64 {
-	return r.GetRequestFloat64(key, def...)
-}
-
-func (r *Request) GetFloats(key string, def ...interface{}) []float64 {
-	return r.GetRequestFloats(key, def...)
-}
-
-func (r *Request) GetArray(key string, def ...interface{}) []string {
-	return r.GetRequestArray(key, def...)
-}
-
-func (r *Request) GetStrings(key string, def ...interface{}) []string {
-	return r.GetRequestStrings(key, def...)
-}
-
-func (r *Request) GetInterfaces(key string, def ...interface{}) []interface{} {
-	return r.GetRequestInterfaces(key, def...)
-}
-
-func (r *Request) GetMap(def ...map[string]interface{}) map[string]interface{} {
-	return r.GetRequestMap(def...)
-}
-
-func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string {
-	return r.GetRequestMapStrStr(def...)
-}
-
-// GetToStruct maps all request variables to a struct object.
-// The parameter <pointer> should be a pointer to a struct object.
-// More details please refer to: gconv.StructDeep.
-func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
-	return r.GetRequestToStruct(pointer, mapping...)
-}
-
 // Exit exits executing of current HTTP handler.
 func (r *Request) Exit() {
 	panic(gEXCEPTION_EXIT)
@@ -232,108 +114,6 @@ func (r *Request) GetHost() string {
 		}
 	}
 	return r.parsedHost
-}
-
-// ParseRaw parses the request raw data into r.rawMap.
-func (r *Request) ParseRaw() {
-	if r.parsedRaw {
-		return
-	}
-	var err error
-	r.parsedRaw = true
-	if raw := r.GetRawString(); len(raw) > 0 {
-		if r.rawMap, err = gstr.Parse(raw); err != nil {
-			panic(err)
-		}
-	}
-}
-
-// ParseForm parses the request form for HTTP method PUT, POST, PATCH.
-// The form data is pared into r.postMap.
-func (r *Request) ParseForm() {
-	// Parse only once.
-	if r.parsedForm {
-		return
-	}
-	var err error
-	r.parsedForm = true
-	if contentType := r.Header.Get("Content-Type"); contentType != "" {
-		if gstr.Contains(contentType, "multipart/") {
-			// multipart/form-data, multipart/mixed
-			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-				panic(err)
-			}
-		} else if gstr.Contains(contentType, "form") {
-			// application/x-www-form-urlencoded
-			if err = r.Request.ParseForm(); err != nil {
-				panic(err)
-			}
-		}
-		if len(r.PostForm) > 0 {
-			// Re-parse the form data using united parsing way.
-			params := ""
-			for name, values := range r.PostForm {
-				if len(values) == 1 {
-					if len(params) > 0 {
-						params += "&"
-					}
-					params += name + "=" + gurl.Encode(values[0])
-				} else {
-					if len(name) > 2 && name[len(name)-2:] == "[]" {
-						name = name[:len(name)-2]
-						for _, v := range values {
-							if len(params) > 0 {
-								params += "&"
-							}
-							params += name + "[]=" + gurl.Encode(v)
-						}
-					} else {
-						if len(params) > 0 {
-							params += "&"
-						}
-						params += name + "=" + gurl.Encode(values[len(values)-1])
-					}
-				}
-			}
-			if r.postMap, err = gstr.Parse(params); err != nil {
-				panic(err)
-			}
-		}
-	}
-}
-
-// parseMultipartForm parses and returns the form as multipart form.
-func (r *Request) parseMultipartForm() *multipart.Form {
-	if !r.parsedForm {
-		r.parsedForm = true
-		if err := r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-			panic(err)
-		}
-	}
-	return r.MultipartForm
-}
-
-// GetMultipartForm parses and returns the form as multipart form.
-func (r *Request) GetMultipartForm() *multipart.Form {
-	r.ParseForm()
-	return r.MultipartForm
-}
-
-// GetMultipartFiles returns the post files array.
-// Note that the request form should be type of multipart.
-func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
-	form := r.GetMultipartForm()
-	if form == nil {
-		return nil
-	}
-	if v := form.File[name]; len(v) > 0 {
-		return v
-	}
-	// Support "name[]" as array parameter.
-	if v := form.File[name+"[]"]; len(v) > 0 {
-		return v
-	}
-	return nil
 }
 
 // IsFileRequest checks and returns whether current request is serving file.

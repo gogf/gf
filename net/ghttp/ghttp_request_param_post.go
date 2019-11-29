@@ -7,36 +7,26 @@
 package ghttp
 
 import (
-	"strings"
-
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 )
 
-func (r *Request) initPost() {
-	if !r.parsedPost && strings.EqualFold(r.Method, "POST") {
-		r.parsedPost = true
-		if r.ParseForm(); len(r.postMap) == 0 {
-			if r.ParseRaw(); len(r.rawMap) != 0 {
-				r.postMap = r.rawMap
-			}
+// GetPost retrieves and returns parameter <key> from form and body.
+// It returns <def> if <key> does not exist in neither form nor body.
+// It returns nil if <def> is not passed.
+func (r *Request) GetPost(key string, def ...interface{}) interface{} {
+	r.ParseForm()
+	r.ParseBody()
+	if len(r.formMap) > 0 {
+		if v, ok := r.formMap[key]; ok {
+			return v
 		}
 	}
-	if r.postMap == nil {
-		r.postMap = make(map[string]interface{})
-	}
-}
-
-func (r *Request) SetPost(key string, value interface{}) {
-	r.initPost()
-	r.postMap[key] = value
-}
-
-func (r *Request) GetPost(key string, def ...interface{}) interface{} {
-	r.initPost()
-	if v, ok := r.postMap[key]; ok {
-		return v
+	if len(r.bodyMap) > 0 {
+		if v, ok := r.bodyMap[key]; ok {
+			return v
+		}
 	}
 	if len(def) > 0 {
 		return def[0]
@@ -108,25 +98,50 @@ func (r *Request) GetPostInterfaces(key string, def ...interface{}) []interface{
 	return r.GetPostVar(key, def...).Interfaces()
 }
 
-// 获取指定键名的关联数组，并且给定当指定键名不存在时的默认值。
-// 当不指定键值对关联数组时，默认获取POST方式提交的所有的提交键值对数据。
+// GetPostMap retrieves and returns all parameters in the form and body passed from client
+// as map. The parameter <kvMap> specifies the keys retrieving from client parameters,
+// the associated values are the default values if the client does not pass.
 func (r *Request) GetPostMap(kvMap ...map[string]interface{}) map[string]interface{} {
-	r.initPost()
+	r.ParseForm()
+	r.ParseBody()
+	m := make(map[string]interface{}, len(r.formMap)+len(r.bodyMap))
 	if len(kvMap) > 0 {
-		m := make(map[string]interface{})
-		for k, defValue := range kvMap[0] {
-			if postValue, ok := r.postMap[k]; ok {
-				m[k] = postValue
-			} else {
-				m[k] = defValue
+		if len(r.formMap) == 0 && len(r.bodyMap) == 0 {
+			return kvMap[0]
+		}
+		if len(r.formMap) > 0 {
+			for k, v := range kvMap[0] {
+				if postValue, ok := r.formMap[k]; ok {
+					m[k] = postValue
+				} else {
+					m[k] = v
+				}
 			}
 		}
-		return m
+		if len(r.bodyMap) > 0 {
+			for k, v := range kvMap[0] {
+				if postValue, ok := r.bodyMap[k]; ok {
+					m[k] = postValue
+				} else {
+					m[k] = v
+				}
+			}
+		}
 	} else {
-		return r.postMap
+		for k, v := range r.formMap {
+			m[k] = v
+		}
+		for k, v := range r.bodyMap {
+			m[k] = v
+		}
 	}
+	return m
 }
 
+// GetPostMapStrStr retrieves and returns all parameters in the form and body passed from client
+// as map[string]string. The parameter <kvMap> specifies the keys
+// retrieving from client parameters, the associated values are the default values if the client
+// does not pass.
 func (r *Request) GetPostMapStrStr(kvMap ...map[string]interface{}) map[string]string {
 	postMap := r.GetPostMap(kvMap...)
 	if len(postMap) > 0 {
@@ -139,6 +154,10 @@ func (r *Request) GetPostMapStrStr(kvMap ...map[string]interface{}) map[string]s
 	return nil
 }
 
+// GetPostMapStrVar retrieves and returns all parameters in the form and body passed from client
+// as map[string]*gvar.Var. The parameter <kvMap> specifies the keys
+// retrieving from client parameters, the associated values are the default values if the client
+// does not pass.
 func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	postMap := r.GetPostMap(kvMap...)
 	if len(postMap) > 0 {
@@ -151,13 +170,16 @@ func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*
 	return nil
 }
 
+// GetPostToStruct retrieves all parameters in the form and body passed from client
+// and converts them to given struct object. Note that the parameter <pointer> is a pointer
+// to the struct object. The optional parameter <mapping> is used to specify the key to
+// attribute mapping.
 func (r *Request) GetPostToStruct(pointer interface{}, mapping ...map[string]string) error {
-	r.initPost()
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
 	if len(mapping) > 0 {
 		for k, v := range mapping[0] {
 			tagMap[k] = v
 		}
 	}
-	return gconv.StructDeep(r.postMap, pointer, tagMap)
+	return gconv.StructDeep(r.GetPostMap(), pointer, tagMap)
 }
