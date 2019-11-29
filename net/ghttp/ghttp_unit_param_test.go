@@ -60,35 +60,35 @@ func Test_Params_Basic(t *testing.T) {
 	})
 	// PUT
 	s.BindHandler("/put", func(r *ghttp.Request) {
-		if r.GetPut("array") != nil {
-			r.Response.Write(r.GetPut("array"))
+		if r.Get("array") != nil {
+			r.Response.Write(r.Get("array"))
 		}
-		if r.GetPut("slice") != nil {
-			r.Response.Write(r.GetPut("slice"))
+		if r.Get("slice") != nil {
+			r.Response.Write(r.Get("slice"))
 		}
-		if r.GetPut("bool") != nil {
-			r.Response.Write(r.GetPutBool("bool"))
+		if r.Get("bool") != nil {
+			r.Response.Write(r.GetBool("bool"))
 		}
-		if r.GetPut("float32") != nil {
-			r.Response.Write(r.GetPutFloat32("float32"))
+		if r.Get("float32") != nil {
+			r.Response.Write(r.GetFloat32("float32"))
 		}
-		if r.GetPut("float64") != nil {
-			r.Response.Write(r.GetPutFloat64("float64"))
+		if r.Get("float64") != nil {
+			r.Response.Write(r.GetFloat64("float64"))
 		}
-		if r.GetPut("int") != nil {
-			r.Response.Write(r.GetPutInt("int"))
+		if r.Get("int") != nil {
+			r.Response.Write(r.GetInt("int"))
 		}
-		if r.GetPut("uint") != nil {
-			r.Response.Write(r.GetPutUint("uint"))
+		if r.Get("uint") != nil {
+			r.Response.Write(r.GetUint("uint"))
 		}
-		if r.GetPut("string") != nil {
-			r.Response.Write(r.GetPutString("string"))
+		if r.Get("string") != nil {
+			r.Response.Write(r.GetString("string"))
 		}
-		if r.GetPut("map") != nil {
-			r.Response.Write(r.GetPutMap()["map"].(map[string]interface{})["b"])
+		if r.Get("map") != nil {
+			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
 		}
-		if r.GetPut("a") != nil {
-			r.Response.Write(r.GetPutMapStrStr()["a"])
+		if r.Get("a") != nil {
+			r.Response.Write(r.GetMapStrStr()["a"])
 		}
 	})
 	// POST
@@ -126,43 +126,78 @@ func Test_Params_Basic(t *testing.T) {
 	})
 	// DELETE
 	s.BindHandler("/delete", func(r *ghttp.Request) {
-		if r.GetDelete("array") != nil {
-			r.Response.Write(r.GetDelete("array"))
+		if r.Get("array") != nil {
+			r.Response.Write(r.Get("array"))
 		}
-		if r.GetDelete("slice") != nil {
-			r.Response.Write(r.GetDelete("slice"))
+		if r.Get("slice") != nil {
+			r.Response.Write(r.Get("slice"))
 		}
-		if r.GetDelete("bool") != nil {
-			r.Response.Write(r.GetDeleteBool("bool"))
+		if r.Get("bool") != nil {
+			r.Response.Write(r.GetBool("bool"))
 		}
-		if r.GetDelete("float32") != nil {
-			r.Response.Write(r.GetDeleteFloat32("float32"))
+		if r.Get("float32") != nil {
+			r.Response.Write(r.GetFloat32("float32"))
 		}
-		if r.GetDelete("float64") != nil {
-			r.Response.Write(r.GetDeleteFloat64("float64"))
+		if r.Get("float64") != nil {
+			r.Response.Write(r.GetFloat64("float64"))
 		}
-		if r.GetDelete("int") != nil {
-			r.Response.Write(r.GetDeleteInt("int"))
+		if r.Get("int") != nil {
+			r.Response.Write(r.GetInt("int"))
 		}
-		if r.GetDelete("uint") != nil {
-			r.Response.Write(r.GetDeleteUint("uint"))
+		if r.Get("uint") != nil {
+			r.Response.Write(r.GetUint("uint"))
 		}
-		if r.GetDelete("string") != nil {
-			r.Response.Write(r.GetDeleteString("string"))
+		if r.Get("string") != nil {
+			r.Response.Write(r.GetString("string"))
 		}
-		if r.GetDelete("map") != nil {
-			r.Response.Write(r.GetDeleteMap()["map"].(map[string]interface{})["b"])
+		if r.Get("map") != nil {
+			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
 		}
-		if r.GetDelete("a") != nil {
-			r.Response.Write(r.GetDeleteMapStrStr()["a"])
+		if r.Get("a") != nil {
+			r.Response.Write(r.GetMapStrStr()["a"])
+		}
+	})
+	// PATCH
+	s.BindHandler("/patch", func(r *ghttp.Request) {
+		if r.Get("array") != nil {
+			r.Response.Write(r.Get("array"))
+		}
+		if r.Get("slice") != nil {
+			r.Response.Write(r.Get("slice"))
+		}
+		if r.Get("bool") != nil {
+			r.Response.Write(r.GetBool("bool"))
+		}
+		if r.Get("float32") != nil {
+			r.Response.Write(r.GetFloat32("float32"))
+		}
+		if r.Get("float64") != nil {
+			r.Response.Write(r.GetFloat64("float64"))
+		}
+		if r.Get("int") != nil {
+			r.Response.Write(r.GetInt("int"))
+		}
+		if r.Get("uint") != nil {
+			r.Response.Write(r.GetUint("uint"))
+		}
+		if r.Get("string") != nil {
+			r.Response.Write(r.GetString("string"))
+		}
+		if r.Get("map") != nil {
+			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
+		}
+		if r.Get("a") != nil {
+			r.Response.Write(r.GetMapStrStr()["a"])
 		}
 	})
 	s.BindHandler("/map", func(r *ghttp.Request) {
 		if m := r.GetQueryMap(); len(m) > 0 {
 			r.Response.Write(m["name"])
+			return
 		}
 		if m := r.GetPostMap(); len(m) > 0 {
 			r.Response.Write(m["name"])
+			return
 		}
 	})
 	s.BindHandler("/raw", func(r *ghttp.Request) {
@@ -181,11 +216,13 @@ func Test_Params_Basic(t *testing.T) {
 			user := new(User)
 			r.GetQueryToStruct(user)
 			r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
+			return
 		}
 		if m := r.GetPostMap(); len(m) > 0 {
 			user := new(User)
 			r.GetPostToStruct(user)
 			r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
+			return
 		}
 	})
 	s.BindHandler("/struct-with-nil", func(r *ghttp.Request) {
@@ -285,6 +322,21 @@ func Test_Params_Basic(t *testing.T) {
 		gtest.Assert(client.DeleteContent("/delete", "string=key"), `key`)
 		gtest.Assert(client.DeleteContent("/delete", "map[a]=1&map[b]=2"), `2`)
 		gtest.Assert(client.DeleteContent("/delete", "a=1&b=2"), `1`)
+
+		// PATCH
+		gtest.Assert(client.PatchContent("/patch", "array[]=1&array[]=2"), `["1","2"]`)
+		gtest.Assert(client.PatchContent("/patch", "slice=1&slice=2"), `2`)
+		gtest.Assert(client.PatchContent("/patch", "bool=1"), `true`)
+		gtest.Assert(client.PatchContent("/patch", "bool=0"), `false`)
+		gtest.Assert(client.PatchContent("/patch", "float32=0.11"), `0.11`)
+		gtest.Assert(client.PatchContent("/patch", "float64=0.22"), `0.22`)
+		gtest.Assert(client.PatchContent("/patch", "int=-10000"), `-10000`)
+		gtest.Assert(client.PatchContent("/patch", "int=10000"), `10000`)
+		gtest.Assert(client.PatchContent("/patch", "uint=10000"), `10000`)
+		gtest.Assert(client.PatchContent("/patch", "uint=9"), `9`)
+		gtest.Assert(client.PatchContent("/patch", "string=key"), `key`)
+		gtest.Assert(client.PatchContent("/patch", "map[a]=1&map[b]=2"), `2`)
+		gtest.Assert(client.PatchContent("/patch", "a=1&b=2"), `1`)
 
 		// Map
 		gtest.Assert(client.GetContent("/map", "id=1&name=john"), `john`)

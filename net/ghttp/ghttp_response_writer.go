@@ -63,9 +63,7 @@ func (w *ResponseWriter) OutputBuffer() {
 		w.buffer.WriteString(http.StatusText(w.Status))
 	}
 	if w.buffer.Len() > 0 {
-		if _, err := w.writer.Write(w.buffer.Bytes()); err != nil {
-			panic(err)
-		}
+		w.writer.Write(w.buffer.Bytes())
 		w.buffer.Reset()
 	}
 }
