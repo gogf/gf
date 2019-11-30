@@ -41,7 +41,7 @@ type RedBlackTreeNode struct {
 }
 
 // NewRedBlackTree instantiates a red-black tree with the custom key comparator.
-// The parameter <safe> used to specify whether using tree in concurrent-safety,
+// The parameter <safe> is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewRedBlackTree(comparator func(v1, v2 interface{}) int, safe ...bool) *RedBlackTree {
 	return &RedBlackTree{
@@ -51,7 +51,7 @@ func NewRedBlackTree(comparator func(v1, v2 interface{}) int, safe ...bool) *Red
 }
 
 // NewRedBlackTreeFrom instantiates a red-black tree with the custom key comparator and <data> map.
-// The parameter <safe> used to specify whether using tree in concurrent-safety,
+// The parameter <safe> is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewRedBlackTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *RedBlackTree {
 	tree := NewRedBlackTree(comparator, safe...)

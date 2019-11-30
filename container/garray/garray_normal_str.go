@@ -25,14 +25,14 @@ type StrArray struct {
 }
 
 // NewStrArray creates and returns an empty array.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArray(safe ...bool) *StrArray {
 	return NewStrArraySize(0, 0, safe...)
 }
 
 // NewStrArraySize create and returns an array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 	return &StrArray{
@@ -42,7 +42,7 @@ func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 }
 
 // NewStrArrayFrom creates and returns an array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 	return &StrArray{
@@ -52,7 +52,7 @@ func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 }
 
 // NewStrArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArrayFromCopy(array []string, safe ...bool) *StrArray {
 	newArray := make([]string, len(array))

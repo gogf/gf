@@ -23,14 +23,14 @@ type IntArray struct {
 }
 
 // NewIntArray creates and returns an empty array.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewIntArray(safe ...bool) *IntArray {
 	return NewIntArraySize(0, 0, safe...)
 }
 
 // NewIntArraySize create and returns an array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewIntArraySize(size int, cap int, safe ...bool) *IntArray {
 	return &IntArray{
@@ -40,7 +40,7 @@ func NewIntArraySize(size int, cap int, safe ...bool) *IntArray {
 }
 
 // NewIntArrayFrom creates and returns an array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewIntArrayFrom(array []int, safe ...bool) *IntArray {
 	return &IntArray{
@@ -50,7 +50,7 @@ func NewIntArrayFrom(array []int, safe ...bool) *IntArray {
 }
 
 // NewIntArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewIntArrayFromCopy(array []int, safe ...bool) *IntArray {
 	newArray := make([]int, len(array))

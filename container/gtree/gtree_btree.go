@@ -41,7 +41,7 @@ type BTreeEntry struct {
 }
 
 // NewBTree instantiates a B-tree with <m> (maximum number of children) and a custom key comparator.
-// The parameter <safe> used to specify whether using tree in concurrent-safety,
+// The parameter <safe> is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 // Note that the <m> must be greater or equal than 3, or else it panics.
 func NewBTree(m int, comparator func(v1, v2 interface{}) int, safe ...bool) *BTree {
@@ -56,7 +56,7 @@ func NewBTree(m int, comparator func(v1, v2 interface{}) int, safe ...bool) *BTr
 }
 
 // NewBTreeFrom instantiates a B-tree with <m> (maximum number of children), a custom key comparator and data map.
-// The parameter <safe> used to specify whether using tree in concurrent-safety,
+// The parameter <safe> is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *BTree {
 	tree := NewBTree(m, comparator, safe...)

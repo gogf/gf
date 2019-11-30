@@ -31,7 +31,7 @@ type gListMapNode struct {
 
 // NewListMap returns an empty link map.
 // ListMap is backed by a hash table to store values and doubly-linked list to store ordering.
-// The parameter <safe> used to specify whether using map in concurrent-safety,
+// The parameter <safe> is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewListMap(safe ...bool) *ListMap {
 	return &ListMap{
@@ -107,7 +107,7 @@ func (m *ListMap) Replace(data map[interface{}]interface{}) {
 	m.mu.Unlock()
 }
 
-// Map returns a copy of the data of the map.
+// Map returns a copy of the underlying data of the map.
 func (m *ListMap) Map() map[interface{}]interface{} {
 	m.mu.RLock()
 	node := (*gListMapNode)(nil)
@@ -121,7 +121,7 @@ func (m *ListMap) Map() map[interface{}]interface{} {
 	return data
 }
 
-// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
 func (m *ListMap) MapStrAny() map[string]interface{} {
 	m.mu.RLock()
 	node := (*gListMapNode)(nil)
