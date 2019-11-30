@@ -23,7 +23,7 @@ func main() {
 	s := g.Server()
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareBefore1, MiddlewareBefore2)
-		group.ALL("/user", func(r *ghttp.Request) {
+		group.ALL("/", func(r *ghttp.Request) {
 			r.Response.Writefln(
 				"%s: %s",
 				r.GetParamVar("name").String(),

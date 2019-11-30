@@ -55,51 +55,51 @@ func (s *Server) handlePreBindItems() {
 }
 
 // 获取分组路由对象
-func (s *Server) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
+func (s *Server) Group(prefix string, groups ...func(group *RouterGroup)) *RouterGroup {
 	if len(prefix) > 0 && prefix[0] != '/' {
 		prefix = "/" + prefix
 	}
 	if prefix == "/" {
 		prefix = ""
 	}
-	group := &RouterGroup{
+	rg := &RouterGroup{
 		server: s,
 		prefix: prefix,
 	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v(group)
+			v(rg)
 		}
 	}
-	return group
+	return rg
 }
 
 // 获取分组路由对象(绑定域名)
-func (d *Domain) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
+func (d *Domain) Group(prefix string, groups ...func(group *RouterGroup)) *RouterGroup {
 	if len(prefix) > 0 && prefix[0] != '/' {
 		prefix = "/" + prefix
 	}
 	if prefix == "/" {
 		prefix = ""
 	}
-	group := &RouterGroup{
+	rg := &RouterGroup{
 		domain: d,
 		prefix: prefix,
 	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v(group)
+			v(rg)
 		}
 	}
-	return group
+	return rg
 }
 
 // 层级递归创建分组路由注册项
-func (g *RouterGroup) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
+func (g *RouterGroup) Group(prefix string, groups ...func(group *RouterGroup)) *RouterGroup {
 	if prefix == "/" {
 		prefix = ""
 	}
-	group := &RouterGroup{
+	rg := &RouterGroup{
 		parent: g,
 		server: g.server,
 		domain: g.domain,
@@ -107,10 +107,10 @@ func (g *RouterGroup) Group(prefix string, groups ...func(g *RouterGroup)) *Rout
 	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v(group)
+			v(rg)
 		}
 	}
-	return group
+	return rg
 }
 
 func (g *RouterGroup) Clone() *RouterGroup {

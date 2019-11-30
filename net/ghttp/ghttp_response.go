@@ -9,15 +9,12 @@ package ghttp
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gogf/gf/os/gres"
 
-	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
 )
 
 // Response is the http response manager.
@@ -40,107 +37,6 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 	}
 	r.Writer = r.ResponseWriter
 	return r
-}
-
-// Write writes <content> to the response buffer.
-func (r *Response) Write(content ...interface{}) {
-	if r.hijacked || len(content) == 0 {
-		return
-	}
-	if r.Status == 0 {
-		r.Status = http.StatusOK
-	}
-	for _, v := range content {
-		switch value := v.(type) {
-		case []byte:
-			r.buffer.Write(value)
-		case string:
-			r.buffer.WriteString(value)
-		default:
-			r.buffer.WriteString(gconv.String(v))
-		}
-	}
-}
-
-// WriteOver overwrites the response buffer with <content>.
-func (r *Response) WriteOver(content ...interface{}) {
-	r.ClearBuffer()
-	r.Write(content...)
-}
-
-// Writef writes the response with fmt.Sprintf.
-func (r *Response) Writef(format string, params ...interface{}) {
-	r.Write(fmt.Sprintf(format, params...))
-}
-
-// Writef writes the response with <content> and new line.
-func (r *Response) Writeln(content ...interface{}) {
-	if len(content) == 0 {
-		r.Write("\n")
-		return
-	}
-	r.Write(append(content, "\n")...)
-}
-
-// Writefln writes the response with fmt.Sprintf and new line.
-func (r *Response) Writefln(format string, params ...interface{}) {
-	r.Writeln(fmt.Sprintf(format, params...))
-}
-
-// WriteJson writes <content> to the response with JSON format.
-func (r *Response) WriteJson(content interface{}) error {
-	if b, err := json.Marshal(content); err != nil {
-		return err
-	} else {
-		r.Header().Set("Content-Type", "application/json")
-		r.Write(b)
-	}
-	return nil
-}
-
-// WriteJson writes <content> to the response with JSONP format.
-// Note that there should be a "callback" parameter in the request for JSONP format.
-func (r *Response) WriteJsonP(content interface{}) error {
-	if b, err := json.Marshal(content); err != nil {
-		return err
-	} else {
-		//r.Header().Set("Content-Type", "application/json")
-		if callback := r.Request.GetString("callback"); callback != "" {
-			buffer := []byte(callback)
-			buffer = append(buffer, byte('('))
-			buffer = append(buffer, b...)
-			buffer = append(buffer, byte(')'))
-			r.Write(buffer)
-		} else {
-			r.Write(b)
-		}
-	}
-	return nil
-}
-
-// WriteJson writes <content> to the response with XML format.
-func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
-	if b, err := gparser.VarToXml(content, rootTag...); err != nil {
-		return err
-	} else {
-		r.Header().Set("Content-Type", "application/xml")
-		r.Write(b)
-	}
-	return nil
-}
-
-// WriteStatus writes HTTP <status> and <content> to the response.
-func (r *Response) WriteStatus(status int, content ...interface{}) {
-	r.WriteHeader(status)
-	if len(content) > 0 {
-		r.Write(content...)
-	} else {
-		r.Write(http.StatusText(status))
-	}
-	if r.Header().Get("Content-Type") == "" {
-		r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		//r.Header().Set("X-Content-Type-Options", "nosniff")
-	}
 }
 
 // ServeFile serves the file to the response.
