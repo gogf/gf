@@ -42,7 +42,8 @@ func (c *Client) TraceBytes(url string, data ...interface{}) []byte {
 	return c.RequestBytes("TRACE", url, data...)
 }
 
-// 请求并返回服务端结果(内部会自动读取服务端返回结果并关闭缓冲区指针)
+// RequestBytes sends request using given HTTP method and data and returns the binary as bytes.
+// It reads and closes the response object internally automatically.
 func (c *Client) RequestBytes(method string, url string, data ...interface{}) []byte {
 	response, err := c.DoRequest(method, url, data...)
 	if err != nil {
