@@ -68,18 +68,23 @@ func (c *Client) Clone() *Client {
 }
 
 // Get send GET request and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) Get(url string) (*ClientResponse, error) {
 	return c.DoRequest("GET", url)
 }
 
 // Put send PUT request and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) Put(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("PUT", url, data...)
 }
 
-// POST请求提交数据，默认使用表单方式提交数据(绝大部分场景下也是如此)。
-// 如果服务端对Content-Type有要求，可使用Client对象进行请求，单独设置相关属性。
-// 支持文件上传，需要字段格式为：FieldName=@file:
+// Post sends request using HTTP method POST and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
+//
+// Note that it uses "multipart/form-data" as its Content-Type if it contains file uploading,
+// else it uses "application/x-www-form-urlencoded". It also automatically detects the post
+// content for JSON format, and for that it automatically sets the Content-Type as "application/json".
 func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, err error) {
 	if len(c.prefix) > 0 {
 		url = c.prefix + url
@@ -90,7 +95,7 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 	}
 	req := (*http.Request)(nil)
 	if strings.Contains(param, "@file:") {
-		// 文件上传
+		// File uploading request.
 		buffer := new(bytes.Buffer)
 		writer := multipart.NewWriter(buffer)
 		for _, item := range strings.Split(param, "&") {
@@ -123,16 +128,16 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 			req.Header.Set("Content-Type", writer.FormDataContentType())
 		}
 	} else {
-		// 普通请求
+		// Normal request.
 		paramBytes := []byte(param)
 		if req, err = http.NewRequest("POST", url, bytes.NewReader(paramBytes)); err != nil {
 			return nil, err
 		} else {
 			if v, ok := c.header["Content-Type"]; ok {
-				// 自定义请求类型
+				// Custom Content-Type.
 				req.Header.Set("Content-Type", v)
 			} else {
-				// 识别提交数据格式
+				// Auto detecting and setting the post content format: JSON.
 				if json.Valid(paramBytes) {
 					req.Header.Set("Content-Type", "application/json")
 				} else {
@@ -141,13 +146,13 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 			}
 		}
 	}
-	// 自定义header
+	// Custom header.
 	if len(c.header) > 0 {
 		for k, v := range c.header {
 			req.Header.Set(k, v)
 		}
 	}
-	// COOKIE
+	// Custom Cookie.
 	if len(c.cookies) > 0 {
 		headerCookie := ""
 		for k, v := range c.cookies {
@@ -160,11 +165,11 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 			req.Header.Set("Cookie", headerCookie)
 		}
 	}
-	// HTTP账号密码
+	// HTTP basic authentication.
 	if len(c.authUser) > 0 {
 		req.SetBasicAuth(c.authUser, c.authPass)
 	}
-	// 执行请求
+	// Sending request.
 	r := (*http.Response)(nil)
 	for {
 		if r, err = c.Do(req); err != nil {
@@ -181,7 +186,7 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 		cookies: make(map[string]string),
 	}
 	resp.Response = r
-	// 浏览器模式
+	// Auto saving cookie content.
 	if c.browserMode {
 		now := time.Now()
 		for _, v := range r.Cookies() {
@@ -195,31 +200,44 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 	return resp, nil
 }
 
+// Delete send DELETE request and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) Delete(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("DELETE", url, data...)
 }
 
+// Head send HEAD request and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) Head(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("HEAD", url, data...)
 }
 
+// Patch send PATCH request and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) Patch(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("PATCH", url, data...)
 }
 
+// Connect send CONNECT request and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) Connect(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("CONNECT", url, data...)
 }
 
+// Options send OPTIONS request and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) Options(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("OPTIONS", url, data...)
 }
 
+// Trace send TRACE request and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("TRACE", url, data...)
 }
 
-// 请求并返回response对象
+// DoRequest sends request with given HTTP method and data and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResponse, error) {
 	if strings.EqualFold("POST", method) {
 		return c.Post(url, data...)
@@ -235,13 +253,13 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 	if err != nil {
 		return nil, err
 	}
-	// 自定义header
+	// custom header.
 	if len(c.header) > 0 {
 		for k, v := range c.header {
 			req.Header.Set(k, v)
 		}
 	}
-	// COOKIE
+	// Custom cookie.
 	if len(c.cookies) > 0 {
 		headerCookie := ""
 		for k, v := range c.cookies {
@@ -254,7 +272,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 			req.Header.Set("Cookie", headerCookie)
 		}
 	}
-	// 执行请求
+	// Sending request.
 	resp := (*http.Response)(nil)
 	for {
 		if r, err := c.Do(req); err != nil {
@@ -272,7 +290,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 		cookies: make(map[string]string),
 	}
 	r.Response = resp
-	// 浏览器模式
+	// Auto sending cookie content.
 	if c.browserMode {
 		now := time.Now()
 		for _, v := range r.Cookies() {
