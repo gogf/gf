@@ -4,8 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// HTTP客户端请求.
-
 package ghttp
 
 import (
@@ -24,29 +22,28 @@ import (
 	"github.com/gogf/gf/os/gfile"
 )
 
-// http客户端
+// Client is the HTTP client for HTTP request management.
 type Client struct {
-	http.Client                     // 底层http client对象
-	header        map[string]string // HEADER信息Map
-	cookies       map[string]string // 自定义COOKIE
-	prefix        string            // 设置请求的URL前缀
-	authUser      string            // HTTP基本权限设置：名称
-	authPass      string            // HTTP基本权限设置：密码
-	browserMode   bool              // 是否模拟浏览器模式(自动保存提交COOKIE)
-	retryCount    int               // 失败重试次数(网络失败情况下)
-	retryInterval int               // 失败重试间隔
+	http.Client                     // Underlying HTTP Client.
+	header        map[string]string // Custom header map.
+	cookies       map[string]string // Custom cookie map.
+	prefix        string            // Prefix for request.
+	authUser      string            // HTTP basic authentication: user.
+	authPass      string            // HTTP basic authentication: pass.
+	browserMode   bool              // Whether auto saving and sending cookie content.
+	retryCount    int               // Retry count when request fails.
+	retryInterval int               // Retry interval when request fails.
 }
 
-// http客户端对象指针
+// NewClient creates and returns a new HTTP client object.
 func NewClient() *Client {
 	return &Client{
 		Client: http.Client{
 			Transport: &http.Transport{
-				// 默认不校验HTTPS证书有效性
+				// No validation for https certification of the server.
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: true,
 				},
-				// 默认关闭KeepAlive功能
 				DisableKeepAlives: true,
 			},
 		},
@@ -55,7 +52,7 @@ func NewClient() *Client {
 	}
 }
 
-// 克隆当前客户端对象，复制属性。
+// Clone clones current client and returns a new one.
 func (c *Client) Clone() *Client {
 	newClient := NewClient()
 	*newClient = *c
@@ -70,12 +67,12 @@ func (c *Client) Clone() *Client {
 	return newClient
 }
 
-// GET请求
+// Get send GET request and returns the response object.
 func (c *Client) Get(url string) (*ClientResponse, error) {
 	return c.DoRequest("GET", url)
 }
 
-// PUT请求
+// Put send PUT request and returns the response object.
 func (c *Client) Put(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("PUT", url, data...)
 }
@@ -198,7 +195,6 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 	return resp, nil
 }
 
-// DELETE请求
 func (c *Client) Delete(url string, data ...interface{}) (*ClientResponse, error) {
 	return c.DoRequest("DELETE", url, data...)
 }
@@ -287,6 +283,5 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 			}
 		}
 	}
-	//fmt.Println(url, c.cookies)
 	return r, nil
 }

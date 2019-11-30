@@ -101,8 +101,8 @@ func (r *Request) GetFormInterfaces(key string, def ...interface{}) []interface{
 	return r.GetFormVar(key, def...).Interfaces()
 }
 
-// GetFormMap retrieves and returns all parameters passed from client using HTTP POST method
-// as map. The parameter <kvMap> specifies the keys retrieving from client parameters,
+// GetFormMap retrieves and returns all form parameters passed from client as map.
+// The parameter <kvMap> specifies the keys retrieving from client parameters,
 // the associated values are the default values if the client does not pass.
 func (r *Request) GetFormMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.ParseForm()
@@ -124,10 +124,9 @@ func (r *Request) GetFormMap(kvMap ...map[string]interface{}) map[string]interfa
 	}
 }
 
-// GetFormMapStrStr retrieves and returns all parameters passed from client using HTTP POST method
-// as map[string]string. The parameter <kvMap> specifies the keys
-// retrieving from client parameters, the associated values are the default values if the client
-// does not pass.
+// GetFormMapStrStr retrieves and returns all form parameters passed from client as map[string]string.
+// The parameter <kvMap> specifies the keys retrieving from client parameters, the associated values
+// are the default values if the client does not pass.
 func (r *Request) GetFormMapStrStr(kvMap ...map[string]interface{}) map[string]string {
 	postMap := r.GetFormMap(kvMap...)
 	if len(postMap) > 0 {
@@ -140,10 +139,9 @@ func (r *Request) GetFormMapStrStr(kvMap ...map[string]interface{}) map[string]s
 	return nil
 }
 
-// GetFormMapStrVar retrieves and returns all parameters passed from client using HTTP POST method
-// as map[string]*gvar.Var. The parameter <kvMap> specifies the keys
-// retrieving from client parameters, the associated values are the default values if the client
-// does not pass.
+// GetFormMapStrVar retrieves and returns all form parameters passed from client as map[string]*gvar.Var.
+// The parameter <kvMap> specifies the keys retrieving from client parameters, the associated values
+// are the default values if the client does not pass.
 func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	postMap := r.GetFormMap(kvMap...)
 	if len(postMap) > 0 {
@@ -156,10 +154,9 @@ func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]*
 	return nil
 }
 
-// GetFormToStruct retrieves all parameters passed from client using HTTP POST method
-// and converts them to given struct object. Note that the parameter <pointer> is a pointer
-// to the struct object. The optional parameter <mapping> is used to specify the key to
-// attribute mapping.
+// GetFormToStruct retrieves all form parameters passed from client and converts them to
+// given struct object. Note that the parameter <pointer> is a pointer to the struct object.
+// The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetFormToStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.ParseForm()
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)

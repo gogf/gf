@@ -16,11 +16,14 @@ import (
 // no matter what HTTP method the client is using. The parameter <def> specifies the default value
 // if the <key> does not exist.
 //
-// Note that the parameter is retrieved in order of: router->get->post->param.
+// Note that the parameter is retrieved in order of: router->get/body->post/body->param.
 func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 	v := r.GetRouterValue(key)
 	if v == nil {
-		v = r.GetQuery(key)
+		r.ParseQuery()
+		if len(r.queryMap) > 0 {
+			v, _ = r.queryMap[key]
+		}
 	}
 	if v == nil {
 		v = r.GetPost(key)
@@ -154,12 +157,26 @@ func (r *Request) GetRequestInterfaces(key string, def ...interface{}) []interfa
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
 func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
-	m := make(map[string]interface{})
-	for k, v := range r.GetQueryMap(kvMap...) {
+	r.ParseQuery()
+	r.ParseForm()
+	r.ParseBody()
+	m := make(map[string]interface{}, len(r.queryMap)+len(r.formMap)+len(r.bodyMap))
+	for k, v := range r.queryMap {
 		m[k] = v
 	}
-	for k, v := range r.GetPostMap(kvMap...) {
+	for k, v := range r.formMap {
 		m[k] = v
+	}
+	for k, v := range r.bodyMap {
+		m[k] = v
+	}
+	if len(kvMap) > 0 && kvMap[0] != nil {
+		var ok bool
+		for k, _ := range m {
+			if _, ok = kvMap[0][k]; !ok {
+				delete(m, k)
+			}
+		}
 	}
 	return m
 }
