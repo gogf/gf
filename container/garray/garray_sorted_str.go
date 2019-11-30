@@ -28,14 +28,14 @@ type SortedStrArray struct {
 }
 
 // NewSortedStrArray creates and returns an empty sorted array.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArray(safe ...bool) *SortedStrArray {
 	return NewSortedStrArraySize(0, safe...)
 }
 
 // NewSortedStrArrayComparator creates and returns an empty sorted array with specified comparator.
-// The parameter <safe> used to specify whether using array in concurrent-safety which is false in default.
+// The parameter <safe> is used to specify whether using array in concurrent-safety which is false in default.
 func NewSortedStrArrayComparator(comparator func(a, b string) int, safe ...bool) *SortedStrArray {
 	array := NewSortedStrArray(safe...)
 	array.comparator = comparator
@@ -43,7 +43,7 @@ func NewSortedStrArrayComparator(comparator func(a, b string) int, safe ...bool)
 }
 
 // NewSortedStrArraySize create and returns an sorted array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArraySize(cap int, safe ...bool) *SortedStrArray {
 	return &SortedStrArray{
@@ -55,7 +55,7 @@ func NewSortedStrArraySize(cap int, safe ...bool) *SortedStrArray {
 }
 
 // NewSortedStrArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArrayFrom(array []string, safe ...bool) *SortedStrArray {
 	a := NewSortedStrArraySize(0, safe...)
@@ -65,7 +65,7 @@ func NewSortedStrArrayFrom(array []string, safe ...bool) *SortedStrArray {
 }
 
 // NewSortedStrArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArrayFromCopy(array []string, safe ...bool) *SortedStrArray {
 	newArray := make([]string, len(array))

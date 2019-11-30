@@ -21,7 +21,7 @@ type IntIntMap struct {
 }
 
 // NewIntIntMap returns an empty IntIntMap object.
-// The parameter <safe> used to specify whether using map in concurrent-safety,
+// The parameter <safe> is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewIntIntMap(safe ...bool) *IntIntMap {
 	return &IntIntMap{
@@ -30,7 +30,7 @@ func NewIntIntMap(safe ...bool) *IntIntMap {
 	}
 }
 
-// NewIntIntMapFrom returns a hash map from given map <data>.
+// NewIntIntMapFrom creates and returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewIntIntMapFrom(data map[int]int, safe ...bool) *IntIntMap {
@@ -73,7 +73,7 @@ func (m *IntIntMap) Map() map[int]int {
 	return data
 }
 
-// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
 func (m *IntIntMap) MapStrAny() map[string]interface{} {
 	m.mu.RLock()
 	data := make(map[string]interface{}, len(m.data))
@@ -84,7 +84,7 @@ func (m *IntIntMap) MapStrAny() map[string]interface{} {
 	return data
 }
 
-// MapCopy returns a copy of the data of the hash map.
+// MapCopy returns a copy of the underlying data of the hash map.
 func (m *IntIntMap) MapCopy() map[int]int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

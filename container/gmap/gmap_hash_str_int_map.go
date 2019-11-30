@@ -21,7 +21,7 @@ type StrIntMap struct {
 }
 
 // NewStrIntMap returns an empty StrIntMap object.
-// The parameter <safe> used to specify whether using map in concurrent-safety,
+// The parameter <safe> is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewStrIntMap(safe ...bool) *StrIntMap {
 	return &StrIntMap{
@@ -30,7 +30,7 @@ func NewStrIntMap(safe ...bool) *StrIntMap {
 	}
 }
 
-// NewStrIntMapFrom returns a hash map from given map <data>.
+// NewStrIntMapFrom creates and returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewStrIntMapFrom(data map[string]int, safe ...bool) *StrIntMap {
@@ -73,7 +73,7 @@ func (m *StrIntMap) Map() map[string]int {
 	return data
 }
 
-// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
 func (m *StrIntMap) MapStrAny() map[string]interface{} {
 	m.mu.RLock()
 	data := make(map[string]interface{}, len(m.data))
@@ -84,7 +84,7 @@ func (m *StrIntMap) MapStrAny() map[string]interface{} {
 	return data
 }
 
-// MapCopy returns a copy of the data of the hash map.
+// MapCopy returns a copy of the underlying data of the hash map.
 func (m *StrIntMap) MapCopy() map[string]int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

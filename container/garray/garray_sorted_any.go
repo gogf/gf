@@ -29,7 +29,7 @@ type SortedArray struct {
 }
 
 // NewSortedArray creates and returns an empty sorted array.
-// The parameter <safe> used to specify whether using array in concurrent-safety, which is false in default.
+// The parameter <safe> is used to specify whether using array in concurrent-safety, which is false in default.
 // The parameter <comparator> used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2;
 // if it returns value = 0, means v1 = v2;
@@ -39,7 +39,7 @@ func NewSortedArray(comparator func(a, b interface{}) int, safe ...bool) *Sorted
 }
 
 // NewSortedArraySize create and returns an sorted array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	return &SortedArray{
@@ -51,7 +51,7 @@ func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...
 }
 
 // NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	a := NewSortedArraySize(0, comparator, safe...)
@@ -63,7 +63,7 @@ func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) i
 }
 
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArrayFromCopy(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	newArray := make([]interface{}, len(array))

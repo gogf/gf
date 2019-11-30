@@ -36,7 +36,7 @@ func New(safe ...bool) *List {
 }
 
 // NewFrom creates and returns a list from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using list in concurrent-safety,
+// The parameter <safe> is used to specify whether using list in concurrent-safety,
 // which is false in default.
 func NewFrom(array []interface{}, safe ...bool) *List {
 	l := list.New()

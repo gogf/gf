@@ -24,7 +24,7 @@ type Array struct {
 }
 
 // New creates and returns an empty array.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func New(safe ...bool) *Array {
 	return NewArraySize(0, 0, safe...)
@@ -36,7 +36,7 @@ func NewArray(safe ...bool) *Array {
 }
 
 // NewArraySize create and returns an array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArraySize(size int, cap int, safe ...bool) *Array {
 	return &Array{
@@ -56,7 +56,7 @@ func NewFromCopy(array []interface{}, safe ...bool) *Array {
 }
 
 // NewArrayFrom creates and returns an array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArrayFrom(array []interface{}, safe ...bool) *Array {
 	return &Array{
@@ -66,7 +66,7 @@ func NewArrayFrom(array []interface{}, safe ...bool) *Array {
 }
 
 // NewArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArrayFromCopy(array []interface{}, safe ...bool) *Array {
 	newArray := make([]interface{}, len(array))

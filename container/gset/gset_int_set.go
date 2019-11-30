@@ -20,7 +20,7 @@ type IntSet struct {
 }
 
 // New create and returns a new set, which contains un-repeated items.
-// The parameter <safe> used to specify whether using set in concurrent-safety,
+// The parameter <safe> is used to specify whether using set in concurrent-safety,
 // which is false in default.
 func NewIntSet(safe ...bool) *IntSet {
 	return &IntSet{

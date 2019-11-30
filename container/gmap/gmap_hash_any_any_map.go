@@ -22,8 +22,8 @@ type AnyAnyMap struct {
 	data map[interface{}]interface{}
 }
 
-// NewAnyAnyMap returns an empty hash map.
-// The parameter <safe> used to specify whether using map in concurrent-safety,
+// NewAnyAnyMap creates and returns an empty hash map.
+// The parameter <safe> is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{
@@ -32,7 +32,7 @@ func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	}
 }
 
-// NewAnyAnyMapFrom returns a hash map from given map <data>.
+// NewAnyAnyMapFrom creates and returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewAnyAnyMapFrom(data map[interface{}]interface{}, safe ...bool) *AnyAnyMap {
@@ -75,7 +75,7 @@ func (m *AnyAnyMap) Map() map[interface{}]interface{} {
 	return data
 }
 
-// MapCopy returns a copy of the data of the hash map.
+// MapCopy returns a copy of the underlying data of the hash map.
 func (m *AnyAnyMap) MapCopy() map[interface{}]interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -86,7 +86,7 @@ func (m *AnyAnyMap) MapCopy() map[interface{}]interface{} {
 	return data
 }
 
-// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
 func (m *AnyAnyMap) MapStrAny() map[string]interface{} {
 	m.mu.RLock()
 	data := make(map[string]interface{}, len(m.data))
