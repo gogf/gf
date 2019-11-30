@@ -28,16 +28,28 @@ func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
 	return r.GetRequestVar(key, def...)
 }
 
-// GetRaw retrieves and returns request body content as bytes.
+// GetRaw is alias for GetBody.
+// See GetBody.
 func (r *Request) GetRaw() []byte {
-	if r.rawContent == nil {
-		r.rawContent, _ = ioutil.ReadAll(r.Body)
+	return r.GetBody()
+}
+
+// GetRawString is alias for GetBodyString.
+// See GetBodyString.
+func (r *Request) GetRawString() string {
+	return r.GetBodyString()
+}
+
+// GetRaw retrieves and returns request body content as bytes.
+func (r *Request) GetBody() []byte {
+	if r.bodyContent == nil {
+		r.bodyContent, _ = ioutil.ReadAll(r.Body)
 	}
-	return r.rawContent
+	return r.bodyContent
 }
 
 // GetRawString retrieves and returns request body content as string.
-func (r *Request) GetRawString() string {
+func (r *Request) GetBodyString() string {
 	return gconv.UnsafeBytesToStr(r.GetRaw())
 }
 
@@ -143,8 +155,8 @@ func (r *Request) ParseBody() {
 		return
 	}
 	r.parsedBody = true
-	if raw := r.GetRawString(); len(raw) > 0 {
-		r.bodyMap, _ = gstr.Parse(raw)
+	if body := r.GetBodyString(); len(body) > 0 {
+		r.bodyMap, _ = gstr.Parse(body)
 	}
 }
 

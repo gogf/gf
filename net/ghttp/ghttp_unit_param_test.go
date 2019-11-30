@@ -190,6 +190,39 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.GetMapStrStr()["a"])
 		}
 	})
+	// Form
+	s.BindHandler("/form", func(r *ghttp.Request) {
+		if r.Get("array") != nil {
+			r.Response.Write(r.GetForm("array"))
+		}
+		if r.Get("slice") != nil {
+			r.Response.Write(r.GetForm("slice"))
+		}
+		if r.Get("bool") != nil {
+			r.Response.Write(r.GetFormBool("bool"))
+		}
+		if r.Get("float32") != nil {
+			r.Response.Write(r.GetFormFloat32("float32"))
+		}
+		if r.Get("float64") != nil {
+			r.Response.Write(r.GetFormFloat64("float64"))
+		}
+		if r.Get("int") != nil {
+			r.Response.Write(r.GetFormInt("int"))
+		}
+		if r.Get("uint") != nil {
+			r.Response.Write(r.GetFormUint("uint"))
+		}
+		if r.Get("string") != nil {
+			r.Response.Write(r.GetFormString("string"))
+		}
+		if r.Get("map") != nil {
+			r.Response.Write(r.GetFormMap()["map"].(map[string]interface{})["b"])
+		}
+		if r.Get("a") != nil {
+			r.Response.Write(r.GetFormMapStrStr()["a"])
+		}
+	})
 	s.BindHandler("/map", func(r *ghttp.Request) {
 		if m := r.GetQueryMap(); len(m) > 0 {
 			r.Response.Write(m["name"])
@@ -337,6 +370,21 @@ func Test_Params_Basic(t *testing.T) {
 		gtest.Assert(client.PatchContent("/patch", "string=key"), `key`)
 		gtest.Assert(client.PatchContent("/patch", "map[a]=1&map[b]=2"), `2`)
 		gtest.Assert(client.PatchContent("/patch", "a=1&b=2"), `1`)
+
+		// Form
+		gtest.Assert(client.PostContent("/form", "array[]=1&array[]=2"), `["1","2"]`)
+		gtest.Assert(client.PostContent("/form", "slice=1&slice=2"), `2`)
+		gtest.Assert(client.PostContent("/form", "bool=1"), `true`)
+		gtest.Assert(client.PostContent("/form", "bool=0"), `false`)
+		gtest.Assert(client.PostContent("/form", "float32=0.11"), `0.11`)
+		gtest.Assert(client.PostContent("/form", "float64=0.22"), `0.22`)
+		gtest.Assert(client.PostContent("/form", "int=-10000"), `-10000`)
+		gtest.Assert(client.PostContent("/form", "int=10000"), `10000`)
+		gtest.Assert(client.PostContent("/form", "uint=10000"), `10000`)
+		gtest.Assert(client.PostContent("/form", "uint=9"), `9`)
+		gtest.Assert(client.PostContent("/form", "string=key"), `key`)
+		gtest.Assert(client.PostContent("/form", "map[a]=1&map[b]=2"), `2`)
+		gtest.Assert(client.PostContent("/form", "a=1&b=2"), `1`)
 
 		// Map
 		gtest.Assert(client.GetContent("/map", "id=1&name=john"), `john`)
