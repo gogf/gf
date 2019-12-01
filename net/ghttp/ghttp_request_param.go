@@ -16,25 +16,26 @@ import (
 	"mime/multipart"
 )
 
-// Get retrieves and returns field value with given name <key> from request.
-// The parameter <def> specifies the default returned value if value of field <key> is not found.
+// Get is alias of GetRequest, which is one of the most commonly used functions for
+// retrieving parameter.
+// See GetRequest.
 func (r *Request) Get(key string, def ...interface{}) interface{} {
 	return r.GetRequest(key, def...)
 }
 
-// GetVar retrieves and returns field value with given name <key> from request as a gvar.Var.
-// The parameter <def> specifies the default returned value if value of field <key> is not found.
+// GetVar is alis of GetRequestVar.
+// See GetRequestVar.
 func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
 	return r.GetRequestVar(key, def...)
 }
 
-// GetRaw is alias for GetBody.
+// GetRaw is alias of GetBody.
 // See GetBody.
 func (r *Request) GetRaw() []byte {
 	return r.GetBody()
 }
 
-// GetRawString is alias for GetBodyString.
+// GetRawString is alias of GetBodyString.
 // See GetBodyString.
 func (r *Request) GetRawString() string {
 	return r.GetBodyString()
@@ -127,9 +128,8 @@ func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string 
 	return r.GetRequestMapStrStr(def...)
 }
 
-// GetToStruct maps all request variables to a struct object.
-// The parameter <pointer> should be a pointer to a struct object.
-// More details please refer to: gconv.StructDeep.
+// GetToStruct is alias of GetRequestToStruct.
+// See GetRequestToStruct.
 func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
 	return r.GetRequestToStruct(pointer, mapping...)
 }
@@ -216,17 +216,6 @@ func (r *Request) ParseForm() {
 			}
 		}
 	}
-}
-
-// parseMultipartForm parses and returns the form as multipart form.
-func (r *Request) parseMultipartForm() *multipart.Form {
-	if !r.parsedForm {
-		r.parsedForm = true
-		if err := r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-			panic(err)
-		}
-	}
-	return r.MultipartForm
 }
 
 // GetMultipartForm parses and returns the form as multipart form.

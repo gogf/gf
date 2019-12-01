@@ -34,59 +34,46 @@ const (
 
 // HTTP Server configuration.
 type ServerConfig struct {
-	// Basic
-	Address        string        // Server listening address like ":port", multiple addresses joined using ','.
-	HTTPSAddr      string        // HTTPS addresses, multiple addresses joined using char ','.
-	HTTPSCertPath  string        // HTTPS certification file path.
-	HTTPSKeyPath   string        // HTTPS key file path.
-	TLSConfig      *tls.Config   // TLS configuration for use by ServeTLS and ListenAndServeTLS.
-	Handler        http.Handler  // Request handler.
-	ReadTimeout    time.Duration // Maximum duration for reading the entire request, including the body.
-	WriteTimeout   time.Duration // Maximum duration before timing out writes of the response.
-	IdleTimeout    time.Duration // Maximum amount of time to wait for the next request when keep-alive is enabled.
-	MaxHeaderBytes int           // Maximum number of bytes the server will read parsing the request header's keys and values, including the request line.
-	KeepAlive      bool          // Enable HTTP keep-alive.
-	ServerAgent    string        // Server Agent.
-	View           *gview.View   // View object for the server.
-
-	// Static
-	Rewrites          map[string]string // URI rewrite rules map.
-	IndexFiles        []string          // The index files for static folder.
-	IndexFolder       bool              // Whether list sub-files when requesting folder; server responses HTTP status code 403 if it's false.
-	ServerRoot        string            // The root directory for static service.
-	SearchPaths       []string          // Additional searching directories for static service.
-	StaticPaths       []staticPathItem  // URI to directory mapping array.
-	FileServerEnabled bool              // Switch for static service.
-
-	// Cookie
-	CookieMaxAge time.Duration // Max TTL for cookie items.
-	CookiePath   string        // Cookie Path(also affects the default storage for session id).
-	CookieDomain string        // Cookie Domain(also affects the default storage for session id).
-
-	// Session
-	SessionMaxAge  time.Duration    // Max TTL for session items.
-	SessionIdName  string           // Session id name.
-	SessionPath    string           // Session Storage directory path for storing session files.
-	SessionStorage gsession.Storage // Session Storage implementer.
-
-	// Logging
-	Logger           *glog.Logger // Logger for server.
-	LogPath          string       // Directory for storing logging files.
-	LogStdout        bool         // Printing logging content to stdout.
-	ErrorStack       bool         // Logging stack information when error.
-	ErrorLogEnabled  bool         // Enable error logging files.
-	ErrorLogPattern  string       // Error log file pattern like: error-{Ymd}.log
-	AccessLogEnabled bool         // Enable access logging files.
-	AccessLogPattern string       // Error log file pattern like: access-{Ymd}.log
-
-	// PProf
-	PProfEnabled bool   // Enable PProf feature.
-	PProfPattern string // PProf service pattern for router, it automatically enables PProf feature if called.
-
-	// Other
-	FormParsingMemory int64 // Max memory in bytes which can be used for parsing multimedia form.
-	NameToUriType     int   // Type for converting struct method name to URI when registering routes.
-	DumpRouteMap      bool  // Whether automatically dump route map when server starts.
+	Address           string            // Basic: Server listening address like ":port", multiple addresses joined using ','.
+	HTTPSAddr         string            // Basic: HTTPS addresses, multiple addresses joined using char ','.
+	HTTPSCertPath     string            // Basic: HTTPS certification file path.
+	HTTPSKeyPath      string            // Basic: HTTPS key file path.
+	TLSConfig         *tls.Config       // Basic: TLS configuration for use by ServeTLS and ListenAndServeTLS.
+	Handler           http.Handler      // Basic: Request handler.
+	ReadTimeout       time.Duration     // Basic: Maximum duration for reading the entire request, including the body.
+	WriteTimeout      time.Duration     // Basic: Maximum duration before timing out writes of the response.
+	IdleTimeout       time.Duration     // Basic: Maximum amount of time to wait for the next request when keep-alive is enabled.
+	MaxHeaderBytes    int               // Basic: Maximum number of bytes the server will read parsing the request header's keys and values, including the request line.
+	KeepAlive         bool              // Basic: Enable HTTP keep-alive.
+	ServerAgent       string            // Basic: Server agent information.
+	View              *gview.View       // Basic: View object for the server.
+	Rewrites          map[string]string // Static: URI rewrite rules map.
+	IndexFiles        []string          // Static: The index files for static folder.
+	IndexFolder       bool              // Static: List sub-files when requesting folder; server responses HTTP status code 403 if false.
+	ServerRoot        string            // Static: The root directory for static service.
+	SearchPaths       []string          // Static: Additional searching directories for static service.
+	StaticPaths       []staticPathItem  // Static: URI to directory mapping array.
+	FileServerEnabled bool              // Static: Switch for static service.
+	CookieMaxAge      time.Duration     // Cookie: Max TTL for cookie items.
+	CookiePath        string            // Cookie: Cookie Path(also affects the default storage for session id).
+	CookieDomain      string            // Cookie: Cookie Domain(also affects the default storage for session id).
+	SessionMaxAge     time.Duration     // Session: Max TTL for session items.
+	SessionIdName     string            // Session: Session id name.
+	SessionPath       string            // Session: Session Storage directory path for storing session files.
+	SessionStorage    gsession.Storage  // Session: Session Storage implementer.
+	Logger            *glog.Logger      // Logging: Logger for server.
+	LogPath           string            // Logging: Directory for storing logging files.
+	LogStdout         bool              // Logging: Printing logging content to stdout.
+	ErrorStack        bool              // Logging: Logging stack information when error.
+	ErrorLogEnabled   bool              // Logging: Enable error logging files.
+	ErrorLogPattern   string            // Logging: Error log file pattern like: error-{Ymd}.log
+	AccessLogEnabled  bool              // Logging: Enable access logging files.
+	AccessLogPattern  string            // Logging: Error log file pattern like: access-{Ymd}.log
+	PProfEnabled      bool              // PProf: Enable PProf feature.
+	PProfPattern      string            // PProf: PProf service pattern for router.
+	FormParsingMemory int64             // Other: Max memory in bytes which can be used for parsing multimedia form.
+	NameToUriType     int               // Other: Type for converting struct method name to URI when registering routes.
+	DumpRouteMap      bool              // Other: Whether automatically dump route map when server starts.
 }
 
 // defaultServerConfig is the default configuration object for server.
