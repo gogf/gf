@@ -6,18 +6,6 @@
 
 package ghttp
 
-func (s *Server) SetDenyIps(ips []string) {
-	s.config.DenyIps = ips
-}
-
-func (s *Server) SetAllowIps(ips []string) {
-	s.config.AllowIps = ips
-}
-
-func (s *Server) SetDenyRoutes(routes []string) {
-	s.config.DenyRoutes = routes
-}
-
 // 设置URI重写规则
 func (s *Server) SetRewrite(uri string, rewrite string) {
 	s.config.Rewrites[uri] = rewrite

@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,51 +20,6 @@ import (
 
 	"github.com/gogf/gf/os/gfile"
 )
-
-// Client is the HTTP client for HTTP request management.
-type Client struct {
-	http.Client                     // Underlying HTTP Client.
-	header        map[string]string // Custom header map.
-	cookies       map[string]string // Custom cookie map.
-	prefix        string            // Prefix for request.
-	authUser      string            // HTTP basic authentication: user.
-	authPass      string            // HTTP basic authentication: pass.
-	browserMode   bool              // Whether auto saving and sending cookie content.
-	retryCount    int               // Retry count when request fails.
-	retryInterval int               // Retry interval when request fails.
-}
-
-// NewClient creates and returns a new HTTP client object.
-func NewClient() *Client {
-	return &Client{
-		Client: http.Client{
-			Transport: &http.Transport{
-				// No validation for https certification of the server.
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-				DisableKeepAlives: true,
-			},
-		},
-		header:  make(map[string]string),
-		cookies: make(map[string]string),
-	}
-}
-
-// Clone clones current client and returns a new one.
-func (c *Client) Clone() *Client {
-	newClient := NewClient()
-	*newClient = *c
-	newClient.header = make(map[string]string)
-	newClient.cookies = make(map[string]string)
-	for k, v := range c.header {
-		newClient.header[k] = v
-	}
-	for k, v := range c.cookies {
-		newClient.cookies[k] = v
-	}
-	return newClient
-}
 
 // Get send GET request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
@@ -258,6 +212,11 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 		for k, v := range c.header {
 			req.Header.Set(k, v)
 		}
+	}
+	// Automatically set default content type to "application/x-www-form-urlencoded"
+	// if there' no content type set.
+	if _, ok := c.header["Content-Type"]; !ok {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 	// Custom cookie.
 	if len(c.cookies) > 0 {

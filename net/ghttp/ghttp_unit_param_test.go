@@ -403,3 +403,44 @@ func Test_Params_Basic(t *testing.T) {
 		gtest.Assert(client.PostContent("/struct-with-base", `id=1&name=john&password1=123&password2=456`), "1john1234561john123456")
 	})
 }
+
+func Test_Params_Priority(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/query", func(r *ghttp.Request) {
+		r.Response.Write(r.GetQuery("a"))
+	})
+	s.BindHandler("/post", func(r *ghttp.Request) {
+		r.Response.Write(r.GetPost("a"))
+	})
+	s.BindHandler("/form", func(r *ghttp.Request) {
+		r.Response.Write(r.GetForm("a"))
+	})
+	s.BindHandler("/request", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("a"))
+	})
+	s.BindHandler("/request-map", func(r *ghttp.Request) {
+		r.Response.Write(r.GetMap(g.Map{
+			"a": 1,
+			"b": 2,
+		}))
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		gtest.Assert(client.GetContent("/query?a=1", "a=100"), "100")
+		gtest.Assert(client.PostContent("/post?a=1", "a=100"), "100")
+		gtest.Assert(client.PostContent("/form?a=1", "a=100"), "100")
+		gtest.Assert(client.PutContent("/form?a=1", "a=100"), "100")
+		gtest.Assert(client.GetContent("/request?a=1", "a=100"), "100")
+		gtest.Assert(client.GetContent("/request-map?a=1&b=2&c=3", "a=100&b=200&c=300"), `{"a":"100","b":"200"}`)
+	})
+}

@@ -26,62 +26,72 @@ import (
 const (
 	gDEFAULT_HTTP_ADDR  = ":80"  // Default listening port for HTTP.
 	gDEFAULT_HTTPS_ADDR = ":443" // Default listening port for HTTPS.
-	URI_TYPE_DEFAULT    = 0      // Type for method name to URI converting, which converts name to its lower case and joins the words using char '-'.
-	URI_TYPE_FULLNAME   = 1      // Type for method name to URI converting, which does no converting to the method name.
-	URI_TYPE_ALLLOWER   = 2      // Type for method name to URI converting, which converts name to its lower case.
-	URI_TYPE_CAMEL      = 3      // Type for method name to URI converting, which converts name to its camel case.
+	URI_TYPE_DEFAULT    = 0      // Method name to URI converting type, which converts name to its lower case and joins the words using char '-'.
+	URI_TYPE_FULLNAME   = 1      // Method name to URI converting type, which does no converting to the method name.
+	URI_TYPE_ALLLOWER   = 2      // Method name to URI converting type, which converts name to its lower case.
+	URI_TYPE_CAMEL      = 3      // Method name to URI converting type, which converts name to its camel case.
 )
 
 // HTTP Server configuration.
 type ServerConfig struct {
-	Address           string            // Server listening address like ":port", multiple addresses joining using ','
-	HTTPSAddr         string            // HTTPS addresses, multiple addresses joining using char ','.
-	HTTPSCertPath     string            // HTTPS certification file path.
-	HTTPSKeyPath      string            // HTTPS key file path.
-	Handler           http.Handler      // Default request handler function.
-	ReadTimeout       time.Duration     // Maximum duration for reading the entire request, including the body.
-	WriteTimeout      time.Duration     // Maximum duration before timing out writes of the response.
-	IdleTimeout       time.Duration     // Maximum amount of time to wait for the next request when keep-alives are enabled.
-	MaxHeaderBytes    int               // Maximum number of bytes the server will read parsing the request header's keys and values, including the request line.
-	TLSConfig         *tls.Config       // TLS configuration for use by ServeTLS and ListenAndServeTLS.
-	KeepAlive         bool              // HTTP keep-alive are enabled or not.
-	ServerAgent       string            // Server Agent.
-	View              *gview.View       // View engine for the server.
-	Rewrites          map[string]string // URI rewrite rules.
-	IndexFiles        []string          // Static: 默认访问的文件列表
-	IndexFolder       bool              // Static: 如果访问目录是否显示目录列表
-	ServerRoot        string            // Static: 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
-	SearchPaths       []string          // Static: 静态文件搜索目录(包含ServerRoot，按照优先级进行排序)
-	StaticPaths       []staticPathItem  // Static: 静态文件目录映射(按照优先级进行排序)
-	FileServerEnabled bool              // Static: 是否允许静态文件服务(通过静态文件服务方法调用自动识别)
-	CookieMaxAge      time.Duration     // Cookie: 有效期
-	CookiePath        string            // Cookie: 有效Path(注意同时也会影响SessionID)
-	CookieDomain      string            // Cookie: 有效Domain(注意同时也会影响SessionID)
-	SessionMaxAge     time.Duration     // Session: 有效期
-	SessionIdName     string            // Session: SessionId.
-	SessionPath       string            // Session: Session Storage path for storing session files.
-	SessionStorage    gsession.Storage  // Session: Session Storage implementer.
-	DenyIps           []string          // Security: 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
-	AllowIps          []string          // Security: 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
-	DenyRoutes        []string          // Security: 不允许访问的路由规则列表
-	Logger            *glog.Logger      // Logging: Custom logger for server.
-	LogPath           string            // Logging: 存放日志的目录路径(默认为空，表示不写文件)
-	LogStdout         bool              // Logging: 是否打印日志到终端(默认开启)
-	ErrorStack        bool              // Logging: 当产生错误时打印调用链详细堆栈
-	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
-	ErrorLogPattern   string            // Logging: Error log file pattern like: error-{Ymd}.log
-	AccessLogEnabled  bool              // Logging: 是否开启access log(默认关闭)
-	AccessLogPattern  string            // Logging: Error log file pattern like: access-{Ymd}.log
-	PProfEnabled      bool              // PProf: Enable PProf feature or not.
-	PProfPattern      string            // PProf: PProf pattern for router, it enables PProf feature if it's not empty.
-	FormParsingMemory int64             // Mess: 表单解析内存限制(byte)
-	NameToUriType     int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
-	GzipContentTypes  []string          // Mess: 允许进行gzip压缩的文件类型
-	DumpRouteMap      bool              // Mess: 是否在程序启动时默认打印路由表信息
-	RouterCacheExpire int               // Mess: 路由检索缓存过期时间(秒)
+	// Basic
+	Address        string        // Server listening address like ":port", multiple addresses joined using ','.
+	HTTPSAddr      string        // HTTPS addresses, multiple addresses joined using char ','.
+	HTTPSCertPath  string        // HTTPS certification file path.
+	HTTPSKeyPath   string        // HTTPS key file path.
+	TLSConfig      *tls.Config   // TLS configuration for use by ServeTLS and ListenAndServeTLS.
+	Handler        http.Handler  // Request handler.
+	ReadTimeout    time.Duration // Maximum duration for reading the entire request, including the body.
+	WriteTimeout   time.Duration // Maximum duration before timing out writes of the response.
+	IdleTimeout    time.Duration // Maximum amount of time to wait for the next request when keep-alive is enabled.
+	MaxHeaderBytes int           // Maximum number of bytes the server will read parsing the request header's keys and values, including the request line.
+	KeepAlive      bool          // Enable HTTP keep-alive.
+	ServerAgent    string        // Server Agent.
+	View           *gview.View   // View object for the server.
+
+	// Static
+	Rewrites          map[string]string // URI rewrite rules map.
+	IndexFiles        []string          // The index files for static folder.
+	IndexFolder       bool              // Whether list sub-files when requesting folder; server responses HTTP status code 403 if it's false.
+	ServerRoot        string            // The root directory for static service.
+	SearchPaths       []string          // Additional searching directories for static service.
+	StaticPaths       []staticPathItem  // URI to directory mapping array.
+	FileServerEnabled bool              // Switch for static service.
+
+	// Cookie
+	CookieMaxAge time.Duration // Max TTL for cookie items.
+	CookiePath   string        // Cookie Path(also affects the default storage for session id).
+	CookieDomain string        // Cookie Domain(also affects the default storage for session id).
+
+	// Session
+	SessionMaxAge  time.Duration    // Max TTL for session items.
+	SessionIdName  string           // Session id name.
+	SessionPath    string           // Session Storage directory path for storing session files.
+	SessionStorage gsession.Storage // Session Storage implementer.
+
+	// Logging
+	Logger           *glog.Logger // Logger for server.
+	LogPath          string       // Directory for storing logging files.
+	LogStdout        bool         // Printing logging content to stdout.
+	ErrorStack       bool         // Logging stack information when error.
+	ErrorLogEnabled  bool         // Enable error logging files.
+	ErrorLogPattern  string       // Error log file pattern like: error-{Ymd}.log
+	AccessLogEnabled bool         // Enable access logging files.
+	AccessLogPattern string       // Error log file pattern like: access-{Ymd}.log
+
+	// PProf
+	PProfEnabled bool   // Enable PProf feature.
+	PProfPattern string // PProf service pattern for router, it automatically enables PProf feature if called.
+
+	// Other
+	FormParsingMemory int64    // 表单解析内存限制(byte)
+	NameToUriType     int      // 服务注册时对象和方法名称转换为URI时的规则
+	GzipContentTypes  []string // 允许进行gzip压缩的文件类型
+	DumpRouteMap      bool     // 是否在程序启动时默认打印路由表信息
+	RouterCacheExpire int      // 路由检索缓存过期时间(秒)
 }
 
-// 默认HTTP Server配置
+// defaultServerConfig is the default configuration object for server.
 var defaultServerConfig = ServerConfig{
 	Address:           "",
 	HTTPSAddr:         "",

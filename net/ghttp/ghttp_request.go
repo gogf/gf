@@ -36,13 +36,13 @@ type Request struct {
 	parsedQuery     bool                   // A bool marking whether the GET parameters parsed.
 	parsedBody      bool                   // A bool marking whether the request body parsed.
 	parsedForm      bool                   // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
+	paramsMap       map[string]interface{} // Custom parameters.
 	routerMap       map[string]interface{} // Router parameters map, which might be nil if there're no router parameters.
 	queryMap        map[string]interface{} // Query parameters map, which is nil if there's no query string.
-	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form.
+	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form data from client.
 	bodyMap         map[string]interface{} // Body parameters map, which might be nil if there're no body content.
 	error           error                  // Current executing error of the request.
 	exit            bool                   // A bool marking whether current request is exited.
-	params          map[string]interface{} // Custom parameters.
 	parsedHost      string                 // The parsed host name for current host used by GetHost function.
 	clientIp        string                 // The parsed client ip for current host used by GetClientIp function.
 	bodyContent     []byte                 // Request body content.

@@ -16,7 +16,6 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-// 基本路由功能测试
 func Test_Router_Basic(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)

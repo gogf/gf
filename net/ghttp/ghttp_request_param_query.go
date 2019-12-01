@@ -25,16 +25,19 @@ func (r *Request) SetQuery(key string, value interface{}) {
 // GetQuery retrieves and returns parameter with given name <key> from query string
 // and request body. It returns <def> if <key> does not exist in the query. It returns nil
 // if <def> is not passed.
+//
+// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
+// in order of priority: query < body.
 func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 	r.ParseQuery()
 	r.ParseBody()
-	if len(r.queryMap) > 0 {
-		if v, ok := r.queryMap[key]; ok {
+	if len(r.bodyMap) > 0 {
+		if v, ok := r.bodyMap[key]; ok {
 			return v
 		}
 	}
-	if len(r.bodyMap) > 0 {
-		if v, ok := r.bodyMap[key]; ok {
+	if len(r.queryMap) > 0 {
+		if v, ok := r.queryMap[key]; ok {
 			return v
 		}
 	}
@@ -111,14 +114,18 @@ func (r *Request) GetQueryInterfaces(key string, def ...interface{}) []interface
 // GetQueryMap retrieves and returns all parameters passed from client using HTTP GET method
 // as map. The parameter <kvMap> specifies the keys retrieving from client parameters,
 // the associated values are the default values if the client does not pass.
+//
+// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
+// in order of priority: query < body.
 func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.ParseQuery()
 	r.ParseBody()
-	m := make(map[string]interface{}, len(r.queryMap)+len(r.bodyMap))
-	if len(kvMap) > 0 {
+	var m map[string]interface{}
+	if len(kvMap) > 0 && kvMap[0] != nil {
 		if len(r.queryMap) == 0 && len(r.bodyMap) == 0 {
 			return kvMap[0]
 		}
+		m = make(map[string]interface{}, len(kvMap[0]))
 		if len(r.queryMap) > 0 {
 			for k, v := range kvMap[0] {
 				if postValue, ok := r.queryMap[k]; ok {
@@ -138,6 +145,7 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 			}
 		}
 	} else {
+		m = make(map[string]interface{}, len(r.queryMap)+len(r.bodyMap))
 		for k, v := range r.queryMap {
 			m[k] = v
 		}

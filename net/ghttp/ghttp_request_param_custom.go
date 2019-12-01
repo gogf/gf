@@ -10,18 +10,18 @@ import "github.com/gogf/gf/container/gvar"
 
 // SetParam sets custom parameter with key-value pair.
 func (r *Request) SetParam(key string, value interface{}) {
-	if r.params == nil {
-		r.params = make(map[string]interface{})
+	if r.paramsMap == nil {
+		r.paramsMap = make(map[string]interface{})
 	}
-	r.params[key] = value
+	r.paramsMap[key] = value
 }
 
 // GetParam returns custom parameter with given name <key>.
 // It returns <def> if <key> does not exist.
 // It returns nil if <def> is not passed.
 func (r *Request) GetParam(key string, def ...interface{}) interface{} {
-	if r.params != nil {
-		return r.params[key]
+	if r.paramsMap != nil {
+		return r.paramsMap[key]
 	}
 	if len(def) > 0 {
 		return def[0]

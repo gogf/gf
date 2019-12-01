@@ -12,32 +12,38 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// GetRequestVar retrieves and returns the parameter named <key> passed from client as interface{},
+// GetRequest retrieves and returns the parameter named <key> passed from client as interface{},
 // no matter what HTTP method the client is using. The parameter <def> specifies the default value
 // if the <key> does not exist.
 //
-// Note that the parameter is retrieved in order of: router->get/body->post/body->param.
+// GetRequest is one of the most commonly used functions for retrieving parameters.
+//
+// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
+// in order of priority: router < query < form < body < custom.
 func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
-	v := r.GetRouterValue(key)
-	if v == nil {
-		r.ParseQuery()
-		if len(r.queryMap) > 0 {
-			v, _ = r.queryMap[key]
+	value := r.GetParam(key)
+	if value == nil {
+		r.ParseBody()
+		if len(r.bodyMap) > 0 {
+			value = r.bodyMap[key]
 		}
 	}
-	if v == nil {
-		v = r.GetPost(key)
+	if value == nil {
+		value = r.GetForm(key)
 	}
-	if v == nil {
-		v = r.GetParam(key)
+	if value == nil {
+		value = r.GetQuery(key)
 	}
-	if v != nil {
-		return v
+	if value == nil {
+		value = r.GetRouterValue(key)
+	}
+	if value != nil {
+		return value
 	}
 	if len(def) > 0 {
 		return def[0]
 	}
-	return v
+	return value
 }
 
 // GetRequestVar retrieves and returns the parameter named <key> passed from client as *gvar.Var,
@@ -155,26 +161,70 @@ func (r *Request) GetRequestInterfaces(key string, def ...interface{}) []interfa
 // GetRequestMap retrieves and returns all parameters passed from client as map,
 // no matter what HTTP method the client is using. The parameter <kvMap> specifies the keys
 // retrieving from client parameters, the associated values are the default values if the client
-// does not pass.
+// does not pass the according keys.
+//
+// GetRequestMap is one of the most commonly used functions for retrieving parameters.
+//
+// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
+// in order of priority: router < query < form < body < custom.
 func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.ParseQuery()
 	r.ParseForm()
 	r.ParseBody()
-	m := make(map[string]interface{}, len(r.queryMap)+len(r.formMap)+len(r.bodyMap))
+	var ok, filter bool
+	var length int
+	if len(kvMap) > 0 && kvMap[0] != nil {
+		length = len(kvMap[0])
+		filter = true
+	} else {
+		length = len(r.routerMap) + len(r.queryMap) + len(r.formMap) + len(r.bodyMap) + len(r.paramsMap)
+	}
+	m := make(map[string]interface{}, length)
+	for k, v := range r.routerMap {
+		if filter {
+			if _, ok = kvMap[0][k]; !ok {
+				continue
+			}
+		}
+		m[k] = v
+	}
 	for k, v := range r.queryMap {
+		if filter {
+			if _, ok = kvMap[0][k]; !ok {
+				continue
+			}
+		}
 		m[k] = v
 	}
 	for k, v := range r.formMap {
+		if filter {
+			if _, ok = kvMap[0][k]; !ok {
+				continue
+			}
+		}
 		m[k] = v
 	}
 	for k, v := range r.bodyMap {
+		if filter {
+			if _, ok = kvMap[0][k]; !ok {
+				continue
+			}
+		}
 		m[k] = v
 	}
-	if len(kvMap) > 0 && kvMap[0] != nil {
-		var ok bool
-		for k, _ := range m {
+	for k, v := range r.paramsMap {
+		if filter {
 			if _, ok = kvMap[0][k]; !ok {
-				delete(m, k)
+				continue
+			}
+		}
+		m[k] = v
+	}
+	// Check none exist parameters and assign it with default value.
+	if filter {
+		for k, v := range kvMap[0] {
+			if _, ok = m[k]; !ok {
+				m[k] = v
 			}
 		}
 	}
@@ -188,7 +238,7 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[string]string {
 	requestMap := r.GetRequestMap(kvMap...)
 	if len(requestMap) > 0 {
-		m := make(map[string]string)
+		m := make(map[string]string, len(requestMap))
 		for k, v := range requestMap {
 			m[k] = gconv.String(v)
 		}
@@ -204,7 +254,7 @@ func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[strin
 func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	requestMap := r.GetRequestMap(kvMap...)
 	if len(requestMap) > 0 {
-		m := make(map[string]*gvar.Var)
+		m := make(map[string]*gvar.Var, len(requestMap))
 		for k, v := range requestMap {
 			m[k] = gvar.New(v)
 		}
