@@ -17,17 +17,17 @@ import (
 // It returns nil if <def> is not passed.
 //
 // Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: form < body.
+// in order of priority: form > body.
 func (r *Request) GetPost(key string, def ...interface{}) interface{} {
 	r.ParseForm()
-	r.ParseBody()
-	if len(r.bodyMap) > 0 {
-		if v, ok := r.bodyMap[key]; ok {
+	if len(r.formMap) > 0 {
+		if v, ok := r.formMap[key]; ok {
 			return v
 		}
 	}
-	if len(r.formMap) > 0 {
-		if v, ok := r.formMap[key]; ok {
+	r.ParseBody()
+	if len(r.bodyMap) > 0 {
+		if v, ok := r.bodyMap[key]; ok {
 			return v
 		}
 	}
@@ -106,7 +106,7 @@ func (r *Request) GetPostInterfaces(key string, def ...interface{}) []interface{
 // the associated values are the default values if the client does not pass.
 //
 // Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: form < body.
+// in order of priority: form > body.
 func (r *Request) GetPostMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.ParseForm()
 	r.ParseBody()
@@ -115,7 +115,7 @@ func (r *Request) GetPostMap(kvMap ...map[string]interface{}) map[string]interfa
 		filter = true
 	}
 	m := make(map[string]interface{}, len(r.formMap)+len(r.bodyMap))
-	for k, v := range r.formMap {
+	for k, v := range r.bodyMap {
 		if filter {
 			if _, ok = kvMap[0][k]; !ok {
 				continue
@@ -123,7 +123,7 @@ func (r *Request) GetPostMap(kvMap ...map[string]interface{}) map[string]interfa
 		}
 		m[k] = v
 	}
-	for k, v := range r.bodyMap {
+	for k, v := range r.formMap {
 		if filter {
 			if _, ok = kvMap[0][k]; !ok {
 				continue
