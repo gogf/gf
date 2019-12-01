@@ -209,6 +209,11 @@ func (r *Request) ParseForm() {
 			if r.formMap, err = gstr.Parse(params); err != nil {
 				panic(err)
 			}
+		} else {
+			r.ParseBody()
+			if len(r.bodyMap) > 0 {
+				r.formMap = r.bodyMap
+			}
 		}
 	}
 }

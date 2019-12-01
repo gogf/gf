@@ -106,11 +106,11 @@ func (r *Request) GetFormInterfaces(key string, def ...interface{}) []interface{
 // the associated values are the default values if the client does not pass.
 func (r *Request) GetFormMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.ParseForm()
-	if len(kvMap) > 0 {
+	if len(kvMap) > 0 && kvMap[0] != nil {
 		if len(r.formMap) == 0 {
 			return kvMap[0]
 		}
-		m := make(map[string]interface{})
+		m := make(map[string]interface{}, len(kvMap[0]))
 		for k, defValue := range kvMap[0] {
 			if postValue, ok := r.formMap[k]; ok {
 				m[k] = postValue
