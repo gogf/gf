@@ -120,6 +120,7 @@ const (
 	gEXCEPTION_EXIT          = "exit"
 	gEXCEPTION_EXIT_ALL      = "exit_all"
 	gEXCEPTION_EXIT_HOOK     = "exit_hook"
+	gROUTE_CACHE_DURATION    = time.Hour
 )
 
 var (

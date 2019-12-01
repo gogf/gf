@@ -84,11 +84,9 @@ type ServerConfig struct {
 	PProfPattern string // PProf service pattern for router, it automatically enables PProf feature if called.
 
 	// Other
-	FormParsingMemory int64    // 表单解析内存限制(byte)
-	NameToUriType     int      // 服务注册时对象和方法名称转换为URI时的规则
-	GzipContentTypes  []string // 允许进行gzip压缩的文件类型
-	DumpRouteMap      bool     // 是否在程序启动时默认打印路由表信息
-	RouterCacheExpire int      // 路由检索缓存过期时间(秒)
+	FormParsingMemory int64 // Max memory in bytes which can be used for parsing multimedia form.
+	NameToUriType     int   // Type for converting struct method name to URI when registering routes.
+	DumpRouteMap      bool  // Whether automatically dump route map when server starts.
 }
 
 // defaultServerConfig is the default configuration object for server.
@@ -121,8 +119,7 @@ var defaultServerConfig = ServerConfig{
 	AccessLogEnabled:  false,
 	AccessLogPattern:  "access-{Ymd}.log",
 	DumpRouteMap:      true,
-	FormParsingMemory: 1024 * 1024 * 1024,
-	RouterCacheExpire: 60,
+	FormParsingMemory: 100 * 1024 * 1024, // 100MB
 	Rewrites:          make(map[string]string),
 }
 

@@ -32,7 +32,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		}
 		//intlog.Printf("cannot find HTTP handler for: %s, %s, %s", r.Method, r.URL.Path, r.GetHost())
 		return nil
-	}, s.config.RouterCacheExpire*1000)
+	}, gROUTE_CACHE_DURATION)
 	if value != nil {
 		item := value.(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe
