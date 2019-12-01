@@ -27,17 +27,17 @@ func (r *Request) SetQuery(key string, value interface{}) {
 // if <def> is not passed.
 //
 // Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: query < body.
+// in order of priority: query > body.
 func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 	r.ParseQuery()
-	r.ParseBody()
-	if len(r.bodyMap) > 0 {
-		if v, ok := r.bodyMap[key]; ok {
+	if len(r.queryMap) > 0 {
+		if v, ok := r.queryMap[key]; ok {
 			return v
 		}
 	}
-	if len(r.queryMap) > 0 {
-		if v, ok := r.queryMap[key]; ok {
+	r.ParseBody()
+	if len(r.bodyMap) > 0 {
+		if v, ok := r.bodyMap[key]; ok {
 			return v
 		}
 	}
@@ -116,7 +116,7 @@ func (r *Request) GetQueryInterfaces(key string, def ...interface{}) []interface
 // the associated values are the default values if the client does not pass.
 //
 // Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: query < body.
+// in order of priority: query > body.
 func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.ParseQuery()
 	r.ParseBody()
@@ -126,15 +126,6 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 			return kvMap[0]
 		}
 		m = make(map[string]interface{}, len(kvMap[0]))
-		if len(r.queryMap) > 0 {
-			for k, v := range kvMap[0] {
-				if postValue, ok := r.queryMap[k]; ok {
-					m[k] = postValue
-				} else {
-					m[k] = v
-				}
-			}
-		}
 		if len(r.bodyMap) > 0 {
 			for k, v := range kvMap[0] {
 				if postValue, ok := r.bodyMap[k]; ok {
@@ -144,12 +135,21 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 				}
 			}
 		}
+		if len(r.queryMap) > 0 {
+			for k, v := range kvMap[0] {
+				if postValue, ok := r.queryMap[k]; ok {
+					m[k] = postValue
+				} else {
+					m[k] = v
+				}
+			}
+		}
 	} else {
 		m = make(map[string]interface{}, len(r.queryMap)+len(r.bodyMap))
-		for k, v := range r.queryMap {
+		for k, v := range r.bodyMap {
 			m[k] = v
 		}
-		for k, v := range r.bodyMap {
+		for k, v := range r.queryMap {
 			m[k] = v
 		}
 	}
