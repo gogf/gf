@@ -42,11 +42,16 @@ func Test_ConfigFromMap(t *testing.T) {
 func Test_SetConfigWithMap(t *testing.T) {
 	gtest.Case(t, func() {
 		m := g.Map{
-			"address":         ":8199",
-			"readTimeout":     "60s",
-			"indexFiles":      g.Slice{"index.php", "main.php"},
-			"errorLogEnabled": true,
-			"cookieMaxAge":    "1y",
+			"Address": ":8199",
+			//"ServerRoot":       "/var/www/MyServerRoot",
+			"IndexFiles":       g.Slice{"index.php", "main.php"},
+			"AccessLogEnabled": true,
+			"ErrorLogEnabled":  true,
+			"PProfEnabled":     true,
+			"LogPath":          "/var/log/MyServerLog",
+			"SessionIdName":    "MySessionId",
+			"SessionPath":      "/tmp/MySessionStoragePath",
+			"SessionMaxAge":    24 * time.Hour,
 		}
 		s := g.Server()
 		err := s.SetConfigWithMap(m)

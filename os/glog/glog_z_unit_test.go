@@ -15,9 +15,10 @@ func Test_SetConfigWithMap(t *testing.T) {
 	gtest.Case(t, func() {
 		l := New()
 		m := map[string]interface{}{
-			"path":   "/tmp/log",
-			"level":  LEVEL_PROD,
-			"stdout": false,
+			"path":     "/var/log",
+			"level":    "all",
+			"stdout":   false,
+			"StStatus": 0,
 		}
 		err := l.SetConfigWithMap(m)
 		gtest.Assert(err, nil)
