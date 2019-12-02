@@ -3,7 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 域名服务注册管理.
 
 package ghttp
 
@@ -115,7 +114,7 @@ func (d *Domain) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 }
 
 // 注册中间件，绑定到全局路由规则("/*")上，中间件参数支持多个。
-func (d *Domain) AddMiddleware(handlers ...HandlerFunc) {
+func (d *Domain) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	for domain, _ := range d.m {
 		d.s.BindMiddleware(gDEFAULT_MIDDLEWARE_PATTERN+"@"+domain, handlers...)
 	}
