@@ -8,11 +8,11 @@ import (
 
 func main() {
 	s := g.Server()
-	s.Group("/", func(g *ghttp.RouterGroup) {
-		g.ALL("/", func(r *ghttp.Request) {
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/", func(r *ghttp.Request) {
 			r.Response.Write("halo world!")
 		})
-		g.ALL("/log/handler", func(r *ghttp.Request) {
+		group.ALL("/log/handler", func(r *ghttp.Request) {
 			r.Response.WriteStatus(http.StatusNotFound, "File Not Found!")
 		})
 	})

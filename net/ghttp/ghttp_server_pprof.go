@@ -31,12 +31,12 @@ func (s *Server) EnablePProf(pattern ...string) {
 	up := &utilPProf{}
 	_, _, uri, _ := s.parsePattern(p)
 	uri = strings.TrimRight(uri, "/")
-	s.Group(uri, func(g *RouterGroup) {
-		g.ALL("/*action", up.Index)
-		g.ALL("/cmdline", up.Cmdline)
-		g.ALL("/profile", up.Profile)
-		g.ALL("/symbol", up.Symbol)
-		g.ALL("/trace", up.Trace)
+	s.Group(uri, func(group *RouterGroup) {
+		group.ALL("/*action", up.Index)
+		group.ALL("/cmdline", up.Cmdline)
+		group.ALL("/profile", up.Profile)
+		group.ALL("/symbol", up.Symbol)
+		group.ALL("/trace", up.Trace)
 	})
 }
 

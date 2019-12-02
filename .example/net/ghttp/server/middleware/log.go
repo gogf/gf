@@ -30,12 +30,12 @@ func MiddlewareLog(r *ghttp.Request) {
 
 func main() {
 	s := g.Server()
-	s.Group("/", func(g *ghttp.RouterGroup) {
-		g.Middleware(MiddlewareLog)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareLog)
 	})
-	s.Group("/api.v2", func(g *ghttp.RouterGroup) {
-		g.Middleware(MiddlewareAuth, MiddlewareCORS)
-		g.ALL("/user/list", func(r *ghttp.Request) {
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareAuth, MiddlewareCORS)
+		group.ALL("/user/list", func(r *ghttp.Request) {
 			panic("custom error")
 		})
 	})
