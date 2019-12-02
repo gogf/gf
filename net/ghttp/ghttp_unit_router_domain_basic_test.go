@@ -332,8 +332,8 @@ func Test_Router_DomainGroup(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
-	d.Group("/", func(g *ghttp.RouterGroup) {
-		g.Group("/app", func(gApp *ghttp.RouterGroup) {
+	d.Group("/", func(group *ghttp.RouterGroup) {
+		group.Group("/app", func(gApp *ghttp.RouterGroup) {
 			gApp.GET("/{table}/list/{page}.html", func(r *ghttp.Request) {
 				intlog.Print("/{table}/list/{page}.html")
 				r.Response.Write(r.Get("table"), "&", r.Get("page"))

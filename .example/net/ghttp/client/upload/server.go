@@ -70,10 +70,10 @@ func UploadShowBatch(r *ghttp.Request) {
 
 func main() {
 	s := g.Server()
-	s.Group("/upload", func(g *ghttp.RouterGroup) {
-		g.ALL("/", Upload)
-		g.ALL("/show", UploadShow)
-		g.ALL("/batch", UploadShowBatch)
+	s.Group("/upload", func(group *ghttp.RouterGroup) {
+		group.ALL("/", Upload)
+		group.ALL("/show", UploadShow)
+		group.ALL("/batch", UploadShowBatch)
 	})
 	s.SetPort(8199)
 	s.Run()

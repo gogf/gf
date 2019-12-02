@@ -134,16 +134,16 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 func Test_BindMiddleware_Must_Be_Called(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	s.Group("/", func(g *ghttp.RouterGroup) {
-		g.Middleware(func(r *ghttp.Request) {
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
 			r.Response.Write("1")
 			r.Middleware.Next()
 		})
-		g.Middleware(func(r *ghttp.Request) {
+		group.Middleware(func(r *ghttp.Request) {
 			r.Middleware.Next()
 			r.Response.Write("2")
 		})
-		g.ALL("/test", func(r *ghttp.Request) {
+		group.ALL("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
 	})
@@ -166,13 +166,13 @@ func Test_BindMiddleware_Must_Be_Called(t *testing.T) {
 func Test_Middleware_With_Static(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	s.Group("/", func(g *ghttp.RouterGroup) {
-		g.Middleware(func(r *ghttp.Request) {
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
 			r.Response.Write("1")
 			r.Middleware.Next()
 			r.Response.Write("2")
 		})
-		g.ALL("/user/list", func(r *ghttp.Request) {
+		group.ALL("/user/list", func(r *ghttp.Request) {
 			r.Response.Write("list")
 		})
 	})
@@ -196,12 +196,12 @@ func Test_Middleware_With_Static(t *testing.T) {
 func Test_Middleware_Status(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	s.Group("/", func(g *ghttp.RouterGroup) {
-		g.Middleware(func(r *ghttp.Request) {
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
 			r.Middleware.Next()
 			r.Response.WriteOver(r.Response.Status)
 		})
-		g.ALL("/user/list", func(r *ghttp.Request) {
+		group.ALL("/user/list", func(r *ghttp.Request) {
 			r.Response.Write("list")
 		})
 	})
@@ -228,23 +228,23 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	a := garray.New(true)
-	s.Group("/", func(g *ghttp.RouterGroup) {
-		g.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 			a.Append(1)
 			fmt.Println("HOOK_BEFORE_SERVE")
 			r.Response.Write("a")
 		})
-		g.Hook("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
+		group.Hook("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
 			a.Append(1)
 			fmt.Println("HOOK_AFTER_SERVE")
 			r.Response.Write("b")
 		})
-		g.Middleware(func(r *ghttp.Request) {
+		group.Middleware(func(r *ghttp.Request) {
 			r.Response.Write("1")
 			r.Middleware.Next()
 			r.Response.Write("2")
 		})
-		g.ALL("/user/list", func(r *ghttp.Request) {
+		group.ALL("/user/list", func(r *ghttp.Request) {
 			r.Response.Write("list")
 		})
 	})
@@ -594,9 +594,9 @@ func MiddlewareCORS(r *ghttp.Request) {
 func Test_Middleware_CORSAndAuth(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	s.Group("/api.v2", func(g *ghttp.RouterGroup) {
-		g.Middleware(MiddlewareAuth, MiddlewareCORS)
-		g.ALL("/user/list", func(r *ghttp.Request) {
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareAuth, MiddlewareCORS)
+		group.ALL("/user/list", func(r *ghttp.Request) {
 			r.Response.Write("list")
 		})
 	})

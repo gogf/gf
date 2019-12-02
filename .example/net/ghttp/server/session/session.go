@@ -8,7 +8,7 @@ import (
 
 func main() {
 	s := g.Server()
-	s.Group("/", func(g *ghttp.RouterGroup) {
+	s.Group("/", func(group *ghttp.RouterGroup) {
 		g.GET("/set", func(r *ghttp.Request) {
 			r.Session.Set("time", gtime.Second())
 			r.Response.Write("ok")

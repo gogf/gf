@@ -19,14 +19,14 @@ import (
 func Test_Router_Group_Hook1(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
-	g := s.Group("/api")
-	g.GET("/handler", func(r *ghttp.Request) {
+	group := s.Group("/api")
+	group.GET("/handler", func(r *ghttp.Request) {
 		r.Response.Write("1")
 	})
-	g.ALL("/handler", func(r *ghttp.Request) {
+	group.ALL("/handler", func(r *ghttp.Request) {
 		r.Response.Write("0")
 	}, ghttp.HOOK_BEFORE_SERVE)
-	g.ALL("/handler", func(r *ghttp.Request) {
+	group.ALL("/handler", func(r *ghttp.Request) {
 		r.Response.Write("2")
 	}, ghttp.HOOK_AFTER_SERVE)
 
