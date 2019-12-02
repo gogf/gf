@@ -236,6 +236,21 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
+	/** 比较路由规则长度，越长的规则优先级越高，模糊/命名规则不算长度 **/
+	var uriNew, uriOld string
+	uriNew, _ = gregex.ReplaceString(`\{[^/]+\}`, "", newItem.router.Uri)
+	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)
+	uriNew, _ = gregex.ReplaceString(`\*[^/]+`, "", uriNew)
+	uriOld, _ = gregex.ReplaceString(`\{[^/]+\}`, "", oldItem.router.Uri)
+	uriOld, _ = gregex.ReplaceString(`:[^/]+`, "", uriOld)
+	uriOld, _ = gregex.ReplaceString(`\*[^/]+`, "", uriOld)
+	if len(uriNew) > len(uriOld) {
+		return true
+	}
+	if len(uriNew) < len(uriOld) {
+		return false
+	}
+
 	/* 模糊规则数量相等，后续不用再判断*规则的数量比较了 */
 
 	// 比较HTTP METHOD，更精准的优先级更高

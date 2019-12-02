@@ -198,3 +198,35 @@ func Test_Router_404(t *testing.T) {
 		gtest.Assert(resp.StatusCode, 404)
 	})
 }
+
+func Test_Router_Priority(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/admin", func(r *ghttp.Request) {
+		r.Response.Write("admin")
+	})
+	s.BindHandler("/admin-{page}", func(r *ghttp.Request) {
+		r.Response.Write("admin-{page}")
+	})
+	s.BindHandler("/admin-goods", func(r *ghttp.Request) {
+		r.Response.Write("admin-goods")
+	})
+	s.BindHandler("/admin-goods-{page}", func(r *ghttp.Request) {
+		r.Response.Write("admin-goods-{page}")
+	})
+	s.SetPort(p)
+	s.SetDumpRouteMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/admin"), "admin")
+		gtest.Assert(client.GetContent("/admin-1"), "admin-{page}")
+		gtest.Assert(client.GetContent("/admin-goods"), "admin-goods")
+		gtest.Assert(client.GetContent("/admin-goods-2"), "admin-goods-{page}")
+	})
+}
