@@ -40,3 +40,28 @@ func Test_Config(t *testing.T) {
 		gtest.Assert(result, "name:gf")
 	})
 }
+
+func Test_ConfigWithMap(t *testing.T) {
+	gtest.Case(t, func() {
+		view := gview.New()
+		err := view.SetConfigWithMap(g.Map{
+			"Paths":       []string{gfile.Join(gdebug.CallerDirectory(), "testdata", "config")},
+			"DefaultFile": "test.html",
+			"Delimiters":  []string{"${", "}"},
+			"Data": g.Map{
+				"name": "gf",
+			},
+		})
+		gtest.Assert(err, nil)
+
+		str := `hello ${.name},version:${.version}`
+		view.Assigns(g.Map{"version": "1.7.0"})
+		result, err := view.ParseContent(str, nil)
+		gtest.Assert(err, nil)
+		gtest.Assert(result, "hello gf,version:1.7.0")
+
+		result, err = view.ParseDefault()
+		gtest.Assert(err, nil)
+		gtest.Assert(result, "name:gf")
+	})
+}
