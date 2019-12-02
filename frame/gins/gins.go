@@ -140,10 +140,10 @@ func Log(name ...string) *glog.Logger {
 		if Config().Available() {
 			var m map[string]interface{}
 			// It firstly searches the configuration of the instance name.
-			if m = Config().GetMap(fmt.Sprintf(`logging.%s`, instanceName)); m == nil {
+			if m = Config().GetMap(fmt.Sprintf(`logger.%s`, instanceName)); m == nil {
 				// If the configuration for the instance does not exist,
 				// it uses the default logging configuration.
-				m = Config().GetMap("logging")
+				m = Config().GetMap("logger")
 			}
 			if m != nil {
 				if err := logger.SetConfigWithMap(m); err != nil {
