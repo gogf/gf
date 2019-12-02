@@ -93,10 +93,10 @@ func View(name ...string) *gview.View {
 		if Config().Available() {
 			var m map[string]interface{}
 			// It firstly searches the configuration of the instance name.
-			if m = Config().GetMap(fmt.Sprintf(`view.%s`, instanceName)); m == nil {
+			if m = Config().GetMap(fmt.Sprintf(`viewer.%s`, instanceName)); m == nil {
 				// If the configuration for the instance does not exist,
 				// it uses the default view configuration.
-				m = Config().GetMap("view")
+				m = Config().GetMap("viewer")
 			}
 			if m != nil {
 				if err := view.SetConfigWithMap(m); err != nil {
