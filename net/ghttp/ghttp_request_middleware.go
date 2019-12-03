@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/util/gutil"
 )
 
-// Middleware is the plugin for request handling.
+// Middleware is the plugin for request workflow management.
 type Middleware struct {
 	served  bool     // Is the request served, which is used for checking response status 404.
 	request *Request // The request object pointer.
@@ -37,9 +37,8 @@ func (m *Middleware) Next() {
 			continue
 		}
 		// Router values switching.
-		for k, v := range item.values {
-			m.request.routerMap[k] = v
-		}
+		m.request.routerMap = item.values
+		// Current router switching.
 		m.request.Router = item.handler.router
 
 		gutil.TryCatch(func() {

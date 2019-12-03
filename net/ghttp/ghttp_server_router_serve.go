@@ -30,7 +30,6 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		if parsedItems != nil {
 			return &handlerCacheItem{parsedItems, hasHook, hasServe}
 		}
-		//intlog.Printf("cannot find HTTP handler for: %s, %s, %s", r.Method, r.URL.Path, r.GetHost())
 		return nil
 	}, gROUTE_CACHE_DURATION)
 	if value != nil {
@@ -109,9 +108,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 				// 服务路由函数只能添加一次，将重复判断放在这里提高检索效率
 				if hasServe {
 					switch item.itemType {
-					case gHANDLER_TYPE_HANDLER,
-						gHANDLER_TYPE_OBJECT,
-						gHANDLER_TYPE_CONTROLLER:
+					case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
 						continue
 					}
 				}

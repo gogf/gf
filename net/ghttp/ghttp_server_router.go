@@ -63,11 +63,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	handler.itemId = handlerIdGenerator.Add(1)
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
-		glog.Error("invalid pattern:", pattern, err)
+		glog.Fatal("invalid pattern:", pattern, err)
 		return
 	}
 	if len(uri) == 0 || uri[0] != '/' {
-		glog.Error("invalid pattern:", pattern, "URI should lead with '/'")
+		glog.Fatal("invalid pattern:", pattern, "URI should lead with '/'")
 		return
 	}
 	// 注册地址记录及重复注册判断
@@ -75,7 +75,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	switch handler.itemType {
 	case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
 		if item, ok := s.routesMap[regKey]; ok {
-			glog.Errorf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
+			glog.Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
 			return
 		}
 	}
@@ -237,6 +237,8 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 	}
 
 	/** 比较路由规则长度，越长的规则优先级越高，模糊/命名规则不算长度 **/
+
+	// 例如：/admin-goods-{page} 比 /admin-{page} 优先级高
 	var uriNew, uriOld string
 	uriNew, _ = gregex.ReplaceString(`\{[^/]+\}`, "", newItem.router.Uri)
 	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)

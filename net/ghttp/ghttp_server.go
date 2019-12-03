@@ -102,12 +102,12 @@ type (
 )
 
 const (
-	SERVER_STATUS_STOPPED    = 0                    // Server状态：停止
-	SERVER_STATUS_RUNNING    = 1                    // Server状态：运行
-	HOOK_BEFORE_SERVE        = "HOOK_BEFORE_SERVE"  // 回调事件，在执行服务前
-	HOOK_AFTER_SERVE         = "HOOK_AFTER_SERVE"   // 回调事件，在执行服务后
-	HOOK_BEFORE_OUTPUT       = "HOOK_BEFORE_OUTPUT" // 回调事件，在输出结果前
-	HOOK_AFTER_OUTPUT        = "HOOK_AFTER_OUTPUT"  // 回调事件，在输出结果后
+	SERVER_STATUS_STOPPED    = 0
+	SERVER_STATUS_RUNNING    = 1
+	HOOK_BEFORE_SERVE        = "HOOK_BEFORE_SERVE"
+	HOOK_AFTER_SERVE         = "HOOK_AFTER_SERVE"
+	HOOK_BEFORE_OUTPUT       = "HOOK_BEFORE_OUTPUT"
+	HOOK_AFTER_OUTPUT        = "HOOK_AFTER_OUTPUT"
 	HTTP_METHODS             = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
 	gDEFAULT_SERVER          = "default"
 	gDEFAULT_DOMAIN          = "default"

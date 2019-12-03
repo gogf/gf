@@ -37,7 +37,7 @@ type Request struct {
 	parsedBody      bool                   // A bool marking whether the request body parsed.
 	parsedForm      bool                   // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
 	paramsMap       map[string]interface{} // Custom parameters.
-	routerMap       map[string]interface{} // Router parameters map, which might be nil if there're no router parameters.
+	routerMap       map[string]string      // Router parameters map, which might be nil if there're no router parameters.
 	queryMap        map[string]interface{} // Query parameters map, which is nil if there's no query string.
 	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form data from client.
 	bodyMap         map[string]interface{} // Body parameters map, which might be nil if there're no body content.
@@ -54,7 +54,6 @@ type Request struct {
 // newRequest creates and returns a new request object.
 func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request := &Request{
-		routerMap: make(map[string]interface{}),
 		Server:    s,
 		Request:   r,
 		Response:  newResponse(s, w),
