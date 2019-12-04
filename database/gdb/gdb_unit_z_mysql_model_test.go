@@ -1247,7 +1247,7 @@ func Test_Model_FieldsEx(t *testing.T) {
 		gtest.Assert(r[1]["nickname"], "name_2")
 		gtest.Assert(r[1]["create_time"], "")
 	})
-	// Filter.
+	// Update.
 	gtest.Case(t, func() {
 		r, err := db.Table(table).FieldsEx("password").Data(g.Map{"nickname": "123", "password": "456"}).Where("id", 3).Update()
 		gtest.Assert(err, nil)
