@@ -117,7 +117,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 					// 注意当不带任何动态路由规则时，len(match) == 1
 					if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 0 {
 						parsedItem := &handlerParsedItem{item, nil}
-						// 如果需要query匹配，那么需要重新正则解析URL
+						// 如果需要路由规则中带有URI名称匹配，那么需要重新正则解析URL
 						if len(item.router.RegNames) > 0 {
 							if len(match) > len(item.router.RegNames) {
 								parsedItem.values = make(map[string]string)

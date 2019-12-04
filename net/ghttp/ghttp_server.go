@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/debug/gdebug"
 	"net/http"
 	"os"
 	"reflect"
@@ -62,15 +63,16 @@ type (
 
 	// 路由函数注册信息
 	handlerItem struct {
-		itemId   int                // 用于标识该注册函数的唯一性ID
-		itemName string             // 注册的函数名称信息(用于路由信息打印)
-		itemType int                // 注册函数类型(对象/函数/控制器/中间件/钩子函数)
-		itemFunc HandlerFunc        // 函数内存地址(与以上两个参数二选一)
-		initFunc HandlerFunc        // 初始化请求回调函数(对象注册方式下有效)
-		shutFunc HandlerFunc        // 完成请求回调函数(对象注册方式下有效)
-		ctrlInfo *handlerController // 控制器服务函数反射信息
-		hookName string             // 钩子类型名称(注册函数类型为钩子函数下有效)
-		router   *Router            // 注册时绑定的路由对象
+		itemId     int                // 用于标识该注册函数的唯一性ID
+		itemName   string             // 注册的函数名称信息(用于路由信息打印)
+		itemType   int                // 注册函数类型(对象/函数/控制器/中间件/钩子函数)
+		itemFunc   HandlerFunc        // 函数内存地址(与以上两个参数二选一)
+		initFunc   HandlerFunc        // 初始化请求回调函数(对象注册方式下有效)
+		shutFunc   HandlerFunc        // 完成请求回调函数(对象注册方式下有效)
+		middleware []HandlerFunc      // 绑定的中间件列表
+		ctrlInfo   *handlerController // 控制器服务函数反射信息
+		hookName   string             // 钩子类型名称(注册函数类型为钩子函数下有效)
+		router     *Router            // 注册时绑定的路由对象
 	}
 
 	// 根据特定URL.Path解析后的路由检索结果项
@@ -317,12 +319,13 @@ func (s *Server) Start() error {
 // 打印展示路由表
 func (s *Server) DumpRoutesMap() {
 	if s.config.DumpRouteMap && len(s.routesMap) > 0 {
-		glog.Header(false).Println(fmt.Sprintf("\n%s", s.GetRouteMap()))
+		glog.Header(false).Println(fmt.Sprintf("\n%s", s.getRouteMapString()))
 	}
 }
 
 // 获得路由表(格式化字符串)
-func (s *Server) GetRouteMap() string {
+func (s *Server) getRouteMapString() string {
+	// Route table for dumping.
 	type tableItem struct {
 		middleware string
 		domain     string
@@ -342,12 +345,11 @@ func (s *Server) GetRouteMap() string {
 		tablewriter.ALIGN_CENTER,
 		tablewriter.ALIGN_CENTER,
 		tablewriter.ALIGN_CENTER,
-		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_CENTER,
 		tablewriter.ALIGN_CENTER,
 		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_LEFT,
-		tablewriter.ALIGN_CENTER,
 	})
 
 	m := make(map[string]*garray.SortedArray)
@@ -363,10 +365,20 @@ func (s *Server) GetRouteMap() string {
 				priority:   len(registeredItems) - index - 1,
 			}
 			if item.handler.itemType == gHANDLER_TYPE_MIDDLEWARE {
-				item.middleware = "MIDDLEWARE"
+				item.middleware = "GLOBAL MIDDLEWARE"
 			}
+			if len(item.handler.middleware) > 0 {
+				for _, v := range item.handler.middleware {
+					if item.middleware != "" {
+						item.middleware += ","
+					}
+					item.middleware += gdebug.FuncName(v)
+				}
+			}
+			// If the domain does not exist in the dump map, it create the map.
+			// The value of the map is a custom sorted array.
 			if _, ok := m[item.domain]; !ok {
-				// 注意排序函数的逻辑，从小到达排序
+				// Sort in ASC order.
 				m[item.domain] = garray.NewSortedArraySize(100, func(v1, v2 interface{}) int {
 					item1 := v1.(*tableItem)
 					item2 := v2.(*tableItem)

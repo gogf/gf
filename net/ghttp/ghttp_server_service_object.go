@@ -19,7 +19,35 @@ import (
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
 // 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写
-func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) {
+func (s *Server) BindObject(pattern string, object interface{}, method ...string) {
+	bindMethod := ""
+	if len(method) > 0 {
+		bindMethod = method[0]
+	}
+	s.doBindObject(pattern, object, bindMethod, nil)
+}
+
+// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面，
+// 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
+func (s *Server) BindObjectMethod(pattern string, object interface{}, method string) {
+	s.doBindObjectMethod(pattern, object, method, nil)
+}
+
+// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面,
+// 需要注意对象方法的定义必须按照 ghttp.HandlerFunc 来定义
+func (s *Server) BindObjectRest(pattern string, object interface{}) {
+	s.doBindObjectRest(pattern, object, nil)
+}
+
+func (s *Server) doBindObject(pattern string, object interface{}, method string, middleware []HandlerFunc) {
+	// Convert input method to map for convenience and high performance searching.
+	var methodMap map[string]bool
+	if len(method) > 0 {
+		methodMap = make(map[string]bool)
+		for _, v := range strings.Split(method, ",") {
+			methodMap[strings.TrimSpace(v)] = true
+		}
+	}
 	// 当pattern中的method为all时，去掉该method，以便于后续方法判断
 	domain, method, path, err := s.parsePattern(pattern)
 	if err != nil {
@@ -30,15 +58,8 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 		pattern = s.serveHandlerKey("", path, domain)
 	}
 
-	methodMap := (map[string]bool)(nil)
-	if len(methods) > 0 {
-		methodMap = make(map[string]bool)
-		for _, v := range strings.Split(methods[0], ",") {
-			methodMap[strings.TrimSpace(v)] = true
-		}
-	}
 	m := make(handlerMap)
-	v := reflect.ValueOf(obj)
+	v := reflect.ValueOf(object)
 	t := v.Type()
 	sname := t.Elem().Name()
 	initFunc := (func(*Request))(nil)
@@ -78,11 +99,12 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 		}
 		key := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
 		m[key] = &handlerItem{
-			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
-			itemType: gHANDLER_TYPE_OBJECT,
-			itemFunc: itemFunc,
-			initFunc: initFunc,
-			shutFunc: shutFunc,
+			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+			itemType:   gHANDLER_TYPE_OBJECT,
+			itemFunc:   itemFunc,
+			initFunc:   initFunc,
+			shutFunc:   shutFunc,
+			middleware: middleware,
 		}
 		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI。
 		// 注意，当pattern带有内置变量时，不会自动加该路由。
@@ -93,11 +115,12 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 				k = "/" + k
 			}
 			m[k] = &handlerItem{
-				itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
-				itemType: gHANDLER_TYPE_OBJECT,
-				itemFunc: itemFunc,
-				initFunc: initFunc,
-				shutFunc: shutFunc,
+				itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+				itemType:   gHANDLER_TYPE_OBJECT,
+				itemFunc:   itemFunc,
+				initFunc:   initFunc,
+				shutFunc:   shutFunc,
+				middleware: middleware,
 			}
 		}
 	}
@@ -106,9 +129,9 @@ func (s *Server) BindObject(pattern string, obj interface{}, methods ...string) 
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面，
 // 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
-func (s *Server) BindObjectMethod(pattern string, obj interface{}, method string) {
+func (s *Server) doBindObjectMethod(pattern string, object interface{}, method string, middleware []HandlerFunc) {
 	m := make(handlerMap)
-	v := reflect.ValueOf(obj)
+	v := reflect.ValueOf(object)
 	t := v.Type()
 	sname := t.Elem().Name()
 	mname := strings.TrimSpace(method)
@@ -139,21 +162,20 @@ func (s *Server) BindObjectMethod(pattern string, obj interface{}, method string
 	}
 	key := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
 	m[key] = &handlerItem{
-		itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
-		itemType: gHANDLER_TYPE_OBJECT,
-		itemFunc: itemFunc,
-		initFunc: initFunc,
-		shutFunc: shutFunc,
+		itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+		itemType:   gHANDLER_TYPE_OBJECT,
+		itemFunc:   itemFunc,
+		initFunc:   initFunc,
+		shutFunc:   shutFunc,
+		middleware: middleware,
 	}
 
 	s.bindHandlerByMap(m)
 }
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面,
-// 需要注意对象方法的定义必须按照 ghttp.HandlerFunc 来定义
-func (s *Server) BindObjectRest(pattern string, obj interface{}) {
+func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware []HandlerFunc) {
 	m := make(handlerMap)
-	v := reflect.ValueOf(obj)
+	v := reflect.ValueOf(object)
 	t := v.Type()
 	sname := t.Elem().Name()
 	initFunc := (func(*Request))(nil)
@@ -184,11 +206,12 @@ func (s *Server) BindObjectRest(pattern string, obj interface{}) {
 		}
 		key := s.mergeBuildInNameToPattern(mname+":"+pattern, sname, mname, false)
 		m[key] = &handlerItem{
-			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
-			itemType: gHANDLER_TYPE_OBJECT,
-			itemFunc: itemFunc,
-			initFunc: initFunc,
-			shutFunc: shutFunc,
+			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+			itemType:   gHANDLER_TYPE_OBJECT,
+			itemFunc:   itemFunc,
+			initFunc:   initFunc,
+			shutFunc:   shutFunc,
+			middleware: middleware,
 		}
 	}
 	s.bindHandlerByMap(m)

@@ -35,10 +35,22 @@ func (d *Domain) BindHandler(pattern string, handler HandlerFunc) {
 	}
 }
 
+func (d *Domain) doBindHandler(pattern string, handler HandlerFunc, middleware []HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.doBindHandler(pattern+"@"+domain, handler, middleware)
+	}
+}
+
 // 执行对象方法
 func (d *Domain) BindObject(pattern string, obj interface{}, methods ...string) {
 	for domain, _ := range d.m {
 		d.s.BindObject(pattern+"@"+domain, obj, methods...)
+	}
+}
+
+func (d *Domain) doBindObject(pattern string, obj interface{}, methods string, middleware []HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.doBindObject(pattern+"@"+domain, obj, methods, middleware)
 	}
 }
 
@@ -49,10 +61,22 @@ func (d *Domain) BindObjectMethod(pattern string, obj interface{}, method string
 	}
 }
 
+func (d *Domain) doBindObjectMethod(pattern string, obj interface{}, method string, middleware []HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.doBindObjectMethod(pattern+"@"+domain, obj, method, middleware)
+	}
+}
+
 // RESTful执行对象注册
 func (d *Domain) BindObjectRest(pattern string, obj interface{}) {
 	for domain, _ := range d.m {
 		d.s.BindObjectRest(pattern+"@"+domain, obj)
+	}
+}
+
+func (d *Domain) doBindObjectRest(pattern string, obj interface{}, middleware []HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.doBindObjectRest(pattern+"@"+domain, obj, middleware)
 	}
 }
 
@@ -63,6 +87,12 @@ func (d *Domain) BindController(pattern string, c Controller, methods ...string)
 	}
 }
 
+func (d *Domain) doBindController(pattern string, c Controller, methods string, middleware []HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.doBindController(pattern+"@"+domain, c, methods, middleware)
+	}
+}
+
 // 控制器方法注册，methods参数区分大小写
 func (d *Domain) BindControllerMethod(pattern string, c Controller, method string) {
 	for domain, _ := range d.m {
@@ -70,10 +100,22 @@ func (d *Domain) BindControllerMethod(pattern string, c Controller, method strin
 	}
 }
 
+func (d *Domain) doBindControllerMethod(pattern string, c Controller, method string, middleware []HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.doBindControllerMethod(pattern+"@"+domain, c, method, middleware)
+	}
+}
+
 // RESTful控制器注册
 func (d *Domain) BindControllerRest(pattern string, c Controller) {
 	for domain, _ := range d.m {
 		d.s.BindControllerRest(pattern+"@"+domain, c)
+	}
+}
+
+func (d *Domain) doBindControllerRest(pattern string, c Controller, middleware []HandlerFunc) {
+	for domain, _ := range d.m {
+		d.s.doBindControllerRest(pattern+"@"+domain, c, middleware)
 	}
 }
 

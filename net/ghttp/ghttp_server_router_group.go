@@ -18,10 +18,11 @@ import (
 
 // 分组路由对象
 type RouterGroup struct {
-	parent *RouterGroup // 父级分组路由
-	server *Server      // Server
-	domain *Domain      // Domain
-	prefix string       // URI前缀
+	parent     *RouterGroup  // 父级分组路由
+	server     *Server       // Server
+	domain     *Domain       // Domain
+	prefix     string        // URI前缀
+	middleware []HandlerFunc // 分组路由绑定的中间件
 }
 
 // 分组路由批量绑定项
@@ -44,6 +45,7 @@ var (
 // 处理预绑定路由项
 func (s *Server) handlePreBindItems() {
 	for _, item := range preBindItems {
+		// Handle the items of current server.
 		if item.group.server != nil && item.group.server != s {
 			continue
 		}
@@ -62,16 +64,16 @@ func (s *Server) Group(prefix string, groups ...func(group *RouterGroup)) *Route
 	if prefix == "/" {
 		prefix = ""
 	}
-	rg := &RouterGroup{
+	group := &RouterGroup{
 		server: s,
 		prefix: prefix,
 	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v(rg)
+			v(group)
 		}
 	}
-	return rg
+	return group
 }
 
 // 获取分组路由对象(绑定域名)
@@ -82,16 +84,16 @@ func (d *Domain) Group(prefix string, groups ...func(group *RouterGroup)) *Route
 	if prefix == "/" {
 		prefix = ""
 	}
-	rg := &RouterGroup{
+	group := &RouterGroup{
 		domain: d,
 		prefix: prefix,
 	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v(rg)
+			v(group)
 		}
 	}
-	return rg
+	return group
 }
 
 // 层级递归创建分组路由注册项
@@ -99,27 +101,34 @@ func (g *RouterGroup) Group(prefix string, groups ...func(group *RouterGroup)) *
 	if prefix == "/" {
 		prefix = ""
 	}
-	rg := &RouterGroup{
+	group := &RouterGroup{
 		parent: g,
 		server: g.server,
 		domain: g.domain,
 		prefix: prefix,
 	}
+	if len(g.middleware) > 0 {
+		group.middleware = make([]HandlerFunc, len(g.middleware))
+		copy(group.middleware, g.middleware)
+	}
 	if len(groups) > 0 {
 		for _, v := range groups {
-			v(rg)
+			v(group)
 		}
 	}
-	return rg
+	return group
 }
 
 func (g *RouterGroup) Clone() *RouterGroup {
-	return &RouterGroup{
-		parent: g.parent,
-		server: g.server,
-		domain: g.domain,
-		prefix: g.prefix,
+	newGroup := &RouterGroup{
+		parent:     g.parent,
+		server:     g.server,
+		domain:     g.domain,
+		prefix:     g.prefix,
+		middleware: make([]HandlerFunc, len(g.middleware)),
 	}
+	copy(newGroup.middleware, g.middleware)
+	return newGroup
 }
 
 // 执行分组路由批量绑定
@@ -211,23 +220,8 @@ func (g *RouterGroup) Hook(pattern string, hook string, handler HandlerFunc) *Ro
 }
 
 func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
-	group := g.Clone()
-	for _, handler := range handlers {
-		if gstr.Contains(g.prefix, "*") {
-			group.preBind("MIDDLEWARE", "/", handler)
-		} else {
-			group.preBind("MIDDLEWARE", "/*", handler)
-		}
-	}
-	return group
-}
-
-func (g *RouterGroup) MiddlewarePattern(pattern string, handlers ...HandlerFunc) *RouterGroup {
-	group := g.Clone()
-	for _, handler := range handlers {
-		group.preBind("MIDDLEWARE", pattern, handler)
-	}
-	return group
+	g.middleware = append(g.middleware, handlers...)
+	return g
 }
 
 func (g *RouterGroup) preBind(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
@@ -279,64 +273,54 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 		bindType = "HOOK"
 	}
 	switch bindType {
-	case "MIDDLEWARE":
-		if h, ok := object.(HandlerFunc); ok {
-			if g.server != nil {
-				g.server.BindMiddleware(pattern, h)
-			} else {
-				g.domain.BindMiddleware(pattern, h)
-			}
-		} else {
-			glog.Fatalf("invalid middleware handler for pattern:%s", pattern)
-		}
 	case "HANDLER":
 		if h, ok := object.(HandlerFunc); ok {
 			if g.server != nil {
-				g.server.BindHandler(pattern, h)
+				g.server.doBindHandler(pattern, h, g.middleware)
 			} else {
-				g.domain.BindHandler(pattern, h)
+				g.domain.doBindHandler(pattern, h, g.middleware)
 			}
 		} else if g.isController(object) {
 			if len(extras) > 0 {
 				if g.server != nil {
-					g.server.BindControllerMethod(pattern, object.(Controller), extras[0])
+					g.server.doBindControllerMethod(pattern, object.(Controller), extras[0], g.middleware)
 				} else {
-					g.domain.BindControllerMethod(pattern, object.(Controller), extras[0])
+					g.domain.doBindControllerMethod(pattern, object.(Controller), extras[0], g.middleware)
 				}
 			} else {
 				if g.server != nil {
-					g.server.BindController(pattern, object.(Controller))
+					g.server.doBindController(pattern, object.(Controller), "", g.middleware)
 				} else {
-					g.domain.BindController(pattern, object.(Controller))
+					g.domain.doBindController(pattern, object.(Controller), "", g.middleware)
 				}
 			}
 		} else {
 			if len(extras) > 0 {
 				if g.server != nil {
-					g.server.BindObjectMethod(pattern, object, extras[0])
+					g.server.doBindObjectMethod(pattern, object, extras[0], g.middleware)
 				} else {
-					g.domain.BindObjectMethod(pattern, object, extras[0])
+					g.domain.doBindObjectMethod(pattern, object, extras[0], g.middleware)
 				}
 			} else {
 				if g.server != nil {
-					g.server.BindObject(pattern, object)
+					g.server.doBindObject(pattern, object, "", g.middleware)
 				} else {
-					g.domain.BindObject(pattern, object)
+					g.domain.doBindObject(pattern, object, "", g.middleware)
 				}
 			}
 		}
 	case "REST":
 		if g.isController(object) {
 			if g.server != nil {
-				g.server.BindControllerRest(pattern, object.(Controller))
+				g.server.doBindControllerRest(pattern, object.(Controller), g.middleware)
 			} else {
-				g.domain.BindControllerRest(pattern, object.(Controller))
+				g.domain.doBindControllerRest(pattern, object.(Controller), g.middleware)
 			}
 		} else {
 			if g.server != nil {
-				g.server.BindObjectRest(pattern, object)
+				g.server.doBindObjectRest(pattern, object, g.middleware)
 			} else {
-				g.domain.BindObjectRest(pattern, object)
+				g.domain.doBindObjectRest(pattern, object, g.middleware)
 			}
 		}
 	case "HOOK":
@@ -365,9 +349,12 @@ func (g *RouterGroup) isController(value interface{}) bool {
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	if v.FieldByName("Request").IsValid() && v.FieldByName("Response").IsValid() &&
-		v.FieldByName("Server").IsValid() && v.FieldByName("Cookie").IsValid() &&
-		v.FieldByName("Session").IsValid() && v.FieldByName("View").IsValid() {
+	if v.FieldByName("Request").IsValid() &&
+		v.FieldByName("Response").IsValid() &&
+		v.FieldByName("Server").IsValid() &&
+		v.FieldByName("Cookie").IsValid() &&
+		v.FieldByName("Session").IsValid() &&
+		v.FieldByName("View").IsValid() {
 		return true
 	}
 	return false
