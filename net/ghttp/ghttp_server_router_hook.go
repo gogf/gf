@@ -7,16 +7,15 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/debug/gdebug"
 	"net/http"
-	"reflect"
-	"runtime"
 )
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
 func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFunc) {
 	s.setHandler(pattern, &handlerItem{
 		itemType: gHANDLER_TYPE_HOOK,
-		itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
+		itemName: gdebug.FuncPath(handler),
 		itemFunc: handler,
 		hookName: hook,
 	})

@@ -30,7 +30,6 @@ type Request struct {
 	LeaveTime       int64                  // Request ending time in microseconds.
 	Middleware      *Middleware            // The middleware manager.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request .
-	handlerIndex    int                    // Index number for executing sequence purpose of handlers.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
 	parsedQuery     bool                   // A bool marking whether the GET parameters parsed.
@@ -125,7 +124,7 @@ func (r *Request) IsAjaxRequest() bool {
 	return strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest")
 }
 
-// GetClientIp returns the client ip of this request.
+// GetClientIp returns the client ip of this request without port.
 func (r *Request) GetClientIp() string {
 	if len(r.clientIp) == 0 {
 		if r.clientIp = r.Header.Get("X-Real-IP"); r.clientIp == "" {

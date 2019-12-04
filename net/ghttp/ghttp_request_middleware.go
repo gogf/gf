@@ -17,23 +17,25 @@ import (
 
 // Middleware is the plugin for request workflow management.
 type Middleware struct {
-	served  bool     // Is the request served, which is used for checking response status 404.
-	request *Request // The request object pointer.
+	served         bool     // Is the request served, which is used for checking response status 404.
+	request        *Request // The request object pointer.
+	handlerIndex   int      // Index number for executing sequence purpose for handler items.
+	handlerMDIndex int      // Index number for executing sequence purpose for bound middleware of handler item.
 }
 
 // Next calls the next workflow handler.
 func (m *Middleware) Next() {
-	item := (*handlerParsedItem)(nil)
-	loop := true
+	var item *handlerParsedItem
+	var loop = true
 	for loop {
 		// Check whether the request is exited.
-		if m.request.IsExited() || m.request.handlerIndex >= len(m.request.handlers) {
+		if m.request.IsExited() || m.handlerIndex >= len(m.request.handlers) {
 			break
 		}
-		item = m.request.handlers[m.request.handlerIndex]
-		m.request.handlerIndex++
+		item = m.request.handlers[m.handlerIndex]
 		// Filter the HOOK handlers, which are designed to be called in another standalone procedure.
 		if item.handler.itemType == gHANDLER_TYPE_HOOK {
+			m.handlerIndex++
 			continue
 		}
 		// Router values switching.
@@ -42,7 +44,20 @@ func (m *Middleware) Next() {
 		m.request.Router = item.handler.router
 
 		gutil.TryCatch(func() {
+			// Execute bound middleware array of the item if it's not empty.
+			if m.handlerMDIndex < len(item.handler.middleware) {
+				md := item.handler.middleware[m.handlerMDIndex]
+				m.handlerMDIndex++
+				niceCallFunc(func() {
+					md(m.request)
+				})
+				loop = false
+				return
+			}
+			m.handlerIndex++
+
 			switch item.handler.itemType {
+			// Service controller.
 			case gHANDLER_TYPE_CONTROLLER:
 				m.served = true
 				if m.request.IsExited() {
@@ -63,6 +78,7 @@ func (m *Middleware) Next() {
 					})
 				}
 
+			// Service object.
 			case gHANDLER_TYPE_OBJECT:
 				m.served = true
 				if m.request.IsExited() {
@@ -84,6 +100,7 @@ func (m *Middleware) Next() {
 					})
 				}
 
+			// Service handler.
 			case gHANDLER_TYPE_HANDLER:
 				m.served = true
 				if m.request.IsExited() {
@@ -93,6 +110,7 @@ func (m *Middleware) Next() {
 					item.handler.itemFunc(m.request)
 				})
 
+			// Global middleware array.
 			case gHANDLER_TYPE_MIDDLEWARE:
 				niceCallFunc(func() {
 					item.handler.itemFunc(m.request)
@@ -107,11 +125,13 @@ func (m *Middleware) Next() {
 		})
 	}
 	// Check the http status code after all handler and middleware done.
-	if m.request.Response.Status == 0 {
-		if m.request.Middleware.served || m.request.Response.buffer.Len() > 0 {
-			m.request.Response.WriteHeader(http.StatusOK)
-		} else {
-			m.request.Response.WriteHeader(http.StatusNotFound)
+	if m.request.IsExited() || m.handlerIndex >= len(m.request.handlers) {
+		if m.request.Response.Status == 0 {
+			if m.request.Middleware.served {
+				m.request.Response.WriteHeader(http.StatusOK)
+			} else {
+				m.request.Response.WriteHeader(http.StatusNotFound)
+			}
 		}
 	}
 }

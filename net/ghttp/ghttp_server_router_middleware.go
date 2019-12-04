@@ -7,8 +7,7 @@
 package ghttp
 
 import (
-	"reflect"
-	"runtime"
+	"github.com/gogf/gf/debug/gdebug"
 )
 
 const (
@@ -20,7 +19,7 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(pattern, &handlerItem{
 			itemType: gHANDLER_TYPE_MIDDLEWARE,
-			itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
+			itemName: gdebug.FuncPath(handler),
 			itemFunc: handler,
 		})
 	}
@@ -31,7 +30,7 @@ func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(gDEFAULT_MIDDLEWARE_PATTERN, &handlerItem{
 			itemType: gHANDLER_TYPE_MIDDLEWARE,
-			itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
+			itemName: gdebug.FuncPath(handler),
 			itemFunc: handler,
 		})
 	}

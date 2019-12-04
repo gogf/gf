@@ -131,7 +131,7 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 	})
 }
 
-func Test_BindMiddleware_Must_Be_Called(t *testing.T) {
+func Test_BindMiddleware_Basic4(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -157,9 +157,9 @@ func Test_BindMiddleware_Must_Be_Called(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "12")
+		gtest.Assert(client.GetContent("/"), "Not Found")
 		gtest.Assert(client.GetContent("/test"), "1test2")
-		gtest.Assert(client.PutContent("/test/none"), "12")
+		gtest.Assert(client.PutContent("/test/none"), "Not Found")
 	})
 }
 
@@ -188,7 +188,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 
 		gtest.Assert(client.GetContent("/"), "index")
 		gtest.Assert(client.GetContent("/test.html"), "test")
-		gtest.Assert(client.GetContent("/none"), "12")
+		gtest.Assert(client.GetContent("/none"), "Not Found")
 		gtest.Assert(client.GetContent("/user/list"), "1list2")
 	})
 }
@@ -214,7 +214,7 @@ func Test_Middleware_Status(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "404")
+		gtest.Assert(client.GetContent("/"), "Not Found")
 		gtest.Assert(client.GetContent("/user/list"), "200")
 
 		resp, err := client.Get("/")
@@ -268,7 +268,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(a.Len(), 4)
 
-		gtest.Assert(client.GetContent("/none"), "a12b")
+		gtest.Assert(client.GetContent("/none"), "ab")
 		time.Sleep(100 * time.Millisecond)
 		gtest.Assert(a.Len(), 6)
 
@@ -610,7 +610,7 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/api.v2"), "Forbidden")
+		gtest.Assert(client.GetContent("/api.v2"), "Not Found")
 		gtest.Assert(client.GetContent("/api.v2/user/list"), "Forbidden")
 		gtest.Assert(client.GetContent("/api.v2/user/list", "token=123456"), "list")
 	})
