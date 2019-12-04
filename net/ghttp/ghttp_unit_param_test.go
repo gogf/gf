@@ -288,7 +288,7 @@ func Test_Params_Basic(t *testing.T) {
 		}
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -426,7 +426,7 @@ func Test_Params_Priority(t *testing.T) {
 		}))
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

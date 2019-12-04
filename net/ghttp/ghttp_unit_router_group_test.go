@@ -86,7 +86,7 @@ func Test_Router_GroupBasic1(t *testing.T) {
 	group.GET("/obj/my-show", obj, "Show")
 	group.REST("/obj/rest", obj)
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -134,7 +134,7 @@ func Test_Router_Basic2(t *testing.T) {
 		{"REST", "/obj/rest", obj},
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -170,7 +170,7 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 	group.ALL("/{.struct}/{.method}", ctl)
 	group.ALL("/{.struct}/{.method}", obj)
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

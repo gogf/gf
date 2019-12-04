@@ -61,6 +61,16 @@ type (
 		Priority int      // 优先级，用于链表排序，值越大优先级越高
 	}
 
+	// Router item just for dumping.
+	RouterItem struct {
+		Middleware string
+		Domain     string
+		Method     string
+		Route      string
+		Priority   int
+		handler    *handlerItem
+	}
+
 	// 路由函数注册信息
 	handlerItem struct {
 		itemId     int                // 用于标识该注册函数的唯一性ID
@@ -238,22 +248,23 @@ func GetServer(name ...interface{}) *Server {
 // 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行),
 // 需要结合Wait方式一起使用.
 func (s *Server) Start() error {
-	// 预处理路由注册项
+	// Register group routes.
 	s.handlePreBindItems()
 
-	// 服务进程初始化，只会初始化一次
+	// Server process initialization, which can only be initialized once.
 	serverProcessInit()
 
-	// 当前Web Server状态判断
+	// Server can only be run once.
 	if s.Status() == SERVER_STATUS_RUNNING {
 		return errors.New("[ghttp] server is already running")
 	}
 
-	// 没有注册任何路由，且没有开启文件服务，那么提示错误
+	// If there's no route registered  and no static service enabled,
+	// it then returns an error of invalid usage of server.
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
 		return errors.New(`[ghttp] there's no route set or static feature enabled, did you forget import the router?`)
 	}
-	// Logging.
+	// Logging path setting check.
 	if s.config.LogPath != "" {
 		if err := s.config.Logger.SetPath(s.config.LogPath); err != nil {
 			return errors.New(fmt.Sprintf("[ghttp] set log path '%s' error: %v", s.config.LogPath, err))
@@ -302,7 +313,7 @@ func (s *Server) Start() error {
 		s.startServer(nil)
 	}
 
-	// 如果是子进程，那么服务开启后通知父进程销毁
+	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
 		gtimer.SetTimeout(2*time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP); err != nil {
@@ -311,87 +322,99 @@ func (s *Server) Start() error {
 		})
 	}
 
-	// 打印展示路由表
-	s.DumpRoutesMap()
+	s.DumpRouterMap()
 	return nil
 }
 
-// 打印展示路由表
-func (s *Server) DumpRoutesMap() {
-	if s.config.DumpRouteMap && len(s.routesMap) > 0 {
-		glog.Header(false).Println(fmt.Sprintf("\n%s", s.getRouteMapString()))
+// DumpRouterMap dumps the router map to the log.
+func (s *Server) DumpRouterMap() {
+	if s.config.DumpRouterMap && len(s.routesMap) > 0 {
+		buffer := bytes.NewBuffer(nil)
+		table := tablewriter.NewWriter(buffer)
+		table.SetHeader([]string{"SERVER", "ADDRESS", "DOMAIN", "METHOD", "P", "ROUTE", "HANDLER", "MIDDLEWARE"})
+		table.SetRowLine(true)
+		table.SetBorder(false)
+		table.SetCenterSeparator("|")
+		table.SetColumnAlignment([]int{
+			tablewriter.ALIGN_CENTER,
+			tablewriter.ALIGN_CENTER,
+			tablewriter.ALIGN_CENTER,
+			tablewriter.ALIGN_CENTER,
+			tablewriter.ALIGN_CENTER,
+			tablewriter.ALIGN_LEFT,
+			tablewriter.ALIGN_LEFT,
+			tablewriter.ALIGN_LEFT,
+		})
+
+		address := s.config.Address
+		if s.config.HTTPSAddr != "" {
+			if len(address) > 0 {
+				address += ","
+			}
+			address += "tls" + s.config.HTTPSAddr
+		}
+		for _, array := range s.GetRouterMap() {
+			data := make([]string, 8)
+			for _, item := range array {
+				data[0] = s.name
+				data[1] = address
+				data[2] = item.Domain
+				data[3] = item.Method
+				data[4] = gconv.String(len(strings.Split(item.Route, "/")) - 1 + item.Priority)
+				data[5] = item.Route
+				data[6] = item.handler.itemName
+				data[7] = item.Middleware
+				table.Append(data)
+			}
+		}
+		table.Render()
+		s.config.Logger.Header(false).Printf("\n%s", buffer.String())
 	}
 }
 
-// 获得路由表(格式化字符串)
-func (s *Server) getRouteMapString() string {
-	// Route table for dumping.
-	type tableItem struct {
-		middleware string
-		domain     string
-		method     string
-		route      string
-		handler    *handlerItem
-		priority   int
-	}
-
-	buf := bytes.NewBuffer(nil)
-	table := tablewriter.NewWriter(buf)
-	table.SetHeader([]string{"SERVER", "ADDRESS", "DOMAIN", "METHOD", "P", "ROUTE", "HANDLER", "MIDDLEWARE"})
-	table.SetRowLine(true)
-	table.SetBorder(false)
-	table.SetCenterSeparator("|")
-	table.SetColumnAlignment([]int{
-		tablewriter.ALIGN_CENTER,
-		tablewriter.ALIGN_CENTER,
-		tablewriter.ALIGN_CENTER,
-		tablewriter.ALIGN_CENTER,
-		tablewriter.ALIGN_CENTER,
-		tablewriter.ALIGN_LEFT,
-		tablewriter.ALIGN_LEFT,
-		tablewriter.ALIGN_LEFT,
-	})
-
+// GetRouterMap retrieves and returns the router map.
+// The key of the returned map is the domain of the server.
+func (s *Server) GetRouterMap() map[string][]RouterItem {
 	m := make(map[string]*garray.SortedArray)
 	for k, registeredItems := range s.routesMap {
 		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
 		for index, registeredItem := range registeredItems {
-			item := &tableItem{
-				middleware: array[1],
-				domain:     array[4],
-				method:     array[2],
-				route:      array[3],
+			item := RouterItem{
+				Middleware: array[1],
+				Domain:     array[4],
+				Method:     array[2],
+				Route:      array[3],
+				Priority:   len(registeredItems) - index - 1,
 				handler:    registeredItem.handler,
-				priority:   len(registeredItems) - index - 1,
 			}
 			if item.handler.itemType == gHANDLER_TYPE_MIDDLEWARE {
-				item.middleware = "GLOBAL MIDDLEWARE"
+				item.Middleware = "GLOBAL MIDDLEWARE"
 			}
 			if len(item.handler.middleware) > 0 {
 				for _, v := range item.handler.middleware {
-					if item.middleware != "" {
-						item.middleware += ","
+					if item.Middleware != "" {
+						item.Middleware += ","
 					}
-					item.middleware += gdebug.FuncName(v)
+					item.Middleware += gdebug.FuncName(v)
 				}
 			}
 			// If the domain does not exist in the dump map, it create the map.
 			// The value of the map is a custom sorted array.
-			if _, ok := m[item.domain]; !ok {
+			if _, ok := m[item.Domain]; !ok {
 				// Sort in ASC order.
-				m[item.domain] = garray.NewSortedArraySize(100, func(v1, v2 interface{}) int {
-					item1 := v1.(*tableItem)
-					item2 := v2.(*tableItem)
+				m[item.Domain] = garray.NewSortedArraySize(100, func(v1, v2 interface{}) int {
+					item1 := v1.(RouterItem)
+					item2 := v2.(RouterItem)
 					r := 0
-					if r = strings.Compare(item1.domain, item2.domain); r == 0 {
-						if r = strings.Compare(item1.route, item2.route); r == 0 {
-							if r = strings.Compare(item1.method, item2.method); r == 0 {
+					if r = strings.Compare(item1.Domain, item2.Domain); r == 0 {
+						if r = strings.Compare(item1.Route, item2.Route); r == 0 {
+							if r = strings.Compare(item1.Method, item2.Method); r == 0 {
 								if item1.handler.itemType == gHANDLER_TYPE_MIDDLEWARE && item2.handler.itemType != gHANDLER_TYPE_MIDDLEWARE {
 									return -1
 								} else if item1.handler.itemType == gHANDLER_TYPE_MIDDLEWARE && item2.handler.itemType == gHANDLER_TYPE_MIDDLEWARE {
 									return 1
-								} else if r = strings.Compare(item1.middleware, item2.middleware); r == 0 {
-									r = item2.priority - item1.priority
+								} else if r = strings.Compare(item1.Middleware, item2.Middleware); r == 0 {
+									r = item2.Priority - item1.Priority
 								}
 							}
 						}
@@ -399,51 +422,36 @@ func (s *Server) getRouteMapString() string {
 					return r
 				})
 			}
-			m[item.domain].Add(item)
+			m[item.Domain].Add(item)
 		}
 	}
-	itemFunc := s.config.Address
-	if s.config.HTTPSAddr != "" {
-		if len(itemFunc) > 0 {
-			itemFunc += ","
+	routerMap := make(map[string][]RouterItem, len(m))
+	for domain, array := range m {
+		if routerMap[domain] == nil {
+			routerMap[domain] = make([]RouterItem, array.Len())
 		}
-		itemFunc += "tls" + s.config.HTTPSAddr
-	}
-	for _, a := range m {
-		data := make([]string, 8)
-		for _, v := range a.Slice() {
-			item := v.(*tableItem)
-			data[0] = s.name
-			data[1] = itemFunc
-			data[2] = item.domain
-			data[3] = item.method
-			data[4] = gconv.String(len(strings.Split(item.route, "/")) - 1 + item.priority)
-			data[5] = item.route
-			data[6] = item.handler.itemName
-			data[7] = item.middleware
-			table.Append(data)
+		for k, v := range array.Slice() {
+			routerMap[domain][k] = v.(RouterItem)
 		}
 	}
-	table.Render()
-
-	return buf.String()
+	return routerMap
 }
 
-// 阻塞执行监听
+// Run starts server listening in blocking way.
 func (s *Server) Run() {
 	if err := s.Start(); err != nil {
 		glog.Fatal(err)
 	}
-	// 阻塞等待服务执行完成
+
+	// Blocking using channel.
 	<-s.closeChan
 
 	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
 }
 
-// 阻塞等待所有Web Server停止，常用于多Web Server场景，以及需要将Web Server异步运行的场景
-// 这是一个与进程相关的方法
+// Wait blocks to wait for all servers done.
+// It's commonly used in multiple servers situation.
 func Wait() {
-	// 阻塞等待服务执行完成
 	<-allDoneChan
 
 	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())

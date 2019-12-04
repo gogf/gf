@@ -32,7 +32,7 @@ func Test_Session_Cookie(t *testing.T) {
 		r.Session.Clear()
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -79,7 +79,7 @@ func Test_Session_Header(t *testing.T) {
 		r.Session.Clear()
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -125,7 +125,7 @@ func Test_Session_StorageFile(t *testing.T) {
 		r.Response.Write(r.Session.Get(r.GetString("k")))
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

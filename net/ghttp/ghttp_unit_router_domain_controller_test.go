@@ -47,7 +47,7 @@ func Test_Router_DomainController1(t *testing.T) {
 	s := g.Server(p)
 	s.Domain("localhost, local").BindController("/", new(DomainController))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -97,7 +97,7 @@ func Test_Router_DomainController2(t *testing.T) {
 	s := g.Server(p)
 	s.Domain("localhost, local").BindController("/controller", new(DomainController), "Show, Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -150,7 +150,7 @@ func Test_Router_DomainControllerMethod(t *testing.T) {
 	s := g.Server(p)
 	s.Domain("localhost, local").BindControllerMethod("/controller-info", new(DomainController), "Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

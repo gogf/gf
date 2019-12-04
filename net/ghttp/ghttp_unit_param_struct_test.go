@@ -53,7 +53,7 @@ func Test_Params_Struct(t *testing.T) {
 		}
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

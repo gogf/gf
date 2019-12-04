@@ -31,7 +31,7 @@ func (s *Server) doBindHandler(pattern string, handler HandlerFunc, middleware [
 	})
 }
 
-// 通过映射数组绑定URI到操作函数/方法
+// 通过映射map绑定URI到操作函数/方法
 func (s *Server) bindHandlerByMap(m handlerMap) {
 	for p, h := range m {
 		s.setHandler(p, h)

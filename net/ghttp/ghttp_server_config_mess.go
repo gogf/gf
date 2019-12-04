@@ -10,8 +10,8 @@ func (s *Server) SetNameToUriType(t int) {
 	s.config.NameToUriType = t
 }
 
-func (s *Server) SetDumpRouteMap(enabled bool) {
-	s.config.DumpRouteMap = enabled
+func (s *Server) SetDumpRouterMap(enabled bool) {
+	s.config.DumpRouterMap = enabled
 }
 
 func (s *Server) SetFormParsingMemory(maxMemory int64) {

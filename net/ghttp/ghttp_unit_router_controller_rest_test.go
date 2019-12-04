@@ -65,7 +65,7 @@ func Test_Router_ControllerRest(t *testing.T) {
 	s.BindControllerRest("/", new(ControllerRest))
 	s.BindControllerRest("/{.struct}/{.method}", new(ControllerRest))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

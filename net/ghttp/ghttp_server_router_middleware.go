@@ -11,10 +11,14 @@ import (
 )
 
 const (
+	// The default route pattern for global middleware.
 	gDEFAULT_MIDDLEWARE_PATTERN = "/*"
 )
 
-// 注册中间件，绑定到指定的路由规则上，中间件参数支持多个。
+// BindMiddleware registers one or more global middleware to the server.
+// Global middleware can be used standalone without service handler, which intercepts all dynamic requests
+// before or after service handler. The parameter <pattern> specifies what route pattern the middleware intercepts,
+// which is usually a "fuzzy" pattern like "/:name", "/*any" or "/{field}".
 func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(pattern, &handlerItem{
@@ -25,7 +29,9 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 	}
 }
 
-// 注册中间件，绑定到全局路由规则("/*")上，中间件参数支持多个。
+// BindMiddlewareDefault registers one or more global middleware to the server using default pattern "/*".
+// Global middleware can be used standalone without service handler, which intercepts all dynamic requests
+// before or after service handler.
 func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(gDEFAULT_MIDDLEWARE_PATTERN, &handlerItem{

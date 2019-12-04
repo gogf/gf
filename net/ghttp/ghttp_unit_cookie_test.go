@@ -29,7 +29,7 @@ func Test_Cookie(t *testing.T) {
 		r.Cookie.Remove(r.GetString("k"))
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

@@ -23,7 +23,7 @@ func Test_Client_Basic(t *testing.T) {
 		r.Response.Write("hello")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

@@ -60,7 +60,7 @@ func Test_Router_ObjectRest(t *testing.T) {
 	s.BindObjectRest("/", new(ObjectRest))
 	s.BindObjectRest("/{.struct}/{.method}", new(ObjectRest))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
