@@ -131,3 +131,8 @@ func (r Result) Structs(pointer interface{}) (err error) {
 	reflect.ValueOf(pointer).Elem().Set(array)
 	return nil
 }
+
+// IsEmpty checks and returns whether <r> is empty.
+func (r Result) IsEmpty() bool {
+	return len(r) == 0
+}

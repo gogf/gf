@@ -46,3 +46,8 @@ func (r Record) Struct(pointer interface{}) error {
 	}
 	return mapToStruct(r.Map(), pointer)
 }
+
+// IsEmpty checks and returns whether <r> is empty.
+func (r Record) IsEmpty() bool {
+	return len(r) == 0
+}
