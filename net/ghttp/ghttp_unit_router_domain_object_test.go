@@ -43,7 +43,7 @@ func Test_Router_DomainObject1(t *testing.T) {
 	s := g.Server(p)
 	s.Domain("localhost, local").BindObject("/", new(DomainObject))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -92,7 +92,7 @@ func Test_Router_DomainObject2(t *testing.T) {
 	s := g.Server(p)
 	s.Domain("localhost, local").BindObject("/object", new(DomainObject), "Show, Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -143,7 +143,7 @@ func Test_Router_DomainObjectMethod(t *testing.T) {
 	s := g.Server(p)
 	s.Domain("localhost, local").BindObjectMethod("/object-info", new(DomainObject), "Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

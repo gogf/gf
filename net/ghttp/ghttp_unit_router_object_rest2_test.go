@@ -47,7 +47,7 @@ func Test_Router_ObjectRest_Id(t *testing.T) {
 	s := g.Server(p)
 	s.BindObjectRest("/object/:id", new(ObjectRest2))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

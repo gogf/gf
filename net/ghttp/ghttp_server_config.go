@@ -73,7 +73,7 @@ type ServerConfig struct {
 	PProfPattern      string            // PProf: PProf service pattern for router.
 	FormParsingMemory int64             // Other: Max memory in bytes which can be used for parsing multimedia form.
 	NameToUriType     int               // Other: Type for converting struct method name to URI when registering routes.
-	DumpRouteMap      bool              // Other: Whether automatically dump route map when server starts.
+	DumpRouterMap     bool              // Other: Whether automatically dump router map when server starts.
 }
 
 // defaultServerConfig is the default configuration object for server.
@@ -105,7 +105,7 @@ var defaultServerConfig = ServerConfig{
 	ErrorLogPattern:   "error-{Ymd}.log",
 	AccessLogEnabled:  false,
 	AccessLogPattern:  "access-{Ymd}.log",
-	DumpRouteMap:      true,
+	DumpRouterMap:     true,
 	FormParsingMemory: 100 * 1024 * 1024, // 100MB
 	Rewrites:          make(map[string]string),
 }

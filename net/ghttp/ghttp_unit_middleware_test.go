@@ -45,7 +45,7 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 		r.Response.Write("8")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	//s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -72,7 +72,7 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 		r.Response.Write("2")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -112,7 +112,7 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 		r.Response.Write("8")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -148,7 +148,7 @@ func Test_BindMiddleware_Basic4(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -177,7 +177,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.SetServerRoot(gfile.Join(gdebug.CallerDirectory(), "testdata", "static1"))
 	s.Start()
 	defer s.Shutdown()
@@ -206,7 +206,7 @@ func Test_Middleware_Status(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
@@ -249,7 +249,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	//s.SetDumpRouteMap(false)
+	//s.SetDumpRouterMap(false)
 	s.SetServerRoot(gfile.Join(gdebug.CallerDirectory(), "testdata", "static1"))
 	s.Start()
 	defer s.Shutdown()
@@ -288,7 +288,7 @@ func Test_BindMiddleware_Status(t *testing.T) {
 		r.Middleware.Next()
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -321,7 +321,7 @@ func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
 		r.Response.Write("4")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -352,7 +352,7 @@ func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
 		r.Response.Write("4")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -383,7 +383,7 @@ func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
 		r.Response.Write("2")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -412,7 +412,7 @@ func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
 		r.Middleware.Next()
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -441,7 +441,7 @@ func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
 		r.Middleware.Next()
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -465,7 +465,7 @@ func Test_BindMiddlewareDefault_Status(t *testing.T) {
 		r.Middleware.Next()
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -516,7 +516,7 @@ func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
 		r.Response.Write("4")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -563,7 +563,7 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 		r.Response.Write("4")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -601,7 +601,7 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)

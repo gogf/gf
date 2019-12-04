@@ -90,7 +90,7 @@ func Test_Params_Json(t *testing.T) {
 		r.Response.WriteJson(responseJson)
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

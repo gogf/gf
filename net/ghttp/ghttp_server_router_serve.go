@@ -64,7 +64,6 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		if !ok {
 			continue
 		}
-		//gutil.Dump(p)
 		// 多层链表(每个节点都有一个*list链表)的目的是当叶子节点未有任何规则匹配时，让父级模糊匹配规则继续处理
 		lists := make([]*glist.List, 0, 16)
 		for k, v := range array {

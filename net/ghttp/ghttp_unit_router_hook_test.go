@@ -29,7 +29,7 @@ func Test_Router_Hook_Basic(t *testing.T) {
 		r.Response.Write("test")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -70,7 +70,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 		r.Response.Write(r.Router.Uri)
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -110,7 +110,7 @@ func Test_Router_Hook_Priority(t *testing.T) {
 		},
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -144,7 +144,7 @@ func Test_Router_Hook_Multi(t *testing.T) {
 		},
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

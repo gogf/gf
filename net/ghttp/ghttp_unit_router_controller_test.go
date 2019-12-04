@@ -49,7 +49,7 @@ func Test_Router_Controller1(t *testing.T) {
 	s.BindController("/", new(Controller))
 	s.BindController("/{.struct}/{.method}", new(Controller))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -79,7 +79,7 @@ func Test_Router_Controller2(t *testing.T) {
 	s := g.Server(p)
 	s.BindController("/controller", new(Controller), "Show, Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -105,7 +105,7 @@ func Test_Router_ControllerMethod(t *testing.T) {
 	s := g.Server(p)
 	s.BindControllerMethod("/controller-info", new(Controller), "Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

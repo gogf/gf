@@ -37,7 +37,7 @@ func Test_WebSocket(t *testing.T) {
 		}
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

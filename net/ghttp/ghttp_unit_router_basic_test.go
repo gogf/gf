@@ -35,7 +35,7 @@ func Test_Router_Basic(t *testing.T) {
 		r.Response.Write(r.Get("field"))
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -61,7 +61,7 @@ func Test_Router_Method(t *testing.T) {
 
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -109,7 +109,7 @@ func Test_Router_Status(t *testing.T) {
 		r.Response.WriteStatus(500)
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -156,7 +156,7 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 		r.Response.Write("404 page")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -182,7 +182,7 @@ func Test_Router_404(t *testing.T) {
 		r.Response.Write("hello")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -215,7 +215,7 @@ func Test_Router_Priority(t *testing.T) {
 		r.Response.Write("admin-goods-{page}")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

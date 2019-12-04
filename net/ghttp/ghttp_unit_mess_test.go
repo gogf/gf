@@ -23,7 +23,7 @@ func Test_GetUrl(t *testing.T) {
 		r.Response.Write(r.GetUrl())
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

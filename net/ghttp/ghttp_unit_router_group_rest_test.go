@@ -108,7 +108,7 @@ func Test_Router_GroupRest(t *testing.T) {
 	g.REST("/{.struct}/{.method}", ctl)
 	g.REST("/{.struct}/{.method}", obj)
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

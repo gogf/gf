@@ -31,7 +31,7 @@ func Test_Router_Exit(t *testing.T) {
 		r.Response.Write("test-end")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -69,7 +69,7 @@ func Test_Router_ExitHook(t *testing.T) {
 		},
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -107,7 +107,7 @@ func Test_Router_ExitAll(t *testing.T) {
 		},
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

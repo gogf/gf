@@ -31,7 +31,7 @@ func Test_Router_Group_Hook1(t *testing.T) {
 	}, ghttp.HOOK_AFTER_SERVE)
 
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -60,7 +60,7 @@ func Test_Router_Group_Hook2(t *testing.T) {
 	}, ghttp.HOOK_AFTER_SERVE)
 
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -91,7 +91,7 @@ func Test_Router_Group_Hook3(t *testing.T) {
 	})
 
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
