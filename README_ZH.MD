@@ -24,7 +24,7 @@
 
 # 安装
 ```html
-go get -u github.com/gogf/gf
+go get -u -v github.com/gogf/gf
 ```
 推荐使用 `go.mod`:
 ```
@@ -33,7 +33,7 @@ require github.com/gogf/gf latest
 
 # 限制
 ```shell
-golang版本 >= 1.10
+golang版本 >= 1.11
 ```
 
 # 架构

@@ -27,6 +27,8 @@
 |[foxhack](https://github.com/foxhack)|wechat|￥20.00
 |*栈|wechat|￥5.00
 |*络|wechat|￥10.00
+|R*s|wechat|￥18.88
+|粟*e|wechat|￥50.00
 
 
 
