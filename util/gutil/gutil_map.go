@@ -26,23 +26,23 @@ func MapCopy(data map[string]interface{}) (copy map[string]interface{}) {
 	return
 }
 
-// MapValueForPossibleKey tries to find the possible value for given key with or without
+// MapPossibleItemByKey tries to find the possible key-value pair for given key with or without
 // cases or chars '-'/'_'/'.'/' '.
 //
 // Note that this function might be of low performance.
-func MapPossibleValueForKey(data map[string]interface{}, key string) interface{} {
+func MapPossibleItemByKey(data map[string]interface{}, key string) (string, interface{}) {
 	if v, ok := data[key]; ok {
-		return v
+		return key, v
 	}
 	replacedKey := replaceCharReg.ReplaceAllString(key, "")
 	if v, ok := data[replacedKey]; ok {
-		return v
+		return replacedKey, v
 	}
 	// Loop for check.
 	for k, v := range data {
 		if strings.EqualFold(replaceCharReg.ReplaceAllString(k, ""), replacedKey) {
-			return v
+			return k, v
 		}
 	}
-	return nil
+	return "", nil
 }

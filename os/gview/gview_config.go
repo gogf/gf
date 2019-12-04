@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gspath"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 )
 
 // Config is the configuration object for template engine.
@@ -56,8 +57,10 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 		return errors.New("configuration cannot be empty")
 	}
 	// Most common used configuration support for single view path.
-	if m["paths"] == nil && m["path"] != nil {
-		m["paths"] = []interface{}{m["path"]}
+	k1, v1 := gutil.MapPossibleItemByKey(m, "paths")
+	_, v2 := gutil.MapPossibleItemByKey(m, "path")
+	if v1 == nil && v2 != nil {
+		m[k1] = []interface{}{v2}
 	}
 	config := Config{}
 	err := gconv.Struct(m, &config)

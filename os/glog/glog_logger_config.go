@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"io"
 	"strings"
 )
@@ -66,14 +67,15 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 		return errors.New("configuration cannot be empty")
 	}
 	// Change string configuration to int value for level.
-	if v, ok := m["level"]; ok {
-		switch gconv.String(v) {
+	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "level")
+	if levelValue != nil {
+		switch gconv.String(levelValue) {
 		case "all":
-			m["level"] = LEVEL_ALL
+			m[levelKey] = LEVEL_ALL
 		case "dev":
-			m["level"] = LEVEL_DEV
+			m[levelKey] = LEVEL_DEV
 		case "prod":
-			m["level"] = LEVEL_PROD
+			m[levelKey] = LEVEL_PROD
 		}
 	}
 	config := DefaultConfig()

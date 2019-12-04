@@ -119,6 +119,11 @@ func (bs *dbBase) SetLogger(logger *glog.Logger) {
 	bs.logger = logger
 }
 
+// 获得数据库Logger对象
+func (bs *dbBase) GetLogger() *glog.Logger {
+	return bs.logger
+}
+
 // 设置数据库连接池中空闲链接的大小
 func (bs *dbBase) SetMaxIdleConnCount(n int) {
 	bs.maxIdleConnCount = n

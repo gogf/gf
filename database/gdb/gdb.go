@@ -88,6 +88,7 @@ type DB interface {
 	GetLastSql() *Sql
 	PrintQueriedSqls()
 	SetLogger(logger *glog.Logger)
+	GetLogger() *glog.Logger
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(d time.Duration)
@@ -199,7 +200,7 @@ func New(name ...string) (db DB, err error) {
 				debug:           gtype.NewBool(),
 				cache:           gcache.New(),
 				schema:          gtype.NewString(),
-				logger:          glog.DefaultLogger(),
+				logger:          glog.New(),
 				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME,
 			}
 			switch node.Type {

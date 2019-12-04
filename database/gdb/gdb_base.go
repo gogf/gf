@@ -50,16 +50,16 @@ func (bs *dbBase) GetQueriedSqls() []*Sql {
 	if bs.sqls == nil {
 		return nil
 	}
-	sqls := make([]*Sql, 0)
+	array := make([]*Sql, 0)
 	bs.sqls.Prev()
 	bs.sqls.RLockIteratorPrev(func(value interface{}) bool {
 		if value == nil {
 			return false
 		}
-		sqls = append(sqls, value.(*Sql))
+		array = append(array, value.(*Sql))
 		return true
 	})
-	return sqls
+	return array
 }
 
 // 打印已经执行的SQL列表(仅在debug=true时有效)
@@ -219,6 +219,9 @@ func (bs *dbBase) GetStruct(pointer interface{}, query string, args ...interface
 	if err != nil {
 		return err
 	}
+	if len(one) == 0 {
+		return sql.ErrNoRows
+	}
 	return one.Struct(pointer)
 }
 
@@ -227,6 +230,9 @@ func (bs *dbBase) GetStructs(pointer interface{}, query string, args ...interfac
 	all, err := bs.GetAll(query, args...)
 	if err != nil {
 		return err
+	}
+	if len(all) == 0 {
+		return sql.ErrNoRows
 	}
 	return all.Structs(pointer)
 }
@@ -597,7 +603,7 @@ func (bs *dbBase) getCache() *gcache.Cache {
 // 将数据查询的列表数据*sql.Rows转换为Result类型
 func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	if !rows.Next() {
-		return nil, sql.ErrNoRows
+		return nil, nil
 	}
 	// 列信息列表, 名称与类型
 	columnTypes, err := rows.ColumnTypes()
@@ -631,7 +637,6 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 				// 由于 sql.RawBytes 是slice类型, 这里必须使用值复制
 				v := make([]byte, len(column))
 				copy(v, column)
-				//fmt.Println(columns[i], types[i], string(v), v, bs.db.convertValue(v, types[i]))
 				row[columns[i]] = gvar.New(bs.db.convertValue(v, types[i]))
 			}
 		}
