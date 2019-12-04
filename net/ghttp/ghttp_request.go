@@ -161,3 +161,9 @@ func (r *Request) GetSessionId() string {
 func (r *Request) GetReferer() string {
 	return r.Header.Get("Referer")
 }
+
+// GetError returns the error occurs in the procedure of the request.
+// It returns nil if there's no error.
+func (r *Request) GetError() error {
+	return r.error
+}
