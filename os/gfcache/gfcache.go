@@ -18,57 +18,46 @@ import (
 
 const (
 	// Default expire time for file content caching in seconds.
-	gDEFAULT_CACHE_EXPIRE = 60
+	gDEFAULT_CACHE_EXPIRE = time.Minute
 )
 
 var (
-	// Default expire time for file content caching in seconds.
-	cacheExpire = cmdenv.Get("gf.gfcache.expire", gDEFAULT_CACHE_EXPIRE).Int() * 1000
+	// Default expire time for file content caching.
+	cacheExpire = cmdenv.Get("gf.gfcache.expire", gDEFAULT_CACHE_EXPIRE).Duration()
 )
 
 // GetContents returns string content of given file by <path> from cache.
 // If there's no content in the cache, it will read it from disk file specified by <path>.
 // The parameter <expire> specifies the caching time for this file content in seconds.
-func GetContents(path string, duration ...interface{}) string {
+func GetContents(path string, duration ...time.Duration) string {
 	return string(GetBinContents(path, duration...))
 }
 
 // GetBinContents returns []byte content of given file by <path> from cache.
 // If there's no content in the cache, it will read it from disk file specified by <path>.
 // The parameter <expire> specifies the caching time for this file content in seconds.
-func GetBinContents(path string, duration ...interface{}) []byte {
-	k := cacheKey(path)
-	e := cacheExpire
+func GetBinContents(path string, duration ...time.Duration) []byte {
+	key := cacheKey(path)
+	expire := cacheExpire
 	if len(duration) > 0 {
-		e = getSecondExpire(duration[0])
+		expire = duration[0]
 	}
-	r := gcache.GetOrSetFuncLock(k, func() interface{} {
+	r := gcache.GetOrSetFuncLock(key, func() interface{} {
 		b := gfile.GetBytes(path)
 		if b != nil {
 			// Adding this <path> to gfsnotify,
 			// it will clear its cache if there's any changes of the file.
 			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
-				gcache.Remove(k)
+				gcache.Remove(key)
 				gfsnotify.Exit()
 			})
 		}
 		return b
-	}, e*1000)
+	}, expire)
 	if r != nil {
 		return r.([]byte)
 	}
 	return nil
-}
-
-// getSecondExpire converts parameter <duration> to int type in seconds.
-//
-// Note that there's some performance cost in type assertion here, but it's valuable.
-func getSecondExpire(duration interface{}) int {
-	if d, ok := duration.(time.Duration); ok {
-		return int(d.Nanoseconds() / 1000000000)
-	} else {
-		return duration.(int)
-	}
 }
 
 // cacheKey produces the cache key for gcache.

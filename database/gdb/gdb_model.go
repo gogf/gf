@@ -335,13 +335,9 @@ func (md *Model) Batch(batch int) *Model {
 // 2. expire参数类型为interface{}，这是一个兼容旧版本的方式，该参数支持 int/time.Duration 类型，当传递类型为int时，表示缓存多少秒。
 // 3. name表示自定义的缓存名称（注意不要出现重复），便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
 //    例如：查询缓存时设置名称，在特定的业务逻辑中清理缓存时可以给定缓存名称进行精准清理。
-func (md *Model) Cache(expire interface{}, name ...string) *Model {
+func (md *Model) Cache(expire time.Duration, name ...string) *Model {
 	model := md.getModel()
-	if d, ok := expire.(time.Duration); ok {
-		model.cacheExpire = d
-	} else {
-		model.cacheExpire = gconv.Duration(expire) * time.Second
-	}
+	model.cacheExpire = expire
 	if len(name) > 0 {
 		model.cacheName = name[0]
 	}
