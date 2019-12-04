@@ -28,11 +28,13 @@ import (
 )
 
 const (
-	gFRAME_CORE_COMPONENT_NAME_VIEW     = "gf.core.component.view"
 	gFRAME_CORE_COMPONENT_NAME_REDIS    = "gf.core.component.redis"
 	gFRAME_CORE_COMPONENT_NAME_LOGGER   = "gf.core.component.logger"
 	gFRAME_CORE_COMPONENT_NAME_SERVER   = "gf.core.component.server"
+	gFRAME_CORE_COMPONENT_NAME_VIEWER   = "gf.core.component.viewer"
 	gFRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
+	gLOGGER_NODE_NAME                   = "logger"
+	gVIEWER_NODE_NAME                   = "viewer"
 )
 
 var (
@@ -86,17 +88,17 @@ func View(name ...string) *gview.View {
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
-	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEW, instanceName)
+	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEWER, instanceName)
 	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		view := gview.Instance(instanceName)
 		// To avoid file no found error while it's not necessary.
 		if Config().Available() {
 			var m map[string]interface{}
 			// It firstly searches the configuration of the instance name.
-			if m = Config().GetMap(fmt.Sprintf(`viewer.%s`, instanceName)); m == nil {
+			if m = Config().GetMap(fmt.Sprintf(`%s.%s`, gVIEWER_NODE_NAME, instanceName)); m == nil {
 				// If the configuration for the instance does not exist,
 				// it uses the default view configuration.
-				m = Config().GetMap("viewer")
+				m = Config().GetMap(gVIEWER_NODE_NAME)
 			}
 			if m != nil {
 				if err := view.SetConfigWithMap(m); err != nil {
@@ -140,10 +142,10 @@ func Log(name ...string) *glog.Logger {
 		if Config().Available() {
 			var m map[string]interface{}
 			// It firstly searches the configuration of the instance name.
-			if m = Config().GetMap(fmt.Sprintf(`logger.%s`, instanceName)); m == nil {
+			if m = Config().GetMap(fmt.Sprintf(`%s.%s`, gLOGGER_NODE_NAME, instanceName)); m == nil {
 				// If the configuration for the instance does not exist,
 				// it uses the default logging configuration.
-				m = Config().GetMap("logger")
+				m = Config().GetMap(gLOGGER_NODE_NAME)
 			}
 			if m != nil {
 				if err := logger.SetConfigWithMap(m); err != nil {
@@ -208,6 +210,16 @@ func Database(name ...string) gdb.DB {
 		addConfigMonitor(instanceKey, config)
 
 		if db, err := gdb.New(name...); err == nil {
+			// Initialize logger for ORM.
+			m := config.GetMap(fmt.Sprintf("database.%s", gLOGGER_NODE_NAME))
+			if m == nil {
+				m = config.GetMap(gLOGGER_NODE_NAME)
+			}
+			if m != nil {
+				if err := db.GetLogger().SetConfigWithMap(m); err != nil {
+					glog.Panic(err)
+				}
+			}
 			return db
 		} else {
 			glog.Panic(err)

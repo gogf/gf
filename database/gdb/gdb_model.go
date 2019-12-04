@@ -616,16 +616,22 @@ func (md *Model) Struct(pointer interface{}) error {
 	if err != nil {
 		return err
 	}
+	if len(one) == 0 {
+		return sql.ErrNoRows
+	}
 	return one.Struct(pointer)
 }
 
 // 链式操作，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
 func (md *Model) Structs(pointer interface{}) error {
-	r, err := md.All()
+	all, err := md.All()
 	if err != nil {
 		return err
 	}
-	return r.Structs(pointer)
+	if len(all) == 0 {
+		return sql.ErrNoRows
+	}
+	return all.Structs(pointer)
 }
 
 // 链式操作，将结果转换为指定的struct/*struct/[]struct/[]*struct,
