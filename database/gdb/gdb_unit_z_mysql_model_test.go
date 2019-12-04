@@ -364,11 +364,10 @@ func Test_Model_All(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), INIT_DATA_SIZE)
 	})
-	// sql.ErrNoRows
 	gtest.Case(t, func() {
 		result, err := db.Table(table).Where("id<0").All()
 		gtest.Assert(result, nil)
-		gtest.Assert(err, sql.ErrNoRows)
+		gtest.Assert(err, nil)
 	})
 }
 
@@ -380,10 +379,10 @@ func Test_Model_One(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(record["nickname"].String(), "name_1")
 	})
-	// sql.ErrNoRows
+
 	gtest.Case(t, func() {
 		record, err := db.Table(table).Where("id", 0).One()
-		gtest.Assert(err, sql.ErrNoRows)
+		gtest.Assert(err, nil)
 		gtest.Assert(record, nil)
 	})
 }
@@ -396,10 +395,10 @@ func Test_Model_Value(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(value.String(), "name_1")
 	})
-	// sql.ErrNoRows
+
 	gtest.Case(t, func() {
 		value, err := db.Table(table).Fields("nickname").Where("id", 0).Value()
-		gtest.Assert(err, sql.ErrNoRows)
+		gtest.Assert(err, nil)
 		gtest.Assert(value, nil)
 	})
 }
