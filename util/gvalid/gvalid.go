@@ -34,6 +34,7 @@ password2            格式：password2                             说明：中
 password3            格式：password3                             说明：强等强度密码(在弱密码的基础上，必须包含大小写字母、数字和特殊字符)
 postcode             格式：postcode                              说明：中国邮政编码
 id-number            格式：id-number                             说明：公民身份证号码
+luhn                 格式：luhn                                  说明：银行号验证
 qq                   格式：qq                                    说明：腾讯QQ号码
 ip                   格式：ip                                    说明：IPv4/IPv6地址
 ipv4                 格式：ipv4                                  说明：IPv4地址
