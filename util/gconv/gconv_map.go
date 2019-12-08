@@ -201,7 +201,7 @@ func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string
 	return doMapToMap(params, pointer, true, mapping...)
 }
 
-// doMapStruct converts map type variable <params> to another map type variable <pointer>.
+// doMapToMap converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of *map.
 func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
 	paramsRv := reflect.ValueOf(params)

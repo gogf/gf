@@ -87,6 +87,10 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 		return
 	}
 	item := r.(*fileCacheItem)
+	// It's not necessary continuing parsing if template content is empty.
+	if item.content == "" {
+		return "", nil
+	}
 	// Get the template object instance for <folder>.
 	tpl, err = view.getTemplate(item.folder, fmt.Sprintf(`*%s`, gfile.Ext(item.path)))
 	if err != nil {
@@ -145,6 +149,10 @@ func (view *View) ParseDefault(params ...Params) (result string, err error) {
 // ParseContent parses given template content <content>  with template variables <params>
 // and returns the parsed content in []byte.
 func (view *View) ParseContent(content string, params ...Params) (string, error) {
+	// It's not necessary continuing parsing if template content is empty.
+	if content == "" {
+		return "", nil
+	}
 	err := (error)(nil)
 	key := fmt.Sprintf("%s_%v", gCONTENT_TEMPLATE_NAME, view.delimiters)
 	tpl := templates.GetOrSetFuncLock(key, func() interface{} {

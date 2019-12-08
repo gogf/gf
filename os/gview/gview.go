@@ -141,5 +141,6 @@ func New(path ...string) *View {
 	view.BindFunc("tolower", view.funcToLower)
 	view.BindFunc("nl2br", view.funcNl2Br)
 	view.BindFunc("include", view.funcInclude)
+	view.BindFunc("dump", view.funcDump)
 	return view
 }

@@ -106,9 +106,7 @@ func (c *memCache) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
 
 // Set sets cache with <key>-<value> pair, which is expired after <duration>.
 //
-// The parameter <duration> can be either type of int or time.Duration.
-// If <duration> is type of int, it means <duration> milliseconds.
-// If <duration> <=0 means it does not expire.
+// It does not expire if <duration> <= 0.
 func (c *memCache) Set(key interface{}, value interface{}, duration time.Duration) {
 	expireTime := c.getInternalExpire(duration.Nanoseconds() / 1000000)
 	c.dataMu.Lock()
@@ -120,9 +118,7 @@ func (c *memCache) Set(key interface{}, value interface{}, duration time.Duratio
 // doSetWithLockCheck sets cache with <key>-<value> pair if <key> does not exist in the cache,
 // which is expired after <duration>.
 //
-// The parameter <duration> can be either type of int or time.Duration.
-// If <duration> is type of int, it means <duration> milliseconds.
-// If <duration> <=0 means it does not expire.
+// It does not expire if <duration> <= 0.
 //
 // It doubly checks the <key> whether exists in the cache using mutex writing lock
 // before setting it to the cache.
@@ -154,11 +150,7 @@ func (c *memCache) getInternalExpire(expire int64) int64 {
 }
 
 // SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
-// which is expired after <duration>.
-//
-// The parameter <duration> can be either type of int or time.Duration.
-// If <duration> is type of int, it means <duration> milliseconds.
-// If <duration> <=0 means it does not expire.
+// which is expired after <duration>. It does not expire if <duration> <= 0.
 func (c *memCache) SetIfNotExist(key interface{}, value interface{}, duration time.Duration) bool {
 	if !c.Contains(key) {
 		c.doSetWithLockCheck(key, value, duration)
@@ -169,9 +161,7 @@ func (c *memCache) SetIfNotExist(key interface{}, value interface{}, duration ti
 
 // Sets batch sets cache with key-value pairs by <data>, which is expired after <duration>.
 //
-// The parameter <duration> can be either type of int or time.Duration.
-// If <duration> is type of int, it means <duration> milliseconds.
-// If <duration> <=0 means it does not expire.
+// It does not expire if <duration> <= 0.
 func (c *memCache) Sets(data map[interface{}]interface{}, duration time.Duration) {
 	expireTime := c.getInternalExpire(duration.Nanoseconds() / 1000000)
 	for k, v := range data {
@@ -198,13 +188,9 @@ func (c *memCache) Get(key interface{}) interface{} {
 	return nil
 }
 
-// GetOrSet returns the value of <key>,
-// or sets <key>-<value> pair and returns <value> if <key> does not exist in the cache.
-// The key-value pair expires after <duration>.
-//
-// The parameter <duration> can be either type of int or time.Duration.
-// If <duration> is type of int, it means <duration> milliseconds.
-// If <duration> <=0 means it does not expire.
+// GetOrSet returns the value of <key>, or sets <key>-<value> pair and returns <value> if <key>
+// does not exist in the cache. The key-value pair expires after <duration>. It does not expire
+// if <duration> <= 0.
 func (c *memCache) GetOrSet(key interface{}, value interface{}, duration time.Duration) interface{} {
 	if v := c.Get(key); v == nil {
 		return c.doSetWithLockCheck(key, value, duration)
@@ -213,14 +199,9 @@ func (c *memCache) GetOrSet(key interface{}, value interface{}, duration time.Du
 	}
 }
 
-// GetOrSetFunc returns the value of <key>,
-// or sets <key> with result of function <f> and returns its result
-// if <key> does not exist in the cache.
-// The key-value pair expires after <duration>.
-//
-// The parameter <duration> can be either type of int or time.Duration.
-// If <duration> is type of int, it means <duration> milliseconds.
-// If <duration> <=0 means it does not expire.
+// GetOrSetFunc returns the value of <key>, or sets <key> with result of function <f>
+// and returns its result if <key> does not exist in the cache. The key-value pair expires
+// after <duration>. It does not expire if <duration> <= 0.
 func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, duration time.Duration) interface{} {
 	if v := c.Get(key); v == nil {
 		return c.doSetWithLockCheck(key, f(), duration)
@@ -229,14 +210,9 @@ func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, duration 
 	}
 }
 
-// GetOrSetFuncLock returns the value of <key>,
-// or sets <key> with result of function <f> and returns its result
-// if <key> does not exist in the cache.
-// The key-value pair expires after <duration>.
-//
-// The parameter <duration> can be either type of int or time.Duration.
-// If <duration> is type of int, it means <duration> milliseconds.
-// If <duration> <=0 means it does not expire.
+// GetOrSetFuncLock returns the value of <key>, or sets <key> with result of function <f>
+// and returns its result if <key> does not exist in the cache. The key-value pair expires
+// after <duration>. It does not expire if <duration> <= 0.
 //
 // Note that the function <f> is executed within writing mutex lock.
 func (c *memCache) GetOrSetFuncLock(key interface{}, f func() interface{}, duration time.Duration) interface{} {

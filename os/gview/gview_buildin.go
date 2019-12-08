@@ -8,6 +8,7 @@ package gview
 
 import (
 	"fmt"
+	"github.com/gogf/gf/util/gutil"
 	"strings"
 
 	"github.com/gogf/gf/encoding/ghtml"
@@ -16,6 +17,16 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
+
+// funcDump implements build-in template function: dump
+func (view *View) funcDump(values ...interface{}) (result string) {
+	result += "<!--\n"
+	for _, v := range values {
+		result += gutil.Export(v) + "\n"
+	}
+	result += "-->\n"
+	return result
+}
 
 // funcEq implements build-in template function: eq
 func (view *View) funcEq(value interface{}, others ...interface{}) bool {
