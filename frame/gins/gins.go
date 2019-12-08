@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/util/gutil"
 
 	"github.com/gogf/gf/os/gfile"
 
@@ -242,8 +243,8 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	if err != nil {
 		glog.Panic(err)
 	}
-	if value, ok := nodeMap["link"]; ok {
-		node.LinkInfo = gconv.String(value)
+	if _, v := gutil.MapPossibleItemByKey(nodeMap, "link"); v != nil {
+		node.LinkInfo = gconv.String(v)
 	}
 	// Parse link syntax.
 	if node.LinkInfo != "" && node.Type == "" {

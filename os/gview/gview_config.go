@@ -57,10 +57,10 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 		return errors.New("configuration cannot be empty")
 	}
 	// Most common used configuration support for single view path.
-	k1, v1 := gutil.MapPossibleItemByKey(m, "paths")
+	_, v1 := gutil.MapPossibleItemByKey(m, "paths")
 	_, v2 := gutil.MapPossibleItemByKey(m, "path")
 	if v1 == nil && v2 != nil {
-		m[k1] = []interface{}{v2}
+		m["paths"] = []interface{}{v2}
 	}
 	config := Config{}
 	err := gconv.Struct(m, &config)

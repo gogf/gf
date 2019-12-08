@@ -63,6 +63,7 @@ type (
 
 	// Router item just for dumping.
 	RouterItem struct {
+		Type       int
 		Middleware string
 		Domain     string
 		Method     string
@@ -380,6 +381,7 @@ func (s *Server) GetRouterMap() map[string][]RouterItem {
 		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
 		for index, registeredItem := range registeredItems {
 			item := RouterItem{
+				Type:       registeredItem.handler.itemType,
 				Middleware: array[1],
 				Domain:     array[4],
 				Method:     array[2],

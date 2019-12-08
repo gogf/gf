@@ -91,8 +91,8 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	if c := gcfg.Instance(); c.Available() {
 		vars["Config"] = c.GetMap(".")
 	}
-	vars["Get"] = r.Request.GetQueryMap()
-	vars["Post"] = r.Request.GetPostMap()
+	vars["Form"] = r.Request.GetFormMap()
+	vars["Query"] = r.Request.GetQueryMap()
 	vars["Cookie"] = r.Request.Cookie.Map()
 	vars["Session"] = r.Request.Session.Map()
 	return vars
