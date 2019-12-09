@@ -1,13 +1,17 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/os/gproc"
+	"log"
 )
 
 func main() {
-	s := `-abc`
-	m, err := gregex.MatchString(`^\-{1,2}a={0,1}(.*)`, s)
-	g.Dump(err)
-	g.Dump(m)
+	process := gproc.NewProcessCmd("go run test.go")
+	if pid, err := process.Start(); err != nil {
+		log.Print("Build failed:", err)
+		return
+	} else {
+		log.Printf("Build running: pid: %d", pid)
+	}
+
 }
