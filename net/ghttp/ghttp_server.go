@@ -63,13 +63,14 @@ type (
 
 	// Router item just for dumping.
 	RouterItem struct {
-		Type       int
-		Middleware string
-		Domain     string
-		Method     string
-		Route      string
-		Priority   int
-		handler    *handlerItem
+		Type             int
+		Middleware       string
+		Domain           string
+		Method           string
+		Route            string
+		Priority         int
+		IsServiceHandler bool
+		handler          *handlerItem
 	}
 
 	// 路由函数注册信息
@@ -389,7 +390,10 @@ func (s *Server) GetRouterMap() map[string][]RouterItem {
 				Priority:   len(registeredItems) - index - 1,
 				handler:    registeredItem.handler,
 			}
-			if item.handler.itemType == gHANDLER_TYPE_MIDDLEWARE {
+			switch item.handler.itemType {
+			case gHANDLER_TYPE_CONTROLLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_HANDLER:
+				item.IsServiceHandler = true
+			case gHANDLER_TYPE_MIDDLEWARE:
 				item.Middleware = "GLOBAL MIDDLEWARE"
 			}
 			if len(item.handler.middleware) > 0 {
