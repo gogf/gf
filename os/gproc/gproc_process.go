@@ -60,6 +60,11 @@ func NewProcess(path string, args []string, environment ...[]string) *Process {
 	return p
 }
 
+// NewProcessCmd creates and returns a process with given command and optional environment variable array.
+func NewProcessCmd(cmd string, environment ...[]string) *Process {
+	return NewProcess(getShell(), []string{getShellOption(), cmd}, environment...)
+}
+
 // 开始执行(非阻塞)
 func (p *Process) Start() (int, error) {
 	if p.Process != nil {
@@ -114,6 +119,8 @@ func (p *Process) Kill() error {
 		if p.Manager != nil {
 			p.Manager.processes.Remove(p.Pid())
 		}
+		p.Process.Release()
+		p.Process.Wait()
 		return nil
 	} else {
 		return err

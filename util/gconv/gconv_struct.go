@@ -53,7 +53,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	if !ok {
 		rv := reflect.ValueOf(pointer)
 		if kind := rv.Kind(); kind != reflect.Ptr {
-			return fmt.Errorf("object pointer should be type of: %v", kind)
+			return fmt.Errorf("object pointer should be type of '*struct', but got '%v'", kind)
 		}
 		// Using IsNil on reflect.Ptr variable is OK.
 		if !rv.IsValid() || rv.IsNil() {
