@@ -63,9 +63,11 @@ type (
 
 	// Router item just for dumping.
 	RouterItem struct {
+		Server     string
+		Address    string
+		Domain     string
 		Type       int
 		Middleware string
-		Domain     string
 		Method     string
 		Route      string
 		Priority   int
@@ -318,7 +320,7 @@ func (s *Server) Start() error {
 	if gproc.IsChild() {
 		gtimer.SetTimeout(2*time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP); err != nil {
-				glog.Error("[ghttp] server error in process communication:", err)
+				//glog.Error("[ghttp] server error in process communication:", err)
 			}
 		})
 	}
@@ -347,18 +349,11 @@ func (s *Server) DumpRouterMap() {
 			tablewriter.ALIGN_LEFT,
 		})
 
-		address := s.config.Address
-		if s.config.HTTPSAddr != "" {
-			if len(address) > 0 {
-				address += ","
-			}
-			address += "tls" + s.config.HTTPSAddr
-		}
 		for _, array := range s.GetRouterMap() {
 			data := make([]string, 8)
 			for _, item := range array {
-				data[0] = s.name
-				data[1] = address
+				data[0] = item.Server
+				data[1] = item.Address
 				data[2] = item.Domain
 				data[3] = item.Method
 				data[4] = gconv.String(len(strings.Split(item.Route, "/")) - 1 + item.Priority)
@@ -377,13 +372,22 @@ func (s *Server) DumpRouterMap() {
 // The key of the returned map is the domain of the server.
 func (s *Server) GetRouterMap() map[string][]RouterItem {
 	m := make(map[string]*garray.SortedArray)
+	address := s.config.Address
+	if s.config.HTTPSAddr != "" {
+		if len(address) > 0 {
+			address += ","
+		}
+		address += "tls" + s.config.HTTPSAddr
+	}
 	for k, registeredItems := range s.routesMap {
 		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
 		for index, registeredItem := range registeredItems {
 			item := RouterItem{
+				Server:     s.name,
+				Address:    address,
+				Domain:     array[4],
 				Type:       registeredItem.handler.itemType,
 				Middleware: array[1],
-				Domain:     array[4],
 				Method:     array[2],
 				Route:      array[3],
 				Priority:   len(registeredItems) - index - 1,
