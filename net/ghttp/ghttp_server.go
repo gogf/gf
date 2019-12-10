@@ -63,16 +63,16 @@ type (
 
 	// Router item just for dumping.
 	RouterItem struct {
-		Server     string
-		Address    string
-		Domain     string
-		Type       int
-		Middleware string
-		Method     string
-		Route      string
-		Priority   int
-IsServiceHandler bool
-		handler    *handlerItem
+		Server           string
+		Address          string
+		Domain           string
+		Type             int
+		Middleware       string
+		Method           string
+		Route            string
+		Priority         int
+		IsServiceHandler bool
+		handler          *handlerItem
 	}
 
 	// 路由函数注册信息
@@ -326,12 +326,12 @@ func (s *Server) Start() error {
 		})
 	}
 
-	s.DumpRouterMap()
+	s.dumpRouterMap()
 	return nil
 }
 
 // DumpRouterMap dumps the router map to the log.
-func (s *Server) DumpRouterMap() {
+func (s *Server) dumpRouterMap() {
 	if s.config.DumpRouterMap && len(s.routesMap) > 0 {
 		buffer := bytes.NewBuffer(nil)
 		table := tablewriter.NewWriter(buffer)
@@ -350,28 +350,26 @@ func (s *Server) DumpRouterMap() {
 			tablewriter.ALIGN_LEFT,
 		})
 
-		for _, array := range s.GetRouterMap() {
+		for _, item := range s.GetRouterArray() {
 			data := make([]string, 8)
-			for _, item := range array {
-				data[0] = item.Server
-				data[1] = item.Address
-				data[2] = item.Domain
-				data[3] = item.Method
-				data[4] = gconv.String(len(strings.Split(item.Route, "/")) - 1 + item.Priority)
-				data[5] = item.Route
-				data[6] = item.handler.itemName
-				data[7] = item.Middleware
-				table.Append(data)
-			}
+			data[0] = item.Server
+			data[1] = item.Address
+			data[2] = item.Domain
+			data[3] = item.Method
+			data[4] = gconv.String(len(strings.Split(item.Route, "/")) - 1 + item.Priority)
+			data[5] = item.Route
+			data[6] = item.handler.itemName
+			data[7] = item.Middleware
+			table.Append(data)
 		}
 		table.Render()
 		s.config.Logger.Header(false).Printf("\n%s", buffer.String())
 	}
 }
 
-// GetRouterMap retrieves and returns the router map.
+// GetRouterArray retrieves and returns the router array.
 // The key of the returned map is the domain of the server.
-func (s *Server) GetRouterMap() map[string][]RouterItem {
+func (s *Server) GetRouterArray() []RouterItem {
 	m := make(map[string]*garray.SortedArray)
 	address := s.config.Address
 	if s.config.HTTPSAddr != "" {
@@ -412,7 +410,7 @@ func (s *Server) GetRouterMap() map[string][]RouterItem {
 			// The value of the map is a custom sorted array.
 			if _, ok := m[item.Domain]; !ok {
 				// Sort in ASC order.
-				m[item.Domain] = garray.NewSortedArraySize(100, func(v1, v2 interface{}) int {
+				m[item.Domain] = garray.NewSortedArray(func(v1, v2 interface{}) int {
 					item1 := v1.(RouterItem)
 					item2 := v2.(RouterItem)
 					r := 0
@@ -435,16 +433,13 @@ func (s *Server) GetRouterMap() map[string][]RouterItem {
 			m[item.Domain].Add(item)
 		}
 	}
-	routerMap := make(map[string][]RouterItem, len(m))
-	for domain, array := range m {
-		if routerMap[domain] == nil {
-			routerMap[domain] = make([]RouterItem, array.Len())
-		}
-		for k, v := range array.Slice() {
-			routerMap[domain][k] = v.(RouterItem)
+	routerArray := make([]RouterItem, 0, 128)
+	for _, array := range m {
+		for _, v := range array.Slice() {
+			routerArray = append(routerArray, v.(RouterItem))
 		}
 	}
-	return routerMap
+	return routerArray
 }
 
 // Run starts server listening in blocking way.
