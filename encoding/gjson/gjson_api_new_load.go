@@ -25,11 +25,10 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// New creates a Json object with any variable type of <data>,
-// but <data> should be a map or slice for data access reason,
-// or it will make no sense.
-// The <unsafe> param specifies whether using this Json object
-// in un-concurrent-safe context, which is false in default.
+// New creates a Json object with any variable type of <data>, but <data> should be a map or slice
+// for data access reason, or it will make no sense.
+// The <safe> param specifies whether using this Json object in concurrent-safe context, which is
+// false in default.
 func New(data interface{}, safe ...bool) *Json {
 	j := (*Json)(nil)
 	switch data.(type) {
@@ -61,7 +60,8 @@ func New(data interface{}, safe ...bool) *Json {
 			}
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			i = gconv.Map(data, "json")
+			// Note that it uses MapDeep function implementing the converting.
+			i = gconv.MapDeep(data, "json")
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),

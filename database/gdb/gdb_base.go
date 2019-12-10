@@ -25,57 +25,13 @@ import (
 )
 
 const (
-	gDEFAULT_DEBUG_SQL_LENGTH = 1000
-	gPATH_FILTER_KEY          = "/database/gdb/gdb"
+	gPATH_FILTER_KEY = "/database/gdb/gdb"
 )
 
 var (
 	wordReg         = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`) // Regular expression object for a word.
 	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)        // Regular expression object for a string which has operator at its tail.
 )
-
-// 获取最近一条执行的sql
-func (bs *dbBase) GetLastSql() *Sql {
-	if bs.sqls == nil {
-		return nil
-	}
-	if v := bs.sqls.Val(); v != nil {
-		return v.(*Sql)
-	}
-	return nil
-}
-
-// 获取已经执行的SQL列表(仅在debug=true时有效)
-func (bs *dbBase) GetQueriedSqls() []*Sql {
-	if bs.sqls == nil {
-		return nil
-	}
-	array := make([]*Sql, 0)
-	bs.sqls.Prev()
-	bs.sqls.RLockIteratorPrev(func(value interface{}) bool {
-		if value == nil {
-			return false
-		}
-		array = append(array, value.(*Sql))
-		return true
-	})
-	return array
-}
-
-// 打印已经执行的SQL列表(仅在debug=true时有效)
-func (bs *dbBase) PrintQueriedSqls() {
-	sqlSlice := bs.GetQueriedSqls()
-	for k, v := range sqlSlice {
-		fmt.Println(len(sqlSlice)-k, ":")
-		fmt.Println("    Sql    :", v.Sql)
-		fmt.Println("    Args   :", v.Args)
-		fmt.Println("    Format :", v.Format)
-		fmt.Println("    Error  :", v.Error)
-		fmt.Println("    Start  :", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
-		fmt.Println("    End    :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
-		fmt.Println("    Cost   :", v.End-v.Start, "ms")
-	}
-}
 
 // 打印SQL对象(仅在debug=true时有效)
 func (bs *dbBase) printSql(v *Sql) {
@@ -113,7 +69,6 @@ func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows 
 			Start:  mTime1,
 			End:    mTime2,
 		}
-		bs.sqls.Put(s)
 		bs.printSql(s)
 	} else {
 		rows, err = link.Query(query, args...)
@@ -151,7 +106,6 @@ func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result
 			Start:  mTime1,
 			End:    mTime2,
 		}
-		bs.sqls.Put(s)
 		bs.printSql(s)
 	} else {
 		result, err = link.Exec(query, args...)
@@ -598,6 +552,11 @@ func (bs *dbBase) doDelete(link dbLink, table string, condition string, args ...
 // 获得缓存对象
 func (bs *dbBase) getCache() *gcache.Cache {
 	return bs.cache
+}
+
+// 获得表名前缀
+func (bs *dbBase) getPrefix() string {
+	return bs.prefix
 }
 
 // 将数据查询的列表数据*sql.Rows转换为Result类型

@@ -65,12 +65,17 @@ const (
 	OPTION_ALLOWEMPTY
 )
 
-// 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (bs *dbBase) Table(tables string) *Model {
+// Table creates and returns a new model with given table.
+// The parameter <table> can be used with alias like "user as u" or "user u".
+// And also, the <table> can be multiple table names joined with char ',', like
+// "user, user_detail" or "user u, user_detail ud".
+func (bs *dbBase) Table(table string) *Model {
+	array := gstr.SplitAndTrim(table, " ")
+	array[0] = bs.db.quoteWord(bs.db.getPrefix() + array[0])
 	return &Model{
 		db:         bs.db,
-		tablesInit: tables,
-		tables:     bs.db.quoteWord(tables),
+		tablesInit: table,
+		tables:     gstr.Join(array, " "),
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
@@ -79,18 +84,22 @@ func (bs *dbBase) Table(tables string) *Model {
 	}
 }
 
-// 链式操作，数据表字段，可支持多个表，以半角逗号连接
+// From is alias of Table.
+// See Table.
 func (bs *dbBase) From(tables string) *Model {
 	return bs.db.Table(tables)
 }
 
-// (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (tx *TX) Table(tables string) *Model {
+// Table creates and returns a new model with given table for transaction object.
+// More detail please see dbBase.Table.
+func (tx *TX) Table(table string) *Model {
+	array := gstr.SplitAndTrim(table, " ")
+	array[0] = tx.db.quoteWord(tx.db.getPrefix() + array[0])
 	return &Model{
 		db:         tx.db,
 		tx:         tx,
-		tablesInit: tables,
-		tables:     tx.db.quoteWord(tables),
+		tablesInit: table,
+		tables:     gstr.Join(array, " "),
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
@@ -99,12 +108,13 @@ func (tx *TX) Table(tables string) *Model {
 	}
 }
 
-// (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
+// From is alias of tx.Table.
+// See Table.
 func (tx *TX) From(tables string) *Model {
 	return tx.Table(tables)
 }
 
-// 克隆一个当前对象
+// Clone creates and returns a new model, which is a deep copy of current model.
 func (md *Model) Clone() *Model {
 	newModel := (*Model)(nil)
 	if md.tx != nil {
@@ -125,14 +135,15 @@ func (md *Model) Clone() *Model {
 	return newModel
 }
 
-// 设置本次链式操作在主节点上
+// Master marks this database operation will be implemented on the master node.
 func (md *Model) Master() *Model {
 	model := md.getModel()
 	model.linkType = gLINK_TYPE_MASTER
 	return model
 }
 
-// 设置本次链式操作在从节点上
+// Slave marks this database operation will be implemented on the slave node.
+// Note that this makes sense only if there's any slave node in the database configuration.
 func (md *Model) Slave() *Model {
 	model := md.getModel()
 	model.linkType = gLINK_TYPE_SLAVE
@@ -165,23 +176,29 @@ func (md *Model) getModel() *Model {
 }
 
 // 链式操作，左联表
-func (md *Model) LeftJoin(joinTable string, on string) *Model {
+func (md *Model) LeftJoin(table string, on string) *Model {
 	model := md.getModel()
-	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", joinTable, on)
+	array := gstr.SplitAndTrim(table, " ")
+	array[0] = md.db.quoteWord(md.db.getPrefix() + array[0])
+	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", gstr.Join(array, " "), on)
 	return model
 }
 
 // 链式操作，右联表
-func (md *Model) RightJoin(joinTable string, on string) *Model {
+func (md *Model) RightJoin(table string, on string) *Model {
 	model := md.getModel()
-	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", joinTable, on)
+	array := gstr.SplitAndTrim(table, " ")
+	array[0] = md.db.quoteWord(md.db.getPrefix() + array[0])
+	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", gstr.Join(array, " "), on)
 	return model
 }
 
 // 链式操作，内联表
-func (md *Model) InnerJoin(joinTable string, on string) *Model {
+func (md *Model) InnerJoin(table string, on string) *Model {
 	model := md.getModel()
-	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", joinTable, on)
+	array := gstr.SplitAndTrim(table, " ")
+	array[0] = md.db.quoteWord(md.db.getPrefix() + array[0])
+	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", gstr.Join(array, " "), on)
 	return model
 }
 
@@ -393,7 +410,6 @@ func (md *Model) Data(data ...interface{}) *Model {
 }
 
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
-// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (md *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
 	if list, ok := md.data.(List); ok {
 		for k, m := range list {
