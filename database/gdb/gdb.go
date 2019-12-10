@@ -16,7 +16,6 @@ import (
 	"github.com/gogf/gf/os/glog"
 
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gring"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcache"
@@ -84,9 +83,6 @@ type DB interface {
 	// 设置管理
 	SetDebug(debug bool)
 	SetSchema(schema string)
-	GetQueriedSqls() []*Sql
-	GetLastSql() *Sql
-	PrintQueriedSqls()
 	SetLogger(logger *glog.Logger)
 	GetLogger() *glog.Logger
 	SetMaxIdleConnCount(n int)
@@ -99,6 +95,7 @@ type DB interface {
 	getCache() *gcache.Cache
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
+	getPrefix() string
 	quoteWord(s string) string
 	doSetSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
@@ -119,9 +116,9 @@ type dbBase struct {
 	db               DB                           // 数据库对象
 	group            string                       // 配置分组名称
 	debug            *gtype.Bool                  // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
-	sqls             *gring.Ring                  // (debug=true时有效)已执行的SQL列表
 	cache            *gcache.Cache                // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
 	schema           *gtype.String                // 手动切换的数据库名称
+	prefix           string                       // 表名前缀
 	tables           map[string]map[string]string // 数据库表结构
 	logger           *glog.Logger                 // 日志管理对象
 	maxIdleConnCount int                          // 连接池最大限制的连接数
@@ -179,7 +176,7 @@ var (
 	instances = gmap.NewStrAnyMap(true)
 )
 
-// New creates ORM DB object with global configurations.
+// New creates and returns an ORM object with global configurations.
 // The parameter <name> specifies the configuration group name,
 // which is DEFAULT_GROUP_NAME in default.
 func New(name ...string) (db DB, err error) {
@@ -201,6 +198,7 @@ func New(name ...string) (db DB, err error) {
 				cache:           gcache.New(),
 				schema:          gtype.NewString(),
 				logger:          glog.New(),
+				prefix:          node.Prefix,
 				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME,
 			}
 			switch node.Type {

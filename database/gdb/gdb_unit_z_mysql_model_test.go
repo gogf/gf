@@ -1260,3 +1260,34 @@ func Test_Model_FieldsEx(t *testing.T) {
 		gtest.AssertNE(one["password"], "456")
 	})
 }
+
+func Test_Model_Prefix(t *testing.T) {
+	db := dbPrefix
+	table := fmt.Sprintf(`%s_%d`, TABLE, gtime.Nanosecond())
+	createInitTableWithDb(db, PREFIX1+table)
+	defer dropTable(PREFIX1 + table)
+	// Select.
+	gtest.Case(t, func() {
+		r, err := db.Table(table).Where("id in (?)", g.Slice{1, 2}).OrderBy("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(r), 2)
+		gtest.Assert(r[0]["id"], "1")
+		gtest.Assert(r[1]["id"], "2")
+	})
+	// Select with alias.
+	gtest.Case(t, func() {
+		r, err := db.Table(table+" as u").Where("u.id in (?)", g.Slice{1, 2}).OrderBy("u.id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(r), 2)
+		gtest.Assert(r[0]["id"], "1")
+		gtest.Assert(r[1]["id"], "2")
+	})
+	// Select with alias and join statement.
+	gtest.Case(t, func() {
+		r, err := db.Table(table+" as u1").LeftJoin(table+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).OrderBy("u1.id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(r), 2)
+		gtest.Assert(r[0]["id"], "1")
+		gtest.Assert(r[1]["id"], "2")
+	})
+}
