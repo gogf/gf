@@ -19,7 +19,6 @@ import (
 type Conn struct {
 	net.Conn                     // Underlying TCP connection object.
 	reader         *bufio.Reader // Buffer reader for connection.
-	buffer         []byte        // Buffer object.
 	recvDeadline   time.Time     // Timeout point for reading.
 	sendDeadline   time.Time     // Timeout point for writing.
 	recvBufferWait time.Duration // Interval duration for reading buffer.
