@@ -8,23 +8,12 @@ package gtcp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/net/gtcp"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 	"testing"
 	"time"
 )
-
-var (
-	ports = garray.NewIntArray(true)
-)
-
-func init() {
-	for i := 9000; i <= 10000; i++ {
-		ports.Append(i)
-	}
-}
 
 func Test_Package_Basic(t *testing.T) {
 	p := ports.PopRand()

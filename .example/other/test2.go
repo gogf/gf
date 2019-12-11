@@ -1,17 +1,17 @@
 package main
 
 import (
-	"github.com/gogf/gf/os/gproc"
-	"log"
+	"fmt"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 )
 
 func main() {
-	process := gproc.NewProcessCmd("go run test.go")
-	if pid, err := process.Start(); err != nil {
-		log.Print("Build failed:", err)
-		return
-	} else {
-		log.Printf("Build running: pid: %d", pid)
+	type User struct {
+		Scores []int64
 	}
-
+	user := new(User)
+	err := gconv.Struct(g.Map{"scores": []interface{}{1, 2, 3}}, user)
+	fmt.Println(err)
+	fmt.Println(user)
 }

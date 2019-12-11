@@ -74,6 +74,7 @@ type ServerConfig struct {
 	FormParsingMemory int64             // Other: Max memory in bytes which can be used for parsing multimedia form.
 	NameToUriType     int               // Other: Type for converting struct method name to URI when registering routes.
 	DumpRouterMap     bool              // Other: Whether automatically dump router map when server starts.
+	Graceful          bool              // Other: Enable graceful reload feature for all servers of the process.
 }
 
 // defaultServerConfig is the default configuration object for server.
@@ -108,6 +109,7 @@ var defaultServerConfig = ServerConfig{
 	DumpRouterMap:     true,
 	FormParsingMemory: 100 * 1024 * 1024, // 100MB
 	Rewrites:          make(map[string]string),
+	Graceful:          true,
 }
 
 // Config returns the default ServerConfig object.
@@ -140,6 +142,7 @@ func (s *Server) SetConfig(c ServerConfig) error {
 	if c.TLSConfig == nil && c.HTTPSCertPath != "" {
 		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
 	}
+	SetGraceful(c.Graceful)
 	return nil
 }
 

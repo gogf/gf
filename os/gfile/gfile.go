@@ -36,7 +36,15 @@ var (
 	// The absolute file path for main package.
 	// It can be only checked and set once.
 	mainPkgPath = gtype.NewString()
+	// Temporary directory of system.
+	tempDir = "/tmp"
 )
+
+func init() {
+	if !Exists(tempDir) {
+		tempDir = os.TempDir()
+	}
+}
 
 // Mkdir creates directories recursively with given <path>.
 // The parameter <path> is suggested to be absolute path.
@@ -511,5 +519,5 @@ func homeWindows() (string, error) {
 
 // See os.TempDir().
 func TempDir() string {
-	return os.TempDir()
+	return tempDir
 }

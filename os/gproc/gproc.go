@@ -9,6 +9,7 @@ package gproc
 
 import (
 	"bytes"
+	"github.com/gogf/gf/text/gstr"
 	"io"
 	"os"
 	"runtime"
@@ -21,15 +22,14 @@ import (
 
 const (
 	gPROC_ENV_KEY_PPID_KEY = "GPROC_PPID"
-	gPROC_TEMP_DIR_ENV_KEY = "GPROC_TEMP_DIR"
 )
 
 var (
-	// 进程开始执行时间
+	// processStartTime is the start time of current process.
 	processStartTime = time.Now()
 )
 
-// 获取当前进程ID
+// Pid returns the pid of current process.
 func Pid() int {
 	return os.Getpid()
 }
@@ -39,7 +39,6 @@ func PPid() int {
 	if !IsChild() {
 		return Pid()
 	}
-	// gPROC_ENV_KEY_PPID_KEY为gproc包自定义的父进程
 	ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
 	if ppidValue != "" && ppidValue != "0" {
 		return gconv.Int(ppidValue)
@@ -114,11 +113,11 @@ func checkEnvKey(env []string, key string) bool {
 func getShell() string {
 	switch runtime.GOOS {
 	case "windows":
-		return searchBinFromEnvPath("cmd.exe")
+		return SearchBinary("cmd.exe")
 	default:
-		path := searchBinFromEnvPath("bash")
+		path := SearchBinary("bash")
 		if path == "" {
-			path = searchBinFromEnvPath("sh")
+			path = SearchBinary("sh")
 		}
 		return path
 	}
@@ -135,24 +134,25 @@ func getShellOption() string {
 }
 
 // 从环境变量PATH中搜索可执行文件
-func searchBinFromEnvPath(file string) string {
-	// 如果是绝对路径，或者相对路径下存在，那么直接返回
+func SearchBinary(file string) string {
+	// Check if it's absolute path of exists at current working directory.
 	if gfile.Exists(file) {
 		return file
 	}
 	array := ([]string)(nil)
 	switch runtime.GOOS {
 	case "windows":
-		array = strings.Split(os.Getenv("Path"), ";")
+		array = gstr.SplitAndTrim(os.Getenv("Path"), ";")
 		if gfile.Ext(file) != ".exe" {
 			file += ".exe"
 		}
 	default:
-		array = strings.Split(os.Getenv("PATH"), ":")
+		array = gstr.SplitAndTrim(os.Getenv("PATH"), ":")
 	}
 	if len(array) > 0 {
+		path := ""
 		for _, v := range array {
-			path := v + gfile.Separator + file
+			path = v + gfile.Separator + file
 			if gfile.Exists(path) {
 				return path
 			}
