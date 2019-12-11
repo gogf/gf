@@ -110,32 +110,32 @@ func (s *Server) Close() error {
 func (s *Server) Run() (err error) {
 	if s.handler == nil {
 		err = errors.New("start running failed: socket handler not defined")
-		glog.Error(err)
+		glog.Fatal(err)
 		return
 	}
 	if s.tlsConfig != nil {
 		// TLS Server
 		s.listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
 		if err != nil {
-			glog.Error(err)
+			glog.Fatal(err)
 			return
 		}
 	} else {
 		// Normal Server
 		addr, err := net.ResolveTCPAddr("tcp", s.address)
 		if err != nil {
-			glog.Error(err)
+			glog.Fatal(err)
 			return err
 		}
 		s.listen, err = net.ListenTCP("tcp", addr)
 		if err != nil {
-			glog.Error(err)
+			glog.Fatal(err)
 			return err
 		}
 	}
+	// Listening loop.
 	for {
 		if conn, err := s.listen.Accept(); err != nil {
-			glog.Error(err)
 			return err
 		} else if conn != nil {
 			go s.handler(NewConnByNetConn(conn))
