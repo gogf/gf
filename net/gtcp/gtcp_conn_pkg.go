@@ -161,13 +161,14 @@ func getPkgOption(option ...PkgOption) (*PkgOption, error) {
 		case 3:
 			pkgOption.MaxDataSize = 0xFFFFFF
 		case 4:
-			pkgOption.MaxDataSize = 0xFFFFFFFF
+			// math.MaxInt32 not math.MaxUint32
+			pkgOption.MaxDataSize = 0x7FFFFFFF
 		}
 	}
-	if pkgOption.MaxDataSize > 0xFFFFFFFF {
+	if pkgOption.MaxDataSize > 0x7FFFFFFF {
 		return nil, fmt.Errorf(
 			`package data size %d definition exceeds allowed max data size %d`,
-			pkgOption.MaxDataSize, 0xFFFFFFFF,
+			pkgOption.MaxDataSize, 0x7FFFFFFF,
 		)
 	}
 	return &pkgOption, nil

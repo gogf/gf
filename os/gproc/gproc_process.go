@@ -25,15 +25,12 @@ type Process struct {
 func NewProcess(path string, args []string, environment ...[]string) *Process {
 	var env []string
 	if len(environment) > 0 {
-		env = make([]string, 0)
-		for _, v := range environment[0] {
-			env = append(env, v)
-		}
+		env = make([]string, len(environment[0]))
+		copy(env, environment[0])
 	} else {
 		env = os.Environ()
 	}
-	env = append(env, fmt.Sprintf("%s=%s", gPROC_TEMP_DIR_ENV_KEY, os.TempDir()))
-	p := &Process{
+	process := &Process{
 		Manager: nil,
 		PPid:    os.Getpid(),
 		Cmd: exec.Cmd{
@@ -46,18 +43,16 @@ func NewProcess(path string, args []string, environment ...[]string) *Process {
 			ExtraFiles: make([]*os.File, 0),
 		},
 	}
-	// 当前工作目录
-	if d, err := os.Getwd(); err == nil {
-		p.Dir = d
-	}
+	process.Dir, _ = os.Getwd()
 	if len(args) > 0 {
+		// Exclude of current binary path.
 		start := 0
 		if strings.EqualFold(path, args[0]) {
 			start = 1
 		}
-		p.Args = append(p.Args, args[start:]...)
+		process.Args = append(process.Args, args[start:]...)
 	}
-	return p
+	return process
 }
 
 // NewProcessCmd creates and returns a process with given command and optional environment variable array.

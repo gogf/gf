@@ -49,7 +49,7 @@ var (
 )
 
 // Convert converts the variable <i> to the type <t>, the type <t> is specified by string.
-// The unnecessary parameter <params> is used for additional parameter passing.
+// The optional parameter <params> is used for additional parameter passing.
 func Convert(i interface{}, t string, params ...interface{}) interface{} {
 	switch t {
 	case "int":
@@ -84,6 +84,20 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 		return Bytes(i)
 	case "[]int":
 		return Ints(i)
+	case "[]int32":
+		return Int32s(i)
+	case "[]int64":
+		return Int64s(i)
+	case "[]uint":
+		return Uints(i)
+	case "[]uint32":
+		return Uint32s(i)
+	case "[]uint64":
+		return Uint64s(i)
+	case "[]float32":
+		return Float32s(i)
+	case "[]float64":
+		return Float64s(i)
 	case "[]string":
 		return Strings(i)
 
@@ -187,8 +201,6 @@ func String(i interface{}) string {
 	case string:
 		return value
 	case []byte:
-		return string(value)
-	case []rune:
 		return string(value)
 	case *time.Time:
 		if value == nil {
