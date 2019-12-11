@@ -86,7 +86,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 				if retry[0].Interval == 0 {
 					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
 				}
-				time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
+				time.Sleep(retry[0].Interval)
 			}
 		} else {
 			return nil
@@ -97,10 +97,11 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 // Recv receives data from the connection.
 //
 // Note that,
-// 1. If length = 0, it means it receives the data from current buffer and returns immediately.
-// 2. If length < 0, it means it receives all data from buffer and returns if it waits til no data from connection.
+// 1. If length = 0, which means it receives the data from current buffer and returns immediately.
+// 2. If length < 0, which means it receives all data from buffer and returns if it waits til no data from connection.
 //    Developers should notice the package parsing yourself if you decide receiving all data from buffer.
-// 3. If length > 0, it means it blocks reading data from connection until length size was received.
+// 3. If length > 0, which means it blocks reading data from connection until length size was received.
+//    It is the most commonly used length value for data receiving.
 func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	var err error       // Reading error.
 	var size int        // Reading size.
@@ -163,7 +164,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 				if retry[0].Interval == 0 {
 					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
 				}
-				time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
+				time.Sleep(retry[0].Interval)
 				continue
 			}
 			break
