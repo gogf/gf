@@ -33,7 +33,10 @@ func MapField(pointer interface{}, priority []string, recursive bool) map[string
 		if name[0] < byte('A') || name[0] > byte('Z') {
 			continue
 		}
-		fieldMap[name] = field
+		fieldMap[name] = &Field{
+			Field: field,
+			Tag:   tag,
+		}
 		tag = ""
 		for _, p := range priority {
 			tag = field.Tag(p)
@@ -42,7 +45,10 @@ func MapField(pointer interface{}, priority []string, recursive bool) map[string
 			}
 		}
 		if tag != "" {
-			fieldMap[tag] = field
+			fieldMap[tag] = &Field{
+				Field: field,
+				Tag:   tag,
+			}
 		}
 		if recursive {
 			rv := reflect.ValueOf(field.Value())

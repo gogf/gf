@@ -141,13 +141,14 @@ type Sql struct {
 
 // 表字段结构信息
 type TableField struct {
-	Index   int         // 用于字段排序(map类型是无序的)
+	Index   int         // 用于字段排序(因为map类型是无序的)
 	Name    string      // 字段名称
 	Type    string      // 字段类型
 	Null    bool        // 是否可为null
 	Key     string      // 索引信息
 	Default interface{} // 默认值
 	Extra   string      // 其他信息
+	Comment string      // 字段描述
 }
 
 // 返回数据表记录值
