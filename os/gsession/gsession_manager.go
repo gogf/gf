@@ -35,6 +35,8 @@ func New(ttl time.Duration, storage ...Storage) *Manager {
 }
 
 // New creates or fetches the session for given session id.
+// The parameter <sessionId> is optional, it creates a new one if not it's passed
+// depending on Storage.New.
 func (m *Manager) New(sessionId ...string) *Session {
 	var id string
 	if len(sessionId) > 0 && sessionId[0] != "" {

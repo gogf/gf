@@ -68,11 +68,16 @@ const (
 // Table creates and returns a new ORM model.
 // The parameter <tables> can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
-func (bs *dbBase) Table(tables string) *Model {
+func (bs *dbBase) Table(table string) *Model {
+	if !gstr.Contains(table, ",") {
+		array := gstr.SplitAndTrim(table, " ")
+		array[0] = bs.db.quoteWord(bs.db.getPrefix() + array[0])
+		table = gstr.Join(array, " ")
+	}
 	return &Model{
 		db:         bs.db,
-		tablesInit: tables,
-		tables:     bs.db.quoteWord(tables),
+		tablesInit: table,
+		tables:     table,
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
@@ -89,12 +94,17 @@ func (bs *dbBase) From(tables string) *Model {
 
 // Table acts like dbBase.Table except it operates on transaction.
 // See dbBase.Table.
-func (tx *TX) Table(tables string) *Model {
+func (tx *TX) Table(table string) *Model {
+	if !gstr.Contains(table, ",") {
+		array := gstr.SplitAndTrim(table, " ")
+		array[0] = tx.db.quoteWord(tx.db.getPrefix() + array[0])
+		table = gstr.Join(array, " ")
+	}
 	return &Model{
 		db:         tx.db,
 		tx:         tx,
-		tablesInit: tables,
-		tables:     tx.db.quoteWord(tables),
+		tablesInit: table,
+		tables:     table,
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
@@ -175,23 +185,32 @@ func (m *Model) getModel() *Model {
 }
 
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
-func (m *Model) LeftJoin(joinTable string, on string) *Model {
+func (m *Model) LeftJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", joinTable, on)
+	array := gstr.SplitAndTrim(table, " ")
+	array[0] = m.db.quoteWord(m.db.getPrefix() + array[0])
+	table = gstr.Join(array, " ")
+	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", table, on)
 	return model
 }
 
 // RightJoin does "RIGHT JOIN ... ON ..." statement on the model.
-func (m *Model) RightJoin(joinTable string, on string) *Model {
+func (m *Model) RightJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", joinTable, on)
+	array := gstr.SplitAndTrim(table, " ")
+	array[0] = m.db.quoteWord(m.db.getPrefix() + array[0])
+	table = gstr.Join(array, " ")
+	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", table, on)
 	return model
 }
 
 // InnerJoin does "INNER JOIN ... ON ..." statement on the model.
-func (m *Model) InnerJoin(joinTable string, on string) *Model {
+func (m *Model) InnerJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", joinTable, on)
+	array := gstr.SplitAndTrim(table, " ")
+	array[0] = m.db.quoteWord(m.db.getPrefix() + array[0])
+	table = gstr.Join(array, " ")
+	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", table, on)
 	return model
 }
 
@@ -304,6 +323,11 @@ func (m *Model) Or(where interface{}, args ...interface{}) *Model {
 // GroupBy sets the "GROUP BY" statement for the model.
 func (m *Model) GroupBy(groupBy string) *Model {
 	model := m.getModel()
+	if !gstr.Contains(groupBy, ",") {
+		array := strings.Split(groupBy, " ")
+		array[0] = m.db.quoteWord(array[0])
+		groupBy = strings.Join(array, " ")
+	}
 	model.groupBy = groupBy
 	return model
 }
@@ -311,9 +335,12 @@ func (m *Model) GroupBy(groupBy string) *Model {
 // OrderBy sets the "ORDER BY" statement for the model.
 func (m *Model) OrderBy(orderBy string) *Model {
 	model := m.getModel()
-	array := strings.Split(orderBy, " ")
-	array[0] = m.db.quoteWord(array[0])
-	model.orderBy = strings.Join(array, " ")
+	if !gstr.Contains(orderBy, ",") {
+		array := strings.Split(orderBy, " ")
+		array[0] = m.db.quoteWord(array[0])
+		orderBy = strings.Join(array, " ")
+	}
+	model.orderBy = orderBy
 	return model
 }
 
