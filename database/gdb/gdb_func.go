@@ -24,17 +24,17 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Type assert api for String.
+// apiString is the type assert api for String.
 type apiString interface {
 	String() string
 }
 
-// Type assert api for Iterator.
+// apiIterator is the type assert api for Iterator.
 type apiIterator interface {
 	Iterator(f func(key, value interface{}) bool)
 }
 
-// Type assert api for Interfaces.
+// apiInterfacesis the type assert api for Interfaces.
 type apiInterfaces interface {
 	Interfaces() []interface{}
 }
@@ -48,15 +48,15 @@ const (
 // 获得struct对象对应的where查询条件
 func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
 	array := ([]string)(nil)
-	for tag, field := range structs.TagMapField(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
-		array = strings.Split(tag, ",")
+	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+		array = strings.Split(field.Tag, ",")
 		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
 			return array[0], []interface{}{field.Value()}
 		}
 		if len(where) > 0 {
 			where += " "
 		}
-		where += tag + "=?"
+		where += field.Tag + "=?"
 		args = append(args, field.Value())
 	}
 	return

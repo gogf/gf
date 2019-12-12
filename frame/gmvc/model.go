@@ -6,6 +6,6 @@
 
 package gmvc
 
-// MVC模型基类
+// Model is the base struct for model.
 type Model struct {
 }

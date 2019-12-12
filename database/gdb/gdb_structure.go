@@ -131,7 +131,7 @@ func (bs *dbBase) TableFields(table string) (fields map[string]*TableField, err 
 	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
 	v := bs.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
 		result := (Result)(nil)
-		result, err = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s`, bs.db.quoteWord(table)))
+		result, err = bs.GetAll(fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, bs.db.quoteWord(table)))
 		if err != nil {
 			return nil
 		}
@@ -145,6 +145,7 @@ func (bs *dbBase) TableFields(table string) (fields map[string]*TableField, err 
 				Key:     m["Key"].String(),
 				Default: m["Default"].Val(),
 				Extra:   m["Extra"].String(),
+				Comment: m["Comment"].String(),
 			}
 		}
 		return fields
