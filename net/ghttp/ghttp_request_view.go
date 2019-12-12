@@ -8,14 +8,14 @@ package ghttp
 
 import "github.com/gogf/gf/os/gview"
 
-// SetView sets template view engine object for this response.
+// SetView sets template view engine object for this request.
 func (r *Request) SetView(view *gview.View) {
-	r.view = view
+	r.viewObject = view
 }
 
-// GetView returns the template view engine object for this response.
+// GetView returns the template view engine object for this request.
 func (r *Request) GetView() *gview.View {
-	view := r.view
+	view := r.viewObject
 	if view == nil {
 		view = r.Server.config.View
 	}

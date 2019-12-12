@@ -20,9 +20,8 @@ type apiMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
-// Map converts any variable <value> to map[string]interface{}.
-//
-// If the parameter <value> is not a map/struct/*struct type, then the conversion will fail and returns nil.
+// Map converts any variable <value> to map[string]interface{}. If the parameter <value> is not a
+// map/struct/*struct type, then the conversion will fail and returns nil.
 //
 // If <value> is a struct/*struct object, the second parameter <tags> specifies the most priority
 // tags that will be detected, otherwise it detects the tags in order of: gconv, json, and then the field name.
@@ -167,8 +166,10 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 	}
 }
 
-// MapDeep do Map function recursively.
-// See Map.
+// MapDeep does Map function recursively, which means if the attribute of <value>
+// is also a struct/*struct, calls Map function on this attribute converting it to
+// a map[string]interface{} type variable.
+// Also see Map.
 func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 	data := Map(value, tags...)
 	for key, value := range data {

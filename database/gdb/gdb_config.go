@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/os/glog"
-
-	"github.com/gogf/gf/container/gring"
 )
 
 const (
@@ -36,6 +34,7 @@ type ConfigNode struct {
 	Type             string        // 数据库类型：mysql, sqlite, mssql, pgsql, oracle
 	Role             string        // (可选，默认为master)数据库的角色，用于主从操作分离，至少需要有一个master，参数值：master, slave
 	Debug            bool          // (可选)开启调试模式
+	Prefix           string        // (可选)表名前缀
 	Weight           int           // (可选)用于负载均衡的权重计算，当集群中只有一个节点时，权重没有任何意义
 	Charset          string        // (可选，默认为 utf8)编码，默认为 utf8
 	LinkInfo         string        // (可选)自定义链接信息，当该字段被设置值时，以上链接字段(Host,Port,User,Pass,Name)将失效(该字段是一个扩展功能)
@@ -159,9 +158,6 @@ func (bs *dbBase) SetDebug(debug bool) {
 		return
 	}
 	bs.debug.Set(debug)
-	if debug && bs.sqls == nil {
-		bs.sqls = gring.New(gDEFAULT_DEBUG_SQL_LENGTH, true)
-	}
 }
 
 // 获取是否开启调试服务

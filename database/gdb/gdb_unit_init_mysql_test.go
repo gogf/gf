@@ -21,14 +21,16 @@ const (
 	TABLE          = "user"
 	SCHEMA1        = "test1"
 	SCHEMA2        = "test2"
+	PREFIX1        = "gf_"
 )
 
 var (
-	db gdb.DB
+	db       gdb.DB
+	dbPrefix gdb.DB
 )
 
 func InitMysql() {
-	node := gdb.ConfigNode{
+	nodeDefault := gdb.ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "3306",
 		User:             "root",
@@ -42,35 +44,62 @@ func InitMysql() {
 		MaxOpenConnCount: 10,
 		MaxConnLifetime:  600,
 	}
-	gdb.AddConfigNode("test", node)
-	gdb.AddConfigNode(gdb.DEFAULT_GROUP_NAME, node)
+	nodePrefix := nodeDefault
+	nodePrefix.Prefix = PREFIX1
+	gdb.AddConfigNode("test", nodeDefault)
+	gdb.AddConfigNode("prefix", nodePrefix)
+	gdb.AddConfigNode(gdb.DEFAULT_GROUP_NAME, nodeDefault)
+	// Default db.
 	if r, err := gdb.New(); err != nil {
 		gtest.Error(err)
 	} else {
 		db = r
 	}
-
 	schemaTemplate := "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET UTF8"
 	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, SCHEMA1)); err != nil {
 		gtest.Error(err)
 	}
-
 	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, SCHEMA2)); err != nil {
 		gtest.Error(err)
 	}
-
 	db.SetSchema(SCHEMA1)
+	createTable(TABLE)
 
+	// Prefix db.
+	if r, err := gdb.New("prefix"); err != nil {
+		gtest.Error(err)
+	} else {
+		dbPrefix = r
+	}
+	if _, err := dbPrefix.Exec(fmt.Sprintf(schemaTemplate, SCHEMA1)); err != nil {
+		gtest.Error(err)
+	}
+	if _, err := dbPrefix.Exec(fmt.Sprintf(schemaTemplate, SCHEMA2)); err != nil {
+		gtest.Error(err)
+	}
+	dbPrefix.SetSchema(SCHEMA1)
 	createTable(TABLE)
 }
 
-func createTable(table ...string) (name string) {
+func createTable(table ...string) string {
+	return createTableWithDb(db, table...)
+}
+
+func createInitTable(table ...string) string {
+	return createInitTableWithDb(db, table...)
+}
+
+func dropTable(table string) {
+	dropTableWithDb(db, table)
+}
+
+func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	if len(table) > 0 {
 		name = table[0]
 	} else {
 		name = fmt.Sprintf(`%s_%d`, TABLE, gtime.Nanosecond())
 	}
-	dropTable(name)
+	dropTableWithDb(db, name)
 	if _, err := db.Exec(fmt.Sprintf(`
     CREATE TABLE %s (
         id          int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -86,8 +115,8 @@ func createTable(table ...string) (name string) {
 	return
 }
 
-func createInitTable(table ...string) (name string) {
-	name = createTable(table...)
+func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
+	name = createTableWithDb(db, table...)
 	array := garray.New(true)
 	for i := 1; i <= INIT_DATA_SIZE; i++ {
 		array.Append(g.Map{
@@ -98,7 +127,8 @@ func createInitTable(table ...string) (name string) {
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
 		})
 	}
-	result, err := db.Table(name).Data(array.Slice()).Insert()
+
+	result, err := db.BatchInsert(name, array.Slice())
 	gtest.Assert(err, nil)
 
 	n, e := result.RowsAffected()
@@ -107,7 +137,7 @@ func createInitTable(table ...string) (name string) {
 	return
 }
 
-func dropTable(table string) {
+func dropTableWithDb(db gdb.DB, table string) {
 	if _, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
 		gtest.Error(err)
 	}
