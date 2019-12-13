@@ -97,6 +97,7 @@ type DB interface {
 	getDebug() bool
 	getPrefix() string
 	quoteWord(s string) string
+	quoteString(s string) string
 	doSetSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
 	convertValue(fieldValue []byte, fieldType string) interface{}
