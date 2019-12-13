@@ -56,8 +56,8 @@ func Test_Pool_Basic2(t *testing.T) {
 		data := []byte("9999")
 		err = conn.SendPkg(data)
 		gtest.Assert(err, nil)
-		err = conn.SendPkgWithTimeout(data, time.Second)
-		gtest.Assert(err, nil)
+		//err = conn.SendPkgWithTimeout(data, time.Second)
+		//gtest.Assert(err, nil)
 
 		_, err = conn.SendRecv(data, -1)
 		gtest.AssertNE(err, nil)
