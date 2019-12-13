@@ -15,8 +15,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gogf/gf/text/gstr"
-
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/os/gtime"
@@ -29,8 +27,8 @@ const (
 )
 
 var (
-	wordReg         = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`) // Regular expression object for a word.
-	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)        // Regular expression object for a string which has operator at its tail.
+	// lastOperatorReg is the regular expression object for a string which has operator at its tail.
+	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
 // 打印SQL对象(仅在debug=true时有效)
@@ -607,14 +605,18 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	return records, nil
 }
 
-// 使用关键字操作符转义给定字符串。
-// 如果给定的字符串不为单词，那么不转义，直接返回该字符串。
+// quoteWord checks given string <s> a word, if true quotes it with security chars of the database
+// and returns the quoted string; or else return <s> without any change.
 func (bs *dbBase) quoteWord(s string) string {
 	charLeft, charRight := bs.db.getChars()
-	if wordReg.MatchString(s) && !gstr.ContainsAny(s, charLeft+charRight) {
-		return charLeft + s + charRight
-	}
-	return s
+	return doQuoteWord(s, charLeft, charRight)
+}
+
+// quoteString quotes string with quote chars. Strings like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
+func (bs *dbBase) quoteString(s string) string {
+	charLeft, charRight := bs.db.getChars()
+	return doQuoteString(s, charLeft, charRight)
 }
 
 // 动态切换数据库

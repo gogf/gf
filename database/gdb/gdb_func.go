@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/os/gtime"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -44,6 +45,55 @@ const (
 	ORM_TAG_FOR_UNIQUE  = "unique"
 	ORM_TAG_FOR_PRIMARY = "primary"
 )
+
+var (
+	// quoteWordReg is the regular expression object for a word check.
+	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+)
+
+// doQuoteWord checks given string <s> a word, if true quotes it with <charLeft> and <charRight>
+// and returns the quoted string; or else return <s> without any change.
+func doQuoteWord(s, charLeft, charRight string) string {
+	if quoteWordReg.MatchString(s) && !gstr.ContainsAny(s, charLeft+charRight) {
+		return charLeft + s + charRight
+	}
+	return s
+}
+
+// doQuoteString quotes string with quote chars. It handles strings like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
+func doQuoteString(s, charLeft, charRight string) string {
+	array1 := gstr.SplitAndTrim(s, ",")
+	for k1, v1 := range array1 {
+		array2 := gstr.SplitAndTrim(v1, " ")
+		array3 := gstr.SplitAndTrim(array2[0], ".")
+		if len(array3) == 1 {
+			array3[0] = doQuoteWord(array3[0], charLeft, charRight)
+		} else if len(array3) == 2 {
+			array3[1] = doQuoteWord(array3[1], charLeft, charRight)
+		}
+		array2[0] = gstr.Join(array3, ".")
+		array1[k1] = gstr.Join(array2, " ")
+	}
+	return gstr.Join(array1, ",")
+}
+
+// addTablePrefix adds prefix string to the table. It handles strings like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
+//
+// Note that, this should be used before any quoting function calls.
+func addTablePrefix(table, prefix string) string {
+	if prefix == "" {
+		return table
+	}
+	array1 := gstr.SplitAndTrim(table, ",")
+	for k1, v1 := range array1 {
+		array2 := gstr.SplitAndTrim(v1, " ")
+		array2[0] = prefix + array2[0]
+		array1[k1] = gstr.Join(array2, " ")
+	}
+	return gstr.Join(array1, ",")
+}
 
 // 获得struct对象对应的where查询条件
 func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
@@ -135,7 +185,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 		if gstr.Pos(newWhere, "?") == -1 {
 			if lastOperatorReg.MatchString(newWhere) {
 				newWhere += "?"
-			} else if wordReg.MatchString(newWhere) {
+			} else if quoteWordReg.MatchString(newWhere) {
 				newWhere += "=?"
 			}
 		}

@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/gogf/gf/container/gset"
@@ -69,11 +68,8 @@ const (
 // The parameter <tables> can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
 func (bs *dbBase) Table(table string) *Model {
-	if !gstr.Contains(table, ",") {
-		array := gstr.SplitAndTrim(table, " ")
-		array[0] = bs.db.quoteWord(bs.db.getPrefix() + array[0])
-		table = gstr.Join(array, " ")
-	}
+	table = addTablePrefix(table, bs.db.getPrefix())
+	table = bs.db.quoteString(table)
 	return &Model{
 		db:         bs.db,
 		tablesInit: table,
@@ -95,11 +91,8 @@ func (bs *dbBase) From(tables string) *Model {
 // Table acts like dbBase.Table except it operates on transaction.
 // See dbBase.Table.
 func (tx *TX) Table(table string) *Model {
-	if !gstr.Contains(table, ",") {
-		array := gstr.SplitAndTrim(table, " ")
-		array[0] = tx.db.quoteWord(tx.db.getPrefix() + array[0])
-		table = gstr.Join(array, " ")
-	}
+	table = addTablePrefix(table, tx.db.getPrefix())
+	table = tx.db.quoteString(table)
 	return &Model{
 		db:         tx.db,
 		tx:         tx,
@@ -187,9 +180,8 @@ func (m *Model) getModel() *Model {
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
 func (m *Model) LeftJoin(table string, on string) *Model {
 	model := m.getModel()
-	array := gstr.SplitAndTrim(table, " ")
-	array[0] = m.db.quoteWord(m.db.getPrefix() + array[0])
-	table = gstr.Join(array, " ")
+	table = addTablePrefix(table, m.db.getPrefix())
+	table = m.db.quoteString(table)
 	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", table, on)
 	return model
 }
@@ -197,9 +189,8 @@ func (m *Model) LeftJoin(table string, on string) *Model {
 // RightJoin does "RIGHT JOIN ... ON ..." statement on the model.
 func (m *Model) RightJoin(table string, on string) *Model {
 	model := m.getModel()
-	array := gstr.SplitAndTrim(table, " ")
-	array[0] = m.db.quoteWord(m.db.getPrefix() + array[0])
-	table = gstr.Join(array, " ")
+	table = addTablePrefix(table, m.db.getPrefix())
+	table = m.db.quoteString(table)
 	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", table, on)
 	return model
 }
@@ -207,9 +198,8 @@ func (m *Model) RightJoin(table string, on string) *Model {
 // InnerJoin does "INNER JOIN ... ON ..." statement on the model.
 func (m *Model) InnerJoin(table string, on string) *Model {
 	model := m.getModel()
-	array := gstr.SplitAndTrim(table, " ")
-	array[0] = m.db.quoteWord(m.db.getPrefix() + array[0])
-	table = gstr.Join(array, " ")
+	table = addTablePrefix(table, m.db.getPrefix())
+	table = m.db.quoteString(table)
 	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", table, on)
 	return model
 }
@@ -323,24 +313,14 @@ func (m *Model) Or(where interface{}, args ...interface{}) *Model {
 // GroupBy sets the "GROUP BY" statement for the model.
 func (m *Model) GroupBy(groupBy string) *Model {
 	model := m.getModel()
-	if !gstr.Contains(groupBy, ",") {
-		array := strings.Split(groupBy, " ")
-		array[0] = m.db.quoteWord(array[0])
-		groupBy = strings.Join(array, " ")
-	}
-	model.groupBy = groupBy
+	model.groupBy = m.db.quoteString(groupBy)
 	return model
 }
 
 // OrderBy sets the "ORDER BY" statement for the model.
 func (m *Model) OrderBy(orderBy string) *Model {
 	model := m.getModel()
-	if !gstr.Contains(orderBy, ",") {
-		array := strings.Split(orderBy, " ")
-		array[0] = m.db.quoteWord(array[0])
-		orderBy = strings.Join(array, " ")
-	}
-	model.orderBy = orderBy
+	model.orderBy = m.db.quoteString(orderBy)
 	return model
 }
 
