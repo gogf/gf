@@ -57,7 +57,7 @@ func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
 // Close puts back the connection to the pool if it's active,
 // or closes the connection if it's not active.
 //
-// Note that, if <c> calls Close function closing itself, <c> should not
+// Note that, if <c> calls Close function closing itself, <c> can not
 // be used again.
 func (c *PoolConn) Close() error {
 	if c.pool != nil && c.status == gCONN_STATUS_ACTIVE {

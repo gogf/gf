@@ -4,8 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// "不要通过共享内存来通信，而应该通过通信来共享内存"
-
 package gproc
 
 import (
@@ -84,20 +82,31 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 	var result []byte
 	var response MsgResponse
 	for {
+		response.Code = 0
+		response.Message = ""
+		response.Data = nil
 		buffer, err := conn.RecvPkg()
 		if len(buffer) > 0 {
+			// Package decoding.
 			msg := new(MsgRequest)
 			if err := json.Unmarshal(buffer, msg); err != nil {
 				glog.Error(err)
 				continue
 			}
-			if v := commReceiveQueues.Get(msg.Group); v == nil {
-				response.Code = 0
+			if msg.RecvPid != Pid() {
+				// Not mine package.
+				response.Message = fmt.Sprintf("receiver pid not match, target: %d, current: %d", msg.RecvPid, Pid())
+			} else if v := commReceiveQueues.Get(msg.Group); v == nil {
+				// Group check.
 				response.Message = fmt.Sprintf("group [%s] does not exist", msg.Group)
 			} else {
+				// Push to buffer queue.
 				response.Code = 1
 				v.(*gqueue.Queue).Push(msg)
 			}
+		} else {
+			// Empty package.
+			response.Message = "empty package"
 		}
 		if err == nil {
 			result, err = json.Marshal(response)
@@ -108,6 +117,7 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 				glog.Error(err)
 			}
 		} else {
+			// Just close the connection if any error occurs.
 			if err := conn.Close(); err != nil {
 				glog.Error(err)
 			}

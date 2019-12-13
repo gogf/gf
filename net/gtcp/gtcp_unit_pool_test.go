@@ -28,7 +28,7 @@ func Test_Pool_Basic1(t *testing.T) {
 	})
 	go s.Run()
 	defer s.Close()
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", p))
 		gtest.Assert(err, nil)
@@ -48,7 +48,7 @@ func Test_Pool_Basic2(t *testing.T) {
 	})
 	go s.Run()
 	defer s.Close()
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", p))
 		gtest.Assert(err, nil)

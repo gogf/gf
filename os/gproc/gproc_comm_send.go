@@ -28,7 +28,7 @@ func Send(pid int, data []byte, group ...string) error {
 	if err != nil {
 		return err
 	}
-	var conn *gtcp.Conn
+	var conn *gtcp.PoolConn
 	conn, err = getConnByPid(pid)
 	if err != nil {
 		return err
@@ -36,7 +36,11 @@ func Send(pid int, data []byte, group ...string) error {
 	defer conn.Close()
 	// Do the sending.
 	var result []byte
-	result, err = conn.SendRecvPkg(msgBytes)
+	result, err = conn.SendRecvPkg(msgBytes, gtcp.PkgOption{
+		Retry: gtcp.Retry{
+			Count: 3,
+		},
+	})
 	if len(result) > 0 {
 		response := new(MsgResponse)
 		err = json.Unmarshal(result, response)

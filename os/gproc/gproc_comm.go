@@ -57,10 +57,10 @@ func init() {
 }
 
 // getConnByPid creates and returns a TCP connection for specified pid.
-func getConnByPid(pid int) (*gtcp.Conn, error) {
+func getConnByPid(pid int) (*gtcp.PoolConn, error) {
 	port := getPortByPid(pid)
 	if port > 0 {
-		if conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", port)); err == nil {
+		if conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", port)); err == nil {
 			return conn, nil
 		} else {
 			return nil, err
