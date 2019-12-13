@@ -105,11 +105,11 @@ func (s *Server) SetTLSConfig(tlsConfig *tls.Config) {
 
 // Close closes the listener and shutdowns the server.
 func (s *Server) Close() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.listen == nil {
 		return nil
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	return s.listen.Close()
 }
 
