@@ -25,13 +25,15 @@ const (
 )
 
 var (
+	// processPid is the pid of current process.
+	processPid = os.Getpid()
 	// processStartTime is the start time of current process.
 	processStartTime = time.Now()
 )
 
 // Pid returns the pid of current process.
 func Pid() int {
-	return os.Getpid()
+	return processPid
 }
 
 // 获取父进程ID(gproc父进程，如果当前进程本身就是父进程，那么返回自身的pid，不存在时则使用系统父进程)
