@@ -190,6 +190,40 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 	return data
 }
 
+// MapStrStr converts <value> to map[string]string.
+// Note that there might be data copy for this map type converting.
+func MapStrStr(value interface{}, tags ...string) map[string]string {
+	if r, ok := value.(map[string]string); ok {
+		return r
+	}
+	m := Map(value, tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]string)
+		for k, v := range m {
+			vMap[k] = String(v)
+		}
+		return vMap
+	}
+	return nil
+}
+
+// MapStrStrDeep converts <value> to map[string]string recursively.
+// Note that there might be data copy for this map type converting.
+func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
+	if r, ok := value.(map[string]string); ok {
+		return r
+	}
+	m := MapDeep(value, tags...)
+	if len(m) > 0 {
+		vMap := make(map[string]string)
+		for k, v := range m {
+			vMap[k] = String(v)
+		}
+		return vMap
+	}
+	return nil
+}
+
 // MapToMap converts map type variable <params> to another map type variable <pointer> using reflect.
 // The elements of <pointer> should be type of *map.
 func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {

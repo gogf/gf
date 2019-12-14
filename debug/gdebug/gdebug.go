@@ -10,7 +10,6 @@ package gdebug
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -29,9 +28,6 @@ const (
 )
 
 var (
-	buildTime        = ""               // Binary time string, which is injected from "go build -ldflags '-X importpath.name=value'".
-	buildGoVersion   = ""               // Binary go version, which is injected from "go build -ldflags '-X importpath.name=value'".
-	buildGitCommit   = ""               // Binary git commit, which is injected from "go build -ldflags '-X importpath.name=value'".
 	goRootForFilter  = runtime.GOROOT() // goRootForFilter is used for stack filtering purpose.
 	binaryVersion    = ""               // The version of current running binary(uint64 hex).
 	binaryVersionMd5 = ""               // The version of current running binary(MD5).
@@ -40,18 +36,6 @@ var (
 func init() {
 	if goRootForFilter != "" {
 		goRootForFilter = strings.Replace(goRootForFilter, "\\", "/", -1)
-	}
-}
-
-// BuildInfo returns the built information of the binary.
-// Note that it should be used with gf-cli tool: gf build,
-// which injects necessary information into the binary.
-func BuildInfo() map[string]string {
-	return map[string]string{
-		"gf":   gf.VERSION,
-		"go":   buildGoVersion,
-		"git":  buildGitCommit,
-		"time": buildTime,
 	}
 }
 

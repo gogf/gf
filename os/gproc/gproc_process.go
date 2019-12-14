@@ -14,14 +14,14 @@ import (
 	"strings"
 )
 
-// 子进程
+// Process is the struct for a single process.
 type Process struct {
 	exec.Cmd
-	Manager *Manager // 所属进程管理器
-	PPid    int      // 自定义关联的父进程ID
+	Manager *Manager
+	PPid    int
 }
 
-// 创建一个进程(不执行)
+// NewProcess creates and returns a new Process.
 func NewProcess(path string, args []string, environment ...[]string) *Process {
 	var env []string
 	if len(environment) > 0 {
@@ -57,10 +57,11 @@ func NewProcess(path string, args []string, environment ...[]string) *Process {
 
 // NewProcessCmd creates and returns a process with given command and optional environment variable array.
 func NewProcessCmd(cmd string, environment ...[]string) *Process {
-	return NewProcess(getShell(), []string{getShellOption(), cmd}, environment...)
+	return NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...), environment...)
 }
 
-// 开始执行(非阻塞)
+// Start starts executing the process in non-blocking way.
+// It returns the pid if success, or else it returns an error.
 func (p *Process) Start() (int, error) {
 	if p.Process != nil {
 		return p.Pid(), nil
@@ -76,7 +77,7 @@ func (p *Process) Start() (int, error) {
 	}
 }
 
-// 运行进程(阻塞等待执行完毕)
+// Run executes the process in blocking way.
 func (p *Process) Run() error {
 	if _, err := p.Start(); err == nil {
 		return p.Wait()
@@ -93,7 +94,7 @@ func (p *Process) Pid() int {
 	return 0
 }
 
-// 向进程发送消息
+// Send send custom data to the process.
 func (p *Process) Send(data []byte) error {
 	if p.Process != nil {
 		return Send(p.Process.Pid, data)
