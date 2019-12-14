@@ -196,6 +196,14 @@ func (t *Time) Truncate(d time.Duration) *Time {
 	return t
 }
 
+// Sub returns the duration t-u. If the result exceeds the maximum (or minimum)
+// value that can be stored in a Duration, the maximum (or minimum) duration
+// will be returned.
+// To compute t-d for a duration d, use t.Add(-d).
+func (t *Time) Sub(u *Time) time.Duration {
+	return t.Time.Sub(u.Time)
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (t *Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.String() + `"`), nil
