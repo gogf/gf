@@ -12,19 +12,19 @@ import (
 
 // Entity is the golang structure for table gf_article.
 type Entity struct {
-    Id         int         `orm:"id,primary"  json:"id"`          //                         
-    CatId      int         `orm:"cat_id"      json:"cat_id"`      // 分类ID                  
-    Uid        int         `orm:"uid"         json:"uid"`         // 用户ID                  
-    Title      string      `orm:"title"       json:"title"`       // 标题                    
-    Content    string      `orm:"content"     json:"content"`     // 内容                    
-    Order      int         `orm:"order"       json:"order"`       // 排序                    
-    Brief      string      `orm:"brief"       json:"brief"`       // 摘要                    
-    Thumb      string      `orm:"thumb"       json:"thumb"`       // 缩略图                  
-    Tags       string      `orm:"tags"        json:"tags"`        // 标签                    
-    Referer    string      `orm:"referer"     json:"referer"`     // 内容来源                
-    Status     int         `orm:"status"      json:"status"`      // 状态\n0: 禁用\n1: 正常  
-    CreateTime *gtime.Time `orm:"create_time" json:"create_time"` // 创建时间                
-    UpdateTime *gtime.Time `orm:"update_time" json:"update_time"` // 修改时间                
+	Id         int         `orm:"id,primary"  json:"id"`          //
+	CatId      int         `orm:"cat_id"      json:"cat_id"`      // 分类ID
+	Uid        int         `orm:"uid"         json:"uid"`         // 用户ID
+	Title      string      `orm:"title"       json:"title"`       // 标题
+	Content    string      `orm:"content"     json:"content"`     // 内容
+	Order      int         `orm:"order"       json:"order"`       // 排序
+	Brief      string      `orm:"brief"       json:"brief"`       // 摘要
+	Thumb      string      `orm:"thumb"       json:"thumb"`       // 缩略图
+	Tags       string      `orm:"tags"        json:"tags"`        // 标签
+	Referer    string      `orm:"referer"     json:"referer"`     // 内容来源
+	Status     int         `orm:"status"      json:"status"`      // 状态\n0: 禁用\n1: 正常
+	CreateTime *gtime.Time `orm:"create_time" json:"create_time"` // 创建时间
+	UpdateTime *gtime.Time `orm:"update_time" json:"update_time"` // 修改时间
 }
 
 // Article is alias of Entity, which some developers say they just want.
