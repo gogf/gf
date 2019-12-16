@@ -484,7 +484,12 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 }
 
 // Insert does "INSERT INTO ..." statement for the model.
-func (m *Model) Insert() (result sql.Result, err error) {
+// The optional parameter <data> is the same as the parameter of Model.Data function,
+// see Model.Data.
+func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).Insert()
+	}
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()
@@ -520,7 +525,12 @@ func (m *Model) Insert() (result sql.Result, err error) {
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
-func (m *Model) Replace() (result sql.Result, err error) {
+// The optional parameter <data> is the same as the parameter of Model.Data function,
+// see Model.Data.
+func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).Replace()
+	}
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()
@@ -555,9 +565,15 @@ func (m *Model) Replace() (result sql.Result, err error) {
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
+// The optional parameter <data> is the same as the parameter of Model.Data function,
+// see Model.Data.
+//
 // It updates the record if there's primary or unique index in the saving data,
 // or else it inserts a new record into the table.
-func (m *Model) Save() (result sql.Result, err error) {
+func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).Save()
+	}
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()
@@ -592,7 +608,20 @@ func (m *Model) Save() (result sql.Result, err error) {
 }
 
 // Update does "UPDATE ... " statement for the model.
-func (m *Model) Update() (result sql.Result, err error) {
+//
+// If the optional parameter <dataAndWhere> is given, the dataAndWhere[0] is the updated data field,
+// and dataAndWhere[1:] is treated as where condition fields.
+// Also see Model.Data and Model.Where functions.
+func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
+	if len(dataAndWhere) > 0 {
+		if len(dataAndWhere) > 2 {
+			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1], dataAndWhere[2:]...).Update()
+		} else if len(dataAndWhere) == 2 {
+			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1]).Update()
+		} else {
+			return m.Data(dataAndWhere[0]).Update()
+		}
+	}
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()
@@ -612,7 +641,12 @@ func (m *Model) Update() (result sql.Result, err error) {
 }
 
 // Delete does "DELETE FROM ... " statement for the model.
-func (m *Model) Delete() (result sql.Result, err error) {
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).Delete()
+	}
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()
@@ -622,24 +656,34 @@ func (m *Model) Delete() (result sql.Result, err error) {
 	return m.db.doDelete(m.getLink(), m.tables, condition, conditionArgs...)
 }
 
-// Select is alias of All.
-// See All.
-func (m *Model) Select() (Result, error) {
-	return m.All()
+// Select is alias of Model.All.
+// See Model.All.
+// Deprecated.
+func (m *Model) Select(where ...interface{}) (Result, error) {
+	return m.All(where...)
 }
 
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
-func (m *Model) All() (Result, error) {
+//
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) All(where ...interface{}) (Result, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).All()
+	}
 	condition, conditionArgs := m.formatCondition()
 	return m.getAll(fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition), conditionArgs...)
 }
 
 // One retrieves one record from table and returns the result as map type.
 // It returns nil if there's no record retrieved with the given conditions from table.
-func (m *Model) One() (Record, error) {
-	list, err := m.All()
+//
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) One(where ...interface{}) (Record, error) {
+	list, err := m.All(where...)
 	if err != nil {
 		return nil, err
 	}
@@ -651,7 +695,20 @@ func (m *Model) One() (Record, error) {
 
 // Value retrieves a specified record value from table and returns the result as interface type.
 // It returns nil if there's no record found with the given conditions from table.
-func (m *Model) Value() (Value, error) {
+//
+// If the optional parameter <fieldsAndWhere> is given, the fieldsAndWhere[0] is the selected fields
+// and fieldsAndWhere[1:] is treated as where condition fields.
+// Also see Model.Fields and Model.Where functions.
+func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
+	if len(fieldsAndWhere) > 0 {
+		if len(fieldsAndWhere) > 2 {
+			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1], fieldsAndWhere[2:]...).Value()
+		} else if len(fieldsAndWhere) == 2 {
+			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1]).Value()
+		} else {
+			return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
+		}
+	}
 	one, err := m.One()
 	if err != nil {
 		return nil, err
@@ -666,6 +723,9 @@ func (m *Model) Value() (Value, error) {
 // The parameter <pointer> should be type of *struct/**struct. If type **struct is given,
 // it can create the struct internally during converting.
 //
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+//
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
 // from table.
 //
@@ -675,8 +735,8 @@ func (m *Model) Value() (Value, error) {
 //
 // user := (*User)(nil)
 // err  := db.Table("user").Where("id", 1).Struct(&user)
-func (m *Model) Struct(pointer interface{}) error {
-	one, err := m.One()
+func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
+	one, err := m.One(where...)
 	if err != nil {
 		return err
 	}
@@ -690,6 +750,9 @@ func (m *Model) Struct(pointer interface{}) error {
 // The parameter <pointer> should be type of *[]struct/*[]*struct. It can create and fill the struct
 // slice internally during converting.
 //
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+//
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
 // from table.
 //
@@ -699,8 +762,8 @@ func (m *Model) Struct(pointer interface{}) error {
 //
 // users := ([]*User)(nil)
 // err := db.Table("user").Structs(&users)
-func (m *Model) Structs(pointer interface{}) error {
-	all, err := m.All()
+func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
+	all, err := m.All(where...)
 	if err != nil {
 		return err
 	}
@@ -713,6 +776,9 @@ func (m *Model) Structs(pointer interface{}) error {
 // Scan automatically calls Struct or Structs function according to the type of parameter <pointer>.
 // It calls function Struct if <pointer> is type of *struct/**struct.
 // It calls function Structs if <pointer> is type of *[]struct/*[]*struct.
+//
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
 // from table.
@@ -729,7 +795,7 @@ func (m *Model) Structs(pointer interface{}) error {
 //
 // users := ([]*User)(nil)
 // err := db.Table("user").Structs(&users)
-func (m *Model) Scan(pointer interface{}) error {
+func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
@@ -738,15 +804,20 @@ func (m *Model) Scan(pointer interface{}) error {
 	switch t.Elem().Kind() {
 	case reflect.Array:
 	case reflect.Slice:
-		return m.Structs(pointer)
+		return m.Structs(pointer, where...)
 	default:
-		return m.Struct(pointer)
+		return m.Struct(pointer, where...)
 	}
 	return nil
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
-func (m *Model) Count() (int, error) {
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) Count(where ...interface{}) (int, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).Count()
+	}
 	defer func(fields string) {
 		m.fields = fields
 	}(m.fields)
@@ -821,7 +892,7 @@ func (m *Model) checkAndRemoveCache() {
 }
 
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
-// Note that this function does not change any of the attribute value of the mode.
+// Note that this function does not change any attribute value of the <m>.
 func (m *Model) formatCondition() (condition string, conditionArgs []interface{}) {
 	var where string
 	if len(m.whereHolder) > 0 {
