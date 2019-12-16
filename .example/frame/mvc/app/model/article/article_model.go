@@ -21,7 +21,7 @@ var (
 	Table = "gf_article"
 	// Model is the model object of gf_article.
 	Model = &arModel{g.DB("default").Table(Table).Safe()}
-	// Primary is the primary field name of table gf_article.
+	// Primary is the primary key name of table gf_article.
 	Primary = gdb.GetPrimaryKey(new(Entity))
 )
 
