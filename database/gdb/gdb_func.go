@@ -126,8 +126,9 @@ func GetPrimaryKey(pointer interface{}) string {
 }
 
 // GetPrimaryKeyCondition returns a new where condition by primary field name.
-// The parameter <where> is like as follows:
-// 123, []int{1,2,3}, "john", []string{"john","smith"}
+// The optional parameter <where> is like follows:
+// 123, []int{1, 2, 3}, "john", []string{"john", "smith"}
+// g.Map{"id": g.Slice{1,2,3}}, g.Map{"id": 1, "name": "john"}, etc.
 //
 // Note that it returns the given <where> parameter directly if there's the <primary> is empty.
 func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondition []interface{}) {

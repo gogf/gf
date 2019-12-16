@@ -26,19 +26,26 @@ var (
 )
 
 // FindOne retrieves and returns a single Entity by a primary key or where conditions by
-// Model.Where.
+// Model.Where. The optional parameter <where> is like follows:
+// 123, []int{1, 2, 3}, "john", []string{"john", "smith"}
+// g.Map{"id": g.Slice{1,2,3}}, g.Map{"id": 1, "name": "john"}, etc.
+//
+// Note that it differs with Mode.One is that any single where condition parameter will
+// be treated as the value of the primary key in FindOne, but a string condition in
+// Model.One. That is, if primary key is "id" and given <where> parameter as "123", the
+// FindOne function treats it as "id=123", but Model.One treats it as "123", just a string.
 func FindOne(where ...interface{}) (*Entity, error) {
 	return Model.One(gdb.GetPrimaryKeyCondition(Primary, where...)...)
 }
 
 // FindAll retrieves and returns multiple Entity by a primary key or where conditions by
-// Model.Where.
+// Model.Where. Also see FindOne.
 func FindAll(where ...interface{}) ([]*Entity, error) {
 	return Model.All(gdb.GetPrimaryKeyCondition(Primary, where...)...)
 }
 
 // FindValue retrieves and returns single field value by a primary key or where conditions by
-// Model.Where.
+// Model.Where. Also see FindOne.
 func FindValue(fieldsAndWhere ...interface{}) (gdb.Value, error) {
 	if len(fieldsAndWhere) == 2 {
 		return Model.Value(append(fieldsAndWhere[0:1], gdb.GetPrimaryKeyCondition(Primary, fieldsAndWhere[1:]...)...)...)
