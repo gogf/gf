@@ -78,7 +78,7 @@ func doQuoteString(s, charLeft, charRight string) string {
 	return gstr.Join(array1, ",")
 }
 
-// addTablePrefix adds prefix string to the table. It handles strings like:
+// addTablePrefix adds prefix string to the table. It handles table string like:
 // "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
 //
 // Note that, this should be used before any quoting function calls.
@@ -95,7 +95,8 @@ func addTablePrefix(table, prefix string) string {
 	return gstr.Join(array1, ",")
 }
 
-// 获得struct对象对应的where查询条件
+// GetWhereConditionOfStruct returns the where condition sql and arguments by given struct pointer.
+// This function automatically retrieves primary or unique field and its attribute value as condition.
 func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
 	array := ([]string)(nil)
 	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
@@ -110,6 +111,51 @@ func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interf
 		args = append(args, field.Value())
 	}
 	return
+}
+
+// GetPrimaryKey retrieves and returns primary key field name from given struct.
+func GetPrimaryKey(pointer interface{}) string {
+	array := ([]string)(nil)
+	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+		array = strings.Split(field.Tag, ",")
+		if len(array) > 1 && array[1] == ORM_TAG_FOR_PRIMARY {
+			return array[0]
+		}
+	}
+	return ""
+}
+
+// GetPrimaryKeyCondition returns a new where condition by primary field name.
+// The parameter <where> is like as follows:
+// 123, []int{1,2,3}, "john", []string{"john","smith"}
+//
+// Note that it returns the given <where> parameter directly if there's the <primary> is empty.
+func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondition []interface{}) {
+	if len(where) == 0 {
+		return nil
+	}
+	if primary == "" {
+		return where
+	}
+	if len(where) == 1 {
+		rv := reflect.ValueOf(where[0])
+		kind := rv.Kind()
+		if kind == reflect.Ptr {
+			rv = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+		case reflect.Map, reflect.Struct:
+			break
+
+		default:
+			return []interface{}{map[string]interface{}{
+				primary: where[0],
+			}}
+		}
+	}
+	return where
+
 }
 
 // 获得orm标签与属性的映射关系
@@ -163,7 +209,6 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 			})
 			break
 		}
-		// TODO garray support.
 		for key, value := range varToMapDeep(where) {
 			if omitEmpty && empty.IsEmpty(value) {
 				continue
