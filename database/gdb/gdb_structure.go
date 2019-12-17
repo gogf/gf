@@ -20,7 +20,8 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// convertValue converts field value from database type to golang variable type.
+// convertValue automatically checks and converts field value from database type
+// to golang variable type.
 func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} {
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	t = strings.ToLower(t)
@@ -97,9 +98,9 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 	}
 }
 
-// 将map的数据按照fields进行过滤，只保留与表字段同名的数据
+// filterFields removes all key-value pairs which are not the field of given table.
 func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
-	// It must use data copy here to avoid changing the origin data map.
+	// It must use data copy here to avoid its changing the origin data map.
 	newDataMap := make(map[string]interface{}, len(data))
 	if fields, err := bs.db.TableFields(table); err == nil {
 		for k, v := range data {
@@ -111,7 +112,7 @@ func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[st
 	return newDataMap
 }
 
-// 返回当前数据库所有的数据表名称
+// Tables returns the table name array of current schema.
 func (bs *dbBase) Tables() (tables []string, err error) {
 	result := (Result)(nil)
 	result, err = bs.GetAll(`SHOW TABLES`)
@@ -126,9 +127,12 @@ func (bs *dbBase) Tables() (tables []string, err error) {
 	return
 }
 
-// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值为字段数据结构.
+// TableFields retrieves and returns the fields of given table.
+// Note that it returns a map containing the field name and its corresponding fields.
+// As a map is unsorted, the TableField struct has a "Index" field marks its sequence in the fields.
+//
+// It's using cache feature to enhance the performance, which is never expired util the process restarts.
 func (bs *dbBase) TableFields(table string) (fields map[string]*TableField, err error) {
-	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
 	v := bs.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
 		result := (Result)(nil)
 		result, err = bs.GetAll(fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, bs.db.quoteWord(table)))

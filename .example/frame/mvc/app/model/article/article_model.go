@@ -53,6 +53,12 @@ func FindValue(fieldsAndWhere ...interface{}) (gdb.Value, error) {
 	return Model.Value(fieldsAndWhere...)
 }
 
+// FindCount retrieves and returns the record number by a primary key or where conditions by
+// Model.Where. Also see FindOne.
+func FindCount(where ...interface{}) (int, error) {
+	return Model.Count(gdb.GetPrimaryKeyCondition(Primary, where...)...)
+}
+
 // Insert is alias of Model.Insert.
 func Insert(data ...interface{}) (result sql.Result, err error) {
 	return Model.Insert(data...)

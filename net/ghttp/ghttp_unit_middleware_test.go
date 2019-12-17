@@ -615,3 +615,58 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 		gtest.Assert(client.GetContent("/api.v2/user/list", "token=123456"), "list")
 	})
 }
+
+func MiddlewareScope1(r *ghttp.Request) {
+	r.Response.Write("a")
+	r.Middleware.Next()
+	r.Response.Write("b")
+}
+
+func MiddlewareScope2(r *ghttp.Request) {
+	r.Response.Write("c")
+	r.Middleware.Next()
+	r.Response.Write("d")
+}
+
+func MiddlewareScope3(r *ghttp.Request) {
+	r.Response.Write("e")
+	r.Middleware.Next()
+	r.Response.Write("f")
+}
+
+func Test_Middleware_Scope(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareScope1)
+		group.ALL("/scope1", func(r *ghttp.Request) {
+			r.Response.Write("1")
+		})
+		group.Group("/", func(group *ghttp.RouterGroup) {
+			group.Middleware(MiddlewareScope2)
+			group.ALL("/scope2", func(r *ghttp.Request) {
+				r.Response.Write("2")
+			})
+		})
+		group.Group("/", func(group *ghttp.RouterGroup) {
+			group.Middleware(MiddlewareScope3)
+			group.ALL("/scope3", func(r *ghttp.Request) {
+				r.Response.Write("3")
+			})
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "Not Found")
+		gtest.Assert(client.GetContent("/scope1"), "a1b")
+		gtest.Assert(client.GetContent("/scope2"), "ac2db")
+		gtest.Assert(client.GetContent("/scope3"), "ae3fb")
+	})
+}

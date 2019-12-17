@@ -9,23 +9,24 @@ package gdb
 import (
 	"database/sql"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/encoding/gparser"
 )
 
-// 将记录结果转换为JSON字符串
+// Json converts <r> to JSON format content.
 func (r Record) Json() string {
 	content, _ := gparser.VarToJson(r.Map())
-	return string(content)
+	return gconv.UnsafeBytesToStr(content)
 }
 
-// 将记录结果转换为XML字符串
+// Xml converts <r> to XML format content.
 func (r Record) Xml(rootTag ...string) string {
 	content, _ := gparser.VarToXml(r.Map(), rootTag...)
-	return string(content)
+	return gconv.UnsafeBytesToStr(content)
 }
 
-// 将Record转换为Map类型
+// Map converts <r> to map[string]interface{}.
 func (r Record) Map() Map {
 	m := make(map[string]interface{})
 	for k, v := range r {
@@ -34,12 +35,13 @@ func (r Record) Map() Map {
 	return m
 }
 
-// 将Record转换为常用的gmap.StrAnyMap类型
+// GMap converts <r> to a gmap.
 func (r Record) GMap() *gmap.StrAnyMap {
 	return gmap.NewStrAnyMapFrom(r.Map())
 }
 
-// 将Map变量映射到指定的struct对象中，注意参数应当是一个对象的指针
+// Struct converts <r> to a struct.
+// Note that the parameter <pointer> should be type of *struct/**struct.
 func (r Record) Struct(pointer interface{}) error {
 	if r == nil {
 		return sql.ErrNoRows

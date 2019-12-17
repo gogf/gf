@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/gmlock"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"strconv"
 	"strings"
@@ -135,11 +136,10 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 	if err := tpl.Execute(buffer, variables); err != nil {
 		return "", err
 	}
-	return view.i18nTranslate(buffer.String(), variables), nil
 	// TODO any graceful plan to replace "<no value>"?
-	//result = gstr.Replace(buffer.String(), "<no value>", "")
-	//result = view.i18nTranslate(result, variables)
-	//return result, nil
+	result = gstr.Replace(buffer.String(), "<no value>", "")
+	result = view.i18nTranslate(result, variables)
+	return result, nil
 }
 
 // ParseDefault parses the default template file with params.
@@ -201,11 +201,10 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 	if err := tpl.Execute(buffer, variables); err != nil {
 		return "", err
 	}
-	return view.i18nTranslate(buffer.String(), variables), nil
 	// TODO any graceful plan to replace "<no value>"?
-	//result := gstr.Replace(buffer.String(), "<no value>", "")
-	//result = view.i18nTranslate(result, variables)
-	//return result, nil
+	result := gstr.Replace(buffer.String(), "<no value>", "")
+	result = view.i18nTranslate(result, variables)
+	return result, nil
 }
 
 // getTemplate returns the template object associated with given template file <path>.

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/gogf/gf/.example/frame/mvc/app/model/article"
-	"github.com/gogf/gf/frame/g"
+	"fmt"
+	"github.com/gogf/gf/os/gtime"
 )
 
 func main() {
-	g.Dump(article.FindAll(g.Slice{2, 3}))
+	fmt.Println(gtime.Timestamp())
 }
