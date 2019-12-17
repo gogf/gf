@@ -112,7 +112,14 @@ func (tx *TX) From(tables string) *Model {
 	return tx.Table(tables)
 }
 
-// TX sets the transaction for current operation.
+// DB sets/changes the db object for current operation.
+func (m *Model) DB(db DB) *Model {
+	model := m.getModel()
+	model.db = db
+	return model
+}
+
+// TX sets/changes the transaction for current operation.
 func (m *Model) TX(tx *TX) *Model {
 	model := m.getModel()
 	model.tx = tx

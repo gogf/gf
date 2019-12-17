@@ -96,24 +96,48 @@ func SetTimeZone(zone string) error {
 	return err
 }
 
-// Nanosecond returns the timestamp in nanoseconds.
-func Nanosecond() int64 {
-	return time.Now().UnixNano()
+// Timestamp returns the timestamp in seconds.
+func Timestamp() int64 {
+	return Now().Timestamp()
 }
 
-// Microsecond returns the timestamp in microseconds.
-func Microsecond() int64 {
-	return time.Now().UnixNano() / 1e3
+// TimestampMilli returns the timestamp in milliseconds.
+func TimestampMilli() int64 {
+	return Now().TimestampMilli()
 }
 
-// Millisecond returns the timestamp in milliseconds.
-func Millisecond() int64 {
-	return time.Now().UnixNano() / 1e6
+// TimestampMicro returns the timestamp in microseconds.
+func TimestampMicro() int64 {
+	return Now().TimestampMicro()
+}
+
+// TimestampNano returns the timestamp in nanoseconds.
+func TimestampNano() int64 {
+	return Now().TimestampNano()
 }
 
 // Second returns the timestamp in seconds.
+// Deprecated, use Timestamp instead.
 func Second() int64 {
-	return time.Now().Unix()
+	return Timestamp()
+}
+
+// Millisecond returns the timestamp in milliseconds.
+// Deprecated, use TimestampMilli instead.
+func Millisecond() int64 {
+	return TimestampMilli()
+}
+
+// Microsecond returns the timestamp in microseconds.
+// Deprecated, use TimestampMicro instead.
+func Microsecond() int64 {
+	return TimestampMicro()
+}
+
+// Nanosecond returns the timestamp in nanoseconds.
+// Deprecated, use TimestampNano instead.
+func Nanosecond() int64 {
+	return TimestampNano()
 }
 
 // Date returns current date in string like "2006-01-02".

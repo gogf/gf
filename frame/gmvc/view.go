@@ -7,6 +7,7 @@
 package gmvc
 
 import (
+	"github.com/gogf/gf/frame/gins"
 	"sync"
 
 	"github.com/gogf/gf/util/gmode"
@@ -26,7 +27,7 @@ type View struct {
 // 创建一个MVC请求中使用的视图对象
 func NewView(w *ghttp.Response) *View {
 	return &View{
-		view:     gview.New(),
+		view:     gins.View(),
 		data:     make(gview.Params),
 		response: w,
 	}
