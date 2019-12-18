@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/container/glist"
 )
 
-func Example_Basic() {
+func Example_basic() {
 	n := 10
 	l := glist.New()
 	for i := 0; i < n; i++ {
@@ -38,7 +38,7 @@ func Example_Basic() {
 	//0
 }
 
-func Example_Iterate() {
+func Example_iterate() {
 	// concurrent-safe list.
 	l := glist.NewFrom(garray.NewArrayRange(1, 10, 1).Slice(), true)
 	// iterate reading from head.
