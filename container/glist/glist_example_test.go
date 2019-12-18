@@ -63,6 +63,20 @@ func Example_iterate() {
 
 	fmt.Println()
 
+	// iterate reading from head using IteratorAsc.
+	l.IteratorAsc(func(e *glist.Element) bool {
+		fmt.Print(e.Value)
+		return true
+	})
+	fmt.Println()
+	// iterate reading from head using IteratorDesc.
+	l.IteratorDesc(func(e *glist.Element) bool {
+		fmt.Print(e.Value)
+		return true
+	})
+
+	fmt.Println()
+
 	// iterate writing from head.
 	l.LockFunc(func(list *list.List) {
 		length := list.Len()
@@ -78,6 +92,8 @@ func Example_iterate() {
 	fmt.Println(l)
 
 	//output:
+	//12345678910
+	//10987654321
 	//12345678910
 	//10987654321
 	//[1,2,3,4,5,"M",7,8,9,10]
