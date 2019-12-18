@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
@@ -43,6 +44,21 @@ func NewArraySize(size int, cap int, safe ...bool) *Array {
 		mu:    rwmutex.New(safe...),
 		array: make([]interface{}, size, cap),
 	}
+}
+
+// NewArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewArrayRange(start, end, step int, safe ...bool) *Array {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]interface{}, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewArrayFrom(slice, safe...)
 }
 
 // See NewArrayFrom.

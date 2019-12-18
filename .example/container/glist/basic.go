@@ -10,10 +10,10 @@ func main() {
 	// Push
 	l.PushBack(1)
 	l.PushBack(2)
-	e0 := l.PushFront(0)
+	e := l.PushFront(0)
 	// Insert
-	l.InsertBefore(e0, -1)
-	l.InsertAfter(e0, "a")
+	l.InsertBefore(e, -1)
+	l.InsertAfter(e, "a")
 	fmt.Println(l)
 	// Pop
 	fmt.Println(l.PopFront())

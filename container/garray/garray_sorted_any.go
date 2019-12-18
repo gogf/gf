@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
 	"math"
@@ -48,6 +49,21 @@ func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...
 		array:      make([]interface{}, 0, cap),
 		comparator: comparator,
 	}
+}
+
+// NewSortedArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewSortedArrayRange(start, end, step int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]interface{}, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewSortedArrayFrom(slice, comparator, safe...)
 }
 
 // NewSortedArrayFrom creates and returns an sorted array with given slice <array>.

@@ -51,19 +51,18 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 	// 当pattern中的method为all时，去掉该method，以便于后续方法判断
 	domain, method, path, err := s.parsePattern(pattern)
 	if err != nil {
-		glog.Error(err)
+		glog.Fatal(err)
 		return
 	}
 	if strings.EqualFold(method, gDEFAULT_METHOD) {
 		pattern = s.serveHandlerKey("", path, domain)
 	}
-
 	m := make(handlerMap)
 	v := reflect.ValueOf(object)
 	t := v.Type()
-	sname := t.Elem().Name()
 	initFunc := (func(*Request))(nil)
 	shutFunc := (func(*Request))(nil)
+	structName := t.Elem().Name()
 	if v.MethodByName("Init").IsValid() {
 		initFunc = v.MethodByName("Init").Interface().(func(*Request))
 	}
@@ -73,11 +72,11 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 	pkgPath := t.Elem().PkgPath()
 	pkgName := gfile.Basename(pkgPath)
 	for i := 0; i < v.NumMethod(); i++ {
-		mname := t.Method(i).Name
-		if methodMap != nil && !methodMap[mname] {
+		methodName := t.Method(i).Name
+		if methodMap != nil && !methodMap[methodName] {
 			continue
 		}
-		if mname == "Init" || mname == "Shut" {
+		if methodName == "Init" || methodName == "Shut" {
 			continue
 		}
 		objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -89,17 +88,17 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 			if len(methodMap) > 0 {
 				// 指定的方法名称注册，那么需要使用错误提示
 				glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-					pkgPath, objName, mname, v.Method(i).Type().String())
+					pkgPath, objName, methodName, v.Method(i).Type().String())
 			} else {
 				// 否则只是Debug提示
 				glog.Debugf(`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)"`,
-					pkgPath, objName, mname, v.Method(i).Type().String())
+					pkgPath, objName, methodName, v.Method(i).Type().String())
 			}
 			continue
 		}
-		key := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
+		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
 		m[key] = &handlerItem{
-			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 			itemType:   gHANDLER_TYPE_OBJECT,
 			itemFunc:   itemFunc,
 			initFunc:   initFunc,
@@ -108,14 +107,14 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 		}
 		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI。
 		// 注意，当pattern带有内置变量时，不会自动加该路由。
-		if strings.EqualFold(mname, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
+		if strings.EqualFold(methodName, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
 			p := gstr.PosRI(key, "/index")
 			k := key[0:p] + key[p+6:]
 			if len(k) == 0 || k[0] == '@' {
 				k = "/" + k
 			}
 			m[k] = &handlerItem{
-				itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+				itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 				itemType:   gHANDLER_TYPE_OBJECT,
 				itemFunc:   itemFunc,
 				initFunc:   initFunc,
@@ -133,11 +132,11 @@ func (s *Server) doBindObjectMethod(pattern string, object interface{}, method s
 	m := make(handlerMap)
 	v := reflect.ValueOf(object)
 	t := v.Type()
-	sname := t.Elem().Name()
-	mname := strings.TrimSpace(method)
-	fval := v.MethodByName(mname)
-	if !fval.IsValid() {
-		glog.Error("invalid method name:" + mname)
+	structName := t.Elem().Name()
+	methodName := strings.TrimSpace(method)
+	methodValue := v.MethodByName(methodName)
+	if !methodValue.IsValid() {
+		glog.Fatal("invalid method name: " + methodName)
 		return
 	}
 	initFunc := (func(*Request))(nil)
@@ -154,15 +153,15 @@ func (s *Server) doBindObjectMethod(pattern string, object interface{}, method s
 	if objName[0] == '*' {
 		objName = fmt.Sprintf(`(%s)`, objName)
 	}
-	itemFunc, ok := fval.Interface().(func(*Request))
+	itemFunc, ok := methodValue.Interface().(func(*Request))
 	if !ok {
 		glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-			pkgPath, objName, mname, fval.Type().String())
+			pkgPath, objName, methodName, methodValue.Type().String())
 		return
 	}
-	key := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
+	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
 	m[key] = &handlerItem{
-		itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+		itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 		itemType:   gHANDLER_TYPE_OBJECT,
 		itemFunc:   itemFunc,
 		initFunc:   initFunc,
@@ -177,9 +176,9 @@ func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware
 	m := make(handlerMap)
 	v := reflect.ValueOf(object)
 	t := v.Type()
-	sname := t.Elem().Name()
 	initFunc := (func(*Request))(nil)
 	shutFunc := (func(*Request))(nil)
+	structName := t.Elem().Name()
 	if v.MethodByName("Init").IsValid() {
 		initFunc = v.MethodByName("Init").Interface().(func(*Request))
 	}
@@ -188,9 +187,8 @@ func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware
 	}
 	pkgPath := t.Elem().PkgPath()
 	for i := 0; i < v.NumMethod(); i++ {
-		mname := t.Method(i).Name
-		method := strings.ToUpper(mname)
-		if _, ok := methodsMap[method]; !ok {
+		methodName := t.Method(i).Name
+		if _, ok := methodsMap[strings.ToUpper(methodName)]; !ok {
 			continue
 		}
 		pkgName := gfile.Basename(pkgPath)
@@ -201,12 +199,12 @@ func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware
 		itemFunc, ok := v.Method(i).Interface().(func(*Request))
 		if !ok {
 			glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-				pkgPath, objName, mname, v.Method(i).Type().String())
+				pkgPath, objName, methodName, v.Method(i).Type().String())
 			continue
 		}
-		key := s.mergeBuildInNameToPattern(mname+":"+pattern, sname, mname, false)
+		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
 		m[key] = &handlerItem{
-			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, mname),
+			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 			itemType:   gHANDLER_TYPE_OBJECT,
 			itemFunc:   itemFunc,
 			initFunc:   initFunc,

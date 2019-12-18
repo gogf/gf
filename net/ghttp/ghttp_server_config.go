@@ -73,6 +73,7 @@ type ServerConfig struct {
 	PProfPattern      string            // PProf: PProf service pattern for router.
 	FormParsingMemory int64             // Other: Max memory in bytes which can be used for parsing multimedia form.
 	NameToUriType     int               // Other: Type for converting struct method name to URI when registering routes.
+	RouteOverWrite    bool              // Other: Allow overwrite the route if duplicated.
 	DumpRouterMap     bool              // Other: Whether automatically dump router map when server starts.
 	Graceful          bool              // Other: Enable graceful reload feature for all servers of the process.
 }
