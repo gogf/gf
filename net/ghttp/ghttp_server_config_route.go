@@ -15,3 +15,7 @@ func (s *Server) SetRewriteMap(rewrites map[string]string) {
 		s.config.Rewrites[k] = v
 	}
 }
+
+func (s *Server) SetRouteOverWrite(enabled bool) {
+	s.config.RouteOverWrite = enabled
+}

@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math"
 	"sort"
 
@@ -51,6 +52,21 @@ func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
 		unique:     gtype.NewBool(),
 		comparator: defaultComparatorInt,
 	}
+}
+
+// NewSortedIntArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewSortedIntArrayRange(start, end, step int, safe ...bool) *SortedIntArray {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]int, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewSortedIntArrayFrom(slice, safe...)
 }
 
 // NewIntArrayFrom creates and returns an sorted array with given slice <array>.

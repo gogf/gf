@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math"
 	"sort"
 
@@ -37,6 +38,21 @@ func NewIntArraySize(size int, cap int, safe ...bool) *IntArray {
 		mu:    rwmutex.New(safe...),
 		array: make([]int, size, cap),
 	}
+}
+
+// NewIntArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewIntArrayRange(start, end, step int, safe ...bool) *IntArray {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]int, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewIntArrayFrom(slice, safe...)
 }
 
 // NewIntArrayFrom creates and returns an array with given slice <array>.

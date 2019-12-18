@@ -53,7 +53,7 @@ func (s *Server) doBindController(pattern string, controller Controller, method 
 	// 当pattern中的method为all时，去掉该method，以便于后续方法判断
 	domain, method, path, err := s.parsePattern(pattern)
 	if err != nil {
-		glog.Error(err)
+		glog.Fatal(err)
 		return
 	}
 	if strings.EqualFold(method, gDEFAULT_METHOD) {
@@ -63,15 +63,15 @@ func (s *Server) doBindController(pattern string, controller Controller, method 
 	m := make(handlerMap)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
-	sname := t.Elem().Name()
 	pkgPath := t.Elem().PkgPath()
 	pkgName := gfile.Basename(pkgPath)
+	structName := t.Elem().Name()
 	for i := 0; i < v.NumMethod(); i++ {
-		mname := t.Method(i).Name
-		if methodMap != nil && !methodMap[mname] {
+		methodName := t.Method(i).Name
+		if methodMap != nil && !methodMap[methodName] {
 			continue
 		}
-		if mname == "Init" || mname == "Shut" || mname == "Exit" {
+		if methodName == "Init" || methodName == "Shut" || methodName == "Exit" {
 			continue
 		}
 		ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -82,20 +82,20 @@ func (s *Server) doBindController(pattern string, controller Controller, method 
 			if len(methodMap) > 0 {
 				// 指定的方法名称注册，那么需要使用错误提示
 				glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
-					pkgPath, ctlName, mname, v.Method(i).Type().String())
+					pkgPath, ctlName, methodName, v.Method(i).Type().String())
 			} else {
 				// 否则只是Debug提示
 				glog.Debugf(`ignore route method: %s.%s.%s defined as "%s", no match "func()"`,
-					pkgPath, ctlName, mname, v.Method(i).Type().String())
+					pkgPath, ctlName, methodName, v.Method(i).Type().String())
 			}
 			continue
 		}
-		key := s.mergeBuildInNameToPattern(pattern, sname, mname, true)
+		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
 		m[key] = &handlerItem{
-			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
+			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
 			itemType: gHANDLER_TYPE_CONTROLLER,
 			ctrlInfo: &handlerController{
-				name:    mname,
+				name:    methodName,
 				reflect: v.Elem().Type(),
 			},
 			middleware: middleware,
@@ -104,17 +104,17 @@ func (s *Server) doBindController(pattern string, controller Controller, method 
 		// 例如: pattern为/user, 那么会同时注册/user及/user/index，
 		// 这里处理新增/user路由绑定。
 		// 注意，当pattern带有内置变量时，不会自动加该路由。
-		if strings.EqualFold(mname, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
+		if strings.EqualFold(methodName, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
 			p := gstr.PosRI(key, "/index")
 			k := key[0:p] + key[p+6:]
 			if len(k) == 0 || k[0] == '@' {
 				k = "/" + k
 			}
 			m[k] = &handlerItem{
-				itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
+				itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
 				itemType: gHANDLER_TYPE_CONTROLLER,
 				ctrlInfo: &handlerController{
-					name:    mname,
+					name:    methodName,
 					reflect: v.Elem().Type(),
 				},
 				middleware: middleware,
@@ -128,11 +128,11 @@ func (s *Server) doBindControllerMethod(pattern string, controller Controller, m
 	m := make(handlerMap)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
-	sname := t.Elem().Name()
-	mname := strings.TrimSpace(method)
-	fval := v.MethodByName(mname)
-	if !fval.IsValid() {
-		glog.Error("invalid method name:" + mname)
+	structName := t.Elem().Name()
+	methodName := strings.TrimSpace(method)
+	methodValue := v.MethodByName(methodName)
+	if !methodValue.IsValid() {
+		glog.Fatal("invalid method name: " + methodName)
 		return
 	}
 	pkgPath := t.Elem().PkgPath()
@@ -141,17 +141,17 @@ func (s *Server) doBindControllerMethod(pattern string, controller Controller, m
 	if ctlName[0] == '*' {
 		ctlName = fmt.Sprintf(`(%s)`, ctlName)
 	}
-	if _, ok := fval.Interface().(func()); !ok {
+	if _, ok := methodValue.Interface().(func()); !ok {
 		glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
-			pkgPath, ctlName, mname, fval.Type().String())
+			pkgPath, ctlName, methodName, methodValue.Type().String())
 		return
 	}
-	key := s.mergeBuildInNameToPattern(pattern, sname, mname, false)
+	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
 	m[key] = &handlerItem{
-		itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
+		itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
 		itemType: gHANDLER_TYPE_CONTROLLER,
 		ctrlInfo: &handlerController{
-			name:    mname,
+			name:    methodName,
 			reflect: v.Elem().Type(),
 		},
 		middleware: middleware,
@@ -164,13 +164,12 @@ func (s *Server) doBindControllerRest(pattern string, controller Controller, mid
 	m := make(handlerMap)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
-	sname := t.Elem().Name()
 	pkgPath := t.Elem().PkgPath()
+	structName := t.Elem().Name()
 	// 如果存在与HttpMethod对应名字的方法，那么绑定这些方法
 	for i := 0; i < v.NumMethod(); i++ {
-		mname := t.Method(i).Name
-		method := strings.ToUpper(mname)
-		if _, ok := methodsMap[method]; !ok {
+		methodName := t.Method(i).Name
+		if _, ok := methodsMap[strings.ToUpper(methodName)]; !ok {
 			continue
 		}
 		pkgName := gfile.Basename(pkgPath)
@@ -180,15 +179,15 @@ func (s *Server) doBindControllerRest(pattern string, controller Controller, mid
 		}
 		if _, ok := v.Method(i).Interface().(func()); !ok {
 			glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
-				pkgPath, ctlName, mname, v.Method(i).Type().String())
+				pkgPath, ctlName, methodName, v.Method(i).Type().String())
 			return
 		}
-		key := s.mergeBuildInNameToPattern(mname+":"+pattern, sname, mname, false)
+		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
 		m[key] = &handlerItem{
-			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, mname),
+			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
 			itemType: gHANDLER_TYPE_CONTROLLER,
 			ctrlInfo: &handlerController{
-				name:    mname,
+				name:    methodName,
 				reflect: v.Elem().Type(),
 			},
 			middleware: middleware,

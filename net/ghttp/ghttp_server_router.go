@@ -72,11 +72,13 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	}
 	// 注册地址记录及重复注册判断
 	regKey := s.handlerKey(handler.hookName, method, uri, domain)
-	switch handler.itemType {
-	case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
-		if item, ok := s.routesMap[regKey]; ok {
-			glog.Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
-			return
+	if !s.config.RouteOverWrite {
+		switch handler.itemType {
+		case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+			if item, ok := s.routesMap[regKey]; ok {
+				glog.Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
+				return
+			}
 		}
 	}
 	// 注册的路由信息对象
@@ -263,8 +265,8 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return true
 	}
 
-	// 最后新的规则比旧的规则优先级低
-	return false
+	// 最后新的规则比旧的规则优先级高(路由覆盖)
+	return true
 }
 
 // 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
