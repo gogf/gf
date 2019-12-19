@@ -265,8 +265,15 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return true
 	}
 
-	// 最后新的规则比旧的规则优先级高(路由覆盖)
-	return true
+	// 如果是服务路由，那么新的规则比旧的规则优先级高(路由覆盖)
+	if newItem.itemType == gHANDLER_TYPE_HANDLER ||
+		newItem.itemType == gHANDLER_TYPE_OBJECT ||
+		newItem.itemType == gHANDLER_TYPE_CONTROLLER {
+		return true
+	}
+
+	// 如果是其他路由(HOOK/中间件)，那么新的规则比旧的规则优先级低，使得注册相同路由则顺序执行
+	return false
 }
 
 // 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
