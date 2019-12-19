@@ -10,13 +10,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/container/gmap"
 	"reflect"
 	"time"
 
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
-
-	"github.com/gogf/gf/container/gmap"
 
 	"github.com/gogf/gf/util/gconv"
 )
@@ -289,6 +288,18 @@ func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
+// WherePri does the same logic as Model.Where except that if the parameter <where>
+// is a single condition like int/string/float/slice, it treats the condition as the primary
+// key value. That is, if primary key is "id" and given <where> parameter as "123", the
+// WherePri function treats it as "id=123", but Model.Where treats it as string "123".
+func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
+	if len(args) > 0 {
+		return m.Where(where, args...)
+	}
+	newWhere := GetPrimaryKeyCondition(m.getPrimaryKey(), where)
+	return m.Where(newWhere[0], newWhere[1:]...)
+}
+
 // And adds "AND" condition to the where statement.
 func (m *Model) And(where interface{}, args ...interface{}) *Model {
 	model := m.getModel()
@@ -317,18 +328,32 @@ func (m *Model) Or(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
-// GroupBy sets the "GROUP BY" statement for the model.
-func (m *Model) GroupBy(groupBy string) *Model {
+// Group sets the "GROUP BY" statement for the model.
+func (m *Model) Group(groupBy string) *Model {
 	model := m.getModel()
 	model.groupBy = m.db.quoteString(groupBy)
 	return model
 }
 
-// OrderBy sets the "ORDER BY" statement for the model.
-func (m *Model) OrderBy(orderBy string) *Model {
+// GroupBy is alias of Model.Group.
+// See Model.Group.
+// Deprecated.
+func (m *Model) GroupBy(groupBy string) *Model {
+	return m.Group(groupBy)
+}
+
+// Order sets the "ORDER BY" statement for the model.
+func (m *Model) Order(orderBy string) *Model {
 	model := m.getModel()
 	model.orderBy = m.db.quoteString(orderBy)
 	return model
+}
+
+// OrderBy is alias of Model.Order.
+// See Model.Order.
+// Deprecated.
+func (m *Model) OrderBy(orderBy string) *Model {
+	return m.Order(orderBy)
 }
 
 // Limit sets the "LIMIT" statement for the model.
@@ -355,14 +380,21 @@ func (m *Model) Offset(offset int) *Model {
 	return model
 }
 
-// ForPage sets the paging number for the model.
+// Page sets the paging number for the model.
 // The parameter <page> is started from 1 for paging.
 // Note that, it differs that the Limit function start from 0 for "LIMIT" statement.
-func (m *Model) ForPage(page, limit int) *Model {
+func (m *Model) Page(page, limit int) *Model {
 	model := m.getModel()
 	model.start = (page - 1) * limit
 	model.limit = limit
 	return model
+}
+
+// ForPage is alias of Model.Page.
+// See Model.Page.
+// Deprecated.
+func (m *Model) ForPage(page, limit int) *Model {
+	return m.Page(page, limit)
 }
 
 // Batch sets the batch operation number for the model.
@@ -444,50 +476,6 @@ func (m *Model) Data(data ...interface{}) *Model {
 		}
 	}
 	return model
-}
-
-// filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
-// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
-	if list, ok := m.data.(List); ok {
-		for k, item := range list {
-			list[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
-		}
-		return list
-	} else if item, ok := m.data.(Map); ok {
-		return m.doFilterDataMapForInsertOrUpdate(item, true)
-	}
-	return data
-}
-
-// doFilterDataMapForInsertOrUpdate does the filter features for map.
-// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) Map {
-	if m.filter {
-		data = m.db.filterFields(m.tables, data)
-	}
-	// Remove key-value pairs of which the value is empty.
-	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
-		m := gmap.NewStrAnyMapFrom(data)
-		m.FilterEmpty()
-		data = m.Map()
-	}
-
-	if len(m.fields) > 0 && m.fields != "*" {
-		// Keep specified fields.
-		set := gset.NewStrSetFrom(gstr.SplitAndTrim(m.fields, ","))
-		for k := range data {
-			if !set.Contains(k) {
-				delete(data, k)
-			}
-		}
-	} else if len(m.fieldsEx) > 0 {
-		// Filter specified fields.
-		for _, v := range gstr.SplitAndTrim(m.fieldsEx, ",") {
-			delete(data, v)
-		}
-	}
-	return data
 }
 
 // Insert does "INSERT INTO ..." statement for the model.
@@ -637,7 +625,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	if m.data == nil {
 		return nil, errors.New("updating table with empty data")
 	}
-	condition, conditionArgs := m.formatCondition()
+	condition, conditionArgs := m.formatCondition(false)
 	return m.db.doUpdate(
 		m.getLink(),
 		m.tables,
@@ -659,7 +647,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			m.checkAndRemoveCache()
 		}
 	}()
-	condition, conditionArgs := m.formatCondition()
+	condition, conditionArgs := m.formatCondition(false)
 	return m.db.doDelete(m.getLink(), m.tables, condition, conditionArgs...)
 }
 
@@ -680,7 +668,7 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
-	condition, conditionArgs := m.formatCondition()
+	condition, conditionArgs := m.formatCondition(false)
 	return m.getAll(fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition), conditionArgs...)
 }
 
@@ -690,12 +678,16 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 // The optional parameter <where> is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) One(where ...interface{}) (Record, error) {
-	list, err := m.All(where...)
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).One()
+	}
+	condition, conditionArgs := m.formatCondition(true)
+	all, err := m.getAll(fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition), conditionArgs...)
 	if err != nil {
 		return nil, err
 	}
-	if len(list) > 0 {
-		return list[0], nil
+	if len(all) > 0 {
+		return all[0], nil
 	}
 	return nil, nil
 }
@@ -833,7 +825,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	} else {
 		m.fields = fmt.Sprintf(`COUNT(%s)`, m.fields)
 	}
-	condition, conditionArgs := m.formatCondition()
+	condition, conditionArgs := m.formatCondition(false)
 	s := fmt.Sprintf("SELECT %s FROM %s %s", m.fields, m.tables, condition)
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
@@ -848,6 +840,116 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		}
 	}
 	return 0, nil
+}
+
+// FindOne retrieves and returns a single Record by Model.WherePri and Model.One.
+// Also see Model.WherePri and Model.One.
+func (m *Model) FindOne(where ...interface{}) (Record, error) {
+	if len(where) > 0 {
+		return m.WherePri(where[0], where[1:]...).One()
+	}
+	return m.One()
+}
+
+// FindAll retrieves and returns Result by by Model.WherePri and Model.All.
+// Also see Model.WherePri and Model.All.
+func (m *Model) FindAll(where ...interface{}) (Result, error) {
+	if len(where) > 0 {
+		return m.WherePri(where[0], where[1:]...).All()
+	}
+	return m.All()
+}
+
+// FindValue retrieves and returns single field value by Model.WherePri and Model.Value.
+// Also see Model.WherePri and Model.Value.
+func (m *Model) FindValue(fieldsAndWhere ...interface{}) (Value, error) {
+	if len(fieldsAndWhere) >= 2 {
+		return m.WherePri(fieldsAndWhere[1], fieldsAndWhere[2:]...).Fields(gconv.String(fieldsAndWhere[0])).Value()
+	}
+	if len(fieldsAndWhere) == 1 {
+		return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
+	}
+	return m.Value()
+}
+
+// FindCount retrieves and returns the record number by Model.WherePri and Model.Count.
+// Also see Model.WherePri and Model.Count.
+func (m *Model) FindCount(where ...interface{}) (int, error) {
+	if len(where) > 0 {
+		return m.WherePri(where[0], where[1:]...).Count()
+	}
+	return m.Count()
+}
+
+// Chunk iterates the table with given size and callback function.
+func (m *Model) Chunk(limit int, callback func(result Result, err error) bool) {
+	page := m.start
+	if page == 0 {
+		page = 1
+	}
+	model := m
+	for {
+		model = model.Page(page, limit)
+		data, err := model.All()
+		if err != nil {
+			callback(nil, err)
+			break
+		}
+		if len(data) == 0 {
+			break
+		}
+		if callback(data, err) == false {
+			break
+		}
+		if len(data) < limit {
+			break
+		}
+		page++
+	}
+}
+
+// filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
+// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
+func (m *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
+	if list, ok := m.data.(List); ok {
+		for k, item := range list {
+			list[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
+		}
+		return list
+	} else if item, ok := m.data.(Map); ok {
+		return m.doFilterDataMapForInsertOrUpdate(item, true)
+	}
+	return data
+}
+
+// doFilterDataMapForInsertOrUpdate does the filter features for map.
+// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
+func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) Map {
+	if m.filter {
+		data = m.db.filterFields(m.tables, data)
+	}
+	// Remove key-value pairs of which the value is empty.
+	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
+		m := gmap.NewStrAnyMapFrom(data)
+		m.FilterEmpty()
+		data = m.Map()
+	}
+
+	if len(m.fields) > 0 && m.fields != "*" {
+		// Keep specified fields.
+		set := gset.NewStrSetFrom(gstr.SplitAndTrim(m.fields, ","))
+		for k := range data {
+			if !set.Contains(k) {
+				delete(data, k)
+			}
+		}
+	} else if len(m.fieldsEx) > 0 {
+		// Filter specified fields.
+		for _, v := range gstr.SplitAndTrim(m.fieldsEx, ",") {
+			delete(data, v)
+		}
+	}
+	return data
 }
 
 // getLink returns the underlying database link object with configured <linkType> attribute.
@@ -891,6 +993,23 @@ func (m *Model) getAll(query string, args ...interface{}) (result Result, err er
 	return result, err
 }
 
+// getPrimaryKey retrieves and returns the primary key name of the model table.
+// It parses m.tables to retrieve the primary table name, supporting m.tables like:
+// "user", "user u", "user as u, user_detail as ud".
+func (m *Model) getPrimaryKey() string {
+	table := gstr.SplitAndTrim(m.tables, " ")[0]
+	tableFields, err := m.db.TableFields(table)
+	if err != nil {
+		return ""
+	}
+	for name, field := range tableFields {
+		if gstr.ContainsI(field.Key, "pri") {
+			return name
+		}
+	}
+	return ""
+}
+
 // checkAndRemoveCache checks and remove the cache if necessary.
 func (m *Model) checkAndRemoveCache() {
 	if m.cacheEnabled && m.cacheDuration < 0 && len(m.cacheName) > 0 {
@@ -900,7 +1019,9 @@ func (m *Model) checkAndRemoveCache() {
 
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
 // Note that this function does not change any attribute value of the <m>.
-func (m *Model) formatCondition() (condition string, conditionArgs []interface{}) {
+//
+// The parameter <limit> specifies whether limits querying only one record if m.limit is not set.
+func (m *Model) formatCondition(limit bool) (condition string, conditionArgs []interface{}) {
 	var where string
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
@@ -955,36 +1076,11 @@ func (m *Model) formatCondition() (condition string, conditionArgs []interface{}
 		} else {
 			condition += fmt.Sprintf(" LIMIT %d", m.limit)
 		}
+	} else if limit {
+		condition += " LIMIT 1"
 	}
 	if m.offset >= 0 {
 		condition += fmt.Sprintf(" OFFSET %d", m.offset)
 	}
 	return
-}
-
-// Chunk iterates the table with given size and callback function.
-func (m *Model) Chunk(limit int, callback func(result Result, err error) bool) {
-	page := m.start
-	if page == 0 {
-		page = 1
-	}
-	model := m
-	for {
-		model = model.ForPage(page, limit)
-		data, err := model.All()
-		if err != nil {
-			callback(nil, err)
-			break
-		}
-		if len(data) == 0 {
-			break
-		}
-		if callback(data, err) == false {
-			break
-		}
-		if len(data) < limit {
-			break
-		}
-		page++
-	}
 }

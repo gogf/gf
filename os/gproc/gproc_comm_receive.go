@@ -63,7 +63,7 @@ func receiveTcpListening() {
 		}
 		// Save the port to the pid file.
 		if err := gfile.PutContents(getCommFilePath(Pid()), gconv.String(i)); err != nil {
-			glog.Panic(err)
+			panic(err)
 		}
 		break
 	}

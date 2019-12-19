@@ -335,31 +335,20 @@ func (s *Server) dumpRouterMap() {
 	if s.config.DumpRouterMap && len(s.routesMap) > 0 {
 		buffer := bytes.NewBuffer(nil)
 		table := tablewriter.NewWriter(buffer)
-		table.SetHeader([]string{"SERVER", "ADDRESS", "DOMAIN", "METHOD", "P", "ROUTE", "HANDLER", "MIDDLEWARE"})
+		table.SetHeader([]string{"SERVER", "DOMAIN", "ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"})
 		table.SetRowLine(true)
 		table.SetBorder(false)
 		table.SetCenterSeparator("|")
-		table.SetColumnAlignment([]int{
-			tablewriter.ALIGN_CENTER,
-			tablewriter.ALIGN_CENTER,
-			tablewriter.ALIGN_CENTER,
-			tablewriter.ALIGN_CENTER,
-			tablewriter.ALIGN_CENTER,
-			tablewriter.ALIGN_LEFT,
-			tablewriter.ALIGN_LEFT,
-			tablewriter.ALIGN_LEFT,
-		})
 
 		for _, item := range s.GetRouterArray() {
-			data := make([]string, 8)
+			data := make([]string, 7)
 			data[0] = item.Server
-			data[1] = item.Address
-			data[2] = item.Domain
+			data[1] = item.Domain
+			data[2] = item.Address
 			data[3] = item.Method
-			data[4] = gconv.String(len(strings.Split(item.Route, "/")) - 1 + item.Priority)
-			data[5] = item.Route
-			data[6] = item.handler.itemName
-			data[7] = item.Middleware
+			data[4] = item.Route
+			data[5] = item.handler.itemName
+			data[6] = item.Middleware
 			table.Append(data)
 		}
 		table.Render()

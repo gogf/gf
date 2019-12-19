@@ -222,7 +222,7 @@ func New(name ...string) (db DB, err error) {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
+		return nil, errors.New(fmt.Sprintf(`database configuration node "%s" is not found`, group))
 	}
 }
 

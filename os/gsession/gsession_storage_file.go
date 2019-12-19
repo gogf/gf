@@ -8,6 +8,7 @@ package gsession
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
@@ -21,8 +22,6 @@ import (
 	"github.com/gogf/gf/encoding/gbinary"
 
 	"github.com/gogf/gf/os/gtime"
-
-	"github.com/gogf/gf/os/glog"
 
 	"github.com/gogf/gf/os/gfile"
 )
@@ -39,7 +38,7 @@ var (
 	DefaultStorageFilePath          = gfile.Join(gfile.TempDir(), "gsessions")
 	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
 	DefaultStorageFileCryptoEnabled = false
-	DefaultStorageFileLoopInterval  = time.Minute
+	DefaultStorageFileLoopInterval  = 10 * time.Second
 )
 
 func init() {
@@ -55,15 +54,15 @@ func NewStorageFile(path ...string) *StorageFile {
 	if len(path) > 0 && path[0] != "" {
 		storagePath, _ = gfile.Search(path[0])
 		if storagePath == "" {
-			glog.Panicf("'%s' does not exist", path[0])
+			panic(fmt.Sprintf(fmt.Sprintf("'%s' does not exist", path[0])))
 		}
 		if !gfile.IsWritable(storagePath) {
-			glog.Panicf("'%s' is not writable", path[0])
+			panic(fmt.Sprintf("'%s' is not writable", path[0]))
 		}
 	}
 	if storagePath != "" {
 		if err := gfile.Mkdir(storagePath); err != nil {
-			glog.Panicf("mkdir '%s' failed: %v", path[0], err)
+			panic(fmt.Sprintf("mkdir '%s' failed: %v", path[0], err))
 		}
 	}
 	s := &StorageFile{

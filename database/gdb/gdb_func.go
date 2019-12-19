@@ -156,7 +156,6 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 		}
 	}
 	return where
-
 }
 
 // 获得orm标签与属性的映射关系

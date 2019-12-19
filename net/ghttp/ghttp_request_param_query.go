@@ -188,11 +188,11 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 	return nil
 }
 
-// GetQueryToStruct retrieves all parameters passed from client using HTTP GET method
+// GetQueryStruct retrieves all parameters passed from client using HTTP GET method
 // and converts them to given struct object. Note that the parameter <pointer> is a pointer
 // to the struct object. The optional parameter <mapping> is used to specify the key to
 // attribute mapping.
-func (r *Request) GetQueryToStruct(pointer interface{}, mapping ...map[string]string) error {
+func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.ParseQuery()
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
 	if len(mapping) > 0 {
@@ -201,4 +201,10 @@ func (r *Request) GetQueryToStruct(pointer interface{}, mapping ...map[string]st
 		}
 	}
 	return gconv.StructDeep(r.GetQueryMap(), pointer, tagMap)
+}
+
+// GetQueryToStruct is alias of GetQueryStruct. See GetQueryStruct.
+// Deprecated.
+func (r *Request) GetQueryToStruct(pointer interface{}, mapping ...map[string]string) error {
+	return r.GetQueryStruct(pointer, mapping...)
 }
