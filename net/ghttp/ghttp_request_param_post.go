@@ -174,11 +174,11 @@ func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*
 	return nil
 }
 
-// GetPostToStruct retrieves all parameters in the form and body passed from client
+// GetPostStruct retrieves all parameters in the form and body passed from client
 // and converts them to given struct object. Note that the parameter <pointer> is a pointer
 // to the struct object. The optional parameter <mapping> is used to specify the key to
 // attribute mapping.
-func (r *Request) GetPostToStruct(pointer interface{}, mapping ...map[string]string) error {
+func (r *Request) GetPostStruct(pointer interface{}, mapping ...map[string]string) error {
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
 	if len(mapping) > 0 {
 		for k, v := range mapping[0] {
@@ -186,4 +186,10 @@ func (r *Request) GetPostToStruct(pointer interface{}, mapping ...map[string]str
 		}
 	}
 	return gconv.StructDeep(r.GetPostMap(), pointer, tagMap)
+}
+
+// GetPostToStruct is alias of GetQueryStruct. See GetPostStruct.
+// Deprecated.
+func (r *Request) GetPostToStruct(pointer interface{}, mapping ...map[string]string) error {
+	return r.GetPostStruct(pointer, mapping...)
 }

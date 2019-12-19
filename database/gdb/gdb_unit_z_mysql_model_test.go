@@ -200,7 +200,7 @@ func Test_Model_Update(t *testing.T) {
 	defer dropTable(table)
 	// UPDATE...LIMIT
 	gtest.Case(t, func() {
-		result, err := db.Table(table).Data("nickname", "T100").OrderBy("id desc").Limit(2).Update()
+		result, err := db.Table(table).Data("nickname", "T100").Order("id desc").Limit(2).Update()
 		gtest.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, 2)
@@ -246,10 +246,10 @@ func Test_Model_Clone(t *testing.T) {
 		count, err := md.Count()
 		gtest.Assert(err, nil)
 
-		record, err := md.OrderBy("id DESC").One()
+		record, err := md.Order("id DESC").One()
 		gtest.Assert(err, nil)
 
-		result, err := md.OrderBy("id ASC").All()
+		result, err := md.Order("id ASC").All()
 		gtest.Assert(err, nil)
 
 		gtest.Assert(count, 2)
@@ -327,7 +327,7 @@ func Test_Model_Safe(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(count, 2)
 
-		all, err := md2.OrderBy("id asc").All()
+		all, err := md2.Order("id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(all), 2)
 		gtest.Assert(all[0]["id"].Int(), 1)
@@ -342,7 +342,7 @@ func Test_Model_Safe(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(count, 3)
 
-		all, err = md3.OrderBy("id asc").All()
+		all, err = md3.Order("id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(all), 3)
 		gtest.Assert(all[0]["id"].Int(), 4)
@@ -371,6 +371,44 @@ func Test_Model_All(t *testing.T) {
 	})
 }
 
+func Test_Model_FindAll(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		result, err := db.Table(table).FindAll(5)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 1)
+		gtest.Assert(result[0]["id"].Int(), 5)
+	})
+
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Order("id asc").FindAll("id", 8)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 1)
+		gtest.Assert(result[0]["id"].Int(), 8)
+	})
+
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Order("id asc").FindAll(g.Slice{3, 9})
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0]["id"].Int(), 3)
+		gtest.Assert(result[1]["id"].Int(), 9)
+	})
+
+	gtest.Case(t, func() {
+		result, err := db.Table(table).FindAll()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), INIT_DATA_SIZE)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Where("id<0").FindAll()
+		gtest.Assert(result, nil)
+		gtest.Assert(err, nil)
+	})
+}
+
 func Test_Model_One(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -387,9 +425,45 @@ func Test_Model_One(t *testing.T) {
 	})
 }
 
+func Test_Model_FindOne(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		record, err := db.Table(table).FindOne(1)
+		gtest.Assert(err, nil)
+		gtest.Assert(record["nickname"].String(), "name_1")
+	})
+
+	gtest.Case(t, func() {
+		record, err := db.Table(table).FindOne(3)
+		gtest.Assert(err, nil)
+		gtest.Assert(record["nickname"].String(), "name_3")
+	})
+
+	gtest.Case(t, func() {
+		record, err := db.Table(table).Where("id", 1).FindOne()
+		gtest.Assert(err, nil)
+		gtest.Assert(record["nickname"].String(), "name_1")
+	})
+
+	gtest.Case(t, func() {
+		record, err := db.Table(table).FindOne("id", 9)
+		gtest.Assert(err, nil)
+		gtest.Assert(record["nickname"].String(), "name_9")
+	})
+
+	gtest.Case(t, func() {
+		record, err := db.Table(table).Where("id", 0).FindOne()
+		gtest.Assert(err, nil)
+		gtest.Assert(record, nil)
+	})
+}
+
 func Test_Model_Value(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
+
 	gtest.Case(t, func() {
 		value, err := db.Table(table).Fields("nickname").Where("id", 1).Value()
 		gtest.Assert(err, nil)
@@ -403,11 +477,60 @@ func Test_Model_Value(t *testing.T) {
 	})
 }
 
+func Test_Model_FindValue(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		value, err := db.Table(table).FindValue("nickname", 1)
+		gtest.Assert(err, nil)
+		gtest.Assert(value.String(), "name_1")
+	})
+
+	gtest.Case(t, func() {
+		value, err := db.Table(table).Order("id desc").FindValue("nickname")
+		gtest.Assert(err, nil)
+		gtest.Assert(value.String(), "name_10")
+	})
+
+	gtest.Case(t, func() {
+		value, err := db.Table(table).Fields("nickname").Where("id", 1).FindValue()
+		gtest.Assert(err, nil)
+		gtest.Assert(value.String(), "name_1")
+	})
+
+	gtest.Case(t, func() {
+		value, err := db.Table(table).Fields("nickname").Where("id", 0).FindValue()
+		gtest.Assert(err, nil)
+		gtest.Assert(value, nil)
+	})
+}
+
 func Test_Model_Count(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.Case(t, func() {
 		count, err := db.Table(table).Count()
+		gtest.Assert(err, nil)
+		gtest.Assert(count, INIT_DATA_SIZE)
+	})
+}
+
+func Test_Model_FindCount(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.Case(t, func() {
+		count, err := db.Table(table).FindCount(g.Slice{1, 3})
+		gtest.Assert(err, nil)
+		gtest.Assert(count, 2)
+	})
+	gtest.Case(t, func() {
+		count, err := db.Table(table).FindCount(g.Slice{1, 300000})
+		gtest.Assert(err, nil)
+		gtest.Assert(count, 1)
+	})
+	gtest.Case(t, func() {
+		count, err := db.Table(table).FindCount()
 		gtest.Assert(err, nil)
 		gtest.Assert(count, INIT_DATA_SIZE)
 	})
@@ -514,7 +637,7 @@ func Test_Model_Structs(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		var users []User
-		err := db.Table(table).OrderBy("id asc").Structs(&users)
+		err := db.Table(table).Order("id asc").Structs(&users)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -537,7 +660,7 @@ func Test_Model_Structs(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		var users []*User
-		err := db.Table(table).OrderBy("id asc").Structs(&users)
+		err := db.Table(table).Order("id asc").Structs(&users)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -560,7 +683,7 @@ func Test_Model_Structs(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		var users []*User
-		err := db.Table(table).OrderBy("id asc").Scan(&users)
+		err := db.Table(table).Order("id asc").Scan(&users)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -629,7 +752,7 @@ func Test_Model_Scan(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		var users []User
-		err := db.Table(table).OrderBy("id asc").Scan(&users)
+		err := db.Table(table).Order("id asc").Scan(&users)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(users), INIT_DATA_SIZE)
 		gtest.Assert(users[0].Id, 1)
@@ -649,7 +772,7 @@ func Test_Model_Scan(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		var users []*User
-		err := db.Table(table).OrderBy("id asc").Scan(&users)
+		err := db.Table(table).Order("id asc").Scan(&users)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(users), INIT_DATA_SIZE)
 		gtest.Assert(users[0].Id, 1)
@@ -683,7 +806,7 @@ func Test_Model_OrderBy(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.Case(t, func() {
-		result, err := db.Table(table).OrderBy("id DESC").Select()
+		result, err := db.Table(table).Order("id DESC").Select()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), INIT_DATA_SIZE)
 		gtest.Assert(result[0]["nickname"].String(), fmt.Sprintf("name_%d", INIT_DATA_SIZE))
@@ -724,7 +847,7 @@ func Test_Model_Where(t *testing.T) {
 	gtest.Case(t, func() {
 		result, err := db.Table(table).Where(g.Map{
 			"passport like": "user_1%",
-		}).OrderBy("id asc").All()
+		}).Order("id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 2)
 		gtest.Assert(result[0].GMap().Get("id"), 1)
@@ -870,7 +993,7 @@ func Test_Model_Where(t *testing.T) {
 			"create_time > 0":    nil,
 			"id":                 g.Slice{1, 2, 3},
 		}
-		result, err := db.Table(table).Where(conditions).OrderBy("id asc").All()
+		result, err := db.Table(table).Where(conditions).Order("id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 3)
 		gtest.Assert(result[0]["id"].Int(), 1)
@@ -885,7 +1008,7 @@ func Test_Model_Where(t *testing.T) {
 			"create_time > ?":    0,
 			"id in(?)":           g.Slice{1, 2, 3},
 		}
-		result, err := db.Table(table).Where(conditions).OrderBy("id asc").All()
+		result, err := db.Table(table).Where(conditions).Order("id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 3)
 		gtest.Assert(result[0]["id"].Int(), 1)
@@ -906,7 +1029,7 @@ func Test_Model_Where(t *testing.T) {
 	})
 	// slice single
 	gtest.Case(t, func() {
-		result, err := db.Table(table).Where("id IN(?)", g.Slice{1, 3}).OrderBy("id ASC").All()
+		result, err := db.Table(table).Where("id IN(?)", g.Slice{1, 3}).Order("id ASC").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 2)
 		gtest.Assert(result[0]["id"].Int(), 1)
@@ -914,7 +1037,7 @@ func Test_Model_Where(t *testing.T) {
 	})
 	// slice + string
 	gtest.Case(t, func() {
-		result, err := db.Table(table).Where("nickname=? AND id IN(?)", "name_3", g.Slice{1, 3}).OrderBy("id ASC").All()
+		result, err := db.Table(table).Where("nickname=? AND id IN(?)", "name_3", g.Slice{1, 3}).Order("id ASC").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 1)
 		gtest.Assert(result[0]["id"].Int(), 3)
@@ -924,7 +1047,7 @@ func Test_Model_Where(t *testing.T) {
 		result, err := db.Table(table).Where(g.Map{
 			"id":       g.Slice{1, 3},
 			"nickname": "name_3",
-		}).OrderBy("id ASC").All()
+		}).Order("id ASC").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 1)
 		gtest.Assert(result[0]["id"].Int(), 3)
@@ -938,7 +1061,265 @@ func Test_Model_Where(t *testing.T) {
 		result, err := db.Table(table).Where(User{
 			Ids:      []int{1, 3},
 			Nickname: "name_3",
-		}).OrderBy("id ASC").All()
+		}).Order("id ASC").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 1)
+		gtest.Assert(result[0]["id"].Int(), 3)
+	})
+}
+
+func Test_Model_WherePri(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// primary key
+	gtest.Case(t, func() {
+		one, err := db.Table(table).WherePri(3).One()
+		gtest.Assert(err, nil)
+		gtest.AssertNE(one, nil)
+		gtest.Assert(one["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		all, err := db.Table(table).WherePri(g.Slice{3, 9}).Order("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(all), 2)
+		gtest.Assert(all[0]["id"].Int(), 3)
+		gtest.Assert(all[1]["id"].Int(), 9)
+	})
+
+	// string
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id=? and nickname=?", 3, "name_3").One()
+		gtest.Assert(err, nil)
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// slice parameter
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id=? and nickname=?", g.Slice{3, "name_3"}).One()
+		gtest.Assert(err, nil)
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// map like
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(g.Map{
+			"passport like": "user_1%",
+		}).Order("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0].GMap().Get("id"), 1)
+		gtest.Assert(result[1].GMap().Get("id"), 10)
+	})
+	// map + slice parameter
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(g.Map{
+			"id":       g.Slice{1, 2, 3},
+			"passport": g.Slice{"user_2", "user_3"},
+		}).And("id=? and nickname=?", g.Slice{3, "name_3"}).One()
+		gtest.Assert(err, nil)
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(g.Map{
+			"id":       g.Slice{1, 2, 3},
+			"passport": g.Slice{"user_2", "user_3"},
+		}).Or("nickname=?", g.Slice{"name_4"}).And("id", 3).One()
+		gtest.Assert(err, nil)
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id=3", g.Slice{}).One()
+		gtest.Assert(err, nil)
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id=?", g.Slice{3}).One()
+		gtest.Assert(err, nil)
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id", 3).One()
+		gtest.Assert(err, nil)
+		gtest.AssertGT(len(result), 0)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id", 3).WherePri("nickname", "name_3").One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id", 3).And("nickname", "name_3").One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id", 30).Or("nickname", "name_3").One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id", 30).Or("nickname", "name_3").And("id>?", 1).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id", 30).Or("nickname", "name_3").And("id>", 1).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// slice
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id=? AND nickname=?", g.Slice{3, "name_3"}...).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id=? AND nickname=?", g.Slice{3, "name_3"}).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("passport like ? and nickname like ?", g.Slice{"user_3", "name_3"}).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// map
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(g.Map{"id": 3, "nickname": "name_3"}).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// map key operator
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(g.Map{"id>": 1, "id<": 3}).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 2)
+	})
+
+	// gmap.Map
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(gmap.NewFrom(g.MapAnyAny{"id": 3, "nickname": "name_3"})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// gmap.Map key operator
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(gmap.NewFrom(g.MapAnyAny{"id>": 1, "id<": 3})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 2)
+	})
+
+	// list map
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(gmap.NewListMapFrom(g.MapAnyAny{"id": 3, "nickname": "name_3"})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// list map key operator
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(gmap.NewListMapFrom(g.MapAnyAny{"id>": 1, "id<": 3})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 2)
+	})
+
+	// tree map
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(gmap.NewTreeMapFrom(gutil.ComparatorString, g.MapAnyAny{"id": 3, "nickname": "name_3"})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// tree map key operator
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(gmap.NewTreeMapFrom(gutil.ComparatorString, g.MapAnyAny{"id>": 1, "id<": 3})).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 2)
+	})
+
+	// complicated where 1
+	gtest.Case(t, func() {
+		//db.SetDebug(true)
+		conditions := g.Map{
+			"nickname like ?":    "%name%",
+			"id between ? and ?": g.Slice{1, 3},
+			"id > 0":             nil,
+			"create_time > 0":    nil,
+			"id":                 g.Slice{1, 2, 3},
+		}
+		result, err := db.Table(table).WherePri(conditions).Order("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 3)
+		gtest.Assert(result[0]["id"].Int(), 1)
+	})
+	// complicated where 2
+	gtest.Case(t, func() {
+		//db.SetDebug(true)
+		conditions := g.Map{
+			"nickname like ?":    "%name%",
+			"id between ? and ?": g.Slice{1, 3},
+			"id >= ?":            1,
+			"create_time > ?":    0,
+			"id in(?)":           g.Slice{1, 2, 3},
+		}
+		result, err := db.Table(table).WherePri(conditions).Order("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 3)
+		gtest.Assert(result[0]["id"].Int(), 1)
+	})
+	// struct
+	gtest.Case(t, func() {
+		type User struct {
+			Id       int    `json:"id"`
+			Nickname string `gconv:"nickname"`
+		}
+		result, err := db.Table(table).WherePri(User{3, "name_3"}).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+
+		result, err = db.Table(table).WherePri(&User{3, "name_3"}).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(result["id"].Int(), 3)
+	})
+	// slice single
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("id IN(?)", g.Slice{1, 3}).Order("id ASC").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0]["id"].Int(), 1)
+		gtest.Assert(result[1]["id"].Int(), 3)
+	})
+	// slice + string
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri("nickname=? AND id IN(?)", "name_3", g.Slice{1, 3}).Order("id ASC").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 1)
+		gtest.Assert(result[0]["id"].Int(), 3)
+	})
+	// slice + map
+	gtest.Case(t, func() {
+		result, err := db.Table(table).WherePri(g.Map{
+			"id":       g.Slice{1, 3},
+			"nickname": "name_3",
+		}).Order("id ASC").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 1)
+		gtest.Assert(result[0]["id"].Int(), 3)
+	})
+	// slice + struct
+	gtest.Case(t, func() {
+		type User struct {
+			Ids      []int  `json:"id"`
+			Nickname string `gconv:"nickname"`
+		}
+		result, err := db.Table(table).WherePri(User{
+			Ids:      []int{1, 3},
+			Nickname: "name_3",
+		}).Order("id ASC").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(result), 1)
 		gtest.Assert(result[0]["id"].Int(), 3)
@@ -969,7 +1350,7 @@ func Test_Model_Offset(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	result, err := db.Table(table).Limit(2).Offset(5).OrderBy("id").Select()
+	result, err := db.Table(table).Limit(2).Offset(5).Order("id").Select()
 	gtest.Assert(err, nil)
 	gtest.Assert(len(result), 2)
 	gtest.Assert(result[0]["id"], 6)
@@ -980,7 +1361,7 @@ func Test_Model_ForPage(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	result, err := db.Table(table).ForPage(3, 3).OrderBy("id").Select()
+	result, err := db.Table(table).ForPage(3, 3).Order("id").Select()
 	gtest.Assert(err, nil)
 	gtest.Assert(len(result), 3)
 	gtest.Assert(result[0]["id"], 7)
@@ -1153,7 +1534,7 @@ func Test_Model_Option_List(t *testing.T) {
 		gtest.Assert(err, nil)
 		n, _ := r.RowsAffected()
 		gtest.Assert(n, 2)
-		list, err := db.Table(table).OrderBy("id asc").All()
+		list, err := db.Table(table).Order("id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(list), 2)
 		gtest.Assert(list[0]["id"].String(), "1")
@@ -1187,7 +1568,7 @@ func Test_Model_Option_List(t *testing.T) {
 		gtest.Assert(err, nil)
 		n, _ := r.RowsAffected()
 		gtest.Assert(n, 2)
-		list, err := db.Table(table).OrderBy("id asc").All()
+		list, err := db.Table(table).Order("id asc").All()
 		g.Dump(list)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(list), 2)
@@ -1232,7 +1613,7 @@ func Test_Model_FieldsEx(t *testing.T) {
 	defer dropTable(table)
 	// Select.
 	gtest.Case(t, func() {
-		r, err := db.Table(table).FieldsEx("create_time, id").Where("id in (?)", g.Slice{1, 2}).OrderBy("id asc").All()
+		r, err := db.Table(table).FieldsEx("create_time, id").Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(r), 2)
 		gtest.Assert(len(r[0]), 3)
@@ -1268,7 +1649,7 @@ func Test_Model_Prefix(t *testing.T) {
 	defer dropTable(PREFIX1 + table)
 	// Select.
 	gtest.Case(t, func() {
-		r, err := db.Table(table).Where("id in (?)", g.Slice{1, 2}).OrderBy("id asc").All()
+		r, err := db.Table(table).Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(r), 2)
 		gtest.Assert(r[0]["id"], "1")
@@ -1276,7 +1657,7 @@ func Test_Model_Prefix(t *testing.T) {
 	})
 	// Select with alias.
 	gtest.Case(t, func() {
-		r, err := db.Table(table+" as u").Where("u.id in (?)", g.Slice{1, 2}).OrderBy("u.id asc").All()
+		r, err := db.Table(table+" as u").Where("u.id in (?)", g.Slice{1, 2}).Order("u.id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(r), 2)
 		gtest.Assert(r[0]["id"], "1")
@@ -1284,7 +1665,7 @@ func Test_Model_Prefix(t *testing.T) {
 	})
 	// Select with alias and join statement.
 	gtest.Case(t, func() {
-		r, err := db.Table(table+" as u1").LeftJoin(table+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).OrderBy("u1.id asc").All()
+		r, err := db.Table(table+" as u1").LeftJoin(table+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).Order("u1.id asc").All()
 		gtest.Assert(err, nil)
 		gtest.Assert(len(r), 2)
 		gtest.Assert(r[0]["id"], "1")

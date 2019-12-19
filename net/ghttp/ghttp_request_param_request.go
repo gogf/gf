@@ -263,10 +263,10 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 	return nil
 }
 
-// GetRequestToStruct retrieves all parameters passed from client no matter what HTTP method the client is using,
+// GetRequestStruct retrieves all parameters passed from client no matter what HTTP method the client is using,
 // and converts them to given struct object. Note that the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
-func (r *Request) GetRequestToStruct(pointer interface{}, mapping ...map[string]string) error {
+func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]string) error {
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
 	if len(mapping) > 0 {
 		for k, v := range mapping[0] {
@@ -274,4 +274,10 @@ func (r *Request) GetRequestToStruct(pointer interface{}, mapping ...map[string]
 		}
 	}
 	return gconv.StructDeep(r.GetRequestMap(), pointer, tagMap)
+}
+
+// GetRequestToStruct is alias of GetRequestStruct. See GetRequestStruct.
+// Deprecated.
+func (r *Request) GetRequestToStruct(pointer interface{}, mapping ...map[string]string) error {
+	return r.GetRequestStruct(pointer, mapping...)
 }

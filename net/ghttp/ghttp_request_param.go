@@ -128,8 +128,15 @@ func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string 
 	return r.GetRequestMapStrStr(def...)
 }
 
+// GetStruct is alias of GetRequestToStruct.
+// See GetRequestToStruct.
+func (r *Request) GetStruct(pointer interface{}, mapping ...map[string]string) error {
+	return r.GetRequestToStruct(pointer, mapping...)
+}
+
 // GetToStruct is alias of GetRequestToStruct.
 // See GetRequestToStruct.
+// Deprecated.
 func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
 	return r.GetRequestToStruct(pointer, mapping...)
 }

@@ -5,6 +5,9 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gins provides instances and core components management.
+//
+// Note that it should not used glog.Panic* functions for panics if you do not want
+// to log all the panics.
 package gins
 
 import (
@@ -103,7 +106,7 @@ func View(name ...string) *gview.View {
 			}
 			if m != nil {
 				if err := view.SetConfigWithMap(m); err != nil {
-					glog.Panic(err)
+					panic(err)
 				}
 			}
 		}
@@ -150,7 +153,7 @@ func Log(name ...string) *glog.Logger {
 			}
 			if m != nil {
 				if err := logger.SetConfigWithMap(m); err != nil {
-					glog.Panic(err)
+					panic(err)
 				}
 			}
 		}
@@ -172,15 +175,15 @@ func Database(name ...string) gdb.DB {
 		if gdb.GetConfig(group) != nil {
 			db, err := gdb.Instance(group)
 			if err != nil {
-				glog.Panic(err)
+				panic(err)
 			}
 			return db
 		}
 		m := config.GetMap("database")
 		if m == nil {
-			glog.Panic(`database init failed: "database" node not found, is config file or configuration missing?`)
+			panic(`database init failed: "database" node not found, is config file or configuration missing?`)
 		}
-		// Parse <m> as map-slice.
+		// Parse <m> as map-slice and adds it to gdb's global configurations.
 		for group, groupConfig := range m {
 			cg := gdb.ConfigGroup{}
 			switch value := groupConfig.(type) {
@@ -199,14 +202,15 @@ func Database(name ...string) gdb.DB {
 				gdb.SetConfigGroup(group, cg)
 			}
 		}
-		// Parse <m> as a single node configuration.
+		// Parse <m> as a single node configuration,
+		// which is the default group configuration.
 		if node := parseDBConfigNode(m); node != nil {
 			cg := gdb.ConfigGroup{}
 			if node.LinkInfo != "" || node.Host != "" {
 				cg = append(cg, *node)
 			}
 			if len(cg) > 0 {
-				gdb.SetConfigGroup(group, cg)
+				gdb.SetConfigGroup(gdb.DEFAULT_GROUP_NAME, cg)
 			}
 		}
 		addConfigMonitor(instanceKey, config)
@@ -219,12 +223,12 @@ func Database(name ...string) gdb.DB {
 			}
 			if m != nil {
 				if err := db.GetLogger().SetConfigWithMap(m); err != nil {
-					glog.Panic(err)
+					panic(err)
 				}
 			}
 			return db
 		} else {
-			glog.Panic(err)
+			panic(err)
 		}
 		return nil
 	})
@@ -242,7 +246,7 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	node := &gdb.ConfigNode{}
 	err := gconv.Struct(nodeMap, node)
 	if err != nil {
-		glog.Panic(err)
+		panic(err)
 	}
 	if _, v := gutil.MapPossibleItemByKey(nodeMap, "link"); v != nil {
 		node.LinkInfo = gconv.String(v)
@@ -282,15 +286,15 @@ func Redis(name ...string) *gredis.Redis {
 			if v, ok := m[group]; ok {
 				redisConfig, err := gredis.ConfigFromStr(gconv.String(v))
 				if err != nil {
-					glog.Panic(err)
+					panic(err)
 				}
 				addConfigMonitor(instanceKey, config)
 				return gredis.New(redisConfig)
 			} else {
-				glog.Panicf(`configuration for redis not found for group "%s"`, group)
+				panic(fmt.Sprintf(`configuration for redis not found for group "%s"`, group))
 			}
 		} else {
-			glog.Panicf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath())
+			panic(fmt.Sprintf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath()))
 		}
 		return nil
 	})

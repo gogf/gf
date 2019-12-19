@@ -21,65 +21,53 @@ var (
 	Table = "gf_article"
 	// Model is the model object of gf_article.
 	Model = &arModel{g.DB("default").Table(Table).Safe()}
-	// Primary is the primary key name of table gf_article.
-	Primary = gdb.GetPrimaryKey(new(Entity))
 )
 
-// FindOne retrieves and returns a single Entity by a primary key or where conditions by
-// Model.Where. The optional parameter <where> is like follows:
-// 123, []int{1, 2, 3}, "john", []string{"john", "smith"}
-// g.Map{"id": g.Slice{1,2,3}}, g.Map{"id": 1, "name": "john"}, etc.
-//
-// Note that it differs with Mode.One is that any single where condition parameter will
-// be treated as the value of the primary key in FindOne, but a string condition in
-// Model.One. That is, if primary key is "id" and given <where> parameter as "123", the
-// FindOne function treats it as "id=123", but Model.One treats it as "123", just a string.
+// FindOne is a convenience method for Model.FindOne.
+// See Model.FindOne.
 func FindOne(where ...interface{}) (*Entity, error) {
-	return Model.One(gdb.GetPrimaryKeyCondition(Primary, where...)...)
+	return Model.FindOne(where...)
 }
 
-// FindAll retrieves and returns multiple Entity by a primary key or where conditions by
-// Model.Where. Also see FindOne.
+// FindAll is a convenience method for Model.FindAll.
+// See Model.FindAll.
 func FindAll(where ...interface{}) ([]*Entity, error) {
-	return Model.All(gdb.GetPrimaryKeyCondition(Primary, where...)...)
+	return Model.FindAll(where...)
 }
 
-// FindValue retrieves and returns single field value by a primary key or where conditions by
-// Model.Where. Also see FindOne.
+// FindValue is a convenience method for Model.FindValue.
+// See Model.FindValue.
 func FindValue(fieldsAndWhere ...interface{}) (gdb.Value, error) {
-	if len(fieldsAndWhere) == 2 {
-		return Model.Value(append(fieldsAndWhere[0:1], gdb.GetPrimaryKeyCondition(Primary, fieldsAndWhere[1:]...)...)...)
-	}
-	return Model.Value(fieldsAndWhere...)
+	return Model.FindValue(fieldsAndWhere...)
 }
 
-// FindCount retrieves and returns the record number by a primary key or where conditions by
-// Model.Where. Also see FindOne.
+// FindCount is a convenience method for Model.FindCount.
+// See Model.FindCount.
 func FindCount(where ...interface{}) (int, error) {
-	return Model.Count(gdb.GetPrimaryKeyCondition(Primary, where...)...)
+	return Model.FindCount(where...)
 }
 
-// Insert is alias of Model.Insert.
+// Insert is a convenience method for Model.Insert.
 func Insert(data ...interface{}) (result sql.Result, err error) {
 	return Model.Insert(data...)
 }
 
-// Replace is alias of Model.Replace.
+// Replace is a convenience method for Model.Replace.
 func Replace(data ...interface{}) (result sql.Result, err error) {
 	return Model.Replace(data...)
 }
 
-// Save is alias of Model.Save.
+// Save is a convenience method for Model.Save.
 func Save(data ...interface{}) (result sql.Result, err error) {
 	return Model.Save(data...)
 }
 
-// Update is alias of Model.Update.
+// Update is a convenience method for Model.Update.
 func Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
 	return Model.Update(dataAndWhere...)
 }
 
-// Delete is alias of Model.Delete.
+// Delete is a convenience method for Model.Delete.
 func Delete(where ...interface{}) (result sql.Result, err error) {
 	return Model.Delete(where...)
 }
@@ -166,14 +154,14 @@ func (m *arModel) Or(where interface{}, args ...interface{}) *arModel {
 	return &arModel{m.M.Or(where, args...)}
 }
 
-// GroupBy sets the "GROUP BY" statement for the model.
-func (m *arModel) GroupBy(groupBy string) *arModel {
-	return &arModel{m.M.GroupBy(groupBy)}
+// Group sets the "GROUP BY" statement for the model.
+func (m *arModel) Group(groupBy string) *arModel {
+	return &arModel{m.M.Group(groupBy)}
 }
 
-// OrderBy sets the "ORDER BY" statement for the model.
-func (m *arModel) OrderBy(orderBy string) *arModel {
-	return &arModel{m.M.OrderBy(orderBy)}
+// Order sets the "ORDER BY" statement for the model.
+func (m *arModel) Order(orderBy string) *arModel {
+	return &arModel{m.M.Order(orderBy)}
 }
 
 // Limit sets the "LIMIT" statement for the model.
@@ -190,11 +178,11 @@ func (m *arModel) Offset(offset int) *arModel {
 	return &arModel{m.M.Offset(offset)}
 }
 
-// ForPage sets the paging number for the model.
+// Page sets the paging number for the model.
 // The parameter <page> is started from 1 for paging.
 // Note that, it differs that the Limit function start from 0 for "LIMIT" statement.
-func (m *arModel) ForPage(page, limit int) *arModel {
-	return &arModel{m.M.ForPage(page, limit)}
+func (m *arModel) Page(page, limit int) *arModel {
+	return &arModel{m.M.Page(page, limit)}
 }
 
 // Batch sets the batch operation number for the model.
@@ -319,6 +307,46 @@ func (m *arModel) One(where ...interface{}) (*Entity, error) {
 // Also see Model.Fields and Model.Where functions.
 func (m *arModel) Value(fieldsAndWhere ...interface{}) (gdb.Value, error) {
 	return m.M.Value(fieldsAndWhere...)
+}
+
+// FindOne retrieves and returns a single Record by Model.WherePri and Model.One.
+// Also see Model.WherePri and Model.One.
+func (m *arModel) FindOne(where ...interface{}) (*Entity, error) {
+	one, err := m.M.FindOne(where...)
+	if err != nil {
+		return nil, err
+	}
+	var entity *Entity
+	if err = one.Struct(&entity); err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	return entity, nil
+}
+
+// FindAll retrieves and returns Result by by Model.WherePri and Model.All.
+// Also see Model.WherePri and Model.All.
+func (m *arModel) FindAll(where ...interface{}) ([]*Entity, error) {
+	all, err := m.M.FindAll(where...)
+	if err != nil {
+		return nil, err
+	}
+	var entities []*Entity
+	if err = all.Structs(&entities); err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	return entities, nil
+}
+
+// FindValue retrieves and returns single field value by Model.WherePri and Model.Value.
+// Also see Model.WherePri and Model.Value.
+func (m *arModel) FindValue(fieldsAndWhere ...interface{}) (gdb.Value, error) {
+	return m.M.FindValue(fieldsAndWhere...)
+}
+
+// FindCount retrieves and returns the record number by Model.WherePri and Model.Count.
+// Also see Model.WherePri and Model.Count.
+func (m *arModel) FindCount(where ...interface{}) (int, error) {
+	return m.M.FindCount(where...)
 }
 
 // Chunk iterates the table with given size and callback function.

@@ -154,10 +154,10 @@ func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]*
 	return nil
 }
 
-// GetFormToStruct retrieves all form parameters passed from client and converts them to
+// GetFormStruct retrieves all form parameters passed from client and converts them to
 // given struct object. Note that the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
-func (r *Request) GetFormToStruct(pointer interface{}, mapping ...map[string]string) error {
+func (r *Request) GetFormStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.ParseForm()
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
 	if len(mapping) > 0 {
@@ -166,4 +166,10 @@ func (r *Request) GetFormToStruct(pointer interface{}, mapping ...map[string]str
 		}
 	}
 	return gconv.StructDeep(r.formMap, pointer, tagMap)
+}
+
+// GetFormToStruct is alias of GetFormStruct. See GetFormStruct.
+// Deprecated.
+func (r *Request) GetFormToStruct(pointer interface{}, mapping ...map[string]string) error {
+	return r.GetFormStruct(pointer, mapping...)
 }
