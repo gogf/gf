@@ -90,16 +90,19 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	r.Server.serveFile(r.Request, serveFile)
 }
 
-// RedirectTo redirects client to another location using http status 302.
-func (r *Response) RedirectTo(location string) {
+// RedirectTo redirects client to another location using http status code (3xx).
+func (r *Response) RedirectTo(code int, location string) {
+	if (code < http.StatusMultipleChoices || code > http.StatusPermanentRedirect) && code != http.StatusCreated {
+		panic(fmt.Sprintf("Cannot redirect with status code %d", code))
+	}
 	r.Header().Set("Location", location)
-	r.WriteHeader(http.StatusFound)
+	r.WriteHeader(code)
 	r.Request.Exit()
 }
 
-// RedirectBack redirects client back to referer using http status 302.
-func (r *Response) RedirectBack() {
-	r.RedirectTo(r.Request.GetReferer())
+// RedirectBack redirects client back to referer using http status code (3xx).
+func (r *Response) RedirectBack(code int) {
+	r.RedirectTo(code, r.Request.GetReferer())
 }
 
 // BufferString returns the buffered content as []byte.
