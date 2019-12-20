@@ -12,11 +12,12 @@ import (
 	"sync/atomic"
 )
 
+// Uint is a struct for concurrent-safe operation for type uint.
 type Uint struct {
 	value uint64
 }
 
-// NewUint returns a concurrent-safe object for uint type,
+// NewUint creates and returns a concurrent-safe object for uint type,
 // with given initial value <value>.
 func NewUint(value ...uint) *Uint {
 	if len(value) > 0 {
@@ -37,7 +38,7 @@ func (v *Uint) Set(value uint) (old uint) {
 	return uint(atomic.SwapUint64(&v.value, uint64(value)))
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Uint) Val() uint {
 	return uint(atomic.LoadUint64(&v.value))
 }

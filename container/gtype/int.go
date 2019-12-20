@@ -12,11 +12,12 @@ import (
 	"sync/atomic"
 )
 
+// Int is a struct for concurrent-safe operation for type int.
 type Int struct {
 	value int64
 }
 
-// NewInt returns a concurrent-safe object for int type,
+// NewInt creates and returns a concurrent-safe object for int type,
 // with given initial value <value>.
 func NewInt(value ...int) *Int {
 	if len(value) > 0 {
@@ -37,7 +38,7 @@ func (v *Int) Set(value int) (old int) {
 	return int(atomic.SwapInt64(&v.value, int64(value)))
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Int) Val() int {
 	return int(atomic.LoadInt64(&v.value))
 }

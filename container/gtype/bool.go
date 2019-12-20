@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 )
 
+// Bool is a struct for concurrent-safe operation for type bool.
 type Bool struct {
 	value int32
 }
@@ -21,7 +22,7 @@ var (
 	bytesFalse = []byte("false")
 )
 
-// NewBool returns a concurrent-safe object for bool type,
+// NewBool creates and returns a concurrent-safe object for bool type,
 // with given initial value <value>.
 func NewBool(value ...bool) *Bool {
 	t := &Bool{}
@@ -50,7 +51,7 @@ func (v *Bool) Set(value bool) (old bool) {
 	return
 }
 
-// Val atomically loads t.valueue.
+// Val atomically loads and returns t.valueue.
 func (v *Bool) Val() bool {
 	return atomic.LoadInt32(&v.value) > 0
 }

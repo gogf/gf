@@ -12,11 +12,12 @@ import (
 	"sync/atomic"
 )
 
+// Interface is a struct for concurrent-safe operation for type interface{}.
 type Interface struct {
 	value atomic.Value
 }
 
-// NewInterface returns a concurrent-safe object for interface{} type,
+// NewInterface creates and returns a concurrent-safe object for interface{} type,
 // with given initial value <value>.
 func NewInterface(value ...interface{}) *Interface {
 	t := &Interface{}
@@ -39,7 +40,7 @@ func (v *Interface) Set(value interface{}) (old interface{}) {
 	return
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Interface) Val() interface{} {
 	return v.value.Load()
 }

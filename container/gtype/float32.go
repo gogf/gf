@@ -14,11 +14,12 @@ import (
 	"unsafe"
 )
 
+// Float32 is a struct for concurrent-safe operation for type float32.
 type Float32 struct {
 	value uint32
 }
 
-// NewFloat32 returns a concurrent-safe object for float32 type,
+// NewFloat32 creates and returns a concurrent-safe object for float32 type,
 // with given initial value <value>.
 func NewFloat32(value ...float32) *Float32 {
 	if len(value) > 0 {
@@ -39,7 +40,7 @@ func (v *Float32) Set(value float32) (old float32) {
 	return math.Float32frombits(atomic.SwapUint32(&v.value, math.Float32bits(value)))
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Float32) Val() float32 {
 	return math.Float32frombits(atomic.LoadUint32(&v.value))
 }
