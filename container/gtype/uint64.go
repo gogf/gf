@@ -12,11 +12,12 @@ import (
 	"sync/atomic"
 )
 
+// Uint64 is a struct for concurrent-safe operation for type uint64.
 type Uint64 struct {
 	value uint64
 }
 
-// NewUint64 returns a concurrent-safe object for uint64 type,
+// NewUint64 creates and returns a concurrent-safe object for uint64 type,
 // with given initial value <value>.
 func NewUint64(value ...uint64) *Uint64 {
 	if len(value) > 0 {
@@ -37,7 +38,7 @@ func (v *Uint64) Set(value uint64) (old uint64) {
 	return atomic.SwapUint64(&v.value, value)
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Uint64) Val() uint64 {
 	return atomic.LoadUint64(&v.value)
 }

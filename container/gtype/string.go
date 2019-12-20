@@ -12,11 +12,12 @@ import (
 	"sync/atomic"
 )
 
+// String is a struct for concurrent-safe operation for type string.
 type String struct {
 	value atomic.Value
 }
 
-// NewString returns a concurrent-safe object for string type,
+// NewString creates and returns a concurrent-safe object for string type,
 // with given initial value <value>.
 func NewString(value ...string) *String {
 	t := &String{}
@@ -38,7 +39,7 @@ func (v *String) Set(value string) (old string) {
 	return
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *String) Val() string {
 	s := v.value.Load()
 	if s != nil {

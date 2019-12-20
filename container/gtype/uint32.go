@@ -12,11 +12,12 @@ import (
 	"sync/atomic"
 )
 
+// Uint32 is a struct for concurrent-safe operation for type uint32.
 type Uint32 struct {
 	value uint32
 }
 
-// NewUint32 returns a concurrent-safe object for uint32 type,
+// NewUint32 creates and returns a concurrent-safe object for uint32 type,
 // with given initial value <value>.
 func NewUint32(value ...uint32) *Uint32 {
 	if len(value) > 0 {
@@ -37,7 +38,7 @@ func (v *Uint32) Set(value uint32) (old uint32) {
 	return atomic.SwapUint32(&v.value, value)
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Uint32) Val() uint32 {
 	return atomic.LoadUint32(&v.value)
 }
