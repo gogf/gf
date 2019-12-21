@@ -14,11 +14,12 @@ import (
 	"unsafe"
 )
 
+// Float64 is a struct for concurrent-safe operation for type float64.
 type Float64 struct {
 	value uint64
 }
 
-// NewFloat64 returns a concurrent-safe object for float64 type,
+// NewFloat64 creates and returns a concurrent-safe object for float64 type,
 // with given initial value <value>.
 func NewFloat64(value ...float64) *Float64 {
 	if len(value) > 0 {
@@ -39,7 +40,7 @@ func (v *Float64) Set(value float64) (old float64) {
 	return math.Float64frombits(atomic.SwapUint64(&v.value, math.Float64bits(value)))
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Float64) Val() float64 {
 	return math.Float64frombits(atomic.LoadUint64(&v.value))
 }
