@@ -67,8 +67,7 @@ const (
 // The parameter <tables> can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
 func (bs *dbBase) Table(table string) *Model {
-	table = addTablePrefix(table, bs.db.getPrefix())
-	table = bs.db.quoteString(table)
+	table = bs.db.handleTableName(table)
 	return &Model{
 		db:         bs.db,
 		tablesInit: table,
@@ -90,8 +89,7 @@ func (bs *dbBase) From(tables string) *Model {
 // Table acts like dbBase.Table except it operates on transaction.
 // See dbBase.Table.
 func (tx *TX) Table(table string) *Model {
-	table = addTablePrefix(table, tx.db.getPrefix())
-	table = tx.db.quoteString(table)
+	table = tx.db.handleTableName(table)
 	return &Model{
 		db:         tx.db,
 		tx:         tx,
@@ -186,27 +184,21 @@ func (m *Model) getModel() *Model {
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
 func (m *Model) LeftJoin(table string, on string) *Model {
 	model := m.getModel()
-	table = addTablePrefix(table, m.db.getPrefix())
-	table = m.db.quoteString(table)
-	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", table, on)
+	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", m.db.handleTableName(table), on)
 	return model
 }
 
 // RightJoin does "RIGHT JOIN ... ON ..." statement on the model.
 func (m *Model) RightJoin(table string, on string) *Model {
 	model := m.getModel()
-	table = addTablePrefix(table, m.db.getPrefix())
-	table = m.db.quoteString(table)
-	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", table, on)
+	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", m.db.handleTableName(table), on)
 	return model
 }
 
 // InnerJoin does "INNER JOIN ... ON ..." statement on the model.
 func (m *Model) InnerJoin(table string, on string) *Model {
 	model := m.getModel()
-	table = addTablePrefix(table, m.db.getPrefix())
-	table = m.db.quoteString(table)
-	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", table, on)
+	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", m.db.handleTableName(table), on)
 	return model
 }
 

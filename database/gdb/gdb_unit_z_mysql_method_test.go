@@ -8,6 +8,7 @@ package gdb_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/container/garray"
 	"testing"
 	"time"
 
@@ -1050,6 +1051,109 @@ func Test_DB_TableField(t *testing.T) {
 	}
 
 	gtest.Assert(result[0], data)
+}
+
+func Test_DB_Prefix(t *testing.T) {
+	db := dbPrefix
+	name := fmt.Sprintf(`%s_%d`, TABLE, gtime.TimestampNano())
+	table := PREFIX1 + name
+	createTableWithDb(db, table)
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Insert(name, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
+		})
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 1)
+	})
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Replace(name, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:01").String(),
+		})
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 2)
+	})
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Save(name, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:02").String(),
+		})
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 2)
+	})
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Update(name, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:03").String(),
+		}, "id=?", id)
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 1)
+	})
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Delete(name, "id=?", id)
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 1)
+	})
+
+	gtest.Case(t, func() {
+		array := garray.New(true)
+		for i := 1; i <= INIT_DATA_SIZE; i++ {
+			array.Append(g.Map{
+				"id":          i,
+				"passport":    fmt.Sprintf(`user_%d`, i),
+				"password":    fmt.Sprintf(`pass_%d`, i),
+				"nickname":    fmt.Sprintf(`name_%d`, i),
+				"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
+			})
+		}
+
+		result, err := db.BatchInsert(name, array.Slice())
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, INIT_DATA_SIZE)
+	})
+
 }
 
 func Test_Model_InnerJoin(t *testing.T) {
