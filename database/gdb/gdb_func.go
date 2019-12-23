@@ -51,8 +51,31 @@ var (
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 )
 
+// handleTableName adds prefix string and quote chars for the table. It handles table string like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
+//
+// Note that, this will automatically checks the table prefix whether already added, if true it does
+// nothing to the table name, or else adds the prefix to the table name.
+func doHandleTableName(table, prefix, charLeft, charRight string) string {
+	array1 := gstr.SplitAndTrim(table, ",")
+	for k1, v1 := range array1 {
+		array2 := gstr.SplitAndTrim(v1, " ")
+		// Trim the security chars.
+		array2[0] = gstr.TrimLeftStr(array2[0], charLeft)
+		array2[0] = gstr.TrimRightStr(array2[0], charRight)
+		// If the table name already has the prefix, skips the prefix adding.
+		if len(array2[0]) <= len(prefix) || array2[0][:len(prefix)] != prefix {
+			array2[0] = prefix + array2[0]
+		}
+		// Add the security chars.
+		array2[0] = doQuoteWord(array2[0], charLeft, charRight)
+		array1[k1] = gstr.Join(array2, " ")
+	}
+	return gstr.Join(array1, ",")
+}
+
 // doQuoteWord checks given string <s> a word, if true quotes it with <charLeft> and <charRight>
-// and returns the quoted string; or else return <s> without any change.
+// and returns the quoted string; or else returns <s> without any change.
 func doQuoteWord(s, charLeft, charRight string) string {
 	if quoteWordReg.MatchString(s) && !gstr.ContainsAny(s, charLeft+charRight) {
 		return charLeft + s + charRight
@@ -73,23 +96,6 @@ func doQuoteString(s, charLeft, charRight string) string {
 			array3[1] = doQuoteWord(array3[1], charLeft, charRight)
 		}
 		array2[0] = gstr.Join(array3, ".")
-		array1[k1] = gstr.Join(array2, " ")
-	}
-	return gstr.Join(array1, ",")
-}
-
-// addTablePrefix adds prefix string to the table. It handles table string like:
-// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
-//
-// Note that, this should be used before any quoting function calls.
-func addTablePrefix(table, prefix string) string {
-	if prefix == "" {
-		return table
-	}
-	array1 := gstr.SplitAndTrim(table, ",")
-	for k1, v1 := range array1 {
-		array2 := gstr.SplitAndTrim(v1, " ")
-		array2[0] = prefix + array2[0]
 		array1[k1] = gstr.Join(array2, " ")
 	}
 	return gstr.Join(array1, ",")
