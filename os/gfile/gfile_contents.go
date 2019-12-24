@@ -7,6 +7,7 @@
 package gfile
 
 import (
+    "bufio"
 	"io"
 	"io/ioutil"
 	"os"
@@ -157,6 +158,36 @@ func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, DefaultPerm); err == nil {
 		defer f.Close()
 		return GetBytesByTwoOffsets(f, start, end)
+	}
+	return nil
+}
+
+
+// ReadLines read file line by line, return line in the file as string to callback function
+func ReadLines(file string, callback func(line string)) error {
+	return getByScan(file, callback, "string")
+}
+
+// ReadByteLines read file line by line, return line in the file as []byte to callback function
+func ReadByteLines(file string, callback func(line []byte)) error {
+	return getByScan(file, callback, "byte")
+}
+
+func getByScan(file string, callback interface{}, t string) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		if t == "string" {
+			callback.(func(line string))(scanner.Text())
+		} else {
+			callback.(func(line []byte))(scanner.Bytes())
+		}
 	}
 	return nil
 }
