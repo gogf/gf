@@ -172,6 +172,7 @@ func ReadByteLines(file string, callback func(line []byte)) error {
 	return getByScan(file, callback, "byte")
 }
 
+// getByScan read file line by line
 func getByScan(file string, callback interface{}, t string) error {
 	f, err := os.Open(file)
 	if err != nil {
