@@ -7,7 +7,7 @@
 package gfile
 
 import (
-    "bufio"
+	"bufio"
 	"io"
 	"io/ioutil"
 	"os"
@@ -161,7 +161,6 @@ func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 	}
 	return nil
 }
-
 
 // ReadLines read file line by line, return line in the file as string to callback function
 func ReadLines(file string, callback func(line string)) error {
