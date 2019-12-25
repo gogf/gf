@@ -31,17 +31,6 @@ var (
 	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
-// 打印SQL对象(仅在debug=true时有效)
-func (bs *dbBase) printSql(v *Sql) {
-	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
-	if v.Error != nil {
-		s += "\nError: " + v.Error.Error()
-		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
-	} else {
-		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
-	}
-}
-
 // 数据库sql查询操作，主要执行查询
 func (bs *dbBase) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	link, err := bs.db.Slave()
@@ -628,6 +617,17 @@ func (bs *dbBase) quoteWord(s string) string {
 func (bs *dbBase) quoteString(s string) string {
 	charLeft, charRight := bs.db.getChars()
 	return doQuoteString(s, charLeft, charRight)
+}
+
+// 打印SQL对象(仅在debug=true时有效)
+func (bs *dbBase) printSql(v *Sql) {
+	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
+	if v.Error != nil {
+		s += "\nError: " + v.Error.Error()
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
+	} else {
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
+	}
 }
 
 // 动态切换数据库

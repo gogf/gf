@@ -587,3 +587,50 @@ func TestSortedArray_Json(t *testing.T) {
 		gtest.AssertIN(user.Scores.PopLeft(), data["Scores"])
 	})
 }
+
+func TestSortedArray_Iterator(t *testing.T) {
+	slice := g.Slice{"a", "b", "d", "c"}
+	array := garray.NewSortedArrayFrom(slice, gutil.ComparatorString)
+	gtest.Case(t, func() {
+		array.Iterator(func(k int, v interface{}) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		array.IteratorAsc(func(k int, v interface{}) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		array.IteratorDesc(func(k int, v interface{}) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.Iterator(func(k int, v interface{}) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.IteratorAsc(func(k int, v interface{}) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.IteratorDesc(func(k int, v interface{}) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+}

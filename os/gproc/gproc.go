@@ -102,6 +102,7 @@ func ShellExec(cmd string, environment ...[]string) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...), environment...)
 	p.Stdout = buf
+	p.Stderr = buf
 	err := p.Run()
 	return buf.String(), err
 }
