@@ -101,7 +101,7 @@ func Join(paths ...string) string {
 
 // Exists checks whether given <path> exist.
 func Exists(path string) bool {
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
+	if stat, err := os.Stat(path); stat != nil && !os.IsNotExist(err) {
 		return true
 	}
 	return false
@@ -228,11 +228,7 @@ func CopyDir(src string, dst string) (err error) {
 	if !si.IsDir() {
 		return fmt.Errorf("source is not a directory")
 	}
-	_, err = os.Stat(dst)
-	if err != nil && !os.IsNotExist(err) {
-		return
-	}
-	if err == nil {
+	if Exists(dst) {
 		return fmt.Errorf("destination already exists")
 	}
 	err = os.MkdirAll(dst, si.Mode())

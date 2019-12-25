@@ -165,7 +165,7 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 			path := ""
 			for _, v := range array {
 				path = gfile.Join(v, name)
-				if stat, err := os.Stat(path); !os.IsNotExist(err) {
+				if stat, err := os.Stat(path); stat != nil && !os.IsNotExist(err) {
 					path = gfile.Abs(path)
 					// Security check: the result file path must be under the searching directory.
 					if len(path) >= len(v) && path[:len(v)] == v {

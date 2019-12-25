@@ -131,8 +131,8 @@ func formatSubStack(st stack, buffer *bytes.Buffer) {
 			if strings.Contains(file, gFILTER_KEY) {
 				continue
 			}
+			// Avoid GF stacks if not in GF development.
 			if !intlog.IsInGFDevelop() {
-				// Avoid GF stacks if not in GF development.
 				if strings.Contains(file, "github.com/gogf/gf/") {
 					continue
 				}

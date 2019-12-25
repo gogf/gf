@@ -40,7 +40,7 @@ func fileRealPath(path string) string {
 
 // fileExists checks whether given <path> exist.
 func fileExists(path string) bool {
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
+	if stat, err := os.Stat(path); stat != nil && !os.IsNotExist(err) {
 		return true
 	}
 	return false
