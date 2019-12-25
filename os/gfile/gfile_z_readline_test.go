@@ -16,45 +16,45 @@ import (
 )
 
 func Test_NotFound(t *testing.T) {
-    gtest.Case(t, func() {
-        teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/error.log"
-        callback := func(line string) {
-        }
-        err := gfile.ReadLines(teatFile, callback) 
-        gtest.AssertNE(err, nil)
-    })
+	gtest.Case(t, func() {
+		teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/error.log"
+		callback := func(line string) {
+		}
+		err := gfile.ReadLines(teatFile, callback)
+		gtest.AssertNE(err, nil)
+	})
 }
 
 func Test_ReadLines(t *testing.T) {
-    gtest.Case(t, func() {
-        expectList := []string{"a", "b", "c", "d", "e"}
+	gtest.Case(t, func() {
+		expectList := []string{"a", "b", "c", "d", "e"}
 
-        getList := make([]string, 0)
-        callback := func(line string) {
-            getList = append(getList, line)
-        }
+		getList := make([]string, 0)
+		callback := func(line string) {
+			getList = append(getList, line)
+		}
 
-        teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/file.log"
-        err := gfile.ReadLines(teatFile, callback) 
+		teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/file.log"
+		err := gfile.ReadLines(teatFile, callback)
 
-        gtest.AssertEQ(getList, expectList)
-        gtest.AssertEQ(err, nil)
-    })
+		gtest.AssertEQ(getList, expectList)
+		gtest.AssertEQ(err, nil)
+	})
 }
 
 func Test_ReadByteLines(t *testing.T) {
-    gtest.Case(t, func() {
-        expectList := [][]byte{[]byte("a"), []byte("b"), []byte("c"), []byte("d"), []byte("e")}
+	gtest.Case(t, func() {
+		expectList := [][]byte{[]byte("a"), []byte("b"), []byte("c"), []byte("d"), []byte("e")}
 
-        getList := make([][]byte, 0)
-        callback := func(line []byte) {
-            getList = append(getList, line)
-        }
+		getList := make([][]byte, 0)
+		callback := func(line []byte) {
+			getList = append(getList, line)
+		}
 
-        teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/file.log"
-        err := gfile.ReadByteLines(teatFile, callback) 
+		teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/file.log"
+		err := gfile.ReadByteLines(teatFile, callback)
 
-        gtest.AssertEQ(getList, expectList)
-        gtest.AssertEQ(err, nil)
-    })
+		gtest.AssertEQ(getList, expectList)
+		gtest.AssertEQ(err, nil)
+	})
 }

@@ -11,6 +11,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+
+	"github.com/gogf/gf/util/gconv"
 )
 
 var (
@@ -162,18 +164,22 @@ func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 	return nil
 }
 
-// ReadLines read file line by line, return line in the file as string to callback function
-func ReadLines(file string, callback func(line string)) error {
-	return getByScan(file, callback, "string")
+// ReadLines reads file line by line to String, each line passed to the callback function as String
+// It matches each line of text, separated by `\r?\n`. stripped of any trailing end-of-line marker.
+// The returned line may be empty.
+// The last non-empty line of input will be returned even if it has no newline.
+func ReadLines(file string, callback func(text string)) error {
+	cb := func(bytes []byte) {
+		callback(gconv.UnsafeBytesToStr(bytes))
+	}
+	return ReadByteLines(file, cb)
 }
 
-// ReadByteLines read file line by line, return line in the file as []byte to callback function
-func ReadByteLines(file string, callback func(line []byte)) error {
-	return getByScan(file, callback, "byte")
-}
-
-// getByScan read file line by line
-func getByScan(file string, callback interface{}, t string) error {
+// ReadByteLines reads file line by line to []byte, each line passed to the callback function as []byte
+// It matches each line of text, separated by `\r?\n`. stripped of any trailing end-of-line marker.
+// The returned line may be empty.
+// The last non-empty line of input will be returned even if it has no newline.
+func ReadByteLines(file string, callback func(bytes []byte)) error {
 	f, err := os.Open(file)
 	if err != nil {
 		return err
@@ -183,11 +189,7 @@ func getByScan(file string, callback interface{}, t string) error {
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
-		if t == "string" {
-			callback.(func(line string))(scanner.Text())
-		} else {
-			callback.(func(line []byte))(scanner.Bytes())
-		}
+		callback(scanner.Bytes())
 	}
 	return nil
 }
