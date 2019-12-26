@@ -31,6 +31,7 @@ type View struct {
 	defaultFile  string                 // Default template file for parsing.
 	i18nManager  *gi18n.Manager         // I18n manager for this view.
 	delimiters   []string               // Custom template delimiters.
+	config       Config                 // Extra configuration for the view.
 }
 
 // Params is type for template params.
@@ -124,9 +125,13 @@ func New(path ...string) *View {
 	view.BindFunc("gt", view.funcGt)
 	view.BindFunc("ge", view.funcGe)
 	view.BindFunc("text", view.funcText)
+
 	view.BindFunc("html", view.funcHtmlEncode)
 	view.BindFunc("htmlencode", view.funcHtmlEncode)
 	view.BindFunc("htmldecode", view.funcHtmlDecode)
+	view.BindFunc("encode", view.funcHtmlEncode)
+	view.BindFunc("decode", view.funcHtmlDecode)
+
 	view.BindFunc("url", view.funcUrlEncode)
 	view.BindFunc("urlencode", view.funcUrlEncode)
 	view.BindFunc("urldecode", view.funcUrlDecode)

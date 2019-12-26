@@ -24,6 +24,7 @@ type Config struct {
 	Data        map[string]interface{} // Global template variables.
 	DefaultFile string                 // Default template file for parsing.
 	Delimiters  []string               // Custom template delimiters.
+	AutoEncode  bool                   // Automatically encodes and provides safe html output, which is good for avoiding XSS.
 }
 
 // SetConfig sets the configuration for view.
@@ -45,6 +46,7 @@ func (view *View) SetConfig(config Config) error {
 	if len(config.Delimiters) > 1 {
 		view.SetDelimiters(config.Delimiters[0], config.Delimiters[1])
 	}
+	view.config = config
 	// Clear global template object cache.
 	// It's just cache, do not hesitate clearing it.
 	templates.Clear()
@@ -198,6 +200,13 @@ func (view *View) SetDefaultFile(file string) {
 func (view *View) SetDelimiters(left, right string) {
 	view.delimiters[0] = left
 	view.delimiters[1] = right
+}
+
+// SetAutoEncode enables/disables automatically html encoding feature.
+// When AutoEncode feature is enables, view engine automatically encodes and provides safe html output,
+// which is good for avoid XSS.
+func (view *View) SetAutoEncode(enable bool) {
+	view.config.AutoEncode = enable
 }
 
 // BindFunc registers customized global template function named <name>

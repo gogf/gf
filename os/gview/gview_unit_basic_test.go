@@ -7,6 +7,7 @@
 package gview_test
 
 import (
+	"github.com/gogf/gf/encoding/ghtml"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
@@ -287,5 +288,27 @@ func Test_HotReload(t *testing.T) {
 		})
 		gtest.Assert(err, nil)
 		gtest.Assert(result, `test2:2`)
+	})
+}
+
+func Test_XSS(t *testing.T) {
+	gtest.Case(t, func() {
+		v := gview.New()
+		s := "<br>"
+		r, err := v.ParseContent("{{.v}}", g.Map{
+			"v": s,
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(r, s)
+	})
+	gtest.Case(t, func() {
+		v := gview.New()
+		v.SetAutoEncode(true)
+		s := "<br>"
+		r, err := v.ParseContent("{{.v}}", g.Map{
+			"v": s,
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(r, ghtml.Entities(s))
 	})
 }
