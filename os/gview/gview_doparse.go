@@ -17,9 +17,10 @@ import (
 	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	htmltpl "html/template"
 	"strconv"
 	"strings"
-	"text/template"
+	texttpl "text/template"
 
 	"github.com/gogf/gf/os/gres"
 
@@ -34,6 +35,13 @@ const (
 	gCONTENT_TEMPLATE_NAME = "TemplateContent"
 )
 
+// fileCacheItem is the cache item for template file.
+type fileCacheItem struct {
+	path    string
+	folder  string
+	content string
+}
+
 var (
 	// Templates cache map for template folder.
 	// Note that there's no expiring logic for this map.
@@ -42,17 +50,10 @@ var (
 	resourceTryFolders = []string{"template/", "template", "/template", "/template/"}
 )
 
-// fileCacheItem is the cache item for template file.
-type fileCacheItem struct {
-	path    string
-	folder  string
-	content string
-}
-
 // Parse parses given template file <file> with given template variables <params>
 // and returns the parsed template content.
 func (view *View) Parse(file string, params ...Params) (result string, err error) {
-	var tpl *template.Template
+	var tpl interface{}
 	// It caches the file, folder and its content to enhance performance.
 	r := view.fileCacheMap.GetOrSetFuncLock(file, func() interface{} {
 		var path, folder, content string
@@ -99,7 +100,11 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 	}
 	// Using memory lock to ensure concurrent safety for template parsing.
 	gmlock.LockFunc("gview.Parse:"+item.path, func() {
-		tpl, err = tpl.Parse(item.content)
+		if view.config.AutoEncode {
+			tpl, err = tpl.(*htmltpl.Template).Parse(item.content)
+		} else {
+			tpl, err = tpl.(*texttpl.Template).Parse(item.content)
+		}
 	})
 
 	// Note that the template variable assignment cannot change the value
@@ -133,9 +138,16 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 		}
 	}
 	buffer := bytes.NewBuffer(nil)
-	if err := tpl.Execute(buffer, variables); err != nil {
-		return "", err
+	if view.config.AutoEncode {
+		if err := tpl.(*htmltpl.Template).Execute(buffer, variables); err != nil {
+			return "", err
+		}
+	} else {
+		if err := tpl.(*texttpl.Template).Execute(buffer, variables); err != nil {
+			return "", err
+		}
 	}
+
 	// TODO any graceful plan to replace "<no value>"?
 	result = gstr.Replace(buffer.String(), "<no value>", "")
 	result = view.i18nTranslate(result, variables)
@@ -157,12 +169,19 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 	err := (error)(nil)
 	key := fmt.Sprintf("%s_%v", gCONTENT_TEMPLATE_NAME, view.delimiters)
 	tpl := templates.GetOrSetFuncLock(key, func() interface{} {
-		return template.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
-	}).(*template.Template)
+		if view.config.AutoEncode {
+			return htmltpl.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+		}
+		return texttpl.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+	})
 	// Using memory lock to ensure concurrent safety for content parsing.
 	hash := strconv.FormatUint(ghash.DJBHash64([]byte(content)), 10)
 	gmlock.LockFunc("gview.ParseContent:"+hash, func() {
-		tpl, err = tpl.Parse(content)
+		if view.config.AutoEncode {
+			tpl, err = tpl.(*htmltpl.Template).Parse(content)
+		} else {
+			tpl, err = tpl.(*texttpl.Template).Parse(content)
+		}
 	})
 	if err != nil {
 		return "", err
@@ -198,8 +217,14 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 		}
 	}
 	buffer := bytes.NewBuffer(nil)
-	if err := tpl.Execute(buffer, variables); err != nil {
-		return "", err
+	if view.config.AutoEncode {
+		if err := tpl.(*htmltpl.Template).Execute(buffer, variables); err != nil {
+			return "", err
+		}
+	} else {
+		if err := tpl.(*texttpl.Template).Execute(buffer, variables); err != nil {
+			return "", err
+		}
 	}
 	// TODO any graceful plan to replace "<no value>"?
 	result := gstr.Replace(buffer.String(), "<no value>", "")
@@ -211,21 +236,32 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 // It uses template cache to enhance performance, that is, it will return the same template object
 // with the same given <path>. It will also automatically refresh the template cache
 // if the template files under <path> changes (recursively).
-func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl *template.Template, err error) {
+func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interface{}, err error) {
 	// Key for template cache.
 	key := fmt.Sprintf("%s_%v", filePath, view.delimiters)
 	result := templates.GetOrSetFuncLock(key, func() interface{} {
-		// Do not use <key> but the <path> as the parameter <name> for template.New,
-		// because when error occurs the <name> will be printed out.
-		tpl = template.New(filePath).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+		// Do not use <key> but the <filePath> as the parameter <name> for function New,
+		// because when error occurs the <name> will be printed out for error locating.
+		if view.config.AutoEncode {
+			tpl = htmltpl.New(filePath).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+		} else {
+			tpl = texttpl.New(filePath).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+		}
 		// Firstly checking the resource manager.
 		if !gres.IsEmpty() {
 			if files := gres.ScanDirFile(folderPath, pattern, true); len(files) > 0 {
 				var err error
 				for _, v := range files {
-					_, err = tpl.New(v.FileInfo().Name()).Option("missingkey=zero").Parse(string(v.Content()))
-					if err != nil {
-						glog.Error(err)
+					if view.config.AutoEncode {
+						_, err = tpl.(*htmltpl.Template).New(v.FileInfo().Name()).Parse(string(v.Content()))
+						if err != nil {
+							glog.Error(err)
+						}
+					} else {
+						_, err = tpl.(*texttpl.Template).New(v.FileInfo().Name()).Parse(string(v.Content()))
+						if err != nil {
+							glog.Error(err)
+						}
 					}
 				}
 				return tpl
@@ -238,13 +274,19 @@ func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl *templa
 		if err != nil {
 			return nil
 		}
-		if tpl, err = tpl.ParseFiles(files...); err != nil {
-			return nil
+		if view.config.AutoEncode {
+			if tpl, err = tpl.(*htmltpl.Template).ParseFiles(files...); err != nil {
+				return nil
+			}
+		} else {
+			if tpl, err = tpl.(*texttpl.Template).ParseFiles(files...); err != nil {
+				return nil
+			}
 		}
 		return tpl
 	})
 	if result != nil {
-		return result.(*template.Template), nil
+		return result, nil
 	}
 	return
 }
