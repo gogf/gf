@@ -22,17 +22,18 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
-// 数据库操作接口
+// DB is the interface for ORM operations.
 type DB interface {
-	// 建立数据库连接方法(开发者一般不需要直接调用)
+	// Open creates a raw connection object for database with given node configuration.
+	// Note that it is not recommended using the this function manually.
 	Open(config *ConfigNode) (*sql.DB, error)
 
-	// SQL操作方法 API
+	// Query APIs.
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error)
 
-	// 内部实现API的方法(不同数据库可覆盖这些方法实现自定义的操作)
+	// Internal APIs for CURD, which can be overwrote for custom CURD implements.
 	doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
 	doGetAll(link dbLink, query string, args ...interface{}) (result Result, err error)
 	doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
@@ -42,7 +43,7 @@ type DB interface {
 	doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
 	doDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error)
 
-	// 数据库查询
+	// Query APIs for convenience purpose.
 	GetAll(query string, args ...interface{}) (Result, error)
 	GetOne(query string, args ...interface{}) (Record, error)
 	GetValue(query string, args ...interface{}) (Value, error)
@@ -51,36 +52,33 @@ type DB interface {
 	GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error
 	GetScan(objPointer interface{}, query string, args ...interface{}) error
 
-	// 创建底层数据库master/slave链接对象
+	// Master/Slave support.
 	Master() (*sql.DB, error)
 	Slave() (*sql.DB, error)
 
-	// Ping
+	// Ping.
 	PingMaster() error
 	PingSlave() error
 
-	// 开启事务操作
+	// Transaction.
 	Begin() (*TX, error)
 
-	// 数据表插入/更新/保存操作
 	Insert(table string, data interface{}, batch ...int) (sql.Result, error)
 	Replace(table string, data interface{}, batch ...int) (sql.Result, error)
 	Save(table string, data interface{}, batch ...int) (sql.Result, error)
 
-	// 数据表插入/更新/保存操作(批量)
 	BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error)
 	BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error)
 	BatchSave(table string, list interface{}, batch ...int) (sql.Result, error)
 
-	// 数据修改/删除
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
-	// 创建链式操作对象
+	// Create model.
 	From(tables string) *Model
 	Table(tables string) *Model
 
-	// 设置管理
+	// Configuration methods.
 	SetDebug(debug bool)
 	SetSchema(schema string)
 	SetLogger(logger *glog.Logger)
@@ -91,13 +89,14 @@ type DB interface {
 	Tables() (tables []string, err error)
 	TableFields(table string) (map[string]*TableField, error)
 
-	// 内部方法接口
+	// Internal methods.
 	getCache() *gcache.Cache
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
 	getPrefix() string
 	quoteWord(s string) string
 	quoteString(s string) string
+	handleTableName(table string) string
 	doSetSchema(sqlDb *sql.DB, schema string) error
 	filterFields(table string, data map[string]interface{}) map[string]interface{}
 	convertValue(fieldValue []byte, fieldType string) interface{}

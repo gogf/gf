@@ -49,29 +49,29 @@ func Test_Func_addTablePrefix(t *testing.T) {
 	gtest.Case(t, func() {
 		prefix := ""
 		array := map[string]string{
-			"user":                         "user",
-			"user u":                       "user u",
-			"user as u":                    "user as u",
-			"user,user_detail":             "user,user_detail",
-			"user u, user_detail ut":       "user u, user_detail ut",
-			"user as u, user_detail as ut": "user as u, user_detail as ut",
+			"user":                         "`user`",
+			"user u":                       "`user` u",
+			"user as u":                    "`user` as u",
+			"user,user_detail":             "`user`,`user_detail`",
+			"user u, user_detail ut":       "`user` u,`user_detail` ut",
+			"user as u, user_detail as ut": "`user` as u,`user_detail` as ut",
 		}
 		for k, v := range array {
-			gtest.Assert(addTablePrefix(k, prefix), v)
+			gtest.Assert(doHandleTableName(k, prefix, "`", "`"), v)
 		}
 	})
 	gtest.Case(t, func() {
 		prefix := "gf_"
 		array := map[string]string{
-			"user":                         "gf_user",
-			"user u":                       "gf_user u",
-			"user as u":                    "gf_user as u",
-			"user,user_detail":             "gf_user,gf_user_detail",
-			"user u, user_detail ut":       "gf_user u,gf_user_detail ut",
-			"user as u, user_detail as ut": "gf_user as u,gf_user_detail as ut",
+			"user":                         "`gf_user`",
+			"user u":                       "`gf_user` u",
+			"user as u":                    "`gf_user` as u",
+			"user,user_detail":             "`gf_user`,`gf_user_detail`",
+			"user u, user_detail ut":       "`gf_user` u,`gf_user_detail` ut",
+			"user as u, user_detail as ut": "`gf_user` as u,`gf_user_detail` as ut",
 		}
 		for k, v := range array {
-			gtest.Assert(addTablePrefix(k, prefix), v)
+			gtest.Assert(doHandleTableName(k, prefix, "`", "`"), v)
 		}
 	})
 }

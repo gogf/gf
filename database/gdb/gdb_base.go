@@ -31,17 +31,6 @@ var (
 	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
-// 打印SQL对象(仅在debug=true时有效)
-func (bs *dbBase) printSql(v *Sql) {
-	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
-	if v.Error != nil {
-		s += "\nError: " + v.Error.Error()
-		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
-	} else {
-		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
-	}
-}
-
 // 数据库sql查询操作，主要执行查询
 func (bs *dbBase) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	link, err := bs.db.Slave()
@@ -56,9 +45,9 @@ func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows 
 	query, args = formatQuery(query, args)
 	query = bs.db.handleSqlBeforeExec(query)
 	if bs.db.getDebug() {
-		mTime1 := gtime.Millisecond()
+		mTime1 := gtime.TimestampMicro()
 		rows, err = link.Query(query, args...)
-		mTime2 := gtime.Millisecond()
+		mTime2 := gtime.TimestampMicro()
 		s := &Sql{
 			Sql:    query,
 			Args:   args,
@@ -302,7 +291,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 	var values []string
 	var params []interface{}
 	var dataMap Map
-	table = bs.db.quoteWord(table)
+	table = bs.db.handleTableName(table)
 	// 使用反射判断data数据类型，如果为slice类型，那么自动转为批量操作
 	rv := reflect.ValueOf(data)
 	kind := rv.Kind()
@@ -371,7 +360,7 @@ func (bs *dbBase) BatchSave(table string, list interface{}, batch ...int) (sql.R
 func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys, values []string
 	var params []interface{}
-	table = bs.db.quoteWord(table)
+	table = bs.db.handleTableName(table)
 	listMap := (List)(nil)
 	switch v := list.(type) {
 	case Result:
@@ -491,7 +480,7 @@ func (bs *dbBase) Update(table string, data interface{}, condition interface{}, 
 // CURD操作:数据更新，统一采用sql预处理。
 // data参数支持string/map/struct/*struct类型类型。
 func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	table = bs.db.quoteWord(table)
+	table = bs.db.handleTableName(table)
 	updates := ""
 	// 使用反射进行类型判断
 	rv := reflect.ValueOf(data)
@@ -543,7 +532,7 @@ func (bs *dbBase) doDelete(link dbLink, table string, condition string, args ...
 			return nil, err
 		}
 	}
-	table = bs.db.quoteWord(table)
+	table = bs.db.handleTableName(table)
 	return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
@@ -605,6 +594,17 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	return records, nil
 }
 
+// handleTableName adds prefix string and quote chars for the table. It handles table string like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
+//
+// Note that, this will automatically checks the table prefix whether already added, if true it does
+// nothing to the table name, or else adds the prefix to the table name.
+func (bs *dbBase) handleTableName(table string) string {
+	charLeft, charRight := bs.db.getChars()
+	prefix := bs.db.getPrefix()
+	return doHandleTableName(table, prefix, charLeft, charRight)
+}
+
 // quoteWord checks given string <s> a word, if true quotes it with security chars of the database
 // and returns the quoted string; or else return <s> without any change.
 func (bs *dbBase) quoteWord(s string) string {
@@ -617,6 +617,17 @@ func (bs *dbBase) quoteWord(s string) string {
 func (bs *dbBase) quoteString(s string) string {
 	charLeft, charRight := bs.db.getChars()
 	return doQuoteString(s, charLeft, charRight)
+}
+
+// 打印SQL对象(仅在debug=true时有效)
+func (bs *dbBase) printSql(v *Sql) {
+	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
+	if v.Error != nil {
+		s += "\nError: " + v.Error.Error()
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
+	} else {
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
+	}
 }
 
 // 动态切换数据库
