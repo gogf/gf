@@ -80,8 +80,15 @@ func (bs *dbBase) Table(table string) *Model {
 	}
 }
 
+// Model is alias of dbBase.Table.
+// See dbBase.Table.
+func (bs *dbBase) Model(tables string) *Model {
+	return bs.db.Table(tables)
+}
+
 // From is alias of dbBase.Table.
 // See dbBase.Table.
+// Deprecated.
 func (bs *dbBase) From(tables string) *Model {
 	return bs.db.Table(tables)
 }
@@ -103,8 +110,15 @@ func (tx *TX) Table(table string) *Model {
 	}
 }
 
+// Model is alias of tx.Table.
+// See tx.Table.
+func (tx *TX) Model(tables string) *Model {
+	return tx.Table(tables)
+}
+
 // From is alias of tx.Table.
 // See tx.Table.
+// Deprecated.
 func (tx *TX) From(tables string) *Model {
 	return tx.Table(tables)
 }
@@ -871,6 +885,15 @@ func (m *Model) FindCount(where ...interface{}) (int, error) {
 		return m.WherePri(where[0], where[1:]...).Count()
 	}
 	return m.Count()
+}
+
+// FindScan retrieves and returns the record/records by Model.WherePri and Model.Scan.
+// Also see Model.WherePri and Model.Scan.
+func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
+	if len(where) > 0 {
+		return m.WherePri(where[0], where[1:]...).Scan(pointer)
+	}
+	return m.Scan(pointer)
 }
 
 // Chunk iterates the table with given size and callback function.
