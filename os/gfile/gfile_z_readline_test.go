@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/os/gfile"
-
 	"github.com/gogf/gf/test/gtest"
 )
 
