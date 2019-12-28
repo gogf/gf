@@ -164,10 +164,11 @@ func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 	return nil
 }
 
-// ReadLines reads file line by line to String, each line passed to the callback function as String
-// It matches each line of text, separated by `\r?\n`. stripped of any trailing end-of-line marker.
-// The returned line may be empty.
-// The last non-empty line of input will be returned even if it has no newline.
+// ReadLines reads file content line by line, which is passed to the callback function <callback> as string.
+// It matches each line of text, separated by chars '\r' or '\n', stripped any trailing end-of-line marker.
+//
+// Note that the parameter passed to callback function might be an empty value, and the last non-empty line
+// will be passed to callback function <callback> even if it has no newline marker.
 func ReadLines(file string, callback func(text string)) error {
 	cb := func(bytes []byte) {
 		callback(gconv.UnsafeBytesToStr(bytes))
@@ -175,10 +176,11 @@ func ReadLines(file string, callback func(text string)) error {
 	return ReadByteLines(file, cb)
 }
 
-// ReadByteLines reads file line by line to []byte, each line passed to the callback function as []byte
-// It matches each line of text, separated by `\r?\n`. stripped of any trailing end-of-line marker.
-// The returned line may be empty.
-// The last non-empty line of input will be returned even if it has no newline.
+// ReadByteLines reads file content line by line, which is passed to the callback function <callback> as []byte.
+// It matches each line of text, separated by chars '\r' or '\n', stripped any trailing end-of-line marker.
+//
+// Note that the parameter passed to callback function might be an empty value, and the last non-empty line
+// will be passed to callback function <callback> even if it has no newline marker.
 func ReadByteLines(file string, callback func(bytes []byte)) error {
 	f, err := os.Open(file)
 	if err != nil {
