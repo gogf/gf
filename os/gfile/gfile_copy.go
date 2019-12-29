@@ -7,6 +7,7 @@
 package gfile
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,6 +20,12 @@ import (
 // If <src> is file, it calls CopyFile to implements copy feature,
 // or else it calls CopyDir.
 func Copy(src string, dst string) error {
+	if src == "" {
+		return errors.New("source path cannot be empty")
+	}
+	if dst == "" {
+		return errors.New("destination path cannot be empty")
+	}
 	if IsFile(src) {
 		return CopyFile(src, dst)
 	}
@@ -32,6 +39,12 @@ func Copy(src string, dst string) error {
 // the copied data is synced/flushed to stable storage.
 // Thanks: https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
 func CopyFile(src, dst string) (err error) {
+	if src == "" {
+		return errors.New("source file cannot be empty")
+	}
+	if dst == "" {
+		return errors.New("destination file cannot be empty")
+	}
 	in, err := os.Open(src)
 	if err != nil {
 		return
@@ -73,6 +86,12 @@ func CopyFile(src, dst string) (err error) {
 //
 // Note that, the sSource directory must exist and symlinks are ignored and skipped.
 func CopyDir(src string, dst string) (err error) {
+	if src == "" {
+		return errors.New("source directory cannot be empty")
+	}
+	if dst == "" {
+		return errors.New("destination directory cannot be empty")
+	}
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 	si, err := os.Stat(src)
