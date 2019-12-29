@@ -628,13 +628,7 @@ func Test_ExtName(t *testing.T) {
 
 func Test_TempDir(t *testing.T) {
 	gtest.Case(t, func() {
-		var (
-			tpath string
-		)
-
-		tpath = gfile.TempDir()
-		gtest.Assert(tpath, os.TempDir())
-
+		gtest.Assert(gfile.TempDir(), "/tmp")
 	})
 }
 
