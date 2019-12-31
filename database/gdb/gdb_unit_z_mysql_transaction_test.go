@@ -667,10 +667,10 @@ func Test_TX_GetScan(t *testing.T) {
 }
 
 func Test_TX_Delete(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
 
 	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -685,6 +685,32 @@ func Test_TX_Delete(t *testing.T) {
 			gtest.Error(err)
 		} else {
 			gtest.Assert(n, 0)
+		}
+	})
+
+	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
+		tx, err := db.Begin()
+		if err != nil {
+			gtest.Error(err)
+		}
+		if _, err := tx.Delete(table, nil); err != nil {
+			gtest.Error(err)
+		}
+		if n, err := tx.Table(table).Count(); err != nil {
+			gtest.Error(err)
+		} else {
+			gtest.Assert(n, 0)
+		}
+		if err := tx.Rollback(); err != nil {
+			gtest.Error(err)
+		}
+		if n, err := db.Table(table).Count(); err != nil {
+			gtest.Error(err)
+		} else {
+			gtest.Assert(n, INIT_DATA_SIZE)
+			gtest.AssertNE(n, 0)
 		}
 	})
 
