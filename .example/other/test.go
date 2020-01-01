@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
 )
 
 func main() {
-	db := g.DB()
-	// 开启调试模式，以便于记录所有执行的SQL
-	db.SetDebug(true)
-
-	db.Table("user").Delete("score < ", 60)
+	s := g.Server()
+	s.BindHandler("/test", func(r *ghttp.Request) {
+		fmt.Println(r.GetBody())
+		r.Response.Write(r.GetBody())
+	})
+	s.SetPort(8199)
+	s.Run()
 }

@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/text/gregex"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -91,10 +92,11 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 				// Custom Content-Type.
 				req.Header.Set("Content-Type", v)
 			} else {
-				// Auto detecting and setting the post content format: JSON.
 				if json.Valid(paramBytes) {
+					// Auto detecting and setting the post content format: JSON.
 					req.Header.Set("Content-Type", "application/json")
-				} else {
+				} else if gregex.IsMatchString(`^\w+=.+`, param) {
+					// If the parameters passed like "name=value", it then uses form type.
 					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 				}
 			}

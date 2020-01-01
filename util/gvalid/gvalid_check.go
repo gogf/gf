@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	gSINGLE_RULE_PATTERN = `^([\w-]+):{0,1}(.*)` // 单条规则匹配正则
+	// 单条规则匹配正则
+	gSINGLE_RULE_PATTERN = `^([\w-]+):{0,1}(.*)`
 )
 
 var (
@@ -113,6 +114,9 @@ var (
 //
 // 3. params参数为联合校验参数，支持任意的map/struct/*struct类型，对于需要联合校验的规则有效，如：required-*、same、different；
 func Check(value interface{}, rules string, msgs interface{}, params ...interface{}) *Error {
+	if rules == "" {
+		return nil
+	}
 	// 内部会将参数全部转换为字符串类型进行校验
 	val := strings.TrimSpace(gconv.String(value))
 	data := make(map[string]string)
