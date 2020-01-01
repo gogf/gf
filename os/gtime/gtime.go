@@ -87,7 +87,15 @@ var (
 )
 
 // SetTimeZone sets the time zone for current whole process.
-// The parameter <zone> is an area string specifying corresponding time zone, eg: Asia/Shanghai.
+// The parameter <zone> is an area string specifying corresponding time zone,
+// eg: Asia/Shanghai.
+//
+// Note that the time zone database needed by LoadLocation may not be
+// present on all systems, especially non-Unix systems.
+// LoadLocation looks in the directory or uncompressed zip file
+// named by the ZONEINFO environment variable, if any, then looks in
+// known installation locations on Unix systems,
+// and finally looks in $GOROOT/lib/time/zoneinfo.zip.
 func SetTimeZone(zone string) error {
 	location, err := time.LoadLocation(zone)
 	if err == nil {

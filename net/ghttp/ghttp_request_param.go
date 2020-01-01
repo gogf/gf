@@ -7,14 +7,38 @@
 package ghttp
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
+	"github.com/gogf/gf/encoding/gxml"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gvalid"
 	"io/ioutil"
 	"mime/multipart"
 )
+
+var (
+	// xmlHeaderBytes is the most common XML format header.
+	xmlHeaderBytes = []byte("<?xml")
+)
+
+// Parse calls r.GetStruct to convert the parameters, which are sent from client,
+// to given struct, and then calls gvalid.CheckStruct validating the struct according
+// to the validation tag of the struct.
+//
+// See GetStruct, gvalid.CheckStruct.
+func (r *Request) Parse(pointer interface{}) error {
+	if err := r.GetStruct(pointer); err != nil {
+		return err
+	}
+	if err := gvalid.CheckStruct(pointer, nil); err != nil {
+		return err
+	}
+	return nil
+}
 
 // Get is alias of GetRequest, which is one of the most commonly used functions for
 // retrieving parameter.
@@ -131,18 +155,18 @@ func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string 
 // GetStruct is alias of GetRequestToStruct.
 // See GetRequestToStruct.
 func (r *Request) GetStruct(pointer interface{}, mapping ...map[string]string) error {
-	return r.GetRequestToStruct(pointer, mapping...)
+	return r.GetRequestStruct(pointer, mapping...)
 }
 
 // GetToStruct is alias of GetRequestToStruct.
 // See GetRequestToStruct.
 // Deprecated.
 func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
-	return r.GetRequestToStruct(pointer, mapping...)
+	return r.GetRequestStruct(pointer, mapping...)
 }
 
-// ParseQuery parses query string into r.queryMap.
-func (r *Request) ParseQuery() {
+// parseQuery parses query string into r.queryMap.
+func (r *Request) parseQuery() {
 	if r.parsedQuery {
 		return
 	}
@@ -157,19 +181,36 @@ func (r *Request) ParseQuery() {
 }
 
 // ParseRaw parses the request raw data into r.rawMap.
-func (r *Request) ParseBody() {
+// Note that it also supports JSON data from client request.
+func (r *Request) parseBody() {
 	if r.parsedBody {
 		return
 	}
 	r.parsedBody = true
-	if body := r.GetBodyString(); len(body) > 0 {
-		r.bodyMap, _ = gstr.Parse(body)
+	if body := r.GetBody(); len(body) > 0 {
+		// Trim space/new line characters.
+		body = bytes.TrimSpace(body)
+		// JSON format checks.
+		if body[0] == '{' && body[len(body)-1] == '}' {
+			_ = json.Unmarshal(body, &r.bodyMap)
+		}
+		// XML format checks.
+		if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
+			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+		}
+		if body[0] == '<' && body[len(body)-1] == '>' {
+			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+		}
+		// Default parameters decoding.
+		if r.bodyMap == nil {
+			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
+		}
 	}
 }
 
-// ParseForm parses the request form for HTTP method PUT, POST, PATCH.
+// parseForm parses the request form for HTTP method PUT, POST, PATCH.
 // The form data is pared into r.formMap.
-func (r *Request) ParseForm() {
+func (r *Request) parseForm() {
 	if r.parsedForm {
 		return
 	}
@@ -217,7 +258,7 @@ func (r *Request) ParseForm() {
 				panic(err)
 			}
 		} else {
-			r.ParseBody()
+			r.parseBody()
 			if len(r.bodyMap) > 0 {
 				r.formMap = r.bodyMap
 			}
@@ -227,7 +268,7 @@ func (r *Request) ParseForm() {
 
 // GetMultipartForm parses and returns the form as multipart form.
 func (r *Request) GetMultipartForm() *multipart.Form {
-	r.ParseForm()
+	r.parseForm()
 	return r.MultipartForm
 }
 
