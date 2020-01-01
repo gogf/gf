@@ -36,7 +36,7 @@
 |*洁|wechat|￥10.00|赞助你肥宅快乐水
 |R*s|wechat|￥18.88| 谢谢GF！辛苦了！
 |粟*e|wechat|￥50.00|
-
+|[李超](https://github.com/effortlee)|wechat|￥124.00| 
 
 
 <img src="https://goframe.org/images/donate.png"/>
