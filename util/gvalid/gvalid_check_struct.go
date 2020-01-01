@@ -14,18 +14,18 @@ import (
 )
 
 var (
-	// 同时支持gvalid、valid和v标签，优先使用gvalid
-	structTagPriority = []string{"gvalid", "valid", "v"}
+	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
+	aliasNameTagPriority = []string{"param", "params", "p"} // aliasNameTagPriority specifies the alias tag priority array.
 )
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法。
 // struct的数据校验结果信息是顺序的。
 func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Error {
-	// 字段别名记录，用于msgs覆盖struct tag的
-	fieldAliases := make(map[string]string)
 	params := make(map[string]interface{})
 	checkRules := make(map[string]string)
 	customMsgs := make(CustomMsg)
+	// 字段别名记录，用于msgs覆盖struct tag的
+	fieldAliases := make(map[string]string)
 	// 返回的顺序规则
 	errorRules := make([]string, 0)
 	// 返回的校验错误
@@ -62,14 +62,19 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			errorRules = append(errorRules, name+"@"+rule)
 		}
 
-	// 不支持校验错误顺序: map[键名]校验规则
+	// Map type rules does not support sequence.
+	// Format: map[key]rule
 	case map[string]string:
 		checkRules = v
+	}
+	// Checks and extends the parameters map with struct alias tag.
+	for nameOrTag, field := range structs.MapField(object, aliasNameTagPriority, true) {
+		params[nameOrTag] = field.Value()
+		params[field.Name()] = field.Value()
 	}
 	// 首先, 按照属性循环一遍将struct的属性、数值、tag解析
 	for nameOrTag, field := range structs.MapField(object, structTagPriority, true) {
 		fieldName := field.Name()
-		params[fieldName] = field.Value()
 		// MapField返回map[name/tag]*Field，当nameOrTag != fieldName时，nameOrTag为tag
 		if nameOrTag != fieldName {
 			// sequence tag == struct tag, 这里的name为别名
