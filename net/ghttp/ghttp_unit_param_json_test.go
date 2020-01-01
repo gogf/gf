@@ -22,7 +22,7 @@ func Test_Params_Json_Request(t *testing.T) {
 		Id    int
 		Name  string
 		Time  *time.Time
-		Pass1 string `p:"password1" v:"password1"`
+		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致"`
 	}
 	p := ports.PopRand()
