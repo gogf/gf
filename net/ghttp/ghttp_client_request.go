@@ -95,7 +95,7 @@ func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, er
 				if json.Valid(paramBytes) {
 					// Auto detecting and setting the post content format: JSON.
 					req.Header.Set("Content-Type", "application/json")
-				} else if gregex.IsMatchString(`^\w+=.+`, param) {
+				} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, param) {
 					// If the parameters passed like "name=value", it then uses form type.
 					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 				}
