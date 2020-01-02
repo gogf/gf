@@ -32,8 +32,8 @@ func Copy(src string, dst string) error {
 	return CopyDir(src, dst)
 }
 
-// CopyFile copies the contents of the file named src to the file named
-// by dst. The file will be created if it does not already exist. If the
+// CopyFile copies the contents of the file named <src> to the file named
+// by <dst>. The file will be created if it does not exist. If the
 // destination file exists, all it's contents will be replaced by the contents
 // of the source file. The file mode will be copied from the source and
 // the copied data is synced/flushed to stable storage.
@@ -84,7 +84,7 @@ func CopyFile(src, dst string) (err error) {
 
 // CopyDir recursively copies a directory tree, attempting to preserve permissions.
 //
-// Note that, the sSource directory must exist and symlinks are ignored and skipped.
+// Note that, the Source directory must exist and symlinks are ignored and skipped.
 func CopyDir(src string, dst string) (err error) {
 	if src == "" {
 		return errors.New("source directory cannot be empty")
