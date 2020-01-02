@@ -103,6 +103,14 @@ func (r *Response) WriteflnExit(format string, params ...interface{}) {
 
 // WriteJson writes <content> to the response with JSON format.
 func (r *Response) WriteJson(content interface{}) error {
+	// If given string/[]byte, response it directly to client.
+	switch content.(type) {
+	case string, []byte:
+		r.Header().Set("Content-Type", "application/json")
+		r.Write(content)
+		return nil
+	}
+	// Else use json.Marshal function to encode the parameter.
 	if b, err := json.Marshal(content); err != nil {
 		return err
 	} else {
@@ -127,6 +135,14 @@ func (r *Response) WriteJsonExit(content interface{}) error {
 //
 // Note that there should be a "callback" parameter in the request for JSONP format.
 func (r *Response) WriteJsonP(content interface{}) error {
+	// If given string/[]byte, response it directly to client.
+	switch content.(type) {
+	case string, []byte:
+		r.Header().Set("Content-Type", "application/json")
+		r.Write(content)
+		return nil
+	}
+	// Else use json.Marshal function to encode the parameter.
 	if b, err := json.Marshal(content); err != nil {
 		return err
 	} else {
@@ -159,6 +175,14 @@ func (r *Response) WriteJsonPExit(content interface{}) error {
 
 // WriteXml writes <content> to the response with XML format.
 func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
+	// If given string/[]byte, response it directly to client.
+	switch content.(type) {
+	case string, []byte:
+		r.Header().Set("Content-Type", "application/xml")
+		r.Write(content)
+		return nil
+	}
+	// Else use gparser.VarToXml function to encode the parameter.
 	if b, err := gparser.VarToXml(content, rootTag...); err != nil {
 		return err
 	} else {

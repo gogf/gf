@@ -155,6 +155,14 @@ func getShell() string {
 	case "windows":
 		return SearchBinary("cmd.exe")
 	default:
+		// Check the default binary storage path.
+		if gfile.Exists("/bin/bash") {
+			return "/bin/bash"
+		}
+		if gfile.Exists("/bin/sh") {
+			return "/bin/sh"
+		}
+		// Else search the env PATH.
 		path := SearchBinary("bash")
 		if path == "" {
 			path = SearchBinary("sh")
