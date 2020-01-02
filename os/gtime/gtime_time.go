@@ -8,6 +8,7 @@ package gtime
 
 import (
 	"bytes"
+	"strconv"
 	"time"
 )
 
@@ -96,6 +97,30 @@ func (t *Time) TimestampMicro() int64 {
 // TimestampNano returns the timestamp in nanoseconds.
 func (t *Time) TimestampNano() int64 {
 	return t.UnixNano()
+}
+
+// TimestampStr is a convenience method which retrieves and returns
+// the timestamp in seconds as string.
+func (t *Time) TimestampStr() string {
+	return strconv.FormatInt(t.Timestamp(), 10)
+}
+
+// TimestampMilliStr is a convenience method which retrieves and returns
+// the timestamp in milliseconds as string.
+func (t *Time) TimestampMilliStr() string {
+	return strconv.FormatInt(t.TimestampMilli(), 10)
+}
+
+// TimestampMicroStr is a convenience method which retrieves and returns
+// the timestamp in microseconds as string.
+func (t *Time) TimestampMicroStr() string {
+	return strconv.FormatInt(t.TimestampMicro(), 10)
+}
+
+// TimestampNanoStr is a convenience method which retrieves and returns
+// the timestamp in nanoseconds as string.
+func (t *Time) TimestampNanoStr() string {
+	return strconv.FormatInt(t.TimestampNano(), 10)
 }
 
 // Second returns the second offset within the minute specified by t,

@@ -104,24 +104,48 @@ func SetTimeZone(zone string) error {
 	return err
 }
 
-// Timestamp returns the timestamp in seconds.
+// Timestamp retrieves and returns the timestamp in seconds.
 func Timestamp() int64 {
 	return Now().Timestamp()
 }
 
-// TimestampMilli returns the timestamp in milliseconds.
+// TimestampMilli retrieves and returns the timestamp in milliseconds.
 func TimestampMilli() int64 {
 	return Now().TimestampMilli()
 }
 
-// TimestampMicro returns the timestamp in microseconds.
+// TimestampMicro retrieves and returns the timestamp in microseconds.
 func TimestampMicro() int64 {
 	return Now().TimestampMicro()
 }
 
-// TimestampNano returns the timestamp in nanoseconds.
+// TimestampNano retrieves and returns the timestamp in nanoseconds.
 func TimestampNano() int64 {
 	return Now().TimestampNano()
+}
+
+// TimestampStr is a convenience method which retrieves and returns
+// the timestamp in seconds as string.
+func TimestampStr() string {
+	return Now().TimestampStr()
+}
+
+// TimestampMilliStr is a convenience method which retrieves and returns
+// the timestamp in milliseconds as string.
+func TimestampMilliStr() string {
+	return Now().TimestampMilliStr()
+}
+
+// TimestampMicroStr is a convenience method which retrieves and returns
+// the timestamp in microseconds as string.
+func TimestampMicroStr() string {
+	return Now().TimestampMicroStr()
+}
+
+// TimestampNanoStr is a convenience method which retrieves and returns
+// the timestamp in nanoseconds as string.
+func TimestampNanoStr() string {
+	return Now().TimestampNanoStr()
 }
 
 // Second returns the timestamp in seconds.
