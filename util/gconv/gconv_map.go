@@ -45,7 +45,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	if r, ok := value.(map[string]interface{}); ok {
 		return r
 	} else {
-		// Only assert the common combination of types, and finally it uses reflection.
+		// Assert the common combination of types, and finally it uses reflection.
 		m := make(map[string]interface{})
 		switch value.(type) {
 		case map[interface{}]interface{}:
@@ -104,7 +104,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			for k, v := range value.(map[uint]string) {
 				m[String(k)] = v
 			}
-		// Not a common type, use reflection
+		// Not a common type, then use reflection.
 		default:
 			rv := reflect.ValueOf(value)
 			kind := rv.Kind()
@@ -136,6 +136,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 				}
 				var rtField reflect.StructField
 				var rvField reflect.Value
+				var rvKind reflect.Kind
 				for i := 0; i < rv.NumField(); i++ {
 					rtField = rt.Field(i)
 					rvField = rv.Field(i)
@@ -173,28 +174,20 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 							}
 						}
 					}
-					switch rvField.Kind() {
-					case reflect.Ptr:
-						if rvField.Elem().Kind() == reflect.Struct {
-							if recursive {
-								for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {
-									m[k] = v
-								}
-							} else {
-								m[name] = doMapConvert(rvField.Interface(), recursive, tags...)
-							}
-						} else {
-							m[name] = rvField.Interface()
+					if recursive {
+						rvKind = rvField.Kind()
+						if rvKind == reflect.Ptr {
+							rvField = rvField.Elem()
+							rvKind = rvField.Kind()
 						}
-					case reflect.Struct:
-						if recursive {
+						if rvKind == reflect.Struct {
 							for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {
 								m[k] = v
 							}
 						} else {
-							m[name] = doMapConvert(rvField.Interface(), recursive, tags...)
+							m[name] = rvField.Interface()
 						}
-					default:
+					} else {
 						m[name] = rvField.Interface()
 					}
 				}

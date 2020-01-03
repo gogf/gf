@@ -252,17 +252,20 @@ func Test_DB_BatchInsert(t *testing.T) {
 		gtest.Assert(n, 1)
 	})
 
+}
+
+func Test_DB_BatchInsert_Struct(t *testing.T) {
 	// batch insert struct
 	gtest.Case(t, func() {
 		table := createTable()
 		defer dropTable(table)
 
 		type User struct {
-			Id         int         `gconv:"id"`
-			Passport   string      `gconv:"passport"`
-			Password   string      `gconv:"password"`
-			NickName   string      `gconv:"nickname"`
-			CreateTime *gtime.Time `gconv:"create_time"`
+			Id         int         `c:"id"`
+			Passport   string      `c:"passport"`
+			Password   string      `c:"password"`
+			NickName   string      `c:"nickname"`
+			CreateTime *gtime.Time `c:"create_time"`
 		}
 		user := &User{
 			Id:         1,
@@ -276,7 +279,6 @@ func Test_DB_BatchInsert(t *testing.T) {
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, 1)
 	})
-
 }
 
 func Test_DB_Save(t *testing.T) {

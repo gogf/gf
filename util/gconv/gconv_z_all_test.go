@@ -940,7 +940,6 @@ func Test_Map_StructInherit_All(t *testing.T) {
 
 func Test_Struct_Basic1_All(t *testing.T) {
 	gtest.Case(t, func() {
-
 		type Score struct {
 			Name   int
 			Result string
