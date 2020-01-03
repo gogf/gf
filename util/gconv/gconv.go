@@ -10,7 +10,6 @@ package gconv
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"strconv"
@@ -213,7 +212,8 @@ func String(i interface{}) string {
 		}
 		return value.String()
 	default:
-		if empty.IsNil(value) {
+		// Empty checks.
+		if value == nil {
 			return ""
 		}
 		if f, ok := value.(apiString); ok {
@@ -225,6 +225,24 @@ func String(i interface{}) string {
 			// then use that interface to perform the conversion
 			return f.Error()
 		} else {
+			// Reflect checks.
+			rv := reflect.ValueOf(value)
+			kind := rv.Kind()
+			switch kind {
+			case reflect.Chan,
+				reflect.Map,
+				reflect.Slice,
+				reflect.Func,
+				reflect.Ptr,
+				reflect.Interface,
+				reflect.UnsafePointer:
+				if rv.IsNil() {
+					return ""
+				}
+			}
+			if kind == reflect.Ptr {
+				return String(rv.Elem().Interface())
+			}
 			// Finally we use json.Marshal to convert.
 			if jsonContent, err := json.Marshal(value); err != nil {
 				return fmt.Sprint(value)
