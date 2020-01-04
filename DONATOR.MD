@@ -1,5 +1,7 @@
 # Donators
 
+We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill.
+
 
 | Name | Channel | Amount | Comment 
 |---|---|--- | ---
@@ -37,6 +39,9 @@
 |R*s|wechat|￥18.88| 谢谢GF！辛苦了！
 |粟*e|wechat|￥50.00|
 |[李超](https://github.com/effortlee)|wechat|￥124.00| 
+|张炳贤|wechat+qq|￥600.00| 
+|[王哈哈](https://gitee.com/develop1024)|wechat|￥6.66| 希望gf越来越好
+|夕景|alipay+qq|￥9.96+3.57| 
 
 
 <img src="https://goframe.org/images/donate.png"/>
